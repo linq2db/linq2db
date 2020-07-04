@@ -1996,11 +1996,11 @@ namespace LinqToDB.Data
 			return dataConnection.DataProvider.BulkCopy(dataConnection.GetTable<T>(), options, source);
 		}
 		//need to add all these extension methods
-		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 			where T : class
 		{
 			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
-			return dataConnection.DataProvider.BulkCopyAsync(dataConnection.GetTable<T>(), options, source);
+			return dataConnection.DataProvider.BulkCopyAsync(dataConnection.GetTable<T>(), options, source, cancellationToken);
 		}
 
 		/// <summary>

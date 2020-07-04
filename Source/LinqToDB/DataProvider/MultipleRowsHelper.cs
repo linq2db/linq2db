@@ -9,6 +9,7 @@ namespace LinqToDB.DataProvider
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
+	using System.Threading;
 	using System.Threading.Tasks;
 
 	public class MultipleRowsHelper<T> : MultipleRowsHelper
@@ -114,9 +115,9 @@ namespace LinqToDB.DataProvider
 			return true;
 		}
 
-		public async Task<bool> ExecuteAsync()
+		public async Task<bool> ExecuteAsync(CancellationToken cancellationToken)
 		{
-			await DataConnection.ExecuteAsync(StringBuilder.AppendLine().ToString(), Parameters.ToArray())
+			await DataConnection.ExecuteAsync(StringBuilder.AppendLine().ToString(), cancellationToken, Parameters.ToArray())
 				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			if (Options.RowsCopiedCallback != null)

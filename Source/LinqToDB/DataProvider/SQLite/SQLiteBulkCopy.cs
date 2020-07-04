@@ -3,6 +3,7 @@
 namespace LinqToDB.DataProvider.SQLite
 {
 	using Data;
+	using System.Threading;
 	using System.Threading.Tasks;
 
 	class SQLiteBulkCopy : BasicBulkCopy
@@ -14,16 +15,16 @@ namespace LinqToDB.DataProvider.SQLite
 		}
 
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			return MultipleRowsCopy1Async(table, options, source);
+			return MultipleRowsCopy1Async(table, options, source, cancellationToken);
 		}
 
 #if !NET45 && !NET46
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source)
+			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			return MultipleRowsCopy1Async(table, options, source);
+			return MultipleRowsCopy1Async(table, options, source, cancellationToken);
 		}
 #endif
 	}

@@ -35,7 +35,8 @@ namespace LinqToDB.DataProvider.SqlServer
 					table,
 					options,
 					(columns) => new BulkCopyReader<T>(connections.Item1, columns, source),
-					false).Result;
+					false,
+					default).Result;
 			}
 
 			return MultipleRowsCopy(table, options, source);
@@ -44,7 +45,8 @@ namespace LinqToDB.DataProvider.SqlServer
 		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T> table,
 			BulkCopyOptions options,
-			IEnumerable<T> source)
+			IEnumerable<T> source, 
+			CancellationToken cancellationToken)
 		{
 			var connections = GetProviderConnection(table);
 			if (connections != null)
@@ -56,17 +58,19 @@ namespace LinqToDB.DataProvider.SqlServer
 					table,
 					options,
 					(columns) => new BulkCopyReader<T>(connections.Item1, columns, source),
-					true);
+					true,
+					cancellationToken);
 			}
 
-			return MultipleRowsCopyAsync(table, options, source);
+			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
 		}
 
 #if !NET45 && !NET46
 		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T> table,
 			BulkCopyOptions options,
-			IAsyncEnumerable<T> source)
+			IAsyncEnumerable<T> source,
+			CancellationToken cancellationToken)
 		{
 			var connections = GetProviderConnection(table);
 			if (connections != null)
@@ -78,10 +82,11 @@ namespace LinqToDB.DataProvider.SqlServer
 					table,
 					options,
 					(columns) => new BulkCopyReader<T>(connections.Item1, columns, source),
-					true);
+					true,
+					cancellationToken);
 			}
 
-			return MultipleRowsCopyAsync(table, options, source);
+			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
 		}
 #endif
 
@@ -110,7 +115,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			ITable<T>                                               table,
 			BulkCopyOptions	                                        options,
 			Func<List<Mapping.ColumnDescriptor>, BulkCopyReader<T>> createDataReader,
-			bool                                                    runAsync)
+			bool                                                    runAsync,
+			CancellationToken                                       cancellationToken)
 		{
 					var ed      = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
 					var columns = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
@@ -156,7 +162,7 @@ namespace LinqToDB.DataProvider.SqlServer
 							() => "INSERT BULK " + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + Environment.NewLine,
 							async () => { 
 								if (runAsync)
-									await bc.WriteToServerAsync(rd, default).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+									await bc.WriteToServerAsync(rd, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 								else
 									bc.WriteToServer(rd); 
 								return rd.Count; 

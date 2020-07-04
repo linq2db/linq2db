@@ -8,6 +8,7 @@ namespace LinqToDB.DataProvider.Informix
 	using Data;
 	using Mapping;
 	using SqlProvider;
+	using System.Threading;
 	using System.Threading.Tasks;
 
 	public class InformixDataProvider : DynamicDataProviderBase<InformixProviderAdapter>
@@ -208,24 +209,26 @@ namespace LinqToDB.DataProvider.Informix
 		}
 
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			return new InformixBulkCopy(this).BulkCopyAsync(
 				options.BulkCopyType == BulkCopyType.Default ? InformixTools.DefaultBulkCopyType : options.BulkCopyType,
 				table,
 				options,
-				source);
+				source,
+				cancellationToken);
 		}
 
 #if !NET45 && !NET46
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source)
+			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			return new InformixBulkCopy(this).BulkCopyAsync(
 				options.BulkCopyType == BulkCopyType.Default ? InformixTools.DefaultBulkCopyType : options.BulkCopyType,
 				table,
 				options,
-				source);
+				source,
+				cancellationToken);
 		}
 #endif
 

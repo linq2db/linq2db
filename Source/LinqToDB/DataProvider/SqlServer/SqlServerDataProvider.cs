@@ -13,6 +13,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
+	using System.Threading;
 	using System.Threading.Tasks;
 
 	public class SqlServerDataProvider : DynamicDataProviderBase<SqlServerProviderAdapter>
@@ -416,7 +417,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				source);
 		}
 
-		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			if (_bulkCopy == null)
 				_bulkCopy = new SqlServerBulkCopy(this);
@@ -425,11 +426,12 @@ namespace LinqToDB.DataProvider.SqlServer
 				options.BulkCopyType == BulkCopyType.Default ? SqlServerTools.DefaultBulkCopyType : options.BulkCopyType,
 				table,
 				options,
-				source);
+				source,
+				cancellationToken);
 		}
 
 #if !NET45 && !NET46
-		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source)
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			if (_bulkCopy == null)
 				_bulkCopy = new SqlServerBulkCopy(this);
@@ -438,7 +440,8 @@ namespace LinqToDB.DataProvider.SqlServer
 				options.BulkCopyType == BulkCopyType.Default ? SqlServerTools.DefaultBulkCopyType : options.BulkCopyType,
 				table,
 				options,
-				source);
+				source,
+				cancellationToken);
 		}
 #endif
 

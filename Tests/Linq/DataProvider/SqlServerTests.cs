@@ -804,7 +804,8 @@ namespace Tests.DataProvider
 							GuidValue = Guid.NewGuid(),
 							SmallIntValue = (short)n
 						}
-					));
+					),
+					default);
 
 				db.GetTable<DataTypes>().Delete(p => p.ID >= 4000);
 			}

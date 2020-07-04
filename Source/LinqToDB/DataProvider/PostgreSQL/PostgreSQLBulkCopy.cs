@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
@@ -34,21 +35,23 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return MultipleRowsCopy(table, options, source);
 		}
 
-		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
+			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			if (table.DataContext is DataConnection dataConnection)
 				// call the synchronous provider-specific implementation
 				return Task.FromResult(ProviderSpecificCopyImpl(dataConnection, table, options, source));
 
-			return MultipleRowsCopyAsync(table, options, source);
+			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
 		}
 
 #if !NET45 && !NET46
-		protected override async Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source)
+		protected override async Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
+			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			if (table.DataContext is DataConnection dataConnection)
 			{
-				var enumerator = source.GetAsyncEnumerator();
+				var enumerator = source.GetAsyncEnumerator(cancellationToken);
 				await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 				{
 					// call the synchronous provider-specific implementation
@@ -56,7 +59,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				}
 			}
 
-			return await MultipleRowsCopyAsync(table, options, source).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			return await MultipleRowsCopyAsync(table, options, source, cancellationToken)
+				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 #endif
 

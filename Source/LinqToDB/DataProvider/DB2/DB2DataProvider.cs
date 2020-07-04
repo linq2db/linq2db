@@ -10,6 +10,7 @@ namespace LinqToDB.DataProvider.DB2
 	using SchemaProvider;
 	using SqlProvider;
 	using System.Threading.Tasks;
+	using System.Threading;
 
 	public class DB2DataProvider : DynamicDataProviderBase<DB2ProviderAdapter>
 	{
@@ -198,7 +199,8 @@ namespace LinqToDB.DataProvider.DB2
 				source);
 		}
 
-		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
+			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			if (_bulkCopy == null)
 				_bulkCopy = new DB2BulkCopy(this);
@@ -207,11 +209,13 @@ namespace LinqToDB.DataProvider.DB2
 				options.BulkCopyType == BulkCopyType.Default ? DB2Tools.DefaultBulkCopyType : options.BulkCopyType,
 				table,
 				options,
-				source);
+				source,
+				cancellationToken);
 		}
 
 #if !NET45 && !NET46
-		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source)
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
+			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			if (_bulkCopy == null)
 				_bulkCopy = new DB2BulkCopy(this);
@@ -220,7 +224,8 @@ namespace LinqToDB.DataProvider.DB2
 				options.BulkCopyType == BulkCopyType.Default ? DB2Tools.DefaultBulkCopyType : options.BulkCopyType,
 				table,
 				options,
-				source);
+				source,
+				cancellationToken);
 		}
 #endif
 

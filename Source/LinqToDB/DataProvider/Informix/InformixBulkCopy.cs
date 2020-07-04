@@ -5,6 +5,7 @@ namespace LinqToDB.DataProvider.Informix
 	using System;
 	using System.Data;
 	using System.Linq;
+	using System.Threading;
 	using System.Threading.Tasks;
 	using Data;
 	using LinqToDB.SqlProvider;
@@ -55,7 +56,8 @@ namespace LinqToDB.DataProvider.Informix
 		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T> table,
 			BulkCopyOptions options,
-			IEnumerable<T> source)
+			IEnumerable<T> source,
+			CancellationToken cancellationToken)
 		{
 			if ((_provider.Adapter.InformixBulkCopy != null || _provider.Adapter.DB2BulkCopy != null) && table.DataContext is DataConnection dataConnection && dataConnection.Transaction == null)
 			{
@@ -84,14 +86,15 @@ namespace LinqToDB.DataProvider.Informix
 				}
 			}
 
-			return MultipleRowsCopyAsync(table, options, source);
+			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
 		}
 
 #if !NET45 && !NET46
 		protected override async Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T> table,
 			BulkCopyOptions options,
-			IAsyncEnumerable<T> source)
+			IAsyncEnumerable<T> source,
+			CancellationToken cancellationToken)
 		{
 			if ((_provider.Adapter.InformixBulkCopy != null || _provider.Adapter.DB2BulkCopy != null) && table.DataContext is DataConnection dataConnection && dataConnection.Transaction == null)
 			{
@@ -125,7 +128,8 @@ namespace LinqToDB.DataProvider.Informix
 				}
 			}
 
-			return await MultipleRowsCopyAsync(table, options, source).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			return await MultipleRowsCopyAsync(table, options, source, cancellationToken)
+				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 #endif
 
@@ -194,5 +198,21 @@ namespace LinqToDB.DataProvider.Informix
 			using (new InvariantCultureRegion())
 				return base.MultipleRowsCopy(table, options, source);
 		}
+
+		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
+			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+		{
+			using (new InvariantCultureRegion())
+				return base.MultipleRowsCopyAsync(table, options, source, cancellationToken);
+		}
+
+#if !NET45 && !NET46
+		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
+			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+		{
+			using (new InvariantCultureRegion())
+				return base.MultipleRowsCopyAsync(table, options, source, cancellationToken);
+		}
+#endif
 	}
 }

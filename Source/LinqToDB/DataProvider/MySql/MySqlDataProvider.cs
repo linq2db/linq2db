@@ -5,6 +5,7 @@ using System.Data;
 namespace LinqToDB.DataProvider.MySql
 {
 	using System.Collections;
+	using System.Threading;
 	using System.Threading.Tasks;
 	using Common;
 	using Data;
@@ -131,7 +132,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			if (source == null)
 				throw new ArgumentException(nameof(source));
@@ -140,12 +141,13 @@ namespace LinqToDB.DataProvider.MySql
 				options.BulkCopyType == BulkCopyType.Default ? MySqlTools.DefaultBulkCopyType : options.BulkCopyType,
 				table,
 				options,
-				source);
+				source,
+				cancellationToken);
 		}
 
 #if !NET45 && !NET46
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source)
+			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			if (source == null)
 				throw new ArgumentException(nameof(source));
@@ -154,7 +156,8 @@ namespace LinqToDB.DataProvider.MySql
 				options.BulkCopyType == BulkCopyType.Default ? MySqlTools.DefaultBulkCopyType : options.BulkCopyType,
 				table,
 				options,
-				source);
+				source,
+				cancellationToken);
 		}
 #endif
 

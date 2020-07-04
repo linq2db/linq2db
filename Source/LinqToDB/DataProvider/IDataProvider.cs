@@ -11,6 +11,7 @@ namespace LinqToDB.DataProvider
 	using SchemaProvider;
 	using SqlProvider;
 	using System.Threading.Tasks;
+	using System.Threading;
 
 	public interface IDataProvider
 	{
@@ -53,10 +54,10 @@ namespace LinqToDB.DataProvider
 
 		BulkCopyRowsCopied       BulkCopy<T>     (ITable<T> table, BulkCopyOptions options, IEnumerable<T> source);
 		
-		Task<BulkCopyRowsCopied> BulkCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source);
+		Task<BulkCopyRowsCopied> BulkCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken);
 
 #if !NET45 && !NET46
-		Task<BulkCopyRowsCopied> BulkCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source);
+		Task<BulkCopyRowsCopied> BulkCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken);
 #endif
 	}
 }
