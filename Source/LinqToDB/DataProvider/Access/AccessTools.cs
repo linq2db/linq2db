@@ -172,6 +172,7 @@ namespace LinqToDB.DataProvider.Access
 
 		// If user has DataConnection - he can call BulkCopy directly and Tools methods only provide some
 		// defaults for parameters
+		[Obsolete("Please use the BulkCopy extension methods within DataConnectionExtensions")]
 		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
 			DataConnection              dataConnection,
 			IEnumerable<T>              source,

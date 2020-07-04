@@ -266,6 +266,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
 
+		[Obsolete("Please use the BulkCopy extension methods within DataConnectionExtensions")]
 		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
 			this DataConnection          dataConnection,
 			IEnumerable<T>               source,
@@ -282,6 +283,7 @@ namespace LinqToDB.DataProvider.Oracle
 				}, source);
 		}
 
+		[Obsolete("Please use the BulkCopy extension methods within DataConnectionExtensions")]
 		public static BulkCopyRowsCopied ProviderSpecificBulkCopy<T>(
 			DataConnection               dataConnection,
 			IEnumerable<T>               source,

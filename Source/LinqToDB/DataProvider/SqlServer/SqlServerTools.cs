@@ -338,6 +338,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.ProviderSpecific;
 
+		[Obsolete("Please use the BulkCopy extension methods within DataConnectionExtensions")]
 		public static BulkCopyRowsCopied ProviderSpecificBulkCopy<T>(
 			DataConnection              dataConnection,
 			IEnumerable<T>              source,
