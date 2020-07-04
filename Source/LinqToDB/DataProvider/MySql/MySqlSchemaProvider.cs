@@ -203,7 +203,7 @@ SELECT
 				case "varbinary"  : return DataType.VarBinary;
 				case "date"       : return DataType.Date;
 				case "datetime"   : return DataType.DateTime;
-				case "timestamp"  : return DataType.DateTime2;
+				case "timestamp"  : return DataType.DateTime;
 				case "time"       : return DataType.Time;
 				case "char"       : return DataType.Char;
 				case "varchar"    : return DataType.VarChar;
@@ -374,9 +374,7 @@ SELECT
 				case "bigint"            : return columnType?.Contains("unsigned") == true ? typeof(ulong)  : typeof(long);
 				case "json"              :
 				case "longtext"          : return typeof(string);
-					// this could be a breaking change for mysql.data users, as this provider works really bad
-					// with DTO type, so they will need to re-map to DateTime type in this case
-				case "timestamp"         : return typeof(DateTimeOffset);
+				case "timestamp"         : return typeof(DateTime);
 				case "point"             :
 				case "linestring"        :
 				case "polygon"           :

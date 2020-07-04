@@ -65,66 +65,66 @@ namespace MySqlConnectorDataContext
 	[Table("alltypes")]
 	public partial class Alltype
 	{
-		[Column(),                      PrimaryKey, Identity] public int             ID                  { get; set; } // int
-		[Column("bigintDataType"),      Nullable            ] public long?           BigintDataType      { get; set; } // bigint
-		[Column("smallintDataType"),    Nullable            ] public short?          SmallintDataType    { get; set; } // smallint
-		[Column("tinyintDataType"),     Nullable            ] public sbyte?          TinyintDataType     { get; set; } // tinyint
-		[Column("mediumintDataType"),   Nullable            ] public int?            MediumintDataType   { get; set; } // mediumint
-		[Column("intDataType"),         Nullable            ] public int?            IntDataType         { get; set; } // int
-		[Column("numericDataType"),     Nullable            ] public decimal?        NumericDataType     { get; set; } // decimal(10,0)
-		[Column("decimalDataType"),     Nullable            ] public decimal?        DecimalDataType     { get; set; } // decimal(10,0)
-		[Column("doubleDataType"),      Nullable            ] public double?         DoubleDataType      { get; set; } // double
-		[Column("floatDataType"),       Nullable            ] public float?          FloatDataType       { get; set; } // float
-		[Column("dateDataType"),        Nullable            ] public DateTime?       DateDataType        { get; set; } // date
-		[Column("datetimeDataType"),    Nullable            ] public DateTime?       DatetimeDataType    { get; set; } // datetime
-		[Column("timestampDataType"),   Nullable            ] public DateTimeOffset? TimestampDataType   { get; set; } // timestamp
-		[Column("timeDataType"),        Nullable            ] public TimeSpan?       TimeDataType        { get; set; } // time
-		[Column("yearDataType"),        Nullable            ] public int?            YearDataType        { get; set; } // year
-		[Column("year2DataType"),       Nullable            ] public int?            Year2DataType       { get; set; } // year
-		[Column("year4DataType"),       Nullable            ] public int?            Year4DataType       { get; set; } // year
-		[Column("charDataType"),        Nullable            ] public char?           CharDataType        { get; set; } // char(1)
-		[Column("char20DataType"),      Nullable            ] public string?         Char20DataType      { get; set; } // char(20)
-		[Column("varcharDataType"),     Nullable            ] public string?         VarcharDataType     { get; set; } // varchar(20)
-		[Column("textDataType"),        Nullable            ] public string?         TextDataType        { get; set; } // text
-		[Column("binaryDataType"),      Nullable            ] public byte[]?         BinaryDataType      { get; set; } // binary(3)
-		[Column("varbinaryDataType"),   Nullable            ] public byte[]?         VarbinaryDataType   { get; set; } // varbinary(5)
-		[Column("blobDataType"),        Nullable            ] public byte[]?         BlobDataType        { get; set; } // blob
-		[Column("bitDataType"),         Nullable            ] public byte?           BitDataType         { get; set; } // bit(3)
-		[Column("enumDataType"),        Nullable            ] public string?         EnumDataType        { get; set; } // enum('Green','Red','Blue')
-		[Column("setDataType"),         Nullable            ] public string?         SetDataType         { get; set; } // set('one','two')
-		[Column("intUnsignedDataType"), Nullable            ] public uint?           IntUnsignedDataType { get; set; } // int unsigned
-		[Column("boolDataType"),        Nullable            ] public bool?           BoolDataType        { get; set; } // tinyint(1)
+		[Column(),                      PrimaryKey, Identity] public int       ID                  { get; set; } // int
+		[Column("bigintDataType"),      Nullable            ] public long?     BigintDataType      { get; set; } // bigint
+		[Column("smallintDataType"),    Nullable            ] public short?    SmallintDataType    { get; set; } // smallint
+		[Column("tinyintDataType"),     Nullable            ] public sbyte?    TinyintDataType     { get; set; } // tinyint
+		[Column("mediumintDataType"),   Nullable            ] public int?      MediumintDataType   { get; set; } // mediumint
+		[Column("intDataType"),         Nullable            ] public int?      IntDataType         { get; set; } // int
+		[Column("numericDataType"),     Nullable            ] public decimal?  NumericDataType     { get; set; } // decimal(10,0)
+		[Column("decimalDataType"),     Nullable            ] public decimal?  DecimalDataType     { get; set; } // decimal(10,0)
+		[Column("doubleDataType"),      Nullable            ] public double?   DoubleDataType      { get; set; } // double
+		[Column("floatDataType"),       Nullable            ] public float?    FloatDataType       { get; set; } // float
+		[Column("dateDataType"),        Nullable            ] public DateTime? DateDataType        { get; set; } // date
+		[Column("datetimeDataType"),    Nullable            ] public DateTime? DatetimeDataType    { get; set; } // datetime
+		[Column("timestampDataType"),   Nullable            ] public DateTime? TimestampDataType   { get; set; } // timestamp
+		[Column("timeDataType"),        Nullable            ] public TimeSpan? TimeDataType        { get; set; } // time
+		[Column("yearDataType"),        Nullable            ] public int?      YearDataType        { get; set; } // year
+		[Column("year2DataType"),       Nullable            ] public int?      Year2DataType       { get; set; } // year
+		[Column("year4DataType"),       Nullable            ] public int?      Year4DataType       { get; set; } // year
+		[Column("charDataType"),        Nullable            ] public char?     CharDataType        { get; set; } // char(1)
+		[Column("char20DataType"),      Nullable            ] public string?   Char20DataType      { get; set; } // char(20)
+		[Column("varcharDataType"),     Nullable            ] public string?   VarcharDataType     { get; set; } // varchar(20)
+		[Column("textDataType"),        Nullable            ] public string?   TextDataType        { get; set; } // text
+		[Column("binaryDataType"),      Nullable            ] public byte[]?   BinaryDataType      { get; set; } // binary(3)
+		[Column("varbinaryDataType"),   Nullable            ] public byte[]?   VarbinaryDataType   { get; set; } // varbinary(5)
+		[Column("blobDataType"),        Nullable            ] public byte[]?   BlobDataType        { get; set; } // blob
+		[Column("bitDataType"),         Nullable            ] public byte?     BitDataType         { get; set; } // bit(3)
+		[Column("enumDataType"),        Nullable            ] public string?   EnumDataType        { get; set; } // enum('Green','Red','Blue')
+		[Column("setDataType"),         Nullable            ] public string?   SetDataType         { get; set; } // set('one','two')
+		[Column("intUnsignedDataType"), Nullable            ] public uint?     IntUnsignedDataType { get; set; } // int unsigned
+		[Column("boolDataType"),        Nullable            ] public bool?     BoolDataType        { get; set; } // tinyint(1)
 	}
 
 	[Table("alltypesnoyear")]
 	public partial class Alltypesnoyear
 	{
-		[Column(),                      PrimaryKey, Identity] public int             ID                  { get; set; } // int
-		[Column("bigintDataType"),      Nullable            ] public long?           BigintDataType      { get; set; } // bigint
-		[Column("smallintDataType"),    Nullable            ] public short?          SmallintDataType    { get; set; } // smallint
-		[Column("tinyintDataType"),     Nullable            ] public sbyte?          TinyintDataType     { get; set; } // tinyint
-		[Column("mediumintDataType"),   Nullable            ] public int?            MediumintDataType   { get; set; } // mediumint
-		[Column("intDataType"),         Nullable            ] public int?            IntDataType         { get; set; } // int
-		[Column("numericDataType"),     Nullable            ] public decimal?        NumericDataType     { get; set; } // decimal(10,0)
-		[Column("decimalDataType"),     Nullable            ] public decimal?        DecimalDataType     { get; set; } // decimal(10,0)
-		[Column("doubleDataType"),      Nullable            ] public double?         DoubleDataType      { get; set; } // double
-		[Column("floatDataType"),       Nullable            ] public float?          FloatDataType       { get; set; } // float
-		[Column("dateDataType"),        Nullable            ] public DateTime?       DateDataType        { get; set; } // date
-		[Column("datetimeDataType"),    Nullable            ] public DateTime?       DatetimeDataType    { get; set; } // datetime
-		[Column("timestampDataType"),   Nullable            ] public DateTimeOffset? TimestampDataType   { get; set; } // timestamp
-		[Column("timeDataType"),        Nullable            ] public TimeSpan?       TimeDataType        { get; set; } // time
-		[Column("charDataType"),        Nullable            ] public char?           CharDataType        { get; set; } // char(1)
-		[Column("char20DataType"),      Nullable            ] public string?         Char20DataType      { get; set; } // char(20)
-		[Column("varcharDataType"),     Nullable            ] public string?         VarcharDataType     { get; set; } // varchar(20)
-		[Column("textDataType"),        Nullable            ] public string?         TextDataType        { get; set; } // text
-		[Column("binaryDataType"),      Nullable            ] public byte[]?         BinaryDataType      { get; set; } // binary(3)
-		[Column("varbinaryDataType"),   Nullable            ] public byte[]?         VarbinaryDataType   { get; set; } // varbinary(5)
-		[Column("blobDataType"),        Nullable            ] public byte[]?         BlobDataType        { get; set; } // blob
-		[Column("bitDataType"),         Nullable            ] public byte?           BitDataType         { get; set; } // bit(3)
-		[Column("enumDataType"),        Nullable            ] public string?         EnumDataType        { get; set; } // enum('Green','Red','Blue')
-		[Column("setDataType"),         Nullable            ] public string?         SetDataType         { get; set; } // set('one','two')
-		[Column("intUnsignedDataType"), Nullable            ] public uint?           IntUnsignedDataType { get; set; } // int unsigned
-		[Column("boolDataType"),        Nullable            ] public bool?           BoolDataType        { get; set; } // tinyint(1)
+		[Column(),                      PrimaryKey, Identity] public int       ID                  { get; set; } // int
+		[Column("bigintDataType"),      Nullable            ] public long?     BigintDataType      { get; set; } // bigint
+		[Column("smallintDataType"),    Nullable            ] public short?    SmallintDataType    { get; set; } // smallint
+		[Column("tinyintDataType"),     Nullable            ] public sbyte?    TinyintDataType     { get; set; } // tinyint
+		[Column("mediumintDataType"),   Nullable            ] public int?      MediumintDataType   { get; set; } // mediumint
+		[Column("intDataType"),         Nullable            ] public int?      IntDataType         { get; set; } // int
+		[Column("numericDataType"),     Nullable            ] public decimal?  NumericDataType     { get; set; } // decimal(10,0)
+		[Column("decimalDataType"),     Nullable            ] public decimal?  DecimalDataType     { get; set; } // decimal(10,0)
+		[Column("doubleDataType"),      Nullable            ] public double?   DoubleDataType      { get; set; } // double
+		[Column("floatDataType"),       Nullable            ] public float?    FloatDataType       { get; set; } // float
+		[Column("dateDataType"),        Nullable            ] public DateTime? DateDataType        { get; set; } // date
+		[Column("datetimeDataType"),    Nullable            ] public DateTime? DatetimeDataType    { get; set; } // datetime
+		[Column("timestampDataType"),   Nullable            ] public DateTime? TimestampDataType   { get; set; } // timestamp
+		[Column("timeDataType"),        Nullable            ] public TimeSpan? TimeDataType        { get; set; } // time
+		[Column("charDataType"),        Nullable            ] public char?     CharDataType        { get; set; } // char(1)
+		[Column("char20DataType"),      Nullable            ] public string?   Char20DataType      { get; set; } // char(20)
+		[Column("varcharDataType"),     Nullable            ] public string?   VarcharDataType     { get; set; } // varchar(20)
+		[Column("textDataType"),        Nullable            ] public string?   TextDataType        { get; set; } // text
+		[Column("binaryDataType"),      Nullable            ] public byte[]?   BinaryDataType      { get; set; } // binary(3)
+		[Column("varbinaryDataType"),   Nullable            ] public byte[]?   VarbinaryDataType   { get; set; } // varbinary(5)
+		[Column("blobDataType"),        Nullable            ] public byte[]?   BlobDataType        { get; set; } // blob
+		[Column("bitDataType"),         Nullable            ] public byte?     BitDataType         { get; set; } // bit(3)
+		[Column("enumDataType"),        Nullable            ] public string?   EnumDataType        { get; set; } // enum('Green','Red','Blue')
+		[Column("setDataType"),         Nullable            ] public string?   SetDataType         { get; set; } // set('one','two')
+		[Column("intUnsignedDataType"), Nullable            ] public uint?     IntUnsignedDataType { get; set; } // int unsigned
+		[Column("boolDataType"),        Nullable            ] public bool?     BoolDataType        { get; set; } // tinyint(1)
 	}
 
 	[Table("child")]

@@ -1412,7 +1412,7 @@ namespace Tests.DataProvider
 					{
 						assertColumn("DateTime3", "DateTime", DataType.DateTime);
 						assertColumn("Time2", "TimeSpan", DataType.Time);
-						assertColumn("TimeStamp5", "DateTimeOffset", DataType.DateTime2);
+						assertColumn("TimeStamp5", "DateTime", DataType.DateTime);
 
 						if (context != TestProvName.MariaDB)
 							assertColumn("Json", "string", DataType.Json);
@@ -1420,7 +1420,7 @@ namespace Tests.DataProvider
 							assertColumn("Json", "string", DataType.Text);
 					}
 
-					assertColumn("TimeStamp", "DateTimeOffset", DataType.DateTime2);
+					assertColumn("TimeStamp", "DateTime", DataType.DateTime);
 
 					assertColumn("Time", "TimeSpan", DataType.Time);
 
