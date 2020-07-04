@@ -8,6 +8,7 @@ namespace LinqToDB.DataProvider
 {
 	using Data;
 	using SqlProvider;
+	using System.Data;
 	using System.Threading;
 	using System.Threading.Tasks;
 
@@ -193,6 +194,13 @@ namespace LinqToDB.DataProvider
 				schemaName   == null ? null : escaped ? sqlBuilder.ConvertInline(schemaName,   ConvertType.NameToSchema)    : schemaName,
 											  escaped ? sqlBuilder.ConvertInline(tableName,    ConvertType.NameToQueryTable): tableName)
 			.ToString();
+		}
+
+		protected struct ProviderConnections
+		{
+			public DataConnection DataConnection;
+			public IDbConnection ProviderConnection;
+			public IDbTransaction? ProviderTransaction;
 		}
 
 		#region ProviderSpecific Support

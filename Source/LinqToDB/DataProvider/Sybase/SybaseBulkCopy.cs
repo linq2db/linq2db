@@ -1,12 +1,13 @@
 ﻿using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace LinqToDB.DataProvider.Sybase
 {
-	using System.Text;
 	using Data;
-	using LinqToDB.SqlProvider;
+	using System.Data;
+	using System.Threading;
+	using System.Threading.Tasks;
 
 	class SybaseBulkCopy : BasicBulkCopy
 	{
@@ -18,9 +19,66 @@ namespace LinqToDB.DataProvider.Sybase
 		}
 
 		protected override BulkCopyRowsCopied ProviderSpecificCopy<T>(
-			ITable<T>       table,
+			ITable<T> table,
 			BulkCopyOptions options,
-			IEnumerable<T>  source)
+			IEnumerable<T> source)
+		{
+			var connections = GetProviderConnection(table);
+			if (connections.HasValue)
+			{
+				return ProviderSpecificCopyInternal(
+					connections.Value,
+					table,
+					options,
+					(columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source));
+			}
+
+			return MultipleRowsCopy(table, options, source);
+		}
+
+		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
+			ITable<T> table,
+			BulkCopyOptions options,
+			IEnumerable<T> source,
+			CancellationToken cancellationToken)
+		{
+			var connections = GetProviderConnection(table);
+			if (connections.HasValue)
+			{
+				// call the synchronous provider-specific implementation
+				return Task.FromResult(ProviderSpecificCopyInternal(
+					connections.Value,
+					table,
+					options,
+					(columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source)));
+			}
+
+			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
+		}
+
+#if !NET45 && !NET46
+		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
+			ITable<T> table,
+			BulkCopyOptions options,
+			IAsyncEnumerable<T> source,
+			CancellationToken cancellationToken)
+		{
+			var connections = GetProviderConnection(table);
+			if (connections.HasValue)
+			{
+				// call the synchronous provider-specific implementation
+				return Task.FromResult(ProviderSpecificCopyInternal(
+					connections.Value,
+					table,
+					options,
+					(columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source)));
+			}
+
+			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
+		}
+#endif
+
+		private ProviderConnections? GetProviderConnection<T>(ITable<T> table)
 		{
 			if (table.DataContext is DataConnection dataConnection && _provider.Adapter.BulkCopy != null)
 			{
@@ -35,10 +93,30 @@ namespace LinqToDB.DataProvider.Sybase
 
 				if (connection != null && (dataConnection.Transaction == null || transaction != null))
 				{
+					return new ProviderConnections
+					{
+						DataConnection = dataConnection,
+						ProviderConnection = connection,
+						ProviderTransaction = transaction
+					};
+				}
+			}
+			return default;
+		}
+
+		private BulkCopyRowsCopied ProviderSpecificCopyInternal<T>(
+			ProviderConnections                                     providerConnections,
+			ITable<T>                                               table,
+			BulkCopyOptions                                         options,
+			Func<List<Mapping.ColumnDescriptor>, BulkCopyReader<T>> createDataReader)
+		{
+			var dataConnection = providerConnections.DataConnection;
+			var connection = providerConnections.ProviderConnection;
+			var transaction = providerConnections.ProviderTransaction;
 					var ed      = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
 					var columns = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
 					var sb      = _provider.CreateSqlBuilder(dataConnection.MappingSchema);
-					var rd      = new BulkCopyReader<T>(dataConnection, columns, source);
+					var rd      = createDataReader(columns);
 					var sqlopt  = SybaseProviderAdapter.AseBulkCopyOptions.Default;
 					var rc      = new BulkCopyRowsCopied();
 
@@ -49,7 +127,7 @@ namespace LinqToDB.DataProvider.Sybase
 					if (options.FireTriggers           == true) sqlopt |= SybaseProviderAdapter.AseBulkCopyOptions.FireTriggers;
 					if (options.UseInternalTransaction == true) sqlopt |= SybaseProviderAdapter.AseBulkCopyOptions.UseInternalTransaction;
 
-					using (var bc = _provider.Adapter.BulkCopy.Create(connection, sqlopt, transaction))
+					using (var bc = _provider.Adapter.BulkCopy!.Create(connection, sqlopt, transaction))
 					{
 						if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
 						{
@@ -92,10 +170,6 @@ namespace LinqToDB.DataProvider.Sybase
 					}
 
 					return rc;
-				}
-			}
-
-			return MultipleRowsCopy(table, options, source);
 		}
 
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
@@ -103,5 +177,19 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 			return MultipleRowsCopy2(table, options, source, "");
 		}
+
+		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
+			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+		{
+			return MultipleRowsCopy2Async(table, options, source, "", cancellationToken);
+		}
+
+#if !NET45 && !NET46
+		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
+			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+		{
+			return MultipleRowsCopy2Async(table, options, source, "", cancellationToken);
+		}
+#endif
 	}
 }
