@@ -2241,13 +2241,13 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			using (new GuardGrouping(true))
 			{
-				db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
+				Assert.Throws<LinqToDBException>(() => db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList()));
 			}
 
 			using (var db = GetDataContext(context))
 			using (new GuardGrouping(false))
 			{
-				Assert.Throws<LinqToDBException>(() => db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList()));
+				db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
 
 			using (var db = GetDataContext(context))
