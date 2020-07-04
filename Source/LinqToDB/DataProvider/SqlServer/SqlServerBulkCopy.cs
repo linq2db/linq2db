@@ -9,6 +9,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	using LinqToDB.Linq;
 	using SqlProvider;
 	using System.Data;
+	using System.Threading;
 
 	class SqlServerBulkCopy : BasicBulkCopy
 	{
@@ -155,7 +156,7 @@ namespace LinqToDB.DataProvider.SqlServer
 							() => "INSERT BULK " + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + Environment.NewLine,
 							async () => { 
 								if (runAsync)
-									await bc.WriteToServerAsync(rd).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+									await bc.WriteToServerAsync(rd, default).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 								else
 									bc.WriteToServer(rd); 
 								return rd.Count; 

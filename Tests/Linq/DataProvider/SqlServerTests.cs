@@ -783,6 +783,33 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Test]
+		public async Task BulkCopyLinqTypesProviderSpecificAsync([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				await db.BulkCopyAsync(
+					new BulkCopyOptions
+					{
+						BulkCopyType = BulkCopyType.ProviderSpecific,
+						RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
+					},
+					Enumerable.Range(0, 10).Select(n =>
+						new DataTypes
+						{
+							ID = 4000 + n,
+							MoneyValue = 1000m + n,
+							DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
+							BoolValue = true,
+							GuidValue = Guid.NewGuid(),
+							SmallIntValue = (short)n
+						}
+					));
+
+				db.GetTable<DataTypes>().Delete(p => p.ID >= 4000);
+			}
+		}
+
 		[Table]
 		internal class AllTypes
 		{
