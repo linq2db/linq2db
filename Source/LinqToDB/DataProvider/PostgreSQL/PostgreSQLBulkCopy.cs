@@ -2,7 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Threading.Tasks;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 using LinqToDB.SqlProvider;
@@ -29,7 +29,39 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		protected override BulkCopyRowsCopied ProviderSpecificCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			if (table.DataContext is DataConnection dataConnection)
+				return ProviderSpecificCopyImpl(dataConnection, table, options, source);
+
+			return MultipleRowsCopy(table, options, source);
+		}
+
+		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+		{
+			if (table.DataContext is DataConnection dataConnection)
+				// call the synchronous provider-specific implementation
+				return Task.FromResult(ProviderSpecificCopyImpl(dataConnection, table, options, source));
+
+			return MultipleRowsCopyAsync(table, options, source);
+		}
+
+#if !NET45 && !NET46
+		protected override async Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source)
+		{
+			if (table.DataContext is DataConnection dataConnection)
 			{
+				var enumerator = source.GetAsyncEnumerator();
+				await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+				{
+					// call the synchronous provider-specific implementation
+					return ProviderSpecificCopyImpl(dataConnection, table, options, AsyncToSync(enumerator));
+				}
+			}
+
+			return await MultipleRowsCopyAsync(table, options, source).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+		}
+#endif
+
+		private BulkCopyRowsCopied ProviderSpecificCopyImpl<T>(DataConnection dataConnection, ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+		{
 				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
 
 				if (connection == null)
@@ -114,9 +146,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				}
 
 				return rowsCopied;
-			}
-
-			return MultipleRowsCopy(table, options, source);
 		}
 	}
 }
