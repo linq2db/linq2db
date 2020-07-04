@@ -8,6 +8,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using Data;
 	using Mapping;
 	using SqlProvider;
+	using System.Threading.Tasks;
 
 	public class PostgreSQLDataProvider : DynamicDataProviderBase<NpgsqlProviderAdapter>
 	{
@@ -270,6 +271,28 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				options,
 				source);
 		}
+
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
+			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+		{
+			return new PostgreSQLBulkCopy(this).BulkCopyAsync(
+				options.BulkCopyType == BulkCopyType.Default ? PostgreSQLTools.DefaultBulkCopyType : options.BulkCopyType,
+				table,
+				options,
+				source);
+		}
+
+#if !NET45 && !NET46
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
+			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source)
+		{
+			return new PostgreSQLBulkCopy(this).BulkCopyAsync(
+				options.BulkCopyType == BulkCopyType.Default ? PostgreSQLTools.DefaultBulkCopyType : options.BulkCopyType,
+				table,
+				options,
+				source);
+		}
+#endif
 
 		#endregion
 

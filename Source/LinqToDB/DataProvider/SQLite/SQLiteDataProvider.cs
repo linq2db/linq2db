@@ -12,6 +12,7 @@ namespace LinqToDB.DataProvider.SQLite
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
+	using System.Threading.Tasks;
 
 	public class SQLiteDataProvider : DynamicDataProviderBase<SQLiteProviderAdapter>
 	{
@@ -222,6 +223,28 @@ namespace LinqToDB.DataProvider.SQLite
 				options,
 				source);
 		}
+
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
+			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+		{
+			return new SQLiteBulkCopy().BulkCopyAsync(
+				options.BulkCopyType == BulkCopyType.Default ? SQLiteTools.DefaultBulkCopyType : options.BulkCopyType,
+				table,
+				options,
+				source);
+		}
+
+#if !NET45 && !NET46
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
+			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source)
+		{
+			return new SQLiteBulkCopy().BulkCopyAsync(
+				options.BulkCopyType == BulkCopyType.Default ? SQLiteTools.DefaultBulkCopyType : options.BulkCopyType,
+				table,
+				options,
+				source);
+		}
+#endif
 
 		#endregion
 	}

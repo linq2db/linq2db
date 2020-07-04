@@ -10,6 +10,7 @@ namespace LinqToDB.DataProvider.Oracle
 	using Extensions;
 	using Mapping;
 	using SqlProvider;
+	using System.Threading.Tasks;
 
 	public class OracleDataProvider : DynamicDataProviderBase<OracleProviderAdapter>
 	{
@@ -307,6 +308,32 @@ namespace LinqToDB.DataProvider.Oracle
 				options,
 				source);
 		}
+
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+		{
+			if (_bulkCopy == null)
+				_bulkCopy = new OracleBulkCopy(this);
+
+			return _bulkCopy.BulkCopyAsync(
+				options.BulkCopyType == BulkCopyType.Default ? OracleTools.DefaultBulkCopyType : options.BulkCopyType,
+				table,
+				options,
+				source);
+		}
+
+#if !NET45 && !NET46
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source)
+		{
+			if (_bulkCopy == null)
+				_bulkCopy = new OracleBulkCopy(this);
+
+			return _bulkCopy.BulkCopyAsync(
+				options.BulkCopyType == BulkCopyType.Default ? OracleTools.DefaultBulkCopyType : options.BulkCopyType,
+				table,
+				options,
+				source);
+		}
+#endif
 
 		#endregion
 	}

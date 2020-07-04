@@ -8,6 +8,7 @@ namespace LinqToDB.DataProvider.Firebird
 	using Data;
 	using Mapping;
 	using SqlProvider;
+	using System.Threading.Tasks;
 
 	public class FirebirdDataProvider : DynamicDataProviderBase<FirebirdProviderAdapter>
 	{
@@ -108,6 +109,28 @@ namespace LinqToDB.DataProvider.Firebird
 				options,
 				source);
 		}
+
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
+			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+		{
+			return new FirebirdBulkCopy().BulkCopyAsync(
+				options.BulkCopyType == BulkCopyType.Default ? FirebirdTools.DefaultBulkCopyType : options.BulkCopyType,
+				table,
+				options,
+				source);
+		}
+
+#if !NET45 && !NET46
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
+			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source)
+		{
+			return new FirebirdBulkCopy().BulkCopyAsync(
+				options.BulkCopyType == BulkCopyType.Default ? FirebirdTools.DefaultBulkCopyType : options.BulkCopyType,
+				table,
+				options,
+				source);
+		}
+#endif
 
 		#endregion
 	}
