@@ -26,15 +26,13 @@ namespace LinqToDB.DataProvider.SqlServer
 			IEnumerable<T> source)
 		{
 			var connections = GetProviderConnection(table);
-			if (connections != null)
+			if (connections.HasValue)
 			{
 				return ProviderSpecificCopyInternal(
-					connections.Item1,
-					connections.Item2,
-					connections.Item3,
+					connections.Value,
 					table,
 					options,
-					(columns) => new BulkCopyReader<T>(connections.Item1, columns, source),
+					(columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source),
 					false,
 					default).Result;
 			}
@@ -49,15 +47,13 @@ namespace LinqToDB.DataProvider.SqlServer
 			CancellationToken cancellationToken)
 		{
 			var connections = GetProviderConnection(table);
-			if (connections != null)
+			if (connections.HasValue)
 			{
 				return ProviderSpecificCopyInternal(
-					connections.Item1,
-					connections.Item2,
-					connections.Item3,
+					connections.Value,
 					table,
 					options,
-					(columns) => new BulkCopyReader<T>(connections.Item1, columns, source),
+					(columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source),
 					true,
 					cancellationToken);
 			}
@@ -73,15 +69,13 @@ namespace LinqToDB.DataProvider.SqlServer
 			CancellationToken cancellationToken)
 		{
 			var connections = GetProviderConnection(table);
-			if (connections != null)
+			if (connections.HasValue)
 			{
 				return ProviderSpecificCopyInternal(
-					connections.Item1,
-					connections.Item2,
-					connections.Item3,
+					connections.Value,
 					table,
 					options,
-					(columns) => new BulkCopyReader<T>(connections.Item1, columns, source),
+					(columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source),
 					true,
 					cancellationToken);
 			}
@@ -90,7 +84,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 #endif
 
-		private Tuple<DataConnection, IDbConnection, IDbTransaction?>? GetProviderConnection<T>(ITable<T> table)
+		private ProviderConnections? GetProviderConnection<T>(ITable<T> table)
 		{
 			if (table.DataContext is DataConnection dataConnection)
 			{
@@ -102,22 +96,28 @@ namespace LinqToDB.DataProvider.SqlServer
 
 				if (connection != null && (dataConnection.Transaction == null || transaction != null))
 				{
-					return new Tuple<DataConnection, IDbConnection, IDbTransaction?>(dataConnection, connection, transaction);
+					return new ProviderConnections
+					{
+						DataConnection = dataConnection,
+						ProviderConnection = connection,
+						ProviderTransaction = transaction
+					};
 				}
 			}
 			return null;
 		}
 
 		private async Task<BulkCopyRowsCopied> ProviderSpecificCopyInternal<T>(
-			DataConnection                                          dataConnection,
-			IDbConnection                                           connection,
-			IDbTransaction?                                         transaction,
+			ProviderConnections                                     providerConnections,
 			ITable<T>                                               table,
 			BulkCopyOptions	                                        options,
 			Func<List<Mapping.ColumnDescriptor>, BulkCopyReader<T>> createDataReader,
 			bool                                                    runAsync,
 			CancellationToken                                       cancellationToken)
 		{
+			var dataConnection = providerConnections.DataConnection;
+			var connection = providerConnections.ProviderConnection;
+			var transaction = providerConnections.ProviderTransaction;
 					var ed      = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
 					var columns = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
 					var sb      = _provider.CreateSqlBuilder(dataConnection.MappingSchema);
