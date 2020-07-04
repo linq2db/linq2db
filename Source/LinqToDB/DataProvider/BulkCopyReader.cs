@@ -14,28 +14,73 @@ namespace LinqToDB.DataProvider
 	using System.Threading;
 	using System.Threading.Tasks;
 
-	public class BulkCopyReader<T> : DbDataReader, IDataReader, IDataRecord
+	public class BulkCopyReader<T> : BulkCopyReader
+#if !NET45 && !NET46
+		, IAsyncDisposable
+#endif
 	{
+		readonly IEnumerator<T>?      _enumerator;
+#if !NET45 && !NET46
+		readonly IAsyncEnumerator<T>? _asyncEnumerator;
+#endif
+
 		public BulkCopyReader(DataConnection dataConnection, List<ColumnDescriptor> columns, IEnumerable<T> collection)
+			: base(dataConnection, columns)
 		{
-			_dataConnection      = dataConnection;
-			_columns             = columns;
-			_enumerator          = collection.GetEnumerator();
-			_columnTypes         = _columns.Select(c => c.GetDbDataType()).ToArray();
-			_ordinals            = _columns.Select((c, i) => new { c, i }).ToDictionary(_ => _.c.ColumnName, _ => _.i);
+			_enumerator = collection.GetEnumerator();
 		}
 
 #if !NET45 && !NET46
 		public BulkCopyReader(DataConnection dataConnection, List<ColumnDescriptor> columns, IAsyncEnumerable<T> collection)
+			: base(dataConnection, columns)
 		{
-			_dataConnection      = dataConnection;
-			_columns             = columns;
-			_asyncEnumerator     = collection.GetAsyncEnumerator();
-			_columnTypes         = _columns.Select(c => c.GetDbDataType()).ToArray();
-			_ordinals            = _columns.Select((c, i) => new { c, i }).ToDictionary(_ => _.c.ColumnName, _ => _.i);
+			_asyncEnumerator = collection.GetAsyncEnumerator();
 		}
+
+		protected override bool MoveNext()
+			=> _enumerator != null ? _enumerator.MoveNext() : _asyncEnumerator!.MoveNextAsync().Result;
+
+		protected override ValueTask<bool> MoveNextAsync()
+			=> _enumerator != null ? new ValueTask<bool>(_enumerator.MoveNext()) : _asyncEnumerator!.MoveNextAsync();
+
+		protected override object Current
+			=> (_enumerator != null ? _enumerator.Current : _asyncEnumerator!.Current)!;
+#else
+		protected override bool MoveNext() 
+			=> _enumerator!.MoveNext();
+
+		protected override object Current 
+			=> _enumerator!.Current!;
 #endif
 
+		#region Implementation of IDisposable
+
+#if !NET45 && !NET46
+		protected override void Dispose(bool disposing)
+		{
+			if (disposing)
+			{
+				_asyncEnumerator?.DisposeAsync().AsTask().Wait();
+			}
+		}
+
+#if NETSTANDARD2_1 || NETCOREAPP3_1
+		public override ValueTask DisposeAsync()
+#else
+		public ValueTask DisposeAsync()
+#endif
+		{
+			return _asyncEnumerator?.DisposeAsync() ?? new ValueTask(Task.CompletedTask);
+		}
+
+#endif
+
+		#endregion
+
+	}
+
+	public abstract class BulkCopyReader : DbDataReader, IDataReader, IDataRecord
+	{
 		public int Count;
 
 		readonly DataConnection                   _dataConnection;
@@ -43,13 +88,20 @@ namespace LinqToDB.DataProvider
 		readonly List<ColumnDescriptor>           _columns;
 		readonly Parameter                        _valueConverter = new Parameter();
 		readonly IReadOnlyDictionary<string, int> _ordinals;
-		readonly IEnumerator<T>?                  _enumerator;
-#if NET45 || NET46
-		T                                         _current => (_enumerator!.Current)!;
-#else
-		readonly IAsyncEnumerator<T>?             _asyncEnumerator;
-		T                                         _current => (_asyncEnumerator != null ? _asyncEnumerator.Current : _enumerator!.Current)!;
+
+		protected abstract bool MoveNext();
+#if !NET45 && !NET46
+		protected abstract ValueTask<bool> MoveNextAsync();
 #endif
+		protected abstract object Current { get; }
+
+		public BulkCopyReader(DataConnection dataConnection, List<ColumnDescriptor> columns)
+		{
+			_dataConnection = dataConnection;
+			_columns = columns;
+			_columnTypes = _columns.Select(c => c.GetDbDataType()).ToArray();
+			_ordinals = _columns.Select((c, i) => new { c, i }).ToDictionary(_ => _.c.ColumnName, _ => _.i);
+		}
 
 		public class Parameter : IDbDataParameter
 		{
@@ -79,7 +131,7 @@ namespace LinqToDB.DataProvider
 
 		public override object? GetValue(int i)
 		{
-			var value = _columns[i].GetValue(_current);
+			var value = _columns[i].GetValue(Current);
 
 			_dataConnection.DataProvider.SetParameter(_dataConnection, _valueConverter, string.Empty, _columnTypes[i], value);
 
@@ -89,7 +141,7 @@ namespace LinqToDB.DataProvider
 		public override int GetValues(object?[] values)
 		{
 			var count = _columns.Count;
-			var obj   = _current;
+			var obj   = Current;
 
 			for (var it = 0; it < count; ++it)
 			{
@@ -202,13 +254,7 @@ namespace LinqToDB.DataProvider
 
 		public override bool Read()
 		{
-			bool b;
-#if !NET45 && !NET46
-			if (_asyncEnumerator != null)
-				b = _asyncEnumerator.MoveNextAsync().Result;
-			else
-#endif
-			b = _enumerator!.MoveNext();
+			var b = MoveNext();
 
 			if (b)
 				Count++;
@@ -216,48 +262,23 @@ namespace LinqToDB.DataProvider
 			return b;
 		}
 
+#if !NET45 && !NET46
 		public override async Task<bool> ReadAsync(CancellationToken cancellationToken)
 		{
-			bool b;
-#if !NET45 && !NET46
-			if (_asyncEnumerator != null)
-				b = await _asyncEnumerator.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-			else
-#endif
-				b = _enumerator!.MoveNext();
+			var b = await MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			if (b)
 				Count++;
 
 			return b;
 		}
+#endif
 
 		public override int Depth           => throw new NotImplementedException();
 
 		public override bool IsClosed       => false;
 
 		public override int RecordsAffected => throw new NotImplementedException();
-
-		#endregion
-
-		#region Implementation of IDisposable
-
-#if !NET45 && !NET46
-		protected override void Dispose(bool disposing)
-		{
-			if (disposing)
-			{
-				_asyncEnumerator?.DisposeAsync().AsTask().Wait();
-			}
-		}
-#endif
-
-#if NETSTANDARD2_1 || NETCOREAPP3_1
-		public override ValueTask DisposeAsync()
-		{
-			return _asyncEnumerator?.DisposeAsync() ?? new ValueTask(Task.CompletedTask);
-		}
-#endif
 
 		#endregion
 

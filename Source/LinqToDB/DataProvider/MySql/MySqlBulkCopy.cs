@@ -66,7 +66,7 @@ namespace LinqToDB.DataProvider.MySql
 					// this is needed, because MySql fails on big batches, so users should be able to limit batch size
 					foreach (var batch in EnumerableHelper.Batch(source, options.MaxBatchSize ?? int.MaxValue))
 					{
-						var rd = new BulkCopyReader(dataConnection, columns, batch);
+						var rd = new BulkCopyReader<T>(dataConnection, columns, batch);
 
 						TraceAction(
 							dataConnection,
