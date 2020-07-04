@@ -1377,41 +1377,78 @@ namespace Tests.DataProvider
 				{
 					var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, new GetSchemaOptions() { GetProcedures = false });
 
-					var tableSchema = schema.Tables.Where(t => t.TableName == "testschematypestable").SingleOrDefault();
+					var tableSchema = schema.Tables.Where(t => t.TableName!.ToLower() == "testschematypestable").SingleOrDefault();
 					Assert.IsNotNull(tableSchema);
 
-					assertColumn("VarChar255", "string", DataType.VarChar);
-					assertColumn("VarChar1", "char?", DataType.VarChar);
-					assertColumn("VarChar112", "string", DataType.VarChar);
-					assertColumn("Char", "char", DataType.Char);
-					assertColumn("Char1", "char?", DataType.Char);
-					assertColumn("Char255", "string", DataType.Char);
-					assertColumn("Char112", "string", DataType.Char);
+					assertColumn("VarChar255"        , "string"  , DataType.VarChar);
+					assertColumn("VarChar1"          , "char?"   , DataType.VarChar);
+					assertColumn("VarChar112"        , "string"  , DataType.VarChar);
+					assertColumn("Char"              , "char"    , DataType.Char);
+					assertColumn("Char1"             , "char?"   , DataType.Char);
+					assertColumn("Char255"           , "string"  , DataType.Char);
+					assertColumn("Char112"           , "string"  , DataType.Char);
+					assertColumn("VarBinary1"        , "byte[]"  , DataType.VarBinary);
+					assertColumn("VarBinary255"      , "byte[]"  , DataType.VarBinary);
+					assertColumn("VarBinary3"        , "byte[]"  , DataType.VarBinary);
+					assertColumn("Binary1"           , "byte[]"  , DataType.Binary);
+					assertColumn("Binary255"         , "byte[]"  , DataType.Binary);
+					assertColumn("Binary3"           , "byte[]"  , DataType.Binary);
+					assertColumn("TinyBlob"          , "byte[]"  , DataType.Blob);
+					assertColumn("Blob"              , "byte[]"  , DataType.Blob);
+					assertColumn("MediumBlob"        , "byte[]"  , DataType.Blob);
+					assertColumn("LongBlob"          , "byte[]"  , DataType.Blob);
+					assertColumn("BlobDefault"       , "byte[]"  , DataType.Blob);
+					assertColumn("TinyText"          , "string"  , DataType.Text);
+					assertColumn("Text"              , "string"  , DataType.Text);
+					assertColumn("MediumText"        , "string"  , DataType.Text);
+					assertColumn("LongText"          , "string"  , DataType.Text);
+					assertColumn("TextDefault"       , "string"  , DataType.Text);
+					assertColumn("Date"              , "DateTime", DataType.Date);
+					assertColumn("DateTime"          , "DateTime", DataType.DateTime);
+					assertColumn("TimeStamp"         , "DateTime", DataType.DateTime);
+					assertColumn("Time"              , "TimeSpan", DataType.Time);
+					assertColumn("TinyInt"           , "sbyte"   , DataType.SByte);
+					assertColumn("UnsignedTinyInt"   , "byte"    , DataType.Byte);
+					assertColumn("SmallInt"          , "short"   , DataType.Int16);
+					assertColumn("UnsignedSmallInt"  , "ushort"  , DataType.UInt16);
+					assertColumn("Int"               , "int"     , DataType.Int32);
+					assertColumn("UnsignedInt"       , "uint"    , DataType.UInt32);
+					assertColumn("BigInt"            , "long"    , DataType.Int64);
+					assertColumn("UnsignedBigInt"    , "ulong"   , DataType.UInt64);
+					assertColumn("Decimal"           , "decimal" , DataType.Decimal);
+					assertColumn("Decimal15_0"       , "decimal" , DataType.Decimal);
+					assertColumn("Decimal10_5"       , "decimal" , DataType.Decimal);
+					assertColumn("Decimal20_2"       , "decimal" , DataType.Decimal);
+					assertColumn("Float"             , "float"   , DataType.Single);
+					assertColumn("Float10"           , "float"   , DataType.Single);
+					assertColumn("Double"            , "double"  , DataType.Double);
+					assertColumn("Float30"           , "double"  , DataType.Double);
+					assertColumn("Bool"              , "bool"    , DataType.Boolean);
+					assertColumn("Bit1"              , "bool"    , DataType.BitArray);
+					assertColumn("Bit8"              , "byte"    , DataType.BitArray);
+					assertColumn("Bit16"             , "ushort"  , DataType.BitArray);
+					assertColumn("Bit32"             , "uint"    , DataType.BitArray);
+					assertColumn("Bit10"             , "ushort"  , DataType.BitArray);
+					assertColumn("Bit64"             , "ulong"   , DataType.BitArray);
+					assertColumn("Guid"              , "string"  , DataType.Char);
+					assertColumn("Enum"              , "string"  , DataType.VarChar);
+					assertColumn("Set"               , "string"  , DataType.VarChar);
+					assertColumn("Year"              , "int"     , DataType.Int32);
+					assertColumn("MediumInt"         , "int"     , DataType.Int32);
+					assertColumn("UnsignedMediumInt" , "uint"    , DataType.UInt32);
+					assertColumn("Geometry"          , "byte[]"  , DataType.Undefined);
+					assertColumn("Point"             , "byte[]"  , DataType.Undefined);
+					assertColumn("LineString"        , "byte[]"  , DataType.Undefined);
+					assertColumn("Polygon"           , "byte[]"  , DataType.Undefined);
+					assertColumn("MultiPoint"        , "byte[]"  , DataType.Undefined);
+					assertColumn("MultiLineString"   , "byte[]"  , DataType.Undefined);
+					assertColumn("MultiPolygon"      , "byte[]"  , DataType.Undefined);
+					assertColumn("GeometryCollection", "byte[]"  , DataType.Undefined);
 
-					assertColumn("VarBinary1", "byte[]", DataType.VarBinary);
-					assertColumn("VarBinary255", "byte[]", DataType.VarBinary);
-					assertColumn("VarBinary3", "byte[]", DataType.VarBinary);
-					assertColumn("Binary1", "byte[]", DataType.Binary);
-					assertColumn("Binary255", "byte[]", DataType.Binary);
-					assertColumn("Binary3", "byte[]", DataType.Binary);
-					assertColumn("TinyBlob", "byte[]", DataType.Blob);
-					assertColumn("Blob", "byte[]", DataType.Blob);
-					assertColumn("MediumBlob", "byte[]", DataType.Blob);
-					assertColumn("LongBlob", "byte[]", DataType.Blob);
-					assertColumn("BlobDefault", "byte[]", DataType.Blob);
-
-					assertColumn("TinyText", "string", DataType.Text);
-					assertColumn("Text", "string", DataType.Text);
-					assertColumn("MediumText", "string", DataType.Text);
-					assertColumn("LongText", "string", DataType.Text);
-					assertColumn("TextDefault", "string", DataType.Text);
-
-					assertColumn("Date", "DateTime", DataType.Date);
-					assertColumn("DateTime", "DateTime", DataType.DateTime);
 					if (context != TestProvName.MySql55)
 					{
-						assertColumn("DateTime3", "DateTime", DataType.DateTime);
-						assertColumn("Time2", "TimeSpan", DataType.Time);
+						assertColumn("DateTime3" , "DateTime", DataType.DateTime);
+						assertColumn("Time2"     , "TimeSpan", DataType.Time);
 						assertColumn("TimeStamp5", "DateTime", DataType.DateTime);
 
 						if (context != TestProvName.MariaDB)
@@ -1419,54 +1456,6 @@ namespace Tests.DataProvider
 						else
 							assertColumn("Json", "string", DataType.Text);
 					}
-
-					assertColumn("TimeStamp", "DateTime", DataType.DateTime);
-
-					assertColumn("Time", "TimeSpan", DataType.Time);
-
-					assertColumn("TinyInt", "sbyte", DataType.SByte);
-					assertColumn("UnsignedTinyInt", "byte", DataType.Byte);
-					assertColumn("SmallInt", "short", DataType.Int16);
-					assertColumn("UnsignedSmallInt", "ushort", DataType.UInt16);
-					assertColumn("Int", "int", DataType.Int32);
-					assertColumn("UnsignedInt", "uint", DataType.UInt32);
-					assertColumn("BigInt", "long", DataType.Int64);
-					assertColumn("UnsignedBigInt", "ulong", DataType.UInt64);
-
-					assertColumn("Decimal", "decimal", DataType.Decimal);
-					assertColumn("Decimal15_0", "decimal", DataType.Decimal);
-					assertColumn("Decimal10_5", "decimal", DataType.Decimal);
-					assertColumn("Decimal20_2", "decimal", DataType.Decimal);
-
-					assertColumn("Float", "float", DataType.Single);
-					assertColumn("Float10", "float", DataType.Single);
-					assertColumn("Double", "double", DataType.Double);
-					assertColumn("Float30", "double", DataType.Double);
-
-					assertColumn("Bool", "bool", DataType.Boolean);
-					assertColumn("Bit1", "bool", DataType.BitArray);
-					assertColumn("Bit8", "byte", DataType.BitArray);
-					assertColumn("Bit16", "ushort", DataType.BitArray);
-					assertColumn("Bit32", "uint", DataType.BitArray);
-					assertColumn("Bit10", "ushort", DataType.BitArray);
-					assertColumn("Bit64", "ulong", DataType.BitArray);
-					assertColumn("Guid", "string", DataType.Char);
-
-					assertColumn("Enum", "string", DataType.VarChar);
-					assertColumn("Set", "string", DataType.VarChar);
-					assertColumn("Year", "int", DataType.Int32);
-					assertColumn("MediumInt", "int", DataType.Int32);
-					assertColumn("UnsignedMediumInt", "uint", DataType.UInt32);
-
-					// for now we return object
-					assertColumn("Geometry", "byte[]", DataType.Undefined);
-					assertColumn("Point", "byte[]", DataType.Undefined);
-					assertColumn("LineString", "byte[]", DataType.Undefined);
-					assertColumn("Polygon", "byte[]", DataType.Undefined);
-					assertColumn("MultiPoint", "byte[]", DataType.Undefined);
-					assertColumn("MultiLineString", "byte[]", DataType.Undefined);
-					assertColumn("MultiPolygon", "byte[]", DataType.Undefined);
-					assertColumn("GeometryCollection", "byte[]", DataType.Undefined);
 
 					void assertColumn(string name, string type, DataType dataType)
 					{
