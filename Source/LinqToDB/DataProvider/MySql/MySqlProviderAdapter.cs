@@ -5,6 +5,8 @@ namespace LinqToDB.DataProvider.MySql
 {
 	using System.Collections.Generic;
 	using System.Linq.Expressions;
+	using System.Threading;
+	using System.Threading.Tasks;
 	using LinqToDB.Expressions;
 	using LinqToDB.Mapping;
 
@@ -428,6 +430,12 @@ namespace LinqToDB.DataProvider.MySql
 					PropertySetter((MySqlBulkCopy this_) => this_.BulkCopyTimeout),
 					// [7]: set DestinationTableName
 					PropertySetter((MySqlBulkCopy this_) => this_.DestinationTableName),
+					// [8]: WriteToServerAsync
+					(Expression<Func<MySqlBulkCopy, IDataReader, CancellationToken, Task>>     )((MySqlBulkCopy this_, IDataReader dataReader, CancellationToken cancellationToken) => this_.WriteToServerAsync (dataReader, cancellationToken)),
+#if !NET45 && !NET46
+					// [9]: WriteToServerAsync
+					(Expression<Func<MySqlBulkCopy, IDataReader, CancellationToken, ValueTask>>)((MySqlBulkCopy this_, IDataReader dataReader, CancellationToken cancellationToken) => this_.WriteToServerAsync2(dataReader, cancellationToken)),
+#endif
 				};
 
 				private static string[] Events { get; }
@@ -443,6 +451,12 @@ namespace LinqToDB.DataProvider.MySql
 				public MySqlBulkCopy(MySqlConnection connection, MySqlTransaction? transaction) => throw new NotImplementedException();
 
 				public void WriteToServer(IDataReader dataReader) => ((Action<MySqlBulkCopy, IDataReader>)CompiledWrappers[0])(this, dataReader);
+				public Task WriteToServerAsync      (IDataReader dataReader, CancellationToken cancellationToken) => ((Func<MySqlBulkCopy, IDataReader, CancellationToken,      Task>)CompiledWrappers[8])(this, dataReader, cancellationToken);
+				public bool CanWriteToServerAsync => CompiledWrappers[8] != null;
+#if !NET45 && !NET46
+				public ValueTask WriteToServerAsync2(IDataReader dataReader, CancellationToken cancellationToken) => ((Func<MySqlBulkCopy, IDataReader, CancellationToken, ValueTask>)CompiledWrappers[9])(this, dataReader, cancellationToken);
+				public bool CanWriteToServerAsync2 => CompiledWrappers[9] != null;
+#endif
 
 				public int NotifyAfter
 				{
