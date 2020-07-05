@@ -97,7 +97,7 @@ namespace LinqToDB.Common
 #if !NET45 && !NET46
 		/// <summary>
 		/// Split enumerable source into batches of specified size.
-		/// Limitation: each batch should be enumerated only once or undefined behvaior will occur.
+		/// Limitation: each batch should be enumerated only once or exception will be generated.
 		/// </summary>
 		/// <typeparam name="T">Type of element in source.</typeparam>
 		/// <param name="source">Source collection to split into batches.</param>
@@ -132,12 +132,13 @@ namespace LinqToDB.Common
 				=> new AsyncBatchEnumerator<T>(_source, _batchSize, cancellationToken);
 		}
 
-		private class AsyncBatchEnumerator<T> : IAsyncEnumerator<IAsyncEnumerable<T>>
+		private class AsyncBatchEnumerator<T> : IAsyncEnumerator<IAsyncEnumerable<T>>, IAsyncEnumerable<T>
 		{
 			readonly IAsyncEnumerator<T> _source;
 			readonly int                 _batchSize;
 			bool                         _finished;
-			IAsyncEnumerable<T>?         _current;
+			bool                         _isCurrent;
+			IAsyncEnumerator<T>?         _current;
 
 			public AsyncBatchEnumerator(IAsyncEnumerable<T> source, int batchSize, CancellationToken cancellationToken)
 			{
@@ -145,26 +146,33 @@ namespace LinqToDB.Common
 				_batchSize = batchSize;
 			}
 
-			public IAsyncEnumerable<T> Current => _current ?? throw new InvalidOperationException();
+			public IAsyncEnumerable<T> Current => _isCurrent ? this : throw new InvalidOperationException();
+
+			IAsyncEnumerator<T> IAsyncEnumerable<T>.GetAsyncEnumerator(CancellationToken cancellationToken) {
+				if (_current == null) throw new InvalidOperationException();
+				var enumerator = _current;
+				_current = null;
+				return enumerator;
+			}
 
 			public ValueTask DisposeAsync() => _source.DisposeAsync();
 
 			public async ValueTask<bool> MoveNextAsync()
 			{
 				if (_finished) return false;
-				var more = await _source.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-				_current = more ? GetNewEnumerable() : null;
-				_finished = !more;
-				return more;
+				_isCurrent = await _source.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				_current = _isCurrent ? GetNewEnumerable() : null;
+				_finished = !_isCurrent;
+				return _isCurrent;
 			}
 
-			private async IAsyncEnumerable<T> GetNewEnumerable()
+			private async IAsyncEnumerator<T> GetNewEnumerable()
 			{
 				int returned = 0;
 				yield return _source.Current;
 				while (++returned < _batchSize)
 				{
-					if (!await _source.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+					if (_finished || !await _source.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 					{
 						_finished = true;
 						yield break;
