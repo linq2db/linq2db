@@ -202,5 +202,53 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			return ret;
 		}
+
+		protected override async Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
+			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+		{
+			BulkCopyRowsCopied ret;
+
+			var helper = new MultipleRowsHelper<T>(table, options);
+
+			if (options.KeepIdentity == true)
+				helper.DataConnection.Execute("SET IDENTITY_INSERT " + helper.TableName + " ON");
+
+			switch (((SqlServerDataProvider)helper.DataConnection.DataProvider).Version)
+			{
+				case SqlServerVersion.v2000:
+				case SqlServerVersion.v2005: ret = await MultipleRowsCopy2Async(helper, source, "", cancellationToken); break;
+				default: ret = await MultipleRowsCopy1Async(helper, source, cancellationToken); break;
+			}
+
+			if (options.KeepIdentity == true)
+				helper.DataConnection.Execute("SET IDENTITY_INSERT " + helper.TableName + " OFF");
+
+			return ret;
+		}
+
+#if !NET45 && !NET46
+		protected override async Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
+			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+		{
+			BulkCopyRowsCopied ret;
+
+			var helper = new MultipleRowsHelper<T>(table, options);
+
+			if (options.KeepIdentity == true)
+				helper.DataConnection.Execute("SET IDENTITY_INSERT " + helper.TableName + " ON");
+
+			switch (((SqlServerDataProvider)helper.DataConnection.DataProvider).Version)
+			{
+				case SqlServerVersion.v2000:
+				case SqlServerVersion.v2005: ret = await MultipleRowsCopy2Async(helper, source, "", cancellationToken); break;
+				default: ret = await MultipleRowsCopy1Async(helper, source, cancellationToken); break;
+			}
+
+			if (options.KeepIdentity == true)
+				helper.DataConnection.Execute("SET IDENTITY_INSERT " + helper.TableName + " OFF");
+
+			return ret;
+		}
+#endif
 	}
 }
