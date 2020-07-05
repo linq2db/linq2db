@@ -306,9 +306,25 @@ namespace LinqToDB.Async
 
 #if !NET45 && !NET46
 		/// <summary>
-		/// Returns an expression which returns a <see cref="ValueTask{TResult}"/> from a <see cref="Task{TResult}"/>.
+		/// Returns an expression which returns a <see cref="ValueTask"/> from a <see cref="Task"/>.
 		/// </summary>
 		private static NewExpression ToValueTask(Expression body)
+		{
+			var taskType = typeof(Task);
+
+			var valueTaskType = typeof(ValueTask);
+
+			// constructor = <<< new ValueTask(Task task) >>>
+			var constructor = valueTaskType.GetConstructor(new Type[] { taskType });
+
+			// return new ValueTask(body);
+			return Expression.New(constructor, body);
+		}
+
+		/// <summary>
+		/// Returns an expression which returns a <see cref="ValueTask{TResult}"/> from a <see cref="Task{TResult}"/>.
+		/// </summary>
+		private static NewExpression ToValueTTask(Expression body)
 		{
 			// taskType = typeof(Task<TResult>);
 			var taskType = body.Type;
@@ -359,7 +375,7 @@ namespace LinqToDB.Async
 			else if (!returnsValueTask && returnValueTask)
 			{
 				//convert a Task result to a ValueTask
-				body = ToValueTask(body);
+				body = ToValueTTask(body);
 			}
 #endif
 
