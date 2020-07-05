@@ -43,7 +43,7 @@ namespace LinqToDB.DataProvider.MySql
 		// mysql provider will execute procedure
 		protected override bool GetProcedureSchemaExecutesProcedure => true;
 
-		protected override List<TableInfo> GetTables(DataConnection dataConnection)
+		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			// https://dev.mysql.com/doc/refman/8.0/en/tables-table.html
 			// all selected columns are not nullable
@@ -78,7 +78,8 @@ SELECT
 				.ToList();
 		}
 
-		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
+		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
+			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
 			return dataConnection.Query<PrimaryKeyInfo>(@"
 			SELECT
@@ -149,7 +150,8 @@ SELECT
 				.ToList();
 		}
 
-		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
+			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
 			// https://dev.mysql.com/doc/refman/8.0/en/key-column-usage-table.html
 			// https://dev.mysql.com/doc/refman/8.0/en/table-constraints-table.html
@@ -194,41 +196,40 @@ SELECT
 			{
 				case "bit"        : return DataType.BitArray;
 				case "blob"       : return DataType.Blob;
-				case "tinyblob"   : return DataType.Binary;
-				case "mediumblob" : return DataType.Binary;
-				case "longblob"   : return DataType.Binary;
+				case "tinyblob"   : return DataType.Blob;
+				case "mediumblob" : return DataType.Blob;
+				case "longblob"   : return DataType.Blob;
 				case "binary"     : return DataType.Binary;
 				case "varbinary"  : return DataType.VarBinary;
 				case "date"       : return DataType.Date;
 				case "datetime"   : return DataType.DateTime;
-				case "timestamp"  : return DataType.Timestamp;
+				case "timestamp"  : return DataType.DateTime;
 				case "time"       : return DataType.Time;
 				case "char"       : return DataType.Char;
-				case "nchar"      : return DataType.NChar;
 				case "varchar"    : return DataType.VarChar;
-				case "nvarchar"   : return DataType.NVarChar;
-				case "set"        : return DataType.NVarChar;
-				case "enum"       : return DataType.NVarChar;
+				case "set"        : return DataType.VarChar;
+				case "enum"       : return DataType.VarChar;
 				case "tinytext"   : return DataType.Text;
 				case "text"       : return DataType.Text;
 				case "mediumtext" : return DataType.Text;
 				case "longtext"   : return DataType.Text;
 				case "double"     : return DataType.Double;
 				case "float"      : return DataType.Single;
-				case "tinyint"    : return columnType == "tinyint(1)" ? DataType.Boolean : DataType.SByte;
+				case "tinyint"    : if (columnType == "tinyint(1)") return DataType.Boolean;
+									return columnType != null && columnType.Contains("unsigned") ? DataType.Byte   : DataType.SByte;
 				case "smallint"   : return columnType != null && columnType.Contains("unsigned") ? DataType.UInt16 : DataType.Int16;
 				case "int"        : return columnType != null && columnType.Contains("unsigned") ? DataType.UInt32 : DataType.Int32;
 				case "year"       : return DataType.Int32;
 				case "mediumint"  : return columnType != null && columnType.Contains("unsigned") ? DataType.UInt32 : DataType.Int32;
 				case "bigint"     : return columnType != null && columnType.Contains("unsigned") ? DataType.UInt64 : DataType.Int64;
 				case "decimal"    : return DataType.Decimal;
-				case "tiny int"   : return DataType.Byte;
+				case "json"       : return DataType.Json;
 			}
 
 			return DataType.Undefined;
 		}
 
-		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
+		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			// GetSchema("PROCEDURES") not used, as for MySql 5.7 (but not mariadb/mysql 5.6) it returns procedures from
 			// sys database too
@@ -312,7 +313,7 @@ SELECT
 				let precision    = Converter.ChangeTypeTo<int>(r["NumericPrecision"])
 				let scale        = Converter.ChangeTypeTo<int>(r["NumericScale"])
 
-				let systemType = GetSystemType(columnType, null, dataType, length, precision, scale)
+				let systemType = GetSystemType(columnType, null, dataType, length, precision, scale, options)
 
 				select new ColumnSchema
 				{
@@ -349,30 +350,43 @@ SELECT
 			return base.GetProviderSpecificType(dataType);
 		}
 
-		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale)
+		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale, GetSchemaOptions options)
 		{
-			if (dataType != null && columnType != null && columnType.Contains("unsigned"))
+			switch (dataType?.ToLower())
 			{
-				switch (dataType.ToLower())
-				{
-					case "smallint"   : return typeof(ushort);
-					case "int"        :
-					case "mediumint"  : return typeof(uint);
-					case "bigint"     : return typeof(ulong);
-					case "tiny int"   : return typeof(byte);
-				}
-			}
-
-			switch (dataType)
-			{
-				case "tinyint"   :
+				case "bit"               :
+					if (precision == 1)
+						return typeof(bool);
+					if (precision <= 8)
+						return typeof(byte);
+					if (precision <= 16)
+						return typeof(ushort);
+					if (precision <= 32)
+						return typeof(uint);
+					return typeof(ulong);
+				case "tinyint"           :
 					if (columnType == "tinyint(1)")
 						return typeof(bool);
-					break;
-				case "datetime2" : return typeof(DateTime);
+					return columnType?.Contains("unsigned") == true ? typeof(byte)  : typeof(sbyte);
+				case "smallint"          : return columnType?.Contains("unsigned") == true ? typeof(ushort) : typeof(short);
+				case "mediumint"         :
+				case "int"               : return columnType?.Contains("unsigned") == true ? typeof(uint)   : typeof(int);
+				case "bigint"            : return columnType?.Contains("unsigned") == true ? typeof(ulong)  : typeof(long);
+				case "json"              :
+				case "longtext"          : return typeof(string);
+				case "timestamp"         : return typeof(DateTime);
+				case "point"             :
+				case "linestring"        :
+				case "polygon"           :
+				case "multipoint"        :
+				case "multipolygon"      :
+				case "multilinestring"   :
+				case "geomcollection"    :
+				case "geometrycollection":
+				case "geometry"          : return typeof(byte[]);
 			}
 
-			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale);
+			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options);
 		}
 
 		protected override StringComparison ForeignKeyColumnComparison(string column)

@@ -11,8 +11,8 @@ namespace LinqToDB.DataProvider.SqlServer
 
 	class SqlServerSchemaProvider : SchemaProviderBase
 	{
-		bool _isAzure;
-		int _compatibilityLevel;
+		protected bool IsAzure;
+		protected int  CompatibilityLevel;
 
 		protected readonly SqlServerDataProvider Provider;
 
@@ -25,14 +25,14 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			var version = dataConnection.Execute<string>("select @@version");
 
-			_isAzure            = version.IndexOf("Azure", StringComparison.Ordinal) >= 0;
-			_compatibilityLevel = dataConnection.Execute<int>("SELECT compatibility_level FROM sys.databases WHERE name = db_name()");
+			IsAzure            = version.IndexOf("Azure", StringComparison.Ordinal) >= 0;
+			CompatibilityLevel = dataConnection.Execute<int>("SELECT compatibility_level FROM sys.databases WHERE name = db_name()");
 		}
 
-		protected override List<TableInfo> GetTables(DataConnection dataConnection)
+		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			return dataConnection.Query<TableInfo>(
-				_isAzure ? @"
+				IsAzure ? @"
 				SELECT
 					TABLE_CATALOG COLLATE DATABASE_DEFAULT + '.' + TABLE_SCHEMA + '.' + TABLE_NAME as TableID,
 					TABLE_CATALOG                                                                  as CatalogName,
@@ -87,10 +87,11 @@ namespace LinqToDB.DataProvider.SqlServer
 				.ToList();
 		}
 
-		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
+		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
+			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
 			return dataConnection.Query<PrimaryKeyInfo>(
-				_isAzure
+				IsAzure
 				? @"
 				SELECT
 					k.TABLE_CATALOG COLLATE DATABASE_DEFAULT + '.' + k.TABLE_SCHEMA + '.' + k.TABLE_NAME as TableID,
@@ -129,7 +130,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			return dataConnection.Query<ColumnInfo>(
-				_isAzure ? @"
+				IsAzure ? @"
 				SELECT
 					TABLE_CATALOG COLLATE DATABASE_DEFAULT + '.' + TABLE_SCHEMA + '.' + TABLE_NAME                      as TableID,
 					COLUMN_NAME                                                                                         as Name,
@@ -239,7 +240,8 @@ namespace LinqToDB.DataProvider.SqlServer
 				.ToList();
 		}
 
-		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
+			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
 			return dataConnection.Query<ForeignKeyInfo>(@"
 				SELECT
@@ -261,10 +263,10 @@ namespace LinqToDB.DataProvider.SqlServer
 				.ToList();
 		}
 
-		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
+		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			return dataConnection.Query<ProcedureInfo>(
-				_isAzure
+				IsAzure
 				? @"SELECT
 					SPECIFIC_CATALOG COLLATE DATABASE_DEFAULT + '.' + SPECIFIC_SCHEMA + '.' + SPECIFIC_NAME as ProcedureID,
 					SPECIFIC_CATALOG                                                                        as CatalogName,
@@ -295,7 +297,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)
 		{
 			return dataConnection.Query<ProcedureParameterInfo>(
-				_isAzure
+				IsAzure
 				? @"SELECT
 					SPECIFIC_CATALOG COLLATE DATABASE_DEFAULT + '.' + SPECIFIC_SCHEMA + '.' + SPECIFIC_NAME as ProcedureID,
 					ORDINAL_POSITION                                                                        as Ordinal,
@@ -423,7 +425,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return base.GetProviderSpecificType(dataType);
 		}
 
-		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale)
+		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale, GetSchemaOptions options)
 		{
 			switch (dataType)
 			{
@@ -434,7 +436,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				case "table type"  : return typeof(DataTable);
 			}
 
-			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale);
+			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options);
 		}
 
 		protected override string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, long? length, int? prec, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
@@ -471,7 +473,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			// TODO: refactor method to use query as parameter instead of manual escaping...
 			// https://github.com/linq2db/linq2db/issues/1921
-			if (_compatibilityLevel >= 140)
+			if (CompatibilityLevel >= 140)
 				sql = $"EXEC('{sql.Replace("'", "''")}')";
 
 			return sql;

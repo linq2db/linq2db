@@ -39,7 +39,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		private string? _currentUser;
 
-		protected override List<TableInfo> GetTables(DataConnection dataConnection)
+		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			LoadCurrentUser(dataConnection);
 
@@ -96,7 +96,8 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
-		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
+		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
+			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
 			return
 				dataConnection.Query<PrimaryKeyInfo>(@"
@@ -210,7 +211,8 @@ namespace LinqToDB.DataProvider.Oracle
 				sql).ToList();
 		}
 
-		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
+			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
 			if (IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0)
 			{
@@ -272,7 +274,7 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
-		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
+		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			LoadCurrentUser(dataConnection);
 
@@ -344,7 +346,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return base.GetDbType(options, columnType, dataType, length, prec, scale, udtCatalog, udtSchema, udtName);
 		}
 
-		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale)
+		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale, GetSchemaOptions options)
 		{
 			if (dataType == "NUMBER" && precision > 0 && (scale ?? 0) == 0)
 			{
@@ -357,7 +359,7 @@ namespace LinqToDB.DataProvider.Oracle
 			if (dataType?.StartsWith("TIMESTAMP") == true)
 				return dataType.EndsWith("TIME ZONE") ? typeof(DateTimeOffset) : typeof(DateTime);
 
-			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale);
+			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options);
 		}
 
 		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)

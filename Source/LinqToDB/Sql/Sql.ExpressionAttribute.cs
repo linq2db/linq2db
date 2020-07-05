@@ -8,6 +8,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB
 {
+	using Mapping;
 	using Extensions;
 	using SqlQuery;
 
@@ -203,7 +204,7 @@ namespace LinqToDB
 			{
 				if (member is MethodInfo method)
 				{
-					if (method.DeclaringType.IsGenericType)
+					if (method.DeclaringType!.IsGenericType)
 						args = args.Concat(method.DeclaringType.GetGenericArguments().Select(t => (ISqlExpression)SqlDataType.GetDataType(t))).ToArray();
 
 					if (method.IsGenericMethod)
@@ -235,7 +236,7 @@ namespace LinqToDB
 			}
 
 			public virtual ISqlExpression? GetExpression(IDataContext dataContext, SelectQuery query,
-				Expression expression, Func<Expression, ISqlExpression> converter)
+				Expression expression, Func<Expression, ColumnDescriptor?, ISqlExpression> converter)
 			{
 				return null;
 			}

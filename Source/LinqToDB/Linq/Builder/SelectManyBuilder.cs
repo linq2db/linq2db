@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using LinqToDB.Tools;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Common;
+	using Tools;
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
@@ -122,7 +123,7 @@ namespace LinqToDB.Linq.Builder
 
 				((ISqlExpressionWalkable)sql.Where.SearchCondition).Walk(new WalkOptions(), e =>
 				{
-					if (e is ISqlTableSource ts && !tableSources.Contains(ts))
+					if (e is ISqlTableSource ts && usedTableSources.Contains(ts))
 						tableSources.Add(ts);
 					return e;
 				});
@@ -278,7 +279,7 @@ namespace LinqToDB.Linq.Builder
 				if (expression == null)
 					return Collection!.BuildExpression(expression, level, enforceServerSide);
 
-				var root = expression.GetRootObject(Builder.MappingSchema);
+				var root = Builder.GetRootObject(expression);
 
 				if (root == Lambda.Parameters[0])
 					return base.BuildExpression(expression, level, enforceServerSide);
@@ -301,7 +302,7 @@ namespace LinqToDB.Linq.Builder
 					if (expression == null)
 						return Collection.ConvertToIndex(expression, level, flags);
 
-					var root = expression.GetRootObject(Builder.MappingSchema);
+					var root = Builder.GetRootObject(expression);
 
 					if (root != Lambda.Parameters[0])
 						return Collection.ConvertToIndex(expression, level, flags);
@@ -317,7 +318,7 @@ namespace LinqToDB.Linq.Builder
 					if (expression == null)
 						return Collection.ConvertToSql(expression, level, flags);
 
-					var root = expression.GetRootObject(Builder.MappingSchema);
+					var root = Builder.GetRootObject(expression);
 
 					if (root != Lambda.Parameters[0])
 						return Collection.ConvertToSql(expression, level, flags);
@@ -333,7 +334,7 @@ namespace LinqToDB.Linq.Builder
 					if (expression == null)
 						return Collection.GetContext(expression, level, buildInfo);
 
-					var root = expression.GetRootObject(Builder.MappingSchema);
+					var root = Builder.GetRootObject(expression);
 
 					if (root != Lambda.Parameters[0])
 						return Collection.GetContext(expression, level, buildInfo);
@@ -349,7 +350,7 @@ namespace LinqToDB.Linq.Builder
 					if (expression == null)
 						return Collection.IsExpression(expression, level, requestFlag);
 
-					var root = expression.GetRootObject(Builder.MappingSchema);
+					var root = Builder.GetRootObject(expression);
 
 					if (root != Lambda.Parameters[0])
 						return Collection.IsExpression(expression, level, requestFlag);

@@ -27,15 +27,5 @@
 
 			return statement;
 		}
-
-		public override ISqlExpression ConvertExpression(ISqlExpression expr)
-		{
-			expr = base.ConvertExpression(expr);
-
-			if (expr is SqlFunction)
-				return ConvertConvertFunction((SqlFunction)expr);
-
-			return expr;
-		}
 	}
 }

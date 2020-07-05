@@ -13,6 +13,7 @@ namespace LinqToDB.SqlQuery
 		private readonly Func<ConvertVisitor, IQueryElement, IQueryElement> _convert;
 
 		static TE[] ToArray<TK,TE>(IDictionary<TK,TE> dic)
+			where TK : notnull
 		{
 			var es = new TE[dic.Count];
 			var i  = 0;
@@ -328,6 +329,22 @@ namespace LinqToDB.SqlQuery
 								e2 != null && !ReferenceEquals(p.Expr2, e2) ||
 								e3 != null && !ReferenceEquals(p.Expr3, e3))
 								newElement = new SqlPredicate.Between(e1 ?? p.Expr1, p.IsNot, e2 ?? p.Expr2, e3 ?? p.Expr3);
+
+							break;
+						}
+
+					case QueryElementType.IsTruePredicate:
+						{
+							var p = (SqlPredicate.IsTrue)element;
+							var e = (ISqlExpression?)ConvertInternal(p.Expr1);
+							var t = (ISqlExpression?)ConvertInternal(p.TrueValue);
+							var f = (ISqlExpression?)ConvertInternal(p.FalseValue);
+
+							if (e != null && !ReferenceEquals(p.Expr1, e) ||
+							    t != null && !ReferenceEquals(p.TrueValue,  t) ||
+								f != null && !ReferenceEquals(p.FalseValue, f)
+							    )
+								newElement = new SqlPredicate.IsTrue(e ?? p.Expr1, t ?? p.TrueValue, f ?? p.FalseValue, p.WithNull, p.IsNot);
 
 							break;
 						}

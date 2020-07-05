@@ -20,6 +20,11 @@ namespace LinqToDB.SqlQuery
 			Type = dataType;
 		}
 
+		public SqlDataType(DataType dataType)
+		{
+			Type = GetDataType(dataType).Type.WithDataType(dataType);
+		}
+
 		public SqlDataType(DataType dataType, int? length)
 		{
 			Type = GetDataType(dataType).Type.WithDataType(dataType).WithLength(length);
@@ -138,7 +143,7 @@ namespace LinqToDB.SqlQuery
 
 		static int Len(object obj)
 		{
-			return obj.ToString().Length;
+			return obj.ToString()!.Length;
 		}
 
 		static readonly TypeInfo[] _typeInfo = SortTypeInfo
@@ -444,7 +449,7 @@ namespace LinqToDB.SqlQuery
 
 		#region IEquatable<ISqlExpression> Members
 
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression other)
+		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
 		{
 			if (this == other)
 				return true;

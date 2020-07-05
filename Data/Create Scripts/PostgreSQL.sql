@@ -298,12 +298,21 @@ CREATE TABLE "AllTypes"
 	"jsonDataType"        json                     NULL,
 -- SKIP PostgreSQL.9.2 BEGIN
 -- SKIP PostgreSQL.9.3 BEGIN
-"jsonbDataType"       jsonb                    NULL,
+	"jsonbDataType"       jsonb                    NULL,
 -- SKIP PostgreSQL.9.2 END
 -- SKIP PostgreSQL.9.3 END
 
 	"xmlDataType"         xml                      NULL,
-	"varBitDataType"      varbit                   NULL
+	"varBitDataType"      varbit                   NULL,
+
+	StrArray              text[]                   NULL,
+	IntArray              int[]                    NULL,
+	Int2dArray            int[][]                  NULL,
+	LongArray             bigint[]                 NULL,
+	IntervalArray         interval[]               NULL,
+	DoubleArray           double precision[]       NULL,
+	NumericArray          numeric[]                NULL,
+	DecimalArray          decimal[]                NULL
 )
 GO
 

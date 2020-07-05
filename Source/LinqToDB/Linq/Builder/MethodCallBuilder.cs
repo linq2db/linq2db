@@ -26,7 +26,7 @@ namespace LinqToDB.Linq.Builder
 			return Convert(builder, (MethodCallExpression)buildInfo.Expression, buildInfo, param);
 		}
 
-		public bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo)
+		public virtual bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
 			return builder.IsSequence(new BuildInfo(buildInfo, ((MethodCallExpression)buildInfo.Expression).Arguments[0]));
 		}

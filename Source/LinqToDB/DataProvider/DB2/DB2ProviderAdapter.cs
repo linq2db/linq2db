@@ -184,20 +184,20 @@ namespace LinqToDB.DataProvider.DB2
 						if (assembly == null)
 							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
 
-						var connectionType  = assembly.GetType($"{ClientNamespace}.DB2Connection" , true);
-						var parameterType   = assembly.GetType($"{ClientNamespace}.DB2Parameter"  , true);
-						var dataReaderType  = assembly.GetType($"{ClientNamespace}.DB2DataReader" , true);
-						var transactionType = assembly.GetType($"{ClientNamespace}.DB2Transaction", true);
-						var commandType     = assembly.GetType($"{ClientNamespace}.DB2Command"    , true);
-						var dbType          = assembly.GetType($"{ClientNamespace}.DB2Type"       , true);
-						var serverTypesType = assembly.GetType($"{ClientNamespace}.DB2ServerTypes", true);
+						var connectionType  = assembly.GetType($"{ClientNamespace}.DB2Connection" , true)!;
+						var parameterType   = assembly.GetType($"{ClientNamespace}.DB2Parameter"  , true)!;
+						var dataReaderType  = assembly.GetType($"{ClientNamespace}.DB2DataReader" , true)!;
+						var transactionType = assembly.GetType($"{ClientNamespace}.DB2Transaction", true)!;
+						var commandType     = assembly.GetType($"{ClientNamespace}.DB2Command"    , true)!;
+						var dbType          = assembly.GetType($"{ClientNamespace}.DB2Type"       , true)!;
+						var serverTypesType = assembly.GetType($"{ClientNamespace}.DB2ServerTypes", true)!;
 
-						var bulkCopyType                    = assembly.GetType($"{ClientNamespace}.DB2BulkCopy"                       , true);
-						var bulkCopyOptionsType             = assembly.GetType($"{ClientNamespace}.DB2BulkCopyOptions"                , true);
-						var bulkCopyColumnMappingType       = assembly.GetType($"{ClientNamespace}.DB2BulkCopyColumnMapping"          , true);
-						var rowsCopiedEventHandlerType      = assembly.GetType($"{ClientNamespace}.DB2RowsCopiedEventHandler"         , true);
-						var rowsCopiedEventArgs             = assembly.GetType($"{ClientNamespace}.DB2RowsCopiedEventArgs"            , true);
-						var bulkCopyColumnMappingCollection = assembly.GetType($"{ClientNamespace}.DB2BulkCopyColumnMappingCollection", true);
+						var bulkCopyType                    = assembly.GetType($"{ClientNamespace}.DB2BulkCopy"                       , true)!;
+						var bulkCopyOptionsType             = assembly.GetType($"{ClientNamespace}.DB2BulkCopyOptions"                , true)!;
+						var bulkCopyColumnMappingType       = assembly.GetType($"{ClientNamespace}.DB2BulkCopyColumnMapping"          , true)!;
+						var rowsCopiedEventHandlerType      = assembly.GetType($"{ClientNamespace}.DB2RowsCopiedEventHandler"         , true)!;
+						var rowsCopiedEventArgs             = assembly.GetType($"{ClientNamespace}.DB2RowsCopiedEventArgs"            , true)!;
+						var bulkCopyColumnMappingCollection = assembly.GetType($"{ClientNamespace}.DB2BulkCopyColumnMappingCollection", true)!;
 
 
 						var mappingSchema = new MappingSchema();
@@ -501,10 +501,10 @@ namespace LinqToDB.DataProvider.DB2
 			}
 
 			private      DB2RowsCopiedEventHandler? _DB2RowsCopied;
-			public event DB2RowsCopiedEventHandler   DB2RowsCopied
+			public event DB2RowsCopiedEventHandler?  DB2RowsCopied
 			{
-				add    => _DB2RowsCopied = (DB2RowsCopiedEventHandler)Delegate.Combine(_DB2RowsCopied, value);
-				remove => _DB2RowsCopied = (DB2RowsCopiedEventHandler)Delegate.Remove (_DB2RowsCopied, value);
+				add    => _DB2RowsCopied = (DB2RowsCopiedEventHandler?)Delegate.Combine(_DB2RowsCopied, value);
+				remove => _DB2RowsCopied = (DB2RowsCopiedEventHandler?)Delegate.Remove (_DB2RowsCopied, value);
 			}
 		}
 

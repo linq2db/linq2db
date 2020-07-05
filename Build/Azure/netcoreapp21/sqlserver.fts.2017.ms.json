@@ -1,0 +1,24 @@
+﻿{
+	"CORE21.Azure": {
+		"Providers": [
+			// SQL Server 2017 + generic sqlserver tests + northwind db tests
+			"SqlServer.2017",
+			"Northwind",
+			"SqlServer"
+		],
+		"Connections": {
+			"SqlServer": {
+				"Provider": "Microsoft.Data.SqlClient",
+				"ConnectionString": "Server=localhost;Database=TestData;User Id=sa;Password=Password12!;"
+			},
+			"Northwind": {
+				"Provider": "Microsoft.Data.SqlClient",
+				"ConnectionString": "Server=localhost;Database=Northwind;User Id=sa;Password=Password12!;"
+			},
+			"SqlServer.2017": {
+				"Provider": "Microsoft.Data.SqlClient",
+				"ConnectionString": "Server=localhost;Database=TestData2017;User Id=sa;Password=Password12!;"
+			}
+		}
+	}
+}

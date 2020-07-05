@@ -17,7 +17,7 @@ namespace LinqToDB.Linq
 	using Data;
 	using LinqToDB.Common.Internal;
 
-	abstract class ExpressionQuery<T> : IExpressionQuery<T>
+	abstract class ExpressionQuery<T> : IExpressionQuery<T>, IAsyncEnumerable<T>
 	{
 		#region Init
 
@@ -165,8 +165,15 @@ namespace LinqToDB.Linq
 
 		public IAsyncEnumerable<T> GetAsyncEnumerable()
 		{
+			return this;
+		}
+
+		public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+		{
 			var expression = Expression;
-			return GetQuery(ref expression, true).GetIAsyncEnumerable(DataContext, expression, Parameters, Preambles);
+			return GetQuery(ref expression, true)
+				.GetIAsyncEnumerable(DataContext, expression, Parameters, Preambles)
+				.GetAsyncEnumerator(cancellationToken);
 		}
 
 		#endregion
@@ -200,11 +207,11 @@ namespace LinqToDB.Linq
 			{
 				return (IQueryable)Activator.CreateInstance(
 					typeof(ExpressionQueryImpl<>).MakeGenericType(elementType),
-					DataContext, expression);
+					DataContext, expression)!;
 			}
 			catch (TargetInvocationException ex)
 			{
-				throw ex.InnerException;
+				throw ex.InnerException ?? ex;
 			}
 		}
 

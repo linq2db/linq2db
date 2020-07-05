@@ -44,7 +44,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected string? CurrentSchema { get; private set; }
 
-		protected override List<TableInfo> GetTables(DataConnection dataConnection)
+		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			LoadCurrentSchema(dataConnection);
 
@@ -80,7 +80,8 @@ namespace LinqToDB.DataProvider.DB2
 				CurrentSchema = dataConnection.Execute<string>("select current_schema from sysibm.sysdummy1");
 		}
 
-		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
+		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
+			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
 			return
 			(
@@ -189,7 +190,8 @@ WHERE
 			}
 		}
 
-		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
+			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
 			return dataConnection
 				.Query(rd => new
@@ -385,7 +387,7 @@ WHERE
 			return base.GetDataSourceName(connection);
 		}
 
-		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
+		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			LoadCurrentSchema(dataConnection);
 

@@ -6,7 +6,7 @@ using LinqToDB.Data;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
-#if !NETCOREAPP2_1
+#if NET46
 using Tests.FSharp.Models;
 #else
 using Tests.Model;
@@ -49,7 +49,7 @@ namespace Tests.Linq
 
 		class VarChar : CustomBase<string>
 		{
-			public override string ToString(IFormatProvider provider)
+			public override string ToString(IFormatProvider? provider)
 			{
 				return Value;
 			}
@@ -57,7 +57,7 @@ namespace Tests.Linq
 
 		class NVarChar : CustomBase<string>
 		{
-			public override string ToString(IFormatProvider provider)
+			public override string ToString(IFormatProvider? provider)
 			{
 				return Value;
 			}
@@ -65,7 +65,7 @@ namespace Tests.Linq
 
 		class VarBinary : CustomBase<byte[]>
 		{
-			public override object ToType(Type conversionType, IFormatProvider provider)
+			public override object ToType(Type conversionType, IFormatProvider? provider)
 			{
 				if (conversionType == typeof(byte[]))
 					return Value;
@@ -83,82 +83,82 @@ namespace Tests.Linq
 				throw new NotImplementedException();
 			}
 
-			bool IConvertible.ToBoolean(IFormatProvider provider)
+			bool IConvertible.ToBoolean(IFormatProvider? provider)
 			{
 				throw new NotImplementedException();
 			}
 
-			byte IConvertible.ToByte(IFormatProvider provider)
+			byte IConvertible.ToByte(IFormatProvider? provider)
 			{
 				throw new NotImplementedException();
 			}
 
-			char IConvertible.ToChar(IFormatProvider provider)
+			char IConvertible.ToChar(IFormatProvider? provider)
 			{
 				throw new NotImplementedException();
 			}
 
-			DateTime IConvertible.ToDateTime(IFormatProvider provider)
+			DateTime IConvertible.ToDateTime(IFormatProvider? provider)
 			{
 				throw new NotImplementedException();
 			}
 
-			decimal IConvertible.ToDecimal(IFormatProvider provider)
+			decimal IConvertible.ToDecimal(IFormatProvider? provider)
 			{
 				throw new NotImplementedException();
 			}
 
-			double IConvertible.ToDouble(IFormatProvider provider)
+			double IConvertible.ToDouble(IFormatProvider? provider)
 			{
 				throw new NotImplementedException();
 			}
 
-			short IConvertible.ToInt16(IFormatProvider provider)
+			short IConvertible.ToInt16(IFormatProvider? provider)
 			{
 				throw new NotImplementedException();
 			}
 
-			int IConvertible.ToInt32(IFormatProvider provider)
+			int IConvertible.ToInt32(IFormatProvider? provider)
 			{
 				throw new NotImplementedException();
 			}
 
-			long IConvertible.ToInt64(IFormatProvider provider)
+			long IConvertible.ToInt64(IFormatProvider? provider)
 			{
 				throw new NotImplementedException();
 			}
 
-			sbyte IConvertible.ToSByte(IFormatProvider provider)
+			sbyte IConvertible.ToSByte(IFormatProvider? provider)
 			{
 				throw new NotImplementedException();
 			}
 
-			float IConvertible.ToSingle(IFormatProvider provider)
+			float IConvertible.ToSingle(IFormatProvider? provider)
 			{
 				throw new NotImplementedException();
 			}
 
-			public virtual string ToString(IFormatProvider provider)
+			public virtual string ToString(IFormatProvider? provider)
 			{
 				throw new NotImplementedException();
 			}
 
-			public virtual object ToType(Type conversionType, IFormatProvider provider)
+			public virtual object ToType(Type conversionType, IFormatProvider? provider)
 			{
 				throw new NotImplementedException();
 			}
 
-			ushort IConvertible.ToUInt16(IFormatProvider provider)
+			ushort IConvertible.ToUInt16(IFormatProvider? provider)
 			{
 				throw new NotImplementedException();
 			}
 
-			uint IConvertible.ToUInt32(IFormatProvider provider)
+			uint IConvertible.ToUInt32(IFormatProvider? provider)
 			{
 				throw new NotImplementedException();
 			}
 
-			ulong IConvertible.ToUInt64(IFormatProvider provider)
+			ulong IConvertible.ToUInt64(IFormatProvider? provider)
 			{
 				throw new NotImplementedException();
 			}
@@ -441,7 +441,7 @@ namespace Tests.Linq
 
 					var records = table.ToList();
 					var p = new NVarChar() { Value = value };
-					var sql = table.Where(t => t.NVarChar == p).ToString();
+					var sql = table.Where(t => t.NVarChar == p).ToString()!;
 
 					Assert.AreEqual(1, records.Count);
 					Assert.IsNotNull(records[0].NVarChar);
@@ -496,7 +496,7 @@ namespace Tests.Linq
 
 					var records = table.ToList();
 					var p = new VarBinary() { Value = value };
-					var sql = table.Where(t => t.VarBinary == p).ToString();
+					var sql = table.Where(t => t.VarBinary == p).ToString()!;
 
 					Assert.AreEqual(1, records.Count);
 					Assert.IsNotNull(records[0].VarBinary);
@@ -657,7 +657,7 @@ namespace Tests.Linq
 
 					var records = table.ToList();
 					var p = new NVarChar() { Value = value };
-					var sql = table.Where(t => t.NVarChar == p).ToString();
+					var sql = table.Where(t => t.NVarChar == p).ToString()!;
 
 					Assert.AreEqual(1, records.Count);
 					Assert.IsNotNull(records[0].NVarChar);
@@ -683,7 +683,7 @@ namespace Tests.Linq
 
 					var records = table.ToList();
 					var p = new VarChar() { Value = value };
-					var sql = table.Where(t => t.VarChar == p).ToString();
+					var sql = table.Where(t => t.VarChar == p).ToString()!;
 
 					Assert.AreEqual(1, records.Count);
 					Assert.IsNotNull(records[0].VarChar);
@@ -712,7 +712,7 @@ namespace Tests.Linq
 
 					var records = table.ToList();
 					var p = new VarBinary() { Value = value };
-					var sql = table.Where(t => t.VarBinary == p).ToString();
+					var sql = table.Where(t => t.VarBinary == p).ToString()!;
 
 					Assert.AreEqual(1, records.Count);
 					Assert.IsNotNull(records[0].VarBinary);

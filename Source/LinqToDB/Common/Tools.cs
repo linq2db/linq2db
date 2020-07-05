@@ -54,7 +54,7 @@ namespace LinqToDB.Common
 		/// <returns>Assembly directory path.</returns>
 		public static string GetPath(this Assembly assembly)
 		{
-			return Path.GetDirectoryName(assembly.GetFileName());
+			return Path.GetDirectoryName(assembly.GetFileName())!;
 		}
 
 		/// <summary>
@@ -64,7 +64,7 @@ namespace LinqToDB.Common
 		/// <returns>Assembly file path.</returns>
 		public static string GetFileName(this Assembly assembly)
 		{
-			return assembly.CodeBase.GetPathFromUri();
+			return assembly.CodeBase!.GetPathFromUri();
 		}
 
 		/// <summary>
@@ -137,10 +137,10 @@ namespace LinqToDB.Common
 		public static IQueryable CreateEmptyQuery(Type elementType)
 		{
 			var method = Methods.LinqToDB.Tools.CreateEmptyQuery.MakeGenericMethod(elementType);
-			return (IQueryable)method.Invoke(null, Array<object>.Empty);
+			return (IQueryable)method.Invoke(null, Array<object>.Empty)!;
 		}
 
-		internal static Assembly? TryLoadAssembly(string? assemblyName, string? providerFactory)
+		public static Assembly? TryLoadAssembly(string? assemblyName, string? providerFactory)
 		{
 			if (assemblyName != null)
 			{

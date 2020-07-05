@@ -3,6 +3,7 @@
 namespace LinqToDB
 {
 	using Async;
+	using System.Collections.Generic;
 
 	/// <summary>
 	/// Provides support for queryable LoadWith/ThenLoad chaining operators.

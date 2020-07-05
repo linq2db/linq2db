@@ -399,7 +399,15 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<string>("SELECT Cast('12345' as varchar(20))"),   Is.EqualTo("12345"));
 				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as varchar(20))"),   Is.Null);
 
-				var isScCollation = conn.Execute<int>("SELECT COUNT(*) FROM sys.Databases WHERE database_id = DB_ID() AND collation_name LIKE '%_SC'") > 0;
+				bool isScCollation; 
+				if (context == ProviderName.SqlServer2000)
+				{
+					isScCollation = false;
+				}
+				else
+				{
+					isScCollation = conn.Execute<int>("SELECT COUNT(*) FROM sys.Databases WHERE database_id = DB_ID() AND collation_name LIKE '%_SC'") > 0;
+				}
 				if (isScCollation)
 				{
 					// explicit collation set for legacy text types as they doesn't support *_SC collations
@@ -650,7 +658,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestXml([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void TestXml([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -1580,7 +1588,7 @@ AS
 		[ActiveIssue(1294)]
 		public void Issue1294Test([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
-			var methodInfo = GetType().GetMethod(nameof(GetPermissions), new[] { typeof(int), typeof(int) });
+			var methodInfo = GetType().GetMethod(nameof(GetPermissions), new[] { typeof(int), typeof(int) })!;
 
 			using (var db = new TestDataConnection(context))
 			using (db.CreateLocalTable<Issue1294Table>())

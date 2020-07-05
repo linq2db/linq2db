@@ -95,7 +95,7 @@ namespace LinqToDB.Linq.Builder
 			if (resultExpr.NodeType == ExpressionType.Call)
 			{
 				var mc = (MethodCallExpression)resultExpr;
-				var attr = MappingSchema.GetAttribute<Sql.ExpressionAttribute>(mc.Method.ReflectedType, mc.Method);
+				var attr = MappingSchema.GetAttribute<Sql.ExpressionAttribute>(mc.Method.ReflectedType!, mc.Method);
 
 				if (attr != null
 					&& attr.IsNullable == Sql.IsNullableType.IfAnyParameterNullable
@@ -212,7 +212,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							if (IsSubQuery(context, ce))
 							{
-								if (!IsMultipleQuery(ce))
+								if (!IsMultipleQuery(ce, context.Builder.MappingSchema))
 								{
 									var info = GetSubQueryContext(context, ce);
 									if (alias != null)
@@ -322,7 +322,7 @@ namespace LinqToDB.Linq.Builder
 
 						if ((_buildMultipleQueryExpressions == null || !_buildMultipleQueryExpressions.Contains(ce)) && IsSubQuery(context, ce))
 						{
-							if (IsMultipleQuery(ce))
+							if (IsMultipleQuery(ce, MappingSchema))
 								return new TransformInfo(BuildMultipleQuery(context, ce, enforceServerSide));
 
 							return new TransformInfo(GetSubQueryExpression(context, ce, enforceServerSide, alias));
@@ -493,9 +493,14 @@ namespace LinqToDB.Linq.Builder
 			return expr;
 		}
 
-		static bool IsMultipleQuery(MethodCallExpression ce)
+		static bool IsMultipleQuery(MethodCallExpression ce, MappingSchema mappingSchema)
 		{
-			return typeof(IEnumerable).IsSameOrParentOf(ce.Type) && ce.Type != typeof(string) && !ce.Type.IsArray;
+			//TODO: Multiply query check should be smarter, possibly not needed if we create fallback mechanism
+			return !ce.IsQueryable(FirstSingleBuilder.MethodNames) 
+			       && typeof(IEnumerable).IsSameOrParentOf(ce.Type) 
+			       && ce.Type != typeof(string) 
+			       && !ce.Type.IsArray 
+			       && !ce.IsAggregate(mappingSchema);
 		}
 
 		class SubQueryContextInfo
@@ -527,7 +532,7 @@ namespace LinqToDB.Linq.Builder
 			return info;
 		}
 
-		public Expression GetSubQueryExpression(IBuildContext context, MethodCallExpression expr, bool enforceServerSide, string alias)
+		public Expression GetSubQueryExpression(IBuildContext context, MethodCallExpression expr, bool enforceServerSide, string? alias)
 		{
 			var info = GetSubQueryContext(context, expr);
 			if (info.Expression == null)
@@ -850,7 +855,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					case ExpressionType.MemberAccess :
 						{
-							var root = e.GetRootObject(mappingSchema);
+							var root = context.Builder.GetRootObject(e);
 
 							if (root != null &&
 								root.NodeType == ExpressionType.Parameter &&
@@ -926,7 +931,7 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				var root = e.GetRootObject(MappingSchema);
+				var root = context.Builder.GetRootObject(e);
 
 				if (root != null &&
 					root.NodeType == ExpressionType.Parameter &&
@@ -952,7 +957,7 @@ namespace LinqToDB.Linq.Builder
 			});
 
 			var sqtype = typeof(MultipleQueryHelper<>).MakeGenericType(expression.Type);
-			var helper = (IMultipleQueryHelper)Activator.CreateInstance(sqtype);
+			var helper = (IMultipleQueryHelper)Activator.CreateInstance(sqtype)!;
 
 			return helper.GetSubquery(this, expression, paramex, parms);
 		}

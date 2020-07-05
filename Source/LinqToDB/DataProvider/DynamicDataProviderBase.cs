@@ -25,8 +25,8 @@ namespace LinqToDB.DataProvider
 
 		public TProviderMappings Adapter { get; }
 
-		public override string ConnectionNamespace => Adapter.ConnectionType.Namespace;
-		public override Type   DataReaderType      => Adapter.DataReaderType;
+		public override string? ConnectionNamespace => Adapter.ConnectionType.Namespace;
+		public override Type    DataReaderType      => Adapter.DataReaderType;
 
 		Func<string, IDbConnection>? _createConnection;
 
@@ -161,22 +161,22 @@ namespace LinqToDB.DataProvider
 		private readonly IDictionary<Type, Func<IDbConnection   , IDbConnection   >?> _connectionConverters  = new ConcurrentDictionary<Type, Func<IDbConnection   , IDbConnection   >?>();
 		private readonly IDictionary<Type, Func<IDbTransaction  , IDbTransaction  >?> _transactionConverters = new ConcurrentDictionary<Type, Func<IDbTransaction  , IDbTransaction  >?>();
 
-		internal virtual IDbDataParameter? TryGetProviderParameter(IDbDataParameter parameter, MappingSchema ms)
+		public virtual IDbDataParameter? TryGetProviderParameter(IDbDataParameter parameter, MappingSchema ms)
 		{
 			return TryConvertProviderType(_parameterConverters, Adapter.ParameterType, parameter, ms);
 		}
 
-		internal virtual IDbCommand? TryGetProviderCommand(IDbCommand command, MappingSchema ms)
+		public virtual IDbCommand? TryGetProviderCommand(IDbCommand command, MappingSchema ms)
 		{
 			return TryConvertProviderType(_commandConverters, Adapter.CommandType, command, ms);
 		}
 
-		internal virtual IDbConnection? TryGetProviderConnection(IDbConnection connection, MappingSchema ms)
+		public virtual IDbConnection? TryGetProviderConnection(IDbConnection connection, MappingSchema ms)
 		{
 			return TryConvertProviderType(_connectionConverters, Adapter.ConnectionType, connection, ms);
 		}
 
-		internal virtual IDbTransaction? TryGetProviderTransaction(IDbTransaction transaction, MappingSchema ms)
+		public virtual IDbTransaction? TryGetProviderTransaction(IDbTransaction transaction, MappingSchema ms)
 		{
 			return TryConvertProviderType(_transactionConverters, Adapter.TransactionType, transaction, ms);
 		}

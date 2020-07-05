@@ -20,7 +20,7 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void TestExcept([DataSources] string context)
+		public void TestExcept([DataSources(ProviderName.SqlServer2000)] string context)
 		{
 			var testData = GenerateTestData();
 			using (var db = GetDataContext(context))
@@ -88,7 +88,7 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void TestExceptProjection([DataSources] string context)
+		public void TestExceptProjection([DataSources(ProviderName.SqlServer2000)] string context)
 		{
 			var testData = GenerateTestData();
 			using (var db = GetDataContext(context))
@@ -112,7 +112,7 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void TestIntersect([DataSources] string context)
+		public void TestIntersect([DataSources(ProviderName.SqlServer2000)] string context)
 		{
 			var testData = GenerateTestData();
 			using (var db = GetDataContext(context))

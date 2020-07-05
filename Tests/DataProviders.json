@@ -48,6 +48,16 @@
 		]
 	},
 
+	"CORE31": {
+		"BasedOn": "LocalConnectionStrings",
+		"DefaultConfiguration": "SQLite.MS",
+		"Providers": [
+			"SQLite.MS",
+			"Northwind.SQLite.MS",
+			"TestNoopProvider"
+		]
+	},
+
 	"NET46.Azure": {
 		"BasedOn": "AzureConnectionStrings",
 		"DefaultConfiguration": "SQLite.Classic",
@@ -55,6 +65,12 @@
 	},
 
 	"CORE21.Azure": {
+		"BasedOn": "AzureConnectionStrings",
+		"DefaultConfiguration": "SQLite.MS",
+		"TraceLevel": "Info"
+	},
+
+	"CORE31.Azure": {
 		"BasedOn": "AzureConnectionStrings",
 		"DefaultConfiguration": "SQLite.MS",
 		"TraceLevel": "Info"
@@ -211,7 +227,13 @@
 		"Connections"         : {
 			"SqlServer"         : { "Provider": "System.Data.SqlClient",           "ConnectionString": "Server=localhost;Database=TestData;User Id=sa;Password=Password12!;"                                                                                      },
 			"Northwind"         : { "Provider": "System.Data.SqlClient",           "ConnectionString": "Server=localhost;Database=Northwind;User Id=sa;Password=Password12!;"                                                                                     },
+			"SqlServer.2005"    : { "Provider": "System.Data.SqlClient",           "ConnectionString": "Server=localhost;Database=TestData2005;User Id=sa;Password=Password12!;"                                                                                  },
+			"SqlServer.2008"    : { "Provider": "System.Data.SqlClient",           "ConnectionString": "Server=localhost;Database=TestData2008;User Id=sa;Password=Password12!;"                                                                                  },
+			"SqlServer.2012"    : { "Provider": "System.Data.SqlClient",           "ConnectionString": "Server=localhost;Database=TestData2012;User Id=sa;Password=Password12!;"                                                                                  },
+			"SqlServer.2014"    : { "Provider": "System.Data.SqlClient",           "ConnectionString": "Server=localhost;Database=TestData2014;User Id=sa;Password=Password12!;"                                                                                  },
+			"SqlServer.2016"    : { "Provider": "System.Data.SqlClient",           "ConnectionString": "Server=localhost;Database=TestData2016;User Id=sa;Password=Password12!;"                                                                                  },
 			"SqlServer.2017"    : { "Provider": "System.Data.SqlClient",           "ConnectionString": "Server=localhost;Database=TestData2017;User Id=sa;Password=Password12!;"                                                                                  },
+			"SqlServer.2019"    : { "Provider": "System.Data.SqlClient",           "ConnectionString": "Server=localhost;Database=TestData2019;User Id=sa;Password=Password12!;"                                                                                  },
 			"PostgreSQL"        : { "Provider": "Npgsql",                          "ConnectionString": "Server=localhost;Port=5432;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100"                           },
 			"PostgreSQL.9.2"    : { "Provider": "Npgsql",                          "ConnectionString": "Server=localhost;Port=5432;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100"                           },
 			"PostgreSQL.9.3"    : { "Provider": "Npgsql",                          "ConnectionString": "Server=localhost;Port=5432;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100"                           },

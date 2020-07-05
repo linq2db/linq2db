@@ -24,19 +24,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			Provider = provider;
 		}
 
-		protected virtual  bool BuildAlternativeSql => false;
-
 		protected override string? FirstFormat(SelectQuery selectQuery)
 		{
 			return selectQuery.Select.SkipValue == null ? "TOP ({0})" : null;
-		}
-
-		protected override void BuildSql()
-		{
-			if (BuildAlternativeSql)
-				AlternativeBuildSql(true, base.BuildSql, "\t(SELECT NULL)");
-			else
-				base.BuildSql();
 		}
 
 		StringBuilder AppendOutputTableVariable(SqlTable table)
@@ -87,79 +77,84 @@ namespace LinqToDB.DataProvider.SqlServer
 						.AppendLine();
 				}
 			}
-			else 
+			else
 			{
 				var output = statement.GetOutputClause();
-				if (output != null && output.HasOutputItems)
+				BuildOutputSubclause(output);
+			}
+		}
+
+		private void BuildOutputSubclause(SqlOutputClause? output)
+		{
+			if (output != null && output.HasOutputItems)
+			{
+				AppendIndent()
+					.AppendLine("OUTPUT");
+
+				if (output.InsertedTable != null)
+					output.InsertedTable.PhysicalName = "INSERTED";
+
+				if (output.DeletedTable != null)
+					output.DeletedTable.PhysicalName = "DELETED";
+
+				++Indent;
+
+				bool first = true;
+				foreach (var oi in output.OutputItems)
+				{
+					if (!first)
+						StringBuilder.Append(',').AppendLine();
+					first = false;
+
+					AppendIndent();
+
+					BuildExpression(oi.Expression!);
+				}
+
+				if (output.OutputItems.Count > 0)
+				{
+					StringBuilder
+						.AppendLine();
+				}
+
+				--Indent;
+
+				if (output.OutputQuery != null)
+				{
+					BuildColumns(output.OutputQuery);
+				}
+
+				if (output.OutputTable != null)
 				{
 					AppendIndent()
-						.AppendLine("OUTPUT");
+						.Append("INTO ")
+						.Append(GetTablePhysicalName(output.OutputTable))
+						.AppendLine();
 
-					if (output.InsertedTable != null)
-						output.InsertedTable.PhysicalName = "INSERTED";
-
-					if (output.DeletedTable != null)
-						output.DeletedTable.PhysicalName = "DELETED";
+					AppendIndent()
+						.AppendLine("(");
 
 					++Indent;
 
-					bool first = true;
+					var firstColumn = true;
 					foreach (var oi in output.OutputItems)
 					{
-						if (!first)
+						if (!firstColumn)
 							StringBuilder.Append(',').AppendLine();
-						first = false;
+						firstColumn = false;
 
 						AppendIndent();
 
-						BuildExpression(oi.Expression!);
+						BuildExpression(oi.Column, false, true);
 					}
 
-					if (output.OutputItems.Count > 0)
-					{
-						StringBuilder
-							.AppendLine();
-					}
+					StringBuilder
+						.AppendLine();
 
 					--Indent;
 
-					if (output.OutputQuery != null)
-					{
-						BuildColumns(output.OutputQuery);
-					}
-
-					if (output.OutputTable != null)
-					{
-						AppendIndent()
-							.Append("INTO ")
-							.Append(GetTablePhysicalName(output.OutputTable))
-							.AppendLine();
-
-						AppendIndent()
-							.AppendLine("(");
-
-						++Indent;
-
-						var firstColumn = true;
-						foreach (var oi in output.OutputItems)
-						{
-							if (!firstColumn)
-								StringBuilder.Append(',').AppendLine();
-							firstColumn = false;
-
-							AppendIndent();
-
-							BuildExpression(oi.Column, false, true);
-						}
-
-						StringBuilder
-							.AppendLine();
-
-						--Indent;
-
-						AppendIndent()
-							.AppendLine(")");
-					}
+					AppendIndent()
+						.AppendLine(")");
 				}
 			}
 		}
@@ -187,19 +182,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-		protected override void BuildOrderByClause(SelectQuery selectQuery)
-		{
-			if (!BuildAlternativeSql || !NeedSkip(selectQuery))
-				base.BuildOrderByClause(selectQuery);
-		}
-
-		protected override IEnumerable<SqlColumn> GetSelectedColumns(SelectQuery selectQuery)
-		{
-			if (BuildAlternativeSql && NeedSkip(selectQuery) && !selectQuery.OrderBy.IsEmpty)
-				return AlternativeGetSelectedColumns(selectQuery, () => base.GetSelectedColumns(selectQuery));
-			return base.GetSelectedColumns(selectQuery);
-		}
-
 		protected override void BuildDeleteClause(SqlDeleteStatement deleteStatement)
 		{
 			var table = deleteStatement.Table != null ?
@@ -214,6 +196,14 @@ namespace LinqToDB.DataProvider.SqlServer
 			StringBuilder.Append(" ");
 			Convert(StringBuilder, GetTableAlias(table)!, ConvertType.NameToQueryTableAlias);
 			StringBuilder.AppendLine();
+
+			BuildOutputSubclause(deleteStatement);
+		}
+
+		protected virtual void BuildOutputSubclause(SqlDeleteStatement deleteStatement)
+		{
+			var output = deleteStatement.GetOutputClause();
+			BuildOutputSubclause(output);
 		}
 
 		protected override void BuildUpdateTableName(SelectQuery selectQuery, SqlUpdateClause updateClause)
@@ -256,7 +246,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 				if (value != null)
 				{
-					var text  = value.ToString();
+					var text  = value.ToString()!;
 					var ntext = predicate.IsSqlLike ? text :  DataTools.EscapeUnterminatedBracket(text);
 
 					if (text != ntext)

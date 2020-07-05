@@ -349,17 +349,6 @@ namespace Tests.Linq
 
 
 		[Test]
-		public void TestScalar(
-			[IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllSqlServer)]
-			string context)
-		{
-			using (var db = GetDataContext(context))
-			{
-				var result = db.FromSql<int>($"select 1 as x").ToArray();
-			}
-		}
-
-		[Test]
 		public void TestScalarSubquery(
 			[IncludeDataSources(true, TestProvName.AllPostgreSQL93Plus)]
 			string context)
@@ -369,7 +358,7 @@ namespace Tests.Linq
 				// ::text hint needed for pgsql < 10
 				var query =
 					from c in db.SelectQuery(() => "hello world")
-					from s in db.FromSql<string>($"regexp_split_to_table({c}::text, E'\\\\s+') {Sql.AliasExpr()}")
+					from s in db.FromSqlScalar<string>($"regexp_split_to_table({c}::text, E'\\\\s+') {Sql.AliasExpr()}")
 					select s;
 				var result = query.ToArray();
 				var expected = new[] { "hello", "world" };

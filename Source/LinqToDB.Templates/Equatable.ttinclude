@@ -54,11 +54,11 @@ void EquatableImpl()
 								new Method(() => "bool", "Equals",
 									new Func<string>[]
 									{
-										() => $"{new ModelType(className, true, false).ToTypeName()} other"
+										() => $"{new ModelType(className, true, true).ToTypeName()} other"
 									},
 									() => new[]
 									{
-										$"return {EqualityComparerFieldName}.Equals(this, other);"
+										$"return {EqualityComparerFieldName}.Equals(this, other{(EnableNullableReferenceTypes ? "!" : "")});"
 									}),
 
 								new Method(() => "int", "GetHashCode", null,

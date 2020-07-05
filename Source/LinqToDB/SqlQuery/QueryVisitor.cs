@@ -145,6 +145,14 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
+				case QueryElementType.IsTruePredicate:
+					{
+						Visit1(((SqlPredicate.IsTrue)element).Expr1);
+						Visit1(((SqlPredicate.IsTrue)element).TrueValue);
+						Visit1(((SqlPredicate.IsTrue)element).FalseValue);
+						break;
+					}
+
 				case QueryElementType.IsNullPredicate:
 					{
 						Visit1(((SqlPredicate.IsNull)element).Expr1);
@@ -238,6 +246,7 @@ namespace LinqToDB.SqlQuery
 					{
 						Visit1(((SqlDeleteStatement)element).With);
 						Visit1(((SqlDeleteStatement)element).Table);
+						Visit1(((SqlDeleteStatement)element).Output);
 						Visit1(((SqlDeleteStatement)element).Top);
 						Visit1(((SqlDeleteStatement)element).SelectQuery);
 						break;
@@ -686,6 +695,14 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
+				case QueryElementType.IsTruePredicate:
+					{
+						Visit2(((SqlPredicate.IsTrue)element).Expr1);
+						Visit2(((SqlPredicate.IsTrue)element).TrueValue);
+						Visit2(((SqlPredicate.IsTrue)element).FalseValue);
+						break;
+					}
+
 				case QueryElementType.IsNullPredicate:
 					{
 						Visit2(((SqlPredicate.IsNull)element).Expr1);
@@ -779,6 +796,7 @@ namespace LinqToDB.SqlQuery
 					{
 						Visit2(((SqlDeleteStatement)element).With);
 						Visit2(((SqlDeleteStatement)element).Table);
+						Visit2(((SqlDeleteStatement)element).Output);
 						Visit2(((SqlDeleteStatement)element).Top);
 						Visit2(((SqlDeleteStatement)element).SelectQuery);
 						break;
@@ -1195,6 +1213,14 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.OrderByItem       : return Find(((SqlOrderByItem)       element).Expression     );
 				case QueryElementType.SetOperator       : return Find(((SqlSetOperator)       element).SelectQuery    );
 				case QueryElementType.FuncLikePredicate : return Find(((SqlPredicate.FuncLike)element).Function       );
+
+				case QueryElementType.IsTruePredicate:
+					{
+						return 
+							Find(((SqlPredicate.IsTrue)element).Expr1) ?? 
+							Find(((SqlPredicate.IsTrue)element).TrueValue) ??
+							Find(((SqlPredicate.IsTrue)element).FalseValue);
+					}
 
 				case QueryElementType.SqlBinaryExpression:
 					{

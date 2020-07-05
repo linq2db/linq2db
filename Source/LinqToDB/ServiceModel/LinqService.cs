@@ -197,6 +197,9 @@ namespace LinqToDB.ServiceModel
 							case QueryType.Insert:
 								select = ((SqlInsertStatement)query.Statement).Output!.OutputQuery!;
 								break;
+							case QueryType.Delete:
+								select = ((SqlDeleteStatement)query.Statement).Output!.OutputQuery!;
+								break;
 							default:
 								throw new NotImplementedException($"Query type not supported: {query.Statement.QueryType}");
 						}

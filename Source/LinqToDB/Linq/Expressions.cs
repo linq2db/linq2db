@@ -218,7 +218,7 @@ namespace LinqToDB.Linq
 							continue;
 
 						var gtype    = type.Key.MakeGenericType(types);
-						var provider = (IGenericInfoProvider)Activator.CreateInstance(gtype);
+						var provider = (IGenericInfoProvider)Activator.CreateInstance(gtype)!;
 
 						provider.SetInfo(new MappingSchema(mappingSchema));
 
@@ -256,7 +256,7 @@ namespace LinqToDB.Linq
 		{
 			if (_checkUserNamespace)
 			{
-				if (IsUserNamespace(mi.DeclaringType.Namespace))
+				if (IsUserNamespace(mi.DeclaringType!.Namespace))
 					return null;
 
 				_checkUserNamespace = false;
@@ -271,6 +271,10 @@ namespace LinqToDB.Linq
 			var targetFramework = "netcoreapp2.1";
 #elif NETSTANDARD2_0
 			var targetFramework = "netstandard2.0";
+#elif NETCOREAPP3_1
+			var targetFramework = "netcoreapp3.1";
+#elif NETSTANDARD2_1
+			var targetFramework = "netstandard2.1";
 #endif
 #endif
 
@@ -285,7 +289,7 @@ namespace LinqToDB.Linq
 
 			if (mi is MethodInfo mm)
 			{
-				var isTypeGeneric   = mm.DeclaringType.IsGenericType && !mm.DeclaringType.IsGenericTypeDefinition;
+				var isTypeGeneric   = mm.DeclaringType!.IsGenericType && !mm.DeclaringType.IsGenericTypeDefinition;
 				var isMethodGeneric = mm.IsGenericMethod && !mm.IsGenericMethodDefinition;
 
 				if (isTypeGeneric || isMethodGeneric)
@@ -306,7 +310,7 @@ namespace LinqToDB.Linq
 
 			if (!Members[""].TryGetValue(mi, out expr))
 			{
-				if (mi is MethodInfo && mi.Name == "CompareString" && mi.DeclaringType.FullName.StartsWith("Microsoft.VisualBasic.CompilerServices."))
+				if (mi is MethodInfo && mi.Name == "CompareString" && mi.DeclaringType!.FullName!.StartsWith("Microsoft.VisualBasic.CompilerServices."))
 				{
 					lock (_memberSync)
 					{
@@ -348,8 +352,8 @@ namespace LinqToDB.Linq
 			if (!_binaries.IsValueCreated)
 				return null;
 
-			IExpressionInfo expr;
-			Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo> dic;
+			IExpressionInfo? expr;
+			Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo>? dic;
 
 			var binaries = _binaries.Value;
 			var key      = Tuple.Create(binaryExpression.NodeType, binaryExpression.Left.Type, binaryExpression.Right.Type);
@@ -480,7 +484,7 @@ namespace LinqToDB.Linq
 				if (!typeof(T).IsClass && !typeof(T).IsInterface && !typeof(T).IsNullable())
 				{
 					var gtype    = typeof(GetValueOrDefaultExpressionInfo<>).MakeGenericType(typeof(T));
-					var provider = (ISetInfo)Activator.CreateInstance(gtype);
+					var provider = (ISetInfo)Activator.CreateInstance(gtype)!;
 
 					provider.SetInfo();
 				}
@@ -527,7 +531,7 @@ namespace LinqToDB.Linq
 			{ M(() => "".Replace    (' ',' ') ), N(() => L<string?,char,char,string?>      ((string? obj,char   p0,char   p1)         => Sql.Replace  (obj, p0, p1))) },
 			{ M(() => "".Trim       ()        ), N(() => L<string?,string?>                ((string? obj)                             => Sql.Trim     (obj))) },
 
-#if NETCOREAPP2_1
+#if NETCOREAPP2_1 || NETCOREAPP3_1
 			{ M(() => "".TrimEnd    ()        ), N(() => L<string,string?>                 ((string obj)                              =>     TrimRight(obj))) },
 			{ M(() => "".TrimStart  ()        ), N(() => L<string,string?>                 ((string obj)                              =>     TrimLeft (obj))) },
 #else
@@ -539,7 +543,7 @@ namespace LinqToDB.Linq
 			{ M(() => "".CompareTo  ("")      ), N(() => L<string,string,int>              ((string obj,string p0)                    => ConvertToCaseCompareTo(obj, p0)!.Value)) },
 			{ M(() => "".CompareTo  (1)       ), N(() => L<string,object,int>              ((string obj,object p0)                    => ConvertToCaseCompareTo(obj, p0.ToString())!.Value)) },
 
-			{ M(() => string.Concat((object)null!)                             ), N(() => L<object,string>                     ((object p0)                               => p0.ToString()))           },
+			{ M(() => string.Concat((object)null!)                             ), N(() => L<object,string?>                    ((object p0)                               => p0.ToString()))           },
 			{ M(() => string.Concat((object)null!,(object)null!)               ), N(() => L<object,object,string>              ((object p0,object p1)                     => p0.ToString() + p1))      },
 			{ M(() => string.Concat((object)null!,(object)null!,(object)null!) ), N(() => L<object,object,object,string>       ((object p0,object p1,object p2)           => p0.ToString() + p1 + p2)) },
 			{ M(() => string.Concat((object[])null!)                           ), N(() => L<object[],string>                   ((object[] ps)                             => Sql.Concat(ps)))          },
@@ -1309,16 +1313,16 @@ namespace LinqToDB.Linq
 
 					{ M(() => Sql.MakeDateTime(0, 0, 0)), N(() => L<int?,int?,int?,DateTime?>((y,m,d) => Sql.Convert(Sql.Date,
 						y.ToString() + "-" +
-						(m.ToString().Length == 1 ? "0" + m.ToString() : m.ToString()) + "-" +
-						(d.ToString().Length == 1 ? "0" + d.ToString() : d.ToString())))) },
+						(m.ToString()!.Length == 1 ? "0" + m.ToString() : m.ToString()) + "-" +
+						(d.ToString()!.Length == 1 ? "0" + d.ToString() : d.ToString())))) },
 
 					{ M(() => Sql.MakeDateTime(0, 0, 0, 0, 0, 0)), N(() => L<int?,int?,int?,int?,int?,int?,DateTime?>((y,m,d,h,i,s) => Sql.Convert(Sql.DateTime2,
 						y.ToString() + "-" +
-						(m.ToString().Length == 1 ? "0" + m.ToString() : m.ToString()) + "-" +
-						(d.ToString().Length == 1 ? "0" + d.ToString() : d.ToString()) + " " +
-						(h.ToString().Length == 1 ? "0" + h.ToString() : h.ToString()) + ":" +
-						(i.ToString().Length == 1 ? "0" + i.ToString() : i.ToString()) + ":" +
-						(s.ToString().Length == 1 ? "0" + s.ToString() : s.ToString())))) },
+						(m.ToString()!.Length == 1 ? "0" + m.ToString() : m.ToString()) + "-" +
+						(d.ToString()!.Length == 1 ? "0" + d.ToString() : d.ToString()) + " " +
+						(h.ToString()!.Length == 1 ? "0" + h.ToString() : h.ToString()) + ":" +
+						(i.ToString()!.Length == 1 ? "0" + i.ToString() : i.ToString()) + ":" +
+						(s.ToString()!.Length == 1 ? "0" + s.ToString() : s.ToString())))) },
 
 					{ M(() => Sql.ConvertTo<string>.From(Guid.Empty)), N(() => L<Guid,string?>((Guid p) => Sql.Lower(
 						Sql.Substring(Hex(p),  7,  2) + Sql.Substring(Hex(p),  5, 2) + Sql.Substring(Hex(p), 3, 2) + Sql.Substring(Hex(p), 1, 2) + "-" +
@@ -1500,10 +1504,11 @@ namespace LinqToDB.Linq
 			public readonly Type   Type;
 			public readonly string Member;
 
-			public override bool Equals(object obj)
+			public override bool Equals(object? obj)
 			{
-				var other = (TypeMember)obj;
-				return Type == other.Type && string.Equals(Member, other.Member);
+				return obj is TypeMember other
+					&& Type == other.Type
+					&& string.Equals(Member, other.Member);
 			}
 
 			public override int GetHashCode()
@@ -1620,7 +1625,7 @@ namespace LinqToDB.Linq
 		// DB2
 		//
 		[Sql.Function]
-		public static string VarChar(object obj, int? size)
+		public static string? VarChar(object obj, int? size)
 		{
 			return obj.ToString();
 		}

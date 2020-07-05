@@ -72,7 +72,12 @@ namespace LinqToDB.SqlQuery
 				IsNot = isNot;
 			}
 
-			public bool IsNot { get; set; }
+			public bool IsNot { get; private set; }
+
+			public virtual void Invert()
+			{
+				IsNot = !IsNot;
+			}
 
 			protected override ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
 			{
@@ -260,6 +265,60 @@ namespace LinqToDB.SqlQuery
 				sb.Append(" AND ");
 				Expr3.ToString(sb, dic);
 			}
+		}
+
+		// [NOT] expression = 1, expression = 0, expression IS NULL OR expression = 0
+		//
+		public class IsTrue : NotExpr
+		{
+			public ISqlExpression TrueValue  { get; }
+			public ISqlExpression FalseValue { get; }
+			public bool?          WithNull    { get; private set; }
+
+			public IsTrue(ISqlExpression exp1, ISqlExpression trueValue, ISqlExpression falseValue, bool? withNull, bool isNot)
+				: base(exp1, isNot, SqlQuery.Precedence.Comparison)
+			{
+				TrueValue    = trueValue;
+				FalseValue   = falseValue;
+				WithNull = withNull;
+			}
+
+			protected override ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
+			{
+				if (!doClone(this))
+					return this;
+
+				if (!objectTree.TryGetValue(this, out var clone))
+					objectTree.Add(this, clone = new IsTrue((ISqlExpression)Expr1.Clone(objectTree, doClone), TrueValue, FalseValue, WithNull, IsNot));
+
+				return clone;
+			}
+
+			protected override void ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+			{
+				Reduce().ToString(sb, dic);
+			}
+
+			public ISqlPredicate Reduce()
+			{
+				var predicate = new ExprExpr(Expr1, Operator.Equal, IsNot ? FalseValue : TrueValue);
+				if (WithNull == null) 
+					return predicate;
+
+				var search = new SqlSearchCondition();
+				search.Conditions.Add(new SqlCondition(false, predicate, WithNull.Value));
+				search.Conditions.Add(new SqlCondition(false, new IsNull(Expr1, !WithNull.Value), WithNull.Value));
+				return search;
+			}
+
+			public override void Invert()
+			{
+				base.Invert();
+				WithNull = !WithNull;
+			}
+
+			public override QueryElementType ElementType => QueryElementType.IsTruePredicate;
+
 		}
 
 		// expression IS [ NOT ] NULL

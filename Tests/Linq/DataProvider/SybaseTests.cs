@@ -47,8 +47,8 @@ namespace Tests.DataProvider
 
 			if (convertToString)
 			{
-				actualValue   = actualValue.  ToString();
-				expectedValue = expectedValue.ToString();
+				actualValue   = actualValue.  ToString()!;
+				expectedValue = expectedValue.ToString()!;
 			}
 
 			Assert.That(actualValue, Is.EqualTo(expectedValue));

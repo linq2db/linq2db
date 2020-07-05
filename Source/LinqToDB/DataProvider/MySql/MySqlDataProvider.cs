@@ -78,7 +78,7 @@ namespace LinqToDB.DataProvider.MySql
 			return _sqlOptimizer;
 		}
 
-#if NETSTANDARD2_0 || NETCOREAPP2_1
+#if !NET45 && !NET46
 		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
 		{
 			return true;

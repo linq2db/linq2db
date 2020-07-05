@@ -224,7 +224,7 @@ namespace LinqToDB.Common.Internal.Cache
             var utcNow = _options.Clock!.UtcNow;
             var found = false;
 
-            if (_entries.TryGetValue(key, out CacheEntry entry))
+            if (_entries.TryGetValue(key, out var entry))
             {
                 // Check if expired due to expiration tokens, timers, etc. and if so, remove it.
                 // Allow a stale Replaced value to be returned due to concurrent calls to SetExpired during SetEntry.
@@ -259,7 +259,7 @@ namespace LinqToDB.Common.Internal.Cache
             }
 
             CheckDisposed();
-            if (_entries.TryRemove(key, out CacheEntry entry))
+            if (_entries.TryRemove(key, out var entry))
             {
                 if (_options.SizeLimit.HasValue)
                 {
@@ -300,7 +300,7 @@ namespace LinqToDB.Common.Internal.Cache
             if (_options.ExpirationScanFrequency < now - _lastExpirationScan)
             {
                 _lastExpirationScan = now;
-                Task.Factory.StartNew(state => ScanForExpiredItems((MemoryCache)state), this,
+                Task.Factory.StartNew(state => ScanForExpiredItems((MemoryCache)state!), this,
                     CancellationToken.None, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default);
             }
         }
@@ -350,7 +350,7 @@ namespace LinqToDB.Common.Internal.Cache
 //            _logger.LogDebug("Overcapacity compaction triggered");
 
             // Spawn background thread for compaction
-            ThreadPool.QueueUserWorkItem(s => OvercapacityCompaction((MemoryCache)s), this);
+            ThreadPool.QueueUserWorkItem(s => OvercapacityCompaction((MemoryCache)s!), this);
         }
 
         private static void OvercapacityCompaction(MemoryCache cache)

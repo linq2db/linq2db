@@ -125,7 +125,7 @@ namespace LinqToDB.SqlQuery
 
 			if (identityField != null)
 			{
-				var cd = ed[identityField.Name];
+				var cd = ed[identityField.Name]!;
 				SequenceAttributes = cd.SequenceName == null ? null : new[] { cd.SequenceName };
 			}
 		}
@@ -189,7 +189,7 @@ namespace LinqToDB.SqlQuery
 
 		#region Public Members
 
-		public SqlField this[string fieldName]
+		public SqlField? this[string fieldName]
 		{
 			get
 			{
@@ -333,7 +333,8 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
-		bool  ISqlExpression.CanBeNull  => true;
+		public bool CanBeNull { get; set; } = true;
+
 		int   ISqlExpression.Precedence => Precedence.Primary;
 		Type? ISqlExpression.SystemType => ObjectType;
 
@@ -346,7 +347,7 @@ namespace LinqToDB.SqlQuery
 
 		#region IEquatable<ISqlExpression> Members
 
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression other)
+		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
 		{
 			return this == other;
 		}
@@ -372,6 +373,16 @@ namespace LinqToDB.SqlQuery
 			{
 				Name         = "INSERTED",
 				PhysicalName = "INSERTED",
+				Schema       = null,
+				Database     = null,
+				Server       = null,
+				SqlTableType = SqlTableType.SystemTable,
+			};
+		internal static SqlTable Deleted(Type objectType)
+			=> new SqlTable(objectType)
+			{
+				Name         = "DELETED",
+				PhysicalName = "DELETED",
 				Schema       = null,
 				Database     = null,
 				Server       = null,

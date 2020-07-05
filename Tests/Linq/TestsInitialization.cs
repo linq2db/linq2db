@@ -38,7 +38,7 @@ public class TestsInitialization
 		RegisterSapHanaFactory();
 		RegisterSqlCEFactory();
 
-#if !NETCOREAPP2_1 && !AZURE
+#if NET46 && !AZURE
 		// configure assembly redirect for referenced assemblies to use version from GAC
 		// this solves exception from provider-specific tests, when it tries to load version from redist folder
 		// but loaded from GAC assembly has other version
@@ -65,12 +65,12 @@ public class TestsInitialization
 
 	private void RegisterSapHanaFactory()
 	{
-#if NETCOREAPP2_1
+#if !NET46
 		try
 		{
 			// woo-hoo, hardcoded pathes! default install location on x64 system
 			var srcPath = @"c:\Program Files (x86)\sap\hdbclient\dotnetcore\v2.1\Sap.Data.Hana.Core.v2.1.dll";
-			var targetPath = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, Path.GetFileName(srcPath));
+			var targetPath = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory!, Path.GetFileName(srcPath));
 			if (File.Exists(srcPath))
 			{
 				// original path contains spaces which breaks broken native dlls discovery logic in SAP provider
@@ -86,7 +86,7 @@ public class TestsInitialization
 
 	private void RegisterSqlCEFactory()
 	{
-#if NETCOREAPP2_1
+#if !NET46
 		try
 		{
 			// default install pathes. Hardcoded for now as hardly anyone will need other location in near future

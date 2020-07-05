@@ -20,7 +20,7 @@ namespace LinqToDB.DataProvider.SapHana
 		// we can't use BasicSqlBuilder.GetValueBuilder, because
 		// a) we need to escape with ' every value,
 		// b) we don't have dataprovider here ether
-		private static string ValueToString(object value)
+		private static string? ValueToString(object value)
 		{
 			if (value is string stringValue)
 				return stringValue;
@@ -56,7 +56,7 @@ namespace LinqToDB.DataProvider.SapHana
 					continue;
 				var p = paramsList[i];
 				sqlValues.Add(new SqlValue("$$" + p.Name + "$$"));
-				sqlValues.Add(new SqlValue(ValueToString(val)));
+				sqlValues.Add(new SqlValue(ValueToString(val)!));
 			}
 
 			var arg = new ISqlExpression[1];

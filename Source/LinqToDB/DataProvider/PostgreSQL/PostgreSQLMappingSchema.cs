@@ -27,11 +27,15 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			AddScalarType(typeof(PhysicalAddress), DataType.Udt);
 
 			SetValueToSqlConverter(typeof(bool),     (sb,dt,v) => sb.Append(v));
-			SetValueToSqlConverter(typeof(string),   (sb,dt,v) => ConvertStringToSql(sb, v.ToString()));
+			SetValueToSqlConverter(typeof(string),   (sb,dt,v) => ConvertStringToSql(sb, v.ToString()!));
 			SetValueToSqlConverter(typeof(char),     (sb,dt,v) => ConvertCharToSql  (sb, (char)v));
 			SetValueToSqlConverter(typeof(byte[]),   (sb,dt,v) => ConvertBinaryToSql(sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary),   (sb,dt,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
 			SetValueToSqlConverter(typeof(DateTime), (sb,dt,v) => BuildDateTime(sb, dt, (DateTime)v));
+
+			AddScalarType(typeof(string),          DataType.Text);
+			AddScalarType(typeof(TimeSpan),        DataType.Interval);
+			AddScalarType(typeof(TimeSpan?),       DataType.Interval);
 		}
 
 		static void BuildDateTime(StringBuilder stringBuilder, SqlDataType dt, DateTime value)

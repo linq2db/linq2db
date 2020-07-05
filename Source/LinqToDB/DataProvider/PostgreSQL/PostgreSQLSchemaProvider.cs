@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.NetworkInformation;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
@@ -11,6 +13,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using SchemaProvider;
 	using System.Data;
 	using System.Net;
+	using SqlQuery;
 
 	public class PostgreSQLSchemaProvider : SchemaProviderBase
 	{
@@ -25,91 +28,97 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			var list = new[]
 			{
-				new DataTypeInfo { TypeName = "name",                        DataType = typeof(string).        AssemblyQualifiedName },
-				new DataTypeInfo { TypeName = "oid",                         DataType = typeof(int).           AssemblyQualifiedName },
-				new DataTypeInfo { TypeName = "xid",                         DataType = typeof(int).           AssemblyQualifiedName },
-				new DataTypeInfo { TypeName = "smallint",                    DataType = typeof(short).         AssemblyQualifiedName },
-				new DataTypeInfo { TypeName = "int2",                        DataType = typeof(short).         AssemblyQualifiedName },
-				new DataTypeInfo { TypeName = "integer",                     DataType = typeof(int).           AssemblyQualifiedName },
-				new DataTypeInfo { TypeName = "int4",                        DataType = typeof(int).           AssemblyQualifiedName },
-				new DataTypeInfo { TypeName = "bigint",                      DataType = typeof(long).          AssemblyQualifiedName },
-				new DataTypeInfo { TypeName = "int8",                        DataType = typeof(long).          AssemblyQualifiedName },
-				new DataTypeInfo { TypeName = "real",                        DataType = typeof(float).         AssemblyQualifiedName },
-				new DataTypeInfo { TypeName = "float4",                      DataType = typeof(float).         AssemblyQualifiedName },
-				new DataTypeInfo { TypeName = "double precision",            DataType = typeof(double).        AssemblyQualifiedName },
-				new DataTypeInfo { TypeName = "float8",                      DataType = typeof(double).        AssemblyQualifiedName },
-				new DataTypeInfo { TypeName = "boolean",                     DataType = typeof(bool).          AssemblyQualifiedName },
-				new DataTypeInfo { TypeName = "bool",                        DataType = typeof(bool).          AssemblyQualifiedName },
-				new DataTypeInfo { TypeName = "regproc",                     DataType = typeof(object).        AssemblyQualifiedName },
-				new DataTypeInfo { TypeName = "money",                       DataType = typeof(decimal).       AssemblyQualifiedName },
-				new DataTypeInfo { TypeName = "text",                        DataType = typeof(string).        AssemblyQualifiedName },
-				new DataTypeInfo { TypeName = "xml",                         DataType = typeof(string).        AssemblyQualifiedName },
+				new DataTypeInfo { TypeName = "name",                        DataType = typeof(string).        AssemblyQualifiedName! },
+				new DataTypeInfo { TypeName = "oid",                         DataType = typeof(int).           AssemblyQualifiedName! },
+				new DataTypeInfo { TypeName = "xid",                         DataType = typeof(int).           AssemblyQualifiedName! },
+				new DataTypeInfo { TypeName = "smallint",                    DataType = typeof(short).         AssemblyQualifiedName! },
+				new DataTypeInfo { TypeName = "int2",                        DataType = typeof(short).         AssemblyQualifiedName! },
+				new DataTypeInfo { TypeName = "integer",                     DataType = typeof(int).           AssemblyQualifiedName! },
+				new DataTypeInfo { TypeName = "int4",                        DataType = typeof(int).           AssemblyQualifiedName! },
+				new DataTypeInfo { TypeName = "bigint",                      DataType = typeof(long).          AssemblyQualifiedName! },
+				new DataTypeInfo { TypeName = "int8",                        DataType = typeof(long).          AssemblyQualifiedName! },
+				new DataTypeInfo { TypeName = "real",                        DataType = typeof(float).         AssemblyQualifiedName! },
+				new DataTypeInfo { TypeName = "float4",                      DataType = typeof(float).         AssemblyQualifiedName! },
+				new DataTypeInfo { TypeName = "double precision",            DataType = typeof(double).        AssemblyQualifiedName! },
+				new DataTypeInfo { TypeName = "float8",                      DataType = typeof(double).        AssemblyQualifiedName! },
+				new DataTypeInfo { TypeName = "boolean",                     DataType = typeof(bool).          AssemblyQualifiedName! },
+				new DataTypeInfo { TypeName = "bool",                        DataType = typeof(bool).          AssemblyQualifiedName! },
+				new DataTypeInfo { TypeName = "regproc",                     DataType = typeof(object).        AssemblyQualifiedName! },
+				new DataTypeInfo { TypeName = "money",                       DataType = typeof(decimal).       AssemblyQualifiedName! },
+				new DataTypeInfo { TypeName = "text",                        DataType = typeof(string).        AssemblyQualifiedName! },
+				new DataTypeInfo { TypeName = "xml",                         DataType = typeof(string).        AssemblyQualifiedName! },
 
-				new DataTypeInfo { TypeName = "bytea",                       DataType = typeof(byte[]).        AssemblyQualifiedName },
-				new DataTypeInfo { TypeName = "uuid",                        DataType = typeof(Guid).          AssemblyQualifiedName },
+				new DataTypeInfo { TypeName = "bytea",                       DataType = typeof(byte[]).        AssemblyQualifiedName! },
+				new DataTypeInfo { TypeName = "uuid",                        DataType = typeof(Guid).          AssemblyQualifiedName! },
 
-				new DataTypeInfo { TypeName = "hstore",                      DataType = typeof(Dictionary<string,string>).AssemblyQualifiedName},
-				new DataTypeInfo { TypeName = "json",                        DataType = typeof(string).        AssemblyQualifiedName },
-				new DataTypeInfo { TypeName = "jsonb",                       DataType = typeof(string).        AssemblyQualifiedName },
+				new DataTypeInfo { TypeName = "hstore",                      DataType = typeof(Dictionary<string,string>).AssemblyQualifiedName!},
+				new DataTypeInfo { TypeName = "json",                        DataType = typeof(string).        AssemblyQualifiedName! },
+				new DataTypeInfo { TypeName = "jsonb",                       DataType = typeof(string).        AssemblyQualifiedName! },
 
-				new DataTypeInfo { TypeName = "character varying",           DataType = typeof(string).        AssemblyQualifiedName, CreateFormat = "character varying({0})",            CreateParameters = "length" },
-				new DataTypeInfo { TypeName = "varchar",                     DataType = typeof(string).        AssemblyQualifiedName, CreateFormat = "character varying({0})",            CreateParameters = "length" },
-				new DataTypeInfo { TypeName = "character",                   DataType = typeof(string).        AssemblyQualifiedName, CreateFormat = "character({0})",                    CreateParameters = "length" },
-				new DataTypeInfo { TypeName = "bpchar",                      DataType = typeof(string).        AssemblyQualifiedName, CreateFormat = "character({0})",                    CreateParameters = "length" },
-				new DataTypeInfo { TypeName = "numeric",                     DataType = typeof(decimal).       AssemblyQualifiedName, CreateFormat = "numeric({0},{1})",                  CreateParameters = "precision,scale" },
+				new DataTypeInfo { TypeName = "character varying",           DataType = typeof(string).        AssemblyQualifiedName!, CreateFormat = "character varying({0})",            CreateParameters = "length" },
+				new DataTypeInfo { TypeName = "varchar",                     DataType = typeof(string).        AssemblyQualifiedName!, CreateFormat = "character varying({0})",            CreateParameters = "length" },
+				new DataTypeInfo { TypeName = "character",                   DataType = typeof(string).        AssemblyQualifiedName!, CreateFormat = "character({0})",                    CreateParameters = "length" },
+				new DataTypeInfo { TypeName = "bpchar",                      DataType = typeof(string).        AssemblyQualifiedName!, CreateFormat = "character({0})",                    CreateParameters = "length" },
+				new DataTypeInfo { TypeName = "numeric",                     DataType = typeof(decimal).       AssemblyQualifiedName!, CreateFormat = "numeric({0},{1})",                  CreateParameters = "precision,scale" },
 
-				new DataTypeInfo { TypeName = "timestamptz",                 DataType = typeof(DateTimeOffset).AssemblyQualifiedName, CreateFormat = "timestamp ({0}) with time zone",    CreateParameters = "precision" },
-				new DataTypeInfo { TypeName = "timestamp with time zone",    DataType = typeof(DateTimeOffset).AssemblyQualifiedName, CreateFormat = "timestamp ({0}) with time zone",    CreateParameters = "precision" },
+				new DataTypeInfo { TypeName = "interval",                    DataType = typeof(TimeSpan).      AssemblyQualifiedName! },
+				new DataTypeInfo { TypeName = "time with time zone",         DataType = typeof(DateTimeOffset).AssemblyQualifiedName! },
+				new DataTypeInfo { TypeName = "time without time zone",      DataType = typeof(TimeSpan).      AssemblyQualifiedName! },
 
-				new DataTypeInfo { TypeName = "timestamp",                   DataType = typeof(DateTime).      AssemblyQualifiedName, CreateFormat = "timestamp ({0}) without time zone", CreateParameters = "precision" },
-				new DataTypeInfo { TypeName = "timestamp without time zone", DataType = typeof(DateTime).      AssemblyQualifiedName, CreateFormat = "timestamp ({0}) without time zone", CreateParameters = "precision" },
+				new DataTypeInfo { TypeName = "timestamptz",                 DataType = typeof(DateTimeOffset).AssemblyQualifiedName!, CreateFormat = "timestamp ({0}) with time zone",    CreateParameters = "precision" },
+				new DataTypeInfo { TypeName = "timestamp with time zone",    DataType = typeof(DateTimeOffset).AssemblyQualifiedName!, CreateFormat = "timestamp ({0}) with time zone",    CreateParameters = "precision" },
+
+				new DataTypeInfo { TypeName = "timestamp",                   DataType = typeof(DateTime).      AssemblyQualifiedName!, CreateFormat = "timestamp ({0}) without time zone", CreateParameters = "precision" },
+				new DataTypeInfo { TypeName = "timestamp without time zone", DataType = typeof(DateTime).      AssemblyQualifiedName!, CreateFormat = "timestamp ({0}) without time zone", CreateParameters = "precision" },
 			}.ToList();
 
 			var provider = (PostgreSQLDataProvider)dataConnection.DataProvider;
 
-			list.Add(new DataTypeInfo { TypeName = "inet"                       , DataType = provider.Adapter.NpgsqlInetType.    AssemblyQualifiedName, ProviderSpecific = true });
-			list.Add(new DataTypeInfo { TypeName = "cidr"                       , DataType = provider.Adapter.NpgsqlInetType.    AssemblyQualifiedName, ProviderSpecific = true });
-			list.Add(new DataTypeInfo { TypeName = "point"                      , DataType = provider.Adapter.NpgsqlPointType.   AssemblyQualifiedName, ProviderSpecific = true });
-			list.Add(new DataTypeInfo { TypeName = "line"                       , DataType = provider.Adapter.NpgsqlLineType.    AssemblyQualifiedName, ProviderSpecific = true });
-			list.Add(new DataTypeInfo { TypeName = "lseg"                       , DataType = provider.Adapter.NpgsqlLSegType.    AssemblyQualifiedName, ProviderSpecific = true });
-			list.Add(new DataTypeInfo { TypeName = "box"                        , DataType = provider.Adapter.NpgsqlBoxType.     AssemblyQualifiedName, ProviderSpecific = true });
-			list.Add(new DataTypeInfo { TypeName = "path"                       , DataType = provider.Adapter.NpgsqlPathType.    AssemblyQualifiedName, ProviderSpecific = true });
-			list.Add(new DataTypeInfo { TypeName = "polygon"                    , DataType = provider.Adapter.NpgsqlPolygonType. AssemblyQualifiedName, ProviderSpecific = true });
-			list.Add(new DataTypeInfo { TypeName = "circle"                     , DataType = provider.Adapter.NpgsqlCircleType.  AssemblyQualifiedName, ProviderSpecific = true });
-			list.Add(new DataTypeInfo { TypeName = "date"                       , DataType = provider.Adapter.NpgsqlDateType.    AssemblyQualifiedName, ProviderSpecific = true });
-			list.Add(new DataTypeInfo { TypeName = "interval"                   , DataType = provider.Adapter.NpgsqlTimeSpanType.AssemblyQualifiedName, ProviderSpecific = true, CreateFormat = "interval({0})"                    , CreateParameters = "precision" });
-			list.Add(new DataTypeInfo { TypeName = "timestamptz"                , DataType = provider.Adapter.NpgsqlDateTimeType.AssemblyQualifiedName, ProviderSpecific = true, CreateFormat = "timestamp ({0}) with time zone"   , CreateParameters = "precision" });
-			list.Add(new DataTypeInfo { TypeName = "timestamp with time zone"   , DataType = provider.Adapter.NpgsqlDateTimeType.AssemblyQualifiedName, ProviderSpecific = true, CreateFormat = "timestamp ({0}) with time zone"   , CreateParameters = "precision" });
-			list.Add(new DataTypeInfo { TypeName = "timestamp"                  , DataType = provider.Adapter.NpgsqlDateTimeType.AssemblyQualifiedName, ProviderSpecific = true, CreateFormat = "timestamp ({0}) without time zone", CreateParameters = "precision" });
-			list.Add(new DataTypeInfo { TypeName = "timestamp without time zone", DataType = provider.Adapter.NpgsqlDateTimeType.AssemblyQualifiedName, ProviderSpecific = true, CreateFormat = "timestamp ({0}) without time zone", CreateParameters = "precision" });
+			list.Add(new DataTypeInfo { TypeName = "inet"                       , DataType = provider.Adapter.NpgsqlInetType.    AssemblyQualifiedName!, ProviderSpecific = true });
+			list.Add(new DataTypeInfo { TypeName = "cidr"                       , DataType = provider.Adapter.NpgsqlInetType.    AssemblyQualifiedName!, ProviderSpecific = true });
+			list.Add(new DataTypeInfo { TypeName = "point"                      , DataType = provider.Adapter.NpgsqlPointType.   AssemblyQualifiedName!, ProviderSpecific = true });
+			list.Add(new DataTypeInfo { TypeName = "line"                       , DataType = provider.Adapter.NpgsqlLineType.    AssemblyQualifiedName!, ProviderSpecific = true });
+			list.Add(new DataTypeInfo { TypeName = "lseg"                       , DataType = provider.Adapter.NpgsqlLSegType.    AssemblyQualifiedName!, ProviderSpecific = true });
+			list.Add(new DataTypeInfo { TypeName = "box"                        , DataType = provider.Adapter.NpgsqlBoxType.     AssemblyQualifiedName!, ProviderSpecific = true });
+			list.Add(new DataTypeInfo { TypeName = "path"                       , DataType = provider.Adapter.NpgsqlPathType.    AssemblyQualifiedName!, ProviderSpecific = true });
+			list.Add(new DataTypeInfo { TypeName = "polygon"                    , DataType = provider.Adapter.NpgsqlPolygonType. AssemblyQualifiedName!, ProviderSpecific = true });
+			list.Add(new DataTypeInfo { TypeName = "circle"                     , DataType = provider.Adapter.NpgsqlCircleType.  AssemblyQualifiedName!, ProviderSpecific = true });
+			list.Add(new DataTypeInfo { TypeName = "date"                       , DataType = provider.Adapter.NpgsqlDateType.    AssemblyQualifiedName!, ProviderSpecific = true });
+			list.Add(new DataTypeInfo { TypeName = "interval"                   , DataType = provider.Adapter.NpgsqlTimeSpanType.AssemblyQualifiedName!, ProviderSpecific = true, CreateFormat = "interval({0})"                    , CreateParameters = "precision" });
+			list.Add(new DataTypeInfo { TypeName = "timestamptz"                , DataType = provider.Adapter.NpgsqlDateTimeType.AssemblyQualifiedName!, ProviderSpecific = true, CreateFormat = "timestamp ({0}) with time zone"   , CreateParameters = "precision" });
+			list.Add(new DataTypeInfo { TypeName = "timestamp with time zone"   , DataType = provider.Adapter.NpgsqlDateTimeType.AssemblyQualifiedName!, ProviderSpecific = true, CreateFormat = "timestamp ({0}) with time zone"   , CreateParameters = "precision" });
+			list.Add(new DataTypeInfo { TypeName = "timestamp"                  , DataType = provider.Adapter.NpgsqlDateTimeType.AssemblyQualifiedName!, ProviderSpecific = true, CreateFormat = "timestamp ({0}) without time zone", CreateParameters = "precision" });
+			list.Add(new DataTypeInfo { TypeName = "timestamp without time zone", DataType = provider.Adapter.NpgsqlDateTimeType.AssemblyQualifiedName!, ProviderSpecific = true, CreateFormat = "timestamp ({0}) without time zone", CreateParameters = "precision" });
 
 
-			list.Add(new DataTypeInfo { TypeName = "inet"                   , DataType = typeof(IPAddress).      AssemblyQualifiedName       });
+			list.Add(new DataTypeInfo { TypeName = "inet"                   , DataType = typeof(IPAddress).      AssemblyQualifiedName!       });
 			list.Add(new DataTypeInfo { TypeName = "cidr"                   , DataType = "System.ValueTuple`2[[System.Net.IPAddress, System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" });
-			list.Add(new DataTypeInfo { TypeName = "date"                   , DataType = typeof(DateTime).       AssemblyQualifiedName });
-			list.Add(new DataTypeInfo { TypeName = "timetz"                 , DataType = typeof(DateTimeOffset). AssemblyQualifiedName, CreateFormat = "time ({0}) with time zone",         CreateParameters = "precision" });
-			list.Add(new DataTypeInfo { TypeName = "time without time zone" , DataType = typeof(TimeSpan).       AssemblyQualifiedName, CreateFormat = "time ({0}) without time zone",      CreateParameters = "precision" });
-			list.Add(new DataTypeInfo { TypeName = "time"                   , DataType = typeof(TimeSpan).       AssemblyQualifiedName, CreateFormat = "time ({0}) without time zone",      CreateParameters = "precision" });
-			list.Add(new DataTypeInfo { TypeName = "time with time zone"    , DataType = typeof(DateTimeOffset). AssemblyQualifiedName, CreateFormat = "time ({0}) with time zone",         CreateParameters = "precision" });
-			list.Add(new DataTypeInfo { TypeName = "interval"               , DataType = typeof(TimeSpan).       AssemblyQualifiedName, CreateFormat = "interval({0})",                     CreateParameters = "precision" });
-			list.Add(new DataTypeInfo { TypeName = "macaddr"                , DataType = typeof(PhysicalAddress).AssemblyQualifiedName });
-			list.Add(new DataTypeInfo { TypeName = "macaddr8"               , DataType = typeof(PhysicalAddress).AssemblyQualifiedName });
-			list.Add(new DataTypeInfo { TypeName = "bit"                    , DataType = typeof(BitArray).       AssemblyQualifiedName, CreateFormat = "bit({0})",                          CreateParameters = "size" });
-			list.Add(new DataTypeInfo { TypeName = "bit varying"            , DataType = typeof(BitArray).       AssemblyQualifiedName, CreateFormat = "bit varying({0})",                  CreateParameters = "size" });
-			list.Add(new DataTypeInfo { TypeName = "varbit"                 , DataType = typeof(BitArray).       AssemblyQualifiedName, CreateFormat = "bit varying({0})",                  CreateParameters = "size" });
+			list.Add(new DataTypeInfo { TypeName = "date"                   , DataType = typeof(DateTime).       AssemblyQualifiedName! });
+			list.Add(new DataTypeInfo { TypeName = "timetz"                 , DataType = typeof(DateTimeOffset). AssemblyQualifiedName!, CreateFormat = "time ({0}) with time zone",         CreateParameters = "precision" });
+			list.Add(new DataTypeInfo { TypeName = "time without time zone" , DataType = typeof(TimeSpan).       AssemblyQualifiedName!, CreateFormat = "time ({0}) without time zone",      CreateParameters = "precision" });
+			list.Add(new DataTypeInfo { TypeName = "time"                   , DataType = typeof(TimeSpan).       AssemblyQualifiedName!, CreateFormat = "time ({0}) without time zone",      CreateParameters = "precision" });
+			list.Add(new DataTypeInfo { TypeName = "time with time zone"    , DataType = typeof(DateTimeOffset). AssemblyQualifiedName!, CreateFormat = "time ({0}) with time zone",         CreateParameters = "precision" });
+			list.Add(new DataTypeInfo { TypeName = "interval"               , DataType = typeof(TimeSpan).       AssemblyQualifiedName!, CreateFormat = "interval({0})",                     CreateParameters = "precision" });
+			list.Add(new DataTypeInfo { TypeName = "macaddr"                , DataType = typeof(PhysicalAddress).AssemblyQualifiedName! });
+			list.Add(new DataTypeInfo { TypeName = "macaddr8"               , DataType = typeof(PhysicalAddress).AssemblyQualifiedName! });
+			list.Add(new DataTypeInfo { TypeName = "bit"                    , DataType = typeof(BitArray).       AssemblyQualifiedName!, CreateFormat = "bit({0})",                          CreateParameters = "size" });
+			list.Add(new DataTypeInfo { TypeName = "bit varying"            , DataType = typeof(BitArray).       AssemblyQualifiedName!, CreateFormat = "bit varying({0})",                  CreateParameters = "size" });
+			list.Add(new DataTypeInfo { TypeName = "varbit"                 , DataType = typeof(BitArray).       AssemblyQualifiedName!, CreateFormat = "bit varying({0})",                  CreateParameters = "size" });
 
 			return list;
 		}
 
-		protected override List<TableInfo> GetTables(DataConnection dataConnection)
+		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var sql = @"
+			var defaultSchema = ToDatabaseLiteral(dataConnection, options?.DefaultSchema ?? "public");
+			
+			var sql = $@"
 				SELECT
 					t.table_catalog || '.' || t.table_schema || '.' || t.table_name            as TableID,
 					t.table_catalog                                                            as CatalogName,
 					t.table_schema                                                             as SchemaName,
 					t.table_name                                                               as TableName,
-					t.table_schema = 'public'                                                  as IsDefaultSchema,
+					t.table_schema = {defaultSchema}                                           as IsDefaultSchema,
 					t.table_type = 'VIEW'                                                      as IsView,
 					(
 						SELECT pgd.description
@@ -121,26 +130,22 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					)                                                                          as Description,
 					left(t.table_schema, 3) = 'pg_' OR t.table_schema = 'information_schema'   as IsProviderSpecific
 				FROM
-					information_schema.tables t";
-
-			if (ExcludedSchemas.Count == 0 && IncludedSchemas.Count == 0)
-				sql += @"
-				WHERE
-					table_schema NOT IN ('pg_catalog','information_schema')";
+					information_schema.tables t
+				WHERE {GenerateSchemaFilter(dataConnection, "table_schema")}";
 
 			// materialized views supported starting from pgsql 9.3
 			var version = dataConnection.Query<int>("SHOW  server_version_num").Single();
 			if (version >= 90300)
 			{
 				// materialized views are not exposed to information_schema
-				sql += @"
+				sql += $@"
 			UNION ALL
 				SELECT
-					v.schemaname || '.' || v.matviewname                                       as TableID,
-					NULL                                                                       as CatalogName,
+					current_database() || '.' || v.schemaname || '.' || v.matviewname          as TableID,
+					current_database()                                                         as CatalogName,
 					v.schemaname                                                               as SchemaName,
 					v.matviewname                                                              as TableName,
-					v.schemaname = 'public'                                                    as IsDefaultSchema,
+					v.schemaname = {defaultSchema}                                             as IsDefaultSchema,
 					true                                                                       as IsView,
 					(
 						SELECT pgd.description
@@ -151,21 +156,18 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						LIMIT 1
 					)                                                                          as Description,
 					false                                                                      as IsProviderSpecific
-				FROM pg_matviews v";
-
-				if (ExcludedSchemas.Count == 0 && IncludedSchemas.Count == 0)
-					sql += @"
-				WHERE
-					v.schemaname NOT IN ('pg_catalog','information_schema')";
+				FROM pg_matviews v
+				WHERE {GenerateSchemaFilter(dataConnection, "v.schemaname")}";
 			}
 
 			return dataConnection.Query<TableInfo>(sql).ToList();
 		}
 
-		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
+		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
+			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
 			return
-				dataConnection.Query<PrimaryKeyInfo>(@"
+				dataConnection.Query<PrimaryKeyInfo>($@"
 					SELECT
 						current_database() || '.' || pg_namespace.nspname || '.' || pg_class.relname as TableID,
 						pg_constraint.conname                                                        as PrimaryKeyName,
@@ -177,92 +179,194 @@ namespace LinqToDB.DataProvider.PostgreSQL
 							JOIN pg_class      ON pg_class.oid = pg_constraint.conrelid
 							JOIN pg_namespace  ON pg_class.relnamespace = pg_namespace.oid
 					WHERE
-						pg_constraint.contype = 'p'")
+						pg_constraint.contype = 'p'
+						AND {GenerateSchemaFilter(dataConnection, "pg_namespace.nspname")}")
 				.ToList();
 		}
 
-		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
+		static string ToDatabaseLiteral(DataConnection dataConnection, string? str)
 		{
-			var sql = @"
-					SELECT
-						c.table_catalog || '.' || c.table_schema || '.' || c.table_name           as TableID,
-						c.column_name                                                             as Name,
-						c.is_nullable = 'YES'                                                     as IsNullable,
-						c.ordinal_position                                                        as Ordinal,
-						c.data_type                                                               as DataType,
-						c.character_maximum_length                                                as Length,
-						COALESCE(
-							c.numeric_precision::integer,
-							c.datetime_precision::integer,
-							c.interval_precision::integer)                                        as Precision,
-						c.numeric_scale                                                           as Scale,
-						c.is_identity = 'YES' OR COALESCE(c.column_default ~* 'nextval', false)   as IsIdentity,
-						c.is_generated <> 'NEVER'                                                 as SkipOnInsert,
-						c.is_updatable = 'NO'                                                     as SkipOnUpdate,
-						(
-							SELECT pgd.description
-							FROM
-								pg_catalog.pg_statio_all_tables as st
-								JOIN pg_catalog.pg_description pgd ON pgd.objsubid = c.ordinal_position AND pgd.objoid = st.relid
-							WHERE c.table_schema = st.schemaname AND c.table_name=st.relname
-							LIMIT 1
-						)                                                                         as Description
-					FROM
-						information_schema.columns as c";
-
-			if (ExcludedSchemas.Count == 0 || IncludedSchemas.Count == 0)
-				sql += @"
-					WHERE
-						table_schema NOT IN ('pg_catalog','information_schema')";
-
-			// materialized views supported starting from pgsql 9.3
-			var version = dataConnection.Query<int>("SHOW  server_version_num").Single();
-			if (version >= 90300)
-			{
-				// materialized views are not exposed to information_schema
-				// NOTE: looks like IsNullable always true for mat.views (or I dunno where to look for it)
-				sql += @"
-				UNION ALL
-					SELECT
-						pg_namespace.nspname || '.' || pg_class.relname                           as TableID,
-						pg_attribute.attname                                                      as Name,
-						pg_attribute.attnotnull <> true                                           as IsNullable,
-						pg_attribute.attnum                                                       as Ordinal,
-						pg_type.typname                                                           as DataType,
-						CASE WHEN pg_attribute.atttypmod = -1
-							THEN NULL
-							ELSE pg_attribute.atttypmod - 4
-						END                                                                       as Length,
-						COALESCE(
-							information_schema._pg_numeric_precision(pg_type.oid, pg_attribute.atttypmod),
-							information_schema._pg_datetime_precision(pg_type.oid, pg_attribute.atttypmod))
-																								  as Precision,
-						information_schema._pg_numeric_scale(pg_type.oid, pg_attribute.atttypmod) as Scale,
-						false                                                                     as IsIdentity,
-						true                                                                      as SkipOnInsert,
-						true                                                                      as SkipOnUpdate,
-						(
-							SELECT pgd.description
-								FROM pg_catalog.pg_class
-									INNER JOIN pg_catalog.pg_namespace       ON pg_class.relnamespace = pg_namespace.oid
-									INNER JOIN pg_catalog.pg_description pgd ON pgd.objoid = pg_class.oid
-								WHERE pg_class.relkind = 'm' AND pgd.objsubid = pg_attribute.attnum AND pg_namespace.nspname = pg_namespace.nspname AND pg_class.relname = pg_class.relname
-								LIMIT 1
-					)                                                                             as Description
-						FROM pg_catalog.pg_class
-							INNER JOIN pg_catalog.pg_namespace ON pg_class.relnamespace = pg_namespace.oid
-							INNER JOIN pg_catalog.pg_attribute ON pg_class.oid = pg_attribute.attrelid
-							INNER JOIN pg_catalog.pg_type      ON pg_attribute.atttypid = pg_type.oid
-						WHERE pg_class.relkind = 'm' AND pg_attribute.attnum >= 1";
-
-				if (ExcludedSchemas.Count == 0 && IncludedSchemas.Count == 0)
-					sql += @" AND pg_namespace.nspname NOT IN ('pg_catalog','information_schema')";
-			}
-
-			return dataConnection.Query<ColumnInfo>(sql).ToList();
+			var sb = new StringBuilder();
+			dataConnection.MappingSchema.ValueToSqlConverter.Convert(sb, SqlDataType.DbText, str);
+			return sb.ToString();
 		}
 
-		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
+		string GenerateSchemaFilter(DataConnection dataConnection, string schemaColumnName)
+		{
+			var excludeSchemas =
+				new HashSet<string?>(
+					ExcludedSchemas.Where(s => !s.IsNullOrEmpty()).Union(new[] { "pg_catalog", "information_schema" }),
+					StringComparer.OrdinalIgnoreCase);
+			
+			var includeSchemas = new HashSet<string?>(IncludedSchemas.Where(s => !s.IsNullOrEmpty()), StringComparer.OrdinalIgnoreCase);
+			
+			if (includeSchemas.Count > 0)
+			{
+				foreach (var toInclude in IncludedSchemas)
+		{
+					excludeSchemas.Remove(toInclude);
+				}
+			}
+			
+			if (excludeSchemas.Count == 0 && IncludedSchemas.Count == 0)
+				return "1 = 1";
+			
+			var schemaFilter = "";
+
+			if (excludeSchemas.Count > 0)
+			{
+				var schemasToExcludeStr =
+					string.Join(", ", excludeSchemas.Select(s => ToDatabaseLiteral(dataConnection, s)));
+				schemaFilter = $@"{schemaColumnName} NOT IN ({schemasToExcludeStr})";
+			}
+
+			if (includeSchemas.Count > 0)
+			{
+				var schemasToIncludeStr =
+					string.Join(", ", includeSchemas.Select(s => ToDatabaseLiteral(dataConnection, s)));
+				if (!schemaFilter.IsNullOrEmpty())
+					schemaFilter += " AND ";
+				schemaFilter += $@"{schemaColumnName} IN ({schemasToIncludeStr})";
+			}
+
+			return schemaFilter;
+			}
+
+		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
+		{
+			var version = dataConnection.Query<int>("SHOW  server_version_num").Single();
+
+			var isIdentityExpr = "false";
+			if (version >= 100000)
+				isIdentityExpr = "attr.attidentity IN ('a', 'd')";
+
+			var sql = $@"
+				SELECT columns.TableID,
+				       columns.Name,
+				       columns.IsNullable,
+				       columns.Ordinal,
+				       columns.DataType,
+				       columns.ArrayDimensions,
+				       columns.Length,
+				       columns.Precision,
+				       columns.Scale,
+				       columns.IsIdentity OR COALESCE(columns.DefaultValue ~* 'nextval', false) AS IsIdentity,
+				       columns.SkipOnInsert,
+				       columns.SkipOnUpdate,
+				       columns.Description
+				FROM (
+				         SELECT current_database() || '.' || ns.nspname || '.' || cls.relname                            AS TableID,
+				                attr.attname                                                                             AS Name,
+				                NOT (attr.attnotnull OR typ.typtype = 'd'::""char"" AND typ.typnotnull)                    AS IsNullable,
+				                attr.attnum                                                                              AS Ordinal,
+				                CASE
+				                    WHEN typ.typtype = 'd'::""char"" THEN
+				                        CASE
+				                            WHEN nbt.nspname = 'pg_catalog'::name THEN format_type(typ.typbasetype, attr.atttypmod)
+				                            ELSE 'USER-DEFINED'::text
+				                            END
+				                    ELSE
+				                        CASE
+				                            WHEN nt.nspname = 'pg_catalog'::name THEN format_type(attr.atttypid, attr.atttypmod)
+				                            ELSE 'USER-DEFINED'::text
+				                            END
+				                    END                                                                                  AS DataType,
+				                attr.attndims                                                                            AS ArrayDimensions,
+				                information_schema._pg_char_max_length(information_schema._pg_truetypid(attr.*, typ.*),
+				                                                       information_schema._pg_truetypmod(attr.*, typ.*)) AS Length,
+				                COALESCE(information_schema._pg_numeric_precision(
+				                                 information_schema._pg_truetypid(attr.*, typ.*),
+				                                 information_schema._pg_truetypmod(attr.*, typ.*)),
+				                         information_schema._pg_datetime_precision(
+				                                 information_schema._pg_truetypid(attr.*, typ.*),
+				                                 information_schema._pg_truetypmod(attr.*, typ.*))
+				                    )                                                                                    AS Precision,
+				                information_schema._pg_numeric_scale(attr.atttypid, attr.atttypmod)                      AS Scale,
+				                {isIdentityExpr}                                                                         AS IsIdentity,
+				                cls.relkind IN ('v', 'm')                                                                AS SkipOnInsert,
+				                NOT (cls.relkind = 'r'::""char"" OR cls.relkind = 'v'::""char""
+				                    AND (EXISTS(SELECT 1
+				                                FROM pg_rewrite
+				                                WHERE pg_rewrite.ev_class = cls.oid
+				                                  AND pg_rewrite.ev_type = '2'::""char""
+				                                  AND pg_rewrite.is_instead))
+				                    AND
+				                                                  (EXISTS(SELECT 1
+				                                                          FROM pg_rewrite
+				                                                          WHERE pg_rewrite.ev_class = cls.oid
+				                                                            AND pg_rewrite.ev_type = '4'::""char""
+				                                                            AND pg_rewrite.is_instead))
+				                    )                                                                                    AS SkipOnUpdate,
+				                des.description                                                                          AS Description,
+				                CASE
+				                    WHEN atthasdef THEN (SELECT pg_get_expr(adbin, cls.oid)
+				                                         FROM pg_attrdef
+				                                         WHERE adrelid = cls.oid
+				                                           AND adnum = attr.attnum)
+				                    END                                                                                  AS DefaultValue
+
+				         FROM pg_catalog.pg_class cls
+				                  JOIN pg_namespace AS ns ON ns.oid = cls.relnamespace
+				                  LEFT JOIN pg_attribute AS attr ON attr.attrelid = cls.oid
+				                  LEFT JOIN pg_type AS typ ON attr.atttypid = typ.oid
+				                  LEFT JOIN pg_proc ON pg_proc.oid = typ.typreceive
+				                  LEFT JOIN pg_description AS des ON des.objoid = cls.oid AND des.objsubid = attr.attnum
+				                  LEFT JOIN pg_collation AS coll ON coll.oid = attr.attcollation
+				                  JOIN pg_namespace nt ON typ.typnamespace = nt.oid
+				                  LEFT JOIN (pg_type bt
+				                 JOIN pg_namespace nbt ON bt.typnamespace = nbt.oid)
+				                            ON typ.typtype = 'd'::""char"" AND typ.typbasetype = bt.oid
+				         WHERE cls.relkind IN ('r', 'v', 'm')
+				           AND attr.attnum > 0
+				           AND NOT attr.attisdropped
+				           AND {GenerateSchemaFilter(dataConnection, "ns.nspname")}
+				     ) columns;";
+
+			var result = dataConnection
+					.Query(rd =>
+					{
+						var dataType = rd.GetString(4);
+						// null - not array
+						// 0 - array with unknown dimensions (unknown for views)
+						// >0 - array with specified dimensions (known for tables)
+						var arrayDimensions = rd.IsDBNull(5) ? (int?)null : rd.GetInt32(5);
+						if (arrayDimensions != null)
+						{
+							if (arrayDimensions > 0)
+							{
+								// first brackets already there
+								--arrayDimensions;
+								while (arrayDimensions > 0)
+								{
+									dataType += "[]";
+									arrayDimensions--;
+								}
+							}
+						}
+
+						return new ColumnInfo()
+						{
+							TableID      = rd.GetString(0),
+							Name         = rd.GetString(1),
+							IsNullable   = rd.GetBoolean(2),
+							Ordinal      = rd.GetInt32(3),
+							DataType     = dataType,
+							Length       = rd.IsDBNull(6) ? (int?)null : rd.GetInt32(6),
+							Precision    = rd.IsDBNull(7) ? (int?)null : rd.GetInt32(7),
+							Scale        = rd.IsDBNull(8) ? (int?)null : rd.GetInt32(8),
+							IsIdentity   = rd.GetBoolean(9),
+							SkipOnInsert = rd.GetBoolean(10),
+							SkipOnUpdate = rd.GetBoolean(11),
+							Description  = rd.IsDBNull(12) ? null : rd.GetString(12),
+						};
+					}, sql)
+					.ToList();
+
+			return result;
+		}
+
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
+			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
 			var data = dataConnection.Query(
 				rd => new
@@ -272,7 +376,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					otherTable   = rd[2],
 					thisColumns  = new[] { rd[ 3], rd[ 4], rd[ 5], rd[ 6], rd[ 7], rd[ 8], rd[ 9], rd[10], rd[11], rd[12], rd[13], rd[14], rd[15], rd[16], rd[17], rd[18] },
 					otherColumns = new[] { rd[19], rd[20], rd[21], rd[22], rd[23], rd[24], rd[25], rd[26], rd[27], rd[28], rd[29], rd[30], rd[31], rd[32], rd[33], rd[34] },
-				}, @"
+				}, $@"
 				SELECT
 					pg_constraint.conname,
 					current_database() || '.' || this_schema.nspname  || '.' || this_table.relname,
@@ -316,7 +420,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						JOIN pg_class as other_table ON other_table.oid = pg_constraint.confrelid
 							JOIN pg_namespace as other_schema ON other_table.relnamespace = other_schema.oid
 				WHERE
-					pg_constraint.contype = 'f'")
+					pg_constraint.contype = 'f'
+					AND {GenerateSchemaFilter(dataConnection, "this_schema.nspname")}")
 				.ToList();
 
 			return
@@ -336,8 +441,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					Name         = name,
 					ThisTableID  = thisTableID,
 					OtherTableID = otherTableID,
-					ThisColumn   = Convert.ToString(col.thisColumn),
-					OtherColumn  = Convert.ToString(col.otherColumn),
+					ThisColumn   = Convert.ToString(col.thisColumn)!,
+					OtherColumn  = Convert.ToString(col.otherColumn)!,
 					Ordinal      = col.ordinal
 				}
 			).ToList();
@@ -345,6 +450,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
 		{
+			if (dataType == null)
+				return DataType.Undefined;
+			dataType = SimplifyDataType(dataType);
 			switch (dataType)
 			{
 				case "bpchar"                      :
@@ -436,7 +544,75 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return base.GetProviderSpecificType(dataType);
 		}
 
-		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
+		static Regex _matchArray = new Regex(@"^(.*)(\[\]){1}$", RegexOptions.Compiled);
+		static Regex _matchType  = new Regex(@"^(.*)(\(\d+(,\s*\d+)?\))(.*){1}$", RegexOptions.Compiled);
+
+		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo,
+			long? length, int? precision, int? scale, GetSchemaOptions options)
+		{
+			var foundType = base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options);
+			if (foundType != null)
+				return foundType;
+
+			if (dataType != null)
+			{
+				dataType = dataType.Trim();
+				var match = _matchArray.Match(dataType);
+				if (match.Success)
+				{
+					var elementType = GetSystemType(match.Groups[1].Value, null, GetDataType(match.Groups[1].Value, options), null, null, null, options);
+					if (elementType != null)
+					{
+						foundType = elementType.MakeArrayType();
+					}
+				}
+				else
+				{
+					var simplified = SimplifyDataType(dataType);
+					if (simplified != dataType)
+					{
+						foundType = GetSystemType(simplified, null, GetDataType(simplified, options), null, null, null, options);
+						if (foundType != null)
+							return foundType;
+					}
+				}
+			}
+						
+			return foundType;
+		}
+
+		protected override DataTypeInfo? GetDataType(string? typeName, GetSchemaOptions options)
+		{
+			if (typeName == null)
+				return null;
+
+			var typInfo = base.GetDataType(typeName, options);
+			if (typInfo == null)
+			{
+				var simplified = SimplifyDataType(typeName);
+				if (simplified != typeName)
+					typInfo = base.GetDataType(simplified, options);
+			}
+
+			return typInfo;
+				}
+		
+		static string SimplifyDataType(string dataType)
+		{
+			var typeMatch = _matchType.Match(dataType);
+			if (typeMatch.Success)
+			{
+				// ignore generated length, precision, scale
+				dataType = typeMatch.Groups[1].Value.Trim();
+				var suffix = typeMatch.Groups[4].Value?.Trim();
+				if (!suffix.IsNullOrEmpty())
+					dataType = dataType + " " + suffix;
+			}
+
+			return dataType;
+		}
+
+		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			// because information schema doesn't contain information about function kind like aggregate or table function
 			// we need to query additional data from pg_proc
@@ -463,13 +639,13 @@ namespace LinqToDB.DataProvider.PostgreSQL
 							IsFunction          = rd.GetString(3) == "FUNCTION",
 							IsTableFunction     = isTableResult,
 							IsAggregateFunction = Converter.ChangeTypeTo<bool>(rd[6]),
-							IsDefaultSchema     = schema == "public",
+							IsDefaultSchema     = schema == (options.DefaultSchema ?? "public"),
 							ProcedureDefinition = Converter.ChangeTypeTo<string>(rd[4]),
 							// result of function has dynamic form and vary per call if function return type is 'record'
 							// only exception is function with out/inout parameters, where we know that record contains those parameters
 							IsResultDynamic     = Converter.ChangeTypeTo<string>(rd[8]) == "record" && Converter.ChangeTypeTo<int>(rd[9]) == 0
 						};
-					}, @"
+					}, $@"
 SELECT	r.ROUTINE_CATALOG,
 		r.ROUTINE_SCHEMA,
 		r.ROUTINE_NAME,
@@ -484,7 +660,8 @@ SELECT	r.ROUTINE_CATALOG,
 		LEFT JOIN pg_catalog.pg_namespace n ON r.ROUTINE_SCHEMA = n.nspname
 		LEFT JOIN pg_catalog.pg_proc p ON p.pronamespace = n.oid AND r.SPECIFIC_NAME = p.proname || '_' || p.oid
 		LEFT JOIN (SELECT SPECIFIC_SCHEMA, SPECIFIC_NAME, COUNT(*) as cnt FROM INFORMATION_SCHEMA.parameters WHERE parameter_mode IN('OUT', 'INOUT') GROUP BY SPECIFIC_SCHEMA, SPECIFIC_NAME) as outp
-			ON r.SPECIFIC_SCHEMA = outp.SPECIFIC_SCHEMA AND r.SPECIFIC_NAME = outp.SPECIFIC_NAME")
+			ON r.SPECIFIC_SCHEMA = outp.SPECIFIC_SCHEMA AND r.SPECIFIC_NAME = outp.SPECIFIC_NAME
+		WHERE {GenerateSchemaFilter(dataConnection, "n.nspname")}")
 					.ToList();
 			}
 			else
@@ -510,11 +687,11 @@ SELECT	r.ROUTINE_CATALOG,
 							// this is only diffrence starting from v11
 							IsAggregateFunction = kind == 'a',
 							IsWindowFunction    = kind == 'w',
-							IsDefaultSchema     = schema == "public",
+							IsDefaultSchema     = schema == (options.DefaultSchema ?? "public"),
 							ProcedureDefinition = Converter.ChangeTypeTo<string>(rd[3]),
 							IsResultDynamic     = Converter.ChangeTypeTo<string>(rd[7]) == "record" && Converter.ChangeTypeTo<int>(rd[8]) == 0
 						};
-					}, @"
+					}, $@"
 SELECT	r.ROUTINE_CATALOG,
 		r.ROUTINE_SCHEMA,
 		r.ROUTINE_NAME,
@@ -528,7 +705,8 @@ SELECT	r.ROUTINE_CATALOG,
 		LEFT JOIN pg_catalog.pg_namespace n ON r.ROUTINE_SCHEMA = n.nspname
 		LEFT JOIN pg_catalog.pg_proc p ON p.pronamespace = n.oid AND r.SPECIFIC_NAME = p.proname || '_' || p.oid
 		LEFT JOIN (SELECT SPECIFIC_SCHEMA, SPECIFIC_NAME, COUNT(*)as cnt FROM INFORMATION_SCHEMA.parameters WHERE parameter_mode IN('OUT', 'INOUT') GROUP BY SPECIFIC_SCHEMA, SPECIFIC_NAME) as outp
-			ON r.SPECIFIC_SCHEMA = outp.SPECIFIC_SCHEMA AND r.SPECIFIC_NAME = outp.SPECIFIC_NAME")
+			ON r.SPECIFIC_SCHEMA = outp.SPECIFIC_SCHEMA AND r.SPECIFIC_NAME = outp.SPECIFIC_NAME
+		WHERE {GenerateSchemaFilter(dataConnection, "n.nspname")}")
 					.ToList();
 			}
 		}
@@ -629,7 +807,7 @@ SELECT	r.ROUTINE_CATALOG,
 					let precision    = r.IsNull("NumericPrecision") ? (int?)null : r.Field<int>("NumericPrecision")
 					let scale        = r.IsNull("NumericScale")     ? (int?)null : r.Field<int>("NumericScale")
 					let providerType = r.IsNull("DataType")         ? null       : r.Field<Type>("DataType")
-					let systemType   =  GetSystemType(columnType, null, dataType, length, precision, scale) ?? providerType ?? typeof(object)
+					let systemType   =  GetSystemType(columnType, null, dataType, length, precision, scale, options) ?? providerType ?? typeof(object)
 
 					select new ColumnSchema
 					{

@@ -12,7 +12,7 @@ namespace LinqToDB.Linq.Builder
 
 	partial class TableBuilder
 	{
-		static IBuildContext BuildRawSqlTable(ExpressionBuilder builder, BuildInfo buildInfo)
+		static IBuildContext BuildRawSqlTable(ExpressionBuilder builder, BuildInfo buildInfo, bool isScalar)
 		{
 			var methodCall = (MethodCallExpression)buildInfo.Expression;
 
@@ -22,7 +22,7 @@ namespace LinqToDB.Linq.Builder
 
 			var sqlArguments = arguments.Select(a => builder.ConvertToSql(buildInfo.Parent, a)).ToArray();
 
-			return new RawSqlContext(builder, buildInfo, methodCall.Method.GetGenericArguments()[0], format, sqlArguments);
+			return new RawSqlContext(builder, buildInfo, methodCall.Method.GetGenericArguments()[0], isScalar, format, sqlArguments);
 		}
 
 		public static void PrepareRawSqlArguments(Expression formatArg, Expression? parametersArg, out string format, out IEnumerable<Expression> arguments)
@@ -99,11 +99,18 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
+		//TODO: We have to separate TableContext in proper hierarchy
 		class RawSqlContext : TableContext
 		{
-			public RawSqlContext(ExpressionBuilder builder, BuildInfo buildInfo, Type originalType, string sql, params ISqlExpression[] parameters)
+			public RawSqlContext(ExpressionBuilder builder, BuildInfo buildInfo, Type originalType, bool isScalar, string sql, params ISqlExpression[] parameters)
 				: base(builder, buildInfo, new SqlRawSqlTable(builder.MappingSchema, originalType, sql, parameters))
 			{
+				// Marking All field as not nullable for satisfying DefaultIfEmptyBuilder 
+				if (isScalar)
+				{
+					IsScalar = true;
+					SqlTable.CanBeNull = false;
+				}
 			}
 		}
 	}

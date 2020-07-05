@@ -32,12 +32,14 @@ namespace LinqToDB.Linq.Builder
 				root = root.SkipMethodChain(builder.MappingSchema);
 			}
 
+			root = builder.ConvertExpressionTree(root);
+
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, root) { CreateSubQuery = true });
 
 			var finalFunction = functions.First();
 				
 			var sqlExpression = finalFunction.GetExpression(builder.DataContext, buildInfo.SelectQuery, methodCall,
-				e => builder.ConvertToExtensionSql(sequence, e));
+				(e, descriptor) => builder.ConvertToExtensionSql(sequence, e, descriptor));
 
 			var context = new ChainContext(buildInfo.Parent, sequence, methodCall);
 			context.Sql        = context.SelectQuery;

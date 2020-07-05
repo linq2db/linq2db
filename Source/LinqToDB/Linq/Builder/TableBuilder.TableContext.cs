@@ -29,15 +29,16 @@ namespace LinqToDB.Linq.Builder
 			public string Path => this.GetPath();
 #endif
 
-			public ExpressionBuilder   Builder     { get; }
-			public Expression?         Expression  { get; }
+			public ExpressionBuilder      Builder     { get; }
+			public Expression?            Expression  { get; }
+									    
+			public SelectQuery            SelectQuery { get; set; }
+			public SqlStatement?          Statement   { get; set; }
 
-			public SelectQuery         SelectQuery { get; set; }
-			public SqlStatement?       Statement   { get; set; }
+			public List<LoadWithInfo[]>?  LoadWith    { get; set; }
 
-			public List<LoadWithInfo[]>? LoadWith    { get; set; }
-
-			public virtual IBuildContext? Parent   { get; set; }
+			public virtual IBuildContext? Parent      { get; set; }
+			public bool                   IsScalar    { get; set; }
 
 			public Type             OriginalType = null!;
 			public Type             ObjectType = null!;
@@ -195,10 +196,10 @@ namespace LinqToDB.Linq.Builder
 
 				foreach (var member in members)
 				{
-					if (member.Info.MemberInfo.DeclaringType.IsAssignableFrom(objectType))
+					if (member.Info.MemberInfo.DeclaringType!.IsAssignableFrom(objectType))
 					{
 						var ma   = Expression.MakeMemberAccess(new ContextRefExpression(objectType, this), member.Info.MemberInfo);
-						var attr = Builder.MappingSchema.GetAttribute<AssociationAttribute>(member.Info.MemberInfo.ReflectedType, member.Info.MemberInfo);
+						var attr = Builder.MappingSchema.GetAttribute<AssociationAttribute>(member.Info.MemberInfo.ReflectedType!, member.Info.MemberInfo);
 
 						if (_loadWithCache == null || !_loadWithCache.TryGetValue(member.Info.MemberInfo, out var ex))
 						{
@@ -217,7 +218,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (member.Info.MemberInfo.IsDynamicColumnPropertyEx())
 						{
-							var typeAcc = TypeAccessor.GetAccessor(member.Info.MemberInfo.ReflectedType);
+							var typeAcc = TypeAccessor.GetAccessor(member.Info.MemberInfo.ReflectedType!);
 							var setter  = new MemberAccessor(typeAcc, member.Info.MemberInfo, EntityDescriptor).SetterExpression;
 
 							exprs.Add(Expression.Invoke(setter, parentObject, ex));
@@ -311,15 +312,6 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (Builder.DataContext is IEntityServices)
 				{
-//					var cex = Expression.Convert(ExpressionBuilder.DataContextParam, typeof(INotifyEntityCreated));
-//
-//					expr =
-//						Expression.Convert(
-//							Expression.Call(
-//								cex,
-//								MemberHelper.MethodOf((INotifyEntityCreated n) => n.EntityCreated(null)),
-//								expr),
-//							expr.Type);
 					expr =
 						Expression.Convert(
 							Expression.Call(
@@ -587,8 +579,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				SqlInfo[] info;
 
-				var isScalar = IsScalarType(tableType);
-				if (isScalar)
+				if (IsScalarSet())
 				{
 					info = ConvertToIndex(null, 0, ConvertFlags.All);
 					if (info.Length != 1)
@@ -715,9 +706,9 @@ namespace LinqToDB.Linq.Builder
 				return expr;
 			}
 
-			private bool IsScalarType(Type tableType)
+			private bool IsScalarSet()
 			{
-				return tableType.IsArray || Builder.MappingSchema.IsScalarType(tableType);
+				return IsScalar || Builder.MappingSchema.IsScalarType(OriginalType);
 			}
 
 			public virtual void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
@@ -752,7 +743,7 @@ namespace LinqToDB.Linq.Builder
 				var descriptor      = GetAssociationDescriptor(levelExpression, out _);
 				if (descriptor?.IsList == true)
 				{
-					if (expression.GetRootObject(Builder.MappingSchema) is ContextRefExpression)
+					if (Builder.GetRootObject(expression) is ContextRefExpression)
 						return EagerLoading.GenerateAssociationExpression(Builder, this, expression, descriptor)!;
 
 					return Builder.BuildMultipleQuery(this, expression, false);
@@ -815,7 +806,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								SqlInfo[] result;
 
-								if (!IsScalarType(OriginalType))
+								if (!IsScalarSet())
 								{
 									// Handling case with Associations
 									//
@@ -838,16 +829,9 @@ namespace LinqToDB.Linq.Builder
 								}
 								else
 								{
-									ISqlExpression sql = SqlTable;
-									if (SqlTable is SqlRawSqlTable)
-									{
-										sql                  = SqlTable.All;
-										((SqlField)sql).Type = ((SqlField)sql).Type?.WithSystemType(OriginalType) ?? new DbDataType(OriginalType);
-									}
-
 									result = new[]
 									{
-										new SqlInfo(sql) 
+										new SqlInfo(SqlTable) 
 									};
 								}
 
@@ -887,6 +871,15 @@ namespace LinqToDB.Linq.Builder
 									}
 
 									return resultSql;
+								}
+
+								if (IsScalarSet())
+								{
+									var result = new[]
+									{
+										new SqlInfo(SqlTable) 
+									};
+									return result;
 								}
 
 								var q =
@@ -935,9 +928,7 @@ namespace LinqToDB.Linq.Builder
 								{
 									new SqlInfo
 									(
-										IsScalarType(OriginalType)
-											? (ISqlExpression)SqlTable
-											: SqlTable.All
+										SqlTable.All
 									)
 								};
 							}
@@ -1060,8 +1051,12 @@ namespace LinqToDB.Linq.Builder
 					case RequestFor.Object      :
 						{
 							if (expression == null)
-								return new IsExpressionResult(true, this);
-
+							{
+								if (!IsScalarSet())
+									return new IsExpressionResult(true, this);
+								return IsExpressionResult.False;
+							}
+							
 							var contextInfo = FindContextExpression(expression, level, false, false);
 							if (contextInfo == null)
 								return IsExpressionResult.False;
@@ -1167,7 +1162,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							var tableLevel  = FindContextExpression(expression, level, true, true)!;
 							
-							if (tableLevel.Descriptor!.IsList)
+							if (tableLevel.Descriptor?.IsList == true)
 							{
 								Expression ma;
 								switch (buildInfo.Expression)
@@ -1184,7 +1179,7 @@ namespace LinqToDB.Linq.Builder
 										}
 
 									default:
-										ma = buildInfo.Expression.GetRootObject(Builder.MappingSchema);
+										ma = Builder.GetRootObject(buildInfo.Expression);
 										break;
 
 								}
@@ -1598,7 +1593,7 @@ namespace LinqToDB.Linq.Builder
 
 				var descriptor = GetAssociationDescriptor(memberInfo, EntityDescriptor);
 				if (descriptor == null && !onlyCurrent && memberInfo.MemberInfo.DeclaringType != ObjectType)
-					descriptor = GetAssociationDescriptor(memberInfo, Builder.MappingSchema.GetEntityDescriptor(memberInfo.MemberInfo.DeclaringType));
+					descriptor = GetAssociationDescriptor(memberInfo, Builder.MappingSchema.GetEntityDescriptor(memberInfo.MemberInfo.DeclaringType!));
 
 				return descriptor;
 			}
@@ -1609,7 +1604,7 @@ namespace LinqToDB.Linq.Builder
 				
 				if (accessorMember.MemberInfo.MemberType == MemberTypes.Method)
 				{
-					var attribute = Builder.MappingSchema.GetAttribute<AssociationAttribute>(accessorMember.MemberInfo.DeclaringType, accessorMember.MemberInfo, a => a.Configuration);
+					var attribute = Builder.MappingSchema.GetAttribute<AssociationAttribute>(accessorMember.MemberInfo.DeclaringType!, accessorMember.MemberInfo, a => a.Configuration);
 
 					if (attribute != null)
 						descriptor = new AssociationDescriptor

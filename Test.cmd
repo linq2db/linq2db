@@ -5,12 +5,14 @@ ECHO OFF
 SET CONFIG=%1
 SET NET46=%2
 SET NETCOREAPP21=%3
-SET FORMAT=%4
+SET NETCOREAPP31=%4
+SET FORMAT=%5
 
 IF [%1] EQU [] (SET CONFIG=Debug)
 IF [%2] EQU [] (SET NET46=1)
 IF [%3] EQU [] (SET NETCOREAPP21=1)
-IF [%4] EQU [] (SET FORMAT=html)
+IF [%4] EQU [] (SET NETCOREAPP31=1)
+IF [%5] EQU [] (SET FORMAT=html)
 
 ECHO Configuration=%CONFIG%, net46 enabled:%NET46%, netcoreapp2.1 enabled:%NETCOREAPP21%, format:%FORMAT%
 
@@ -18,3 +20,4 @@ ECHO Configuration=%CONFIG%, net46 enabled:%NET46%, netcoreapp2.1 enabled:%NETCO
 
 IF %NET46%        NEQ 0 (dotnet vstest ./Tests/Linq/bin/%CONFIG%/net46/linq2db.Tests.dll         /Framework:.NETFramework,Version=v4.6 /logger:%FORMAT%;LogFileName=net46.%FORMAT%)
 IF %NETCOREAPP21% NEQ 0 (dotnet vstest ./Tests/Linq/bin/%CONFIG%/netcoreapp2.1/linq2db.Tests.dll /Framework:.NETCoreApp,Version=v2.1   /logger:%FORMAT%;LogFileName=netcoreapp21.%FORMAT%)
+IF %NETCOREAPP31% NEQ 0 (dotnet vstest ./Tests/Linq/bin/%CONFIG%/netcoreapp3.1/linq2db.Tests.dll /Framework:.NETCoreApp,Version=v3.1   /logger:%FORMAT%;LogFileName=netcoreapp31.%FORMAT%)

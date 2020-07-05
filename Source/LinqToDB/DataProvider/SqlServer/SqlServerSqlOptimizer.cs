@@ -15,13 +15,16 @@ namespace LinqToDB.DataProvider.SqlServer
 			_sqlVersion = sqlVersion;
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		protected SqlStatement ReplaceSkipWithRowNumber(SqlStatement statement)
+			=> ReplaceTakeSkipWithRowNumber(statement, query => query.Select.SkipValue != null, false);
+
+		protected SqlStatement WrapRootTakeSkipOrderBy(SqlStatement statement)
 		{
-			statement = SeparateDistinctFromPagination(statement);
-			statement = ReplaceDistinctOrderByWithRowNumber(statement);
-			statement = ReplaceTakeSkipWithRowNumber(statement, false);
-			statement = QueryHelper.OptimizeSubqueries(statement);
-			return statement;
+			return QueryHelper.WrapQuery(
+				statement,
+				query => query.ParentSelect == null && (query.Select.SkipValue != null || query.Select.TakeValue != null || query.Select.TakeHints != null || !query.OrderBy.IsEmpty),
+				(query, wrappedQuery) => { }
+				);
 		}
 
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)
@@ -74,6 +77,39 @@ namespace LinqToDB.DataProvider.SqlServer
 											func.Parameters[0],
 											new SqlFunction(func.SystemType, "Floor", func.Parameters[1]));
 
+									if (Type.GetTypeCode(func.SystemType.ToUnderlying()) == TypeCode.DateTime)
+									{
+										var type1 = func.Parameters[1].SystemType!.ToUnderlying();
+
+										if (IsTimeDataType(func.Parameters[0]))
+										{
+											if (type1 == typeof(DateTimeOffset) || type1 == typeof(DateTime))
+												if (_sqlVersion >= SqlServerVersion.v2008)
+													return new SqlExpression(
+														func.SystemType, "CAST({0} AS TIME)", Precedence.Primary, func.Parameters[1]);
+												else
+													return new SqlExpression(
+														func.SystemType, "Cast(Convert(Char, {0}, 114) as DateTime)", Precedence.Primary, func.Parameters[1]);
+
+											if (func.Parameters[1].SystemType == typeof(string))
+												return func.Parameters[1];
+
+											return new SqlExpression(
+												func.SystemType, "Convert(Char, {0}, 114)", Precedence.Primary, func.Parameters[1]);
+										}
+
+										if (type1 == typeof(DateTime) || type1 == typeof(DateTimeOffset))
+										{
+											if (IsDateDataType(func.Parameters[0], "Datetime"))
+												return new SqlExpression(
+													func.SystemType, "Cast(Floor(Cast({0} as Float)) as DateTime)", Precedence.Primary, func.Parameters[1]);
+										}
+
+										if (func.Parameters.Length == 2 && func.Parameters[0] is SqlDataType && func.Parameters[0] == SqlDataType.DateTime)
+											return new SqlFunction(func.SystemType, func.Name, func.IsAggregate, func.Precedence, func.Parameters[0], func.Parameters[1], new SqlValue(120));
+									}
+
+
 									break;
 								}
 						}
@@ -85,48 +121,5 @@ namespace LinqToDB.DataProvider.SqlServer
 			return expr;
 		}
 
-		public ISqlExpression ConvertConvertFunction(SqlFunction func)
-		{
-			switch (Type.GetTypeCode(func.SystemType.ToUnderlying()))
-			{
-				case TypeCode.DateTime :
-
-					if (func.Name == "Convert")
-					{
-						var type1 = func.Parameters[1].SystemType!.ToUnderlying();
-
-						if (IsTimeDataType(func.Parameters[0]))
-						{
-							if (type1 == typeof(DateTimeOffset) || type1 == typeof(DateTime))
-								if (_sqlVersion >= SqlServerVersion.v2008)
-									return new SqlExpression(
-										func.SystemType, "CAST({0} AS TIME)", Precedence.Primary, func.Parameters[1]);
-								else
-									return new SqlExpression(
-										func.SystemType, "Cast(Convert(Char, {0}, 114) as DateTime)", Precedence.Primary, func.Parameters[1]);
-
-							if (func.Parameters[1].SystemType == typeof(string))
-								return func.Parameters[1];
-
-							return new SqlExpression(
-								func.SystemType, "Convert(Char, {0}, 114)", Precedence.Primary, func.Parameters[1]);
-						}
-
-						if (type1 == typeof(DateTime) || type1 == typeof(DateTimeOffset))
-						{
-							if (IsDateDataType(func.Parameters[0], "Datetime"))
-								return new SqlExpression(
-									func.SystemType, "Cast(Floor(Cast({0} as Float)) as DateTime)", Precedence.Primary, func.Parameters[1]);
-						}
-
-						if (func.Parameters.Length == 2 && func.Parameters[0] is SqlDataType && func.Parameters[0] == SqlDataType.DateTime)
-							return new SqlFunction(func.SystemType, func.Name, func.IsAggregate, func.Precedence, func.Parameters[0], func.Parameters[1], new SqlValue(120));
-					}
-
-					break;
-			}
-
-			return func;
-		}
 	}
 }

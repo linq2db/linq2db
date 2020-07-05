@@ -661,9 +661,9 @@ namespace LinqToDB.Data
 				_rd          = rd;
 			}
 
-			public IAsyncEnumerator<T> GetEnumerator()
+			public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken)
 			{
-				return new ReaderAsyncEnumerator<T>(_commandInfo, _rd);
+				return new ReaderAsyncEnumerator<T>(_commandInfo, _rd, cancellationToken);
 			}
 		}
 
@@ -675,27 +675,39 @@ namespace LinqToDB.Data
 			Func<IDataReader, T>      _objectReader;
 			bool                      _isFaulted;
 			bool                      _isFinished;
+			CancellationToken         _cancellationToken;
 
-			public ReaderAsyncEnumerator(CommandInfo commandInfo, DbDataReader rd)
+			public ReaderAsyncEnumerator(CommandInfo commandInfo, DbDataReader rd, CancellationToken cancellationToken)
 			{
-				_commandInfo   = commandInfo;
-				_rd            = rd;
-				_additionalKey = commandInfo.GetCommandAdditionalKey(rd);
-				_objectReader  = GetObjectReader<T>(commandInfo.DataConnection, rd, commandInfo.DataConnection.Command.CommandText, _additionalKey);
-				_isFaulted     = false;
+				_commandInfo       = commandInfo;
+				_rd                = rd;
+				_additionalKey     = commandInfo.GetCommandAdditionalKey(rd);
+				_objectReader      = GetObjectReader<T>(commandInfo.DataConnection, rd, commandInfo.DataConnection.Command.CommandText, _additionalKey);
+				_isFaulted         = false;
+				_cancellationToken = cancellationToken;
 			}
 
 			public void Dispose()
 			{
 			}
 
+#if NET45 || NET46
+			public Task DisposeAsync() => TaskEx.CompletedTask;
+#else
+			public ValueTask DisposeAsync() => new ValueTask(Task.CompletedTask);
+#endif
+
 			public T Current { get; set; } = default!;
 
-			public async Task<bool> MoveNext(CancellationToken cancellationToken)
+#if NET45 || NET46
+			public async Task<bool> MoveNextAsync()
+#else
+			public async ValueTask<bool> MoveNextAsync()
+#endif
 			{
 				if (_isFinished)
 					return false;
-				if (!await _rd.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+				if (!await _rd.ReadAsync(_cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 				{
 					_isFinished = true;
 					return false;
@@ -769,7 +781,7 @@ namespace LinqToDB.Data
 					}
 
 					var genericMethod = valueMethodInfo.MakeGenericMethod(elementType);
-					var task = (Task)genericMethod.Invoke(this, new object[] { rd, cancellationToken });
+					var task = (Task)genericMethod.Invoke(this, new object[] { rd, cancellationToken })!;
 					await task.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 					// Task<T>.Result
@@ -1229,7 +1241,7 @@ namespace LinqToDB.Data
 				if (dataParameter.Direction.HasValue &&
 					(dataParameter.Direction == ParameterDirection.Output || dataParameter.Direction == ParameterDirection.InputOutput || dataParameter.Direction == ParameterDirection.ReturnValue))
 				{
-					var dbParameter      = (IDbDataParameter)dbParameters[i];
+					var dbParameter      = (IDbDataParameter)dbParameters[i]!;
 					dataParameter.Output = dbParameter;
 
 					if (!object.Equals(dataParameter.Value, dbParameter.Value))
@@ -1253,9 +1265,12 @@ namespace LinqToDB.Data
 				}
 			}
 
-			public override bool Equals(object obj)
+			public override bool Equals(object? obj)
 			{
-				return Equals((ParamKey)obj);
+				if (obj is ParamKey pk)
+					return Equals(pk);
+
+				return false;
 			}
 
 			readonly int    _hashCode;
@@ -1297,7 +1312,7 @@ namespace LinqToDB.Data
 			var type = parameters.GetType();
 			var key  = new ParamKey(type, dataConnection.ID);
 
-			if (!_parameterReaders.TryGetValue(key, out Func<object, DataParameter[]> func))
+			if (!_parameterReaders.TryGetValue(key, out var func))
 			{
 				var td  = dataConnection.MappingSchema.GetEntityDescriptor(type);
 				var p   = Expression.Parameter(typeof(object), "p");
@@ -1422,9 +1437,12 @@ namespace LinqToDB.Data
 				}
 			}
 
-			public override bool Equals(object obj)
+			public override bool Equals(object? obj)
 			{
-				return Equals((QueryKey)obj);
+				if (obj is QueryKey qk)
+					return Equals(qk);
+
+				return false;
 			}
 
 			readonly int     _hashCode;

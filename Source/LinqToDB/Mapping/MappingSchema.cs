@@ -829,7 +829,7 @@ namespace LinqToDB.Mapping
 			_metadataReaders = list.ToArray();
 		}
 
-#if !NETSTANDARD2_0 && !NETCOREAPP2_1
+#if NET45 || NET46
 		/// <summary>
 		/// Gets or sets metadata attributes provider for current schema.
 		/// Metadata providers, shipped with LINQ to DB:
@@ -1368,9 +1368,9 @@ namespace LinqToDB.Mapping
 							if (valueType == null)
 								valueType = attr.Value.GetType();
 
-							if (attr.Value is string)
+							if (attr.Value is string strVal)
 							{
-								var len = attr.Value.ToString().Length;
+								var len = strVal.Length;
 
 								if (length == null)
 								{
@@ -1411,7 +1411,7 @@ namespace LinqToDB.Mapping
 
 		#region GetMapValues
 
-		ConcurrentDictionary<Type,MapValue[]>? _mapValues;
+		ConcurrentDictionary<Type,MapValue[]?>? _mapValues;
 
 		/// <summary>
 		/// Returns enum type mapping information or <c>null</c> for non-enum types.
@@ -1423,7 +1423,7 @@ namespace LinqToDB.Mapping
 			if (type == null) throw new ArgumentNullException("type");
 
 			if (_mapValues == null)
-				_mapValues = new ConcurrentDictionary<Type,MapValue[]>();
+				_mapValues = new ConcurrentDictionary<Type,MapValue[]?>();
 
 			if (_mapValues.TryGetValue(type, out var mapValues))
 				return mapValues;

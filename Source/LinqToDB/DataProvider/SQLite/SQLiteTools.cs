@@ -118,7 +118,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public static void ResolveSQLite(Assembly assembly)
 		{
-			new AssemblyResolver(assembly, assembly.FullName);
+			new AssemblyResolver(assembly, assembly.FullName!);
 		}
 
 		#region CreateDataConnection

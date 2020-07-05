@@ -40,7 +40,6 @@ namespace Tests.xUpdate
 			[Column]                       public decimal Field1;
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configuration = ProviderName.DB2)]
 		[Test]
 		public void TruncateIdentityTest([DataSources(TestProvName.AllInformix, TestProvName.AllSapHana)]
 			string context)
@@ -71,7 +70,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query", Configuration = ProviderName.DB2)]
 		[Test]
 		public void TruncateIdentityNoResetTest([DataSources] string context)
 		{

@@ -810,7 +810,7 @@ namespace Tests.DataProvider
 			[Column]                                   public NpgsqlDateTime? timestampDataType         { get; set; }
 			[Column]                                   public DateTimeOffset? timestampTZDataType       { get; set; }
 			[Column]                                   public NpgsqlDate?     dateDataType              { get; set; }
-			[Column]                                   public TimeSpan?       timeDataType              { get; set; }
+			[Column(DbType = "time")]                  public TimeSpan?       timeDataType              { get; set; }
 			[Column  (DbType = "time with time zone")] public DateTimeOffset? timeTZDataType            { get; set; }
 			[Column]                                   public NpgsqlTimeSpan? intervalDataType          { get; set; }
 			[Column(DataType = DataType.Interval)]     public TimeSpan?       intervalDataType2         { get; set; }
@@ -1493,7 +1493,7 @@ namespace Tests.DataProvider
 						intervalDataType2 = TimeSpan.FromDays(3),
 					});
 
-					Assert.Throws<PostgresException>(
+					Assert.DoesNotThrow(
 						() => db.GetTable<Issue1429Table>().Insert(() => new Issue1429Table()
 						{
 							timeDataType = TimeSpan.FromDays(3)
@@ -1643,7 +1643,7 @@ namespace Tests.DataProvider
 		[Sql.TableFunction("\"TestTableFunctionSchema\"")]
 		public LinqToDB.ITable<PostgreSQLTests.AllTypes> GetAllTypes()
 		{
-			var methodInfo = typeof(TestPgFunctions).GetMethod("GetAllTypes", new Type[0]);
+			var methodInfo = typeof(TestPgFunctions).GetMethod("GetAllTypes", new Type[0])!;
 
 			return _ctx.GetTable<PostgreSQLTests.AllTypes>(this, methodInfo);
 		}
@@ -1657,7 +1657,7 @@ namespace Tests.DataProvider
 		[Sql.TableFunction("\"TestTableFunction\"")]
 		public LinqToDB.ITable<TestScalarTableFunctionResult> TestScalarTableFunction(int? param1)
 		{
-			var methodInfo = typeof(TestPgFunctions).GetMethod("TestScalarTableFunction", new[] { typeof(int?) });
+			var methodInfo = typeof(TestPgFunctions).GetMethod("TestScalarTableFunction", new[] { typeof(int?) })!;
 
 			return _ctx.GetTable<TestScalarTableFunctionResult>(this, methodInfo, param1);
 		}
@@ -1665,7 +1665,7 @@ namespace Tests.DataProvider
 		[Sql.TableFunction("\"TestTableFunction1\"")]
 		public LinqToDB.ITable<TestRecordTableFunctionResult> TestRecordTableFunction(int? param1, int? param2)
 		{
-			var methodInfo = typeof(TestPgFunctions).GetMethod("TestRecordTableFunction", new[] { typeof(int?), typeof(int?) });
+			var methodInfo = typeof(TestPgFunctions).GetMethod("TestRecordTableFunction", new[] { typeof(int?), typeof(int?) })!;
 
 			return _ctx.GetTable<TestRecordTableFunctionResult>(this, methodInfo, param1, param2);
 		}
@@ -1692,7 +1692,7 @@ namespace Tests.DataProvider
 		public LinqToDB.ITable<TRecord> DynamicTableFunction<TRecord>(string json)
 			where TRecord : class
 		{
-			var methodInfo = typeof(TestPgFunctions).GetMethod("DynamicTableFunction", new [] { typeof(string) });
+			var methodInfo = typeof(TestPgFunctions).GetMethod("DynamicTableFunction", new [] { typeof(string) })!;
 
 			return _ctx.GetTable<TRecord>(this, methodInfo, json);
 		}

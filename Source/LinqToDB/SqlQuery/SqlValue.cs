@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
-using LinqToDB.Common;
 
 namespace LinqToDB.SqlQuery
 {
+	using Common;
+
 	public class SqlValue : ISqlExpression, IValueContainer
 	{
 		public SqlValue(Type systemType, object? value)
@@ -25,9 +27,35 @@ namespace LinqToDB.SqlQuery
 			ValueType = new DbDataType(value.GetType());
 		}
 
-		public   object?    Value      { get; internal set; }
-		public   DbDataType ValueType  { get; set; }
+		object? _value;
 		
+		public object? Value
+		{
+			get => _value;
+			internal set
+			{
+				if (_value == value)
+					return;
+				
+				_value    = value;
+				_hashCode = null;
+			}
+		}
+
+		DbDataType _valueType;
+		
+		public DbDataType ValueType
+		{
+			get => _valueType;
+			set
+			{
+				if (_valueType == value)
+					return;
+				_valueType = value;
+				_hashCode  = null;
+			}
+		}
+
 		Type ISqlExpression.SystemType => ValueType.SystemType;
 
 		#region Overrides
@@ -60,7 +88,7 @@ namespace LinqToDB.SqlQuery
 
 		#region IEquatable<ISqlExpression> Members
 
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression other)
+		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
 		{
 			if (this == other)
 				return true;
@@ -71,8 +99,14 @@ namespace LinqToDB.SqlQuery
 				(Value == null && value.Value == null || Value != null && Value.Equals(value.Value));
 		}
 
+		int? _hashCode;
+
+		[SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
 		public override int GetHashCode()
 		{
+			if (_hashCode.HasValue)
+				return _hashCode.Value;
+
 			var hashCode = 17;
 
 			hashCode = unchecked(hashCode + (hashCode * 397) ^ ValueType.GetHashCode());
@@ -80,6 +114,7 @@ namespace LinqToDB.SqlQuery
 			if (Value != null)
 				hashCode = unchecked(hashCode + (hashCode * 397) ^ Value.GetHashCode());
 
+			_hashCode = hashCode;
 			return hashCode;
 		}
 
@@ -120,10 +155,10 @@ namespace LinqToDB.SqlQuery
 			return
 				Value == null ?
 					sb.Append("NULL") :
-				Value is string ?
+				Value is string strVal ?
 					sb
 						.Append('\'')
-						.Append(Value.ToString().Replace("\'", "''"))
+						.Append(strVal.Replace("\'", "''"))
 						.Append('\'')
 				:
 					sb.Append(Value);

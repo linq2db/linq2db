@@ -40,7 +40,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 	class SqlCeSchemaProvider : SchemaProviderBase
 	{
-		protected override List<TableInfo> GetTables(DataConnection dataConnection)
+		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			var tables = ((DbConnection)dataConnection.Connection).GetSchema("Tables");
 
@@ -63,7 +63,8 @@ namespace LinqToDB.DataProvider.SqlCe
 			).ToList();
 		}
 
-		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
+		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
+			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
 			var data = dataConnection.Query<PrimaryKeyInfo>(
 				@"
@@ -100,7 +101,8 @@ WHERE PRIMARY_KEY = 1");
 			).ToList();
 		}
 
-		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
+			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
 			var data = dataConnection.Query<ForeignKeyInfo>(
 				@"
@@ -122,14 +124,14 @@ INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE oc ON oc.CONSTRAINT_NAME = rc.UNI
 			return Path.GetFileNameWithoutExtension(((DbConnection)connection.Connection).Database);
 		}
 
-		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale)
+		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale, GetSchemaOptions options)
 		{
 			switch (dataType?.ToLower())
 			{
 				case "tinyint" : return typeof(byte);
 			}
 
-			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale);
+			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options);
 		}
 
 		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)

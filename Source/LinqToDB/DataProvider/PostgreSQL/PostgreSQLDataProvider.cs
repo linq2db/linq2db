@@ -178,7 +178,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return new PostgreSQLSchemaProvider(this);
 		}
 
-#if NETSTANDARD2_0 || NETCOREAPP2_1
+#if !NET45 && !NET46
 		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
 		{
 			return true;
@@ -214,6 +214,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case DataType.Dictionary: type = NpgsqlProviderAdapter.NpgsqlDbType.Hstore ; break;
 				case DataType.Json      : type = NpgsqlProviderAdapter.NpgsqlDbType.Json   ; break;
 				case DataType.BinaryJson: type = NpgsqlProviderAdapter.NpgsqlDbType.Jsonb  ; break;
+				case DataType.Interval  : type = NpgsqlProviderAdapter.NpgsqlDbType.Interval ; break;
+				case DataType.Int64     : type = NpgsqlProviderAdapter.NpgsqlDbType.Bigint ; break;
 			}
 
 			if (!string.IsNullOrEmpty(dataType.DbType))

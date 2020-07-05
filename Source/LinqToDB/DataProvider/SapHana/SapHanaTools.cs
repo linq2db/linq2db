@@ -9,7 +9,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 	public static class SapHanaTools
 	{
-#if !NETSTANDARD2_0
+#if !NETSTANDARD2_0 && !NETSTANDARD2_1
 		private static readonly Lazy<IDataProvider> _hanaDataProvider = new Lazy<IDataProvider>(() =>
 		{
 			var provider = new SapHanaDataProvider(ProviderName.SapHanaNative);
@@ -33,7 +33,7 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 			new AssemblyResolver(
 				path,
-#if !NETSTANDARD2_0
+#if !NETSTANDARD2_0 && !NETSTANDARD2_1
 			DetectedProviderName == ProviderName.SapHanaNative
 						? SapHanaProviderAdapter.AssemblyName :
 #endif
@@ -42,12 +42,12 @@ namespace LinqToDB.DataProvider.SapHana
 
 		public static void ResolveSapHana(Assembly assembly)
 		{
-			new AssemblyResolver(assembly, assembly.FullName);
+			new AssemblyResolver(assembly, assembly.FullName!);
 		}
 
 		public static IDataProvider GetDataProvider(string? providerName = null, string? assemblyName = null)
 		{
-#if !NETSTANDARD2_0
+#if !NETSTANDARD2_0 && !NETSTANDARD2_1
 			if (assemblyName == SapHanaProviderAdapter.AssemblyName) return _hanaDataProvider.Value;
 #endif
 			if (assemblyName == OdbcProviderAdapter.AssemblyName)    return _hanaOdbcDataProvider.Value;
@@ -56,12 +56,12 @@ namespace LinqToDB.DataProvider.SapHana
 			switch (providerName)
 			{
 				case ProviderName.SapHanaOdbc  : return _hanaOdbcDataProvider.Value;
-#if !NETSTANDARD2_0
+#if !NETSTANDARD2_0 && !NETSTANDARD2_1
 				case ProviderName.SapHanaNative: return _hanaDataProvider.Value;
 #endif
 			}
 
-#if !NETSTANDARD2_0
+#if !NETSTANDARD2_0 && !NETSTANDARD2_1
 			if (DetectedProviderName == ProviderName.SapHanaNative)
 				return _hanaDataProvider.Value;
 #endif
@@ -95,7 +95,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 		static string DetectProviderName()
 		{
-#if !NETSTANDARD2_0
+#if !NETSTANDARD2_0 && !NETSTANDARD2_1
 			return ProviderName.SapHanaNative;
 #else
 			return ProviderName.SapHanaOdbc;
@@ -109,7 +109,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 			switch (css.ProviderName)
 			{
-#if !NETSTANDARD2_0
+#if !NETSTANDARD2_0 && !NETSTANDARD2_1
 				case SapHanaProviderAdapter.ClientNamespace:
 				case "Sap.Data.Hana.v4.5"                  :
 				case "Sap.Data.Hana.Core"                  :
