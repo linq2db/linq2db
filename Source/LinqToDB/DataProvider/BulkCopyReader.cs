@@ -60,7 +60,7 @@ namespace LinqToDB.DataProvider
 		{
 			if (disposing)
 			{
-				_asyncEnumerator?.DisposeAsync().AsTask().Wait();
+				_asyncEnumerator?.DisposeAsync().GetAwaiter().GetResult();
 			}
 		}
 
