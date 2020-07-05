@@ -71,7 +71,7 @@ namespace LinqToDB.DataProvider.Sybase
 					connections.Value,
 					table,
 					options,
-					(columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source)));
+					(columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source, cancellationToken)));
 			}
 
 			return MultipleRowsCopyAsync(table, options, source, cancellationToken);

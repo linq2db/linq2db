@@ -31,10 +31,10 @@ namespace LinqToDB.DataProvider
 		}
 
 #if !NET45 && !NET46
-		public BulkCopyReader(DataConnection dataConnection, List<ColumnDescriptor> columns, IAsyncEnumerable<T> collection)
+		public BulkCopyReader(DataConnection dataConnection, List<ColumnDescriptor> columns, IAsyncEnumerable<T> collection, CancellationToken cancellationToken)
 			: base(dataConnection, columns)
 		{
-			_asyncEnumerator = collection.GetAsyncEnumerator();
+			_asyncEnumerator = collection.GetAsyncEnumerator(cancellationToken);
 		}
 
 		protected override bool MoveNext()

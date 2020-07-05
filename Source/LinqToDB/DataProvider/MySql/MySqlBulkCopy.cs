@@ -225,7 +225,7 @@ namespace LinqToDB.DataProvider.MySql
 			var batches = EnumerableHelper.Batch(source, options.MaxBatchSize ?? int.MaxValue);
 			await foreach (var batch in batches.WithCancellation(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 			{
-				var rd = new BulkCopyReader<T>(dataConnection, columns, batch);
+				var rd = new BulkCopyReader<T>(dataConnection, columns, batch, cancellationToken);
 
 				await TraceActionAsync(
 					dataConnection,

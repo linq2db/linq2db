@@ -75,7 +75,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					connections.Value,
 					table,
 					options,
-					(columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source),
+					(columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source, cancellationToken),
 					true,
 					cancellationToken);
 			}
