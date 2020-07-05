@@ -25,7 +25,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			BulkCopyOptions options,
 			IEnumerable<T> source)
 		{
-			var connections = GetProviderConnection(table);
+			var connections = TryGetProviderConnections(table);
 			if (connections.HasValue)
 			{
 				return ProviderSpecificCopyInternal(
@@ -46,7 +46,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			IEnumerable<T> source, 
 			CancellationToken cancellationToken)
 		{
-			var connections = GetProviderConnection(table);
+			var connections = TryGetProviderConnections(table);
 			if (connections.HasValue)
 			{
 				return ProviderSpecificCopyInternal(
@@ -68,7 +68,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			IAsyncEnumerable<T> source,
 			CancellationToken cancellationToken)
 		{
-			var connections = GetProviderConnection(table);
+			var connections = TryGetProviderConnections(table);
 			if (connections.HasValue)
 			{
 				return ProviderSpecificCopyInternal(
@@ -84,7 +84,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 #endif
 
-		private ProviderConnections? GetProviderConnection<T>(ITable<T> table)
+		private ProviderConnections? TryGetProviderConnections<T>(ITable<T> table)
 		{
 			if (table.DataContext is DataConnection dataConnection)
 			{
