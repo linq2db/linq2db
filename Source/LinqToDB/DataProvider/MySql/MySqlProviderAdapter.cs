@@ -411,8 +411,8 @@ namespace LinqToDB.DataProvider.MySql
 			[Wrapper]
 			internal class MySqlBulkCopy : TypeWrapper
 			{
-				private static LambdaExpression[] Wrappers { get; }
-					= new LambdaExpression[]
+				private static object[] Wrappers { get; }
+					= new object[]
 				{
 					// [0]: WriteToServer
 					(Expression<Action<MySqlBulkCopy, IDataReader>>               )((MySqlBulkCopy this_, IDataReader            dataReader) => this_.WriteToServer(dataReader)),
@@ -431,10 +431,12 @@ namespace LinqToDB.DataProvider.MySql
 					// [7]: set DestinationTableName
 					PropertySetter((MySqlBulkCopy this_) => this_.DestinationTableName),
 					// [8]: WriteToServerAsync
-					(Expression<Func<MySqlBulkCopy, IDataReader, CancellationToken, Task>>     )((MySqlBulkCopy this_, IDataReader dataReader, CancellationToken cancellationToken) => this_.WriteToServerAsync (dataReader, cancellationToken)),
+					new Tuple<LambdaExpression, bool>
+					((Expression<Func<MySqlBulkCopy, IDataReader, CancellationToken, Task>>     )((MySqlBulkCopy this_, IDataReader dataReader, CancellationToken cancellationToken) => this_.WriteToServerAsync (dataReader, cancellationToken)), true),
 #if !NET45 && !NET46
 					// [9]: WriteToServerAsync
-					(Expression<Func<MySqlBulkCopy, IDataReader, CancellationToken, ValueTask>>)((MySqlBulkCopy this_, IDataReader dataReader, CancellationToken cancellationToken) => this_.WriteToServerAsync2(dataReader, cancellationToken)),
+					new Tuple<LambdaExpression, bool>
+					((Expression<Func<MySqlBulkCopy, IDataReader, CancellationToken, ValueTask>>)((MySqlBulkCopy this_, IDataReader dataReader, CancellationToken cancellationToken) => this_.WriteToServerAsync2(dataReader, cancellationToken)), true),
 #endif
 				};
 
