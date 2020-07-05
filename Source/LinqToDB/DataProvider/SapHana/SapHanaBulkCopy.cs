@@ -158,12 +158,9 @@ namespace LinqToDB.DataProvider.SapHana
 						dataConnection,
 						() => "INSERT BULK " + tableName + Environment.NewLine,
 						async () => {
-							// todo: update saphana bulk copy adapter to add WriteToServerAsync and uncomment below code block
-							/*
-							if (runAsync)
+							if (runAsync && bc.CanWriteToServerAsync)
 								await bc.WriteToServerAsync(rd, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 							else
-							*/
 								bc.WriteToServer(rd); 
 							return rd.Count; 
 						}).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
