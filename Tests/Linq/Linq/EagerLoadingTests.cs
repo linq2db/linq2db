@@ -1167,7 +1167,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue2307([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void Issue2307([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
