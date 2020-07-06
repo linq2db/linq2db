@@ -5,6 +5,7 @@ variables:
 #  netfx45_tests: 'netfx45_tests' # maybe later
   netfx46_tests: 'netfx46_tests'
   netcore21_tests: 'netcoreapp21_tests'
+  netcore31_tests: 'netcoreapp31_tests'
 
 trigger: none
 pr:
@@ -44,12 +45,6 @@ stages:
         configuration: '$(build_configuration)'
         msbuildArguments: '/t:Restore;Rebuild -m'
       displayName: Build Solution
-
-# need it for DotNetCoreCLI task be able to build C#8 project
-    - task: UseDotNet@2
-      displayName: Install .NET Core 3.1
-      inputs:
-        version: 3.1.x
 
     - task: DotNetCoreCLI@2
       inputs:
@@ -114,6 +109,12 @@ stages:
       inputs:
         path: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.1/publish'
         artifact: '$(netcore21_tests)'
+      displayName: Publish test artifacts for NETCOREAPP2.1
+
+    - task: PublishPipelineArtifact@1
+      inputs:
+        path: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.1/publish'
+        artifact: '$(netcore31_tests)'
       displayName: Publish test artifacts for NETCOREAPP2.1
 
 ##############################################################################################
@@ -335,10 +336,11 @@ stages:
           title: 'Access ODBC ACE'
           config: 'access.odbc.ace'
           script: 'access.ace.x64.cmd'
-        Access_OLEDB_ACE:
-          title: 'Access OleDb ACE'
-          config: 'access.ace'
-          script: 'access.ace.x64.cmd'
+# disabled due to a lot of random crashes https://github.com/dotnet/runtime/issues/36954
+#        Access_OLEDB_ACE:
+#          title: 'Access OleDb ACE'
+#          config: 'access.ace'
+#          script: 'access.ace.x64.cmd'
         SQLite:
           title: 'SQLite'
           config: 'sqlite'
@@ -437,6 +439,127 @@ stages:
         testFilterCriteria: 'TestCategory != SkipCI'
         otherConsoleOptions: '/Framework:.NETCoreApp,Version=v2.1'
         testRunTitle: 'Windows / NETCOREAPP2.1 / $(title)'
+      displayName: '$(title)'
+
+###################################
+#  Tests: Windows (NETCOREAPP3_1) #
+#  Windows 2016                   #
+###################################
+  - job: test_win2016_netcoreapp21_job
+    pool:
+      vmImage: 'vs2017-win2016'
+    displayName: 'Tests: Win / NETCOREAPP3.1 / '
+    dependsOn: build_job
+    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+
+    strategy:
+      matrix:
+#        Access_ODBC_ACE:
+#          title: 'Access ODBC ACE'
+#          config: 'access.odbc.ace'
+#          script: 'access.ace.x64.cmd'
+        Access_OLEDB_ACE:
+          title: 'Access OleDb ACE'
+          config: 'access.ace'
+          script: 'access.ace.x64.cmd'
+#        SQLite:
+#          title: 'SQLite'
+#          config: 'sqlite'
+#        SQLite_MS:
+#          title: 'SQLite.MS'
+#          config: 'sqlite.ms'
+#        SqlCE:
+#          title: 'SQL CE'
+#          config: 'sqlce'
+#          psscript: 'sqlce.ps1'
+#        SqlServer2005:
+#          title: 'SQL Server 2005 (System.Data.SqlClient)'
+#          config: 'sqlserver.2005'
+#          script: 'sqlserver.2005.cmd'
+#        SqlServer2005_MS:
+#          title: 'SQL Server 2005 (Microsoft.Data.SqlClient)'
+#          config: 'sqlserver.2005.ms'
+#          script: 'sqlserver.2005.cmd'
+#        SqlServer2008:
+#          title: 'SQL Server 2008 (System.Data.SqlClient)'
+#          config: 'sqlserver.2008'
+#          script: 'sqlserver.2008.cmd'
+#        SqlServer2008_MS:
+#          title: 'SQL Server 2008 (Microsoft.Data.SqlClient)'
+#          config: 'sqlserver.2008.ms'
+#          script: 'sqlserver.2008.cmd'
+#        SqlServer2012:
+#          title: 'SQL Server 2012 (System.Data.SqlClient)'
+#          config: 'sqlserver.2012'
+#          script: 'sqlserver.2012.cmd'
+#        SqlServer2012_MS:
+#          title: 'SQL Server 2012 (Microsoft.Data.SqlClient)'
+#          config: 'sqlserver.2012.ms'
+#          script: 'sqlserver.2012.cmd'
+#        SqlServer2014:
+#          title: 'SQL Server 2014 (System.Data.SqlClient)'
+#          config: 'sqlserver.2014'
+#          script: 'sqlserver.2014.cmd'
+#        SqlServer2014_MS:
+#          title: 'SQL Server 2014 (Microsoft.Data.SqlClient)'
+#          config: 'sqlserver.2014.ms'
+#          script: 'sqlserver.2014.cmd'
+#        SqlServer2016:
+#          title: 'SQL Server 2016 (System.Data.SqlClient)'
+#          config: 'sqlserver.2016'
+#          script: 'sqlserver.2016.cmd'
+#        SqlServer2016_MS:
+#          title: 'SQL Server 2016 (Microsoft.Data.SqlClient)'
+#          config: 'sqlserver.2016.ms'
+#          script: 'sqlserver.2016.cmd'
+#        SqlServer2017:
+#          title: 'SQL Server 2017 (System.Data.SqlClient)'
+#          config: 'sqlserver.2017'
+#          script: 'sqlserver.2017.cmd'
+#        SqlServer2017_MS:
+#          title: 'SQL Server 2017 (Microsoft.Data.SqlClient)'
+#          config: 'sqlserver.2017.ms'
+#          script: 'sqlserver.2017.cmd'
+#        PostgreSQL10:
+#          title: 'PostgreSQL 10'
+#          config: 'pgsql10.win'
+#          script: 'pgsql10.cmd'
+    steps:
+    - checkout: none
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: '$(netcore31_tests)'
+        targetPath: '$(System.DefaultWorkingDirectory)'
+
+    - task: CmdLine@2
+      inputs:
+        script: 'copy $(System.DefaultWorkingDirectory)\configs\$(config).json UserDataProviders.json'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      displayName: Copy test config
+
+    - task: CmdLine@2
+      inputs:
+        script: '$(System.DefaultWorkingDirectory)\scripts\$(script)'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      condition: variables['script']
+      displayName: Setup tests
+
+    - task: PowerShell@2
+      inputs:
+        filePath: '$(System.DefaultWorkingDirectory)\scripts\$(psscript)'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      condition: variables['psscript']
+      displayName: Setup tests
+
+    - task: VSTest@2
+      inputs:
+        testAssemblyVer2: linq2db.Tests.dll
+        platform: '$(buildPlatform)'
+        configuration: '$(buildConfiguration)'
+        testFilterCriteria: 'TestCategory != SkipCI'
+        otherConsoleOptions: '/Framework:.NETCoreApp,Version=v3.1'
+        testRunTitle: 'Windows / NETCOREAPP3.1 / $(title)'
       displayName: '$(title)'
 
 ###################################
