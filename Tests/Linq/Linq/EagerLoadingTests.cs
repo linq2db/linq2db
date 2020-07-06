@@ -1139,19 +1139,19 @@ namespace Tests.Linq
 		class AttendanceSheetRow
 		{
 			[Column] public int Id;
-			[Column] public int SheetId;
+			[Column] public int AttendanceSheetId;
 
 			public static AttendanceSheetRow[] Items { get; } =
 				new[]
 				{
-					new AttendanceSheetRow() { Id = 1, SheetId = 1 },
-					new AttendanceSheetRow() { Id = 2, SheetId = 2 },
-					new AttendanceSheetRow() { Id = 3, SheetId = 1 },
-					new AttendanceSheetRow() { Id = 4, SheetId = 2 },
+					new AttendanceSheetRow() { Id = 1, AttendanceSheetId = 1 },
+					new AttendanceSheetRow() { Id = 2, AttendanceSheetId = 2 },
+					new AttendanceSheetRow() { Id = 3, AttendanceSheetId = 1 },
+					new AttendanceSheetRow() { Id = 4, AttendanceSheetId = 2 },
 				};
 		}
 
-		class X
+		class AttendanceSheetDTO
 		{
 			public List<AttendanceSheetRowListModel> Rows = null!;
 		}
@@ -1160,10 +1160,10 @@ namespace Tests.Linq
 		{
 			public AttendanceSheetRowListModel(AttendanceSheetRow row)
 			{
-				Row = row;
+				AttendanceSheetId = row.AttendanceSheetId;
 			}
 
-			public AttendanceSheetRow Row = null!;
+			public int AttendanceSheetId;
 		}
 
 		[Test]
@@ -1175,8 +1175,8 @@ namespace Tests.Linq
 			using (var sheetRows   = db.CreateLocalTable(AttendanceSheetRow.Items))
 			{
 				var query = from sheet in sheets
-							join row in sheetRows on sheet.Id equals row.SheetId into rows
-							select new X
+							join row in sheetRows on sheet.Id equals row.AttendanceSheetId into rows
+							select new AttendanceSheetDTO()
 							{
 								Rows = rows.Select(x => new AttendanceSheetRowListModel(x)).ToList(),
 							};
