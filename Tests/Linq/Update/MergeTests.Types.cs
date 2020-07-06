@@ -339,7 +339,7 @@ namespace Tests.xUpdate
 
 		[ActiveIssue(Configurations = new[]
 		{
-			ProviderName.SapHana
+			ProviderName.SapHanaNative
 #if AZURE
 			,TestProvName.AllSybase
 		//[ActiveIssue("need to configure sybase docker image to use utf8 character set", Configuration = TestProvName.AllSybase)]
