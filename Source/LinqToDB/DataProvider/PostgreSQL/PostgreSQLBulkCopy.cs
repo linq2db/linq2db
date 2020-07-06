@@ -27,6 +27,18 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return MultipleRowsCopy1(table, options, source);
 		}
 
+		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+		{
+			return MultipleRowsCopy1Async(table, options, source, cancellationToken);
+		}
+
+#if !NET45 && !NET46
+		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+		{
+			return MultipleRowsCopy1Async(table, options, source, cancellationToken);
+		}
+#endif
+
 		protected override BulkCopyRowsCopied ProviderSpecificCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			if (table.DataContext is DataConnection dataConnection)
