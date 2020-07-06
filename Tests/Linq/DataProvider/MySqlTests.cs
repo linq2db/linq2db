@@ -1365,6 +1365,7 @@ namespace Tests.DataProvider
 			[Column(DbType = "MULTIPOLYGON")                        ] public object? MultiPolygon;
 			[Column(DbType = "GEOMETRYCOLLECTION")                  ] public object? GeometryCollection;
 		}
+
 		[Test]
 		public void TestTypesSchema([IncludeDataSources(false, TestProvName.AllMySql)] string context)
 		{
@@ -1463,6 +1464,101 @@ namespace Tests.DataProvider
 						Assert.IsNotNull(column);
 						Assert.AreEqual(type, column.MemberType);
 						Assert.AreEqual(dataType, column.DataType);
+					}
+				}
+			}
+		}
+
+		// test both parameters and result table
+		[Test]
+		public void TestProcedureTypes([IncludeDataSources(false, TestProvName.AllMySql)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				// enable configuration use in mapping attributes
+				if (context == TestProvName.MySql55)
+					db.AddMappingSchema(new MappingSchema(context));
+				using (var table = db.CreateLocalTable<TestSchemaTypesTable>())
+				{
+					var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, new GetSchemaOptions() { GetTables = false });
+
+					var proc = schema.Procedures.Where(t => t.ProcedureName == "Issue2313").SingleOrDefault();
+
+					Assert.IsNotNull(proc);
+					//Assert.IsNotNull(proc.ResultTable);
+
+					assertColumnAndParameter("VarChar255"        , "string"   , DataType.VarChar);
+					assertColumnAndParameter("VarChar1"          , "char?"    , DataType.VarChar);
+					assertColumnAndParameter("Char255"           , "string"   , DataType.Char);
+					assertColumnAndParameter("Char1"             , "char?"    , DataType.Char);
+					assertColumnAndParameter("VarBinary255"      , "byte[]"   , DataType.VarBinary);
+					assertColumnAndParameter("Binary255"         , "byte[]"   , DataType.Binary);
+					assertColumnAndParameter("TinyBlob"          , "byte[]"   , DataType.Blob);
+					assertColumnAndParameter("Blob"              , "byte[]"   , DataType.Blob);
+					assertColumnAndParameter("MediumBlob"        , "byte[]"   , DataType.Blob);
+					assertColumnAndParameter("LongBlob"          , "byte[]"   , DataType.Blob);
+					assertColumnAndParameter("TinyText"          , "string"   , DataType.Text);
+					assertColumnAndParameter("Text"              , "string"   , DataType.Text);
+					assertColumnAndParameter("MediumText"        , "string"   , DataType.Text);
+					assertColumnAndParameter("LongText"          , "string"   , DataType.Text);
+					assertColumnAndParameter("Date"              , "DateTime?", DataType.Date);
+					assertColumnAndParameter("DateTime"          , "DateTime?", DataType.DateTime);
+					assertColumnAndParameter("TimeStamp"         , "DateTime?", DataType.DateTime);
+					assertColumnAndParameter("Time"              , "TimeSpan?", DataType.Time);
+					assertColumnAndParameter("TinyInt"           , "sbyte?"   , DataType.SByte);
+					assertColumnAndParameter("TinyIntUnsigned"   , "byte?"    , DataType.Byte);
+					assertColumnAndParameter("SmallInt"          , "short?"   , DataType.Int16);
+					assertColumnAndParameter("SmallIntUnsigned"  , "ushort?"  , DataType.UInt16);
+					assertColumnAndParameter("MediumInt"         , "int?"     , DataType.Int32);
+					assertColumnAndParameter("MediumIntUnsigned" , "uint?"    , DataType.UInt32);
+					assertColumnAndParameter("Int"               , "int?"     , DataType.Int32);
+					assertColumnAndParameter("IntUnsigned"       , "uint?"    , DataType.UInt32);
+					assertColumnAndParameter("BigInt"            , "long?"    , DataType.Int64);
+					assertColumnAndParameter("BigIntUnsigned"    , "ulong?"   , DataType.UInt64);
+					assertColumnAndParameter("Decimal"           , "decimal?" , DataType.Decimal);
+					assertColumnAndParameter("Float"             , "float?"   , DataType.Single);
+					assertColumnAndParameter("Double"            , "double?"  , DataType.Double);
+					assertColumnAndParameter("Boolean"           , "bool?"    , DataType.Boolean);
+					assertColumnAndParameter("Bit1"              , "bool?"    , DataType.BitArray);
+					assertColumnAndParameter("Bit8"              , "byte?"    , DataType.BitArray);
+					assertColumnAndParameter("Bit10"             , "ushort?"  , DataType.BitArray);
+					assertColumnAndParameter("Bit16"             , "ushort?"  , DataType.BitArray);
+					assertColumnAndParameter("Bit32"             , "uint?"    , DataType.BitArray);
+					assertColumnAndParameter("Bit64"             , "ulong?"   , DataType.BitArray);
+					assertColumnAndParameter("Enum"              , "string"   , DataType.VarChar);
+					assertColumnAndParameter("Set"               , "string"   , DataType.VarChar);
+					assertColumnAndParameter("Year"              , "int?"     , DataType.Int32);
+					assertColumnAndParameter("Geometry"          , "byte[]"   , DataType.Undefined);
+					assertColumnAndParameter("Point"             , "byte[]"   , DataType.Undefined);
+					assertColumnAndParameter("LineString"        , "byte[]"   , DataType.Undefined);
+					assertColumnAndParameter("Polygon"           , "byte[]"   , DataType.Undefined);
+					assertColumnAndParameter("MultiPoint"        , "byte[]"   , DataType.Undefined);
+					assertColumnAndParameter("MultiLineString"   , "byte[]"   , DataType.Undefined);
+					assertColumnAndParameter("MultiPolygon"      , "byte[]"   , DataType.Undefined);
+					assertColumnAndParameter("GeometryCollection", "byte[]"   , DataType.Undefined);
+
+					if (context != TestProvName.MySql55)
+					{
+						if (context != TestProvName.MariaDB)
+							assertColumnAndParameter("Json", "string", DataType.Json);
+						else
+							assertColumnAndParameter("Json", "string", DataType.Text);
+					}
+
+					void assertColumnAndParameter(string name, string type, DataType dataType)
+					{
+
+						var parameter = proc.Parameters.Where(c => c.ParameterName == name).SingleOrDefault();
+						//var column    = proc.ResultTable!.Columns.Where(c => c.ColumnName == name).SingleOrDefault();
+
+						Assert.IsNotNull(parameter);
+						//Assert.IsNotNull(column);
+
+						//Assert.AreEqual(type, column.MemberType);
+						//Assert.AreEqual(dataType, column.DataType);
+
+						Assert.AreEqual(type, parameter.ParameterType);
+						Assert.AreEqual(dataType, parameter.DataType);
 					}
 				}
 			}

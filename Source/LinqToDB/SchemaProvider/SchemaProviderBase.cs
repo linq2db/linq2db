@@ -249,7 +249,7 @@ namespace LinqToDB.SchemaProvider
 
 								let dt         = GetDataType(pr.DataType, options)
 
-								let systemType = GetSystemType(pr.DataType, null, dt, pr.Length, pr.Precision, pr.Scale, options)
+								let systemType = GetSystemType(pr.DataType, pr.DataTypeExact, dt, pr.Length, pr.Precision, pr.Scale, options)
 
 								orderby pr.Ordinal
 								select new ParameterSchema
@@ -263,7 +263,7 @@ namespace LinqToDB.SchemaProvider
 									ParameterName        = ToValidName(pr.ParameterName ?? "par" + ++n),
 									ParameterType        = ToTypeName(systemType, true),
 									SystemType           = systemType ?? typeof(object),
-									DataType             = GetDataType(pr.DataType, null, pr.Length, pr.Precision, pr.Scale),
+									DataType             = GetDataType(pr.DataType, pr.DataTypeExact, pr.Length, pr.Precision, pr.Scale),
 									ProviderSpecificType = GetProviderSpecificType(pr.DataType),
 									IsNullable           = pr.IsNullable
 								}
