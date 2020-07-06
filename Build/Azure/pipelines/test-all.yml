@@ -445,7 +445,7 @@ stages:
 #  Tests: Windows (NETCOREAPP3_1) #
 #  Windows 2016                   #
 ###################################
-  - job: test_win2016_netcoreapp21_job
+  - job: test_win2016_netcoreapp31_job
     pool:
       vmImage: 'vs2017-win2016'
     displayName: 'Tests: Win / NETCOREAPP3.1 / '
