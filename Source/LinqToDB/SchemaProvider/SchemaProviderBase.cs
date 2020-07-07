@@ -581,6 +581,7 @@ namespace LinqToDB.SchemaProvider
 			return dbType;
 		}
 
+		// TODO: use proper C# identifier validation procedure
 		public static string ToValidName(string name)
 		{
 			if (name.Contains(" ") || name.Contains("\t"))
@@ -601,6 +602,7 @@ namespace LinqToDB.SchemaProvider
 				.Replace('/',  '_')
 				.Replace('\\', '_')
 				.Replace(':', '_')
+				.Replace('`', '_')
 				;
 		}
 
