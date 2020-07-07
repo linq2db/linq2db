@@ -439,47 +439,47 @@ namespace MariaDBDataContext
 
 		public partial class Issue2313ResultsResult
 		{
-			[Column("`VarChar255`")       ] public string?   _VarChar255_        { get; set; }
-			[Column("`VarChar1`")         ] public char?     _VarChar1_          { get; set; }
-			[Column("`Char255`")          ] public string?   _Char255_           { get; set; }
-			[Column("`Char1`")            ] public char?     _Char1_             { get; set; }
-			[Column("`VarBinary255`")     ] public byte[]?   _VarBinary255_      { get; set; }
-			[Column("`Binary255`")        ] public byte[]?   _Binary255_         { get; set; }
-			[Column("`TinyBlob`")         ] public byte[]?   _TinyBlob_          { get; set; }
-			[Column("`Blob`")             ] public byte[]?   _Blob_              { get; set; }
-			[Column("`MediumBlob`")       ] public byte[]?   _MediumBlob_        { get; set; }
-			[Column("`LongBlob`")         ] public byte[]?   _LongBlob_          { get; set; }
-			[Column("`TinyText`")         ] public string?   _TinyText_          { get; set; }
-			[Column("`Text`")             ] public string?   _Text_              { get; set; }
-			[Column("`MediumText`")       ] public string?   _MediumText_        { get; set; }
-			[Column("`LongText`")         ] public string?   _LongText_          { get; set; }
-			[Column("`Date`")             ] public DateTime? _Date_              { get; set; }
-			[Column("`DateTime`")         ] public DateTime? _DateTime_          { get; set; }
-			[Column("`TimeStamp`")        ] public DateTime? _TimeStamp_         { get; set; }
-			[Column("`Time`")             ] public TimeSpan? _Time_              { get; set; }
-			[Column("`TinyInt`")          ] public sbyte?    _TinyInt_           { get; set; }
-			[Column("`TinyIntUnsigned`")  ] public byte?     _TinyIntUnsigned_   { get; set; }
-			[Column("`SmallInt`")         ] public short?    _SmallInt_          { get; set; }
-			[Column("`SmallIntUnsigned`") ] public ushort?   _SmallIntUnsigned_  { get; set; }
-			[Column("`MediumInt`")        ] public int?      _MediumInt_         { get; set; }
-			[Column("`MediumIntUnsigned`")] public uint?     _MediumIntUnsigned_ { get; set; }
-			[Column("`Int`")              ] public int?      _Int_               { get; set; }
-			[Column("`IntUnsigned`")      ] public uint?     _IntUnsigned_       { get; set; }
-			[Column("`BigInt`")           ] public long?     _BigInt_            { get; set; }
-			[Column("`BigIntUnsigned`")   ] public ulong?    _BigIntUnsigned_    { get; set; }
-			[Column("`Decimal`")          ] public decimal?  _Decimal_           { get; set; }
-			[Column("`Float`")            ] public float?    _Float_             { get; set; }
-			[Column("`Double`")           ] public double?   _Double_            { get; set; }
-			[Column("`Boolean`")          ] public bool?     _Boolean_           { get; set; }
-			[Column("`Bit1`")             ] public bool?     _Bit1_              { get; set; }
-			[Column("`Bit8`")             ] public byte?     _Bit8_              { get; set; }
-			[Column("`Bit10`")            ] public ushort?   _Bit10_             { get; set; }
-			[Column("`Bit16`")            ] public ushort?   _Bit16_             { get; set; }
-			[Column("`Bit32`")            ] public uint?     _Bit32_             { get; set; }
-			[Column("`Bit64`")            ] public ulong?    _Bit64_             { get; set; }
-			[Column("`Enum`")             ] public string?   _Enum_              { get; set; }
-			[Column("`Set`")              ] public string?   _Set_               { get; set; }
-			[Column("`Year`")             ] public int?      _Year_              { get; set; }
+			[Column("`VarChar255`")       ] public string?   VarChar255        { get; set; }
+			[Column("`VarChar1`")         ] public char?     VarChar1          { get; set; }
+			[Column("`Char255`")          ] public string?   Char255           { get; set; }
+			[Column("`Char1`")            ] public char?     Char1             { get; set; }
+			[Column("`VarBinary255`")     ] public byte[]?   VarBinary255      { get; set; }
+			[Column("`Binary255`")        ] public byte[]?   Binary255         { get; set; }
+			[Column("`TinyBlob`")         ] public byte[]?   TinyBlob          { get; set; }
+			[Column("`Blob`")             ] public byte[]?   Blob              { get; set; }
+			[Column("`MediumBlob`")       ] public byte[]?   MediumBlob        { get; set; }
+			[Column("`LongBlob`")         ] public byte[]?   LongBlob          { get; set; }
+			[Column("`TinyText`")         ] public string?   TinyText          { get; set; }
+			[Column("`Text`")             ] public string?   Text              { get; set; }
+			[Column("`MediumText`")       ] public string?   MediumText        { get; set; }
+			[Column("`LongText`")         ] public string?   LongText          { get; set; }
+			[Column("`Date`")             ] public DateTime? Date              { get; set; }
+			[Column("`DateTime`")         ] public DateTime? DateTime          { get; set; }
+			[Column("`TimeStamp`")        ] public DateTime? TimeStamp         { get; set; }
+			[Column("`Time`")             ] public TimeSpan? Time              { get; set; }
+			[Column("`TinyInt`")          ] public sbyte?    TinyInt           { get; set; }
+			[Column("`TinyIntUnsigned`")  ] public byte?     TinyIntUnsigned   { get; set; }
+			[Column("`SmallInt`")         ] public short?    SmallInt          { get; set; }
+			[Column("`SmallIntUnsigned`") ] public ushort?   SmallIntUnsigned  { get; set; }
+			[Column("`MediumInt`")        ] public int?      MediumInt         { get; set; }
+			[Column("`MediumIntUnsigned`")] public uint?     MediumIntUnsigned { get; set; }
+			[Column("`Int`")              ] public int?      Int               { get; set; }
+			[Column("`IntUnsigned`")      ] public uint?     IntUnsigned       { get; set; }
+			[Column("`BigInt`")           ] public long?     BigInt            { get; set; }
+			[Column("`BigIntUnsigned`")   ] public ulong?    BigIntUnsigned    { get; set; }
+			[Column("`Decimal`")          ] public decimal?  Decimal           { get; set; }
+			[Column("`Float`")            ] public float?    Float             { get; set; }
+			[Column("`Double`")           ] public double?   Double            { get; set; }
+			[Column("`Boolean`")          ] public bool?     Boolean           { get; set; }
+			[Column("`Bit1`")             ] public bool?     Bit1              { get; set; }
+			[Column("`Bit8`")             ] public byte?     Bit8              { get; set; }
+			[Column("`Bit10`")            ] public ushort?   Bit10             { get; set; }
+			[Column("`Bit16`")            ] public ushort?   Bit16             { get; set; }
+			[Column("`Bit32`")            ] public uint?     Bit32             { get; set; }
+			[Column("`Bit64`")            ] public ulong?    Bit64             { get; set; }
+			[Column("`Enum`")             ] public string?   Enum              { get; set; }
+			[Column("`Set`")              ] public string?   Set               { get; set; }
+			[Column("`Year`")             ] public int?      Year              { get; set; }
 		}
 
 		#endregion

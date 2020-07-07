@@ -325,7 +325,6 @@ SELECT
 				let providerType = Converter.ChangeTypeTo<int>(r["ProviderType"])
 				let dt           = GetDataTypeByProviderDbType(providerType, options)
 				let dataType     = dt == null ? null : dt.TypeName
-				//let columnType   = dt == null ? null : GetDataTypeNameByProviderDbType(dt.ProviderDbType)
 				let columnName   = r.Field<string>("ColumnName")
 				let isNullable   = r.Field<bool>("AllowDBNull")
 				let length       = r.Field<int>("ColumnSize")
@@ -339,7 +338,7 @@ SELECT
 					ColumnName           = columnName,
 					ColumnType           = GetDbType(options, dataType, dt, length, precision, scale, null, null, null),
 					IsNullable           = isNullable,
-					MemberName           = ToValidName(columnName),
+					MemberName           = ToValidName(columnName.Trim('`')),
 					MemberType           = ToTypeName(systemType, isNullable),
 					SystemType           = systemType ?? typeof(object),
 					DataType             = GetDataType(dataType, null, length, precision, scale),

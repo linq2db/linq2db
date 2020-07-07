@@ -1630,8 +1630,8 @@ namespace Tests.DataProvider
 				void assertColumn(string name, string type, DataType dataType)
 				{
 					// m'kaaaay...
-					name = "`" + name + "`";
-					var column    = proc.ResultTable!.Columns.Where(c => c.ColumnName == name).SingleOrDefault();
+					name       = "`" + name + "`";
+					var column = proc.ResultTable!.Columns.Where(c => c.ColumnName == name).SingleOrDefault();
 
 					Assert.IsNotNull(column);
 
