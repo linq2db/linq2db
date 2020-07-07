@@ -24,9 +24,11 @@ namespace MySqlConnectorDataContext
 	{
 		public ITable<Alltype>           Alltypes           { get { return this.GetTable<Alltype>(); } }
 		public ITable<Alltypesnoyear>    Alltypesnoyears    { get { return this.GetTable<Alltypesnoyear>(); } }
+		public ITable<Animals8>          Animals8           { get { return this.GetTable<Animals8>(); } }
 		public ITable<Child>             Children           { get { return this.GetTable<Child>(); } }
 		public ITable<Datatypetest>      Datatypetests      { get { return this.GetTable<Datatypetest>(); } }
 		public ITable<Doctor>            Doctors            { get { return this.GetTable<Doctor>(); } }
+		public ITable<Eyes8>             Eyes8              { get { return this.GetTable<Eyes8>(); } }
 		public ITable<Fulltextindextest> Fulltextindextests { get { return this.GetTable<Fulltextindextest>(); } }
 		public ITable<Grandchild>        Grandchilds        { get { return this.GetTable<Grandchild>(); } }
 		public ITable<Inheritancechild>  Inheritancechilds  { get { return this.GetTable<Inheritancechild>(); } }
@@ -40,6 +42,7 @@ namespace MySqlConnectorDataContext
 		/// VIEW
 		/// </summary>
 		public ITable<Personview>        Personviews        { get { return this.GetTable<Personview>(); } }
+		public ITable<Testanimaltable>   Testanimaltables   { get { return this.GetTable<Testanimaltable>(); } }
 		public ITable<Testidentity>      Testidentities     { get { return this.GetTable<Testidentity>(); } }
 		public ITable<Testmerge1>        Testmerge1         { get { return this.GetTable<Testmerge1>(); } }
 		public ITable<Testmerge2>        Testmerge2         { get { return this.GetTable<Testmerge2>(); } }
@@ -127,6 +130,19 @@ namespace MySqlConnectorDataContext
 		[Column("boolDataType"),        Nullable            ] public bool?     BoolDataType        { get; set; } // tinyint(1)
 	}
 
+	[Table("animals8")]
+	public partial class Animals8
+	{
+		[Column,     NotNull    ] public string  AnimalType    { get; set; } = null!; // varchar(40)
+		[Column,     NotNull    ] public string  AnimalType2   { get; set; } = null!; // varchar(40)
+		[PrimaryKey, NotNull    ] public int     Id            { get; set; } // int
+		[Column,        Nullable] public string? Name          { get; set; } // varchar(255)
+		[Column,     NotNull    ] public string  Discriminator { get; set; } = null!; // varchar(40)
+		[Column,        Nullable] public int?    EyeId         { get; set; } // int
+		[Column,        Nullable] public string? Second        { get; set; } // varchar(40)
+		[Column,        Nullable] public string? First         { get; set; } // varchar(40)
+	}
+
 	[Table("child")]
 	public partial class Child
 	{
@@ -176,6 +192,13 @@ namespace MySqlConnectorDataContext
 		public Person Person { get; set; } = null!;
 
 		#endregion
+	}
+
+	[Table("eyes8")]
+	public partial class Eyes8
+	{
+		[PrimaryKey, NotNull    ] public int     Id { get; set; } // int
+		[Column,        Nullable] public string? Xy { get; set; } // varchar(40)
 	}
 
 	[Table("fulltextindextest")]
@@ -293,6 +316,13 @@ namespace MySqlConnectorDataContext
 		[Column, NotNull] public int ID { get; set; } // int
 	}
 
+	[Table("testanimaltable")]
+	public partial class Testanimaltable
+	{
+		[Column, NotNull    ] public int  Id           { get; set; } // int
+		[Column,    Nullable] public int? TestAnimalId { get; set; } // int
+	}
+
 	[Table("testidentity")]
 	public partial class Testidentity
 	{
@@ -372,13 +402,13 @@ namespace MySqlConnectorDataContext
 
 		#region TestOutputParametersWithoutTableProcedure
 
-		public static int TestOutputParametersWithoutTableProcedure(this TestmysqlconnectordbDB dataConnection, string? aInParam, out sbyte? aOutParam)
+		public static int TestOutputParametersWithoutTableProcedure(this TestmysqlconnectordbDB dataConnection, string? aInParam, out bool? aOutParam)
 		{
 			var ret = dataConnection.ExecuteProc("`TestOutputParametersWithoutTableProcedure`",
 				new DataParameter("aInParam",  aInParam,  DataType.VarChar),
 				new DataParameter("aOutParam", null, DataType.SByte) { Direction = ParameterDirection.Output });
 
-			aOutParam = Converter.ChangeTypeTo<sbyte?>(((IDbDataParameter)dataConnection.Command.Parameters["aOutParam"]).Value);
+			aOutParam = Converter.ChangeTypeTo<bool?>(((IDbDataParameter)dataConnection.Command.Parameters["aOutParam"]).Value);
 
 			return ret;
 		}
@@ -430,6 +460,12 @@ namespace MySqlConnectorDataContext
 				t.ID == ID);
 		}
 
+		public static Animals8 Find(this ITable<Animals8> table, int Id)
+		{
+			return table.FirstOrDefault(t =>
+				t.Id == Id);
+		}
+
 		public static Datatypetest Find(this ITable<Datatypetest> table, int DataTypeID)
 		{
 			return table.FirstOrDefault(t =>
@@ -440,6 +476,12 @@ namespace MySqlConnectorDataContext
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
+		}
+
+		public static Eyes8 Find(this ITable<Eyes8> table, int Id)
+		{
+			return table.FirstOrDefault(t =>
+				t.Id == Id);
 		}
 
 		public static Fulltextindextest Find(this ITable<Fulltextindextest> table, uint Id)

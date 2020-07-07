@@ -7,7 +7,7 @@ namespace LinqToDB.DataProvider.MySql
 {
 	using Common;
 	using Data;
-	using SchemaProvider;
+	using LinqToDB.SchemaProvider;
 
 	class MySqlSchemaProvider : SchemaProviderBase
 	{
@@ -194,36 +194,41 @@ SELECT
 		{
 			switch (dataType?.ToLower())
 			{
-				case "bit"        : return DataType.BitArray;
-				case "blob"       : return DataType.Blob;
-				case "tinyblob"   : return DataType.Blob;
-				case "mediumblob" : return DataType.Blob;
-				case "longblob"   : return DataType.Blob;
-				case "binary"     : return DataType.Binary;
-				case "varbinary"  : return DataType.VarBinary;
-				case "date"       : return DataType.Date;
-				case "datetime"   : return DataType.DateTime;
-				case "timestamp"  : return DataType.DateTime;
-				case "time"       : return DataType.Time;
-				case "char"       : return DataType.Char;
-				case "varchar"    : return DataType.VarChar;
-				case "set"        : return DataType.VarChar;
-				case "enum"       : return DataType.VarChar;
-				case "tinytext"   : return DataType.Text;
-				case "text"       : return DataType.Text;
-				case "mediumtext" : return DataType.Text;
-				case "longtext"   : return DataType.Text;
-				case "double"     : return DataType.Double;
-				case "float"      : return DataType.Single;
-				case "tinyint"    : if (columnType == "tinyint(1)") return DataType.Boolean;
-									return columnType != null && columnType.Contains("unsigned") ? DataType.Byte   : DataType.SByte;
-				case "smallint"   : return columnType != null && columnType.Contains("unsigned") ? DataType.UInt16 : DataType.Int16;
-				case "int"        : return columnType != null && columnType.Contains("unsigned") ? DataType.UInt32 : DataType.Int32;
-				case "year"       : return DataType.Int32;
-				case "mediumint"  : return columnType != null && columnType.Contains("unsigned") ? DataType.UInt32 : DataType.Int32;
-				case "bigint"     : return columnType != null && columnType.Contains("unsigned") ? DataType.UInt64 : DataType.Int64;
-				case "decimal"    : return DataType.Decimal;
-				case "json"       : return DataType.Json;
+				case "tinyint unsigned"  : return DataType.Byte;
+				case "smallint unsigned" : return DataType.UInt16;
+				case "mediumint unsigned": return DataType.UInt32;
+				case "int unsigned"      : return DataType.UInt32;
+				case "bigint unsigned"   : return DataType.UInt64;
+				case "bool"              : return DataType.SByte; // tinyint(1) alias
+				case "bit"               : return DataType.BitArray;
+				case "blob"              : return DataType.Blob;
+				case "tinyblob"          : return DataType.Blob;
+				case "mediumblob"        : return DataType.Blob;
+				case "longblob"          : return DataType.Blob;
+				case "binary"            : return DataType.Binary;
+				case "varbinary"         : return DataType.VarBinary;
+				case "date"              : return DataType.Date;
+				case "datetime"          : return DataType.DateTime;
+				case "timestamp"         : return DataType.DateTime;
+				case "time"              : return DataType.Time;
+				case "char"              : return DataType.Char;
+				case "varchar"           : return DataType.VarChar;
+				case "set"               : return DataType.VarChar;
+				case "enum"              : return DataType.VarChar;
+				case "tinytext"          : return DataType.Text;
+				case "text"              : return DataType.Text;
+				case "mediumtext"        : return DataType.Text;
+				case "longtext"          : return DataType.Text;
+				case "double"            : return DataType.Double;
+				case "float"             : return DataType.Single;
+				case "tinyint"           : return columnType != null && columnType.Contains("unsigned") ? DataType.Byte   : DataType.SByte;
+				case "smallint"          : return columnType != null && columnType.Contains("unsigned") ? DataType.UInt16 : DataType.Int16;
+				case "int"               : return columnType != null && columnType.Contains("unsigned") ? DataType.UInt32 : DataType.Int32;
+				case "year"              : return DataType.Int32;
+				case "mediumint"         : return columnType != null && columnType.Contains("unsigned") ? DataType.UInt32 : DataType.Int32;
+				case "bigint"            : return columnType != null && columnType.Contains("unsigned") ? DataType.UInt64 : DataType.Int64;
+				case "decimal"           : return DataType.Decimal;
+				case "json"              : return DataType.Json;
 			}
 
 			return DataType.Undefined;
@@ -273,10 +278,23 @@ SELECT
 						Ordinal       = Converter.ChangeTypeTo<int>(rd["ORDINAL_POSITION"]),
 						IsResult      = mode == null,
 						DataType      = rd.GetString(7).ToUpper(),
+						DataTypeExact = Converter.ChangeTypeTo<string>(rd[9]),
+						Length        = Converter.ChangeTypeTo<long?>(rd["CHARACTER_MAXIMUM_LENGTH"]),
 						IsNullable    = true
 					};
-				}, "SELECT SPECIFIC_SCHEMA, SPECIFIC_NAME, PARAMETER_MODE, ORDINAL_POSITION, PARAMETER_NAME, NUMERIC_PRECISION, NUMERIC_SCALE, DATA_TYPE FROM INFORMATION_SCHEMA.parameters WHERE SPECIFIC_SCHEMA = database()")
+				}, "SELECT SPECIFIC_SCHEMA, SPECIFIC_NAME, PARAMETER_MODE, ORDINAL_POSITION, PARAMETER_NAME, NUMERIC_PRECISION, NUMERIC_SCALE, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH, DTD_IDENTIFIER FROM INFORMATION_SCHEMA.parameters WHERE SPECIFIC_SCHEMA = database()")
 				.ToList();
+		}
+
+		protected override DataParameter BuildProcedureParameter(ParameterSchema p)
+		{
+			var param = base.BuildProcedureParameter(p);
+
+			// mysql procedure parameters are nullable so better to pass NULL, as at least JSON parameters
+			// doesn't work with empty string (and we cannot detect json-typed parameters for MariaDB)
+			param.Value = null;
+
+			return param;
 		}
 
 		protected override DataTable? GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters)
@@ -305,26 +323,26 @@ SELECT
 				from r in resultTable.AsEnumerable()
 
 				let providerType = Converter.ChangeTypeTo<int>(r["ProviderType"])
-				let dataType     = GetDataTypeByProviderDbType(providerType, options)
-				let columnType   = dataType == null ? null : dataType.TypeName
+				let dt           = GetDataTypeByProviderDbType(providerType, options)
+				let dataType     = dt == null ? null : dt.TypeName
 				let columnName   = r.Field<string>("ColumnName")
 				let isNullable   = r.Field<bool>("AllowDBNull")
 				let length       = r.Field<int>("ColumnSize")
 				let precision    = Converter.ChangeTypeTo<int>(r["NumericPrecision"])
 				let scale        = Converter.ChangeTypeTo<int>(r["NumericScale"])
 
-				let systemType = GetSystemType(columnType, null, dataType, length, precision, scale, options)
+				let systemType = GetSystemType(dataType, null, dt, length, precision, scale, options)
 
 				select new ColumnSchema
 				{
 					ColumnName           = columnName,
-					ColumnType           = GetDbType(options, columnType, dataType, length, precision, scale, null, null, null),
+					ColumnType           = GetDbType(options, dataType, dt, length, precision, scale, null, null, null),
 					IsNullable           = isNullable,
-					MemberName           = ToValidName(columnName),
+					MemberName           = ToValidName(columnName.Trim('`')),
 					MemberType           = ToTypeName(systemType, isNullable),
 					SystemType           = systemType ?? typeof(object),
-					DataType             = GetDataType(columnType, null, length, precision, scale),
-					ProviderSpecificType = GetProviderSpecificType(columnType),
+					DataType             = GetDataType(dataType, null, length, precision, scale),
+					ProviderSpecificType = GetProviderSpecificType(dataType),
 					IsIdentity           = r.IsNull("IsIdentity") ? false : r.Field<bool>("IsIdentity")
 				}
 			).ToList();
@@ -355,19 +373,31 @@ SELECT
 			switch (dataType?.ToLower())
 			{
 				case "bit"               :
-					if (precision == 1)
-						return typeof(bool);
-					if (precision <= 8)
-						return typeof(byte);
-					if (precision <= 16)
-						return typeof(ushort);
-					if (precision <= 32)
-						return typeof(uint);
-					return typeof(ulong);
+					{
+						// C - "Consistency"
+						var size = precision > 0 ? precision : length;
+						if (size == 1)
+							return typeof(bool);
+						if (size <= 8)
+							return typeof(byte);
+						if (size <= 16)
+							return typeof(ushort);
+						if (size <= 32)
+							return typeof(uint);
+						return typeof(ulong);
+					}
+				case "tinyint unsigned"  : return typeof(byte);
+				case "smallint unsigned" : return typeof(ushort);
+				case "mediumint unsigned": return typeof(uint);
+				case "int unsigned"      : return typeof(uint);
+				case "bigint unsigned"   : return typeof(ulong);
 				case "tinyint"           :
-					if (columnType == "tinyint(1)")
-						return typeof(bool);
-					return columnType?.Contains("unsigned") == true ? typeof(byte)  : typeof(sbyte);
+					{
+						var size = precision > 0 ? precision : length;
+						if (columnType == "tinyint(1)" || size == 1)
+							return typeof(bool);
+						return columnType?.Contains("unsigned") == true ? typeof(byte) : typeof(sbyte);
+					}
 				case "smallint"          : return columnType?.Contains("unsigned") == true ? typeof(ushort) : typeof(short);
 				case "mediumint"         :
 				case "int"               : return columnType?.Contains("unsigned") == true ? typeof(uint)   : typeof(int);
@@ -375,6 +405,7 @@ SELECT
 				case "json"              :
 				case "longtext"          : return typeof(string);
 				case "timestamp"         : return typeof(DateTime);
+				case "bool"              : return typeof(bool);
 				case "point"             :
 				case "linestring"        :
 				case "polygon"           :
