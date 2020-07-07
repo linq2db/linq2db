@@ -17,22 +17,6 @@ public class TestsInitialization
 	[OneTimeSetUp]
 	public void TestAssemblySetup()
 	{
-#if NET46
-		// recent SAP HANA provider uses Assembly.GetEntryAssembly() calls during native dlls discovery, which
-		// leads to NRE as it returns null under NETFX, so we need to fake this method result to unblock HANA testing
-		// https://github.com/microsoft/vstest/issues/1834
-		// https://dejanstojanovic.net/aspnet/2015/january/set-entry-assembly-in-unit-testing-methods/
-		var assembly = Assembly.GetCallingAssembly();
-
-		var manager            = new AppDomainManager();
-		var entryAssemblyfield = manager.GetType().GetField("m_entryAssembly", BindingFlags.Instance | BindingFlags.NonPublic);
-		entryAssemblyfield.SetValue(manager, assembly);
-
-		var domain             = AppDomain.CurrentDomain;
-		var domainManagerField = domain.GetType().GetField("_domainManager", BindingFlags.Instance | BindingFlags.NonPublic);
-		domainManagerField.SetValue(domain, manager);
-#endif
-
 		// netcoreapp2.1 adds DbProviderFactories support, but providers should be registered by application itself
 		// this code allows to load assembly using factory without adding explicit reference to project
 		RegisterSapHanaFactory();
