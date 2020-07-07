@@ -527,9 +527,9 @@ CREATE TABLE Issue1993 (
 	description	VARCHAR(100)		NULL,
 PRIMARY KEY(id));
 GO
-DROP PROCEDURE IF EXISTS `Issue2313`
+DROP PROCEDURE IF EXISTS `Issue2313Parameters`
 GO
-CREATE PROCEDURE `Issue2313`(
+CREATE PROCEDURE `Issue2313Parameters`(
 	IN `VarChar255` VARCHAR(255),
 	IN `VarChar1` VARCHAR(1),
 	IN `Char255` CHAR(255),
@@ -637,6 +637,132 @@ BEGIN
 	`MultiLineString`,
 	`MultiPolygon`,
 	`GeometryCollection`
+	FROM Person;
+END
+GO
+DROP PROCEDURE IF EXISTS `Issue2313Results`
+GO
+CREATE PROCEDURE `Issue2313Results`(
+	IN `VarChar255` VARCHAR(255),
+	IN `VarChar1` VARCHAR(1),
+	IN `Char255` CHAR(255),
+	IN `Char1` CHAR(1),
+	IN `VarBinary255` VARBINARY(255),
+	IN `Binary255` BINARY(255),
+	IN `TinyBlob` TINYBLOB,
+	IN `Blob` BLOB,
+	IN `MediumBlob` MEDIUMBLOB,
+	IN `LongBlob` LONGBLOB,
+	IN `TinyText` TINYTEXT,
+	IN `Text` TEXT,
+	IN `MediumText` MEDIUMTEXT,
+	IN `LongText` LONGTEXT,
+	IN `Date` DATE,
+	IN `DateTime` DATETIME,
+	IN `TimeStamp` TIMESTAMP,
+	IN `Time` TIME,
+	IN `TinyInt` TINYINT,
+	IN `TinyIntUnsigned` TINYINT UNSIGNED,
+	IN `SmallInt` SMALLINT,
+	IN `SmallIntUnsigned` SMALLINT UNSIGNED,
+	IN `MediumInt` MEDIUMINT,
+	IN `MediumIntUnsigned` MEDIUMINT UNSIGNED,
+	IN `Int` INT,
+	IN `IntUnsigned` INT UNSIGNED,
+	IN `BigInt` BIGINT,
+	IN `BigIntUnsigned` BIGINT UNSIGNED,
+	IN `Decimal` DECIMAL,
+	IN `Float` FLOAT,
+	IN `Double` DOUBLE,
+	IN `Boolean` BOOLEAN,
+	IN `Bit1` BIT,
+	IN `Bit8` BIT(8),
+	IN `Bit10` BIT(10),
+	IN `Bit16` BIT(16),
+	IN `Bit32` BIT(32),
+	IN `Bit64` BIT(64),
+	IN `Enum` ENUM('one', 'two'),
+	IN `Set` ENUM('one', 'two'),
+
+-- SKIP MySql55 BEGIN
+-- SKIP MySql BEGIN
+-- SKIP MariaDB BEGIN
+	IN `Json` JSON,
+	IN `Geometry` GEOMETRY,
+	IN `Point` POINT,
+	IN `LineString` LINESTRING,
+	IN `Polygon` POLYGON,
+	IN `MultiPoint` MULTIPOINT,
+	IN `MultiLineString` MULTILINESTRING,
+	IN `MultiPolygon` MULTIPOLYGON,
+-- SKIP MariaDB END
+-- SKIP MySql END
+-- SKIP MySql55 END
+
+/*	IN `GeometryCollection` GEOMETRYCOLLECTION*/
+	IN `Year` YEAR
+)
+BEGIN
+	SELECT 
+	`VarChar255`,
+	`VarChar1`,
+	`Char255`,
+	`Char1`,
+	`VarBinary255`,
+	`Binary255`,
+	`TinyBlob`,
+	`Blob`,
+	`MediumBlob`,
+	`LongBlob`,
+	`TinyText`,
+	`Text`,
+	`MediumText`,
+	`LongText`,
+	`Date`,
+	`DateTime`,
+	`TimeStamp`,
+	`Time`,
+	`TinyInt`,
+	`TinyIntUnsigned`,
+	`SmallInt`,
+	`SmallIntUnsigned`,
+	`MediumInt`,
+	`MediumIntUnsigned`,
+	`Int`,
+	`IntUnsigned`,
+	`BigInt`,
+	`BigIntUnsigned`,
+	`Decimal`,
+	`Float`,
+	`Double`,
+	`Boolean`,
+	`Bit1`,
+	`Bit8`,
+	`Bit10`,
+	`Bit16`,
+	`Bit32`,
+	`Bit64`,
+	`Enum`,
+	`Set`,
+	`Year`
+
+-- SKIP MySql55 BEGIN
+-- SKIP MySql BEGIN
+-- SKIP MariaDB BEGIN
+	,`Json`,
+	`Geometry`,
+	`Point`,
+	`LineString`,
+	`Polygon`,
+	`MultiPoint`,
+	`MultiLineString`,
+	`MultiPolygon`
+-- SKIP MariaDB END
+-- SKIP MySql END
+-- SKIP MySql55 END
+
+
+-- `GeometryCollection`
 	FROM Person;
 END
 GO
