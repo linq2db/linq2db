@@ -3265,22 +3265,23 @@ namespace LinqToDB.Linq.Builder
 
 						if (expr.Members != null)
 						{
-						for (var i = 0; i < expr.Members.Count; i++)
-						{
-							var member = expr.Members[i];
+							for (var i = 0; i < expr.Members.Count; i++)
+							{
+								var member = expr.Members[i];
 
-							var converted = expr.Arguments[i].Transform(e => RemoveNullPropagation(e));
-							members.Add(member, converted);
+								var converted = expr.Arguments[i].Transform(e => RemoveNullPropagation(e));
+								members.Add(member, converted);
 
-							if (member is MethodInfo info)
-								members.Add(info.GetPropertyInfo(), converted);
+								if (member is MethodInfo info)
+									members.Add(info.GetPropertyInfo(), converted);
+							}
 						}
-						}
 
-						if (!MappingSchema.IsScalarType(expr.Type))
+						var isScalar = MappingSchema.IsScalarType(expr.Type);
+						if (!isScalar)
 							CollectParameters(expr.Type, expr.Constructor, expr.Arguments);
 
-						return members.Count > 0;
+						return members.Count > 0 || !isScalar;
 					}
 
 				// new MyObject { ... }
@@ -3312,10 +3313,11 @@ namespace LinqToDB.Linq.Builder
 
 						// process fabric methods
 
-						if (!MappingSchema.IsScalarType(mc.Type))
+						var isScalar = MappingSchema.IsScalarType(mc.Type);
+						if (!isScalar)
 							CollectParameters(mc.Type, mc.Method, mc.Arguments);
 
-						return members.Count > 0;
+						return members.Count > 0 || !isScalar;
 					}
 
 				case ExpressionType.NewArrayInit:
