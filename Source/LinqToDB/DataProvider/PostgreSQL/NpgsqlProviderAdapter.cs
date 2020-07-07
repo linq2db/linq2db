@@ -9,6 +9,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using System.Net;
 	using System.Net.NetworkInformation;
 	using System.Text;
+	using System.Threading;
+	using System.Threading.Tasks;
 	using LinqToDB.Common;
 	using LinqToDB.Data;
 	using LinqToDB.Expressions;
@@ -576,6 +578,17 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				(Expression<Action<NpgsqlBinaryImporter>>                                  )((NpgsqlBinaryImporter this_) => this_.Dispose()),
 				// [3]: StartRow
 				(Expression<Action<NpgsqlBinaryImporter>>                                  )((NpgsqlBinaryImporter this_) => this_.StartRow()),
+#if !NET45 && !NET46
+				// [4]: CompleteAsync
+				new Tuple<LambdaExpression, bool>
+				((Expression<Func<NpgsqlBinaryImporter, CancellationToken, ValueTask<ulong>>>)((NpgsqlBinaryImporter this_, CancellationToken token)                  => this_.CompleteAsync(token)),         true),
+				// [5]: DisposeAsync
+				new Tuple<LambdaExpression, bool>
+				((Expression<Func<NpgsqlBinaryImporter, ValueTask                          >>)((NpgsqlBinaryImporter this_)                                           => this_.DisposeAsync()),               true),
+				// [6]: WriteRowAsync
+				new Tuple<LambdaExpression, bool>
+				((Expression<Func<NpgsqlBinaryImporter, CancellationToken, object[], Task  >>)((NpgsqlBinaryImporter this_, CancellationToken token, object[] values) => this_.WriteRowAsync(token, values)), true),
+#endif
 			};
 
 			public NpgsqlBinaryImporter(object instance, Delegate[] wrappers) : base(instance, wrappers)
@@ -591,6 +604,20 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			public void Complete() => ((Action<NpgsqlBinaryImporter>)CompiledWrappers[1])(this);
 			public void Dispose()  => ((Action<NpgsqlBinaryImporter>)CompiledWrappers[2])(this);
 			public void StartRow() => ((Action<NpgsqlBinaryImporter>)CompiledWrappers[3])(this);
+
+#if !NET45 && !NET46
+#pragma warning disable CS3002 // Return type is not CLS-compliant
+			public ValueTask<ulong> CompleteAsync(CancellationToken cancellationToken) 
+				=> ((Func<NpgsqlBinaryImporter, CancellationToken, ValueTask<ulong>>)CompiledWrappers[4])(this, cancellationToken);
+#pragma warning restore CS3002 // Return type is not CLS-compliant
+			public ValueTask DisposeAsync()
+				=> ((Func<NpgsqlBinaryImporter, ValueTask>)CompiledWrappers[5])(this);
+			public Task WriteRowAsync(CancellationToken cancellationToken, object[] values) 
+				=> ((Func<NpgsqlBinaryImporter, CancellationToken, object[], Task>)CompiledWrappers[6])(this, cancellationToken, values);
+
+			public bool SupportsAsync 
+				=> CompiledWrappers[4] != null && CompiledWrappers[5] != null && CompiledWrappers[6] != null;
+#endif
 		}
 
 		#endregion
