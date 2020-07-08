@@ -8,6 +8,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using System.Linq.Expressions;
 	using System.Net;
 	using System.Net.NetworkInformation;
+	using System.Reflection;
 	using System.Text;
 	using System.Threading;
 	using System.Threading.Tasks;
@@ -113,6 +114,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				// use setter([]) instead of Add() because enum contains duplicate fields with same values
 				_knownDbTypes[(NpgsqlDbType)Enum.Parse(typeof(NpgsqlDbType), knownTypeName)] = (int)Enum.Parse(dbTypeType, knownTypeName);
 			}
+
+			BinaryImporterWriteAsyncFunction = GetBinaryImporterWriteAsyncFunction();
 		}
 
 		public Type ConnectionType  { get; }
@@ -218,6 +221,47 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					pWriterIn, pColumns, pEntity);
 
 			return ex.Compile();
+		}
+
+		public Func<NpgsqlBinaryImporter, object?, NpgsqlDbType, CancellationToken, Task>? BinaryImporterWriteAsyncFunction { get; }
+
+		private Func<NpgsqlBinaryImporter, object?, NpgsqlDbType, CancellationToken, Task>? GetBinaryImporterWriteAsyncFunction()
+		{
+			// find the WriteAsync method, or return null if it cannot be found
+			var writeAsyncMethod = _npgsqlBinaryImporterType.GetMethod("WriteAsync", 1, new Type[] { typeof(object), _dbTypeType, typeof(CancellationToken) });
+			if (writeAsyncMethod == null) return null;
+			if (writeAsyncMethod.ReturnType != typeof(Task)) return null;
+
+			// find the MethodInfo of the instance_ get-property of NpgsqlBinaryImporter
+			var instance_GetProperty = typeof(NpgsqlBinaryImporter).GetProperty(nameof(NpgsqlBinaryImporter.instance_));
+			if (instance_GetProperty == null) throw new ApplicationException($"Cannot find {nameof(NpgsqlBinaryImporter)}.{nameof(NpgsqlBinaryImporter.instance_)} property.");
+
+			// set up the 4 parameters to the lambda
+			var pImporter = Expression.Parameter(typeof(NpgsqlBinaryImporter));
+			var pValue = Expression.Parameter(typeof(object));
+			var pDbType = Expression.Parameter(typeof(NpgsqlDbType));
+			var pCancellationToken = Expression.Parameter(typeof(CancellationToken));
+
+			// convertedDbType = (_dbTypeType)pDbType
+			var convertedDbType = Expression.Convert(Expression.Constant(pDbType), _dbTypeType);
+			// importerInternal = pImporter.instance_
+			var importerInternal = Expression.MakeMemberAccess(pImporter, instance_GetProperty);
+			// typedImporter = (_npgsqlBinaryImporterType)pImporter.instance_
+			var typedImporter = Expression.Convert(importerInternal, _npgsqlBinaryImporterType);
+
+			// body = ((_npgSqlBinaryImporterType)pImporter.instance_).WriteAsync(pValue, (_dbTypeType)pDbType, pCancellationToken)
+			var body = Expression.Call(
+				typedImporter,
+				writeAsyncMethod,
+				new Expression[] { pValue, convertedDbType, pCancellationToken });
+
+			// lambda = (pImporter, pValue, pDbType, pCancellationToken) => ((_npgSqlBinaryImporterType)pImporter.instance_).WriteAsync(pValue, (_dbTypeType)pDbType, pCancellationToken)
+			var lambda = Expression.Lambda<Func<NpgsqlBinaryImporter, object?, NpgsqlDbType, CancellationToken, Task>>(
+				body,
+				new ParameterExpression[] { pImporter, pValue, pDbType, pCancellationToken });
+
+			// compile and return the lambda
+			return lambda.Compile();
 		}
 
 		public MappingSchema MappingSchema { get; }
@@ -581,13 +625,13 @@ namespace LinqToDB.DataProvider.PostgreSQL
 #if !NET45 && !NET46
 				// [4]: CompleteAsync
 				new Tuple<LambdaExpression, bool>
-				((Expression<Func<NpgsqlBinaryImporter, CancellationToken, ValueTask<ulong>>>)((NpgsqlBinaryImporter this_, CancellationToken token)                  => this_.CompleteAsync(token)),         true),
+				((Expression<Func<NpgsqlBinaryImporter, CancellationToken, ValueTask<ulong>>>)((NpgsqlBinaryImporter this_, CancellationToken token) => this_.CompleteAsync(token)),         true),
 				// [5]: DisposeAsync
 				new Tuple<LambdaExpression, bool>
-				((Expression<Func<NpgsqlBinaryImporter, ValueTask                          >>)((NpgsqlBinaryImporter this_)                                           => this_.DisposeAsync()),               true),
-				// [6]: WriteRowAsync
+				((Expression<Func<NpgsqlBinaryImporter, ValueTask                          >>)((NpgsqlBinaryImporter this_)                          => this_.DisposeAsync()),               true),
+				// [6]: StartRowAsync
 				new Tuple<LambdaExpression, bool>
-				((Expression<Func<NpgsqlBinaryImporter, CancellationToken, object[], Task  >>)((NpgsqlBinaryImporter this_, CancellationToken token, object[] values) => this_.WriteRowAsync(token, values)), true),
+				((Expression<Func<NpgsqlBinaryImporter, CancellationToken,           Task  >>)((NpgsqlBinaryImporter this_, CancellationToken token) => this_.StartRowAsync(token)), true),
 #endif
 			};
 
@@ -612,8 +656,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 #pragma warning restore CS3002 // Return type is not CLS-compliant
 			public ValueTask DisposeAsync()
 				=> ((Func<NpgsqlBinaryImporter, ValueTask>)CompiledWrappers[5])(this);
-			public Task WriteRowAsync(CancellationToken cancellationToken, object[] values) 
-				=> ((Func<NpgsqlBinaryImporter, CancellationToken, object[], Task>)CompiledWrappers[6])(this, cancellationToken, values);
+			public Task StartRowAsync(CancellationToken cancellationToken) 
+				=> ((Func<NpgsqlBinaryImporter, CancellationToken, Task>)CompiledWrappers[6])(this, cancellationToken);
 
 			public bool SupportsAsync 
 				=> CompiledWrappers[4] != null && CompiledWrappers[5] != null && CompiledWrappers[6] != null;
