@@ -4,18 +4,6 @@
 <#@ include file="..\Shared.ttinclude"                                           #>
 <#@ import namespace="System.Reflection"                                         #>
 <#
-	var assembly = Assembly.GetCallingAssembly();
-
-	var manager = new AppDomainManager();
-	var entryAssemblyfield = manager.GetType().GetField("m_entryAssembly", BindingFlags.Instance | BindingFlags.NonPublic);
-	entryAssemblyfield.SetValue(manager, assembly);
-
-	var domain = AppDomain.CurrentDomain;
-	var domainManagerField = domain.GetType().GetField("_domainManager", BindingFlags.Instance | BindingFlags.NonPublic);
-	domainManagerField.SetValue(domain, manager);
-
-
-
 	NamespaceName = "SapHanaDataContext";
 
 	//GetSchemaOptions.IncludedSchemas = new[] { "TEST" };

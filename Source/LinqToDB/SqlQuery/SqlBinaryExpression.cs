@@ -30,7 +30,7 @@ namespace LinqToDB.SqlQuery
 
 		#region Overrides
 
-		public string SqlText => ToString();
+		public string SqlText => ToString()!;
 
 #if OVERRIDETOSTRING
 

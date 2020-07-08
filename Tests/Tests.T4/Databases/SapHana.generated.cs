@@ -26,10 +26,10 @@ namespace SapHanaDataContext
 	{
 		                                           public ITable<_SYS_PLAN_STABILITY_AbstractSqlPlanEntries>                                           AbstractSqlPlanEntries                                                                   { get { return this.GetTable<_SYS_PLAN_STABILITY_AbstractSqlPlanEntries>(); } }
 		                                           public ITable<_SYS_PLAN_STABILITY_AbstractSqlPlanQueries>                                           AbstractSqlPlanQueries                                                                   { get { return this.GetTable<_SYS_PLAN_STABILITY_AbstractSqlPlanQueries>(); } }
-		                                           public ITable<AllType>                                                                              AllTypes                                                                                 { get { return this.GetTable<AllType>(); } }
-		                                           public ITable<TESTHANAODBC_AllType>                                                                 AllTypes0                                                                                { get { return this.GetTable<TESTHANAODBC_AllType>(); } }
-		                                           public ITable<AllTypesGeo>                                                                          AllTypesGeos                                                                             { get { return this.GetTable<AllTypesGeo>(); } }
-		                                           public ITable<TESTHANAODBC_AllTypesGeo>                                                             AllTypesGeos0                                                                            { get { return this.GetTable<TESTHANAODBC_AllTypesGeo>(); } }
+		                                           public ITable<TESTHANAODBC_AllType>                                                                 AllTypes                                                                                 { get { return this.GetTable<TESTHANAODBC_AllType>(); } }
+		                                           public ITable<AllType>                                                                              AllTypes0                                                                                { get { return this.GetTable<AllType>(); } }
+		                                           public ITable<TESTHANAODBC_AllTypesGeo>                                                             AllTypesGeos                                                                             { get { return this.GetTable<TESTHANAODBC_AllTypesGeo>(); } }
+		                                           public ITable<AllTypesGeo>                                                                          AllTypesGeos0                                                                            { get { return this.GetTable<AllTypesGeo>(); } }
 		/// <summary>
 		/// This table contains a summary of Best Record group master statistics
 		/// </summary>
@@ -46,10 +46,10 @@ namespace SapHanaDataContext
 		/// </summary>
 		                                           public ITable<_SYS_TASK_BestRecordSTRATEGy>                                                         BestRecordStrategies0                                                                    { get { return this.GetTable<_SYS_TASK_BestRecordSTRATEGy>(); } }
 		                                           public ITable<_SYS_TASK_BestRecordStrategyGroups>                                                   BestRecordStrategyGroups                                                                 { get { return this.GetTable<_SYS_TASK_BestRecordStrategyGroups>(); } }
-		                                           public ITable<BulkInsertLowerCaseColumn>                                                            BulkInsertLowerCaseColumns                                                               { get { return this.GetTable<BulkInsertLowerCaseColumn>(); } }
-		                                           public ITable<TESTHANAODBC_BulkInsertLowerCaseColumn>                                               BulkInsertLowerCaseColumns0                                                              { get { return this.GetTable<TESTHANAODBC_BulkInsertLowerCaseColumn>(); } }
-		                                           public ITable<BulkInsertUpperCaseColumn>                                                            BulkInsertUpperCaseColumns                                                               { get { return this.GetTable<BulkInsertUpperCaseColumn>(); } }
-		                                           public ITable<TESTHANAODBC_BulkInsertUpperCaseColumn>                                               BulkInsertUpperCaseColumns0                                                              { get { return this.GetTable<TESTHANAODBC_BulkInsertUpperCaseColumn>(); } }
+		                                           public ITable<TESTHANAODBC_BulkInsertLowerCaseColumn>                                               BulkInsertLowerCaseColumns                                                               { get { return this.GetTable<TESTHANAODBC_BulkInsertLowerCaseColumn>(); } }
+		                                           public ITable<BulkInsertLowerCaseColumn>                                                            BulkInsertLowerCaseColumns0                                                              { get { return this.GetTable<BulkInsertLowerCaseColumn>(); } }
+		                                           public ITable<TESTHANAODBC_BulkInsertUpperCaseColumn>                                               BulkInsertUpperCaseColumns                                                               { get { return this.GetTable<TESTHANAODBC_BulkInsertUpperCaseColumn>(); } }
+		                                           public ITable<BulkInsertUpperCaseColumn>                                                            BulkInsertUpperCaseColumns0                                                              { get { return this.GetTable<BulkInsertUpperCaseColumn>(); } }
 		                                           public ITable<_SYS_RT_CdsAnnotation>                                                                CdsAnnotations                                                                           { get { return this.GetTable<_SYS_RT_CdsAnnotation>(); } }
 		                                           public ITable<_SYS_RT_CdsAnnotationAssignment>                                                      CdsAnnotationAssignments                                                                 { get { return this.GetTable<_SYS_RT_CdsAnnotationAssignment>(); } }
 		                                           public ITable<_SYS_RT_CdsAnnotationValue>                                                           CdsAnnotationValues                                                                      { get { return this.GetTable<_SYS_RT_CdsAnnotationValue>(); } }
@@ -72,8 +72,8 @@ namespace SapHanaDataContext
 		                                           public ITable<_SYS_RT_CdsStructure>                                                                 CdsStructures                                                                            { get { return this.GetTable<_SYS_RT_CdsStructure>(); } }
 		                                           public ITable<_SYS_RT_CdsStructureComponent>                                                        CdsStructureComponents                                                                   { get { return this.GetTable<_SYS_RT_CdsStructureComponent>(); } }
 		                                           public ITable<_SYS_RT_CdsView>                                                                      CdsViews                                                                                 { get { return this.GetTable<_SYS_RT_CdsView>(); } }
-		                                           public ITable<TESTHANAODBC_Child>                                                                   Children                                                                                 { get { return this.GetTable<TESTHANAODBC_Child>(); } }
-		                                           public ITable<Child>                                                                                Children0                                                                                { get { return this.GetTable<Child>(); } }
+		                                           public ITable<Child>                                                                                Children                                                                                 { get { return this.GetTable<Child>(); } }
+		                                           public ITable<TESTHANAODBC_Child>                                                                   Children0                                                                                { get { return this.GetTable<TESTHANAODBC_Child>(); } }
 		                                           public ITable<_SYS_TASK_CleanseAddressRecordInfo>                                                   CleanseAddressRecordInfo                                                                 { get { return this.GetTable<_SYS_TASK_CleanseAddressRecordInfo>(); } }
 		/// <summary>
 		/// The table tells a user how well an address assigned and the type of address
@@ -190,10 +190,10 @@ namespace SapHanaDataContext
 		                                           public ITable<_SYS_RT_InaActiveObject>                                                              InaActiveObjects                                                                         { get { return this.GetTable<_SYS_RT_InaActiveObject>(); } }
 		                                           public ITable<_SYS_RT_InaActiveObjectProperty>                                                      InaActiveObjectProperties                                                                { get { return this.GetTable<_SYS_RT_InaActiveObjectProperty>(); } }
 		                                           public ITable<_SYS_RT_InaActivePerspectiveV>                                                        InaActivePerspectiveV                                                                    { get { return this.GetTable<_SYS_RT_InaActivePerspectiveV>(); } }
-		                                           public ITable<IndexTable>                                                                           IndexTables                                                                              { get { return this.GetTable<IndexTable>(); } }
-		                                           public ITable<TESTHANAODBC_IndexTable>                                                              IndexTables0                                                                             { get { return this.GetTable<TESTHANAODBC_IndexTable>(); } }
-		                                           public ITable<IndexTable2>                                                                          IndexTable2                                                                              { get { return this.GetTable<IndexTable2>(); } }
-		                                           public ITable<TESTHANAODBC_IndexTable2>                                                             IndexTable3                                                                              { get { return this.GetTable<TESTHANAODBC_IndexTable2>(); } }
+		                                           public ITable<TESTHANAODBC_IndexTable>                                                              IndexTables                                                                              { get { return this.GetTable<TESTHANAODBC_IndexTable>(); } }
+		                                           public ITable<IndexTable>                                                                           IndexTables0                                                                             { get { return this.GetTable<IndexTable>(); } }
+		                                           public ITable<TESTHANAODBC_IndexTable2>                                                             IndexTable2                                                                              { get { return this.GetTable<TESTHANAODBC_IndexTable2>(); } }
+		                                           public ITable<IndexTable2>                                                                          IndexTable3                                                                              { get { return this.GetTable<IndexTable2>(); } }
 		                                           public ITable<TESTHANAODBC_InheritanceChild>                                                        InheritanceChildren                                                                      { get { return this.GetTable<TESTHANAODBC_InheritanceChild>(); } }
 		                                           public ITable<InheritanceChild>                                                                     InheritanceChildren0                                                                     { get { return this.GetTable<InheritanceChild>(); } }
 		                                           public ITable<TESTHANAODBC_InheritanceParent>                                                       InheritanceParents                                                                       { get { return this.GetTable<TESTHANAODBC_InheritanceParent>(); } }
@@ -215,8 +215,8 @@ namespace SapHanaDataContext
 		/// Information on the currently valid license (if any) installed on this system
 		/// </summary>
 		                                           public ITable<_SYS_TELEMETRY_LICENSE>                                                               Licenses                                                                                 { get { return this.GetTable<_SYS_TELEMETRY_LICENSE>(); } }
-		                                           public ITable<LinqDataType>                                                                         LinqDataTypes                                                                            { get { return this.GetTable<LinqDataType>(); } }
-		                                           public ITable<TESTHANAODBC_LinqDataType>                                                            LinqDataTypes0                                                                           { get { return this.GetTable<TESTHANAODBC_LinqDataType>(); } }
+		                                           public ITable<TESTHANAODBC_LinqDataType>                                                            LinqDataTypes                                                                            { get { return this.GetTable<TESTHANAODBC_LinqDataType>(); } }
+		                                           public ITable<LinqDataType>                                                                         LinqDataTypes0                                                                           { get { return this.GetTable<LinqDataType>(); } }
 		/// <summary>
 		/// Log buffer statistics
 		/// </summary>
@@ -225,8 +225,6 @@ namespace SapHanaDataContext
 		/// Log segment statistics
 		/// </summary>
 		                                           public ITable<_SYS_TELEMETRY_LogSegment>                                                            LogSegments                                                                              { get { return this.GetTable<_SYS_TELEMETRY_LogSegment>(); } }
-		                                           public ITable<_SYS_LDB_LT0000000000000001>                                                          LT0000000000000001                                                                       { get { return this.GetTable<_SYS_LDB_LT0000000000000001>(); } }
-		                                           public ITable<_SYS_LDB_LT0000000000000002>                                                          LT0000000000000002                                                                       { get { return this.GetTable<_SYS_LDB_LT0000000000000002>(); } }
 		                                           public ITable<_SYS_TASK_MatchGroupInfo>                                                             MatchGroupInfo                                                                           { get { return this.GetTable<_SYS_TASK_MatchGroupInfo>(); } }
 		/// <summary>
 		/// This table contains one row for each match group
@@ -258,6 +256,7 @@ namespace SapHanaDataContext
 		                                           public ITable<_SYS_EPM_MdsMetadata>                                                                 MdsMetadatas                                                                             { get { return this.GetTable<_SYS_EPM_MdsMetadata>(); } }
 		                                           public ITable<_SYS_EPM_MdsMetadataDocument>                                                         MdsMetadataDocuments                                                                     { get { return this.GetTable<_SYS_EPM_MdsMetadataDocument>(); } }
 		                                           public ITable<_SYS_EPM_ModelAdmin>                                                                  ModelAdmins                                                                              { get { return this.GetTable<_SYS_EPM_ModelAdmin>(); } }
+		                                           public ITable<_SYS_EPM_ModelMigration>                                                              ModelMigrations                                                                          { get { return this.GetTable<_SYS_EPM_ModelMigration>(); } }
 		                                           public ITable<_SYS_XS_OauthAccessToken>                                                             OauthAccessTokens                                                                        { get { return this.GetTable<_SYS_XS_OauthAccessToken>(); } }
 		                                           public ITable<_SYS_XS_OauthAccessTokenScope>                                                        OauthAccessTokenScopes                                                                   { get { return this.GetTable<_SYS_XS_OauthAccessTokenScope>(); } }
 		                                           public ITable<_SYS_XS_OauthAppConfig>                                                               OauthAppConfigs                                                                          { get { return this.GetTable<_SYS_XS_OauthAppConfig>(); } }
@@ -275,17 +274,17 @@ namespace SapHanaDataContext
 		/// Disposition specific memory object statistics. The statistics are calculated and reading them may take a while.
 		/// </summary>
 		                                           public ITable<_SYS_TELEMETRY_OutOfMemoryEvent>                                                      OutOfMemoryEvents                                                                        { get { return this.GetTable<_SYS_TELEMETRY_OutOfMemoryEvent>(); } }
-		                                           public ITable<Parent>                                                                               Parents                                                                                  { get { return this.GetTable<Parent>(); } }
-		                                           public ITable<TESTHANAODBC_Parent>                                                                  Parents0                                                                                 { get { return this.GetTable<TESTHANAODBC_Parent>(); } }
-		                                           public ITable<ParentChildView>                                                                      ParentChildViews                                                                         { get { return this.GetTable<ParentChildView>(); } }
-		                                           public ITable<TESTHANAODBC_ParentChildView>                                                         ParentChildViews0                                                                        { get { return this.GetTable<TESTHANAODBC_ParentChildView>(); } }
-		                                           public ITable<ParentView>                                                                           ParentViews                                                                              { get { return this.GetTable<ParentView>(); } }
-		                                           public ITable<TESTHANAODBC_ParentView>                                                              ParentViews0                                                                             { get { return this.GetTable<TESTHANAODBC_ParentView>(); } }
+		                                           public ITable<TESTHANAODBC_Parent>                                                                  Parents                                                                                  { get { return this.GetTable<TESTHANAODBC_Parent>(); } }
+		                                           public ITable<Parent>                                                                               Parents0                                                                                 { get { return this.GetTable<Parent>(); } }
+		                                           public ITable<TESTHANAODBC_ParentChildView>                                                         ParentChildViews                                                                         { get { return this.GetTable<TESTHANAODBC_ParentChildView>(); } }
+		                                           public ITable<ParentChildView>                                                                      ParentChildViews0                                                                        { get { return this.GetTable<ParentChildView>(); } }
+		                                           public ITable<TESTHANAODBC_ParentView>                                                              ParentViews                                                                              { get { return this.GetTable<TESTHANAODBC_ParentView>(); } }
+		                                           public ITable<ParentView>                                                                           ParentViews0                                                                             { get { return this.GetTable<ParentView>(); } }
 		                                           public ITable<Patient>                                                                              Patients                                                                                 { get { return this.GetTable<Patient>(); } }
 		                                           public ITable<TESTHANAODBC_Patient>                                                                 Patients0                                                                                { get { return this.GetTable<TESTHANAODBC_Patient>(); } }
 		                                           public ITable<_SYS_TASK_PendingDropTasks>                                                           PendingDropTasks                                                                         { get { return this.GetTable<_SYS_TASK_PendingDropTasks>(); } }
-		                                           public ITable<TESTHANAODBC_Person>                                                                  People                                                                                   { get { return this.GetTable<TESTHANAODBC_Person>(); } }
-		                                           public ITable<Person>                                                                               People0                                                                                  { get { return this.GetTable<Person>(); } }
+		                                           public ITable<Person>                                                                               People                                                                                   { get { return this.GetTable<Person>(); } }
+		                                           public ITable<TESTHANAODBC_Person>                                                                  People0                                                                                  { get { return this.GetTable<TESTHANAODBC_Person>(); } }
 		                                           public ITable<_SYS_PLAN_STABILITY_PlanStabilityConfig>                                              PlanStabilityConfig                                                                      { get { return this.GetTable<_SYS_PLAN_STABILITY_PlanStabilityConfig>(); } }
 		                                           public ITable<_SYS_PLAN_STABILITY_PlanStabilityStatistics>                                          PlanStabilityStatistics                                                                  { get { return this.GetTable<_SYS_PLAN_STABILITY_PlanStabilityStatistics>(); } }
 		                                           public ITable<_SYS_SQL_ANALYZER_PlanStatistic>                                                      PlanStatistics                                                                           { get { return this.GetTable<_SYS_SQL_ANALYZER_PlanStatistic>(); } }
@@ -296,8 +295,8 @@ namespace SapHanaDataContext
 		                                           public ITable<_SYS_RT_PpADatacontainer>                                                             PpADatacontainers                                                                        { get { return this.GetTable<_SYS_RT_PpADatacontainer>(); } }
 		                                           public ITable<_SYS_RT_PpAKyf>                                                                       PpAKyfs                                                                                  { get { return this.GetTable<_SYS_RT_PpAKyf>(); } }
 		                                           public ITable<_SYS_RT_PpASession>                                                                   PpASessions                                                                              { get { return this.GetTable<_SYS_RT_PpASession>(); } }
-		                                           public ITable<PrdGlobalEccCvMara>                                                                   PrdGlobalEccCvMaras                                                                      { get { return this.GetTable<PrdGlobalEccCvMara>(); } }
-		                                           public ITable<TESTHANAODBC_PrdGlobalEccCvMara>                                                      PrdGlobalEccCvMaras0                                                                     { get { return this.GetTable<TESTHANAODBC_PrdGlobalEccCvMara>(); } }
+		                                           public ITable<TESTHANAODBC_PrdGlobalEccCvMara>                                                      PrdGlobalEccCvMaras                                                                      { get { return this.GetTable<TESTHANAODBC_PrdGlobalEccCvMara>(); } }
+		                                           public ITable<PrdGlobalEccCvMara>                                                                   PrdGlobalEccCvMaras0                                                                     { get { return this.GetTable<PrdGlobalEccCvMara>(); } }
 		                                           public ITable<_SYS_EPM_PublishGrant>                                                                PublishGrants                                                                            { get { return this.GetTable<_SYS_EPM_PublishGrant>(); } }
 		                                           public ITable<_SYS_EPM_PublishPrivilege>                                                            PublishPrivileges                                                                        { get { return this.GetTable<_SYS_EPM_PublishPrivilege>(); } }
 		                                           public ITable<_SYS_XS_RuntimeConfiguration>                                                         RuntimeConfigurations                                                                    { get { return this.GetTable<_SYS_XS_RuntimeConfiguration>(); } }
@@ -551,12 +550,12 @@ namespace SapHanaDataContext
 		/// </summary>
 		                                           public ITable<_SYS_TELEMETRY_TelHanaUsage>                                                          TelHanaUsages                                                                            { get { return this.GetTable<_SYS_TELEMETRY_TelHanaUsage>(); } }
 		                                           public ITable<_SYS_EPM_TemporaryContainer>                                                          TemporaryContainers                                                                      { get { return this.GetTable<_SYS_EPM_TemporaryContainer>(); } }
-		                                           public ITable<TestIdentity>                                                                         TestIdentities                                                                           { get { return this.GetTable<TestIdentity>(); } }
-		                                           public ITable<TESTHANAODBC_TestIdentity>                                                            TestIdentities0                                                                          { get { return this.GetTable<TESTHANAODBC_TestIdentity>(); } }
-		                                           public ITable<TestMerge1>                                                                           TestMerge1                                                                               { get { return this.GetTable<TestMerge1>(); } }
-		                                           public ITable<TESTHANAODBC_TestMerge1>                                                              TestMerge2                                                                               { get { return this.GetTable<TESTHANAODBC_TestMerge1>(); } }
-		                                           public ITable<TestMerge2>                                                                           TestMerge3                                                                               { get { return this.GetTable<TestMerge2>(); } }
-		                                           public ITable<TESTHANAODBC_TestMerge2>                                                              TestMerge4                                                                               { get { return this.GetTable<TESTHANAODBC_TestMerge2>(); } }
+		                                           public ITable<TESTHANAODBC_TestIdentity>                                                            TestIdentities                                                                           { get { return this.GetTable<TESTHANAODBC_TestIdentity>(); } }
+		                                           public ITable<TestIdentity>                                                                         TestIdentities0                                                                          { get { return this.GetTable<TestIdentity>(); } }
+		                                           public ITable<TESTHANAODBC_TestMerge1>                                                              TestMerge1                                                                               { get { return this.GetTable<TESTHANAODBC_TestMerge1>(); } }
+		                                           public ITable<TestMerge1>                                                                           TestMerge2                                                                               { get { return this.GetTable<TestMerge1>(); } }
+		                                           public ITable<TESTHANAODBC_TestMerge2>                                                              TestMerge3                                                                               { get { return this.GetTable<TESTHANAODBC_TestMerge2>(); } }
+		                                           public ITable<TestMerge2>                                                                           TestMerge4                                                                               { get { return this.GetTable<TestMerge2>(); } }
 		                                           public ITable<_SYS_RT_TiImportKey>                                                                  TiImportKeys                                                                             { get { return this.GetTable<_SYS_RT_TiImportKey>(); } }
 		                                           public ITable<_SYS_RT_UisAppsite>                                                                   UisAppsites                                                                              { get { return this.GetTable<_SYS_RT_UisAppsite>(); } }
 		                                           public ITable<_SYS_RT_UisAppsitePROPERTy>                                                           UisAppsiteProperties                                                                     { get { return this.GetTable<_SYS_RT_UisAppsitePROPERTy>(); } }
@@ -831,38 +830,6 @@ namespace SapHanaDataContext
 		[Column("SELECTED_PLAN_ID"),     Nullable         ] public long?     SelectedPlanId  { get; set; } // BIGINT
 	}
 
-	[Table(Schema="TESTHANA", Name="AllTypes")]
-	public partial class AllType
-	{
-		[Column(),                       PrimaryKey, Identity] public int       ID                   { get; set; } // INTEGER
-		[Column("bigintDataType"),       Nullable            ] public long?     BigintDataType       { get; set; } // BIGINT
-		[Column("smallintDataType"),     Nullable            ] public short?    SmallintDataType     { get; set; } // SMALLINT
-		[Column("decimalDataType"),      Nullable            ] public decimal?  DecimalDataType      { get; set; } // DECIMAL(34, 0)
-		[Column("smalldecimalDataType"), Nullable            ] public decimal?  SmalldecimalDataType { get; set; } // SMALLDECIMAL(16, 0)
-		[Column("intDataType"),          Nullable            ] public int?      IntDataType          { get; set; } // INTEGER
-		[Column("tinyintDataType"),      Nullable            ] public byte?     TinyintDataType      { get; set; } // TINYINT
-		[Column("floatDataType"),        Nullable            ] public double?   FloatDataType        { get; set; } // DOUBLE
-		[Column("realDataType"),         Nullable            ] public float?    RealDataType         { get; set; } // REAL
-		[Column("dateDataType"),         Nullable            ] public DateTime? DateDataType         { get; set; } // DATE
-		[Column("timeDataType"),         Nullable            ] public TimeSpan? TimeDataType         { get; set; } // TIME
-		[Column("seconddateDataType"),   Nullable            ] public DateTime? SeconddateDataType   { get; set; } // SECONDDATE
-		[Column("timestampDataType"),    Nullable            ] public DateTime? TimestampDataType    { get; set; } // TIMESTAMP
-		[Column("charDataType"),         Nullable            ] public char?     CharDataType         { get; set; } // CHAR(1)
-		[Column("char20DataType"),       Nullable            ] public string?   Char20DataType       { get; set; } // CHAR(20)
-		[Column("varcharDataType"),      Nullable            ] public string?   VarcharDataType      { get; set; } // VARCHAR(20)
-		[Column("textDataType"),         Nullable            ] public string?   TextDataType         { get; set; } // TEXT
-		[Column("shorttextDataType"),    Nullable            ] public string?   ShorttextDataType    { get; set; } // SHORTTEXT
-		[Column("ncharDataType"),        Nullable            ] public char?     NcharDataType        { get; set; } // NCHAR(1)
-		[Column("nchar20DataType"),      Nullable            ] public string?   Nchar20DataType      { get; set; } // NCHAR(20)
-		[Column("nvarcharDataType"),     Nullable            ] public string?   NvarcharDataType     { get; set; } // NVARCHAR(20)
-		[Column("alphanumDataType"),     Nullable            ] public string?   AlphanumDataType     { get; set; } // ALPHANUM
-		[Column("binaryDataType"),       Nullable            ] public byte[]?   BinaryDataType       { get; set; } // BINARY(10)
-		[Column("varbinaryDataType"),    Nullable            ] public byte[]?   VarbinaryDataType    { get; set; } // VARBINARY(10)
-		[Column("blobDataType"),         Nullable            ] public byte[]?   BlobDataType         { get; set; } // BLOB
-		[Column("clobDataType"),         Nullable            ] public string?   ClobDataType         { get; set; } // CLOB
-		[Column("nclobDataType"),        Nullable            ] public string?   NclobDataType        { get; set; } // NCLOB
-	}
-
 	[Table(Schema="TESTHANAODBC", Name="AllTypes")]
 	public partial class TESTHANAODBC_AllType
 	{
@@ -895,16 +862,48 @@ namespace SapHanaDataContext
 		[Column("nclobDataType"),        Nullable            ] public string?   NclobDataType        { get; set; } // NCLOB
 	}
 
-	[Table(Schema="TESTHANA", Name="AllTypesGeo")]
-	public partial class AllTypesGeo
+	[Table(Schema="TESTHANA", Name="AllTypes")]
+	public partial class AllType
+	{
+		[Column(),                       PrimaryKey, Identity] public int       ID                   { get; set; } // INTEGER
+		[Column("bigintDataType"),       Nullable            ] public long?     BigintDataType       { get; set; } // BIGINT
+		[Column("smallintDataType"),     Nullable            ] public short?    SmallintDataType     { get; set; } // SMALLINT
+		[Column("decimalDataType"),      Nullable            ] public decimal?  DecimalDataType      { get; set; } // DECIMAL(34, 0)
+		[Column("smalldecimalDataType"), Nullable            ] public decimal?  SmalldecimalDataType { get; set; } // SMALLDECIMAL(16, 0)
+		[Column("intDataType"),          Nullable            ] public int?      IntDataType          { get; set; } // INTEGER
+		[Column("tinyintDataType"),      Nullable            ] public byte?     TinyintDataType      { get; set; } // TINYINT
+		[Column("floatDataType"),        Nullable            ] public double?   FloatDataType        { get; set; } // DOUBLE
+		[Column("realDataType"),         Nullable            ] public float?    RealDataType         { get; set; } // REAL
+		[Column("dateDataType"),         Nullable            ] public DateTime? DateDataType         { get; set; } // DATE
+		[Column("timeDataType"),         Nullable            ] public TimeSpan? TimeDataType         { get; set; } // TIME
+		[Column("seconddateDataType"),   Nullable            ] public DateTime? SeconddateDataType   { get; set; } // SECONDDATE
+		[Column("timestampDataType"),    Nullable            ] public DateTime? TimestampDataType    { get; set; } // TIMESTAMP
+		[Column("charDataType"),         Nullable            ] public char?     CharDataType         { get; set; } // CHAR(1)
+		[Column("char20DataType"),       Nullable            ] public string?   Char20DataType       { get; set; } // CHAR(20)
+		[Column("varcharDataType"),      Nullable            ] public string?   VarcharDataType      { get; set; } // VARCHAR(20)
+		[Column("textDataType"),         Nullable            ] public string?   TextDataType         { get; set; } // TEXT
+		[Column("shorttextDataType"),    Nullable            ] public string?   ShorttextDataType    { get; set; } // SHORTTEXT
+		[Column("ncharDataType"),        Nullable            ] public char?     NcharDataType        { get; set; } // NCHAR(1)
+		[Column("nchar20DataType"),      Nullable            ] public string?   Nchar20DataType      { get; set; } // NCHAR(20)
+		[Column("nvarcharDataType"),     Nullable            ] public string?   NvarcharDataType     { get; set; } // NVARCHAR(20)
+		[Column("alphanumDataType"),     Nullable            ] public string?   AlphanumDataType     { get; set; } // ALPHANUM
+		[Column("binaryDataType"),       Nullable            ] public byte[]?   BinaryDataType       { get; set; } // BINARY(10)
+		[Column("varbinaryDataType"),    Nullable            ] public byte[]?   VarbinaryDataType    { get; set; } // VARBINARY(10)
+		[Column("blobDataType"),         Nullable            ] public byte[]?   BlobDataType         { get; set; } // BLOB
+		[Column("clobDataType"),         Nullable            ] public string?   ClobDataType         { get; set; } // CLOB
+		[Column("nclobDataType"),        Nullable            ] public string?   NclobDataType        { get; set; } // NCLOB
+	}
+
+	[Table(Schema="TESTHANAODBC", Name="AllTypesGeo")]
+	public partial class TESTHANAODBC_AllTypesGeo
 	{
 		[Column(),                     PrimaryKey, Identity] public int     ID                 { get; set; } // INTEGER
 		[Column("dataType"),           Nullable            ] public string? DataType           { get; set; } // VARCHAR(20)
 		[Column("stgeometryDataType"), Nullable            ] public object? StgeometryDataType { get; set; } // ST_GEOMETRY
 	}
 
-	[Table(Schema="TESTHANAODBC", Name="AllTypesGeo")]
-	public partial class TESTHANAODBC_AllTypesGeo
+	[Table(Schema="TESTHANA", Name="AllTypesGeo")]
+	public partial class AllTypesGeo
 	{
 		[Column(),                     PrimaryKey, Identity] public int     ID                 { get; set; } // INTEGER
 		[Column("dataType"),           Nullable            ] public string? DataType           { get; set; } // VARCHAR(20)
@@ -1117,20 +1116,6 @@ namespace SapHanaDataContext
 		[Column("STRATEGY_GROUP_NAME"),    Nullable           ] public string? StrategyGroupName { get; set; } // NVARCHAR(256)
 	}
 
-	[Table(Schema="TESTHANA", Name="BulkInsertLowerCaseColumns")]
-	public partial class BulkInsertLowerCaseColumn
-	{
-		[Column, Nullable] public int?      ID            { get; set; } // INTEGER
-		[Column, Nullable] public decimal?  MoneyValue    { get; set; } // DECIMAL(10, 4)
-		[Column, Nullable] public DateTime? DateTimeValue { get; set; } // TIMESTAMP
-		[Column, Nullable] public byte?     BoolValue     { get; set; } // TINYINT
-		[Column, Nullable] public string?   GuidValue     { get; set; } // VARCHAR(36)
-		[Column, Nullable] public byte[]?   BinaryValue   { get; set; } // VARBINARY(5000)
-		[Column, Nullable] public short?    SmallIntValue { get; set; } // SMALLINT
-		[Column, Nullable] public int?      IntValue      { get; set; } // INTEGER
-		[Column, Nullable] public long?     BigIntValue   { get; set; } // BIGINT
-	}
-
 	[Table(Schema="TESTHANAODBC", Name="BulkInsertLowerCaseColumns")]
 	public partial class TESTHANAODBC_BulkInsertLowerCaseColumn
 	{
@@ -1145,8 +1130,22 @@ namespace SapHanaDataContext
 		[Column, Nullable] public long?     BigIntValue   { get; set; } // BIGINT
 	}
 
-	[Table(Schema="TESTHANA", Name="BulkInsertUpperCaseColumns")]
-	public partial class BulkInsertUpperCaseColumn
+	[Table(Schema="TESTHANA", Name="BulkInsertLowerCaseColumns")]
+	public partial class BulkInsertLowerCaseColumn
+	{
+		[Column, Nullable] public int?      ID            { get; set; } // INTEGER
+		[Column, Nullable] public decimal?  MoneyValue    { get; set; } // DECIMAL(10, 4)
+		[Column, Nullable] public DateTime? DateTimeValue { get; set; } // TIMESTAMP
+		[Column, Nullable] public byte?     BoolValue     { get; set; } // TINYINT
+		[Column, Nullable] public string?   GuidValue     { get; set; } // VARCHAR(36)
+		[Column, Nullable] public byte[]?   BinaryValue   { get; set; } // VARBINARY(5000)
+		[Column, Nullable] public short?    SmallIntValue { get; set; } // SMALLINT
+		[Column, Nullable] public int?      IntValue      { get; set; } // INTEGER
+		[Column, Nullable] public long?     BigIntValue   { get; set; } // BIGINT
+	}
+
+	[Table(Schema="TESTHANAODBC", Name="BulkInsertUpperCaseColumns")]
+	public partial class TESTHANAODBC_BulkInsertUpperCaseColumn
 	{
 		[Column, Nullable] public int?      ID            { get; set; } // INTEGER
 		[Column, Nullable] public decimal?  MONEYVALUE    { get; set; } // DECIMAL(10, 4)
@@ -1159,8 +1158,8 @@ namespace SapHanaDataContext
 		[Column, Nullable] public long?     BIGINTVALUE   { get; set; } // BIGINT
 	}
 
-	[Table(Schema="TESTHANAODBC", Name="BulkInsertUpperCaseColumns")]
-	public partial class TESTHANAODBC_BulkInsertUpperCaseColumn
+	[Table(Schema="TESTHANA", Name="BulkInsertUpperCaseColumns")]
+	public partial class BulkInsertUpperCaseColumn
 	{
 		[Column, Nullable] public int?      ID            { get; set; } // INTEGER
 		[Column, Nullable] public decimal?  MONEYVALUE    { get; set; } // DECIMAL(10, 4)
@@ -1489,15 +1488,15 @@ namespace SapHanaDataContext
 		[Column("definition"),                      NotNull] public string   Definition       { get; set; } = null!; // NCLOB
 	}
 
-	[Table(Schema="TESTHANAODBC", Name="Child")]
-	public partial class TESTHANAODBC_Child
+	[Table(Schema="TESTHANA", Name="Child")]
+	public partial class Child
 	{
 		[Column, Nullable] public int? ParentID { get; set; } // INTEGER
 		[Column, Nullable] public int? ChildID  { get; set; } // INTEGER
 	}
 
-	[Table(Schema="TESTHANA", Name="Child")]
-	public partial class Child
+	[Table(Schema="TESTHANAODBC", Name="Child")]
+	public partial class TESTHANAODBC_Child
 	{
 		[Column, Nullable] public int? ParentID { get; set; } // INTEGER
 		[Column, Nullable] public int? ChildID  { get; set; } // INTEGER
@@ -2805,25 +2804,6 @@ namespace SapHanaDataContext
 		[Column("SUMMARY_TEXT"),          Nullable] public string?   SummaryText         { get; set; } // NVARCHAR(4000)
 	}
 
-	[Table(Schema="TESTHANA", Name="IndexTable")]
-	public partial class IndexTable
-	{
-		[PrimaryKey(1), NotNull] public int PKField1    { get; set; } // INTEGER
-		[PrimaryKey(2), NotNull] public int PKField2    { get; set; } // INTEGER
-		[Column,        NotNull] public int UniqueField { get; set; } // INTEGER
-		[Column,        NotNull] public int IndexField  { get; set; } // INTEGER
-
-		#region Associations
-
-		/// <summary>
-		/// FK_Patient2_IndexTable_BackReference
-		/// </summary>
-		[Association(ThisKey="PKField1, PKField2", OtherKey="PKField1, PKField2", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
-		public IndexTable2? Patient { get; set; }
-
-		#endregion
-	}
-
 	[Table(Schema="TESTHANAODBC", Name="IndexTable")]
 	public partial class TESTHANAODBC_IndexTable
 	{
@@ -2843,19 +2823,21 @@ namespace SapHanaDataContext
 		#endregion
 	}
 
-	[Table(Schema="TESTHANA", Name="IndexTable2")]
-	public partial class IndexTable2
+	[Table(Schema="TESTHANA", Name="IndexTable")]
+	public partial class IndexTable
 	{
-		[PrimaryKey(1), NotNull] public int PKField1 { get; set; } // INTEGER
-		[PrimaryKey(2), NotNull] public int PKField2 { get; set; } // INTEGER
+		[PrimaryKey(1), NotNull] public int PKField1    { get; set; } // INTEGER
+		[PrimaryKey(2), NotNull] public int PKField2    { get; set; } // INTEGER
+		[Column,        NotNull] public int UniqueField { get; set; } // INTEGER
+		[Column,        NotNull] public int IndexField  { get; set; } // INTEGER
 
 		#region Associations
 
 		/// <summary>
-		/// FK_Patient2_IndexTable
+		/// FK_Patient2_IndexTable_BackReference
 		/// </summary>
-		[Association(ThisKey="PKField1, PKField2", OtherKey="PKField1, PKField2", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Patient2_IndexTable", BackReferenceName="Patient")]
-		public IndexTable Patient2IndexTable { get; set; } = null!;
+		[Association(ThisKey="PKField1, PKField2", OtherKey="PKField1, PKField2", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
+		public IndexTable2? Patient { get; set; }
 
 		#endregion
 	}
@@ -2873,6 +2855,23 @@ namespace SapHanaDataContext
 		/// </summary>
 		[Association(ThisKey="PKField1, PKField2", OtherKey="PKField1, PKField2", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Patient2_IndexTable", BackReferenceName="Patient")]
 		public TESTHANAODBC_IndexTable Patient2IndexTable { get; set; } = null!;
+
+		#endregion
+	}
+
+	[Table(Schema="TESTHANA", Name="IndexTable2")]
+	public partial class IndexTable2
+	{
+		[PrimaryKey(1), NotNull] public int PKField1 { get; set; } // INTEGER
+		[PrimaryKey(2), NotNull] public int PKField2 { get; set; } // INTEGER
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Patient2_IndexTable
+		/// </summary>
+		[Association(ThisKey="PKField1, PKField2", OtherKey="PKField1, PKField2", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Patient2_IndexTable", BackReferenceName="Patient")]
+		public IndexTable Patient2IndexTable { get; set; } = null!;
 
 		#endregion
 	}
@@ -3107,8 +3106,8 @@ namespace SapHanaDataContext
 		[Column("LOCKED_DOWN"),        Nullable] public string?   LockedDown     { get; set; } // VARCHAR(5)
 	}
 
-	[Table(Schema="TESTHANA", Name="LinqDataTypes")]
-	public partial class LinqDataType
+	[Table(Schema="TESTHANAODBC", Name="LinqDataTypes")]
+	public partial class TESTHANAODBC_LinqDataType
 	{
 		[Column, Nullable] public int?      ID             { get; set; } // INTEGER
 		[Column, Nullable] public decimal?  MoneyValue     { get; set; } // DECIMAL(10, 4)
@@ -3123,8 +3122,8 @@ namespace SapHanaDataContext
 		[Column, Nullable] public string?   StringValue    { get; set; } // NVARCHAR(50)
 	}
 
-	[Table(Schema="TESTHANAODBC", Name="LinqDataTypes")]
-	public partial class TESTHANAODBC_LinqDataType
+	[Table(Schema="TESTHANA", Name="LinqDataTypes")]
+	public partial class LinqDataType
 	{
 		[Column, Nullable] public int?      ID             { get; set; } // INTEGER
 		[Column, Nullable] public decimal?  MoneyValue     { get; set; } // DECIMAL(10, 4)
@@ -3273,38 +3272,6 @@ namespace SapHanaDataContext
 		/// Hash of key used for log segment encryption
 		/// </summary>
 		[Column("ENCRYPTION_KEY_HASH"),    Nullable] public string?   EncryptionKeyHash { get; set; } // VARCHAR(64)
-	}
-
-	[Table(Schema="_SYS_LDB", Name="LT0000000000000001")]
-	public partial class _SYS_LDB_LT0000000000000001
-	{
-		[Column, Nullable] public int?      ID             { get; set; } // INTEGER
-		[Column, Nullable] public decimal?  MoneyValue     { get; set; } // DECIMAL(10, 4)
-		[Column, Nullable] public DateTime? DateTimeValue  { get; set; } // TIMESTAMP
-		[Column, Nullable] public DateTime? DateTimeValue2 { get; set; } // TIMESTAMP
-		[Column, Nullable] public byte?     BoolValue      { get; set; } // TINYINT
-		[Column, Nullable] public string?   GuidValue      { get; set; } // VARCHAR(36)
-		[Column, Nullable] public byte[]?   BinaryValue    { get; set; } // VARBINARY(5000)
-		[Column, Nullable] public short?    SmallIntValue  { get; set; } // SMALLINT
-		[Column, Nullable] public int?      IntValue       { get; set; } // INTEGER
-		[Column, Nullable] public long?     BigIntValue    { get; set; } // BIGINT
-		[Column, Nullable] public string?   StringValue    { get; set; } // NVARCHAR(50)
-	}
-
-	[Table(Schema="_SYS_LDB", Name="LT0000000000000002")]
-	public partial class _SYS_LDB_LT0000000000000002
-	{
-		[Column, Nullable] public int?      ID             { get; set; } // INTEGER
-		[Column, Nullable] public decimal?  MoneyValue     { get; set; } // DECIMAL(10, 4)
-		[Column, Nullable] public DateTime? DateTimeValue  { get; set; } // TIMESTAMP
-		[Column, Nullable] public DateTime? DateTimeValue2 { get; set; } // TIMESTAMP
-		[Column, Nullable] public byte?     BoolValue      { get; set; } // TINYINT
-		[Column, Nullable] public string?   GuidValue      { get; set; } // VARCHAR(36)
-		[Column, Nullable] public byte[]?   BinaryValue    { get; set; } // VARBINARY(5000)
-		[Column, Nullable] public short?    SmallIntValue  { get; set; } // SMALLINT
-		[Column, Nullable] public int?      IntValue       { get; set; } // INTEGER
-		[Column, Nullable] public long?     BigIntValue    { get; set; } // BIGINT
-		[Column, Nullable] public string?   StringValue    { get; set; } // NVARCHAR(50)
 	}
 
 	[Table(Schema="_SYS_TASK", Name="MATCH_GROUP_INFO_")]
@@ -3653,6 +3620,17 @@ namespace SapHanaDataContext
 		[Column("ADMIN_USER_ID"), PrimaryKey, NotNull] public long AdminUserId { get; set; } // BIGINT
 	}
 
+	[Table(Schema="_SYS_EPM", Name="MODEL_MIGRATIONS")]
+	public partial class _SYS_EPM_ModelMigration
+	{
+		[Column("SCHEMA_NAME"),            PrimaryKey(1), NotNull] public string    SchemaName           { get; set; } = null!; // NVARCHAR(256)
+		[Column("MODEL_NAME"),             PrimaryKey(2), NotNull] public string    ModelName            { get; set; } = null!; // NVARCHAR(256)
+		[Column("MIGRATION_ID"),           PrimaryKey(3), NotNull] public int       MigrationId          { get; set; } // INTEGER
+		[Column("ACTIVATION_TIME"),           Nullable           ] public DateTime? ActivationTime       { get; set; } // TIMESTAMP
+		[Column("MIGRATION_DEFINITION"),      Nullable           ] public string?   MigrationDefinition  { get; set; } // NCLOB
+		[Column("DEBUG_MODEL_DEFINITION"),    Nullable           ] public string?   DebugModelDefinition { get; set; } // NCLOB
+	}
+
 	[Table(Schema="_SYS_XS", Name="OAUTH_ACCESS_TOKEN")]
 	public partial class _SYS_XS_OauthAccessToken
 	{
@@ -3912,13 +3890,6 @@ namespace SapHanaDataContext
 		[Column("MEMORY_LIMIT_SIZE"),       Nullable] public long?     MemoryLimitSize    { get; set; } // BIGINT
 	}
 
-	[Table(Schema="TESTHANA", Name="Parent")]
-	public partial class Parent
-	{
-		[Column, Nullable] public int? ParentID { get; set; } // INTEGER
-		[Column, Nullable] public int? Value1   { get; set; } // INTEGER
-	}
-
 	[Table(Schema="TESTHANAODBC", Name="Parent")]
 	public partial class TESTHANAODBC_Parent
 	{
@@ -3926,12 +3897,11 @@ namespace SapHanaDataContext
 		[Column, Nullable] public int? Value1   { get; set; } // INTEGER
 	}
 
-	[Table(Schema="TESTHANA", Name="ParentChildView", IsView=true)]
-	public partial class ParentChildView
+	[Table(Schema="TESTHANA", Name="Parent")]
+	public partial class Parent
 	{
 		[Column, Nullable] public int? ParentID { get; set; } // INTEGER
 		[Column, Nullable] public int? Value1   { get; set; } // INTEGER
-		[Column, Nullable] public int? ChildID  { get; set; } // INTEGER
 	}
 
 	[Table(Schema="TESTHANAODBC", Name="ParentChildView", IsView=true)]
@@ -3942,15 +3912,23 @@ namespace SapHanaDataContext
 		[Column, Nullable] public int? ChildID  { get; set; } // INTEGER
 	}
 
-	[Table(Schema="TESTHANA", Name="ParentView", IsView=true)]
-	public partial class ParentView
+	[Table(Schema="TESTHANA", Name="ParentChildView", IsView=true)]
+	public partial class ParentChildView
+	{
+		[Column, Nullable] public int? ParentID { get; set; } // INTEGER
+		[Column, Nullable] public int? Value1   { get; set; } // INTEGER
+		[Column, Nullable] public int? ChildID  { get; set; } // INTEGER
+	}
+
+	[Table(Schema="TESTHANAODBC", Name="ParentView", IsView=true)]
+	public partial class TESTHANAODBC_ParentView
 	{
 		[Column, Nullable] public int? ParentID { get; set; } // INTEGER
 		[Column, Nullable] public int? Value1   { get; set; } // INTEGER
 	}
 
-	[Table(Schema="TESTHANAODBC", Name="ParentView", IsView=true)]
-	public partial class TESTHANAODBC_ParentView
+	[Table(Schema="TESTHANA", Name="ParentView", IsView=true)]
+	public partial class ParentView
 	{
 		[Column, Nullable] public int? ParentID { get; set; } // INTEGER
 		[Column, Nullable] public int? Value1   { get; set; } // INTEGER
@@ -3996,32 +3974,6 @@ namespace SapHanaDataContext
 		[Column("TASK_OID"), Nullable] public long? TaskOid { get; set; } // BIGINT
 	}
 
-	[Table(Schema="TESTHANAODBC", Name="Person")]
-	public partial class TESTHANAODBC_Person
-	{
-		[PrimaryKey, Identity   ] public int     PersonID   { get; set; } // INTEGER
-		[Column,     NotNull    ] public string  FirstName  { get; set; } = null!; // NVARCHAR(50)
-		[Column,     NotNull    ] public string  LastName   { get; set; } = null!; // NVARCHAR(50)
-		[Column,        Nullable] public string? MiddleName { get; set; } // NVARCHAR(50)
-		[Column,     NotNull    ] public char    Gender     { get; set; } // CHAR(1)
-
-		#region Associations
-
-		/// <summary>
-		/// FK_Doctor_Person_BackReference
-		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
-		public TESTHANAODBC_Doctor? Doctor { get; set; }
-
-		/// <summary>
-		/// FK_Patient_Person_BackReference
-		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
-		public TESTHANAODBC_Patient? Patient { get; set; }
-
-		#endregion
-	}
-
 	[Table(Schema="TESTHANA", Name="Person")]
 	public partial class Person
 	{
@@ -4044,6 +3996,32 @@ namespace SapHanaDataContext
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
 		public Patient? Patient { get; set; }
+
+		#endregion
+	}
+
+	[Table(Schema="TESTHANAODBC", Name="Person")]
+	public partial class TESTHANAODBC_Person
+	{
+		[PrimaryKey, Identity   ] public int     PersonID   { get; set; } // INTEGER
+		[Column,     NotNull    ] public string  FirstName  { get; set; } = null!; // NVARCHAR(50)
+		[Column,     NotNull    ] public string  LastName   { get; set; } = null!; // NVARCHAR(50)
+		[Column,        Nullable] public string? MiddleName { get; set; } // NVARCHAR(50)
+		[Column,     NotNull    ] public char    Gender     { get; set; } // CHAR(1)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Doctor_Person_BackReference
+		/// </summary>
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
+		public TESTHANAODBC_Doctor? Doctor { get; set; }
+
+		/// <summary>
+		/// FK_Patient_Person_BackReference
+		/// </summary>
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
+		public TESTHANAODBC_Patient? Patient { get; set; }
 
 		#endregion
 	}
@@ -4175,14 +4153,14 @@ namespace SapHanaDataContext
 		[Column(),                 Nullable           ] public string? USER       { get; set; } // NVARCHAR(256)
 	}
 
-	[Table(Schema="TESTHANA", Name="prd.global.ecc/CV_MARA")]
-	public partial class PrdGlobalEccCvMara
+	[Table(Schema="TESTHANAODBC", Name="prd.global.ecc/CV_MARA")]
+	public partial class TESTHANAODBC_PrdGlobalEccCvMara
 	{
 		[PrimaryKey, NotNull] public int Id { get; set; } // INTEGER
 	}
 
-	[Table(Schema="TESTHANAODBC", Name="prd.global.ecc/CV_MARA")]
-	public partial class TESTHANAODBC_PrdGlobalEccCvMara
+	[Table(Schema="TESTHANA", Name="prd.global.ecc/CV_MARA")]
+	public partial class PrdGlobalEccCvMara
 	{
 		[PrimaryKey, NotNull] public int Id { get; set; } // INTEGER
 	}
@@ -4695,13 +4673,13 @@ namespace SapHanaDataContext
 	[Table(Schema="HANA_XS_BASE", Name="sap.hana.xs.admin.db::fetchAllRolesView", IsView=true)]
 	public partial class HANA_XS_BASE_SapHanaXsAdminDbFetchAllRolesView
 	{
-		[Column, Nullable] public char? VALUE { get; set; } // NVARCHAR(1)
+		[Column, Nullable] public string? VALUE { get; set; } // NVARCHAR(512)
 	}
 
 	[Table(Schema="HANA_XS_BASE", Name="sap.hana.xs.admin.db::samlIdpListCount", IsView=true)]
 	public partial class HANA_XS_BASE_SapHanaXsAdminDbSamlIdpListCount
 	{
-		[Column, Nullable] public char? VALUE { get; set; } // NVARCHAR(1)
+		[Column, Nullable] public string? VALUE { get; set; } // NVARCHAR(512)
 	}
 
 	[Table(Schema="HANA_XS_BASE", Name="sap.hana.xs.admin.jobs.server.db::DISTINCT_ID", IsView=true)]
@@ -4772,41 +4750,41 @@ namespace SapHanaDataContext
 	public partial class HANA_XS_BASE_SapHanaXsAdminJobsServerDbLog
 	{
 		[Column(),                   Nullable] public long?     ID             { get; set; } // BIGINT
-		[Column("JOB_NAME"),         Nullable] public char?     JobName        { get; set; } // VARCHAR(1)
-		[Column(),                   Nullable] public char?     XSCRON         { get; set; } // VARCHAR(1)
-		[Column(),                   Nullable] public char?     DESCRIPTION    { get; set; } // VARCHAR(1)
-		[Column(),                   Nullable] public char?     PARAMETER      { get; set; } // VARCHAR(1)
+		[Column("JOB_NAME"),         Nullable] public string?   JobName        { get; set; } // NVARCHAR(512)
+		[Column(),                   Nullable] public string?   XSCRON         { get; set; } // NVARCHAR(512)
+		[Column(),                   Nullable] public string?   DESCRIPTION    { get; set; } // NVARCHAR(512)
+		[Column(),                   Nullable] public string?   PARAMETER      { get; set; } // NCLOB
 		[Column("PLANNED_TIME"),     Nullable] public DateTime? PlannedTime    { get; set; } // TIMESTAMP
-		[Column(),                   Nullable] public char?     STATUS         { get; set; } // VARCHAR(1)
-		[Column("ERROR_MESSAGE"),    Nullable] public char?     ErrorMessage   { get; set; } // VARCHAR(1)
+		[Column(),                   Nullable] public string?   STATUS         { get; set; } // NVARCHAR(512)
+		[Column("ERROR_MESSAGE"),    Nullable] public string?   ErrorMessage   { get; set; } // NVARCHAR(512)
 		[Column("STARTED_AT"),       Nullable] public DateTime? StartedAt      { get; set; } // TIMESTAMP
 		[Column("FINISHED_AT"),      Nullable] public DateTime? FinishedAt     { get; set; } // TIMESTAMP
 		[Column("TIME_TAKEN_MS"),    Nullable] public long?     TimeTakenMs    { get; set; } // BIGINT
-		[Column("DATE_FORMAT"),      Nullable] public char?     DateFormat     { get; set; } // VARCHAR(1)
-		[Column("TIME_FORMAT"),      Nullable] public char?     TimeFormat     { get; set; } // VARCHAR(1)
-		[Column("DATE_TIME_FORMAT"), Nullable] public char?     DateTimeFormat { get; set; } // VARCHAR(1)
+		[Column("DATE_FORMAT"),      Nullable] public string?   DateFormat     { get; set; } // NVARCHAR(512)
+		[Column("TIME_FORMAT"),      Nullable] public string?   TimeFormat     { get; set; } // NVARCHAR(512)
+		[Column("DATE_TIME_FORMAT"), Nullable] public string?   DateTimeFormat { get; set; } // NVARCHAR(512)
 	}
 
 	[Table(Schema="HANA_XS_BASE", Name="sap.hana.xs.admin.jobs.server.db::SCHEDULES", IsView=true)]
 	public partial class HANA_XS_BASE_SapHanaXsAdminJobsServerDbSchedule
 	{
 		[Column(),                   Nullable] public long?     ID             { get; set; } // BIGINT
-		[Column("JOB_NAME"),         Nullable] public char?     JobName        { get; set; } // VARCHAR(1)
-		[Column(),                   Nullable] public char?     XSCRON         { get; set; } // VARCHAR(1)
-		[Column(),                   Nullable] public char?     DESCRIPTION    { get; set; } // VARCHAR(1)
-		[Column(),                   Nullable] public char?     PARAMETER      { get; set; } // VARCHAR(1)
+		[Column("JOB_NAME"),         Nullable] public string?   JobName        { get; set; } // NVARCHAR(512)
+		[Column(),                   Nullable] public string?   XSCRON         { get; set; } // NVARCHAR(512)
+		[Column(),                   Nullable] public string?   DESCRIPTION    { get; set; } // NVARCHAR(512)
+		[Column(),                   Nullable] public string?   PARAMETER      { get; set; } // NCLOB
 		[Column("PLANNED_TIME"),     Nullable] public DateTime? PlannedTime    { get; set; } // TIMESTAMP
-		[Column(),                   Nullable] public char?     STATUS         { get; set; } // VARCHAR(1)
-		[Column("ERROR_MESSAGE"),    Nullable] public char?     ErrorMessage   { get; set; } // VARCHAR(1)
+		[Column(),                   Nullable] public string?   STATUS         { get; set; } // NVARCHAR(512)
+		[Column("ERROR_MESSAGE"),    Nullable] public string?   ErrorMessage   { get; set; } // NVARCHAR(512)
 		[Column("STARTED_AT"),       Nullable] public DateTime? StartedAt      { get; set; } // TIMESTAMP
 		[Column("FINISHED_AT"),      Nullable] public DateTime? FinishedAt     { get; set; } // TIMESTAMP
 		[Column("TIME_TAKEN_MS"),    Nullable] public long?     TimeTakenMs    { get; set; } // BIGINT
-		[Column(),                   Nullable] public char?     ORIGIN         { get; set; } // VARCHAR(1)
-		[Column("CHANGED_BY"),       Nullable] public char?     ChangedBy      { get; set; } // VARCHAR(1)
+		[Column(),                   Nullable] public string?   ORIGIN         { get; set; } // NVARCHAR(512)
+		[Column("CHANGED_BY"),       Nullable] public string?   ChangedBy      { get; set; } // NVARCHAR(512)
 		[Column("CHANGED_AT"),       Nullable] public DateTime? ChangedAt      { get; set; } // TIMESTAMP
-		[Column("DATE_FORMAT"),      Nullable] public char?     DateFormat     { get; set; } // VARCHAR(1)
-		[Column("TIME_FORMAT"),      Nullable] public char?     TimeFormat     { get; set; } // VARCHAR(1)
-		[Column("DATE_TIME_FORMAT"), Nullable] public char?     DateTimeFormat { get; set; } // VARCHAR(1)
+		[Column("DATE_FORMAT"),      Nullable] public string?   DateFormat     { get; set; } // NVARCHAR(512)
+		[Column("TIME_FORMAT"),      Nullable] public string?   TimeFormat     { get; set; } // NVARCHAR(512)
+		[Column("DATE_TIME_FORMAT"), Nullable] public string?   DateTimeFormat { get; set; } // NVARCHAR(512)
 	}
 
 	[Table(Schema="HANA_XS_BASE", Name="sap.hana.xs.admin.webdispatcher.server.db::APPLICATION_DETAILS", IsView=true)]
@@ -4962,11 +4940,11 @@ namespace SapHanaDataContext
 	[Table(Schema="HANA_XS_BASE", Name="sap.hana.xs.formLogin.profile.db::USER_PROFILE_VIEW", IsView=true)]
 	public partial class HANA_XS_BASE_SapHanaXsFormLoginProfileDbUserProfileView
 	{
-		[Column("USER_NAME"),     Nullable] public char? UserName     { get; set; } // VARCHAR(1)
-		[Column("EMAIL_ADDRESS"), Nullable] public char? EmailAddress { get; set; } // VARCHAR(1)
-		[Column(),                Nullable] public char? LOCALE       { get; set; } // VARCHAR(1)
-		[Column("DATE_FORMAT"),   Nullable] public char? DateFormat   { get; set; } // VARCHAR(1)
-		[Column("TIME_FORMAT"),   Nullable] public char? TimeFormat   { get; set; } // VARCHAR(1)
+		[Column("USER_NAME"),     Nullable] public string? UserName     { get; set; } // NVARCHAR(512)
+		[Column("EMAIL_ADDRESS"), Nullable] public string? EmailAddress { get; set; } // NVARCHAR(512)
+		[Column(),                Nullable] public string? LOCALE       { get; set; } // NVARCHAR(512)
+		[Column("DATE_FORMAT"),   Nullable] public string? DateFormat   { get; set; } // NVARCHAR(512)
+		[Column("TIME_FORMAT"),   Nullable] public string? TimeFormat   { get; set; } // NVARCHAR(512)
 	}
 
 	[Table(Schema="SAP_XS_LM", Name="sap.hana.xs.lm.db::ACTION_LOG")]
@@ -6645,20 +6623,20 @@ namespace SapHanaDataContext
 	[Table(Schema="HANA_XS_BASE", Name="sap.hana.xs.selfService.admin.db::USS_REQUESTS_VIEW", IsView=true)]
 	public partial class HANA_XS_BASE_SapHanaXsSelfServiceAdminDbUssRequestsView
 	{
-		[Column("USER_NAME"),           Nullable] public char?    UserName           { get; set; } // NVARCHAR(1)
+		[Column("USER_NAME"),           Nullable] public string?  UserName           { get; set; } // NVARCHAR(512)
 		[Column("REQUEST_ATTEMPTS"),    Nullable] public decimal? RequestAttempts    { get; set; } // DECIMAL(34, 0)
-		[Column("ORIGIN_LOCATION"),     Nullable] public char?    OriginLocation     { get; set; } // NVARCHAR(1)
-		[Column(),                      Nullable] public char?    VALUE              { get; set; } // NVARCHAR(1)
-		[Column("REQUEST_STATUS"),      Nullable] public char?    RequestStatus      { get; set; } // NVARCHAR(1)
-		[Column("DEACTIVATION_STATUS"), Nullable] public char?    DeactivationStatus { get; set; } // NVARCHAR(1)
+		[Column("ORIGIN_LOCATION"),     Nullable] public string?  OriginLocation     { get; set; } // NVARCHAR(512)
+		[Column(),                      Nullable] public string?  VALUE              { get; set; } // NVARCHAR(512)
+		[Column("REQUEST_STATUS"),      Nullable] public string?  RequestStatus      { get; set; } // NVARCHAR(512)
+		[Column("DEACTIVATION_STATUS"), Nullable] public string?  DeactivationStatus { get; set; } // NVARCHAR(512)
 	}
 
 	[Table(Schema="HANA_XS_BASE", Name="sap.hana.xs.selfService.user.db::INI_PARAMS_DETAILS", IsView=true)]
 	public partial class HANA_XS_BASE_SapHanaXsSelfServiceUserDbIniParamsDetail
 	{
-		[Column, Nullable] public char? KEY      { get; set; } // NVARCHAR(1)
-		[Column, Nullable] public char? VALUE    { get; set; } // NVARCHAR(1)
-		[Column, Nullable] public int?  PRIORITY { get; set; } // INTEGER
+		[Column, Nullable] public string? KEY      { get; set; } // NVARCHAR(512)
+		[Column, Nullable] public string? VALUE    { get; set; } // NVARCHAR(512)
+		[Column, Nullable] public int?    PRIORITY { get; set; } // INTEGER
 	}
 
 	[Table(Schema="HANA_XS_BASE", Name="sap.hana.xs.selfService.user.db::SECURITY_QUESTIONS")]
@@ -7673,43 +7651,16 @@ namespace SapHanaDataContext
 		[Column("LAST_CHANGE_TIME"),    Nullable           ] public DateTime? LastChangeTime { get; set; } // TIMESTAMP
 	}
 
-	[Table(Schema="TESTHANA", Name="TestIdentity")]
-	public partial class TestIdentity
-	{
-		[PrimaryKey, Identity] public int ID { get; set; } // INTEGER
-	}
-
 	[Table(Schema="TESTHANAODBC", Name="TestIdentity")]
 	public partial class TESTHANAODBC_TestIdentity
 	{
 		[PrimaryKey, Identity] public int ID { get; set; } // INTEGER
 	}
 
-	[Table(Schema="TESTHANA", Name="TestMerge1")]
-	public partial class TestMerge1
+	[Table(Schema="TESTHANA", Name="TestIdentity")]
+	public partial class TestIdentity
 	{
-		[PrimaryKey, NotNull    ] public int       Id              { get; set; } // INTEGER
-		[Column,        Nullable] public int?      Field1          { get; set; } // INTEGER
-		[Column,        Nullable] public int?      Field2          { get; set; } // INTEGER
-		[Column,        Nullable] public int?      Field3          { get; set; } // INTEGER
-		[Column,        Nullable] public int?      Field4          { get; set; } // INTEGER
-		[Column,        Nullable] public int?      Field5          { get; set; } // INTEGER
-		[Column,        Nullable] public long?     FieldInt64      { get; set; } // BIGINT
-		[Column,        Nullable] public byte?     FieldBoolean    { get; set; } // TINYINT
-		[Column,        Nullable] public string?   FieldString     { get; set; } // VARCHAR(20)
-		[Column,        Nullable] public string?   FieldNString    { get; set; } // NVARCHAR(20)
-		[Column,        Nullable] public char?     FieldChar       { get; set; } // CHAR(1)
-		[Column,        Nullable] public char?     FieldNChar      { get; set; } // NCHAR(1)
-		[Column,        Nullable] public float?    FieldFloat      { get; set; } // REAL
-		[Column,        Nullable] public double?   FieldDouble     { get; set; } // DOUBLE
-		[Column,        Nullable] public DateTime? FieldDateTime   { get; set; } // TIMESTAMP
-		[Column,        Nullable] public byte[]?   FieldBinary     { get; set; } // VARBINARY(20)
-		[Column,        Nullable] public string?   FieldGuid       { get; set; } // CHAR(36)
-		[Column,        Nullable] public decimal?  FieldDecimal    { get; set; } // DECIMAL(24, 10)
-		[Column,        Nullable] public DateTime? FieldDate       { get; set; } // DATE
-		[Column,        Nullable] public TimeSpan? FieldTime       { get; set; } // TIME
-		[Column,        Nullable] public string?   FieldEnumString { get; set; } // VARCHAR(20)
-		[Column,        Nullable] public int?      FieldEnumNumber { get; set; } // INTEGER
+		[PrimaryKey, Identity] public int ID { get; set; } // INTEGER
 	}
 
 	[Table(Schema="TESTHANAODBC", Name="TestMerge1")]
@@ -7739,8 +7690,8 @@ namespace SapHanaDataContext
 		[Column,        Nullable] public int?      FieldEnumNumber { get; set; } // INTEGER
 	}
 
-	[Table(Schema="TESTHANA", Name="TestMerge2")]
-	public partial class TestMerge2
+	[Table(Schema="TESTHANA", Name="TestMerge1")]
+	public partial class TestMerge1
 	{
 		[PrimaryKey, NotNull    ] public int       Id              { get; set; } // INTEGER
 		[Column,        Nullable] public int?      Field1          { get; set; } // INTEGER
@@ -7768,6 +7719,33 @@ namespace SapHanaDataContext
 
 	[Table(Schema="TESTHANAODBC", Name="TestMerge2")]
 	public partial class TESTHANAODBC_TestMerge2
+	{
+		[PrimaryKey, NotNull    ] public int       Id              { get; set; } // INTEGER
+		[Column,        Nullable] public int?      Field1          { get; set; } // INTEGER
+		[Column,        Nullable] public int?      Field2          { get; set; } // INTEGER
+		[Column,        Nullable] public int?      Field3          { get; set; } // INTEGER
+		[Column,        Nullable] public int?      Field4          { get; set; } // INTEGER
+		[Column,        Nullable] public int?      Field5          { get; set; } // INTEGER
+		[Column,        Nullable] public long?     FieldInt64      { get; set; } // BIGINT
+		[Column,        Nullable] public byte?     FieldBoolean    { get; set; } // TINYINT
+		[Column,        Nullable] public string?   FieldString     { get; set; } // VARCHAR(20)
+		[Column,        Nullable] public string?   FieldNString    { get; set; } // NVARCHAR(20)
+		[Column,        Nullable] public char?     FieldChar       { get; set; } // CHAR(1)
+		[Column,        Nullable] public char?     FieldNChar      { get; set; } // NCHAR(1)
+		[Column,        Nullable] public float?    FieldFloat      { get; set; } // REAL
+		[Column,        Nullable] public double?   FieldDouble     { get; set; } // DOUBLE
+		[Column,        Nullable] public DateTime? FieldDateTime   { get; set; } // TIMESTAMP
+		[Column,        Nullable] public byte[]?   FieldBinary     { get; set; } // VARBINARY(20)
+		[Column,        Nullable] public string?   FieldGuid       { get; set; } // CHAR(36)
+		[Column,        Nullable] public decimal?  FieldDecimal    { get; set; } // DECIMAL(24, 10)
+		[Column,        Nullable] public DateTime? FieldDate       { get; set; } // DATE
+		[Column,        Nullable] public TimeSpan? FieldTime       { get; set; } // TIME
+		[Column,        Nullable] public string?   FieldEnumString { get; set; } // VARCHAR(20)
+		[Column,        Nullable] public int?      FieldEnumNumber { get; set; } // INTEGER
+	}
+
+	[Table(Schema="TESTHANA", Name="TestMerge2")]
+	public partial class TestMerge2
 	{
 		[PrimaryKey, NotNull    ] public int       Id              { get; set; } // INTEGER
 		[Column,        Nullable] public int?      Field1          { get; set; } // INTEGER
@@ -8128,6 +8106,7 @@ namespace SapHanaDataContext
 		[Column("PDC_PERSISTENCE"),     Nullable           ] public int?      PdcPersistence { get; set; } // INTEGER
 		[Column("CHANGE_COUNT"),        Nullable           ] public int?      ChangeCount    { get; set; } // INTEGER
 		[Column("UNDO_STEPS"),          Nullable           ] public int?      UndoSteps      { get; set; } // INTEGER
+		[Column("MIGRATION_ID"),        Nullable           ] public int?      MigrationId    { get; set; } // INTEGER
 	}
 
 	[Table(Schema="_SYS_EPM", Name="VERSION_PRIVILEGES")]
@@ -8762,71 +8741,6 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region PersonUpdate
-
-		public static int PersonUpdate(this HXEDB dataConnection, int? PERSONID, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
-		{
-			return dataConnection.ExecuteProc("\"TESTHANA\".\"Person_Update\"",
-				new DataParameter("PERSONID",   PERSONID,   DataType.Int32),
-				new DataParameter("FIRSTNAME",  FIRSTNAME,  DataType.NVarChar),
-				new DataParameter("LASTNAME",   LASTNAME,   DataType.NVarChar),
-				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar),
-				new DataParameter("GENDER",     GENDER,     DataType.Char));
-		}
-
-		#endregion
-
-		#region PersonDelete
-
-		public static int PersonDelete(this HXEDB dataConnection, int? PERSONID)
-		{
-			return dataConnection.ExecuteProc("\"TESTHANA\".\"Person_Delete\"",
-				new DataParameter("PERSONID", PERSONID, DataType.Int32));
-		}
-
-		#endregion
-
-		#region PatientSelectAll
-
-		public static IEnumerable<PatientSelectAllResult> PatientSelectAll(this HXEDB dataConnection)
-		{
-			return dataConnection.QueryProc<PatientSelectAllResult>("\"TESTHANA\".\"Patient_SelectAll\"");
-		}
-
-		public partial class PatientSelectAllResult
-		{
-			public int?    PersonID   { get; set; }
-			public string? FirstName  { get; set; }
-			public string? LastName   { get; set; }
-			public string? MiddleName { get; set; }
-			public string? Gender     { get; set; }
-			public string? Diagnosis  { get; set; }
-		}
-
-		#endregion
-
-		#region OutRefTest
-
-		public static int OutRefTest(this HXEDB dataConnection, int? ID, out int? OUTPUTID, ref int? INPUTOUTPUTID, string? STR, out string? OUTPUTSTR, ref string? INPUTOUTPUTSTR)
-		{
-			var ret = dataConnection.ExecuteProc("\"TESTHANA\".\"OutRefTest\"",
-				new DataParameter("ID",             ID,             DataType.Int32),
-				new DataParameter("OUTPUTID", null,       DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 },
-				new DataParameter("INPUTOUTPUTID",  INPUTOUTPUTID,  DataType.Int32) { Direction = ParameterDirection.InputOutput, Size = 10 },
-				new DataParameter("STR",            STR,            DataType.VarChar),
-				new DataParameter("OUTPUTSTR", null,      DataType.VarChar) { Direction = ParameterDirection.Output, Size = 50 },
-				new DataParameter("INPUTOUTPUTSTR", INPUTOUTPUTSTR, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
-
-			OUTPUTID       = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTID"]).      Value);
-			INPUTOUTPUTID  = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTID"]). Value);
-			OUTPUTSTR      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
-			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
 		#region DuplicateColumnNames
 
 		public static IEnumerable<DuplicateColumnNamesResult> DuplicateColumnNames(this HXEDB dataConnection)
@@ -8850,115 +8764,115 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region PersonSelectAll
+		#region PrdGlobalEccCvMARAproc
 
-		public static IEnumerable<PersonSelectAllResult> PersonSelectAll(this HXEDB dataConnection)
+		public static IEnumerable<PrdGlobalEccCvMARAprocResult> PrdGlobalEccCvMARAproc(this HXEDB dataConnection)
 		{
-			return dataConnection.QueryProc<PersonSelectAllResult>("\"TESTHANAODBC\".\"Person_SelectAll\"");
+			var ms = dataConnection.MappingSchema;
+
+			return dataConnection.QueryProc(dataReader =>
+				new PrdGlobalEccCvMARAprocResult
+				{
+					id      = Converter.ChangeTypeTo<int?>   (dataReader.GetValue(0), ms),
+					Column2 = Converter.ChangeTypeTo<string?>(dataReader.GetValue(1), ms),
+				},
+				"\"TESTHANA\".\"prd.global.ecc/CV_MARAproc\"");
 		}
 
-		public partial class PersonSelectAllResult
+		public partial class PrdGlobalEccCvMARAprocResult
 		{
-			public int     PersonID   { get; set; }
-			public string  FirstName  { get; set; } = null!;
-			public string  LastName   { get; set; } = null!;
-			public string? MiddleName { get; set; }
-			public string  Gender     { get; set; } = null!;
-		}
-
-		#endregion
-
-		#region PersonSelectByName
-
-		public static IEnumerable<PersonSelectByNameResult> PersonSelectByName(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME)
-		{
-			return dataConnection.QueryProc<PersonSelectByNameResult>("\"TESTHANAODBC\".\"Person_SelectByName\"",
-				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
-				new DataParameter("LASTNAME",  LASTNAME,  DataType.NVarChar));
-		}
-
-		public partial class PersonSelectByNameResult
-		{
-			public int     PersonID   { get; set; }
-			public string  FirstName  { get; set; } = null!;
-			public string  LastName   { get; set; } = null!;
-			public string? MiddleName { get; set; }
-			public string  Gender     { get; set; } = null!;
+			               public int?    id      { get; set; }
+			[Column("id")] public string? Column2 { get; set; }
 		}
 
 		#endregion
 
-		#region PersonSelectListByName
+		#region DROPEXISTINGTABLE
 
-		public static IEnumerable<PersonSelectListByNameResult> PersonSelectListByName(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME)
+		public static int DROPEXISTINGTABLE(this HXEDB dataConnection, string? TABLENAME, string? SCHEMANAME)
 		{
-			return dataConnection.QueryProc<PersonSelectListByNameResult>("\"TESTHANAODBC\".\"Person_SelectListByName\"",
-				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
-				new DataParameter("LASTNAME",  LASTNAME,  DataType.NVarChar));
-		}
-
-		public partial class PersonSelectListByNameResult
-		{
-			public int     PersonID   { get; set; }
-			public string  FirstName  { get; set; } = null!;
-			public string  LastName   { get; set; } = null!;
-			public string? MiddleName { get; set; }
-			public string  Gender     { get; set; } = null!;
+			return dataConnection.ExecuteProc("\"TESTHANAODBC\".\"DROPEXISTINGTABLE\"",
+				new DataParameter("TABLENAME",  TABLENAME,  DataType.VarChar),
+				new DataParameter("SCHEMANAME", SCHEMANAME, DataType.VarChar));
 		}
 
 		#endregion
 
-		#region PersonInsert
+		#region DROPEXISTINGPROCEDURE
 
-		public static int PersonInsert(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
+		public static int DROPEXISTINGPROCEDURE(this HXEDB dataConnection, string? PROCEDURENAME, string? SCHEMANAME)
 		{
-			return dataConnection.ExecuteProc("\"TESTHANAODBC\".\"Person_Insert\"",
-				new DataParameter("FIRSTNAME",  FIRSTNAME,  DataType.NVarChar),
-				new DataParameter("LASTNAME",   LASTNAME,   DataType.NVarChar),
-				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar),
-				new DataParameter("GENDER",     GENDER,     DataType.Char));
+			return dataConnection.ExecuteProc("\"TESTHANAODBC\".\"DROPEXISTINGPROCEDURE\"",
+				new DataParameter("PROCEDURENAME", PROCEDURENAME, DataType.VarChar),
+				new DataParameter("SCHEMANAME",    SCHEMANAME,    DataType.VarChar));
 		}
 
 		#endregion
 
-		#region PersonInsertOutputParameter
+		#region DROPEXISTINGFUNCTION
 
-		public static int PersonInsertOutputParameter(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER, out int? PERSONID)
+		public static int DROPEXISTINGFUNCTION(this HXEDB dataConnection, string? FUNCTIONNAME, string? SCHEMANAME)
 		{
-			var ret = dataConnection.ExecuteProc("\"TESTHANAODBC\".\"Person_Insert_OutputParameter\"",
-				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
-				new DataParameter("LASTNAME", LASTNAME, DataType.NVarChar),
-				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar),
-				new DataParameter("GENDER",   GENDER,   DataType.Char),
-				new DataParameter("PERSONID", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
-
-			PERSONID = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).Value);
-
-			return ret;
+			return dataConnection.ExecuteProc("\"TESTHANAODBC\".\"DROPEXISTINGFUNCTION\"",
+				new DataParameter("FUNCTIONNAME", FUNCTIONNAME, DataType.VarChar),
+				new DataParameter("SCHEMANAME",   SCHEMANAME,   DataType.VarChar));
 		}
 
 		#endregion
 
-		#region PersonUpdate
+		#region DROPEXISTINGVIEW
 
-		public static int PersonUpdate0(this HXEDB dataConnection, int? PERSONID, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
+		public static int DROPEXISTINGVIEW(this HXEDB dataConnection, string? VIEWNAME, string? SCHEMANAME)
 		{
-			return dataConnection.ExecuteProc("\"TESTHANAODBC\".\"Person_Update\"",
-				new DataParameter("PERSONID",   PERSONID,   DataType.Int32),
-				new DataParameter("FIRSTNAME",  FIRSTNAME,  DataType.NVarChar),
-				new DataParameter("LASTNAME",   LASTNAME,   DataType.NVarChar),
-				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar),
-				new DataParameter("GENDER",     GENDER,     DataType.Char));
+			return dataConnection.ExecuteProc("\"TESTHANAODBC\".\"DROPEXISTINGVIEW\"",
+				new DataParameter("VIEWNAME",   VIEWNAME,   DataType.VarChar),
+				new DataParameter("SCHEMANAME", SCHEMANAME, DataType.VarChar));
 		}
 
 		#endregion
 
-		#region PersonDelete
+		#region DROPCONSTRAINTFROMTABLE
 
-		public static int PersonDelete0(this HXEDB dataConnection, int? PERSONID)
+		public static int DROPCONSTRAINTFROMTABLE(this HXEDB dataConnection, string? TABLENAME, string? CONSTRAINTNAME, string? SCHEMANAME)
 		{
-			return dataConnection.ExecuteProc("\"TESTHANAODBC\".\"Person_Delete\"",
-				new DataParameter("PERSONID", PERSONID, DataType.Int32));
+			return dataConnection.ExecuteProc("\"TESTHANAODBC\".\"DROPCONSTRAINTFROMTABLE\"",
+				new DataParameter("TABLENAME",      TABLENAME,      DataType.VarChar),
+				new DataParameter("CONSTRAINTNAME", CONSTRAINTNAME, DataType.VarChar),
+				new DataParameter("SCHEMANAME",     SCHEMANAME,     DataType.VarChar));
+		}
+
+		#endregion
+
+		#region DROPEXISTINGTABLE
+
+		public static int DROPEXISTINGTABLE0(this HXEDB dataConnection, string? TABLENAME, string? SCHEMANAME)
+		{
+			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPEXISTINGTABLE\"",
+				new DataParameter("TABLENAME",  TABLENAME,  DataType.VarChar),
+				new DataParameter("SCHEMANAME", SCHEMANAME, DataType.VarChar));
+		}
+
+		#endregion
+
+		#region DROPEXISTINGVIEW
+
+		public static int DROPEXISTINGVIEW0(this HXEDB dataConnection, string? VIEWNAME, string? SCHEMANAME)
+		{
+			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPEXISTINGVIEW\"",
+				new DataParameter("VIEWNAME",   VIEWNAME,   DataType.VarChar),
+				new DataParameter("SCHEMANAME", SCHEMANAME, DataType.VarChar));
+		}
+
+		#endregion
+
+		#region DROPCONSTRAINTFROMTABLE
+
+		public static int DROPCONSTRAINTFROMTABLE0(this HXEDB dataConnection, string? TABLENAME, string? CONSTRAINTNAME, string? SCHEMANAME)
+		{
+			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPCONSTRAINTFROMTABLE\"",
+				new DataParameter("TABLENAME",      TABLENAME,      DataType.VarChar),
+				new DataParameter("CONSTRAINTNAME", CONSTRAINTNAME, DataType.VarChar),
+				new DataParameter("SCHEMANAME",     SCHEMANAME,     DataType.VarChar));
 		}
 
 		#endregion
@@ -8984,14 +8898,14 @@ namespace SapHanaDataContext
 
 		#region PersonSelectByName
 
-		public static IEnumerable<PersonSelectByNameResult0> PersonSelectByName0(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME)
+		public static IEnumerable<PersonSelectByNameResult> PersonSelectByName(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME)
 		{
-			return dataConnection.QueryProc<PersonSelectByNameResult0>("\"TESTHANA\".\"Person_SelectByName\"",
+			return dataConnection.QueryProc<PersonSelectByNameResult>("\"TESTHANA\".\"Person_SelectByName\"",
 				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
 				new DataParameter("LASTNAME",  LASTNAME,  DataType.NVarChar));
 		}
 
-		public partial class PersonSelectByNameResult0
+		public partial class PersonSelectByNameResult
 		{
 			public int     PersonID   { get; set; }
 			public string  FirstName  { get; set; } = null!;
@@ -9004,14 +8918,14 @@ namespace SapHanaDataContext
 
 		#region PersonSelectListByName
 
-		public static IEnumerable<PersonSelectListByNameResult0> PersonSelectListByName0(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME)
+		public static IEnumerable<PersonSelectListByNameResult> PersonSelectListByName(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME)
 		{
-			return dataConnection.QueryProc<PersonSelectListByNameResult0>("\"TESTHANA\".\"Person_SelectListByName\"",
+			return dataConnection.QueryProc<PersonSelectListByNameResult>("\"TESTHANA\".\"Person_SelectListByName\"",
 				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
 				new DataParameter("LASTNAME",  LASTNAME,  DataType.NVarChar));
 		}
 
-		public partial class PersonSelectListByNameResult0
+		public partial class PersonSelectListByNameResult
 		{
 			public int     PersonID   { get; set; }
 			public string  FirstName  { get; set; } = null!;
@@ -9024,9 +8938,41 @@ namespace SapHanaDataContext
 
 		#region PersonInsert
 
-		public static int PersonInsert0(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
+		public static int PersonInsert(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
 		{
 			return dataConnection.ExecuteProc("\"TESTHANA\".\"Person_Insert\"",
+				new DataParameter("FIRSTNAME",  FIRSTNAME,  DataType.NVarChar),
+				new DataParameter("LASTNAME",   LASTNAME,   DataType.NVarChar),
+				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar),
+				new DataParameter("GENDER",     GENDER,     DataType.Char));
+		}
+
+		#endregion
+
+		#region PersonInsertOutputParameter
+
+		public static int PersonInsertOutputParameter(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER, out int? PERSONID)
+		{
+			var ret = dataConnection.ExecuteProc("\"TESTHANA\".\"Person_Insert_OutputParameter\"",
+				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
+				new DataParameter("LASTNAME", LASTNAME, DataType.NVarChar),
+				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar),
+				new DataParameter("GENDER",   GENDER,   DataType.Char),
+				new DataParameter("PERSONID", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+
+			PERSONID = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region PersonUpdate
+
+		public static int PersonUpdate(this HXEDB dataConnection, int? PERSONID, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
+		{
+			return dataConnection.ExecuteProc("\"TESTHANA\".\"Person_Update\"",
+				new DataParameter("PERSONID",   PERSONID,   DataType.Int32),
 				new DataParameter("FIRSTNAME",  FIRSTNAME,  DataType.NVarChar),
 				new DataParameter("LASTNAME",   LASTNAME,   DataType.NVarChar),
 				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar),
@@ -9045,84 +8991,6 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region StartupAppendix
-
-		public static IEnumerable<StartupAPPENDIXResult> StartupAppendix(this HXEDB dataConnection)
-		{
-			return dataConnection.QueryProc<StartupAPPENDIXResult>("\"_SYS_STATISTICS\".\"STARTUP_APPENDIX\"");
-		}
-
-		public partial class StartupAPPENDIXResult
-		{
-			[Column("1")] public int? _1 { get; set; }
-		}
-
-		#endregion
-
-		#region TelemetrySystemOverview
-
-		public static int TelemetrySystemOverview(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
-		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"TELEMETRY_SYSTEM_OVERVIEW\"",
-				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
-				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
-
-			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region SharedFollowUpActions
-
-		public static int SharedFollowUpActions(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, int? ALERT_ID)
-		{
-			return dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_FOLLOW_UP_ACTIONS\"",
-				new DataParameter("SNAPSHOT_ID", SNAPSHOT_ID, DataType.Timestamp),
-				new DataParameter("ALERT_ID",    ALERT_ID,    DataType.Int32));
-		}
-
-		#endregion
-
-		#region SharedCreateUnionView
-
-		public static int SharedCreateUnionView(this HXEDB dataConnection, string? PREFIX, string? VIEW_NAME, string? SYNONYM_NAME)
-		{
-			return dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_CREATE_UNION_VIEW\"",
-				new DataParameter("PREFIX",       PREFIX,       DataType.VarChar),
-				new DataParameter("VIEW_NAME",    VIEW_NAME,    DataType.VarChar),
-				new DataParameter("SYNONYM_NAME", SYNONYM_NAME, DataType.VarChar));
-		}
-
-		#endregion
-
-		#region SharedWriteInternalAlert
-
-		public static int SharedWriteInternalAlert(this HXEDB dataConnection, DateTime? SNAPSHOTID, string? ALERTDETAILS)
-		{
-			return dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_WRITE_INTERNAL_ALERT\"",
-				new DataParameter("SNAPSHOTID",   SNAPSHOTID,   DataType.Timestamp),
-				new DataParameter("ALERTDETAILS", ALERTDETAILS, DataType.VarChar));
-		}
-
-		#endregion
-
-		#region SharedColumnNames
-
-		public static int SharedColumnNames(this HXEDB dataConnection, string? TABLE_NAME, out string? COLUMN_NAMES)
-		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_COLUMN_NAMES\"",
-				new DataParameter("TABLE_NAME",   TABLE_NAME,   DataType.VarChar),
-				new DataParameter("COLUMN_NAMES", null, DataType.VarChar) { Direction = ParameterDirection.Output, Size = 5000 });
-
-			COLUMN_NAMES = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["COLUMN_NAMES"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
 		#region SharedKeyColumnNames
 
 		public static int SharedKeyColumnNames(this HXEDB dataConnection, string? TABLE_NAME, out string? COLUMN_NAMES)
@@ -9132,6 +9000,39 @@ namespace SapHanaDataContext
 				new DataParameter("COLUMN_NAMES", null, DataType.VarChar) { Direction = ParameterDirection.Output, Size = 5000 });
 
 			COLUMN_NAMES = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["COLUMN_NAMES"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region StatisticsPrepareCallTimer
+
+		public static int StatisticsPrepareCallTimer(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, int? SCHEDULABLE_ID, out int? CAN_CALL)
+		{
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"STATISTICS_PREPARE_CALL_TIMER\"",
+				new DataParameter("SNAPSHOT_ID", SNAPSHOT_ID, DataType.Timestamp),
+				new DataParameter("SCHEDULABLE_ID", SCHEDULABLE_ID, DataType.Int32),
+				new DataParameter("CAN_CALL", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+
+			CAN_CALL = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["CAN_CALL"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region StatisticsPrepareCallManual
+
+		public static int StatisticsPrepareCallManual(this HXEDB dataConnection, int? SCHEDULABLE_ID, out int? CAN_CALL, out DateTime? CALLTIME_UTC)
+		{
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"STATISTICS_PREPARE_CALL_MANUAL\"",
+				new DataParameter("SCHEDULABLE_ID", SCHEDULABLE_ID, DataType.Int32),
+				new DataParameter("CAN_CALL", null,     DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 },
+				new DataParameter("CALLTIME_UTC", null, DataType.Timestamp) { Direction = ParameterDirection.Output });
+
+			CAN_CALL     = Converter.ChangeTypeTo<int?>     (((IDbDataParameter)dataConnection.Command.Parameters["CAN_CALL"]).    Value);
+			CALLTIME_UTC = Converter.ChangeTypeTo<DateTime?>(((IDbDataParameter)dataConnection.Command.Parameters["CALLTIME_UTC"]).Value);
 
 			return ret;
 		}
@@ -9166,6 +9067,20 @@ namespace SapHanaDataContext
 			COLUMN_NAMES = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["COLUMN_NAMES"]).Value);
 
 			return ret;
+		}
+
+		#endregion
+
+		#region StartupPreamble
+
+		public static IEnumerable<StartupPREAMBLEResult> StartupPreamble(this HXEDB dataConnection)
+		{
+			return dataConnection.QueryProc<StartupPREAMBLEResult>("\"_SYS_STATISTICS\".\"STARTUP_PREAMBLE\"");
+		}
+
+		public partial class StartupPREAMBLEResult
+		{
+			[Column("1")] public int? _1 { get; set; }
 		}
 
 		#endregion
@@ -9255,16 +9170,28 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region StartupPreamble
+		#region SharedWriteInternalAlert
 
-		public static IEnumerable<StartupPREAMBLEResult> StartupPreamble(this HXEDB dataConnection)
+		public static int SharedWriteInternalAlert(this HXEDB dataConnection, DateTime? SNAPSHOTID, string? ALERTDETAILS)
 		{
-			return dataConnection.QueryProc<StartupPREAMBLEResult>("\"_SYS_STATISTICS\".\"STARTUP_PREAMBLE\"");
+			return dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_WRITE_INTERNAL_ALERT\"",
+				new DataParameter("SNAPSHOTID",   SNAPSHOTID,   DataType.Timestamp),
+				new DataParameter("ALERTDETAILS", ALERTDETAILS, DataType.VarChar));
 		}
 
-		public partial class StartupPREAMBLEResult
+		#endregion
+
+		#region SharedColumnNames
+
+		public static int SharedColumnNames(this HXEDB dataConnection, string? TABLE_NAME, out string? COLUMN_NAMES)
 		{
-			[Column("1")] public int? _1 { get; set; }
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_COLUMN_NAMES\"",
+				new DataParameter("TABLE_NAME",   TABLE_NAME,   DataType.VarChar),
+				new DataParameter("COLUMN_NAMES", null, DataType.VarChar) { Direction = ParameterDirection.Output, Size = 5000 });
+
+			COLUMN_NAMES = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["COLUMN_NAMES"]).Value);
+
+			return ret;
 		}
 
 		#endregion
@@ -9293,6 +9220,29 @@ namespace SapHanaDataContext
 				new DataParameter("STAT_SCHEMA", STAT_SCHEMA, DataType.VarChar),
 				new DataParameter("STAT_VIEW",   STAT_VIEW,   DataType.VarChar),
 				new DataParameter("STAT_COLUMN", STAT_COLUMN, DataType.VarChar));
+		}
+
+		#endregion
+
+		#region SharedFollowUpActions
+
+		public static int SharedFollowUpActions(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, int? ALERT_ID)
+		{
+			return dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_FOLLOW_UP_ACTIONS\"",
+				new DataParameter("SNAPSHOT_ID", SNAPSHOT_ID, DataType.Timestamp),
+				new DataParameter("ALERT_ID",    ALERT_ID,    DataType.Int32));
+		}
+
+		#endregion
+
+		#region SharedCreateUnionView
+
+		public static int SharedCreateUnionView(this HXEDB dataConnection, string? PREFIX, string? VIEW_NAME, string? SYNONYM_NAME)
+		{
+			return dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_CREATE_UNION_VIEW\"",
+				new DataParameter("PREFIX",       PREFIX,       DataType.VarChar),
+				new DataParameter("VIEW_NAME",    VIEW_NAME,    DataType.VarChar),
+				new DataParameter("SYNONYM_NAME", SYNONYM_NAME, DataType.VarChar));
 		}
 
 		#endregion
@@ -9331,11 +9281,11 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region CollectorHostServiceThreadSamples
+		#region CollectorHostConnectionStatistics
 
-		public static int CollectorHostServiceThreadSamples(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostConnectionStatistics(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_SERVICE_THREAD_SAMPLES\"",
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_CONNECTION_STATISTICS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
 				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
 				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
@@ -9379,11 +9329,11 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region CollectorGlobalPersistenceStatistics
+		#region CollectorHostLongSerializableTransaction
 
-		public static int CollectorGlobalPersistenceStatistics(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostLongSerializableTransaction(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_GLOBAL_PERSISTENCE_STATISTICS\"",
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_LONG_SERIALIZABLE_TRANSACTION\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
 				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
 				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
@@ -9395,11 +9345,11 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region CollectorHostVolumeIoDetailedStatistics
+		#region CollectorHostOneDayFileCount
 
-		public static int CollectorHostVolumeIoDetailedStatistics(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostOneDayFileCount(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_VOLUME_IO_DETAILED_STATISTICS\"",
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_ONE_DAY_FILE_COUNT\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
 				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
 				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
@@ -9411,11 +9361,11 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region CollectorHostConnections
+		#region CollectorHostServiceThreadSamples
 
-		public static int CollectorHostConnections(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostServiceThreadSamples(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_CONNECTIONS\"",
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_SERVICE_THREAD_SAMPLES\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
 				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
 				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
@@ -9427,59 +9377,11 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region CollectorHostObjectLockStatistics
+		#region CollectorHostHeapAllocators
 
-		public static int CollectorHostObjectLockStatistics(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostHeapAllocators(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_OBJECT_LOCK_STATISTICS\"",
-				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
-				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
-				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
-
-			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region CollectorHostVolumeFiles
-
-		public static int CollectorHostVolumeFiles(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
-		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_VOLUME_FILES\"",
-				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
-				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
-				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
-
-			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region CollectorGlobalRowstoreTablesSize
-
-		public static int CollectorGlobalRowstoreTablesSize(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
-		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_GLOBAL_ROWSTORE_TABLES_SIZE\"",
-				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
-				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
-				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
-
-			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region CollectorHostColumnTablesPartSize
-
-		public static int CollectorHostColumnTablesPartSize(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
-		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_COLUMN_TABLES_PART_SIZE\"",
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_HEAP_ALLOCATORS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
 				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
 				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
@@ -9507,11 +9409,59 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region CollectorHostDataVolumeSuperblockStatistics
+		#region CollectorGlobalRowstoreTablesSize
 
-		public static int CollectorHostDataVolumeSuperblockStatistics(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorGlobalRowstoreTablesSize(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_DATA_VOLUME_SUPERBLOCK_STATISTICS\"",
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_GLOBAL_ROWSTORE_TABLES_SIZE\"",
+				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
+				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
+				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+
+			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region CollectorHostVolumeIoRetryStatistics
+
+		public static int CollectorHostVolumeIoRetryStatistics(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		{
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_VOLUME_IO_RETRY_STATISTICS\"",
+				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
+				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
+				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+
+			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region CollectorGlobalTablePersistenceStatistics
+
+		public static int CollectorGlobalTablePersistenceStatistics(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		{
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_GLOBAL_TABLE_PERSISTENCE_STATISTICS\"",
+				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
+				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
+				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+
+			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region CollectorHostLongIdleCursor
+
+		public static int CollectorHostLongIdleCursor(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		{
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_LONG_IDLE_CURSOR\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
 				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
 				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
@@ -9539,11 +9489,11 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region CollectorHostRsMemory
+		#region CollectorHostConnections
 
-		public static int CollectorHostRsMemory(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostConnections(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_RS_MEMORY\"",
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_CONNECTIONS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
 				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
 				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
@@ -9555,11 +9505,91 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region CollectorHostMvccOverview
+		#region CollectorHostSavepoints
 
-		public static int CollectorHostMvccOverview(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostSavepoints(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_MVCC_OVERVIEW\"",
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_SAVEPOINTS\"",
+				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
+				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
+				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+
+			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region CollectorHostColumnTablesPartSize
+
+		public static int CollectorHostColumnTablesPartSize(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		{
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_COLUMN_TABLES_PART_SIZE\"",
+				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
+				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
+				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+
+			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region CollectorGlobalPersistenceStatistics
+
+		public static int CollectorGlobalPersistenceStatistics(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		{
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_GLOBAL_PERSISTENCE_STATISTICS\"",
+				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
+				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
+				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+
+			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region CollectorHostServiceMemory
+
+		public static int CollectorHostServiceMemory(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		{
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_SERVICE_MEMORY\"",
+				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
+				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
+				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+
+			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region CollectorHostUncommittedWriteTransaction
+
+		public static int CollectorHostUncommittedWriteTransaction(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		{
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_UNCOMMITTED_WRITE_TRANSACTION\"",
+				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
+				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
+				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+
+			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region CollectorHostRecordLocks
+
+		public static int CollectorHostRecordLocks(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		{
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_RECORD_LOCKS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
 				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
 				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
@@ -9603,107 +9633,11 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region CollectorHostDataVolumePageStatistics
+		#region CollectorHostVolumeFiles
 
-		public static int CollectorHostDataVolumePageStatistics(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostVolumeFiles(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_DATA_VOLUME_PAGE_STATISTICS\"",
-				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
-				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
-				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
-
-			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region CollectorHostServiceMemory
-
-		public static int CollectorHostServiceMemory(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
-		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_SERVICE_MEMORY\"",
-				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
-				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
-				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
-
-			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region CollectorHostVolumeIoRetryStatistics
-
-		public static int CollectorHostVolumeIoRetryStatistics(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
-		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_VOLUME_IO_RETRY_STATISTICS\"",
-				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
-				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
-				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
-
-			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region CollectorHostWorkload
-
-		public static int CollectorHostWorkload(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
-		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_WORKLOAD\"",
-				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
-				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
-				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
-
-			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region CollectorHostLongIdleCursor
-
-		public static int CollectorHostLongIdleCursor(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
-		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_LONG_IDLE_CURSOR\"",
-				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
-				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
-				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
-
-			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region CollectorHostConnectionStatistics
-
-		public static int CollectorHostConnectionStatistics(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
-		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_CONNECTION_STATISTICS\"",
-				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
-				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
-				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
-
-			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region CollectorHostLongRunningStatements
-
-		public static int CollectorHostLongRunningStatements(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
-		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_LONG_RUNNING_STATEMENTS\"",
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_VOLUME_FILES\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
 				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
 				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
@@ -9731,54 +9665,6 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region CollectorGlobalDisks
-
-		public static int CollectorGlobalDisks(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
-		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_GLOBAL_DISKS\"",
-				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
-				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
-				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
-
-			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region CollectorHostCsUnloads
-
-		public static int CollectorHostCsUnloads(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
-		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_CS_UNLOADS\"",
-				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
-				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
-				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
-
-			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region CollectorHostLongSerializableTransaction
-
-		public static int CollectorHostLongSerializableTransaction(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
-		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_LONG_SERIALIZABLE_TRANSACTION\"",
-				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
-				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
-				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
-
-			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
 		#region CollectorHostObjectLocks
 
 		public static int CollectorHostObjectLocks(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
@@ -9795,11 +9681,11 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region CollectorHostSavepoints
+		#region CollectorHostObjectLockStatistics
 
-		public static int CollectorHostSavepoints(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostObjectLockStatistics(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_SAVEPOINTS\"",
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_OBJECT_LOCK_STATISTICS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
 				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
 				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
@@ -9827,59 +9713,11 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region CollectorHostRecordLocks
+		#region CollectorHostVolumeIoDetailedStatistics
 
-		public static int CollectorHostRecordLocks(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostVolumeIoDetailedStatistics(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_RECORD_LOCKS\"",
-				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
-				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
-				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
-
-			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region CollectorHostDeltaMergeStatistics
-
-		public static int CollectorHostDeltaMergeStatistics(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
-		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_DELTA_MERGE_STATISTICS\"",
-				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
-				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
-				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
-
-			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region CollectorHostResourceUtilizationStatistics
-
-		public static int CollectorHostResourceUtilizationStatistics(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
-		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_RESOURCE_UTILIZATION_STATISTICS\"",
-				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
-				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
-				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
-
-			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region CollectorGlobalTablePersistenceStatistics
-
-		public static int CollectorGlobalTablePersistenceStatistics(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
-		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_GLOBAL_TABLE_PERSISTENCE_STATISTICS\"",
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_VOLUME_IO_DETAILED_STATISTICS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
 				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
 				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
@@ -9907,11 +9745,11 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region CollectorHostUncommittedWriteTransaction
+		#region CollectorGlobalDisks
 
-		public static int CollectorHostUncommittedWriteTransaction(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorGlobalDisks(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_UNCOMMITTED_WRITE_TRANSACTION\"",
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_GLOBAL_DISKS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
 				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
 				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
@@ -9923,11 +9761,11 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region CollectorHostOneDayFileCount
+		#region CollectorHostDataVolumePageStatistics
 
-		public static int CollectorHostOneDayFileCount(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostDataVolumePageStatistics(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_ONE_DAY_FILE_COUNT\"",
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_DATA_VOLUME_PAGE_STATISTICS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
 				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
 				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
@@ -9939,11 +9777,11 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region CollectorHostHeapAllocators
+		#region CollectorHostLongRunningStatements
 
-		public static int CollectorHostHeapAllocators(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostLongRunningStatements(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_HEAP_ALLOCATORS\"",
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_LONG_RUNNING_STATEMENTS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
 				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
 				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
@@ -9955,11 +9793,11 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region CollectorLivecacheProcedureStatistics
+		#region CollectorHostResourceUtilizationStatistics
 
-		public static int CollectorLivecacheProcedureStatistics(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostResourceUtilizationStatistics(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_LIVECACHE_PROCEDURE_STATISTICS\"",
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_RESOURCE_UTILIZATION_STATISTICS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
 				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
 				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
@@ -9971,11 +9809,11 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region CollectorTelLogBuffers
+		#region CollectorHostCsUnloads
 
-		public static int CollectorTelLogBuffers(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostCsUnloads(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_TEL_LOG_BUFFERS\"",
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_CS_UNLOADS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
 				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
 				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
@@ -9987,11 +9825,11 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region CollectorHostLoadHistoryHost
+		#region CollectorStreamingProjectsStatistics
 
-		public static int CollectorHostLoadHistoryHost(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorStreamingProjectsStatistics(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_LOAD_HISTORY_HOST\"",
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_STREAMING_PROJECTS_STATISTICS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
 				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
 				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
@@ -10003,11 +9841,11 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region CollectorLivecacheSchemaStatistics
+		#region CollectorLivecacheOmsversions
 
-		public static int CollectorLivecacheSchemaStatistics(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorLivecacheOmsversions(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_LIVECACHE_SCHEMA_STATISTICS\"",
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_LIVECACHE_OMSVERSIONS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
 				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
 				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
@@ -10051,43 +9889,11 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region CollectorTelOutOfMemoryEvents
+		#region CollectorHostDeltaMergeStatistics
 
-		public static int CollectorTelOutOfMemoryEvents(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostDeltaMergeStatistics(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_TEL_OUT_OF_MEMORY_EVENTS\"",
-				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
-				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
-				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
-
-			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region CollectorLivecacheContainerStatistics
-
-		public static int CollectorLivecacheContainerStatistics(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
-		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_LIVECACHE_CONTAINER_STATISTICS\"",
-				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
-				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
-				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
-
-			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region CollectorHostLogPartitions
-
-		public static int CollectorHostLogPartitions(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
-		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_LOG_PARTITIONS\"",
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_DELTA_MERGE_STATISTICS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
 				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
 				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
@@ -10104,86 +9910,6 @@ namespace SapHanaDataContext
 		public static int CollectorHostLoadHistoryService(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_LOAD_HISTORY_SERVICE\"",
-				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
-				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
-				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
-
-			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region CollectorStreamingSubscribersStatistics
-
-		public static int CollectorStreamingSubscribersStatistics(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
-		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_STREAMING_SUBSCRIBERS_STATISTICS\"",
-				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
-				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
-				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
-
-			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region CollectorLivecacheOmsversions
-
-		public static int CollectorLivecacheOmsversions(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
-		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_LIVECACHE_OMSVERSIONS\"",
-				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
-				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
-				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
-
-			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region CollectorTelLicenses
-
-		public static int CollectorTelLicenses(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
-		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_TEL_LICENSES\"",
-				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
-				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
-				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
-
-			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region CollectorHostCsIndexes
-
-		public static int CollectorHostCsIndexes(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
-		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_CS_INDEXES\"",
-				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
-				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
-				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
-
-			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region CollectorHostServiceThreadSamplesStatements
-
-		public static int CollectorHostServiceThreadSamplesStatements(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
-		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_SERVICE_THREAD_SAMPLES_STATEMENTS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
 				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
 				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
@@ -10227,11 +9953,11 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region CollectorTelLicense
+		#region CollectorTelFeatureUsage
 
-		public static int CollectorTelLicense(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorTelFeatureUsage(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_TEL_LICENSE\"",
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_TEL_FEATURE_USAGE\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
 				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
 				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
@@ -10243,11 +9969,27 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region CollectorHostCsLobSpaceReclaims
+		#region CollectorHostDataVolumeSuperblockStatistics
 
-		public static int CollectorHostCsLobSpaceReclaims(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorHostDataVolumeSuperblockStatistics(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_CS_LOB_SPACE_RECLAIMS\"",
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_DATA_VOLUME_SUPERBLOCK_STATISTICS\"",
+				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
+				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
+				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+
+			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region CollectorHostLogPartitions
+
+		public static int CollectorHostLogPartitions(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		{
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_LOG_PARTITIONS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
 				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
 				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
@@ -10275,6 +10017,54 @@ namespace SapHanaDataContext
 
 		#endregion
 
+		#region CollectorTelLogBuffers
+
+		public static int CollectorTelLogBuffers(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		{
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_TEL_LOG_BUFFERS\"",
+				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
+				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
+				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+
+			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region CollectorHostRsMemory
+
+		public static int CollectorHostRsMemory(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		{
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_RS_MEMORY\"",
+				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
+				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
+				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+
+			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region CollectorHostServiceThreadSamplesStatements
+
+		public static int CollectorHostServiceThreadSamplesStatements(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		{
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_SERVICE_THREAD_SAMPLES_STATEMENTS\"",
+				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
+				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
+				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+
+			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
 		#region CollectorHostServiceReplication
 
 		public static int CollectorHostServiceReplication(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
@@ -10291,11 +10081,11 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region CollectorTelInifileContents
+		#region CollectorTelLicense
 
-		public static int CollectorTelInifileContents(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorTelLicense(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_TEL_INIFILE_CONTENTS\"",
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_TEL_LICENSE\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
 				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
 				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
@@ -10307,171 +10097,11 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region CollectorGlobalOutOfMemoryEvents
+		#region CollectorTelLicenses
 
-		public static int CollectorGlobalOutOfMemoryEvents(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		public static int CollectorTelLicenses(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
 		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_GLOBAL_OUT_OF_MEMORY_EVENTS\"",
-				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
-				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
-				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
-
-			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region CollectorStreamingProjectsStatistics
-
-		public static int CollectorStreamingProjectsStatistics(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
-		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_STREAMING_PROJECTS_STATISTICS\"",
-				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
-				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
-				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
-
-			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region CollectorTelLogSegments
-
-		public static int CollectorTelLogSegments(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
-		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_TEL_LOG_SEGMENTS\"",
-				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
-				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
-				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
-
-			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region CollectorHostServiceNetworkIo
-
-		public static int CollectorHostServiceNetworkIo(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
-		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_SERVICE_NETWORK_IO\"",
-				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
-				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
-				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
-
-			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region CollectorStreamingProjectConnectionsStatistics
-
-		public static int CollectorStreamingProjectConnectionsStatistics(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
-		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_STREAMING_PROJECT_CONNECTIONS_STATISTICS\"",
-				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
-				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
-				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
-
-			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region CollectorGlobalTableConsistency
-
-		public static int CollectorGlobalTableConsistency(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
-		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_GLOBAL_TABLE_CONSISTENCY\"",
-				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
-				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
-				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
-
-			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region CollectorGlobalCatalogConsistency
-
-		public static int CollectorGlobalCatalogConsistency(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
-		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_GLOBAL_CATALOG_CONSISTENCY\"",
-				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
-				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
-				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
-
-			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region CollectorTelFeatureUsage
-
-		public static int CollectorTelFeatureUsage(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
-		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_TEL_FEATURE_USAGE\"",
-				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
-				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
-				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
-
-			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region CollectorTelSystemOverview
-
-		public static int CollectorTelSystemOverview(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
-		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_TEL_SYSTEM_OVERVIEW\"",
-				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
-				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
-				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
-
-			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region CollectorGlobalDiskUsage
-
-		public static int CollectorGlobalDiskUsage(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
-		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_GLOBAL_DISK_USAGE\"",
-				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
-				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
-				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
-
-			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region CollectorHostJobHistory
-
-		public static int CollectorHostJobHistory(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
-		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_JOB_HISTORY\"",
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_TEL_LICENSES\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
 				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
 				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
@@ -10499,6 +10129,326 @@ namespace SapHanaDataContext
 
 		#endregion
 
+		#region CollectorHostWorkload
+
+		public static int CollectorHostWorkload(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		{
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_WORKLOAD\"",
+				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
+				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
+				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+
+			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region CollectorHostCsLobSpaceReclaims
+
+		public static int CollectorHostCsLobSpaceReclaims(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		{
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_CS_LOB_SPACE_RECLAIMS\"",
+				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
+				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
+				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+
+			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region CollectorHostCsIndexes
+
+		public static int CollectorHostCsIndexes(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		{
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_CS_INDEXES\"",
+				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
+				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
+				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+
+			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region CollectorStreamingProjectConnectionsStatistics
+
+		public static int CollectorStreamingProjectConnectionsStatistics(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		{
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_STREAMING_PROJECT_CONNECTIONS_STATISTICS\"",
+				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
+				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
+				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+
+			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region CollectorHostMvccOverview
+
+		public static int CollectorHostMvccOverview(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		{
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_MVCC_OVERVIEW\"",
+				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
+				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
+				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+
+			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region CollectorGlobalTableConsistency
+
+		public static int CollectorGlobalTableConsistency(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		{
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_GLOBAL_TABLE_CONSISTENCY\"",
+				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
+				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
+				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+
+			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region CollectorTelLogSegments
+
+		public static int CollectorTelLogSegments(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		{
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_TEL_LOG_SEGMENTS\"",
+				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
+				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
+				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+
+			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region CollectorGlobalOutOfMemoryEvents
+
+		public static int CollectorGlobalOutOfMemoryEvents(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		{
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_GLOBAL_OUT_OF_MEMORY_EVENTS\"",
+				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
+				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
+				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+
+			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region CollectorLivecacheProcedureStatistics
+
+		public static int CollectorLivecacheProcedureStatistics(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		{
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_LIVECACHE_PROCEDURE_STATISTICS\"",
+				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
+				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
+				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+
+			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region CollectorTelOutOfMemoryEvents
+
+		public static int CollectorTelOutOfMemoryEvents(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		{
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_TEL_OUT_OF_MEMORY_EVENTS\"",
+				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
+				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
+				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+
+			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region CollectorHostDiskUsage
+
+		public static int CollectorHostDiskUsage(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		{
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_DISK_USAGE\"",
+				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
+				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
+				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+
+			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region CollectorLivecacheSchemaStatistics
+
+		public static int CollectorLivecacheSchemaStatistics(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		{
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_LIVECACHE_SCHEMA_STATISTICS\"",
+				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
+				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
+				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+
+			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region CollectorHostServiceNetworkIo
+
+		public static int CollectorHostServiceNetworkIo(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		{
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_SERVICE_NETWORK_IO\"",
+				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
+				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
+				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+
+			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region CollectorHostJobHistory
+
+		public static int CollectorHostJobHistory(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		{
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_JOB_HISTORY\"",
+				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
+				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
+				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+
+			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region CollectorTelSystemOverview
+
+		public static int CollectorTelSystemOverview(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		{
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_TEL_SYSTEM_OVERVIEW\"",
+				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
+				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
+				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+
+			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region CollectorStreamingSubscribersStatistics
+
+		public static int CollectorStreamingSubscribersStatistics(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		{
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_STREAMING_SUBSCRIBERS_STATISTICS\"",
+				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
+				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
+				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+
+			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region CollectorLivecacheContainerStatistics
+
+		public static int CollectorLivecacheContainerStatistics(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		{
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_LIVECACHE_CONTAINER_STATISTICS\"",
+				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
+				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
+				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+
+			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region CollectorGlobalCatalogConsistency
+
+		public static int CollectorGlobalCatalogConsistency(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		{
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_GLOBAL_CATALOG_CONSISTENCY\"",
+				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
+				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
+				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+
+			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region CollectorHostLoadHistoryHost
+
+		public static int CollectorHostLoadHistoryHost(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		{
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_HOST_LOAD_HISTORY_HOST\"",
+				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
+				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
+				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+
+			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region CollectorTelInifileContents
+
+		public static int CollectorTelInifileContents(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, byte? DELETE_HISTORY, out int? WAS_CANCELLED)
+		{
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"COLLECTOR_TEL_INIFILE_CONTENTS\"",
+				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
+				new DataParameter("DELETE_HISTORY", DELETE_HISTORY, DataType.Byte),
+				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+
+			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
 		#region SharedSetRecommendedSp
 
 		public static int SharedSetRecommendedSp(this HXEDB dataConnection, int? SP, DateTime? RELEASE_DATE)
@@ -10506,22 +10456,6 @@ namespace SapHanaDataContext
 			return dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"SHARED_SET_RECOMMENDED_SP\"",
 				new DataParameter("SP",           SP,           DataType.Int32),
 				new DataParameter("RELEASE_DATE", RELEASE_DATE, DataType.Date));
-		}
-
-		#endregion
-
-		#region StatisticsPrepareCallTimer
-
-		public static int StatisticsPrepareCallTimer(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, int? SCHEDULABLE_ID, out int? CAN_CALL)
-		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"STATISTICS_PREPARE_CALL_TIMER\"",
-				new DataParameter("SNAPSHOT_ID", SNAPSHOT_ID, DataType.Timestamp),
-				new DataParameter("SCHEDULABLE_ID", SCHEDULABLE_ID, DataType.Int32),
-				new DataParameter("CAN_CALL", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
-
-			CAN_CALL = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["CAN_CALL"]).Value);
-
-			return ret;
 		}
 
 		#endregion
@@ -10541,15 +10475,6 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region RemoveStatisticsStoreUsedValues
-
-		public static int RemoveStatisticsStoreUsedValues(this HXEDB dataConnection)
-		{
-			return dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"REMOVE_STATISTICS_STORE_USED_VALUES\"");
-		}
-
-		#endregion
-
 		#region SpecialFunctionActivateObjects
 
 		public static int SpecialFunctionActivateObjects(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
@@ -10559,23 +10484,6 @@ namespace SapHanaDataContext
 				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
 
 			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region StatisticsPrepareCallManual
-
-		public static int StatisticsPrepareCallManual(this HXEDB dataConnection, int? SCHEDULABLE_ID, out int? CAN_CALL, out DateTime? CALLTIME_UTC)
-		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"STATISTICS_PREPARE_CALL_MANUAL\"",
-				new DataParameter("SCHEDULABLE_ID", SCHEDULABLE_ID, DataType.Int32),
-				new DataParameter("CAN_CALL", null,     DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 },
-				new DataParameter("CALLTIME_UTC", null, DataType.Timestamp) { Direction = ParameterDirection.Output });
-
-			CAN_CALL     = Converter.ChangeTypeTo<int?>     (((IDbDataParameter)dataConnection.Command.Parameters["CAN_CALL"]).    Value);
-			CALLTIME_UTC = Converter.ChangeTypeTo<DateTime?>(((IDbDataParameter)dataConnection.Command.Parameters["CALLTIME_UTC"]).Value);
 
 			return ret;
 		}
@@ -10597,11 +10505,94 @@ namespace SapHanaDataContext
 
 		#endregion
 
+		#region RemoveStatisticsStoreUsedValues
+
+		public static int RemoveStatisticsStoreUsedValues(this HXEDB dataConnection)
+		{
+			return dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"REMOVE_STATISTICS_STORE_USED_VALUES\"");
+		}
+
+		#endregion
+
+		#region TelemetryHanaUsage
+
+		public static int TelemetryHanaUsage(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
+		{
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"TELEMETRY_HANA_USAGE\"",
+				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
+				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+
+			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region StartupAppendix
+
+		public static IEnumerable<StartupAPPENDIXResult> StartupAppendix(this HXEDB dataConnection)
+		{
+			return dataConnection.QueryProc<StartupAPPENDIXResult>("\"_SYS_STATISTICS\".\"STARTUP_APPENDIX\"");
+		}
+
+		public partial class StartupAPPENDIXResult
+		{
+			[Column("1")] public int? _1 { get; set; }
+		}
+
+		#endregion
+
+		#region TelemetrySystemOverview
+
+		public static int TelemetrySystemOverview(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
+		{
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"TELEMETRY_SYSTEM_OVERVIEW\"",
+				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
+				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+
+			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region TelemetryLogSegments
+
+		public static int TelemetryLogSegments(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
+		{
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"TELEMETRY_LOG_SEGMENTS\"",
+				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
+				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+
+			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
 		#region TelemetryHostInformation
 
 		public static int TelemetryHostInformation(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"TELEMETRY_HOST_INFORMATION\"",
+				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
+				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+
+			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region TelemetryLogBuffers
+
+		public static int TelemetryLogBuffers(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
+		{
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"TELEMETRY_LOG_BUFFERS\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
 				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
 
@@ -10632,6 +10623,21 @@ namespace SapHanaDataContext
 		public static int TelemetryInifileContents(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
 		{
 			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"TELEMETRY_INIFILE_CONTENTS\"",
+				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
+				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+
+			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region TelemetryLicense
+
+		public static int TelemetryLicense(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
+		{
+			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"TELEMETRY_LICENSE\"",
 				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
 				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
 
@@ -10747,231 +10753,11 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region TelemetryHanaUsage
-
-		public static int TelemetryHanaUsage(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
-		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"TELEMETRY_HANA_USAGE\"",
-				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
-				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
-
-			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region TelemetryLogSegments
-
-		public static int TelemetryLogSegments(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
-		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"TELEMETRY_LOG_SEGMENTS\"",
-				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
-				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
-
-			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region TelemetryLogBuffers
-
-		public static int TelemetryLogBuffers(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
-		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"TELEMETRY_LOG_BUFFERS\"",
-				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
-				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
-
-			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region TelemetryLicense
-
-		public static int TelemetryLicense(this HXEDB dataConnection, DateTime? SNAPSHOT_ID, out int? WAS_CANCELLED)
-		{
-			var ret = dataConnection.ExecuteProc("\"_SYS_STATISTICS\".\"TELEMETRY_LICENSE\"",
-				new DataParameter("SNAPSHOT_ID",   SNAPSHOT_ID,   DataType.Timestamp),
-				new DataParameter("WAS_CANCELLED", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
-
-			WAS_CANCELLED = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["WAS_CANCELLED"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region PersonSelectByKey
-
-		public static IEnumerable<PersonSelectByKeyResult0> PersonSelectByKey0(this HXEDB dataConnection, int? ID)
-		{
-			return dataConnection.QueryProc<PersonSelectByKeyResult0>("\"TESTHANAODBC\".\"Person_SelectByKey\"",
-				new DataParameter("ID", ID, DataType.Int32));
-		}
-
-		public partial class PersonSelectByKeyResult0
-		{
-			public int     PersonID   { get; set; }
-			public string  FirstName  { get; set; } = null!;
-			public string  LastName   { get; set; } = null!;
-			public string? MiddleName { get; set; }
-			public string  Gender     { get; set; } = null!;
-		}
-
-		#endregion
-
-		#region AddIssue792Record
-
-		public static int AddIssue792Record(this HXEDB dataConnection)
-		{
-			return dataConnection.ExecuteProc("\"TESTHANA\".\"AddIssue792Record\"");
-		}
-
-		#endregion
-
-		#region PrdGlobalEccCvMARAproc
-
-		public static IEnumerable<PrdGlobalEccCvMARAprocResult> PrdGlobalEccCvMARAproc(this HXEDB dataConnection)
-		{
-			var ms = dataConnection.MappingSchema;
-
-			return dataConnection.QueryProc(dataReader =>
-				new PrdGlobalEccCvMARAprocResult
-				{
-					id      = Converter.ChangeTypeTo<int?>   (dataReader.GetValue(0), ms),
-					Column2 = Converter.ChangeTypeTo<string?>(dataReader.GetValue(1), ms),
-				},
-				"\"TESTHANA\".\"prd.global.ecc/CV_MARAproc\"");
-		}
-
-		public partial class PrdGlobalEccCvMARAprocResult
-		{
-			               public int?    id      { get; set; }
-			[Column("id")] public string? Column2 { get; set; }
-		}
-
-		#endregion
-
-		#region DROPEXISTINGFUNCTION
-
-		public static int DROPEXISTINGFUNCTION(this HXEDB dataConnection, string? FUNCTIONNAME, string? SCHEMANAME)
-		{
-			return dataConnection.ExecuteProc("\"TESTHANAODBC\".\"DROPEXISTINGFUNCTION\"",
-				new DataParameter("FUNCTIONNAME", FUNCTIONNAME, DataType.VarChar),
-				new DataParameter("SCHEMANAME",   SCHEMANAME,   DataType.VarChar));
-		}
-
-		#endregion
-
-		#region DROPEXISTINGVIEW
-
-		public static int DROPEXISTINGVIEW(this HXEDB dataConnection, string? VIEWNAME, string? SCHEMANAME)
-		{
-			return dataConnection.ExecuteProc("\"TESTHANAODBC\".\"DROPEXISTINGVIEW\"",
-				new DataParameter("VIEWNAME",   VIEWNAME,   DataType.VarChar),
-				new DataParameter("SCHEMANAME", SCHEMANAME, DataType.VarChar));
-		}
-
-		#endregion
-
-		#region DROPCONSTRAINTFROMTABLE
-
-		public static int DROPCONSTRAINTFROMTABLE(this HXEDB dataConnection, string? TABLENAME, string? CONSTRAINTNAME, string? SCHEMANAME)
-		{
-			return dataConnection.ExecuteProc("\"TESTHANAODBC\".\"DROPCONSTRAINTFROMTABLE\"",
-				new DataParameter("TABLENAME",      TABLENAME,      DataType.VarChar),
-				new DataParameter("CONSTRAINTNAME", CONSTRAINTNAME, DataType.VarChar),
-				new DataParameter("SCHEMANAME",     SCHEMANAME,     DataType.VarChar));
-		}
-
-		#endregion
-
-		#region OutRefEnumTest
-
-		public static int OutRefEnumTest(this HXEDB dataConnection, string? STR, out string? OUTPUTSTR, ref string? INPUTOUTPUTSTR)
-		{
-			var ret = dataConnection.ExecuteProc("\"TESTHANA\".\"OutRefEnumTest\"",
-				new DataParameter("STR",            STR,            DataType.VarChar),
-				new DataParameter("OUTPUTSTR", null,      DataType.VarChar) { Direction = ParameterDirection.Output, Size = 50 },
-				new DataParameter("INPUTOUTPUTSTR", INPUTOUTPUTSTR, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
-
-			OUTPUTSTR      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
-			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region DROPEXISTINGTABLE
-
-		public static int DROPEXISTINGTABLE(this HXEDB dataConnection, string? TABLENAME, string? SCHEMANAME)
-		{
-			return dataConnection.ExecuteProc("\"TESTHANAODBC\".\"DROPEXISTINGTABLE\"",
-				new DataParameter("TABLENAME",  TABLENAME,  DataType.VarChar),
-				new DataParameter("SCHEMANAME", SCHEMANAME, DataType.VarChar));
-		}
-
-		#endregion
-
-		#region DROPEXISTINGPROCEDURE
-
-		public static int DROPEXISTINGPROCEDURE(this HXEDB dataConnection, string? PROCEDURENAME, string? SCHEMANAME)
-		{
-			return dataConnection.ExecuteProc("\"TESTHANAODBC\".\"DROPEXISTINGPROCEDURE\"",
-				new DataParameter("PROCEDURENAME", PROCEDURENAME, DataType.VarChar),
-				new DataParameter("SCHEMANAME",    SCHEMANAME,    DataType.VarChar));
-		}
-
-		#endregion
-
-		#region PersonSelectAll
-
-		public static IEnumerable<PersonSelectAllResult0> PersonSelectAll0(this HXEDB dataConnection)
-		{
-			return dataConnection.QueryProc<PersonSelectAllResult0>("\"TESTHANA\".\"Person_SelectAll\"");
-		}
-
-		public partial class PersonSelectAllResult0
-		{
-			public int     PersonID   { get; set; }
-			public string  FirstName  { get; set; } = null!;
-			public string  LastName   { get; set; } = null!;
-			public string? MiddleName { get; set; }
-			public string  Gender     { get; set; } = null!;
-		}
-
-		#endregion
-
-		#region PersonInsertOutputParameter
-
-		public static int PersonInsertOutputParameter0(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER, out int? PERSONID)
-		{
-			var ret = dataConnection.ExecuteProc("\"TESTHANA\".\"Person_Insert_OutputParameter\"",
-				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
-				new DataParameter("LASTNAME", LASTNAME, DataType.NVarChar),
-				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar),
-				new DataParameter("GENDER",   GENDER,   DataType.Char),
-				new DataParameter("PERSONID", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
-
-			PERSONID = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
 		#region PatientSelectByName
 
 		public static IEnumerable<PatientSelectByNameResult> PatientSelectByName(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME)
 		{
-			return dataConnection.QueryProc<PatientSelectByNameResult>("\"TESTHANA\".\"Patient_SelectByName\"",
+			return dataConnection.QueryProc<PatientSelectByNameResult>("\"TESTHANAODBC\".\"Patient_SelectByName\"",
 				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
 				new DataParameter("LASTNAME",  LASTNAME,  DataType.NVarChar));
 		}
@@ -10984,6 +10770,45 @@ namespace SapHanaDataContext
 			public string? MiddleName { get; set; }
 			public string? Gender     { get; set; }
 			public string? Diagnosis  { get; set; }
+		}
+
+		#endregion
+
+		#region OutRefTest
+
+		public static int OutRefTest(this HXEDB dataConnection, int? ID, out int? OUTPUTID, ref int? INPUTOUTPUTID, string? STR, out string? OUTPUTSTR, ref string? INPUTOUTPUTSTR)
+		{
+			var ret = dataConnection.ExecuteProc("\"TESTHANAODBC\".\"OutRefTest\"",
+				new DataParameter("ID",             ID,             DataType.Int32),
+				new DataParameter("OUTPUTID", null,       DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 },
+				new DataParameter("INPUTOUTPUTID",  INPUTOUTPUTID,  DataType.Int32) { Direction = ParameterDirection.InputOutput, Size = 10 },
+				new DataParameter("STR",            STR,            DataType.VarChar),
+				new DataParameter("OUTPUTSTR", null,      DataType.VarChar) { Direction = ParameterDirection.Output, Size = 50 },
+				new DataParameter("INPUTOUTPUTSTR", INPUTOUTPUTSTR, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
+
+			OUTPUTID       = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTID"]).      Value);
+			INPUTOUTPUTID  = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTID"]). Value);
+			OUTPUTSTR      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
+			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region OutRefEnumTest
+
+		public static int OutRefEnumTest(this HXEDB dataConnection, string? STR, out string? OUTPUTSTR, ref string? INPUTOUTPUTSTR)
+		{
+			var ret = dataConnection.ExecuteProc("\"TESTHANAODBC\".\"OutRefEnumTest\"",
+				new DataParameter("STR",            STR,            DataType.VarChar),
+				new DataParameter("OUTPUTSTR", null,      DataType.VarChar) { Direction = ParameterDirection.Output, Size = 50 },
+				new DataParameter("INPUTOUTPUTSTR", INPUTOUTPUTSTR, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
+
+			OUTPUTSTR      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
+			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
+
+			return ret;
 		}
 
 		#endregion
@@ -11002,14 +10827,23 @@ namespace SapHanaDataContext
 
 		#endregion
 
+		#region AddIssue792Record
+
+		public static int AddIssue792Record(this HXEDB dataConnection)
+		{
+			return dataConnection.ExecuteProc("\"TESTHANA\".\"AddIssue792Record\"");
+		}
+
+		#endregion
+
 		#region PatientSelectAll
 
-		public static IEnumerable<PatientSelectAllResult0> PatientSelectAll0(this HXEDB dataConnection)
+		public static IEnumerable<PatientSelectAllResult> PatientSelectAll(this HXEDB dataConnection)
 		{
-			return dataConnection.QueryProc<PatientSelectAllResult0>("\"TESTHANAODBC\".\"Patient_SelectAll\"");
+			return dataConnection.QueryProc<PatientSelectAllResult>("\"TESTHANAODBC\".\"Patient_SelectAll\"");
 		}
 
-		public partial class PatientSelectAllResult0
+		public partial class PatientSelectAllResult
 		{
 			public int?    PersonID   { get; set; }
 			public string? FirstName  { get; set; }
@@ -11017,49 +10851,6 @@ namespace SapHanaDataContext
 			public string? MiddleName { get; set; }
 			public string? Gender     { get; set; }
 			public string? Diagnosis  { get; set; }
-		}
-
-		#endregion
-
-		#region PatientSelectByName
-
-		public static IEnumerable<PatientSelectByNameResult0> PatientSelectByName0(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME)
-		{
-			return dataConnection.QueryProc<PatientSelectByNameResult0>("\"TESTHANAODBC\".\"Patient_SelectByName\"",
-				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
-				new DataParameter("LASTNAME",  LASTNAME,  DataType.NVarChar));
-		}
-
-		public partial class PatientSelectByNameResult0
-		{
-			public int?    PersonID   { get; set; }
-			public string? FirstName  { get; set; }
-			public string? LastName   { get; set; }
-			public string? MiddleName { get; set; }
-			public string? Gender     { get; set; }
-			public string? Diagnosis  { get; set; }
-		}
-
-		#endregion
-
-		#region OutRefTest
-
-		public static int OutRefTest0(this HXEDB dataConnection, int? ID, out int? OUTPUTID, ref int? INPUTOUTPUTID, string? STR, out string? OUTPUTSTR, ref string? INPUTOUTPUTSTR)
-		{
-			var ret = dataConnection.ExecuteProc("\"TESTHANAODBC\".\"OutRefTest\"",
-				new DataParameter("ID",             ID,             DataType.Int32),
-				new DataParameter("OUTPUTID", null,       DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 },
-				new DataParameter("INPUTOUTPUTID",  INPUTOUTPUTID,  DataType.Int32) { Direction = ParameterDirection.InputOutput, Size = 10 },
-				new DataParameter("STR",            STR,            DataType.VarChar),
-				new DataParameter("OUTPUTSTR", null,      DataType.VarChar) { Direction = ParameterDirection.Output, Size = 50 },
-				new DataParameter("INPUTOUTPUTSTR", INPUTOUTPUTSTR, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
-
-			OUTPUTID       = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTID"]).      Value);
-			INPUTOUTPUTID  = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTID"]). Value);
-			OUTPUTSTR      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
-			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
-
-			return ret;
 		}
 
 		#endregion
@@ -11094,19 +10885,134 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region OutRefEnumTest
+		#region PersonSelectByKey
 
-		public static int OutRefEnumTest0(this HXEDB dataConnection, string? STR, out string? OUTPUTSTR, ref string? INPUTOUTPUTSTR)
+		public static IEnumerable<PersonSelectByKeyResult0> PersonSelectByKey0(this HXEDB dataConnection, int? ID)
 		{
-			var ret = dataConnection.ExecuteProc("\"TESTHANAODBC\".\"OutRefEnumTest\"",
-				new DataParameter("STR",            STR,            DataType.VarChar),
-				new DataParameter("OUTPUTSTR", null,      DataType.VarChar) { Direction = ParameterDirection.Output, Size = 50 },
-				new DataParameter("INPUTOUTPUTSTR", INPUTOUTPUTSTR, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
+			return dataConnection.QueryProc<PersonSelectByKeyResult0>("\"TESTHANAODBC\".\"Person_SelectByKey\"",
+				new DataParameter("ID", ID, DataType.Int32));
+		}
 
-			OUTPUTSTR      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
-			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
+		public partial class PersonSelectByKeyResult0
+		{
+			public int     PersonID   { get; set; }
+			public string  FirstName  { get; set; } = null!;
+			public string  LastName   { get; set; } = null!;
+			public string? MiddleName { get; set; }
+			public string  Gender     { get; set; } = null!;
+		}
+
+		#endregion
+
+		#region PersonSelectAll
+
+		public static IEnumerable<PersonSelectAllResult> PersonSelectAll(this HXEDB dataConnection)
+		{
+			return dataConnection.QueryProc<PersonSelectAllResult>("\"TESTHANAODBC\".\"Person_SelectAll\"");
+		}
+
+		public partial class PersonSelectAllResult
+		{
+			public int     PersonID   { get; set; }
+			public string  FirstName  { get; set; } = null!;
+			public string  LastName   { get; set; } = null!;
+			public string? MiddleName { get; set; }
+			public string  Gender     { get; set; } = null!;
+		}
+
+		#endregion
+
+		#region PersonSelectByName
+
+		public static IEnumerable<PersonSelectByNameResult0> PersonSelectByName0(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME)
+		{
+			return dataConnection.QueryProc<PersonSelectByNameResult0>("\"TESTHANAODBC\".\"Person_SelectByName\"",
+				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
+				new DataParameter("LASTNAME",  LASTNAME,  DataType.NVarChar));
+		}
+
+		public partial class PersonSelectByNameResult0
+		{
+			public int     PersonID   { get; set; }
+			public string  FirstName  { get; set; } = null!;
+			public string  LastName   { get; set; } = null!;
+			public string? MiddleName { get; set; }
+			public string  Gender     { get; set; } = null!;
+		}
+
+		#endregion
+
+		#region PersonSelectListByName
+
+		public static IEnumerable<PersonSelectListByNameResult0> PersonSelectListByName0(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME)
+		{
+			return dataConnection.QueryProc<PersonSelectListByNameResult0>("\"TESTHANAODBC\".\"Person_SelectListByName\"",
+				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
+				new DataParameter("LASTNAME",  LASTNAME,  DataType.NVarChar));
+		}
+
+		public partial class PersonSelectListByNameResult0
+		{
+			public int     PersonID   { get; set; }
+			public string  FirstName  { get; set; } = null!;
+			public string  LastName   { get; set; } = null!;
+			public string? MiddleName { get; set; }
+			public string  Gender     { get; set; } = null!;
+		}
+
+		#endregion
+
+		#region PersonInsert
+
+		public static int PersonInsert0(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
+		{
+			return dataConnection.ExecuteProc("\"TESTHANAODBC\".\"Person_Insert\"",
+				new DataParameter("FIRSTNAME",  FIRSTNAME,  DataType.NVarChar),
+				new DataParameter("LASTNAME",   LASTNAME,   DataType.NVarChar),
+				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar),
+				new DataParameter("GENDER",     GENDER,     DataType.Char));
+		}
+
+		#endregion
+
+		#region PersonInsertOutputParameter
+
+		public static int PersonInsertOutputParameter0(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER, out int? PERSONID)
+		{
+			var ret = dataConnection.ExecuteProc("\"TESTHANAODBC\".\"Person_Insert_OutputParameter\"",
+				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
+				new DataParameter("LASTNAME", LASTNAME, DataType.NVarChar),
+				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar),
+				new DataParameter("GENDER",   GENDER,   DataType.Char),
+				new DataParameter("PERSONID", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+
+			PERSONID = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).Value);
 
 			return ret;
+		}
+
+		#endregion
+
+		#region PersonUpdate
+
+		public static int PersonUpdate0(this HXEDB dataConnection, int? PERSONID, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
+		{
+			return dataConnection.ExecuteProc("\"TESTHANAODBC\".\"Person_Update\"",
+				new DataParameter("PERSONID",   PERSONID,   DataType.Int32),
+				new DataParameter("FIRSTNAME",  FIRSTNAME,  DataType.NVarChar),
+				new DataParameter("LASTNAME",   LASTNAME,   DataType.NVarChar),
+				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar),
+				new DataParameter("GENDER",     GENDER,     DataType.Char));
+		}
+
+		#endregion
+
+		#region PersonDelete
+
+		public static int PersonDelete(this HXEDB dataConnection, int? PERSONID)
+		{
+			return dataConnection.ExecuteProc("\"TESTHANAODBC\".\"Person_Delete\"",
+				new DataParameter("PERSONID", PERSONID, DataType.Int32));
 		}
 
 		#endregion
@@ -11180,17 +11086,6 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region DROPEXISTINGTABLE
-
-		public static int DROPEXISTINGTABLE0(this HXEDB dataConnection, string? TABLENAME, string? SCHEMANAME)
-		{
-			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPEXISTINGTABLE\"",
-				new DataParameter("TABLENAME",  TABLENAME,  DataType.VarChar),
-				new DataParameter("SCHEMANAME", SCHEMANAME, DataType.VarChar));
-		}
-
-		#endregion
-
 		#region DROPEXISTINGPROCEDURE
 
 		public static int DROPEXISTINGPROCEDURE0(this HXEDB dataConnection, string? PROCEDURENAME, string? SCHEMANAME)
@@ -11213,25 +11108,109 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region DROPEXISTINGVIEW
+		#region PersonSelectAll
 
-		public static int DROPEXISTINGVIEW0(this HXEDB dataConnection, string? VIEWNAME, string? SCHEMANAME)
+		public static IEnumerable<PersonSelectAllResult0> PersonSelectAll0(this HXEDB dataConnection)
 		{
-			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPEXISTINGVIEW\"",
-				new DataParameter("VIEWNAME",   VIEWNAME,   DataType.VarChar),
-				new DataParameter("SCHEMANAME", SCHEMANAME, DataType.VarChar));
+			return dataConnection.QueryProc<PersonSelectAllResult0>("\"TESTHANA\".\"Person_SelectAll\"");
+		}
+
+		public partial class PersonSelectAllResult0
+		{
+			public int     PersonID   { get; set; }
+			public string  FirstName  { get; set; } = null!;
+			public string  LastName   { get; set; } = null!;
+			public string? MiddleName { get; set; }
+			public string  Gender     { get; set; } = null!;
 		}
 
 		#endregion
 
-		#region DROPCONSTRAINTFROMTABLE
+		#region PersonDelete
 
-		public static int DROPCONSTRAINTFROMTABLE0(this HXEDB dataConnection, string? TABLENAME, string? CONSTRAINTNAME, string? SCHEMANAME)
+		public static int PersonDelete0(this HXEDB dataConnection, int? PERSONID)
 		{
-			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPCONSTRAINTFROMTABLE\"",
-				new DataParameter("TABLENAME",      TABLENAME,      DataType.VarChar),
-				new DataParameter("CONSTRAINTNAME", CONSTRAINTNAME, DataType.VarChar),
-				new DataParameter("SCHEMANAME",     SCHEMANAME,     DataType.VarChar));
+			return dataConnection.ExecuteProc("\"TESTHANA\".\"Person_Delete\"",
+				new DataParameter("PERSONID", PERSONID, DataType.Int32));
+		}
+
+		#endregion
+
+		#region PatientSelectAll
+
+		public static IEnumerable<PatientSelectAllResult0> PatientSelectAll0(this HXEDB dataConnection)
+		{
+			return dataConnection.QueryProc<PatientSelectAllResult0>("\"TESTHANA\".\"Patient_SelectAll\"");
+		}
+
+		public partial class PatientSelectAllResult0
+		{
+			public int?    PersonID   { get; set; }
+			public string? FirstName  { get; set; }
+			public string? LastName   { get; set; }
+			public string? MiddleName { get; set; }
+			public string? Gender     { get; set; }
+			public string? Diagnosis  { get; set; }
+		}
+
+		#endregion
+
+		#region PatientSelectByName
+
+		public static IEnumerable<PatientSelectByNameResult0> PatientSelectByName0(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME)
+		{
+			return dataConnection.QueryProc<PatientSelectByNameResult0>("\"TESTHANA\".\"Patient_SelectByName\"",
+				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
+				new DataParameter("LASTNAME",  LASTNAME,  DataType.NVarChar));
+		}
+
+		public partial class PatientSelectByNameResult0
+		{
+			public int?    PersonID   { get; set; }
+			public string? FirstName  { get; set; }
+			public string? LastName   { get; set; }
+			public string? MiddleName { get; set; }
+			public string? Gender     { get; set; }
+			public string? Diagnosis  { get; set; }
+		}
+
+		#endregion
+
+		#region OutRefTest
+
+		public static int OutRefTest0(this HXEDB dataConnection, int? ID, out int? OUTPUTID, ref int? INPUTOUTPUTID, string? STR, out string? OUTPUTSTR, ref string? INPUTOUTPUTSTR)
+		{
+			var ret = dataConnection.ExecuteProc("\"TESTHANA\".\"OutRefTest\"",
+				new DataParameter("ID",             ID,             DataType.Int32),
+				new DataParameter("OUTPUTID", null,       DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 },
+				new DataParameter("INPUTOUTPUTID",  INPUTOUTPUTID,  DataType.Int32) { Direction = ParameterDirection.InputOutput, Size = 10 },
+				new DataParameter("STR",            STR,            DataType.VarChar),
+				new DataParameter("OUTPUTSTR", null,      DataType.VarChar) { Direction = ParameterDirection.Output, Size = 50 },
+				new DataParameter("INPUTOUTPUTSTR", INPUTOUTPUTSTR, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
+
+			OUTPUTID       = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTID"]).      Value);
+			INPUTOUTPUTID  = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTID"]). Value);
+			OUTPUTSTR      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
+			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region OutRefEnumTest
+
+		public static int OutRefEnumTest0(this HXEDB dataConnection, string? STR, out string? OUTPUTSTR, ref string? INPUTOUTPUTSTR)
+		{
+			var ret = dataConnection.ExecuteProc("\"TESTHANA\".\"OutRefEnumTest\"",
+				new DataParameter("STR",            STR,            DataType.VarChar),
+				new DataParameter("OUTPUTSTR", null,      DataType.VarChar) { Direction = ParameterDirection.Output, Size = 50 },
+				new DataParameter("INPUTOUTPUTSTR", INPUTOUTPUTSTR, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
+
+			OUTPUTSTR      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
+			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
+
+			return ret;
 		}
 
 		#endregion
@@ -11264,25 +11243,25 @@ namespace SapHanaDataContext
 				t.QueryId == QueryId);
 		}
 
-		public static AllType Find(this ITable<AllType> table, int ID)
-		{
-			return table.FirstOrDefault(t =>
-				t.ID == ID);
-		}
-
 		public static TESTHANAODBC_AllType Find(this ITable<TESTHANAODBC_AllType> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static AllTypesGeo Find(this ITable<AllTypesGeo> table, int ID)
+		public static AllType Find(this ITable<AllType> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
 		public static TESTHANAODBC_AllTypesGeo Find(this ITable<TESTHANAODBC_AllTypesGeo> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
+		public static AllTypesGeo Find(this ITable<AllTypesGeo> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
@@ -11647,13 +11626,6 @@ namespace SapHanaDataContext
 				t.VALUE        == VALUE);
 		}
 
-		public static IndexTable Find(this ITable<IndexTable> table, int PKField1, int PKField2)
-		{
-			return table.FirstOrDefault(t =>
-				t.PKField1 == PKField1 &&
-				t.PKField2 == PKField2);
-		}
-
 		public static TESTHANAODBC_IndexTable Find(this ITable<TESTHANAODBC_IndexTable> table, int PKField1, int PKField2)
 		{
 			return table.FirstOrDefault(t =>
@@ -11661,7 +11633,7 @@ namespace SapHanaDataContext
 				t.PKField2 == PKField2);
 		}
 
-		public static IndexTable2 Find(this ITable<IndexTable2> table, int PKField1, int PKField2)
+		public static IndexTable Find(this ITable<IndexTable> table, int PKField1, int PKField2)
 		{
 			return table.FirstOrDefault(t =>
 				t.PKField1 == PKField1 &&
@@ -11669,6 +11641,13 @@ namespace SapHanaDataContext
 		}
 
 		public static TESTHANAODBC_IndexTable2 Find(this ITable<TESTHANAODBC_IndexTable2> table, int PKField1, int PKField2)
+		{
+			return table.FirstOrDefault(t =>
+				t.PKField1 == PKField1 &&
+				t.PKField2 == PKField2);
+		}
+
+		public static IndexTable2 Find(this ITable<IndexTable2> table, int PKField1, int PKField2)
 		{
 			return table.FirstOrDefault(t =>
 				t.PKField1 == PKField1 &&
@@ -11815,6 +11794,14 @@ namespace SapHanaDataContext
 				t.AdminUserId == AdminUserId);
 		}
 
+		public static _SYS_EPM_ModelMigration Find(this ITable<_SYS_EPM_ModelMigration> table, string SchemaName, string ModelName, int MigrationId)
+		{
+			return table.FirstOrDefault(t =>
+				t.SchemaName  == SchemaName &&
+				t.ModelName   == ModelName  &&
+				t.MigrationId == MigrationId);
+		}
+
 		public static _SYS_XS_OauthAccessToken Find(this ITable<_SYS_XS_OauthAccessToken> table, string ClientPackage, string ClientName, string USER, byte TokenType)
 		{
 			return table.FirstOrDefault(t =>
@@ -11878,13 +11865,13 @@ namespace SapHanaDataContext
 				t.PersonID == PersonID);
 		}
 
-		public static TESTHANAODBC_Person Find(this ITable<TESTHANAODBC_Person> table, int PersonID)
+		public static Person Find(this ITable<Person> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
 		}
 
-		public static Person Find(this ITable<Person> table, int PersonID)
+		public static TESTHANAODBC_Person Find(this ITable<TESTHANAODBC_Person> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
@@ -11933,13 +11920,13 @@ namespace SapHanaDataContext
 				t.ReadView   == ReadView);
 		}
 
-		public static PrdGlobalEccCvMara Find(this ITable<PrdGlobalEccCvMara> table, int Id)
+		public static TESTHANAODBC_PrdGlobalEccCvMara Find(this ITable<TESTHANAODBC_PrdGlobalEccCvMara> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static TESTHANAODBC_PrdGlobalEccCvMara Find(this ITable<TESTHANAODBC_PrdGlobalEccCvMara> table, int Id)
+		public static PrdGlobalEccCvMara Find(this ITable<PrdGlobalEccCvMara> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
@@ -12523,22 +12510,16 @@ namespace SapHanaDataContext
 				t.CONTAINER  == CONTAINER);
 		}
 
-		public static TestIdentity Find(this ITable<TestIdentity> table, int ID)
-		{
-			return table.FirstOrDefault(t =>
-				t.ID == ID);
-		}
-
 		public static TESTHANAODBC_TestIdentity Find(this ITable<TESTHANAODBC_TestIdentity> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static TestMerge1 Find(this ITable<TestMerge1> table, int Id)
+		public static TestIdentity Find(this ITable<TestIdentity> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
-				t.Id == Id);
+				t.ID == ID);
 		}
 
 		public static TESTHANAODBC_TestMerge1 Find(this ITable<TESTHANAODBC_TestMerge1> table, int Id)
@@ -12547,13 +12528,19 @@ namespace SapHanaDataContext
 				t.Id == Id);
 		}
 
-		public static TestMerge2 Find(this ITable<TestMerge2> table, int Id)
+		public static TestMerge1 Find(this ITable<TestMerge1> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
 		public static TESTHANAODBC_TestMerge2 Find(this ITable<TESTHANAODBC_TestMerge2> table, int Id)
+		{
+			return table.FirstOrDefault(t =>
+				t.Id == Id);
+		}
+
+		public static TestMerge2 Find(this ITable<TestMerge2> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);

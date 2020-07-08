@@ -69,7 +69,36 @@ From **NuGet**:
 
 ## Configuring connection strings
 
-### .NET
+
+### Using Connection Options Builder
+
+You can configure connection options from code using [`LinqToDbConnectionOptionsBuilder`](https://linq2db.github.io/api/LinqToDB.Configuration.LinqToDbConnectionOptionsBuilder.html) class (check class for available options):
+
+```cs
+// create options builder
+var builder = new LinqToDbConnectionOptionsBuilder();
+
+// configure connection string
+builder.UseSqlServer(connectionString);
+
+// or using custom connection factory
+b.UseConnectionFactory(
+    SqlServerTools.GetDataProvider(
+        SqlServerVersion.v2017,
+        SqlServerProvider.MicrosoftDataSqlClient),
+    () =>
+    {
+        var cn = new SqlConnection(connectionString);
+        cn.AccessToken = accessToken;
+        return cn;
+    });
+
+// pass configured options to data connection constructor
+var dc = new DataConnection(builder.Build());
+```
+
+
+### Using Config File (.NET Framework)
 
 In your `web.config` or `app.config` make sure you have a connection string (check [this file](https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/ProviderName.cs) for supported providers):
 
@@ -81,7 +110,7 @@ In your `web.config` or `app.config` make sure you have a connection string (che
 </connectionStrings>
 ```
 
-### .NET Core
+### Using Connection String Settings Provider
 
 .Net Core does not support `System.Configuration` so to configure connection strings you should implement `ILinqToDBSettings`, for example:
 
@@ -124,7 +153,9 @@ And later just set on program startup before the first query is done (Startup.cs
 DataConnection.DefaultSettings = new MySettings();
 ```
 
-You can also use same for regular .NET.
+### ASP.NET Core
+
+See [article](https://linq2db.github.io/articles/get-started/asp-dotnet-core/index.html).
 
 ## Now let's create a **POCO** class
 
