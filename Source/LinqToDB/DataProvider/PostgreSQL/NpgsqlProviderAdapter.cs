@@ -242,6 +242,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			if (writeAsyncMethod == null) return null;
 			if (writeAsyncMethod.ReturnType != typeof(Task)) return null;
 
+			// create a reference to WriteAsync<object>(...)
+			var writeAsyncMethodTyped = writeAsyncMethod.MakeGenericMethod(typeof(object));
+
 			// find the MethodInfo of the instance_ get-property of NpgsqlBinaryImporter
 			var instance_GetProperty = typeof(NpgsqlBinaryImporter).GetProperty(nameof(NpgsqlBinaryImporter.instance_));
 			if (instance_GetProperty == null) throw new ApplicationException($"Cannot find {nameof(NpgsqlBinaryImporter)}.{nameof(NpgsqlBinaryImporter.instance_)} property.");
@@ -253,19 +256,19 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			var pCancellationToken = Expression.Parameter(typeof(CancellationToken));
 
 			// convertedDbType = (_dbTypeType)pDbType
-			var convertedDbType = Expression.Convert(Expression.Constant(pDbType), _dbTypeType);
+			var convertedDbType = Expression.Convert(pDbType, _dbTypeType);
 			// importerInternal = pImporter.instance_
 			var importerInternal = Expression.MakeMemberAccess(pImporter, instance_GetProperty);
 			// typedImporter = (_npgsqlBinaryImporterType)pImporter.instance_
 			var typedImporter = Expression.Convert(importerInternal, _npgsqlBinaryImporterType);
 
-			// body = ((_npgSqlBinaryImporterType)pImporter.instance_).WriteAsync(pValue, (_dbTypeType)pDbType, pCancellationToken)
+			// body = ((_npgSqlBinaryImporterType)pImporter.instance_).WriteAsync<object>(pValue, (_dbTypeType)pDbType, pCancellationToken)
 			var body = Expression.Call(
 				typedImporter,
-				writeAsyncMethod,
+				writeAsyncMethodTyped,
 				new Expression[] { pValue, convertedDbType, pCancellationToken });
 
-			// lambda = (pImporter, pValue, pDbType, pCancellationToken) => ((_npgSqlBinaryImporterType)pImporter.instance_).WriteAsync(pValue, (_dbTypeType)pDbType, pCancellationToken)
+			// lambda = (pImporter, pValue, pDbType, pCancellationToken) => ((_npgSqlBinaryImporterType)pImporter.instance_).WriteAsync<object>(pValue, (_dbTypeType)pDbType, pCancellationToken)
 			var lambda = Expression.Lambda<Func<NpgsqlBinaryImporter, object?, NpgsqlDbType, CancellationToken, Task>>(
 				body,
 				new ParameterExpression[] { pImporter, pValue, pDbType, pCancellationToken });
