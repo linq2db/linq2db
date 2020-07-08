@@ -228,7 +228,17 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		private Func<NpgsqlBinaryImporter, object?, NpgsqlDbType, CancellationToken, Task>? GetBinaryImporterWriteAsyncFunction()
 		{
 			// find the WriteAsync method, or return null if it cannot be found
-			var writeAsyncMethod = _npgsqlBinaryImporterType.GetMethod("WriteAsync", 1, new Type[] { typeof(object), _dbTypeType, typeof(CancellationToken) });
+			MethodInfo? writeAsyncMethod = null;
+#if NETCOREAPP2_1 || NETCOREAPP3_1 || NETSTANDARD2_1
+			writeAsyncMethod = _npgsqlBinaryImporterType.GetMethod("WriteAsync", 1, new Type[] { Type.MakeGenericMethodParameter(0), _dbTypeType, typeof(CancellationToken) });
+#elif NETSTANDARD2_0
+			writeAsyncMethod = _npgsqlBinaryImporterType.GetMethods().Where(x => x.Name == "WriteAsync" && 
+				x.GetGenericArguments().Length == 1 &&
+				x.GetParameters().Length == 3 &&
+				x.GetParameters()[0].ParameterType == x.GetGenericArguments()[0] &&
+				x.GetParameters()[1].ParameterType == _dbTypeType &&
+				x.GetParameters()[2].ParameterType == typeof(CancellationToken)).SingleOrDefault();
+#endif
 			if (writeAsyncMethod == null) return null;
 			if (writeAsyncMethod.ReturnType != typeof(Task)) return null;
 
