@@ -12,7 +12,7 @@
 
 		<PackageReference Include="System.Data.SQLite.Core" Version="1.0.113.1" />
 		<PackageReference Include="MySql.Data" Version="8.0.20" Alias="MySqlData" />
-		<PackageReference Include="MySqlConnector" Version="0.69.5" Alias="MySqlConnector" />
+		<PackageReference Include="MySqlConnector" Version="0.69.6" Alias="MySqlConnector" />
 		<PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="7.5.0" />
 		<PackageReference Include="AdoNetCore.AseClient" Version="0.18.0" />
 

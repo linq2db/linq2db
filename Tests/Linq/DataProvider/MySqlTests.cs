@@ -1614,8 +1614,7 @@ namespace Tests.DataProvider
 					assertColumn("MultiLineString"     , "byte[]", DataType.Undefined);
 					assertColumn("MultiPolygon"        , "byte[]", DataType.Undefined);
 					assertColumn("Geometry"            , "byte[]", DataType.Undefined);
-					// see https://github.com/mysql-net/MySqlConnector/issues/845
-					//assertColumn("GeometryCollection", "byte[]", DataType.Undefined);
+					assertColumn("GeometryCollection", "byte[]", DataType.Undefined);
 
 					assertColumn("Json"    , "string", DataType.Json);
 					assertColumn("Enum"    , "string", DataType.VarChar);
