@@ -3311,17 +3311,12 @@ namespace LinqToDB.Linq.Builder
 					{
 						var mc = (MethodCallExpression)expression;
 
-						// treat all extensions as scalar
-						if (GetExpressionAttribute(mc.Method) != null)
-							return false;
-
 						// process fabric methods
 
-						var isScalar = MappingSchema.IsScalarType(mc.Type);
-						if (!isScalar)
+						if (!MappingSchema.IsScalarType(mc.Type))
 							CollectParameters(mc.Type, mc.Method, mc.Arguments);
 
-						return members.Count > 0 || !isScalar;
+						return members.Count > 0;
 					}
 
 				case ExpressionType.NewArrayInit:
