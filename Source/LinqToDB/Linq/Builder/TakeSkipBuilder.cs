@@ -37,7 +37,7 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				BuildSkip(builder, sequence, sequence.SelectQuery.Select.SkipValue!, expr);
+				BuildSkip(builder, sequence, expr);
 			}
 
 			return sequence;
@@ -75,6 +75,14 @@ namespace LinqToDB.Linq.Builder
 			if (hints != null && sql.Select.SkipValue != null)
 				throw new LinqException("Take with hints could not be applied with Skip");
 
+			if (sql.Select.TakeValue != null)
+				expr = new SqlFunction(
+					typeof(int),
+					"CASE",
+					new SqlBinaryExpression(typeof(bool), sql.Select.TakeValue, "<", expr, Precedence.Comparison),
+					sql.Select.TakeValue,
+					expr);
+
 			sql.Select.Take(expr, hints);
 
 			if ( sql.Select.SkipValue != null &&
@@ -84,7 +92,7 @@ namespace LinqToDB.Linq.Builder
 					new SqlBinaryExpression(typeof(int), sql.Select.SkipValue, "+", sql.Select.TakeValue!, Precedence.Additive), hints);
 		}
 
-		static void BuildSkip(ExpressionBuilder builder, IBuildContext sequence, ISqlExpression prevSkipValue, ISqlExpression expr)
+		static void BuildSkip(ExpressionBuilder builder, IBuildContext sequence, ISqlExpression expr)
 		{
 			var sql = sequence.SelectQuery;
 
@@ -92,20 +100,16 @@ namespace LinqToDB.Linq.Builder
 				throw new LinqException("Skip could not be applied with Take with hints");
 
 			if (sql.Select.SkipValue != null)
-				expr = new SqlBinaryExpression(typeof(int), sql.Select.SkipValue, "+", expr, Precedence.Additive);
-
-			sql.Select.Skip(expr);
+				sql.Select.Skip(new SqlBinaryExpression(typeof(int), sql.Select.SkipValue, "+", expr, Precedence.Additive));
+			else
+				sql.Select.Skip(expr);
 
 			if (sql.Select.TakeValue != null)
 			{
 				if (builder.DataContext.SqlProviderFlags.GetIsSkipSupportedFlag(sql) ||
 					!builder.DataContext.SqlProviderFlags.IsTakeSupported)
 					sql.Select.Take(
-						new SqlBinaryExpression(typeof(int), sql.Select.TakeValue, "-", sql.Select.SkipValue!, Precedence.Additive), sql.Select.TakeHints);
-
-				if (prevSkipValue != null)
-					sql.Select.Skip(
-						new SqlBinaryExpression(typeof(int), prevSkipValue, "+", sql.Select.SkipValue!, Precedence.Additive));
+						new SqlBinaryExpression(typeof(int), sql.Select.TakeValue, "-", expr, Precedence.Additive), sql.Select.TakeHints);
 			}
 		}
 	}
