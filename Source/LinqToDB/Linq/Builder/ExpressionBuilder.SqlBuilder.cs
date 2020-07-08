@@ -3311,6 +3311,10 @@ namespace LinqToDB.Linq.Builder
 					{
 						var mc = (MethodCallExpression)expression;
 
+						// treat all extensions as scalar
+						if (GetExpressionAttribute(mc.Method) != null)
+							return false;
+
 						// process fabric methods
 
 						var isScalar = MappingSchema.IsScalarType(mc.Type);
