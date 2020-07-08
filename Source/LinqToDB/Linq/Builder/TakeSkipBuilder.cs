@@ -91,6 +91,9 @@ namespace LinqToDB.Linq.Builder
 			if (sql.Select.TakeHints != null)
 				throw new LinqException("Skip could not be applied with Take with hints");
 
+			if (sql.Select.SkipValue != null)
+				expr = new SqlBinaryExpression(typeof(int), sql.Select.SkipValue, "+", expr, Precedence.Additive);
+
 			sql.Select.Skip(expr);
 
 			if (sql.Select.TakeValue != null)

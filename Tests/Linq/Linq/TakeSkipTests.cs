@@ -775,5 +775,128 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void MultipleTake1([DataSources] string context)
+		{
+			var testData = new[]
+			{
+				new TakeSkipClass { Value = "PLUTO" },
+				new TakeSkipClass { Value = "PIPPO" },
+				new TakeSkipClass { Value = "PLUTO" },
+				new TakeSkipClass { Value = "BOLTO" }
+			};
+
+			using (var db = GetDataContext(context))
+			using (var tempTable = db.CreateLocalTable(testData))
+			{
+
+				var actual = tempTable
+					.OrderBy(t => t.Value)
+					.Take(3)
+					.Take(2)
+					.ToArray();
+
+				var expected = testData
+					.OrderBy(t => t.Value)
+					.Take(3)
+					.Take(2)
+					.ToArray();
+
+				Assert.AreEqual(expected, actual);
+			}
+		}
+
+		[Test]
+		public void MultipleTake2([DataSources] string context)
+		{
+			var testData = new[]
+			{
+				new TakeSkipClass { Value = "PLUTO" },
+				new TakeSkipClass { Value = "PIPPO" },
+				new TakeSkipClass { Value = "PLUTO" },
+				new TakeSkipClass { Value = "BOLTO" }
+			};
+
+			using (var db = GetDataContext(context))
+			using (var tempTable = db.CreateLocalTable(testData))
+			{
+
+				var actual = tempTable
+					.OrderBy(t => t.Value)
+					.Take(2)
+					.Take(3)
+					.ToArray();
+
+				var expected = testData
+					.OrderBy(t => t.Value)
+					.Take(2)
+					.Take(3)
+					.ToArray();
+
+				Assert.AreEqual(expected, actual);
+			}
+		}
+
+		[Test]
+		public void MultipleSkip1([DataSources] string context)
+		{
+			var testData = new[]
+			{
+				new TakeSkipClass { Value = "PLUTO" },
+				new TakeSkipClass { Value = "PIPPO" },
+				new TakeSkipClass { Value = "PLUTO" },
+				new TakeSkipClass { Value = "BOLTO" }
+			};
+
+			using (var db = GetDataContext(context))
+			using (var tempTable = db.CreateLocalTable(testData))
+			{
+
+				var actual = tempTable
+					.OrderBy(t => t.Value)
+					.Skip(1)
+					.Skip(2)
+					.ToArray();
+
+				var expected = testData
+					.OrderBy(t => t.Value)
+					.Skip(1)
+					.Skip(2)
+					.ToArray();
+
+				Assert.AreEqual(expected, actual);
+			}
+		}
+
+		[Test]
+		public void MultipleSkip2([DataSources] string context)
+		{
+			var testData = new[]
+			{
+				new TakeSkipClass { Value = "PLUTO" },
+				new TakeSkipClass { Value = "PIPPO" },
+				new TakeSkipClass { Value = "PLUTO" },
+				new TakeSkipClass { Value = "BOLTO" }
+			};
+
+			using (var db = GetDataContext(context))
+			using (var tempTable = db.CreateLocalTable(testData))
+			{
+
+				var actual = tempTable
+					.OrderBy(t => t.Value)
+					.Skip(2)
+					.Skip(1)
+					.ToArray();
+
+				var expected = testData
+					.OrderBy(t => t.Value)
+					.Skip(2)
+					.Skip(1)
+					.ToArray();
+
+				Assert.AreEqual(expected, actual);
+			}
+		}
 	}
 }
