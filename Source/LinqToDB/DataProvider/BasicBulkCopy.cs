@@ -46,14 +46,6 @@ namespace LinqToDB.DataProvider
 				default                        : return ProviderSpecificCopyAsync(table, options, source, cancellationToken);
 			}
 		}
-
-		protected static IEnumerable<T> AsyncToSyncEnumerable<T>(IAsyncEnumerator<T> enumerator)
-		{
-			while (enumerator.MoveNextAsync().Result)
-			{
-				yield return enumerator.Current;
-			}
-		}
 #endif
 
 		protected virtual BulkCopyRowsCopied ProviderSpecificCopy<T>(

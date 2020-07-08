@@ -6,6 +6,7 @@ using System.Linq;
 namespace LinqToDB.DataProvider.DB2
 {
 	using Data;
+	using LinqToDB.Common;
 	using System.Threading;
 	using System.Threading.Tasks;
 	using DB2BulkCopyOptions = DB2ProviderAdapter.DB2BulkCopyOptions;
@@ -76,7 +77,7 @@ namespace LinqToDB.DataProvider.DB2
 						return ProviderSpecificCopyImpl(
 							table,
 							options,
-							AsyncToSyncEnumerable(enumerator),
+							EnumerableHelper.AsyncToSyncEnumerable(enumerator),
 							dataConnection,
 							connection,
 							_provider.Adapter.BulkCopy,

@@ -7,6 +7,26 @@ namespace LinqToDB.Common
 {
 	internal class EnumerableHelper
 	{
+#if !NET45 && !NET46
+		public static IEnumerable<T> AsyncToSyncEnumerable<T>(IAsyncEnumerator<T> enumerator)
+		{
+			while (enumerator.MoveNextAsync().Result)
+			{
+				yield return enumerator.Current;
+			}
+		}
+
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+		public static async IAsyncEnumerable<T> SyncToAsyncEnumerable<T>(IEnumerable<T> enumerable)
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+		{
+			foreach (var item in enumerable)
+			{
+				yield return item;
+			}
+		}
+#endif
+
 		/// <summary>
 		/// Split enumerable source into batches of specified size.
 		/// Limitation: each batch could be enumerated only once or exception will be generated.

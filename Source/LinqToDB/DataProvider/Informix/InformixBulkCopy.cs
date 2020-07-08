@@ -8,6 +8,7 @@ namespace LinqToDB.DataProvider.Informix
 	using System.Threading;
 	using System.Threading.Tasks;
 	using Data;
+	using LinqToDB.Common;
 	using LinqToDB.SqlProvider;
 
 	class InformixBulkCopy : BasicBulkCopy
@@ -106,7 +107,7 @@ namespace LinqToDB.DataProvider.Informix
 					await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 					{
 						// call the synchronous provider-specific implementation
-						var syncSource = AsyncToSyncEnumerable(enumerator);
+						var syncSource = EnumerableHelper.AsyncToSyncEnumerable(enumerator);
 						if (_provider.Adapter.InformixBulkCopy != null)
 							return IDSProviderSpecificCopy(
 								table,

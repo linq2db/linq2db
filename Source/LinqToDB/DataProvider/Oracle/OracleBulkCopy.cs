@@ -7,6 +7,7 @@ using System.Linq;
 namespace LinqToDB.DataProvider.Oracle
 {
 	using Data;
+	using LinqToDB.Common;
 	using SqlProvider;
 	using System.Threading;
 	using System.Threading.Tasks;
@@ -105,7 +106,7 @@ namespace LinqToDB.DataProvider.Oracle
 			await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 			{
 				// call the synchronous provider-specific implementation
-				return ProviderSpecificCopy(table, options, AsyncToSyncEnumerable(enumerator));
+				return ProviderSpecificCopy(table, options, EnumerableHelper.AsyncToSyncEnumerable(enumerator));
 			}
 		}
 #endif

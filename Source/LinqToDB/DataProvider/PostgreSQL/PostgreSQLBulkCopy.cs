@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 using LinqToDB.SqlProvider;
@@ -51,10 +52,13 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			if (table.DataContext is DataConnection dataConnection)
+#if !NET45 && !NET46
+				return ProviderSpecificCopyImplAsync(dataConnection, table, options, EnumerableHelper.SyncToAsyncEnumerable(source), cancellationToken);
+#else
 				// call the synchronous provider-specific implementation,
 				//   as the asynchronous implementation is only available with .Net Standard
 				return Task.FromResult(ProviderSpecificCopyImpl(dataConnection, table, options, source));
-
+#endif
 			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
 		}
 
@@ -167,7 +171,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				var enumerator = source.GetAsyncEnumerator(cancellationToken);
 				await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 				{
-					return ProviderSpecificCopyImpl(dataConnection, table, options, AsyncToSyncEnumerable(enumerator));
+					return ProviderSpecificCopyImpl(dataConnection, table, options, EnumerableHelper.AsyncToSyncEnumerable(enumerator));
 				}
 			}
 
@@ -220,7 +224,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				var enumerator = source.GetAsyncEnumerator(cancellationToken);
 				await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 				{
-					return ProviderSpecificCopyImpl(dataConnection, table, options, AsyncToSyncEnumerable(enumerator));
+					return ProviderSpecificCopyImpl(dataConnection, table, options, EnumerableHelper.AsyncToSyncEnumerable(enumerator));
 				}
 			}
 			try
