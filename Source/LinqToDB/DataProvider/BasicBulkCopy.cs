@@ -47,7 +47,7 @@ namespace LinqToDB.DataProvider
 			}
 		}
 
-		protected static IEnumerable<T> AsyncToSync<T>(IAsyncEnumerator<T> enumerator)
+		protected static IEnumerable<T> AsyncToSyncEnumerable<T>(IAsyncEnumerator<T> enumerator)
 		{
 			while (enumerator.MoveNextAsync().Result)
 			{

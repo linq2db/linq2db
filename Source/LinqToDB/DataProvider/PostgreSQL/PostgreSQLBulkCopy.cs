@@ -167,7 +167,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				var enumerator = source.GetAsyncEnumerator(cancellationToken);
 				await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 				{
-					return ProviderSpecificCopyImpl(dataConnection, table, options, AsyncToSync(enumerator));
+					return ProviderSpecificCopyImpl(dataConnection, table, options, AsyncToSyncEnumerable(enumerator));
 				}
 			}
 
@@ -220,7 +220,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				var enumerator = source.GetAsyncEnumerator(cancellationToken);
 				await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 				{
-					return ProviderSpecificCopyImpl(dataConnection, table, options, AsyncToSync(enumerator));
+					return ProviderSpecificCopyImpl(dataConnection, table, options, AsyncToSyncEnumerable(enumerator));
 				}
 			}
 			try

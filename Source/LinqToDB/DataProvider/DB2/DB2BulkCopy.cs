@@ -76,7 +76,7 @@ namespace LinqToDB.DataProvider.DB2
 						return ProviderSpecificCopyImpl(
 							table,
 							options,
-							AsyncToSync(enumerator),
+							AsyncToSyncEnumerable(enumerator),
 							dataConnection,
 							connection,
 							_provider.Adapter.BulkCopy,

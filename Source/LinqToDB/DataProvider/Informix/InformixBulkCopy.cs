@@ -106,7 +106,7 @@ namespace LinqToDB.DataProvider.Informix
 					await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 					{
 						// call the synchronous provider-specific implementation
-						var syncSource = AsyncToSync(enumerator);
+						var syncSource = AsyncToSyncEnumerable(enumerator);
 						if (_provider.Adapter.InformixBulkCopy != null)
 							return IDSProviderSpecificCopy(
 								table,

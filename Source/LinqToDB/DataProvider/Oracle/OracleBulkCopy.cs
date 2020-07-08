@@ -105,7 +105,7 @@ namespace LinqToDB.DataProvider.Oracle
 			await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 			{
 				// call the synchronous provider-specific implementation
-				return ProviderSpecificCopy(table, options, AsyncToSync(enumerator));
+				return ProviderSpecificCopy(table, options, AsyncToSyncEnumerable(enumerator));
 			}
 		}
 #endif
