@@ -217,12 +217,12 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				case SqlServerVersion.v2000:
 				case SqlServerVersion.v2005:
-					ret = await MultipleRowsCopy2Async(helper, source, "", cancellationToken).
-						ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					ret = await MultipleRowsCopy2Async(helper, source, "", cancellationToken)
+						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 					break;
 				default: 
-					ret = await MultipleRowsCopy1Async(helper, source, cancellationToken).
-						ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					ret = await MultipleRowsCopy1Async(helper, source, cancellationToken)
+						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 					break;
 			}
 
@@ -247,12 +247,12 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				case SqlServerVersion.v2000:
 				case SqlServerVersion.v2005:
-					ret = await MultipleRowsCopy2Async(helper, source, "", cancellationToken).
-						ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					ret = await MultipleRowsCopy2Async(helper, source, "", cancellationToken)
+						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 					break;
 				default:
-					ret = await MultipleRowsCopy1Async(helper, source, cancellationToken).
-						ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					ret = await MultipleRowsCopy1Async(helper, source, cancellationToken)
+						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 					break;
 			}
 
