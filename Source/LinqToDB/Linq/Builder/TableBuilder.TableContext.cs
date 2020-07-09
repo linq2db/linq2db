@@ -928,7 +928,7 @@ namespace LinqToDB.Linq.Builder
 								{
 									new SqlInfo
 									(
-										SqlTable
+										SqlTable.All
 									)
 								};
 							}
