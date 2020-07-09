@@ -249,6 +249,15 @@ namespace LinqToDB.SqlQuery
 								break;
 							}
 
+						case QueryElementType.IsTruePredicate :
+							{
+								var expr = (SqlPredicate.IsTrue)e;
+								if (dic.TryGetValue(expr.Expr1,      out ex)) expr.Expr1      = ex;
+								if (dic.TryGetValue(expr.TrueValue,  out ex)) expr.TrueValue  = ex;
+								if (dic.TryGetValue(expr.FalseValue, out ex)) expr.FalseValue = ex;
+								break;
+							}
+						
 						case QueryElementType.LikePredicate :
 							{
 								var expr = (SqlPredicate.Like)e;
