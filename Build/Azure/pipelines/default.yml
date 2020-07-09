@@ -121,6 +121,12 @@ stages:
 
     - task: CopyFiles@2
       inputs:
+        targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp3.1/publish/scripts'
+        sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/scripts'
+      displayName: Copy test scripts for NETCOREAPP3.1
+
+    - task: CopyFiles@2
+      inputs:
         targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.1/publish/scripts'
         sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/scripts'
       displayName: Copy test scripts for NETCOREAPP2.1
