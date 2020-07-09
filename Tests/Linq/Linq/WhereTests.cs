@@ -1504,29 +1504,5 @@ namespace Tests.Linq
 					Assert.AreEqual(flag == null ? 0 : 1, Regex.Matches(sql, " AND ").Count);
 			}
 		}
-
-		[Test]
-		public void ExistsSqlTest1([DataSources(false)] string context)
-		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
-			{
-				db.Parent.Where(p => db.Child.Select(c => c.ParentID).Contains(p.ParentID)).Delete();
-
-				Assert.False(db.LastQuery!.ToLower().Contains("iif(exists(") || db.LastQuery!.ToLower().Contains("when exists("));
-			}
-		}
-
-		[Test]
-		public void ExistsSqlTest2([DataSources(false)] string context)
-		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
-			{
-				db.Parent.Where(p => p.Children.Any()).Delete();
-
-				Assert.False(db.LastQuery!.ToLower().Contains("iif(exists(") || db.LastQuery!.ToLower().Contains("when exists("));
-			}
-		}
 	}
 }
