@@ -498,6 +498,7 @@ using LinqToDB.Data;
 [Table(Name = "ProductsTemp")]
 public class ProductTemp
 {
+  [PrimaryKey]
   public int ProductID { get; set; }
 
   [Column(Name = "ProductName"), NotNull]
@@ -506,7 +507,8 @@ public class ProductTemp
   // ... other columns ...
 }
 
-list = List<ProductTemp>
+var list = new List<ProductTemp>();
+// populate list
 
 using (var db = new DbNorthwind())
 {
