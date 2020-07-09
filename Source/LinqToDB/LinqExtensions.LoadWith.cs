@@ -77,7 +77,7 @@ namespace LinqToDB
 			public Type ElementType        => _query.ElementType;
 			public IQueryProvider Provider => _query.Provider;
 
-			public override string ToString() => _query.ToString();
+			public override string ToString() => _query.ToString()!;
 		}
 
 		/// <summary>

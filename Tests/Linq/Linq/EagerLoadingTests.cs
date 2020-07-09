@@ -179,7 +179,7 @@ namespace Tests.Linq
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
-				var sql = db.Parent.LoadWith(p => p.Children).ToString();
+				var sql = db.Parent.LoadWith(p => p.Children).ToString()!;
 
 				Assert.False(sql.Contains("LoadWithQueryable"));
 
@@ -197,7 +197,7 @@ FROM
 		{
 			using (var db = GetDataContext(context))
 			{
-				var sql = db.Person.LoadWith(p => p.Patient).ToString();
+				var sql = db.Person.LoadWith(p => p.Patient).ToString()!;
 
 				Assert.False(sql.Contains("LoadWithQueryable"));
 
