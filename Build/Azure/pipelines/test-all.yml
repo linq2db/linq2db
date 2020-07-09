@@ -54,7 +54,17 @@ stages:
         zipAfterPublish: false
         arguments: -f netcoreapp2.1 -c $(build_configuration)
         nobuild: true
-      displayName: Publish Test Project
+      displayName: Publish Test Project for netcore 2.1
+
+    - task: DotNetCoreCLI@2
+      inputs:
+        command: 'publish'
+        projects: '**/Tests/Linq/Tests.csproj'
+        publishWebProjects: false
+        zipAfterPublish: false
+        arguments: -f netcoreapp3.1 -c $(build_configuration)
+        nobuild: true
+      displayName: Publish Test Project for netcore 3.1
 
     - task: CopyFiles@2
       inputs:
@@ -113,9 +123,9 @@ stages:
 
     - task: PublishPipelineArtifact@1
       inputs:
-        path: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.1/publish'
+        path: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp3.1/publish'
         artifact: '$(netcore31_tests)'
-      displayName: Publish test artifacts for NETCOREAPP2.1
+      displayName: Publish test artifacts for NETCOREAPP3.1
 
 ##############################################################################################
 #  Tests: Windows (NETFX 4.6)                                                                #
