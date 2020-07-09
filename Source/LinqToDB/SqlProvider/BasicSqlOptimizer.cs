@@ -980,7 +980,9 @@ namespace LinqToDB.SqlProvider
 					{
 						var expr = (SqlPredicate.IsTrue)predicate;
 
-						if (expr.Expr1 is SqlParameter)
+						if (expr.Reduce() is SqlPredicate.ExprExpr exprExpr)
+							predicate = ConvertPredicate(selectQuery, exprExpr);
+						else if (expr.Expr1 is SqlParameter)
 							selectQuery.IsParameterDependent = true;
 
 						break;
