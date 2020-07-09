@@ -174,6 +174,18 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void TestLoadWithToString([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			{
+				var sql = db.Parent.LoadWith(p => p.Children).ToString();
+				Assert.False(sql.Contains("LoadWithQueryable"));
+				Assert.True(sql.Contains("SELECT"));
+			}
+		}
+
+		[Test]
 		public void TestLoadWithDeep([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
