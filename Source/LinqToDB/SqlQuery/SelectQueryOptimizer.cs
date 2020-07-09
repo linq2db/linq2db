@@ -446,13 +446,15 @@ namespace LinqToDB.SqlQuery
 					_selectQuery.Select.Take(new SqlParameter(takeValue.ValueType, "take", takeValue.Value){ IsQueryParameter = !inlineParameters }, _selectQuery.Select.TakeHints);
 				else if (!supportsParameter && _selectQuery.Select.TakeValue is SqlParameter)
 					_selectQuery.IsParameterDependent = true;
-				else if (_selectQuery.Select.TakeValue is SqlBinaryExpression expr)
+				else if (_selectQuery.Select.TakeValue is SqlBinaryExpression
+					// TODO: is this check safe?
+					|| _selectQuery.Select.TakeValue is SqlFunction)
 				{
-					if (visitor.Find(expr, e => e is SqlParameter) != null)
+					if (visitor.Find(_selectQuery.Select.TakeValue, e => e is SqlParameter) != null)
 						_selectQuery.IsParameterDependent = true;
 					else
 					{
-						var value = expr.EvaluateExpression()!;
+						var value = _selectQuery.Select.TakeValue.EvaluateExpression()!;
 
 						if (supportsParameter)
 							_selectQuery.Select.Take(new SqlParameter(new DbDataType(value.GetType()), "take", value) { IsQueryParameter = !inlineParameters }, _selectQuery.Select.TakeHints);
@@ -470,13 +472,14 @@ namespace LinqToDB.SqlQuery
 						{ IsQueryParameter = !inlineParameters });
 				else if (!supportsParameter && _selectQuery.Select.SkipValue is SqlParameter)
 					_selectQuery.IsParameterDependent = true;
-				else if (_selectQuery.Select.SkipValue is SqlBinaryExpression expr)
+				else if (_selectQuery.Select.SkipValue is SqlBinaryExpression
+					|| _selectQuery.Select.SkipValue is SqlFunction)
 				{
-					if (visitor.Find(expr, e => e is SqlParameter) != null)
+					if (visitor.Find(_selectQuery.Select.SkipValue, e => e is SqlParameter) != null)
 						_selectQuery.IsParameterDependent = true;
 					else
 					{
-						var value = expr.EvaluateExpression()!;
+						var value = _selectQuery.Select.SkipValue.EvaluateExpression()!;
 
 						if (supportsParameter)
 							_selectQuery.Select.Skip(new SqlParameter(new DbDataType(value.GetType()), "skip", value)

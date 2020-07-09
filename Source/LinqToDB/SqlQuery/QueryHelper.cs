@@ -1056,15 +1056,44 @@ namespace LinqToDB.SqlQuery
 							return null;
 						switch (binary.Operation)
 						{
-							case "+": return left + right;
-							case "-": return left - right;
-							case "*": return left * right;
-							case "/": return left / right;
-							case "%": return left % right;
-							case "^": return left ^ right;
-							case "&": return left & right;
+							case "+" : return left +  right;
+							case "-" : return left -  right;
+							case "*" : return left *  right;
+							case "/" : return left /  right;
+							case "%" : return left %  right;
+							case "^" : return left ^  right;
+							case "&" : return left &  right;
+							case "<" : return left <  right;
+							case ">" : return left >  right;
+							case "<=": return left <= right;
+							case ">=": return left >= right;
 							default:
 								throw new LinqToDBException($"Unknown binary operation '{binary.Operation}'.");
+						}
+					}
+				case QueryElementType.SqlFunction        :
+					{
+						var function = (SqlFunction)expr;
+
+						switch (function.Name)
+						{
+							case "CASE":
+
+								if (function.Parameters.Length != 3)
+									throw new LinqToDBException($"CASE function expected to have 3 parameters.");
+
+								var cond = function.Parameters[0].EvaluateExpression();
+
+								if (!(cond is bool))
+									throw new LinqToDBException($"CASE function expected to have boolean condition (was: {cond?.GetType()}).");
+
+								if ((bool)cond!)
+									return function.Parameters[1].EvaluateExpression();
+								else
+									return function.Parameters[2].EvaluateExpression();
+
+							default:
+								throw new LinqToDBException($"Unknown function '{function.Name}'.");
 						}
 					}
 
