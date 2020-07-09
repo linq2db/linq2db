@@ -1,0 +1,14 @@
+﻿{
+	"CORE31.Azure": {
+		"Providers": [
+			// MariaDB latest
+			"MariaDB"
+		],
+		"Connections": {
+			"MariaDB": {
+				"Provider": "MySql.Data",
+				"ConnectionString": "Server=localhost;Port=3306;Database=testdata;Uid=root;Pwd=54321;charset=utf8;Allow User Variables=True;"
+			}
+		}
+	}
+}

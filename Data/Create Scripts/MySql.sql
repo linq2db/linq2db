@@ -695,11 +695,11 @@ CREATE PROCEDURE `Issue2313Results`(
 	IN `MultiPoint` MULTIPOINT,
 	IN `MultiLineString` MULTILINESTRING,
 	IN `MultiPolygon` MULTIPOLYGON,
+	IN `GeometryCollection` GEOMETRYCOLLECTION,
 -- SKIP MariaDB END
 -- SKIP MySql END
 -- SKIP MySql55 END
 
-/*	IN `GeometryCollection` GEOMETRYCOLLECTION*/
 	IN `Year` YEAR
 )
 BEGIN
@@ -756,13 +756,13 @@ BEGIN
 	`Polygon`,
 	`MultiPoint`,
 	`MultiLineString`,
-	`MultiPolygon`
+	`MultiPolygon`,
+	`GeometryCollection`
 -- SKIP MariaDB END
 -- SKIP MySql END
 -- SKIP MySql55 END
 
 
--- `GeometryCollection`
 	FROM Person;
 END
 GO
