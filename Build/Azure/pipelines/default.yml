@@ -91,6 +91,13 @@ stages:
 
     - task: CopyFiles@2
       inputs:
+        targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp3.1/publish'
+        sourceFolder: '$(Build.SourcesDirectory)/Tests'
+        contents: 'DataProviders.json'
+      displayName: Copy test settings for NETCOREAPP3.1
+
+    - task: CopyFiles@2
+      inputs:
         targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net46/configs'
         sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/net46'
       displayName: Copy test configs for NETFX46
@@ -100,6 +107,12 @@ stages:
         targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.1/publish/configs'
         sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/netcoreapp21'
       displayName: Copy test configs for NETCOREAPP2.1
+
+    - task: CopyFiles@2
+      inputs:
+        targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp3.1/publish/configs'
+        sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/netcoreapp31'
+      displayName: Copy test configs for NETCOREAPP3.1
 
     - task: CmdLine@2
       inputs:
