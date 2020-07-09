@@ -1037,15 +1037,15 @@ namespace Tests
 			Assert.IsTrue(b);
 		}
 
-		protected void CompareSql(string result, string expected)
+		protected void CompareSql(string expected, string result)
 		{
-			var ss = expected.Replace("\r", "").Trim('\r', '\n').Split('\n');
+			Assert.AreEqual(normalize(expected), normalize(result));
 
-			while (ss.All(_ => _.Length > 0 && _[0] == '\t'))
-				for (var i = 0; i < ss.Length; i++)
-					ss[i] = ss[i].Substring(1);
-
-			Assert.AreEqual(string.Join("\n", ss), result.Replace("\r", "").Trim('\r', '\n'));
+			string normalize(string sql)
+			{
+				var lines = sql.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+				return string.Join("\n", lines.Where(l => !l.StartsWith("-- ")).Select(l => l.TrimStart('\t', ' ')));
+			}
 		}
 
 		protected List<LinqDataTypes> GetTypes(string context)
