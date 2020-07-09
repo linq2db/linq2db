@@ -37,7 +37,7 @@ namespace Tests.Common
 			{
 				var array1 = enumerable2.ToList();
 				Assert.AreEqual(new int[] { 0, 1, 2 }, array1);
-				Assert.ThrowsAsync<InvalidOperationException>(async () =>
+				Assert.Throws<InvalidOperationException>(() =>
 				{
 					var array2 = enumerable2.ToList();
 				});
