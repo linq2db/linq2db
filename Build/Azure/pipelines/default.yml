@@ -586,13 +586,14 @@ stages:
 
     strategy:
       matrix:
-#        Access_ODBC_ACE:
-#          title: 'Access ODBC ACE'
-#          config: 'access.odbc.ace'
+# disabled due to a lot of random crashes https://github.com/dotnet/runtime/issues/36954
+#        Access_OLEDB_ACE:
+#          title: 'Access OleDb ACE'
+#          config: 'access.ace'
 #          script: 'access.ace.x64.cmd'
-        Access_OLEDB_ACE:
-          title: 'Access OleDb ACE'
-          config: 'access.ace'
+        Access_ODBC_ACE:
+          title: 'Access ODBC ACE'
+          config: 'access.odbc.ace'
           script: 'access.ace.x64.cmd'
 #        SQLite:
 #          title: 'SQLite'
