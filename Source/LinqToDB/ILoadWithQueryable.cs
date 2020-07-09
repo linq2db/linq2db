@@ -1,9 +1,9 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace LinqToDB
 {
 	using Async;
-	using System.Collections.Generic;
 
 	/// <summary>
 	/// Provides support for queryable LoadWith/ThenLoad chaining operators.
