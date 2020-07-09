@@ -490,7 +490,7 @@ using (var db = new DbNorthwind())
 
 ## Bulk Copy
 
-Bulk copy feature supports the transfer of large amounts of data into a table from another data source. For faster data inserting DO NOT use a transaction. If you use a transaction an adhoc implementation of the bulk copy feature has been added in order to insert multiple lines at once. You get faster results then inserting lines one by one, but it's still slower than the database provider bulk copy. So, DO NOT use transactions whenever you can (Take care of unique constraints, primary keys, etc. since bulk copy ignores them at insertion).
+Bulk copy feature supports the transfer of large amounts of data into a table from another data source. For more details read this [article](https://linq2db.github.io/articles/sql/Bulk-Copy.html).
 
 ```c#
 using LinqToDB.Data;
