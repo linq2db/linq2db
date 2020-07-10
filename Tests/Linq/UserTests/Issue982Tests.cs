@@ -144,7 +144,7 @@ namespace Tests.UserTests
 									c
 								};
 
-					var str = query.ToString();
+					var str = query.ToString()!;
 					Assert.True(str.Contains("2147483647"));
 					var _ = query.ToArray();
 				}

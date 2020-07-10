@@ -277,7 +277,7 @@ public class a_CreateData : TestBase
 			                                                     RunScript(context+ ".Data", "\nGO\n",  "Access",   AccessODBCAction);     break;
 			case ProviderName.SqlCe                            : RunScript(context,          "\nGO\n",  "SqlCe");
 			                                                     RunScript(context+ ".Data", "\nGO\n",  "SqlCe");                          break;
-#if !NETCOREAPP2_1
+#if NET46
 			case ProviderName.Sybase                           : RunScript(context,          "\nGO\n",  "Sybase",   null, "TestData");     break;
 			case ProviderName.OracleNative                     : RunScript(context,          "\n/\n",   "Oracle");                         break;
 			case TestProvName.Oracle11Native                   : RunScript(context,          "\n/\n",   "Oracle");                         break;

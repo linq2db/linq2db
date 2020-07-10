@@ -196,10 +196,10 @@ namespace LinqToDB.Linq.Builder
 
 				foreach (var member in members)
 				{
-					if (member.Info.MemberInfo.DeclaringType.IsAssignableFrom(objectType))
+					if (member.Info.MemberInfo.DeclaringType!.IsAssignableFrom(objectType))
 					{
 						var ma   = Expression.MakeMemberAccess(new ContextRefExpression(objectType, this), member.Info.MemberInfo);
-						var attr = Builder.MappingSchema.GetAttribute<AssociationAttribute>(member.Info.MemberInfo.ReflectedType, member.Info.MemberInfo);
+						var attr = Builder.MappingSchema.GetAttribute<AssociationAttribute>(member.Info.MemberInfo.ReflectedType!, member.Info.MemberInfo);
 
 						if (_loadWithCache == null || !_loadWithCache.TryGetValue(member.Info.MemberInfo, out var ex))
 						{
@@ -218,7 +218,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (member.Info.MemberInfo.IsDynamicColumnPropertyEx())
 						{
-							var typeAcc = TypeAccessor.GetAccessor(member.Info.MemberInfo.ReflectedType);
+							var typeAcc = TypeAccessor.GetAccessor(member.Info.MemberInfo.ReflectedType!);
 							var setter  = new MemberAccessor(typeAcc, member.Info.MemberInfo, EntityDescriptor).SetterExpression;
 
 							exprs.Add(Expression.Invoke(setter, parentObject, ex));
@@ -1593,7 +1593,7 @@ namespace LinqToDB.Linq.Builder
 
 				var descriptor = GetAssociationDescriptor(memberInfo, EntityDescriptor);
 				if (descriptor == null && !onlyCurrent && memberInfo.MemberInfo.DeclaringType != ObjectType)
-					descriptor = GetAssociationDescriptor(memberInfo, Builder.MappingSchema.GetEntityDescriptor(memberInfo.MemberInfo.DeclaringType));
+					descriptor = GetAssociationDescriptor(memberInfo, Builder.MappingSchema.GetEntityDescriptor(memberInfo.MemberInfo.DeclaringType!));
 
 				return descriptor;
 			}
@@ -1604,7 +1604,7 @@ namespace LinqToDB.Linq.Builder
 				
 				if (accessorMember.MemberInfo.MemberType == MemberTypes.Method)
 				{
-					var attribute = Builder.MappingSchema.GetAttribute<AssociationAttribute>(accessorMember.MemberInfo.DeclaringType, accessorMember.MemberInfo, a => a.Configuration);
+					var attribute = Builder.MappingSchema.GetAttribute<AssociationAttribute>(accessorMember.MemberInfo.DeclaringType!, accessorMember.MemberInfo, a => a.Configuration);
 
 					if (attribute != null)
 						descriptor = new AssociationDescriptor

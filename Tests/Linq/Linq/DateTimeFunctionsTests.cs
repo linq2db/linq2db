@@ -138,7 +138,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "SELECT * query")]
 		[Test]
 		public void Now([DataSources] string context)
 		{
@@ -1436,7 +1435,7 @@ namespace Tests.Linq
 					from t in from p in db.Types select new DateTime(p.DateTimeValue.Year + 1, 10, 1) where t.Month == 10 select t);
 		}
 
-		#endregion
+#endregion
 
 		[ActiveIssue("SQL0418N", Configuration = ProviderName.DB2)]
 		[Test]

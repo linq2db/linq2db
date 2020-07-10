@@ -67,7 +67,7 @@
 		<Compile Include="Compatibility\System\Threading\AsyncLocal.cs" />
 	</ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netcoreapp2.1' ">
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netcoreapp2.1' OR '$(TargetFramework)' == 'netstandard2.1' OR '$(TargetFramework)' == 'netcoreapp3.1' ">
 		<Compile Remove="Metadata\SystemDataLinqAttributeReader.cs" />
 		<Compile Remove="Configuration\DataProviderElement.cs" />
 		<Compile Remove="Configuration\DataProviderElementCollection.cs" />
@@ -77,16 +77,25 @@
 		<Compile Remove="ServiceModel\**\*.cs;" />
 
 		<Compile Include="Compatibility\System\Data\Linq\Binary.cs" />
-		<Compile Include="Compatibility\System\Diagnostics\CodeAnalysis\NullableAttributes.cs" />
 
-		<PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
 		<PackageReference Include="System.ComponentModel.Annotations" Version="4.7.0" />
 	</ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netcoreapp2.1' ">
+		<PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
+		<Compile Include="Compatibility\System\Diagnostics\CodeAnalysis\NullableAttributes.cs" />
+	</ItemGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netstandard2.1' ">
 		<Compile Remove="DataProvider\SapHana\SapHanaDataProvider.cs" />
 		<Compile Remove="DataProvider\SapHana\SapHanaBulkCopy.cs" />
 
 		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+	</ItemGroup>
+	
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.1' OR '$(TargetFramework)' == 'netcoreapp3.1' OR '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netcoreapp2.1' ">
+		<Compile Remove="Async\IAsyncEnumerable.cs" />
+		<Compile Remove="Async\IAsyncEnumerator.cs" />
+	  <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="1.1.1" />
 	</ItemGroup>
 </Project>

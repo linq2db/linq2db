@@ -30,7 +30,7 @@ namespace LinqToDB.SqlQuery
 
 		#region Overrides
 
-		public string SqlText => ToString();
+		public string SqlText => ToString()!;
 
 #if OVERRIDETOSTRING
 
@@ -57,7 +57,7 @@ namespace LinqToDB.SqlQuery
 
 		#region IEquatable<ISqlExpression> Members
 
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression other)
+		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
 		{
 			return Equals(other, SqlExpression.DefaultComparer);
 		}
@@ -79,7 +79,7 @@ namespace LinqToDB.SqlQuery
 
 		public bool CanBeNull => Expr1.CanBeNull || Expr2.CanBeNull;
 
-		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
+		public bool Equals(ISqlExpression? other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{
 			if (this == other)
 				return true;

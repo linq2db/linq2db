@@ -166,7 +166,7 @@ namespace LinqToDB.SqlQuery
 			if (Expression is SqlField)
 				return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
 
-			return base.ToString();
+			return base.ToString()!;
 #endif
 		}
 
@@ -230,7 +230,7 @@ namespace LinqToDB.SqlQuery
 
 		#region IEquatable<ISqlExpression> Members
 
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression other)
+		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
 		{
 			if (this == other)
 				return true;

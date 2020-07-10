@@ -21,28 +21,28 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			return new[]
 			{
-				new DataTypeInfo { TypeName = "CHAR",       DataType = typeof(string).  FullName, CreateFormat = "CHAR({0})",        CreateParameters = "length" },
-				new DataTypeInfo { TypeName = "SMALLINT",   DataType = typeof(short).   FullName },
-				new DataTypeInfo { TypeName = "INTEGER",    DataType = typeof(int).     FullName },
-				new DataTypeInfo { TypeName = "FLOAT",      DataType = typeof(double).  FullName },
-				new DataTypeInfo { TypeName = "SMALLFLOAT", DataType = typeof(float).   FullName },
-				new DataTypeInfo { TypeName = "DECIMAL",    DataType = typeof(decimal). FullName, CreateFormat = "DECIMAL({0},{1})", CreateParameters = "precision,scale" },
-				new DataTypeInfo { TypeName = "SERIAL",     DataType = typeof(int).     FullName },
-				new DataTypeInfo { TypeName = "DATE",       DataType = typeof(DateTime).FullName },
-				new DataTypeInfo { TypeName = "MONEY",      DataType = typeof(decimal). FullName, CreateFormat = "MONEY({0},{1})",   CreateParameters = "precision,scale" },
-				new DataTypeInfo { TypeName = "DATETIME",   DataType = typeof(DateTime).FullName },
-				new DataTypeInfo { TypeName = "BYTE",       DataType = typeof(byte[]).  FullName },
-				new DataTypeInfo { TypeName = "TEXT",       DataType = typeof(string).  FullName },
-				new DataTypeInfo { TypeName = "VARCHAR",    DataType = typeof(string).  FullName, CreateFormat = "VARCHAR({0})",     CreateParameters = "length" },
-				new DataTypeInfo { TypeName = "INTERVAL",   DataType = typeof(TimeSpan).FullName },
-				new DataTypeInfo { TypeName = "NCHAR",      DataType = typeof(string).  FullName, CreateFormat = "NCHAR({0})",       CreateParameters = "length" },
-				new DataTypeInfo { TypeName = "NVARCHAR",   DataType = typeof(string).  FullName, CreateFormat = "NVARCHAR({0})",    CreateParameters = "length" },
-				new DataTypeInfo { TypeName = "INT8",       DataType = typeof(long).    FullName },
-				new DataTypeInfo { TypeName = "SERIAL8",    DataType = typeof(long).    FullName },
-				new DataTypeInfo { TypeName = "LVARCHAR",   DataType = typeof(string).  FullName, CreateFormat = "LVARCHAR({0})",    CreateParameters = "length" },
-				new DataTypeInfo { TypeName = "BOOLEAN",    DataType = typeof(bool).    FullName },
-				new DataTypeInfo { TypeName = "BIGINT",     DataType = typeof(long).    FullName },
-				new DataTypeInfo { TypeName = "BIGSERIAL",  DataType = typeof(long).    FullName },
+				new DataTypeInfo { TypeName = "CHAR",       DataType = typeof(string).  FullName!, CreateFormat = "CHAR({0})",        CreateParameters = "length" },
+				new DataTypeInfo { TypeName = "SMALLINT",   DataType = typeof(short).   FullName! },
+				new DataTypeInfo { TypeName = "INTEGER",    DataType = typeof(int).     FullName! },
+				new DataTypeInfo { TypeName = "FLOAT",      DataType = typeof(double).  FullName! },
+				new DataTypeInfo { TypeName = "SMALLFLOAT", DataType = typeof(float).   FullName! },
+				new DataTypeInfo { TypeName = "DECIMAL",    DataType = typeof(decimal). FullName!, CreateFormat = "DECIMAL({0},{1})", CreateParameters = "precision,scale" },
+				new DataTypeInfo { TypeName = "SERIAL",     DataType = typeof(int).     FullName! },
+				new DataTypeInfo { TypeName = "DATE",       DataType = typeof(DateTime).FullName! },
+				new DataTypeInfo { TypeName = "MONEY",      DataType = typeof(decimal). FullName!, CreateFormat = "MONEY({0},{1})",   CreateParameters = "precision,scale" },
+				new DataTypeInfo { TypeName = "DATETIME",   DataType = typeof(DateTime).FullName! },
+				new DataTypeInfo { TypeName = "BYTE",       DataType = typeof(byte[]).  FullName! },
+				new DataTypeInfo { TypeName = "TEXT",       DataType = typeof(string).  FullName! },
+				new DataTypeInfo { TypeName = "VARCHAR",    DataType = typeof(string).  FullName!, CreateFormat = "VARCHAR({0})",     CreateParameters = "length" },
+				new DataTypeInfo { TypeName = "INTERVAL",   DataType = typeof(TimeSpan).FullName! },
+				new DataTypeInfo { TypeName = "NCHAR",      DataType = typeof(string).  FullName!, CreateFormat = "NCHAR({0})",       CreateParameters = "length" },
+				new DataTypeInfo { TypeName = "NVARCHAR",   DataType = typeof(string).  FullName!, CreateFormat = "NVARCHAR({0})",    CreateParameters = "length" },
+				new DataTypeInfo { TypeName = "INT8",       DataType = typeof(long).    FullName! },
+				new DataTypeInfo { TypeName = "SERIAL8",    DataType = typeof(long).    FullName! },
+				new DataTypeInfo { TypeName = "LVARCHAR",   DataType = typeof(string).  FullName!, CreateFormat = "LVARCHAR({0})",    CreateParameters = "length" },
+				new DataTypeInfo { TypeName = "BOOLEAN",    DataType = typeof(bool).    FullName! },
+				new DataTypeInfo { TypeName = "BIGINT",     DataType = typeof(long).    FullName! },
+				new DataTypeInfo { TypeName = "BIGSERIAL",  DataType = typeof(long).    FullName! },
 				//new DataTypeInfo { TypeName = "SET",        DataType = typeof(object).  FullName },
 				//new DataTypeInfo { TypeName = "MULTISET",   DataType = typeof(object).  FullName },
 				//new DataTypeInfo { TypeName = "LIST",       DataType = typeof(object).  FullName },
@@ -105,7 +105,7 @@ namespace LinqToDB.DataProvider.Informix
 			return base.GetProviderSpecificType(dataType);
 		}
 
-		protected override List<TableInfo> GetTables(DataConnection dataConnection)
+		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			return dataConnection.Query<TableInfo>(@"
 				SELECT
@@ -121,7 +121,8 @@ namespace LinqToDB.DataProvider.Informix
 				.ToList();
 		}
 
-		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
+		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
+			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
 			return
 			(
@@ -360,7 +361,8 @@ namespace LinqToDB.DataProvider.Informix
 				.ToList();
 		}
 
-		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
+			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
 			var names = new HashSet<string>();
 
@@ -384,7 +386,7 @@ namespace LinqToDB.DataProvider.Informix
 						}
 
 						var id           = rd["ID"].ToString();
-						var name         = rd["Name"].ToString();
+						var name         = rd["Name"].ToString()!;
 						var thisTableID  = rd["ThisTableID"]. ToString();
 						var otherTableID = rd["OtherTableID"].ToString();
 

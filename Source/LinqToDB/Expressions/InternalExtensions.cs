@@ -48,7 +48,7 @@ namespace LinqToDB.Expressions
 				return type.GetGenericArguments()[0].IsConstantable(includingArrays);
 
 			if (includingArrays && type.IsArray)
-				return type.GetElementType().IsConstantable(includingArrays);
+				return type.GetElementType()!.IsConstantable(includingArrays);
 
 			return false;
 		}
@@ -1091,7 +1091,7 @@ namespace LinqToDB.Expressions
 
 		public static bool IsExtensionMethod(this MethodCallExpression methodCall, MappingSchema mapping)
 		{
-			var functions = mapping.GetAttributes<Sql.ExtensionAttribute>(methodCall.Method.ReflectedType,
+			var functions = mapping.GetAttributes<Sql.ExtensionAttribute>(methodCall.Method.ReflectedType!,
 				methodCall.Method,
 				f => f.Configuration);
 			return functions.Any();
@@ -1139,7 +1139,7 @@ namespace LinqToDB.Expressions
 
 		public static bool IsAssociation(this MethodCallExpression method, MappingSchema mappingSchema)
 		{
-			return mappingSchema.GetAttribute<AssociationAttribute>(method.Method.DeclaringType, method.Method) != null;
+			return mappingSchema.GetAttribute<AssociationAttribute>(method.Method.DeclaringType!, method.Method) != null;
 		}
 
 		public static bool IsCte(this MethodCallExpression method, MappingSchema mappingSchema)

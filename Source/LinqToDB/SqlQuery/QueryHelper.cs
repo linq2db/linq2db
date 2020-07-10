@@ -1056,15 +1056,44 @@ namespace LinqToDB.SqlQuery
 							return null;
 						switch (binary.Operation)
 						{
-							case "+": return left + right;
-							case "-": return left - right;
-							case "*": return left * right;
-							case "/": return left / right;
-							case "%": return left % right;
-							case "^": return left ^ right;
-							case "&": return left & right;
+							case "+" : return left +  right;
+							case "-" : return left -  right;
+							case "*" : return left *  right;
+							case "/" : return left /  right;
+							case "%" : return left %  right;
+							case "^" : return left ^  right;
+							case "&" : return left &  right;
+							case "<" : return left <  right;
+							case ">" : return left >  right;
+							case "<=": return left <= right;
+							case ">=": return left >= right;
 							default:
 								throw new LinqToDBException($"Unknown binary operation '{binary.Operation}'.");
+						}
+					}
+				case QueryElementType.SqlFunction        :
+					{
+						var function = (SqlFunction)expr;
+
+						switch (function.Name)
+						{
+							case "CASE":
+
+								if (function.Parameters.Length != 3)
+									throw new LinqToDBException($"CASE function expected to have 3 parameters.");
+
+								var cond = function.Parameters[0].EvaluateExpression();
+
+								if (!(cond is bool))
+									throw new LinqToDBException($"CASE function expected to have boolean condition (was: {cond?.GetType()}).");
+
+								if ((bool)cond!)
+									return function.Parameters[1].EvaluateExpression();
+								else
+									return function.Parameters[2].EvaluateExpression();
+
+							default:
+								throw new LinqToDBException($"Unknown function '{function.Name}'.");
 						}
 					}
 
@@ -1077,5 +1106,63 @@ namespace LinqToDB.SqlQuery
 					}
 			}
 		}
+
+
+		public static SqlCondition CorrectSearchConditionNesting(SelectQuery sql, SqlCondition condition, HashSet<ISqlTableSource> forTableSources)
+		{
+			var newCondition = ConvertVisitor.Convert(condition, (v, e) =>
+			{
+				if (   e is SqlColumn column && column.Parent != null && forTableSources.Contains(column.Parent) 
+				    || e is SqlField field   && field.Table   != null && forTableSources.Contains(field.Table))
+				{
+					e = sql.Select.AddColumn((ISqlExpression)e);
+				}
+
+				return e;
+			});
+
+			return newCondition;
+		}
+
+		public static void MoveSearchConditionsToJoin(SelectQuery sql, SqlJoinedTable joinedTable, List<SqlCondition>? movedConditions)
+		{
+			var usedTableSources = new HashSet<ISqlTableSource>(sql.Select.From.Tables.Select(t => t.Source));
+
+			var tableSources = new HashSet<ISqlTableSource>();
+
+			((ISqlExpressionWalkable)sql.Where.SearchCondition).Walk(new WalkOptions(), e =>
+			{
+				if (e is ISqlTableSource ts && usedTableSources.Contains(ts))
+					tableSources.Add(ts);
+				return e;
+			});
+
+			bool ContainsTable(ISqlTableSource tbl, IQueryElement qe)
+			{
+				return null != new QueryVisitor().Find(qe, e =>
+					e == tbl ||
+					e.ElementType == QueryElementType.SqlField && tbl == ((SqlField) e).Table ||
+					e.ElementType == QueryElementType.Column   && tbl == ((SqlColumn)e).Parent);
+			}
+
+			var conditions = sql.Where.SearchCondition.Conditions;
+
+			if (conditions.Count > 0)
+			{
+				for (var i = conditions.Count - 1; i >= 0; i--)
+				{
+					var condition = conditions[i];
+
+					if (!tableSources.Any(ts => ContainsTable(ts, condition)))
+					{
+						var corrected = CorrectSearchConditionNesting(sql, condition, usedTableSources);
+						joinedTable.Condition.Conditions.Insert(0, corrected);
+						conditions.RemoveAt(i);
+						movedConditions?.Insert(0, condition);
+					}
+				}
+			}
+		}
+
 	}
 }

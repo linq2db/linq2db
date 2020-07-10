@@ -1081,9 +1081,6 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-#if NETCOREAPP2_1
-		[ActiveIssue("https://github.com/dotnet/runtime/issues/36954", Configuration = ProviderName.Access)]
-#endif
 		public void InsertOrUpdate2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

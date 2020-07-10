@@ -87,9 +87,11 @@ namespace Tests.SchemaProvider
 							                                                                                                       MemberName = "varBitDataType",      MemberType = "BitArray",                    SystemType = typeof(BitArray),                                                IsNullable = true, DataType = DataType.BitArray       },
 							new ColumnSchema { ColumnName = "strarray",            ColumnType = "text[]",                          MemberName = "strarray",            MemberType = "string[]",                    SystemType = typeof(string[]),                                                IsNullable = true, DataType = DataType.Undefined      },
 							new ColumnSchema { ColumnName = "intarray",            ColumnType = "integer[]",                       MemberName = "intarray",            MemberType = "int[]",                       SystemType = typeof(int[]),                                                   IsNullable = true, DataType = DataType.Undefined      },
-							new ColumnSchema { ColumnName = "int2darray",          ColumnType = "bigint[]",                        MemberName = "int2darray",          MemberType = "long[]",                      SystemType = typeof(long[]),                                                  IsNullable = true, DataType = DataType.Undefined      },
-							new ColumnSchema { ColumnName = "longarray",           ColumnType = "double precision[]",              MemberName = "longarray",           MemberType = "double[]",                    SystemType = typeof(double[]),                                                IsNullable = true, DataType = DataType.Undefined      },
-							new ColumnSchema { ColumnName = "doublearray",         ColumnType = "numeric[]",                       MemberName = "doublearray",         MemberType = "decimal[]",                   SystemType = typeof(decimal[]),                                               IsNullable = true, DataType = DataType.Undefined      },
+							new ColumnSchema { ColumnName = "int2darray",          ColumnType = "integer[]",                       MemberName = "int2darray",          MemberType = "int[]",                       SystemType = typeof(int[]),                                                   IsNullable = true, DataType = DataType.Undefined      },
+							new ColumnSchema { ColumnName = "longarray",           ColumnType = "bigint[]",                        MemberName = "longarray",           MemberType = "long[]",                      SystemType = typeof(long[]),                                                IsNullable = true, DataType = DataType.Undefined      },
+							new ColumnSchema { ColumnName = "doublearray",         ColumnType = "double precision[]",              MemberName = "doublearray",         MemberType = "double[]",                    SystemType = typeof(double[]),                                               IsNullable = true, DataType = DataType.Undefined      },
+							new ColumnSchema { ColumnName = "intervalarray",       ColumnType = "interval[]",                      MemberName = "intervalarray",       MemberType = "TimeSpan[]",                  SystemType = typeof(TimeSpan[]),                                              IsNullable = true, DataType = DataType.Undefined      },
+							new ColumnSchema { ColumnName = "numericarray",        ColumnType = "numeric[]",                       MemberName = "numericarray",        MemberType = "decimal[]",                   SystemType = typeof(decimal[]),                                               IsNullable = true, DataType = DataType.Undefined      },
 							new ColumnSchema { ColumnName = "decimalarray",        ColumnType = "numeric[]",                       MemberName = "decimalarray",        MemberType = "decimal[]",                   SystemType = typeof(decimal[]),                                               IsNullable = true, DataType = DataType.Undefined      },
 						}
 					},
@@ -374,8 +376,16 @@ namespace Tests.SchemaProvider
 							Assert.Contains(actualColumn.ColumnType, new[] { "bit(-1)", "bit(3)" });
 						else if (expectedColumn.ColumnType == "bool")
 							Assert.Contains(actualColumn.ColumnType, new[] { "bool", "boolean" });
+						else if (expectedColumn.ColumnType == "time (0) with time zone")
+							Assert.Contains(actualColumn.ColumnType, new[] { "time (0) with time zone", "time with time zone" });
+						else if (expectedColumn.ColumnType == "time (0) without time zone")
+							Assert.Contains(actualColumn.ColumnType, new[] { "time (0) without time zone", "time without time zone" });
+						else if (expectedColumn.ColumnType == "timestamp (0) with time zone")
+							Assert.Contains(actualColumn.ColumnType, new[] { "timestamp (0) with time zone", "timestamp with time zone" });
+						else if (expectedColumn.ColumnType == "timestamp (0) without time zone")
+							Assert.Contains(actualColumn.ColumnType, new[] { "timestamp (0) without time zone", "timestamp without time zone" });
 						else
-						Assert.AreEqual(expectedColumn.ColumnType, actualColumn.ColumnType);
+							Assert.AreEqual(expectedColumn.ColumnType, actualColumn.ColumnType);
 
 						Assert.AreEqual(expectedColumn.IsNullable, actualColumn.IsNullable);
 						Assert.AreEqual(expectedColumn.IsIdentity, actualColumn.IsIdentity);
@@ -442,8 +452,8 @@ namespace Tests.SchemaProvider
 				
 				Assert.IsNotNull(view);
 
-				Assert.AreEqual("public.Issue2023", view.ID);
-				Assert.IsNull(view.CatalogName);
+				Assert.That(view.ID, Is.EqualTo(view.CatalogName + ".public.Issue2023"));
+				Assert.IsNotNull(view.CatalogName);
 				Assert.AreEqual("public", view.SchemaName);
 				Assert.AreEqual("Issue2023", view.TableName);
 				Assert.AreEqual("This is the Issue2023 matview", view.Description);
@@ -456,7 +466,7 @@ namespace Tests.SchemaProvider
 				Assert.AreEqual(5, view.Columns.Count);
 
 				Assert.AreEqual("PersonID", view.Columns[0].ColumnName);
-				Assert.AreEqual("int4", view.Columns[0].ColumnType);
+				Assert.AreEqual("integer", view.Columns[0].ColumnType);
 				Assert.AreEqual(true, view.Columns[0].IsNullable);
 				Assert.AreEqual(false, view.Columns[0].IsIdentity);
 				Assert.AreEqual(false, view.Columns[0].IsPrimaryKey);

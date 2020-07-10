@@ -107,7 +107,7 @@ namespace Tests.Samples
 					.Property(_ => _.Name).HasColumnName("EntityName");
 
 				var q1 = db.GetTable<Entity>().Select(_ => _).ToString();
-				var q2 = dc.GetTable<Entity>().Select(_ => _).ToString();
+				var q2 = dc.GetTable<Entity>().Select(_ => _).ToString()!;
 
 				Assert.AreNotEqual(q1, q2);
 				Assert.That(q2.Contains("EntityId"));

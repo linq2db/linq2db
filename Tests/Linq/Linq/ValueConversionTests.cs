@@ -131,7 +131,7 @@ namespace Tests.Linq
 				.Property(e => e.Enum)
 				.HasConversion(v => v.ToString(), p => (EnumValue)Enum.Parse(typeof(EnumValue), p))
 				.Property(e => e.EnumNullable)
-				.HasConversion(v => v.ToString(), p => (EnumValue)Enum.Parse(typeof(EnumValue), p))
+				.HasConversion(v => v.ToString()!, p => (EnumValue)Enum.Parse(typeof(EnumValue), p))
 				.Property(e => e.EnumWithNull)
 				.HasConversion(
 					v => v == EnumValue.Null ? null : v.ToString(),
@@ -314,6 +314,28 @@ namespace Tests.Linq
 				var selectResult = query.ToArray();
 				
 				Assert.That(selectResult.Length, Is.EqualTo(7));
+			}
+		}
+
+		[Test]
+		public void BoolJoinTest([DataSources(false)] string context)
+		{
+			var ms = CreateMappingSchema();
+
+			var testData = MainClass.TestData();
+			using (var db = GetDataContext(context, ms))
+			using (var table = db.CreateLocalTable(testData))
+			{
+				var query = from t1 in table
+					from t2 in table.Where(t2 => t2.BoolValue && t1.BoolValue).AsSubQuery()
+					select new
+					{
+						t1.Enum,
+					};
+
+				var selectResult = query.ToArray();
+				
+				Assert.That(selectResult.Length, Is.EqualTo(9));
 			}
 		}
 

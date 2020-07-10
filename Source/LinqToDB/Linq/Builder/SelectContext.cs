@@ -380,7 +380,7 @@ namespace LinqToDB.Linq.Builder
 												var memberExpression = GetMemberExpression(
 													member, levelExpression == expression, levelExpression.Type, expression);
 
-												var ed = Builder.MappingSchema.GetEntityDescriptor(member.DeclaringType);
+												var ed = Builder.MappingSchema.GetEntityDescriptor(member.DeclaringType!);
 												var descriptor = ed.FindColumnDescriptor(member);
 
 												sql = ConvertExpressions(memberExpression, flags, descriptor)
@@ -454,7 +454,7 @@ namespace LinqToDB.Linq.Builder
 
 		SqlInfo[] ConvertMember(MemberInfo member, Expression expression, ConvertFlags flags)
 		{
-			var ed         = Builder.MappingSchema.GetEntityDescriptor(member.DeclaringType);
+			var ed         = Builder.MappingSchema.GetEntityDescriptor(member.DeclaringType!);
 			var descriptor = ed.FindColumnDescriptor(member);
 
 			return ConvertExpressions(expression, flags, descriptor)
@@ -774,9 +774,9 @@ namespace LinqToDB.Linq.Builder
 										{
 											var nm = Members.Keys.FirstOrDefault(m => m.Name == member.Name);
 
-											if (nm != null && member.DeclaringType.IsInterface)
+											if (nm != null && member.DeclaringType!.IsInterface)
 											{
-												if (member.DeclaringType.IsSameOrParentOf(nm.DeclaringType))
+												if (member.DeclaringType.IsSameOrParentOf(nm.DeclaringType!))
 													memberExpression = GetProjectedExpression(nm, false);
 												else
 												{
@@ -1157,10 +1157,10 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (typeof(ExpressionBuilder.GroupSubQuery<,>).IsSameOrParentOf(Body!.Type))
 					{
-						var newMember = Body.Type.GetField("Element");
+						var newMember = Body.Type.GetField("Element")!;
 						if (Members.TryGetValue(newMember, out memberExpression))
 						{
-							if (memberInfo.DeclaringType.IsSameOrParentOf(memberExpression.Type))
+							if (memberInfo.DeclaringType!.IsSameOrParentOf(memberExpression.Type))
 								memberExpression = Expression.MakeMemberAccess(memberExpression, memberInfo);
 						}
 					}
@@ -1243,7 +1243,7 @@ namespace LinqToDB.Linq.Builder
 			if (memberExpression is MemberExpression me)
 			{
 				//TODO: Why do we need such quirks with grouping?
-				if (typeof(IGrouping<,>).IsSameOrParentOf(me.Member.DeclaringType) && memberExpression.Type == expression.Type)
+				if (typeof(IGrouping<,>).IsSameOrParentOf(me.Member.DeclaringType!) && memberExpression.Type == expression.Type)
 					return memberExpression;
 			}
 
@@ -1325,7 +1325,7 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				if (member.DeclaringType.IsSameOrParentOf(Body.Type))
+				if (member.DeclaringType!.IsSameOrParentOf(Body.Type))
 				{
 					if (Body.NodeType == ExpressionType.MemberInit)
 					{

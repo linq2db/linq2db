@@ -174,6 +174,49 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void TestLoadWithToString1([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			{
+				var sql = db.Parent.LoadWith(p => p.Children).ToString()!;
+
+				Assert.False(sql.Contains("LoadWithQueryable"));
+
+				// two queries generated, now returns sql for main query
+				CompareSql(@"SELECT
+	[t1].[ParentID],
+	[t1].[Value1]
+FROM
+	[Parent] [t1]", sql);
+			}
+		}
+
+		[Test]
+		public void TestLoadWithToString2([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var sql = db.Person.LoadWith(p => p.Patient).ToString()!;
+
+				Assert.False(sql.Contains("LoadWithQueryable"));
+
+				// one query with join generated
+				CompareSql(@"SELECT
+	[t1].[FirstName],
+	[t1].[PersonID],
+	[t1].[LastName],
+	[t1].[MiddleName],
+	[t1].[Gender],
+	[a_Patient].[PersonID],
+	[a_Patient].[Diagnosis]
+FROM
+	[Person] [t1]
+		LEFT JOIN [Patient] [a_Patient] ON [t1].[PersonID] = [a_Patient].[PersonID]", sql);
+			}
+		}
+
+		[Test]
 		public void TestLoadWithDeep([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
@@ -825,6 +868,27 @@ namespace Tests.Linq
 			}
 		}
 
+		public static X InitData<X>(X entity) => entity; // for simplicity
+
+		[Test]
+		public void ProjectionWithExtension([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var (masterRecords, detailRecords) = GenerateData();
+
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			{
+				var result = master.LoadWith(x => x.Details).Select(x => InitData(x))
+					.ToArray();
+				var result2 = master.LoadWith(x => x.Details).Select(x => InitData(x)).Select(x => new { x = InitData(x)})
+					.ToArray();
+
+				Assert.That(result.Length, Is.EqualTo(result2.Length));
+			}
+		}
+
 		#region issue 1862
 		[Table]
 		public partial class Blog
@@ -1096,6 +1160,71 @@ namespace Tests.Linq
 
 				Assert.That(result.Count, Is.EqualTo(1));
 				Assert.That(result[0].Persons.Count, Is.EqualTo(1));
+			}
+		}
+		#endregion
+
+		#region issue 2307
+		[Table]
+		class AttendanceSheet
+		{
+			[Column] public int Id;
+
+			public static AttendanceSheet[] Items { get; } =
+				new[]
+				{
+					new AttendanceSheet() { Id = 1 },
+					new AttendanceSheet() { Id = 2 }
+				};
+		}
+
+		[Table]
+		class AttendanceSheetRow
+		{
+			[Column] public int Id;
+			[Column] public int AttendanceSheetId;
+
+			public static AttendanceSheetRow[] Items { get; } =
+				new[]
+				{
+					new AttendanceSheetRow() { Id = 1, AttendanceSheetId = 1 },
+					new AttendanceSheetRow() { Id = 2, AttendanceSheetId = 2 },
+					new AttendanceSheetRow() { Id = 3, AttendanceSheetId = 1 },
+					new AttendanceSheetRow() { Id = 4, AttendanceSheetId = 2 },
+				};
+		}
+
+		class AttendanceSheetDTO
+		{
+			public List<AttendanceSheetRowListModel> Rows = null!;
+		}
+
+		class AttendanceSheetRowListModel
+		{
+			public AttendanceSheetRowListModel(AttendanceSheetRow row)
+			{
+				AttendanceSheetId = row.AttendanceSheetId;
+			}
+
+			public int AttendanceSheetId;
+		}
+
+		[Test]
+		public void Issue2307([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			using (var sheets = db.CreateLocalTable(AttendanceSheet.Items))
+			using (var sheetRows   = db.CreateLocalTable(AttendanceSheetRow.Items))
+			{
+				var query = from sheet in sheets
+							join row in sheetRows on sheet.Id equals row.AttendanceSheetId into rows
+							select new AttendanceSheetDTO()
+							{
+								Rows = rows.Select(x => new AttendanceSheetRowListModel(x)).ToList(),
+							};
+
+				query.ToList();
 			}
 		}
 		#endregion

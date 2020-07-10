@@ -53,6 +53,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		class EagerLoadingContext<T, TKey>
+			where TKey : notnull
 		{
 			private Dictionary<TKey, List<T>>? _items;
 			private TKey                       _prevKey = default!;
@@ -60,7 +61,7 @@ namespace LinqToDB.Linq.Builder
 
 			public void Add(TKey key, T item)
 			{
-				List<T> list;
+				List<T>? list;
 
 				if (_prevList != null && _prevKey!.Equals(key))
 				{
@@ -159,7 +160,7 @@ namespace LinqToDB.Linq.Builder
 			if (!IsEnumerableType(type, mappingSchema))
 				return type;
 			if (type.IsArray)
-				return type.GetElementType();
+				return type.GetElementType()!;
 			if (typeof(IGrouping<,>).IsSameOrParentOf(type))
 				return type.GetGenericArguments()[1];
 			return type.GetGenericArguments()[0];
@@ -208,7 +209,7 @@ namespace LinqToDB.Linq.Builder
 			Expression result = ob;
 			foreach (var memberInfo in memberPath)
 			{
-				if (!memberInfo.DeclaringType.IsSameOrParentOf(result.Type))
+				if (!memberInfo.DeclaringType!.IsSameOrParentOf(result.Type))
 				{
 					if (throwOnError)
 						throw new LinqToDBException($"Type {result.Type.Name} does not have member {memberInfo.Name}.");
@@ -649,19 +650,33 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
+		static Expression RemoveProjection(Expression expression)
+		{
+			while (expression is MethodCallExpression mc)
+			{
+				if (mc.IsQueryable("Select"))
+					expression = mc.Arguments[0];
+				else
+					break;
+			}
+
+			return expression;
+		}
+
 		public static Expression? GenerateAssociationExpression(ExpressionBuilder builder, IBuildContext context, Expression expression, AssociationDescriptor association)
 		{
 			if (!Common.Configuration.Linq.AllowMultipleQuery)
 				throw new LinqException("Multiple queries are not allowed. Set the 'LinqToDB.Common.Configuration.Linq.AllowMultipleQuery' flag to 'true' to allow multiple queries.");
 
 			var initialMainQuery = ValidateMainQuery(builder.Expression);
+			var mainQuery        = RemoveProjection(initialMainQuery);
 			var mappingSchema    = builder.MappingSchema;
 
 			// that means we processing association from TableContext. First parameter is master
 			//
 			Expression? detailQuery;
 
-			var mainQueryElementType  = GetEnumerableElementType(initialMainQuery.Type, builder.MappingSchema);
+			var mainQueryElementType  = GetEnumerableElementType(mainQuery.Type, builder.MappingSchema);
 			var alias = "lw_" + (association.MemberInfo.DeclaringType?.Name ?? "master");
 			
 			var masterParam           = Expression.Parameter(mainQueryElementType, alias);
@@ -690,7 +705,7 @@ namespace LinqToDB.Linq.Builder
 
 
 			var extractContext        = reversedAssociationPath[0].Item2;
-			var associationParentType = associationPath[0].MemberInfo.DeclaringType;
+			var associationParentType = associationPath[0].MemberInfo.DeclaringType!;
 			var loadWithItems         = reversedAssociationPath[reversedAssociationPath.Count - 1].Item3;
 
 			if (!associationParentType.IsSameOrParentOf(mainQueryElementType) && !typeof(KeyDetailEnvelope<,>).IsSameOrParentOf(mainQueryElementType))
@@ -719,7 +734,7 @@ namespace LinqToDB.Linq.Builder
 			// recursive processing
 			if (typeof(KeyDetailEnvelope<,>).IsSameOrParentOf(mainQueryElementType))
 			{
-				if (!IsQueryableMethod(initialMainQuery, "SelectMany", out var mainSelectManyMethod))
+				if (!IsQueryableMethod(mainQuery, "SelectMany", out var mainSelectManyMethod))
 					throw new InvalidOperationException("Unexpected Main Query");
 
 				var detailProp   = ExpressionHelper.Property(masterParam, nameof(KeyDetailEnvelope<object, object>.Detail));
@@ -784,7 +799,7 @@ namespace LinqToDB.Linq.Builder
 				ExtractNotSupportedPart(mappingSchema, detailQuery, associationMember.MemberInfo.GetMemberType(), out detailQuery, out finalExpression, out replaceParam);
 
 				var masterKeys   = prevKeys.Concat(subMasterKeys).ToArray();
-				resultExpression = GeneratePreambleExpression(masterKeys, masterParam, masterParam, detailQuery, initialMainQuery, builder);
+				resultExpression = GeneratePreambleExpression(masterKeys, masterParam, masterParam, detailQuery, mainQuery, builder);
 			}
 			else
 			{
@@ -822,7 +837,7 @@ namespace LinqToDB.Linq.Builder
 
 				ExtractNotSupportedPart(mappingSchema, detailQuery, associationMember.MemberInfo.GetMemberType(), out detailQuery, out finalExpression, out replaceParam);
 
-				resultExpression = GeneratePreambleExpression(masterKeys, masterParam, masterParam, detailQuery, initialMainQuery, builder);
+				resultExpression = GeneratePreambleExpression(masterKeys, masterParam, masterParam, detailQuery, mainQuery, builder);
 			}
 
 			if (replaceParam != null)
@@ -1139,7 +1154,7 @@ namespace LinqToDB.Linq.Builder
 
 				resultExpression = (Expression)enlistMethod.Invoke(null,
 					new object[]
-						{ builder, unchangedDetailQuery });
+						{ builder, unchangedDetailQuery })!;
 			}
 			else
 			{
@@ -1246,7 +1261,7 @@ namespace LinqToDB.Linq.Builder
 
 				resultExpression = (Expression)enlistMethodFinal.Invoke(null,
 					new object[]
-						{ builder, mainQueryWithCollectedKey, queryableDetailLambda, generateKeyExpression, keySelectLambda });
+						{ builder, mainQueryWithCollectedKey, queryableDetailLambda, generateKeyExpression, keySelectLambda })!;
 			}
 
 			if (replaceParam != null)
@@ -1274,7 +1289,7 @@ namespace LinqToDB.Linq.Builder
 
 			var resultExpression = (Expression)enlistMethod.Invoke(null,
 				new object[]
-					{ builder, masterQuery, detailsQueryLambda, keyCompiledExpression, keySelectLambda });
+					{ builder, masterQuery, detailsQueryLambda, keyCompiledExpression, keySelectLambda })!;
 			return resultExpression;
 		}
 
@@ -1308,6 +1323,7 @@ namespace LinqToDB.Linq.Builder
 			Expression<Func<T, IEnumerable<TD>>> detailQueryLambda,
 			Expression compiledKeyExpression,
 			Expression<Func<T, TKey>> selectKeyExpression)
+			where TKey : notnull
 		{
 			var mainQuery   = Internals.CreateExpressionQueryInstance<T>(builder.DataContext, mainQueryExpr);
 			var detailQuery = mainQuery
@@ -1394,6 +1410,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		private static int RegisterPreambles<TD, TKey>(ExpressionBuilder builder, IQueryable<KeyDetailEnvelope<TKey, TD>> detailQuery)
+			where TKey : notnull
 		{
 			// Finalize keys for recursive processing
 			var expression = detailQuery.Expression;

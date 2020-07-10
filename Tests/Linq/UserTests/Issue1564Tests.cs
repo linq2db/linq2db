@@ -59,7 +59,7 @@ namespace Tests.UserTests
 				pathQuery.ToList();
 				adminCategoriesQuery.ToList();
 
-				Assert.True(adminCategoriesQuery.ToString().Contains("ORDER BY"));
+				Assert.True(adminCategoriesQuery.ToString()!.Contains("ORDER BY"));
 			}
 
 			IQueryable<AdminCategoryPathItemCte> GetPathQuery(IDataContext db)

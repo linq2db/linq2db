@@ -23,6 +23,10 @@
 		/// </summary>
 		public string? DataType;
 		/// <summary>
+		/// Get or sets exact database type for parameter.
+		/// </summary>
+		public string? DataTypeExact;
+		/// <summary>
 		/// Gets or sets parameter type length attribute.
 		/// </summary>
 		public long?  Length;

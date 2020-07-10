@@ -18,13 +18,14 @@ namespace LinqToDB.DataProvider.Access
 		{
 		}
 
-		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
+			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
 			// https://github.com/dotnet/runtime/issues/35442
 			return Array<ForeignKeyInfo>.Empty;
 		}
 
-		protected override List<TableInfo> GetTables(DataConnection dataConnection)
+		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			// tables and views has same schema, only difference in TABLE_TYPE
 			// views also include SELECT procedures, including procedures with parameters(!)
@@ -61,7 +62,8 @@ namespace LinqToDB.DataProvider.Access
 			).ToList();
 		}
 
-		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables)
+		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
+			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
 			// https://github.com/dotnet/runtime/issues/35442
 			return Array<PrimaryKeyInfo>.Empty;
@@ -94,7 +96,7 @@ namespace LinqToDB.DataProvider.Access
 			).ToList();
 		}
 
-		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
+		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			var ps = ((DbConnection)dataConnection.Connection).GetSchema("Procedures");
 
@@ -193,7 +195,7 @@ namespace LinqToDB.DataProvider.Access
 				dts.Add(new DataTypeInfo()
 				{
 					TypeName         = "BIGBINARY",
-					DataType         = typeof(byte[]).FullName,
+					DataType         = typeof(byte[]).FullName!,
 					ProviderDbType   = 9,
 				});
 			}

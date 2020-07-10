@@ -49,7 +49,7 @@ namespace Tests
 				{
 					exception = ex;
 
-					if (exception is NUnitException)
+					if (exception is NUnitException && ex.InnerException != null)
 						exception = ex.InnerException;
 
 					caughtType = exception.GetType();

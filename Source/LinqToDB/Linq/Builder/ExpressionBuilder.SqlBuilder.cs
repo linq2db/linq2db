@@ -451,7 +451,7 @@ namespace LinqToDB.Linq.Builder
 							if (ma.Member.IsNullableValueMember())
 							{
 								var ntype  = typeof(ConvertHelper<>).MakeGenericType(ma.Type);
-								var helper = (IConvertHelper)Activator.CreateInstance(ntype);
+								var helper = (IConvertHelper)Activator.CreateInstance(ntype)!;
 								var expr   = helper.ConvertNull(ma);
 
 								return new TransformInfo(ConvertExpression(expr));
@@ -1593,15 +1593,15 @@ namespace LinqToDB.Linq.Builder
 						else if (e.Method.Name == "Contains")
 						{
 							if (e.Method.DeclaringType == typeof(Enumerable) ||
-								typeof(IList).        IsSameOrParentOf(e.Method.DeclaringType) ||
-								typeof(ICollection<>).IsSameOrParentOf(e.Method.DeclaringType))
+								typeof(IList).        IsSameOrParentOf(e.Method.DeclaringType!) ||
+								typeof(ICollection<>).IsSameOrParentOf(e.Method.DeclaringType!))
 							{
 								predicate = ConvertInPredicate(context!, e);
 							}
 						}
-						else if (e.Method.Name == "ContainsValue" && typeof(Dictionary<,>).IsSameOrParentOf(e.Method.DeclaringType))
+						else if (e.Method.Name == "ContainsValue" && typeof(Dictionary<,>).IsSameOrParentOf(e.Method.DeclaringType!))
 						{
-							var args = e.Method.DeclaringType.GetGenericArguments(typeof(Dictionary<,>))!;
+							var args = e.Method.DeclaringType!.GetGenericArguments(typeof(Dictionary<,>))!;
 							var minf = EnumerableMethods
 								.First(m => m.Name == "Contains" && m.GetParameters().Length == 2)
 								.MakeGenericMethod(args[1]);
@@ -1613,9 +1613,9 @@ namespace LinqToDB.Linq.Builder
 
 							predicate = ConvertInPredicate(context!, expr);
 						}
-						else if (e.Method.Name == "ContainsKey" && typeof(IDictionary<,>).IsSameOrParentOf(e.Method.DeclaringType))
+						else if (e.Method.Name == "ContainsKey" && typeof(IDictionary<,>).IsSameOrParentOf(e.Method.DeclaringType!))
 						{
-							var args = e.Method.DeclaringType.GetGenericArguments(typeof(IDictionary<,>))!;
+							var args = e.Method.DeclaringType!.GetGenericArguments(typeof(IDictionary<,>))!;
 							var minf = EnumerableMethods
 								.First(m => m.Name == "Contains" && m.GetParameters().Length == 2)
 								.MakeGenericMethod(args[0]);
@@ -1627,7 +1627,7 @@ namespace LinqToDB.Linq.Builder
 
 							predicate = ConvertInPredicate(context!, expr);
 						}
-#if !NETSTANDARD2_0 && !NETCOREAPP2_1
+#if NET45 || NET46
 						else if (e.Method == ReflectionHelper.Functions.String.Like11) predicate = ConvertLikePredicate(context!, e);
 						else if (e.Method == ReflectionHelper.Functions.String.Like12) predicate = ConvertLikePredicate(context!, e);
 #endif
@@ -1899,7 +1899,7 @@ namespace LinqToDB.Linq.Builder
 				}
 				// here underlying type used
 				// (int?)enum? op (int?)enum
-				else if (op1conv.Operand.Type.IsNullable() && Nullable.GetUnderlyingType(op1conv.Operand.Type).IsEnum
+				else if (op1conv.Operand.Type.IsNullable() && Nullable.GetUnderlyingType(op1conv.Operand.Type)!.IsEnum
 					&& op2.NodeType == ExpressionType.Convert
 					&& op2 is UnaryExpression op2conv2
 					&& op2conv2.Operand.NodeType == ExpressionType.Constant
@@ -2084,7 +2084,7 @@ namespace LinqToDB.Linq.Builder
 			var skipCount     = 0;
 			foreach (var memberInfo in memberPath)
 			{
-				if (!memberInfo.DeclaringType.IsAssignableFrom(result.Type))
+				if (!memberInfo.DeclaringType!.IsAssignableFrom(result.Type))
 				{
 					// first element may have inappropriate nesting
 					if (skipCount-- == 0)
@@ -2294,8 +2294,8 @@ namespace LinqToDB.Linq.Builder
 		{
 			var typeResult = new DbDataType(member.GetMemberType());
 
-			var dta      = MappingSchema.GetAttribute<DataTypeAttribute>(member.ReflectedType, member);
-			var ca       = MappingSchema.GetAttribute<ColumnAttribute>  (member.ReflectedType, member);
+			var dta      = MappingSchema.GetAttribute<DataTypeAttribute>(member.ReflectedType!, member);
+			var ca       = MappingSchema.GetAttribute<ColumnAttribute>  (member.ReflectedType!, member);
 
 			var dataType = ca?.DataType ?? dta?.DataType;
 
@@ -2568,9 +2568,9 @@ namespace LinqToDB.Linq.Builder
 				if (value == null)
 					throw new LinqException("NULL cannot be used as a LIKE predicate parameter.");
 
-				return value.ToString().IndexOfAny(new[] { '%', '_' }) < 0?
+				return value.ToString()!.IndexOfAny(new[] { '%', '_' }) < 0?
 					new SqlPredicate.Like(o, false, new SqlValue(start + value + end), null, false):
-					new SqlPredicate.Like(o, false, new SqlValue(start + EscapeLikeText(value.ToString()) + end), new SqlValue('~'), false);
+					new SqlPredicate.Like(o, false, new SqlValue(start + EscapeLikeText(value.ToString()!) + end), new SqlValue('~'), false);
 			}
 
 			if (a is SqlParameter p)
@@ -3147,12 +3147,12 @@ namespace LinqToDB.Linq.Builder
 
 		Sql.ExpressionAttribute? GetExpressionAttribute(MemberInfo member)
 		{
-			return MappingSchema.GetAttribute<Sql.ExpressionAttribute>(member.ReflectedType, member, a => a.Configuration);
+			return MappingSchema.GetAttribute<Sql.ExpressionAttribute>(member.ReflectedType!, member, a => a.Configuration);
 		}
 
 		internal Sql.TableFunctionAttribute? GetTableFunctionAttribute(MemberInfo member)
 		{
-			return MappingSchema.GetAttribute<Sql.TableFunctionAttribute>(member.ReflectedType, member, a => a.Configuration);
+			return MappingSchema.GetAttribute<Sql.TableFunctionAttribute>(member.ReflectedType!, member, a => a.Configuration);
 		}
 
 		public ISqlExpression Convert(ISqlExpression expr)
@@ -3265,22 +3265,23 @@ namespace LinqToDB.Linq.Builder
 
 						if (expr.Members != null)
 						{
-						for (var i = 0; i < expr.Members.Count; i++)
-						{
-							var member = expr.Members[i];
+							for (var i = 0; i < expr.Members.Count; i++)
+							{
+								var member = expr.Members[i];
 
-							var converted = expr.Arguments[i].Transform(e => RemoveNullPropagation(e));
-							members.Add(member, converted);
+								var converted = expr.Arguments[i].Transform(e => RemoveNullPropagation(e));
+								members.Add(member, converted);
 
-							if (member is MethodInfo info)
-								members.Add(info.GetPropertyInfo(), converted);
+								if (member is MethodInfo info)
+									members.Add(info.GetPropertyInfo(), converted);
+							}
 						}
-						}
 
-						if (!MappingSchema.IsScalarType(expr.Type))
+						var isScalar = MappingSchema.IsScalarType(expr.Type);
+						if (!isScalar)
 							CollectParameters(expr.Type, expr.Constructor, expr.Arguments);
 
-						return members.Count > 0;
+						return members.Count > 0 || !isScalar;
 					}
 
 				// new MyObject { ... }

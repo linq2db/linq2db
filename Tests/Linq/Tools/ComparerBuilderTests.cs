@@ -100,8 +100,8 @@ namespace Tests.Tools
 		{
 			var comparer = ComparerBuilder.GetEqualityComparer<MethodInfo>(m => m.MethodHandle);
 
-			var a  = typeof(A).GetMethod("M");
-			var b  = typeof(B).GetMethod("M");
+			var a  = typeof(A).GetMethod("M")!;
+			var b  = typeof(B).GetMethod("M")!;
 			var b2 = b.GetBaseDefinition();
 
 			Assert.False(a.Equals(b), "MethodInfo fails");
@@ -133,7 +133,7 @@ namespace Tests.Tools
 			var eq = ComparerBuilder.GetEqualityComparer<TestClass?>();
 
 			Assert.That(eq.GetHashCode(new TestClass()), Is.Not.EqualTo(0));
-			Assert.That(eq.GetHashCode(null),        Is.    EqualTo(0));
+			Assert.That(eq.GetHashCode(null!),           Is.    EqualTo(0));
 		}
 
 		[Test]

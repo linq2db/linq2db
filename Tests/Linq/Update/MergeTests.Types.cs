@@ -337,9 +337,14 @@ namespace Tests.xUpdate
 			}
 		};
 
+		[ActiveIssue(Configurations = new[]
+		{
+			ProviderName.SapHanaNative
 #if AZURE
-		[ActiveIssue("need to configure sybase docker image to use utf8 character set", Configuration = TestProvName.AllSybase)]
+			,TestProvName.AllSybase
+		//[ActiveIssue("need to configure sybase docker image to use utf8 character set", Configuration = TestProvName.AllSybase)]
 #endif
+		}, Details = "Native provider from SAP HANA 2 SPS04 045 cannot digest null/DBNull/byte[0] binary parameters")]
 		[Test]
 		public void TestMergeTypes([DataSources(true, ProviderName.SQLiteMS)] string context)
 		{

@@ -58,9 +58,9 @@ namespace LinqToDB.SqlQuery
 				{
 					if (value != null)
 					{
-						return value.ToString().IndexOfAny(new[] { '%', '_' }) < 0 ?
+						return value.ToString()!.IndexOfAny(new[] { '%', '_' }) < 0 ?
 							LikeStart + value + LikeEnd :
-							LikeStart + EscapeLikeText(value.ToString()) + LikeEnd;
+							LikeStart + EscapeLikeText(value.ToString()!) + LikeEnd;
 					}
 				}
 
@@ -168,7 +168,7 @@ namespace LinqToDB.SqlQuery
 
 		#region IEquatable<ISqlExpression> Members
 
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression other)
+		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
 		{
 			if (this == other)
 				return true;

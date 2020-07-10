@@ -1,4 +1,4 @@
-﻿#if !NETSTANDARD2_0
+﻿#if !NETSTANDARD2_0 && !NETSTANDARD2_1
 using System;
 using System.Data;
 
@@ -15,8 +15,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 #if NET45 || NET46
 		public const string AssemblyName        = "Sap.Data.Hana.v4.5";
-#endif
-#if NETCOREAPP2_1
+#else
 		public const string AssemblyName        = "Sap.Data.Hana.Core.v2.1";
 #endif
 
@@ -68,19 +67,19 @@ namespace LinqToDB.DataProvider.SapHana
 						if (assembly == null)
 							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
 
-						var connectionType  = assembly.GetType($"{ClientNamespace}.HanaConnection" , true);
-						var dataReaderType  = assembly.GetType($"{ClientNamespace}.HanaDataReader" , true);
-						var parameterType   = assembly.GetType($"{ClientNamespace}.HanaParameter"  , true);
-						var commandType     = assembly.GetType($"{ClientNamespace}.HanaCommand"    , true);
-						var transactionType = assembly.GetType($"{ClientNamespace}.HanaTransaction", true);
-						var dbType          = assembly.GetType($"{ClientNamespace}.HanaDbType"     , true);
+						var connectionType  = assembly.GetType($"{ClientNamespace}.HanaConnection" , true)!;
+						var dataReaderType  = assembly.GetType($"{ClientNamespace}.HanaDataReader" , true)!;
+						var parameterType   = assembly.GetType($"{ClientNamespace}.HanaParameter"  , true)!;
+						var commandType     = assembly.GetType($"{ClientNamespace}.HanaCommand"    , true)!;
+						var transactionType = assembly.GetType($"{ClientNamespace}.HanaTransaction", true)!;
+						var dbType          = assembly.GetType($"{ClientNamespace}.HanaDbType"     , true)!;
 
-						var bulkCopyType                    = assembly.GetType($"{ClientNamespace}.HanaBulkCopy"                       , true);
-						var bulkCopyOptionsType             = assembly.GetType($"{ClientNamespace}.HanaBulkCopyOptions"                , true);
-						var bulkCopyColumnMappingType       = assembly.GetType($"{ClientNamespace}.HanaBulkCopyColumnMapping"          , true);
-						var rowsCopiedEventHandlerType      = assembly.GetType($"{ClientNamespace}.HanaRowsCopiedEventHandler"         , true);
-						var rowsCopiedEventArgs             = assembly.GetType($"{ClientNamespace}.HanaRowsCopiedEventArgs"            , true);
-						var bulkCopyColumnMappingCollection = assembly.GetType($"{ClientNamespace}.HanaBulkCopyColumnMappingCollection", true);
+						var bulkCopyType                    = assembly.GetType($"{ClientNamespace}.HanaBulkCopy"                       , true)!;
+						var bulkCopyOptionsType             = assembly.GetType($"{ClientNamespace}.HanaBulkCopyOptions"                , true)!;
+						var bulkCopyColumnMappingType       = assembly.GetType($"{ClientNamespace}.HanaBulkCopyColumnMapping"          , true)!;
+						var rowsCopiedEventHandlerType      = assembly.GetType($"{ClientNamespace}.HanaRowsCopiedEventHandler"         , true)!;
+						var rowsCopiedEventArgs             = assembly.GetType($"{ClientNamespace}.HanaRowsCopiedEventArgs"            , true)!;
+						var bulkCopyColumnMappingCollection = assembly.GetType($"{ClientNamespace}.HanaBulkCopyColumnMappingCollection", true)!;
 
 						var typeMapper = new TypeMapper();
 
@@ -232,10 +231,10 @@ namespace LinqToDB.DataProvider.SapHana
 			public HanaBulkCopyColumnMappingCollection ColumnMappings => ((Func<HanaBulkCopy, HanaBulkCopyColumnMappingCollection>)CompiledWrappers[6])(this);
 
 			private      HanaRowsCopiedEventHandler? _HanaRowsCopied;
-			public event HanaRowsCopiedEventHandler   HanaRowsCopied
+			public event HanaRowsCopiedEventHandler?  HanaRowsCopied
 			{
-				add    => _HanaRowsCopied = (HanaRowsCopiedEventHandler)Delegate.Combine(_HanaRowsCopied, value);
-				remove => _HanaRowsCopied = (HanaRowsCopiedEventHandler)Delegate.Remove (_HanaRowsCopied, value);
+				add    => _HanaRowsCopied = (HanaRowsCopiedEventHandler?)Delegate.Combine(_HanaRowsCopied, value);
+				remove => _HanaRowsCopied = (HanaRowsCopiedEventHandler?)Delegate.Remove (_HanaRowsCopied, value);
 			}
 		}
 

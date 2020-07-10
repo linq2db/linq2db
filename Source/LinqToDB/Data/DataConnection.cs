@@ -643,7 +643,7 @@ namespace LinqToDB.Data
 		{
 			get
 			{
-#if !NETSTANDARD2_0 && !NETCOREAPP2_1
+#if NET45 || NET46
 				return _defaultSettings ?? (_defaultSettings = LinqToDBSection.Instance);
 #else
 				return _defaultSettings;
@@ -697,8 +697,8 @@ namespace LinqToDB.Data
 
 				foreach (var provider in section.DataProviders)
 				{
-					var dataProviderType = Type.GetType(provider.TypeName, true);
-					var providerInstance = (IDataProviderFactory)Activator.CreateInstance(dataProviderType);
+					var dataProviderType = Type.GetType(provider.TypeName, true)!;
+					var providerInstance = (IDataProviderFactory)Activator.CreateInstance(dataProviderType)!;
 
 					if (!provider.Name.IsNullOrEmpty())
 						AddDataProvider(provider.Name, providerInstance.GetDataProvider(provider.Attributes));

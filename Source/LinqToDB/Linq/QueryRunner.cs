@@ -407,7 +407,7 @@ namespace LinqToDB.Linq
 						type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>) &&
 						etype.GetGenericArguments()[0].IsEnum)
 					{
-						var values = new List<object>();
+						var values = new List<object?>();
 
 						foreach (var v in vs)
 						{
@@ -418,7 +418,7 @@ namespace LinqToDB.Linq
 								var valueType = v.GetType();
 
 								if (valueType.ToNullableUnderlying().IsEnum)
-									value = query.GetConvertedEnum(valueType, value);
+									value = query.GetConvertedEnum(valueType, v);
 							}
 
 							values.Add(value);
@@ -593,7 +593,12 @@ namespace LinqToDB.Linq
 		{
 			using (var runner = dataContext.GetQueryRunner(query, queryNumber, expression, ps, preambles))
 			{
-				using (var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+				var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+#if !NET45 && !NET46
+				await using (dr.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+#else
+				using (dr)
+#endif
 				{
 					var skip = skipAction?.Invoke(expression, dataContext, ps) ?? 0;
 
@@ -623,6 +628,7 @@ namespace LinqToDB.Linq
 			readonly int                           _queryNumber;
 			readonly Func<Expression,IDataContext?,object?[]?,int>? _skipAction;
 			readonly Func<Expression,IDataContext?,object?[]?,int>? _takeAction;
+			readonly CancellationToken             _cancellationToken;
 
 			IQueryRunner?     _queryRunner;
 			IDataReaderAsync? _dataReader;
@@ -637,41 +643,47 @@ namespace LinqToDB.Linq
 				object?[]?                       preambles,
 				int                              queryNumber,
 				Func<Expression,IDataContext?,object?[]?,int>? skipAction,
-				Func<Expression,IDataContext?,object?[]?,int>? takeAction)
+				Func<Expression,IDataContext?,object?[]?,int>? takeAction,
+				CancellationToken                cancellationToken)
 			{
-				_query       = query;
-				_dataContext = dataContext;
-				_mapper      = mapper;
-				_expression  = expression;
-				_ps          = ps;
-				_preambles   = preambles;
-				_queryNumber = queryNumber;
-				_skipAction  = skipAction;
-				_takeAction  = takeAction;
+				_query             = query;
+				_dataContext       = dataContext;
+				_mapper            = mapper;
+				_expression        = expression;
+				_ps                = ps;
+				_preambles         = preambles;
+				_queryNumber       = queryNumber;
+				_skipAction        = skipAction;
+				_takeAction        = takeAction;
+				_cancellationToken = cancellationToken;
 			}
 
 			public T Current { get; set; } = default!;
 
-			public async Task<bool> MoveNext(CancellationToken cancellationToken)
+#if NET45 || NET46
+			public async Task<bool> MoveNextAsync()
+#else
+			public async ValueTask<bool> MoveNextAsync()
+#endif
 			{
 				if (_queryRunner == null)
 				{
 					_queryRunner = _dataContext.GetQueryRunner(_query, _queryNumber, _expression, _ps, _preambles);
 
-					_dataReader = await _queryRunner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					_dataReader = await _queryRunner.ExecuteReaderAsync(_cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 					var skip = _skipAction?.Invoke(_expression, _dataContext, _ps) ?? 0;
 
 					while (skip-- > 0)
 					{
-						if (!await _dataReader.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+						if (!await _dataReader.ReadAsync(_cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 							return false;
 					}
 
 					_take = _takeAction?.Invoke(_expression, _dataContext, _ps) ?? int.MaxValue;
 				}
 
-				if (_take-- > 0 && await _dataReader!.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+				if (_take-- > 0 && await _dataReader!.ReadAsync(_cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 				{
 					_queryRunner.RowsCount++;
 
@@ -690,6 +702,23 @@ namespace LinqToDB.Linq
 
 				_queryRunner = null;
 			}
+
+#if NET45 || NET46
+			public Task DisposeAsync()
+			{
+				Dispose();
+				return TaskEx.CompletedTask;
+			}
+#else
+			public async ValueTask DisposeAsync()
+			{
+				_queryRunner?.Dispose();
+				if (_dataReader != null) 
+					await _dataReader.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				
+				_queryRunner = null;
+			}
+#endif
 		}
 
 		class AsyncEnumerableImpl<T> : IAsyncEnumerable<T>
@@ -726,10 +755,10 @@ namespace LinqToDB.Linq
 				_takeAction  = takeAction;
 			}
 
-			public IAsyncEnumerator<T> GetEnumerator()
+			public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken)
 			{
 				return new AsyncEnumeratorImpl<T>(
-					_query, _dataContext, _mapper, _expression, _ps, _preambles, _queryNumber, _skipAction, _takeAction);
+					_query, _dataContext, _mapper, _expression, _ps, _preambles, _queryNumber, _skipAction, _takeAction, cancellationToken);
 			}
 		}
 
@@ -899,7 +928,12 @@ namespace LinqToDB.Linq
 		{
 			using (var runner = dataContext.GetQueryRunner(query, 0, expression, ps, preambles))
 			{
-				using (var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+				var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+#if !NET45 && !NET46
+				await using (dr.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+#else
+				using (dr)
+#endif
 				{
 					if (await dr.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 					{

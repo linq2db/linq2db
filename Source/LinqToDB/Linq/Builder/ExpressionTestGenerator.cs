@@ -174,7 +174,7 @@ namespace LinqToDB.Linq.Builder
 						var e = (MemberExpression)expr;
 
 						e.Expression.Visit(BuildExpression);
-						_exprBuilder.AppendFormat(".{0}", MangleName(e.Member.DeclaringType, e.Member.Name, "P"));
+						_exprBuilder.AppendFormat(".{0}", MangleName(e.Member.DeclaringType!, e.Member.Name, "P"));
 
 						return false;
 					}
@@ -202,9 +202,9 @@ namespace LinqToDB.Linq.Builder
 						else if (ex.Object != null)
 							ex.Object.Visit(BuildExpression);
 						else
-							_exprBuilder.Append(GetTypeName(mi.DeclaringType));
+							_exprBuilder.Append(GetTypeName(mi.DeclaringType!));
 
-						_exprBuilder.Append(".").Append(MangleName(mi.DeclaringType, mi.Name, "M"));
+						_exprBuilder.Append(".").Append(MangleName(mi.DeclaringType!, mi.Name, "M"));
 
 						if (!ex.IsQueryable() && mi.IsGenericMethod && mi.GetGenericArguments().Select(GetTypeName).All(t => t != null))
 						{
@@ -309,7 +309,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							if (ne.Members.Count == 1)
 							{
-								_exprBuilder.AppendFormat("new {{ {0} = ", MangleName(ne.Members[0].DeclaringType, ne.Members[0].Name, "P"));
+								_exprBuilder.AppendFormat("new {{ {0} = ", MangleName(ne.Members[0].DeclaringType!, ne.Members[0].Name, "P"));
 								ne.Arguments[0].Visit(BuildExpression);
 								_exprBuilder.Append(" }}");
 							}
@@ -321,7 +321,7 @@ namespace LinqToDB.Linq.Builder
 
 								for (var i = 0; i < ne.Members.Count; i++)
 								{
-									_exprBuilder.AppendLine().Append(_indent).AppendFormat("{0} = ", MangleName(ne.Members[i].DeclaringType, ne.Members[i].Name, "P"));
+									_exprBuilder.AppendLine().Append(_indent).AppendFormat("{0} = ", MangleName(ne.Members[i].DeclaringType!, ne.Members[i].Name, "P"));
 									ne.Arguments[i].Visit(BuildExpression);
 
 									if (i + 1 < ne.Members.Count)
@@ -357,7 +357,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								case MemberBindingType.Assignment:
 									var ma = (MemberAssignment) b;
-									_exprBuilder.AppendFormat("{0} = ", MangleName(ma.Member.DeclaringType, ma.Member.Name, "P"));
+									_exprBuilder.AppendFormat("{0} = ", MangleName(ma.Member.DeclaringType!, ma.Member.Name, "P"));
 									ma.Expression.Visit(BuildExpression);
 									break;
 								default:
@@ -401,7 +401,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var e = (NewArrayExpression)expr;
 
-						_exprBuilder.AppendFormat("new {0}[]", GetTypeName(e.Type.GetElementType()));
+						_exprBuilder.AppendFormat("new {0}[]", GetTypeName(e.Type.GetElementType()!));
 
 						if (e.Expressions.Count == 1)
 						{
@@ -527,9 +527,9 @@ namespace LinqToDB.Linq.Builder
 			if (type.IsGenericType)
 				type = type.GetGenericTypeDefinition();
 
-			var baseClasses = new[] { type.BaseType }
+			Type[] baseClasses = new[] { type.BaseType }
 				.Where(t => t != null && t != typeof(object))
-				.Concat(type.GetInterfaces()).ToArray();
+				.Concat(type.GetInterfaces()).ToArray()!;
 
 			var ctors = type.GetConstructors().Select(c =>
 			{
@@ -646,17 +646,17 @@ namespace {0}
 
 		readonly Dictionary<string,string> _nameDic = new Dictionary<string,string>();
 
-		string MangleName(Type type, string name, string prefix)
+		string MangleName(Type type, string? name, string prefix)
 		{
-			return IsUserType(type) ? MangleName(name, prefix) : name;
+			return IsUserType(type) ? MangleName(name, prefix) : name ?? prefix;
 		}
 
-		string MangleName(bool isUserType, string name, string prefix)
+		string MangleName(bool isUserType, string? name, string prefix)
 		{
-			return isUserType ? MangleName(name, prefix) : name;
+			return isUserType ? MangleName(name, prefix) : name ?? prefix;
 		}
 
-		string MangleName(string name, string prefix)
+		string MangleName(string? name, string prefix)
 		{
 			name = name ?? ""; 
 			if (!_mangleNames)
@@ -802,7 +802,7 @@ namespace {0}
 
 		readonly HashSet<Type> _usedTypes = new HashSet<Type>();
 
-		void AddType(Type type)
+		void AddType(Type? type)
 		{
 			if (type == null || type == typeof(object) || type.IsGenericParameter || _usedTypes.Contains(type))
 				return;

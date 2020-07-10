@@ -17,7 +17,7 @@ namespace Tests.Model
 			public string? StringValue1;
 			public string? StringValue2;
 
-			public override bool Equals(object obj)
+			public override bool Equals(object? obj)
 			{
 				var other = obj as StringTest;
 				if (other == null)

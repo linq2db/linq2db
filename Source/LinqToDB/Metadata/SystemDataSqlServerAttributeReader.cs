@@ -31,7 +31,7 @@ namespace LinqToDB.Metadata
 #endif
 				Type.GetType("Microsoft.SqlServer.Server.SqlMethodAttribute, System.Data.SqlClient", false),
 				Type.GetType("Microsoft.Data.SqlClient.Server.SqlMethodAttribute, Microsoft.Data.SqlClient", false)
-			}.Where(_ => _ != null).Distinct().ToArray();
+			}.Where(_ => _ != null).Distinct().ToArray()!;
 
 			_sqlUserDefinedTypeAttributes = new[]
 			{
@@ -40,7 +40,7 @@ namespace LinqToDB.Metadata
 #endif
 				Type.GetType("Microsoft.SqlServer.Server.SqlUserDefinedTypeAttribute, System.Data.SqlClient", false),
 				Type.GetType("Microsoft.Data.SqlClient.Server.SqlUserDefinedTypeAttribute, Microsoft.Data.SqlClient", false)
-			}.Where(_ => _ != null).Distinct().ToArray();
+			}.Where(_ => _ != null).Distinct().ToArray()!;
 		}
 
 		public T[] GetAttributes<T>(Type type, bool inherit)
@@ -74,7 +74,7 @@ namespace LinqToDB.Metadata
 								var ex = mi.IsStatic
 									?
 									string.Format("{0}::{1}({2})",
-										memberInfo.DeclaringType.Name.ToLower().StartsWith("sql")
+										memberInfo.DeclaringType!.Name.ToLower().StartsWith("sql")
 											? memberInfo.DeclaringType.Name.Substring(3)
 											: memberInfo.DeclaringType.Name,
 											((dynamic)ma[0]).Name ?? memberInfo.Name,

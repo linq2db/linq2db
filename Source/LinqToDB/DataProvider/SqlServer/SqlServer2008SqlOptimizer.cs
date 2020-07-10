@@ -13,7 +13,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			//SQL Server 2008 supports ROW_NUMBER but not OFFSET/FETCH
 
-			statement = SeparateDistinctFromPagination(statement);
+			statement = SeparateDistinctFromPagination(statement, q => q.Select.TakeValue != null || q.Select.SkipValue != null);
 			if (statement.IsUpdate() || statement.IsDelete()) statement = WrapRootTakeSkipOrderBy(statement);
 			statement = ReplaceSkipWithRowNumber(statement);
 			if (statement.QueryType == QueryType.Select)

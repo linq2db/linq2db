@@ -13,13 +13,13 @@ namespace LinqToDB.SchemaProvider
 	public abstract class SchemaProviderBase : ISchemaProvider
 	{
 		protected abstract DataType                            GetDataType   (string? dataType, string? columnType, long? length, int? prec, int? scale);
-		protected abstract List<TableInfo>                     GetTables     (DataConnection dataConnection);
-		protected abstract IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables);
+		protected abstract List<TableInfo>                     GetTables     (DataConnection dataConnection, GetSchemaOptions options);
+		protected abstract IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables, GetSchemaOptions options);
 		protected abstract List<ColumnInfo>                    GetColumns    (DataConnection dataConnection, GetSchemaOptions options);
-		protected abstract IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables);
+		protected abstract IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables, GetSchemaOptions options);
 		protected abstract string?                             GetProviderSpecificTypeNamespace();
 
-		protected virtual List<ProcedureInfo>?          GetProcedures         (DataConnection dataConnection) => null;
+		protected virtual List<ProcedureInfo>?          GetProcedures         (DataConnection dataConnection, GetSchemaOptions options) => null;
 		protected virtual List<ProcedureParameterInfo>? GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options) => null;
 
 		protected HashSet<string?>   IncludedSchemas  = null!;
@@ -83,7 +83,7 @@ namespace LinqToDB.SchemaProvider
 			{
 				tables =
 				(
-					from t in GetTables(dataConnection)
+					from t in GetTables(dataConnection, options)
 					where
 						(IncludedSchemas .Count == 0 ||  IncludedSchemas .Contains(t.SchemaName))  &&
 						(ExcludedSchemas .Count == 0 || !ExcludedSchemas .Contains(t.SchemaName))  &&
@@ -106,7 +106,7 @@ namespace LinqToDB.SchemaProvider
 					}
 				).ToList();
 
-				var pks = GetPrimaryKeys(dataConnection, tables);
+				var pks = GetPrimaryKeys(dataConnection, tables, options);
 
 				#region Columns
 
@@ -156,7 +156,7 @@ namespace LinqToDB.SchemaProvider
 
 				#region FK
 
-				var fks = options.GetForeignKeys ? GetForeignKeys(dataConnection, tables) : Array<ForeignKeyInfo>.Empty;
+				var fks = options.GetForeignKeys ? GetForeignKeys(dataConnection, tables, options) : Array<ForeignKeyInfo>.Empty;
 
 				foreach (var fk in fks.OrderBy(f => f.Ordinal))
 				{
@@ -216,7 +216,7 @@ namespace LinqToDB.SchemaProvider
 				#region Procedures
 
 				var sqlProvider = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
-				var procs       = GetProcedures(dataConnection);
+				var procs       = GetProcedures(dataConnection, options);
 				var n           = 0;
 
 				if (procs != null)
@@ -249,7 +249,7 @@ namespace LinqToDB.SchemaProvider
 
 								let dt         = GetDataType(pr.DataType, options)
 
-								let systemType = GetSystemType(pr.DataType, null, dt, pr.Length, pr.Precision, pr.Scale, options)
+								let systemType = GetSystemType(pr.DataType, pr.DataTypeExact, dt, pr.Length, pr.Precision, pr.Scale, options)
 
 								orderby pr.Ordinal
 								select new ParameterSchema
@@ -263,7 +263,7 @@ namespace LinqToDB.SchemaProvider
 									ParameterName        = ToValidName(pr.ParameterName ?? "par" + ++n),
 									ParameterType        = ToTypeName(systemType, true),
 									SystemType           = systemType ?? typeof(object),
-									DataType             = GetDataType(pr.DataType, null, pr.Length, pr.Precision, pr.Scale),
+									DataType             = GetDataType(pr.DataType, pr.DataTypeExact, pr.Length, pr.Precision, pr.Scale),
 									ProviderSpecificType = GetProviderSpecificType(pr.DataType),
 									IsNullable           = pr.IsNullable
 								}
@@ -454,11 +454,11 @@ namespace LinqToDB.SchemaProvider
 
 		protected virtual string? GetProviderSpecificType(string? dataType) => null;
 
-		protected DataTypeInfo? GetDataType(string? typeName, GetSchemaOptions options)
+		protected virtual DataTypeInfo? GetDataType(string? typeName, GetSchemaOptions options)
 		{
 			if (typeName == null)
 				return null;
-
+			
 			return
 				options.PreferProviderSpecificTypes == true
 				? (ProviderSpecificDataTypesDic.TryGetValue(typeName, out var dt) ? dt : DataTypesDic                .TryGetValue(typeName, out dt) ? dt : null)
@@ -581,6 +581,7 @@ namespace LinqToDB.SchemaProvider
 			return dbType;
 		}
 
+		// TODO: use proper C# identifier validation procedure
 		public static string ToValidName(string name)
 		{
 			if (name.Contains(" ") || name.Contains("\t"))
@@ -601,6 +602,7 @@ namespace LinqToDB.SchemaProvider
 				.Replace('/',  '_')
 				.Replace('\\', '_')
 				.Replace(':', '_')
+				.Replace('`', '_')
 				;
 		}
 

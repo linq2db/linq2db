@@ -17,28 +17,12 @@ public class TestsInitialization
 	[OneTimeSetUp]
 	public void TestAssemblySetup()
 	{
-#if NET46
-		// recent SAP HANA provider uses Assembly.GetEntryAssembly() calls during native dlls discovery, which
-		// leads to NRE as it returns null under NETFX, so we need to fake this method result to unblock HANA testing
-		// https://github.com/microsoft/vstest/issues/1834
-		// https://dejanstojanovic.net/aspnet/2015/january/set-entry-assembly-in-unit-testing-methods/
-		var assembly = Assembly.GetCallingAssembly();
-
-		var manager            = new AppDomainManager();
-		var entryAssemblyfield = manager.GetType().GetField("m_entryAssembly", BindingFlags.Instance | BindingFlags.NonPublic);
-		entryAssemblyfield.SetValue(manager, assembly);
-
-		var domain             = AppDomain.CurrentDomain;
-		var domainManagerField = domain.GetType().GetField("_domainManager", BindingFlags.Instance | BindingFlags.NonPublic);
-		domainManagerField.SetValue(domain, manager);
-#endif
-
 		// netcoreapp2.1 adds DbProviderFactories support, but providers should be registered by application itself
 		// this code allows to load assembly using factory without adding explicit reference to project
 		RegisterSapHanaFactory();
 		RegisterSqlCEFactory();
 
-#if !NETCOREAPP2_1 && !AZURE
+#if NET46 && !AZURE
 		// configure assembly redirect for referenced assemblies to use version from GAC
 		// this solves exception from provider-specific tests, when it tries to load version from redist folder
 		// but loaded from GAC assembly has other version
@@ -65,12 +49,12 @@ public class TestsInitialization
 
 	private void RegisterSapHanaFactory()
 	{
-#if NETCOREAPP2_1
+#if !NET46
 		try
 		{
 			// woo-hoo, hardcoded pathes! default install location on x64 system
 			var srcPath = @"c:\Program Files (x86)\sap\hdbclient\dotnetcore\v2.1\Sap.Data.Hana.Core.v2.1.dll";
-			var targetPath = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, Path.GetFileName(srcPath));
+			var targetPath = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory!, Path.GetFileName(srcPath));
 			if (File.Exists(srcPath))
 			{
 				// original path contains spaces which breaks broken native dlls discovery logic in SAP provider
@@ -86,7 +70,7 @@ public class TestsInitialization
 
 	private void RegisterSqlCEFactory()
 	{
-#if NETCOREAPP2_1
+#if !NET46
 		try
 		{
 			// default install pathes. Hardcoded for now as hardly anyone will need other location in near future

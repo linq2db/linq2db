@@ -1504,5 +1504,43 @@ namespace Tests.Linq
 					Assert.AreEqual(flag == null ? 0 : 1, Regex.Matches(sql, " AND ").Count);
 			}
 		}
+
+		[Test]
+		public void ExistsSqlTest1([DataSources(false)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				db.Parent.Where(p => db.Child.Select(c => c.ParentID).Contains(p.ParentID)).Delete();
+
+				Assert.False(db.LastQuery!.ToLower().Contains("iif(exists(") || db.LastQuery!.ToLower().Contains("when exists("));
+			}
+		}
+
+		[Test]
+		public void ExistsSqlTest2([DataSources(false)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				db.Parent.Where(p => p.Children.Any()).Delete();
+
+				Assert.False(db.LastQuery!.ToLower().Contains("iif(exists(") || db.LastQuery!.ToLower().Contains("when exists("));
+			}
+		}
+
+		[ActiveIssue(1767)]
+		[Test]
+		public void Issue1767Test([DataSources(false)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				db.Person.FirstOrDefault(p => p.MiddleName != null && p.MiddleName != "test");
+
+				Assert.True(db.LastQuery!.Contains("IS NOT NULL"));
+				Assert.False(db.LastQuery!.Contains("IS NULL"));
+			}
+		}
 	}
 }

@@ -461,7 +461,7 @@ namespace LinqToDB.Linq.Builder
 			if (sql.Length != 1)
 				throw new LinqException($"Expression '{extract}' can not be used as Update Field.");
 
-			var column = table != null && field != null ? table[field.Name] : sql[0].Sql;
+			var column = table != null && field != null ? table[field.Name]! : sql[0].Sql;
 
 			sp = valuesContext.Parent;
 			ctx = new ExpressionContext(buildInfo.Parent, valuesContext, update);

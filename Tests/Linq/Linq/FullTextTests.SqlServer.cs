@@ -2027,7 +2027,7 @@ namespace Tests.Linq
 					orderby c.CategoryID descending
 					select c;
 
-				Assert.That(q.ToString().Contains("CONTAINS(PROPERTY([c_1].[Description], N'title'), N'bread')"));
+				Assert.That(q.ToString()!.Contains("CONTAINS(PROPERTY([c_1].[Description], N'title'), N'bread')"));
 			}
 		}
 
@@ -2042,7 +2042,7 @@ namespace Tests.Linq
 					orderby c.CategoryID descending
 					select c;
 
-				Assert.That(q.ToString().Contains("CONTAINS(PROPERTY([c_1].[Description], N'Title'), N'dry & bread', LANGUAGE N'English')"));
+				Assert.That(q.ToString()!.Contains("CONTAINS(PROPERTY([c_1].[Description], N'Title'), N'dry & bread', LANGUAGE N'English')"));
 			}
 		}
 
@@ -2057,7 +2057,7 @@ namespace Tests.Linq
 					orderby c.CategoryID descending
 					select c;
 
-				Assert.That(q.ToString().Contains("CONTAINS(PROPERTY([c_1].[CategoryName], N'Title'), N'candy | meat', LANGUAGE 1033)"));
+				Assert.That(q.ToString()!.Contains("CONTAINS(PROPERTY([c_1].[CategoryName], N'Title'), N'candy | meat', LANGUAGE 1033)"));
 			}
 		}
 
@@ -2075,7 +2075,7 @@ namespace Tests.Linq
 					orderby c.CategoryID descending
 					select c;
 
-				Assert.That(q.ToString().Contains($"CONTAINS(PROPERTY([c_1].[Description], N'{property}'), @search_1)"));
+				Assert.That(q.ToString()!.Contains($"CONTAINS(PROPERTY([c_1].[Description], N'{property}'), @search_1)"));
 			}
 		}
 
@@ -2094,7 +2094,7 @@ namespace Tests.Linq
 					orderby c.CategoryID descending
 					select c;
 
-				Assert.That(q.ToString().Contains($"CONTAINS(PROPERTY([c_1].[Description], N'{property}'), @search_1, LANGUAGE @lang)"));
+				Assert.That(q.ToString()!.Contains($"CONTAINS(PROPERTY([c_1].[Description], N'{property}'), @search_1, LANGUAGE @lang)"));
 			}
 		}
 
@@ -2113,7 +2113,7 @@ namespace Tests.Linq
 					orderby c.CategoryID descending
 					select c;
 
-				Assert.That(q.ToString().Contains($"CONTAINS(PROPERTY([c_1].[CategoryName], N'{property}'), @search_1, LANGUAGE @lang)"));
+				Assert.That(q.ToString()!.Contains($"CONTAINS(PROPERTY([c_1].[CategoryName], N'{property}'), @search_1, LANGUAGE @lang)"));
 			}
 		}
 		#endregion

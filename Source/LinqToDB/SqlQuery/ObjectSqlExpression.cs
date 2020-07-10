@@ -32,7 +32,7 @@ namespace LinqToDB.SqlQuery
 
 			if (!_getters.TryGetValue(index, out var getter))
 			{
-				var ta        = TypeAccessor.GetAccessor(mi.DeclaringType);
+				var ta        = TypeAccessor.GetAccessor(mi.DeclaringType!);
 				var valueType = mi.GetMemberType();
 				getter        = ta[mi.Name].Getter!;
 

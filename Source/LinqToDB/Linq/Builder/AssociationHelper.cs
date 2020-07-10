@@ -215,7 +215,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								
 								var query = ExpressionQueryImpl.CreateQuery(objectType, builder.DataContext, body);
-								var filtered = (IQueryable)filterDelegate.DynamicInvoke(query);
+								var filtered = (IQueryable)filterDelegate.DynamicInvoke(query)!;
 								body = filtered.Expression;
 							}
 						}
