@@ -115,60 +115,6 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			void MoveSearchConditionsToJoin(SqlFromClause.Join join)
-			{
-				var usedTableSources = new HashSet<ISqlTableSource>(sql.Select.From.Tables.Select(t => t.Source));
-
-				var tableSources = new HashSet<ISqlTableSource>();
-
-				((ISqlExpressionWalkable)sql.Where.SearchCondition).Walk(new WalkOptions(), e =>
-				{
-					if (e is ISqlTableSource ts && usedTableSources.Contains(ts))
-						tableSources.Add(ts);
-					return e;
-				});
-
-				bool ContainsTable(ISqlTableSource tbl, IQueryElement qe)
-				{
-					return null != new QueryVisitor().Find(qe, e =>
-						e == tbl ||
-						e.ElementType == QueryElementType.SqlField && tbl == ((SqlField) e).Table ||
-						e.ElementType == QueryElementType.Column   && tbl == ((SqlColumn)e).Parent);
-				}
-
-				SqlCondition CorrectSearchConditionNesting(SqlCondition condition)
-				{
-					var newCondition = ConvertVisitor.Convert(condition, (v, e) =>
-					{
-						if (e is SqlColumn column && column.Parent != null && usedTableSources.Contains(column.Parent))
-						{
-							e = sql.Select.AddColumn((ISqlExpression)e);
-						}
-
-						return e;
-					});
-
-					return newCondition;
-				}
-
-				var conditions = sql.Where.SearchCondition.Conditions;
-
-				if (conditions.Count > 0)
-				{
-					for (var i = conditions.Count - 1; i >= 0; i--)
-					{
-						var condition = conditions[i];
-
-						if (!tableSources.Any(ts => ContainsTable(ts, condition)))
-						{
-							var corrected = CorrectSearchConditionNesting(condition);
-							join.JoinedTable.Condition.Conditions.Insert(0, corrected);
-							conditions.RemoveAt(i);
-						}
-					}
-				}
-			}
-
 			var joinType = collectionInfo.JoinType;
 
 			if (collection is TableBuilder.TableContext table)
@@ -197,7 +143,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (!(joinType == JoinType.CrossApply || joinType == JoinType.OuterApply))
 				{
-					MoveSearchConditionsToJoin(join);
+					QueryHelper.MoveSearchConditionsToJoin(sql, join.JoinedTable, null);
 				}
 
 				// Association.
@@ -235,7 +181,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (!(joinType == JoinType.CrossApply || joinType == JoinType.OuterApply))
 				{
-					MoveSearchConditionsToJoin(join);
+					QueryHelper.MoveSearchConditionsToJoin(sql, join.JoinedTable, null);
 				}
 
 				sequence.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);

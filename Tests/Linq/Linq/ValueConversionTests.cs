@@ -318,6 +318,28 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void BoolJoinTest([DataSources(false)] string context)
+		{
+			var ms = CreateMappingSchema();
+
+			var testData = MainClass.TestData();
+			using (var db = GetDataContext(context, ms))
+			using (var table = db.CreateLocalTable(testData))
+			{
+				var query = from t1 in table
+					from t2 in table.Where(t2 => t2.BoolValue && t1.BoolValue).AsSubQuery()
+					select new
+					{
+						t1.Enum,
+					};
+
+				var selectResult = query.ToArray();
+				
+				Assert.That(selectResult.Length, Is.EqualTo(9));
+			}
+		}
+
+		[Test]
 		public void NullTest([DataSources(false)] string context)
 		{
 			var ms = CreateMappingSchema();
