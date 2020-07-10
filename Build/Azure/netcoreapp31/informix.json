@@ -1,0 +1,7 @@
+﻿{
+	"CORE31.Azure": {
+		"Providers": [
+			"Informix.DB2"
+		]
+	}
+}

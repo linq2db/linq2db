@@ -174,6 +174,49 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void TestLoadWithToString1([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			{
+				var sql = db.Parent.LoadWith(p => p.Children).ToString()!;
+
+				Assert.False(sql.Contains("LoadWithQueryable"));
+
+				// two queries generated, now returns sql for main query
+				CompareSql(@"SELECT
+	[t1].[ParentID],
+	[t1].[Value1]
+FROM
+	[Parent] [t1]", sql);
+			}
+		}
+
+		[Test]
+		public void TestLoadWithToString2([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var sql = db.Person.LoadWith(p => p.Patient).ToString()!;
+
+				Assert.False(sql.Contains("LoadWithQueryable"));
+
+				// one query with join generated
+				CompareSql(@"SELECT
+	[t1].[FirstName],
+	[t1].[PersonID],
+	[t1].[LastName],
+	[t1].[MiddleName],
+	[t1].[Gender],
+	[a_Patient].[PersonID],
+	[a_Patient].[Diagnosis]
+FROM
+	[Person] [t1]
+		LEFT JOIN [Patient] [a_Patient] ON [t1].[PersonID] = [a_Patient].[PersonID]", sql);
+			}
+		}
+
+		[Test]
 		public void TestLoadWithDeep([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();

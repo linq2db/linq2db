@@ -1,0 +1,8 @@
+﻿{
+	"CORE31.Azure": {
+		"Providers": [
+			// posgresql 9.3
+			"PostgreSQL.9.3"
+		]
+	}
+}

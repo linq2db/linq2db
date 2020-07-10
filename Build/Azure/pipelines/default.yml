@@ -91,6 +91,13 @@ stages:
 
     - task: CopyFiles@2
       inputs:
+        targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp3.1/publish'
+        sourceFolder: '$(Build.SourcesDirectory)/Tests'
+        contents: 'DataProviders.json'
+      displayName: Copy test settings for NETCOREAPP3.1
+
+    - task: CopyFiles@2
+      inputs:
         targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net46/configs'
         sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/net46'
       displayName: Copy test configs for NETFX46
@@ -101,10 +108,22 @@ stages:
         sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/netcoreapp21'
       displayName: Copy test configs for NETCOREAPP2.1
 
+    - task: CopyFiles@2
+      inputs:
+        targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp3.1/publish/configs'
+        sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/netcoreapp31'
+      displayName: Copy test configs for NETCOREAPP3.1
+
     - task: CmdLine@2
       inputs:
         script: 'copy "$(System.DefaultWorkingDirectory)\Data\Create Scripts\Northwind.sql" $(Build.SourcesDirectory)\Build\Azure\scripts\northwind.sql'
       displayName: Copy northwind.sql to scripts
+
+    - task: CopyFiles@2
+      inputs:
+        targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp3.1/publish/scripts'
+        sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/scripts'
+      displayName: Copy test scripts for NETCOREAPP3.1
 
     - task: CopyFiles@2
       inputs:
@@ -567,13 +586,14 @@ stages:
 
     strategy:
       matrix:
-#        Access_ODBC_ACE:
-#          title: 'Access ODBC ACE'
-#          config: 'access.odbc.ace'
+# disabled due to a lot of random crashes https://github.com/dotnet/runtime/issues/36954
+#        Access_OLEDB_ACE:
+#          title: 'Access OleDb ACE'
+#          config: 'access.ace'
 #          script: 'access.ace.x64.cmd'
-        Access_OLEDB_ACE:
-          title: 'Access OleDb ACE'
-          config: 'access.ace'
+        Access_ODBC_ACE:
+          title: 'Access ODBC ACE'
+          config: 'access.odbc.ace'
           script: 'access.ace.x64.cmd'
 #        SQLite:
 #          title: 'SQLite'
