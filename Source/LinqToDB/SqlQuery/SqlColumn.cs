@@ -166,7 +166,7 @@ namespace LinqToDB.SqlQuery
 			if (Expression is SqlField)
 				return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
 
-			return base.ToString();
+			return base.ToString()!;
 #endif
 		}
 

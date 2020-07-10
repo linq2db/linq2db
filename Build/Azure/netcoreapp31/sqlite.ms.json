@@ -1,0 +1,9 @@
+﻿{
+	"CORE31.Azure": {
+		"Providers": [
+			// Microsoft.Data.SQLite
+			"SQLite.MS",
+			"Northwind.SQLite.MS"
+		]
+	}
+}

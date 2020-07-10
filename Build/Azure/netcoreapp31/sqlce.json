@@ -1,0 +1,8 @@
+﻿{
+	"CORE31.Azure": {
+		"Providers": [
+			// SQL CE
+			"SqlCe"
+		]
+	}
+}

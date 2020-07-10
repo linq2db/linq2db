@@ -23,8 +23,15 @@ namespace LinqToDB.DataProvider.MySql
 		public const string ClientNamespace = "MySql.Data.MySqlClient";
 		public const string TypesNamespace  = "MySql.Data.Types";
 
+		internal enum MySqlProvider
+		{
+			MySqlData,
+			MySqlConnector
+		}
 
 		private MySqlProviderAdapter(
+			MySqlProvider provider,
+
 			Type connectionType,
 			Type dataReaderType,
 			Type parameterType,
@@ -46,6 +53,8 @@ namespace LinqToDB.DataProvider.MySql
 			MappingSchema    mappingSchema,
 			BulkCopyAdapter? bulkCopy)
 		{
+			ProviderType = provider;
+
 			ConnectionType  = connectionType;
 			DataReaderType  = dataReaderType;
 			ParameterType   = parameterType;
@@ -68,6 +77,8 @@ namespace LinqToDB.DataProvider.MySql
 			BulkCopy      = bulkCopy;
 		}
 
+		internal MySqlProvider ProviderType { get; }
+
 		public Type ConnectionType  { get; }
 		public Type DataReaderType  { get; }
 		public Type ParameterType   { get; }
@@ -79,7 +90,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Not supported by MySqlConnector.
 		/// </summary>
-		public Type? MySqlDecimalType { get; }
+		public Type? MySqlDecimalType  { get; }
 		public Type  MySqlDateTimeType { get; }
 		public Type  MySqlGeometryType { get; }
 
@@ -179,6 +190,7 @@ namespace LinqToDB.DataProvider.MySql
 				mappingSchema.SetConvertExpression(mySqlDateTimeType, typeof(DateTime), dateTimeConverter);
 
 				return new MySqlProviderAdapter(
+					MySqlProvider.MySqlData,
 					connectionType,
 					dataReaderType,
 					parameterType,
@@ -318,6 +330,7 @@ namespace LinqToDB.DataProvider.MySql
 				mappingSchema.SetConvertExpression(mySqlDateTimeType, typeof(DateTime), dateTimeConverter);
 
 				return new MySqlProviderAdapter(
+					MySqlProvider.MySqlConnector,
 					connectionType,
 					dataReaderType,
 					parameterType,
