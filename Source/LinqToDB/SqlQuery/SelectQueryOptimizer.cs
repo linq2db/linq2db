@@ -867,7 +867,7 @@ namespace LinqToDB.SqlQuery
 
 		static bool CheckColumn(SqlColumn column, ISqlExpression expr, SelectQuery query, bool optimizeValues, bool optimizeColumns)
 		{
-			if (expr is SqlField || expr is SqlColumn)
+			if (expr is SqlField || expr is SqlColumn || expr.ElementType == QueryElementType.SqlRawSqlTable)
 				return false;
 
 			if (expr is SqlValue sqlValue)
