@@ -64,11 +64,11 @@ namespace Tests.Playground
 							Value = x.s.Value + 2,
 							ValueStr = x.t.ValueStr,
 						},
-						(s, d, i) => new
+						(source, deleted, inserted) => new
 						{
-							SourceStr = s.s.ValueStr,
-							DeletedValue = d.Value,
-							InsertedValue = i.Value,
+							SourceStr = source.s.ValueStr,
+							DeletedValue = deleted.Value,
+							InsertedValue = inserted.Value,
 						})
 					.ToArray();
 			}

@@ -151,23 +151,25 @@ namespace LinqToDB.Linq.Builder
 			{
 				var outputExpression = GetOutputExpression(methodCall.Method.GetGenericArguments().Last());
 
-				var insertedTable = SqlTable.Inserted(methodCall.Method.GetGenericArguments().Last());
-				var deletedTable = SqlTable.Deleted(methodCall.Method.GetGenericArguments().Last());
+				var objectType    = methodCall.Method.GetGenericArguments()[1];
+				var insertedTable = SqlTable.Inserted(objectType);
+				var deletedTable  = SqlTable.Deleted(objectType);
 
 				updateStatement.Output = new SqlOutputClause()
 				{
 					InsertedTable = insertedTable,
-					DeletedTable = deletedTable,
+					DeletedTable  = deletedTable,
 				};
 
 				var outputContext = new UpdateOutputContext(
 					buildInfo.Parent,
 					outputExpression,
+					sequence,
 					new TableBuilder.TableContext(builder, new SelectQuery(), deletedTable),
 					new TableBuilder.TableContext(builder, new SelectQuery(), insertedTable));
 
 				if (updateType != UpdateContext.UpdateType.UpdateOutputInto)
-					return new UpdateWithOutputContext(buildInfo.Parent, sequence, outputContext, outputExpression);
+					return outputContext;
 
 				var outputTable = GetArgumentByName("outputTable");
 				var destination = builder.BuildSequence(new BuildInfo(buildInfo, outputTable, new SelectQuery()));
@@ -573,75 +575,33 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		class UpdateWithOutputContext : SelectContext
-		{
-			public UpdateWithOutputContext(IBuildContext? parent, IBuildContext sequence, IBuildContext outputContext, LambdaExpression outputExpression)
-				: base(parent, outputExpression, outputContext)
-			{
-				Statement = sequence.Statement;
-			}
-
-			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
-			{
-				var expr = BuildExpression(null, 0, false);
-				var mapper = Builder.BuildMapper<T>(expr);
-
-				var updateStatement = (SqlUpdateStatement)Statement!;
-				var outputQuery = Sequence[0].SelectQuery;
-
-				updateStatement.Output!.OutputQuery = outputQuery;
-
-				QueryRunner.SetRunQuery(query, mapper);
-			}
-		}
-
 		class UpdateOutputContext : SelectContext
 		{
-			public UpdateOutputContext(IBuildContext? parent, LambdaExpression lambda, IBuildContext deletedTable, IBuildContext insertedTable)
-				: base(parent, lambda, deletedTable, insertedTable)
+			public UpdateOutputContext(IBuildContext? parent, LambdaExpression lambda, IBuildContext source, IBuildContext deletedTable, IBuildContext insertedTable)
+				: base(parent, lambda, source, deletedTable, insertedTable)
 			{
-				DeletedTable = deletedTable;
+				Statement     = source.Statement;
+				DeletedTable  = deletedTable;
 				InsertedTable = insertedTable;
 			}
 
 			public IBuildContext DeletedTable { get; }
 			public IBuildContext InsertedTable { get; }
 
-			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
+			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
-				SqlInfo[]? result = null;
+				var expr   = BuildExpression(null, 0, false);
+				var mapper = Builder.BuildMapper<T>(expr);
 
-				if (expression != null)
-				{
-					var root = Builder.GetRootObject(expression);
-					var index = Lambda.Parameters.IndexOf(root as ParameterExpression);
+				var updateStatement = (SqlUpdateStatement)Statement!;
+				//TODO: check this
+				var outputQuery     = Sequence[0].SelectQuery;
 
-					IBuildContext? context = null;
-					if (root == Lambda.Parameters[^2])
-						context = DeletedTable;
-					if (root == Lambda.Parameters[^1])
-						context = InsertedTable;
+				updateStatement.Output!.OutputQuery = outputQuery;
 
-					if (context != null)
-					{
-						result = base.ConvertToSql(expression, level, flags);
-
-						// we need exact column from context
-						result = result
-							.Select(s =>
-							{
-								var idx = context.SelectQuery.Select.Add(s.Sql);
-								return new SqlInfo(s.MemberChain, context.SelectQuery.Select.Columns[idx], context.SelectQuery, idx);
-							})
-							.ToArray();
-					}
-				}
-
-				if (result == null)
-					result = base.ConvertToSql(expression, level, flags);
-
-				return result;
+				QueryRunner.SetRunQuery(query, mapper);
 			}
+
 		}
 		#endregion
 
