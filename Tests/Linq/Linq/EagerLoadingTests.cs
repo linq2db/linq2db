@@ -1163,5 +1163,70 @@ FROM
 			}
 		}
 		#endregion
+
+		#region issue 2307
+		[Table]
+		class AttendanceSheet
+		{
+			[Column] public int Id;
+
+			public static AttendanceSheet[] Items { get; } =
+				new[]
+				{
+					new AttendanceSheet() { Id = 1 },
+					new AttendanceSheet() { Id = 2 }
+				};
+		}
+
+		[Table]
+		class AttendanceSheetRow
+		{
+			[Column] public int Id;
+			[Column] public int AttendanceSheetId;
+
+			public static AttendanceSheetRow[] Items { get; } =
+				new[]
+				{
+					new AttendanceSheetRow() { Id = 1, AttendanceSheetId = 1 },
+					new AttendanceSheetRow() { Id = 2, AttendanceSheetId = 2 },
+					new AttendanceSheetRow() { Id = 3, AttendanceSheetId = 1 },
+					new AttendanceSheetRow() { Id = 4, AttendanceSheetId = 2 },
+				};
+		}
+
+		class AttendanceSheetDTO
+		{
+			public List<AttendanceSheetRowListModel> Rows = null!;
+		}
+
+		class AttendanceSheetRowListModel
+		{
+			public AttendanceSheetRowListModel(AttendanceSheetRow row)
+			{
+				AttendanceSheetId = row.AttendanceSheetId;
+			}
+
+			public int AttendanceSheetId;
+		}
+
+		[Test]
+		public void Issue2307([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			using (var sheets = db.CreateLocalTable(AttendanceSheet.Items))
+			using (var sheetRows   = db.CreateLocalTable(AttendanceSheetRow.Items))
+			{
+				var query = from sheet in sheets
+							join row in sheetRows on sheet.Id equals row.AttendanceSheetId into rows
+							select new AttendanceSheetDTO()
+							{
+								Rows = rows.Select(x => new AttendanceSheetRowListModel(x)).ToList(),
+							};
+
+				query.ToList();
+			}
+		}
+		#endregion
 	}
 }

@@ -249,6 +249,15 @@ namespace LinqToDB.SqlQuery
 								break;
 							}
 
+						case QueryElementType.IsTruePredicate :
+							{
+								var expr = (SqlPredicate.IsTrue)e;
+								if (dic.TryGetValue(expr.Expr1,      out ex)) expr.Expr1      = ex;
+								if (dic.TryGetValue(expr.TrueValue,  out ex)) expr.TrueValue  = ex;
+								if (dic.TryGetValue(expr.FalseValue, out ex)) expr.FalseValue = ex;
+								break;
+							}
+						
 						case QueryElementType.LikePredicate :
 							{
 								var expr = (SqlPredicate.Like)e;
@@ -867,7 +876,7 @@ namespace LinqToDB.SqlQuery
 
 		static bool CheckColumn(SqlColumn column, ISqlExpression expr, SelectQuery query, bool optimizeValues, bool optimizeColumns)
 		{
-			if (expr is SqlField || expr is SqlColumn)
+			if (expr is SqlField || expr is SqlColumn || expr.ElementType == QueryElementType.SqlRawSqlTable)
 				return false;
 
 			if (expr is SqlValue sqlValue)

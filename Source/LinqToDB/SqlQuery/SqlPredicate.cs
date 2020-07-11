@@ -271,8 +271,8 @@ namespace LinqToDB.SqlQuery
 		//
 		public class IsTrue : NotExpr
 		{
-			public ISqlExpression TrueValue  { get; }
-			public ISqlExpression FalseValue { get; }
+			public ISqlExpression TrueValue   { get; set; }
+			public ISqlExpression FalseValue  { get; set; }
 			public bool?          WithNull    { get; private set; }
 
 			public IsTrue(ISqlExpression exp1, ISqlExpression trueValue, ISqlExpression falseValue, bool? withNull, bool isNot)
