@@ -129,7 +129,7 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				case AlternativeBulkCopy.InsertInto: return OracleMultipleRowsCopy2Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken);
 				case AlternativeBulkCopy.InsertDual: return OracleMultipleRowsCopy3Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken);
-				default: return OracleMultipleRowsCopy1Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken);
+				default                            : return OracleMultipleRowsCopy1Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken);
 			}
 		}
 
@@ -141,7 +141,7 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				case AlternativeBulkCopy.InsertInto: return OracleMultipleRowsCopy2Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken);
 				case AlternativeBulkCopy.InsertDual: return OracleMultipleRowsCopy3Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken);
-				default: return OracleMultipleRowsCopy1Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken);
+				default                            : return OracleMultipleRowsCopy1Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken);
 			}
 		}
 #endif
@@ -303,7 +303,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			for (var i = 0; i < helper.Columns.Length; i++)
 			{
-				var column = helper.Columns[i];
+				var column   = helper.Columns[i];
 				var dataType = column.DataType == DataType.Undefined
 					? helper.DataConnection.MappingSchema.GetDataType(column.MemberType).Type.DataType
 					: column.DataType;
@@ -311,7 +311,7 @@ namespace LinqToDB.DataProvider.Oracle
 				helper.Parameters.Add(new DataParameter(":p" + (i + 1), list.Select(o => column.GetValue(o)).ToArray(), dataType, column.DbType)
 				{
 					Direction = ParameterDirection.Input,
-					IsArray = true,
+					IsArray   = true,
 				});
 			}
 
@@ -322,7 +322,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			for (var i = 0; i < helper.Columns.Length; i++)
 			{
-				var column = helper.Columns[i];
+				var column   = helper.Columns[i];
 				var dataType = column.DataType == DataType.Undefined
 					? helper.DataConnection.MappingSchema.GetDataType(column.MemberType).Type.DataType
 					: column.DataType;
@@ -330,7 +330,7 @@ namespace LinqToDB.DataProvider.Oracle
 				helper.Parameters.Add(new DataParameter(":p" + (i + 1), list.Select(o => column.GetValue(o)).ToArray(), dataType, column.DbType)
 				{
 					Direction = ParameterDirection.Input,
-					IsArray = true,
+					IsArray   = true,
 				});
 			}
 

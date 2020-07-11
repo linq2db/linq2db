@@ -327,37 +327,20 @@ namespace LinqToDB.Async
 		private static NewExpression ToValueTTask(Expression body)
 		{
 			// taskType = typeof(Task<TResult>);
-			//   or
-			// taskType = typeof(Task);
 			var taskType = body.Type;
 
-			if (taskType == typeof(Task))
-			{
-				// constructor = <<< new ValueTask(Task task) >>>
-				var constructor = typeof(ValueTask).GetConstructor(new Type[] { typeof(Task) });
 
-				// return new ValueTask(body);
-				return Expression.New(constructor, body);
-			}
-			else if (taskType.IsGenericType && taskType.GetGenericTypeDefinition() == typeof(Task<>))
-			{
+			// dataType = typeof(TResult);
+			var dataType = taskType.GenericTypeArguments[0];
 
-				// dataType = typeof(TResult);
-				var dataType = taskType.GenericTypeArguments[0];
+			// valueTaskType = typeof(ValueTask<TResult>);
+			var valueTaskType = typeof(ValueTask<>).MakeGenericType(dataType);
 
-				// valueTaskType = typeof(ValueTask<TResult>);
-				var valueTaskType = typeof(ValueTask<>).MakeGenericType(dataType);
+			// constructor = <<< new ValueTask<TResult>(Task<TResult> task) >>>
+			var constructor = valueTaskType.GetConstructor(new Type[] { taskType });
 
-				// constructor = <<< new ValueTask<TResult>(Task<TResult> task) >>>
-				var constructor = valueTaskType.GetConstructor(new Type[] { taskType });
-
-				// return new ValueTask<TResult>(body);
-				return Expression.New(constructor, body);
-			}
-			else
-			{
-				throw new ArgumentOutOfRangeException(nameof(body), "The supplied expression is not of type Task or Task<T>");
-			}
+			// return new ValueTask<TResult>(body);
+			return Expression.New(constructor, body);
 		}
 #endif
 

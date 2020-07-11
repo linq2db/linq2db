@@ -21,9 +21,9 @@ namespace LinqToDB.DataProvider.Informix
 		}
 
 		protected override BulkCopyRowsCopied ProviderSpecificCopy<T>(
-			ITable<T> table,
+			ITable<T>       table,
 			BulkCopyOptions options,
-			IEnumerable<T> source)
+			IEnumerable<T>  source)
 		{
 			if ((_provider.Adapter.InformixBulkCopy != null || _provider.Adapter.DB2BulkCopy != null) && table.DataContext is DataConnection dataConnection && dataConnection.Transaction == null)
 			{
@@ -55,9 +55,9 @@ namespace LinqToDB.DataProvider.Informix
 		}
 
 		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
-			ITable<T> table,
-			BulkCopyOptions options,
-			IEnumerable<T> source,
+			ITable<T>         table,
+			BulkCopyOptions   options,
+			IEnumerable<T>    source,
 			CancellationToken cancellationToken)
 		{
 			if ((_provider.Adapter.InformixBulkCopy != null || _provider.Adapter.DB2BulkCopy != null) && table.DataContext is DataConnection dataConnection && dataConnection.Transaction == null)
@@ -92,10 +92,10 @@ namespace LinqToDB.DataProvider.Informix
 
 #if !NET45 && !NET46
 		protected override async Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
-			ITable<T> table,
-			BulkCopyOptions options,
+			ITable<T>           table,
+			BulkCopyOptions     options,
 			IAsyncEnumerable<T> source,
-			CancellationToken cancellationToken)
+			CancellationToken   cancellationToken)
 		{
 			if ((_provider.Adapter.InformixBulkCopy != null || _provider.Adapter.DB2BulkCopy != null) && table.DataContext is DataConnection dataConnection && dataConnection.Transaction == null)
 			{

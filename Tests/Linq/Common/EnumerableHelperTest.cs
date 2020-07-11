@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using LinqToDB.Async;
 using LinqToDB.Common;
-using LinqToDB.Extensions;
 
 using NUnit.Framework;
 
@@ -18,9 +15,10 @@ namespace Tests.Common
 		[Test]
 		public void BatchTest()
 		{
-			var countTo10 = Enumerable.Range(0, 10);
+			var countTo10   = Enumerable.Range(0, 10);
 			var enumerables = EnumerableHelper.Batch(countTo10, 3);
-			var finalList = new List<List<int>>();
+			var finalList   = new List<List<int>>();
+
 			foreach (var enumerable2 in enumerables) 
 			{
 				finalList.Add(enumerable2.ToList());
@@ -31,8 +29,9 @@ namespace Tests.Common
 		[Test]
 		public void BatchThrowsWhenEnumerating2ndTimeTest()
 		{
-			var countTo10 = Enumerable.Range(0, 10);
+			var countTo10   = Enumerable.Range(0, 10);
 			var enumerables = EnumerableHelper.Batch(countTo10, 3);
+
 			foreach (var enumerable2 in enumerables)
 			{
 				var array1 = enumerable2.ToList();
@@ -49,9 +48,10 @@ namespace Tests.Common
 		[Test]
 		public async Task BatchAsyncTest()
 		{
-			var countTo10 = AsyncEnumerableRange(10);
+			var countTo10   = AsyncEnumerableRange(10);
 			var enumerables = EnumerableHelper.Batch(countTo10, 3);
-			var finalList = new List<List<int>>();
+			var finalList   = new List<List<int>>();
+
 			await foreach (var enumerable2 in enumerables)
 			{
 				finalList.Add(await enumerable2.ToListAsync());
@@ -62,8 +62,9 @@ namespace Tests.Common
 		[Test]
 		public async Task BatchAsyncThrowsWhenEnumerating2ndTimeTest()
 		{
-			var countTo10 = AsyncEnumerableRange(10);
+			var countTo10   = AsyncEnumerableRange(10);
 			var enumerables = EnumerableHelper.Batch(countTo10, 3);
+
 			await foreach (var enumerable2 in enumerables)
 			{
 				var array1 = await enumerable2.ToListAsync();

@@ -139,13 +139,13 @@ namespace Tests.xUpdate
 		[ActiveIssue("Unsupported column datatype for BulkCopyType.ProviderSpecific", Configurations = new[] { TestProvName.AllOracleNative , ProviderName.Sybase } )]
 		[Test]
 		public async Task KeepIdentity_SkipOnInsertFalse(
-			[DataSources(false)]string context,
-			[Values(null, true, false)]bool? keepIdentity,
-			[Values] BulkCopyType copyType,
+			[DataSources(false)]        string       context,
+			[Values(null, true, false)] bool?        keepIdentity,
+			[Values]                    BulkCopyType copyType,
 #if NET46
-			[Values(0, 1)] int asyncMode) // 0 == sync, 1 == async
+			[Values(0, 1)]              int          asyncMode) // 0 == sync, 1 == async
 #else
-			[Values(0, 1, 2)] int asyncMode) // 0 == sync, 1 == async, 2 == async with IAsyncEnumerable
+			[Values(0, 1, 2)]           int          asyncMode) // 0 == sync, 1 == async, 2 == async with IAsyncEnumerable
 #endif
 		{
 			// don't use transactions as some providers will fallback to non-provider-specific implementation then

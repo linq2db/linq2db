@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.Sybase
 {
 	using Data;
-	using System.Data;
-	using System.Threading;
-	using System.Threading.Tasks;
 
 	class SybaseBulkCopy : BasicBulkCopy
 	{
@@ -37,9 +37,9 @@ namespace LinqToDB.DataProvider.Sybase
 		}
 
 		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
-			ITable<T> table,
-			BulkCopyOptions options,
-			IEnumerable<T> source,
+			ITable<T>         table,
+			BulkCopyOptions   options,
+			IEnumerable<T>    source,
 			CancellationToken cancellationToken)
 		{
 			var connections = GetProviderConnection(table);
@@ -58,10 +58,10 @@ namespace LinqToDB.DataProvider.Sybase
 
 #if !NET45 && !NET46
 		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
-			ITable<T> table,
-			BulkCopyOptions options,
+			ITable<T>           table,
+			BulkCopyOptions     options,
 			IAsyncEnumerable<T> source,
-			CancellationToken cancellationToken)
+			CancellationToken   cancellationToken)
 		{
 			var connections = GetProviderConnection(table);
 			if (connections.HasValue)
@@ -93,10 +93,10 @@ namespace LinqToDB.DataProvider.Sybase
 
 				if (connection != null && (dataConnection.Transaction == null || transaction != null))
 				{
-					return new ProviderConnections
+					return new ProviderConnections()
 					{
-						DataConnection = dataConnection,
-						ProviderConnection = connection,
+						DataConnection      = dataConnection,
+						ProviderConnection  = connection,
 						ProviderTransaction = transaction
 					};
 				}
@@ -111,14 +111,14 @@ namespace LinqToDB.DataProvider.Sybase
 			Func<List<Mapping.ColumnDescriptor>, BulkCopyReader<T>> createDataReader)
 		{
 			var dataConnection = providerConnections.DataConnection;
-			var connection = providerConnections.ProviderConnection;
-			var transaction = providerConnections.ProviderTransaction;
-			var ed      = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
-			var columns = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
-			var sb      = _provider.CreateSqlBuilder(dataConnection.MappingSchema);
-			var rd      = createDataReader(columns);
-			var sqlopt  = SybaseProviderAdapter.AseBulkCopyOptions.Default;
-			var rc      = new BulkCopyRowsCopied();
+			var connection     = providerConnections.ProviderConnection;
+			var transaction    = providerConnections.ProviderTransaction;
+			var ed             = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
+			var columns        = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
+			var sb             = _provider.CreateSqlBuilder(dataConnection.MappingSchema);
+			var rd             = createDataReader(columns);
+			var sqlopt         = SybaseProviderAdapter.AseBulkCopyOptions.Default;
+			var rc             = new BulkCopyRowsCopied();
 
 			if (options.CheckConstraints       == true) sqlopt |= SybaseProviderAdapter.AseBulkCopyOptions.CheckConstraints;
 			if (options.KeepIdentity           == true) sqlopt |= SybaseProviderAdapter.AseBulkCopyOptions.KeepIdentity;

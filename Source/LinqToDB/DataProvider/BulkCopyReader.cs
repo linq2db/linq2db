@@ -98,9 +98,9 @@ namespace LinqToDB.DataProvider
 		public BulkCopyReader(DataConnection dataConnection, List<ColumnDescriptor> columns)
 		{
 			_dataConnection = dataConnection;
-			_columns = columns;
-			_columnTypes = _columns.Select(c => c.GetDbDataType()).ToArray();
-			_ordinals = _columns.Select((c, i) => new { c, i }).ToDictionary(_ => _.c.ColumnName, _ => _.i);
+			_columns        = columns;
+			_columnTypes    = _columns.Select(c => c.GetDbDataType()).ToArray();
+			_ordinals       = _columns.Select((c, i) => new { c, i }).ToDictionary(_ => _.c.ColumnName, _ => _.i);
 		}
 
 		public class Parameter : IDbDataParameter

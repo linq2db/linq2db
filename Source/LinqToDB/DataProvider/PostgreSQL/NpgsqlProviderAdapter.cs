@@ -239,7 +239,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				x.GetParameters()[1].ParameterType == _dbTypeType &&
 				x.GetParameters()[2].ParameterType == typeof(CancellationToken)).SingleOrDefault();
 #endif
-			if (writeAsyncMethod == null) return null;
+			if (writeAsyncMethod            == null)         return null;
 			if (writeAsyncMethod.ReturnType != typeof(Task)) return null;
 
 			// create a reference to WriteAsync<object>(...)
@@ -250,17 +250,17 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			if (instance_GetProperty == null) throw new ApplicationException($"Cannot find {nameof(NpgsqlBinaryImporter)}.{nameof(NpgsqlBinaryImporter.instance_)} property.");
 
 			// set up the 4 parameters to the lambda
-			var pImporter = Expression.Parameter(typeof(NpgsqlBinaryImporter));
-			var pValue = Expression.Parameter(typeof(object));
-			var pDbType = Expression.Parameter(typeof(NpgsqlDbType));
+			var pImporter          = Expression.Parameter(typeof(NpgsqlBinaryImporter));
+			var pValue             = Expression.Parameter(typeof(object));
+			var pDbType            = Expression.Parameter(typeof(NpgsqlDbType));
 			var pCancellationToken = Expression.Parameter(typeof(CancellationToken));
 
 			// convertedDbType = (_dbTypeType)pDbType
-			var convertedDbType = Expression.Convert(pDbType, _dbTypeType);
+			var convertedDbType  = Expression.Convert(pDbType, _dbTypeType);
 			// importerInternal = pImporter.instance_
 			var importerInternal = Expression.MakeMemberAccess(pImporter, instance_GetProperty);
 			// typedImporter = (_npgsqlBinaryImporterType)pImporter.instance_
-			var typedImporter = Expression.Convert(importerInternal, _npgsqlBinaryImporterType);
+			var typedImporter    = Expression.Convert(importerInternal, _npgsqlBinaryImporterType);
 
 			// body = ((_npgSqlBinaryImporterType)pImporter.instance_).WriteAsync<object>(pValue, (_dbTypeType)pDbType, pCancellationToken)
 			var body = Expression.Call(
@@ -672,7 +672,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			public Task StartRowAsync(CancellationToken cancellationToken) 
 				=> ((Func<NpgsqlBinaryImporter, CancellationToken, Task>)CompiledWrappers[6])(this, cancellationToken);
 
-			public bool SupportsAsync 
+			public bool SupportsAsync
 				=> CompiledWrappers[4] != null && CompiledWrappers[5] != null && CompiledWrappers[6] != null;
 #endif
 		}

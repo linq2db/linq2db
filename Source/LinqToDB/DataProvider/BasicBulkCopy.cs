@@ -41,8 +41,8 @@ namespace LinqToDB.DataProvider
 		{
 			switch (bulkCopyType)
 			{
-				case BulkCopyType.MultipleRows : return MultipleRowsCopyAsync(table, options, source, cancellationToken);
-				case BulkCopyType.RowByRow     : return RowByRowCopyAsync(table, options, source, cancellationToken);
+				case BulkCopyType.MultipleRows : return MultipleRowsCopyAsync    (table, options, source, cancellationToken);
+				case BulkCopyType.RowByRow     : return RowByRowCopyAsync        (table, options, source, cancellationToken);
 				default                        : return ProviderSpecificCopyAsync(table, options, source, cancellationToken);
 			}
 		}
@@ -190,8 +190,8 @@ namespace LinqToDB.DataProvider
 
 		protected struct ProviderConnections
 		{
-			public DataConnection DataConnection;
-			public IDbConnection ProviderConnection;
+			public DataConnection  DataConnection;
+			public IDbConnection   ProviderConnection;
 			public IDbTransaction? ProviderTransaction;
 		}
 
@@ -258,14 +258,14 @@ namespace LinqToDB.DataProvider
 		#region MultipleRows Support
 
 		protected static BulkCopyRowsCopied MultipleRowsCopyHelper(
-			MultipleRowsHelper helper, 
-			IEnumerable source,
-			string? from,
-			Action<MultipleRowsHelper> prepFunction,
+			MultipleRowsHelper                          helper,
+			IEnumerable                                 source,
+			string?                                     from,
+			Action<MultipleRowsHelper>                  prepFunction,
 			Action<MultipleRowsHelper, object, string?> addFunction,
-			Action<MultipleRowsHelper> finishFunction,
-			int maxParameters = 10000,
-			int maxSqlLength = 100000)
+			Action<MultipleRowsHelper>                  finishFunction,
+			int                                         maxParameters = 10000,
+			int                                         maxSqlLength  = 100000)
 		{
 			prepFunction(helper);
 
@@ -291,15 +291,15 @@ namespace LinqToDB.DataProvider
 		}
 
 		protected static async Task<BulkCopyRowsCopied> MultipleRowsCopyHelperAsync(
-			MultipleRowsHelper helper,
-			IEnumerable source,
-			string? from,
-			Action<MultipleRowsHelper> prepFunction,
+			MultipleRowsHelper                          helper,
+			IEnumerable                                 source,
+			string?                                     from,
+			Action<MultipleRowsHelper>                  prepFunction,
 			Action<MultipleRowsHelper, object, string?> addFunction,
-			Action<MultipleRowsHelper> finishFunction,
-			CancellationToken cancellationToken,
-			int maxParameters = 10000,
-			int maxSqlLength = 100000)
+			Action<MultipleRowsHelper>                  finishFunction,
+			CancellationToken                           cancellationToken,
+			int                                         maxParameters = 10000,
+			int                                         maxSqlLength  = 100000)
 		{
 			prepFunction(helper);
 
@@ -326,15 +326,15 @@ namespace LinqToDB.DataProvider
 
 #if !NET45 && !NET46
 		protected static async Task<BulkCopyRowsCopied> MultipleRowsCopyHelperAsync<T>(
-			MultipleRowsHelper helper,
-			IAsyncEnumerable<T> source,
-			string? from,
-			Action<MultipleRowsHelper> prepFunction,
+			MultipleRowsHelper                          helper,
+			IAsyncEnumerable<T>                         source,
+			string?                                     from,
+			Action<MultipleRowsHelper>                  prepFunction,
 			Action<MultipleRowsHelper, object, string?> addFunction,
-			Action<MultipleRowsHelper> finishFunction,
-			CancellationToken cancellationToken,
-			int maxParameters = 10000,
-			int maxSqlLength = 100000)
+			Action<MultipleRowsHelper>                  finishFunction,
+			CancellationToken                           cancellationToken,
+			int                                         maxParameters = 10000,
+			int                                         maxSqlLength  = 100000)
 		{
 			prepFunction(helper);
 

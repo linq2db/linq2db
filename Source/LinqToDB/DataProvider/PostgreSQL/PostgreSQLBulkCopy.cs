@@ -181,16 +181,16 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				return await MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			var sqlBuilder = (BasicSqlBuilder)_provider.CreateSqlBuilder(dataConnection.MappingSchema);
-			var ed = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
-			var tableName = GetTableName(sqlBuilder, options, table);
-			var columns = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToArray();
+			var ed         = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
+			var tableName  = GetTableName(sqlBuilder, options, table);
+			var columns    = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToArray();
 
-			var fields = string.Join(", ", columns.Select(column => sqlBuilder.ConvertInline(column.ColumnName, ConvertType.NameToQueryField)));
+			var fields      = string.Join(", ", columns.Select(column => sqlBuilder.ConvertInline(column.ColumnName, ConvertType.NameToQueryField)));
 			var copyCommand = $"COPY {tableName} ({fields}) FROM STDIN (FORMAT BINARY)";
 
-			var rowsCopied = new BulkCopyRowsCopied();
+			var rowsCopied   = new BulkCopyRowsCopied();
 			// batch size numbers not based on any strong grounds as I didn't found any recommendations for it
-			var batchSize = Math.Max(10, options.MaxBatchSize ?? 10000);
+			var batchSize    = Math.Max(10, options.MaxBatchSize ?? 10000);
 			var currentCount = 0;
 
 			var npgsqlTypes = new NpgsqlProviderAdapter.NpgsqlDbType[columns.Length];
@@ -216,7 +216,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			}
 
 			var writeAsync = _provider.Adapter.BinaryImporterWriteAsyncFunction;
-			var writer = _provider.Adapter.BeginBinaryImport(connection, copyCommand);
+			var writer     = _provider.Adapter.BeginBinaryImport(connection, copyCommand);
+
 			if (!writer.SupportsAsync) // double check that all the async methods are available
 			{
 				// seems to be missing one of the required async methods; fallback to sync importer

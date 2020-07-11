@@ -21,9 +21,9 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		protected override BulkCopyRowsCopied ProviderSpecificCopy<T>(
-			ITable<T> table,
+			ITable<T>       table,
 			BulkCopyOptions options,
-			IEnumerable<T> source)
+			IEnumerable<T>  source)
 		{
 			var connections = TryGetProviderConnections(table);
 			if (connections.HasValue)
@@ -41,9 +41,9 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
-			ITable<T> table,
-			BulkCopyOptions options,
-			IEnumerable<T> source, 
+			ITable<T>         table,
+			BulkCopyOptions   options,
+			IEnumerable<T>    source,
 			CancellationToken cancellationToken)
 		{
 			var connections = TryGetProviderConnections(table);
@@ -63,10 +63,10 @@ namespace LinqToDB.DataProvider.SqlServer
 
 #if !NET45 && !NET46
 		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
-			ITable<T> table,
-			BulkCopyOptions options,
+			ITable<T>           table,
+			BulkCopyOptions     options,
 			IAsyncEnumerable<T> source,
-			CancellationToken cancellationToken)
+			CancellationToken   cancellationToken)
 		{
 			var connections = TryGetProviderConnections(table);
 			if (connections.HasValue)
@@ -96,10 +96,10 @@ namespace LinqToDB.DataProvider.SqlServer
 
 				if (connection != null && (dataConnection.Transaction == null || transaction != null))
 				{
-					return new ProviderConnections
+					return new ProviderConnections()
 					{
-						DataConnection = dataConnection,
-						ProviderConnection = connection,
+						DataConnection      = dataConnection,
+						ProviderConnection  = connection,
 						ProviderTransaction = transaction
 					};
 				}
@@ -211,7 +211,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			var helper = new MultipleRowsHelper<T>(table, options);
 
 			if (options.KeepIdentity == true)
-				helper.DataConnection.Execute("SET IDENTITY_INSERT " + helper.TableName + " ON");
+				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " ON")
+					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			switch (((SqlServerDataProvider)helper.DataConnection.DataProvider).Version)
 			{
@@ -227,7 +228,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 
 			if (options.KeepIdentity == true)
-				helper.DataConnection.Execute("SET IDENTITY_INSERT " + helper.TableName + " OFF");
+				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " OFF")
+					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			return ret;
 		}
@@ -241,7 +243,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			var helper = new MultipleRowsHelper<T>(table, options);
 
 			if (options.KeepIdentity == true)
-				helper.DataConnection.Execute("SET IDENTITY_INSERT " + helper.TableName + " ON");
+				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " ON")
+					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			switch (((SqlServerDataProvider)helper.DataConnection.DataProvider).Version)
 			{
@@ -257,7 +260,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 
 			if (options.KeepIdentity == true)
-				helper.DataConnection.Execute("SET IDENTITY_INSERT " + helper.TableName + " OFF");
+				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " OFF")
+					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			return ret;
 		}

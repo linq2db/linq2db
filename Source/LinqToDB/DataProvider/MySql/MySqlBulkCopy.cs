@@ -1,16 +1,13 @@
 ﻿using System;
-using System.Linq;
-using System.Collections;
 using System.Collections.Generic;
-using System.Data.Linq;
+using System.Linq;
 
 namespace LinqToDB.DataProvider.MySql
 {
-	using Data;
-	using LinqToDB.Common;
-	using LinqToDB.SqlProvider;
 	using System.Threading;
 	using System.Threading.Tasks;
+	using Data;
+	using LinqToDB.Common;
 
 	class MySqlBulkCopy : BasicBulkCopy
 	{
@@ -21,9 +18,9 @@ namespace LinqToDB.DataProvider.MySql
 			_provider = provider;
 		}
 		protected override BulkCopyRowsCopied ProviderSpecificCopy<T>(
-			ITable<T> table,
+			ITable<T>       table,
 			BulkCopyOptions options,
-			IEnumerable<T> source)
+			IEnumerable<T>  source)
 		{
 			var connections = TryGetProviderConnections(table);
 			if (connections.HasValue)
@@ -41,9 +38,9 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
-			ITable<T> table,
-			BulkCopyOptions options,
-			IEnumerable<T> source,
+			ITable<T>         table,
+			BulkCopyOptions   options,
+			IEnumerable<T>    source,
 			CancellationToken cancellationToken)
 		{
 			var connections = TryGetProviderConnections(table);
@@ -63,10 +60,10 @@ namespace LinqToDB.DataProvider.MySql
 
 #if !NET45 && !NET46
 		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
-			ITable<T> table,
-			BulkCopyOptions options,
+			ITable<T>           table,
+			BulkCopyOptions     options,
 			IAsyncEnumerable<T> source,
-			CancellationToken cancellationToken)
+			CancellationToken   cancellationToken)
 		{
 			var connections = TryGetProviderConnections(table);
 			if (connections.HasValue)
@@ -97,8 +94,8 @@ namespace LinqToDB.DataProvider.MySql
 				{
 					return new ProviderConnections
 					{
-						DataConnection = dataConnection,
-						ProviderConnection = connection,
+						DataConnection      = dataConnection,
+						ProviderConnection  = connection,
 						ProviderTransaction = transaction
 					};
 				}
@@ -107,12 +104,12 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		private async Task<BulkCopyRowsCopied> ProviderSpecificCopyInternal<T>(
-			ProviderConnections                                     providerConnections,
-			ITable<T>                                               table,
-			BulkCopyOptions	                                        options,
-			IEnumerable<T>                                          source,
-			bool                                                    runAsync,
-			CancellationToken                                       cancellationToken)
+			ProviderConnections providerConnections,
+			ITable<T>           table,
+			BulkCopyOptions     options,
+			IEnumerable<T>      source,
+			bool                runAsync,
+			CancellationToken   cancellationToken)
 		{
 			var dataConnection = providerConnections.DataConnection;
 			var connection = providerConnections.ProviderConnection;
@@ -183,11 +180,11 @@ namespace LinqToDB.DataProvider.MySql
 
 #if !NET45 && !NET46
 		private async Task<BulkCopyRowsCopied> ProviderSpecificCopyInternal<T>(
-			ProviderConnections                                     providerConnections,
-			ITable<T>                                               table,
-			BulkCopyOptions	                                        options,
-			IAsyncEnumerable<T>                                     source,
-			CancellationToken                                       cancellationToken)
+			ProviderConnections providerConnections,
+			ITable<T>           table,
+			BulkCopyOptions     options,
+			IAsyncEnumerable<T> source,
+			CancellationToken   cancellationToken)
 		{
 			var dataConnection = providerConnections.DataConnection;
 			var connection = providerConnections.ProviderConnection;

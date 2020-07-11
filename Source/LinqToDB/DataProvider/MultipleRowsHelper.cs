@@ -129,8 +129,8 @@ namespace LinqToDB.DataProvider
 			}
 
 			Parameters.Clear();
-			ParameterIndex = 0;
-			CurrentCount = 0;
+			ParameterIndex       = 0;
+			CurrentCount         = 0;
 			StringBuilder.Length = HeaderSize;
 
 			return true;

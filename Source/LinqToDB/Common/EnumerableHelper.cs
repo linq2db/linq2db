@@ -144,7 +144,7 @@ namespace LinqToDB.Common
 
 			public AsyncBatchEnumerable(IAsyncEnumerable<T> source, int batchSize)
 			{
-				_source = source;
+				_source    = source;
 				_batchSize = batchSize;
 			}
 
@@ -162,16 +162,19 @@ namespace LinqToDB.Common
 
 			public AsyncBatchEnumerator(IAsyncEnumerable<T> source, int batchSize, CancellationToken cancellationToken)
 			{
-				_source = source.GetAsyncEnumerator(cancellationToken);
+				_source    = source.GetAsyncEnumerator(cancellationToken);
 				_batchSize = batchSize;
 			}
 
 			public IAsyncEnumerable<T> Current => _isCurrent ? this : throw new InvalidOperationException();
 
-			IAsyncEnumerator<T> IAsyncEnumerable<T>.GetAsyncEnumerator(CancellationToken cancellationToken) {
+			IAsyncEnumerator<T> IAsyncEnumerable<T>.GetAsyncEnumerator(CancellationToken cancellationToken)
+			{
 				if (_current == null) throw new InvalidOperationException();
+
 				var enumerator = _current;
-				_current = null;
+				_current       = null;
+
 				return enumerator;
 			}
 
@@ -180,9 +183,11 @@ namespace LinqToDB.Common
 			public async ValueTask<bool> MoveNextAsync()
 			{
 				if (_finished) return false;
+
 				_isCurrent = await _source.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-				_current = _isCurrent ? GetNewEnumerable() : null;
-				_finished = !_isCurrent;
+				_current   = _isCurrent ? GetNewEnumerable() : null;
+				_finished  = !_isCurrent;
+
 				return _isCurrent;
 			}
 

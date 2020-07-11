@@ -5,10 +5,10 @@ using System.Linq;
 
 namespace LinqToDB.DataProvider.DB2
 {
-	using Data;
-	using LinqToDB.Common;
 	using System.Threading;
 	using System.Threading.Tasks;
+	using Data;
+	using LinqToDB.Common;
 	using DB2BulkCopyOptions = DB2ProviderAdapter.DB2BulkCopyOptions;
 
 	class DB2BulkCopy : BasicBulkCopy
