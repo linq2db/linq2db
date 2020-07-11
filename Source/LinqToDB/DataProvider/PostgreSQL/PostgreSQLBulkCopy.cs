@@ -75,90 +75,90 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		private BulkCopyRowsCopied ProviderSpecificCopyImpl<T>(DataConnection dataConnection, ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
-				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
+			var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
 
-				if (connection == null)
-					return MultipleRowsCopy(table, options, source);
+			if (connection == null)
+				return MultipleRowsCopy(table, options, source);
 
-				var sqlBuilder = (BasicSqlBuilder)_provider.CreateSqlBuilder(dataConnection.MappingSchema);
-				var ed         = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
-				var tableName  = GetTableName(sqlBuilder, options, table);
-				var columns    = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToArray();
+			var sqlBuilder = (BasicSqlBuilder)_provider.CreateSqlBuilder(dataConnection.MappingSchema);
+			var ed         = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
+			var tableName  = GetTableName(sqlBuilder, options, table);
+			var columns    = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToArray();
 
-				var fields      = string.Join(", ", columns.Select(column => sqlBuilder.ConvertInline(column.ColumnName, ConvertType.NameToQueryField)));
-				var copyCommand = $"COPY {tableName} ({fields}) FROM STDIN (FORMAT BINARY)";
+			var fields      = string.Join(", ", columns.Select(column => sqlBuilder.ConvertInline(column.ColumnName, ConvertType.NameToQueryField)));
+			var copyCommand = $"COPY {tableName} ({fields}) FROM STDIN (FORMAT BINARY)";
 
-				var rowsCopied = new BulkCopyRowsCopied();
-				// batch size numbers not based on any strong grounds as I didn't found any recommendations for it
-				var batchSize = Math.Max(10, options.MaxBatchSize ?? 10000);
-				var currentCount = 0;
+			var rowsCopied = new BulkCopyRowsCopied();
+			// batch size numbers not based on any strong grounds as I didn't found any recommendations for it
+			var batchSize = Math.Max(10, options.MaxBatchSize ?? 10000);
+			var currentCount = 0;
 
-				var key = new { Type = typeof(T), options.KeepIdentity, ed, dataConnection.MappingSchema.ConfigurationID };
-				var rowWriter = (Action<NpgsqlProviderAdapter.NpgsqlBinaryImporter, ColumnDescriptor[], T>)_rowWriterCache.GetOrAdd(
-					key,
-					_ => _provider.Adapter.CreateBinaryImportRowWriter<T>(_provider, sqlBuilder, columns));
+			var key = new { Type = typeof(T), options.KeepIdentity, ed, dataConnection.MappingSchema.ConfigurationID };
+			var rowWriter = (Action<NpgsqlProviderAdapter.NpgsqlBinaryImporter, ColumnDescriptor[], T>)_rowWriterCache.GetOrAdd(
+				key,
+				_ => _provider.Adapter.CreateBinaryImportRowWriter<T>(_provider, sqlBuilder, columns));
 
-				var useComplete = _provider.Adapter.BinaryImporterHasComplete;
-				var writer      = _provider.Adapter.BeginBinaryImport(connection, copyCommand);
+			var useComplete = _provider.Adapter.BinaryImporterHasComplete;
+			var writer      = _provider.Adapter.BeginBinaryImport(connection, copyCommand);
 
-				try
+			try
+			{
+				foreach (var item in source)
 				{
-					foreach (var item in source)
+					rowWriter(writer, columns, item);
+
+					currentCount++;
+					rowsCopied.RowsCopied++;
+
+					if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null && rowsCopied.RowsCopied % options.NotifyAfter == 0)
 					{
-						rowWriter(writer, columns, item);
+						options.RowsCopiedCallback(rowsCopied);
 
-						currentCount++;
-						rowsCopied.RowsCopied++;
-
-						if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null && rowsCopied.RowsCopied % options.NotifyAfter == 0)
+						if (rowsCopied.Abort)
 						{
-							options.RowsCopiedCallback(rowsCopied);
-
-							if (rowsCopied.Abort)
-							{
-								if (!useComplete)
-									writer.Cancel();
-								break;
-							}
+							if (!useComplete)
+								writer.Cancel();
+							break;
 						}
+					}
 
-						if (currentCount >= batchSize)
-						{
+					if (currentCount >= batchSize)
+					{
+						if (useComplete)
+							writer.Complete();
+
+						writer.Dispose();
+
+						writer       = _provider.Adapter.BeginBinaryImport(connection, copyCommand);
+						currentCount = 0;
+					}
+				}
+
+				if (!rowsCopied.Abort)
+				{
+					TraceAction(
+						dataConnection,
+						() => "INSERT BULK " + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + Environment.NewLine,
+						() => { 
 							if (useComplete)
 								writer.Complete();
-
-							writer.Dispose();
-
-							writer       = _provider.Adapter.BeginBinaryImport(connection, copyCommand);
-							currentCount = 0;
-						}
-					}
-
-					if (!rowsCopied.Abort)
-					{
-						TraceAction(
-							dataConnection,
-							() => "INSERT BULK " + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + Environment.NewLine,
-							() => { 
-								if (useComplete)
-									writer.Complete();
-								return (int)rowsCopied.RowsCopied; });
-					}
-
-					if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
-						options.RowsCopiedCallback(rowsCopied);
-				}
-				catch when (!useComplete)
-				{
-					writer.Cancel();
-					throw;
-				}
-				finally
-				{
-					writer.Dispose();
+							return (int)rowsCopied.RowsCopied; });
 				}
 
-				return rowsCopied;
+				if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
+					options.RowsCopiedCallback(rowsCopied);
+			}
+			catch when (!useComplete)
+			{
+				writer.Cancel();
+				throw;
+			}
+			finally
+			{
+				writer.Dispose();
+			}
+
+			return rowsCopied;
 		}
 
 #if !NET45 && !NET46
