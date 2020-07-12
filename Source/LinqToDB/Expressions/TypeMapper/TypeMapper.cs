@@ -639,7 +639,7 @@ namespace LinqToDB.Expressions
 										var method   = replacement.GetMethodEx(methodName, typeArgs.Length, types);
 
 										if (method == null
-											|| (customReturnMapper == null && mc.Method.ReturnType != method.ReturnType && (!TryMapType(mc.Method.ReturnType, out var newReturnType) || method.ReturnType != newReturnType)))
+											|| (customReturnMapper == null && !mc.Method.ReturnType.IsAssignableFrom(method.ReturnType) && (!TryMapType(mc.Method.ReturnType, out var newReturnType) || method.ReturnType != newReturnType)))
 										{
 											if (ignoreMissingMembers)
 											{
@@ -663,7 +663,7 @@ namespace LinqToDB.Expressions
 										var method = replacement.GetMethod(methodName, types);
 
 										if (method == null
-											|| (customReturnMapper == null && mc.Method.ReturnType != method.ReturnType && (!TryMapType(mc.Method.ReturnType, out var newReturnType) || method.ReturnType != newReturnType)))
+											|| (customReturnMapper == null && !mc.Method.ReturnType.IsAssignableFrom(method.ReturnType) && (!TryMapType(mc.Method.ReturnType, out var newReturnType) || method.ReturnType != newReturnType)))
 										{
 											if (ignoreMissingMembers)
 											{
