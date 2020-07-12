@@ -9,6 +9,7 @@ namespace LinqToDB.DataProvider
 {
 	using Expressions;
 	using Extensions;
+	using LinqToDB.Data.RetryPolicy;
 	using Mapping;
 
 	public abstract class DynamicDataProviderBase<TProviderMappings> : DataProviderBase
@@ -168,11 +169,19 @@ namespace LinqToDB.DataProvider
 
 		public virtual IDbCommand? TryGetProviderCommand(IDbCommand command, MappingSchema ms)
 		{
+			// remove retry policy wrapper
+			if (command is RetryingDbCommand rcmd)
+				command = rcmd.UnderlyingObject;
+
 			return TryConvertProviderType(_commandConverters, Adapter.CommandType, command, ms);
 		}
 
 		public virtual IDbConnection? TryGetProviderConnection(IDbConnection connection, MappingSchema ms)
 		{
+			// remove retry policy wrapper
+			if (connection is RetryingDbConnection rcn)
+				connection = rcn.UnderlyingObject;
+
 			return TryConvertProviderType(_connectionConverters, Adapter.ConnectionType, connection, ms);
 		}
 
