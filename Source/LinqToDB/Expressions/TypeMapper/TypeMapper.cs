@@ -20,18 +20,19 @@ namespace LinqToDB.Expressions
 		private static readonly Type[] _wrapperContructorParameters2 = new[] { typeof(object), typeof(Delegate[]) };
 
 		// [type name] = originalType
-		private readonly IDictionary<string, Type>              _types                   = new Dictionary<string, Type>();
+		private readonly IDictionary<string, Type>              _types                    = new Dictionary<string, Type>();
 
 		// [wrapperType] = originalType?
-		readonly Dictionary<Type, Type?>                        _typeMappingCache        = new Dictionary<Type, Type?>();
+		readonly Dictionary<Type, Type?>                        _typeMappingCache         = new Dictionary<Type, Type?>();
 		// [originalType] = wrapperType
-		readonly Dictionary<Type, Type>                         _typeMappingReverseCache = new Dictionary<Type, Type>();
-		readonly Dictionary<LambdaExpression, LambdaExpression> _lambdaMappingCache      = new Dictionary<LambdaExpression, LambdaExpression>();
-		readonly Dictionary<Type, Func<object, object>>         _wrapperFactoryCache     = new Dictionary<Type, Func<object, object>>();
+		readonly Dictionary<Type, Type>                         _typeMappingReverseCache  = new Dictionary<Type, Type>();
+		readonly Dictionary<LambdaExpression, LambdaExpression> _lambdaMappingCache       = new Dictionary<LambdaExpression, LambdaExpression>();
+		readonly Dictionary<Type, Func<object, object>>         _wrapperFactoryCache      = new Dictionary<Type, Func<object, object>>();
 		// [originalType] = converter
-		readonly Dictionary<Type, LambdaExpression>             _enumToWrapperCache      = new Dictionary<Type, LambdaExpression>();
+		readonly Dictionary<Type, LambdaExpression>             _enumToWrapperCache       = new Dictionary<Type, LambdaExpression>();
 		// [wrapperType] = converter
-		readonly Dictionary<Type, LambdaExpression>             _enumFromWrapperCache    = new Dictionary<Type, LambdaExpression>();
+		readonly Dictionary<Type, LambdaExpression>             _enumFromWrapperCache     = new Dictionary<Type, LambdaExpression>();
+		readonly Dictionary<Type, ICustomMapper>                _typeMapperInstancesCache = new Dictionary<Type, ICustomMapper>();
 
 		private bool _finalized;
 
@@ -622,6 +623,9 @@ namespace LinqToDB.Expressions
 							{
 								var mc = (MethodCallExpression)e;
 
+								var methodName         = mc.Method.GetCustomAttribute<TypeWrapperNameAttribute>()?.Name ?? mc.Method.Name;
+								var customReturnMapper = CreateTypeMapper(mc.Method.ReturnParameter.GetCustomAttribute<CustomMapperAttribute>()?.Mapper);
+
 								if (TryMapType(mc.Method.DeclaringType!, out var replacement))
 								{
 									var types = mc.Method.GetParameters()
@@ -632,9 +636,10 @@ namespace LinqToDB.Expressions
 									{
 										// typeArgs replacements not implemented now, as we don't have usecases for it
 										var typeArgs = mc.Method.GetGenericArguments();
-										var method   = replacement.GetMethodEx(mc.Method.Name, typeArgs.Length, types);
+										var method   = replacement.GetMethodEx(methodName, typeArgs.Length, types);
 
-										if (method == null)
+										if (method == null
+											|| (customReturnMapper == null && mc.Method.ReturnType != method.ReturnType && (!TryMapType(mc.Method.ReturnType, out var newReturnType) || method.ReturnType != newReturnType)))
 										{
 											if (ignoreMissingMembers)
 											{
@@ -642,21 +647,23 @@ namespace LinqToDB.Expressions
 												return e;
 											}
 
-											var name = replacement.FullName + "." + mc.Method.Name + "<" +
+											var name = replacement.FullName + "." + methodName + "<" +
 													   string.Join(", ", typeArgs.Select(t => t.Name))+ ">(" +
 													   string.Join(", ", types.Select(t => t.Name)) + ")";
 											throw new LinqToDBException($"Method not found in target type: {name}");
 										}
 
 										var newArguments  = mc.Arguments.Select(ReplaceTypes);
-										var newMethodCall = Expression.Call(ReplaceTypes(mc.Object), mc.Method.Name, typeArgs, newArguments.ToArray());
-										return newMethodCall;
+										var newMethodCall = Expression.Call(ReplaceTypes(mc.Object), methodName, typeArgs, newArguments.ToArray());
+
+										return customReturnMapper != null ? customReturnMapper.Map(newMethodCall) : newMethodCall;
 									}
 									else
 									{
-										var method = replacement.GetMethod(mc.Method.Name, types);
+										var method = replacement.GetMethod(methodName, types);
 
-										if (method == null)
+										if (method == null
+											|| (customReturnMapper == null && mc.Method.ReturnType != method.ReturnType && (!TryMapType(mc.Method.ReturnType, out var newReturnType) || method.ReturnType != newReturnType)))
 										{
 											if (ignoreMissingMembers)
 											{
@@ -664,14 +671,15 @@ namespace LinqToDB.Expressions
 												return e;
 											}
 
-											var name = replacement.FullName + "." + mc.Method.Name + "(" +
+											var name = replacement.FullName + "." + methodName + "(" +
 													   string.Join(", ", types.Select(t => t.Name)) + ")";
 											throw new LinqToDBException($"Method not found in target type: {name}");
 										}
 
 										var newArguments = mc.Arguments.Select(ReplaceTypes);
 										var newMethodCall = Expression.Call(ReplaceTypes(mc.Object), method, newArguments);
-										return newMethodCall;
+
+										return customReturnMapper != null ? customReturnMapper.Map(newMethodCall) : newMethodCall;
 									}
 								}
 
@@ -696,6 +704,24 @@ namespace LinqToDB.Expressions
 
 			_lambdaMappingCache.Add(lambda, mappedLambda);
 			return mappedLambda;
+		}
+
+		[return: NotNullIfNotNull("mapperType")]
+		private ICustomMapper? CreateTypeMapper(Type? mapperType)
+		{
+			if (mapperType == null)
+				return null;
+
+			if (!_typeMapperInstancesCache.TryGetValue(mapperType, out var mapper))
+			{
+				mapper = Activator.CreateInstance(mapperType) as ICustomMapper;
+				if (mapper == null)
+					throw new LinqToDBException($"Type {mapperType} must implement {nameof(ICustomMapper)} interface.");
+
+				_typeMapperInstancesCache[mapperType] = mapper;
+			}
+
+			return mapper;
 		}
 
 		private Expression MapExpressionInternal(LambdaExpression lambdaExpression, params Expression[] parameters)

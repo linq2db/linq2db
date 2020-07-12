@@ -157,7 +157,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 					await TraceActionAsync(
 						dataConnection,
-						() => "INSERT BULK " + tableName + Environment.NewLine,
+						() => (runAsync && bc.CanWriteToServerAsync ? "INSERT ASYNC BULK " : "INSERT BULK ") + tableName + Environment.NewLine,
 						async () => {
 							if (runAsync && bc.CanWriteToServerAsync)
 								await bc.WriteToServerAsync(rd, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);

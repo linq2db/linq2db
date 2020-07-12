@@ -112,12 +112,12 @@ namespace LinqToDB.DataProvider.MySql
 			CancellationToken   cancellationToken)
 		{
 			var dataConnection = providerConnections.DataConnection;
-			var connection = providerConnections.ProviderConnection;
-			var transaction = providerConnections.ProviderTransaction;
-			var ed      = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
-			var columns = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
-			var sb      = _provider.CreateSqlBuilder(dataConnection.MappingSchema);
-			var rc      = new BulkCopyRowsCopied();
+			var connection     = providerConnections.ProviderConnection;
+			var transaction    = providerConnections.ProviderTransaction;
+			var ed             = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
+			var columns        = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
+			var sb             = _provider.CreateSqlBuilder(dataConnection.MappingSchema);
+			var rc             = new BulkCopyRowsCopied();
 
 			var bc = _provider.Adapter.BulkCopy!.Create(connection, transaction);
 			if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
@@ -150,7 +150,14 @@ namespace LinqToDB.DataProvider.MySql
 
 				await TraceActionAsync(
 					dataConnection,
-					() => "INSERT BULK " + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + Environment.NewLine,
+					() =>
+					(runAsync && (
+#if !NET45 && !NET46
+							bc.CanWriteToServerAsync2 ||
+#endif
+							bc.CanWriteToServerAsync)
+					? "INSERT ASYNC BULK " : "INSERT BULK ")
+					+ tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + Environment.NewLine,
 					async () => {
 						if (runAsync)
 						{

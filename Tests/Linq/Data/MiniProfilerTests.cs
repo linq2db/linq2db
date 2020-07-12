@@ -447,7 +447,7 @@ namespace Tests.Data
 						new BulkCopyOptions() { BulkCopyType = BulkCopyType.ProviderSpecific },
 						Enumerable.Range(0, 1000).Select(n => new MySqlTests.AllTypeBaseProviderSpecific() { ID = 2000 + n }));
 
-					Assert.AreEqual(!unmapped, trace.Contains("INSERT BULK"));
+					Assert.AreEqual(!unmapped, trace.Contains("INSERT ASYNC BULK"));
 				}
 				finally
 				{
@@ -695,7 +695,7 @@ namespace Tests.Data
 							options,
 							Enumerable.Range(0, 1000).Select(n => new SqlServerTests.AllTypes() { ID = 2000 + n }));
 
-						Assert.AreEqual(!unmapped, trace.Contains("INSERT BULK"));
+						Assert.AreEqual(!unmapped, trace.Contains("INSERT ASYNC BULK"));
 						Assert.AreEqual(1000, copied);
 					}
 					finally
@@ -857,7 +857,7 @@ namespace Tests.Data
 							options,
 							Enumerable.Range(0, 1000).Select(n => new SqlServerTests.AllTypes() { ID = 2000 + n }));
 
-						Assert.AreEqual(!unmapped, trace.Contains("INSERT BULK"));
+						Assert.AreEqual(!unmapped, trace.Contains("INSERT ASYNC BULK"));
 						Assert.AreEqual(1000, copied);
 					}
 					finally
@@ -950,7 +950,12 @@ namespace Tests.Data
 							options,
 							Enumerable.Range(0, 1000).Select(n => new SapHanaTests.AllType() { ID = 2000 + n }));
 
+#if NET45 || NET46
+						Assert.AreEqual(!unmapped, trace.Contains("INSERT ASYNC BULK"));
+#else
 						Assert.AreEqual(!unmapped, trace.Contains("INSERT BULK"));
+#endif
+
 						Assert.AreEqual(1000, copied);
 					}
 					finally
@@ -1471,7 +1476,12 @@ namespace Tests.Data
 							options,
 							Enumerable.Range(0, 1000).Select(n => new PostgreSQLTests.AllTypes() { ID = 2000 + n }));
 
+#if NET45 || NET46
+						// we use 4.0.10 for tests, async added in 4.1.0
 						Assert.AreEqual(!unmapped, trace.Contains("INSERT BULK"));
+#else
+						Assert.AreEqual(!unmapped, trace.Contains("INSERT ASYNC BULK"));
+#endif
 						Assert.AreEqual(1000, copied);
 					}
 					finally

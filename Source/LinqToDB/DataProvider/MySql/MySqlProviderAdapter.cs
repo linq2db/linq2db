@@ -469,6 +469,7 @@ namespace LinqToDB.DataProvider.MySql
 				public Task WriteToServerAsync      (IDataReader dataReader, CancellationToken cancellationToken) => ((Func<MySqlBulkCopy, IDataReader, CancellationToken,      Task>)CompiledWrappers[8])(this, dataReader, cancellationToken);
 				public bool CanWriteToServerAsync => CompiledWrappers[8] != null;
 #if !NET45 && !NET46
+				[TypeWrapperName("WriteToServerAsync")]
 				public ValueTask WriteToServerAsync2(IDataReader dataReader, CancellationToken cancellationToken) => ((Func<MySqlBulkCopy, IDataReader, CancellationToken, ValueTask>)CompiledWrappers[9])(this, dataReader, cancellationToken);
 				public bool CanWriteToServerAsync2 => CompiledWrappers[9] != null;
 #endif
