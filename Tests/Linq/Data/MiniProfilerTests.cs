@@ -541,6 +541,20 @@ namespace Tests.Data
 		}
 
 		[Test]
+		public void TestRetryPolicy([IncludeDataSources(TestProvName.AllSqlServer)] string context, [Values] ConnectionType type)
+		{
+			Configuration.RetryPolicy.Factory = connection => new SqlServerRetryPolicy();
+			try
+			{
+				TestSqlServer(context, type);
+			}
+			finally
+			{
+				Configuration.RetryPolicy.Factory = null;
+			}
+		}
+
+		[Test]
 		public async Task TestSqlServer([IncludeDataSources(TestProvName.AllSqlServer)] string context, [Values] ConnectionType type)
 		{
 			string providerName;
