@@ -25,6 +25,9 @@ using Oracle.ManagedDataAccess.Types;
 namespace Tests.DataProvider
 {
 	using System.Diagnostics.CodeAnalysis;
+	using System.Threading;
+	using System.Threading.Tasks;
+	using LinqToDB.Data.RetryPolicy;
 	using LinqToDB.Linq;
 	using LinqToDB.SchemaProvider;
 	using Model;
@@ -2873,5 +2876,45 @@ namespace Tests.DataProvider
 				}
 			}
 		}
+
+		#region Issue 2342
+		[Test]
+		public void Issue2342Test([IncludeDataSources(false, TestProvName.AllOracle)] string context)
+		{
+			var oldMode = OracleTools.UseAlternativeBulkCopy;
+			try
+			{
+				OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertInto;
+				Configuration.RetryPolicy.Factory  = connection => new DummyRetryPolicy();
+
+				using (var db    = new TestDataConnection(context))
+				using (var table = db.CreateTempTable<Issue2342Entity>())
+				using (db.BeginTransaction())
+				{
+					table.BulkCopy(Enumerable.Range(1, 10).Select(id => new Issue2342Entity { Id = id, Name = $"Name_{id}" }));
+				}
+			}
+			finally
+			{
+				OracleTools.UseAlternativeBulkCopy = oldMode;
+				Configuration.RetryPolicy.Factory  = null;
+			}
+		}
+
+		sealed class DummyRetryPolicy : IRetryPolicy
+		{
+			public TResult       Execute<TResult>(Func<TResult> operation) => operation();
+			public void          Execute(Action operation) => operation();
+			public Task<TResult> ExecuteAsync<TResult>(Func<CancellationToken, Task<TResult>> operation, CancellationToken cancellationToken = new CancellationToken()) => operation(cancellationToken);
+			public Task          ExecuteAsync(Func<CancellationToken, Task> operation, CancellationToken cancellationToken = new CancellationToken()) => operation(cancellationToken);
+		}
+
+		[Table]
+		sealed class Issue2342Entity
+		{
+			[Column]                        public long   Id   { get; set; }
+			[NotNull, Column(Length = 256)] public string Name { get; set; } = null!;
+		}
+		#endregion
 	}
 }
