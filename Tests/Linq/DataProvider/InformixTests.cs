@@ -361,7 +361,7 @@ namespace Tests.DataProvider
 							}
 						));
 				}
-				catch
+				finally
 				{
 					await db.GetTable<DataTypes>().DeleteAsync(p => p.ID >= 4000);
 				}
