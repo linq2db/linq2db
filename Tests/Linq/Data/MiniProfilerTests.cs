@@ -38,6 +38,7 @@ using LinqToDB.DataProvider.Informix;
 using LinqToDB.DataProvider.Oracle;
 using LinqToDB.DataProvider.PostgreSQL;
 using System.Threading.Tasks;
+using LinqToDB.Common;
 #if NET46
 using IBM.Data.Informix;
 #endif
@@ -541,12 +542,12 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestRetryPolicy([IncludeDataSources(TestProvName.AllSqlServer)] string context, [Values] ConnectionType type)
+		public async Task TestRetryPolicy([IncludeDataSources(TestProvName.AllSqlServer)] string context, [Values] ConnectionType type)
 		{
 			Configuration.RetryPolicy.Factory = connection => new SqlServerRetryPolicy();
 			try
 			{
-				TestSqlServer(context, type);
+				await TestSqlServer(context, type);
 			}
 			finally
 			{

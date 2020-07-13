@@ -116,68 +116,68 @@ namespace LinqToDB.DataProvider.SqlServer
 			CancellationToken                                       cancellationToken)
 		{
 			var dataConnection = providerConnections.DataConnection;
-			var connection = providerConnections.ProviderConnection;
-			var transaction = providerConnections.ProviderTransaction;
-					var ed      = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
-					var columns = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
-					var sb      = _provider.CreateSqlBuilder(dataConnection.MappingSchema);
-					var rd      = createDataReader(columns);
-					var sqlopt  = SqlServerProviderAdapter.SqlBulkCopyOptions.Default;
-					var rc      = new BulkCopyRowsCopied();
+			var connection     = providerConnections.ProviderConnection;
+			var transaction    = providerConnections.ProviderTransaction;
+			var ed             = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
+			var columns        = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
+			var sb             = _provider.CreateSqlBuilder(dataConnection.MappingSchema);
+			var rd             = createDataReader(columns);
+			var sqlopt         = SqlServerProviderAdapter.SqlBulkCopyOptions.Default;
+			var rc             = new BulkCopyRowsCopied();
 
-					if (options.CheckConstraints       == true) sqlopt |= SqlServerProviderAdapter.SqlBulkCopyOptions.CheckConstraints;
-					if (options.KeepIdentity           == true) sqlopt |= SqlServerProviderAdapter.SqlBulkCopyOptions.KeepIdentity;
-					if (options.TableLock              == true) sqlopt |= SqlServerProviderAdapter.SqlBulkCopyOptions.TableLock;
-					if (options.KeepNulls              == true) sqlopt |= SqlServerProviderAdapter.SqlBulkCopyOptions.KeepNulls;
-					if (options.FireTriggers           == true) sqlopt |= SqlServerProviderAdapter.SqlBulkCopyOptions.FireTriggers;
-					if (options.UseInternalTransaction == true) sqlopt |= SqlServerProviderAdapter.SqlBulkCopyOptions.UseInternalTransaction;
+			if (options.CheckConstraints       == true) sqlopt |= SqlServerProviderAdapter.SqlBulkCopyOptions.CheckConstraints;
+			if (options.KeepIdentity           == true) sqlopt |= SqlServerProviderAdapter.SqlBulkCopyOptions.KeepIdentity;
+			if (options.TableLock              == true) sqlopt |= SqlServerProviderAdapter.SqlBulkCopyOptions.TableLock;
+			if (options.KeepNulls              == true) sqlopt |= SqlServerProviderAdapter.SqlBulkCopyOptions.KeepNulls;
+			if (options.FireTriggers           == true) sqlopt |= SqlServerProviderAdapter.SqlBulkCopyOptions.FireTriggers;
+			if (options.UseInternalTransaction == true) sqlopt |= SqlServerProviderAdapter.SqlBulkCopyOptions.UseInternalTransaction;
 
-					using (var bc = _provider.Adapter.CreateBulkCopy(connection, sqlopt, transaction))
+			using (var bc = _provider.Adapter.CreateBulkCopy(connection, sqlopt, transaction))
+			{
+				if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
+				{
+					bc.NotifyAfter = options.NotifyAfter;
+
+					bc.SqlRowsCopied += (sender, args) =>
 					{
-						if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
-						{
-							bc.NotifyAfter = options.NotifyAfter;
+						rc.RowsCopied = args.RowsCopied;
+						options.RowsCopiedCallback(rc);
+						if (rc.Abort)
+							args.Abort = true;
+					};
+				}
 
-							bc.SqlRowsCopied += (sender, args) =>
-							{
-								rc.RowsCopied = args.RowsCopied;
-								options.RowsCopiedCallback(rc);
-								if (rc.Abort)
-									args.Abort = true;
-							};
-						}
+				if (options.MaxBatchSize.HasValue)    bc.BatchSize       = options.MaxBatchSize.Value;
+				if (options.BulkCopyTimeout.HasValue) bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
 
-						if (options.MaxBatchSize.HasValue)    bc.BatchSize       = options.MaxBatchSize.Value;
-						if (options.BulkCopyTimeout.HasValue) bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
+				var tableName = GetTableName(sb, options, table);
 
-						var tableName = GetTableName(sb, options, table);
+				bc.DestinationTableName = tableName;
 
-						bc.DestinationTableName = tableName;
+				for (var i = 0; i < columns.Count; i++)
+					bc.ColumnMappings.Add(_provider.Adapter.CreateBulkCopyColumnMapping(i, sb.ConvertInline(columns[i].ColumnName, ConvertType.NameToQueryField)));
 
-						for (var i = 0; i < columns.Count; i++)
-							bc.ColumnMappings.Add(_provider.Adapter.CreateBulkCopyColumnMapping(i, sb.ConvertInline(columns[i].ColumnName, ConvertType.NameToQueryField)));
+				await TraceActionAsync(
+					dataConnection,
+					() => (runAsync ? "INSERT ASYNC BULK " : "INSERT BULK ") + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + Environment.NewLine,
+					async () => {
+						if (runAsync)
+							await bc.WriteToServerAsync(rd, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+						else
+							bc.WriteToServer(rd); 
+						return rd.Count; 
+					}).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			}
 
-						await TraceActionAsync(
-							dataConnection,
-							() => (runAsync ? "INSERT ASYNC BULK " : "INSERT BULK ") + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + Environment.NewLine,
-							async () => { 
-								if (runAsync)
-									await bc.WriteToServerAsync(rd, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-								else
-									bc.WriteToServer(rd); 
-								return rd.Count; 
-							}).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-					}
+			if (rc.RowsCopied != rd.Count)
+			{
+				rc.RowsCopied = rd.Count;
 
-					if (rc.RowsCopied != rd.Count)
-					{
-						rc.RowsCopied = rd.Count;
+				if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
+					options.RowsCopiedCallback(rc);
+			}
 
-						if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
-							options.RowsCopiedCallback(rc);
-					}
-
-					return rc;
+			return rc;
 		}
 
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
