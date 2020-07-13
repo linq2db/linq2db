@@ -37,6 +37,7 @@ using LinqToDB.DataProvider.Sybase;
 using LinqToDB.DataProvider.Informix;
 using LinqToDB.DataProvider.Oracle;
 using LinqToDB.DataProvider.PostgreSQL;
+using LinqToDB.Common;
 #if NET46
 using IBM.Data.Informix;
 #endif
@@ -522,6 +523,20 @@ namespace Tests.Data
 
 					Assert.AreEqual(DB2ProviderAdapter.DB2ServerTypes.DB2_UW, cn.eServerType);
 				}
+			}
+		}
+
+		[Test]
+		public void TestRetryPolicy([IncludeDataSources(TestProvName.AllSqlServer)] string context, [Values] ConnectionType type)
+		{
+			Configuration.RetryPolicy.Factory = connection => new SqlServerRetryPolicy();
+			try
+			{
+				TestSqlServer(context, type);
+			}
+			finally
+			{
+				Configuration.RetryPolicy.Factory = null;
 			}
 		}
 
