@@ -229,6 +229,7 @@ namespace LinqToDB.SqlQuery
 					{
 						Visit1(((SqlUpdateStatement)element).With);
 						Visit1(((SqlUpdateStatement)element).Update);
+						Visit1(((SqlUpdateStatement)element).Output);
 						Visit1(((SqlUpdateStatement)element).SelectQuery);
 						break;
 					}
@@ -779,6 +780,7 @@ namespace LinqToDB.SqlQuery
 					{
 						Visit2(((SqlUpdateStatement)element).With);
 						Visit2(((SqlUpdateStatement)element).Update);
+						Visit2(((SqlUpdateStatement)element).Output);
 						Visit2(((SqlUpdateStatement)element).SelectQuery);
 						break;
 					}

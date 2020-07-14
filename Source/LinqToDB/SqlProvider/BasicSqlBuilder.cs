@@ -566,8 +566,8 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildUpdateClause(SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)
 		{
-			BuildUpdateTable(selectQuery, updateClause);
-			BuildUpdateSet  (selectQuery, updateClause);
+			BuildUpdateTable (selectQuery, updateClause);
+			BuildUpdateSet   (selectQuery, updateClause);
 		}
 
 		protected virtual void BuildUpdateTable(SelectQuery selectQuery, SqlUpdateClause updateClause)
