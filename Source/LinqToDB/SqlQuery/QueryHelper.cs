@@ -108,6 +108,20 @@ namespace LinqToDB.SqlQuery
 			}
 			return null;
 		}
+
+		public static DbDataType GetDbDataType(ISqlExpression? expr)
+		{
+			if (expr == null)
+				return new DbDataType(typeof(object), DataType.Undefined);
+
+			var descriptor = GetColumnDescriptor(expr);
+			if (descriptor == null)
+			{
+				return new DbDataType(expr.SystemType ?? typeof(object), DataType.Undefined);
+			}
+
+			return descriptor.GetDbDataType();
+		}
 		
 		public static void CollectDependencies(IQueryElement root, IEnumerable<ISqlTableSource> sources, HashSet<ISqlExpression> found, IEnumerable<IQueryElement>? ignore = null)
 		{

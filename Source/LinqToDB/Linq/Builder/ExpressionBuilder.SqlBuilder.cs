@@ -2453,7 +2453,7 @@ namespace LinqToDB.Linq.Builder
 				dbDataTypeAccessor.Compile(),
 				new SqlParameter(new DbDataType(accessorExpression.Type), name, null)
 				{
-					IsQueryParameter = !(dataContext.InlineParameters && dataContext.MappingSchema.ValueToSqlConverter.CanConvert(accessorExpression.Type))
+					IsQueryParameter = !dataContext.InlineParameters
 				}
 			);
 		}

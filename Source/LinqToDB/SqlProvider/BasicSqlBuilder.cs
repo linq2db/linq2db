@@ -2377,14 +2377,17 @@ namespace LinqToDB.SqlProvider
 					{
 						var parm = (SqlParameter)expr;
 
-						if (parm.IsQueryParameter)
+						var inlining = !parm.IsQueryParameter;
+						if (inlining)
+						{
+							if (!MappingSchema.ValueToSqlConverter.TryConvert(StringBuilder, new SqlDataType(parm.Type), parm.Value))
+								inlining = false;
+						}
+
+						if (!inlining)
 						{
 							Convert(StringBuilder, parm.Name!, ConvertType.NameToQueryParameter);
 							AddParameter(parm);
-						}
-						else
-						{
-							BuildValue(new SqlDataType(parm.Type), parm.Value);
 						}
 					}
 
