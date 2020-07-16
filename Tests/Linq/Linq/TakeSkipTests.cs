@@ -22,7 +22,7 @@ namespace Tests.Linq
 			if (!(dc is DataConnection db))
 				return;
 
-			if (!LinqToDB.Common.Configuration.Linq.ParametrizeTakeSip || 
+			if (!LinqToDB.Common.Configuration.Linq.ParametrizeTakeSkip || 
 			    (!db.DataProvider.SqlProviderFlags.AcceptsTakeAsParameter && !db.DataProvider.SqlProviderFlags.AcceptsTakeAsParameterIfSkip))
 				Assert.That(db.Command.Parameters.Count, Is.EqualTo(additional));
 			else
@@ -34,7 +34,7 @@ namespace Tests.Linq
 			if (!(dc is DataConnection db))
 				return;
 
-			if (!LinqToDB.Common.Configuration.Linq.ParametrizeTakeSip || 
+			if (!LinqToDB.Common.Configuration.Linq.ParametrizeTakeSkip || 
 			    !db.DataProvider.SqlProviderFlags.AcceptsTakeAsParameter)
 				Assert.That(db.Command.Parameters.Count, Is.EqualTo(additional));
 			else
