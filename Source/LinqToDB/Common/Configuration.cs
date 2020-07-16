@@ -191,6 +191,11 @@ namespace LinqToDB.Common
 			/// Into GROUP BY equivalent if syntax is not supported
 			/// </summary>
 			public static bool KeepDistinctOrdered = true;
+
+			/// <summary>
+			/// Enables Take/Skip parametrization.
+			/// </summary>
+			public static bool ParametrizeTakeSkip = true;
 		}
 
 		/// <summary>

@@ -264,15 +264,19 @@ namespace LinqToDB.Linq
 		[Flags]
 		enum QueryFlags
 		{
-			None             = 0,
+			None                = 0,
 			/// <summary>
 			/// Bit set, when group by guard set for connection.
 			/// </summary>
-			GroupByGuard     = 0x1,
+			GroupByGuard        = 0x1,
 			/// <summary>
 			/// Bit set, when inline parameters enabled for connection.
 			/// </summary>
-			InlineParameters = 0x2,
+			InlineParameters    = 0x2,
+			/// <summary>
+			/// Bit set, when inline Take/Skip parametrization is enabled for query.
+			/// </summary>
+			ParametrizeTakeSkip = 0x4,
 		}
 
 		class QueryCache
@@ -480,6 +484,8 @@ namespace LinqToDB.Linq
 			// global flag change
 			if (Configuration.Linq.GuardGrouping)
 				flags |= QueryFlags.GroupByGuard;
+			if (Configuration.Linq.ParametrizeTakeSkip)
+				flags |= QueryFlags.ParametrizeTakeSkip;
 
 			var query = _queryCache.Find(dataContext, expr, flags);
 

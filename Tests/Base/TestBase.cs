@@ -1192,6 +1192,21 @@ namespace Tests
 		}
 	}
 
+	public class ParametrizeTakeSkip : IDisposable
+	{
+		private readonly bool _oldValue = Configuration.Linq.ParametrizeTakeSkip;
+
+		public ParametrizeTakeSkip(bool enable)
+		{
+			Configuration.Linq.ParametrizeTakeSkip = enable;
+		}
+
+		public void Dispose()
+		{
+			Configuration.Linq.ParametrizeTakeSkip = _oldValue;
+		}
+	}
+
 	public class PreloadGroups : IDisposable
 	{
 		private readonly bool _oldValue = Configuration.Linq.PreloadGroups;

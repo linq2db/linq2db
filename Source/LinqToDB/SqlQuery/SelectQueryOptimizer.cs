@@ -442,7 +442,7 @@ namespace LinqToDB.SqlQuery
 			{
 				var supportsParameter = _flags.GetAcceptsTakeAsParameterFlag(_selectQuery);
 
-				if (supportsParameter && _selectQuery.Select.TakeValue is SqlValue takeValue)
+				if (supportsParameter && _selectQuery.Select.TakeValue is SqlValue takeValue && Configuration.Linq.ParametrizeTakeSkip)
 					_selectQuery.Select.Take(new SqlParameter(takeValue.ValueType, "take", takeValue.Value){ IsQueryParameter = !inlineParameters }, _selectQuery.Select.TakeHints);
 				else if (!supportsParameter && _selectQuery.Select.TakeValue is SqlParameter)
 					_selectQuery.IsParameterDependent = true;
@@ -457,7 +457,12 @@ namespace LinqToDB.SqlQuery
 						var value = _selectQuery.Select.TakeValue.EvaluateExpression()!;
 
 						if (supportsParameter)
-							_selectQuery.Select.Take(new SqlParameter(new DbDataType(value.GetType()), "take", value) { IsQueryParameter = !inlineParameters }, _selectQuery.Select.TakeHints);
+							_selectQuery.Select.Take(
+								new SqlParameter(new DbDataType(value.GetType()), "take", value)
+								{
+									IsQueryParameter = !inlineParameters && Configuration.Linq.ParametrizeTakeSkip
+								}, _selectQuery.Select.TakeHints
+							);
 						else
 							_selectQuery.Select.Take(new SqlValue(value), _selectQuery.Select.TakeHints);
 					}
@@ -467,7 +472,7 @@ namespace LinqToDB.SqlQuery
 			{
 				var supportsParameter = _flags.AcceptsTakeAsParameter;
 
-				if (supportsParameter && _selectQuery.Select.SkipValue is SqlValue skipValue)
+				if (supportsParameter && _selectQuery.Select.SkipValue is SqlValue skipValue && Configuration.Linq.ParametrizeTakeSkip)
 					_selectQuery.Select.Skip(new SqlParameter(skipValue.ValueType, "skip", skipValue.Value)
 						{ IsQueryParameter = !inlineParameters });
 				else if (!supportsParameter && _selectQuery.Select.SkipValue is SqlParameter)
@@ -483,7 +488,7 @@ namespace LinqToDB.SqlQuery
 
 						if (supportsParameter)
 							_selectQuery.Select.Skip(new SqlParameter(new DbDataType(value.GetType()), "skip", value)
-								{ IsQueryParameter = !inlineParameters });
+								{ IsQueryParameter = !inlineParameters && Configuration.Linq.ParametrizeTakeSkip });
 						else
 							_selectQuery.Select.Skip(new SqlValue(value));
 					}

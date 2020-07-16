@@ -514,7 +514,7 @@ namespace LinqToDB.Linq
 						skip  = (expr, pc, ps) => n;
 					}
 				}
-				else if (select.SkipValue is SqlParameter)
+				else if (select.SkipValue is SqlParameter skipParam && skipParam.IsQueryParameter)
 				{
 					var i = GetParameterIndex(query, select.SkipValue);
 					queryFunc = (qq, db, mapper, expr, ps, preambles, qn) => q(qq, db, mapper, expr, ps, preambles, qn).Skip((int)query.Queries[0].Parameters[i].Accessor(expr, db, ps)!);
@@ -541,7 +541,7 @@ namespace LinqToDB.Linq
 						take      = (expr, pc, ps) => n;
 					}
 				}
-				else if (select.TakeValue is SqlParameter)
+				else if (select.TakeValue is SqlParameter takeParam && takeParam.IsQueryParameter)
 				{
 					var i = GetParameterIndex(query, select.TakeValue);
 					queryFunc = (qq, db, mapper, expr, ps, preambles, qn) => q(qq, db, mapper, expr, ps, preambles, qn).Take((int)query.Queries[0].Parameters[i].Accessor(expr, db, ps)!);

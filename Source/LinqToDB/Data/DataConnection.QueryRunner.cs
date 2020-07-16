@@ -193,10 +193,10 @@ namespace LinqToDB.Data
 				if (!sql.IsParameterDependent)
 				{
 					query.Context = commands;
-
-					query.Statement.Parameters.Clear();
-					query.Statement.Parameters.AddRange(sqlProvider.ActualParameters);
 				}
+
+				query.Statement.Parameters.Clear();
+				query.Statement.Parameters.AddRange(sqlProvider.ActualParameters);
 
 				return new PreparedQuery
 				{
