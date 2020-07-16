@@ -31,7 +31,7 @@ namespace LinqToDB.DataProvider.MySql
 					options,
 					source,
 					false,
-					default).Result;
+					default).GetAwaiter().GetResult();
 			}
 
 			return MultipleRowsCopy(table, options, source);

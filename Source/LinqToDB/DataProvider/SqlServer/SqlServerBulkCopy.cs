@@ -34,7 +34,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					options,
 					(columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source),
 					false,
-					default).Result;
+					default).GetAwaiter().GetResult();
 			}
 
 			return MultipleRowsCopy(table, options, source);

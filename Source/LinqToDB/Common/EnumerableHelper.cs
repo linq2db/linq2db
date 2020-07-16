@@ -10,7 +10,7 @@ namespace LinqToDB.Common
 #if !NET45 && !NET46
 		public static IEnumerable<T> AsyncToSyncEnumerable<T>(IAsyncEnumerator<T> enumerator)
 		{
-			while (enumerator.MoveNextAsync().Result)
+			while (enumerator.MoveNextAsync().GetAwaiter().GetResult())
 			{
 				yield return enumerator.Current;
 			}

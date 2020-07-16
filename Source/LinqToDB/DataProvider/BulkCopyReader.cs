@@ -38,7 +38,7 @@ namespace LinqToDB.DataProvider
 		}
 
 		protected override bool MoveNext()
-			=> _enumerator != null ? _enumerator.MoveNext() : _asyncEnumerator!.MoveNextAsync().Result;
+			=> _enumerator != null ? _enumerator.MoveNext() : _asyncEnumerator!.MoveNextAsync().GetAwaiter().GetResult();
 
 		protected override ValueTask<bool> MoveNextAsync()
 			=> _enumerator != null ? new ValueTask<bool>(_enumerator.MoveNext()) : _asyncEnumerator!.MoveNextAsync();
