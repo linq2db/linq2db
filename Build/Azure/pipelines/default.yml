@@ -403,10 +403,11 @@ stages:
           title: 'SQL Server 2017 (Microsoft.Data.SqlClient)'
           config: 'sqlserver.2017.ms'
           script: 'sqlserver.2017.cmd'
-        PostgreSQL10:
-          title: 'PostgreSQL 10'
-          config: 'pgsql10.win'
-          script: 'pgsql10.cmd'
+# temporary disabled, need new/fixed image
+#        PostgreSQL10:
+#          title: 'PostgreSQL 10'
+#          config: 'pgsql10.win'
+#          script: 'pgsql10.cmd'
 
     steps:
     - checkout: none
@@ -531,10 +532,11 @@ stages:
           title: 'SQL Server 2017 (Microsoft.Data.SqlClient)'
           config: 'sqlserver.2017.ms'
           script: 'sqlserver.2017.cmd'
-        PostgreSQL10:
-          title: 'PostgreSQL 10'
-          config: 'pgsql10.win'
-          script: 'pgsql10.cmd'
+# temporary disabled, need new/fixed image
+#        PostgreSQL10:
+#          title: 'PostgreSQL 10'
+#          config: 'pgsql10.win'
+#          script: 'pgsql10.cmd'
     steps:
     - checkout: none
 
@@ -969,7 +971,9 @@ stages:
       vmImage: 'macOS-10.15'
     displayName: 'Tests: Mac / NETCOREAPP2.1 / '
     dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+# temporary disabled due to unstable homebrew install
+#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+    condition: eq(variables['Build.SourceBranchName'], 'disabled')
 
     strategy:
       matrix:
