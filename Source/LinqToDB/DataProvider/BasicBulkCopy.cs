@@ -16,35 +16,35 @@ namespace LinqToDB.DataProvider
 	{
 		public virtual BulkCopyRowsCopied BulkCopy<T>(BulkCopyType bulkCopyType, ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			switch (bulkCopyType)
+			return bulkCopyType switch
 			{
-				case BulkCopyType.MultipleRows : return MultipleRowsCopy    (table, options, source);
-				case BulkCopyType.RowByRow     : return RowByRowCopy        (table, options, source);
-				default                        : return ProviderSpecificCopy(table, options, source);
-			}
+				BulkCopyType.MultipleRows => MultipleRowsCopy    (table, options, source),
+				BulkCopyType.RowByRow     => RowByRowCopy        (table, options, source),
+				_                         => ProviderSpecificCopy(table, options, source),
+			};
 		}
 
 		public virtual Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
 			BulkCopyType bulkCopyType, ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			switch (bulkCopyType)
+			return bulkCopyType switch
 			{
-				case BulkCopyType.MultipleRows : return MultipleRowsCopyAsync    (table, options, source, cancellationToken);
-				case BulkCopyType.RowByRow     : return RowByRowCopyAsync        (table, options, source, cancellationToken);
-				default                        : return ProviderSpecificCopyAsync(table, options, source, cancellationToken);
-			}
+				BulkCopyType.MultipleRows => MultipleRowsCopyAsync    (table, options, source, cancellationToken),
+				BulkCopyType.RowByRow     => RowByRowCopyAsync        (table, options, source, cancellationToken),
+				_                         => ProviderSpecificCopyAsync(table, options, source, cancellationToken),
+			};
 		}
 
 #if !NET45 && !NET46
 		public virtual Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
 			BulkCopyType bulkCopyType, ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			switch (bulkCopyType)
+			return bulkCopyType switch
 			{
-				case BulkCopyType.MultipleRows : return MultipleRowsCopyAsync    (table, options, source, cancellationToken);
-				case BulkCopyType.RowByRow     : return RowByRowCopyAsync        (table, options, source, cancellationToken);
-				default                        : return ProviderSpecificCopyAsync(table, options, source, cancellationToken);
-			}
+				BulkCopyType.MultipleRows => MultipleRowsCopyAsync    (table, options, source, cancellationToken),
+				BulkCopyType.RowByRow     => RowByRowCopyAsync        (table, options, source, cancellationToken),
+				_                         => ProviderSpecificCopyAsync(table, options, source, cancellationToken),
+			};
 		}
 #endif
 
