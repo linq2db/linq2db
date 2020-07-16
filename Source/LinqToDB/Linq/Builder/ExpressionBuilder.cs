@@ -82,6 +82,7 @@ namespace LinqToDB.Linq.Builder
 			new ArrayBuilder               (),
 			new AsSubQueryBuilder          (),
 			new DisableGroupingGuardBuilder(),
+			new InlineParametersBuilder    (),
 			new HasUniqueKeyBuilder        (),
 		};
 

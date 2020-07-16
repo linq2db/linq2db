@@ -55,6 +55,23 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void InlineTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var id = 1;
+				var query = from t in db.Person
+					where t.ID == id
+					select t;
+
+				var queryInlined = query.InlineParameters();
+
+				Assert.That(query.GetStatement().Parameters.Count,        Is.EqualTo(1));
+				Assert.That(queryInlined.GetStatement().Parameters.Count, Is.EqualTo(0));
+			}
+		}
+
+		[Test]
 		public void CharAsSqlParameter1(
 			[DataSources(
 				ProviderName.SqlCe,
