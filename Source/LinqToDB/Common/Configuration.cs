@@ -200,8 +200,8 @@ namespace LinqToDB.Common
 		public static class SqlServer
 		{
 			/// <summary>
-			/// if set to true SchemaProvider uses <see cref="System.Data.CommandBehavior.SchemaOnly"/> to get metadata.
-			/// Otherwise the sp_describe_first_result_set sproc is used instead.
+			/// if set to true, SchemaProvider uses <see cref="System.Data.CommandBehavior.SchemaOnly"/> to get metadata.
+			/// Otherwise the sp_describe_first_result_set sproc is used.
 			/// </summary>
 			public static bool UseSchemaOnlyToGetSchema = false;
 		}

@@ -569,9 +569,9 @@ namespace LinqToDB.SchemaProvider
 						switch (paramNames[i].Trim().ToLower())
 						{
 							case "size"       :
-							case "length"     : paramValues[i] = length;        break;
-							case "max length" : paramValues[i] = length == int.MaxValue ? "max" : length.HasValue ? length.ToString() : null; break;
-							case "precision"  : paramValues[i] = prec;          break;
+							case "length"     : paramValues[i] = length; break;
+							case "max length" : paramValues[i] = length == int.MaxValue ? "max" : length?.ToString(); break;
+							case "precision"  : paramValues[i] = prec;   break;
 							case "scale"      : paramValues[i] = scale.HasValue || paramNames.Length == 2 ? scale : prec; break;
 						}
 					}
@@ -585,8 +585,11 @@ namespace LinqToDB.SchemaProvider
 		}
 
 		// TODO: use proper C# identifier validation procedure
-		public static string ToValidName(string name)
+		public static string ToValidName(string? name)
 		{
+			if (name == null)
+				return "";
+
 			if (name.Contains(" ") || name.Contains("\t"))
 			{
 				var ss = name.Split(new [] {' ', '\t'}, StringSplitOptions.RemoveEmptyEntries)

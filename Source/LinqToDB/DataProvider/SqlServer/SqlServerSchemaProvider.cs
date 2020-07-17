@@ -528,7 +528,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					var row = dt.NewRow();
 
 					row["DataTypeName"]     = item.system_type_name.Split('(')[0];
-					row["ColumnName"]       = item.name;
+					row["ColumnName"]       = item.name ?? "";
 					row["AllowDBNull"]      = item.is_nullable;
 					row["ColumnSize"]       = item.max_length;
 					row["NumericPrecision"] = item.precision;
@@ -537,8 +537,6 @@ namespace LinqToDB.DataProvider.SqlServer
 
 					dt.Rows.Add(row);
 				}
-
-				//var dt1 = CallBase();
 
 				return dt.Rows.Count == 0 ? null : dt;
 			}
@@ -549,20 +547,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			DataTable? CallBase()
 			{
-				var doTransaction = dataConnection.Transaction == null;
-
-				if (doTransaction)
-					dataConnection.BeginTransaction();
-
-				try
-				{
-					return base.GetProcedureSchema(dataConnection, commandText, commandType, parameters);
-				}
-				finally
-				{
-					if (doTransaction)
-						dataConnection.RollbackTransaction();
-				}
+				return base.GetProcedureSchema(dataConnection, commandText, commandType, parameters);
 			}
 		}
 	}
