@@ -34,7 +34,7 @@ namespace LinqToDB.SchemaProvider
 		/// Default Schema name.
 		/// </summary>
 		public string? DefaultSchema;
-		
+
 		/// <summary>
 		/// List of allowed schemas/owners.
 		/// </summary>

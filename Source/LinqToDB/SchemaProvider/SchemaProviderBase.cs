@@ -221,7 +221,8 @@ namespace LinqToDB.SchemaProvider
 
 				if (procs != null)
 				{
-					var procPparams = GetProcedureParameters(dataConnection, procs, options);
+					var procParams = GetProcedureParameters(dataConnection, procs, options);
+
 					procedures =
 					(
 						from sp in procs
@@ -230,7 +231,7 @@ namespace LinqToDB.SchemaProvider
 							(ExcludedSchemas .Count == 0 || !ExcludedSchemas .Contains(sp.SchemaName))  &&
 							(IncludedCatalogs.Count == 0 ||  IncludedCatalogs.Contains(sp.CatalogName)) &&
 							(ExcludedCatalogs.Count == 0 || !ExcludedCatalogs.Contains(sp.CatalogName))
-						join p  in procPparams on sp.ProcedureID equals p.ProcedureID
+						join p  in procParams on sp.ProcedureID equals p.ProcedureID
 						into gr
 						select new ProcedureSchema
 						{
@@ -400,6 +401,7 @@ namespace LinqToDB.SchemaProvider
 				if (st != null && st.Columns.Count > 0)
 				{
 					var columns = GetProcedureResultColumns(st, options);
+
 					if (columns.Count > 0)
 					{
 						procedure.ResultTable = new TableSchema
@@ -434,15 +436,16 @@ namespace LinqToDB.SchemaProvider
 		{
 			return new DataParameter
 			{
-				Name = p.ParameterName,
-				Value =
+				Name      = p.ParameterName,
+				Value     =
 					p.SystemType == typeof(string) ?
 						"" :
 						p.SystemType == typeof(DateTime) ?
 							DateTime.Now :
 							DefaultValue.GetValue(p.SystemType),
-				DataType = p.DataType,
-				Size = (int?)p.Size,
+				DataType  = p.DataType,
+				DbType    = p.SchemaType,
+				Size      = (int?)p.Size,
 				Direction =
 					p.IsIn ?
 						p.IsOut ?
@@ -458,7 +461,7 @@ namespace LinqToDB.SchemaProvider
 		{
 			if (typeName == null)
 				return null;
-			
+
 			return
 				options.PreferProviderSpecificTypes == true
 				? (ProviderSpecificDataTypesDic.TryGetValue(typeName, out var dt) ? dt : DataTypesDic                .TryGetValue(typeName, out dt) ? dt : null)
@@ -475,8 +478,8 @@ namespace LinqToDB.SchemaProvider
 
 		protected virtual DataTable? GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters)
 		{
-			using (var rd = dataConnection.ExecuteReader(commandText, commandType, CommandBehavior.SchemaOnly, parameters))
-				return rd.Reader!.GetSchemaTable();
+			using var rd = dataConnection.ExecuteReader(commandText, commandType, CommandBehavior.SchemaOnly, parameters);
+			return rd.Reader!.GetSchemaTable();
 		}
 
 		protected virtual List<ColumnSchema> GetProcedureResultColumns(DataTable resultTable, GetSchemaOptions options)
