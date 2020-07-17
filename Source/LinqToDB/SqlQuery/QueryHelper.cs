@@ -604,7 +604,7 @@ namespace LinqToDB.SqlQuery
 			{
 				SqlField field   => field,
 				SqlColumn column => GetUnderlyingField(column.Expression, new HashSet<ISqlExpression>()),
-				_			     => null,
+				_                => null,
 			};
 		}
 

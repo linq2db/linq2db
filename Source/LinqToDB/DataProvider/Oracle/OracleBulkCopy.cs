@@ -95,7 +95,7 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				AlternativeBulkCopy.InsertInto => OracleMultipleRowsCopy2(new MultipleRowsHelper<T>(table, options), source),
 				AlternativeBulkCopy.InsertDual => OracleMultipleRowsCopy3(new MultipleRowsHelper<T>(table, options), source),
-				_							   => OracleMultipleRowsCopy1(new MultipleRowsHelper<T>(table, options), source),
+				_                              => OracleMultipleRowsCopy1(new MultipleRowsHelper<T>(table, options), source),
 			};
 		}
 

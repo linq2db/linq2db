@@ -22,7 +22,7 @@
 			return convertType switch
 			{
 				ConvertType.NameToQueryParameter => sb.Append('?'),
-				_								 => base.Convert(sb, value, convertType),
+				_                                => base.Convert(sb, value, convertType),
 			};
 		}
 

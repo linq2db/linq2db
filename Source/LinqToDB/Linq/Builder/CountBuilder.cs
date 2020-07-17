@@ -133,7 +133,7 @@ namespace LinqToDB.Linq.Builder
 				return flags switch
 				{
 					ConvertFlags.Field => new[] { new SqlInfo(Sql!, Parent!.SelectQuery) },
-					_				   => throw new NotImplementedException(),
+					_                  => throw new NotImplementedException(),
 				};
 			}
 
@@ -155,7 +155,7 @@ namespace LinqToDB.Linq.Builder
 				return requestFlag switch
 				{
 					RequestFor.Expression => IsExpressionResult.True,
-					_					  => IsExpressionResult.False,
+					_                     => IsExpressionResult.False,
 				};
 			}
 

@@ -96,7 +96,7 @@ namespace Tests.UserTests
 				DateTimeQuantifiers.Fraction3 => "fraction(3)",
 				DateTimeQuantifiers.Fraction4 => "fraction(4)",
 				DateTimeQuantifiers.Fraction5 => "fraction(5)",
-				_							  => quantifier.ToString(),
+				_                             => quantifier.ToString(),
 			};
 		}
 

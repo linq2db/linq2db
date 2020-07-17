@@ -237,7 +237,7 @@ namespace LinqToDB.SqlProvider
 						{
 							QueryElementType.SqlField => !allTables.Contains(((SqlField)e).Table!),
 							QueryElementType.Column   => !allTables.Contains(((SqlColumn)e).Parent!),
-							_						  => false,
+							_                         => false,
 						};
 					}
 
@@ -349,7 +349,7 @@ namespace LinqToDB.SqlProvider
 							{
 								QueryElementType.SqlField => !allTables.Contains(((SqlField)e).Table!),
 								QueryElementType.Column	  => !allTables.Contains(((SqlColumn)e).Parent!),
-								_						  => false,
+								_                         => false,
 							};
 						}
 
@@ -1251,7 +1251,7 @@ namespace LinqToDB.SqlProvider
 			{
 				QueryElementType.SqlDataType   => ((SqlDataType)expr).Type.DataType == DataType.Date,
 				QueryElementType.SqlExpression => ((SqlExpression)expr).Expr == dateName,
-				_							   => false,
+				_                              => false,
 			};
 		}
 
@@ -1260,7 +1260,7 @@ namespace LinqToDB.SqlProvider
 			return expr.ElementType switch
 			{
 				QueryElementType.SqlDataType => ((SqlDataType)expr).Type.DataType == DataType.DateTimeOffset,
-				_							 => false,
+				_                              => false,
 			};
 		}
 
@@ -1270,7 +1270,7 @@ namespace LinqToDB.SqlProvider
 			{
 				QueryElementType.SqlDataType   => ((SqlDataType)expr).Type.DataType == DataType.Time,
 				QueryElementType.SqlExpression => ((SqlExpression)expr).Expr == "Time",
-				_							   => false,
+				_                              => false,
 			};
 		}
 

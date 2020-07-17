@@ -43,7 +43,7 @@ namespace LinqToDB.Linq.Builder
 						SqlJoinType.Left  => JoinType.Left,
 						SqlJoinType.Right => JoinType.Right,
 						SqlJoinType.Full  => JoinType.Full,
-						_				  => throw new ArgumentOutOfRangeException(),
+						_                 => throw new ArgumentOutOfRangeException(),
 					};
 					break;
 			}

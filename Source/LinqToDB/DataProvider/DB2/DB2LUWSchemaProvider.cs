@@ -320,7 +320,7 @@ WHERE
 				"TIMESTAMP"                 => DataType.Timestamp, // Timestamp       System.DateTime
 				"TIMESTMP"                  => DataType.Timestamp, // Timestamp       System.DateTime
 				"ROWID"                     => DataType.Undefined, // RowID           System.Byte[]
-				_							=> DataType.Undefined,
+				_                           => DataType.Undefined,
 			};
 		}
 

@@ -120,7 +120,7 @@ namespace LinqToDB.Linq.Builder
 				return requestFlag switch
 				{
 					RequestFor.Root => IsExpressionResult.False,
-					_				=> throw new InvalidOperationException(),
+					_               => throw new InvalidOperationException(),
 				};
 			}
 

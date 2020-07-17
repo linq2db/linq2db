@@ -229,7 +229,7 @@ SELECT
 				"bigint"            => columnType != null && columnType.Contains("unsigned") ? DataType.UInt64 : DataType.Int64,
 				"decimal"           => DataType.Decimal,
 				"json"              => DataType.Json,
-				_					=> DataType.Undefined,
+				_                   => DataType.Undefined,
 			};
 		}
 

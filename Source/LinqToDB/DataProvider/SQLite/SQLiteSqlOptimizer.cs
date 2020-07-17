@@ -38,7 +38,7 @@ namespace LinqToDB.DataProvider.SQLite
 			{
 				switch (be.Operation)
 				{
-					case "+": return be.SystemType == typeof(string) ? new SqlBinaryExpression(be.SystemType, be.Expr1, "||", be.Expr2, be.Precedence) : expr;
+					case "+": return be.SystemType == typeof(string)? new SqlBinaryExpression(be.SystemType, be.Expr1, "||", be.Expr2, be.Precedence) : expr;
 					case "^": // (a + b) - (a & b) * 2
 						return Sub(
 							Add(be.Expr1, be.Expr2, be.SystemType),

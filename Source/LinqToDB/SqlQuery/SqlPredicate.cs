@@ -141,15 +141,15 @@ namespace LinqToDB.SqlQuery
 				Expr1.ToString(sb, dic);
 				var op = Operator switch
 				{
-					Operator.Equal			=> "=",
-					Operator.NotEqual		=> "<>",
-					Operator.Greater		=> ">",
+					Operator.Equal          => "=",
+					Operator.NotEqual       => "<>",
+					Operator.Greater        => ">",
 					Operator.GreaterOrEqual => ">=",
-					Operator.NotGreater		=> "!>",
-					Operator.Less			=> "<",
-					Operator.LessOrEqual	=> "<=",
-					Operator.NotLess		=> "!<",
-					_						=> throw new InvalidOperationException(),
+					Operator.NotGreater     => "!>",
+					Operator.Less           => "<",
+					Operator.LessOrEqual    => "<=",
+					Operator.NotLess        => "!<",
+					_                       => throw new InvalidOperationException(),
 				};
 				sb.Append(" ").Append(op).Append(" ");
 

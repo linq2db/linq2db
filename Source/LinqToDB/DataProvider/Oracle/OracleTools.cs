@@ -132,8 +132,7 @@ namespace LinqToDB.DataProvider.Oracle
 					var command = conn.CreateCommand();
 					command.CommandText =
 						"select VERSION from PRODUCT_COMPONENT_VERSION where PRODUCT like 'PL/SQL%'";
-					var result = command.ExecuteScalar() as string;
-					if (result != null)
+					if (command.ExecuteScalar() is string result)
 					{
 						var version = int.Parse(result.Split('.')[0]);
 
@@ -172,14 +171,14 @@ namespace LinqToDB.DataProvider.Oracle
 				return version switch
 				{
 					OracleVersion.v11 => _oracleNativeDataProvider11.Value,
-					_				  => _oracleNativeDataProvider12.Value,
+					_                 => _oracleNativeDataProvider12.Value,
 				};
 			}
 #endif
 			return version switch
 			{
 				OracleVersion.v11 => _oracleManagedDataProvider11.Value,
-				_				  => _oracleManagedDataProvider12.Value,
+				_                 => _oracleManagedDataProvider12.Value,
 			};
 		}
 

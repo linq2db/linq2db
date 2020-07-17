@@ -320,7 +320,7 @@ namespace LinqToDB.DataProvider
 					if (value is TimeSpan span) value = span.Ticks;
 					break;
 				case DataType.Xml       :
-					     if (value is XDocument)		    value = value.ToString();
+					     if (value is XDocument)            value = value.ToString();
 					else if (value is XmlDocument document) value = document.InnerXml;
 					break;
 			}

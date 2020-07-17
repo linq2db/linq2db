@@ -138,7 +138,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				SqlServerVersion.v2008 => new SqlServer2008SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
 				SqlServerVersion.v2012 => new SqlServer2012SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
 				SqlServerVersion.v2017 => new SqlServer2017SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
-				_				       => throw new InvalidOperationException(),
+				_                      => throw new InvalidOperationException(),
 			};
 		}
 

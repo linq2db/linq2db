@@ -914,9 +914,9 @@ namespace LinqToDB.Expressions
 		{
 			return ex?.NodeType switch
 			{
-				null				  => null,
+				null                  => null,
 				ExpressionType.TypeAs => ((UnaryExpression)ex).Operand.Unwrap(),
-				_					  => ex.Unwrap(),
+				_                     => ex.Unwrap(),
 			};
 		}
 
@@ -1307,11 +1307,11 @@ namespace LinqToDB.Expressions
 		{
 			return expression?.NodeType switch
 			{
-				null						=> true,
+				null                        => true,
 				ExpressionType.Convert      => IsEvaluable(((UnaryExpression)expression).Operand),
 				ExpressionType.Constant     => true,
 				ExpressionType.MemberAccess => IsEvaluable(((MemberExpression)expression).Expression),
-				_							=> false,
+				_                           => false,
 			};
 		}
 

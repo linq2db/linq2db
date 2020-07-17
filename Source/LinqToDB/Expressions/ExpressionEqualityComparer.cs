@@ -675,7 +675,7 @@ namespace LinqToDB.Expressions
 					MemberBindingType.Assignment	=> CompareMemberAssignment((MemberAssignment)a, (MemberAssignment)b),
 					MemberBindingType.ListBinding	=> CompareMemberListBinding((MemberListBinding)a, (MemberListBinding)b),
 					MemberBindingType.MemberBinding => CompareMemberMemberBinding((MemberMemberBinding)a, (MemberMemberBinding)b),
-					_								=> throw new NotImplementedException(),
+					_                               => throw new NotImplementedException(),
 				};
 			}
 

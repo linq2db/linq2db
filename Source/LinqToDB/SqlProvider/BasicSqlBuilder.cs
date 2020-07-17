@@ -1961,7 +1961,7 @@ namespace LinqToDB.SqlProvider
 			{
 				QueryElementType.SqlField => (SqlField)expr,
 				QueryElementType.Column	  => GetUnderlayingField(((SqlColumn)expr).Expression),
-				_						  => throw new InvalidOperationException(),
+				_                         => throw new InvalidOperationException(),
 			};
 		}
 
@@ -2859,7 +2859,7 @@ namespace LinqToDB.SqlProvider
 			{
 				QueryElementType.SqlDataType   => ((SqlDataType)expr).Type.DataType == DataType.Date,
 				QueryElementType.SqlExpression => ((SqlExpression)expr).Expr == dateName,
-				_							   => false,
+				_                              => false,
 			};
 		}
 
@@ -2869,7 +2869,7 @@ namespace LinqToDB.SqlProvider
 			{
 				QueryElementType.SqlDataType   => ((SqlDataType)expr).Type.DataType == DataType.Time,
 				QueryElementType.SqlExpression => ((SqlExpression)expr).Expr == "Time",
-				_							   => false,
+				_                              => false,
 			};
 		}
 
@@ -3163,13 +3163,13 @@ namespace LinqToDB.SqlProvider
 		{
 			return parameter.DbType switch
 			{
-				DbType.AnsiString			 => "VarChar",
+				DbType.AnsiString            => "VarChar",
 				DbType.AnsiStringFixedLength => "Char",
-				DbType.String				 => "NVarChar",
-				DbType.StringFixedLength	 => "NChar",
-				DbType.Decimal				 => "Decimal",
-				DbType.Binary				 => "Binary",
-				_							 => null,
+				DbType.String                => "NVarChar",
+				DbType.StringFixedLength     => "NChar",
+				DbType.Decimal               => "Decimal",
+				DbType.Binary                => "Binary",
+				_                            => null,
 			};
 		}
 

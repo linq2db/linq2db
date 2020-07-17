@@ -27,8 +27,8 @@ namespace LinqToDB.Linq
 			return queryable switch
 			{
 				ExpressionQuery<T> query => query.DataContext,
-				ITable<T> table			 => table.DataContext,
-				_						 => default!,
+				ITable<T> table          => table.DataContext,
+				_                        => default!,
 			};
 		}
 

@@ -69,7 +69,7 @@ namespace LinqToDB.Linq.Builder
 			return testFlag switch
 			{
 				RequestFor.SubQuery => IsExpressionResult.True,
-				_				    => base.IsExpression(expression, level, testFlag),
+				_                   => base.IsExpression(expression, level, testFlag),
 			};
 		}
 

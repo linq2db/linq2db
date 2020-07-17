@@ -148,9 +148,9 @@ namespace LinqToDB.Linq.Builder
 			{
 				return requestFlag switch
 				{
-					RequestFor.Root		  => new IsExpressionResult(Lambda != null && expression == Lambda.Parameters[0]),
+					RequestFor.Root       => new IsExpressionResult(Lambda != null && expression == Lambda.Parameters[0]),
 					RequestFor.Expression => IsExpressionResult.True,
-					_					  => IsExpressionResult.False,
+					_                     => IsExpressionResult.False,
 				};
 			}
 

@@ -207,7 +207,7 @@ namespace LinqToDB.DataProvider.SQLite
 				"time"             => DataType.Time,
 				"uniqueidentifier" => DataType.Guid,
 				"guid"             => DataType.Guid,
-				_				   => DataType.Undefined,
+				_                  => DataType.Undefined,
 			};
 		}
 

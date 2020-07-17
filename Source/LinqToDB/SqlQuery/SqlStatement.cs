@@ -125,7 +125,7 @@ namespace LinqToDB.SqlQuery
 			{
 				QueryElementType.SqlField => (SqlField)expr,
 				QueryElementType.Column   => GetUnderlyingField(((SqlColumn)expr).Expression),
-				_						  => throw new InvalidOperationException(),
+				_                         => throw new InvalidOperationException(),
 			};
 		}
 

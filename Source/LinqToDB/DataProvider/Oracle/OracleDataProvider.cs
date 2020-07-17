@@ -85,7 +85,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return Version switch
 			{
 				OracleVersion.v11 => new Oracle11SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
-				_				  => new Oracle12SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
+				_                 => new Oracle12SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
 			};
 		}
 
@@ -94,7 +94,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return name switch
 			{
 				ProviderName.OracleNative => new OracleMappingSchema.NativeMappingSchema(providerSchema),
-				_						  => new OracleMappingSchema.ManagedMappingSchema(providerSchema),
+				_                         => new OracleMappingSchema.ManagedMappingSchema(providerSchema),
 			};
 		}
 

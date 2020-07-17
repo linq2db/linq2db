@@ -129,7 +129,7 @@ INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE oc ON oc.CONSTRAINT_NAME = rc.UNI
 			return (dataType?.ToLower()) switch
 			{
 				"tinyint" => typeof(byte),
-				_		  => base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options),
+				_         => base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options),
 			};
 		}
 

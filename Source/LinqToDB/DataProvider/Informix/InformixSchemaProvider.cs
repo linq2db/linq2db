@@ -93,8 +93,8 @@ namespace LinqToDB.DataProvider.Informix
 			{
 				"DATETIME" => _provider.Adapter.DateTimeType?.Name,
 				"INTERVAL" => _provider.Adapter.TimeSpanType?.Name,
-				"DECIMAL" => _provider.Adapter.DecimalType?.Name,
-				_ => base.GetProviderSpecificType(dataType),
+				"DECIMAL"  => _provider.Adapter.DecimalType?.Name,
+				_          => base.GetProviderSpecificType(dataType),
 			};
 		}
 

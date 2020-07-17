@@ -201,7 +201,7 @@ namespace LinqToDB.SqlQuery
 					return f.Name switch
 					{
 						"EXISTS" => false,
-						_		 => true,
+						_        => true,
 					};
 			}
 

@@ -111,7 +111,7 @@ namespace LinqToDB.Linq.Builder
 				return requestFlag switch
 				{
 					RequestFor.Expression => IsExpressionResult.True,
-					_					  => IsExpressionResult.False,
+					_                     => IsExpressionResult.False,
 				};
 			}
 

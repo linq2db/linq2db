@@ -299,7 +299,7 @@ namespace LinqToDB.SqlQuery
 				DataType.Json           => DbJson,
 				DataType.BinaryJson     => DbBinaryJson,
 				DataType.SByte          => DbSByte,
-				_					    => throw new InvalidOperationException($"Unexpected type: {type}"),
+				_                       => throw new InvalidOperationException($"Unexpected type: {type}"),
 			};
 		}
 

@@ -260,7 +260,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					SqlServerVersion.v2005 => _sqlServerDataProvider2005sdc.Value,
 					SqlServerVersion.v2012 => _sqlServerDataProvider2012sdc.Value,
 					SqlServerVersion.v2017 => _sqlServerDataProvider2017sdc.Value,
-					_					   => _sqlServerDataProvider2008sdc.Value,
+					_                      => _sqlServerDataProvider2008sdc.Value,
 				},
 				SqlServerProvider.MicrosoftDataSqlClient => version switch
 				{
@@ -268,7 +268,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					SqlServerVersion.v2005 => _sqlServerDataProvider2005mdc.Value,
 					SqlServerVersion.v2012 => _sqlServerDataProvider2012mdc.Value,
 					SqlServerVersion.v2017 => _sqlServerDataProvider2017mdc.Value,
-					_					   => _sqlServerDataProvider2008mdc.Value,
+					_                      => _sqlServerDataProvider2008mdc.Value,
 				},
 				_ => _sqlServerDataProvider2008sdc.Value,
 			};

@@ -23,7 +23,7 @@
 			{
 				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement),
 				QueryType.Update => GetAlternativeUpdateFrom((SqlUpdateStatement)statement),
-				_				 => statement,
+				_                => statement,
 			};
 		}
 

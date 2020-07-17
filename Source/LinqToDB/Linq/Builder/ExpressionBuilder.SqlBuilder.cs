@@ -1744,7 +1744,7 @@ namespace LinqToDB.Linq.Builder
 				ExpressionType.GreaterThanOrEqual => SqlPredicate.Operator.GreaterOrEqual,
 				ExpressionType.LessThan           => SqlPredicate.Operator.Less,
 				ExpressionType.LessThanOrEqual    => SqlPredicate.Operator.LessOrEqual,
-				_								  => throw new InvalidOperationException(),
+				_                                 => throw new InvalidOperationException(),
 			};
 			if ((left.NodeType == ExpressionType.Convert || right.NodeType == ExpressionType.Convert) && op.In(SqlPredicate.Operator.Equal, SqlPredicate.Operator.NotEqual))
 			{

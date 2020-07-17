@@ -107,7 +107,7 @@ namespace LinqToDB.SqlQuery
 				{
 					SqlTable t => QueryHelper.IsEqualTables(t, table),
 					SqlField f => QueryHelper.IsEqualTables(f.Table as SqlTable, table),
-					_		   => false,
+					_          => false,
 				};
 			});
 		}

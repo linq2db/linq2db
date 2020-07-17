@@ -106,7 +106,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			{
 				PostgreSQLVersion.v95 => _postgreSQLDataProvider95.Value,
 				PostgreSQLVersion.v93 => _postgreSQLDataProvider93.Value,
-				_					  => _postgreSQLDataProvider92.Value,
+				_                     => _postgreSQLDataProvider92.Value,
 			};
 		}
 

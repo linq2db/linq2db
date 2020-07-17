@@ -1050,7 +1050,7 @@ namespace LinqToDB.Linq.Builder
 				return Body.NodeType switch
 				{
 					ExpressionType.MemberAccess => action(GetSequence(expression, level)!, null, 0),
-					_							=> defaultAction(),
+					_                           => defaultAction(),
 				};
 			}
 			else

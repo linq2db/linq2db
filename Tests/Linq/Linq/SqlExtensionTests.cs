@@ -20,17 +20,17 @@ namespace Tests.Linq
 				var part = builder.GetValue<Sql.DateParts>("part");
 				var partStr = part switch
 				{
-					Sql.DateParts.Year			=> "year",
-					Sql.DateParts.Quarter		=> "quarter",
-					Sql.DateParts.Month			=> "month",
-					Sql.DateParts.DayOfYear		=> "dayofyear",
-					Sql.DateParts.Day			=> "day",
-					Sql.DateParts.Week			=> "week",
-					Sql.DateParts.WeekDay		=> "weekday",
-					Sql.DateParts.Hour			=> "hour",
-					Sql.DateParts.Minute		=> "minute",
-					Sql.DateParts.Second		=> "second",
-					Sql.DateParts.Millisecond	=> "millisecond",
+					Sql.DateParts.Year          => "year",
+					Sql.DateParts.Quarter       => "quarter",
+					Sql.DateParts.Month         => "month",
+					Sql.DateParts.DayOfYear     => "dayofyear",
+					Sql.DateParts.Day           => "day",
+					Sql.DateParts.Week          => "week",
+					Sql.DateParts.WeekDay       => "weekday",
+					Sql.DateParts.Hour          => "hour",
+					Sql.DateParts.Minute        => "minute",
+					Sql.DateParts.Second        => "second",
+					Sql.DateParts.Millisecond   => "millisecond",
 					_ => throw new ArgumentOutOfRangeException(),
 				};
 				builder.AddExpression("part", partStr);
@@ -147,16 +147,16 @@ namespace Tests.Linq
 				var part    = builder.GetValue<Sql.DateParts>("part");
 				var partStr = part switch
 				{
-					Sql.DateParts.Year		=> "yyyy",
-					Sql.DateParts.Quarter	=> "q",
-					Sql.DateParts.Month		=> "m",
+					Sql.DateParts.Year      => "yyyy",
+					Sql.DateParts.Quarter   => "q",
+					Sql.DateParts.Month     => "m",
 					Sql.DateParts.DayOfYear => "y",
-					Sql.DateParts.Day		=> "d",
-					Sql.DateParts.Week		=> "ww",
-					Sql.DateParts.WeekDay	=> "w",
-					Sql.DateParts.Hour		=> "h",
-					Sql.DateParts.Minute	=> "n",
-					Sql.DateParts.Second	=> "s",
+					Sql.DateParts.Day       => "d",
+					Sql.DateParts.Week      => "ww",
+					Sql.DateParts.WeekDay   => "w",
+					Sql.DateParts.Hour      => "h",
+					Sql.DateParts.Minute    => "n",
+					Sql.DateParts.Second    => "s",
 					_ => throw new ArgumentOutOfRangeException(),
 				};
 				builder.AddExpression("part", partStr);
@@ -171,16 +171,16 @@ namespace Tests.Linq
 				var part = builder.GetValue<Sql.DateParts>("part");
 				var partStr = part switch
 				{
-					Sql.DateParts.Year		=> "Year({date})",
-					Sql.DateParts.Quarter	=> "Floor((Month({date})-1) / 3) + 1",
-					Sql.DateParts.Month		=> "Month({date})",
+					Sql.DateParts.Year      => "Year({date})",
+					Sql.DateParts.Quarter   => "Floor((Month({date})-1) / 3) + 1",
+					Sql.DateParts.Month     => "Month({date})",
 					Sql.DateParts.DayOfYear => "DayOfYear({date})",
-					Sql.DateParts.Day		=> "DayOfMonth({date})",
-					Sql.DateParts.Week		=> "Week({date})",
-					Sql.DateParts.WeekDay	=> "MOD(Weekday({date}) + 1, 7) + 1",
-					Sql.DateParts.Hour		=> "Hour({date})",
-					Sql.DateParts.Minute	=> "Minute({date})",
-					Sql.DateParts.Second	=> "Second({date})",
+					Sql.DateParts.Day       => "DayOfMonth({date})",
+					Sql.DateParts.Week      => "Week({date})",
+					Sql.DateParts.WeekDay   => "MOD(Weekday({date}) + 1, 7) + 1",
+					Sql.DateParts.Hour      => "Hour({date})",
+					Sql.DateParts.Minute    => "Minute({date})",
+					Sql.DateParts.Second    => "Second({date})",
 					_ => throw new ArgumentOutOfRangeException(),
 				};
 				builder.Expression = partStr;
@@ -194,17 +194,17 @@ namespace Tests.Linq
 				var part = builder.GetValue<Sql.DateParts>("part");
 				var partStr = part switch
 				{
-					Sql.DateParts.Year			=> "Year({date})",
-					Sql.DateParts.Quarter		=> "((Month({date}) - 1) / 3 + 1)",
-					Sql.DateParts.Month			=> "Month({date})",
-					Sql.DateParts.DayOfYear		=> "(Mdy(Month({date}), Day({date}), Year({date})) - Mdy(1, 1, Year({date})) + 1)",
-					Sql.DateParts.Day			=> "Day({date})",
-					Sql.DateParts.Week			=> "((Extend({date}, year to day) - (Mdy(12, 31 - WeekDay(Mdy(1, 1, year({date}))), Year({date}) - 1) + Interval(1) day to day)) / 7 + Interval(1) day to day)::char(10)::int",
-					Sql.DateParts.WeekDay		=> "(weekDay({date}) + 1)",
-					Sql.DateParts.Hour			=> "({date}::datetime Hour to Hour)::char(3)::int",
-					Sql.DateParts.Minute		=> "({date}::datetime Minute to Minute)::char(3)::int",
-					Sql.DateParts.Second		=> "({date}::datetime Second to Second)::char(3)::int",
-					Sql.DateParts.Millisecond	=> "Millisecond({date})",
+					Sql.DateParts.Year          => "Year({date})",
+					Sql.DateParts.Quarter       => "((Month({date}) - 1) / 3 + 1)",
+					Sql.DateParts.Month         => "Month({date})",
+					Sql.DateParts.DayOfYear     => "(Mdy(Month({date}), Day({date}), Year({date})) - Mdy(1, 1, Year({date})) + 1)",
+					Sql.DateParts.Day           => "Day({date})",
+					Sql.DateParts.Week          => "((Extend({date}, year to day) - (Mdy(12, 31 - WeekDay(Mdy(1, 1, year({date}))), Year({date}) - 1) + Interval(1) day to day)) / 7 + Interval(1) day to day)::char(10)::int",
+					Sql.DateParts.WeekDay       => "(weekDay({date}) + 1)",
+					Sql.DateParts.Hour          => "({date}::datetime Hour to Hour)::char(3)::int",
+					Sql.DateParts.Minute        => "({date}::datetime Minute to Minute)::char(3)::int",
+					Sql.DateParts.Second        => "({date}::datetime Second to Second)::char(3)::int",
+					Sql.DateParts.Millisecond   => "Millisecond({date})",
 					_ => throw new ArgumentOutOfRangeException(),
 				};
 				builder.Expression = partStr;
@@ -218,17 +218,17 @@ namespace Tests.Linq
 				var part = builder.GetValue<Sql.DateParts>("part");
 				var partStr = part switch
 				{
-					Sql.DateParts.Year			=> "To_Number(To_Char({date}, 'YYYY'))",
-					Sql.DateParts.Quarter		=> "To_Number(To_Char({date}, 'Q'))",
-					Sql.DateParts.Month			=> "To_Number(To_Char({date}, 'MM'))",
-					Sql.DateParts.DayOfYear		=> "To_Number(To_Char({date}, 'DDD'))",
-					Sql.DateParts.Day			=> "To_Number(To_Char({date}, 'DD'))",
-					Sql.DateParts.Week			=> "To_Number(To_Char({date}, 'WW'))",
-					Sql.DateParts.WeekDay		=> "Mod(1 + Trunc({date}) - Trunc({date}, 'IW'), 7) + 1",
-					Sql.DateParts.Hour			=> "To_Number(To_Char({date}, 'HH24'))",
-					Sql.DateParts.Minute		=> "To_Number(To_Char({date}, 'MI'))",
-					Sql.DateParts.Second		=> "To_Number(To_Char({date}, 'SS'))",
-					Sql.DateParts.Millisecond	=> "To_Number(To_Char({date}, 'FF'))",
+					Sql.DateParts.Year          => "To_Number(To_Char({date}, 'YYYY'))",
+					Sql.DateParts.Quarter       => "To_Number(To_Char({date}, 'Q'))",
+					Sql.DateParts.Month         => "To_Number(To_Char({date}, 'MM'))",
+					Sql.DateParts.DayOfYear     => "To_Number(To_Char({date}, 'DDD'))",
+					Sql.DateParts.Day           => "To_Number(To_Char({date}, 'DD'))",
+					Sql.DateParts.Week          => "To_Number(To_Char({date}, 'WW'))",
+					Sql.DateParts.WeekDay       => "Mod(1 + Trunc({date}) - Trunc({date}, 'IW'), 7) + 1",
+					Sql.DateParts.Hour          => "To_Number(To_Char({date}, 'HH24'))",
+					Sql.DateParts.Minute        => "To_Number(To_Char({date}, 'MI'))",
+					Sql.DateParts.Second        => "To_Number(To_Char({date}, 'SS'))",
+					Sql.DateParts.Millisecond   => "To_Number(To_Char({date}, 'FF'))",
 					_ => throw new ArgumentOutOfRangeException(),
 				};
 				builder.Expression = partStr;
@@ -242,17 +242,17 @@ namespace Tests.Linq
 				var part = builder.GetValue<Sql.DateParts>("part");
 				var partStr = part switch
 				{
-					Sql.DateParts.Year			=> "To_Number(To_Char({date}, 'YYYY'))",
-					Sql.DateParts.Quarter		=> "To_Number(To_Char({date}, 'Q'))",
-					Sql.DateParts.Month			=> "To_Number(To_Char({date}, 'MM'))",
-					Sql.DateParts.DayOfYear		=> "To_Number(To_Char({date}, 'DDD'))",
-					Sql.DateParts.Day			=> "To_Number(To_Char({date}, 'DD'))",
-					Sql.DateParts.Week			=> "To_Number(To_Char({date}, 'WW'))",
-					Sql.DateParts.WeekDay		=> "DayOfWeek({date})",
-					Sql.DateParts.Hour			=> "To_Number(To_Char({date}, 'HH24'))",
-					Sql.DateParts.Minute		=> "To_Number(To_Char({date}, 'MI'))",
-					Sql.DateParts.Second		=> "To_Number(To_Char({date}, 'SS'))",
-					Sql.DateParts.Millisecond	=> "To_Number(To_Char({date}, 'FF')) / 1000",
+					Sql.DateParts.Year          => "To_Number(To_Char({date}, 'YYYY'))",
+					Sql.DateParts.Quarter       => "To_Number(To_Char({date}, 'Q'))",
+					Sql.DateParts.Month         => "To_Number(To_Char({date}, 'MM'))",
+					Sql.DateParts.DayOfYear     => "To_Number(To_Char({date}, 'DDD'))",
+					Sql.DateParts.Day           => "To_Number(To_Char({date}, 'DD'))",
+					Sql.DateParts.Week          => "To_Number(To_Char({date}, 'WW'))",
+					Sql.DateParts.WeekDay       => "DayOfWeek({date})",
+					Sql.DateParts.Hour          => "To_Number(To_Char({date}, 'HH24'))",
+					Sql.DateParts.Minute        => "To_Number(To_Char({date}, 'MI'))",
+					Sql.DateParts.Second        => "To_Number(To_Char({date}, 'SS'))",
+					Sql.DateParts.Millisecond   => "To_Number(To_Char({date}, 'FF')) / 1000",
 					_ => throw new ArgumentOutOfRangeException(),
 				};
 				builder.Expression = partStr;
@@ -315,18 +315,18 @@ namespace Tests.Linq
 
 			return part switch
 			{
-				Sql.DateParts.Year			=> date.Value.Year,
-				Sql.DateParts.Quarter		=> (date.Value.Month - 1) / 3 + 1,
-				Sql.DateParts.Month			=> date.Value.Month,
-				Sql.DateParts.DayOfYear		=> date.Value.DayOfYear,
-				Sql.DateParts.Day			=> date.Value.Day,
-				Sql.DateParts.Week			=> CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(date.Value, CalendarWeekRule.FirstDay, DayOfWeek.Sunday),
-				Sql.DateParts.WeekDay		=> ((int)date.Value.DayOfWeek + 1 + Sql.DateFirst + 6) % 7 + 1,
-				Sql.DateParts.Hour			=> date.Value.Hour,
-				Sql.DateParts.Minute		=> date.Value.Minute,
-				Sql.DateParts.Second		=> date.Value.Second,
-				Sql.DateParts.Millisecond	=> date.Value.Millisecond,
-				_							=> throw new InvalidOperationException(),
+				Sql.DateParts.Year          => date.Value.Year,
+				Sql.DateParts.Quarter       => (date.Value.Month - 1) / 3 + 1,
+				Sql.DateParts.Month         => date.Value.Month,
+				Sql.DateParts.DayOfYear     => date.Value.DayOfYear,
+				Sql.DateParts.Day           => date.Value.Day,
+				Sql.DateParts.Week          => CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(date.Value, CalendarWeekRule.FirstDay, DayOfWeek.Sunday),
+				Sql.DateParts.WeekDay       => ((int)date.Value.DayOfWeek + 1 + Sql.DateFirst + 6) % 7 + 1,
+				Sql.DateParts.Hour          => date.Value.Hour,
+				Sql.DateParts.Minute        => date.Value.Minute,
+				Sql.DateParts.Second        => date.Value.Second,
+				Sql.DateParts.Millisecond   => date.Value.Millisecond,
+				_ => throw new InvalidOperationException(),
 			};
 		}
 	}

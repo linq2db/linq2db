@@ -157,7 +157,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			{
 				PostgreSQLVersion.v92 => ProviderName.PostgreSQL92,
 				PostgreSQLVersion.v93 => ProviderName.PostgreSQL93,
-				_					  => ProviderName.PostgreSQL95,
+				_                     => ProviderName.PostgreSQL95,
 			};
 		}
 
@@ -417,7 +417,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			{
 				PostgreSQLVersion.v92 => new PostgreSQL92MappingSchema(providerSchema),
 				PostgreSQLVersion.v93 => new PostgreSQL93MappingSchema(providerSchema),
-				_					  => new PostgreSQL95MappingSchema(providerSchema),
+				_                     => new PostgreSQL95MappingSchema(providerSchema),
 			};
 		}
 	}

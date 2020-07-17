@@ -811,7 +811,7 @@ namespace LinqToDB.Expressions
 								MemberBindingType.Assignment	=> Find(((MemberAssignment)b).Expression, func),
 								MemberBindingType.ListBinding	=> Find(((MemberListBinding)b).Initializers, p => Find(p.Arguments, func)),
 								MemberBindingType.MemberBinding => Find(((MemberMemberBinding)b).Bindings, MemberFind),
-								_								=> null,
+								_                               => null,
 							};
 
 						var e = (MemberInitExpression)expr;

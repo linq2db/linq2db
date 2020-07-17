@@ -74,7 +74,7 @@ namespace LinqToDB.DataProvider.MySql
 			{
 				ProviderName.MySqlOfficial  => _mySqlDataProvider.Value,
 				ProviderName.MySqlConnector => _mySqlConnectorDataProvider.Value,
-				_							=> 
+				_                           => 
 					DetectedProviderName == ProviderName.MySqlOfficial
 					? _mySqlDataProvider.Value
 					: _mySqlConnectorDataProvider.Value,

@@ -28,18 +28,18 @@ namespace LinqToDB
 
 			return part switch
 			{
-				Sql.DateParts.Year			=> date.Value.Year,
-				Sql.DateParts.Quarter		=> (date.Value.Month - 1) / 3 + 1,
-				Sql.DateParts.Month			=> date.Value.Month,
-				Sql.DateParts.DayOfYear		=> date.Value.DayOfYear,
-				Sql.DateParts.Day			=> date.Value.Day,
-				Sql.DateParts.Week			=> CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(date.Value.LocalDateTime, CalendarWeekRule.FirstDay, DayOfWeek.Sunday),
-				Sql.DateParts.WeekDay		=> ((int)date.Value.DayOfWeek + 1 + Sql.DateFirst + 6) % 7 + 1,
-				Sql.DateParts.Hour			=> date.Value.Hour,
-				Sql.DateParts.Minute		=> date.Value.Minute,
-				Sql.DateParts.Second		=> date.Value.Second,
-				Sql.DateParts.Millisecond	=> date.Value.Millisecond,
-				_							=> throw new InvalidOperationException(),
+				Sql.DateParts.Year          => date.Value.Year,
+				Sql.DateParts.Quarter       => (date.Value.Month - 1) / 3 + 1,
+				Sql.DateParts.Month         => date.Value.Month,
+				Sql.DateParts.DayOfYear     => date.Value.DayOfYear,
+				Sql.DateParts.Day           => date.Value.Day,
+				Sql.DateParts.Week          => CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(date.Value.LocalDateTime, CalendarWeekRule.FirstDay, DayOfWeek.Sunday),
+				Sql.DateParts.WeekDay       => ((int)date.Value.DayOfWeek + 1 + Sql.DateFirst + 6) % 7 + 1,
+				Sql.DateParts.Hour          => date.Value.Hour,
+				Sql.DateParts.Minute        => date.Value.Minute,
+				Sql.DateParts.Second        => date.Value.Second,
+				Sql.DateParts.Millisecond   => date.Value.Millisecond,
+				_                           => throw new InvalidOperationException(),
 			};
 		}
 		#endregion
@@ -62,18 +62,18 @@ namespace LinqToDB
 
 			return part switch
 			{
-				Sql.DateParts.Year			=> date.Value.AddYears((int)number),
-				Sql.DateParts.Quarter		=> date.Value.AddMonths((int)number * 3),
-				Sql.DateParts.Month			=> date.Value.AddMonths((int)number),
-				Sql.DateParts.DayOfYear		=> date.Value.AddDays(number.Value),
-				Sql.DateParts.Day			=> date.Value.AddDays(number.Value),
-				Sql.DateParts.Week			=> date.Value.AddDays(number.Value * 7),
-				Sql.DateParts.WeekDay		=> date.Value.AddDays(number.Value),
-				Sql.DateParts.Hour			=> date.Value.AddHours(number.Value),
-				Sql.DateParts.Minute		=> date.Value.AddMinutes(number.Value),
-				Sql.DateParts.Second		=> date.Value.AddSeconds(number.Value),
-				Sql.DateParts.Millisecond	=> date.Value.AddMilliseconds(number.Value),
-				_							=> throw new InvalidOperationException(),
+				Sql.DateParts.Year          => date.Value.AddYears((int)number),
+				Sql.DateParts.Quarter       => date.Value.AddMonths((int)number * 3),
+				Sql.DateParts.Month         => date.Value.AddMonths((int)number),
+				Sql.DateParts.DayOfYear     => date.Value.AddDays(number.Value),
+				Sql.DateParts.Day           => date.Value.AddDays(number.Value),
+				Sql.DateParts.Week          => date.Value.AddDays(number.Value * 7),
+				Sql.DateParts.WeekDay       => date.Value.AddDays(number.Value),
+				Sql.DateParts.Hour          => date.Value.AddHours(number.Value),
+				Sql.DateParts.Minute        => date.Value.AddMinutes(number.Value),
+				Sql.DateParts.Second        => date.Value.AddSeconds(number.Value),
+				Sql.DateParts.Millisecond   => date.Value.AddMilliseconds(number.Value),
+				_                           => throw new InvalidOperationException(),
 			};
 		}
 		#endregion
