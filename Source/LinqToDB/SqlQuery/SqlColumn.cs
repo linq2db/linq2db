@@ -179,9 +179,7 @@ namespace LinqToDB.SqlQuery
 			if (this == other)
 				return true;
 
-			var otherColumn = other as SqlColumn;
-
-			if (otherColumn == null)
+			if (!(other is SqlColumn otherColumn))
 				return false;
 
 			if (Parent != otherColumn.Parent)

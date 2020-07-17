@@ -1176,16 +1176,16 @@ namespace LinqToDB.SqlQuery
 
 				if (table != _selectQuery.From.Tables[i])
 				{
-					var sql = _selectQuery.From.Tables[i].Source as SelectQuery;
-
 					if (!_selectQuery.Select.Columns.All(c => QueryHelper.IsAggregationFunction(c.Expression)))
-						if (sql != null && sql.OrderBy.Items.Count > 0)
+					{
+						if (_selectQuery.From.Tables[i].Source is SelectQuery sql && sql.OrderBy.Items.Count > 0)
 						{
 							foreach (var item in sql.OrderBy.Items)
 							{
 								_selectQuery.OrderBy.Items.Insert(orderStartIndex++, new SqlOrderByItem(item.Expression, item.IsDescending));
 							}
 						}
+					}
 
 					_selectQuery.From.Tables[i] = table;
 				}

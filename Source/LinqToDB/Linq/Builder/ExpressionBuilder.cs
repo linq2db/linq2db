@@ -1309,8 +1309,7 @@ namespace LinqToDB.Linq.Builder
 								new[] { fakeQuery.Expression }.Concat(callExpression.Arguments.Skip(1)));
 							if (CanBeCompiled(callExpression))
 							{
-								var appliedQuery  = callExpression.EvaluateExpression() as IQueryable;
-								if (appliedQuery == null)
+								if (!(callExpression.EvaluateExpression() is IQueryable appliedQuery))
 									throw new LinqToDBException($"Method call '{expression}' returned null value.");
 								var newExpression = appliedQuery.Expression.Transform(e =>
 									e == fakeQuery.Expression ? firstArgument : e);

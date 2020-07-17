@@ -619,7 +619,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				if (level == 0 && expression.NodeType == ExpressionType.MemberAccess)
-					level = level + 1;
+					level += 1;
 				if (level > 0)
 				{
 					switch (expression.NodeType)

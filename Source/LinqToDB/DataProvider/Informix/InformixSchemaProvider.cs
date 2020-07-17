@@ -245,7 +245,7 @@ namespace LinqToDB.DataProvider.Informix
 				k = arr[j].end_point - arr[j].start_point;
  
 				// add in the extra
-				k = k + len;
+				k += len;
  
 				c.ColumnType = c.DataType + " " + arr[j].datetype + " (" + k + ") TO " + arr[i].datetype;
 				c.Precision = 5;

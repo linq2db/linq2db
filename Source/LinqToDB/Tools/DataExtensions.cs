@@ -36,7 +36,7 @@ namespace LinqToDB.Tools
 			{
 				if (column.IsIdentity)
 				{
-					sourceList = sourceList ?? source.ToList();
+					sourceList ??= source.ToList();
 
 					if (sourceList.Count == 0)
 						return sourceList;

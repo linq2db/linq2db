@@ -144,8 +144,7 @@ namespace LinqToDB.SqlQuery
 		{
 			if (sqlExpression.Parameters.Length == 1 && sqlExpression.Expr.Trim() == "{0}")
 			{
-				var argExpression = sqlExpression.Parameters[0] as SqlExpression;
-				if (argExpression != null)
+				if (sqlExpression.Parameters[0] is SqlExpression argExpression)
 					return IsTransitiveExpression(argExpression);
 				return true;
 			}

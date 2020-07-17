@@ -382,8 +382,8 @@ namespace LinqToDB.Linq.Builder
 					let   cd = entityDescriptor.Columns[idx.i]
 					where
 						cd.Storage != null ||
-						!(cd.MemberAccessor.MemberInfo is PropertyInfo) ||
-						((PropertyInfo)cd.MemberAccessor.MemberInfo).GetSetMethod(true) != null
+						!(cd.MemberAccessor.MemberInfo is PropertyInfo info) ||
+						info.GetSetMethod(true) != null
 					select new
 					{
 						Column = cd,
@@ -1371,9 +1371,9 @@ namespace LinqToDB.Linq.Builder
 
 										if (me.Expression is MemberExpression)
 										{
-											while (me.Expression is MemberExpression)
+											while (me.Expression is MemberExpression me1)
 											{
-												me = (MemberExpression)me.Expression;
+												me = me1;
 												name = me.Member.Name + '.' + name;
 											}
 

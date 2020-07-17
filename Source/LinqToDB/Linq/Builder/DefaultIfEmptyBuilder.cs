@@ -18,11 +18,9 @@ namespace LinqToDB.Linq.Builder
 			var sequence     = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			var defaultValue = methodCall.Arguments.Count == 1 ? null : methodCall.Arguments[1].Unwrap();
 
-			if (buildInfo.Parent is SelectManyBuilder.SelectManyContext)
+			if (buildInfo.Parent is SelectManyBuilder.SelectManyContext context)
 			{
-				var groupJoin = ((SelectManyBuilder.SelectManyContext)buildInfo.Parent).Sequence[0] as JoinBuilder.GroupJoinContext;
-
-				if (groupJoin != null)
+				if (context.Sequence[0] is JoinBuilder.GroupJoinContext groupJoin)
 				{
 					groupJoin.SelectQuery.From.Tables[0].Joins[0].JoinType = JoinType.Left;
 					groupJoin.SelectQuery.From.Tables[0].Joins[0].IsWeak   = false;

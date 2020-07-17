@@ -10,7 +10,7 @@ namespace LinqToDB.Linq.Builder
 	class SubQueryContext : PassThroughContext
 	{
 #if DEBUG
-		string? _sqlQueryText => SelectQuery.SqlText;
+		public string? _sqlQueryText => SelectQuery.SqlText;
 #endif
 
 		public SubQueryContext(IBuildContext subQuery, SelectQuery selectQuery, bool addToSql)

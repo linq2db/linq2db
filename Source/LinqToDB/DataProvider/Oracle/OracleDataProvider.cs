@@ -131,16 +131,12 @@ namespace LinqToDB.DataProvider.Oracle
 				if (parameters != null)
 					foreach (var parameter in parameters)
 					{
-						if (parameter.IsArray && parameter.Value is object[])
+						if (parameter.IsArray 
+							&& parameter.Value is object[] value
+							&& value.Length != 0)
 						{
-							var value = (object[])parameter.Value;
-
-							if (value.Length != 0)
-							{
-								Adapter.SetArrayBindCount(command, value.Length);
-
-								break;
-							}
+							Adapter.SetArrayBindCount(command, value.Length);
+							break;
 						}
 					}
 			}
