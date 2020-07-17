@@ -76,7 +76,7 @@ namespace LinqToDB.SqlQuery
 		public SqlOrderByClause OrderBy { get; private set; } = null!;
 
 		private List<object>? _properties;
-		public  List<object>   Properties => _properties ?? (_properties = new List<object>());
+		public  List<object>   Properties => _properties ??= new List<object>();
 
 		public SelectQuery?   ParentSelect         { get; set; }
 		public bool           IsSimple => !Select.HasModifier && Where.IsEmpty && GroupBy.IsEmpty && Having.IsEmpty && OrderBy.IsEmpty && !HasSetOperators;
@@ -93,7 +93,7 @@ namespace LinqToDB.SqlQuery
 		/// Contains list of columns that build unique key for this sub-query.
 		/// Used in JoinOptimizer for safely removing sub-query from resulting SQL.
 		/// </summary>
-		public  List<ISqlExpression[]>  UniqueKeys   => _uniqueKeys ?? (_uniqueKeys = new List<ISqlExpression[]>());
+		public  List<ISqlExpression[]>  UniqueKeys   => _uniqueKeys ??= new List<ISqlExpression[]>();
 
 		public  bool                    HasUniqueKeys => _uniqueKeys != null && _uniqueKeys.Count > 0;
 
@@ -103,7 +103,7 @@ namespace LinqToDB.SqlQuery
 		#region Union
 
 		private List<SqlSetOperator>? _setOperators;
-		public  List<SqlSetOperator>   SetOperators => _setOperators ?? (_setOperators = new List<SqlSetOperator>());
+		public  List<SqlSetOperator>   SetOperators => _setOperators ??= new List<SqlSetOperator>();
 
 		public  bool            HasSetOperators    => _setOperators != null && _setOperators.Count > 0;
 
@@ -310,7 +310,7 @@ namespace LinqToDB.SqlQuery
 		private SqlField? _all;
 		public  SqlField   All
 		{
-			get => _all ?? (_all = SqlField.All(this));
+			get => _all ??= SqlField.All(this);
 
 			internal set
 			{

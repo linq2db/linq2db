@@ -45,7 +45,7 @@ namespace LinqToDB.ServiceModel
 		private MappingSchema? _serializationMappingSchema;
 		internal  MappingSchema SerializationMappingSchema
 		{
-			get => _serializationMappingSchema ?? (_serializationMappingSchema = new SerializationMappingSchema(_mappingSchema));
+			get => _serializationMappingSchema ??= new SerializationMappingSchema(_mappingSchema);
 		}
 
 		public static Func<string,Type?> TypeResolver = _ => null;

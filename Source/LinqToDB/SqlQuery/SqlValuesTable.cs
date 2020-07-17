@@ -35,7 +35,7 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlTableSource
 		private SqlField? _all;
-		SqlField ISqlTableSource.All => _all ?? (_all = SqlField.All(this));
+		SqlField ISqlTableSource.All => _all ??= SqlField.All(this);
 
 		int ISqlTableSource.SourceID => throw new NotImplementedException();
 

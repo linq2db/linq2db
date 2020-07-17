@@ -503,7 +503,7 @@ namespace Tests
 		{
 			get
 			{
-				return _parent4 ?? (_parent4 = Parent.Select(p => new Parent4 { ParentID = p.ParentID, Value1 = ConvertTo<TypeValue>.From(p.Value1) }).ToList());
+				return _parent4 ??= Parent.Select(p => new Parent4 { ParentID = p.ParentID, Value1 = ConvertTo<TypeValue>.From(p.Value1) }).ToList();
 			}
 		}
 
@@ -545,8 +545,8 @@ namespace Tests
 		{
 			get
 			{
-				return _parentInheritanceValue ?? (_parentInheritanceValue =
-					ParentInheritance.Where(p => p is ParentInheritanceValue).Cast<ParentInheritanceValue>().ToList());
+				return _parentInheritanceValue ??=
+					ParentInheritance.Where(p => p is ParentInheritanceValue).Cast<ParentInheritanceValue>().ToList();
 			}
 		}
 
@@ -555,8 +555,8 @@ namespace Tests
 		{
 			get
 			{
-				return _parentInheritance1 ?? (_parentInheritance1 =
-					ParentInheritance.Where(p => p is ParentInheritance1).Cast<ParentInheritance1>().ToList());
+				return _parentInheritance1 ??=
+					ParentInheritance.Where(p => p is ParentInheritance1).Cast<ParentInheritance1>().ToList();
 			}
 		}
 
@@ -565,12 +565,12 @@ namespace Tests
 		{
 			get
 			{
-				return _parentInheritance4 ?? (_parentInheritance4 = Parent
+				return _parentInheritance4 ??= Parent
 					.Where(p => p.Value1.HasValue && (new[] { 1, 2 }.Contains(p.Value1.Value)))
 					.Select(p => p.Value1 == 1 ?
 						(ParentInheritanceBase4)new ParentInheritance14 { ParentID = p.ParentID } :
 						(ParentInheritanceBase4)new ParentInheritance24 { ParentID = p.ParentID }
-				).ToList());
+				).ToList();
 			}
 		}
 
@@ -819,7 +819,7 @@ namespace Tests
 			private List<Northwind.ActiveProduct>? _activeProduct;
 			public List<Northwind.ActiveProduct>    ActiveProduct
 			{
-				get { return _activeProduct ?? (_activeProduct = Product.OfType<Northwind.ActiveProduct>().ToList()); }
+				get { return _activeProduct ??= Product.OfType<Northwind.ActiveProduct>().ToList(); }
 			}
 
 			public IEnumerable<Northwind.DiscontinuedProduct> DiscontinuedProduct

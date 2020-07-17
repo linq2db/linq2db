@@ -213,7 +213,7 @@ namespace LinqToDB.SqlQuery
 		public SequenceNameAttribute[]? SequenceAttributes { get; protected set; }
 
 		private SqlField? _all;
-		public  SqlField  All => _all ?? (_all = SqlField.All(this));
+		public  SqlField  All => _all ??= SqlField.All(this);
 
 		public SqlField? GetIdentityField()
 		{

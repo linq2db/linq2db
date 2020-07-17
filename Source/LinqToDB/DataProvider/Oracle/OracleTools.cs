@@ -184,7 +184,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		public static string  DetectedProviderName =>
-			_detectedProviderName ?? (_detectedProviderName = DetectProviderName());
+			_detectedProviderName ??= DetectProviderName();
 
 		private static string DetectProviderName()
 		{

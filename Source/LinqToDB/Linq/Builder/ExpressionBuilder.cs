@@ -350,10 +350,10 @@ namespace LinqToDB.Linq.Builder
 		#region OptimizeExpression
 
 		private MethodInfo[]? _enumerableMethods;
-		public  MethodInfo[]   EnumerableMethods => _enumerableMethods ?? (_enumerableMethods = typeof(Enumerable).GetMethods());
+		public  MethodInfo[]   EnumerableMethods => _enumerableMethods ??= typeof(Enumerable).GetMethods();
 
 		private MethodInfo[]? _queryableMethods;
-		public  MethodInfo[]   QueryableMethods  => _queryableMethods  ?? (_queryableMethods  = typeof(Queryable). GetMethods());
+		public  MethodInfo[]   QueryableMethods  => _queryableMethods  ??= typeof(Queryable). GetMethods();
 
 		readonly Dictionary<Expression, Expression> _optimizedExpressions = new Dictionary<Expression, Expression>();
 

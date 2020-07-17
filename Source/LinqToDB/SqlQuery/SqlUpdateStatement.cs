@@ -14,7 +14,7 @@ namespace LinqToDB.SqlQuery
 
 		public SqlUpdateClause Update
 		{
-			get => _update ?? (_update = new SqlUpdateClause());
+			get => _update ??= new SqlUpdateClause();
 			set => _update = value;
 		}
 

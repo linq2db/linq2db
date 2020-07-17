@@ -3312,7 +3312,7 @@ namespace LinqToDB.SqlProvider
 
 		private string? _name;
 
-		public virtual string Name => _name ?? (_name = GetType().Name.Replace("SqlBuilder", ""));
+		public virtual string Name => _name ??= GetType().Name.Replace("SqlBuilder", "");
 
 		#endregion
 	}

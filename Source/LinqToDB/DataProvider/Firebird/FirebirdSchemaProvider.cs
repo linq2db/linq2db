@@ -237,7 +237,7 @@ namespace LinqToDB.DataProvider.Firebird
 				"timestamp"        => DataType.DateTime,
 				"varchar"          => DataType.NVarChar,
 				_				   => DataType.Undefined,
-			}
+			};
 		}
 
 		protected override string? GetProviderSpecificTypeNamespace() => null;
