@@ -200,12 +200,11 @@ namespace LinqToDB.SqlQuery
 
 					var f = (SqlFunction)ex;
 
-					switch (f.Name)
+					return f.Name switch
 					{
-						case "EXISTS" : return false;
-					}
-
-					return true;
+						"EXISTS" => false,
+						_		 => true,
+					};
 			}
 
 			return false;

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -290,39 +290,38 @@ WHERE
 
 		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
 		{
-			switch (dataType)
+			return dataType switch
 			{
-				case "XML"                       : return DataType.Xml;       // Xml             System.String
-				case "DECFLOAT"                  : return DataType.Decimal;   // DecimalFloat    System.Decimal
-				case "DBCLOB"                    : return DataType.Text;      // DbClob          System.String
-				case "CLOB"                      : return DataType.Text;      // Clob            System.String
-				case "BLOB"                      : return DataType.Blob;      // Blob            System.Byte[]
-				case "LONG VARGRAPHIC"           : return DataType.Text;      // LongVarGraphic  System.String
-				case "VARGRAPHIC"                : return DataType.Text;      // VarGraphic      System.String
-				case "GRAPHIC"                   : return DataType.Text;      // Graphic         System.String
-				case "BIGINT"                    : return DataType.Int64;     // BigInt          System.Int64
-				case "LONG VARCHAR FOR BIT DATA" : return DataType.VarBinary; // LongVarBinary   System.Byte[]
-				case "VARCHAR () FOR BIT DATA"   : return DataType.VarBinary; // VarBinary       System.Byte[]
-				case "VARBIN"                    : return DataType.VarBinary; // VarBinary       System.Byte[]
-				case "BINARY"                    : return DataType.Binary;    // Binary          System.Byte[]
-				case "CHAR () FOR BIT DATA"      : return DataType.Binary;    // Binary          System.Byte[]
-				case "LONG VARCHAR"              : return DataType.VarChar;   // LongVarChar     System.String
-				case "CHARACTER"                 : return DataType.Char;      // Char            System.String
-				case "CHAR"                      : return DataType.Char;      // Char            System.String
-				case "DECIMAL"                   : return DataType.Decimal;   // Decimal         System.Decimal
-				case "INTEGER"                   : return DataType.Int32;     // Integer         System.Int32
-				case "SMALLINT"                  : return DataType.Int16;     // SmallInt        System.Int16
-				case "REAL"                      : return DataType.Single;    // Real            System.Single
-				case "DOUBLE"                    : return DataType.Double;    // Double          System.Double
-				case "VARCHAR"                   : return DataType.VarChar;   // VarChar         System.String
-				case "DATE"                      : return DataType.Date;      // Date            System.DateTime
-				case "TIME"                      : return DataType.Time;      // Time            System.TimeSpan
-				case "TIMESTAMP"                 : return DataType.Timestamp; // Timestamp       System.DateTime
-				case "TIMESTMP"                  : return DataType.Timestamp; // Timestamp       System.DateTime
-				case "ROWID"                     : return DataType.Undefined; // RowID           System.Byte[]
-			}
-
-			return DataType.Undefined;
+				"XML"                       => DataType.Xml,       // Xml             System.String
+				"DECFLOAT"                  => DataType.Decimal,   // DecimalFloat    System.Decimal
+				"DBCLOB"                    => DataType.Text,      // DbClob          System.String
+				"CLOB"                      => DataType.Text,      // Clob            System.String
+				"BLOB"                      => DataType.Blob,      // Blob            System.Byte[]
+				"LONG VARGRAPHIC"           => DataType.Text,      // LongVarGraphic  System.String
+				"VARGRAPHIC"                => DataType.Text,      // VarGraphic      System.String
+				"GRAPHIC"                   => DataType.Text,      // Graphic         System.String
+				"BIGINT"                    => DataType.Int64,     // BigInt          System.Int64
+				"LONG VARCHAR FOR BIT DATA" => DataType.VarBinary, // LongVarBinary   System.Byte[]
+				"VARCHAR () FOR BIT DATA"   => DataType.VarBinary, // VarBinary       System.Byte[]
+				"VARBIN"                    => DataType.VarBinary, // VarBinary       System.Byte[]
+				"BINARY"                    => DataType.Binary,    // Binary          System.Byte[]
+				"CHAR () FOR BIT DATA"      => DataType.Binary,    // Binary          System.Byte[]
+				"LONG VARCHAR"              => DataType.VarChar,   // LongVarChar     System.String
+				"CHARACTER"                 => DataType.Char,      // Char            System.String
+				"CHAR"                      => DataType.Char,      // Char            System.String
+				"DECIMAL"                   => DataType.Decimal,   // Decimal         System.Decimal
+				"INTEGER"                   => DataType.Int32,     // Integer         System.Int32
+				"SMALLINT"                  => DataType.Int16,     // SmallInt        System.Int16
+				"REAL"                      => DataType.Single,    // Real            System.Single
+				"DOUBLE"                    => DataType.Double,    // Double          System.Double
+				"VARCHAR"                   => DataType.VarChar,   // VarChar         System.String
+				"DATE"                      => DataType.Date,      // Date            System.DateTime
+				"TIME"                      => DataType.Time,      // Time            System.TimeSpan
+				"TIMESTAMP"                 => DataType.Timestamp, // Timestamp       System.DateTime
+				"TIMESTMP"                  => DataType.Timestamp, // Timestamp       System.DateTime
+				"ROWID"                     => DataType.Undefined, // RowID           System.Byte[]
+				_							=> DataType.Undefined,
+			};
 		}
 
 		protected override string GetProviderSpecificTypeNamespace()

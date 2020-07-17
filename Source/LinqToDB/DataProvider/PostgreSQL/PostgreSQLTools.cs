@@ -102,16 +102,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		public static IDataProvider GetDataProvider(PostgreSQLVersion version = PostgreSQLVersion.v92)
 		{
-			switch (version)
+			return version switch
 			{
-				case PostgreSQLVersion.v95:
-					return _postgreSQLDataProvider95.Value;
-				case PostgreSQLVersion.v93:
-					return _postgreSQLDataProvider93.Value;
-				default:
-				case PostgreSQLVersion.v92:
-					return _postgreSQLDataProvider92.Value;
-			}
+				PostgreSQLVersion.v95 => _postgreSQLDataProvider95.Value,
+				PostgreSQLVersion.v93 => _postgreSQLDataProvider93.Value,
+				_					  => _postgreSQLDataProvider92.Value,
+			};
 		}
 
 		public static void ResolvePostgreSQL(string path)

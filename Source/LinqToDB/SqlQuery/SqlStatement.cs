@@ -121,13 +121,12 @@ namespace LinqToDB.SqlQuery
 
 		static SqlField GetUnderlyingField(ISqlExpression expr)
 		{
-			switch (expr.ElementType)
+			return expr.ElementType switch
 			{
-				case QueryElementType.SqlField: return (SqlField)expr;
-				case QueryElementType.Column  : return GetUnderlyingField(((SqlColumn)expr).Expression);
-			}
-
-			throw new InvalidOperationException();
+				QueryElementType.SqlField => (SqlField)expr,
+				QueryElementType.Column   => GetUnderlyingField(((SqlColumn)expr).Expression),
+				_						  => throw new InvalidOperationException(),
+			};
 		}
 
 		static SqlPredicate? ConvertInListPredicate(MappingSchema mappingSchema, SqlPredicate.InList p)

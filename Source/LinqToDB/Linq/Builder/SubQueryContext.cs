@@ -66,12 +66,11 @@ namespace LinqToDB.Linq.Builder
 
 		public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor testFlag)
 		{
-			switch (testFlag)
+			return testFlag switch
 			{
-				case RequestFor.SubQuery : return IsExpressionResult.True;
-			}
-
-			return base.IsExpression(expression, level, testFlag);
+				RequestFor.SubQuery => IsExpressionResult.True,
+				_				    => base.IsExpression(expression, level, testFlag),
+			};
 		}
 
 		protected internal readonly Dictionary<ISqlExpression,int> ColumnIndexes = new Dictionary<ISqlExpression,int>();

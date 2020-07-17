@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -839,15 +839,14 @@ namespace LinqToDB.Extensions
 
 		public static Type GetMemberType(this MemberInfo memberInfo)
 		{
-			switch (memberInfo.MemberType)
+			return memberInfo.MemberType switch
 			{
-				case MemberTypes.Property    : return ((PropertyInfo)memberInfo).PropertyType;
-				case MemberTypes.Field       : return ((FieldInfo)   memberInfo).FieldType;
-				case MemberTypes.Method      : return ((MethodInfo)  memberInfo).ReturnType;
-				case MemberTypes.Constructor : return                memberInfo. DeclaringType!;
-			}
-
-			throw new InvalidOperationException();
+				MemberTypes.Property	=> ((PropertyInfo)memberInfo).PropertyType,
+				MemberTypes.Field		=> ((FieldInfo)memberInfo).FieldType,
+				MemberTypes.Method		=> ((MethodInfo)memberInfo).ReturnType,
+				MemberTypes.Constructor => memberInfo.DeclaringType!,
+				_						=> throw new InvalidOperationException(),
+			};
 		}
 
 		public static bool IsNullableValueMember(this MemberInfo member)

@@ -910,12 +910,12 @@ namespace LinqToDB.Data
 					{
 						var providers = _dataProviders.Where(dp => dp.Value.ConnectionNamespace == providerName).ToList();
 
-						switch (providers.Count)
+						dataProvider = providers.Count switch
 						{
-							case 0: dataProvider = defaultDataProvider; break;
-							case 1: dataProvider = providers[0].Value; break;
-							default: dataProvider = FindProvider(configuration, providers, providers[0].Value); break;
-						}
+							0 => defaultDataProvider,
+							1 => providers[0].Value,
+							_ => FindProvider(configuration, providers, providers[0].Value),
+						};
 					}
 				}
 

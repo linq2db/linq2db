@@ -19,13 +19,11 @@
 
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
-			switch (convertType)
+			return convertType switch
 			{
-				case ConvertType.NameToQueryParameter:
-					return sb.Append('?');
-				default:
-					return base.Convert(sb, value, convertType);
-			}
+				ConvertType.NameToQueryParameter => sb.Append('?'),
+				_								 => base.Convert(sb, value, convertType),
+			};
 		}
 
 		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)

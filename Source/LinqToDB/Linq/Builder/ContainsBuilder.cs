@@ -117,12 +117,11 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				switch (requestFlag)
+				return requestFlag switch
 				{
-					case RequestFor.Root : return IsExpressionResult.False;
-				}
-
-				throw new InvalidOperationException();
+					RequestFor.Root => IsExpressionResult.False,
+					_				=> throw new InvalidOperationException(),
+				};
 			}
 
 			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)

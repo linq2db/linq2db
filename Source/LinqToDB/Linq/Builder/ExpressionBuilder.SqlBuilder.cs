@@ -1736,19 +1736,16 @@ namespace LinqToDB.Linq.Builder
 					break;
 			}
 
-			SqlPredicate.Operator op;
-
-			switch (nodeType)
+			var op = nodeType switch
 			{
-				case ExpressionType.Equal             : op = SqlPredicate.Operator.Equal;          break;
-				case ExpressionType.NotEqual          : op = SqlPredicate.Operator.NotEqual;       break;
-				case ExpressionType.GreaterThan       : op = SqlPredicate.Operator.Greater;        break;
-				case ExpressionType.GreaterThanOrEqual: op = SqlPredicate.Operator.GreaterOrEqual; break;
-				case ExpressionType.LessThan          : op = SqlPredicate.Operator.Less;           break;
-				case ExpressionType.LessThanOrEqual   : op = SqlPredicate.Operator.LessOrEqual;    break;
-				default: throw new InvalidOperationException();
-			}
-
+				ExpressionType.Equal              => SqlPredicate.Operator.Equal,
+				ExpressionType.NotEqual           => SqlPredicate.Operator.NotEqual,
+				ExpressionType.GreaterThan        => SqlPredicate.Operator.Greater,
+				ExpressionType.GreaterThanOrEqual => SqlPredicate.Operator.GreaterOrEqual,
+				ExpressionType.LessThan           => SqlPredicate.Operator.Less,
+				ExpressionType.LessThanOrEqual    => SqlPredicate.Operator.LessOrEqual,
+				_								  => throw new InvalidOperationException(),
+			};
 			if ((left.NodeType == ExpressionType.Convert || right.NodeType == ExpressionType.Convert) && op.In(SqlPredicate.Operator.Equal, SqlPredicate.Operator.NotEqual))
 			{
 				var p = ConvertEnumConversion(context!, left, op, right);

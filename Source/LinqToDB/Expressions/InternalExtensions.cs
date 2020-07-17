@@ -912,16 +912,12 @@ namespace LinqToDB.Expressions
 		[return: NotNullIfNotNull("ex")]
 		public static Expression? UnwrapWithAs(this Expression? ex)
 		{
-			if (ex == null)
-				return null;
-
-			switch (ex.NodeType)
+			return ex?.NodeType switch
 			{
-				case ExpressionType.TypeAs:
-					return ((UnaryExpression)ex).Operand.Unwrap();
-			}
-
-			return ex.Unwrap();
+				null				  => null,
+				ExpressionType.TypeAs => ((UnaryExpression)ex).Operand.Unwrap(),
+				_					  => ex.Unwrap(),
+			};
 		}
 
 		public static Expression SkipPathThrough(this Expression expr)
@@ -1309,19 +1305,14 @@ namespace LinqToDB.Expressions
 
 		public static bool IsEvaluable(Expression? expression)
 		{
-			if (expression == null)
-				return true;
-			switch (expression.NodeType)
+			return expression?.NodeType switch
 			{
-				case ExpressionType.Convert:
-					return IsEvaluable(((UnaryExpression) expression).Operand);
-				case ExpressionType.Constant:
-					return true;
-				case ExpressionType.MemberAccess:
-					return IsEvaluable(((MemberExpression) expression).Expression);
-				default:
-					return false;
-			}
+				null						=> true,
+				ExpressionType.Convert      => IsEvaluable(((UnaryExpression)expression).Operand),
+				ExpressionType.Constant     => true,
+				ExpressionType.MemberAccess => IsEvaluable(((MemberExpression)expression).Expression),
+				_							=> false,
+			};
 		}
 
 		/// <summary>

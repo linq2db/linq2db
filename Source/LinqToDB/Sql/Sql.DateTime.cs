@@ -56,24 +56,21 @@ namespace LinqToDB
 
 			public static string DatePartToStr(DateParts part)
 			{
-				string partStr;
-				switch (part)
+				return part switch
 				{
-					case Sql.DateParts.Year        : partStr = "year";        break;
-					case Sql.DateParts.Quarter     : partStr = "quarter";     break;
-					case Sql.DateParts.Month       : partStr = "month";       break;
-					case Sql.DateParts.DayOfYear   : partStr = "dayofyear";   break;
-					case Sql.DateParts.Day         : partStr = "day";         break;
-					case Sql.DateParts.Week        : partStr = "week";        break;
-					case Sql.DateParts.WeekDay     : partStr = "weekday";     break;
-					case Sql.DateParts.Hour        : partStr = "hour";        break;
-					case Sql.DateParts.Minute      : partStr = "minute";      break;
-					case Sql.DateParts.Second      : partStr = "second";      break;
-					case Sql.DateParts.Millisecond : partStr = "millisecond"; break;
-					default:
-						throw new ArgumentOutOfRangeException();
-				}
-				return partStr;
+					Sql.DateParts.Year        => "year",
+					Sql.DateParts.Quarter     => "quarter",
+					Sql.DateParts.Month       => "month",
+					Sql.DateParts.DayOfYear   => "dayofyear",
+					Sql.DateParts.Day         => "day",
+					Sql.DateParts.Week        => "week",
+					Sql.DateParts.WeekDay     => "weekday",
+					Sql.DateParts.Hour        => "hour",
+					Sql.DateParts.Minute      => "minute",
+					Sql.DateParts.Second      => "second",
+					Sql.DateParts.Millisecond => "millisecond",
+					_						  => throw new ArgumentOutOfRangeException(),
+				};
 			}
 		}
 
@@ -184,24 +181,21 @@ namespace LinqToDB
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
-				string partStr;
 				var part    = builder.GetValue<Sql.DateParts>("part");
-				switch (part)
+				var partStr = part switch
 				{
-					case Sql.DateParts.Year        : partStr = "yyyy"; break;
-					case Sql.DateParts.Quarter     : partStr = "q";    break;
-					case Sql.DateParts.Month       : partStr = "m";    break;
-					case Sql.DateParts.DayOfYear   : partStr = "y";    break;
-					case Sql.DateParts.Day         : partStr = "d";    break;
-					case Sql.DateParts.Week        : partStr = "ww";   break;
-					case Sql.DateParts.WeekDay     : partStr = "w";    break;
-					case Sql.DateParts.Hour        : partStr = "h";    break;
-					case Sql.DateParts.Minute      : partStr = "n";    break;
-					case Sql.DateParts.Second      : partStr = "s";    break;
-					default:
-						throw new ArgumentOutOfRangeException();
-				}
-
+					Sql.DateParts.Year		=> "yyyy",
+					Sql.DateParts.Quarter	=> "q",
+					Sql.DateParts.Month		=> "m",
+					Sql.DateParts.DayOfYear => "y",
+					Sql.DateParts.Day		=> "d",
+					Sql.DateParts.Week		=> "ww",
+					Sql.DateParts.WeekDay	=> "w",
+					Sql.DateParts.Hour		=> "h",
+					Sql.DateParts.Minute	=> "n",
+					Sql.DateParts.Second	=> "s",
+					_ => throw new ArgumentOutOfRangeException(),
+				};
 				builder.AddExpression("part", partStr);
 			}
 		}
@@ -409,22 +403,21 @@ namespace LinqToDB
 			if (date == null)
 				return null;
 
-			switch (part)
+			return part switch
 			{
-				case Sql.DateParts.Year        : return date.Value.Year;
-				case Sql.DateParts.Quarter     : return (date.Value.Month - 1) / 3 + 1;
-				case Sql.DateParts.Month       : return date.Value.Month;
-				case Sql.DateParts.DayOfYear   : return date.Value.DayOfYear;
-				case Sql.DateParts.Day         : return date.Value.Day;
-				case Sql.DateParts.Week        : return CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(date.Value, CalendarWeekRule.FirstDay, DayOfWeek.Sunday);
-				case Sql.DateParts.WeekDay     : return ((int)date.Value.DayOfWeek + 1 + Sql.DateFirst + 6) % 7 + 1;
-				case Sql.DateParts.Hour        : return date.Value.Hour;
-				case Sql.DateParts.Minute      : return date.Value.Minute;
-				case Sql.DateParts.Second      : return date.Value.Second;
-				case Sql.DateParts.Millisecond : return date.Value.Millisecond;
-			}
-
-			throw new InvalidOperationException();
+				Sql.DateParts.Year			=> date.Value.Year,
+				Sql.DateParts.Quarter		=> (date.Value.Month - 1) / 3 + 1,
+				Sql.DateParts.Month			=> date.Value.Month,
+				Sql.DateParts.DayOfYear		=> date.Value.DayOfYear,
+				Sql.DateParts.Day			=> date.Value.Day,
+				Sql.DateParts.Week			=> CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(date.Value, CalendarWeekRule.FirstDay, DayOfWeek.Sunday),
+				Sql.DateParts.WeekDay		=> ((int)date.Value.DayOfWeek + 1 + Sql.DateFirst + 6) % 7 + 1,
+				Sql.DateParts.Hour			=> date.Value.Hour,
+				Sql.DateParts.Minute		=> date.Value.Minute,
+				Sql.DateParts.Second		=> date.Value.Second,
+				Sql.DateParts.Millisecond	=> date.Value.Millisecond,
+				_							=> throw new InvalidOperationException(),
+			};
 		}
 
 		#endregion DatePart
@@ -642,24 +635,20 @@ namespace LinqToDB
 				var part    = builder.GetValue<Sql.DateParts>("part");
 				var date    = builder.GetExpression("date");
 				var number  = builder.GetExpression("number");
-
-				string partStr;
-				switch (part)
+				var partStr = part switch
 				{
-					case Sql.DateParts.Year        : partStr = "yyyy"; break;
-					case Sql.DateParts.Quarter     : partStr = "q";    break;
-					case Sql.DateParts.Month       : partStr = "m";    break;
-					case Sql.DateParts.DayOfYear   : partStr = "y";    break; 
-					case Sql.DateParts.Day         : partStr = "d";    break;
-					case Sql.DateParts.Week        : partStr = "ww";   break;
-					case Sql.DateParts.WeekDay     : partStr = "w";    break;
-					case Sql.DateParts.Hour        : partStr = "h";    break;
-					case Sql.DateParts.Minute      : partStr = "n";    break;
-					case Sql.DateParts.Second      : partStr = "s";    break;
-					default:
-						throw new ArgumentOutOfRangeException();
-				}
-
+					Sql.DateParts.Year      => "yyyy",
+					Sql.DateParts.Quarter   => "q",
+					Sql.DateParts.Month     => "m",
+					Sql.DateParts.DayOfYear => "y",
+					Sql.DateParts.Day       => "d",
+					Sql.DateParts.Week      => "ww",
+					Sql.DateParts.WeekDay   => "w",
+					Sql.DateParts.Hour      => "h",
+					Sql.DateParts.Minute    => "n",
+					Sql.DateParts.Second    => "s",
+					_						=> throw new ArgumentOutOfRangeException(),
+				};
 				builder.ResultExpression = new SqlFunction(typeof(DateTime?), "DateAdd", 
 					new SqlValue(partStr), number, date);
 			}
@@ -753,22 +742,21 @@ namespace LinqToDB
 			if (number == null || date == null)
 				return null;
 
-			switch (part)
+			return part switch
 			{
-				case Sql.DateParts.Year        : return date.Value.AddYears       ((int)number);
-				case Sql.DateParts.Quarter     : return date.Value.AddMonths      ((int)number * 3);
-				case Sql.DateParts.Month       : return date.Value.AddMonths      ((int)number);
-				case Sql.DateParts.DayOfYear   : return date.Value.AddDays        (number.Value);
-				case Sql.DateParts.Day         : return date.Value.AddDays        (number.Value);
-				case Sql.DateParts.Week        : return date.Value.AddDays        (number.Value * 7);
-				case Sql.DateParts.WeekDay     : return date.Value.AddDays        (number.Value);
-				case Sql.DateParts.Hour        : return date.Value.AddHours       (number.Value);
-				case Sql.DateParts.Minute      : return date.Value.AddMinutes     (number.Value);
-				case Sql.DateParts.Second      : return date.Value.AddSeconds     (number.Value);
-				case Sql.DateParts.Millisecond : return date.Value.AddMilliseconds(number.Value);
-			}
-
-			throw new InvalidOperationException();
+				Sql.DateParts.Year			=> date.Value.AddYears((int)number),
+				Sql.DateParts.Quarter		=> date.Value.AddMonths((int)number * 3),
+				Sql.DateParts.Month			=> date.Value.AddMonths((int)number),
+				Sql.DateParts.DayOfYear		=> date.Value.AddDays(number.Value),
+				Sql.DateParts.Day			=> date.Value.AddDays(number.Value),
+				Sql.DateParts.Week			=> date.Value.AddDays(number.Value * 7),
+				Sql.DateParts.WeekDay		=> date.Value.AddDays(number.Value),
+				Sql.DateParts.Hour			=> date.Value.AddHours(number.Value),
+				Sql.DateParts.Minute		=> date.Value.AddMinutes(number.Value),
+				Sql.DateParts.Second		=> date.Value.AddSeconds(number.Value),
+				Sql.DateParts.Millisecond	=> date.Value.AddMilliseconds(number.Value),
+				_							=> throw new InvalidOperationException(),
+			};
 		}
 
 		#endregion
@@ -868,17 +856,15 @@ namespace LinqToDB
 				var endDate = builder.GetExpression(2);
 
 				var expStr = "round((julianday({1}) - julianday({0}))";
-				switch (part)
+				expStr += part switch
 				{
-					case DateParts.Day:         expStr += ")";          break;
-					case DateParts.Hour:        expStr += " * 24)";       break;
-					case DateParts.Minute:      expStr += " * 1440)";     break;
-					case DateParts.Second:      expStr += " * 86400)";    break;
-					case DateParts.Millisecond: expStr += " * 86400000)"; break;
-					default:
-						throw new ArgumentOutOfRangeException();
-				}
-
+					DateParts.Day			=> ")",
+					DateParts.Hour			=> " * 24)",
+					DateParts.Minute		=> " * 1440)",
+					DateParts.Second		=> " * 86400)",
+					DateParts.Millisecond	=> " * 86400000)",
+					_						=> throw new ArgumentOutOfRangeException(),
+				};
 				builder.ResultExpression = new SqlExpression(typeof(int), expStr, startDate, endDate );
 			}
 		}
@@ -890,24 +876,18 @@ namespace LinqToDB
 				var part = builder.GetValue<Sql.DateParts>(0);
 				var startDate = builder.GetExpression(1);
 				var endDate = builder.GetExpression(2);
-
-				string expStr;
-				switch (part)
+				var expStr = part switch
 				{
-					case DateParts.Year:        expStr = "(DATE_PART('year', {1}::date) - DATE_PART('year', {0}::date))";    break;
-					case DateParts.Month:       
-						expStr = "((DATE_PART('year', {1}::date) - DATE_PART('year', {0}::date)) * 12 + (DATE_PART('month', {1}'::date) - DATE_PART('month', {0}::date)))"; 
-						break;
-					case DateParts.Week:        expStr = "TRUNC(DATE_PART('day', {1}::timestamp - {0}::timestamp) / 7)";   break;
-					case DateParts.Day:         expStr = "EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp)) / 86400";  break;
-					case DateParts.Hour:        expStr = "EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp)) / 3600";   break;
-					case DateParts.Minute:      expStr = "EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp)) / 60";     break;
-					case DateParts.Second:      expStr = "EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp))";          break;
-					case DateParts.Millisecond: expStr = "ROUND(EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp)) * 1000)";  break;
-					default:
-						throw new ArgumentOutOfRangeException();
-				}
-
+					DateParts.Year			=> "(DATE_PART('year', {1}::date) - DATE_PART('year', {0}::date))",
+					DateParts.Month			=> "((DATE_PART('year', {1}::date) - DATE_PART('year', {0}::date)) * 12 + (DATE_PART('month', {1}'::date) - DATE_PART('month', {0}::date)))",
+					DateParts.Week			=> "TRUNC(DATE_PART('day', {1}::timestamp - {0}::timestamp) / 7)",
+					DateParts.Day			=> "EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp)) / 86400",
+					DateParts.Hour			=> "EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp)) / 3600",
+					DateParts.Minute		=> "EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp)) / 60",
+					DateParts.Second		=> "EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp))",
+					DateParts.Millisecond	=> "ROUND(EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp)) * 1000)",
+					_						=> throw new ArgumentOutOfRangeException(),
+				};
 				builder.ResultExpression = new SqlExpression(typeof(int), expStr, Precedence.Multiplicative, startDate, endDate);
 			}
 		}
@@ -924,16 +904,15 @@ namespace LinqToDB
 			if (startDate == null || endDate == null)
 				return null;
 
-			switch (part)
+			return part switch
 			{
-				case DateParts.Day         : return (int)(endDate - startDate).Value.TotalDays;
-				case DateParts.Hour        : return (int)(endDate - startDate).Value.TotalHours;
-				case DateParts.Minute      : return (int)(endDate - startDate).Value.TotalMinutes;
-				case DateParts.Second      : return (int)(endDate - startDate).Value.TotalSeconds;
-				case DateParts.Millisecond : return (int)(endDate - startDate).Value.TotalMilliseconds;
-			}
-
-			throw new InvalidOperationException();
+				DateParts.Day			=> (int)(endDate - startDate).Value.TotalDays,
+				DateParts.Hour			=> (int)(endDate - startDate).Value.TotalHours,
+				DateParts.Minute		=> (int)(endDate - startDate).Value.TotalMinutes,
+				DateParts.Second		=> (int)(endDate - startDate).Value.TotalSeconds,
+				DateParts.Millisecond	=> (int)(endDate - startDate).Value.TotalMilliseconds,
+				_						=> throw new InvalidOperationException(),
+			};
 		}
 
 		#endregion

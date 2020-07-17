@@ -14,11 +14,11 @@ namespace LinqToDB.DataProvider.MySql
 
 		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
-			switch (statement.QueryType)
+			return statement.QueryType switch
 			{
-				case QueryType.Update : return CorrectMySqlUpdate((SqlUpdateStatement)statement);
-				default               : return statement;
-			}
+				QueryType.Update => CorrectMySqlUpdate((SqlUpdateStatement)statement),
+				_                => statement,
+			};
 		}
 
 		private SqlUpdateStatement CorrectMySqlUpdate(SqlUpdateStatement statement)

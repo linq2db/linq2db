@@ -82,22 +82,20 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
-			switch (Version)
+			return Version switch
 			{
-				case OracleVersion.v11: return new Oracle11SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
-				default               :
-				case OracleVersion.v12: return new Oracle12SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
-			}
+				OracleVersion.v11 => new Oracle11SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
+				_				  => new Oracle12SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
+			};
 		}
 
 		private static MappingSchema GetMappingSchema(string name, MappingSchema providerSchema)
 		{
-			switch (name)
+			return name switch
 			{
-				default                        :
-				case ProviderName.OracleManaged: return new OracleMappingSchema.ManagedMappingSchema(providerSchema);
-				case ProviderName.OracleNative : return new OracleMappingSchema.NativeMappingSchema (providerSchema);
-			}
+				ProviderName.OracleNative => new OracleMappingSchema.NativeMappingSchema(providerSchema),
+				_						  => new OracleMappingSchema.ManagedMappingSchema(providerSchema),
+			};
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;

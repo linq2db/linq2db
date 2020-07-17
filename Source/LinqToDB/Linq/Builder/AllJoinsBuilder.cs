@@ -37,17 +37,14 @@ namespace LinqToDB.Linq.Builder
 				default:
 					conditionIndex = 2;
 
-					var joinValue = (SqlJoinType) methodCall.Arguments[1].EvaluateExpression()!;
-
-					switch (joinValue)
+					joinType = (SqlJoinType) methodCall.Arguments[1].EvaluateExpression()! switch
 					{
-						case SqlJoinType.Inner : joinType = JoinType.Inner; break;
-						case SqlJoinType.Left  : joinType = JoinType.Left;  break;
-						case SqlJoinType.Right : joinType = JoinType.Right; break;
-						case SqlJoinType.Full  : joinType = JoinType.Full;  break;
-						default                : throw new ArgumentOutOfRangeException();
-					}
-
+						SqlJoinType.Inner => JoinType.Inner,
+						SqlJoinType.Left  => JoinType.Left,
+						SqlJoinType.Right => JoinType.Right,
+						SqlJoinType.Full  => JoinType.Full,
+						_				  => throw new ArgumentOutOfRangeException(),
+					};
 					break;
 			}
 

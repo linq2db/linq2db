@@ -187,23 +187,13 @@ namespace LinqToDB.ServiceModel
 						};
 
 						var names = new HashSet<string>();
-
-						SelectQuery select;
-						switch (query.Statement.QueryType)
+						var select = query.Statement.QueryType switch
 						{
-							case QueryType.Select:
-								select = query.Statement.SelectQuery!;
-								break;
-							case QueryType.Insert:
-								select = ((SqlInsertStatement)query.Statement).Output!.OutputQuery!;
-								break;
-							case QueryType.Delete:
-								select = ((SqlDeleteStatement)query.Statement).Output!.OutputQuery!;
-								break;
-							default:
-								throw new NotImplementedException($"Query type not supported: {query.Statement.QueryType}");
-						}
-
+							QueryType.Select => query.Statement.SelectQuery!,
+							QueryType.Insert => ((SqlInsertStatement)query.Statement).Output!.OutputQuery!,
+							QueryType.Delete => ((SqlDeleteStatement)query.Statement).Output!.OutputQuery!,
+							_ => throw new NotImplementedException($"Query type not supported: {query.Statement.QueryType}"),
+						};
 						for (var i = 0; i < ret.FieldCount; i++)
 						{
 							var name = rd.GetName(i);

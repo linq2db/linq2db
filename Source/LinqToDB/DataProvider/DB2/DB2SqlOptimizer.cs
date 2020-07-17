@@ -17,12 +17,12 @@
 			statement = ReplaceDistinctOrderByWithRowNumber(statement, q => q.Select.SkipValue != null);
 			statement = ReplaceTakeSkipWithRowNumber(statement, query => query.Select.SkipValue != null && SqlProviderFlags.GetIsSkipSupportedFlag(query), true);
 
-			switch (statement.QueryType)
+			return statement.QueryType switch
 			{
-				case QueryType.Delete : return GetAlternativeDelete((SqlDeleteStatement)statement);
-				case QueryType.Update : return GetAlternativeUpdate((SqlUpdateStatement)statement);
-				default               : return statement;
-			}
+				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement),
+				QueryType.Update => GetAlternativeUpdate((SqlUpdateStatement)statement),
+				_                => statement,
+			};
 		}
 
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)

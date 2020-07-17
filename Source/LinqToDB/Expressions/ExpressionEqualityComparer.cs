@@ -670,17 +670,13 @@ namespace LinqToDB.Expressions
 					return false;
 				}
 
-				switch (a.BindingType)
+				return a.BindingType switch
 				{
-					case MemberBindingType.Assignment:
-						return CompareMemberAssignment((MemberAssignment)a, (MemberAssignment)b);
-					case MemberBindingType.ListBinding:
-						return CompareMemberListBinding((MemberListBinding)a, (MemberListBinding)b);
-					case MemberBindingType.MemberBinding:
-						return CompareMemberMemberBinding((MemberMemberBinding)a, (MemberMemberBinding)b);
-					default:
-						throw new NotImplementedException();
-				}
+					MemberBindingType.Assignment	=> CompareMemberAssignment((MemberAssignment)a, (MemberAssignment)b),
+					MemberBindingType.ListBinding	=> CompareMemberListBinding((MemberListBinding)a, (MemberListBinding)b),
+					MemberBindingType.MemberBinding => CompareMemberMemberBinding((MemberMemberBinding)a, (MemberMemberBinding)b),
+					_								=> throw new NotImplementedException(),
+				};
 			}
 
 			private bool CompareMemberAssignment(MemberAssignment a, MemberAssignment b)

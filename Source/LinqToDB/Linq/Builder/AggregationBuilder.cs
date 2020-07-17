@@ -182,13 +182,12 @@ namespace LinqToDB.Linq.Builder
 
 			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
-				switch (requestFlag)
+				return requestFlag switch
 				{
-					case RequestFor.Root       : return new IsExpressionResult(Lambda != null && expression == Lambda.Parameters[0]);
-					case RequestFor.Expression : return IsExpressionResult.True;
-				}
-
-				return IsExpressionResult.False;
+					RequestFor.Root		  => new IsExpressionResult(Lambda != null && expression == Lambda.Parameters[0]),
+					RequestFor.Expression => IsExpressionResult.True,
+					_					  => IsExpressionResult.False,
+				};
 			}
 
 			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)

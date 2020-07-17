@@ -169,22 +169,18 @@ namespace LinqToDB.DataProvider.Oracle
 #if NET45 || NET46
 			if (!managed)
 			{
-				switch (version)
+				return version switch
 				{
-					case OracleVersion.v11:
-						return _oracleNativeDataProvider11.Value;
-				}
-
-				return _oracleNativeDataProvider12.Value;
+					OracleVersion.v11 => _oracleNativeDataProvider11.Value,
+					_				  => _oracleNativeDataProvider12.Value,
+				};
 			}
 #endif
-			switch (version)
+			return version switch
 			{
-				case OracleVersion.v11:
-					return _oracleManagedDataProvider11.Value;
-			}
-
-			return _oracleManagedDataProvider12.Value;
+				OracleVersion.v11 => _oracleManagedDataProvider11.Value,
+				_				  => _oracleManagedDataProvider12.Value,
+			};
 		}
 
 		public static string  DetectedProviderName =>
@@ -216,15 +212,15 @@ namespace LinqToDB.DataProvider.Oracle
 			if (assemblyName == OracleProviderAdapter.NativeAssemblyName ) return GetVersionedDataProvider(DefaultVersion, false);
 			if (assemblyName == OracleProviderAdapter.ManagedAssemblyName) return GetVersionedDataProvider(DefaultVersion, true);
 
-			switch (providerName)
+			return providerName switch
 			{
-				case ProviderName.OracleNative : return GetVersionedDataProvider(DefaultVersion, false);
-				case ProviderName.OracleManaged: return GetVersionedDataProvider(DefaultVersion, true);
-			}
-
-			return DetectedProviderName == ProviderName.OracleNative
-				? GetVersionedDataProvider(DefaultVersion, false)
-				: GetVersionedDataProvider(DefaultVersion, true);
+				ProviderName.OracleNative  => GetVersionedDataProvider(DefaultVersion, false),
+				ProviderName.OracleManaged => GetVersionedDataProvider(DefaultVersion, true),
+				_						   => 
+					DetectedProviderName == ProviderName.OracleNative
+					? GetVersionedDataProvider(DefaultVersion, false)
+					: GetVersionedDataProvider(DefaultVersion, true),
+			};
 #else
 			return GetVersionedDataProvider(DefaultVersion, true);
 #endif

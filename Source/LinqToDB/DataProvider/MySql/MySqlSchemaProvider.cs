@@ -192,46 +192,45 @@ SELECT
 
 		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
 		{
-			switch (dataType?.ToLower())
+			return dataType?.ToLower() switch 
 			{
-				case "tinyint unsigned"  : return DataType.Byte;
-				case "smallint unsigned" : return DataType.UInt16;
-				case "mediumint unsigned": return DataType.UInt32;
-				case "int unsigned"      : return DataType.UInt32;
-				case "bigint unsigned"   : return DataType.UInt64;
-				case "bool"              : return DataType.SByte; // tinyint(1) alias
-				case "bit"               : return DataType.BitArray;
-				case "blob"              : return DataType.Blob;
-				case "tinyblob"          : return DataType.Blob;
-				case "mediumblob"        : return DataType.Blob;
-				case "longblob"          : return DataType.Blob;
-				case "binary"            : return DataType.Binary;
-				case "varbinary"         : return DataType.VarBinary;
-				case "date"              : return DataType.Date;
-				case "datetime"          : return DataType.DateTime;
-				case "timestamp"         : return DataType.DateTime;
-				case "time"              : return DataType.Time;
-				case "char"              : return DataType.Char;
-				case "varchar"           : return DataType.VarChar;
-				case "set"               : return DataType.VarChar;
-				case "enum"              : return DataType.VarChar;
-				case "tinytext"          : return DataType.Text;
-				case "text"              : return DataType.Text;
-				case "mediumtext"        : return DataType.Text;
-				case "longtext"          : return DataType.Text;
-				case "double"            : return DataType.Double;
-				case "float"             : return DataType.Single;
-				case "tinyint"           : return columnType != null && columnType.Contains("unsigned") ? DataType.Byte   : DataType.SByte;
-				case "smallint"          : return columnType != null && columnType.Contains("unsigned") ? DataType.UInt16 : DataType.Int16;
-				case "int"               : return columnType != null && columnType.Contains("unsigned") ? DataType.UInt32 : DataType.Int32;
-				case "year"              : return DataType.Int32;
-				case "mediumint"         : return columnType != null && columnType.Contains("unsigned") ? DataType.UInt32 : DataType.Int32;
-				case "bigint"            : return columnType != null && columnType.Contains("unsigned") ? DataType.UInt64 : DataType.Int64;
-				case "decimal"           : return DataType.Decimal;
-				case "json"              : return DataType.Json;
-			}
-
-			return DataType.Undefined;
+				"tinyint unsigned"  => DataType.Byte,
+				"smallint unsigned" => DataType.UInt16,
+				"mediumint unsigned"=> DataType.UInt32,
+				"int unsigned"      => DataType.UInt32,
+				"bigint unsigned"   => DataType.UInt64,
+				"bool"              => DataType.SByte, // tinyint(1) alias
+				"bit"               => DataType.BitArray,
+				"blob"              => DataType.Blob,
+				"tinyblob"          => DataType.Blob,
+				"mediumblob"        => DataType.Blob,
+				"longblob"          => DataType.Blob,
+				"binary"            => DataType.Binary,
+				"varbinary"         => DataType.VarBinary,
+				"date"              => DataType.Date,
+				"datetime"          => DataType.DateTime,
+				"timestamp"         => DataType.DateTime,
+				"time"              => DataType.Time,
+				"char"              => DataType.Char,
+				"varchar"           => DataType.VarChar,
+				"set"               => DataType.VarChar,
+				"enum"              => DataType.VarChar,
+				"tinytext"          => DataType.Text,
+				"text"              => DataType.Text,
+				"mediumtext"        => DataType.Text,
+				"longtext"          => DataType.Text,
+				"double"            => DataType.Double,
+				"float"             => DataType.Single,
+				"tinyint"           => columnType != null && columnType.Contains("unsigned") ? DataType.Byte   : DataType.SByte,
+				"smallint"          => columnType != null && columnType.Contains("unsigned") ? DataType.UInt16 : DataType.Int16,
+				"int"               => columnType != null && columnType.Contains("unsigned") ? DataType.UInt32 : DataType.Int32,
+				"year"              => DataType.Int32,
+				"mediumint"         => columnType != null && columnType.Contains("unsigned") ? DataType.UInt32 : DataType.Int32,
+				"bigint"            => columnType != null && columnType.Contains("unsigned") ? DataType.UInt64 : DataType.Int64,
+				"decimal"           => DataType.Decimal,
+				"json"              => DataType.Json,
+				_					=> DataType.Undefined,
+			};
 		}
 
 		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)

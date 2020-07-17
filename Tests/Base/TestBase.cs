@@ -186,12 +186,12 @@ namespace Tests
 #if NET46
 			LinqService.TypeResolver = str =>
 			{
-				switch (str)
+				return str switch
 				{
-					case "Tests.Model.Gender": return typeof(Gender);
-					case "Tests.Model.Person": return typeof(Person);
-					default: return null;
-				}
+					"Tests.Model.Gender" => typeof(Gender),
+					"Tests.Model.Person" => typeof(Person),
+					_ => null,
+				};
 			};
 #endif
 		}

@@ -19,12 +19,12 @@
 
 		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
-			switch (statement.QueryType)
+			return statement.QueryType switch
 			{
-				case QueryType.Delete : return GetAlternativeDelete((SqlDeleteStatement)statement);
-				case QueryType.Update : return GetAlternativeUpdateFrom((SqlUpdateStatement)statement);
-				default               : return statement;
-			}
+				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement),
+				QueryType.Update => GetAlternativeUpdateFrom((SqlUpdateStatement)statement),
+				_				 => statement,
+			};
 		}
 
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 
@@ -58,12 +58,11 @@ namespace LinqToDB.DataProvider.DB2
 
 		private static MappingSchema GetMappingSchema(DB2Version version, MappingSchema providerSchema)
 		{
-			switch (version)
+			return version switch
 			{
-				case DB2Version.zOS: return new DB2zOSMappingSchema(providerSchema);
-				default            :
-				case DB2Version.LUW: return new DB2LUWMappingSchema(providerSchema);
-			}
+				DB2Version.zOS => new DB2zOSMappingSchema(providerSchema),
+				_              => new DB2LUWMappingSchema(providerSchema),
+			};
 		}
 
 		public override ISchemaProvider GetSchemaProvider()

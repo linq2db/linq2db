@@ -11,12 +11,12 @@
 
 		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
-			switch (statement.QueryType)
+			return statement.QueryType switch
 			{
-				case QueryType.Delete : return GetAlternativeDelete((SqlDeleteStatement) statement);
-				case QueryType.Update : return CorrectAccessUpdate((SqlUpdateStatement)statement);
-				default               : return statement;
-			}
+				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement),
+				QueryType.Update => CorrectAccessUpdate((SqlUpdateStatement)statement),
+				_                => statement,
+			};
 		}
 
 		private SqlUpdateStatement CorrectAccessUpdate(SqlUpdateStatement statement)

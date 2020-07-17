@@ -1047,11 +1047,11 @@ namespace LinqToDB.Linq.Builder
 						return action(sequence, null, 0);
 				}
 
-				switch (Body.NodeType)
+				return Body.NodeType switch
 				{
-					case ExpressionType.MemberAccess : return action(GetSequence(expression, level)!, null, 0);
-					default                          : return defaultAction();
-				}
+					ExpressionType.MemberAccess => action(GetSequence(expression, level)!, null, 0),
+					_							=> defaultAction(),
+				};
 			}
 			else
 			{

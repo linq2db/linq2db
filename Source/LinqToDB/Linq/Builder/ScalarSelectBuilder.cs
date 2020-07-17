@@ -108,11 +108,11 @@ namespace LinqToDB.Linq.Builder
 
 			public IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
-				switch (requestFlag)
+				return requestFlag switch
 				{
-					case RequestFor.Expression : return IsExpressionResult.True;
-					default                    : return IsExpressionResult.False;
-				}
+					RequestFor.Expression => IsExpressionResult.True,
+					_					  => IsExpressionResult.False,
+				};
 			}
 
 			public IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)

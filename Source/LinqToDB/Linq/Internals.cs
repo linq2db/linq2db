@@ -24,15 +24,12 @@ namespace LinqToDB.Linq
 		/// </summary>
 		public static IDataContext GetDataContext<T>(IQueryable<T> queryable)
 		{
-			switch (queryable)
+			return queryable switch
 			{
-				case ExpressionQuery<T> query:
-					return query.DataContext;
-				case ITable<T> table:
-					return table.DataContext;
-				default:
-					return default!;
-			}
+				ExpressionQuery<T> query => query.DataContext,
+				ITable<T> table			 => table.DataContext,
+				_						 => default!,
+			};
 		}
 
 		/// <summary>

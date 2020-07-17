@@ -233,13 +233,12 @@ namespace LinqToDB.SqlProvider
 
 					bool CheckTable(IQueryElement e)
 					{
-						switch (e.ElementType)
+						return e.ElementType switch
 						{
-							case QueryElementType.SqlField : return !allTables.Contains(((SqlField) e).Table!);
-							case QueryElementType.Column   : return !allTables.Contains(((SqlColumn)e).Parent!);
-						}
-
-						return false;
+							QueryElementType.SqlField => !allTables.Contains(((SqlField)e).Table!),
+							QueryElementType.Column   => !allTables.Contains(((SqlColumn)e).Parent!),
+							_						  => false,
+						};
 					}
 
 					var join = subQuery.LeftJoin();
@@ -346,13 +345,12 @@ namespace LinqToDB.SqlProvider
 
 						bool CheckTable(IQueryElement e)
 						{
-							switch (e.ElementType)
+							return e.ElementType switch
 							{
-								case QueryElementType.SqlField : return !allTables.Contains(((SqlField) e).Table!);
-								case QueryElementType.Column   : return !allTables.Contains(((SqlColumn)e).Parent!);
-							}
-
-							return false;
+								QueryElementType.SqlField => !allTables.Contains(((SqlField)e).Table!),
+								QueryElementType.Column	  => !allTables.Contains(((SqlColumn)e).Parent!),
+								_						  => false,
+							};
 						}
 
 						new QueryVisitor().Visit(subQuery, e =>
@@ -1259,34 +1257,31 @@ namespace LinqToDB.SqlProvider
 
 		protected static bool IsDateDataType(ISqlExpression expr, string dateName)
 		{
-			switch (expr.ElementType)
+			return expr.ElementType switch
 			{
-				case QueryElementType.SqlDataType   : return ((SqlDataType)  expr).Type.DataType == DataType.Date;
-				case QueryElementType.SqlExpression : return ((SqlExpression)expr).Expr          == dateName;
-			}
-
-			return false;
+				QueryElementType.SqlDataType   => ((SqlDataType)expr).Type.DataType == DataType.Date,
+				QueryElementType.SqlExpression => ((SqlExpression)expr).Expr == dateName,
+				_							   => false,
+			};
 		}
 
 		protected static bool IsDateDataOffsetType(ISqlExpression expr)
 		{
-			switch (expr.ElementType)
+			return expr.ElementType switch
 			{
-				case QueryElementType.SqlDataType: return ((SqlDataType)expr).Type.DataType == DataType.DateTimeOffset;
-			}
-
-			return false;
+				QueryElementType.SqlDataType => ((SqlDataType)expr).Type.DataType == DataType.DateTimeOffset,
+				_							 => false,
+			};
 		}
 
 		protected static bool IsTimeDataType(ISqlExpression expr)
 		{
-			switch (expr.ElementType)
+			return expr.ElementType switch
 			{
-				case QueryElementType.SqlDataType   : return ((SqlDataType)expr).Type.DataType == DataType.Time;
-				case QueryElementType.SqlExpression : return ((SqlExpression)expr).Expr        == "Time";
-			}
-
-			return false;
+				QueryElementType.SqlDataType   => ((SqlDataType)expr).Type.DataType == DataType.Time,
+				QueryElementType.SqlExpression => ((SqlExpression)expr).Expr == "Time",
+				_							   => false,
+			};
 		}
 
 		protected ISqlExpression FloorBeforeConvert(SqlFunction func)

@@ -219,26 +219,25 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
 		{
-			switch (dataType?.ToLower())
+			return dataType?.ToLower() switch
 			{
-				case "array"            : return DataType.VarBinary;
-				case "bigint"           : return DataType.Int64;
-				case "blob"             : return DataType.Blob;
-				case "char"             : return DataType.NChar;
-				case "date"             : return DataType.Date;
-				case "decimal"          : return DataType.Decimal;
-				case "double precision" : return DataType.Double;
-				case "float"            : return DataType.Single;
-				case "integer"          : return DataType.Int32;
-				case "numeric"          : return DataType.Decimal;
-				case "smallint"         : return DataType.Int16;
-				case "blob sub_type 1"  : return DataType.Text;
-				case "time"             : return DataType.Time;
-				case "timestamp"        : return DataType.DateTime;
-				case "varchar"          : return DataType.NVarChar;
+				"array"            => DataType.VarBinary,
+				"bigint"           => DataType.Int64,
+				"blob"             => DataType.Blob,
+				"char"             => DataType.NChar,
+				"date"             => DataType.Date,
+				"decimal"          => DataType.Decimal,
+				"double precision" => DataType.Double,
+				"float"            => DataType.Single,
+				"integer"          => DataType.Int32,
+				"numeric"          => DataType.Decimal,
+				"smallint"         => DataType.Int16,
+				"blob sub_type 1"  => DataType.Text,
+				"time"             => DataType.Time,
+				"timestamp"        => DataType.DateTime,
+				"varchar"          => DataType.NVarChar,
+				_				   => DataType.Undefined,
 			}
-
-			return DataType.Undefined;
 		}
 
 		protected override string? GetProviderSpecificTypeNamespace() => null;
