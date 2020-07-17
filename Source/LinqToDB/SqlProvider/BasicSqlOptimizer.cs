@@ -1060,19 +1060,9 @@ namespace LinqToDB.SqlProvider
 
 		ISqlPredicate OptimizeCase(SelectQuery selectQuery, SqlPredicate.ExprExpr expr)
 		{
-			var value = expr.Expr1 as SqlValue;
-			var func  = expr.Expr2 as SqlFunction;
-			var valueFirst = false;
-
-			if (value != null && func != null)
-			{
-				valueFirst = true;
-			}
-			else
-			{
-				value = expr.Expr2 as SqlValue;
-				func  = expr.Expr1 as SqlFunction;
-			}
+			var value = expr.Expr1 as SqlValue   ?? expr.Expr2 as SqlValue;
+			var func  = expr.Expr2 as SqlFunction?? expr.Expr1 as SqlFunction;
+			var valueFirst = expr.Expr1 is SqlValue;
 
 			if (value != null && func != null && func.Name == "CASE")
 			{

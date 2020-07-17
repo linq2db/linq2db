@@ -536,9 +536,8 @@ namespace LinqToDB.Linq.Builder
 					{
 						var ex = e.Unwrap();
 
-						if (ex is LambdaExpression)
+						if (ex is LambdaExpression l)
 						{
-							var l = (LambdaExpression) ex;
 							var p = Element.Parent;
 							var ctx = new ExpressionContext(Parent, Element, l);
 
@@ -575,9 +574,8 @@ namespace LinqToDB.Linq.Builder
 					{
 						var ex = call.Arguments[i].Unwrap();
 
-						if (ex is LambdaExpression)
+						if (ex is LambdaExpression l)
 						{
-							var l   = (LambdaExpression) ex;
 							var p   = Element.Parent;
 							var ctx = new ExpressionContext(Parent, Element, l);
 
@@ -724,7 +722,7 @@ namespace LinqToDB.Linq.Builder
 				var expr = SelectQuery.Select.Columns[index].Expression;
 
 				//if (!SelectQuery.GroupBy.EnumItems().Any(_ => QueryHelper.ContainsElement(expr, _)))
-				if (!SelectQuery.GroupBy.EnumItems().Any(_ => ReferenceEquals(_, expr) || (expr is SqlColumn && ReferenceEquals(_, ((SqlColumn)expr).Expression))))
+				if (!SelectQuery.GroupBy.EnumItems().Any(_ => ReferenceEquals(_, expr) || (expr is SqlColumn column && ReferenceEquals(_, column.Expression))))
 				{
 					if (SelectQuery.GroupBy.GroupingType == GroupingType.GroupBySets)
 						SelectQuery.GroupBy.Items.Add(new SqlGroupingSet(new[]{expr}));
@@ -758,9 +756,8 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (expression == null && buildInfo != null)
 				{
-					if (buildInfo.Parent is SelectManyBuilder.SelectManyContext)
+					if (buildInfo.Parent is SelectManyBuilder.SelectManyContext sm)
 					{
-						var sm     = (SelectManyBuilder.SelectManyContext)buildInfo.Parent;
 						var ctype  = typeof(ContextHelper<>).MakeGenericType(_key.Lambda.Parameters[0].Type);
 						var helper = (IContextHelper)Activator.CreateInstance(ctype)!;
 						var expr   = helper.GetContext(

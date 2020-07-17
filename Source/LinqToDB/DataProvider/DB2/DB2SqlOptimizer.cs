@@ -29,27 +29,23 @@
 		{
 			expr = base.ConvertExpression(expr);
 
-			if (expr is SqlBinaryExpression)
+			if (expr is SqlBinaryExpression be)
 			{
-				var be = (SqlBinaryExpression)expr;
-
 				switch (be.Operation)
 				{
 					case "%":
-						{
-							var expr1 = !be.Expr1.SystemType!.IsIntegerType() ? new SqlFunction(typeof(int), "Int", be.Expr1) : be.Expr1;
-							return new SqlFunction(be.SystemType, "Mod", expr1, be.Expr2);
-						}
+					{
+						var expr1 = !be.Expr1.SystemType!.IsIntegerType() ? new SqlFunction(typeof(int), "Int", be.Expr1) : be.Expr1;
+						return new SqlFunction(be.SystemType, "Mod", expr1, be.Expr2);
+					}
 					case "&": return new SqlFunction(be.SystemType, "BitAnd", be.Expr1, be.Expr2);
-					case "|": return new SqlFunction(be.SystemType, "BitOr",  be.Expr1, be.Expr2);
+					case "|": return new SqlFunction(be.SystemType, "BitOr", be.Expr1, be.Expr2);
 					case "^": return new SqlFunction(be.SystemType, "BitXor", be.Expr1, be.Expr2);
-					case "+": return be.SystemType == typeof(string)? new SqlBinaryExpression(be.SystemType, be.Expr1, "||", be.Expr2, be.Precedence): expr;
+					case "+": return be.SystemType == typeof(string) ? new SqlBinaryExpression(be.SystemType, be.Expr1, "||", be.Expr2, be.Precedence) : expr;
 				}
 			}
-			else if (expr is SqlFunction)
+			else if (expr is SqlFunction func)
 			{
-				var func = (SqlFunction) expr;
-
 				switch (func.Name)
 				{
 					case "Convert"    :

@@ -235,7 +235,7 @@ namespace LinqToDB.SqlQuery
 			if (this == other)
 				return true;
 
-			return other is SqlColumn && Equals((SqlColumn)other);
+			return other is SqlColumn column && Equals(column);
 		}
 
 		#endregion

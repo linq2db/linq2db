@@ -198,9 +198,9 @@ namespace LinqToDB.SqlQuery
 			if (jt != null)
 				return jt;
 
-			if (ts.Source is SelectQuery)
+			if (ts.Source is SelectQuery query)
 			{
-				var s = ((SelectQuery)ts.Source).From[table, alias];
+				var s = query.From[table, alias];
 
 				if (s != null)
 					return s;

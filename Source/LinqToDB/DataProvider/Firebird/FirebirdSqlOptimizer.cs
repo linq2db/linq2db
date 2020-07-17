@@ -36,23 +36,19 @@
 		{
 			expr = base.ConvertExpression(expr);
 
-			if (expr is SqlBinaryExpression)
+			if (expr is SqlBinaryExpression be)
 			{
-				SqlBinaryExpression be = (SqlBinaryExpression)expr;
-
 				switch (be.Operation)
 				{
-					case "%": return new SqlFunction(be.SystemType, "Mod",     be.Expr1, be.Expr2);
+					case "%": return new SqlFunction(be.SystemType, "Mod", be.Expr1, be.Expr2);
 					case "&": return new SqlFunction(be.SystemType, "Bin_And", be.Expr1, be.Expr2);
-					case "|": return new SqlFunction(be.SystemType, "Bin_Or",  be.Expr1, be.Expr2);
+					case "|": return new SqlFunction(be.SystemType, "Bin_Or", be.Expr1, be.Expr2);
 					case "^": return new SqlFunction(be.SystemType, "Bin_Xor", be.Expr1, be.Expr2);
-					case "+": return be.SystemType == typeof(string)? new SqlBinaryExpression(be.SystemType, be.Expr1, "||", be.Expr2, be.Precedence): expr;
+					case "+": return be.SystemType == typeof(string) ? new SqlBinaryExpression(be.SystemType, be.Expr1, "||", be.Expr2, be.Precedence) : expr;
 				}
 			}
-			else if (expr is SqlFunction)
+			else if (expr is SqlFunction func)
 			{
-				SqlFunction func = (SqlFunction)expr;
-
 				switch (func.Name)
 				{
 					case "Convert" :

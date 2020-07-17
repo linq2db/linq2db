@@ -38,19 +38,15 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			expr = base.ConvertExpression(expr);
 
-			if (expr is SqlBinaryExpression)
+			if (expr is SqlBinaryExpression be)
 			{
-				var be = (SqlBinaryExpression)expr;
-
 				switch (be.Operation)
 				{
 					case "+":
 						if (be.SystemType == typeof(string))
 						{
-							if (be.Expr1 is SqlFunction)
+							if (be.Expr1 is SqlFunction func)
 							{
-								var func = (SqlFunction)be.Expr1;
-
 								if (func.Name == "Concat")
 								{
 									var list = new List<ISqlExpression>(func.Parameters) { be.Expr2 };
@@ -81,10 +77,8 @@ namespace LinqToDB.DataProvider.MySql
 						break;
 				}
 			}
-			else if (expr is SqlFunction)
+			else if (expr is SqlFunction func)
 			{
-				var func = (SqlFunction) expr;
-
 				switch (func.Name)
 				{
 					case "Convert" :

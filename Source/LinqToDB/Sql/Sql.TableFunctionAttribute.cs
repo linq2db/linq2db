@@ -56,10 +56,8 @@ namespace LinqToDB
 
 			protected ISqlExpression[] ConvertArgs(MemberInfo member, ISqlExpression[] args)
 			{
-				if (member is MethodInfo)
+				if (member is MethodInfo method)
 				{
-					var method = (MethodInfo)member;
-
 					if (method.DeclaringType!.IsGenericType)
 						args = args.Concat(method.DeclaringType.GetGenericArguments().Select(t => (ISqlExpression)SqlDataType.GetDataType(t))).ToArray();
 

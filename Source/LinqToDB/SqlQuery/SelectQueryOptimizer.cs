@@ -884,10 +884,8 @@ namespace LinqToDB.SqlQuery
 
 			if (expr is SqlBinaryExpression e1)
 			{
-				if (e1.Operation == "*" && e1.Expr1 is SqlValue)
+				if (e1.Operation == "*" && e1.Expr1 is SqlValue value)
 				{
-					var value = (SqlValue)e1.Expr1;
-
 					if (value.Value is int i && i == -1)
 						return CheckColumn(column, e1.Expr2, query, optimizeValues, optimizeColumns);
 				}

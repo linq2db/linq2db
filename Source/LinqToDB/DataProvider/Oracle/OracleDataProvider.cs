@@ -203,7 +203,7 @@ namespace LinqToDB.DataProvider.Oracle
 					}
 			}
 
-			if (dataType.DataType == DataType.Undefined && value is string && ((string)value).Length >= 4000)
+			if (dataType.DataType == DataType.Undefined && value is string @string && @string.Length >= 4000)
 			{
 				dataType = dataType.WithDataType(DataType.NText);
 			}
