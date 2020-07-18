@@ -1260,7 +1260,7 @@ namespace LinqToDB.SqlProvider
 			return expr.ElementType switch
 			{
 				QueryElementType.SqlDataType => ((SqlDataType)expr).Type.DataType == DataType.DateTimeOffset,
-				_                              => false,
+				_                            => false,
 			};
 		}
 

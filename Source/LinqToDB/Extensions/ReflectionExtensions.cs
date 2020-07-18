@@ -841,11 +841,11 @@ namespace LinqToDB.Extensions
 		{
 			return memberInfo.MemberType switch
 			{
-				MemberTypes.Property	=> ((PropertyInfo)memberInfo).PropertyType,
-				MemberTypes.Field		=> ((FieldInfo)memberInfo).FieldType,
-				MemberTypes.Method		=> ((MethodInfo)memberInfo).ReturnType,
+				MemberTypes.Property    => ((PropertyInfo)memberInfo).PropertyType,
+				MemberTypes.Field       => ((FieldInfo)memberInfo).FieldType,
+				MemberTypes.Method      => ((MethodInfo)memberInfo).ReturnType,
 				MemberTypes.Constructor => memberInfo.DeclaringType!,
-				_						=> throw new InvalidOperationException(),
+				_                       => throw new InvalidOperationException(),
 			};
 		}
 
