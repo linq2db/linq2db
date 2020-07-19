@@ -479,7 +479,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return sql;
 		}
 
-		protected override DataTable? GetProcedureSchema(DataConnection dataConnection, GetSchemaOptions options, string commandText, CommandType commandType, DataParameter[] parameters)
+		protected override DataTable? GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters, GetSchemaOptions options)
 		{
 			switch (dataConnection.DataProvider.Name)
 			{
@@ -547,7 +547,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			DataTable? CallBase()
 			{
-				return base.GetProcedureSchema(dataConnection, options, commandText, commandType, parameters);
+				return base.GetProcedureSchema(dataConnection, commandText, commandType, parameters, options);
 			}
 		}
 	}

@@ -482,7 +482,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 			try
 			{
-				var st = GetProcedureSchema(dataConnection, options, commandText, commandType, parameters);
+				var st = GetProcedureSchema(dataConnection, commandText, commandType, parameters, options);
 
 				procedure.IsLoaded = true;
 
@@ -538,7 +538,7 @@ namespace LinqToDB.DataProvider.SapHana
 				}).ToArray();
 		}
 
-		protected override DataTable? GetProcedureSchema(DataConnection dataConnection, GetSchemaOptions options, string commandText, CommandType commandType, DataParameter[] parameters)
+		protected override DataTable? GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters, GetSchemaOptions options)
 		{
 			//bug in drivers, SchemaOnly executes statement
 			using (dataConnection.BeginTransaction())

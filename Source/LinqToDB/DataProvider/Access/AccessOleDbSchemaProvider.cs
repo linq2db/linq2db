@@ -303,7 +303,7 @@ namespace LinqToDB.DataProvider.Access
 			return dbType;
 		}
 
-		protected override DataTable? GetProcedureSchema(DataConnection dataConnection, GetSchemaOptions options, string commandText, CommandType commandType, DataParameter[] parameters)
+		protected override DataTable? GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters, GetSchemaOptions options)
 		{
 			// KeyInfo used, as SchemaOnly doesn't return schema
 			// required GetProcedureSchemaExecutesProcedure = true
