@@ -223,9 +223,9 @@ WHERE
 			}
 		}
 
-		protected override DataTable? GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters)
+		protected override DataTable? GetProcedureSchema(DataConnection dataConnection, GetSchemaOptions options, string commandText, CommandType commandType, DataParameter[] parameters)
 		{
-			var dt = base.GetProcedureSchema(dataConnection, commandText, commandType, parameters);
+			var dt = base.GetProcedureSchema(dataConnection, options, commandText, commandType, parameters);
 
 			return dt.AsEnumerable().Any() ? dt : null;
 		}

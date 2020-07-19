@@ -185,11 +185,11 @@ namespace LinqToDB.DataProvider.Firebird
 			).ToList();
 		}
 
-		protected override DataTable? GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters)
+		protected override DataTable? GetProcedureSchema(DataConnection dataConnection, GetSchemaOptions options, string commandText, CommandType commandType, DataParameter[] parameters)
 		{
 			try
 			{
-				return base.GetProcedureSchema(dataConnection, commandText, commandType, parameters);
+				return base.GetProcedureSchema(dataConnection, options, commandText, commandType, parameters);
 			}
 			catch (Exception ex)
 			{
