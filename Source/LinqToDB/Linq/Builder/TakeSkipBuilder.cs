@@ -22,10 +22,25 @@ namespace LinqToDB.Linq.Builder
 
 			var arg = methodCall.Arguments[1].Unwrap();
 
+			ISqlExpression expr;
+			var parametrize = Common.Configuration.Linq.ParametrizeTakeSkip;
 			if (arg.NodeType == ExpressionType.Lambda)
-				arg = ((LambdaExpression)arg).Body.Unwrap();
-
-			var expr = builder.ConvertToSql(sequence, arg);
+			{
+				arg  = ((LambdaExpression)arg).Body.Unwrap();
+				expr = builder.ConvertToSql(sequence, arg);
+			}
+			else
+			{
+				expr = builder.ConvertToSql(sequence, arg);
+				if (expr.ElementType == QueryElementType.SqlValue)
+				{
+					var param   = builder.BuildParameterFromArgument(methodCall, 1, null).SqlParameter;
+					param.Name  = methodCall.Method.Name == "Take" ? "take" : "skip";
+					param.Value = expr.EvaluateExpression();
+					param.IsQueryParameter = param.IsQueryParameter && parametrize;
+					expr = param;
+				}
+			}
 
 			if (methodCall.Method.Name == "Take")
 			{

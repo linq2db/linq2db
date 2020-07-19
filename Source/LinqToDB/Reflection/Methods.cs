@@ -30,6 +30,9 @@ namespace LinqToDB.Reflection
 			public static readonly MethodInfo FirstOrDefault          = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.FirstOrDefault());
 			public static readonly MethodInfo FirstOrDefaultCondition = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.FirstOrDefault(e => true));
 
+			public static readonly MethodInfo ElementAt               = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.ElementAt(0));
+			public static readonly MethodInfo ElementAtOrDefault      = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.ElementAtOrDefault(0));
+																	  
 			public static readonly MethodInfo DefaultIfEmpty       = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.DefaultIfEmpty());
 			public static readonly MethodInfo DefaultIfEmptyValue  = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.DefaultIfEmpty(0));
 
@@ -57,6 +60,11 @@ namespace LinqToDB.Reflection
 			public static readonly MethodInfo First                   = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.First());
 			public static readonly MethodInfo FirstOrDefault          = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.FirstOrDefault());
 			public static readonly MethodInfo FirstOrDefaultCondition = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.FirstOrDefault(e => true));
+
+			public static readonly MethodInfo ElementAt               = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.ElementAt(0));
+			public static readonly MethodInfo ElementAtOrDefault      = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.ElementAtOrDefault(0));
+			public static readonly MethodInfo ElementAtAsync          = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.ElementAtAsync(() => 0, default));
+			public static readonly MethodInfo ElementAtOrDefaultAsync = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.ElementAtOrDefaultAsync(() => 0, default));
 
 			public static readonly MethodInfo DefaultIfEmpty       = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.DefaultIfEmpty());
 			public static readonly MethodInfo DefaultIfEmptyValue  = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.DefaultIfEmpty(0));

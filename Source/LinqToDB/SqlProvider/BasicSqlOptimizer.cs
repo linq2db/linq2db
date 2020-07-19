@@ -9,6 +9,7 @@ namespace LinqToDB.SqlProvider
 	using Common;
 	using Extensions;
 	using SqlQuery;
+	using Tools;
 
 	public class BasicSqlOptimizer : ISqlOptimizer
 	{
@@ -1874,7 +1875,7 @@ namespace LinqToDB.SqlProvider
 						var take = expr;
 						if (SqlProviderFlags.GetAcceptsTakeAsParameterFlag(selectClause.SelectQuery))
 						{
-							if (expr.ElementType != QueryElementType.SqlParameter)
+							if (expr.ElementType.NotIn(QueryElementType.SqlParameter, QueryElementType.SqlValue))
 							{
 								var takeValue = take.EvaluateExpression()!;
 								take = new SqlParameter(new DbDataType(takeValue.GetType()), "take", takeValue)
@@ -1893,7 +1894,7 @@ namespace LinqToDB.SqlProvider
 						if (SqlProviderFlags.GetIsSkipSupportedFlag(selectClause.SelectQuery)
 						    && SqlProviderFlags.AcceptsTakeAsParameter)
 						{
-							if (expr.ElementType != QueryElementType.SqlParameter)
+							if (expr.ElementType.NotIn(QueryElementType.SqlParameter, QueryElementType.SqlValue))
 							{
 								var skipValue = skip.EvaluateExpression()!;
 								skip = new SqlParameter(new DbDataType(skipValue.GetType()), "skip", skipValue)

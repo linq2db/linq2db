@@ -1383,7 +1383,13 @@ namespace LinqToDB.Linq.Builder
 
 			firstMethod = firstMethod.MakeGenericMethod(sourceType);
 
-			var converted = Expression.Call(null, firstMethod, Expression.Call(skipMethod, sequence, index));
+			var skipCall = Expression.Call(skipMethod, sequence, index);
+			if (_expressionAccessors.TryGetValue(method, out var accessor))
+			{
+				_expressionAccessors.Add(skipCall, accessor);
+			}
+
+			var converted = Expression.Call(null, firstMethod, skipCall);
 
 			return converted;
 		}

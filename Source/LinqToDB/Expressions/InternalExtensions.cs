@@ -7,7 +7,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using LinqToDB.Tools;
+using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.Expressions
 {
@@ -15,7 +15,8 @@ namespace LinqToDB.Expressions
 	using Linq;
 	using Linq.Builder;
 	using Mapping;
-	using System.Diagnostics.CodeAnalysis;
+	using Reflection;
+	using Tools;
 
 	static class InternalExtensions
 	{
@@ -479,6 +480,17 @@ namespace LinqToDB.Expressions
 
 			if (!expr1.Object.EqualsTo(expr2.Object, info))
 				return false;
+
+			if (expr1.IsSameGenericMethod(
+				Methods.Queryable.Take,       Methods.Queryable.Skip,
+				Methods.Enumerable.Take,      Methods.Enumerable.Skip,
+				Methods.Queryable.ElementAt,  Methods.Queryable.ElementAtOrDefault,
+				Methods.Enumerable.ElementAt, Methods.Enumerable.ElementAtOrDefault
+				))
+			{
+				// We do not compare last argument
+				return expr1.Arguments[0].EqualsTo(expr2.Arguments[0], info);
+			}
 
 			var dependentParameters = _queryDependentMethods.GetOrAdd(
 				expr1.Method, mi =>

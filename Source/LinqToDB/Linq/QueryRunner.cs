@@ -482,6 +482,30 @@ namespace LinqToDB.Linq
 
 		#region SetRunQuery
 
+		static IEnumerable<TSource> SkipLazy<TSource>(
+			IEnumerable<TSource> source,
+			ISqlExpression count)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (count  == null) throw new ArgumentNullException(nameof(count));
+
+			using (var enumerator = source.GetEnumerator())
+			{
+				int cnt = -1;
+				while (enumerator.MoveNext())
+				{
+					if (cnt < 0)
+						cnt = (int)count.EvaluateExpression()!;
+					if (cnt > 0)
+					{
+						--cnt;
+						continue;
+					}					
+					yield return enumerator.Current;
+				}
+			}
+		}
+
 		static Tuple<
 			Func<Query,IDataContext,Mapper<T>,Expression,object?[]?,object?[]?,int,IEnumerable<T>>,
 			Func<Expression,IDataContext?,object?[]?,int>?,
@@ -511,19 +535,19 @@ namespace LinqToDB.Linq
 					if (n > 0)
 					{
 						queryFunc = (qq, db, mapper, expr, ps, preambles, qn) => q(qq, db, mapper, expr, ps, preambles, qn).Skip(n);
-						skip  = (expr, pc, ps) => n;
+						skip      = (expr, pc, ps) => n;
 					}
 				}
 				else if (select.SkipValue is SqlParameter skipParam && skipParam.IsQueryParameter)
 				{
-					var i = GetParameterIndex(query, select.SkipValue);
+					var i     = GetParameterIndex(query, select.SkipValue);
 					queryFunc = (qq, db, mapper, expr, ps, preambles, qn) => q(qq, db, mapper, expr, ps, preambles, qn).Skip((int)query.Queries[0].Parameters[i].Accessor(expr, db, ps)!);
-					skip  = (expr, pc, ps) => (int)query.Queries[0].Parameters[i].Accessor(expr, pc, ps)!;
+					skip      = (expr, pc, ps) => (int)query.Queries[0].Parameters[i].Accessor(expr, pc, ps)!;
 				}
 				else
 				{
-					queryFunc = (qq, db, mapper, expr, ps, preambles, qn) => q(qq, db, mapper, expr, ps, preambles, qn).Skip((int)select.SkipValue.EvaluateExpression()!);
-					skip  = (expr, pc, ps) => (int)select.SkipValue.EvaluateExpression()!;
+					queryFunc = (qq, db, mapper, expr, ps, preambles, qn) => SkipLazy(q(qq, db, mapper, expr, ps, preambles, qn), select.SkipValue);
+					skip      = (expr, pc, ps) => (int)select.SkipValue.EvaluateExpression()!;
 				}
 			}
 
@@ -603,7 +627,7 @@ namespace LinqToDB.Linq
 					var skip = skipAction?.Invoke(expression, dataContext, ps) ?? 0;
 
 					while (skip-- > 0 && await dr.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
-						{}
+					{}
 
 					var take = takeAction?.Invoke(expression, dataContext, ps) ?? int.MaxValue;
 

@@ -345,7 +345,7 @@ namespace LinqToDB.Linq
 			/// </summary>
 			public void TryAdd(IDataContext dataContext, Query<T> query, QueryFlags flags)
 			{
-				// because Add is less frequient operation than Find, it is fine to have put bigger locks here
+				// because Add is less frequent operation than Find, it is fine to have put bigger locks here
 				QueryCacheEntry[] cache;
 				int               version;
 
@@ -386,7 +386,7 @@ namespace LinqToDB.Linq
 					newPriorities[0] = 0;
 
 					for (var i = 1; i < newCache.Length; i++)
-		{
+					{
 						newCache[i]      = cache[i - 1];
 						newPriorities[i] = i;
 					}
@@ -395,14 +395,14 @@ namespace LinqToDB.Linq
 					_indexes = newPriorities;
 					version  = _version;
 				}
-		}
+			}
 
 
 			/// <summary>
 			/// Search for query in cache and of found, try to move it to better position in cache.
 			/// </summary>
 			public Query<T>? Find(IDataContext dataContext, Expression expr, QueryFlags flags)
-		{
+			{
 				QueryCacheEntry[] cache;
 				int[]             indexes;
 				int               version;
@@ -445,8 +445,9 @@ namespace LinqToDB.Linq
 				Interlocked.Increment(ref CacheMissCount);
 
 				return null;
-				}
+			}
 		}
+
 		#endregion
 
 		#region Query

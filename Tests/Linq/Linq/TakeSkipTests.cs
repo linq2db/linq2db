@@ -64,6 +64,16 @@ namespace Tests.Linq
 					Assert.AreEqual(i, (from ch in db.Child select ch).Take(i).ToList().Count);
 					CheckTakeGlobalParams(db);
 				}
+
+				var currentCacheMissCount = Query<Child>.CacheMissCount;
+
+				for (var i = 2; i <= 3; i++)
+				{
+					Assert.AreEqual(i, (from ch in db.Child select ch).Take(i).ToList().Count);
+					CheckTakeGlobalParams(db);
+				}
+
+				Assert.That(Query<Child>.CacheMissCount, Is.EqualTo(currentCacheMissCount));
 			}
 		}
 
@@ -137,7 +147,6 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				Assert.AreEqual(3, db.Child.Take(() => 3).ToList().Count);
-				CheckTakeGlobalParams(db);
 			}
 		}
 
@@ -149,7 +158,6 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				Assert.AreEqual(3, db.Child.Take(() => n).ToList().Count);
-				CheckTakeSkipParamterized(db);
 			}
 		}
 
@@ -173,6 +181,12 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				AreEqual(Child.Skip(3), db.Child.Skip(3));
+
+				var currentCacheMissCount = Query<Child>.CacheMissCount;
+
+				AreEqual(Child.Skip(4), db.Child.Skip(4));
+
+				Assert.That(Query<Child>.CacheMissCount, Is.EqualTo(currentCacheMissCount));
 			}
 		}
 
@@ -677,7 +691,6 @@ namespace Tests.Linq
 
 				var qry = q.ToString()!;
 				Assert.That(qry.Contains("PERCENT"));
-				CheckTakeGlobalParams(db);
 			}
 
 		}
@@ -713,7 +726,6 @@ namespace Tests.Linq
 				var qry = q.ToString()!;
 				Assert.That(qry.Contains("PERCENT"));
 				Assert.That(qry.Contains("WITH"));
-				CheckTakeSkipParamterized(db);
 			}
 
 		}
@@ -1169,25 +1181,33 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			using (var tempTable = db.CreateLocalTable(testData))
 			{
-
-				var actual = tempTable
-					.OrderBy(t => t.Value)
-					.Skip(2)
-					.Skip(1)
-					.ToArray();
-
-				var expected = testData
-					.OrderBy(t => t.Value)
-					.Skip(2)
-					.Skip(1)
-					.ToArray();
-
-				Assert.AreEqual(expected, actual);
-
-				if (db is TestDataConnection cn)
+				for (int i = 1; i <= 2; i++)
 				{
-					Assert.False(cn.LastQuery!.ToLower().Contains("iif"));
-					Assert.False(cn.LastQuery!.ToLower().Contains("case"));
+					var missCount = Query<TakeSkipClass>.CacheMissCount;
+
+					var actual = tempTable
+						.OrderBy(t => t.Value)
+						.Skip(2)
+						.Skip(i)
+						.ToArray();
+
+					var expected = testData
+						.OrderBy(t => t.Value)
+						.Skip(2)
+						.Skip(i)
+						.ToArray();
+
+					Assert.AreEqual(expected, actual);
+
+					if (db is TestDataConnection cn)
+					{
+						Assert.False(cn.LastQuery!.ToLower().Contains("iif"));
+						Assert.False(cn.LastQuery!.ToLower().Contains("case"));
+					}
+
+					if (i == 2)
+						Assert.That(missCount, Is.EqualTo(Query<TakeSkipClass>.CacheMissCount));
+					
 				}
 			}
 		}
