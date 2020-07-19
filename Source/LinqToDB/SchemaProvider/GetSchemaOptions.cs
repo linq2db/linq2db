@@ -34,7 +34,7 @@ namespace LinqToDB.SchemaProvider
 		/// Default Schema name.
 		/// </summary>
 		public string? DefaultSchema;
-		
+
 		/// <summary>
 		/// List of allowed schemas/owners.
 		/// </summary>
@@ -67,7 +67,7 @@ namespace LinqToDB.SchemaProvider
 		public Func<ForeignKeySchema,string>? GetAssociationMemberName;
 		/// <summary>
 		/// Optional callback to report procedure metadata load progress. First parameter contains total number of
-		/// discovered procedires. Second parameter provides position of currently loaded procedure.
+		/// discovered procedures. Second parameter provides position of currently loaded procedure.
 		/// </summary>
 		public Action<int,int>                ProcedureLoadingProgress = (outOf,current) => {};
 
@@ -76,5 +76,11 @@ namespace LinqToDB.SchemaProvider
 		/// to indicate that table should be loaded (<c>true</c>) or skipped (<c>false</c>).
 		/// </summary>
 		public Func<LoadTableData, bool>?     LoadTable;
+
+		/// <summary>
+		/// if set to true, SchemaProvider uses <see cref="System.Data.CommandBehavior.SchemaOnly"/> to get SqlServer metadata.
+		/// Otherwise the sp_describe_first_result_set sproc is used.
+		/// </summary>
+		public bool                           UseSchemaOnly = Common.Configuration.SqlServer.UseSchemaOnlyToGetSchema;
 	}
 }

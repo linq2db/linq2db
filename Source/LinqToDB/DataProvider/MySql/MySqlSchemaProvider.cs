@@ -297,9 +297,9 @@ SELECT
 			return param;
 		}
 
-		protected override DataTable? GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters)
+		protected override DataTable? GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters, GetSchemaOptions options)
 		{
-			var rv = base.GetProcedureSchema(dataConnection, commandText, commandType, parameters);
+			var rv = base.GetProcedureSchema(dataConnection, commandText, commandType, parameters, options);
 
 			// for no good reason if procedure doesn't return table data but have output parameters, MySql provider
 			// returns fake schema with output parameters as columns
