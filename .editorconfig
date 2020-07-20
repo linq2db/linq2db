@@ -1,5 +1,7 @@
 # EditorConfig is awesome: https://EditorConfig.org
 
+root = true
+
 [*]
 indent_style = tab
 insert_final_newline = true
@@ -25,6 +27,15 @@ indent_size = 2
 # Powershell files
 [*.ps1]
 indent_size = 2
+
+# Azure files
+[*.{yml,sh,cmd,md}]
+indent_style = space
+
+# Azure files
+[*.sh]
+end_of_line = lf
+
 
 # Dotnet code style settings:
 [*.{cs,vb}]

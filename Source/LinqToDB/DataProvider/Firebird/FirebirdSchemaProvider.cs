@@ -236,7 +236,7 @@ namespace LinqToDB.DataProvider.Firebird
 				"time"             => DataType.Time,
 				"timestamp"        => DataType.DateTime,
 				"varchar"          => DataType.NVarChar,
-				_				   => DataType.Undefined,
+				_                  => DataType.Undefined,
 			};
 		}
 
