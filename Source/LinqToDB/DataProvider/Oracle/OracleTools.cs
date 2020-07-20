@@ -132,8 +132,7 @@ namespace LinqToDB.DataProvider.Oracle
 					var command = conn.CreateCommand();
 					command.CommandText =
 						"select VERSION from PRODUCT_COMPONENT_VERSION where PRODUCT like 'PL/SQL%'";
-					var result = command.ExecuteScalar() as string;
-					if (result != null)
+					if (command.ExecuteScalar() is string result)
 					{
 						var version = int.Parse(result.Split('.')[0]);
 
@@ -169,26 +168,22 @@ namespace LinqToDB.DataProvider.Oracle
 #if NET45 || NET46
 			if (!managed)
 			{
-				switch (version)
+				return version switch
 				{
-					case OracleVersion.v11:
-						return _oracleNativeDataProvider11.Value;
-				}
-
-				return _oracleNativeDataProvider12.Value;
+					OracleVersion.v11 => _oracleNativeDataProvider11.Value,
+					_                 => _oracleNativeDataProvider12.Value,
+				};
 			}
 #endif
-			switch (version)
+			return version switch
 			{
-				case OracleVersion.v11:
-					return _oracleManagedDataProvider11.Value;
-			}
-
-			return _oracleManagedDataProvider12.Value;
+				OracleVersion.v11 => _oracleManagedDataProvider11.Value,
+				_                 => _oracleManagedDataProvider12.Value,
+			};
 		}
 
 		public static string  DetectedProviderName =>
-			_detectedProviderName ?? (_detectedProviderName = DetectProviderName());
+			_detectedProviderName ??= DetectProviderName();
 
 		private static string DetectProviderName()
 		{
@@ -216,15 +211,15 @@ namespace LinqToDB.DataProvider.Oracle
 			if (assemblyName == OracleProviderAdapter.NativeAssemblyName ) return GetVersionedDataProvider(DefaultVersion, false);
 			if (assemblyName == OracleProviderAdapter.ManagedAssemblyName) return GetVersionedDataProvider(DefaultVersion, true);
 
-			switch (providerName)
+			return providerName switch
 			{
-				case ProviderName.OracleNative : return GetVersionedDataProvider(DefaultVersion, false);
-				case ProviderName.OracleManaged: return GetVersionedDataProvider(DefaultVersion, true);
-			}
-
-			return DetectedProviderName == ProviderName.OracleNative
-				? GetVersionedDataProvider(DefaultVersion, false)
-				: GetVersionedDataProvider(DefaultVersion, true);
+				ProviderName.OracleNative  => GetVersionedDataProvider(DefaultVersion, false),
+				ProviderName.OracleManaged => GetVersionedDataProvider(DefaultVersion, true),
+				_						   => 
+					DetectedProviderName == ProviderName.OracleNative
+					? GetVersionedDataProvider(DefaultVersion, false)
+					: GetVersionedDataProvider(DefaultVersion, true),
+			};
 #else
 			return GetVersionedDataProvider(DefaultVersion, true);
 #endif

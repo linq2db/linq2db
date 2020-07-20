@@ -64,7 +64,7 @@ namespace LinqToDB.DataProvider
 
 		public virtual void BuildColumns(object item, Func<ColumnDescriptor, bool>? skipConvert = null)
 		{
-			skipConvert = skipConvert ?? (_ => false);
+			skipConvert ??= (_ => false);
 
 			for (var i = 0; i < Columns.Length; i++)
 			{

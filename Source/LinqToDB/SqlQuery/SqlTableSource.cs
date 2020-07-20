@@ -67,7 +67,7 @@ namespace LinqToDB.SqlQuery
 		/// Contains list of columns that build unique key for <see cref="Source"/>.
 		/// Used in JoinOptimizer for safely removing sub-query from resulting SQL.
 		/// </summary>
-		public  List<ISqlExpression[]>  UniqueKeys    => _uniqueKeys ?? (_uniqueKeys = new List<ISqlExpression[]>());
+		public  List<ISqlExpression[]>  UniqueKeys    => _uniqueKeys ??= new List<ISqlExpression[]>();
 
 		public  bool                    HasUniqueKeys => _uniqueKeys != null && _uniqueKeys.Count > 0;
 

@@ -16,7 +16,7 @@ namespace LinqToDB.SqlQuery
 		public SelectQuery? OutputQuery    { get; set; }
 
 		public bool                   HasOutputItems => _outputItems != null && _outputItems.Count > 0 || OutputQuery != null;
-		public List<SqlSetExpression> OutputItems    => _outputItems ?? (_outputItems = new List<SqlSetExpression>());
+		public List<SqlSetExpression> OutputItems    => _outputItems ??= new List<SqlSetExpression>();
 
 		#region Overrides
 

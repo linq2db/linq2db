@@ -1082,7 +1082,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		internal  string  ConfigurationID
 		{
-			get { return _configurationID ?? (_configurationID = string.Join(".", ConfigurationList)); }
+			get { return _configurationID ??= string.Join(".", ConfigurationList); }
 		}
 
 		private string[]? _configurationList;

@@ -70,10 +70,9 @@ namespace LinqToDB.DataProvider.SQLite
 			return null;
 		}
 
-		static string? _detectedProviderName;
-
-		public static string  DetectedProviderName =>
-			_detectedProviderName ?? (_detectedProviderName = DetectProviderName());
+		private static string? _detectedProviderName;
+		public  static string  DetectedProviderName =>
+			_detectedProviderName ??= DetectProviderName();
 
 		static string DetectProviderName()
 		{

@@ -1037,16 +1037,23 @@ namespace Tests.Linq
 		public void SubQuery1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
+			{
+				var q = from p in db.Types
+					select new { Value = Math.Round(p.MoneyValue, 2) } into pp
+					where pp.Value != 0 && pp.Value != 7
+					select pp.Value;
+
+				if (context.StartsWith("DB2"))
+					q = q.AsQueryable().Select(t => Math.Round(t, 2));
+
 				AreEqual(
 					from p in Types
 					select new { Value = Math.Round(p.MoneyValue, 2) } into pp
 					where pp.Value != 0 && pp.Value != 7
 					select pp.Value
 					,
-					from p in db.Types
-					select new { Value = Math.Round(p.MoneyValue, 2) } into pp
-					where pp.Value != 0 && pp.Value != 7
-					select pp.Value);
+					q);
+			}
 		}
 
 		[Test]
@@ -1281,7 +1288,7 @@ namespace Tests.Linq
 				var act = actual.  Where(predicate);
 				AreEqual(exp, act, WhereCases.Comparer);
 				Assert.That(act.ToString(), Does.Not.Contain("<>"));
-				
+
 				var notPredicate = Expression.Lambda<Func<WhereCases, bool>>(
 					Expression.Not(predicate.Body), predicate.Parameters);
 

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Reflection;
@@ -252,28 +252,26 @@ namespace LinqToDB.DataProvider.SqlServer
 			SqlServerVersion version   = SqlServerVersion.v2008,
 			SqlServerProvider provider = SqlServerProvider.SystemDataSqlClient)
 		{
-			switch (provider)
+			return provider switch
 			{
-				case SqlServerProvider.SystemDataSqlClient:
-					switch (version)
-					{
-						case SqlServerVersion.v2000: return _sqlServerDataProvider2000sdc.Value;
-						case SqlServerVersion.v2005: return _sqlServerDataProvider2005sdc.Value;
-						case SqlServerVersion.v2012: return _sqlServerDataProvider2012sdc.Value;
-						case SqlServerVersion.v2017: return _sqlServerDataProvider2017sdc.Value;
-						default: return _sqlServerDataProvider2008sdc.Value;
-					}
-				case SqlServerProvider.MicrosoftDataSqlClient:
-					switch (version)
-					{
-						case SqlServerVersion.v2000: return _sqlServerDataProvider2000mdc.Value;
-						case SqlServerVersion.v2005: return _sqlServerDataProvider2005mdc.Value;
-						case SqlServerVersion.v2012: return _sqlServerDataProvider2012mdc.Value;
-						case SqlServerVersion.v2017: return _sqlServerDataProvider2017mdc.Value;
-						default: return _sqlServerDataProvider2008mdc.Value;
-					}
-				default: return _sqlServerDataProvider2008sdc.Value;
-			}
+				SqlServerProvider.SystemDataSqlClient => version switch
+				{
+					SqlServerVersion.v2000 => _sqlServerDataProvider2000sdc.Value,
+					SqlServerVersion.v2005 => _sqlServerDataProvider2005sdc.Value,
+					SqlServerVersion.v2012 => _sqlServerDataProvider2012sdc.Value,
+					SqlServerVersion.v2017 => _sqlServerDataProvider2017sdc.Value,
+					_                      => _sqlServerDataProvider2008sdc.Value,
+				},
+				SqlServerProvider.MicrosoftDataSqlClient => version switch
+				{
+					SqlServerVersion.v2000 => _sqlServerDataProvider2000mdc.Value,
+					SqlServerVersion.v2005 => _sqlServerDataProvider2005mdc.Value,
+					SqlServerVersion.v2012 => _sqlServerDataProvider2012mdc.Value,
+					SqlServerVersion.v2017 => _sqlServerDataProvider2017mdc.Value,
+					_                      => _sqlServerDataProvider2008mdc.Value,
+				},
+				_ => _sqlServerDataProvider2008sdc.Value,
+			};
 		}
 
 		/// <summary>

@@ -139,22 +139,18 @@ namespace LinqToDB.SqlQuery
 			protected override void ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 			{
 				Expr1.ToString(sb, dic);
-
-				string op;
-
-				switch (Operator)
+				var op = Operator switch
 				{
-					case Operator.Equal         : op = "=";  break;
-					case Operator.NotEqual      : op = "<>"; break;
-					case Operator.Greater       : op = ">";  break;
-					case Operator.GreaterOrEqual: op = ">="; break;
-					case Operator.NotGreater    : op = "!>"; break;
-					case Operator.Less          : op = "<";  break;
-					case Operator.LessOrEqual   : op = "<="; break;
-					case Operator.NotLess       : op = "!<"; break;
-					default: throw new InvalidOperationException();
-				}
-
+					Operator.Equal          => "=",
+					Operator.NotEqual       => "<>",
+					Operator.Greater        => ">",
+					Operator.GreaterOrEqual => ">=",
+					Operator.NotGreater     => "!>",
+					Operator.Less           => "<",
+					Operator.LessOrEqual    => "<=",
+					Operator.NotLess        => "!<",
+					_                       => throw new InvalidOperationException(),
+				};
 				sb.Append(" ").Append(op).Append(" ");
 
 				Expr2.ToString(sb, dic);

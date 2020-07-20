@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Text;
@@ -144,8 +144,7 @@ namespace LinqToDB.SqlQuery
 		{
 			if (sqlExpression.Parameters.Length == 1 && sqlExpression.Expr.Trim() == "{0}")
 			{
-				var argExpression = sqlExpression.Parameters[0] as SqlExpression;
-				if (argExpression != null)
+				if (sqlExpression.Parameters[0] is SqlExpression argExpression)
 					return IsTransitiveExpression(argExpression);
 				return true;
 			}
@@ -600,15 +599,12 @@ namespace LinqToDB.SqlQuery
 		/// <returns>Field instance associated with expression</returns>
 		public static SqlField? GetUnderlyingField(ISqlExpression expression)
 		{
-			switch (expression)
+			return expression switch
 			{
-				case SqlField field:
-					return field;
-				case SqlColumn column:
-					return GetUnderlyingField(column.Expression, new HashSet<ISqlExpression>());
-			}
-
-			return null;
+				SqlField field   => field,
+				SqlColumn column => GetUnderlyingField(column.Expression, new HashSet<ISqlExpression>()),
+				_                => null,
+			};
 		}
 
 		static SqlField? GetUnderlyingField(ISqlExpression expression, HashSet<ISqlExpression> visited)
@@ -1054,23 +1050,22 @@ namespace LinqToDB.SqlQuery
 						dynamic? right = binary.Expr2.EvaluateExpression();
 						if (left == null || right == null)
 							return null;
-						switch (binary.Operation)
+						return binary.Operation switch
 						{
-							case "+" : return left +  right;
-							case "-" : return left -  right;
-							case "*" : return left *  right;
-							case "/" : return left /  right;
-							case "%" : return left %  right;
-							case "^" : return left ^  right;
-							case "&" : return left &  right;
-							case "<" : return left <  right;
-							case ">" : return left >  right;
-							case "<=": return left <= right;
-							case ">=": return left >= right;
-							default:
-								throw new LinqToDBException($"Unknown binary operation '{binary.Operation}'.");
-						}
-					}
+							"+"  => left + right,
+							"-"  => left - right,
+							"*"  => left * right,
+							"/"  => left / right,
+							"%"  => left % right,
+							"^"  => left ^ right,
+							"&"  => left & right,
+							"<"  => left < right,
+							">"  => left > right,
+							"<=" => left <= right,
+							">=" => left >= right,
+							_    => throw new LinqToDBException($"Unknown binary operation '{binary.Operation}'."),
+						};
+				}
 				case QueryElementType.SqlFunction        :
 					{
 						var function = (SqlFunction)expr;

@@ -24,7 +24,7 @@ namespace LinqToDB.SqlQuery
 		private SqlInsertClause? _insert;
 		public  SqlInsertClause   Insert
 		{
-			get => _insert ?? (_insert = new SqlInsertClause());
+			get => _insert ??= new SqlInsertClause();
 			set => _insert = value;
 		}
 

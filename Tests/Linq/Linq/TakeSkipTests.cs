@@ -257,7 +257,7 @@ namespace Tests.Linq
 				var take = 5;
 				var expected =    Child.OrderByDescending(c => c.ChildID).Skip(skip).Take(take);
 				var result   = db.Child.OrderByDescending(c => c.ChildID).Skip(skip).Take(take);
-				
+
 				Assert.IsTrue(result.ToList().SequenceEqual(expected));
 				if (inline || (!db.DataProvider.SqlProviderFlags.AcceptsTakeAsParameter
 						&& !db.DataProvider.SqlProviderFlags.AcceptsTakeAsParameterIfSkip))
@@ -632,7 +632,7 @@ namespace Tests.Linq
 					new Confirmation { BatchId = 3, Date = DateTime.Parse("09 Apr 2019 14:30:35 GMT") },
 				}))
 				{
-				
+
 					var query = db.GetTable<Batch>()
 							.OrderByDescending(x => x.Id)
 							.Select(x => new
@@ -688,8 +688,8 @@ namespace Tests.Linq
 		{
 			var testData = new[]
 			{
-				new TakeSkipClass { Value = "PIPPO" }, 
-				new TakeSkipClass { Value = "PLUTO" }, 
+				new TakeSkipClass { Value = "PIPPO" },
+				new TakeSkipClass { Value = "PLUTO" },
 				new TakeSkipClass { Value = "PLUTO" },
 				new TakeSkipClass { Value = "BOLTO" }
 			};
@@ -722,8 +722,8 @@ namespace Tests.Linq
 		{
 			var testData = new[]
 			{
-				new TakeSkipClass { Value = "PLUTO" }, 
-				new TakeSkipClass { Value = "PIPPO" }, 
+				new TakeSkipClass { Value = "PLUTO" },
+				new TakeSkipClass { Value = "PIPPO" },
 				new TakeSkipClass { Value = "PLUTO" },
 				new TakeSkipClass { Value = "BOLTO" }
 			};
@@ -751,8 +751,8 @@ namespace Tests.Linq
 		{
 			var testData = new[]
 			{
-				new TakeSkipClass { Value = "PLUTO" }, 
-				new TakeSkipClass { Value = "PIPPO" }, 
+				new TakeSkipClass { Value = "PLUTO" },
+				new TakeSkipClass { Value = "PIPPO" },
 				new TakeSkipClass { Value = "PLUTO" },
 				new TakeSkipClass { Value = "BOLTO" }
 			};

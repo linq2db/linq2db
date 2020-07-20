@@ -155,15 +155,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		private static string GetProviderName(PostgreSQLVersion version)
 		{
-			switch (version)
+			return version switch
 			{
-				case PostgreSQLVersion.v92:
-					return ProviderName.PostgreSQL92;
-				case PostgreSQLVersion.v93:
-					return ProviderName.PostgreSQL93;
-				default:
-					return ProviderName.PostgreSQL95;
-			}
+				PostgreSQLVersion.v92 => ProviderName.PostgreSQL92,
+				PostgreSQLVersion.v93 => ProviderName.PostgreSQL93,
+				_                     => ProviderName.PostgreSQL95,
+			};
 		}
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
@@ -442,13 +439,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		private static MappingSchema GetMappingSchema(PostgreSQLVersion version, MappingSchema providerSchema)
 		{
-			switch (version)
+			return version switch
 			{
-				case PostgreSQLVersion.v92: return new PostgreSQL92MappingSchema(providerSchema);
-				case PostgreSQLVersion.v93: return new PostgreSQL93MappingSchema(providerSchema);
-				default:
-				case PostgreSQLVersion.v95: return new PostgreSQL95MappingSchema(providerSchema);
-			}
+				PostgreSQLVersion.v92 => new PostgreSQL92MappingSchema(providerSchema),
+				PostgreSQLVersion.v93 => new PostgreSQL93MappingSchema(providerSchema),
+				_                     => new PostgreSQL95MappingSchema(providerSchema),
+			};
 		}
 	}
 }

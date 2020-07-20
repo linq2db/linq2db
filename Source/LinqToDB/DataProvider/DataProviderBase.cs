@@ -316,14 +316,14 @@ namespace LinqToDB.DataProvider
 				case DataType.Binary    :
 				case DataType.Blob      :
 				case DataType.VarBinary :
-					if (value is Binary) value = ((Binary)value).ToArray();
+					if (value is Binary binary) value = binary.ToArray();
 					break;
 				case DataType.Int64     :
-					if (value is TimeSpan) value = ((TimeSpan)value).Ticks;
+					if (value is TimeSpan span) value = span.Ticks;
 					break;
 				case DataType.Xml       :
-					     if (value is XDocument)   value = value.ToString();
-					else if (value is XmlDocument) value = ((XmlDocument)value).InnerXml;
+					     if (value is XDocument)            value = value.ToString();
+					else if (value is XmlDocument document) value = document.InnerXml;
 					break;
 			}
 

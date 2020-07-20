@@ -411,16 +411,13 @@ namespace LinqToDB.ServiceModel
 					var typecode = ReadInt();
 					Pos++;
 
-					switch (typecode)
+					type = typecode switch
 					{
-						case TypeIndex     : type = ResolveType(ReadString())!; break;
-						case TypeArrayIndex: type = GetArrayType(Read<Type>()!); break;
-
-						default:
-							throw new SerializationException(
-								$"TypeIndex or TypeArrayIndex ({TypeIndex} or {TypeArrayIndex}) expected, but was {typecode}");
-					}
-
+						TypeIndex      => ResolveType(ReadString())!,
+						TypeArrayIndex => GetArrayType(Read<Type>()!),
+						_              => throw new SerializationException(
+							$"TypeIndex or TypeArrayIndex ({TypeIndex} or {TypeArrayIndex}) expected, but was {typecode}"),
+					};
 					ObjectIndices.Add(idx, type);
 
 					NextLine();

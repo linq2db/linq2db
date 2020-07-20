@@ -94,7 +94,7 @@ namespace LinqToDB.Linq.Builder
 
 			IBuildContext? GetQueryContext()
 			{
-				return _cteQueryContext ?? (_cteQueryContext = Builder.GetCteContext(_cteExpression));
+				return _cteQueryContext ??= Builder.GetCteContext(_cteExpression);
 			}
 
 			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFor)

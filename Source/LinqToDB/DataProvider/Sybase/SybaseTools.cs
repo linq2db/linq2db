@@ -62,7 +62,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 		private static string? _detectedProviderName;
 		public  static string  DetectedProviderName =>
-			_detectedProviderName ?? (_detectedProviderName = DetectProviderName());
+			_detectedProviderName ??= DetectProviderName();
 
 		private static string DetectProviderName()
 		{

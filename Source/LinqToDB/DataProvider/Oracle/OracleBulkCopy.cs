@@ -114,12 +114,12 @@ namespace LinqToDB.DataProvider.Oracle
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
 			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			switch (OracleTools.UseAlternativeBulkCopy)
+			return OracleTools.UseAlternativeBulkCopy switch
 			{
-				case AlternativeBulkCopy.InsertInto: return OracleMultipleRowsCopy2(new MultipleRowsHelper<T>(table, options), source);
-				case AlternativeBulkCopy.InsertDual: return OracleMultipleRowsCopy3(new MultipleRowsHelper<T>(table, options), source);
-				default                            : return OracleMultipleRowsCopy1(new MultipleRowsHelper<T>(table, options), source);
-			}
+				AlternativeBulkCopy.InsertInto => OracleMultipleRowsCopy2(new MultipleRowsHelper<T>(table, options), source),
+				AlternativeBulkCopy.InsertDual => OracleMultipleRowsCopy3(new MultipleRowsHelper<T>(table, options), source),
+				_                              => OracleMultipleRowsCopy1(new MultipleRowsHelper<T>(table, options), source),
+			};
 		}
 
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
