@@ -63,12 +63,11 @@ namespace LinqToDB.DataProvider.MySql
 
 		private static MappingSchema GetMappingSchema(string name, MappingSchema providerSchema)
 		{
-			switch (name)
+			return name switch
 			{
-				case ProviderName.MySqlConnector: return new MySqlMappingSchema.MySqlConnectorMappingSchema(providerSchema);
-				default                         :
-				case ProviderName.MySqlOfficial : return new MySqlMappingSchema.MySqlOfficialMappingSchema (providerSchema);
-			}
+				ProviderName.MySqlConnector => new MySqlMappingSchema.MySqlConnectorMappingSchema(providerSchema),
+				_                           => new MySqlMappingSchema.MySqlOfficialMappingSchema(providerSchema),
+			};
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;

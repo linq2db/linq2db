@@ -121,13 +121,12 @@ namespace LinqToDB.SqlQuery
 
 		static SqlField GetUnderlyingField(ISqlExpression expr)
 		{
-			switch (expr.ElementType)
+			return expr.ElementType switch
 			{
-				case QueryElementType.SqlField: return (SqlField)expr;
-				case QueryElementType.Column  : return GetUnderlyingField(((SqlColumn)expr).Expression);
-			}
-
-			throw new InvalidOperationException();
+				QueryElementType.SqlField => (SqlField)expr,
+				QueryElementType.Column   => GetUnderlyingField(((SqlColumn)expr).Expression),
+				_                         => throw new InvalidOperationException(),
+			};
 		}
 
 		static SqlPredicate? ConvertInListPredicate(MappingSchema mappingSchema, SqlPredicate.InList p)
@@ -135,20 +134,17 @@ namespace LinqToDB.SqlQuery
 			if (p.Values == null || p.Values.Count == 0)
 				return new SqlPredicate.Expr(new SqlValue(p.IsNot));
 
-			if (p.Values.Count == 1 && p.Values[0] is SqlParameter)
+			if (p.Values.Count == 1 && p.Values[0] is SqlParameter parameter)
 			{
-				var pr = (SqlParameter)p.Values[0];
+				var pr = parameter;
 
 				if (pr.Value == null)
 					return new SqlPredicate.Expr(new SqlValue(p.IsNot));
 
-				if (pr.Value is IEnumerable)
+				if (pr.Value is IEnumerable items)
 				{
-					var items = (IEnumerable)pr.Value;
-
-					if (p.Expr1 is ISqlTableSource)
+					if (p.Expr1 is ISqlTableSource table)
 					{
-						var table = (ISqlTableSource)p.Expr1;
 						var keys  = table.GetKeys(true);
 
 						if (keys == null || keys.Count == 0)
@@ -204,10 +200,8 @@ namespace LinqToDB.SqlQuery
 						}
 					}
 
-					if (p.Expr1 is ObjectSqlExpression)
+					if (p.Expr1 is ObjectSqlExpression expr)
 					{
-						var expr = (ObjectSqlExpression)p.Expr1;
-
 						if (expr.Parameters.Length == 1)
 						{
 							var values = new List<ISqlExpression>();

@@ -13,14 +13,14 @@ namespace LinqToDB.SqlQuery
 		private SqlInsertClause? _insert;
 		public  SqlInsertClause   Insert
 		{
-			get => _insert ?? (_insert = new SqlInsertClause());
+			get => _insert ??= new SqlInsertClause();
 			set => _insert = value;
 		}
 
 		private SqlUpdateClause? _update;
 		public  SqlUpdateClause   Update
 		{
-			get => _update ?? (_update = new SqlUpdateClause());
+			get => _update ??= new SqlUpdateClause();
 			set => _update = value;
 		}
 

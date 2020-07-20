@@ -132,9 +132,7 @@ namespace LinqToDB.SqlQuery
 			if (this == other)
 				return true;
 
-			var expr = other as SqlExpression;
-
-			if (expr == null || SystemType != expr.SystemType || Expr != expr.Expr || Parameters.Length != expr.Parameters.Length)
+			if (!(other is SqlExpression expr) || SystemType != expr.SystemType || Expr != expr.Expr || Parameters.Length != expr.Parameters.Length)
 				return false;
 
 			for (var i = 0; i < Parameters.Length; i++)
@@ -200,12 +198,11 @@ namespace LinqToDB.SqlQuery
 
 					var f = (SqlFunction)ex;
 
-					switch (f.Name)
+					return f.Name switch
 					{
-						case "EXISTS" : return false;
-					}
-
-					return true;
+						"EXISTS" => false,
+						_        => true,
+					};
 			}
 
 			return false;
