@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -12,11 +11,10 @@ using System.Diagnostics.CodeAnalysis;
 namespace LinqToDB.Expressions
 {
 	using LinqToDB.Extensions;
+	using Reflection;
 	using Linq;
 	using Linq.Builder;
 	using Mapping;
-	using Reflection;
-	using Tools;
 
 	static class InternalExtensions
 	{
@@ -1077,7 +1075,7 @@ namespace LinqToDB.Expressions
 		{
 			var type = method.Method.DeclaringType;
 
-			return type == typeof(Queryable) || (enumerable && type == typeof(Enumerable)) || type == typeof(LinqExtensions) || type == typeof(DataExtensions);
+			return type == typeof(Queryable) || (enumerable && type == typeof(Enumerable)) || type == typeof(LinqExtensions) || type == typeof(LinqToDB.DataExtensions);
 		}
 
 		public static bool IsAsyncExtension(this MethodCallExpression method, bool enumerable = true)

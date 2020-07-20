@@ -484,7 +484,7 @@ namespace LinqToDB.Linq
 
 		static IEnumerable<TSource> SkipLazy<TSource>(
 			IEnumerable<TSource> source,
-			ISqlExpression count)
+			ISqlExpression       count)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (count  == null) throw new ArgumentNullException(nameof(count));
@@ -501,6 +501,32 @@ namespace LinqToDB.Linq
 						--cnt;
 						continue;
 					}					
+					yield return enumerator.Current;
+				}
+			}
+		}
+
+		static IEnumerable<TSource> TakeLazy<TSource>(
+			IEnumerable<TSource> source,
+			ISqlExpression       count)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (count  == null) throw new ArgumentNullException(nameof(count));
+
+			using (var enumerator = source.GetEnumerator())
+			{
+				int cnt = -1;
+				while (enumerator.MoveNext())
+				{
+					if (cnt < 0)
+					{
+						cnt = (int)count.EvaluateExpression()!;
+						if (cnt <= 0)
+							break;
+					}					
+					if (cnt == 0)
+						break;
+					--cnt;
 					yield return enumerator.Current;
 				}
 			}
@@ -528,54 +554,16 @@ namespace LinqToDB.Linq
 			{
 				var q = queryFunc;
 
-				if (select.SkipValue is SqlValue value)
-				{
-					var n = (int)value.Value!;
-
-					if (n > 0)
-					{
-						queryFunc = (qq, db, mapper, expr, ps, preambles, qn) => q(qq, db, mapper, expr, ps, preambles, qn).Skip(n);
-						skip      = (expr, pc, ps) => n;
-					}
-				}
-				else if (select.SkipValue is SqlParameter skipParam && skipParam.IsQueryParameter)
-				{
-					var i     = GetParameterIndex(query, select.SkipValue);
-					queryFunc = (qq, db, mapper, expr, ps, preambles, qn) => q(qq, db, mapper, expr, ps, preambles, qn).Skip((int)query.Queries[0].Parameters[i].Accessor(expr, db, ps)!);
-					skip      = (expr, pc, ps) => (int)query.Queries[0].Parameters[i].Accessor(expr, pc, ps)!;
-				}
-				else
-				{
-					queryFunc = (qq, db, mapper, expr, ps, preambles, qn) => SkipLazy(q(qq, db, mapper, expr, ps, preambles, qn), select.SkipValue);
-					skip      = (expr, pc, ps) => (int)select.SkipValue.EvaluateExpression()!;
-				}
+				queryFunc = (qq, db, mapper, expr, ps, preambles, qn) => SkipLazy(q(qq, db, mapper, expr, ps, preambles, qn), select.SkipValue);
+				skip      = (expr, pc, ps) => (int)select.SkipValue.EvaluateExpression()!;
 			}
 
 			if (select.TakeValue != null && !query.SqlProviderFlags.IsTakeSupported)
 			{
 				var q = queryFunc;
 
-				if (select.TakeValue is SqlValue value)
-				{
-					var n = (int)value.Value!;
-
-					if (n > 0)
-					{
-						queryFunc = (qq, db, mapper, expr, ps, preambles, qn) => q(qq, db, mapper, expr, ps, preambles, qn).Take(n);
-						take      = (expr, pc, ps) => n;
-					}
-				}
-				else if (select.TakeValue is SqlParameter takeParam && takeParam.IsQueryParameter)
-				{
-					var i = GetParameterIndex(query, select.TakeValue);
-					queryFunc = (qq, db, mapper, expr, ps, preambles, qn) => q(qq, db, mapper, expr, ps, preambles, qn).Take((int)query.Queries[0].Parameters[i].Accessor(expr, db, ps)!);
-					take  = (expr, pc, ps) => (int)query.Queries[0].Parameters[i].Accessor(expr, pc, ps)!;
-				}
-				else
-				{
-					queryFunc = (qq, db, mapper, expr, ps, preambles, qn) => q(qq, db, mapper, expr, ps, preambles, qn).Take((int)select.TakeValue.EvaluateExpression()!);
-					take      = (expr, pc, ps) => (int)select.TakeValue.EvaluateExpression()!;
-				}
+				queryFunc = (qq, db, mapper, expr, ps, preambles, qn) => TakeLazy(q(qq, db, mapper, expr, ps, preambles, qn), select.TakeValue!);
+				take      = (expr, pc, ps) => (int)select.TakeValue.EvaluateExpression()!;
 			}
 
 			return Tuple.Create(queryFunc, skip, take);
