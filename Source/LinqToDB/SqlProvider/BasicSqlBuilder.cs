@@ -1957,13 +1957,12 @@ namespace LinqToDB.SqlProvider
 
 		static SqlField GetUnderlayingField(ISqlExpression expr)
 		{
-			switch (expr.ElementType)
+			return expr.ElementType switch
 			{
-				case QueryElementType.SqlField: return (SqlField)expr;
-				case QueryElementType.Column  : return GetUnderlayingField(((SqlColumn)expr).Expression);
-			}
-
-			throw new InvalidOperationException();
+				QueryElementType.SqlField => (SqlField)expr,
+				QueryElementType.Column	  => GetUnderlayingField(((SqlColumn)expr).Expression),
+				_                         => throw new InvalidOperationException(),
+			};
 		}
 
 		void BuildInListPredicate(ISqlPredicate predicate)
@@ -2859,24 +2858,22 @@ namespace LinqToDB.SqlProvider
 
 		protected static bool IsDateDataType(ISqlExpression expr, string dateName)
 		{
-			switch (expr.ElementType)
+			return expr.ElementType switch
 			{
-				case QueryElementType.SqlDataType  : return ((SqlDataType)expr).Type.DataType == DataType.Date;
-				case QueryElementType.SqlExpression: return ((SqlExpression)expr).Expr     == dateName;
-			}
-
-			return false;
+				QueryElementType.SqlDataType   => ((SqlDataType)expr).Type.DataType == DataType.Date,
+				QueryElementType.SqlExpression => ((SqlExpression)expr).Expr == dateName,
+				_                              => false,
+			};
 		}
 
 		protected static bool IsTimeDataType(ISqlExpression expr)
 		{
-			switch (expr.ElementType)
+			return expr.ElementType switch
 			{
-				case QueryElementType.SqlDataType  : return ((SqlDataType)expr).Type.DataType == DataType.Time;
-				case QueryElementType.SqlExpression: return ((SqlExpression)expr).Expr     == "Time";
-			}
-
-			return false;
+				QueryElementType.SqlDataType   => ((SqlDataType)expr).Type.DataType == DataType.Time,
+				QueryElementType.SqlExpression => ((SqlExpression)expr).Expr == "Time",
+				_                              => false,
+			};
 		}
 
 		static bool IsBooleanParameter(ISqlExpression expr, int count, int i)
@@ -3167,17 +3164,16 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual string? GetProviderTypeName(IDbDataParameter parameter)
 		{
-			switch (parameter.DbType)
+			return parameter.DbType switch
 			{
-				case DbType.AnsiString           : return "VarChar";
-				case DbType.AnsiStringFixedLength: return "Char";
-				case DbType.String               : return "NVarChar";
-				case DbType.StringFixedLength    : return "NChar";
-				case DbType.Decimal              : return "Decimal";
-				case DbType.Binary               : return "Binary";
-			}
-
-			return null;
+				DbType.AnsiString            => "VarChar",
+				DbType.AnsiStringFixedLength => "Char",
+				DbType.String                => "NVarChar",
+				DbType.StringFixedLength     => "NChar",
+				DbType.Decimal               => "Decimal",
+				DbType.Binary                => "Binary",
+				_                            => null,
+			};
 		}
 
 		protected virtual void PrintParameterType(StringBuilder sb, IDbDataParameter parameter)
@@ -3319,7 +3315,7 @@ namespace LinqToDB.SqlProvider
 
 		private string? _name;
 
-		public virtual string Name => _name ?? (_name = GetType().Name.Replace("SqlBuilder", ""));
+		public virtual string Name => _name ??= GetType().Name.Replace("SqlBuilder", "");
 
 		#endregion
 	}

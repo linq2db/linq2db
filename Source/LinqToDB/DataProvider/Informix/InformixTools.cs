@@ -79,7 +79,7 @@ namespace LinqToDB.DataProvider.Informix
 
 		private  static string? _detectedProviderName;
 		internal static string DetectedProviderName =>
-			_detectedProviderName ?? (_detectedProviderName = DetectProviderName());
+			_detectedProviderName ??= DetectProviderName();
 
 		public static IDataProvider GetDataProvider(string? providerName = null)
 		{

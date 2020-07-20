@@ -236,7 +236,6 @@ namespace Tests.Linq
 			{
 				return (item3 * (item2 - item1) / item3) * item1;
 			}
-
 		}
 
 		[Test]
@@ -428,7 +427,6 @@ namespace Tests.Linq
 		[Table(IsColumnAttributeRequired = true)]
 		public partial class Issue1189Customer
 		{
-
 			[Column("ID"), PrimaryKey, NotNull] public int Id { get; set; } // integer
 
 			[Column("NAME"), NotNull] public string Name { get; set; } = null!; // varchar(20)

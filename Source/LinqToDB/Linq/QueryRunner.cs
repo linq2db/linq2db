@@ -152,7 +152,7 @@ namespace LinqToDB.Linq
 					if (e is ParameterExpression vex && vex.Name == "ldr")
 					{
 						oldVariable = vex;
-						return newVariable ?? (newVariable = Expression.Variable(variableType, "ldr"));
+						return newVariable ??= Expression.Variable(variableType, "ldr");
 					}
 
 					if (e is BinaryExpression bex

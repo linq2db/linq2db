@@ -42,18 +42,11 @@ namespace LinqToDB.Linq.Builder
 					{
 						var query = enumerableBuildInfo.SelectQuery;
 						var innerQuery = new SelectQuery { ParentSelect = query };
-
-						IList<SqlValue> elements;
-
-						switch (index)
+						var elements = index switch
 						{
-							case 4:
-								elements = BuildElements(type, (IEnumerable)((ConstantExpression)enumerableBuildInfo.Expression).Value);
-								break;
-							default:
-								throw new InvalidOperationException();
-						}
-
+							4 => BuildElements(type, (IEnumerable)((ConstantExpression)enumerableBuildInfo.Expression).Value),
+							_ => throw new InvalidOperationException(),
+						};
 						return new EnumerableContext(builder, enumerableBuildInfo, query, type, elements);
 					});
 

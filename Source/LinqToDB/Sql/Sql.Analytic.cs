@@ -63,10 +63,10 @@ namespace LinqToDB
 					case Sql.NullsPosition.None :
 						break;
 					case Sql.NullsPosition.First :
-						builder.Expression = builder.Expression + " NULLS FIRST";
+						builder.Expression += " NULLS FIRST";
 						break;
 					case Sql.NullsPosition.Last :
-						builder.Expression = builder.Expression + " NULLS LAST";
+						builder.Expression += " NULLS LAST";
 						break;
 					default :
 						throw new ArgumentOutOfRangeException();

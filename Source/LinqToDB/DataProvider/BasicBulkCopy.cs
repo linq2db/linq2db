@@ -13,12 +13,12 @@ namespace LinqToDB.DataProvider
 	{
 		public virtual BulkCopyRowsCopied BulkCopy<T>(BulkCopyType bulkCopyType, ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			switch (bulkCopyType)
+			return bulkCopyType switch
 			{
-				case BulkCopyType.MultipleRows : return MultipleRowsCopy    (table, options, source);
-				case BulkCopyType.RowByRow     : return RowByRowCopy        (table, options, source);
-				default                        : return ProviderSpecificCopy(table, options, source);
-			}
+				BulkCopyType.MultipleRows => MultipleRowsCopy(table, options, source),
+				BulkCopyType.RowByRow     => RowByRowCopy(table, options, source),
+				_					      => ProviderSpecificCopy(table, options, source),
+			};
 		}
 
 		protected virtual BulkCopyRowsCopied ProviderSpecificCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)

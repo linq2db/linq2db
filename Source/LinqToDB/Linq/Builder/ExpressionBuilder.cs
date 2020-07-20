@@ -351,10 +351,10 @@ namespace LinqToDB.Linq.Builder
 		#region OptimizeExpression
 
 		private MethodInfo[]? _enumerableMethods;
-		public  MethodInfo[]   EnumerableMethods => _enumerableMethods ?? (_enumerableMethods = typeof(Enumerable).GetMethods());
+		public  MethodInfo[]   EnumerableMethods => _enumerableMethods ??= typeof(Enumerable).GetMethods();
 
 		private MethodInfo[]? _queryableMethods;
-		public  MethodInfo[]   QueryableMethods  => _queryableMethods  ?? (_queryableMethods  = typeof(Queryable). GetMethods());
+		public  MethodInfo[]   QueryableMethods  => _queryableMethods  ??= typeof(Queryable). GetMethods();
 
 		readonly Dictionary<Expression, Expression> _optimizedExpressions = new Dictionary<Expression, Expression>();
 
@@ -1310,8 +1310,7 @@ namespace LinqToDB.Linq.Builder
 								new[] { fakeQuery.Expression }.Concat(callExpression.Arguments.Skip(1)));
 							if (CanBeCompiled(callExpression))
 							{
-								var appliedQuery  = callExpression.EvaluateExpression() as IQueryable;
-								if (appliedQuery == null)
+								if (!(callExpression.EvaluateExpression() is IQueryable appliedQuery))
 									throw new LinqToDBException($"Method call '{expression}' returned null value.");
 								var newExpression = appliedQuery.Expression.Transform(e =>
 									e == fakeQuery.Expression ? firstArgument : e);

@@ -96,20 +96,6 @@ namespace LinqToDB.Linq.Builder
 			return SubqueryContext.GetContext(expression, level, buildInfo);
 		}
 
-		readonly Dictionary<ISqlExpression,int> _columnIndexes = new Dictionary<ISqlExpression,int>();
-
-		int GetIndex(SqlColumn column)
-		{
-			if (!_columnIndexes.TryGetValue(column, out var idx))
-			{
-				idx = SelectQuery.Select.Add(column);
-				_columnIndexes.Add(column, idx);
-			}
-
-			return idx;
-		}
-
-
 		public int ConvertToParentIndex(int index, IBuildContext context)
 		{
 			if (context != null)

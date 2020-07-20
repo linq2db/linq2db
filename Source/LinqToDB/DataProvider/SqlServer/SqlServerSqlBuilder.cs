@@ -228,8 +228,10 @@ namespace LinqToDB.DataProvider.SqlServer
 					wrap = true;
 				else
 				{
-					var ex = expr as SqlExpression;
-					wrap = ex != null && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SqlSearchCondition;
+					wrap = expr is SqlExpression ex 
+						&& ex.Expr == "{0}" 
+						&& ex.Parameters.Length == 1 
+						&& ex.Parameters[0] is SqlSearchCondition;
 				}
 			}
 

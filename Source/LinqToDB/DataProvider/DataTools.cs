@@ -254,12 +254,12 @@ namespace LinqToDB.DataProvider
 
 			switch (precision)
 			{
-				case 1: delta = delta % 1000000; break;
-				case 2: delta = delta % 100000 ; break;
-				case 3: delta = delta % 10000  ; break;
-				case 4: delta = delta % 1000   ; break;
-				case 5: delta = delta % 100    ; break;
-				case 6: delta = delta % 10     ; break;
+				case 1: delta %= 1000000; break;
+				case 2: delta %= 100000 ; break;
+				case 3: delta %= 10000  ; break;
+				case 4: delta %= 1000   ; break;
+				case 5: delta %= 100    ; break;
+				case 6: delta %= 10     ; break;
 			}
 
 			return delta != 0 ? value.AddTicks(-delta) : value;
@@ -274,12 +274,12 @@ namespace LinqToDB.DataProvider
 
 			switch (precision)
 			{
-				case 1: delta = delta % 1000000; break;
-				case 2: delta = delta % 100000 ; break;
-				case 3: delta = delta % 10000  ; break;
-				case 4: delta = delta % 1000   ; break;
-				case 5: delta = delta % 100    ; break;
-				case 6: delta = delta % 10     ; break;
+				case 1: delta %= 1000000; break;
+				case 2: delta %= 100000 ; break;
+				case 3: delta %= 10000  ; break;
+				case 4: delta %= 1000   ; break;
+				case 5: delta %= 100    ; break;
+				case 6: delta %= 10     ; break;
 			}
 
 			return delta != 0 ? value.AddTicks(-delta) : value;

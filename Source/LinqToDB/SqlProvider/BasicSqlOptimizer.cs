@@ -234,13 +234,12 @@ namespace LinqToDB.SqlProvider
 
 					bool CheckTable(IQueryElement e)
 					{
-						switch (e.ElementType)
+						return e.ElementType switch
 						{
-							case QueryElementType.SqlField : return !allTables.Contains(((SqlField) e).Table!);
-							case QueryElementType.Column   : return !allTables.Contains(((SqlColumn)e).Parent!);
-						}
-
-						return false;
+							QueryElementType.SqlField => !allTables.Contains(((SqlField)e).Table!),
+							QueryElementType.Column   => !allTables.Contains(((SqlColumn)e).Parent!),
+							_                         => false,
+						};
 					}
 
 					var join = subQuery.LeftJoin();
@@ -347,13 +346,12 @@ namespace LinqToDB.SqlProvider
 
 						bool CheckTable(IQueryElement e)
 						{
-							switch (e.ElementType)
+							return e.ElementType switch
 							{
-								case QueryElementType.SqlField : return !allTables.Contains(((SqlField) e).Table!);
-								case QueryElementType.Column   : return !allTables.Contains(((SqlColumn)e).Parent!);
-							}
-
-							return false;
+								QueryElementType.SqlField => !allTables.Contains(((SqlField)e).Table!),
+								QueryElementType.Column	  => !allTables.Contains(((SqlColumn)e).Parent!),
+								_                         => false,
+							};
 						}
 
 						new QueryVisitor().Visit(subQuery, e =>
@@ -1063,19 +1061,9 @@ namespace LinqToDB.SqlProvider
 
 		ISqlPredicate OptimizeCase(SelectQuery selectQuery, SqlPredicate.ExprExpr expr)
 		{
-			var value = expr.Expr1 as SqlValue;
-			var func  = expr.Expr2 as SqlFunction;
-			var valueFirst = false;
-
-			if (value != null && func != null)
-			{
-				valueFirst = true;
-			}
-			else
-			{
-				value = expr.Expr2 as SqlValue;
-				func  = expr.Expr1 as SqlFunction;
-			}
+			var value = expr.Expr1 as SqlValue   ?? expr.Expr2 as SqlValue;
+			var func  = expr.Expr2 as SqlFunction?? expr.Expr1 as SqlFunction;
+			var valueFirst = expr.Expr1 is SqlValue;
 
 			if (value != null && func != null && func.Name == "CASE")
 			{
@@ -1260,34 +1248,31 @@ namespace LinqToDB.SqlProvider
 
 		protected static bool IsDateDataType(ISqlExpression expr, string dateName)
 		{
-			switch (expr.ElementType)
+			return expr.ElementType switch
 			{
-				case QueryElementType.SqlDataType   : return ((SqlDataType)  expr).Type.DataType == DataType.Date;
-				case QueryElementType.SqlExpression : return ((SqlExpression)expr).Expr          == dateName;
-			}
-
-			return false;
+				QueryElementType.SqlDataType   => ((SqlDataType)expr).Type.DataType == DataType.Date,
+				QueryElementType.SqlExpression => ((SqlExpression)expr).Expr == dateName,
+				_                              => false,
+			};
 		}
 
 		protected static bool IsDateDataOffsetType(ISqlExpression expr)
 		{
-			switch (expr.ElementType)
+			return expr.ElementType switch
 			{
-				case QueryElementType.SqlDataType: return ((SqlDataType)expr).Type.DataType == DataType.DateTimeOffset;
-			}
-
-			return false;
+				QueryElementType.SqlDataType => ((SqlDataType)expr).Type.DataType == DataType.DateTimeOffset,
+				_                            => false,
+			};
 		}
 
 		protected static bool IsTimeDataType(ISqlExpression expr)
 		{
-			switch (expr.ElementType)
+			return expr.ElementType switch
 			{
-				case QueryElementType.SqlDataType   : return ((SqlDataType)expr).Type.DataType == DataType.Time;
-				case QueryElementType.SqlExpression : return ((SqlExpression)expr).Expr        == "Time";
-			}
-
-			return false;
+				QueryElementType.SqlDataType   => ((SqlDataType)expr).Type.DataType == DataType.Time,
+				QueryElementType.SqlExpression => ((SqlExpression)expr).Expr == "Time",
+				_                              => false,
+			};
 		}
 
 		protected ISqlExpression FloorBeforeConvert(SqlFunction func)

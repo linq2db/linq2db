@@ -18,7 +18,7 @@ namespace LinqToDB.Async
 	{
 		private readonly IDbConnection _connection;
 
-		internal protected AsyncDbConnection(IDbConnection connection)
+		protected internal AsyncDbConnection(IDbConnection connection)
 		{
 			_connection = connection ?? throw new ArgumentNullException(nameof(connection));
 		}
@@ -78,7 +78,7 @@ namespace LinqToDB.Async
 		public virtual Task CloseAsync()
 		{
 #if NETSTANDARD2_1 || NETCOREAPP3_1
-			if (Connection is DbConnection dbConnection) 
+			if (Connection is DbConnection dbConnection)
 				return dbConnection.CloseAsync();
 #endif
 			Close();
@@ -139,7 +139,7 @@ namespace LinqToDB.Async
 #else
 		public virtual ValueTask DisposeAsync()
 		{
-			if (Connection is IAsyncDisposable asyncDisposable) 
+			if (Connection is IAsyncDisposable asyncDisposable)
 				return asyncDisposable.DisposeAsync();
 
 			Dispose();

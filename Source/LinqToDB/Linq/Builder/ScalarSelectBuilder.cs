@@ -49,7 +49,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 #if DEBUG
-			public string _sqlQueryText { get { return SelectQuery == null ? "" : SelectQuery.SqlText; } }
+			public string _sqlQueryText => SelectQuery == null ? "" : SelectQuery.SqlText;
 			public string Path => this.GetPath();
 #endif
 
@@ -108,11 +108,11 @@ namespace LinqToDB.Linq.Builder
 
 			public IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
-				switch (requestFlag)
+				return requestFlag switch
 				{
-					case RequestFor.Expression : return IsExpressionResult.True;
-					default                    : return IsExpressionResult.False;
-				}
+					RequestFor.Expression => IsExpressionResult.True,
+					_                     => IsExpressionResult.False,
+				};
 			}
 
 			public IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
@@ -136,7 +136,7 @@ namespace LinqToDB.Linq.Builder
 
 			public virtual SqlStatement GetResultStatement()
 			{
-				return Statement ?? (Statement = new SqlSelectStatement(SelectQuery));
+				return Statement ??= new SqlSelectStatement(SelectQuery);
 			}
 		}
 	}
