@@ -10,6 +10,8 @@ namespace LinqToDB.DataProvider.Access
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
+	using System.Threading;
+	using System.Threading.Tasks;
 
 	public class AccessOleDbDataProvider : DynamicDataProviderBase<OleDbProviderAdapter>
 	{
@@ -110,6 +112,32 @@ namespace LinqToDB.DataProvider.Access
 				options,
 				source);
 		}
+
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
+			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+		{
+
+			return new AccessBulkCopy().BulkCopyAsync(
+				options.BulkCopyType == BulkCopyType.Default ? AccessTools.DefaultBulkCopyType : options.BulkCopyType,
+				table,
+				options,
+				source,
+				cancellationToken);
+		}
+
+#if !NET45 && !NET46
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
+			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+		{
+
+			return new AccessBulkCopy().BulkCopyAsync(
+				options.BulkCopyType == BulkCopyType.Default ? AccessTools.DefaultBulkCopyType : options.BulkCopyType,
+				table,
+				options,
+				source,
+				cancellationToken);
+		}
+#endif
 
 		#endregion
 	}

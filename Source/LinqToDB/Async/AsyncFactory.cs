@@ -330,6 +330,7 @@ namespace LinqToDB.Async
 			// taskType = typeof(Task<TResult>);
 			var taskType = body.Type;
 
+
 			// dataType = typeof(TResult);
 			var dataType = taskType.GenericTypeArguments[0];
 

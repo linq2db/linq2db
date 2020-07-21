@@ -137,6 +137,7 @@ namespace LinqToDB.DataProvider.Sybase
 		/// </summary>
 		public static BulkCopyType DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
 
+		[Obsolete("Please use the BulkCopy extension methods within DataConnectionExtensions")]
 		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
 			DataConnection              dataConnection,
 			IEnumerable<T>              source,
