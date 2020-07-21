@@ -74,6 +74,8 @@ namespace LinqToDB.Linq.Builder
 					//methodCall.Transform(ex => ConvertMethod(methodCall, 0, info, null, ex));
 				info.Parameter  = param;
 
+				builder.RegisterAccessorTransformation(methodCall, info.Expression);
+
 				return info;
 			}
 

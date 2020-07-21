@@ -39,6 +39,8 @@ namespace LinqToDB.Linq.Builder
 			{
 				info.Expression = methodCall.Transform(ex => ConvertMethod(methodCall, 0, info, predicate.Parameters[0], ex));
 
+				builder.RegisterAccessorTransformation(methodCall, info.Expression);
+
 				if (param != null)
 				{
 					if (param.Type != info.Parameter!.Type)
