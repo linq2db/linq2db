@@ -11,6 +11,8 @@ namespace LinqToDB.DataProvider.SqlCe
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
+	using System.Threading;
+	using System.Threading.Tasks;
 
 	public class SqlCeDataProvider : DynamicDataProviderBase<SqlCeProviderAdapter>
 	{
@@ -143,6 +145,30 @@ namespace LinqToDB.DataProvider.SqlCe
 				source);
 		}
 
-#endregion
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
+			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+		{
+			return new SqlCeBulkCopy().BulkCopyAsync(
+				options.BulkCopyType == BulkCopyType.Default ? SqlCeTools.DefaultBulkCopyType : options.BulkCopyType,
+				table,
+				options,
+				source,
+				cancellationToken);
+		}
+
+#if !NET45 && !NET46
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
+			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+		{
+			return new SqlCeBulkCopy().BulkCopyAsync(
+				options.BulkCopyType == BulkCopyType.Default ? SqlCeTools.DefaultBulkCopyType : options.BulkCopyType,
+				table,
+				options,
+				source,
+				cancellationToken);
+		}
+#endif
+
+		#endregion
 	}
 }

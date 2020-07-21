@@ -5,6 +5,8 @@ using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 using LinqToDB.Expressions;
 
 namespace LinqToDB.DataProvider.SqlServer
@@ -390,6 +392,9 @@ namespace LinqToDB.DataProvider.SqlServer
 				PropertySetter((SqlBulkCopy this_) => this_.BulkCopyTimeout),
 				// [10]: set DestinationTableName
 				PropertySetter((SqlBulkCopy this_) => this_.DestinationTableName),
+				// [11]: WriteToServerAsync
+				(Expression<Func<SqlBulkCopy, IDataReader, CancellationToken, Task>>)((SqlBulkCopy this_, IDataReader reader, CancellationToken token) 
+					=> this_.WriteToServerAsync(reader, token)),
 			};
 
 			private static string[] Events { get; }
@@ -406,6 +411,8 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			void IDisposable.Dispose()                        => ((Action<SqlBulkCopy>)CompiledWrappers[0])(this);
 			public void WriteToServer(IDataReader dataReader) => ((Action<SqlBulkCopy, IDataReader>)CompiledWrappers[1])(this, dataReader);
+			public Task WriteToServerAsync(IDataReader dataReader, CancellationToken cancellationToken)
+				=> ((Func<SqlBulkCopy, IDataReader, CancellationToken, Task>)CompiledWrappers[11])(this, dataReader, cancellationToken);
 
 			public int NotifyAfter
 			{

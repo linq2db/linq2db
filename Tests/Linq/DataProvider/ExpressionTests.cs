@@ -1,14 +1,8 @@
 ﻿using System;
-using System.Configuration;
 using System.Data;
 using System.Linq.Expressions;
-
-using NUnit.Framework;
-
 using LinqToDB.Data;
-using LinqToDB.DataProvider;
-using LinqToDB.DataProvider.SqlServer;
-using LinqToDB.DataProvider.SQLite;
+using NUnit.Framework;
 
 namespace Tests.DataProvider
 {

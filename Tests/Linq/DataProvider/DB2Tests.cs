@@ -24,6 +24,7 @@ using NUnit.Framework;
 namespace Tests.DataProvider
 {
 	using System.Globalization;
+	using System.Threading.Tasks;
 	using LinqToDB.Tools.Comparers;
 	using Model;
 
@@ -394,43 +395,92 @@ namespace Tests.DataProvider
 		{
 			using (var conn = new DataConnection(context))
 			{
-				//conn.BeginTransaction();
-				conn.BulkCopy(
-					new BulkCopyOptions
-					{
-						MaxBatchSize       = maxSize,
-						BulkCopyType       = bulkCopyType,
-						NotifyAfter        = 10000,
-						RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
-					},
-					Enumerable.Range(0, batchSize).Select(n =>
-						new ALLTYPE
+				try
+				{
+					conn.BulkCopy(
+						new BulkCopyOptions
 						{
-							ID                = 2000 + n,
-							BIGINTDATATYPE    = 3000 + n,
-							INTDATATYPE       = 4000 + n,
-							SMALLINTDATATYPE  = (short)(5000 + n),
-							DECIMALDATATYPE   = 6000 + n,
-							DECFLOATDATATYPE  = 7000 + n,
-							REALDATATYPE      = 8000 + n,
-							DOUBLEDATATYPE    = 9000 + n,
-							CHARDATATYPE      = 'A',
-							VARCHARDATATYPE   = "",
-							CLOBDATATYPE      = null,
-							DBCLOBDATATYPE    = null,
-							BINARYDATATYPE    = null,
-							VARBINARYDATATYPE = null,
-							BLOBDATATYPE      = new byte[] { 1, 2, 3 },
-							GRAPHICDATATYPE   = null,
-							DATEDATATYPE      = DateTime.Now,
-							TIMEDATATYPE      = null,
-							TIMESTAMPDATATYPE = null,
-							XMLDATATYPE       = null,
-						}));
+							MaxBatchSize       = maxSize,
+							BulkCopyType       = bulkCopyType,
+							NotifyAfter        = 10000,
+							RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
+						},
+						Enumerable.Range(0, batchSize).Select(n =>
+							new ALLTYPE
+							{
+								ID                = 2000 + n,
+								BIGINTDATATYPE    = 3000 + n,
+								INTDATATYPE       = 4000 + n,
+								SMALLINTDATATYPE  = (short)(5000 + n),
+								DECIMALDATATYPE   = 6000 + n,
+								DECFLOATDATATYPE  = 7000 + n,
+								REALDATATYPE      = 8000 + n,
+								DOUBLEDATATYPE    = 9000 + n,
+								CHARDATATYPE      = 'A',
+								VARCHARDATATYPE   = "",
+								CLOBDATATYPE      = null,
+								DBCLOBDATATYPE    = null,
+								BINARYDATATYPE    = null,
+								VARBINARYDATATYPE = null,
+								BLOBDATATYPE      = new byte[] { 1, 2, 3 },
+								GRAPHICDATATYPE   = null,
+								DATEDATATYPE      = DateTime.Now,
+								TIMEDATATYPE      = null,
+								TIMESTAMPDATATYPE = null,
+								XMLDATATYPE       = null,
+							}));
 
-				//var list = conn.GetTable<ALLTYPE>().ToList();
+				}
+				finally
+				{
+					conn.GetTable<ALLTYPE>().Delete(p => p.SMALLINTDATATYPE >= 5000);
+				}
+			}
+		}
 
-				conn.GetTable<ALLTYPE>().Delete(p => p.SMALLINTDATATYPE >= 5000);
+		async Task BulkCopyTestAsync(string context, BulkCopyType bulkCopyType, int maxSize, int batchSize)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				try
+				{
+					await conn.BulkCopyAsync(
+						new BulkCopyOptions
+						{
+							MaxBatchSize       = maxSize,
+							BulkCopyType       = bulkCopyType,
+							NotifyAfter        = 10000,
+							RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
+						},
+						Enumerable.Range(0, batchSize).Select(n =>
+							new ALLTYPE
+							{
+								ID                = 2000 + n,
+								BIGINTDATATYPE    = 3000 + n,
+								INTDATATYPE       = 4000 + n,
+								SMALLINTDATATYPE  = (short)(5000 + n),
+								DECIMALDATATYPE   = 6000 + n,
+								DECFLOATDATATYPE  = 7000 + n,
+								REALDATATYPE      = 8000 + n,
+								DOUBLEDATATYPE    = 9000 + n,
+								CHARDATATYPE      = 'A',
+								VARCHARDATATYPE   = "",
+								CLOBDATATYPE      = null,
+								DBCLOBDATATYPE    = null,
+								BINARYDATATYPE    = null,
+								VARBINARYDATATYPE = null,
+								BLOBDATATYPE      = new byte[] { 1, 2, 3 },
+								GRAPHICDATATYPE   = null,
+								DATEDATATYPE      = DateTime.Now,
+								TIMEDATATYPE      = null,
+								TIMESTAMPDATATYPE = null,
+								XMLDATATYPE       = null,
+							}));
+				}
+				finally
+				{
+					await conn.GetTable<ALLTYPE>().DeleteAsync(p => p.SMALLINTDATATYPE >= 5000);
+				}
 			}
 		}
 
@@ -443,9 +493,19 @@ namespace Tests.DataProvider
 		[Test]
 		public void BulkCopyProviderSpecific([IncludeDataSources(CurrentProvider)] string context)
 		{
-//			new IBM.Data.DB2.DB2BulkCopy("").NotifyAfter;
-
 			BulkCopyTest(context, BulkCopyType.ProviderSpecific, 50000, 100001);
+		}
+
+		[Test]
+		public async Task BulkCopyMultipleRowsAsync([IncludeDataSources(CurrentProvider)] string context)
+		{
+			await BulkCopyTestAsync(context, BulkCopyType.MultipleRows, 5000, 10001);
+		}
+
+		[Test]
+		public async Task BulkCopyProviderSpecificAsync([IncludeDataSources(CurrentProvider)] string context)
+		{
+			await BulkCopyTestAsync(context, BulkCopyType.ProviderSpecific, 50000, 100001);
 		}
 
 		[Test]
@@ -455,21 +515,57 @@ namespace Tests.DataProvider
 			{
 				using (var db = new DataConnection(context))
 				{
-					db.BulkCopy(
-						new BulkCopyOptions { BulkCopyType = bulkCopyType, },
-						Enumerable.Range(0, 10).Select(n =>
-							new LinqDataTypes
-							{
-								ID            = 4000 + n,
-								MoneyValue    = 1000m + n,
-								DateTimeValue = new DateTime(2001,  1,  11,  1, 11, 21, 100),
-								BoolValue     = true,
-								GuidValue     = Guid.NewGuid(),
-								SmallIntValue = (short)n
-							}
-						));
+					try
+					{
+						db.BulkCopy(
+							new BulkCopyOptions { BulkCopyType = bulkCopyType, },
+							Enumerable.Range(0, 10).Select(n =>
+								new LinqDataTypes
+								{
+									ID            = 4000 + n,
+									MoneyValue    = 1000m + n,
+									DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
+									BoolValue     = true,
+									GuidValue     = Guid.NewGuid(),
+									SmallIntValue = (short)n
+								}
+							));
+					}
+					finally
+					{
+						db.GetTable<LinqDataTypes>().Delete(p => p.ID >= 4000);
+					}
+				}
+			}
+		}
 
-					db.GetTable<LinqDataTypes>().Delete(p => p.ID >= 4000);
+		[Test]
+		public async Task BulkCopyLinqTypesAsync([IncludeDataSources(CurrentProvider)] string context)
+		{
+			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
+			{
+				using (var db = new DataConnection(context))
+				{
+					try
+					{
+						await db.BulkCopyAsync(
+							new BulkCopyOptions { BulkCopyType = bulkCopyType, },
+							Enumerable.Range(0, 10).Select(n =>
+								new LinqDataTypes
+								{
+									ID            = 4000 + n,
+									MoneyValue    = 1000m + n,
+									DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
+									BoolValue     = true,
+									GuidValue     = Guid.NewGuid(),
+									SmallIntValue = (short)n
+								}
+							));
+					}
+					finally
+					{
+						await db.GetTable<LinqDataTypes>().DeleteAsync(p => p.ID >= 4000);
+					}
 				}
 			}
 		}

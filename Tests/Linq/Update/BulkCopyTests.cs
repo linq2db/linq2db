@@ -11,6 +11,8 @@ namespace Tests.xUpdate
 {
 	using LinqToDB.DataProvider.Informix;
 	using Model;
+	using System.Collections.Generic;
+	using System.Threading.Tasks;
 
 	[TestFixture]
 	[Order(10000)]
@@ -48,10 +50,15 @@ namespace Tests.xUpdate
 
 		[ActiveIssue("Sybase: Bulk insert failed. Null value is not allowed in not null column.", Configuration = ProviderName.Sybase)]
 		[Test]
-		public void KeepIdentity_SkipOnInsertTrue(
+		public async Task KeepIdentity_SkipOnInsertTrue(
 			[DataSources(false)]string context,
 			[Values(null, true, false)]bool? keepIdentity,
-			[Values] BulkCopyType copyType)
+			[Values] BulkCopyType copyType,
+#if NET46
+			[Values(0, 1)] int asyncMode) // 0 == sync, 1 == async
+#else
+			[Values(0, 1, 2)] int asyncMode) // 0 == sync, 1 == async, 2 == async with IAsyncEnumerable
+#endif
 		{
 			if ((context == ProviderName.OracleNative || context == TestProvName.Oracle11Native) && copyType == BulkCopyType.ProviderSpecific)
 				Assert.Inconclusive("Oracle BulkCopy doesn't support identity triggers");
@@ -68,7 +75,7 @@ namespace Tests.xUpdate
 						BulkCopyType = copyType
 					};
 
-					if (!Execute(db, context, perform, keepIdentity, copyType))
+					if (!await ExecuteAsync(db, context, perform, keepIdentity, copyType))
 						return;
 
 					var data = db.GetTable<TestTable2>().Where(_ => _.ID > lastId).OrderBy(_ => _.ID).ToArray();
@@ -84,11 +91,9 @@ namespace Tests.xUpdate
 					Assert.AreEqual(lastId + (!useGenerated ? 20 : 2), data[1].ID);
 					Assert.AreEqual(300, data[1].Value);
 
-					void perform()
+					async Task perform()
 					{
-						db.BulkCopy(
-							options,
-							new[]
+						var values = new[]
 							{
 								new TestTable2()
 								{
@@ -100,7 +105,27 @@ namespace Tests.xUpdate
 									ID = lastId + 20,
 									Value = 300
 								}
-							});
+							};
+						if (asyncMode == 0) // synchronous 
+						{
+							db.BulkCopy(
+								options,
+								values);
+						} 
+						else if (asyncMode == 1) // asynchronous
+						{
+							await db.BulkCopyAsync(
+								options,
+								values);
+						}
+						else // asynchronous with IAsyncEnumerable
+						{
+#if !NET46
+							await db.BulkCopyAsync(
+								options,
+								AsAsyncEnumerable(values));
+#endif
+						}
 					}
 				}
 				finally
@@ -113,10 +138,15 @@ namespace Tests.xUpdate
 
 		[ActiveIssue("Unsupported column datatype for BulkCopyType.ProviderSpecific", Configurations = new[] { TestProvName.AllOracleNative , ProviderName.Sybase } )]
 		[Test]
-		public void KeepIdentity_SkipOnInsertFalse(
-			[DataSources(false)]string context,
-			[Values(null, true, false)]bool? keepIdentity,
-			[Values] BulkCopyType copyType)
+		public async Task KeepIdentity_SkipOnInsertFalse(
+			[DataSources(false)]        string       context,
+			[Values(null, true, false)] bool?        keepIdentity,
+			[Values]                    BulkCopyType copyType,
+#if NET46
+			[Values(0, 1)]              int          asyncMode) // 0 == sync, 1 == async
+#else
+			[Values(0, 1, 2)]           int          asyncMode) // 0 == sync, 1 == async, 2 == async with IAsyncEnumerable
+#endif
 		{
 			// don't use transactions as some providers will fallback to non-provider-specific implementation then
 			using (var db = new TestDataConnection(context))
@@ -130,7 +160,7 @@ namespace Tests.xUpdate
 						BulkCopyType = copyType
 					};
 
-					if (!Execute(db, context, perform, keepIdentity, copyType))
+					if (!await ExecuteAsync(db, context, perform, keepIdentity, copyType))
 						return;
 
 					var data = db.GetTable<TestTable1>().Where(_ => _.ID > lastId).OrderBy(_ => _.ID).ToArray();
@@ -146,11 +176,9 @@ namespace Tests.xUpdate
 					Assert.AreEqual(lastId + (!useGenerated ? 20 : 2), data[1].ID);
 					Assert.AreEqual(300, data[1].Value);
 
-					void perform()
+					async Task perform()
 					{
-						db.BulkCopy(
-							options,
-							new[]
+						var values = new[]
 							{
 								new TestTable1()
 								{
@@ -162,7 +190,27 @@ namespace Tests.xUpdate
 									ID = lastId + 20,
 									Value = 300
 								}
-							});
+							};
+						if (asyncMode == 0) // synchronous
+						{
+							db.BulkCopy(
+								options,
+								values);
+						}
+						else if (asyncMode == 1) // asynchronous
+						{
+							await db.BulkCopyAsync(
+								options,
+								values);
+						}
+						else // asynchronous with IAsyncEnumerable
+						{
+#if !NET46
+							await db.BulkCopyAsync(
+								options,
+								AsAsyncEnumerable(values));
+#endif
+						}
 					}
 				}
 				finally
@@ -173,7 +221,20 @@ namespace Tests.xUpdate
 			}
 		}
 
-		private bool Execute(DataConnection db, string context, Action perform, bool? keepIdentity, BulkCopyType copyType)
+#if !NET46
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+		private async IAsyncEnumerable<T> AsAsyncEnumerable<T>(IEnumerable<T> enumerable)
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+		{
+			var enumerator = enumerable.GetEnumerator();
+			while (enumerator.MoveNext())
+			{
+				yield return enumerator.Current;
+			}
+		}
+#endif
+
+		private async Task<bool> ExecuteAsync(DataConnection db, string context, Func<Task> perform, bool? keepIdentity, BulkCopyType copyType)
 		{
 			if ((context == ProviderName.Firebird || context == TestProvName.Firebird3)
 				&& keepIdentity == true
@@ -181,7 +242,7 @@ namespace Tests.xUpdate
 					|| copyType == BulkCopyType.MultipleRows
 					|| copyType == BulkCopyType.ProviderSpecific))
 			{
-				var ex = Assert.Catch(() => perform());
+				var ex = Assert.CatchAsync(async () => await perform());
 				Assert.IsInstanceOf<LinqToDBException>(ex);
 				Assert.AreEqual("BulkCopyOptions.KeepIdentity = true is not supported by Firebird provider. If you use generators with triggers, you should disable triggers during BulkCopy execution manually.", ex.Message);
 				return false;
@@ -204,13 +265,13 @@ namespace Tests.xUpdate
 					|| (context == ProviderName.SapHanaOdbc && copyType == BulkCopyType.ProviderSpecific))
 				&& keepIdentity == true)
 			{
-				var ex = Assert.Catch(() => perform());
+				var ex = Assert.CatchAsync(async () => await perform());
 				Assert.IsInstanceOf<LinqToDBException>(ex);
 				Assert.AreEqual("BulkCopyOptions.KeepIdentity = true is not supported by BulkCopyType.RowByRow mode", ex.Message);
 				return false;
 			}
 
-			perform();
+			await perform();
 			return true;
 		}
 
