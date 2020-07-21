@@ -123,8 +123,27 @@ namespace LinqToDB.Extensions
 		{
 			foreach (var method in type.GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic))
 			{
-				if (method.IsGenericMethod && method.Name == name && method.GetParameters().Length == genericParametersCount)
-					return method;
+				if (method.IsGenericMethod
+					&& method.Name == name
+					&& method.GetGenericMethodDefinition().GetGenericArguments().Length == genericParametersCount)
+				{
+					var parameters = method.GetParameters();
+					if (parameters.Length == types.Length)
+					{
+						var found = true;
+						for (var i = 0; i < types.Length; i++)
+						{
+							if (!parameters[i].ParameterType.IsGenericParameter && parameters[i].ParameterType != types[i])
+							{
+								found = false;
+								break;
+							}
+						}
+
+						if (found)
+							return method;
+					}
+				}
 			}
 
 			return null;
