@@ -483,7 +483,7 @@ namespace LinqToDB.Mapping
 			var getterExpr = MemberAccessor.GetterExpression.GetBody(objParam);
 			var dbDataType = GetDbDataType();
 
-			getterExpr = ApplyConversions(getterExpr, dbDataType);
+			getterExpr = ApplyConversions(getterExpr, dbDataType, true);
 
 			_getterParameterLambda = Expression.Lambda(getterExpr, objParam);
 			return _getterParameterLambda;
@@ -496,8 +496,9 @@ namespace LinqToDB.Mapping
 		/// <param name="getterExpr">Expression which returns value which has to be converted.</param>
 		/// <param name="dbDataType">Database type.</param>
 		/// <param name="valueConverter">Optional <see cref="IValueConverter"/></param>
+		/// <param name="includingEnum">Provides default enum conversion.</param>
 		/// <returns>Expression with applied conversions.</returns>
-		public static Expression ApplyConversions(MappingSchema mappingSchema, Expression getterExpr, DbDataType dbDataType, IValueConverter? valueConverter)
+		public static Expression ApplyConversions(MappingSchema mappingSchema, Expression getterExpr, DbDataType dbDataType, IValueConverter? valueConverter, bool includingEnum)
 		{
 			// search for type preparation converter
 			var prepareConverter = mappingSchema.GetConvertExpression(getterExpr.Type, getterExpr.Type, false, false);
@@ -525,7 +526,7 @@ namespace LinqToDB.Mapping
 				}
 				else
 				{
-					if (valueConverter == null)
+					if (valueConverter == null && includingEnum)
 					{
 						var type = Converter.GetDefaultMappingFromEnumType(mappingSchema, getterExpr.Type);
 						if (type != null)
@@ -554,10 +555,11 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="getterExpr">Expression which returns value which has to be converted.</param>
 		/// <param name="dbDataType">Database type.</param>
+		/// <param name="includingEnum">Provides default enum conversion.</param>
 		/// <returns>Expression with applied conversions.</returns>
-		public Expression ApplyConversions(Expression getterExpr, DbDataType dbDataType)
+		public Expression ApplyConversions(Expression getterExpr, DbDataType dbDataType, bool includingEnum)
 		{
-			return ApplyConversions(MappingSchema, getterExpr, dbDataType, ValueConverter);
+			return ApplyConversions(MappingSchema, getterExpr, dbDataType, ValueConverter, includingEnum);
 		}
 
 		/// <summary>

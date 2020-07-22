@@ -1259,11 +1259,11 @@ namespace LinqToDB.Linq.Builder
 
 			if (columnDescriptor != null)
 			{
-				expr = columnDescriptor.ApplyConversions(expr, dbType);
+				expr = columnDescriptor.ApplyConversions(expr, dbType, false);
 			}
 			else
 			{
-				expr = ColumnDescriptor.ApplyConversions(MappingSchema, expr, dbType, null);
+				expr = ColumnDescriptor.ApplyConversions(MappingSchema, expr, dbType, null, false);
 			}
 
 			var value = expr.EvaluateExpression();
@@ -1272,9 +1272,9 @@ namespace LinqToDB.Linq.Builder
 				sqlValue = new SqlValue(dbType, value);
 			else
 			{
-				if (value != null && value.GetType().IsEnum)
+				if (value != null && dbType.SystemType.IsEnum)
 				{
-					var attrs = value.GetType().GetCustomAttributes(typeof(Sql.EnumAttribute), true);
+					var attrs = dbType.SystemType.GetCustomAttributes(typeof(Sql.EnumAttribute), true);
 
 					if (attrs.Length == 0)
 						value = MappingSchema.EnumToValue((Enum)value);
@@ -1460,7 +1460,7 @@ namespace LinqToDB.Linq.Builder
 						newExpr.DataType        = columnDescriptor.GetDbDataType();
 						if (newExpr.ValueExpression.Type != columnDescriptor.MemberType)
 							newExpr.ValueExpression = Expression.Convert(newExpr.ValueExpression, columnDescriptor.MemberType);
-						newExpr.ValueExpression = columnDescriptor.ApplyConversions(newExpr.ValueExpression, newExpr.DataType);
+						newExpr.ValueExpression = columnDescriptor.ApplyConversions(newExpr.ValueExpression, newExpr.DataType, true);
 
 						if (name == null)
 						{
@@ -1475,7 +1475,7 @@ namespace LinqToDB.Linq.Builder
 					}
 					else
 					{
-						newExpr.ValueExpression = ColumnDescriptor.ApplyConversions(MappingSchema, newExpr.ValueExpression, newExpr.DataType, null);
+						newExpr.ValueExpression = ColumnDescriptor.ApplyConversions(MappingSchema, newExpr.ValueExpression, newExpr.DataType, null, true);
 					}
 				}
 
