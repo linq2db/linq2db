@@ -791,7 +791,7 @@ namespace LinqToDB.Linq.Builder
 			if (!PreferServerSide(expression, false))
 			{
 				if (columnDescriptor?.ValueConverter == null && CanBeConstant(expression))
-					return BuildConstant(expression);
+					return BuildConstant(expression, columnDescriptor);
 
 				if (CanBeCompiled(expression))
 					return BuildParameter(expression, columnDescriptor).SqlParameter;
@@ -1247,34 +1247,45 @@ namespace LinqToDB.Linq.Builder
 
 		#region Build Constant
 
-		readonly Dictionary<Expression,SqlValue> _constants = new Dictionary<Expression,SqlValue>();
+		readonly Dictionary<Tuple<Expression, ColumnDescriptor?>,SqlValue> _constants = new Dictionary<Tuple<Expression, ColumnDescriptor?>,SqlValue>();
 
-		SqlValue BuildConstant(Expression expr)
+		SqlValue BuildConstant(Expression expr, ColumnDescriptor? columnDescriptor)
 		{
-			if (_constants.TryGetValue(expr, out var value))
-				return value;
+			var key = Tuple.Create(expr, columnDescriptor);
+			if (_constants.TryGetValue(key, out var sqlValue))
+				return sqlValue;
 
-			var lambda = Expression.Lambda<Func<object?>>(Expression.Convert(expr, typeof(object)));
-			var v      = lambda.Compile()();
+			var dbType = columnDescriptor?.GetDbDataType() ?? new DbDataType(expr.Type);
 
-			if (v != null && MappingSchema.ValueToSqlConverter.CanConvert(v.GetType()))
-				value = new SqlValue(v);
+			if (columnDescriptor != null)
+			{
+				expr = columnDescriptor.ApplyConversions(expr, dbType);
+			}
 			else
 			{
-				if (v != null && v.GetType().IsEnum)
-				{
-					var attrs = v.GetType().GetCustomAttributes(typeof(Sql.EnumAttribute), true);
-
-					if (attrs.Length == 0)
-						v = MappingSchema.EnumToValue((Enum)v);
-				}
-
-				value = MappingSchema.GetSqlValue(expr.Type, v);
+				expr = ColumnDescriptor.ApplyConversions(MappingSchema, expr, dbType, null);
 			}
 
-			_constants.Add(expr, value);
+			var value = expr.EvaluateExpression();
 
-			return value;
+			if (value != null && MappingSchema.ValueToSqlConverter.CanConvert(dbType.SystemType))
+				sqlValue = new SqlValue(dbType, value);
+			else
+			{
+				if (value != null && value.GetType().IsEnum)
+				{
+					var attrs = value.GetType().GetCustomAttributes(typeof(Sql.EnumAttribute), true);
+
+					if (attrs.Length == 0)
+						value = MappingSchema.EnumToValue((Enum)value);
+				}
+
+				sqlValue = MappingSchema.GetSqlValue(expr.Type, value);
+			}
+
+			_constants.Add(key, sqlValue);
+
+			return sqlValue;
 		}
 
 		#endregion
