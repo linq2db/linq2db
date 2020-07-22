@@ -499,6 +499,12 @@ namespace LinqToDB.Mapping
 		/// <returns>Expression with applied conversions.</returns>
 		public static Expression ApplyConversions(MappingSchema mappingSchema, Expression getterExpr, DbDataType dbDataType, IValueConverter? valueConverter)
 		{
+			// search for type preparation converter
+			var prepareConverter = mappingSchema.GetConvertExpression(getterExpr.Type, getterExpr.Type, false, false);
+
+			if (prepareConverter != null)
+				getterExpr = InternalExtensions.ApplyLambdaToExpression(prepareConverter, getterExpr);
+
 			if (valueConverter != null)
 			{
 				var toProvider = valueConverter.ToProviderExpression;

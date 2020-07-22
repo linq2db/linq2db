@@ -17,7 +17,8 @@ namespace Tests.UserTests
 			public DateTime DateTime { get; set; }
 		}
 
-		static DateTime SetKind(DateTime dt) => DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+		static DateTime SetKind(DateTime dt) 
+			=> DateTime.SpecifyKind(dt, DateTimeKind.Utc);
 
 		[Test]
 		public void Test([IncludeDataSources(TestProvName.AllSQLite)] string context)
@@ -34,6 +35,7 @@ namespace Tests.UserTests
 				{
 					DateTime = DateTime.UtcNow
 				});
+
 				var record = t.Single();
 
 				Assert.AreEqual(DateTimeKind.Utc, record.DateTime.Kind);
