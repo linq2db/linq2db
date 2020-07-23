@@ -9,7 +9,7 @@ namespace LinqToDB.Expressions
 		Expression ICustomMapper.Map(Expression expression)
 		{
 			if ((!expression.Type.IsGenericType && expression.Type.FullName == "System.Threading.Tasks.ValueTask")
-				|| (expression.Type.IsGenericType && expression.Type.FullName == "System.Threading.Tasks.ValueTask`1"))
+				|| (expression.Type.IsGenericType && expression.Type.GetGenericTypeDefinition().FullName == "System.Threading.Tasks.ValueTask`1"))
 			{
 				return Expression.Call(expression, "AsTask", Array<Type>.Empty);
 			}
