@@ -13,8 +13,29 @@ namespace Tests.Linq
 		[Table]
 		class ClassWithIntDate
 		{
-			[Column] public int Id    { get; set; }
+			[Column] public int Id             { get; set; }
 			[Column(DataType = DataType.Int64)] public DateTime Value { get; set; }
+			[Column] public double DoubleValue { get; set; }
+			[Column] public float FloatValue   { get; set; }
+		}
+
+		[Table]
+		class ClassRealTypes
+		{
+			[Column] public int Id             { get; set; }
+			[Column] public double DoubleValue { get; set; }
+			[Column] public float FloatValue   { get; set; }
+
+			public static ClassRealTypes[] Seed()
+			{
+				var result = new ClassRealTypes[]
+				{
+					new ClassRealTypes { Id = 1, DoubleValue = double.MaxValue, FloatValue = float.MaxValue, },
+					new ClassRealTypes { Id = 1, DoubleValue = double.MinValue, FloatValue = float.MinValue, },
+				};
+
+				return result;
+			}
 		}
 
 		[Test]
@@ -36,6 +57,39 @@ namespace Tests.Linq
 				Assert.That(query.GetStatement().Parameters.Count, Is.EqualTo(0));
 
 				Assert.That(query.ToString(), Does.Not.Contain("DateTime("));
+			}
+		}
+
+		[Test]
+		public void DoubleParametrization([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var data = ClassRealTypes.Seed();
+
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(data))
+			{
+				var actual = (
+					from t1 in table
+					where t1.DoubleValue == double.MaxValue && t1.FloatValue == float.MaxValue
+					select t1
+				).Concat(
+					from t1 in table
+					where t1.DoubleValue == double.MinValue && t1.FloatValue == float.MinValue
+					select t1
+				).ToArray();
+
+				var expected = (
+					from t1 in data
+					where t1.DoubleValue == double.MaxValue && t1.FloatValue == float.MaxValue
+					select t1
+				).Concat(
+					from t1 in data
+					where t1.DoubleValue == double.MinValue && t1.FloatValue == float.MinValue
+					select t1
+				);
+
+
+				AreEqualWithComparer(expected, actual);
 			}
 		}
 

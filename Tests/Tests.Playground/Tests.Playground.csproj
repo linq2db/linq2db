@@ -9,6 +9,7 @@
 
 	<ItemGroup>
 		<Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
+		<Compile Include="..\Linq\DataProvider\SQLiteParameterTests.cs" Link="SQLiteParameterTests.cs" />
 	</ItemGroup>
 
 </Project>
