@@ -54,7 +54,7 @@
 
 		internal static readonly SapHanaMappingSchema Instance = new SapHanaMappingSchema();
 
-#if !NETSTANDARD2_0 && !NETSTANDARD2_1
+#if NETFRAMEWORK || NETCOREAPP
 		public class NativeMappingSchema : MappingSchema
 		{
 			public NativeMappingSchema()

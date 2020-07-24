@@ -177,7 +177,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return new PostgreSQLSchemaProvider(this);
 		}
 
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
 		{
 			return true;
@@ -281,7 +281,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				cancellationToken);
 		}
 
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{

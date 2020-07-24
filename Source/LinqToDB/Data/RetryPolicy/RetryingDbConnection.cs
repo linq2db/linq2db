@@ -113,7 +113,7 @@ namespace LinqToDB.Data.RetryPolicy
 			return _dataConnection.DataProvider.CreateConnection(_dataConnection.ConnectionString!);
 		}
 
-#if NET45 || NET46
+#if NETFRAMEWORK
 		public Task<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
 			=> _connection.BeginTransactionAsync(cancellationToken);
 
@@ -137,7 +137,7 @@ namespace LinqToDB.Data.RetryPolicy
 #endif
 
 
-#if !NETSTANDARD2_1 && !NETCOREAPP3_1
+#if !NETSTANDARD2_1PLUS
 		public Task CloseAsync()
 #else
 		public override Task CloseAsync()
@@ -146,7 +146,7 @@ namespace LinqToDB.Data.RetryPolicy
 			return _connection.CloseAsync();
 		}
 
-#if NET45 || NET46
+#if NETFRAMEWORK
 		public Task DisposeAsync()
 #elif NETSTANDARD2_0 || NETCOREAPP2_1
 		public ValueTask DisposeAsync()

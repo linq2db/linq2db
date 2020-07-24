@@ -446,7 +446,7 @@ namespace LinqToDB.DataProvider.MySql
 					// [8]: WriteToServerAsync
 					new Tuple<LambdaExpression, bool>
 					((Expression<Func<MySqlBulkCopy, IDataReader, CancellationToken, Task>>     )((MySqlBulkCopy this_, IDataReader dataReader, CancellationToken cancellationToken) => this_.WriteToServerAsync (dataReader, cancellationToken)), true),
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 					// [9]: WriteToServerAsync
 					new Tuple<LambdaExpression, bool>
 					((Expression<Func<MySqlBulkCopy, IDataReader, CancellationToken, ValueTask>>)((MySqlBulkCopy this_, IDataReader dataReader, CancellationToken cancellationToken) => this_.WriteToServerAsync2(dataReader, cancellationToken)), true),
@@ -468,7 +468,7 @@ namespace LinqToDB.DataProvider.MySql
 				public void WriteToServer(IDataReader dataReader) => ((Action<MySqlBulkCopy, IDataReader>)CompiledWrappers[0])(this, dataReader);
 				public Task WriteToServerAsync      (IDataReader dataReader, CancellationToken cancellationToken) => ((Func<MySqlBulkCopy, IDataReader, CancellationToken,      Task>)CompiledWrappers[8])(this, dataReader, cancellationToken);
 				public bool CanWriteToServerAsync => CompiledWrappers[8] != null;
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 				[TypeWrapperName("WriteToServerAsync")]
 				public ValueTask WriteToServerAsync2(IDataReader dataReader, CancellationToken cancellationToken) => ((Func<MySqlBulkCopy, IDataReader, CancellationToken, ValueTask>)CompiledWrappers[9])(this, dataReader, cancellationToken);
 				public bool CanWriteToServerAsync2 => CompiledWrappers[9] != null;

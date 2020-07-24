@@ -12,7 +12,7 @@ namespace LinqToDB.DataProvider.Informix
 
 	public static class InformixTools
 	{
-#if NET45 || NET46
+#if NETFRAMEWORK
 		private static readonly Lazy<IDataProvider> _informixDataProvider = new Lazy<IDataProvider>(() =>
 		{
 			var provider = new InformixDataProvider(ProviderName.Informix);
@@ -38,7 +38,7 @@ namespace LinqToDB.DataProvider.Informix
 			{
 				case ProviderName.InformixDB2:
 					return _informixDB2DataProvider.Value;
-#if NET45 || NET46
+#if NETFRAMEWORK
 				case InformixProviderAdapter.IfxClientNamespace:
 					return _informixDataProvider.Value;
 #endif
@@ -55,7 +55,7 @@ namespace LinqToDB.DataProvider.Informix
 					if (css.Name.Contains("DB2"))
 						return _informixDB2DataProvider.Value;
 
-#if NET45 || NET46
+#if NETFRAMEWORK
 					return _informixDataProvider.Value;
 #else
 					return _informixDB2DataProvider.Value;
@@ -67,7 +67,7 @@ namespace LinqToDB.DataProvider.Informix
 
 		private static string DetectProviderName()
 		{
-#if NET45 || NET46
+#if NETFRAMEWORK
 			var path = typeof(InformixTools).Assembly.GetPath();
 
 			if (File.Exists(Path.Combine(path, $"{InformixProviderAdapter.IfxAssemblyName}.dll")))
@@ -85,13 +85,13 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			switch (providerName ?? DetectedProviderName)
 			{
-#if NET45 || NET46
+#if NETFRAMEWORK
 				case ProviderName.Informix   : return _informixDataProvider.Value;
 #endif
 				case ProviderName.InformixDB2: return _informixDB2DataProvider.Value;
 			}
 
-#if NET45 || NET46
+#if NETFRAMEWORK
 				return _informixDataProvider.Value;
 #else
 				return _informixDB2DataProvider.Value;

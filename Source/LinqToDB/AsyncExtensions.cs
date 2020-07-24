@@ -70,7 +70,7 @@ namespace LinqToDB
 		}
 
 		#region AsAsyncEnumerable
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 		/// <summary>
 		/// Returns an <see cref="IAsyncEnumerable{T}"/> that can be enumerated asynchronously.
 		/// </summary>

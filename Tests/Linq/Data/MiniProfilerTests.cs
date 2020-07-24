@@ -965,7 +965,7 @@ namespace Tests.Data
 							options,
 							Enumerable.Range(0, 1000).Select(n => new SapHanaTests.AllType() { ID = 2000 + n }));
 
-#if NET45 || NET46
+#if NET46
 						Assert.AreEqual(!unmapped, trace.Contains("INSERT ASYNC BULK"));
 #else
 						Assert.AreEqual(!unmapped, trace.Contains("INSERT BULK"));
@@ -1491,7 +1491,7 @@ namespace Tests.Data
 							options,
 							Enumerable.Range(0, 1000).Select(n => new PostgreSQLTests.AllTypes() { ID = 2000 + n }));
 
-#if NET45 || NET46
+#if NET46
 						// we use 4.0.10 for tests, async added in 4.1.0
 						Assert.AreEqual(!unmapped, trace.Contains("INSERT BULK"));
 #else

@@ -61,7 +61,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
 		}
 
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T>           table,
 			BulkCopyOptions     options,
@@ -234,7 +234,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return ret;
 		}
 
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 		protected override async Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{

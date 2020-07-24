@@ -37,7 +37,7 @@ namespace LinqToDB.Async
 
 		public virtual IDbConnection Connection => _connection;
 
-#if NET45 || NET46
+#if NETFRAMEWORK
 		public virtual Task<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
 			=> Task.FromResult(AsyncFactory.Create(BeginTransaction()));
 #elif NETSTANDARD2_0 || NETCOREAPP2_1
@@ -56,7 +56,7 @@ namespace LinqToDB.Async
 		}
 #endif
 
-#if NET45 || NET46
+#if NETFRAMEWORK
 		public virtual Task<IAsyncDbTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken = default)
 			=> Task.FromResult(AsyncFactory.Create(BeginTransaction(isolationLevel)));
 #elif NETSTANDARD2_0 || NETCOREAPP2_1
@@ -77,7 +77,7 @@ namespace LinqToDB.Async
 
 		public virtual Task CloseAsync()
 		{
-#if NETSTANDARD2_1 || NETCOREAPP3_1
+#if NETSTANDARD2_1PLUS
 			if (Connection is DbConnection dbConnection)
 				return dbConnection.CloseAsync();
 #endif
@@ -129,7 +129,7 @@ namespace LinqToDB.Async
 			Connection.Dispose();
 		}
 
-#if NET45 || NET46
+#if NETFRAMEWORK
 		public virtual Task DisposeAsync()
 		{
 			Dispose();
