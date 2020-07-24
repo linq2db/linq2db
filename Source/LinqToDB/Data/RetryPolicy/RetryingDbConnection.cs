@@ -119,7 +119,7 @@ namespace LinqToDB.Data.RetryPolicy
 
 		public Task<IAsyncDbTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken = default)
 			=> _connection.BeginTransactionAsync(isolationLevel, cancellationToken);
-#elif NETSTANDARD2_0 || NETCOREAPP2_1
+#elif !NETSTANDARD2_1PLUS
 		public ValueTask<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
 			=> _connection.BeginTransactionAsync(cancellationToken);
 
@@ -148,7 +148,7 @@ namespace LinqToDB.Data.RetryPolicy
 
 #if NETFRAMEWORK
 		public Task DisposeAsync()
-#elif NETSTANDARD2_0 || NETCOREAPP2_1
+#elif !NETSTANDARD2_1PLUS
 		public ValueTask DisposeAsync()
 #else
 		public override ValueTask DisposeAsync()

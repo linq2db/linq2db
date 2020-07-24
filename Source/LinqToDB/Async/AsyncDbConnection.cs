@@ -40,7 +40,7 @@ namespace LinqToDB.Async
 #if NETFRAMEWORK
 		public virtual Task<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
 			=> Task.FromResult(AsyncFactory.Create(BeginTransaction()));
-#elif NETSTANDARD2_0 || NETCOREAPP2_1
+#elif !NETSTANDARD2_1PLUS
 		public virtual ValueTask<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
 			=> new ValueTask<IAsyncDbTransaction>(AsyncFactory.Create(BeginTransaction()));
 #else
@@ -59,7 +59,7 @@ namespace LinqToDB.Async
 #if NETFRAMEWORK
 		public virtual Task<IAsyncDbTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken = default)
 			=> Task.FromResult(AsyncFactory.Create(BeginTransaction(isolationLevel)));
-#elif NETSTANDARD2_0 || NETCOREAPP2_1
+#elif !NETSTANDARD2_1PLUS
 		public virtual ValueTask<IAsyncDbTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken = default)
 			=> new ValueTask<IAsyncDbTransaction>(AsyncFactory.Create(BeginTransaction(isolationLevel)));
 #else
