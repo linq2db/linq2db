@@ -150,7 +150,7 @@ namespace LinqToDB.SqlProvider
 
 		public bool TryConvert(StringBuilder stringBuilder, object? value)
 		{
-			if (value == null || value is INullable && ((INullable)value).IsNull)
+			if (value == null || value is INullable nullable && nullable.IsNull)
 			{
 				stringBuilder.Append("NULL");
 				return true;
@@ -166,7 +166,7 @@ namespace LinqToDB.SqlProvider
 
 		bool TryConvertImpl(StringBuilder stringBuilder, SqlDataType dataType, object? value, bool tryBase)
 		{
-			if (value == null || value is INullable && ((INullable)value).IsNull)
+			if (value == null || value is INullable nullable && nullable.IsNull)
 			{
 				stringBuilder.Append("NULL");
 				return true;

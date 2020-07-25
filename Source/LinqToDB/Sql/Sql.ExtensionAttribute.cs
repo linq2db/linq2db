@@ -728,7 +728,7 @@ namespace LinqToDB
 					extension.CanBeNull = CalcCanBeNull(IsNullable,
 						extension.GetParameters().Select(p => p.Expression?.CanBeNull ?? p.Extension?.CanBeNull ?? true));
 
-				result = result ?? new SqlExtensionParam(TokenName, extension);
+				result ??= new SqlExtensionParam(TokenName, extension);
 
 				return result;
 			}
@@ -806,8 +806,8 @@ namespace LinqToDB
 								continue;
 
 							if (!string.IsNullOrEmpty(result))
-								result = result + delimiter;
-							result = result + paramValue;
+								result += delimiter;
+							result += paramValue;
 						}
 
 						if (delimiter == null && !string.IsNullOrEmpty(result))

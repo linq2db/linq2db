@@ -79,7 +79,7 @@ namespace LinqToDB.DataProvider.Informix
 
 		private  static string? _detectedProviderName;
 		internal static string DetectedProviderName =>
-			_detectedProviderName ?? (_detectedProviderName = DetectProviderName());
+			_detectedProviderName ??= DetectProviderName();
 
 		public static IDataProvider GetDataProvider(string? providerName = null)
 		{
@@ -121,6 +121,7 @@ namespace LinqToDB.DataProvider.Informix
 
 		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.ProviderSpecific;
 
+		[Obsolete("Please use the BulkCopy extension methods within DataConnectionExtensions")]
 		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
 			DataConnection              dataConnection,
 			IEnumerable<T>              source,

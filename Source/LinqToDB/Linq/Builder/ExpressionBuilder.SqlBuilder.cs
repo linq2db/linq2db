@@ -641,8 +641,8 @@ namespace LinqToDB.Linq.Builder
 							.Select((arg,i) =>
 							{
 								var mi = expr.Members[i];
-								if (mi is MethodInfo)
-									mi = ((MethodInfo)mi).GetPropertyInfo();
+								if (mi is MethodInfo info)
+									mi = info.GetPropertyInfo();
 
 								var descriptor = ed.FindColumnDescriptor(mi);
 
@@ -667,8 +667,8 @@ namespace LinqToDB.Linq.Builder
 							.Select (a =>
 							{
 								var mi = a.Member;
-								if (mi is MethodInfo)
-									mi = ((MethodInfo)mi).GetPropertyInfo();
+								if (mi is MethodInfo info)
+									mi = info.GetPropertyInfo();
 
 								var descriptor = ed.FindColumnDescriptor(mi);
 
@@ -1736,19 +1736,16 @@ namespace LinqToDB.Linq.Builder
 					break;
 			}
 
-			SqlPredicate.Operator op;
-
-			switch (nodeType)
+			var op = nodeType switch
 			{
-				case ExpressionType.Equal             : op = SqlPredicate.Operator.Equal;          break;
-				case ExpressionType.NotEqual          : op = SqlPredicate.Operator.NotEqual;       break;
-				case ExpressionType.GreaterThan       : op = SqlPredicate.Operator.Greater;        break;
-				case ExpressionType.GreaterThanOrEqual: op = SqlPredicate.Operator.GreaterOrEqual; break;
-				case ExpressionType.LessThan          : op = SqlPredicate.Operator.Less;           break;
-				case ExpressionType.LessThanOrEqual   : op = SqlPredicate.Operator.LessOrEqual;    break;
-				default: throw new InvalidOperationException();
-			}
-
+				ExpressionType.Equal              => SqlPredicate.Operator.Equal,
+				ExpressionType.NotEqual           => SqlPredicate.Operator.NotEqual,
+				ExpressionType.GreaterThan        => SqlPredicate.Operator.Greater,
+				ExpressionType.GreaterThanOrEqual => SqlPredicate.Operator.GreaterOrEqual,
+				ExpressionType.LessThan           => SqlPredicate.Operator.Less,
+				ExpressionType.LessThanOrEqual    => SqlPredicate.Operator.LessOrEqual,
+				_                                 => throw new InvalidOperationException(),
+			};
 			if ((left.NodeType == ExpressionType.Convert || right.NodeType == ExpressionType.Convert) && op.In(SqlPredicate.Operator.Equal, SqlPredicate.Operator.NotEqual))
 			{
 				var p = ConvertEnumConversion(context!, left, op, right);
@@ -1769,14 +1766,11 @@ namespace LinqToDB.Linq.Builder
 				r = ConvertToSql(context, right, true);
 				l = ConvertToSql(context, left, false, QueryHelper.GetColumnDescriptor(r));
 			}
-			
-			var lValue = l as SqlValue;
-			var rValue = r as SqlValue;
 
-			if (lValue != null)
+			if (l is SqlValue lValue)
 				lValue.ValueType = GetDataType(r, lValue.ValueType);
 
-			if (rValue != null)
+			if (r is SqlValue rValue)
 				rValue.ValueType = GetDataType(l, rValue.ValueType);
 
 			switch (nodeType)
@@ -2240,7 +2234,6 @@ namespace LinqToDB.Linq.Builder
 				right = temp;
 			}
 
-			var newRight = right as NewExpression;
 			var newExpr  = (NewExpression)left;
 
 // ReSharper disable ConditionIsAlwaysTrueOrFalse
@@ -2254,7 +2247,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var lex = ConvertToSql(context, newExpr.Arguments[i]);
 				var rex =
-					newRight != null ?
+					right is NewExpression newRight ?
 						ConvertToSql(context, newRight.Arguments[i]) :
 						GetParameter(right, newExpr.Members[i]);
 

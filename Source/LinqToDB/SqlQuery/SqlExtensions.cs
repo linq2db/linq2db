@@ -65,9 +65,9 @@ namespace LinqToDB.SqlQuery
 		{
 			return statement switch
 			{
-				SqlInsertStatement insert => insert.Insert,
+				SqlInsertStatement insert         => insert.Insert,
 				SqlInsertOrUpdateStatement update => update.Insert,
-				_ => null,
+				_                                 => null,
 			};
 		}
 
@@ -76,7 +76,7 @@ namespace LinqToDB.SqlQuery
 			return statement switch
 			{
 				SqlStatementWithQueryBase query => query.With,
-				_ => null,
+				_                               => null,
 			};
 		}
 
@@ -100,9 +100,9 @@ namespace LinqToDB.SqlQuery
 		{
 			return statement switch
 			{
-				SqlUpdateStatement update => update.Update,
+				SqlUpdateStatement update                 => update.Update,
 				SqlInsertOrUpdateStatement insertOrUpdate => insertOrUpdate.Update,
-				_ => null,
+				_                                         => null,
 			};
 		}
 

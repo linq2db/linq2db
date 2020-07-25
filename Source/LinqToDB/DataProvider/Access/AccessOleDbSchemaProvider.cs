@@ -1,12 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace LinqToDB.DataProvider.Access
 {
-	using System;
-	using System.Data.Common;
-	using System.Text.RegularExpressions;
 	using Common;
 	using Data;
 	using SchemaProvider;
@@ -303,12 +303,12 @@ namespace LinqToDB.DataProvider.Access
 			return dbType;
 		}
 
-		protected override DataTable? GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters)
+		protected override DataTable? GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters, GetSchemaOptions options)
 		{
 			// KeyInfo used, as SchemaOnly doesn't return schema
 			// required GetProcedureSchemaExecutesProcedure = true
-			using (var rd = dataConnection.ExecuteReader(commandText, commandType, CommandBehavior.KeyInfo, parameters))
-				return rd.Reader!.GetSchemaTable();
+			using var rd = dataConnection.ExecuteReader(commandText, commandType, CommandBehavior.KeyInfo, parameters);
+			return rd.Reader!.GetSchemaTable();
 		}
 
 		protected override List<ColumnSchema> GetProcedureResultColumns(DataTable resultTable, GetSchemaOptions options)

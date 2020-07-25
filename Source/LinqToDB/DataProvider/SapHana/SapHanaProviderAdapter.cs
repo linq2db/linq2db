@@ -6,6 +6,8 @@ namespace LinqToDB.DataProvider.SapHana
 {
 	using System.Data.Common;
 	using System.Linq.Expressions;
+	using System.Threading;
+	using System.Threading.Tasks;
 	using LinqToDB.Expressions;
 
 	public class SapHanaProviderAdapter : IDynamicProviderAdapter
@@ -162,8 +164,8 @@ namespace LinqToDB.DataProvider.SapHana
 		[Wrapper]
 		public class HanaBulkCopy : TypeWrapper, IDisposable
 		{
-			private static LambdaExpression[] Wrappers { get; }
-				= new LambdaExpression[]
+			private static object[] Wrappers { get; }
+				= new object[]
 			{
 				// [0]: Dispose
 				(Expression<Action<HanaBulkCopy>>                                   )((HanaBulkCopy this_                    ) => ((IDisposable)this_).Dispose()),
@@ -187,6 +189,9 @@ namespace LinqToDB.DataProvider.SapHana
 				PropertySetter((HanaBulkCopy this_) => this_.BulkCopyTimeout),
 				// [10]: set DestinationTableName
 				PropertySetter((HanaBulkCopy this_) => this_.DestinationTableName),
+				// [11]: WriteToServerAsync
+				new Tuple<LambdaExpression, bool>
+				((Expression<Func<HanaBulkCopy, IDataReader, CancellationToken, Task>>)((HanaBulkCopy this_, IDataReader reader, CancellationToken cancellationToken) => this_.WriteToServerAsync(reader, cancellationToken)), true),
 			};
 
 			private static string[] Events { get; }
@@ -203,6 +208,10 @@ namespace LinqToDB.DataProvider.SapHana
 
 			public void Dispose      ()                       => ((Action<HanaBulkCopy>)CompiledWrappers[0])(this);
 			public void WriteToServer(IDataReader dataReader) => ((Action<HanaBulkCopy, IDataReader>)CompiledWrappers[1])(this, dataReader);
+
+			public bool CanWriteToServerAsync => CompiledWrappers[11] != null;
+			public Task WriteToServerAsync(IDataReader dataReader, CancellationToken cancellationToken)
+				=> ((Func<HanaBulkCopy, IDataReader, CancellationToken, Task>)CompiledWrappers[11])(this, dataReader, cancellationToken);
 
 			public int NotifyAfter
 			{

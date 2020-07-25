@@ -33,8 +33,9 @@ namespace LinqToDB.Async
 		private static readonly ConcurrentDictionary<Type, Func<IDbTransaction, IAsyncDbTransaction>> _transactionFactories
 			= new ConcurrentDictionary<Type, Func<IDbTransaction, IAsyncDbTransaction>>();
 
+#if NET45 || NET46
 		private static readonly MethodInfo _transactionWrap      = MemberHelper.MethodOf(() => Wrap<IDbTransaction>(default!)).GetGenericMethodDefinition();
-#if !NET45 && !NET46
+#else
 		private static readonly MethodInfo _transactionValueWrap = MemberHelper.MethodOf(() => WrapValue<IDbTransaction>(default!)).GetGenericMethodDefinition();
 #endif
 
@@ -328,6 +329,7 @@ namespace LinqToDB.Async
 		{
 			// taskType = typeof(Task<TResult>);
 			var taskType = body.Type;
+
 
 			// dataType = typeof(TResult);
 			var dataType = taskType.GenericTypeArguments[0];

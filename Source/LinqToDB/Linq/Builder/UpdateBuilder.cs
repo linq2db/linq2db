@@ -56,67 +56,67 @@ namespace LinqToDB.Linq.Builder
 						if (expr is LambdaExpression lex && lex.ReturnType == typeof(bool))
 							sequence = builder.BuildWhere(buildInfo.Parent, sequence, (LambdaExpression)methodCall.Arguments[1].Unwrap(), false);
 
-						if (sequence.SelectQuery.Select.SkipValue != null || !sequence.SelectQuery.Select.OrderBy.IsEmpty)
-							sequence = new SubQueryContext(sequence);
+							if (sequence.SelectQuery.Select.SkipValue != null || !sequence.SelectQuery.Select.OrderBy.IsEmpty)
+								sequence = new SubQueryContext(sequence);
 
-						updateStatement.SelectQuery = sequence.SelectQuery;
-						sequence.Statement = updateStatement;
+							updateStatement.SelectQuery = sequence.SelectQuery;
+							sequence.Statement = updateStatement;
 
-						BuildSetter(
-							builder,
-							buildInfo,
-							(LambdaExpression)methodCall.Arguments[2].Unwrap(),
-							sequence,
-							updateStatement.Update.Items,
-							sequence);
+							BuildSetter(
+								builder,
+								buildInfo,
+								(LambdaExpression)methodCall.Arguments[2].Unwrap(),
+								sequence,
+								updateStatement.Update.Items,
+								sequence);
 
 						break;
-					}
+						}
 
 				case OutputMethod.QueryableTarget:
-					{
+						{
 						// int Update<TSource,TTarget>(this IQueryable<TSource> source, ITable<TTarget> target, Expression<Func<TSource,TTarget>> setter)
 						// int Update<TSource,TTarget>(this IQueryable<TSource> source, Expression<Func<TSource,TTarget>> target, Expression<Func<TSource,TTarget>> setter)
 
 						var expr = methodCall.Arguments[1].Unwrap();
-						IBuildContext into;
+							IBuildContext into;
 
-						if (expr is LambdaExpression expression)
-						{
+							if (expr is LambdaExpression expression)
+							{
 							var body = expression.Body;
-							var level = body.GetLevel(builder.MappingSchema);
+								var level = body.GetLevel(builder.MappingSchema);
 
-							var tableInfo = sequence.IsExpression(body, level, RequestFor.Table);
+								var tableInfo = sequence.IsExpression(body, level, RequestFor.Table);
 
-							if (tableInfo.Result == false)
-								throw new LinqException("Expression '{0}' must be a table.", body);
+								if (tableInfo.Result == false)
+									throw new LinqException("Expression '{0}' must be a table.", body);
 
-							into = tableInfo.Context!;
-						}
-						else
-						{
-							into = builder.BuildSequence(new BuildInfo(buildInfo, expr, new SelectQuery()));
-						}
+								into = tableInfo.Context!;
+							}
+							else
+							{
+								into = builder.BuildSequence(new BuildInfo(buildInfo, expr, new SelectQuery()));
+							}
 
-						sequence.ConvertToIndex(null, 0, ConvertFlags.All);
-						new SelectQueryOptimizer(builder.DataContext.SqlProviderFlags, updateStatement, updateStatement.SelectQuery, 0)
-							.ResolveWeakJoins();
-						updateStatement.SelectQuery.Select.Columns.Clear();
+							sequence.ConvertToIndex(null, 0, ConvertFlags.All);
+							new SelectQueryOptimizer(builder.DataContext.SqlProviderFlags, updateStatement, updateStatement.SelectQuery, 0)
+								.ResolveWeakJoins();
+							updateStatement.SelectQuery.Select.Columns.Clear();
 
-						BuildSetter(
-							builder,
-							buildInfo,
-							(LambdaExpression)methodCall.Arguments[2].Unwrap(),
-							into,
-							updateStatement.Update.Items,
-							sequence);
+							BuildSetter(
+								builder,
+								buildInfo,
+								(LambdaExpression)methodCall.Arguments[2].Unwrap(),
+								into,
+								updateStatement.Update.Items,
+								sequence);
 
-						updateStatement.SelectQuery.Select.Columns.Clear();
+							updateStatement.SelectQuery.Select.Columns.Clear();
 
-						foreach (var item in updateStatement.Update.Items)
-							updateStatement.SelectQuery.Select.Columns.Add(new SqlColumn(updateStatement.SelectQuery, item.Expression!));
+							foreach (var item in updateStatement.Update.Items)
+								updateStatement.SelectQuery.Select.Columns.Add(new SqlColumn(updateStatement.SelectQuery, item.Expression!));
 
-						updateStatement.Update.Table = ((TableBuilder.TableContext)into!).SqlTable;
+							updateStatement.Update.Table = ((TableBuilder.TableContext)into!).SqlTable;
 
 						break;
 					}
@@ -227,10 +227,8 @@ namespace LinqToDB.Linq.Builder
 				{
 					res = ctx.IsExpression(null, 0, RequestFor.Table);
 
-					if (res.Result && res.Context is TableBuilder.TableContext context)
+					if (res.Result && res.Context is TableBuilder.TableContext tc)
 					{
-						var tc = context;
-
 						if (ctx.Statement!.SelectQuery!.From.Tables.Count == 0 || ctx.Statement.SelectQuery.From.Tables[0].Source != tc.SelectQuery)
 							ctx.Statement.RequireUpdateClause().Table = tc.SqlTable;
 					}

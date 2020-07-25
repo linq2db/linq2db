@@ -5,7 +5,10 @@ using System.Linq;
 
 namespace LinqToDB.DataProvider.DB2
 {
+	using System.Threading;
+	using System.Threading.Tasks;
 	using Data;
+	using LinqToDB.Common;
 	using DB2BulkCopyOptions = DB2ProviderAdapter.DB2BulkCopyOptions;
 
 	class DB2BulkCopy : BasicBulkCopy
@@ -39,6 +42,54 @@ namespace LinqToDB.DataProvider.DB2
 			return MultipleRowsCopy(table, options, source);
 		}
 
+		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+		{
+			if (table.DataContext is DataConnection dataConnection)
+			{
+				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
+				if (connection != null)
+					// call the synchronous provider-specific implementation
+					return Task.FromResult(ProviderSpecificCopyImpl(
+						table,
+						options,
+						source,
+						dataConnection,
+						connection,
+						_provider.Adapter.BulkCopy,
+						TraceAction));
+			}
+
+			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
+		}
+
+#if !NET45 && !NET46
+		protected override async Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+		{
+			if (table.DataContext is DataConnection dataConnection)
+			{
+				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
+				if (connection != null)
+				{
+					var enumerator = source.GetAsyncEnumerator(cancellationToken);
+					await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+					{
+						// call the synchronous provider-specific implementation
+						return ProviderSpecificCopyImpl(
+							table,
+							options,
+							EnumerableHelper.AsyncToSyncEnumerable(enumerator),
+							dataConnection,
+							connection,
+							_provider.Adapter.BulkCopy,
+							TraceAction);
+					}
+				}
+			}
+
+			return await MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+		}
+#endif
+
 		internal static BulkCopyRowsCopied ProviderSpecificCopyImpl<T>(
 			ITable<T>                                       table,
 			BulkCopyOptions                                 options,
@@ -50,7 +101,7 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			var descriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
 			var columns    = descriptor.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
-			var rd         = new BulkCopyReader(dataConnection, columns, source);
+			var rd         = new BulkCopyReader<T>(dataConnection, columns, source);
 			var rc         = new BulkCopyRowsCopied();
 			var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
 			var tableName  = GetTableName(sqlBuilder, options, table);
@@ -112,5 +163,27 @@ namespace LinqToDB.DataProvider.DB2
 
 			return MultipleRowsCopy1(table, options, source);
 		}
+
+		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+		{
+			var dataConnection = (DataConnection)table.DataContext;
+
+			if (((DB2DataProvider)dataConnection.DataProvider).Version == DB2Version.zOS)
+				return MultipleRowsCopy2Async(table, options, source, " FROM SYSIBM.SYSDUMMY1", cancellationToken);
+
+			return MultipleRowsCopy1Async(table, options, source, cancellationToken);
+		}
+
+#if !NET45 && !NET46
+		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+		{
+			var dataConnection = (DataConnection)table.DataContext;
+
+			if (((DB2DataProvider)dataConnection.DataProvider).Version == DB2Version.zOS)
+				return MultipleRowsCopy2Async(table, options, source, " FROM SYSIBM.SYSDUMMY1", cancellationToken);
+
+			return MultipleRowsCopy1Async(table, options, source, cancellationToken);
+		}
+#endif
 	}
 }

@@ -95,7 +95,7 @@ namespace Tests
 
 		HashSet<string> GetConfigurations()
 		{
-			return _configurationsToSkip ?? (_configurationsToSkip = new HashSet<string>(Configurations ?? new string[0]));
+			return _configurationsToSkip ??= new HashSet<string>(Configurations ?? new string[0]);
 		}
 
 		IEnumerable<TestMethod> ITestBuilder.BuildFrom(IMethodInfo method, Test suite)

@@ -30,11 +30,9 @@ namespace LinqToDB.DataProvider.Access
 		{
 			if (dataTypeInfo == null && dataType != null)
 			{
-				switch (dataType.ToLower())
-				{
-					case "text" : return typeof(string);
-					default     : throw new InvalidOperationException();
-				}
+				if (dataType.ToLower() == "text")
+					return typeof(string);
+				throw new InvalidOperationException();
 			}
 
 			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options);
@@ -42,34 +40,43 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
 		{
-			switch (dataType?.ToLower())
+			return dataType?.ToLower() switch
 			{
-				case "smallint"   :
-				case "short"      : return DataType.Int16;
-				case "counter"    :
-				case "integer"    :
-				case "long"       : return DataType.Int32;
-				case "real"       :
-				case "single"     : return DataType.Single;
-				case "double"     : return DataType.Double;
-				case "currency"   : return DataType.Money;
-				case "datetime"   : return DataType.DateTime;
-				case "bit"        : return DataType.Boolean;
-				case "byte"       : return DataType.Byte;
-				case "guid"       : return DataType.Guid;
-				case "binary"     : return DataType.Binary;
-				case "bigbinary"  :
-				case "longbinary" : return DataType.Image;
-				case "varbinary"  : return DataType.VarBinary;
-				case "text"       :
-				case "longchar"   :
-				case "longtext"   : return DataType.NText;
-				case "varchar"    : return DataType.VarChar;
-				case "char"       : return DataType.Char;
-				case "decimal"    : return DataType.Decimal;
-			}
+				"smallint"   => DataType.Int16,
+				"short"      => DataType.Int16,
 
-			return DataType.Undefined;
+				"counter"    => DataType.Int32,
+				"integer"    => DataType.Int32,
+				"long"       => DataType.Int32,
+
+				"real"       => DataType.Single,
+				"single"     => DataType.Single,
+
+				"double"     => DataType.Double,
+
+				"currency"   => DataType.Money,
+				"datetime"   => DataType.DateTime,
+				"bit"        => DataType.Boolean,
+				"byte"       => DataType.Byte,
+				"guid"       => DataType.Guid,
+				"binary"     => DataType.Binary,
+
+				"bigbinary"  => DataType.Image,
+				"longbinary" => DataType.Image,
+
+				"varbinary"  => DataType.VarBinary,
+
+				"text"       => DataType.NText,
+				"longchar"   => DataType.NText,
+				"longtext"   => DataType.NText,
+
+				"varchar"    => DataType.VarChar,
+				"char"       => DataType.Char,
+
+				"decimal"    => DataType.Decimal,
+
+				_			 => DataType.Undefined,
+			};
 		}
 	}
 }

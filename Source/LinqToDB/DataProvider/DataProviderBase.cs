@@ -18,6 +18,8 @@ namespace LinqToDB.DataProvider
 	using SchemaProvider;
 	using SqlProvider;
 	using System.Diagnostics.CodeAnalysis;
+	using System.Threading.Tasks;
+	using System.Threading;
 
 	public abstract class DataProviderBase : IDataProvider
 	{
@@ -314,14 +316,14 @@ namespace LinqToDB.DataProvider
 				case DataType.Binary    :
 				case DataType.Blob      :
 				case DataType.VarBinary :
-					if (value is Binary) value = ((Binary)value).ToArray();
+					if (value is Binary binary) value = binary.ToArray();
 					break;
 				case DataType.Int64     :
-					if (value is TimeSpan) value = ((TimeSpan)value).Ticks;
+					if (value is TimeSpan span) value = span.Ticks;
 					break;
 				case DataType.Xml       :
-					     if (value is XDocument)   value = value.ToString();
-					else if (value is XmlDocument) value = ((XmlDocument)value).InnerXml;
+					     if (value is XDocument)            value = value.ToString();
+					else if (value is XmlDocument document) value = document.InnerXml;
 					break;
 			}
 
@@ -408,6 +410,20 @@ namespace LinqToDB.DataProvider
 		{
 			return new BasicBulkCopy().BulkCopy(options.BulkCopyType, table, options, source);
 		}
+
+		public virtual Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
+			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+		{
+			return new BasicBulkCopy().BulkCopyAsync(options.BulkCopyType, table, options, source, cancellationToken);
+		}
+
+#if !NET45 && !NET46
+		public virtual Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
+			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+		{
+			return new BasicBulkCopy().BulkCopyAsync(options.BulkCopyType, table, options, source, cancellationToken);
+		}
+#endif
 
 		#endregion
 	}

@@ -8,6 +8,8 @@ namespace LinqToDB.DataProvider.Informix
 	using Data;
 	using Mapping;
 	using SqlProvider;
+	using System.Threading;
+	using System.Threading.Tasks;
 
 	public class InformixDataProvider : DynamicDataProviderBase<InformixProviderAdapter>
 	{
@@ -175,23 +177,21 @@ namespace LinqToDB.DataProvider.Informix
 
 			public static MappingSchema Get(string providerName, MappingSchema providerSchema)
 			{
-				switch (providerName)
+				return providerName switch
 				{
-					default:
-					case ProviderName.Informix   : return new MappingSchema(IfxMappingSchema, providerSchema);
-					case ProviderName.InformixDB2: return new MappingSchema(DB2MappingSchema, providerSchema);
-				}
+					ProviderName.InformixDB2 => new MappingSchema(DB2MappingSchema, providerSchema),
+					_                        => new MappingSchema(IfxMappingSchema, providerSchema),
+				};
 			}
 		}
 
 		private static MappingSchema GetMappingSchema(string name, MappingSchema providerSchema)
 		{
-			switch (name)
+			return name switch
 			{
-				case ProviderName.Informix   : return new InformixMappingSchema.IfxMappingSchema(providerSchema);
-				default                      :
-				case ProviderName.InformixDB2: return new InformixMappingSchema.DB2MappingSchema(providerSchema);
-			}
+				ProviderName.Informix => new InformixMappingSchema.IfxMappingSchema(providerSchema),
+				_                     => new InformixMappingSchema.DB2MappingSchema(providerSchema),
+			};
 		}
 
 		#region BulkCopy
@@ -205,6 +205,30 @@ namespace LinqToDB.DataProvider.Informix
 				options,
 				source);
 		}
+
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
+			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+		{
+			return new InformixBulkCopy(this).BulkCopyAsync(
+				options.BulkCopyType == BulkCopyType.Default ? InformixTools.DefaultBulkCopyType : options.BulkCopyType,
+				table,
+				options,
+				source,
+				cancellationToken);
+		}
+
+#if !NET45 && !NET46
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
+			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+		{
+			return new InformixBulkCopy(this).BulkCopyAsync(
+				options.BulkCopyType == BulkCopyType.Default ? InformixTools.DefaultBulkCopyType : options.BulkCopyType,
+				table,
+				options,
+				source,
+				cancellationToken);
+		}
+#endif
 
 		#endregion
 	}

@@ -122,7 +122,7 @@ namespace LinqToDB.Linq.Builder
 			if (_skippedExpressions.Contains(expr))
 				return new TransformInfo(expr, true);
 
-			alias = alias ?? _optimizationContext.GetExpressionAlias(expr);
+			alias ??= _optimizationContext.GetExpressionAlias(expr);
 
 			switch (expr.NodeType)
 			{

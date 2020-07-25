@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -1275,7 +1275,7 @@ namespace LinqToDB.SqlProvider
 
 			private ISqlExpression? _expression;
 			private ISqlExpression Expression => 
-				_expression ?? (_expression = Field ?? QueryHelper.GetUnderlyingField(Column!) as ISqlExpression ?? Column!);
+				_expression ??= Field ?? QueryHelper.GetUnderlyingField(Column!) as ISqlExpression ?? Column!;
 
 			public ISqlExpression Element
 			{

@@ -10,6 +10,8 @@ namespace LinqToDB.DataProvider.Oracle
 	using Extensions;
 	using Mapping;
 	using SqlProvider;
+	using System.Threading;
+	using System.Threading.Tasks;
 
 	public class OracleDataProvider : DynamicDataProviderBase<OracleProviderAdapter>
 	{
@@ -82,22 +84,20 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
-			switch (Version)
+			return Version switch
 			{
-				case OracleVersion.v11: return new Oracle11SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
-				default               :
-				case OracleVersion.v12: return new Oracle12SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
-			}
+				OracleVersion.v11 => new Oracle11SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
+				_                 => new Oracle12SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
+			};
 		}
 
 		private static MappingSchema GetMappingSchema(string name, MappingSchema providerSchema)
 		{
-			switch (name)
+			return name switch
 			{
-				default                        :
-				case ProviderName.OracleManaged: return new OracleMappingSchema.ManagedMappingSchema(providerSchema);
-				case ProviderName.OracleNative : return new OracleMappingSchema.NativeMappingSchema (providerSchema);
-			}
+				ProviderName.OracleNative => new OracleMappingSchema.NativeMappingSchema(providerSchema),
+				_                         => new OracleMappingSchema.ManagedMappingSchema(providerSchema),
+			};
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
@@ -133,16 +133,12 @@ namespace LinqToDB.DataProvider.Oracle
 				if (parameters != null)
 					foreach (var parameter in parameters)
 					{
-						if (parameter.IsArray && parameter.Value is object[])
+						if (parameter.IsArray 
+							&& parameter.Value is object[] value
+							&& value.Length != 0)
 						{
-							var value = (object[])parameter.Value;
-
-							if (value.Length != 0)
-							{
-								Adapter.SetArrayBindCount(command, value.Length);
-
-								break;
-							}
+							Adapter.SetArrayBindCount(command, value.Length);
+							break;
 						}
 					}
 			}
@@ -205,7 +201,7 @@ namespace LinqToDB.DataProvider.Oracle
 					}
 			}
 
-			if (dataType.DataType == DataType.Undefined && value is string && ((string)value).Length >= 4000)
+			if (dataType.DataType == DataType.Undefined && value is string @string && @string.Length >= 4000)
 			{
 				dataType = dataType.WithDataType(DataType.NText);
 			}
@@ -307,6 +303,36 @@ namespace LinqToDB.DataProvider.Oracle
 				options,
 				source);
 		}
+
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
+			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+		{
+			if (_bulkCopy == null)
+				_bulkCopy = new OracleBulkCopy(this);
+
+			return _bulkCopy.BulkCopyAsync(
+				options.BulkCopyType == BulkCopyType.Default ? OracleTools.DefaultBulkCopyType : options.BulkCopyType,
+				table,
+				options,
+				source,
+				cancellationToken);
+		}
+
+#if !NET45 && !NET46
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
+			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+		{
+			if (_bulkCopy == null)
+				_bulkCopy = new OracleBulkCopy(this);
+
+			return _bulkCopy.BulkCopyAsync(
+				options.BulkCopyType == BulkCopyType.Default ? OracleTools.DefaultBulkCopyType : options.BulkCopyType,
+				table,
+				options,
+				source,
+				cancellationToken);
+		}
+#endif
 
 		#endregion
 	}

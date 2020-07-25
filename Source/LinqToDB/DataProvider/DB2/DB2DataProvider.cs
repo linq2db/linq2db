@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 
@@ -9,6 +9,8 @@ namespace LinqToDB.DataProvider.DB2
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
+	using System.Threading.Tasks;
+	using System.Threading;
 
 	public class DB2DataProvider : DynamicDataProviderBase<DB2ProviderAdapter>
 	{
@@ -58,12 +60,11 @@ namespace LinqToDB.DataProvider.DB2
 
 		private static MappingSchema GetMappingSchema(DB2Version version, MappingSchema providerSchema)
 		{
-			switch (version)
+			return version switch
 			{
-				case DB2Version.zOS: return new DB2zOSMappingSchema(providerSchema);
-				default            :
-				case DB2Version.LUW: return new DB2LUWMappingSchema(providerSchema);
-			}
+				DB2Version.zOS => new DB2zOSMappingSchema(providerSchema),
+				_              => new DB2LUWMappingSchema(providerSchema),
+			};
 		}
 
 		public override ISchemaProvider GetSchemaProvider()
@@ -190,14 +191,44 @@ namespace LinqToDB.DataProvider.DB2
 			if (_bulkCopy == null)
 				_bulkCopy = new DB2BulkCopy(this);
 
-				return _bulkCopy.BulkCopy(
+			return _bulkCopy.BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? DB2Tools.DefaultBulkCopyType : options.BulkCopyType,
 				table,
 				options,
 				source);
 		}
 
-#endregion
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
+			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+		{
+			if (_bulkCopy == null)
+				_bulkCopy = new DB2BulkCopy(this);
+
+			return _bulkCopy.BulkCopyAsync(
+				options.BulkCopyType == BulkCopyType.Default ? DB2Tools.DefaultBulkCopyType : options.BulkCopyType,
+				table,
+				options,
+				source,
+				cancellationToken);
+		}
+
+#if !NET45 && !NET46
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
+			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+		{
+			if (_bulkCopy == null)
+				_bulkCopy = new DB2BulkCopy(this);
+
+			return _bulkCopy.BulkCopyAsync(
+				options.BulkCopyType == BulkCopyType.Default ? DB2Tools.DefaultBulkCopyType : options.BulkCopyType,
+				table,
+				options,
+				source,
+				cancellationToken);
+		}
+#endif
+
+		#endregion
 
 	}
 }
