@@ -34,7 +34,7 @@ namespace LinqToDB.Linq.Builder
 				expr = builder.ConvertToSql(sequence, arg);
 				if (expr.ElementType == QueryElementType.SqlValue)
 				{
-					var param   = builder.BuildParameterFromArgument(methodCall, 1, null).SqlParameter;
+					var param   = builder.BuildParameter(methodCall.Arguments[1], null, true).SqlParameter;
 					param.Name  = methodCall.Method.Name == "Take" ? "take" : "skip";
 					param.Value = expr.EvaluateExpression();
 					param.IsQueryParameter = param.IsQueryParameter && parametrize;
@@ -73,8 +73,6 @@ namespace LinqToDB.Linq.Builder
 						info.Expression, methodCall.Arguments[1]);
 					//methodCall.Transform(ex => ConvertMethod(methodCall, 0, info, null, ex));
 				info.Parameter  = param;
-
-				builder.RegisterAccessorTransformation(methodCall, info.Expression);
 
 				return info;
 			}

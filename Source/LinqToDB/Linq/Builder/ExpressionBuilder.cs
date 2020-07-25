@@ -379,8 +379,6 @@ namespace LinqToDB.Linq.Builder
 			CollectLambdaParameters(expression, currentParameters);
 			expr = expr.Transform(e => OptimizeExpressionImpl(e, currentParameters));
 
-			RegisterAccessorTransformation(expression, expr);
-
 			_optimizedExpressions[expression] = expr;
 
 			_optimizationContext.RelocateAlias(expression, expr);
@@ -672,8 +670,6 @@ namespace LinqToDB.Linq.Builder
 				var previous    = method;
 				method = Expression.Call(newMethod, sequence, predicate);
 
-				RegisterAccessorTransformation(previous, method);
-
 				if (exprs.Count > 0)
 				{
 					var parameter = Expression.Parameter(expr!.Type, lparam.Name);
@@ -685,7 +681,6 @@ namespace LinqToDB.Linq.Builder
 							exprs.Aggregate((Expression)parameter, (current,_) => ExpressionHelper.PropertyOrField(current, "p")),
 							parameter));
 
-					RegisterAccessorTransformation(previous, method);
 				}
 			}
 
@@ -1294,7 +1289,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var p    = Expression.Parameter(typeof(Expression), "exp");
 				var exas = expression.GetExpressionAccessors(p);
-				var expr = ReplaceParameter(exas, expression, _ => {}).ValueExpression;
+				var expr = ReplaceParameter(exas, expression, false, _ => {}).ValueExpression;
 
 				var allowedParameters = new HashSet<ParameterExpression>(currentParameters) { p };
 
@@ -1389,27 +1384,11 @@ namespace LinqToDB.Linq.Builder
 
 			firstMethod = firstMethod.MakeGenericMethod(sourceType);
 
-			var skipCall = Expression.Call(skipMethod, sequence, index);
-			RegisterAccessorTransformation(method, skipCall);
+			var skipCall = Expression.Call(skipMethod, sequence, method.Arguments[1]);
 
 			var converted = Expression.Call(null, firstMethod, skipCall);
 
 			return converted;
-		}
-
-		#endregion
-
-		#region Accessor Helpers
-
-		public void RegisterAccessorTransformation(Expression before, Expression after)
-		{
-			if (ReferenceEquals(before, after))
-				return;
-
-			if (_expressionAccessors.TryGetValue(before, out var accessor) && !_expressionAccessors.ContainsKey(after))
-			{
-				_expressionAccessors.Add(after, accessor);
-			}
 		}
 
 		#endregion

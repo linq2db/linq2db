@@ -60,6 +60,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("Improving MappingSchema needed.")]
 		[Test]
 		public void DoubleParametrization([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{

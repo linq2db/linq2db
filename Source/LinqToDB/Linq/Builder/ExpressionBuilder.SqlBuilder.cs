@@ -1296,7 +1296,7 @@ namespace LinqToDB.Linq.Builder
 			InPredicate
 		}
 
-		ParameterAccessor BuildParameter(Expression expr, ColumnDescriptor? columnDescriptor,
+		public ParameterAccessor BuildParameter(Expression expr, ColumnDescriptor? columnDescriptor, bool forceConstant = false,
 			BuildParameterType buildParameterType = BuildParameterType.Default)
 		{
 			if (_parameters.TryGetValue(expr, out var p))
@@ -1305,7 +1305,7 @@ namespace LinqToDB.Linq.Builder
 			string? name = null;
 
 			ValueTypeExpression newExpr;
-			newExpr = ReplaceParameter(_expressionAccessors, expr, nm => name = nm);
+			newExpr = ReplaceParameter(_expressionAccessors, expr, forceConstant, nm => name = nm);
 
 			p = PrepareConvertersAndCreateParameter(newExpr, expr, name, columnDescriptor, buildParameterType);
 
@@ -1490,7 +1490,7 @@ namespace LinqToDB.Linq.Builder
 			public DbDataType DataType;
 		}
 
-		ValueTypeExpression ReplaceParameter(IDictionary<Expression,Expression> expressionAccessors, Expression expression, Action<string> setName)
+		ValueTypeExpression ReplaceParameter(IDictionary<Expression,Expression> expressionAccessors, Expression expression, bool forceConstant, Action<string> setName)
 		{
 			var result = new ValueTypeExpression
 			{
@@ -1511,7 +1511,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var c = (ConstantExpression)expr;
 
-					if (!expr.Type.IsConstantable(false))
+					if (forceConstant || !expr.Type.IsConstantable(false))
 					{
 						if (expressionAccessors.TryGetValue(expr, out var val))
 						{
@@ -2272,7 +2272,7 @@ namespace LinqToDB.Linq.Builder
 			if (member is MethodInfo mi)
 				member = mi.GetPropertyInfo();
 
-			var vte  = ReplaceParameter(_expressionAccessors, ex, _ => { });
+			var vte  = ReplaceParameter(_expressionAccessors, ex, false, _ => { });
 			var par  = vte.ValueExpression;
 			var expr = Expression.MakeMemberAccess(par.Type == typeof(object) ? Expression.Convert(par, member.DeclaringType) : par, member);
 			var p    = CreateParameterAccessor(DataContext, expr, vte.DbDataTypeExpression, expr, ExpressionParam, ParametersParam, DataContextParam, member.Name);
@@ -2533,7 +2533,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (CanBeCompiled(arr))
 					{
-						var p = BuildParameter(arr, null, BuildParameterType.InPredicate).SqlParameter;
+						var p = BuildParameter(arr, null, false, BuildParameterType.InPredicate).SqlParameter;
 						p.IsQueryParameter = false;
 						return new SqlPredicate.InList(expr, false, p);
 					}

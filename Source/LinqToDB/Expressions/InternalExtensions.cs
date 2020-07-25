@@ -484,7 +484,7 @@ namespace LinqToDB.Expressions
 				Methods.Enumerable.Take,      Methods.Enumerable.Skip,
 				Methods.Queryable.ElementAt,  Methods.Queryable.ElementAtOrDefault,
 				Methods.Enumerable.ElementAt, Methods.Enumerable.ElementAtOrDefault
-				))
+				) && expr1.Arguments[1].NodeType == ExpressionType.Constant && expr2.Arguments[1].NodeType == ExpressionType.Constant)
 			{
 				// We do not compare last argument
 				return expr1.Arguments[0].EqualsTo(expr2.Arguments[0], info);

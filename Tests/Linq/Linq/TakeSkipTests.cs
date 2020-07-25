@@ -650,15 +650,19 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ElementAtDefault5([DataSources] string context, [Values] bool withParameters)
+		public void ElementAtDefault5([DataSources] string context, [Values(2,3)] int idx, [Values] bool withParameters)
 		{
 			using (new ParametrizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
+				var missCount = Query<Person>.CacheMissCount;
 				Assert.AreEqual(
-					Person.   OrderBy(p => p.LastName).ElementAtOrDefault(3),
-					db.Person.OrderBy(p => p.LastName).ElementAtOrDefault(3));
+					Person.   OrderBy(p => p.LastName).ElementAtOrDefault(idx),
+					db.Person.OrderBy(p => p.LastName).ElementAtOrDefault(idx));
 				CheckTakeGlobalParams(db);
+
+				if (idx == 3)
+					Assert.That(missCount, Is.EqualTo(Query<Person>.CacheMissCount));
 			}
 		}
 
