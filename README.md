@@ -112,7 +112,7 @@ In your `web.config` or `app.config` make sure you have a connection string (che
 
 ### Using Connection String Settings Provider
 
-.Net Core does not support `System.Configuration` so to configure connection strings you should implement `ILinqToDBSettings`, for example:
+.Net Core does not support `System.Configuration` until 3.0 so to configure connection strings you should implement `ILinqToDBSettings`, for example:
 
 ```cs
 public class ConnectionStringSettings : IConnectionStringSettings
