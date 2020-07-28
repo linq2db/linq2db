@@ -1290,7 +1290,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var p    = Expression.Parameter(typeof(Expression), "exp");
 				var exas = expression.GetExpressionAccessors(p);
-				var expr = ReplaceParameter(exas, expression, false, _ => {}).ValueExpression;
+				var expr = ReplaceParameter(exas, expression, forceConstant: false, _ => {}).ValueExpression;
 
 				var allowedParameters = new HashSet<ParameterExpression>(currentParameters) { p };
 

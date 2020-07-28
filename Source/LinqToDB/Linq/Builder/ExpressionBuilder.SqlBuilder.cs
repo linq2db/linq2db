@@ -2283,7 +2283,7 @@ namespace LinqToDB.Linq.Builder
 			if (member is MethodInfo mi)
 				member = mi.GetPropertyInfo();
 
-			var vte  = ReplaceParameter(_expressionAccessors, ex, false, _ => { });
+			var vte  = ReplaceParameter(_expressionAccessors, ex, forceConstant: false, _ => { });
 			var par  = vte.ValueExpression;
 			var expr = Expression.MakeMemberAccess(par.Type == typeof(object) ? Expression.Convert(par, member.DeclaringType) : par, member);
 			var p    = CreateParameterAccessor(DataContext, expr, vte.DbDataTypeExpression, expr, ExpressionParam, ParametersParam, DataContextParam, member.Name);
