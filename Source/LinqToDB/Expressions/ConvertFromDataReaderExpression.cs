@@ -68,10 +68,10 @@ namespace LinqToDB.Expressions
 
 		static Expression ConvertExpressionToType(Expression current, Type toType, MappingSchema mappingSchema)
 		{
-			if (current.Type == toType)
+			var toConvertExpression = mappingSchema.GetConvertExpression(current.Type, toType, false, current.Type != toType)!;
+
+			if (toConvertExpression == null)
 				return current;
-			
-			var toConvertExpression = mappingSchema.GetConvertExpression(current.Type, toType, false)!;
 
 			current = InternalExtensions.ApplyLambdaToExpression(toConvertExpression, current);
 
@@ -147,6 +147,10 @@ namespace LinqToDB.Expressions
 
 
 			ex = ConvertExpressionToType(ex, type, mappingSchema)!;
+
+			// Try to search postprocessing converter TType -> TType
+			//
+			ex = ConvertExpressionToType(ex, ex.Type, mappingSchema)!;
 
 			// Add check null expression.
 			// If converter handles nulls, do not provide IsNull check
