@@ -12,7 +12,7 @@ namespace LinqToDB.Async
 	/// </summary>
 	[PublicAPI]
 	public interface IAsyncDbConnection : IDbConnection
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 		, IAsyncDisposable
 #endif
 	{
@@ -21,7 +21,7 @@ namespace LinqToDB.Async
 		/// </summary>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Database transaction object.</returns>
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 		ValueTask<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default);
 #else
 		Task<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default);
@@ -33,7 +33,7 @@ namespace LinqToDB.Async
 		/// <param name="isolationLevel">Transaction isolation level.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Database transaction object.</returns>
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 		ValueTask<IAsyncDbTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken = default);
 #else
 		Task<IAsyncDbTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken = default);
@@ -52,7 +52,7 @@ namespace LinqToDB.Async
 		/// <returns>Async operation task.</returns>
 		Task OpenAsync(CancellationToken cancellationToken = default);
 
-#if NET45 || NET46
+#if NETFRAMEWORK
 		/// <summary>
 		/// Disposes current connection asynchonously.
 		/// </summary>

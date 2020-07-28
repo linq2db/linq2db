@@ -594,7 +594,7 @@ namespace LinqToDB.Linq
 			using (var runner = dataContext.GetQueryRunner(query, queryNumber, expression, ps, preambles))
 			{
 				var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 				await using (dr.ConfigureAwait(Configuration.ContinueOnCapturedContext))
 #else
 				using (dr)
@@ -660,7 +660,7 @@ namespace LinqToDB.Linq
 
 			public T Current { get; set; } = default!;
 
-#if NET45 || NET46
+#if NETFRAMEWORK
 			public async Task<bool> MoveNextAsync()
 #else
 			public async ValueTask<bool> MoveNextAsync()
@@ -703,7 +703,7 @@ namespace LinqToDB.Linq
 				_queryRunner = null;
 			}
 
-#if NET45 || NET46
+#if NETFRAMEWORK
 			public Task DisposeAsync()
 			{
 				Dispose();
@@ -929,7 +929,7 @@ namespace LinqToDB.Linq
 			using (var runner = dataContext.GetQueryRunner(query, 0, expression, ps, preambles))
 			{
 				var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 				await using (dr.ConfigureAwait(Configuration.ContinueOnCapturedContext))
 #else
 				using (dr)

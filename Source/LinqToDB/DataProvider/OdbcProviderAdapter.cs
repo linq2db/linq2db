@@ -46,7 +46,7 @@ namespace LinqToDB.DataProvider
 				lock (_syncRoot)
 					if (_instance == null)
 					{
-#if NET45 || NET46
+#if NETFRAMEWORK
 						var assembly = typeof(System.Data.Odbc.OdbcConnection).Assembly;
 #else
 						var assembly = LinqToDB.Common.Tools.TryLoadAssembly(AssemblyName, null);

@@ -61,7 +61,7 @@ namespace LinqToDB.Async
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			var result = new List<T>();
-#if NET45 || NET46
+#if NETFRAMEWORK
 			using (var enumerator = source.GetAsyncEnumerator(cancellationToken))
 #else
 			var enumerator = source.GetAsyncEnumerator(cancellationToken);
@@ -131,7 +131,7 @@ namespace LinqToDB.Async
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-#if NET45 || NET46
+#if NETFRAMEWORK
 			using (var enumerator = source.GetAsyncEnumerator(cancellationToken))
 #else
 			var enumerator = source.GetAsyncEnumerator(cancellationToken);
@@ -156,7 +156,7 @@ namespace LinqToDB.Async
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-#if NET45 || NET46
+#if NETFRAMEWORK
 			using (var enumerator = source.GetAsyncEnumerator(token))
 #else
 			var enumerator = source.GetAsyncEnumerator(token);

@@ -164,7 +164,7 @@ namespace LinqToDB
 		/// Used as configuration name for SAP HANA mapping schema <see cref="DataProvider.SapHana.SapHanaMappingSchema"/>.
 		/// </summary>
 		public const string SapHana       = "SapHana";
-#if !NETSTANDARD2_0 && !NETSTANDARD2_1
+#if NETFRAMEWORK || NETCOREAPP
 		/// <summary>
 		/// SAP HANA provider.
 		/// Used as configuration name for SAP HANA mapping schema <see cref="DataProvider.SapHana.SapHanaMappingSchema.NativeMappingSchema"/>.

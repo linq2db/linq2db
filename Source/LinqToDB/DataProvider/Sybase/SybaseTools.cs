@@ -12,7 +12,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 	public static class SybaseTools
 	{
-#if NET45 || NET46
+#if NETFRAMEWORK
 		private static readonly Lazy<IDataProvider> _sybaseNativeDataProvider = new Lazy<IDataProvider>(() =>
 		{
 			var provider = new SybaseDataProvider(ProviderName.Sybase);
@@ -37,7 +37,7 @@ namespace LinqToDB.DataProvider.Sybase
 			{
 				case SybaseProviderAdapter.ManagedClientNamespace:
 				case ProviderName.SybaseManaged                  : return _sybaseManagedDataProvider.Value;
-#if NET45 || NET46
+#if NETFRAMEWORK
 				case "Sybase.Native"                             :
 				case SybaseProviderAdapter.NativeClientNamespace :
 				case SybaseProviderAdapter.NativeAssemblyName    : return _sybaseNativeDataProvider.Value;
@@ -50,7 +50,7 @@ namespace LinqToDB.DataProvider.Sybase
 				case ProviderName.Sybase                         :
 					if (css.Name.Contains("Managed"))
 						return _sybaseManagedDataProvider.Value;
-#if NET45 || NET46
+#if NETFRAMEWORK
 					if (css.Name.Contains("Native"))
 						return _sybaseNativeDataProvider.Value;
 #endif
@@ -76,7 +76,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 		public static IDataProvider GetDataProvider(string? providerName = null, string? assemblyName = null)
 		{
-#if NET45 || NET46
+#if NETFRAMEWORK
 			if (assemblyName == SybaseProviderAdapter.NativeAssemblyName)  return _sybaseNativeDataProvider.Value;
 			if (assemblyName == SybaseProviderAdapter.ManagedAssemblyName) return _sybaseManagedDataProvider.Value;
 

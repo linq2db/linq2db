@@ -8,7 +8,7 @@ namespace LinqToDB.Data
 	/// Data connection transaction controller.
 	/// </summary>
 	public class DataConnectionTransaction : IDisposable
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 		, IAsyncDisposable
 #endif
 	{
@@ -76,7 +76,7 @@ namespace LinqToDB.Data
 				DataConnection.RollbackTransaction();
 		}
 
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 		public ValueTask DisposeAsync()
 		{
 			if (_disposeTransaction)

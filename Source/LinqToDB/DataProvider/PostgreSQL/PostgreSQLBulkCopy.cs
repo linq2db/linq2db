@@ -31,7 +31,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return MultipleRowsCopy1Async(table, options, source, cancellationToken);
 		}
 
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			return MultipleRowsCopy1Async(table, options, source, cancellationToken);
@@ -55,7 +55,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
 		}
 
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
@@ -305,7 +305,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return rowsCopied;
 		}
 
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 		private async Task<BulkCopyRowsCopied> ProviderSpecificCopyImplAsync<T>(DataConnection dataConnection, ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);

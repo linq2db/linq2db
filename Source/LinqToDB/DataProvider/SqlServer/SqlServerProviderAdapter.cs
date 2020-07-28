@@ -138,7 +138,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			var isSystem = assemblyName == SystemAssemblyName;
 
 			Assembly? assembly;
-#if NET45 || NET46
+#if NETFRAMEWORK
 			if (isSystem)
 			{
 				assembly = typeof(System.Data.SqlClient.SqlConnection).Assembly;

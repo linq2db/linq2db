@@ -692,7 +692,7 @@ namespace LinqToDB.Data
 			{
 			}
 
-#if NET45 || NET46
+#if NETFRAMEWORK
 			public Task DisposeAsync() => TaskEx.CompletedTask;
 #else
 			public ValueTask DisposeAsync() => new ValueTask(Task.CompletedTask);
@@ -700,7 +700,7 @@ namespace LinqToDB.Data
 
 			public T Current { get; set; } = default!;
 
-#if NET45 || NET46
+#if NETFRAMEWORK
 			public async Task<bool> MoveNextAsync()
 #else
 			public async ValueTask<bool> MoveNextAsync()

@@ -1,4 +1,4 @@
-﻿#if NET45 || NET46
+﻿#if NET46
 using LinqToDB;
 using LinqToDB.Metadata;
 using NUnit.Framework;

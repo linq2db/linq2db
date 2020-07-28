@@ -35,7 +35,7 @@ namespace LinqToDB.DataProvider
 			};
 		}
 
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 		public virtual Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
 			BulkCopyType bulkCopyType, ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
@@ -60,7 +60,7 @@ namespace LinqToDB.DataProvider
 			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
 		}
 
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 		protected virtual Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
@@ -80,7 +80,7 @@ namespace LinqToDB.DataProvider
 			return RowByRowCopyAsync(table, options, source, cancellationToken);
 		}
 
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 		protected virtual Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
@@ -142,7 +142,7 @@ namespace LinqToDB.DataProvider
 			return rowsCopied;
 		}
 
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 		protected virtual async Task<BulkCopyRowsCopied> RowByRowCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
@@ -324,7 +324,7 @@ namespace LinqToDB.DataProvider
 			return helper.RowsCopied;
 		}
 
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 		protected static async Task<BulkCopyRowsCopied> MultipleRowsCopyHelperAsync<T>(
 			MultipleRowsHelper                          helper,
 			IAsyncEnumerable<T>                         source,
@@ -372,7 +372,7 @@ namespace LinqToDB.DataProvider
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy1Async(MultipleRowsHelper helper, IEnumerable source, CancellationToken cancellationToken)
 			=> MultipleRowsCopyHelperAsync(helper, source, null, MultipleRowsCopy1Prep, MultipleRowsCopy1Add, MultipleRowsCopy1Finish, cancellationToken);
 
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy1Async<T>(ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 			=> MultipleRowsCopy1Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken);
 
@@ -436,7 +436,7 @@ namespace LinqToDB.DataProvider
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy2Async(MultipleRowsHelper helper, IEnumerable source, string from, CancellationToken cancellationToken)
 			=> MultipleRowsCopyHelperAsync(helper, source, from, MultipleRowsCopy2Prep, MultipleRowsCopy2Add, MultipleRowsCopy2Finish, cancellationToken);
 
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy2Async<T>(ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, string from, CancellationToken cancellationToken)
 			=> MultipleRowsCopy2Async(new MultipleRowsHelper<T>(table, options), source, from, cancellationToken);
 
@@ -491,7 +491,7 @@ namespace LinqToDB.DataProvider
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy3Async(MultipleRowsHelper helper, BulkCopyOptions options, IEnumerable source, string from, CancellationToken cancellationToken)
 			=> MultipleRowsCopyHelperAsync(helper, source, from, MultipleRowsCopy3Prep, MultipleRowsCopy3Add, MultipleRowsCopy3Finish, cancellationToken);
 
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy3Async<T>(MultipleRowsHelper helper, BulkCopyOptions options, IAsyncEnumerable<T> source, string from, CancellationToken cancellationToken)
 			=> MultipleRowsCopyHelperAsync(helper, source, from, MultipleRowsCopy3Prep, MultipleRowsCopy3Add, MultipleRowsCopy3Finish, cancellationToken);
 #endif

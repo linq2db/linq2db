@@ -829,7 +829,7 @@ namespace LinqToDB.Mapping
 			_metadataReaders = list.ToArray();
 		}
 
-#if NET45 || NET46
+#if NETFRAMEWORK
 		/// <summary>
 		/// Gets or sets metadata attributes provider for current schema.
 		/// Metadata providers, shipped with LINQ to DB:
