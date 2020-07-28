@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
+using LinqToDB;
 using LinqToDB.Expressions;
 using NUnit.Framework;
 
@@ -712,6 +714,37 @@ namespace Tests
 				var wrapped = typeMapper.BuildWrappedFactory(() => new SampleClass(1, 2))();
 
 				Assert.AreEqual(4, wrapped.ReturnTypeMapper("test"));
+			}
+
+			[Test]
+			public void ValueTaskToTaskMapperTest1()
+			{
+				var taskExpression = Expression.Constant(new ValueTask<long>());
+				var mapper         = new ValueTaskToTaskMapper();
+				var result         = ((ICustomMapper)mapper).Map(taskExpression);
+
+				Assert.AreEqual(typeof(Task<long>), result.Type);
+				Assert.AreEqual(typeof(Task<long>), result.EvaluateExpression()!.GetType());
+			}
+
+			[Test]
+			public void ValueTaskToTaskMapperTest2()
+			{
+				var taskExpression = Expression.Constant(new ValueTask());
+				var mapper         = new ValueTaskToTaskMapper();
+				var result         = ((ICustomMapper)mapper).Map(taskExpression);
+
+				Assert.AreEqual(typeof(Task), result.Type);
+				Assert.AreEqual(typeof(Task), result.EvaluateExpression()!.GetType());
+			}
+
+			[Test]
+			public void ValueTaskToTaskMapperTest3()
+			{
+				var taskExpression = Expression.Constant(0);
+				var mapper         = new ValueTaskToTaskMapper();
+
+				Assert.Throws(typeof(LinqToDBException), () => ((ICustomMapper)mapper).Map(taskExpression));
 			}
 		}
 	}
