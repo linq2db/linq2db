@@ -79,6 +79,22 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void LoadWithAsTable4([DataSources] string context)
+		{
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			{
+				var q =
+					from t in db.Parent.LoadWithAsTable(p => p.Children.First().Parent)
+					select t;
+
+				var ch = q.FirstOrDefault();
+
+				Assert.IsNotNull(ch.Children[0].Parent);
+			}
+		}
+
+		[Test]
 		public void LoadWith3([DataSources] string context)
 		{
 			using (new AllowMultipleQuery())

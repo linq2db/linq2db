@@ -464,6 +464,7 @@ namespace LinqToDB.Linq.Builder
 								case "ElementAt"            :
 								case "ElementAtOrDefault"   : return new TransformInfo(ConvertElementAt     (call));
 								case "LoadWith"             : return new TransformInfo(expr, true);
+								case "LoadWithAsTable"      : return new TransformInfo(expr, true);
 								case "With"                 : return new TransformInfo(expr);
 							}
 						}
