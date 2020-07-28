@@ -15,12 +15,12 @@ namespace LinqToDB.DataProvider
 	using System.Threading.Tasks;
 
 	public class BulkCopyReader<T> : BulkCopyReader
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 		, IAsyncDisposable
 #endif
 	{
 		readonly IEnumerator<T>?      _enumerator;
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 		readonly IAsyncEnumerator<T>? _asyncEnumerator;
 #endif
 
@@ -30,7 +30,7 @@ namespace LinqToDB.DataProvider
 			_enumerator = collection.GetEnumerator();
 		}
 
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 		public BulkCopyReader(DataConnection dataConnection, List<ColumnDescriptor> columns, IAsyncEnumerable<T> collection, CancellationToken cancellationToken)
 			: base(dataConnection, columns)
 		{
@@ -55,7 +55,7 @@ namespace LinqToDB.DataProvider
 
 		#region Implementation of IDisposable
 
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 		protected override void Dispose(bool disposing)
 		{
 			if (disposing)
@@ -64,7 +64,7 @@ namespace LinqToDB.DataProvider
 			}
 		}
 
-#if NETSTANDARD2_1 || NETCOREAPP3_1
+#if NETSTANDARD2_1PLUS
 		public override ValueTask DisposeAsync()
 #else
 		public ValueTask DisposeAsync()
@@ -90,7 +90,7 @@ namespace LinqToDB.DataProvider
 		readonly IReadOnlyDictionary<string, int> _ordinals;
 
 		protected abstract bool MoveNext();
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 		protected abstract ValueTask<bool> MoveNextAsync();
 #endif
 		protected abstract object Current { get; }
@@ -262,7 +262,7 @@ namespace LinqToDB.DataProvider
 			return b;
 		}
 
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 		public override async Task<bool> ReadAsync(CancellationToken cancellationToken)
 		{
 			var b = await MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);

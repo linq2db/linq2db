@@ -90,6 +90,10 @@ namespace Tests.Playground
 					from t2 in table.Where(predicate)
 					select t;
 
+				//DO NOT REMOVE, it forces caching query
+				var str = query.ToString();
+				Console.WriteLine(str);
+
 				var expected = from t in sampleData
 					from t2 in sampleData.Where(predicate.Compile())
 					select t;

@@ -43,7 +43,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			return ret;
 		}
 
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 		protected override async Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{

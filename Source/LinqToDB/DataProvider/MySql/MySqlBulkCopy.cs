@@ -58,7 +58,7 @@ namespace LinqToDB.DataProvider.MySql
 			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
 		}
 
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T>           table,
 			BulkCopyOptions     options,
@@ -152,7 +152,7 @@ namespace LinqToDB.DataProvider.MySql
 					dataConnection,
 					() =>
 					(runAsync && (
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 							bc.CanWriteToServerAsync2 ||
 #endif
 							bc.CanWriteToServerAsync)
@@ -161,7 +161,7 @@ namespace LinqToDB.DataProvider.MySql
 					async () => {
 						if (runAsync)
 						{
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 							if (bc.CanWriteToServerAsync2)
 								await bc.WriteToServerAsync2(rd, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 							else
@@ -185,7 +185,7 @@ namespace LinqToDB.DataProvider.MySql
 			return rc;
 		}
 
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 		private async Task<BulkCopyRowsCopied> ProviderSpecificCopyInternal<T>(
 			ProviderConnections providerConnections,
 			ITable<T>           table,
@@ -267,7 +267,7 @@ namespace LinqToDB.DataProvider.MySql
 			return MultipleRowsCopy1Async(table, options, source, cancellationToken);
 		}
 
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			return MultipleRowsCopy1Async(table, options, source, cancellationToken);

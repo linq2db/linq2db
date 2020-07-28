@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 namespace LinqToDB.Linq
 {
 	public interface IDataReaderAsync : IDisposable
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 		, IAsyncDisposable
 #endif
 	{

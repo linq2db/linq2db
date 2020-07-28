@@ -7,7 +7,7 @@ namespace LinqToDB.Common
 {
 	internal class EnumerableHelper
 	{
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 		public static IEnumerable<T> AsyncToSyncEnumerable<T>(IAsyncEnumerator<T> enumerator)
 		{
 			while (enumerator.MoveNextAsync().GetAwaiter().GetResult())
@@ -114,7 +114,7 @@ namespace LinqToDB.Common
 			}
 		}
 
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 		/// <summary>
 		/// Split enumerable source into batches of specified size.
 		/// Limitation: each batch should be enumerated only once or exception will be generated.

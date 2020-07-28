@@ -56,7 +56,7 @@ namespace LinqToDB.DataProvider
 		
 		Task<BulkCopyRowsCopied> BulkCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken);
 
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 		Task<BulkCopyRowsCopied> BulkCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken);
 #endif
 	}

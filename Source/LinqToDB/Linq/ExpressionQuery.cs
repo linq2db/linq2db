@@ -52,6 +52,8 @@ namespace LinqToDB.Linq
 			{
 				var expression = Expression;
 				var info       = GetQuery(ref expression, true);
+				Expression     = expression;
+
 				var sqlText    = QueryRunner.GetSqlText(info, DataContext, expression, Parameters, Preambles);
 
 				return sqlText;
@@ -161,8 +163,10 @@ namespace LinqToDB.Linq
 		public Task GetForEachUntilAsync(Func<T,bool> func, CancellationToken cancellationToken)
 		{
 			var expression = Expression;
-			return GetQuery(ref expression, true)
-				.GetForEachAsync(DataContext, expression, Parameters, Preambles, func, cancellationToken);
+			var query      = GetQuery(ref expression, true);
+			Expression     = expression;
+
+			return query.GetForEachAsync(DataContext, expression, Parameters, Preambles, func, cancellationToken);
 		}
 
 		public IAsyncEnumerable<T> GetAsyncEnumerable()
@@ -173,7 +177,10 @@ namespace LinqToDB.Linq
 		public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
 		{
 			var expression = Expression;
-			return GetQuery(ref expression, true)
+			var query      = GetQuery(ref expression, true);
+			Expression     = expression;
+
+			return query
 				.GetIAsyncEnumerable(DataContext, expression, Parameters, Preambles)
 				.GetAsyncEnumerator(cancellationToken);
 		}

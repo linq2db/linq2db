@@ -19,7 +19,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 	public static partial class OracleTools
 	{
-#if NET45 || NET46
+#if NETFRAMEWORK
 		private static readonly Lazy<IDataProvider> _oracleNativeDataProvider11 = new Lazy<IDataProvider>(() =>
 		{
 			var provider = new OracleDataProvider(ProviderName.OracleNative, OracleVersion.v11);
@@ -64,7 +64,7 @@ namespace LinqToDB.DataProvider.Oracle
 			bool? managed = null;
 			switch (css.ProviderName)
 			{
-#if NET45 || NET46
+#if NETFRAMEWORK
 				case OracleProviderAdapter.NativeAssemblyName    :
 				case OracleProviderAdapter.NativeClientNamespace :
 				case ProviderName.OracleNative                   :
@@ -84,7 +84,7 @@ namespace LinqToDB.DataProvider.Oracle
 						goto case ProviderName.Oracle;
 					break;
 				case ProviderName.Oracle                         :
-#if NET45 || NET46
+#if NETFRAMEWORK
 					if (css.Name.Contains("Native") || managed == false)
 					{
 						if (css.Name.Contains("11"))
@@ -118,7 +118,7 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				var cs = string.IsNullOrWhiteSpace(connectionString) ? css.ConnectionString : connectionString;
 
-#if NET45 || NET46
+#if NETFRAMEWORK
 				if (!managed)
 					providerAdapter = OracleProviderAdapter.GetInstance(ProviderName.OracleNative);
 				else
@@ -165,7 +165,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		private static IDataProvider GetVersionedDataProvider(OracleVersion version, bool managed)
 		{
-#if NET45 || NET46
+#if NETFRAMEWORK
 			if (!managed)
 			{
 				return version switch
@@ -187,7 +187,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		private static string DetectProviderName()
 		{
-#if NET45 || NET46
+#if NETFRAMEWORK
 			try
 			{
 				var path = typeof(OracleTools).Assembly.GetPath();
@@ -207,7 +207,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public static IDataProvider GetDataProvider(string? providerName = null, string? assemblyName = null)
 		{
-#if NET45 || NET46
+#if NETFRAMEWORK
 			if (assemblyName == OracleProviderAdapter.NativeAssemblyName ) return GetVersionedDataProvider(DefaultVersion, false);
 			if (assemblyName == OracleProviderAdapter.ManagedAssemblyName) return GetVersionedDataProvider(DefaultVersion, true);
 
@@ -227,7 +227,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public static void ResolveOracle(string path)       => new AssemblyResolver(
 			path,
-#if NET45 || NET46
+#if NETFRAMEWORK
 			DetectedProviderName == ProviderName.OracleManaged
 				? OracleProviderAdapter.ManagedAssemblyName
 				: OracleProviderAdapter.NativeAssemblyName

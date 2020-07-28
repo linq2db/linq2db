@@ -643,7 +643,7 @@ namespace LinqToDB.Data
 		{
 			get
 			{
-#if NET45 || NET46
+#if NETFRAMEWORK
 				return _defaultSettings ??= LinqToDBSection.Instance;
 #else
 				return _defaultSettings;

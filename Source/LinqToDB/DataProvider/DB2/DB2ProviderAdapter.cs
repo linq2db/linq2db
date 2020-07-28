@@ -14,7 +14,7 @@ namespace LinqToDB.DataProvider.DB2
 		public const string NetFxClientNamespace = "IBM.Data.DB2";
 		public const string CoreClientNamespace  = "IBM.Data.DB2.Core";
 
-#if NET45 || NET46
+#if NETFRAMEWORK
 		public const string AssemblyName         = "IBM.Data.DB2";
 		public const string ClientNamespace      = "IBM.Data.DB2";
 #else
