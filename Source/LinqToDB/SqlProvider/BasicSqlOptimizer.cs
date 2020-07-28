@@ -1864,7 +1864,7 @@ namespace LinqToDB.SqlProvider
 							{
 								var takeValue = take.EvaluateExpression()!;
 								take = new SqlParameter(new DbDataType(takeValue.GetType()), "take", takeValue)
-									{ IsQueryParameter = !inlineParameters && Configuration.Linq.ParametrizeTakeSkip };
+									{ IsQueryParameter = !inlineParameters && Configuration.Linq.ParameterizeTakeSkip };
 							}
 						}
 						else if (take.ElementType != QueryElementType.SqlValue)
@@ -1883,7 +1883,7 @@ namespace LinqToDB.SqlProvider
 							{
 								var skipValue = skip.EvaluateExpression()!;
 								skip = new SqlParameter(new DbDataType(skipValue.GetType()), "skip", skipValue)
-									{ IsQueryParameter = !inlineParameters && Configuration.Linq.ParametrizeTakeSkip };
+									{ IsQueryParameter = !inlineParameters && Configuration.Linq.ParameterizeTakeSkip };
 							}
 						}
 						else if (skip.ElementType != QueryElementType.SqlValue)

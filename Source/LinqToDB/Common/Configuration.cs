@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 using JetBrains.Annotations;
 
@@ -193,9 +193,9 @@ namespace LinqToDB.Common
 			public static bool KeepDistinctOrdered = true;
 
 			/// <summary>
-			/// Enables Take/Skip parametrization.
+			/// Enables Take/Skip parameterization.
 			/// </summary>
-			public static bool ParametrizeTakeSkip = true;
+			public static bool ParameterizeTakeSkip = true;
 		}
 
 		/// <summary>

@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
+using System.Collections.Concurrent;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
@@ -11,16 +13,13 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
-	using System.Collections.Concurrent;
-	using System.Diagnostics;
-	using System.Diagnostics.CodeAnalysis;
-	using Async;
 	using Builder;
 	using Common;
 	using Common.Internal.Cache;
 	using Common.Logging;
 	using Data;
 	using Extensions;
+	using LinqToDB.Async;
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
@@ -374,19 +373,46 @@ namespace LinqToDB.Linq
 #endif
 		}
 
-		static int GetParameterIndex(Query query, ISqlExpression parameter)
+		static ParameterAccessor? GetParameterAccessor(List<ParameterAccessor> parameters, ISqlExpression parameter)
+		{
+			for (var i = 0; i < parameters.Count; i++)
+			{
+				var accessor = parameters[i];
+				if (accessor.SqlParameter == parameter)
+					return accessor;
+			}
+
+			return null;
+		}
+
+		static ISqlExpression ConvertParametersToValues(Query query, Expression expr, IDataContext? db, object?[]? ps, ISqlExpression sqlExpr)
 		{
 			var parameters = query.Queries[0].Parameters;
 
-			for (var i = 0; i < parameters.Count; i++)
+			var result = ConvertVisitor.Convert(sqlExpr, (v, e) =>
 			{
-				var p = parameters[i].SqlParameter;
+				if (e.ElementType == QueryElementType.SqlParameter)
+				{
+					var parameter = (SqlParameter)e;
+					var accessor  = GetParameterAccessor(parameters, parameter);
+					if (accessor != null)
+						return new SqlValue(parameter.Type, accessor.Accessor(expr, db, ps));
+				}
 
-				if (p == parameter)
-					return i;
-			}
+				return e;
+			});
 
-			throw new InvalidOperationException();
+			return result;
+		}
+
+		static int EvaluateTakeSkipValue(Query query, Expression expr, IDataContext? db, object?[]? ps,
+			ISqlExpression sqlExpr)
+		{
+			var converted = ConvertParametersToValues(query, expr, db, ps, sqlExpr);
+			var evaluated = converted.EvaluateExpression() as int?;
+			if (evaluated == null)
+				throw new InvalidOperationException($"Can not evaluate integer expression from '{converted}'.");
+			return evaluated.Value;
 		}
 
 		internal static void SetParameters(
@@ -482,60 +508,10 @@ namespace LinqToDB.Linq
 
 		#region SetRunQuery
 
-		static IEnumerable<TSource> SkipLazy<TSource>(
-			IEnumerable<TSource> source,
-			ISqlExpression       count)
-		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (count  == null) throw new ArgumentNullException(nameof(count));
-
-			using (var enumerator = source.GetEnumerator())
-			{
-				int cnt = -1;
-				while (enumerator.MoveNext())
-				{
-					if (cnt < 0)
-						cnt = (int)count.EvaluateExpression()!;
-					if (cnt > 0)
-					{
-						--cnt;
-						continue;
-					}					
-					yield return enumerator.Current;
-				}
-			}
-		}
-
-		static IEnumerable<TSource> TakeLazy<TSource>(
-			IEnumerable<TSource> source,
-			ISqlExpression       count)
-		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (count  == null) throw new ArgumentNullException(nameof(count));
-
-			using (var enumerator = source.GetEnumerator())
-			{
-				int cnt = -1;
-				while (enumerator.MoveNext())
-				{
-					if (cnt < 0)
-					{
-						cnt = (int)count.EvaluateExpression()!;
-						if (cnt <= 0)
-							break;
-					}					
-					if (cnt == 0)
-						break;
-					--cnt;
-					yield return enumerator.Current;
-				}
-			}
-		}
-
 		static Tuple<
 			Func<Query,IDataContext,Mapper<T>,Expression,object?[]?,object?[]?,int,IEnumerable<T>>,
-			Func<Expression,IDataContext?,object?[]?,int>?,
-			Func<Expression,IDataContext?,object?[]?,int>?>
+			Func<Query,Expression,IDataContext?,object?[]?,int>?,
+			Func<Query,Expression,IDataContext?,object?[]?,int>?>
 			GetExecuteQuery<T>(
 				Query query,
 				Func<Query,IDataContext,Mapper<T>,Expression,object?[]?,object?[]?,int,IEnumerable<T>> queryFunc)
@@ -545,7 +521,7 @@ namespace LinqToDB.Linq
 			if (query.Queries.Count != 1)
 				throw new InvalidOperationException();
 
-			Func<Expression,IDataContext?,object?[]?,int>? skip = null, take = null;
+			Func<Query,Expression,IDataContext?,object?[]?,int>? skip = null, take = null;
 
 			var selectQuery = query.Queries[0].Statement.SelectQuery!;
 			var select      = selectQuery.Select;
@@ -554,16 +530,16 @@ namespace LinqToDB.Linq
 			{
 				var q = queryFunc;
 
-				queryFunc = (qq, db, mapper, expr, ps, preambles, qn) => SkipLazy(q(qq, db, mapper, expr, ps, preambles, qn), select.SkipValue);
-				skip      = (expr, pc, ps) => (int)select.SkipValue.EvaluateExpression()!;
+				queryFunc = (qq, db, mapper, expr, ps, preambles, qn) => q(qq, db, mapper, expr, ps, preambles, qn).Skip(EvaluateTakeSkipValue(qq, expr, db, ps, select.SkipValue));
+				skip      = (qq, expr, pc, ps) => EvaluateTakeSkipValue(qq, expr, pc, ps, select.SkipValue);
 			}
 
 			if (select.TakeValue != null && !query.SqlProviderFlags.IsTakeSupported)
 			{
 				var q = queryFunc;
 
-				queryFunc = (qq, db, mapper, expr, ps, preambles, qn) => TakeLazy(q(qq, db, mapper, expr, ps, preambles, qn), select.TakeValue!);
-				take      = (expr, pc, ps) => (int)select.TakeValue.EvaluateExpression()!;
+				queryFunc = (qq, db, mapper, expr, ps, preambles, qn) => q(qq, db, mapper, expr, ps, preambles, qn).Take(EvaluateTakeSkipValue(qq, expr, db, ps, select.TakeValue));
+				take      = (qq, expr, pc, ps) => EvaluateTakeSkipValue(qq, expr, pc, ps, select.TakeValue);
 			}
 
 			return Tuple.Create(queryFunc, skip, take);
@@ -599,8 +575,8 @@ namespace LinqToDB.Linq
 			object?[]?                    preambles,
 			int                           queryNumber,
 			Func<T,bool>                  func,
-			Func<Expression,IDataContext?,object?[]?,int>? skipAction,
-			Func<Expression,IDataContext?,object?[]?,int>? takeAction,
+			Func<Query,Expression,IDataContext?,object?[]?,int>? skipAction,
+			Func<Query,Expression,IDataContext?,object?[]?,int>? takeAction,
 			CancellationToken             cancellationToken)
 		{
 			using (var runner = dataContext.GetQueryRunner(query, queryNumber, expression, ps, preambles))
@@ -612,12 +588,12 @@ namespace LinqToDB.Linq
 				using (dr)
 #endif
 				{
-					var skip = skipAction?.Invoke(expression, dataContext, ps) ?? 0;
+					var skip = skipAction?.Invoke(query, expression, dataContext, ps) ?? 0;
 
 					while (skip-- > 0 && await dr.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 					{}
 
-					var take = takeAction?.Invoke(expression, dataContext, ps) ?? int.MaxValue;
+					var take = takeAction?.Invoke(query, expression, dataContext, ps) ?? int.MaxValue;
 
 					while (take-- > 0 && await dr.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 					{
@@ -638,8 +614,8 @@ namespace LinqToDB.Linq
 			readonly object?[]?                    _ps;
 			readonly object?[]?                    _preambles;
 			readonly int                           _queryNumber;
-			readonly Func<Expression,IDataContext?,object?[]?,int>? _skipAction;
-			readonly Func<Expression,IDataContext?,object?[]?,int>? _takeAction;
+			readonly Func<Query,Expression,IDataContext?,object?[]?,int>? _skipAction;
+			readonly Func<Query,Expression,IDataContext?,object?[]?,int>? _takeAction;
 			readonly CancellationToken             _cancellationToken;
 
 			IQueryRunner?     _queryRunner;
@@ -654,8 +630,8 @@ namespace LinqToDB.Linq
 				object?[]?                       ps,
 				object?[]?                       preambles,
 				int                              queryNumber,
-				Func<Expression,IDataContext?,object?[]?,int>? skipAction,
-				Func<Expression,IDataContext?,object?[]?,int>? takeAction,
+				Func<Query,Expression,IDataContext?,object?[]?,int>? skipAction,
+				Func<Query,Expression,IDataContext?,object?[]?,int>? takeAction,
 				CancellationToken                cancellationToken)
 			{
 				_query             = query;
@@ -684,7 +660,7 @@ namespace LinqToDB.Linq
 
 					_dataReader = await _queryRunner.ExecuteReaderAsync(_cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
-					var skip = _skipAction?.Invoke(_expression, _dataContext, _ps) ?? 0;
+					var skip = _skipAction?.Invoke(_query, _expression, _dataContext, _ps) ?? 0;
 
 					while (skip-- > 0)
 					{
@@ -692,7 +668,7 @@ namespace LinqToDB.Linq
 							return false;
 					}
 
-					_take = _takeAction?.Invoke(_expression, _dataContext, _ps) ?? int.MaxValue;
+					_take = _takeAction?.Invoke(_query, _expression, _dataContext, _ps) ?? int.MaxValue;
 				}
 
 				if (_take-- > 0 && await _dataReader!.ReadAsync(_cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
@@ -742,8 +718,8 @@ namespace LinqToDB.Linq
 			readonly object?[]?                       _ps;
 			readonly object?[]?                       _preambles;
 			readonly int                              _queryNumber;
-			readonly Func<Expression,IDataContext?,object?[]?,int>? _skipAction;
-			readonly Func<Expression,IDataContext?,object?[]?,int>? _takeAction;
+			readonly Func<Query,Expression,IDataContext?,object?[]?,int>? _skipAction;
+			readonly Func<Query,Expression,IDataContext?,object?[]?,int>? _takeAction;
 
 			public AsyncEnumerableImpl(
 				Query                            query,
@@ -753,8 +729,8 @@ namespace LinqToDB.Linq
 				object?[]?                       ps,
 				object?[]?                       preambles,
 				int                              queryNumber,
-				Func<Expression,IDataContext?,object?[]?,int>? skipAction,
-				Func<Expression,IDataContext?,object?[]?,int>? takeAction)
+				Func<Query,Expression,IDataContext?,object?[]?,int>? skipAction,
+				Func<Query,Expression,IDataContext?,object?[]?,int>? takeAction)
 			{
 				_query       = query;
 				_dataContext = dataContext;
@@ -782,8 +758,8 @@ namespace LinqToDB.Linq
 			object?[]?                       ps,
 			object?[]?                       preambles,
 			int                              queryNumber,
-			Func<Expression,IDataContext?,object?[]?,int>? skipAction,
-			Func<Expression,IDataContext?,object?[]?,int>? takeAction)
+			Func<Query,Expression,IDataContext?,object?[]?,int>? skipAction,
+			Func<Query,Expression,IDataContext?,object?[]?,int>? takeAction)
 		{
 			return new AsyncEnumerableImpl<T>(
 				query, dataContext, mapper, expression, ps, preambles, queryNumber, skipAction, takeAction);

@@ -22,7 +22,7 @@ namespace Tests.Linq
 			if (!(dc is DataConnection db))
 				return;
 
-			if (!LinqToDB.Common.Configuration.Linq.ParametrizeTakeSkip || 
+			if (!LinqToDB.Common.Configuration.Linq.ParameterizeTakeSkip || 
 			    (!db.DataProvider.SqlProviderFlags.AcceptsTakeAsParameter && !db.DataProvider.SqlProviderFlags.AcceptsTakeAsParameterIfSkip))
 				Assert.That(db.Command.Parameters.Count, Is.EqualTo(additional));
 			else
@@ -34,7 +34,7 @@ namespace Tests.Linq
 			if (!(dc is DataConnection db))
 				return;
 
-			if (!LinqToDB.Common.Configuration.Linq.ParametrizeTakeSkip || 
+			if (!LinqToDB.Common.Configuration.Linq.ParameterizeTakeSkip || 
 			    !db.DataProvider.SqlProviderFlags.AcceptsTakeAsParameter)
 				Assert.That(db.Command.Parameters.Count, Is.EqualTo(additional));
 			else
@@ -56,7 +56,7 @@ namespace Tests.Linq
 		[Test]
 		public void Take1([DataSources] string context, [Values] bool withParameters)
 		{
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
 				for (var i = 2; i <= 3; i++)
@@ -87,7 +87,7 @@ namespace Tests.Linq
 		[Test]
 		public void Take2([DataSources] string context, [Values] bool withParameters)
 		{
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 				TakeParam(db, 1);
 		}
@@ -95,7 +95,7 @@ namespace Tests.Linq
 		[Test]
 		public void Take3([DataSources] string context, [Values] bool withParameters)
 		{
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
 				Assert.AreEqual(3,
@@ -107,7 +107,7 @@ namespace Tests.Linq
 		[Test]
 		public void Take4([DataSources] string context, [Values] bool withParameters)
 		{
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
 				Assert.AreEqual(3,
@@ -119,7 +119,7 @@ namespace Tests.Linq
 		[Test]
 		public void Take5([DataSources] string context, [Values] bool withParameters)
 		{
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
 				Assert.AreEqual(3, db.Child.Take(3).ToList().Count);
@@ -130,7 +130,7 @@ namespace Tests.Linq
 		[Test]
 		public void Take6([DataSources] string context, [Values] bool withParameters)
 		{
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
 				var expected =    Child.OrderBy(c => c.ChildID).Take(3);
@@ -143,7 +143,7 @@ namespace Tests.Linq
 		[Test]
 		public void Take7([DataSources] string context, [Values] bool withParameters)
 		{
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
 				Assert.AreEqual(3, db.Child.Take(() => 3).ToList().Count);
@@ -154,7 +154,7 @@ namespace Tests.Linq
 		public void Take8([DataSources] string context, [Values] bool withParameters)
 		{
 			var n = 3;
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
 				Assert.AreEqual(3, db.Child.Take(() => n).ToList().Count);
@@ -164,7 +164,7 @@ namespace Tests.Linq
 		[Test]
 		public void TakeCount([DataSources(TestProvName.AllSybase)] string context, [Values] bool withParameters)
 		{
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
 				Assert.AreEqual(
@@ -177,7 +177,7 @@ namespace Tests.Linq
 		[Test]
 		public void Skip1([DataSources] string context, [Values] bool withParameters)
 		{
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
 				AreEqual(Child.Skip(3), db.Child.Skip(3));
@@ -193,7 +193,7 @@ namespace Tests.Linq
 		[Test]
 		public void Skip2([DataSources] string context, [Values] bool withParameters)
 		{
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 				AreEqual(
 					(from ch in    Child where ch.ChildID > 3 || ch.ChildID < 4 select ch).Skip(3),
@@ -203,7 +203,7 @@ namespace Tests.Linq
 		[Test]
 		public void Skip3([DataSources] string context, [Values] bool withParameters)
 		{
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
 				AreEqual(
@@ -215,7 +215,7 @@ namespace Tests.Linq
 		[Test]
 		public void Skip4([DataSources] string context, [Values] bool withParameters)
 		{
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
 				var expected = Child.OrderByDescending(c => c.ChildID).Skip(3);
@@ -227,7 +227,7 @@ namespace Tests.Linq
 		[Test]
 		public void Skip5([DataSources] string context, [Values] bool withParameters)
 		{
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
 				AreEqual(
@@ -239,7 +239,7 @@ namespace Tests.Linq
 		[Test]
 		public void Skip6([DataSources] string context, [Values] bool withParameters)
 		{
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
 				AreEqual(Child.Skip(3), db.Child.Skip(() => 3));
@@ -250,7 +250,7 @@ namespace Tests.Linq
 		public void Skip7([DataSources] string context, [Values] bool withParameters)
 		{
 			var n = 3;
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
 				AreEqual(Child.Skip(n), db.Child.Skip(() => n));
@@ -266,7 +266,7 @@ namespace Tests.Linq
 			string context,
 			[Values] bool withParameters)
 		{
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
 				Assert.AreEqual(
@@ -279,7 +279,7 @@ namespace Tests.Linq
 		[Test]
 		public void SkipTake1([DataSources] string context, [Values] bool withParameters)
 		{
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
 				var expected =    Child.OrderByDescending(c => c.ChildID).Skip(2).Take(5);
@@ -293,7 +293,7 @@ namespace Tests.Linq
 		[Test]
 		public void SkipTake2([DataSources] string context, [Values] bool withParameters)
 		{
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
 				var expected =    Child.OrderByDescending(c => c.ChildID).Take(7).Skip(2);
@@ -307,7 +307,7 @@ namespace Tests.Linq
 		[Test]
 		public void SkipTake3([DataSources] string context, [Values] bool withParameters)
 		{
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
 				var expected = Child.OrderBy(c => c.ChildID).Skip(1).Take(7).Skip(2);
@@ -321,7 +321,7 @@ namespace Tests.Linq
 		[Test]
 		public void SkipTake21([DataSources] string context, [Values] bool withParameters)
 		{
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
 				var skip = 2;
@@ -337,7 +337,7 @@ namespace Tests.Linq
 		[Test]
 		public void SkipTake22([DataSources] string context, [Values] bool withParameters)
 		{
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
 				var skip = 2;
@@ -353,7 +353,7 @@ namespace Tests.Linq
 		[Test]
 		public void SkipTake23([DataSources] string context, [Values] bool withParameters)
 		{
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
 				var skip1 = 1;
@@ -439,7 +439,7 @@ namespace Tests.Linq
 			string context, 
 			[Values] bool withParameters)
 		{
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
 				var expected =    Child.OrderByDescending(c => c.ChildID).Skip(1).Take(7).OrderBy(c => c.ChildID).Skip(2);
@@ -452,7 +452,7 @@ namespace Tests.Linq
 		[Test]
 		public void SkipTake5([DataSources] string context, [Values] bool withParameters)
 		{
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
 				var list = db.Child.Skip(2).Take(5).ToList();
@@ -500,7 +500,7 @@ namespace Tests.Linq
 			string context, 
 			[Values] bool withParameters)
 		{
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
 				SkipTake6(db, false);
@@ -521,7 +521,7 @@ namespace Tests.Linq
 			string context, 
 			[Values] bool withParameters)
 		{
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
 				Assert.AreEqual(
@@ -534,7 +534,7 @@ namespace Tests.Linq
 		[Test]
 		public void SkipFirst([DataSources] string context, [Values] bool withParameters)
 		{
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
 				var expected = (from p in Parent where p.ParentID > 1 select p).Skip(1).First();
@@ -550,7 +550,7 @@ namespace Tests.Linq
 		[Test]
 		public void ElementAt1([DataSources] string context, [Values(2, 3)] int at, [Values] bool withParameters)
 		{
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
 				Assert.AreEqual(
@@ -564,7 +564,7 @@ namespace Tests.Linq
 		public void ElementAt2([DataSources] string context, [Values] bool withParameters)
 		{
 			var n = 3;
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
 					(from p in    Parent where p.ParentID > 1 select p).ElementAt(n),
@@ -575,7 +575,7 @@ namespace Tests.Linq
 		public async Task ElementAt2Async([DataSources] string context, [Values] bool withParameters)
 		{
 			var n = 3;
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
 				Assert.AreEqual(
@@ -588,7 +588,7 @@ namespace Tests.Linq
 		[Test]
 		public void ElementAtDefault1([DataSources] string context, [Values] bool withParameters)
 		{
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
 				Assert.AreEqual(
@@ -601,7 +601,7 @@ namespace Tests.Linq
 		[Test]
 		public void ElementAtDefault2([DataSources] string context, [Values] bool withParameters)
 		{
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
 				Assert.IsNull((from p in db.Parent where p.ParentID > 1 select p).ElementAtOrDefault(300000));
@@ -613,7 +613,7 @@ namespace Tests.Linq
 		public void ElementAtDefault3([DataSources] string context, [Values] bool withParameters)
 		{
 			var n = 3;
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
 				Assert.AreEqual(
@@ -627,7 +627,7 @@ namespace Tests.Linq
 		public async Task ElementAtDefault3Async([DataSources] string context, [Values] bool withParameters)
 		{
 			var n = 3;
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
 				Assert.AreEqual(
@@ -641,7 +641,7 @@ namespace Tests.Linq
 		public void ElementAtDefault4([DataSources] string context, [Values] bool withParameters)
 		{
 			var n = 300000;
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
 				Assert.IsNull((from p in db.Parent where p.ParentID > 1 select p).ElementAtOrDefault(() => n));
@@ -652,7 +652,7 @@ namespace Tests.Linq
 		[Test]
 		public void ElementAtDefault5([DataSources] string context, [Values(2,3)] int idx, [Values] bool withParameters)
 		{
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
 				var missCount = Query<Person>.CacheMissCount;
@@ -669,7 +669,7 @@ namespace Tests.Linq
 		[Test]
 		public void TakeWithPercent([IncludeDataSources(true, TestProvName.AllAccess, TestProvName.AllSqlServer2005Plus)] string context, [Values] bool withParameters)
 		{
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
 				var q = db.Person.Take(50, TakeHints.Percent).Select(_ => _);
@@ -686,7 +686,7 @@ namespace Tests.Linq
 		[Test]
 		public void TakeWithPercent1([IncludeDataSources(TestProvName.AllAccess, TestProvName.AllSqlServer2005Plus)] string context, [Values] bool withParameters)
 		{
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
 				var q = db.Person.Take(() => 50, TakeHints.Percent).Select(_ => _);
@@ -702,7 +702,7 @@ namespace Tests.Linq
 		[Test]
 		public void TakeWithTies([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context, [Values] bool withParameters)
 		{
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
 				var q = db.Person.OrderBy(_ => _.FirstName).Take(50, TakeHints.WithTies | TakeHints.Percent).Select(_ => _);
@@ -720,7 +720,7 @@ namespace Tests.Linq
 		[Test]
 		public void TakeWithTies2([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context, [Values] bool withParameters)
 		{
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
 				var q = db.Person.OrderBy(_ => _.FirstName).Take(() => 50, TakeHints.WithTies | TakeHints.Percent).Select(_ => _);
@@ -755,7 +755,7 @@ namespace Tests.Linq
 		[Test]
 		public void TakeSkipJoin([DataSources(TestProvName.AllSybase)] string context, [Values] bool withParameters)
 		{
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
 				var types = db.Types.ToList();
@@ -797,7 +797,7 @@ namespace Tests.Linq
 		[Test]
 		public void FirstOrDefaultInSubQuery([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool withParameters)
 		{
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
 				using (db.CreateLocalTable(new[]
@@ -878,7 +878,7 @@ namespace Tests.Linq
 				new TakeSkipClass { Value = "BOLTO" }
 			};
 
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			using (var tempTable = db.CreateLocalTable(testData))
 			{
@@ -914,7 +914,7 @@ namespace Tests.Linq
 				new TakeSkipClass { Value = "BOLTO" }
 			};
 
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			using (var tempTable = db.CreateLocalTable(testData))
 			{
@@ -945,7 +945,7 @@ namespace Tests.Linq
 				new TakeSkipClass { Value = "BOLTO" }
 			};
 
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			using (var tempTable = db.CreateLocalTable(testData))
 			{
@@ -976,7 +976,7 @@ namespace Tests.Linq
 				new TakeSkipClass { Value = "BOLTO" }
 			};
 
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			using (var tempTable = db.CreateLocalTable(testData))
 			{
@@ -1015,7 +1015,7 @@ namespace Tests.Linq
 				new TakeSkipClass { Value = "BOLTO" }
 			};
 
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			using (var tempTable = db.CreateLocalTable(testData))
 			{
@@ -1058,7 +1058,7 @@ namespace Tests.Linq
 				new TakeSkipClass { Value = "Value8" },
 			};
 
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			using (var tempTable = db.CreateLocalTable(testData))
 			{
@@ -1103,7 +1103,7 @@ namespace Tests.Linq
 				new TakeSkipClass { Value = "Value8" },
 			};
 
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			using (var tempTable = db.CreateLocalTable(testData))
 			{
@@ -1181,7 +1181,7 @@ namespace Tests.Linq
 				new TakeSkipClass { Value = "BOLTO" }
 			};
 
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			using (var tempTable = db.CreateLocalTable(testData))
 			{
@@ -1231,7 +1231,7 @@ namespace Tests.Linq
 				new TakeSkipClass { Value = "Value8" },
 			};
 
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			using (var tempTable = db.CreateLocalTable(testData))
 			{
@@ -1275,7 +1275,7 @@ namespace Tests.Linq
 				new TakeSkipClass { Value = "Value8" },
 			};
 
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			using (var tempTable = db.CreateLocalTable(testData))
 			{
@@ -1319,7 +1319,7 @@ namespace Tests.Linq
 				new TakeSkipClass { Value = "Value8" },
 			};
 
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			using (var tempTable = db.CreateLocalTable(testData))
 			{
@@ -1366,7 +1366,7 @@ namespace Tests.Linq
 				new TakeSkipClass { Value = "Value8" },
 			};
 
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			using (var tempTable = db.CreateLocalTable(testData))
 			{
@@ -1414,7 +1414,7 @@ namespace Tests.Linq
 				new TakeSkipClass { Value = "Value9" },
 			};
 
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			using (var tempTable = db.CreateLocalTable(testData))
 			{
@@ -1466,7 +1466,7 @@ namespace Tests.Linq
 				new TakeSkipClass { Value = "Value9" },
 			};
 
-			using (new ParametrizeTakeSkip(withParameters))
+			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			using (var tempTable = db.CreateLocalTable(testData))
 			{
