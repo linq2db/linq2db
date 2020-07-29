@@ -3161,12 +3161,12 @@ namespace LinqToDB.Linq.Builder
 
 		public ISqlExpression Convert(ISqlExpression expr)
 		{
-			return DataContext.GetSqlOptimizer().ConvertExpression(expr);
+			return DataContext.GetSqlOptimizer().ConvertExpression(expr, false);
 		}
 
 		public ISqlPredicate Convert(IBuildContext context, ISqlPredicate predicate)
 		{
-			return DataContext.GetSqlOptimizer().ConvertPredicate(context.SelectQuery, predicate);
+			return DataContext.GetSqlOptimizer().ConvertPredicate(context.SelectQuery, predicate, false);
 		}
 
 		internal ISqlExpression ConvertSearchCondition(ISqlExpression sqlExpression)

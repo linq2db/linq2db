@@ -502,11 +502,11 @@ namespace LinqToDB.SqlQuery
 			});
 		}
 
-		public static bool? GetBoolValue(ISqlExpression expression)
+		public static bool? GetBoolValue(ISqlExpression expression, bool withParameters)
 		{
-			if (expression is SqlValue value)
+			if (expression.TryEvaluateExpression(withParameters, out var value))
 			{
-				if (value.Value is bool b)
+				if (value is bool b)
 					return b;
 			}
 			else if (expression is SqlSearchCondition searchCondition)
@@ -518,7 +518,7 @@ namespace LinqToDB.SqlQuery
 					var cond = searchCondition.Conditions[0];
 					if (cond.Predicate.ElementType == QueryElementType.ExprPredicate)
 					{
-						var boolValue = GetBoolValue(((SqlPredicate.Expr)cond.Predicate).Expr1);
+						var boolValue = GetBoolValue(((SqlPredicate.Expr)cond.Predicate).Expr1, withParameters);
 						if (boolValue.HasValue)
 							return cond.IsNot ? !boolValue : boolValue;
 					}
@@ -639,7 +639,7 @@ namespace LinqToDB.SqlQuery
 				if (cond.Predicate.ElementType == QueryElementType.ExprPredicate)
 				{
 					var expr = (SqlPredicate.Expr)cond.Predicate;
-					var boolValue = GetBoolValue(expr.Expr1);
+					var boolValue = GetBoolValue(expr.Expr1, withParameters);
 
 					if (boolValue != null)
 					{

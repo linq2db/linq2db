@@ -45,7 +45,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override void BuildFunction(SqlFunction func)
 		{
-			func = ConvertFunctionParameters(func);
+			func = ConvertFunctionParameters(func, false);
 
 			switch (func.Name)
 			{

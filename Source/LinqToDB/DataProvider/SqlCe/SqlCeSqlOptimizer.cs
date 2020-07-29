@@ -85,7 +85,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			// already fixed by CorrectSkipAndColumns
 		}
 
-		public override ISqlExpression ConvertExpression(ISqlExpression expr)
+		public override ISqlExpression ConvertExpression(ISqlExpression expr, bool withParameters)
 		{
 			if (SqlCeConfiguration.InlineFunctionParameters && expr is SqlFunction sqlFunction)
 			{
@@ -98,7 +98,7 @@ namespace LinqToDB.DataProvider.SqlCe
 				}
 			}
 
-			expr = base.ConvertExpression(expr);
+			expr = base.ConvertExpression(expr, withParameters);
 
 			switch (expr)
 			{
