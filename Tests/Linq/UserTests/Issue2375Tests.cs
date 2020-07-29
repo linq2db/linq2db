@@ -18,6 +18,12 @@ namespace Tests.UserTests
 			Finished = 88
 		}
 
+		public enum InfeedStatus
+		{
+			Undefined = 0,
+			Finished = 88
+		}
+
 		[Table]
 		public class InventoryResourceDTO
 		{
@@ -29,9 +35,6 @@ namespace Tests.UserTests
 
 			[Column]
 			public Guid ResourceID { get; set; }
-
-			[Column]
-			public Guid? InfeedAdviceID { get; set; }
 
 			[Column]
 			public DateTime? ModifiedTimeStamp { get; set; }
@@ -60,18 +63,18 @@ namespace Tests.UserTests
 					db.Insert(res);
 					var dto1 = new InventoryResourceDTO
 					{
+						ResourceID = res.Id,
 						Status = InventoryResourceStatus.Used,
 						ModifiedTimeStamp = DateTime.UtcNow - TimeSpan.FromHours(2),
-						Id = Guid.NewGuid(),
-						InfeedAdviceID = Guid.NewGuid()
+						Id = Guid.NewGuid()
 					};
 					db.Insert(dto1);
 					var dto2 = new InventoryResourceDTO
 					{
+						ResourceID = res.Id,
 						Status = InventoryResourceStatus.Used,
 						ModifiedTimeStamp = DateTime.UtcNow- TimeSpan.FromHours(2),
-						Id = Guid.NewGuid(),
-						InfeedAdviceID = Guid.NewGuid()
+						Id = Guid.NewGuid()
 					};
 					db.Insert(dto2);
 
