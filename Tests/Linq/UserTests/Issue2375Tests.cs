@@ -14,6 +14,7 @@ namespace Tests.UserTests
 		public enum InventoryResourceStatus
 		{
 			Undefined = 0,
+			Used = 40,
 			Finished = 88
 		}
 
@@ -25,6 +26,8 @@ namespace Tests.UserTests
 
 		public class InventoryResourceDTO
 		{
+			public Guid Id { get; set; }
+
 			[Column(DataType = DataType.Int32)]
 			public InventoryResourceStatus Status { get; set; }
 
@@ -89,13 +92,20 @@ namespace Tests.UserTests
 			public long? CustomLong9 { get; set; }
 		}
 
+		[Table]
 		public class WmsLoadCarrierDTO
 		{
+			[Column]
 			public Guid Id { get; set; }
 
+			[Column]
 			public string? ResourceLabel { get; set; }
+
+			[Column]
+			public string? Name { get; set; }
 		}
 
+		[Table]
 		public class InfeedAdviceDTO
 		{
 			public Guid Id { get; set; }
@@ -106,10 +116,14 @@ namespace Tests.UserTests
 			public DateTime? ModifiedTimeStamp { get; set; }
 		}
 
-
+		[Table]
 		public class MaterialDTO
 		{
+			[Column]
 			public Guid Id { get; set; }
+
+			[Column]
+			public string? Name { get; set; }
 		}
 
 		[Test]
@@ -118,11 +132,34 @@ namespace Tests.UserTests
 		{
 			using (var db = GetDataContext(context))
 			{
-				using (var itb = db.CreateTempTable<InventoryResourceDTO>())
-				using (var lctb = db.CreateTempTable<WmsLoadCarrierDTO>())
-				using (var intb = db.CreateTempTable<InfeedAdviceDTO>())
-				using (var mtb = db.CreateTempTable<MaterialDTO>())
+				using (var itb = db.CreateLocalTable<InventoryResourceDTO>())
+				using (var lctb = db.CreateLocalTable<WmsLoadCarrierDTO>())
+				using (var intb = db.CreateLocalTable<InfeedAdviceDTO>())
+				using (var mtb = db.CreateLocalTable<MaterialDTO>())
 				{
+					var res = new WmsLoadCarrierDTO { Id = Guid.NewGuid(), Name = "a" };
+					lctb.Insert(() => res);
+					var dto1 = new InventoryResourceDTO
+					{
+						Status = InventoryResourceStatus.Used,
+						MaterialID = Guid.NewGuid(),
+						ResourceID = res.Id,
+						ModifiedTimeStamp = DateTime.UtcNow,
+						Id = Guid.NewGuid(),
+						InfeedAdviceID = Guid.NewGuid()
+					};
+					itb.Insert(() => dto1);
+					var dto2 = new InventoryResourceDTO
+					{
+						Status = InventoryResourceStatus.Used,
+						MaterialID = Guid.NewGuid(),
+						ResourceID = res.Id,
+						ModifiedTimeStamp = DateTime.UtcNow,
+						Id = Guid.NewGuid(),
+						InfeedAdviceID = Guid.NewGuid()
+					};
+					itb.Insert(() => dto2);
+
 					var qry = from inventory in itb
 							   join lc in lctb on inventory.ResourceID equals lc.Id
 							   join material in mtb on inventory.MaterialID equals material.Id
