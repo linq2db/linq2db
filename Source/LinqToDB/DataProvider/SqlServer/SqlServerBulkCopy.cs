@@ -147,8 +147,13 @@ namespace LinqToDB.DataProvider.SqlServer
 					};
 				}
 
-				if (options.MaxBatchSize.HasValue)    bc.BatchSize       = options.MaxBatchSize.Value;
-				if (options.BulkCopyTimeout.HasValue) bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
+				if (options.MaxBatchSize.HasValue)
+					bc.BatchSize = options.MaxBatchSize.Value;
+
+				if (options.BulkCopyTimeout.HasValue) 
+					bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
+				else if (Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout)
+					bc.BulkCopyTimeout = connection.ConnectionTimeout;
 
 				var tableName = GetTableName(sb, options, table);
 
