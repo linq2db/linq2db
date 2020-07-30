@@ -107,7 +107,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void CurrentTzTimestamp(
-			[IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, ProviderName.SqlCe, ProviderName.DB2)]
+			[IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus, ProviderName.DB2)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
