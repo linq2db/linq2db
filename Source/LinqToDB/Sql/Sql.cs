@@ -732,6 +732,12 @@ namespace LinqToDB
 		[Sql.Function(PN.Sybase,   "GetDate",           CanBeNull = false)]
 		public static DateTime CurrentTimestamp2 => DateTime.Now;
 
+		[Sql.Function(PN.SqlServer , "SYSDATETIMEOFFSET", ServerSideOnly = false, CanBeNull = false)]
+		[Sql.Function(PN.PostgreSQL, "now"              , ServerSideOnly = false, CanBeNull = false)]
+		[Sql.Function(PN.DB2       , "SYSTIMESTAMP"     , ServerSideOnly = false, CanBeNull = false, Precedence = Precedence.Subtraction)]
+		[Sql.Function(PN.Oracle    , "SYSTIMESTAMP"     , ServerSideOnly = false, CanBeNull = false, Precedence = Precedence.Additive)]
+		public static DateTimeOffset CurrentTzTimestamp => DateTimeOffset.Now;
+
 		[Sql.Function]
 		public static DateTime? ToDate(int? year, int? month, int? day, int? hour, int? minute, int? second, int? millisecond)
 		{
@@ -788,11 +794,11 @@ namespace LinqToDB
 		[Sql.Function] public static sbyte?   Abs    (sbyte?   value) { return value == null ? null : (sbyte?)  Math.Abs    (value.Value); }
 		[Sql.Function] public static float?   Abs    (float?   value) { return value == null ? null : (float?)  Math.Abs    (value.Value); }
 
-		[Sql.Function] public static double?  Acos   (Double?  value) { return value == null ? null : (double?) Math.Acos   (value.Value); }
-		[Sql.Function] public static double?  Asin   (Double?  value) { return value == null ? null : (double?) Math.Asin   (value.Value); }
+		[Sql.Function] public static double?  Acos   (double?  value) { return value == null ? null : (double?) Math.Acos   (value.Value); }
+		[Sql.Function] public static double?  Asin   (double?  value) { return value == null ? null : (double?) Math.Asin   (value.Value); }
 
 		[Sql.Function(PN.Access, "Atn")]
-		[Sql.Function] public static double?  Atan   (Double?  value) { return value == null ? null : (double?) Math.Atan   (value.Value); }
+		[Sql.Function] public static double?  Atan   (double?  value) { return value == null ? null : (double?) Math.Atan   (value.Value); }
 
 		[CLSCompliant(false)]
 		[Sql.Function(PN.SqlServer, "Atn2")]

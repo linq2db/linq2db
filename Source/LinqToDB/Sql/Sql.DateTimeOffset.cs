@@ -76,6 +76,29 @@ namespace LinqToDB
 				_                           => throw new InvalidOperationException(),
 			};
 		}
+
+		[CLSCompliant(false)]
+		[Sql.Extension(                "DateDiff",      BuilderType = typeof(DateDiffBuilder))]
+		[Sql.Extension(PN.MySql,       "TIMESTAMPDIFF", BuilderType = typeof(DateDiffBuilder))]
+		[Sql.Extension(PN.DB2,         "",              BuilderType = typeof(DateDiffBuilderDB2))]
+		[Sql.Extension(PN.SapHana,     "",              BuilderType = typeof(DateDiffBuilderSapHana))]
+		[Sql.Extension(PN.SQLite,      "",              BuilderType = typeof(DateDiffBuilderSQLite))]
+		[Sql.Extension(PN.PostgreSQL,  "",              BuilderType = typeof(DateDiffBuilderPostgreSql))]
+		public static int? DateDiff(DateParts part, DateTimeOffset? startDate, DateTimeOffset? endDate)
+		{
+			if (startDate == null || endDate == null)
+				return null;
+
+			return part switch
+			{
+				DateParts.Day         => (int)(endDate - startDate).Value.TotalDays,
+				DateParts.Hour        => (int)(endDate - startDate).Value.TotalHours,
+				DateParts.Minute      => (int)(endDate - startDate).Value.TotalMinutes,
+				DateParts.Second      => (int)(endDate - startDate).Value.TotalSeconds,
+				DateParts.Millisecond => (int)(endDate - startDate).Value.TotalMilliseconds,
+				_                     => throw new InvalidOperationException(),
+			};
+		}
 		#endregion
 	}
 }
