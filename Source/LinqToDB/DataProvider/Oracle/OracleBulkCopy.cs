@@ -61,8 +61,13 @@ namespace LinqToDB.DataProvider.Oracle
 							};
 						}
 
-						if (options.MaxBatchSize.HasValue)    bc.BatchSize       = options.MaxBatchSize.Value;
-						if (options.BulkCopyTimeout.HasValue) bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
+						if (options.MaxBatchSize.HasValue)    
+							bc.BatchSize = options.MaxBatchSize.Value;
+
+						if (options.BulkCopyTimeout.HasValue) 
+							bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
+						else if (Configuration.Data.BulkCopyUseConnectionCommandTimeout)
+							bc.BulkCopyTimeout = connection.ConnectionTimeout;
 
 						bc.DestinationTableName = tableName;
 

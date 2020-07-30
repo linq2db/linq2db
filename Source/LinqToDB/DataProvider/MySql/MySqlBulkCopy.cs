@@ -133,7 +133,10 @@ namespace LinqToDB.DataProvider.MySql
 				};
 			}
 
-			if (options.BulkCopyTimeout.HasValue) bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
+			if (options.BulkCopyTimeout.HasValue) 
+				bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
+				else if (Configuration.Data.BulkCopyUseConnectionCommandTimeout)
+					bc.BulkCopyTimeout = connection.ConnectionTimeout;
 
 			var tableName = GetTableName(sb, options, table);
 
