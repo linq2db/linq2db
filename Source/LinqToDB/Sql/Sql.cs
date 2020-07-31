@@ -732,10 +732,10 @@ namespace LinqToDB
 		[Sql.Function(PN.Sybase,   "GetDate",           CanBeNull = false)]
 		public static DateTime CurrentTimestamp2 => DateTime.Now;
 
-		[Sql.Function(PN.SqlServer , "SYSDATETIMEOFFSET", ServerSideOnly = false, CanBeNull = false)]
-		[Sql.Function(PN.PostgreSQL, "now"              , ServerSideOnly = false, CanBeNull = false)]
-		[Sql.Function(PN.DB2       , "SYSTIMESTAMP"     , ServerSideOnly = false, CanBeNull = false, Precedence = Precedence.Subtraction)]
-		[Sql.Function(PN.Oracle    , "SYSTIMESTAMP"     , ServerSideOnly = false, CanBeNull = false, Precedence = Precedence.Additive)]
+		[Sql.Function(PN.SqlServer , "SYSDATETIMEOFFSET", ServerSideOnly = true, CanBeNull = false)]
+		[Sql.Function(PN.PostgreSQL, "now"              , ServerSideOnly = true, CanBeNull = false)]
+		[Sql.Function(PN.DB2       , "SYSTIMESTAMP"     , ServerSideOnly = true, CanBeNull = false, Precedence = Precedence.Subtraction)]
+		[Sql.Function(PN.Oracle    , "SYSTIMESTAMP"     , ServerSideOnly = true, CanBeNull = false, Precedence = Precedence.Additive)]
 		public static DateTimeOffset CurrentTzTimestamp => DateTimeOffset.Now;
 
 		[Sql.Function]
