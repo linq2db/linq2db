@@ -280,8 +280,6 @@ namespace LinqToDB.DataProvider.MySql
 
 		internal class MySqlConnector
 		{
-			private static readonly Version MinBulkCopyVersion = new Version(0, 67);
-
 			internal static MySqlProviderAdapter CreateAdapter()
 			{
 				var assembly = Common.Tools.TryLoadAssembly(MySqlConnectorAssemblyName, null);
@@ -305,27 +303,20 @@ namespace LinqToDB.DataProvider.MySql
 				typeMapper.RegisterTypeWrapper<MySqlConnection >(connectionType);
 				typeMapper.RegisterTypeWrapper<MySqlTransaction>(transactionType);
 
-				BulkCopyAdapter? bulkCopy = null;
+				var bulkCopyType                   = assembly.GetType($"{MySqlConnectorNamespace}.MySqlBulkCopy", true)!;
+				var bulkRowsCopiedEventHandlerType = assembly.GetType($"{MySqlConnectorNamespace}.MySqlRowsCopiedEventHandler", true)!;
+				var bulkCopyColumnMappingType      = assembly.GetType($"{MySqlConnectorNamespace}.MySqlBulkCopyColumnMapping" , true)!;
+				var rowsCopiedEventArgsType        = assembly.GetType($"{MySqlConnectorNamespace}.MySqlRowsCopiedEventArgs"   , true)!;
 
-				if (assembly.GetName().Version >= MinBulkCopyVersion)
-				{
-					var bulkCopyType                   = assembly.GetType($"{MySqlConnectorNamespace}.MySqlBulkCopy", true)!;
-					var bulkRowsCopiedEventHandlerType = assembly.GetType($"{MySqlConnectorNamespace}.MySqlRowsCopiedEventHandler", true)!;
-					var bulkCopyColumnMappingType      = assembly.GetType($"{MySqlConnectorNamespace}.MySqlBulkCopyColumnMapping" , true)!;
-					var rowsCopiedEventArgsType        = assembly.GetType($"{MySqlConnectorNamespace}.MySqlRowsCopiedEventArgs"   , true)!;
+				typeMapper.RegisterTypeWrapper<MySqlBulkCopy              >(bulkCopyType!);
+				typeMapper.RegisterTypeWrapper<MySqlRowsCopiedEventHandler>(bulkRowsCopiedEventHandlerType);
+				typeMapper.RegisterTypeWrapper<MySqlBulkCopyColumnMapping >(bulkCopyColumnMappingType);
+				typeMapper.RegisterTypeWrapper<MySqlRowsCopiedEventArgs   >(rowsCopiedEventArgsType);
+				typeMapper.FinalizeMappings();
 
-					typeMapper.RegisterTypeWrapper<MySqlBulkCopy              >(bulkCopyType!);
-					typeMapper.RegisterTypeWrapper<MySqlRowsCopiedEventHandler>(bulkRowsCopiedEventHandlerType);
-					typeMapper.RegisterTypeWrapper<MySqlBulkCopyColumnMapping >(bulkCopyColumnMappingType);
-					typeMapper.RegisterTypeWrapper<MySqlRowsCopiedEventArgs   >(rowsCopiedEventArgsType);
-					typeMapper.FinalizeMappings();
-
-					bulkCopy = new BulkCopyAdapter(
-						typeMapper.BuildWrappedFactory((IDbConnection connection, IDbTransaction? transaction) => new MySqlBulkCopy((MySqlConnection)connection, (MySqlTransaction?)transaction)),
-						typeMapper.BuildWrappedFactory((int source, string destination) => new MySqlBulkCopyColumnMapping(source, destination, null)));
-				}
-				else
-					typeMapper.FinalizeMappings();
+				var bulkCopy = new BulkCopyAdapter(
+					typeMapper.BuildWrappedFactory((IDbConnection connection, IDbTransaction? transaction) => new MySqlBulkCopy((MySqlConnection)connection, (MySqlTransaction?)transaction)),
+					typeMapper.BuildWrappedFactory((int source, string destination) => new MySqlBulkCopyColumnMapping(source, destination, null)));
 
 
 				var typeGetter        = typeMapper.Type<MySqlParameter>().Member(p => p.MySqlDbType).BuildGetter<IDbDataParameter>();
