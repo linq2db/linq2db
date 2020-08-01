@@ -154,10 +154,10 @@ namespace LinqToDB.Data
 				{
 					return new PreparedQuery
 					{
-						Commands = (string[])query.Context,
+						Commands      = (string[])query.Context,
 						SqlParameters = query.Statement.Parameters,
-						Statement = query.Statement,
-						QueryHints = query.QueryHints,
+						Statement     = query.Statement,
+						QueryHints    = query.QueryHints,
 					};
 				}
 
