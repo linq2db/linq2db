@@ -154,10 +154,8 @@ namespace LinqToDB.Linq.Builder
 				{
 					res = ctx.IsExpression(null, 0, RequestFor.Table);
 
-					if (res.Result && res.Context is TableBuilder.TableContext)
+					if (res.Result && res.Context is TableBuilder.TableContext tc)
 					{
-						var tc = (TableBuilder.TableContext)res.Context;
-
 						if (ctx.Statement!.SelectQuery!.From.Tables.Count == 0 || ctx.Statement.SelectQuery.From.Tables[0].Source != tc.SelectQuery)
 							ctx.Statement.RequireUpdateClause().Table = tc.SqlTable;
 					}
@@ -423,8 +421,8 @@ namespace LinqToDB.Linq.Builder
 				if (!member.IsPropertyEx() && !member.IsFieldEx() || rootObject != extract.Parameters[0])
 					throw new LinqException("Member expression expected for the 'Set' statement.");
 
-				if (member is MethodInfo)
-					member = ((MethodInfo)member).GetPropertyInfo();
+				if (member is MethodInfo info)
+					member = info.GetPropertyInfo();
 
 				var columnExpr = body;
 				var column     = select.ConvertToSql(columnExpr, 1, ConvertFlags.Field);

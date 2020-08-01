@@ -70,10 +70,9 @@ namespace LinqToDB.DataProvider.SQLite
 			return null;
 		}
 
-		static string? _detectedProviderName;
-
-		public static string  DetectedProviderName =>
-			_detectedProviderName ?? (_detectedProviderName = DetectProviderName());
+		private static string? _detectedProviderName;
+		public  static string  DetectedProviderName =>
+			_detectedProviderName ??= DetectProviderName();
 
 		static string DetectProviderName()
 		{
@@ -164,6 +163,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
 
+		[Obsolete("Please use the BulkCopy extension methods within DataConnectionExtensions")]
 		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
 			DataConnection               dataConnection,
 			IEnumerable<T>               source,

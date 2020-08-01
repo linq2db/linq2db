@@ -109,7 +109,7 @@ namespace LinqToDB.SqlQuery
 		SqlTableType ISqlTableSource.SqlTableType => SqlTableType.MergeSource;
 
 		private SqlField? _all;
-		SqlField ISqlTableSource.All => _all ?? (_all = SqlField.All(this));
+		SqlField ISqlTableSource.All => _all ??= SqlField.All(this);
 
 
 		public int SourceID { get; }

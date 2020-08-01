@@ -26,7 +26,7 @@ namespace LinqToDB.Metadata
 		{
 			_sqlMethodAttributes = new[]
 			{
-#if NET45 || NET46
+#if NETFRAMEWORK
 				typeof(Microsoft.SqlServer.Server.SqlMethodAttribute),
 #endif
 				Type.GetType("Microsoft.SqlServer.Server.SqlMethodAttribute, System.Data.SqlClient", false),
@@ -35,7 +35,7 @@ namespace LinqToDB.Metadata
 
 			_sqlUserDefinedTypeAttributes = new[]
 			{
-#if NET45 || NET46
+#if NETFRAMEWORK
 				typeof(Microsoft.SqlServer.Server.SqlUserDefinedTypeAttribute),
 #endif
 				Type.GetType("Microsoft.SqlServer.Server.SqlUserDefinedTypeAttribute, System.Data.SqlClient", false),

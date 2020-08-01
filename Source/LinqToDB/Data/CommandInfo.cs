@@ -446,6 +446,7 @@ namespace LinqToDB.Data
 		#endregion
 
 		#region Query with template
+
 		/// <summary>
 		/// Executes command and returns results as collection of values of specified type.
 		/// </summary>
@@ -458,7 +459,7 @@ namespace LinqToDB.Data
 		}
 
 		/// <summary>
-		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type and returns results as collection of values of specified type.
+		/// Executes command using <see cref="System.Data.CommandType.StoredProcedure"/> command type and returns results as collection of values of specified type.
 		/// </summary>
 		/// <typeparam name="T">Result record type.</typeparam>
 		/// <param name="template">This value used only for <typeparamref name="T"/> parameter type inference, which makes this method usable with anonymous types.</param>
@@ -602,7 +603,7 @@ namespace LinqToDB.Data
 		{
 			var typeAccessor = TypeAccessor.GetAccessor<T>();
 			var indexMap     = GetMultipleQueryIndexMap(typeAccessor);
-			
+
 			var resultIndex = 0;
 			var result = typeAccessor.Create();
 			do
@@ -622,7 +623,7 @@ namespace LinqToDB.Data
 					{
 						valueMethodInfo = _readAsListMethodInfo;
 						elementType     = member.Type.GetGenericArguments()[0];
-					} 
+					}
 					else
 					{
 						valueMethodInfo = _readSingletMethodInfo;
@@ -691,7 +692,7 @@ namespace LinqToDB.Data
 			{
 			}
 
-#if NET45 || NET46
+#if NETFRAMEWORK
 			public Task DisposeAsync() => TaskEx.CompletedTask;
 #else
 			public ValueTask DisposeAsync() => new ValueTask(Task.CompletedTask);
@@ -699,7 +700,7 @@ namespace LinqToDB.Data
 
 			public T Current { get; set; } = default!;
 
-#if NET45 || NET46
+#if NETFRAMEWORK
 			public async Task<bool> MoveNextAsync()
 #else
 			public async ValueTask<bool> MoveNextAsync()
@@ -753,7 +754,7 @@ namespace LinqToDB.Data
 		{
 			var typeAccessor = TypeAccessor.GetAccessor<T>();
 			var indexMap     = GetMultipleQueryIndexMap(typeAccessor);
-			
+
 			var resultIndex = 0;
 			var result = typeAccessor.Create();
 			do
@@ -773,7 +774,7 @@ namespace LinqToDB.Data
 					{
 						valueMethodInfo = _readAsListAsyncMethodInfo;
 						elementType     = member.Type.GetGenericArguments()[0];
-					} 
+					}
 					else
 					{
 						valueMethodInfo = _readSingletAsyncMethodInfo;

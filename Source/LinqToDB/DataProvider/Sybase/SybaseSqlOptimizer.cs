@@ -14,10 +14,8 @@
 		{
 			expr = base.ConvertExpression(expr);
 
-			if (expr is SqlFunction)
+			if (expr is SqlFunction func)
 			{
-				var func = (SqlFunction) expr;
-
 				switch (func.Name)
 				{
 					case "CharIndex" :
@@ -32,11 +30,9 @@
 						break;
 
 					case "Stuff"     :
-						if (func.Parameters[3] is SqlValue)
+						if (func.Parameters[3] is SqlValue value)
 						{
-							var value = (SqlValue)func.Parameters[3];
-
-							if (value.Value is string && string.IsNullOrEmpty((string)value.Value))
+							if (value.Value is string @string && string.IsNullOrEmpty(@string))
 								return new SqlFunction(
 									func.SystemType,
 									func.Name,

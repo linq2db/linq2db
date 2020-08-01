@@ -126,7 +126,7 @@ namespace System.Data.Linq
 			for(int i = 0; i < bytes.Length; i++)
 			{
 				hashCode = hashCode * s + bytes[i];
-				s = s * t;
+				s *= t;
 			}
 		}
 	}

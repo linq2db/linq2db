@@ -806,16 +806,13 @@ namespace LinqToDB.Expressions
 				case ExpressionType.MemberInit:
 					{
 						Expression? MemberFind(MemberBinding b)
-						{
-							switch (b.BindingType)
+							=> b.BindingType switch
 							{
-								case MemberBindingType.Assignment    : return Find(((MemberAssignment)b).   Expression,   func);
-								case MemberBindingType.ListBinding   : return Find(((MemberListBinding)b).  Initializers, p => Find(p.Arguments, func));
-								case MemberBindingType.MemberBinding : return Find(((MemberMemberBinding)b).Bindings,     MemberFind);
-							}
-
-							return null;
-						}
+								MemberBindingType.Assignment	=> Find(((MemberAssignment)b).Expression, func),
+								MemberBindingType.ListBinding	=> Find(((MemberListBinding)b).Initializers, p => Find(p.Arguments, func)),
+								MemberBindingType.MemberBinding => Find(((MemberMemberBinding)b).Bindings, MemberFind),
+								_                               => null,
+							};
 
 						var e = (MemberInitExpression)expr;
 

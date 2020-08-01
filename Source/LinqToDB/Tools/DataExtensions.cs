@@ -36,7 +36,7 @@ namespace LinqToDB.Tools
 			{
 				if (column.IsIdentity)
 				{
-					sourceList = sourceList ?? source.ToList();
+					sourceList ??= source.ToList();
 
 					if (sourceList.Count == 0)
 						return sourceList;
@@ -67,22 +67,20 @@ namespace LinqToDB.Tools
 
 						foreach (var item in sourceList)
 						{
-							switch (type)
+							maxValue = type switch
 							{
-								case TypeCode.Byte   : maxValue = (byte   )maxValue + 1; break;
-								case TypeCode.SByte  : maxValue = (sbyte  )maxValue + 1; break;
-								case TypeCode.Int16  : maxValue = (short  )maxValue + 1; break;
-								case TypeCode.Int32  : maxValue = (int    )maxValue + 1; break;
-								case TypeCode.Int64  : maxValue = (long   )maxValue + 1; break;
-								case TypeCode.UInt16 : maxValue = (ushort )maxValue + 1; break;
-								case TypeCode.UInt32 : maxValue = (uint   )maxValue + 1; break;
-								case TypeCode.UInt64 : maxValue = (ulong  )maxValue + 1; break;
-								case TypeCode.Single : maxValue = (float  )maxValue + 1; break;
-								case TypeCode.Decimal: maxValue = (decimal)maxValue + 1; break;
-								default:
-									throw new NotImplementedException(    );
-							}
-
+								TypeCode.Byte	 => (byte)maxValue + 1,
+								TypeCode.SByte	 => (sbyte)maxValue + 1,
+								TypeCode.Int16	 => (short)maxValue + 1,
+								TypeCode.Int32	 => (int)maxValue + 1,
+								TypeCode.Int64	 => (long)maxValue + 1,
+								TypeCode.UInt16  => (ushort)maxValue + 1,
+								TypeCode.UInt32  => (uint)maxValue + 1,
+								TypeCode.UInt64  => (ulong)maxValue + 1,
+								TypeCode.Single  => (float)maxValue + 1,
+								TypeCode.Decimal => (decimal)maxValue + 1,
+								_                => throw new NotImplementedException(),
+							};
 							var value = Converter.ChangeType(maxValue, column.MemberType);
 							column.MemberAccessor.SetValue(item!, value);
 						}

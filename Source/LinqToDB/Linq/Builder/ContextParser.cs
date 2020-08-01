@@ -11,8 +11,8 @@ namespace LinqToDB.Linq.Builder
 
 		public bool CanBuild(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
-			var call = buildInfo.Expression as MethodCallExpression;
-			return call != null && call.Method.Name == "GetContext";
+			return buildInfo.Expression is MethodCallExpression call 
+				&& call.Method.Name == "GetContext";
 		}
 
 		public IBuildContext BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)

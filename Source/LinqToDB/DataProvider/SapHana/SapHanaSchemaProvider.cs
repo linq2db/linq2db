@@ -113,16 +113,16 @@ namespace LinqToDB.DataProvider.SapHana
 					FROM SYS.TABLES AS t
 					WHERE t.SCHEMA_NAME != '_SYS_BIC' AND t.IS_USER_DEFINED_TYPE = 'FALSE'
 					UNION ALL
-					SELECT 
+					SELECT
 						v.SCHEMA_NAME,
 						v.VIEW_NAME AS TABLE_NAME,
 						v.COMMENTS,
-						CAST(0 AS TINYINT) AS IS_TABLE	
-					FROM 
+						CAST(0 AS TINYINT) AS IS_TABLE
+					FROM
 					(
 						SELECT *
 						FROM SYS.VIEWS AS v
-						WHERE v.IS_VALID = 'TRUE' 
+						WHERE v.IS_VALID = 'TRUE'
 						AND v.VIEW_TYPE NOT IN ('HIERARCHY', 'CALC') ";
 
 			if (HaveAccessForCalculationViews)
@@ -134,7 +134,7 @@ namespace LinqToDB.DataProvider.SapHana
 						JOIN _SYS_BI.BIMC_ALL_CUBES AS c ON c.VIEW_NAME = v.VIEW_NAME
 						LEFT JOIN
 						(
-							SELECT COUNT(p.CUBE_NAME) AS ParamCount, p.CUBE_NAME 
+							SELECT COUNT(p.CUBE_NAME) AS ParamCount, p.CUBE_NAME
 							FROM _SYS_BI.BIMC_VARIABLE AS p
 							GROUP BY p.CUBE_NAME
 						) AS p ON c.CUBE_NAME = p.CUBE_NAME
@@ -145,7 +145,7 @@ namespace LinqToDB.DataProvider.SapHana
 					) AS v
 				) AS combined
 				JOIN SYS.SCHEMAS AS s ON combined.SCHEMA_NAME = s.SCHEMA_NAME
-				WHERE s.HAS_PRIVILEGES = 'TRUE' 
+				WHERE s.HAS_PRIVILEGES = 'TRUE'
 					AND s.SCHEMA_NAME NOT IN ('SYS', '_SYS_BI', '_SYS_REPO', '_SYS_STATISTICS')";
 
 			return result;
@@ -159,7 +159,7 @@ namespace LinqToDB.DataProvider.SapHana
 			return
 			(
 				from pk in pks.AsEnumerable()
-				where pk.Field<string>("CONSTRAINT") == "PRIMARY KEY" 
+				where pk.Field<string>("CONSTRAINT") == "PRIMARY KEY"
 				select new PrimaryKeyInfo
 				{
 					TableID        = pk.Field<string>("TABLE_SCHEMA") + "." + pk.Field<string>("TABLE_NAME"),
@@ -185,7 +185,7 @@ namespace LinqToDB.DataProvider.SapHana
 					COMMENTS,
 					CAST(CASE WHEN GENERATION_TYPE = 'BY DEFAULT AS IDENTITY' THEN 1 ELSE 0 END AS TINYINT) AS IS_IDENTITY
 				FROM
-					(SELECT 
+					(SELECT
 						SCHEMA_NAME,
 						TABLE_NAME,
 						COLUMN_NAME,
@@ -212,7 +212,7 @@ namespace LinqToDB.DataProvider.SapHana
 					FROM SYS.VIEW_COLUMNS
 				) AS combined
 				JOIN SYS.SCHEMAS AS s ON combined.SCHEMA_NAME = s.SCHEMA_NAME
-				WHERE s.HAS_PRIVILEGES = 'TRUE' 
+				WHERE s.HAS_PRIVILEGES = 'TRUE'
 				AND s.SCHEMA_NAME NOT IN ('SYS', '_SYS_BI', '_SYS_REPO', '_SYS_STATISTICS')";
 
 			var query = dataConnection.Query(x =>
@@ -256,7 +256,7 @@ namespace LinqToDB.DataProvider.SapHana
 					SCHEMA_NAME || '.' || TABLE_NAME AS ""ThisTableID"",
 					COLUMN_NAME AS ""ThisColumn"",
 					SCHEMA_NAME || '.' || REFERENCED_TABLE_NAME AS ""OtherTableID"",
-					REFERENCED_COLUMN_NAME AS ""OtherColumn"",	
+					REFERENCED_COLUMN_NAME AS ""OtherColumn"",
 					POSITION AS ""Ordinal""
 				FROM REFERENTIAL_CONSTRAINTS
 			").ToList();
@@ -264,7 +264,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			return dataConnection.Query(rd => 
+			return dataConnection.Query(rd =>
 			{
 				var schema = rd.GetString(0);
 				var procedure = rd.GetString(1);
@@ -292,12 +292,12 @@ namespace LinqToDB.DataProvider.SapHana
 					DEFINITION
 				FROM PROCEDURES
 				UNION ALL
-				SELECT 
+				SELECT
 					F.SCHEMA_NAME,
 					F.FUNCTION_NAME AS PROCEDURE_NAME,
 					1 AS IS_FUNCTION,
 					CASE WHEN FP.DATA_TYPE_NAME = 'TABLE_TYPE' THEN 1 ELSE 0 END AS IS_TABLE_FUNCTION,
-					DEFINITION	
+					DEFINITION
 				FROM FUNCTIONS AS F
 				JOIN FUNCTION_PARAMETERS AS FP ON F.FUNCTION_OID = FP.FUNCTION_OID
 				WHERE FP.PARAMETER_TYPE = 'RETURN'")
@@ -414,7 +414,7 @@ namespace LinqToDB.DataProvider.SapHana
 			{
 				case "BIGINT"       : return DataType.Int64;
 				case "SMALLINT"     : return DataType.Int16;
-				case "DECIMAL"      : 
+				case "DECIMAL"      :
 				case "SMALLDECIMAL" : return DataType.Decimal;
 				case "INTEGER"      : return DataType.Int32;
 				case "TINYINT"      : return DataType.Byte;
@@ -436,7 +436,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 				case "BINARY"       : return DataType.Binary;
 				case "VARBINARY"    : return DataType.VarBinary;
-				
+
 				case "BLOB"         : return DataType.Blob;
 				case "CLOB"         : return DataType.Text;
 				case "NCLOB"        :
@@ -482,7 +482,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 			try
 			{
-				var st = GetProcedureSchema(dataConnection, commandText, commandType, parameters);
+				var st = GetProcedureSchema(dataConnection, commandText, commandType, parameters, options);
 
 				procedure.IsLoaded = true;
 
@@ -538,7 +538,7 @@ namespace LinqToDB.DataProvider.SapHana
 				}).ToArray();
 		}
 
-		protected override DataTable GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters)
+		protected override DataTable? GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters, GetSchemaOptions options)
 		{
 			//bug in drivers, SchemaOnly executes statement
 			using (dataConnection.BeginTransaction())
@@ -565,14 +565,14 @@ namespace LinqToDB.DataProvider.SapHana
 					TableName       = tableName
 				};
 			}, @"
-				SELECT 
+				SELECT
 					v.SCHEMA_NAME,
 					v.VIEW_NAME AS TABLE_NAME,
 					v.COMMENTS
 				FROM SYS.VIEWS AS v
 				JOIN _SYS_BI.BIMC_ALL_CUBES AS c ON c.VIEW_NAME = v.VIEW_NAME
 				JOIN (
-					SELECT COUNT(p.CUBE_NAME) AS ParamCount, p.CUBE_NAME 
+					SELECT COUNT(p.CUBE_NAME) AS ParamCount, p.CUBE_NAME
 					FROM _SYS_BI.BIMC_VARIABLE AS p
 					GROUP BY p.CUBE_NAME
 				) AS p ON c.CUBE_NAME = p.CUBE_NAME
@@ -623,7 +623,7 @@ namespace LinqToDB.DataProvider.SapHana
 					IsNullable    = true
 				};
 			}, @"
-				SELECT 
+				SELECT
 					v.SCHEMA_NAME,
 					v.VIEW_NAME,
 					p.VARIABLE_NAME,

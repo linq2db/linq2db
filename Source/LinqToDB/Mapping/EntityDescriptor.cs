@@ -335,7 +335,7 @@ namespace LinqToDB.Mapping
 							mapping.Discriminator = column;
 					}
 
-					mapping.Discriminator = mapping.Discriminator ?? Columns.FirstOrDefault(x => x.IsDiscriminator);
+					mapping.Discriminator ??= Columns.FirstOrDefault(x => x.IsDiscriminator);
 
 					result.Add(mapping);
 				}

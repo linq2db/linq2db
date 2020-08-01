@@ -43,7 +43,13 @@ Solutions:
 | `.\Source\LinqToDB\LinqToDB.csproj`              |    √    |    √    |         √         |       √       |         √         |       √       |
 | `.\Source\LinqToDB\LinqToDB.Tools.csproj`        |    √    |         |         √         |               |                   |               |
 
-Allowed target defines:
+Preferred target defines:
+- `NETFRAMEWORK` - `net45` and `net46` target ifdef
+- `!NETFRAMEWORK` - `netstandard2.0` and newer target ifdef
+- `NETCOREAPP` - `netcoreapp2.1` and `netcoreapp3.1` target ifdef
+- `NETSTANDARD2_1PLUS` - `netstandard2.1` and `netcoreapp3.1` target ifdef
+
+Other allowed target defines:
 - `NETSTANDARD2_1` - `netstandard2.1` target ifdef
 - `NETCOREAPP3_1` - `netcoreapp3.1` target ifdef
 - `NETSTANDARD2_0` - `netstandard2.0` target ifdef

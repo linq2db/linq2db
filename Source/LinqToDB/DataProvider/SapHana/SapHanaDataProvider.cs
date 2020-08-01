@@ -1,4 +1,4 @@
-﻿#if !NETSTANDARD2_0 && !NETSTANDARD2_1
+﻿#if NETFRAMEWORK || NETCOREAPP
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -10,6 +10,8 @@ namespace LinqToDB.DataProvider.SapHana
 	using Extensions;
 	using Mapping;
 	using SqlProvider;
+	using System.Threading;
+	using System.Threading.Tasks;
 
 	public class SapHanaDataProvider : DynamicDataProviderBase<SapHanaProviderAdapter>
 	{
@@ -148,6 +150,30 @@ namespace LinqToDB.DataProvider.SapHana
 				options,
 				source);
 		}
+
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
+			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+		{
+			return new SapHanaBulkCopy(this).BulkCopyAsync(
+				options.BulkCopyType == BulkCopyType.Default ? SapHanaTools.DefaultBulkCopyType : options.BulkCopyType,
+				table,
+				options,
+				source,
+				cancellationToken);
+		}
+
+#if !NETFRAMEWORK
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
+			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+		{
+			return new SapHanaBulkCopy(this).BulkCopyAsync(
+				options.BulkCopyType == BulkCopyType.Default ? SapHanaTools.DefaultBulkCopyType : options.BulkCopyType,
+				table,
+				options,
+				source,
+				cancellationToken);
+		}
+#endif
 
 		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
 		{

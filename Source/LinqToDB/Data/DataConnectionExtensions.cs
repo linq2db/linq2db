@@ -375,7 +375,6 @@ namespace LinqToDB.Data
 
 		#endregion
 
-		
 		#region Query
 
 		/// <summary>
@@ -1163,6 +1162,7 @@ namespace LinqToDB.Data
 		#endregion
 
 		#region Query with template
+
 		/// <summary>
 		/// Executes command and returns results as collection of values of specified type.
 		/// </summary>
@@ -1198,6 +1198,43 @@ namespace LinqToDB.Data
 		public static IEnumerable<T> Query<T>(this DataConnection connection, T template, string sql, object? parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).Query(template);
+		}
+
+		/// <summary>
+		/// Executes stored procedure and returns results as collection of values of specified type.
+		/// </summary>
+		/// <typeparam name="T">Result record type.</typeparam>
+		/// <param name="connection">Database connection.</param>
+		/// <param name="template">This value used only for <typeparamref name="T"/> parameter type inference, which makes this method usable with anonymous types.</param>
+		/// <param name="sql">Command text.</param>
+		/// <param name="parameters">Command parameters.</param>
+		/// <returns>Returns collection of query result records.</returns>
+		public static IEnumerable<T> QueryProc<T>(this DataConnection connection, T template, string sql, params DataParameter[] parameters)
+		{
+			return new CommandInfo(connection, sql, parameters).QueryProc(template);
+		}
+
+		/// <summary>
+		/// Executes stored procedure and returns results as collection of values of specified type.
+		/// </summary>
+		/// <typeparam name="T">Result record type.</typeparam>
+		/// <param name="connection">Database connection.</param>
+		/// <param name="template">This value used only for <typeparamref name="T"/> parameter type inference, which makes this method usable with anonymous types.</param>
+		/// <param name="sql">Command text.</param>
+		/// <param name="parameters">Command parameters. Supported values:
+		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - single <see cref="DataParameter"/> instance;</para>
+		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
+		/// <para> - mapping class entity.</para>
+		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
+		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
+		/// </param>
+		/// <returns>Returns collection of query result records.</returns>
+		public static IEnumerable<T> QueryProc<T>(this DataConnection connection, T template, string sql, object? parameters)
+		{
+			return new CommandInfo(connection, sql, parameters).QueryProc(template);
 		}
 
 		#endregion
@@ -2087,5 +2124,256 @@ namespace LinqToDB.Data
 		}
 
 		#endregion
+
+		#region BulkCopy IEnumerable async
+
+		/// <summary>
+		/// Asynchronously performs bulk insert operation.
+		/// </summary>
+		/// <typeparam name="T">Mapping type of inserted record.</typeparam>
+		/// <param name="dataConnection">Database connection.</param>
+		/// <param name="options">Operation options.</param>
+		/// <param name="source">Records to insert.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Task with bulk insert operation status.</returns>
+		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken = default)
+			where T : class
+		{
+			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
+			if (source         == null) throw new ArgumentNullException(nameof(source));
+
+			return dataConnection.DataProvider.BulkCopyAsync(dataConnection.GetTable<T>(), options, source, cancellationToken);
+		}
+
+		/// <summary>
+		/// Asynchronously performs bulk insert operation.
+		/// </summary>
+		/// <typeparam name="T">Mapping type of inserted record.</typeparam>
+		/// <param name="dataConnection">Database connection.</param>
+		/// <param name="maxBatchSize">Number of rows in each batch. At the end of each batch, the rows in the batch are sent to the server. </param>
+		/// <param name="source">Records to insert.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Task with bulk insert operation status.</returns>
+		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this DataConnection dataConnection, int maxBatchSize, IEnumerable<T> source, CancellationToken cancellationToken = default)
+			where T : class
+		{
+			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
+			if (source         == null) throw new ArgumentNullException(nameof(source));
+
+			return dataConnection.DataProvider.BulkCopyAsync(
+				dataConnection.GetTable<T>(),
+				new BulkCopyOptions { MaxBatchSize = maxBatchSize },
+				source, 
+				cancellationToken);
+		}
+
+		/// <summary>
+		/// Asynchronously performs bulk insert operation.
+		/// </summary>
+		/// <typeparam name="T">Mapping type of inserted record.</typeparam>
+		/// <param name="dataConnection">Database connection.</param>
+		/// <param name="source">Records to insert.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Task with bulk insert operation status.</returns>
+		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this DataConnection dataConnection, IEnumerable<T> source, CancellationToken cancellationToken = default)
+			where T : class
+		{
+			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
+			if (source         == null) throw new ArgumentNullException(nameof(source));
+
+			return dataConnection.DataProvider.BulkCopyAsync(
+				dataConnection.GetTable<T>(),
+				new BulkCopyOptions(),
+				source, 
+				cancellationToken);
+		}
+
+		/// <summary>
+		/// Asynchronously performs bulk insert operation into table specified in <paramref name="options"/> parameter or into table, identified by <paramref name="table"/>.
+		/// </summary>
+		/// <typeparam name="T">Mapping type of inserted record.</typeparam>
+		/// <param name="table">Target table.</param>
+		/// <param name="options">Operation options.</param>
+		/// <param name="source">Records to insert.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Task with bulk insert operation status.</returns>
+		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken = default)
+		{
+			if (table  == null) throw new ArgumentNullException(nameof(table));
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
+			if (!(table.DataContext is DataConnection dataConnection))
+				throw new ArgumentException("DataContext must be of DataConnection type.");
+
+			return dataConnection.DataProvider.BulkCopyAsync(table, options, source, cancellationToken);
+		}
+
+		/// <summary>
+		/// Asynchronously performs bulk insert operation into table, identified by <paramref name="table"/>.
+		/// </summary>
+		/// <typeparam name="T">Mapping type of inserted record.</typeparam>
+		/// <param name="table">Target table.</param>
+		/// <param name="maxBatchSize">Number of rows in each batch. At the end of each batch, the rows in the batch are sent to the server. </param>
+		/// <param name="source">Records to insert.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Task with bulk insert operation status.</returns>
+		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this ITable<T> table, int maxBatchSize, IEnumerable<T> source, CancellationToken cancellationToken = default)
+		{
+			if (table  == null) throw new ArgumentNullException(nameof(table));
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
+			if (!(table.DataContext is DataConnection dataConnection))
+				throw new ArgumentException("DataContext must be of DataConnection type.");
+
+			return dataConnection.DataProvider.BulkCopyAsync(table, new BulkCopyOptions { MaxBatchSize = maxBatchSize, }, source, cancellationToken);
+		}
+
+		/// <summary>
+		/// Asynchronously performs bulk insert operation into table, identified by <paramref name="table"/>.
+		/// </summary>
+		/// <typeparam name="T">Mapping type of inserted record.</typeparam>
+		/// <param name="table">Target table.</param>
+		/// <param name="source">Records to insert.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Task with bulk insert operation status.</returns>
+		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this ITable<T> table, IEnumerable<T> source, CancellationToken cancellationToken = default)
+		{
+			if (table  == null) throw new ArgumentNullException(nameof(table));
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
+			if (!(table.DataContext is DataConnection dataConnection))
+				throw new ArgumentException("DataContext must be of DataConnection type.");
+
+			return dataConnection.DataProvider.BulkCopyAsync(table, new BulkCopyOptions(), source, cancellationToken);
+		}
+
+		#endregion
+
+		#region BulkCopy IAsyncEnumerable async
+#if !NETFRAMEWORK
+
+		/// <summary>
+		/// Asynchronously performs bulk insert operation.
+		/// </summary>
+		/// <typeparam name="T">Mapping type of inserted record.</typeparam>
+		/// <param name="dataConnection">Database connection.</param>
+		/// <param name="options">Operation options.</param>
+		/// <param name="source">Records to insert.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Task with bulk insert operation status.</returns>
+		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this DataConnection dataConnection, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken = default)
+			where T : class
+		{
+			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
+			if (source         == null) throw new ArgumentNullException(nameof(source));
+
+			return dataConnection.DataProvider.BulkCopyAsync(dataConnection.GetTable<T>(), options, source, cancellationToken);
+		}
+
+		/// <summary>
+		/// Asynchronously performs bulk insert operation.
+		/// </summary>
+		/// <typeparam name="T">Mapping type of inserted record.</typeparam>
+		/// <param name="dataConnection">Database connection.</param>
+		/// <param name="maxBatchSize">Number of rows in each batch. At the end of each batch, the rows in the batch are sent to the server. </param>
+		/// <param name="source">Records to insert.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Task with bulk insert operation status.</returns>
+		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this DataConnection dataConnection, int maxBatchSize, IAsyncEnumerable<T> source, CancellationToken cancellationToken = default)
+			where T : class
+		{
+			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
+			if (source         == null) throw new ArgumentNullException(nameof(source));
+
+			return dataConnection.DataProvider.BulkCopyAsync(
+				dataConnection.GetTable<T>(),
+				new BulkCopyOptions { MaxBatchSize = maxBatchSize },
+				source,
+				cancellationToken);
+		}
+
+		/// <summary>
+		/// Asynchronously performs bulk insert operation.
+		/// </summary>
+		/// <typeparam name="T">Mapping type of inserted record.</typeparam>
+		/// <param name="dataConnection">Database connection.</param>
+		/// <param name="source">Records to insert.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Task with bulk insert operation status.</returns>
+		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this DataConnection dataConnection, IAsyncEnumerable<T> source, CancellationToken cancellationToken = default)
+			where T : class
+		{
+			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
+			if (source         == null) throw new ArgumentNullException(nameof(source));
+
+			return dataConnection.DataProvider.BulkCopyAsync(
+				dataConnection.GetTable<T>(),
+				new BulkCopyOptions(),
+				source,
+				cancellationToken);
+		}
+
+		/// <summary>
+		/// Asynchronously performs bulk insert operation into table specified in <paramref name="options"/> parameter or into table, identified by <paramref name="table"/>.
+		/// </summary>
+		/// <typeparam name="T">Mapping type of inserted record.</typeparam>
+		/// <param name="table">Target table.</param>
+		/// <param name="options">Operation options.</param>
+		/// <param name="source">Records to insert.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Task with bulk insert operation status.</returns>
+		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken = default)
+		{
+			if (table  == null) throw new ArgumentNullException(nameof(table));
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
+			if (!(table.DataContext is DataConnection dataConnection))
+				throw new ArgumentException("DataContext must be of DataConnection type.");
+
+			return dataConnection.DataProvider.BulkCopyAsync(table, options, source, cancellationToken);
+		}
+
+		/// <summary>
+		/// Asynchronously performs bulk insert operation into table, identified by <paramref name="table"/>.
+		/// </summary>
+		/// <typeparam name="T">Mapping type of inserted record.</typeparam>
+		/// <param name="table">Target table.</param>
+		/// <param name="maxBatchSize">Number of rows in each batch. At the end of each batch, the rows in the batch are sent to the server. </param>
+		/// <param name="source">Records to insert.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Task with bulk insert operation status.</returns>
+		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this ITable<T> table, int maxBatchSize, IAsyncEnumerable<T> source, CancellationToken cancellationToken = default)
+		{
+			if (table  == null) throw new ArgumentNullException(nameof(table));
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
+			if (!(table.DataContext is DataConnection dataConnection))
+				throw new ArgumentException("DataContext must be of DataConnection type.");
+
+			return dataConnection.DataProvider.BulkCopyAsync(table, new BulkCopyOptions { MaxBatchSize = maxBatchSize, }, source, cancellationToken);
+		}
+
+		/// <summary>
+		/// Asynchronously performs bulk insert operation into table, identified by <paramref name="table"/>.
+		/// </summary>
+		/// <typeparam name="T">Mapping type of inserted record.</typeparam>
+		/// <param name="table">Target table.</param>
+		/// <param name="source">Records to insert.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Task with bulk insert operation status.</returns>
+		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this ITable<T> table, IAsyncEnumerable<T> source, CancellationToken cancellationToken = default)
+		{
+			if (table  == null) throw new ArgumentNullException(nameof(table));
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
+			if (!(table.DataContext is DataConnection dataConnection))
+				throw new ArgumentException("DataContext must be of DataConnection type.");
+
+			return dataConnection.DataProvider.BulkCopyAsync(table, new BulkCopyOptions(), source, cancellationToken);
+		}
+
+#endif
+		#endregion
+
 	}
 }

@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
+using LinqToDB;
 using LinqToDB.Expressions;
 using NUnit.Framework;
 
@@ -78,6 +80,11 @@ namespace Tests
 			public RegularEnum1 RegularEnum1Property { get; set; } = RegularEnum1.Two;
 			public RegularEnum2 RegularEnum2Property { get; set; } = RegularEnum2.Two;
 			public FlagsEnum   FlagsEnumProperty     { get; set; } = FlagsEnum   .Bit3;
+
+			public string MethodWithRemappedName(string value) => value;
+			public int MethodWithWrongReturnType(string value) => value.Length;
+
+			public string ReturnTypeMapper(string value) => value;
 		}
 
 		public static class SampleClassExtensions
@@ -153,10 +160,18 @@ namespace Tests
 		[Wrapper] delegate string      ReturningDelegate           (string input);
 		[Wrapper] delegate SampleClass ReturningDelegateWithMapping(SampleClass input);
 
+		class StringToIntMapper : ICustomMapper
+		{
+			public Expression Map(Expression expression)
+			{
+				return Expression.Property(expression, "Length");
+			}
+		}
+
 		class SampleClass : TypeWrapper
 		{
-			private static LambdaExpression[] Wrappers { get; }
-				= new LambdaExpression[]
+			private static object[] Wrappers { get; }
+				= new object[]
 			{
 				// [0]: get Id
 				(Expression<Func<SampleClass, int>>)((SampleClass this_) => this_.Id),
@@ -192,6 +207,15 @@ namespace Tests
 				(Expression<Func<SampleClass, RegularEnum2>>)((SampleClass this_) => this_.RegularEnum2Property),
 				// [16]: set RegularEnum2Property
 				PropertySetter((SampleClass this_) => this_.RegularEnum2Property),
+				// [17]: set MethodWithRemappedName
+				new Tuple<LambdaExpression, bool>
+					((Expression<Func<SampleClass, string, string>>     )((SampleClass this_, string value) => this_.MethodWithRemappedName2(value)), true),
+				// [18]: set MethodWithWrongReturnType
+				new Tuple<LambdaExpression, bool>
+					((Expression<Func<SampleClass, string, string>>     )((SampleClass this_, string value) => this_.MethodWithWrongReturnType(value)), true),
+				// [19]: set ReturnTypeMapper
+				new Tuple<LambdaExpression, bool>
+					((Expression<Func<SampleClass, string, int>>        )((SampleClass this_, string value) => this_.ReturnTypeMapper(value)), true),
 			};
 
 			private static string[] Events { get; }
@@ -219,6 +243,15 @@ namespace Tests
 			public int SetRegularEnum1(RegularEnum1 val) => ((Func<SampleClass, RegularEnum1, int>)CompiledWrappers[6])(this, val);
 			public int SetRegularEnum2(RegularEnum2 val) => ((Func<SampleClass, RegularEnum2, int>)CompiledWrappers[14])(this, val);
 			public int SetFlagsEnum   (FlagsEnum    val) => ((Func<SampleClass, FlagsEnum, int>)CompiledWrappers[7])(this, val);
+
+			[TypeWrapperName("MethodWithRemappedName")]
+			public string MethodWithRemappedName2(string value) => ((Func<SampleClass, string, string>)CompiledWrappers[17])(this, value);
+			public string MethodWithWrongReturnType(string value) => ((Func<SampleClass, string, string>)CompiledWrappers[18])(this, value);
+
+			public bool HasMethodWithWrongReturnType => CompiledWrappers[18] != null;
+
+			[return: CustomMapper(typeof(StringToIntMapper))]
+			public int ReturnTypeMapper(string value) => ((Func<SampleClass, string, int>)CompiledWrappers[19])(this, value);
 
 			public RegularEnum1 RegularEnum1Property
 			{
@@ -650,6 +683,68 @@ namespace Tests
 				var errors  = wrapped.Errors.ToArray();
 
 				Assert.AreEqual(2, errors.Length);
+			}
+
+			[Test]
+			public void TestMethodNameAttribute()
+			{
+				var typeMapper = CreateTypeMapper();
+
+				var wrapped = typeMapper.BuildWrappedFactory(() => new SampleClass(1, 2))();
+				var res = wrapped.MethodWithRemappedName2("value");
+
+				Assert.AreEqual("value", res);
+			}
+
+			[Test]
+			public void TestMethodWithWrongReturnType()
+			{
+				var typeMapper = CreateTypeMapper();
+
+				var wrapped = typeMapper.BuildWrappedFactory(() => new SampleClass(1, 2))();
+
+				Assert.False(wrapped.HasMethodWithWrongReturnType);
+			}
+
+			[Test]
+			public void TestReturnTypeMapper()
+			{
+				var typeMapper = CreateTypeMapper();
+
+				var wrapped = typeMapper.BuildWrappedFactory(() => new SampleClass(1, 2))();
+
+				Assert.AreEqual(4, wrapped.ReturnTypeMapper("test"));
+			}
+
+			[Test]
+			public void ValueTaskToTaskMapperTest1()
+			{
+				var taskExpression = Expression.Constant(new ValueTask<long>());
+				var mapper         = new ValueTaskToTaskMapper();
+				var result         = ((ICustomMapper)mapper).Map(taskExpression);
+
+				Assert.AreEqual(typeof(Task<long>), result.Type);
+				Assert.AreEqual(typeof(Task<long>), result.EvaluateExpression()!.GetType());
+			}
+
+			[Test]
+			public void ValueTaskToTaskMapperTest2()
+			{
+				var taskExpression = Expression.Constant(new ValueTask());
+				var mapper         = new ValueTaskToTaskMapper();
+				var result         = ((ICustomMapper)mapper).Map(taskExpression);
+
+				Assert.AreEqual(typeof(Task), result.Type);
+				Assert.AreEqual(typeof(Task), result.EvaluateExpression()!.GetType());
+			}
+
+			[Test]
+			public void ValueTaskToTaskMapperTest3()
+			{
+				var taskExpression = Expression.Constant(0);
+				var mapper         = new ValueTaskToTaskMapper();
+
+				Assert.Throws(typeof(LinqToDBException), () => ((ICustomMapper)mapper).Map(taskExpression));
 			}
 		}
 	}

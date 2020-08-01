@@ -150,6 +150,7 @@ namespace LinqToDB.DataProvider.DB2
 		/// </summary>
 		public static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
 
+		[Obsolete("Please use the BulkCopy extension methods within DataConnectionExtensions")]
 		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
 			DataConnection              dataConnection,
 			IEnumerable<T>              source,
@@ -166,6 +167,7 @@ namespace LinqToDB.DataProvider.DB2
 				}, source);
 		}
 
+		[Obsolete("Please use the BulkCopy extension methods within DataConnectionExtensions")]
 		public static BulkCopyRowsCopied ProviderSpecificBulkCopy<T>(
 			DataConnection              dataConnection,
 			IEnumerable<T>              source,

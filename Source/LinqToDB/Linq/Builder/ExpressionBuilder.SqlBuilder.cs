@@ -641,8 +641,8 @@ namespace LinqToDB.Linq.Builder
 							.Select((arg,i) =>
 							{
 								var mi = expr.Members[i];
-								if (mi is MethodInfo)
-									mi = ((MethodInfo)mi).GetPropertyInfo();
+								if (mi is MethodInfo info)
+									mi = info.GetPropertyInfo();
 
 								var descriptor = ed.FindColumnDescriptor(mi);
 
@@ -667,8 +667,8 @@ namespace LinqToDB.Linq.Builder
 							.Select (a =>
 							{
 								var mi = a.Member;
-								if (mi is MethodInfo)
-									mi = ((MethodInfo)mi).GetPropertyInfo();
+								if (mi is MethodInfo info)
+									mi = info.GetPropertyInfo();
 
 								var descriptor = ed.FindColumnDescriptor(mi);
 
@@ -791,7 +791,7 @@ namespace LinqToDB.Linq.Builder
 			if (!PreferServerSide(expression, false))
 			{
 				if (columnDescriptor?.ValueConverter == null && CanBeConstant(expression))
-					return BuildConstant(expression);
+					return BuildConstant(expression, columnDescriptor);
 
 				if (CanBeCompiled(expression))
 					return BuildParameter(expression, columnDescriptor).SqlParameter;
@@ -1247,34 +1247,45 @@ namespace LinqToDB.Linq.Builder
 
 		#region Build Constant
 
-		readonly Dictionary<Expression,SqlValue> _constants = new Dictionary<Expression,SqlValue>();
+		readonly Dictionary<Tuple<Expression, ColumnDescriptor?>,SqlValue> _constants = new Dictionary<Tuple<Expression, ColumnDescriptor?>,SqlValue>();
 
-		SqlValue BuildConstant(Expression expr)
+		SqlValue BuildConstant(Expression expr, ColumnDescriptor? columnDescriptor)
 		{
-			if (_constants.TryGetValue(expr, out var value))
-				return value;
+			var key = Tuple.Create(expr, columnDescriptor);
+			if (_constants.TryGetValue(key, out var sqlValue))
+				return sqlValue;
 
-			var lambda = Expression.Lambda<Func<object?>>(Expression.Convert(expr, typeof(object)));
-			var v      = lambda.Compile()();
+			var dbType = columnDescriptor?.GetDbDataType() ?? new DbDataType(expr.Type);
 
-			if (v != null && MappingSchema.ValueToSqlConverter.CanConvert(v.GetType()))
-				value = new SqlValue(v);
+			if (columnDescriptor != null)
+			{
+				expr = columnDescriptor.ApplyConversions(expr, dbType, false);
+			}
 			else
 			{
-				if (v != null && v.GetType().IsEnum)
-				{
-					var attrs = v.GetType().GetCustomAttributes(typeof(Sql.EnumAttribute), true);
-
-					if (attrs.Length == 0)
-						v = MappingSchema.EnumToValue((Enum)v);
-				}
-
-				value = MappingSchema.GetSqlValue(expr.Type, v);
+				expr = ColumnDescriptor.ApplyConversions(MappingSchema, expr, dbType, null, false);
 			}
 
-			_constants.Add(expr, value);
+			var value = expr.EvaluateExpression();
 
-			return value;
+			if (value != null && MappingSchema.ValueToSqlConverter.CanConvert(dbType.SystemType))
+				sqlValue = new SqlValue(dbType, value);
+			else
+			{
+				if (value != null && dbType.SystemType.IsEnum)
+				{
+					var attrs = dbType.SystemType.GetCustomAttributes(typeof(Sql.EnumAttribute), true);
+
+					if (attrs.Length == 0)
+						value = MappingSchema.EnumToValue((Enum)value);
+				}
+
+				sqlValue = MappingSchema.GetSqlValue(expr.Type, value);
+			}
+
+			_constants.Add(key, sqlValue);
+
+			return sqlValue;
 		}
 
 		#endregion
@@ -1449,7 +1460,7 @@ namespace LinqToDB.Linq.Builder
 						newExpr.DataType        = columnDescriptor.GetDbDataType();
 						if (newExpr.ValueExpression.Type != columnDescriptor.MemberType)
 							newExpr.ValueExpression = Expression.Convert(newExpr.ValueExpression, columnDescriptor.MemberType);
-						newExpr.ValueExpression = columnDescriptor.ApplyConversions(newExpr.ValueExpression, newExpr.DataType);
+						newExpr.ValueExpression = columnDescriptor.ApplyConversions(newExpr.ValueExpression, newExpr.DataType, true);
 
 						if (name == null)
 						{
@@ -1464,7 +1475,7 @@ namespace LinqToDB.Linq.Builder
 					}
 					else
 					{
-						newExpr.ValueExpression = ColumnDescriptor.ApplyConversions(MappingSchema, newExpr.ValueExpression, newExpr.DataType, null);
+						newExpr.ValueExpression = ColumnDescriptor.ApplyConversions(MappingSchema, newExpr.ValueExpression, newExpr.DataType, null, true);
 					}
 				}
 
@@ -1627,7 +1638,7 @@ namespace LinqToDB.Linq.Builder
 
 							predicate = ConvertInPredicate(context!, expr);
 						}
-#if NET45 || NET46
+#if NETFRAMEWORK
 						else if (e.Method == ReflectionHelper.Functions.String.Like11) predicate = ConvertLikePredicate(context!, e);
 						else if (e.Method == ReflectionHelper.Functions.String.Like12) predicate = ConvertLikePredicate(context!, e);
 #endif
@@ -1736,19 +1747,16 @@ namespace LinqToDB.Linq.Builder
 					break;
 			}
 
-			SqlPredicate.Operator op;
-
-			switch (nodeType)
+			var op = nodeType switch
 			{
-				case ExpressionType.Equal             : op = SqlPredicate.Operator.Equal;          break;
-				case ExpressionType.NotEqual          : op = SqlPredicate.Operator.NotEqual;       break;
-				case ExpressionType.GreaterThan       : op = SqlPredicate.Operator.Greater;        break;
-				case ExpressionType.GreaterThanOrEqual: op = SqlPredicate.Operator.GreaterOrEqual; break;
-				case ExpressionType.LessThan          : op = SqlPredicate.Operator.Less;           break;
-				case ExpressionType.LessThanOrEqual   : op = SqlPredicate.Operator.LessOrEqual;    break;
-				default: throw new InvalidOperationException();
-			}
-
+				ExpressionType.Equal              => SqlPredicate.Operator.Equal,
+				ExpressionType.NotEqual           => SqlPredicate.Operator.NotEqual,
+				ExpressionType.GreaterThan        => SqlPredicate.Operator.Greater,
+				ExpressionType.GreaterThanOrEqual => SqlPredicate.Operator.GreaterOrEqual,
+				ExpressionType.LessThan           => SqlPredicate.Operator.Less,
+				ExpressionType.LessThanOrEqual    => SqlPredicate.Operator.LessOrEqual,
+				_                                 => throw new InvalidOperationException(),
+			};
 			if ((left.NodeType == ExpressionType.Convert || right.NodeType == ExpressionType.Convert) && op.In(SqlPredicate.Operator.Equal, SqlPredicate.Operator.NotEqual))
 			{
 				var p = ConvertEnumConversion(context!, left, op, right);
@@ -1769,14 +1777,11 @@ namespace LinqToDB.Linq.Builder
 				r = ConvertToSql(context, right, true);
 				l = ConvertToSql(context, left, false, QueryHelper.GetColumnDescriptor(r));
 			}
-			
-			var lValue = l as SqlValue;
-			var rValue = r as SqlValue;
 
-			if (lValue != null)
+			if (l is SqlValue lValue)
 				lValue.ValueType = GetDataType(r, lValue.ValueType);
 
-			if (rValue != null)
+			if (r is SqlValue rValue)
 				rValue.ValueType = GetDataType(l, rValue.ValueType);
 
 			switch (nodeType)
@@ -2240,7 +2245,6 @@ namespace LinqToDB.Linq.Builder
 				right = temp;
 			}
 
-			var newRight = right as NewExpression;
 			var newExpr  = (NewExpression)left;
 
 // ReSharper disable ConditionIsAlwaysTrueOrFalse
@@ -2254,7 +2258,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var lex = ConvertToSql(context, newExpr.Arguments[i]);
 				var rex =
-					newRight != null ?
+					right is NewExpression newRight ?
 						ConvertToSql(context, newRight.Arguments[i]) :
 						GetParameter(right, newExpr.Members[i]);
 

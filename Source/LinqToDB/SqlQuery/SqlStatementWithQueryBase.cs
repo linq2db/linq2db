@@ -15,7 +15,7 @@ namespace LinqToDB.SqlQuery
 		[NotNull]
 		public override SelectQuery?  SelectQuery
 		{
-			get => _selectQuery ?? (_selectQuery = new SelectQuery());
+			get => _selectQuery ??= new SelectQuery();
 			set => _selectQuery = value;
 		}
 
