@@ -769,7 +769,7 @@ namespace LinqToDB.Linq.Builder
 
 				var prevKeysByParameter = ExtractTupleValues(keyExpression, ExpressionHelper.Property(masterParam, nameof(KeyDetailEnvelope<object, object>.Key))).ToArray();
 
-				var correctLookup = prevKeysByParameter.ToLookup(tv => tv.Item1, tv => tv.Item2, new ExpressionEqualityComparer());
+				var correctLookup = prevKeysByParameter.ToLookup(tv => tv.Item1, tv => tv.Item2, ExpressionEqualityComparer.Instance);
 				foreach (var key in prevKeys)
 				{
 					if (correctLookup.Contains(key.ForSelect)) 

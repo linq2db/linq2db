@@ -44,14 +44,14 @@ namespace LinqToDB.SqlProvider
 		{
 			foreach (var parameter in parameters)
 			{
-				if (!ActualParameters.Contains(parameter))
+				if (SqlProviderFlags.IsParameterOrderDependent || !ActualParameters.Contains(parameter))
 					ActualParameters.Add(parameter);
 			}
 		}
 
 		protected void AddParameter(SqlParameter parameter)
 		{
-			if (!ActualParameters.Contains(parameter))
+			if (SqlProviderFlags.IsParameterOrderDependent || !ActualParameters.Contains(parameter))
 				ActualParameters.Add(parameter);
 		}
 

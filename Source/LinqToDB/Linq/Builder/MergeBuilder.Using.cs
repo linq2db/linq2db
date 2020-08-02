@@ -30,25 +30,16 @@ namespace LinqToDB.Linq.Builder
 
 				if (LinqExtensions.UsingMethodInfo1 == methodCall.Method.GetGenericMethodDefinition())
 				{
-					var sourceContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
-					var source = new MergeSourceQueryContext(mergeContext.Merge, sourceContext);
+					var sourceContext      = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
+					var source             = new MergeSourceQueryContext(mergeContext.Merge, sourceContext);
 					mergeContext.Sequences = new IBuildContext[] { mergeContext.Sequence, source };
 				}
 				else
 				{
 					var enumerableBuildInfo = new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery());
 
-					var sourceContext = Find(builder, enumerableBuildInfo, (index, type) =>
-					{
-						var query = enumerableBuildInfo.SelectQuery;
-						var innerQuery = new SelectQuery { ParentSelect = query };
-						var elements = index switch
-						{
-							4 => BuildElements(type, (IEnumerable)((ConstantExpression)enumerableBuildInfo.Expression).Value),
-							_ => throw new InvalidOperationException(),
-						};
-						return new EnumerableContext(builder, enumerableBuildInfo, query, type, elements);
-					});
+					var type = FindType(builder, enumerableBuildInfo);
+					var sourceContext = new EnumerableContext(builder, enumerableBuildInfo, enumerableBuildInfo.SelectQuery, type, enumerableBuildInfo.Expression);
 
 					var source = new MergeSourceQueryContext(mergeContext.Merge, sourceContext);
 					mergeContext.Sequences = new IBuildContext[] { mergeContext.Sequence, source };
@@ -57,7 +48,7 @@ namespace LinqToDB.Linq.Builder
 				return mergeContext;
 			}
 
-			static T Find<T>(ExpressionBuilder builder, BuildInfo buildInfo, Func<int, Type, T> action)
+			static Type FindType(ExpressionBuilder builder, BuildInfo buildInfo)
 			{
 				var expression = buildInfo.Expression;
 
@@ -76,18 +67,14 @@ namespace LinqToDB.Linq.Builder
 								if (!builder.MappingSchema.IsScalarType(elementType))
 									break;
 
-								return action(1, elementType);
+								return elementType;
 							}
 
 							if (typeof(IEnumerable<>).IsSameOrParentOf(type))
-							{
-								var elementType = type.GetGenericArguments(typeof(IEnumerable<>))![0];
-
-								return action(4, elementType);
-							}
+								return type.GetGenericArguments(typeof(IEnumerable<>))![0];
 
 							if (typeof(Array).IsSameOrParentOf(type))
-								return action(2, type.GetElementType()!);
+								return type.GetElementType()!;
 
 							break;
 						}
@@ -96,7 +83,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							var newArray = (NewArrayExpression)expression;
 							if (newArray.Expressions.Count > 0)
-								return action(3, newArray.Expressions[0].Type);
+								return newArray.Expressions[0].Type;
 							break;
 						}
 
@@ -107,11 +94,6 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				throw new InvalidOperationException();
-			}
-
-			static IList<SqlValue> BuildElements(Type type, IEnumerable elements)
-			{
-				return elements.OfType<object>().Select(o => new SqlValue(type, o)).ToList();
 			}
 
 			protected override SequenceConvertInfo? Convert(

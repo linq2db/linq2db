@@ -830,18 +830,22 @@ namespace LinqToDB.SqlQuery
 						{
 							var table = (SqlValuesTable)element;
 
-							var covertedRows = new List<IList<ISqlExpression>>();
+							List<ISqlExpression[]>? convertedRows = null;
 							var rowsConverted = false;
 
-							foreach (var row in table.Rows)
+							if (table.Rows != null)
 							{
-								var convertedRow = ConvertSafe(row);
-								rowsConverted    = rowsConverted || (row != null && !ReferenceEquals(convertedRow, row));
+								convertedRows = new List<ISqlExpression[]>();
+								foreach (var row in table.Rows)
+								{
+									var convertedRow = ConvertSafe(row);
+									rowsConverted    = rowsConverted || (row != null && !ReferenceEquals(convertedRow, row));
 
-								covertedRows.Add(convertedRow ?? row!);
+									convertedRows.Add(convertedRow?.ToArray() ?? row!);
+								}
 							}
 
-							var fields1 = ToArray(table.Fields);
+							var fields1 = table.Fields.ToArray();
 							var fields2 = Convert(fields1, f => new SqlField(f));
 
 							var fieldsConverted = fields2 != null && !ReferenceEquals(fields1, fields2);
@@ -862,7 +866,7 @@ namespace LinqToDB.SqlQuery
 									}
 								}
 
-								newElement = new SqlValuesTable(fields2!, rowsConverted ? covertedRows : table.Rows);
+								newElement = new SqlValuesTable(table.Source!, table.ValueBuilders!, fields2, rowsConverted ? convertedRows : table.Rows);
 							}
 
 							break;

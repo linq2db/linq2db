@@ -1,36 +1,122 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Text;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.SqlQuery
 {
 	public class SqlValuesTable : ISqlTableSource
 	{
-		public SqlValuesTable()
+		/// <summary>
+		/// To create new instance in build context.
+		/// </summary>
+		/// <param name="source">Expression, that contains enumerable source.</param>
+		internal SqlValuesTable(Expression source)
 		{
-			Rows = new List<IList<ISqlExpression>>();
+			Source        = source;
+			ValueBuilders = new Dictionary<string, Func<object, IDictionary<Expression, ISqlExpression>, ISqlExpression>>();
+			FieldsLookup  = new Dictionary<string, SqlField>();
 		}
 
-		internal SqlValuesTable(SqlField[] fields, IList<IList<ISqlExpression>> rows)
+		/// <summary>
+		/// Constructor for convert visitor.
+		/// </summary>
+		internal SqlValuesTable(Expression source, Dictionary<string, Func<object, IDictionary<Expression, ISqlExpression>, ISqlExpression>> valueBuilders, SqlField[] fields, IReadOnlyList<ISqlExpression[]>? rows)
 		{
-			if (fields != null)
-				foreach (var field in fields)
-					Add(field);
+			Source        = source;
+			ValueBuilders = valueBuilders;
 
-			Rows = rows;
+			foreach (var field in fields)
+			{
+				if (field.Table != null) throw new InvalidOperationException("Invalid parent table.");
+				_fields.Add(field);
+			}
+
+			if (rows != null)
+			{
+				_rowsBuilt = true;
+				Rows       = rows;
+			}
 		}
 
-		public Dictionary<string, SqlField> Fields { get; } = new Dictionary<string, SqlField>();
+		/// <summary>
+		/// Constructor for remote context.
+		/// </summary>
+		internal SqlValuesTable(SqlField[] fields, ISqlExpression[][] rows)
+		{
+			_rowsBuilt = true;
+			Rows       = rows;
 
-		public IList<IList<ISqlExpression>> Rows { get; }
+			foreach (var field in fields)
+			{
+				if (field.Table != null) throw new InvalidOperationException("Invalid parent table.");
+				_fields.Add(field);
+			}
+		}
 
-		public void Add(SqlField field)
+		/// <summary>
+		/// Source value expression.
+		/// </summary>
+		internal Expression? Source { get; }
+
+		/// <summary>
+		/// Used only during build.
+		/// </summary>
+		internal Dictionary<string, SqlField>? FieldsLookup { get; }
+
+		private readonly List<SqlField> _fields = new List<SqlField>();
+
+		// Fields from source, used in query. Columns in rows should have same order.
+		public IList<SqlField> Fields => _fields;
+
+		internal Dictionary<string, Func<object, IDictionary<Expression, ISqlExpression>, ISqlExpression>>? ValueBuilders { get; }
+
+		internal void Add(SqlField field, Func<object, IDictionary<Expression, ISqlExpression>, ISqlExpression> valueBuilder)
 		{
 			if (field.Table != null) throw new InvalidOperationException("Invalid parent table.");
 
 			field.Table = this;
+			_fields.Add(field);
 
-			Fields.Add(field.Name, field);
+			FieldsLookup !.Add(field.Name, field);
+			ValueBuilders!.Add(field.Name, valueBuilder);
+		}
+
+		internal IReadOnlyList<ISqlExpression[]>? Rows { get; private set; }
+
+		private readonly bool _rowsBuilt;
+
+		internal void BuildRows()
+		{
+			if (_rowsBuilt)
+				return;
+
+			var parameters = new Dictionary<Expression, ISqlExpression>(ExpressionEqualityComparer.Instance);
+
+			// rows pre-build for remote context
+			var source = Source.EvaluateExpression<IEnumerable>();
+
+			if (source == null)
+				throw new LinqToDBException($"Merge source must be enumerable: {Source}");
+
+			var rows = new List<ISqlExpression[]>();
+
+			foreach (var record in source)
+			{
+				var row = new ISqlExpression[ValueBuilders!.Count];
+				var idx = 0;
+				rows.Add(row);
+
+				foreach (var valueBuilder in ValueBuilders!.Values)
+				{
+					row[idx] = valueBuilder(record, parameters);
+					idx++;
+				}
+			}
+
+			Rows = rows;
 		}
 
 		#region ISqlTableSource
@@ -52,18 +138,12 @@ namespace LinqToDB.SqlQuery
 
 		Type ISqlExpression.SystemType => throw new NotImplementedException();
 
-		bool ISqlExpression.Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
-		{
-			throw new NotImplementedException();
-		}
+		bool ISqlExpression.Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer) => throw new NotImplementedException();
 
 		#endregion
 
 		#region ICloneableElement
-		ICloneableElement ICloneableElement.Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			throw new NotImplementedException();
-		}
+		ICloneableElement ICloneableElement.Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone) => throw new NotImplementedException();
 		#endregion
 
 		#region IQueryElement
@@ -71,13 +151,17 @@ namespace LinqToDB.SqlQuery
 
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
+			if (Rows == null)
+				return sb;
+
 			sb.Append("\n\t");
-			for (var i = 0; i < Rows.Count; i++)
+			var rows = Rows!;
+			for (var i = 0; i < rows.Count; i++)
 			{
 				// limit number of printed records
 				if (i == 10)
 				{
-					sb.Append($"-- skipping... total rows: {Rows.Count}");
+					sb.Append($"-- skipping... total rows: {rows.Count}");
 					break;
 				}
 
@@ -90,7 +174,7 @@ namespace LinqToDB.SqlQuery
 					if (j > 0)
 						sb.Append(", ");
 
-					sb = Rows[i][j].ToString(sb, dic);
+					sb = rows[i][j].ToString(sb, dic);
 				}
 
 				sb.Append(")");
@@ -103,17 +187,11 @@ namespace LinqToDB.SqlQuery
 		#endregion
 
 		#region IEquatable
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
-		{
-			throw new NotImplementedException();
-		}
+		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other) => throw new NotImplementedException();
 		#endregion
 
 		#region ISqlExpressionWalkable
-		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
-		{
-			throw new NotImplementedException();
-		}
+		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func) => throw new NotImplementedException();
 		#endregion
 	}
 }
