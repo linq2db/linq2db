@@ -161,9 +161,6 @@ namespace LinqToDB.Data
 					};
 				}
 
-				// already called by OptimizeStatement below
-				// before processing query we correct parameters
-				//var sql = query.Statement.ProcessParameters(dataConnection.MappingSchema);
 				var sql = query.Statement;
 
 				// custom query handling

@@ -1,9 +1,7 @@
 ﻿using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.Mapping;
 using NUnit.Framework;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Tests.Model;
 

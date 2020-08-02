@@ -1205,7 +1205,7 @@ namespace LinqToDB.Linq.Builder
 			return Convert(attr.GetExpression(mc.Method, parms.ToArray()));
 		}
 
-		internal static ISqlExpression ConvertToSqlConvertible(Expression expression)
+		static ISqlExpression ConvertToSqlConvertible(Expression expression)
 		{
 			var l = Expression.Lambda<Func<IToSqlConverter>>(expression);
 			var f = l.Compile();
@@ -2460,32 +2460,6 @@ namespace LinqToDB.Linq.Builder
 					IsQueryParameter = !(dataContext.InlineParameters && dataContext.MappingSchema.ValueToSqlConverter.CanConvert(accessorExpression.Type))
 				}
 			);
-		}
-
-		internal static SqlParameter CreateParameter(
-			object value,
-			IDataContext dataContext,
-			Expression accessorExpression,
-			Expression dbDataTypeAccessorExpression,
-			Expression expression,
-			ParameterExpression expressionParam,
-			ParameterExpression parametersParam,
-			ParameterExpression dataContextParam,
-			string? name)
-		{
-			// Extracting name for parameter
-			//
-			if (name == null && expression.Type == typeof(DataParameter))
-			{
-				var dp = expression.EvaluateExpression<DataParameter>();
-				if (dp?.Name?.IsNullOrEmpty() == false)
-					name = dp.Name;
-			}
-
-			return new SqlParameter(new DbDataType(accessorExpression.Type), name, null)
-			{
-				IsQueryParameter = !(dataContext.InlineParameters && dataContext.MappingSchema.ValueToSqlConverter.CanConvert(accessorExpression.Type))
-			};
 		}
 
 		static Expression FindExpression(Expression expr)

@@ -105,6 +105,9 @@ namespace LinqToDB.SqlQuery
 
 			foreach (var record in source)
 			{
+				if (record == null)
+					throw new LinqToDBException("Merge source cannot hold null records");
+
 				var row = new ISqlExpression[ValueBuilders!.Count];
 				var idx = 0;
 				rows.Add(row);

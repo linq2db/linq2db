@@ -17,6 +17,10 @@
 
 			statement = base.Finalize(statement, inlineParameters);
 
+			// called in both finalize and optimize to avoid query conversion on each call
+			// as most of cases will be handled with finalize
+			statement = WrapParameters(statement);
+
 			return statement;
 		}
 

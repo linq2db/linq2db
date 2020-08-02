@@ -866,7 +866,7 @@ namespace LinqToDB.SqlQuery
 									}
 								}
 
-								newElement = new SqlValuesTable(table.Source!, table.ValueBuilders!, fields2, rowsConverted ? convertedRows : table.Rows);
+								newElement = new SqlValuesTable(table.Source!, table.ValueBuilders!, fields2!, rowsConverted ? convertedRows : table.Rows);
 							}
 
 							break;
