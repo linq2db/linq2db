@@ -188,9 +188,9 @@ namespace LinqToDB.Linq
 				sql.Statement.SetAliases();
 
 				// normalize parameters
-				if (query.SqlProviderFlags.IsParameterOrderDependent)
-					sql.Statement = NormalizeParameters(sql.Statement, sql.Parameters);
-				else
+				// if (query.SqlProviderFlags.IsParameterOrderDependent)
+				// 	sql.Statement = NormalizeParameters(sql.Statement, sql.Parameters);
+				// else
 					sql.Statement.CollectParameters();
 
 				var parameters =
