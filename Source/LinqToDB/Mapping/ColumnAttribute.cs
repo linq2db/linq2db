@@ -156,6 +156,12 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public bool IsDiscriminator { get; set; }
 
+		/// <summary>
+		/// Gets or sets whether a column must be explicitly defined in a Select statement to be fetched. If <c>true</c>, a "SELECT *"-ish statement won't retrieve this column.
+		/// Default value: <c>false</c>.
+		/// </summary>
+		public bool SkipOnEntityFetch { get; set; }
+
 		private bool? _skipOnInsert;
 		/// <summary>
 		/// Gets or sets whether a column is insertable.

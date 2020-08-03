@@ -62,14 +62,15 @@ namespace LinqToDB.Mapping
 				if (dataType.Type.Scale     != null && !columnAttribute.HasScale())     columnAttribute.Scale     = dataType.Type.Scale.Value;
 			}
 
-			MemberName      = columnAttribute.MemberName ?? MemberInfo.Name;
-			ColumnName      = columnAttribute.Name       ?? MemberInfo.Name;
-			Storage         = columnAttribute.Storage;
-			PrimaryKeyOrder = columnAttribute.PrimaryKeyOrder;
-			IsDiscriminator = columnAttribute.IsDiscriminator;
-			DataType        = columnAttribute.DataType;
-			DbType          = columnAttribute.DbType;
-			CreateFormat    = columnAttribute.CreateFormat;
+			MemberName        = columnAttribute.MemberName ?? MemberInfo.Name;
+			ColumnName        = columnAttribute.Name       ?? MemberInfo.Name;
+			Storage           = columnAttribute.Storage;
+			PrimaryKeyOrder   = columnAttribute.PrimaryKeyOrder;
+			IsDiscriminator   = columnAttribute.IsDiscriminator;
+			SkipOnEntityFetch = columnAttribute.SkipOnEntityFetch;
+			DataType          = columnAttribute.DataType;
+			DbType            = columnAttribute.DbType;
+			CreateFormat      = columnAttribute.CreateFormat;
 
 			if (columnAttribute.HasLength   ()) Length    = columnAttribute.Length;
 			if (columnAttribute.HasPrecision()) Precision = columnAttribute.Precision;
@@ -316,6 +317,12 @@ namespace LinqToDB.Mapping
 		/// method and will be ignored when user explicitly specifies value for this column.
 		/// </summary>
 		public bool           SkipOnInsert    { get; }
+
+		/// <summary>
+		/// Gets whether a column must be explicitly defined in a Select statement to be fetched. If <c>true</c>, a "SELECT *"-ish statement won't retrieve this column.
+		/// Default value: <c>false</c>.
+		/// </summary>
+		public bool           SkipOnEntityFetch { get; }
 
 		/// <summary>
 		/// Gets whether the column has specific values that should be skipped on insert.
