@@ -734,7 +734,6 @@ namespace LinqToDB
 
 		[Sql.Function(PN.SqlServer , "SYSDATETIMEOFFSET", ServerSideOnly = true, CanBeNull = false)]
 		[Sql.Function(PN.PostgreSQL, "now"              , ServerSideOnly = true, CanBeNull = false)]
-		[Sql.Property(PN.DB2       , "SYSTIMESTAMP"     , ServerSideOnly = true, CanBeNull = false, Precedence = Precedence.Subtraction)]
 		[Sql.Property(PN.Oracle    , "SYSTIMESTAMP"     , ServerSideOnly = true, CanBeNull = false, Precedence = Precedence.Additive)]
 		public static DateTimeOffset CurrentTzTimestamp => DateTimeOffset.Now;
 
