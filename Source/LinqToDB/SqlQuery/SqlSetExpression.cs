@@ -15,7 +15,7 @@ namespace LinqToDB.SqlQuery
 			{
 				if (column is SqlField field)
 				{
-					if (field.ColumnDescriptor != null)
+					if (field.ColumnDescriptor != null && p.Type.SystemType != typeof(object))
 					{
 						if (field.ColumnDescriptor.DataType  != DataType.Undefined && p.Type.DataType == DataType.Undefined)
 							p.Type = p.Type.WithDataType(field.ColumnDescriptor.DataType);

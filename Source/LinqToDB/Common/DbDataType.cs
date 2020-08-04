@@ -64,9 +64,9 @@ namespace LinqToDB.Common
 		public DbDataType WithSetValues(DbDataType from)
 		{
 			return new DbDataType(
-				SystemType,
-				from.DataType != DataType.Undefined ? from.DataType : DataType,
-				!from.DbType.IsNullOrEmpty()        ? from.DbType   : DbType,
+				SystemType    == typeof(object)     ? from.SystemType : SystemType,
+				from.DataType != DataType.Undefined ? from.DataType   : DataType,
+				!from.DbType.IsNullOrEmpty()        ? from.DbType     : DbType,
 				from.Length    ?? Length,
 				from.Precision ?? Precision,
 				from.Scale     ?? Scale);

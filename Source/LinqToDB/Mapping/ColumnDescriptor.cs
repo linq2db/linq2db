@@ -156,19 +156,29 @@ namespace LinqToDB.Mapping
 				}
 			}
 
-			if (MemberType.ToNullableUnderlying().IsEnum)
+			var vc = mappingSchema.GetAttribute<ValueConverterAttribute>(memberAccessor.TypeAccessor.Type, MemberInfo, attr => attr.Configuration);
+			if (vc != null)
+			{
+				ValueConverter = vc.GetValueConverter(this);
+			}
+
+			var systemType = MemberType;
+			if (ValueConverter != null)
+				systemType = ValueConverter.ToProviderExpression.Body.Type;
+
+			if (systemType.ToNullableUnderlying().IsEnum)
 			{
 				if (DataType == DataType.Undefined)
 				{
-					var enumtype = mappingSchema.GetDefaultFromEnumType(MemberType);
+					var enumtype = mappingSchema.GetDefaultFromEnumType(systemType);
 
 					if (enumtype != null)
 						DataType = mappingSchema.GetDataType(enumtype).Type.DataType;
 				}
 
-				if (DataType == DataType.Undefined && MemberType.IsNullable())
+				if (DataType == DataType.Undefined && systemType.IsNullable())
 				{
-					var enumtype = mappingSchema.GetDefaultFromEnumType(MemberType.ToNullableUnderlying());
+					var enumtype = mappingSchema.GetDefaultFromEnumType(systemType.ToNullableUnderlying());
 
 					if (enumtype != null)
 						DataType = mappingSchema.GetDataType(enumtype).Type.DataType;
@@ -184,26 +194,20 @@ namespace LinqToDB.Mapping
 
 				if (DataType == DataType.Undefined)
 				{
-					DataType = mappingSchema.GetUnderlyingDataType(MemberType, out var canBeNull).Type.DataType;
+					DataType = mappingSchema.GetUnderlyingDataType(systemType, out var canBeNull).Type.DataType;
 					if (canBeNull)
 						CanBeNull = canBeNull;
 				}
 			}
 
 			if (DataType == DataType.Undefined)
-				DataType = mappingSchema.GetDataType(MemberType).Type.DataType;
+				DataType = mappingSchema.GetDataType(systemType).Type.DataType;
 
 			var skipValueAttributes = mappingSchema.GetAttributes<SkipBaseAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo, attr => attr.Configuration);
 			if (skipValueAttributes.Length > 0)
 			{
 				SkipBaseAttributes    = skipValueAttributes;
 				SkipModificationFlags = SkipBaseAttributes.Aggregate(SkipModification.None, (s, c) => s | c.Affects);
-			}
-
-			var vc = mappingSchema.GetAttribute<ValueConverterAttribute>(memberAccessor.TypeAccessor.Type, MemberInfo, attr => attr.Configuration);
-			if (vc != null)
-			{
-				ValueConverter = vc.GetValueConverter(this);
 			}
 		}
 
@@ -438,11 +442,7 @@ namespace LinqToDB.Mapping
 			if (ValueConverter != null)
 				sytemType = ValueConverter.ToProviderExpression.Body.Type;
 
-			var dataType = DataType;
-			if (dataType == DataType.Undefined)
-				dataType = MappingSchema.GetDataType(sytemType).Type.DataType;
-
-			return new DbDataType(sytemType, dataType, DbType, Length, Precision, Scale);
+			return new DbDataType(sytemType, DataType, DbType, Length, Precision, Scale);
 		}
 
 		/// <summary>
