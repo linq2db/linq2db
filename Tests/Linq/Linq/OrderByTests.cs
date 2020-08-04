@@ -3,6 +3,7 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.SqlQuery;
 using NUnit.Framework;
 
 // ReSharper disable ReturnValueOfPureMethodIsNotUsed
@@ -372,6 +373,30 @@ namespace Tests.Linq
 					select new { p.ParentID, c.ChildID };
 
 				Assert.IsTrue(result.ToList().SequenceEqual(expected));
+			}
+		}
+
+		[Test]
+		public void OrderByContinuous([DataSources(ProviderName.Access)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var firstOrder =
+					from p in db.Parent
+					orderby (p.Children.Count)
+					select p;
+
+				var secondOrder =
+					from p in firstOrder
+					join pp in db.Parent on p.Value1 equals pp.Value1 
+					orderby pp.ParentID
+					select p;
+
+				var selectQuery = secondOrder.GetSelectQuery();
+				Assert.That(selectQuery.OrderBy.Items.Count, Is.EqualTo(2));
+				var field = QueryHelper.GetUnderlyingField(selectQuery.OrderBy.Items[0].Expression);
+				Assert.That(field, Is.Not.Null);
+				Assert.That(field!.Name, Is.EqualTo("ParentID"));
 			}
 		}
 
