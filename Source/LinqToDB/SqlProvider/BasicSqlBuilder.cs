@@ -44,34 +44,14 @@ namespace LinqToDB.SqlProvider
 		{
 			foreach (var parameter in parameters)
 			{
-				if (!ActualParameters.Contains(parameter))
-					ActualParameters.Add(parameter);
+				AddParameter(parameter);
 			}
 		}
 
 		protected void AddParameter(SqlParameter parameter)
 		{
-			if (!SqlProviderFlags.IsParameterOrderDependent)
-			{
-				if (!ActualParameters.Contains(parameter))
-					ActualParameters.Add(parameter);
-			}
-			else
-			{
-				if (!ActualParameters.Contains(parameter))
-				{
-					ActualParameters.Add(parameter);
-				}
-				else
-				{
-					var newParam = parameter;
-					// var newParam = new SqlParameter(parameter.Type, parameter.Name, parameter.Value);
-					// Utils.MakeUniqueNames(new[] { newParam },
-					// 	ActualParameters.Select(p => p.Name ?? string.Empty), p => p.Name, (p, n, a) => p.Name = n,
-					// 	p => "p");
-					ActualParameters.Add(newParam);
-				}
-			}
+			if (SqlProviderFlags.IsParameterOrderDependent || !ActualParameters.Contains(parameter))
+				ActualParameters.Add(parameter);
 		}
 
 		#endregion

@@ -84,6 +84,12 @@ namespace LinqToDB.SqlProvider
 //statement.EnsureFindTables();
 			statement = TransformStatement(statement);
 
+			if (SqlProviderFlags.IsParameterOrderDependent)
+			{
+				// ensure that parameters in expressions are well sorted
+				statement = NormalizeExpressions(statement);
+			}
+
 			return statement;
 		}
 
@@ -158,6 +164,68 @@ namespace LinqToDB.SqlProvider
 					select.With.Clauses.AddRange(ordered);
 				}
 			}
+		}
+
+
+		static bool HasParameters(ISqlExpression expr)
+		{
+			var hasParameters  = null != new QueryVisitor().Find(expr,
+				el => el.ElementType == QueryElementType.SqlParameter);
+
+			return hasParameters;
+		}
+
+		static T NormalizeExpressions<T>(T expression) 
+			where T : class, IQueryElement
+		{
+			var result = ConvertVisitor.Convert(expression, (visitor, e) =>
+			{
+				if (e.ElementType == QueryElementType.SqlExpression)
+				{
+					var expr = (SqlExpression)e;
+					var newExpression = expr;
+
+					// we interested in modifying only expressions which have parameters
+					if (HasParameters(expr))
+					{
+						if (expr.Expr.IsNullOrEmpty() || expr.Parameters.Length == 0)
+							return expr;
+
+						var newExpressions = new List<ISqlExpression>();
+
+						var changed = false;
+
+						var newExpr = QueryHelper.TransformExpressionIndexes(expr.Expr,
+							idx =>
+							{
+								if (idx >= 0 && idx < expr.Parameters.Length)
+								{
+									var paramExpr  = expr.Parameters[idx];
+									var normalized = NormalizeExpressions(paramExpr);
+
+									if (!changed && !ReferenceEquals(normalized, paramExpr))
+										changed = true;
+
+									var newIndex   = newExpressions.Count;
+
+									newExpressions.Add(normalized);
+									return newIndex;
+								}
+								return idx;
+							});
+
+						changed = changed || newExpr != expr.Expr;
+
+						if (changed)
+							newExpression = new SqlExpression(expr.SystemType, newExpr, expr.Precedence, expr.IsAggregate, expr.IsPure, newExpressions.ToArray());
+
+						return newExpression;
+					}
+				}
+				return e;
+			});
+
+			return result;
 		}
 
 		SelectQuery MoveCountSubQuery(SelectQuery selectQuery)
@@ -520,16 +588,21 @@ namespace LinqToDB.SqlProvider
 
 		static ISqlExpression CreateSqlValue(object value, params ISqlExpression[] basedOn)
 		{
-			var parameters = basedOn.Select(element => element as SqlParameter).Where(ee => ee != null).ToList();
+			SqlParameter? foundParam = null;
 
-			var queryParameter = parameters.FirstOrDefault(e => e.IsQueryParameter);
-				
-			if (queryParameter != null)
-				return new SqlParameter(queryParameter.Type, queryParameter.Name, value);
+			foreach (var element in basedOn)
+			{
+				if (element.ElementType == QueryElementType.SqlParameter)
+				{
+					var param = (SqlParameter)element;
+					if (param.IsQueryParameter)
+						return new SqlParameter(param.Type, param.Name, value);
+					foundParam ??= param;
+				}
+			}
 
-			var parameter = parameters.FirstOrDefault();
-			if (parameter != null)
-				return new SqlParameter(parameter.Type, parameter.Name, value) { IsQueryParameter = false };
+			if (foundParam != null)
+				return new SqlParameter(foundParam.Type, foundParam.Name, value) { IsQueryParameter = false };
 
 			return new SqlValue(value);
 		}

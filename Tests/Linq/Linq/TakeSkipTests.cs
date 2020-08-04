@@ -19,39 +19,23 @@ namespace Tests.Linq
 
 		static void CheckTakeGlobalParams(IDataContext dc, int additional = 0)
 		{
-			if (!(dc is DataConnection db))
-				return;
-
-			if (!LinqToDB.Common.Configuration.Linq.ParameterizeTakeSkip || 
-			    (!db.DataProvider.SqlProviderFlags.AcceptsTakeAsParameter && !db.DataProvider.SqlProviderFlags.AcceptsTakeAsParameterIfSkip))
-				Assert.That(db.Command.Parameters.Count, Is.EqualTo(additional));
-			else
-				Assert.That(db.Command.Parameters.Count, Is.GreaterThan(additional));
+			CheckTakeSkipParams(dc, !LinqToDB.Common.Configuration.Linq.ParameterizeTakeSkip, additional);
 		}
 
-		static void CheckSkipGlobalParams(IDataContext dc, int additional = 0)
+		static void CheckTakeSkipParams(IDataContext dc, bool inline, int additional = 0)
 		{
 			if (!(dc is DataConnection db))
 				return;
 
-			if (!LinqToDB.Common.Configuration.Linq.ParameterizeTakeSkip || 
-			    !db.DataProvider.SqlProviderFlags.AcceptsTakeAsParameter)
-				Assert.That(db.Command.Parameters.Count, Is.EqualTo(additional));
-			else
+			// check only strong providers
+			if (!inline && db.DataProvider.SqlProviderFlags.AcceptsTakeAsParameter && db.DataProvider.SqlProviderFlags.AcceptsTakeAsParameterIfSkip)
 				Assert.That(db.Command.Parameters.Count, Is.GreaterThan(additional));
 		}
 
-		static void CheckTakeSkipParamterized(IDataContext dc, int additional = 0)
+		static void CheckTakeSkipParameterized(IDataContext dc, int additional = 0)
 		{
-			if (!(dc is DataConnection db))
-				return;
-
-			if (!db.DataProvider.SqlProviderFlags.AcceptsTakeAsParameter && !db.DataProvider.SqlProviderFlags.AcceptsTakeAsParameterIfSkip)
-				Assert.That(db.Command.Parameters.Count, Is.EqualTo(additional));
-			else
-				Assert.That(db.Command.Parameters.Count, Is.GreaterThan(additional));
+			CheckTakeSkipParams(dc, false, additional);
 		}
-
 
 		[Test]
 		public void Take1([DataSources] string context, [Values] bool withParameters)
@@ -81,7 +65,7 @@ namespace Tests.Linq
 		{
 			Assert.AreEqual(n, (from ch in dc.Child select ch).Take(() => n).ToList().Count);
 
-			CheckTakeSkipParamterized(dc);
+			CheckTakeSkipParameterized(dc);
 		}
 
 		[Test]
@@ -379,11 +363,8 @@ namespace Tests.Linq
 				var result   = db.Child.OrderByDescending(c => c.ChildID).Skip(skip).Take(take);
 
 				Assert.IsTrue(result.ToList().SequenceEqual(expected));
-				if (inline || (!db.DataProvider.SqlProviderFlags.AcceptsTakeAsParameter
-						&& !db.DataProvider.SqlProviderFlags.AcceptsTakeAsParameterIfSkip))
-					Assert.True(db.Command.Parameters.Count == 0);
-				else
-					Assert.True(db.Command.Parameters.Count > 0);
+
+				CheckTakeSkipParams(db, inline);
 			}
 		}
 
@@ -400,11 +381,8 @@ namespace Tests.Linq
 				var result   = db.Child.OrderByDescending(c => c.ChildID).Take(take).Skip(skip);
 
 				Assert.IsTrue(result.ToList().SequenceEqual(expected));
-				if (inline || (!db.DataProvider.SqlProviderFlags.AcceptsTakeAsParameter
-						&& !db.DataProvider.SqlProviderFlags.AcceptsTakeAsParameterIfSkip))
-					Assert.True(db.Command.Parameters.Count == 0);
-				else
-					Assert.True(db.Command.Parameters.Count > 0);
+
+				CheckTakeSkipParams(db, inline);
 			}
 		}
 
@@ -422,11 +400,8 @@ namespace Tests.Linq
 				var result   = db.Child.OrderBy(c => c.ChildID).Skip(skip1).Take(take).Skip(skip2);
 
 				Assert.IsTrue(result.ToList().SequenceEqual(expected));
-				if (inline || (!db.DataProvider.SqlProviderFlags.AcceptsTakeAsParameter
-						&& !db.DataProvider.SqlProviderFlags.AcceptsTakeAsParameterIfSkip))
-					Assert.True(db.Command.Parameters.Count == 0);
-				else
-					Assert.True(db.Command.Parameters.Count > 0);
+
+				CheckTakeSkipParams(db, inline);
 			}
 		}
 
@@ -581,7 +556,7 @@ namespace Tests.Linq
 				Assert.AreEqual(
 					      (from p in    Parent where p.ParentID > 1 select p).ElementAt(n),
 					await (from p in db.Parent where p.ParentID > 1 select p).ElementAtAsync(() => n));
-				CheckTakeSkipParamterized(db);
+				CheckTakeSkipParameterized(db);
 			}
 		}
 
@@ -619,7 +594,7 @@ namespace Tests.Linq
 				Assert.AreEqual(
 					(from p in    Parent where p.ParentID > 1 select p).ElementAtOrDefault(n),
 					(from p in db.Parent where p.ParentID > 1 select p).ElementAtOrDefault(() => n));
-				CheckTakeSkipParamterized(db);
+				CheckTakeSkipParameterized(db);
 			}
 		}
 
@@ -633,7 +608,7 @@ namespace Tests.Linq
 				Assert.AreEqual(
 					      (from p in    Parent where p.ParentID > 1 select p).ElementAtOrDefault(n),
 					await (from p in db.Parent where p.ParentID > 1 select p).ElementAtOrDefaultAsync(() => n));
-				CheckTakeSkipParamterized(db);
+				CheckTakeSkipParameterized(db);
 			}
 		}
 
@@ -645,7 +620,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				Assert.IsNull((from p in db.Parent where p.ParentID > 1 select p).ElementAtOrDefault(() => n));
-				CheckTakeSkipParamterized(db);
+				CheckTakeSkipParameterized(db);
 			}
 		}
 
