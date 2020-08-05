@@ -184,8 +184,7 @@ namespace LinqToDB.Linq
 			{
 				sql.Statement = query.SqlOptimizer.Finalize(sql.Statement, query.InlineParameters);
 
-				sql.Statement.UpdateIsParameterDepended();
-				sql.Statement.SetAliases();
+				sql.Statement.PrepareQueryAndAliases();
 			}
 		}
 

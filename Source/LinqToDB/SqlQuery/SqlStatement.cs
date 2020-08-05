@@ -308,34 +308,9 @@ namespace LinqToDB.SqlQuery
 			return aliases;
 		}
 
-		internal void UpdateIsParameterDepended()
-		{
-			if (IsParameterDependent)
-				return;
-
-			var isDepended = null != new QueryVisitor().Find(this, expr =>
-			{
-				if (expr.ElementType == QueryElementType.SqlParameter)
-				{
-					var p = (SqlParameter)expr;
-
-					if (!p.IsQueryParameter)
-					{
-						return true;
-					}
-				}
-
-				return false;
-			});
-
-			IsParameterDependent = isDepended;
-		}
-
-		internal void SetAliases()
+		internal void PrepareQueryAndAliases()
 		{
 			_aliases = null;
-
-			Parameters.Clear();
 
 			var allAliases    = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 			var paramsVisited = new HashSet<SqlParameter>();
@@ -421,11 +396,8 @@ namespace LinqToDB.SqlQuery
 						{
 							var p = (SqlParameter)expr;
 
-							if (p.IsQueryParameter)
-							{
-								if (paramsVisited.Add(p))
-									Parameters.Add(p);
-							}
+							if (paramsVisited.Add(p) && !p.IsQueryParameter)
+								IsParameterDependent = true;
 
 							break;
 						}
@@ -457,7 +429,7 @@ namespace LinqToDB.SqlQuery
 				StringComparer.OrdinalIgnoreCase);
 
 			Utils.MakeUniqueNames(
-				Parameters,
+				paramsVisited,
 				allAliases,
 				(n, a) => !a!.Contains(n) && !ReservedWords.IsReserved(n), p => p.Name, (p, n, a) =>
 				{
