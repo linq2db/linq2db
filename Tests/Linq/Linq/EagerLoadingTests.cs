@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Mapping;
+using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
 using NUnit.Framework;
 
@@ -69,6 +70,10 @@ namespace Tests.Linq
 			[Column] [PrimaryKey] public int SubDetailId    { get; set; }
 			[Column] public int? DetailId    { get; set; }
 			[Column] public string? SubDetailValue { get; set; }
+
+			[Association(ThisKey = nameof(DetailId), OtherKey = nameof(DetailClass.DetailId))]
+			public SubDetailClass? Detail { get; set; } = null!;
+
 		}
 
 		class SubDetailDTO
@@ -172,6 +177,33 @@ namespace Tests.Linq
 				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 			}
 		}
+
+		[Test]
+		public void TestLoadWithAndExtensions([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
+			
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			using (var subDetail = db.CreateLocalTable(subDetailRecords))
+			{
+				var query = 
+					from d in detail
+					from m in master.InnerJoin(m => m.Id1 == d.MasterId)
+					where m.Id1.In(1, 2)
+					select d;
+
+				query = query.LoadWith(d => d.SubDetails).ThenLoad(sd => sd.Detail);
+				var result = query.ToArray();
+
+				Assert.That(result.Length, Is.EqualTo(1));
+				Assert.That(result[0].SubDetails.Length, Is.EqualTo(100));
+				Assert.That(result[0].SubDetails[0].Detail, Is.Not.Null);
+			}
+		}
+
 
 		[Test]
 		public void TestLoadWithToString1([IncludeDataSources(TestProvName.AllSQLite)] string context)
