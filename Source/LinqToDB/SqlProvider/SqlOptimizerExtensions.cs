@@ -16,11 +16,13 @@ namespace LinqToDB.SqlProvider
 			// transforming parameters to values
 			var newStatement = statement.ProcessParameters(mappingSchema);
 
-			newStatement.PrepareQueryAndAliases();
+			newStatement.UpdateIsParameterDepended();
 
 			// optimizing expressions according to new values
 			newStatement = optimizer.OptimizeStatement(newStatement, inlineParameters,
 				newStatement.IsParameterDependent || inlineParameters);
+
+			newStatement.PrepareQueryAndAliases();
 
 			return newStatement;
 		}

@@ -308,6 +308,29 @@ namespace LinqToDB.SqlQuery
 			return aliases;
 		}
 
+		internal void UpdateIsParameterDepended()
+		{
+			if (IsParameterDependent)
+				return;
+
+			var isDepended = null != new QueryVisitor().Find(this, expr =>
+			{
+				if (expr.ElementType == QueryElementType.SqlParameter)
+				{
+					var p = (SqlParameter)expr;
+
+					if (!p.IsQueryParameter)
+					{
+						return true;
+					}
+				}
+
+				return false;
+			});
+
+			IsParameterDependent = isDepended;
+		}
+
 		internal void PrepareQueryAndAliases()
 		{
 			_aliases = null;
