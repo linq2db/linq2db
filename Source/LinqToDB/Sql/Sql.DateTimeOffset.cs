@@ -59,39 +59,6 @@ namespace LinqToDB
 			}
 		}
 
-		class DateAddOffsetBuilderOracle : Sql.IExtensionCallBuilder
-		{
-			public void Build(Sql.ISqExtensionBuilder builder)
-			{
-				var part    = builder.GetValue<Sql.DateParts>("part");
-				var date    = builder.GetExpression("date");
-				var number  = builder.GetExpression("number");
-
-				string expStr;
-				switch (part)
-				{
-					case Sql.DateParts.Year        : expStr = "{0} * INTERVAL '1' YEAR"      ; break;
-					case Sql.DateParts.Quarter     : expStr = "{0} * INTERVAL '3' MONTH"     ; break;
-					case Sql.DateParts.Month       : expStr = "{0} * INTERVAL '1' MONTH"     ; break;
-					case Sql.DateParts.DayOfYear   :
-					case Sql.DateParts.WeekDay     :
-					case Sql.DateParts.Day         : expStr = "{0} * INTERVAL '1' DAY"       ; break;
-					case Sql.DateParts.Week        : expStr = "{0} * INTERVAL '7' DAY"       ; break;
-					case Sql.DateParts.Hour        : expStr = "{0} * INTERVAL '1' HOUR"      ; break;
-					case Sql.DateParts.Minute      : expStr = "{0} * INTERVAL '1' MINUTE"    ; break;
-					case Sql.DateParts.Second      : expStr = "{0} * INTERVAL '1' SECOND"    ; break;
-					case Sql.DateParts.Millisecond : expStr = "{0} * INTERVAL '0.001' SECOND"; break;
-					default:
-						throw new ArgumentOutOfRangeException();
-				}
-
-				builder.ResultExpression = builder.Add(
-					date,
-					new SqlExpression(typeof(TimeSpan?), expStr, Precedence.Multiplicative, number),
-					typeof(DateTimeOffset?));
-			}
-		}
-
 		class DateAddOffsetBuilderPostgreSQL : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
@@ -126,7 +93,6 @@ namespace LinqToDB
 		}
 
 		[Sql.Extension("DateAdd"        , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddOffsetBuilder))]
-		[Sql.Extension(PN.Oracle,     "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddOffsetBuilderOracle))]
 		[Sql.Extension(PN.PostgreSQL, "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddOffsetBuilderPostgreSQL))]
 		public static DateTimeOffset? DateAdd([SqlQueryDependent] Sql.DateParts part, double? number, DateTimeOffset? date)
 		{
@@ -152,10 +118,6 @@ namespace LinqToDB
 
 		[CLSCompliant(false)]
 		[Sql.Extension(                "DateDiff",      BuilderType = typeof(DateDiffBuilder))]
-		[Sql.Extension(PN.MySql,       "TIMESTAMPDIFF", BuilderType = typeof(DateDiffBuilder))]
-		[Sql.Extension(PN.DB2,         "",              BuilderType = typeof(DateDiffBuilderDB2))]
-		[Sql.Extension(PN.SapHana,     "",              BuilderType = typeof(DateDiffBuilderSapHana))]
-		[Sql.Extension(PN.SQLite,      "",              BuilderType = typeof(DateDiffBuilderSQLite))]
 		[Sql.Extension(PN.PostgreSQL,  "",              BuilderType = typeof(DateDiffBuilderPostgreSql))]
 		public static int? DateDiff(DateParts part, DateTimeOffset? startDate, DateTimeOffset? endDate)
 		{
