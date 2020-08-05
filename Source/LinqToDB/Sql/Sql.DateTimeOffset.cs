@@ -45,16 +45,89 @@ namespace LinqToDB
 		#endregion
 
 		#region DateAdd
-		[Sql.Extension("DateAdd"        , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilder))]
-		[Sql.Extension(PN.Oracle,     "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilderOracle))]
-		[Sql.Extension(PN.DB2,        "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilderDB2))]
-		[Sql.Extension(PN.Informix,   "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilderInformix))]
-		[Sql.Extension(PN.PostgreSQL, "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilderPostgreSQL))]
-		[Sql.Extension(PN.MySql,      "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilderMySql))]
-		[Sql.Extension(PN.SQLite,     "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilderSQLite))]
-		[Sql.Extension(PN.Access,     "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilderAccess))]
-		[Sql.Extension(PN.SapHana,    "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilderSapHana))]
-		[Sql.Extension(PN.Firebird,   "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilderFirebird))]
+
+		class DateAddOffsetBuilder : Sql.IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var part    = builder.GetValue<Sql.DateParts>("part");
+				var partStr = DatePartBuilder.DatePartToStr(part);
+				var date    = builder.GetExpression("date");
+				var number  = builder.GetExpression("number");
+				builder.ResultExpression = new SqlFunction(typeof(DateTimeOffset?), builder.Expression,
+					new SqlExpression(partStr, Precedence.Primary), number, date);
+			}
+		}
+
+		class DateAddOffsetBuilderOracle : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqExtensionBuilder builder)
+			{
+				var part    = builder.GetValue<Sql.DateParts>("part");
+				var date    = builder.GetExpression("date");
+				var number  = builder.GetExpression("number");
+
+				string expStr;
+				switch (part)
+				{
+					case Sql.DateParts.Year        : expStr = "{0} * INTERVAL '1' YEAR"      ; break;
+					case Sql.DateParts.Quarter     : expStr = "{0} * INTERVAL '3' MONTH"     ; break;
+					case Sql.DateParts.Month       : expStr = "{0} * INTERVAL '1' MONTH"     ; break;
+					case Sql.DateParts.DayOfYear   :
+					case Sql.DateParts.WeekDay     :
+					case Sql.DateParts.Day         : expStr = "{0} * INTERVAL '1' DAY"       ; break;
+					case Sql.DateParts.Week        : expStr = "{0} * INTERVAL '7' DAY"       ; break;
+					case Sql.DateParts.Hour        : expStr = "{0} * INTERVAL '1' HOUR"      ; break;
+					case Sql.DateParts.Minute      : expStr = "{0} * INTERVAL '1' MINUTE"    ; break;
+					case Sql.DateParts.Second      : expStr = "{0} * INTERVAL '1' SECOND"    ; break;
+					case Sql.DateParts.Millisecond : expStr = "{0} * INTERVAL '0.001' SECOND"; break;
+					default:
+						throw new ArgumentOutOfRangeException();
+				}
+
+				builder.ResultExpression = builder.Add(
+					date,
+					new SqlExpression(typeof(TimeSpan?), expStr, Precedence.Multiplicative, number),
+					typeof(DateTimeOffset?));
+			}
+		}
+
+		class DateAddOffsetBuilderPostgreSQL : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqExtensionBuilder builder)
+			{
+				var part    = builder.GetValue<Sql.DateParts>("part");
+				var date    = builder.GetExpression("date");
+				var number  = builder.GetExpression("number");
+
+				string expStr;
+				switch (part)
+				{
+					case Sql.DateParts.Year        : expStr = "{0} * Interval '1 Year'";         break;
+					case Sql.DateParts.Quarter     : expStr = "{0} * Interval '1 Month' * 3";    break;
+					case Sql.DateParts.Month       : expStr = "{0} * Interval '1 Month'";        break;
+					case Sql.DateParts.DayOfYear   : 
+					case Sql.DateParts.WeekDay     : 
+					case Sql.DateParts.Day         : expStr = "{0} * Interval '1 Day'";          break;
+					case Sql.DateParts.Week        : expStr = "{0} * Interval '1 Day' * 7";      break;
+					case Sql.DateParts.Hour        : expStr = "{0} * Interval '1 Hour'";         break;
+					case Sql.DateParts.Minute      : expStr = "{0} * Interval '1 Minute'";       break;
+					case Sql.DateParts.Second      : expStr = "{0} * Interval '1 Second'";       break;
+					case Sql.DateParts.Millisecond : expStr = "{0} * Interval '1 Millisecond'";  break;
+					default:
+						throw new ArgumentOutOfRangeException();
+				}
+
+				builder.ResultExpression = builder.Add(
+					date,
+					new SqlExpression(typeof(TimeSpan?), expStr, Precedence.Multiplicative, number),
+					typeof(DateTimeOffset?));
+			}
+		}
+
+		[Sql.Extension("DateAdd"        , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddOffsetBuilder))]
+		[Sql.Extension(PN.Oracle,     "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddOffsetBuilderOracle))]
+		[Sql.Extension(PN.PostgreSQL, "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddOffsetBuilderPostgreSQL))]
 		public static DateTimeOffset? DateAdd([SqlQueryDependent] Sql.DateParts part, double? number, DateTimeOffset? date)
 		{
 			if (number == null || date == null)

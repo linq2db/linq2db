@@ -5,8 +5,10 @@ using System.Linq;
 
 namespace Tests.Linq
 {
+	using System.Collections.Generic;
 	using System.Runtime.InteropServices;
 	using LinqToDB.Mapping;
+	using Tests.Model;
 
 	[TestFixture]
 	public class DateTimeOffsetTests : TestBase
@@ -61,8 +63,9 @@ namespace Tests.Linq
 			};
 		}
 
+		#region Group By Tests
 		[Test]
-		public void GroupByDateTimeOffsetByDateTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void GroupByDateTimeOffsetByDateTest([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -84,7 +87,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByTimeOfDayTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void GroupByDateTimeOffsetByTimeOfDayTest([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -106,7 +109,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void GroupByDateTimeOffsetTest([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -128,7 +131,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByDayTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void GroupByDateTimeOffsetByDayTest([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -150,7 +153,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByDayOfWeekTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void GroupByDateTimeOffsetByDayOfWeekTest([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -172,7 +175,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByDayOfYearTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void GroupByDateTimeOffsetByDayOfYearTest([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -194,7 +197,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByHourTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void GroupByDateTimeOffsetByHourTest([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -216,7 +219,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByLocalDateTimeTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void GroupByDateTimeOffsetByLocalDateTimeTest([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -238,7 +241,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByMillisecondTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void GroupByDateTimeOffsetByMillisecondTest([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -260,7 +263,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByMinuteTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void GroupByDateTimeOffsetByMinuteTest([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -282,7 +285,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByMonthTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void GroupByDateTimeOffsetByMonthTest([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -304,7 +307,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetBySecondTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void GroupByDateTimeOffsetBySecondTest([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -326,7 +329,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByYearTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void GroupByDateTimeOffsetByYearTest([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -348,7 +351,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByAddDaysTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void GroupByDateTimeOffsetByAddDaysTest([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -370,7 +373,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByAddHoursTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void GroupByDateTimeOffsetByAddHoursTest([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -392,7 +395,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByAddMillisecondsTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void GroupByDateTimeOffsetByAddMillisecondsTest([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -414,7 +417,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByAddMinutesTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void GroupByDateTimeOffsetByAddMinutesTest([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -436,7 +439,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByAddMonthsTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void GroupByDateTimeOffsetByAddMonthsTest([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -458,7 +461,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByAddSecondsTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void GroupByDateTimeOffsetByAddSecondsTest([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -480,7 +483,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByAddYearsTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void GroupByDateTimeOffsetByAddYearsTest([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -500,5 +503,544 @@ namespace Tests.Linq
 				}
 			}
 		}
+		#endregion
+
+		#region DateAdd
+
+		public class CustomNullableDateTimeOffsetComparer : IEqualityComparer<DateTimeOffset?>
+		{
+			public bool Equals(DateTimeOffset? x, DateTimeOffset? y)
+			{
+				if (!x.HasValue) return false;
+				if (!y.HasValue) return false;
+				return x.Value.Between(y.Value.AddMilliseconds(-1), y.Value.AddMilliseconds(1));
+			}
+
+			public int GetHashCode(DateTimeOffset? x) => 0;
+		}
+
+		public class CustomDateTimeOffsetComparer : IEqualityComparer<DateTimeOffset>
+		{
+			public bool Equals(DateTimeOffset x, DateTimeOffset y)
+			{
+				return x.Between(y.AddMilliseconds(-1), y.AddMilliseconds(1));
+			}
+
+			public int GetHashCode(DateTimeOffset x) => 0;
+		}
+
+		[Test]
+		public void DateAddYear([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.Data))
+				AreEqual(
+					from t in Transaction.Data           select           Sql.DateAdd(Sql.DateParts.Year, 11, t.TransactionDate)!. Value.Date,
+					from t in db.GetTable<Transaction>() select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Year, 11, t.TransactionDate))!.Value.Date);
+		}
+
+		[Test]
+		public void DateAddQuarter([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.Data))
+				AreEqual(
+					from t in Transaction.Data           select           Sql.DateAdd(Sql.DateParts.Quarter, -1, t.TransactionDate)!. Value.Date,
+					from t in db.GetTable<Transaction>() select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Quarter, -1, t.TransactionDate))!.Value.Date);
+		}
+
+		[Test]
+		public void DateAddMonth([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.Data))
+				AreEqual(
+					from t in Transaction.Data           select           Sql.DateAdd(Sql.DateParts.Month, 2, t.TransactionDate)!. Value.Date,
+					from t in db.GetTable<Transaction>() select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Month, 2, t.TransactionDate))!.Value.Date);
+		}
+
+		[Test]
+		public void DateAddDayOfYear([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.Data))
+				AreEqual(
+					from t in Transaction.Data           select           Sql.DateAdd(Sql.DateParts.DayOfYear, 3, t.TransactionDate)!. Value.Date,
+					from t in db.GetTable<Transaction>() select Sql.AsSql(Sql.DateAdd(Sql.DateParts.DayOfYear, 3, t.TransactionDate))!.Value.Date);
+		}
+
+		[Test]
+		public void DateAddDay([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.Data))
+				AreEqual(
+					from t in Transaction.Data           select           Sql.DateAdd(Sql.DateParts.Day, 5, t.TransactionDate)!. Value.Date,
+					from t in db.GetTable<Transaction>() select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Day, 5, t.TransactionDate))!.Value.Date);
+		}
+
+		[Test]
+		public void DateAddWeek([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.Data))
+				AreEqual(
+					from t in Transaction.Data           select           Sql.DateAdd(Sql.DateParts.Week, -1, t.TransactionDate)!. Value.Date,
+					from t in db.GetTable<Transaction>() select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Week, -1, t.TransactionDate))!.Value.Date);
+		}
+
+		[Test]
+		public void DateAddWeekDay([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.Data))
+				AreEqual(
+					from t in Transaction.Data           select           Sql.DateAdd(Sql.DateParts.WeekDay, 1, t.TransactionDate)!. Value.Date,
+					from t in db.GetTable<Transaction>() select Sql.AsSql(Sql.DateAdd(Sql.DateParts.WeekDay, 1, t.TransactionDate))!.Value.Date);
+		}
+
+		[Test]
+		public void DateAddHour([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.Data))
+				AreEqual(
+					from t in Transaction.Data           select           Sql.DateAdd(Sql.DateParts.Hour, 1, t.TransactionDate)!. Value.Hour,
+					from t in db.GetTable<Transaction>() select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Hour, 1, t.TransactionDate))!.Value.Hour);
+		}
+
+		[Test]
+		public void DateAddMinute([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.Data))
+				AreEqual(
+					from t in Transaction.Data           select           Sql.DateAdd(Sql.DateParts.Minute, 5, t.TransactionDate)!. Value.Minute,
+					from t in db.GetTable<Transaction>() select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Minute, 5, t.TransactionDate))!.Value.Minute);
+		}
+
+		[Test]
+		public void DateAddSecond([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.Data))
+				AreEqual(
+					from t in Transaction.Data           select           Sql.DateAdd(Sql.DateParts.Second, 41, t.TransactionDate)!. Value.Second,
+					from t in db.GetTable<Transaction>() select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Second, 41, t.TransactionDate))!.Value.Second);
+		}
+
+		[Test]
+		public void AddYears([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.Data))
+				AreEqual(
+					from t in Transaction.Data           select           t.TransactionDate.AddYears(1). Date,
+					from t in db.GetTable<Transaction>() select Sql.AsSql(t.TransactionDate.AddYears(1)).Date);
+		}
+
+		[Test]
+		public void AddMonths([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.Data))
+				AreEqual(
+					from t in Transaction.Data           select           t.TransactionDate.AddMonths(-2). Date,
+					from t in db.GetTable<Transaction>() select Sql.AsSql(t.TransactionDate.AddMonths(-2)).Date);
+		}
+
+		[Test]
+		public void AddDays([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.Data))
+				AreEqual(
+					from t in Transaction.Data           select           t.TransactionDate.AddDays(5). Date,
+					from t in db.GetTable<Transaction>() select Sql.AsSql(t.TransactionDate.AddDays(5)).Date);
+		}
+
+		[Test]
+		public void AddHours([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.Data))
+				AreEqual(
+					from t in Transaction.Data           select           t.TransactionDate.AddHours(22). Hour,
+					from t in db.GetTable<Transaction>() select Sql.AsSql(t.TransactionDate.AddHours(22)).Hour);
+		}
+
+		[Test]
+		public void AddMinutes([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.Data))
+				AreEqual(
+					from t in Transaction.Data           select           t.TransactionDate.AddMinutes(-8). Minute,
+					from t in db.GetTable<Transaction>() select Sql.AsSql(t.TransactionDate.AddMinutes(-8)).Minute);
+		}
+
+		[Test]
+		public void AddSeconds([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.Data))
+				AreEqual(
+					from t in Transaction.Data           select           t.TransactionDate.AddSeconds(-35). Second,
+					from t in db.GetTable<Transaction>() select Sql.AsSql(t.TransactionDate.AddSeconds(-35)).Second);
+		}
+
+		#endregion
+
+		#region DateAdd Expression
+
+		[Test]
+		public void DateAddYearExpression([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
+		{
+			var part1 = 6;
+			var part2 = 5;
+
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.Data))
+				AreEqual(
+					from t in Transaction.Data           select           Sql.DateAdd(Sql.DateParts.Year, 11, t.TransactionDate)!.Value.Date,
+					from t in db.GetTable<Transaction>() select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Year, part1 + part2, t.TransactionDate))!.Value.Date);
+		}
+
+		[Test]
+		public void DateAddQuarterExpression([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
+		{
+			var part1 = 6;
+			var part2 = 5;
+
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.Data))
+				AreEqual(
+					from t in Transaction.Data           select           Sql.DateAdd(Sql.DateParts.Quarter, -1, t.TransactionDate)!.Value.Date,
+					from t in db.GetTable<Transaction>() select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Quarter, part2 - part1, t.TransactionDate))!.Value.Date);
+		}
+
+		[Test]
+		public void DateAddMonthExpression([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
+		{
+			var part1 = 5;
+			var part2 = 3;
+
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.Data))
+				AreEqual(
+					from t in Transaction.Data           select           Sql.DateAdd(Sql.DateParts.Month, 2, t.TransactionDate)!.Value.Date,
+					from t in db.GetTable<Transaction>() select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Month, part1 - part2, t.TransactionDate))!.Value.Date);
+		}
+
+		[Test]
+		public void DateAddDayOfYearExpression([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
+		{
+			var part1 = 6;
+			var part2 = 3;
+
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.Data))
+				AreEqual(
+					from t in Transaction.Data           select           Sql.DateAdd(Sql.DateParts.DayOfYear, 3, t.TransactionDate)!.Value.Date,
+					from t in db.GetTable<Transaction>() select Sql.AsSql(Sql.DateAdd(Sql.DateParts.DayOfYear, part1 - part2, t.TransactionDate))!.Value.Date);
+		}
+
+		[Test]
+		public void DateAddDayExpression([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
+		{
+			var part1 = 2;
+			var part2 = 3;
+
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.Data))
+				AreEqual(
+					from t in Transaction.Data           select           Sql.DateAdd(Sql.DateParts.Day, 5, t.TransactionDate)!.Value.Date,
+					from t in db.GetTable<Transaction>() select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Day, part1 + part2, t.TransactionDate))!.Value.Date);
+		}
+
+		[Test]
+		public void DateAddWeekExpression([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
+		{
+			var part1 = 2;
+			var part2 = 3;
+
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.Data))
+				AreEqual(
+					from t in Transaction.Data           select           Sql.DateAdd(Sql.DateParts.Week, -1, t.TransactionDate)!.Value.Date,
+					from t in db.GetTable<Transaction>() select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Week, part1 - part2, t.TransactionDate))!.Value.Date);
+		}
+
+		[Test]
+		public void DateAddWeekDayExpression([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
+		{
+			var part1 = 2;
+			var part2 = 3;
+
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.Data))
+				AreEqual(
+					from t in Transaction.Data           select           Sql.DateAdd(Sql.DateParts.WeekDay, 1, t.TransactionDate)!.Value.Date,
+					from t in db.GetTable<Transaction>() select Sql.AsSql(Sql.DateAdd(Sql.DateParts.WeekDay, part2 - part1, t.TransactionDate))!.Value.Date);
+		}
+
+		[Test]
+		public void DateAddHourExpression([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
+		{
+			var part1 = 2;
+			var part2 = 3;
+
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.Data))
+				AreEqual(
+					from t in Transaction.Data           select           Sql.DateAdd(Sql.DateParts.Hour, 1, t.TransactionDate)!.Value.Hour,
+					from t in db.GetTable<Transaction>() select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Hour, part2 - part1, t.TransactionDate))!.Value.Hour);
+		}
+
+		[Test]
+		public void DateAddMinuteExpression([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
+		{
+			var part1 = 2;
+			var part2 = 3;
+
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.Data))
+				AreEqual(
+					from t in Transaction.Data           select           Sql.DateAdd(Sql.DateParts.Minute, 5, t.TransactionDate)!.Value.Minute,
+					from t in db.GetTable<Transaction>() select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Minute, part1 + part2, t.TransactionDate))!.Value.Minute);
+		}
+
+		[Test]
+		public void DateAddSecondExpression([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
+		{
+			var part1 = 20;
+			var part2 = 21;
+
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.Data))
+				AreEqual(
+					from t in Transaction.Data           select           Sql.DateAdd(Sql.DateParts.Second, 41, t.TransactionDate)!.Value.Second,
+					from t in db.GetTable<Transaction>() select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Second, part1 + part2, t.TransactionDate))!.Value.Second);
+		}
+
+		[Test]
+		public void AddYearsExpression([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
+		{
+			var part1 = 5;
+			var part2 = 4;
+
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.Data))
+				AreEqual(
+					from t in Transaction.Data           select           t.TransactionDate.AddYears(1).Date,
+					from t in db.GetTable<Transaction>() select Sql.AsSql(t.TransactionDate.AddYears(part1 - part2)).Date);
+		}
+
+		[Test]
+		public void AddMonthsExpression([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
+		{
+			var part1 = 2;
+			var part2 = 4;
+
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.Data))
+				AreEqual(
+					from t in Transaction.Data           select           t.TransactionDate.AddMonths(-2).Date,
+					from t in db.GetTable<Transaction>() select Sql.AsSql(t.TransactionDate.AddMonths(part1 - part2)).Date);
+		}
+
+		[Test]
+		public void AddDaysExpression([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
+		{
+			var part1 = 2;
+			var part2 = 3;
+
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.Data))
+				AreEqual(
+					from t in Transaction.Data           select           t.TransactionDate.AddDays(5).Date,
+					from t in db.GetTable<Transaction>() select Sql.AsSql(t.TransactionDate.AddDays(part1 + part2)).Date);
+		}
+
+		[Test]
+		public void AddHoursExpression([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
+		{
+			var part1 = 11;
+			var part2 = 11;
+
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.Data))
+				AreEqual(
+					from t in Transaction.Data           select           t.TransactionDate.AddHours(22).Hour,
+					from t in db.GetTable<Transaction>() select Sql.AsSql(t.TransactionDate.AddHours(part1 + part2)).Hour);
+		}
+
+		[Test]
+		public void AddMinutesExpression([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
+		{
+			var part1 = 1;
+			var part2 = 9;
+
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.Data))
+				AreEqual(
+					from t in Transaction.Data           select           t.TransactionDate.AddMinutes(-8).Minute,
+					from t in db.GetTable<Transaction>() select Sql.AsSql(t.TransactionDate.AddMinutes(part1 - part2)).Minute);
+		}
+
+		[Test]
+		public void AddSecondsExpression([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)] string context)
+		{
+			var part1 = 5;
+			var part2 = 40;
+
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.Data))
+				AreEqual(
+					from t in Transaction.Data           select           t.TransactionDate.AddSeconds(-35).Second,
+					from t in db.GetTable<Transaction>() select Sql.AsSql(t.TransactionDate.AddSeconds(part1 - part2)).Second);
+		}
+
+		[Test]
+		public void AddMillisecondsExpression([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)]
+			string context)
+		{
+			var part1 = 150;
+			var part2 = 76;
+
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.Data))
+				AreEqual(
+					from t in Transaction.Data           select           t.TransactionDate.AddMilliseconds(226),
+					from t in db.GetTable<Transaction>() select Sql.AsSql(t.TransactionDate.AddMilliseconds(part1 + part2)),
+					new CustomDateTimeOffsetComparer());
+		}
+
+		#endregion
+
+		#region DateDiff
+
+		[Test]
+		public void SubDateDay(
+			[IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)]
+			string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.Data))
+				AreEqual(
+					from t in Transaction.Data           select           (int)(t.TransactionDate.AddHours(96) - t.TransactionDate).TotalDays,
+					from t in db.GetTable<Transaction>() select (int)Sql.AsSql((t.TransactionDate.AddHours(96) - t.TransactionDate).TotalDays));
+		}
+
+		[Test]
+		public void DateDiffDay(
+			[IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)]
+			string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.Data))
+				AreEqual(
+					from t in Transaction.Data           select           Sql.DateDiff(Sql.DateParts.Day, t.TransactionDate, t.TransactionDate.AddHours(96)),
+					from t in db.GetTable<Transaction>() select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Day, t.TransactionDate, t.TransactionDate.AddHours(96))));
+		}
+
+		[Test]
+		public void SubDateHour(
+			[IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)]
+			string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.Data))
+				AreEqual(
+					from t in Transaction.Data           select           (int)(t.TransactionDate.AddHours(100) - t.TransactionDate).TotalHours,
+					from t in db.GetTable<Transaction>() select (int)Sql.AsSql((t.TransactionDate.AddHours(100) - t.TransactionDate).TotalHours));
+		}
+
+		[Test]
+		public void DateDiffHour(
+			[IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)]
+			string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.Data))
+				AreEqual(
+					from t in Transaction.Data           select           Sql.DateDiff(Sql.DateParts.Hour, t.TransactionDate, t.TransactionDate.AddHours(100)),
+					from t in db.GetTable<Transaction>() select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Hour, t.TransactionDate, t.TransactionDate.AddHours(100))));
+		}
+
+		[Test]
+		public void SubDateMinute(
+			[IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)]
+			string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.Data))
+				AreEqual(
+					from t in Transaction.Data           select           (int)(t.TransactionDate.AddMinutes(100) - t.TransactionDate).TotalMinutes,
+					from t in db.GetTable<Transaction>() select (int)Sql.AsSql((t.TransactionDate.AddMinutes(100) - t.TransactionDate).TotalMinutes));
+		}
+
+		[Test]
+		public void DateDiffMinute(
+			[IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)]
+			string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.Data))
+				AreEqual(
+					from t in Transaction.Data           select           Sql.DateDiff(Sql.DateParts.Minute, t.TransactionDate, t.TransactionDate.AddMinutes(100)),
+					from t in db.GetTable<Transaction>() select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Minute, t.TransactionDate, t.TransactionDate.AddMinutes(100))));
+		}
+
+		[Test]
+		public void SubDateSecond(
+			[IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)]
+			string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.Data))
+				AreEqual(
+					from t in Transaction.Data           select           (int)(t.TransactionDate.AddMinutes(100) - t.TransactionDate).TotalSeconds,
+					from t in db.GetTable<Transaction>() select (int)Sql.AsSql((t.TransactionDate.AddMinutes(100) - t.TransactionDate).TotalSeconds));
+		}
+
+		[Test]
+		public void DateDiffSecond(
+			[IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)]
+			string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.Data))
+				AreEqual(
+					from t in Transaction.Data           select           Sql.DateDiff(Sql.DateParts.Second, t.TransactionDate, t.TransactionDate.AddMinutes(100)),
+					from t in db.GetTable<Transaction>() select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Second, t.TransactionDate, t.TransactionDate.AddMinutes(100))));
+		}
+
+		[Test]
+		public void SubDateMillisecond(
+			[IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)]
+			string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.Data))
+				AreEqual(
+					from t in Transaction.Data           select (int)          (t.TransactionDate.AddSeconds(1) - t.TransactionDate).TotalMilliseconds,
+					from t in db.GetTable<Transaction>() select (int)Sql.AsSql((t.TransactionDate.AddSeconds(1) - t.TransactionDate).TotalMilliseconds));
+		}
+
+		[Test]
+		public void DateDiffMillisecond(
+			[IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)]
+			string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.Data))
+				AreEqual(
+					from t in Transaction.Data           select           Sql.DateDiff(Sql.DateParts.Millisecond, t.TransactionDate, t.TransactionDate.AddSeconds(1)),
+					from t in db.GetTable<Transaction>() select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Millisecond, t.TransactionDate, t.TransactionDate.AddSeconds(1))));
+		}
+
+		#endregion
+
 	}
 }
