@@ -19,12 +19,10 @@ namespace LinqToDB.SqlProvider
 			newStatement.UpdateIsParameterDepended();
 
 			// optimizing expressions according to new values
-			newStatement = optimizer.OptimizeStatement(newStatement, inlineParameters, newStatement.IsParameterDependent);
+			newStatement = optimizer.OptimizeStatement(newStatement, inlineParameters,
+				newStatement.IsParameterDependent || inlineParameters);
 
 			newStatement.SetAliases();
-
-			// reset parameters
-			newStatement.CollectParameters();
 
 			return newStatement;
 		}

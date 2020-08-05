@@ -546,10 +546,10 @@ namespace LinqToDB.Linq
 
 		public SqlParameter[] GetParameters()
 		{
-			var ps = new SqlParameter[Parameters.Count];
+			var ps = new SqlParameter[Statement.Parameters.Count];
 
 			for (var i = 0; i < ps.Length; i++)
-				ps[i] = Parameters[i].SqlParameter;
+				ps[i] = Statement.Parameters[i];
 
 			return ps;
 		}

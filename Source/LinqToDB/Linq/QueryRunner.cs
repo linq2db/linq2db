@@ -186,30 +186,6 @@ namespace LinqToDB.Linq
 
 				sql.Statement.UpdateIsParameterDepended();
 				sql.Statement.SetAliases();
-
-				sql.Statement.CollectParameters();
-
-				var parameters =
-					sql.Parameters
-						.Select(p => new {p, idx = sql.Statement.Parameters.IndexOf(p.SqlParameter)})
-						.OrderBy(p => p.idx)
-						.Select(p => p.p);
-
-				var alreadyAdded = new HashSet<SqlParameter>(sql.Parameters.Select(pp => pp.SqlParameter));
-
-				var runtime = sql.Statement.Parameters.Where(p => !alreadyAdded.Contains(p));
-
-				// combining with dynamically created parameters
-
-				parameters = parameters.Concat(
-					runtime.Select(p => new ParameterAccessor(Expression.Constant(p.Value), (e, pc, o) => p.Value,
-						(e, pc, o) => p.Type.DataType != DataType.Undefined || p.Value == null
-							? p.Type
-							: p.Type.WithDataType(query.MappingSchema.GetDataType(p.Value.GetType()).Type.DataType),
-						p))
-				);
-
-				sql.Parameters = parameters.ToList();
 			}
 		}
 
