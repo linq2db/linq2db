@@ -28,7 +28,8 @@ namespace LinqToDB.SqlQuery
 			SequenceNameAttribute[]? sequenceAttributes,
 			SqlField[]               fields,
 			SqlTableType             sqlTableType,
-			ISqlExpression[]?        tableArguments)
+			ISqlExpression[]?        tableArguments,
+			bool                     isTemporary)
 		{
 			SourceID           = id;
 			Name               = name;
@@ -57,6 +58,7 @@ namespace LinqToDB.SqlQuery
 
 			SqlTableType   = sqlTableType;
 			TableArguments = tableArguments;
+			IsTemporary    = isTemporary;
 		}
 
 		#endregion
@@ -207,13 +209,14 @@ namespace LinqToDB.SqlQuery
 		public virtual string?           PhysicalName   { get; set; }
 		public virtual SqlTableType      SqlTableType   { get; set; }
 		public         ISqlExpression[]? TableArguments { get; set; }
+		public         bool              IsTemporary    { get; set; }
 
 		public Dictionary<string,SqlField> Fields { get; }
 
 		public SequenceNameAttribute[]? SequenceAttributes { get; protected set; }
 
 		private SqlField? _all;
-		public  SqlField  All => _all ??= SqlField.All(this);
+		public  SqlField   All => _all ??= SqlField.All(this);
 
 		public SqlField? GetIdentityField()
 		{
@@ -248,21 +251,20 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlTableSource Members
 
-		public   int  SourceID { get; protected set; }
+		public int SourceID { get; protected set; }
 
 		List<ISqlExpression>? _keyFields;
 
 		public IList<ISqlExpression> GetKeys(bool allIfEmpty)
 		{
-			if (_keyFields == null)
-			{
-				_keyFields = (
-					from f in Fields.Values
-					where   f.IsPrimaryKey
-					orderby f.PrimaryKeyOrder
-					select f as ISqlExpression
-				).ToList();
-			}
+			_keyFields ??=
+			(
+				from f in Fields.Values
+				where f.IsPrimaryKey
+				orderby f.PrimaryKeyOrder
+				select f as ISqlExpression
+			)
+			.ToList();
 
 			if (_keyFields.Count == 0 && allIfEmpty)
 				return Fields.Values.Select(f => f as ISqlExpression).ToList();

@@ -687,7 +687,6 @@ namespace LinqToDB.ServiceModel
 						{
 							var elem = (SqlField)e;
 
-
 							Append(elem.Type);
 							Append(elem.Name);
 							Append(elem.PhysicalName);
@@ -779,6 +778,7 @@ namespace LinqToDB.ServiceModel
 
 							Append(elem.ValueType);
 							Append(elem.ValueType.SystemType, elem.Value, false);
+
 							break;
 						}
 
@@ -837,6 +837,8 @@ namespace LinqToDB.ServiceModel
 										Append(ObjectIndices[expr]);
 								}
 							}
+
+							Append(elem.IsTemporary);
 
 							break;
 						}
@@ -1586,10 +1588,11 @@ namespace LinqToDB.ServiceModel
 
 							var sqlTableType = (SqlTableType)ReadInt();
 							var tableArgs    = sqlTableType == SqlTableType.Table ? null : ReadArray<ISqlExpression>();
+							var isTemparary  = ReadBool();
 
 							obj = new SqlTable(
 								sourceID, name, alias, server, database, schema, physicalName, objectType, sequenceAttributes, flds,
-								sqlTableType, tableArgs);
+								sqlTableType, tableArgs, isTemparary);
 
 							break;
 						}
@@ -1714,7 +1717,7 @@ namespace LinqToDB.ServiceModel
 							var trueValue  = Read<ISqlExpression>()!;
 							var falseValue = Read<ISqlExpression>()!;
 							var withNull   = ReadInt();
-							
+
 							obj = new SqlPredicate.IsTrue(expr1, trueValue, falseValue, withNull == 3 ? (bool?)null : withNull == 1, isNot);
 
 							break;

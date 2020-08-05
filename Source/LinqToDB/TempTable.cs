@@ -221,7 +221,7 @@ namespace LinqToDB
 		public string? ServerName   => _table.ServerName;
 		public string? DatabaseName => _table.DatabaseName;
 		public string? SchemaName   => _table.SchemaName;
-		public string TableName    => _table.TableName;
+		public string  TableName    => _table.TableName;
 
 		public string GetTableName()
 		{
