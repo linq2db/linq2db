@@ -98,6 +98,27 @@ namespace LinqToDB.SqlQuery
 			return this;
 		}
 
+		public void CollectParameters()
+		{
+			var alreadyAdded = new HashSet<SqlParameter>();
+			Parameters.Clear();
+
+			new QueryVisitor().VisitAll(this, expr =>
+			{
+				switch (expr.ElementType)
+				{
+					case QueryElementType.SqlParameter :
+					{
+						var p = (SqlParameter)expr;
+						if (p.IsQueryParameter && alreadyAdded.Add(p))
+							Parameters.Add(p);
+
+						break;
+					}
+				}
+			});
+		}
+
 		static SqlField GetUnderlyingField(ISqlExpression expr)
 		{
 			return expr.ElementType switch

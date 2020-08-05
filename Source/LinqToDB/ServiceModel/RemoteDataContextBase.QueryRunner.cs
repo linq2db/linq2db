@@ -58,6 +58,8 @@ namespace LinqToDB.ServiceModel
 						.Append(sqlBuilder.Name)
 						.AppendLine();
 
+					query.Statement.CollectParameters();
+
 					if (query.Statement.Parameters != null && query.Statement.Parameters.Count > 0)
 					{
 						foreach (var p in query.Statement.Parameters)
@@ -135,10 +137,12 @@ namespace LinqToDB.ServiceModel
 
 					var q = _dataContext.GetSqlOptimizer().OptimizeStatement(queryContext.Statement, _dataContext.MappingSchema, _dataContext.InlineParameters);
 
+					q.CollectParameters();
+
 					data = LinqServiceSerializer.Serialize(
 						_dataContext.SerializationMappingSchema,
 						q,
-						q.IsParameterDependent ? q.Parameters.ToArray() : queryContext.GetParameters(),
+						queryContext.GetParameters(),
 						QueryHints);
 				}
 
