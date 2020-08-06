@@ -119,5 +119,41 @@ namespace LinqToDB.Common
 				currentCounters.Add(name, startDigit);
 			}
 		}
+
+		public static void RemoveDuplicates<T>(this IList<T> list, IEqualityComparer<T>? comparer = null)
+		{
+			if (list.Count <= 1)
+				return;
+
+			var hashSet = new HashSet<T>(comparer ?? EqualityComparer<T>.Default);
+			var i = 0;
+			while (i < list.Count)
+			{
+				if (hashSet.Add(list[i]))
+					++i;
+				else
+				{
+					list.RemoveAt(i);
+				}
+			}
+		}
+
+		public static void RemoveDuplicates<T, TKey>(this IList<T> list, Func<T, TKey> keySelector, IEqualityComparer<TKey>? comparer = null)
+		{
+			if (list.Count <= 1)
+				return;
+
+			var hashSet = new HashSet<TKey>(comparer ?? EqualityComparer<TKey>.Default);
+			var i = 0;
+			while (i < list.Count)
+			{
+				if (hashSet.Add(keySelector(list[i])))
+					++i;
+				else
+				{
+					list.RemoveAt(i);
+				}
+			}
+		}
 	}
 }

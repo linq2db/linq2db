@@ -401,6 +401,33 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void OrderByContinuousDuplicates([DataSources(ProviderName.Access)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var firstOrder =
+					from p in db.Parent
+					orderby p.ParentID
+					select p;
+
+				var secondOrder =
+					from p in firstOrder
+					join pp in db.Parent on p.ParentID equals pp.ParentID
+					orderby p.ParentID descending 
+					select p;
+
+				var selectQuery = secondOrder.GetSelectQuery();
+				Assert.That(selectQuery.OrderBy.Items.Count, Is.EqualTo(1));
+				Assert.That(selectQuery.OrderBy.Items[0].IsDescending, Is.True);
+				var field = QueryHelper.GetUnderlyingField(selectQuery.OrderBy.Items[0].Expression);
+				Assert.That(field, Is.Not.Null);
+				Assert.That(field!.Name, Is.EqualTo("ParentID"));
+
+				Console.WriteLine(secondOrder.ToString());
+			}
+		}
+
+		[Test]
 		public void OrderAscDesc([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

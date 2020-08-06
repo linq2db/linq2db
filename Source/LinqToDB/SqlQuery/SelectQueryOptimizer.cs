@@ -1333,6 +1333,9 @@ namespace LinqToDB.SqlQuery
 
 			foreach (var query in information.GetQueriesParentFirst())
 			{
+				// removing duplicate order items
+				query.OrderBy.Items.RemoveDuplicates(o => o.Expression);
+
 				// removing sorting for subselects
 				if (QueryHelper.CanRemoveOrderBy(query, _flags, information))
 				{
