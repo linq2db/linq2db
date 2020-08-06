@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Common
 {
@@ -136,6 +137,25 @@ namespace LinqToDB.Common
 					list.RemoveAt(i);
 				}
 			}
+		}
+
+		public class ObjectReferenceEqualityComparer<T> : IEqualityComparer<T>
+		{
+			public static IEqualityComparer<T> Default = new ObjectReferenceEqualityComparer<T>();
+
+			#region IEqualityComparer<T> Members
+
+			public bool Equals(T x, T y)
+			{
+				return ReferenceEquals(x, y);
+			}
+
+			public int GetHashCode(T obj)
+			{
+				return RuntimeHelpers.GetHashCode(obj);
+			}
+
+			#endregion
 		}
 
 		public static void RemoveDuplicates<T, TKey>(this IList<T> list, Func<T, TKey> keySelector, IEqualityComparer<TKey>? comparer = null)
