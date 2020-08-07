@@ -59,16 +59,17 @@ namespace LinqToDB.Mapping
 		/// <param name="ca">Attribute to clone.</param>
 		internal ColumnAttribute(ColumnAttribute ca)
 		{
-			MemberName      = ca.MemberName;
-			Configuration   = ca.Configuration;
-			Name            = ca.Name;
-			DataType        = ca.DataType;
-			DbType          = ca.DbType;
-			Storage         = ca.Storage;
-			IsDiscriminator = ca.IsDiscriminator;
-			PrimaryKeyOrder = ca.PrimaryKeyOrder;
-			IsColumn        = ca.IsColumn;
-			CreateFormat    = ca.CreateFormat;
+			MemberName        = ca.MemberName;
+			Configuration     = ca.Configuration;
+			Name              = ca.Name;
+			DataType          = ca.DataType;
+			DbType            = ca.DbType;
+			Storage           = ca.Storage;
+			IsDiscriminator   = ca.IsDiscriminator;
+			SkipOnEntityFetch = ca.SkipOnEntityFetch;
+			PrimaryKeyOrder   = ca.PrimaryKeyOrder;
+			IsColumn          = ca.IsColumn;
+			CreateFormat      = ca.CreateFormat;
 
 			if (ca.HasSkipOnInsert()) SkipOnInsert = ca.SkipOnInsert;
 			if (ca.HasSkipOnUpdate()) SkipOnUpdate = ca.SkipOnUpdate;
