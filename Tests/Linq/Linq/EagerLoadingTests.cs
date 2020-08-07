@@ -206,6 +206,42 @@ namespace Tests.Linq
 
 
 		[Test]
+		public void TestLoadWithAndDuplications([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var (masterRecords, detailRecords) = GenerateData();
+			
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			{
+				var query = 
+					from m in master
+					from d in detail.InnerJoin(d => m.Id1 == d.MasterId)
+					select m;
+
+				query = query.LoadWith(d => d.Details);
+
+
+				var expectedQuery = from m in masterRecords
+					join dd in detailRecords on m.Id1 equals dd.MasterId
+					select new MasterClass
+					{
+						Id1 = m.Id1,
+						Id2 = m.Id2,
+						Value = m.Value,
+						Details = detailRecords.Where(d => d.MasterId == m.Id1).ToList(),
+					};
+
+				var result = query.ToList();
+				var expected = expectedQuery.ToList();
+
+				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+			}
+		}
+
+
+		[Test]
 		public void TestLoadWithToString1([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (new AllowMultipleQuery())

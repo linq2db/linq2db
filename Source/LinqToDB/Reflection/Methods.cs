@@ -40,6 +40,8 @@ namespace LinqToDB.Reflection
 
 			public static readonly MethodInfo Join      = MemberHelper.MethodOfGeneric<IEnumerable<LW1>, IEnumerable<LW2>>((m, d) => m.Join(d, _ => _.Value1, _ => _.Value2, (m, d) => d));
 			public static readonly MethodInfo GroupJoin = MemberHelper.MethodOfGeneric<IEnumerable<LW1>, IEnumerable<LW2>>((m, d) => m.GroupJoin(d, _ => _.Value1, _ => _.Value2, (m, d) => d));
+
+			public static readonly MethodInfo Distinct  = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.Distinct());
 		}
 
 		public static class Queryable
@@ -68,6 +70,8 @@ namespace LinqToDB.Reflection
 
 			public static readonly MethodInfo Join      = MemberHelper.MethodOfGeneric<IQueryable<LW1>, IQueryable<LW2>>((m, d) => m.Join(d, _ => _.Value1, _ => _.Value2, (m, d) => d));
 			public static readonly MethodInfo GroupJoin = MemberHelper.MethodOfGeneric<IQueryable<LW1>, IQueryable<LW2>>((m, d) => m.GroupJoin(d, _ => _.Value1, _ => _.Value2, (m, d) => d));
+
+			public static readonly MethodInfo Distinct  = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.Distinct());
 		}
 
 		public static class LinqToDB

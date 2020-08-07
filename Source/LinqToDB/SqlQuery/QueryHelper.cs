@@ -326,10 +326,10 @@ namespace LinqToDB.SqlQuery
 		public static IEnumerable<ISqlTableSource> EnumerateAccessibleSources(SqlTableSource tableSource)
 		{
 			if (tableSource.Source is SelectQuery q)
-				{
-					foreach (var ts in EnumerateAccessibleSources(q))
-						yield return ts;
-				}
+			{
+				foreach (var ts in EnumerateAccessibleSources(q))
+					yield return ts;
+			}
 			else 
 				yield return tableSource.Source;
 
@@ -1036,6 +1036,62 @@ namespace LinqToDB.SqlQuery
 
 			return false;
 		}
+
+		/// <summary>
+		/// Collects unique keys from different sources.
+		/// </summary>
+		/// <param name="tableSource"></param>
+		/// <returns>New List of unique keys</returns>
+		public static List<IList<ISqlExpression>> CollectUniqueKeys(SqlTableSource tableSource)
+		{
+			var knownKeys = new List<IList<ISqlExpression>>();
+
+			if (tableSource.HasUniqueKeys)
+				knownKeys.AddRange(tableSource.UniqueKeys);
+
+			switch (tableSource.Source)
+			{
+				case SqlTable table:
+				{
+					var keys = table.GetKeys(false);
+					if (keys != null && keys.Count > 0)
+						knownKeys.Add(keys);
+
+					break;
+				}
+				case SelectQuery selectQuery:
+				{
+					if (selectQuery.HasUniqueKeys)
+						knownKeys.AddRange(selectQuery.UniqueKeys);
+
+					if (selectQuery.Select.IsDistinct)
+						knownKeys.Add(selectQuery.Select.Columns.OfType<ISqlExpression>().ToList());
+
+					if (!selectQuery.Select.GroupBy.IsEmpty)
+					{
+						var columns = selectQuery.Select.GroupBy.Items
+							.Select(i => selectQuery.Select.Columns.Find(c => c.Expression.Equals(i))).Where(c => c != null)
+							.ToArray();
+						if (columns.Length == selectQuery.Select.GroupBy.Items.Count)
+							knownKeys.Add(columns.OfType<ISqlExpression>().ToList());
+					}
+
+					if (selectQuery.From.Tables.Count == 1)
+					{
+						var table = selectQuery.From.Tables[0];
+						if (table.HasUniqueKeys && table.Joins.Count == 0)
+						{
+							knownKeys.AddRange(table.UniqueKeys);
+						}
+					}
+
+					break;
+				}
+			}
+
+			return knownKeys;
+		}
+
 
 		public static object? EvaluateExpression(this ISqlExpression expr)
 		{

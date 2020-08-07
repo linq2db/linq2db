@@ -429,6 +429,7 @@ namespace LinqToDB.SqlQuery
 			OptimizeSubQueries(isApplySupported, optimizeColumns);
 			OptimizeApplies   (isApplySupported, optimizeColumns);
 
+			OptimizeDistinct();
 			OptimizeDistinctOrderBy();
 			OptimizeSkipTake(inlineParameters);
 
@@ -731,7 +732,7 @@ namespace LinqToDB.SqlQuery
 		}
 
 		internal void ResolveWeakJoins()
-			{
+		{
 			_selectQuery.ForEachTable(table =>
 			{
 				for (var i = table.Joins.Count - 1; i >= 0; i--)
@@ -754,6 +755,43 @@ namespace LinqToDB.SqlQuery
 					}
 				}
 			}, new HashSet<SelectQuery>());
+		}
+
+
+		static bool IsComplexQuery(SelectQuery query)
+		{
+			var complexFound = QueryHelper.EnumerateAccessibleSources(query)
+				.Any(source =>
+				{
+					if (source is SelectQuery q)
+						return q.From.Tables.Count != 1 || QueryHelper.EnumerateJoins(q).Any();
+					return false;
+				});
+			return complexFound;
+		}
+
+		void OptimizeDistinct()
+		{
+			if (!_selectQuery.Select.IsDistinct)
+				return;
+
+			if (IsComplexQuery(_selectQuery))
+				return;
+
+			var table = _selectQuery.From.Tables[0];
+
+			var keys = QueryHelper.CollectUniqueKeys(table);
+			if (keys.Count == 0)
+				return;
+
+			var expressions = new HashSet<ISqlExpression>(_selectQuery.Select.Columns.Select(c => c.Expression));
+			var foundUnique = keys.Any(key => key.All(k => expressions.Contains(k)));
+
+			if (foundUnique)
+			{
+				// We have found distinct has unique key, so we can remove distinct
+				_selectQuery.Select.IsDistinct = false;
+			}
 		}
 
 		SqlTableSource OptimizeSubQuery(
