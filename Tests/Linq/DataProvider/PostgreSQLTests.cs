@@ -1514,11 +1514,15 @@ namespace Tests.DataProvider
 			public int Id { get; set; }
 
 			[Column(DbType = "daterange")]
-			public NpgsqlRange<DateTime> DateRange { get; set; }
+			public NpgsqlRange<DateTime> DateRangeInclusive { get; set; }
+
+			[Column(DbType = "daterange")]
+			public NpgsqlRange<DateTime> DateRangeExclusive { get; set; }
 
 			[Column(DbType = "tsrange")]
 			public NpgsqlRange<DateTime> TSRange   { get; set; }
 
+			// for unknown reason, npgsql enforce DateTime for tstzrange type
 			[Column(DbType = "tstzrange")]
 			public NpgsqlRange<DateTime> TSTZRange { get; set; }
 		}
@@ -1530,42 +1534,45 @@ namespace Tests.DataProvider
 			using (var table = db.CreateLocalTable<NpgsqlTableWithDateRanges>())
 			{
 				var date = DateTime.Now;
-				var range1 = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), new DateTime(2000, 3, 3));
-				var range2 = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3, 4, 5, 6), new DateTime(2000, 4, 3, 4, 5, 6));
-				var range3 = new NpgsqlRange<DateTime>(new DateTime(2000, 4, 3, 4, 5, 6), new DateTime(2000, 5, 3, 4, 5, 6));
+				var range1 = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), true, new DateTime(2000, 3, 3), true);
+				var range2 = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), false, new DateTime(2000, 3, 3), false);
+				var range3 = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3, 4, 5, 6), new DateTime(2000, 4, 3, 4, 5, 6));
+				var range4 = new NpgsqlRange<DateTime>(new DateTime(2000, 4, 3, 4, 5, 6, DateTimeKind.Local), new DateTime(2000, 5, 3, 4, 5, 6, DateTimeKind.Local));
 				db.Insert(new NpgsqlTableWithDateRanges
 				{
-					DateRange =  range1,
-					TSRange   = range2,
-					TSTZRange =  range3,
+					DateRangeInclusive = range1,
+					DateRangeExclusive = range2,
+					TSRange            = range3,
+					TSTZRange          = range4,
 				});
 
 				var record = table.Single();
 
-				Assert.AreEqual(new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), true, new DateTime(2000, 3, 4), false), record.DateRange);
-				Assert.AreEqual(range2, record.TSRange);
-				Assert.AreEqual(new NpgsqlRange<DateTime>(new DateTime(2000, 4, 3, 4, 5, 6).Add(TimeZoneInfo.Local.GetUtcOffset(range3.LowerBound)), new DateTime(2000, 5, 3, 4, 5, 6).Add(TimeZoneInfo.Local.GetUtcOffset(range3.UpperBound))), record.TSTZRange);
+				Assert.AreEqual(new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), true, new DateTime(2000, 3, 4), false), record.DateRangeInclusive);
+				Assert.AreEqual(new NpgsqlRange<DateTime>(new DateTime(2000, 2, 4), true, new DateTime(2000, 3, 3), false), record.DateRangeExclusive);
+				Assert.AreEqual(range3, record.TSRange);
+				Assert.AreEqual(range4, record.TSTZRange);
 			}
 		}
 
 		[Test]
 		public void TestRangeBulkCopy([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var db = (DataConnection)GetDataContext(context))
+			using (var db    = (DataConnection)GetDataContext(context))
 			using (var table = db.CreateLocalTable<NpgsqlTableWithDateRanges>())
 			{
 				var items = Enumerable.Range(1, 100)
 					.Select(i =>
 					{
-						var range1 = new NpgsqlRange<DateTime>(new DateTime(2000 + i, 2, 3), new DateTime(2000 + i, 3, 3));
-						var range2 = new NpgsqlRange<DateTime>(new DateTime(2000 + i, 2, 3, 4, 5, 6), new DateTime(2000 + i, 4, 3, 4, 5, 6));
-						var range3 = new NpgsqlRange<DateTime>(new DateTime(2000 + i, 4, 3, 0, 5, 6), new DateTime(2000 + i, 5, 3, 0, 5, 6));
 						return new NpgsqlTableWithDateRanges
 						{
-							Id        = i,
-							DateRange = range1,
-							TSRange   = range2,
-							TSTZRange = range3,
+							Id                 = i,
+							DateRangeInclusive = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), true, new DateTime(2000, 3, 3), true),
+							DateRangeExclusive = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), false, new DateTime(2000, 3, 3), false),
+							TSRange            = new NpgsqlRange<DateTime>(new DateTime(2000 + i, 2, 3, 4, 5, 6), true, new DateTime(2000 + i, 4, 3, 4, 5, 6), true),
+							// DateTimeKind.Local used, because npgsql will return values with DateTimeKind.Local kind
+							// passing DateTimeKind.Utc values will require offset calculations in assert, as DateTime.Equals ignore kind in comparison
+							TSTZRange          = new NpgsqlRange<DateTime>(new DateTime(2000 + i, 4, 3, 4, 5, 6, DateTimeKind.Local), true, new DateTime(2000 + i, 5, 3, 4, 5, 6, DateTimeKind.Local), true),
 						};
 					})
 					.ToArray();
@@ -1580,16 +1587,16 @@ namespace Tests.DataProvider
 					items.Select(t => new
 					{
 						t.Id,
-						DateRange = new NpgsqlRange<DateTime>(new DateTime(2000 + t.Id, 2, 3), true, new DateTime(2000 + t.Id, 3, 4), false),
+						// date range read back as lower-inclusive, upper-exclusive and
+						// NpgsqlRange Equals implementation cannot compare equal ranges if they use different flags or bounds types
+						// so we need to convert original values
+						// https://github.com/npgsql/npgsql/blob/dev/src/Npgsql/NpgsqlTypes/NpgsqlRange.cs#L304
+						DateRangeInclusive = new NpgsqlRange<DateTime>(t.DateRangeInclusive.LowerBound, true, t.DateRangeInclusive.UpperBound.AddDays(1), false),
+						DateRangeExclusive = new NpgsqlRange<DateTime>(t.DateRangeExclusive.LowerBound.AddDays(1), true, t.DateRangeExclusive.UpperBound, false),
 						t.TSRange,
-						TSTZRange =
-							new NpgsqlRange<DateTime>(
-								new DateTime(2000 + t.Id, 4, 3, 0, 5, 6)
-									.Add(TimeZoneInfo.Local.GetUtcOffset(new DateTime(2000 + t.Id, 4, 3, 0, 5, 6))),
-								new DateTime(2000 + t.Id, 5, 3, 0, 5, 6)
-									.Add(TimeZoneInfo.Local.GetUtcOffset(new DateTime(2000 + t.Id, 5, 3, 0, 5, 6))))
+						t.TSTZRange
 					}),
-					records.Select(t => new { t.Id, t.DateRange, t.TSRange, t.TSTZRange }));
+					records.Select(t => new { t.Id, t.DateRangeInclusive, t.DateRangeExclusive, t.TSRange, t.TSTZRange }));
 			}
 		}
 
@@ -1599,21 +1606,21 @@ namespace Tests.DataProvider
 			using (var db = (DataConnection)GetDataContext(context))
 			using (var table = db.CreateLocalTable<NpgsqlTableWithDateRanges>())
 			{
-				var date = DateTime.Now;
-
-				var items = Enumerable.Range(1, 100).Select(i =>
-				{
-					var range1 = new NpgsqlRange<DateTime>(new DateTime(2000 + i, 2, 3), new DateTime(2000 + i, 3, 8));
-					var range2 = new NpgsqlRange<DateTime>(new DateTime(2000 + i, 2, 3, 4, 5, 6), new DateTime(2000 + i, 4, 3, 4, 5, 6));
-					var range3 = new NpgsqlRange<DateTime>(new DateTime(2000 + i, 2, 8, 4, 5, 6), new DateTime(2000 + i, 5, 6, 4, 5, 6));
-					return new NpgsqlTableWithDateRanges
+				var items = Enumerable.Range(1, 100)
+					.Select(i =>
 					{
-						Id        = i,
-						DateRange = range1,
-						TSRange   = range2,
-						TSTZRange = range3,
-					};
-				});
+						return new NpgsqlTableWithDateRanges
+						{
+							Id                 = i,
+							DateRangeInclusive = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), true, new DateTime(2000, 3, 3), true),
+							DateRangeExclusive = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), false, new DateTime(2000, 3, 3), false),
+							TSRange            = new NpgsqlRange<DateTime>(new DateTime(2000 + i, 2, 3, 4, 5, 6), true, new DateTime(2000 + i, 4, 3, 4, 5, 6), true),
+							// DateTimeKind.Local used, because npgsql will return values with DateTimeKind.Local kind
+							// passing DateTimeKind.Utc values will require offset calculations in assert, as DateTime.Equals ignore kind in comparison
+							TSTZRange          = new NpgsqlRange<DateTime>(new DateTime(2000 + i, 4, 3, 4, 5, 6, DateTimeKind.Local), true, new DateTime(2000 + i, 5, 3, 4, 5, 6, DateTimeKind.Local), true),
+						};
+					})
+					.ToArray();
 
 				await db.BulkCopyAsync(items);
 
@@ -1621,101 +1628,20 @@ namespace Tests.DataProvider
 
 				Assert.AreEqual(100, records.Length);
 
-				var cnt = 1;
-				foreach (var record in records)
-				{
-					Assert.AreEqual(cnt, record.Id);
-					Assert.AreEqual(new NpgsqlRange<DateTime>(new DateTime(2000 + cnt, 2, 3), true, new DateTime(2000 + cnt, 3, 9), false), record.DateRange);
-					Assert.AreEqual(new NpgsqlRange<DateTime>(new DateTime(2000 + cnt, 2, 3, 4, 5, 6), new DateTime(2000 + cnt, 4, 3, 4, 5, 6)), record.TSRange);
-					Assert.AreEqual(new NpgsqlRange<DateTime>(
-						new DateTime(2000 + cnt, 2, 8, 4, 5, 6).Add(TimeZoneInfo.Local.GetUtcOffset(new DateTime(2000 + cnt, 2, 8, 4, 5, 6))), 
-						new DateTime(2000 + cnt, 5, 6, 4, 5, 6).Add(TimeZoneInfo.Local.GetUtcOffset(new DateTime(2000 + cnt, 5, 6, 4, 5, 6)))), record.TSTZRange);
-					cnt++;
-				}
-			}
-		}
-
-		[Test]
-		[ActiveIssue("Npgsql DST issues")]
-		public void TestRangeBulkCopyDST([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
-		{
-			var dateEarly = new DateTime(2002, 1, 1, 0, 0, 0);
-			var dateLate = new DateTime(2010, 1, 1, 0, 0, 0);
-			var datesToTest = new DateTime[]
-			{
-				//2002 spring forward
-				new DateTime(2002,  4,  7, 0,  0, 0),
-				new DateTime(2002,  4,  7, 1, 30, 0),
-				//note 4/7/2002 at 2am does not exist
-				new DateTime(2002,  4,  7, 3,  0, 0), //comment these lines for a successful run
-
-				//2002 fall back
-				new DateTime(2002, 10, 27, 0,  0, 0),
-				new DateTime(2002, 10, 27, 0, 30, 0),
-				//note 10/27/2002 at 1am occurs twice and should not be tested
-				new DateTime(2002, 10, 27, 2,  0, 0), //comment these lines for a successful run
-
-				//2008 spring forward
-				new DateTime(2008, 3, 9, 1, 30, 0),
-				new DateTime(2008, 3, 9, 3, 0, 0), //comment these lines for a successful run
-
-				//2008 fall back
-				new DateTime(2008, 11, 2, 0, 30, 0),
-				new DateTime(2008, 11, 2, 2, 0, 0), //comment these lines for a successful run
-			};
-			using (var db = (DataConnection)GetDataContext(context))
-			using (var table = db.CreateLocalTable<NpgsqlTableWithDateRanges>())
-			{
-				var items = datesToTest
-					.Select((d, index) => new NpgsqlTableWithDateRanges
+				AreEqual(
+					items.Select(t => new
 					{
-						Id = index,
-						DateRange = new NpgsqlRange<DateTime>(dateEarly.Date, d.Date),
-						TSRange   = new NpgsqlRange<DateTime>(dateEarly, d),
-						TSTZRange = new NpgsqlRange<DateTime>(dateEarly, d),
-					});
-				items = items.Concat(datesToTest
-					.Select((d, index) => new NpgsqlTableWithDateRanges
-					{
-						Id = index + datesToTest.Length,
-						DateRange = new NpgsqlRange<DateTime>(d.Date, dateLate.Date),
-						TSRange   = new NpgsqlRange<DateTime>(d, dateLate),
-						TSTZRange = new NpgsqlRange<DateTime>(d, dateLate),
-					}));
-
-				db.BulkCopy(items);
-
-				var actual = table.OrderBy(_ => _.Id).ToArray();
-
-				var expected = datesToTest
-					.Select((d, index) => new NpgsqlTableWithDateRanges
-					{
-						Id = index,
-						DateRange = new NpgsqlRange<DateTime>(dateEarly.Date, true, d.Date.AddDays(1), false),
-						TSRange   = new NpgsqlRange<DateTime>(dateEarly, d),
-						TSTZRange = new NpgsqlRange<DateTime>(dateEarly.Add(TimeZoneInfo.Local.GetUtcOffset(dateEarly)), d.Add(TimeZoneInfo.Local.GetUtcOffset(d))),
-					})
-					.Concat(datesToTest
-					.Select((d, index) => new NpgsqlTableWithDateRanges
-					{
-						Id = index + datesToTest.Length,
-						DateRange = new NpgsqlRange<DateTime>(d.Date, true, dateLate.Date.AddDays(1), false),
-						TSRange   = new NpgsqlRange<DateTime>(d, dateLate),
-						TSTZRange = new NpgsqlRange<DateTime>(d.Add(TimeZoneInfo.Local.GetUtcOffset(d)), dateLate.Add(TimeZoneInfo.Local.GetUtcOffset(dateLate))),
-					}))
-					.ToArray();
-
-				Assert.AreEqual(expected.Length, actual.Length);
-
-				for (int i = 0; i < actual.Length; i++)
-				{
-					var actualRow = actual[i];
-					var expectedRow = expected[i];
-					Assert.AreEqual(expectedRow.Id, actualRow.Id);
-					Assert.AreEqual(expectedRow.DateRange, actualRow.DateRange);
-					Assert.AreEqual(expectedRow.TSRange, actualRow.TSRange);
-					Assert.AreEqual(expectedRow.TSTZRange, actualRow.TSTZRange);
-				}
+						t.Id,
+						// date range read back as lower-inclusive, upper-exclusive and
+						// NpgsqlRange Equals implementation cannot compare equal ranges if they use different flags or bounds types
+						// so we need to convert original values
+						// https://github.com/npgsql/npgsql/blob/dev/src/Npgsql/NpgsqlTypes/NpgsqlRange.cs#L304
+						DateRangeInclusive = new NpgsqlRange<DateTime>(t.DateRangeInclusive.LowerBound, true, t.DateRangeInclusive.UpperBound.AddDays(1), false),
+						DateRangeExclusive = new NpgsqlRange<DateTime>(t.DateRangeExclusive.LowerBound.AddDays(1), true, t.DateRangeExclusive.UpperBound, false),
+						t.TSRange,
+						t.TSTZRange
+					}),
+					records.Select(t => new { t.Id, t.DateRangeInclusive, t.DateRangeExclusive, t.TSRange, t.TSTZRange }));
 			}
 		}
 
