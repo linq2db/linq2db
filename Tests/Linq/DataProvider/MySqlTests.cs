@@ -828,6 +828,26 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		public void TestBeginTransactionWithIsolationLevel([IncludeDataSources(TestProvName.AllMySql)] string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				db.GetTable<Parent>().Update(p => p.ParentID == 1, p => new Parent { Value1 = 1 });
+
+				using (var tran = db.BeginTransaction(IsolationLevel.Unspecified))
+				{
+					db.GetTable<Parent>().Update(p => p.ParentID == 1, p => new Parent { Value1 = null });
+
+					Assert.IsNull(db.GetTable<Parent>().First(p => p.ParentID == 1).Value1);
+
+					tran.Rollback();
+
+					Assert.That(1, Is.EqualTo(db.GetTable<Parent>().First(p => p.ParentID == 1).Value1));
+				}
+			}
+		}
+
+		[Test]
 		public void SchemaProviderTest([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
 			using (var db = (DataConnection)GetDataContext(context))
