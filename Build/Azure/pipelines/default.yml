@@ -405,7 +405,7 @@ stages:
           script: 'sqlserver.2017.cmd'
         PostgreSQL10:
           title: 'PostgreSQL 10'
-          config: 'pgsql10.win'
+          config: 'pgsql10'
           script: 'pgsql10.cmd'
 
     steps:
@@ -533,7 +533,7 @@ stages:
           script: 'sqlserver.2017.cmd'
         PostgreSQL10:
           title: 'PostgreSQL 10'
-          config: 'pgsql10.win'
+          config: 'pgsql10'
           script: 'pgsql10.cmd'
     steps:
     - checkout: none
@@ -655,7 +655,7 @@ stages:
 #          script: 'sqlserver.2017.cmd'
 #        PostgreSQL10:
 #          title: 'PostgreSQL 10'
-#          config: 'pgsql10.win'
+#          config: 'pgsql10'
 #          script: 'pgsql10.cmd'
     steps:
     - checkout: none
