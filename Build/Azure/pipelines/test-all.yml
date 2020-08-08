@@ -195,6 +195,10 @@ stages:
           title: 'SQL Server 2019 (Microsoft.Data.SqlClient)'
           config: 'sqlserver.2019.ms'
           script: 'sqlserver.2019.cmd'
+        PostgreSQL10:
+          title: 'PostgreSQL 10'
+          config: 'pgsql10'
+          script: 'pgsql10.cmd'
 
     steps:
     - checkout: none
@@ -300,10 +304,6 @@ stages:
           title: 'SQL Server 2017 (Microsoft.Data.SqlClient)'
           config: 'sqlserver.2017.ms'
           script: 'sqlserver.2017.cmd'
-        PostgreSQL10:
-          title: 'PostgreSQL 10'
-          config: 'pgsql10'
-          script: 'pgsql10.cmd'
 
     steps:
     - checkout: none
@@ -428,10 +428,6 @@ stages:
           title: 'SQL Server 2017 (Microsoft.Data.SqlClient)'
           config: 'sqlserver.2017.ms'
           script: 'sqlserver.2017.cmd'
-        PostgreSQL10:
-          title: 'PostgreSQL 10'
-          config: 'pgsql10'
-          script: 'pgsql10.cmd'
     steps:
     - checkout: none
 
@@ -617,6 +613,10 @@ stages:
           title: 'SQL Server 2019 (Microsoft.Data.SqlClient)'
           config: 'sqlserver.2019.ms'
           script: 'sqlserver.2019.cmd'
+        PostgreSQL10:
+          title: 'PostgreSQL 10'
+          config: 'pgsql10'
+          script: 'pgsql10.cmd'
     steps:
     - checkout: none
 
