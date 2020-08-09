@@ -49,7 +49,6 @@
 			<HintPath>..\..\Redist\Oracle\Oracle.DataAccess.dll</HintPath>
 		</Reference>
 
-		<!-- why pople cannot create nuget that just works... is it so hard? -->
 		<PackageReference Include="IBM.Data.DB.Provider" Version="11.1.4040.4" GeneratePathProperty="true" />
 		<Reference Include="IBM.Data.DB2">
 			<HintPath>$(PkgIBM_Data_DB_Provider)\build\net451\x86\IBM.Data.DB2.dll</HintPath>
