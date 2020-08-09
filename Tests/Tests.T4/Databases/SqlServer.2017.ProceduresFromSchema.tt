@@ -6,9 +6,9 @@
 <#@ include file="..\..\..\Source\LinqToDB.Templates\ObsoleteAttributes.ttinclude"         #>
 <#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net46\Microsoft.SqlServer.Types.dll" #>
 <#
-	GetSchemaOptions.UseSchemaOnly = false;
-	NamespaceName   = "Sql2017";
-//	DataContextName = "NorthwindDB";
+	GetSchemaOptions.UseSchemaOnly = true;
+	NamespaceName   = "Sql2017ProcSchema";
+	//DataContextName = "NorthwindDB";
 	DatabaseName    = null;//"Northwind";
 	GenerateDatabaseName = false;
 	OneToManyAssociationType = "List<{0}>";
