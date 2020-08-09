@@ -285,6 +285,7 @@ WHERE
 					new DataTypeInfo { TypeName = "timestamp"       , DataType = typeof(byte[])  .FullName!, CreateFormat = "timestamp"        , ProviderDbType = 19                                                                   },
 					new DataTypeInfo { TypeName = "binary"          , DataType = typeof(byte[])  .FullName!, CreateFormat = "binary({0})"      , ProviderDbType = 1   , CreateParameters = "length"                                    },
 					new DataTypeInfo { TypeName = "image"           , DataType = typeof(byte[])  .FullName!, CreateFormat = "image"            , ProviderDbType = 7                                                                    },
+					new DataTypeInfo { TypeName = "varbinary"       , DataType = typeof(byte[])  .FullName!, CreateFormat = "varbinary({0})"   , ProviderDbType = 21  , CreateParameters = "max length"                                },
 					new DataTypeInfo { TypeName = "text"            , DataType = typeof(string)  .FullName!, CreateFormat = "text"             , ProviderDbType = 18                                                                   },
 					new DataTypeInfo { TypeName = "ntext"           , DataType = typeof(string)  .FullName!, CreateFormat = "ntext"            , ProviderDbType = 11                                                                   },
 					new DataTypeInfo { TypeName = "decimal"         , DataType = typeof(decimal) .FullName!, CreateFormat = "decimal({0}, {1})", ProviderDbType = 5   , CreateParameters = "precision,scale"                           },
@@ -297,7 +298,6 @@ WHERE
 					new DataTypeInfo { TypeName = "char"            , DataType = typeof(string)  .FullName!, CreateFormat = "char({0})"        , ProviderDbType = 3   , CreateParameters = "length"                                    },
 					new DataTypeInfo { TypeName = "nchar"           , DataType = typeof(string)  .FullName!, CreateFormat = "nchar({0})"       , ProviderDbType = 10  , CreateParameters = "length"                                    },
 					new DataTypeInfo { TypeName = "nvarchar"        , DataType = typeof(string)  .FullName!, CreateFormat = "nvarchar({0})"    , ProviderDbType = 12  , CreateParameters = "max length"                                },
-					new DataTypeInfo { TypeName = "varbinary"       , DataType = typeof(string)  .FullName!, CreateFormat = "varbinary({0})"   , ProviderDbType = 21  , CreateParameters = "max length"                                },
 					new DataTypeInfo { TypeName = "uniqueidentifier", DataType = typeof(Guid)    .FullName!, CreateFormat = "uniqueidentifier" , ProviderDbType = 14                                                                   }
 				};
 			}

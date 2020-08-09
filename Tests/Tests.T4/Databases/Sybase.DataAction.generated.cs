@@ -87,7 +87,7 @@ namespace SybaseDataActionDataContext
 		[Column("nvarcharDataType"),                                               Nullable] public string?   NvarcharDataType      { get; set; } // nvarchar(60)
 		[Column("ntextDataType"),                                                  Nullable] public object?   NtextDataType         { get; set; } // unitext
 		[Column("binaryDataType"),                                                 Nullable] public byte[]?   BinaryDataType        { get; set; } // binary(1)
-		[Column("varbinaryDataType"),                                              Nullable] public char?     VarbinaryDataType     { get; set; } // varbinary(1)
+		[Column("varbinaryDataType"),                                              Nullable] public byte[]?   VarbinaryDataType     { get; set; } // varbinary(1)
 		[Column("imageDataType"),                                                  Nullable] public byte[]?   ImageDataType         { get; set; } // image
 		[Column("timestampDataType",     SkipOnInsert=true, SkipOnUpdate=true),    Nullable] public byte[]?   TimestampDataType     { get; set; } // timestamp
 	}
@@ -288,7 +288,7 @@ namespace SybaseDataActionDataContext
 		[Column,        Nullable] public float?    FieldFloat      { get; set; } // real
 		[Column,        Nullable] public double?   FieldDouble     { get; set; } // float
 		[Column,        Nullable] public DateTime? FieldDateTime   { get; set; } // datetime
-		[Column,        Nullable] public string?   FieldBinary     { get; set; } // varbinary(20)
+		[Column,        Nullable] public byte[]?   FieldBinary     { get; set; } // varbinary(20)
 		[Column,        Nullable] public string?   FieldGuid       { get; set; } // char(36)
 		[Column,        Nullable] public decimal?  FieldDecimal    { get; set; } // decimal(24, 10)
 		[Column,        Nullable] public object?   FieldDate       { get; set; } // date
@@ -314,7 +314,7 @@ namespace SybaseDataActionDataContext
 		[Column,        Nullable] public float?    FieldFloat      { get; set; } // real
 		[Column,        Nullable] public double?   FieldDouble     { get; set; } // float
 		[Column,        Nullable] public DateTime? FieldDateTime   { get; set; } // datetime
-		[Column,        Nullable] public string?   FieldBinary     { get; set; } // varbinary(20)
+		[Column,        Nullable] public byte[]?   FieldBinary     { get; set; } // varbinary(20)
 		[Column,        Nullable] public string?   FieldGuid       { get; set; } // char(36)
 		[Column,        Nullable] public decimal?  FieldDecimal    { get; set; } // decimal(24, 10)
 		[Column,        Nullable] public object?   FieldDate       { get; set; } // date
