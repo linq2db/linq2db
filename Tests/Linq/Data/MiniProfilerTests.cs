@@ -1489,7 +1489,7 @@ namespace Tests.Data
 							Enumerable.Range(0, 1000).Select(n => new PostgreSQLTests.AllTypes() { ID = 2000 + n }));
 
 #if NET46
-						// we use 4.0.10 for tests, async added in 4.1.0
+						// we use 4.0.11 for tests, async added in 4.1.0
 						Assert.AreEqual(!unmapped, trace.Contains("INSERT BULK"));
 #else
 						Assert.AreEqual(!unmapped, trace.Contains("INSERT ASYNC BULK"));
