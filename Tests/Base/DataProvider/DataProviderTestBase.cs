@@ -22,7 +22,7 @@ namespace Tests.DataProvider
 
 		protected T TestType<T>(DataConnection conn, string fieldName,
 			DataType dataType          = DataType.Undefined,
-			string   tableName         = "AllTypes",
+			string   tableName         = "\"AllTypes\"",
 			bool     skipPass          = false,
 			bool     skipNull          = false,
 			bool     skipDefinedNull   = false,

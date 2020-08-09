@@ -176,7 +176,7 @@ namespace Tests.Data
 				};
 
 				// assert provider-specific parameter type name
-				Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE nvarcharDataType = @p", new DataParameter("@p", "3323", DataType.NVarChar)));
+				Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM \"AllTypes\" WHERE \"nvarcharDataType\" = @p", new DataParameter("@p", "3323", DataType.NVarChar)));
 				Assert.True(trace.Contains("DECLARE @p VarChar"));
 
 				// just check schema (no api used)
