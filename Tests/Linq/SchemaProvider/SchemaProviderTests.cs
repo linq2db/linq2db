@@ -509,9 +509,7 @@ namespace Tests.SchemaProvider
 						var c2 = t2.Columns[j];
 
 						Assert.That(c1.ColumnName,           Is.EqualTo(c2.ColumnName));
-						// IT: Different approaches return different result: nvarchar(50) vs nvarchar(100).
-						// We do not use it anyway.
-						//Assert.That(c1.ColumnType,         Is.EqualTo(c2.ColumnType));
+						Assert.That(c1.ColumnType,           Is.EqualTo(c2.ColumnType));
 						Assert.That(c1.IsNullable,           Is.EqualTo(c2.IsNullable));
 						Assert.That(c1.IsIdentity,           Is.EqualTo(c2.IsIdentity));
 						Assert.That(c1.IsPrimaryKey,         Is.EqualTo(c2.IsPrimaryKey));
