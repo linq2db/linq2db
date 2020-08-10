@@ -87,7 +87,6 @@ namespace Tests.UserTests
 			// those providers cannot load schema when in transaction
 			ProviderName.DB2,
 			ProviderName.Access,
-			TestProvName.AllSybase,
 			TestProvName.AllMySql,
 			TestProvName.AllSqlServer)]
 			string context)
@@ -140,7 +139,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestWithTransactionThrowsFromLinqToDB([IncludeDataSources(TestProvName.AllSybase, TestProvName.AllMySql)] string context)
+		public void TestWithTransactionThrowsFromLinqToDB([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
 			using (var db = new DataConnection(context))
 			using (db.BeginTransaction())
