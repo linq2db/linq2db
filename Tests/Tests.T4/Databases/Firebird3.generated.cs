@@ -327,349 +327,349 @@ namespace Firebird3DataContext
 
 		#region OutRefEnumTest
 
-		public static IEnumerable<OutRefEnumTestResult> OutRefEnumTest(this TESTDB30DB dataConnection, string? str, string? in_inputOutputStr, out string? inputOutputStr, out string? outputStr)
+		public static IEnumerable<OutRefEnumTestResult> OutRefEnumTest(this TESTDB30DB dataConnection, string? STR, string? IN_INPUTOUTPUTSTR, out string? INPUTOUTPUTSTR, out string? OUTPUTSTR)
 		{
 			var ret = dataConnection.QueryProc<OutRefEnumTestResult>("\"OutRefEnumTest\"",
-				new DataParameter("str",            str,            DataType.NVarChar),
-				new DataParameter("in_inputOutputStr", in_inputOutputStr, DataType.NVarChar),
-				new DataParameter("inputOutputStr", null, DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
-				new DataParameter("outputStr", null,      DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 }).ToList();
+				new DataParameter("STR",            STR,            DataType.NVarChar),
+				new DataParameter("IN_INPUTOUTPUTSTR", IN_INPUTOUTPUTSTR, DataType.NVarChar),
+				new DataParameter("INPUTOUTPUTSTR", null, DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
+				new DataParameter("OUTPUTSTR", null,      DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 }).ToList();
 
-			inputOutputStr = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["inputOutputStr"]).Value);
-			outputStr      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["outputStr"]).     Value);
+			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
+			OUTPUTSTR      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
 
 			return ret;
 		}
 
 		public partial class OutRefEnumTestResult
 		{
-			public string? inputOutputStr { get; set; }
-			public string? outputStr      { get; set; }
+			public string? INPUTOUTPUTSTR { get; set; }
+			public string? OUTPUTSTR      { get; set; }
 		}
 
 		#endregion
 
 		#region OutRefTest
 
-		public static IEnumerable<OutRefTestResult> OutRefTest(this TESTDB30DB dataConnection, int? ID, int? in_inputOutputID, string? str, string? in_inputOutputStr, out int? inputOutputID, out string? inputOutputStr, out int? outputID, out string? outputStr)
+		public static IEnumerable<OutRefTestResult> OutRefTest(this TESTDB30DB dataConnection, int? ID, int? IN_INPUTOUTPUTID, string? STR, string? IN_INPUTOUTPUTSTR, out int? INPUTOUTPUTID, out string? INPUTOUTPUTSTR, out int? OUTPUTID, out string? OUTPUTSTR)
 		{
 			var ret = dataConnection.QueryProc<OutRefTestResult>("\"OutRefTest\"",
 				new DataParameter("ID",             ID,             DataType.Int32),
-				new DataParameter("in_inputOutputID", in_inputOutputID, DataType.Int32),
-				new DataParameter("str",            str,            DataType.NVarChar),
-				new DataParameter("in_inputOutputStr", in_inputOutputStr, DataType.NVarChar),
-				new DataParameter("inputOutputID", null,  DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
-				new DataParameter("inputOutputStr", null, DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
-				new DataParameter("outputID", null,       DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
-				new DataParameter("outputStr", null,      DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 }).ToList();
+				new DataParameter("IN_INPUTOUTPUTID", IN_INPUTOUTPUTID, DataType.Int32),
+				new DataParameter("STR",            STR,            DataType.NVarChar),
+				new DataParameter("IN_INPUTOUTPUTSTR", IN_INPUTOUTPUTSTR, DataType.NVarChar),
+				new DataParameter("INPUTOUTPUTID", null,  DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
+				new DataParameter("INPUTOUTPUTSTR", null, DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
+				new DataParameter("OUTPUTID", null,       DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
+				new DataParameter("OUTPUTSTR", null,      DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 }).ToList();
 
-			inputOutputID  = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["inputOutputID"]). Value);
-			inputOutputStr = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["inputOutputStr"]).Value);
-			outputID       = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["outputID"]).      Value);
-			outputStr      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["outputStr"]).     Value);
+			INPUTOUTPUTID  = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTID"]). Value);
+			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
+			OUTPUTID       = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTID"]).      Value);
+			OUTPUTSTR      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
 
 			return ret;
 		}
 
 		public partial class OutRefTestResult
 		{
-			public int?    inputOutputID  { get; set; }
-			public string? inputOutputStr { get; set; }
-			public int?    outputID       { get; set; }
-			public string? outputStr      { get; set; }
+			public int?    INPUTOUTPUTID  { get; set; }
+			public string? INPUTOUTPUTSTR { get; set; }
+			public int?    OUTPUTID       { get; set; }
+			public string? OUTPUTSTR      { get; set; }
 		}
 
 		#endregion
 
 		#region PatientSelectAll
 
-		public static IEnumerable<PatientSelectAllResult> PatientSelectAll(this TESTDB30DB dataConnection, out int? PersonID, out string? FirstName, out string? LastName, out string? MiddleName, out char? Gender, out string? Diagnosis)
+		public static IEnumerable<PatientSelectAllResult> PatientSelectAll(this TESTDB30DB dataConnection, out int? PERSONID, out string? FIRSTNAME, out string? LASTNAME, out string? MIDDLENAME, out char? GENDER, out string? DIAGNOSIS)
 		{
 			var ret = dataConnection.QueryProc<PatientSelectAllResult>("\"Patient_SelectAll\"",
-				new DataParameter("PersonID", null,   DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
-				new DataParameter("FirstName", null,  DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
-				new DataParameter("LastName", null,   DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
-				new DataParameter("MiddleName", null, DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
-				new DataParameter("Gender", null,     DataType.NChar) { Direction = ParameterDirection.Output, Size = 1 },
-				new DataParameter("Diagnosis", null,  DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 256 }).ToList();
+				new DataParameter("PERSONID", null,   DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
+				new DataParameter("FIRSTNAME", null,  DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
+				new DataParameter("LASTNAME", null,   DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
+				new DataParameter("MIDDLENAME", null, DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
+				new DataParameter("GENDER", null,     DataType.NChar) { Direction = ParameterDirection.Output, Size = 1 },
+				new DataParameter("DIAGNOSIS", null,  DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 256 }).ToList();
 
-			PersonID   = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["PersonID"]).  Value);
-			FirstName  = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["FirstName"]). Value);
-			LastName   = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["LastName"]).  Value);
-			MiddleName = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["MiddleName"]).Value);
-			Gender     = Converter.ChangeTypeTo<char?>  (((IDbDataParameter)dataConnection.Command.Parameters["Gender"]).    Value);
-			Diagnosis  = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["Diagnosis"]). Value);
+			PERSONID   = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).  Value);
+			FIRSTNAME  = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["FIRSTNAME"]). Value);
+			LASTNAME   = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["LASTNAME"]).  Value);
+			MIDDLENAME = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["MIDDLENAME"]).Value);
+			GENDER     = Converter.ChangeTypeTo<char?>  (((IDbDataParameter)dataConnection.Command.Parameters["GENDER"]).    Value);
+			DIAGNOSIS  = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["DIAGNOSIS"]). Value);
 
 			return ret;
 		}
 
 		public partial class PatientSelectAllResult
 		{
-			public int?    PersonID   { get; set; }
-			public string? FirstName  { get; set; }
-			public string? LastName   { get; set; }
-			public string? MiddleName { get; set; }
-			public string? Gender     { get; set; }
-			public string? Diagnosis  { get; set; }
+			public int?    PERSONID   { get; set; }
+			public string? FIRSTNAME  { get; set; }
+			public string? LASTNAME   { get; set; }
+			public string? MIDDLENAME { get; set; }
+			public string? GENDER     { get; set; }
+			public string? DIAGNOSIS  { get; set; }
 		}
 
 		#endregion
 
 		#region PatientSelectByName
 
-		public static IEnumerable<PatientSelectByNameResult> PatientSelectByName(this TESTDB30DB dataConnection, string? FirstName, string? LastName, out int? PersonID, out string? MiddleName, out char? Gender, out string? Diagnosis)
+		public static IEnumerable<PatientSelectByNameResult> PatientSelectByName(this TESTDB30DB dataConnection, string? FIRSTNAME, string? LASTNAME, out int? PERSONID, out string? MIDDLENAME, out char? GENDER, out string? DIAGNOSIS)
 		{
 			var ret = dataConnection.QueryProc<PatientSelectByNameResult>("\"Patient_SelectByName\"",
-				new DataParameter("FirstName",  FirstName,  DataType.NVarChar),
-				new DataParameter("LastName",   LastName,   DataType.NVarChar),
-				new DataParameter("PersonID", null,   DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
-				new DataParameter("MiddleName", null, DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
-				new DataParameter("Gender", null,     DataType.NChar) { Direction = ParameterDirection.Output, Size = 1 },
-				new DataParameter("Diagnosis", null,  DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 256 }).ToList();
+				new DataParameter("FIRSTNAME",  FIRSTNAME,  DataType.NVarChar),
+				new DataParameter("LASTNAME",   LASTNAME,   DataType.NVarChar),
+				new DataParameter("PERSONID", null,   DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
+				new DataParameter("MIDDLENAME", null, DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
+				new DataParameter("GENDER", null,     DataType.NChar) { Direction = ParameterDirection.Output, Size = 1 },
+				new DataParameter("DIAGNOSIS", null,  DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 256 }).ToList();
 
-			PersonID   = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["PersonID"]).  Value);
-			MiddleName = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["MiddleName"]).Value);
-			Gender     = Converter.ChangeTypeTo<char?>  (((IDbDataParameter)dataConnection.Command.Parameters["Gender"]).    Value);
-			Diagnosis  = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["Diagnosis"]). Value);
+			PERSONID   = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).  Value);
+			MIDDLENAME = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["MIDDLENAME"]).Value);
+			GENDER     = Converter.ChangeTypeTo<char?>  (((IDbDataParameter)dataConnection.Command.Parameters["GENDER"]).    Value);
+			DIAGNOSIS  = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["DIAGNOSIS"]). Value);
 
 			return ret;
 		}
 
 		public partial class PatientSelectByNameResult
 		{
-			public int?    PersonID   { get; set; }
-			public string? MiddleName { get; set; }
-			public string? Gender     { get; set; }
-			public string? Diagnosis  { get; set; }
+			public int?    PERSONID   { get; set; }
+			public string? MIDDLENAME { get; set; }
+			public string? GENDER     { get; set; }
+			public string? DIAGNOSIS  { get; set; }
 		}
 
 		#endregion
 
 		#region PersonDelete
 
-		public static int PersonDelete(this TESTDB30DB dataConnection, int? PersonID)
+		public static int PersonDelete(this TESTDB30DB dataConnection, int? PERSONID)
 		{
 			return dataConnection.ExecuteProc("\"Person_Delete\"",
-				new DataParameter("PersonID", PersonID, DataType.Int32));
+				new DataParameter("PERSONID", PERSONID, DataType.Int32));
 		}
 
 		#endregion
 
 		#region PersonInsert
 
-		public static IEnumerable<PersonInsertResult> PersonInsert(this TESTDB30DB dataConnection, string? FirstName, string? LastName, string? MiddleName, char? Gender, out int? PersonID)
+		public static IEnumerable<PersonInsertResult> PersonInsert(this TESTDB30DB dataConnection, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER, out int? PERSONID)
 		{
 			var ret = dataConnection.QueryProc<PersonInsertResult>("\"Person_Insert\"",
-				new DataParameter("FirstName", FirstName, DataType.NVarChar),
-				new DataParameter("LastName", LastName, DataType.NVarChar),
-				new DataParameter("MiddleName", MiddleName, DataType.NVarChar),
-				new DataParameter("Gender",   Gender,   DataType.NChar),
-				new DataParameter("PersonID", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 }).ToList();
+				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
+				new DataParameter("LASTNAME", LASTNAME, DataType.NVarChar),
+				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar),
+				new DataParameter("GENDER",   GENDER,   DataType.NChar),
+				new DataParameter("PERSONID", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 }).ToList();
 
-			PersonID = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["PersonID"]).Value);
+			PERSONID = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).Value);
 
 			return ret;
 		}
 
 		public partial class PersonInsertResult
 		{
-			public int? PersonID { get; set; }
+			public int? PERSONID { get; set; }
 		}
 
 		#endregion
 
 		#region PersonInsertOutputParameter
 
-		public static IEnumerable<PersonInsertOutputParameterResult> PersonInsertOutputParameter(this TESTDB30DB dataConnection, string? FirstName, string? LastName, string? MiddleName, char? Gender, out int? PersonID)
+		public static IEnumerable<PersonInsertOutputParameterResult> PersonInsertOutputParameter(this TESTDB30DB dataConnection, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER, out int? PERSONID)
 		{
 			var ret = dataConnection.QueryProc<PersonInsertOutputParameterResult>("\"Person_Insert_OutputParameter\"",
-				new DataParameter("FirstName", FirstName, DataType.NVarChar),
-				new DataParameter("LastName", LastName, DataType.NVarChar),
-				new DataParameter("MiddleName", MiddleName, DataType.NVarChar),
-				new DataParameter("Gender",   Gender,   DataType.NChar),
-				new DataParameter("PersonID", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 }).ToList();
+				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
+				new DataParameter("LASTNAME", LASTNAME, DataType.NVarChar),
+				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar),
+				new DataParameter("GENDER",   GENDER,   DataType.NChar),
+				new DataParameter("PERSONID", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 }).ToList();
 
-			PersonID = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["PersonID"]).Value);
+			PERSONID = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).Value);
 
 			return ret;
 		}
 
 		public partial class PersonInsertOutputParameterResult
 		{
-			public int? PersonID { get; set; }
+			public int? PERSONID { get; set; }
 		}
 
 		#endregion
 
 		#region PersonSelectAll
 
-		public static IEnumerable<PersonSelectAllResult> PersonSelectAll(this TESTDB30DB dataConnection, out int? PersonID, out string? FirstName, out string? LastName, out string? MiddleName, out char? Gender)
+		public static IEnumerable<PersonSelectAllResult> PersonSelectAll(this TESTDB30DB dataConnection, out int? PERSONID, out string? FIRSTNAME, out string? LASTNAME, out string? MIDDLENAME, out char? GENDER)
 		{
 			var ret = dataConnection.QueryProc<PersonSelectAllResult>("\"Person_SelectAll\"",
-				new DataParameter("PersonID", null,   DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
-				new DataParameter("FirstName", null,  DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
-				new DataParameter("LastName", null,   DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
-				new DataParameter("MiddleName", null, DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
-				new DataParameter("Gender", null,     DataType.NChar) { Direction = ParameterDirection.Output, Size = 1 }).ToList();
+				new DataParameter("PERSONID", null,   DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
+				new DataParameter("FIRSTNAME", null,  DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
+				new DataParameter("LASTNAME", null,   DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
+				new DataParameter("MIDDLENAME", null, DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
+				new DataParameter("GENDER", null,     DataType.NChar) { Direction = ParameterDirection.Output, Size = 1 }).ToList();
 
-			PersonID   = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["PersonID"]).  Value);
-			FirstName  = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["FirstName"]). Value);
-			LastName   = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["LastName"]).  Value);
-			MiddleName = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["MiddleName"]).Value);
-			Gender     = Converter.ChangeTypeTo<char?>  (((IDbDataParameter)dataConnection.Command.Parameters["Gender"]).    Value);
+			PERSONID   = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).  Value);
+			FIRSTNAME  = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["FIRSTNAME"]). Value);
+			LASTNAME   = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["LASTNAME"]).  Value);
+			MIDDLENAME = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["MIDDLENAME"]).Value);
+			GENDER     = Converter.ChangeTypeTo<char?>  (((IDbDataParameter)dataConnection.Command.Parameters["GENDER"]).    Value);
 
 			return ret;
 		}
 
 		public partial class PersonSelectAllResult
 		{
-			public int?    PersonID   { get; set; }
-			public string? FirstName  { get; set; }
-			public string? LastName   { get; set; }
-			public string? MiddleName { get; set; }
-			public string? Gender     { get; set; }
+			public int?    PERSONID   { get; set; }
+			public string? FIRSTNAME  { get; set; }
+			public string? LASTNAME   { get; set; }
+			public string? MIDDLENAME { get; set; }
+			public string? GENDER     { get; set; }
 		}
 
 		#endregion
 
 		#region PersonSelectByKey
 
-		public static IEnumerable<PersonSelectByKeyResult> PersonSelectByKey(this TESTDB30DB dataConnection, int? id, out int? PersonID, out string? FirstName, out string? LastName, out string? MiddleName, out char? Gender)
+		public static IEnumerable<PersonSelectByKeyResult> PersonSelectByKey(this TESTDB30DB dataConnection, int? ID, out int? PERSONID, out string? FIRSTNAME, out string? LASTNAME, out string? MIDDLENAME, out char? GENDER)
 		{
 			var ret = dataConnection.QueryProc<PersonSelectByKeyResult>("\"Person_SelectByKey\"",
-				new DataParameter("id",         id,         DataType.Int32),
-				new DataParameter("PersonID", null,   DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
-				new DataParameter("FirstName", null,  DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
-				new DataParameter("LastName", null,   DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
-				new DataParameter("MiddleName", null, DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
-				new DataParameter("Gender", null,     DataType.NChar) { Direction = ParameterDirection.Output, Size = 1 }).ToList();
+				new DataParameter("ID",         ID,         DataType.Int32),
+				new DataParameter("PERSONID", null,   DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
+				new DataParameter("FIRSTNAME", null,  DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
+				new DataParameter("LASTNAME", null,   DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
+				new DataParameter("MIDDLENAME", null, DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
+				new DataParameter("GENDER", null,     DataType.NChar) { Direction = ParameterDirection.Output, Size = 1 }).ToList();
 
-			PersonID   = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["PersonID"]).  Value);
-			FirstName  = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["FirstName"]). Value);
-			LastName   = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["LastName"]).  Value);
-			MiddleName = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["MiddleName"]).Value);
-			Gender     = Converter.ChangeTypeTo<char?>  (((IDbDataParameter)dataConnection.Command.Parameters["Gender"]).    Value);
+			PERSONID   = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).  Value);
+			FIRSTNAME  = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["FIRSTNAME"]). Value);
+			LASTNAME   = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["LASTNAME"]).  Value);
+			MIDDLENAME = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["MIDDLENAME"]).Value);
+			GENDER     = Converter.ChangeTypeTo<char?>  (((IDbDataParameter)dataConnection.Command.Parameters["GENDER"]).    Value);
 
 			return ret;
 		}
 
 		public partial class PersonSelectByKeyResult
 		{
-			public int?    PersonID   { get; set; }
-			public string? FirstName  { get; set; }
-			public string? LastName   { get; set; }
-			public string? MiddleName { get; set; }
-			public string? Gender     { get; set; }
+			public int?    PERSONID   { get; set; }
+			public string? FIRSTNAME  { get; set; }
+			public string? LASTNAME   { get; set; }
+			public string? MIDDLENAME { get; set; }
+			public string? GENDER     { get; set; }
 		}
 
 		#endregion
 
 		#region PersonSelectByName
 
-		public static IEnumerable<PersonSelectByNameResult> PersonSelectByName(this TESTDB30DB dataConnection, string? in_FirstName, string? in_LastName, out int? PersonID, out string? FirstName, out string? LastName, out string? MiddleName, out char? Gender)
+		public static IEnumerable<PersonSelectByNameResult> PersonSelectByName(this TESTDB30DB dataConnection, string? IN_FIRSTNAME, string? IN_LASTNAME, out int? PERSONID, out string? FIRSTNAME, out string? LASTNAME, out string? MIDDLENAME, out char? GENDER)
 		{
 			var ret = dataConnection.QueryProc<PersonSelectByNameResult>("\"Person_SelectByName\"",
-				new DataParameter("in_FirstName", in_FirstName, DataType.NVarChar),
-				new DataParameter("in_LastName", in_LastName, DataType.NVarChar),
-				new DataParameter("PersonID", null,   DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
-				new DataParameter("FirstName", null,  DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
-				new DataParameter("LastName", null,   DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
-				new DataParameter("MiddleName", null, DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
-				new DataParameter("Gender", null,     DataType.NChar) { Direction = ParameterDirection.Output, Size = 1 }).ToList();
+				new DataParameter("IN_FIRSTNAME", IN_FIRSTNAME, DataType.NVarChar),
+				new DataParameter("IN_LASTNAME", IN_LASTNAME, DataType.NVarChar),
+				new DataParameter("PERSONID", null,   DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
+				new DataParameter("FIRSTNAME", null,  DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
+				new DataParameter("LASTNAME", null,   DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
+				new DataParameter("MIDDLENAME", null, DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
+				new DataParameter("GENDER", null,     DataType.NChar) { Direction = ParameterDirection.Output, Size = 1 }).ToList();
 
-			PersonID   = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["PersonID"]).  Value);
-			FirstName  = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["FirstName"]). Value);
-			LastName   = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["LastName"]).  Value);
-			MiddleName = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["MiddleName"]).Value);
-			Gender     = Converter.ChangeTypeTo<char?>  (((IDbDataParameter)dataConnection.Command.Parameters["Gender"]).    Value);
+			PERSONID   = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).  Value);
+			FIRSTNAME  = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["FIRSTNAME"]). Value);
+			LASTNAME   = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["LASTNAME"]).  Value);
+			MIDDLENAME = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["MIDDLENAME"]).Value);
+			GENDER     = Converter.ChangeTypeTo<char?>  (((IDbDataParameter)dataConnection.Command.Parameters["GENDER"]).    Value);
 
 			return ret;
 		}
 
 		public partial class PersonSelectByNameResult
 		{
-			public int?    PersonID   { get; set; }
-			public string? FirstName  { get; set; }
-			public string? LastName   { get; set; }
-			public string? MiddleName { get; set; }
-			public string? Gender     { get; set; }
+			public int?    PERSONID   { get; set; }
+			public string? FIRSTNAME  { get; set; }
+			public string? LASTNAME   { get; set; }
+			public string? MIDDLENAME { get; set; }
+			public string? GENDER     { get; set; }
 		}
 
 		#endregion
 
 		#region PersonUpdate
 
-		public static int PersonUpdate(this TESTDB30DB dataConnection, int? PersonID, string? FirstName, string? LastName, string? MiddleName, char? Gender)
+		public static int PersonUpdate(this TESTDB30DB dataConnection, int? PERSONID, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
 		{
 			return dataConnection.ExecuteProc("\"Person_Update\"",
-				new DataParameter("PersonID",   PersonID,   DataType.Int32),
-				new DataParameter("FirstName",  FirstName,  DataType.NVarChar),
-				new DataParameter("LastName",   LastName,   DataType.NVarChar),
-				new DataParameter("MiddleName", MiddleName, DataType.NVarChar),
-				new DataParameter("Gender",     Gender,     DataType.NChar));
+				new DataParameter("PERSONID",   PERSONID,   DataType.Int32),
+				new DataParameter("FIRSTNAME",  FIRSTNAME,  DataType.NVarChar),
+				new DataParameter("LASTNAME",   LASTNAME,   DataType.NVarChar),
+				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar),
+				new DataParameter("GENDER",     GENDER,     DataType.NChar));
 		}
 
 		#endregion
 
 		#region ScalarDataReader
 
-		public static IEnumerable<ScalarDataReaderResult> ScalarDataReader(this TESTDB30DB dataConnection, out int? intField, out string? stringField)
+		public static IEnumerable<ScalarDataReaderResult> ScalarDataReader(this TESTDB30DB dataConnection, out int? INTFIELD, out string? STRINGFIELD)
 		{
 			var ret = dataConnection.QueryProc<ScalarDataReaderResult>("\"Scalar_DataReader\"",
-				new DataParameter("intField", null,    DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
-				new DataParameter("stringField", null, DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 }).ToList();
+				new DataParameter("INTFIELD", null,    DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
+				new DataParameter("STRINGFIELD", null, DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 }).ToList();
 
-			intField    = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["intField"]).   Value);
-			stringField = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["stringField"]).Value);
+			INTFIELD    = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["INTFIELD"]).   Value);
+			STRINGFIELD = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["STRINGFIELD"]).Value);
 
 			return ret;
 		}
 
 		public partial class ScalarDataReaderResult
 		{
-			public int?    intField    { get; set; }
-			public string? stringField { get; set; }
+			public int?    INTFIELD    { get; set; }
+			public string? STRINGFIELD { get; set; }
 		}
 
 		#endregion
 
 		#region ScalarOutputParameter
 
-		public static IEnumerable<ScalarOutputParameterResult> ScalarOutputParameter(this TESTDB30DB dataConnection, out int? outputInt, out string? outputString)
+		public static IEnumerable<ScalarOutputParameterResult> ScalarOutputParameter(this TESTDB30DB dataConnection, out int? OUTPUTINT, out string? OUTPUTSTRING)
 		{
 			var ret = dataConnection.QueryProc<ScalarOutputParameterResult>("\"Scalar_OutputParameter\"",
-				new DataParameter("outputInt", null,    DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
-				new DataParameter("outputString", null, DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 }).ToList();
+				new DataParameter("OUTPUTINT", null,    DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
+				new DataParameter("OUTPUTSTRING", null, DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 }).ToList();
 
-			outputInt    = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["outputInt"]).   Value);
-			outputString = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["outputString"]).Value);
+			OUTPUTINT    = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTINT"]).   Value);
+			OUTPUTSTRING = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTRING"]).Value);
 
 			return ret;
 		}
 
 		public partial class ScalarOutputParameterResult
 		{
-			public int?    outputInt    { get; set; }
-			public string? outputString { get; set; }
+			public int?    OUTPUTINT    { get; set; }
+			public string? OUTPUTSTRING { get; set; }
 		}
 
 		#endregion
 
 		#region ScalarReturnParameter
 
-		public static IEnumerable<ScalarReturnParameterResult> ScalarReturnParameter(this TESTDB30DB dataConnection, out int? Return_Value)
+		public static IEnumerable<ScalarReturnParameterResult> ScalarReturnParameter(this TESTDB30DB dataConnection, out int? RETURN_VALUE)
 		{
 			var ret = dataConnection.QueryProc<ScalarReturnParameterResult>("\"Scalar_ReturnParameter\"",
-				new DataParameter("Return_Value", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 }).ToList();
+				new DataParameter("RETURN_VALUE", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 }).ToList();
 
-			Return_Value = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["Return_Value"]).Value);
+			RETURN_VALUE = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["RETURN_VALUE"]).Value);
 
 			return ret;
 		}
 
 		public partial class ScalarReturnParameterResult
 		{
-			public int? Return_Value { get; set; }
+			public int? RETURN_VALUE { get; set; }
 		}
 
 		#endregion

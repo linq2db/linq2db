@@ -17,6 +17,8 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
+	using System.Collections.Generic;
+	using System.Data;
 	using System.Globalization;
 	using System.Threading.Tasks;
 	using LinqToDB.Linq;
@@ -642,6 +644,91 @@ namespace Tests.DataProvider
 					Query.ClearCaches();
 				}
 			}
+		}
+
+		[Test]
+		public void TestProcedureNonLatinParameters1([IncludeDataSources(false, TestProvName.AllFirebird)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				int? id = null;
+				try
+				{
+					var id1 = db.PersonInsert("Имя", "Фамилия", "Отчество", 'M', out id).ToList();
+					Assert.AreEqual(1, id1.Count);
+					Assert.IsNotNull(id1[0].PersonID);
+
+					// TODO: see TestProcedureNonLatinParameters2
+					// output parameter value is not set
+					id = id1[0].PersonID;
+
+					var record = db.Person.Single(p => p.ID == id);
+
+					Assert.AreEqual("Имя", record.FirstName);
+					Assert.AreEqual("Фамилия", record.LastName);
+					Assert.AreEqual("Отчество", record.MiddleName);
+					Assert.AreEqual(Gender.Male, record.Gender);
+					Assert.IsNotNull(id);
+					Assert.AreEqual(id, id1[0].PersonID);
+				}
+				finally
+				{
+					if (id != null)
+						db.Person.Delete(p => p.ID == id);
+				}
+			}
+		}
+
+		[ActiveIssue(Details = "Output parameter not set")]
+		[Test]
+		public void TestProcedureNonLatinParameters2([IncludeDataSources(false, TestProvName.AllFirebird)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				int? id = null;
+				try
+				{
+					var id1 = db.PersonInsert("Имя", "Фамилия", "Отчество", 'M', out id).ToList();
+					Assert.AreEqual(1, id1.Count);
+					Assert.IsNotNull(id1[0].PersonID);
+
+					var record = db.Person.Single(p => p.ID == id);
+
+					Assert.AreEqual("Имя", record.FirstName);
+					Assert.AreEqual("Фамилия", record.LastName);
+					Assert.AreEqual("Отчество", record.MiddleName);
+					Assert.AreEqual(Gender.Male, record.Gender);
+					Assert.IsNotNull(id);
+					Assert.AreEqual(id, id1[0].PersonID);
+				}
+				finally
+				{
+					if (id != null)
+						db.Person.Delete(p => p.ID == id);
+				}
+			}
+		}
+	}
+
+	static class FirebirdProcedures
+	{
+		public partial class PersonInsertResult
+		{
+			public int? PersonID { get; set; }
+		}
+
+		public static IEnumerable<PersonInsertResult> PersonInsert(this DataConnection dataConnection, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER, out int? PERSONID)
+		{
+			var ret = dataConnection.QueryProc<PersonInsertResult>("\"Person_Insert\"",
+				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
+				new DataParameter("LASTNAME", LASTNAME, DataType.NVarChar),
+				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar),
+				new DataParameter("GENDER",   GENDER,   DataType.NChar),
+				new DataParameter("PERSONID", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 }).ToList();
+
+			PERSONID = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).Value);
+
+			return ret;
 		}
 	}
 }

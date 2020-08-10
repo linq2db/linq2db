@@ -86,7 +86,7 @@ CREATE TABLE "Person"
 	"PersonID"   INTEGER     NOT NULL  PRIMARY KEY,
 	"FirstName"  VARCHAR(50) CHARACTER SET UNICODE_FSS NOT NULL,
 	"LastName"   VARCHAR(50) CHARACTER SET UNICODE_FSS NOT NULL,
-	"MiddleName" VARCHAR(50),
+	"MiddleName" VARCHAR(50) CHARACTER SET UNICODE_FSS,
 	"Gender"     CHAR(1)     NOT NULL CHECK ("Gender" in ('M', 'F', 'U', 'O'))
 ); 
 COMMIT;
@@ -379,24 +379,24 @@ COMMIT;
 
 -- Person_SelectByKey
 
-CREATE PROCEDURE "Person_SelectByKey"("id" INTEGER)
+CREATE PROCEDURE "Person_SelectByKey"(id INTEGER)
 RETURNS (
-	"PersonID"   INTEGER,
-	"FirstName"  VARCHAR(50),
-	"LastName"   VARCHAR(50),
-	"MiddleName" VARCHAR(50),
-	"Gender"     CHAR(1)
+	PersonID   INTEGER,
+	FirstName  VARCHAR(50) CHARACTER SET UNICODE_FSS,
+	LastName   VARCHAR(50) CHARACTER SET UNICODE_FSS,
+	MiddleName VARCHAR(50) CHARACTER SET UNICODE_FSS,
+	Gender     CHAR(1)
 	)
 AS
 BEGIN
 	SELECT "PersonID", "FirstName", "LastName", "MiddleName", "Gender" FROM "Person"
-	WHERE "PersonID" = :"id"
+	WHERE "PersonID" = :id
 	INTO
-		:"PersonID",
-		:"FirstName",
-		:"LastName",
-		:"MiddleName",
-		:"Gender";
+		:PersonID,
+		:FirstName,
+		:LastName,
+		:MiddleName,
+		:Gender;
 	SUSPEND;
 END;
 COMMIT;
@@ -405,22 +405,22 @@ COMMIT;
 
 CREATE PROCEDURE "Person_SelectAll"
 RETURNS (
-	"PersonID"   INTEGER,
-	"FirstName"  VARCHAR(50),
-	"LastName"   VARCHAR(50),
-	"MiddleName" VARCHAR(50),
-	"Gender"     CHAR(1)
+	PersonID   INTEGER,
+	FirstName  VARCHAR(50) CHARACTER SET UNICODE_FSS,
+	LastName   VARCHAR(50) CHARACTER SET UNICODE_FSS,
+	MiddleName VARCHAR(50) CHARACTER SET UNICODE_FSS,
+	Gender     CHAR(1)
 	)
 AS
 BEGIN
 	FOR 
 		SELECT "PersonID", "FirstName", "LastName", "MiddleName", "Gender" FROM "Person"
 		INTO
-			:"PersonID",
-			:"FirstName",
-			:"LastName",
-			:"MiddleName",
-			:"Gender"
+			:PersonID,
+			:FirstName,
+			:LastName,
+			:MiddleName,
+			:Gender
 	DO SUSPEND;
 END;
 COMMIT;
@@ -429,28 +429,28 @@ COMMIT;
 
 CREATE PROCEDURE "Person_SelectByName"
 (
-	"in_FirstName" VARCHAR(50),
-	"in_LastName"  VARCHAR(50)
+	in_FirstName VARCHAR(50) CHARACTER SET UNICODE_FSS,
+	in_LastName  VARCHAR(50) CHARACTER SET UNICODE_FSS
 )
 RETURNS
 (
-	"PersonID"   int,
-	"FirstName"  VARCHAR(50),
-	"LastName"   VARCHAR(50),
-	"MiddleName" VARCHAR(50),
-	"Gender"     CHAR(1)
+	PersonID   int,
+	FirstName  VARCHAR(50) CHARACTER SET UNICODE_FSS,
+	LastName   VARCHAR(50) CHARACTER SET UNICODE_FSS,
+	MiddleName VARCHAR(50) CHARACTER SET UNICODE_FSS,
+	Gender     CHAR(1)
 )
 AS
 BEGIN
 
 	FOR SELECT "PersonID", "FirstName", "LastName", "MiddleName", "Gender" FROM "Person"
-		WHERE "FirstName" LIKE :"in_FirstName" and "LastName" LIKE :"in_LastName"
+		WHERE "FirstName" LIKE :in_FirstName and "LastName" LIKE :in_LastName
 	INTO
-		:"PersonID",
-		:"FirstName",
-		:"LastName",
-		:"MiddleName",
-		:"Gender"
+		:PersonID,
+		:FirstName,
+		:LastName,
+		:MiddleName,
+		:Gender
 	DO SUSPEND;
 END;
 COMMIT;
@@ -459,21 +459,21 @@ COMMIT;
 
 CREATE PROCEDURE "Person_Insert"
 (
-	"FirstName"  VARCHAR(50),
-	"LastName"   VARCHAR(50),
-	"MiddleName" VARCHAR(50),
-	"Gender"     CHAR(1)
+	FirstName  VARCHAR(50) CHARACTER SET UNICODE_FSS,
+	LastName   VARCHAR(50) CHARACTER SET UNICODE_FSS,
+	MiddleName VARCHAR(50) CHARACTER SET UNICODE_FSS,
+	Gender     CHAR(1)
 )
-RETURNS ("PersonID" INTEGER)
+RETURNS (PersonID INTEGER)
 AS
 BEGIN
 	INSERT INTO "Person"
 		( "LastName",  "FirstName",  "MiddleName",  "Gender")
 	VALUES
-		(:"LastName", :"FirstName", :"MiddleName", :"Gender");
+		(:LastName, :FirstName, :MiddleName, :Gender);
 
 	SELECT MAX("PersonID") FROM "Person"
-		INTO :"PersonID";
+		INTO :PersonID;
 	SUSPEND;
 END;
 COMMIT;
@@ -482,21 +482,21 @@ COMMIT;
 
 CREATE PROCEDURE "Person_Insert_OutputParameter"
 (
-	"FirstName"  VARCHAR(50),
-	"LastName"   VARCHAR(50),
-	"MiddleName" VARCHAR(50),
-	"Gender"     CHAR(1)
+	FirstName  VARCHAR(50) CHARACTER SET UNICODE_FSS,
+	LastName   VARCHAR(50) CHARACTER SET UNICODE_FSS,
+	MiddleName VARCHAR(50) CHARACTER SET UNICODE_FSS,
+	Gender     CHAR(1)
 )
-RETURNS ("PersonID" INTEGER)
+RETURNS (PersonID INTEGER)
 AS
 BEGIN
 	INSERT INTO "Person"
 		( "LastName",  "FirstName",  "MiddleName",  "Gender")
 	VALUES
-		(:"LastName", :"FirstName", :"MiddleName", :"Gender");
+		(:LastName, :FirstName, :MiddleName, :Gender);
 
 	SELECT max("PersonID") FROM "Person"
-	INTO :"PersonID";
+	INTO :PersonID;
 	SUSPEND;
 END;
 COMMIT;
@@ -504,34 +504,34 @@ COMMIT;
 -- Person_Update
 
 CREATE PROCEDURE "Person_Update"(
-	"PersonID"   INTEGER,
-	"FirstName"  VARCHAR(50),
-	"LastName"   VARCHAR(50),
-	"MiddleName" VARCHAR(50),
-	"Gender"     CHAR(1)
+	PersonID   INTEGER,
+	FirstName  VARCHAR(50) CHARACTER SET UNICODE_FSS,
+	LastName   VARCHAR(50) CHARACTER SET UNICODE_FSS,
+	MiddleName VARCHAR(50) CHARACTER SET UNICODE_FSS,
+	Gender     CHAR(1)
 	)
 AS
 BEGIN
 	UPDATE
 		"Person"
 	SET
-		"LastName"   = :"LastName",
-		"FirstName"  = :"FirstName",
-		"MiddleName" = :"MiddleName",
-		"Gender"     = :"Gender"
+		"LastName"   = :LastName,
+		"FirstName"  = :FirstName,
+		"MiddleName" = :MiddleName,
+		"Gender"     = :Gender
 	WHERE
-		"PersonID" = :"PersonID";
+		"PersonID" = :PersonID;
 END;
 COMMIT;
 
 -- Person_Delete
 
 CREATE PROCEDURE "Person_Delete"(
-	"PersonID" INTEGER
+	PersonID INTEGER
 	)
 AS
 BEGIN
-	DELETE FROM "Person" WHERE "PersonID" = :"PersonID";
+	DELETE FROM "Person" WHERE "PersonID" = :PersonID;
 END;
 COMMIT;
 
@@ -539,12 +539,12 @@ COMMIT;
 
 CREATE PROCEDURE "Patient_SelectAll"
 RETURNS (
-	"PersonID"   int,
-	"FirstName"  VARCHAR(50),
-	"LastName"   VARCHAR(50),
-	"MiddleName" VARCHAR(50),
-	"Gender"     CHAR(1),
-	"Diagnosis"  VARCHAR(256)
+	PersonID   int,
+	FirstName  VARCHAR(50) CHARACTER SET UNICODE_FSS,
+	LastName   VARCHAR(50) CHARACTER SET UNICODE_FSS,
+	MiddleName VARCHAR(50) CHARACTER SET UNICODE_FSS,
+	Gender     CHAR(1),
+	Diagnosis  VARCHAR(256)
 	)
 AS
 BEGIN
@@ -561,12 +561,12 @@ BEGIN
 		WHERE
 			"Patient"."PersonID" = "Person"."PersonID"
 		INTO
-			:"PersonID",
-			:"FirstName",
-			:"LastName",
-			:"MiddleName",
-			:"Gender",
-			:"Diagnosis"
+			:PersonID,
+			:FirstName,
+			:LastName,
+			:MiddleName,
+			:Gender,
+			:Diagnosis
 	DO SUSPEND;
 END;
 COMMIT;
@@ -574,14 +574,14 @@ COMMIT;
 -- Patient_SelectByName
 
 CREATE PROCEDURE "Patient_SelectByName"(
-	"FirstName" VARCHAR(50),
-	"LastName"  VARCHAR(50)
+	FirstName VARCHAR(50) CHARACTER SET UNICODE_FSS,
+	LastName  VARCHAR(50) CHARACTER SET UNICODE_FSS
 	)
 RETURNS (
-	"PersonID"   int,
-	"MiddleName" VARCHAR(50),
-	"Gender"     CHAR(1),
-	"Diagnosis"  VARCHAR(256)
+	PersonID   int,
+	MiddleName VARCHAR(50) CHARACTER SET UNICODE_FSS,
+	Gender     CHAR(1),
+	Diagnosis  VARCHAR(256)
 	)
 AS
 BEGIN
@@ -595,12 +595,12 @@ BEGIN
 			"Patient", "Person"
 		WHERE
 			"Patient"."PersonID" = "Person"."PersonID"
-			and "FirstName" = :"FirstName" and "LastName" = :"LastName"
+			and "FirstName" = :FirstName and "LastName" = :LastName
 		INTO
-			:"PersonID",
-			:"MiddleName",
-			:"Gender",
-			:"Diagnosis"
+			:PersonID,
+			:MiddleName,
+			:Gender,
+			:Diagnosis
 	DO SUSPEND;
 END;
 COMMIT;
@@ -618,22 +618,22 @@ in_inputOutputID is input mirror FOR inout parameter inputOutputID
 */
 CREATE PROCEDURE "OutRefTest"(
 	ID					INTEGER,
-	"in_inputOutputID"	INTEGER,
-	"str"				VARCHAR(50),
-	"in_inputOutputStr"	VARCHAR(50)
+	in_inputOutputID	INTEGER,
+	str					VARCHAR(50),
+	in_inputOutputStr	VARCHAR(50)
 	)
 RETURNS(
-	"inputOutputID"  INTEGER,
-	"inputOutputStr" VARCHAR(50),
-	"outputID"       INTEGER,
-	"outputStr"      VARCHAR(50)
+	inputOutputID  INTEGER,
+	inputOutputStr VARCHAR(50),
+	outputID       INTEGER,
+	outputStr      VARCHAR(50)
 	)
 AS
 BEGIN
-	"outputID"       = ID;
-	"inputOutputID"  = ID + "in_inputOutputID";
-	"outputStr"      = "str";
-	"inputOutputStr" = "str" || "in_inputOutputStr";
+	outputID       = ID;
+	inputOutputID  = ID + in_inputOutputID;
+	outputStr      = str;
+	inputOutputStr = str || in_inputOutputStr;
 	SUSPEND;
 END;
 COMMIT;
@@ -641,17 +641,17 @@ COMMIT;
 -- OutRefEnumTest
 
 CREATE PROCEDURE "OutRefEnumTest"(
-		"str"					VARCHAR(50),
-		"in_inputOutputStr"	VARCHAR(50)
+		str					VARCHAR(50),
+		in_inputOutputStr	VARCHAR(50)
 		)
 RETURNS (
-	"inputOutputStr" VARCHAR(50),
-	"outputStr"      VARCHAR(50)
+	inputOutputStr VARCHAR(50),
+	outputStr      VARCHAR(50)
 	)
 AS
 BEGIN
-	"outputStr"      = "str";
-	"inputOutputStr" = "str" || "in_inputOutputStr";
+	outputStr      = str;
+	inputOutputStr = str || in_inputOutputStr;
 	SUSPEND;
 END;
 COMMIT;
@@ -660,26 +660,26 @@ COMMIT;
 
 CREATE PROCEDURE "Scalar_DataReader"
 RETURNS(
-	"intField"		INTEGER,
-	"stringField"	VARCHAR(50)
+	intField	INTEGER,
+	stringField	VARCHAR(50)
 	)
 AS
 BEGIN
-	"intField" = 12345;
-	"stringField" = '54321';
+	intField = 12345;
+	stringField = '54321';
 	SUSPEND;
 END;
 COMMIT;
 
 CREATE PROCEDURE "Scalar_OutputParameter"
 RETURNS (
-	"outputInt"      INTEGER,
-	"outputString"   VARCHAR(50)
+	outputInt      INTEGER,
+	outputString   VARCHAR(50)
 	)
 AS
 BEGIN
-	"outputInt" = 12345;
-	"outputString" = '54321';
+	outputInt = 12345;
+	outputString = '54321';
 	SUSPEND;
 END;
 COMMIT;
@@ -689,10 +689,10 @@ COMMIT;
 may be changed: FdpDataProvider.ReturnParameterName
 */
 CREATE PROCEDURE "Scalar_ReturnParameter"
-RETURNS ("Return_Value" INTEGER)
+RETURNS (Return_Value INTEGER)
 AS
 BEGIN
-	"Return_Value" = 12345;
+	Return_Value = 12345;
 	SUSPEND;
 END;
 COMMIT;
