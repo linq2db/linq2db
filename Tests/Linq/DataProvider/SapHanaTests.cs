@@ -341,6 +341,8 @@ namespace Tests.DataProvider
 			[Column, Nullable]
 			public char? charDataType { get; set; } // char(1)
 			[Column, Nullable]
+			public string? char20DataType { get; set; } // varchar(20)
+			[Column, Nullable]
 			public string? varcharDataType { get; set; } // varchar(20)
 			[Column, Nullable]
 			public string? textDataType { get; set; } // text
@@ -348,6 +350,8 @@ namespace Tests.DataProvider
 			public string? shorttextDataType { get; set; } // text
 			[Column, Nullable]
 			public char? ncharDataType { get; set; } // char(1)
+			[Column, Nullable]
+			public string? nchar20DataType { get; set; } // varchar(20)
 			[Column, Nullable]
 			public string? nvarcharDataType { get; set; } // varchar(20)
 			[Column, Nullable]
@@ -715,5 +719,18 @@ namespace Tests.DataProvider
 			[Column, Nullable]
 			public string? stringoptional { get; set; }
 		}
+
+		[Test]
+		public void SelectAllTypes([IncludeDataSources(CurrentProvider)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				// This query fails for ODBC x64 provider with
+				// "Arithmetic operation resulted in an overflow"
+				db.GetTable<AllType>().Take(100).ToList();
+			}
+		}
+
+
 	}
 }
