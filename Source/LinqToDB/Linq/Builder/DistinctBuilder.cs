@@ -24,7 +24,11 @@ namespace LinqToDB.Linq.Builder
 
 			// We do not need all fields for SelectDistinct
 			//
-			if (!methodCall.IsSameGenericMethod(Methods.LinqToDB.SelectDistinct))
+			if (methodCall.IsSameGenericMethod(Methods.LinqToDB.SelectDistinct))
+			{
+				sequence.SelectQuery.Select.OptimizeDistinct = true;
+			}
+			else
 			{
 				sequence.ConvertToIndex(null, 0, ConvertFlags.All);
 			}

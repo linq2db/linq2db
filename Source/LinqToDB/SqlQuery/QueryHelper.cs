@@ -140,6 +140,38 @@ namespace LinqToDB.SqlQuery
 			});
 		}
 
+		public static void CollectUsedSources(IQueryElement root, HashSet<ISqlTableSource> found, IEnumerable<IQueryElement>? ignore = null)
+		{
+			var hashIgnore = new HashSet<IQueryElement  >(ignore ?? Enumerable.Empty<IQueryElement>());
+
+			new QueryVisitor().VisitParentFirst(root, e =>
+			{
+				if (e is SqlTableSource source)
+				{
+					if (hashIgnore.Contains(e))
+						return false;
+					found.Add(source.Source);
+				}
+
+				switch (e.ElementType)
+				{
+					case QueryElementType.Column :
+					{
+						var c = (SqlColumn) e;
+						found.Add(c.Parent!);
+						return false;
+					}
+					case QueryElementType.SqlField :
+					{
+						var f = (SqlField) e;
+						found.Add(f.Table!);
+						return false;
+					}
+				}
+				return true;
+			});
+		}
+
 		public static bool IsTransitiveExpression(SqlExpression sqlExpression)
 		{
 			if (sqlExpression.Parameters.Length == 1 && sqlExpression.Expr.Trim() == "{0}")

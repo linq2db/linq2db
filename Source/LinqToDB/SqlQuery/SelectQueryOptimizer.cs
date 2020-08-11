@@ -758,19 +758,28 @@ namespace LinqToDB.SqlQuery
 
 		static bool IsComplexQuery(SelectQuery query)
 		{
+			var accessibleSources = new HashSet<ISqlTableSource>();
 			var complexFound = QueryHelper.EnumerateAccessibleSources(query)
 				.Any(source =>
 				{
+					accessibleSources.Add(source);
 					if (source is SelectQuery q)
 						return q.From.Tables.Count != 1 || QueryHelper.EnumerateJoins(q).Any();
 					return false;
 				});
-			return complexFound;
+
+			if (complexFound)
+				return true;
+
+			var usedSources = new HashSet<ISqlTableSource>();
+			QueryHelper.CollectUsedSources(query, usedSources);
+
+			return usedSources.Count > accessibleSources.Count;
 		}
 
 		void OptimizeDistinct()
 		{
-			if (!_selectQuery.Select.IsDistinct)
+			if (!_selectQuery.Select.IsDistinct || !_selectQuery.Select.OptimizeDistinct)
 				return;
 
 			if (IsComplexQuery(_selectQuery))
@@ -797,7 +806,7 @@ namespace LinqToDB.SqlQuery
 
 			if (foundUnique)
 			{
-				// We have found distinct has unique key, so we can remove distinct
+				// We have found that distinct columns has unique key, so we can remove distinct
 				_selectQuery.Select.IsDistinct = false;
 			}
 		}
