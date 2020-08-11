@@ -1041,15 +1041,25 @@ namespace LinqToDB.SqlQuery
 		/// Collects unique keys from different sources.
 		/// </summary>
 		/// <param name="tableSource"></param>
-		/// <returns>New List of unique keys</returns>
-		public static List<IList<ISqlExpression>> CollectUniqueKeys(SqlTableSource tableSource)
+		/// <param name="knownKeys">List with found keys.</param>
+		public static void CollectUniqueKeys(SqlTableSource tableSource, List<IList<ISqlExpression>> knownKeys)
 		{
-			var knownKeys = new List<IList<ISqlExpression>>();
-
 			if (tableSource.HasUniqueKeys)
 				knownKeys.AddRange(tableSource.UniqueKeys);
 
-			switch (tableSource.Source)
+			CollectUniqueKeys(tableSource.Source, true, knownKeys);
+		}
+
+
+		/// <summary>
+		/// Collects unique keys from different sources.
+		/// </summary>
+		/// <param name="tableSource"></param>
+		/// <param name="includeDistinct">Flag to include Distinct as unique key.</param>
+		/// <param name="knownKeys">List with found keys.</param>
+		public static void CollectUniqueKeys(ISqlTableSource tableSource, bool includeDistinct, List<IList<ISqlExpression>> knownKeys)
+		{
+			switch (tableSource)
 			{
 				case SqlTable table:
 				{
@@ -1064,7 +1074,7 @@ namespace LinqToDB.SqlQuery
 					if (selectQuery.HasUniqueKeys)
 						knownKeys.AddRange(selectQuery.UniqueKeys);
 
-					if (selectQuery.Select.IsDistinct)
+					if (includeDistinct && selectQuery.Select.IsDistinct)
 						knownKeys.Add(selectQuery.Select.Columns.OfType<ISqlExpression>().ToList());
 
 					if (!selectQuery.Select.GroupBy.IsEmpty)
@@ -1088,10 +1098,7 @@ namespace LinqToDB.SqlQuery
 					break;
 				}
 			}
-
-			return knownKeys;
 		}
-
 
 		public static object? EvaluateExpression(this ISqlExpression expr)
 		{

@@ -1236,6 +1236,7 @@ FROM
 		[Table]
 		class AttendanceSheet
 		{
+			[PrimaryKey]
 			[Column] public int Id;
 
 			public static AttendanceSheet[] Items { get; } =

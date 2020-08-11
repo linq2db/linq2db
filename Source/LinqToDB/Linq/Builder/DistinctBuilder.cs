@@ -2,13 +2,14 @@
 
 namespace LinqToDB.Linq.Builder
 {
+	using Reflection;
 	using LinqToDB.Expressions;
 
 	class DistinctBuilder : MethodCallBuilder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsQueryable("Distinct");
+			return methodCall.IsSameGenericMethod(Methods.Queryable.Distinct, Methods.Enumerable.Distinct, Methods.LinqToDB.SelectDistinct);
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -20,7 +21,13 @@ namespace LinqToDB.Linq.Builder
 				sequence = new SubQueryContext(sequence);
 
 			sequence.SelectQuery.Select.IsDistinct = true;
-			sequence.ConvertToIndex(null, 0, ConvertFlags.All);
+
+			// We do not need all fields for SelectDistinct
+			//
+			if (!methodCall.IsSameGenericMethod(Methods.LinqToDB.SelectDistinct))
+			{
+				sequence.ConvertToIndex(null, 0, ConvertFlags.All);
+			}
 
 			return sequence;
 		}

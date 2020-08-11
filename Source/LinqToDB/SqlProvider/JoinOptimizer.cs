@@ -651,7 +651,8 @@ namespace LinqToDB.SqlProvider
 		/// <returns>List of unique keys</returns>
 		List<VirtualField[]>? GetKeysInternal(SqlTableSource tableSource)
 		{
-			var knownKeys = QueryHelper.CollectUniqueKeys(tableSource);
+			var knownKeys = new List<IList<ISqlExpression>>();
+			QueryHelper.CollectUniqueKeys(tableSource, knownKeys);
 			if (knownKeys.Count == 0)
 			{
 				return null;

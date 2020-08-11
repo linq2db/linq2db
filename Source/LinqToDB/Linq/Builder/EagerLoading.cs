@@ -772,7 +772,7 @@ namespace LinqToDB.Linq.Builder
 				ExtractNotSupportedPart(mappingSchema, detailQuery, associationMember.MemberInfo.GetMemberType(), out detailQuery, out finalExpression, out replaceParam);
 
 				var masterKeys   = prevKeys.Concat(subMasterKeys).ToArray();
-				resultExpression = GeneratePreambleExpression(masterKeys, context, masterParam, detailQuery, mainQuery, builder);
+				resultExpression = GeneratePreambleExpression(masterKeys, masterParam, detailQuery, mainQuery, builder);
 			}
 			else
 			{
@@ -810,7 +810,7 @@ namespace LinqToDB.Linq.Builder
 
 				ExtractNotSupportedPart(mappingSchema, detailQuery, associationMember.MemberInfo.GetMemberType(), out detailQuery, out finalExpression, out replaceParam);
 
-				resultExpression = GeneratePreambleExpression(masterKeys, context, masterParam, detailQuery, mainQuery, builder);
+				resultExpression = GeneratePreambleExpression(masterKeys, masterParam, detailQuery, mainQuery, builder);
 			}
 
 			if (replaceParam != null)
@@ -879,6 +879,39 @@ namespace LinqToDB.Linq.Builder
 			});
 
 			return result;
+		}
+
+		private static void CollectDependenciesByParameter(MappingSchema mappingSchema, Expression forExpr, ParameterExpression byParameter, List<Expression> dependencies)
+		{
+			var ignore  = new HashSet<Expression>();
+			ignore.Add(forExpr);
+
+			// child first
+			forExpr.Visit(e =>
+			{
+				if (ignore.Contains(e))
+					return true;
+
+				if (e.NodeType == ExpressionType.MemberAccess)
+				{
+					var ma = (MemberExpression)e;
+
+					if (IsEnumerableType(ma.Type, mappingSchema))
+						return true;
+
+					var root = InternalExtensions.GetRootObject(ma, mappingSchema);
+					if (root == byParameter)
+					{
+						dependencies.Add(e);
+						while (ma.Expression.Unwrap()?.NodeType == ExpressionType.MemberAccess)
+						{
+							ignore.Add(ma.Expression);
+							ma = (MemberExpression) ma.Expression.Unwrap();
+						}
+					}
+				}
+				return true;
+			});
 		}
 
 		private static void CollectDependencies(MappingSchema mappingSchema, Expression forExpr, List<Expression> dependencies, List<ParameterExpression> dependencyParameters)
@@ -1226,6 +1259,10 @@ namespace LinqToDB.Linq.Builder
 				var queryableDetailLambda = Expression.Lambda(queryableDetailCorrected, resultParameter);
 				var keySelectLambda       = Expression.Lambda(keySelectExpressionCorrected, resultParameter);
 
+				// mark query as distinct
+				//
+				mainQueryWithCollectedKey = TypeHelper.MakeMethodCall(Methods.LinqToDB.SelectDistinct, mainQueryWithCollectedKey);
+
 				var enlistMethodFinal =
 					EnlistEagerLoadingFunctionalityMethodInfo.MakeGenericMethod(
 						resultParameterType,
@@ -1269,43 +1306,18 @@ namespace LinqToDB.Linq.Builder
 			return false;
 		}
 
-		private static Expression GeneratePreambleExpression(KeyInfo[] preparedKeys, IBuildContext context,
+		private static Expression GeneratePreambleExpression(KeyInfo[] preparedKeys, 
 			ParameterExpression masterParam, Expression detailQuery, Expression masterQuery, ExpressionBuilder builder)
 		{
-			var distinctSelectExpression = GenerateKeyExpression(preparedKeys.Select(k => k.ForSelect).ToArray(), 0);
-
-			var mc = TypeHelper.MakeMethodCall(Methods.LinqToDB.RemoveOrderBy, masterQuery);
-			mc     = TypeHelper.MakeMethodCall(Methods.Queryable.Select, mc, Expression.Quote(Expression.Lambda(distinctSelectExpression, masterParam)));
-			mc     = TypeHelper.MakeMethodCall(Methods.Queryable.Distinct, mc);
-
-			var keyParam    = Expression.Parameter(distinctSelectExpression.Type, "key");
-			var tuples      = ExtractTupleValues(distinctSelectExpression, keyParam).ToArray();
-			if (tuples.Length == 0)
-				tuples = new[] { Tuple.Create<Expression, Expression>(distinctSelectExpression, keyParam) };
-
-			var keySelectExpression = GenerateKeyExpression(tuples.Select(t => t.Item2).ToArray(), 0);
-
-			masterQuery = mc;
-
-			// correcting detail query to get information from key projection
-			detailQuery = detailQuery.Transform(e =>
-			{
-				if (e.NodeType == ExpressionType.MemberAccess)
-				{
-					var ma = (MemberExpression)e;
-					var found = tuples.FirstOrDefault(t => IsEqualPath(t.Item1, ma));
-					if (found != null)
-					{
-						e = found.Item2.Replace(masterParam, keyParam);
-					}
-				}
-				return e;
-			});
-
-			var keySelectLambda    = Expression.Lambda(keySelectExpression, keyParam);
-			var detailsQueryLambda = Expression.Lambda(EnsureEnumerable(detailQuery, builder.MappingSchema), keyParam);
+			// mark query as distinct
+			//
+			masterQuery = TypeHelper.MakeMethodCall(Methods.LinqToDB.SelectDistinct, masterQuery);
 
 			var keyCompiledExpression = GenerateKeyExpression(preparedKeys.Select(k => k.ForCompilation).ToArray(), 0);
+			var keySelectExpression   = GenerateKeyExpression(preparedKeys.Select(k => k.ForSelect).ToArray(), 0);
+
+			var keySelectLambda    = Expression.Lambda(keySelectExpression, masterParam);
+			var detailsQueryLambda = Expression.Lambda(EnsureEnumerable(detailQuery, builder.MappingSchema), masterParam);
 
 			var enlistMethod =
 				EnlistEagerLoadingFunctionalityMethodInfo.MakeGenericMethod(

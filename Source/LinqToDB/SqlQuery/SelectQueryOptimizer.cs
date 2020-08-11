@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using LinqToDB.Common;
-using LinqToDB.Tools;
 
 namespace LinqToDB.SqlQuery
 {
-	using LinqToDB.Common;
+	using Common;
 	using SqlProvider;
 
 	class SelectQueryOptimizer
@@ -780,12 +778,22 @@ namespace LinqToDB.SqlQuery
 
 			var table = _selectQuery.From.Tables[0];
 
-			var keys = QueryHelper.CollectUniqueKeys(table);
+			var keys = new List<IList<ISqlExpression>>();
+
+			QueryHelper.CollectUniqueKeys(_selectQuery, includeDistinct: false, keys);
+			QueryHelper.CollectUniqueKeys(table, keys);
 			if (keys.Count == 0)
 				return;
 
 			var expressions = new HashSet<ISqlExpression>(_selectQuery.Select.Columns.Select(c => c.Expression));
-			var foundUnique = keys.Any(key => key.All(k => expressions.Contains(k)));
+			var foundUnique = keys.Any(key =>
+			{
+				if (key.All(k => expressions.Contains(k)))
+					return true;
+				if (key.Select(k => QueryHelper.GetUnderlyingField(k)).All(k => k != null && expressions.Contains(k)))
+					return true;
+				return false;
+			});
 
 			if (foundUnique)
 			{
