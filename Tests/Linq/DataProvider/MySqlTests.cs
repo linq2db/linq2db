@@ -21,6 +21,7 @@ using MySqlConnectorDateTime = MySqlConnector.MySqlDateTime;
 namespace Tests.DataProvider
 {
 	using LinqToDB.DataProvider.MySql;
+	using LinqToDB.SqlProvider;
 	using LinqToDB.Tools.Comparers;
 	using Model;
 	using System.Collections;
@@ -815,6 +816,26 @@ namespace Tests.DataProvider
 				db.GetTable<Parent>().Update(p => p.ParentID == 1, p => new Parent { Value1 = 1 });
 
 				using (var tran = db.BeginTransaction())
+				{
+					db.GetTable<Parent>().Update(p => p.ParentID == 1, p => new Parent { Value1 = null });
+
+					Assert.IsNull(db.GetTable<Parent>().First(p => p.ParentID == 1).Value1);
+
+					tran.Rollback();
+
+					Assert.That(1, Is.EqualTo(db.GetTable<Parent>().First(p => p.ParentID == 1).Value1));
+				}
+			}
+		}
+
+		[Test]
+		public void TestBeginTransactionWithIsolationLevel([IncludeDataSources(TestProvName.AllMySql)] string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				db.GetTable<Parent>().Update(p => p.ParentID == 1, p => new Parent { Value1 = 1 });
+
+				using (var tran = db.BeginTransaction(IsolationLevel.Unspecified))
 				{
 					db.GetTable<Parent>().Update(p => p.ParentID == 1, p => new Parent { Value1 = null });
 
@@ -1873,7 +1894,9 @@ namespace Tests.DataProvider
 	{
 		public static int TestOutputParametersWithoutTableProcedure(this DataConnection dataConnection, string aInParam, out sbyte? aOutParam)
 		{
-			var ret = dataConnection.ExecuteProc("`TestOutputParametersWithoutTableProcedure`",
+			// WORKAROUND: db name needed for MySql.Data 8.0.21, as they managed to break already escaped procedure name handling
+			var dbName = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema).ConvertInline(TestUtils.GetDatabaseName(dataConnection), ConvertType.NameToDatabase);
+			var ret = dataConnection.ExecuteProc($"{dbName}.`TestOutputParametersWithoutTableProcedure`",
 				new DataParameter("aInParam", aInParam, DataType.VarChar),
 				new DataParameter("aOutParam", null, DataType.SByte) { Direction = ParameterDirection.Output });
 
@@ -1884,7 +1907,9 @@ namespace Tests.DataProvider
 
 		public static IEnumerable<Person> TestProcedure(this DataConnection dataConnection, int? param3, ref int? param2, out int? param1)
 		{
-			var ret = dataConnection.QueryProc<Person>("`TestProcedure`",
+			// WORKAROUND: db name needed for MySql.Data 8.0.21, as they managed to break already escaped procedure name handling
+			var dbName = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema).ConvertInline(TestUtils.GetDatabaseName(dataConnection), ConvertType.NameToDatabase);
+			var ret = dataConnection.QueryProc<Person>($"{dbName}.`TestProcedure`",
 				new DataParameter("param3", param3, DataType.Int32),
 				new DataParameter("param2", param2, DataType.Int32) { Direction = ParameterDirection.InputOutput },
 				new DataParameter("param1", null, DataType.Int32) { Direction = ParameterDirection.Output }).ToList();

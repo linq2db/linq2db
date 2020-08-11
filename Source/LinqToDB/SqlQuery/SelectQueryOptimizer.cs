@@ -843,7 +843,9 @@ namespace LinqToDB.SqlQuery
 						var join = source.Joins[0];
 						if ((join.JoinType == JoinType.Full || join.JoinType == JoinType.Right)
 							&& !select.Where.IsEmpty)
-						canRemove = false;
+						{
+							canRemove = false;
+						}
 					}
 				}
 				if (canRemove)
@@ -1215,7 +1217,6 @@ namespace LinqToDB.SqlQuery
 		{
 			CorrectCrossJoinQuery(_selectQuery);
 
-			var orderStartIndex = 0;
 			for (var i = 0; i < _selectQuery.From.Tables.Count; i++)
 			{
 				var table = OptimizeSubQuery(_selectQuery.From.Tables[i], true, false, isApplySupported, true, optimizeColumns, JoinType.Inner);
@@ -1228,7 +1229,7 @@ namespace LinqToDB.SqlQuery
 						{
 							foreach (var item in sql.OrderBy.Items)
 							{
-								_selectQuery.OrderBy.Items.Insert(orderStartIndex++, new SqlOrderByItem(item.Expression, item.IsDescending));
+								_selectQuery.OrderBy.Items.Add(new SqlOrderByItem(item.Expression, item.IsDescending));
 							}
 						}
 					}
@@ -1378,6 +1379,9 @@ namespace LinqToDB.SqlQuery
 
 			foreach (var query in information.GetQueriesParentFirst())
 			{
+				// removing duplicate order items
+				query.OrderBy.Items.RemoveDuplicates(o => o.Expression, Utils.ObjectReferenceEqualityComparer<ISqlExpression>.Default);
+
 				// removing sorting for subselects
 				if (QueryHelper.CanRemoveOrderBy(query, _flags, information))
 				{
