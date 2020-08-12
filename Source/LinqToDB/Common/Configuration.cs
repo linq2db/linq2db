@@ -36,6 +36,14 @@ namespace LinqToDB.Common
 		public static class Data
 		{
 			public static bool ThrowOnDisposed = true;
+
+			/// <summary>
+			/// Controls behavior of bulk copy timeout if <see cref="BulkCopyOptions.BulkCopyTimeout"/> is not provided.
+			/// - if <c>true</c> - the current timeout on the <see cref="DataConnection"/> is used
+			/// - if <c>false</c> - command timeout is infinite.
+			/// Default value: <c>false</c>.
+			/// </summary>
+			public static bool BulkCopyUseConnectionCommandTimeout = false;
 		}
 
 		/// <summary>
