@@ -200,6 +200,8 @@ namespace LinqToDB.ServiceModel
 
 					var q = _dataContext.GetSqlOptimizer().OptimizeStatement(queryContext.Statement, _dataContext.MappingSchema, _dataContext.InlineParameters);
 
+					q.CollectParameters();
+
 					data = LinqServiceSerializer.Serialize(
 						_dataContext.SerializationMappingSchema,
 						q,
