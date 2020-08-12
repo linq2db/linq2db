@@ -271,7 +271,7 @@ namespace Tests.SchemaProvider
 				// added SchemaProceduresLoadedTest to test system schema
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(
 					db,
-					TestUtils.GetDefaultSchemaOptions(context, new GetSchemaOptions() { ExcludedSchemas = new[] { "pg_catalog" } }));
+					new GetSchemaOptions() { ExcludedSchemas = new[] { "pg_catalog" } });
 
 				var procedures = schema.Procedures.Where(_ => _.ProcedureName == expectedProc.ProcedureName).ToList();
 

@@ -731,6 +731,50 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Test]
+		public void ByDefaultLoadCurrentSchemaOnly([IncludeDataSources(CurrentProvider)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				var currentSchema = TestUtils.GetSchemaName(db);
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 
+				foreach (var table in schema.Tables)
+					Assert.AreEqual(currentSchema, table.SchemaName);
+
+				foreach (var procedure in schema.Procedures)
+					Assert.AreEqual(currentSchema, procedure.SchemaName);
+			}
+		}
+
+		[Table(Schema = "TESTHANA", Name = "AllTypesGeo")]
+		public partial class AllTypesGeo
+		{
+			[PrimaryKey, Identity        ] public int     ID                 { get; set; } // INTEGER
+			[Column("dataType")          ] public string? DataType           { get; set; } // VARCHAR(20)
+			[Column("stgeometryDataType")] public byte[]? StgeometryDataType { get; set; } // ST_GEOMETRY
+		}
+
+		[Test]
+		public void TestGeometryTypesNative([IncludeDataSources(true, ProviderName.SapHanaNative)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var data = db.GetTable<AllTypesGeo>().ToArray();
+
+				Assert.AreEqual(7, data.Length);
+			}
+		}
+
+		[Test]
+		public void TestGeometryTypesODBC([IncludeDataSources(ProviderName.SapHanaOdbc)] string context)
+		{
+			// ODBC provider doesn't support spatial types
+			// https://github.com/dotnet/runtime/issues/40707
+			using (var db = GetDataContext(context))
+			{
+				Assert.Throws<ArgumentException>(() => db.GetTable<AllTypesGeo>().ToArray());
+			}
+		}
 	}
 }

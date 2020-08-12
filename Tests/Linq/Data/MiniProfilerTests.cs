@@ -158,7 +158,7 @@ namespace Tests.Data
 #endif
 			{
 				// provider doesn't use provider-specific API, so we just query schema
-				db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				db.DataProvider.GetSchemaProvider().GetSchema(db);
 			}
 		}
 
@@ -180,7 +180,7 @@ namespace Tests.Data
 				Assert.True(trace.Contains("DECLARE @p VarChar"));
 
 				// just check schema (no api used)
-				db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				db.DataProvider.GetSchemaProvider().GetSchema(db);
 
 				// assert api resolved and callable
 				FirebirdTools.ClearAllPools();
@@ -221,7 +221,7 @@ namespace Tests.Data
 				Assert.True    (trace.Contains("DECLARE @p Timestamp("));
 
 				// just check schema (no api used)
-				db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				db.DataProvider.GetSchemaProvider().GetSchema(db);
 
 
 				// assert api resolved and callable
@@ -389,7 +389,7 @@ namespace Tests.Data
 				Assert.True(trace.Contains("DECLARE @p Byte "));
 
 				// just check schema (no api used)
-				db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				db.DataProvider.GetSchemaProvider().GetSchema(db);
 			}
 		}
 
@@ -453,7 +453,7 @@ namespace Tests.Data
 				}
 
 				// just check schema (no api used)
-				db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				db.DataProvider.GetSchemaProvider().GetSchema(db);
 			}
 		}
 
@@ -463,7 +463,7 @@ namespace Tests.Data
 			using (var db = CreateDataConnection(new SQLiteDataProvider(ProviderName.SQLiteClassic), context, type, "System.Data.SQLite.SQLiteConnection, System.Data.SQLite"))
 			{
 				// just check schema (no api used)
-				db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				db.DataProvider.GetSchemaProvider().GetSchema(db);
 			}
 		}
 
@@ -473,7 +473,7 @@ namespace Tests.Data
 			using (var db = CreateDataConnection(new SQLiteDataProvider(ProviderName.SQLiteMS), context, type, "Microsoft.Data.Sqlite.SqliteConnection, Microsoft.Data.Sqlite"))
 			{
 				// just check schema (no api used)
-				db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				db.DataProvider.GetSchemaProvider().GetSchema(db);
 			}
 		}
 
@@ -525,7 +525,7 @@ namespace Tests.Data
 				}
 
 				// just check schema (no api used)
-				db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				db.DataProvider.GetSchemaProvider().GetSchema(db);
 
 				// test connection server type property
 				var cs = DataConnection.GetConnectionString(GetProviderName(context, out var _));
@@ -626,7 +626,7 @@ namespace Tests.Data
 					await TestBulkCopyAsync();
 
 				// test schema type name escaping
-				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 				if (tvpSupported)
 				{
 					var proc = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "TableTypeTestProc");
@@ -789,7 +789,7 @@ namespace Tests.Data
 					await TestBulkCopyAsync();
 
 				// test schema type name escaping
-				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 				if (tvpSupported)
 				{
 					var proc = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "TableTypeTestProc");
@@ -919,7 +919,7 @@ namespace Tests.Data
 					await TestBulkCopyAsync();
 
 				// test schema type name escaping
-				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 
 				void TestBulkCopy()
 				{
@@ -1000,7 +1000,7 @@ namespace Tests.Data
 				using (var tr = db.BeginTransaction())
 					TestBulkCopy();
 
-				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 
 				void TestBulkCopy()
 				{
@@ -1047,7 +1047,7 @@ namespace Tests.Data
 				Assert.AreEqual(ntextValue, db.Execute<string>("SELECT @p", new DataParameter("p", ntextValue, DataType.NText)));
 				Assert.True    (trace.Contains("DECLARE @p Unitext("));
 
-				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 			}
 		}
 
@@ -1100,7 +1100,7 @@ namespace Tests.Data
 					TestBulkCopy();
 
 
-				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 
 				void TestBulkCopy()
 				{
@@ -1170,7 +1170,7 @@ namespace Tests.Data
 				if (provider.Adapter.DB2BulkCopy != null)
 					TestBulkCopy();
 
-				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 
 				void TestBulkCopy()
 				{
@@ -1237,7 +1237,7 @@ namespace Tests.Data
 				// bulk copy without transaction (transaction not supported)
 				TestBulkCopy();
 
-				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 				// ToLower, because native prodiver returns it lowercased
 				Assert.AreEqual(unmapped ? string.Empty : TestUtils.GetServerName(db).ToLower(), schema.Database);
 				//schema.DataSource not asserted, as it returns db hostname
@@ -1328,7 +1328,7 @@ namespace Tests.Data
 				Assert.AreEqual(dtoVal, dtoValue);
 				Assert.AreEqual(((OracleDataProvider)db.DataProvider).Adapter.OracleTimeStampTZType, ((IDbDataParameter)db.Command.Parameters[0]!).Value.GetType());
 
-				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 				Assert.AreEqual(unmapped ? string.Empty : TestUtils.GetServerName(db), schema.Database);
 				//schema.DataSource not asserted, as it returns db hostname
 
@@ -1414,7 +1414,7 @@ namespace Tests.Data
 					await TestBulkCopyAsync();
 
 				// provider types support by schema
-				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 				var allTypes = schema.Tables.Where(t => t.TableName == "AllTypes").SingleOrDefault();
 				Assert.NotNull (allTypes);
 				var tsColumn = allTypes.Columns.Where(c => c.ColumnName == "timestampDataType").SingleOrDefault();
