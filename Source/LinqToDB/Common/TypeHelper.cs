@@ -43,6 +43,8 @@ namespace LinqToDB.Common
 			{
 				var currentTemplateArguments = templateType.GetGenericArguments();
 				var replacedArguments        = replaced.GetGenericArguments();
+				if (replacedArguments.Length == 0 && replaced.IsArray)
+					replacedArguments = new[] { replaced.GetElementType()! };
 
 				for (int i = 0; i < currentTemplateArguments.Length; i++)
 				{

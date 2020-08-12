@@ -230,13 +230,47 @@ namespace Tests.Linq
 						Id1 = m.Id1,
 						Id2 = m.Id2,
 						Value = m.Value,
-						Details = detailRecords.Where(d => d.MasterId == m.Id1).ToList(),
+						Details = detailRecords.Where(d => m.Id1 == d.MasterId).ToList(),
 					};
 
 				var result = query.ToList();
 				var expected = expectedQuery.ToList();
 
 				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+			}
+		}
+
+		[Test]
+		public void TestLoadWithFromProjection([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
+			
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			using (var subDetail = db.CreateLocalTable(subDetailRecords))
+			{
+				var subQuery = 
+					from m in master
+					from d in detail.InnerJoin(d => m.Id1 == d.MasterId)
+					select new {m, d};
+
+				var query = subQuery.Select(r => new { One = r, Two = r.d });
+
+				query = query.LoadWith(a => a.One.m.Details).ThenLoad(d => d.SubDetails)
+					.LoadWith(a => a.One.d.SubDetails)
+					.LoadWith(b => b.Two.SubDetails).ThenLoad(sd => sd.Detail);
+
+
+				var result = query.ToArray();
+
+				foreach (var item in result)
+				{
+					Assert.That(ReferenceEquals(item.One.d, item.Two), Is.True);
+					Assert.That(item.Two.SubDetails.Length, Is.GreaterThan(0));
+					Assert.That(item.Two.SubDetails[0].Detail, Is.Not.Null);
+				}
 			}
 		}
 
