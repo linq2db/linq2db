@@ -651,57 +651,16 @@ namespace LinqToDB.SqlProvider
 		/// <returns>List of unique keys</returns>
 		List<VirtualField[]>? GetKeysInternal(SqlTableSource tableSource)
 		{
-			var knownKeys = new Lazy<List<IList<ISqlExpression>>>(() => new List<IList<ISqlExpression>>());
-
-			if (tableSource.HasUniqueKeys)
-				knownKeys.Value.AddRange(tableSource.UniqueKeys);
-
-			switch (tableSource.Source)
+			var knownKeys = new List<IList<ISqlExpression>>();
+			QueryHelper.CollectUniqueKeys(tableSource, knownKeys);
+			if (knownKeys.Count == 0)
 			{
-				case SqlTable table:
-				{
-					var keys = table.GetKeys(false);
-					if (keys != null && keys.Count > 0)
-						knownKeys.Value.Add(keys);
-
-					break;
-				}
-				case SelectQuery selectQuery:
-				{
-					if (selectQuery.HasUniqueKeys)
-						knownKeys.Value.AddRange(selectQuery.UniqueKeys);
-
-					if (selectQuery.Select.IsDistinct)
-						knownKeys.Value.Add(selectQuery.Select.Columns.OfType<ISqlExpression>().ToList());
-
-					if (!selectQuery.Select.GroupBy.IsEmpty)
-					{
-						var columns = selectQuery.Select.GroupBy.Items
-							.Select(i => selectQuery.Select.Columns.Find(c => c.Expression.Equals(i))).Where(c => c != null).ToArray();
-						if (columns.Length == selectQuery.Select.GroupBy.Items.Count)
-							knownKeys.Value.Add(columns.OfType<ISqlExpression>().ToList());
-					}
-
-					if (selectQuery.From.Tables.Count == 1)
-					{
-						var table = selectQuery.From.Tables[0];
-						if (table.HasUniqueKeys && table.Joins.Count == 0)
-						{
-							knownKeys.Value.AddRange(table.UniqueKeys);
-						}
-					}
-
-
-					break;
-				}
-			}
-
-			if (!knownKeys.IsValueCreated)
 				return null;
+			}
 
 			var result = new List<VirtualField[]>();
 
-			foreach (var v in knownKeys.Value)
+			foreach (var v in knownKeys)
 			{
 				var fields = v.Select(GetUnderlayingField).ToArray();
 				if (fields.Length == v.Count)
