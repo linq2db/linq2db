@@ -164,7 +164,7 @@ namespace LinqToDB
 		/// <param name="table">Table instance.</param>
 		protected TempTable(ITable<T> table)
 		{
-			_table = table;
+			_table = table ?? throw new ArgumentNullException(nameof(table));
 		}
 
 		/// <summary>
