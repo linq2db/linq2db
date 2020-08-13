@@ -811,6 +811,20 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
+		static void ApplySubsequentOrder(SelectQuery mainQuery, SelectQuery subQuery)
+		{
+			if (subQuery.OrderBy.Items.Count > 0)
+			{
+				var orderItems = !mainQuery.Select.IsDistinct && mainQuery.GroupBy.IsEmpty
+					? subQuery.OrderBy.Items
+					: subQuery.OrderBy.Items.Where(oi =>
+						mainQuery.Select.Columns.Any(c => c.Expression.Equals(oi.Expression)));
+
+				foreach (var item in orderItems)
+					mainQuery.OrderBy.Expr(item.Expression, item.IsDescending);
+			}
+		}
+
 		SqlTableSource OptimizeSubQuery(
 			SqlTableSource source,
 			bool optimizeWhere,
@@ -833,9 +847,8 @@ namespace LinqToDB.SqlQuery
 
 				if (table != jt.Table)
 				{
-					if (jt.Table.Source is SelectQuery sql && sql.OrderBy.Items.Count > 0)
-						foreach (var item in sql.OrderBy.Items)
-							_selectQuery.OrderBy.Expr(item.Expression, item.IsDescending);
+					if (jt.Table.Source is SelectQuery sql)
+						ApplySubsequentOrder(_selectQuery, sql);
 
 					jt.Table = table;
 				}
@@ -1175,8 +1188,7 @@ namespace LinqToDB.SqlQuery
 					if (table != joinTable.Table)
 					{
 						if (joinTable.Table.Source is SelectQuery q && q.OrderBy.Items.Count > 0)
-							foreach (var item in q.OrderBy.Items)
-								_selectQuery.OrderBy.Expr(item.Expression, item.IsDescending);
+							ApplySubsequentOrder(_selectQuery, q);
 
 						joinTable.Table = table;
 
@@ -1234,13 +1246,8 @@ namespace LinqToDB.SqlQuery
 				{
 					if (!_selectQuery.Select.Columns.All(c => QueryHelper.IsAggregationFunction(c.Expression)))
 					{
-						if (_selectQuery.From.Tables[i].Source is SelectQuery sql && sql.OrderBy.Items.Count > 0)
-						{
-							foreach (var item in sql.OrderBy.Items)
-							{
-								_selectQuery.OrderBy.Items.Add(new SqlOrderByItem(item.Expression, item.IsDescending));
-							}
-						}
+						if (_selectQuery.From.Tables[i].Source is SelectQuery sql)
+							ApplySubsequentOrder(_selectQuery, sql);
 					}
 
 					_selectQuery.From.Tables[i] = table;

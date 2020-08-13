@@ -1889,6 +1889,24 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void OrderByGroupPy([DataSources()] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query1 = from c in db.Child
+					orderby c.ChildID
+					select c;
+
+				var query2 = from c1 in query1
+					group c1 by c1.ParentID
+					into c2
+					select c2.Key;
+
+				var result = query2.ToArray();
+			}
+		}
+
 		void CheckGuardedQuery<TKey, TEntity>(IQueryable<IGrouping<TKey, TEntity>> grouping)
 		{
 			Assert.Throws<LinqToDBException>(() =>
