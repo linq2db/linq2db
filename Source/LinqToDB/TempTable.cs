@@ -184,7 +184,7 @@ namespace LinqToDB
 			if (db == null) throw new ArgumentNullException(nameof(db));
 
 			return new TempTable<T>(await db.CreateTableAsync<T>(tableName, databaseName, schemaName, serverName: serverName)
-				.ConfigureAwait(false));
+				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext));
 		}
 
 		/// <summary>
@@ -230,10 +230,10 @@ namespace LinqToDB
 			if (items == null) throw new ArgumentNullException(nameof(items));
 
 			var table = await CreateAsync(db, tableName, databaseName, schemaName, serverName)
-				.ConfigureAwait(false);
+				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			await table.CopyAsync(items, options)
-				.ConfigureAwait(false);
+				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			return table;
 		}
@@ -260,14 +260,14 @@ namespace LinqToDB
 			if (items == null) throw new ArgumentNullException(nameof(items));
 
 			var table = await CreateAsync(db, tableName, databaseName, schemaName, serverName)
-				.ConfigureAwait(false);
+				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			if (action != null)
 				await action.Invoke(table)
-					.ConfigureAwait(false);
+					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			await table.InsertAsync(items)
-				.ConfigureAwait(false);
+				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			return table;
 		}
@@ -319,8 +319,8 @@ namespace LinqToDB
 		public async Task<long> CopyAsync(IEnumerable<T> items, BulkCopyOptions? options = null)
 		{
 			var count = options != null ?
-				await _table.BulkCopyAsync(options, items).ConfigureAwait(false) :
-				await _table.BulkCopyAsync(items).ConfigureAwait(false);
+				await _table.BulkCopyAsync(options, items).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext) :
+				await _table.BulkCopyAsync(items).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			TotalCopied += count.RowsCopied;
 
@@ -354,7 +354,7 @@ namespace LinqToDB
 		{
 			var l = GenerateInsertSetter(items ?? throw new ArgumentNullException(nameof(items)));
 
-			var count = await items.InsertAsync(_table, l).ConfigureAwait(false);
+			var count = await items.InsertAsync(_table, l).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			TotalCopied += count;
 
