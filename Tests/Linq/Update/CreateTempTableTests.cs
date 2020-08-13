@@ -111,7 +111,7 @@ namespace Tests.xUpdate
 			{
 				db.DropTable<int>("TempTable", throwExceptionIfNotExists: false);
 
-#if !NETFRAMEWORK
+#if !NET46
 				await
 #endif
 				using (var tmp = await db.CreateTempTableAsync(
@@ -135,7 +135,7 @@ namespace Tests.xUpdate
 			{
 				db.DropTable<int>("TempTable", throwExceptionIfNotExists: false);
 
-#if !NETFRAMEWORK
+#if !NET46
 				await
 #endif
 				using (var tmp = await db.CreateTempTableAsync(
