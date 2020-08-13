@@ -154,6 +154,38 @@ namespace LinqToDB.SqlQuery
 			});
 		}
 
+		public static void CollectUsedSources(IQueryElement root, HashSet<ISqlTableSource> found, IEnumerable<IQueryElement>? ignore = null)
+		{
+			var hashIgnore = new HashSet<IQueryElement  >(ignore ?? Enumerable.Empty<IQueryElement>());
+
+			new QueryVisitor().VisitParentFirst(root, e =>
+			{
+				if (e is SqlTableSource source)
+				{
+					if (hashIgnore.Contains(e))
+						return false;
+					found.Add(source.Source);
+				}
+
+				switch (e.ElementType)
+				{
+					case QueryElementType.Column :
+					{
+						var c = (SqlColumn) e;
+						found.Add(c.Parent!);
+						return false;
+					}
+					case QueryElementType.SqlField :
+					{
+						var f = (SqlField) e;
+						found.Add(f.Table!);
+						return false;
+					}
+				}
+				return true;
+			});
+		}
+
 		public static bool IsTransitiveExpression(SqlExpression sqlExpression)
 		{
 			if (sqlExpression.Parameters.Length == 1 && sqlExpression.Expr.Trim() == "{0}")
@@ -340,10 +372,10 @@ namespace LinqToDB.SqlQuery
 		public static IEnumerable<ISqlTableSource> EnumerateAccessibleSources(SqlTableSource tableSource)
 		{
 			if (tableSource.Source is SelectQuery q)
-				{
-					foreach (var ts in EnumerateAccessibleSources(q))
-						yield return ts;
-				}
+			{
+				foreach (var ts in EnumerateAccessibleSources(q))
+					yield return ts;
+			}
 			else 
 				yield return tableSource.Source;
 
@@ -1051,6 +1083,68 @@ namespace LinqToDB.SqlQuery
 			return false;
 		}
 
+		/// <summary>
+		/// Collects unique keys from different sources.
+		/// </summary>
+		/// <param name="tableSource"></param>
+		/// <param name="knownKeys">List with found keys.</param>
+		public static void CollectUniqueKeys(SqlTableSource tableSource, List<IList<ISqlExpression>> knownKeys)
+		{
+			if (tableSource.HasUniqueKeys)
+				knownKeys.AddRange(tableSource.UniqueKeys);
+
+			CollectUniqueKeys(tableSource.Source, true, knownKeys);
+		}
+
+
+		/// <summary>
+		/// Collects unique keys from different sources.
+		/// </summary>
+		/// <param name="tableSource"></param>
+		/// <param name="includeDistinct">Flag to include Distinct as unique key.</param>
+		/// <param name="knownKeys">List with found keys.</param>
+		public static void CollectUniqueKeys(ISqlTableSource tableSource, bool includeDistinct, List<IList<ISqlExpression>> knownKeys)
+		{
+			switch (tableSource)
+			{
+				case SqlTable table:
+				{
+					var keys = table.GetKeys(false);
+					if (keys != null && keys.Count > 0)
+						knownKeys.Add(keys);
+
+					break;
+				}
+				case SelectQuery selectQuery:
+				{
+					if (selectQuery.HasUniqueKeys)
+						knownKeys.AddRange(selectQuery.UniqueKeys);
+
+					if (includeDistinct && selectQuery.Select.IsDistinct)
+						knownKeys.Add(selectQuery.Select.Columns.OfType<ISqlExpression>().ToList());
+
+					if (!selectQuery.Select.GroupBy.IsEmpty)
+					{
+						var columns = selectQuery.Select.GroupBy.Items
+							.Select(i => selectQuery.Select.Columns.Find(c => c.Expression.Equals(i))).Where(c => c != null)
+							.ToArray();
+						if (columns.Length == selectQuery.Select.GroupBy.Items.Count)
+							knownKeys.Add(columns.OfType<ISqlExpression>().ToList());
+					}
+
+					if (selectQuery.From.Tables.Count == 1)
+					{
+						var table = selectQuery.From.Tables[0];
+						if (table.HasUniqueKeys && table.Joins.Count == 0)
+						{
+							knownKeys.AddRange(table.UniqueKeys);
+						}
+					}
+
+					break;
+				}
+			}
+		}
 
 		public static bool TryEvaluateExpression(this ISqlExpression expr, bool withParameters, out object? result)
 		{

@@ -3197,6 +3197,11 @@ namespace LinqToDB.Linq.Builder
 
 		Expression RemoveNullPropagation(Expression expr)
 		{
+			// Do not modify parameters
+			//
+			if (CanBeCompiled(expr))
+				return expr;
+
 			switch (expr.NodeType)
 			{
 				case ExpressionType.Conditional:

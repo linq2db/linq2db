@@ -464,9 +464,23 @@ namespace LinqToDB.Linq.Builder
 								case "AverageAsync"         : return new TransformInfo(ConvertSelectorAsync (call, false));
 								case "ElementAt"            :
 								case "ElementAtOrDefault"   : return new TransformInfo(ConvertElementAt     (call));
-								case "LoadWith"             : return new TransformInfo(expr, true);
 								case "LoadWithAsTable"      : return new TransformInfo(expr, true);
 								case "With"                 : return new TransformInfo(expr);
+								case "LoadWith":
+								case "ThenLoad":
+								{
+									var mc   = (MethodCallExpression)expr;
+									var args = new Expression[mc.Arguments.Count];
+
+									// skipping second argument
+									for (int i = 0; i < mc.Arguments.Count; i++)
+									{
+										args[i] = i == 1 ? mc.Arguments[i] : OptimizeExpression(mc.Arguments[i]);
+									}
+
+									mc = mc.Update(mc.Object, args);
+									return new TransformInfo(mc, true);
+								};
 							}
 						}
 

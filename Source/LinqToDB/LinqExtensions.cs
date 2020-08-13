@@ -3358,5 +3358,30 @@ namespace LinqToDB
 		public static IExtensionsAdapter? ExtensionsAdapter { get; set; }
 
 		#endregion
+
+		#region Eager Loading helpers
+
+		/// <summary>
+		/// Marks SelectQuery as Distinct.
+		/// </summary>
+		/// <typeparam name="TSource">Source query record type.</typeparam>
+		/// <param name="source">Source query.</param>
+		/// <returns>Distinct query.</returns>
+		[LinqTunnel]
+		[Pure]
+		internal static IQueryable<TSource> SelectDistinct<TSource>(this IQueryable<TSource> source)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			return currentSource.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(SelectDistinct, source), currentSource.Expression));
+		}
+
+
+		#endregion;
 	}
 }
