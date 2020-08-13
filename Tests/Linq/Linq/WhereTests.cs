@@ -1549,5 +1549,25 @@ namespace Tests.Linq
 				Assert.False(db.LastQuery!.Contains("IS NULL"));
 			}
 		}
+
+		class Parameter
+		{
+			public int Id;
+		}
+
+		[Test]
+		public void OptionalObjectInCondition([DataSources(false)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				var p  = new Parameter() { Id = 1};
+				db.Person.Where(r => r.FirstName == (p != null ? p.Id.ToString() : null)).ToList();
+				p = null;
+				db.Person.Where(r => r.FirstName == (p != null ? p.Id.ToString() : null)).ToList();
+				p  = new Parameter() { Id = 1};
+				db.Person.Where(r => r.FirstName == (p != null ? p.Id.ToString() : null)).ToList();
+			}
+		}
 	}
 }
