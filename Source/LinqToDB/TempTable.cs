@@ -336,33 +336,7 @@ namespace LinqToDB
 		/// <returns>Number of records, inserted into table.</returns>
 		public long Insert(IQueryable<T> items)
 		{
-			var type = typeof(T);
-			var ed   = _table.DataContext.MappingSchema.GetEntityDescriptor(type);
-			var p    = Expression.Parameter(type, "t");
-
-			var l = _setterDic.GetOrAdd(type, t =>
-			{
-				if (t.IsAnonymous())
-				{
-					var nctor   = (NewExpression)items.Expression.Find(e => e.NodeType == ExpressionType.New && e.Type == t)!;
-					var members = nctor.Members
-						.Select(m => m is MethodInfo info ? info.GetPropertyInfo()! : m)
-						.ToList();
-
-					return Expression.Lambda<Func<T,T>>(
-						Expression.New(
-							nctor.Constructor,
-							members.Select(m => ExpressionHelper.PropertyOrField(p, m.Name)),
-							members),
-						p);
-				}
-
-				return Expression.Lambda<Func<T,T>>(
-					Expression.MemberInit(
-						Expression.New(t),
-						ed.Columns.Select(c => Expression.Bind(c.MemberInfo, Expression.MakeMemberAccess(p, c.MemberInfo)))),
-					p);
-			});
+			var l = GenerateInsertSetter(items ?? throw new ArgumentNullException(nameof(items)));
 
 			var count = items.Insert(_table, l);
 
@@ -378,11 +352,22 @@ namespace LinqToDB
 		/// <returns>Number of records, inserted into table.</returns>
 		public async Task<long> InsertAsync(IQueryable<T> items)
 		{
+			var l = GenerateInsertSetter(items ?? throw new ArgumentNullException(nameof(items)));
+
+			var count = await items.InsertAsync(_table, l).ConfigureAwait(false);
+
+			TotalCopied += count;
+
+			return count;
+		}
+
+		private Expression<Func<T, T>> GenerateInsertSetter(IQueryable<T> items)
+		{
 			var type = typeof(T);
 			var ed   = _table.DataContext.MappingSchema.GetEntityDescriptor(type);
 			var p    = Expression.Parameter(type, "t");
 
-			var l = _setterDic.GetOrAdd(type, t =>
+			return _setterDic.GetOrAdd(type, t =>
 			{
 				if (t.IsAnonymous())
 				{
@@ -405,12 +390,6 @@ namespace LinqToDB
 						ed.Columns.Select(c => Expression.Bind(c.MemberInfo, Expression.MakeMemberAccess(p, c.MemberInfo)))),
 					p);
 			});
-
-			var count = await items.InsertAsync(_table, l).ConfigureAwait(false);
-
-			TotalCopied += count;
-
-			return count;
 		}
 
 		#region ITable<T> implementation
