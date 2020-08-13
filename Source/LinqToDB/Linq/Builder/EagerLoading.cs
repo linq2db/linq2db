@@ -817,11 +817,11 @@ namespace LinqToDB.Linq.Builder
 				var associationLambda = AssociationHelper.CreateAssociationQueryLambda(builder, associationMember, association, parentType, parentType,
 					objectType, false, false, loadWithItems, out _);
 
-				var dpendencyAnchor = detailQuery;
-				detailQuery = associationLambda.GetBody(dpendencyAnchor);
+				var dependencyAnchor = detailQuery;
+				detailQuery = associationLambda.GetBody(dependencyAnchor);
 
 				var dependencies = new List<Expression>();
-				CollectDependenciesByParameter(mappingSchema, detailQuery, dpendencyAnchor, dependencies);
+				CollectDependenciesByParameter(mappingSchema, detailQuery, dependencyAnchor, dependencies);
 				
 				var masterKeys  = ExtractKeysFromContext(extractContext, dependencies).ToList();
 
