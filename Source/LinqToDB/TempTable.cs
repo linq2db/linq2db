@@ -25,7 +25,7 @@ namespace LinqToDB
 	/// </summary>
 	/// <typeparam name="T">Table record mapping class.</typeparam>
 	[PublicAPI]
-	public class TempTable<T> : ITable<T>, ITableMutable<T>, IDisposable 
+	public class TempTable<T> : ITable<T>, ITableMutable<T>, IDisposable
 	{
 		readonly ITable<T> _table;
 
