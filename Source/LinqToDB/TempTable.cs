@@ -43,7 +43,7 @@ namespace LinqToDB
 		/// <param name="db">Database connection instance.</param>
 		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
+		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		public TempTable(IDataContext db,
 			string? tableName    = null,
@@ -64,7 +64,7 @@ namespace LinqToDB
 		/// <param name="options">Optional BulkCopy options.</param>
 		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
+		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		public TempTable(IDataContext db,
 			IEnumerable<T> items,
@@ -89,7 +89,7 @@ namespace LinqToDB
 		/// <param name="items">Initial records to insert into created table.</param>
 		/// <param name="options">Optional BulkCopy options.</param>
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
+		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		public TempTable(IDataContext db,
 			string? tableName,
@@ -113,7 +113,7 @@ namespace LinqToDB
 		/// <param name="items">Query to get records to populate created table with initial data.</param>
 		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
+		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="action">Optional action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		public TempTable(IDataContext db,
@@ -139,7 +139,7 @@ namespace LinqToDB
 		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
 		/// <param name="items">Query to get records to populate created table with initial data.</param>
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
+		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="action">Optional action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		public TempTable(IDataContext db,
@@ -173,13 +173,13 @@ namespace LinqToDB
 		/// <param name="db">Database connection instance.</param>
 		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
+		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		public static async Task<TempTable<T>> CreateAsync(IDataContext db,
-			string? tableName = null,
+			string? tableName    = null,
 			string? databaseName = null,
-			string? schemaName = null,
-			string? serverName = null)
+			string? schemaName   = null,
+			string? serverName   = null)
 		{
 			if (db == null) throw new ArgumentNullException(nameof(db));
 
@@ -195,15 +195,15 @@ namespace LinqToDB
 		/// <param name="options">Optional BulkCopy options.</param>
 		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
+		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		public static Task<TempTable<T>> CreateAsync(IDataContext db,
 			IEnumerable<T> items,
 			BulkCopyOptions? options = null,
-			string? tableName = null,
-			string? databaseName = null,
-			string? schemaName = null,
-			string? serverName = null)
+			string? tableName        = null,
+			string? databaseName     = null,
+			string? schemaName       = null,
+			string? serverName       = null)
 		{
 			return CreateAsync(db, tableName, items, options, databaseName, schemaName, serverName);
 		}
@@ -216,23 +216,25 @@ namespace LinqToDB
 		/// <param name="items">Initial records to insert into created table.</param>
 		/// <param name="options">Optional BulkCopy options.</param>
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
+		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		public static async Task<TempTable<T>> CreateAsync(IDataContext db,
 			string? tableName,
 			IEnumerable<T> items,
 			BulkCopyOptions? options = null,
-			string? databaseName = null,
-			string? schemaName = null,
-			string? serverName = null)
+			string? databaseName     = null,
+			string? schemaName       = null,
+			string? serverName       = null)
 		{
 			if (db == null) throw new ArgumentNullException(nameof(db));
 			if (items == null) throw new ArgumentNullException(nameof(items));
 
 			var table = await CreateAsync(db, tableName, databaseName, schemaName, serverName)
 				.ConfigureAwait(false);
+
 			await table.CopyAsync(items, options)
 				.ConfigureAwait(false);
+
 			return table;
 		}
 
@@ -243,29 +245,30 @@ namespace LinqToDB
 		/// <param name="items">Query to get records to populate created table with initial data.</param>
 		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
+		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="action">Optional asynchronous action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		public static async Task<TempTable<T>> CreateAsync(IDataContext db,
 			IQueryable<T> items,
-			string? tableName = null,
-			string? databaseName = null,
-			string? schemaName = null,
+			string? tableName             = null,
+			string? databaseName          = null,
+			string? schemaName            = null,
 			Func<ITable<T>, Task>? action = null,
-			string? serverName = null)
+			string? serverName            = null)
 		{
 			if (db == null) throw new ArgumentNullException(nameof(db));
 			if (items == null) throw new ArgumentNullException(nameof(items));
 
 			var table = await CreateAsync(db, tableName, databaseName, schemaName, serverName)
 				.ConfigureAwait(false);
+
 			if (action != null)
-			{
 				await action.Invoke(table)
 					.ConfigureAwait(false);
-			}
+
 			await table.InsertAsync(items)
 				.ConfigureAwait(false);
+
 			return table;
 		}
 
@@ -276,16 +279,16 @@ namespace LinqToDB
 		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
 		/// <param name="items">Query to get records to populate created table with initial data.</param>
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
+		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="action">Optional asynchronous action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		public static Task<TempTable<T>> CreateAsync(IDataContext db,
 			string? tableName,
 			IQueryable<T> items,
-			string? databaseName = null,
-			string? schemaName = null,
+			string? databaseName          = null,
+			string? schemaName            = null,
 			Func<ITable<T>, Task>? action = null,
-			string? serverName = null)
+			string? serverName            = null)
 		{
 			return CreateAsync(db, items, tableName, databaseName, schemaName, action, serverName);
 		}
@@ -557,7 +560,7 @@ namespace LinqToDB
 		/// <param name="db">Database connection instance.</param>
 		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
+		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static TempTable<T> CreateTempTable<T>(
@@ -579,7 +582,7 @@ namespace LinqToDB
 		/// <param name="options">Optional BulkCopy options.</param>
 		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
+		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static TempTable<T> CreateTempTable<T>(
@@ -603,7 +606,7 @@ namespace LinqToDB
 		/// <param name="items">Initial records to insert into created table.</param>
 		/// <param name="options">Optional BulkCopy options.</param>
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
+		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static TempTable<T> CreateTempTable<T>(
@@ -626,7 +629,7 @@ namespace LinqToDB
 		/// <param name="items">Query to get records to populate created table with initial data.</param>
 		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
+		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="action">Optional action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <returns>Returns temporary table instance.</returns>
@@ -652,7 +655,7 @@ namespace LinqToDB
 		/// <param name="setTable">Action to modify <typeparamref name="T"/> entity's mapping using fluent mapping.</param>
 		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
+		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="action">Optional action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <returns>Returns temporary table instance.</returns>
@@ -681,7 +684,7 @@ namespace LinqToDB
 		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
 		/// <param name="items">Query to get records to populate created table with initial data.</param>
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
+		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="action">Optional action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <returns>Returns temporary table instance.</returns>
@@ -707,7 +710,7 @@ namespace LinqToDB
 		/// <param name="items">Query to get records to populate created table with initial data.</param>
 		/// <param name="setTable">Action to modify <typeparamref name="T"/> entity's mapping using fluent mapping.</param>
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
+		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="action">Optional action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <returns>Returns temporary table instance.</returns>
@@ -735,15 +738,16 @@ namespace LinqToDB
 		/// <param name="db">Database connection instance.</param>
 		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
+		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static Task<TempTable<T>> CreateTempTableAsync<T>(
 			this IDataContext db,
-			string? tableName = null,
+			string? tableName    = null,
 			string? databaseName = null,
-			string? schemaName = null,
-			string? serverName = null)
+			string? schemaName   = null,
+			string? serverName   = null)
+			where T : class
 		{
 			return TempTable<T>.CreateAsync(db, tableName, databaseName, schemaName, serverName);
 		}
@@ -757,17 +761,18 @@ namespace LinqToDB
 		/// <param name="options">Optional BulkCopy options.</param>
 		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
+		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static Task<TempTable<T>> CreateTempTableAsync<T>(
 			this IDataContext db,
 			IEnumerable<T> items,
 			BulkCopyOptions? options = null,
-			string? tableName = null,
-			string? databaseName = null,
-			string? schemaName = null,
-			string? serverName = null)
+			string? tableName        = null,
+			string? databaseName     = null,
+			string? schemaName       = null,
+			string? serverName       = null)
+			where T : class
 		{
 			return TempTable<T>.CreateAsync(db, items, options, tableName, databaseName, schemaName, serverName);
 		}
@@ -781,7 +786,7 @@ namespace LinqToDB
 		/// <param name="items">Initial records to insert into created table.</param>
 		/// <param name="options">Optional BulkCopy options.</param>
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
+		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static Task<TempTable<T>> CreateTempTableAsync<T>(
@@ -789,9 +794,10 @@ namespace LinqToDB
 			string? tableName,
 			IEnumerable<T> items,
 			BulkCopyOptions? options = null,
-			string? databaseName = null,
-			string? schemaName = null,
-			string? serverName = null)
+			string? databaseName     = null,
+			string? schemaName       = null,
+			string? serverName       = null)
+			where T : class
 		{
 			return TempTable<T>.CreateAsync(db, tableName, items, options, databaseName, schemaName, serverName);
 		}
@@ -804,18 +810,19 @@ namespace LinqToDB
 		/// <param name="items">Query to get records to populate created table with initial data.</param>
 		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
+		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="action">Optional asynchronous action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static Task<TempTable<T>> CreateTempTableAsync<T>(
 			this IDataContext db,
 			IQueryable<T> items,
-			string? tableName = null,
-			string? databaseName = null,
-			string? schemaName = null,
+			string? tableName             = null,
+			string? databaseName          = null,
+			string? schemaName            = null,
 			Func<ITable<T>, Task>? action = null,
-			string? serverName = null)
+			string? serverName            = null)
+			where T : class
 		{
 			return TempTable<T>.CreateAsync(db, items, tableName, databaseName, schemaName, action, serverName);
 		}
@@ -830,7 +837,7 @@ namespace LinqToDB
 		/// <param name="setTable">Action to modify <typeparamref name="T"/> entity's mapping using fluent mapping.</param>
 		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
+		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="action">Optional asynchronous action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <returns>Returns temporary table instance.</returns>
@@ -838,11 +845,12 @@ namespace LinqToDB
 			this IDataContext db,
 			IQueryable<T> items,
 			Action<EntityMappingBuilder<T>> setTable,
-			string? tableName = null,
-			string? databaseName = null,
-			string? schemaName = null,
+			string? tableName             = null,
+			string? databaseName          = null,
+			string? schemaName            = null,
 			Func<ITable<T>, Task>? action = null,
-			string? serverName = null)
+			string? serverName            = null)
+			where T : class
 		{
 			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
 
@@ -859,7 +867,7 @@ namespace LinqToDB
 		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
 		/// <param name="items">Query to get records to populate created table with initial data.</param>
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
+		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="action">Optional asynchronous action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <returns>Returns temporary table instance.</returns>
@@ -867,10 +875,11 @@ namespace LinqToDB
 			this IDataContext db,
 			string? tableName,
 			IQueryable<T> items,
-			string? databaseName = null,
-			string? schemaName = null,
+			string? databaseName          = null,
+			string? schemaName            = null,
 			Func<ITable<T>, Task>? action = null,
-			string? serverName = null)
+			string? serverName            = null)
+			where T : class
 		{
 			return TempTable<T>.CreateAsync(db, tableName, items, databaseName, schemaName, action, serverName);
 		}
@@ -885,7 +894,7 @@ namespace LinqToDB
 		/// <param name="items">Query to get records to populate created table with initial data.</param>
 		/// <param name="setTable">Action to modify <typeparamref name="T"/> entity's mapping using fluent mapping.</param>
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
+		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="action">Optional asynchronous action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <returns>Returns temporary table instance.</returns>
@@ -894,10 +903,11 @@ namespace LinqToDB
 			string? tableName,
 			IQueryable<T> items,
 			Action<EntityMappingBuilder<T>> setTable,
-			string? databaseName = null,
-			string? schemaName = null,
+			string? databaseName          = null,
+			string? schemaName            = null,
 			Func<ITable<T>, Task>? action = null,
-			string? serverName = null)
+			string? serverName            = null)
+			where T : class
 		{
 			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
 
