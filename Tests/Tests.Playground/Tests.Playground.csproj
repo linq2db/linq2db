@@ -9,10 +9,6 @@
 
 	<ItemGroup>
 		<Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
-		<Compile Include="..\Linq\Linq\ConcatUnionTests.cs" Link="ConcatUnionTests.cs" />
-		<Compile Include="..\Linq\Linq\ParameterTests.cs" Link="ParameterTests.cs" />
-		<Compile Include="..\Linq\Linq\TakeSkipTests.cs" Link="TakeSkipTests.cs" />
-		<Compile Include="..\Linq\Linq\WhereTests.cs" Link="WhereTests.cs" />
 	</ItemGroup>
 
 </Project>
