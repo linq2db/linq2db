@@ -352,6 +352,16 @@ namespace LinqToDB.SqlQuery
 			IsParameterDependent = isDepended;
 		}
 
+		static string NormalizeParameterName(string? name)
+		{
+			if (string.IsNullOrEmpty(name))
+				return "p";
+
+			name = name!.Replace(' ', '_');
+
+			return name;
+		}
+
 		internal void PrepareQueryAndAliases()
 		{
 			_aliases = null;
@@ -442,6 +452,8 @@ namespace LinqToDB.SqlQuery
 
 							if (paramsVisited.Add(p) && !p.IsQueryParameter)
 								IsParameterDependent = true;
+
+							p.Name = NormalizeParameterName(p.Name);
 
 							break;
 						}

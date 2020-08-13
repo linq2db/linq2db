@@ -8,6 +8,7 @@ using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+using Tests.Model;
 
 namespace Tests.Linq
 {
@@ -291,6 +292,22 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				db.Parent.Where(p => GetChildrenFiltered(db, ChildFilter).Select(c => c.ParentID).Contains(p.ParentID)).ToList();
+			}
+		}
+
+		[Test]
+		public void TestInternationalParamName([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var параметр = 1;
+				var result1 = db.Parent.Where(p => p.ParentID == параметр).ToList();
+
+				var 参数 = 1;
+				var result2 = db.Parent.Where(p => p.ParentID == 参数).ToList();
+
+				var パラメータ = 1;
+				var result3 = db.Parent.Where(p => p.ParentID == パラメータ).ToList();
 			}
 		}
 
