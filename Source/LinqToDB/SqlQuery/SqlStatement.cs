@@ -352,10 +352,10 @@ namespace LinqToDB.SqlQuery
 			IsParameterDependent = isDepended;
 		}
 
-		static string NormalizeParameterName(string? name)
+		static string? NormalizeParameterName(string? name)
 		{
 			if (string.IsNullOrEmpty(name))
-				return "p";
+				return name;
 
 			name = name!.Replace(' ', '_');
 
