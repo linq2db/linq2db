@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 
 namespace LinqToDB.Common
 {
 	using Mapping;
+	using Expressions;
 
 	/// <summary>
 	/// Stores database type attributes.
@@ -60,6 +62,10 @@ namespace LinqToDB.Common
 		public int?     Length     { get; }
 		public int?     Precision  { get; }
 		public int?     Scale      { get; }
+
+
+		internal static MethodInfo WithSetValuesMethodInfo =
+			MemberHelper.MethodOf<DbDataType>(dt => dt.WithSetValues(dt));
 
 		public DbDataType WithSetValues(DbDataType from)
 		{

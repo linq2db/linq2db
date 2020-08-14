@@ -454,16 +454,18 @@ namespace LinqToDB.Linq
 
 			valueGetter = InternalExtensions.ApplyLambdaToExpression(dbValueLambda, getter);
 
+			var dbDataType = field.ColumnDescriptor.GetDbDataType();
+
 			if (typeof(DataParameter).IsSameOrParentOf(valueGetter.Type))
 			{
-				dbDataTypeExpression = Expression.PropertyOrField(valueGetter, nameof(DataParameter.DbDataType));
+				dbDataTypeExpression = Expression.Call(Expression.Constant(dbDataType),
+					DbDataType.WithSetValuesMethodInfo,
+					Expression.PropertyOrField(valueGetter, nameof(DataParameter.DbDataType)));
 				valueGetter          = Expression.PropertyOrField(valueGetter, nameof(DataParameter.Value));
 			}
 			else
 			{
-				var dbDataType = field.ColumnDescriptor.GetDbDataType();
-				dbDataType = dbDataType.WithSystemType(valueGetter.Type);
-
+				dbDataType           = dbDataType.WithSystemType(valueGetter.Type);
 				dbDataTypeExpression = Expression.Constant(dbDataType);
 			}
 

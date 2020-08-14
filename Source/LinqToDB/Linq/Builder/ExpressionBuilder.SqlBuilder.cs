@@ -1482,6 +1482,14 @@ namespace LinqToDB.Linq.Builder
 				if (typeof(DataParameter).IsSameOrParentOf(newExpr.ValueExpression.Type))
 				{
 					newExpr.DbDataTypeExpression = Expression.PropertyOrField(newExpr.ValueExpression, nameof(DataParameter.DbDataType));
+
+					if (columnDescriptor != null)
+					{
+						var dbDataType = columnDescriptor.GetDbDataType();
+						newExpr.DbDataTypeExpression = Expression.Call(Expression.Constant(dbDataType),
+							DbDataType.WithSetValuesMethodInfo, newExpr.DbDataTypeExpression);
+					}
+
 					newExpr.ValueExpression      = Expression.PropertyOrField(newExpr.ValueExpression, nameof(DataParameter.Value));
 				}
 			}
