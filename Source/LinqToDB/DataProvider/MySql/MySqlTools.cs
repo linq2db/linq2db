@@ -46,8 +46,8 @@ namespace LinqToDB.DataProvider.MySql
 					if (css.Name.Contains("MySql"))
 						goto case ProviderName.MySql;
 					break;
-				case MySqlProviderAdapter.ClientNamespace:
-				case ProviderName.MySql                  :
+				case MySqlProviderAdapter.MySqlDataClientNamespace:
+				case ProviderName.MySql                           :
 					if (css.Name.Contains(MySqlProviderAdapter.MySqlConnectorAssemblyName))
 						return _mySqlConnectorDataProvider.Value;
 

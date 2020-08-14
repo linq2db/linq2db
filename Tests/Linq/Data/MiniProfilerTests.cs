@@ -1,7 +1,4 @@
-﻿extern alias MySqlData;
-extern alias MySqlConnector;
-
-using System;
+﻿using System;
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
@@ -22,10 +19,10 @@ using StackExchange.Profiling;
 using StackExchange.Profiling.Data;
 using Tests.Model;
 
-using MySqlDataDateTime           = MySqlData::MySql.Data.Types.MySqlDateTime;
-using MySqlDataDecimal            = MySqlData::MySql.Data.Types.MySqlDecimal;
-using MySqlConnectorDateTime      = MySqlConnector::MySql.Data.Types.MySqlDateTime;
-using MySqlDataMySqlConnection    = MySqlData::MySql.Data.MySqlClient.MySqlConnection;
+using MySqlDataDateTime           = MySql.Data.Types.MySqlDateTime;
+using MySqlDataDecimal            = MySql.Data.Types.MySqlDecimal;
+using MySqlConnectorDateTime      = MySqlConnector.MySqlDateTime;
+using MySqlDataMySqlConnection    = MySql.Data.MySqlClient.MySqlConnection;
 using System.Globalization;
 using LinqToDB.DataProvider.SQLite;
 using LinqToDB.DataProvider.DB2;
@@ -400,7 +397,7 @@ namespace Tests.Data
 		public async Task TestMySqlConnector([IncludeDataSources(ProviderName.MySqlConnector)] string context, [Values] ConnectionType type)
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
-			using (var db = CreateDataConnection(new MySqlDataProvider(ProviderName.MySqlConnector), context, type, "MySql.Data.MySqlClient.MySqlConnection, MySqlConnector", ";AllowZeroDateTime=true"))
+			using (var db = CreateDataConnection(new MySqlDataProvider(ProviderName.MySqlConnector), context, type, "MySqlConnector.MySqlConnection, MySqlConnector", ";AllowZeroDateTime=true"))
 			{
 				var trace = string.Empty;
 				db.OnTraceConnection += (TraceInfo ti) =>
@@ -1492,7 +1489,7 @@ namespace Tests.Data
 							Enumerable.Range(0, 1000).Select(n => new PostgreSQLTests.AllTypes() { ID = 2000 + n }));
 
 #if NET46
-						// we use 4.0.10 for tests, async added in 4.1.0
+						// we use 4.0.11 for tests, async added in 4.1.0
 						Assert.AreEqual(!unmapped, trace.Contains("INSERT BULK"));
 #else
 						Assert.AreEqual(!unmapped, trace.Contains("INSERT ASYNC BULK"));

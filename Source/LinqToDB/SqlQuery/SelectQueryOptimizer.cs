@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using LinqToDB.Common;
-using LinqToDB.Tools;
 
 namespace LinqToDB.SqlQuery
 {
-	using LinqToDB.Common;
+	using Common;
 	using SqlProvider;
 
 	class SelectQueryOptimizer
@@ -429,6 +427,7 @@ namespace LinqToDB.SqlQuery
 			OptimizeSubQueries(isApplySupported, optimizeColumns);
 			OptimizeApplies   (isApplySupported, optimizeColumns);
 
+			OptimizeDistinct();
 			OptimizeDistinctOrderBy();
 			OptimizeSkipTake(inlineParameters);
 
@@ -731,7 +730,7 @@ namespace LinqToDB.SqlQuery
 		}
 
 		internal void ResolveWeakJoins()
-			{
+		{
 			_selectQuery.ForEachTable(table =>
 			{
 				for (var i = table.Joins.Count - 1; i >= 0; i--)
@@ -754,6 +753,62 @@ namespace LinqToDB.SqlQuery
 					}
 				}
 			}, new HashSet<SelectQuery>());
+		}
+
+
+		static bool IsComplexQuery(SelectQuery query)
+		{
+			var accessibleSources = new HashSet<ISqlTableSource>();
+			var complexFound = QueryHelper.EnumerateAccessibleSources(query)
+				.Any(source =>
+				{
+					accessibleSources.Add(source);
+					if (source is SelectQuery q)
+						return q.From.Tables.Count != 1 || QueryHelper.EnumerateJoins(q).Any();
+					return false;
+				});
+
+			if (complexFound)
+				return true;
+
+			var usedSources = new HashSet<ISqlTableSource>();
+			QueryHelper.CollectUsedSources(query, usedSources);
+
+			return usedSources.Count > accessibleSources.Count;
+		}
+
+		void OptimizeDistinct()
+		{
+			if (!_selectQuery.Select.IsDistinct || !_selectQuery.Select.OptimizeDistinct)
+				return;
+
+			if (IsComplexQuery(_selectQuery))
+				return;
+
+			var table = _selectQuery.From.Tables[0];
+
+			var keys = new List<IList<ISqlExpression>>();
+
+			QueryHelper.CollectUniqueKeys(_selectQuery, includeDistinct: false, keys);
+			QueryHelper.CollectUniqueKeys(table, keys);
+			if (keys.Count == 0)
+				return;
+
+			var expressions = new HashSet<ISqlExpression>(_selectQuery.Select.Columns.Select(c => c.Expression));
+			var foundUnique = keys.Any(key =>
+			{
+				if (key.All(k => expressions.Contains(k)))
+					return true;
+				if (key.Select(k => QueryHelper.GetUnderlyingField(k)).All(k => k != null && expressions.Contains(k)))
+					return true;
+				return false;
+			});
+
+			if (foundUnique)
+			{
+				// We have found that distinct columns has unique key, so we can remove distinct
+				_selectQuery.Select.IsDistinct = false;
+			}
 		}
 
 		SqlTableSource OptimizeSubQuery(
@@ -797,7 +852,9 @@ namespace LinqToDB.SqlQuery
 						var join = source.Joins[0];
 						if ((join.JoinType == JoinType.Full || join.JoinType == JoinType.Right)
 							&& !select.Where.IsEmpty)
-						canRemove = false;
+						{
+							canRemove = false;
+						}
 					}
 				}
 				if (canRemove)
@@ -1169,7 +1226,6 @@ namespace LinqToDB.SqlQuery
 		{
 			CorrectCrossJoinQuery(_selectQuery);
 
-			var orderStartIndex = 0;
 			for (var i = 0; i < _selectQuery.From.Tables.Count; i++)
 			{
 				var table = OptimizeSubQuery(_selectQuery.From.Tables[i], true, false, isApplySupported, true, optimizeColumns, JoinType.Inner);
@@ -1182,7 +1238,7 @@ namespace LinqToDB.SqlQuery
 						{
 							foreach (var item in sql.OrderBy.Items)
 							{
-								_selectQuery.OrderBy.Items.Insert(orderStartIndex++, new SqlOrderByItem(item.Expression, item.IsDescending));
+								_selectQuery.OrderBy.Items.Add(new SqlOrderByItem(item.Expression, item.IsDescending));
 							}
 						}
 					}
@@ -1332,6 +1388,9 @@ namespace LinqToDB.SqlQuery
 
 			foreach (var query in information.GetQueriesParentFirst())
 			{
+				// removing duplicate order items
+				query.OrderBy.Items.RemoveDuplicates(o => o.Expression, Utils.ObjectReferenceEqualityComparer<ISqlExpression>.Default);
+
 				// removing sorting for subselects
 				if (QueryHelper.CanRemoveOrderBy(query, _flags, information))
 				{
