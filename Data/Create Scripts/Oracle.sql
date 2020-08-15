@@ -1120,9 +1120,8 @@ CREATE OR REPLACE PROCEDURE TEST2132
 BEGIN
 	return 6;
 END;
-/
-
 -- schema test table, view and matview. doesn't have columns, as we test only object and it's atributes load
+/
 DROP VIEW SchemaTestView
 /
 DROP MATERIALIZED VIEW SchemaTestMatView
