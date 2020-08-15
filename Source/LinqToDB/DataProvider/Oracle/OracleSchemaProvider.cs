@@ -49,23 +49,28 @@ namespace LinqToDB.DataProvider.Oracle
 				return dataConnection.Query<TableInfo>(
 					@"
 					SELECT
-						d.OWNER || '.' || d.NAME                         as TableID,
-						d.OWNER                                          as SchemaName,
-						d.NAME                                           as TableName,
-						d.IsView                                         as IsView,
-						CASE :CurrentUser WHEN d.OWNER THEN 1 ELSE 0 END as IsDefaultSchema,
-						tc.COMMENTS                                      as Description
+						d.OWNER || '.' || d.NAME                                     as TableID,
+						d.OWNER                                                      as SchemaName,
+						d.NAME                                                       as TableName,
+						d.IsView                                                     as IsView,
+						CASE :CurrentUser WHEN d.OWNER THEN 1 ELSE 0 END             as IsDefaultSchema,
+						CASE d.MatView WHEN 1 THEN mvc.COMMENTS ELSE tc.COMMENTS END as Description
 					FROM
 					(
-						SELECT t.OWNER, t.TABLE_NAME NAME, 0 as IsView FROM ALL_TABLES t
-							UNION ALL
-							SELECT v.OWNER, v.VIEW_NAME NAME, 1 as IsView FROM ALL_VIEWS v
-								UNION ALL
-								SELECT m.OWNER, m.MVIEW_NAME NAME, 1 as IsView FROM ALL_MVIEWS m
+						SELECT t.OWNER, t.TABLE_NAME NAME, 0 as IsView, 0 as MatView FROM ALL_TABLES t
+							LEFT JOIN ALL_MVIEWS tm ON t.OWNER = tm.OWNER AND t.TABLE_NAME = tm.CONTAINER_NAME
+							WHERE tm.MVIEW_NAME IS NULL
+						UNION ALL
+						SELECT v.OWNER, v.VIEW_NAME NAME, 1 as IsView, 0 as MatView FROM ALL_VIEWS v
+						UNION ALL
+						SELECT m.OWNER, m.MVIEW_NAME NAME, 1 as IsView, 1 as MatView FROM ALL_MVIEWS m
 					) d
-						JOIN ALL_TAB_COMMENTS tc ON
+						LEFT JOIN ALL_TAB_COMMENTS tc ON
 							d.OWNER = tc.OWNER AND
 							d.NAME  = tc.TABLE_NAME
+						LEFT JOIN ALL_MVIEW_COMMENTS mvc ON
+							d.OWNER = mvc.OWNER AND
+							d.NAME  = mvc.MVIEW_NAME
 					ORDER BY TableID, isView
 					",
 					new DataParameter("CurrentUser", _currentUser, DataType.VarChar))
@@ -82,22 +87,24 @@ namespace LinqToDB.DataProvider.Oracle
 						d.NAME                        as TableName,
 						d.IsView                      as IsView,
 						1                             as IsDefaultSchema,
-						d.COMMENTS                   as Description
-                    FROM 
+						d.COMMENTS                    as Description
+					FROM
 					(
-						SELECT NAME, ISVIEW, COMMENTS
+						SELECT NAME, ISVIEW, CASE c.MatView WHEN 1 THEN mvc.COMMENTS ELSE tc.COMMENTS END AS COMMENTS
 						FROM 
 						(
-							SELECT t.TABLE_NAME NAME, 0 as IsView FROM USER_TABLES t
-								UNION ALL
-								SELECT v.VIEW_NAME NAME, 1 as IsView FROM USER_VIEWS v
+							SELECT t.TABLE_NAME NAME, 0 as IsView, 0 as MatView FROM USER_TABLES t
+								LEFT JOIN USER_MVIEWS tm ON t.TABLE_NAME = tm.CONTAINER_NAME
+								WHERE tm.MVIEW_NAME IS NULL
+							UNION ALL
+							SELECT v.VIEW_NAME NAME, 1 as IsView, 0 as MatView FROM USER_VIEWS v
+							UNION ALL
+							SELECT m.MVIEW_NAME NAME, 1 as IsView, 1 as MatView FROM USER_MVIEWS m
 						) c
-							JOIN USER_TAB_COMMENTS tc ON 							
-                            c.NAME = tc.table_name
-                            UNION ALL
-								SELECT m.MVIEW_NAME NAME, 1 as IsView, null as COMMENTS FROM USER_MVIEWS m
-							) d
-                    ORDER BY TableID, isView
+							LEFT JOIN USER_TAB_COMMENTS tc ON c.NAME = tc.TABLE_NAME
+							LEFT JOIN USER_MVIEW_COMMENTS mvc ON c.NAME = mvc.MVIEW_NAME
+					) d
+					ORDER BY TableID, isView
 					",
 					new DataParameter("CurrentUser", _currentUser, DataType.VarChar))
 				.ToList();
