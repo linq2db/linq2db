@@ -548,6 +548,7 @@ namespace LinqToDB
 			string? databaseName = null,
 			string? schemaName   = null,
 			string? serverName   = null)
+			where T : class
 		{
 			return new TempTable<T>(db, tableName, databaseName, schemaName, serverName);
 		}
@@ -572,6 +573,7 @@ namespace LinqToDB
 			string? databaseName = null,
 			string? schemaName   = null,
 			string? serverName   = null)
+			where T : class
 		{
 			return new TempTable<T>(db, items, options, tableName, databaseName, schemaName, serverName);
 		}
@@ -596,6 +598,7 @@ namespace LinqToDB
 			string? databaseName = null,
 			string? schemaName   = null,
 			string? serverName   = null)
+			where T : class
 		{
 			return new TempTable<T>(db, tableName, items, options, databaseName, schemaName, serverName);
 		}
@@ -620,6 +623,7 @@ namespace LinqToDB
 			string? schemaName        = null,
 			Action<ITable<T>>? action = null,
 			string? serverName        = null)
+			where T : class
 		{
 			return new TempTable<T>(db, items, tableName, databaseName, schemaName, action, serverName);
 		}
@@ -647,6 +651,7 @@ namespace LinqToDB
 			string? schemaName        = null,
 			Action<ITable<T>>? action = null,
 			string? serverName        = null)
+			where T : class
 		{
 			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
 
@@ -675,6 +680,7 @@ namespace LinqToDB
 			string? schemaName        = null,
 			Action<ITable<T>>? action = null,
 			string? serverName        = null)
+			where T : class
 		{
 			return new TempTable<T>(db, tableName, items, databaseName, schemaName, action, serverName);
 		}
@@ -702,6 +708,7 @@ namespace LinqToDB
 			string? schemaName        = null,
 			Action<ITable<T>>? action = null,
 			string? serverName        = null)
+			where T : class
 		{
 			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
 
