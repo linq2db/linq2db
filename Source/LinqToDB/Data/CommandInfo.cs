@@ -20,6 +20,7 @@ namespace LinqToDB.Data
 	using Mapping;
 	using Async;
 	using Reflection;
+	using System.Diagnostics.CodeAnalysis;
 
 	/// <summary>
 	/// Provides database connection command abstraction.
@@ -132,6 +133,19 @@ namespace LinqToDB.Data
 		}
 
 		/// <summary>
+		/// Executes command asynchronously using <see cref="CommandType.StoredProcedure"/> command type and returns results as collection of values, mapped using provided mapping function.
+		/// </summary>
+		/// <typeparam name="T">Result record type.</typeparam>
+		/// <param name="objectReader">Record mapping function from data reader.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Returns collection of query result records.</returns>
+		public Task<IEnumerable<T>> QueryProcAsync<T>(Func<IDataReader, T> objectReader, CancellationToken cancellationToken = default)
+		{
+			CommandType = CommandType.StoredProcedure;
+			return QueryAsync(objectReader, cancellationToken);
+		}
+
+		/// <summary>
 		/// Executes command and returns results as collection of values, mapped using provided mapping function.
 		/// </summary>
 		/// <typeparam name="T">Result record type.</typeparam>
@@ -152,6 +166,28 @@ namespace LinqToDB.Data
 				DataConnection.DataProvider.ExecuteScope(DataConnection));
 		}
 
+		/// <summary>
+		/// Executes command asynchronously and returns results as collection of values, mapped using provided mapping function.
+		/// </summary>
+		/// <typeparam name="T">Result record type.</typeparam>
+		/// <param name="objectReader">Record mapping function from data reader.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Returns collection of query result records.</returns>
+		public async Task<IEnumerable<T>> QueryAsync<T>(Func<IDataReader, T> objectReader, CancellationToken cancellationToken = default)
+		{
+			var hasParameters = Parameters?.Length > 0;
+
+			DataConnection.InitCommand(CommandType, CommandText, Parameters, null, hasParameters);
+
+			if (hasParameters)
+				SetParameters(DataConnection, Parameters!);
+
+			return ReadEnumerator(
+				await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext),
+				objectReader,
+				DataConnection.DataProvider.ExecuteScope(DataConnection));
+		}
+
 		static IEnumerable<T> ReadEnumerator<T>(IDataReader rd, Func<IDataReader, T> objectReader, IDisposable? scope)
 		{
 			using (scope)
@@ -165,18 +201,6 @@ namespace LinqToDB.Data
 		#endregion
 
 		#region Query with object reader async
-
-		/// <summary>
-		/// Executes command asynchronously and returns list of values, mapped using provided mapping function.
-		/// </summary>
-		/// <typeparam name="T">Result record type.</typeparam>
-		/// <param name="objectReader">Record mapping function from data reader.</param>
-		/// <returns>Returns task with list of query result records.</returns>
-		public Task<List<T>> QueryToListAsync<T>(Func<IDataReader,T> objectReader)
-		{
-			return QueryToListAsync(objectReader, CancellationToken.None);
-		}
-
 		/// <summary>
 		/// Executes command asynchronously and returns list of values, mapped using provided mapping function.
 		/// </summary>
@@ -184,7 +208,7 @@ namespace LinqToDB.Data
 		/// <param name="objectReader">Record mapping function from data reader.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task with list of query result records.</returns>
-		public async Task<List<T>> QueryToListAsync<T>(Func<IDataReader,T> objectReader, CancellationToken cancellationToken)
+		public async Task<List<T>> QueryToListAsync<T>(Func<IDataReader,T> objectReader, CancellationToken cancellationToken = default)
 		{
 			var list = new List<T>();
 			await QueryForEachAsync(objectReader, list.Add, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
@@ -196,20 +220,9 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <typeparam name="T">Result record type.</typeparam>
 		/// <param name="objectReader">Record mapping function from data reader.</param>
-		/// <returns>Returns task with array of query result records.</returns>
-		public Task<T[]> QueryToArrayAsync<T>(Func<IDataReader,T> objectReader)
-		{
-			return QueryToArrayAsync(objectReader, CancellationToken.None);
-		}
-
-		/// <summary>
-		/// Executes command asynchronously and returns array of values, mapped using provided mapping function.
-		/// </summary>
-		/// <typeparam name="T">Result record type.</typeparam>
-		/// <param name="objectReader">Record mapping function from data reader.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task with array of query result records.</returns>
-		public async Task<T[]> QueryToArrayAsync<T>(Func<IDataReader,T> objectReader, CancellationToken cancellationToken)
+		public async Task<T[]> QueryToArrayAsync<T>(Func<IDataReader,T> objectReader, CancellationToken cancellationToken = default)
 		{
 			var list = new List<T>();
 			await QueryForEachAsync(objectReader, list.Add, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
@@ -222,21 +235,9 @@ namespace LinqToDB.Data
 		/// <typeparam name="T">Result record type.</typeparam>
 		/// <param name="objectReader">Record mapping function from data reader.</param>
 		/// <param name="action">Action, applied to each result record.</param>
-		/// <returns>Returns task.</returns>
-		public Task QueryForEachAsync<T>(Func<IDataReader,T> objectReader, Action<T> action)
-		{
-			return QueryForEachAsync(objectReader, action, CancellationToken.None);
-		}
-
-		/// <summary>
-		/// Executes command asynchronously and apply provided action to each record, mapped using provided mapping function.
-		/// </summary>
-		/// <typeparam name="T">Result record type.</typeparam>
-		/// <param name="objectReader">Record mapping function from data reader.</param>
-		/// <param name="action">Action, applied to each result record.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task.</returns>
-		public async Task QueryForEachAsync<T>(Func<IDataReader,T> objectReader, Action<T> action, CancellationToken cancellationToken)
+		public async Task QueryForEachAsync<T>(Func<IDataReader,T> objectReader, Action<T> action, CancellationToken cancellationToken = default)
 		{
 			await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
@@ -269,6 +270,18 @@ namespace LinqToDB.Data
 		}
 
 		/// <summary>
+		/// Executes command asynchronously using <see cref="CommandType.StoredProcedure"/> command type and returns results as collection of values of specified type.
+		/// </summary>
+		/// <typeparam name="T">Result record type.</typeparam>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Returns collection of query result records.</returns>
+		public Task<IEnumerable<T>> QueryProcAsync<T>(CancellationToken cancellationToken = default)
+		{
+			CommandType = CommandType.StoredProcedure;
+			return QueryAsync<T>(cancellationToken);
+		}
+
+		/// <summary>
 		/// Executes command and returns results as collection of values of specified type.
 		/// </summary>
 		/// <typeparam name="T">Result record type.</typeparam>
@@ -284,6 +297,26 @@ namespace LinqToDB.Data
 
 			return ReadEnumerator<T>(
 				DataConnection.ExecuteReader(GetCommandBehavior()),
+				DataConnection.DataProvider.ExecuteScope(DataConnection));
+		}
+
+		/// <summary>
+		/// Executes command asynchronously and returns results as collection of values of specified type.
+		/// </summary>
+		/// <typeparam name="T">Result record type.</typeparam>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Returns collection of query result records.</returns>
+		public async Task<IEnumerable<T>> QueryAsync<T>(CancellationToken cancellationToken = default)
+		{
+			var hasParameters = Parameters?.Length > 0;
+
+			DataConnection.InitCommand(CommandType, CommandText, Parameters, null, hasParameters);
+
+			if (hasParameters)
+				SetParameters(DataConnection, Parameters!);
+
+			return ReadEnumerator<T>(
+				await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext),
 				DataConnection.DataProvider.ExecuteScope(DataConnection));
 		}
 
@@ -338,19 +371,9 @@ namespace LinqToDB.Data
 		/// Executes command asynchronously and returns list of values.
 		/// </summary>
 		/// <typeparam name="T">Result record type.</typeparam>
-		/// <returns>Returns task with list of query result records.</returns>
-		public Task<List<T>> QueryToListAsync<T>()
-		{
-			return QueryToListAsync<T>(CancellationToken.None);
-		}
-
-		/// <summary>
-		/// Executes command asynchronously and returns list of values.
-		/// </summary>
-		/// <typeparam name="T">Result record type.</typeparam>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task with list of query result records.</returns>
-		public async Task<List<T>> QueryToListAsync<T>(CancellationToken cancellationToken)
+		public async Task<List<T>> QueryToListAsync<T>(CancellationToken cancellationToken = default)
 		{
 			var list = new List<T>();
 			await QueryForEachAsync<T>(list.Add, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
@@ -361,19 +384,9 @@ namespace LinqToDB.Data
 		/// Executes command asynchronously and returns array of values.
 		/// </summary>
 		/// <typeparam name="T">Result record type.</typeparam>
-		/// <returns>Returns task with array of query result records.</returns>
-		public Task<T[]> QueryToArrayAsync<T>()
-		{
-			return QueryToArrayAsync<T>(CancellationToken.None);
-		}
-
-		/// <summary>
-		/// Executes command asynchronously and returns array of values.
-		/// </summary>
-		/// <typeparam name="T">Result record type.</typeparam>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task with array of query result records.</returns>
-		public async Task<T[]> QueryToArrayAsync<T>(CancellationToken cancellationToken)
+		public async Task<T[]> QueryToArrayAsync<T>(CancellationToken cancellationToken = default)
 		{
 			var list = new List<T>();
 			await QueryForEachAsync<T>(list.Add, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
@@ -385,20 +398,9 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <typeparam name="T">Result record type.</typeparam>
 		/// <param name="action">Action, applied to each result record.</param>
-		/// <returns>Returns task.</returns>
-		public Task QueryForEachAsync<T>(Action<T> action)
-		{
-			return QueryForEachAsync(action, CancellationToken.None);
-		}
-
-		/// <summary>
-		/// Executes command asynchronously and apply provided action to each record.
-		/// </summary>
-		/// <typeparam name="T">Result record type.</typeparam>
-		/// <param name="action">Action, applied to each result record.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task.</returns>
-		public async Task QueryForEachAsync<T>(Action<T> action, CancellationToken cancellationToken)
+		public async Task QueryForEachAsync<T>(Action<T> action, CancellationToken cancellationToken = default)
 		{
 			await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
@@ -467,6 +469,18 @@ namespace LinqToDB.Data
 		public IEnumerable<T> QueryProc<T>(T template)
 		{
 			return QueryProc<T>();
+		}
+
+		/// <summary>
+		/// Executes command asynchronously using <see cref="System.Data.CommandType.StoredProcedure"/> command type and returns results as collection of values of specified type.
+		/// </summary>
+		/// <typeparam name="T">Result record type.</typeparam>
+		/// <param name="template">This value used only for <typeparamref name="T"/> parameter type inference, which makes this method usable with anonymous types.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Returns collection of query result records.</returns>
+		public Task<IEnumerable<T>> QueryProcAsync<T>(T template, CancellationToken cancellationToken = default)
+		{
+			return QueryProcAsync<T>(cancellationToken);
 		}
 
 		#endregion
@@ -698,7 +712,7 @@ namespace LinqToDB.Data
 			public ValueTask DisposeAsync() => new ValueTask(Task.CompletedTask);
 #endif
 
-			public T Current { get; set; } = default!;
+			public T Current { get; private set; } = default!;
 
 #if NETFRAMEWORK
 			public async Task<bool> MoveNextAsync()
@@ -838,19 +852,9 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type asynchronously and returns number of affected records.
 		/// </summary>
-		/// <returns>Task with number of records, affected by command execution.</returns>
-		public Task<int> ExecuteProcAsync()
-		{
-			CommandType = CommandType.StoredProcedure;
-			return ExecuteAsync(CancellationToken.None);
-		}
-
-		/// <summary>
-		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type asynchronously and returns number of affected records.
-		/// </summary>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of records, affected by command execution.</returns>
-		public Task<int> ExecuteProcAsync(CancellationToken cancellationToken)
+		public Task<int> ExecuteProcAsync(CancellationToken cancellationToken = default)
 		{
 			CommandType = CommandType.StoredProcedure;
 			return ExecuteAsync(cancellationToken);
@@ -859,18 +863,9 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Executes command asynchronously and returns number of affected records.
 		/// </summary>
-		/// <returns>Task with number of records, affected by command execution.</returns>
-		public Task<int> ExecuteAsync()
-		{
-			return ExecuteAsync(CancellationToken.None);
-		}
-
-		/// <summary>
-		/// Executes command asynchronously and returns number of affected records.
-		/// </summary>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of records, affected by command execution.</returns>
-		public async Task<int> ExecuteAsync(CancellationToken cancellationToken)
+		public async Task<int> ExecuteAsync(CancellationToken cancellationToken = default)
 		{
 			await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
@@ -946,7 +941,7 @@ namespace LinqToDB.Data
 				}
 			}
 
-			return default(T)!;
+			return default!;
 		}
 
 		#endregion
@@ -954,33 +949,12 @@ namespace LinqToDB.Data
 		#region Execute scalar async
 
 		/// <summary>
-		/// Executes command asynchronously and returns single value.
-		/// </summary>
-		/// <typeparam name="T">Resulting value type.</typeparam>
-		/// <returns>Task with resulting value.</returns>
-		public Task<T> ExecuteAsync<T>()
-		{
-			return ExecuteAsync<T>(CancellationToken.None);
-		}
-
-		/// <summary>
-		/// Executes command using <see cref="System.Data.CommandType.StoredProcedure"/> command type asynchronously and returns single value.
-		/// </summary>
-		/// <typeparam name="T">Resulting value type.</typeparam>
-		/// <returns>Task with resulting value.</returns>
-		public Task<T> ExecuteProcAsync<T>()
-		{
-			CommandType = CommandType.StoredProcedure;
-			return ExecuteAsync<T>(CancellationToken.None);
-		}
-
-		/// <summary>
 		/// Executes command using <see cref="System.Data.CommandType.StoredProcedure"/> command type asynchronously and returns single value.
 		/// </summary>
 		/// <typeparam name="T">Resulting value type.</typeparam>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Task with resulting value.</returns>
-		public Task<T> ExecuteProcAsync<T>(CancellationToken cancellationToken)
+		public Task<T> ExecuteProcAsync<T>(CancellationToken cancellationToken = default)
 		{
 			CommandType = CommandType.StoredProcedure;
 			return ExecuteAsync<T>(cancellationToken);
@@ -992,7 +966,7 @@ namespace LinqToDB.Data
 		/// <typeparam name="T">Resulting value type.</typeparam>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Task with resulting value.</returns>
-		public async Task<T> ExecuteAsync<T>(CancellationToken cancellationToken)
+		public async Task<T> ExecuteAsync<T>(CancellationToken cancellationToken = default)
 		{
 			await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
@@ -1035,6 +1009,17 @@ namespace LinqToDB.Data
 		{
 			CommandType = CommandType.StoredProcedure;
 			return ExecuteReader();
+		}
+
+		/// <summary>
+		/// Executes command asynchronously using <see cref="CommandType.StoredProcedure"/> command type and returns data reader instance.
+		/// </summary>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Data reader object.</returns>
+		public Task<DataReaderAsync> ExecuteReaderProcAsync(CancellationToken cancellationToken = default)
+		{
+			CommandType = CommandType.StoredProcedure;
+			return ExecuteReaderAsync(cancellationToken);
 		}
 
 		/// <summary>
@@ -1085,6 +1070,7 @@ namespace LinqToDB.Data
 			}
 		}
 
+		[return: MaybeNull]
 		internal T ExecuteScalar<T>(IDataReader rd, string sql)
 		{
 			if (rd.Read())
@@ -1100,7 +1086,7 @@ namespace LinqToDB.Data
 				}
 			}
 
-			return default(T)!;
+			return default;
 		}
 
 		#endregion
@@ -1110,18 +1096,9 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Executes command asynchronously and returns data reader instance.
 		/// </summary>
-		/// <returns>Task with data reader object.</returns>
-		public Task<DataReaderAsync> ExecuteReaderAsync()
-		{
-			return ExecuteReaderAsync(CancellationToken.None);
-		}
-
-		/// <summary>
-		/// Executes command asynchronously and returns data reader instance.
-		/// </summary>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Task with data reader object.</returns>
-		public async Task<DataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken)
+		public async Task<DataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken = default)
 		{
 			await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
@@ -1182,7 +1159,7 @@ namespace LinqToDB.Data
 				}
 			}
 
-			return default(T)!;
+			return default!;
 		}
 
 		#endregion
