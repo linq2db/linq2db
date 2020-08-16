@@ -451,7 +451,7 @@ namespace LinqToDB
 			});
 		}
 
-#region ITable<T> implementation
+		#region ITable<T> implementation
 
 		public string? ServerName   => _table.ServerName;
 		public string? DatabaseName => _table.DatabaseName;
@@ -463,9 +463,9 @@ namespace LinqToDB
 			return _table.GetTableName();
 		}
 
-#endregion
+		#endregion
 
-#region ITableMutable<T> implementation
+		#region ITableMutable<T> implementation
 
 		ITable<T> ITableMutable<T>.ChangeServerName(string? serverName)
 		{
@@ -487,9 +487,9 @@ namespace LinqToDB
 			return ((ITableMutable<T>)_table).ChangeTableName(tableName);
 		}
 
-#endregion
+		#endregion
 
-#region IQueryProvider
+		#region IQueryProvider
 
 		IQueryable IQueryProvider.CreateQuery(Expression expression)
 		{
@@ -511,9 +511,9 @@ namespace LinqToDB
 			return _table.Execute<TResult>(expression);
 		}
 
-#endregion
+		#endregion
 
-#region IQueryProviderAsync
+		#region IQueryProviderAsync
 
 		Task<TResult> IQueryProviderAsync.ExecuteAsync<TResult>(Expression expression, CancellationToken token)
 		{
@@ -525,9 +525,9 @@ namespace LinqToDB
 			return _table.ExecuteAsync<TResult>(expression);
 		}
 
-#endregion
+		#endregion
 
-#region IExpressionQuery<T>
+		#region IExpressionQuery<T>
 
 		Expression IExpressionQuery<T>.Expression
 		{
@@ -535,9 +535,9 @@ namespace LinqToDB
 			set => _table.Expression = value;
 		}
 
-#endregion
+		#endregion
 
-#region IExpressionQuery
+		#region IExpressionQuery
 
 		/// <summary>
 		/// Gets data connection, associated with current table.
@@ -547,34 +547,34 @@ namespace LinqToDB
 		string       IExpressionQuery.SqlText    => _table.SqlText;
 		Expression   IExpressionQuery.Expression => ((IExpressionQuery)_table).Expression;
 
-#endregion
+		#endregion
 
-#region IQueryable
+		#region IQueryable
 
 		Expression IQueryable.Expression => ((IQueryable)_table).Expression;
 
 		Type           IQueryable.ElementType => _table.ElementType;
 		IQueryProvider IQueryable.Provider    => _table.Provider;
 
-#endregion
+		#endregion
 
-#region IEnumerable<T>
+		#region IEnumerable<T>
 
 		IEnumerator<T> IEnumerable<T>.GetEnumerator()
 		{
 			return _table.GetEnumerator();
 		}
 
-#endregion
+		#endregion
 
-#region IEnumerable
+		#region IEnumerable
 
 		IEnumerator IEnumerable.GetEnumerator()
 		{
 			return ((IEnumerable)_table).GetEnumerator();
 		}
 
-#endregion
+		#endregion
 
 		public virtual void Dispose()
 		{
