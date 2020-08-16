@@ -110,24 +110,8 @@ namespace LinqToDB
 			string? databaseName = null,
 			string? schemaName   = null,
 			string? serverName   = null)
+			: this(db, items, options, tableName, databaseName, schemaName, serverName)
 		{
-			if (db    == null) throw new ArgumentNullException(nameof(db));
-			if (items == null) throw new ArgumentNullException(nameof(items));
-
-			_table = db.CreateTable<T>(tableName, databaseName, schemaName, serverName: serverName);
-			try
-			{
-				Copy(items, options);
-			}
-			catch
-			{
-				try
-				{
-					_table.DropTable();
-				}
-				catch { }
-				throw;
-			}
 		}
 
 		/// <summary>
@@ -185,25 +169,8 @@ namespace LinqToDB
 			string? schemaName        = null,
 			Action<ITable<T>>? action = null,
 			string? serverName        = null)
+			: this(db, items, tableName, databaseName, schemaName, action, serverName)
 		{
-			if (db    == null) throw new ArgumentNullException(nameof(db));
-			if (items == null) throw new ArgumentNullException(nameof(items));
-
-			_table = db.CreateTable<T>(tableName, databaseName, schemaName, serverName: serverName);
-			try
-			{
-				action?.Invoke(_table);
-				Insert(items);
-			}
-			catch
-			{
-				try
-				{
-					_table.DropTable();
-				}
-				catch { }
-				throw;
-			}
 		}
 
 		/// <summary>
