@@ -83,13 +83,19 @@ namespace LinqToDB.Linq.Builder
 				var tableContext  = (TableBuilder.TableContext)onContext;
 				var clonedContext = new TableBuilder.TableContext(builder, new SelectQuery(), tableContext.SqlTable);
 
+				var targetParameter = Expression.Parameter(tableContext.ObjectType);
+
 				if (secondContext != null)
 				{
 					var secondContextRefExpression =
 							new ContextRefExpression(condition.Parameters[1].Type, secondContext);
-					var targetParameter = Expression.Parameter(tableContext.ObjectType);
 
 					var newBody = condition.GetBody(targetParameter, secondContextRefExpression);
+					condition = Expression.Lambda(newBody, targetParameter);
+				}
+				else
+				{
+					var newBody = condition.GetBody(targetParameter);
 					condition   = Expression.Lambda(newBody, targetParameter);
 				}
 
