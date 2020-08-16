@@ -1206,7 +1206,7 @@ CREATE Procedure ExecuteProcIntParameters
 AS
 
 SET @output = @input + 1
-SELECT 5
+UPDATE Person SET FirstName = N'John' WHERE FirstName = N'John'
 
 GO
 

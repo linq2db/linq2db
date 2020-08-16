@@ -489,6 +489,7 @@ namespace LinqToDB.Data
 
 		/// <summary>
 		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type and returns a result containing multiple result sets.
+		/// Saves result values for output and reference parameters to corresponding <see cref="DataParameter"/> object.
 		/// </summary>
 		/// <typeparam name="T">Result set type.</typeparam>
 		/// <returns>Returns result.</returns>
@@ -532,15 +533,23 @@ namespace LinqToDB.Data
 			if (hasParameters)
 				SetParameters(DataConnection, Parameters!);
 
+			T result;
+
 			using (DataConnection.DataProvider.ExecuteScope(DataConnection))
 			using (var rd = DataConnection.ExecuteReader(GetCommandBehavior()))
 			{
-				return ReadMultipleResultSets<T>(rd);
+				result = ReadMultipleResultSets<T>(rd);
 			}
+
+			if (hasParameters)
+				RebindParameters(DataConnection, Parameters!);
+
+			return result;
 		}
 
 		/// <summary>
 		/// Executes command asynchronously and returns a result containing multiple result sets.
+		/// Saves result values for output and reference parameters to corresponding <see cref="DataParameter"/> object.
 		/// </summary>
 		/// <typeparam name="T">Result set type.</typeparam>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
@@ -559,11 +568,18 @@ namespace LinqToDB.Data
 			if (hasParameters)
 				SetParameters(DataConnection, Parameters!);
 
+			T result;
+
 			using (DataConnection.DataProvider.ExecuteScope(DataConnection))
 			using (var rd = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 			{
-				return await ReadMultipleResultSetsAsync<T>(rd, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				result = await ReadMultipleResultSetsAsync<T>(rd, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			}
+
+			if (hasParameters)
+				RebindParameters(DataConnection, Parameters!);
+
+			return result;
 		}
 
 		Dictionary<int, MemberAccessor> GetMultipleQueryIndexMap<T>(TypeAccessor<T> typeAccessor)
@@ -816,6 +832,7 @@ namespace LinqToDB.Data
 		#region Execute
 		/// <summary>
 		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type and returns number of affected records.
+		/// Saves result values for output and reference parameters to corresponding <see cref="DataParameter"/> object.
 		/// </summary>
 		/// <returns>Number of records, affected by command execution.</returns>
 		public int ExecuteProc()
@@ -851,6 +868,7 @@ namespace LinqToDB.Data
 
 		/// <summary>
 		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type asynchronously and returns number of affected records.
+		/// Saves result values for output and reference parameters to corresponding <see cref="DataParameter"/> object.
 		/// </summary>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of records, affected by command execution.</returns>
@@ -901,6 +919,7 @@ namespace LinqToDB.Data
 
 		/// <summary>
 		/// Executes command and returns single value.
+		/// Saves result values for output and reference parameters to corresponding <see cref="DataParameter"/> object.
 		/// </summary>
 		/// <typeparam name="T">Resulting value type.</typeparam>
 		/// <returns>Resulting value.</returns>
@@ -912,6 +931,8 @@ namespace LinqToDB.Data
 
 			if (hasParameters)
 				SetParameters(DataConnection, Parameters!);
+
+			T result = default!;
 
 			using (DataConnection.DataProvider.ExecuteScope(DataConnection))
 			using (var rd = DataConnection.ExecuteReader(GetCommandBehavior()))
@@ -928,20 +949,23 @@ namespace LinqToDB.Data
 
 					try
 					{
-						return objectReader(rd);
+						result = objectReader(rd);
 					}
 					catch (InvalidCastException)
 					{
-						return GetObjectReader2<T>(DataConnection, rd, CommandText, additionalKey)(rd);
+						result = GetObjectReader2<T>(DataConnection, rd, CommandText, additionalKey)(rd);
 					}
 					catch (FormatException)
 					{
-						return GetObjectReader2<T>(DataConnection, rd, CommandText, additionalKey)(rd);
+						result = GetObjectReader2<T>(DataConnection, rd, CommandText, additionalKey)(rd);
 					}
 				}
 			}
 
-			return default!;
+			if (hasParameters)
+				RebindParameters(DataConnection, Parameters!);
+
+			return result;
 		}
 
 		#endregion
@@ -950,6 +974,7 @@ namespace LinqToDB.Data
 
 		/// <summary>
 		/// Executes command using <see cref="System.Data.CommandType.StoredProcedure"/> command type asynchronously and returns single value.
+		/// Saves result values for output and reference parameters to corresponding <see cref="DataParameter"/> object.
 		/// </summary>
 		/// <typeparam name="T">Resulting value type.</typeparam>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
@@ -977,6 +1002,8 @@ namespace LinqToDB.Data
 			if (hasParameters)
 				SetParameters(DataConnection, Parameters!);
 
+			T result = default!;
+
 			using (DataConnection.DataProvider.ExecuteScope(DataConnection))
 			using (var rd = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 			{
@@ -985,16 +1012,19 @@ namespace LinqToDB.Data
 					var additionalKey = GetCommandAdditionalKey(rd);
 					try
 					{
-						return GetObjectReader<T>(DataConnection, rd, CommandText, additionalKey)(rd);
+						result = GetObjectReader<T>(DataConnection, rd, CommandText, additionalKey)(rd);
 					}
 					catch (InvalidCastException)
 					{
-						return GetObjectReader2<T>(DataConnection, rd, CommandText, additionalKey)(rd);
+						result = GetObjectReader2<T>(DataConnection, rd, CommandText, additionalKey)(rd);
 					}
 				}
 			}
 
-			return default!;
+			if (hasParameters)
+				RebindParameters(DataConnection, Parameters!);
+
+			return result;
 		}
 
 		#endregion

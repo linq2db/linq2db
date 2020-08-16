@@ -781,6 +781,7 @@ namespace LinqToDB.Data
 
 		/// <summary>
 		/// Executes command asynchronously using <see cref="CommandType.StoredProcedure"/> command type and returns a result containing multiple result sets.
+		/// Sets result values for output and reference parameters to corresponding parameters in <paramref name="parameters"/>.
 		/// </summary>
 		/// <typeparam name="T">Result set type.</typeparam>
 		/// <param name="connection">Database connection.</param>
@@ -882,6 +883,7 @@ namespace LinqToDB.Data
 
 		/// <summary>
 		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type and returns a result containing multiple result sets.
+		/// Sets result values for output and reference parameters to corresponding parameters in <paramref name="parameters"/>.
 		/// </summary>
 		/// <typeparam name="T">Result set type.</typeparam>
 		/// <param name="connection">Database connection.</param>
@@ -1578,6 +1580,7 @@ namespace LinqToDB.Data
 
 		/// <summary>
 		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type and returns number of affected records.
+		/// Sets result values for output and reference parameters to corresponding parameters in <paramref name="parameters"/>.
 		/// </summary>
 		/// <param name="connection">Database connection.</param>
 		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
@@ -1723,6 +1726,7 @@ namespace LinqToDB.Data
 
 		/// <summary>
 		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type asynchronously and returns number of affected records.
+		/// Sets result values for output and reference parameters to corresponding parameters in <paramref name="parameters"/>.
 		/// </summary>
 		/// <param name="connection">Database connection.</param>
 		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
@@ -1855,6 +1859,7 @@ namespace LinqToDB.Data
 
 		/// <summary>
 		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type and returns single value.
+		/// Sets result values for output and reference parameters to corresponding parameters in <paramref name="parameters"/>.
 		/// </summary>
 		/// <typeparam name="T">Resulting value type.</typeparam>
 		/// <param name="connection">Database connection.</param>
@@ -2017,6 +2022,7 @@ namespace LinqToDB.Data
 
 		/// <summary>
 		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type asynchronously and returns single value.
+		/// Sets result values for output and reference parameters to corresponding parameters in <paramref name="parameters"/>.
 		/// </summary>
 		/// <typeparam name="T">Resulting value type.</typeparam>
 		/// <param name="connection">Database connection.</param>
