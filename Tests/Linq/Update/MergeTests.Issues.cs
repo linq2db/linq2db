@@ -403,7 +403,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestMergeWithInterfaces([MergeDataContextSource] string context)
+		public void TestMergeWithInterfaces1([MergeDataContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<ReviewIndex>())
@@ -426,6 +426,98 @@ namespace Tests.xUpdate
 					.Merge()
 					.Using(items)
 					.On(x => new { x.Index, x.Date }, x => new { x.Index, x.Date })
+					.UpdateWhenMatched()
+					.InsertWhenNotMatched()
+					.Merge();
+			}
+		}
+
+		[Test]
+		public void TestMergeWithInterfaces2([MergeDataContextSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<ReviewIndex>())
+			{
+				((ITable<IReviewIndex>)db.GetTable<ReviewIndex>())
+					.Merge()
+					.Using(((ITable<IReviewIndex>)db.GetTable<ReviewIndex>()))
+					.On(x => new { x.Index, x.Date }, x => new { x.Index, x.Date })
+					.UpdateWhenMatched()
+					.InsertWhenNotMatched()
+					.Merge();
+			}
+		}
+
+		[Test]
+		public void TestMergeWithInterfaces3([MergeDataContextSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<ReviewIndex>())
+			{
+				var items = new IReviewIndex[]
+				{
+					new ReviewIndex()
+					{
+						Change  = 1.1,
+						Ctime   = true,
+						Date    = DateTime.Now,
+						DateMsk = DateTime.Now,
+						Decp    = 2,
+						Index   = 1,
+						Value   = 2.2m
+					}
+				};
+
+				((ITable<IReviewIndex>)db.GetTable<ReviewIndex>())
+					.Merge()
+					.Using(items)
+					.On((t, s) => t.Index == s.Index && t.Date == s.Date)
+					.UpdateWhenMatched()
+					.InsertWhenNotMatched()
+					.Merge();
+			}
+		}
+
+		[Test]
+		public void TestMergeWithInterfaces4([MergeDataContextSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<ReviewIndex>())
+			{
+				var items = new IReviewIndex[]
+				{
+					new ReviewIndex()
+					{
+						Change  = 1.1,
+						Ctime   = true,
+						Date    = DateTime.Now,
+						DateMsk = DateTime.Now,
+						Decp    = 2,
+						Index   = 1,
+						Value   = 2.2m
+					}
+				};
+
+				((ITable<IReviewIndex>)db.GetTable<ReviewIndex>())
+					.Merge()
+					.Using(items)
+					.OnTargetKey()
+					.UpdateWhenMatched()
+					.InsertWhenNotMatched()
+					.Merge();
+			}
+		}
+
+		[Test]
+		public void TestMergeWithInterfaces5([MergeDataContextSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<ReviewIndex>())
+			{
+				((ITable<IReviewIndex>)db.GetTable<ReviewIndex>())
+					.Merge()
+					.Using(((ITable<IReviewIndex>)db.GetTable<ReviewIndex>()))
+					.OnTargetKey()
 					.UpdateWhenMatched()
 					.InsertWhenNotMatched()
 					.Merge();
