@@ -154,7 +154,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void CreateTableAsyncCanceled([DataSources(false)] string context)
+		public async Task CreateTableAsyncCanceled([DataSources(false)] string context)
 		{
 			var cts = new CancellationTokenSource();
 			cts.Cancel();
@@ -162,7 +162,7 @@ namespace Tests.xUpdate
 			{
 				db.DropTable<int>("TempTable", throwExceptionIfNotExists: false);
 
-				Assert.ThrowsAsync<TaskCanceledException>(async () =>
+				try
 				{
 #if !NET46
 					await
@@ -179,7 +179,10 @@ namespace Tests.xUpdate
 							select t
 						).ToList();
 					}
-				});
+					Assert.Fail("Task should have been canceled but was not");
+				}
+				catch (OperationCanceledException) { }
+				
 
 				var tableExists = true;
 				try
@@ -195,14 +198,14 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void CreateTableAsyncCanceled2([DataSources(false)] string context)
+		public async Task CreateTableAsyncCanceled2([DataSources(false)] string context)
 		{
 			var cts = new CancellationTokenSource();
 			using (var db = GetDataContext(context))
 			{
 				db.DropTable<int>("TempTable", throwExceptionIfNotExists: false);
 
-				Assert.ThrowsAsync<TaskCanceledException>(async () =>
+				try
 				{
 #if !NET46
 					await
@@ -224,7 +227,9 @@ namespace Tests.xUpdate
 							select t
 						).ToList();
 					}
-				});
+					Assert.Fail("Task should have been canceled but was not");
+				}
+				catch (OperationCanceledException) { }
 
 				var tableExists = true;
 				try
