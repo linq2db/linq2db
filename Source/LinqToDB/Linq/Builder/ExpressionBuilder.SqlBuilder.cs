@@ -1255,7 +1255,7 @@ namespace LinqToDB.Linq.Builder
 			if (_constants.TryGetValue(key, out var sqlValue))
 				return sqlValue;
 
-			var dbType = columnDescriptor?.GetDbDataType() ?? new DbDataType(expr.Type);
+			var dbType = columnDescriptor?.GetDbDataType(true) ?? new DbDataType(expr.Type);
 
 			if (columnDescriptor != null)
 			{
@@ -1352,7 +1352,7 @@ namespace LinqToDB.Linq.Builder
 
 			valueAccessor = Expression.MakeMemberAccess(valueAccessor, columnDescriptor.MemberInfo);
 
-			var dataType = columnDescriptor.GetDbDataType();
+			var dataType = columnDescriptor.GetDbDataType(true);
 			var newExpr  = new ValueTypeExpression
 			{
 				DataType             = dataType,
@@ -1457,7 +1457,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (columnDescriptor != null)
 					{
-						newExpr.DataType        = columnDescriptor.GetDbDataType();
+						newExpr.DataType        = columnDescriptor.GetDbDataType(true);
 						if (newExpr.ValueExpression.Type != columnDescriptor.MemberType)
 							newExpr.ValueExpression = Expression.Convert(newExpr.ValueExpression, columnDescriptor.MemberType);
 						newExpr.ValueExpression = columnDescriptor.ApplyConversions(newExpr.ValueExpression, newExpr.DataType, true);
@@ -1485,7 +1485,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (columnDescriptor != null)
 					{
-						var dbDataType = columnDescriptor.GetDbDataType();
+						var dbDataType = columnDescriptor.GetDbDataType(false);
 						newExpr.DbDataTypeExpression = Expression.Call(Expression.Constant(dbDataType),
 							DbDataType.WithSetValuesMethodInfo, newExpr.DbDataTypeExpression);
 					}

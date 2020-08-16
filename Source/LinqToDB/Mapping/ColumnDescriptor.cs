@@ -163,49 +163,6 @@ namespace LinqToDB.Mapping
 				ValueConverter = vc.GetValueConverter(this);
 			}
 
-			/*
-			var systemType = MemberType;
-			if (ValueConverter != null)
-				systemType = ValueConverter.ToProviderExpression.Body.Type;
-
-			if (systemType.ToNullableUnderlying().IsEnum)
-			{
-				if (DataType == DataType.Undefined)
-				{
-					var enumtype = mappingSchema.GetDefaultFromEnumType(systemType);
-
-					if (enumtype != null)
-						DataType = mappingSchema.GetDataType(enumtype).Type.DataType;
-				}
-
-				if (DataType == DataType.Undefined && systemType.IsNullable())
-				{
-					var enumtype = mappingSchema.GetDefaultFromEnumType(systemType.ToNullableUnderlying());
-
-					if (enumtype != null)
-						DataType = mappingSchema.GetDataType(enumtype).Type.DataType;
-				}
-
-				if (DataType == DataType.Undefined)
-				{
-					var enumtype = mappingSchema.GetDefaultFromEnumType(typeof(Enum));
-
-					if (enumtype != null)
-						DataType = mappingSchema.GetDataType(enumtype).Type.DataType;
-				}
-
-				if (DataType == DataType.Undefined)
-				{
-					DataType = mappingSchema.GetUnderlyingDataType(systemType, out var canBeNull).Type.DataType;
-					if (canBeNull)
-						CanBeNull = canBeNull;
-				}
-			}
-
-			if (DataType == DataType.Undefined)
-				DataType = mappingSchema.GetDataType(systemType).Type.DataType;
-*/
-
 			var skipValueAttributes = mappingSchema.GetAttributes<SkipBaseAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo, attr => attr.Configuration);
 			if (skipValueAttributes.Length > 0)
 			{
@@ -445,13 +402,57 @@ namespace LinqToDB.Mapping
 		/// Returns DbDataType for current column.
 		/// </summary>
 		/// <returns></returns>
-		public DbDataType GetDbDataType()
+		public DbDataType GetDbDataType(bool completeDataType)
 		{
-			var sytemType = MemberType;
+			var systemType = MemberType;
+			var dataType   = DataType;
 			if (ValueConverter != null)
-				sytemType = ValueConverter.ToProviderExpression.Body.Type;
+				systemType = ValueConverter.ToProviderExpression.Body.Type;
 
-			return new DbDataType(sytemType, DataType, DbType, Length, Precision, Scale);
+			if (completeDataType && dataType == DataType.Undefined)
+			{
+				dataType = CalculateDataType(MappingSchema, systemType);
+			}
+
+			return new DbDataType(systemType, dataType, DbType, Length, Precision, Scale);
+		}
+
+		public static DataType CalculateDataType(MappingSchema mappingSchema, Type systemType)
+		{
+			var dataType = DataType.Undefined;
+			if (systemType.ToNullableUnderlying().IsEnum)
+			{
+				var enumType = mappingSchema.GetDefaultFromEnumType(systemType);
+
+				if (enumType != null)
+					dataType = mappingSchema.GetDataType(enumType).Type.DataType;
+
+				if (dataType == DataType.Undefined && systemType.IsNullable())
+				{
+					enumType = mappingSchema.GetDefaultFromEnumType(systemType.ToNullableUnderlying());
+
+					if (enumType != null)
+						dataType = mappingSchema.GetDataType(enumType).Type.DataType;
+				}
+
+				if (dataType == DataType.Undefined)
+				{
+					enumType = mappingSchema.GetDefaultFromEnumType(typeof(Enum));
+
+					if (enumType != null)
+						dataType = mappingSchema.GetDataType(enumType).Type.DataType;
+				}
+
+				if (dataType == DataType.Undefined)
+				{
+					dataType = mappingSchema.GetUnderlyingDataType(systemType, out var canBeNull).Type.DataType;
+				}
+			}
+
+			if (dataType == DataType.Undefined)
+				dataType = mappingSchema.GetDataType(systemType).Type.DataType;
+
+			return dataType;
 		}
 
 		/// <summary>
@@ -490,7 +491,7 @@ namespace LinqToDB.Mapping
 
 			var objParam   = Expression.Parameter(MemberAccessor.TypeAccessor.Type, "obj");
 			var getterExpr = MemberAccessor.GetterExpression.GetBody(objParam);
-			var dbDataType = GetDbDataType();
+			var dbDataType = GetDbDataType(true);
 
 			getterExpr = ApplyConversions(getterExpr, dbDataType, true);
 
