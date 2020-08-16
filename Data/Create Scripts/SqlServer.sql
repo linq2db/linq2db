@@ -1159,3 +1159,67 @@ BEGIN
 RETURN
 END
 GO
+
+
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'QueryProcParameters')
+BEGIN DROP Procedure QueryProcParameters END
+GO
+
+CREATE Procedure QueryProcParameters
+	@input          int,
+	@output1        int output,
+	@output2        int output
+AS
+
+SET @output1 = @input + 1
+SELECT * FROM Person
+SET @output2 = @input + 2
+
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'QueryProcMultipleParameters')
+BEGIN DROP Procedure QueryProcMultipleParameters END
+GO
+
+CREATE Procedure QueryProcMultipleParameters
+	@input          int,
+	@output1        int output,
+	@output2        int output,
+	@output3        int output
+AS
+
+SET @output1 = @input + 1
+SELECT * FROM Person
+SET @output2 = @input + 2
+SELECT * FROM Doctor
+SET @output3 = @input + 3
+
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'ExecuteProcIntParameters')
+BEGIN DROP Procedure ExecuteProcIntParameters END
+GO
+
+CREATE Procedure ExecuteProcIntParameters
+	@input          int,
+	@output         int output
+AS
+
+SET @output = @input + 1
+SELECT 5
+
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'ExecuteProcStringParameters')
+BEGIN DROP Procedure ExecuteProcStringParameters END
+GO
+
+CREATE Procedure ExecuteProcStringParameters
+	@input          int,
+	@output         int output
+AS
+
+SET @output = @input + 1
+SELECT N'издрасте'
+
+GO
