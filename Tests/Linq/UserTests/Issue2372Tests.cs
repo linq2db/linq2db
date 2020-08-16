@@ -27,7 +27,7 @@ namespace Tests.UserTests
 
 		[Test]
 		public void Issue2372Test(
-			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllPostgreSQL)] string context)
+			[IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllPostgreSQL)] string context)
 		{
 			Model.ITestDataContext? db1 = null;
 			try

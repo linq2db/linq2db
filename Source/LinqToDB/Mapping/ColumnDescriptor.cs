@@ -163,6 +163,7 @@ namespace LinqToDB.Mapping
 				ValueConverter = vc.GetValueConverter(this);
 			}
 
+			/*
 			var systemType = MemberType;
 			if (ValueConverter != null)
 				systemType = ValueConverter.ToProviderExpression.Body.Type;
@@ -203,6 +204,7 @@ namespace LinqToDB.Mapping
 
 			if (DataType == DataType.Undefined)
 				DataType = mappingSchema.GetDataType(systemType).Type.DataType;
+*/
 
 			var skipValueAttributes = mappingSchema.GetAttributes<SkipBaseAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo, attr => attr.Configuration);
 			if (skipValueAttributes.Length > 0)
