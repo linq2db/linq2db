@@ -9,6 +9,7 @@ using NUnit.Framework;
 
 namespace Tests.xUpdate
 {
+	using System.Threading.Tasks;
 	using Model;
 
 	[TestFixture]
@@ -363,5 +364,73 @@ namespace Tests.xUpdate
 					.Merge();
 			}
 		}
+
+		#region issue 2388
+		public interface IReviewIndex
+		{
+			DateTime  Date    { get; set; }
+			int       Index   { get; set; }
+			decimal   Value   { get; set; }
+			bool      Ctime   { get; set; }
+			DateTime? DateMsk { get; set; }
+			double?   Change  { get; set; }
+			short?    Decp    { get; set; }
+		}
+
+		[Table("ReviewIndexes")]
+		public class ReviewIndex : IReviewIndex
+		{
+			[PrimaryKey]
+			public DateTime Date { get; set; }
+
+			[PrimaryKey]
+			public int Index { get; set; }
+
+			[Column]
+			public decimal Value { get; set; }
+
+			[Column]
+			public bool Ctime { get; set; }
+
+			[Column]
+			public DateTime? DateMsk { get; set; }
+
+			[Column]
+			public double? Change { get; set; }
+
+			[Column]
+			public short? Decp { get; set; }
+		}
+
+		[Test]
+		public void TestMergeWithInterfaces([MergeDataContextSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<ReviewIndex>())
+			{
+				var items = new IReviewIndex[]
+				{
+					new ReviewIndex()
+					{
+						Change  = 1.1,
+						Ctime   = true,
+						Date    = DateTime.Now,
+						DateMsk = DateTime.Now,
+						Decp    = 2,
+						Index   = 1,
+						Value   = 2.2m
+					}
+				};
+
+				((ITable<IReviewIndex>)db.GetTable<ReviewIndex>())
+					.Merge()
+					.Using(items)
+					.On(x => new { x.Index, x.Date }, x => new { x.Index, x.Date })
+					.UpdateWhenMatched()
+					.InsertWhenNotMatched()
+					.Merge();
+			}
+		}
+		#endregion
 	}
 }
