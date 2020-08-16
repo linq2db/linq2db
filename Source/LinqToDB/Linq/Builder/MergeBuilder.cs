@@ -89,9 +89,7 @@ namespace LinqToDB.Linq.Builder
 							new ContextRefExpression(condition.Parameters[1].Type, secondContext);
 					var targetParameter = Expression.Parameter(tableContext.ObjectType);
 
-					var newBody = condition.Body
-						.Replace(condition.Parameters[1], secondContextRefExpression)
-						.Replace(condition.Parameters[0], targetParameter);
+					var newBody = condition.GetBody(targetParameter, secondContextRefExpression);
 					condition   = Expression.Lambda(newBody, targetParameter);
 				}
 
