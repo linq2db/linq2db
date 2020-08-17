@@ -42,9 +42,8 @@ namespace LinqToDB.Linq.Builder
 				else
 				{
 					// build setters like QueryRunner.Update
-					var targetType = methodCall.Method.GetGenericArguments()[0];
 					var sqlTable   = (SqlTable)statement.Target.Source;
-					var param      = Expression.Parameter(targetType, "s");
+					var param      = Expression.Parameter(sqlTable.ObjectType, "s");
 					var keys       = sqlTable.GetKeys(false).Cast<SqlField>().ToList();
 
 					foreach (var field in sqlTable.Fields.Values.Where(f => f.IsUpdatable).Except(keys))
