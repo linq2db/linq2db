@@ -108,6 +108,20 @@ namespace LinqToDB.SqlQuery
 			}
 			return null;
 		}
+
+		public static DbDataType GetDbDataType(ISqlExpression? expr)
+		{
+			if (expr == null)
+				return new DbDataType(typeof(object), DataType.Undefined);
+
+			var descriptor = GetColumnDescriptor(expr);
+			if (descriptor == null)
+			{
+				return new DbDataType(expr.SystemType ?? typeof(object), DataType.Undefined);
+			}
+
+			return descriptor.GetDbDataType();
+		}
 		
 		public static void CollectDependencies(IQueryElement root, IEnumerable<ISqlTableSource> sources, HashSet<ISqlExpression> found, IEnumerable<IQueryElement>? ignore = null)
 		{
@@ -1132,35 +1146,56 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		public static object? EvaluateExpression(this ISqlExpression expr)
+		public static bool TryEvaluateExpression(this ISqlExpression expr, bool withParameters, out object? result)
 		{
+			return expr.TryEvaluateExpression(withParameters, out result, out _);
+		}
+
+		public static bool TryEvaluateExpression(this ISqlExpression expr, bool withParameters, out object? result, out string? errorMessage)
+		{
+			result = null;
+			errorMessage = null;
 			switch (expr.ElementType)
 			{
-				case QueryElementType.SqlValue           : return ((SqlValue)expr).Value;
-				case QueryElementType.SqlParameter       : return ((SqlParameter)expr).Value;
+				case QueryElementType.SqlValue           : result = ((SqlValue)expr).Value; return true;
+				case QueryElementType.SqlParameter       :
+				{
+					if (!withParameters) 
+						return false;
+					result = ((SqlParameter)expr).Value;
+					return true;
+				}	
 				case QueryElementType.SqlBinaryExpression:
 					{
 						var binary = (SqlBinaryExpression)expr;
-						dynamic? left  = binary.Expr1.EvaluateExpression();
-						dynamic? right = binary.Expr2.EvaluateExpression();
+						if (!binary.Expr1.TryEvaluateExpression(withParameters, out var leftEvaluated, out errorMessage))
+							return false;
+						if (!binary.Expr2.TryEvaluateExpression(withParameters, out var rightEvaluated, out errorMessage))
+							return false;
+						dynamic? left  = leftEvaluated;
+						dynamic? right = rightEvaluated;
 						if (left == null || right == null)
-							return null;
-						return binary.Operation switch
+							return false;
+						switch (binary.Operation)
 						{
-							"+"  => left + right,
-							"-"  => left - right,
-							"*"  => left * right,
-							"/"  => left / right,
-							"%"  => left % right,
-							"^"  => left ^ right,
-							"&"  => left & right,
-							"<"  => left < right,
-							">"  => left > right,
-							"<=" => left <= right,
-							">=" => left >= right,
-							_    => throw new LinqToDBException($"Unknown binary operation '{binary.Operation}'."),
-						};
-				}
+							case "+" : result = left + right; break;
+							case "-" : result = left - right; break;
+							case "*" : result = left * right; break;
+							case "/" : result = left / right; break;
+							case "%" : result = left % right; break;
+							case "^" : result = left ^ right; break;
+							case "&" : result = left & right; break;
+							case "<" : result = left < right; break;
+							case ">" : result = left > right; break;
+							case "<=": result = left <= right; break;
+							case ">=": result = left >= right; break;
+							default:
+								errorMessage = $"Unknown binary operation '{binary.Operation}'.";
+								return false;
+						}
+
+						return true;
+					}
 				case QueryElementType.SqlFunction        :
 					{
 						var function = (SqlFunction)expr;
@@ -1170,20 +1205,29 @@ namespace LinqToDB.SqlQuery
 							case "CASE":
 
 								if (function.Parameters.Length != 3)
-									throw new LinqToDBException($"CASE function expected to have 3 parameters.");
+								{
+									errorMessage = "CASE function expected to have 3 parameters.";
+									return false;
+								}
 
-								var cond = function.Parameters[0].EvaluateExpression();
+								if (!function.Parameters[0].TryEvaluateExpression(withParameters, out var cond, out errorMessage))
+									return false;
 
 								if (!(cond is bool))
-									throw new LinqToDBException($"CASE function expected to have boolean condition (was: {cond?.GetType()}).");
+								{
+									errorMessage =
+										$"CASE function expected to have boolean condition (was: {cond?.GetType()}).";
+									return false;
+								}
 
 								if ((bool)cond!)
-									return function.Parameters[1].EvaluateExpression();
+									return function.Parameters[1].TryEvaluateExpression(withParameters, out result, out errorMessage);
 								else
-									return function.Parameters[2].EvaluateExpression();
+									return function.Parameters[2].TryEvaluateExpression(withParameters, out result, out errorMessage);
 
 							default:
-								throw new LinqToDBException($"Unknown function '{function.Name}'.");
+								errorMessage = $"Unknown function '{function.Name}'.";
+								return false;
 						}
 					}
 
@@ -1191,10 +1235,27 @@ namespace LinqToDB.SqlQuery
 					{
 						var str = expr.ToString(new StringBuilder(), new Dictionary<IQueryElement, IQueryElement>())
 							.ToString();
-						throw new NotImplementedException(
-							$"Not implemented evaluation of '{expr.ElementType}': '{str}'.");
+						errorMessage = $"Not implemented evaluation of '{expr.ElementType}': '{str}'.";
+						return false;
 					}
 			}
+		}
+
+		public static object? EvaluateExpression(this ISqlExpression expr)
+		{
+			if (!expr.TryEvaluateExpression(true, out var result, out var message))
+			{
+				if (message == null)
+				{
+					var str = expr.ToString(new StringBuilder(), new Dictionary<IQueryElement, IQueryElement>())
+						.ToString();
+					message = $"Not implemented evaluation of '{expr.ElementType}': '{str}'.";
+				}
+
+				throw new LinqToDBException(message);
+			}
+
+			return result;
 		}
 
 

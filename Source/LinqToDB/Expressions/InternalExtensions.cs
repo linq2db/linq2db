@@ -2,20 +2,19 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using LinqToDB.Tools;
+using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.Expressions
 {
 	using LinqToDB.Extensions;
+	using Reflection;
 	using Linq;
 	using Linq.Builder;
 	using Mapping;
-	using System.Diagnostics.CodeAnalysis;
 
 	static class InternalExtensions
 	{
@@ -479,6 +478,17 @@ namespace LinqToDB.Expressions
 
 			if (!expr1.Object.EqualsTo(expr2.Object, info))
 				return false;
+
+			if (expr1.IsSameGenericMethod(
+				Methods.Queryable.Take,       Methods.Queryable.Skip,
+				Methods.Enumerable.Take,      Methods.Enumerable.Skip,
+				Methods.Queryable.ElementAt,  Methods.Queryable.ElementAtOrDefault,
+				Methods.Enumerable.ElementAt, Methods.Enumerable.ElementAtOrDefault
+				) && expr1.Arguments[1].NodeType == ExpressionType.Constant && expr2.Arguments[1].NodeType == ExpressionType.Constant)
+			{
+				// We do not compare last argument
+				return expr1.Arguments[0].EqualsTo(expr2.Arguments[0], info);
+			}
 
 			var dependentParameters = _queryDependentMethods.GetOrAdd(
 				expr1.Method, mi =>
@@ -1061,7 +1071,7 @@ namespace LinqToDB.Expressions
 		{
 			var type = method.Method.DeclaringType;
 
-			return type == typeof(Queryable) || (enumerable && type == typeof(Enumerable)) || type == typeof(LinqExtensions) || type == typeof(DataExtensions);
+			return type == typeof(Queryable) || (enumerable && type == typeof(Enumerable)) || type == typeof(LinqExtensions) || type == typeof(LinqToDB.DataExtensions);
 		}
 
 		public static bool IsAsyncExtension(this MethodCallExpression method, bool enumerable = true)

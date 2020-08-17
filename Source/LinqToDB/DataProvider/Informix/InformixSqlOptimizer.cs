@@ -68,9 +68,9 @@ namespace LinqToDB.DataProvider.Informix
 			return statement;
 		}
 
-		public override ISqlExpression ConvertExpression(ISqlExpression expr)
+		public override ISqlExpression ConvertExpression(ISqlExpression expr, bool withParameters)
 		{
-			expr = base.ConvertExpression(expr);
+			expr = base.ConvertExpression(expr, withParameters);
 
 			if (expr is SqlBinaryExpression be)
 			{
@@ -98,7 +98,7 @@ namespace LinqToDB.DataProvider.Informix
 							case TypeCode.String   : return new SqlFunction(func.SystemType, "To_Char", func.Parameters[1]);
 							case TypeCode.Boolean  :
 							{
-								var ex = AlternativeConvertToBoolean(func, 1);
+								var ex = AlternativeConvertToBoolean(func, 1, withParameters);
 								if (ex != null)
 									return ex;
 								break;

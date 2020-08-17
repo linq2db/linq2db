@@ -3127,7 +3127,7 @@ namespace LinqToDB
 		/// <returns>Query covered in sub-query.</returns>
 		[Pure]
 		[LinqTunnel]
-		public static IQueryable<TSource> AsSubQuery<TSource>( this IQueryable<TSource> source)
+		public static IQueryable<TSource> AsSubQuery<TSource>(this IQueryable<TSource> source)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
@@ -3154,6 +3154,30 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(AsSubQuery, grouping), grouping.Expression));
+		}
+
+		#endregion
+
+		#region InlineParameters
+
+		/// <summary>
+		/// Inline parameters in query which can be converted to SQL Literal.
+		/// </summary>
+		/// <typeparam name="TSource">Source query record type.</typeparam>
+		/// <param name="source">Source data query.</param>
+		/// <returns>Query with inlined parameters.</returns>
+		[Pure]
+		[LinqTunnel]
+		public static IQueryable<TSource> InlineParameters<TSource>(this IQueryable<TSource> source)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			return source.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(InlineParameters, source), currentSource.Expression));
 		}
 
 		#endregion
