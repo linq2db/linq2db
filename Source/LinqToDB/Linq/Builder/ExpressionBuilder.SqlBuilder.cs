@@ -1205,7 +1205,7 @@ namespace LinqToDB.Linq.Builder
 			return Convert(attr.GetExpression(mc.Method, parms.ToArray()));
 		}
 
-		ISqlExpression ConvertToSqlConvertible(Expression expression)
+		static ISqlExpression ConvertToSqlConvertible(Expression expression)
 		{
 			var l = Expression.Lambda<Func<IToSqlConverter>>(expression);
 			var f = l.Compile();

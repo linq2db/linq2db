@@ -31,6 +31,7 @@ namespace LinqToDB.SqlQuery
 		public string          Name   => "Source";
 
 		public List<SqlField> SourceFields { get; } = new List<SqlField>();
+
 		private void AddField(SqlField field)
 		{
 			field.Table = this;
@@ -47,14 +48,10 @@ namespace LinqToDB.SqlQuery
 				SourceQuery = func(SourceQuery);
 		}
 
-		// ???
 		public bool IsParameterDependent
 		{
-			get
-			{
-				return SourceQuery?.IsParameterDependent ?? false;
-			}
-
+			// enumerable source allways parameter-dependent
+			get => SourceQuery?.IsParameterDependent ?? true;
 			set
 			{
 				if (SourceQuery != null)
@@ -62,8 +59,9 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		private readonly IDictionary<SqlField, Tuple<SqlField, int>> _sourceFieldsByBase = new Dictionary<SqlField, Tuple<SqlField, int>>();
+		private readonly IDictionary<SqlField, Tuple<SqlField, int>>       _sourceFieldsByBase       = new Dictionary<SqlField, Tuple<SqlField, int>>();
 		private readonly IDictionary<ISqlExpression, Tuple<SqlField, int>> _sourceFieldsByExpression = new Dictionary<ISqlExpression, Tuple<SqlField, int>>();
+
 		internal SqlField RegisterSourceField(ISqlExpression baseExpression, ISqlExpression expression, int index, Func<SqlField> fieldFactory)
 		{
 			var baseField = baseExpression as SqlField;

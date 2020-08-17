@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Linq;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -9,7 +11,6 @@ using NUnit.Framework;
 
 namespace Tests.xUpdate
 {
-	using System.Threading.Tasks;
 	using Model;
 
 	[TestFixture]
@@ -727,6 +728,66 @@ namespace Tests.xUpdate
 					.Merge();
 			}
 		}
+		#endregion
+
+		#region https://github.com/linq2db/linq2db/issues/2377
+		class CacheTestTable
+		{
+			[PrimaryKey] public int Id;
+			[Column    ] public int Value;
+		}
+
+		[Test(Description = "")]
+		public void TestEnumerableSourceCaching([MergeDataContextSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable<CacheTestTable>())
+			{
+				var source = new List<CacheTestTable>()
+				{
+					new CacheTestTable() { Id = 1, Value = 1 },
+					new CacheTestTable() { Id = 2, Value = 2 },
+				};
+
+				table
+					.Merge()
+					.Using(source)
+					.OnTargetKey()
+					.UpdateWhenMatched()
+					.InsertWhenNotMatched()
+					.Merge();
+
+				var res = table.OrderBy(_ => _.Id).ToArray();
+
+				Assert.AreEqual(2, res.Length);
+				Assert.AreEqual(1, res[0].Id);
+				Assert.AreEqual(1, res[0].Value);
+				Assert.AreEqual(2, res[1].Id);
+				Assert.AreEqual(2, res[1].Value);
+
+				source[1].Value = 4;
+				source.Add(new CacheTestTable() { Id = 3, Value = 3 });
+
+				table
+					.Merge()
+					.Using(source)
+					.OnTargetKey()
+					.UpdateWhenMatched()
+					.InsertWhenNotMatched()
+					.Merge();
+
+				res = table.OrderBy(_ => _.Id).ToArray();
+
+				Assert.AreEqual(3, res.Length);
+				Assert.AreEqual(1, res[0].Id);
+				Assert.AreEqual(1, res[0].Value);
+				Assert.AreEqual(2, res[1].Id);
+				Assert.AreEqual(4, res[1].Value);
+				Assert.AreEqual(3, res[2].Id);
+				Assert.AreEqual(3, res[2].Value);
+			}
+		}
+
 		#endregion
 	}
 }

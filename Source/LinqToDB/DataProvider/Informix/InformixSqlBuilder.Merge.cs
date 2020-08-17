@@ -2,6 +2,7 @@
 
 namespace LinqToDB.DataProvider.Informix
 {
+	using System.Collections.Generic;
 	using SqlQuery;
 
 	partial class InformixSqlBuilder
@@ -14,7 +15,7 @@ namespace LinqToDB.DataProvider.Informix
 		protected override string FakeTable => "table(set{1})";
 
 		// Informix is too lazy to infer types itself from context
-		protected override bool MergeSourceValueTypeRequired(SqlValuesTable sourceEnumerable, int row, int column) => true;
+		protected override bool MergeSourceValueTypeRequired(SqlValuesTable source, IReadOnlyList<ISqlExpression[]> rows, int row, int column) => true;
 
 		protected override void BuildMergeInto(SqlMergeStatement merge)
 		{

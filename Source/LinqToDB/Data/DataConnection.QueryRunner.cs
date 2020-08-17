@@ -154,15 +154,14 @@ namespace LinqToDB.Data
 				{
 					return new PreparedQuery
 					{
-						Commands = (string[])query.Context,
+						Commands      = (string[])query.Context,
 						SqlParameters = query.Statement.Parameters,
-						Statement = query.Statement,
-						QueryHints = query.QueryHints,
+						Statement     = query.Statement,
+						QueryHints    = query.QueryHints,
 					};
 				}
 
-				// before processing query we correct parameters
-				var sql = query.Statement.ProcessParameters(dataConnection.MappingSchema);
+				var sql = query.Statement;
 
 				// custom query handling
 				var newSql = dataConnection.ProcessQuery(sql);

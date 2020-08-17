@@ -13,6 +13,8 @@ namespace LinqToDB.SqlProvider
 			if (statement     == null) throw new ArgumentNullException(nameof(statement));
 			if (mappingSchema == null) throw new ArgumentNullException(nameof(mappingSchema));
 
+			BuildSqlValueTableParameters(statement);
+
 			// transforming parameters to values
 			var newStatement = statement.ProcessParameters(mappingSchema);
 
@@ -26,5 +28,19 @@ namespace LinqToDB.SqlProvider
 
 			return newStatement;
 		}
+
+		static void BuildSqlValueTableParameters(SqlStatement statement)
+		{
+			if (statement.IsParameterDependent)
+			{
+				new QueryVisitor().Visit(statement, e =>
+				{
+					if (e is SqlValuesTable table)
+						table.BuildRows();
+				});
+			}
+		}
+
+
 	}
 }

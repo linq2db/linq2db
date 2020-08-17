@@ -17,9 +17,18 @@
 
 			statement = base.Finalize(statement, inlineParameters);
 
+			// called in both finalize and optimize to avoid query conversion on each call
+			// as most of cases will be handled with finalize
 			statement = WrapParameters(statement);
 
 			return statement;
+		}
+
+		public override SqlStatement OptimizeStatement(SqlStatement statement, bool inlineParameters, bool withParameters)
+		{
+			statement = base.OptimizeStatement(statement, inlineParameters, withParameters);
+
+			return WrapParameters(statement);
 		}
 
 		public override SqlStatement TransformStatement(SqlStatement statement)
