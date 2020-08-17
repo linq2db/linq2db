@@ -120,7 +120,7 @@ namespace LinqToDB.SqlQuery
 				return new DbDataType(expr.SystemType ?? typeof(object), DataType.Undefined);
 			}
 
-			return descriptor.GetDbDataType();
+			return descriptor.GetDbDataType(true);
 		}
 		
 		public static void CollectDependencies(IQueryElement root, IEnumerable<ISqlTableSource> sources, HashSet<ISqlExpression> found, IEnumerable<IQueryElement>? ignore = null)

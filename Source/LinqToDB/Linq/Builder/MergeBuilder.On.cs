@@ -95,7 +95,7 @@ namespace LinqToDB.Linq.Builder
 				else
 				{
 					// OnTargetKey<TTarget>(IMergeableOn<TTarget, TTarget> merge)
-					var targetType       = statement.Target.SystemType;
+					var targetType       = statement.Target.SystemType!;
 					var pTarget          = Expression.Parameter(targetType, "t");
 					var pSource          = Expression.Parameter(targetType, "s");
 					var targetDescriptor = builder.MappingSchema.GetEntityDescriptor(targetType);
