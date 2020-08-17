@@ -6,7 +6,6 @@ using System.Linq;
 
 namespace LinqToDB.DataProvider.SapHana
 {
-	using System.Text;
 	using Common;
 	using Data;
 	using SchemaProvider;
@@ -23,50 +22,9 @@ namespace LinqToDB.DataProvider.SapHana
 			HanaSchemaOptions            = options as GetHanaSchemaOptions;
 			DefaultSchema                = dataConnection.Execute<string>("SELECT CURRENT_SCHEMA FROM DUMMY");
 			HasAccessForCalculationViews = CheckAccessForCalculationViews(dataConnection);
-			SchemasFilter                = CreateSchemasFilter(options);
+			SchemasFilter                = BuildSchemaFilter(options, DefaultSchema, SapHanaMappingSchema.ConvertStringToSql);
 
 			return base.GetSchema(dataConnection, options);
-		}
-
-		private string CreateSchemasFilter(GetSchemaOptions? options)
-		{
-			var schemas = new HashSet<string>();
-			schemas.Add(DefaultSchema);
-
-			if (options != null)
-			{
-				if (options.IncludedSchemas != null)
-					foreach (var schema in options.IncludedSchemas)
-						if (!string.IsNullOrEmpty(schema))
-							schemas.Add(schema!);
-
-				if (options.ExcludedSchemas != null)
-					foreach (var schema in options.ExcludedSchemas)
-						if (!string.IsNullOrEmpty(schema))
-							schemas.Remove(schema!);
-			}
-
-			if (schemas.Count == 0)
-				throw new LinqToDBException($"{nameof(GetSchemaOptions.IncludedSchemas)}/{nameof(GetSchemaOptions.ExcludedSchemas)} options result in empty list of schemas");
-
-			var first = true;
-
-			var sb = new StringBuilder();
-			sb.Append("IN (");
-			
-			foreach (var schema in schemas)
-			{
-				if (!first)
-					sb.Append(", ");
-				else
-					first = false;
-
-				SapHanaMappingSchema.ConvertStringToSql(sb, schema);
-			}
-
-			sb.Append(")");
-
-			return sb.ToString();
 		}
 
 		private bool CheckAccessForCalculationViews(DataConnection dataConnection)

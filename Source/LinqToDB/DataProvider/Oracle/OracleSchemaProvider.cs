@@ -14,9 +14,19 @@ namespace LinqToDB.DataProvider.Oracle
 	{
 		private readonly OracleDataProvider _provider;
 
+		protected string SchemasFilter { get; private set; } = null!;
+
 		public OracleSchemaProvider(OracleDataProvider provider)
 		{
 			_provider = provider;
+		}
+
+		public override DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions? options = null)
+		{
+			var defaultSchema = dataConnection.Execute<string>("SELECT USER FROM DUAL");
+			SchemasFilter     = BuildSchemaFilter(options, defaultSchema, OracleMappingSchema.ConvertStringToSql);
+
+			return base.GetSchema(dataConnection, options);
 		}
 
 		protected override string GetDataSourceName(DataConnection dataConnection)
@@ -59,11 +69,13 @@ namespace LinqToDB.DataProvider.Oracle
 					(
 						SELECT t.OWNER, t.TABLE_NAME NAME, 0 as IsView, 0 as MatView FROM ALL_TABLES t
 							LEFT JOIN ALL_MVIEWS tm ON t.OWNER = tm.OWNER AND t.TABLE_NAME = tm.CONTAINER_NAME
-							WHERE tm.MVIEW_NAME IS NULL
+							WHERE tm.MVIEW_NAME IS NULL AND t.OWNER " + SchemasFilter + @"
 						UNION ALL
 						SELECT v.OWNER, v.VIEW_NAME NAME, 1 as IsView, 0 as MatView FROM ALL_VIEWS v
+							WHERE v.OWNER " + SchemasFilter + @"
 						UNION ALL
 						SELECT m.OWNER, m.MVIEW_NAME NAME, 1 as IsView, 1 as MatView FROM ALL_MVIEWS m
+							WHERE m.OWNER " + SchemasFilter + @"
 					) d
 						LEFT JOIN ALL_TAB_COMMENTS tc ON
 							d.OWNER = tc.OWNER AND
@@ -125,10 +137,11 @@ namespace LinqToDB.DataProvider.Oracle
 						ALL_CONS_COLUMNS FKCOLS,
 						ALL_CONSTRAINTS FKCON
 					WHERE
-						FKCOLS.OWNER           = FKCON.OWNER and
-						FKCOLS.TABLE_NAME      = FKCON.TABLE_NAME and
+						FKCOLS.OWNER           = FKCON.OWNER AND
+						FKCOLS.TABLE_NAME      = FKCON.TABLE_NAME AND
 						FKCOLS.CONSTRAINT_NAME = FKCON.CONSTRAINT_NAME AND
-						FKCON.CONSTRAINT_TYPE  = 'P'")
+						FKCON.CONSTRAINT_TYPE  = 'P' AND
+						FKCOLS.OWNER " + SchemasFilter)
 				.ToList();
 		}
 
@@ -178,7 +191,7 @@ namespace LinqToDB.DataProvider.Oracle
 							c.OWNER       = cc.OWNER      AND
 							c.TABLE_NAME  = cc.TABLE_NAME AND
 							c.COLUMN_NAME = cc.COLUMN_NAME
-					";
+					WHERE c.OWNER " + SchemasFilter;
 			}
 			else
 			{
@@ -258,8 +271,9 @@ namespace LinqToDB.DataProvider.Oracle
 								PKCON.CONSTRAINT_NAME = FKCON.R_CONSTRAINT_NAME
 						WHERE 
 							FKCON.CONSTRAINT_TYPE = 'R'          AND
-							FKCOLS.POSITION       = PKCOLS.POSITION
-						")
+							FKCOLS.POSITION       = PKCOLS.POSITION AND
+							FKCON.OWNER " + SchemasFilter + @" AND
+							PKCON.OWNER " + SchemasFilter)
 					.ToList();
 			}
 			else
