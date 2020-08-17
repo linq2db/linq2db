@@ -368,7 +368,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestExecuteReaderProcNoRebind([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestExecuteReaderProcRebind([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -383,15 +383,13 @@ namespace Tests.Data
 					{
 					}
 
-				Assert.IsNull(output1.Value);
-				Assert.IsNull(output2.Value);
-				Assert.AreEqual(2, ((IDataParameter)db.Command.Parameters["output1"]).Value);
-				Assert.AreEqual(3, ((IDataParameter)db.Command.Parameters["output2"]).Value);
+				Assert.AreEqual(2, output1.Value);
+				Assert.AreEqual(3, output2.Value);
 			}
 		}
 
 		[Test]
-		public async Task TestExecuteReaderProcAsyncNoRebind([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public async Task TestExecuteReaderProcAsyncRebind([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -406,10 +404,8 @@ namespace Tests.Data
 					{
 					}
 
-				Assert.IsNull(output1.Value);
-				Assert.IsNull(output2.Value);
-				Assert.AreEqual(2, ((IDataParameter)db.Command.Parameters["output1"]).Value);
-				Assert.AreEqual(3, ((IDataParameter)db.Command.Parameters["output2"]).Value);
+				Assert.AreEqual(2, output1.Value);
+				Assert.AreEqual(3, output2.Value);
 			}
 		}
 	}
