@@ -44,8 +44,7 @@ namespace LinqToDB.SqlProvider
 		{
 			foreach (var parameter in parameters)
 			{
-				if (SqlProviderFlags.IsParameterOrderDependent || !ActualParameters.Contains(parameter))
-					ActualParameters.Add(parameter);
+				AddParameter(parameter);
 			}
 		}
 
@@ -2223,7 +2222,7 @@ namespace LinqToDB.SqlProvider
 		{
 			// TODO: check the necessity.
 			//
-			expr = SqlOptimizer.ConvertExpression(expr);
+			expr = SqlOptimizer.ConvertExpression(expr, Statement.IsParameterDependent);
 
 			switch (expr.ElementType)
 			{
@@ -2376,14 +2375,17 @@ namespace LinqToDB.SqlProvider
 					{
 						var parm = (SqlParameter)expr;
 
-						if (parm.IsQueryParameter)
+						var inlining = !parm.IsQueryParameter;
+						if (inlining)
+						{
+							if (!MappingSchema.ValueToSqlConverter.TryConvert(StringBuilder, new SqlDataType(parm.Type), parm.Value))
+								inlining = false;
+						}
+
+						if (!inlining)
 						{
 							Convert(StringBuilder, parm.Name!, ConvertType.NameToQueryParameter);
 							AddParameter(parm);
-						}
-						else
-						{
-							BuildValue(new SqlDataType(parm.Type), parm.Value);
 						}
 					}
 
@@ -2886,7 +2888,7 @@ namespace LinqToDB.SqlProvider
 			return false;
 		}
 
-		protected SqlFunction ConvertFunctionParameters(SqlFunction func)
+		protected SqlFunction ConvertFunctionParameters(SqlFunction func, bool withParameters = false)
 		{
 			if (func.Name == "CASE" &&
 				func.Parameters.Select((p, i) => new { p, i }).Any(p => IsBooleanParameter(p.p, func.Parameters.Length, p.i)))
@@ -2898,7 +2900,7 @@ namespace LinqToDB.SqlProvider
 					func.Precedence,
 					func.Parameters.Select((p, i) =>
 						IsBooleanParameter(p, func.Parameters.Length, i) ?
-							SqlOptimizer.ConvertExpression(new SqlFunction(typeof(bool), "CASE", p, new SqlValue(true), new SqlValue(false))) :
+							SqlOptimizer.ConvertExpression(new SqlFunction(typeof(bool), "CASE", p, new SqlValue(true), new SqlValue(false)), withParameters) :
 							p
 					).ToArray());
 			}
@@ -3120,7 +3122,7 @@ namespace LinqToDB.SqlProvider
 
 		ISqlExpression Add(ISqlExpression expr1, ISqlExpression expr2, Type type)
 		{
-			return SqlOptimizer.ConvertExpression(new SqlBinaryExpression(type, expr1, "+", expr2, Precedence.Additive));
+			return SqlOptimizer.ConvertExpression(new SqlBinaryExpression(type, expr1, "+", expr2, Precedence.Additive), false);
 		}
 
 		protected ISqlExpression Add<T>(ISqlExpression expr1, ISqlExpression expr2)

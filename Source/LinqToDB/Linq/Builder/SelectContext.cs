@@ -790,8 +790,8 @@ namespace LinqToDB.Linq.Builder
 
 											if (memberExpression == null)
 												return new IsExpressionResult(requestFlag == RequestFor.Expression);
-												//throw new InvalidOperationException(
-												//	string.Format("Invalid member '{0}.{1}'", member.DeclaringType, member.Name));
+											//throw new InvalidOperationException(
+											//	string.Format("Invalid member '{0}.{1}'", member.DeclaringType, member.Name));
 										}
 
 										if (ReferenceEquals(levelExpression, expression))
@@ -866,7 +866,8 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			throw new NotImplementedException();
+
+			return IsExpressionResult.False;
 		}
 
 		#endregion

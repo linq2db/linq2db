@@ -12,7 +12,7 @@ namespace LinqToDB
 	using Data;
 	using DataProvider;
 	using Linq;
-	using LinqToDB.Async;
+	using Async;
 	using Mapping;
 	using SqlProvider;
 

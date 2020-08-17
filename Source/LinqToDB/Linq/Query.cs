@@ -264,15 +264,19 @@ namespace LinqToDB.Linq
 		[Flags]
 		enum QueryFlags
 		{
-			None             = 0,
+			None                = 0,
 			/// <summary>
 			/// Bit set, when group by guard set for connection.
 			/// </summary>
-			GroupByGuard     = 0x1,
+			GroupByGuard        = 0x1,
 			/// <summary>
 			/// Bit set, when inline parameters enabled for connection.
 			/// </summary>
-			InlineParameters = 0x2,
+			InlineParameters    = 0x2,
+			/// <summary>
+			/// Bit set, when inline Take/Skip parameterization is enabled for query.
+			/// </summary>
+			ParameterizeTakeSkip = 0x4,
 		}
 
 		class QueryCache
@@ -341,7 +345,7 @@ namespace LinqToDB.Linq
 			/// </summary>
 			public void TryAdd(IDataContext dataContext, Query<T> query, QueryFlags flags)
 			{
-				// because Add is less frequient operation than Find, it is fine to have put bigger locks here
+				// because Add is less frequent operation than Find, it is fine to have put bigger locks here
 				QueryCacheEntry[] cache;
 				int               version;
 
@@ -382,7 +386,7 @@ namespace LinqToDB.Linq
 					newPriorities[0] = 0;
 
 					for (var i = 1; i < newCache.Length; i++)
-		{
+					{
 						newCache[i]      = cache[i - 1];
 						newPriorities[i] = i;
 					}
@@ -391,14 +395,14 @@ namespace LinqToDB.Linq
 					_indexes = newPriorities;
 					version  = _version;
 				}
-		}
+			}
 
 
 			/// <summary>
 			/// Search for query in cache and of found, try to move it to better position in cache.
 			/// </summary>
 			public Query<T>? Find(IDataContext dataContext, Expression expr, QueryFlags flags)
-		{
+			{
 				QueryCacheEntry[] cache;
 				int[]             indexes;
 				int               version;
@@ -441,8 +445,9 @@ namespace LinqToDB.Linq
 				Interlocked.Increment(ref CacheMissCount);
 
 				return null;
-				}
+			}
 		}
+
 		#endregion
 
 		#region Query
@@ -480,6 +485,8 @@ namespace LinqToDB.Linq
 			// global flag change
 			if (Configuration.Linq.GuardGrouping)
 				flags |= QueryFlags.GroupByGuard;
+			if (Configuration.Linq.ParameterizeTakeSkip)
+				flags |= QueryFlags.ParameterizeTakeSkip;
 
 			var query = _queryCache.Find(dataContext, expr, flags);
 
@@ -539,10 +546,10 @@ namespace LinqToDB.Linq
 
 		public SqlParameter[] GetParameters()
 		{
-			var ps = new SqlParameter[Parameters.Count];
+			var ps = new SqlParameter[Statement.Parameters.Count];
 
 			for (var i = 0; i < ps.Length; i++)
-				ps[i] = Parameters[i].SqlParameter;
+				ps[i] = Statement.Parameters[i];
 
 			return ps;
 		}

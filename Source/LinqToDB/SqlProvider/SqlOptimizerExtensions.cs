@@ -15,18 +15,16 @@ namespace LinqToDB.SqlProvider
 
 			BuildSqlValueTableParameters(statement);
 
-			statement.UpdateIsParameterDepended();
-
 			// transforming parameters to values
 			var newStatement = statement.ProcessParameters(mappingSchema);
 
+			newStatement.UpdateIsParameterDepended();
+
 			// optimizing expressions according to new values
-			newStatement = optimizer.OptimizeStatement(newStatement, inlineParameters);
+			newStatement = optimizer.OptimizeStatement(newStatement, inlineParameters,
+				newStatement.IsParameterDependent || inlineParameters);
 
-			newStatement.SetAliases();
-
-			// reset parameters
-			newStatement.CollectParameters();
+			newStatement.PrepareQueryAndAliases();
 
 			return newStatement;
 		}

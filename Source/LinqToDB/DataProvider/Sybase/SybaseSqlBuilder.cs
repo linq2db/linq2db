@@ -46,7 +46,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 		protected override void BuildFunction(SqlFunction func)
 		{
-			func = ConvertFunctionParameters(func);
+			func = ConvertFunctionParameters(func, false);
 			base.BuildFunction(func);
 		}
 

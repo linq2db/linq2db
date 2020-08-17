@@ -12,19 +12,19 @@
 		<tags>linq linq2db Npgsql PostgreSQL LinqToDB ORM database DB SQL</tags>
 		<dependencies>
 			<group targetFramework=".NETFramework4.5">
-				<dependency id="Npgsql"  version="4.0.10" />
+				<dependency id="Npgsql"  version="4.0.11" />
 				<dependency id="linq2db" version="3.0.0" />
 			</group>
 			<group targetFramework=".NETFramework4.6.1">
-				<dependency id="Npgsql"  version="4.1.3.1" />
+				<dependency id="Npgsql"  version="4.1.4" />
 				<dependency id="linq2db" version="3.0.0" />
 			</group>
 			<group targetFramework=".NETStandard2.0">
-				<dependency id="Npgsql"  version="4.1.3.1" />
+				<dependency id="Npgsql"  version="4.1.4" />
 				<dependency id="linq2db" version="3.0.0" />
 			</group>
 			<group targetFramework=".NETCoreApp2.1">
-				<dependency id="Npgsql"  version="4.1.3.1" />
+				<dependency id="Npgsql"  version="4.1.4" />
 				<dependency id="linq2db" version="3.0.0" />
 			</group>
 		</dependencies>

@@ -27,9 +27,9 @@ namespace LinqToDB.DataProvider.SqlServer
 				);
 		}
 
-		public override ISqlExpression ConvertExpression(ISqlExpression expr)
+		public override ISqlExpression ConvertExpression(ISqlExpression expr, bool withParameters)
 		{
-			expr = base.ConvertExpression(expr);
+			expr = base.ConvertExpression(expr, withParameters);
 
 			switch (expr.ElementType)
 			{
