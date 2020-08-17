@@ -188,7 +188,7 @@ namespace LinqToDB.Data
 				DataConnection.DataProvider.ExecuteScope(DataConnection));
 		}
 
-		static IEnumerable<T> ReadEnumerator<T>(IDataReader rd, Func<IDataReader, T> objectReader, IDisposable? scope)
+		IEnumerable<T> ReadEnumerator<T>(IDataReader rd, Func<IDataReader, T> objectReader, IDisposable? scope)
 		{
 			using (scope)
 			using (rd)
@@ -196,6 +196,9 @@ namespace LinqToDB.Data
 				while (rd.Read())
 					yield return objectReader(rd);
 			}
+
+			if (Parameters?.Length > 0)
+				RebindParameters(DataConnection, Parameters!);
 		}
 
 		#endregion
@@ -361,6 +364,9 @@ namespace LinqToDB.Data
 					if (disposeReader)
 						rd.Dispose();
 				}
+
+			if (Parameters?.Length > 0)
+				RebindParameters(DataConnection, Parameters!);
 		}
 
 		#endregion

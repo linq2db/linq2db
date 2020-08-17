@@ -153,7 +153,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestQueryProcNoRebind([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestQueryProcRebind([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -166,15 +166,16 @@ namespace Tests.Data
 
 				persons.ToList();
 
-				Assert.IsNull(output1.Value);
-				Assert.IsNull(output2.Value);
+				Assert.AreEqual(2, output1.Value);
+				Assert.AreEqual(3, output2.Value);
+
 				Assert.AreEqual(2, ((IDataParameter)db.Command.Parameters["output1"]).Value);
 				Assert.AreEqual(3, ((IDataParameter)db.Command.Parameters["output2"]).Value);
 			}
 		}
 
 		[Test]
-		public async Task TestQueryProcAsyncNoRebind([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public async Task TestQueryProcAsyncRebind([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -187,8 +188,9 @@ namespace Tests.Data
 
 				persons.ToList();
 
-				Assert.IsNull(output1.Value);
-				Assert.IsNull(output2.Value);
+				Assert.AreEqual(2, output1.Value);
+				Assert.AreEqual(3, output2.Value);
+
 				Assert.AreEqual(2, ((IDataParameter)db.Command.Parameters["output1"]).Value);
 				Assert.AreEqual(3, ((IDataParameter)db.Command.Parameters["output2"]).Value);
 
@@ -196,7 +198,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestQueryProcTemplateNoRebind([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestQueryProcTemplateRebind([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -207,15 +209,16 @@ namespace Tests.Data
 
 				persons.ToList();
 
-				Assert.IsNull(output1.Value);
-				Assert.IsNull(output2.Value);
+				Assert.AreEqual(2, output1.Value);
+				Assert.AreEqual(3, output2.Value);
+
 				Assert.AreEqual(2, ((IDataParameter)db.Command.Parameters["output1"]).Value);
 				Assert.AreEqual(3, ((IDataParameter)db.Command.Parameters["output2"]).Value);
 			}
 		}
 
 		[Test]
-		public async Task TestQueryProcAsyncTemplateNoRebind([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public async Task TestQueryProcAsyncTemplateRebind([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -228,15 +231,16 @@ namespace Tests.Data
 
 				persons.ToList();
 
-				Assert.IsNull(output1.Value);
-				Assert.IsNull(output2.Value);
+				Assert.AreEqual(2, output1.Value);
+				Assert.AreEqual(3, output2.Value);
+
 				Assert.AreEqual(2, ((IDataParameter)db.Command.Parameters["output1"]).Value);
 				Assert.AreEqual(3, ((IDataParameter)db.Command.Parameters["output2"]).Value);
 			}
 		}
 
 		[Test]
-		public void TestQueryProcReaderNoRebind([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestQueryProcReaderRebind([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -249,15 +253,16 @@ namespace Tests.Data
 
 				persons.ToList();
 
-				Assert.IsNull(output1.Value);
-				Assert.IsNull(output2.Value);
+				Assert.AreEqual(2, output1.Value);
+				Assert.AreEqual(3, output2.Value);
+
 				Assert.AreEqual(2, ((IDataParameter)db.Command.Parameters["output1"]).Value);
 				Assert.AreEqual(3, ((IDataParameter)db.Command.Parameters["output2"]).Value);
 			}
 		}
 
 		[Test]
-		public async Task TestQueryProcAsyncReaderNoRebind([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public async Task TestQueryProcAsyncReaderRebind([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -270,8 +275,9 @@ namespace Tests.Data
 
 				persons.ToList();
 
-				Assert.IsNull(output1.Value);
-				Assert.IsNull(output2.Value);
+				Assert.AreEqual(2, output1.Value);
+				Assert.AreEqual(3, output2.Value);
+
 				Assert.AreEqual(2, ((IDataParameter)db.Command.Parameters["output1"]).Value);
 				Assert.AreEqual(3, ((IDataParameter)db.Command.Parameters["output2"]).Value);
 			}
@@ -355,7 +361,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task TestExecuteProcAsyncTRebind([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public async Task TestExecuteProcAsyncRebind([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
