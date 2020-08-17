@@ -24,9 +24,9 @@
 			return statement;
 		}
 
-		public override SqlStatement OptimizeStatement(SqlStatement statement, bool inlineParameters)
+		public override SqlStatement OptimizeStatement(SqlStatement statement, bool inlineParameters, bool withParameters)
 		{
-			statement = base.OptimizeStatement(statement, inlineParameters);
+			statement = base.OptimizeStatement(statement, inlineParameters, withParameters);
 
 			return WrapParameters(statement);
 		}
