@@ -108,8 +108,6 @@ namespace LinqToDB.Reflection
 
 			internal static readonly MethodInfo SelectDistinct    = MemberHelper.MethodOfGeneric<IQueryable<IGrouping<int, object>>>(q => q.SelectDistinct());
 
-			internal static readonly MethodInfo SelectDistinct    = MemberHelper.MethodOfGeneric<IQueryable<IGrouping<int, object>>>(q => q.SelectDistinct());
-
 			public static class Table
 			{
 				public static readonly MethodInfo TableName    = MemberHelper.MethodOfGeneric<ITable<int>>(t => t.TableName(null!));

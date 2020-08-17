@@ -4,6 +4,7 @@ using LinqToDB;
 using LinqToDB.Data;
 using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using LinqToDB.Mapping;
 
 namespace Tests.UserTests

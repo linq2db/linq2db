@@ -96,7 +96,7 @@ namespace LinqToDB.Common
 			var lengthStr    = Length == null                 ? string.Empty : $", \"{Length}\"";
 			var precisionStr = Precision == null              ? string.Empty : $", \"{Precision}\"";
 			var scaleStr     = Scale == null                  ? string.Empty : $", \"{Scale}\"";
-			return $"{SystemType}{dataTypeStr}{dbTypeStr}{lengthStr}{precisionStr}{scaleStr}";
+			return $"({SystemType}{dataTypeStr}{dbTypeStr}{lengthStr}{precisionStr}{scaleStr})";
 		}
 
 		#region Equality members

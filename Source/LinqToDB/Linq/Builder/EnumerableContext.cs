@@ -108,7 +108,7 @@ namespace LinqToDB.Linq.Builder
 											{
 												if (pa.SqlParameter == p)
 												{
-													p.Value = pa.Accessor(pa.Expression, null, null);
+													p.Value = pa.ValueAccessor(pa.Expression, null, null);
 													break;
 												}
 											}

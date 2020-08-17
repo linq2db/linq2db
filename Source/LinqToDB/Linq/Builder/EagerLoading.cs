@@ -1457,10 +1457,11 @@ namespace LinqToDB.Linq.Builder
 
 		private static int RegisterPreamblesDetached<TD>(ExpressionBuilder builder, IQueryable<TD> detailQuery)
 		{
-			PrepareParameters(detailQuery.Expression, builder, out var container, out var detailExpression);
-
 			var idx = builder.RegisterPreamble((dc, expr, ps) =>
 				{
+					//TODO: needed more performant way
+					PrepareParameters(detailQuery.Expression, builder, out var container, out var detailExpression);
+
 					container.DataContext         = dc;
 					container.CompiledParameters  = ps;
 					container.ParameterExpression = expr;
@@ -1471,6 +1472,9 @@ namespace LinqToDB.Linq.Builder
 				},
 				async (dc, expr, ps) =>
 				{
+					//TODO: needed more performant way
+					PrepareParameters(detailQuery.Expression, builder, out var container, out var detailExpression);
+
 					container.DataContext         = dc;
 					container.CompiledParameters  = ps;
 					container.ParameterExpression = expr;
@@ -1491,11 +1495,12 @@ namespace LinqToDB.Linq.Builder
 			expression     = builder.ExposeExpression(expression);
 			expression     = FinalizeExpressionKeys(expression);
 
-			PrepareParameters(expression, builder, out var container, out var detailExpression);
-
 			// Filler code is duplicated for the future usage with IAsyncEnumerable
 			var idx = builder.RegisterPreamble((dc, expr, ps) =>
 				{
+					//TODO: needed more performant way
+					PrepareParameters(expression, builder, out var container, out var detailExpression);
+
 					container.DataContext         = dc;
 					container.CompiledParameters  = ps;
 					container.ParameterExpression = expr;
@@ -1513,6 +1518,9 @@ namespace LinqToDB.Linq.Builder
 				},
 				async (dc, expr, ps) =>
 				{
+					//TODO: needed more performant way
+					PrepareParameters(expression, builder, out var container, out var detailExpression);
+
 					container.DataContext         = dc;
 					container.CompiledParameters  = ps;
 					container.ParameterExpression = expr;
