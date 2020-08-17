@@ -173,11 +173,11 @@ namespace LinqToDB.Data
 					sql.IsParameterDependent = true;
 				}
 
-				var sqlProvider = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
+				var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
 
 				sql = dataConnection.DataProvider.GetSqlOptimizer().OptimizeStatement(sql, dataConnection.MappingSchema, dataConnection.InlineParameters);
 
-				var cc = sqlProvider.CommandCount(sql);
+				var cc = sqlBuilder.CommandCount(sql);
 				var sb = new StringBuilder();
 
 				var commands = new string[cc];
@@ -186,24 +186,24 @@ namespace LinqToDB.Data
 				{
 					sb.Length = 0;
 
-					sqlProvider.BuildSql(i, sql, sb, startIndent);
+					sqlBuilder.BuildSql(i, sql, sb, startIndent);
 					commands[i] = sb.ToString();
 				}
 
 				if (!sql.IsParameterDependent)
 				{
 					query.Context = commands;
-
-					query.Statement.Parameters.Clear();
-					query.Statement.Parameters.AddRange(sqlProvider.ActualParameters);
 				}
+
+				query.Statement.Parameters.Clear();
+				query.Statement.Parameters.AddRange(sqlBuilder.ActualParameters);
 
 				return new PreparedQuery
 				{
 					Commands      = commands,
-					SqlParameters = sqlProvider.ActualParameters,
+					SqlParameters = sqlBuilder.ActualParameters,
 					Statement     = sql,
-					SqlProvider   = sqlProvider,
+					SqlProvider   = sqlBuilder,
 					QueryHints    = query.QueryHints,
 				};
 			}
@@ -219,10 +219,7 @@ namespace LinqToDB.Data
 				{
 					var sqlp = pq.SqlParameters[i];
 
-					if (sqlp.IsQueryParameter)
-					{
-						AddParameter(dataConnection, parms, sqlp.Name!, sqlp);
-					}
+					AddParameter(dataConnection, parms, sqlp.Name!, sqlp);
 				}
 
 				pq.Parameters = parms;

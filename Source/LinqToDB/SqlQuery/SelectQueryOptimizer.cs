@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using LinqToDB.Common;
-using LinqToDB.Tools;
 
 namespace LinqToDB.SqlQuery
 {
-	using LinqToDB.Common;
+	using Common;
 	using SqlProvider;
 
 	class SelectQueryOptimizer
@@ -429,6 +427,7 @@ namespace LinqToDB.SqlQuery
 			OptimizeSubQueries(isApplySupported, optimizeColumns);
 			OptimizeApplies   (isApplySupported, optimizeColumns);
 
+			OptimizeDistinct();
 			OptimizeDistinctOrderBy();
 			OptimizeSkipTake(inlineParameters);
 
@@ -442,9 +441,7 @@ namespace LinqToDB.SqlQuery
 			{
 				var supportsParameter = _flags.GetAcceptsTakeAsParameterFlag(_selectQuery);
 
-				if (supportsParameter && _selectQuery.Select.TakeValue is SqlValue takeValue)
-					_selectQuery.Select.Take(new SqlParameter(takeValue.ValueType, "take", takeValue.Value){ IsQueryParameter = !inlineParameters }, _selectQuery.Select.TakeHints);
-				else if (!supportsParameter && _selectQuery.Select.TakeValue is SqlParameter)
+				if (!supportsParameter && !(_selectQuery.Select.TakeValue is SqlValue))
 					_selectQuery.IsParameterDependent = true;
 				else if (_selectQuery.Select.TakeValue is SqlBinaryExpression
 					// TODO: is this check safe?
@@ -457,7 +454,12 @@ namespace LinqToDB.SqlQuery
 						var value = _selectQuery.Select.TakeValue.EvaluateExpression()!;
 
 						if (supportsParameter)
-							_selectQuery.Select.Take(new SqlParameter(new DbDataType(value.GetType()), "take", value) { IsQueryParameter = !inlineParameters }, _selectQuery.Select.TakeHints);
+							_selectQuery.Select.Take(
+								new SqlParameter(new DbDataType(value.GetType()), "take", value)
+								{
+									IsQueryParameter = !inlineParameters
+								}, _selectQuery.Select.TakeHints
+							);
 						else
 							_selectQuery.Select.Take(new SqlValue(value), _selectQuery.Select.TakeHints);
 					}
@@ -467,10 +469,7 @@ namespace LinqToDB.SqlQuery
 			{
 				var supportsParameter = _flags.AcceptsTakeAsParameter;
 
-				if (supportsParameter && _selectQuery.Select.SkipValue is SqlValue skipValue)
-					_selectQuery.Select.Skip(new SqlParameter(skipValue.ValueType, "skip", skipValue.Value)
-						{ IsQueryParameter = !inlineParameters });
-				else if (!supportsParameter && _selectQuery.Select.SkipValue is SqlParameter)
+				if (!supportsParameter && !(_selectQuery.Select.SkipValue is SqlValue))
 					_selectQuery.IsParameterDependent = true;
 				else if (_selectQuery.Select.SkipValue is SqlBinaryExpression
 					|| _selectQuery.Select.SkipValue is SqlFunction)
@@ -502,11 +501,11 @@ namespace LinqToDB.SqlQuery
 			});
 		}
 
-		public static bool? GetBoolValue(ISqlExpression expression)
+		public static bool? GetBoolValue(ISqlExpression expression, bool withParameters)
 		{
-			if (expression is SqlValue value)
+			if (expression.TryEvaluateExpression(withParameters, out var value))
 			{
-				if (value.Value is bool b)
+				if (value is bool b)
 					return b;
 			}
 			else if (expression is SqlSearchCondition searchCondition)
@@ -518,7 +517,7 @@ namespace LinqToDB.SqlQuery
 					var cond = searchCondition.Conditions[0];
 					if (cond.Predicate.ElementType == QueryElementType.ExprPredicate)
 					{
-						var boolValue = GetBoolValue(((SqlPredicate.Expr)cond.Predicate).Expr1);
+						var boolValue = GetBoolValue(((SqlPredicate.Expr)cond.Predicate).Expr1, withParameters);
 						if (boolValue.HasValue)
 							return cond.IsNot ? !boolValue : boolValue;
 					}
@@ -639,7 +638,7 @@ namespace LinqToDB.SqlQuery
 				if (cond.Predicate.ElementType == QueryElementType.ExprPredicate)
 				{
 					var expr = (SqlPredicate.Expr)cond.Predicate;
-					var boolValue = GetBoolValue(expr.Expr1);
+					var boolValue = GetBoolValue(expr.Expr1, withParameters);
 
 					if (boolValue != null)
 					{
@@ -731,7 +730,7 @@ namespace LinqToDB.SqlQuery
 		}
 
 		internal void ResolveWeakJoins()
-			{
+		{
 			_selectQuery.ForEachTable(table =>
 			{
 				for (var i = table.Joins.Count - 1; i >= 0; i--)
@@ -756,6 +755,76 @@ namespace LinqToDB.SqlQuery
 			}, new HashSet<SelectQuery>());
 		}
 
+
+		static bool IsComplexQuery(SelectQuery query)
+		{
+			var accessibleSources = new HashSet<ISqlTableSource>();
+			var complexFound = QueryHelper.EnumerateAccessibleSources(query)
+				.Any(source =>
+				{
+					accessibleSources.Add(source);
+					if (source is SelectQuery q)
+						return q.From.Tables.Count != 1 || QueryHelper.EnumerateJoins(q).Any();
+					return false;
+				});
+
+			if (complexFound)
+				return true;
+
+			var usedSources = new HashSet<ISqlTableSource>();
+			QueryHelper.CollectUsedSources(query, usedSources);
+
+			return usedSources.Count > accessibleSources.Count;
+		}
+
+		void OptimizeDistinct()
+		{
+			if (!_selectQuery.Select.IsDistinct || !_selectQuery.Select.OptimizeDistinct)
+				return;
+
+			if (IsComplexQuery(_selectQuery))
+				return;
+
+			var table = _selectQuery.From.Tables[0];
+
+			var keys = new List<IList<ISqlExpression>>();
+
+			QueryHelper.CollectUniqueKeys(_selectQuery, includeDistinct: false, keys);
+			QueryHelper.CollectUniqueKeys(table, keys);
+			if (keys.Count == 0)
+				return;
+
+			var expressions = new HashSet<ISqlExpression>(_selectQuery.Select.Columns.Select(c => c.Expression));
+			var foundUnique = keys.Any(key =>
+			{
+				if (key.All(k => expressions.Contains(k)))
+					return true;
+				if (key.Select(k => QueryHelper.GetUnderlyingField(k)).All(k => k != null && expressions.Contains(k)))
+					return true;
+				return false;
+			});
+
+			if (foundUnique)
+			{
+				// We have found that distinct columns has unique key, so we can remove distinct
+				_selectQuery.Select.IsDistinct = false;
+			}
+		}
+
+		static void ApplySubsequentOrder(SelectQuery mainQuery, SelectQuery subQuery)
+		{
+			if (subQuery.OrderBy.Items.Count > 0)
+			{
+				var orderItems = !mainQuery.Select.IsDistinct && mainQuery.GroupBy.IsEmpty
+					? subQuery.OrderBy.Items
+					: subQuery.OrderBy.Items.Where(oi =>
+						mainQuery.Select.Columns.Any(c => c.Expression.Equals(oi.Expression)));
+
+				foreach (var item in orderItems)
+					mainQuery.OrderBy.Expr(item.Expression, item.IsDescending);
+			}
+		}
+
 		SqlTableSource OptimizeSubQuery(
 			SqlTableSource source,
 			bool optimizeWhere,
@@ -778,9 +847,8 @@ namespace LinqToDB.SqlQuery
 
 				if (table != jt.Table)
 				{
-					if (jt.Table.Source is SelectQuery sql && sql.OrderBy.Items.Count > 0)
-						foreach (var item in sql.OrderBy.Items)
-							_selectQuery.OrderBy.Expr(item.Expression, item.IsDescending);
+					if (jt.Table.Source is SelectQuery sql)
+						ApplySubsequentOrder(_selectQuery, sql);
 
 					jt.Table = table;
 				}
@@ -1120,8 +1188,7 @@ namespace LinqToDB.SqlQuery
 					if (table != joinTable.Table)
 					{
 						if (joinTable.Table.Source is SelectQuery q && q.OrderBy.Items.Count > 0)
-							foreach (var item in q.OrderBy.Items)
-								_selectQuery.OrderBy.Expr(item.Expression, item.IsDescending);
+							ApplySubsequentOrder(_selectQuery, q);
 
 						joinTable.Table = table;
 
@@ -1179,13 +1246,8 @@ namespace LinqToDB.SqlQuery
 				{
 					if (!_selectQuery.Select.Columns.All(c => QueryHelper.IsAggregationFunction(c.Expression)))
 					{
-						if (_selectQuery.From.Tables[i].Source is SelectQuery sql && sql.OrderBy.Items.Count > 0)
-						{
-							foreach (var item in sql.OrderBy.Items)
-							{
-								_selectQuery.OrderBy.Items.Add(new SqlOrderByItem(item.Expression, item.IsDescending));
-							}
-						}
+						if (_selectQuery.From.Tables[i].Source is SelectQuery sql)
+							ApplySubsequentOrder(_selectQuery, sql);
 					}
 
 					_selectQuery.From.Tables[i] = table;

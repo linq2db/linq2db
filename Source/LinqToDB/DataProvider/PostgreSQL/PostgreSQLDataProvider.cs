@@ -330,7 +330,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			dbType = dbType.Trim();
 
-			// normalize synonyms and parametrized type names
+			// normalize synonyms and parameterized type names
 			switch (dbType)
 			{
 				case "int4range":

@@ -3532,5 +3532,48 @@ namespace Tests.DataProvider
 			[NotNull, Column(Length = 256)] public string Name { get; set; } = null!;
 		}
 		#endregion
+
+		[Test]
+		public void TestTablesAndViewsLoad([IncludeDataSources(false, TestProvName.AllOracle)] string context, [Values] bool withFilter)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				var options = withFilter
+					? new GetSchemaOptions() { ExcludedSchemas = new string[] { "fake" } }
+					: null;
+
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, options);
+
+				var table        = schema.Tables.Where(t => t.TableName == "SCHEMATESTTABLE").FirstOrDefault();
+				var view         = schema.Tables.Where(t => t.TableName == "SCHEMATESTVIEW").FirstOrDefault();
+				var matView      = schema.Tables.Where(t => t.TableName == "SCHEMATESTMATVIEW" && t.IsView).FirstOrDefault();
+				var matViewTable = schema.Tables.Where(t => t.TableName == "SCHEMATESTMATVIEW" && !t.IsView).FirstOrDefault();
+
+				Assert.IsNotNull(table);
+				Assert.AreEqual("This is table", table.Description);
+				Assert.IsFalse(table.IsView);
+
+				Assert.AreEqual(1, table.Columns.Count);
+				Assert.AreEqual("ID", table.Columns[0].ColumnName);
+				Assert.AreEqual("This is column", table.Columns[0].Description);
+
+				Assert.IsNotNull(view);
+				Assert.IsNull(view.Description);
+				Assert.IsTrue(view.IsView);
+
+				Assert.AreEqual(1, view.Columns.Count);
+				Assert.AreEqual("ID", view.Columns[0].ColumnName);
+				Assert.AreEqual("This is view column", view.Columns[0].Description);
+
+				Assert.IsNotNull(matView);
+				Assert.AreEqual("This is matview", matView.Description);
+
+				Assert.AreEqual(1, matView.Columns.Count);
+				Assert.AreEqual("ID", matView.Columns[0].ColumnName);
+				Assert.AreEqual("This is matview column", matView.Columns[0].Description);
+
+				Assert.IsNull(matViewTable);
+			}
+		}
 	}
 }
