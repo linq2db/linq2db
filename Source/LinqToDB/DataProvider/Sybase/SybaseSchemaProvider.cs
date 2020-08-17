@@ -11,8 +11,11 @@ namespace LinqToDB.DataProvider.Sybase
 
 	class SybaseSchemaProvider : SchemaProviderBase
 	{
-		// sybase provider will execute procedure
-		protected override bool GetProcedureSchemaExecutesProcedure => true;
+		private readonly SybaseDataProvider _provider;
+		public SybaseSchemaProvider(SybaseDataProvider provider)
+		{
+			_provider = provider;
+		}
 
 		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
 		{
@@ -185,7 +188,7 @@ WHERE
 		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)
 		{
 			// otherwise GetSchema will throw AseException
-			if (dataConnection.Transaction != null)
+			if (dataConnection.Transaction != null && GetProcedureSchemaExecutesProcedure)
 				throw new LinqToDBException("Cannot read schema with GetSchemaOptions.GetProcedures = true from transaction. Remove transaction or set GetSchemaOptions.GetProcedures to false");
 
 			using (var reader = dataConnection.ExecuteReader(
@@ -225,8 +228,22 @@ WHERE
 
 		protected override DataTable? GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters, GetSchemaOptions options)
 		{
-			var dt = base.GetProcedureSchema(dataConnection, commandText, commandType, parameters, options);
-			return dt.AsEnumerable().Any() ? dt : null;
+			DataTable? dt;
+
+			dataConnection.Execute("SET FMTONLY ON");
+
+			if (dataConnection.DataProvider.Name == ProviderName.SybaseManaged)
+			{
+				// https://github.com/DataAction/AdoNetCore.AseClient/issues/189
+				using (var rd = dataConnection.ExecuteReader(commandText, commandType, CommandBehavior.Default, parameters))
+					dt = rd.Reader!.GetSchemaTable();
+			}
+			else
+				dt = base.GetProcedureSchema(dataConnection, commandText, commandType, parameters, options);
+
+			dataConnection.Execute("SET FMTONLY OFF");
+
+			return dt?.AsEnumerable().Any() == true ? dt : null;
 		}
 
 		protected override List<ColumnSchema> GetProcedureResultColumns(DataTable resultTable, GetSchemaOptions options)
@@ -285,6 +302,7 @@ WHERE
 					new DataTypeInfo { TypeName = "timestamp"       , DataType = typeof(byte[])  .FullName!, CreateFormat = "timestamp"        , ProviderDbType = 19                                                                   },
 					new DataTypeInfo { TypeName = "binary"          , DataType = typeof(byte[])  .FullName!, CreateFormat = "binary({0})"      , ProviderDbType = 1   , CreateParameters = "length"                                    },
 					new DataTypeInfo { TypeName = "image"           , DataType = typeof(byte[])  .FullName!, CreateFormat = "image"            , ProviderDbType = 7                                                                    },
+					new DataTypeInfo { TypeName = "varbinary"       , DataType = typeof(byte[])  .FullName!, CreateFormat = "varbinary({0})"   , ProviderDbType = 21  , CreateParameters = "max length"                                },
 					new DataTypeInfo { TypeName = "text"            , DataType = typeof(string)  .FullName!, CreateFormat = "text"             , ProviderDbType = 18                                                                   },
 					new DataTypeInfo { TypeName = "ntext"           , DataType = typeof(string)  .FullName!, CreateFormat = "ntext"            , ProviderDbType = 11                                                                   },
 					new DataTypeInfo { TypeName = "decimal"         , DataType = typeof(decimal) .FullName!, CreateFormat = "decimal({0}, {1})", ProviderDbType = 5   , CreateParameters = "precision,scale"                           },
@@ -297,7 +315,6 @@ WHERE
 					new DataTypeInfo { TypeName = "char"            , DataType = typeof(string)  .FullName!, CreateFormat = "char({0})"        , ProviderDbType = 3   , CreateParameters = "length"                                    },
 					new DataTypeInfo { TypeName = "nchar"           , DataType = typeof(string)  .FullName!, CreateFormat = "nchar({0})"       , ProviderDbType = 10  , CreateParameters = "length"                                    },
 					new DataTypeInfo { TypeName = "nvarchar"        , DataType = typeof(string)  .FullName!, CreateFormat = "nvarchar({0})"    , ProviderDbType = 12  , CreateParameters = "max length"                                },
-					new DataTypeInfo { TypeName = "varbinary"       , DataType = typeof(string)  .FullName!, CreateFormat = "varbinary({0})"   , ProviderDbType = 21  , CreateParameters = "max length"                                },
 					new DataTypeInfo { TypeName = "uniqueidentifier", DataType = typeof(Guid)    .FullName!, CreateFormat = "uniqueidentifier" , ProviderDbType = 14                                                                   }
 				};
 			}

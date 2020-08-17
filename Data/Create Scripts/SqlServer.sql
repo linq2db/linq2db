@@ -951,6 +951,11 @@ GO
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('TestSchema.TestSchemaA') AND type in (N'U'))
 BEGIN
 	DROP TABLE TestSchema.TestSchemaA
+END
+GO
+
+IF EXISTS (SELECT  schema_name FROM    information_schema.schemata WHERE   schema_name = 'TestSchema')
+BEGIN
 	DROP SCHEMA [TestSchema]
 END
 GO

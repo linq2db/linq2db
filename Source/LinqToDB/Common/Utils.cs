@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
@@ -140,18 +141,22 @@ namespace LinqToDB.Common
 		}
 
 		public class ObjectReferenceEqualityComparer<T> : IEqualityComparer<T>
+			where T: notnull
 		{
 			public static IEqualityComparer<T> Default = new ObjectReferenceEqualityComparer<T>();
 
 			#region IEqualityComparer<T> Members
 
-			public bool Equals(T x, T y)
+			public bool Equals([AllowNull] T x, [AllowNull] T y)
 			{
 				return ReferenceEquals(x, y);
 			}
 
 			public int GetHashCode(T obj)
 			{
+				if (obj == null)
+					return 0;
+
 				return RuntimeHelpers.GetHashCode(obj);
 			}
 

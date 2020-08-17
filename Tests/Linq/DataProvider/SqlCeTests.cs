@@ -498,7 +498,7 @@ namespace Tests.DataProvider
 			using (var db = new DataConnection(context))
 			{
 				var sp = db.DataProvider.GetSchemaProvider();
-				var sh = sp.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				var sh = sp.GetSchema(db);
 				var t  = sh.Tables.Single(_ => _.TableName!.Equals("Issue695", StringComparison.OrdinalIgnoreCase));
 
 				Assert.AreEqual(2, t.Columns.Count);

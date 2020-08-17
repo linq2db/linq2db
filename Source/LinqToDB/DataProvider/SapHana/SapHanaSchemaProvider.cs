@@ -6,22 +6,67 @@ using System.Linq;
 
 namespace LinqToDB.DataProvider.SapHana
 {
+	using System.Text;
 	using Common;
 	using Data;
 	using SchemaProvider;
 
 	class SapHanaSchemaProvider : SchemaProviderBase
 	{
-		protected string                DefaultSchema = null!;
-		protected GetHanaSchemaOptions? HanaSchemaOptions;
-		protected bool                  HaveAccessForCalculationViews;
+		protected string                DefaultSchema                { get; private set; } = null!;
+		protected GetHanaSchemaOptions? HanaSchemaOptions            { get; private set; }
+		protected bool                  HasAccessForCalculationViews { get; private set; }
+		protected string                SchemasFilter                { get; private set; } = null!;
 
 		public override DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions? options = null)
 		{
-			HanaSchemaOptions             = options as GetHanaSchemaOptions;
-			DefaultSchema                 = dataConnection.Execute<string>("SELECT CURRENT_SCHEMA FROM DUMMY");
-			HaveAccessForCalculationViews = CheckAccessForCalculationViews(dataConnection);
+			HanaSchemaOptions            = options as GetHanaSchemaOptions;
+			DefaultSchema                = dataConnection.Execute<string>("SELECT CURRENT_SCHEMA FROM DUMMY");
+			HasAccessForCalculationViews = CheckAccessForCalculationViews(dataConnection);
+			SchemasFilter                = CreateSchemasFilter(options);
+
 			return base.GetSchema(dataConnection, options);
+		}
+
+		private string CreateSchemasFilter(GetSchemaOptions? options)
+		{
+			var schemas = new HashSet<string>();
+			schemas.Add(DefaultSchema);
+
+			if (options != null)
+			{
+				if (options.IncludedSchemas != null)
+					foreach (var schema in options.IncludedSchemas)
+						if (!string.IsNullOrEmpty(schema))
+							schemas.Add(schema!);
+
+				if (options.ExcludedSchemas != null)
+					foreach (var schema in options.ExcludedSchemas)
+						if (!string.IsNullOrEmpty(schema))
+							schemas.Remove(schema!);
+			}
+
+			if (schemas.Count == 0)
+				throw new LinqToDBException($"{nameof(GetSchemaOptions.IncludedSchemas)}/{nameof(GetSchemaOptions.ExcludedSchemas)} options result in empty list of schemas");
+
+			var first = true;
+
+			var sb = new StringBuilder();
+			sb.Append("IN (");
+			
+			foreach (var schema in schemas)
+			{
+				if (!first)
+					sb.Append(", ");
+				else
+					first = false;
+
+				SapHanaMappingSchema.ConvertStringToSql(sb, schema);
+			}
+
+			sb.Append(")");
+
+			return sb.ToString();
 		}
 
 		private bool CheckAccessForCalculationViews(DataConnection dataConnection)
@@ -111,7 +156,7 @@ namespace LinqToDB.DataProvider.SapHana
 						t.COMMENTS,
 						CAST(1 AS TINYINT) AS IS_TABLE
 					FROM SYS.TABLES AS t
-					WHERE t.SCHEMA_NAME != '_SYS_BIC' AND t.IS_USER_DEFINED_TYPE = 'FALSE'
+					WHERE t.SCHEMA_NAME " + SchemasFilter + @"
 					UNION ALL
 					SELECT
 						v.SCHEMA_NAME,
@@ -123,9 +168,10 @@ namespace LinqToDB.DataProvider.SapHana
 						SELECT *
 						FROM SYS.VIEWS AS v
 						WHERE v.IS_VALID = 'TRUE'
-						AND v.VIEW_TYPE NOT IN ('HIERARCHY', 'CALC') ";
+						AND v.VIEW_TYPE NOT IN ('HIERARCHY', 'CALC')
+						AND v.SCHEMA_NAME " + SchemasFilter;
 
-			if (HaveAccessForCalculationViews)
+			if (HasAccessForCalculationViews)
 			{
 				result += @"
 						UNION ALL
@@ -138,15 +184,14 @@ namespace LinqToDB.DataProvider.SapHana
 							FROM _SYS_BI.BIMC_VARIABLE AS p
 							GROUP BY p.CUBE_NAME
 						) AS p ON c.CUBE_NAME = p.CUBE_NAME
-						WHERE v.VIEW_TYPE = 'CALC' AND v.IS_VALID = 'TRUE' AND p.CUBE_NAME IS NULL";
+						WHERE v.VIEW_TYPE = 'CALC' AND v.IS_VALID = 'TRUE' AND p.CUBE_NAME IS NULL AND v.SCHEMA_NAME " + SchemasFilter;
 			}
 
 			result += @"
 					) AS v
 				) AS combined
 				JOIN SYS.SCHEMAS AS s ON combined.SCHEMA_NAME = s.SCHEMA_NAME
-				WHERE s.HAS_PRIVILEGES = 'TRUE'
-					AND s.SCHEMA_NAME NOT IN ('SYS', '_SYS_BI', '_SYS_REPO', '_SYS_STATISTICS')";
+				WHERE s.HAS_PRIVILEGES = 'TRUE'";
 
 			return result;
 		}
@@ -172,7 +217,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			const string sqlText = @"
+			var sqlText = @"
 				SELECT
 					combined.SCHEMA_NAME,
 					TABLE_NAME,
@@ -197,6 +242,7 @@ namespace LinqToDB.DataProvider.SapHana
 						COMMENTS,
 						GENERATION_TYPE
 					FROM SYS.TABLE_COLUMNS
+					WHERE SCHEMA_NAME " + SchemasFilter + @"
 					UNION ALL
 					SELECT
 						SCHEMA_NAME,
@@ -210,10 +256,10 @@ namespace LinqToDB.DataProvider.SapHana
 						COMMENTS,
 						GENERATION_TYPE
 					FROM SYS.VIEW_COLUMNS
+					WHERE SCHEMA_NAME " + SchemasFilter + @"
 				) AS combined
 				JOIN SYS.SCHEMAS AS s ON combined.SCHEMA_NAME = s.SCHEMA_NAME
-				WHERE s.HAS_PRIVILEGES = 'TRUE'
-				AND s.SCHEMA_NAME NOT IN ('SYS', '_SYS_BI', '_SYS_REPO', '_SYS_STATISTICS')";
+				WHERE s.HAS_PRIVILEGES = 'TRUE'";
 
 			var query = dataConnection.Query(x =>
 			{
@@ -259,18 +305,18 @@ namespace LinqToDB.DataProvider.SapHana
 					REFERENCED_COLUMN_NAME AS ""OtherColumn"",
 					POSITION AS ""Ordinal""
 				FROM REFERENTIAL_CONSTRAINTS
-			").ToList();
+				WHERE SCHEMA_NAME " + SchemasFilter).ToList();
 		}
 
 		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			return dataConnection.Query(rd =>
 			{
-				var schema = rd.GetString(0);
-				var procedure = rd.GetString(1);
-				var isFunction = rd.GetBoolean(2);
+				var schema          = rd.GetString(0);
+				var procedure       = rd.GetString(1);
+				var isFunction      = rd.GetBoolean(2);
 				var isTableFunction = rd.GetBoolean(3);
-				var definition = rd.IsDBNull(4) ? null : rd.GetString(4);
+				var definition      = rd.IsDBNull(4) ? null : rd.GetString(4);
 				return new ProcedureInfo
 				{
 					ProcedureID         = string.Concat(schema, '.', procedure),
@@ -291,6 +337,7 @@ namespace LinqToDB.DataProvider.SapHana
 					0 AS IS_TABLE_FUNCTION,
 					DEFINITION
 				FROM PROCEDURES
+				WHERE SCHEMA_NAME " + SchemasFilter + @"
 				UNION ALL
 				SELECT
 					F.SCHEMA_NAME,
@@ -300,7 +347,7 @@ namespace LinqToDB.DataProvider.SapHana
 					DEFINITION
 				FROM FUNCTIONS AS F
 				JOIN FUNCTION_PARAMETERS AS FP ON F.FUNCTION_OID = FP.FUNCTION_OID
-				WHERE FP.PARAMETER_TYPE = 'RETURN'")
+				WHERE FP.PARAMETER_TYPE = 'RETURN' AND F.SCHEMA_NAME " + SchemasFilter)
 			.ToList();
 		}
 
@@ -346,6 +393,7 @@ namespace LinqToDB.DataProvider.SapHana
 					SCALE,
 					IS_NULLABLE
 				FROM PROCEDURE_PARAMETERS
+				WHERE SCHEMA_NAME " + SchemasFilter + @"
 				UNION ALL
 				SELECT
 					SCHEMA_NAME,
@@ -359,7 +407,7 @@ namespace LinqToDB.DataProvider.SapHana
 					SCALE,
 					IS_NULLABLE
 				FROM FUNCTION_PARAMETERS
-				WHERE NOT (PARAMETER_TYPE = 'RETURN' AND DATA_TYPE_NAME = 'TABLE_TYPE')
+				WHERE NOT (PARAMETER_TYPE = 'RETURN' AND DATA_TYPE_NAME = 'TABLE_TYPE') AND SCHEMA_NAME " + SchemasFilter + @"
 				ORDER BY SCHEMA_NAME, PROCEDURE_NAME, POSITION")
 			.ToList();
 		}
@@ -402,8 +450,21 @@ namespace LinqToDB.DataProvider.SapHana
 
 		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale, GetSchemaOptions options)
 		{
-			if (dataType?.ToLowerInvariant() == "tinyint")
-				return typeof(byte);
+			switch (dataType)
+			{
+				case "TINYINT"              :
+					return typeof(byte);
+				case "ST_GEOMETRY"          :
+				case "ST_GEOMETRYCOLLECTION":
+				case "ST_POINT"             :
+				case "ST_MULTIPOINT"        :
+				case "ST_LINESTRING"        :
+				case "ST_MULTILINESTRING"   :
+				case "ST_POLYGON"           :
+				case "ST_MULTIPOLYGON"      :
+				case "ST_CIRCULARSTRING"    :
+					return typeof(byte[]);
+			}
 
 			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options);
 		}
@@ -442,14 +503,19 @@ namespace LinqToDB.DataProvider.SapHana
 				case "NCLOB"        :
 				case "BINTEXT"      : return DataType.NText;
 
-				case "ST_POINT"     :
-				case "ST_GEOMETRY"  :
-				case "ST_POINTZ"    : return DataType.Udt;
+				case "ST_GEOMETRY"          :
+				case "ST_GEOMETRYCOLLECTION":
+				case "ST_POINT"             :
+				case "ST_MULTIPOINT"        :
+				case "ST_LINESTRING"        :
+				case "ST_MULTILINESTRING"   :
+				case "ST_POLYGON"           :
+				case "ST_MULTIPOLYGON"      :
+				case "ST_CIRCULARSTRING"    : return DataType.Udt;
 			}
 
 			return DataType.Undefined;
 		}
-
 
 		protected override string? GetProviderSpecificTypeNamespace() => null;
 
@@ -576,12 +642,12 @@ namespace LinqToDB.DataProvider.SapHana
 					FROM _SYS_BI.BIMC_VARIABLE AS p
 					GROUP BY p.CUBE_NAME
 				) AS p ON c.CUBE_NAME = p.CUBE_NAME
-				WHERE v.VIEW_TYPE = 'CALC' AND v.IS_VALID = 'TRUE'");
+				WHERE v.VIEW_TYPE = 'CALC' AND v.IS_VALID = 'TRUE' AND v.SCHEMA_NAME " + SchemasFilter);
 
 			return query.ToList();
 		}
 
-		static IEnumerable<ProcedureParameterInfo> GetParametersForViews(DataConnection dataConnection)
+		private IEnumerable<ProcedureParameterInfo> GetParametersForViews(DataConnection dataConnection)
 		{
 			var query = dataConnection.Query(rd =>
 			{
@@ -633,7 +699,7 @@ namespace LinqToDB.DataProvider.SapHana
 				FROM SYS.VIEWS AS v
 				JOIN _SYS_BI.BIMC_ALL_CUBES AS c ON c.VIEW_NAME = v.VIEW_NAME
 				JOIN _SYS_BI.BIMC_VARIABLE AS p ON c.CUBE_NAME = p.CUBE_NAME
-				WHERE c.CATALOG_NAME = p.CATALOG_NAME AND v.VIEW_TYPE = 'CALC'
+				WHERE c.CATALOG_NAME = p.CATALOG_NAME AND v.VIEW_TYPE = 'CALC' AND v.SCHEMA_NAME " + SchemasFilter + @"
 				ORDER BY v.VIEW_NAME, p.""ORDER""");
 
 			return query.ToList();
@@ -641,7 +707,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 		protected override List<TableSchema> GetProviderSpecificTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			if (!HaveAccessForCalculationViews)
+			if (!HasAccessForCalculationViews)
 				return new List<TableSchema>();
 
 			var result =

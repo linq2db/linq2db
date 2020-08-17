@@ -42,7 +42,7 @@
 			stringBuilder.Append("'");
 		}
 
-		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
+		internal static void ConvertStringToSql(StringBuilder stringBuilder, string value)
 		{
 			DataTools.ConvertStringToSql(stringBuilder, "||", null, AppendConversion, value, null);
 		}

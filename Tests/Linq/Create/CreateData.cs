@@ -362,11 +362,11 @@ public class a_CreateData : TestBase
 		using (var conn = LinqToDB.DataProvider.Firebird.FirebirdTools.CreateDataConnection(connection))
 		{
 			conn.Execute(@"
-				UPDATE PERSON
+				UPDATE ""Person""
 				SET
-					FIRSTNAME = @FIRSTNAME,
-					LASTNAME  = @LASTNAME
-				WHERE PERSONID = 4",
+					""FirstName"" = @FIRSTNAME,
+					""LastName""  = @LASTNAME
+				WHERE ""PersonID"" = 4",
 				new
 				{
 					FIRSTNAME = "Jürgen",

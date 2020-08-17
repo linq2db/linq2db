@@ -31,7 +31,7 @@ namespace LinqToDB.DataProvider.Access
 			if (dataTypeInfo == null && dataType != null)
 			{
 				if (dataType.ToLower() == "text")
-					return typeof(string);
+					return length == 1 && !options.GenerateChar1AsString ? typeof(char) : typeof(string);
 				throw new InvalidOperationException();
 			}
 

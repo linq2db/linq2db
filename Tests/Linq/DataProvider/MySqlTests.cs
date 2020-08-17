@@ -854,7 +854,7 @@ namespace Tests.DataProvider
 			using (var db = (DataConnection)GetDataContext(context))
 			{
 				var sp = db.DataProvider.GetSchemaProvider();
-				var schema = sp.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				var schema = sp.GetSchema(db);
 
 				var systemTables = schema.Tables.Where(_ => _.CatalogName!.Equals("sys", StringComparison.OrdinalIgnoreCase)).ToList();
 
@@ -1053,7 +1053,7 @@ namespace Tests.DataProvider
 			{
 				expectedProc.CatalogName = TestUtils.GetDatabaseName(db);
 
-				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 
 				var procedures = schema.Procedures.Where(_ => _.ProcedureName == expectedProc.ProcedureName).ToList();
 
@@ -1178,7 +1178,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
-				DatabaseSchema schema = db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				DatabaseSchema schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 				var res = schema.Tables.FirstOrDefault(c => c.ID!.ToLower().Contains("fulltextindex"));
 				Assert.AreNotEqual(null, res);
 			}
@@ -1189,7 +1189,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
-				DatabaseSchema schema = db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				DatabaseSchema schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 				var table = schema.Tables.FirstOrDefault(t => t.ID!.ToLower().Contains("issue1993"));
 				Assert.IsNotNull(table);
 				Assert.AreEqual(2, table.Columns.Count);

@@ -74,6 +74,10 @@
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>SQLite.generated.cs</LastGenOutput>
 		</None>
+		<None Update="Databases\SqlServer.2017.ProceduresFromSchema.tt">
+		  <LastGenOutput>SqlServer.2017.ProceduresFromSchema.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
 		<None Update="Databases\SqlServer.MS.tt">
 		  <LastGenOutput>SqlServer.MS.generated.cs</LastGenOutput>
 		  <Generator>TextTemplatingFileGenerator</Generator>
@@ -237,6 +241,16 @@
 			<AutoGen>True</AutoGen>
 			<DependentUpon>SQLite.tt</DependentUpon>
 		</Compile>
+		<Compile Update="Databases\SqlServer.2017.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>SqlServer.2017.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Databases\SqlServer.2017.ProceduresFromSchema.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>SqlServer.2017.ProceduresFromSchema.tt</DependentUpon>
+		</Compile>
 		<Compile Update="Databases\SqlServer.generated.cs">
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>
@@ -246,11 +260,6 @@
 		  <DesignTime>True</DesignTime>
 		  <AutoGen>True</AutoGen>
 		  <DependentUpon>SqlServer.MS.tt</DependentUpon>
-		</Compile>
-		<Compile Update="Databases\SqlServer.2017.generated.cs">
-			<DesignTime>True</DesignTime>
-			<AutoGen>True</AutoGen>
-			<DependentUpon>SqlServer.2017.tt</DependentUpon>
 		</Compile>
 		<Compile Update="Databases\SqlServerAzure.generated.cs">
 			<DesignTime>True</DesignTime>
