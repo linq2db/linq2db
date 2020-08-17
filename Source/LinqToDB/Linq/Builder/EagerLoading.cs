@@ -1440,13 +1440,10 @@ namespace LinqToDB.Linq.Builder
 						var idx = containerLocal.RegisterAccessor(accessor);
 
 						accessExpression = Expression.Call(Expression.Constant(containerLocal),
-							ParameterContainer.GetValueMethodInfo, Expression.Constant(idx));
+							ParameterContainer.GetValueMethodInfo.MakeGenericMethod(e.Type), Expression.Constant(idx));
 
 						indexes.Add(accessor, accessExpression);
 					}
-
-					if (e.Type != accessExpression.Type)
-						accessExpression = Expression.Convert(accessExpression, e.Type);
 
 					return accessExpression;
 				}

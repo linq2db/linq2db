@@ -2428,40 +2428,22 @@ namespace LinqToDB.Linq.Builder
 			);
 		}
 
-		internal static ParameterAccessor CreateParameterAccessor(
-			IDataContext        dataContext,
-			Expression          accessorExpression,
-			Expression          originalAccessorExpression,
-			Expression          dbDataTypeAccessorExpression,
-			Expression          expression,
-			ParameterExpression expressionParam,
-			ParameterExpression parametersParam,
-			ParameterExpression dataContextParam,
-			string?             name)
+		static Expression CorrectAccessorExpression(Expression accessorExpression, IDataContext dataContext, ParameterExpression dataContextParam)
 		{
-			// Extracting name for parameter
-			//
-			if (name == null && expression.Type == typeof(DataParameter))
-			{
-				var dp = expression.EvaluateExpression<DataParameter>();
-				if (dp?.Name?.IsNullOrEmpty() == false)
-					name = dp.Name;
-			}
-
 			// see #820
 			accessorExpression = accessorExpression.Transform(e =>
 			{
 				switch (e.NodeType)
 				{
 					case ExpressionType.Parameter:
-						{
-							// DataContext creates DataConnection which is not compatible with QueryRunner and parameter evaluation.
-							// It can be fixed by adding additional parameter to execution path, but it's may slowdown performance.
-							// So for now decided to throw exception.
-							if (e == dataContextParam && !typeof(DataConnection).IsSameOrParentOf(dataContext.GetType()))
-								throw new LinqException("Only DataConnection descendants can be used as source of parameters.");
-							return e;
-						}
+					{
+						// DataContext creates DataConnection which is not compatible with QueryRunner and parameter evaluation.
+						// It can be fixed by adding additional parameter to execution path, but it's may slowdown performance.
+						// So for now decided to throw exception.
+						if (e == dataContextParam && !typeof(DataConnection).IsSameOrParentOf(dataContext.GetType()))
+							throw new LinqException("Only DataConnection descendants can be used as source of parameters.");
+						return e;
+					}
 					case ExpressionType.MemberAccess:
 						var ma = (MemberExpression) e;
 
@@ -2488,6 +2470,33 @@ namespace LinqToDB.Linq.Builder
 						return e;
 				}
 			})!;
+
+			return accessorExpression;
+		}
+
+		internal static ParameterAccessor CreateParameterAccessor(
+			IDataContext        dataContext,
+			Expression          accessorExpression,
+			Expression          originalAccessorExpression,
+			Expression          dbDataTypeAccessorExpression,
+			Expression          expression,
+			ParameterExpression expressionParam,
+			ParameterExpression parametersParam,
+			ParameterExpression dataContextParam,
+			string?             name)
+		{
+			// Extracting name for parameter
+			//
+			if (name == null && expression.Type == typeof(DataParameter))
+			{
+				var dp = expression.EvaluateExpression<DataParameter>();
+				if (dp?.Name?.IsNullOrEmpty() == false)
+					name = dp.Name;
+			}
+
+			// see #820
+			accessorExpression         = CorrectAccessorExpression(accessorExpression, dataContext, dataContextParam);
+			originalAccessorExpression = CorrectAccessorExpression(originalAccessorExpression, dataContext, dataContextParam);
 
 			var mapper = Expression.Lambda<Func<Expression,IDataContext?,object?[]?,object?>>(
 				Expression.Convert(accessorExpression, typeof(object)),
