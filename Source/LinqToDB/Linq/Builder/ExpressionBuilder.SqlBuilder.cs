@@ -2329,7 +2329,7 @@ namespace LinqToDB.Linq.Builder
 
 			var vte  = ReplaceParameter(_expressionAccessors, ex, forceConstant: false, _ => { });
 			var par  = vte.ValueExpression;
-			var expr = Expression.MakeMemberAccess(par.Type == typeof(object) ? Expression.Convert(par, member.DeclaringType) : par, member);
+			var expr = Expression.MakeMemberAccess(par.Type == typeof(object) ? Expression.Convert(par, member?.DeclaringType ?? typeof(object)) : par, member);
 
 			vte.ValueExpression = expr;
 			var p = PrepareConvertersAndCreateParameter(vte, expr, member?.Name, columnDescriptor, BuildParameterType.Default);
