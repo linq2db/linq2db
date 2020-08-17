@@ -63,7 +63,7 @@ namespace LinqToDB.SqlQuery
 
 		public SqlField(ColumnDescriptor column)
 		{
-			Type              = new DbDataType(column.MemberType, column.DataType, column.DbType, column.Length, column.Precision, column.Scale);
+			Type              = column.GetDbDataType(true);
 			Name              = column.MemberName;
 			PhysicalName      = column.ColumnName;
 			CanBeNull         = column.CanBeNull;

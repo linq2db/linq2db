@@ -71,13 +71,7 @@ namespace LinqToDB.SqlQuery
 		}
 
 		internal SqlDataType(ColumnDescriptor column)
-			: this(
-				  column.DataType,
-				  column.MemberType,
-				  column.Length,
-				  column.Precision,
-				  column.Scale,
-				  column.DbType)
+			: this(column.GetDbDataType(true))
 		{
 		}
 

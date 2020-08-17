@@ -456,14 +456,14 @@ namespace LinqToDB.Linq
 
 			if (typeof(DataParameter).IsSameOrParentOf(valueGetter.Type))
 			{
-				dbDataTypeExpression = Expression.PropertyOrField(valueGetter, nameof(DataParameter.DbDataType));
+				dbDataTypeExpression = Expression.Call(Expression.Constant(field.ColumnDescriptor.GetDbDataType(false)),
+					DbDataType.WithSetValuesMethodInfo,
+					Expression.PropertyOrField(valueGetter, nameof(DataParameter.DbDataType)));
 				valueGetter          = Expression.PropertyOrField(valueGetter, nameof(DataParameter.Value));
 			}
 			else
 			{
-				var dbDataType = field.ColumnDescriptor.GetDbDataType();
-				dbDataType = dbDataType.WithSystemType(valueGetter.Type);
-
+				var dbDataType       = field.ColumnDescriptor.GetDbDataType(true).WithSystemType(valueGetter.Type);
 				dbDataTypeExpression = Expression.Constant(dbDataType);
 			}
 
