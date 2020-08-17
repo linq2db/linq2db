@@ -49,19 +49,19 @@ namespace Tests.DataProvider
 
 		const string CurrentProvider = TestProvName.AllSapHana;
 
-		protected override string  GetNullSql  (DataConnection dc) => "SELECT \"{0}\" FROM \"{1}\" WHERE \"ID\" = 1";
-		protected override string  GetValueSql (DataConnection dc) => "SELECT \"{0}\" FROM \"{1}\" WHERE \"ID\" = 2";
+		protected override string  GetNullSql  (DataConnection dc) => "SELECT \"{0}\" FROM {1} WHERE \"ID\" = 1";
+		protected override string  GetValueSql (DataConnection dc) => "SELECT \"{0}\" FROM {1} WHERE \"ID\" = 2";
 		protected override string? PassNullSql(DataConnection dc, out int paramCount)
 		{
 			paramCount = 1;
 			return dc.DataProvider.Name == ProviderName.SapHanaOdbc
-				? "SELECT \"ID\" FROM \"{1}\" WHERE \"{0}\" IS NULL AND ? IS NULL"
-				: "SELECT \"ID\" FROM \"{1}\" WHERE \"{0}\" IS NULL AND :p IS NULL";
+				? "SELECT \"ID\" FROM {1} WHERE \"{0}\" IS NULL AND ? IS NULL"
+				: "SELECT \"ID\" FROM {1} WHERE \"{0}\" IS NULL AND :p IS NULL";
 		}
 		protected override string  PassValueSql(DataConnection dc) =>
 			dc.DataProvider.Name == ProviderName.SapHanaOdbc
-				? "SELECT \"ID\" FROM \"{1}\" WHERE \"{0}\" = ?"
-				: "SELECT \"ID\" FROM \"{1}\" WHERE \"{0}\" = :p";
+				? "SELECT \"ID\" FROM {1} WHERE \"{0}\" = ?"
+				: "SELECT \"ID\" FROM {1} WHERE \"{0}\" = :p";
 
 		[Test]
 		public void TestParameters([IncludeDataSources(CurrentProvider)] string context)

@@ -701,7 +701,7 @@ namespace Tests.Linq
 			[Column] public byte[]? root;
 		}
 
-		[ActiveIssue(Configuration = ProviderName.SQLiteClassic, Details = "Make hybrid fields work for classic provider too")]
+		[ActiveIssue(Configuration = TestProvName.AllSQLiteClassic, Details = "Make hybrid fields work for classic provider too")]
 		[Test]
 		public void Fts3SegDirTableQuery([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
