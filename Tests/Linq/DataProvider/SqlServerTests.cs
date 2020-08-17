@@ -1587,7 +1587,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
-				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 
 				var table = schema.Tables.Where(_ => _.TableName == "Issue1144").Single();
 
@@ -1691,7 +1691,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
-				var options = TestUtils.GetDefaultSchemaOptions(context, new GetSchemaOptions());
+				var options = new GetSchemaOptions();
 				options.GetTables = false;
 
 				var schema = db.DataProvider
@@ -1730,7 +1730,7 @@ RETURNS TABLE
 AS
 	RETURN ( SELECT * FROM dbo.Categories WHERE CONTAINS( *, @s ) )
 ");
-				var options = TestUtils.GetDefaultSchemaOptions(context, new GetSchemaOptions());
+				var options = new GetSchemaOptions();
 				options.GetTables = false;
 
 				var schema = db.DataProvider

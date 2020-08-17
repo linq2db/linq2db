@@ -49,19 +49,19 @@ namespace Tests.DataProvider
 
 		const string CurrentProvider = TestProvName.AllSapHana;
 
-		protected override string  GetNullSql  (DataConnection dc) => "SELECT \"{0}\" FROM \"{1}\" WHERE \"ID\" = 1";
-		protected override string  GetValueSql (DataConnection dc) => "SELECT \"{0}\" FROM \"{1}\" WHERE \"ID\" = 2";
+		protected override string  GetNullSql  (DataConnection dc) => "SELECT \"{0}\" FROM {1} WHERE \"ID\" = 1";
+		protected override string  GetValueSql (DataConnection dc) => "SELECT \"{0}\" FROM {1} WHERE \"ID\" = 2";
 		protected override string? PassNullSql(DataConnection dc, out int paramCount)
 		{
 			paramCount = 1;
 			return dc.DataProvider.Name == ProviderName.SapHanaOdbc
-				? "SELECT \"ID\" FROM \"{1}\" WHERE \"{0}\" IS NULL AND ? IS NULL"
-				: "SELECT \"ID\" FROM \"{1}\" WHERE \"{0}\" IS NULL AND :p IS NULL";
+				? "SELECT \"ID\" FROM {1} WHERE \"{0}\" IS NULL AND ? IS NULL"
+				: "SELECT \"ID\" FROM {1} WHERE \"{0}\" IS NULL AND :p IS NULL";
 		}
 		protected override string  PassValueSql(DataConnection dc) =>
 			dc.DataProvider.Name == ProviderName.SapHanaOdbc
-				? "SELECT \"ID\" FROM \"{1}\" WHERE \"{0}\" = ?"
-				: "SELECT \"ID\" FROM \"{1}\" WHERE \"{0}\" = :p";
+				? "SELECT \"ID\" FROM {1} WHERE \"{0}\" = ?"
+				: "SELECT \"ID\" FROM {1} WHERE \"{0}\" = :p";
 
 		[Test]
 		public void TestParameters([IncludeDataSources(CurrentProvider)] string context)
@@ -341,6 +341,8 @@ namespace Tests.DataProvider
 			[Column, Nullable]
 			public char? charDataType { get; set; } // char(1)
 			[Column, Nullable]
+			public string? char20DataType { get; set; } // varchar(20)
+			[Column, Nullable]
 			public string? varcharDataType { get; set; } // varchar(20)
 			[Column, Nullable]
 			public string? textDataType { get; set; } // text
@@ -348,6 +350,8 @@ namespace Tests.DataProvider
 			public string? shorttextDataType { get; set; } // text
 			[Column, Nullable]
 			public char? ncharDataType { get; set; } // char(1)
+			[Column, Nullable]
+			public string? nchar20DataType { get; set; } // varchar(20)
 			[Column, Nullable]
 			public string? nvarcharDataType { get; set; } // varchar(20)
 			[Column, Nullable]
@@ -714,6 +718,63 @@ namespace Tests.DataProvider
 			public double doubleoptional { get; set; }
 			[Column, Nullable]
 			public string? stringoptional { get; set; }
+		}
+
+		[Test]
+		public void SelectAllTypes([IncludeDataSources(CurrentProvider)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				// This query fails for ODBC x64 provider with
+				// "Arithmetic operation resulted in an overflow"
+				db.GetTable<AllType>().Take(100).ToList();
+			}
+		}
+
+		[Test]
+		public void ByDefaultLoadCurrentSchemaOnly([IncludeDataSources(CurrentProvider)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				var currentSchema = TestUtils.GetSchemaName(db);
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
+
+				foreach (var table in schema.Tables)
+					Assert.AreEqual(currentSchema, table.SchemaName);
+
+				foreach (var procedure in schema.Procedures)
+					Assert.AreEqual(currentSchema, procedure.SchemaName);
+			}
+		}
+
+		[Table(Schema = "TESTHANA", Name = "AllTypesGeo")]
+		public partial class AllTypesGeo
+		{
+			[PrimaryKey, Identity        ] public int     ID                 { get; set; } // INTEGER
+			[Column("dataType")          ] public string? DataType           { get; set; } // VARCHAR(20)
+			[Column("stgeometryDataType")] public byte[]? StgeometryDataType { get; set; } // ST_GEOMETRY
+		}
+
+		[Test]
+		public void TestGeometryTypesNative([IncludeDataSources(true, ProviderName.SapHanaNative)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var data = db.GetTable<AllTypesGeo>().ToArray();
+
+				Assert.AreEqual(7, data.Length);
+			}
+		}
+
+		[Test]
+		public void TestGeometryTypesODBC([IncludeDataSources(ProviderName.SapHanaOdbc)] string context)
+		{
+			// ODBC provider doesn't support spatial types
+			// https://github.com/dotnet/runtime/issues/40707
+			using (var db = GetDataContext(context))
+			{
+				Assert.Throws<ArgumentException>(() => db.GetTable<AllTypesGeo>().ToArray());
+			}
 		}
 	}
 }

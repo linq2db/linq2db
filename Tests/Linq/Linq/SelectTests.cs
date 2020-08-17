@@ -918,6 +918,7 @@ namespace Tests.Linq
 					false,
 					ProviderName.DB2,
 					TestProvName.AllPostgreSQL,
+					TestProvName.AllFirebird,
 					TestProvName.AllSapHana)]
 				string context)
 		{

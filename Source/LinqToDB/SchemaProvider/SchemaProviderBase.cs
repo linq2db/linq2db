@@ -585,11 +585,8 @@ namespace LinqToDB.SchemaProvider
 		}
 
 		// TODO: use proper C# identifier validation procedure
-		public static string ToValidName(string? name)
+		public static string ToValidName(string name)
 		{
-			if (name == null)
-				return "";
-
 			if (name.Contains(" ") || name.Contains("\t"))
 			{
 				var ss = name.Split(new [] {' ', '\t'}, StringSplitOptions.RemoveEmptyEntries)
