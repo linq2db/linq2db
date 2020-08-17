@@ -895,7 +895,7 @@ namespace LinqToDB
 		/// <returns>Returns number of target table records, affected by merge comand.</returns>
 		public static Task<int> MergeAsync<TTarget, TSource>(
 			 this IMergeable<TTarget, TSource> merge,
-			               CancellationToken            token = default)
+			               CancellationToken   token = default)
 		{
 			if (merge == null) throw new ArgumentNullException(nameof(merge));
 

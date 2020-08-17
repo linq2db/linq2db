@@ -13,20 +13,34 @@ namespace LinqToDB.SqlProvider
 			if (statement     == null) throw new ArgumentNullException(nameof(statement));
 			if (mappingSchema == null) throw new ArgumentNullException(nameof(mappingSchema));
 
-			statement.UpdateIsParameterDepended();
+			BuildSqlValueTableParameters(statement);
 
 			// transforming parameters to values
 			var newStatement = statement.ProcessParameters(mappingSchema);
 
+			newStatement.UpdateIsParameterDepended();
+
 			// optimizing expressions according to new values
-			newStatement = optimizer.OptimizeStatement(newStatement, inlineParameters);
+			newStatement = optimizer.OptimizeStatement(newStatement, inlineParameters,
+				newStatement.IsParameterDependent || inlineParameters);
 
-			newStatement.SetAliases();
-
-			// reset parameters
-			newStatement.CollectParameters();
+			newStatement.PrepareQueryAndAliases();
 
 			return newStatement;
 		}
+
+		static void BuildSqlValueTableParameters(SqlStatement statement)
+		{
+			if (statement.IsParameterDependent)
+			{
+				new QueryVisitor().Visit(statement, e =>
+				{
+					if (e is SqlValuesTable table)
+						table.BuildRows();
+				});
+			}
+		}
+
+
 	}
 }

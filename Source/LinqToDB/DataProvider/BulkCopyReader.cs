@@ -99,7 +99,7 @@ namespace LinqToDB.DataProvider
 		{
 			_dataConnection = dataConnection;
 			_columns        = columns;
-			_columnTypes    = _columns.Select(c => c.GetDbDataType()).ToArray();
+			_columnTypes    = _columns.Select(c => c.GetDbDataType(true)).ToArray();
 			_ordinals       = _columns.Select((c, i) => new { c, i }).ToDictionary(_ => _.c.ColumnName, _ => _.i);
 		}
 

@@ -82,6 +82,7 @@ namespace LinqToDB.Linq.Builder
 			new ArrayBuilder               (),
 			new AsSubQueryBuilder          (),
 			new DisableGroupingGuardBuilder(),
+			new InlineParametersBuilder    (),
 			new HasUniqueKeyBuilder        (),
 		};
 
@@ -681,6 +682,7 @@ namespace LinqToDB.Linq.Builder
 				var genericType = sequence.Type.GetGenericArguments()[0];
 				var newMethod   = methodInfo.MakeGenericMethod(genericType);
 
+				var previous    = method;
 				method = Expression.Call(newMethod, sequence, predicate);
 
 				if (exprs.Count > 0)
@@ -693,6 +695,7 @@ namespace LinqToDB.Linq.Builder
 						Expression.Lambda(
 							exprs.Aggregate((Expression)parameter, (current,_) => ExpressionHelper.PropertyOrField(current, "p")),
 							parameter));
+
 				}
 			}
 
@@ -1301,7 +1304,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var p    = Expression.Parameter(typeof(Expression), "exp");
 				var exas = expression.GetExpressionAccessors(p);
-				var expr = ReplaceParameter(exas, expression, _ => {}).ValueExpression;
+				var expr = ReplaceParameter(exas, expression, forceConstant: false, _ => {}).ValueExpression;
 
 				var allowedParameters = new HashSet<ParameterExpression>(currentParameters) { p };
 
@@ -1396,7 +1399,9 @@ namespace LinqToDB.Linq.Builder
 
 			firstMethod = firstMethod.MakeGenericMethod(sourceType);
 
-			var converted = Expression.Call(null, firstMethod, Expression.Call(skipMethod, sequence, index));
+			var skipCall = Expression.Call(skipMethod, sequence, method.Arguments[1]);
+
+			var converted = Expression.Call(null, firstMethod, skipCall);
 
 			return converted;
 		}

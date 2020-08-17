@@ -28,8 +28,32 @@ namespace LinqToDB.DataProvider.SqlCe
 
 			statement = CorrectSkipAndColumns(statement);
 
+			statement = CorrectInsertParameters(statement);
+
 			// call fixer after CorrectSkipAndColumns for remaining cases
 			base.FixEmptySelect(statement);
+
+			return statement;
+		}
+
+		public SqlStatement CorrectInsertParameters(SqlStatement statement)
+		{
+			//SlqCe do not support parameters in columns for insert
+			//
+			if (statement.IsInsert())
+			{
+				var query = statement.SelectQuery;
+				if (query != null)
+				{
+					foreach (var column in query.Select.Columns)
+					{
+						if (column.Expression is SqlParameter parameter)
+						{
+							parameter.IsQueryParameter = false;
+						}
+					}
+				}
+			}
 
 			return statement;
 		}
@@ -85,7 +109,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			// already fixed by CorrectSkipAndColumns
 		}
 
-		public override ISqlExpression ConvertExpression(ISqlExpression expr)
+		public override ISqlExpression ConvertExpression(ISqlExpression expr, bool withParameters)
 		{
 			if (SqlCeConfiguration.InlineFunctionParameters && expr is SqlFunction sqlFunction)
 			{
@@ -98,7 +122,7 @@ namespace LinqToDB.DataProvider.SqlCe
 				}
 			}
 
-			expr = base.ConvertExpression(expr);
+			expr = base.ConvertExpression(expr, withParameters);
 
 			switch (expr)
 			{
