@@ -295,6 +295,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(Configuration = TestProvName.AllSybase, Details = "CI: sybase image needs utf-8 enabled")]
 		[Test]
 		public void TestInternationalParamName([DataSources] string context)
 		{
