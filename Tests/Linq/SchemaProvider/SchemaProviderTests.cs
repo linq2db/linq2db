@@ -264,7 +264,6 @@ namespace Tests.SchemaProvider
 			}
 		}
 
-		[SkipCI("It is insanely slow for oracle. Wether we should fix it or implement configurations support for SkipCI")]
 		[Test]
 		public void IncludeExcludeSchemaTest([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector)]
 			string context)
