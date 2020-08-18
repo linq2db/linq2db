@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Common
 {
@@ -117,6 +118,61 @@ namespace LinqToDB.Common
 
 				currentCounters.Remove(name);
 				currentCounters.Add(name, startDigit);
+			}
+		}
+
+		public static void RemoveDuplicates<T>(this IList<T> list, IEqualityComparer<T>? comparer = null)
+		{
+			if (list.Count <= 1)
+				return;
+
+			var hashSet = new HashSet<T>(comparer ?? EqualityComparer<T>.Default);
+			var i = 0;
+			while (i < list.Count)
+			{
+				if (hashSet.Add(list[i]))
+					++i;
+				else
+				{
+					list.RemoveAt(i);
+				}
+			}
+		}
+
+		public class ObjectReferenceEqualityComparer<T> : IEqualityComparer<T>
+		{
+			public static IEqualityComparer<T> Default = new ObjectReferenceEqualityComparer<T>();
+
+			#region IEqualityComparer<T> Members
+
+			public bool Equals(T x, T y)
+			{
+				return ReferenceEquals(x, y);
+			}
+
+			public int GetHashCode(T obj)
+			{
+				return RuntimeHelpers.GetHashCode(obj);
+			}
+
+			#endregion
+		}
+
+		public static void RemoveDuplicates<T, TKey>(this IList<T> list, Func<T, TKey> keySelector, IEqualityComparer<TKey>? comparer = null)
+		{
+			if (list.Count <= 1)
+				return;
+
+			var hashSet = new HashSet<TKey>(comparer ?? EqualityComparer<TKey>.Default);
+			var i = 0;
+			while (i < list.Count)
+			{
+				if (hashSet.Add(keySelector(list[i])))
+					++i;
+				else
+				{
+					list.RemoveAt(i);
+				}
 			}
 		}
 	}

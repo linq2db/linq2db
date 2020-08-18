@@ -323,6 +323,16 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
+		/// Marks current column to be skipped by default during a full entity fetch
+		/// </summary>
+		/// <param name="skipOnEntityFetch">If <c>true</c>, column won't be fetched unless explicity selected in a Linq query.</param>
+		/// <returns>Returns current column mapping builder.</returns>
+		public PropertyMappingBuilder<TEntity, TProperty> SkipOnEntityFetch(bool skipOnEntityFetch = true)
+		{
+			return SetColumn(a => a.SkipOnEntityFetch = skipOnEntityFetch);
+		}
+
+		/// <summary>
 		/// Sets whether a column is insertable.
 		/// This flag will affect only insert operations with implicit columns specification like
 		/// <see cref="DataExtensions.Insert{T}(IDataContext, T, string?, string?, string?, string?, bool?)"/>

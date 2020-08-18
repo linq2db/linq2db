@@ -59,16 +59,17 @@ namespace LinqToDB.Mapping
 		/// <param name="ca">Attribute to clone.</param>
 		internal ColumnAttribute(ColumnAttribute ca)
 		{
-			MemberName      = ca.MemberName;
-			Configuration   = ca.Configuration;
-			Name            = ca.Name;
-			DataType        = ca.DataType;
-			DbType          = ca.DbType;
-			Storage         = ca.Storage;
-			IsDiscriminator = ca.IsDiscriminator;
-			PrimaryKeyOrder = ca.PrimaryKeyOrder;
-			IsColumn        = ca.IsColumn;
-			CreateFormat    = ca.CreateFormat;
+			MemberName        = ca.MemberName;
+			Configuration     = ca.Configuration;
+			Name              = ca.Name;
+			DataType          = ca.DataType;
+			DbType            = ca.DbType;
+			Storage           = ca.Storage;
+			IsDiscriminator   = ca.IsDiscriminator;
+			SkipOnEntityFetch = ca.SkipOnEntityFetch;
+			PrimaryKeyOrder   = ca.PrimaryKeyOrder;
+			IsColumn          = ca.IsColumn;
+			CreateFormat      = ca.CreateFormat;
 
 			if (ca.HasSkipOnInsert()) SkipOnInsert = ca.SkipOnInsert;
 			if (ca.HasSkipOnUpdate()) SkipOnUpdate = ca.SkipOnUpdate;
@@ -155,6 +156,12 @@ namespace LinqToDB.Mapping
 		/// Default value: <c>false</c>.
 		/// </summary>
 		public bool IsDiscriminator { get; set; }
+
+		/// <summary>
+		/// Gets or sets whether a column must be explicitly defined in a Select statement to be fetched. If <c>true</c>, a "SELECT *"-ish statement won't retrieve this column.
+		/// Default value: <c>false</c>.
+		/// </summary>
+		public bool SkipOnEntityFetch { get; set; }
 
 		private bool? _skipOnInsert;
 		/// <summary>

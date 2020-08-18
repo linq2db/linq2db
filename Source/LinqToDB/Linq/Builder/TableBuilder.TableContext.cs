@@ -818,7 +818,7 @@ namespace LinqToDB.Linq.Builder
 
 									{
 										result = SqlTable.Fields.Values
-											.Where(field => !field.IsDynamic)
+											.Where(field => !field.IsDynamic && !field.SkipOnEntityFetch)
 											.Select(f =>
 												f.ColumnDescriptor != null
 													? new SqlInfo(f.ColumnDescriptor.MemberInfo, f)
