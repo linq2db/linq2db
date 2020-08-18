@@ -40,7 +40,7 @@ namespace LinqToDB.SchemaProvider
 		/// </summary>
 		protected virtual bool GetProcedureSchemaExecutesProcedure => false;
 
-		protected string BuildSchemaFilter(GetSchemaOptions? options, string defaultSchema, Action<StringBuilder, string> stringLiteralBuilder)
+		protected string? BuildSchemaFilter(GetSchemaOptions? options, string defaultSchema, Action<StringBuilder, string> stringLiteralBuilder)
 		{
 			var schemas = new HashSet<string>();
 			schemas.Add(defaultSchema);
@@ -48,9 +48,12 @@ namespace LinqToDB.SchemaProvider
 			if (options != null)
 			{
 				if (options.IncludedSchemas != null)
+				{
+					schemas.Clear();
 					foreach (var schema in options.IncludedSchemas)
 						if (!string.IsNullOrEmpty(schema))
 							schemas.Add(schema!);
+				}
 
 				if (options.ExcludedSchemas != null)
 					foreach (var schema in options.ExcludedSchemas)
@@ -59,7 +62,7 @@ namespace LinqToDB.SchemaProvider
 			}
 
 			if (schemas.Count == 0)
-				throw new LinqToDBException($"{nameof(GetSchemaOptions.IncludedSchemas)}/{nameof(GetSchemaOptions.ExcludedSchemas)} options result in empty list of schemas");
+				return null;
 
 			var first = true;
 

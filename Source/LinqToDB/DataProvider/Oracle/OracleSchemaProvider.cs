@@ -14,7 +14,7 @@ namespace LinqToDB.DataProvider.Oracle
 	{
 		private readonly OracleDataProvider _provider;
 
-		protected string SchemasFilter { get; private set; } = null!;
+		protected string? SchemasFilter { get; private set; }
 
 		public OracleSchemaProvider(OracleDataProvider provider)
 		{
@@ -51,6 +51,9 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
+			if (SchemasFilter == null)
+				return new List<TableInfo>();
+
 			LoadCurrentUser(dataConnection);
 
 			if (IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0)
@@ -126,6 +129,9 @@ namespace LinqToDB.DataProvider.Oracle
 		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
+			if (SchemasFilter == null)
+				return new List<PrimaryKeyInfo>();
+
 			return
 				dataConnection.Query<PrimaryKeyInfo>(@"
 					SELECT
@@ -162,6 +168,9 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
+			if (SchemasFilter == null)
+				return new List<ColumnInfo>();
+
 			var isIdentitySql = "0                                              as IsIdentity,";
 			if (GetMajorVersion(dataConnection) >= 12)
 			{
@@ -242,6 +251,9 @@ namespace LinqToDB.DataProvider.Oracle
 		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
+			if (SchemasFilter == null)
+				return new List<ForeignKeyInfo>();
+
 			if (IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0)
 			{
 				// This is very slow

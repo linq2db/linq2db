@@ -15,7 +15,7 @@ namespace LinqToDB.DataProvider.SapHana
 		protected string                DefaultSchema                { get; private set; } = null!;
 		protected GetHanaSchemaOptions? HanaSchemaOptions            { get; private set; }
 		protected bool                  HasAccessForCalculationViews { get; private set; }
-		protected string                SchemasFilter                { get; private set; } = null!;
+		protected string?               SchemasFilter                { get; private set; }
 
 		public override DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions? options = null)
 		{
@@ -76,6 +76,9 @@ namespace LinqToDB.DataProvider.SapHana
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
+			if (SchemasFilter == null)
+				return new List<TableInfo>();
+
 			var combinedQuery = dataConnection.Query(x =>
 			{
 				var schemaName = x.GetString(0);
@@ -175,6 +178,9 @@ namespace LinqToDB.DataProvider.SapHana
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
+			if (SchemasFilter == null)
+				return new List<ColumnInfo>();
+
 			var sqlText = @"
 				SELECT
 					combined.SCHEMA_NAME,
@@ -254,6 +260,9 @@ namespace LinqToDB.DataProvider.SapHana
 		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
+			if (SchemasFilter == null)
+				return new List<ForeignKeyInfo>();
+
 			return dataConnection.Query<ForeignKeyInfo>(@"
 				SELECT
 					CONSTRAINT_NAME AS ""Name"",
@@ -268,6 +277,9 @@ namespace LinqToDB.DataProvider.SapHana
 
 		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
+			if (SchemasFilter == null)
+				return null;
+
 			return dataConnection.Query(rd =>
 			{
 				var schema          = rd.GetString(0);
@@ -311,6 +323,9 @@ namespace LinqToDB.DataProvider.SapHana
 
 		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)
 		{
+			if (SchemasFilter == null)
+				return new List<ProcedureParameterInfo>();
+
 			return dataConnection.Query(rd =>
 			{
 				var schema     = rd.GetString(0);
@@ -574,6 +589,9 @@ namespace LinqToDB.DataProvider.SapHana
 
 		private IEnumerable<TableInfo> GetViewsWithParameters(DataConnection dataConnection)
 		{
+			if (SchemasFilter == null)
+				return new List<TableInfo>();
+
 			var query = dataConnection.Query(x =>
 			{
 				var schemaName = x.GetString(0);
@@ -607,6 +625,9 @@ namespace LinqToDB.DataProvider.SapHana
 
 		private IEnumerable<ProcedureParameterInfo> GetParametersForViews(DataConnection dataConnection)
 		{
+			if (SchemasFilter == null)
+				return new List<ProcedureParameterInfo>();
+
 			var query = dataConnection.Query(rd =>
 			{
 				var schema           = rd.GetString(0);
