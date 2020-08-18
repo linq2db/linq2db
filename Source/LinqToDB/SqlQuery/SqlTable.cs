@@ -65,7 +65,8 @@ namespace LinqToDB.SqlQuery
 
 		#region Init from type
 
-		public SqlTable(MappingSchema mappingSchema, Type objectType, string? physicalName = null) : this()
+		public SqlTable(MappingSchema mappingSchema, Type objectType, string? physicalName = null)
+			: this()
 		{
 			if (mappingSchema == null) throw new ArgumentNullException(nameof(mappingSchema));
 
@@ -77,6 +78,7 @@ namespace LinqToDB.SqlQuery
 			Name         = ed.TableName;
 			ObjectType   = objectType;
 			PhysicalName = physicalName ?? Name;
+			IsTemporary  = ed.IsTemporary ?? false;
 
 			foreach (var column in ed.Columns)
 			{

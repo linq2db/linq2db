@@ -84,6 +84,17 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
+		/// Gets or sets optional linked server name. See <see cref="LinqExtensions.IsTemporary{T}(ITable{T}, bool)"/> method for support information per provider.
+		/// </summary>
+		public bool? IsTemporary { get; private set; }
+
+		bool? IEntityChangeDescriptor.IsTemporary
+		{
+			get => IsTemporary;
+			set => IsTemporary = value;
+		}
+
+		/// <summary>
 		/// Gets or sets column mapping rules for current mapping class or interface.
 		/// If <c>true</c>, properties and fields should be marked with one of those attributes to be used for mapping:
 		/// - <see cref="ColumnAttribute"/>;
@@ -92,7 +103,7 @@ namespace LinqToDB.Mapping
 		/// - <see cref="ColumnAliasAttribute"/>.
 		/// Otherwise all supported members of scalar type will be used:
 		/// - public instance fields and properties;
-		/// - explicit interface implmentation properties.
+		/// - explicit interface implementation properties.
 		/// Also see <seealso cref="Configuration.IsStructIsScalarType"/> and <seealso cref="ScalarTypeAttribute"/>.
 		/// </summary>
 		public bool IsColumnAttributeRequired { get; private set; }
@@ -107,7 +118,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public List<ColumnDescriptor> Columns { get; private set; }
 
-		IEnumerable<IColumnChangeDescriptor> IEntityChangeDescriptor.Columns => Columns.Cast<IColumnChangeDescriptor>();
+		IEnumerable<IColumnChangeDescriptor> IEntityChangeDescriptor.Columns => Columns;
 
 		/// <summary>
 		/// Gets list of association descriptors for current entity.
@@ -132,14 +143,14 @@ namespace LinqToDB.Mapping
 
 		private List<InheritanceMapping> _inheritanceMappings = null!;
 		/// <summary>
-		/// Gets list of inheritace mapping descriptors for current entity.
+		/// Gets list of inheritance mapping descriptors for current entity.
 		/// </summary>
 		public List<InheritanceMapping> InheritanceMapping => _inheritanceMappings;
 
 		/// <summary>
 		/// Gets mapping class type.
 		/// </summary>
-		public Type ObjectType { get { return TypeAccessor.Type; } }
+		public Type ObjectType => TypeAccessor.Type;
 
 		/// <summary>
 		/// Returns <c>true</c>, if entity has complex columns (with <see cref="MemberAccessor.IsComplex"/> flag set).
@@ -158,6 +169,7 @@ namespace LinqToDB.Mapping
 				SchemaName                = ta.Schema;
 				DatabaseName              = ta.Database;
 				ServerName                = ta.Server;
+				IsTemporary               = ta.IsTemporary;
 				IsColumnAttributeRequired = ta.IsColumnAttributeRequired;
 			}
 
@@ -170,6 +182,7 @@ namespace LinqToDB.Mapping
 			}
 
 			var qf = MappingSchema.GetAttribute<QueryFilterAttribute>(TypeAccessor.Type);
+
 			if (qf != null)
 			{
 				QueryFilterFunc = qf.FilterFunc;

@@ -373,7 +373,7 @@ namespace LinqToDB.Linq
 								return;
 					}
 
-					// create new cache instance and reorder items according to priorities to inprove Find without
+					// create new cache instance and reorder items according to priorities to improve Find without
 					// reorder lock
 					var newCache      = new QueryCacheEntry[cache.Length == CacheSize ? CacheSize : cache.Length + 1];
 					var newPriorities = new int[newCache.Length];
@@ -382,7 +382,7 @@ namespace LinqToDB.Linq
 					newPriorities[0] = 0;
 
 					for (var i = 1; i < newCache.Length; i++)
-		{
+					{
 						newCache[i]      = cache[i - 1];
 						newPriorities[i] = i;
 					}
@@ -391,14 +391,13 @@ namespace LinqToDB.Linq
 					_indexes = newPriorities;
 					version  = _version;
 				}
-		}
-
+			}
 
 			/// <summary>
 			/// Search for query in cache and of found, try to move it to better position in cache.
 			/// </summary>
 			public Query<T>? Find(IDataContext dataContext, Expression expr, QueryFlags flags)
-		{
+			{
 				QueryCacheEntry[] cache;
 				int[]             indexes;
 				int               version;
@@ -441,8 +440,9 @@ namespace LinqToDB.Linq
 				Interlocked.Increment(ref CacheMissCount);
 
 				return null;
-				}
+			}
 		}
+
 		#endregion
 
 		#region Query
@@ -473,8 +473,10 @@ namespace LinqToDB.Linq
 
 			// calculate query flags
 			var flags = QueryFlags.None;
+
 			if (dataContext.InlineParameters)
 				flags |= QueryFlags.InlineParameters;
+
 			// TODO: here we have race condition due to flag being global setting
 			// to fix it we must move flags to context level and remove global flags or invalidate caches on
 			// global flag change
@@ -528,6 +530,7 @@ namespace LinqToDB.Linq
 
 			return query;
 		}
+
 		#endregion
 	}
 

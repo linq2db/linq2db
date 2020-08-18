@@ -233,7 +233,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 					var sb = new StringBuilder();
 					sb.Append("nextval(");
-					ValueToSqlConverter.Convert(sb, BuildTableName(new StringBuilder(), server, database, schema, name).ToString());
+					ValueToSqlConverter.Convert(sb, BuildTableName(new StringBuilder(), server, database, schema, name, table.IsTemporary).ToString());
 					sb.Append(")");
 					return new SqlExpression(sb.ToString(), Precedence.Primary);
 				}
@@ -279,7 +279,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return base.BuildJoinType(join);
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, bool isTemporary)
 		{
 			if (database != null && database.Length == 0) database = null;
 			if (schema   != null && schema.  Length == 0) schema   = null;
@@ -289,7 +289,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			if (database != null && schema == null)
 				database = null;
 
-			return base.BuildTableName(sb, null, database, schema, table);
+			return base.BuildTableName(sb, null, database, schema, table, isTemporary);
 		}
 
 		protected override string? GetProviderTypeName(IDbDataParameter parameter)

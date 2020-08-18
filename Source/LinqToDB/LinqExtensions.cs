@@ -102,6 +102,22 @@ namespace LinqToDB
 		}
 
 		/// <summary>
+		/// Overrides IsTemporary flag for the current table. This call will have effect only for databases that support
+		/// temporary tables.
+		/// <para>Supported by: DB2, Oracle, PostgreSQL, Informix, SQL Server, Sybase ASE.</para>
+		/// </summary>
+		/// <typeparam name="T">Table record mapping class.</typeparam>
+		/// <param name="table">Table-like query source.</param>
+		/// <param name="isTemporary">If true, the current tables will handled as a temporary table.</param>
+		/// <returns>Table-like query source with new owner/schema name.</returns>
+		[LinqTunnel]
+		[Pure]
+		public static ITable<T> IsTemporary<T>(this ITable<T> table, [SqlQueryDependent] bool isTemporary = true)
+		{
+			return ((ITableMutable<T>)table).ChangeIsTemporary(isTemporary);
+		}
+
+		/// <summary>
 		/// Replaces access to a table in generated query with SQL expression.
 		/// Example below adds hint to a table. Also see <see cref="With{T}(ITable{T}, string)"/> method.
 		/// <code>
@@ -3091,7 +3107,7 @@ namespace LinqToDB
 		/// <exception cref="T:System.ArgumentNullException">
 		/// <paramref name="source" /> is <see langword="null" />.</exception>
 		public static IQueryable<TElement> AsQueryable<TElement>(
-			[SqlQueryDependent]  this IEnumerable<TElement> source, 
+			[SqlQueryDependent]  this IEnumerable<TElement> source,
 			                          IDataContext          dataContext)
 		{
 			if (source      == null) throw new ArgumentNullException(nameof(source));
@@ -3178,7 +3194,7 @@ namespace LinqToDB
 					null,
 					MethodHelper.GetMethodInfo(DisableGuard, grouping), grouping.Expression));
 		}
-		
+
 
 		#endregion
 
@@ -3206,9 +3222,9 @@ namespace LinqToDB
 					null,
 					MethodHelper.GetMethodInfo(HasUniqueKey, source, keySelector),
 					source.Expression,
-					Expression.Quote(keySelector) 
+					Expression.Quote(keySelector)
 				));
-		}		
+		}
 
 		#endregion
 

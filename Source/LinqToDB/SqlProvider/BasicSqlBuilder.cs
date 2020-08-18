@@ -356,21 +356,22 @@ namespace LinqToDB.SqlProvider
 			throw new SqlException("Unknown query type '{0}'.", Statement.QueryType);
 		}
 
-		public virtual StringBuilder ConvertTableName(StringBuilder sb, string? server, string? database, string? schema, string table)
+		public virtual StringBuilder ConvertTableName(StringBuilder sb, string? server, string? database, string? schema, string table, bool isTemporary)
 		{
 			if (server   != null) server   = ConvertInline(server,   ConvertType.NameToServer);
 			if (database != null) database = ConvertInline(database, ConvertType.NameToDatabase);
 			if (schema   != null) schema   = ConvertInline(schema,   ConvertType.NameToSchema);
 								  table    = ConvertInline(table,    ConvertType.NameToQueryTable);
 
-			return BuildTableName(sb, server, database, schema, table);
+			return BuildTableName(sb, server, database, schema, table, isTemporary);
 		}
 
 		public virtual StringBuilder BuildTableName(StringBuilder sb,
 			string? server,
 			string? database,
 			string? schema,
-			string table)
+			string  table,
+			bool    isTemporary)
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
 
@@ -429,7 +430,7 @@ namespace LinqToDB.SqlProvider
 					AppendIndent();
 				}
 
-				ConvertTableName(StringBuilder, null, null, null, cte.Name!);
+				ConvertTableName(StringBuilder, null, null, null, cte.Name!, false);
 
 				if (cte.Fields!.Length > 3)
 				{
@@ -1837,7 +1838,6 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.IsTruePredicate:
 					{
 						var reduced = ((SqlPredicate.IsTrue)predicate).Reduce();
-						
 						BuildPredicate(GetPrecedence(predicate), GetPrecedence(reduced), reduced);
 					}
 
@@ -2239,14 +2239,16 @@ namespace LinqToDB.SqlProvider
 
 							if (ts == null)
 							{
-								SqlStatement? current = Statement;
+								var current = Statement;
+
 								do
 								{
 									ts = current.GetTableSource(field.Table);
 									if (ts != null)
 										break;
 									current = current.ParentStatement;
-								} while (current != null);
+								}
+								while (current != null);
 							}
 
 							if (ts == null)
@@ -2298,14 +2300,16 @@ namespace LinqToDB.SqlProvider
 #endif
 
 						ISqlTableSource? table;
-						SqlStatement?    currentStatement = Statement;
+						var currentStatement = Statement;
+
 						do
 						{
 							table = currentStatement.GetTableSource(column.Parent!);
 							if (table != null)
 								break;
 							currentStatement = currentStatement.ParentStatement;
-						} while (currentStatement != null);
+						}
+						while (currentStatement != null);
 
 						if (table == null)
 						{
@@ -2460,9 +2464,10 @@ namespace LinqToDB.SqlProvider
 				return text;
 
 			text = text.Replace("\r", "");
-			
-			var strArray = text.Split('\n'); 
-			var sb = new StringBuilder();
+
+			var strArray = text.Split('\n');
+			var sb       = new StringBuilder();
+
 			for (var i = 0; i < strArray.Length; i++)
 			{
 				var s = strArray[i];
@@ -2986,20 +2991,16 @@ namespace LinqToDB.SqlProvider
 					{
 						var alias = ((SqlTable)table).Alias;
 						return alias != "$" && alias != "$F" ? alias : null;
-					}	
+					}
 				case QueryElementType.SqlRawSqlTable  :
 					{
-						var ts = Statement.SelectQuery?.GetTableSource(table);
-						if (ts == null)
-							ts = Statement.GetTableSource(table);
+						var ts = Statement.SelectQuery?.GetTableSource(table) ?? Statement.GetTableSource(table);
 
 						if (ts != null)
 							return GetTableAlias(ts);
-						else
-						{
+
 						var alias = ((SqlTable)table).Alias;
 						return alias != "$" && alias != "$F" ? alias : null;
-					}	
 					}
 				case QueryElementType.MergeSourceTable:
 					return null;
@@ -3029,6 +3030,11 @@ namespace LinqToDB.SqlProvider
 			return table.PhysicalName == null ? null : ConvertInline(table.PhysicalName, ConvertType.NameToQueryTable);
 		}
 
+		protected virtual bool GetTableIsTemporary(SqlTable table)
+		{
+			return table.IsTemporary;
+		}
+
 		string GetPhysicalTableName(ISqlTableSource table, string? alias, bool ignoreTableExpression = false)
 		{
 			switch (table.ElementType)
@@ -3044,7 +3050,7 @@ namespace LinqToDB.SqlProvider
 
 						var sb = new StringBuilder();
 
-						BuildTableName(sb, server, database, schema, physicalName);
+						BuildTableName(sb, server, database, schema, physicalName, tbl.IsTemporary);
 
 						if (!ignoreTableExpression && tbl.SqlTableType == SqlTableType.Expression)
 						{
@@ -3304,7 +3310,8 @@ namespace LinqToDB.SqlProvider
 				server   == null ? null : ConvertInline(server,   ConvertType.NameToServer),
 				database == null ? null : ConvertInline(database, ConvertType.NameToDatabase),
 				schema   == null ? null : ConvertInline(schema,   ConvertType.NameToSchema),
-										  ConvertInline(table,    ConvertType.NameToQueryTable))
+				                          ConvertInline(table,    ConvertType.NameToQueryTable),
+				                          entity.IsTemporary ?? false)
 			.ToString();
 
 			return $"SELECT Max({columnName}) FROM {tableName}";

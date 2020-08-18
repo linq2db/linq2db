@@ -228,9 +228,9 @@ namespace LinqToDB.DataProvider.SqlServer
 					wrap = true;
 				else
 				{
-					wrap = expr is SqlExpression ex 
-						&& ex.Expr == "{0}" 
-						&& ex.Parameters.Length == 1 
+					wrap = expr is SqlExpression ex
+						&& ex.Expr == "{0}"
+						&& ex.Parameters.Length == 1
 						&& ex.Parameters[0] is SqlSearchCondition;
 				}
 			}
@@ -265,7 +265,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			string? server,
 			string? database,
 			string? schema,
-			string table)
+			string  table,
+			bool    isTemporary)
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
 

@@ -293,7 +293,8 @@ namespace LinqToDB.SchemaProvider
 									null,
 									procedure.CatalogName,
 									procedure.SchemaName,
-									procedure.ProcedureName).ToString();
+									procedure.ProcedureName,
+									false).ToString();
 
 								LoadProcedureTableSchema(dataConnection, options, procedure, commandText, tables);
 							}

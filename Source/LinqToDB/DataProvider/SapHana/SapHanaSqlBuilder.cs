@@ -249,7 +249,7 @@ namespace LinqToDB.DataProvider.SapHana
 				ConvertCase(systemType, parameters, start + 2));
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, bool isTemporary)
 		{
 			if (server   != null && server.Length == 0) server = null;
 			if (schema   != null && schema.Length == 0) schema = null;

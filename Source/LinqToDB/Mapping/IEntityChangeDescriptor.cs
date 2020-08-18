@@ -35,6 +35,11 @@ namespace LinqToDB.Mapping
 		string? ServerName { get; set; }
 
 		/// <summary>
+		/// Gets or sets optional IsTemporary flag. See <see cref="LinqExtensions.IsTemporary{T}(ITable{T}, bool)"/> method for support information per provider.
+		/// </summary>
+		bool? IsTemporary { get; set; }
+
+		/// <summary>
 		/// Gets list of change interfaces for column descriptors for current entity.
 		/// </summary>
 		IEnumerable<IColumnChangeDescriptor> Columns { get; }

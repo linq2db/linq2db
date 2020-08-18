@@ -1364,7 +1364,7 @@ namespace Tests.Data
 
 		[Table]
 		public class OracleBulkCopyTable
-		{ 
+		{
 			[Column]
 			public int ID { get; set; }
 		}
@@ -1506,7 +1506,7 @@ namespace Tests.Data
 
 		[Table]
 		public class TestPostgreSQLTypeName
-		{ 
+		{
 			[Column]
 			public NpgsqlTypes.NpgsqlCircle? Column { get; set; }
 		}

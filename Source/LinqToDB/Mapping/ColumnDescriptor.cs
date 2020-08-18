@@ -312,7 +312,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets whether a column is insertable.
 		/// This flag will affect only insert operations with implicit columns specification like
-		/// <see cref="DataExtensions.Insert{T}(IDataContext, T, string, string, string, string)"/>
+		/// <see cref="DataExtensions.Insert{T}(IDataContext, T, string?, string?, string?, string?, bool?)"/>
 		/// method and will be ignored when user explicitly specifies value for this column.
 		/// </summary>
 		public bool           SkipOnInsert    { get; }
@@ -337,8 +337,8 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public SkipModification SkipModificationFlags { get; }
 
-		/// <summary> 
-		/// Checks if the passed object has values that should bes skipped based on the given flags. 
+		/// <summary>
+		/// Checks if the passed object has values that should bes skipped based on the given flags.
 		/// </summary>
 		/// <param name="obj">The object containing the values for the operation.</param>
 		/// <param name="descriptor"><see cref="EntityDescriptor"/> of the current instance.</param>
@@ -348,7 +348,7 @@ namespace LinqToDB.Mapping
 		{
 			if (SkipBaseAttributes == null)
 				return false;
-	
+
 			foreach (var skipBaseAttribute in SkipBaseAttributes)
 				if ((skipBaseAttribute.Affects & flags) != 0 && skipBaseAttribute.ShouldSkip(obj, descriptor, this))
 					return true;
@@ -359,7 +359,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets whether a column is updatable.
 		/// This flag will affect only update operations with implicit columns specification like
-		/// <see cref="DataExtensions.Update{T}(IDataContext, T, string, string, string, string)"/>
+		/// <see cref="DataExtensions.Update{T}(IDataContext, T, string?, string?, string?, string?, bool?)"/>
 		/// method and will be ignored when user explicitly specifies value for this column.
 		/// </summary>
 		public bool           SkipOnUpdate    { get; }
@@ -399,7 +399,7 @@ namespace LinqToDB.Mapping
 
 		/// <summary>
 		/// Custom template for column definition in create table SQL expression, generated using
-		/// <see cref="DataExtensions.CreateTable{T}(IDataContext, string, string, string, string, string, DefaultNullable, string)"/> methods.
+		/// <see cref="DataExtensions.CreateTable{T}(IDataContext, string?, string?, string?, string?, string?, DefaultNullable, string?, bool?)"/> methods.
 		/// Template accepts following string parameters:
 		/// - {0} - column name;
 		/// - {1} - column type;

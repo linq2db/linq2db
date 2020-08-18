@@ -34,7 +34,7 @@ namespace LinqToDB.DataProvider.Access
 				var field = trun.Table!.Fields.Values.Skip(commandNumber - 1).First(f => f.IsIdentity);
 
 				StringBuilder.Append("ALTER TABLE ");
-				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName!);
+				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName!, trun.Table.IsTemporary);
 				StringBuilder.Append(" ALTER COLUMN ");
 				Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
 				StringBuilder.AppendLine(" COUNTER(1,1)");
@@ -169,7 +169,7 @@ namespace LinqToDB.DataProvider.Access
 				if (value != null)
 				{
 					var text  = value.ToString()!;
-		
+
 					var ntext = predicate.IsSqlLike ? text : DataTools.EscapeUnterminatedBracket(text);
 
 					if (text != ntext)
@@ -389,9 +389,10 @@ namespace LinqToDB.DataProvider.Access
 			StringBuilder.Append(")");
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, bool isTemporary)
 		{
-			if (database != null && database.Length == 0) database = null;
+			if (database != null && database.Length == 0)
+				database = null;
 
 			if (database != null)
 				sb.Append(database).Append(".");

@@ -19,7 +19,7 @@ namespace LinqToDB.Linq
 
 		public string GetTableName() =>
 			DataContext.CreateSqlProvider()
-				.ConvertTableName(new StringBuilder(), null, null, null, TableName!)
+				.ConvertTableName(new StringBuilder(), null, null, null, TableName!, false)
 				.ToString();
 
 		#region Overrides

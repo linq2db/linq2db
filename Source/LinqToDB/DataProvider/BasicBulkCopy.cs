@@ -99,7 +99,8 @@ namespace LinqToDB.DataProvider
 
 			foreach (var item in source)
 			{
-				table.DataContext.Insert(item, options.TableName, options.DatabaseName, options.SchemaName, options.ServerName);
+				table.DataContext.Insert(item, options.TableName, options.DatabaseName, options.SchemaName, options.ServerName, options.IsTemporary);
+
 				rowsCopied.RowsCopied++;
 
 				if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null && rowsCopied.RowsCopied % options.NotifyAfter == 0)
@@ -126,8 +127,10 @@ namespace LinqToDB.DataProvider
 
 			foreach (var item in source)
 			{
-				await table.DataContext.InsertAsync(item, options.TableName, options.DatabaseName, options.SchemaName, options.ServerName, cancellationToken)
+				await table.DataContext
+					.InsertAsync(item, options.TableName, options.DatabaseName, options.SchemaName, options.ServerName, options.IsTemporary, cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
 				rowsCopied.RowsCopied++;
 
 				if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null && rowsCopied.RowsCopied % options.NotifyAfter == 0)
@@ -155,7 +158,8 @@ namespace LinqToDB.DataProvider
 
 			await foreach (var item in source.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext).WithCancellation(cancellationToken))
 			{
-				await table.DataContext.InsertAsync(item, options.TableName, options.DatabaseName, options.SchemaName, options.ServerName, cancellationToken)
+				await table.DataContext
+					.InsertAsync(item, options.TableName, options.DatabaseName, options.SchemaName, options.ServerName, options.IsTemporary, cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 				rowsCopied.RowsCopied++;
 
@@ -178,14 +182,17 @@ namespace LinqToDB.DataProvider
 			var databaseName = options.DatabaseName ?? table.DatabaseName;
 			var schemaName   = options.SchemaName   ?? table.SchemaName;
 			var tableName    = options.TableName    ?? table.TableName;
+			var isTemporary  = options.IsTemporary  ?? table.IsTemporary;
 
-			return sqlBuilder.BuildTableName(
-				new StringBuilder(),
-				serverName   == null ? null : escaped ? sqlBuilder.ConvertInline(serverName,   ConvertType.NameToServer)    : serverName,
-				databaseName == null ? null : escaped ? sqlBuilder.ConvertInline(databaseName, ConvertType.NameToDatabase)  : databaseName,
-				schemaName   == null ? null : escaped ? sqlBuilder.ConvertInline(schemaName,   ConvertType.NameToSchema)    : schemaName,
-											  escaped ? sqlBuilder.ConvertInline(tableName,    ConvertType.NameToQueryTable): tableName)
-			.ToString();
+			return sqlBuilder
+				.BuildTableName(
+					new StringBuilder(),
+					serverName   == null ? null : escaped ? sqlBuilder.ConvertInline(serverName,   ConvertType.NameToServer)     : serverName,
+					databaseName == null ? null : escaped ? sqlBuilder.ConvertInline(databaseName, ConvertType.NameToDatabase)   : databaseName,
+					schemaName   == null ? null : escaped ? sqlBuilder.ConvertInline(schemaName,   ConvertType.NameToSchema)     : schemaName,
+					                              escaped ? sqlBuilder.ConvertInline(tableName,    ConvertType.NameToQueryTable) : tableName,
+					                              isTemporary)
+				.ToString();
 		}
 
 		protected struct ProviderConnections

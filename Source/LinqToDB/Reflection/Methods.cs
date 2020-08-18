@@ -79,10 +79,10 @@ namespace LinqToDB.Reflection
 			public static readonly MethodInfo LoadWith              = MemberHelper.MethodOfGeneric<IQueryable<LW1>>(q => q.LoadWith(e => e.Single2));
 			public static readonly MethodInfo LoadWithSingleFilter  = MemberHelper.MethodOfGeneric<IQueryable<LW1>>(q => q.LoadWith(e => e.Single2, eq => eq.Where(e => e.Value2 == 1)));
 			public static readonly MethodInfo LoadWithManyFilter    = MemberHelper.MethodOfGeneric<IQueryable<LW1>>(q => q.LoadWith(e => e.Many2,   eq => eq.Where(e => e.Value2 == 1)));
-			
+
 			public static readonly MethodInfo ThenLoadFromSingle             = MemberHelper.MethodOfGeneric<IQueryable<LW1>>(q => q.LoadWith(e => e.Single2).ThenLoad(e => e.Single3));
 			public static readonly MethodInfo ThenLoadFromMany               = MemberHelper.MethodOfGeneric<IQueryable<LW1>>(q => q.LoadWith(e => e.Many2).ThenLoad(e => e.Single3));
-			
+
 			public static readonly MethodInfo ThenLoadFromSingleSingleFilter = MemberHelper.MethodOfGeneric<IQueryable<LW1>>(q => q.LoadWith(e => e.Single2).ThenLoad(e => e.Single3, eq => eq.Where(e => e.Value3 == 3)));
 			public static readonly MethodInfo ThenLoadFromSingleManyFilter   = MemberHelper.MethodOfGeneric<IQueryable<LW1>>(q => q.LoadWith(e => e.Single2).ThenLoad(e => e.Many3,   eq => eq.Where(e => e.Value3 == 3)));
 			public static readonly MethodInfo ThenLoadFromManySingleFilter   = MemberHelper.MethodOfGeneric<IQueryable<LW1>>(q => q.LoadWith(e => e.Many2).ThenLoad(e => e.Single3,   eq => eq.Where(e => e.Value3 == 3)));
@@ -95,10 +95,11 @@ namespace LinqToDB.Reflection
 
 			public static class Table
 			{
-				public static readonly MethodInfo TableName    = MemberHelper.MethodOfGeneric<ITable<int>>(t => t.TableName(null!));
-				public static readonly MethodInfo SchemaName   = MemberHelper.MethodOfGeneric<ITable<int>>(t => t.SchemaName(null!));
+				public static readonly MethodInfo TableName    = MemberHelper.MethodOfGeneric<ITable<int>>(t => t.TableName   (null!));
+				public static readonly MethodInfo SchemaName   = MemberHelper.MethodOfGeneric<ITable<int>>(t => t.SchemaName  (null!));
 				public static readonly MethodInfo DatabaseName = MemberHelper.MethodOfGeneric<ITable<int>>(t => t.DatabaseName(null!));
-				public static readonly MethodInfo ServerName   = MemberHelper.MethodOfGeneric<ITable<int>>(t => t.ServerName(null!));
+				public static readonly MethodInfo ServerName   = MemberHelper.MethodOfGeneric<ITable<int>>(t => t.ServerName  (null!));
+				public static readonly MethodInfo IsTemporary  = MemberHelper.MethodOfGeneric<ITable<int>>(t => t.IsTemporary (false));
 
 				public static readonly MethodInfo With                = MemberHelper.MethodOfGeneric<ITable<int>>(t => t.With(""));
 				public static readonly MethodInfo WithTableExpression = MemberHelper.MethodOfGeneric<ITable<int>>(t => t.WithTableExpression(""));
@@ -142,7 +143,7 @@ namespace LinqToDB.Reflection
 				public static class Q
 				{
 					public static readonly MethodInfo Into        = MemberHelper.MethodOfGeneric((IQueryable<LW1> q, ITable<LW2> t) => q.Into(t));
-					
+
 					public static readonly MethodInfo Insert      = MemberHelper.MethodOfGeneric((IQueryable<LW1> q, ITable<LW2> t, Expression<Func<LW1, LW2>> s) => q.Insert(t, s));
 					public static readonly MethodInfo InsertAsync = MemberHelper.MethodOfGeneric((IQueryable<LW1> q, ITable<LW2> t, Expression<Func<LW1, LW2>> s) => q.InsertAsync(t, s, default));
 
@@ -159,19 +160,19 @@ namespace LinqToDB.Reflection
 				public static class DC
 				{
 					public static readonly MethodInfo Into        = MemberHelper.MethodOfGeneric((IDataContext dc, ITable<LW1> t) => dc.Into(t));
-					
-					public static readonly MethodInfo Insert      = MemberHelper.MethodOfGeneric((IDataContext dc, LW1 o) => dc.Insert(o, "tn", "db", "sch", "srv"));
-					public static readonly MethodInfo InsertAsync = MemberHelper.MethodOfGeneric((IDataContext dc, LW1 o) => dc.InsertAsync(o, "tn", "db", "sch", "srv", default));
+
+					public static readonly MethodInfo Insert      = MemberHelper.MethodOfGeneric((IDataContext dc, LW1 o) => dc.Insert(o, "tn", "db", "sch", "srv", false));
+					public static readonly MethodInfo InsertAsync = MemberHelper.MethodOfGeneric((IDataContext dc, LW1 o) => dc.InsertAsync(o, "tn", "db", "sch", "srv", false, default));
 				}
-				
+
 				public static class T
 				{
 					public static readonly MethodInfo Value             = MemberHelper.MethodOfGeneric<ITable<LW1>>(q => q.Value(e => e.Value1, 1));
 					public static readonly MethodInfo ValueExpression   = MemberHelper.MethodOfGeneric<ITable<LW1>>(q => q.Value(e => e.Value1, () => 1));
-				
+
 					public static readonly MethodInfo Insert      = MemberHelper.MethodOfGeneric((ITable<LW1> t, Expression<Func<LW1>> s) => t.Insert(s));
 					public static readonly MethodInfo InsertAsync = MemberHelper.MethodOfGeneric((ITable<LW1> t, Expression<Func<LW1>> s) => t.InsertAsync(s, default));
-					
+
 					public static readonly MethodInfo InsertWithIdentity             = MemberHelper.MethodOfGeneric((ITable<LW1> t, Expression<Func<LW1>> s) => t.InsertWithIdentity(s));
 					public static readonly MethodInfo InsertWithIdentityAsync        = MemberHelper.MethodOfGeneric((ITable<LW1> t, Expression<Func<LW1>> s) => t.InsertWithIdentityAsync(s, default));
 					public static readonly MethodInfo InsertWithInt32Identity        = MemberHelper.MethodOfGeneric((ITable<LW1> t, Expression<Func<LW1>> s) => t.InsertWithInt32Identity(s));
@@ -181,15 +182,15 @@ namespace LinqToDB.Reflection
 					public static readonly MethodInfo InsertWithDecimalIdentity      = MemberHelper.MethodOfGeneric((ITable<LW1> t, Expression<Func<LW1>> s) => t.InsertWithDecimalIdentity(s));
 					public static readonly MethodInfo InsertWithDecimalIdentityAsync = MemberHelper.MethodOfGeneric((ITable<LW1> t, Expression<Func<LW1>> s) => t.InsertWithDecimalIdentityAsync(s, default));
 				}
-				
+
 				public static class VI
 				{
 					public static readonly MethodInfo Value           = MemberHelper.MethodOfGeneric<IValueInsertable<LW1>>(q => q.Value(e => e.Value1, 1));
 					public static readonly MethodInfo ValueExpression = MemberHelper.MethodOfGeneric<IValueInsertable<LW1>>(q => q.Value(e => e.Value1, () => 1));
-				
+
 					public static readonly MethodInfo Insert          = MemberHelper.MethodOfGeneric<IValueInsertable<LW1>>(i => i.Insert());
 					public static readonly MethodInfo InsertAsync     = MemberHelper.MethodOfGeneric<IValueInsertable<LW1>>(i => i.InsertAsync(default));
-				
+
 					public static readonly MethodInfo InsertWithIdentity             = MemberHelper.MethodOfGeneric<IValueInsertable<LW1>>(i => i.InsertWithIdentity());
 					public static readonly MethodInfo InsertWithIdentityAsync        = MemberHelper.MethodOfGeneric<IValueInsertable<LW1>>(i => i.InsertWithIdentityAsync(default));
 					public static readonly MethodInfo InsertWithInt32Identity        = MemberHelper.MethodOfGeneric<IValueInsertable<LW1>>(i => i.InsertWithInt32Identity());
@@ -208,7 +209,7 @@ namespace LinqToDB.Reflection
 
 					public static readonly MethodInfo Insert      = MemberHelper.MethodOfGeneric<ISelectInsertable<LW1, LW2>>(q => q.Insert());
 					public static readonly MethodInfo InsertAsync = MemberHelper.MethodOfGeneric<ISelectInsertable<LW1, LW2>>(q => q.InsertAsync(default));
-					
+
 					public static readonly MethodInfo InsertWithIdentity             = MemberHelper.MethodOfGeneric<ISelectInsertable<LW1, LW2>>(i => i.InsertWithIdentity());
 					public static readonly MethodInfo InsertWithIdentityAsync        = MemberHelper.MethodOfGeneric<ISelectInsertable<LW1, LW2>>(i => i.InsertWithIdentityAsync(default));
 					public static readonly MethodInfo InsertWithInt32Identity        = MemberHelper.MethodOfGeneric<ISelectInsertable<LW1, LW2>>(i => i.InsertWithInt32Identity());
@@ -252,7 +253,7 @@ namespace LinqToDB.Reflection
 
 			public LW3   Single3 = null!;
 			public LW3[] Many3   = null!;
-				
+
 		}
 
 		abstract class LW3

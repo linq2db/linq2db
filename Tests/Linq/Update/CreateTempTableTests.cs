@@ -27,6 +27,8 @@ namespace Tests.xUpdate
 					"TempTable",
 					db.Parent.Select(p => new IDTable { ID = p.ParentID })))
 				{
+					var l = tmp.ToList();
+
 					var list =
 					(
 						from p in db.Parent

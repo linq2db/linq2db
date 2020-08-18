@@ -5,6 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+
 using LinqToDB.Async;
 
 namespace LinqToDB.Linq
@@ -31,8 +32,8 @@ namespace LinqToDB.Linq
 		public Expression Expression => _query.Expression;
 		Expression IExpressionQuery<T>.Expression
 		{
-			get { return _query.Expression; }
-			set { throw new NotImplementedException(); }
+			get => _query.Expression;
+			set => throw new NotImplementedException();
 		}
 
 		public string         SqlText        { get; } = null!;
@@ -76,6 +77,7 @@ namespace LinqToDB.Linq
 		public string? SchemaName   { get; }
 		public string  TableName    { get; } = null!;
 		public string? ServerName   { get; }
+		public bool    IsTemporary  { get; }
 
 		public string GetTableName()
 		{

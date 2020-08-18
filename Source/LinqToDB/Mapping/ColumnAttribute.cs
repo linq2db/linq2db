@@ -160,7 +160,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets or sets whether a column is insertable.
 		/// This flag will affect only insert operations with implicit columns specification like
-		/// <see cref="DataExtensions.Insert{T}(IDataContext, T, string, string, string, string)"/>
+		/// <see cref="DataExtensions.Insert{T}(IDataContext, T, string?, string?, string?, string?, bool?)"/>
 		/// method and will be ignored when user explicitly specifies value for this column.
 		/// </summary>
 		public bool   SkipOnInsert
@@ -173,13 +173,13 @@ namespace LinqToDB.Mapping
 		/// Returns <c>true</c>, if <see cref="SkipOnInsert"/> was configured for current attribute.
 		/// </summary>
 		/// <returns><c>true</c> if <see cref="SkipOnInsert"/> property was set in attribute.</returns>
-		internal bool HasSkipOnInsert() => _skipOnInsert.HasValue; 
+		internal bool HasSkipOnInsert() => _skipOnInsert.HasValue;
 
 		private bool? _skipOnUpdate;
 		/// <summary>
 		/// Gets or sets whether a column is updatable.
 		/// This flag will affect only update operations with implicit columns specification like
-		/// <see cref="DataExtensions.Update{T}(IDataContext, T, string, string, string, string)"/>
+		/// <see cref="DataExtensions.Update{T}(IDataContext, T, string?, string?, string?, string?, bool?)"/>
 		/// method and will be ignored when user explicitly specifies value for this column.
 		/// </summary>
 		public bool   SkipOnUpdate
@@ -303,7 +303,7 @@ namespace LinqToDB.Mapping
 
 		/// <summary>
 		/// Custom template for column definition in create table SQL expression, generated using
-		/// <see cref="DataExtensions.CreateTable{T}(IDataContext, string, string, string, string, string, DefaultNullable, string)"/> methods.
+		/// <see cref="DataExtensions.CreateTable{T}(IDataContext, string?, string?, string?, string?, string?, DefaultNullable, string?, bool?)"/> methods.
 		/// Template accepts following string parameters:
 		/// - {0} - column name;
 		/// - {1} - column type;
@@ -318,7 +318,7 @@ namespace LinqToDB.Mapping
 		/// Positive values first (ascending), then unspecified (arbitrary), then negative values (ascending).
 		/// </summary>
 		/// <remarks>
-		/// Ordering performed in <see cref="SqlTable.SqlTable(MappingSchema, Type, string)"/> constructor.
+		/// Ordering performed in <see cref="SqlTable"/> constructor.
 		/// </remarks>
 		public int Order
 		{

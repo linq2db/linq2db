@@ -17,6 +17,7 @@ namespace LinqToDB
 		string? DatabaseName { get; }
 		string? SchemaName   { get; }
 		string  TableName    { get; }
+		bool    IsTemporary  { get; }
 
 		//TODO: replace with extension method
 		string GetTableName();

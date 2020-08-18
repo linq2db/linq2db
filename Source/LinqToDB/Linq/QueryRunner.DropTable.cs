@@ -13,8 +13,12 @@ namespace LinqToDB.Linq
 		{
 			public static void Query(
 				IDataContext dataContext,
-				string? tableName, string? serverName, string? databaseName, string? schemaName,
-				bool ifExists)
+				string?      tableName,
+				string?      serverName,
+				string?      databaseName,
+				string?      schemaName,
+				bool         ifExists,
+				bool?        isTemporary)
 			{
 				var sqlTable  = new SqlTable<T>(dataContext.MappingSchema);
 				var dropTable = new SqlDropTableStatement(ifExists);
@@ -23,6 +27,7 @@ namespace LinqToDB.Linq
 				if (serverName   != null) sqlTable.Server       = serverName;
 				if (databaseName != null) sqlTable.Database     = databaseName;
 				if (schemaName   != null) sqlTable.Schema       = schemaName;
+				if (isTemporary  != null) sqlTable.IsTemporary  = isTemporary.Value;
 
 				dropTable.Table  = sqlTable;
 
@@ -38,8 +43,12 @@ namespace LinqToDB.Linq
 
 			public static async Task QueryAsync(
 				IDataContext dataContext,
-				string? tableName, string? serverName, string? databaseName, string? schemaName,
-				bool ifExists,
+				string?      tableName,
+				string?      serverName,
+				string?      databaseName,
+				string?      schemaName,
+				bool         ifExists,
+				bool?        isTemporary,
 				CancellationToken token)
 			{
 				var sqlTable  = new SqlTable<T>(dataContext.MappingSchema);
@@ -49,6 +58,7 @@ namespace LinqToDB.Linq
 				if (serverName   != null) sqlTable.Server       = serverName;
 				if (databaseName != null) sqlTable.Database     = databaseName;
 				if (schemaName   != null) sqlTable.Schema       = schemaName;
+				if (isTemporary  != null) sqlTable.IsTemporary  = isTemporary.Value;
 
 				dropTable.Table  = sqlTable;
 

@@ -1,5 +1,7 @@
 ﻿using System.Linq.Expressions;
 
+using static LinqToDB.LinqExtensions;
+
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
@@ -8,21 +10,27 @@ namespace LinqToDB.Linq.Builder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsQueryable("TableName", "ServerName", "DatabaseName", "SchemaName");
+			return methodCall.IsQueryable(
+				nameof(LinqExtensions.TableName),
+				nameof(LinqExtensions.ServerName),
+				nameof(LinqExtensions.DatabaseName),
+				nameof(LinqExtensions.SchemaName),
+				nameof(LinqExtensions.IsTemporary));
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			var table    = (TableBuilder.TableContext)sequence;
-			var value    = (string?)methodCall.Arguments[1].EvaluateExpression();
+			var value    = methodCall.Arguments[1].EvaluateExpression();
 
 			switch (methodCall.Method.Name)
 			{
-				case "TableName"    : table.SqlTable.PhysicalName = value!; break;
-				case "ServerName"   : table.SqlTable.Server       = value;  break;
-				case "DatabaseName" : table.SqlTable.Database     = value;  break;
-				case "SchemaName"   : table.SqlTable.Schema       = value;  break;
+				case nameof(LinqExtensions.TableName)    : table.SqlTable.PhysicalName = (string?)value!; break;
+				case nameof(LinqExtensions.ServerName)   : table.SqlTable.Server       = (string?)value;  break;
+				case nameof(LinqExtensions.DatabaseName) : table.SqlTable.Database     = (string?)value;  break;
+				case nameof(LinqExtensions.SchemaName)   : table.SqlTable.Schema       = (string?)value;  break;
+				case nameof(LinqExtensions.IsTemporary)  : table.SqlTable.IsTemporary  = (bool)   value!; break;
 			}
 
 			return sequence;

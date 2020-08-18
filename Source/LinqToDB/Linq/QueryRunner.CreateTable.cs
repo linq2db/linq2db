@@ -11,10 +11,16 @@ namespace LinqToDB.Linq
 	{
 		public static class CreateTable<T>
 		{
-			public static ITable<T> Query(IDataContext dataContext,
-				string? tableName, string? serverName, string? databaseName, string? schemaName,
-				string? statementHeader, string? statementFooter,
-				DefaultNullable defaultNullable)
+			public static ITable<T> Query(
+				IDataContext    dataContext,
+				string?         tableName,
+				string?         serverName,
+				string?         databaseName,
+				string?         schemaName,
+				string?         statementHeader,
+				string?         statementFooter,
+				DefaultNullable defaultNullable,
+				bool?           isTemporary = null)
 			{
 				var sqlTable    = new SqlTable<T>(dataContext.MappingSchema);
 				var createTable = new SqlCreateTableStatement();
@@ -23,6 +29,7 @@ namespace LinqToDB.Linq
 				if (serverName   != null) sqlTable.Server       = serverName;
 				if (databaseName != null) sqlTable.Database     = databaseName;
 				if (schemaName   != null) sqlTable.Schema       = schemaName;
+				if (isTemporary  != null) sqlTable.IsTemporary  = isTemporary.Value;
 
 				createTable.Table           = sqlTable;
 				createTable.StatementHeader = statementHeader;
@@ -45,13 +52,22 @@ namespace LinqToDB.Linq
 				if (sqlTable.Database     != null) table = table.DatabaseName(sqlTable.Database);
 				if (sqlTable.Schema       != null) table = table.SchemaName  (sqlTable.Schema);
 
+				if (sqlTable.IsTemporary  != table.IsTemporary)
+					table = table.IsTemporary(sqlTable.IsTemporary);
+
 				return table;
 			}
 
-			public static async Task<ITable<T>> QueryAsync(IDataContext dataContext,
-				string? tableName, string? serverName, string? databaseName, string? schemaName,
-				string? statementHeader, string? statementFooter,
-				DefaultNullable defaultNullable,
+			public static async Task<ITable<T>> QueryAsync(
+				IDataContext      dataContext,
+				string?           tableName,
+				string?           serverName,
+				string?           databaseName,
+				string?           schemaName,
+				string?           statementHeader,
+				string?           statementFooter,
+				DefaultNullable   defaultNullable,
+				bool?             isTemporary,
 				CancellationToken token)
 			{
 				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
@@ -61,6 +77,7 @@ namespace LinqToDB.Linq
 				if (serverName   != null) sqlTable.Server       = serverName;
 				if (databaseName != null) sqlTable.Database     = databaseName;
 				if (schemaName   != null) sqlTable.Schema       = schemaName;
+				if (isTemporary  != null) sqlTable.IsTemporary  = isTemporary.Value;
 
 				createTable.Table           = sqlTable;
 				createTable.StatementHeader = statementHeader;
@@ -82,6 +99,9 @@ namespace LinqToDB.Linq
 				if (sqlTable.Server       != null) table = table.ServerName  (sqlTable.Server);
 				if (sqlTable.Database     != null) table = table.DatabaseName(sqlTable.Database);
 				if (sqlTable.Schema       != null) table = table.SchemaName  (sqlTable.Schema);
+
+				if (sqlTable.IsTemporary  != table.IsTemporary)
+					table = table.IsTemporary(sqlTable.IsTemporary);
 
 				return table;
 			}
