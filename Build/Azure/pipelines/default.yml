@@ -259,7 +259,7 @@ stages:
     displayName: 'Tests: Win / NETFX 4.6 / '
     dependsOn: build_job
 #    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
-    condition: eq(variables['Build.SourceBranchName'], 'tests_disabled_in_this_pipeline')
+    condition: eq(variables['System.PullRequest.TargetBranch'], 'release')
 
     strategy:
       matrix:
@@ -357,7 +357,7 @@ stages:
     displayName: 'Tests: Win / NETFX 4.6 / '
     dependsOn: build_job
 #    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
-    condition: eq(variables['Build.SourceBranchName'], 'tests_disabled_in_this_pipeline')
+    condition: eq(variables['System.PullRequest.TargetBranch'], 'release')
 
     strategy:
       matrix:
@@ -463,7 +463,7 @@ stages:
     displayName: 'Tests: Win / NETCOREAPP2.1 / '
     dependsOn: build_job
 #    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
-    condition: eq(variables['Build.SourceBranchName'], 'tests_disabled_in_this_pipeline')
+    condition: eq(variables['System.PullRequest.TargetBranch'], 'release')
 
     strategy:
       matrix:
@@ -582,7 +582,7 @@ stages:
     displayName: 'Tests: Win / NETCOREAPP3.1 / '
     dependsOn: build_job
 #    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
-    condition: eq(variables['Build.SourceBranchName'], 'tests_disabled_in_this_pipeline')
+    condition: eq(variables['System.PullRequest.TargetBranch'], 'release')
 
     strategy:
       matrix:
@@ -705,7 +705,7 @@ stages:
     displayName: 'Tests: Win / NETCOREAPP2.1 / '
     dependsOn: build_job
 #    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
-    condition: eq(variables['Build.SourceBranchName'], 'tests_disabled_in_this_pipeline')
+    condition: eq(variables['System.PullRequest.TargetBranch'], 'release')
 
     strategy:
       matrix:
@@ -765,7 +765,7 @@ stages:
     displayName: 'Tests: Lin / NETCOREAPP2.1 / '
     dependsOn: build_job
 #    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
-    condition: eq(variables['Build.SourceBranchName'], 'tests_disabled_in_this_pipeline')
+    condition: eq(variables['System.PullRequest.TargetBranch'], 'release')
 
     strategy:
       matrix:
@@ -905,7 +905,7 @@ stages:
     displayName: 'Tests: Lin / NETCOREAPP3.1 / '
     dependsOn: build_job
 #    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
-    condition: eq(variables['Build.SourceBranchName'], 'tests_disabled_in_this_pipeline')
+    condition: eq(variables['System.PullRequest.TargetBranch'], 'release')
 
     strategy:
       matrix:
@@ -1045,7 +1045,7 @@ stages:
     displayName: 'Tests: Lin / NETCOREAPP2.1 / '
     dependsOn: build_job
 #    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
-    condition: eq(variables['Build.SourceBranchName'], 'tests_disabled_in_this_pipeline')
+    condition: eq(variables['System.PullRequest.TargetBranch'], 'release')
 
     strategy:
       matrix:
@@ -1117,7 +1117,7 @@ stages:
     displayName: 'Tests: Mac / NETCOREAPP2.1 / '
     dependsOn: build_job
 #    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
-    condition: eq(variables['Build.SourceBranchName'], 'tests_disabled_in_this_pipeline')
+    condition: eq(variables['System.PullRequest.TargetBranch'], 'release')
 
     strategy:
       matrix:
@@ -1302,7 +1302,7 @@ stages:
     displayName: 'Tests: Mac / NETCOREAPP3.1 / '
     dependsOn: build_job
 #    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
-    condition: eq(variables['Build.SourceBranchName'], 'tests_disabled_in_this_pipeline')
+    condition: eq(variables['System.PullRequest.TargetBranch'], 'release')
 
     strategy:
       matrix:
