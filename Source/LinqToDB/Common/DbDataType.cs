@@ -70,7 +70,7 @@ namespace LinqToDB.Common
 		public DbDataType WithSetValues(DbDataType from)
 		{
 			return new DbDataType(
-				SystemType    == typeof(object)     ? from.SystemType : SystemType,
+				from.SystemType != typeof(object)   ? from.SystemType : SystemType,
 				from.DataType != DataType.Undefined ? from.DataType   : DataType,
 				!from.DbType.IsNullOrEmpty()        ? from.DbType     : DbType,
 				from.Length    ?? Length,
