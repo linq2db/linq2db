@@ -22,16 +22,16 @@ namespace LinqToDB.Linq.Builder
 		public IDataContext? DataContext         { get; set; }
 
 		public static readonly MethodInfo GetValueMethodInfo =
-			MemberHelper.MethodOf<ParameterContainer>(c => c.GetValue(0));
+			MemberHelper.MethodOfGeneric<ParameterContainer>(c => c.GetValue<int>(0));
 
-		public object? GetValue(int index)
+		public T GetValue<T>(int index)
 		{
 			if (_accessors == null || index >= _accessors.Count || ParameterExpression == null || DataContext == null)
 				throw new InvalidOperationException();
 			
 			var accessor = _accessors[index];
 			
-			return accessor.Accessor(ParameterExpression!, DataContext, CompiledParameters);
+			return (T)accessor.OriginalAccessor(ParameterExpression!, DataContext, CompiledParameters)!;
 		}
 	}
 }

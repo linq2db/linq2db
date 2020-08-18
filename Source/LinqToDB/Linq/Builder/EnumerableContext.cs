@@ -101,21 +101,19 @@ namespace LinqToDB.Linq.Builder
 										var sql = Builder.ConvertToSqlExpression(Parent!, valueExpr, column);
 										if (sql is SqlParameter p)
 										{
-											// TODO: ConvertToSqlExpression should set type using column type
-											p.Type = p.Type.WithoutSystemType(column);
 											p.IsQueryParameter = !Builder.MappingSchema.ValueToSqlConverter.CanConvert(p.Type.SystemType);
 											foreach (var pa in Builder._parameters.Values)
 											{
 												if (pa.SqlParameter == p)
 												{
-													p.Value = pa.Accessor(pa.Expression, null, null);
+													// Mimic QueryRunner.SetParameters
+													p.Value        = pa.ValueAccessor(Builder.Expression, Builder.DataContext, null);
+													var dbDataType = pa.DbDataTypeAccessor(Builder.Expression, Builder.DataContext, null);
+													p.Type         = p.Type.WithSetValues(dbDataType);
 													break;
 												}
 											}
 										}
-										else if (sql is SqlValue val)
-											// TODO: ConvertToSqlExpression should set type using column type
-											val.ValueType = val.ValueType.WithoutSystemType(column);
 
 										parameters.Add(valueExpr, sql);
 

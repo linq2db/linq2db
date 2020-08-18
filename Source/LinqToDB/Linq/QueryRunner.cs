@@ -220,7 +220,7 @@ namespace LinqToDB.Linq
 					var parameter = (SqlParameter)e;
 					var accessor  = GetParameterAccessor(parameters, parameter);
 					if (accessor != null)
-						return new SqlValue(parameter.Type, accessor.Accessor(expr, db, ps));
+						return new SqlValue(parameter.Type, accessor.ValueAccessor(expr, db, ps));
 				}
 
 				return e;
@@ -246,7 +246,7 @@ namespace LinqToDB.Linq
 
 			foreach (var p in queryContext.Parameters)
 			{
-				var value = p.Accessor(expression, parametersContext, parameters);
+				var value = p.ValueAccessor(expression, parametersContext, parameters);
 
 				if (value is IEnumerable vs)
 				{
@@ -318,7 +318,7 @@ namespace LinqToDB.Linq
 			}
 
 			var param = ExpressionBuilder.CreateParameterAccessor(
-				dataContext, valueGetter, dbDataTypeExpression, valueGetter, exprParam, Expression.Parameter(typeof(object[]), "ps"), Expression.Parameter(typeof(IDataContext), "ctx"), field.Name.Replace('.', '_'));
+				dataContext, valueGetter, getter, dbDataTypeExpression, valueGetter, exprParam, Expression.Parameter(typeof(object[]), "ps"), Expression.Parameter(typeof(IDataContext), "ctx"), field.Name.Replace('.', '_'));
 
 			return param;
 		}
