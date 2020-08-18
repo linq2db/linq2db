@@ -299,10 +299,10 @@ stages:
           title: 'SQL Server 2019 (Microsoft.Data.SqlClient)'
           config: 'sqlserver.2019.ms'
           script: 'sqlserver.2019.cmd'
-        PostgreSQL10:
-          title: 'PostgreSQL 10'
-          config: 'pgsql10'
-          script: 'pgsql10.cmd'
+#        PostgreSQL10:
+#          title: 'PostgreSQL 10'
+#          config: 'pgsql10'
+#          script: 'pgsql10.cmd'
 
     steps:
     - checkout: none
@@ -721,10 +721,10 @@ stages:
           title: 'SQL Server 2019 (Microsoft.Data.SqlClient)'
           config: 'sqlserver.2019.ms'
           script: 'sqlserver.2019.cmd'
-        PostgreSQL10:
-          title: 'PostgreSQL 10'
-          config: 'pgsql10'
-          script: 'pgsql10.cmd'
+#        PostgreSQL10:
+#          title: 'PostgreSQL 10'
+#          config: 'pgsql10'
+#          script: 'pgsql10.cmd'
     steps:
     - checkout: none
 
@@ -1313,16 +1313,16 @@ stages:
 #          title: 'SQLite.MS'
 #          config: 'sqlite.ms'
 # temporary disabled due to stack overflow exception during test run. needs investigation
-        SqlServer2017:
-          title: 'SQL Server 2017 (System.Data.SqlClient)'
-          config: 'sqlserver.fts.2017'
-          script: 'mac.sqlserver.2017.sh'
-          docker: 'true'
-        SqlServer2017_MS:
-          title: 'SQL Server 2017 (Microsoft.Data.SqlClient)'
-          config: 'sqlserver.fts.2017'
-          script: 'mac.sqlserver.2017.sh'
-          docker: 'true'
+#        SqlServer2017:
+#          title: 'SQL Server 2017 (System.Data.SqlClient)'
+#          config: 'sqlserver.fts.2017'
+#          script: 'mac.sqlserver.2017.sh'
+#          docker: 'true'
+#        SqlServer2017_MS:
+#          title: 'SQL Server 2017 (Microsoft.Data.SqlClient)'
+#          config: 'sqlserver.fts.2017'
+#          script: 'mac.sqlserver.2017.sh'
+#          docker: 'true'
 #        SqlServer2019:
 #          title: 'SQL Server 2019 (System.Data.SqlClient)'
 #          config: 'sqlserver.fts.2019'
