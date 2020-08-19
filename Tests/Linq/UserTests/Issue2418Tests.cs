@@ -28,9 +28,9 @@ namespace Tests.UserTests
 			var memberExpression = (MemberExpression) propertyExpression.Expression;
 			var fieldInfo = (FieldInfo) memberExpression.Member;
 			var valueExpression = (ConstantExpression) memberExpression.Expression;
-			var value = ((PropertyInfo) propertyExpression.Member).GetValue(fieldInfo.GetValue(valueExpression.Value));
+			var value = ((PropertyInfo) propertyExpression.Member).GetValue(fieldInfo.GetValue(valueExpression.Value))!;
 
-			builder.AddParameter("value", value.ToString());
+			builder.AddParameter("value", value.ToString()!);
 		}
 	}
 
@@ -76,7 +76,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public async Task UpdateJsonValueTest([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string context)
+		public async Task UpdateJsonValueTest([IncludeDataSources(false, TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			var schema = new MappingSchema();
 
@@ -84,16 +84,16 @@ namespace Tests.UserTests
 			schema.SetConverter<DbObject<TestJson>, DataParameter>(v => new DataParameter
 			{
 				DataType = DataType.NVarChar,
-				Value = JsonConvert.SerializeObject(v.Value)
+				Value    = JsonConvert.SerializeObject(v.Value)
 			});
 			schema.SetConverter<string, DbObject<TestJson>>(json => new DbObject<TestJson>(JsonConvert.DeserializeObject<TestJson>(json)));
 			
-			using (var db = (DataConnection)GetDataContext(context, schema))
+			using (var db    = (DataConnection)GetDataContext(context, schema))
 			using (var table = db.CreateLocalTable<TestTable>())
 			{
 				var newRecord = new TestTable()
 				{
-					Id = Guid.NewGuid(),
+					Id   = Guid.NewGuid(),
 					Json = new DbObject<TestJson>(new TestJson
 					{
 						String = "Test",
@@ -113,7 +113,7 @@ namespace Tests.UserTests
 
 				await table
 					.Where(o => o.Id == savedRecord.Id)
-					.Set(o => o.Json, o => o.Json
+					.Set(o => o.Json, o => o.Json!
 						.Set(j => j.Number, newJson.Number)
 						.Set(j => j.String, newJson.String)
 					).UpdateAsync()
