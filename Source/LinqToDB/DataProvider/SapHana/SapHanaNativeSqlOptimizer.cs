@@ -26,13 +26,18 @@
 			// duplicate parameters
 			statement = ConvertVisitor.ConvertAll(statement, (visitor, e) =>
 			{
-				if (e is SqlParameter p && !parameters.Add(p))
+				// prevent skipping of duplicate elements
+				visitor.VisitedElements[e] = null;
+
+				if (e is SqlParameter p)
 				{
-					// prevent skipping of parameter
-					visitor.VisitedElements[e] = null;
-					p = p.Clone();
-					parameters.Add(p);
-					return p;
+					if (!parameters.Add(p))
+					{
+						p = p.Clone();
+						parameters.Add(p);
+						visitor.VisitedElements[p] = null;
+						return p;
+					}
 				}
 
 				return e;
