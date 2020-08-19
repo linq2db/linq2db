@@ -27,8 +27,8 @@ namespace LinqToDB.SqlQuery
 		delegate T Clone<T>(T obj);
 
 		public Dictionary<IQueryElement, IQueryElement?> VisitedElements { get; } =  new Dictionary<IQueryElement, IQueryElement?>();
-		public List<IQueryElement>                        Stack          { get; } =  new List<IQueryElement>();
-		public IQueryElement?                             ParentElement           => Stack.Count == 0 ? null : Stack[Stack.Count - 1];
+		public List<IQueryElement>                       Stack           { get; } =  new List<IQueryElement>();
+		public IQueryElement?                            ParentElement            => Stack.Count == 0 ? null : Stack[Stack.Count - 1];
 
 		public static T Convert<T>(T element, Func<ConvertVisitor, IQueryElement, IQueryElement> convertAction)
 			where T : class, IQueryElement
