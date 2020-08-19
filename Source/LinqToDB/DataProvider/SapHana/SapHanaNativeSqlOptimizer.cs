@@ -20,6 +20,9 @@
 			// same parameter name
 			var parameters = new HashSet<SqlParameter>(Utils.ObjectReferenceEqualityComparer<SqlParameter>.Default);
 
+			if (statement.Parameters.Count > 0)
+				return statement;
+
 			// duplicate parameters
 			statement = ConvertVisitor.ConvertAll(statement, (visitor, e) =>
 			{
