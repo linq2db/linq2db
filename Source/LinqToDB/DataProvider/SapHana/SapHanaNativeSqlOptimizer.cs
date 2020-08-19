@@ -36,6 +36,7 @@
 						p = p.Clone();
 						parameters.Add(p);
 						visitor.VisitedElements[p] = null;
+						statement.IsParameterDependent = true;
 						return p;
 					}
 				}
