@@ -7,7 +7,7 @@ namespace LinqToDB.SqlProvider
 	internal static class SqlOptimizerExtensions
 	{
 		public static SqlStatement OptimizeStatement(this ISqlOptimizer optimizer, SqlStatement statement,
-			MappingSchema mappingSchema, bool inlineParameters)
+			MappingSchema mappingSchema, bool inlineParameters, bool remoteContext)
 		{
 			if (optimizer     == null) throw new ArgumentNullException(nameof(optimizer));
 			if (statement     == null) throw new ArgumentNullException(nameof(statement));
@@ -22,7 +22,7 @@ namespace LinqToDB.SqlProvider
 
 			// optimizing expressions according to new values
 			newStatement = optimizer.OptimizeStatement(newStatement, inlineParameters,
-				newStatement.IsParameterDependent || inlineParameters);
+				newStatement.IsParameterDependent || inlineParameters, remoteContext);
 
 			newStatement.PrepareQueryAndAliases();
 

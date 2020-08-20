@@ -174,7 +174,7 @@ namespace LinqToDB.Data
 
 				var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
 
-				sql = dataConnection.DataProvider.GetSqlOptimizer().OptimizeStatement(sql, dataConnection.MappingSchema, dataConnection.InlineParameters);
+				sql = dataConnection.DataProvider.GetSqlOptimizer().OptimizeStatement(sql, dataConnection.MappingSchema, dataConnection.InlineParameters, false);
 
 				var cc = sqlBuilder.CommandCount(sql);
 				var sb = new StringBuilder();

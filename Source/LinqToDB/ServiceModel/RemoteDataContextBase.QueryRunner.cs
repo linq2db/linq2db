@@ -135,7 +135,7 @@ namespace LinqToDB.ServiceModel
 
 					var queryContext = Query.Queries[QueryNumber];
 
-					var q = _dataContext.GetSqlOptimizer().OptimizeStatement(queryContext.Statement, _dataContext.MappingSchema, _dataContext.InlineParameters);
+					var q = _dataContext.GetSqlOptimizer().OptimizeStatement(queryContext.Statement, _dataContext.MappingSchema, _dataContext.InlineParameters, true);
 
 					q.CollectParameters();
 
@@ -170,7 +170,7 @@ namespace LinqToDB.ServiceModel
 
 					var queryContext = Query.Queries[QueryNumber];
 
-					var q = _dataContext.GetSqlOptimizer().OptimizeStatement(queryContext.Statement, _dataContext.MappingSchema, _dataContext.InlineParameters);
+					var q = _dataContext.GetSqlOptimizer().OptimizeStatement(queryContext.Statement, _dataContext.MappingSchema, _dataContext.InlineParameters, true);
 
 					data = LinqServiceSerializer.Serialize(
 						_dataContext.SerializationMappingSchema,
@@ -198,7 +198,7 @@ namespace LinqToDB.ServiceModel
 
 					var queryContext = Query.Queries[QueryNumber];
 
-					var q = _dataContext.GetSqlOptimizer().OptimizeStatement(queryContext.Statement, _dataContext.MappingSchema, _dataContext.InlineParameters);
+					var q = _dataContext.GetSqlOptimizer().OptimizeStatement(queryContext.Statement, _dataContext.MappingSchema, _dataContext.InlineParameters, true);
 
 					q.CollectParameters();
 
@@ -267,7 +267,7 @@ namespace LinqToDB.ServiceModel
 
 					var queryContext = Query.Queries[QueryNumber];
 
-					var q = _dataContext.GetSqlOptimizer().OptimizeStatement(queryContext.Statement, _dataContext.MappingSchema, _dataContext.InlineParameters);
+					var q = _dataContext.GetSqlOptimizer().OptimizeStatement(queryContext.Statement, _dataContext.MappingSchema, _dataContext.InlineParameters, true);
 
 					data = LinqServiceSerializer.Serialize(
 						_dataContext.SerializationMappingSchema,
@@ -299,7 +299,7 @@ namespace LinqToDB.ServiceModel
 
 					var queryContext = Query.Queries[QueryNumber];
 
-					var q = _dataContext.GetSqlOptimizer().OptimizeStatement(queryContext.Statement, _dataContext.MappingSchema, _dataContext.InlineParameters);
+					var q = _dataContext.GetSqlOptimizer().OptimizeStatement(queryContext.Statement, _dataContext.MappingSchema, _dataContext.InlineParameters, true);
 
 					data = LinqServiceSerializer.Serialize(
 						_dataContext.SerializationMappingSchema,
@@ -322,7 +322,7 @@ namespace LinqToDB.ServiceModel
 
 					var queryContext = Query.Queries[QueryNumber];
 
-					var q = _dataContext.GetSqlOptimizer().OptimizeStatement(queryContext.Statement, _dataContext.MappingSchema, _dataContext.InlineParameters);
+					var q = _dataContext.GetSqlOptimizer().OptimizeStatement(queryContext.Statement, _dataContext.MappingSchema, _dataContext.InlineParameters, true);
 					data = LinqServiceSerializer.Serialize(
 						_dataContext.SerializationMappingSchema,
 						q,

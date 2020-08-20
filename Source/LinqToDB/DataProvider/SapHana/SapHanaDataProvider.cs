@@ -48,7 +48,7 @@ namespace LinqToDB.DataProvider.SapHana
 			SqlProviderFlags.IsInsertOrUpdateSupported = false;
 			SqlProviderFlags.IsUpdateFromSupported     = false;
 
-			_sqlOptimizer = new SapHanaSqlOptimizer(SqlProviderFlags);
+			_sqlOptimizer = new SapHanaNativeSqlOptimizer(SqlProviderFlags);
 		}
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
