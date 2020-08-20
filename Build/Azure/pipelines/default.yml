@@ -1,9 +1,9 @@
 variables:
   solution: 'linq2db.sln'
   build_configuration: 'Azure'
-  assemblyVersion: 3.0.2
-  nugetVersion: 3.0.2
-  nugetDevVersion: 3.0.2
+  assemblyVersion: 3.1.0
+  nugetVersion: 3.1.0
+  nugetDevVersion: 3.1.0
   artifact_nugets: 'nugets'
   artifact_linq2db_binaries: 'linq2db_binaries'
   artifact_linq2db_tools_binaries: 'linq2db_tools_binaries'
