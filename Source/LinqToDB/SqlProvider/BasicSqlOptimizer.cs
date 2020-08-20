@@ -167,7 +167,7 @@ namespace LinqToDB.SqlProvider
 		}
 
 
-		static bool HasParameters(ISqlExpression expr)
+		protected static bool HasParameters(ISqlExpression expr)
 		{
 			var hasParameters  = null != new QueryVisitor().Find(expr,
 				el => el.ElementType == QueryElementType.SqlParameter);
@@ -1946,7 +1946,7 @@ namespace LinqToDB.SqlProvider
 
 		#region Optimizing Statement
 
-		public virtual SqlStatement OptimizeStatement(SqlStatement statement, bool inlineParameters, bool withParameters)
+		public virtual SqlStatement OptimizeStatement(SqlStatement statement, bool inlineParameters, bool withParameters, bool remoteContext)
 		{
 			statement = ConvertVisitor.ConvertAll(statement, (visitor, e) =>
 			{
