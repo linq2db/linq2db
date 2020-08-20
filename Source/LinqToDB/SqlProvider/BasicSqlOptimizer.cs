@@ -1115,18 +1115,18 @@ namespace LinqToDB.SqlProvider
 			return cond;
 		}
 
-		static SqlPredicate.Operator InvertOperator(SqlPredicate.Operator op, bool skipEqual)
+		static SqlPredicate.Operator InvertOperator(SqlPredicate.Operator op, bool preserveEqual)
 		{
 			switch (op)
 			{
-				case SqlPredicate.Operator.Equal          : return skipEqual ? op : SqlPredicate.Operator.NotEqual;
-				case SqlPredicate.Operator.NotEqual       : return skipEqual ? op : SqlPredicate.Operator.Equal;
+				case SqlPredicate.Operator.Equal          : return preserveEqual ? op : SqlPredicate.Operator.NotEqual;
+				case SqlPredicate.Operator.NotEqual       : return preserveEqual ? op : SqlPredicate.Operator.Equal;
 				case SqlPredicate.Operator.Greater        : return SqlPredicate.Operator.LessOrEqual;
 				case SqlPredicate.Operator.NotLess        :
-				case SqlPredicate.Operator.GreaterOrEqual : return SqlPredicate.Operator.Less;
+				case SqlPredicate.Operator.GreaterOrEqual : return preserveEqual ? SqlPredicate.Operator.LessOrEqual : SqlPredicate.Operator.Less;
 				case SqlPredicate.Operator.Less           : return SqlPredicate.Operator.GreaterOrEqual;
 				case SqlPredicate.Operator.NotGreater     :
-				case SqlPredicate.Operator.LessOrEqual    : return SqlPredicate.Operator.Greater;
+				case SqlPredicate.Operator.LessOrEqual    : return preserveEqual ? SqlPredicate.Operator.GreaterOrEqual : SqlPredicate.Operator.Greater;
 				default: throw new InvalidOperationException();
 			}
 		}
