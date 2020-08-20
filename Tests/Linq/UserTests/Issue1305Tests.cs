@@ -69,7 +69,7 @@ namespace Tests.UserTests
 			{
 				// Get table schema
 				var sp = db.DataProvider.GetSchemaProvider();
-				var s = sp.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				var s = sp.GetSchema(db);
 				var table = s.Tables.FirstOrDefault(_ => _.TableName!.Equals("ColumnOrderTest", StringComparison.OrdinalIgnoreCase));
 				Assert.IsNotNull(table);
 
@@ -112,7 +112,7 @@ namespace Tests.UserTests
 				{
 					// Get table schema
 					var sp = db.DataProvider.GetSchemaProvider();
-					var s = sp.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+					var s = sp.GetSchema(db);
 					var table = s.Tables.FirstOrDefault(_ => _.TableName!.Equals(nameof(FluentMapping), StringComparison.OrdinalIgnoreCase));
 					Assert.IsNotNull(table);
 

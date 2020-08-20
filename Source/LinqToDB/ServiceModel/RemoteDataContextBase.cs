@@ -72,12 +72,12 @@ namespace LinqToDB.ServiceModel
 
 		string?            _contextID;
 		string IDataContext.ContextID =>
-			_contextID ?? (_contextID = GetConfigurationInfo().MappingSchema.ConfigurationList[0]);
+			_contextID ??= GetConfigurationInfo().MappingSchema.ConfigurationList[0];
 
 		private MappingSchema? _mappingSchema;
 		public  MappingSchema   MappingSchema
 		{
-			get => _mappingSchema ?? (_mappingSchema = GetConfigurationInfo().MappingSchema);
+			get => _mappingSchema ??= GetConfigurationInfo().MappingSchema;
 			set
 			{
 				_mappingSchema = value;
@@ -88,7 +88,7 @@ namespace LinqToDB.ServiceModel
 		private  MappingSchema? _serializationMappingSchema;
 		internal MappingSchema   SerializationMappingSchema
 		{
-			get => _serializationMappingSchema ?? (_serializationMappingSchema = new SerializationMappingSchema(MappingSchema));
+			get => _serializationMappingSchema ??= new SerializationMappingSchema(MappingSchema);
 		}
 
 		public  bool InlineParameters { get; set; }
@@ -96,10 +96,10 @@ namespace LinqToDB.ServiceModel
 
 
 		private List<string>? _queryHints;
-		public  List<string>   QueryHints => _queryHints ?? (_queryHints = new List<string>());
+		public  List<string>   QueryHints => _queryHints ??= new List<string>();
 
 		private List<string>? _nextQueryHints;
-		public  List<string>   NextQueryHints => _nextQueryHints ?? (_nextQueryHints = new List<string>());
+		public  List<string>   NextQueryHints => _nextQueryHints ??= new List<string>();
 
 		private        Type? _sqlProviderType;
 		public virtual Type   SqlProviderType

@@ -1173,23 +1173,6 @@ namespace Sql2017
 
 		#endregion
 
-		#region Issue1294
-
-		[Sql.TableFunction(Name="Issue1294")]
-		public ITable<Issue1294Result> Issue1294(int? @p1, int? @p2)
-		{
-			return this.GetTable<Issue1294Result>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				@p1,
-				@p2);
-		}
-
-		public partial class Issue1294Result
-		{
-			public int? Id { get; set; }
-		}
-
-		#endregion
-
 		#region Issue1921
 
 		[Sql.TableFunction(Name="Issue1921")]

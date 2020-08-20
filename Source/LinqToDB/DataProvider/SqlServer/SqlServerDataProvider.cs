@@ -13,6 +13,8 @@ namespace LinqToDB.DataProvider.SqlServer
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
+	using System.Threading;
+	using System.Threading.Tasks;
 
 	public class SqlServerDataProvider : DynamicDataProviderBase<SqlServerProviderAdapter>
 	{
@@ -56,26 +58,14 @@ namespace LinqToDB.DataProvider.SqlServer
 			SetCharFieldToType<char>("char", (r, i) => DataTools.GetChar(r, i));
 			SetCharFieldToType<char>("nchar", (r, i) => DataTools.GetChar(r, i));
 
-			switch (version)
+			_sqlOptimizer = version switch
 			{
-				case SqlServerVersion.v2000:
-					_sqlOptimizer = new SqlServer2000SqlOptimizer(SqlProviderFlags);
-					break;
-				case SqlServerVersion.v2005:
-					_sqlOptimizer = new SqlServer2005SqlOptimizer(SqlProviderFlags);
-					break;
-				default:
-				case SqlServerVersion.v2008:
-					_sqlOptimizer = new SqlServer2008SqlOptimizer(SqlProviderFlags);
-					break;
-				case SqlServerVersion.v2012:
-					_sqlOptimizer = new SqlServer2012SqlOptimizer(SqlProviderFlags);
-					break;
-				case SqlServerVersion.v2017:
-					_sqlOptimizer = new SqlServer2017SqlOptimizer(SqlProviderFlags);
-					break;
-			}
-
+				SqlServerVersion.v2000 => new SqlServer2000SqlOptimizer(SqlProviderFlags),
+				SqlServerVersion.v2005 => new SqlServer2005SqlOptimizer(SqlProviderFlags),
+				SqlServerVersion.v2012 => new SqlServer2012SqlOptimizer(SqlProviderFlags),
+				SqlServerVersion.v2017 => new SqlServer2017SqlOptimizer(SqlProviderFlags),
+				_                      => new SqlServer2008SqlOptimizer(SqlProviderFlags),
+			};
 			SetField<IDataReader, decimal>((r, i) => r.GetDecimal(i));
 			SetField<IDataReader, decimal>("money"     , (r, i) => SqlServerTools.DataReaderGetMoney(r, i));
 			SetField<IDataReader, decimal>("smallmoney", (r, i) => SqlServerTools.DataReaderGetMoney(r, i));
@@ -130,30 +120,28 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			public static MappingSchema Get(SqlServerVersion version)
 			{
-				switch (version)
+				return version switch
 				{
-					case SqlServerVersion.v2000: return SqlServer2000MappingSchema;
-					case SqlServerVersion.v2005: return SqlServer2005MappingSchema;
-					default:
-					case SqlServerVersion.v2008: return SqlServer2008MappingSchema;
-					case SqlServerVersion.v2012: return SqlServer2012MappingSchema;
-					case SqlServerVersion.v2017: return SqlServer2017MappingSchema;
-				}
+					SqlServerVersion.v2000 => SqlServer2000MappingSchema,
+					SqlServerVersion.v2005 => SqlServer2005MappingSchema,
+					SqlServerVersion.v2012 => SqlServer2012MappingSchema,
+					SqlServerVersion.v2017 => SqlServer2017MappingSchema,
+					_                      => SqlServer2008MappingSchema,
+				};
 			}
 		}
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
-			switch (Version)
+			return Version switch
 			{
-				case SqlServerVersion.v2000 : return new SqlServer2000SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
-				case SqlServerVersion.v2005 : return new SqlServer2005SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
-				case SqlServerVersion.v2008 : return new SqlServer2008SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
-				case SqlServerVersion.v2012 : return new SqlServer2012SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
-				case SqlServerVersion.v2017 : return new SqlServer2017SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
-			}
-
-			throw new InvalidOperationException();
+				SqlServerVersion.v2000 => new SqlServer2000SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
+				SqlServerVersion.v2005 => new SqlServer2005SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
+				SqlServerVersion.v2008 => new SqlServer2008SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
+				SqlServerVersion.v2012 => new SqlServer2012SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
+				SqlServerVersion.v2017 => new SqlServer2017SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
+				_                      => throw new InvalidOperationException(),
+			};
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
@@ -414,6 +402,34 @@ namespace LinqToDB.DataProvider.SqlServer
 				options,
 				source);
 		}
+
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+		{
+			if (_bulkCopy == null)
+				_bulkCopy = new SqlServerBulkCopy(this);
+
+			return _bulkCopy.BulkCopyAsync(
+				options.BulkCopyType == BulkCopyType.Default ? SqlServerTools.DefaultBulkCopyType : options.BulkCopyType,
+				table,
+				options,
+				source,
+				cancellationToken);
+		}
+
+#if !NETFRAMEWORK
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+		{
+			if (_bulkCopy == null)
+				_bulkCopy = new SqlServerBulkCopy(this);
+
+			return _bulkCopy.BulkCopyAsync(
+				options.BulkCopyType == BulkCopyType.Default ? SqlServerTools.DefaultBulkCopyType : options.BulkCopyType,
+				table,
+				options,
+				source,
+				cancellationToken);
+		}
+#endif
 
 		#endregion
 	}

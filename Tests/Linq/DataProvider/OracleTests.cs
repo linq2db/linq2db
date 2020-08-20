@@ -650,17 +650,44 @@ namespace Tests.DataProvider
 			{
 				db.GetTable<ALLTYPE>().Delete(t => t.ID >= 1000);
 
-				db.BeginTransaction();
-
-				db.MultipleRowsCopy(new[]
+				using (db.BeginTransaction())
 				{
-					new ALLTYPE
-					{
-						ID                = 1000,
-						DATETIMEDATATYPE  = DateTime.Now,
-						DATETIME2DATATYPE = DateTime.Now
-					}
-				});
+					db.BulkCopy(
+						new BulkCopyOptions() { BulkCopyType = BulkCopyType.MultipleRows },
+						new[]
+						{
+							new ALLTYPE
+							{
+								ID                = 1000,
+								DATETIMEDATATYPE  = DateTime.Now,
+								DATETIME2DATATYPE = DateTime.Now
+							}
+						});
+				}
+			}
+		}
+
+		[Test]
+		public async Task DateTimeTest1Async([IncludeDataSources(TestProvName.AllOracle)] string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				db.GetTable<ALLTYPE>().Delete(t => t.ID >= 1000);
+
+				using (db.BeginTransaction())
+				{
+					await db.BulkCopyAsync(
+						new BulkCopyOptions() { BulkCopyType = BulkCopyType.MultipleRows },
+						new[]
+						{
+							new ALLTYPE
+							{
+								ID                = 1000,
+								DATETIMEDATATYPE  = DateTime.Now,
+								DATETIME2DATATYPE = DateTime.Now
+							}
+						});
+				}
 			}
 		}
 
@@ -772,17 +799,60 @@ namespace Tests.DataProvider
 			{
 				db.GetTable<ALLTYPE>().Delete(t => t.ID >= 1000);
 
-				db.BeginTransaction();
-
-				db.MultipleRowsCopy(new[]
+				using (db.BeginTransaction())
 				{
-					new ALLTYPE
-					{
-						ID                = 1000,
-						DATETIMEDATATYPE  = DateTime.Now,
-						DATETIME2DATATYPE = DateTime.Now
-					}
+					db.BulkCopy(
+						new BulkCopyOptions() { BulkCopyType = BulkCopyType.MultipleRows },
+						new[]
+						{
+							new ALLTYPE
+							{
+								ID                = 1000,
+								DATETIMEDATATYPE  = DateTime.Now,
+								DATETIME2DATATYPE = DateTime.Now
+							}
+						});
+				}
+			}
+		}
+
+		[Test]
+		public async Task DateTimeTest2Async([IncludeDataSources(TestProvName.AllOracle)] string context)
+		{
+			// Set custom DateTime to SQL converter.
+			//
+			var ms = new MappingSchema();
+			ms.SetValueToSqlConverter(
+				typeof(DateTime),
+				(stringBuilder, dataType, val) =>
+				{
+					var value = (DateTime)val;
+					var format =
+						dataType.Type.DataType == DataType.DateTime ?
+							"TO_DATE('{0:yyyy-MM-dd HH:mm:ss}', 'YYYY-MM-DD HH24:MI:SS')" :
+							"TO_TIMESTAMP('{0:yyyy-MM-dd HH:mm:ss.fffffff}', 'YYYY-MM-DD HH24:MI:SS.FF7')";
+
+					stringBuilder.AppendFormat(format, value);
 				});
+
+			using (var db = new DataConnection(context, ms))
+			{
+				db.GetTable<ALLTYPE>().Delete(t => t.ID >= 1000);
+
+				using (db.BeginTransaction())
+				{
+					await db.BulkCopyAsync(
+						new BulkCopyOptions() { BulkCopyType = BulkCopyType.MultipleRows },
+						new[]
+						{
+							new ALLTYPE
+							{
+								ID                = 1000,
+								DATETIMEDATATYPE  = DateTime.Now,
+								DATETIME2DATATYPE = DateTime.Now
+							}
+						});
+				}
 			}
 		}
 
@@ -893,21 +963,75 @@ namespace Tests.DataProvider
 					db.AddMappingSchema(ms);
 				}
 
-				db.BulkCopy(
-					new BulkCopyOptions { BulkCopyType = bulkCopyType },
-					Enumerable.Range(0, 10).Select(n =>
-						new LinqDataTypes
-						{
-							ID            = 4000 + n,
-							MoneyValue    = 1000m + n,
-							DateTimeValue = new DateTime(2001,  1,  11,  1, 11, 21, 100),
-							BoolValue     = true,
-							GuidValue     = Guid.NewGuid(),
-							SmallIntValue = (short)n
-						}
-					));
+				try
+				{
+					db.BulkCopy(
+						new BulkCopyOptions { BulkCopyType = bulkCopyType },
+						Enumerable.Range(0, 10).Select(n =>
+							new LinqDataTypes
+							{
+								ID            = 4000 + n,
+								MoneyValue    = 1000m + n,
+								DateTimeValue = new DateTime(2001,  1,  11,  1, 11, 21, 100),
+								BoolValue     = true,
+								GuidValue     = Guid.NewGuid(),
+								SmallIntValue = (short)n
+							}
+						));
+				}
+				finally
+				{
+					db.GetTable<LinqDataTypes>().Delete(p => p.ID >= 4000);
+				}
+			}
+		}
 
-				db.GetTable<LinqDataTypes>().Delete(p => p.ID >= 4000);
+		async Task BulkCopyLinqTypesAsync(string context, BulkCopyType bulkCopyType)
+		{
+			using (var db = new DataConnection(context))
+			{
+				if (bulkCopyType == BulkCopyType.ProviderSpecific)
+				{
+					var ms = new MappingSchema();
+
+					ms.GetFluentMappingBuilder()
+						.Entity<LinqDataTypes>()
+							.Property(e => e.GuidValue)
+								.IsNotColumn()
+						;
+
+					if (GetProviderName(context, out var _).Contains("Native"))
+					{
+						ms.GetFluentMappingBuilder()
+							.Entity<LinqDataTypes>()
+								.Property(e => e.BoolValue)
+									.HasDataType(DataType.Int16)
+							;
+					}
+
+					db.AddMappingSchema(ms);
+				}
+
+				try
+				{
+					await db.BulkCopyAsync(
+						new BulkCopyOptions { BulkCopyType = bulkCopyType },
+						Enumerable.Range(0, 10).Select(n =>
+							new LinqDataTypes
+							{
+								ID            = 4000 + n,
+								MoneyValue    = 1000m + n,
+								DateTimeValue = new DateTime(2001,  1,  11,  1, 11, 21, 100),
+								BoolValue     = true,
+								GuidValue     = Guid.NewGuid(),
+								SmallIntValue = (short)n
+							}
+						));
+				}
+				finally
+				{
+					await db.GetTable<LinqDataTypes>().DeleteAsync(p => p.ID >= 4000);
+				}
 			}
 		}
 
@@ -925,6 +1049,27 @@ namespace Tests.DataProvider
 				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
 
 				BulkCopyLinqTypes(context, BulkCopyType.MultipleRows);
+			}
+			finally
+			{
+				OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
+			}
+		}
+
+		[Test]
+		public async Task BulkCopyLinqTypesMultipleRowsAsync(
+			[IncludeDataSources(TestProvName.AllOracle)] string context,
+			[Values(
+				AlternativeBulkCopy.InsertAll,
+				AlternativeBulkCopy.InsertDual,
+				AlternativeBulkCopy.InsertInto)]
+			AlternativeBulkCopy useAlternativeBulkCopy)
+		{
+			try
+			{
+				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
+
+				await BulkCopyLinqTypesAsync(context, BulkCopyType.MultipleRows);
 			}
 			finally
 			{
@@ -954,6 +1099,27 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		public async Task BulkCopyLinqTypesProviderSpecificAsync(
+			[IncludeDataSources(TestProvName.AllOracle)] string context,
+			[Values(
+				AlternativeBulkCopy.InsertAll,
+				AlternativeBulkCopy.InsertDual,
+				AlternativeBulkCopy.InsertInto)]
+			AlternativeBulkCopy useAlternativeBulkCopy)
+		{
+			try
+			{
+				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
+
+				await BulkCopyLinqTypesAsync(context, BulkCopyType.ProviderSpecific);
+			}
+			finally
+			{
+				OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
+			}
+		}
+
+		[Test]
 		public void BulkCopyRetrieveSequencesProviderSpecific(
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values(
@@ -967,6 +1133,27 @@ namespace Tests.DataProvider
 				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
 
 				BulkCopyRetrieveSequence(context, BulkCopyType.ProviderSpecific);
+			}
+			finally
+			{
+				OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
+			}
+		}
+
+		[Test]
+		public async Task BulkCopyRetrieveSequencesProviderSpecificAsync(
+			[IncludeDataSources(TestProvName.AllOracle)] string context,
+			[Values(
+				AlternativeBulkCopy.InsertAll,
+				AlternativeBulkCopy.InsertDual,
+				AlternativeBulkCopy.InsertInto)]
+			AlternativeBulkCopy useAlternativeBulkCopy)
+		{
+			try
+			{
+				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
+
+				await BulkCopyRetrieveSequenceAsync(context, BulkCopyType.ProviderSpecific);
 			}
 			finally
 			{
@@ -996,6 +1183,27 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		public async Task BulkCopyRetrieveSequencesMultipleRowsAsync(
+			[IncludeDataSources(TestProvName.AllOracle)] string context,
+			[Values(
+				AlternativeBulkCopy.InsertAll,
+				AlternativeBulkCopy.InsertDual,
+				AlternativeBulkCopy.InsertInto)]
+			AlternativeBulkCopy useAlternativeBulkCopy)
+		{
+			try
+			{
+				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
+
+				await BulkCopyRetrieveSequenceAsync(context, BulkCopyType.MultipleRows);
+			}
+			finally
+			{
+				OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
+			}
+		}
+
+		[Test]
 		public void BulkCopyRetrieveSequencesRowByRow(
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values(
@@ -1009,6 +1217,27 @@ namespace Tests.DataProvider
 				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
 
 				BulkCopyRetrieveSequence(context, BulkCopyType.RowByRow);
+			}
+			finally
+			{
+				OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
+			}
+		}
+
+		[Test]
+		public async Task BulkCopyRetrieveSequencesRowByRowAsync(
+			[IncludeDataSources(TestProvName.AllOracle)] string context,
+			[Values(
+				AlternativeBulkCopy.InsertAll,
+				AlternativeBulkCopy.InsertDual,
+				AlternativeBulkCopy.InsertInto)]
+			AlternativeBulkCopy useAlternativeBulkCopy)
+		{
+			try
+			{
+				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
+
+				await BulkCopyRetrieveSequenceAsync(context, BulkCopyType.RowByRow);
 			}
 			finally
 			{
@@ -1041,6 +1270,41 @@ namespace Tests.DataProvider
 				};
 
 				db.BulkCopy(options, data.RetrieveIdentity(db));
+
+				foreach (var d in data)
+				{
+					Assert.That(d.ID, Is.GreaterThan(0));
+				}
+
+				//Assert.That(options.BulkCopyType, Is.EqualTo(bulkCopyType));
+			}
+		}
+
+		static async Task BulkCopyRetrieveSequenceAsync(string context, BulkCopyType bulkCopyType)
+		{
+			var data = new[]
+			{
+				new OracleSpecific.SequenceTest { Value = "Value"},
+				new OracleSpecific.SequenceTest { Value = "Value"},
+				new OracleSpecific.SequenceTest { Value = "Value"},
+				new OracleSpecific.SequenceTest { Value = "Value"},
+			};
+
+			using (var db = new TestDataConnection(context))
+			{
+				db.GetTable<OracleSpecific.SequenceTest>().Where(_ => _.Value == "SeqValue").Delete();
+
+				var options = new BulkCopyOptions
+				{
+					MaxBatchSize       = 5,
+					//RetrieveSequence   = true,
+					KeepIdentity       = bulkCopyType != BulkCopyType.RowByRow,
+					BulkCopyType       = bulkCopyType,
+					NotifyAfter        = 3,
+					RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
+				};
+
+				await db.BulkCopyAsync(options, data.RetrieveIdentity(db));
 
 				foreach (var d in data)
 				{
@@ -1093,6 +1357,36 @@ namespace Tests.DataProvider
 			}
 		}
 
+		static async Task BulkCopy1Async(string context, BulkCopyType bulkCopyType)
+		{
+			var data = new[]
+			{
+				new Trade { ID = 375, Version = 1, TypeID = 20224, TypeName = "Gas Month",     },
+				new Trade { ID = 328, Version = 1, TypeID = 20224, TypeName = "Gas Month",     },
+				new Trade { ID = 348, Version = 1, TypeID = 20224, TypeName = "Gas Month",     },
+				new Trade { ID = 357, Version = 1, TypeID = 20224, TypeName = "Gas Month",     },
+				new Trade { ID = 371, Version = 1, TypeID = 20224, TypeName = "Gas Month",     },
+				new Trade { ID = 333, Version = 1, TypeID = 20224, TypeName = "Gas Month",     ValueAsInteger = 1,          ValueAsDate = new DateTime(2011, 1, 5) },
+				new Trade { ID = 353, Version = 1, TypeID = 20224, TypeName = "Gas Month",     ValueAsInteger = 1000000000,                                        },
+				new Trade { ID = 973, Version = 1, TypeID = 20160, TypeName = "EU Allowances", },
+			};
+
+			using (var db = new TestDataConnection(context))
+			{
+				var options = new BulkCopyOptions
+				{
+					MaxBatchSize = 5,
+					BulkCopyType = bulkCopyType,
+					NotifyAfter  = 3,
+					RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
+				};
+
+				await db.BulkCopyAsync(options, data);
+
+				//Assert.That(options.BulkCopyType, Is.EqualTo(bulkCopyType));
+			}
+		}
+
 		[Test]
 		public void BulkCopy1MultipleRows(
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
@@ -1107,6 +1401,27 @@ namespace Tests.DataProvider
 				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
 
 				BulkCopy1(context, BulkCopyType.MultipleRows);
+			}
+			finally
+			{
+				OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
+			}
+		}
+
+		[Test]
+		public async Task BulkCopy1MultipleRowsAsync(
+			[IncludeDataSources(TestProvName.AllOracle)] string context,
+			[Values(
+				AlternativeBulkCopy.InsertAll,
+				AlternativeBulkCopy.InsertDual,
+				AlternativeBulkCopy.InsertInto)]
+			AlternativeBulkCopy useAlternativeBulkCopy)
+		{
+			try
+			{
+				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
+
+				await BulkCopy1Async(context, BulkCopyType.MultipleRows);
 			}
 			finally
 			{
@@ -1135,6 +1450,27 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Test]
+		public async Task BulkCopy1ProviderSpecificAsync(
+			[IncludeDataSources(TestProvName.AllOracle)] string context,
+			[Values(
+				AlternativeBulkCopy.InsertAll,
+				AlternativeBulkCopy.InsertDual,
+				AlternativeBulkCopy.InsertInto)]
+			AlternativeBulkCopy useAlternativeBulkCopy)
+		{
+			try
+			{
+				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
+
+				await BulkCopy1Async(context, BulkCopyType.ProviderSpecific);
+			}
+			finally
+			{
+				OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
+			}
+		}
+
 		static void BulkCopy21(string context, BulkCopyType bulkCopyType)
 		{
 			using (var db = new TestDataConnection(context))
@@ -1154,17 +1490,60 @@ namespace Tests.DataProvider
 						;
 				}
 
-				db.BulkCopy(
-					new BulkCopyOptions { MaxBatchSize = 2, BulkCopyType = bulkCopyType },
-					new[]
-					{
-						new LinqDataTypes2 { ID = 1003, MoneyValue = 0m, DateTimeValue = null,         BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue = null, IntValue = null    },
-						new LinqDataTypes2 { ID = 1004, MoneyValue = 0m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 2,    IntValue = 1532334 },
-						new LinqDataTypes2 { ID = 1005, MoneyValue = 1m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 5,    IntValue = null    },
-						new LinqDataTypes2 { ID = 1006, MoneyValue = 2m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 6,    IntValue = 153     }
-					});
+				try
+				{
+					db.BulkCopy(
+						new BulkCopyOptions { MaxBatchSize = 2, BulkCopyType = bulkCopyType },
+						new[]
+						{
+							new LinqDataTypes2 { ID = 1003, MoneyValue = 0m, DateTimeValue = null,         BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue = null, IntValue = null    },
+							new LinqDataTypes2 { ID = 1004, MoneyValue = 0m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 2,    IntValue = 1532334 },
+							new LinqDataTypes2 { ID = 1005, MoneyValue = 1m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 5,    IntValue = null    },
+							new LinqDataTypes2 { ID = 1006, MoneyValue = 2m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 6,    IntValue = 153     }
+						});
+				}
+				finally
+				{
+					db.Types2.Delete(_ => _.ID > 1000);
+				}
+			}
+		}
 
+		static async Task BulkCopy21Async(string context, BulkCopyType bulkCopyType)
+		{
+			using (var db = new TestDataConnection(context))
+			{
 				db.Types2.Delete(_ => _.ID > 1000);
+
+				if (context.Contains("Native") && bulkCopyType == BulkCopyType.ProviderSpecific)
+				{
+					var ms = new MappingSchema();
+
+					db.AddMappingSchema(ms);
+
+					ms.GetFluentMappingBuilder()
+						.Entity<LinqDataTypes2>()
+							.Property(e => e.GuidValue)
+								.IsNotColumn()
+						;
+				}
+
+				try
+				{
+					await db.BulkCopyAsync(
+						new BulkCopyOptions { MaxBatchSize = 2, BulkCopyType = bulkCopyType },
+						new[]
+						{
+							new LinqDataTypes2 { ID = 1003, MoneyValue = 0m, DateTimeValue = null,         BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue = null, IntValue = null    },
+							new LinqDataTypes2 { ID = 1004, MoneyValue = 0m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 2,    IntValue = 1532334 },
+							new LinqDataTypes2 { ID = 1005, MoneyValue = 1m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 5,    IntValue = null    },
+							new LinqDataTypes2 { ID = 1006, MoneyValue = 2m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 6,    IntValue = 153     }
+						});
+				}
+				finally
+				{
+					await db.Types2.DeleteAsync(_ => _.ID > 1000);
+				}
 			}
 		}
 
@@ -1182,6 +1561,27 @@ namespace Tests.DataProvider
 				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
 
 				BulkCopy21(context, BulkCopyType.MultipleRows);
+			}
+			finally
+			{
+				OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
+			}
+		}
+
+		[Test]
+		public async Task BulkCopy21MultipleRowsAsync(
+			[IncludeDataSources(TestProvName.AllOracle)] string context,
+			[Values(
+				AlternativeBulkCopy.InsertAll,
+				AlternativeBulkCopy.InsertDual,
+				AlternativeBulkCopy.InsertInto)]
+			AlternativeBulkCopy useAlternativeBulkCopy)
+		{
+			try
+			{
+				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
+
+				await BulkCopy21Async(context, BulkCopyType.MultipleRows);
 			}
 			finally
 			{
@@ -1210,6 +1610,27 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Test]
+		public async Task BulkCopy21ProviderSpecificAsync(
+			[IncludeDataSources(TestProvName.AllOracle)] string context,
+			[Values(
+				AlternativeBulkCopy.InsertAll,
+				AlternativeBulkCopy.InsertDual,
+				AlternativeBulkCopy.InsertInto)]
+			AlternativeBulkCopy useAlternativeBulkCopy)
+		{
+			try
+			{
+				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
+
+				await BulkCopy21Async(context, BulkCopyType.ProviderSpecific);
+			}
+			finally
+			{
+				OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
+			}
+		}
+
 		static void BulkCopy22(string context, BulkCopyType bulkCopyType)
 		{
 			using (var db = new TestDataConnection(context))
@@ -1226,17 +1647,57 @@ namespace Tests.DataProvider
 							.IsNotColumn()
 					;
 
-				db.BulkCopy(
-					new BulkCopyOptions { MaxBatchSize = 2, BulkCopyType = bulkCopyType },
-					new[]
-					{
-						new LinqDataTypes2 { ID = 1003, MoneyValue = 0m, DateTimeValue = DateTime.Now, BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue = null, IntValue = null    },
-						new LinqDataTypes2 { ID = 1004, MoneyValue = 0m, DateTimeValue = null,         BoolValue = false, GuidValue = null,                                             SmallIntValue = 2,    IntValue = 1532334 },
-						new LinqDataTypes2 { ID = 1005, MoneyValue = 1m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 5,    IntValue = null    },
-						new LinqDataTypes2 { ID = 1006, MoneyValue = 2m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 6,    IntValue = 153     }
-					});
+				try
+				{
+					db.BulkCopy(
+						new BulkCopyOptions { MaxBatchSize = 2, BulkCopyType = bulkCopyType },
+						new[]
+						{
+							new LinqDataTypes2 { ID = 1003, MoneyValue = 0m, DateTimeValue = DateTime.Now, BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue = null, IntValue = null    },
+							new LinqDataTypes2 { ID = 1004, MoneyValue = 0m, DateTimeValue = null,         BoolValue = false, GuidValue = null,                                             SmallIntValue = 2,    IntValue = 1532334 },
+							new LinqDataTypes2 { ID = 1005, MoneyValue = 1m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 5,    IntValue = null    },
+							new LinqDataTypes2 { ID = 1006, MoneyValue = 2m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 6,    IntValue = 153     }
+						});
+				}
+				finally
+				{
+					db.Types2.Delete(_ => _.ID > 1000);
+				}
+			}
+		}
 
+		static async Task BulkCopy22Async(string context, BulkCopyType bulkCopyType)
+		{
+			using (var db = new TestDataConnection(context))
+			{
 				db.Types2.Delete(_ => _.ID > 1000);
+
+				var ms = new MappingSchema();
+
+				db.AddMappingSchema(ms);
+
+				ms.GetFluentMappingBuilder()
+					.Entity<LinqDataTypes2>()
+						.Property(e => e.GuidValue)
+							.IsNotColumn()
+					;
+
+				try
+				{
+					await db.BulkCopyAsync(
+						new BulkCopyOptions { MaxBatchSize = 2, BulkCopyType = bulkCopyType },
+						new[]
+						{
+							new LinqDataTypes2 { ID = 1003, MoneyValue = 0m, DateTimeValue = DateTime.Now, BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue = null, IntValue = null    },
+							new LinqDataTypes2 { ID = 1004, MoneyValue = 0m, DateTimeValue = null,         BoolValue = false, GuidValue = null,                                             SmallIntValue = 2,    IntValue = 1532334 },
+							new LinqDataTypes2 { ID = 1005, MoneyValue = 1m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 5,    IntValue = null    },
+							new LinqDataTypes2 { ID = 1006, MoneyValue = 2m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 6,    IntValue = 153     }
+						});
+				}
+				finally
+				{
+					await db.Types2.DeleteAsync(_ => _.ID > 1000);
+				}
 			}
 		}
 
@@ -1262,6 +1723,27 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		public async Task BulkCopy22MultipleRowsAsync(
+			[IncludeDataSources(TestProvName.AllOracle)] string context,
+			[Values(
+				AlternativeBulkCopy.InsertAll,
+				AlternativeBulkCopy.InsertDual,
+				AlternativeBulkCopy.InsertInto)]
+			AlternativeBulkCopy useAlternativeBulkCopy)
+		{
+			try
+			{
+				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
+
+				await BulkCopy22Async(context, BulkCopyType.MultipleRows);
+			}
+			finally
+			{
+				OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
+			}
+		}
+
+		[Test]
 		public void BulkCopy22ProviderSpecific(
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values(
@@ -1275,6 +1757,27 @@ namespace Tests.DataProvider
 				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
 
 				BulkCopy22(context, BulkCopyType.ProviderSpecific);
+			}
+			finally
+			{
+				OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
+			}
+		}
+
+		[Test]
+		public async Task BulkCopy22ProviderSpecificAsync(
+			[IncludeDataSources(TestProvName.AllOracle)] string context,
+			[Values(
+				AlternativeBulkCopy.InsertAll,
+				AlternativeBulkCopy.InsertDual,
+				AlternativeBulkCopy.InsertInto)]
+			AlternativeBulkCopy useAlternativeBulkCopy)
+		{
+			try
+			{
+				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
+
+				await BulkCopy22Async(context, BulkCopyType.ProviderSpecific);
 			}
 			finally
 			{
@@ -1730,7 +2233,7 @@ namespace Tests.DataProvider
 		{
 			var data = new List<UseAlternativeBulkCopy>(100);
 			for (var i = 0; i < 100; i++)
-				data.Add(new UseAlternativeBulkCopy() {Id = i, Value = i});
+				data.Add(new UseAlternativeBulkCopy() { Id = i, Value = i });
 
 			using (var db = new DataConnection(context))
 			{
@@ -1749,7 +2252,32 @@ namespace Tests.DataProvider
 					db.DropTable<UseAlternativeBulkCopy>();
 				}
 			}
+		}
 
+		[Test]
+		public async Task UseAlternativeBulkCopyInsertIntoTestAsync([IncludeDataSources(TestProvName.AllOracle)] string context)
+		{
+			var data = new List<UseAlternativeBulkCopy>(100);
+			for (var i = 0; i < 100; i++)
+				data.Add(new UseAlternativeBulkCopy() { Id = i, Value = i });
+
+			using (var db = new DataConnection(context))
+			{
+				OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertInto;
+				await db.CreateTableAsync<UseAlternativeBulkCopy>();
+				try
+				{
+					await db.BulkCopyAsync(25, data);
+
+					var selected = await db.GetTable<UseAlternativeBulkCopy>().ToListAsync();
+					AreEqual(data, selected);
+				}
+				finally
+				{
+					OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
+					await db.DropTableAsync<UseAlternativeBulkCopy>();
+				}
+			}
 		}
 
 		[Test]
@@ -1776,7 +2304,32 @@ namespace Tests.DataProvider
 					db.DropTable<UseAlternativeBulkCopy>();
 				}
 			}
+		}
 
+		[Test]
+		public async Task UseAlternativeBulkCopyInsertDualTestAsync([IncludeDataSources(TestProvName.AllOracle)] string context)
+		{
+			var data = new List<UseAlternativeBulkCopy>(100);
+			for (var i = 0; i < 100; i++)
+				data.Add(new UseAlternativeBulkCopy() { Id = i, Value = i });
+
+			using (var db = new DataConnection(context))
+			{
+				OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertDual;
+				await db.CreateTableAsync<UseAlternativeBulkCopy>();
+				try
+				{
+					await db.BulkCopyAsync(25, data);
+
+					var selected = await db.GetTable<UseAlternativeBulkCopy>().ToListAsync();
+					AreEqual(data, selected);
+				}
+				finally
+				{
+					OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
+					await db.DropTableAsync<UseAlternativeBulkCopy>();
+				}
+			}
 		}
 
 		public class ClobEntity
@@ -1842,7 +2395,7 @@ namespace Tests.DataProvider
 				AlternativeBulkCopy.InsertInto)]
 			AlternativeBulkCopy useAlternativeBulkCopy)
 		{
-			var data = new List<ClobEntity>(new[] {new ClobEntity(1), new ClobEntity(2)});
+			var data = new List<ClobEntity>(new[] { new ClobEntity(1), new ClobEntity(2) });
 
 			using (var db = new DataConnection(context))
 			{
@@ -1860,6 +2413,38 @@ namespace Tests.DataProvider
 				{
 					OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
 					db.DropTable<ClobEntity>();
+				}
+
+			}
+		}
+
+		[Test]
+		public async Task ClobBulkCopyTestAsync(
+			[IncludeDataSources(TestProvName.AllOracle)] string context,
+			[Values(
+				AlternativeBulkCopy.InsertAll,
+				AlternativeBulkCopy.InsertDual,
+				AlternativeBulkCopy.InsertInto)]
+			AlternativeBulkCopy useAlternativeBulkCopy)
+		{
+			var data = new List<ClobEntity>(new[] { new ClobEntity(1), new ClobEntity(2) });
+
+			using (var db = new DataConnection(context))
+			{
+				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
+
+				try
+				{
+					await db.CreateTableAsync<ClobEntity>();
+					await db.BulkCopyAsync(data);
+
+					var selected = await db.GetTable<ClobEntity>().ToListAsync();
+					AreEqual(data, selected);
+				}
+				finally
+				{
+					OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
+					await db.DropTableAsync<ClobEntity>();
 				}
 
 			}
@@ -2280,6 +2865,33 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Test]
+		public async Task BooleanMappingTestsAsync([IncludeDataSources(TestProvName.AllOracleManaged)] string context)
+		{
+			var ms = new MappingSchema();
+
+			ms.SetConvertExpression<bool?, DataParameter>(_ =>
+				_ != null
+					? DataParameter.Char(null, _.HasValue && _.Value ? 'Y' : 'N')
+					: new DataParameter(null, DBNull.Value));
+
+			var testData = new[]
+			{
+				new BooleanMapping { Id = 1, BoolProp = true,  NullableBoolProp = true  },
+				new BooleanMapping { Id = 2, BoolProp = false, NullableBoolProp = false },
+				new BooleanMapping { Id = 3, BoolProp = true,  NullableBoolProp = null  }
+			};
+
+			using (var db = GetDataContext(context, ms))
+			using (var table = db.CreateLocalTable<BooleanMapping>())
+			{
+				await table.BulkCopyAsync(testData);
+				var values = await table.ToArrayAsync();
+
+				AreEqual(testData, values, BooleanMapping.Comparer);
+			}
+		}
+
 		[Table("AllTypes")]
 		public class TestIdentifiersTable1
 		{
@@ -2418,7 +3030,10 @@ namespace Tests.DataProvider
 
 				// TODO: fix timezones handling
 				if (!context.Contains("Native"))
-					Assert.AreEqual(new DateTimeOffset(2012, 12, 12, 11, 12, 12, isNative ? 0 : 12, TimeSpan.Zero), pms[15].Value);
+					Assert.That(pms[15].Value,
+						Is.EqualTo(new DateTimeOffset(2012, 12, 12, 11, 12, 12, isNative ? 0 : 12, TimeSpan.Zero)).
+						Or.EqualTo(new DateTimeOffset(2012, 12, 12, 11, 12, 12, isNative ? 0 : 12, DateTimeOffset.Now.Offset)).
+						Or.EqualTo(new DateTimeOffset(2012, 12, 12, 12, 12, 12, isNative ? 0 : 12, DateTimeOffset.Now.Offset.Add(new TimeSpan(-1, 0, 0)))));
 
 				Assert.AreEqual("1"                   , pms[16].Value);
 				Assert.IsNull(pms[17].Value);
@@ -2448,12 +3063,13 @@ namespace Tests.DataProvider
 						file.OpenFile();
 						Assert.AreEqual(new byte[] { 0x31, 0x32, 0x33, 0x34, 0x35 }, file.Value);
 					}
-
 				}
 
 				// guid is autogenerated
 				Assert.AreEqual(16                    , ((byte[])pms[25].Value!).Length);
-				Assert.AreEqual("<root>\n  <element strattr=\"strvalue\" intattr=\"12345\"/>\n</root>\n", pms[26].Value);
+				Assert.AreEqual(
+					"<root><elementstrattr=\"strvalue\"intattr=\"12345\"/></root>",
+					pms[26].Value!.ToString()!.Replace(" ", "").Replace("\n", ""));
 			}
 		}
 
@@ -2510,7 +3126,7 @@ namespace Tests.DataProvider
 
 					var id = db.GetTable<ALLTYPE>().InsertWithDecimalIdentity(() => new ALLTYPE
 					{
-						LONGDATATYPE = str, 
+						LONGDATATYPE = str,
 					});
 
 					var insertedItems = db.GetTable<ALLTYPE>()
@@ -2524,7 +3140,7 @@ namespace Tests.DataProvider
 
 					var id2 = db.GetTable<ALLTYPE>().InsertWithDecimalIdentity(() => new ALLTYPE
 					{
-						LONGDATATYPE = Sql.ToSql(str2), 
+						LONGDATATYPE = Sql.ToSql(str2),
 					});
 
 					var insertedItems2 = db.GetTable<ALLTYPE>()
@@ -2565,13 +3181,13 @@ namespace Tests.DataProvider
 				Assert.That(items.Length, Is.EqualTo(2));
 				Assert.That(items[0].LONGRAWDATATYPE, Is.Null);
 				Assert.That(items[1].LONGRAWDATATYPE, Is.Not.Null);
-					
+
 				var bytes1 = Encoding.UTF8.GetBytes(new string('A', 10000));
 
 				db.GetTable<LongRawTable>().Insert(() => new LongRawTable
 				{
 					Id = 3,
-					LONGRAWDATATYPE = bytes1, 
+					LONGRAWDATATYPE = bytes1,
 				});
 
 				var bytes2 = Encoding.UTF8.GetBytes(new string('B', 10000));
@@ -2579,7 +3195,7 @@ namespace Tests.DataProvider
 				db.GetTable<LongRawTable>().Insert(() => new LongRawTable
 				{
 					Id = 4,
-					LONGRAWDATATYPE = bytes2, 
+					LONGRAWDATATYPE = bytes2,
 				});
 
 				var insertedItems = db.GetTable<LongRawTable>()
@@ -2606,7 +3222,7 @@ namespace Tests.DataProvider
 
 				var recordsAffected = query.Set(child => child.ParentID, child => child.ParentID)
 					.Update();
-				
+
 				Assert.That(recordsAffected, Is.EqualTo(countRecords));
 			}
 		}
@@ -2628,7 +3244,7 @@ namespace Tests.DataProvider
 			using (db.CreateLocalTable<ItentityColumnTable>())
 			{
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, new GetSchemaOptions()
-				{ 
+				{
 					GetProcedures = false
 				});
 
@@ -2916,5 +3532,48 @@ namespace Tests.DataProvider
 			[NotNull, Column(Length = 256)] public string Name { get; set; } = null!;
 		}
 		#endregion
+
+		[Test]
+		public void TestTablesAndViewsLoad([IncludeDataSources(false, TestProvName.AllOracle)] string context, [Values] bool withFilter)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				var options = withFilter
+					? new GetSchemaOptions() { ExcludedSchemas = new string[] { "fake" } }
+					: null;
+
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, options);
+
+				var table        = schema.Tables.Where(t => t.TableName == "SCHEMATESTTABLE").FirstOrDefault();
+				var view         = schema.Tables.Where(t => t.TableName == "SCHEMATESTVIEW").FirstOrDefault();
+				var matView      = schema.Tables.Where(t => t.TableName == "SCHEMATESTMATVIEW" && t.IsView).FirstOrDefault();
+				var matViewTable = schema.Tables.Where(t => t.TableName == "SCHEMATESTMATVIEW" && !t.IsView).FirstOrDefault();
+
+				Assert.IsNotNull(table);
+				Assert.AreEqual("This is table", table.Description);
+				Assert.IsFalse(table.IsView);
+
+				Assert.AreEqual(1, table.Columns.Count);
+				Assert.AreEqual("ID", table.Columns[0].ColumnName);
+				Assert.AreEqual("This is column", table.Columns[0].Description);
+
+				Assert.IsNotNull(view);
+				Assert.IsNull(view.Description);
+				Assert.IsTrue(view.IsView);
+
+				Assert.AreEqual(1, view.Columns.Count);
+				Assert.AreEqual("ID", view.Columns[0].ColumnName);
+				Assert.AreEqual("This is view column", view.Columns[0].Description);
+
+				Assert.IsNotNull(matView);
+				Assert.AreEqual("This is matview", matView.Description);
+
+				Assert.AreEqual(1, matView.Columns.Count);
+				Assert.AreEqual("ID", matView.Columns[0].ColumnName);
+				Assert.AreEqual("This is matview column", matView.Columns[0].Description);
+
+				Assert.IsNull(matViewTable);
+			}
+		}
 	}
 }

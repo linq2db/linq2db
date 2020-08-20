@@ -2,7 +2,7 @@
 using System.Linq;
 
 using LinqToDB;
-
+using LinqToDB.SqlQuery;
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -1886,6 +1886,29 @@ namespace Tests.Linq
 					group g by g.ParentID into gc
 					select gc.Key
 				);
+			}
+		}
+
+		[Test]
+		public void OrderByGroupBy([DataSources()] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query1 = from c in db.Child
+							 orderby c.ChildID, c.ParentID
+							 select c;
+
+				var query2 = from c1 in query1
+							 group c1 by c1.ParentID
+					into c2
+							 select c2.Key;
+
+				Assert.DoesNotThrow(() => query2.ToArray());
+
+				var orderItems = query2.GetSelectQuery().OrderBy.Items;
+
+				Assert.That(orderItems.Count, Is.EqualTo(1));
+				Assert.That(QueryHelper.GetUnderlyingField(orderItems[0].Expression)!.Name, Is.EqualTo("ParentID"));
 			}
 		}
 

@@ -221,9 +221,16 @@ namespace Tests.Linq
 		public void Round3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
+			{
+				var q = from t in from p in db.Types select Math.Round(p.MoneyValue, 1) where t != 0 && t != 7 select t;
+
+				if (context.StartsWith("DB2"))
+					q = q.AsQueryable().Select(t => Math.Round(t, 1));
+
 				AreEqual(
 					from t in from p in    Types select Math.Round(p.MoneyValue, 1) where t != 0 && t != 7 select t,
-					from t in from p in db.Types select Math.Round(p.MoneyValue, 1) where t != 0 && t != 7 select t);
+					q);
+			}
 		}
 
 #if AZURE
@@ -287,9 +294,16 @@ namespace Tests.Linq
 		public void Round10([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
+			{
+				var q = from t in from p in db.Types select Math.Round(p.MoneyValue, 1, MidpointRounding.ToEven) where t != 0 && t != 7 select t;
+
+				if (context.StartsWith("DB2"))
+					q = q.AsQueryable().Select(t => Math.Round(t, 1, MidpointRounding.ToEven));
+
 				AreEqual(
 					from t in from p in    Types select Math.Round(p.MoneyValue, 1, MidpointRounding.ToEven) where t != 0 && t != 7 select t,
-					from t in from p in db.Types select Math.Round(p.MoneyValue, 1, MidpointRounding.ToEven) where t != 0 && t != 7 select t);
+					q);
+			}
 		}
 
 #if AZURE
@@ -310,9 +324,16 @@ namespace Tests.Linq
 			var mp = MidpointRounding.AwayFromZero;
 
 			using (var db = GetDataContext(context))
+			{
+				var q = from t in from p in db.Types select Math.Round(p.MoneyValue, 1, mp) where t != 0 && t != 7 select t;
+
+				if (context.StartsWith("DB2"))
+					q = q.AsQueryable().Select(t => Math.Round(t, 1, mp));
+
 				AreEqual(
 					from t in from p in    Types select Math.Round(p.MoneyValue, 1, mp) where t != 0 && t != 7 select t,
-					from t in from p in db.Types select Math.Round(p.MoneyValue, 1, mp) where t != 0 && t != 7 select t);
+					q);
+			}
 		}
 
 		[Test]

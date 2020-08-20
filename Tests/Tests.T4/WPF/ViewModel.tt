@@ -14,6 +14,7 @@
 			new NotifyingProperty("double", "NotifiedProp1", "NotifiedProp1", "NotifiedBrush1"),
 			new NotifyingProperty("int",    "NotifiedProp2", "NotifiedProp1", "NotifiedProp2") { InitValue = "500" },
 			new NotifyingProperty("Brush",  "NotifiedBrush1").InitGetter(() => new [] { "GetBrush()" }),
+			new NotifyingProperty(ModelType.Create<string>(false),    "ConditionalProp") { InitValue = "string.Empty", CustomValidation = true, Conditional = "DEBUG" },
 			new NotifyingProperty(ModelType.Create<string>(false),    "NotifiedProp3") { InitValue = "string.Empty", CustomValidation = true }));
 
 	GenerateModel();

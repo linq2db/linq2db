@@ -1,45 +1,45 @@
-﻿DROP PROCEDURE AddIssue792Record;             COMMIT;
-DROP PROCEDURE Person_SelectByKey;            COMMIT;
-DROP PROCEDURE Person_SelectAll;              COMMIT;
-DROP PROCEDURE Person_SelectByName;           COMMIT;
-DROP PROCEDURE Person_Insert;                 COMMIT;
-DROP PROCEDURE Person_Insert_OutputParameter; COMMIT;
-DROP PROCEDURE Person_Update;                 COMMIT;
-DROP PROCEDURE Person_Delete;                 COMMIT;
-DROP PROCEDURE Patient_SelectAll;             COMMIT;
-DROP PROCEDURE Patient_SelectByName;          COMMIT;
-DROP PROCEDURE OutRefTest;                    COMMIT;
-DROP PROCEDURE OutRefEnumTest;                COMMIT;
-DROP PROCEDURE Scalar_DataReader;             COMMIT;
-DROP PROCEDURE Scalar_OutputParameter;        COMMIT;
-DROP PROCEDURE Scalar_ReturnParameter;        COMMIT;
+﻿DROP PROCEDURE "AddIssue792Record";             COMMIT;
+DROP PROCEDURE "Person_SelectByKey";            COMMIT;
+DROP PROCEDURE "Person_SelectAll";              COMMIT;
+DROP PROCEDURE "Person_SelectByName";           COMMIT;
+DROP PROCEDURE "Person_Insert";                 COMMIT;
+DROP PROCEDURE "Person_Insert_OutputParameter"; COMMIT;
+DROP PROCEDURE "Person_Update";                 COMMIT;
+DROP PROCEDURE "Person_Delete";                 COMMIT;
+DROP PROCEDURE "Patient_SelectAll";             COMMIT;
+DROP PROCEDURE "Patient_SelectByName";          COMMIT;
+DROP PROCEDURE "OutRefTest";                    COMMIT;
+DROP PROCEDURE "OutRefEnumTest";                COMMIT;
+DROP PROCEDURE "Scalar_DataReader";             COMMIT;
+DROP PROCEDURE "Scalar_OutputParameter";        COMMIT;
+DROP PROCEDURE "Scalar_ReturnParameter";        COMMIT;
 
-DROP VIEW PersonView;                         COMMIT;
+DROP VIEW "PersonView";                         COMMIT;
 
-DROP TRIGGER CREATE_PersonID;                 COMMIT;
-DROP TRIGGER CREATE_DataTypeTest;             COMMIT;
-DROP TRIGGER CREATE_BinaryDataID;             COMMIT;
+DROP TRIGGER "CREATE_PersonID";                 COMMIT;
+DROP TRIGGER "CREATE_DataTypeTest";             COMMIT;
+DROP TRIGGER "CREATE_BinaryDataID";             COMMIT;
 
-DROP TABLE Dual;                              COMMIT;
-DROP TABLE DataTypeTest;                      COMMIT;
-DROP TABLE Doctor;                            COMMIT;
-DROP TABLE Patient;                           COMMIT;
-DROP TABLE Person;                            COMMIT;
+DROP TABLE "Dual";                              COMMIT;
+DROP TABLE "DataTypeTest";                      COMMIT;
+DROP TABLE "Doctor";                            COMMIT;
+DROP TABLE "Patient";                           COMMIT;
+DROP TABLE "Person";                            COMMIT;
 
-DROP GENERATOR DataTypeID;                    COMMIT;
-DROP GENERATOR PersonID;                      COMMIT;
+DROP GENERATOR "DataTypeID";                    COMMIT;
+DROP GENERATOR "PersonID";                      COMMIT;
 
-DROP EXTERNAL FUNCTION rtrim;                 COMMIT;
-DROP EXTERNAL FUNCTION ltrim;                 COMMIT;
+DROP EXTERNAL FUNCTION RTRIM;                 COMMIT;
+DROP EXTERNAL FUNCTION LTRIM;                 COMMIT;
 
 
-DECLARE EXTERNAL FUNCTION ltrim 
+DECLARE EXTERNAL FUNCTION LTRIM
 	CSTRING(255) NULL
 	RETURNS CSTRING(255) FREE_IT
 	ENTRY_POINT 'IB_UDF_ltrim' MODULE_NAME 'ib_udf';
 COMMIT;
 
-DECLARE EXTERNAL FUNCTION rtrim 
+DECLARE EXTERNAL FUNCTION RTRIM
 	CSTRING(255) NULL
 	RETURNS CSTRING(255) FREE_IT
 	ENTRY_POINT 'IB_UDF_rtrim' MODULE_NAME 'ib_udf';
@@ -50,93 +50,93 @@ COMMIT;
 Dual table FOR supporting queryies LIKE:
 SELECT 1 AS id => SELECT 1 AS "id" *FROM Dual*
 */
-CREATE TABLE Dual (Dummy  VARCHAR(10));
+CREATE TABLE "Dual" ("Dummy"  VARCHAR(10));
 COMMIT;
-INSERT INTO  Dual (Dummy) VALUES ('X');
-COMMIT;
-
-DROP TABLE InheritanceParent;
+INSERT INTO  "Dual" ("Dummy") VALUES ('X');
 COMMIT;
 
-CREATE TABLE InheritanceParent
+DROP TABLE "InheritanceParent";
+COMMIT;
+
+CREATE TABLE "InheritanceParent"
 (
-	InheritanceParentId INTEGER     NOT NULL PRIMARY KEY,
-	TypeDiscriminator   INTEGER,
-	Name                VARCHAR(50)
+	"InheritanceParentId" INTEGER     NOT NULL PRIMARY KEY,
+	"TypeDiscriminator"   INTEGER,
+	"Name"                VARCHAR(50)
 );
 COMMIT;
 
-DROP TABLE InheritanceChild;
+DROP TABLE "InheritanceChild";
 COMMIT;
 
-CREATE TABLE InheritanceChild
+CREATE TABLE "InheritanceChild"
 (
-	InheritanceChildId  INTEGER     NOT NULL PRIMARY KEY,
-	InheritanceParentId INTEGER     NOT NULL,
-	TypeDiscriminator   INTEGER,
-	Name                VARCHAR(50)
+	"InheritanceChildId"  INTEGER     NOT NULL PRIMARY KEY,
+	"InheritanceParentId" INTEGER     NOT NULL,
+	"TypeDiscriminator"   INTEGER,
+	"Name"                VARCHAR(50)
 );
 COMMIT;
 
 
 -- Person Table
 
-CREATE TABLE Person
+CREATE TABLE "Person"
 (
-	PersonID   INTEGER     NOT NULL  PRIMARY KEY,
-	FirstName  VARCHAR(50) CHARACTER SET UNICODE_FSS NOT NULL,
-	LastName   VARCHAR(50) CHARACTER SET UNICODE_FSS NOT NULL,
-	MiddleName VARCHAR(50),
-	Gender     CHAR(1)     NOT NULL CHECK (Gender in ('M', 'F', 'U', 'O'))
+	"PersonID"   INTEGER     NOT NULL  PRIMARY KEY,
+	"FirstName"  VARCHAR(50) CHARACTER SET UNICODE_FSS NOT NULL,
+	"LastName"   VARCHAR(50) CHARACTER SET UNICODE_FSS NOT NULL,
+	"MiddleName" VARCHAR(50) CHARACTER SET UNICODE_FSS,
+	"Gender"     CHAR(1)     NOT NULL CHECK ("Gender" in ('M', 'F', 'U', 'O'))
 ); 
 COMMIT;
 
-CREATE GENERATOR PersonID;
+CREATE GENERATOR "PersonID";
 COMMIT;
 
-CREATE TRIGGER CREATE_PersonID FOR Person
+CREATE TRIGGER "CREATE_PersonID" FOR "Person"
 BEFORE INSERT POSITION 0
 AS BEGIN
-	NEW.PersonID = GEN_ID(PersonID, 1);
+	NEW."PersonID" = GEN_ID("PersonID", 1);
 END;
 COMMIT;
 
-INSERT INTO Person (FirstName, LastName, Gender) VALUES ('John',   'Pupkin',    'M');
+INSERT INTO "Person" ("FirstName", "LastName", "Gender") VALUES ('John',   'Pupkin',    'M');
 COMMIT;
-INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Tester', 'Testerson', 'M');
+INSERT INTO "Person" ("FirstName", "LastName", "Gender") VALUES ('Tester', 'Testerson', 'M');
 COMMIT;
-INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jane',   'Doe',       'F');
+INSERT INTO "Person" ("FirstName", "LastName", "Gender") VALUES ('Jane',   'Doe',       'F');
 COMMIT;
--- INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jürgen', 'König',     'M');
-INSERT INTO Person (FirstName, LastName, MiddleName, Gender) VALUES (_utf8 x'4AC3BC7267656E', _utf8 x'4BC3B66E6967', 'Ko', 'M');
+-- INSERT INTO "Person" ("FirstName", "LastName", "Gender") VALUES ('Jürgen', 'König',     'M');
+INSERT INTO "Person" ("FirstName", "LastName", "MiddleName", "Gender") VALUES (_utf8 x'4AC3BC7267656E', _utf8 x'4BC3B66E6967', 'Ko', 'M');
 COMMIT;
 
 -- Doctor Table Extension
 
-CREATE TABLE Doctor
+CREATE TABLE "Doctor"
 (
-	PersonID INTEGER     NOT NULL PRIMARY KEY,
-	Taxonomy VARCHAR(50) NOT NULL,
-		CONSTRAINT FK_Doctor_Person FOREIGN KEY (PersonID) REFERENCES Person (PersonID)
+	"PersonID" INTEGER     NOT NULL PRIMARY KEY,
+	"Taxonomy" VARCHAR(50) NOT NULL,
+		CONSTRAINT "FK_Doctor_Person" FOREIGN KEY ("PersonID") REFERENCES "Person" ("PersonID")
 			ON DELETE CASCADE
 );
 COMMIT;
 
-INSERT INTO Doctor (PersonID, Taxonomy) VALUES (1, 'Psychiatry');
+INSERT INTO "Doctor" ("PersonID", "Taxonomy") VALUES (1, 'Psychiatry');
 COMMIT;
 
 -- Patient Table Extension
 
-CREATE TABLE Patient
+CREATE TABLE "Patient"
 (
-	PersonID  int           NOT NULL PRIMARY KEY,
-	Diagnosis VARCHAR(256)  NOT NULL,
-	FOREIGN KEY (PersonID) REFERENCES Person (PersonID)
+	"PersonID"  int           NOT NULL PRIMARY KEY,
+	"Diagnosis" VARCHAR(256)  NOT NULL,
+	FOREIGN KEY ("PersonID") REFERENCES "Person" ("PersonID")
 			ON DELETE CASCADE
 );
 COMMIT;
 
-INSERT INTO Patient (PersonID, Diagnosis) VALUES (2, 'Hallucination with Paranoid Bugs'' Delirium of Persecution');
+INSERT INTO "Patient" ("PersonID", "Diagnosis") VALUES (2, 'Hallucination with Paranoid Bugs'' Delirium of Persecution');
 COMMIT;
 
 -- Data Types test
@@ -148,58 +148,58 @@ http://www.firebirdsql.org/manual/migration-mssql-data-types.html
 BUT! BLOB is ised for BINARY data! not CHAR
 */
 
-CREATE TABLE DataTypeTest
+CREATE TABLE "DataTypeTest"
 (
-	DataTypeID      INTEGER NOT NULL PRIMARY KEY,
-	Binary_         BLOB,
-	Boolean_        CHAR(1),
-	Byte_           SMALLINT,
-	Bytes_          BLOB,
-	CHAR_           CHAR(1),
-	DateTime_       TIMESTAMP,
-	Decimal_        DECIMAL(10, 2),
-	Double_         DOUBLE PRECISION,
-	Guid_           CHAR(38),
-	Int16_          SMALLINT,
-	Int32_          INTEGER,
-	Int64_          NUMERIC(11),
-	Money_          DECIMAL(18, 4),
-	SByte_          SMALLINT,
-	Single_         FLOAT,
-	Stream_         BLOB,
-	String_         VARCHAR(50) CHARACTER SET UNICODE_FSS,
-	UInt16_         SMALLINT,
-	UInt32_         INTEGER,
-	UInt64_         NUMERIC(11),
-	Xml_            CHAR(1000)
+	"DataTypeID"      INTEGER NOT NULL PRIMARY KEY,
+	"Binary_"         BLOB,
+	"Boolean_"        CHAR(1),
+	"Byte_"           SMALLINT,
+	"Bytes_"          BLOB,
+	CHAR_             CHAR(1),
+	"DateTime_"       TIMESTAMP,
+	"Decimal_"        DECIMAL(10, 2),
+	"Double_"         DOUBLE PRECISION,
+	"Guid_"           CHAR(38),
+	"Int16_"          SMALLINT,
+	"Int32_"          INTEGER,
+	"Int64_"          NUMERIC(11),
+	"Money_"          DECIMAL(18, 4),
+	"SByte_"          SMALLINT,
+	"Single_"         FLOAT,
+	"Stream_"         BLOB,
+	"String_"         VARCHAR(50) CHARACTER SET UNICODE_FSS,
+	"UInt16_"         SMALLINT,
+	"UInt32_"         INTEGER,
+	"UInt64_"         NUMERIC(11),
+	"Xml_"            CHAR(1000)
 );
 COMMIT;
 
-CREATE GENERATOR DataTypeID;
+CREATE GENERATOR "DataTypeID";
 COMMIT;
 
-CREATE TRIGGER CREATE_DataTypeTest FOR DataTypeTest
+CREATE TRIGGER "CREATE_DataTypeTest" FOR "DataTypeTest"
 BEFORE INSERT POSITION 0
 AS BEGIN
-	NEW.DataTypeID = GEN_ID(DataTypeID, 1); 
+	NEW."DataTypeID" = GEN_ID("DataTypeID", 1); 
 END;
 COMMIT;
 
-INSERT INTO DataTypeTest
-	(Binary_, Boolean_,   Byte_,  Bytes_,  CHAR_,  DateTime_, Decimal_,
-	 Double_,    Guid_,  Int16_,  Int32_,  Int64_,    Money_,   SByte_,
-	 Single_,  Stream_, String_, UInt16_, UInt32_,   UInt64_,     Xml_)
+INSERT INTO "DataTypeTest"
+	("Binary_", "Boolean_",   "Byte_",  "Bytes_",  CHAR_,  "DateTime_", "Decimal_",
+	 "Double_",    "Guid_",  "Int16_",  "Int32_",  "Int64_",    "Money_",   "SByte_",
+	 "Single_",  "Stream_", "String_", "UInt16_", "UInt32_",   "UInt64_",     "Xml_")
 VALUES
 	(   NULL,     NULL,    NULL,    NULL,    NULL,      NULL,     NULL,
 		NULL,     NULL,    NULL,    NULL,    NULL,      NULL,     NULL,
 		NULL,     NULL,    NULL,    NULL,    NULL,      NULL,     NULL);
 COMMIT;
 
-INSERT INTO DataTypeTest
-	(Binary_,	Boolean_,	Byte_,   Bytes_,  CHAR_,	DateTime_, Decimal_,
-	 Double_,	Guid_,		Int16_,  Int32_,  Int64_,    Money_,   SByte_,
-	 Single_,	Stream_,	String_, UInt16_, UInt32_,   UInt64_,
-	 Xml_)
+INSERT INTO "DataTypeTest"
+	("Binary_",	"Boolean_",	"Byte_",   "Bytes_",  CHAR_,		"DateTime_", "Decimal_",
+	 "Double_",	"Guid_",	"Int16_",  "Int32_",  "Int64_",		"Money_",   "SByte_",
+	 "Single_",	"Stream_",	"String_", "UInt16_", "UInt32_",	"UInt64_",
+	 "Xml_")
 VALUES
 	('dddddddddddddddd', 1,  255,'dddddddddddddddd', 'B', 'NOW', 12345.67,
 	1234.567, 'dddddddddddddddddddddddddddddddd', 32767, 32768, 1000000, 12.3456, 127,
@@ -209,44 +209,44 @@ COMMIT;
 
 
 
-DROP TABLE Parent;     COMMIT;
-DROP TABLE Child;      COMMIT;
-DROP TABLE GrandChild; COMMIT;
+DROP TABLE "Parent";     COMMIT;
+DROP TABLE "Child";      COMMIT;
+DROP TABLE "GrandChild"; COMMIT;
 
-CREATE TABLE Parent      (ParentID int, Value1 int);                    COMMIT;
-CREATE TABLE Child       (ParentID int, ChildID int);                   COMMIT;
-CREATE TABLE GrandChild  (ParentID int, ChildID int, GrandChildID int); COMMIT;
+CREATE TABLE "Parent"      ("ParentID" int, "Value1" int);                    COMMIT;
+CREATE TABLE "Child"       ("ParentID" int, "ChildID" int);                   COMMIT;
+CREATE TABLE "GrandChild"  ("ParentID" int, "ChildID" int, "GrandChildID" int); COMMIT;
 
 
-DROP TABLE LinqDataTypes; COMMIT;
+DROP TABLE "LinqDataTypes"; COMMIT;
 
-CREATE TABLE LinqDataTypes
+CREATE TABLE "LinqDataTypes"
 (
-	ID             int,
-	MoneyValue     decimal(10,4),
-	DateTimeValue  timestamp,
-	DateTimeValue2 timestamp,
-	BoolValue      char(1),
-	GuidValue      char(38),
-	BinaryValue    blob,
-	SmallIntValue  smallint,
-	IntValue       int,
-	BigIntValue    bigint,
-	StringValue    VARCHAR(50)
+	ID               int,
+	"MoneyValue"     decimal(10,4),
+	"DateTimeValue"  timestamp,
+	"DateTimeValue2" timestamp,
+	"BoolValue"      char(1),
+	"GuidValue"      char(38),
+	"BinaryValue"    blob,
+	"SmallIntValue"  smallint,
+	"IntValue"       int,
+	"BigIntValue"    bigint,
+	"StringValue"    VARCHAR(50)
 );
 COMMIT;
 
-DROP GENERATOR SequenceTestSeq; COMMIT;
+DROP GENERATOR "SequenceTestSeq"; COMMIT;
 
-CREATE GENERATOR SequenceTestSeq;
+CREATE GENERATOR "SequenceTestSeq";
 COMMIT;
 
-DROP TABLE SequenceTest; COMMIT;
+DROP TABLE "SequenceTest"; COMMIT;
 
-CREATE TABLE SequenceTest
+CREATE TABLE "SequenceTest"
 (
-	ID     int         NOT NULL PRIMARY KEY,
-	Value_ VARCHAR(50) NOT NULL
+	ID       int         NOT NULL PRIMARY KEY,
+	"Value_" VARCHAR(50) NOT NULL
 );
 COMMIT;
 
@@ -254,73 +254,73 @@ COMMIT;
 DROP TRIGGER CREATE_ID;
 COMMIT;
 
-DROP GENERATOR TestIdentityID;
+DROP GENERATOR "TestIdentityID";
 COMMIT;
 
-DROP TABLE TestIdentity;
+DROP TABLE "TestIdentity";
 COMMIT;
 
-CREATE TABLE TestIdentity (
+CREATE TABLE "TestIdentity" (
 	ID INTEGER NOT NULL PRIMARY KEY
 );
 COMMIT;
 
-CREATE GENERATOR TestIdentityID;
+CREATE GENERATOR "TestIdentityID";
 COMMIT;
 
-CREATE TRIGGER CREATE_ID FOR TestIdentity
+CREATE TRIGGER CREATE_ID FOR "TestIdentity"
 BEFORE INSERT POSITION 0
 AS BEGIN
-	NEW.ID = GEN_ID(TestIdentityID, 1);
+	NEW.ID = GEN_ID("TestIdentityID", 1);
 END;
 COMMIT;
 
 
 
-DROP TRIGGER AllTypes_ID;
+DROP TRIGGER "AllTypes_ID";
 COMMIT;
 
-DROP GENERATOR AllTypesID;
+DROP GENERATOR "AllTypesID";
 COMMIT;
 
-DROP TABLE AllTypes;
+DROP TABLE "AllTypes";
 COMMIT;
 
-CREATE TABLE AllTypes
+CREATE TABLE "AllTypes"
 (
 	ID                       integer      NOT NULL PRIMARY KEY,
 
-	bigintDataType           bigint,
-	smallintDataType         smallint,
-	decimalDataType          decimal(18),
-	intDataType              int,
-	floatDataType            float,
-	realDataType             real,
+	"bigintDataType"           bigint,
+	"smallintDataType"         smallint,
+	"decimalDataType"          decimal(18),
+	"intDataType"              int,
+	"floatDataType"            float,
+	"realDataType"             real,
 
-	timestampDataType        timestamp,
+	"timestampDataType"        timestamp,
 
-	charDataType             char(1),
-	char20DataType           char(20),
-	varcharDataType          varchar(20),
-	textDataType             blob sub_type TEXT,
-	ncharDataType            char(20) character set UNICODE_FSS,
-	nvarcharDataType         varchar(20) character set UNICODE_FSS,
+	"charDataType"             char(1),
+	"char20DataType"           char(20),
+	"varcharDataType"          varchar(20),
+	"textDataType"             blob sub_type TEXT,
+	"ncharDataType"            char(20) character set UNICODE_FSS,
+	"nvarcharDataType"         varchar(20) character set UNICODE_FSS,
 
-	blobDataType             blob
+	"blobDataType"             blob
 );
 COMMIT;
 
-CREATE GENERATOR AllTypesID;
+CREATE GENERATOR "AllTypesID";
 COMMIT;
 
-CREATE TRIGGER AllTypes_ID FOR AllTypes
+CREATE TRIGGER "AllTypes_ID" FOR "AllTypes"
 BEFORE INSERT POSITION 0
 AS BEGIN
-	NEW.ID = GEN_ID(AllTypesID, 1);
+	NEW.ID = GEN_ID("AllTypesID", 1);
 END;
 COMMIT;
 
-INSERT INTO AllTypes
+INSERT INTO "AllTypes"
 VALUES
 (
 	1,
@@ -345,7 +345,7 @@ VALUES
 );
 COMMIT;
 
-INSERT INTO AllTypes
+INSERT INTO "AllTypes"
 VALUES
 (
 	2,
@@ -371,26 +371,26 @@ VALUES
 COMMIT;
 
 
-CREATE VIEW PersonView
+CREATE VIEW "PersonView"
 AS
-	SELECT * FROM Person;
+	SELECT * FROM "Person";
 COMMIT;
 
 
 -- Person_SelectByKey
 
-CREATE PROCEDURE Person_SelectByKey(id INTEGER)
+CREATE PROCEDURE "Person_SelectByKey"(id INTEGER)
 RETURNS (
 	PersonID   INTEGER,
-	FirstName  VARCHAR(50),
-	LastName   VARCHAR(50),
-	MiddleName VARCHAR(50),
+	FirstName  VARCHAR(50) CHARACTER SET UNICODE_FSS,
+	LastName   VARCHAR(50) CHARACTER SET UNICODE_FSS,
+	MiddleName VARCHAR(50) CHARACTER SET UNICODE_FSS,
 	Gender     CHAR(1)
 	)
 AS
 BEGIN
-	SELECT PersonID, FirstName, LastName, MiddleName, Gender FROM Person 
-	WHERE PersonID = :id
+	SELECT "PersonID", "FirstName", "LastName", "MiddleName", "Gender" FROM "Person"
+	WHERE "PersonID" = :id
 	INTO
 		:PersonID,
 		:FirstName,
@@ -403,18 +403,18 @@ COMMIT;
 
 -- Person_SelectAll
 
-CREATE PROCEDURE Person_SelectAll
+CREATE PROCEDURE "Person_SelectAll"
 RETURNS (
 	PersonID   INTEGER,
-	FirstName  VARCHAR(50),
-	LastName   VARCHAR(50),
-	MiddleName VARCHAR(50),
+	FirstName  VARCHAR(50) CHARACTER SET UNICODE_FSS,
+	LastName   VARCHAR(50) CHARACTER SET UNICODE_FSS,
+	MiddleName VARCHAR(50) CHARACTER SET UNICODE_FSS,
 	Gender     CHAR(1)
 	)
 AS
 BEGIN
 	FOR 
-		SELECT PersonID, FirstName, LastName, MiddleName, Gender FROM Person 
+		SELECT "PersonID", "FirstName", "LastName", "MiddleName", "Gender" FROM "Person"
 		INTO
 			:PersonID,
 			:FirstName,
@@ -427,52 +427,52 @@ COMMIT;
 
 -- Person_SelectByName
 
-CREATE PROCEDURE Person_SelectByName
+CREATE PROCEDURE "Person_SelectByName"
 (
-	in_FirstName VARCHAR(50),
-	in_LastName  VARCHAR(50)
+	in_FirstName VARCHAR(50) CHARACTER SET UNICODE_FSS,
+	in_LastName  VARCHAR(50) CHARACTER SET UNICODE_FSS
 )
 RETURNS
 (
 	PersonID   int,
-	FirstName  VARCHAR(50),
-	LastName   VARCHAR(50),
-	MiddleName VARCHAR(50),
+	FirstName  VARCHAR(50) CHARACTER SET UNICODE_FSS,
+	LastName   VARCHAR(50) CHARACTER SET UNICODE_FSS,
+	MiddleName VARCHAR(50) CHARACTER SET UNICODE_FSS,
 	Gender     CHAR(1)
 )
 AS
 BEGIN
 
-	FOR SELECT PersonID, FirstName, LastName, MiddleName, Gender FROM Person 
-		WHERE FirstName LIKE :in_FirstName and LastName LIKE :in_LastName
+	FOR SELECT "PersonID", "FirstName", "LastName", "MiddleName", "Gender" FROM "Person"
+		WHERE "FirstName" LIKE :in_FirstName and "LastName" LIKE :in_LastName
 	INTO
 		:PersonID,
 		:FirstName,
 		:LastName,
 		:MiddleName,
-		:Gender 
+		:Gender
 	DO SUSPEND;
 END;
 COMMIT;
 
 -- Person_Insert
 
-CREATE PROCEDURE Person_Insert
+CREATE PROCEDURE "Person_Insert"
 (
-	FirstName  VARCHAR(50),
-	LastName   VARCHAR(50),
-	MiddleName VARCHAR(50),
+	FirstName  VARCHAR(50) CHARACTER SET UNICODE_FSS,
+	LastName   VARCHAR(50) CHARACTER SET UNICODE_FSS,
+	MiddleName VARCHAR(50) CHARACTER SET UNICODE_FSS,
 	Gender     CHAR(1)
 )
 RETURNS (PersonID INTEGER)
 AS
 BEGIN
-	INSERT INTO Person
-		( LastName,  FirstName,  MiddleName,  Gender)
+	INSERT INTO "Person"
+		( "LastName",  "FirstName",  "MiddleName",  "Gender")
 	VALUES
 		(:LastName, :FirstName, :MiddleName, :Gender);
 
-	SELECT MAX(PersonID) FROM person
+	SELECT MAX("PersonID") FROM "Person"
 		INTO :PersonID;
 	SUSPEND;
 END;
@@ -480,22 +480,22 @@ COMMIT;
 
 -- Person_Insert_OutputParameter
 
-CREATE PROCEDURE Person_Insert_OutputParameter
+CREATE PROCEDURE "Person_Insert_OutputParameter"
 (
-	FirstName  VARCHAR(50),
-	LastName   VARCHAR(50),
-	MiddleName VARCHAR(50),
+	FirstName  VARCHAR(50) CHARACTER SET UNICODE_FSS,
+	LastName   VARCHAR(50) CHARACTER SET UNICODE_FSS,
+	MiddleName VARCHAR(50) CHARACTER SET UNICODE_FSS,
 	Gender     CHAR(1)
 )
 RETURNS (PersonID INTEGER)
 AS
 BEGIN
-	INSERT INTO Person
-		( LastName,  FirstName,  MiddleName,  Gender)
+	INSERT INTO "Person"
+		( "LastName",  "FirstName",  "MiddleName",  "Gender")
 	VALUES
 		(:LastName, :FirstName, :MiddleName, :Gender);
 
-	SELECT max(PersonID) FROM person
+	SELECT max("PersonID") FROM "Person"
 	INTO :PersonID;
 	SUSPEND;
 END;
@@ -503,46 +503,46 @@ COMMIT;
 
 -- Person_Update
 
-CREATE PROCEDURE Person_Update(
+CREATE PROCEDURE "Person_Update"(
 	PersonID   INTEGER,
-	FirstName  VARCHAR(50),
-	LastName   VARCHAR(50),
-	MiddleName VARCHAR(50),
+	FirstName  VARCHAR(50) CHARACTER SET UNICODE_FSS,
+	LastName   VARCHAR(50) CHARACTER SET UNICODE_FSS,
+	MiddleName VARCHAR(50) CHARACTER SET UNICODE_FSS,
 	Gender     CHAR(1)
 	)
 AS
 BEGIN
 	UPDATE
-		Person
+		"Person"
 	SET
-		LastName   = :LastName,
-		FirstName  = :FirstName,
-		MiddleName = :MiddleName,
-		Gender     = :Gender
+		"LastName"   = :LastName,
+		"FirstName"  = :FirstName,
+		"MiddleName" = :MiddleName,
+		"Gender"     = :Gender
 	WHERE
-		PersonID = :PersonID;
+		"PersonID" = :PersonID;
 END;
 COMMIT;
 
 -- Person_Delete
 
-CREATE PROCEDURE Person_Delete(
+CREATE PROCEDURE "Person_Delete"(
 	PersonID INTEGER
 	)
 AS
 BEGIN
-	DELETE FROM Person WHERE PersonID = :PersonID;
+	DELETE FROM "Person" WHERE "PersonID" = :PersonID;
 END;
 COMMIT;
 
 -- Patient_SelectAll
 
-CREATE PROCEDURE Patient_SelectAll
+CREATE PROCEDURE "Patient_SelectAll"
 RETURNS (
 	PersonID   int,
-	FirstName  VARCHAR(50),
-	LastName   VARCHAR(50),
-	MiddleName VARCHAR(50),
+	FirstName  VARCHAR(50) CHARACTER SET UNICODE_FSS,
+	LastName   VARCHAR(50) CHARACTER SET UNICODE_FSS,
+	MiddleName VARCHAR(50) CHARACTER SET UNICODE_FSS,
 	Gender     CHAR(1),
 	Diagnosis  VARCHAR(256)
 	)
@@ -550,16 +550,16 @@ AS
 BEGIN
 	FOR 
 		SELECT
-			Person.PersonID,
-			FirstName,
-			LastName,
-			MiddleName,
-			Gender,
-			Patient.Diagnosis
+			"Person"."PersonID",
+			"FirstName",
+			"LastName",
+			"MiddleName",
+			"Gender",
+			"Patient"."Diagnosis"
 		FROM
-			Patient, Person
+			"Patient", "Person"
 		WHERE
-			Patient.PersonID = Person.PersonID
+			"Patient"."PersonID" = "Person"."PersonID"
 		INTO
 			:PersonID,
 			:FirstName,
@@ -573,13 +573,13 @@ COMMIT;
 
 -- Patient_SelectByName
 
-CREATE PROCEDURE Patient_SelectByName(
-	FirstName VARCHAR(50),
-	LastName  VARCHAR(50)
+CREATE PROCEDURE "Patient_SelectByName"(
+	FirstName VARCHAR(50) CHARACTER SET UNICODE_FSS,
+	LastName  VARCHAR(50) CHARACTER SET UNICODE_FSS
 	)
 RETURNS (
 	PersonID   int,
-	MiddleName VARCHAR(50),
+	MiddleName VARCHAR(50) CHARACTER SET UNICODE_FSS,
 	Gender     CHAR(1),
 	Diagnosis  VARCHAR(256)
 	)
@@ -587,15 +587,15 @@ AS
 BEGIN
 	FOR 
 		SELECT
-			Person.PersonID, 
-			MiddleName,
-			Gender,
-			Patient.Diagnosis
+			"Person"."PersonID",
+			"MiddleName",
+			"Gender",
+			"Patient"."Diagnosis"
 		FROM
-			Patient, Person
+			"Patient", "Person"
 		WHERE
-			Patient.PersonID = Person.PersonID
-			and FirstName = :FirstName and LastName = :LastName
+			"Patient"."PersonID" = "Person"."PersonID"
+			and "FirstName" = :FirstName and "LastName" = :LastName
 		INTO
 			:PersonID,
 			:MiddleName,
@@ -616,7 +616,7 @@ FdpDataProvider.InOutInputParameterPrefix + [parameter name]
 ex:
 in_inputOutputID is input mirror FOR inout parameter inputOutputID
 */
-CREATE PROCEDURE OutRefTest(
+CREATE PROCEDURE "OutRefTest"(
 	ID					INTEGER,
 	in_inputOutputID	INTEGER,
 	str					VARCHAR(50),
@@ -640,7 +640,7 @@ COMMIT;
 
 -- OutRefEnumTest
 
-CREATE PROCEDURE OutRefEnumTest(
+CREATE PROCEDURE "OutRefEnumTest"(
 		str					VARCHAR(50),
 		in_inputOutputStr	VARCHAR(50)
 		)
@@ -658,7 +658,7 @@ COMMIT;
 
 -- ExecuteScalarTest
 
-CREATE PROCEDURE Scalar_DataReader
+CREATE PROCEDURE "Scalar_DataReader"
 RETURNS(
 	intField	INTEGER,
 	stringField	VARCHAR(50)
@@ -671,7 +671,7 @@ BEGIN
 END;
 COMMIT;
 
-CREATE PROCEDURE Scalar_OutputParameter
+CREATE PROCEDURE "Scalar_OutputParameter"
 RETURNS (
 	outputInt      INTEGER,
 	outputString   VARCHAR(50)
@@ -688,7 +688,7 @@ COMMIT;
 "Return_Value" is the name for ReturnValue "emulating"
 may be changed: FdpDataProvider.ReturnParameterName
 */
-CREATE PROCEDURE Scalar_ReturnParameter
+CREATE PROCEDURE "Scalar_ReturnParameter"
 RETURNS (Return_Value INTEGER)
 AS
 BEGIN
@@ -712,69 +712,69 @@ CREATE TABLE "CamelCaseName"
 COMMIT;
 
 
-DROP TABLE TestMerge1;                            COMMIT;
-DROP TABLE TestMerge2;                            COMMIT;
+DROP TABLE "TestMerge1";                            COMMIT;
+DROP TABLE "TestMerge2";                            COMMIT;
 
-CREATE TABLE TestMerge1
+CREATE TABLE "TestMerge1"
 (
-	Id     INTEGER     NOT NULL PRIMARY KEY,
-	Field1 INTEGER,
-	Field2 INTEGER,
-	Field3 INTEGER,
-	Field4 INTEGER,
-	Field5 INTEGER,
+	"Id"     INTEGER     NOT NULL PRIMARY KEY,
+	"Field1" INTEGER,
+	"Field2" INTEGER,
+	"Field3" INTEGER,
+	"Field4" INTEGER,
+	"Field5" INTEGER,
 
-	FieldInt64      BIGINT,
-	FieldBoolean    CHAR(1),
-	FieldString     VARCHAR(20),
-	FieldNString    VARCHAR(20) CHARACTER SET UNICODE_FSS,
-	FieldChar       CHAR(1),
-	FieldNChar      CHAR(1) CHARACTER SET UNICODE_FSS,
-	FieldFloat      FLOAT,
-	FieldDouble     DOUBLE PRECISION,
-	FieldDateTime   TIMESTAMP,
-	FieldBinary     BLOB(20),
-	FieldGuid       CHAR(38),
-	FieldDecimal    DECIMAL(18, 10),
-	FieldDate       DATE,
-	FieldTime       TIMESTAMP,
-	FieldEnumString VARCHAR(20),
-	FieldEnumNumber INT
+	"FieldInt64"      BIGINT,
+	"FieldBoolean"    CHAR(1),
+	"FieldString"     VARCHAR(20),
+	"FieldNString"    VARCHAR(20) CHARACTER SET UNICODE_FSS,
+	"FieldChar"       CHAR(1),
+	"FieldNChar"      CHAR(1) CHARACTER SET UNICODE_FSS,
+	"FieldFloat"      FLOAT,
+	"FieldDouble"     DOUBLE PRECISION,
+	"FieldDateTime"   TIMESTAMP,
+	"FieldBinary"     BLOB(20),
+	"FieldGuid"       CHAR(38),
+	"FieldDecimal"    DECIMAL(18, 10),
+	"FieldDate"       DATE,
+	"FieldTime"       TIMESTAMP,
+	"FieldEnumString" VARCHAR(20),
+	"FieldEnumNumber" INT
 );
 COMMIT;
 
-CREATE TABLE TestMerge2
+CREATE TABLE "TestMerge2"
 (
-	Id     INTEGER     NOT NULL PRIMARY KEY,
-	Field1 INTEGER,
-	Field2 INTEGER,
-	Field3 INTEGER,
-	Field4 INTEGER,
-	Field5 INTEGER,
+	"Id"     INTEGER     NOT NULL PRIMARY KEY,
+	"Field1" INTEGER,
+	"Field2" INTEGER,
+	"Field3" INTEGER,
+	"Field4" INTEGER,
+	"Field5" INTEGER,
 
-	FieldInt64      BIGINT,
-	FieldBoolean    CHAR(1),
-	FieldString     VARCHAR(20),
-	FieldNString    VARCHAR(20) CHARACTER SET UNICODE_FSS,
-	FieldChar       CHAR(1),
-	FieldNChar      CHAR(1) CHARACTER SET UNICODE_FSS,
-	FieldFloat      FLOAT,
-	FieldDouble     DOUBLE PRECISION,
-	FieldDateTime   TIMESTAMP,
-	FieldBinary     BLOB(20),
-	FieldGuid       CHAR(38),
-	FieldDecimal    DECIMAL(18, 10),
-	FieldDate       DATE,
-	FieldTime       TIMESTAMP,
-	FieldEnumString VARCHAR(20),
-	FieldEnumNumber INT
+	"FieldInt64"      BIGINT,
+	"FieldBoolean"    CHAR(1),
+	"FieldString"     VARCHAR(20),
+	"FieldNString"    VARCHAR(20) CHARACTER SET UNICODE_FSS,
+	"FieldChar"       CHAR(1),
+	"FieldNChar"      CHAR(1) CHARACTER SET UNICODE_FSS,
+	"FieldFloat"      FLOAT,
+	"FieldDouble"     DOUBLE PRECISION,
+	"FieldDateTime"   TIMESTAMP,
+	"FieldBinary"     BLOB(20),
+	"FieldGuid"       CHAR(38),
+	"FieldDecimal"    DECIMAL(18, 10),
+	"FieldDate"       DATE,
+	"FieldTime"       TIMESTAMP,
+	"FieldEnumString" VARCHAR(20),
+	"FieldEnumNumber" INT
 );
 COMMIT;
 
-CREATE PROCEDURE AddIssue792Record
+CREATE PROCEDURE "AddIssue792Record"
 AS
 BEGIN
-	INSERT INTO AllTypes(char20DataType) VALUES('issue792');
+	INSERT INTO "AllTypes"("char20DataType") VALUES('issue792');
 	SUSPEND;
 END;
 COMMIT;

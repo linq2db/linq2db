@@ -14,7 +14,7 @@ namespace LinqToDB.SqlQuery
 
 		public SqlUpdateClause Update
 		{
-			get => _update ?? (_update = new SqlUpdateClause());
+			get => _update ??= new SqlUpdateClause();
 			set => _update = value;
 		}
 
@@ -103,13 +103,12 @@ namespace LinqToDB.SqlQuery
 
 			return null != new QueryVisitor().Find(Update, e =>
 			{
-				switch (e)
+				return e switch
 				{
-					case SqlTable t: return QueryHelper.IsEqualTables(t, table);
-					case SqlField f: return QueryHelper.IsEqualTables(f.Table as SqlTable, table);
-				}
-
-				return false;
+					SqlTable t => QueryHelper.IsEqualTables(t, table),
+					SqlField f => QueryHelper.IsEqualTables(f.Table as SqlTable, table),
+					_          => false,
+				};
 			});
 		}
 

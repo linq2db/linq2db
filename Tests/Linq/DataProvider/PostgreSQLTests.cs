@@ -30,8 +30,8 @@ using Newtonsoft.Json.Linq;
 
 namespace Tests.DataProvider
 {
+	using System.Threading.Tasks;
 	using Model;
-	using Npgsql;
 
 	[TestFixture]
 	public class PostgreSQLTests : DataProviderTestBase
@@ -43,9 +43,9 @@ namespace Tests.DataProvider
 			paramCount = 1;
 			return "SELECT \"ID\" FROM \"AllTypes\" WHERE :p IS NULL AND \"{0}\" IS NULL OR :p IS NOT NULL AND \"{0}\" = :p";
 		}
-		protected override string  GetNullSql  (DataConnection dc) => "SELECT \"{0}\" FROM \"{1}\" WHERE \"ID\" = 1";
+		protected override string  GetNullSql  (DataConnection dc) => "SELECT \"{0}\" FROM {1} WHERE \"ID\" = 1";
 		protected override string  PassValueSql(DataConnection dc) => "SELECT \"ID\" FROM \"AllTypes\" WHERE \"{0}\" = :p";
-		protected override string  GetValueSql (DataConnection dc) => "SELECT \"{0}\" FROM \"{1}\" WHERE \"ID\" = 2";
+		protected override string  GetValueSql (DataConnection dc) => "SELECT \"{0}\" FROM {1} WHERE \"ID\" = 2";
 
 		[Test]
 		public void TestParameters([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
@@ -713,21 +713,58 @@ namespace Tests.DataProvider
 			{
 				using (var db = new DataConnection(context))
 				{
-					db.BulkCopy(
-						new BulkCopyOptions { BulkCopyType = bulkCopyType },
-						Enumerable.Range(0, 10).Select(n =>
-							new LinqDataTypes
-							{
-								ID = 4000 + n,
-								MoneyValue = 1000m + n,
-								DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
-								BoolValue = true,
-								GuidValue = Guid.NewGuid(),
-								SmallIntValue = (short)n
-							}
-						));
+					try
+					{
+						db.BulkCopy(
+							new BulkCopyOptions { BulkCopyType = bulkCopyType },
+							Enumerable.Range(0, 10).Select(n =>
+								new LinqDataTypes
+								{
+									ID            = 4000 + n,
+									MoneyValue    = 1000m + n,
+									DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
+									BoolValue     = true,
+									GuidValue     = Guid.NewGuid(),
+									SmallIntValue = (short)n
+								}
+							));
+					}
+					finally
+					{
+						db.GetTable<LinqDataTypes>().Delete(p => p.ID >= 4000);
+					}
+				}
+			}
+		}
 
-					db.GetTable<LinqDataTypes>().Delete(p => p.ID >= 4000);
+		[Test]
+		public async Task BulkCopyLinqTypesAsync([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
+			{
+				using (var db = new DataConnection(context))
+				{
+					try
+					{
+						await db.BulkCopyAsync(
+							new BulkCopyOptions { BulkCopyType = bulkCopyType },
+							Enumerable.Range(0, 10).Select(n =>
+								new LinqDataTypes
+								{
+									ID            = 4000 + n,
+									MoneyValue    = 1000m + n,
+									DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
+									BoolValue     = true,
+									GuidValue     = Guid.NewGuid(),
+									SmallIntValue = (short)n
+								}
+							));
+
+					}
+					finally
+					{
+						await db.GetTable<LinqDataTypes>().DeleteAsync(p => p.ID >= 4000);
+					}
 				}
 			}
 		}
@@ -943,6 +980,151 @@ namespace Tests.DataProvider
 				try
 				{
 					var result = db.BulkCopy(new BulkCopyOptions() { BulkCopyType = BulkCopyType.ProviderSpecific }, testData);
+
+					Assert.AreEqual(testData.Length, result.RowsCopied);
+
+					var data = db.GetTable<AllTypes>().OrderByDescending(_ => _.ID).Take(2).AsEnumerable().Reverse().ToArray();
+
+					ids = data.Select(_ => _.ID).ToArray();
+
+					// comparer generator miss collections support
+					if (testData.Length == data.Length)
+						for (var i = 0; i < testData.Length; i++)
+						{
+							var expectedBinary = testData[i].binaryDataType;
+							var actualBinary = data[i].binaryDataType;
+
+							if (expectedBinary != null && actualBinary != null)
+								Assert.True(expectedBinary.SequenceEqual(actualBinary));
+							else if (expectedBinary != null || actualBinary != null)
+								Assert.Fail();
+
+							var expectedBit = testData[i].bitDataType;
+							var actualBit = data[i].bitDataType;
+
+							if (expectedBit != null && actualBit != null)
+								Assert.True(expectedBit.Cast<bool>().SequenceEqual(actualBit.Cast<bool>()));
+							else if (expectedBit != null || actualBit != null)
+								Assert.Fail();
+
+							expectedBit = testData[i].varBitDataType;
+							actualBit = data[i].varBitDataType;
+
+							if (expectedBit != null && actualBit != null)
+								Assert.True(expectedBit.Cast<bool>().SequenceEqual(actualBit.Cast<bool>()));
+							else if (expectedBit != null || actualBit != null)
+								Assert.Fail();
+						}
+
+					AreEqual(
+						r =>
+						{
+							r.ID = 0;
+							r.binaryDataType = null;
+							r.bitDataType = null;
+							r.varBitDataType = null;
+							if (!lineSupported)     r.lineDataType     = null;
+							if (!jsonbSupported)    r.jsonbDataType    = null;
+							if (!macaddr8Supported) r.macaddr8DataType = null;
+							return r;
+						},
+						testData,
+						data,
+						AllTypes.Comparer);
+
+					if (mode != BulkTestMode.WithoutTransaction)
+						ts!.Rollback();
+				}
+				finally
+				{
+					if (mode == BulkTestMode.WithoutTransaction)
+						db.GetTable<AllTypes>().Where(_ => ids.Contains(_.ID)).Delete();
+				}
+
+				if (mode == BulkTestMode.WithRollback)
+					Assert.AreEqual(0, db.GetTable<AllTypes>().Where(_ => ids.Contains(_.ID)).Count());
+			}
+		}
+
+				[Test]
+		public async Task BulkCopyTestAsync([Values]BulkTestMode mode, [IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			var macaddr8Supported = context.Contains(TestProvName.PostgreSQL10) || context.Contains(TestProvName.PostgreSQL11);
+			var lineSupported     = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL93);
+			var jsonbSupported    = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL93);
+			var testData = new[]
+			{
+				// test null values
+				new AllTypes(),
+				// test non-null values
+				new AllTypes()
+				{
+					bigintDataType      = long.MaxValue,
+					numericDataType     = 12345.6789M,
+					smallintDataType    = short.MaxValue,
+					intDataType         = int.MaxValue,
+					moneyDataType       = 9876.54M,
+					doubleDataType      = double.MaxValue,
+					realDataType        = float.MaxValue,
+
+					timestampDataType   = new NpgsqlDateTime(2010, 5, 30, 1, 2, 3, 4),
+					timestampTZDataType = new DateTimeOffset(2011, 3, 22, 10, 11, 12, 13, TimeSpan.FromMinutes(30)),
+					dateDataType        = new NpgsqlDate(2010, 5, 30),
+					timeDataType        = new TimeSpan(0, 1, 2, 3, 4),
+					// npgsql4 uses 2/1/1 instead of 1/1/1 as date part in npgsql3
+					timeTZDataType      = new DateTimeOffset(1, 1, 2, 10, 11, 12, 13, TimeSpan.FromMinutes(30)),
+					intervalDataType    = TimeSpan.FromTicks(-123456780),
+					intervalDataType2   = TimeSpan.FromTicks(-123456780),
+
+					charDataType        = 'ы',
+					char20DataType      = "тест1",
+					varcharDataType     = "тест2",
+					textDataType        = "текст",
+
+					binaryDataType      = new byte[] { 1, 2, 3 },
+					uuidDataType        = Guid.NewGuid(),
+					bitDataType         = new BitArray(new []{ true, false, true }),
+					booleanDataType     = true,
+					colorDataType       = "Green",
+					xmlDataType         = "<test>data</test>",
+					varBitDataType      = new BitArray(new []{ true, false, true, false, true }),
+
+					pointDataType       = new NpgsqlPoint(1.4, 4.3),
+					lsegDataType        = new NpgsqlLSeg(1.1, 2.2, 3.3, 4.4),
+					boxDataType         = new NpgsqlBox(6.6, 5.5, 4.4, 3.3),
+					pathDataType        = new NpgsqlPath(new NpgsqlPoint(1.4, 4.3), new NpgsqlPoint(2.4, 2.3), new NpgsqlPoint(3.4, 3.3)),
+					polygonDataType     = new NpgsqlPolygon(new NpgsqlPoint(1.4, 4.3), new NpgsqlPoint(6.4, 2.3), new NpgsqlPoint(3.4, 7.3)),
+					circleDataType      = new NpgsqlCircle(1.1, 2.2, 3.3),
+					lineDataType        = new NpgsqlLine(3.3, 4.4, 5.5),
+
+					inetDataType        = IPAddress.Parse("2001:0db8:0000:0042:0000:8a2e:0370:7334"),
+#pragma warning disable CS0618 // NpgsqlInet obsolete
+					cidrDataType        = new NpgsqlInet("::ffff:1.2.3.0/120"),
+#pragma warning restore CS0618
+					macaddrDataType     = PhysicalAddress.Parse("08-00-2B-01-02-03"),
+					macaddr8DataType    = PhysicalAddress.Parse("08-00-2B-FF-FE-01-02-03"),
+
+					jsonDataType        = "{\"test\": 1}",
+					jsonbDataType       = "{\"test\": 2}"
+				}
+			};
+
+			using (var db = new DataConnection(context, new MappingSchema(context)))
+			{
+				// color enum type will not work without this call if _create test was run in the same session
+				// More details here: https://github.com/npgsql/npgsql/issues/1357
+				// must be called before transaction opened due to: https://github.com/npgsql/npgsql/issues/2244
+				((dynamic)db.Connection).ReloadTypes();
+
+				DataConnectionTransaction? ts = null;
+
+				if (mode != BulkTestMode.WithoutTransaction)
+					ts = db.BeginTransaction();
+
+				int[]? ids = null;
+				try
+				{
+					var result = await db.BulkCopyAsync(new BulkCopyOptions() { BulkCopyType = BulkCopyType.ProviderSpecific }, testData);
 
 					Assert.AreEqual(testData.Length, result.RowsCopied);
 
@@ -1300,17 +1482,46 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Test]
+		public async Task TestCustomTypeBulkCopyAsync([IncludeDataSources(TestProvName.AllPostgreSQLv3)] string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context, CreateRangesMapping()))
+			using (var table = db.CreateLocalTable<TableWithDateRanges>())
+			{
+				var date = DateTime.UtcNow;
+
+				var items = Enumerable.Range(1, 100).Select(i =>
+				{
+					var range1 = new SomeRange<DateTime>(date.AddDays(i), date.AddDays(i + 1));
+					var range2 = new SomeRange<DateTime>(date.AddDays(i), date.AddDays(i + 1));
+					return new TableWithDateRanges
+					{
+						SimpleRange = range1,
+						RangeWithTimeZone = range2,
+					};
+				});
+
+				await db.BulkCopyAsync(items);
+
+				var loadedItems = table.ToArray();
+			}
+		}
+
 		public class NpgsqlTableWithDateRanges
 		{
 			[Column]
 			public int Id { get; set; }
 
 			[Column(DbType = "daterange")]
-			public NpgsqlRange<DateTime> DateRange { get; set; }
+			public NpgsqlRange<DateTime> DateRangeInclusive { get; set; }
+
+			[Column(DbType = "daterange")]
+			public NpgsqlRange<DateTime> DateRangeExclusive { get; set; }
 
 			[Column(DbType = "tsrange")]
 			public NpgsqlRange<DateTime> TSRange   { get; set; }
 
+			// for unknown reason, npgsql enforce DateTime for tstzrange type
 			[Column(DbType = "tstzrange")]
 			public NpgsqlRange<DateTime> TSTZRange { get; set; }
 		}
@@ -1322,45 +1533,48 @@ namespace Tests.DataProvider
 			using (var table = db.CreateLocalTable<NpgsqlTableWithDateRanges>())
 			{
 				var date = DateTime.Now;
-				var range1 = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), new DateTime(2000, 3, 3));
-				var range2 = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3, 4, 5, 6), new DateTime(2000, 4, 3, 4, 5, 6));
-				var range3 = new NpgsqlRange<DateTime>(new DateTime(2000, 4, 3, 4, 5, 6), new DateTime(2000, 5, 3, 4, 5, 6));
+				var range1 = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), true, new DateTime(2000, 3, 3), true);
+				var range2 = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), false, new DateTime(2000, 3, 3), false);
+				var range3 = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3, 4, 5, 6), new DateTime(2000, 4, 3, 4, 5, 6));
+				var range4 = new NpgsqlRange<DateTime>(new DateTime(2000, 4, 3, 4, 5, 6, DateTimeKind.Local), new DateTime(2000, 5, 3, 4, 5, 6, DateTimeKind.Local));
 				db.Insert(new NpgsqlTableWithDateRanges
 				{
-					DateRange =  range1,
-					TSRange   = range2,
-					TSTZRange =  range3,
+					DateRangeInclusive = range1,
+					DateRangeExclusive = range2,
+					TSRange            = range3,
+					TSTZRange          = range4,
 				});
 
 				var record = table.Single();
 
-				Assert.AreEqual(new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), true, new DateTime(2000, 3, 4), false), record.DateRange);
-				Assert.AreEqual(range2, record.TSRange);
-				Assert.AreEqual(new NpgsqlRange<DateTime>(new DateTime(2000, 4, 3, 4, 5, 6).Add(TimeZoneInfo.Local.GetUtcOffset(range3.LowerBound)), new DateTime(2000, 5, 3, 4, 5, 6).Add(TimeZoneInfo.Local.GetUtcOffset(range3.UpperBound))), record.TSTZRange);
+				Assert.AreEqual(new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), true, new DateTime(2000, 3, 4), false), record.DateRangeInclusive);
+				Assert.AreEqual(new NpgsqlRange<DateTime>(new DateTime(2000, 2, 4), true, new DateTime(2000, 3, 3), false), record.DateRangeExclusive);
+				Assert.AreEqual(range3, record.TSRange);
+				Assert.AreEqual(range4, record.TSTZRange);
 			}
 		}
 
 		[Test]
 		public void TestRangeBulkCopy([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var db = (DataConnection)GetDataContext(context))
+			using (var db    = (DataConnection)GetDataContext(context))
 			using (var table = db.CreateLocalTable<NpgsqlTableWithDateRanges>())
 			{
-				var date = DateTime.Now;
-
-				var items = Enumerable.Range(1, 100).Select(i =>
-				{
-					var range1 = new NpgsqlRange<DateTime>(new DateTime(2000 + i, 2, 3), new DateTime(2000 + i, 3, 3));
-					var range2 = new NpgsqlRange<DateTime>(new DateTime(2000 + i, 2, 3, 4, 5, 6), new DateTime(2000 + i, 4, 3, 4, 5, 6));
-					var range3 = new NpgsqlRange<DateTime>(new DateTime(2000 + i, 4, 3, 4, 5, 6), new DateTime(2000 + i, 5, 3, 4, 5, 6));
-					return new NpgsqlTableWithDateRanges
+				var items = Enumerable.Range(1, 100)
+					.Select(i =>
 					{
-						Id        = i,
-						DateRange = range1,
-						TSRange   = range2,
-						TSTZRange = range3,
-					};
-				});
+						return new NpgsqlTableWithDateRanges
+						{
+							Id                 = i,
+							DateRangeInclusive = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), true, new DateTime(2000, 3, 3), true),
+							DateRangeExclusive = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), false, new DateTime(2000, 3, 3), false),
+							TSRange            = new NpgsqlRange<DateTime>(new DateTime(2000 + i, 2, 3, 4, 5, 6), true, new DateTime(2000 + i, 4, 3, 4, 5, 6), true),
+							// DateTimeKind.Local used, because npgsql will return values with DateTimeKind.Local kind
+							// passing DateTimeKind.Utc values will require offset calculations in assert, as DateTime.Equals ignore kind in comparison
+							TSTZRange          = new NpgsqlRange<DateTime>(new DateTime(2000 + i, 4, 3, 4, 5, 6, DateTimeKind.Local), true, new DateTime(2000 + i, 5, 3, 4, 5, 6, DateTimeKind.Local), true),
+						};
+					})
+					.ToArray();
 
 				db.BulkCopy(items);
 
@@ -1368,15 +1582,65 @@ namespace Tests.DataProvider
 
 				Assert.AreEqual(100, records.Length);
 
-				var cnt = 1;
-				foreach (var record in records)
-				{
-					Assert.AreEqual(cnt, record.Id);
-					Assert.AreEqual(new NpgsqlRange<DateTime>(new DateTime(2000 + cnt, 2, 3), true, new DateTime(2000 + cnt, 3, 4), false), record.DateRange);
-					Assert.AreEqual(new NpgsqlRange<DateTime>(new DateTime(2000 + cnt, 2, 3, 4, 5, 6), new DateTime(2000 + cnt, 4, 3, 4, 5, 6)), record.TSRange);
-					Assert.AreEqual(new NpgsqlRange<DateTime>(new DateTime(2000 + cnt, 4, 3, 4, 5, 6).Add(TimeZoneInfo.Local.GetUtcOffset(new DateTime(2000 + cnt, 5, 3, 4, 5, 6))), new DateTime(2000 + cnt, 5, 3, 4, 5, 6).Add(TimeZoneInfo.Local.GetUtcOffset(new DateTime(2000 + cnt, 5, 3, 4, 5, 6)))), record.TSTZRange);
-					cnt++;
-				}
+				AreEqual(
+					items.Select(t => new
+					{
+						t.Id,
+						// date range read back as lower-inclusive, upper-exclusive and
+						// NpgsqlRange Equals implementation cannot compare equal ranges if they use different flags or bounds types
+						// so we need to convert original values
+						// https://github.com/npgsql/npgsql/blob/dev/src/Npgsql/NpgsqlTypes/NpgsqlRange.cs#L304
+						DateRangeInclusive = new NpgsqlRange<DateTime>(t.DateRangeInclusive.LowerBound, true, t.DateRangeInclusive.UpperBound.AddDays(1), false),
+						DateRangeExclusive = new NpgsqlRange<DateTime>(t.DateRangeExclusive.LowerBound.AddDays(1), true, t.DateRangeExclusive.UpperBound, false),
+						t.TSRange,
+						t.TSTZRange
+					}),
+					records.Select(t => new { t.Id, t.DateRangeInclusive, t.DateRangeExclusive, t.TSRange, t.TSTZRange }));
+			}
+		}
+
+		[Test]
+		public async Task TestRangeBulkCopyAsync([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			using (var table = db.CreateLocalTable<NpgsqlTableWithDateRanges>())
+			{
+				var items = Enumerable.Range(1, 100)
+					.Select(i =>
+					{
+						return new NpgsqlTableWithDateRanges
+						{
+							Id                 = i,
+							DateRangeInclusive = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), true, new DateTime(2000, 3, 3), true),
+							DateRangeExclusive = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), false, new DateTime(2000, 3, 3), false),
+							TSRange            = new NpgsqlRange<DateTime>(new DateTime(2000 + i, 2, 3, 4, 5, 6), true, new DateTime(2000 + i, 4, 3, 4, 5, 6), true),
+							// DateTimeKind.Local used, because npgsql will return values with DateTimeKind.Local kind
+							// passing DateTimeKind.Utc values will require offset calculations in assert, as DateTime.Equals ignore kind in comparison
+							TSTZRange          = new NpgsqlRange<DateTime>(new DateTime(2000 + i, 4, 3, 4, 5, 6, DateTimeKind.Local), true, new DateTime(2000 + i, 5, 3, 4, 5, 6, DateTimeKind.Local), true),
+						};
+					})
+					.ToArray();
+
+				await db.BulkCopyAsync(items);
+
+				var records = await table.OrderBy(_ => _.Id).ToArrayAsync();
+
+				Assert.AreEqual(100, records.Length);
+
+				AreEqual(
+					items.Select(t => new
+					{
+						t.Id,
+						// date range read back as lower-inclusive, upper-exclusive and
+						// NpgsqlRange Equals implementation cannot compare equal ranges if they use different flags or bounds types
+						// so we need to convert original values
+						// https://github.com/npgsql/npgsql/blob/dev/src/Npgsql/NpgsqlTypes/NpgsqlRange.cs#L304
+						DateRangeInclusive = new NpgsqlRange<DateTime>(t.DateRangeInclusive.LowerBound, true, t.DateRangeInclusive.UpperBound.AddDays(1), false),
+						DateRangeExclusive = new NpgsqlRange<DateTime>(t.DateRangeExclusive.LowerBound.AddDays(1), true, t.DateRangeExclusive.UpperBound, false),
+						t.TSRange,
+						t.TSTZRange
+					}),
+					records.Select(t => new { t.Id, t.DateRangeInclusive, t.DateRangeExclusive, t.TSRange, t.TSTZRange }));
 			}
 		}
 

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
@@ -643,8 +643,8 @@ namespace LinqToDB.Data
 		{
 			get
 			{
-#if NET45 || NET46
-				return _defaultSettings ?? (_defaultSettings = LinqToDBSection.Instance);
+#if NETFRAMEWORK
+				return _defaultSettings ??= LinqToDBSection.Instance;
 #else
 				return _defaultSettings;
 #endif
@@ -879,7 +879,7 @@ namespace LinqToDB.Data
 			{
 				get
 				{
-					var dataProvider = _dataProvider ?? (_dataProvider = GetDataProvider(_connectionStringSettings!, ConnectionString));
+					var dataProvider = _dataProvider ??= GetDataProvider(_connectionStringSettings!, ConnectionString);
 
 					if (dataProvider == null)
 						throw new LinqToDBException($"DataProvider is not provided for configuration: {_configurationString}");
@@ -910,12 +910,12 @@ namespace LinqToDB.Data
 					{
 						var providers = _dataProviders.Where(dp => dp.Value.ConnectionNamespace == providerName).ToList();
 
-						switch (providers.Count)
+						dataProvider = providers.Count switch
 						{
-							case 0: dataProvider = defaultDataProvider; break;
-							case 1: dataProvider = providers[0].Value; break;
-							default: dataProvider = FindProvider(configuration, providers, providers[0].Value); break;
-						}
+							0 => defaultDataProvider,
+							1 => providers[0].Value,
+							_ => FindProvider(configuration, providers, providers[0].Value),
+						};
 					}
 				}
 
@@ -1217,7 +1217,7 @@ namespace LinqToDB.Data
 		/// </summary>
 		public  IDbCommand  Command
 		{
-			get => _command ?? (_command = CreateCommand());
+			get => _command ??= CreateCommand();
 			set => _command = value;
 		}
 
@@ -1580,13 +1580,13 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Gets list of query hints (writable collection), that will be used for all queries, executed through current connection.
 		/// </summary>
-		public  List<string>  QueryHints => _queryHints ?? (_queryHints = new List<string>());
+		public  List<string>  QueryHints => _queryHints ??= new List<string>();
 
 		private List<string>? _nextQueryHints;
 		/// <summary>
 		/// Gets list of query hints (writable collection), that will be used only for next query, executed through current connection.
 		/// </summary>
-		public  List<string>  NextQueryHints => _nextQueryHints ?? (_nextQueryHints = new List<string>());
+		public  List<string>  NextQueryHints => _nextQueryHints ??= new List<string>();
 
 		/// <summary>
 		/// Adds additional mapping schema to current connection.

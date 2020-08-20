@@ -1,9 +1,9 @@
 variables:
   solution: 'linq2db.sln'
   build_configuration: 'Azure'
-  assemblyVersion: 3.0.1
-  nugetVersion: 3.0.1
-  nugetDevVersion: 3.0.1
+  assemblyVersion: 3.0.2
+  nugetVersion: 3.0.2
+  nugetDevVersion: 3.0.2
   artifact_nugets: 'nugets'
   artifact_linq2db_binaries: 'linq2db_binaries'
   artifact_linq2db_tools_binaries: 'linq2db_tools_binaries'
@@ -258,7 +258,8 @@ stages:
       vmImage: 'windows-2019'
     displayName: 'Tests: Win / NETFX 4.6 / '
     dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+    condition: eq(variables['System.PullRequest.TargetBranch'], 'release')
 
     strategy:
       matrix:
@@ -298,6 +299,10 @@ stages:
           title: 'SQL Server 2019 (Microsoft.Data.SqlClient)'
           config: 'sqlserver.2019.ms'
           script: 'sqlserver.2019.cmd'
+#        PostgreSQL10:
+#          title: 'PostgreSQL 10'
+#          config: 'pgsql10'
+#          script: 'pgsql10.cmd'
 
     steps:
     - checkout: none
@@ -351,7 +356,8 @@ stages:
       vmImage: 'vs2017-win2016'
     displayName: 'Tests: Win / NETFX 4.6 / '
     dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+    condition: eq(variables['System.PullRequest.TargetBranch'], 'release')
 
     strategy:
       matrix:
@@ -359,54 +365,50 @@ stages:
           title: 'SQL Server 2005 (System.Data.SqlClient)'
           config: 'sqlserver.2005'
           script: 'sqlserver.2005.cmd'
-        SqlServer2005_MS:
-          title: 'SQL Server 2005 (Microsoft.Data.SqlClient)'
-          config: 'sqlserver.2005.ms'
-          script: 'sqlserver.2005.cmd'
+#        SqlServer2005_MS:
+#          title: 'SQL Server 2005 (Microsoft.Data.SqlClient)'
+#          config: 'sqlserver.2005.ms'
+#          script: 'sqlserver.2005.cmd'
         SqlServer2008:
           title: 'SQL Server 2008 (System.Data.SqlClient)'
           config: 'sqlserver.2008'
           script: 'sqlserver.2008.cmd'
-        SqlServer2008_MS:
-          title: 'SQL Server 2008 (Microsoft.Data.SqlClient)'
-          config: 'sqlserver.2008.ms'
-          script: 'sqlserver.2008.cmd'
+#        SqlServer2008_MS:
+#          title: 'SQL Server 2008 (Microsoft.Data.SqlClient)'
+#          config: 'sqlserver.2008.ms'
+#          script: 'sqlserver.2008.cmd'
         SqlServer2012:
           title: 'SQL Server 2012 (System.Data.SqlClient)'
           config: 'sqlserver.2012'
           script: 'sqlserver.2012.cmd'
-        SqlServer2012_MS:
-          title: 'SQL Server 2012 (Microsoft.Data.SqlClient)'
-          config: 'sqlserver.2012.ms'
-          script: 'sqlserver.2012.cmd'
+#        SqlServer2012_MS:
+#          title: 'SQL Server 2012 (Microsoft.Data.SqlClient)'
+#          config: 'sqlserver.2012.ms'
+#          script: 'sqlserver.2012.cmd'
         SqlServer2014:
           title: 'SQL Server 2014 (System.Data.SqlClient)'
           config: 'sqlserver.2014'
           script: 'sqlserver.2014.cmd'
-        SqlServer2014_MS:
-          title: 'SQL Server 2014 (Microsoft.Data.SqlClient)'
-          config: 'sqlserver.2014.ms'
-          script: 'sqlserver.2014.cmd'
+#        SqlServer2014_MS:
+#          title: 'SQL Server 2014 (Microsoft.Data.SqlClient)'
+#          config: 'sqlserver.2014.ms'
+#          script: 'sqlserver.2014.cmd'
         SqlServer2016:
           title: 'SQL Server 2016 (System.Data.SqlClient)'
           config: 'sqlserver.2016'
           script: 'sqlserver.2016.cmd'
-        SqlServer2016_MS:
-          title: 'SQL Server 2016 (Microsoft.Data.SqlClient)'
-          config: 'sqlserver.2016.ms'
-          script: 'sqlserver.2016.cmd'
+#        SqlServer2016_MS:
+#          title: 'SQL Server 2016 (Microsoft.Data.SqlClient)'
+#          config: 'sqlserver.2016.ms'
+#          script: 'sqlserver.2016.cmd'
         SqlServer2017:
           title: 'SQL Server 2017 (System.Data.SqlClient)'
           config: 'sqlserver.2017'
           script: 'sqlserver.2017.cmd'
-        SqlServer2017_MS:
-          title: 'SQL Server 2017 (Microsoft.Data.SqlClient)'
-          config: 'sqlserver.2017.ms'
-          script: 'sqlserver.2017.cmd'
-        PostgreSQL10:
-          title: 'PostgreSQL 10'
-          config: 'pgsql10.win'
-          script: 'pgsql10.cmd'
+#        SqlServer2017_MS:
+#          title: 'SQL Server 2017 (Microsoft.Data.SqlClient)'
+#          config: 'sqlserver.2017.ms'
+#          script: 'sqlserver.2017.cmd'
 
     steps:
     - checkout: none
@@ -460,7 +462,8 @@ stages:
       vmImage: 'vs2017-win2016'
     displayName: 'Tests: Win / NETCOREAPP2.1 / '
     dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+    condition: eq(variables['System.PullRequest.TargetBranch'], 'release')
 
     strategy:
       matrix:
@@ -487,54 +490,50 @@ stages:
           title: 'SQL Server 2005 (System.Data.SqlClient)'
           config: 'sqlserver.2005'
           script: 'sqlserver.2005.cmd'
-        SqlServer2005_MS:
-          title: 'SQL Server 2005 (Microsoft.Data.SqlClient)'
-          config: 'sqlserver.2005.ms'
-          script: 'sqlserver.2005.cmd'
+#        SqlServer2005_MS:
+#          title: 'SQL Server 2005 (Microsoft.Data.SqlClient)'
+#          config: 'sqlserver.2005.ms'
+#          script: 'sqlserver.2005.cmd'
         SqlServer2008:
           title: 'SQL Server 2008 (System.Data.SqlClient)'
           config: 'sqlserver.2008'
           script: 'sqlserver.2008.cmd'
-        SqlServer2008_MS:
-          title: 'SQL Server 2008 (Microsoft.Data.SqlClient)'
-          config: 'sqlserver.2008.ms'
-          script: 'sqlserver.2008.cmd'
+#        SqlServer2008_MS:
+#          title: 'SQL Server 2008 (Microsoft.Data.SqlClient)'
+#          config: 'sqlserver.2008.ms'
+#          script: 'sqlserver.2008.cmd'
         SqlServer2012:
           title: 'SQL Server 2012 (System.Data.SqlClient)'
           config: 'sqlserver.2012'
           script: 'sqlserver.2012.cmd'
-        SqlServer2012_MS:
-          title: 'SQL Server 2012 (Microsoft.Data.SqlClient)'
-          config: 'sqlserver.2012.ms'
-          script: 'sqlserver.2012.cmd'
+#        SqlServer2012_MS:
+#          title: 'SQL Server 2012 (Microsoft.Data.SqlClient)'
+#          config: 'sqlserver.2012.ms'
+#          script: 'sqlserver.2012.cmd'
         SqlServer2014:
           title: 'SQL Server 2014 (System.Data.SqlClient)'
           config: 'sqlserver.2014'
           script: 'sqlserver.2014.cmd'
-        SqlServer2014_MS:
-          title: 'SQL Server 2014 (Microsoft.Data.SqlClient)'
-          config: 'sqlserver.2014.ms'
-          script: 'sqlserver.2014.cmd'
+#        SqlServer2014_MS:
+#          title: 'SQL Server 2014 (Microsoft.Data.SqlClient)'
+#          config: 'sqlserver.2014.ms'
+#          script: 'sqlserver.2014.cmd'
         SqlServer2016:
           title: 'SQL Server 2016 (System.Data.SqlClient)'
           config: 'sqlserver.2016'
           script: 'sqlserver.2016.cmd'
-        SqlServer2016_MS:
-          title: 'SQL Server 2016 (Microsoft.Data.SqlClient)'
-          config: 'sqlserver.2016.ms'
-          script: 'sqlserver.2016.cmd'
+#        SqlServer2016_MS:
+#          title: 'SQL Server 2016 (Microsoft.Data.SqlClient)'
+#          config: 'sqlserver.2016.ms'
+#          script: 'sqlserver.2016.cmd'
         SqlServer2017:
           title: 'SQL Server 2017 (System.Data.SqlClient)'
           config: 'sqlserver.2017'
           script: 'sqlserver.2017.cmd'
-        SqlServer2017_MS:
-          title: 'SQL Server 2017 (Microsoft.Data.SqlClient)'
-          config: 'sqlserver.2017.ms'
-          script: 'sqlserver.2017.cmd'
-        PostgreSQL10:
-          title: 'PostgreSQL 10'
-          config: 'pgsql10.win'
-          script: 'pgsql10.cmd'
+#        SqlServer2017_MS:
+#          title: 'SQL Server 2017 (Microsoft.Data.SqlClient)'
+#          config: 'sqlserver.2017.ms'
+#          script: 'sqlserver.2017.cmd'
     steps:
     - checkout: none
 
@@ -582,7 +581,8 @@ stages:
       vmImage: 'vs2017-win2016'
     displayName: 'Tests: Win / NETCOREAPP3.1 / '
     dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+    condition: eq(variables['System.PullRequest.TargetBranch'], 'release')
 
     strategy:
       matrix:
@@ -655,7 +655,7 @@ stages:
 #          script: 'sqlserver.2017.cmd'
 #        PostgreSQL10:
 #          title: 'PostgreSQL 10'
-#          config: 'pgsql10.win'
+#          config: 'pgsql10'
 #          script: 'pgsql10.cmd'
     steps:
     - checkout: none
@@ -704,7 +704,8 @@ stages:
       vmImage: 'windows-2019'
     displayName: 'Tests: Win / NETCOREAPP2.1 / '
     dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+    condition: eq(variables['System.PullRequest.TargetBranch'], 'release')
 
     strategy:
       matrix:
@@ -720,6 +721,10 @@ stages:
           title: 'SQL Server 2019 (Microsoft.Data.SqlClient)'
           config: 'sqlserver.2019.ms'
           script: 'sqlserver.2019.cmd'
+#        PostgreSQL10:
+#          title: 'PostgreSQL 10'
+#          config: 'pgsql10'
+#          script: 'pgsql10.cmd'
     steps:
     - checkout: none
 
@@ -759,7 +764,8 @@ stages:
       vmImage: 'ubuntu-20.04'
     displayName: 'Tests: Lin / NETCOREAPP2.1 / '
     dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+    condition: eq(variables['System.PullRequest.TargetBranch'], 'release')
 
     strategy:
       matrix:
@@ -891,6 +897,146 @@ stages:
         testRunTitle: 'Linux / NETCOREAPP2.1 / $(title)'
 
 ########################################
+#  Tests: Ubuntu 20.04 (NETCOREAPP3_1) #
+########################################
+  - job: test_ubuntu_20_netcoreapp31_job
+    pool:
+      vmImage: 'ubuntu-20.04'
+    displayName: 'Tests: Lin / NETCOREAPP3.1 / '
+    dependsOn: build_job
+#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+    condition: eq(variables['System.PullRequest.TargetBranch'], 'release')
+
+    strategy:
+      matrix:
+#        SQLite:
+#          title: 'SQLite'
+#          config: 'sqlite'
+#        SQLite_MS:
+#          title: 'SQLite.MS'
+#          config: 'sqlite.ms'
+#        SqlServer2017:
+#          title: 'SQL Server 2017 (System.Data.SqlClient)'
+#          config: 'sqlserver.fts.2017'
+#          script: 'sqlserver.2017.sh'
+#        SqlServer2017_MS:
+#          title: 'SQL Server 2017 (Microsoft.Data.SqlClient)'
+#          config: 'sqlserver.fts.2017'
+#          script: 'sqlserver.2017.sh'
+#        SqlServer2019:
+#          title: 'SQL Server 2019 (System.Data.SqlClient)'
+#          config: 'sqlserver.fts.2019'
+#          script: 'sqlserver.2019.sh'
+#        SqlServer2019_MS:
+#          title: 'SQL Server 2019 (Microsoft.Data.SqlClient)'
+#          config: 'sqlserver.fts.2019.ms'
+#          script: 'sqlserver.2019.sh'
+        MySQL:
+          title: 'MySQL'
+          config: 'mysql'
+          script: 'mysql.sh'
+#        MySQL55:
+#          title: 'MySQL 5.5'
+#          config: 'mysql55'
+#          script: 'mysql55.sh'
+#        MariaDB:
+#          title: 'MariaDB'
+#          config: 'mariadb'
+#          script: 'mariadb.sh'
+        PostgreSQL:
+          title: 'PostgreSQL'
+          config: 'pgsql'
+          script: 'pgsql.sh'
+#        PostgreSQL92:
+#          title: 'PostgreSQL 9.2'
+#          config: 'pgsql92'
+#          script: 'pgsql92.sh'
+#        PostgreSQL93:
+#          title: 'PostgreSQL 9.3'
+#          config: 'pgsql93'
+#          script: 'pgsql93.sh'
+#        PostgreSQL95:
+#          title: 'PostgreSQL 9.5'
+#          config: 'pgsql95'
+#          script: 'pgsql95.sh'
+#        PostgreSQL10:
+#          title: 'PostgreSQL 10'
+#          config: 'pgsql10'
+#          script: 'pgsql10.sh'
+#        PostgreSQL11:
+#          title: 'PostgreSQL 11'
+#          config: 'pgsql11'
+#          script: 'pgsql11.sh'
+#        Sybase:
+#          title: 'Sybase ASE 16'
+#          config: 'sybase'
+#          script: 'sybase.sh'
+#        Oracle11:
+#          title: 'Oracle 11g XE'
+#          config: 'oracle11'
+#          script: 'oracle11.sh'
+#        Oracle12:
+#          title: 'Oracle 12c'
+#          config: 'oracle12'
+#          script: 'oracle12.sh'
+#        Firebird25:
+#          title: 'Firebird 2.5'
+#          config: 'firebird25'
+#          script: 'firebird25.sh'
+#        Firebird3:
+#          title: 'Firebird 3.0'
+#          config: 'firebird3'
+#          script: 'firebird3.sh'
+    steps:
+    - checkout: none
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: '$(netcore31_tests)'
+        targetPath: '$(System.DefaultWorkingDirectory)'
+
+    - task: CmdLine@2
+      inputs:
+        script: 'cp $(System.DefaultWorkingDirectory)/configs/$(config).json UserDataProviders.json'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      displayName: Copy test config
+
+    - task: NuGet@0
+      displayName: Install nugets
+      inputs:
+        command: 'install'
+        arguments: '$(nuget) -ExcludeVersion'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
+      condition: variables['nuget']
+
+    - task: CmdLine@2
+      inputs:
+        script: 'chmod +x $(script)'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
+      condition: variables['script']
+      displayName: Mark script as executable
+
+    - task: CmdLine@2
+      inputs:
+        script: '$(System.DefaultWorkingDirectory)/scripts/$(script)'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      condition: variables['script']
+      displayName: Setup tests
+
+# just because there is not vstest handing in DotNetCoreCLI@2
+# https://github.com/microsoft/azure-pipelines-tasks/blob/master/Tasks/DotNetCoreCLIV2/dotnetcore.ts#L60
+    - script: dotnet vstest ./linq2db.Tests.dll /TestCaseFilter:"TestCategory != SkipCI" /Framework:.NETCoreApp,Version=v3.1 /logger:trx
+      displayName: '$(title)'
+
+
+    - task: PublishTestResults@2
+      condition: succeededOrFailed()
+      inputs:
+        testRunner: VsTest
+        testResultsFiles: '**/*.trx'
+        testRunTitle: 'Linux / NETCOREAPP3.1 / $(title)'
+
+########################################
 #  Tests: Ubuntu 16.04 (NETCOREAPP2_1) #
 ########################################
   - job: test_ubuntu_16_netcoreapp21_job
@@ -898,7 +1044,8 @@ stages:
       vmImage: 'ubuntu-16.04'
     displayName: 'Tests: Lin / NETCOREAPP2.1 / '
     dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+    condition: eq(variables['System.PullRequest.TargetBranch'], 'release')
 
     strategy:
       matrix:
@@ -969,7 +1116,8 @@ stages:
       vmImage: 'macOS-10.15'
     displayName: 'Tests: Mac / NETCOREAPP2.1 / '
     dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+    condition: eq(variables['System.PullRequest.TargetBranch'], 'release')
 
     strategy:
       matrix:
@@ -1144,3 +1292,188 @@ stages:
         testRunner: VsTest
         testResultsFiles: '**/*.trx'
         testRunTitle: 'Mac / NETCOREAPP2.1 / $(title)'
+
+#################################
+#  Tests: MacOS (NETCOREAPP3_1) #
+#################################
+  - job: test_macos_netcoreapp31_job
+    pool:
+      vmImage: 'macOS-10.15'
+    displayName: 'Tests: Mac / NETCOREAPP3.1 / '
+    dependsOn: build_job
+#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+    condition: eq(variables['System.PullRequest.TargetBranch'], 'release')
+
+    strategy:
+      matrix:
+#        SQLite:
+#          title: 'SQLite'
+#          config: 'sqlite'
+#        SQLite_MS:
+#          title: 'SQLite.MS'
+#          config: 'sqlite.ms'
+# temporary disabled due to stack overflow exception during test run. needs investigation
+#        SqlServer2017:
+#          title: 'SQL Server 2017 (System.Data.SqlClient)'
+#          config: 'sqlserver.fts.2017'
+#          script: 'mac.sqlserver.2017.sh'
+#          docker: 'true'
+#        SqlServer2017_MS:
+#          title: 'SQL Server 2017 (Microsoft.Data.SqlClient)'
+#          config: 'sqlserver.fts.2017'
+#          script: 'mac.sqlserver.2017.sh'
+#          docker: 'true'
+#        SqlServer2019:
+#          title: 'SQL Server 2019 (System.Data.SqlClient)'
+#          config: 'sqlserver.fts.2019'
+#          script: 'mac.sqlserver.2019.sh'
+#          docker: 'true'
+#        SqlServer2019_MS:
+#          title: 'SQL Server 2019 (Microsoft.Data.SqlClient)'
+#          config: 'sqlserver.fts.2019.ms'
+#          script: 'mac.sqlserver.2019.sh'
+#          docker: 'true'
+        MySQL:
+          title: 'MySQL'
+          config: 'mysql'
+          script: 'mac.mysql.sh'
+          docker: 'true'
+#        MySQL55:
+#          title: 'MySQL 5.5'
+#          config: 'mysql55'
+#          script: 'mac.mysql55.sh'
+#          docker: 'true'
+#        MariaDB:
+#          title: 'MariaDB'
+#          config: 'mariadb'
+#          script: 'mac.mariadb.sh'
+#          docker: 'true'
+        PostgreSQL:
+          title: 'PostgreSQL'
+          config: 'pgsql'
+          script: 'mac.pgsql.sh'
+          docker: 'true'
+#        PostgreSQL92:
+#          title: 'PostgreSQL 9.2'
+#          config: 'pgsql92'
+#          script: 'mac.pgsql92.sh'
+#          docker: 'true'
+#        PostgreSQL93:
+#          title: 'PostgreSQL 9.3'
+#          config: 'pgsql93'
+#          script: 'mac.pgsql93.sh'
+#          docker: 'true'
+#        PostgreSQL95:
+#          title: 'PostgreSQL 9.5'
+#          config: 'pgsql95'
+#          script: 'mac.pgsql95.sh'
+#          docker: 'true'
+#        PostgreSQL10:
+#          title: 'PostgreSQL 10'
+#          config: 'pgsql10'
+#          script: 'mac.pgsql10.sh'
+#          docker: 'true'
+#        PostgreSQL11:
+#          title: 'PostgreSQL 11'
+#          config: 'pgsql11'
+#          script: 'mac.pgsql11.sh'
+#          docker: 'true'
+#        Sybase:
+#          title: 'Sybase ASE 16'
+#          config: 'sybase'
+#          script: 'sybase.sh'
+#          docker: 'true'
+#        Oracle11:
+#          title: 'Oracle 11g XE'
+#          config: 'oracle11'
+#          script: 'oracle11.sh'
+#          docker: 'true'
+#        Oracle12:
+#          title: 'Oracle 12c'
+#          config: 'oracle12'
+#          script: 'oracle12.sh'
+#          docker: 'true'
+#        Firebird25:
+#          title: 'Firebird 2.5'
+#          config: 'firebird25'
+#          script: 'firebird25.sh'
+#          docker: 'true'
+#        Firebird3:
+#          title: 'Firebird 3.0'
+#          config: 'firebird3'
+#          script: 'firebird3.sh'
+#          docker: 'true'
+#        Informix14:
+#          title: 'Informix 14.10'
+#          config: 'informix'
+#          script: 'mac.informix14.sh'
+#          docker: 'true'
+#          nuget: 'IBM.Data.DB2.Core-osx'
+#        DB2:
+#          title: 'DB2 LUW 11.5'
+#          config: 'db2'
+#          script: 'mac.db2.sh'
+#          docker: 'true'
+#          nuget: 'IBM.Data.DB2.Core-osx'
+    steps:
+    - checkout: none
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: '$(netcore31_tests)'
+        targetPath: '$(System.DefaultWorkingDirectory)'
+
+    - task: CmdLine@2
+      inputs:
+        script: 'cp $(System.DefaultWorkingDirectory)/configs/$(config).json UserDataProviders.json'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      displayName: Copy test config
+
+    - task: CmdLine@2
+      inputs:
+        script: 'chmod +x mac.docker.sh'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
+      condition: eq(variables['docker'], 'true')
+      displayName: Mark docker install script as executable
+
+    - task: CmdLine@2
+      inputs:
+        script: '$(System.DefaultWorkingDirectory)/scripts/mac.docker.sh'
+      condition: eq(variables['docker'], 'true')
+      displayName: Install Docker
+
+    - task: NuGet@0
+      displayName: Install nugets
+      inputs:
+        command: 'install'
+        arguments: '$(nuget) -ExcludeVersion'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
+      condition: variables['nuget']
+
+    - task: CmdLine@2
+      inputs:
+        script: 'chmod +x $(script)'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
+      condition: and(succeeded(), variables['script'])
+      displayName: Mark script as executable
+      
+    - task: CmdLine@2
+      inputs:
+        script: '$(System.DefaultWorkingDirectory)/scripts/$(script)'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      condition: and(succeeded(), variables['script'])
+      displayName: Setup tests
+
+# just because there is not vstest handing in DotNetCoreCLI@2
+# https://github.com/microsoft/azure-pipelines-tasks/blob/master/Tasks/DotNetCoreCLIV2/dotnetcore.ts#L60
+    - script: dotnet vstest linq2db.Tests.dll /TestCaseFilter:"TestCategory != SkipCI" /Framework:.NETCoreApp,Version=v3.1 /logger:trx
+      condition: succeeded()
+      displayName: '$(title)'
+
+
+    - task: PublishTestResults@2
+      condition: succeededOrFailed()
+      inputs:
+        testRunner: VsTest
+        testResultsFiles: '**/*.trx'
+        testRunTitle: 'Mac / NETCOREAPP3.1 / $(title)'

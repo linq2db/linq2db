@@ -15,6 +15,7 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
+	using System.Threading.Tasks;
 	using Model;
 
 	[TestFixture]
@@ -48,19 +49,19 @@ namespace Tests.DataProvider
 
 		const string CurrentProvider = TestProvName.AllSapHana;
 
-		protected override string  GetNullSql  (DataConnection dc) => "SELECT \"{0}\" FROM \"{1}\" WHERE \"ID\" = 1";
-		protected override string  GetValueSql (DataConnection dc) => "SELECT \"{0}\" FROM \"{1}\" WHERE \"ID\" = 2";
+		protected override string  GetNullSql  (DataConnection dc) => "SELECT \"{0}\" FROM {1} WHERE \"ID\" = 1";
+		protected override string  GetValueSql (DataConnection dc) => "SELECT \"{0}\" FROM {1} WHERE \"ID\" = 2";
 		protected override string? PassNullSql(DataConnection dc, out int paramCount)
 		{
 			paramCount = 1;
 			return dc.DataProvider.Name == ProviderName.SapHanaOdbc
-				? "SELECT \"ID\" FROM \"{1}\" WHERE \"{0}\" IS NULL AND ? IS NULL"
-				: "SELECT \"ID\" FROM \"{1}\" WHERE \"{0}\" IS NULL AND :p IS NULL";
+				? "SELECT \"ID\" FROM {1} WHERE \"{0}\" IS NULL AND ? IS NULL"
+				: "SELECT \"ID\" FROM {1} WHERE \"{0}\" IS NULL AND :p IS NULL";
 		}
 		protected override string  PassValueSql(DataConnection dc) =>
 			dc.DataProvider.Name == ProviderName.SapHanaOdbc
-				? "SELECT \"ID\" FROM \"{1}\" WHERE \"{0}\" = ?"
-				: "SELECT \"ID\" FROM \"{1}\" WHERE \"{0}\" = :p";
+				? "SELECT \"ID\" FROM {1} WHERE \"{0}\" = ?"
+				: "SELECT \"ID\" FROM {1} WHERE \"{0}\" = :p";
 
 		[Test]
 		public void TestParameters([IncludeDataSources(CurrentProvider)] string context)
@@ -340,6 +341,8 @@ namespace Tests.DataProvider
 			[Column, Nullable]
 			public char? charDataType { get; set; } // char(1)
 			[Column, Nullable]
+			public string? char20DataType { get; set; } // varchar(20)
+			[Column, Nullable]
 			public string? varcharDataType { get; set; } // varchar(20)
 			[Column, Nullable]
 			public string? textDataType { get; set; } // text
@@ -347,6 +350,8 @@ namespace Tests.DataProvider
 			public string? shorttextDataType { get; set; } // text
 			[Column, Nullable]
 			public char? ncharDataType { get; set; } // char(1)
+			[Column, Nullable]
+			public string? nchar20DataType { get; set; } // varchar(20)
 			[Column, Nullable]
 			public string? nvarcharDataType { get; set; } // varchar(20)
 			[Column, Nullable]
@@ -403,8 +408,47 @@ namespace Tests.DataProvider
 							clobDataType      = "clobclobclob",
 							nclobDataType     = "nclob\u00fcnclob\u00fcnclob\u00fc"
 						}));
+			}
+		}
 
-				conn.GetTable<AllType>().Delete(p => p.ID >= 2000);
+		async Task BulkCopyTestAsync(string context, BulkCopyType bulkCopyType)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				conn.BeginTransaction();
+
+				await conn.BulkCopyAsync(new BulkCopyOptions { MaxBatchSize = 50, BulkCopyType = bulkCopyType },
+					Enumerable.Range(0, 100).Select(n =>
+						new AllType
+						{
+							ID                   = 2000 + n,
+							bigintDataType       = 3000 + n,
+							smallintDataType     = (short)(4000 + n),
+							decimalDataType      = 900000 + n,
+							smalldecimalDataType = 90000 + n,
+							intDataType          = 7000 + n,
+							tinyintDataType      = (byte)(5000 + n),
+							floatDataType        = 7700 + n,
+							realDataType         = 7600 + n,
+
+							dateDataType       = DateTime.Now,
+							timeDataType       = DateTime.Now - DateTime.Today,
+							seconddateDataType = DateTime.Now,
+							timestampDataType  = DateTime.Now,
+
+							charDataType      = 'A',
+							varcharDataType   = "AA",
+							textDataType      = "text",
+							shorttextDataType = "shorttext",
+							ncharDataType     = '\u00fc',
+							nvarcharDataType  = "A\u00fcfsdf\u00fc",
+							alphanumDataType  = "abcQWE654",
+							binaryDataType    = new byte[] { 1 },
+							varbinaryDataType = new byte[] { 1, 2, 3 },
+							blobDataType      = new byte[] { 1, 2, 3, 4, 5, 6 },
+							clobDataType      = "clobclobclob",
+							nclobDataType     = "nclob\u00fcnclob\u00fcnclob\u00fc"
+						}));
 			}
 		}
 
@@ -421,26 +465,74 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		public async Task BulkCopyMultipleRowsAsync([IncludeDataSources(CurrentProvider)] string context)
+		{
+			await BulkCopyTestAsync(context, BulkCopyType.MultipleRows);
+		}
+
+		[Test]
+		public async Task BulkCopyProviderSpecificAsync([IncludeDataSources(CurrentProvider)] string context)
+		{
+			await BulkCopyTestAsync(context, BulkCopyType.ProviderSpecific);
+		}
+
+		[Test]
 		public void BulkCopyProviderSpecificUpperCaseColumns([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using (var db = new DataConnection(context))
 			{
-				var result = db.BulkCopy(
-					new BulkCopyOptions { BulkCopyType = BulkCopyType.ProviderSpecific },
-					Enumerable.Range(0, 10).Select(n =>
-						new BulkInsertUpperCaseColumns
-						{
-							ID = 4000 + n,
-							MoneyValue = 1000m + n,
-							DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
-							BoolValue = true,
-							GuidValue = Guid.NewGuid(),
-							SmallIntValue = (short)n
-						}
-					));
-				Assert.That(result.RowsCopied, Is.EqualTo(10));
-				var count = db.GetTable<BulkInsertUpperCaseColumns>().Delete(p => p.ID >= 4000);
-				Assert.That(count, Is.EqualTo(10));
+				try
+				{
+					var result = db.BulkCopy(
+						new BulkCopyOptions { BulkCopyType = BulkCopyType.ProviderSpecific },
+						Enumerable.Range(0, 10).Select(n =>
+							new BulkInsertUpperCaseColumns
+							{
+								ID            = 4000 + n,
+								MoneyValue    = 1000m + n,
+								DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
+								BoolValue     = true,
+								GuidValue     = Guid.NewGuid(),
+								SmallIntValue = (short)n
+							}
+						));
+					Assert.That(result.RowsCopied, Is.EqualTo(10));
+				}
+				finally
+				{
+					var count = db.GetTable<BulkInsertUpperCaseColumns>().Delete(p => p.ID >= 4000);
+					Assert.That(count, Is.EqualTo(10));
+				}
+			}
+		}
+
+		[Test]
+		public async Task BulkCopyProviderSpecificUpperCaseColumnsAsync([IncludeDataSources(CurrentProvider)] string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				try
+				{
+					var result = await db.BulkCopyAsync(
+						new BulkCopyOptions { BulkCopyType = BulkCopyType.ProviderSpecific },
+						Enumerable.Range(0, 10).Select(n =>
+							new BulkInsertUpperCaseColumns
+							{
+								ID            = 4000 + n,
+								MoneyValue    = 1000m + n,
+								DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
+								BoolValue     = true,
+								GuidValue     = Guid.NewGuid(),
+								SmallIntValue = (short)n
+							}
+						));
+					Assert.That(result.RowsCopied, Is.EqualTo(10));
+				}
+				finally
+				{
+					var count = await db.GetTable<BulkInsertUpperCaseColumns>().DeleteAsync(p => p.ID >= 4000);
+					Assert.That(count, Is.EqualTo(10));
+				}
 			}
 		}
 
@@ -449,35 +541,42 @@ namespace Tests.DataProvider
 		{
 			using (var db = new DataConnection(context))
 			{
-				var result = db.BulkCopy(
-					new BulkCopyOptions { BulkCopyType = BulkCopyType.ProviderSpecific },
-					Enumerable.Range(0, 10).Select(n =>
-						new BulkInsertLowerCaseColumns
-						{
-							ID = 4000 + n,
-							MoneyValue = 1000m + n,
-							DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
-							BoolValue = true,
-							GuidValue = Guid.NewGuid(),
-							SmallIntValue = (short)n
-						}
-					));
-				Assert.That(result.RowsCopied, Is.EqualTo(10));
-				var count = db.GetTable<BulkInsertLowerCaseColumns>().Delete(p => p.ID >= 4000);
-				Assert.That(count, Is.EqualTo(10));
+				try
+				{
+					var result = db.BulkCopy(
+						new BulkCopyOptions { BulkCopyType = BulkCopyType.ProviderSpecific },
+						Enumerable.Range(0, 10).Select(n =>
+							new BulkInsertLowerCaseColumns
+							{
+								ID            = 4000 + n,
+								MoneyValue    = 1000m + n,
+								DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
+								BoolValue     = true,
+								GuidValue     = Guid.NewGuid(),
+								SmallIntValue = (short)n
+							}
+						));
+					Assert.That(result.RowsCopied, Is.EqualTo(10));
+				}
+				finally
+				{
+					var count = db.GetTable<BulkInsertLowerCaseColumns>().Delete(p => p.ID >= 4000);
+					Assert.That(count, Is.EqualTo(10));
+				}
 			}
 		}
 
-		public void BulkCopyLinqTypes([IncludeDataSources(CurrentProvider)] string context)
+		[Test]
+		public async Task BulkCopyProviderSpecificLowerCaseColumnsAsync([IncludeDataSources(CurrentProvider)] string context)
 		{
-			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
+			using (var db = new DataConnection(context))
 			{
-				using (var db = new DataConnection(context))
+				try
 				{
-					db.BulkCopy(
-						new BulkCopyOptions { BulkCopyType = bulkCopyType },
+					var result = await db.BulkCopyAsync(
+						new BulkCopyOptions { BulkCopyType = BulkCopyType.ProviderSpecific },
 						Enumerable.Range(0, 10).Select(n =>
-							new LinqDataTypes
+							new BulkInsertLowerCaseColumns
 							{
 								ID = 4000 + n,
 								MoneyValue = 1000m + n,
@@ -487,8 +586,72 @@ namespace Tests.DataProvider
 								SmallIntValue = (short)n
 							}
 						));
+					Assert.That(result.RowsCopied, Is.EqualTo(10));
+				}
+				finally
+				{
+					var count = await db.GetTable<BulkInsertLowerCaseColumns>().DeleteAsync(p => p.ID >= 4000);
+					Assert.That(count, Is.EqualTo(10));
+				}
+			}
+		}
 
-					db.GetTable<LinqDataTypes>().Delete(p => p.ID >= 4000);
+		public void BulkCopyLinqTypes([IncludeDataSources(CurrentProvider)] string context)
+		{
+			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
+			{
+				using (var db = new DataConnection(context))
+				{
+					try
+					{
+						db.BulkCopy(
+							new BulkCopyOptions { BulkCopyType = bulkCopyType },
+							Enumerable.Range(0, 10).Select(n =>
+								new LinqDataTypes
+								{
+									ID            = 4000 + n,
+									MoneyValue    = 1000m + n,
+									DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
+									BoolValue     = true,
+									GuidValue     = Guid.NewGuid(),
+									SmallIntValue = (short)n
+								}
+							));
+					}
+					finally
+					{
+						db.GetTable<LinqDataTypes>().Delete(p => p.ID >= 4000);
+					}
+				}
+			}
+		}
+
+		public async Task BulkCopyLinqTypesAsync([IncludeDataSources(CurrentProvider)] string context)
+		{
+			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
+			{
+				using (var db = new DataConnection(context))
+				{
+					try
+					{
+						await db.BulkCopyAsync(
+							new BulkCopyOptions { BulkCopyType = bulkCopyType },
+							Enumerable.Range(0, 10).Select(n =>
+								new LinqDataTypes
+								{
+									ID            = 4000 + n,
+									MoneyValue    = 1000m + n,
+									DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
+									BoolValue     = true,
+									GuidValue     = Guid.NewGuid(),
+									SmallIntValue = (short)n
+								}
+							));
+					}
+					finally
+					{
+						await db.GetTable<LinqDataTypes>().DeleteAsync(p => p.ID >= 4000);
+					}
 				}
 			}
 		}
@@ -555,6 +718,63 @@ namespace Tests.DataProvider
 			public double doubleoptional { get; set; }
 			[Column, Nullable]
 			public string? stringoptional { get; set; }
+		}
+
+		[Test]
+		public void SelectAllTypes([IncludeDataSources(CurrentProvider)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				// This query fails for ODBC x64 provider with
+				// "Arithmetic operation resulted in an overflow"
+				db.GetTable<AllType>().Take(100).ToList();
+			}
+		}
+
+		[Test]
+		public void ByDefaultLoadCurrentSchemaOnly([IncludeDataSources(CurrentProvider)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				var currentSchema = TestUtils.GetSchemaName(db);
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
+
+				foreach (var table in schema.Tables)
+					Assert.AreEqual(currentSchema, table.SchemaName);
+
+				foreach (var procedure in schema.Procedures)
+					Assert.AreEqual(currentSchema, procedure.SchemaName);
+			}
+		}
+
+		[Table(Schema = "TESTHANA", Name = "AllTypesGeo")]
+		public partial class AllTypesGeo
+		{
+			[PrimaryKey, Identity        ] public int     ID                 { get; set; } // INTEGER
+			[Column("dataType")          ] public string? DataType           { get; set; } // VARCHAR(20)
+			[Column("stgeometryDataType")] public byte[]? StgeometryDataType { get; set; } // ST_GEOMETRY
+		}
+
+		[Test]
+		public void TestGeometryTypesNative([IncludeDataSources(true, ProviderName.SapHanaNative)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var data = db.GetTable<AllTypesGeo>().ToArray();
+
+				Assert.AreEqual(7, data.Length);
+			}
+		}
+
+		[Test]
+		public void TestGeometryTypesODBC([IncludeDataSources(ProviderName.SapHanaOdbc)] string context)
+		{
+			// ODBC provider doesn't support spatial types
+			// https://github.com/dotnet/runtime/issues/40707
+			using (var db = GetDataContext(context))
+			{
+				Assert.Throws<ArgumentException>(() => db.GetTable<AllTypesGeo>().ToArray());
+			}
 		}
 	}
 }

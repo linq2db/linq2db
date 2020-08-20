@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Text;
@@ -108,6 +108,20 @@ namespace LinqToDB.SqlQuery
 			}
 			return null;
 		}
+
+		public static DbDataType GetDbDataType(ISqlExpression? expr)
+		{
+			if (expr == null)
+				return new DbDataType(typeof(object), DataType.Undefined);
+
+			var descriptor = GetColumnDescriptor(expr);
+			if (descriptor == null)
+			{
+				return new DbDataType(expr.SystemType ?? typeof(object), DataType.Undefined);
+			}
+
+			return descriptor.GetDbDataType(true);
+		}
 		
 		public static void CollectDependencies(IQueryElement root, IEnumerable<ISqlTableSource> sources, HashSet<ISqlExpression> found, IEnumerable<IQueryElement>? ignore = null)
 		{
@@ -140,12 +154,43 @@ namespace LinqToDB.SqlQuery
 			});
 		}
 
+		public static void CollectUsedSources(IQueryElement root, HashSet<ISqlTableSource> found, IEnumerable<IQueryElement>? ignore = null)
+		{
+			var hashIgnore = new HashSet<IQueryElement  >(ignore ?? Enumerable.Empty<IQueryElement>());
+
+			new QueryVisitor().VisitParentFirst(root, e =>
+			{
+				if (e is SqlTableSource source)
+				{
+					if (hashIgnore.Contains(e))
+						return false;
+					found.Add(source.Source);
+				}
+
+				switch (e.ElementType)
+				{
+					case QueryElementType.Column :
+					{
+						var c = (SqlColumn) e;
+						found.Add(c.Parent!);
+						return false;
+					}
+					case QueryElementType.SqlField :
+					{
+						var f = (SqlField) e;
+						found.Add(f.Table!);
+						return false;
+					}
+				}
+				return true;
+			});
+		}
+
 		public static bool IsTransitiveExpression(SqlExpression sqlExpression)
 		{
 			if (sqlExpression.Parameters.Length == 1 && sqlExpression.Expr.Trim() == "{0}")
 			{
-				var argExpression = sqlExpression.Parameters[0] as SqlExpression;
-				if (argExpression != null)
+				if (sqlExpression.Parameters[0] is SqlExpression argExpression)
 					return IsTransitiveExpression(argExpression);
 				return true;
 			}
@@ -327,10 +372,10 @@ namespace LinqToDB.SqlQuery
 		public static IEnumerable<ISqlTableSource> EnumerateAccessibleSources(SqlTableSource tableSource)
 		{
 			if (tableSource.Source is SelectQuery q)
-				{
-					foreach (var ts in EnumerateAccessibleSources(q))
-						yield return ts;
-				}
+			{
+				foreach (var ts in EnumerateAccessibleSources(q))
+					yield return ts;
+			}
 			else 
 				yield return tableSource.Source;
 
@@ -600,15 +645,12 @@ namespace LinqToDB.SqlQuery
 		/// <returns>Field instance associated with expression</returns>
 		public static SqlField? GetUnderlyingField(ISqlExpression expression)
 		{
-			switch (expression)
+			return expression switch
 			{
-				case SqlField field:
-					return field;
-				case SqlColumn column:
-					return GetUnderlyingField(column.Expression, new HashSet<ISqlExpression>());
-			}
-
-			return null;
+				SqlField field   => field,
+				SqlColumn column => GetUnderlyingField(column.Expression, new HashSet<ISqlExpression>()),
+				_                => null,
+			};
 		}
 
 		static SqlField? GetUnderlyingField(ISqlExpression expression, HashSet<ISqlExpression> visited)
@@ -1041,35 +1083,118 @@ namespace LinqToDB.SqlQuery
 			return false;
 		}
 
-		public static object? EvaluateExpression(this ISqlExpression expr)
+		/// <summary>
+		/// Collects unique keys from different sources.
+		/// </summary>
+		/// <param name="tableSource"></param>
+		/// <param name="knownKeys">List with found keys.</param>
+		public static void CollectUniqueKeys(SqlTableSource tableSource, List<IList<ISqlExpression>> knownKeys)
 		{
+			if (tableSource.HasUniqueKeys)
+				knownKeys.AddRange(tableSource.UniqueKeys);
+
+			CollectUniqueKeys(tableSource.Source, true, knownKeys);
+		}
+
+
+		/// <summary>
+		/// Collects unique keys from different sources.
+		/// </summary>
+		/// <param name="tableSource"></param>
+		/// <param name="includeDistinct">Flag to include Distinct as unique key.</param>
+		/// <param name="knownKeys">List with found keys.</param>
+		public static void CollectUniqueKeys(ISqlTableSource tableSource, bool includeDistinct, List<IList<ISqlExpression>> knownKeys)
+		{
+			switch (tableSource)
+			{
+				case SqlTable table:
+				{
+					var keys = table.GetKeys(false);
+					if (keys != null && keys.Count > 0)
+						knownKeys.Add(keys);
+
+					break;
+				}
+				case SelectQuery selectQuery:
+				{
+					if (selectQuery.HasUniqueKeys)
+						knownKeys.AddRange(selectQuery.UniqueKeys);
+
+					if (includeDistinct && selectQuery.Select.IsDistinct)
+						knownKeys.Add(selectQuery.Select.Columns.OfType<ISqlExpression>().ToList());
+
+					if (!selectQuery.Select.GroupBy.IsEmpty)
+					{
+						var columns = selectQuery.Select.GroupBy.Items
+							.Select(i => selectQuery.Select.Columns.Find(c => c.Expression.Equals(i))).Where(c => c != null)
+							.ToArray();
+						if (columns.Length == selectQuery.Select.GroupBy.Items.Count)
+							knownKeys.Add(columns.OfType<ISqlExpression>().ToList());
+					}
+
+					if (selectQuery.From.Tables.Count == 1)
+					{
+						var table = selectQuery.From.Tables[0];
+						if (table.HasUniqueKeys && table.Joins.Count == 0)
+						{
+							knownKeys.AddRange(table.UniqueKeys);
+						}
+					}
+
+					break;
+				}
+			}
+		}
+
+		public static bool TryEvaluateExpression(this ISqlExpression expr, bool withParameters, out object? result)
+		{
+			return expr.TryEvaluateExpression(withParameters, out result, out _);
+		}
+
+		public static bool TryEvaluateExpression(this ISqlExpression expr, bool withParameters, out object? result, out string? errorMessage)
+		{
+			result = null;
+			errorMessage = null;
 			switch (expr.ElementType)
 			{
-				case QueryElementType.SqlValue           : return ((SqlValue)expr).Value;
-				case QueryElementType.SqlParameter       : return ((SqlParameter)expr).Value;
+				case QueryElementType.SqlValue           : result = ((SqlValue)expr).Value; return true;
+				case QueryElementType.SqlParameter       :
+				{
+					if (!withParameters) 
+						return false;
+					result = ((SqlParameter)expr).Value;
+					return true;
+				}	
 				case QueryElementType.SqlBinaryExpression:
 					{
 						var binary = (SqlBinaryExpression)expr;
-						dynamic? left  = binary.Expr1.EvaluateExpression();
-						dynamic? right = binary.Expr2.EvaluateExpression();
+						if (!binary.Expr1.TryEvaluateExpression(withParameters, out var leftEvaluated, out errorMessage))
+							return false;
+						if (!binary.Expr2.TryEvaluateExpression(withParameters, out var rightEvaluated, out errorMessage))
+							return false;
+						dynamic? left  = leftEvaluated;
+						dynamic? right = rightEvaluated;
 						if (left == null || right == null)
-							return null;
+							return false;
 						switch (binary.Operation)
 						{
-							case "+" : return left +  right;
-							case "-" : return left -  right;
-							case "*" : return left *  right;
-							case "/" : return left /  right;
-							case "%" : return left %  right;
-							case "^" : return left ^  right;
-							case "&" : return left &  right;
-							case "<" : return left <  right;
-							case ">" : return left >  right;
-							case "<=": return left <= right;
-							case ">=": return left >= right;
+							case "+" : result = left + right; break;
+							case "-" : result = left - right; break;
+							case "*" : result = left * right; break;
+							case "/" : result = left / right; break;
+							case "%" : result = left % right; break;
+							case "^" : result = left ^ right; break;
+							case "&" : result = left & right; break;
+							case "<" : result = left < right; break;
+							case ">" : result = left > right; break;
+							case "<=": result = left <= right; break;
+							case ">=": result = left >= right; break;
 							default:
-								throw new LinqToDBException($"Unknown binary operation '{binary.Operation}'.");
+								errorMessage = $"Unknown binary operation '{binary.Operation}'.";
+								return false;
 						}
+
+						return true;
 					}
 				case QueryElementType.SqlFunction        :
 					{
@@ -1080,20 +1205,29 @@ namespace LinqToDB.SqlQuery
 							case "CASE":
 
 								if (function.Parameters.Length != 3)
-									throw new LinqToDBException($"CASE function expected to have 3 parameters.");
+								{
+									errorMessage = "CASE function expected to have 3 parameters.";
+									return false;
+								}
 
-								var cond = function.Parameters[0].EvaluateExpression();
+								if (!function.Parameters[0].TryEvaluateExpression(withParameters, out var cond, out errorMessage))
+									return false;
 
 								if (!(cond is bool))
-									throw new LinqToDBException($"CASE function expected to have boolean condition (was: {cond?.GetType()}).");
+								{
+									errorMessage =
+										$"CASE function expected to have boolean condition (was: {cond?.GetType()}).";
+									return false;
+								}
 
 								if ((bool)cond!)
-									return function.Parameters[1].EvaluateExpression();
+									return function.Parameters[1].TryEvaluateExpression(withParameters, out result, out errorMessage);
 								else
-									return function.Parameters[2].EvaluateExpression();
+									return function.Parameters[2].TryEvaluateExpression(withParameters, out result, out errorMessage);
 
 							default:
-								throw new LinqToDBException($"Unknown function '{function.Name}'.");
+								errorMessage = $"Unknown function '{function.Name}'.";
+								return false;
 						}
 					}
 
@@ -1101,10 +1235,27 @@ namespace LinqToDB.SqlQuery
 					{
 						var str = expr.ToString(new StringBuilder(), new Dictionary<IQueryElement, IQueryElement>())
 							.ToString();
-						throw new NotImplementedException(
-							$"Not implemented evaluation of '{expr.ElementType}': '{str}'.");
+						errorMessage = $"Not implemented evaluation of '{expr.ElementType}': '{str}'.";
+						return false;
 					}
 			}
+		}
+
+		public static object? EvaluateExpression(this ISqlExpression expr)
+		{
+			if (!expr.TryEvaluateExpression(true, out var result, out var message))
+			{
+				if (message == null)
+				{
+					var str = expr.ToString(new StringBuilder(), new Dictionary<IQueryElement, IQueryElement>())
+						.ToString();
+					message = $"Not implemented evaluation of '{expr.ElementType}': '{str}'.";
+				}
+
+				throw new LinqToDBException(message);
+			}
+
+			return result;
 		}
 
 

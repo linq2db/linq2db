@@ -69,7 +69,7 @@ namespace Tests.Linq
 			using (var db = new DataConnection(context))
 			{
 				var sp       = db.DataProvider.GetSchemaProvider();
-				var dbSchema = sp.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				var dbSchema = sp.GetSchema(db);
 
 				var q =
 					from t in dbSchema.Tables

@@ -19,9 +19,11 @@ namespace Tests.Linq
 	public class FromSqlTests : TestBase
 	{
 		[Table(Name = "sample_class")]
+		[Table(Name = "SAMPLE_CLASS", Configuration = ProviderName.Firebird)]
 		class SampleClass
 		{
 			[Column("id")]
+			[Column("ID", Configuration = ProviderName.Firebird)]
 			public int Id    { get; set; }
 
 			[Column("value", Length = 50)]

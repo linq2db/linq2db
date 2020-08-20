@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -123,8 +123,27 @@ namespace LinqToDB.Extensions
 		{
 			foreach (var method in type.GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic))
 			{
-				if (method.IsGenericMethod && method.Name == name && method.GetParameters().Length == genericParametersCount)
-					return method;
+				if (method.IsGenericMethod
+					&& method.Name == name
+					&& method.GetGenericMethodDefinition().GetGenericArguments().Length == genericParametersCount)
+				{
+					var parameters = method.GetParameters();
+					if (parameters.Length == types.Length)
+					{
+						var found = true;
+						for (var i = 0; i < types.Length; i++)
+						{
+							if (!parameters[i].ParameterType.IsGenericParameter && parameters[i].ParameterType != types[i])
+							{
+								found = false;
+								break;
+							}
+						}
+
+						if (found)
+							return method;
+					}
+				}
 			}
 
 			return null;
@@ -560,9 +579,9 @@ namespace LinqToDB.Extensions
 					return last.PropertyType;
 			}
 
-			if (list is IList)
+			if (list is IList list1)
 			{
-				foreach (var o in (IList)list)
+				foreach (var o in list1)
 					if (o != null && o.GetType() != typeOfObject)
 						return o.GetType();
 			}
@@ -839,15 +858,14 @@ namespace LinqToDB.Extensions
 
 		public static Type GetMemberType(this MemberInfo memberInfo)
 		{
-			switch (memberInfo.MemberType)
+			return memberInfo.MemberType switch
 			{
-				case MemberTypes.Property    : return ((PropertyInfo)memberInfo).PropertyType;
-				case MemberTypes.Field       : return ((FieldInfo)   memberInfo).FieldType;
-				case MemberTypes.Method      : return ((MethodInfo)  memberInfo).ReturnType;
-				case MemberTypes.Constructor : return                memberInfo. DeclaringType!;
-			}
-
-			throw new InvalidOperationException();
+				MemberTypes.Property    => ((PropertyInfo)memberInfo).PropertyType,
+				MemberTypes.Field       => ((FieldInfo)memberInfo).FieldType,
+				MemberTypes.Method      => ((MethodInfo)memberInfo).ReturnType,
+				MemberTypes.Constructor => memberInfo.DeclaringType!,
+				_                       => throw new InvalidOperationException(),
+			};
 		}
 
 		public static bool IsNullableValueMember(this MemberInfo member)
@@ -920,7 +938,7 @@ namespace LinqToDB.Extensions
 				if (member1.DeclaringType == member2.DeclaringType)
 					return true;
 
-				if (member1 is PropertyInfo)
+				if (member1 is PropertyInfo info1)
 				{
 					var isSubclass =
 						member1.DeclaringType!.IsSameOrParentOf(member2.DeclaringType!) ||
@@ -931,7 +949,7 @@ namespace LinqToDB.Extensions
 
 					if (declaringType != null && member2.DeclaringType!.IsInterface)
 					{
-						var getter1 = ((PropertyInfo)member1).GetGetMethod()!;
+						var getter1 = info1.GetGetMethod()!;
 						var getter2 = ((PropertyInfo)member2).GetGetMethod()!;
 
 						var map = declaringType.GetInterfaceMap(member2.DeclaringType);
@@ -946,13 +964,13 @@ namespace LinqToDB.Extensions
 
 			if (member2.DeclaringType!.IsInterface && !member1.DeclaringType!.IsInterface && member1.Name.EndsWith(member2.Name))
 			{
-				if (member1 is PropertyInfo)
+				if (member1 is PropertyInfo info)
 				{
 					var isSubclass = member2.DeclaringType.IsAssignableFrom(member1.DeclaringType);
 
 					if (isSubclass)
 					{
-						var getter1 = ((PropertyInfo)member1).GetGetMethod();
+						var getter1 = info.GetGetMethod();
 						var getter2 = ((PropertyInfo)member2).GetGetMethod();
 
 						var map = member1.DeclaringType.GetInterfaceMap(member2.DeclaringType);

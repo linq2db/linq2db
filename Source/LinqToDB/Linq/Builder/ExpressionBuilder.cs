@@ -82,6 +82,7 @@ namespace LinqToDB.Linq.Builder
 			new ArrayBuilder               (),
 			new AsSubQueryBuilder          (),
 			new DisableGroupingGuardBuilder(),
+			new InlineParametersBuilder    (),
 			new HasUniqueKeyBuilder        (),
 		};
 
@@ -350,10 +351,10 @@ namespace LinqToDB.Linq.Builder
 		#region OptimizeExpression
 
 		private MethodInfo[]? _enumerableMethods;
-		public  MethodInfo[]   EnumerableMethods => _enumerableMethods ?? (_enumerableMethods = typeof(Enumerable).GetMethods());
+		public  MethodInfo[]   EnumerableMethods => _enumerableMethods ??= typeof(Enumerable).GetMethods();
 
 		private MethodInfo[]? _queryableMethods;
-		public  MethodInfo[]   QueryableMethods  => _queryableMethods  ?? (_queryableMethods  = typeof(Queryable). GetMethods());
+		public  MethodInfo[]   QueryableMethods  => _queryableMethods  ??= typeof(Queryable). GetMethods();
 
 		readonly Dictionary<Expression, Expression> _optimizedExpressions = new Dictionary<Expression, Expression>();
 
@@ -463,8 +464,23 @@ namespace LinqToDB.Linq.Builder
 								case "AverageAsync"         : return new TransformInfo(ConvertSelectorAsync (call, false));
 								case "ElementAt"            :
 								case "ElementAtOrDefault"   : return new TransformInfo(ConvertElementAt     (call));
-								case "LoadWith"             : return new TransformInfo(expr, true);
+								case "LoadWithAsTable"      : return new TransformInfo(expr, true);
 								case "With"                 : return new TransformInfo(expr);
+								case "LoadWith":
+								case "ThenLoad":
+								{
+									var mc   = (MethodCallExpression)expr;
+									var args = new Expression[mc.Arguments.Count];
+
+									// skipping second argument
+									for (int i = 0; i < mc.Arguments.Count; i++)
+									{
+										args[i] = i == 1 ? mc.Arguments[i] : OptimizeExpression(mc.Arguments[i]);
+									}
+
+									mc = mc.Update(mc.Object, args);
+									return new TransformInfo(mc, true);
+								};
 							}
 						}
 
@@ -666,6 +682,7 @@ namespace LinqToDB.Linq.Builder
 				var genericType = sequence.Type.GetGenericArguments()[0];
 				var newMethod   = methodInfo.MakeGenericMethod(genericType);
 
+				var previous    = method;
 				method = Expression.Call(newMethod, sequence, predicate);
 
 				if (exprs.Count > 0)
@@ -678,6 +695,7 @@ namespace LinqToDB.Linq.Builder
 						Expression.Lambda(
 							exprs.Aggregate((Expression)parameter, (current,_) => ExpressionHelper.PropertyOrField(current, "p")),
 							parameter));
+
 				}
 			}
 
@@ -1286,7 +1304,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var p    = Expression.Parameter(typeof(Expression), "exp");
 				var exas = expression.GetExpressionAccessors(p);
-				var expr = ReplaceParameter(exas, expression, _ => {}).ValueExpression;
+				var expr = ReplaceParameter(exas, expression, forceConstant: false, _ => {}).ValueExpression;
 
 				var allowedParameters = new HashSet<ParameterExpression>(currentParameters) { p };
 
@@ -1309,8 +1327,7 @@ namespace LinqToDB.Linq.Builder
 								new[] { fakeQuery.Expression }.Concat(callExpression.Arguments.Skip(1)));
 							if (CanBeCompiled(callExpression))
 							{
-								var appliedQuery  = callExpression.EvaluateExpression() as IQueryable;
-								if (appliedQuery == null)
+								if (!(callExpression.EvaluateExpression() is IQueryable appliedQuery))
 									throw new LinqToDBException($"Method call '{expression}' returned null value.");
 								var newExpression = appliedQuery.Expression.Transform(e =>
 									e == fakeQuery.Expression ? firstArgument : e);
@@ -1382,7 +1399,9 @@ namespace LinqToDB.Linq.Builder
 
 			firstMethod = firstMethod.MakeGenericMethod(sourceType);
 
-			var converted = Expression.Call(null, firstMethod, Expression.Call(skipMethod, sequence, index));
+			var skipCall = Expression.Call(skipMethod, sequence, method.Arguments[1]);
+
+			var converted = Expression.Call(null, firstMethod, skipCall);
 
 			return converted;
 		}

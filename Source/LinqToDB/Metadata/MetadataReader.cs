@@ -13,7 +13,7 @@ namespace LinqToDB.Metadata
 		public static MetadataReader Default = new MetadataReader(
 			new AttributeReader()
 			, new SystemComponentModelDataAnnotationsSchemaAttributeReader()
-#if NET45 || NET46
+#if NETFRAMEWORK
 			, new SystemDataLinqAttributeReader()
 #endif
 		);

@@ -10,14 +10,12 @@
 		{
 		}
 
-		public override ISqlExpression ConvertExpression(ISqlExpression expr)
+		public override ISqlExpression ConvertExpression(ISqlExpression expr, bool withParameters)
 		{
-			expr = base.ConvertExpression(expr);
+			expr = base.ConvertExpression(expr, withParameters);
 
-			if (expr is SqlFunction)
+			if (expr is SqlFunction func)
 			{
-				var func = (SqlFunction) expr;
-
 				switch (func.Name)
 				{
 					case "CharIndex" :
@@ -26,17 +24,17 @@
 								ConvertExpression(new SqlFunction(func.SystemType, "CharIndex",
 									func.Parameters[0],
 									ConvertExpression(new SqlFunction(typeof(string), "Substring",
-										func.Parameters[1],
-										func.Parameters[2], new SqlFunction(typeof(int), "Len", func.Parameters[1]))))),
+											func.Parameters[1],
+											func.Parameters[2],
+											new SqlFunction(typeof(int), "Len", func.Parameters[1])),
+										withParameters)), withParameters),
 								Sub(func.Parameters[2], 1));
 						break;
 
 					case "Stuff"     :
-						if (func.Parameters[3] is SqlValue)
+						if (func.Parameters[3] is SqlValue value)
 						{
-							var value = (SqlValue)func.Parameters[3];
-
-							if (value.Value is string && string.IsNullOrEmpty((string)value.Value))
+							if (value.Value is string @string && string.IsNullOrEmpty(@string))
 								return new SqlFunction(
 									func.SystemType,
 									func.Name,

@@ -71,13 +71,7 @@ namespace LinqToDB.SqlQuery
 		}
 
 		internal SqlDataType(ColumnDescriptor column)
-			: this(
-				  column.DataType,
-				  column.MemberType,
-				  column.Length,
-				  column.Precision,
-				  column.Scale,
-				  column.DbType)
+			: this(column.GetDbDataType(true))
 		{
 		}
 
@@ -259,49 +253,48 @@ namespace LinqToDB.SqlQuery
 
 		public static SqlDataType GetDataType(DataType type)
 		{
-			switch (type)
+			return type switch
 			{
-				case DataType.Int64            : return DbInt64;
-				case DataType.Binary           : return DbBinary;
-				case DataType.Boolean          : return DbBoolean;
-				case DataType.Char             : return DbChar;
-				case DataType.DateTime         : return DbDateTime;
-				case DataType.Decimal          : return DbDecimal;
-				case DataType.Double           : return DbDouble;
-				case DataType.Image            : return DbImage;
-				case DataType.Int32            : return DbInt32;
-				case DataType.Money            : return DbMoney;
-				case DataType.NChar            : return DbNChar;
-				case DataType.NText            : return DbNText;
-				case DataType.NVarChar         : return DbNVarChar;
-				case DataType.Single           : return DbSingle;
-				case DataType.Guid             : return DbGuid;
-				case DataType.SmallDateTime    : return DbSmallDateTime;
-				case DataType.Int16            : return DbInt16;
-				case DataType.SmallMoney       : return DbSmallMoney;
-				case DataType.Text             : return DbText;
-				case DataType.Timestamp        : return DbTimestamp;
-				case DataType.Byte             : return DbByte;
-				case DataType.VarBinary        : return DbVarBinary;
-				case DataType.VarChar          : return DbVarChar;
-				case DataType.Variant          : return DbVariant;
-				case DataType.Xml              : return DbXml;
-				case DataType.BitArray         : return DbBitArray;
-				case DataType.Udt              : return DbUdt;
-				case DataType.Date             : return DbDate;
-				case DataType.Time             : return DbTime;
-				case DataType.DateTime2        : return DbDateTime2;
-				case DataType.DateTimeOffset   : return DbDateTimeOffset;
-				case DataType.UInt16           : return DbUInt16;
-				case DataType.UInt32           : return DbUInt32;
-				case DataType.UInt64           : return DbUInt64;
-				case DataType.Dictionary       : return DbDictionary;
-				case DataType.Json             : return DbJson;
-				case DataType.BinaryJson       : return DbBinaryJson;
-				case DataType.SByte            : return DbSByte;
-			}
-
-			throw new InvalidOperationException($"Unexpected type: {type}");
+				DataType.Int64          => DbInt64,
+				DataType.Binary         => DbBinary,
+				DataType.Boolean        => DbBoolean,
+				DataType.Char           => DbChar,
+				DataType.DateTime       => DbDateTime,
+				DataType.Decimal        => DbDecimal,
+				DataType.Double         => DbDouble,
+				DataType.Image          => DbImage,
+				DataType.Int32          => DbInt32,
+				DataType.Money          => DbMoney,
+				DataType.NChar          => DbNChar,
+				DataType.NText          => DbNText,
+				DataType.NVarChar       => DbNVarChar,
+				DataType.Single         => DbSingle,
+				DataType.Guid           => DbGuid,
+				DataType.SmallDateTime  => DbSmallDateTime,
+				DataType.Int16          => DbInt16,
+				DataType.SmallMoney     => DbSmallMoney,
+				DataType.Text           => DbText,
+				DataType.Timestamp      => DbTimestamp,
+				DataType.Byte           => DbByte,
+				DataType.VarBinary      => DbVarBinary,
+				DataType.VarChar        => DbVarChar,
+				DataType.Variant        => DbVariant,
+				DataType.Xml            => DbXml,
+				DataType.BitArray       => DbBitArray,
+				DataType.Udt            => DbUdt,
+				DataType.Date           => DbDate,
+				DataType.Time           => DbTime,
+				DataType.DateTime2      => DbDateTime2,
+				DataType.DateTimeOffset => DbDateTimeOffset,
+				DataType.UInt16         => DbUInt16,
+				DataType.UInt32         => DbUInt32,
+				DataType.UInt64         => DbUInt64,
+				DataType.Dictionary     => DbDictionary,
+				DataType.Json           => DbJson,
+				DataType.BinaryJson     => DbBinaryJson,
+				DataType.SByte          => DbSByte,
+				_                       => throw new InvalidOperationException($"Unexpected type: {type}"),
+			};
 		}
 
 		public static bool TypeCanBeNull(Type type)

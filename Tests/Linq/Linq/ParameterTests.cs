@@ -8,6 +8,7 @@ using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+using Tests.Model;
 
 namespace Tests.Linq
 {
@@ -51,6 +52,23 @@ namespace Tests.Linq
 			{
 				var id = 1;
 				Assert.AreEqual(1, db.Person.Where(_ => _.ID == id || _.ID <= id || _.ID == id).Count());
+			}
+		}
+
+		[Test]
+		public void InlineTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var id = 1;
+				var query = from t in db.Person
+					where t.ID == id
+					select t;
+
+				var queryInlined = query.InlineParameters();
+
+				Assert.That(query.GetStatement().Parameters.Count,        Is.EqualTo(1));
+				Assert.That(queryInlined.GetStatement().Parameters.Count, Is.EqualTo(0));
 			}
 		}
 
@@ -219,7 +237,6 @@ namespace Tests.Linq
 			{
 				return (item3 * (item2 - item1) / item3) * item1;
 			}
-
 		}
 
 		[Test]
@@ -275,6 +292,23 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				db.Parent.Where(p => GetChildrenFiltered(db, ChildFilter).Select(c => c.ParentID).Contains(p.ParentID)).ToList();
+			}
+		}
+
+		[ActiveIssue(Configuration = TestProvName.AllSybase, Details = "CI: sybase image needs utf-8 enabled")]
+		[Test]
+		public void TestInternationalParamName([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var параметр = 1;
+				var result1 = db.Parent.Where(p => p.ParentID == параметр).ToList();
+
+				var 参数 = 1;
+				var result2 = db.Parent.Where(p => p.ParentID == 参数).ToList();
+
+				var パラメータ = 1;
+				var result3 = db.Parent.Where(p => p.ParentID == パラメータ).ToList();
 			}
 		}
 
@@ -411,7 +445,6 @@ namespace Tests.Linq
 		[Table(IsColumnAttributeRequired = true)]
 		public partial class Issue1189Customer
 		{
-
 			[Column("ID"), PrimaryKey, NotNull] public int Id { get; set; } // integer
 
 			[Column("NAME"), NotNull] public string Name { get; set; } = null!; // varchar(20)

@@ -23,6 +23,12 @@ namespace LinqToDB.Expressions
 	/// </summary>
 	class ExpressionEqualityComparer : IEqualityComparer<Expression>
 	{
+		public static IEqualityComparer<Expression> Instance { get; } = new ExpressionEqualityComparer();
+
+		private ExpressionEqualityComparer()
+		{
+		}
+
 		/// <summary>
 		///     This API supports the Entity Framework Core infrastructure and is not intended to be used
 		///     directly from your code. This API may change or be removed in future releases.
@@ -670,17 +676,13 @@ namespace LinqToDB.Expressions
 					return false;
 				}
 
-				switch (a.BindingType)
+				return a.BindingType switch
 				{
-					case MemberBindingType.Assignment:
-						return CompareMemberAssignment((MemberAssignment)a, (MemberAssignment)b);
-					case MemberBindingType.ListBinding:
-						return CompareMemberListBinding((MemberListBinding)a, (MemberListBinding)b);
-					case MemberBindingType.MemberBinding:
-						return CompareMemberMemberBinding((MemberMemberBinding)a, (MemberMemberBinding)b);
-					default:
-						throw new NotImplementedException();
-				}
+					MemberBindingType.Assignment	=> CompareMemberAssignment((MemberAssignment)a, (MemberAssignment)b),
+					MemberBindingType.ListBinding	=> CompareMemberListBinding((MemberListBinding)a, (MemberListBinding)b),
+					MemberBindingType.MemberBinding => CompareMemberMemberBinding((MemberMemberBinding)a, (MemberMemberBinding)b),
+					_                               => throw new NotImplementedException(),
+				};
 			}
 
 			private bool CompareMemberAssignment(MemberAssignment a, MemberAssignment b)

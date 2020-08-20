@@ -17,48 +17,53 @@
 
 			statement = base.Finalize(statement, inlineParameters);
 
+			// called in both finalize and optimize to avoid query conversion on each call
+			// as most of cases will be handled with finalize
 			statement = WrapParameters(statement);
 
 			return statement;
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlStatement OptimizeStatement(SqlStatement statement, bool inlineParameters, bool withParameters, bool remoteContext)
 		{
-			switch (statement.QueryType)
-			{
-				case QueryType.Delete : return GetAlternativeDelete((SqlDeleteStatement)statement);
-				case QueryType.Update : return GetAlternativeUpdate((SqlUpdateStatement)statement);
-				default               : return statement;
-			}
+			statement = base.OptimizeStatement(statement, inlineParameters, withParameters, remoteContext);
+
+			return WrapParameters(statement);
 		}
 
-		public override ISqlExpression ConvertExpression(ISqlExpression expr)
+		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
-			expr = base.ConvertExpression(expr);
-
-			if (expr is SqlBinaryExpression)
+			return statement.QueryType switch
 			{
-				SqlBinaryExpression be = (SqlBinaryExpression)expr;
+				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement),
+				QueryType.Update => GetAlternativeUpdate((SqlUpdateStatement)statement),
+				_                => statement,
+			};
+		}
 
+		public override ISqlExpression ConvertExpression(ISqlExpression expr, bool withParameters)
+		{
+			expr = base.ConvertExpression(expr, withParameters);
+
+			if (expr is SqlBinaryExpression be)
+			{
 				switch (be.Operation)
 				{
-					case "%": return new SqlFunction(be.SystemType, "Mod",     be.Expr1, be.Expr2);
+					case "%": return new SqlFunction(be.SystemType, "Mod", be.Expr1, be.Expr2);
 					case "&": return new SqlFunction(be.SystemType, "Bin_And", be.Expr1, be.Expr2);
-					case "|": return new SqlFunction(be.SystemType, "Bin_Or",  be.Expr1, be.Expr2);
+					case "|": return new SqlFunction(be.SystemType, "Bin_Or", be.Expr1, be.Expr2);
 					case "^": return new SqlFunction(be.SystemType, "Bin_Xor", be.Expr1, be.Expr2);
-					case "+": return be.SystemType == typeof(string)? new SqlBinaryExpression(be.SystemType, be.Expr1, "||", be.Expr2, be.Precedence): expr;
+					case "+": return be.SystemType == typeof(string) ? new SqlBinaryExpression(be.SystemType, be.Expr1, "||", be.Expr2, be.Precedence) : expr;
 				}
 			}
-			else if (expr is SqlFunction)
+			else if (expr is SqlFunction func)
 			{
-				SqlFunction func = (SqlFunction)expr;
-
 				switch (func.Name)
 				{
 					case "Convert" :
 						if (func.SystemType.ToUnderlying() == typeof(bool))
 						{
-							var ex = AlternativeConvertToBoolean(func, 1);
+							var ex = AlternativeConvertToBoolean(func, 1, withParameters);
 							if (ex != null)
 								return ex;
 						}

@@ -790,8 +790,8 @@ namespace LinqToDB.Linq.Builder
 
 											if (memberExpression == null)
 												return new IsExpressionResult(requestFlag == RequestFor.Expression);
-												//throw new InvalidOperationException(
-												//	string.Format("Invalid member '{0}.{1}'", member.DeclaringType, member.Name));
+											//throw new InvalidOperationException(
+											//	string.Format("Invalid member '{0}.{1}'", member.DeclaringType, member.Name));
 										}
 
 										if (ReferenceEquals(levelExpression, expression))
@@ -866,7 +866,8 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			throw new NotImplementedException();
+
+			return IsExpressionResult.False;
 		}
 
 		#endregion
@@ -1010,7 +1011,7 @@ namespace LinqToDB.Linq.Builder
 
 		public virtual SqlStatement GetResultStatement()
 		{
-			return Statement ?? (Statement = new SqlSelectStatement(SelectQuery));
+			return Statement ??= new SqlSelectStatement(SelectQuery);
 		}
 
 		#region Helpers
@@ -1047,11 +1048,11 @@ namespace LinqToDB.Linq.Builder
 						return action(sequence, null, 0);
 				}
 
-				switch (Body.NodeType)
+				return Body.NodeType switch
 				{
-					case ExpressionType.MemberAccess : return action(GetSequence(expression, level)!, null, 0);
-					default                          : return defaultAction();
-				}
+					ExpressionType.MemberAccess => action(GetSequence(expression, level)!, null, 0),
+					_                           => defaultAction(),
+				};
 			}
 			else
 			{

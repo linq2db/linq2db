@@ -24,6 +24,7 @@ using NUnit.Framework;
 namespace Tests.DataProvider
 {
 	using System.Globalization;
+	using System.Threading.Tasks;
 	using LinqToDB.Tools.Comparers;
 	using Model;
 
@@ -51,52 +52,52 @@ namespace Tests.DataProvider
 		{
 			using (var conn = new DataConnection(context))
 			{
-				Assert.That(TestType<long?>        (conn, "bigintDataType",    DataType.Int64),     Is.EqualTo(1000000L));
-				Assert.That(TestType<DB2Int64?>    (conn, "bigintDataType",    DataType.Int64),     Is.EqualTo(new DB2Int64(1000000L)));
-				Assert.That(TestType<int?>         (conn, "intDataType",       DataType.Int32),     Is.EqualTo(7777777));
-				Assert.That(TestType<DB2Int32?>    (conn, "intDataType",       DataType.Int32),     Is.EqualTo(new DB2Int32(7777777)));
-				Assert.That(TestType<short?>       (conn, "smallintDataType",  DataType.Int16),     Is.EqualTo(100));
-				Assert.That(TestType<DB2Int16?>    (conn, "smallintDataType",  DataType.Int16),     Is.EqualTo(new DB2Int16(100)));
-				Assert.That(TestType<decimal?>     (conn, "decimalDataType",   DataType.Decimal),   Is.EqualTo(9999999m));
-				Assert.That(TestType<decimal?>     (conn, "decfloatDataType",  DataType.Decimal),   Is.EqualTo(8888888m));
-				Assert.That(TestType<float?>       (conn, "realDataType",      DataType.Single),    Is.EqualTo(20.31f));
-				Assert.That(TestType<DB2Real?>     (conn, "realDataType",      DataType.Single),    Is.EqualTo(new DB2Real(20.31f)));
-				Assert.That(TestType<double?>      (conn, "doubleDataType",    DataType.Double),    Is.EqualTo(16.2d));
-				Assert.That(TestType<DB2Double?>   (conn, "doubleDataType",    DataType.Double),    Is.EqualTo(new DB2Double(16.2d)));
+				Assert.That(TestType<long?>        (conn, "bigintDataType",    DataType.Int64  , "ALLTYPES"),   Is.EqualTo(1000000L));
+				Assert.That(TestType<DB2Int64?>    (conn, "bigintDataType",    DataType.Int64  , "ALLTYPES"),   Is.EqualTo(new DB2Int64(1000000L)));
+				Assert.That(TestType<int?>         (conn, "intDataType",       DataType.Int32  , "ALLTYPES"),   Is.EqualTo(7777777));
+				Assert.That(TestType<DB2Int32?>    (conn, "intDataType",       DataType.Int32  , "ALLTYPES"),   Is.EqualTo(new DB2Int32(7777777)));
+				Assert.That(TestType<short?>       (conn, "smallintDataType",  DataType.Int16  , "ALLTYPES"),   Is.EqualTo(100));
+				Assert.That(TestType<DB2Int16?>    (conn, "smallintDataType",  DataType.Int16  , "ALLTYPES"),   Is.EqualTo(new DB2Int16(100)));
+				Assert.That(TestType<decimal?>     (conn, "decimalDataType",   DataType.Decimal, "ALLTYPES"),   Is.EqualTo(9999999m));
+				Assert.That(TestType<decimal?>     (conn, "decfloatDataType",  DataType.Decimal, "ALLTYPES"),   Is.EqualTo(8888888m));
+				Assert.That(TestType<float?>       (conn, "realDataType",      DataType.Single , "ALLTYPES"),   Is.EqualTo(20.31f));
+				Assert.That(TestType<DB2Real?>     (conn, "realDataType",      DataType.Single , "ALLTYPES"),   Is.EqualTo(new DB2Real(20.31f)));
+				Assert.That(TestType<double?>      (conn, "doubleDataType",    DataType.Double , "ALLTYPES"),   Is.EqualTo(16.2d));
+				Assert.That(TestType<DB2Double?>   (conn, "doubleDataType",    DataType.Double , "ALLTYPES"),   Is.EqualTo(new DB2Double(16.2d)));
 
-				Assert.That(TestType<string>       (conn, "charDataType",      DataType.Char),      Is.EqualTo("1"));
-				Assert.That(TestType<string>       (conn, "charDataType",      DataType.NChar),     Is.EqualTo("1"));
-				Assert.That(TestType<DB2String?>   (conn, "charDataType",      DataType.Char),      Is.EqualTo(new DB2String("1")));
-				Assert.That(TestType<string>       (conn, "varcharDataType",   DataType.VarChar),   Is.EqualTo("234"));
-				Assert.That(TestType<string>       (conn, "varcharDataType",   DataType.NVarChar),  Is.EqualTo("234"));
-				Assert.That(TestType<string>       (conn, "clobDataType",      DataType.Text),      Is.EqualTo("55645"));
-				Assert.That(TestType<string>       (conn, "dbclobDataType",    DataType.NText),     Is.EqualTo("6687"));
+				Assert.That(TestType<string>       (conn, "charDataType",      DataType.Char    , "ALLTYPES"),  Is.EqualTo("1"));
+				Assert.That(TestType<string>       (conn, "charDataType",      DataType.NChar   , "ALLTYPES"),  Is.EqualTo("1"));
+				Assert.That(TestType<DB2String?>   (conn, "charDataType",      DataType.Char    , "ALLTYPES"),  Is.EqualTo(new DB2String("1")));
+				Assert.That(TestType<string>       (conn, "varcharDataType",   DataType.VarChar , "ALLTYPES"),  Is.EqualTo("234"));
+				Assert.That(TestType<string>       (conn, "varcharDataType",   DataType.NVarChar, "ALLTYPES"),  Is.EqualTo("234"));
+				Assert.That(TestType<string>       (conn, "clobDataType",      DataType.Text    , "ALLTYPES"),  Is.EqualTo("55645"));
+				Assert.That(TestType<string>       (conn, "dbclobDataType",    DataType.NText   , "ALLTYPES"),  Is.EqualTo("6687"));
 
-				Assert.That(TestType<byte[]>       (conn, "binaryDataType",    DataType.Binary),    Is.EqualTo(new byte[] { 49, 50, 51, 32, 32 }));
-				Assert.That(TestType<byte[]>       (conn, "varbinaryDataType", DataType.VarBinary), Is.EqualTo(new byte[] { 49, 50, 51, 52 }));
-				Assert.That(TestType<byte[]>       (conn, "blobDataType",      DataType.Blob,      skipDefaultNull:true, skipUndefinedNull:true, skipDefault:true, skipUndefined:true), Is.EqualTo(new byte[] { 50, 51, 52 }));
-				Assert.That(TestType<byte[]>       (conn, "blobDataType",      DataType.VarBinary, skipDefaultNull:true, skipUndefinedNull:true, skipDefault:true, skipUndefined:true), Is.EqualTo(new byte[] { 50, 51, 52 }));
-				Assert.That(TestType<string>       (conn, "graphicDataType",   DataType.VarChar),   Is.EqualTo("23        "));
+				Assert.That(TestType<byte[]>       (conn, "binaryDataType",    DataType.Binary   , "ALLTYPES"), Is.EqualTo(new byte[] { 49, 50, 51, 32, 32 }));
+				Assert.That(TestType<byte[]>       (conn, "varbinaryDataType", DataType.VarBinary, "ALLTYPES"), Is.EqualTo(new byte[] { 49, 50, 51, 52 }));
+				Assert.That(TestType<byte[]>       (conn, "blobDataType",      DataType.Blob     , "ALLTYPES",  skipDefaultNull:true, skipUndefinedNull:true, skipDefault:true, skipUndefined:true), Is.EqualTo(new byte[] { 50, 51, 52 }));
+				Assert.That(TestType<byte[]>       (conn, "blobDataType",      DataType.VarBinary, "ALLTYPES",  skipDefaultNull:true, skipUndefinedNull:true, skipDefault:true, skipUndefined:true), Is.EqualTo(new byte[] { 50, 51, 52 }));
+				Assert.That(TestType<string>       (conn, "graphicDataType",   DataType.VarChar  , "ALLTYPES"), Is.EqualTo("23        "));
 
-				Assert.That(TestType<DateTime?>    (conn, "dateDataType",      DataType.Date),      Is.EqualTo(new DateTime(2012, 12, 12)));
-				Assert.That(TestType<DB2Date?>     (conn, "dateDataType",      DataType.Date),      Is.EqualTo(new DB2Date(new DateTime(2012, 12, 12))));
-				Assert.That(TestType<TimeSpan?>    (conn, "timeDataType",      DataType.Time),      Is.EqualTo(new TimeSpan(12, 12, 12)));
-				Assert.That(TestType<DB2Time?>     (conn, "timeDataType",      DataType.Time),      Is.EqualTo(new DB2Time(new TimeSpan(12, 12, 12))));
-				Assert.That(TestType<DateTime?>    (conn, "timestampDataType", DataType.DateTime2), Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 12)));
-				Assert.That(TestType<DB2TimeStamp?>(conn, "timestampDataType", DataType.DateTime2), Is.EqualTo(new DB2TimeStamp(new DateTime(2012, 12, 12, 12, 12, 12, 12))));
+				Assert.That(TestType<DateTime?>    (conn, "dateDataType",      DataType.Date     , "ALLTYPES"), Is.EqualTo(new DateTime(2012, 12, 12)));
+				Assert.That(TestType<DB2Date?>     (conn, "dateDataType",      DataType.Date     , "ALLTYPES"), Is.EqualTo(new DB2Date(new DateTime(2012, 12, 12))));
+				Assert.That(TestType<TimeSpan?>    (conn, "timeDataType",      DataType.Time     , "ALLTYPES"), Is.EqualTo(new TimeSpan(12, 12, 12)));
+				Assert.That(TestType<DB2Time?>     (conn, "timeDataType",      DataType.Time     , "ALLTYPES"), Is.EqualTo(new DB2Time(new TimeSpan(12, 12, 12))));
+				Assert.That(TestType<DateTime?>    (conn, "timestampDataType", DataType.DateTime2, "ALLTYPES"), Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 12)));
+				Assert.That(TestType<DB2TimeStamp?>(conn, "timestampDataType", DataType.DateTime2, "ALLTYPES"), Is.EqualTo(new DB2TimeStamp(new DateTime(2012, 12, 12, 12, 12, 12, 12))));
 
-				Assert.That(TestType<string>       (conn, "xmlDataType",       DataType.Xml, skipPass:true), Is.EqualTo("<root><element strattr=\"strvalue\" intattr=\"12345\"/></root>"));
+				Assert.That(TestType<string>       (conn, "xmlDataType",       DataType.Xml, "ALLTYPES", skipPass:true), Is.EqualTo("<root><element strattr=\"strvalue\" intattr=\"12345\"/></root>"));
 
 				Assert.That(conn.Execute<byte[]>("SELECT rowid FROM AllTypes WHERE ID = 2").Length, Is.Not.EqualTo(0));
 				//Assert.That(conn.Execute<DB2RowId>("SELECT rowid FROM AllTypes WHERE ID = 2").Value.Length, Is.Not.EqualTo(0));
 
-				            TestType<DB2Clob>      (conn, "clobDataType",      DataType.Text,      skipNotNull:true);
-				            TestType<DB2Blob>      (conn, "blobDataType",      DataType.VarBinary, skipNotNull:true);
-				            TestType<DB2Xml>       (conn, "xmlDataType",       DataType.Xml, skipPass:true);
+				            TestType<DB2Clob>      (conn, "clobDataType",      DataType.Text     , "ALLTYPES", skipNotNull:true);
+				            TestType<DB2Blob>      (conn, "blobDataType",      DataType.VarBinary, "ALLTYPES", skipNotNull:true);
+				            TestType<DB2Xml>       (conn, "xmlDataType",       DataType.Xml      , "ALLTYPES", skipPass:true);
 
-				Assert.That(TestType<DB2Decimal?>     (conn, "decimalDataType",   DataType.Decimal).  ToString(), Is.EqualTo(new DB2Decimal(9999999m).ToString()));
-				Assert.That(TestType<DB2Binary>       (conn, "varbinaryDataType", DataType.VarBinary).ToString(), Is.EqualTo(new DB2Binary(new byte[] { 49, 50, 51, 52 }).ToString()));
-				Assert.That(TestType<DB2DecimalFloat?>(conn, "decfloatDataType",  DataType.Decimal).  ToString(), Is.EqualTo(new DB2DecimalFloat(8888888m).ToString()));
+				Assert.That(TestType<DB2Decimal?>     (conn, "decimalDataType",   DataType.Decimal  , "ALLTYPES").ToString(), Is.EqualTo(new DB2Decimal(9999999m).ToString()));
+				Assert.That(TestType<DB2Binary>       (conn, "varbinaryDataType", DataType.VarBinary, "ALLTYPES").ToString(), Is.EqualTo(new DB2Binary(new byte[] { 49, 50, 51, 52 }).ToString()));
+				Assert.That(TestType<DB2DecimalFloat?>(conn, "decfloatDataType",  DataType.Decimal  , "ALLTYPES").ToString(), Is.EqualTo(new DB2DecimalFloat(8888888m).ToString()));
 			}
 		}
 
@@ -394,43 +395,92 @@ namespace Tests.DataProvider
 		{
 			using (var conn = new DataConnection(context))
 			{
-				//conn.BeginTransaction();
-				conn.BulkCopy(
-					new BulkCopyOptions
-					{
-						MaxBatchSize       = maxSize,
-						BulkCopyType       = bulkCopyType,
-						NotifyAfter        = 10000,
-						RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
-					},
-					Enumerable.Range(0, batchSize).Select(n =>
-						new ALLTYPE
+				try
+				{
+					conn.BulkCopy(
+						new BulkCopyOptions
 						{
-							ID                = 2000 + n,
-							BIGINTDATATYPE    = 3000 + n,
-							INTDATATYPE       = 4000 + n,
-							SMALLINTDATATYPE  = (short)(5000 + n),
-							DECIMALDATATYPE   = 6000 + n,
-							DECFLOATDATATYPE  = 7000 + n,
-							REALDATATYPE      = 8000 + n,
-							DOUBLEDATATYPE    = 9000 + n,
-							CHARDATATYPE      = 'A',
-							VARCHARDATATYPE   = "",
-							CLOBDATATYPE      = null,
-							DBCLOBDATATYPE    = null,
-							BINARYDATATYPE    = null,
-							VARBINARYDATATYPE = null,
-							BLOBDATATYPE      = new byte[] { 1, 2, 3 },
-							GRAPHICDATATYPE   = null,
-							DATEDATATYPE      = DateTime.Now,
-							TIMEDATATYPE      = null,
-							TIMESTAMPDATATYPE = null,
-							XMLDATATYPE       = null,
-						}));
+							MaxBatchSize       = maxSize,
+							BulkCopyType       = bulkCopyType,
+							NotifyAfter        = 10000,
+							RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
+						},
+						Enumerable.Range(0, batchSize).Select(n =>
+							new ALLTYPE
+							{
+								ID                = 2000 + n,
+								BIGINTDATATYPE    = 3000 + n,
+								INTDATATYPE       = 4000 + n,
+								SMALLINTDATATYPE  = (short)(5000 + n),
+								DECIMALDATATYPE   = 6000 + n,
+								DECFLOATDATATYPE  = 7000 + n,
+								REALDATATYPE      = 8000 + n,
+								DOUBLEDATATYPE    = 9000 + n,
+								CHARDATATYPE      = 'A',
+								VARCHARDATATYPE   = "",
+								CLOBDATATYPE      = null,
+								DBCLOBDATATYPE    = null,
+								BINARYDATATYPE    = null,
+								VARBINARYDATATYPE = null,
+								BLOBDATATYPE      = new byte[] { 1, 2, 3 },
+								GRAPHICDATATYPE   = null,
+								DATEDATATYPE      = DateTime.Now,
+								TIMEDATATYPE      = null,
+								TIMESTAMPDATATYPE = null,
+								XMLDATATYPE       = null,
+							}));
 
-				//var list = conn.GetTable<ALLTYPE>().ToList();
+				}
+				finally
+				{
+					conn.GetTable<ALLTYPE>().Delete(p => p.SMALLINTDATATYPE >= 5000);
+				}
+			}
+		}
 
-				conn.GetTable<ALLTYPE>().Delete(p => p.SMALLINTDATATYPE >= 5000);
+		async Task BulkCopyTestAsync(string context, BulkCopyType bulkCopyType, int maxSize, int batchSize)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				try
+				{
+					await conn.BulkCopyAsync(
+						new BulkCopyOptions
+						{
+							MaxBatchSize       = maxSize,
+							BulkCopyType       = bulkCopyType,
+							NotifyAfter        = 10000,
+							RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
+						},
+						Enumerable.Range(0, batchSize).Select(n =>
+							new ALLTYPE
+							{
+								ID                = 2000 + n,
+								BIGINTDATATYPE    = 3000 + n,
+								INTDATATYPE       = 4000 + n,
+								SMALLINTDATATYPE  = (short)(5000 + n),
+								DECIMALDATATYPE   = 6000 + n,
+								DECFLOATDATATYPE  = 7000 + n,
+								REALDATATYPE      = 8000 + n,
+								DOUBLEDATATYPE    = 9000 + n,
+								CHARDATATYPE      = 'A',
+								VARCHARDATATYPE   = "",
+								CLOBDATATYPE      = null,
+								DBCLOBDATATYPE    = null,
+								BINARYDATATYPE    = null,
+								VARBINARYDATATYPE = null,
+								BLOBDATATYPE      = new byte[] { 1, 2, 3 },
+								GRAPHICDATATYPE   = null,
+								DATEDATATYPE      = DateTime.Now,
+								TIMEDATATYPE      = null,
+								TIMESTAMPDATATYPE = null,
+								XMLDATATYPE       = null,
+							}));
+				}
+				finally
+				{
+					await conn.GetTable<ALLTYPE>().DeleteAsync(p => p.SMALLINTDATATYPE >= 5000);
+				}
 			}
 		}
 
@@ -443,9 +493,19 @@ namespace Tests.DataProvider
 		[Test]
 		public void BulkCopyProviderSpecific([IncludeDataSources(CurrentProvider)] string context)
 		{
-//			new IBM.Data.DB2.DB2BulkCopy("").NotifyAfter;
-
 			BulkCopyTest(context, BulkCopyType.ProviderSpecific, 50000, 100001);
+		}
+
+		[Test]
+		public async Task BulkCopyMultipleRowsAsync([IncludeDataSources(CurrentProvider)] string context)
+		{
+			await BulkCopyTestAsync(context, BulkCopyType.MultipleRows, 5000, 10001);
+		}
+
+		[Test]
+		public async Task BulkCopyProviderSpecificAsync([IncludeDataSources(CurrentProvider)] string context)
+		{
+			await BulkCopyTestAsync(context, BulkCopyType.ProviderSpecific, 50000, 100001);
 		}
 
 		[Test]
@@ -455,21 +515,57 @@ namespace Tests.DataProvider
 			{
 				using (var db = new DataConnection(context))
 				{
-					db.BulkCopy(
-						new BulkCopyOptions { BulkCopyType = bulkCopyType, },
-						Enumerable.Range(0, 10).Select(n =>
-							new LinqDataTypes
-							{
-								ID            = 4000 + n,
-								MoneyValue    = 1000m + n,
-								DateTimeValue = new DateTime(2001,  1,  11,  1, 11, 21, 100),
-								BoolValue     = true,
-								GuidValue     = Guid.NewGuid(),
-								SmallIntValue = (short)n
-							}
-						));
+					try
+					{
+						db.BulkCopy(
+							new BulkCopyOptions { BulkCopyType = bulkCopyType, },
+							Enumerable.Range(0, 10).Select(n =>
+								new LinqDataTypes
+								{
+									ID            = 4000 + n,
+									MoneyValue    = 1000m + n,
+									DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
+									BoolValue     = true,
+									GuidValue     = Guid.NewGuid(),
+									SmallIntValue = (short)n
+								}
+							));
+					}
+					finally
+					{
+						db.GetTable<LinqDataTypes>().Delete(p => p.ID >= 4000);
+					}
+				}
+			}
+		}
 
-					db.GetTable<LinqDataTypes>().Delete(p => p.ID >= 4000);
+		[Test]
+		public async Task BulkCopyLinqTypesAsync([IncludeDataSources(CurrentProvider)] string context)
+		{
+			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
+			{
+				using (var db = new DataConnection(context))
+				{
+					try
+					{
+						await db.BulkCopyAsync(
+							new BulkCopyOptions { BulkCopyType = bulkCopyType, },
+							Enumerable.Range(0, 10).Select(n =>
+								new LinqDataTypes
+								{
+									ID            = 4000 + n,
+									MoneyValue    = 1000m + n,
+									DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
+									BoolValue     = true,
+									GuidValue     = Guid.NewGuid(),
+									SmallIntValue = (short)n
+								}
+							));
+					}
+					finally
+					{
+						await db.GetTable<LinqDataTypes>().DeleteAsync(p => p.ID >= 4000);
+					}
 				}
 			}
 		}

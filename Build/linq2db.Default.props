@@ -31,4 +31,8 @@
 		<GenerateAssemblyFileVersionAttribute>true</GenerateAssemblyFileVersionAttribute>
 		<GenerateNeutralResourcesLanguageAttribute>false</GenerateNeutralResourcesLanguageAttribute>
 	</PropertyGroup>
+	
+	<PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.1' OR '$(TargetFramework)' == 'netcoreapp3.1'">
+		<DefineConstants>NETSTANDARD2_1PLUS;$(DefineConstants)</DefineConstants>
+	</PropertyGroup>
 </Project>

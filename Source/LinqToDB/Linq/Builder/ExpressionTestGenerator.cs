@@ -658,7 +658,7 @@ namespace {0}
 
 		string MangleName(string? name, string prefix)
 		{
-			name = name ?? ""; 
+			name ??= ""; 
 			if (!_mangleNames)
 				return name;
 

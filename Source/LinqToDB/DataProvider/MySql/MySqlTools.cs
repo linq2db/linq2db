@@ -46,8 +46,8 @@ namespace LinqToDB.DataProvider.MySql
 					if (css.Name.Contains("MySql"))
 						goto case ProviderName.MySql;
 					break;
-				case MySqlProviderAdapter.ClientNamespace:
-				case ProviderName.MySql                  :
+				case MySqlProviderAdapter.MySqlDataClientNamespace:
+				case ProviderName.MySql                           :
 					if (css.Name.Contains(MySqlProviderAdapter.MySqlConnectorAssemblyName))
 						return _mySqlConnectorDataProvider.Value;
 
@@ -70,21 +70,20 @@ namespace LinqToDB.DataProvider.MySql
 
 		public static IDataProvider GetDataProvider(string? providerName = null)
 		{
-			switch (providerName)
+			return providerName switch
 			{
-				case ProviderName.MySqlOfficial : return _mySqlDataProvider.Value;
-				case ProviderName.MySqlConnector: return _mySqlConnectorDataProvider.Value;
-			}
-
-			return DetectedProviderName == ProviderName.MySqlOfficial
-				? _mySqlDataProvider.Value
-				: _mySqlConnectorDataProvider.Value;
+				ProviderName.MySqlOfficial  => _mySqlDataProvider.Value,
+				ProviderName.MySqlConnector => _mySqlConnectorDataProvider.Value,
+				_                           => 
+					DetectedProviderName == ProviderName.MySqlOfficial
+					? _mySqlDataProvider.Value
+					: _mySqlConnectorDataProvider.Value,
+			};
 		}
 
-		static string? _detectedProviderName;
-
-		public static string  DetectedProviderName =>
-			_detectedProviderName ?? (_detectedProviderName = DetectProviderName());
+		private static string? _detectedProviderName;
+		public  static string  DetectedProviderName =>
+			_detectedProviderName ??= DetectProviderName();
 
 		static string DetectProviderName()
 		{
@@ -143,6 +142,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
 
+		[Obsolete("Please use the BulkCopy extension methods within DataConnectionExtensions")]
 		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
 			DataConnection               dataConnection,
 			IEnumerable<T>               source,

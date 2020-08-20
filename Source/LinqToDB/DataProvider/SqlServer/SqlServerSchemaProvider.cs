@@ -142,10 +142,10 @@ namespace LinqToDB.DataProvider.SqlServer
 					NUMERIC_SCALE                                                                                       as Scale,
 					''                                                                                                  as [Description],
 					COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsIdentity') as IsIdentity,
-					CASE WHEN c.DATA_TYPE = 'timestamp' 
+					CASE WHEN c.DATA_TYPE = 'timestamp'
 						OR COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsComputed') = 1
 						THEN 1 ELSE 0 END as SkipOnInsert,
-					CASE WHEN c.DATA_TYPE = 'timestamp' 
+					CASE WHEN c.DATA_TYPE = 'timestamp'
 						OR COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsComputed') = 1
 						THEN 1 ELSE 0 END as SkipOnUpdate
 				FROM
@@ -162,10 +162,10 @@ namespace LinqToDB.DataProvider.SqlServer
 					NUMERIC_SCALE                                                                                       as Scale,
 					ISNULL(CONVERT(varchar(8000), x.Value), '')                                                         as [Description],
 					COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsIdentity') as IsIdentity,
-					CASE WHEN c.DATA_TYPE = 'timestamp' 
+					CASE WHEN c.DATA_TYPE = 'timestamp'
 						OR COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsComputed') = 1
 						THEN 1 ELSE 0 END as SkipOnInsert,
-					CASE WHEN c.DATA_TYPE = 'timestamp' 
+					CASE WHEN c.DATA_TYPE = 'timestamp'
 						OR COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsComputed') = 1
 						THEN 1 ELSE 0 END as SkipOnUpdate
 				FROM
@@ -274,7 +274,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					SPECIFIC_NAME                                                                           as ProcedureName,
 					CASE WHEN ROUTINE_TYPE = 'FUNCTION'                         THEN 1 ELSE 0 END           as IsFunction,
 					CASE WHEN ROUTINE_TYPE = 'FUNCTION' AND DATA_TYPE = 'TABLE' THEN 1 ELSE 0 END           as IsTableFunction,
-					CASE WHEN EXISTS(SELECT * FROM sys.objects where name = SPECIFIC_NAME AND type='AF') 
+					CASE WHEN EXISTS(SELECT * FROM sys.objects where name = SPECIFIC_NAME AND type='AF')
 					                                                            THEN 1 ELSE 0 END           as IsAggregateFunction,
 					CASE WHEN SPECIFIC_SCHEMA = 'dbo'                           THEN 1 ELSE 0 END           as IsDefaultSchema
 				FROM
@@ -286,7 +286,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					SPECIFIC_NAME                                                                           as ProcedureName,
 					CASE WHEN ROUTINE_TYPE = 'FUNCTION'                         THEN 1 ELSE 0 END           as IsFunction,
 					CASE WHEN ROUTINE_TYPE = 'FUNCTION' AND DATA_TYPE = 'TABLE' THEN 1 ELSE 0 END           as IsTableFunction,
-					CASE WHEN EXISTS(SELECT * FROM sys.objects where name = SPECIFIC_NAME AND type='AF') 
+					CASE WHEN EXISTS(SELECT * FROM sys.objects where name = SPECIFIC_NAME AND type='AF')
 					                                                            THEN 1 ELSE 0 END           as IsAggregateFunction,
 					CASE WHEN SPECIFIC_SCHEMA = 'dbo'                           THEN 1 ELSE 0 END           as IsDefaultSchema
 				FROM
@@ -451,7 +451,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		protected override DataParameter BuildProcedureParameter(ParameterSchema p)
 		{
 			if (p.DataType == DataType.Structured)
-				return new DataParameter()
+				return new DataParameter
 				{
 					Name      = p.ParameterName,
 					DataType  = p.DataType,
@@ -477,6 +477,78 @@ namespace LinqToDB.DataProvider.SqlServer
 				sql = $"EXEC('{sql.Replace("'", "''")}')";
 
 			return sql;
+		}
+
+		protected override DataTable? GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters, GetSchemaOptions options)
+		{
+			switch (dataConnection.DataProvider.Name)
+			{
+				case ProviderName.SqlServer2000 :
+				case ProviderName.SqlServer2005 :
+				case ProviderName.SqlServer2008 :
+					return CallBase();
+			}
+
+			if (options.UseSchemaOnly || commandType == CommandType.Text)
+				return CallBase();
+
+			try
+			{
+				var tsql  = $"exec {commandText} {parameters.Select(p => p.Name).Aggregate("", (p1, p2) => $"{p1}, {p2}", p => p.TrimStart(',', ' '))}";
+				var parms = parameters.Select(p => $"{p.Name} {p.DbType}").Aggregate("", (p1, p2) => $"{p1}, {p2}", p => p.TrimStart(',', ' '));
+
+				var dt = new DataTable();
+
+				dt.Columns.AddRange(new[]
+				{
+					new DataColumn { ColumnName = "DataTypeName",     DataType = typeof(string) },
+					new DataColumn { ColumnName = "ColumnName",       DataType = typeof(string) },
+					new DataColumn { ColumnName = "AllowDBNull",      DataType = typeof(bool)   },
+					new DataColumn { ColumnName = "ColumnSize",       DataType = typeof(int)    },
+					new DataColumn { ColumnName = "NumericPrecision", DataType = typeof(int)    },
+					new DataColumn { ColumnName = "NumericScale",     DataType = typeof(int)    },
+					new DataColumn { ColumnName = "IsIdentity",       DataType = typeof(bool)   },
+				});
+
+				foreach (var item in dataConnection.QueryProc(new
+					{
+						name               = "",
+						is_nullable        = false,
+						system_type_name   = "",
+						max_length         = 0,
+						precision          = 0,
+						scale              = 0,
+						is_identity_column = false
+					},
+					"sp_describe_first_result_set",
+					new DataParameter("tsql", tsql),
+					new DataParameter("params", parms)
+					))
+				{
+					var row = dt.NewRow();
+
+					row["DataTypeName"]     = item.system_type_name.Split('(')[0];
+					row["ColumnName"]       = item.name ?? "";
+					row["AllowDBNull"]      = item.is_nullable;
+					row["ColumnSize"]       = item.system_type_name.Contains("nchar") || item.system_type_name.Contains("nvarchar") ? item.max_length / 2 : item.max_length;
+					row["NumericPrecision"] = item.precision;
+					row["NumericScale"]     = item.scale;
+					row["IsIdentity"]       = item.is_identity_column;
+
+					dt.Rows.Add(row);
+				}
+
+				return dt.Rows.Count == 0 ? null : dt;
+			}
+			catch
+			{
+				return CallBase();
+			}
+
+			DataTable? CallBase()
+			{
+				return base.GetProcedureSchema(dataConnection, commandText, commandType, parameters, options);
+			}
 		}
 	}
 }

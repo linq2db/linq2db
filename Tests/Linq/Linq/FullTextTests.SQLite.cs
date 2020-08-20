@@ -685,6 +685,32 @@ namespace Tests.Linq
 			}
 		}
 		#endregion
+
+		#region FTS shadow tables
+		[Table]
+		class FTS3_TABLE_segdir
+		{
+			[Column] public long    level;
+			[Column] public long    idx;
+			[Column] public long?   start_block;
+			[Column] public long?   leaves_end_block;
+			//[Column] public long?   end_block;
+			// from documentation:
+			// This field may contain either an integer or a text field consisting of two integers separated by a space character
+			[Column] public string?   end_block;
+			[Column] public byte[]? root;
+		}
+
+		[ActiveIssue(Configuration = TestProvName.AllSQLiteClassic, Details = "Make hybrid fields work for classic provider too")]
+		[Test]
+		public void Fts3SegDirTableQuery([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				db.GetTable<FTS3_TABLE_segdir>().ToList();
+			}
+		}
+		#endregion
 	}
 
 }

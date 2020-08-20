@@ -725,13 +725,13 @@ WHERE
 			[Association(QueryExpressionMethod = nameof(UsersWithLanguageExpression), Relationship = Relationship.OneToMany)]
 			public IQueryable<User> UsersWithLanguage(IDataContext db, int languageId)
 			{
-				return (_usersWithLanguageExpression = _usersWithLanguageExpression ?? UsersWithLanguageExpression().Compile())(this, db, languageId);
+				return (_usersWithLanguageExpression ??= UsersWithLanguageExpression().Compile())(this, db, languageId);
 			}
 			
 			[ExpressionMethod(nameof(UsersWithLanguageExpression))]
 			public IQueryable<User> UsersWithLanguageEM(IDataContext db, int languageId)
 			{
-				return (_usersWithLanguageExpression = _usersWithLanguageExpression ?? UsersWithLanguageExpression().Compile())(this, db, languageId);
+				return (_usersWithLanguageExpression ??= UsersWithLanguageExpression().Compile())(this, db, languageId);
 			}
 			
 			public static Expression<Func<UserGroup, IDataContext, int, IQueryable<User>>> UsersWithLanguageExpression()
@@ -744,8 +744,8 @@ WHERE
 			[Association(QueryExpressionMethod = nameof(UsersWithLanguageLikeExpression), Relationship = Relationship.OneToMany)]
 			public IQueryable<User> UsersWithLanguageLike(IDataContext db, string language)
 			{
-				return (_usersWithLanguageLikeExpression =
-						_usersWithLanguageLikeExpression ?? UsersWithLanguageLikeExpression().Compile()
+				return (_usersWithLanguageLikeExpression ??=
+UsersWithLanguageLikeExpression().Compile()
 					)(this, db, language);
 			}
 						
@@ -762,8 +762,7 @@ WHERE
 			[Association(QueryExpressionMethod = nameof(FirstUserWithMultipleParametersExpression), Relationship = Relationship.OneToOne, CanBeNull = true)]
 			public User FirstUserWithMultipleParameters(IDataContext db, int parameter1, string parameter2, decimal parameter3)
 			{
-				return (_firstUserWithMultipleParametersExpression =
-						_firstUserWithMultipleParametersExpression ??
+				return (_firstUserWithMultipleParametersExpression ??=
 						FirstUserWithMultipleParametersExpression().Compile()
 					)(this, db, parameter1, parameter2, parameter3).FirstOrDefault();
 			}
@@ -786,7 +785,7 @@ WHERE
 			[Association(QueryExpressionMethod = nameof(FirstUserWithLanguageExpression), Relationship = Relationship.OneToOne, CanBeNull = true)]
 			public User FirstUsersWithLanguage(IDataContext db, int languageId)
 			{
-				return (_firstUserWithLanguageExpression = _firstUserWithLanguageExpression ?? FirstUserWithLanguageExpression().Compile())(this, db, languageId).FirstOrDefault();
+				return (_firstUserWithLanguageExpression ??= FirstUserWithLanguageExpression().Compile())(this, db, languageId).FirstOrDefault();
 			}
 			
 			public static Expression<Func<UserGroup, IDataContext, int, IQueryable<User>>> FirstUserWithLanguageExpression()

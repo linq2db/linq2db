@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace LinqToDB.SqlProvider
 {
@@ -129,5 +129,10 @@ namespace LinqToDB.SqlProvider
 		///   OleDbException -> OleDbException.Errors[0].Message
 		/// </summary>
 		ExceptionToErrorMessage,
+
+		/// <summary>
+		/// Provided name should be converted to sequence name.
+		/// </summary>
+		SequenceName,
 	}
 }

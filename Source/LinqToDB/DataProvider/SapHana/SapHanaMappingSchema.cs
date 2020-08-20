@@ -42,7 +42,7 @@
 			stringBuilder.Append("'");
 		}
 
-		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
+		internal static void ConvertStringToSql(StringBuilder stringBuilder, string value)
 		{
 			DataTools.ConvertStringToSql(stringBuilder, "||", null, AppendConversion, value, null);
 		}
@@ -54,7 +54,7 @@
 
 		internal static readonly SapHanaMappingSchema Instance = new SapHanaMappingSchema();
 
-#if !NETSTANDARD2_0 && !NETSTANDARD2_1
+#if NETFRAMEWORK || NETCOREAPP
 		public class NativeMappingSchema : MappingSchema
 		{
 			public NativeMappingSchema()

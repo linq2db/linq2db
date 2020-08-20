@@ -5,6 +5,8 @@ namespace LinqToDB.DataProvider.MySql
 {
 	using System.Collections.Generic;
 	using System.Linq.Expressions;
+	using System.Threading;
+	using System.Threading.Tasks;
 	using LinqToDB.Expressions;
 	using LinqToDB.Mapping;
 
@@ -16,12 +18,13 @@ namespace LinqToDB.DataProvider.MySql
 		private static MySqlProviderAdapter? _mysqlDataInstance;
 		private static MySqlProviderAdapter? _mysqlConnectorInstance;
 
-		public const string MySqlConnectorAssemblyName    = "MySqlConnector";
-		public const string MySqlDataAssemblyName         = "MySql.Data";
+		public const string MySqlConnectorAssemblyName = "MySqlConnector";
+		public const string MySqlDataAssemblyName      = "MySql.Data";
 
-		// shared by both providers
-		public const string ClientNamespace = "MySql.Data.MySqlClient";
-		public const string TypesNamespace  = "MySql.Data.Types";
+		public const string MySqlDataClientNamespace = "MySql.Data.MySqlClient";
+		public const string MySqlDataTypesNamespace  = "MySql.Data.Types";
+
+		public const string MySqlConnectorNamespace = "MySqlConnector";
 
 		internal enum MySqlProvider
 		{
@@ -50,6 +53,7 @@ namespace LinqToDB.DataProvider.MySql
 			string? getDateTimeOffsetMethodName,
 			string  getMySqlDateTimeMethodName,
 
+			string  providerTypesNamespace,
 			MappingSchema    mappingSchema,
 			BulkCopyAdapter? bulkCopy)
 		{
@@ -72,6 +76,7 @@ namespace LinqToDB.DataProvider.MySql
 			GetMySqlDecimalMethodName   = getMySqlDecimalMethodName;
 			GetDateTimeOffsetMethodName = getDateTimeOffsetMethodName;
 			GetMySqlDateTimeMethodName  = getMySqlDateTimeMethodName;
+			ProviderTypesNamespace      = providerTypesNamespace;
 
 			MappingSchema = mappingSchema;
 			BulkCopy      = bulkCopy;
@@ -111,7 +116,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		public string GetMySqlDateTimeMethodName   { get; }
 
-		public string ProviderTypesNamespace => TypesNamespace;
+		public string ProviderTypesNamespace       { get; }
 
 		/// <summary>
 		/// Returns object, because both providers use different enums and we anyway don't need typed value.
@@ -164,15 +169,15 @@ namespace LinqToDB.DataProvider.MySql
 				if (assembly == null)
 					throw new InvalidOperationException($"Cannot load assembly {MySqlDataAssemblyName}");
 
-				var connectionType    = assembly.GetType($"{ClientNamespace}.MySqlConnection" , true)!;
-				var dataReaderType    = assembly.GetType($"{ClientNamespace}.MySqlDataReader" , true)!;
-				var parameterType     = assembly.GetType($"{ClientNamespace}.MySqlParameter"  , true)!;
-				var commandType       = assembly.GetType($"{ClientNamespace}.MySqlCommand"    , true)!;
-				var transactionType   = assembly.GetType($"{ClientNamespace}.MySqlTransaction", true)!;
-				var dbType            = assembly.GetType($"{ClientNamespace}.MySqlDbType"     , true)!;
-				var mySqlDecimalType  = assembly.GetType($"{TypesNamespace}.MySqlDecimal"     , true)!;
-				var mySqlDateTimeType = assembly.GetType($"{TypesNamespace}.MySqlDateTime"    , true)!;
-				var mySqlGeometryType = assembly.GetType($"{TypesNamespace}.MySqlGeometry"    , true)!;
+				var connectionType    = assembly.GetType($"{MySqlDataClientNamespace}.MySqlConnection" , true)!;
+				var dataReaderType    = assembly.GetType($"{MySqlDataClientNamespace}.MySqlDataReader" , true)!;
+				var parameterType     = assembly.GetType($"{MySqlDataClientNamespace}.MySqlParameter"  , true)!;
+				var commandType       = assembly.GetType($"{MySqlDataClientNamespace}.MySqlCommand"    , true)!;
+				var transactionType   = assembly.GetType($"{MySqlDataClientNamespace}.MySqlTransaction", true)!;
+				var dbType            = assembly.GetType($"{MySqlDataClientNamespace}.MySqlDbType"     , true)!;
+				var mySqlDecimalType  = assembly.GetType($"{MySqlDataTypesNamespace}.MySqlDecimal"     , true)!;
+				var mySqlDateTimeType = assembly.GetType($"{MySqlDataTypesNamespace}.MySqlDateTime"    , true)!;
+				var mySqlGeometryType = assembly.GetType($"{MySqlDataTypesNamespace}.MySqlGeometry"    , true)!;
 
 				var typeMapper = new TypeMapper();
 				typeMapper.RegisterTypeWrapper<MySqlParameter>(parameterType);
@@ -204,6 +209,7 @@ namespace LinqToDB.DataProvider.MySql
 					"GetMySqlDecimal",
 					null,
 					"GetMySqlDateTime",
+					MySqlDataTypesNamespace,
 					mappingSchema,
 					null);
 			}
@@ -274,22 +280,20 @@ namespace LinqToDB.DataProvider.MySql
 
 		internal class MySqlConnector
 		{
-			private static readonly Version MinBulkCopyVersion = new Version(0, 67);
-
 			internal static MySqlProviderAdapter CreateAdapter()
 			{
 				var assembly = Common.Tools.TryLoadAssembly(MySqlConnectorAssemblyName, null);
 				if (assembly == null)
 					throw new InvalidOperationException($"Cannot load assembly {MySqlConnectorAssemblyName}");
 
-				var connectionType    = assembly.GetType($"{ClientNamespace}.MySqlConnection" , true)!;
-				var dataReaderType    = assembly.GetType($"{ClientNamespace}.MySqlDataReader" , true)!;
-				var parameterType     = assembly.GetType($"{ClientNamespace}.MySqlParameter"  , true)!;
-				var commandType       = assembly.GetType($"{ClientNamespace}.MySqlCommand"    , true)!;
-				var transactionType   = assembly.GetType($"{ClientNamespace}.MySqlTransaction", true)!;
-				var dbType            = assembly.GetType($"{ClientNamespace}.MySqlDbType"     , true)!;
-				var mySqlDateTimeType = assembly.GetType($"{TypesNamespace}.MySqlDateTime"    , true)!;
-				var mySqlGeometryType = assembly.GetType($"{TypesNamespace}.MySqlGeometry"    , true)!;
+				var connectionType    = assembly.GetType($"{MySqlConnectorNamespace}.MySqlConnection" , true)!;
+				var dataReaderType    = assembly.GetType($"{MySqlConnectorNamespace}.MySqlDataReader" , true)!;
+				var parameterType     = assembly.GetType($"{MySqlConnectorNamespace}.MySqlParameter"  , true)!;
+				var commandType       = assembly.GetType($"{MySqlConnectorNamespace}.MySqlCommand"    , true)!;
+				var transactionType   = assembly.GetType($"{MySqlConnectorNamespace}.MySqlTransaction", true)!;
+				var dbType            = assembly.GetType($"{MySqlConnectorNamespace}.MySqlDbType"     , true)!;
+				var mySqlDateTimeType = assembly.GetType($"{MySqlConnectorNamespace}.MySqlDateTime"    , true)!;
+				var mySqlGeometryType = assembly.GetType($"{MySqlConnectorNamespace}.MySqlGeometry"    , true)!;
 
 				var typeMapper = new TypeMapper();
 				typeMapper.RegisterTypeWrapper<MySqlParameter>(parameterType);
@@ -299,27 +303,20 @@ namespace LinqToDB.DataProvider.MySql
 				typeMapper.RegisterTypeWrapper<MySqlConnection >(connectionType);
 				typeMapper.RegisterTypeWrapper<MySqlTransaction>(transactionType);
 
-				BulkCopyAdapter? bulkCopy = null;
+				var bulkCopyType                   = assembly.GetType($"{MySqlConnectorNamespace}.MySqlBulkCopy", true)!;
+				var bulkRowsCopiedEventHandlerType = assembly.GetType($"{MySqlConnectorNamespace}.MySqlRowsCopiedEventHandler", true)!;
+				var bulkCopyColumnMappingType      = assembly.GetType($"{MySqlConnectorNamespace}.MySqlBulkCopyColumnMapping" , true)!;
+				var rowsCopiedEventArgsType        = assembly.GetType($"{MySqlConnectorNamespace}.MySqlRowsCopiedEventArgs"   , true)!;
 
-				if (assembly.GetName().Version >= MinBulkCopyVersion)
-				{
-					var bulkCopyType                   = assembly.GetType($"{ClientNamespace}.MySqlBulkCopy", true)!;
-					var bulkRowsCopiedEventHandlerType = assembly.GetType($"{ClientNamespace}.MySqlRowsCopiedEventHandler", true)!;
-					var bulkCopyColumnMappingType      = assembly.GetType($"{ClientNamespace}.MySqlBulkCopyColumnMapping" , true)!;
-					var rowsCopiedEventArgsType        = assembly.GetType($"{ClientNamespace}.MySqlRowsCopiedEventArgs"   , true)!;
+				typeMapper.RegisterTypeWrapper<MySqlBulkCopy              >(bulkCopyType!);
+				typeMapper.RegisterTypeWrapper<MySqlRowsCopiedEventHandler>(bulkRowsCopiedEventHandlerType);
+				typeMapper.RegisterTypeWrapper<MySqlBulkCopyColumnMapping >(bulkCopyColumnMappingType);
+				typeMapper.RegisterTypeWrapper<MySqlRowsCopiedEventArgs   >(rowsCopiedEventArgsType);
+				typeMapper.FinalizeMappings();
 
-					typeMapper.RegisterTypeWrapper<MySqlBulkCopy              >(bulkCopyType!);
-					typeMapper.RegisterTypeWrapper<MySqlRowsCopiedEventHandler>(bulkRowsCopiedEventHandlerType);
-					typeMapper.RegisterTypeWrapper<MySqlBulkCopyColumnMapping >(bulkCopyColumnMappingType);
-					typeMapper.RegisterTypeWrapper<MySqlRowsCopiedEventArgs   >(rowsCopiedEventArgsType);
-					typeMapper.FinalizeMappings();
-
-					bulkCopy = new BulkCopyAdapter(
-						typeMapper.BuildWrappedFactory((IDbConnection connection, IDbTransaction? transaction) => new MySqlBulkCopy((MySqlConnection)connection, (MySqlTransaction?)transaction)),
-						typeMapper.BuildWrappedFactory((int source, string destination) => new MySqlBulkCopyColumnMapping(source, destination, null)));
-				}
-				else
-					typeMapper.FinalizeMappings();
+				var bulkCopy = new BulkCopyAdapter(
+					typeMapper.BuildWrappedFactory((IDbConnection connection, IDbTransaction? transaction) => new MySqlBulkCopy((MySqlConnection)connection, (MySqlTransaction?)transaction)),
+					typeMapper.BuildWrappedFactory((int source, string destination) => new MySqlBulkCopyColumnMapping(source, destination, null)));
 
 
 				var typeGetter        = typeMapper.Type<MySqlParameter>().Member(p => p.MySqlDbType).BuildGetter<IDbDataParameter>();
@@ -344,6 +341,7 @@ namespace LinqToDB.DataProvider.MySql
 					null,
 					"GetDateTimeOffset",
 					"GetMySqlDateTime",
+					MySqlConnectorNamespace,
 					mappingSchema,
 					bulkCopy);
 			}
@@ -422,8 +420,8 @@ namespace LinqToDB.DataProvider.MySql
 			[Wrapper]
 			internal class MySqlBulkCopy : TypeWrapper
 			{
-				private static LambdaExpression[] Wrappers { get; }
-					= new LambdaExpression[]
+				private static object[] Wrappers { get; }
+					= new object[]
 				{
 					// [0]: WriteToServer
 					(Expression<Action<MySqlBulkCopy, IDataReader>>               )((MySqlBulkCopy this_, IDataReader            dataReader) => this_.WriteToServer(dataReader)),
@@ -441,6 +439,14 @@ namespace LinqToDB.DataProvider.MySql
 					PropertySetter((MySqlBulkCopy this_) => this_.BulkCopyTimeout),
 					// [7]: set DestinationTableName
 					PropertySetter((MySqlBulkCopy this_) => this_.DestinationTableName),
+					// [8]: WriteToServerAsync
+					new Tuple<LambdaExpression, bool>
+					((Expression<Func<MySqlBulkCopy, IDataReader, CancellationToken, Task>>     )((MySqlBulkCopy this_, IDataReader dataReader, CancellationToken cancellationToken) => this_.WriteToServerAsync (dataReader, cancellationToken)), true),
+#if !NETFRAMEWORK
+					// [9]: WriteToServerAsync
+					new Tuple<LambdaExpression, bool>
+					((Expression<Func<MySqlBulkCopy, IDataReader, CancellationToken, ValueTask>>)((MySqlBulkCopy this_, IDataReader dataReader, CancellationToken cancellationToken) => this_.WriteToServerAsync2(dataReader, cancellationToken)), true),
+#endif
 				};
 
 				private static string[] Events { get; }
@@ -456,6 +462,13 @@ namespace LinqToDB.DataProvider.MySql
 				public MySqlBulkCopy(MySqlConnection connection, MySqlTransaction? transaction) => throw new NotImplementedException();
 
 				public void WriteToServer(IDataReader dataReader) => ((Action<MySqlBulkCopy, IDataReader>)CompiledWrappers[0])(this, dataReader);
+				public Task WriteToServerAsync      (IDataReader dataReader, CancellationToken cancellationToken) => ((Func<MySqlBulkCopy, IDataReader, CancellationToken,      Task>)CompiledWrappers[8])(this, dataReader, cancellationToken);
+				public bool CanWriteToServerAsync => CompiledWrappers[8] != null;
+#if !NETFRAMEWORK
+				[TypeWrapperName("WriteToServerAsync")]
+				public ValueTask WriteToServerAsync2(IDataReader dataReader, CancellationToken cancellationToken) => ((Func<MySqlBulkCopy, IDataReader, CancellationToken, ValueTask>)CompiledWrappers[9])(this, dataReader, cancellationToken);
+				public bool CanWriteToServerAsync2 => CompiledWrappers[9] != null;
+#endif
 
 				public int NotifyAfter
 				{

@@ -12,7 +12,7 @@ namespace LinqToDB
 	using Data;
 	using DataProvider;
 	using Linq;
-	using LinqToDB.Async;
+	using Async;
 	using Mapping;
 	using SqlProvider;
 
@@ -160,7 +160,7 @@ namespace LinqToDB
 				if (_dataConnection != null)
 					return _dataConnection.QueryHints;
 
-				return _queryHints ?? (_queryHints = new List<string>());
+				return _queryHints ??= new List<string>();
 			}
 		}
 
@@ -175,7 +175,7 @@ namespace LinqToDB
 				if (_dataConnection != null)
 					return _dataConnection.NextQueryHints;
 
-				return _nextQueryHints ?? (_nextQueryHints = new List<string>());
+				return _nextQueryHints ??= new List<string>();
 			}
 		}
 

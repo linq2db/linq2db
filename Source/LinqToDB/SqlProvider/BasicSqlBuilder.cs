@@ -44,14 +44,13 @@ namespace LinqToDB.SqlProvider
 		{
 			foreach (var parameter in parameters)
 			{
-				if (!ActualParameters.Contains(parameter))
-					ActualParameters.Add(parameter);
+				AddParameter(parameter);
 			}
 		}
 
 		protected void AddParameter(SqlParameter parameter)
 		{
-			if (!ActualParameters.Contains(parameter))
+			if (SqlProviderFlags.IsParameterOrderDependent || !ActualParameters.Contains(parameter))
 				ActualParameters.Add(parameter);
 		}
 
@@ -1957,13 +1956,12 @@ namespace LinqToDB.SqlProvider
 
 		static SqlField GetUnderlayingField(ISqlExpression expr)
 		{
-			switch (expr.ElementType)
+			return expr.ElementType switch
 			{
-				case QueryElementType.SqlField: return (SqlField)expr;
-				case QueryElementType.Column  : return GetUnderlayingField(((SqlColumn)expr).Expression);
-			}
-
-			throw new InvalidOperationException();
+				QueryElementType.SqlField => (SqlField)expr,
+				QueryElementType.Column	  => GetUnderlayingField(((SqlColumn)expr).Expression),
+				_                         => throw new InvalidOperationException(),
+			};
 		}
 
 		void BuildInListPredicate(ISqlPredicate predicate)
@@ -2224,7 +2222,7 @@ namespace LinqToDB.SqlProvider
 		{
 			// TODO: check the necessity.
 			//
-			expr = SqlOptimizer.ConvertExpression(expr);
+			expr = SqlOptimizer.ConvertExpression(expr, Statement.IsParameterDependent);
 
 			switch (expr.ElementType)
 			{
@@ -2377,14 +2375,17 @@ namespace LinqToDB.SqlProvider
 					{
 						var parm = (SqlParameter)expr;
 
-						if (parm.IsQueryParameter)
+						var inlining = !parm.IsQueryParameter;
+						if (inlining)
+						{
+							if (!MappingSchema.ValueToSqlConverter.TryConvert(StringBuilder, new SqlDataType(parm.Type), parm.Value))
+								inlining = false;
+						}
+
+						if (!inlining)
 						{
 							Convert(StringBuilder, parm.Name!, ConvertType.NameToQueryParameter);
 							AddParameter(parm);
-						}
-						else
-						{
-							BuildValue(new SqlDataType(parm.Type), parm.Value);
 						}
 					}
 
@@ -2856,24 +2857,22 @@ namespace LinqToDB.SqlProvider
 
 		protected static bool IsDateDataType(ISqlExpression expr, string dateName)
 		{
-			switch (expr.ElementType)
+			return expr.ElementType switch
 			{
-				case QueryElementType.SqlDataType  : return ((SqlDataType)expr).Type.DataType == DataType.Date;
-				case QueryElementType.SqlExpression: return ((SqlExpression)expr).Expr     == dateName;
-			}
-
-			return false;
+				QueryElementType.SqlDataType   => ((SqlDataType)expr).Type.DataType == DataType.Date,
+				QueryElementType.SqlExpression => ((SqlExpression)expr).Expr == dateName,
+				_                              => false,
+			};
 		}
 
 		protected static bool IsTimeDataType(ISqlExpression expr)
 		{
-			switch (expr.ElementType)
+			return expr.ElementType switch
 			{
-				case QueryElementType.SqlDataType  : return ((SqlDataType)expr).Type.DataType == DataType.Time;
-				case QueryElementType.SqlExpression: return ((SqlExpression)expr).Expr     == "Time";
-			}
-
-			return false;
+				QueryElementType.SqlDataType   => ((SqlDataType)expr).Type.DataType == DataType.Time,
+				QueryElementType.SqlExpression => ((SqlExpression)expr).Expr == "Time",
+				_                              => false,
+			};
 		}
 
 		static bool IsBooleanParameter(ISqlExpression expr, int count, int i)
@@ -2889,7 +2888,7 @@ namespace LinqToDB.SqlProvider
 			return false;
 		}
 
-		protected SqlFunction ConvertFunctionParameters(SqlFunction func)
+		protected SqlFunction ConvertFunctionParameters(SqlFunction func, bool withParameters = false)
 		{
 			if (func.Name == "CASE" &&
 				func.Parameters.Select((p, i) => new { p, i }).Any(p => IsBooleanParameter(p.p, func.Parameters.Length, p.i)))
@@ -2901,7 +2900,7 @@ namespace LinqToDB.SqlProvider
 					func.Precedence,
 					func.Parameters.Select((p, i) =>
 						IsBooleanParameter(p, func.Parameters.Length, i) ?
-							SqlOptimizer.ConvertExpression(new SqlFunction(typeof(bool), "CASE", p, new SqlValue(true), new SqlValue(false))) :
+							SqlOptimizer.ConvertExpression(new SqlFunction(typeof(bool), "CASE", p, new SqlValue(true), new SqlValue(false)), withParameters) :
 							p
 					).ToArray());
 			}
@@ -3123,7 +3122,7 @@ namespace LinqToDB.SqlProvider
 
 		ISqlExpression Add(ISqlExpression expr1, ISqlExpression expr2, Type type)
 		{
-			return SqlOptimizer.ConvertExpression(new SqlBinaryExpression(type, expr1, "+", expr2, Precedence.Additive));
+			return SqlOptimizer.ConvertExpression(new SqlBinaryExpression(type, expr1, "+", expr2, Precedence.Additive), false);
 		}
 
 		protected ISqlExpression Add<T>(ISqlExpression expr1, ISqlExpression expr2)
@@ -3164,17 +3163,16 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual string? GetProviderTypeName(IDbDataParameter parameter)
 		{
-			switch (parameter.DbType)
+			return parameter.DbType switch
 			{
-				case DbType.AnsiString           : return "VarChar";
-				case DbType.AnsiStringFixedLength: return "Char";
-				case DbType.String               : return "NVarChar";
-				case DbType.StringFixedLength    : return "NChar";
-				case DbType.Decimal              : return "Decimal";
-				case DbType.Binary               : return "Binary";
-			}
-
-			return null;
+				DbType.AnsiString            => "VarChar",
+				DbType.AnsiStringFixedLength => "Char",
+				DbType.String                => "NVarChar",
+				DbType.StringFixedLength     => "NChar",
+				DbType.Decimal               => "Decimal",
+				DbType.Binary                => "Binary",
+				_                            => null,
+			};
 		}
 
 		protected virtual void PrintParameterType(StringBuilder sb, IDbDataParameter parameter)
@@ -3316,7 +3314,7 @@ namespace LinqToDB.SqlProvider
 
 		private string? _name;
 
-		public virtual string Name => _name ?? (_name = GetType().Name.Replace("SqlBuilder", ""));
+		public virtual string Name => _name ??= GetType().Name.Replace("SqlBuilder", "");
 
 		#endregion
 	}

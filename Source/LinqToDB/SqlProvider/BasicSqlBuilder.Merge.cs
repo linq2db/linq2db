@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 namespace LinqToDB.SqlProvider
 {
+	using LinqToDB.Common;
 	using SqlQuery;
 
 	public abstract partial class BasicSqlBuilder : ISqlBuilder
@@ -207,15 +208,15 @@ namespace LinqToDB.SqlProvider
 
 		private void BuildMergeSourceEnumerable(SqlMergeStatement merge)
 		{
-
-			if (merge.Source.SourceEnumerable!.Rows.Count > 0)
+			var rows = merge.Source.SourceEnumerable!.Rows!;
+			if (rows.Count > 0)
 			{
 				StringBuilder.Append("(");
 
 				if (MergeSupportsSourceDirectValues)
-					BuildValues(merge.Source);
+					BuildValues(merge.Source.SourceEnumerable, rows);
 				else
-					BuildValuesAsSelectsUnion(merge.Source.SourceFields, merge.Source.SourceEnumerable);
+					BuildValuesAsSelectsUnion(merge.Source.SourceFields, merge.Source.SourceEnumerable, rows);
 
 				StringBuilder.Append(")");
 			}
@@ -230,19 +231,20 @@ namespace LinqToDB.SqlProvider
 		/// <summary>
 		/// Checks that value in specific row and column in enumerable source requires type information generation.
 		/// </summary>
-		/// <param name="sourceEnumerable">Merge source data.</param>
+		/// <param name="source">Merge source table.</param>
+		/// <param name="rows">Merge source data.</param>
 		/// <param name="row">Index of data row to check. Could contain -1 to indicate that this is a check for empty source NULL value.</param>
 		/// <param name="column">Index of data column to check in row.</param>
 		/// <returns>Returns <c>true</c>, if generated SQL should include type information for value at specified position, otherwise <c>false</c> returned.</returns>
-		protected virtual bool MergeSourceValueTypeRequired(SqlValuesTable sourceEnumerable, int row, int column) => false;
+		protected virtual bool MergeSourceValueTypeRequired(SqlValuesTable source, IReadOnlyList<ISqlExpression[]> rows, int row, int column) => false;
 
-		private void BuildValuesAsSelectsUnion(IList<SqlField> sourceFields, SqlValuesTable sourceEnumerable)
+		private void BuildValuesAsSelectsUnion(IList<SqlField> sourceFields, SqlValuesTable source, IReadOnlyList<ISqlExpression[]> rows)
 		{
 			var columnTypes = new SqlDataType[sourceFields.Count];
 			for (var i = 0; i < sourceFields.Count; i++)
 				columnTypes[i] = new SqlDataType(sourceFields[i]);
 
-			for (var i = 0; i < sourceEnumerable.Rows.Count; i++)
+			for (var i = 0; i < rows.Count; i++)
 			{
 				if (i > 0)
 					StringBuilder
@@ -252,14 +254,14 @@ namespace LinqToDB.SqlProvider
 				// build record select
 				StringBuilder.Append("\tSELECT ");
 
-				var row = sourceEnumerable.Rows[i];
-				for (var j = 0; j < row.Count; j++)
+				var row = rows[i];
+				for (var j = 0; j < row.Length; j++)
 				{
 					var value = row[j];
 					if (j > 0)
 						StringBuilder.Append(",");
 
-					if (MergeSourceValueTypeRequired(sourceEnumerable, i, j))
+					if (MergeSourceValueTypeRequired(source, rows, i, j))
 						BuildTypedExpression(columnTypes[j], value);
 					else
 						BuildExpression(value);
@@ -294,7 +296,7 @@ namespace LinqToDB.SqlProvider
 				if (i > 0)
 					StringBuilder.Append(", ");
 
-				if (MergeSourceValueTypeRequired(merge.Source.SourceEnumerable!, -1, i))
+				if (MergeSourceValueTypeRequired(merge.Source.SourceEnumerable!, Array<ISqlExpression[]>.Empty, -1, i))
 					BuildTypedExpression(new SqlDataType(field), new SqlValue(field.Type!.Value, null));
 				else
 					BuildExpression(new SqlValue(field.Type!.Value, null));
@@ -328,15 +330,15 @@ namespace LinqToDB.SqlProvider
 			return true;
 		}
 
-		private void BuildValues(SqlMergeSourceTable mergeSource)
+		private void BuildValues(SqlValuesTable source, IReadOnlyList<ISqlExpression[]> rows)
 		{
-			var columnTypes = new SqlDataType[mergeSource.SourceFields.Count];
-			for (var i = 0; i < mergeSource.SourceFields.Count; i++)
-				columnTypes[i] = new SqlDataType(mergeSource.SourceFields[i]);
+			var columnTypes = new SqlDataType[source.Fields.Count];
+			for (var i = 0; i < source.Fields.Count; i++)
+				columnTypes[i] = new SqlDataType(source.Fields[i]);
 
-			for (var i = 0; i < mergeSource.SourceEnumerable!.Rows.Count; i++)
+			for (var i = 0; i < rows.Count; i++)
 			{
-				var row = mergeSource.SourceEnumerable.Rows[i];
+				var row = rows[i];
 
 				if (i != 0)
 					StringBuilder.AppendLine(",");
@@ -344,13 +346,13 @@ namespace LinqToDB.SqlProvider
 					StringBuilder.AppendLine("\tVALUES");
 
 				StringBuilder.Append("\t\t(");
-				for (var j = 0; j < row.Count; j++)
+				for (var j = 0; j < row.Length; j++)
 				{
 					var value = row[j];
 					if (j > 0)
 						StringBuilder.Append(",");
 
-					if (MergeSourceValueTypeRequired(mergeSource.SourceEnumerable, i, j))
+					if (MergeSourceValueTypeRequired(source, rows, i, j))
 						BuildTypedExpression(columnTypes[j], value);
 					else
 						BuildExpression(value);

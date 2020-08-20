@@ -19,38 +19,34 @@
 
 		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
-			switch (statement.QueryType)
+			return statement.QueryType switch
 			{
-				case QueryType.Delete : return GetAlternativeDelete((SqlDeleteStatement)statement);
-				case QueryType.Update : return GetAlternativeUpdateFrom((SqlUpdateStatement)statement);
-				default               : return statement;
-			}
+				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement),
+				QueryType.Update => GetAlternativeUpdateFrom((SqlUpdateStatement)statement),
+				_                => statement,
+			};
 		}
 
-		public override ISqlExpression ConvertExpression(ISqlExpression expr)
+		public override ISqlExpression ConvertExpression(ISqlExpression expr, bool withParameters)
 		{
-			expr = base.ConvertExpression(expr);
+			expr = base.ConvertExpression(expr, withParameters);
 
-			if (expr is SqlBinaryExpression)
+			if (expr is SqlBinaryExpression be)
 			{
-				var be = (SqlBinaryExpression)expr;
-
 				switch (be.Operation)
 				{
 					case "^": return new SqlBinaryExpression(be.SystemType, be.Expr1, "#", be.Expr2);
-					case "+": return be.SystemType == typeof(string)? new SqlBinaryExpression(be.SystemType, be.Expr1, "||", be.Expr2, be.Precedence): expr;
+					case "+": return be.SystemType == typeof(string) ? new SqlBinaryExpression(be.SystemType, be.Expr1, "||", be.Expr2, be.Precedence) : expr;
 				}
 			}
-			else if (expr is SqlFunction)
+			else if (expr is SqlFunction func)
 			{
-				var func = (SqlFunction) expr;
-
 				switch (func.Name)
 				{
 					case "Convert"   :
 						if (func.SystemType.ToUnderlying() == typeof(bool))
 						{
-							var ex = AlternativeConvertToBoolean(func, 1);
+							var ex = AlternativeConvertToBoolean(func, 1, withParameters);
 							if (ex != null)
 								return ex;
 						}
@@ -61,14 +57,19 @@
 						return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary, FloorBeforeConvert(func), func.Parameters[0]);
 
 					case "CharIndex" :
-						return func.Parameters.Length == 2?
-							new SqlExpression(func.SystemType, "Position({0} in {1})", Precedence.Primary, func.Parameters[0], func.Parameters[1]):
-							Add<int>(
-								new SqlExpression(func.SystemType, "Position({0} in {1})", Precedence.Primary, func.Parameters[0],
+						return func.Parameters.Length == 2
+							? new SqlExpression(func.SystemType, "Position({0} in {1})", Precedence.Primary,
+								func.Parameters[0], func.Parameters[1])
+							: Add<int>(
+								new SqlExpression(func.SystemType, "Position({0} in {1})", Precedence.Primary,
+									func.Parameters[0],
 									ConvertExpression(new SqlFunction(typeof(string), "Substring",
 										func.Parameters[1],
 										func.Parameters[2],
-										Sub<int>(ConvertExpression(new SqlFunction(typeof(int), "Length", func.Parameters[1])), func.Parameters[2])))),
+										Sub<int>(
+											ConvertExpression(
+												new SqlFunction(typeof(int), "Length", func.Parameters[1]),
+												withParameters), func.Parameters[2])), withParameters)),
 								Sub(func.Parameters[2], 1));
 				}
 			}

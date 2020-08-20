@@ -80,19 +80,18 @@ namespace LinqToDB.DataProvider.DB2
 			}
 
 			precision = precision == null || precision < 0 ? 6 : (precision > 7 ? 7 : precision);
-			switch (precision)
+			return precision switch
 			{
-				case 0: return "yyyy-MM-dd-HH.mm.ss";
-				case 1: return "yyyy-MM-dd-HH.mm.ss.f";
-				case 2: return "yyyy-MM-dd-HH.mm.ss.ff";
-				case 3: return "yyyy-MM-dd-HH.mm.ss.fff";
-				case 4: return "yyyy-MM-dd-HH.mm.ss.ffff";
-				case 5: return "yyyy-MM-dd-HH.mm.ss.fffff";
-				case 6: return "yyyy-MM-dd-HH.mm.ss.ffffff";
-				case 7: return "yyyy-MM-dd-HH.mm.ss.fffffff";
-			}
-
-			throw new InvalidOperationException();
+				0 => "yyyy-MM-dd-HH.mm.ss",
+				1 => "yyyy-MM-dd-HH.mm.ss.f",
+				2 => "yyyy-MM-dd-HH.mm.ss.ff",
+				3 => "yyyy-MM-dd-HH.mm.ss.fff",
+				4 => "yyyy-MM-dd-HH.mm.ss.ffff",
+				5 => "yyyy-MM-dd-HH.mm.ss.fffff",
+				6 => "yyyy-MM-dd-HH.mm.ss.ffffff",
+				7 => "yyyy-MM-dd-HH.mm.ss.fffffff",
+				_ => throw new InvalidOperationException(),
+			};
 		}
 
 		static void ConvertDateTimeToSql(StringBuilder stringBuilder, SqlDataType type, DateTime value)

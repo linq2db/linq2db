@@ -49,7 +49,15 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			if (take != 0)
-				builder.BuildTake(sequence, new SqlValue(take), null);
+			{
+				var takeExpression = Configuration.Linq.ParameterizeTakeSkip
+					? (ISqlExpression)new SqlParameter(new DbDataType(typeof(int)), "take", take)
+					{
+						IsQueryParameter = !builder.DataContext.InlineParameters
+					}
+					: new SqlValue(take);
+				builder.BuildTake(sequence, takeExpression, null);
+			}
 
 			return new FirstSingleContext(buildInfo.Parent, sequence, methodCall);
 		}

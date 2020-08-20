@@ -10,7 +10,7 @@ namespace LinqToDB.Linq.Builder
 	class SubQueryContext : PassThroughContext
 	{
 #if DEBUG
-		string? _sqlQueryText => SelectQuery.SqlText;
+		public string? _sqlQueryText => SelectQuery.SqlText;
 #endif
 
 		public SubQueryContext(IBuildContext subQuery, SelectQuery selectQuery, bool addToSql)
@@ -66,12 +66,11 @@ namespace LinqToDB.Linq.Builder
 
 		public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor testFlag)
 		{
-			switch (testFlag)
+			return testFlag switch
 			{
-				case RequestFor.SubQuery : return IsExpressionResult.True;
-			}
-
-			return base.IsExpression(expression, level, testFlag);
+				RequestFor.SubQuery => IsExpressionResult.True,
+				_                   => base.IsExpression(expression, level, testFlag),
+			};
 		}
 
 		protected internal readonly Dictionary<ISqlExpression,int> ColumnIndexes = new Dictionary<ISqlExpression,int>();
@@ -112,7 +111,7 @@ namespace LinqToDB.Linq.Builder
 
 		public override SqlStatement GetResultStatement()
 		{
-			return Statement ?? (Statement = new SqlSelectStatement(SelectQuery));
+			return Statement ??= new SqlSelectStatement(SelectQuery);
 		}
 	}
 }

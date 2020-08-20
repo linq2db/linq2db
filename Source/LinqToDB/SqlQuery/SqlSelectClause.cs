@@ -250,7 +250,8 @@ namespace LinqToDB.SqlQuery
 
 		#region Distinct
 
-		public bool IsDistinct { get; set; }
+		public bool IsDistinct       { get; set; }
+		public bool OptimizeDistinct { get; set; }
 
 		#endregion
 

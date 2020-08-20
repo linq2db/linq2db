@@ -64,6 +64,8 @@ namespace LinqToDB.ServiceModel
 			protected readonly Dictionary<object,string> DelayedObjects = new Dictionary<object,string>();
 			protected int                                Index;
 
+			protected readonly Dictionary<SqlValuesTable, IReadOnlyList<ISqlExpression[]>> EnumerableData = new Dictionary<SqlValuesTable, IReadOnlyList<ISqlExpression[]>>();
+
 			protected SerializerBase(MappingSchema serializationMappingSchema)
 			{
 				_ms = serializationMappingSchema;
@@ -411,16 +413,13 @@ namespace LinqToDB.ServiceModel
 					var typecode = ReadInt();
 					Pos++;
 
-					switch (typecode)
+					type = typecode switch
 					{
-						case TypeIndex     : type = ResolveType(ReadString())!; break;
-						case TypeArrayIndex: type = GetArrayType(Read<Type>()!); break;
-
-						default:
-							throw new SerializationException(
-								$"TypeIndex or TypeArrayIndex ({TypeIndex} or {TypeArrayIndex}) expected, but was {typecode}");
-					}
-
+						TypeIndex      => ResolveType(ReadString())!,
+						TypeArrayIndex => GetArrayType(Read<Type>()!),
+						_              => throw new SerializationException(
+							$"TypeIndex or TypeArrayIndex ({TypeIndex} or {TypeArrayIndex}) expected, but was {typecode}"),
+					};
 					ObjectIndices.Add(idx, type);
 
 					NextLine();
@@ -628,6 +627,18 @@ namespace LinqToDB.ServiceModel
 			{
 				switch (e.ElementType)
 				{
+					case QueryElementType.SqlValuesTable :
+						{
+							var table = (SqlValuesTable)e;
+							var rows  = table.Rows!;
+							EnumerableData.Add(table, rows);
+							foreach (var row in rows)
+								foreach (var item in row)
+									if (!ObjectIndices.ContainsKey(item))
+										Visit(item);
+
+							break;
+						}
 					case QueryElementType.SqlField :
 						{
 							var fld = (SqlField)e;
@@ -1314,11 +1325,11 @@ namespace LinqToDB.ServiceModel
 					case QueryElementType.SqlValuesTable:
 						{
 							var elem = (SqlValuesTable)e;
+							var rows = EnumerableData[elem];
 
-							Append(elem.Fields.Values);
-							Append(elem.Rows.Count);
-
-							foreach (var row in elem.Rows)
+							Append(elem.Fields);
+							Append(rows.Count);
+							foreach (var row in rows)
 								Append(row);
 
 							break;
@@ -2116,7 +2127,7 @@ namespace LinqToDB.ServiceModel
 							var fields    = ReadArray<SqlField>()!;
 
 							var rowsCount = ReadInt();
-							var rows      = new IList<ISqlExpression>[rowsCount];
+							var rows      = new ISqlExpression[rowsCount][];
 
 							for (var i = 0; i < rowsCount; i++)
 								rows[i] = ReadArray<ISqlExpression>()!;

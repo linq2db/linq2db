@@ -382,8 +382,8 @@ namespace LinqToDB.Linq.Builder
 					let   cd = entityDescriptor.Columns[idx.i]
 					where
 						cd.Storage != null ||
-						!(cd.MemberAccessor.MemberInfo is PropertyInfo) ||
-						((PropertyInfo)cd.MemberAccessor.MemberInfo).GetSetMethod(true) != null
+						!(cd.MemberAccessor.MemberInfo is PropertyInfo info) ||
+						info.GetSetMethod(true) != null
 					select new
 					{
 						Column = cd,
@@ -818,7 +818,7 @@ namespace LinqToDB.Linq.Builder
 									
 									{
 										result = SqlTable.Fields.Values
-											.Where(field => !field.IsDynamic)
+											.Where(field => !field.IsDynamic && !field.SkipOnEntityFetch)
 											.Select(f =>
 												f.ColumnDescriptor != null
 													? new SqlInfo(f.ColumnDescriptor.MemberInfo, f)
@@ -1215,7 +1215,7 @@ namespace LinqToDB.Linq.Builder
 
 			public virtual SqlStatement GetResultStatement()
 			{
-				return Statement ?? (Statement = new SqlSelectStatement(SelectQuery));
+				return Statement ??= new SqlSelectStatement(SelectQuery);
 			}
 
 			#endregion
@@ -1371,9 +1371,9 @@ namespace LinqToDB.Linq.Builder
 
 										if (me.Expression is MemberExpression)
 										{
-											while (me.Expression is MemberExpression)
+											while (me.Expression is MemberExpression me1)
 											{
-												me = (MemberExpression)me.Expression;
+												me = me1;
 												name = me.Member.Name + '.' + name;
 											}
 
