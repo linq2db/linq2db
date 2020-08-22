@@ -5,9 +5,15 @@
 		<LinqToDBT4ToolsDirectory>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4ToolsDirectory>
 	</PropertyGroup>
 
-	<ItemGroup>
-		<PackageReference Include="IBM.Data.DB2.Core" Version="1.3.0.100"  Condition=" '$(OS)' == 'Windows_NT' " />
-		<PackageReference Include="IBM.Data.DB2.Core-lnx" Version="1.3.0.100" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' " />
-		<PackageReference Include="IBM.Data.DB2.Core-osx" Version="1.3.0.100" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' "/>
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+		<PackageReference Include="IBM.Data.DB2.Core" Version="2.2.0.100"  Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' " />
+		<PackageReference Include="IBM.Data.DB2.Core-lnx" Version="2.2.0.100" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' " />
+		<PackageReference Include="IBM.Data.DB2.Core-osx" Version="2.0.0.100" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' "/>
+	</ItemGroup>
+	
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.1' ">
+		<PackageReference Include="IBM.Data.DB2.Core" Version="3.1.0.200"  Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' " />
+		<PackageReference Include="IBM.Data.DB2.Core-lnx" Version="3.1.0.200" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' " />
+		<PackageReference Include="IBM.Data.DB2.Core-osx" Version="3.1.0.200" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' "/>
 	</ItemGroup>
 </Project>
