@@ -350,12 +350,12 @@ stages:
         testResultsFiles: '**/*.trx'
         testRunTitle: 'Mac / NETCOREAPP2.1 / $(title)'
 
-    - task: PublishPipelineArtifact@1
-      inputs:
-        archiveFilePatterns: '**/*.logz'
-        path: '$(System.DefaultWorkingDirectory)'
-        artifact: 'mac_test_logs'
-      displayName: Publish test diagnostics
+#    - task: PublishPipelineArtifact@1
+#      inputs:
+#        archiveFilePatterns: '**/*.logz'
+#        path: '$(System.DefaultWorkingDirectory)'
+#        artifact: 'mac_test_logs'
+#      displayName: Publish test diagnostics
 
 
 ###################################
@@ -473,12 +473,12 @@ stages:
         testRunTitle: 'Windows / NETCOREAPP2.1 / $(title)'
       displayName: '$(title)'
 
-    - task: PublishPipelineArtifact@1
-      inputs:
-        archiveFilePatterns: '**/*.logz'
-        path: '$(System.DefaultWorkingDirectory)'
-        artifact: 'win_core_test_logs'
-      displayName: Publish test diagnostics
+#    - task: PublishPipelineArtifact@1
+#      inputs:
+#        archiveFilePatterns: '**/*.logz'
+#        path: '$(System.DefaultWorkingDirectory)'
+#        artifact: 'win_core_test_logs'
+#      displayName: Publish test diagnostics
 
 ###########################
 #  Tests: Windows (NETFX) #
