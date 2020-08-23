@@ -115,8 +115,8 @@ stages:
       vmImage: 'ubuntu-16.04'
     displayName: 'Tests: Lin / NETCOREAPP2.1 / '
     dependsOn: build_job
-    condition: ne(variables['Build.SourceBranchName'], 'release')
-#    condition: eq(variables['Build.SourceBranchName'], 'fake')
+#    condition: ne(variables['Build.SourceBranchName'], 'release')
+    condition: eq(variables['Build.SourceBranchName'], 'fake')
 
     strategy:
       matrix:
@@ -240,16 +240,16 @@ stages:
 #          config: 'sqlserver.fts.2017'
 #          script: 'mac.sqlserver.2017.sh'
 #          docker: 'true'
-#        SqlServer2019:
-#          title: 'SQL Server 2019 (System.Data.SqlClient)'
-#          config: 'sqlserver.fts.2019'
-#          script: 'mac.sqlserver.2019.sh'
-#          docker: 'true'
-#        SqlServer2019_MS:
-#          title: 'SQL Server 2019 (Microsoft.Data.SqlClient)'
-#          config: 'sqlserver.fts.2019.ms'
-#          script: 'mac.sqlserver.2019.sh'
-#          docker: 'true'
+        SqlServer2019:
+          title: 'SQL Server 2019 (System.Data.SqlClient)'
+          config: 'sqlserver.fts.2019'
+          script: 'mac.sqlserver.2019.sh'
+          docker: 'true'
+        SqlServer2019_MS:
+          title: 'SQL Server 2019 (Microsoft.Data.SqlClient)'
+          config: 'sqlserver.fts.2019.ms'
+          script: 'mac.sqlserver.2019.sh'
+          docker: 'true'
 #        Informix12:
 #          title: 'Informix 12.10'
 #          config: 'informix'
@@ -267,21 +267,21 @@ stages:
 #          config: 'sqlserver.2017.ms'
 #          script: 'mac.sqlserver.2017.sh'
 #          docker: 'true'
-#        MySQL:
-#          title: 'MySQL'
-#          config: 'mysql'
-#          script: 'mac.mysql.sh'
-#          docker: 'true'
-#        MySQL55:
-#          title: 'MySQL 5.5'
-#          config: 'mysql55'
-#          script: 'mac.mysql55.sh'
-#          docker: 'true'
-#        MariaDB:
-#          title: 'MariaDB'
-#          config: 'mariadb'
-#          script: 'mac.mariadb.sh'
-#          docker: 'true'
+        MySQL:
+          title: 'MySQL'
+          config: 'mysql'
+          script: 'mac.mysql.sh'
+          docker: 'true'
+        MySQL55:
+          title: 'MySQL 5.5'
+          config: 'mysql55'
+          script: 'mac.mysql55.sh'
+          docker: 'true'
+        MariaDB:
+          title: 'MariaDB'
+          config: 'mariadb'
+          script: 'mac.mariadb.sh'
+          docker: 'true'
 
     steps:
     - checkout: none
