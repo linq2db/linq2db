@@ -213,31 +213,43 @@ stages:
       vmImage: 'macOS-10.15'
     displayName: 'Tests: Mac / NETCOREAPP2.1 / '
     dependsOn: build_job
-#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
-    condition: eq(variables['Build.SourceBranchName'], 'fake')
+    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+#    condition: eq(variables['Build.SourceBranchName'], 'fake')
 
     strategy:
       matrix:
-        SqlServer2017:
-          title: 'SQL Server 2017 (System.Data.SqlClient)'
-          config: 'sqlserver.fts.2017'
-          script: 'mac.sqlserver.2017.sh'
+        Informix14:
+          title: 'Informix 14.10'
+          config: 'informix'
+          script: 'mac.informix14.sh'
           docker: 'true'
-        SqlServer2017_MS:
-          title: 'SQL Server 2017 (Microsoft.Data.SqlClient)'
-          config: 'sqlserver.fts.2017'
-          script: 'mac.sqlserver.2017.sh'
+          nuget: 'IBM.Data.DB2.Core-osx'
+        DB2:
+          title: 'DB2 LUW 11.5'
+          config: 'db2'
+          script: 'mac.db2.sh'
           docker: 'true'
-        SqlServer2019:
-          title: 'SQL Server 2019 (System.Data.SqlClient)'
-          config: 'sqlserver.fts.2019'
-          script: 'mac.sqlserver.2019.sh'
-          docker: 'true'
-        SqlServer2019_MS:
-          title: 'SQL Server 2019 (Microsoft.Data.SqlClient)'
-          config: 'sqlserver.fts.2019.ms'
-          script: 'mac.sqlserver.2019.sh'
-          docker: 'true'
+          nuget: 'IBM.Data.DB2.Core-osx'
+#        SqlServer2017:
+#          title: 'SQL Server 2017 (System.Data.SqlClient)'
+#          config: 'sqlserver.fts.2017'
+#          script: 'mac.sqlserver.2017.sh'
+#          docker: 'true'
+#        SqlServer2017_MS:
+#          title: 'SQL Server 2017 (Microsoft.Data.SqlClient)'
+#          config: 'sqlserver.fts.2017'
+#          script: 'mac.sqlserver.2017.sh'
+#          docker: 'true'
+#        SqlServer2019:
+#          title: 'SQL Server 2019 (System.Data.SqlClient)'
+#          config: 'sqlserver.fts.2019'
+#          script: 'mac.sqlserver.2019.sh'
+#          docker: 'true'
+#        SqlServer2019_MS:
+#          title: 'SQL Server 2019 (Microsoft.Data.SqlClient)'
+#          config: 'sqlserver.fts.2019.ms'
+#          script: 'mac.sqlserver.2019.sh'
+#          docker: 'true'
 #        Informix12:
 #          title: 'Informix 12.10'
 #          config: 'informix'
