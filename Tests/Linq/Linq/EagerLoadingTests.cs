@@ -186,7 +186,7 @@ namespace Tests.Linq
 			var intParam = 0;
 
 			using (new AllowMultipleQuery())
-			using (var db = GetDataContext(context))
+			using (var db     = GetDataContext(context))
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
 			{
@@ -198,10 +198,10 @@ namespace Tests.Linq
 									where m.Id1 >= intParam
 									select new MasterClass
 									{
-										Id1 = m.Id1,
-										Id2 = m.Id2,
-										Value = m.Value,
-										Details = detailRecords.Where(d => d.MasterId == m.Id1).ToList(),
+										Id1          = m.Id1,
+										Id2          = m.Id2,
+										Value        = m.Value,
+										Details      = detailRecords.Where(d => d.MasterId == m.Id1).ToList(),
 										DetailsQuery = detailRecords.Where(d => d.MasterId == m.Id1 && d.MasterId == m.Id2 && d.DetailId % 2 == 0).ToArray(),
 									};
 

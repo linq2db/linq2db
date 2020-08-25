@@ -11,16 +11,15 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
+	using System.Diagnostics;
 	using Async;
 	using Builder;
-	using Data;
 	using Common;
 	using Common.Logging;
 	using LinqToDB.Expressions;
 	using Mapping;
-	using SqlQuery;
 	using SqlProvider;
-	using System.Diagnostics;
+	using SqlQuery;
 
 	public abstract class Query
 	{
@@ -180,10 +179,10 @@ namespace LinqToDB.Linq
 
 		#region Eager Loading
 
-		Tuple<Func<IDataContext, Expression, object?[]?, object?>, Func<IDataContext, Expression, object?[]?, Task<object?>>>[]? _preambles;
+		Tuple<Func<IDataContext, Expression, object?[]?, object?>, Func<IDataContext, Expression, object?[]?, CancellationToken, Task<object?>>>[]? _preambles;
 
 		public void SetPreambles(
-			IEnumerable<Tuple<Func<IDataContext, Expression, object?[]?, object?>, Func<IDataContext, Expression, object?[]?, Task<object?>>>>? preambles)
+			IEnumerable<Tuple<Func<IDataContext, Expression, object?[]?, object?>, Func<IDataContext, Expression, object?[]?, CancellationToken, Task<object?>>>>? preambles)
 		{
 			_preambles = preambles?.ToArray();
 		}
@@ -212,7 +211,7 @@ namespace LinqToDB.Linq
 			return preambles;
 		}
 
-		public async Task<object?[]?> InitPreamblesAsync(IDataContext dc, Expression rootExpression, object?[]? ps)
+		public async Task<object?[]?> InitPreamblesAsync(IDataContext dc, Expression rootExpression, object?[]? ps, CancellationToken cancellationToken)
 		{
 			if (_preambles == null)
 				return null;
@@ -220,7 +219,7 @@ namespace LinqToDB.Linq
 			var preambles = new object?[_preambles.Length];
 			for (var i = 0; i < preambles.Length; i++)
 			{
-				preambles[i] = await _preambles[i].Item2(dc, rootExpression, ps).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				preambles[i] = await _preambles[i].Item2(dc, rootExpression, ps, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			}
 
 			return preambles;
