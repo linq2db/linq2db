@@ -1233,9 +1233,8 @@ namespace LinqToDB.SqlQuery
 
 				default:
 					{
-						var str = expr.ToString(new StringBuilder(), new Dictionary<IQueryElement, IQueryElement>())
-							.ToString();
-						errorMessage = $"Not implemented evaluation of '{expr.ElementType}': '{str}'.";
+						errorMessage = GetEvaluationError(expr);
+
 						return false;
 					}
 			}
@@ -1245,17 +1244,26 @@ namespace LinqToDB.SqlQuery
 		{
 			if (!expr.TryEvaluateExpression(true, out var result, out var message))
 			{
-				if (message == null)
-				{
-					var str = expr.ToString(new StringBuilder(), new Dictionary<IQueryElement, IQueryElement>())
-						.ToString();
-					message = $"Not implemented evaluation of '{expr.ElementType}': '{str}'.";
-				}
+				message ??= GetEvaluationError(expr);
 
 				throw new LinqToDBException(message);
 			}
 
 			return result;
+		}
+
+		private static string GetEvaluationError(ISqlExpression expr)
+		{
+			try
+			{
+				var str = expr.ToString(new StringBuilder(), new Dictionary<IQueryElement, IQueryElement>())
+								.ToString();
+				return $"Not implemented evaluation of '{expr.ElementType}': '{str}'.";
+			}
+			catch
+			{
+				return $"Not implemented evaluation of '{expr.ElementType}'.";
+			}
 		}
 
 

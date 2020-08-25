@@ -180,6 +180,9 @@ namespace LinqToDB.SqlQuery
 				return (object)s;
 			});
 
+			if (Parameters.Length == 0)
+				return sb.Append(Expr);
+
 			return sb.AppendFormat(Expr, ss.ToArray());
 		}
 
