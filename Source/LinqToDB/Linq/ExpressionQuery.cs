@@ -180,9 +180,16 @@ namespace LinqToDB.Linq
 			var query      = GetQuery(ref expression, true);
 			Expression     = expression;
 
-			return query
-				.GetIAsyncEnumerable(DataContext, expression, Parameters, Preambles)
-				.GetAsyncEnumerator(cancellationToken);
+			//TODO: need async call
+
+			using (StartLoadTransaction(query))
+			{
+				Preambles = query.InitPreambles(DataContext, expression, Parameters);
+
+				return query
+					.GetIAsyncEnumerable(DataContext, expression, Parameters, Preambles)
+					.GetAsyncEnumerator(cancellationToken);
+			}
 		}
 
 		#endregion
