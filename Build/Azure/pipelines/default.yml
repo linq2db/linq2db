@@ -1053,12 +1053,12 @@ stages:
           title: 'Informix 14.10'
           config: 'informix'
           script: 'informix14.sh'
-          nuget: 'IBM.Data.DB2.Core-lnx'
+          nuget: 'IBM.Data.DB2.Core-lnx -Version 2.2.0.100'
         DB2:
           title: 'DB2 LUW 11.5'
           config: 'db2'
           script: 'db2.sh'
-          nuget: 'IBM.Data.DB2.Core-lnx'
+          nuget: 'IBM.Data.DB2.Core-lnx -Version 2.2.0.100'
     steps:
     - checkout: none
 
@@ -1223,13 +1223,13 @@ stages:
           config: 'informix'
           script: 'mac.informix14.sh'
           docker: 'true'
-          nuget: 'IBM.Data.DB2.Core-osx'
+          nuget: 'IBM.Data.DB2.Core-osx -Version 2.0.0.100'
         DB2:
           title: 'DB2 LUW 11.5'
           config: 'db2'
           script: 'mac.db2.sh'
           docker: 'true'
-          nuget: 'IBM.Data.DB2.Core-osx'
+          nuget: 'IBM.Data.DB2.Core-osx -Version 2.0.0.100'
     steps:
     - checkout: none
 
@@ -1408,13 +1408,13 @@ stages:
 #          config: 'informix'
 #          script: 'mac.informix14.sh'
 #          docker: 'true'
-#          nuget: 'IBM.Data.DB2.Core-osx'
+#          nuget: 'IBM.Data.DB2.Core-osx -Version 2.0.0.100'
 #        DB2:
 #          title: 'DB2 LUW 11.5'
 #          config: 'db2'
 #          script: 'mac.db2.sh'
 #          docker: 'true'
-#          nuget: 'IBM.Data.DB2.Core-osx'
+#          nuget: 'IBM.Data.DB2.Core-osx -Version 2.0.0.100'
     steps:
     - checkout: none
 
