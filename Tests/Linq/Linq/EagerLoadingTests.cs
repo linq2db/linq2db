@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
@@ -172,6 +173,43 @@ namespace Tests.Linq
 					};
 
 				var result = query.ToList();
+				var expected = expectedQuery.ToList();
+
+				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2442")]
+		public async Task TestLoadWithAsyncEnumerator([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var (masterRecords, detailRecords) = GenerateData();
+			var intParam = 0;
+
+			using (new AllowMultipleQuery())
+			using (var db     = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			{
+				var query = from m in master.LoadWith(m => m.Details).LoadWith(m => m.DetailsQuery)
+							where m.Id1 >= intParam
+							select m;
+
+				var expectedQuery = from m in masterRecords
+									where m.Id1 >= intParam
+									select new MasterClass
+									{
+										Id1          = m.Id1,
+										Id2          = m.Id2,
+										Value        = m.Value,
+										Details      = detailRecords.Where(d => d.MasterId == m.Id1).ToList(),
+										DetailsQuery = detailRecords.Where(d => d.MasterId == m.Id1 && d.MasterId == m.Id2 && d.DetailId % 2 == 0).ToArray(),
+									};
+
+				var result = new List<MasterClass>();
+
+				await foreach (var item in (IAsyncEnumerable<MasterClass>)query)
+					result.Add(item);
+
 				var expected = expectedQuery.ToList();
 
 				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
@@ -991,7 +1029,7 @@ FROM
 			}
 		}
 
-		#region issue 1862
+#region issue 1862
 		[Table]
 		public partial class Blog
 		{
@@ -1139,10 +1177,10 @@ FROM
 				Assert.AreEqual("SqlKata", result.Blog[0].Posts[3].Tags[0].Name);
 			}
 		}
-		#endregion
+#endregion
 
 
-		#region issue 2196
+#region issue 2196
 		public class EventScheduleItemBase
 		{
 			public EventScheduleItemBase()
@@ -1264,9 +1302,9 @@ FROM
 				Assert.That(result[0].Persons.Count, Is.EqualTo(1));
 			}
 		}
-		#endregion
+#endregion
 
-		#region issue 2307
+#region issue 2307
 		[Table]
 		class AttendanceSheet
 		{
@@ -1330,6 +1368,6 @@ FROM
 				query.ToList();
 			}
 		}
-		#endregion
+#endregion
 	}
 }
