@@ -776,9 +776,11 @@ SELECT	r.ROUTINE_CATALOG,
 				commandText += "NULL";
 
 				// we don't have proper support for any* yet
-				if (parameter.SchemaType == "anyarray")
+				if (parameter.SchemaType == "USER-DEFINED")
+				{ }
+				else if (parameter.SchemaType == "anyarray")
 					commandText += "::int[]";
-				if (parameter.SchemaType == "anyelement")
+				else if (parameter.SchemaType == "anyelement")
 					commandText += "::int";
 				else if (parameter.SchemaType != "ARRAY")
 					// otherwise it will fail on overrides with same parameter count

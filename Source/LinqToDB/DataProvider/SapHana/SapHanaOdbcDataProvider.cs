@@ -126,5 +126,18 @@ namespace LinqToDB.DataProvider.SapHana
 		}
 
 		private static readonly MappingSchema MappingSchemaInstance = new SapHanaMappingSchema.OdbcMappingSchema();
+
+		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
+		{
+			try
+			{
+				return base.IsDBNullAllowed(reader, idx);
+			}
+			catch (OverflowException)
+			{
+				// https://github.com/dotnet/runtime/issues/40654
+				return true;
+			}
+		}
 	}
 }

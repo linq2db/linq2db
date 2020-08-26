@@ -247,6 +247,34 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void GroupByTest([DataSources(false)] string context)
+		{
+			var ms = CreateMappingSchema();
+
+			var testData = MainClass.TestData();
+			using (var db = GetDataContext(context, ms))
+			using (var table = db.CreateLocalTable(testData))
+			{
+				var testedList = testData[0].Value2;
+
+				var query = from t in table
+					where testedList == t.Value2
+					group t by t.Id
+					into g
+					select g;
+
+
+				query = query.DisableGuard();
+
+				foreach (var item in query)
+				{
+					var elements = item.ToArray();
+				}
+			
+			}
+		}
+
+		[Test]
 		public void ExtensionTest([DataSources(false)] string context)
 		{
 			var ms = CreateMappingSchema();

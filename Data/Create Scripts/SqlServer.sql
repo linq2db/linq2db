@@ -951,6 +951,11 @@ GO
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('TestSchema.TestSchemaA') AND type in (N'U'))
 BEGIN
 	DROP TABLE TestSchema.TestSchemaA
+END
+GO
+
+IF EXISTS (SELECT  schema_name FROM    information_schema.schemata WHERE   schema_name = 'TestSchema')
+BEGIN
 	DROP SCHEMA [TestSchema]
 END
 GO
@@ -1158,4 +1163,68 @@ BEGIN
   SELECT  name, object_id from sys.objects where name ='Issue1921'
 RETURN
 END
+GO
+
+
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'QueryProcParameters')
+BEGIN DROP Procedure QueryProcParameters END
+GO
+
+CREATE Procedure QueryProcParameters
+	@input          int,
+	@output1        int output,
+	@output2        int output
+AS
+
+SET @output1 = @input + 1
+SELECT * FROM Person
+SET @output2 = @input + 2
+
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'QueryProcMultipleParameters')
+BEGIN DROP Procedure QueryProcMultipleParameters END
+GO
+
+CREATE Procedure QueryProcMultipleParameters
+	@input          int,
+	@output1        int output,
+	@output2        int output,
+	@output3        int output
+AS
+
+SET @output1 = @input + 1
+SELECT * FROM Person
+SET @output2 = @input + 2
+SELECT * FROM Doctor
+SET @output3 = @input + 3
+
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'ExecuteProcIntParameters')
+BEGIN DROP Procedure ExecuteProcIntParameters END
+GO
+
+CREATE Procedure ExecuteProcIntParameters
+	@input          int,
+	@output         int output
+AS
+
+SET @output = @input + 1
+UPDATE Person SET FirstName = N'John' WHERE FirstName = N'John'
+
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'ExecuteProcStringParameters')
+BEGIN DROP Procedure ExecuteProcStringParameters END
+GO
+
+CREATE Procedure ExecuteProcStringParameters
+	@input          int,
+	@output         int output
+AS
+
+SET @output = @input + 1
+SELECT N'издрасте'
+
 GO

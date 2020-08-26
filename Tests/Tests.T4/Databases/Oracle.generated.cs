@@ -37,6 +37,15 @@ namespace OracleDataContext
 		public ITable<PARENT>                Parents                { get { return this.GetTable<PARENT>(); } }
 		public ITable<PATIENT>               Patients               { get { return this.GetTable<PATIENT>(); } }
 		public ITable<PERSON>                People                 { get { return this.GetTable<PERSON>(); } }
+		/// <summary>
+		/// This is matview
+		/// </summary>
+		public ITable<SCHEMATESTMATVIEW>     Schematestmatviews     { get { return this.GetTable<SCHEMATESTMATVIEW>(); } }
+		/// <summary>
+		/// This is table
+		/// </summary>
+		public ITable<SCHEMATESTTABLE>       Schematesttables       { get { return this.GetTable<SCHEMATESTTABLE>(); } }
+		public ITable<SCHEMATESTVIEW>        Schematestviews        { get { return this.GetTable<SCHEMATESTVIEW>(); } }
 		public ITable<SEQUENCETEST>          Sequencetests          { get { return this.GetTable<SEQUENCETEST>(); } }
 		public ITable<StgTradeInformation>   StgTradeInformation    { get { return this.GetTable<StgTradeInformation>(); } }
 		public ITable<STRINGTEST>            Stringtests            { get { return this.GetTable<STRINGTEST>(); } }
@@ -274,6 +283,39 @@ namespace OracleDataContext
 		#endregion
 	}
 
+	/// <summary>
+	/// This is matview
+	/// </summary>
+	[Table(Schema="MANAGED", Name="SCHEMATESTMATVIEW", IsView=true)]
+	public partial class SCHEMATESTMATVIEW
+	{
+		/// <summary>
+		/// This is matview column
+		/// </summary>
+		[Column(DbType="NUMBER", DataType=DataType.Decimal, Length=22), PrimaryKey, NotNull] public decimal ID { get; set; } // NUMBER
+	}
+
+	/// <summary>
+	/// This is table
+	/// </summary>
+	[Table(Schema="MANAGED", Name="SCHEMATESTTABLE")]
+	public partial class SCHEMATESTTABLE
+	{
+		/// <summary>
+		/// This is column
+		/// </summary>
+		[Column(DbType="NUMBER", DataType=DataType.Decimal, Length=22), PrimaryKey, NotNull] public decimal ID { get; set; } // NUMBER
+	}
+
+	[Table(Schema="MANAGED", Name="SCHEMATESTVIEW", IsView=true)]
+	public partial class SCHEMATESTVIEW
+	{
+		/// <summary>
+		/// This is view column
+		/// </summary>
+		[Column(DbType="NUMBER", DataType=DataType.Decimal, Length=22), NotNull] public decimal ID { get; set; } // NUMBER
+	}
+
 	[Table(Schema="MANAGED", Name="SEQUENCETEST")]
 	public partial class SEQUENCETEST
 	{
@@ -376,7 +418,7 @@ namespace OracleDataContext
 		#region Associations
 
 		/// <summary>
-		/// SYS_C00613092_BackReference
+		/// SYS_C00667279_BackReference
 		/// </summary>
 		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
 		public IEnumerable<TTestUserContract> Syscs { get; set; } = null!;
@@ -395,9 +437,9 @@ namespace OracleDataContext
 		#region Associations
 
 		/// <summary>
-		/// SYS_C00613092
+		/// SYS_C00667279
 		/// </summary>
-		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="SYS_C00613092", BackReferenceName="Syscs")]
+		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="SYS_C00667279", BackReferenceName="Syscs")]
 		public TTestUser USER { get; set; } = null!;
 
 		#endregion
@@ -529,6 +571,18 @@ namespace OracleDataContext
 		{
 			return table.FirstOrDefault(t =>
 				t.PERSONID == PERSONID);
+		}
+
+		public static SCHEMATESTMATVIEW Find(this ITable<SCHEMATESTMATVIEW> table, decimal ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
+		public static SCHEMATESTTABLE Find(this ITable<SCHEMATESTTABLE> table, decimal ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
 		}
 
 		public static SEQUENCETEST Find(this ITable<SEQUENCETEST> table, decimal ID)

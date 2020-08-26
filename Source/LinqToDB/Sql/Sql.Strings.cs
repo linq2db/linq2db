@@ -28,7 +28,7 @@ namespace LinqToDB
 				var descriptor = QueryHelper.GetColumnDescriptor(data);
 				if (descriptor != null)
 				{
-					var dbDataType = descriptor.GetDbDataType();
+					var dbDataType = descriptor.GetDbDataType(true);
 					if (dbDataType.DataType != DataType.Undefined)
 					{
 						var separator = builder.GetExpression("separator");

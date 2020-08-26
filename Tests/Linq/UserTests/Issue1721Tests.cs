@@ -71,6 +71,7 @@ namespace Tests.UserTests
 		/// <param name="connection"><see cref="DataConnection"/> to create temporary table in.</param>
 		/// <returns>SQL used to create the table.</returns>
 		private static string GetCreateTableSQL<T>(DataConnection connection)
+			where T : class
 		{
 			using (var temp = connection.CreateTempTable<T>())
 			{

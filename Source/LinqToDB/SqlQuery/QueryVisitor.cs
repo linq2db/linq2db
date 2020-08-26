@@ -542,12 +542,13 @@ namespace LinqToDB.SqlQuery
 
 		void Visit1X(SqlValuesTable element)
 		{
-			foreach (var field in element.Fields.Values)
+			foreach (var field in element.Fields)
 				Visit1(field);
 
-			foreach (var row in element.Rows)
-				foreach (var value in row)
-					Visit1(value);
+			if (element.Rows != null)
+				foreach (var row in element.Rows)
+					foreach (var value in row)
+						Visit1(value);
 		}
 
 		void Visit1X(SqlMergeOperationClause element)
@@ -1128,12 +1129,13 @@ namespace LinqToDB.SqlQuery
 
 		void Visit2X(SqlValuesTable element)
 		{
-			foreach (var field in element.Fields.Values)
+			foreach (var field in element.Fields)
 				Visit2(field);
 
-			foreach (var row in element.Rows)
-				foreach (var value in row)
-					Visit2(value);
+			if (element.Rows != null)
+				foreach (var row in element.Rows)
+					foreach (var value in row)
+						Visit2(value);
 		}
 
 		void Visit2X(SqlMergeOperationClause element)
@@ -1452,8 +1454,8 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SqlValuesTable:
 					{
 						return 
-							Find(((SqlValuesTable)element).Fields.Values          ) ??
-							Find(((SqlValuesTable)element).Rows.SelectMany(r => r));
+							Find(((SqlValuesTable)element).Fields                  ) ??
+							Find(((SqlValuesTable)element).Rows?.SelectMany(r => r));
 					}
 
 				case QueryElementType.SqlField:

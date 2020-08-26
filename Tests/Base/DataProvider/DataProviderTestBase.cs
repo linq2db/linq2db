@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 using LinqToDB;
 using LinqToDB.Data;
-
+using LinqToDB.SqlProvider;
 using NUnit.Framework;
 
 namespace Tests.DataProvider
@@ -40,6 +40,7 @@ namespace Tests.DataProvider
 			//
 			Debug.WriteLine("{0} {1}:{2} -> NULL", fieldName, (object)type.Name, dataType);
 
+			tableName = conn.DataProvider.CreateSqlBuilder(conn.DataProvider.MappingSchema).ConvertInline(tableName, ConvertType.NameToQueryTable);
 			var sql   = string.Format(GetNullSql(conn),  fieldName, tableName);
 			var value = conn.Execute<T>(sql);
 

@@ -226,7 +226,8 @@ namespace LinqToDB.Linq
 					.Select(p => new ParameterAccessor
 						(
 							p.Expression,
-							p.Accessor,
+							p.ValueAccessor,
+							p.OriginalAccessor,
 							p.DbDataTypeAccessor,
 							dic.ContainsKey(p.SqlParameter) ? (SqlParameter)dic[p.SqlParameter] : null!
 						))

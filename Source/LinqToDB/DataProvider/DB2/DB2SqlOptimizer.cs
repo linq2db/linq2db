@@ -25,9 +25,9 @@
 			};
 		}
 
-		public override ISqlExpression ConvertExpression(ISqlExpression expr)
+		public override ISqlExpression ConvertExpression(ISqlExpression expr, bool withParameters)
 		{
-			expr = base.ConvertExpression(expr);
+			expr = base.ConvertExpression(expr, withParameters);
 
 			if (expr is SqlBinaryExpression be)
 			{
@@ -51,7 +51,7 @@
 					case "Convert"    :
 						if (func.SystemType.ToUnderlying() == typeof(bool))
 						{
-							var ex = AlternativeConvertToBoolean(func, 1);
+							var ex = AlternativeConvertToBoolean(func, 1, withParameters);
 							if (ex != null)
 								return ex;
 						}

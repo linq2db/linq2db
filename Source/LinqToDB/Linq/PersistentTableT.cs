@@ -61,7 +61,7 @@ namespace LinqToDB.Linq
 			return _query.Provider.Execute<TResult>(expression);
 		}
 
-		public IAsyncEnumerable<TResult> ExecuteAsync<TResult>(Expression expression)
+		public Task<IAsyncEnumerable<TResult>> ExecuteAsyncEnumerable<TResult>(Expression expression, CancellationToken token)
 		{
 			throw new NotImplementedException();
 		}

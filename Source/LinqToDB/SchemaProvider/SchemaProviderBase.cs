@@ -40,6 +40,50 @@ namespace LinqToDB.SchemaProvider
 		/// </summary>
 		protected virtual bool GetProcedureSchemaExecutesProcedure => false;
 
+		protected string? BuildSchemaFilter(GetSchemaOptions? options, string defaultSchema, Action<StringBuilder, string> stringLiteralBuilder)
+		{
+			var schemas = new HashSet<string>();
+			schemas.Add(defaultSchema);
+
+			if (options != null)
+			{
+				if (options.IncludedSchemas != null)
+				{
+					schemas.Clear();
+					foreach (var schema in options.IncludedSchemas)
+						if (!string.IsNullOrEmpty(schema))
+							schemas.Add(schema!);
+				}
+
+				if (options.ExcludedSchemas != null)
+					foreach (var schema in options.ExcludedSchemas)
+						if (!string.IsNullOrEmpty(schema))
+							schemas.Remove(schema!);
+			}
+
+			if (schemas.Count == 0)
+				return null;
+
+			var first = true;
+
+			var sb = new StringBuilder();
+			sb.Append("IN (");
+
+			foreach (var schema in schemas)
+			{
+				if (!first)
+					sb.Append(", ");
+				else
+					first = false;
+
+				stringLiteralBuilder(sb, schema);
+			}
+
+			sb.Append(")");
+
+			return sb.ToString();
+		}
+
 		public virtual DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions? options = null)
 		{
 			if (options == null)
@@ -586,11 +630,8 @@ namespace LinqToDB.SchemaProvider
 		}
 
 		// TODO: use proper C# identifier validation procedure
-		public static string ToValidName(string? name)
+		public static string ToValidName(string name)
 		{
-			if (name == null)
-				return "";
-
 			if (name.Contains(" ") || name.Contains("\t"))
 			{
 				var ss = name.Split(new [] {' ', '\t'}, StringSplitOptions.RemoveEmptyEntries)

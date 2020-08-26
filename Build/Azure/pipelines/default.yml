@@ -1,9 +1,9 @@
 variables:
   solution: 'linq2db.sln'
   build_configuration: 'Azure'
-  assemblyVersion: 3.0.2
-  nugetVersion: 3.0.2
-  nugetDevVersion: 3.0.2
+  assemblyVersion: 3.1.1
+  nugetVersion: 3.1.1
+  nugetDevVersion: 3.1.1
   artifact_nugets: 'nugets'
   artifact_linq2db_binaries: 'linq2db_binaries'
   artifact_linq2db_tools_binaries: 'linq2db_tools_binaries'
@@ -258,7 +258,8 @@ stages:
       vmImage: 'windows-2019'
     displayName: 'Tests: Win / NETFX 4.6 / '
     dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+    condition: eq(variables['System.PullRequest.TargetBranch'], 'release')
 
     strategy:
       matrix:
@@ -298,6 +299,10 @@ stages:
           title: 'SQL Server 2019 (Microsoft.Data.SqlClient)'
           config: 'sqlserver.2019.ms'
           script: 'sqlserver.2019.cmd'
+#        PostgreSQL10:
+#          title: 'PostgreSQL 10'
+#          config: 'pgsql10'
+#          script: 'pgsql10.cmd'
 
     steps:
     - checkout: none
@@ -351,7 +356,8 @@ stages:
       vmImage: 'vs2017-win2016'
     displayName: 'Tests: Win / NETFX 4.6 / '
     dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+    condition: eq(variables['System.PullRequest.TargetBranch'], 'release')
 
     strategy:
       matrix:
@@ -359,54 +365,50 @@ stages:
           title: 'SQL Server 2005 (System.Data.SqlClient)'
           config: 'sqlserver.2005'
           script: 'sqlserver.2005.cmd'
-        SqlServer2005_MS:
-          title: 'SQL Server 2005 (Microsoft.Data.SqlClient)'
-          config: 'sqlserver.2005.ms'
-          script: 'sqlserver.2005.cmd'
+#        SqlServer2005_MS:
+#          title: 'SQL Server 2005 (Microsoft.Data.SqlClient)'
+#          config: 'sqlserver.2005.ms'
+#          script: 'sqlserver.2005.cmd'
         SqlServer2008:
           title: 'SQL Server 2008 (System.Data.SqlClient)'
           config: 'sqlserver.2008'
           script: 'sqlserver.2008.cmd'
-        SqlServer2008_MS:
-          title: 'SQL Server 2008 (Microsoft.Data.SqlClient)'
-          config: 'sqlserver.2008.ms'
-          script: 'sqlserver.2008.cmd'
+#        SqlServer2008_MS:
+#          title: 'SQL Server 2008 (Microsoft.Data.SqlClient)'
+#          config: 'sqlserver.2008.ms'
+#          script: 'sqlserver.2008.cmd'
         SqlServer2012:
           title: 'SQL Server 2012 (System.Data.SqlClient)'
           config: 'sqlserver.2012'
           script: 'sqlserver.2012.cmd'
-        SqlServer2012_MS:
-          title: 'SQL Server 2012 (Microsoft.Data.SqlClient)'
-          config: 'sqlserver.2012.ms'
-          script: 'sqlserver.2012.cmd'
+#        SqlServer2012_MS:
+#          title: 'SQL Server 2012 (Microsoft.Data.SqlClient)'
+#          config: 'sqlserver.2012.ms'
+#          script: 'sqlserver.2012.cmd'
         SqlServer2014:
           title: 'SQL Server 2014 (System.Data.SqlClient)'
           config: 'sqlserver.2014'
           script: 'sqlserver.2014.cmd'
-        SqlServer2014_MS:
-          title: 'SQL Server 2014 (Microsoft.Data.SqlClient)'
-          config: 'sqlserver.2014.ms'
-          script: 'sqlserver.2014.cmd'
+#        SqlServer2014_MS:
+#          title: 'SQL Server 2014 (Microsoft.Data.SqlClient)'
+#          config: 'sqlserver.2014.ms'
+#          script: 'sqlserver.2014.cmd'
         SqlServer2016:
           title: 'SQL Server 2016 (System.Data.SqlClient)'
           config: 'sqlserver.2016'
           script: 'sqlserver.2016.cmd'
-        SqlServer2016_MS:
-          title: 'SQL Server 2016 (Microsoft.Data.SqlClient)'
-          config: 'sqlserver.2016.ms'
-          script: 'sqlserver.2016.cmd'
+#        SqlServer2016_MS:
+#          title: 'SQL Server 2016 (Microsoft.Data.SqlClient)'
+#          config: 'sqlserver.2016.ms'
+#          script: 'sqlserver.2016.cmd'
         SqlServer2017:
           title: 'SQL Server 2017 (System.Data.SqlClient)'
           config: 'sqlserver.2017'
           script: 'sqlserver.2017.cmd'
-        SqlServer2017_MS:
-          title: 'SQL Server 2017 (Microsoft.Data.SqlClient)'
-          config: 'sqlserver.2017.ms'
-          script: 'sqlserver.2017.cmd'
-        PostgreSQL10:
-          title: 'PostgreSQL 10'
-          config: 'pgsql10.win'
-          script: 'pgsql10.cmd'
+#        SqlServer2017_MS:
+#          title: 'SQL Server 2017 (Microsoft.Data.SqlClient)'
+#          config: 'sqlserver.2017.ms'
+#          script: 'sqlserver.2017.cmd'
 
     steps:
     - checkout: none
@@ -460,7 +462,8 @@ stages:
       vmImage: 'vs2017-win2016'
     displayName: 'Tests: Win / NETCOREAPP2.1 / '
     dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+    condition: eq(variables['System.PullRequest.TargetBranch'], 'release')
 
     strategy:
       matrix:
@@ -487,54 +490,50 @@ stages:
           title: 'SQL Server 2005 (System.Data.SqlClient)'
           config: 'sqlserver.2005'
           script: 'sqlserver.2005.cmd'
-        SqlServer2005_MS:
-          title: 'SQL Server 2005 (Microsoft.Data.SqlClient)'
-          config: 'sqlserver.2005.ms'
-          script: 'sqlserver.2005.cmd'
+#        SqlServer2005_MS:
+#          title: 'SQL Server 2005 (Microsoft.Data.SqlClient)'
+#          config: 'sqlserver.2005.ms'
+#          script: 'sqlserver.2005.cmd'
         SqlServer2008:
           title: 'SQL Server 2008 (System.Data.SqlClient)'
           config: 'sqlserver.2008'
           script: 'sqlserver.2008.cmd'
-        SqlServer2008_MS:
-          title: 'SQL Server 2008 (Microsoft.Data.SqlClient)'
-          config: 'sqlserver.2008.ms'
-          script: 'sqlserver.2008.cmd'
+#        SqlServer2008_MS:
+#          title: 'SQL Server 2008 (Microsoft.Data.SqlClient)'
+#          config: 'sqlserver.2008.ms'
+#          script: 'sqlserver.2008.cmd'
         SqlServer2012:
           title: 'SQL Server 2012 (System.Data.SqlClient)'
           config: 'sqlserver.2012'
           script: 'sqlserver.2012.cmd'
-        SqlServer2012_MS:
-          title: 'SQL Server 2012 (Microsoft.Data.SqlClient)'
-          config: 'sqlserver.2012.ms'
-          script: 'sqlserver.2012.cmd'
+#        SqlServer2012_MS:
+#          title: 'SQL Server 2012 (Microsoft.Data.SqlClient)'
+#          config: 'sqlserver.2012.ms'
+#          script: 'sqlserver.2012.cmd'
         SqlServer2014:
           title: 'SQL Server 2014 (System.Data.SqlClient)'
           config: 'sqlserver.2014'
           script: 'sqlserver.2014.cmd'
-        SqlServer2014_MS:
-          title: 'SQL Server 2014 (Microsoft.Data.SqlClient)'
-          config: 'sqlserver.2014.ms'
-          script: 'sqlserver.2014.cmd'
+#        SqlServer2014_MS:
+#          title: 'SQL Server 2014 (Microsoft.Data.SqlClient)'
+#          config: 'sqlserver.2014.ms'
+#          script: 'sqlserver.2014.cmd'
         SqlServer2016:
           title: 'SQL Server 2016 (System.Data.SqlClient)'
           config: 'sqlserver.2016'
           script: 'sqlserver.2016.cmd'
-        SqlServer2016_MS:
-          title: 'SQL Server 2016 (Microsoft.Data.SqlClient)'
-          config: 'sqlserver.2016.ms'
-          script: 'sqlserver.2016.cmd'
+#        SqlServer2016_MS:
+#          title: 'SQL Server 2016 (Microsoft.Data.SqlClient)'
+#          config: 'sqlserver.2016.ms'
+#          script: 'sqlserver.2016.cmd'
         SqlServer2017:
           title: 'SQL Server 2017 (System.Data.SqlClient)'
           config: 'sqlserver.2017'
           script: 'sqlserver.2017.cmd'
-        SqlServer2017_MS:
-          title: 'SQL Server 2017 (Microsoft.Data.SqlClient)'
-          config: 'sqlserver.2017.ms'
-          script: 'sqlserver.2017.cmd'
-        PostgreSQL10:
-          title: 'PostgreSQL 10'
-          config: 'pgsql10.win'
-          script: 'pgsql10.cmd'
+#        SqlServer2017_MS:
+#          title: 'SQL Server 2017 (Microsoft.Data.SqlClient)'
+#          config: 'sqlserver.2017.ms'
+#          script: 'sqlserver.2017.cmd'
     steps:
     - checkout: none
 
@@ -582,7 +581,8 @@ stages:
       vmImage: 'vs2017-win2016'
     displayName: 'Tests: Win / NETCOREAPP3.1 / '
     dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+    condition: eq(variables['System.PullRequest.TargetBranch'], 'release')
 
     strategy:
       matrix:
@@ -655,7 +655,7 @@ stages:
 #          script: 'sqlserver.2017.cmd'
 #        PostgreSQL10:
 #          title: 'PostgreSQL 10'
-#          config: 'pgsql10.win'
+#          config: 'pgsql10'
 #          script: 'pgsql10.cmd'
     steps:
     - checkout: none
@@ -704,7 +704,8 @@ stages:
       vmImage: 'windows-2019'
     displayName: 'Tests: Win / NETCOREAPP2.1 / '
     dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+    condition: eq(variables['System.PullRequest.TargetBranch'], 'release')
 
     strategy:
       matrix:
@@ -720,6 +721,10 @@ stages:
           title: 'SQL Server 2019 (Microsoft.Data.SqlClient)'
           config: 'sqlserver.2019.ms'
           script: 'sqlserver.2019.cmd'
+#        PostgreSQL10:
+#          title: 'PostgreSQL 10'
+#          config: 'pgsql10'
+#          script: 'pgsql10.cmd'
     steps:
     - checkout: none
 
@@ -759,7 +764,8 @@ stages:
       vmImage: 'ubuntu-20.04'
     displayName: 'Tests: Lin / NETCOREAPP2.1 / '
     dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+    condition: eq(variables['System.PullRequest.TargetBranch'], 'release')
 
     strategy:
       matrix:
@@ -898,7 +904,8 @@ stages:
       vmImage: 'ubuntu-20.04'
     displayName: 'Tests: Lin / NETCOREAPP3.1 / '
     dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+    condition: eq(variables['System.PullRequest.TargetBranch'], 'release')
 
     strategy:
       matrix:
@@ -1037,7 +1044,8 @@ stages:
       vmImage: 'ubuntu-16.04'
     displayName: 'Tests: Lin / NETCOREAPP2.1 / '
     dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+    condition: eq(variables['System.PullRequest.TargetBranch'], 'release')
 
     strategy:
       matrix:
@@ -1045,12 +1053,12 @@ stages:
           title: 'Informix 14.10'
           config: 'informix'
           script: 'informix14.sh'
-          nuget: 'IBM.Data.DB2.Core-lnx'
+          nuget: 'IBM.Data.DB2.Core-lnx -Version 2.2.0.100'
         DB2:
           title: 'DB2 LUW 11.5'
           config: 'db2'
           script: 'db2.sh'
-          nuget: 'IBM.Data.DB2.Core-lnx'
+          nuget: 'IBM.Data.DB2.Core-lnx -Version 2.2.0.100'
     steps:
     - checkout: none
 
@@ -1108,7 +1116,8 @@ stages:
       vmImage: 'macOS-10.15'
     displayName: 'Tests: Mac / NETCOREAPP2.1 / '
     dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+    condition: eq(variables['System.PullRequest.TargetBranch'], 'release')
 
     strategy:
       matrix:
@@ -1214,13 +1223,13 @@ stages:
           config: 'informix'
           script: 'mac.informix14.sh'
           docker: 'true'
-          nuget: 'IBM.Data.DB2.Core-osx'
+          nuget: 'IBM.Data.DB2.Core-osx -Version 2.0.0.100'
         DB2:
           title: 'DB2 LUW 11.5'
           config: 'db2'
           script: 'mac.db2.sh'
           docker: 'true'
-          nuget: 'IBM.Data.DB2.Core-osx'
+          nuget: 'IBM.Data.DB2.Core-osx -Version 2.0.0.100'
     steps:
     - checkout: none
 
@@ -1292,7 +1301,8 @@ stages:
       vmImage: 'macOS-10.15'
     displayName: 'Tests: Mac / NETCOREAPP3.1 / '
     dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+    condition: eq(variables['System.PullRequest.TargetBranch'], 'release')
 
     strategy:
       matrix:
@@ -1303,16 +1313,16 @@ stages:
 #          title: 'SQLite.MS'
 #          config: 'sqlite.ms'
 # temporary disabled due to stack overflow exception during test run. needs investigation
-        SqlServer2017:
-          title: 'SQL Server 2017 (System.Data.SqlClient)'
-          config: 'sqlserver.fts.2017'
-          script: 'mac.sqlserver.2017.sh'
-          docker: 'true'
-        SqlServer2017_MS:
-          title: 'SQL Server 2017 (Microsoft.Data.SqlClient)'
-          config: 'sqlserver.fts.2017'
-          script: 'mac.sqlserver.2017.sh'
-          docker: 'true'
+#        SqlServer2017:
+#          title: 'SQL Server 2017 (System.Data.SqlClient)'
+#          config: 'sqlserver.fts.2017'
+#          script: 'mac.sqlserver.2017.sh'
+#          docker: 'true'
+#        SqlServer2017_MS:
+#          title: 'SQL Server 2017 (Microsoft.Data.SqlClient)'
+#          config: 'sqlserver.fts.2017'
+#          script: 'mac.sqlserver.2017.sh'
+#          docker: 'true'
 #        SqlServer2019:
 #          title: 'SQL Server 2019 (System.Data.SqlClient)'
 #          config: 'sqlserver.fts.2019'
@@ -1398,13 +1408,13 @@ stages:
 #          config: 'informix'
 #          script: 'mac.informix14.sh'
 #          docker: 'true'
-#          nuget: 'IBM.Data.DB2.Core-osx'
+#          nuget: 'IBM.Data.DB2.Core-osx -Version 2.0.0.100'
 #        DB2:
 #          title: 'DB2 LUW 11.5'
 #          config: 'db2'
 #          script: 'mac.db2.sh'
 #          docker: 'true'
-#          nuget: 'IBM.Data.DB2.Core-osx'
+#          nuget: 'IBM.Data.DB2.Core-osx -Version 2.0.0.100'
     steps:
     - checkout: none
 

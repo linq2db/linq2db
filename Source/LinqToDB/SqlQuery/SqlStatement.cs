@@ -108,13 +108,13 @@ namespace LinqToDB.SqlQuery
 				switch (expr.ElementType)
 				{
 					case QueryElementType.SqlParameter :
-						{
-							var p = (SqlParameter)expr;
-							if (p.IsQueryParameter && alreadyAdded.Add(p))
-								Parameters.Add(p);
+					{
+						var p = (SqlParameter)expr;
+						if (p.IsQueryParameter && alreadyAdded.Add(p))
+							Parameters.Add(p);
 
-							break;
-						}
+						break;
+					}
 				}
 			});
 		}
@@ -352,11 +352,19 @@ namespace LinqToDB.SqlQuery
 			IsParameterDependent = isDepended;
 		}
 
-		internal void SetAliases()
+		static string? NormalizeParameterName(string? name)
+		{
+			if (string.IsNullOrEmpty(name))
+				return name;
+
+			name = name!.Replace(' ', '_');
+
+			return name;
+		}
+
+		internal void PrepareQueryAndAliases()
 		{
 			_aliases = null;
-
-			Parameters.Clear();
 
 			var allAliases    = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 			var paramsVisited = new HashSet<SqlParameter>();
@@ -442,11 +450,10 @@ namespace LinqToDB.SqlQuery
 						{
 							var p = (SqlParameter)expr;
 
-							if (p.IsQueryParameter)
-							{
-								if (paramsVisited.Add(p))
-									Parameters.Add(p);
-							}
+							if (paramsVisited.Add(p) && !p.IsQueryParameter)
+								IsParameterDependent = true;
+
+							p.Name = NormalizeParameterName(p.Name);
 
 							break;
 						}
@@ -478,7 +485,7 @@ namespace LinqToDB.SqlQuery
 				StringComparer.OrdinalIgnoreCase);
 
 			Utils.MakeUniqueNames(
-				Parameters,
+				paramsVisited,
 				allAliases,
 				(n, a) => !a!.Contains(n) && !ReservedWords.IsReserved(n), p => p.Name, (p, n, a) =>
 				{

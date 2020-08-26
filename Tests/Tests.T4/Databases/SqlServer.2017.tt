@@ -6,6 +6,7 @@
 <#@ include file="..\..\..\Source\LinqToDB.Templates\ObsoleteAttributes.ttinclude"         #>
 <#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net46\Microsoft.SqlServer.Types.dll" #>
 <#
+	GetSchemaOptions.UseSchemaOnly = false;
 	NamespaceName   = "Sql2017";
 //	DataContextName = "NorthwindDB";
 	DatabaseName    = null;//"Northwind";

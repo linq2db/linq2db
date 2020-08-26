@@ -231,7 +231,7 @@ CREATE TABLE "TestIdentity" (
 GO
 
 
-DROP TABLE IF EXISTS AllTypes
+DROP TABLE IF EXISTS "AllTypes"
 GO
 DROP TABLE IF EXISTS "AllTypes"
 GO
@@ -568,7 +568,7 @@ CREATE OR REPLACE FUNCTION AddIssue792Record()
 	RETURNS void AS
 $BODY$
 BEGIN
-	INSERT INTO dbo.AllTypes(char20DataType) VALUES('issue792');
+	INSERT INTO dbo."AllTypes"(char20DataType) VALUES('issue792');
 END;
 $BODY$
 	LANGUAGE PLPGSQL;

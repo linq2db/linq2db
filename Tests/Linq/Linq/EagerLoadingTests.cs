@@ -4,7 +4,9 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Mapping;
+using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
 using NUnit.Framework;
 
@@ -69,6 +71,10 @@ namespace Tests.Linq
 			[Column] [PrimaryKey] public int SubDetailId    { get; set; }
 			[Column] public int? DetailId    { get; set; }
 			[Column] public string? SubDetailValue { get; set; }
+
+			[Association(ThisKey = nameof(DetailId), OtherKey = nameof(DetailClass.DetailId))]
+			public SubDetailClass? Detail { get; set; } = null!;
+
 		}
 
 		class SubDetailDTO
@@ -172,6 +178,140 @@ namespace Tests.Linq
 				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 			}
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2442")]
+		public async Task TestLoadWithAsyncEnumerator([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var (masterRecords, detailRecords) = GenerateData();
+			var intParam = 0;
+
+			using (new AllowMultipleQuery())
+			using (var db     = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			{
+				var query = from m in master.LoadWith(m => m.Details).LoadWith(m => m.DetailsQuery)
+							where m.Id1 >= intParam
+							select m;
+
+				var expectedQuery = from m in masterRecords
+									where m.Id1 >= intParam
+									select new MasterClass
+									{
+										Id1          = m.Id1,
+										Id2          = m.Id2,
+										Value        = m.Value,
+										Details      = detailRecords.Where(d => d.MasterId == m.Id1).ToList(),
+										DetailsQuery = detailRecords.Where(d => d.MasterId == m.Id1 && d.MasterId == m.Id2 && d.DetailId % 2 == 0).ToArray(),
+									};
+
+				var result = new List<MasterClass>();
+
+				await foreach (var item in (IAsyncEnumerable<MasterClass>)query)
+					result.Add(item);
+
+				var expected = expectedQuery.ToList();
+
+				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+			}
+		}
+
+		[Test]
+		public void TestLoadWithAndExtensions([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
+			
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			using (var subDetail = db.CreateLocalTable(subDetailRecords))
+			{
+				var query = 
+					from d in detail
+					from m in master.InnerJoin(m => m.Id1 == d.MasterId)
+					where m.Id1.In(1, 2)
+					select d;
+
+				query = query.LoadWith(d => d.SubDetails).ThenLoad(sd => sd.Detail);
+				var result = query.ToArray();
+
+				Assert.That(result.Length, Is.EqualTo(1));
+				Assert.That(result[0].SubDetails.Length, Is.EqualTo(100));
+				Assert.That(result[0].SubDetails[0].Detail, Is.Not.Null);
+			}
+		}
+
+
+		[Test]
+		public void TestLoadWithAndDuplications([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var (masterRecords, detailRecords) = GenerateData();
+			
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			{
+				var query = 
+					from m in master
+					from d in detail.InnerJoin(d => m.Id1 == d.MasterId)
+					select m;
+
+				query = query.LoadWith(d => d.Details);
+
+
+				var expectedQuery = from m in masterRecords
+					join dd in detailRecords on m.Id1 equals dd.MasterId
+					select new MasterClass
+					{
+						Id1 = m.Id1,
+						Id2 = m.Id2,
+						Value = m.Value,
+						Details = detailRecords.Where(d => m.Id1 == d.MasterId).ToList(),
+					};
+
+				var result = query.ToList();
+				var expected = expectedQuery.ToList();
+
+				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+			}
+		}
+
+		[Test]
+		public void TestLoadWithFromProjection([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
+			
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			using (var subDetail = db.CreateLocalTable(subDetailRecords))
+			{
+				var subQuery = 
+					from m in master
+					from d in detail.InnerJoin(d => m.Id1 == d.MasterId)
+					select new {m, d};
+
+				var query = subQuery.Select(r => new { One = r, Two = r.d });
+
+				query = query.LoadWith(a => a.One.m.Details).ThenLoad(d => d.SubDetails)
+					.LoadWith(a => a.One.d.SubDetails)
+					.LoadWith(b => b.Two.SubDetails).ThenLoad(sd => sd.Detail);
+
+
+				var result = query.ToArray();
+
+				foreach (var item in result)
+				{
+					Assert.That(ReferenceEquals(item.One.d, item.Two), Is.True);
+					Assert.That(item.Two.SubDetails.Length, Is.GreaterThan(0));
+					Assert.That(item.Two.SubDetails[0].Detail, Is.Not.Null);
+				}
+			}
+		}
+
 
 		[Test]
 		public void TestLoadWithToString1([IncludeDataSources(TestProvName.AllSQLite)] string context)
@@ -889,7 +1029,7 @@ FROM
 			}
 		}
 
-		#region issue 1862
+#region issue 1862
 		[Table]
 		public partial class Blog
 		{
@@ -1037,10 +1177,10 @@ FROM
 				Assert.AreEqual("SqlKata", result.Blog[0].Posts[3].Tags[0].Name);
 			}
 		}
-		#endregion
+#endregion
 
 
-		#region issue 2196
+#region issue 2196
 		public class EventScheduleItemBase
 		{
 			public EventScheduleItemBase()
@@ -1162,12 +1302,13 @@ FROM
 				Assert.That(result[0].Persons.Count, Is.EqualTo(1));
 			}
 		}
-		#endregion
+#endregion
 
-		#region issue 2307
+#region issue 2307
 		[Table]
 		class AttendanceSheet
 		{
+			[PrimaryKey]
 			[Column] public int Id;
 
 			public static AttendanceSheet[] Items { get; } =
@@ -1227,6 +1368,6 @@ FROM
 				query.ToList();
 			}
 		}
-		#endregion
+#endregion
 	}
 }

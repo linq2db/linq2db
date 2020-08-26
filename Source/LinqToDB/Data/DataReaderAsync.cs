@@ -16,7 +16,7 @@ namespace LinqToDB.Data
 		internal CancellationToken CancellationToken { get; set; }
 		private  DateTime          StartedOn         { get; }      = DateTime.UtcNow;
 		private  Stopwatch         Stopwatch         { get; }      = Stopwatch.StartNew();
-
+		internal Action?           OnDispose         { get; set; }
 		public void Dispose()
 		{
 			if (Reader != null)
@@ -35,6 +35,8 @@ namespace LinqToDB.Data
 					});
 				}
 			}
+
+			OnDispose?.Invoke();
 		}
 
 		#region Query with object reader

@@ -1120,4 +1120,30 @@ CREATE OR REPLACE PROCEDURE TEST2132
 BEGIN
 	return 6;
 END;
+-- schema test table, view and matview. doesn't have columns, as we test only object and it's atributes load
+/
+DROP VIEW SchemaTestView
+/
+DROP MATERIALIZED VIEW SchemaTestMatView
+/
+DROP TABLE SchemaTestTable
+/
+CREATE TABLE SchemaTestTable
+(
+	Id  NUMBER NOT NULL PRIMARY KEY
+)
+/
+CREATE VIEW SchemaTestView AS SELECT Id FROM SchemaTestTable
+/
+CREATE MATERIALIZED VIEW SchemaTestMatView AS SELECT Id FROM SchemaTestTable
+/
+COMMENT ON TABLE SchemaTestTable IS 'This is table'
+/
+COMMENT ON MATERIALIZED VIEW SchemaTestMatView IS 'This is matview'
+/
+COMMENT ON COLUMN SchemaTestTable.Id IS 'This is column'
+/
+COMMENT ON COLUMN SchemaTestView.Id IS 'This is view column'
+/
+COMMENT ON COLUMN SchemaTestMatView.Id IS 'This is matview column'
 /

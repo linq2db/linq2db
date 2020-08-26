@@ -844,7 +844,7 @@ namespace LinqToDB
 				var ordered = chain
 					.Select((c, i) => Tuple.Create(c, i))
 					.OrderByDescending(t => t.Item1.Extension?.ChainPrecedence ?? int.MinValue)
-					.ThenByDescending(t => t.Item2)
+					.ThenBy(t => t.Item2)
 					.Select(t => t.Item1)
 					.ToArray();
 
@@ -887,7 +887,9 @@ namespace LinqToDB
 						Name = g.Key,
 						UnderName = g
 							.OrderByDescending(e => e.Item1.Extension?.ChainPrecedence ?? int.MinValue)
-							.ThenBy(e => e.Item2).Select(e => e.Item1).ToArray()
+							.ThenBy(e => e.Item2)
+							.Select(e => e.Item1)
+							.ToArray()
 					})
 					.ToArray();
 

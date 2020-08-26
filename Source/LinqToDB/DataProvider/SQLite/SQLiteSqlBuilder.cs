@@ -7,7 +7,9 @@ namespace LinqToDB.DataProvider.SQLite
 {
 	using SqlQuery;
 	using SqlProvider;
-	using LinqToDB.Mapping;
+	using Mapping;
+	using Common;
+	using Tools;
 
 	public class SQLiteSqlBuilder : BasicSqlBuilder
 	{
@@ -120,7 +122,7 @@ namespace LinqToDB.DataProvider.SQLite
 			}
 			else
 			{
-			AppendIndent();
+				AppendIndent();
 				StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY (");
 				StringBuilder.Append(fieldNames.Aggregate((f1,f2) => f1 + ", " + f2));
 				StringBuilder.Append(")");
@@ -131,24 +133,24 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 			if (predicate is SqlPredicate.ExprExpr exprExpr)
 			{
-				var leftType  = exprExpr.Expr1.SystemType!;
-				var rightType = exprExpr.Expr2.SystemType!;
+				var leftType  = QueryHelper.GetDbDataType(exprExpr.Expr1);
+				var rightType = QueryHelper.GetDbDataType(exprExpr.Expr2);
 
 				if ((IsDateTime(leftType) || IsDateTime(rightType)) &&
-					!(exprExpr.Expr1 is IValueContainer && ((IValueContainer)exprExpr.Expr1).Value == null ||
-					  exprExpr.Expr2 is IValueContainer && ((IValueContainer)exprExpr.Expr2).Value == null))
+					!(exprExpr.Expr1 is IValueContainer container1 && container1.Value == null ||
+					  exprExpr.Expr2 is IValueContainer container2 && container2.Value == null))
 				{
-					if (leftType != null && !(exprExpr.Expr1 is SqlFunction func1 && (func1.Name == "$Convert$" || func1.Name == "DateTime")))
+					if (!(exprExpr.Expr1 is SqlFunction func1 && (func1.Name == "$Convert$" || func1.Name == "DateTime")))
 					{
-						var l = new SqlFunction(leftType, "$Convert$", SqlDataType.GetDataType(leftType),
-							SqlDataType.GetDataType(leftType), exprExpr.Expr1);
+						var l = new SqlFunction(leftType.SystemType, "$Convert$", SqlDataType.GetDataType(leftType.SystemType),
+							new SqlDataType(leftType), exprExpr.Expr1);
 						exprExpr.Expr1 = l;
 					}
-
-					if (rightType != null && !(exprExpr.Expr2 is SqlFunction func2 && (func2.Name == "$Convert$" || func2.Name == "DateTime")))
+					
+					if (!(exprExpr.Expr2 is SqlFunction func2 && (func2.Name == "$Convert$" || func2.Name == "DateTime")))
 					{
-						var r = new SqlFunction(rightType, "$Convert$", SqlDataType.GetDataType(rightType),
-							SqlDataType.GetDataType(rightType), exprExpr.Expr2);
+						var r = new SqlFunction(rightType.SystemType, "$Convert$", new SqlDataType(rightType),
+							new SqlDataType(rightType), exprExpr.Expr2);
 						exprExpr.Expr2 = r;
 					}
 				}
@@ -165,6 +167,18 @@ namespace LinqToDB.DataProvider.SQLite
 				sb.Append(database).Append(".");
 
 			return sb.Append(table);
+		}
+
+		static bool IsDateTime(DbDataType dbDataType)
+		{
+			if (dbDataType.DataType.In(DataType.Date, DataType.Time, DataType.DateTime, DataType.DateTime2,
+				DataType.DateTimeOffset, DataType.SmallDateTime, DataType.Timestamp))
+				return true;
+
+			if (dbDataType.DataType != DataType.Undefined)
+				return false;
+
+			return IsDateTime(dbDataType.SystemType);
 		}
 
 		static bool IsDateTime(Type type)

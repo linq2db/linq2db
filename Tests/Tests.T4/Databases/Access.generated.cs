@@ -417,7 +417,7 @@ namespace AccessDataContext
 
 		#region PersonInsert
 
-		public static int PersonInsert(this TestDataDB dataConnection, string? @FirstName, string? @MiddleName, string? @LastName, string? @Gender)
+		public static int PersonInsert(this TestDataDB dataConnection, string? @FirstName, string? @MiddleName, string? @LastName, char? @Gender)
 		{
 			return dataConnection.ExecuteProc("[Person_Insert]",
 				new DataParameter("@FirstName",  @FirstName,  DataType.NText),
@@ -462,7 +462,7 @@ namespace AccessDataContext
 
 		#region PersonUpdate
 
-		public static int PersonUpdate(this TestDataDB dataConnection, int? @id, string? @FirstName, string? @MiddleName, string? @LastName, string? @Gender)
+		public static int PersonUpdate(this TestDataDB dataConnection, int? @id, string? @FirstName, string? @MiddleName, string? @LastName, char? @Gender)
 		{
 			return dataConnection.ExecuteProc("[Person_Update]",
 				new DataParameter("@id",         @id,         DataType.Int32),
