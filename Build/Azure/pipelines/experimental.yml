@@ -213,8 +213,8 @@ stages:
       vmImage: 'macOS-10.15'
     displayName: 'Tests: Mac / NETCOREAPP2.1 / '
     dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
-#    condition: eq(variables['Build.SourceBranchName'], 'fake')
+#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+    condition: eq(variables['Build.SourceBranchName'], 'fake')
 
     strategy:
       matrix:
@@ -490,15 +490,19 @@ stages:
       vmImage: 'windows-2019'
     displayName: 'Tests: Win / NETFX 4.6 / '
     dependsOn: build_job
-#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
-    condition: eq(variables['Build.SourceBranchName'], 'fake')
+    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+#    condition: eq(variables['Build.SourceBranchName'], 'fake')
 
     strategy:
       matrix:
-        SqlServer2016_2:
-          title: 'SQL Server 2016.2 (System.Data.SqlClient)'
-          config: 'sqlserver.2016'
-          script: 'sqlserver.2016.2.cmd'
+        MariaDB:
+          title: 'MariaDB'
+          config: 'mariadb'
+          script: 'mariadb.cmd'
+#        SqlServer2016_2:
+#          title: 'SQL Server 2016.2 (System.Data.SqlClient)'
+#          config: 'sqlserver.2016'
+#          script: 'sqlserver.2016.2.cmd'
 #        SqlServer2019:
 #          title: 'SQL Server 2019 (System.Data.SqlClient)'
 #          config: 'sqlserver.2019'

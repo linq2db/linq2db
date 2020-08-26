@@ -1,5 +1,6 @@
 rem change password if it will work
-docker run -d --name mysql -h mysql -p 3306:3306 petrjahoda/mariadb-nanoserver:latest
+#docker run -d --name mysql -h mysql -p 3306:3306 petrjahoda/mariadb-nanoserver:latest
+docker run -d --name mysql -h mysql -p 3306:3306 philotimo/mariadb-windows:10.3.16-nanoserver-1809
 docker ps -a
 
 echo "Waiting"
