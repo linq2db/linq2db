@@ -213,23 +213,23 @@ stages:
       vmImage: 'macOS-10.15'
     displayName: 'Tests: Mac / NETCOREAPP2.1 / '
     dependsOn: build_job
-#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
-    condition: eq(variables['Build.SourceBranchName'], 'fake')
+    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+#    condition: eq(variables['Build.SourceBranchName'], 'fake')
 
     strategy:
       matrix:
-        Informix14:
-          title: 'Informix 14.10'
-          config: 'informix'
-          script: 'mac.informix14.sh'
-          docker: 'true'
-          nuget: 'IBM.Data.DB2.Core-osx -Version 2.0.0.100'
-        DB2:
-          title: 'DB2 LUW 11.5'
-          config: 'db2'
-          script: 'mac.db2.sh'
-          docker: 'true'
-          nuget: 'IBM.Data.DB2.Core-osx -Version 2.0.0.100'
+#        Informix14:
+#          title: 'Informix 14.10'
+#          config: 'informix'
+#          script: 'mac.informix14.sh'
+#          docker: 'true'
+#          nuget: 'IBM.Data.DB2.Core-osx -Version 2.0.0.100'
+#        DB2:
+#          title: 'DB2 LUW 11.5'
+#          config: 'db2'
+#          script: 'mac.db2.sh'
+#          docker: 'true'
+#          nuget: 'IBM.Data.DB2.Core-osx -Version 2.0.0.100'
 #        SqlServer2017:
 #          title: 'SQL Server 2017 (System.Data.SqlClient)'
 #          config: 'sqlserver.fts.2017'
@@ -240,11 +240,11 @@ stages:
 #          config: 'sqlserver.fts.2017'
 #          script: 'mac.sqlserver.2017.sh'
 #          docker: 'true'
-        SqlServer2019:
-          title: 'SQL Server 2019 (System.Data.SqlClient)'
-          config: 'sqlserver.fts.2019'
-          script: 'mac.sqlserver.2019.sh'
-          docker: 'true'
+#        SqlServer2019:
+#          title: 'SQL Server 2019 (System.Data.SqlClient)'
+#          config: 'sqlserver.fts.2019'
+#          script: 'mac.sqlserver.2019.sh'
+#          docker: 'true'
         SqlServer2019_MS:
           title: 'SQL Server 2019 (Microsoft.Data.SqlClient)'
           config: 'sqlserver.fts.2019.ms'
@@ -267,21 +267,21 @@ stages:
 #          config: 'sqlserver.2017.ms'
 #          script: 'mac.sqlserver.2017.sh'
 #          docker: 'true'
-        MySQL:
-          title: 'MySQL'
-          config: 'mysql'
-          script: 'mac.mysql.sh'
-          docker: 'true'
-        MySQL55:
-          title: 'MySQL 5.5'
-          config: 'mysql55'
-          script: 'mac.mysql55.sh'
-          docker: 'true'
-        MariaDB:
-          title: 'MariaDB'
-          config: 'mariadb'
-          script: 'mac.mariadb.sh'
-          docker: 'true'
+#        MySQL:
+#          title: 'MySQL'
+#          config: 'mysql'
+#          script: 'mac.mysql.sh'
+#          docker: 'true'
+#        MySQL55:
+#          title: 'MySQL 5.5'
+#          config: 'mysql55'
+#          script: 'mac.mysql55.sh'
+#          docker: 'true'
+#        MariaDB:
+#          title: 'MariaDB'
+#          config: 'mariadb'
+#          script: 'mac.mariadb.sh'
+#          docker: 'true'
 
     steps:
     - checkout: none
@@ -490,8 +490,8 @@ stages:
       vmImage: 'windows-2019'
     displayName: 'Tests: Win / NETFX 4.6 / '
     dependsOn: build_job
-    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
-#    condition: eq(variables['Build.SourceBranchName'], 'fake')
+#    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+    condition: eq(variables['Build.SourceBranchName'], 'fake')
 
     strategy:
       matrix:
