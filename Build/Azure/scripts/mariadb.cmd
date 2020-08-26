@@ -1,9 +1,9 @@
-rem change password if it will work
+rem TODO: need working image
 rem docker run -d --name mysql -h mysql -p 3306:3306 petrjahoda/mariadb-nanoserver:latest
 rem docker run -d --name mysql -h mysql -p 3306:3306 philotimo/mariadb-windows:10.3.16-nanoserver-1809
 rem docker run -d --name mysql -h mysql -p 3306:3306 connorlanigan/mariadb-windows:10.3.7
 rem docker run -d --name mysql -h mysql -p 3306:3306 kiazhi/nanoserver.mariadb:latest
-docker run -d --name mysql -h mysql -p 3306:3306 awesomecontainer/wdocker-mariadb:latest
+rem docker run -d --name mysql -h mysql -p 3306:3306 awesomecontainer/wdocker-mariadb:latest
 docker ps -a
 
 echo "Waiting"

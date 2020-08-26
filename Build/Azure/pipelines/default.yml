@@ -287,10 +287,10 @@ stages:
           title: 'SQL CE'
           config: 'sqlce'
           psscript: 'sqlce.ps1'
-        MariaDB:
-          title: 'MariaDB'
-          config: 'mariadb'
-          script: 'mariadb.cmd'
+#        MariaDB:
+#          title: 'MariaDB'
+#          config: 'mariadb'
+#          script: 'mariadb.cmd'
         SqlServer2019:
           title: 'SQL Server 2019 (System.Data.SqlClient)'
           config: 'sqlserver.2019'
@@ -709,10 +709,10 @@ stages:
 
     strategy:
       matrix:
-        MariaDB:
-          title: 'MariaDB'
-          config: 'mariadb.win'
-          script: 'mariadb.cmd'
+#        MariaDB:
+#          title: 'MariaDB'
+#          config: 'mariadb.win'
+#          script: 'mariadb.cmd'
         SqlServer2019:
           title: 'SQL Server 2019 (System.Data.SqlClient)'
           config: 'sqlserver.2019'
