@@ -1091,12 +1091,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (e.Method.DeclaringType == typeof(string) && e.Method.Name == "Format")
 						{
-							// TODO: move PrepareRawSqlArguments to more correct location
-							TableBuilder.PrepareRawSqlArguments(e, null,
-								out var format, out var arguments);
-							var sqlArguments = arguments.Select(a => ConvertToSql(context, a)).ToArray();
-
-							return new SqlExpression(e.Type, format, Precedence.Primary, sqlArguments);
+							return ConvertFormatToSql(context, e);
 						}
 
 						break;
@@ -1154,6 +1149,16 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			throw new LinqException("'{0}' cannot be converted to SQL.", expression);
+		}
+
+		public ISqlExpression ConvertFormatToSql(IBuildContext? context, MethodCallExpression mc)
+		{
+			// TODO: move PrepareRawSqlArguments to more correct location
+			TableBuilder.PrepareRawSqlArguments(mc, null,
+				out var format, out var arguments);
+			var sqlArguments = arguments.Select(a => ConvertToSql(context, a)).ToArray();
+
+			return QueryHelper.ConvertFormatToConcatenation(format, sqlArguments);
 		}
 
 		public ISqlExpression ConvertExtensionToSql(IBuildContext context, Sql.ExpressionAttribute attr, MethodCallExpression mc)
