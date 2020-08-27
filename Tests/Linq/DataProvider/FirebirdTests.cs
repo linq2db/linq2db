@@ -20,6 +20,7 @@ namespace Tests.DataProvider
 	using System.Collections.Generic;
 	using System.Data;
 	using System.Globalization;
+	using System.Linq.Expressions;
 	using System.Threading.Tasks;
 	using LinqToDB.Linq;
 	using Model;
@@ -708,6 +709,70 @@ namespace Tests.DataProvider
 				}
 			}
 		}
+
+		#region issue 2445
+		[Table]
+		public class Card
+		{
+			[Column] public int     Id       { get; set; }
+			[Column] public string? CardName { get; set; }
+			[Column] public int     OwnerId  { get; set; }
+
+			[Association(QueryExpressionMethod = nameof(Card_Owner), CanBeNull = true)]
+			public Client Owner { get; set; } = null!;
+
+			public static Expression<Func<Card, IDataContext, IQueryable<Client>>> Card_Owner()
+			{
+				return (c, db) => db.GetTable<Client>().Where(cl => cl.Id == c.OwnerId);
+			}
+		}
+
+		[Table]
+		public class Client
+		{
+			[Column] public int     Id   { get; set; }
+			[Column] public string? Name { get; set; }
+
+			[ExpressionMethod(nameof(Client_CountOfTCards), IsColumn = true)]
+			public int CountOfTCards { get; set; }
+
+			public static Expression<Func<Client, IDataContext, int>> Client_CountOfTCards()
+			{
+				return (cl, db) => db.GetTable<Card>().Where(t => t.OwnerId == cl.Id).Count();
+			}
+		}
+
+		[Test]
+		public void Issue2445Test(
+			[IncludeDataSources(false, TestProvName.AllFirebird)] string context,
+			[Values] FirebirdIdentifierQuoteMode quoteMode)
+		{
+			Query.ClearCaches();
+			using (new FirebirdQuoteMode(quoteMode))
+			using (var db      = new TestDataConnection(context))
+			using (var cards   = db.CreateLocalTable<Card>())
+			using (var clients = db.CreateLocalTable<Client>())
+			{
+				cards.LoadWith(x => x.Owner).ToList();
+
+				var sql = db.LastQuery!;
+
+				if (quoteMode == FirebirdIdentifierQuoteMode.None)
+				{
+					Assert.True(sql.Contains(") a_Owner ON")); // subquery alias
+					Assert.True(sql.Contains("Client cl")); // table alias
+					Assert.True(sql.Contains(") as cnt")); // column alias
+				}
+				else
+				{
+					Assert.True(sql.Contains(") \"a_Owner\" ON")); // subquery alias
+					Assert.True(sql.Contains("\"Client\" \"cl\"")); // table alias
+					Assert.True(sql.Contains(") as \"cnt\"")); // column alias
+				}
+			}
+			Query.ClearCaches();
+		}
+		#endregion
 	}
 
 	static class FirebirdProcedures

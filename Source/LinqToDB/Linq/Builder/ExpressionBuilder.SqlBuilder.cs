@@ -20,6 +20,7 @@ namespace LinqToDB.Linq.Builder
 	using SqlQuery;
 	using SqlProvider;
 	using Tools;
+	using System.Threading;
 
 	partial class ExpressionBuilder
 	{
@@ -1090,12 +1091,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (e.Method.DeclaringType == typeof(string) && e.Method.Name == "Format")
 						{
-							// TODO: move PrepareRawSqlArguments to more correct location
-							TableBuilder.PrepareRawSqlArguments(e, null,
-								out var format, out var arguments);
-							var sqlArguments = arguments.Select(a => ConvertToSql(context, a)).ToArray();
-
-							return new SqlExpression(e.Type, format, Precedence.Primary, sqlArguments);
+							return ConvertFormatToSql(context, e);
 						}
 
 						break;
@@ -1153,6 +1149,16 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			throw new LinqException("'{0}' cannot be converted to SQL.", expression);
+		}
+
+		public ISqlExpression ConvertFormatToSql(IBuildContext? context, MethodCallExpression mc)
+		{
+			// TODO: move PrepareRawSqlArguments to more correct location
+			TableBuilder.PrepareRawSqlArguments(mc, null,
+				out var format, out var arguments);
+			var sqlArguments = arguments.Select(a => ConvertToSql(context, a)).ToArray();
+
+			return QueryHelper.ConvertFormatToConcatenation(format, sqlArguments);
 		}
 
 		public ISqlExpression ConvertExtensionToSql(IBuildContext context, Sql.ExpressionAttribute attr, MethodCallExpression mc)
@@ -3478,19 +3484,19 @@ namespace LinqToDB.Linq.Builder
 
 		#region Eager Loading
 
-		private List<Tuple<Func<IDataContext, Expression, object?[]?, object?>, Func<IDataContext, Expression, object?[]?, Task<object?>>>>? _preambles;
+		private List<Tuple<Func<IDataContext, Expression, object?[]?, object?>, Func<IDataContext, Expression, object?[]?, CancellationToken, Task<object?>>>>? _preambles;
 
 		public static readonly ParameterExpression PreambleParam =
 			Expression.Parameter(typeof(object[]), "preamble");
 
-		public int RegisterPreamble<T>(Func<IDataContext, Expression, object?[]?, T> func, Func<IDataContext, Expression, object?[]?, Task<T>> funcAsync)
+		public int RegisterPreamble<T>(Func<IDataContext, Expression, object?[]?, T> func, Func<IDataContext, Expression, object?[]?, CancellationToken, Task<T>> funcAsync)
 		{
 			if (_preambles == null)
-				_preambles = new List<Tuple<Func<IDataContext, Expression, object?[]?, object?>,Func<IDataContext, Expression, object?[]?, Task<object?>>>>();
+				_preambles = new List<Tuple<Func<IDataContext, Expression, object?[]?, object?>,Func<IDataContext, Expression, object?[]?, CancellationToken, Task<object?>>>>();
 			_preambles.Add(
-				Tuple.Create< Func<IDataContext, Expression, object?[]?, object?>, Func<IDataContext, Expression, object?[]?, Task<object?>>>(
+				Tuple.Create< Func<IDataContext, Expression, object?[]?, object?>, Func<IDataContext, Expression, object?[]?, CancellationToken, Task<object?>>>(
 					(dc, e, ps) => func(dc, e, ps),
-					async (dc, e, ps) => await funcAsync(dc, e, ps)));
+					async (dc, e, ps, ct) => await funcAsync(dc, e, ps, ct)));
 			return _preambles.Count - 1;
 		}
 

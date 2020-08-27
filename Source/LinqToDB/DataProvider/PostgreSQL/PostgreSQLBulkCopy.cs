@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
@@ -84,13 +84,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				var npgsqlType = _provider.GetNativeType(columns[i].DbType, true);
 				if (npgsqlType == null)
 				{
-					var columnType = columns[i].DataType != DataType.Undefined ? new SqlQuery.SqlDataType(columns[i]) : null;
-
-					if (columnType == null || columnType.Type.DataType == DataType.Undefined)
-						columnType = columns[i].MappingSchema.GetDataType(columns[i].StorageType);
+					var columnType = columns[i].GetDbDataType(true);
 
 					var sb = new System.Text.StringBuilder();
-					sqlBuilder.BuildTypeName(sb, columnType);
+					sqlBuilder.BuildTypeName(sb, new SqlQuery.SqlDataType(columnType));
 					npgsqlType = _provider.GetNativeType(sb.ToString(), true);
 				}
 
