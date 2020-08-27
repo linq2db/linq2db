@@ -729,10 +729,10 @@ namespace LinqToDB.Linq.Builder
 			return new[] { new SqlInfo(ConvertToSql(context, expression, false, columnDescriptor)) };
 		}
 
-		public ISqlExpression ConvertToSqlExpression(IBuildContext context, Expression expression, ColumnDescriptor? columnDescriptor)
+		public ISqlExpression ConvertToSqlExpression(IBuildContext context, Expression expression, ColumnDescriptor? columnDescriptor, bool isPureExpression)
 		{
 			var expr = ConvertExpression(expression);
-			return ConvertToSql(context, expr, false, columnDescriptor);
+			return ConvertToSql(context, expr, false, columnDescriptor, isPureExpression);
 		}
 
 		public ISqlExpression ConvertToExtensionSql(IBuildContext context, Expression expression, ColumnDescriptor? columnDescriptor)
@@ -780,7 +780,7 @@ namespace LinqToDB.Linq.Builder
 			return ConvertToSql(context, expression, false, columnDescriptor);
 		}
 
-		public ISqlExpression ConvertToSql(IBuildContext? context, Expression expression, bool unwrap = false, ColumnDescriptor? columnDescriptor = null)
+		public ISqlExpression ConvertToSql(IBuildContext? context, Expression expression, bool unwrap = false, ColumnDescriptor? columnDescriptor = null, bool isPureExpression = false)
 		{
 			if (typeof(IToSqlConverter).IsSameOrParentOf(expression.Type))
 			{
@@ -1091,7 +1091,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (e.Method.DeclaringType == typeof(string) && e.Method.Name == "Format")
 						{
-							return ConvertFormatToSql(context, e);
+							return ConvertFormatToSql(context, e, isPureExpression);
 						}
 
 						break;
@@ -1151,12 +1151,17 @@ namespace LinqToDB.Linq.Builder
 			throw new LinqException("'{0}' cannot be converted to SQL.", expression);
 		}
 
-		public ISqlExpression ConvertFormatToSql(IBuildContext? context, MethodCallExpression mc)
+		public ISqlExpression ConvertFormatToSql(IBuildContext? context, MethodCallExpression mc, bool isPureExpression)
 		{
 			// TODO: move PrepareRawSqlArguments to more correct location
 			TableBuilder.PrepareRawSqlArguments(mc, null,
 				out var format, out var arguments);
 			var sqlArguments = arguments.Select(a => ConvertToSql(context, a)).ToArray();
+
+			if (isPureExpression)
+			{
+				return new SqlExpression(mc.Type, format, Precedence.Primary, sqlArguments);
+			}
 
 			return QueryHelper.ConvertFormatToConcatenation(format, sqlArguments);
 		}

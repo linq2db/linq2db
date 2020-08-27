@@ -98,7 +98,7 @@ namespace LinqToDB.Linq.Builder
 
 										// TODO: parameter accessor is overkill here for disposable parameter
 										// we need method to create parameter value directly with all conversions
-										var sql = Builder.ConvertToSqlExpression(Parent!, valueExpr, column);
+										var sql = Builder.ConvertToSqlExpression(Parent!, valueExpr, column, false);
 										if (sql is SqlParameter p)
 										{
 											p.IsQueryParameter = !Builder.MappingSchema.ValueToSqlConverter.CanConvert(p.Type.SystemType);
