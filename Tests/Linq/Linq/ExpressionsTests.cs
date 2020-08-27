@@ -815,6 +815,56 @@ namespace Tests.Linq
 		{
 			throw new InvalidOperationException();
 		}
+
+
+		#region issue 2431
+		[Table]
+		class Issue2431Table
+		{
+			[Column] public int Id;
+			[Column(DataType = DataType.NVarChar)] public JsonType? Json;
+
+			public static readonly Issue2431Table[] Data = new []
+			{
+				new Issue2431Table() { Id = 1 },
+				new Issue2431Table() { Id = 2 },
+				new Issue2431Table() { Id = 3 }
+			};
+
+			public class JsonType
+			{
+				public string? Text;
+			}
+		}
+
+		[Test]
+		public void Issue2431Test([IncludeDataSources(true, TestProvName.AllPostgreSQL93Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(Issue2431Table.Data))
+			{
+				db.GetTable<Issue2431Table>().Where(r => JsonExtractPathText(r.Json, json => json!.Text) == "test" ? true : false).ToList();
+			}
+		}
+
+		[ExpressionMethod(nameof(JsonExtractPathExpression))]
+		public static TJsonProp JsonExtractPathText<TColumn, TJsonProp>(
+			TColumn field,
+			Expression<Func<TColumn, TJsonProp>> path)
+			=> throw new InvalidOperationException();
+
+		private static Expression<Func<TColumn, Expression<Func<TColumn, TJsonProp>>, TJsonProp>>
+			JsonExtractPathExpression<TColumn, TJsonProp>()
+		{
+			return (column, jsonProp) => JsonExtractPathText<TColumn, TJsonProp>(column, Sql.Expr<string>(JsonPath(jsonProp)));
+		}
+
+		[Sql.Expression("{0}::json #>> {1}", ServerSideOnly = true, IsPredicate = true)]
+		public static TJsonProp JsonExtractPathText<TColumn, TJsonProp>(TColumn left, string right)
+			=> throw new InvalidOperationException();
+
+		public static string JsonPath<TColumn, TJsonProp>(Expression<Func<TColumn, TJsonProp>> extractor) => "'{json, text}'";
+		#endregion
 	}
 
 	static class ExpressionTestExtensions

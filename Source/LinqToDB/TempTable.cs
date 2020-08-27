@@ -520,9 +520,9 @@ namespace LinqToDB
 			return _table.ExecuteAsync<TResult>(expression, token);
 		}
 
-		IAsyncEnumerable<TResult> IQueryProviderAsync.ExecuteAsync<TResult>(Expression expression)
+		Task<IAsyncEnumerable<TResult>> IQueryProviderAsync.ExecuteAsyncEnumerable<TResult>(Expression expression, CancellationToken token)
 		{
-			return _table.ExecuteAsync<TResult>(expression);
+			return _table.ExecuteAsyncEnumerable<TResult>(expression, token);
 		}
 
 		#endregion

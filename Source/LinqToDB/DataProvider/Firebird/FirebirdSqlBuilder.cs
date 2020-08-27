@@ -181,6 +181,7 @@ namespace LinqToDB.DataProvider.Firebird
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryFieldAlias :
+				case ConvertType.NameToQueryTableAlias :
 				case ConvertType.NameToQueryField      :
 				case ConvertType.NameToQueryTable      :
 				case ConvertType.SequenceName          :
