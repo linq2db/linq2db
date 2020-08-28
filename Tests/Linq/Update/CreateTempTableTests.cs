@@ -2,10 +2,11 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+
 using LinqToDB;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
-using Tests.Model;
 
 namespace Tests.xUpdate
 {
@@ -184,7 +185,7 @@ namespace Tests.xUpdate
 					Assert.Fail("Task should have been canceled but was not");
 				}
 				catch (OperationCanceledException) { }
-				
+
 
 				var tableExists = true;
 				try

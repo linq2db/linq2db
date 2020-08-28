@@ -265,7 +265,9 @@ namespace LinqToDB.SqlProvider
 			BuildStep = Step.UpdateClause;  BuildUpdateClause(Statement, selectQuery, updateClause);
 
 			if (SqlProviderFlags.IsUpdateFromSupported)
-				{BuildStep = Step.FromClause;    BuildFromClause(Statement, selectQuery);}
+			{
+				BuildStep = Step.FromClause; BuildFromClause(Statement, selectQuery);
+			}
 
 			BuildStep = Step.WhereClause;   BuildWhereClause(selectQuery);
 			BuildStep = Step.GroupByClause; BuildGroupByClause(selectQuery);
@@ -355,12 +357,12 @@ namespace LinqToDB.SqlProvider
 			throw new SqlException("Unknown query type '{0}'.", Statement.QueryType);
 		}
 
-		public virtual StringBuilder ConvertTableName(StringBuilder sb, string? server, string? database, string? schema, string table, bool isTemporary)
+		public virtual StringBuilder ConvertTableName(StringBuilder sb, string? server, string? database, string? schema, string table, bool? isTemporary)
 		{
 			if (server   != null) server   = ConvertInline(server,   ConvertType.NameToServer);
 			if (database != null) database = ConvertInline(database, ConvertType.NameToDatabase);
 			if (schema   != null) schema   = ConvertInline(schema,   ConvertType.NameToSchema);
-								  table    = ConvertInline(table,    ConvertType.NameToQueryTable);
+			                      table    = ConvertInline(table,    ConvertType.NameToQueryTable);
 
 			return BuildTableName(sb, server, database, schema, table, isTemporary);
 		}
@@ -370,7 +372,7 @@ namespace LinqToDB.SqlProvider
 			string? database,
 			string? schema,
 			string  table,
-			bool    isTemporary)
+			bool?   isTemporary)
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
 
@@ -1005,11 +1007,18 @@ namespace LinqToDB.SqlProvider
 			StringBuilder.AppendLine();
 		}
 
+		protected virtual void BuildCreateTableCommand(SqlTable table)
+		{
+			StringBuilder
+				.Append("CREATE TABLE ");
+		}
+
 		protected virtual void BuildStartCreateTableStatement(SqlCreateTableStatement createTable)
 		{
 			if (createTable.StatementHeader == null)
 			{
-				AppendIndent().Append("CREATE TABLE ");
+				AppendIndent();
+				BuildCreateTableCommand(createTable.Table!);
 				BuildPhysicalTable(createTable.Table!, null);
 			}
 			else
@@ -3032,7 +3041,7 @@ namespace LinqToDB.SqlProvider
 			return table.PhysicalName == null ? null : ConvertInline(table.PhysicalName, ConvertType.NameToQueryTable);
 		}
 
-		protected virtual bool GetTableIsTemporary(SqlTable table)
+		protected virtual bool? GetTableIsTemporary(SqlTable table)
 		{
 			return table.IsTemporary;
 		}

@@ -388,7 +388,7 @@ namespace LinqToDB
 						(qualified & TableQualification.DatabaseName) != 0 ? sqlTable.Database    : null,
 						(qualified & TableQualification.SchemaName)   != 0 ? sqlTable.Schema      : null,
 						sqlTable.PhysicalName!,
-						(qualified & TableQualification.IsTemporary)  != 0 && sqlTable.IsTemporary);
+						(qualified & TableQualification.IsTemporary)  != 0 ? sqlTable.IsTemporary : null);
 
 					name = sb.ToString();
 				}

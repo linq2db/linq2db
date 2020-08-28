@@ -646,14 +646,24 @@ namespace LinqToDB.Mapping
 				},
 				setColumn,
 				a => a.Configuration,
-				a => new TableAttribute
+				a =>
 				{
-					Configuration             = a.Configuration,
-					Name                      = a.Name,
-					Schema                    = a.Schema,
-					Database                  = a.Database,
-					Server                    = a.Server,
-					IsColumnAttributeRequired = a.IsColumnAttributeRequired,
+					var ta = new TableAttribute
+					{
+						Configuration             = a.Configuration,
+						Name                      = a.Name,
+						Schema                    = a.Schema,
+						Database                  = a.Database,
+						Server                    = a.Server,
+						IsColumnAttributeRequired = a.IsColumnAttributeRequired,
+					};
+
+					var isTemporary = a.GetIsTemporaryValue();
+
+					if (isTemporary != null)
+						ta.IsTemporary = isTemporary.Value;
+
+					return ta;
 				});
 		}
 
@@ -722,8 +732,8 @@ namespace LinqToDB.Mapping
 		{
 			var ex = func.Body;
 
-			if (ex is UnaryExpression)
-				ex = ((UnaryExpression)ex).Operand;
+			if (ex is UnaryExpression expression)
+				ex = expression.Operand;
 
 			if (existingGetter == null)
 				existingGetter = GetExisting;

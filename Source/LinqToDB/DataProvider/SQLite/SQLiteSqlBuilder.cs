@@ -59,7 +59,7 @@ namespace LinqToDB.DataProvider.SQLite
 			return "OFFSET {0}";
 		}
 
-		public override bool IsNestedJoinSupported { get { return false; } }
+		public override bool IsNestedJoinSupported => false;
 
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
@@ -146,7 +146,7 @@ namespace LinqToDB.DataProvider.SQLite
 							new SqlDataType(leftType), exprExpr.Expr1);
 						exprExpr.Expr1 = l;
 					}
-					
+
 					if (!(exprExpr.Expr2 is SqlFunction func2 && (func2.Name == "$Convert$" || func2.Name == "DateTime")))
 					{
 						var r = new SqlFunction(rightType.SystemType, "$Convert$", new SqlDataType(rightType),
@@ -159,7 +159,7 @@ namespace LinqToDB.DataProvider.SQLite
 			base.BuildPredicate(predicate);
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, bool isTemporary)
+		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, bool? isTemporary)
 		{
 			if (database != null && database.Length == 0) database = null;
 
@@ -197,6 +197,13 @@ namespace LinqToDB.DataProvider.SQLite
 		protected override void BuildMergeStatement(SqlMergeStatement merge)
 		{
 			throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
+		}
+
+		protected override void BuildCreateTableCommand(SqlTable table)
+		{
+			StringBuilder.Append(table.IsTemporary == true
+				? "CREATE TEMPORARY TABLE "
+				: "CREATE TABLE ");
 		}
 	}
 }

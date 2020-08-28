@@ -51,9 +51,7 @@ namespace LinqToDB.Linq
 				if (sqlTable.Server       != null) table = table.ServerName  (sqlTable.Server);
 				if (sqlTable.Database     != null) table = table.DatabaseName(sqlTable.Database);
 				if (sqlTable.Schema       != null) table = table.SchemaName  (sqlTable.Schema);
-
-				if (sqlTable.IsTemporary  != table.IsTemporary)
-					table = table.IsTemporary(sqlTable.IsTemporary);
+				if (sqlTable.IsTemporary  != null) table = table.IsTemporary (sqlTable.IsTemporary.Value);
 
 				return table;
 			}
@@ -99,9 +97,7 @@ namespace LinqToDB.Linq
 				if (sqlTable.Server       != null) table = table.ServerName  (sqlTable.Server);
 				if (sqlTable.Database     != null) table = table.DatabaseName(sqlTable.Database);
 				if (sqlTable.Schema       != null) table = table.SchemaName  (sqlTable.Schema);
-
-				if (sqlTable.IsTemporary  != table.IsTemporary)
-					table = table.IsTemporary(sqlTable.IsTemporary);
+				if (sqlTable.IsTemporary  != null) table = table.IsTemporary (sqlTable.IsTemporary.Value);
 
 				return table;
 			}

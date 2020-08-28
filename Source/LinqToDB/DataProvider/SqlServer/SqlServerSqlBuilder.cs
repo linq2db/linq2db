@@ -6,9 +6,9 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
+	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
-	using LinqToDB.Mapping;
 
 	abstract class SqlServerSqlBuilder : BasicSqlBuilder
 	{
@@ -261,12 +261,24 @@ namespace LinqToDB.DataProvider.SqlServer
 			base.BuildLikePredicate(predicate);
 		}
 
+		protected override string? GetTablePhysicalName(SqlTable table)
+		{
+			if (table.PhysicalName == null)
+				return null;
+
+			var physicalName = table.IsTemporary == true
+				? '#' + table.PhysicalName
+				: table.PhysicalName;
+
+			return Convert(new StringBuilder(), physicalName, ConvertType.NameToQueryTable).ToString();
+		}
+
 		public override StringBuilder BuildTableName(StringBuilder sb,
 			string? server,
 			string? database,
 			string? schema,
 			string  table,
-			bool    isTemporary)
+			bool?   isTemporary)
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
 
@@ -274,7 +286,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			if (database != null && database.Length == 0) database = null;
 			if (schema   != null && schema.  Length == 0) schema   = null;
 
-			if(server != null)
+			if (server != null)
 			{
 				// all components required for linked-server syntax by SQL server
 				if (database == null || schema == null)
@@ -282,7 +294,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 				sb.Append(server).Append(".").Append(database).Append(".").Append(schema).Append(".");
 			}
-			else if(database != null)
+			else if (database != null)
 			{
 				if (schema == null) sb.Append(database).Append("..");
 				else sb.Append(database).Append(".").Append(schema).Append(".");

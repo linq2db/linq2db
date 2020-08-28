@@ -279,7 +279,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return base.BuildJoinType(join);
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, bool isTemporary)
+		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, bool? isTemporary)
 		{
 			if (database != null && database.Length == 0) database = null;
 			if (schema   != null && schema.  Length == 0) schema   = null;
@@ -362,5 +362,16 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			}
 		}
 
+		protected override string? GetTableSchemaName(SqlTable table)
+		{
+			return table.Schema == null || table.IsTemporary == true ? null : ConvertInline(table.Schema, ConvertType.NameToSchema);
+		}
+
+		protected override void BuildCreateTableCommand(SqlTable table)
+		{
+			StringBuilder.Append(table.IsTemporary == true
+				? "CREATE TEMPORARY TABLE "
+				: "CREATE TABLE ");
+		}
 	}
 }

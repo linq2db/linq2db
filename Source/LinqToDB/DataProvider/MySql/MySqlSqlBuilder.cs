@@ -465,7 +465,7 @@ namespace LinqToDB.DataProvider.MySql
 			StringBuilder.Append(")");
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, bool isTemporary)
+		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, bool? isTemporary)
 		{
 			if (database != null && database.Length == 0) database = null;
 
@@ -478,7 +478,7 @@ namespace LinqToDB.DataProvider.MySql
 		protected override string? GetProviderTypeName(IDbDataParameter parameter)
 		{
 			if (_provider != null)
-		{
+			{
 				var param = _provider.TryGetProviderParameter(parameter, MappingSchema);
 				if (param != null)
 					return _provider.Adapter.GetDbType(param).ToString();

@@ -29,7 +29,7 @@ namespace LinqToDB.SqlQuery
 			SqlField[]               fields,
 			SqlTableType             sqlTableType,
 			ISqlExpression[]?        tableArguments,
-			bool                     isTemporary)
+			bool?                    isTemporary)
 		{
 			SourceID           = id;
 			Name               = name;
@@ -211,7 +211,7 @@ namespace LinqToDB.SqlQuery
 		public virtual string?           PhysicalName   { get; set; }
 		public virtual SqlTableType      SqlTableType   { get; set; }
 		public         ISqlExpression[]? TableArguments { get; set; }
-		public         bool              IsTemporary    { get; set; }
+		public         bool?             IsTemporary    { get; set; }
 
 		public Dictionary<string,SqlField> Fields { get; }
 

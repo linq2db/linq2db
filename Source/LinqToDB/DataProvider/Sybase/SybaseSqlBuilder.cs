@@ -277,5 +277,17 @@ namespace LinqToDB.DataProvider.Sybase
 			BuildTableName(table, true, false);
 			StringBuilder.AppendLine(enable ? " ON" : " OFF");
 		}
+
+		protected override string? GetTablePhysicalName(SqlTable table)
+		{
+			if (table.PhysicalName == null)
+				return null;
+
+			var physicalName = table.IsTemporary == true
+				? '#' + table.PhysicalName
+				: table.PhysicalName;
+
+			return Convert(new StringBuilder(), physicalName, ConvertType.NameToQueryTable).ToString();
+		}
 	}
 }

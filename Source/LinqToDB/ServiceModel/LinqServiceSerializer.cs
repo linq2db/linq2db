@@ -135,6 +135,14 @@ namespace LinqToDB.ServiceModel
 				Builder.Append(' ').Append(value ? '1' : '0');
 			}
 
+			protected void Append(bool? value)
+			{
+				Builder.Append(' ').Append(value.HasValue ? '1' : '0');
+
+				if (value.HasValue)
+					Builder.Append(value.Value ? '1' : '0');
+			}
+
 			protected void Append(DbDataType? type)
 			{
 				Append(type != null);
@@ -370,6 +378,22 @@ namespace LinqToDB.ServiceModel
 			protected bool ReadBool()
 			{
 				Get(' ');
+
+				var value = Peek() == '1';
+
+				Pos++;
+
+				return value;
+			}
+
+			protected bool? ReadNullableBool()
+			{
+				Get(' ');
+
+				if (Get('0'))
+					return null;
+
+				Get('1');
 
 				var value = Peek() == '1';
 
@@ -1602,11 +1626,11 @@ namespace LinqToDB.ServiceModel
 
 							var sqlTableType = (SqlTableType)ReadInt();
 							var tableArgs    = sqlTableType == SqlTableType.Table ? null : ReadArray<ISqlExpression>();
-							var isTemparary  = ReadBool();
+							var isTemporary  = ReadNullableBool();
 
 							obj = new SqlTable(
 								sourceID, name, alias, server, database, schema, physicalName, objectType, sequenceAttributes, flds,
-								sqlTableType, tableArgs, isTemparary);
+								sqlTableType, tableArgs, isTemporary);
 
 							break;
 						}

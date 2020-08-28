@@ -163,23 +163,27 @@ namespace LinqToDB.Mapping
 		{
 			var ta = MappingSchema.GetAttribute<TableAttribute>(TypeAccessor.Type, a => a.Configuration);
 
+			string? tableName = null;
+
 			if (ta != null)
 			{
-				TableName                 = ta.Name!;
+				tableName                 = ta.Name!;
 				SchemaName                = ta.Schema;
 				DatabaseName              = ta.Database;
 				ServerName                = ta.Server;
-				IsTemporary               = ta.IsTemporary;
+				IsTemporary               = ta.GetIsTemporaryValue();
 				IsColumnAttributeRequired = ta.IsColumnAttributeRequired;
 			}
 
-			if (TableName == null)
+			if (tableName == null)
 			{
-				TableName = TypeAccessor.Type.Name;
+				tableName = TypeAccessor.Type.Name;
 
-				if (TypeAccessor.Type.IsInterface && TableName.Length > 1 && TableName[0] == 'I')
-					TableName = TableName.Substring(1);
+				if (TypeAccessor.Type.IsInterface && tableName.Length > 1 && tableName[0] == 'I')
+					tableName = tableName.Substring(1);
 			}
+
+			TableName = tableName;
 
 			var qf = MappingSchema.GetAttribute<QueryFilterAttribute>(TypeAccessor.Type);
 

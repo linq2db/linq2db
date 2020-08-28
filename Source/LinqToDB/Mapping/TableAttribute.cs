@@ -59,7 +59,15 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets or sets IsTemporary flag. See <see cref="LinqExtensions.IsTemporary{T}(ITable{T}, bool)"/> method for support information per provider.
 		/// </summary>
-		public bool?   IsTemporary              { get; set; }
+		public bool IsTemporary
+		{
+			get => _isTemporary ?? false;
+			set => _isTemporary = value;
+		}
+
+		bool? _isTemporary;
+
+		public bool? GetIsTemporaryValue() => _isTemporary;
 
 		/// <summary>
 		/// Gets or sets column mapping rules for current class or interface.
