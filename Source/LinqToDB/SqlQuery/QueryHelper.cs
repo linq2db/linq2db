@@ -1043,7 +1043,7 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		static Regex _paramsRegex = new Regex(@"(?<open>{+)(?<key>[^{}]+)(?<format>:[^}]+)?(?<close>}+)", RegexOptions.Compiled);
+		static Regex _paramsRegex = new Regex(@"(?<open>{+)(?<key>\w+)(?<format>:[^}]+)?(?<close>}+)", RegexOptions.Compiled);
 
 		public static string TransformExpressionIndexes(string expression, Func<int, int> transformFunc)
 		{
