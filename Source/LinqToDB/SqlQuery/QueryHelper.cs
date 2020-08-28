@@ -1043,7 +1043,7 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		static Regex _paramsRegex = new Regex(@"(?<open>{+)(?<key>\w+)(?<format>:[^}]+)?(?<close>}+)", RegexOptions.Compiled);
+		static Regex _paramsRegex = new Regex(@"(?<open>{+)(?<key>[^{}]+)(?<format>:[^}]+)?(?<close>}+)", RegexOptions.Compiled);
 
 		public static string TransformExpressionIndexes(string expression, Func<int, int> transformFunc)
 		{
@@ -1077,6 +1077,12 @@ namespace LinqToDB.SqlQuery
 			if (format     == null) throw new ArgumentNullException(nameof(format));
 			if (parameters == null) throw new ArgumentNullException(nameof(parameters));
 
+			string StripDoubleQuotes(string str)
+			{
+				str = str.Replace("{{", "{");
+				str = str.Replace("}}", "}");
+				return str;
+			}
 
 			var matches = _paramsRegex.Matches(format);
 
@@ -1099,26 +1105,27 @@ namespace LinqToDB.SqlQuery
 
 				var current = parameters[idx];
 
+				var brackets = open.Length / 2;
 				if (match.Index > lastMatchPosition)
 				{
+
 					current = new SqlBinaryExpression(typeof(string),
 						new SqlValue(typeof(string),
-							format.Substring(lastMatchPosition, match.Index - lastMatchPosition)),
+							StripDoubleQuotes(format.Substring(lastMatchPosition, match.Index - lastMatchPosition + brackets))),
 						"+", current,
 						Precedence.Additive);
 				}
 
 				result = result == null ? current : new SqlBinaryExpression(typeof(string), result, "+", current);
 
-				lastMatchPosition = match.Index + match.Length;
+				lastMatchPosition = match.Index + match.Length - brackets;
 			}
-
 
 			if (result != null && lastMatchPosition < format.Length)
 			{
 				result = new SqlBinaryExpression(typeof(string),
 					result, "+", new SqlValue(typeof(string),
-						format.Substring(lastMatchPosition, format.Length - lastMatchPosition)), Precedence.Additive);
+						StripDoubleQuotes(format.Substring(lastMatchPosition, format.Length - lastMatchPosition))), Precedence.Additive);
 			}
 
 			result ??= new SqlValue(typeof(string), format);

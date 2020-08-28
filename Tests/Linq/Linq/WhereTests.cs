@@ -1575,11 +1575,13 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var cnt = db.Person.Count(p => p.LastName + ", " + p.FirstName == $"{p.LastName}, {p.FirstName}"
-				                               && "<" + p.LastName + ", " + p.FirstName + ">" ==
-				                               $"<{p.LastName}, {p.FirstName}>"
-				                               && "<" + p.LastName + p.FirstName + ">" == $"<{p.LastName}{p.FirstName}>"
-				);
+				var cnt = db.Person
+					.Count(p => p.LastName + ", " + p.FirstName == $"{p.LastName}, {p.FirstName}"
+					            && "<" + p.LastName + ", " + p.FirstName + ">" == $"<{p.LastName}, {p.FirstName}>"
+					            && "<" + p.LastName + p.FirstName + ">" == $"<{p.LastName}{p.FirstName}>"
+					            && "<{p.LastName}, " + p.FirstName + " {" + p.LastName + "}" + ">" == $"<{{p.LastName}}, {p.FirstName} {{{p.LastName}}}>"
+					            && "{}" + p.LastName == $"{{}}{p.LastName}"
+					);
 
 				Assert.That(cnt, Is.EqualTo(db.Person.Count()));
 			}
