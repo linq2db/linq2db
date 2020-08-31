@@ -7,38 +7,39 @@ namespace Tests.Playground
 {
 	[TestFixture]
 	public class SkipOnEntityFetchTests : TestBase
-	{		
+	{
 		[Table("Person")]
 		public class PersonEx
 		{
-			[Column("PersonID", SkipOnEntityFetch=true)]
-			public int? ID;
-
-			[Column]
+			[Column(SkipOnEntityFetch = true)]
 			public string? FirstName { get; set; }
 
 			[Column]
 			public string? LastName { get; set; }
+
+			[Column("PersonID")]
+			public int? ID;
 		}
 
+		[Test]
 		public void SelectFullEntityWithSkipColumn([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
 				var allPeople = db.GetTable<PersonEx>().ToArray();
-				var anyGotId = allPeople.Any(p => p.ID != null);
-				Assert.IsFalse(anyGotId);
+				var anyGotFirstName = allPeople.Any(p => p.FirstName != null);
+				Assert.IsFalse(anyGotFirstName);
 
 				var allPeopleWithCondition = db.GetTable<PersonEx>()
 												.Where(p => (p.ID ?? 0) >= 2)
 												.ToArray();
-				var anyWithCondGotId = allPeopleWithCondition.Any(p => p.ID != null);
-				Assert.IsFalse(anyWithCondGotId);
+				var anyWithCondGotFirstName = allPeopleWithCondition.Any(p => p.FirstName != null);
+				Assert.IsFalse(anyWithCondGotFirstName);
 
 				var allAnonymWithExplicitSelect = db.GetTable<PersonEx>()
-													.Select(p => new {p.ID, p.FirstName,p.LastName});
-				var allAnonymGotId = allAnonymWithExplicitSelect.All(p => p.ID != null);
-				Assert.IsTrue(allAnonymGotId);
+													.Select(p => new {p.ID, p.FirstName, p.LastName});
+				var allAnonymGotFirstName = allAnonymWithExplicitSelect.All(p => p.FirstName != null);
+				Assert.IsTrue(allAnonymGotFirstName);
 
 				var allPeopleWithExplicitSelect = db.GetTable<PersonEx>()
 													.Select(p => new PersonEx()
@@ -47,8 +48,8 @@ namespace Tests.Playground
 														FirstName = p.FirstName,
 														LastName = p.LastName
 													});
-				var allExplicitGotId = allPeopleWithExplicitSelect.All(p => p.ID != null);
-				Assert.IsTrue(allExplicitGotId);
+				var allExplicitGotFirstName = allPeopleWithExplicitSelect.All(p => p.FirstName != null);
+				Assert.IsTrue(allExplicitGotFirstName);
 			}
 		}
 	}

@@ -381,9 +381,11 @@ namespace LinqToDB.Linq.Builder
 					where idx.n >= 0
 					let   cd = entityDescriptor.Columns[idx.i]
 					where
+					(
 						cd.Storage != null ||
 						!(cd.MemberAccessor.MemberInfo is PropertyInfo info) ||
 						info.GetSetMethod(true) != null
+					) && !cd.SkipOnEntityFetch
 					select new
 					{
 						Column = cd,
