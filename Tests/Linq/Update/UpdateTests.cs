@@ -1741,5 +1741,36 @@ namespace Tests.xUpdate
 
 			}
 		}
+
+		[Test]
+		public void TestSetValueExpr2(
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context, [Values("zz", "yy")] string str)
+		{
+			var data = new[]
+			{
+				new TextData { Id = 1, Items1 = "T1", Items2 = "Z1" },
+				new TextData { Id = 2, Items1 = "T2", Items2 = "Z2" },
+			};
+
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(data))
+			{
+				var id = 1;
+				
+				table.Where(_ => _.Id >= id)
+					.Set(x => x.Items1, x => $"{x.Items1}{str}")
+					.Set(x => x.Items2, x => $"{x.Items2}{str}")
+					.Update();
+
+				var result = table.ToArray();
+
+				Assert.That(result[0].Items1, Is.EqualTo("T1" + str));
+				Assert.That(result[0].Items2, Is.EqualTo("Z1" + str));
+
+				Assert.That(result[1].Items1, Is.EqualTo("T2" + str));
+				Assert.That(result[1].Items2, Is.EqualTo("Z2" + str));
+
+			}
+		}
 	}
 }

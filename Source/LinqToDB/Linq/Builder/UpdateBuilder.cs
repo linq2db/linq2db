@@ -198,7 +198,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var column     = into.ConvertToSql(memberExpression, 1, ConvertFlags.Field);
 				var columnExpr = column[0].Sql;
-				var expr       = builder.ConvertToSqlExpression(ctx, expression, QueryHelper.GetColumnDescriptor(columnExpr));
+				var expr       = builder.ConvertToSqlExpression(ctx, expression, QueryHelper.GetColumnDescriptor(columnExpr), false);
 
 				if (expr.ElementType == QueryElementType.SqlParameter)
 				{
@@ -345,7 +345,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var column     = into.ConvertToSql(pe, 1, ConvertFlags.Field);
 						var columnExpr = column[0].Sql;
-						var expr       = builder.ConvertToSqlExpression(ctx, ma.Expression, QueryHelper.GetColumnDescriptor(columnExpr));
+						var expr       = builder.ConvertToSqlExpression(ctx, ma.Expression, QueryHelper.GetColumnDescriptor(columnExpr), false);
 
 						if (expr.ElementType == QueryElementType.SqlParameter)
 						{
@@ -392,7 +392,7 @@ namespace LinqToDB.Linq.Builder
 
 			sp       = valuesContext.Parent;
 			ctx      = new ExpressionContext(buildInfo.Parent, valuesContext, update);
-			var expr = builder.ConvertToSqlExpression(ctx, update.Body, QueryHelper.GetColumnDescriptor(column));
+			var expr = builder.ConvertToSqlExpression(ctx, update.Body, QueryHelper.GetColumnDescriptor(column), false);
 
 			builder.ReplaceParent(ctx, sp);
 
@@ -522,7 +522,7 @@ namespace LinqToDB.Linq.Builder
 					// we have first lambda as whole update field part
 					var sp     = sequence.Parent;
 					var ctx    = new ExpressionContext(buildInfo.Parent, sequence, extract);
-					var expr   = builder.ConvertToSqlExpression(ctx, extract.Body, null);
+					var expr   = builder.ConvertToSqlExpression(ctx, extract.Body, null, true);
 
 					builder.ReplaceParent(ctx, sp);
 
