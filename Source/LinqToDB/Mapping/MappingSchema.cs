@@ -588,6 +588,30 @@ namespace LinqToDB.Mapping
 			return expr;
 		}
 
+		public LambdaExpression SafeConvert(Type fromType, Type type)
+		{
+			var param = Expression.Parameter(fromType);
+			var body  = (Expression)param;
+
+			if (fromType.IsNullable())
+			{
+				body = Expression.Condition(
+					ExpressionHelper.Property(param, nameof(Nullable<int>.HasValue)),
+					Expression.Convert(body, type),
+					new DefaultValueExpression(this, type));
+			}
+			else if (fromType.IsClass || fromType.IsInterface)
+			{
+				body = Expression.Condition(
+					Expression.NotEqual(param, Expression.Constant(null, fromType)),
+					Expression.Convert(body, type),
+					new DefaultValueExpression(this, type));
+			}
+
+			var expr = Expression.Lambda(body, param);
+			return expr;
+		}
+
 		static bool IsSimple (ref DbDataType type) 
 			=> type.DataType == DataType.Undefined && string.IsNullOrEmpty(type.DbType) && type.Length == null;
 

@@ -1469,9 +1469,13 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (columnDescriptor != null)
 					{
-						newExpr.DataType        = columnDescriptor.GetDbDataType(true);
+						newExpr.DataType = columnDescriptor.GetDbDataType(true);
 						if (newExpr.ValueExpression.Type != columnDescriptor.MemberType)
-							newExpr.ValueExpression = Expression.Convert(newExpr.ValueExpression, columnDescriptor.MemberType);
+						{
+							var convertLambda       = MappingSchema.GenerateSafeConvert(newExpr.ValueExpression.Type, columnDescriptor.MemberType);
+							newExpr.ValueExpression = InternalExtensions.ApplyLambdaToExpression(convertLambda, newExpr.ValueExpression);
+						}				
+
 						newExpr.ValueExpression = columnDescriptor.ApplyConversions(newExpr.ValueExpression, newExpr.DataType, true);
 
 						if (name == null)
