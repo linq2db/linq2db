@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+
 using LinqToDB.Common.Internal;
 
 namespace LinqToDB.Data
@@ -43,22 +43,22 @@ namespace LinqToDB.Data
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="isTemporary">Optional IsTemporary flag. If not specified, value from mapping will be used.</param>
+		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <returns>Returns number of affected target records.</returns>
 		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
 		public static int Merge<T>(
 			this DataConnection      dataConnection,
 			IQueryable<T>            source,
 			Expression<Func<T,bool>> predicate,
-			string?                  tableName    = null,
-			string?                  databaseName = null,
-			string?                  schemaName   = null,
-			string?                  serverName   = null,
-			bool?                    isTemporary  = null
+			string?                  tableName    = default,
+			string?                  databaseName = default,
+			string?                  schemaName   = default,
+			string?                  serverName   = default,
+			TableOptions             tableOptions = default
 		)
 			where T : class
 		{
-			return Merge(dataConnection.GetTable<T>(), source, predicate, tableName, databaseName, schemaName, serverName, isTemporary);
+			return Merge(dataConnection.GetTable<T>(), source, predicate, tableName, databaseName, schemaName, serverName, tableOptions);
 		}
 
 		/// <summary>
@@ -76,22 +76,22 @@ namespace LinqToDB.Data
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="isTemporary">Optional IsTemporary flag. If not specified, value from mapping will be used.</param>
+		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <returns>Returns number of affected target records.</returns>
 		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
 		public static int Merge<T>(
 			this DataConnection      dataConnection,
 			Expression<Func<T,bool>> predicate,
 			IEnumerable<T>           source,
-			string?                  tableName    = null,
-			string?                  databaseName = null,
-			string?                  schemaName   = null,
-			string?                  serverName   = null,
-			bool?                    isTemporary  = null
+			string?                  tableName    = default,
+			string?                  databaseName = default,
+			string?                  schemaName   = default,
+			string?                  serverName   = default,
+			TableOptions             tableOptions = default
 		)
 			where T : class
 		{
-			return Merge(dataConnection.GetTable<T>(), predicate, source, tableName, databaseName, schemaName, serverName, isTemporary);
+			return Merge(dataConnection.GetTable<T>(), predicate, source, tableName, databaseName, schemaName, serverName, tableOptions);
 		}
 
 		/// <summary>
@@ -109,22 +109,22 @@ namespace LinqToDB.Data
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="isTemporary">Optional IsTemporary flag. If not specified, value from mapping will be used.</param>
+		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <returns>Returns number of affected target records.</returns>
 		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
 		public static int Merge<T>(
 			this DataConnection dataConnection,
 			bool                delete,
 			IEnumerable<T>      source,
-			string?             tableName    = null,
-			string?             databaseName = null,
-			string?             schemaName   = null,
-			string?             serverName   = null,
-			bool?               isTemporary  = null
+			string?             tableName    = default,
+			string?             databaseName = default,
+			string?             schemaName   = default,
+			string?             serverName   = default,
+			TableOptions        tableOptions = default
 		)
 			where T : class
 		{
-			return Merge(dataConnection.GetTable<T>(), delete, source, tableName, databaseName, schemaName, serverName, isTemporary);
+			return Merge(dataConnection.GetTable<T>(), delete, source, tableName, databaseName, schemaName, serverName, tableOptions);
 		}
 
 		/// <summary>
@@ -139,21 +139,21 @@ namespace LinqToDB.Data
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="isTemporary">Optional IsTemporary flag. If not specified, value from mapping will be used.</param>
+		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <returns>Returns number of affected target records.</returns>
 		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
 		public static int Merge<T>(
 			this DataConnection dataConnection,
 			IEnumerable<T>      source,
-			string?             tableName    = null,
-			string?             databaseName = null,
-			string?             schemaName   = null,
-			string?             serverName   = null,
-			bool?               isTemporary  = null
+			string?             tableName    = default,
+			string?             databaseName = default,
+			string?             schemaName   = default,
+			string?             serverName   = default,
+			TableOptions        tableOptions = default
 		)
 			where T : class
 		{
-			return Merge(dataConnection.GetTable<T>(), source, tableName, databaseName, schemaName, serverName, isTemporary);
+			return Merge(dataConnection.GetTable<T>(), source, tableName, databaseName, schemaName, serverName, tableOptions);
 		}
 
 		/// <summary>
@@ -171,18 +171,18 @@ namespace LinqToDB.Data
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="isTemporary">Optional IsTemporary flag. If not specified, value from mapping will be used.</param>
+		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <returns>Returns number of affected target records.</returns>
 		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
 		public static int Merge<T>(
 			this ITable<T>           table,
 			IQueryable<T>            source,
 			Expression<Func<T,bool>> predicate,
-			string?                  tableName    = null,
-			string?                  databaseName = null,
-			string?                  schemaName   = null,
-			string?                  serverName   = null,
-			bool?                    isTemporary  = false
+			string?                  tableName    = default,
+			string?                  databaseName = default,
+			string?                  schemaName   = default,
+			string?                  serverName   = default,
+			TableOptions             tableOptions = default
 		)
 			where T : class
 		{
@@ -195,7 +195,7 @@ namespace LinqToDB.Data
 			if (databaseName != null) target = target.DatabaseName(databaseName);
 			if (schemaName   != null) target = target.SchemaName  (schemaName);
 			if (serverName   != null) target = target.ServerName  (serverName);
-			if (isTemporary  != null) target = target.IsTemporary (isTemporary.Value);
+			if (tableOptions.IsSet()) target = target.TableOptions(tableOptions);
 
 			var query = target
 				.Merge()
@@ -226,18 +226,18 @@ namespace LinqToDB.Data
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="isTemporary">Optional IsTemporary flag. If not specified, value from mapping will be used.</param>
+		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <returns>Returns number of affected target records.</returns>
 		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
 		public static int Merge<T>(
 			this ITable<T>           table,
 			Expression<Func<T,bool>> predicate,
 			IEnumerable<T>           source,
-			string?                  tableName    = null,
-			string?                  databaseName = null,
-			string?                  schemaName   = null,
-			string?                  serverName   = null,
-			bool?                    isTemporary  = null
+			string?                  tableName    = default,
+			string?                  databaseName = default,
+			string?                  schemaName   = default,
+			string?                  serverName   = default,
+			TableOptions             tableOptions = default
 		)
 			where T : class
 		{
@@ -254,7 +254,7 @@ namespace LinqToDB.Data
 			if (databaseName != null) target = target.DatabaseName(databaseName);
 			if (schemaName   != null) target = target.SchemaName  (schemaName);
 			if (serverName   != null) target = target.ServerName  (serverName);
-			if (isTemporary  != null) target = target.IsTemporary (isTemporary.Value);
+			if (tableOptions.IsSet()) target = target.TableOptions(tableOptions);
 
 			var query = target
 				.Merge()
@@ -285,18 +285,18 @@ namespace LinqToDB.Data
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="isTemporary">Optional IsTemporary flag. If not specified, value from mapping will be used.</param>
+		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <returns>Returns number of affected target records.</returns>
 		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
 		public static int Merge<T>(
 			this ITable<T> table,
 			bool           delete,
 			IEnumerable<T> source,
-			string?        tableName    = null,
-			string?        databaseName = null,
-			string?        schemaName   = null,
-			string?        serverName   = null,
-			bool?          isTemporary  = null
+			string?        tableName    = default,
+			string?        databaseName = default,
+			string?        schemaName   = default,
+			string?        serverName   = default,
+			TableOptions   tableOptions = default
 		)
 			where T : class
 		{
@@ -313,7 +313,7 @@ namespace LinqToDB.Data
 			if (databaseName != null) target = target.DatabaseName(databaseName);
 			if (schemaName   != null) target = target.SchemaName  (schemaName);
 			if (serverName   != null) target = target.ServerName  (serverName);
-			if (isTemporary  != null) target = target.IsTemporary (isTemporary.Value);
+			if (tableOptions.IsSet()) target = target.TableOptions(tableOptions);
 
 			var query = target
 				.Merge()
@@ -340,17 +340,17 @@ namespace LinqToDB.Data
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="isTemporary">Optional IsTemporary flag. If not specified, value from mapping will be used.</param>
+		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <returns>Returns number of affected target records.</returns>
 		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
 		public static int Merge<T>(
 			this ITable<T> table,
 			IEnumerable<T> source,
-			string?        tableName    = null,
-			string?        databaseName = null,
-			string?        schemaName   = null,
-			string?        serverName   = null,
-			bool?          isTemporary  = null
+			string?        tableName    = default,
+			string?        databaseName = default,
+			string?        schemaName   = default,
+			string?        serverName   = default,
+			TableOptions   tableOptions = default
 		)
 			where T : class
 		{
@@ -367,7 +367,7 @@ namespace LinqToDB.Data
 			if (databaseName != null) target = target.DatabaseName(databaseName);
 			if (schemaName   != null) target = target.SchemaName  (schemaName);
 			if (serverName   != null) target = target.ServerName  (serverName);
-			if (isTemporary  != null) target = target.IsTemporary (isTemporary.Value);
+			if (tableOptions.IsSet()) target = target.TableOptions(tableOptions);
 
 			var query = target
 				.Merge()
@@ -397,7 +397,7 @@ namespace LinqToDB.Data
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="isTemporary">Optional IsTemporary flag. If not specified, value from mapping will be used.</param>
+		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of affected target records.</returns>
 		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
@@ -405,15 +405,15 @@ namespace LinqToDB.Data
 			this DataConnection      dataConnection,
 			IQueryable<T>            source,
 			Expression<Func<T,bool>> predicate,
-			string?                  tableName         = null,
-			string?                  databaseName      = null,
-			string?                  schemaName        = null,
-			string?                  serverName        = null,
-			bool?                    isTemporary       = null,
+			string?                  tableName         = default,
+			string?                  databaseName      = default,
+			string?                  schemaName        = default,
+			string?                  serverName        = default,
+			TableOptions             tableOptions      = default,
 			CancellationToken        cancellationToken = default)
 			where T : class
 		{
-			return MergeAsync(dataConnection.GetTable<T>(), source, predicate, tableName, databaseName, schemaName, serverName, isTemporary, cancellationToken);
+			return MergeAsync(dataConnection.GetTable<T>(), source, predicate, tableName, databaseName, schemaName, serverName, tableOptions, cancellationToken);
 		}
 
 		/// <summary>
@@ -431,7 +431,7 @@ namespace LinqToDB.Data
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="isTemporary">Optional IsTemporary flag. If not specified, value from mapping will be used.</param>
+		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of affected target records.</returns>
 		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
@@ -439,15 +439,15 @@ namespace LinqToDB.Data
 			this DataConnection      dataConnection,
 			Expression<Func<T,bool>> predicate,
 			IEnumerable<T>           source,
-			string?                  tableName         = null,
-			string?                  databaseName      = null,
-			string?                  schemaName        = null,
-			string?                  serverName        = null,
-			bool?                    isTemporary       = null,
+			string?                  tableName         = default,
+			string?                  databaseName      = default,
+			string?                  schemaName        = default,
+			string?                  serverName        = default,
+			TableOptions             tableOptions      = default,
 			CancellationToken        cancellationToken = default)
 			where T : class
 		{
-			return MergeAsync(dataConnection.GetTable<T>(), predicate, source, tableName, databaseName, schemaName, serverName, isTemporary, cancellationToken);
+			return MergeAsync(dataConnection.GetTable<T>(), predicate, source, tableName, databaseName, schemaName, serverName, tableOptions, cancellationToken);
 		}
 
 		/// <summary>
@@ -465,7 +465,7 @@ namespace LinqToDB.Data
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="isTemporary">Optional IsTemporary flag. If not specified, value from mapping will be used.</param>
+		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of affected target records.</returns>
 		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
@@ -473,15 +473,15 @@ namespace LinqToDB.Data
 			this DataConnection dataConnection,
 			bool                delete,
 			IEnumerable<T>      source,
-			string?             tableName         = null,
-			string?             databaseName      = null,
-			string?             schemaName        = null,
-			string?             serverName        = null,
-			bool?               isTemporary       = null,
+			string?             tableName         = default,
+			string?             databaseName      = default,
+			string?             schemaName        = default,
+			string?             serverName        = default,
+			TableOptions        tableOptions      = default,
 			CancellationToken   cancellationToken = default)
 			where T : class
 		{
-			return MergeAsync(dataConnection.GetTable<T>(), delete, source, tableName, databaseName, schemaName, serverName, isTemporary, cancellationToken);
+			return MergeAsync(dataConnection.GetTable<T>(), delete, source, tableName, databaseName, schemaName, serverName, tableOptions, cancellationToken);
 		}
 
 		/// <summary>
@@ -496,22 +496,22 @@ namespace LinqToDB.Data
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="isTemporary">Optional IsTemporary flag. If not specified, value from mapping will be used.</param>
+		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of affected target records.</returns>
 		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
 		public static Task<int> MergeAsync<T>(
 			this DataConnection dataConnection,
 			IEnumerable<T>      source,
-			string?             tableName         = null,
-			string?             databaseName      = null,
-			string?             schemaName        = null,
-			string?             serverName        = null,
-			bool?               isTemporary       = null,
+			string?             tableName         = default,
+			string?             databaseName      = default,
+			string?             schemaName        = default,
+			string?             serverName        = default,
+			TableOptions        tableOptions      = default,
 			CancellationToken   cancellationToken = default)
 			where T : class
 		{
-			return MergeAsync(dataConnection.GetTable<T>(), source, tableName, databaseName, schemaName, serverName, isTemporary, cancellationToken);
+			return MergeAsync(dataConnection.GetTable<T>(), source, tableName, databaseName, schemaName, serverName, tableOptions, cancellationToken);
 		}
 
 		/// <summary>
@@ -529,7 +529,7 @@ namespace LinqToDB.Data
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="isTemporary">Optional IsTemporary flag. If not specified, value from mapping will be used.</param>
+		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of affected target records.</returns>
 		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
@@ -537,11 +537,11 @@ namespace LinqToDB.Data
 			this ITable<T>           table,
 			IQueryable<T>            source,
 			Expression<Func<T,bool>> predicate,
-			string?                  tableName         = null,
-			string?                  databaseName      = null,
-			string?                  schemaName        = null,
-			string?                  serverName        = null,
-			bool?                    isTemporary       = null,
+			string?                  tableName         = default,
+			string?                  databaseName      = default,
+			string?                  schemaName        = default,
+			string?                  serverName        = default,
+			TableOptions             tableOptions      = default,
 			CancellationToken        cancellationToken = default)
 			where T : class
 		{
@@ -554,7 +554,7 @@ namespace LinqToDB.Data
 			if (databaseName != null) target = target.DatabaseName(databaseName);
 			if (schemaName   != null) target = target.SchemaName  (schemaName);
 			if (serverName   != null) target = target.ServerName  (serverName);
-			if (isTemporary  != null) target = target.IsTemporary (isTemporary.Value);
+			if (tableOptions.IsSet()) target = target.TableOptions(tableOptions);
 
 			var query = target
 				.Merge()
@@ -585,7 +585,7 @@ namespace LinqToDB.Data
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="isTemporary">Optional IsTemporary flag. If not specified, value from mapping will be used.</param>
+		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of affected target records.</returns>
 		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
@@ -593,11 +593,11 @@ namespace LinqToDB.Data
 			this ITable<T>           table,
 			Expression<Func<T,bool>> predicate,
 			IEnumerable<T>           source,
-			string?                  tableName         = null,
-			string?                  databaseName      = null,
-			string?                  schemaName        = null,
-			string?                  serverName        = null,
-			bool?                    isTemporary       = null,
+			string?                  tableName         = default,
+			string?                  databaseName      = default,
+			string?                  schemaName        = default,
+			string?                  serverName        = default,
+			TableOptions             tableOptions      = default,
 			CancellationToken        cancellationToken = default)
 			where T : class
 		{
@@ -614,7 +614,7 @@ namespace LinqToDB.Data
 			if (databaseName != null) target = target.DatabaseName(databaseName);
 			if (schemaName   != null) target = target.SchemaName  (schemaName);
 			if (serverName   != null) target = target.ServerName  (serverName);
-			if (isTemporary  != null) target = target.IsTemporary (isTemporary.Value);
+			if (tableOptions.IsSet()) target = target.TableOptions(tableOptions);
 
 			var query = target
 				.Merge()
@@ -645,7 +645,7 @@ namespace LinqToDB.Data
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="isTemporary">Optional IsTemporary flag. If not specified, value from mapping will be used.</param>
+		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of affected target records.</returns>
 		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
@@ -653,11 +653,11 @@ namespace LinqToDB.Data
 			this ITable<T>    table,
 			bool              delete,
 			IEnumerable<T>    source,
-			string?           tableName         = null,
-			string?           databaseName      = null,
-			string?           schemaName        = null,
-			string?           serverName        = null,
-			bool?             isTemporary       = null,
+			string?           tableName         = default,
+			string?           databaseName      = default,
+			string?           schemaName        = default,
+			string?           serverName        = default,
+			TableOptions      tableOptions      = default,
 			CancellationToken cancellationToken = default)
 			where T : class
 		{
@@ -674,7 +674,7 @@ namespace LinqToDB.Data
 			if (databaseName != null) target = target.DatabaseName(databaseName);
 			if (schemaName   != null) target = target.SchemaName  (schemaName);
 			if (serverName   != null) target = target.ServerName  (serverName);
-			if (isTemporary  != null) target = target.IsTemporary (isTemporary.Value);
+			if (tableOptions.IsSet()) target = target.TableOptions(tableOptions);
 
 			var query = target
 				.Merge()
@@ -701,18 +701,18 @@ namespace LinqToDB.Data
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="isTemporary">Optional IsTemporary flag. If not specified, value from mapping will be used.</param>
+		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of affected target records.</returns>
 		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
 		public static Task<int> MergeAsync<T>(
 			this ITable<T>    table,
 			IEnumerable<T>    source,
-			string?           tableName         = null,
-			string?           databaseName      = null,
-			string?           schemaName        = null,
-			string?           serverName        = null,
-			bool?             isTemporary       = null,
+			string?           tableName         = default,
+			string?           databaseName      = default,
+			string?           schemaName        = default,
+			string?           serverName        = default,
+			TableOptions      tableOptions      = default,
 			CancellationToken cancellationToken = default)
 			where T : class
 		{
@@ -729,7 +729,7 @@ namespace LinqToDB.Data
 			if (databaseName != null) target = target.DatabaseName(databaseName);
 			if (schemaName   != null) target = target.SchemaName  (schemaName);
 			if (serverName   != null) target = target.ServerName  (serverName);
-			if (isTemporary  != null) target = target.IsTemporary (isTemporary.Value);
+			if (tableOptions.IsSet()) target = target.TableOptions(tableOptions);
 
 			var query = target
 				.Merge()

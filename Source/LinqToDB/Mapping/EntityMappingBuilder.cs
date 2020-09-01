@@ -500,17 +500,6 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
-		/// Sets IsTemporary flag.
-		/// See <see cref="LinqExtensions.IsTemporary{T}(ITable{T}, bool)"/> method for support information per provider.
-		/// </summary>
-		/// <param name="isTemporary">If true, the table is handled as a temporary table.</param>
-		/// <returns>Returns current fluent entity mapping builder.</returns>
-		public EntityMappingBuilder<TEntity> IsTemporary(bool isTemporary = true)
-		{
-			return SetTable(a => a.IsTemporary = isTemporary);
-		}
-
-		/// <summary>
 		/// Sets linked server name.
 		/// See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.
 		/// </summary>
@@ -530,6 +519,17 @@ namespace LinqToDB.Mapping
 		public EntityMappingBuilder<TEntity> HasIsTemporary(bool isTemporary)
 		{
 			return SetTable(a => a.IsTemporary = isTemporary);
+		}
+
+		/// <summary>
+		/// Sets Table options.
+		/// See <see cref="LinqExtensions.TableOptions{T}(ITable{T},LinqToDB.TableOptions)"/> method for support information per provider.
+		/// </summary>
+		/// <param name="tableOptions">Table options.</param>
+		/// <returns>Returns current fluent entity mapping builder.</returns>
+		public EntityMappingBuilder<TEntity> HasTableOptions(TableOptions tableOptions)
+		{
+			return SetTable(a => a.TableOptions = tableOptions);
 		}
 
 		/// <summary>
