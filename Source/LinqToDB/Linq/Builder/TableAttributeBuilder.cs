@@ -1,6 +1,5 @@
-﻿using System.Linq.Expressions;
-
-using static LinqToDB.LinqExtensions;
+﻿using System;
+using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -15,7 +14,8 @@ namespace LinqToDB.Linq.Builder
 				nameof(LinqExtensions.ServerName),
 				nameof(LinqExtensions.DatabaseName),
 				nameof(LinqExtensions.SchemaName),
-				nameof(LinqExtensions.IsTemporary));
+				nameof(LinqExtensions.IsTemporary),
+				nameof(LinqExtensions.TableOptions));
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -26,11 +26,17 @@ namespace LinqToDB.Linq.Builder
 
 			switch (methodCall.Method.Name)
 			{
-				case nameof(LinqExtensions.TableName)    : table.SqlTable.PhysicalName = (string?)value!; break;
-				case nameof(LinqExtensions.ServerName)   : table.SqlTable.Server       = (string?)value;  break;
-				case nameof(LinqExtensions.DatabaseName) : table.SqlTable.Database     = (string?)value;  break;
-				case nameof(LinqExtensions.SchemaName)   : table.SqlTable.Schema       = (string?)value;  break;
-				case nameof(LinqExtensions.IsTemporary)  : table.SqlTable.IsTemporary  = (bool)   value!; break;
+				case nameof(LinqExtensions.TableName)    : table.SqlTable.PhysicalName = (string?)     value!; break;
+				case nameof(LinqExtensions.ServerName)   : table.SqlTable.Server       = (string?)     value;  break;
+				case nameof(LinqExtensions.DatabaseName) : table.SqlTable.Database     = (string?)     value;  break;
+				case nameof(LinqExtensions.SchemaName)   : table.SqlTable.Schema       = (string?)     value;  break;
+				case nameof(LinqExtensions.TableOptions) : table.SqlTable.TableOptions = (TableOptions)value!; break;
+				case nameof(LinqExtensions.IsTemporary)  :
+					if ((bool)value!)
+						table.SqlTable.TableOptions |=  TableOptions.IsTemporary;
+					else
+						table.SqlTable.TableOptions &= ~TableOptions.IsTemporary;
+					break;
 			}
 
 			return sequence;

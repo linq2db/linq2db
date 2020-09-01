@@ -141,9 +141,9 @@ namespace LinqToDB
 			DatabaseName = 0x00000010b,
 			SchemaName   = 0x00000100b,
 			ServerName   = 0x00001000b,
-			IsTemporary  = 0x00010000b,
+			TableOptions = 0x00010000b,
 
-			Full         = TableName | DatabaseName | SchemaName | ServerName | IsTemporary
+			Full         = TableName | DatabaseName | SchemaName | ServerName | TableOptions
 		}
 
 		[Sql.Extension("", BuilderType = typeof(FieldNameBuilderDirect), ServerSideOnly = false)]
@@ -217,8 +217,7 @@ namespace LinqToDB
 
 		private static ColumnDescriptor[] GetColumnsFromExpression(Type entityType, LambdaExpression fieldExpr, MappingSchema mappingSchema)
 		{
-			var init = fieldExpr.Body as NewExpression;
-			if (init == null)
+			if (!(fieldExpr.Body is NewExpression init))
 				return new[] { GetColumnFromExpression(entityType, fieldExpr, mappingSchema) };
 
 			if (init.Arguments == null || init.Arguments.Count == 0)
@@ -284,11 +283,11 @@ namespace LinqToDB
 
 		private abstract class TableHelper
 		{
-			public abstract string? ServerName   { get; }
-			public abstract string? DatabaseName { get; }
-			public abstract string? SchemaName   { get; }
-			public abstract string  TableName    { get; }
-			public abstract bool    IsTemporary  { get; }
+			public abstract string?      ServerName   { get; }
+			public abstract string?      DatabaseName { get; }
+			public abstract string?      SchemaName   { get; }
+			public abstract string       TableName    { get; }
+			public abstract TableOptions TableOptions { get; }
 		}
 
 		private class TableHelper<T> : TableHelper
@@ -300,11 +299,11 @@ namespace LinqToDB
 				_table = table;
 			}
 
-			public override string? ServerName   => _table.ServerName;
-			public override string? DatabaseName => _table.DatabaseName;
-			public override string? SchemaName   => _table.SchemaName;
-			public override string  TableName    => _table.TableName;
-			public override bool    IsTemporary  => _table.IsTemporary;
+			public override string?      ServerName   => _table.ServerName;
+			public override string?      DatabaseName => _table.DatabaseName;
+			public override string?      SchemaName   => _table.SchemaName;
+			public override string       TableName    => _table.TableName;
+			public override TableOptions TableOptions => _table.TableOptions;
 		}
 
 		private class TableNameBuilderDirect : IExtensionCallBuilder
@@ -330,7 +329,7 @@ namespace LinqToDB
 							Server       = (qualified & TableQualification.ServerName)   != 0 ? tableHelper.ServerName   : null,
 							Database     = (qualified & TableQualification.DatabaseName) != 0 ? tableHelper.DatabaseName : null,
 							Schema       = (qualified & TableQualification.SchemaName)   != 0 ? tableHelper.SchemaName   : null,
-							IsTemporary  = (qualified & TableQualification.IsTemporary)  != 0 && tableHelper.IsTemporary,
+							TableOptions = (qualified & TableQualification.TableOptions) != 0 ? tableHelper.TableOptions : TableOptions.NotSet,
 						};
 
 						builder.ResultExpression = table;
@@ -348,7 +347,7 @@ namespace LinqToDB
 							(qualified & TableQualification.DatabaseName) != 0 ? tableHelper.DatabaseName : null,
 							(qualified & TableQualification.SchemaName)   != 0 ? tableHelper.SchemaName   : null,
 							name,
-							(qualified & TableQualification.IsTemporary)  != 0 && tableHelper.IsTemporary);
+							(qualified & TableQualification.TableOptions) != 0 ? tableHelper.TableOptions : TableOptions.NotSet);
 						name = sb.ToString();
 					}
 
@@ -384,11 +383,11 @@ namespace LinqToDB
 					var sb = new StringBuilder();
 
 					builder.DataContext.CreateSqlProvider().ConvertTableName(sb,
-						(qualified & TableQualification.ServerName)   != 0 ? sqlTable.Server      : null,
-						(qualified & TableQualification.DatabaseName) != 0 ? sqlTable.Database    : null,
-						(qualified & TableQualification.SchemaName)   != 0 ? sqlTable.Schema      : null,
+						(qualified & TableQualification.ServerName)   != 0 ? sqlTable.Server       : null,
+						(qualified & TableQualification.DatabaseName) != 0 ? sqlTable.Database     : null,
+						(qualified & TableQualification.SchemaName)   != 0 ? sqlTable.Schema       : null,
 						sqlTable.PhysicalName!,
-						(qualified & TableQualification.IsTemporary)  != 0 ? sqlTable.IsTemporary : null);
+						(qualified & TableQualification.TableOptions) != 0 ? sqlTable.TableOptions : TableOptions.NotSet);
 
 					name = sb.ToString();
 				}
@@ -502,7 +501,7 @@ namespace LinqToDB
 					(qualification & TableQualification.DatabaseName) != 0 ? table.DatabaseName : null,
 					(qualification & TableQualification.SchemaName)   != 0 ? table.SchemaName   : null,
 					table.TableName,
-					(qualification & TableQualification.IsTemporary)  != 0 && table.IsTemporary);
+					(qualification & TableQualification.TableOptions) != 0 ? table.TableOptions : TableOptions.NotSet);
 				result = sb.ToString();
 			}
 
@@ -546,7 +545,7 @@ namespace LinqToDB
 					(qualification & TableQualification.DatabaseName) != 0 ? table.DatabaseName : null,
 					(qualification & TableQualification.SchemaName)   != 0 ? table.SchemaName   : null,
 					table.TableName,
-					(qualification & TableQualification.IsTemporary)  != 0 && table.IsTemporary);
+					(qualification & TableQualification.TableOptions) != 0 ? table.TableOptions : TableOptions.NotSet);
 
 				name = sb.ToString();
 			}

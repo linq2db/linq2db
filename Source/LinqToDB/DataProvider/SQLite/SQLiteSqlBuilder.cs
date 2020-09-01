@@ -159,7 +159,7 @@ namespace LinqToDB.DataProvider.SQLite
 			base.BuildPredicate(predicate);
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, bool? isTemporary)
+		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions)
 		{
 			if (database != null && database.Length == 0) database = null;
 
@@ -201,9 +201,12 @@ namespace LinqToDB.DataProvider.SQLite
 
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
-			StringBuilder.Append(table.IsTemporary == true
+			StringBuilder.Append((table.TableOptions & TableOptions.IsTemporary) != 0
 				? "CREATE TEMPORARY TABLE "
 				: "CREATE TABLE ");
+
+			if ((table.TableOptions & TableOptions.CreateIfNotExists) != 0)
+				StringBuilder.Append("IF NOT EXISTS ");
 		}
 	}
 }

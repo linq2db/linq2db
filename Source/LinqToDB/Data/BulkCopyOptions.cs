@@ -26,7 +26,7 @@ namespace LinqToDB.Data
 			DatabaseName           = options.DatabaseName;
 			SchemaName             = options.SchemaName;
 			TableName              = options.TableName;
-			IsTemporary            = options.IsTemporary;
+			TableOptions           = options.TableOptions;
 			NotifyAfter            = options.NotifyAfter;
 			RowsCopiedCallback     = options.RowsCopiedCallback;
 		}
@@ -74,7 +74,7 @@ namespace LinqToDB.Data
 		/// Gets or sets explicit IsTemporary flag instead of one, configured for copied entity in mapping schema.
 		/// See <see cref="LinqExtensions.IsTemporary{T}(ITable{T}, bool)"/> method for support information per provider.
 		/// </summary>
-		public bool?        IsTemporary            { get; set; }
+		public TableOptions TableOptions           { get; set; }
 
 		/// <summary>
 		/// Gets or sets counter after how many copied records <see cref="RowsCopiedCallback"/> should be called.

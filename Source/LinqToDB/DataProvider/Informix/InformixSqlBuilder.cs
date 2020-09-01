@@ -47,7 +47,7 @@ namespace LinqToDB.DataProvider.Informix
 				var field = trun.Table!.Fields.Values.Skip(commandNumber - 1).First(f => f.IsIdentity);
 
 				StringBuilder.Append("ALTER TABLE ");
-				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName!, trun.Table.IsTemporary);
+				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName!, trun.Table.TableOptions);
 				StringBuilder.Append(" MODIFY ");
 				Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
 				StringBuilder.AppendLine(" SERIAL(1)");
@@ -239,7 +239,7 @@ namespace LinqToDB.DataProvider.Informix
 		}
 
 		// https://www.ibm.com/support/knowledgecenter/en/SSGU8G_12.1.0/com.ibm.sqls.doc/ids_sqs_1652.htm
-		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, bool? isTemporary)
+		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions)
 		{
 			if (server   != null && server  .Length == 0) server   = null;
 			if (database != null && database.Length == 0) database = null;

@@ -357,22 +357,22 @@ namespace LinqToDB.SqlProvider
 			throw new SqlException("Unknown query type '{0}'.", Statement.QueryType);
 		}
 
-		public virtual StringBuilder ConvertTableName(StringBuilder sb, string? server, string? database, string? schema, string table, bool? isTemporary)
+		public virtual StringBuilder ConvertTableName(StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions)
 		{
 			if (server   != null) server   = ConvertInline(server,   ConvertType.NameToServer);
 			if (database != null) database = ConvertInline(database, ConvertType.NameToDatabase);
 			if (schema   != null) schema   = ConvertInline(schema,   ConvertType.NameToSchema);
 			                      table    = ConvertInline(table,    ConvertType.NameToQueryTable);
 
-			return BuildTableName(sb, server, database, schema, table, isTemporary);
+			return BuildTableName(sb, server, database, schema, table, tableOptions);
 		}
 
 		public virtual StringBuilder BuildTableName(StringBuilder sb,
-			string? server,
-			string? database,
-			string? schema,
-			string  table,
-			bool?   isTemporary)
+			string?      server,
+			string?      database,
+			string?      schema,
+			string       table,
+			TableOptions tableOptions)
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
 
@@ -431,7 +431,7 @@ namespace LinqToDB.SqlProvider
 					AppendIndent();
 				}
 
-				ConvertTableName(StringBuilder, null, null, null, cte.Name!, false);
+				ConvertTableName(StringBuilder, null, null, null, cte.Name!, TableOptions.None);
 
 				if (cte.Fields!.Length > 3)
 				{
@@ -3041,11 +3041,6 @@ namespace LinqToDB.SqlProvider
 			return table.PhysicalName == null ? null : ConvertInline(table.PhysicalName, ConvertType.NameToQueryTable);
 		}
 
-		protected virtual bool? GetTableIsTemporary(SqlTable table)
-		{
-			return table.IsTemporary;
-		}
-
 		string GetPhysicalTableName(ISqlTableSource table, string? alias, bool ignoreTableExpression = false)
 		{
 			switch (table.ElementType)
@@ -3061,7 +3056,7 @@ namespace LinqToDB.SqlProvider
 
 						var sb = new StringBuilder();
 
-						BuildTableName(sb, server, database, schema, physicalName, tbl.IsTemporary);
+						BuildTableName(sb, server, database, schema, physicalName, tbl.TableOptions);
 
 						if (!ignoreTableExpression && tbl.SqlTableType == SqlTableType.Expression)
 						{
@@ -3322,7 +3317,7 @@ namespace LinqToDB.SqlProvider
 				database == null ? null : ConvertInline(database, ConvertType.NameToDatabase),
 				schema   == null ? null : ConvertInline(schema,   ConvertType.NameToSchema),
 				                          ConvertInline(table,    ConvertType.NameToQueryTable),
-				                          entity.IsTemporary ?? false)
+				                          entity.TableOptions)
 			.ToString();
 
 			return $"SELECT Max({columnName}) FROM {tableName}";

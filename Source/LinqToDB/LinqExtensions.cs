@@ -14,7 +14,6 @@ namespace LinqToDB
 	using Expressions;
 	using Linq;
 	using Linq.Builder;
-	using Reflection;
 
 	/// <summary>
 	/// Contains extension methods for LINQ queries.
@@ -114,7 +113,24 @@ namespace LinqToDB
 		[Pure]
 		public static ITable<T> IsTemporary<T>(this ITable<T> table, [SqlQueryDependent] bool isTemporary = true)
 		{
-			return ((ITableMutable<T>)table).ChangeIsTemporary(isTemporary);
+			return ((ITableMutable<T>)table).ChangeTableOptions(isTemporary
+				? table.TableOptions |  LinqToDB.TableOptions.IsTemporary
+				: table.TableOptions & ~LinqToDB.TableOptions.IsTemporary);
+		}
+
+		/// <summary>
+		/// Overrides TableOptions value for the current table. This call will have effect only for databases that support
+		/// the options.
+		/// </summary>
+		/// <typeparam name="T">Table record mapping class.</typeparam>
+		/// <param name="table">Table-like query source.</param>
+		/// <param name="options"><see cref="TableOptions"/> value.</param>
+		/// <returns>Table-like query source with new owner/schema name.</returns>
+		[LinqTunnel]
+		[Pure]
+		public static ITable<T> TableOptions<T>(this ITable<T> table, [SqlQueryDependent] TableOptions options)
+		{
+			return ((ITableMutable<T>)table).ChangeTableOptions(options);
 		}
 
 		/// <summary>

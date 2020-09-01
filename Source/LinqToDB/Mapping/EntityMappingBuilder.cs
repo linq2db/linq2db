@@ -424,11 +424,12 @@ namespace LinqToDB.Mapping
 		/// <returns>Returns current fluent entity mapping builder.</returns>
 		public EntityMappingBuilder<TEntity> HasSkipValuesOnInsert(Expression<Func<TEntity, object?>> func, params object?[] values)
 		{
-			return SetAttribute(func,
-			                    true,
-			                    _ => new SkipValuesOnInsertAttribute(values) { Configuration = Configuration },
-			                    (_, a) => { },
-			                    a => a.Configuration);
+			return SetAttribute(
+				func,
+				true,
+				_ => new SkipValuesOnInsertAttribute(values) { Configuration = Configuration },
+				(_, a) => { },
+				a => a.Configuration);
 		}
 
 		/// <summary>
@@ -439,11 +440,12 @@ namespace LinqToDB.Mapping
 		/// <returns>Returns current fluent entity mapping builder.</returns>
 		public EntityMappingBuilder<TEntity> HasSkipValuesOnUpdate(Expression<Func<TEntity, object?>> func, params object?[] values)
 		{
-			return SetAttribute(func,
-			                    true,
-			                    _ => new SkipValuesOnUpdateAttribute(values) { Configuration = Configuration },
-			                    (_, a) => { },
-			                    a => a.Configuration);
+			return SetAttribute(
+				func,
+				true,
+				_ => new SkipValuesOnUpdateAttribute(values) { Configuration = Configuration },
+				(_, a) => { },
+				a => a.Configuration);
 		}
 
 		/// <summary>
@@ -646,24 +648,15 @@ namespace LinqToDB.Mapping
 				},
 				setColumn,
 				a => a.Configuration,
-				a =>
+				a => new TableAttribute
 				{
-					var ta = new TableAttribute
-					{
-						Configuration             = a.Configuration,
-						Name                      = a.Name,
-						Schema                    = a.Schema,
-						Database                  = a.Database,
-						Server                    = a.Server,
-						IsColumnAttributeRequired = a.IsColumnAttributeRequired,
-					};
-
-					var isTemporary = a.GetIsTemporaryValue();
-
-					if (isTemporary != null)
-						ta.IsTemporary = isTemporary.Value;
-
-					return ta;
+					Configuration             = a.Configuration,
+					Name                      = a.Name,
+					Schema                    = a.Schema,
+					Database                  = a.Database,
+					Server                    = a.Server,
+					TableOptions              = a.TableOptions,
+					IsColumnAttributeRequired = a.IsColumnAttributeRequired,
 				});
 		}
 

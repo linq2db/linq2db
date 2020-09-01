@@ -266,19 +266,22 @@ namespace LinqToDB.DataProvider.SqlServer
 			if (table.PhysicalName == null)
 				return null;
 
-			var physicalName = table.IsTemporary == true
-				? '#' + table.PhysicalName
-				: table.PhysicalName;
+			var physicalName =
+				(table.TableOptions & TableOptions.IsTemporary) != 0 ?
+					$"#{table.PhysicalName}" :
+				(table.TableOptions & TableOptions.IsGlobalTemporary) != 0 ?
+					$"##{table.PhysicalName}" :
+					table.PhysicalName;
 
 			return Convert(new StringBuilder(), physicalName, ConvertType.NameToQueryTable).ToString();
 		}
 
 		public override StringBuilder BuildTableName(StringBuilder sb,
-			string? server,
-			string? database,
-			string? schema,
-			string  table,
-			bool?   isTemporary)
+			string?      server,
+			string?      database,
+			string?      schema,
+			string       table,
+			TableOptions tableOptions)
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
 

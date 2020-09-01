@@ -29,7 +29,7 @@ namespace LinqToDB.SqlQuery
 			SqlField[]               fields,
 			SqlTableType             sqlTableType,
 			ISqlExpression[]?        tableArguments,
-			bool?                    isTemporary)
+			TableOptions             tableOptions)
 		{
 			SourceID           = id;
 			Name               = name;
@@ -41,7 +41,7 @@ namespace LinqToDB.SqlQuery
 			ObjectType         = objectType;
 			SequenceAttributes = sequenceAttributes;
 
-			Fields = new Dictionary<string, SqlField>();
+			Fields = new Dictionary<string,SqlField>();
 
 			AddRange(fields);
 
@@ -58,7 +58,7 @@ namespace LinqToDB.SqlQuery
 
 			SqlTableType   = sqlTableType;
 			TableArguments = tableArguments;
-			IsTemporary    = isTemporary;
+			TableOptions   = tableOptions;
 		}
 
 		#endregion
@@ -78,7 +78,7 @@ namespace LinqToDB.SqlQuery
 			Name         = ed.TableName;
 			ObjectType   = objectType;
 			PhysicalName = physicalName ?? Name;
-			IsTemporary  = ed.IsTemporary ?? false;
+			TableOptions = ed.TableOptions;
 
 			foreach (var column in ed.Columns)
 			{
@@ -211,7 +211,7 @@ namespace LinqToDB.SqlQuery
 		public virtual string?           PhysicalName   { get; set; }
 		public virtual SqlTableType      SqlTableType   { get; set; }
 		public         ISqlExpression[]? TableArguments { get; set; }
-		public         bool?             IsTemporary    { get; set; }
+		public         TableOptions      TableOptions   { get; set; }
 
 		public Dictionary<string,SqlField> Fields { get; }
 

@@ -35,7 +35,7 @@ namespace LinqToDB.Linq
 			_databaseName = ed.DatabaseName;
 			_schemaName   = ed.SchemaName;
 			_tableName    = ed.TableName;
-			_isTemporary  = ed.IsTemporary == true;
+			_tableOptions = ed.TableOptions;
 		}
 
 		// ReSharper disable StaticMemberInGenericType
@@ -43,7 +43,7 @@ namespace LinqToDB.Linq
 		static MethodInfo? _databaseNameMethodInfo;
 		static MethodInfo? _schemaNameMethodInfo;
 		static MethodInfo? _tableNameMethodInfo;
-		static MethodInfo? _isTemporaryMethodInfo;
+		static MethodInfo? _tableOptionsMethodInfo;
 		// ReSharper restore StaticMemberInGenericType
 
 		private string? _serverName;
@@ -100,20 +100,20 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		private bool _isTemporary;
-		public  bool  IsTemporary
+		private TableOptions _tableOptions;
+		public  TableOptions  TableOptions
 		{
-			get => _isTemporary;
+			get => _tableOptions;
 			set
 			{
-				if (_isTemporary != value)
+				if (_tableOptions != value)
 				{
 					Expression = Expression.Call(
 						null,
-						_isTemporaryMethodInfo ??= Methods.LinqToDB.Table.IsTemporary.MakeGenericMethod(typeof(T)),
+						_tableOptionsMethodInfo ??= Methods.LinqToDB.Table.TableOptions.MakeGenericMethod(typeof(T)),
 						Expression, Expression.Constant(value));
 
-					_isTemporary = value;
+					_tableOptions = value;
 				}
 			}
 		}
@@ -138,7 +138,7 @@ namespace LinqToDB.Linq
 
 		public string GetTableName() =>
 			DataContext.CreateSqlProvider()
-				.ConvertTableName(new StringBuilder(), ServerName, DatabaseName, SchemaName, TableName, IsTemporary)
+				.ConvertTableName(new StringBuilder(), ServerName, DatabaseName, SchemaName, TableName, TableOptions)
 				.ToString();
 
 		public ITable<T> ChangeServerName(string? serverName)
@@ -150,7 +150,7 @@ namespace LinqToDB.Linq
 				DatabaseName = DatabaseName,
 				Expression   = Expression,
 				ServerName   = serverName,
-				IsTemporary  = IsTemporary
+				TableOptions = TableOptions
 			};
 		}
 
@@ -163,7 +163,7 @@ namespace LinqToDB.Linq
 				ServerName   = ServerName,
 				Expression   = Expression,
 				DatabaseName = databaseName,
-				IsTemporary  = IsTemporary
+				TableOptions = TableOptions
 			};
 		}
 
@@ -176,7 +176,7 @@ namespace LinqToDB.Linq
 				DatabaseName = DatabaseName,
 				Expression   = Expression,
 				SchemaName   = schemaName,
-				IsTemporary  = IsTemporary
+				TableOptions = TableOptions
 			};
 		}
 
@@ -189,11 +189,11 @@ namespace LinqToDB.Linq
 				DatabaseName = DatabaseName,
 				Expression   = Expression,
 				TableName    = tableName,
-				IsTemporary = IsTemporary
+				TableOptions = TableOptions
 			};
 		}
 
-		public ITable<T> ChangeIsTemporary(bool isTemporary)
+		public ITable<T> ChangeTableOptions(TableOptions tableOptions)
 		{
 			return new Table<T>(DataContext)
 			{
@@ -202,7 +202,7 @@ namespace LinqToDB.Linq
 				DatabaseName = DatabaseName,
 				Expression   = Expression,
 				TableName    = TableName,
-				IsTemporary  = isTemporary
+				TableOptions = tableOptions
 			};
 		}
 

@@ -24,7 +24,7 @@ namespace LinqToDB.Linq
 				string?                serverName,
 				string?                databaseName,
 				string?                schemaName,
-				bool?                  isTemporary,
+				TableOptions           tableOptions,
 				Type                   type)
 			{
 				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
@@ -33,7 +33,7 @@ namespace LinqToDB.Linq
 				if (serverName   != null) sqlTable.Server       = serverName;
 				if (databaseName != null) sqlTable.Database     = databaseName;
 				if (schemaName   != null) sqlTable.Schema       = schemaName;
-				if (isTemporary  != null) sqlTable.IsTemporary  = isTemporary.Value;
+				if (tableOptions.IsSet()) sqlTable.TableOptions = tableOptions;
 
 				var sqlQuery = new SelectQuery();
 				var updateStatement = new SqlUpdateStatement(sqlQuery);
@@ -98,7 +98,7 @@ namespace LinqToDB.Linq
 				string?                serverName,
 				string?                databaseName,
 				string?                schemaName,
-				bool?                  isTemporary)
+				TableOptions           tableOptions)
 			{
 				if (Equals(default(T), obj))
 					return 0;
@@ -106,13 +106,13 @@ namespace LinqToDB.Linq
 				var type = GetType<T>(obj!, dataContext);
 				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type);
 				var ei               = Configuration.Linq.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update) || columnFilter != null
-					? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schemaName, isTemporary, type)
+					? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, type)
 					: Cache<T>.QueryCache.GetOrCreate(
-						new { Operation = 'U', dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, columnFilter, tableName, schemaName, databaseName, serverName, isTemporary, type },
+						new { Operation = 'U', dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, columnFilter, tableName, schemaName, databaseName, serverName, tableOptions, type },
 						o =>
 						{
 							o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
-							return CreateQuery(dataContext, entityDescriptor, obj, null, tableName, serverName, databaseName, schemaName, isTemporary, type);
+							return CreateQuery(dataContext, entityDescriptor, obj, null, tableName, serverName, databaseName, schemaName, tableOptions, type);
 						});
 
 				return ei == null ? 0 : (int)ei.GetElement(dataContext, Expression.Constant(obj), null, null)!;
@@ -126,7 +126,7 @@ namespace LinqToDB.Linq
 				string?                serverName,
 				string?                databaseName,
 				string?                schemaName,
-				bool?                  isTemporary,
+				TableOptions           tableOptions,
 				CancellationToken      token)
 			{
 				if (Equals(default(T), obj))
@@ -135,13 +135,13 @@ namespace LinqToDB.Linq
 				var type = GetType<T>(obj!, dataContext);
 				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type);
 				var ei               = Configuration.Linq.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update) || columnFilter != null
-					? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schemaName, isTemporary, type)
+					? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, type)
 					: Cache<T>.QueryCache.GetOrCreate(
-						new { Operation = 'U', dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, columnFilter, tableName, schemaName, databaseName, serverName, isTemporary, type },
+						new { Operation = 'U', dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, columnFilter, tableName, schemaName, databaseName, serverName, tableOptions, type },
 						o =>
 						{
 							o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
-							return CreateQuery(dataContext, entityDescriptor, obj, null, tableName, serverName, databaseName, schemaName, isTemporary, type);
+							return CreateQuery(dataContext, entityDescriptor, obj, null, tableName, serverName, databaseName, schemaName, tableOptions, type);
 						});
 
 				var result = ei == null ? 0 : await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, null, token).ConfigureAwait(Configuration.ContinueOnCapturedContext);

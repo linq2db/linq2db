@@ -84,14 +84,14 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
-		/// Gets or sets optional linked server name. See <see cref="LinqExtensions.IsTemporary{T}(ITable{T}, bool)"/> method for support information per provider.
+		/// Gets or sets table options. See <see cref="TableOptions"/> enum for support information per provider.
 		/// </summary>
-		public bool? IsTemporary { get; private set; }
+		public TableOptions TableOptions { get; private set; }
 
-		bool? IEntityChangeDescriptor.IsTemporary
+		TableOptions IEntityChangeDescriptor.TableOptions
 		{
-			get => IsTemporary;
-			set => IsTemporary = value;
+			get => TableOptions;
+			set => TableOptions = value;
 		}
 
 		/// <summary>
@@ -171,7 +171,7 @@ namespace LinqToDB.Mapping
 				SchemaName                = ta.Schema;
 				DatabaseName              = ta.Database;
 				ServerName                = ta.Server;
-				IsTemporary               = ta.GetIsTemporaryValue();
+				TableOptions              = ta.TableOptions;
 				IsColumnAttributeRequired = ta.IsColumnAttributeRequired;
 			}
 

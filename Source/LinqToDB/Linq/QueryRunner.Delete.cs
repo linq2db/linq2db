@@ -19,7 +19,7 @@ namespace LinqToDB.Linq
 				string?      serverName,
 				string?      databaseName,
 				string?      schemaName,
-				bool?        isTemporary,
+				TableOptions tableOptions,
 				Type         type)
 			{
 				var sqlTable = new SqlTable(dataContext.MappingSchema, type);
@@ -28,7 +28,7 @@ namespace LinqToDB.Linq
 				if (serverName   != null) sqlTable.Server       = serverName;
 				if (databaseName != null) sqlTable.Database     = databaseName;
 				if (schemaName   != null) sqlTable.Schema       = schemaName;
-				if (isTemporary  != null) sqlTable.IsTemporary  = isTemporary.Value;
+				if (tableOptions.IsSet()) sqlTable.TableOptions = tableOptions;
 
 				var deleteStatement = new SqlDeleteStatement();
 
@@ -68,20 +68,20 @@ namespace LinqToDB.Linq
 				string?      serverName,
 				string?      databaseName,
 				string?      schemaName,
-				bool?        isTemporary)
+				TableOptions tableOptions)
 			{
 				if (Equals(default(T), obj))
 					return 0;
 
 				var type = GetType<T>(obj!, dataContext);
-				var key  = new { Operation = 'D', dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, serverName, isTemporary, type };
+				var key  = new { Operation = 'D', dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, serverName, tableOptions, type };
 				var ei   = Common.Configuration.Linq.DisableQueryCache
-					? CreateQuery(dataContext, tableName, serverName, databaseName, schemaName, isTemporary, type)
+					? CreateQuery(dataContext, tableName, serverName, databaseName, schemaName, tableOptions, type)
 					: Cache<T>.QueryCache.GetOrCreate(key,
 						o =>
 						{
 							o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
-							return CreateQuery(dataContext, tableName, serverName, databaseName, schemaName, isTemporary, type);
+							return CreateQuery(dataContext, tableName, serverName, databaseName, schemaName, tableOptions, type);
 						});
 
 				return (int)ei.GetElement(dataContext, Expression.Constant(obj), null, null)!;
@@ -94,21 +94,21 @@ namespace LinqToDB.Linq
 				string?           serverName,
 				string?           databaseName,
 				string?           schemaName,
-				bool?             isTemporary,
+				TableOptions      tableOptions,
 				CancellationToken token)
 			{
 				if (Equals(default(T), obj))
 					return 0;
 
 				var type = GetType<T>(obj!, dataContext);
-				var key  = new { Operation = 'D', dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, serverName, isTemporary, type };
+				var key  = new { Operation = 'D', dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, serverName, tableOptions, type };
 				var ei   = Common.Configuration.Linq.DisableQueryCache
-					? CreateQuery(dataContext, tableName, serverName, databaseName, schemaName, isTemporary, type)
+					? CreateQuery(dataContext, tableName, serverName, databaseName, schemaName, tableOptions, type)
 					: Cache<T>.QueryCache.GetOrCreate(key,
 						o =>
 						{
 							o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
-							return CreateQuery(dataContext, tableName, serverName, databaseName, schemaName, isTemporary, type);
+							return CreateQuery(dataContext, tableName, serverName, databaseName, schemaName, tableOptions, type);
 						});
 
 				var result = await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, null, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);

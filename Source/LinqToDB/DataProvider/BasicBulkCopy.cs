@@ -99,7 +99,13 @@ namespace LinqToDB.DataProvider
 
 			foreach (var item in source)
 			{
-				table.DataContext.Insert(item, options.TableName ?? table.TableName, options.DatabaseName ?? table.DatabaseName, options.SchemaName ?? table.SchemaName, options.ServerName ?? table.ServerName, options.IsTemporary ?? table.IsTemporary);
+				table.DataContext.Insert(
+					item,
+					options.TableName    ?? table.TableName,
+					options.DatabaseName ?? table.DatabaseName,
+					options.SchemaName   ?? table.SchemaName,
+					options.ServerName   ?? table.ServerName,
+					options.TableOptions.Or(table.TableOptions));
 
 				rowsCopied.RowsCopied++;
 
@@ -128,7 +134,14 @@ namespace LinqToDB.DataProvider
 			foreach (var item in source)
 			{
 				await table.DataContext
-					.InsertAsync(item, options.TableName ?? table.TableName, options.DatabaseName ?? table.DatabaseName, options.SchemaName ?? table.SchemaName, options.ServerName ?? table.ServerName, options.IsTemporary ?? table.IsTemporary, cancellationToken)
+					.InsertAsync(
+						item,
+						options.TableName    ?? table.TableName,
+						options.DatabaseName ?? table.DatabaseName,
+						options.SchemaName   ?? table.SchemaName,
+						options.ServerName   ?? table.ServerName,
+						options.TableOptions.Or(table.TableOptions),
+						cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				rowsCopied.RowsCopied++;
@@ -159,7 +172,7 @@ namespace LinqToDB.DataProvider
 			await foreach (var item in source.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext).WithCancellation(cancellationToken))
 			{
 				await table.DataContext
-					.InsertAsync(item, options.TableName ?? table.TableName, options.DatabaseName ?? table.DatabaseName, options.SchemaName ?? table.SchemaName, options.ServerName ?? table.ServerName, options.IsTemporary ?? table.IsTemporary, cancellationToken)
+					.InsertAsync(item, options.TableName ?? table.TableName, options.DatabaseName ?? table.DatabaseName, options.SchemaName ?? table.SchemaName, options.ServerName ?? table.ServerName, options.TableOptions.Or(table.TableOptions), cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 				rowsCopied.RowsCopied++;
 
@@ -182,7 +195,7 @@ namespace LinqToDB.DataProvider
 			var databaseName = options.DatabaseName ?? table.DatabaseName;
 			var schemaName   = options.SchemaName   ?? table.SchemaName;
 			var tableName    = options.TableName    ?? table.TableName;
-			var isTemporary  = options.IsTemporary  ?? table.IsTemporary;
+			var tableOptions = options.TableOptions.Or(table.TableOptions);
 
 			return sqlBuilder
 				.BuildTableName(
@@ -191,7 +204,7 @@ namespace LinqToDB.DataProvider
 					databaseName == null ? null : escaped ? sqlBuilder.ConvertInline(databaseName, ConvertType.NameToDatabase)   : databaseName,
 					schemaName   == null ? null : escaped ? sqlBuilder.ConvertInline(schemaName,   ConvertType.NameToSchema)     : schemaName,
 					                              escaped ? sqlBuilder.ConvertInline(tableName,    ConvertType.NameToQueryTable) : tableName,
-					                              isTemporary)
+					                              tableOptions)
 				.ToString();
 		}
 

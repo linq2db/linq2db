@@ -32,7 +32,7 @@ namespace LinqToDB.Reflection
 
 			public static readonly MethodInfo ElementAt               = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.ElementAt(0));
 			public static readonly MethodInfo ElementAtOrDefault      = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.ElementAtOrDefault(0));
-																	  
+
 			public static readonly MethodInfo DefaultIfEmpty       = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.DefaultIfEmpty());
 			public static readonly MethodInfo DefaultIfEmptyValue  = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.DefaultIfEmpty(0));
 
@@ -114,7 +114,7 @@ namespace LinqToDB.Reflection
 				public static readonly MethodInfo SchemaName   = MemberHelper.MethodOfGeneric<ITable<int>>(t => t.SchemaName  (null!));
 				public static readonly MethodInfo DatabaseName = MemberHelper.MethodOfGeneric<ITable<int>>(t => t.DatabaseName(null!));
 				public static readonly MethodInfo ServerName   = MemberHelper.MethodOfGeneric<ITable<int>>(t => t.ServerName  (null!));
-				public static readonly MethodInfo IsTemporary  = MemberHelper.MethodOfGeneric<ITable<int>>(t => t.IsTemporary (false));
+				public static readonly MethodInfo TableOptions = MemberHelper.MethodOfGeneric<ITable<int>>(t => t.TableOptions(global::LinqToDB.TableOptions.NotSet));
 
 				public static readonly MethodInfo With                = MemberHelper.MethodOfGeneric<ITable<int>>(t => t.With(""));
 				public static readonly MethodInfo WithTableExpression = MemberHelper.MethodOfGeneric<ITable<int>>(t => t.WithTableExpression(""));
@@ -176,8 +176,8 @@ namespace LinqToDB.Reflection
 				{
 					public static readonly MethodInfo Into        = MemberHelper.MethodOfGeneric((IDataContext dc, ITable<LW1> t) => dc.Into(t));
 
-					public static readonly MethodInfo Insert      = MemberHelper.MethodOfGeneric((IDataContext dc, LW1 o) => dc.Insert(o, "tn", "db", "sch", "srv", false));
-					public static readonly MethodInfo InsertAsync = MemberHelper.MethodOfGeneric((IDataContext dc, LW1 o) => dc.InsertAsync(o, "tn", "db", "sch", "srv", false, default));
+					public static readonly MethodInfo Insert      = MemberHelper.MethodOfGeneric((IDataContext dc, LW1 o) => dc.Insert     (o, "tn", "db", "sch", "srv", TableOptions.NotSet));
+					public static readonly MethodInfo InsertAsync = MemberHelper.MethodOfGeneric((IDataContext dc, LW1 o) => dc.InsertAsync(o, "tn", "db", "sch", "srv", TableOptions.NotSet, default));
 				}
 
 				public static class T

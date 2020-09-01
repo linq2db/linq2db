@@ -32,7 +32,7 @@ namespace LinqToDB.SqlQuery
 			SqlField[]       fields,
 			string           sql,
 			ISqlExpression[] parameters)
-			: base(id, string.Empty, alias, null, null, null, string.Empty, objectType, null, fields, SqlTableType.RawSql, null, false)
+			: base(id, string.Empty, alias, null, null, null, string.Empty, objectType, null, fields, SqlTableType.RawSql, null, TableOptions.NotSet)
 		{
 			SQL        = sql;
 			Parameters = parameters;

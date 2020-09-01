@@ -61,13 +61,20 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public bool IsTemporary
 		{
-			get => _isTemporary ?? false;
-			set => _isTemporary = value;
+			get => (TableOptions & TableOptions.IsTemporary) != 0;
+			set
+			{
+				if (value)
+					TableOptions |= TableOptions.IsTemporary;
+				else
+					TableOptions &= ~TableOptions.IsTemporary;
+			}
 		}
 
-		bool? _isTemporary;
-
-		public bool? GetIsTemporaryValue() => _isTemporary;
+		/// <summary>
+		/// Gets or sets Table options. See <see cref="TableOptions"/> enum for support information per provider.
+		/// </summary>
+		public TableOptions TableOptions        { get; set; }
 
 		/// <summary>
 		/// Gets or sets column mapping rules for current class or interface.

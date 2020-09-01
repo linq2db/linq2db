@@ -50,7 +50,7 @@ namespace LinqToDB.DataProvider.DB2
 				var field = trun.Table!.Fields.Values.Skip(commandNumber - 1).First(f => f.IsIdentity);
 
 				StringBuilder.Append("ALTER TABLE ");
-				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName!, trun.Table.IsTemporary);
+				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName!, trun.Table.TableOptions);
 				StringBuilder.Append(" ALTER ");
 				Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
 				StringBuilder.AppendLine(" RESTART WITH 1");
@@ -234,7 +234,7 @@ namespace LinqToDB.DataProvider.DB2
 			StringBuilder.Append("GENERATED ALWAYS AS IDENTITY");
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, bool? isTemporary)
+		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions)
 		{
 			if (database != null && database.Length == 0) database = null;
 			if (schema   != null && schema.  Length == 0) schema   = null;
@@ -243,7 +243,7 @@ namespace LinqToDB.DataProvider.DB2
 			if (database != null && schema == null)
 				throw new LinqToDBException("DB2 requires schema name if database name provided.");
 
-			return base.BuildTableName(sb, null, database, schema, table, isTemporary);
+			return base.BuildTableName(sb, null, database, schema, table, tableOptions);
 		}
 
 		protected override string? GetProviderTypeName(IDbDataParameter parameter)

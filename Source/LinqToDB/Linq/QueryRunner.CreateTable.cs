@@ -20,7 +20,7 @@ namespace LinqToDB.Linq
 				string?         statementHeader,
 				string?         statementFooter,
 				DefaultNullable defaultNullable,
-				bool?           isTemporary = null)
+				TableOptions    tableOptions)
 			{
 				var sqlTable    = new SqlTable<T>(dataContext.MappingSchema);
 				var createTable = new SqlCreateTableStatement();
@@ -29,7 +29,7 @@ namespace LinqToDB.Linq
 				if (serverName   != null) sqlTable.Server       = serverName;
 				if (databaseName != null) sqlTable.Database     = databaseName;
 				if (schemaName   != null) sqlTable.Schema       = schemaName;
-				if (isTemporary  != null) sqlTable.IsTemporary  = isTemporary.Value;
+				if (tableOptions.IsSet()) sqlTable.TableOptions = tableOptions;
 
 				createTable.Table           = sqlTable;
 				createTable.StatementHeader = statementHeader;
@@ -51,7 +51,7 @@ namespace LinqToDB.Linq
 				if (sqlTable.Server       != null) table = table.ServerName  (sqlTable.Server);
 				if (sqlTable.Database     != null) table = table.DatabaseName(sqlTable.Database);
 				if (sqlTable.Schema       != null) table = table.SchemaName  (sqlTable.Schema);
-				if (sqlTable.IsTemporary  != null) table = table.IsTemporary (sqlTable.IsTemporary.Value);
+				if (sqlTable.TableOptions.IsSet()) table = table.TableOptions(sqlTable.TableOptions);
 
 				return table;
 			}
@@ -65,7 +65,7 @@ namespace LinqToDB.Linq
 				string?           statementHeader,
 				string?           statementFooter,
 				DefaultNullable   defaultNullable,
-				bool?             isTemporary,
+				TableOptions      tableOptions,
 				CancellationToken token)
 			{
 				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
@@ -75,7 +75,7 @@ namespace LinqToDB.Linq
 				if (serverName   != null) sqlTable.Server       = serverName;
 				if (databaseName != null) sqlTable.Database     = databaseName;
 				if (schemaName   != null) sqlTable.Schema       = schemaName;
-				if (isTemporary  != null) sqlTable.IsTemporary  = isTemporary.Value;
+				if (tableOptions.IsSet()) sqlTable.TableOptions = tableOptions;
 
 				createTable.Table           = sqlTable;
 				createTable.StatementHeader = statementHeader;
@@ -97,7 +97,7 @@ namespace LinqToDB.Linq
 				if (sqlTable.Server       != null) table = table.ServerName  (sqlTable.Server);
 				if (sqlTable.Database     != null) table = table.DatabaseName(sqlTable.Database);
 				if (sqlTable.Schema       != null) table = table.SchemaName  (sqlTable.Schema);
-				if (sqlTable.IsTemporary  != null) table = table.IsTemporary (sqlTable.IsTemporary.Value);
+				if (sqlTable.TableOptions.IsSet()) table = table.TableOptions(sqlTable.TableOptions);
 
 				return table;
 			}

@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using System;
+using System.Data;
 using System.Linq;
 
 #region ReSharper disable
@@ -9,10 +10,10 @@ using System.Linq;
 namespace LinqToDB.DataProvider.Firebird
 {
 	using Common;
+	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
 	using System.Text;
-	using LinqToDB.Mapping;
 
 	public partial class FirebirdSqlBuilder : BasicSqlBuilder
 	{
@@ -356,7 +357,7 @@ namespace LinqToDB.DataProvider.Firebird
 			}
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, bool? isTemporary)
+		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions)
 		{
 			return sb.Append(table);
 		}
@@ -394,6 +395,70 @@ namespace LinqToDB.DataProvider.Firebird
 			else
 			{
 				base.BuildInsertQuery(statement, insertClause, addAlias);
+			}
+		}
+
+		protected override void BuildCreateTableCommand(SqlTable table)
+		{
+			StringBuilder.Append(
+				(table.TableOptions & TableOptions.IsGlobalTemporary) != 0 ?
+					"CREATE GLOBAL TEMPORARY TABLE " :
+//				(table.TableOptions & TableOptions.IsTemporary) != 0 ?
+//					"CREATE TEMPORARY TABLE " :
+					"CREATE TABLE ");
+
+//			if ((table.TableOptions & TableOptions.CreateIfNotExists) != 0)
+//				StringBuilder.Append("IF NOT EXISTS ");
+		}
+
+		protected override void BuildStartCreateTableStatement(SqlCreateTableStatement createTable)
+		{
+			if (createTable.StatementHeader == null && (createTable.Table!.TableOptions & TableOptions.CreateIfNotExists) != 0)
+			{
+				StringBuilder
+					.AppendLine("EXECUTE BLOCK AS BEGIN");
+
+				Indent++;
+
+				AppendIndent().Append("IF (NOT EXISTS(SELECT 1 FROM rdb$relations WHERE rdb$relation_name = ");
+
+				var identifierValue = createTable.Table.PhysicalName!;
+
+				// if identifier is not quoted, it must be converted to upper case to match record in rdb$relation_name
+				if (FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.None ||
+				    FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && IsValidIdentifier(identifierValue))
+					identifierValue = identifierValue.ToUpper();
+
+				BuildValue(null, identifierValue);
+
+				StringBuilder
+					.AppendLine(")) THEN");
+
+				Indent++;
+
+				AppendIndent().AppendLine("EXECUTE STATEMENT '");
+
+				Indent++;
+			}
+
+			base.BuildStartCreateTableStatement(createTable);
+		}
+
+		protected override void BuildEndCreateTableStatement(SqlCreateTableStatement createTable)
+		{
+			base.BuildEndCreateTableStatement(createTable);
+
+			if (createTable.StatementHeader == null && (createTable.Table!.TableOptions & TableOptions.CreateIfNotExists) != 0)
+			{
+				Indent--;
+
+				AppendIndent()
+					.AppendLine("';");
+
+				Indent--;
+
+				StringBuilder
+					.AppendLine("END");
 			}
 		}
 	}

@@ -18,7 +18,7 @@ namespace LinqToDB.Linq
 				string?      databaseName,
 				string?      schemaName,
 				bool         ifExists,
-				bool?        isTemporary)
+				TableOptions tableOptions)
 			{
 				var sqlTable  = new SqlTable<T>(dataContext.MappingSchema);
 				var dropTable = new SqlDropTableStatement(ifExists);
@@ -27,7 +27,7 @@ namespace LinqToDB.Linq
 				if (serverName   != null) sqlTable.Server       = serverName;
 				if (databaseName != null) sqlTable.Database     = databaseName;
 				if (schemaName   != null) sqlTable.Schema       = schemaName;
-				if (isTemporary  != null) sqlTable.IsTemporary  = isTemporary.Value;
+				if (tableOptions.IsSet()) sqlTable.TableOptions = tableOptions;
 
 				dropTable.Table  = sqlTable;
 
@@ -42,13 +42,13 @@ namespace LinqToDB.Linq
 			}
 
 			public static async Task QueryAsync(
-				IDataContext dataContext,
-				string?      tableName,
-				string?      serverName,
-				string?      databaseName,
-				string?      schemaName,
-				bool         ifExists,
-				bool?        isTemporary,
+				IDataContext      dataContext,
+				string?           tableName,
+				string?           serverName,
+				string?           databaseName,
+				string?           schemaName,
+				bool              ifExists,
+				TableOptions      tableOptions,
 				CancellationToken token)
 			{
 				var sqlTable  = new SqlTable<T>(dataContext.MappingSchema);
@@ -58,7 +58,7 @@ namespace LinqToDB.Linq
 				if (serverName   != null) sqlTable.Server       = serverName;
 				if (databaseName != null) sqlTable.Database     = databaseName;
 				if (schemaName   != null) sqlTable.Schema       = schemaName;
-				if (isTemporary  != null) sqlTable.IsTemporary  = isTemporary.Value;
+				if (tableOptions.IsSet()) sqlTable.TableOptions = tableOptions;
 
 				dropTable.Table  = sqlTable;
 

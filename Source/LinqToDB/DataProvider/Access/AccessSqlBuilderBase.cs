@@ -6,7 +6,7 @@ using System.Text;
 namespace LinqToDB.DataProvider.Access
 {
 	using Extensions;
-	using LinqToDB.Mapping;
+	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
 
@@ -34,7 +34,7 @@ namespace LinqToDB.DataProvider.Access
 				var field = trun.Table!.Fields.Values.Skip(commandNumber - 1).First(f => f.IsIdentity);
 
 				StringBuilder.Append("ALTER TABLE ");
-				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName!, trun.Table.IsTemporary);
+				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName!, trun.Table.TableOptions);
 				StringBuilder.Append(" ALTER COLUMN ");
 				Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
 				StringBuilder.AppendLine(" COUNTER(1,1)");
@@ -389,7 +389,7 @@ namespace LinqToDB.DataProvider.Access
 			StringBuilder.Append(")");
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, bool? isTemporary)
+		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions)
 		{
 			if (database != null && database.Length == 0)
 				database = null;

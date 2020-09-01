@@ -266,7 +266,7 @@ namespace LinqToDB.DataProvider.Sybase
 			if (statement is SqlTruncateTableStatement trun)
 			{
 				StringBuilder.Append("sp_chgattribute ");
-				ConvertTableName(StringBuilder, trun.Table!.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName!, trun.Table.IsTemporary);
+				ConvertTableName(StringBuilder, trun.Table!.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName!, trun.Table.TableOptions);
 				StringBuilder.AppendLine(", 'identity_burn_max', 0, '0'");
 			}
 		}
@@ -283,9 +283,12 @@ namespace LinqToDB.DataProvider.Sybase
 			if (table.PhysicalName == null)
 				return null;
 
-			var physicalName = table.IsTemporary == true
-				? '#' + table.PhysicalName
-				: table.PhysicalName;
+			var physicalName =
+				(table.TableOptions & TableOptions.IsTemporary) != 0 ?
+					$"#{table.PhysicalName}" :
+				(table.TableOptions & TableOptions.IsGlobalTemporary) != 0 ?
+					$"##{table.PhysicalName}" :
+					table.PhysicalName;
 
 			return Convert(new StringBuilder(), physicalName, ConvertType.NameToQueryTable).ToString();
 		}

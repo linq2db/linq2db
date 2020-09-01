@@ -876,7 +876,7 @@ namespace LinqToDB.ServiceModel
 								}
 							}
 
-							Append(elem.IsTemporary);
+							Append((int)elem.TableOptions);
 
 							break;
 						}
@@ -1626,11 +1626,11 @@ namespace LinqToDB.ServiceModel
 
 							var sqlTableType = (SqlTableType)ReadInt();
 							var tableArgs    = sqlTableType == SqlTableType.Table ? null : ReadArray<ISqlExpression>();
-							var isTemporary  = ReadNullableBool();
+							var tableOptions = (TableOptions)ReadInt();
 
 							obj = new SqlTable(
 								sourceID, name, alias, server, database, schema, physicalName, objectType, sequenceAttributes, flds,
-								sqlTableType, tableArgs, isTemporary);
+								sqlTableType, tableArgs, tableOptions);
 
 							break;
 						}
@@ -1750,8 +1750,8 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.IsTruePredicate :
 						{
-							var expr1 = Read<ISqlExpression>()!;
-							var isNot = ReadBool();
+							var expr1      = Read<ISqlExpression>()!;
+							var isNot      = ReadBool();
 							var trueValue  = Read<ISqlExpression>()!;
 							var falseValue = Read<ISqlExpression>()!;
 							var withNull   = ReadInt();

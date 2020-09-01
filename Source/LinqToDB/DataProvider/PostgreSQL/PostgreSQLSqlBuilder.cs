@@ -233,7 +233,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 					var sb = new StringBuilder();
 					sb.Append("nextval(");
-					ValueToSqlConverter.Convert(sb, BuildTableName(new StringBuilder(), server, database, schema, name, table.IsTemporary).ToString());
+					ValueToSqlConverter.Convert(sb, BuildTableName(new StringBuilder(), server, database, schema, name, table.TableOptions).ToString());
 					sb.Append(")");
 					return new SqlExpression(sb.ToString(), Precedence.Primary);
 				}
@@ -279,7 +279,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return base.BuildJoinType(join);
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, bool? isTemporary)
+		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions)
 		{
 			if (database != null && database.Length == 0) database = null;
 			if (schema   != null && schema.  Length == 0) schema   = null;
@@ -289,7 +289,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			if (database != null && schema == null)
 				database = null;
 
-			return base.BuildTableName(sb, null, database, schema, table, isTemporary);
+			return base.BuildTableName(sb, null, database, schema, table, tableOptions);
 		}
 
 		protected override string? GetProviderTypeName(IDbDataParameter parameter)
@@ -364,14 +364,17 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		protected override string? GetTableSchemaName(SqlTable table)
 		{
-			return table.Schema == null || table.IsTemporary == true ? null : ConvertInline(table.Schema, ConvertType.NameToSchema);
+			return table.Schema == null || (table.TableOptions & TableOptions.IsTemporary) != 0 ? null : ConvertInline(table.Schema, ConvertType.NameToSchema);
 		}
 
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
-			StringBuilder.Append(table.IsTemporary == true
+			StringBuilder.Append((table.TableOptions & TableOptions.IsTemporary) != 0
 				? "CREATE TEMPORARY TABLE "
 				: "CREATE TABLE ");
+
+			if ((table.TableOptions & TableOptions.CreateIfNotExists) != 0)
+				StringBuilder.Append("IF NOT EXISTS ");
 		}
 	}
 }
