@@ -396,10 +396,12 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				if (_sequence1.IsExpression(expression, level, RequestFor.Association).Result
-				 || _sequence2.IsExpression(expression, level, RequestFor.Association).Result)
+				var testExpression = expression?.GetLevelExpression(Builder.MappingSchema, level);
+
+				if (_sequence1.IsExpression(testExpression, level, RequestFor.Association).Result
+				 || _sequence2.IsExpression(testExpression, level, RequestFor.Association).Result)
 				{
-					throw new LinqException(
+					throw new LinqToDBException(
 						"Associations with Concat/Union or other Set operations are not supported.");
 				}
 
