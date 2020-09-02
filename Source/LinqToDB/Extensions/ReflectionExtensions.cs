@@ -669,20 +669,20 @@ namespace LinqToDB.Extensions
 				return null;
 			return getItemTypeCache.GetOrAdd(type, (t) =>
 			{
-				if (type == typeof(object))
+				if (t == typeof(object))
 					// if it possible to have null here or we should remove check?
-					return type.HasElementType ? type.GetElementType() : null;
+					return t.HasElementType ? t.GetElementType() : null;
 
-				if (type.IsArray)
-					return type.GetElementType();
+				if (t.IsArray)
+					return t.GetElementType();
 
-				if (type.IsGenericType)
-					foreach (var aType in type.GetGenericArguments())
+				if (t.IsGenericType)
+					foreach (var aType in t.GetGenericArguments())
 						if (typeof(IEnumerable<>).MakeGenericType(new[] {aType})
-							.IsAssignableFrom(type))
+							.IsAssignableFrom(t))
 							return aType;
 
-				var interfaces = type.GetInterfaces();
+				var interfaces = t.GetInterfaces();
 
 				if (interfaces != null && interfaces.Length > 0)
 				{
@@ -695,7 +695,7 @@ namespace LinqToDB.Extensions
 					}
 				}
 
-				return type.BaseType.GetItemType();
+				return t.BaseType.GetItemType();
 			});
 		}
 
