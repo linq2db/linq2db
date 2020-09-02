@@ -588,9 +588,9 @@ namespace LinqToDB.Mapping
 			return expr;
 		}
 
-		public LambdaExpression SafeConvert(Type fromType, Type type)
+		public LambdaExpression GenerateSafeConvert(Type fromType, Type type)
 		{
-			var param = Expression.Parameter(fromType);
+			var param = Expression.Parameter(fromType, "v");
 			var body  = (Expression)param;
 
 			if (fromType.IsNullable())
