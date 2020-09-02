@@ -1,14 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 
 namespace LinqToDB.DataProvider.Informix
 {
+	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
-	using System.Globalization;
-	using Mapping;
 
 	partial class InformixSqlBuilder : BasicSqlBuilder
 	{
@@ -283,6 +284,16 @@ namespace LinqToDB.DataProvider.Informix
 			BuildExpression(value);
 			StringBuilder.Append("::");
 			BuildDataType(dataType, false);
+		}
+
+		protected override void BuildCreateTableCommand(SqlTable table)
+		{
+			StringBuilder.Append((table.TableOptions & TableOptions.IsTemporary) != 0
+				? "CREATE TEMP TABLE "
+				: "CREATE TABLE ");
+
+			if ((table.TableOptions & TableOptions.CreateIfNotExists) != 0)
+				StringBuilder.Append("IF NOT EXISTS ");
 		}
 	}
 }
