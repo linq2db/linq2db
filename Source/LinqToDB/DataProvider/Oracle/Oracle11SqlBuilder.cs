@@ -1,13 +1,14 @@
-﻿using System.Data;
+﻿using System;
+using System.Data;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.Oracle
 {
 	using Common;
+	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
 	using System.Text;
-	using LinqToDB.Mapping;
 
 	partial class Oracle11SqlBuilder : BasicSqlBuilder
 	{
@@ -521,6 +522,66 @@ END;",
 			}
 
 			return base.GetProviderTypeName(parameter);
+		}
+
+		protected override void BuildCreateTableCommand(SqlTable table)
+		{
+			StringBuilder.Append(
+				(table.TableOptions & TableOptions.IsTemporary) != 0 ?
+					"CREATE GLOBAL TEMPORARY TABLE " :
+					"CREATE TABLE ");
+//
+//			if ((table.TableOptions & TableOptions.CreateIfNotExists) != 0)
+//				StringBuilder.Append("IF NOT EXISTS ");
+		}
+
+		protected override void BuildStartCreateTableStatement(SqlCreateTableStatement createTable)
+		{
+			if (createTable.StatementHeader == null && (createTable.Table!.TableOptions & TableOptions.CreateIfNotExists) != 0)
+			{
+				AppendIndent().AppendLine(@"BEGIN");
+
+				Indent++;
+
+				AppendIndent().AppendLine(@"EXECUTE IMMEDIATE '");
+
+				Indent++;
+			}
+
+			base.BuildStartCreateTableStatement(createTable);
+		}
+
+		protected override void BuildEndCreateTableStatement(SqlCreateTableStatement createTable)
+		{
+			base.BuildEndCreateTableStatement(createTable);
+
+			if (createTable.StatementHeader == null)
+			{
+				if ((createTable.Table!.TableOptions & TableOptions.IsTemporary) != 0)
+				{
+					AppendIndent()
+						.AppendLine("ON COMMIT PRESERVE ROWS");
+				}
+
+				if ((createTable.Table!.TableOptions & TableOptions.CreateIfNotExists) != 0)
+				{
+					Indent--;
+
+					AppendIndent()
+						.AppendLine("';");
+
+					Indent--;
+
+					StringBuilder
+						.AppendLine("EXCEPTION")
+						.AppendLine("\tWHEN OTHERS THEN")
+						.AppendLine("\t\tIF SQLCODE != -955 THEN")
+						.AppendLine("\t\t\tRAISE;")
+						.AppendLine("\t\tEND IF;")
+						.AppendLine("END;")
+						;
+				}
+			}
 		}
 	}
 }

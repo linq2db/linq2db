@@ -22,7 +22,7 @@ namespace LinqToDB
 		IsGlobalTemporary = 0b0100,
 		/// <summary>
 		/// IF NOT EXISTS option of the CREATE statement. This option will have effect only for databases that support the option.
-		/// <para>Supported by: DB2, Firebird, Informix, MySql, PostgreSQL, SQLite.</para>
+		/// <para>Supported by: DB2, Firebird, Informix, MySql, Oracle, PostgreSQL, SQLite.</para>
 		/// </summary>
 		CreateIfNotExists = 0b1000,
 	}

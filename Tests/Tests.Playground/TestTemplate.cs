@@ -112,6 +112,7 @@ namespace Tests.Playground
 			ProviderName.Informix,
 			ProviderName.Firebird,
 			TestProvName.AllMySql,
+			TestProvName.AllOracle,
 			ProviderName.PostgreSQL,
 			TestProvName.AllSQLite)] string context)
 		{
