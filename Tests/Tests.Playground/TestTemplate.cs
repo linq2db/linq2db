@@ -23,7 +23,7 @@ namespace Tests.Playground
 		[Table(IsTemporary = true, Configuration = ProviderName.Sybase,     Database = "TestData")]
 		[Table(IsTemporary = true, Configuration = ProviderName.SQLite)]
 		[Table(IsTemporary = true, Configuration = ProviderName.PostgreSQL, Database = "TestData", Schema = "test_schema")]
-		[Table(IsTemporary = true, Configuration = ProviderName.DB2, Schema = "SESSION")]
+		[Table(IsTemporary = true, Configuration = ProviderName.DB2,                               Schema = "SESSION")]
 		class IsTemporaryTable
 		{
 			[Column] public int Id    { get; set; }
@@ -70,12 +70,8 @@ namespace Tests.Playground
 		public void IsGlobalTemporaryTest([IncludeDataSources(
 			ProviderName.DB2,
 			ProviderName.Firebird,
-			ProviderName.SqlServer2005,
-			ProviderName.SqlServer2008,
-			ProviderName.SqlServer2012,
-			ProviderName.SqlServer2014,
-			ProviderName.Sybase,
-			ProviderName.SybaseManaged)] string context,
+			TestProvName.AllSqlServer2005Plus,
+			TestProvName.AllSybase)] string context,
 			[Values(true)] bool firstCall)
 		{
 			using var db = (DataConnection)GetDataContext(context);
@@ -111,11 +107,13 @@ namespace Tests.Playground
 
 		[Test]
 		public void CreateIfNotExistsTest([IncludeDataSources(
+			true,
 			ProviderName.DB2,
+			ProviderName.Informix,
 			ProviderName.Firebird,
+			TestProvName.AllMySql,
 			ProviderName.PostgreSQL,
-			ProviderName.SQLiteClassic,
-			ProviderName.SQLiteMS)] string context)
+			TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 

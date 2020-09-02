@@ -6,11 +6,11 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.MySql
 {
+	using Extensions;
+	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
-	using LinqToDB.Mapping;
-	using LinqToDB.Extensions;
-	using LinqToDB.Tools;
+	using Tools;
 
 	class MySqlSqlBuilder : BasicSqlBuilder
 	{
@@ -546,6 +546,15 @@ namespace LinqToDB.DataProvider.MySql
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
+		}
+		protected override void BuildCreateTableCommand(SqlTable table)
+		{
+			StringBuilder.Append((table.TableOptions & TableOptions.IsTemporary) != 0
+				? "CREATE TEMPORARY TABLE "
+				: "CREATE TABLE ");
+
+			if ((table.TableOptions & TableOptions.CreateIfNotExists) != 0)
+				StringBuilder.Append("IF NOT EXISTS ");
 		}
 	}
 }
