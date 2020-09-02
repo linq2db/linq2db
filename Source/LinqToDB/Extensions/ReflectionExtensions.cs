@@ -660,7 +660,7 @@ namespace LinqToDB.Extensions
 			return false;
 		}
 		
-		static readonly ConcurrentDictionary<Type?,Type?> getItemTypeCache = new ConcurrentDictionary<Type?, Type?>();
+		static readonly ConcurrentDictionary<Type,Type?> getItemTypeCache = new ConcurrentDictionary<Type, Type?>();
 		
 		[return: NotNullIfNotNull("type")]
 		public static Type? GetItemType(this Type? type)
