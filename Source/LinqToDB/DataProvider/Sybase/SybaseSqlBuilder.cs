@@ -168,6 +168,8 @@ namespace LinqToDB.DataProvider.Sybase
 				BuildTableName(selectQuery.From.Tables[0], true, false);
 		}
 
+		bool _skipBrackets;
+
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
 			switch (convertType)
@@ -184,7 +186,7 @@ namespace LinqToDB.DataProvider.Sybase
 				case ConvertType.NameToQueryField:
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryTableAlias:
-					if (value.Length > 28 || value.Length > 0 && value[0] == '[')
+					if (_skipBrackets || value.Length > 28 || value.Length > 0 && value[0] == '[')
 						return sb.Append(value);
 
 					// https://github.com/linq2db/linq2db/issues/1064
@@ -196,7 +198,7 @@ namespace LinqToDB.DataProvider.Sybase
 				case ConvertType.NameToDatabase:
 				case ConvertType.NameToSchema:
 				case ConvertType.NameToQueryTable:
-					if (value.Length > 28 || value.Length > 0 && (value[0] == '[' || value[0] == '#'))
+					if (_skipBrackets || value.Length > 28 || value.Length > 0 && (value[0] == '[' || value[0] == '#'))
 						return sb.Append(value);
 
 					if (value.IndexOf('.') > 0)
@@ -284,6 +286,8 @@ namespace LinqToDB.DataProvider.Sybase
 				return null;
 
 			var physicalName =
+				table.PhysicalName.StartsWith("#") ?
+					table.PhysicalName :
 				(table.TableOptions & TableOptions.IsTemporary) != 0 ?
 					$"#{table.PhysicalName}" :
 				(table.TableOptions & TableOptions.IsGlobalTemporary) != 0 ?
@@ -291,6 +295,70 @@ namespace LinqToDB.DataProvider.Sybase
 					table.PhysicalName;
 
 			return Convert(new StringBuilder(), physicalName, ConvertType.NameToQueryTable).ToString();
+		}
+
+		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
+		{
+			var table = dropTable.Table!;
+
+			if (dropTable.IfExists)
+			{
+				var defaultDatabaseName =
+					table.PhysicalName!.StartsWith("#") || (table.TableOptions & (TableOptions.IsTemporary | TableOptions.IsGlobalTemporary)) != 0 ?
+						"tempdb" : null;
+
+				_skipBrackets = true;
+				StringBuilder.Append("IF (OBJECT_ID(N'");
+				BuildPhysicalTable(table, null, defaultDatabaseName : defaultDatabaseName);
+				StringBuilder.AppendLine("') IS NOT NULL)");
+				_skipBrackets = false;
+
+				Indent++;
+			}
+
+			AppendIndent().Append("DROP TABLE ");
+			BuildPhysicalTable(table, null);
+
+			if (dropTable.IfExists)
+				Indent--;
+		}
+
+		protected override void BuildStartCreateTableStatement(SqlCreateTableStatement createTable)
+		{
+			if (createTable.StatementHeader == null && (createTable.Table!.TableOptions & TableOptions.CreateIfNotExists) != 0)
+			{
+				var table = createTable.Table;
+
+				var defaultDatabaseName =
+					table.PhysicalName!.StartsWith("#") || (table.TableOptions & (TableOptions.IsTemporary | TableOptions.IsGlobalTemporary)) != 0 ?
+						"tempdb" : null;
+
+				_skipBrackets = true;
+				StringBuilder.Append("IF (OBJECT_ID(N'");
+				BuildPhysicalTable(table, null, defaultDatabaseName : defaultDatabaseName);
+				StringBuilder.AppendLine("') IS NULL)");
+				_skipBrackets = false;
+
+				Indent++;
+
+				AppendIndent().AppendLine("EXECUTE('");
+
+				Indent++;
+			}
+
+			base.BuildStartCreateTableStatement(createTable);
+		}
+
+		protected override void BuildEndCreateTableStatement(SqlCreateTableStatement createTable)
+		{
+			base.BuildEndCreateTableStatement(createTable);
+
+			if (createTable.StatementHeader == null && (createTable.Table!.TableOptions & TableOptions.CreateIfNotExists) != 0)
+			{
+				Indent--;
+				AppendIndent().AppendLine("')");
+				Indent--;
+			}
 		}
 	}
 }

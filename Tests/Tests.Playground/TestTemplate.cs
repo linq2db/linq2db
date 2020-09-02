@@ -117,7 +117,8 @@ namespace Tests.Playground
 			TestProvName.AllOracle,
 			ProviderName.PostgreSQL,
 			TestProvName.AllSQLite,
-			TestProvName.AllSqlServer2005Plus)] string context)
+			TestProvName.AllSqlServer2005Plus,
+			TestProvName.AllSybase)] string context)
 		{
 			if (context == "SqlServer.2008.LinqService" ||
 				context == "SqlServer.2012.LinqService" ||
