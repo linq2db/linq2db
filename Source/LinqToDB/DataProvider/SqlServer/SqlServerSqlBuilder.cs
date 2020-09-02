@@ -267,6 +267,8 @@ namespace LinqToDB.DataProvider.SqlServer
 				return null;
 
 			var physicalName =
+				table.PhysicalName.StartsWith("#") ?
+					table.PhysicalName :
 				(table.TableOptions & TableOptions.IsTemporary) != 0 ?
 					$"#{table.PhysicalName}" :
 				(table.TableOptions & TableOptions.IsGlobalTemporary) != 0 ?
@@ -368,28 +370,23 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			var table = dropTable.Table!;
 
-			if (table.PhysicalName!.StartsWith("#"))
+			if (dropTable.IfExists)
 			{
-				AppendIndent().Append("DROP TABLE ");
-				BuildPhysicalTable(table, null);
-				StringBuilder.AppendLine();
-			}
-			else
-			{
-				if (dropTable.IfExists)
-				{
-					StringBuilder.Append("IF (OBJECT_ID(N'");
-					BuildPhysicalTable(table, null);
-					StringBuilder.AppendLine("', N'U') IS NOT NULL)");
-					Indent++;
-				}
+				var defaultDatabaseName =
+					table.PhysicalName!.StartsWith("#") || (table.TableOptions & (TableOptions.IsTemporary | TableOptions.IsGlobalTemporary)) != 0 ?
+						"[tempdb]" : null;
 
-				AppendIndent().Append("DROP TABLE ");
-				BuildPhysicalTable(table, null);
-
-				if (dropTable.IfExists)
-					Indent--;
+				StringBuilder.Append("IF (OBJECT_ID(N'");
+				BuildPhysicalTable(table, null, defaultDatabaseName : defaultDatabaseName);
+				StringBuilder.AppendLine("', N'U') IS NOT NULL)");
+				Indent++;
 			}
+
+			AppendIndent().Append("DROP TABLE ");
+			BuildPhysicalTable(table, null);
+
+			if (dropTable.IfExists)
+				Indent--;
 		}
 
 		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
@@ -483,9 +480,38 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected void BuildIdentityInsert(SqlTableSource table, bool enable)
 		{
-			StringBuilder.Append($"SET IDENTITY_INSERT ");
+			StringBuilder.Append("SET IDENTITY_INSERT ");
 			BuildTableName(table, true, false);
 			StringBuilder.AppendLine(enable ? " ON" : " OFF");
+		}
+
+		protected override void BuildStartCreateTableStatement(SqlCreateTableStatement createTable)
+		{
+			if (createTable.StatementHeader == null && (createTable.Table!.TableOptions & TableOptions.CreateIfNotExists) != 0)
+			{
+				var table = createTable.Table;
+
+				var defaultDatabaseName =
+					table.PhysicalName!.StartsWith("#") || (table.TableOptions & (TableOptions.IsTemporary | TableOptions.IsGlobalTemporary)) != 0 ?
+						"[tempdb]" : null;
+
+				StringBuilder.Append("IF (OBJECT_ID(N'");
+				BuildPhysicalTable(table, null, defaultDatabaseName : defaultDatabaseName);
+				StringBuilder.AppendLine("', N'U') IS NULL)");
+				Indent++;
+			}
+
+			base.BuildStartCreateTableStatement(createTable);
+		}
+
+		protected override void BuildEndCreateTableStatement(SqlCreateTableStatement createTable)
+		{
+			base.BuildEndCreateTableStatement(createTable);
+
+			if (createTable.StatementHeader == null && (createTable.Table!.TableOptions & TableOptions.CreateIfNotExists) != 0)
+			{
+				Indent--;
+			}
 		}
 	}
 }

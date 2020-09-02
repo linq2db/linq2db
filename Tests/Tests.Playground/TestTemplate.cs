@@ -99,6 +99,8 @@ namespace Tests.Playground
 		}
 
 		[Table(TableOptions = TableOptions.CreateIfNotExists)]
+		[Table(TableOptions = TableOptions.CreateIfNotExists | TableOptions.IsTemporary, Configuration = ProviderName.SqlServer2008)]
+		[Table("##temp_table", TableOptions = TableOptions.CreateIfNotExists, Configuration = ProviderName.SqlServer2012)]
 		class CreateIfNotExistsTable
 		{
 			[Column] public int Id    { get; set; }
@@ -114,8 +116,14 @@ namespace Tests.Playground
 			TestProvName.AllMySql,
 			TestProvName.AllOracle,
 			ProviderName.PostgreSQL,
-			TestProvName.AllSQLite)] string context)
+			TestProvName.AllSQLite,
+			TestProvName.AllSqlServer2005Plus)] string context)
 		{
+			if (context == "SqlServer.2008.LinqService" ||
+				context == "SqlServer.2012.LinqService" ||
+				context == "SqlServer.2014.LinqService")
+				return;
+
 			using var db = GetDataContext(context);
 
 			db.DropTable<CreateIfNotExistsTable>(throwExceptionIfNotExists:false);

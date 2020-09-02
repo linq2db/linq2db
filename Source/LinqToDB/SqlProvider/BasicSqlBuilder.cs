@@ -1355,14 +1355,15 @@ namespace LinqToDB.SqlProvider
 
 		private static readonly Regex _selectDetector = new Regex(@"^[\W\r\n]*select\W+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-		protected bool? BuildPhysicalTable(ISqlTableSource table, string? alias)
+		protected bool? BuildPhysicalTable(ISqlTableSource table, string? alias, string? defaultDatabaseName = null)
 		{
 			bool? buildAlias = null;
+
 			switch (table.ElementType)
 			{
 				case QueryElementType.SqlTable        :
 				case QueryElementType.TableSource     :
-					StringBuilder.Append(GetPhysicalTableName(table, alias));
+					StringBuilder.Append(GetPhysicalTableName(table, alias, defaultDatabaseName : defaultDatabaseName));
 					break;
 
 				case QueryElementType.SqlQuery        :
@@ -3041,7 +3042,7 @@ namespace LinqToDB.SqlProvider
 			return table.PhysicalName == null ? null : ConvertInline(table.PhysicalName, ConvertType.NameToQueryTable);
 		}
 
-		string GetPhysicalTableName(ISqlTableSource table, string? alias, bool ignoreTableExpression = false)
+		string GetPhysicalTableName(ISqlTableSource table, string? alias, bool ignoreTableExpression = false, string? defaultDatabaseName = null)
 		{
 			switch (table.ElementType)
 			{
@@ -3050,7 +3051,7 @@ namespace LinqToDB.SqlProvider
 						var tbl = (SqlTable)table;
 
 						var server       = GetTableServerName  (tbl);
-						var database     = GetTableDatabaseName(tbl);
+						var database     = GetTableDatabaseName(tbl) ?? defaultDatabaseName;
 						var schema       = GetTableSchemaName  (tbl);
 						var physicalName = GetTablePhysicalName(tbl)!;
 
