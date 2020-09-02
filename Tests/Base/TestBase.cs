@@ -28,7 +28,6 @@ using NUnit.Framework;
 
 namespace Tests
 {
-	using System.Diagnostics.CodeAnalysis;
 	using LinqToDB.DataProvider.Informix;
 	using Model;
 	using NUnit.Framework.Internal;

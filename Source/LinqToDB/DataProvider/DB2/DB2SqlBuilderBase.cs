@@ -1,13 +1,14 @@
-﻿using System.Data;
+﻿using System;
+using System.Data;
 using System.Data.SqlTypes;
 using System.Linq;
 using System.Text;
 
 namespace LinqToDB.DataProvider.DB2
 {
+	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
-	using LinqToDB.Mapping;
 
 	abstract partial class DB2SqlBuilderBase : BasicSqlBuilder
 	{
@@ -271,8 +272,7 @@ namespace LinqToDB.DataProvider.DB2
 			if (dropTable.IfExists)
 			{
 				AppendIndent().Append(@"BEGIN
-	DECLARE CONTINUE HANDLER FOR SQLSTATE '42704'
-		BEGIN END;
+	DECLARE CONTINUE HANDLER FOR SQLSTATE '42704' BEGIN END;
 	EXECUTE IMMEDIATE 'DROP TABLE ");
 				BuildPhysicalTable(table, null);
 				StringBuilder.AppendLine(
@@ -284,6 +284,54 @@ END");
 				AppendIndent().Append("DROP TABLE ");
 				BuildPhysicalTable(table, null);
 				StringBuilder.AppendLine();
+			}
+		}
+
+		protected override void BuildCreateTableCommand(SqlTable table)
+		{
+			StringBuilder.Append(
+				(table.TableOptions & TableOptions.IsGlobalTemporary) != 0 ?
+					"CREATE GLOBAL TEMPORARY TABLE " :
+				(table.TableOptions & TableOptions.IsTemporary) != 0 ?
+					"DECLARE GLOBAL TEMPORARY TABLE " :
+					"CREATE TABLE ");
+//
+//			if ((table.TableOptions & TableOptions.CreateIfNotExists) != 0)
+//				StringBuilder.Append("IF NOT EXISTS ");
+		}
+
+		protected override void BuildStartCreateTableStatement(SqlCreateTableStatement createTable)
+		{
+			if (createTable.StatementHeader == null && (createTable.Table!.TableOptions & TableOptions.CreateIfNotExists) != 0)
+			{
+				AppendIndent().AppendLine(@"BEGIN");
+
+				Indent++;
+
+				AppendIndent().AppendLine(@"DECLARE CONTINUE HANDLER FOR SQLSTATE '42710' BEGIN END;");
+				AppendIndent().AppendLine(@"EXECUTE IMMEDIATE '");
+
+				Indent++;
+			}
+
+			base.BuildStartCreateTableStatement(createTable);
+		}
+
+		protected override void BuildEndCreateTableStatement(SqlCreateTableStatement createTable)
+		{
+			base.BuildEndCreateTableStatement(createTable);
+
+			if (createTable.StatementHeader == null && (createTable.Table!.TableOptions & TableOptions.CreateIfNotExists) != 0)
+			{
+				Indent--;
+
+				AppendIndent()
+					.AppendLine("';");
+
+				Indent--;
+
+				StringBuilder
+					.AppendLine("END");
 			}
 		}
 	}

@@ -15,10 +15,10 @@ namespace LinqToDB.DataProvider.DB2
 	public class DB2DataProvider : DynamicDataProviderBase<DB2ProviderAdapter>
 	{
 		public DB2DataProvider(string name, DB2Version version)
-						: base(
-				  name,
-				  GetMappingSchema(version, DB2ProviderAdapter.GetInstance().MappingSchema),
-				  DB2ProviderAdapter.GetInstance())
+			: base(
+				name,
+				GetMappingSchema(version, DB2ProviderAdapter.GetInstance().MappingSchema),
+				DB2ProviderAdapter.GetInstance())
 
 		{
 			Version = version;
@@ -130,8 +130,8 @@ namespace LinqToDB.DataProvider.DB2
 						{
 							value    = b ? 1 : 0;
 							dataType = dataType.WithDataType(DataType.Int16);
-					}
-					break;
+						}
+						break;
 					}
 				case DataType.Guid       :
 					{
@@ -148,11 +148,10 @@ namespace LinqToDB.DataProvider.DB2
 				case DataType.VarBinary  :
 					{
 						if (value is Guid g) value = g.ToByteArray();
-
 						else if (parameter.Size == 0 && value != null
 							&& value.GetType() == Adapter.DB2BinaryType
 							&& Adapter.IsDB2BinaryNull(value))
-								value = DBNull.Value;
+							value = DBNull.Value;
 						break;
 					}
 			}

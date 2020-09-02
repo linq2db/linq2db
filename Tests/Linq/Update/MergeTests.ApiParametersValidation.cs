@@ -241,11 +241,11 @@ namespace Tests.xUpdate
 				throw new NotImplementedException();
 			}
 
-			public string? ServerName   { get; }
-			public string? DatabaseName { get; }
-			public string? SchemaName   { get; }
-			public string TableName     { get; } = null!;
-			public bool   IsTemporary   { get; }
+			public string?      ServerName   { get; }
+			public string?      DatabaseName { get; }
+			public string?      SchemaName   { get; }
+			public string       TableName    { get; } = null!;
+			public TableOptions TableOptions { get; }
 
 			public string GetTableName()
 			{
