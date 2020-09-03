@@ -1,27 +1,38 @@
-﻿using NUnit.Framework;
-using LinqToDB.Data;
-using System;
-using LinqToDB.Mapping;
-using LinqToDB;
+﻿using System;
 using System.Linq;
-using LinqToDB.Linq;
 using System.Linq.Expressions;
-using LinqToDB.Expressions;
-using System.Reflection;
-using Org.BouncyCastle.Asn1.X509.Qualified;
+using LinqToDB;
+using LinqToDB.Data;
+using LinqToDB.Linq;
+using LinqToDB.Mapping;
+using NUnit.Framework;
 
 namespace Tests.UserTests
 {
 	[TestFixture]
 	public class Issue2468Tests : TestBase
 	{
-		public enum MyEnum
+		public enum StatusEnum
+		{
+			Unknown = 0,
+			Open = 1,
+			InProgress = 2,
+			Done = 3,
+		}
+
+		public enum ColorEnum
 		{
 			Blue = 0,
 			Red = 10,
 			Green = 20,
-			Yellow = 40,
+		}
 
+		public enum CMYKEnum
+		{
+			Cyan = 0,
+			Magenta = 10,
+			Yellow = 20,
+			Black = 40,
 		}
 
 		[Table]
@@ -31,66 +42,90 @@ namespace Tests.UserTests
 			public Guid Id { get; set; }
 
 			[Column]
-			public MyEnum Status { get; set; }
+			public StatusEnum Status { get; set; }
+
+			[Column]
+			public ColorEnum Color { get; set; }
+
+			[Column]
+			public CMYKEnum CMYKColor { get; set; }
 		}
 
-		static class MyExtensions
+		private static class MyExtensions
 		{
-			[ExpressionMethod(nameof(MyEnumToStringImpl))]
-			public static string MyEnumToString(MyEnum v)
+			[ExpressionMethod(nameof(StatusEnumToStringImpl))]
+			public static string StatusEnumToString(StatusEnum v)
 			{
 				return v.ToString();
 			}
 
-			static Expression<Func<MyEnum, string>> MyEnumToStringImpl()
-			   => v => v == MyEnum.Blue ? "Blue" : v == MyEnum.Red ? "Red" : v == MyEnum.Green ? "Green" : "Yellow";
+			private static Expression<Func<StatusEnum, string>> StatusEnumToStringImpl()
+			{
+				return v => v == StatusEnum.Done ? "Done" :
+					v == StatusEnum.Open ? "Open" :
+					v == StatusEnum.InProgress ? "InProgress" : "Unknown";
+			}
 		}
 
 		public static void MapEnumToString<T>() where T : struct
 		{
-			var type=typeof(T);
-			MapEnumToString(type);
+			MapEnumToString(typeof(T));
 		}
-		public static void MapEnumToString(Type type)
-		{			
-			var underlyingType=Enum.GetUnderlyingType(type);
 
-			var par = Expression.Parameter(typeof(object), "enum");
-			var casted = Expression.Convert(par, underlyingType);
+		public static void MapEnumToString(Type type)
+		{
+			var param  = Expression.Parameter(type, "enum");
 			var values = Enum.GetValues(type);
+			var list   = (System.Collections.IList)values;
 			Expression retE = Expression.Constant(null, typeof(string));
-			foreach (var v in values)
+
+			for (var i = values.Length - 1; i >= 0; i--)
 			{
-				var eq = Expression.Equal(Expression.Constant(Convert.ChangeType(v,underlyingType)), casted);
+				var v = list[i];
+				var eq = Expression.Equal(Expression.Constant(v, type), param);
 				retE = Expression.Condition(eq, Expression.Constant(v.ToString()), retE);
 			}
-			var lambda = Expression.Lambda<Func<object,string>>(retE, par);
 
-			Expressions.MapMember((MyEnum v) => v.ToString(), lambda);
+			var lambda = Expression.Lambda(retE, param);
+
+			var toStringMethod = type.GetMethods().First(m => m.Name == "ToString" && m.GetParameters().Length == 0);
+
+			Expressions.MapMember(toStringMethod, lambda);
 		}
 
+
+		static Issue2468Tests()
+		{
+			MapEnumToString<ColorEnum>();
+			MapEnumToString<CMYKEnum>();
+			Expressions.MapMember((StatusEnum v) => v.ToString(), v => MyExtensions.StatusEnumToString(v));
+		}
 
 		[Test]
 		public void Issue2468Test(
-			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllPostgreSQL)] string context)
+			[IncludeDataSources(TestProvName.AllSQLite)]
+			string context)
 		{
-			//MapEnumToString<MyEnum>();
-
-			Expressions.MapMember((MyEnum v) => v.ToString(), v => MyExtensions.MyEnumToString(v));
 
 			using (var db = (DataConnection)GetDataContext(context))
+			using (var itb = db.CreateLocalTable<InventoryResourceDTO>())
 			{
-				using (var itb = db.CreateLocalTable<InventoryResourceDTO>())
+				var dto1 = new InventoryResourceDTO
 				{
-					var dto1 = new InventoryResourceDTO
-					{
-						Status = MyEnum.Blue,
-						Id = Guid.NewGuid()
-					};
-					db.Insert(dto1);
+					Color = ColorEnum.Blue, Id = Guid.NewGuid(), CMYKColor = CMYKEnum.Cyan, Status = StatusEnum.Open
+				};
 
-					var lst = db.GetTable<InventoryResourceDTO>().Where(x=>x.Status.ToString().Contains("e")).ToList();
-				}
+				db.Insert(dto1);
+
+				var list = itb
+					.Where(x =>
+						x.Color.ToString().Contains("Bl")
+						&& x.CMYKColor.ToString().Contains("Cya")
+						&& x.Status.ToString().Contains("en")
+					)
+					.ToList();
+
+				Assert.That(list.Count, Is.EqualTo(1));
 			}
 		}
 	}
