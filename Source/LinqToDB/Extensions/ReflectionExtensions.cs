@@ -1011,5 +1011,41 @@ namespace LinqToDB.Extensions
 				 type.Name.StartsWith("VB$AnonymousType", StringComparison.Ordinal)) &&
 				type.GetCustomAttributes(typeof(CompilerGeneratedAttribute), true).Any();
 		}
+
+		internal static MemberInfo GetMemberOverride(this Type type, MemberInfo mi)
+		{
+			if (mi.DeclaringType == type)
+				return mi;
+
+			if (mi is MethodInfo method)
+			{
+				var baseDefinition = method.GetBaseDefinition();
+
+				foreach (var m in type.GetMethods())
+					if (m.GetBaseDefinition() == baseDefinition)
+						return m;
+			}
+			else if (mi is PropertyInfo property)
+			{
+				if (property.GetMethod != null)
+				{
+					var baseDefinition = property.GetMethod.GetBaseDefinition();
+
+					foreach (var p in type.GetProperties())
+						if (p.GetMethod?.GetBaseDefinition() == baseDefinition)
+							return p;
+				}
+				if (property.SetMethod != null)
+				{
+					var baseDefinition = property.SetMethod.GetBaseDefinition();
+
+					foreach (var p in type.GetProperties())
+						if (p.SetMethod?.GetBaseDefinition() == baseDefinition)
+							return p;
+				}
+			}
+
+			return mi;
+		}
 	}
 }
