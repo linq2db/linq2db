@@ -1000,7 +1000,7 @@ namespace LinqToDB.SqlProvider
 		{
 			AppendIndent().Append("DROP TABLE ");
 
-			if (dropTable.IfExists)
+			if (dropTable.Table.TableOptions.HasDropIfExists())
 				StringBuilder.Append("IF EXISTS ");
 
 			BuildPhysicalTable(dropTable.Table!, null);

@@ -549,11 +549,11 @@ namespace LinqToDB.DataProvider.MySql
 		}
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
-			StringBuilder.Append((table.TableOptions & TableOptions.IsTemporary) != 0
+			StringBuilder.Append(table.TableOptions.HasIsTemporary()
 				? "CREATE TEMPORARY TABLE "
 				: "CREATE TABLE ");
 
-			if ((table.TableOptions & TableOptions.CreateIfNotExists) != 0)
+			if (table.TableOptions.HasCreateIfNotExists())
 				StringBuilder.Append("IF NOT EXISTS ");
 		}
 	}

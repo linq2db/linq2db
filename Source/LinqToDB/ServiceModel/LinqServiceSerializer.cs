@@ -1262,7 +1262,6 @@ namespace LinqToDB.ServiceModel
 
 						Append(elem.Table);
 						Append(elem.Parameters);
-						Append(elem.IfExists);
 
 						break;
 					}
@@ -2034,15 +2033,14 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.CreateTableStatement :
 						{
-							var table           = Read<SqlTable>();
-							var parameters      = ReadArray<SqlParameter>();
+							var table           = Read<SqlTable>()!;
+							var parameters      = ReadArray<SqlParameter>()!;
 							var statementHeader = ReadString();
 							var statementFooter = ReadString();
 							var defaultNullable = (DefaultNullable)ReadInt();
 
-							obj = _statement = new SqlCreateTableStatement
+							obj = _statement = new SqlCreateTableStatement(table)
 							{
-								Table           = table,
 								StatementHeader = statementHeader,
 								StatementFooter = statementFooter,
 								DefaultNullable = defaultNullable,
@@ -2054,14 +2052,11 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.DropTableStatement :
 					{
-						var table      = Read<SqlTable>();
-						var parameters = ReadArray<SqlParameter>();
-						var ifExists   = ReadBool();
+						var table      = Read<SqlTable>()!;
+						var parameters = ReadArray<SqlParameter>()!;
 
-						obj = _statement = new SqlDropTableStatement(ifExists)
-						{
-							Table = table,
-						};
+						obj = _statement = new SqlDropTableStatement(table);
+
 						_statement.Parameters.AddRange(parameters);
 
 						break;
@@ -2071,7 +2066,7 @@ namespace LinqToDB.ServiceModel
 					{
 						var table      = Read<SqlTable>();
 						var reset      = ReadBool();
-						var parameters = ReadArray<SqlParameter>();
+						var parameters = ReadArray<SqlParameter>()!;
 
 						obj = _statement = new SqlTruncateTableStatement
 						{
@@ -2084,11 +2079,11 @@ namespace LinqToDB.ServiceModel
 					}
 
 					case QueryElementType.SetExpression : obj = new SqlSetExpression(Read     <ISqlExpression>()!, Read<ISqlExpression>()!); break;
-					case QueryElementType.FromClause    : obj = new SqlFromClause   (ReadArray<SqlTableSource>()!);                break;
-					case QueryElementType.WhereClause   : obj = new SqlWhereClause  (Read     <SqlSearchCondition>()!);            break;
+					case QueryElementType.FromClause    : obj = new SqlFromClause   (ReadArray<SqlTableSource>()!);                          break;
+					case QueryElementType.WhereClause   : obj = new SqlWhereClause  (Read     <SqlSearchCondition>()!);                      break;
 					case QueryElementType.GroupByClause : obj = new SqlGroupByClause((GroupingType)ReadInt(), ReadArray<ISqlExpression>()!); break;
-					case QueryElementType.GroupingSet   : obj = new SqlGroupingSet(ReadArray<ISqlExpression>()!);                  break;
-					case QueryElementType.OrderByClause : obj = new SqlOrderByClause(ReadArray<SqlOrderByItem>()!);                break;
+					case QueryElementType.GroupingSet   : obj = new SqlGroupingSet  (ReadArray<ISqlExpression>()!);                          break;
+					case QueryElementType.OrderByClause : obj = new SqlOrderByClause(ReadArray<SqlOrderByItem>()!);                          break;
 
 					case QueryElementType.OrderByItem :
 						{
@@ -2141,7 +2136,7 @@ namespace LinqToDB.ServiceModel
 							var source     = Read<SqlMergeSourceTable>()!;
 							var on         = Read<SqlSearchCondition>()!;
 							var operations = ReadArray<SqlMergeOperationClause>()!;
-							var parameters = ReadArray<SqlParameter>();
+							var parameters = ReadArray<SqlParameter>()!;
 
 							obj = _statement = new SqlMergeStatement(hint, target, source, on, operations);
 							_statement.Parameters.AddRange(parameters);

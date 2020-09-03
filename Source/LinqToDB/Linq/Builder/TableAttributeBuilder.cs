@@ -31,12 +31,7 @@ namespace LinqToDB.Linq.Builder
 				case nameof(LinqExtensions.DatabaseName) : table.SqlTable.Database     = (string?)     value;  break;
 				case nameof(LinqExtensions.SchemaName)   : table.SqlTable.Schema       = (string?)     value;  break;
 				case nameof(LinqExtensions.TableOptions) : table.SqlTable.TableOptions = (TableOptions)value!; break;
-				case nameof(LinqExtensions.IsTemporary)  :
-					if ((bool)value!)
-						table.SqlTable.TableOptions |=  TableOptions.IsTemporary;
-					else
-						table.SqlTable.TableOptions &= ~TableOptions.IsTemporary;
-					break;
+				case nameof(LinqExtensions.IsTemporary)  : table.SqlTable.Set((bool)value!, TableOptions.IsTemporary); break;
 			}
 
 			return sequence;

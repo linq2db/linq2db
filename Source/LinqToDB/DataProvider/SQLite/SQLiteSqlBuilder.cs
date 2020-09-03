@@ -183,10 +183,11 @@ namespace LinqToDB.DataProvider.SQLite
 
 		static bool IsDateTime(Type type)
 		{
-			return    type == typeof(DateTime)
-				   || type == typeof(DateTimeOffset)
-				   || type == typeof(DateTime?)
-				   || type == typeof(DateTimeOffset?);
+			return
+				type == typeof(DateTime) ||
+				type == typeof(DateTimeOffset) ||
+				type == typeof(DateTime?) ||
+				type == typeof(DateTimeOffset?);
 		}
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
@@ -201,11 +202,11 @@ namespace LinqToDB.DataProvider.SQLite
 
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
-			StringBuilder.Append((table.TableOptions & TableOptions.IsTemporary) != 0
+			StringBuilder.Append(table.TableOptions.HasIsTemporary()
 				? "CREATE TEMPORARY TABLE "
 				: "CREATE TABLE ");
 
-			if ((table.TableOptions & TableOptions.CreateIfNotExists) != 0)
+			if (table.TableOptions.HasCreateIfNotExists())
 				StringBuilder.Append("IF NOT EXISTS ");
 		}
 	}

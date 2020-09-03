@@ -23,7 +23,7 @@ namespace LinqToDB.Linq
 				TableOptions    tableOptions)
 			{
 				var sqlTable    = new SqlTable<T>(dataContext.MappingSchema);
-				var createTable = new SqlCreateTableStatement();
+				var createTable = new SqlCreateTableStatement(sqlTable);
 
 				if (tableName    != null) sqlTable.PhysicalName = tableName;
 				if (serverName   != null) sqlTable.Server       = serverName;
@@ -31,7 +31,6 @@ namespace LinqToDB.Linq
 				if (schemaName   != null) sqlTable.Schema       = schemaName;
 				if (tableOptions.IsSet()) sqlTable.TableOptions = tableOptions;
 
-				createTable.Table           = sqlTable;
 				createTable.StatementHeader = statementHeader;
 				createTable.StatementFooter = statementFooter;
 				createTable.DefaultNullable = defaultNullable;
@@ -69,7 +68,7 @@ namespace LinqToDB.Linq
 				CancellationToken token)
 			{
 				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
-				var createTable = new SqlCreateTableStatement();
+				var createTable = new SqlCreateTableStatement(sqlTable);
 
 				if (tableName    != null) sqlTable.PhysicalName = tableName;
 				if (serverName   != null) sqlTable.Server       = serverName;
@@ -77,7 +76,6 @@ namespace LinqToDB.Linq
 				if (schemaName   != null) sqlTable.Schema       = schemaName;
 				if (tableOptions.IsSet()) sqlTable.TableOptions = tableOptions;
 
-				createTable.Table           = sqlTable;
 				createTable.StatementHeader = statementHeader;
 				createTable.StatementFooter = statementFooter;
 				createTable.DefaultNullable = defaultNullable;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
@@ -9,8 +10,8 @@ namespace LinqToDB.SqlQuery
 	{
 		// when true, only changed (and explicitly added) elements added to VisitedElements
 		// greatly reduce memory allocation for majority of cases, where there is nothing to replace
-		private readonly bool												_visitAll;
-		private readonly Func<ConvertVisitor, IQueryElement, IQueryElement> _convert;
+		private readonly bool                                             _visitAll;
+		private readonly Func<ConvertVisitor,IQueryElement,IQueryElement> _convert;
 
 		static TE[] ToArray<TK,TE>(IDictionary<TK,TE> dic)
 			where TK : notnull
@@ -26,23 +27,23 @@ namespace LinqToDB.SqlQuery
 
 		delegate T Clone<T>(T obj);
 
-		public Dictionary<IQueryElement, IQueryElement?> VisitedElements { get; } =  new Dictionary<IQueryElement, IQueryElement?>();
-		public List<IQueryElement>                       Stack           { get; } =  new List<IQueryElement>();
-		public IQueryElement?                            ParentElement            => Stack.Count == 0 ? null : Stack[Stack.Count - 1];
+		public Dictionary<IQueryElement,IQueryElement?> VisitedElements { get; } =  new Dictionary<IQueryElement,IQueryElement?>();
+		public List<IQueryElement>                      Stack           { get; } =  new List<IQueryElement>();
+		public IQueryElement?                           ParentElement            => Stack.Count == 0 ? null : Stack[Stack.Count - 1];
 
-		public static T Convert<T>(T element, Func<ConvertVisitor, IQueryElement, IQueryElement> convertAction)
+		public static T Convert<T>(T element, Func<ConvertVisitor,IQueryElement,IQueryElement> convertAction)
 			where T : class, IQueryElement
 		{
 			return (T?)new ConvertVisitor(convertAction, false).ConvertInternal(element) ?? element;
 		}
 
-		public static T ConvertAll<T>(T element, Func<ConvertVisitor, IQueryElement, IQueryElement> convertAction)
+		public static T ConvertAll<T>(T element, Func<ConvertVisitor,IQueryElement,IQueryElement> convertAction)
 			where T : class, IQueryElement
 		{
 			return (T?)new ConvertVisitor(convertAction, true).ConvertInternal(element) ?? element;
 		}
 
-		private ConvertVisitor(Func<ConvertVisitor, IQueryElement, IQueryElement> convertAction, bool visitAll)
+		ConvertVisitor(Func<ConvertVisitor,IQueryElement,IQueryElement> convertAction, bool visitAll)
 		{
 			_visitAll = visitAll;
 			_convert  = convertAction;
@@ -52,11 +53,13 @@ namespace LinqToDB.SqlQuery
 		{
 			if (parentQuery == null)
 				return;
+
 			new QueryVisitor().Visit(parentQuery, element =>
 			{
 				if (element is SelectQuery q)
 					q.ParentSelect = parentQuery;
 			});
+
 			parentQuery.ParentSelect = null;
 		}
 
@@ -86,13 +89,14 @@ namespace LinqToDB.SqlQuery
 
 			return null;
 		}
-		
+
+		[return:NotNullIfNotNull("element")]
 		IQueryElement? ConvertInternal(IQueryElement? element)
 		{
 			if (element == null)
 				return null;
 
-			// if element manually added outside to VisistedElements as null, it will be processed continuously.
+			// if element manually added outside to VisitedElements as null, it will be processed continuously.
 			// Useful when we have to duplicate such items, especially parameters
 			var newElement = GetCurrentReplaced(element);
 			if (newElement != null)
@@ -570,13 +574,13 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.CreateTableStatement:
 						{
 							var s  = (SqlCreateTableStatement)element;
-							var t  = s.Table != null ? (SqlTable?)ConvertInternal(s.Table) : null;
+							var t  = (SqlTable)ConvertInternal(s.Table);
 							var ps = ConvertSafe(s.Parameters);
 
 							if (t  != null && !ReferenceEquals(s.Table, t) ||
 								ps != null && !ReferenceEquals(s.Parameters,  ps))
 							{
-								newElement = new SqlCreateTableStatement { Table = t ?? s.Table };
+								newElement = new SqlCreateTableStatement(t ?? s.Table);
 								if (ps != null)
 									((SqlCreateTableStatement)newElement).Parameters.AddRange(ps);
 								else
@@ -589,13 +593,13 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.DropTableStatement:
 						{
 							var s  = (SqlDropTableStatement)element;
-							var t  = s.Table != null ? (SqlTable?)ConvertInternal(s.Table) : null;
+							var t  = (SqlTable)ConvertInternal(s.Table);
 							var ps = ConvertSafe(s.Parameters);
 
-							if (t  != null && !ReferenceEquals(s.Table, t) ||
-								ps != null && !ReferenceEquals(s.Parameters,  ps))
+							if (!ReferenceEquals(s.Table, t) || ps != null && !ReferenceEquals(s.Parameters,  ps))
 							{
-								newElement = new SqlDropTableStatement(s.IfExists) { Table = t ?? s.Table };
+								newElement = new SqlDropTableStatement(t);
+
 								if (ps != null)
 									((SqlDropTableStatement)newElement).Parameters.AddRange(ps);
 								else
@@ -823,8 +827,8 @@ namespace LinqToDB.SqlQuery
 									fields ?? source.SourceFields);
 							}
 
-								break;
-							}
+							break;
+						}
 
 					case QueryElementType.SqlValuesTable:
 						{
@@ -1022,7 +1026,7 @@ namespace LinqToDB.SqlQuery
 				Stack.RemoveAt(Stack.Count - 1);
 			}
 
-			newElement = newElement == null ? _convert(this, element) : _convert(this, newElement);
+			newElement = _convert(this, newElement ?? element);
 
 			if (!_visitAll || !ReferenceEquals(element, newElement))
 				AddVisited(element, newElement);
@@ -1079,9 +1083,8 @@ namespace LinqToDB.SqlQuery
 			for (var i = 0; i < list1.Count; i++)
 			{
 				var elem1 = list1[i];
-				var elem2 = ConvertInternal(elem1) as T;
 
-				if (elem2 != null && !ReferenceEquals(elem1, elem2))
+				if (ConvertInternal(elem1) is T elem2 && !ReferenceEquals(elem1, elem2))
 				{
 					if (list2 == null)
 					{

@@ -269,7 +269,7 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			var table = dropTable.Table!;
 
-			if (dropTable.IfExists)
+			if (dropTable.Table.TableOptions.HasDropIfExists())
 			{
 				AppendIndent().Append(@"BEGIN
 	DECLARE CONTINUE HANDLER FOR SQLSTATE '42704' BEGIN END;
@@ -290,19 +290,19 @@ END");
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
 			StringBuilder.Append(
-				(table.TableOptions & TableOptions.IsGlobalTemporary) != 0 ?
+				table.TableOptions.HasIsGlobalTemporary() ?
 					"CREATE GLOBAL TEMPORARY TABLE " :
-				(table.TableOptions & TableOptions.IsTemporary) != 0 ?
+				table.TableOptions.HasIsTemporary() ?
 					"DECLARE GLOBAL TEMPORARY TABLE " :
 					"CREATE TABLE ");
 //
-//			if ((table.TableOptions & TableOptions.CreateIfNotExists) != 0)
+//			if ((table.TableOptions.HasCreateIfNotExists) != 0)
 //				StringBuilder.Append("IF NOT EXISTS ");
 		}
 
 		protected override void BuildStartCreateTableStatement(SqlCreateTableStatement createTable)
 		{
-			if (createTable.StatementHeader == null && (createTable.Table!.TableOptions & TableOptions.CreateIfNotExists) != 0)
+			if (createTable.StatementHeader == null && createTable.Table!.TableOptions.HasCreateIfNotExists())
 			{
 				AppendIndent().AppendLine(@"BEGIN");
 
@@ -321,7 +321,7 @@ END");
 		{
 			base.BuildEndCreateTableStatement(createTable);
 
-			if (createTable.StatementHeader == null && (createTable.Table!.TableOptions & TableOptions.CreateIfNotExists) != 0)
+			if (createTable.StatementHeader == null && createTable.Table!.TableOptions.HasCreateIfNotExists())
 			{
 				Indent--;
 

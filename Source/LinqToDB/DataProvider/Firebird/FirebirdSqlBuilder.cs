@@ -243,7 +243,7 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 			var identityField = dropTable.Table!.Fields.Values.FirstOrDefault(f => f.IsIdentity);
 
-			if (identityField == null && dropTable.IfExists == false)
+			if (identityField == null && dropTable.Table.TableOptions.HasDropIfExists() == false)
 			{
 				base.BuildDropTableStatement(dropTable);
 				return;
@@ -270,7 +270,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 			void BuildDropWithSchemaCheck(string objectName, string schemaTable, string nameColumn, string identifier)
 			{
-				if (dropTable.IfExists)
+				if (dropTable.Table.TableOptions.HasDropIfExists())
 				{
 					AppendIndent().AppendFormat("IF (EXISTS(SELECT 1 FROM {0} WHERE {1} = ", schemaTable, nameColumn);
 
@@ -303,7 +303,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 				StringBuilder.AppendLine(";");
 
-				if (dropTable.IfExists)
+				if (dropTable.Table.TableOptions.HasDropIfExists())
 					Indent--;
 			}
 		}
@@ -401,19 +401,19 @@ namespace LinqToDB.DataProvider.Firebird
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
 			StringBuilder.Append(
-				(table.TableOptions & TableOptions.IsGlobalTemporary) != 0 ?
+				table.TableOptions.HasIsGlobalTemporary() ?
 					"CREATE GLOBAL TEMPORARY TABLE " :
-//				(table.TableOptions & TableOptions.IsTemporary) != 0 ?
+//				(table.TableOptions.HasIsTemporary) != 0 ?
 //					"CREATE TEMPORARY TABLE " :
 					"CREATE TABLE ");
 
-//			if ((table.TableOptions & TableOptions.CreateIfNotExists) != 0)
+//			if ((table.TableOptions.HasCreateIfNotExists) != 0)
 //				StringBuilder.Append("IF NOT EXISTS ");
 		}
 
 		protected override void BuildStartCreateTableStatement(SqlCreateTableStatement createTable)
 		{
-			if (createTable.StatementHeader == null && (createTable.Table!.TableOptions & TableOptions.CreateIfNotExists) != 0)
+			if (createTable.StatementHeader == null && createTable.Table!.TableOptions.HasCreateIfNotExists())
 			{
 				StringBuilder
 					.AppendLine("EXECUTE BLOCK AS BEGIN");
@@ -448,7 +448,7 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 			base.BuildEndCreateTableStatement(createTable);
 
-			if (createTable.StatementHeader == null && (createTable.Table!.TableOptions & TableOptions.CreateIfNotExists) != 0)
+			if (createTable.StatementHeader == null && createTable.Table!.TableOptions.HasCreateIfNotExists())
 			{
 				Indent--;
 

@@ -269,9 +269,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			var physicalName =
 				table.PhysicalName.StartsWith("#") ?
 					table.PhysicalName :
-				(table.TableOptions & TableOptions.IsTemporary) != 0 ?
+				table.TableOptions.HasIsTemporary() ?
 					$"#{table.PhysicalName}" :
-				(table.TableOptions & TableOptions.IsGlobalTemporary) != 0 ?
+				table.TableOptions.HasIsGlobalTemporary() ?
 					$"##{table.PhysicalName}" :
 					table.PhysicalName;
 
@@ -370,7 +370,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			var table = dropTable.Table!;
 
-			if (dropTable.IfExists)
+			if (dropTable.Table.TableOptions.HasDropIfExists())
 			{
 				var defaultDatabaseName =
 					table.PhysicalName!.StartsWith("#") || (table.TableOptions & (TableOptions.IsTemporary | TableOptions.IsGlobalTemporary)) != 0 ?
@@ -385,7 +385,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			AppendIndent().Append("DROP TABLE ");
 			BuildPhysicalTable(table, null);
 
-			if (dropTable.IfExists)
+			if (dropTable.Table.TableOptions.HasDropIfExists())
 				Indent--;
 		}
 
@@ -487,7 +487,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override void BuildStartCreateTableStatement(SqlCreateTableStatement createTable)
 		{
-			if (createTable.StatementHeader == null && (createTable.Table!.TableOptions & TableOptions.CreateIfNotExists) != 0)
+			if (createTable.StatementHeader == null && createTable.Table!.TableOptions.HasCreateIfNotExists())
 			{
 				var table = createTable.Table;
 
@@ -508,7 +508,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			base.BuildEndCreateTableStatement(createTable);
 
-			if (createTable.StatementHeader == null && (createTable.Table!.TableOptions & TableOptions.CreateIfNotExists) != 0)
+			if (createTable.StatementHeader == null && createTable.Table!.TableOptions.HasCreateIfNotExists())
 			{
 				Indent--;
 			}

@@ -21,7 +21,7 @@ namespace LinqToDB.Linq
 				TableOptions tableOptions)
 			{
 				var sqlTable  = new SqlTable<T>(dataContext.MappingSchema);
-				var dropTable = new SqlDropTableStatement(ifExists);
+				var dropTable = new SqlDropTableStatement(sqlTable);
 
 				if (tableName    != null) sqlTable.PhysicalName = tableName;
 				if (serverName   != null) sqlTable.Server       = serverName;
@@ -29,7 +29,7 @@ namespace LinqToDB.Linq
 				if (schemaName   != null) sqlTable.Schema       = schemaName;
 				if (tableOptions.IsSet()) sqlTable.TableOptions = tableOptions;
 
-				dropTable.Table  = sqlTable;
+				sqlTable.Set(ifExists, TableOptions.DropIfExists);
 
 				var query = new Query<int>(dataContext, null)
 				{
@@ -52,7 +52,7 @@ namespace LinqToDB.Linq
 				CancellationToken token)
 			{
 				var sqlTable  = new SqlTable<T>(dataContext.MappingSchema);
-				var dropTable = new SqlDropTableStatement(ifExists);
+				var dropTable = new SqlDropTableStatement(sqlTable);
 
 				if (tableName    != null) sqlTable.PhysicalName = tableName;
 				if (serverName   != null) sqlTable.Server       = serverName;
@@ -60,7 +60,7 @@ namespace LinqToDB.Linq
 				if (schemaName   != null) sqlTable.Schema       = schemaName;
 				if (tableOptions.IsSet()) sqlTable.TableOptions = tableOptions;
 
-				dropTable.Table  = sqlTable;
+				sqlTable.Set(ifExists, TableOptions.DropIfExists);
 
 				var query = new Query<int>(dataContext, null)
 				{

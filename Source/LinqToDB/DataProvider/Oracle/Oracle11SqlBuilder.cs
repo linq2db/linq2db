@@ -322,7 +322,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			var identityField = dropTable.Table!.Fields.Values.FirstOrDefault(f => f.IsIdentity);
 
-			if (identityField == null && dropTable.IfExists == false)
+			if (identityField == null && dropTable.Table.TableOptions.HasDropIfExists() == false)
 			{
 				base.BuildDropTableStatement(dropTable);
 			}
@@ -344,7 +344,7 @@ namespace LinqToDB.DataProvider.Oracle
 						.AppendLine("';")
 						;
 
-					if (dropTable.IfExists)
+					if (dropTable.Table.TableOptions.HasDropIfExists())
 					{
 						StringBuilder
 							.AppendLine("EXCEPTION")
@@ -355,7 +355,7 @@ namespace LinqToDB.DataProvider.Oracle
 							;
 					}
 				}
-				else if (!dropTable.IfExists)
+				else if (!dropTable.Table.TableOptions.HasDropIfExists())
 				{
 					StringBuilder
 						.Append("\tEXECUTE IMMEDIATE 'DROP TRIGGER ")
@@ -527,17 +527,17 @@ END;",
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
 			StringBuilder.Append(
-				(table.TableOptions & TableOptions.IsTemporary) != 0 ?
+				table.TableOptions.HasIsTemporary() ?
 					"CREATE GLOBAL TEMPORARY TABLE " :
 					"CREATE TABLE ");
 //
-//			if ((table.TableOptions & TableOptions.CreateIfNotExists) != 0)
+//			if ((table.TableOptions.HasCreateIfNotExists) != 0)
 //				StringBuilder.Append("IF NOT EXISTS ");
 		}
 
 		protected override void BuildStartCreateTableStatement(SqlCreateTableStatement createTable)
 		{
-			if (createTable.StatementHeader == null && (createTable.Table!.TableOptions & TableOptions.CreateIfNotExists) != 0)
+			if (createTable.StatementHeader == null && createTable.Table!.TableOptions.HasCreateIfNotExists())
 			{
 				AppendIndent().AppendLine(@"BEGIN");
 
@@ -557,13 +557,13 @@ END;",
 
 			if (createTable.StatementHeader == null)
 			{
-				if ((createTable.Table!.TableOptions & TableOptions.IsTemporary) != 0)
+				if (createTable.Table!.TableOptions.HasIsTemporary())
 				{
 					AppendIndent()
 						.AppendLine("ON COMMIT PRESERVE ROWS");
 				}
 
-				if ((createTable.Table!.TableOptions & TableOptions.CreateIfNotExists) != 0)
+				if (createTable.Table!.TableOptions.HasCreateIfNotExists())
 				{
 					Indent--;
 

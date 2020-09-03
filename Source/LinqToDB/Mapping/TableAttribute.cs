@@ -61,7 +61,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public bool IsTemporary
 		{
-			get => (TableOptions & TableOptions.IsTemporary) != 0;
+			get => TableOptions.HasIsTemporary();
 			set
 			{
 				if (value)

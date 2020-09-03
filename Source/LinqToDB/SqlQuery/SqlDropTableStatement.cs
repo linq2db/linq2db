@@ -6,18 +6,17 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlDropTableStatement : SqlStatement
 	{
-		public SqlDropTableStatement(bool ifExists)
+		public SqlDropTableStatement(SqlTable table)
 		{
-			IfExists = ifExists;
+			Table = table;
 		}
 
-		public SqlTable? Table { get; set; }
+		public SqlTable Table { get; }
 
 		public override QueryType        QueryType    => QueryType.DropTable;
 		public override QueryElementType ElementType  => QueryElementType.DropTableStatement;
 		public override bool             IsParameterDependent { get => false; set {} }
 		public override SelectQuery?     SelectQuery          { get => null;  set {} }
-		public          bool             IfExists             { get; }
 
 		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
@@ -42,10 +41,7 @@ namespace LinqToDB.SqlQuery
 			if (!doClone(this))
 				return this;
 
-			var clone = new SqlDropTableStatement(IfExists);
-
-			if (Table != null)
-				clone.Table = (SqlTable)Table.Clone(objectTree, doClone);
+			var clone = new SqlDropTableStatement((SqlTable)Table.Clone(objectTree, doClone));
 
 			objectTree.Add(this, clone);
 

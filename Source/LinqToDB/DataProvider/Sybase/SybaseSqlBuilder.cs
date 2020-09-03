@@ -1,13 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Text;
 
 namespace LinqToDB.DataProvider.Sybase
 {
+	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
-	using LinqToDB.Mapping;
-	using System.Text;
 
 	partial class SybaseSqlBuilder : BasicSqlBuilder
 	{
@@ -288,9 +289,9 @@ namespace LinqToDB.DataProvider.Sybase
 			var physicalName =
 				table.PhysicalName.StartsWith("#") ?
 					table.PhysicalName :
-				(table.TableOptions & TableOptions.IsTemporary) != 0 ?
+				table.TableOptions.HasIsTemporary() ?
 					$"#{table.PhysicalName}" :
-				(table.TableOptions & TableOptions.IsGlobalTemporary) != 0 ?
+				table.TableOptions.HasIsGlobalTemporary() ?
 					$"##{table.PhysicalName}" :
 					table.PhysicalName;
 
@@ -301,7 +302,7 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 			var table = dropTable.Table!;
 
-			if (dropTable.IfExists)
+			if (dropTable.Table.TableOptions.HasDropIfExists())
 			{
 				var defaultDatabaseName =
 					table.PhysicalName!.StartsWith("#") || (table.TableOptions & (TableOptions.IsTemporary | TableOptions.IsGlobalTemporary)) != 0 ?
@@ -319,13 +320,13 @@ namespace LinqToDB.DataProvider.Sybase
 			AppendIndent().Append("DROP TABLE ");
 			BuildPhysicalTable(table, null);
 
-			if (dropTable.IfExists)
+			if (dropTable.Table.TableOptions.HasDropIfExists())
 				Indent--;
 		}
 
 		protected override void BuildStartCreateTableStatement(SqlCreateTableStatement createTable)
 		{
-			if (createTable.StatementHeader == null && (createTable.Table!.TableOptions & TableOptions.CreateIfNotExists) != 0)
+			if (createTable.StatementHeader == null && createTable.Table!.TableOptions.HasCreateIfNotExists())
 			{
 				var table = createTable.Table;
 
@@ -353,7 +354,7 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 			base.BuildEndCreateTableStatement(createTable);
 
-			if (createTable.StatementHeader == null && (createTable.Table!.TableOptions & TableOptions.CreateIfNotExists) != 0)
+			if (createTable.StatementHeader == null && createTable.Table!.TableOptions.HasCreateIfNotExists())
 			{
 				Indent--;
 				AppendIndent().AppendLine("')");
