@@ -1,9 +1,9 @@
 variables:
   solution: 'linq2db.sln'
   build_configuration: 'Azure'
-  assemblyVersion: 3.1.0
-  nugetVersion: 3.1.0
-  nugetDevVersion: 3.1.0
+  assemblyVersion: 3.1.2
+  nugetVersion: 3.1.2
+  nugetDevVersion: 3.1.2
   artifact_nugets: 'nugets'
   artifact_linq2db_binaries: 'linq2db_binaries'
   artifact_linq2db_tools_binaries: 'linq2db_tools_binaries'
@@ -287,10 +287,10 @@ stages:
           title: 'SQL CE'
           config: 'sqlce'
           psscript: 'sqlce.ps1'
-        MariaDB:
-          title: 'MariaDB'
-          config: 'mariadb'
-          script: 'mariadb.cmd'
+#        MariaDB:
+#          title: 'MariaDB'
+#          config: 'mariadb'
+#          script: 'mariadb.cmd'
         SqlServer2019:
           title: 'SQL Server 2019 (System.Data.SqlClient)'
           config: 'sqlserver.2019'
@@ -709,10 +709,10 @@ stages:
 
     strategy:
       matrix:
-        MariaDB:
-          title: 'MariaDB'
-          config: 'mariadb.win'
-          script: 'mariadb.cmd'
+#        MariaDB:
+#          title: 'MariaDB'
+#          config: 'mariadb.win'
+#          script: 'mariadb.cmd'
         SqlServer2019:
           title: 'SQL Server 2019 (System.Data.SqlClient)'
           config: 'sqlserver.2019'
@@ -1053,12 +1053,12 @@ stages:
           title: 'Informix 14.10'
           config: 'informix'
           script: 'informix14.sh'
-          nuget: 'IBM.Data.DB2.Core-lnx'
+          nuget: 'IBM.Data.DB2.Core-lnx -Version 2.2.0.100'
         DB2:
           title: 'DB2 LUW 11.5'
           config: 'db2'
           script: 'db2.sh'
-          nuget: 'IBM.Data.DB2.Core-lnx'
+          nuget: 'IBM.Data.DB2.Core-lnx -Version 2.2.0.100'
     steps:
     - checkout: none
 
@@ -1223,13 +1223,13 @@ stages:
           config: 'informix'
           script: 'mac.informix14.sh'
           docker: 'true'
-          nuget: 'IBM.Data.DB2.Core-osx'
+          nuget: 'IBM.Data.DB2.Core-osx -Version 2.0.0.100'
         DB2:
           title: 'DB2 LUW 11.5'
           config: 'db2'
           script: 'mac.db2.sh'
           docker: 'true'
-          nuget: 'IBM.Data.DB2.Core-osx'
+          nuget: 'IBM.Data.DB2.Core-osx -Version 2.0.0.100'
     steps:
     - checkout: none
 
@@ -1408,13 +1408,13 @@ stages:
 #          config: 'informix'
 #          script: 'mac.informix14.sh'
 #          docker: 'true'
-#          nuget: 'IBM.Data.DB2.Core-osx'
+#          nuget: 'IBM.Data.DB2.Core-osx -Version 2.0.0.100'
 #        DB2:
 #          title: 'DB2 LUW 11.5'
 #          config: 'db2'
 #          script: 'mac.db2.sh'
 #          docker: 'true'
-#          nuget: 'IBM.Data.DB2.Core-osx'
+#          nuget: 'IBM.Data.DB2.Core-osx -Version 2.0.0.100'
     steps:
     - checkout: none
 

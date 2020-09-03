@@ -1467,7 +1467,7 @@ namespace LinqToDB.Linq.Builder
 					var details = queryable.ToList();
 					return details;
 				},
-				async (dc, expr, ps) =>
+				async (dc, expr, ps, ct) =>
 				{
 					//TODO: needed more performant way
 					PrepareParameters(detailQuery.Expression, builder, out var container, out var detailExpression);
@@ -1477,7 +1477,7 @@ namespace LinqToDB.Linq.Builder
 					container.ParameterExpression = expr;
 
 					var queryable = new ExpressionQueryImpl<TD>(dc, detailExpression);
-					var details = await queryable.ToListAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					var details = await queryable.ToListAsync(ct).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 					return details;
 				}
 			);
@@ -1513,7 +1513,7 @@ namespace LinqToDB.Linq.Builder
 
 					return eagerLoadingContext;
 				},
-				async (dc, expr, ps) =>
+				async (dc, expr, ps, ct) =>
 				{
 					//TODO: needed more performant way
 					PrepareParameters(expression, builder, out var container, out var detailExpression);
@@ -1523,7 +1523,7 @@ namespace LinqToDB.Linq.Builder
 					container.ParameterExpression = expr;
 
 					var queryable           = new ExpressionQueryImpl<KeyDetailEnvelope<TKey, TD>>(dc, detailExpression);
-					var detailsWithKey      = await queryable.ToListAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					var detailsWithKey      = await queryable.ToListAsync(ct).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 					var eagerLoadingContext = new EagerLoadingContext<TD, TKey>();
 
 					foreach (var d in detailsWithKey)

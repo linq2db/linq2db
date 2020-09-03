@@ -468,5 +468,41 @@ namespace Tests.Linq
 				table.Where(k => k.ToDelete <= DateTime.Now).ToList();
 			}
 		}
+
+		[Table]
+		class TestEqualsTable1
+		{
+			[Column]
+			public int Id { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(TestEqualsTable2.FK), CanBeNull = true)]
+			public IQueryable<TestEqualsTable2> Relation { get; } = null!;
+		}
+
+		[Table]
+		class TestEqualsTable2
+		{
+			[Column]
+			public int Id { get; set; }
+
+			[Column]
+			public int? FK { get; set; }
+		}
+
+		[Test]
+		public void TestParameterInEquals([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table1 = db.CreateLocalTable<TestEqualsTable1>())
+			using (var table2 = db.CreateLocalTable<TestEqualsTable2>())
+			{
+				int? param = null;
+				table1
+				.Where(_ => _.Relation
+					.Select(__ => __.Id)
+					.Any(__ => __.Equals(param)))
+				.ToList();
+			}
+		}
 	}
 }
