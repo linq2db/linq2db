@@ -136,12 +136,12 @@ namespace LinqToDB
 		[Flags]
 		public enum TableQualification
 		{
-			None         = 0x00000000b,
-			TableName    = 0x00000001b,
-			DatabaseName = 0x00000010b,
-			SchemaName   = 0x00000100b,
-			ServerName   = 0x00001000b,
-			TableOptions = 0x00010000b,
+			None         = 0b00000000,
+			TableName    = 0b00000001,
+			DatabaseName = 0b00000010,
+			SchemaName   = 0b00000100,
+			ServerName   = 0b00001000,
+			TableOptions = 0b00010000,
 
 			Full         = TableName | DatabaseName | SchemaName | ServerName | TableOptions
 		}
