@@ -1574,14 +1574,14 @@ namespace LinqToDB.Linq
 				{ MT<decimal>(() => ((decimal) 0)  .ToString()), N(() => L<decimal, string>((decimal p0) => Sql.ConvertTo<string>.From(p0) )) },
 				{ MT<double >(() => ((double)  0)  .ToString()), N(() => L<double,  string>((double  p0) => Sql.ConvertTo<string>.From(p0) )) },
 				{ MT<short  >(() => ((short)   0)  .ToString()), N(() => L<short,   string>((short   p0) => Sql.ConvertTo<string>.From(p0) )) },
-				{ MT<int  >(() => ((int)   0)  .ToString()), N(() => L<int,   string>((int   p0) => Sql.ConvertTo<string>.From(p0) )) },
-				{ MT<long  >(() => ((long)   0)  .ToString()), N(() => L<long,   string>((long   p0) => Sql.ConvertTo<string>.From(p0) )) },
+				{ MT<int    >(() => ((int)     0)  .ToString()), N(() => L<int,     string>((int     p0) => Sql.ConvertTo<string>.From(p0) )) },
+				{ MT<long   >(() => ((long)    0)  .ToString()), N(() => L<long,    string>((long    p0) => Sql.ConvertTo<string>.From(p0) )) },
 				{ MT<sbyte  >(() => ((sbyte)   0)  .ToString()), N(() => L<sbyte,   string>((sbyte   p0) => Sql.ConvertTo<string>.From(p0) )) },
 				{ MT<float  >(() => ((float)   0)  .ToString()), N(() => L<float,   string>((float   p0) => Sql.ConvertTo<string>.From(p0) )) },
 //				{ MT<string >(() => ((string) "0") .ToString()), N(() => L<string,  string>((string  p0) => p0                             )) },
 				{ MT<ushort >(() => ((ushort)  0)  .ToString()), N(() => L<ushort,  string>((ushort  p0) => Sql.ConvertTo<string>.From(p0) )) },
-				{ MT<uint >(() => ((uint)  0)  .ToString()), N(() => L<uint,  string>((uint  p0) => Sql.ConvertTo<string>.From(p0) )) },
-				{ MT<ulong >(() => ((ulong)  0)  .ToString()), N(() => L<ulong,  string>((ulong  p0) => Sql.ConvertTo<string>.From(p0) )) },
+				{ MT<uint   >(() => ((uint)    0)  .ToString()), N(() => L<uint,    string>((uint    p0) => Sql.ConvertTo<string>.From(p0) )) },
+				{ MT<ulong  >(() => ((ulong)   0)  .ToString()), N(() => L<ulong,   string>((ulong   p0) => Sql.ConvertTo<string>.From(p0) )) },
 
 				#endregion
 

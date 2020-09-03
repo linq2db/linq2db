@@ -429,7 +429,8 @@ namespace LinqToDB.Linq.Builder
 
 							var cm = ConvertMethod(expr);
 							if (cm != null)
-								return new TransformInfo(ConvertExpression(cm));
+								//TODO: looks like a mess: ConvertExpression can not work without OptimizeExpression
+								return new TransformInfo(OptimizeExpression(ConvertExpression(cm)));
 							break;
 						}
 
@@ -446,7 +447,8 @@ namespace LinqToDB.Linq.Builder
 								if (expr.Type != e.Type)
 									expr = new ChangeTypeExpression(expr, e.Type);
 
-								return new TransformInfo(ConvertExpression(expr));
+								//TODO: looks like a mess: ConvertExpression can not work without OptimizeExpression
+								return new TransformInfo(OptimizeExpression(ConvertExpression(expr)));
 							}
 
 							if (ma.Member.IsNullableValueMember())
@@ -535,8 +537,19 @@ namespace LinqToDB.Linq.Builder
 
 		Expression? ConvertMethod(MethodCallExpression pi)
 		{
-			var l = Expressions.ConvertMember(MappingSchema, pi.Object?.Type, pi.Method);
-			return l == null ? null : ConvertMethod(pi, l);
+			LambdaExpression? lambda = null;
+
+			if (!pi.Method.IsStatic && pi.Object != null && pi.Object.Type != pi.Method.DeclaringType)
+			{
+				var concreteTypeMemberInfo = pi.Object.Type.GetMemberEx(pi.Method);
+				if (concreteTypeMemberInfo != null)
+					lambda = Expressions.ConvertMember(MappingSchema, pi.Object.Type, concreteTypeMemberInfo);
+			}
+
+			if (lambda == null)
+				lambda = Expressions.ConvertMember(MappingSchema, pi.Object?.Type, pi.Method);
+
+			return lambda == null ? null : ConvertMethod(pi, lambda);
 		}
 
 		static Expression ConvertMethod(MethodCallExpression pi, LambdaExpression lambda)
