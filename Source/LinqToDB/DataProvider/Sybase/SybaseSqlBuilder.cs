@@ -281,6 +281,14 @@ namespace LinqToDB.DataProvider.Sybase
 			StringBuilder.AppendLine(enable ? " ON" : " OFF");
 		}
 
+		protected override string? GetTableDatabaseName(SqlTable table)
+		{
+			if (table.PhysicalName!.StartsWith("#") || (table.TableOptions & (TableOptions.IsTemporary | TableOptions.IsGlobalTemporary)) != 0)
+				return null;
+
+			return base.GetTableDatabaseName(table);
+		}
+
 		protected override string? GetTablePhysicalName(SqlTable table)
 		{
 			if (table.PhysicalName == null)
