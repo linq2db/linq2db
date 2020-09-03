@@ -429,7 +429,8 @@ namespace LinqToDB.Linq.Builder
 
 							var cm = ConvertMethod(expr);
 							if (cm != null)
-								return new TransformInfo(ConvertExpression(cm));
+								//TODO: looks like a mess: ConvertExpression can not work without OptimizeExpression
+								return new TransformInfo(OptimizeExpression(ConvertExpression(cm)));
 							break;
 						}
 
@@ -446,7 +447,8 @@ namespace LinqToDB.Linq.Builder
 								if (expr.Type != e.Type)
 									expr = new ChangeTypeExpression(expr, e.Type);
 
-								return new TransformInfo(ConvertExpression(expr));
+								//TODO: looks like a mess: ConvertExpression can not work without OptimizeExpression
+								return new TransformInfo(OptimizeExpression(ConvertExpression(expr)));
 							}
 
 							if (ma.Member.IsNullableValueMember())
@@ -535,8 +537,19 @@ namespace LinqToDB.Linq.Builder
 
 		Expression? ConvertMethod(MethodCallExpression pi)
 		{
-			var l = Expressions.ConvertMember(MappingSchema, pi.Object?.Type, pi.Method);
-			return l == null ? null : ConvertMethod(pi, l);
+			LambdaExpression? lambda = null;
+
+			if (!pi.Method.IsStatic && pi.Object != null && pi.Object.Type != pi.Method.DeclaringType)
+			{
+				var concreteTypeMemberInfo = pi.Object.Type.GetMemberEx(pi.Method);
+				if (concreteTypeMemberInfo != null)
+					lambda = Expressions.ConvertMember(MappingSchema, pi.Object.Type, concreteTypeMemberInfo);
+			}
+
+			if (lambda == null)
+				lambda = Expressions.ConvertMember(MappingSchema, pi.Object?.Type, pi.Method);
+
+			return lambda == null ? null : ConvertMethod(pi, lambda);
 		}
 
 		static Expression ConvertMethod(MethodCallExpression pi, LambdaExpression lambda)
@@ -729,10 +742,10 @@ namespace LinqToDB.Linq.Builder
 			return new[] { new SqlInfo(ConvertToSql(context, expression, false, columnDescriptor)) };
 		}
 
-		public ISqlExpression ConvertToSqlExpression(IBuildContext context, Expression expression, ColumnDescriptor? columnDescriptor)
+		public ISqlExpression ConvertToSqlExpression(IBuildContext context, Expression expression, ColumnDescriptor? columnDescriptor, bool isPureExpression)
 		{
 			var expr = ConvertExpression(expression);
-			return ConvertToSql(context, expr, false, columnDescriptor);
+			return ConvertToSql(context, expr, false, columnDescriptor, isPureExpression);
 		}
 
 		public ISqlExpression ConvertToExtensionSql(IBuildContext context, Expression expression, ColumnDescriptor? columnDescriptor)
@@ -780,7 +793,7 @@ namespace LinqToDB.Linq.Builder
 			return ConvertToSql(context, expression, false, columnDescriptor);
 		}
 
-		public ISqlExpression ConvertToSql(IBuildContext? context, Expression expression, bool unwrap = false, ColumnDescriptor? columnDescriptor = null)
+		public ISqlExpression ConvertToSql(IBuildContext? context, Expression expression, bool unwrap = false, ColumnDescriptor? columnDescriptor = null, bool isPureExpression = false)
 		{
 			if (typeof(IToSqlConverter).IsSameOrParentOf(expression.Type))
 			{
@@ -1091,12 +1104,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (e.Method.DeclaringType == typeof(string) && e.Method.Name == "Format")
 						{
-							// TODO: move PrepareRawSqlArguments to more correct location
-							TableBuilder.PrepareRawSqlArguments(e, null,
-								out var format, out var arguments);
-							var sqlArguments = arguments.Select(a => ConvertToSql(context, a)).ToArray();
-
-							return new SqlExpression(e.Type, format, Precedence.Primary, sqlArguments);
+							return ConvertFormatToSql(context, e, isPureExpression);
 						}
 
 						break;
@@ -1154,6 +1162,21 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			throw new LinqException("'{0}' cannot be converted to SQL.", expression);
+		}
+
+		public ISqlExpression ConvertFormatToSql(IBuildContext? context, MethodCallExpression mc, bool isPureExpression)
+		{
+			// TODO: move PrepareRawSqlArguments to more correct location
+			TableBuilder.PrepareRawSqlArguments(mc, null,
+				out var format, out var arguments);
+			var sqlArguments = arguments.Select(a => ConvertToSql(context, a)).ToArray();
+
+			if (isPureExpression)
+			{
+				return new SqlExpression(mc.Type, format, Precedence.Primary, sqlArguments);
+			}
+
+			return QueryHelper.ConvertFormatToConcatenation(format, sqlArguments);
 		}
 
 		public ISqlExpression ConvertExtensionToSql(IBuildContext context, Sql.ExpressionAttribute attr, MethodCallExpression mc)
@@ -1459,9 +1482,24 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (columnDescriptor != null)
 					{
-						newExpr.DataType        = columnDescriptor.GetDbDataType(true);
+						newExpr.DataType = columnDescriptor.GetDbDataType(true);
 						if (newExpr.ValueExpression.Type != columnDescriptor.MemberType)
-							newExpr.ValueExpression = Expression.Convert(newExpr.ValueExpression, columnDescriptor.MemberType);
+						{
+							newExpr.ValueExpression = newExpr.ValueExpression.UnwrapConvert()!;
+							var memberType = columnDescriptor.MemberType;
+							if (newExpr.ValueExpression.Type != memberType)
+							{
+								if (!newExpr.ValueExpression.Type.IsNullable() || newExpr.ValueExpression.Type.ToNullableUnderlying() != memberType)
+								{
+									var convertLambda = MappingSchema.GenerateSafeConvert(newExpr.ValueExpression.Type,
+										memberType);
+									newExpr.ValueExpression =
+										InternalExtensions.ApplyLambdaToExpression(convertLambda,
+											newExpr.ValueExpression);
+								}
+							}
+						}				
+
 						newExpr.ValueExpression = columnDescriptor.ApplyConversions(newExpr.ValueExpression, newExpr.DataType, true);
 
 						if (name == null)

@@ -865,6 +865,32 @@ namespace Tests.Linq
 
 		public static string JsonPath<TColumn, TJsonProp>(Expression<Func<TColumn, TJsonProp>> extractor) => "'{json, text}'";
 		#endregion
+
+		#region issue 2434
+		[Table]
+		class Issue2434Table
+		{
+			[Column] public int     Id;
+			[Column] public string? FirstName;
+			[Column] public string? LastName;
+
+			[ExpressionMethod(nameof(FullNameExpr), IsColumn = true)]
+			public string? FullName { get; set; }
+
+			private static Expression<Func<Issue2434Table, string>> FullNameExpr() => t => $"{t.FirstName} {t.LastName}";
+		}
+
+		[Test]
+		public void Issue2434Test([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var tb = db.CreateLocalTable<Issue2434Table>())
+			{
+				tb.OrderBy(x => x.FullName).ToArray();
+			}
+		}
+		#endregion
+
 	}
 
 	static class ExpressionTestExtensions

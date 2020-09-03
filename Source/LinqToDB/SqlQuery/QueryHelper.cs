@@ -1043,14 +1043,14 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
+		static Regex _paramsRegex = new Regex(@"(?<open>{+)(?<key>\w+)(?<format>:[^}]+)?(?<close>}+)", RegexOptions.Compiled);
+
 		public static string TransformExpressionIndexes(string expression, Func<int, int> transformFunc)
 		{
 			if (expression    == null) throw new ArgumentNullException(nameof(expression));
 			if (transformFunc == null) throw new ArgumentNullException(nameof(transformFunc));
 
-			const string pattern = @"(?<open>{+)(?<key>\w+)(?<format>:[^}]+)?(?<close>}+)";
-
-			var str = Regex.Replace(expression, pattern, match =>
+			var str = _paramsRegex.Replace(expression, match =>
 			{
 				string open   = match.Groups["open"].Value;
 				string key    = match.Groups["key"].Value;
@@ -1070,6 +1070,67 @@ namespace LinqToDB.SqlQuery
 			});
 
 			return str;
+		}
+
+		public static ISqlExpression ConvertFormatToConcatenation(string format, IList<ISqlExpression> parameters)
+		{
+			if (format     == null) throw new ArgumentNullException(nameof(format));
+			if (parameters == null) throw new ArgumentNullException(nameof(parameters));
+
+			string StripDoubleQuotes(string str)
+			{
+				str = str.Replace("{{", "{");
+				str = str.Replace("}}", "}");
+				return str;
+			}
+
+			var matches = _paramsRegex.Matches(format);
+
+			ISqlExpression? result = null;
+			var lastMatchPosition = 0;
+
+			foreach (Match? match in matches)
+			{
+				if (match == null)
+					continue;
+
+				string open = match.Groups["open"].Value;
+				string key  = match.Groups["key"].Value;
+
+				if (open.Length % 2 == 0)
+					continue;
+
+				if (!int.TryParse(key, out var idx))
+					continue;
+
+				var current = parameters[idx];
+
+				var brackets = open.Length / 2;
+				if (match.Index > lastMatchPosition)
+				{
+
+					current = new SqlBinaryExpression(typeof(string),
+						new SqlValue(typeof(string),
+							StripDoubleQuotes(format.Substring(lastMatchPosition, match.Index - lastMatchPosition + brackets))),
+						"+", current,
+						Precedence.Additive);
+				}
+
+				result = result == null ? current : new SqlBinaryExpression(typeof(string), result, "+", current);
+
+				lastMatchPosition = match.Index + match.Length - brackets;
+			}
+
+			if (result != null && lastMatchPosition < format.Length)
+			{
+				result = new SqlBinaryExpression(typeof(string),
+					result, "+", new SqlValue(typeof(string),
+						StripDoubleQuotes(format.Substring(lastMatchPosition, format.Length - lastMatchPosition))), Precedence.Additive);
+			}
+
+			result ??= new SqlValue(typeof(string), format);
+
+			return result;
 		}
 
 		public static bool IsAggregationFunction(IQueryElement expr)

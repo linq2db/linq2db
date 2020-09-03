@@ -620,6 +620,8 @@ namespace LinqToDB.Linq.Builder
 
 		public LambdaExpression? ConvertMethodExpression(Type type, MemberInfo mi, out string? alias)
 		{
+			mi = type.GetMemberOverride(mi);
+
 			var attr = MappingSchema.GetAttribute<ExpressionMethodAttribute>(type, mi, a => a.Configuration);
 
 			if (attr != null)
@@ -628,7 +630,7 @@ namespace LinqToDB.Linq.Builder
 				if (attr.Expression != null)
 					return attr.Expression;
 
-				if (!String.IsNullOrEmpty(attr.MethodName))
+				if (!string.IsNullOrEmpty(attr.MethodName))
 				{
 					Expression expr;
 
@@ -636,7 +638,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var args  = method.GetGenericArguments();
 						var names = args.Select(t => (object)t.Name).ToArray();
-						var name  = String.Format(attr.MethodName, names);
+						var name  = string.Format(attr.MethodName, names);
 
 						expr = Expression.Call(
 							mi.DeclaringType,

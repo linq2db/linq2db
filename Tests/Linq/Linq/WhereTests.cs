@@ -1570,6 +1570,24 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void SrtingInterpolationTests([DataSources(false)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var cnt = db.Person
+					.Count(p => p.LastName + ", " + p.FirstName == $"{p.LastName}, {p.FirstName}"
+					            && "<" + p.LastName + ", " + p.FirstName + ">" == $"<{p.LastName}, {p.FirstName}>"
+					            && "<" + p.LastName + p.FirstName + ">" == $"<{p.LastName}{p.FirstName}>"
+					            && "<{p.LastName}, " + p.FirstName + " {" + p.LastName + "}" + ">" == $"<{{p.LastName}}, {p.FirstName} {{{p.LastName}}}>"
+					            && "{}" + p.LastName == $"{{}}{p.LastName}"
+					);
+
+				Assert.That(cnt, Is.EqualTo(db.Person.Count()));
+			}
+		}
+
+
 		#region issue 2424
 		class Isue2424Table
 		{

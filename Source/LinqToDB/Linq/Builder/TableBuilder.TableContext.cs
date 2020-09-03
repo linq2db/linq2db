@@ -257,7 +257,7 @@ namespace LinqToDB.Linq.Builder
 
 			ParameterExpression? _variable;
 
-			Expression BuildTableExpression(bool buildBlock, Type objectType, int[] index)
+			Expression BuildTableExpression(bool buildBlock, Type objectType, Tuple<int, SqlField?>[] index)
 			{
 				if (buildBlock && _variable != null)
 					return _variable;
@@ -373,21 +373,22 @@ namespace LinqToDB.Linq.Builder
 				return Expression.Block(new[] { variable }, expressions);
 			}
 
-			Expression BuildDefaultConstructor(EntityDescriptor entityDescriptor, Type objectType, int[] index)
+			Expression BuildDefaultConstructor(EntityDescriptor entityDescriptor, Type objectType, Tuple<int, SqlField?>[] index)
 			{
 				var members =
 				(
-					from idx in index.Select((n,i) => new { n, i })
-					where idx.n >= 0
-					let   cd = entityDescriptor.Columns[idx.i]
+					from idx in index
+					where idx.Item1 >= 0 && idx.Item2 != null
+					let   cd = entityDescriptor.Columns.FirstOrDefault(c => c.ColumnName == idx.Item2.PhysicalName)
 					where
-						cd.Storage != null ||
-						!(cd.MemberAccessor.MemberInfo is PropertyInfo info) ||
-						info.GetSetMethod(true) != null
+						cd != null &&
+						(cd.Storage != null ||
+						 !(cd.MemberAccessor.MemberInfo is PropertyInfo info) ||
+						 info.GetSetMethod(true) != null)
 					select new
 					{
 						Column = cd,
-						Expr   = new ConvertFromDataReaderExpression(cd.StorageType, idx.n, cd.ValueConverter, Builder.DataReaderLocal)
+						Expr   = new ConvertFromDataReaderExpression(cd.StorageType, idx.Item1, cd.ValueConverter, Builder.DataReaderLocal)
 					}
 				).ToList();
 
@@ -435,7 +436,7 @@ namespace LinqToDB.Linq.Builder
 				public Expression Expression = null!;
 			}
 
-			IEnumerable<Expression?>? GetExpressions(TypeAccessor typeAccessor, bool isRecordType, List<ColumnInfo> columns)
+			IEnumerable<Expression?> GetExpressions(TypeAccessor typeAccessor, bool isRecordType, List<ColumnInfo> columns)
 			{
 				var members = isRecordType ?
 					typeAccessor.Members.Where(m =>
@@ -521,20 +522,21 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			Expression BuildRecordConstructor(EntityDescriptor entityDescriptor, Type objectType, int[] index, bool isRecord)
+			Expression BuildRecordConstructor(EntityDescriptor entityDescriptor, Type objectType, Tuple<int, SqlField?>[] index, bool isRecord)
 			{
 				var ctor = objectType.GetConstructors().Single();
 
 				var exprs = GetExpressions(entityDescriptor.TypeAccessor, isRecord,
 					(
-						from idx in index.Select((n,i) => new { n, i })
-						where idx.n >= 0
-						let   cd = entityDescriptor.Columns[idx.i]
+						from idx in index
+						where idx.Item1 >= 0 && idx.Item2 != null
+						let   cd = entityDescriptor.Columns.FirstOrDefault(c => c.ColumnName == idx.Item2!.PhysicalName)
+						where cd != null
 						select new ColumnInfo
 						{
 							IsComplex  = cd.MemberAccessor.IsComplex,
 							Name       = cd.MemberName,
-							Expression = new ConvertFromDataReaderExpression(cd.MemberType, idx.n, cd.ValueConverter, Builder.DataReaderLocal)
+							Expression = new ConvertFromDataReaderExpression(cd.MemberType, idx.Item1, cd.ValueConverter, Builder.DataReaderLocal)
 						}
 					).ToList()).ToList();
 
@@ -556,7 +558,7 @@ namespace LinqToDB.Linq.Builder
 				return expression;
 			}
 
-			int[] BuildIndex(int[] index, Type objectType)
+			Tuple<int, SqlField?>[] BuildIndex(Tuple<int, SqlField?>[] index, Type objectType)
 			{
 				var names = new Dictionary<string,int>();
 				var n     = 0;
@@ -624,7 +626,7 @@ namespace LinqToDB.Linq.Builder
 					info = matchedFields.ToArray();
 				}
 
-				var index = info.Select(idx => ConvertToParentIndex(idx.Index, this)).ToArray();
+				var index = info.Select(idx => Tuple.Create(ConvertToParentIndex(idx.Index, this), QueryHelper.GetUnderlyingField(idx.Sql))).ToArray();
 
 				if (ObjectType != tableType || InheritanceMapping.Count == 0)
 					return BuildTableExpression(!Builder.IsBlockDisable, tableType, index);
