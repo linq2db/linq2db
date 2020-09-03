@@ -81,9 +81,9 @@ namespace Tests.UserTests
 
 			for (var i = values.Length - 1; i >= 0; i--)
 			{
-				var v = list[i];
+				var v  = list[i]!;
 				var eq = Expression.Equal(Expression.Constant(v, type), param);
-				retE = Expression.Condition(eq, Expression.Constant(v.ToString()), retE);
+				retE   = Expression.Condition(eq, Expression.Constant(v.ToString()), retE);
 			}
 
 			var lambda = Expression.Lambda(retE, param);
