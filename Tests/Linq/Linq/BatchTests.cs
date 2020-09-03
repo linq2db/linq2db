@@ -1,4 +1,4 @@
-﻿#if NETFRAMEWORK
+﻿#if NETFRAMEWORK1
 
 using System;
 using System.Linq;
