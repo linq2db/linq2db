@@ -337,7 +337,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TransactionScope([DataSources] string context)
+		public void TransactionScope([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllSQLite)] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
@@ -360,7 +360,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public async Task TransactionScopeAsync([DataSources] string context)
+		public async Task TransactionScopeAsync([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllSQLite)] string context)
 		{
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))

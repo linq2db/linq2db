@@ -25,8 +25,8 @@ namespace LinqToDB.Data
 
 			if (assembly != null)
 			{
-				var t = assembly.GetType("System.Transactions.ContextData");
-				var currentDataProperty = t.GetProperty("TLSCurrentData", BindingFlags.NonPublic | BindingFlags.Static);
+				var t = assembly.GetType("System.Transactions.Transaction");
+				var currentDataProperty = t.GetProperty("Current", BindingFlags.Public | BindingFlags.Static);
 				if (currentDataProperty != null)
 				{
 					var body   = Expression.MakeMemberAccess(null, currentDataProperty);
