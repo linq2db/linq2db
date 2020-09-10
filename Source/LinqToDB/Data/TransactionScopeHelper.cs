@@ -7,7 +7,7 @@ namespace LinqToDB.Data
 {
 	internal static class TransactionScopeHelper
 	{
-		static Func<object?> _getCurrentScopeDelegate = GetTransactionScopeFunc();
+		static readonly Func<object?> _getCurrentScopeDelegate = GetTransactionScopeFunc();
 
 		public static bool IsInsideTransactionScope
 		{
@@ -20,12 +20,15 @@ namespace LinqToDB.Data
 
 		static Func<object?> GetTransactionScopeFunc()
 		{
+			// netfx: "System.Transactions"
+			// netcore: "System.Transactions.Local"
+			// check for both names as I'm not sure how it will work with netstandard builds
 			var assembly = AppDomain.CurrentDomain.GetAssemblies()
-				.FirstOrDefault(a => a.GetName().Name == "System.Transactions");
+				.FirstOrDefault(a => a.GetName().Name == "System.Transactions" || a.GetName().Name == "System.Transactions.Local");
 
 			if (assembly != null)
 			{
-				var t = assembly.GetType("System.Transactions.Transaction");
+				var t = assembly.GetType("System.Transactions.Transaction")!;
 				var currentDataProperty = t.GetProperty("Current", BindingFlags.Public | BindingFlags.Static);
 				if (currentDataProperty != null)
 				{
