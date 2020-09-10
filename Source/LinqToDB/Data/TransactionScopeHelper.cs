@@ -7,38 +7,37 @@ namespace LinqToDB.Data
 {
 	internal static class TransactionScopeHelper
 	{
-		static readonly Func<object?> _getCurrentScopeDelegate = GetTransactionScopeFunc();
+		static readonly Func<bool> _getInScopeFunc = GetTransactionScopeFunc();
 
-		public static bool IsInsideTransactionScope
-		{
-			get
-			{
-				var ts = _getCurrentScopeDelegate();
-				return ts != null;
-			}
-		}
+		public static bool IsInsideTransactionScope => _getInScopeFunc();
 
-		static Func<object?> GetTransactionScopeFunc()
+		static Func<bool> GetTransactionScopeFunc()
 		{
-			// netfx: "System.Transactions"
+			// netfx:   "System.Transactions"
 			// netcore: "System.Transactions.Local"
 			// check for both names as I'm not sure how it will work with netstandard builds
 			var assembly = AppDomain.CurrentDomain.GetAssemblies()
-				.FirstOrDefault(a => a.GetName().Name == "System.Transactions" || a.GetName().Name == "System.Transactions.Local");
+				.FirstOrDefault(a =>
+				{
+					var n = a.GetName().Name;
+					return n == "System.Transactions" || n == "System.Transactions.Local";
+				});
 
 			if (assembly != null)
 			{
-				var t = assembly.GetType("System.Transactions.Transaction")!;
-				var currentDataProperty = t.GetProperty("Current", BindingFlags.Public | BindingFlags.Static);
+				var t = assembly.GetType("System.Transactions.Transaction");
+				
+				var currentDataProperty = t?.GetProperty("Current", BindingFlags.Public | BindingFlags.Static);
 				if (currentDataProperty != null)
 				{
-					var body   = Expression.MakeMemberAccess(null, currentDataProperty);
-					var lambda = Expression.Lambda<Func<object?>>(body);
-					return lambda.Compile;
+					var body   = Expression.NotEqual(Expression.MakeMemberAccess(null, currentDataProperty),
+						Expression.Constant(null));
+					var lambda = Expression.Lambda<Func<bool>>(body);
+					return lambda.Compile();
 				}
 			}
 
-			return () => null;
+			return () => false;
 		}
 	}
 }
