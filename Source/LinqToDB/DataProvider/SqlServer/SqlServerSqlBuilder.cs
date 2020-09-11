@@ -386,7 +386,7 @@ namespace LinqToDB.DataProvider.SqlServer
 						"[tempdb]" : null;
 
 				StringBuilder.Append("IF (OBJECT_ID(N'");
-				BuildPhysicalTable(table, null, defaultDatabaseName : defaultDatabaseName);
+				BuildPhysicalTable(table, alias: null, defaultDatabaseName: defaultDatabaseName);
 				StringBuilder.AppendLine("', N'U') IS NOT NULL)");
 				Indent++;
 			}
