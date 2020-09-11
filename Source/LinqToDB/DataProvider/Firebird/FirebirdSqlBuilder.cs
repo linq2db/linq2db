@@ -403,12 +403,7 @@ namespace LinqToDB.DataProvider.Firebird
 			StringBuilder.Append(
 				table.TableOptions.HasIsGlobalTemporary() ?
 					"CREATE GLOBAL TEMPORARY TABLE " :
-//				(table.TableOptions.HasIsTemporary) != 0 ?
-//					"CREATE TEMPORARY TABLE " :
 					"CREATE TABLE ");
-
-//			if ((table.TableOptions.HasCreateIfNotExists) != 0)
-//				StringBuilder.Append("IF NOT EXISTS ");
 		}
 
 		protected override void BuildStartCreateTableStatement(SqlCreateTableStatement createTable)

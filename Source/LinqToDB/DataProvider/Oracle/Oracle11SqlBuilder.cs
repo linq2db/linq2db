@@ -530,9 +530,6 @@ END;",
 				table.TableOptions.HasIsTemporary() ?
 					"CREATE GLOBAL TEMPORARY TABLE " :
 					"CREATE TABLE ");
-//
-//			if ((table.TableOptions.HasCreateIfNotExists) != 0)
-//				StringBuilder.Append("IF NOT EXISTS ");
 		}
 
 		protected override void BuildStartCreateTableStatement(SqlCreateTableStatement createTable)

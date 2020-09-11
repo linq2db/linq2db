@@ -1102,7 +1102,7 @@ namespace LinqToDB
 		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
 		/// <param name="setTable">Action to modify <typeparamref name="T"/> entity's mapping using fluent mapping.</param>
 		/// <returns>Returns temporary table instance.</returns>
-		public static TempTable<T> ToTempTable<T>(
+		public static TempTable<T> IntoTempTable<T>(
 			this IQueryable<T>               items,
 			string?                          tableName    = default,
 			string?                          databaseName = default,
@@ -1135,7 +1135,7 @@ namespace LinqToDB
 		/// <param name="tableOptions">Optional Table options. If not specified, value from mapping will be used.</param>
 		/// <param name="setTable">Action to modify <typeparamref name="T"/> entity's mapping using fluent mapping.</param>
 		/// <returns>Returns temporary table instance.</returns>
-		public static TempTable<T> ToTable<T>(
+		public static TempTable<T> IntoTable<T>(
 			this IQueryable<T>               items,
 			string?                          tableName    = default,
 			string?                          databaseName = default,
@@ -1169,7 +1169,7 @@ namespace LinqToDB
 		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns temporary table instance.</returns>
-		public static Task<TempTable<T>> ToTempTableAsync<T>(
+		public static Task<TempTable<T>> IntoTempTableAsync<T>(
 			this IEnumerable<T> items,
 			IDataContext        db,
 			string?             tableName         = default,
@@ -1198,7 +1198,7 @@ namespace LinqToDB
 		/// <param name="tableOptions">Optional Table options. If not specified, value from mapping will be used.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns temporary table instance.</returns>
-		public static Task<TempTable<T>> ToTableAsync<T>(
+		public static Task<TempTable<T>> IntoTableAsync<T>(
 			this IEnumerable<T> items,
 			IDataContext        db,
 			string?             tableName         = default,
@@ -1228,7 +1228,7 @@ namespace LinqToDB
 		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns temporary table instance.</returns>
-		public static Task<TempTable<T>> ToTempTableAsync<T>(
+		public static Task<TempTable<T>> IntoTempTableAsync<T>(
 			this IQueryable<T>               items,
 			string?                          tableName         = default,
 			string?                          databaseName      = default,
@@ -1264,7 +1264,7 @@ namespace LinqToDB
 		/// <param name="tableOptions">Optional Table options. If not specified, value from mapping will be used.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns temporary table instance.</returns>
-		public static Task<TempTable<T>> ToTableAsync<T>(
+		public static Task<TempTable<T>> IntoTableAsync<T>(
 			this IQueryable<T>               items,
 			string?                          tableName         = default,
 			string?                          databaseName      = default,

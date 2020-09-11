@@ -38,7 +38,7 @@ namespace LinqToDB
 		/// </summary>
 		Type                DataReaderType    { get; }
 		/// <summary>
-		/// Gets maping schema, used for current context.
+		/// Gets mapping schema, used for current context.
 		/// </summary>
 		MappingSchema       MappingSchema     { get; }
 		/// <summary>
