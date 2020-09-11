@@ -392,7 +392,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 
 			AppendIndent().Append("DROP TABLE ");
-			BuildPhysicalTable(table, null);
+			BuildPhysicalTable(table, alias: null);
 
 			if (dropTable.Table.TableOptions.HasDropIfExists())
 				Indent--;
