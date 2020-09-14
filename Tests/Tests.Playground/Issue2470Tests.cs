@@ -32,7 +32,7 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void SampleSelectTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void GroupJoinTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Order>())
