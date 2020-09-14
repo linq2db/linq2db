@@ -1,4 +1,4 @@
-﻿#if !NETSTANDARD2_0 && !NETSTANDARD2_1
+﻿#if NETFRAMEWORK || NETCOREAPP
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -48,7 +48,7 @@ namespace LinqToDB.DataProvider.SapHana
 			SqlProviderFlags.IsInsertOrUpdateSupported = false;
 			SqlProviderFlags.IsUpdateFromSupported     = false;
 
-			_sqlOptimizer = new SapHanaSqlOptimizer(SqlProviderFlags);
+			_sqlOptimizer = new SapHanaNativeSqlOptimizer(SqlProviderFlags);
 		}
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
@@ -162,7 +162,7 @@ namespace LinqToDB.DataProvider.SapHana
 				cancellationToken);
 		}
 
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{

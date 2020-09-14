@@ -90,7 +90,7 @@ namespace LinqToDB.DataProvider.Informix
 			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
 		}
 
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 		protected override async Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T>           table,
 			BulkCopyOptions     options,
@@ -167,7 +167,10 @@ namespace LinqToDB.DataProvider.Informix
 					};
 				}
 
-				if (options.BulkCopyTimeout.HasValue) bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
+				if (options.BulkCopyTimeout.HasValue) 
+					bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
+				else if (Configuration.Data.BulkCopyUseConnectionCommandTimeout)
+					bc.BulkCopyTimeout = connection.ConnectionTimeout;
 
 				var tableName = GetTableName(sb, options, table);
 
@@ -207,7 +210,7 @@ namespace LinqToDB.DataProvider.Informix
 				return base.MultipleRowsCopyAsync(table, options, source, cancellationToken);
 		}
 
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{

@@ -1,11 +1,10 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq.Expressions;
+using System.Reflection;
+using LinqToDB.Extensions;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
-using LinqToDB.Extensions;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -27,23 +26,18 @@ namespace LinqToDB.Linq.Builder
 
 		private readonly EntityDescriptor _entityDescriptor;
 
-		public SqlValuesTable Table = new SqlValuesTable();
-		private readonly IList<SqlValue> _records;
+		public SqlValuesTable Table { get; }
 
 		public EnumerableContext(ExpressionBuilder builder, BuildInfo buildInfo, SelectQuery query, Type elementType,
-			IList<SqlValue> records)
+			Expression source)
 		{
-			_records          = records;
 			Parent            = buildInfo.Parent;
 			Builder           = builder;
 			Expression        = buildInfo.Expression;
 			SelectQuery       = query;
 			_elementType      = elementType;
 			_entityDescriptor = Builder.MappingSchema.GetEntityDescriptor(elementType);
-			for (var i        = 0; i < _records.Count; i++)
-			{
-				Table.Rows.Add(new List<ISqlExpression>());
-			}
+			Table             = new SqlValuesTable(source);
 		}
 
 		public void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
@@ -76,65 +70,70 @@ namespace LinqToDB.Linq.Builder
 			switch (flags)
 			{
 				case ConvertFlags.Field:
+				{
+					if (expression.NodeType == ExpressionType.MemberAccess)
 					{
-						if (expression.NodeType == ExpressionType.MemberAccess)
+						var memberExpression = (MemberExpression)expression;
+
+						foreach (var column in _entityDescriptor.Columns)
 						{
-							var memberExpression = (MemberExpression)expression;
-
-							foreach (var column in _entityDescriptor.Columns)
+							if (column.MemberInfo.EqualsTo(memberExpression.Member, _elementType))
 							{
-								if (column.MemberInfo.EqualsTo(memberExpression.Member, _elementType))
+								if (!Table.FieldsLookup!.TryGetValue(column.MemberInfo.Name, out var newField))
 								{
-									if (!Table.Fields.TryGetValue(column.MemberInfo.Name, out var newField))
+									Table.Add(newField = new SqlField(column), (record, parameters) =>
 									{
-										newField = new SqlField(column);
+										// TODO: improve this place to avoid closures
+										object? value;
+										if (column.MemberInfo.IsPropertyEx())
+											value = ((PropertyInfo)column.MemberInfo).GetValue(record);
+										else if (column.MemberInfo.IsFieldEx())
+											value = ((FieldInfo)column.MemberInfo).GetValue(record);
+										else
+											throw new InvalidOperationException();
 
-										Table.Add(newField);
+										var valueExpr = Expression.Constant(value, column.MemberType);
+										if (parameters.TryGetValue(valueExpr, out var parameter))
+											return parameter;
 
-										for (var i = 0; i < _records.Count; i++)
+										// TODO: parameter accessor is overkill here for disposable parameter
+										// we need method to create parameter value directly with all conversions
+										var sql = Builder.ConvertToSqlExpression(Parent!, valueExpr, column, false);
+										if (sql is SqlParameter p)
 										{
-											object? value;
-											if (column.MemberInfo.IsPropertyEx())
+											p.IsQueryParameter = !Builder.MappingSchema.ValueToSqlConverter.CanConvert(p.Type.SystemType);
+											foreach (var pa in Builder._parameters.Values)
 											{
-												value = ((PropertyInfo)column.MemberInfo).GetValue(_records[i].Value);
+												if (pa.SqlParameter == p)
+												{
+													// Mimic QueryRunner.SetParameters
+													p.Value        = pa.ValueAccessor(Builder.Expression, Builder.DataContext, null);
+													var dbDataType = pa.DbDataTypeAccessor(Builder.Expression, Builder.DataContext, null);
+													p.Type         = p.Type.WithSetValues(dbDataType);
+													break;
+												}
 											}
-											else if (column.MemberInfo.IsFieldEx())
-											{
-												value = ((FieldInfo)column.MemberInfo).GetValue(_records[i].Value);
-											}
-											else
-											{
-												throw new InvalidOperationException();
-											}
-
-											var valueExpr = Expression.Constant(value, column.MemberType);
-											var expr = Builder.ConvertToSqlExpression(Parent!, valueExpr, column);
-
-											if (expr is SqlParameter p)
-											{
-												// avoid parameters is source, because their number is limited
-												p.IsQueryParameter = !Builder.MappingSchema.ValueToSqlConverter.CanConvert(p.Type.SystemType);
-												p.Type             = p.Type.WithoutSystemType(column);
-											}
-											else if (expr is SqlValue val)
-												val.ValueType = val.ValueType.WithoutSystemType(column);
-
-											Table.Rows[i].Add(expr);
 										}
-									}
-									return new[]
-									{
-										new SqlInfo(column.MemberInfo, newField, SelectQuery)
-									};
 
+										parameters.Add(valueExpr, sql);
+
+										return sql;
+									});
 								}
+
+								return new[]
+								{
+									new SqlInfo(column.MemberInfo, newField, SelectQuery)
+								};
+
 							}
 						}
-
-						break;
 					}
 
+					break;
+				}
 			}
+
 			throw new NotImplementedException();
 		}
 

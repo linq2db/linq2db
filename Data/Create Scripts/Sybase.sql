@@ -263,6 +263,13 @@ RETURN
 
 GO
 
+CREATE Procedure Person_SelectAll
+AS
+
+SELECT * FROM Person
+
+GO
+
 CREATE TABLE KeepIdentityTest (
 	ID    NUMERIC(12, 0) IDENTITY,
 	Value INT            NULL

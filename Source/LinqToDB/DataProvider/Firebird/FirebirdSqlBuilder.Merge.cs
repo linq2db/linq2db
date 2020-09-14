@@ -23,23 +23,23 @@
 
 		private readonly ISet<Tuple<SqlValuesTable, int>> _typedColumns = new HashSet<Tuple<SqlValuesTable, int>>();
 
-		protected override bool MergeSourceValueTypeRequired(SqlValuesTable sourceEnumerable, int row, int column)
+		protected override bool MergeSourceValueTypeRequired(SqlValuesTable source, IReadOnlyList<ISqlExpression[]> rows, int row, int column)
 		{
 			if (row == 0)
 			{
 				// without type Firebird with convert string values in column to CHAR(LENGTH_OF_BIGGEST_VALUE_IN_COLUMN) with
 				// padding shorter values with spaces
-				if (sourceEnumerable.Rows.Any(r => r[column] is SqlValue value && value.Value is string))
+				if (rows.Any(r => r[column] is SqlValue value && value.Value is string))
 				{
-					_typedColumns.Add(Tuple.Create(sourceEnumerable, column));
-					return sourceEnumerable.Rows[0][column] is SqlValue val && val.Value != null;
+					_typedColumns.Add(Tuple.Create(source, column));
+					return rows[0][column] is SqlValue val && val.Value != null;
 				}
 
 				return false;
 			}
 
-			return _typedColumns.Contains(Tuple.Create(sourceEnumerable, column))
-				&& sourceEnumerable.Rows[row][column] is SqlValue sqlValue && sqlValue.Value != null;
+			return _typedColumns.Contains(Tuple.Create(source, column))
+				&& rows[row][column] is SqlValue sqlValue && sqlValue.Value != null;
 		}
 
 		protected override void BuildTypedExpression(SqlDataType dataType, ISqlExpression value)

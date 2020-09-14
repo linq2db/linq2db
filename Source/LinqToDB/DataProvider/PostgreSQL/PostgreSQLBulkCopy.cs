@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
@@ -31,7 +31,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return MultipleRowsCopy1Async(table, options, source, cancellationToken);
 		}
 
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			return MultipleRowsCopy1Async(table, options, source, cancellationToken);
@@ -55,7 +55,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
 		}
 
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
@@ -84,13 +84,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				var npgsqlType = _provider.GetNativeType(columns[i].DbType, true);
 				if (npgsqlType == null)
 				{
-					var columnType = columns[i].DataType != DataType.Undefined ? new SqlQuery.SqlDataType(columns[i]) : null;
-
-					if (columnType == null || columnType.Type.DataType == DataType.Undefined)
-						columnType = columns[i].MappingSchema.GetDataType(columns[i].StorageType);
+					var columnType = columns[i].GetDbDataType(true);
 
 					var sb = new System.Text.StringBuilder();
-					sqlBuilder.BuildTypeName(sb, columnType);
+					sqlBuilder.BuildTypeName(sb, new SqlQuery.SqlDataType(columnType));
 					npgsqlType = _provider.GetNativeType(sb.ToString(), true);
 				}
 
@@ -305,7 +302,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return rowsCopied;
 		}
 
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 		private async Task<BulkCopyRowsCopied> ProviderSpecificCopyImplAsync<T>(DataConnection dataConnection, ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);

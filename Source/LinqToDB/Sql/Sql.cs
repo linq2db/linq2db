@@ -423,7 +423,7 @@ namespace LinqToDB
 		[Sql.Function(ServerSideOnly = true)]
 		public static bool Like(string? matchExpression, string? pattern)
 		{
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 			throw new InvalidOperationException();
 #else
 			return matchExpression != null && pattern != null &&
@@ -434,7 +434,7 @@ namespace LinqToDB
 		[Sql.Function(ServerSideOnly = true)]
 		public static bool Like(string? matchExpression, string? pattern, char? escapeCharacter)
 		{
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 			throw new InvalidOperationException();
 #else
 			return matchExpression != null && pattern != null && escapeCharacter != null &&

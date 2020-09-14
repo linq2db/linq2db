@@ -98,7 +98,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 		public override ISchemaProvider GetSchemaProvider()
 		{
-			return new SybaseSchemaProvider();
+			return new SybaseSchemaProvider(this);
 		}
 
 		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
@@ -107,8 +107,8 @@ namespace LinqToDB.DataProvider.Sybase
 			{
 				case DataType.SByte      :
 					dataType = dataType.WithDataType(DataType.Int16);
-					if (value is sbyte)
-						value = (short)(sbyte)value;
+					if (value is sbyte sbyteValue)
+						value = (short)sbyteValue;
 					break;
 
 				case DataType.Time       :
@@ -117,8 +117,8 @@ namespace LinqToDB.DataProvider.Sybase
 
 				case DataType.Xml        :
 					dataType = dataType.WithDataType(DataType.NVarChar);
-						 if (value is XDocument)   value = value.ToString();
-					else if (value is XmlDocument) value = ((XmlDocument)value).InnerXml;
+						 if (value is XDocument      ) value = value.ToString();
+					else if (value is XmlDocument xml) value = xml.InnerXml;
 					break;
 
 				case DataType.Guid       :
@@ -224,7 +224,7 @@ namespace LinqToDB.DataProvider.Sybase
 				cancellationToken);
 		}
 
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{

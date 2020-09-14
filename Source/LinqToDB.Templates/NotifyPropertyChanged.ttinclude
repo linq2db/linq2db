@@ -60,6 +60,9 @@ void NotifyPropertyChangedImpl()
 			parentMembers.Insert  (index, gr);
 		}
 
+		gr.Conditional   = prop.Conditional;
+		prop.Conditional = null;
+
 		if (prop.IsAuto)
 		{
 			var field = new Field(() => type, "_" + ToCamelCase(name))

@@ -509,7 +509,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				(Expression<Action<NpgsqlBinaryImporter>>                                  )((NpgsqlBinaryImporter this_) => this_.Dispose()),
 				// [3]: StartRow
 				(Expression<Action<NpgsqlBinaryImporter>>                                  )((NpgsqlBinaryImporter this_) => this_.StartRow()),
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 				// [4]: CompleteAsync
 				new Tuple<LambdaExpression, bool>
 				((Expression<Func<NpgsqlBinaryImporter, CancellationToken, ValueTask<ulong>>>)((NpgsqlBinaryImporter this_, CancellationToken token) => this_.CompleteAsync(token)),         true),
@@ -549,7 +549,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			public void StartRow() => ((Action<NpgsqlBinaryImporter>)CompiledWrappers[3])(this);
 			public void Write<T>(T value, NpgsqlDbType npgsqlDbType) => ((Action<NpgsqlBinaryImporter, object?, NpgsqlDbType>)CompiledWrappers[8])(this, (object?)value, npgsqlDbType);
 
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 #pragma warning disable CS3002 // Return type is not CLS-compliant
 			public ValueTask<ulong> CompleteAsync(CancellationToken cancellationToken) 
 				=> ((Func<NpgsqlBinaryImporter, CancellationToken, ValueTask<ulong>>)CompiledWrappers[4])(this, cancellationToken);

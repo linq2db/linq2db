@@ -89,7 +89,7 @@ namespace LinqToDB.DataProvider.Firebird
 		public override ISqlExpression? GetIdentityExpression(SqlTable table)
 		{
 			if (!table.SequenceAttributes.IsNullOrEmpty())
-				return new SqlExpression("GEN_ID(" + table.SequenceAttributes[0].SequenceName + ", 1)", Precedence.Primary);
+				return new SqlExpression("GEN_ID(" + ConvertInline(table.SequenceAttributes[0].SequenceName, ConvertType.SequenceName) + ", 1)", Precedence.Primary);
 
 			return base.GetIdentityExpression(table);
 		}
@@ -168,9 +168,8 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 			// https://firebirdsql.org/file/documentation/reference_manuals/fblangref25-en/html/fblangref25-structure-identifiers.html
 			return !IsReserved(name) &&
-				((name[0] >= 'a' && name[0] <= 'z') || (name[0] >= 'A' && name[0] <= 'Z')) &&
+				name[0] >= 'A' && name[0] <= 'Z' &&
 				name.All(c =>
-					(c >= 'a' && c <= 'z') ||
 					(c >= 'A' && c <= 'Z') ||
 					(c >= '0' && c <= '9') ||
 					c == '$' ||
@@ -182,8 +181,10 @@ namespace LinqToDB.DataProvider.Firebird
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryFieldAlias :
+				case ConvertType.NameToQueryTableAlias :
 				case ConvertType.NameToQueryField      :
 				case ConvertType.NameToQueryTable      :
+				case ConvertType.SequenceName          :
 					if (FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Quote ||
 					   (FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && !IsValidIdentifier(value)))
 					{

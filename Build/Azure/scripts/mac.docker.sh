@@ -15,7 +15,8 @@ sudo /bin/chmod 544 /Library/PrivilegedHelperTools/com.docker.vmnetd
 sudo /bin/chmod 644 /Library/LaunchDaemons/com.docker.vmnetd.plist
 sudo /bin/launchctl load /Library/LaunchDaemons/com.docker.vmnetd.plist
 
-open -g -a Docker.app || exit
+#open -g -a Docker.app || exit
+open -g /Applications/Docker.app || exit
 
 while ! docker info 2>/dev/null ; do
     sleep 5
@@ -24,7 +25,8 @@ while ! docker info 2>/dev/null ; do
         echo 'docker still running'
     else
         echo 'docker not running, restart'
-        open -g -a Docker.app || exit
+        #open -g -a Docker.app || exit
+        open -g /Applications/Docker.app || exit
     fi
     if [ $retries -gt 30 ]; then
         >&2 echo 'Failed to run docker'

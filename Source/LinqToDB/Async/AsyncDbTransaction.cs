@@ -34,7 +34,7 @@ namespace LinqToDB.Async
 
 		public virtual Task CommitAsync(CancellationToken cancellationToken = default)
 		{
-#if NETSTANDARD2_1 || NETCOREAPP3_1
+#if NETSTANDARD2_1PLUS
 			if (Transaction is DbTransaction dbTransaction)
 				return dbTransaction.CommitAsync(cancellationToken);
 #endif
@@ -49,7 +49,7 @@ namespace LinqToDB.Async
 			Transaction.Dispose();
 		}
 
-#if NET45 || NET46
+#if NETFRAMEWORK
 		public virtual Task DisposeAsync()
 		{
 			Dispose();
@@ -74,7 +74,7 @@ namespace LinqToDB.Async
 
 		public virtual Task RollbackAsync(CancellationToken cancellationToken = default)
 		{
-#if NETSTANDARD2_1 || NETCOREAPP3_1
+#if NETSTANDARD2_1PLUS
 			if (Transaction is DbTransaction dbTransaction)
 				return dbTransaction.RollbackAsync(cancellationToken);
 #endif

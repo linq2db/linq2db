@@ -59,7 +59,7 @@ namespace LinqToDB.DataProvider.SapHana
 			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
 		}
 
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T> table,
 			BulkCopyOptions options,
@@ -141,8 +141,13 @@ namespace LinqToDB.DataProvider.SapHana
 					};
 				}
 
-				if (options.MaxBatchSize.HasValue)    bc.BatchSize       = options.MaxBatchSize.Value;
-				if (options.BulkCopyTimeout.HasValue) bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
+				if (options.MaxBatchSize.HasValue)
+					bc.BatchSize = options.MaxBatchSize.Value;
+
+				if (options.BulkCopyTimeout.HasValue) 
+					bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
+				else if (Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout)
+					bc.BulkCopyTimeout = connection.ConnectionTimeout;
 
 				var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
 				var tableName  = GetTableName(sqlBuilder, options, table);

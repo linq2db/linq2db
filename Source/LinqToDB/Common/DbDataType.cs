@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 
 namespace LinqToDB.Common
 {
 	using Mapping;
+	using Expressions;
 
 	/// <summary>
 	/// Stores database type attributes.
@@ -61,12 +63,16 @@ namespace LinqToDB.Common
 		public int?     Precision  { get; }
 		public int?     Scale      { get; }
 
+
+		internal static MethodInfo WithSetValuesMethodInfo =
+			MemberHelper.MethodOf<DbDataType>(dt => dt.WithSetValues(dt));
+
 		public DbDataType WithSetValues(DbDataType from)
 		{
 			return new DbDataType(
-				SystemType,
-				from.DataType != DataType.Undefined ? from.DataType : DataType,
-				!from.DbType.IsNullOrEmpty()        ? from.DbType   : DbType,
+				from.SystemType != typeof(object)   ? from.SystemType : SystemType,
+				from.DataType != DataType.Undefined ? from.DataType   : DataType,
+				!from.DbType.IsNullOrEmpty()        ? from.DbType     : DbType,
 				from.Length    ?? Length,
 				from.Precision ?? Precision,
 				from.Scale     ?? Scale);
@@ -90,7 +96,7 @@ namespace LinqToDB.Common
 			var lengthStr    = Length == null                 ? string.Empty : $", \"{Length}\"";
 			var precisionStr = Precision == null              ? string.Empty : $", \"{Precision}\"";
 			var scaleStr     = Scale == null                  ? string.Empty : $", \"{Scale}\"";
-			return $"{SystemType}{dataTypeStr}{dbTypeStr}{lengthStr}{precisionStr}{scaleStr}";
+			return $"({SystemType}{dataTypeStr}{dbTypeStr}{lengthStr}{precisionStr}{scaleStr})";
 		}
 
 		#region Equality members

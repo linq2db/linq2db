@@ -8,6 +8,7 @@ using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+using Tests.Model;
 
 namespace Tests.Linq
 {
@@ -51,6 +52,23 @@ namespace Tests.Linq
 			{
 				var id = 1;
 				Assert.AreEqual(1, db.Person.Where(_ => _.ID == id || _.ID <= id || _.ID == id).Count());
+			}
+		}
+
+		[Test]
+		public void InlineTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var id = 1;
+				var query = from t in db.Person
+					where t.ID == id
+					select t;
+
+				var queryInlined = query.InlineParameters();
+
+				Assert.That(query.GetStatement().Parameters.Count,        Is.EqualTo(1));
+				Assert.That(queryInlined.GetStatement().Parameters.Count, Is.EqualTo(0));
 			}
 		}
 
@@ -277,6 +295,23 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(Configuration = TestProvName.AllSybase, Details = "CI: sybase image needs utf-8 enabled")]
+		[Test]
+		public void TestInternationalParamName([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var параметр = 1;
+				var result1 = db.Parent.Where(p => p.ParentID == параметр).ToList();
+
+				var 参数 = 1;
+				var result2 = db.Parent.Where(p => p.ParentID == 参数).ToList();
+
+				var パラメータ = 1;
+				var result3 = db.Parent.Where(p => p.ParentID == パラメータ).ToList();
+			}
+		}
+
 		// sequence evaluation fails in GetChildrenFiltered2
 		[ActiveIssue("Unable to cast object of type 'System.Linq.Expressions.FieldExpression' to type 'System.Linq.Expressions.LambdaExpression'.")]
 		[Test]
@@ -431,6 +466,42 @@ namespace Tests.Linq
 			using (var table = db.CreateLocalTable<Issue1189Customer>())
 			{
 				table.Where(k => k.ToDelete <= DateTime.Now).ToList();
+			}
+		}
+
+		[Table]
+		class TestEqualsTable1
+		{
+			[Column]
+			public int Id { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(TestEqualsTable2.FK), CanBeNull = true)]
+			public IQueryable<TestEqualsTable2> Relation { get; } = null!;
+		}
+
+		[Table]
+		class TestEqualsTable2
+		{
+			[Column]
+			public int Id { get; set; }
+
+			[Column]
+			public int? FK { get; set; }
+		}
+
+		[Test]
+		public void TestParameterInEquals([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table1 = db.CreateLocalTable<TestEqualsTable1>())
+			using (var table2 = db.CreateLocalTable<TestEqualsTable2>())
+			{
+				int? param = null;
+				table1
+				.Where(_ => _.Relation
+					.Select(__ => __.Id)
+					.Any(__ => __.Equals(param)))
+				.ToList();
 			}
 		}
 	}

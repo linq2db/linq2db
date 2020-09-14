@@ -119,38 +119,6 @@ namespace Tests
 			return NO_SCHEMA_NAME;
 		}
 
-		[return: NotNullIfNotNull("baseOptions")]
-		public static GetSchemaOptions? GetDefaultSchemaOptions(string context, GetSchemaOptions? baseOptions = null)
-		{
-			if (context.Contains("SapHana"))
-			{
-				// SAP HANA provider throws C++ assertions when we try to load schema for some functions
-				var options = baseOptions ?? new GetSchemaOptions();
-
-				var oldLoad = options.LoadProcedure;
-				if (oldLoad != null)
-					options.LoadProcedure = p => oldLoad(p) && loadCheck(p);
-				else
-					options.LoadProcedure = loadCheck;
-
-				bool loadCheck(ProcedureSchema p)
-				{
-					// TODO: actualize list for SPS04
-					return false;
-					//return p.ProcedureName != "SERIES_GENERATE_TIME"
-					//	&& p.ProcedureName != "SERIES_DISAGGREGATE_TIME"
-					//	// just too slow
-					//	&& p.ProcedureName != "GET_FULL_SYSTEM_INFO_DUMP"
-					//	&& p.ProcedureName != "GET_FULL_SYSTEM_INFO_DUMP_WITH_PARAMETERS"
-					//	&& p.ProcedureName != "FULL_SYSTEM_INFO_DUMP_CREATE";
-				}
-
-				return options;
-			}
-
-			return baseOptions;
-		}
-
 		/// <summary>
 		/// Returns server name for provided connection.
 		/// Returns UNUSED_SERVER if fully-qualified table name doesn't support server name.

@@ -1,10 +1,11 @@
 ## LINQ to DB
 
-<img align="right" alt=".NET Foundation Logo" src="https://github.com/dotnet/swag/blob/master/logo/dotnetfoundation_v4_horizontal.png" width="250px" >
+<a href="https://dotnetfoundation.org/projects/linq2db">
+<img align="right" alt=".NET Foundation Logo" src="https://github.com/dotnet/swag/blob/master/logo/dotnetfoundation_v4_horizontal.png" width="250px" ></a>
 
 [![NuGet Version and Downloads count](https://buildstats.info/nuget/linq2db?includePreReleases=true)](https://www.nuget.org/profiles/LinqToDB) [![License](https://img.shields.io/github/license/linq2db/linq2db)](MIT-LICENSE.txt)
 
-[![Master branch build](https://img.shields.io/azure-devops/build/linq2db/linq2db/3/master?label=build%20(master))](https://dev.azure.com/linq2db/linq2db/_build?definitionId=3&_a=summary) [![Latest build](https://img.shields.io/azure-devops/build/linq2db/linq2db/5?label=build%20(latest))](https://dev.azure.com/linq2db/linq2db/_build?definitionId=5&_a=summary)
+[![Master branch build](https://img.shields.io/azure-devops/build/linq2db/linq2db/5/master?label=build%20(master))](https://dev.azure.com/linq2db/linq2db/_build?definitionId=5&_a=summary) [![Latest build](https://img.shields.io/azure-devops/build/linq2db/linq2db/5?label=build%20(latest))](https://dev.azure.com/linq2db/linq2db/_build?definitionId=5&_a=summary)
 
 [![StackOverflow questions](https://img.shields.io/stackexchange/stackoverflow/t/linq2db.svg?label=stackoverflow)](https://stackoverflow.com/questions/tagged/linq2db) [![Follow @linq2db](https://img.shields.io/twitter/follow/linq2db.svg)](https://twitter.com/linq2db)
 
@@ -112,7 +113,7 @@ In your `web.config` or `app.config` make sure you have a connection string (che
 
 ### Using Connection String Settings Provider
 
-.Net Core does not support `System.Configuration` so to configure connection strings you should implement `ILinqToDBSettings`, for example:
+.Net Core does not support `System.Configuration` until 3.0 so to configure connection strings you should implement `ILinqToDBSettings`, for example:
 
 ```cs
 public class ConnectionStringSettings : IConnectionStringSettings

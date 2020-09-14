@@ -659,39 +659,44 @@ namespace LinqToDB.Extensions
 					return true;
 			return false;
 		}
-
+		
+		static readonly ConcurrentDictionary<Type,Type?> getItemTypeCache = new ConcurrentDictionary<Type, Type?>();
+		
 		[return: NotNullIfNotNull("type")]
 		public static Type? GetItemType(this Type? type)
 		{
 			if (type == null)
 				return null;
-
-			if (type == typeof(object))
-				// if it possible to have null here or we should remove check?
-				return type.HasElementType ? type.GetElementType(): null;
-
-			if (type.IsArray)
-				return type.GetElementType();
-
-			if (type.IsGenericType)
-				foreach (var aType in type.GetGenericArguments())
-					if (typeof(IEnumerable<>).MakeGenericType(new[] { aType }).IsAssignableFrom(type))
-						return aType;
-
-			var interfaces = type.GetInterfaces();
-
-			if (interfaces != null && interfaces.Length > 0)
+			return getItemTypeCache.GetOrAdd(type, (t) =>
 			{
-				foreach (var iType in interfaces)
+				if (t == typeof(object))
+					// if it possible to have null here or we should remove check?
+					return t.HasElementType ? t.GetElementType() : null;
+
+				if (t.IsArray)
+					return t.GetElementType();
+
+				if (t.IsGenericType)
+					foreach (var aType in t.GetGenericArguments())
+						if (typeof(IEnumerable<>).MakeGenericType(new[] {aType})
+							.IsAssignableFrom(t))
+							return aType;
+
+				var interfaces = t.GetInterfaces();
+
+				if (interfaces != null && interfaces.Length > 0)
 				{
-					var eType = iType.GetItemType();
+					foreach (var iType in interfaces)
+					{
+						var eType = iType.GetItemType();
 
-					if (eType != null)
-						return eType;
+						if (eType != null)
+							return eType;
+					}
 				}
-			}
 
-			return type.BaseType.GetItemType();
+				return t.BaseType.GetItemType();
+			});
 		}
 
 		/// <summary>
@@ -1005,6 +1010,42 @@ namespace LinqToDB.Extensions
 				(type.Name.StartsWith("<>f__AnonymousType", StringComparison.Ordinal) ||
 				 type.Name.StartsWith("VB$AnonymousType", StringComparison.Ordinal)) &&
 				type.GetCustomAttributes(typeof(CompilerGeneratedAttribute), true).Any();
+		}
+
+		internal static MemberInfo GetMemberOverride(this Type type, MemberInfo mi)
+		{
+			if (mi.DeclaringType == type)
+				return mi;
+
+			if (mi is MethodInfo method)
+			{
+				var baseDefinition = method.GetBaseDefinition();
+
+				foreach (var m in type.GetMethods())
+					if (m.GetBaseDefinition() == baseDefinition)
+						return m;
+			}
+			else if (mi is PropertyInfo property)
+			{
+				if (property.GetMethod != null)
+				{
+					var baseDefinition = property.GetMethod.GetBaseDefinition();
+
+					foreach (var p in type.GetProperties())
+						if (p.GetMethod?.GetBaseDefinition() == baseDefinition)
+							return p;
+				}
+				if (property.SetMethod != null)
+				{
+					var baseDefinition = property.SetMethod.GetBaseDefinition();
+
+					foreach (var p in type.GetProperties())
+						if (p.SetMethod?.GetBaseDefinition() == baseDefinition)
+							return p;
+				}
+			}
+
+			return mi;
 		}
 	}
 }

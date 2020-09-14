@@ -11,7 +11,7 @@ namespace LinqToDB.DataProvider.Oracle
 	{
 		const int NanosecondsPerTick = 100;
 
-#if NET45 || NET46
+#if NETFRAMEWORK
 		private static readonly object _nativeSyncRoot = new object();
 
 		public const string NativeAssemblyName        = "Oracle.DataAccess";
@@ -215,7 +215,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public static OracleProviderAdapter GetInstance(string name)
 		{
-#if NET45 || NET46
+#if NETFRAMEWORK
 			if (name == ProviderName.OracleNative)
 			{
 				if (_nativeAdapter == null)
@@ -240,7 +240,7 @@ namespace LinqToDB.DataProvider.Oracle
 		private static OracleProviderAdapter CreateAdapter(string assemblyName, string clientNamespace, string typesNamespace, string? factoryName)
 		{
 			var isNative = false;
-#if NET45 || NET46
+#if NETFRAMEWORK
 			isNative = assemblyName == NativeAssemblyName;
 #endif
 

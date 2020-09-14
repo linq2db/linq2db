@@ -574,7 +574,7 @@ namespace Tests.DataProvider
 			using (var db = new TestDataConnection(context))
 			{
 				var sp = db.DataProvider.GetSchemaProvider();
-				var s  = sp.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				var s  = sp.GetSchema(db);
 
 				var table = s.Tables.FirstOrDefault(_ => _.TableName!.Equals("ForeignKeyTable", StringComparison.OrdinalIgnoreCase));
 				Assert.IsNotNull(table);

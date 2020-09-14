@@ -31,8 +31,8 @@ namespace LinqToDB.Linq
 		public Expression Expression => _query.Expression;
 		Expression IExpressionQuery<T>.Expression
 		{
-			get { return _query.Expression; }
-			set { throw new NotImplementedException(); }
+			get => _query.Expression;
+			set => throw new NotImplementedException();
 		}
 
 		public string         SqlText        { get; } = null!;
@@ -60,7 +60,7 @@ namespace LinqToDB.Linq
 			return _query.Provider.Execute<TResult>(expression);
 		}
 
-		public IAsyncEnumerable<TResult> ExecuteAsync<TResult>(Expression expression)
+		public Task<IAsyncEnumerable<TResult>> ExecuteAsyncEnumerable<TResult>(Expression expression, CancellationToken token)
 		{
 			throw new NotImplementedException();
 		}

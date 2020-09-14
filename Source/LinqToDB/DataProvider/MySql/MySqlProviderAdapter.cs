@@ -18,12 +18,17 @@ namespace LinqToDB.DataProvider.MySql
 		private static MySqlProviderAdapter? _mysqlDataInstance;
 		private static MySqlProviderAdapter? _mysqlConnectorInstance;
 
-		public const string MySqlConnectorAssemblyName    = "MySqlConnector";
-		public const string MySqlDataAssemblyName         = "MySql.Data";
+		public const string MySqlConnectorAssemblyName = "MySqlConnector";
+		public const string MySqlDataAssemblyName      = "MySql.Data";
 
-		// shared by both providers
-		public const string ClientNamespace = "MySql.Data.MySqlClient";
-		public const string TypesNamespace  = "MySql.Data.Types";
+		public const string MySqlDataClientNamespace = "MySql.Data.MySqlClient";
+		public const string MySqlDataTypesNamespace  = "MySql.Data.Types";
+
+		public const string MySqlConnectorNamespace      = "MySqlConnector";
+		public const string MySqlConnectorTypesNamespace = "MySqlConnector";
+
+		public const string OldMySqlConnectorNamespace       = "MySql.Data.MySqlClient";
+		public const string OldMySqlConnectorTypesNamespace  = "MySql.Data.Types";
 
 		internal enum MySqlProvider
 		{
@@ -52,6 +57,7 @@ namespace LinqToDB.DataProvider.MySql
 			string? getDateTimeOffsetMethodName,
 			string  getMySqlDateTimeMethodName,
 
+			string  providerTypesNamespace,
 			MappingSchema    mappingSchema,
 			BulkCopyAdapter? bulkCopy)
 		{
@@ -74,6 +80,7 @@ namespace LinqToDB.DataProvider.MySql
 			GetMySqlDecimalMethodName   = getMySqlDecimalMethodName;
 			GetDateTimeOffsetMethodName = getDateTimeOffsetMethodName;
 			GetMySqlDateTimeMethodName  = getMySqlDateTimeMethodName;
+			ProviderTypesNamespace      = providerTypesNamespace;
 
 			MappingSchema = mappingSchema;
 			BulkCopy      = bulkCopy;
@@ -113,7 +120,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		public string GetMySqlDateTimeMethodName   { get; }
 
-		public string ProviderTypesNamespace => TypesNamespace;
+		public string ProviderTypesNamespace       { get; }
 
 		/// <summary>
 		/// Returns object, because both providers use different enums and we anyway don't need typed value.
@@ -166,15 +173,15 @@ namespace LinqToDB.DataProvider.MySql
 				if (assembly == null)
 					throw new InvalidOperationException($"Cannot load assembly {MySqlDataAssemblyName}");
 
-				var connectionType    = assembly.GetType($"{ClientNamespace}.MySqlConnection" , true)!;
-				var dataReaderType    = assembly.GetType($"{ClientNamespace}.MySqlDataReader" , true)!;
-				var parameterType     = assembly.GetType($"{ClientNamespace}.MySqlParameter"  , true)!;
-				var commandType       = assembly.GetType($"{ClientNamespace}.MySqlCommand"    , true)!;
-				var transactionType   = assembly.GetType($"{ClientNamespace}.MySqlTransaction", true)!;
-				var dbType            = assembly.GetType($"{ClientNamespace}.MySqlDbType"     , true)!;
-				var mySqlDecimalType  = assembly.GetType($"{TypesNamespace}.MySqlDecimal"     , true)!;
-				var mySqlDateTimeType = assembly.GetType($"{TypesNamespace}.MySqlDateTime"    , true)!;
-				var mySqlGeometryType = assembly.GetType($"{TypesNamespace}.MySqlGeometry"    , true)!;
+				var connectionType    = assembly.GetType($"{MySqlDataClientNamespace}.MySqlConnection" , true)!;
+				var dataReaderType    = assembly.GetType($"{MySqlDataClientNamespace}.MySqlDataReader" , true)!;
+				var parameterType     = assembly.GetType($"{MySqlDataClientNamespace}.MySqlParameter"  , true)!;
+				var commandType       = assembly.GetType($"{MySqlDataClientNamespace}.MySqlCommand"    , true)!;
+				var transactionType   = assembly.GetType($"{MySqlDataClientNamespace}.MySqlTransaction", true)!;
+				var dbType            = assembly.GetType($"{MySqlDataClientNamespace}.MySqlDbType"     , true)!;
+				var mySqlDecimalType  = assembly.GetType($"{MySqlDataTypesNamespace}.MySqlDecimal"     , true)!;
+				var mySqlDateTimeType = assembly.GetType($"{MySqlDataTypesNamespace}.MySqlDateTime"    , true)!;
+				var mySqlGeometryType = assembly.GetType($"{MySqlDataTypesNamespace}.MySqlGeometry"    , true)!;
 
 				var typeMapper = new TypeMapper();
 				typeMapper.RegisterTypeWrapper<MySqlParameter>(parameterType);
@@ -206,6 +213,7 @@ namespace LinqToDB.DataProvider.MySql
 					"GetMySqlDecimal",
 					null,
 					"GetMySqlDateTime",
+					MySqlDataTypesNamespace,
 					mappingSchema,
 					null);
 			}
@@ -277,6 +285,7 @@ namespace LinqToDB.DataProvider.MySql
 		internal class MySqlConnector
 		{
 			private static readonly Version MinBulkCopyVersion = new Version(0, 67);
+			private static readonly Version MinModernVersion   = new Version(1, 0);
 
 			internal static MySqlProviderAdapter CreateAdapter()
 			{
@@ -284,14 +293,20 @@ namespace LinqToDB.DataProvider.MySql
 				if (assembly == null)
 					throw new InvalidOperationException($"Cannot load assembly {MySqlConnectorAssemblyName}");
 
-				var connectionType    = assembly.GetType($"{ClientNamespace}.MySqlConnection" , true)!;
-				var dataReaderType    = assembly.GetType($"{ClientNamespace}.MySqlDataReader" , true)!;
-				var parameterType     = assembly.GetType($"{ClientNamespace}.MySqlParameter"  , true)!;
-				var commandType       = assembly.GetType($"{ClientNamespace}.MySqlCommand"    , true)!;
-				var transactionType   = assembly.GetType($"{ClientNamespace}.MySqlTransaction", true)!;
-				var dbType            = assembly.GetType($"{ClientNamespace}.MySqlDbType"     , true)!;
-				var mySqlDateTimeType = assembly.GetType($"{TypesNamespace}.MySqlDateTime"    , true)!;
-				var mySqlGeometryType = assembly.GetType($"{TypesNamespace}.MySqlGeometry"    , true)!;
+				var hasBulkCopy  = assembly.GetName().Version >= MinBulkCopyVersion;
+				var version1plus = assembly.GetName().Version >= MinModernVersion;
+
+				var clientNamespace = version1plus ? MySqlConnectorNamespace      : OldMySqlConnectorNamespace;
+				var typesNamespace  = version1plus ? MySqlConnectorTypesNamespace : OldMySqlConnectorTypesNamespace;
+
+				var connectionType    = assembly.GetType($"{clientNamespace}.MySqlConnection" , true)!;
+				var dataReaderType    = assembly.GetType($"{clientNamespace}.MySqlDataReader" , true)!;
+				var parameterType     = assembly.GetType($"{clientNamespace}.MySqlParameter"  , true)!;
+				var commandType       = assembly.GetType($"{clientNamespace}.MySqlCommand"    , true)!;
+				var transactionType   = assembly.GetType($"{clientNamespace}.MySqlTransaction", true)!;
+				var dbType            = assembly.GetType($"{clientNamespace}.MySqlDbType"     , true)!;
+				var mySqlDateTimeType = assembly.GetType($"{typesNamespace}.MySqlDateTime"    , true)!;
+				var mySqlGeometryType = assembly.GetType($"{typesNamespace}.MySqlGeometry"    , true)!;
 
 				var typeMapper = new TypeMapper();
 				typeMapper.RegisterTypeWrapper<MySqlParameter>(parameterType);
@@ -302,13 +317,12 @@ namespace LinqToDB.DataProvider.MySql
 				typeMapper.RegisterTypeWrapper<MySqlTransaction>(transactionType);
 
 				BulkCopyAdapter? bulkCopy = null;
-
-				if (assembly.GetName().Version >= MinBulkCopyVersion)
+				if (hasBulkCopy)
 				{
-					var bulkCopyType                   = assembly.GetType($"{ClientNamespace}.MySqlBulkCopy", true)!;
-					var bulkRowsCopiedEventHandlerType = assembly.GetType($"{ClientNamespace}.MySqlRowsCopiedEventHandler", true)!;
-					var bulkCopyColumnMappingType      = assembly.GetType($"{ClientNamespace}.MySqlBulkCopyColumnMapping" , true)!;
-					var rowsCopiedEventArgsType        = assembly.GetType($"{ClientNamespace}.MySqlRowsCopiedEventArgs"   , true)!;
+					var bulkCopyType                   = assembly.GetType($"{clientNamespace}.MySqlBulkCopy", true)!;
+					var bulkRowsCopiedEventHandlerType = assembly.GetType($"{clientNamespace}.MySqlRowsCopiedEventHandler", true)!;
+					var bulkCopyColumnMappingType      = assembly.GetType($"{clientNamespace}.MySqlBulkCopyColumnMapping" , true)!;
+					var rowsCopiedEventArgsType        = assembly.GetType($"{clientNamespace}.MySqlRowsCopiedEventArgs"   , true)!;
 
 					typeMapper.RegisterTypeWrapper<MySqlBulkCopy              >(bulkCopyType!);
 					typeMapper.RegisterTypeWrapper<MySqlRowsCopiedEventHandler>(bulkRowsCopiedEventHandlerType);
@@ -322,7 +336,6 @@ namespace LinqToDB.DataProvider.MySql
 				}
 				else
 					typeMapper.FinalizeMappings();
-
 
 				var typeGetter        = typeMapper.Type<MySqlParameter>().Member(p => p.MySqlDbType).BuildGetter<IDbDataParameter>();
 				var dateTimeConverter = typeMapper.MapLambda((MySqlDateTime dt) => dt.GetDateTime());
@@ -346,6 +359,7 @@ namespace LinqToDB.DataProvider.MySql
 					null,
 					"GetDateTimeOffset",
 					"GetMySqlDateTime",
+					typesNamespace,
 					mappingSchema,
 					bulkCopy);
 			}
@@ -446,7 +460,7 @@ namespace LinqToDB.DataProvider.MySql
 					// [8]: WriteToServerAsync
 					new Tuple<LambdaExpression, bool>
 					((Expression<Func<MySqlBulkCopy, IDataReader, CancellationToken, Task>>     )((MySqlBulkCopy this_, IDataReader dataReader, CancellationToken cancellationToken) => this_.WriteToServerAsync (dataReader, cancellationToken)), true),
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 					// [9]: WriteToServerAsync
 					new Tuple<LambdaExpression, bool>
 					((Expression<Func<MySqlBulkCopy, IDataReader, CancellationToken, ValueTask>>)((MySqlBulkCopy this_, IDataReader dataReader, CancellationToken cancellationToken) => this_.WriteToServerAsync2(dataReader, cancellationToken)), true),
@@ -468,7 +482,7 @@ namespace LinqToDB.DataProvider.MySql
 				public void WriteToServer(IDataReader dataReader) => ((Action<MySqlBulkCopy, IDataReader>)CompiledWrappers[0])(this, dataReader);
 				public Task WriteToServerAsync      (IDataReader dataReader, CancellationToken cancellationToken) => ((Func<MySqlBulkCopy, IDataReader, CancellationToken,      Task>)CompiledWrappers[8])(this, dataReader, cancellationToken);
 				public bool CanWriteToServerAsync => CompiledWrappers[8] != null;
-#if !NET45 && !NET46
+#if !NETFRAMEWORK
 				[TypeWrapperName("WriteToServerAsync")]
 				public ValueTask WriteToServerAsync2(IDataReader dataReader, CancellationToken cancellationToken) => ((Func<MySqlBulkCopy, IDataReader, CancellationToken, ValueTask>)CompiledWrappers[9])(this, dataReader, cancellationToken);
 				public bool CanWriteToServerAsync2 => CompiledWrappers[9] != null;

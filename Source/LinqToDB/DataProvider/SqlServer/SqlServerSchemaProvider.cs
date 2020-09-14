@@ -530,7 +530,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					row["DataTypeName"]     = item.system_type_name.Split('(')[0];
 					row["ColumnName"]       = item.name ?? "";
 					row["AllowDBNull"]      = item.is_nullable;
-					row["ColumnSize"]       = item.max_length;
+					row["ColumnSize"]       = item.system_type_name.Contains("nchar") || item.system_type_name.Contains("nvarchar") ? item.max_length / 2 : item.max_length;
 					row["NumericPrecision"] = item.precision;
 					row["NumericScale"]     = item.scale;
 					row["IsIdentity"]       = item.is_identity_column;
