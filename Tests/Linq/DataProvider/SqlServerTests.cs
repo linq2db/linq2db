@@ -1796,5 +1796,26 @@ AS
 				}
 			}
 		}
+
+		[Test]
+		[ActiveIssue(1468)]
+		public void Issue1468Test([IncludeDataSources(false, TestProvName.AllSqlServer)] string context, [Values] bool useFmtOnly)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				var options = new GetSchemaOptions();
+				options.GetTables     = false;
+				options.UseSchemaOnly = useFmtOnly;
+
+				var schema = db.DataProvider
+					.GetSchemaProvider()
+					.GetSchema(db, options);
+
+				var proc = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "PersonSearch");
+				Assert.NotNull(proc);
+				Assert.False(proc.IsFunction);
+				Assert.IsNull(proc.ResultException);
+			}
+		}
 	}
 }
