@@ -427,7 +427,7 @@ namespace LinqToDB.SqlQuery
 		#region ISqlExpression Members
 
 		public int  Precedence => SqlQuery.Precedence.Primary;
-		public Type SystemType => typeof(Type);
+		public Type SystemType => Type.SystemType;
 
 		#endregion
 
