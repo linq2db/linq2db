@@ -65,7 +65,7 @@ namespace Tests.Linq
 
 		#region Group By Tests
 		[Test]
-		public void GroupByDateTimeOffsetByDateTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void GroupByDateTimeOffsetByDateTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -87,7 +87,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByTimeOfDayTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void GroupByDateTimeOffsetByTimeOfDayTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -109,7 +109,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void GroupByDateTimeOffsetTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -131,7 +131,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByDayTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void GroupByDateTimeOffsetByDayTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -153,7 +153,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByDayOfWeekTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void GroupByDateTimeOffsetByDayOfWeekTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -175,7 +175,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByDayOfYearTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void GroupByDateTimeOffsetByDayOfYearTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -197,7 +197,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByHourTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void GroupByDateTimeOffsetByHourTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -219,7 +219,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByLocalDateTimeTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void GroupByDateTimeOffsetByLocalDateTimeTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -241,7 +241,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByMillisecondTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void GroupByDateTimeOffsetByMillisecondTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -263,7 +263,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByMinuteTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void GroupByDateTimeOffsetByMinuteTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -285,7 +285,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByMonthTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void GroupByDateTimeOffsetByMonthTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -307,7 +307,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetBySecondTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void GroupByDateTimeOffsetBySecondTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -329,7 +329,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByYearTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void GroupByDateTimeOffsetByYearTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -351,7 +351,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByAddDaysTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void GroupByDateTimeOffsetByAddDaysTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -373,7 +373,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByAddHoursTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void GroupByDateTimeOffsetByAddHoursTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -395,7 +395,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByAddMillisecondsTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void GroupByDateTimeOffsetByAddMillisecondsTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -417,7 +417,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByAddMinutesTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void GroupByDateTimeOffsetByAddMinutesTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -439,7 +439,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByAddMonthsTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void GroupByDateTimeOffsetByAddMonthsTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -461,7 +461,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByAddSecondsTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void GroupByDateTimeOffsetByAddSecondsTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -483,7 +483,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByAddYearsTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void GroupByDateTimeOffsetByAddYearsTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -530,7 +530,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateAddYear([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void DateAddYear([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Transaction.Data))
@@ -540,7 +540,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateAddQuarter([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void DateAddQuarter([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Transaction.Data))
@@ -550,7 +550,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateAddMonth([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void DateAddMonth([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Transaction.Data))
@@ -560,7 +560,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateAddDayOfYear([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void DateAddDayOfYear([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Transaction.Data))
@@ -570,7 +570,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateAddDay([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void DateAddDay([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Transaction.Data))
@@ -580,7 +580,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateAddWeek([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void DateAddWeek([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Transaction.Data))
@@ -590,7 +590,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateAddWeekDay([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void DateAddWeekDay([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Transaction.Data))
@@ -600,7 +600,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateAddHour([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void DateAddHour([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Transaction.Data))
@@ -610,7 +610,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateAddMinute([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void DateAddMinute([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Transaction.Data))
@@ -620,7 +620,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateAddSecond([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void DateAddSecond([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Transaction.Data))
@@ -630,7 +630,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AddYears([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void AddYears([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Transaction.Data))
@@ -640,7 +640,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AddMonths([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void AddMonths([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Transaction.Data))
@@ -650,7 +650,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AddDays([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void AddDays([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Transaction.Data))
@@ -660,7 +660,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AddHours([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void AddHours([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Transaction.Data))
@@ -670,7 +670,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AddMinutes([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void AddMinutes([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Transaction.Data))
@@ -680,7 +680,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AddSeconds([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void AddSeconds([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Transaction.Data))
@@ -694,7 +694,7 @@ namespace Tests.Linq
 		#region DateAdd Expression
 
 		[Test]
-		public void DateAddYearExpression([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void DateAddYearExpression([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var part1 = 6;
 			var part2 = 5;
@@ -707,7 +707,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateAddQuarterExpression([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void DateAddQuarterExpression([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var part1 = 6;
 			var part2 = 5;
@@ -720,7 +720,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateAddMonthExpression([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void DateAddMonthExpression([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var part1 = 5;
 			var part2 = 3;
@@ -733,7 +733,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateAddDayOfYearExpression([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void DateAddDayOfYearExpression([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var part1 = 6;
 			var part2 = 3;
@@ -746,7 +746,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateAddDayExpression([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void DateAddDayExpression([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var part1 = 2;
 			var part2 = 3;
@@ -759,7 +759,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateAddWeekExpression([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void DateAddWeekExpression([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var part1 = 2;
 			var part2 = 3;
@@ -772,7 +772,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateAddWeekDayExpression([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void DateAddWeekDayExpression([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var part1 = 2;
 			var part2 = 3;
@@ -785,7 +785,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateAddHourExpression([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void DateAddHourExpression([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var part1 = 2;
 			var part2 = 3;
@@ -798,7 +798,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateAddMinuteExpression([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void DateAddMinuteExpression([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var part1 = 2;
 			var part2 = 3;
@@ -811,7 +811,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateAddSecondExpression([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void DateAddSecondExpression([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var part1 = 20;
 			var part2 = 21;
@@ -824,7 +824,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AddYearsExpression([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void AddYearsExpression([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var part1 = 5;
 			var part2 = 4;
@@ -837,7 +837,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AddMonthsExpression([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void AddMonthsExpression([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var part1 = 2;
 			var part2 = 4;
@@ -850,7 +850,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AddDaysExpression([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void AddDaysExpression([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var part1 = 2;
 			var part2 = 3;
@@ -863,7 +863,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AddHoursExpression([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void AddHoursExpression([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var part1 = 11;
 			var part2 = 11;
@@ -876,7 +876,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AddMinutesExpression([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void AddMinutesExpression([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var part1 = 1;
 			var part2 = 9;
@@ -889,7 +889,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AddSecondsExpression([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)] string context)
+		public void AddSecondsExpression([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var part1 = 5;
 			var part2 = 40;
@@ -902,7 +902,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AddMillisecondsExpression([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)]
+		public void AddMillisecondsExpression([IncludeDataSources(TestProvName.AllSqlServer2008Plus)]
 			string context)
 		{
 			var part1 = 150;
@@ -922,7 +922,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void SubDateDay(
-			[IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)]
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -934,7 +934,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void DateDiffDay(
-			[IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)]
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -946,7 +946,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void SubDateHour(
-			[IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)]
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -958,7 +958,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void DateDiffHour(
-			[IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)]
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -970,7 +970,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void SubDateMinute(
-			[IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)]
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -982,7 +982,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void DateDiffMinute(
-			[IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)]
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -994,7 +994,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void SubDateSecond(
-			[IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)]
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1006,7 +1006,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void DateDiffSecond(
-			[IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)]
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1018,7 +1018,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void SubDateMillisecond(
-			[IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)]
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1030,7 +1030,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void DateDiffMillisecond(
-			[IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL10Plus)]
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

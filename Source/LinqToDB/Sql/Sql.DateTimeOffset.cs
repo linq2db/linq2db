@@ -59,41 +59,7 @@ namespace LinqToDB
 			}
 		}
 
-		class DateAddOffsetBuilderPostgreSQL : Sql.IExtensionCallBuilder
-		{
-			public void Build(Sql.ISqExtensionBuilder builder)
-			{
-				var part    = builder.GetValue<Sql.DateParts>("part");
-				var date    = builder.GetExpression("date");
-				var number  = builder.GetExpression("number");
-
-				string expStr;
-				switch (part)
-				{
-					case Sql.DateParts.Year        : expStr = "{0} * Interval '1 Year'";         break;
-					case Sql.DateParts.Quarter     : expStr = "{0} * Interval '1 Month' * 3";    break;
-					case Sql.DateParts.Month       : expStr = "{0} * Interval '1 Month'";        break;
-					case Sql.DateParts.DayOfYear   : 
-					case Sql.DateParts.WeekDay     : 
-					case Sql.DateParts.Day         : expStr = "{0} * Interval '1 Day'";          break;
-					case Sql.DateParts.Week        : expStr = "{0} * Interval '1 Day' * 7";      break;
-					case Sql.DateParts.Hour        : expStr = "{0} * Interval '1 Hour'";         break;
-					case Sql.DateParts.Minute      : expStr = "{0} * Interval '1 Minute'";       break;
-					case Sql.DateParts.Second      : expStr = "{0} * Interval '1 Second'";       break;
-					case Sql.DateParts.Millisecond : expStr = "{0} * Interval '1 Millisecond'";  break;
-					default:
-						throw new ArgumentOutOfRangeException();
-				}
-
-				builder.ResultExpression = builder.Add(
-					date,
-					new SqlExpression(typeof(TimeSpan?), expStr, Precedence.Multiplicative, number),
-					typeof(DateTimeOffset?));
-			}
-		}
-
 		[Sql.Extension("DateAdd"        , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddOffsetBuilder))]
-		[Sql.Extension(PN.PostgreSQL, "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddOffsetBuilderPostgreSQL))]
 		public static DateTimeOffset? DateAdd([SqlQueryDependent] Sql.DateParts part, double? number, DateTimeOffset? date)
 		{
 			if (number == null || date == null)
@@ -118,7 +84,6 @@ namespace LinqToDB
 
 		[CLSCompliant(false)]
 		[Sql.Extension(                "DateDiff",      BuilderType = typeof(DateDiffBuilder))]
-		[Sql.Extension(PN.PostgreSQL,  "",              BuilderType = typeof(DateDiffBuilderPostgreSql))]
 		public static int? DateDiff(DateParts part, DateTimeOffset? startDate, DateTimeOffset? endDate)
 		{
 			if (startDate == null || endDate == null)
