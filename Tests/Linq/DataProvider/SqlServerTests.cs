@@ -1817,5 +1817,40 @@ AS
 				Assert.IsNull(proc.ResultException);
 			}
 		}
+
+		[Test]
+		public void TestDescriptions([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				var options = new GetSchemaOptions();
+				options.GetTables = false;
+
+				var schema = db.DataProvider
+					.GetSchemaProvider()
+					.GetSchema(db, options);
+
+				var proc = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "ExecuteProcStringParameters");
+				Assert.NotNull(proc);
+				Assert.AreEqual("This is <test> procedure!", proc.Description);
+				var param = proc.Parameters.FirstOrDefault(p => p.ParameterName == "@input");
+				Assert.NotNull(param);
+				Assert.AreEqual("This is <test> procedure parameter!", param.Description);
+
+				var func = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "GetParentByID");
+				Assert.NotNull(func);
+				Assert.AreEqual("This is <test> table function!", func.Description);
+				param = func.Parameters.FirstOrDefault(p => p.ParameterName == "@id");
+				Assert.NotNull(param);
+				Assert.AreEqual("This is <test> table function parameter!", param.Description);
+
+				func = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "ScalarFunction");
+				Assert.NotNull(func);
+				Assert.AreEqual("This is <test> scalar function!", func.Description);
+				param = func.Parameters.FirstOrDefault(p => p.ParameterName == "@value");
+				Assert.NotNull(param);
+				Assert.AreEqual("This is <test> scalar function parameter!", param.Description);
+			}
+		}
 	}
 }

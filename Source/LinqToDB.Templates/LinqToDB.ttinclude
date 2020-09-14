@@ -253,15 +253,7 @@ void GenerateTypesFromMetadata()
 
 		t.Attributes.Add(new Attribute("Table", tableAttrs.ToArray()) { IsSeparated = true } );
 
-		var comments = new List<string>();
-
-		if (!string.IsNullOrWhiteSpace(t.Description))
-		{
-			comments.Add("/ <summary>");
-			foreach (var line in t.Description.Split('\n'))
-				comments.Add("/ " + line.TrimEnd());
-			comments.Add("/ </summary>");
-		}
+		var comments = CreateXmlCommentFromText(t.Description);
 
 		if (comments.Count > 0)
 		{
@@ -396,15 +388,7 @@ void GenerateTypesFromMetadata()
 			else if (!c.IsIdentity)
 				c.Attributes.Add(new Attribute("NotNull"));
 
-			var columnComments = new List<string>();
-
-			if (!string.IsNullOrWhiteSpace(c.Description))
-			{
-				columnComments.Add("/ <summary>");
-				foreach (var line in c.Description.Split('\n'))
-					columnComments.Add("/ " + line.TrimEnd());
-				columnComments.Add("/ </summary>");
-			}
+			var columnComments = CreateXmlCommentFromText(c.Description);
 
 			if (columnComments.Count > 0)
 				c.Comment.AddRange(columnComments);
@@ -720,6 +704,19 @@ void GenerateTypesFromMetadata()
 				proc.Errors.Add(p.ResultException.Message);
 				continue;
 			}
+
+			var comments  = CreateXmlCommentFromText(p.Description);
+
+			foreach (var param in p.ProcParameters)
+			{
+				if (param.IsResult && p.IsFunction)
+					comments.AddRange(CreateXmlCommentFromText(param.Description, "returns"));
+				else
+					comments.AddRange(CreateXmlCommentFromText(param.Description, "param", $"name=\"{param.ParameterName}\""));
+			}
+
+			if (comments.Count > 0)
+				p.Comment.AddRange(comments);
 
 			proc.Members.Add(p);
 
@@ -1050,6 +1047,27 @@ IEnumerable<IClassMember> GetAllClassMembers(IEnumerable<IClassMember> members, 
 string NormalizeStringName(string name)
 {
 	return ToStringLiteral(name);
+}
+
+List<string> CreateXmlCommentFromText(string text, string tag = "summary", string attributes = null)
+{
+	var comments = new List<string>();
+
+	if (!string.IsNullOrWhiteSpace(text))
+	{
+		comments.Add($"/ <{tag}{(attributes == null ? null : " " + attributes)}>");
+		foreach (var line in text.Split('\n'))
+			comments.Add("/ " + line
+				.Replace("&", "&amp;")
+				.Replace("<", "&lt;")
+				.Replace(">", "&gt;")
+				.Replace("\"", "&quot;")
+				.Replace("'", "&apos;")
+				.TrimEnd());
+		comments.Add($"/ </{tag}>");
+	}
+
+	return comments;
 }
 
 #>
