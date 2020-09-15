@@ -5,7 +5,7 @@ using LinqToDB.Mapping;
 using MySqlX.XDevAPI;
 using NUnit.Framework;
 
-namespace Tests.Playground
+namespace Tests.UserTests
 {
 	[TestFixture]
 	public class Issue2470Tests : TestBase
