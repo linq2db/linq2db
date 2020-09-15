@@ -1,4 +1,4 @@
-﻿#if NET46
+﻿#if NET472
 using LinqToDB;
 using LinqToDB.Metadata;
 using NUnit.Framework;
@@ -24,7 +24,7 @@ namespace Tests.Metadata
 
 			private string? _Phone;
 
-			#region Extensibility Method Definitions
+#region Extensibility Method Definitions
 			partial void OnLoaded();
 			partial void OnValidate(System.Data.Linq.ChangeAction action);
 			partial void OnCreated();
@@ -34,7 +34,7 @@ namespace Tests.Metadata
 			partial void OnCompanyNameChanged();
 			partial void OnPhoneChanging(string? value);
 			partial void OnPhoneChanged();
-			#endregion
+#endregion
 
 			public Shipper()
 			{

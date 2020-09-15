@@ -19,8 +19,8 @@
 		</contentFiles>
 	</metadata>
 	<files>
-		<file src="..\Tests\Linq\bin\Azure\net46\System.Data.SQLite.dll"     target="tools" />
-		<file src="..\Tests\Linq\bin\Azure\net46\x86\SQLite.Interop.dll"     target="tools" />
+		<file src="..\Tests\Linq\bin\Azure\net472\System.Data.SQLite.dll"    target="tools" />
+		<file src="..\Tests\Linq\bin\Azure\net472\x86\SQLite.Interop.dll"    target="tools" />
 		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"         target="tools" />
 		
 		<file src="SQLite\linq2db.SQLite.props"                              target="build\linq2db.SQLite.MS.props" />

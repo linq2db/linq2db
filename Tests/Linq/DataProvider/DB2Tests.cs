@@ -11,7 +11,7 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
-#if NET46
+#if NET472
 using IBM.Data.DB2;
 #else
 using IBM.Data.DB2.Core;

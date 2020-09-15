@@ -166,7 +166,7 @@ namespace Tests
 
 		private static string GetContextName(IDataContext db)
 		{
-#if NET46
+#if NET472
 			if (db is TestServiceModelDataContext linqDb)
 				return linqDb.Configuration!;
 #endif

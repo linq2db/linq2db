@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 
-#if NET46
+#if NET472
 using System.ServiceModel;
 #endif
 
@@ -86,7 +86,7 @@ namespace Tests.UserTests
 
 				if (throws && context.Contains(".LinqService"))
 				{
-#if NET46
+#if NET472
 					Assert.Throws<FaultException<ExceptionDetail>>(() => table.ToList());
 #endif
 				}

@@ -444,7 +444,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-#if NET46
+#if NET472
 
 		[Test]
 		public void TestOracleNativeTypes([IncludeDataSources(TestProvName.AllOracleNative)] string context)
@@ -3048,7 +3048,7 @@ namespace Tests.DataProvider
 				var bfile = pms[24].Output!.Value;
 				if (isNative)
 				{
-#if NET46
+#if NET472
 					using (var file = (Oracle.DataAccess.Types.OracleBFile)bfile)
 					{
 						file.OpenFile();

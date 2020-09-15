@@ -18,7 +18,7 @@ using NUnit.Framework;
 namespace Tests.xUpdate
 {
 	using Model;
-#if NET46
+#if NET472
 	using System.ServiceModel;
 #endif
 
@@ -41,7 +41,7 @@ namespace Tests.xUpdate
 				GetProviderName(context, out var isLinq);
 				if (!isLinq)
 					Assert.Throws<LinqToDBException>(() => table.Merge().Using(GetSource1(db)).OnTargetKey().InsertWhenNotMatched().Merge());
-#if NET46
+#if NET472
 					else
 						Assert.Throws<FaultException<ExceptionDetail>>(() => table.Merge().Using(GetSource1(db)).OnTargetKey().InsertWhenNotMatched().Merge());
 #endif

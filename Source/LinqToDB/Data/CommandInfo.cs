@@ -1445,7 +1445,7 @@ namespace LinqToDB.Data
 					var hashCode = _type.GetHashCode();
 					hashCode = (hashCode * 397) ^ _readerType.GetHashCode();
 					hashCode = (hashCode * 397) ^ _configID;
-					hashCode = (hashCode * 397) ^ (_sql?.GetHashCode() ?? 0);
+					hashCode = (hashCode * 397) ^ _sql.GetHashCode();
 					hashCode = (hashCode * 397) ^ (_additionalKey?.GetHashCode() ?? 0);
 					_hashCode = hashCode;
 				}

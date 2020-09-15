@@ -1,8 +1,8 @@
 ﻿{
-	"NET46.Azure": {
+	"NET472.Azure": {
 		"Providers": [
-			// SQL Server 2016 + generic sqlserver tests + northwind db tests
-			"SqlServer.2016",
+			// SQL Server 2014 + generic sqlserver tests + northwind db tests
+			"SqlServer.2014",
 			//"Northwind", // FTS not awailable in default images, need to use custom one
 			"SqlServer"
 		]
