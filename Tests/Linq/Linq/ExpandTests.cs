@@ -6,7 +6,7 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
-namespace Tests.Playground
+namespace Tests.Linq
 {
 	using Tools;
 

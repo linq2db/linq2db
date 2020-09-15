@@ -9,7 +9,6 @@ using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 using NUnit.Framework;
-using Tests.Playground;
 
 namespace Tests.Linq
 {

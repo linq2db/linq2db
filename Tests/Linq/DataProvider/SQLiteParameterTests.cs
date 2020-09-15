@@ -5,7 +5,7 @@ using LinqToDB.Data;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
-namespace Tests.Linq
+namespace Tests.DataProvider
 {
 	[TestFixture]
 	public class SQLiteParameterTests : TestBase
