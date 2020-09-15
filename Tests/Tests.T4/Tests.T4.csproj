@@ -141,7 +141,7 @@
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.1' OR '$(TargetFramework)' == 'netcoreapp3.1' ">
 		<PackageReference Include="Npgsql" Version="4.1.4" />
 		<!--nuget doesn't have strong name, so we use local self-signed copy-->
-		<!--<PackageReference Include="dotMorten.Microsoft.SqlServer.Types" Version="1.1.0" />-->
+		<!--<PackageReference Include="dotMorten.Microsoft.SqlServer.Types" Version="1.2.0" />-->
 		<Reference Include="Microsoft.SqlServer.Types">
 			<HintPath>..\..\Redist\dotMorten.Microsoft.SqlServer.Types\Microsoft.SqlServer.Types.dll</HintPath>
 		</Reference>
