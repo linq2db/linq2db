@@ -320,7 +320,7 @@ void LoadServerMetadata(DataConnection dataConnection)
 						SystemType    = pr.SystemType,
 						DataType      = pr.DataType.ToString(),
 						IsNullable    = pr.IsNullable,
-						Description   = pr.Description
+						Description   = pr.Description,
 					})
 					.ToList(),
 			}

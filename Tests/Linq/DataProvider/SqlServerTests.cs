@@ -1819,7 +1819,7 @@ AS
 		}
 
 		[Test]
-		public void TestDescriptions([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestDescriptions([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{

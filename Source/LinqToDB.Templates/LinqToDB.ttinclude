@@ -706,14 +706,18 @@ void GenerateTypesFromMetadata()
 			}
 
 			var comments  = CreateXmlCommentFromText(p.Description);
+			List<string> returnsComments = null;
 
 			foreach (var param in p.ProcParameters)
 			{
 				if (param.IsResult && p.IsFunction)
-					comments.AddRange(CreateXmlCommentFromText(param.Description, "returns"));
+					returnsComments = CreateXmlCommentFromText(param.Description, "returns");
 				else
 					comments.AddRange(CreateXmlCommentFromText(param.Description, "param", $"name=\"{param.ParameterName}\""));
 			}
+
+			if (returnsComments != null)
+				comments.AddRange(returnsComments);
 
 			if (comments.Count > 0)
 				p.Comment.AddRange(comments);
