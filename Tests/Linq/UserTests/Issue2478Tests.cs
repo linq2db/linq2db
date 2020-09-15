@@ -1,11 +1,6 @@
 ﻿using System;
 using System.Linq;
-using System.Linq.Expressions;
 using LinqToDB;
-using LinqToDB.Common;
-using LinqToDB.Expressions;
-using LinqToDB.Reflection;
-using LinqToDB.Tools.Comparers;
 using NUnit.Framework;
 using Tests.Model;
 
@@ -14,43 +9,6 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue2478Tests : TestBase
 	{
-
-		public T[] AssertQuery<T>(IQueryable<T> query)
-		{
-			var expr = query.Expression;
-
-			var newExpr = expr.Transform(e =>
-			{
-				if (e.NodeType == ExpressionType.Call)
-				{
-					var mc = (MethodCallExpression)e;
-					if (mc.IsSameGenericMethod(Methods.LinqToDB.GetTable))
-					{
-						var newCall = TypeHelper.MakeMethodCall(Methods.Queryable.ToArray, mc);
-						newCall = TypeHelper.MakeMethodCall(Methods.Enumerable.AsQueryable, newCall);
-						return newCall;
-					}
-				}
-
-				return e;
-			})!;
-
-
-			var actual = query.ToArray();
-
-			var empty = LinqToDB.Common.Tools.CreateEmptyQuery<T>();
-			T[]? expected;
-			using (new DisableLogging())
-			{
-				expected = empty.Provider.CreateQuery<T>(newExpr).ToArray();
-			}
-
-			AreEqual(expected, actual, ComparerBuilder.GetEqualityComparer<T>());
-
-			return actual;
-		}
-
-
 		[Test]
 		public void CrossApplyTest([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
