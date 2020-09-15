@@ -9,7 +9,7 @@ using LinqToDB.Tools.Comparers;
 using NUnit.Framework;
 using Tests.Model;
 
-namespace Tests.Playground
+namespace Tests.UserTests
 {
 	[TestFixture]
 	public class Issue2478Tests : TestBase
