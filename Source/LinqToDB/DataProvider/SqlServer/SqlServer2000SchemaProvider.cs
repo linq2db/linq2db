@@ -68,9 +68,13 @@ namespace LinqToDB.DataProvider.SqlServer
 					SPECIFIC_NAME                                                                 as ProcedureName,
 					CASE WHEN ROUTINE_TYPE = 'FUNCTION'                         THEN 1 ELSE 0 END as IsFunction,
 					CASE WHEN ROUTINE_TYPE = 'FUNCTION' AND DATA_TYPE = 'TABLE' THEN 1 ELSE 0 END as IsTableFunction,
-					CASE WHEN SPECIFIC_SCHEMA = 'dbo'                           THEN 1 ELSE 0 END as IsDefaultSchema
+					CASE WHEN SPECIFIC_SCHEMA = 'dbo'                           THEN 1 ELSE 0 END as IsDefaultSchema,
+					ISNULL(CONVERT(varchar(8000), x.Value), '')                                   as Description
 				FROM
-					INFORMATION_SCHEMA.ROUTINES")
+					INFORMATION_SCHEMA.ROUTINES
+					LEFT JOIN SYS.EXTENDED_PROPERTIES x
+						ON OBJECT_ID('[' + SPECIFIC_SCHEMA + '].[' + SPECIFIC_NAME + ']') = x.major_id AND
+							x.name = 'MS_Description' AND x.class = 1")
 				.ToList();
 		}
 

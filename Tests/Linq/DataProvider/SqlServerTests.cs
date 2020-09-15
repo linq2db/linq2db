@@ -1091,16 +1091,16 @@ namespace Tests.DataProvider
 				if (column.MemberName == "timestampDataType")
 					continue;
 
-				if (actualValue is SqlGeometry)
+				if (actualValue is SqlGeometry geometry)
 				{
-					Assert.That(actualValue == null  || ((SqlGeometry) actualValue).IsNull ? null : actualValue.ToString(),
-						Is.EqualTo(testValue == null || ((SqlGeometry) testValue).IsNull   ? null : testValue.ToString()),
+					Assert.That(actualValue == null  || geometry.IsNull                  ? null : actualValue.ToString(),
+						Is.EqualTo(testValue == null || ((SqlGeometry) testValue).IsNull ? null : testValue.ToString()),
 						"Column  : {0}", column.MemberName);
 				}
-				else if (actualValue is SqlGeography)
+				else if (actualValue is SqlGeography geography)
 				{
-					Assert.That(actualValue == null  || ((SqlGeography) actualValue).IsNull ? null : actualValue.ToString(),
-						Is.EqualTo(testValue == null || ((SqlGeography) testValue).IsNull   ? null : testValue.ToString()),
+					Assert.That(actualValue == null  || geography.IsNull                  ? null : actualValue.ToString(),
+						Is.EqualTo(testValue == null || ((SqlGeography) testValue).IsNull ? null : testValue.ToString()),
 						"Column  : {0}", column.MemberName);
 				}
 				else
@@ -1850,6 +1850,27 @@ AS
 				param = func.Parameters.FirstOrDefault(p => p.ParameterName == "@value");
 				Assert.NotNull(param);
 				Assert.AreEqual("This is <test> scalar function parameter!", param.Description);
+			}
+		}
+
+		[Test]
+		public void TestDescriptionsSql2000([IncludeDataSources(false, ProviderName.SqlServer2000)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				var options = new GetSchemaOptions();
+				options.GetTables = false;
+
+				var schema = db.DataProvider
+					.GetSchemaProvider()
+					.GetSchema(db, options);
+
+				var func = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "GetParentByID");
+				Assert.NotNull(func);
+				Assert.AreEqual("This is <test> table function!", func.Description);
+				var param = func.Parameters.FirstOrDefault(p => p.ParameterName == "@id");
+				Assert.NotNull(param);
+				Assert.AreEqual("This is <test> table function parameter!", param.Description);
 			}
 		}
 	}
