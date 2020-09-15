@@ -1852,26 +1852,5 @@ AS
 				Assert.AreEqual("This is <test> scalar function parameter!", param.Description);
 			}
 		}
-
-		[Test]
-		public void TestDescriptionsSql2000([IncludeDataSources(false, ProviderName.SqlServer2000)] string context)
-		{
-			using (var db = new TestDataConnection(context))
-			{
-				var options = new GetSchemaOptions();
-				options.GetTables = false;
-
-				var schema = db.DataProvider
-					.GetSchemaProvider()
-					.GetSchema(db, options);
-
-				var func = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "GetParentByID");
-				Assert.NotNull(func);
-				Assert.AreEqual("This is <test> table function!", func.Description);
-				var param = func.Parameters.FirstOrDefault(p => p.ParameterName == "@id");
-				Assert.NotNull(param);
-				Assert.AreEqual("This is <test> table function parameter!", param.Description);
-			}
-		}
 	}
 }

@@ -690,7 +690,9 @@ CREATE TABLE Issue1144
 	CONSTRAINT PK_Issue1144 PRIMARY KEY CLUSTERED (id ASC)
 )
 GO
-
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Column description' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Issue1144', @level2type=N'COLUMN',@level2name=N'id'
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Index description' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Issue1144', @level2type=N'INDEX',@level2name=N'PK_Issue1144'
+GO
 DROP Procedure Issue1897
 GO
 
@@ -700,7 +702,21 @@ BEGIN
 	RETURN 4
 END
 GO
+DROP Procedure OutRefTest
+GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'This is <test> table function!', @level0type=N'SCHEMA', @level0name=N'dbo',  @level1type=N'FUNCTION', @level1name=N'GetParentByID'
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'This is <test> table function parameter!', @level0type=N'SCHEMA', @level0name=N'dbo',  @level1type=N'FUNCTION', @level1name=N'GetParentByID', @level2type=N'PARAMETER', @level2name=N'@id'
+CREATE Procedure OutRefTest
+	@ID             int,
+	@outputID       int output,
+	@inputOutputID  int output,
+	@str            varchar(50),
+	@outputStr      varchar(50) output,
+	@inputOutputStr varchar(50) output
+AS
+
+SET @outputID       = @ID
+SET @inputOutputID  = @ID + @inputOutputID
+SET @outputStr      = @str
+SET @inputOutputStr = @str + @inputOutputStr
+
 GO
