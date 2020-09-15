@@ -1583,7 +1583,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestIssue1144([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void TestIssue1144([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
