@@ -638,6 +638,26 @@ namespace LinqToDB.SqlQuery
 		}
 
 		/// <summary>
+		/// Unwraps SqlColumn and returns underlying expression.
+		/// </summary>
+		/// <param name="expression"></param>
+		/// <returns>Underlying expression.</returns>
+		public static ISqlExpression? GetUnderlyingExpression(ISqlExpression? expression)
+		{
+			var current = expression;
+			HashSet<ISqlExpression>? visited = null;
+			while (current?.ElementType == QueryElementType.Column)
+			{
+				visited ??= new HashSet<ISqlExpression>();
+				if (!visited.Add(current))
+					return null;
+				current = ((SqlColumn)current).Expression;
+			}
+
+			return current;
+		}
+
+		/// <summary>
 		/// Returns SqlField from specific expression. Usually from SqlColumn.
 		/// Complex expressions ignored.
 		/// </summary>
@@ -645,29 +665,7 @@ namespace LinqToDB.SqlQuery
 		/// <returns>Field instance associated with expression</returns>
 		public static SqlField? GetUnderlyingField(ISqlExpression expression)
 		{
-			return expression switch
-			{
-				SqlField field   => field,
-				SqlColumn column => GetUnderlyingField(column.Expression, new HashSet<ISqlExpression>()),
-				_                => null,
-			};
-		}
-
-		static SqlField? GetUnderlyingField(ISqlExpression expression, HashSet<ISqlExpression> visited)
-		{
-			switch (expression)
-			{
-				case SqlField field:
-					return field;
-				case SqlColumn column:
-				{
-					if (visited.Contains(column))
-						return null;
-					visited.Add(column);
-					return GetUnderlyingField(column.Expression, visited);
-				}
-			}
-			return null;
+			return GetUnderlyingExpression(expression) as SqlField;
 		}
 
 		public static SqlCondition GenerateEquality(ISqlExpression field1, ISqlExpression field2)

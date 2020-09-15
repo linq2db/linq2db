@@ -68,6 +68,7 @@ namespace LinqToDB.Linq.Builder
 				var expr   = Builder.BuildSql(typeof(bool), 0, sql);
 				var mapper = Builder.BuildMapper<object>(expr);
 
+				CompleteColumns();
 				QueryRunner.SetRunQuery(query, mapper);
 			}
 
