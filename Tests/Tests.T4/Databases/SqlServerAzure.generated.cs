@@ -80,6 +80,12 @@ namespace TestAzureSQL
 
 		#region GetParentByID
 
+		/// <summary>
+		/// This is &lt;test&gt; table function!
+		/// </summary>
+		/// <param name="@id">
+		/// This is &lt;test&gt; table function parameter!
+		/// </param>
 		[Sql.TableFunction(Schema="dbo", Name="GetParentByID")]
 		public ITable<Parent> GetParentByID(int? @id)
 		{
@@ -656,6 +662,54 @@ namespace TestAzureSQL
 
 		#endregion
 
+		#region ExecuteProcIntParameters
+
+		public static int ExecuteProcIntParameters(this Issue1733DB dataConnection, int? @input, ref int? @output)
+		{
+			var ret = dataConnection.ExecuteProc("[dbo].[ExecuteProcIntParameters]",
+				new DataParameter("@input",  @input,  DataType.Int32),
+				new DataParameter("@output", @output, DataType.Int32) { Direction = ParameterDirection.InputOutput });
+
+			@output = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@output"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region ExecuteProcStringParameters
+
+		/// <summary>
+		/// This is &lt;test&gt; procedure!
+		/// </summary>
+		/// <param name="@input">
+		/// This is &lt;test&gt; procedure parameter!
+		/// </param>
+		public static IEnumerable<ExecuteProcStringParametersResult> ExecuteProcStringParameters(this Issue1733DB dataConnection, int? @input, ref int? @output)
+		{
+			var ms = dataConnection.MappingSchema;
+
+			var ret = dataConnection.QueryProc(dataReader =>
+				new ExecuteProcStringParametersResult
+				{
+					Column1 = Converter.ChangeTypeTo<string>(dataReader.GetValue(0), ms),
+				},
+				"[dbo].[ExecuteProcStringParameters]",
+				new DataParameter("@input",  @input,  DataType.Int32),
+				new DataParameter("@output", @output, DataType.Int32) { Direction = ParameterDirection.InputOutput }).ToList();
+
+			@output = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@output"]).Value);
+
+			return ret;
+		}
+
+		public partial class ExecuteProcStringParametersResult
+		{
+			[Column("")] public string Column1 { get; set; } = null!;
+		}
+
+		#endregion
+
 		#region Issue1897
 
 		public static int Issue1897(this Issue1733DB dataConnection)
@@ -861,6 +915,42 @@ namespace TestAzureSQL
 
 		#endregion
 
+		#region QueryProcMultipleParameters
+
+		public static IEnumerable<Person> QueryProcMultipleParameters(this Issue1733DB dataConnection, int? @input, ref int? @output1, ref int? @output2, ref int? @output3)
+		{
+			var ret = dataConnection.QueryProc<Person>("[dbo].[QueryProcMultipleParameters]",
+				new DataParameter("@input",   @input,   DataType.Int32),
+				new DataParameter("@output1", @output1, DataType.Int32) { Direction = ParameterDirection.InputOutput },
+				new DataParameter("@output2", @output2, DataType.Int32) { Direction = ParameterDirection.InputOutput },
+				new DataParameter("@output3", @output3, DataType.Int32) { Direction = ParameterDirection.InputOutput }).ToList();
+
+			@output1 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@output1"]).Value);
+			@output2 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@output2"]).Value);
+			@output3 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@output3"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region QueryProcParameters
+
+		public static IEnumerable<Person> QueryProcParameters(this Issue1733DB dataConnection, int? @input, ref int? @output1, ref int? @output2)
+		{
+			var ret = dataConnection.QueryProc<Person>("[dbo].[QueryProcParameters]",
+				new DataParameter("@input",   @input,   DataType.Int32),
+				new DataParameter("@output1", @output1, DataType.Int32) { Direction = ParameterDirection.InputOutput },
+				new DataParameter("@output2", @output2, DataType.Int32) { Direction = ParameterDirection.InputOutput }).ToList();
+
+			@output1 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@output1"]).Value);
+			@output2 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@output2"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
 		#region SelectImplicitColumn
 
 		public static IEnumerable<SelectImplicitColumnResult> SelectImplicitColumn(this Issue1733DB dataConnection)
@@ -932,6 +1022,25 @@ namespace TestAzureSQL
 			public int    Code   { get; set; }
 			public string Value1 { get; set; } = null!;
 			public string Value2 { get; set; } = null!;
+		}
+
+		#endregion
+	}
+
+	public static partial class SqlFunctions
+	{
+		#region ScalarFunction
+
+		/// <summary>
+		/// This is &lt;test&gt; scalar function!
+		/// </summary>
+		/// <param name="@value">
+		/// This is &lt;test&gt; scalar function parameter!
+		/// </param>
+		[Sql.Function(Name="dbo.ScalarFunction", ServerSideOnly=true)]
+		public static int? ScalarFunction(int? @value)
+		{
+			throw new InvalidOperationException();
 		}
 
 		#endregion

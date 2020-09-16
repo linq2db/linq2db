@@ -271,6 +271,7 @@ void LoadServerMetadata(DataConnection dataConnection)
 				IsTableFunction     = p.IsTableFunction,
 				IsAggregateFunction = p.IsAggregateFunction,
 				IsDefaultSchema     = p.IsDefaultSchema,
+				Description         = p.Description,
 				IsLoaded            = p.IsLoaded,
 				ResultTable         = p.ResultTable == null ? null :
 					new Table
@@ -318,7 +319,8 @@ void LoadServerMetadata(DataConnection dataConnection)
 						ParameterType = pr.ParameterType,
 						SystemType    = pr.SystemType,
 						DataType      = pr.DataType.ToString(),
-						IsNullable    = pr.IsNullable
+						IsNullable    = pr.IsNullable,
+						Description   = pr.Description,
 					})
 					.ToList(),
 			}
@@ -833,6 +835,7 @@ public partial class Procedure : Method
 	public bool   IsAggregateFunction { get; set; }
 	public bool   IsDefaultSchema     { get; set; }
 	public bool   IsLoaded            { get; set; }
+	public string Description         { get; set; }
 
 	public Table           ResultTable     { get; set; }
 	public Exception       ResultException { get; set; }
@@ -854,6 +857,7 @@ public class Parameter
 	public bool     IsNullable    { get; set; }
 	public Type     SystemType    { get; set; }
 	public string   DataType      { get; set; }
+	public string   Description   { get; set; }
 
 	public ModelType Type => new ModelType(ParameterType, !IsValueType(ParameterType), IsNullable);
 }
