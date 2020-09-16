@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 
 #if NET46
@@ -14,6 +15,7 @@ using System.ServiceModel.Description;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.Expressions;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.Reflection;
@@ -1035,6 +1037,41 @@ namespace Tests
 					Debug.WriteLine("{0} {1} --- {2}", Equals(expectedList[i], resultList[i]) ? " " : "-", expectedList[i], resultList[i]);
 
 			Assert.IsTrue(b);
+		}
+
+		public T[] AssertQuery<T>(IQueryable<T> query)
+		{
+			var expr = query.Expression;
+
+			var newExpr = expr.Transform(e =>
+			{
+				if (e.NodeType == ExpressionType.Call)
+				{
+					var mc = (MethodCallExpression)e;
+					if (mc.IsSameGenericMethod(Methods.LinqToDB.GetTable))
+					{
+						var newCall = LinqToDB.Common.TypeHelper.MakeMethodCall(Methods.Queryable.ToArray, mc);
+						newCall     = LinqToDB.Common.TypeHelper.MakeMethodCall(Methods.Enumerable.AsQueryable, newCall);
+						return newCall;
+					}
+				}
+
+				return e;
+			})!;
+
+
+			var actual = query.ToArray();
+
+			var empty = LinqToDB.Common.Tools.CreateEmptyQuery<T>();
+			T[]? expected;
+			using (new DisableLogging())
+			{
+				expected = empty.Provider.CreateQuery<T>(newExpr).ToArray();
+			}
+
+			AreEqual(expected, actual, ComparerBuilder.GetEqualityComparer<T>());
+
+			return actual;
 		}
 
 		protected void CompareSql(string expected, string result)

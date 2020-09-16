@@ -273,6 +273,10 @@ namespace LinqToDB.Linq.Builder
 				: base(parent, lambda, outerContext, innerContext)
 			{
 			}
+
+			public override void CompleteColumns()
+			{
+			}
 		}
 
 		internal class GroupJoinContext : JoinContext

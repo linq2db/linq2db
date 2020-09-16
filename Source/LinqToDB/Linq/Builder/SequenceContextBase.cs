@@ -60,6 +60,14 @@ namespace LinqToDB.Linq.Builder
 			return Sequence.GetResultStatement();
 		}
 
+		public void CompleteColumns()
+		{
+			foreach (var sequence in Sequences)
+			{
+				sequence.CompleteColumns();
+			}
+		}
+
 		public virtual int ConvertToParentIndex(int index, IBuildContext context)
 		{
 			return Parent?.ConvertToParentIndex(index, context) ?? index;

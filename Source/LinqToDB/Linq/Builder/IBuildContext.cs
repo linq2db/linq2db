@@ -82,5 +82,6 @@ namespace LinqToDB.Linq.Builder
 		ISqlExpression?    GetSubQuery         (IBuildContext context);
 
 		SqlStatement       GetResultStatement();
+		void               CompleteColumns();
 	}
 }

@@ -242,6 +242,10 @@ namespace LinqToDB.Linq.Builder
 			{
 				throw new NotImplementedException();
 			}
+
+			public void CompleteColumns()
+			{
+			}
 		}
 	}
 }

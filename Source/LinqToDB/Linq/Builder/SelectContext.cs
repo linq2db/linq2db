@@ -1014,6 +1014,29 @@ namespace LinqToDB.Linq.Builder
 			return Statement ??= new SqlSelectStatement(SelectQuery);
 		}
 
+		public virtual void CompleteColumns()
+		{
+			if (SelectQuery.Select.Columns.Count == 0)
+			{
+				var sql = ConvertToSql(null, 0, ConvertFlags.All);
+				if (sql.Length > 0)
+				{
+					// Handling case when all columns are aggregates, it cause query to produce only single record and we have to include at least one aggregation in Select statement.
+					// 
+					var allAggregate = sql.All(s => QueryHelper.IsAggregationFunction(s.Sql));
+					if (allAggregate)
+					{
+						SelectQuery.Select.Add(sql[0].Sql);
+					}
+				}
+			}
+
+			foreach (var sequence in Sequence)
+			{
+				sequence.CompleteColumns();
+			}
+		}
+
 		#region Helpers
 
 		T ProcessScalar<T>(Expression expression, int level, Func<IBuildContext?,Expression?,int,T> action, Func<T> defaultAction, bool throwOnError)

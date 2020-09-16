@@ -349,7 +349,7 @@ namespace LinqToDB.Linq.Builder
 									if (mc.IsQueryable(false))
 									{
 										replaceExpr = Expression.Call(
-											Methods.Queryable.AsQueryable.MakeGenericMethod(subElementType), replaceExpr);
+											Methods.Enumerable.AsQueryable.MakeGenericMethod(subElementType), replaceExpr);
 									}
 									return new TransformInfo(replaceExpr, true);
 								}
@@ -363,7 +363,7 @@ namespace LinqToDB.Linq.Builder
 									if (typeof(IQueryable<>).IsSameOrParentOf(mc.Method.GetParameters()[0].ParameterType))
 									{
 										replaceExpr = Expression.Call(
-											Methods.Queryable.AsQueryable.MakeGenericMethod(subElementType), replaceExpr);
+											Methods.Enumerable.AsQueryable.MakeGenericMethod(subElementType), replaceExpr);
 									}
 									var newMethod       = mc.Update(mc.Object, new[]{replaceExpr}.Concat(mc.Arguments.Skip(1)));
 									return new TransformInfo(newMethod, true);
@@ -448,7 +448,7 @@ namespace LinqToDB.Linq.Builder
 				result = expression;
 				if (!typeof(IQueryable<>).IsSameOrParentOf(result.Type))
 				{
-					result = Expression.Call(Methods.Queryable.AsQueryable.MakeGenericMethod(elementType),
+					result = Expression.Call(Methods.Enumerable.AsQueryable.MakeGenericMethod(elementType),
 						expression);
 				}
 
