@@ -8,7 +8,7 @@ using LinqToDB.Mapping;
 using NpgsqlTypes;
 using NUnit.Framework;
 
-namespace Tests.Playground
+namespace Tests.Linq
 {
 	[TestFixture]
 	public class QueryFilterTests : TestBase

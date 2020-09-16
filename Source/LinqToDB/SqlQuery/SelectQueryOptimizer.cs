@@ -11,10 +11,10 @@ namespace LinqToDB.SqlQuery
 	{
 		public SelectQueryOptimizer(SqlProviderFlags flags, IQueryElement rootElement, SelectQuery selectQuery, int level, params IQueryElement[] dependencies)
 		{
-			_flags       = flags;
-			_selectQuery = selectQuery;
+			_flags        = flags;
+			_selectQuery  = selectQuery;
 			_rootElement  = rootElement;
-			_level       = level;
+			_level        = level;
 			_dependencies = dependencies;
 		}
 

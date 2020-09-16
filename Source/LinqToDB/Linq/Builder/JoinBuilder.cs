@@ -473,11 +473,6 @@ namespace LinqToDB.Linq.Builder
 			{
 			}
 
-			public override int ConvertToParentIndex(int index, IBuildContext context)
-			{
-				return GroupJoin!.ConvertToParentIndex(index, context);
-			}
-
 			public override IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
 				if (expression == null)

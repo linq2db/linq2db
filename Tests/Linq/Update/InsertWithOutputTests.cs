@@ -8,7 +8,7 @@ using NUnit.Framework;
 using Tests.Model;
 using LinqToDB.Tools.Comparers;
 
-namespace Tests.Playground
+namespace Tests.xUpdate
 {
 	[TestFixture]
 	public class InsertWithOutputTests : TestBase
