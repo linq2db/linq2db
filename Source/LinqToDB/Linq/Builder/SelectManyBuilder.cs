@@ -304,6 +304,13 @@ namespace LinqToDB.Linq.Builder
 
 				return base.IsExpression(expression, level, requestFlag);
 			}
+
+			public override void CompleteColumns()
+			{
+				base.CompleteColumns();
+
+				Collection?.CompleteColumns();
+			}
 		}
 	}
 }

@@ -479,21 +479,42 @@ namespace LinqToDB.Linq.Builder
 											default                  : return new TransformInfo(e);
 										}
 
-										var ex     = (BinaryExpression)ma.Expression;
-										var method = MemberHelper.MethodOf(
-											() => Sql.DateDiff(Sql.DateParts.Day, DateTime.MinValue, DateTime.MinValue));
+										var ex = (BinaryExpression)ma.Expression;
+										if (ex.Left.Type == typeof(DateTime)
+											&& ex.Right.Type == typeof(DateTime))
+										{
+											var method = MemberHelper.MethodOf(
+												() => Sql.DateDiff(Sql.DateParts.Day, DateTime.MinValue, DateTime.MinValue));
 
-										var call   =
-											Expression.Convert(
-												Expression.Call(
-													null,
-													method,
-													Expression.Constant(datePart),
-													Expression.Convert(ex.Right, typeof(DateTime?)),
-													Expression.Convert(ex.Left,  typeof(DateTime?))),
-												typeof(double));
+											var call   =
+												Expression.Convert(
+													Expression.Call(
+														null,
+														method,
+														Expression.Constant(datePart),
+														Expression.Convert(ex.Right, typeof(DateTime?)),
+														Expression.Convert(ex.Left,  typeof(DateTime?))),
+													typeof(double));
 
-										return new TransformInfo(ConvertExpression(call));
+											return new TransformInfo(ConvertExpression(call));
+										}
+										else
+										{
+											var method = MemberHelper.MethodOf(
+												() => Sql.DateDiff(Sql.DateParts.Day, DateTimeOffset.MinValue, DateTimeOffset.MinValue));
+
+											var call   =
+												Expression.Convert(
+													Expression.Call(
+														null,
+														method,
+														Expression.Constant(datePart),
+														Expression.Convert(ex.Right, typeof(DateTimeOffset?)),
+														Expression.Convert(ex.Left,  typeof(DateTimeOffset?))),
+													typeof(double));
+
+											return new TransformInfo(ConvertExpression(call));
+										}
 								}
 							}
 

@@ -106,6 +106,23 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void CurrentTzTimestamp(
+			[IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)]
+			string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var dbTzNow = db.Select(() => Sql.CurrentTzTimestamp);
+
+				var now   = DateTimeOffset.Now;
+				var delta = now - dbTzNow;
+				Assert.IsTrue(
+					delta.Between(TimeSpan.FromSeconds(-120), TimeSpan.FromSeconds(120)),
+					$"{now}, {dbTzNow}, {delta}");
+			}
+		}
+
+		[Test]
 		public void CurrentTimestampUtcClientSideParameter(
 			[IncludeDataSources(true, TestProvName.AllAccess, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SqlCe)]
 			string context)

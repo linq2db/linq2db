@@ -119,6 +119,7 @@ namespace LinqToDB.Linq.Builder
 				var expr   = BuildExpression(FieldIndex, Sql);
 				var mapper = Builder.BuildMapper<object>(expr);
 
+				CompleteColumns();
 				QueryRunner.SetRunQuery(query, mapper);
 			}
 

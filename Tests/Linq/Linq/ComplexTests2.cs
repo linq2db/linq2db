@@ -7,7 +7,7 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
-namespace Tests.ComplexTests2
+namespace Tests.Linq
 {
 	using Model;
 

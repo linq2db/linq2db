@@ -276,9 +276,13 @@ namespace LinqToDB.DataProvider.SqlServer
 					CASE WHEN ROUTINE_TYPE = 'FUNCTION' AND DATA_TYPE = 'TABLE' THEN 1 ELSE 0 END           as IsTableFunction,
 					CASE WHEN EXISTS(SELECT * FROM sys.objects where name = SPECIFIC_NAME AND type='AF')
 					                                                            THEN 1 ELSE 0 END           as IsAggregateFunction,
-					CASE WHEN SPECIFIC_SCHEMA = 'dbo'                           THEN 1 ELSE 0 END           as IsDefaultSchema
+					CASE WHEN SPECIFIC_SCHEMA = 'dbo'                           THEN 1 ELSE 0 END           as IsDefaultSchema,
+					ISNULL(CONVERT(varchar(8000), x.Value), '')                                             as Description
 				FROM
-					INFORMATION_SCHEMA.ROUTINES"
+					INFORMATION_SCHEMA.ROUTINES
+					LEFT JOIN SYS.EXTENDED_PROPERTIES x
+						ON OBJECT_ID('[' + SPECIFIC_SCHEMA + '].[' + SPECIFIC_NAME + ']') = x.major_id AND
+							x.name = 'MS_Description' AND x.class = 1"
 				: @"SELECT
 					SPECIFIC_CATALOG + '.' + SPECIFIC_SCHEMA + '.' + SPECIFIC_NAME                          as ProcedureID,
 					SPECIFIC_CATALOG                                                                        as CatalogName,
@@ -288,9 +292,13 @@ namespace LinqToDB.DataProvider.SqlServer
 					CASE WHEN ROUTINE_TYPE = 'FUNCTION' AND DATA_TYPE = 'TABLE' THEN 1 ELSE 0 END           as IsTableFunction,
 					CASE WHEN EXISTS(SELECT * FROM sys.objects where name = SPECIFIC_NAME AND type='AF')
 					                                                            THEN 1 ELSE 0 END           as IsAggregateFunction,
-					CASE WHEN SPECIFIC_SCHEMA = 'dbo'                           THEN 1 ELSE 0 END           as IsDefaultSchema
+					CASE WHEN SPECIFIC_SCHEMA = 'dbo'                           THEN 1 ELSE 0 END           as IsDefaultSchema,
+					ISNULL(CONVERT(varchar(8000), x.Value), '')                                             as Description
 				FROM
-					INFORMATION_SCHEMA.ROUTINES")
+					INFORMATION_SCHEMA.ROUTINES
+					LEFT JOIN SYS.EXTENDED_PROPERTIES x
+						ON OBJECT_ID('[' + SPECIFIC_SCHEMA + '].[' + SPECIFIC_NAME + ']') = x.major_id AND
+							x.name = 'MS_Description' AND x.class = 1")
 				.ToList();
 		}
 
@@ -313,9 +321,14 @@ namespace LinqToDB.DataProvider.SqlServer
 					USER_DEFINED_TYPE_CATALOG                                                               as UDTCatalog,
 					USER_DEFINED_TYPE_SCHEMA                                                                as UDTSchema,
 					USER_DEFINED_TYPE_NAME                                                                  as UDTName,
-					1                                                                                       as IsNullable
+					1                                                                                       as IsNullable,
+					ISNULL(CONVERT(varchar(8000), x.Value), '')                                             as Description
 				FROM
-					INFORMATION_SCHEMA.PARAMETERS"
+					INFORMATION_SCHEMA.PARAMETERS
+					LEFT JOIN SYS.EXTENDED_PROPERTIES x
+						ON OBJECT_ID('[' + SPECIFIC_SCHEMA + '].[' + SPECIFIC_NAME + ']') = x.major_id AND
+							ORDINAL_POSITION = x.minor_id AND
+							x.name = 'MS_Description' AND x.class = 2"
 				: @"SELECT
 					SPECIFIC_CATALOG + '.' + SPECIFIC_SCHEMA + '.' + SPECIFIC_NAME                          as ProcedureID,
 					ORDINAL_POSITION                                                                        as Ordinal,
@@ -331,9 +344,14 @@ namespace LinqToDB.DataProvider.SqlServer
 					USER_DEFINED_TYPE_CATALOG                                                               as UDTCatalog,
 					USER_DEFINED_TYPE_SCHEMA                                                                as UDTSchema,
 					USER_DEFINED_TYPE_NAME                                                                  as UDTName,
-					1                                                                                       as IsNullable
+					1                                                                                       as IsNullable,
+					ISNULL(CONVERT(varchar(8000), x.Value), '')                                             as Description
 				FROM
-					INFORMATION_SCHEMA.PARAMETERS")
+					INFORMATION_SCHEMA.PARAMETERS
+					LEFT JOIN SYS.EXTENDED_PROPERTIES x
+						ON OBJECT_ID('[' + SPECIFIC_SCHEMA + '].[' + SPECIFIC_NAME + ']') = x.major_id AND
+							ORDINAL_POSITION = x.minor_id AND
+							x.name = 'MS_Description' AND x.class = 2")
 				.ToList();
 		}
 

@@ -1091,16 +1091,16 @@ namespace Tests.DataProvider
 				if (column.MemberName == "timestampDataType")
 					continue;
 
-				if (actualValue is SqlGeometry)
+				if (actualValue is SqlGeometry geometry)
 				{
-					Assert.That(actualValue == null  || ((SqlGeometry) actualValue).IsNull ? null : actualValue.ToString(),
-						Is.EqualTo(testValue == null || ((SqlGeometry) testValue).IsNull   ? null : testValue.ToString()),
+					Assert.That(actualValue == null  || geometry.IsNull                  ? null : actualValue.ToString(),
+						Is.EqualTo(testValue == null || ((SqlGeometry) testValue).IsNull ? null : testValue.ToString()),
 						"Column  : {0}", column.MemberName);
 				}
-				else if (actualValue is SqlGeography)
+				else if (actualValue is SqlGeography geography)
 				{
-					Assert.That(actualValue == null  || ((SqlGeography) actualValue).IsNull ? null : actualValue.ToString(),
-						Is.EqualTo(testValue == null || ((SqlGeography) testValue).IsNull   ? null : testValue.ToString()),
+					Assert.That(actualValue == null  || geography.IsNull                  ? null : actualValue.ToString(),
+						Is.EqualTo(testValue == null || ((SqlGeography) testValue).IsNull ? null : testValue.ToString()),
 						"Column  : {0}", column.MemberName);
 				}
 				else
@@ -1583,7 +1583,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestIssue1144([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void TestIssue1144([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
@@ -1794,6 +1794,62 @@ AS
 				{
 					return db.GetTable<Issue1294Table>(this, methodInfo, p1, p2);
 				}
+			}
+		}
+
+		[Test]
+		[ActiveIssue(1468)]
+		public void Issue1468Test([IncludeDataSources(false, TestProvName.AllSqlServer)] string context, [Values] bool useFmtOnly)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				var options = new GetSchemaOptions();
+				options.GetTables     = false;
+				options.UseSchemaOnly = useFmtOnly;
+
+				var schema = db.DataProvider
+					.GetSchemaProvider()
+					.GetSchema(db, options);
+
+				var proc = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "PersonSearch");
+				Assert.NotNull(proc);
+				Assert.False(proc.IsFunction);
+				Assert.IsNull(proc.ResultException);
+			}
+		}
+
+		[Test]
+		public void TestDescriptions([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				var options = new GetSchemaOptions();
+				options.GetTables = false;
+
+				var schema = db.DataProvider
+					.GetSchemaProvider()
+					.GetSchema(db, options);
+
+				var proc = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "ExecuteProcStringParameters");
+				Assert.NotNull(proc);
+				Assert.AreEqual("This is <test> procedure!", proc.Description);
+				var param = proc.Parameters.FirstOrDefault(p => p.ParameterName == "@input");
+				Assert.NotNull(param);
+				Assert.AreEqual("This is <test> procedure parameter!", param.Description);
+
+				var func = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "GetParentByID");
+				Assert.NotNull(func);
+				Assert.AreEqual("This is <test> table function!", func.Description);
+				param = func.Parameters.FirstOrDefault(p => p.ParameterName == "@id");
+				Assert.NotNull(param);
+				Assert.AreEqual("This is <test> table function parameter!", param.Description);
+
+				func = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "ScalarFunction");
+				Assert.NotNull(func);
+				Assert.AreEqual("This is <test> scalar function!", func.Description);
+				param = func.Parameters.FirstOrDefault(p => p.ParameterName == "@value");
+				Assert.NotNull(param);
+				Assert.AreEqual("This is <test> scalar function parameter!", param.Description);
 			}
 		}
 	}

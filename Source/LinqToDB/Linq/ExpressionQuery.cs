@@ -6,7 +6,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-
 using JetBrains.Annotations;
 
 namespace LinqToDB.Linq
@@ -15,7 +14,6 @@ namespace LinqToDB.Linq
 	using Async;
 	using Extensions;
 	using Data;
-	using LinqToDB.Common.Internal;
 
 	abstract class ExpressionQuery<T> : IExpressionQuery<T>, IAsyncEnumerable<T>
 	{
@@ -89,41 +87,68 @@ namespace LinqToDB.Linq
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			return (TResult)value!;
-		}
+			}
 		}
 
 		DataConnectionTransaction? StartLoadTransaction(Query query)
 		{
+			// Do not start implicit transaction if there is no preambles
+			//
 			if (!query.IsAnyPreambles())
 				return null;
 
-			DataConnection? dc = null;
-			if (DataContext is DataConnection dataConnection)
-				dc = dataConnection;
-			else if (DataContext is DataContext dataContext)
-				dc = dataContext.GetDataConnection();
-
-			if (dc == null || dc.TransactionAsync != null)
+			var dc = DataContext switch
+			{
+				DataConnection dataConnection => dataConnection,
+				DataContext    dataContext    => dataContext.GetDataConnection(),
+				_                             => null
+			};
+		
+			if (dc == null)
 				return null;
 
-			return dc.BeginTransaction(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel);
+			// transaction will be maintained by TransactionScope
+			//
+			if (TransactionScopeHelper.IsInsideTransactionScope)
+				return null;
+		
+			dc.EnsureConnection();
+
+			if (dc.TransactionAsync != null || dc.Command.Transaction != null)
+				return null;
+		
+			return dc!.BeginTransaction(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel);
 		}
 
-		Task<DataConnectionTransaction?> StartLoadTransactionAsync(Query query, CancellationToken cancellationToken)
+		async Task<DataConnectionTransaction?> StartLoadTransactionAsync(Query query, CancellationToken cancellationToken)
 		{
+			// Do not start implicit transaction if there is no preambles
+			//
 			if (!query.IsAnyPreambles())
-				return TaskCache.CompletedTransaction;
+				return null;
 
-			DataConnection? dc = null;
-			if (DataContext is DataConnection dataConnection)
-				dc = dataConnection;
-			else if (DataContext is DataContext dataContext)
-				dc = dataContext.GetDataConnection();
+			var dc = DataContext switch
+			{
+				DataConnection dataConnection => dataConnection,
+				DataContext    dataContext    => dataContext.GetDataConnection(),
+				_                             => null
+			};
+		
+			if (dc == null)
+				return null;
 
-			if (dc == null || dc.TransactionAsync != null)
-				return TaskCache.CompletedTransaction;
+			// transaction will be maintained by TransactionScope
+			//
+			if (TransactionScopeHelper.IsInsideTransactionScope)
+				return null;
+		
+			await dc.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-			return dc.BeginTransactionAsync(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel, cancellationToken)!;
+			if (dc.TransactionAsync != null || dc.Command.Transaction != null)
+				return null;
+		
+			return await dc!.BeginTransactionAsync(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel, cancellationToken)!
+				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
 		async Task<IAsyncEnumerable<TResult>> IQueryProviderAsync.ExecuteAsyncEnumerable<TResult>(Expression expression, CancellationToken cancellationToken)

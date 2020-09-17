@@ -351,10 +351,11 @@ namespace LinqToDB.Linq.Builder
 
 					if (Builder.IsSequence(buildInfo))
 					{
+						var saveParent    = Parent;
 						var expressionCtx = new ExpressionContext(Parent, this, selectorLambda);
 						buildInfo         = new BuildInfo(expressionCtx, selectorLambda.Body, new SelectQuery());
 						context           = Builder.BuildSequence(buildInfo);
-						Builder.ReplaceParent(expressionCtx, this);
+						Builder.ReplaceParent(expressionCtx, saveParent);
 					}
 					else
 					{
@@ -1218,6 +1219,10 @@ namespace LinqToDB.Linq.Builder
 			public virtual SqlStatement GetResultStatement()
 			{
 				return Statement ??= new SqlSelectStatement(SelectQuery);
+			}
+
+			public void CompleteColumns()
+			{
 			}
 
 			#endregion
