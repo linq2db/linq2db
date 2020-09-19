@@ -11,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using JetBrains.Annotations;
+using LinqToDB.Common.Internal.Cache;
 
 namespace LinqToDB.Data
 {
@@ -1587,6 +1588,8 @@ namespace LinqToDB.Data
 		/// Gets list of query hints (writable collection), that will be used only for next query, executed through current connection.
 		/// </summary>
 		public  List<string>  NextQueryHints => _nextQueryHints ??= new List<string>();
+		
+		private static readonly MemoryCache _combinedSchemas = new MemoryCache(new MemoryCacheOptions(){});
 
 		/// <summary>
 		/// Adds additional mapping schema to current connection.
@@ -1595,7 +1598,13 @@ namespace LinqToDB.Data
 		/// <returns>Current connection object.</returns>
 		public DataConnection AddMappingSchema(MappingSchema mappingSchema)
 		{
-			MappingSchema = new MappingSchema(mappingSchema, MappingSchema);
+			var key = new { BaseSchema = MappingSchema.ConfigurationID, AddedSchema = mappingSchema.ConfigurationID };
+			MappingSchema = _combinedSchemas.GetOrCreate(key, 
+				o => 
+				{
+					o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+					return new MappingSchema(mappingSchema, MappingSchema);
+				});
 			_id            = null;
 
 			return this;
