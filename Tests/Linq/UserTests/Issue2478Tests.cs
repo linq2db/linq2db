@@ -117,6 +117,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue]
 		[Test]
 		public void ExistsRemoval([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context, [Values] bool shouldFilter, [Values] bool isPositive)
 		{
