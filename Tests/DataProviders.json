@@ -21,7 +21,7 @@
 //
 
 {
-	"NET46": {
+	"NET472": {
 		"BasedOn": "LocalConnectionStrings",
 		"DefaultConfiguration": "SQLite.Classic",
 		"Providers": [
@@ -58,7 +58,7 @@
 		]
 	},
 
-	"NET46.Azure": {
+	"NET472.Azure": {
 		"BasedOn": "AzureConnectionStrings",
 		"DefaultConfiguration": "SQLite.Classic",
 		"TraceLevel": "Info"

@@ -602,7 +602,7 @@ namespace Tests.DataProvider
 					expectedVersion = "3.32.1";
 					break;
 				case ProviderName.SQLiteMS:
-#if NET46
+#if NET472
 					expectedVersion = "3.13.0";
 #else
 					expectedVersion = "3.28.0";

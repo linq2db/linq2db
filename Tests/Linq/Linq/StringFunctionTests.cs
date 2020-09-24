@@ -1,6 +1,6 @@
 ﻿using System;
 
-#if NET46
+#if NET472
 using System.Data.Linq.SqlClient;
 #else
 using System.Data;
@@ -301,7 +301,7 @@ namespace Tests.Linq
 			}
 		}
 
-#if NET46
+#if NET472
 		[Test]
 		public void Like11([DataSources] string context)
 		{

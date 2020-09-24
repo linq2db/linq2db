@@ -22,7 +22,7 @@ public class TestsInitialization
 		RegisterSapHanaFactory();
 		RegisterSqlCEFactory();
 
-#if NET46 && !AZURE
+#if NET472 && !AZURE
 		// configure assembly redirect for referenced assemblies to use version from GAC
 		// this solves exception from provider-specific tests, when it tries to load version from redist folder
 		// but loaded from GAC assembly has other version
@@ -43,13 +43,13 @@ public class TestsInitialization
 #endif
 
 		// register test providers
-		TestNoopProvider          .Init();
+		TestNoopProvider.Init();
 		SQLiteMiniprofilerProvider.Init();
 	}
 
 	private void RegisterSapHanaFactory()
 	{
-#if !NET46
+#if !NET472
 		try
 		{
 			// woo-hoo, hardcoded pathes! default install location on x64 system
@@ -70,7 +70,7 @@ public class TestsInitialization
 
 	private void RegisterSqlCEFactory()
 	{
-#if !NET46
+#if !NET472
 		try
 		{
 			// default install pathes. Hardcoded for now as hardly anyone will need other location in near future

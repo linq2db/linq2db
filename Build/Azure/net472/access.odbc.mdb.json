@@ -1,5 +1,5 @@
 ﻿{
-	"NET46.Azure": {
+	"NET472.Azure": {
 		"Providers": [
 			"Access.Odbc"
 		],

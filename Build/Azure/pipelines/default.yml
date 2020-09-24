@@ -8,8 +8,7 @@ variables:
   artifact_linq2db_binaries: 'linq2db_binaries'
   artifact_linq2db_tools_binaries: 'linq2db_tools_binaries'
   artifact_linq2db_aspnet_binaries: 'linq2db_aspnet_binaries'
-#  netfx45_tests: 'netfx45_tests' # maybe later
-  netfx46_tests: 'netfx46_tests'
+  netfx472_tests: 'netfx472_tests'
   netcore21_tests: 'netcoreapp21_tests'
   netcore31_tests: 'netcoreapp31_tests'
 
@@ -77,10 +76,10 @@ stages:
 
     - task: CopyFiles@2
       inputs:
-        targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net46'
+        targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net472'
         sourceFolder: '$(Build.SourcesDirectory)/Tests'
         contents: 'DataProviders.json'
-      displayName: Copy test settings for NETFX46
+      displayName: Copy test settings for NETFX472
 
     - task: CopyFiles@2
       inputs:
@@ -98,9 +97,9 @@ stages:
 
     - task: CopyFiles@2
       inputs:
-        targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net46/configs'
-        sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/net46'
-      displayName: Copy test configs for NETFX46
+        targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net472/configs'
+        sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/net472'
+      displayName: Copy test configs for NETFX472
 
     - task: CopyFiles@2
       inputs:
@@ -133,15 +132,15 @@ stages:
 
     - task: CopyFiles@2
       inputs:
-        targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net46/scripts'
+        targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net472/scripts'
         sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/scripts'
-      displayName: Copy test scripts for NETFX46
+      displayName: Copy test scripts for NETFX472
 
     - task: PublishPipelineArtifact@1
       inputs:
-        path: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net46'
-        artifact: '$(netfx46_tests)'
-      displayName: Publish test artifacts for NETFX46
+        path: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net472'
+        artifact: '$(netfx472_tests)'
+      displayName: Publish test artifacts for NETFX472
 
     - task: PublishPipelineArtifact@1
       inputs:
@@ -208,8 +207,8 @@ stages:
 
     - task: DownloadPipelineArtifact@2
       inputs:
-        artifactName: '$(netfx46_tests)'
-        targetPath: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net46'
+        artifactName: '$(netfx472_tests)'
+        targetPath: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net472'
 
     - task: PowerShell@2
       inputs:
@@ -250,13 +249,13 @@ stages:
       condition: and(succeeded(), eq(variables['Build.SourceBranchName'], 'release'))
 
 ##############################################################################################
-#  Tests: Windows (NETFX 4.6)                                                                #
+#  Tests: Windows (NETFX 4.7.2)                                                              #
 #  Windows 2019 (for Win2019 docker images, chocolatey-dependent tests and non-docker tests) #
 ##############################################################################################
-  - job: test_win_netfx46_job_2019
+  - job: test_win_netfx472_job_2019
     pool:
       vmImage: 'windows-2019'
-    displayName: 'Tests: Win / NETFX 4.6 / '
+    displayName: 'Tests: Win / NETFX 4.7.2 / '
     dependsOn: build_job
 #    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
     condition: eq(variables['System.PullRequest.TargetBranch'], 'release')
@@ -309,12 +308,12 @@ stages:
 
     - task: DownloadPipelineArtifact@2
       inputs:
-        artifactName: '$(netfx46_tests)'
+        artifactName: '$(netfx472_tests)'
         targetPath: '$(System.DefaultWorkingDirectory)'
 
     - task: DownloadPipelineArtifact@2
       inputs:
-        artifactName: '$(netfx46_tests)'
+        artifactName: '$(netfx472_tests)'
         targetPath: '$(System.DefaultWorkingDirectory)'
 
     - task: CmdLine@2
@@ -343,18 +342,18 @@ stages:
         platform: '$(buildPlatform)'
         configuration: '$(buildConfiguration)'
         testFiltercriteria: 'TestCategory != SkipCI'
-        otherConsoleOptions: '/Framework:.NETFramework,Version=v4.6'
-        testRunTitle: 'Windows / NET46 / $(title)'
+        otherConsoleOptions: '/Framework:.NETFramework,Version=v4.7.2'
+        testRunTitle: 'Windows / NET472 / $(title)'
       displayName: '$(title)'
 
 #############################################
-#  Tests: Windows (NETFX 4.6)               #
+#  Tests: Windows (NETFX 4.7.2)             #
 #  Windows 2016 (for Win2016 docker images) #
 #############################################
-  - job: test_win_netfx46_job_2016
+  - job: test_win_netfx472_job_2016
     pool:
       vmImage: 'vs2017-win2016'
-    displayName: 'Tests: Win / NETFX 4.6 / '
+    displayName: 'Tests: Win / NETFX 4.7.2 / '
     dependsOn: build_job
 #    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
     condition: eq(variables['System.PullRequest.TargetBranch'], 'release')
@@ -415,12 +414,12 @@ stages:
 
     - task: DownloadPipelineArtifact@2
       inputs:
-        artifactName: '$(netfx46_tests)'
+        artifactName: '$(netfx472_tests)'
         targetPath: '$(System.DefaultWorkingDirectory)'
 
     - task: DownloadPipelineArtifact@2
       inputs:
-        artifactName: '$(netfx46_tests)'
+        artifactName: '$(netfx472_tests)'
         targetPath: '$(System.DefaultWorkingDirectory)'
 
     - task: CmdLine@2
@@ -449,8 +448,8 @@ stages:
         platform: '$(buildPlatform)'
         configuration: '$(buildConfiguration)'
         testFiltercriteria: 'TestCategory != SkipCI'
-        otherConsoleOptions: '/Framework:.NETFramework,Version=v4.6'
-        testRunTitle: 'Windows / NET46 / $(title)'
+        otherConsoleOptions: '/Framework:.NETFramework,Version=v4.7.2'
+        testRunTitle: 'Windows / NET472 / $(title)'
       displayName: '$(title)'
 
 ###################################
