@@ -172,14 +172,24 @@ namespace LinqToDB.Data
 					sql.IsParameterDependent = true;
 				}
 
-				var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
-
-				sql = dataConnection.DataProvider.GetSqlOptimizer().OptimizeStatement(sql, dataConnection.MappingSchema, dataConnection.InlineParameters, false);
+				var sqlBuilder   = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
+				var sqlOptimizer = dataConnection.DataProvider.GetSqlOptimizer();
 
 				var cc = sqlBuilder.CommandCount(sql);
 				var sb = new StringBuilder();
 
 				var commands = new string[cc];
+
+				if (!sql.IsParameterDependent)
+					sql.IsParameterDependent = sqlOptimizer.IsParameterDependent(sql);
+
+				// optimize, optionally with parameters
+				sql = sqlOptimizer.OptimizeStatement(sql, sql.IsParameterDependent);
+
+				// convert statement to be ready for Sql translation
+				sql = sqlOptimizer.ConvertStatement(dataConnection.MappingSchema, sql, sql.IsParameterDependent);
+
+				sql.PrepareQueryAndAliases();
 
 				for (var i = 0; i < cc; i++)
 				{

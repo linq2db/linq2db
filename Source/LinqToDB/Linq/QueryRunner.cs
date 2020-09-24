@@ -182,7 +182,7 @@ namespace LinqToDB.Linq
 		{
 			foreach (var sql in query.Queries)
 			{
-				sql.Statement = query.SqlOptimizer.Finalize(sql.Statement, query.InlineParameters);
+				sql.Statement = query.SqlOptimizer.Finalize(sql.Statement);
 
 				sql.Statement.PrepareQueryAndAliases();
 			}

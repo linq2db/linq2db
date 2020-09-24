@@ -10,9 +10,9 @@
 		{
 		}
 
-		public override ISqlExpression ConvertExpression(ISqlExpression expr, bool withParameters)
+		public override ISqlExpression ConvertExpression(ISqlExpression expr)
 		{
-			expr = base.ConvertExpression(expr, withParameters);
+			expr = base.ConvertExpression(expr);
 
 			if (expr is SqlFunction func)
 			{
@@ -26,8 +26,7 @@
 									ConvertExpression(new SqlFunction(typeof(string), "Substring",
 											func.Parameters[1],
 											func.Parameters[2],
-											new SqlFunction(typeof(int), "Len", func.Parameters[1])),
-										withParameters)), withParameters),
+											new SqlFunction(typeof(int), "Len", func.Parameters[1]))))),
 								Sub(func.Parameters[2], 1));
 						break;
 
@@ -51,6 +50,12 @@
 			}
 
 			return expr;
+		}
+
+		protected override ISqlExpression ConvertFunction(SqlFunction func)
+		{
+			func = ConvertFunctionParameters(func, false);
+			return base.ConvertFunction(func);
 		}
 	}
 }

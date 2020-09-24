@@ -121,12 +121,6 @@ namespace LinqToDB.DataProvider.Oracle
 			base.BuildSetOperation(operation, sb);
 		}
 
-		protected override void BuildFunction(SqlFunction func)
-		{
-			func = ConvertFunctionParameters(func);
-			base.BuildFunction(func);
-		}
-
 		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
 			switch (type.Type.DataType)

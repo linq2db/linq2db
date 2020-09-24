@@ -10,11 +10,11 @@
 		{
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement, bool inlineParameters)
+		public override SqlStatement Finalize(SqlStatement statement)
 		{
 			CheckAliases(statement, int.MaxValue);
 
-			return base.Finalize(statement, inlineParameters);
+			return base.Finalize(statement);
 		}
 
 		public override SqlStatement TransformStatement(SqlStatement statement)
@@ -27,9 +27,9 @@
 			};
 		}
 
-		public override ISqlExpression ConvertExpression(ISqlExpression expr, bool withParameters)
+		public override ISqlExpression ConvertExpression(ISqlExpression expr)
 		{
-			expr = base.ConvertExpression(expr, withParameters);
+			expr = base.ConvertExpression(expr);
 
 			if (expr is SqlBinaryExpression be)
 			{
@@ -46,7 +46,7 @@
 					case "Convert"   :
 						if (func.SystemType.ToUnderlying() == typeof(bool))
 						{
-							var ex = AlternativeConvertToBoolean(func, 1, withParameters);
+							var ex = AlternativeConvertToBoolean(func, 1);
 							if (ex != null)
 								return ex;
 						}
@@ -68,8 +68,7 @@
 										func.Parameters[2],
 										Sub<int>(
 											ConvertExpression(
-												new SqlFunction(typeof(int), "Length", func.Parameters[1]),
-												withParameters), func.Parameters[2])), withParameters)),
+												new SqlFunction(typeof(int), "Length", func.Parameters[1])), func.Parameters[2])))),
 								Sub(func.Parameters[2], 1));
 				}
 			}

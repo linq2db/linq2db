@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
@@ -7,9 +6,7 @@ using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
-	using Mapping;
 	using Common;
-	using LinqToDB.Extensions;
 
 	[DebuggerDisplay("SQL = {" + nameof(DebugSqlText) + "}")]
 	public abstract class SqlStatement: IQueryElement, ISqlExpressionWalkable, ICloneableElement
@@ -33,71 +30,6 @@ namespace LinqToDB.SqlQuery
 		/// </summary>
 		public SqlStatement? ParentStatement { get; set; }
 
-		public SqlStatement ProcessParameters(MappingSchema mappingSchema)
-		{
-			if (IsParameterDependent)
-			{
-				var statement = ConvertVisitor.ConvertAll(this, (v, e) =>
-				{
-					switch (e.ElementType)
-					{
-						case QueryElementType.SqlParameter :
-							{
-								var p = (SqlParameter)e;
-
-								if (p.Value == null)
-									return new SqlValue(p.Type, null);
-							}
-
-							break;
-
-						case QueryElementType.ExprExprPredicate :
-							{
-								var ee = (SqlPredicate.ExprExpr)e;
-
-								if (ee.Operator == SqlPredicate.Operator.Equal || ee.Operator == SqlPredicate.Operator.NotEqual)
-								{
-									object? value1;
-									object? value2;
-
-									if (ee.Expr1 is SqlValue v1)
-										value1 = v1.Value;
-									else if (ee.Expr1 is SqlParameter p1)
-										value1 = p1.Value;
-									else
-										break;
-
-									if (ee.Expr2 is SqlValue v2)
-										value2 = v2.Value;
-									else if (ee.Expr2 is SqlParameter p2)
-										value2 = p2.Value;
-									else
-										break;
-
-									var value = Equals(value1, value2);
-
-									if (ee.Operator == SqlPredicate.Operator.NotEqual)
-										value = !value;
-
-									return new SqlPredicate.Expr(new SqlValue(value), Precedence.Comparison);
-								}
-							}
-
-							break;
-
-						case QueryElementType.InListPredicate :
-							return ConvertInListPredicate(mappingSchema, (SqlPredicate.InList)e)!;
-					}
-
-					return e;
-				});
-
-				return statement;
-			}
-
-			return this;
-		}
-
 		public void CollectParameters()
 		{
 			var alreadyAdded = new HashSet<SqlParameter>();
@@ -117,139 +49,6 @@ namespace LinqToDB.SqlQuery
 					}
 				}
 			});
-		}
-
-		static SqlField GetUnderlyingField(ISqlExpression expr)
-		{
-			return expr.ElementType switch
-			{
-				QueryElementType.SqlField => (SqlField)expr,
-				QueryElementType.Column   => GetUnderlyingField(((SqlColumn)expr).Expression),
-				_                         => throw new InvalidOperationException(),
-			};
-		}
-
-		static SqlPredicate? ConvertInListPredicate(MappingSchema mappingSchema, SqlPredicate.InList p)
-		{
-			if (p.Values == null || p.Values.Count == 0)
-				return new SqlPredicate.Expr(new SqlValue(p.IsNot));
-
-			if (p.Values.Count == 1 && p.Values[0] is SqlParameter parameter)
-			{
-				var pr = parameter;
-
-				if (pr.Value == null)
-					return new SqlPredicate.Expr(new SqlValue(p.IsNot));
-
-				if (pr.Value is IEnumerable items)
-				{
-					if (p.Expr1 is ISqlTableSource table)
-					{
-						var keys  = table.GetKeys(true);
-
-						if (keys == null || keys.Count == 0)
-							throw new SqlException("Cant create IN expression.");
-
-						if (keys.Count == 1)
-						{
-							var values = new List<ISqlExpression>();
-							var field  = GetUnderlyingField(keys[0]);
-							var cd     = field.ColumnDescriptor;
-
-							foreach (var item in items)
-							{
-								var value = cd.MemberAccessor.GetValue(item!);
-								values.Add(mappingSchema.GetSqlValue(cd.MemberType, value));
-							}
-
-							if (values.Count == 0)
-								return new SqlPredicate.Expr(new SqlValue(p.IsNot));
-
-							return new SqlPredicate.InList(keys[0], p.IsNot, values);
-						}
-
-						{
-							var sc = new SqlSearchCondition();
-
-							foreach (var item in items)
-							{
-								var itemCond = new SqlSearchCondition();
-
-								foreach (var key in keys)
-								{
-									var field = GetUnderlyingField(key);
-									var cd    = field.ColumnDescriptor;
-									var value = cd.MemberAccessor.GetValue(item!);
-									var cond  = value == null ?
-										new SqlCondition(false, new SqlPredicate.IsNull  (field, false)) :
-										new SqlCondition(false, new SqlPredicate.ExprExpr(field, SqlPredicate.Operator.Equal, mappingSchema.GetSqlValue(value)));
-
-									itemCond.Conditions.Add(cond);
-								}
-
-								sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.Expr(itemCond), true));
-							}
-
-							if (sc.Conditions.Count == 0)
-								return new SqlPredicate.Expr(new SqlValue(p.IsNot));
-
-							if (p.IsNot)
-								return new SqlPredicate.NotExpr(sc, true, SqlQuery.Precedence.LogicalNegation);
-
-							return new SqlPredicate.Expr(sc, SqlQuery.Precedence.LogicalDisjunction);
-						}
-					}
-
-					if (p.Expr1 is ObjectSqlExpression expr)
-					{
-						if (expr.Parameters.Length == 1)
-						{
-							var values = new List<ISqlExpression>();
-
-							foreach (var item in items)
-							{
-								var value = expr.GetValue(item!, 0);
-								values.Add(new SqlValue(value));
-							}
-
-							if (values.Count == 0)
-								return new SqlPredicate.Expr(new SqlValue(p.IsNot));
-
-							return new SqlPredicate.InList(expr.Parameters[0], p.IsNot, values);
-						}
-
-						var sc = new SqlSearchCondition();
-
-						foreach (var item in items)
-						{
-							var itemCond = new SqlSearchCondition();
-
-							for (var i = 0; i < expr.Parameters.Length; i++)
-							{
-								var sql   = expr.Parameters[i];
-								var value = expr.GetValue(item!, i);
-								var cond  = value == null ?
-									new SqlCondition(false, new SqlPredicate.IsNull  (sql, false)) :
-									new SqlCondition(false, new SqlPredicate.ExprExpr(sql, SqlPredicate.Operator.Equal, new SqlValue(value)));
-
-								itemCond.Conditions.Add(cond);
-							}
-
-							sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.Expr(itemCond), true));
-						}
-
-						if (sc.Conditions.Count == 0)
-							return new SqlPredicate.Expr(new SqlValue(p.IsNot));
-
-						if (p.IsNot)
-							return new SqlPredicate.NotExpr(sc, true, SqlQuery.Precedence.LogicalNegation);
-
-						return new SqlPredicate.Expr(sc, SqlQuery.Precedence.LogicalDisjunction);
-					}
-				}
-			}
-
-			return null;
 		}
 
 		public abstract SelectQuery? SelectQuery { get; set; }
@@ -329,29 +128,6 @@ namespace LinqToDB.SqlQuery
 			return aliases;
 		}
 
-		internal void UpdateIsParameterDepended()
-		{
-			if (IsParameterDependent)
-				return;
-
-			var isDepended = null != new QueryVisitor().Find(this, expr =>
-			{
-				if (expr.ElementType == QueryElementType.SqlParameter)
-				{
-					var p = (SqlParameter)expr;
-
-					if (!p.IsQueryParameter)
-					{
-						return true;
-					}
-				}
-
-				return false;
-			});
-
-			IsParameterDependent = isDepended;
-		}
-
 		static string? NormalizeParameterName(string? name)
 		{
 			if (string.IsNullOrEmpty(name))
@@ -403,8 +179,6 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.SqlQuery:
 						{
 							var query = (SelectQuery)expr;
-							if (query.IsParameterDependent)
-								IsParameterDependent = true;
 
 							if (query.Select.Columns.Count > 0)
 							{
@@ -449,11 +223,10 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.SqlParameter:
 						{
 							var p = (SqlParameter)expr;
-
-							if (paramsVisited.Add(p) && !p.IsQueryParameter)
-								IsParameterDependent = true;
-
-							p.Name = NormalizeParameterName(p.Name);
+							if (paramsVisited.Add(p))
+							{
+								p.Name = NormalizeParameterName(p.Name);
+							}
 
 							break;
 						}

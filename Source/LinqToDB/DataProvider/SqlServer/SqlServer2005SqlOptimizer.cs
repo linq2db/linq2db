@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.DataProvider.SqlServer
+﻿using LinqToDB.Common;
+
+namespace LinqToDB.DataProvider.SqlServer
 {
 	using SqlProvider;
 	using SqlQuery;
@@ -21,6 +23,12 @@
 				statement = QueryHelper.OptimizeSubqueries(statement); // OptimizeSubqueries can break update queries
 
 			return statement;
+		}
+
+		protected override ISqlExpression ConvertFunction(SqlFunction func)
+		{
+			func = ConvertFunctionParameters(func, false);
+			return base.ConvertFunction(func);
 		}
 
 	}

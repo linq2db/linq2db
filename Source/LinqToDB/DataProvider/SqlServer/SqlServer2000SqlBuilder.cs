@@ -81,12 +81,6 @@
 			base.BuildDataTypeFromDataType(type, forCreateTable);
 		}
 
-		protected override void BuildFunction(SqlFunction func)
-		{
-			func = ConvertFunctionParameters(func);
-			base.BuildFunction(func);
-		}
-
 		public override string  Name => ProviderName.SqlServer2000;
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)

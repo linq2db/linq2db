@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.DataProvider.SapHana
+﻿using System;
+
+namespace LinqToDB.DataProvider.SapHana
 {
 	using Extensions;
 	using SqlProvider;
@@ -21,9 +23,9 @@
 			return statement;
 		}
 
-		public override ISqlExpression ConvertExpression(ISqlExpression expr, bool withParameters)
+		public override ISqlExpression ConvertExpression(ISqlExpression expr)
 		{
-			expr = base.ConvertExpression(expr, withParameters);
+			expr = base.ConvertExpression(expr);
 
 			if (expr is SqlFunction func)
 			{
@@ -33,7 +35,7 @@
 
 					if (ftype == typeof(bool))
 					{
-						var ex = AlternativeConvertToBoolean(func, 1, withParameters);
+						var ex = AlternativeConvertToBoolean(func, 1);
 						if (ex != null)
 							return ex;
 					}
@@ -67,5 +69,43 @@
 
 			return expr;
 		}
+
+		//this is for Tests.Linq.Common.CoalesceLike test
+		static SqlFunction ConvertCase(Type systemType, ISqlExpression[] parameters, int start)
+		{
+			var len  = parameters.Length - start;
+			var cond = parameters[start];
+
+			if (start == 0 && SqlExpression.NeedsEqual(cond))
+			{
+				cond = new SqlSearchCondition(
+					new SqlCondition(
+						false,
+						new SqlPredicate.ExprExpr(cond, SqlPredicate.Operator.Equal, new SqlValue(1), null)));
+			}
+
+			const string name = "CASE";
+
+			if (len == 3)
+				return new SqlFunction(systemType, name, cond, parameters[start + 1], parameters[start + 2]);
+
+			return new SqlFunction(systemType, name,
+				cond,
+				parameters[start + 1],
+				ConvertCase(systemType, parameters, start + 2));
+		}
+
+		//this is for Tests.Linq.Common.CoalesceLike test
+		protected override ISqlExpression ConvertFunction(SqlFunction func)
+		{
+			func = ConvertFunctionParameters(func, false);
+			switch (func.Name)
+			{
+				case "CASE": func = ConvertCase(func.SystemType, func.Parameters, 0);
+					break;
+			}
+			return base.ConvertFunction(func);
+		}
+
 	}
 }

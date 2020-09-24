@@ -163,7 +163,9 @@ namespace LinqToDB.Linq.Builder
 				{
 					var cond = new SqlCondition(
 						_methodCall.Method.Name.StartsWith("All"),
-						new SqlPredicate.FuncLike(SqlFunction.CreateExists(SelectQuery)));
+						new SqlPredicate.Expr(SqlFunction.CreateExists(SelectQuery)));
+
+					Sequence.CompleteColumns();
 
 					_subQuerySql = new SqlSearchCondition(cond);
 				}

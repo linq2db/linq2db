@@ -12,11 +12,11 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement, bool inlineParameters)
+		public override SqlStatement Finalize(SqlStatement statement)
 		{
 			CheckAliases(statement, 30);
 
-			return base.Finalize(statement, inlineParameters);
+			return base.Finalize(statement);
 		}
 
 		public override SqlStatement TransformStatement(SqlStatement statement)
@@ -34,9 +34,9 @@ namespace LinqToDB.DataProvider.Oracle
 			return statement;
 		}
 
-		public override ISqlExpression ConvertExpression(ISqlExpression expr, bool withParameters)
+		public override ISqlExpression ConvertExpression(ISqlExpression expr)
 		{
-			expr = base.ConvertExpression(expr, withParameters);
+			expr = base.ConvertExpression(expr);
 
 			if (expr is SqlBinaryExpression be)
 			{
@@ -69,7 +69,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 						if (ftype == typeof(bool))
 						{
-							var ex = AlternativeConvertToBoolean(func, 1, withParameters);
+							var ex = AlternativeConvertToBoolean(func, 1);
 							if (ex != null)
 								return ex;
 						}
@@ -188,6 +188,12 @@ namespace LinqToDB.DataProvider.Oracle
 					query.Select.Take(null, null);
 
 				});
+		}
+
+		protected override ISqlExpression ConvertFunction(SqlFunction func)
+		{
+			func = ConvertFunctionParameters(func, false);
+			return base.ConvertFunction(func);
 		}
 	}
 }

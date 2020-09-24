@@ -6,41 +6,22 @@ namespace LinqToDB.SqlProvider
 {
 	internal static class SqlOptimizerExtensions
 	{
-		public static SqlStatement OptimizeStatement(this ISqlOptimizer optimizer, SqlStatement statement,
-			MappingSchema mappingSchema, bool inlineParameters, bool remoteContext)
+		public static SqlStatement PrepareStatementForRemoting(this ISqlOptimizer optimizer, SqlStatement statement,
+			MappingSchema mappingSchema)
 		{
-			if (optimizer     == null) throw new ArgumentNullException(nameof(optimizer));
-			if (statement     == null) throw new ArgumentNullException(nameof(statement));
-			if (mappingSchema == null) throw new ArgumentNullException(nameof(mappingSchema));
-
-			BuildSqlValueTableParameters(statement);
-
-			// transforming parameters to values
-			var newStatement = statement.ProcessParameters(mappingSchema);
-
-			newStatement.UpdateIsParameterDepended();
-
-			// optimizing expressions according to new values
-			newStatement = optimizer.OptimizeStatement(newStatement, inlineParameters,
-				newStatement.IsParameterDependent || inlineParameters, remoteContext);
-
+			var newStatement = optimizer.OptimizeStatement(statement, true);
 			newStatement.PrepareQueryAndAliases();
-
 			return newStatement;
 		}
 
-		static void BuildSqlValueTableParameters(SqlStatement statement)
+		public static SqlStatement PrepareStatementForSql(this ISqlOptimizer optimizer, SqlStatement statement,
+			MappingSchema mappingSchema)
 		{
-			if (statement.IsParameterDependent)
-			{
-				new QueryVisitor().Visit(statement, e =>
-				{
-					if (e is SqlValuesTable table)
-						table.BuildRows();
-				});
-			}
+			var newStatement = optimizer.OptimizeStatement(statement, true);
+			newStatement     = optimizer.ConvertStatement(mappingSchema, newStatement, true);
+			newStatement.PrepareQueryAndAliases();
+			return newStatement;
 		}
-
 
 	}
 }

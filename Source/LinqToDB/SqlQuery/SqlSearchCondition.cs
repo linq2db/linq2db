@@ -5,7 +5,7 @@ using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlSearchCondition : ConditionBase<SqlSearchCondition, SqlSearchCondition.Next>, ISqlPredicate, ISqlExpression
+	public class SqlSearchCondition : ConditionBase<SqlSearchCondition, SqlSearchCondition.Next>, ISqlPredicate, ISqlExpression, IInvertibleElement
 	{
 		public SqlSearchCondition()
 		{
@@ -82,6 +82,32 @@ namespace LinqToDB.SqlQuery
 				condition.Predicate.Walk(options, func);
 
 			return func(this);
+		}
+
+		#endregion
+
+		#region IInvertibleElement Members
+
+		public bool CanInvert()
+		{
+			return Conditions.Count == 1;
+		}
+
+		public IQueryElement Invert()
+		{
+			if (Conditions.Count == 0)
+			{
+				return new SqlSearchCondition(new SqlCondition(false,
+					new SqlPredicate.ExprExpr(new SqlValue(1), SqlPredicate.Operator.Equal, new SqlValue(0), null)));
+			}
+
+			var newConditions = Conditions.Select(c =>
+			{
+				var condition = new SqlCondition(!c.IsNot, c.Predicate, !c.IsOr);
+				return condition;
+			});
+
+			return new SqlSearchCondition(newConditions);
 		}
 
 		#endregion

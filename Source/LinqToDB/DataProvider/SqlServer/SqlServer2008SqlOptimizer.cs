@@ -1,4 +1,4 @@
-using LinqToDB.SqlProvider;
+﻿using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.SqlServer
@@ -21,5 +21,13 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			return statement;
 		}
+
+
+		protected override ISqlExpression ConvertFunction(SqlFunction func)
+		{
+			func = ConvertFunctionParameters(func, false);
+			return base.ConvertFunction(func);
+		}
+
 	}
 }

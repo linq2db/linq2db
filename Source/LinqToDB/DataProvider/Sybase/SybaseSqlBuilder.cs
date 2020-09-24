@@ -44,12 +44,6 @@ namespace LinqToDB.DataProvider.Sybase
 			return "TOP {0}";
 		}
 
-		protected override void BuildFunction(SqlFunction func)
-		{
-			func = ConvertFunctionParameters(func, false);
-			base.BuildFunction(func);
-		}
-
 		private  bool _isSelect;
 		readonly bool _skipAliases;
 

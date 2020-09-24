@@ -930,6 +930,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.Expr1);
 							Append((int)elem.Operator);
 							Append(elem.Expr2);
+							Append(elem.WithNull == null ? 3 : elem.WithNull.Value ? 1 : 0);
 
 							break;
 						}
@@ -1691,8 +1692,9 @@ namespace LinqToDB.ServiceModel
 							var expr1     = Read<ISqlExpression>()!;
 							var @operator = (SqlPredicate.Operator)ReadInt();
 							var expr2     = Read<ISqlExpression>()!;
+							var withNull  = ReadInt();
 
-							obj = new SqlPredicate.ExprExpr(expr1, @operator, expr2);
+							obj = new SqlPredicate.ExprExpr(expr1, @operator, expr2, withNull == 3 ? (bool?)null : withNull == 1);
 
 							break;
 						}

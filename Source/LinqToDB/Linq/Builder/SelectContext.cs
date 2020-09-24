@@ -473,8 +473,8 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (expression.Sql is SqlSearchCondition)
 			{
-				expression = expression.WithSql(Builder.Convert(
-					new SqlFunction(typeof(bool), "CASE", expression.Sql, new SqlValue(true), new SqlValue(false))));
+				expression = expression.WithSql(
+					new SqlFunction(typeof(bool), "CASE", expression.Sql, new SqlValue(true), new SqlValue(false)));
 			}
 
 			return expression;
@@ -1016,20 +1016,7 @@ namespace LinqToDB.Linq.Builder
 
 		public virtual void CompleteColumns()
 		{
-			if (SelectQuery.Select.Columns.Count == 0)
-			{
-				var sql = ConvertToSql(null, 0, ConvertFlags.All);
-				if (sql.Length > 0)
-				{
-					// Handling case when all columns are aggregates, it cause query to produce only single record and we have to include at least one aggregation in Select statement.
-					// 
-					var allAggregate = sql.All(s => QueryHelper.IsAggregationFunction(s.Sql));
-					if (allAggregate)
-					{
-						SelectQuery.Select.Add(sql[0].Sql);
-					}
-				}
-			}
+			ExpressionBuilder.EnsureAggregateColumns(this, SelectQuery);
 
 			foreach (var sequence in Sequence)
 			{

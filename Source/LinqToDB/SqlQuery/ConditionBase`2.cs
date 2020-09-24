@@ -45,7 +45,7 @@
 				readonly Expr_              _expr;
 				readonly SqlPredicate.Operator _op;
 
-				public T2 Expr    (ISqlExpression expr)       { return _expr.Add(new SqlPredicate.ExprExpr(_expr._expr, _op, expr)); }
+				public T2 Expr    (ISqlExpression expr)       { return _expr.Add(new SqlPredicate.ExprExpr(_expr._expr, _op, expr, null)); }
 				public T2 Field   (SqlField      field)       { return Expr(field);               }
 				public T2 SubQuery(SelectQuery   selectQuery) { return Expr(selectQuery);         }
 				public T2 Value   (object        value)       { return Expr(new SqlValue(value)); }

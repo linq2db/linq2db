@@ -30,7 +30,7 @@ namespace LinqToDB.DataProvider.Informix
 				p.IsQueryParameter = false;
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement, bool inlineParameters)
+		public override SqlStatement Finalize(SqlStatement statement)
 		{
 			CheckAliases(statement, int.MaxValue);
 
@@ -46,7 +46,7 @@ namespace LinqToDB.DataProvider.Informix
 						new QueryVisitor().VisitAll(select, ClearQueryParameter);
 				});
 
-			return base.Finalize(statement, inlineParameters);
+			return base.Finalize(statement);
 		}
 
 		public override SqlStatement TransformStatement(SqlStatement statement)
@@ -68,9 +68,9 @@ namespace LinqToDB.DataProvider.Informix
 			return statement;
 		}
 
-		public override ISqlExpression ConvertExpression(ISqlExpression expr, bool withParameters)
+		public override ISqlExpression ConvertExpression(ISqlExpression expr)
 		{
-			expr = base.ConvertExpression(expr, withParameters);
+			expr = base.ConvertExpression(expr);
 
 			if (expr is SqlBinaryExpression be)
 			{
@@ -98,7 +98,7 @@ namespace LinqToDB.DataProvider.Informix
 							case TypeCode.String   : return new SqlFunction(func.SystemType, "To_Char", func.Parameters[1]);
 							case TypeCode.Boolean  :
 							{
-								var ex = AlternativeConvertToBoolean(func, 1, withParameters);
+								var ex = AlternativeConvertToBoolean(func, 1);
 								if (ex != null)
 									return ex;
 								break;
@@ -142,5 +142,10 @@ namespace LinqToDB.DataProvider.Informix
 			return expr;
 		}
 
+		protected override ISqlExpression ConvertFunction(SqlFunction func)
+		{
+			func = ConvertFunctionParameters(func, false);
+			return base.ConvertFunction(func);
+		}
 	}
 }

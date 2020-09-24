@@ -1,8 +1,8 @@
 ﻿namespace LinqToDB.DataProvider.Firebird
 {
 	using System.Linq;
-	using LinqToDB.Extensions;
-	using LinqToDB.SqlQuery;
+	using Extensions;
+	using SqlQuery;
 	using SqlProvider;
 
 	public class FirebirdSqlOptimizer : BasicSqlOptimizer
@@ -11,11 +11,11 @@
 		{
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement, bool inlineParameters)
+		public override SqlStatement Finalize(SqlStatement statement)
 		{
 			CheckAliases(statement, int.MaxValue);
 
-			statement = base.Finalize(statement, inlineParameters);
+			statement = base.Finalize(statement);
 
 			// called in both finalize and optimize to avoid query conversion on each call
 			// as most of cases will be handled with finalize
@@ -24,9 +24,9 @@
 			return statement;
 		}
 
-		public override SqlStatement OptimizeStatement(SqlStatement statement, bool inlineParameters, bool withParameters, bool remoteContext)
+		public override SqlStatement OptimizeStatement(SqlStatement statement, bool withParameters)
 		{
-			statement = base.OptimizeStatement(statement, inlineParameters, withParameters, remoteContext);
+			statement = base.OptimizeStatement(statement, withParameters);
 
 			return WrapParameters(statement);
 		}
@@ -41,9 +41,9 @@
 			};
 		}
 
-		public override ISqlExpression ConvertExpression(ISqlExpression expr, bool withParameters)
+		public override ISqlExpression ConvertExpression(ISqlExpression expr)
 		{
-			expr = base.ConvertExpression(expr, withParameters);
+			expr = base.ConvertExpression(expr);
 
 			if (expr is SqlBinaryExpression be)
 			{
@@ -63,7 +63,7 @@
 					case "Convert" :
 						if (func.SystemType.ToUnderlying() == typeof(bool))
 						{
-							var ex = AlternativeConvertToBoolean(func, 1, withParameters);
+							var ex = AlternativeConvertToBoolean(func, 1);
 							if (ex != null)
 								return ex;
 						}
@@ -73,6 +73,12 @@
 			}
 
 			return expr;
+		}
+
+		protected override ISqlExpression ConvertFunction(SqlFunction func)
+		{
+			func = ConvertFunctionParameters(func, false);
+			return base.ConvertFunction(func);
 		}
 
 		#region Wrap Parameters

@@ -24,7 +24,7 @@ namespace LinqToDB.SqlQuery
 		readonly int              _level;
 		readonly IQueryElement[]  _dependencies;
 
-		public void FinalizeAndValidate(bool isApplySupported, bool optimizeColumns, bool inlineParameters)
+		public void FinalizeAndValidate(bool isApplySupported, bool optimizeColumns)
 		{
 #if DEBUG
 			// ReSharper disable once NotAccessedVariable
@@ -45,7 +45,7 @@ namespace LinqToDB.SqlQuery
 #endif
 
 			OptimizeUnions();
-			FinalizeAndValidateInternal(isApplySupported, optimizeColumns, inlineParameters);
+			FinalizeAndValidateInternal(isApplySupported, optimizeColumns);
 			ResolveFields();
 
 #if DEBUG
@@ -405,7 +405,7 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		void FinalizeAndValidateInternal(bool isApplySupported, bool optimizeColumns, bool inlineParameters)
+		void FinalizeAndValidateInternal(bool isApplySupported, bool optimizeColumns)
 		{
 			new QueryVisitor().Visit(_selectQuery, e =>
 			{
@@ -413,7 +413,7 @@ namespace LinqToDB.SqlQuery
 				{
 					sql.ParentSelect = _selectQuery;
 					new SelectQueryOptimizer(_flags, _rootElement, sql, _level + 1, _dependencies)
-						.FinalizeAndValidateInternal(isApplySupported, optimizeColumns, inlineParameters);
+						.FinalizeAndValidateInternal(isApplySupported, optimizeColumns);
 
 					if (sql.IsParameterDependent)
 						_selectQuery.IsParameterDependent = true;
@@ -429,12 +429,12 @@ namespace LinqToDB.SqlQuery
 
 			OptimizeDistinct();
 			OptimizeDistinctOrderBy();
-			OptimizeSkipTake(inlineParameters);
+			OptimizeSkipTake();
 
 			OptimizeSearchConditions();
 		}
 
-		private void OptimizeSkipTake(bool inlineParameters)
+		private void OptimizeSkipTake()
 		{
 			var visitor = new QueryVisitor();
 			if (_selectQuery.Select.TakeValue != null)
@@ -457,7 +457,7 @@ namespace LinqToDB.SqlQuery
 							_selectQuery.Select.Take(
 								new SqlParameter(new DbDataType(value.GetType()), "take", value)
 								{
-									IsQueryParameter = !inlineParameters
+									IsQueryParameter = !QueryHelper.NeedParameterInlining(_selectQuery.Select.TakeValue)
 								}, _selectQuery.Select.TakeHints
 							);
 						else
@@ -482,7 +482,7 @@ namespace LinqToDB.SqlQuery
 
 						if (supportsParameter)
 							_selectQuery.Select.Skip(new SqlParameter(new DbDataType(value.GetType()), "skip", value)
-								{ IsQueryParameter = !inlineParameters });
+								{ IsQueryParameter = !QueryHelper.NeedParameterInlining(_selectQuery.Select.SkipValue) });
 						else
 							_selectQuery.Select.Skip(new SqlValue(value));
 					}
@@ -499,32 +499,6 @@ namespace LinqToDB.SqlQuery
 
 				return expr;
 			});
-		}
-
-		public static bool? GetBoolValue(ISqlExpression expression, bool withParameters)
-		{
-			if (expression.TryEvaluateExpression(withParameters, out var value))
-			{
-				if (value is bool b)
-					return b;
-			}
-			else if (expression is SqlSearchCondition searchCondition)
-			{
-				if (searchCondition.Conditions.Count == 0)
-					return true;
-				if (searchCondition.Conditions.Count == 1)
-				{
-					var cond = searchCondition.Conditions[0];
-					if (cond.Predicate.ElementType == QueryElementType.ExprPredicate)
-					{
-						var boolValue = GetBoolValue(((SqlPredicate.Expr)cond.Predicate).Expr1, withParameters);
-						if (boolValue.HasValue)
-							return cond.IsNot ? !boolValue : boolValue;
-					}
-				}
-			}
-
-			return null;
 		}
 
 		internal static SqlSearchCondition OptimizeSearchCondition(SqlSearchCondition inputCondition, bool withParameters = false)
@@ -552,24 +526,9 @@ namespace LinqToDB.SqlQuery
 				{
 					var exprExpr = (SqlPredicate.ExprExpr)cond.Predicate;
 
-					if (cond.IsNot)
+					if (cond.IsNot && exprExpr.CanInvert())
 					{
-						SqlPredicate.Operator op;
-
-						switch (exprExpr.Operator)
-						{
-							case SqlPredicate.Operator.Equal          : op = SqlPredicate.Operator.NotEqual;       break;
-							case SqlPredicate.Operator.NotEqual       : op = SqlPredicate.Operator.Equal;          break;
-							case SqlPredicate.Operator.Greater        : op = SqlPredicate.Operator.LessOrEqual;    break;
-							case SqlPredicate.Operator.NotLess        :
-							case SqlPredicate.Operator.GreaterOrEqual : op = SqlPredicate.Operator.Less;           break;
-							case SqlPredicate.Operator.Less           : op = SqlPredicate.Operator.GreaterOrEqual; break;
-							case SqlPredicate.Operator.NotGreater     :
-							case SqlPredicate.Operator.LessOrEqual    : op = SqlPredicate.Operator.Greater;        break;
-							default: throw new InvalidOperationException();
-						}
-
-						exprExpr = new SqlPredicate.ExprExpr(exprExpr.Expr1, op, exprExpr.Expr2);
+						exprExpr = (SqlPredicate.ExprExpr)exprExpr.Invert();
 						newCond  = new SqlCondition(false, exprExpr, newCond.IsOr);
 					}
 
@@ -596,35 +555,18 @@ namespace LinqToDB.SqlQuery
 				{
 					var expr = (SqlPredicate.Expr)newCond.Predicate;
 
-					if (cond.IsNot && expr.Expr1 is SqlValue sqlValue && sqlValue.Value is bool b)
+					if (newCond.IsNot)
 					{
-						newCond = new SqlCondition(false, new SqlPredicate.Expr(new SqlValue(!b)), newCond.IsOr);
-					}
-				}
-				else if (newCond.Predicate.ElementType == QueryElementType.IsTruePredicate)
-				{
-					//TODO: This everything is weird, predicates needs full refactoring
-					var expr = (SqlPredicate.IsTrue)newCond.Predicate;
-
-					if (expr.Expr1.ElementType == QueryElementType.SqlValue || withParameters && expr.Expr1.ElementType == QueryElementType.SqlParameter)
-					{
-						var value  = expr.Expr1.EvaluateExpression();
-						var result = false;
-						if (value == null)
+						var boolValue = QueryHelper.GetBoolValue(expr.Expr1, withParameters);
+						if (boolValue != null)
 						{
-							if (expr.WithNull != true)
-								result = false;
+							newCond = new SqlCondition(false, new SqlPredicate.Expr(new SqlValue(!boolValue.Value)), newCond.IsOr);
 						}
-						else
+						else if (expr.Expr1 is SqlSearchCondition expCond && expCond.Conditions.Count == 1)
 						{
-							if (expr.IsNot)
-								result = value.Equals(expr.FalseValue.EvaluateExpression());
-							else
-								result = value.Equals(expr.TrueValue.EvaluateExpression());
+							if (expCond.Conditions[0].Predicate is IInvertibleElement invertible && invertible.CanInvert())
+								newCond = new SqlCondition(false, (ISqlPredicate)invertible.Invert(), newCond.IsOr);
 						}
-
-						newCond = new SqlCondition(false, new SqlPredicate.Expr(new SqlValue(result)), newCond.IsOr);
-
 					}
 				}
 
@@ -638,7 +580,7 @@ namespace LinqToDB.SqlQuery
 				if (cond.Predicate.ElementType == QueryElementType.ExprPredicate)
 				{
 					var expr = (SqlPredicate.Expr)cond.Predicate;
-					var boolValue = GetBoolValue(expr.Expr1, withParameters);
+					var boolValue = QueryHelper.GetBoolValue(expr.Expr1, withParameters);
 
 					if (boolValue != null)
 					{
@@ -717,7 +659,14 @@ namespace LinqToDB.SqlQuery
 						if (sc.Conditions[0].IsNot)
 							isNot = !isNot;
 
-						var inlineCondition = new SqlCondition(isNot, sc.Conditions[0].Predicate, searchCondition.Conditions[i].IsOr);
+						var predicate = sc.Conditions[0].Predicate;
+						if (isNot && predicate is IInvertibleElement invertible && invertible.CanInvert())
+						{
+							predicate = (ISqlPredicate)invertible.Invert();
+							isNot = !isNot;
+						}
+
+						var inlineCondition = new SqlCondition(isNot, predicate, searchCondition.Conditions[i].IsOr);
 
 						searchCondition.Conditions[i] = inlineCondition;
 

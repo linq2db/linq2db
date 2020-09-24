@@ -1833,15 +1833,6 @@ namespace LinqToDB.SqlProvider
 
 					break;
 
-				case QueryElementType.IsTruePredicate:
-					{
-						var reduced = ((SqlPredicate.IsTrue)predicate).Reduce();
-						
-						BuildPredicate(GetPrecedence(predicate), GetPrecedence(reduced), reduced);
-					}
-
-					break;
-
 				case QueryElementType.IsNullPredicate:
 					{
 						BuildExpression(GetPrecedence((SqlPredicate.IsNull)predicate), ((SqlPredicate.IsNull)predicate).Expr1);
@@ -2220,10 +2211,6 @@ namespace LinqToDB.SqlProvider
 			ref bool       addAlias,
 			bool           throwExceptionIfTableNotFound = true)
 		{
-			// TODO: check the necessity.
-			//
-			expr = SqlOptimizer.ConvertExpression(expr, Statement.IsParameterDependent);
-
 			switch (expr.ElementType)
 			{
 				case QueryElementType.SqlField:
@@ -2875,39 +2862,6 @@ namespace LinqToDB.SqlProvider
 			};
 		}
 
-		static bool IsBooleanParameter(ISqlExpression expr, int count, int i)
-		{
-			if ((i % 2 == 1 || i == count - 1) && expr.SystemType == typeof(bool) || expr.SystemType == typeof(bool?))
-			{
-				switch (expr.ElementType)
-				{
-					case QueryElementType.SearchCondition: return true;
-				}
-			}
-
-			return false;
-		}
-
-		protected SqlFunction ConvertFunctionParameters(SqlFunction func, bool withParameters = false)
-		{
-			if (func.Name == "CASE" &&
-				func.Parameters.Select((p, i) => new { p, i }).Any(p => IsBooleanParameter(p.p, func.Parameters.Length, p.i)))
-			{
-				return new SqlFunction(
-					func.SystemType,
-					func.Name,
-					false,
-					func.Precedence,
-					func.Parameters.Select((p, i) =>
-						IsBooleanParameter(p, func.Parameters.Length, i) ?
-							SqlOptimizer.ConvertExpression(new SqlFunction(typeof(bool), "CASE", p, new SqlValue(true), new SqlValue(false)), withParameters) :
-							p
-					).ToArray());
-			}
-
-			return func;
-		}
-
 		#endregion
 
 		#region Helpers
@@ -2999,9 +2953,9 @@ namespace LinqToDB.SqlProvider
 							return GetTableAlias(ts);
 						else
 						{
-						var alias = ((SqlTable)table).Alias;
-						return alias != "$" && alias != "$F" ? alias : null;
-					}	
+							var alias = ((SqlTable)table).Alias;
+							return alias != "$" && alias != "$F" ? alias : null;
+						}	
 					}
 				case QueryElementType.MergeSourceTable:
 					return null;
@@ -3122,7 +3076,7 @@ namespace LinqToDB.SqlProvider
 
 		ISqlExpression Add(ISqlExpression expr1, ISqlExpression expr2, Type type)
 		{
-			return SqlOptimizer.ConvertExpression(new SqlBinaryExpression(type, expr1, "+", expr2, Precedence.Additive), false);
+			return new SqlBinaryExpression(type, expr1, "+", expr2, Precedence.Additive);
 		}
 
 		protected ISqlExpression Add<T>(ISqlExpression expr1, ISqlExpression expr2)

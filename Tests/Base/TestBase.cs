@@ -1069,7 +1069,8 @@ namespace Tests
 				expected = empty.Provider.CreateQuery<T>(newExpr).ToArray();
 			}
 
-			AreEqual(expected, actual, ComparerBuilder.GetEqualityComparer<T>());
+			if (actual.Length > 0 || expected.Length > 0)
+				AreEqual(expected, actual, ComparerBuilder.GetEqualityComparer<T>());
 
 			return actual;
 		}

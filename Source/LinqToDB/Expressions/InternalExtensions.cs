@@ -1396,7 +1396,7 @@ namespace LinqToDB.Expressions
 									if (leftBool == true)
 										e = be.Right;
 									else if (leftBool == false)
-										newExpr = Expression.Constant(false);
+										newExpr = ExpressionHelper.FalseConstant;
 								}
 								else if (IsEvaluable(be.Right))
 								{
@@ -1404,7 +1404,7 @@ namespace LinqToDB.Expressions
 									if (rightBool == true)
 										newExpr = be.Left;
 									else if (rightBool == false)
-										newExpr = Expression.Constant(false);
+										newExpr = ExpressionHelper.FalseConstant;
 								}
 
 								break;
@@ -1417,7 +1417,7 @@ namespace LinqToDB.Expressions
 									if (leftBool == false)
 										newExpr = be.Right;
 									else if (leftBool == true)
-										newExpr = Expression.Constant(true);
+										newExpr = ExpressionHelper.TrueConstant;
 								}
 								else if (IsEvaluable(be.Right))
 								{
@@ -1425,7 +1425,7 @@ namespace LinqToDB.Expressions
 									if (rightBool == false)
 										newExpr = be.Left;
 									else if (rightBool == true)
-										newExpr = Expression.Constant(true);
+										newExpr = ExpressionHelper.TrueConstant;
 								}
 
 								break;
