@@ -22,13 +22,13 @@ public class a_CreateData : TestBase
 {
 	static void RunScript(string configString, string divider, string name, Action<IDbConnection>? action = null, string? database = null)
 	{
-		Console.WriteLine("=== " + name + " === \n");
+		TestContext.WriteLine("=== " + name + " === \n");
 
 		var scriptFolder = Path.Combine(Path.GetFullPath("."), "Database", "Create Scripts");
-		Console.WriteLine("Script folder exists: {1}; {0}", scriptFolder, Directory.Exists(scriptFolder));
+		TestContext.WriteLine("Script folder exists: {1}; {0}", scriptFolder, Directory.Exists(scriptFolder));
 
 		var sqlFileName  = Path.GetFullPath(Path.Combine(scriptFolder, Path.ChangeExtension(name, "sql")));
-		Console.WriteLine("Sql file exists: {1}; {0}", sqlFileName, File.Exists(sqlFileName));
+		TestContext.WriteLine("Sql file exists: {1}; {0}", sqlFileName, File.Exists(sqlFileName));
 
 		var text = File.ReadAllText(sqlFileName);
 
@@ -52,7 +52,7 @@ public class a_CreateData : TestBase
 			.ToArray();
 
 		if (DataConnection.TraceSwitch.TraceInfo)
-			Console.WriteLine("Commands count: {0}", cmds.Length);
+			TestContext.WriteLine("Commands count: {0}", cmds.Length);
 
 		Exception? exception = null;
 
@@ -65,7 +65,7 @@ public class a_CreateData : TestBase
 				try
 				{
 					if (DataConnection.TraceSwitch.TraceInfo)
-						Console.WriteLine(command);
+						TestContext.WriteLine(command);
 
 					if (configString == ProviderName.OracleNative || configString == TestProvName.Oracle11Native)
 					{
@@ -80,28 +80,28 @@ public class a_CreateData : TestBase
 						db.Execute(command);
 
 					if (DataConnection.TraceSwitch.TraceInfo)
-						Console.WriteLine("\nOK\n");
+						TestContext.WriteLine("\nOK\n");
 				}
 				catch (Exception ex)
 				{
 					if (DataConnection.TraceSwitch.TraceError)
 					{
 						if (!DataConnection.TraceSwitch.TraceInfo)
-							Console.WriteLine(command);
+							TestContext.WriteLine(command);
 
 						var isDrop =
 							command.TrimStart().StartsWith("DROP") ||
 							command.TrimStart().StartsWith("CALL DROP");
 
-						Console.WriteLine(ex.Message);
+						TestContext.WriteLine(ex.Message);
 
 						if (isDrop)
 						{
-							Console.WriteLine("\nnot too OK\n");
+							TestContext.WriteLine("\nnot too OK\n");
 						}
 						else
 						{
-							Console.WriteLine("\nFAILED\n");
+							TestContext.WriteLine("\nFAILED\n");
 
 							if (exception == null)
 								exception = ex;
@@ -115,7 +115,7 @@ public class a_CreateData : TestBase
 				throw exception;
 
 			if (DataConnection.TraceSwitch.TraceInfo)
-				Console.WriteLine("\nBulkCopy LinqDataTypes\n");
+				TestContext.WriteLine("\nBulkCopy LinqDataTypes\n");
 
 			var options = new BulkCopyOptions();
 
@@ -138,7 +138,7 @@ public class a_CreateData : TestBase
 				});
 
 			if (DataConnection.TraceSwitch.TraceInfo)
-				Console.WriteLine("\nBulkCopy Parent\n");
+				TestContext.WriteLine("\nBulkCopy Parent\n");
 
 			db.BulkCopy(
 				options,
@@ -154,7 +154,7 @@ public class a_CreateData : TestBase
 				});
 
 			if (DataConnection.TraceSwitch.TraceInfo)
-				Console.WriteLine("\nBulkCopy Child\n");
+				TestContext.WriteLine("\nBulkCopy Child\n");
 
 			db.BulkCopy(
 				options,
@@ -180,7 +180,7 @@ public class a_CreateData : TestBase
 				});
 
 			if (DataConnection.TraceSwitch.TraceInfo)
-				Console.WriteLine("\nBulkCopy GrandChild\n");
+				TestContext.WriteLine("\nBulkCopy GrandChild\n");
 
 			db.BulkCopy(
 				options,

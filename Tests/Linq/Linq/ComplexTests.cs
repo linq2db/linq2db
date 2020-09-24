@@ -486,7 +486,7 @@ namespace Tests.Linq
 			using (db.CreateTempTable<T3>())
 			{
 				string cond = "aaa";
-				DateTime uptoDate = DateTime.Now;
+				DateTime uptoDate = TestData.DateTime;
 
 				db.Insert(new T3() { IndexId = 1, InstrumentId = 1 });
 				db.Insert(new T3() { IndexId = 1, InstrumentId = 2 });
@@ -494,8 +494,8 @@ namespace Tests.Linq
 				db.Insert(new T2() { IndexId = 1, InstrumentId = 1 });
 				db.Insert(new T2() { IndexId = 1, InstrumentId = 2 });
 
-				db.Insert(new T1() { InstrumentId = 1, CreateDate = DateTime.Now.AddDays(-1), InstrumentCode = "aaa1", SourceInstrumentCode = "NOTNULL" });
-				db.Insert(new T1() { InstrumentId = 2, CreateDate = DateTime.Now.AddDays(-1), InstrumentCode = "aaa2", SourceInstrumentCode = null });
+				db.Insert(new T1() { InstrumentId = 1, CreateDate = TestData.DateTime.AddDays(-1), InstrumentCode = "aaa1", SourceInstrumentCode = "NOTNULL" });
+				db.Insert(new T1() { InstrumentId = 2, CreateDate = TestData.DateTime.AddDays(-1), InstrumentCode = "aaa2", SourceInstrumentCode = null });
 
 				var res = db.GetTable<T1>()
 									.Where(_ => _.InstrumentCode!.StartsWith(cond) && _.CreateDate <= uptoDate)

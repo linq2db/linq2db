@@ -487,7 +487,8 @@ namespace LinqToDB.SchemaProvider
 					p.SystemType == typeof(string) ?
 						"" :
 						p.SystemType == typeof(DateTime) ?
-							DateTime.Now :
+							// use fixed value to generate stable baselines
+							new DateTime(2020, 09, 23) :
 							DefaultValue.GetValue(p.SystemType),
 				DataType  = p.DataType,
 				DbType    = p.SchemaType,

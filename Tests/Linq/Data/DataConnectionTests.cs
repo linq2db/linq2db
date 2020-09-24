@@ -332,29 +332,32 @@ namespace Tests.Data
 		[ActiveIssue("Fails due to connection limit for development version when run with nonmanaged provider", Configuration = ProviderName.SybaseManaged)]
 		public void MultipleConnectionsTest([DataSources(TestProvName.AllInformix)] string context)
 		{
-			var exceptions = new ConcurrentBag<Exception>();
+			using (new DisableBaseline("Multi-threading"))
+			{
+				var exceptions = new ConcurrentBag<Exception>();
 
-			var threads = Enumerable
-				.Range(1, 10)
-				.Select(n => new Thread(() =>
-				{
-					try
+				var threads = Enumerable
+					.Range(1, 10)
+					.Select(n => new Thread(() =>
 					{
-						using (var db = GetDataContext(context))
-							db.Parent.ToList();
-					}
-					catch (Exception e)
-					{
-						exceptions.Add(e);
-					}
-				}))
-				.ToArray();
+						try
+						{
+							using (var db = GetDataContext(context))
+								db.Parent.ToList();
+						}
+						catch (Exception e)
+						{
+							exceptions.Add(e);
+						}
+					}))
+					.ToArray();
 
-			foreach (var thread in threads) thread.Start();
-			foreach (var thread in threads) thread.Join();
+				foreach (var thread in threads) thread.Start();
+				foreach (var thread in threads) thread.Join();
 
-			if (exceptions.Count > 0)
-				throw new AggregateException(exceptions);
+				if (exceptions.Count > 0)
+					throw new AggregateException(exceptions);
+			}
 		}
 
 		[Test]

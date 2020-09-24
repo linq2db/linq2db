@@ -19,7 +19,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Issue1925Test([IncludeDataSources(TestProvName.AllAccess, ProviderName.SqlServer, ProviderName.Sybase)]  string context)
+		public void Issue1925Test([IncludeDataSources(TestProvName.AllAccess, TestProvName.AllSqlServer, ProviderName.Sybase)]  string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<SampleClass>())

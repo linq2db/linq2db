@@ -24,12 +24,12 @@
 		/// SQLite classic provider wrapped into MiniProfiler without mappings to provider types configured.
 		/// Used to test general compatibility of linq2db with wrapped providers.
 		/// </summary>
-		public const string SQLiteClassicMiniProfilerUnmapped = "SQLite.Classic.MiniProfiler.Unmapped";
+		public const string SQLiteClassicMiniProfilerUnmapped = "SQLite.Classic.MPU";
 		/// <summary>
 		/// SQLite classic provider wrapped into MiniProfiler with mappings to provider types configured.
 		/// Used to test general compatibility of linq2db with wrapped providers.
 		/// </summary>
-		public const string SQLiteClassicMiniProfilerMapped   = "SQLite.Classic.MiniProfiler.Mapped";
+		public const string SQLiteClassicMiniProfilerMapped   = "SQLite.Classic.MPM";
 
 
 		/// <summary>
@@ -60,8 +60,8 @@
 		public const string AllOracle11            = "Oracle.11.Native,Oracle.11.Managed";
 		public const string AllOracle12            = "Oracle.Native,Oracle.Managed";
 		public const string AllFirebird            = "Firebird,Firebird3";
-		public const string AllSQLite              = "SQLite.Classic,SQLite.MS,SQLite.Classic.MiniProfiler.Unmapped,SQLite.Classic.MiniProfiler.Mapped";
-		public const string AllSQLiteClassic       = "SQLite.Classic,SQLite.Classic.MiniProfiler.Unmapped,SQLite.Classic.MiniProfiler.Mapped";
+		public const string AllSQLite              = "SQLite.Classic,SQLite.MS,SQLite.Classic.MPU,SQLite.Classic.MPM";
+		public const string AllSQLiteClassic       = "SQLite.Classic,SQLite.Classic.MPU,SQLite.Classic.MPM";
 		public const string AllSybase              = "Sybase,Sybase.Managed";
 		public const string AllSqlServer           = "SqlServer.2000,SqlServer.2005,SqlServer.2008,SqlServer.2012,SqlServer.2014,SqlServer.2017,SqlAzure";
 		public const string AllSqlServer2005Minus  = "SqlServer.2000,SqlServer.2005";

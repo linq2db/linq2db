@@ -132,8 +132,8 @@ namespace Tests.UserTests
 			using (db.CreateLocalTable<Workstation>())
 			using (db.CreateLocalTable<WorkstationGroup>())
 			{
-				var dateMin = DateTime.Now;
-				var dateMax = DateTime.Now;
+				var dateMin = TestData.DateTime;
+				var dateMax = TestData.DateTime;
 				var sectorId = 1;
 
 				var query1 = from q in db.GetTable<FtqData>()

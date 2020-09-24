@@ -1,0 +1,73 @@
+parameters:
+  isCore: false
+  artifacts: ''
+  framework: ''
+  titleFramework: ''
+  with_baselines: false
+
+steps:
+- checkout: none
+
+- task: CmdLine@2
+  inputs:
+    script: 'git clone https://$(BASELINES_GH_PAT)@github.com/linq2db/linq2db.baselines.git baselines && cd baselines && git checkout -b baselines_$(system.pullRequest.sourceCommitId)_$(System.JobId) && cd ..'
+    workingDirectory: '$(System.DefaultWorkingDirectory)'
+  displayName: Checkout test baselines
+  condition: and(variables.title, ${{ parameters.with_baselines }})
+
+- task: DownloadPipelineArtifact@2
+  inputs:
+    artifactName: ${{ parameters.artifacts }}
+    targetPath: '$(System.DefaultWorkingDirectory)'
+  condition: variables.title
+
+- task: CmdLine@2
+  inputs:
+    script: 'copy $(System.DefaultWorkingDirectory)\configs\$(config).json UserDataProviders.json'
+    workingDirectory: '$(System.DefaultWorkingDirectory)'
+  displayName: Copy test config
+  condition: variables.title
+
+- task: CmdLine@2
+  inputs:
+    script: '$(System.DefaultWorkingDirectory)\scripts\$(script)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)'
+  condition: and(variables.title, variables.script)
+  displayName: Setup tests
+
+- task: PowerShell@2
+  inputs:
+    filePath: '$(System.DefaultWorkingDirectory)\scripts\$(psscript)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)'
+  condition: and(variables.title, variables.psscript, ne(${{ parameters.isCore }}, False))
+  displayName: Setup tests
+
+- task: VSTest@2
+  inputs:
+    testAssemblyVer2: linq2db.Tests.dll
+    platform: '$(buildPlatform)'
+    configuration: '$(buildConfiguration)'
+    testFilterCriteria: 'TestCategory != SkipCI'
+    otherConsoleOptions: '/Framework:${{ parameters.framework }}'
+    testRunTitle: 'Windows / ${{ parameters.titleFramework }} / $(title)'
+  displayName: '$(title)'
+  condition: variables.title
+
+- task: CmdLine@2
+  inputs:
+    script: 'git add -A && git commit -m "[Windows / ${{ parameters.titleFramework }} / $(title)] baselines from https://github.com/linq2db/linq2db/pull/$(system.pullRequest.pullRequestNumber)" && git push https://$(BASELINES_GH_PAT)@github.com/linq2db/linq2db.baselines.git baselines_$(system.pullRequest.sourceCommitId)_$(System.JobId) && gh pr create --title "[Windows / ${{ parameters.titleFramework }} / $(title)] Baselines" --body "[Windows / ${{ parameters.titleFramework }} / $(title)] Baselines from  https://github.com/linq2db/linq2db/pull/$(system.pullRequest.pullRequestNumber)" --reviewer linq2db/baselines-reviewers --draft'
+    workingDirectory: '$(System.DefaultWorkingDirectory)\baselines'
+  displayName: Commit test baselines
+  condition: and(variables.title, succeeded(), ${{ parameters.with_baselines }})
+  continueOnError: true # dont fail if there is no changes to baselines
+  env:
+    GITHUB_TOKEN: $(BASELINES_GH_PAT)
+    EMAIL: azp@linq2db.com
+    GIT_AUTHOR_NAME: Azure Pipelines Bot
+    GIT_COMMITTER_NAME: Azure Pipelines Bot
+
+#    - powershell: Get-OdbcDriver | Select Name, Platform
+#      displayName: List ODBC providers
+
+#    - powershell: '[System.Data.OleDb.OleDbEnumerator]::GetRootEnumerator() | % { $_.GetValue(0) + " => " + $_.GetValue(2) }'
+#      displayName: List OLEDB providers

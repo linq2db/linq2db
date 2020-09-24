@@ -179,7 +179,7 @@ namespace Tests.Linq
 				var p   = 123.456m;
 				var sql = db.GetTable<AllTypes>().Where(t => t.DecimalDataType == p).ToString();
 
-				Console.WriteLine(sql);
+				TestContext.WriteLine(sql);
 
 				Assert.That(sql, Contains.Substring("(6,3)"));
 			}
@@ -194,7 +194,7 @@ namespace Tests.Linq
 				var p   = new byte[] { 0, 1, 2 };
 				var sql = db.GetTable<AllTypes>().Where(t => t.BinaryDataType == p).ToString();
 
-				Console.WriteLine(sql);
+				TestContext.WriteLine(sql);
 
 				Assert.That(sql, Contains.Substring("(3)").Or.Contains("Blob").Or.Contains("(8000)"));
 			}
@@ -205,7 +205,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var dt = DateTime.Now;
+				var dt = TestData.DateTime;
 
 				if (context.Contains("Informix"))
 					dt = new DateTime(dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute, dt.Second);
@@ -399,45 +399,51 @@ namespace Tests.Linq
 			public List<Table404Two>? Values;
 		}
 
-		[Repeat(2)] // don't ever remove Repeat, as it used to test issue #2174
 		[Test]
 		public void Issue404Test([DataSources(TestProvName.AllSybase)] string context)
 		{
-			using (new AllowMultipleQuery(true))
-			using (var db = GetDataContext(context))
-			using (var t1 = db.CreateLocalTable(Table404One.Data))
-			using (var t2 = db.CreateLocalTable(Table404Two.Data))
+			// executed twice to test issue #2174
+			execute(context);
+			execute(context);
+
+			void execute(string context)
 			{
-				Issue404? usage = null;
-				var allUsages = !usage.HasValue;
-				var res1 = Test();
-				Assert.AreEqual(1, res1.Id);
-				Assert.AreEqual(3, res1.Values.Count());
-				Assert.AreEqual(3, res1.Values.Where(v => v.FirstTableId == 1).Count());
-
-				usage = Issue404.Value1;
-				allUsages = false;
-				var res2 = Test();
-				Assert.AreEqual(1, res2.Id);
-				Assert.AreEqual(2, res2.Values.Count());
-				Assert.AreEqual(2, res2.Values.Where(v => v.Usage == usage).Count());
-				Assert.AreEqual(2, res2.Values.Where(v => v.FirstTableId == 1).Count());
-
-				usage = Issue404.Value2;
-				allUsages = false;
-				var res3 = Test();
-				Assert.AreEqual(1, res2.Id);
-				Assert.AreEqual(1, res3.Values.Count());
-				Assert.AreEqual(1, res3.Values.Where(v => v.Usage == usage).Count());
-				Assert.AreEqual(1, res3.Values.Where(v => v.FirstTableId == 1).Count());
-
-				FirstTable Test()
+				using (new AllowMultipleQuery(true))
+				using (var db = GetDataContext(context))
+				using (var t1 = db.CreateLocalTable(Table404One.Data))
+				using (var t2 = db.CreateLocalTable(Table404Two.Data))
 				{
-					return t1
-					  .GroupJoin(t2.Where(v =>
-						allUsages || v.Usage == usage.GetValueOrDefault()), c => c.Id, v => v.FirstTableId,
-						 (c, v) => new FirstTable { Id = c.Id, Values = v.ToList() })
-					  .FirstOrDefault();
+					Issue404? usage = null;
+					var allUsages = !usage.HasValue;
+					var res1 = Test();
+					Assert.AreEqual(1, res1.Id);
+					Assert.AreEqual(3, res1.Values.Count());
+					Assert.AreEqual(3, res1.Values.Where(v => v.FirstTableId == 1).Count());
+
+					usage = Issue404.Value1;
+					allUsages = false;
+					var res2 = Test();
+					Assert.AreEqual(1, res2.Id);
+					Assert.AreEqual(2, res2.Values.Count());
+					Assert.AreEqual(2, res2.Values.Where(v => v.Usage == usage).Count());
+					Assert.AreEqual(2, res2.Values.Where(v => v.FirstTableId == 1).Count());
+
+					usage = Issue404.Value2;
+					allUsages = false;
+					var res3 = Test();
+					Assert.AreEqual(1, res2.Id);
+					Assert.AreEqual(1, res3.Values.Count());
+					Assert.AreEqual(1, res3.Values.Where(v => v.Usage == usage).Count());
+					Assert.AreEqual(1, res3.Values.Where(v => v.FirstTableId == 1).Count());
+
+					FirstTable Test()
+					{
+						return t1
+						  .GroupJoin(t2.Where(v =>
+							allUsages || v.Usage == usage.GetValueOrDefault()), c => c.Id, v => v.FirstTableId,
+							 (c, v) => new FirstTable { Id = c.Id, Values = v.ToList() })
+						  .FirstOrDefault();
+					}
 				}
 			}
 		}
@@ -454,7 +460,7 @@ namespace Tests.Linq
 
 			static Expression<Func<Issue1189Customer, DateTime>> DefaultDateTime()
 			{
-				return p => Sql.AsSql(DateTime.Now);
+				return p => Sql.AsSql(TestData.DateTime);
 			}
 		}
 
@@ -465,7 +471,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<Issue1189Customer>())
 			{
-				table.Where(k => k.ToDelete <= DateTime.Now).ToList();
+				table.Where(k => k.ToDelete <= TestData.DateTime).ToList();
 			}
 		}
 

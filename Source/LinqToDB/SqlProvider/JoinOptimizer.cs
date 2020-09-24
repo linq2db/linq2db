@@ -550,8 +550,8 @@ namespace LinqToDB.SqlProvider
 			var res = new Dictionary<string, VirtualField>();
 
 			if (source is SqlTable table)
-				foreach (var pair in table.Fields)
-					res.Add(pair.Key, new VirtualField(pair.Value));
+				foreach (var field in table.Fields)
+					res.Add(field.Name, new VirtualField(field));
 
 			return res;
 		}

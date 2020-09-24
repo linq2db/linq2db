@@ -621,8 +621,8 @@ namespace Tests.Linq
 					select p.Name.LastName;
 
 				var sql = q.ToString()!;
-				
-				Console.WriteLine(sql);
+
+				TestContext.WriteLine(sql);
 
 				Assert.That(sql.IndexOf("First"),    Is.LessThan(0));
 				Assert.That(sql.IndexOf("LastName"), Is.GreaterThan(0));

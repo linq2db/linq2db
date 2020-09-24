@@ -39,7 +39,7 @@ namespace LinqToDB.Linq
 					Queries = { new QueryInfo { Statement = insertStatement, } }
 				};
 
-				foreach (var field in sqlTable.Fields.Values.Where(x => columnFilter == null || columnFilter(obj, x.ColumnDescriptor)))
+				foreach (var field in sqlTable.Fields.Where(x => columnFilter == null || columnFilter(obj, x.ColumnDescriptor)))
 				{
 					if (field.IsInsertable && !field.ColumnDescriptor.ShouldSkip(obj!, descriptor, SkipModification.Insert))
 					{
