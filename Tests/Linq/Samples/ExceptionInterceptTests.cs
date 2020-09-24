@@ -89,7 +89,7 @@ namespace Tests.Samples
 			public int ID { get; set; }
 		}
 
-#if NET46
+#if NET472
 		[Test]
 		public void StandardExceptionExecuteReader([IncludeDataSources(TestProvName.AllSQLiteClassic)]
 			string context)

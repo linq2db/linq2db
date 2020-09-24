@@ -17,7 +17,7 @@ namespace Tests.Linq
 			public int Id { get; set; }
 
 			[Column]
-			public string? DuplicateData { get; set; }
+			public string DuplicateData { get; set; } = null!;
 
 			[Column]
 			public int OrderData1 { get; set; }

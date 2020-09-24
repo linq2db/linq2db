@@ -6,7 +6,7 @@ using LinqToDB.Data;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
-#if NET46
+#if NET472
 using Tests.FSharp.Models;
 #else
 using Tests.Model;

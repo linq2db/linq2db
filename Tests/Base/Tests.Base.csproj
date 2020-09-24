@@ -13,7 +13,7 @@
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.7.1" />
 	</ItemGroup>
 
-	<ItemGroup Condition="'$(TargetFramework)' == 'net46' ">
+	<ItemGroup Condition="'$(TargetFramework)' == 'net472' ">
 		<None Update="SqlServerTypes\x64\msvcr120.dll">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
