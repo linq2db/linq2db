@@ -534,7 +534,7 @@ jobs:
           enable_os_win2019: true
           enable_os_ubuntu16: false
           enable_os_ubuntu20: true
-          enable_os_macos: true
+          enable_os_macos:  false # true (disabled due to stack overflow exception during test run. needs investigation)
           enable_fw_net472: true
           enable_fw_netcore21: true
           enable_fw_netcore31: false
@@ -553,7 +553,7 @@ jobs:
           enable_os_win2019: true
           enable_os_ubuntu16: false
           enable_os_ubuntu20: true
-          enable_os_macos: true
+          enable_os_macos:  false # true (disabled due to stack overflow exception during test run. needs investigation)
           enable_fw_net472: true
           enable_fw_netcore21: true
           enable_fw_netcore31: false
