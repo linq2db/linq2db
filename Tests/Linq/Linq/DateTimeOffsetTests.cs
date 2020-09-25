@@ -1042,5 +1042,16 @@ namespace Tests.Linq
 
 		#endregion
 
+		#region Issue Tests
+		[Test]
+		public void Issue2508([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.Data))
+				AreEqual(
+					from t in Transaction.Data           where t.TransactionDate > DateTimeOffset.Now.AddMinutes(200) select t.TransactionId,
+					from t in db.GetTable<Transaction>() where t.TransactionDate > DateTimeOffset.Now.AddMinutes(200) select t.TransactionId);
+		}
+		#endregion
 	}
 }
