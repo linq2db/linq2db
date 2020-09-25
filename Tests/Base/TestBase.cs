@@ -346,7 +346,9 @@ namespace Tests
 			ProviderName.SqlServer2008,
 			ProviderName.SqlServer2012,
 			ProviderName.SqlServer2014,
+			TestProvName.SqlServer2016,
 			ProviderName.SqlServer2017,
+			TestProvName.SqlServer2019,
 			ProviderName.SqlServer2000,
 			ProviderName.SqlServer2005,
 			TestProvName.SqlAzure,
@@ -1127,8 +1129,10 @@ namespace Tests
 				case ProviderName.SqlServer2008:
 				case ProviderName.SqlServer2012:
 				case ProviderName.SqlServer2014:
+				case TestProvName.SqlServer2016:
 				case ProviderName.SqlServer2017:
-					{
+				case TestProvName.SqlServer2019:
+				{
 						if (!tableName.StartsWith("#"))
 							finalTableName = "#" + tableName;
 						break;

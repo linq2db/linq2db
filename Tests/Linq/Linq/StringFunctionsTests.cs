@@ -96,7 +96,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AggregationOrderTest([IncludeDataSources(ProviderName.SqlServer2017)] string context)
+		public void AggregationOrderTest([IncludeDataSources(TestProvName.AllSqlServer2017Plus)] string context)
 		{
 			var data = GenerateData();
 
