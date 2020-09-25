@@ -1124,7 +1124,7 @@ namespace LinqToDB
 			string?           tableName                 = default,
 			string?           databaseName              = default,
 			string?           schemaName                = default,
-			bool              throwExceptionIfNotExists = true,
+			bool?             throwExceptionIfNotExists = default,
 			string?           serverName                = default,
 			TableOptions      tableOptions              = default)
 		{
@@ -1134,7 +1134,7 @@ namespace LinqToDB
 			{
 				QueryRunner.DropTable<T>.Query(dataContext, tableName, serverName, databaseName, schemaName, !throwExceptionIfNotExists, tableOptions);
 			}
-			catch when (!throwExceptionIfNotExists)
+			catch when (!throwExceptionIfNotExists ?? tableOptions.HasDropIfExists())
 			{
 				// ignore
 			}
@@ -1159,7 +1159,7 @@ namespace LinqToDB
 			string?        tableName                 = default,
 			string?        databaseName              = default,
 			string?        schemaName                = default,
-			bool           throwExceptionIfNotExists = true,
+			bool?          throwExceptionIfNotExists = default,
 			string?        serverName                = default,
 			TableOptions   tableOptions              = default)
 		{
@@ -1176,7 +1176,7 @@ namespace LinqToDB
 					!throwExceptionIfNotExists,
 					tableOptions.IsSet() ? tableOptions : table.TableOptions);
 			}
-			catch when (!throwExceptionIfNotExists)
+			catch when (!throwExceptionIfNotExists ?? tableOptions.HasDropIfExists())
 			{
 				// ignore
 			}
@@ -1203,7 +1203,7 @@ namespace LinqToDB
 			string?           tableName                 = default,
 			string?           databaseName              = default,
 			string?           schemaName                = default,
-			bool              throwExceptionIfNotExists = true,
+			bool?             throwExceptionIfNotExists = default,
 			string?           serverName                = default,
 			TableOptions      tableOptions              = default,
 			CancellationToken token                     = default)
@@ -1216,7 +1216,7 @@ namespace LinqToDB
 					.QueryAsync(dataContext, tableName, serverName, databaseName, schemaName, !throwExceptionIfNotExists, tableOptions, token)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
-			catch when (!throwExceptionIfNotExists)
+			catch when (!throwExceptionIfNotExists ?? tableOptions.HasDropIfExists())
 			{
 				// ignore
 			}
@@ -1244,7 +1244,7 @@ namespace LinqToDB
 			string?           tableName                 = default,
 			string?           databaseName              = default,
 			string?           schemaName                = default,
-			bool              throwExceptionIfNotExists = true,
+			bool?             throwExceptionIfNotExists = default,
 			string?           serverName                = default,
 			TableOptions      tableOptions              = default,
 			CancellationToken token                     = default)
@@ -1265,7 +1265,7 @@ namespace LinqToDB
 						token)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
-			catch when (!throwExceptionIfNotExists)
+			catch when (!throwExceptionIfNotExists ?? tableOptions.HasDropIfExists())
 			{
 				// ignore
 			}

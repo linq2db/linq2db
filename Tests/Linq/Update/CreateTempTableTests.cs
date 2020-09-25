@@ -113,7 +113,7 @@ namespace Tests.xUpdate
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.DropTable<int>("TempTable", throwExceptionIfNotExists: false);
+				await db.DropTableAsync<int>("TempTable", throwExceptionIfNotExists: false);
 
 #if !NET46
 				await

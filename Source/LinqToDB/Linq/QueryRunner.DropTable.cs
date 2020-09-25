@@ -17,7 +17,7 @@ namespace LinqToDB.Linq
 				string?      serverName,
 				string?      databaseName,
 				string?      schemaName,
-				bool         ifExists,
+				bool?        ifExists,
 				TableOptions tableOptions)
 			{
 				var sqlTable  = new SqlTable<T>(dataContext.MappingSchema);
@@ -47,7 +47,7 @@ namespace LinqToDB.Linq
 				string?           serverName,
 				string?           databaseName,
 				string?           schemaName,
-				bool              ifExists,
+				bool?             ifExists,
 				TableOptions      tableOptions,
 				CancellationToken token)
 			{

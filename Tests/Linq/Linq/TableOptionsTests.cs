@@ -3,6 +3,8 @@ using System.Linq;
 
 using IBM.Data.DB2;
 
+using JetBrains.Annotations;
+
 #if !NET46
 using IBM.Data.DB2.Core;
 #endif
@@ -24,6 +26,7 @@ namespace Tests.Linq
 		[Table(IsTemporary = true, Configuration = ProviderName.SQLite)]
 		[Table(IsTemporary = true, Configuration = ProviderName.PostgreSQL, Database = "TestData", Schema = "test_schema")]
 		[Table(IsTemporary = true, Configuration = ProviderName.DB2,                               Schema = "SESSION")]
+		[UsedImplicitly]
 		class IsTemporaryTable
 		{
 			[Column] public int Id    { get; set; }
@@ -31,7 +34,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void IsTemporaryTest([DataSources(false)] string context, [Values(true)] bool firstCall)
+		public void IsTemporaryFlagTest([DataSources(false)] string context, [Values(true)] bool firstCall)
 		{
 			using var db = (DataConnection)GetDataContext(context);
 
@@ -43,11 +46,6 @@ namespace Tests.Linq
 			}
 			catch (DB2Exception ex) when (firstCall && ex.ErrorCode == -2147467259)
 			{
-//				db.Execute("DROP TABLESPACE DBHOSTTEMPU_32K;");
-//				db.Execute("DROP TABLESPACE DBHOSTTEMPS_32K;");
-//				db.Execute("DROP TABLESPACE DBHOST_32K;");
-//				db.Execute("DROP BUFFERPOOL DBHOST_32K;");
-
 				db.Execute("CREATE BUFFERPOOL DBHOST_32K IMMEDIATE SIZE 250 AUTOMATIC PAGESIZE 32K;");
 				db.Execute("CREATE LARGE TABLESPACE DBHOST_32K PAGESIZE 32K MANAGED BY AUTOMATIC STORAGE EXTENTSIZE 32 PREFETCHSIZE 32 BUFFERPOOL DBHOST_32K;");
 				db.Execute("CREATE USER TEMPORARY TABLESPACE DBHOSTTEMPU_32K PAGESIZE 32K MANAGED BY AUTOMATIC STORAGE BUFFERPOOL DBHOST_32K;");
@@ -55,11 +53,11 @@ namespace Tests.Linq
 
 				IsGlobalTemporaryTest(context, false);
 			}
-
 		}
 
 		[Table(TableOptions = TableOptions.IsGlobalTemporary)]
 		[Table(TableOptions = TableOptions.IsGlobalTemporary, Configuration = ProviderName.DB2, Schema = "SESSION")]
+		[UsedImplicitly]
 		class IsGlobalTemporaryTable
 		{
 			[Column] public int Id    { get; set; }
@@ -84,11 +82,6 @@ namespace Tests.Linq
 			}
 			catch (DB2Exception ex) when (firstCall && ex.ErrorCode == -2147467259)
 			{
-//				db.Execute("DROP TABLESPACE DBHOSTTEMPU_32K;");
-//				db.Execute("DROP TABLESPACE DBHOSTTEMPS_32K;");
-//				db.Execute("DROP TABLESPACE DBHOST_32K;");
-//				db.Execute("DROP BUFFERPOOL DBHOST_32K;");
-
 				db.Execute("CREATE BUFFERPOOL DBHOST_32K IMMEDIATE SIZE 250 AUTOMATIC PAGESIZE 32K;");
 				db.Execute("CREATE LARGE TABLESPACE DBHOST_32K PAGESIZE 32K MANAGED BY AUTOMATIC STORAGE EXTENTSIZE 32 PREFETCHSIZE 32 BUFFERPOOL DBHOST_32K;");
 				db.Execute("CREATE USER TEMPORARY TABLESPACE DBHOSTTEMPU_32K PAGESIZE 32K MANAGED BY AUTOMATIC STORAGE BUFFERPOOL DBHOST_32K;");
@@ -101,6 +94,7 @@ namespace Tests.Linq
 		[Table(TableOptions = TableOptions.CreateIfNotExists)]
 		[Table(TableOptions = TableOptions.CreateIfNotExists | TableOptions.IsTemporary, Configuration = ProviderName.SqlServer2008)]
 		[Table("##temp_table", TableOptions = TableOptions.CreateIfNotExists, Configuration = ProviderName.SqlServer2012)]
+		[UsedImplicitly]
 		class CreateIfNotExistsTable
 		{
 			[Column] public int Id    { get; set; }
@@ -131,9 +125,30 @@ namespace Tests.Linq
 
 			using var table = db.CreateTempTable<CreateIfNotExistsTable>();
 
-			var result = table.ToArray();
+			_ = table.ToArray();
+			_ = db.CreateTempTable<CreateIfNotExistsTable>();
+		}
 
-			var table1 = db.CreateTempTable<CreateIfNotExistsTable>();
+		[UsedImplicitly]
+		class TestTable
+		{
+			[Column] public int Id    { get; set; }
+			[Column] public int Value { get; set; }
+		}
+
+		[Test]
+		public void IsTemporaryMethodTest([DataSources(false)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db.DropTable<TestTable>(tableOptions:TableOptions.IsTemporary | TableOptions.DropIfExists);
+
+
+			using var table = db.CreateTempTable<TestTable>(tableOptions:TableOptions.IsTemporary);
+
+			_ = db.GetTable<TestTable>().IsTemporary().ToList();
+
+
 		}
 	}
 }

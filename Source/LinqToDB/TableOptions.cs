@@ -65,10 +65,13 @@ namespace LinqToDB
 			return tableOptions == LinqToDB.TableOptions.NotSet ? additionalOptions : tableOptions;
 		}
 
-		internal static SqlTable Set(this SqlTable table, bool set, TableOptions tableOptions)
+		internal static SqlTable Set(this SqlTable table, bool? set, TableOptions tableOptions)
 		{
-			if (set) table.TableOptions |=  tableOptions;
-			else     table.TableOptions &= ~tableOptions;
+			if (set.HasValue)
+			{
+				if (set.Value) table.TableOptions |=  tableOptions;
+				else           table.TableOptions &= ~tableOptions;
+			}
 
 			return table;
 		}
