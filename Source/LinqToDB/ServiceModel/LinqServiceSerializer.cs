@@ -1000,6 +1000,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.Expr1);
 							Append(elem.IsNot);
 							Append(elem.Values);
+							Append(elem.WithNull == null ? 3 : elem.WithNull.Value ? 1 : 0);
 
 							break;
 						}
@@ -1759,11 +1760,12 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.InListPredicate :
 						{
-							var expr1  = Read<ISqlExpression>()!;
-							var isNot  = ReadBool();
-							var values = ReadList<ISqlExpression>()!;
+							var expr1    = Read<ISqlExpression>()!;
+							var isNot    = ReadBool();
+							var values   = ReadList<ISqlExpression>()!;
+							var withNull = ReadInt();
 
-							obj = new SqlPredicate.InList(expr1, isNot, values);
+							obj = new SqlPredicate.InList(expr1, withNull == 3 ? (bool?)null : withNull == 1, isNot, values);
 
 							break;
 						}

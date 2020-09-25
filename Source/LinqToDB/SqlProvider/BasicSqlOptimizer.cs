@@ -856,7 +856,7 @@ namespace LinqToDB.SqlProvider
 							if (parms.Length != len)
 								return new SqlFunction(func.SystemType, func.Name, func.IsAggregate, func.Precedence, parms);
 
-							if (parms.Length == 3)
+							if (parms.Length == 3 && parms[0].ElementType == QueryElementType.SqlFunction)
 							{
 								var boolValue1 = QueryHelper.GetBoolValue(parms[1], withParameters);
 								var boolValue2 = QueryHelper.GetBoolValue(parms[2], withParameters);
@@ -1136,7 +1136,15 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.IsTruePredicate:
 					return ((SqlPredicate.IsTrue)predicate).Reduce();
 				case QueryElementType.InListPredicate:
-					return ConvertInListPredicate(mappingSchema, (SqlPredicate.InList)predicate);
+				{
+					var inList = (SqlPredicate.InList)predicate;
+					var reduced = inList.Reduce(withParameters);
+
+					if (ReferenceEquals(reduced, inList))
+						return ConvertInListPredicate(mappingSchema, inList);
+
+					return reduced;
+				}
 			}
 			return predicate;
 		}
@@ -1185,7 +1193,7 @@ namespace LinqToDB.SqlProvider
 							if (values.Count == 0)
 								return new SqlPredicate.Expr(new SqlValue(p.IsNot));
 
-							return new SqlPredicate.InList(keys[0], p.IsNot, values);
+							return new SqlPredicate.InList(keys[0], null, p.IsNot, values);
 						}
 
 						{
@@ -1236,7 +1244,7 @@ namespace LinqToDB.SqlProvider
 							if (values.Count == 0)
 								return new SqlPredicate.Expr(new SqlValue(p.IsNot));
 
-							return new SqlPredicate.InList(expr.Parameters[0], p.IsNot, values);
+							return new SqlPredicate.InList(expr.Parameters[0], null, p.IsNot, values);
 						}
 
 						var sc = new SqlSearchCondition();
@@ -1999,11 +2007,13 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.ExprExprPredicate:
 				{
 					var exprExpr = (SqlPredicate.ExprExpr)element;
-					
-					if (exprExpr.Expr1.CanBeEvaluated(true) &&
-					    exprExpr.Expr2.CanBeEvaluated(true) && (!exprExpr.Expr1.CanBeEvaluated(false) ||
-					                                            !exprExpr.Expr2.CanBeEvaluated(false)))
+
+					var isMutable1 = exprExpr.Expr1.CanBeEvaluated(true) && !exprExpr.Expr1.CanBeEvaluated(false);
+					var isMutable2 = exprExpr.Expr2.CanBeEvaluated(true) && !exprExpr.Expr2.CanBeEvaluated(false);
+
+					if ((isMutable1 || isMutable2) && exprExpr.WithNull != null)
 						return true;
+
 					return false;
 				}
 				case QueryElementType.IsTruePredicate:
@@ -2061,6 +2071,7 @@ namespace LinqToDB.SqlProvider
 
 					if (ReferenceEquals(ne, e))
 						break;
+
 					e = ne;
 				}
 				

@@ -2649,7 +2649,7 @@ namespace LinqToDB.Linq.Builder
 						for (var i = 0; i < newArr.Expressions.Count; i++)
 							exprs[i] = ConvertToSql(context, newArr.Expressions[i]);
 
-						return new SqlPredicate.InList(expr, false, exprs);
+						return new SqlPredicate.InList(expr, Configuration.Linq.CompareNullsAsValues ? false : (bool?)null, false, exprs);
 					}
 
 				default :
@@ -2658,7 +2658,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var p = BuildParameter(arr, null, false, BuildParameterType.InPredicate).SqlParameter;
 						p.IsQueryParameter = false;
-						return new SqlPredicate.InList(expr, false, p);
+						return new SqlPredicate.InList(expr, Configuration.Linq.CompareNullsAsValues ? false : (bool?)null, false, p);
 					}
 
 					break;

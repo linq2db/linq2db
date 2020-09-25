@@ -13,7 +13,6 @@ namespace LinqToDB.SqlQuery
 
 	public static class QueryHelper
 	{
-
 		public static bool ContainsElement(IQueryElement testedRoot, IQueryElement element)
 		{
 			return null != new QueryVisitor().Find(testedRoot, e => e == element);
@@ -1582,5 +1581,24 @@ namespace LinqToDB.SqlQuery
 
 			return hasParameter;
 		}
+
+		public static bool ShouldCheckForNull(this ISqlExpression expr)
+		{
+			if (!expr.CanBeNull)
+				return false;
+
+			if (expr.ElementType == QueryElementType.SqlBinaryExpression)
+				return false;
+
+			if (expr.ElementType.In(QueryElementType.SqlField, QueryElementType.Column, QueryElementType.SqlValue, QueryElementType.SqlParameter))
+				return true;
+
+			if (null != new QueryVisitor().Find(expr, e => e.ElementType == QueryElementType.SqlQuery))
+				return false;
+
+			return true;
+		}
+
+
 	}
 }

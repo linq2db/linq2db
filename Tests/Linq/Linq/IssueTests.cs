@@ -594,17 +594,13 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var values = new int?[] { 123 };
+				var values = new int?[] { 1, 2, 3 };
 
-				var expected = from p in Parent
-					where !values.Contains(p.Value1)
-					select p;
-
-				var actual = from p in db.GetTable<Parent>()
+				var query = from p in db.GetTable<Parent>()
 						where !values.Contains(p.Value1)
 						select p;
 
-				AreEqual(expected, actual);
+				AssertQuery(query);
 			}
 		}
 
@@ -613,19 +609,14 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var values = new int?[] { 123 };
+				var values = new int?[] { 1, 2, 3 };
 
-				var expected = from c in Child
-					from p in Parent
-					where p.ParentID == c.ParentID && !values.Contains(p.Value1)
-					select c;
-
-				var actual = from c in db.GetTable<Child>()
+				var query = from c in db.GetTable<Child>()
 					from p in db.GetTable<Parent>()
 					where p.ParentID == c.ParentID && !values.Contains(p.Value1)
 					select c;
 
-				AreEqual(expected, actual);
+				AssertQuery(query);
 			}
 		}
 		[Test]
@@ -633,7 +624,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var values = new[] { 123 };
+				var values = new int?[] { 1, 2, 3 };
 
 				var expected = from c in Child
 					where (from p in Parent

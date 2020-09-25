@@ -225,11 +225,14 @@ namespace LinqToDB.SqlQuery
 				if (WithNull == null)
 					return this;
 
+				var canBeNull_1 = Expr1.ShouldCheckForNull();
+				var canBeNull_2 = Expr2.ShouldCheckForNull();
+
 				var isInverted = !WithNull.Value;
 
 				var predicate = new ExprExpr(Expr1, Operator, Expr2, null);
 
-				if (!Expr1.CanBeNull && !Expr2.CanBeNull)
+				if (!canBeNull_1 && !canBeNull_2)
 					return predicate;
 
 				var search = new SqlSearchCondition();
@@ -238,7 +241,7 @@ namespace LinqToDB.SqlQuery
 				{
 					if (!Expr2.CanBeEvaluated(withParameters))
 					{
-						if (Expr2.CanBeNull)
+						if (canBeNull_2)
 						{
 							if (isInverted)
 							{
@@ -258,7 +261,7 @@ namespace LinqToDB.SqlQuery
 				}
 				else if (Expr2.CanBeEvaluated(withParameters))
 				{
-					if (Expr1.CanBeNull)
+					if (canBeNull_1)
 					{
 						if (isInverted)
 						{
@@ -277,9 +280,9 @@ namespace LinqToDB.SqlQuery
 				}
 				else
 				{
-					if (Expr2.CanBeNull)
+					if (canBeNull_2)
 					{
-						if (Expr1.CanBeNull)
+						if (canBeNull_1)
 						{
 							if (isInverted)
 							{
@@ -348,7 +351,7 @@ namespace LinqToDB.SqlQuery
 					}
 					else
 					{
-						if (Expr1.CanBeNull)
+						if (canBeNull_1)
 						{
 							if (isInverted)
 							{
@@ -372,150 +375,6 @@ namespace LinqToDB.SqlQuery
 				return search;
 			}
 
-			public ISqlPredicate ReduceOld()
-			{
-				if (Operator.In(Operator.Equal, Operator.NotEqual))
-				{
-					if (Expr1.TryEvaluateExpression(false, out var value1))
-					{
-						if (value1 == null)
-							return new IsNull(Expr2, Operator != Operator.Equal);
-
-					} else if (Expr2.TryEvaluateExpression(false, out var value2))
-					{
-						if (value2 == null)
-							return new IsNull(Expr1, Operator != Operator.Equal);
-					}
-				}
-
-				if (WithNull == null)
-					return this;
-
-				var includeNulls = WithNull.Value;
-
-				var predicate = new ExprExpr(Expr1, Operator, Expr2, null);
-
-				if (!Expr1.CanBeNull && !Expr2.CanBeNull)
-					return predicate;
-
-				var search = new SqlSearchCondition();
-
-				SqlSearchCondition nullPart = new SqlSearchCondition();
-
-				var isEquality = Operator.In(Operator.Equal, Operator.GreaterOrEqual, Operator.LessOrEqual,
-					Operator.NotLess, Operator.NotGreater);
-
-				if (isEquality && includeNulls)
-				{
-					if (Expr1.CanBeEvaluated(true))
-					{
-						/*if (Expr2.CanBeNull && !Expr2.CanBeEvaluated(true))
-						{
-							search.Conditions.Add(new SqlCondition(false, predicate, true));
-							search.Conditions.Add(new SqlCondition(false, new IsNull(Expr2, false), false));
-						}*/
-					}
-					else if (Expr2.CanBeEvaluated(false))
-					{
-						/*if (Expr1.CanBeNull && !Expr1.CanBeEvaluated(true))
-						{
-							search.Conditions.Add(new SqlCondition(false, predicate, true));
-							search.Conditions.Add(new SqlCondition(false, new IsNull(Expr1, false), false));
-						}*/
-					}
-					else
-					{
-						if (Expr1.CanBeNull && Expr2.CanBeNull)
-						{
-							search.Conditions.Add(new SqlCondition(false, predicate, true));
-							search.Conditions.Add(new SqlCondition(false, new IsNull(Expr1, false), false));
-							search.Conditions.Add(new SqlCondition(false, new IsNull(Expr2, false), false));
-						}
-					}
-				}
-				else
-				{
-					if (!isEquality && !includeNulls)
-					{
-						if (Expr1.CanBeEvaluated(true))
-						{
-							if (Expr2.CanBeNull && !Expr2.CanBeEvaluated(true))
-							{
-								search.Conditions.Add(new SqlCondition(false, predicate, false));
-								search.Conditions.Add(new SqlCondition(false, new IsNull(Expr2, true), false));
-							}
-						}
-						else if (Expr2.CanBeEvaluated(false))
-						{
-							if (Expr1.CanBeNull && !Expr1.CanBeEvaluated(true))
-							{
-								search.Conditions.Add(new SqlCondition(false, predicate, false));
-								search.Conditions.Add(new SqlCondition(false, new IsNull(Expr1, true), false));
-							}
-						}
-						else
-						{
-							if (Expr1.CanBeNull && Expr2.CanBeNull)
-							{
-								search.Conditions.Add(new SqlCondition(false, predicate, false));
-								search.Conditions.Add(new SqlCondition(false, new IsNull(Expr1, true), false));
-								search.Conditions.Add(new SqlCondition(false, new IsNull(Expr2, true), false));
-							}
-						}
-					}
-				}
-
-				/*
-				switch (Operator)
-				{
-					case Operator.Equal:
-						search.Conditions.Add(new SqlCondition(false, predicate, includeNulls));
-						if (!(Expr1.CanBeEvaluated(false) || Expr2.CanBeEvaluated(false)))
-						{
-							nullPart.Conditions.Add(new SqlCondition(false, new IsNull(Expr1, !includeNulls), !includeNulls));
-							nullPart.Conditions.Add(new SqlCondition(false, new IsNull(Expr2, !includeNulls), includeNulls));
-						}
-						break;
-					case Operator.NotEqual:
-						search.Conditions.Add(new SqlCondition(false, predicate, includeNulls));
-						if (!(Expr1.CanBeEvaluated(false) || Expr2.CanBeEvaluated(false)))
-						{
-							nullPart.Conditions.Add(new SqlCondition(false, new IsNull(Expr1, !includeNulls), includeNulls));
-							nullPart.Conditions.Add(new SqlCondition(false, new IsNull(Expr2, !includeNulls), includeNulls));
-						}
-						break;
-					/*case Operator.Greater:
-						break;
-					case Operator.GreaterOrEqual:
-						break;
-					case Operator.NotGreater:
-						break;
-					case Operator.Less:
-						break;
-					case Operator.LessOrEqual:
-						break;
-					case Operator.NotLess:
-						break;#1#
-					default:
-						throw new ArgumentOutOfRangeException();
-				}
-				*/
-
-				/*if (nullPart.Conditions.Count > 0)
-				{
-					search.Conditions.Add(new SqlCondition(false, predicate, includeNulls != isEquality));
-					search.Conditions.Add(new SqlCondition(false, nullPart));
-				}
-				else
-				{
-					return predicate;
-				}*/
-
-				if (search.Conditions.Count == 0)
-					return predicate;
-				
-				return search;
-			}
 		}
 
 		// string_expression [ NOT ] LIKE string_expression [ ESCAPE 'escape_character' ]
@@ -669,7 +528,7 @@ namespace LinqToDB.SqlQuery
 			public ISqlPredicate Reduce()
 			{
 				var predicate = new ExprExpr(Expr1, Operator.Equal, IsNot ? FalseValue : TrueValue, null);
-				if (WithNull == null || !Expr1.CanBeNull) 
+				if (WithNull == null || !Expr1.ShouldCheckForNull()) 
 					return predicate;
 
 				var search = new SqlSearchCondition();
@@ -777,16 +636,20 @@ namespace LinqToDB.SqlQuery
 
 		public class InList : BaseNotExpr
 		{
-			public InList(ISqlExpression exp1, bool isNot, params ISqlExpression[]? values)
+			public bool?          WithNull    { get; }
+
+			public InList(ISqlExpression exp1, bool? withNull, bool isNot, params ISqlExpression[]? values)
 				: base(exp1, isNot, SqlQuery.Precedence.Comparison)
 			{
+				WithNull = withNull;
 				if (values != null && values.Length > 0)
 					Values.AddRange(values);
 			}
 
-			public InList(ISqlExpression exp1, bool isNot, IEnumerable<ISqlExpression> values)
+			public InList(ISqlExpression exp1, bool? withNull, bool isNot, IEnumerable<ISqlExpression>? values)
 				: base(exp1, isNot, SqlQuery.Precedence.Comparison)
 			{
+				WithNull = withNull;
 				if (values != null)
 					Values.AddRange(values);
 			}
@@ -802,7 +665,23 @@ namespace LinqToDB.SqlQuery
 
 			public override IQueryElement Invert()
 			{
-				return new InList(Expr1, !IsNot, Values);
+				return new InList(Expr1, !WithNull, !IsNot, Values);
+			}
+
+			public ISqlPredicate Reduce(bool withParameters)
+			{
+				if (WithNull == null)
+					return this;
+
+				var predicate = new InList(Expr1, null, IsNot, Values);
+				if (WithNull == null || !Expr1.ShouldCheckForNull()) 
+					return predicate;
+
+				var search = new SqlSearchCondition();
+				search.Conditions.Add(new SqlCondition(false, predicate, WithNull.Value));
+				search.Conditions.Add(new SqlCondition(false, new IsNull(Expr1, !WithNull.Value), WithNull.Value));
+				return search;
+
 			}
 
 			protected override ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
@@ -814,6 +693,7 @@ namespace LinqToDB.SqlQuery
 				{
 					objectTree.Add(this, clone = new InList(
 						(ISqlExpression)Expr1.Clone(objectTree, doClone),
+						WithNull,
 						IsNot,
 						Values.Select(e => (ISqlExpression)e.Clone(objectTree, doClone)).ToArray()));
 				}

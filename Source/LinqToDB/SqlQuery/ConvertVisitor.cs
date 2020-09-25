@@ -379,7 +379,7 @@ namespace LinqToDB.SqlQuery
 							var v = Convert(p.Values);
 
 							if (e != null && !ReferenceEquals(p.Expr1, e) || v != null && !ReferenceEquals(p.Values, v))
-								newElement = new SqlPredicate.InList(e ?? p.Expr1, p.IsNot, v ?? p.Values);
+								newElement = new SqlPredicate.InList(e ?? p.Expr1, p.WithNull, p.IsNot, v ?? p.Values);
 
 							break;
 						}

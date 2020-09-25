@@ -96,7 +96,7 @@
 
 			SqlPredicate.InList CreateInList(bool isNot, object[] exprs)
 			{
-				var list = new SqlPredicate.InList(_expr, isNot, null);
+				var list = new SqlPredicate.InList(_expr, Common.Configuration.Linq.CompareNullsAsValues ? false : (bool?)null, isNot, null);
 
 				if (exprs != null && exprs.Length > 0)
 				{
