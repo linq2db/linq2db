@@ -8,6 +8,7 @@ namespace Tests.Linq
 	using System.Collections.Generic;
 	using System.Runtime.InteropServices;
 	using LinqToDB.Mapping;
+	using LinqToDB.Tools;
 	using Tests.Model;
 
 	[TestFixture]
@@ -63,10 +64,13 @@ namespace Tests.Linq
 
 			/* Currently, only SQL Server properly handles DateTimeOffset with full fidelity in both directions.
 			 * Other Server behaviors:
-			 *  - PostgreSQL: Translates to UTC before transmitting to server. Original TZ lost in translation.
+			 *  - PostgreSQL: 
+			 *     - Translates to UTC before transmitting to server. Original TZ lost in translation.
+			 *     - Does not keep precision to the Tick level, only to the 100ns level.
 			 */
 			public static Transaction[] LocalTzData { get; } = AllData
-				.Where(t => t.TransactionDate.Offset == DateTimeOffset.Now.Offset)
+				.Where(t => t.TransactionDate.Offset == DateTimeOffset.Now.Offset) // only local TZ is accurate
+				.Where(t => t.TransactionId.NotIn(17, 18))                         // ignore items w/ 1-tick variance
 				.ToArray();
 
 			public static Transaction[] GetDataForContext(string context) =>
@@ -76,8 +80,9 @@ namespace Tests.Linq
 		}
 
 		#region Group By Tests
+		// Group by tests are only done for Sql Server due to complexity of db variances in handling TZ
 		[Test]
-		public void GroupByDateTimeOffsetByDateTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context)
+		public void GroupByDateTimeOffsetByDateTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -99,7 +104,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByTimeOfDayTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context)
+		public void GroupByDateTimeOffsetByTimeOfDayTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -121,7 +126,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context)
+		public void GroupByDateTimeOffsetTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -143,7 +148,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByDayTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context)
+		public void GroupByDateTimeOffsetByDayTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -165,7 +170,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByDayOfWeekTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context)
+		public void GroupByDateTimeOffsetByDayOfWeekTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -187,7 +192,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByDayOfYearTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context)
+		public void GroupByDateTimeOffsetByDayOfYearTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -209,7 +214,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByHourTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context)
+		public void GroupByDateTimeOffsetByHourTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -231,7 +236,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByLocalDateTimeTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context)
+		public void GroupByDateTimeOffsetByLocalDateTimeTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -253,7 +258,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByMillisecondTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context)
+		public void GroupByDateTimeOffsetByMillisecondTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -275,7 +280,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByMinuteTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context)
+		public void GroupByDateTimeOffsetByMinuteTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -297,7 +302,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByMonthTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context)
+		public void GroupByDateTimeOffsetByMonthTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -319,7 +324,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetBySecondTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context)
+		public void GroupByDateTimeOffsetBySecondTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -341,7 +346,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByYearTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context)
+		public void GroupByDateTimeOffsetByYearTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -363,7 +368,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByAddDaysTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context)
+		public void GroupByDateTimeOffsetByAddDaysTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -385,7 +390,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByAddHoursTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context)
+		public void GroupByDateTimeOffsetByAddHoursTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -407,7 +412,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByAddMillisecondsTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context)
+		public void GroupByDateTimeOffsetByAddMillisecondsTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -429,7 +434,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByAddMinutesTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context)
+		public void GroupByDateTimeOffsetByAddMinutesTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -451,7 +456,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByAddMonthsTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context)
+		public void GroupByDateTimeOffsetByAddMonthsTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -473,7 +478,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByAddSecondsTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context)
+		public void GroupByDateTimeOffsetByAddSecondsTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -495,7 +500,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDateTimeOffsetByAddYearsTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context)
+		public void GroupByDateTimeOffsetByAddYearsTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
