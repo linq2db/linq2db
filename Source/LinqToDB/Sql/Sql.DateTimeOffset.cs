@@ -123,9 +123,16 @@ namespace LinqToDB
 				_                           => throw new InvalidOperationException(),
 			};
 		}
+		#endregion
 
+		#region DateDiff
 		[CLSCompliant(false)]
-		[Sql.Extension(                "DateDiff",      BuilderType = typeof(DateDiffBuilder))]
+		[Sql.Extension(            "DateDiff",      BuilderType = typeof(DateDiffBuilder))]
+		[Sql.Extension(PN.MySql,   "TIMESTAMPDIFF", BuilderType = typeof(DateDiffBuilder))]
+		[Sql.Extension(PN.DB2,     "",              BuilderType = typeof(DateDiffBuilderDB2))]
+		[Sql.Extension(PN.SapHana, "",              BuilderType = typeof(DateDiffBuilderSapHana))]
+		[Sql.Extension(PN.SQLite,  "",              BuilderType = typeof(DateDiffBuilderSQLite))]
+		[Sql.Extension(PN.PostgreSQL,  "",          BuilderType = typeof(DateDiffBuilderPostgreSql))]
 		public static int? DateDiff(DateParts part, DateTimeOffset? startDate, DateTimeOffset? endDate)
 		{
 			if (startDate == null || endDate == null)
