@@ -23,6 +23,13 @@ namespace Tests.Linq
 	public class SelectTests : TestBase
 	{
 		[Test]
+		public void TestBaselines([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+				TestJohn(from p in db.Person select p);
+		}
+
+		[Test]
 		public void SimpleDirect([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

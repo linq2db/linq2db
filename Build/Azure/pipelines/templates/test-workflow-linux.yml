@@ -8,7 +8,7 @@ steps:
 
 - task: CmdLine@2
   inputs:
-    script: 'git clone https://$(BASELINES_GH_PAT)@github.com/linq2db/linq2db.baselines.git baselines && cd baselines && git checkout -b baselines_$(system.pullRequest.sourceCommitId)_$(System.JobId) && cd ..'
+    script: 'git clone https://$(BASELINES_GH_PAT)@github.com/linq2db/linq2db.baselines.git baselines && cd baselines && git checkout -b $(baselines_branch) && cd ..'
     workingDirectory: '$(System.DefaultWorkingDirectory)'
   displayName: Checkout test baselines
   condition: and(variables.title, ${{ parameters.with_baselines }})
@@ -63,7 +63,7 @@ steps:
 
 - task: CmdLine@2
   inputs:
-    script: 'git add -A && git commit -m "[Linux / NETCOREAPP${{ parameters.netcoreversion }} / $(title)] baselines from https://github.com/linq2db/linq2db/pull/$(system.pullRequest.pullRequestNumber)" && git push https://$(BASELINES_GH_PAT)@github.com/linq2db/linq2db.baselines.git baselines_$(system.pullRequest.sourceCommitId)_$(System.JobId) && gh pr create --title "[Linux / NETCOREAPP${{ parameters.netcoreversion }} / $(title)] Baselines" --body "[Linux / NETCOREAPP${{ parameters.netcoreversion }} / $(title)] Baselines from  https://github.com/linq2db/linq2db/pull/$(system.pullRequest.pullRequestNumber)" --reviewer linq2db/baselines-reviewers --draft'
+    script: 'git add -A && git commit -m "[Linux / NETCOREAPP${{ parameters.netcoreversion }} / $(title)] baselines from https://github.com/linq2db/linq2db/pull/$(system.pullRequest.pullRequestNumber)" && git pull --rebase && git push https://$(BASELINES_GH_PAT)@github.com/linq2db/linq2db.baselines.git $(baselines_branch)'
     workingDirectory: '$(System.DefaultWorkingDirectory)/baselines'
   displayName: Commit test baselines
   condition: and(variables.title, succeeded(), ${{ parameters.with_baselines }})
