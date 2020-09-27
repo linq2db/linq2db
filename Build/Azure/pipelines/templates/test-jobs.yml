@@ -17,6 +17,7 @@ jobs:
   condition: and(${{ parameters.enabled }}, ${{ parameters.with_baselines }})
 
   steps:
+  - checkout: none
   - task: CmdLine@2
     inputs:
       script: |
@@ -32,6 +33,7 @@ jobs:
         IF [%BRANCHCHECK%] NEQ [] (
         ECHO Skip branch creation. Branch %BRANCHNAME% already exists. Hash:%BRANCHCHECK%
         ) ELSE (
+        git ls-remote %REPO% HEAD
         SET HEADHASH=
         FOR /F %%I IN ('git ls-remote %REPO% HEAD') DO SET HEADHASH=%%I
         IF [%HEADHASH%] EQU [] ECHO Cannot find baselines repository HEAD & GOTO:FAIL
@@ -366,10 +368,11 @@ jobs:
   condition: and(${{ parameters.enabled }}, ${{ parameters.with_baselines }})
 
   steps:
+  - checkout: none
   - task: CmdLine@2
     inputs:
       script: |
-        ECHO OFF
+        ECHO ON
         SET PRNUM=$(system.pullRequest.pullRequestNumber)
         SET BRANCHNAME=$(baselines_branch)
         SET BRANCHROOT=$(baselines_head)
