@@ -28,14 +28,13 @@ jobs:
         SET REPO=https://%GITHUB_TOKEN%@github.com/%USER%/%REPONAME%.git
         IF "%PR_NUM%" NEQ "" (SET BRANCHNAME=baselines/pr_%PR_NUM%) ELSE (SET BRANCHNAME=baselines/default)
         SET BRANCHCHECK=
-        FOR /F %%I IN ('git ls-remote --heads %REPO% %BRANCHNAME%') DO SET BRANCHCHECK=%%I
+        FOR /F %I IN ('git ls-remote --heads %REPO% %BRANCHNAME%') DO SET BRANCHCHECK=%I
         IF %ERRORLEVEL% NEQ 0 ECHO Faled to check branch %BRANCHNAME% existence & GOTO:FAIL
         IF [%BRANCHCHECK%] NEQ [] (
         ECHO Skip branch creation. Branch %BRANCHNAME% already exists. Hash:%BRANCHCHECK%
         ) ELSE (
-        git ls-remote %REPO% HEAD
         SET HEADHASH=
-        FOR /F %%I IN ('git ls-remote %REPO% HEAD') DO SET HEADHASH=%%I
+        FOR /F %I IN ('git ls-remote %REPO% HEAD') DO SET HEADHASH=%I
         IF [%HEADHASH%] EQU [] ECHO Cannot find baselines repository HEAD & GOTO:FAIL
         ECHO Create baselines branch %BRANCHNAME%
         gh api /repos/%USER%/%REPONAME%/git/refs -i -F ref=refs/heads/%BRANCHNAME% -F sha=%HEADHASH% | FIND "201 Created"
@@ -384,7 +383,7 @@ jobs:
         IF [%BRANCHNAME%] EQU [] ECHO Baselines branch %BRANCHNAME% not found & GOTO:FAIL
         IF [%BRANCHROOT%] EQU [] ECHO Baselines branch root hash missing & GOTO:FAIL
         SET CURRENTHEAD=
-        FOR /F %%I IN ('git ls-remote --heads %REPO% %BRANCHNAME%') DO SET CURRENTHEAD=%%I
+        FOR /F %I IN ('git ls-remote --heads %REPO% %BRANCHNAME%') DO SET CURRENTHEAD=%I
         IF %ERRORLEVEL% EQU 1 ECHO Faled to check branch %BRANCHNAME% head & GOTO:FAIL
         IF [%CURRENTHEAD%] EQU [] ECHO Baselines branch %BRANCHNAME% doesn't exist & GOTO:FAIL
         IF [%BRANCHROOT%] EQU [%CURRENTHEAD%] (
