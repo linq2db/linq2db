@@ -387,10 +387,17 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.FuncLikePredicate:
 						{
 							var p = (SqlPredicate.FuncLike)element;
-							var f = (SqlFunction?)ConvertInternal(p.Function);
+							var f = (ISqlExpression?)ConvertInternal(p.Function);
 
 							if (f != null && !ReferenceEquals(p.Function, f))
-								newElement = new SqlPredicate.FuncLike(f);
+							{
+								if (f is SqlFunction function)
+									newElement = new SqlPredicate.FuncLike(function);
+								else if (f is ISqlPredicate predicate)
+									newElement = predicate;
+								else
+									throw new InvalidCastException("Converted FuncLikePredicate expression is not a Predicate expression.");
+							}
 
 							break;
 						}
