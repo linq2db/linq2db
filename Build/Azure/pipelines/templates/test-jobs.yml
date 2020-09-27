@@ -20,7 +20,7 @@ jobs:
   - task: CmdLine@2
     inputs:
       script: |
-        ECHO OFF
+        ECHO ON
         SET PR_NUM=$(system.pullRequest.pullRequestNumber)
         SET USER=linq2db
         SET REPONAME=linq2db.baselines
