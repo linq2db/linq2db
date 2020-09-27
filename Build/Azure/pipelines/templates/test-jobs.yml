@@ -348,7 +348,7 @@ jobs:
 # - if baselines branch has no commits - delete branch         #
 # - if PR created, post link to it to main PR                  #
 ################################################################
-- job: create_baselines_branch
+- job: create_baselines_pr
   pool:
     vmImage: 'windows-2019'
   displayName: 'Create Test Baselines Pull Request'
