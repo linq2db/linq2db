@@ -2011,7 +2011,8 @@ namespace LinqToDB.SqlProvider
 					var isMutable1 = exprExpr.Expr1.CanBeEvaluated(true) && !exprExpr.Expr1.CanBeEvaluated(false);
 					var isMutable2 = exprExpr.Expr2.CanBeEvaluated(true) && !exprExpr.Expr2.CanBeEvaluated(false);
 
-					if ((isMutable1 || isMutable2) && exprExpr.WithNull != null)
+					if ((isMutable1 || isMutable2) && exprExpr.WithNull != null 
+					                               && (exprExpr.Expr1.ShouldCheckForNull() || exprExpr.Expr2.ShouldCheckForNull()))
 						return true;
 
 					return false;
