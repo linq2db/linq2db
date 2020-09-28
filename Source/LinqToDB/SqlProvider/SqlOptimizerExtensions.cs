@@ -10,6 +10,7 @@ namespace LinqToDB.SqlProvider
 			MappingSchema mappingSchema)
 		{
 			var newStatement = optimizer.OptimizeStatement(statement, true);
+			newStatement     = optimizer.ConvertStatement(mappingSchema, newStatement, true);
 			newStatement.PrepareQueryAndAliases();
 			return newStatement;
 		}

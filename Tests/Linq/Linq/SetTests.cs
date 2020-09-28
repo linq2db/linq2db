@@ -145,6 +145,26 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void NotContains8([DataSources] string context)
+		{
+			var arr = new[] { GrandChild.ElementAt(0), GrandChild.ElementAt(1) };
+
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in Parent
+					join ch in Child on p.ParentID equals ch.ParentID
+					join gc in GrandChild on ch.ChildID equals gc.ChildID
+					where !arr.Contains(gc)
+					select p
+					,
+					from p in db.Parent
+					join ch in db.Child on p.ParentID equals ch.ParentID
+					join gc in db.GrandChild on ch.ChildID equals gc.ChildID
+					where !arr.Contains(gc)
+					select p);
+		}
+
+		[Test]
 		public void Contains801([DataSources] string context)
 		{
 			var arr = new[] { GrandChild.ElementAt(0), GrandChild.ElementAt(1) };
