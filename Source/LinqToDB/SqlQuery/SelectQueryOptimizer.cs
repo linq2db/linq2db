@@ -429,65 +429,8 @@ namespace LinqToDB.SqlQuery
 
 			OptimizeDistinct();
 			OptimizeDistinctOrderBy();
-			OptimizeSkipTake();
 
-			OptimizeSearchConditions();
-		}
-
-		private void OptimizeSkipTake()
-		{
-			var visitor = new QueryVisitor();
-			if (_selectQuery.Select.TakeValue != null)
-			{
-				var supportsParameter = _flags.GetAcceptsTakeAsParameterFlag(_selectQuery);
-
-				if (!supportsParameter && !(_selectQuery.Select.TakeValue is SqlValue))
-					_selectQuery.IsParameterDependent = true;
-				else if (_selectQuery.Select.TakeValue is SqlBinaryExpression
-					// TODO: is this check safe?
-					|| _selectQuery.Select.TakeValue is SqlFunction)
-				{
-					if (visitor.Find(_selectQuery.Select.TakeValue, e => e is SqlParameter) != null)
-						_selectQuery.IsParameterDependent = true;
-					else
-					{
-						var value = _selectQuery.Select.TakeValue.EvaluateExpression(null)!;
-
-						if (supportsParameter)
-							_selectQuery.Select.Take(
-								new SqlParameter(new DbDataType(value.GetType()), "take", value)
-								{
-									IsQueryParameter = !QueryHelper.NeedParameterInlining(_selectQuery.Select.TakeValue)
-								}, _selectQuery.Select.TakeHints
-							);
-						else
-							_selectQuery.Select.Take(new SqlValue(value), _selectQuery.Select.TakeHints);
-					}
-				}
-			}
-			if (_selectQuery.Select.SkipValue != null)
-			{
-				var supportsParameter = _flags.AcceptsTakeAsParameter;
-
-				if (!supportsParameter && !(_selectQuery.Select.SkipValue is SqlValue))
-					_selectQuery.IsParameterDependent = true;
-				else if (_selectQuery.Select.SkipValue is SqlBinaryExpression
-					|| _selectQuery.Select.SkipValue is SqlFunction)
-				{
-					if (visitor.Find(_selectQuery.Select.SkipValue, e => e is SqlParameter) != null)
-						_selectQuery.IsParameterDependent = true;
-					else
-					{
-						var value = _selectQuery.Select.SkipValue.EvaluateExpression(null)!;
-
-						if (supportsParameter)
-							_selectQuery.Select.Skip(new SqlParameter(new DbDataType(value.GetType()), "skip", value)
-								{ IsQueryParameter = !QueryHelper.NeedParameterInlining(_selectQuery.Select.SkipValue) });
-						else
-							_selectQuery.Select.Skip(new SqlValue(value));
-					}
-				}
-			}
+			// OptimizeSearchConditions();
 		}
 
 		private void OptimizeSearchConditions()

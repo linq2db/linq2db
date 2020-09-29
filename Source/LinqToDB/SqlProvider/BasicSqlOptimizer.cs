@@ -1968,6 +1968,40 @@ namespace LinqToDB.SqlProvider
 			return statement;
 		}
 
+		public virtual bool IsParameterDependedQuery(SelectQuery query)
+		{
+			var takeValue = query.Select.TakeValue;
+			if (takeValue != null)
+			{
+				var supportsParameter = SqlProviderFlags.GetAcceptsTakeAsParameterFlag(query);
+
+				if (!supportsParameter)
+				{
+					if (takeValue.ElementType != QueryElementType.SqlValue && takeValue.CanBeEvaluated(true))
+						return true;
+				}
+				else if (takeValue.ElementType != QueryElementType.SqlParameter)
+					return true;
+
+			}
+
+			var skipValue = query.Select.SkipValue;
+			if (skipValue != null)
+			{
+				var supportsParameter = SqlProviderFlags.AcceptsTakeAsParameter;
+
+				if (!supportsParameter)
+				{
+					if (skipValue.ElementType != QueryElementType.SqlValue && skipValue.CanBeEvaluated(true))
+						return true;
+				}
+				else if (skipValue.ElementType != QueryElementType.SqlParameter)
+					return true;
+			}
+
+			return false;
+		}
+
 		public virtual bool IsParameterDependedElement(IQueryElement element)
 		{
 			switch (element.ElementType)
@@ -1990,7 +2024,9 @@ namespace LinqToDB.SqlProvider
 				}
 				case QueryElementType.SqlQuery:
 				{
-					return ((SelectQuery)element).IsParameterDependent;
+					if (((SelectQuery)element).IsParameterDependent)
+						return true;
+					return IsParameterDependedQuery((SelectQuery)element);
 				}
 				case QueryElementType.SqlBinaryExpression:
 				{
@@ -2009,7 +2045,14 @@ namespace LinqToDB.SqlProvider
 					var exprExpr = (SqlPredicate.ExprExpr)element;
 
 					var isMutable1 = exprExpr.Expr1.CanBeEvaluated(true) && !exprExpr.Expr1.CanBeEvaluated(false);
+
+					if (isMutable1 && exprExpr.Expr2.CanBeEvaluated(false))
+						return true;
+
 					var isMutable2 = exprExpr.Expr2.CanBeEvaluated(true) && !exprExpr.Expr2.CanBeEvaluated(false);
+
+					if (isMutable2 && exprExpr.Expr1.CanBeEvaluated(false))
+						return true;
 
 					if ((isMutable1 || isMutable2) && exprExpr.WithNull != null 
 					                               && (exprExpr.Expr1.ShouldCheckForNull() || exprExpr.Expr2.ShouldCheckForNull()))

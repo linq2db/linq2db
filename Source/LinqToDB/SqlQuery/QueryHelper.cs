@@ -1400,7 +1400,7 @@ namespace LinqToDB.SqlQuery
 					dynamic? left  = leftEvaluated;
 					dynamic? right = rightEvaluated;
 					if (left == null || right == null)
-						return false;
+						return true;
 					switch (binary.Operation)
 					{
 						case "+" : result = left + right; break;
@@ -1577,6 +1577,11 @@ namespace LinqToDB.SqlQuery
 					}
 				}
 			}
+		}
+
+		public static bool HasQueryParameters(ISqlExpression expression)
+		{
+			return null != new QueryVisitor().Find(expression, e => (e.ElementType == QueryElementType.SqlParameter) && ((SqlParameter)e).IsQueryParameter);
 		}
 
 		public static bool NeedParameterInlining(ISqlExpression expression)
