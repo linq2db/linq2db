@@ -20,7 +20,7 @@ namespace Tests.Exceptions
 			{
 			}
 
-			protected override SqlStatement ProcessQuery(SqlStatement statement)
+			protected override SqlStatement ProcessQuery(SqlStatement statement, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
 			{
 				if (statement.IsInsert() && statement.RequireInsertClause().Into!.Name == "Parent")
 				{
@@ -36,9 +36,9 @@ namespace Tests.Exceptions
 							return false;
 						}) as SqlSetExpression;
 
-					if (expr != null)
+					if (expr != null && expr.Expression!.TryEvaluateExpression(parameterValues, out var expressionValue))
 					{
-						var value = ConvertTo<int>.From(((IValueContainer)expr.Expression!).Value);
+						var value = ConvertTo<int>.From(expressionValue);
 
 						if (value == 555)
 						{

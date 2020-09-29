@@ -28,7 +28,7 @@ namespace Tests.Linq
 
 			var sqlBuilder = connection.DataProvider.CreateSqlBuilder(connection.MappingSchema);
 			var sb = new StringBuilder();
-			sqlBuilder.BuildSql(0, query, sb);
+			sqlBuilder.BuildSql(0, query, sb, null);
 
 			return connection.Query<T>(sb.ToString());
 		}
