@@ -8,7 +8,7 @@ namespace LinqToDB.DataProvider.Informix
 	using SqlQuery;
 	using SqlProvider;
 	using System.Globalization;
-	using LinqToDB.Mapping;
+	using Mapping;
 
 	partial class InformixSqlBuilder : BasicSqlBuilder
 	{
@@ -68,9 +68,9 @@ namespace LinqToDB.DataProvider.Informix
 			return new InformixSqlBuilder(_provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
-		protected override void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, int indent, bool skipAlias)
+		protected override void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues, int indent, bool skipAlias)
 		{
-			base.BuildSql(commandNumber, statement, sb, indent, skipAlias);
+			base.BuildSql(commandNumber, statement, sb, parameterValues, indent, skipAlias);
 
 			sb
 				.Replace("NULL IS NOT NULL", "1=0")

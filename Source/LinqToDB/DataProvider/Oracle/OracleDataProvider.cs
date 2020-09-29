@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.Oracle
 {
@@ -10,8 +12,6 @@ namespace LinqToDB.DataProvider.Oracle
 	using Extensions;
 	using Mapping;
 	using SqlProvider;
-	using System.Threading;
-	using System.Threading.Tasks;
 
 	public class OracleDataProvider : DynamicDataProviderBase<OracleProviderAdapter>
 	{

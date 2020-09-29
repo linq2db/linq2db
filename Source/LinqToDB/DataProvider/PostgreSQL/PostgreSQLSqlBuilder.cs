@@ -10,8 +10,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using SqlQuery;
 	using SqlProvider;
 	using System.Globalization;
-	using LinqToDB.Extensions;
-	using LinqToDB.Mapping;
+	using Extensions;
+	using Mapping;
 
 	public class PostgreSQLSqlBuilder : BasicSqlBuilder
 	{

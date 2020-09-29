@@ -2,7 +2,7 @@
 {
 	using SqlQuery;
 	using SqlProvider;
-	using LinqToDB.Mapping;
+	using Mapping;
 
 	class SqlServer2005SqlBuilder : SqlServerSqlBuilder
 	{

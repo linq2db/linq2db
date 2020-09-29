@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.DataProvider.Firebird
+﻿using System.Collections.Generic;
+
+namespace LinqToDB.DataProvider.Firebird
 {
 	using System.Linq;
 	using Extensions;
@@ -24,9 +26,9 @@
 			return statement;
 		}
 
-		public override SqlStatement OptimizeStatement(SqlStatement statement, bool withParameters)
+		public override SqlStatement OptimizeStatement(SqlStatement statement, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
 		{
-			statement = base.OptimizeStatement(statement, withParameters);
+			statement = base.OptimizeStatement(statement, parameterValues);
 
 			return WrapParameters(statement);
 		}

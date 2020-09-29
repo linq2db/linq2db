@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.SqlProvider
+﻿using System.Collections.Generic;
+
+namespace LinqToDB.SqlProvider
 {
 	using SqlQuery;
 	using Mapping;
@@ -16,9 +18,9 @@
 		/// Optimizes statement.
 		/// </summary>
 		/// <param name="statement">Statement for optimization.</param>
-		/// <param name="withParameters">Indicates that query should be optimized including parameter values.</param>
+		/// <param name="parameterValues">Contains parameter values. If it is null, that means that parameters should be ignored from evaluation.</param>
 		/// <returns>Optimized statement.</returns>
-		SqlStatement OptimizeStatement (SqlStatement statement, bool withParameters);
+		SqlStatement OptimizeStatement (SqlStatement statement, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues);
 
 		/// <summary>
 		/// Examine query for parameter dependency.
@@ -32,8 +34,8 @@
 		/// </summary>
 		/// <param name="mappingSchema"></param>
 		/// <param name="statement"></param>
-		/// <param name="withParameters">Indicates that query should be optimized including parameter values.</param>
+		/// <param name="parameterValues">Contains parameter values. If it is null, that means that parameters should be ignored from evaluation.</param>
 		/// <returns></returns>
-		SqlStatement ConvertStatement (MappingSchema mappingSchema, SqlStatement statement, bool withParameters);
+		SqlStatement ConvertStatement (MappingSchema mappingSchema, SqlStatement statement, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues);
 	}
 }

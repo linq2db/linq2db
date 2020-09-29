@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlTypes;
 using System.Linq;
 using System.Text;
@@ -72,12 +73,13 @@ namespace LinqToDB.DataProvider.DB2
 			StringBuilder.AppendLine();
 		}
 
-		protected override void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, int indent, bool skipAlias)
+		protected override void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues, int indent, bool skipAlias)
 		{
-			Statement     = statement;
-			StringBuilder = sb;
-			Indent        = indent;
-			SkipAlias     = skipAlias;
+			Statement       = statement;
+			StringBuilder   = sb;
+			ParameterValues = parameterValues;
+			Indent          = indent;
+			SkipAlias       = skipAlias;
 
 			if (_identityField != null)
 			{
@@ -92,7 +94,7 @@ namespace LinqToDB.DataProvider.DB2
 				AppendIndent().AppendLine("\t(");
 			}
 
-			base.BuildSql(commandNumber, statement, sb, indent, skipAlias);
+			base.BuildSql(commandNumber, statement, sb, parameterValues, indent, skipAlias);
 
 			if (_identityField != null)
 				sb.AppendLine("\t)");

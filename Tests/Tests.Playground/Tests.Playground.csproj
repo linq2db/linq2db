@@ -9,6 +9,18 @@
 
 	<ItemGroup>
 		<Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
+		<Compile Include="..\Linq\Linq\GroupByTests.cs" Link="GroupByTests.cs" />
+		<Compile Include="..\Linq\Linq\IdlTests.cs" Link="IdlTests.cs" />
+		<Compile Include="..\Linq\Linq\IssueTests.cs" Link="IssueTests.cs" />
+		<Compile Include="..\Linq\Linq\JoinTests.cs" Link="JoinTests.cs" />
+		<Compile Include="..\Linq\Linq\OrderByDistinctTests.cs" Link="OrderByDistinctTests.cs" />
+		<Compile Include="..\Linq\Linq\SetTests.cs" Link="SetTests.cs" />
+		<Compile Include="..\Linq\Linq\TakeSkipTests.cs" Link="TakeSkipTests.cs" />
+		<Compile Include="..\Linq\Linq\WhereTests.cs" Link="WhereTests.cs" />
+		<Compile Include="..\Linq\Update\DeleteTests.cs" Link="DeleteTests.cs" />
+		<Compile Include="..\Linq\Update\InsertTests.cs" Link="InsertTests.cs" />
+		<Compile Include="..\Linq\UserTests\Issue2478Tests.cs" Link="Issue2478Tests.cs" />
+		<Compile Include="..\Linq\UserTests\Issue358Tests.cs" Link="Issue358Tests.cs" />
 	</ItemGroup>
 
 </Project>

@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.MySql
 {
-	using System.Collections;
-	using System.Threading;
-	using System.Threading.Tasks;
 	using Common;
 	using Data;
 	using Mapping;

@@ -7,7 +7,7 @@ namespace LinqToDB.DataProvider.Oracle
 	using SqlQuery;
 	using SqlProvider;
 	using System.Text;
-	using LinqToDB.Mapping;
+	using Mapping;
 
 	partial class Oracle11SqlBuilder : BasicSqlBuilder
 	{

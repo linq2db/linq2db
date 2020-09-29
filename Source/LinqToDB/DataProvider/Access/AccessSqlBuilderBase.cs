@@ -6,7 +6,7 @@ using System.Text;
 namespace LinqToDB.DataProvider.Access
 {
 	using Extensions;
-	using LinqToDB.Mapping;
+	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
 
@@ -119,7 +119,7 @@ namespace LinqToDB.DataProvider.Access
 
 			_selectColumn = new SqlColumn(selectQuery, new SqlExpression(cond.Conditions[0].IsNot ? "Count(*) = 0" : "Count(*) > 0"), selectQuery.Select.Columns[0].Alias);
 
-			BuildSql(0, new SqlSelectStatement(query), StringBuilder);
+			BuildSql(0, new SqlSelectStatement(query), StringBuilder, ParameterValues);
 
 			_selectColumn = null;
 		}
@@ -178,6 +178,7 @@ namespace LinqToDB.DataProvider.Access
 			}
 			else if (predicate.Expr2 is SqlParameter p)
 			{
+				//TODO: parameter mutable!
 				p.ReplaceLike = predicate.IsSqlLike != true;
 			}
 
@@ -199,7 +200,7 @@ namespace LinqToDB.DataProvider.Access
 				{
 					if (p.LikeStart != null)
 					{
-						var value = (string?)p.Value;
+						var value = (string?)p.GetParameterValue(ParameterValues).Value;
 
 						if (value != null)
 						{

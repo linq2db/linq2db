@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using LinqToDB.SqlQuery;
 using OleDbType = LinqToDB.DataProvider.OleDbProviderAdapter.OleDbType;
 
 namespace LinqToDB.DataProvider.Access

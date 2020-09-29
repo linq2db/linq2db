@@ -112,7 +112,7 @@ namespace LinqToDB.ServiceModel
 						Statement  = query.Statement,
 						Parameters = query.Parameters,
 						QueryHints = query.QueryHints
-					});
+					}, null);
 				}
 			}
 			catch (Exception exception)
@@ -139,7 +139,7 @@ namespace LinqToDB.ServiceModel
 						Statement  = query.Statement,
 						Parameters = query.Parameters,
 						QueryHints = query.QueryHints
-					});
+					}, null);
 				}
 			}
 			catch (Exception exception)
@@ -166,7 +166,7 @@ namespace LinqToDB.ServiceModel
 						Statement   = query.Statement,
 						Parameters  = query.Parameters,
 						QueryHints  = query.QueryHints
-					}))
+					}, null))
 					{
 						var reader = rd;
 						var converterExpr = db.MappingSchema.GetConvertExpression(rd.GetType(), typeof(IDataReader), false, false);
@@ -278,7 +278,7 @@ namespace LinqToDB.ServiceModel
 							Statement   = query.Statement,
 							Parameters  = query.Parameters,
 							QueryHints  = query.QueryHints
-						});
+						}, null);
 					}
 
 					db.CommitTransaction();

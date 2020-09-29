@@ -8,8 +8,6 @@ namespace LinqToDB.DataProvider.SQLite
 	using SqlQuery;
 	using SqlProvider;
 	using Mapping;
-	using Common;
-	using Tools;
 
 	public class SQLiteSqlBuilder : BasicSqlBuilder
 	{
@@ -59,7 +57,7 @@ namespace LinqToDB.DataProvider.SQLite
 			return "OFFSET {0}";
 		}
 
-		public override bool IsNestedJoinSupported { get { return false; } }
+		public override bool IsNestedJoinSupported => false;
 
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{

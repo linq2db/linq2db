@@ -4,17 +4,18 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlTypes;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
 	using Common;
 	using Data;
-	using LinqToDB.Extensions;
+	using Extensions;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
-	using System.Threading;
-	using System.Threading.Tasks;
+	using SqlQuery;
 
 	public class SqlServerDataProvider : DynamicDataProviderBase<SqlServerProviderAdapter>
 	{

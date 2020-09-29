@@ -8,9 +8,9 @@ namespace LinqToDB.DataProvider.MySql
 {
 	using SqlQuery;
 	using SqlProvider;
-	using LinqToDB.Mapping;
-	using LinqToDB.Extensions;
-	using LinqToDB.Tools;
+	using Mapping;
+	using Extensions;
+	using Tools;
 
 	class MySqlSqlBuilder : BasicSqlBuilder
 	{

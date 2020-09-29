@@ -18,9 +18,9 @@ namespace LinqToDB.ServiceModel
 	{
 		#region Public Members
 
-		public static string Serialize(MappingSchema serializationSchema, SqlStatement statement, SqlParameter[] parameters, List<string>? queryHints)
+		public static string Serialize(MappingSchema serializationSchema, SqlStatement statement, SqlParameter[] parameters, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues, List<string>? queryHints)
 		{
-			return new QuerySerializer(serializationSchema).Serialize(statement, parameters, queryHints);
+			return new QuerySerializer(serializationSchema).Serialize(statement, parameters, parameterValues, queryHints);
 		}
 
 		public static LinqServiceQuery Deserialize(MappingSchema serializationSchema, string str)
@@ -587,7 +587,7 @@ namespace LinqToDB.ServiceModel
 			{
 			}
 
-			public string Serialize(SqlStatement statement, SqlParameter[] parameters, List<string>? queryHints)
+			public string Serialize(SqlStatement statement, SqlParameter[] parameters, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues, List<string>? queryHints)
 			{
 				var queryHintCount = queryHints?.Count ?? 0;
 
@@ -599,14 +599,14 @@ namespace LinqToDB.ServiceModel
 
 				var visitor = new QueryVisitor();
 
-				visitor.Visit(statement, Visit);
+				visitor.Visit(statement, e => Visit(e, parameterValues));
 
 				if (DelayedObjects.Count > 0)
 					throw new LinqToDBException($"QuerySerializer error. Unknown object '{DelayedObjects.First().Key.GetType()}'.");
 
 				foreach (var parameter in parameters)
 					if (!ObjectIndices.ContainsKey(parameter))
-						Visit(parameter);
+						Visit(parameter, parameterValues);
 
 				Builder
 					.Append(++Index)
@@ -623,7 +623,7 @@ namespace LinqToDB.ServiceModel
 				return Builder.ToString();
 			}
 
-			void Visit(IQueryElement e)
+			void Visit(IQueryElement e, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
 			{
 				switch (e.ElementType)
 				{
@@ -635,7 +635,7 @@ namespace LinqToDB.ServiceModel
 							foreach (var row in rows)
 								foreach (var item in row)
 									if (!ObjectIndices.ContainsKey(item))
-										Visit(item);
+										Visit(item, parameterValues);
 
 							break;
 						}
@@ -652,8 +652,10 @@ namespace LinqToDB.ServiceModel
 					case QueryElementType.SqlParameter :
 						{
 							var p = (SqlParameter)e;
-							var v = p.Value;
-							var t = v == null ? p.Type.SystemType : v.GetType();
+
+							var pValue = p.GetParameterValue(parameterValues);
+							var v = pValue.Value;
+							var t = v == null ? pValue.DbDataType.SystemType : v.GetType();
 
 							if (v == null || t.IsArray || t == typeof(string) || !(v is IEnumerable))
 							{
@@ -743,8 +745,8 @@ namespace LinqToDB.ServiceModel
 							Append(elem.LikeEnd);
 							Append(elem.ReplaceLike);
 
-							var value = elem.LikeStart != null ? elem.RawValue : elem.Value;
-							var type  = value == null ? elem.Type.SystemType : value.GetType();
+							var value = elem.LikeStart != null ? elem.RawValue : elem.GetParameterValue(parameterValues).Value;
+							var type  = value == null ? elem.GetParameterValue(parameterValues).DbDataType.SystemType : value.GetType();
 
 							if (value == null || type.IsArray || type == typeof(string) || !(value is IEnumerable))
 							{

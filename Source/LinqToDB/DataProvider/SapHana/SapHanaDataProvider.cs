@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.SapHana
 {
@@ -10,8 +12,6 @@ namespace LinqToDB.DataProvider.SapHana
 	using Extensions;
 	using Mapping;
 	using SqlProvider;
-	using System.Threading;
-	using System.Threading.Tasks;
 
 	public class SapHanaDataProvider : DynamicDataProviderBase<SapHanaProviderAdapter>
 	{

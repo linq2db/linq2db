@@ -19,7 +19,7 @@ namespace LinqToDB.Linq
 	using Common.Logging;
 	using Data;
 	using Extensions;
-	using LinqToDB.Async;
+	using Async;
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
@@ -209,38 +209,20 @@ namespace LinqToDB.Linq
 			return null;
 		}
 
-		static ISqlExpression ConvertParametersToValues(Query query, Expression expr, IDataContext? db, object?[]? ps, ISqlExpression sqlExpr)
-		{
-			var parameters = query.Queries[0].Parameters;
-
-			var result = ConvertVisitor.Convert(sqlExpr, (v, e) =>
-			{
-				if (e.ElementType == QueryElementType.SqlParameter)
-				{
-					var parameter = (SqlParameter)e;
-					var accessor  = GetParameterAccessor(parameters, parameter);
-					if (accessor != null)
-						return new SqlValue(parameter.Type, accessor.ValueAccessor(expr, db, ps));
-				}
-
-				return e;
-			});
-
-			return result;
-		}
-
-		static int EvaluateTakeSkipValue(Query query, Expression expr, IDataContext? db, object?[]? ps,
+		static int EvaluateTakeSkipValue(Query query, Expression expr, IDataContext? db, object?[]? ps, int qn,
 			ISqlExpression sqlExpr)
 		{
-			var converted = ConvertParametersToValues(query, expr, db, ps, sqlExpr);
-			var evaluated = converted.EvaluateExpression() as int?;
+			var parameterValues = new Dictionary<SqlParameter, SqlParameterValue>();
+			SetParameters(query, expr, db, ps, qn, parameterValues);
+
+			var evaluated = sqlExpr.EvaluateExpression(parameterValues) as int?;
 			if (evaluated == null)
-				throw new InvalidOperationException($"Can not evaluate integer expression from '{converted}'.");
+				throw new InvalidOperationException($"Can not evaluate integer expression from '{sqlExpr}'.");
 			return evaluated.Value;
 		}
 
 		internal static void SetParameters(
-			Query query, Expression expression, IDataContext? parametersContext, object?[]? parameters, int queryNumber)
+			Query query, Expression expression, IDataContext? parametersContext, object?[]? parameters, int queryNumber, Dictionary<SqlParameter, SqlParameterValue> parameterValues)
 		{
 			var queryContext = query.Queries[queryNumber];
 
@@ -250,7 +232,7 @@ namespace LinqToDB.Linq
 
 				if (value is IEnumerable vs)
 				{
-					var type = vs.GetType();
+					var type  = vs.GetType();
 					var etype = type.GetItemType();
 
 					if (etype == null || etype == typeof(object) || etype.IsEnum ||
@@ -278,11 +260,10 @@ namespace LinqToDB.Linq
 					}
 				}
 
-				p.SqlParameter.Value = value;
-
 				var dbDataType = p.DbDataTypeAccessor(expression, parametersContext, parameters);
 
-				p.SqlParameter.Type = p.SqlParameter.Type.WithSetValues(dbDataType);
+				parameterValues.Remove(p.SqlParameter);
+				parameterValues.Add(p.SqlParameter, new SqlParameterValue(value, p.SqlParameter.Type.WithSetValues(dbDataType)));
 			}
 		}
 
@@ -332,10 +313,16 @@ namespace LinqToDB.Linq
 
 		#region SetRunQuery
 
+		public delegate int TakeSkipDelegate(
+			Query                    query, 
+			Expression               expression, 
+			IDataContext?            dataContext,
+			object?[]?               ps);
+
 		static Tuple<
 			Func<Query,IDataContext,Mapper<T>,Expression,object?[]?,object?[]?,int,IEnumerable<T>>,
-			Func<Query,Expression,IDataContext?,object?[]?,int>?,
-			Func<Query,Expression,IDataContext?,object?[]?,int>?>
+			TakeSkipDelegate?,
+			TakeSkipDelegate?>
 			GetExecuteQuery<T>(
 				Query query,
 				Func<Query,IDataContext,Mapper<T>,Expression,object?[]?,object?[]?,int,IEnumerable<T>> queryFunc)
@@ -345,7 +332,7 @@ namespace LinqToDB.Linq
 			if (query.Queries.Count != 1)
 				throw new InvalidOperationException();
 
-			Func<Query,Expression,IDataContext?,object?[]?,int>? skip = null, take = null;
+			TakeSkipDelegate? skip = null, take = null;
 
 			var selectQuery = query.Queries[0].Statement.SelectQuery!;
 			var select      = selectQuery.Select;
@@ -354,16 +341,16 @@ namespace LinqToDB.Linq
 			{
 				var q = queryFunc;
 
-				queryFunc = (qq, db, mapper, expr, ps, preambles, qn) => q(qq, db, mapper, expr, ps, preambles, qn).Skip(EvaluateTakeSkipValue(qq, expr, db, ps, select.SkipValue));
-				skip      = (qq, expr, pc, ps) => EvaluateTakeSkipValue(qq, expr, pc, ps, select.SkipValue);
+				queryFunc = (qq, db, mapper, expr, ps, preambles, qn) => q(qq, db, mapper, expr, ps, preambles, qn).Skip(EvaluateTakeSkipValue(qq, expr, db, ps, qn, select.SkipValue));
+				skip      = (qq, expr, pc, ps) => EvaluateTakeSkipValue(qq, expr, pc, ps, 0, select.SkipValue);
 			}
 
 			if (select.TakeValue != null && !query.SqlProviderFlags.IsTakeSupported)
 			{
 				var q = queryFunc;
 
-				queryFunc = (qq, db, mapper, expr, ps, preambles, qn) => q(qq, db, mapper, expr, ps, preambles, qn).Take(EvaluateTakeSkipValue(qq, expr, db, ps, select.TakeValue));
-				take      = (qq, expr, pc, ps) => EvaluateTakeSkipValue(qq, expr, pc, ps, select.TakeValue);
+				queryFunc = (qq, db, mapper, expr, ps, preambles, qn) => q(qq, db, mapper, expr, ps, preambles, qn).Take(EvaluateTakeSkipValue(qq, expr, db, ps, qn, select.TakeValue));
+				take      = (qq, expr, pc, ps) => EvaluateTakeSkipValue(qq, expr, pc, ps, 0, select.TakeValue);
 			}
 
 			return Tuple.Create(queryFunc, skip, take);
@@ -391,17 +378,17 @@ namespace LinqToDB.Linq
 		}
 
 		static async Task ExecuteQueryAsync<T>(
-			Query                         query,
-			IDataContext                  dataContext,
-			Mapper<T>                     mapper,
-			Expression                    expression,
-			object?[]?                    ps,
-			object?[]?                    preambles,
-			int                           queryNumber,
-			Func<T,bool>                  func,
-			Func<Query,Expression,IDataContext?,object?[]?,int>? skipAction,
-			Func<Query,Expression,IDataContext?,object?[]?,int>? takeAction,
-			CancellationToken             cancellationToken)
+			Query                    query,
+			IDataContext             dataContext,
+			Mapper<T>                mapper,
+			Expression               expression,
+			object?[]?               ps,
+			object?[]?               preambles,
+			int                      queryNumber,
+			Func<T,bool>             func,
+			TakeSkipDelegate?        skipAction,
+			TakeSkipDelegate?        takeAction,
+			CancellationToken        cancellationToken)
 		{
 			using (var runner = dataContext.GetQueryRunner(query, queryNumber, expression, ps, preambles))
 			{
@@ -431,32 +418,32 @@ namespace LinqToDB.Linq
 
 		class AsyncEnumeratorImpl<T> : IAsyncEnumerator<T>
 		{
-			readonly Query                         _query;
-			readonly IDataContext                  _dataContext;
-			readonly Mapper<T>                     _mapper;
-			readonly Expression                    _expression;
-			readonly object?[]?                    _ps;
-			readonly object?[]?                    _preambles;
-			readonly int                           _queryNumber;
-			readonly Func<Query,Expression,IDataContext?,object?[]?,int>? _skipAction;
-			readonly Func<Query,Expression,IDataContext?,object?[]?,int>? _takeAction;
-			readonly CancellationToken             _cancellationToken;
+			readonly Query                    _query;
+			readonly IDataContext             _dataContext;
+			readonly Mapper<T>                _mapper;
+			readonly Expression               _expression;
+			readonly object?[]?               _ps;
+			readonly object?[]?               _preambles;
+			readonly int                      _queryNumber;
+			readonly TakeSkipDelegate?        _skipAction;
+			readonly TakeSkipDelegate?        _takeAction;
+			readonly CancellationToken        _cancellationToken;
 
 			IQueryRunner?     _queryRunner;
 			IDataReaderAsync? _dataReader;
 			int              _take;
 
 			public AsyncEnumeratorImpl(
-				Query                            query,
-				IDataContext                     dataContext,
-				Mapper<T>                        mapper,
-				Expression                       expression,
-				object?[]?                       ps,
-				object?[]?                       preambles,
-				int                              queryNumber,
-				Func<Query,Expression,IDataContext?,object?[]?,int>? skipAction,
-				Func<Query,Expression,IDataContext?,object?[]?,int>? takeAction,
-				CancellationToken                cancellationToken)
+				Query             query,
+				IDataContext      dataContext,
+				Mapper<T>         mapper,
+				Expression        expression,
+				object?[]?        ps,
+				object?[]?        preambles,
+				int               queryNumber,
+				TakeSkipDelegate? skipAction,
+				TakeSkipDelegate? takeAction,
+				CancellationToken cancellationToken)
 			{
 				_query             = query;
 				_dataContext       = dataContext;
@@ -535,26 +522,26 @@ namespace LinqToDB.Linq
 
 		class AsyncEnumerableImpl<T> : IAsyncEnumerable<T>
 		{
-			readonly Query                            _query;
-			readonly IDataContext                     _dataContext;
-			readonly Mapper<T>                        _mapper;
-			readonly Expression                       _expression;
-			readonly object?[]?                       _ps;
-			readonly object?[]?                       _preambles;
-			readonly int                              _queryNumber;
-			readonly Func<Query,Expression,IDataContext?,object?[]?,int>? _skipAction;
-			readonly Func<Query,Expression,IDataContext?,object?[]?,int>? _takeAction;
+			readonly Query             _query;
+			readonly IDataContext      _dataContext;
+			readonly Mapper<T>         _mapper;
+			readonly Expression        _expression;
+			readonly object?[]?        _ps;
+			readonly object?[]?        _preambles;
+			readonly int               _queryNumber;
+			readonly TakeSkipDelegate? _skipAction;
+			readonly TakeSkipDelegate? _takeAction;
 
 			public AsyncEnumerableImpl(
-				Query                            query,
-				IDataContext                     dataContext,
-				Mapper<T>                        mapper,
-				Expression                       expression,
-				object?[]?                       ps,
-				object?[]?                       preambles,
-				int                              queryNumber,
-				Func<Query,Expression,IDataContext?,object?[]?,int>? skipAction,
-				Func<Query,Expression,IDataContext?,object?[]?,int>? takeAction)
+				Query             query,
+				IDataContext      dataContext,
+				Mapper<T>         mapper,
+				Expression        expression,
+				object?[]?        ps,
+				object?[]?        preambles,
+				int               queryNumber,
+				TakeSkipDelegate? skipAction,
+				TakeSkipDelegate? takeAction)
 			{
 				_query       = query;
 				_dataContext = dataContext;
@@ -575,15 +562,15 @@ namespace LinqToDB.Linq
 		}
 
 		static IAsyncEnumerable<T> ExecuteQueryAsync<T>(
-			Query                            query,
-			IDataContext                     dataContext,
-			Mapper<T>                        mapper,
-			Expression                       expression,
-			object?[]?                       ps,
-			object?[]?                       preambles,
-			int                              queryNumber,
-			Func<Query,Expression,IDataContext?,object?[]?,int>? skipAction,
-			Func<Query,Expression,IDataContext?,object?[]?,int>? takeAction)
+			Query             query,
+			IDataContext      dataContext,
+			Mapper<T>         mapper,
+			Expression        expression,
+			object?[]?        ps,
+			object?[]?        preambles,
+			int               queryNumber,
+			TakeSkipDelegate? skipAction,
+			TakeSkipDelegate? takeAction)
 		{
 			return new AsyncEnumerableImpl<T>(
 				query, dataContext, mapper, expression, ps, preambles, queryNumber, skipAction, takeAction);

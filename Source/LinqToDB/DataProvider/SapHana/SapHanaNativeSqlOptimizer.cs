@@ -13,16 +13,16 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 		}
 
-		public override SqlStatement OptimizeStatement(SqlStatement statement, bool withParameters)
+		public override SqlStatement OptimizeStatement(SqlStatement statement, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
 		{
-			statement = base.OptimizeStatement(statement, withParameters);
+			statement = base.OptimizeStatement(statement, parameterValues);
 
 			return statement;
 		}
 
-		public override SqlStatement ConvertStatement(MappingSchema mappingSchema, SqlStatement statement, bool withParameters)
+		public override SqlStatement ConvertStatement(MappingSchema mappingSchema, SqlStatement statement, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
 		{
-			statement = base.ConvertStatement(mappingSchema, statement, withParameters);
+			statement = base.ConvertStatement(mappingSchema, statement, parameterValues);
 
 			// SAP HANA parameters are not just order-dependent but also name-dependent, so we cannot use
 			// same parameter name

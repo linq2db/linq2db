@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -7,10 +8,8 @@ namespace LinqToDB.Data
 {
 	using DataProvider;
 	using Linq;
-	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
-	using System.Linq;
 
 	public partial class DataConnection : IDataContext
 	{

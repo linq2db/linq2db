@@ -12,7 +12,7 @@ namespace LinqToDB.DataProvider.Firebird
 	using SqlQuery;
 	using SqlProvider;
 	using System.Text;
-	using LinqToDB.Mapping;
+	using Mapping;
 
 	public partial class FirebirdSqlBuilder : BasicSqlBuilder
 	{

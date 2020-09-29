@@ -7,7 +7,7 @@ namespace LinqToDB.SqlQuery
 {
 	using Common;
 
-	public class SqlValue : ISqlExpression, IValueContainer
+	public class SqlValue : ISqlExpression
 	{
 		public SqlValue(Type systemType, object? value)
 		{

@@ -1,13 +1,14 @@
 ﻿using System;
-using LinqToDB.Common;
-using LinqToDB.Mapping;
-using LinqToDB.Tools;
+using System.Collections.Generic;
 
 namespace LinqToDB.DataProvider.SQLite
 {
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
+	using Common;
+	using Mapping;
+	using Tools;
 
 	class SQLiteSqlOptimizer : BasicSqlOptimizer
 	{
@@ -79,7 +80,7 @@ namespace LinqToDB.DataProvider.SQLite
 			return expr;
 		}
 
-		public override ISqlPredicate ConvertPredicate(MappingSchema mappingSchema, ISqlPredicate predicate, bool withParameters)
+		public override ISqlPredicate ConvertPredicate(MappingSchema mappingSchema, ISqlPredicate predicate, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
 		{
 			if (predicate is SqlPredicate.ExprExpr exprExpr)
 			{
@@ -87,8 +88,8 @@ namespace LinqToDB.DataProvider.SQLite
 				var rightType = QueryHelper.GetDbDataType(exprExpr.Expr2);
 
 				if ((IsDateTime(leftType) || IsDateTime(rightType)) &&
-				    !(exprExpr.Expr1 is IValueContainer container1 && container1.Value == null ||
-				      exprExpr.Expr2 is IValueContainer container2 && container2.Value == null))
+				    !(exprExpr.Expr1.TryEvaluateExpression(parameterValues, out var value1) && value1 == null ||
+				      exprExpr.Expr2.TryEvaluateExpression(parameterValues, out var value2) && value2 == null))
 				{
 					if (!(exprExpr.Expr1 is SqlFunction func1 && (func1.Name == "$Convert$" || func1.Name == "DateTime")))
 					{
@@ -108,7 +109,7 @@ namespace LinqToDB.DataProvider.SQLite
 				}
 			}
 
-			predicate = base.ConvertPredicate(mappingSchema, predicate, withParameters);
+			predicate = base.ConvertPredicate(mappingSchema, predicate, parameterValues);
 			return predicate;
 		}
 

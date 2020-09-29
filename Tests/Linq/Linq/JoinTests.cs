@@ -42,7 +42,7 @@ namespace Tests.Linq
 					var secondResult = secondItems.Where(s => !firstItems.Any(f => predicate(f, s)))
 						.Select(s => new {First = default(TOuter), Second = s});
 
-					var res = firstResult.Concat(secondResult).Select(r => resultSelector(r.First, r.Second));
+					var res = firstResult.Concat(secondResult).Select(r => resultSelector(r.First!, r.Second));
 					return res;
 				default:
 					throw new ArgumentOutOfRangeException(nameof(joinType), joinType, null);

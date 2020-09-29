@@ -7,7 +7,7 @@ namespace LinqToDB.DataProvider.SapHana
 {
 	using SqlQuery;
 	using SqlProvider;
-	using LinqToDB.Mapping;
+	using Mapping;
 
 	partial class SapHanaSqlBuilder : BasicSqlBuilder
 	{

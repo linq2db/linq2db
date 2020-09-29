@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Data;
 using System.Xml;
 using System.Xml.Linq;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace LinqToDB.DataProvider.Sybase
 {
@@ -11,10 +13,8 @@ namespace LinqToDB.DataProvider.Sybase
 	using Common;
 	using SchemaProvider;
 	using SqlProvider;
-	using LinqToDB.Extensions;
-	using System.Threading.Tasks;
-	using System.Threading;
-
+	using Extensions;
+	
 	public class SybaseDataProvider : DynamicDataProviderBase<SybaseProviderAdapter>
 	{
 		#region Init

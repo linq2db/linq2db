@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
@@ -8,8 +10,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using Data;
 	using Mapping;
 	using SqlProvider;
-	using System.Threading;
-	using System.Threading.Tasks;
 
 	public class PostgreSQLDataProvider : DynamicDataProviderBase<NpgsqlProviderAdapter>
 	{

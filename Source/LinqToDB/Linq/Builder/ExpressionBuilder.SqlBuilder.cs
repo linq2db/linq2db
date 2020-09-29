@@ -2699,7 +2699,7 @@ namespace LinqToDB.Linq.Builder
 					ep.ValueAccessor,
 					ep.OriginalAccessor,
 					ep.DbDataTypeAccessor,
-					new SqlParameter(p.Type.WithSystemType(ep.Expression.Type), p.Name, p.Value)
+					new SqlParameter(p.Type.WithSystemType(ep.Expression.Type), p.Name, p.GetParameterValue(null))
 					{
 						LikeStart        = start,
 						LikeEnd          = end,

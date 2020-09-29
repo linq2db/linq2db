@@ -85,7 +85,7 @@ namespace Tests.Model
 			//provider.SqlQuery = sql;
 
 			var statement = (SqlSelectStatement)optimizer.Finalize(new SqlSelectStatement(query));
-			statement = (SqlSelectStatement)optimizer.PrepareStatementForRemoting(statement, MappingSchema);
+			statement = (SqlSelectStatement)optimizer.PrepareStatementForRemoting(statement, MappingSchema, SqlParameterValue.EmptyDictionary);
 
 			var cc = provider.CommandCount(statement);
 			var sb = new StringBuilder();
@@ -96,7 +96,7 @@ namespace Tests.Model
 			{
 				sb.Length = 0;
 
-				provider.BuildSql(i, statement, sb);
+				provider.BuildSql(i, statement, sb, SqlParameterValue.EmptyDictionary);
 				commands[i] = sb.ToString();
 			}
 

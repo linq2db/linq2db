@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace LinqToDB.DataProvider.SQLite
 {
@@ -12,8 +14,6 @@ namespace LinqToDB.DataProvider.SQLite
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
-	using System.Threading.Tasks;
-	using System.Threading;
 
 	public class SQLiteDataProvider : DynamicDataProviderBase<SQLiteProviderAdapter>
 	{

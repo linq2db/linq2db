@@ -206,16 +206,16 @@ namespace LinqToDB.SqlQuery
 				return new ExprExpr(Expr1, InvertOperator(Operator), Expr2, !WithNull);
 			}
 
-			public ISqlPredicate Reduce(bool withParameters)
+			public ISqlPredicate Reduce(IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
 			{
 				if (Operator.In(Operator.Equal, Operator.NotEqual))
 				{
-					if (Expr1.TryEvaluateExpression(withParameters, out var value1))
+					if (Expr1.TryEvaluateExpression(parameterValues, out var value1))
 					{
 						if (value1 == null)
 							return new IsNull(Expr2, Operator != Operator.Equal);
 
-					} else if (Expr2.TryEvaluateExpression(withParameters, out var value2))
+					} else if (Expr2.TryEvaluateExpression(parameterValues, out var value2))
 					{
 						if (value2 == null)
 							return new IsNull(Expr1, Operator != Operator.Equal);
@@ -237,9 +237,9 @@ namespace LinqToDB.SqlQuery
 
 				var search = new SqlSearchCondition();
 
-				if (Expr1.CanBeEvaluated(withParameters))
+				if (Expr1.CanBeEvaluated(parameterValues))
 				{
-					if (!Expr2.CanBeEvaluated(withParameters))
+					if (!Expr2.CanBeEvaluated(parameterValues))
 					{
 						if (canBeNull_2)
 						{
@@ -259,7 +259,7 @@ namespace LinqToDB.SqlQuery
 						}
 					}
 				}
-				else if (Expr2.CanBeEvaluated(withParameters))
+				else if (Expr2.CanBeEvaluated(parameterValues))
 				{
 					if (canBeNull_1)
 					{
@@ -668,7 +668,7 @@ namespace LinqToDB.SqlQuery
 				return new InList(Expr1, !WithNull, !IsNot, Values);
 			}
 
-			public ISqlPredicate Reduce(bool withParameters)
+			public ISqlPredicate Reduce(IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
 			{
 				if (WithNull == null)
 					return this;

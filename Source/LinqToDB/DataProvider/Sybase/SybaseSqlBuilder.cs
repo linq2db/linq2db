@@ -6,7 +6,7 @@ namespace LinqToDB.DataProvider.Sybase
 {
 	using SqlQuery;
 	using SqlProvider;
-	using LinqToDB.Mapping;
+	using Mapping;
 	using System.Text;
 
 	partial class SybaseSqlBuilder : BasicSqlBuilder

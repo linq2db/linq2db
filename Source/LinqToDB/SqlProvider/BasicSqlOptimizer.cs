@@ -603,7 +603,7 @@ namespace LinqToDB.SqlProvider
 			return new SqlValue(value);
 		}
 
-		public virtual ISqlExpression OptimizeExpression(ISqlExpression expression, bool withParameters)
+		public virtual ISqlExpression OptimizeExpression(ISqlExpression expression, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
 		{
 			switch (expression.ElementType)
 			{
@@ -616,7 +616,7 @@ namespace LinqToDB.SqlProvider
 					{
 						case "+":
 						{
-							var v1 = be.Expr1.TryEvaluateExpression(withParameters, out var value1);
+							var v1 = be.Expr1.TryEvaluateExpression(parameterValues, out var value1);
 							if (v1)
 							{
 								switch (value1)
@@ -629,7 +629,7 @@ namespace LinqToDB.SqlProvider
 								}
 							}
 
-							var v2 = be.Expr2.TryEvaluateExpression(withParameters, out var value2);
+							var v2 = be.Expr2.TryEvaluateExpression(parameterValues, out var value2);
 							if (v2)
 							{
 								switch (value2)
@@ -637,7 +637,7 @@ namespace LinqToDB.SqlProvider
 									case int vi when vi == 0 : return be.Expr1;
 									case int vi when
 										be.Expr1    is SqlBinaryExpression be1 &&
-										be1.Expr2.TryEvaluateExpression(withParameters, out var be1v2) &&
+										be1.Expr2.TryEvaluateExpression(parameterValues, out var be1v2) &&
 										be1v2 is int be1v2i :
 									{
 										switch (be1.Operation)
@@ -678,7 +678,7 @@ namespace LinqToDB.SqlProvider
 									case string vs when
 										be.Expr1    is SqlBinaryExpression be1 &&
 										//be1.Operation == "+"                   &&
-										be1.Expr2.TryEvaluateExpression(withParameters, out var be1v2) &&
+										be1.Expr2.TryEvaluateExpression(parameterValues, out var be1v2) &&
 										be1v2 is string be1v2s :
 									{
 										return new SqlBinaryExpression(
@@ -701,7 +701,7 @@ namespace LinqToDB.SqlProvider
 
 						case "-":
 						{
-							var v2 = be.Expr2.TryEvaluateExpression(withParameters, out var value2);
+							var v2 = be.Expr2.TryEvaluateExpression(parameterValues, out var value2);
 							if (v2)
 							{
 								switch (value2)
@@ -709,7 +709,7 @@ namespace LinqToDB.SqlProvider
 									case int vi when vi == 0 : return be.Expr1;
 									case int vi when
 										be.Expr1 is SqlBinaryExpression be1 &&
-										be1.Expr2.TryEvaluateExpression(withParameters, out var be1v2) &&
+										be1.Expr2.TryEvaluateExpression(parameterValues, out var be1v2) &&
 										be1v2 is int be1v2i :
 									{
 										switch (be1.Operation)
@@ -748,7 +748,7 @@ namespace LinqToDB.SqlProvider
 								}
 							}
 
-							if (v2 && be.Expr1.TryEvaluateExpression(withParameters, out var value1))
+							if (v2 && be.Expr1.TryEvaluateExpression(parameterValues, out var value1))
 							{
 								if (value1 is int i1 && value2 is int i2) return CreateSqlValue(i1 - i2, be);
 							}
@@ -758,7 +758,7 @@ namespace LinqToDB.SqlProvider
 
 						case "*":
 						{
-							var v1 = be.Expr1.TryEvaluateExpression(withParameters, out var value1);
+							var v1 = be.Expr1.TryEvaluateExpression(parameterValues, out var value1);
 							if (v1)
 							{
 								switch (value1)
@@ -768,16 +768,16 @@ namespace LinqToDB.SqlProvider
 									case int i when
 										be.Expr2    is SqlBinaryExpression be2 &&
 										be2.Operation == "*"                   &&
-										be2.Expr1.TryEvaluateExpression(withParameters, out var be2v1)  &&
+										be2.Expr1.TryEvaluateExpression(parameterValues, out var be2v1)  &&
 										be2v1 is int bi :
 									{
 										return OptimizeExpression(
-											new SqlBinaryExpression(be2.SystemType, CreateSqlValue(i * bi, be), "*", be2.Expr2), withParameters);
+											new SqlBinaryExpression(be2.SystemType, CreateSqlValue(i * bi, be), "*", be2.Expr2), parameterValues);
 									}
 								}
 							}
 
-							var v2 = be.Expr2.TryEvaluateExpression(withParameters, out var value2);
+							var v2 = be.Expr2.TryEvaluateExpression(parameterValues, out var value2);
 							if (v2)
 							{
 								switch (value2)
@@ -820,7 +820,7 @@ namespace LinqToDB.SqlProvider
 
 							for (var i = 0; i < parms.Length - 1; i += 2)
 							{
-								var boolValue = QueryHelper.GetBoolValue(parms[i], withParameters);
+								var boolValue = QueryHelper.GetBoolValue(parms[i], parameterValues);
 								if (boolValue != null)
 								{
 									if (boolValue == false)
@@ -858,8 +858,8 @@ namespace LinqToDB.SqlProvider
 
 							if (parms.Length == 3 && parms[0].ElementType == QueryElementType.SqlFunction)
 							{
-								var boolValue1 = QueryHelper.GetBoolValue(parms[1], withParameters);
-								var boolValue2 = QueryHelper.GetBoolValue(parms[2], withParameters);
+								var boolValue1 = QueryHelper.GetBoolValue(parms[1], parameterValues);
+								var boolValue2 = QueryHelper.GetBoolValue(parms[2], parameterValues);
 
 								if (boolValue1 != null && boolValue2 != null)
 								{
@@ -897,7 +897,7 @@ namespace LinqToDB.SqlProvider
 
 				case QueryElementType.SearchCondition :
 				{
-					expression = SelectQueryOptimizer.OptimizeSearchCondition((SqlSearchCondition)expression, withParameters);
+					expression = SelectQueryOptimizer.OptimizeSearchCondition((SqlSearchCondition)expression, parameterValues);
 					break;
 				}
 
@@ -915,7 +915,7 @@ namespace LinqToDB.SqlProvider
 			return expression;
 		}
 
-		public virtual ISqlPredicate OptimizePredicate(ISqlPredicate predicate, bool withParameters)
+		public virtual ISqlPredicate OptimizePredicate(ISqlPredicate predicate, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
 		{
 			// Avoiding infinite recursion
 			//
@@ -926,7 +926,7 @@ namespace LinqToDB.SqlProvider
 					return predicate;
 			}
 
-			if (predicate.TryEvaluateExpression(withParameters, out var value) && value != null)
+			if (predicate.TryEvaluateExpression(parameterValues, out var value) && value != null)
 			{
 				return new SqlPredicate.Expr(new SqlValue(value));
 			}
@@ -941,7 +941,7 @@ namespace LinqToDB.SqlProvider
 					{
 						if (expr.Expr2 is ISqlPredicate)
 						{
-							var boolValue1 = QueryHelper.GetBoolValue(expr.Expr1, withParameters);
+							var boolValue1 = QueryHelper.GetBoolValue(expr.Expr1, parameterValues);
 							if (boolValue1 != null)
 							{
 								ISqlPredicate transformed = new SqlPredicate.Expr(expr.Expr2);
@@ -958,7 +958,7 @@ namespace LinqToDB.SqlProvider
 							
 						if (expr.Expr1 is ISqlPredicate)
 						{
-							var boolValue2 = QueryHelper.GetBoolValue(expr.Expr2, withParameters);
+							var boolValue2 = QueryHelper.GetBoolValue(expr.Expr2, parameterValues);
 							if (boolValue2 != null)
 							{
 								ISqlPredicate transformed = new SqlPredicate.Expr(expr.Expr1);
@@ -973,9 +973,9 @@ namespace LinqToDB.SqlProvider
 							}
 						}
 					}
-				}
 
 					break;
+				}
 
 				case QueryElementType.NotExprPredicate:
 				{
@@ -1127,21 +1127,21 @@ namespace LinqToDB.SqlProvider
 			return func;
 		}
 
-		public virtual ISqlPredicate ConvertPredicate(MappingSchema mappingSchema, ISqlPredicate predicate, bool withParameters)
+		public virtual ISqlPredicate ConvertPredicate(MappingSchema mappingSchema, ISqlPredicate predicate, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
 		{
 			switch (predicate.ElementType)
 			{
 				case QueryElementType.ExprExprPredicate:
-					return ((SqlPredicate.ExprExpr)predicate).Reduce(withParameters);
+					return ((SqlPredicate.ExprExpr)predicate).Reduce(parameterValues);
 				case QueryElementType.IsTruePredicate:
 					return ((SqlPredicate.IsTrue)predicate).Reduce();
 				case QueryElementType.InListPredicate:
 				{
 					var inList = (SqlPredicate.InList)predicate;
-					var reduced = inList.Reduce(withParameters);
+					var reduced = inList.Reduce(parameterValues);
 
 					if (ReferenceEquals(reduced, inList))
-						return ConvertInListPredicate(mappingSchema, inList);
+						return ConvertInListPredicate(mappingSchema, inList, parameterValues);
 
 					return reduced;
 				}
@@ -1157,19 +1157,19 @@ namespace LinqToDB.SqlProvider
 			return result;
 		}
 
-		public virtual ISqlPredicate ConvertInListPredicate(MappingSchema mappingSchema, SqlPredicate.InList p)
+		public virtual ISqlPredicate ConvertInListPredicate(MappingSchema mappingSchema, SqlPredicate.InList p, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
 		{
 			if (p.Values == null || p.Values.Count == 0)
 				return new SqlPredicate.Expr(new SqlValue(p.IsNot));
 
 			if (p.Values.Count == 1 && p.Values[0] is SqlParameter parameter)
 			{
-				var pr = parameter;
+				var paramValue = parameter.GetParameterValue(parameterValues);
 
-				if (pr.Value == null)
+				if (paramValue.Value == null)
 					return new SqlPredicate.Expr(new SqlValue(p.IsNot));
 
-				if (pr.Value is IEnumerable items)
+				if (paramValue.Value is IEnumerable items)
 				{
 					if (p.Expr1 is ISqlTableSource table)
 					{
@@ -1933,7 +1933,7 @@ namespace LinqToDB.SqlProvider
 
 		#region Optimizing Statement
 
-		public SqlStatement OptimizeElements(SqlStatement statement, bool withParameters)
+		public SqlStatement OptimizeElements(SqlStatement statement, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
 		{
 			var newElement = ConvertVisitor.ConvertAll(statement, (visitor, e) =>
 			{
@@ -1941,10 +1941,10 @@ namespace LinqToDB.SqlProvider
 				for (;;)
 				{
 					if (ne is ISqlExpression sqlExpression)
-						ne = OptimizeExpression(sqlExpression, withParameters);
+						ne = OptimizeExpression(sqlExpression, parameterValues);
 
 					if (ne is ISqlPredicate sqlPredicate)
-						ne = OptimizePredicate(sqlPredicate, withParameters);
+						ne = OptimizePredicate(sqlPredicate, parameterValues);
 
 					if (ReferenceEquals(ne, e))
 						break;
@@ -1954,14 +1954,14 @@ namespace LinqToDB.SqlProvider
 			});
 
 			if (!ReferenceEquals(newElement, statement))
-				newElement = OptimizeElements(newElement, withParameters);
+				newElement = OptimizeElements(newElement, parameterValues);
 
 			return newElement;
 		}
 
-		public virtual SqlStatement OptimizeStatement(SqlStatement statement, bool withParameters)
+		public virtual SqlStatement OptimizeStatement(SqlStatement statement, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
 		{
-			statement = OptimizeElements(statement, withParameters);
+			statement = OptimizeElements(statement, parameterValues);
 
 			statement = OptimizeAggregates(statement);
 
@@ -2057,7 +2057,7 @@ namespace LinqToDB.SqlProvider
 			return null != new QueryVisitor().Find(statement, e => IsParameterDependedElement(e));
 		}
 
-		public IQueryElement ConvertElements(MappingSchema mappingSchema, IQueryElement element, bool withParameters)
+		public IQueryElement ConvertElements(MappingSchema mappingSchema, IQueryElement element, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
 		{
 			var newElement = ConvertVisitor.ConvertAll(element, (visitor, e) =>
 			{
@@ -2068,7 +2068,7 @@ namespace LinqToDB.SqlProvider
 						ne = ConvertExpression(sqlExpression);
 
 					if (ne is SqlPredicate sqlPredicate)
-						ne = ConvertPredicate(mappingSchema, sqlPredicate, withParameters);
+						ne = ConvertPredicate(mappingSchema, sqlPredicate, parameterValues);
 
 					if (ReferenceEquals(ne, e))
 						break;
@@ -2080,22 +2080,22 @@ namespace LinqToDB.SqlProvider
 			});
 
 			if (!ReferenceEquals(newElement, element))
-				newElement = ConvertElements(mappingSchema, newElement, withParameters);
+				newElement = ConvertElements(mappingSchema, newElement, parameterValues);
 
 			return newElement;
 		}
 
-		public virtual SqlStatement ConvertStatement(MappingSchema mappingSchema, SqlStatement statement, bool withParameters)
+		public virtual SqlStatement ConvertStatement(MappingSchema mappingSchema, SqlStatement statement, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
 		{
-			statement = (SqlStatement)ConvertElements(mappingSchema, statement, withParameters);
-			statement = FinalizeStatement(statement);
+			statement = (SqlStatement)ConvertElements(mappingSchema, statement, parameterValues);
+			statement = FinalizeStatement(statement, parameterValues);
 			return statement;
 		}
 
-		public virtual SqlStatement FinalizeStatement(SqlStatement statement)
+		public virtual SqlStatement FinalizeStatement(SqlStatement statement, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
 		{
 			statement = TransformStatement(statement);
-			statement = CorrectSkipTake(statement);
+			statement = CorrectSkipTake(statement, parameterValues);
 
 			if (SqlProviderFlags.IsParameterOrderDependent)
 			{
@@ -2144,8 +2144,11 @@ namespace LinqToDB.SqlProvider
 			return newStatement;
 		}
 
-		public virtual SqlStatement CorrectSkipTake(SqlStatement statement)
+		public virtual SqlStatement CorrectSkipTake(SqlStatement statement, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
 		{
+			if (parameterValues == null)
+				return statement;
+
 			statement = ConvertVisitor.ConvertAll(statement, (visitor, e) =>
 			{
 				// make skip take as parameters or evaluate otherwise
@@ -2159,13 +2162,13 @@ namespace LinqToDB.SqlProvider
 						{
 							if (expr.ElementType.NotIn(QueryElementType.SqlParameter, QueryElementType.SqlValue))
 							{
-								var takeValue = take.EvaluateExpression()!;
+								var takeValue = take.EvaluateExpression(parameterValues)!;
 								take = new SqlParameter(new DbDataType(takeValue.GetType()), "take", takeValue)
 									{ IsQueryParameter = !QueryHelper.NeedParameterInlining(take) && Configuration.Linq.ParameterizeTakeSkip };
 							}
 						}
 						else if (take.ElementType != QueryElementType.SqlValue)
-							take = new SqlValue(take.EvaluateExpression()!);
+							take = new SqlValue(take.EvaluateExpression(parameterValues)!);
 
 						return take;
 					}
@@ -2178,13 +2181,13 @@ namespace LinqToDB.SqlProvider
 						{
 							if (expr.ElementType.NotIn(QueryElementType.SqlParameter, QueryElementType.SqlValue))
 							{
-								var skipValue = skip.EvaluateExpression()!;
+								var skipValue = skip.EvaluateExpression(parameterValues)!;
 								skip = new SqlParameter(new DbDataType(skipValue.GetType()), "skip", skipValue)
 									{ IsQueryParameter = !QueryHelper.NeedParameterInlining(skip) && Configuration.Linq.ParameterizeTakeSkip };
 							}
 						}
 						else if (skip.ElementType != QueryElementType.SqlValue)
-							skip = new SqlValue(skip.EvaluateExpression()!);
+							skip = new SqlValue(skip.EvaluateExpression(parameterValues)!);
 
 						return skip;
 					}

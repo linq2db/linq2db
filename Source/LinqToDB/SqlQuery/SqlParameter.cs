@@ -6,7 +6,7 @@ using LinqToDB.DataProvider;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlParameter : ISqlExpression, IValueContainer
+	public class SqlParameter : ISqlExpression
 	{
 		public SqlParameter(DbDataType type, string? name, object? value)
 		{
@@ -242,10 +242,12 @@ namespace LinqToDB.SqlQuery
 #if DEBUG
 			sb.Append('(').Append(_paramNumber).Append(')');
 #endif
-			return sb
-				.Append('[')
-				.Append(Value ?? "NULL")
-				.Append(']');
+			if (Value != null)
+				sb
+					.Append('[')
+					.Append(Value)
+					.Append(']');
+			return sb;
 		}
 
 		#endregion

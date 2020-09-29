@@ -451,7 +451,7 @@ namespace LinqToDB.SqlQuery
 						_selectQuery.IsParameterDependent = true;
 					else
 					{
-						var value = _selectQuery.Select.TakeValue.EvaluateExpression()!;
+						var value = _selectQuery.Select.TakeValue.EvaluateExpression(null)!;
 
 						if (supportsParameter)
 							_selectQuery.Select.Take(
@@ -478,7 +478,7 @@ namespace LinqToDB.SqlQuery
 						_selectQuery.IsParameterDependent = true;
 					else
 					{
-						var value = _selectQuery.Select.SkipValue.EvaluateExpression()!;
+						var value = _selectQuery.Select.SkipValue.EvaluateExpression(null)!;
 
 						if (supportsParameter)
 							_selectQuery.Select.Skip(new SqlParameter(new DbDataType(value.GetType()), "skip", value)
@@ -501,7 +501,7 @@ namespace LinqToDB.SqlQuery
 			});
 		}
 
-		internal static SqlSearchCondition OptimizeSearchCondition(SqlSearchCondition inputCondition, bool withParameters = false)
+		internal static SqlSearchCondition OptimizeSearchCondition(SqlSearchCondition inputCondition, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues = null)
 		{
 			var searchCondition = inputCondition;
 
@@ -557,7 +557,7 @@ namespace LinqToDB.SqlQuery
 
 					if (newCond.IsNot)
 					{
-						var boolValue = QueryHelper.GetBoolValue(expr.Expr1, withParameters);
+						var boolValue = QueryHelper.GetBoolValue(expr.Expr1, parameterValues);
 						if (boolValue != null)
 						{
 							newCond = new SqlCondition(false, new SqlPredicate.Expr(new SqlValue(!boolValue.Value)), newCond.IsOr);
@@ -580,7 +580,7 @@ namespace LinqToDB.SqlQuery
 				if (cond.Predicate.ElementType == QueryElementType.ExprPredicate)
 				{
 					var expr = (SqlPredicate.Expr)cond.Predicate;
-					var boolValue = QueryHelper.GetBoolValue(expr.Expr1, withParameters);
+					var boolValue = QueryHelper.GetBoolValue(expr.Expr1, parameterValues);
 
 					if (boolValue != null)
 					{
