@@ -409,18 +409,24 @@ namespace LinqToDB.Mapping
 			if (ValueConverter != null)
 				systemType = ValueConverter.ToProviderExpression.Body.Type;
 
-			if (completeDataType && dataType == DataType.Undefined)
-			{
-				dataType = CalculateDataType(MappingSchema, systemType);
-			}
+			var dbDataType = new DbDataType(systemType, dataType, DbType, Length, Precision, Scale);
 
-			if (ValueConverter == null && systemType.IsEnum)
+			var convertLambda = MappingSchema.GetConvertExpression(
+				dbDataType, 
+				dbDataType.WithSystemType(typeof(DataParameter)), createDefault: false);
+
+			if (convertLambda == null && ValueConverter == null && systemType.IsEnum)
 			{
 				var type = Converter.GetDefaultMappingFromEnumType(MappingSchema, systemType);
 				if (type != null)
 				{
 					systemType = type;
 				}
+			}
+
+			if (completeDataType && dataType == DataType.Undefined)
+			{
+				dataType = CalculateDataType(MappingSchema, systemType);
 			}
 
 			return new DbDataType(systemType, dataType, DbType, Length, Precision, Scale);

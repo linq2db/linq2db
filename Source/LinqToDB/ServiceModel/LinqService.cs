@@ -222,7 +222,7 @@ namespace LinqToDB.ServiceModel
 
 						for (var i = 0; i < ret.FieldCount; i++)
 							columnReaders[i] = new ConvertFromDataReaderExpression.ColumnReader(db, db.MappingSchema,
-								ret.FieldTypes[i], i, QueryHelper.GetValueConverter(select.Select.Columns[i]));
+								ret.FieldTypes[i], i, null);
 
 						while (rd.Read())
 						{
