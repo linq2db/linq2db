@@ -20,7 +20,7 @@ namespace Tests.Exceptions
 			{
 			}
 
-			protected override SqlStatement ProcessQuery(SqlStatement statement, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
+			protected override SqlStatement ProcessQuery(SqlStatement statement, IReadOnlyParameterValues? parameterValues)
 			{
 				if (statement.IsInsert() && statement.RequireInsertClause().Into!.Name == "Parent")
 				{
