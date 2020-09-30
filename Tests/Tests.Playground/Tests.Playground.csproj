@@ -20,6 +20,7 @@
 		<Compile Include="..\Linq\Linq\StringFunctionTests.cs" Link="StringFunctionTests.cs" />
 		<Compile Include="..\Linq\Linq\TakeSkipTests.cs" Link="TakeSkipTests.cs" />
 		<Compile Include="..\Linq\Linq\WhereTests.cs" Link="WhereTests.cs" />
+		<Compile Include="..\Linq\Samples\ConcurrencyCheckTests.cs" Link="ConcurrencyCheckTests.cs" />
 		<Compile Include="..\Linq\Update\DeleteTests.cs" Link="DeleteTests.cs" />
 		<Compile Include="..\Linq\Update\InsertTests.cs" Link="InsertTests.cs" />
 		<Compile Include="..\Linq\UserTests\Issue2478Tests.cs" Link="Issue2478Tests.cs" />
