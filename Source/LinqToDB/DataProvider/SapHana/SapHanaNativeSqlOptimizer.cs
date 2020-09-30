@@ -13,14 +13,14 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 		}
 
-		public override SqlStatement OptimizeStatement(SqlStatement statement, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
+		public override SqlStatement OptimizeStatement(SqlStatement statement, IReadOnlyParameterValues? parameterValues)
 		{
 			statement = base.OptimizeStatement(statement, parameterValues);
 
 			return statement;
 		}
 
-		public override SqlStatement ConvertStatement(MappingSchema mappingSchema, SqlStatement statement, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
+		public override SqlStatement ConvertStatement(MappingSchema mappingSchema, SqlStatement statement, IReadOnlyParameterValues? parameterValues)
 		{
 			statement = base.ConvertStatement(mappingSchema, statement, parameterValues);
 

@@ -24,7 +24,7 @@ namespace LinqToDB.SqlProvider
 			SqlProviderFlags    = sqlProviderFlags;
 		}
 
-		public IReadOnlyDictionary<SqlParameter, SqlParameterValue>? ParameterValues { get; protected set; }
+		public IReadOnlyParameterValues? ParameterValues { get; protected set; }
 
 		protected SqlStatement           Statement = null!;
 		protected readonly MappingSchema MappingSchema;
@@ -88,7 +88,7 @@ namespace LinqToDB.SqlProvider
 
 		#region BuildSql
 
-		public void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues, int startIndent = 0)
+		public void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, IReadOnlyParameterValues? parameterValues, int startIndent = 0)
 		{
 			BuildSql(commandNumber, statement, sb, parameterValues, startIndent, !Configuration.Sql.GenerateFinalAliases && CanSkipRootAliases(statement));
 		}
@@ -120,7 +120,7 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		protected virtual void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues, int indent, bool skipAlias)
+		protected virtual void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, IReadOnlyParameterValues? parameterValues, int indent, bool skipAlias)
 		{
 			Statement       = statement;
 			StringBuilder   = sb;

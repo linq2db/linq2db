@@ -72,6 +72,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		static void ConvertEmptyStringToNullIfNeeded(ISqlExpression expr)
 		{
+			/*
 			var sqlParameter = expr as SqlParameter;
 			var sqlValue     = expr as SqlValue;
 
@@ -80,6 +81,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 			if (sqlValue?.Value is string && sqlValue.Value.ToString() == "")
 				sqlValue.Value = null;
+		*/
 		}
 
 		protected override void BuildPredicate(ISqlPredicate predicate)

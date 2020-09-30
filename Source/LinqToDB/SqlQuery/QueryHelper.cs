@@ -104,6 +104,11 @@ namespace LinqToDB.SqlQuery
 							return GetColumnDescriptor(query.Select.Columns[0]);
 						break;
 					}
+				case QueryElementType.SqlBinaryExpression:
+				{
+					var binary = (SqlBinaryExpression)expr;
+					return GetColumnDescriptor(binary.Expr1) ?? GetColumnDescriptor(binary.Expr2);
+				}
 			}
 			return null;
 		}
@@ -1248,7 +1253,7 @@ namespace LinqToDB.SqlQuery
 
 		#region Expression Evaluation
 
-		public static SqlParameterValue GetParameterValue(this SqlParameter parameter, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
+		public static SqlParameterValue GetParameterValue(this SqlParameter parameter, IReadOnlyParameterValues? parameterValues)
 		{
 			if (parameterValues != null && parameterValues.TryGetValue(parameter, out var value))
 			{
@@ -1257,22 +1262,22 @@ namespace LinqToDB.SqlQuery
 			return new SqlParameterValue(parameter.Value, parameter.Type);
 		}
 
-		public static bool TryEvaluateExpression(this IQueryElement expr, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues, out object? result)
+		public static bool TryEvaluateExpression(this IQueryElement expr, IReadOnlyParameterValues? parameterValues, out object? result)
 		{
 			return expr.TryEvaluateExpression(parameterValues, out result, out _);
 		}
 
 		public static bool CanBeEvaluated(this IQueryElement expr, bool withParameters)
 		{
-			return expr.TryEvaluateExpression(withParameters ? SqlParameterValue.EmptyDictionary : null, out _, out _);
+			return expr.TryEvaluateExpression(withParameters ? SqlParameterValues.Empty : null, out _, out _);
 		}
 
-		public static bool CanBeEvaluated(this IQueryElement expr, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
+		public static bool CanBeEvaluated(this IQueryElement expr, IReadOnlyParameterValues? parameterValues)
 		{
 			return expr.TryEvaluateExpression(parameterValues, out _, out _);
 		}
 
-		public static bool TryEvaluateExpression(this IQueryElement expr, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues, out object? result, out string? errorMessage)
+		public static bool TryEvaluateExpression(this IQueryElement expr, IReadOnlyParameterValues? parameterValues, out object? result, out string? errorMessage)
 		{
 			result = null;
 			errorMessage = null;
@@ -1463,7 +1468,7 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		public static object? EvaluateExpression(this IQueryElement expr, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
+		public static object? EvaluateExpression(this IQueryElement expr, IReadOnlyParameterValues? parameterValues)
 		{
 			if (!expr.TryEvaluateExpression(parameterValues, out var result, out var message))
 			{
@@ -1483,7 +1488,7 @@ namespace LinqToDB.SqlQuery
 		#endregion
 
 
-		public static bool? GetBoolValue(ISqlExpression expression, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
+		public static bool? GetBoolValue(ISqlExpression expression, IReadOnlyParameterValues? parameterValues)
 		{
 			if (expression.TryEvaluateExpression(parameterValues, out var value))
 			{

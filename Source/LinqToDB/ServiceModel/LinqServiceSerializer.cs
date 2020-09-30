@@ -18,7 +18,7 @@ namespace LinqToDB.ServiceModel
 	{
 		#region Public Members
 
-		public static string Serialize(MappingSchema serializationSchema, SqlStatement statement, SqlParameter[] parameters, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues, List<string>? queryHints)
+		public static string Serialize(MappingSchema serializationSchema, SqlStatement statement, SqlParameter[] parameters, IReadOnlyParameterValues? parameterValues, List<string>? queryHints)
 		{
 			return new QuerySerializer(serializationSchema).Serialize(statement, parameters, parameterValues, queryHints);
 		}
@@ -587,7 +587,7 @@ namespace LinqToDB.ServiceModel
 			{
 			}
 
-			public string Serialize(SqlStatement statement, SqlParameter[] parameters, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues, List<string>? queryHints)
+			public string Serialize(SqlStatement statement, SqlParameter[] parameters, IReadOnlyParameterValues? parameterValues, List<string>? queryHints)
 			{
 				var queryHintCount = queryHints?.Count ?? 0;
 
@@ -623,7 +623,7 @@ namespace LinqToDB.ServiceModel
 				return Builder.ToString();
 			}
 
-			void Visit(IQueryElement e, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
+			void Visit(IQueryElement e, IReadOnlyParameterValues? parameterValues)
 			{
 				switch (e.ElementType)
 				{
@@ -737,18 +737,16 @@ namespace LinqToDB.ServiceModel
 					case QueryElementType.SqlParameter :
 						{
 							var elem = (SqlParameter)e;
+							var paramValue = elem.GetParameterValue(parameterValues);
 
 							Append(elem.Name);
 							Append(elem.IsQueryParameter);
-							Append(elem.Type);
-							Append(elem.LikeStart);
-							Append(elem.LikeEnd);
-							Append(elem.ReplaceLike);
+							Append(paramValue.DbDataType);
 
-							var value = elem.LikeStart != null ? elem.RawValue : elem.GetParameterValue(parameterValues).Value;
-							var type  = value == null ? elem.GetParameterValue(parameterValues).DbDataType.SystemType : value.GetType();
+							var value = paramValue.Value;
+							var type  = paramValue.DbDataType.SystemType;
 
-							if (value == null || type.IsArray || type == typeof(string) || !(value is IEnumerable))
+							if (value == null || type.IsEnum || type.IsArray || type == typeof(string) || !(value is IEnumerable))
 							{
 								Append(type, value);
 							}
@@ -1512,18 +1510,12 @@ namespace LinqToDB.ServiceModel
 							var name             = ReadString();
 							var isQueryParameter = ReadBool();
 							var dbDataType       = ReadDbDataType();
-							var likeStart        = ReadString();
-							var likeEnd          = ReadString();
-							var replaceLike      = ReadBool();
 
 							var value            = ReadValue(Read<Type>()!);
 
 							obj = new SqlParameter(dbDataType, name, value)
 							{
 								IsQueryParameter = isQueryParameter,
-								LikeStart        = likeStart,
-								LikeEnd          = likeEnd,
-								ReplaceLike      = replaceLike,
 							};
 
 							break;

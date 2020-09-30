@@ -1,4 +1,7 @@
-﻿namespace LinqToDB.DataProvider.Access
+﻿using LinqToDB.Linq;
+using LinqToDB.Mapping;
+
+namespace LinqToDB.DataProvider.Access
 {
 	using SqlProvider;
 	using SqlQuery;
@@ -7,6 +10,65 @@
 	{
 		public AccessSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
+		}
+
+
+		protected static string[] AccessLikeCharactersToEscape = {"_", "?", "*", "%", "#", "-", "!"};
+
+		public override bool   LikeIsEscapeSupported => false;
+
+
+		public override ISqlPredicate ConvertLikePredicate(MappingSchema mappingSchema, SqlPredicate.Like predicate,
+			IReadOnlyParameterValues? parameterValues)
+		{
+			if (predicate.Escape != null)
+			{
+				return new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, predicate.Expr2, null, predicate.IsSqlLike);
+			}
+
+			return base.ConvertLikePredicate(mappingSchema, predicate, parameterValues);
+		}
+
+
+		/*
+		static ISqlExpression GenerateEscapeReplacement(ISqlExpression expression, ISqlExpression character)
+		{
+			var result = new SqlFunction(typeof(string), "Replace", false, true, expression, character,
+				new SqlBinaryExpression(typeof(string), new SqlValue("["), "+",
+					new SqlBinaryExpression(typeof(string), character, "+", new SqlValue("]"), Precedence.Additive),
+					Precedence.Additive));
+			return result;
+		}
+		*/
+
+		public override ISqlExpression EscapeLikeCharacters(ISqlExpression expression, ref ISqlExpression? escape)
+		{
+			throw new LinqException("Access does not supports `Replace` functions which is required for such query.");
+
+			/*var newExpr = expression;
+
+			var toEscape = AccessLikeCharactersToEscape;
+			foreach (var s in toEscape)
+			{
+				newExpr = GenerateEscapeReplacement(newExpr, new SqlValue(s));
+			}
+
+			return newExpr;*/
+		}
+
+		public override string EscapeLikeCharacters(string str, string escape)
+		{
+			var newStr = str;
+
+			newStr = DataTools.EscapeUnterminatedBracket(newStr);
+
+			var toEscape = AccessLikeCharactersToEscape;
+			foreach (var s in toEscape)
+			{
+				newStr = newStr.Replace(s, "[" + s + "]");
+			}
+
+			return newStr;
 		}
 
 		public override SqlStatement TransformStatement(SqlStatement statement)

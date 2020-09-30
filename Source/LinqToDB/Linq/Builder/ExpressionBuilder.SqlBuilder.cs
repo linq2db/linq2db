@@ -1304,11 +1304,11 @@ namespace LinqToDB.Linq.Builder
 
 			if (columnDescriptor != null)
 			{
-				expr = columnDescriptor.ApplyConversions(expr, dbType, false);
+				expr = columnDescriptor.ApplyConversions(expr, dbType, true);
 			}
 			else
 			{
-				expr = ColumnDescriptor.ApplyConversions(MappingSchema, expr, dbType, null, false);
+				expr = ColumnDescriptor.ApplyConversions(MappingSchema, expr, dbType, null, true);
 			}
 
 			var value = expr.EvaluateExpression();
@@ -1317,9 +1317,9 @@ namespace LinqToDB.Linq.Builder
 				sqlValue = new SqlValue(dbType, value);
 			else
 			{
-				if (value != null && dbType.SystemType.IsEnum)
+				if (value != null && value.GetType().IsEnum)
 				{
-					var attrs = dbType.SystemType.GetCustomAttributes(typeof(Sql.EnumAttribute), true);
+					var attrs = value.GetType().GetCustomAttributes(typeof(Sql.EnumAttribute), true);
 
 					if (attrs.Length == 0)
 						value = MappingSchema.EnumToValue((Enum)value);
@@ -1667,9 +1667,9 @@ namespace LinqToDB.Linq.Builder
 						{
 							switch (e.Method.Name)
 							{
-								case "Contains"   : predicate = ConvertLikePredicate(context, e, "%", "%"); break;
-								case "StartsWith" : predicate = ConvertLikePredicate(context, e, "",  "%"); break;
-								case "EndsWith"   : predicate = ConvertLikePredicate(context, e, "%", "");  break;
+								case "Contains"   : predicate = CreateStringPredicate(context, e, SqlPredicate.SearchString.SearchKind.Contains);   break;
+								case "StartsWith" : predicate = CreateStringPredicate(context, e, SqlPredicate.SearchString.SearchKind.StartsWith); break;
+								case "EndsWith"   : predicate = CreateStringPredicate(context, e, SqlPredicate.SearchString.SearchKind.EndsWith);   break;
 							}
 						}
 						else if (e.Method.Name == "Contains")
@@ -2406,6 +2406,21 @@ namespace LinqToDB.Linq.Builder
 			var expr = Expression.MakeMemberAccess(par.Type == typeof(object) ? Expression.Convert(par, member?.DeclaringType ?? typeof(object)) : par, member);
 
 			vte.ValueExpression = expr;
+
+			if (columnDescriptor != null)
+			{
+				var dbDataType = columnDescriptor.GetDbDataType(true);
+				vte.DataType = dbDataType;
+				vte.DbDataTypeExpression = Expression.Constant(dbDataType);
+			}
+
+			if (!expr.Type.IsSameOrParentOf(vte.DataType.SystemType))
+			{
+				var dbDataType = new DbDataType(expr.Type);
+				vte.DataType = dbDataType;
+				vte.DbDataTypeExpression = Expression.Constant(dbDataType);
+			}
+
 			var p = PrepareConvertersAndCreateParameter(vte, expr, member?.Name, columnDescriptor, BuildParameterType.Default);
 
 			_parameters.Add(expr, p);
@@ -2671,67 +2686,13 @@ namespace LinqToDB.Linq.Builder
 
 		#region LIKE predicate
 
-		ISqlPredicate ConvertLikePredicate(IBuildContext? context, MethodCallExpression expression, string start, string end)
+		ISqlPredicate CreateStringPredicate(IBuildContext? context, MethodCallExpression expression, SqlPredicate.SearchString.SearchKind kind)
 		{
 			var e = expression;
 			var o = ConvertToSql(context, e.Object);
 			var a = ConvertToSql(context, e.Arguments[0]);
 
-			if (a is SqlValue sqlValue)
-			{
-				var value = sqlValue.Value;
-
-				if (value == null)
-					throw new LinqException("NULL cannot be used as a LIKE predicate parameter.");
-
-				return value.ToString()!.IndexOfAny(new[] { '%', '_' }) < 0?
-					new SqlPredicate.Like(o, false, new SqlValue(start + value + end), null, false):
-					new SqlPredicate.Like(o, false, new SqlValue(start + EscapeLikeText(value.ToString()!) + end), new SqlValue('~'), false);
-			}
-
-			if (a is SqlParameter p)
-			{
-				var ep = (from pm in CurrentSqlParameters where pm.SqlParameter == p select pm).First();
-
-				ep = new ParameterAccessor
-				(
-					ep.Expression,
-					ep.ValueAccessor,
-					ep.OriginalAccessor,
-					ep.DbDataTypeAccessor,
-					new SqlParameter(p.Type.WithSystemType(ep.Expression.Type), p.Name, p.GetParameterValue(null))
-					{
-						LikeStart        = start,
-						LikeEnd          = end,
-						ReplaceLike      = p.ReplaceLike,
-						IsQueryParameter = !(DataContext.InlineParameters && ep.Expression.Type.IsScalar(false))
-					}
-				);
-
-				AddCurrentSqlParameter(ep);
-
-				return new SqlPredicate.Like(o, false, ep.SqlParameter, new SqlValue('~'), false);
-			}
-
-			var mi = MemberHelper.MethodOf(() => "".Replace("", ""));
-			var ex =
-				Expression.Call(
-				Expression.Call(
-				Expression.Call(
-					e.Arguments[0],
-						mi, Expression.Constant("~"), Expression.Constant("~~")),
-						mi, Expression.Constant("%"), Expression.Constant("~%")),
-						mi, Expression.Constant("_"), Expression.Constant("~_"));
-
-			var expr = ConvertToSql(context, ConvertExpression(ex));
-
-			if (!string.IsNullOrEmpty(start))
-				expr = new SqlBinaryExpression(typeof(string), new SqlValue("%"), "+", expr);
-
-			if (!string.IsNullOrEmpty(end))
-				expr = new SqlBinaryExpression(typeof(string), expr, "+", new SqlValue("%"));
-
-			return new SqlPredicate.Like(o, false, expr, new SqlValue('~'), false);
+			return new SqlPredicate.SearchString(o, false, a, kind, true);
 		}
 
 		ISqlPredicate ConvertLikePredicate(IBuildContext context, MethodCallExpression expression)
@@ -2746,30 +2707,6 @@ namespace LinqToDB.Linq.Builder
 				a3 = ConvertToSql(context, e.Arguments[2]);
 
 			return new SqlPredicate.Like(a1, false, a2, a3, true);
-		}
-
-		static string EscapeLikeText(string text)
-		{
-			if (text.IndexOfAny(new[] { '%', '_' }) < 0)
-				return text;
-
-			var builder = new StringBuilder(text.Length);
-
-			foreach (var ch in text)
-			{
-				switch (ch)
-				{
-					case '%':
-					case '_':
-					case '~':
-						builder.Append('~');
-						break;
-				}
-
-				builder.Append(ch);
-			}
-
-			return builder.ToString();
 		}
 
 		#endregion

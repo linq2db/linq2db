@@ -46,7 +46,7 @@ namespace LinqToDB.Linq
 				DataContext.Close();
 		}
 
-		protected virtual void SetCommand(bool clearQueryHints, Dictionary<SqlParameter, SqlParameterValue> parameterValues)
+		protected virtual void SetCommand(bool clearQueryHints, SqlParameterValues parameterValues)
 		{
 			if (QueryNumber == 0 && (DataContext.QueryHints.Count > 0 || DataContext.NextQueryHints.Count > 0))
 			{
@@ -70,7 +70,7 @@ namespace LinqToDB.Linq
 			SetQuery(parameterValues);
 		}
 
-		protected abstract void SetQuery(IReadOnlyDictionary<SqlParameter, SqlParameterValue> parameterValues);
+		protected abstract void SetQuery(IReadOnlyParameterValues parameterValues);
 
 		public    abstract string GetSqlText();
 	}

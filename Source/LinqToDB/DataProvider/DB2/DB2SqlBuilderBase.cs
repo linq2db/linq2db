@@ -73,7 +73,7 @@ namespace LinqToDB.DataProvider.DB2
 			StringBuilder.AppendLine();
 		}
 
-		protected override void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues, int indent, bool skipAlias)
+		protected override void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, IReadOnlyParameterValues? parameterValues, int indent, bool skipAlias)
 		{
 			Statement       = statement;
 			StringBuilder   = sb;

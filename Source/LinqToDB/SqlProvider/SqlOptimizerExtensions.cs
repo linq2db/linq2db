@@ -8,7 +8,7 @@ namespace LinqToDB.SqlProvider
 	internal static class SqlOptimizerExtensions
 	{
 		public static SqlStatement PrepareStatementForRemoting(this ISqlOptimizer optimizer, SqlStatement statement,
-			MappingSchema mappingSchema, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
+			MappingSchema mappingSchema, IReadOnlyParameterValues? parameterValues)
 		{
 			var newStatement = optimizer.OptimizeStatement(statement, parameterValues);
 			newStatement     = optimizer.ConvertStatement(mappingSchema, newStatement, parameterValues);
@@ -17,7 +17,7 @@ namespace LinqToDB.SqlProvider
 		}
 
 		public static SqlStatement PrepareStatementForSql(this ISqlOptimizer optimizer, SqlStatement statement,
-			MappingSchema mappingSchema, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
+			MappingSchema mappingSchema, IReadOnlyParameterValues? parameterValues)
 		{
 			var newStatement = optimizer.OptimizeStatement(statement, parameterValues);
 			newStatement     = optimizer.ConvertStatement(mappingSchema, newStatement, parameterValues);

@@ -40,7 +40,7 @@ namespace LinqToDB.Data
 			return DataExtensions.GetTable<T>(this, instance, methodInfo, parameters);
 		}
 
-		protected virtual SqlStatement ProcessQuery(SqlStatement statement, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
+		protected virtual SqlStatement ProcessQuery(SqlStatement statement, IReadOnlyParameterValues? parameterValues)
 		{
 			return statement;
 		}

@@ -31,6 +31,9 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
+				// revert unwrap
+				arg = methodCall.Arguments[1];
+
 				expr = builder.ConvertToSql(sequence, arg);
 				if (expr.ElementType == QueryElementType.SqlValue)
 				{

@@ -12,6 +12,7 @@ namespace LinqToDB.SqlProvider
 	using SqlQuery;
 	using Tools;
 	using Mapping;
+	using DataProvider;
 
 	public class BasicSqlOptimizer : ISqlOptimizer
 	{
@@ -577,12 +578,12 @@ namespace LinqToDB.SqlProvider
 
 		#region Optimization
 
-		static ISqlExpression CreateSqlValue(object value, SqlBinaryExpression be)
+		public static ISqlExpression CreateSqlValue(object value, SqlBinaryExpression be)
 		{
 			return CreateSqlValue(value, be.Expr1, be.Expr2);
 		}
 
-		static ISqlExpression CreateSqlValue(object value, params ISqlExpression[] basedOn)
+		public static ISqlExpression CreateSqlValue(object value, params ISqlExpression[] basedOn)
 		{
 			SqlParameter? foundParam = null;
 
@@ -603,7 +604,7 @@ namespace LinqToDB.SqlProvider
 			return new SqlValue(value);
 		}
 
-		public virtual ISqlExpression OptimizeExpression(ISqlExpression expression, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
+		public virtual ISqlExpression OptimizeExpression(ISqlExpression expression, IReadOnlyParameterValues? parameterValues)
 		{
 			switch (expression.ElementType)
 			{
@@ -915,7 +916,7 @@ namespace LinqToDB.SqlProvider
 			return expression;
 		}
 
-		public virtual ISqlPredicate OptimizePredicate(ISqlPredicate predicate, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
+		public virtual ISqlPredicate OptimizePredicate(ISqlPredicate predicate, IReadOnlyParameterValues? parameterValues)
 		{
 			// Avoiding infinite recursion
 			//
@@ -1127,7 +1128,7 @@ namespace LinqToDB.SqlProvider
 			return func;
 		}
 
-		public virtual ISqlPredicate ConvertPredicate(MappingSchema mappingSchema, ISqlPredicate predicate, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
+		public virtual ISqlPredicate ConvertPredicate(MappingSchema mappingSchema, ISqlPredicate predicate, IReadOnlyParameterValues? parameterValues)
 		{
 			switch (predicate.ElementType)
 			{
@@ -1135,6 +1136,10 @@ namespace LinqToDB.SqlProvider
 					return ((SqlPredicate.ExprExpr)predicate).Reduce(parameterValues);
 				case QueryElementType.IsTruePredicate:
 					return ((SqlPredicate.IsTrue)predicate).Reduce();
+				case QueryElementType.LikePredicate:
+					return ConvertLikePredicate(mappingSchema, (SqlPredicate.Like)predicate, parameterValues);
+				case QueryElementType.SearchStringPredicate:
+					return ConvertContainsPredicate(mappingSchema, (SqlPredicate.SearchString)predicate, parameterValues);
 				case QueryElementType.InListPredicate:
 				{
 					var inList = (SqlPredicate.InList)predicate;
@@ -1149,6 +1154,134 @@ namespace LinqToDB.SqlProvider
 			return predicate;
 		}
 
+
+		public virtual string LikeEscapeCharacter => "~";
+		public virtual string LikeWildcardCharacter => "%";
+
+		public virtual bool LikeHasCharacterSetSupport => true;
+		public virtual bool LikeParameterSupport => true;
+		public virtual bool LikeIsEscapeSupported => true;
+
+		protected static string[] StandardLikeCharactersToEscape = {"%", "_", "?", "*", "#", "[", "]", "-"};
+		public virtual string[]   LikeCharactersToEscape => StandardLikeCharactersToEscape;
+
+		public virtual string EscapeLikeCharacters(string str, string escape)
+		{
+			var newStr = str;
+
+			/*if (LikeHasCharacterSetSupport)
+				newStr = DataTools.EscapeUnterminatedBracket(newStr);*/
+
+			newStr = newStr.Replace(escape, escape + escape);
+
+
+			var toEscape = LikeCharactersToEscape;
+			foreach (var s in toEscape)
+			{
+				newStr = newStr.Replace(s, escape + s);
+			}
+
+			return newStr;
+		}
+
+
+		static ISqlExpression GenerateEscapeReplacement(ISqlExpression expression, ISqlExpression character, ISqlExpression escapeCharacter)
+		{
+			var result = new SqlFunction(typeof(string), "Replace", false, true, expression, character,
+				new SqlBinaryExpression(typeof(string), escapeCharacter, "+", character, Precedence.Additive));
+			return result;
+		}
+
+		public static ISqlExpression GenerateEscapeReplacement(ISqlExpression expression, ISqlExpression character)
+		{
+			var result = new SqlFunction(typeof(string), "Replace", false, true, expression, character,
+				new SqlBinaryExpression(typeof(string), new SqlValue("["), "+",
+					new SqlBinaryExpression(typeof(string), character, "+", new SqlValue("]"), Precedence.Additive),
+					Precedence.Additive));
+			return result;
+		}
+
+
+		public virtual ISqlExpression EscapeLikeCharacters(ISqlExpression expression, ref ISqlExpression? escape)
+		{
+			var newExpr = expression;
+
+			if (escape == null)
+				escape = new SqlValue(LikeEscapeCharacter);
+
+			newExpr = GenerateEscapeReplacement(newExpr, escape, escape);
+
+			var toEscape = LikeCharactersToEscape;
+			foreach (var s in toEscape)
+			{
+				newExpr = GenerateEscapeReplacement(newExpr, new SqlValue(s), escape);
+			}
+
+			return newExpr;
+		}
+
+		public virtual ISqlPredicate ConvertLikePredicate(MappingSchema mappingSchema, SqlPredicate.Like predicate,
+			IReadOnlyParameterValues? parameterValues)
+		{
+			return predicate;
+		}
+
+		public virtual ISqlPredicate ConvertContainsPredicate(MappingSchema mappingSchema, SqlPredicate.SearchString predicate,
+			IReadOnlyParameterValues? parameterValues)
+		{
+			if (!predicate.IgnoreCase)
+				throw new NotImplementedException("!predicate.IgnoreCase");
+
+			if (predicate.Expr2.TryEvaluateExpression(parameterValues, out var patternRaw))
+			{
+				var patternRawValue = patternRaw as string;
+
+				if (patternRawValue == null)
+				{
+					return new SqlPredicate.IsTrue(new SqlValue(true), new SqlValue(true), new SqlValue(false), null, predicate.IsNot);
+				}
+
+				var patternValue = EscapeLikeCharacters(patternRawValue, LikeEscapeCharacter);
+
+				patternValue = predicate.Kind switch
+				{
+					SqlPredicate.SearchString.SearchKind.StartsWith => patternValue + LikeWildcardCharacter,
+					SqlPredicate.SearchString.SearchKind.EndsWith   => LikeWildcardCharacter + patternValue,
+					SqlPredicate.SearchString.SearchKind.Contains   => LikeWildcardCharacter + patternValue + LikeWildcardCharacter,
+					_ => throw new ArgumentOutOfRangeException()
+				};
+
+				var patternExpr = LikeParameterSupport ? CreateSqlValue(patternValue, predicate.Expr2) : new SqlValue(patternValue);
+
+				return new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, patternExpr,
+					LikeIsEscapeSupported && (patternValue != patternRawValue) ? new SqlValue(LikeEscapeCharacter) : null,
+					true);
+			}
+			else
+			{
+				ISqlExpression? escape = null;
+
+				var patternExpr = EscapeLikeCharacters(predicate.Expr2, ref escape);
+
+				var anyCharacterExpr = new SqlValue(LikeWildcardCharacter);
+
+				patternExpr = predicate.Kind switch
+				{
+					SqlPredicate.SearchString.SearchKind.StartsWith => new SqlBinaryExpression(typeof(string), patternExpr, "+", anyCharacterExpr, Precedence.Additive),
+					SqlPredicate.SearchString.SearchKind.EndsWith   => new SqlBinaryExpression(typeof(string), anyCharacterExpr, "+", patternExpr, Precedence.Additive),
+					SqlPredicate.SearchString.SearchKind.Contains   => new SqlBinaryExpression(typeof(string), new SqlBinaryExpression(typeof(string), anyCharacterExpr, "+", patternExpr, Precedence.Additive), "+", anyCharacterExpr, Precedence.Additive),
+					_ => throw new ArgumentOutOfRangeException()
+				};
+
+
+				patternExpr = (ISqlExpression)OptimizeElements(patternExpr, parameterValues);
+
+				return new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, patternExpr,
+					LikeIsEscapeSupported ? escape : null,
+					true);
+			}
+		}
+
 		static SqlField ExpectsUnderlyingField(ISqlExpression expr)
 		{
 			var result = QueryHelper.GetUnderlyingField(expr);
@@ -1157,7 +1290,7 @@ namespace LinqToDB.SqlProvider
 			return result;
 		}
 
-		public virtual ISqlPredicate ConvertInListPredicate(MappingSchema mappingSchema, SqlPredicate.InList p, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
+		public virtual ISqlPredicate ConvertInListPredicate(MappingSchema mappingSchema, SqlPredicate.InList p, IReadOnlyParameterValues? parameterValues)
 		{
 			if (p.Values == null || p.Values.Count == 0)
 				return new SqlPredicate.Expr(new SqlValue(p.IsNot));
@@ -1933,9 +2066,9 @@ namespace LinqToDB.SqlProvider
 
 		#region Optimizing Statement
 
-		public SqlStatement OptimizeElements(SqlStatement statement, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
+		public IQueryElement OptimizeElements(IQueryElement root, IReadOnlyParameterValues? parameterValues)
 		{
-			var newElement = ConvertVisitor.ConvertAll(statement, (visitor, e) =>
+			var newElement = ConvertVisitor.ConvertAll(root, (visitor, e) =>
 			{
 				var ne = e;
 				for (;;)
@@ -1953,15 +2086,15 @@ namespace LinqToDB.SqlProvider
 				return e;
 			});
 
-			if (!ReferenceEquals(newElement, statement))
+			if (!ReferenceEquals(newElement, root))
 				newElement = OptimizeElements(newElement, parameterValues);
 
 			return newElement;
 		}
 
-		public virtual SqlStatement OptimizeStatement(SqlStatement statement, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
+		public virtual SqlStatement OptimizeStatement(SqlStatement statement, IReadOnlyParameterValues? parameterValues)
 		{
-			statement = OptimizeElements(statement, parameterValues);
+			statement = (SqlStatement)OptimizeElements(statement, parameterValues);
 
 			statement = OptimizeAggregates(statement);
 
@@ -2072,6 +2205,14 @@ namespace LinqToDB.SqlProvider
 				{
 					return true;
 				}
+				case QueryElementType.SearchStringPredicate:
+				{
+					var containsPredicate = (SqlPredicate.SearchString)element;
+					if (containsPredicate.Expr2.ElementType != QueryElementType.SqlValue)
+						return true;
+
+					return false;
+				}
 				case QueryElementType.SqlFunction:
 				{
 					var sqlFunc = (SqlFunction)element;
@@ -2100,7 +2241,7 @@ namespace LinqToDB.SqlProvider
 			return null != new QueryVisitor().Find(statement, e => IsParameterDependedElement(e));
 		}
 
-		public IQueryElement ConvertElements(MappingSchema mappingSchema, IQueryElement element, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
+		public IQueryElement ConvertElements(MappingSchema mappingSchema, IQueryElement element, IReadOnlyParameterValues? parameterValues)
 		{
 			var newElement = ConvertVisitor.ConvertAll(element, (visitor, e) =>
 			{
@@ -2128,14 +2269,14 @@ namespace LinqToDB.SqlProvider
 			return newElement;
 		}
 
-		public virtual SqlStatement ConvertStatement(MappingSchema mappingSchema, SqlStatement statement, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
+		public virtual SqlStatement ConvertStatement(MappingSchema mappingSchema, SqlStatement statement, IReadOnlyParameterValues? parameterValues)
 		{
 			statement = (SqlStatement)ConvertElements(mappingSchema, statement, parameterValues);
 			statement = FinalizeStatement(statement, parameterValues);
 			return statement;
 		}
 
-		public virtual SqlStatement FinalizeStatement(SqlStatement statement, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
+		public virtual SqlStatement FinalizeStatement(SqlStatement statement, IReadOnlyParameterValues? parameterValues)
 		{
 			statement = TransformStatement(statement);
 			statement = CorrectSkipTake(statement, parameterValues);
@@ -2187,7 +2328,7 @@ namespace LinqToDB.SqlProvider
 			return newStatement;
 		}
 
-		public virtual SqlStatement CorrectSkipTake(SqlStatement statement, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
+		public virtual SqlStatement CorrectSkipTake(SqlStatement statement, IReadOnlyParameterValues? parameterValues)
 		{
 			if (parameterValues == null)
 				return statement;

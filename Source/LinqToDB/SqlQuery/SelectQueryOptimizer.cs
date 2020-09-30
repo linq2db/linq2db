@@ -444,7 +444,7 @@ namespace LinqToDB.SqlQuery
 			});
 		}
 
-		internal static SqlSearchCondition OptimizeSearchCondition(SqlSearchCondition inputCondition, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues = null)
+		internal static SqlSearchCondition OptimizeSearchCondition(SqlSearchCondition inputCondition, IReadOnlyParameterValues? parameterValues = null)
 		{
 			var searchCondition = inputCondition;
 

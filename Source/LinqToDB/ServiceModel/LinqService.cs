@@ -166,7 +166,7 @@ namespace LinqToDB.ServiceModel
 						Statement   = query.Statement,
 						Parameters  = query.Parameters,
 						QueryHints  = query.QueryHints
-					}, null))
+					}, SqlParameterValues.Empty))
 					{
 						var reader = rd;
 						var converterExpr = db.MappingSchema.GetConvertExpression(rd.GetType(), typeof(IDataReader), false, false);

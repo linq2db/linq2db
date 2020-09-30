@@ -10,6 +10,10 @@
 		{
 		}
 
+		protected static string[] SybaseCharactersToEscape = {"_", "%", "[", "]", "^"};
+
+		public override string[] LikeCharactersToEscape => SybaseCharactersToEscape;
+
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)
 		{
 			expr = base.ConvertExpression(expr);

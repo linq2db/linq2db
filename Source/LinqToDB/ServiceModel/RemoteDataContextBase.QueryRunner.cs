@@ -35,7 +35,7 @@ namespace LinqToDB.ServiceModel
 
 			public override Expression? MapperExpression { get; set; }
 
-			protected override void SetQuery(IReadOnlyDictionary<SqlParameter, SqlParameterValue> parameterValues)
+			protected override void SetQuery(IReadOnlyParameterValues parameterValues)
 			{
 			}
 
@@ -43,7 +43,7 @@ namespace LinqToDB.ServiceModel
 
 			public override string GetSqlText()
 			{
-				var parameterValues = new Dictionary<SqlParameter, SqlParameterValue>();
+				var parameterValues = new SqlParameterValues();
 				SetCommand(false, parameterValues);
 
 				var query = Query.Queries[QueryNumber];
@@ -130,7 +130,7 @@ namespace LinqToDB.ServiceModel
 			{
 				string data;
 
-				var parameterValues = new Dictionary<SqlParameter, SqlParameterValue>();
+				var parameterValues = new SqlParameterValues();
 				SetCommand(true, parameterValues);
 
 				var queryContext = Query.Queries[QueryNumber];
@@ -165,7 +165,7 @@ namespace LinqToDB.ServiceModel
 
 				string data;
 
-				var parameterValues = new Dictionary<SqlParameter, SqlParameterValue>();
+				var parameterValues = new SqlParameterValues();
 				SetCommand(true, parameterValues);
 
 				var queryContext = Query.Queries[QueryNumber];
@@ -192,7 +192,7 @@ namespace LinqToDB.ServiceModel
 
 				string data;
 
-				var parameterValues = new Dictionary<SqlParameter, SqlParameterValue>();
+				var parameterValues = new SqlParameterValues();
 				SetCommand(true, parameterValues);
 
 				var queryContext = Query.Queries[QueryNumber];
@@ -260,7 +260,7 @@ namespace LinqToDB.ServiceModel
 
 				string data;
 
-				var parameterValues = new Dictionary<SqlParameter, SqlParameterValue>();
+				var parameterValues = new SqlParameterValues();
 				SetCommand(true, parameterValues);
 
 				var queryContext = Query.Queries[QueryNumber];
@@ -291,7 +291,7 @@ namespace LinqToDB.ServiceModel
 
 				string data;
 
-				var parameterValues = new Dictionary<SqlParameter, SqlParameterValue>();
+				var parameterValues = new SqlParameterValues();
 				SetCommand(true, parameterValues);
 
 				var queryContext = Query.Queries[QueryNumber];
@@ -314,7 +314,7 @@ namespace LinqToDB.ServiceModel
 			{
 				string data;
 
-				var parameterValues = new Dictionary<SqlParameter, SqlParameterValue>();
+				var parameterValues = new SqlParameterValues();
 				SetCommand(true, parameterValues);
 
 				var queryContext = Query.Queries[QueryNumber];

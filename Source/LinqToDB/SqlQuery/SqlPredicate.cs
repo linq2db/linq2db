@@ -206,7 +206,7 @@ namespace LinqToDB.SqlQuery
 				return new ExprExpr(Expr1, InvertOperator(Operator), Expr2, !WithNull);
 			}
 
-			public ISqlPredicate Reduce(IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
+			public ISqlPredicate Reduce(IReadOnlyParameterValues? parameterValues)
 			{
 				if (Operator.In(Operator.Equal, Operator.NotEqual))
 				{
@@ -434,6 +434,79 @@ namespace LinqToDB.SqlQuery
 					sb.Append(" ESCAPE ");
 					Escape.ToString(sb, dic);
 				}
+			}
+		}
+
+		// virtual predicate for simplifying string search operations
+		// string_expression [ NOT ] STARTS_WITH | ENDS_WITH | CONTAINS string_expression
+		//
+		public class SearchString : BaseNotExpr
+		{
+			public enum SearchKind
+			{
+				StartsWith,
+				EndsWith,
+				Contains
+			}
+
+			public SearchString(ISqlExpression exp1, bool isNot, ISqlExpression exp2, SearchKind searchKind, bool ignoreCase)
+				: base(exp1, isNot, SqlQuery.Precedence.Comparison)
+			{
+				Expr2      = exp2;
+				Kind       = searchKind;
+				IgnoreCase = ignoreCase;
+			}
+
+			public ISqlExpression Expr2      { get; internal set; }
+			public SearchKind     Kind       { get; }
+			public bool           IgnoreCase { get; }
+
+			protected override void Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+			{
+				base.Walk(options, func);
+				Expr2 = Expr2.Walk(options, func)!;
+			}
+
+			public override IQueryElement Invert()
+			{
+				return new SearchString(Expr1, !IsNot, Expr2, Kind, IgnoreCase);
+			}
+
+			protected override ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
+			{
+				if (!doClone(this))
+					return this;
+
+				if (!objectTree.TryGetValue(this, out var clone))
+					objectTree.Add(this, clone = new SearchString(
+						(ISqlExpression)Expr1.Clone(objectTree, doClone), IsNot, (ISqlExpression)Expr2.Clone(objectTree, doClone), Kind, IgnoreCase));
+
+				return clone;
+			}
+
+			public override QueryElementType ElementType => QueryElementType.SearchStringPredicate;
+
+			protected override void ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+			{
+				Expr1.ToString(sb, dic);
+
+				if (IsNot) sb.Append(" NOT");
+				switch (Kind)
+				{
+					case SearchKind.StartsWith:
+						sb.Append(" STARTS_WITH ");
+						break;
+					case SearchKind.EndsWith:
+						sb.Append(" ENS_WITH ");
+						break;
+					case SearchKind.Contains:
+						sb.Append(" CONTAINS ");
+						break;
+					default:
+						throw new ArgumentOutOfRangeException();
+				}
+
+				Expr2.ToString(sb, dic);
 			}
 		}
 
@@ -668,7 +741,7 @@ namespace LinqToDB.SqlQuery
 				return new InList(Expr1, !WithNull, !IsNot, Values);
 			}
 
-			public ISqlPredicate Reduce(IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
+			public ISqlPredicate Reduce(IReadOnlyParameterValues? parameterValues)
 			{
 				if (WithNull == null)
 					return this;

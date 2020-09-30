@@ -318,6 +318,19 @@ namespace LinqToDB.SqlQuery
 							break;
 						}
 
+					case QueryElementType.SearchStringPredicate:
+						{
+							var p  = (SqlPredicate.SearchString)element;
+							var e1 = (ISqlExpression?)ConvertInternal(p.Expr1 );
+							var e2 = (ISqlExpression?)ConvertInternal(p.Expr2 );
+
+							if (e1 != null && !ReferenceEquals(p.Expr1, e1) ||
+								e2 != null && !ReferenceEquals(p.Expr2, e2))
+								newElement = new SqlPredicate.SearchString(e1 ?? p.Expr1, p.IsNot, e2 ?? p.Expr2, p.Kind, p.IgnoreCase);
+
+							break;
+						}
+
 					case QueryElementType.BetweenPredicate:
 						{
 							var p = (SqlPredicate.Between)element;

@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
-using System.Diagnostics;
-using LinqToDB.Common;
+﻿using System.Diagnostics;
 
 namespace LinqToDB.SqlQuery
 {
+	using Common;
+
 	[DebuggerDisplay("{Value}")]
 	public class SqlParameterValue
 	{
@@ -15,7 +15,5 @@ namespace LinqToDB.SqlQuery
 
 		public object?    Value      { get; }
 		public DbDataType DbDataType { get; }
-
-		public static IReadOnlyDictionary<SqlParameter, SqlParameterValue> EmptyDictionary = new Dictionary<SqlParameter, SqlParameterValue>();
 	}
 }

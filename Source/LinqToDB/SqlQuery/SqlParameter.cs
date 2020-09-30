@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Text;
 using LinqToDB.Common;
-using LinqToDB.DataProvider;
 
 namespace LinqToDB.SqlQuery
 {
@@ -35,43 +34,20 @@ namespace LinqToDB.SqlQuery
 		public string?    Name             { get; set; }
 		public DbDataType Type             { get; set; }
 		public bool       IsQueryParameter { get; set; }
-		public string?    LikeStart        { get; set; }
-		public string?    LikeEnd          { get; set; }
-		public bool       ReplaceLike      { get; set; }
 		internal int?     AccessorId       { get; set; }
 
 		Type ISqlExpression.SystemType => Type.SystemType;
 
-		private object? _value;
-		public  object?  Value
+		//TODO: Setter used only in EnumerableContext and should be hidden.
+		public object?  Value { get; internal set; }
+
+		public object? CorrectParameterValue(object? rawValue)
 		{
-			get
-			{
-				var value = _value;
+			var value = rawValue;
 
-				if (ReplaceLike)
-				{
-					value = DataTools.EscapeUnterminatedBracket(value?.ToString());
-				}
-
-				if (LikeStart != null)
-				{
-					if (value != null)
-					{
-						return value.ToString()!.IndexOfAny(new[] { '%', '_' }) < 0 ?
-							LikeStart + value + LikeEnd :
-							LikeStart + EscapeLikeText(value.ToString()!) + LikeEnd;
-					}
-				}
-
-				var valueConverter = ValueConverter;
-				return valueConverter == null ? value : valueConverter(value);
-			}
-
-			set => _value = value;
+			var valueConverter = ValueConverter;
+			return valueConverter == null ? value : valueConverter(value);
 		}
-
-		internal object? RawValue => _value;
 
 		#region Value Converter
 
@@ -110,30 +86,6 @@ namespace LinqToDB.SqlQuery
 				_valueConverter = v => v == null ? null : (object) ((int) v + take);
 			else
 				_valueConverter = v => v == null ? null : (object) ((int) conv(v)! + take);
-		}
-
-		static string EscapeLikeText(string text)
-		{
-			if (text.IndexOfAny(new[] { '%', '_' }) < 0)
-				return text;
-
-			var builder = new StringBuilder(text.Length);
-
-			foreach (var ch in text)
-			{
-				switch (ch)
-				{
-					case '%':
-					case '_':
-					case '~':
-						builder.Append('~');
-						break;
-				}
-
-				builder.Append(ch);
-			}
-
-			return builder.ToString();
 		}
 
 		#endregion
@@ -212,12 +164,9 @@ namespace LinqToDB.SqlQuery
 
 			if (!objectTree.TryGetValue(this, out var clone))
 			{
-				var p = new SqlParameter(Type, Name, _value, _valueConverter)
+				var p = new SqlParameter(Type, Name, Value, _valueConverter)
 				{
 					IsQueryParameter = IsQueryParameter,
-					LikeStart        = LikeStart,
-					LikeEnd          = LikeEnd,
-					ReplaceLike      = ReplaceLike,
 					AccessorId       = AccessorId
 				};
 

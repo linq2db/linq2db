@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace LinqToDB.DataProvider.Firebird
+﻿namespace LinqToDB.DataProvider.Firebird
 {
 	using System.Linq;
 	using Extensions;
@@ -26,7 +24,7 @@ namespace LinqToDB.DataProvider.Firebird
 			return statement;
 		}
 
-		public override SqlStatement OptimizeStatement(SqlStatement statement, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
+		public override SqlStatement OptimizeStatement(SqlStatement statement, IReadOnlyParameterValues? parameterValues)
 		{
 			statement = base.OptimizeStatement(statement, parameterValues);
 

@@ -10,7 +10,7 @@ namespace LinqToDB.SqlProvider
 	public interface ISqlBuilder
 	{
 		int              CommandCount         (SqlStatement statement);
-		void             BuildSql             (int commandNumber, SqlStatement statement, StringBuilder sb, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues, int startIndent = 0);
+		void             BuildSql             (int commandNumber, SqlStatement statement, StringBuilder sb, IReadOnlyParameterValues? parameterValues, int startIndent = 0);
 
 		StringBuilder    ConvertTableName     (StringBuilder sb, string? server, string? database, string? schema, string table);
 		StringBuilder    BuildTableName       (StringBuilder sb, string? server, string? database, string? schema, string table);

@@ -80,7 +80,7 @@ namespace LinqToDB.DataProvider.SQLite
 			return expr;
 		}
 
-		public override ISqlPredicate ConvertPredicate(MappingSchema mappingSchema, ISqlPredicate predicate, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
+		public override ISqlPredicate ConvertPredicate(MappingSchema mappingSchema, ISqlPredicate predicate, IReadOnlyParameterValues? parameterValues)
 		{
 			if (predicate is SqlPredicate.ExprExpr exprExpr)
 			{

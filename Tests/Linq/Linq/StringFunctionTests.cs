@@ -98,6 +98,32 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void ContainsValueAll([DataSources(TestProvName.AllInformix)] string context, 
+			[Values("N", "-", "*", "?", "#", "%", "[", "]", "[]", "[[", "]]")]string toTest)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var s  = "123" + toTest + "456";
+
+				var q = from p in db.Person where p.ID == 1 && s.Contains(Sql.ToSql(toTest)) select p;
+				Assert.AreEqual(1, q.ToList().First().ID);
+			}
+		}
+
+		[Test]
+		public void ContainsParameterAll([DataSources(TestProvName.AllInformix)] string context, 
+			[Values("N", "-", "*", "?", "#", "%", "[", "]", "[]", "[[", "]]")]string toTest)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var s  = "123" + toTest + "456";
+
+				var q = from p in db.Person where p.ID == 1 && s.Contains(toTest) select p;
+				Assert.AreEqual(1, q.ToList().First().ID);
+			}
+		}
+
+		[Test]
 		public void ContainsConstant51([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

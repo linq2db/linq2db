@@ -240,27 +240,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			if (wrap) StringBuilder.Append(" THEN 1 ELSE 0 END");
 		}
 
-		protected override void BuildLikePredicate(SqlPredicate.Like predicate)
-		{
-			if (predicate.Expr2 is SqlValue sqlValue)
-			{
-				var value = sqlValue.Value;
-
-				if (value != null)
-				{
-					var text  = value.ToString()!;
-					var ntext = predicate.IsSqlLike ? text :  DataTools.EscapeUnterminatedBracket(text);
-
-					if (text != ntext)
-						predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, new SqlValue(ntext), predicate.Escape, predicate.IsSqlLike);
-				}
-			}
-			else if (predicate.Expr2 is SqlParameter p)
-				p.ReplaceLike = predicate.IsSqlLike != true;
-
-			base.BuildLikePredicate(predicate);
-		}
-
 		public override StringBuilder BuildTableName(StringBuilder sb,
 			string? server,
 			string? database,

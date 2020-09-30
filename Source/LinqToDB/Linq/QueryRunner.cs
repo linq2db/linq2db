@@ -212,7 +212,7 @@ namespace LinqToDB.Linq
 		static int EvaluateTakeSkipValue(Query query, Expression expr, IDataContext? db, object?[]? ps, int qn,
 			ISqlExpression sqlExpr)
 		{
-			var parameterValues = new Dictionary<SqlParameter, SqlParameterValue>();
+			var parameterValues = new SqlParameterValues();
 			SetParameters(query, expr, db, ps, qn, parameterValues);
 
 			var evaluated = sqlExpr.EvaluateExpression(parameterValues) as int?;
@@ -222,7 +222,7 @@ namespace LinqToDB.Linq
 		}
 
 		internal static void SetParameters(
-			Query query, Expression expression, IDataContext? parametersContext, object?[]? parameters, int queryNumber, Dictionary<SqlParameter, SqlParameterValue> parameterValues)
+			Query query, Expression expression, IDataContext? parametersContext, object?[]? parameters, int queryNumber, SqlParameterValues parameterValues)
 		{
 			var queryContext = query.Queries[queryNumber];
 
@@ -262,8 +262,7 @@ namespace LinqToDB.Linq
 
 				var dbDataType = p.DbDataTypeAccessor(expression, parametersContext, parameters);
 
-				parameterValues.Remove(p.SqlParameter);
-				parameterValues.Add(p.SqlParameter, new SqlParameterValue(value, p.SqlParameter.Type.WithSetValues(dbDataType)));
+				parameterValues.AddValue(p.SqlParameter, value, p.SqlParameter.Type.WithSetValues(dbDataType));
 			}
 		}
 

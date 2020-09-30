@@ -414,6 +414,15 @@ namespace LinqToDB.Mapping
 				dataType = CalculateDataType(MappingSchema, systemType);
 			}
 
+			if (ValueConverter == null && systemType.IsEnum)
+			{
+				var type = Converter.GetDefaultMappingFromEnumType(MappingSchema, systemType);
+				if (type != null)
+				{
+					systemType = type;
+				}
+			}
+
 			return new DbDataType(systemType, dataType, DbType, Length, Precision, Scale);
 		}
 

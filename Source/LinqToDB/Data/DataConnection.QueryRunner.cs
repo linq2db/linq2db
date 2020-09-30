@@ -64,7 +64,7 @@ namespace LinqToDB.Data
 
 			public override string GetSqlText()
 			{
-				var parameterValues = new Dictionary<SqlParameter, SqlParameterValue>();
+				var parameterValues = new SqlParameterValues();
 				SetCommand(false, parameterValues);
 
 				var sqlProvider = _dataConnection.DataProvider.CreateSqlBuilder(_dataConnection.MappingSchema);
@@ -148,7 +148,7 @@ namespace LinqToDB.Data
 
 			PreparedQuery? _preparedQuery;
 
-			static PreparedQuery GetCommand(DataConnection dataConnection, IQueryContext query, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues, int startIndent = 0)
+			static PreparedQuery GetCommand(DataConnection dataConnection, IQueryContext query, IReadOnlyParameterValues? parameterValues, int startIndent = 0)
 			{
 				if (query.Context != null)
 				{
@@ -216,7 +216,7 @@ namespace LinqToDB.Data
 				};
 			}
 
-			static void GetParameters(DataConnection dataConnection, PreparedQuery pq, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
+			static void GetParameters(DataConnection dataConnection, PreparedQuery pq, IReadOnlyParameterValues? parameterValues)
 			{
 				if (pq.SqlParameters.Count == 0)
 					return;
@@ -227,17 +227,17 @@ namespace LinqToDB.Data
 				{
 					var sqlp = pq.SqlParameters[i];
 
-					AddParameter(dataConnection, parms, sqlp.Name!, sqlp.GetParameterValue(parameterValues));
+					AddParameter(dataConnection, parms, sqlp, sqlp.GetParameterValue(parameterValues));
 				}
 
 				pq.Parameters = parms;
 			}
 
-			static void AddParameter(DataConnection dataConnection, ICollection<IDbDataParameter> parms, string name, SqlParameterValue parmValue)
+			static void AddParameter(DataConnection dataConnection, ICollection<IDbDataParameter> parms, SqlParameter parameter, SqlParameterValue parmValue)
 			{
 				var p          = dataConnection.Command.CreateParameter();
 				var dbDataType = parmValue.DbDataType;
-				var paramValue = parmValue.Value;
+				var paramValue = parameter.CorrectParameterValue(parmValue.Value);
 
 				if (dbDataType.DataType == DataType.Undefined)
 				{
@@ -248,12 +248,12 @@ namespace LinqToDB.Data
 								: dbDataType.SystemType).Type.DataType);
 				}
 
-				dataConnection.DataProvider.SetParameter(dataConnection, p, name, dbDataType, paramValue);
+				dataConnection.DataProvider.SetParameter(dataConnection, p, parameter.Name!, dbDataType, paramValue);
 
 				parms.Add(p);
 			}
 
-			public static PreparedQuery SetQuery(DataConnection dataConnection, IQueryContext queryContext, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues, int startIndent = 0)
+			public static PreparedQuery SetQuery(DataConnection dataConnection, IQueryContext queryContext, IReadOnlyParameterValues? parameterValues, int startIndent = 0)
 			{
 				var preparedQuery = GetCommand(dataConnection, queryContext, parameterValues, startIndent);
 
@@ -262,14 +262,14 @@ namespace LinqToDB.Data
 				return preparedQuery;
 			}
 
-			protected override void SetQuery(IReadOnlyDictionary<SqlParameter, SqlParameterValue> parameterValues)
+			protected override void SetQuery(IReadOnlyParameterValues parameterValues)
 			{
 				_preparedQuery = SetQuery(_dataConnection, Query.Queries[QueryNumber], parameterValues);
 			}
 
 			void SetCommand()
 			{
-				var parameterValues = new Dictionary<SqlParameter, SqlParameterValue>();
+				var parameterValues = new SqlParameterValues();
 				SetCommand(true, parameterValues);
 
 				var hasParameters = _preparedQuery!.Parameters?.Count > 0;
@@ -334,12 +334,12 @@ namespace LinqToDB.Data
 
 			public override int ExecuteNonQuery()
 			{
-				var parameterValues = new Dictionary<SqlParameter, SqlParameterValue>();
+				var parameterValues = new SqlParameterValues();
 				SetCommand(true, parameterValues);
 				return ExecuteNonQueryImpl(_dataConnection, _preparedQuery!);
 			}
 
-			public static int ExecuteNonQuery(DataConnection dataConnection, IQueryContext context, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
+			public static int ExecuteNonQuery(DataConnection dataConnection, IQueryContext context, IReadOnlyParameterValues? parameterValues)
 			{
 				var preparedQuery = GetCommand(dataConnection, context, parameterValues);
 
@@ -391,7 +391,7 @@ namespace LinqToDB.Data
 				return dataConnection.ExecuteScalar();
 			}
 
-			public static object? ExecuteScalar(DataConnection dataConnection, IQueryContext context, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
+			public static object? ExecuteScalar(DataConnection dataConnection, IQueryContext context, IReadOnlyParameterValues? parameterValues)
 			{
 				var preparedQuery = GetCommand(dataConnection, context, parameterValues);
 
@@ -418,7 +418,7 @@ namespace LinqToDB.Data
 
 			#region ExecuteReader
 
-			public static IDataReader ExecuteReader(DataConnection dataConnection, IQueryContext context, IReadOnlyDictionary<SqlParameter, SqlParameterValue>? parameterValues)
+			public static IDataReader ExecuteReader(DataConnection dataConnection, IQueryContext context, IReadOnlyParameterValues? parameterValues)
 			{
 				var preparedQuery = GetCommand(dataConnection, context, parameterValues);
 
@@ -437,7 +437,7 @@ namespace LinqToDB.Data
 
 			public override IDataReader ExecuteReader()
 			{
-				var parameterValues = new Dictionary<SqlParameter, SqlParameterValue>();
+				var parameterValues = new SqlParameterValues();
 				SetCommand(true, parameterValues);
 
 				var hasParameters = _preparedQuery!.Parameters?.Count > 0;
@@ -496,7 +496,7 @@ namespace LinqToDB.Data
 
 				await _dataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
-				var parameterValues = new Dictionary<SqlParameter, SqlParameterValue>();
+				var parameterValues = new SqlParameterValues();
 				base.SetCommand(true, parameterValues);
 
 				var hasParameters = _preparedQuery!.Parameters?.Count > 0;
@@ -518,7 +518,7 @@ namespace LinqToDB.Data
 
 				await _dataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
-				var parameterValues = new Dictionary<SqlParameter, SqlParameterValue>();
+				var parameterValues = new SqlParameterValues();
 				base.SetCommand(true, parameterValues);
 
 				if (_preparedQuery!.Commands.Length == 1)

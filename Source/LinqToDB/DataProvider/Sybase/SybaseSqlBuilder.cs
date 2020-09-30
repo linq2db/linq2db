@@ -131,29 +131,6 @@ namespace LinqToDB.DataProvider.Sybase
 			StringBuilder.AppendLine();
 		}
 
-		protected override void BuildLikePredicate(SqlPredicate.Like predicate)
-		{
-			if (predicate.Expr2 is SqlValue sqlValue)
-			{
-				var value = sqlValue.Value;
-
-				if (value != null)
-				{
-					var text  = value.ToString()!;
-					var ntext = predicate.IsSqlLike ? text :  DataTools.EscapeUnterminatedBracket(text);
-
-					if (text != ntext)
-						predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, new SqlValue(ntext), predicate.Escape, predicate.IsSqlLike);
-				}
-			}
-			else if (predicate.Expr2 is SqlParameter p)
-			{
-				p.ReplaceLike = true;
-			}
-
-			base.BuildLikePredicate(predicate);
-		}
-
 		protected override void BuildUpdateTableName(SelectQuery selectQuery, SqlUpdateClause updateClause)
 		{
 			if (updateClause.Table != null && updateClause.Table != selectQuery.From.Tables[0].Source)
