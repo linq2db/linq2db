@@ -815,9 +815,9 @@ namespace LinqToDB.SqlQuery
 						{
 							var source = (SqlMergeSourceTable)element;
 
-							var enumerableSource         = (SqlValuesTable?)ConvertInternal(source.SourceEnumerable);
-							var querySource              = (SelectQuery?)   ConvertInternal(source.SourceQuery);
-							IEnumerable<SqlField> fields = Convert(source.SourceFields, f => new SqlField(f));
+							var enumerableSource          = (SqlValuesTable?)ConvertInternal(source.SourceEnumerable);
+							var querySource               = (SelectQuery?)   ConvertInternal(source.SourceQuery);
+							IEnumerable<SqlField>? fields = Convert(source.SourceFields, f => new SqlField(f));
 
 							var fe = fields != null && !ReferenceEquals(source.SourceFields, fields);
 
