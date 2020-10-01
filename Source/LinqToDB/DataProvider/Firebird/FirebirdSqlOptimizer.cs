@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.DataProvider.Firebird
+﻿using LinqToDB.Mapping;
+
+namespace LinqToDB.DataProvider.Firebird
 {
 	using System.Linq;
 	using Extensions;
@@ -27,8 +29,7 @@
 		public override SqlStatement OptimizeStatement(SqlStatement statement, IReadOnlyParameterValues? parameterValues)
 		{
 			statement = base.OptimizeStatement(statement, parameterValues);
-
-			return WrapParameters(statement);
+			return statement;
 		}
 
 		public override SqlStatement TransformStatement(SqlStatement statement)
@@ -79,6 +80,13 @@
 		{
 			func = ConvertFunctionParameters(func, false);
 			return base.ConvertFunction(func);
+		}
+
+		public override SqlStatement FinalizeStatement(SqlStatement statement, IReadOnlyParameterValues? parameterValues)
+		{
+			statement = base.FinalizeStatement(statement, parameterValues);
+			statement = WrapParameters(statement);
+			return statement;
 		}
 
 		#region Wrap Parameters
