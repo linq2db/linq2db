@@ -789,5 +789,48 @@ namespace Tests.xUpdate
 		}
 
 		#endregion
+
+		#region TestNullableParameterInSourceQuery
+		[Table]
+		public class TestNullableParameterTarget
+		{
+			[PrimaryKey] public int Id1 { get; set; }
+			[PrimaryKey] public int Id2 { get; set; }
+		}
+
+		[Table]
+		public class TestNullableParameterSource
+		{
+			[PrimaryKey] public int Id { get; set; }
+		}
+
+		[Test]
+		public void TestNullableParameterInSourceQuery([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var target = db.CreateLocalTable<TestNullableParameterTarget>())
+			using (var source = db.CreateLocalTable<TestNullableParameterSource>())
+			{
+				run(null);
+				run(1);
+
+				void run(int? id)
+				{
+					target
+						.Merge()
+						.Using(source
+							.Where(_ => _.Id == id)
+							.Select(_ => new TestNullableParameterTarget()
+							{
+								Id1 = 2,
+								Id2 = _.Id
+							}))
+						.OnTargetKey()
+						.InsertWhenNotMatched()
+						.Merge();
+				}
+			}
+		}
+		#endregion
 	}
 }
