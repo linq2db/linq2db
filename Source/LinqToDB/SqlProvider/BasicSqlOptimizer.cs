@@ -2269,7 +2269,7 @@ namespace LinqToDB.SqlProvider
 			return newElement;
 		}
 
-		public virtual SqlStatement ConvertStatement(MappingSchema mappingSchema, SqlStatement statement, IReadOnlyParameterValues? parameterValues)
+		public SqlStatement ConvertStatement(MappingSchema mappingSchema, SqlStatement statement, IReadOnlyParameterValues? parameterValues)
 		{
 			statement = (SqlStatement)ConvertElements(mappingSchema, statement, parameterValues);
 			statement = FinalizeStatement(statement, parameterValues);

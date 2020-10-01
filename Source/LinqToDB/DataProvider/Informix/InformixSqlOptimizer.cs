@@ -49,7 +49,7 @@ namespace LinqToDB.DataProvider.Informix
 			return base.Finalize(statement);
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlStatement FinalizeStatement(SqlStatement statement, IReadOnlyParameterValues? parameterValues)
 		{
 			switch (statement.QueryType)
 			{

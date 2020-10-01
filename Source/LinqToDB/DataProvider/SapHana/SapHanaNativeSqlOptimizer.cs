@@ -20,9 +20,9 @@ namespace LinqToDB.DataProvider.SapHana
 			return statement;
 		}
 
-		public override SqlStatement ConvertStatement(MappingSchema mappingSchema, SqlStatement statement, IReadOnlyParameterValues? parameterValues)
+		public override SqlStatement FinalizeStatement(SqlStatement statement, IReadOnlyParameterValues? parameterValues)
 		{
-			statement = base.ConvertStatement(mappingSchema, statement, parameterValues);
+			statement = base.FinalizeStatement(statement, parameterValues);
 
 			// SAP HANA parameters are not just order-dependent but also name-dependent, so we cannot use
 			// same parameter name

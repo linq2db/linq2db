@@ -1,7 +1,6 @@
 ﻿namespace LinqToDB.DataProvider.Sybase
 {
 	using SqlProvider;
-
 	using SqlQuery;
 
 	class SybaseSqlOptimizer : BasicSqlOptimizer

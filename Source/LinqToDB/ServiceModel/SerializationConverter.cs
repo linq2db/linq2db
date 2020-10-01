@@ -97,7 +97,7 @@
 				}
 
 				if (li == null)
-					li = ms.GetConverter(new DbDataType(_stringType), new DbDataType(to), true);
+					li = ms.GetConverter(new DbDataType(_stringType), new DbDataType(to), true)!;
 
 				var b  = li.CheckNullLambda.Body;
 				var ps = li.CheckNullLambda.Parameters;

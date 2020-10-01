@@ -21,7 +21,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			// SQL Server 2012 supports OFFSET/FETCH providing there is an ORDER BY
 			// UPDATE queries do not directly support ORDER BY, TOP, OFFSET, or FETCH, but they are supported in subqueries
 
-			if (statement.IsUpdate() || statement.IsDelete()) statement = WrapRootTakeSkipOrderBy(statement);
+			if (statement.IsUpdate() || statement.IsDelete()) 
+				statement = WrapRootTakeSkipOrderBy(statement);
+
 			statement = AddOrderByForSkip(statement);
 
 			return statement;
@@ -32,7 +34,10 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// </summary>
 		protected SqlStatement AddOrderByForSkip(SqlStatement statement)
 		{
-			ConvertVisitor.Convert(statement, (visitor, element) => {
+			throw new NotImplementedException("Bad visitor usage.");
+
+			statement = ConvertVisitor.Convert(statement, (visitor, element) => 
+			{
 				if (element is SelectQuery query && query.Select.SkipValue != null && query.OrderBy.IsEmpty)
 					query.OrderBy.ExprAsc(new SqlValue(typeof(int), 1));
 				return element;
