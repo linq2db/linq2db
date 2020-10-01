@@ -406,23 +406,6 @@ namespace LinqToDB.Mapping
 		{
 			var systemType = MemberType;
 			var dataType   = DataType;
-			if (ValueConverter != null)
-				systemType = ValueConverter.ToProviderExpression.Body.Type;
-
-			var dbDataType = new DbDataType(systemType, dataType, DbType, Length, Precision, Scale);
-
-			var convertLambda = MappingSchema.GetConvertExpression(
-				dbDataType, 
-				dbDataType.WithSystemType(typeof(DataParameter)), createDefault: false);
-
-			if (convertLambda == null && ValueConverter == null && systemType.IsEnum)
-			{
-				var type = Converter.GetDefaultMappingFromEnumType(MappingSchema, systemType);
-				if (type != null)
-				{
-					systemType = type;
-				}
-			}
 
 			if (completeDataType && dataType == DataType.Undefined)
 			{
@@ -430,6 +413,47 @@ namespace LinqToDB.Mapping
 			}
 
 			return new DbDataType(systemType, dataType, DbType, Length, Precision, Scale);
+		}
+
+
+		/// <summary>
+		/// Returns DbDataType for current column after conversions.
+		/// </summary>
+		/// <returns></returns>
+		public DbDataType GetConvertedDbDataType()
+		{
+			var dbDataType = GetDbDataType(true);
+
+			var systemType = dbDataType.SystemType;
+
+			if (ValueConverter != null)
+				systemType = ValueConverter.ToProviderExpression.Body.Type;
+			else
+			{
+				var convertLambda = MappingSchema.GetConvertExpression(
+					dbDataType.WithSystemType(dbDataType.SystemType),
+					dbDataType.WithSystemType(typeof(DataParameter)), createDefault: false);
+
+				// it is conversion via DataParameter, so we don't know destination type
+				if (convertLambda != null)
+				{
+					systemType = typeof(object);
+				}
+				else
+					if (systemType.IsEnum)
+					{
+						var type = Converter.GetDefaultMappingFromEnumType(MappingSchema, dbDataType.SystemType);
+						if (type != null)
+						{
+							systemType = type;
+						}
+					}
+			}
+
+			if (dbDataType.SystemType != systemType)
+				dbDataType = dbDataType.WithSystemType(systemType);
+
+			return dbDataType;
 		}
 
 		public static DataType CalculateDataType(MappingSchema mappingSchema, Type systemType)

@@ -1162,7 +1162,7 @@ namespace LinqToDB.SqlProvider
 		public virtual bool LikeParameterSupport => true;
 		public virtual bool LikeIsEscapeSupported => true;
 
-		protected static string[] StandardLikeCharactersToEscape = {"%", "_", "?", "*", "#", "[", "]", "-"};
+		protected static string[] StandardLikeCharactersToEscape = {"%", "_", "?", "*", "#", "[", "]"};
 		public virtual string[]   LikeCharactersToEscape => StandardLikeCharactersToEscape;
 
 		public virtual string EscapeLikeCharacters(string str, string escape)

@@ -58,9 +58,9 @@ namespace LinqToDB.DataProvider.Access
 
 		public override string EscapeLikeCharacters(string str, string escape)
 		{
-			var newStr = str;
-
-			newStr = DataTools.EscapeUnterminatedBracket(newStr);
+			var newStr = DataTools.EscapeUnterminatedBracket(str);
+			if (newStr == str)
+				newStr = newStr.Replace("[", "[[]");
 
 			var toEscape = AccessLikeCharactersToEscape;
 			foreach (var s in toEscape)

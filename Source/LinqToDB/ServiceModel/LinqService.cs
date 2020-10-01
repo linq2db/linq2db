@@ -14,6 +14,7 @@ namespace LinqToDB.ServiceModel
 	using System.Threading.Tasks;
 	using System.Data;
 	using System.Linq.Expressions;
+	using Common;
 
 	[ServiceBehavior  (InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]
 	[WebService       (Namespace  = "http://tempuri.org/")]
@@ -211,18 +212,37 @@ namespace LinqToDB.ServiceModel
 							ret.FieldNames[i] = name;
 							// ugh...
 							// still if it fails here due to empty columns - it is a bug in columns generation
-							ret.FieldTypes[i] = select.Select.Columns[i].SystemType!;
+
+							var fieldType = select.Select.Columns[i].SystemType!;
 
 							// async compiled query support
-							if (ret.FieldTypes[i].IsGenericType && ret.FieldTypes[i].GetGenericTypeDefinition() == typeof(Task<>))
-								ret.FieldTypes[i] = ret.FieldTypes[i].GetGenericArguments()[0];
+							if (fieldType.IsGenericType && fieldType.GetGenericTypeDefinition() == typeof(Task<>))
+								fieldType = fieldType.GetGenericArguments()[0];
+
+
+							if (fieldType.IsEnum)
+							{
+								var stringConverter = db.MappingSchema.GetConverter(new DbDataType(typeof(string)), new DbDataType(fieldType), false);
+								if (stringConverter != null)
+									fieldType = typeof(string);
+								else
+								{
+									var type = Converter.GetDefaultMappingFromEnumType(db.MappingSchema, fieldType);
+									if (type != null)
+									{
+										fieldType = type;
+									}
+								}
+							}
+
+							ret.FieldTypes[i] = fieldType;
 						}
 
 						var columnReaders = new ConvertFromDataReaderExpression.ColumnReader[rd.FieldCount];
 
 						for (var i = 0; i < ret.FieldCount; i++)
 							columnReaders[i] = new ConvertFromDataReaderExpression.ColumnReader(db, db.MappingSchema,
-								ret.FieldTypes[i], i, null);
+								ret.FieldTypes[i], i, QueryHelper.GetValueConverter(select.Select.Columns[i]));
 
 						while (rd.Read())
 						{
