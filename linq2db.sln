@@ -474,6 +474,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "netcoreapp31", "netcoreapp3
 		Build\Azure\netcoreapp31\sybase.json = Build\Azure\netcoreapp31\sybase.json
 	EndProjectSection
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LinqToDB.Identity", "Source\LinqToDB.Identity\LinqToDB.Identity.csproj", "{984583B9-563D-40CB-854C-C011C6B4508A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Azure|Any CPU = Azure|Any CPU
@@ -544,6 +546,12 @@ Global
 		{52EABB0B-0C56-43F1-B98B-6461FA841E5F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{52EABB0B-0C56-43F1-B98B-6461FA841E5F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{52EABB0B-0C56-43F1-B98B-6461FA841E5F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{984583B9-563D-40CB-854C-C011C6B4508A}.Azure|Any CPU.ActiveCfg = Release|Any CPU
+		{984583B9-563D-40CB-854C-C011C6B4508A}.Azure|Any CPU.Build.0 = Release|Any CPU
+		{984583B9-563D-40CB-854C-C011C6B4508A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{984583B9-563D-40CB-854C-C011C6B4508A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{984583B9-563D-40CB-854C-C011C6B4508A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{984583B9-563D-40CB-854C-C011C6B4508A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -584,6 +592,7 @@ Global
 		{F97046E3-8A95-42B2-8B23-A78B892A9C05} = {3A081B6E-D3B3-433F-A3CA-EE29CD24C324}
 		{16894D8D-697E-49B7-BC72-02D2462FC80E} = {3A081B6E-D3B3-433F-A3CA-EE29CD24C324}
 		{BD5FA19A-4092-45F0-A7AF-D46666718EB5} = {51E64464-E257-4984-A4D5-BF9FF8B7DF1D}
+		{984583B9-563D-40CB-854C-C011C6B4508A} = {AF93451E-198C-4A94-8EB4-C330D886E102}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {15BBD7CE-1C8E-4407-9DCF-674982CEB3F7}

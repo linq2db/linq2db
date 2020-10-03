@@ -1,0 +1,42 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<Import Project="..\..\Build\linq2db.Source.props" />
+
+	<PropertyGroup>
+		<AssemblyName>LinqToDB.Identity</AssemblyName>
+		<Description>ASP.NET Core Identity provider that uses LinqToDB.</Description>
+	  <SignAssembly>true</SignAssembly>
+		<AssemblyOriginatorKeyFile>..\..\Build\linq2db.snk</AssemblyOriginatorKeyFile>
+
+		<Nullable>disable</Nullable>
+
+		<TargetFrameworks>net461;netstandard2.0;netcoreapp2.1</TargetFrameworks>
+
+		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.Identity.xml</DocumentationFile>
+
+		<PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>
+
+	</PropertyGroup>
+
+	<ItemGroup>
+		<EmbeddedResource Include="**\*.resx" Exclude="bin\**;obj\**;**\*.xproj;packages\**;@(EmbeddedResource)" />
+	</ItemGroup>
+
+	<ItemGroup>
+	
+		<PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.1.2" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.1.1" />
+		<PackageReference Include="Microsoft.Extensions.Identity.Stores" Version="2.1.2" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
+	</ItemGroup>
+
+	<PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.0' OR '$(TargetFramework)'=='netcoreapp2.1'">
+		<DefineConstants>$(DefineConstants);NETSTANDARD2_0</DefineConstants>
+	</PropertyGroup>
+</Project>

@@ -45,3 +45,4 @@ linq2db.sln.ide/
 [Dd]oc/api
 /linq2db.github.io
 ![Dd]oc/articles/**
+/NuGet/*.nuspec

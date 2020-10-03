@@ -1,40 +1,51 @@
 <?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
-	<metadata>
-		<id>linq2db</id>
-		<title>LINQ to DB</title>
-		<description>LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.</description>
-		<summary />
-		<tags>
+  <metadata>
+    <id>linq2db</id>
+    <title>LINQ to DB</title>
+    <description>LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.</description>
+    <summary />
+    <tags>
 			linq linq2db LinqToDB ORM database DB SQL SqlServer Access SqlCe SqlServerCe MySql Firebird SQLite Sybase Oracle ODP PostgreSQL DB2 Informix SapHana
 		</tags>
-		<dependencies>
-			<group targetFramework=".NETFramework4.5" />
-			<group targetFramework=".NETFramework4.6" />
-			<group targetFramework=".NETStandard2.0">
-				<dependency id="Microsoft.CSharp"                     version="4.7.0" />
-				<dependency id="System.ComponentModel.Annotations"    version="4.7.0" />
-				<dependency id="System.Data.DataSetExtensions"        version="4.5.0" />
-				<dependency id="Microsoft.Bcl.AsyncInterfaces"        version="1.1.1" />
-			</group>
-			<group targetFramework=".NETCoreApp2.1">
-				<dependency id="System.ComponentModel.Annotations"    version="4.7.0" />
-				<dependency id="System.Data.DataSetExtensions"        version="4.5.0" />
-				<dependency id="Microsoft.Bcl.AsyncInterfaces"        version="1.1.1" />
-			</group>
-			<group targetFramework=".NETStandard2.1">
-				<dependency id="Microsoft.CSharp"                     version="4.7.0" />
-				<dependency id="System.ComponentModel.Annotations"    version="4.7.0" />
-			</group>
-			<group targetFramework=".NETCoreApp3.1">
-				<dependency id="System.ComponentModel.Annotations"    version="4.7.0" />
-			</group>
-		</dependencies>
-	</metadata>
-
-	<files>
-		<file src="..\Source\LinqToDB\bin\Release\**\linq2db.pdb" target="lib\" />
-		<file src="..\Source\LinqToDB\bin\Release\**\linq2db.xml" target="lib\" />
-		<file src="..\Source\LinqToDB\bin\Release\**\linq2db.dll" target="lib\" />
-	</files>
+    <dependencies>
+      <group targetFramework=".NETFramework4.5" />
+      <group targetFramework=".NETFramework4.6" />
+      <group targetFramework=".NETStandard2.0">
+        <dependency id="Microsoft.CSharp" version="4.7.0" />
+        <dependency id="System.ComponentModel.Annotations" version="4.7.0" />
+        <dependency id="System.Data.DataSetExtensions" version="4.5.0" />
+        <dependency id="Microsoft.Bcl.AsyncInterfaces" version="1.1.1" />
+      </group>
+      <group targetFramework=".NETCoreApp2.1">
+        <dependency id="System.ComponentModel.Annotations" version="4.7.0" />
+        <dependency id="System.Data.DataSetExtensions" version="4.5.0" />
+        <dependency id="Microsoft.Bcl.AsyncInterfaces" version="1.1.1" />
+      </group>
+      <group targetFramework=".NETStandard2.1">
+        <dependency id="Microsoft.CSharp" version="4.7.0" />
+        <dependency id="System.ComponentModel.Annotations" version="4.7.0" />
+      </group>
+      <group targetFramework=".NETCoreApp3.1">
+        <dependency id="System.ComponentModel.Annotations" version="4.7.0" />
+      </group>
+    </dependencies>
+    <version>3.0.0-local1</version>
+    <releaseNotes>https://github.com/linq2db/linq2db/wiki/releases-and-roadmap#release-300-local1</releaseNotes>
+    <copyright>Copyright © 2020 Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</copyright>
+    <authors>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</authors>
+    <owners>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</owners>
+    <license type="file">MIT-LICENSE.txt</license>
+    <projectUrl>http://linq2db.com</projectUrl>
+    <icon>images\icon.png</icon>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <repository type="git" url="https://github.com/linq2db/linq2db.git" branch="linq2db.Identity" commit="67524cb861c559d0679a84892e588f92616a25eb" />
+  </metadata>
+  <files>
+    <file src="..\Source\LinqToDB\bin\Release\**\linq2db.pdb" target="lib\" />
+    <file src="..\Source\LinqToDB\bin\Release\**\linq2db.xml" target="lib\" />
+    <file src="..\Source\LinqToDB\bin\Release\**\linq2db.dll" target="lib\" />
+    <file src="..\MIT-LICENSE.txt" />
+    <file src="icon64.png" target="images\icon.png" />
+  </files>
 </package>

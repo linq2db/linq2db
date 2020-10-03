@@ -1,36 +1,45 @@
 <?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
-	<metadata minClientVersion="3.3.0">
-		<id>linq2db.Sybase.DataAction</id>
-		<title>LINQ to SAP/Sybase ASE DataAction AdoNetCore.AseClient managed provider</title>
-		<description>
+  <metadata minClientVersion="3.3.0">
+    <id>linq2db.Sybase.DataAction</id>
+    <title>LINQ to SAP/Sybase ASE DataAction AdoNetCore.AseClient managed provider</title>
+    <description>
 			LINQ to Sybase ASE is a data access technology that provides a run-time infrastructure for managing relational data as objects.
 		</description>
-		<summary>
+    <summary>
 			This package includes a T4 template to generate data models for SAP/Sybase ASE database and a reference to the linq2db and AdoNetCore.AseClient nugets. This is a fully managed provider with .NET Core support.
 		</summary>
-		<tags>linq linq2db SAP Sybase LinqToDB ORM database DB SQL</tags>
-		<dependencies>
-			<dependency id="linq2db"              version="3.0.0"  />
-			<dependency id="AdoNetCore.AseClient" version="0.18.0" />
-		</dependencies>
-		<contentFiles>
-			<files include="**\*" buildAction="None"/>
-		</contentFiles>
-	</metadata>
-	<files>
-		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"  target="tools" />
-		
-		<file src="Sybase.DataAction\linq2db.Sybase.DataAction.props" target="build" />
-		
-		<file src="Sybase.DataAction\*.*"                             target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
-		<file src="t4models\*.ttinclude"                              target="contentFiles\any\any\LinqToDB.Templates"/>
-		<file src="..\Source\LinqToDB.Templates\*.ttinclude"          target="contentFiles\any\any\LinqToDB.Templates" exclude="**\LinqToDB.*.ttinclude"/>
-		<file src="..\Source\LinqToDB.Templates\*.Sybase.ttinclude"   target="contentFiles\any\any\LinqToDB.Templates" />
-		
-		<file src="Sybase.DataAction\*.*"                             target="content\LinqToDB.Templates" exclude="**\*.props" />
-		<file src="t4models\*.ttinclude"                              target="content\LinqToDB.Templates"/>
-		<file src="..\Source\LinqToDB.Templates\*.ttinclude"          target="content\LinqToDB.Templates" exclude="**\LinqToDB.*.ttinclude"/>
-		<file src="..\Source\LinqToDB.Templates\*.Sybase.ttinclude"   target="content\LinqToDB.Templates" />
-	</files>
+    <tags>linq linq2db SAP Sybase LinqToDB ORM database DB SQL</tags>
+    <dependencies>
+      <dependency id="linq2db" version="3.0.0-local1" />
+      <dependency id="AdoNetCore.AseClient" version="0.18.0" />
+    </dependencies>
+    <contentFiles>
+      <files include="**\*" buildAction="None" />
+    </contentFiles>
+    <version>3.0.0-local1</version>
+    <releaseNotes>https://github.com/linq2db/linq2db/wiki/releases-and-roadmap#release-300-local1</releaseNotes>
+    <copyright>Copyright © 2020 Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</copyright>
+    <authors>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</authors>
+    <owners>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</owners>
+    <license type="file">MIT-LICENSE.txt</license>
+    <projectUrl>http://linq2db.com</projectUrl>
+    <icon>images\icon.png</icon>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <repository type="git" url="https://github.com/linq2db/linq2db.git" branch="linq2db.Identity" commit="67524cb861c559d0679a84892e588f92616a25eb" />
+  </metadata>
+  <files>
+    <file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll" target="tools" />
+    <file src="Sybase.DataAction\linq2db.Sybase.DataAction.props" target="build" />
+    <file src="Sybase.DataAction\*.*" target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
+    <file src="t4models\*.ttinclude" target="contentFiles\any\any\LinqToDB.Templates" />
+    <file src="..\Source\LinqToDB.Templates\*.ttinclude" target="contentFiles\any\any\LinqToDB.Templates" exclude="**\LinqToDB.*.ttinclude" />
+    <file src="..\Source\LinqToDB.Templates\*.Sybase.ttinclude" target="contentFiles\any\any\LinqToDB.Templates" />
+    <file src="Sybase.DataAction\*.*" target="content\LinqToDB.Templates" exclude="**\*.props" />
+    <file src="t4models\*.ttinclude" target="content\LinqToDB.Templates" />
+    <file src="..\Source\LinqToDB.Templates\*.ttinclude" target="content\LinqToDB.Templates" exclude="**\LinqToDB.*.ttinclude" />
+    <file src="..\Source\LinqToDB.Templates\*.Sybase.ttinclude" target="content\LinqToDB.Templates" />
+    <file src="..\MIT-LICENSE.txt" />
+    <file src="icon64.png" target="images\icon.png" />
+  </files>
 </package>

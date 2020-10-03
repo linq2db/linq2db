@@ -1,64 +1,73 @@
 <?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
-	<metadata minClientVersion="3.3.0">
-		<id>linq2db.t4models</id>
-		<title>LINQ to DB T4 Models</title>
-		<description>T4 templates to generate data models for LINQ to DB SQL</description>
-		<summary />
-		<tags>
+  <metadata minClientVersion="3.3.0">
+    <id>linq2db.t4models</id>
+    <title>LINQ to DB T4 Models</title>
+    <description>T4 templates to generate data models for LINQ to DB SQL</description>
+    <summary />
+    <tags>
 			linq linq2db LinqToDB ORM database DB T4 datamodel SqlServer Access SqlCe SqlServerCe MySql Firebird SQLite Sybase
 			Oracle ODP PostgreSQL DB2 Informix SapHana
 		</tags>
-		<dependencies>
-			<dependency id="linq2db" version="3.0.0"/>
-		</dependencies>
-		<contentFiles>
-			<files include="**\*" buildAction="None"/>
-		</contentFiles>
-	</metadata>
-	<files>
-		<file src="Init.ps1"                                                             target="tools" />
-		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"                     target="tools" />
-		<file src="..\Tests\Linq\bin\Azure\net472\Npgsql.dll"                            target="tools" />
-		<file src="..\Tests\Linq\bin\Azure\net472\FirebirdSql.Data.FirebirdClient.dll"   target="tools" />
-		<file src="..\Tests\Linq\bin\Azure\net472\MySql.Data.dll"                        target="tools" />
-		<file src="..\Tests\Linq\bin\Azure\net472\BouncyCastle.Crypto.dll"               target="tools" />
-		<file src="..\Tests\Linq\bin\Azure\net472\Oracle.ManagedDataAccess.dll"          target="tools" />
-		<file src="..\Tests\Linq\bin\Azure\net472\System.Threading.Tasks.Extensions.dll" target="tools" />
-		<file src="..\Tests\Linq\bin\Azure\net472\System.Data.SQLite.dll"                target="tools" />
-		<file src="..\Tests\Linq\bin\Azure\net472\x86\SQLite.Interop.dll"                target="tools" />
-		<file src="..\Tests\Linq\bin\Azure\net472\Microsoft.SqlServer.Types.dll"         target="tools" />
-
-		<file src="t4models\linq2db.t4models.props"                  target="build" />
-
-		<file src="Access\*.*"                                       target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
-		<file src="DB2\*.*"                                          target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
-		<file src="Firebird\*.*"                                     target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
-		<file src="Informix\*.*"                                     target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
-		<file src="MySql\*.*"                                        target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
-		<file src="Oracle\*.*"                                       target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
-		<file src="PostgreSQL\*.*"                                   target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
-		<file src="SapHana\*.*"                                      target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
-		<file src="SqlCe\*.*"                                        target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
-		<file src="SQLite\*.*"                                       target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
-		<file src="SqlServer\*.*"                                    target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
-		<file src="Sybase\*.*"                                       target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
-		<file src="..\Source\LinqToDB.Templates\*.*"                 target="contentFiles\any\any\LinqToDB.Templates" />
-		<file src="t4models\*.*"                                     target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
-
-		<file src="Access\*.*"                                       target="content\LinqToDB.Templates" exclude="**\*.props" />
-		<file src="DB2\*.*"                                          target="content\LinqToDB.Templates" exclude="**\*.props" />
-		<file src="Firebird\*.*"                                     target="content\LinqToDB.Templates" exclude="**\*.props" />
-		<file src="Informix\*.*"                                     target="content\LinqToDB.Templates" exclude="**\*.props" />
-		<file src="MySql\*.*"                                        target="content\LinqToDB.Templates" exclude="**\*.props" />
-		<file src="Oracle\*.*"                                       target="content\LinqToDB.Templates" exclude="**\*.props" />
-		<file src="PostgreSQL\*.*"                                   target="content\LinqToDB.Templates" exclude="**\*.props" />
-		<file src="SapHana\*.*"                                      target="content\LinqToDB.Templates" exclude="**\*.props" />
-		<file src="SqlCe\*.*"                                        target="content\LinqToDB.Templates" exclude="**\*.props" />
-		<file src="SQLite\*.*"                                       target="content\LinqToDB.Templates" exclude="**\*.props" />
-		<file src="SqlServer\*.*"                                    target="content\LinqToDB.Templates" exclude="**\*.props" />
-		<file src="Sybase\*.*"                                       target="content\LinqToDB.Templates" exclude="**\*.props" />
-		<file src="..\Source\LinqToDB.Templates\*.*"                 target="content\LinqToDB.Templates" />
-		<file src="t4models\*.*"                                     target="content\LinqToDB.Templates" exclude="**\*.props" />
-	</files>
+    <dependencies>
+      <dependency id="linq2db" version="3.0.0-local1" />
+    </dependencies>
+    <contentFiles>
+      <files include="**\*" buildAction="None" />
+    </contentFiles>
+    <version>3.0.0-local1</version>
+    <releaseNotes>https://github.com/linq2db/linq2db/wiki/releases-and-roadmap#release-300-local1</releaseNotes>
+    <copyright>Copyright © 2020 Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</copyright>
+    <authors>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</authors>
+    <owners>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</owners>
+    <license type="file">MIT-LICENSE.txt</license>
+    <projectUrl>http://linq2db.com</projectUrl>
+    <icon>images\icon.png</icon>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <repository type="git" url="https://github.com/linq2db/linq2db.git" branch="linq2db.Identity" commit="67524cb861c559d0679a84892e588f92616a25eb" />
+  </metadata>
+  <files>
+    <file src="Init.ps1" target="tools" />
+    <file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll" target="tools" />
+    <file src="..\Tests\Linq\bin\Azure\net472\Npgsql.dll" target="tools" />
+    <file src="..\Tests\Linq\bin\Azure\net472\FirebirdSql.Data.FirebirdClient.dll" target="tools" />
+    <file src="..\Tests\Linq\bin\Azure\net472\MySql.Data.dll" target="tools" />
+    <file src="..\Tests\Linq\bin\Azure\net472\BouncyCastle.Crypto.dll" target="tools" />
+    <file src="..\Tests\Linq\bin\Azure\net472\Oracle.ManagedDataAccess.dll" target="tools" />
+    <file src="..\Tests\Linq\bin\Azure\net472\System.Threading.Tasks.Extensions.dll" target="tools" />
+    <file src="..\Tests\Linq\bin\Azure\net472\System.Data.SQLite.dll" target="tools" />
+    <file src="..\Tests\Linq\bin\Azure\net472\x86\SQLite.Interop.dll" target="tools" />
+    <file src="..\Tests\Linq\bin\Azure\net472\Microsoft.SqlServer.Types.dll" target="tools" />
+    <file src="t4models\linq2db.t4models.props" target="build" />
+    <file src="Access\*.*" target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
+    <file src="DB2\*.*" target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
+    <file src="Firebird\*.*" target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
+    <file src="Informix\*.*" target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
+    <file src="MySql\*.*" target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
+    <file src="Oracle\*.*" target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
+    <file src="PostgreSQL\*.*" target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
+    <file src="SapHana\*.*" target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
+    <file src="SqlCe\*.*" target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
+    <file src="SQLite\*.*" target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
+    <file src="SqlServer\*.*" target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
+    <file src="Sybase\*.*" target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
+    <file src="..\Source\LinqToDB.Templates\*.*" target="contentFiles\any\any\LinqToDB.Templates" />
+    <file src="t4models\*.*" target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
+    <file src="Access\*.*" target="content\LinqToDB.Templates" exclude="**\*.props" />
+    <file src="DB2\*.*" target="content\LinqToDB.Templates" exclude="**\*.props" />
+    <file src="Firebird\*.*" target="content\LinqToDB.Templates" exclude="**\*.props" />
+    <file src="Informix\*.*" target="content\LinqToDB.Templates" exclude="**\*.props" />
+    <file src="MySql\*.*" target="content\LinqToDB.Templates" exclude="**\*.props" />
+    <file src="Oracle\*.*" target="content\LinqToDB.Templates" exclude="**\*.props" />
+    <file src="PostgreSQL\*.*" target="content\LinqToDB.Templates" exclude="**\*.props" />
+    <file src="SapHana\*.*" target="content\LinqToDB.Templates" exclude="**\*.props" />
+    <file src="SqlCe\*.*" target="content\LinqToDB.Templates" exclude="**\*.props" />
+    <file src="SQLite\*.*" target="content\LinqToDB.Templates" exclude="**\*.props" />
+    <file src="SqlServer\*.*" target="content\LinqToDB.Templates" exclude="**\*.props" />
+    <file src="Sybase\*.*" target="content\LinqToDB.Templates" exclude="**\*.props" />
+    <file src="..\Source\LinqToDB.Templates\*.*" target="content\LinqToDB.Templates" />
+    <file src="t4models\*.*" target="content\LinqToDB.Templates" exclude="**\*.props" />
+    <file src="..\MIT-LICENSE.txt" />
+    <file src="icon64.png" target="images\icon.png" />
+  </files>
 </package>
