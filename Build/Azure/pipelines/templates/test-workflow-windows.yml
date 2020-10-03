@@ -10,7 +10,7 @@ steps:
 
 - task: CmdLine@2
   inputs:
-    script: 'git clone https://$(BASELINES_GH_PAT)@github.com/linq2db/linq2db.baselines.git baselines && cd baselines && git checkout -b $(baselines_branch) && cd ..'
+    script: 'git clone https://$(BASELINES_GH_PAT)@github.com/linq2db/linq2db.baselines.git baselines && cd baselines && git checkout -b $(baselines_branch) origin/$(baselines_branch) && cd ..'
     workingDirectory: '$(System.DefaultWorkingDirectory)'
   displayName: Checkout test baselines
   condition: and(variables.title, ${{ parameters.with_baselines }})
