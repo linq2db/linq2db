@@ -1,5 +1,5 @@
 ﻿Param(
-        [Parameter(Mandatory=$true)][string]$path,
+	[Parameter(Mandatory=$true)][string]$path,
 	[Parameter(Mandatory=$true)][string]$version,
 	[Parameter(Mandatory=$false)][string]$branch
 )
