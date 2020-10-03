@@ -18,37 +18,61 @@ jobs:
 
   steps:
   - checkout: none
-  - task: CmdLine@2
+  - task: PowerShell@2
     inputs:
+      targetType: 'inline'
       script: |
-        SETLOCAL ENABLEDELAYEDEXPANSION
-        ECHO ON
-        SET PR_NUM=$(system.pullRequest.pullRequestNumber)
-        SET USER=linq2db
-        SET REPONAME=linq2db.baselines
-        SET REPO=https://%GITHUB_TOKEN%@github.com/%USER%/%REPONAME%.git
-        IF "%PR_NUM%" NEQ "" (SET BRANCHNAME=baselines/pr_%PR_NUM%) ELSE (SET BRANCHNAME=baselines/default)
-        SET BRANCHCHECK=
-        FOR /F %%I IN ('git ls-remote --heads %REPO% %BRANCHNAME%') DO SET BRANCHCHECK=%%I
-        IF %ERRORLEVEL% NEQ 0 ECHO Faled to check branch %BRANCHNAME% existence & GOTO:FAIL
-        IF [%BRANCHCHECK%] NEQ [] (
-        ECHO Skip branch creation. Branch %BRANCHNAME% already exists. Hash:%BRANCHCHECK%
-        ) ELSE (
-        SET HEADHASH=
-        FOR /F %%I IN ('git ls-remote %REPO% HEAD') DO SET HEADHASH=%%I
-        IF [%HEADHASH%] EQU [] ECHO Cannot find baselines repository HEAD & GOTO:FAIL
-        ECHO Create baselines branch %BRANCHNAME%
-        gh api /repos/%USER%/%REPONAME%/git/refs -i -F ref=refs/heads/%BRANCHNAME% -F sha=%HEADHASH% | FIND "201 Created"
-        IF ERRORLEVEL 1 (ECHO Failed to create baselines branch %BRANCHNAME% & GOTO:FAIL) ELSE (ECHO Created baselines branch %BRANCHNAME%)
-        )
-        ECHO Done
-        ECHO "##vso[task.setvariable variable=baselines_branch]%BRANCHNAME%"
-        ECHO "##vso[task.setvariable variable=baselines_head]%BRANCHCHECK%"
-        ENDLOCAL
-        EXIT /B 0
-        :FAIL
-        ENDLOCAL
-        EXIT /B 1
+        $prId = "$(system.pullRequest.pullRequestNumber)"
+        $orgName = "linq2db"
+        $baselinesRepo = "linq2db.baselines"
+        $baselinesRepoUrl = "https://${Env:GITHUB_TOKEN}@github.com/${orgName}/${baselinesRepo}.git"
+        Write-Host "Source PR ID: ${prId}"
+        if ($prId) {
+            $baselinesBranch = "baselines/pr_${prId}"
+        } else {
+            $baselinesBranch = "baselines/default"
+        }
+        Write-Host "Baselines branch name: ${baselinesBranch}"
+        $output = git ls-remote --heads $baselinesRepoUrl $baselinesBranch
+        Write-Host "Baselines HEAD: ${output}"
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "Baselines HEAD request failed with code ${LASTEXITCODE}"
+            exit 1
+        }
+        if ($output.Length -lt 40) {
+            Write-Host "Baselines branch not found"
+            Write-Host "Reading baselines repository HEAD hash..."
+            $output = git ls-remote $baselinesRepoUrl HEAD
+            if ($LASTEXITCODE -ne 0) {
+                Write-Host "Failed to read HEAD hash. Error code ${LASTEXITCODE}"
+                exit 1
+            }
+            if ($output.Length -lt 40) {
+                Write-Host "Baselines repo HEAD not found. Last output: ${output}"
+                exit 1
+            }
+            $baslinesHeadHash = ($output -split '\s+')[0]
+            Write-Host "Creating new baselines branch ${baselinesBranch}..."
+            $output = gh api /repos/$orgName/$baselinesRepo/git/refs -i -F ref=refs/heads/$baselinesBranch -F sha=$baslinesHeadHash
+            Write-Host "Create command output: ${output}"
+            if ($LASTEXITCODE -ne 0) {
+                Write-Host "Failed to create branch. Error code ${LASTEXITCODE}"
+                exit 1
+            }
+            if ($output -match "201 Created") {
+                Write-Host "Baselines branch created"
+            } else {
+                Write-Host "Baselines branch creation failed"
+                exit 1
+            }
+        } else {
+            Write-Host "Baselines branch already exists"
+            $baslinesHeadHash = ($output -split '\s+')[0]
+        }
+        Write-Host "Baselines branch head hash: ${baslinesHeadHash}"
+        # export branch name and hash to pipelines variables
+        echo "##vso[task.setvariable variable=baselines_branch]${baselinesBranch}"
+        echo "##vso[task.setvariable variable=baselines_head]${baslinesHeadHash}"
       workingDirectory: '$(System.DefaultWorkingDirectory)'
     displayName: Checkout test baselines
     env:
@@ -371,55 +395,96 @@ jobs:
 
   steps:
   - checkout: none
-  - task: CmdLine@2
+  - task: PowerShell@2
     inputs:
+      targetType: 'inline'
       script: |
-        SETLOCAL ENABLEDELAYEDEXPANSION
-        ECHO ON
-        SET PRNUM=$(system.pullRequest.pullRequestNumber)
-        SET BRANCHNAME=$(baselines_branch)
-        SET BRANCHROOT=$(baselines_head)
-        SET USER=linq2db
-        SET REPONAME=linq2db.baselines
-        SET SRCUSER=linq2db
-        SET SRCREPONAME=linq2db
-        SET REPO=https://%GITHUB_TOKEN%@github.com/%USER%/%REPONAME%.git
-        IF [%BRANCHNAME%] EQU [] ECHO Baselines branch %BRANCHNAME% not found & GOTO:FAIL
-        IF [%BRANCHROOT%] EQU [] ECHO Baselines branch root hash missing & GOTO:FAIL
-        SET CURRENTHEAD=
-        FOR /F %%I IN ('git ls-remote --heads %REPO% %BRANCHNAME%') DO SET CURRENTHEAD=%%I
-        IF %ERRORLEVEL% EQU 1 ECHO Faled to check branch %BRANCHNAME% head & GOTO:FAIL
-        IF [%CURRENTHEAD%] EQU [] ECHO Baselines branch %BRANCHNAME% doesn't exist & GOTO:FAIL
-        IF [%BRANCHROOT%] EQU [%CURRENTHEAD%] (
-        ECHO Baselines branch has no commits, remove it
-        gh api -XDELETE /repos/%USER%/%REPONAME%/git/refs/heads/%BRANCHNAME%
-        IF %ERRORLEVEL% EQU 0 ECHO Deleted empty baselines branch %BRANCHNAME% & GOTO:DONE
-        ELSE ECHO Failed to delete baselines branch %BRANCHNAME% & GOTO:FAIL
-        )
-        gh api -XGET /repos/%USER%/%REPONAME%/pulls -F state=open -F head=MaceWindu:%BRANCHNAME% | FIND "html_url"
-        IF %ERRORLEVEL% EQU 0 ECHO Baselines PR already exists, exit & GOTO:DONE
-        IF [%PRNUM%] EQU [] (
-        SET PRNAME=Baselines
-        SET PRMESSAGE="Not associated with any pull request (tests triggered manually on master?)"
-        ) ELSE (
-        SET SOURCEPR=https://github.com/%SRCUSER%/%SRCREPONAME%/pulls/%PRNUM%
-        SET PRNAME="Baselines for %SOURCEPR%"
-        SET PRMESSAGE="Baselines for [#%PRNUM%](%SOURCEPR%)"
-        )
-        gh api /repos/%USER%/%REPONAME%/pulls -F title=%PRNAME% -F head=%BRANCHNAME% -F base=master -F draft=true -F body=%PRMESSAGE% | FIND "html_url"
-        IF %ERRORLEVEL% EQU 1 ECHO Baselines PR creation failed & GOTO:FAIL
-        IF [%PRNUM%] NEQ [] (
-        SET MSG="Test baselines changed by this PR. Don't forget to merge/close baselines PR after this pr merged/closed."
-        gh api /repos/%SRCUSER%/%SRCREPONAME%/issues/%PRNUM%/comments -F body=%MSG% | FIND "html_url"
-        IF %ERRORLEVEL% EQU 1 ECHO Posting in source PR failed & GOTO:FAIL
-        )
-        :DONE
-        ECHO Done
-        ENDLOCAL
-        EXIT /B 0
-        :FAIL
-        ENDLOCAL
-        EXIT /B 1
+        $prId = "$(system.pullRequest.pullRequestNumber)"
+        $baselinesBranch = "$(baselines_branch)"
+        $baselinesHash = "$(baselines_head)"
+        $newBranch = $(baselines_new_branch)
+        $orgName = "linq2db"
+        $baselinesRepo = "linq2db.baselines"
+        $testsRepo = "linq2db"
+        $baselinesRepoUrl = "https://${Env:GITHUB_TOKEN}@github.com/${orgName}/${baselinesRepo}.git"
+        Write-Host "Source PR ID: ${prId}"
+        Write-Host "Baselines branch: ${baselinesBranch}"
+        Write-Host "Baselines branch hash: ${baselinesHash}"
+        if (-not ($baselinesBranch)) {
+            Write-Host "Baselines branch name missing"
+            exit 1
+        }
+        if (-not ($baselinesHash)) {
+            Write-Host "Baselines branch hash missing"
+            exit 1
+        }
+        $output = git ls-remote --heads $baselinesRepoUrl $baselinesBranch
+        Write-Host "Baselines current HEAD: ${output}"
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "Baselines HEAD request failed with code ${LASTEXITCODE}"
+            exit 1
+        }
+        if ($output.Length -lt 40) {
+            Write-Host "Baselines HEAD request returned no result"
+            exit 1
+        }
+        $baslinesCurrentHash = ($output -split '\s+')[0]
+        Write-Host "Baselines branch current head hash: ${baslinesCurrentHash}"
+        if ($baselinesHash -eq $baslinesCurrentHash) {
+            Write-Host "Baselines branch has no new commits"
+            if ($newBranch -eq 1) {
+                Write-Host "Remove empty baselines branch"
+                $output = gh api -XDELETE /repos/$orgName/$baselinesRepo/git/refs/heads/$baselinesBranch
+                Write-Host "Delete branch command output: ${output}"
+                if ($LASTEXITCODE -ne 0) {
+                    Write-Host "Failed to delete branch. Error code ${LASTEXITCODE}"
+                    exit 1
+                }
+                # delete operation returns nothing on both delete and missing branch
+                Write-Host "Baselines branch deleted"
+                exit 0
+            }
+            exit 0
+        }
+        Write-Host "New baselines commited, check if we need to create PR or it already created"
+        $output = gh api -XGET /repos/$orgName/$baselinesRepo/pulls -F state=open -F head=${orgName}:$baselinesBranch
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "PR search request failed. Error code ${LASTEXITCODE}, output: ${output}"
+            exit 1
+        }
+        if ($output -match "html_url") {
+            Write-Host "PR already exists"
+            exit 0
+        }
+        if ($prId) {
+            $sourcePrUrl = "https://github.com/${orgName}/${testsRepo}/pull/${prId}"
+            $prName = "Baselines for ${sourcePrUrl}"
+            $prMessage = "Baselines for [#${prId}](${sourcePrUrl})"
+        }
+        else {
+            $prName = "Baselines"
+            $prMessage = "Not associated with any pull request (tests pipeline triggered from admin console?)"
+        }
+        $output = gh api /repos/$orgName/$baselinesRepo/pulls -F title="${prName}" -F head=$baselinesBranch -F base=master -F draft=true -F body="${prMessage}"
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "PR creation failed. Error code ${LASTEXITCODE}, output: ${output}"
+            exit 1
+        }
+        if ($output -match "html_url") {
+            Write-Host "PR created"
+        }
+        if ($prId) {
+            Write-Host "Post notification to source PR about baselines PR creation"
+            $output = gh api /repos/$orgName/$testsRepo/issues/$prId/comments -F body="Test baselines changed by this PR. Don't forget to merge/close baselines PR after this pr merged/closed."
+            if ($LASTEXITCODE -ne 0) {
+                Write-Host "Message posting failed. Error code ${LASTEXITCODE}, output: ${output}"
+                exit 1
+            }
+            if (-not($output -match "html_url")) {
+                Write-Host "Message posting failed. Output: ${output}"
+                exit 1
+            }
+        }
       workingDirectory: '$(System.DefaultWorkingDirectory)'
     displayName: Create Baselines PR
     env:
