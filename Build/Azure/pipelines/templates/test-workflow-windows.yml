@@ -55,7 +55,7 @@ steps:
 
 - task: CmdLine@2
   inputs:
-    script: 'git add -A && git commit -m "[Windows / ${{ parameters.titleFramework }} / $(title)] baselines from https://github.com/linq2db/linq2db/pull/$(system.pullRequest.pullRequestNumber)" && git pull --rebase && git push https://$(BASELINES_GH_PAT)@github.com/linq2db/linq2db.baselines.git $(baselines_branch)'
+    script: 'git add -A && git commit -m "[Windows / ${{ parameters.titleFramework }} / $(title)] baselines" && git pull --rebase && git push https://$(BASELINES_GH_PAT)@github.com/linq2db/linq2db.baselines.git $(baselines_branch)'
     workingDirectory: '$(System.DefaultWorkingDirectory)\baselines'
   displayName: Commit test baselines
   condition: and(variables.title, succeeded(), ${{ parameters.with_baselines }})
