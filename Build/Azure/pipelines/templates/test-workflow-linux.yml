@@ -3,9 +3,6 @@ parameters:
   netcoreversion: ''
   with_baselines: false
 
-variables:
-  baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
-
 steps:
 - checkout: none
 

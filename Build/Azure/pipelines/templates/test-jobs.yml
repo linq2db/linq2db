@@ -92,6 +92,8 @@ jobs:
   displayName: 'Tests: Win / NETFX 4.7.2 / '
   dependsOn: create_baselines_branch
   condition: ${{ parameters.enabled }}
+  variables:
+    baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
 
   strategy:
     matrix:
@@ -122,6 +124,8 @@ jobs:
   displayName: 'Tests: Win / NETFX 4.7.2 / '
   dependsOn: create_baselines_branch
   condition: ${{ parameters.enabled }}
+  variables:
+    baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
 
   strategy:
     matrix:
@@ -152,6 +156,8 @@ jobs:
   displayName: 'Tests: Win / NETCOREAPP2.1 / '
   dependsOn: create_baselines_branch
   condition: ${{ parameters.enabled }}
+  variables:
+    baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
 
   strategy:
     matrix:
@@ -182,6 +188,8 @@ jobs:
   displayName: 'Tests: Win / NETCOREAPP3.1 / '
   dependsOn: create_baselines_branch
   condition: ${{ parameters.enabled }}
+  variables:
+    baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
 
   strategy:
     matrix:
@@ -212,6 +220,8 @@ jobs:
   displayName: 'Tests: Win / NETCOREAPP2.1 / '
   dependsOn: create_baselines_branch
   condition: ${{ parameters.enabled }}
+  variables:
+    baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
 
   strategy:
     matrix:
@@ -241,6 +251,8 @@ jobs:
   displayName: 'Tests: Lin / NETCOREAPP2.1 / '
   dependsOn: create_baselines_branch
   condition: ${{ parameters.enabled }}
+  variables:
+    baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
 
   strategy:
     matrix:
@@ -269,6 +281,8 @@ jobs:
   displayName: 'Tests: Lin / NETCOREAPP3.1 / '
   dependsOn: create_baselines_branch
   condition: ${{ parameters.enabled }}
+  variables:
+    baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
 
   strategy:
     matrix:
@@ -297,6 +311,8 @@ jobs:
   displayName: 'Tests: Lin / NETCOREAPP2.1 / '
   dependsOn: create_baselines_branch
   condition: ${{ parameters.enabled }}
+  variables:
+    baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
 
   strategy:
     matrix:
@@ -325,6 +341,8 @@ jobs:
   displayName: 'Tests: Mac / NETCOREAPP2.1 / '
   dependsOn: create_baselines_branch
   condition: ${{ parameters.enabled }}
+  variables:
+    baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
 
   strategy:
     matrix:
@@ -354,6 +372,8 @@ jobs:
   displayName: 'Tests: Mac / NETCOREAPP3.1 / '
   dependsOn: create_baselines_branch
   condition: ${{ parameters.enabled }}
+  variables:
+    baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
 
   strategy:
     matrix:
