@@ -405,7 +405,7 @@ jobs:
     vmImage: 'windows-2019'
   displayName: 'Create Test Baselines Pull Request'
   dependsOn:
-  - baselines_init # for variables flow
+  - create_baselines_branch # for variables flow
   - test_win_netfx472_job_2019
   - test_win_netfx472_job_2016
   - test_win2016_netcoreapp21_job
