@@ -30,9 +30,9 @@
 		</dependencies>
 	</metadata>
 
-	<files>
-		<file src="..\Source\LinqToDB.Identity\bin\Release\**\linq2db.Identity.pdb" target="lib\" />
+	<files>	
+		<file src="..\Source\LinqToDB.Identity\bin\Release\**\linqToDb.Identity.dll" target="lib\" />
+		<file src="..\Source\LinqToDB.Identity\bin\Release\**\linqToDb.Identity.pdb" target="lib\" />
 		<file src="..\Source\LinqToDB.Identity\bin\Release\**\linq2db.Identity.xml" target="lib\" />
-		<file src="..\Source\LinqToDB.Identity\bin\Release\**\linq2db.Identity.dll" target="lib\" />
 	</files>
 </package>
