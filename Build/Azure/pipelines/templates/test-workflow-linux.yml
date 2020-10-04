@@ -61,9 +61,45 @@ steps:
     testResultsFiles: '**/*.trx'
     testRunTitle: 'Linux / NETCOREAPP${{ parameters.netcoreversion }} / $(title)'
 
-- task: CmdLine@2
+- task: PowerShell@2
   inputs:
-    script: 'git add -A && git commit -m "[Linux / NETCOREAPP${{ parameters.netcoreversion }} / $(title)] baselines" && git pull --rebase && git push https://$(BASELINES_GH_PAT)@github.com/linq2db/linq2db.baselines.git $(baselines_branch)'
+    targetType: 'inline'
+    script: |
+      Write-Host "Add baselines changes to commit (index)"
+      $output = git add -A
+      if ($LASTEXITCODE -ne 0) {
+          Write-Host "Failed to add baselines changes. Error code ${LASTEXITCODE}, output: ${output}"
+          exit 1
+      }
+      Write-Host "Create commit"
+      $output = git commit -m "[Linux / NETCOREAPP${{ parameters.netcoreversion }} / $(title)]"
+      if ($output -match "nothing to commit") {
+          Write-Host "No baselines changes detected"
+          exit 0
+      }
+      if ($LASTEXITCODE -ne 0) {
+          Write-Host "Failed to create commit. Error code ${LASTEXITCODE}, output: ${output}"
+          exit 1
+      }
+      $rebaseAttempts = 10
+      do {
+          Write-Host "Pull with rebase"
+          $output = git pull --rebase
+          if ($LASTEXITCODE -ne 0) {
+              Write-Host "Failed to rebase. Error code ${LASTEXITCODE}, output: ${output}"
+              exit 1
+          }
+          Write-Host "Push baselines to server"
+          $output = git push https://$(BASELINES_GH_PAT)@github.com/linq2db/linq2db.baselines.git $(baselines_branch)
+          if ($LASTEXITCODE -ne 0) {
+              Write-Host "Failed to push baselines. Error code ${LASTEXITCODE}, output: ${output}"
+          } else {
+              exit 0
+          }
+          $rebaseAttempts = $rebaseAttempts - 1
+      } while ($rebaseAttempts -gt 0)
+      Write-Host "Failed to push baselines"
+      exit 1
     workingDirectory: '$(System.DefaultWorkingDirectory)/baselines'
   displayName: Commit test baselines
   condition: and(variables.title, succeeded(), ${{ parameters.with_baselines }})
