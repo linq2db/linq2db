@@ -116,7 +116,6 @@ steps:
     workingDirectory: '$(System.DefaultWorkingDirectory)/baselines'
   displayName: Commit test baselines
   condition: and(variables.title, succeeded(), ${{ parameters.with_baselines }})
-  continueOnError: true # dont fail if there is no changes to baselines
   env:
     GITHUB_TOKEN: $(BASELINES_GH_PAT)
     EMAIL: azp@linq2db.com
