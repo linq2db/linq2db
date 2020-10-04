@@ -31,7 +31,7 @@ namespace LinqToDB.Identity
 		{
 			var ex = ms.GetConvertExpression(val.GetType(), column.MemberType);
 
-			column.MemberAccessor.SetValue(o, ex.Compile().DynamicInvoke(val));
+			column.MemberAccessor.SetValue(o, ex?.Compile().DynamicInvoke(val));
 		}
 
 		public static int UpdateConcurrent<T, TKey>(this IDataContext dc, T obj)
@@ -52,11 +52,11 @@ namespace LinqToDB.Identity
 					_ => _.MemberName != nameof(IConcurrency<TKey>.ConcurrencyStamp) && !_.IsPrimaryKey && !_.SkipOnUpdate))
 			{
 				var expr = Expression
-					.Lambda<Func<T, object>>(
+					.Lambda<Func<T, object?>>(
 						Expression.Convert(Expression.PropertyOrField(p, column.MemberName), typeof(object)),
 						p);
 
-				var val = column.MemberAccessor.Getter(obj);
+				var val = column.MemberAccessor.Getter!(obj);
 				query = query.Set(expr, val);
 			}
 

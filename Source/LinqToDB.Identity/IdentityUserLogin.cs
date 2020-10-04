@@ -1,4 +1,4 @@
-// Copyright (c) .NET Foundation. All rights reserved.
+﻿// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
@@ -19,22 +19,22 @@ namespace LinqToDB.Identity
 		/// <summary>
 		///     Gets or sets the login provider for the login (e.g. facebook, google)
 		/// </summary>
-		public virtual string LoginProvider { get; set; }
+		public virtual string LoginProvider { get; set; } = default!;
 
 		/// <summary>
 		///     Gets or sets the unique provider identifier for this login.
 		/// </summary>
-		public virtual string ProviderKey { get; set; }
+		public virtual string ProviderKey { get; set; } = default!;
 
 		/// <summary>
 		///     Gets or sets the friendly name used in a UI for this login.
 		/// </summary>
-		public virtual string ProviderDisplayName { get; set; }
+		public virtual string ProviderDisplayName { get; set; } = default!;
 
 		/// <summary>
 		///     Gets or sets the of the primary key of the user associated with this login.
 		/// </summary>
-		public virtual TKey UserId { get; set; }
+		public virtual TKey UserId { get; set; } = default!;
 #endif
 	}
 }

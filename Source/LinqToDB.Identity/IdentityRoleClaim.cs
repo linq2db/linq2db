@@ -1,4 +1,4 @@
-// Copyright (c) .NET Foundation. All rights reserved.
+﻿// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
@@ -32,8 +32,8 @@ namespace LinqToDB.Identity
 		/// <param name="other">The claim to initialize from.</param>
 		public virtual void InitializeFromClaim(Claim other)
 		{
-			ClaimType = other?.Type;
-			ClaimValue = other?.Value;
+			ClaimType  = other.Type;
+			ClaimValue = other.Value;
 		}
 
 		/// <summary>
@@ -44,17 +44,17 @@ namespace LinqToDB.Identity
 		/// <summary>
 		///     Gets or sets the of the primary key of the role associated with this claim.
 		/// </summary>
-		public virtual TKey RoleId { get; set; }
+		public virtual TKey RoleId { get; set; } = default!;
 
 		/// <summary>
 		///     Gets or sets the claim type for this claim.
 		/// </summary>
-		public virtual string ClaimType { get; set; }
+		public virtual string ClaimType { get; set; } = default!;
 
 		/// <summary>
 		///     Gets or sets the claim value for this claim.
 		/// </summary>
-		public virtual string ClaimValue { get; set; }
+		public virtual string ClaimValue { get; set; } = default!;
 #endif
 	}
 }

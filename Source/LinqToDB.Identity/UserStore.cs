@@ -1,4 +1,4 @@
-// Copyright (c) .NET Foundation. All rights reserved.
+﻿// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
@@ -30,7 +30,7 @@ namespace LinqToDB.Identity
 		///     <see cref="IConnectionFactory" />
 		/// </param>
 		/// <param name="describer">The <see cref="IdentityErrorDescriber" />.</param>
-		public UserStore(IConnectionFactory factory, IdentityErrorDescriber describer = null)
+		public UserStore(IConnectionFactory factory, IdentityErrorDescriber? describer = null)
 			: base(factory, describer)
 		{
 		}
@@ -52,7 +52,7 @@ namespace LinqToDB.Identity
 		///     <see cref="IConnectionFactory" />
 		/// </param>
 		/// <param name="describer">The <see cref="IdentityErrorDescriber" />.</param>
-		public UserStore(IConnectionFactory factory, IdentityErrorDescriber describer = null)
+		public UserStore(IConnectionFactory factory, IdentityErrorDescriber? describer = null)
 			: base(factory, describer)
 		{
 		}
@@ -78,7 +78,7 @@ namespace LinqToDB.Identity
 		///     <see cref="IConnectionFactory" />
 		/// </param>
 		/// <param name="describer">The <see cref="IdentityErrorDescriber" />.</param>
-		public UserStore(IConnectionFactory factory, IdentityErrorDescriber describer = null)
+		public UserStore(IConnectionFactory factory, IdentityErrorDescriber? describer = null)
 			: base(factory, describer)
 		{
 		}
@@ -208,7 +208,7 @@ namespace LinqToDB.Identity
 		///     <see cref="IConnectionFactory" />
 		/// </param>
 		/// <param name="describer">The <see cref="IdentityErrorDescriber" /> used to describe store errors.</param>
-		public UserStore(IConnectionFactory factory, IdentityErrorDescriber describer = null)
+		public UserStore(IConnectionFactory factory, IdentityErrorDescriber? describer = null)
 		{
 			if (factory == null)
 				throw new ArgumentNullException(nameof(factory));
@@ -327,7 +327,7 @@ namespace LinqToDB.Identity
 		///     should be canceled.
 		/// </param>
 		/// <returns>The <see cref="Task" /> that represents the asynchronous operation.</returns>
-		public async Task<string> GetTokenAsync(TUser user, string loginProvider, string name,
+		public async Task<string?> GetTokenAsync(TUser user, string loginProvider, string name,
 			CancellationToken cancellationToken)
 		{
 			cancellationToken.ThrowIfCancellationRequested();
@@ -343,7 +343,7 @@ namespace LinqToDB.Identity
 		}
 
 		///<inheritdoc cref="GetTokenAsync(TUser , string , string ,CancellationToken )"/>
-		protected virtual async Task<string> GetTokenAsync(DataConnection db, TUser user, string loginProvider, string name,
+		protected virtual async Task<string?> GetTokenAsync(DataConnection db, TUser user, string loginProvider, string name,
 			CancellationToken cancellationToken)
 		{
 			var entry = await db
@@ -501,7 +501,7 @@ namespace LinqToDB.Identity
 				var userId = Expression.PropertyOrField(Expression.Constant(user, typeof(TUser)), nameof(user.Id));
 				var equals = typeof(TKey).GetMethod(nameof(IEquatable<TKey>.Equals), new[] {typeof(TKey)});
 				var uc = Expression.Parameter(typeof(TUserClaim));
-				Expression body = null;
+				Expression? body = null;
 				var ucUserId = Expression.PropertyOrField(uc, nameof(IIdentityUserClaim<TKey>.UserId));
 				var userIdEquals = Expression.Call(ucUserId, @equals, userId);
 
@@ -899,7 +899,7 @@ namespace LinqToDB.Identity
 		///     The <see cref="Task" /> that represents the asynchronous operation, containing the identifier for the
 		///     specified <paramref name="user" />.
 		/// </returns>
-		public virtual Task<string> GetUserIdAsync(TUser user,
+		public virtual Task<string?> GetUserIdAsync(TUser user,
 			CancellationToken cancellationToken = default(CancellationToken))
 		{
 			cancellationToken.ThrowIfCancellationRequested();
@@ -1820,10 +1820,10 @@ namespace LinqToDB.Identity
 		/// </summary>
 		/// <param name="id">The id to convert.</param>
 		/// <returns>An instance of <typeparamref name="TKey" /> representing the provided <paramref name="id" />.</returns>
-		public virtual TKey ConvertIdFromString(string id)
+		public virtual TKey ConvertIdFromString(string? id)
 		{
 			if (id == null)
-				return default(TKey);
+				return default!;
 			return (TKey) TypeDescriptor.GetConverter(typeof(TKey)).ConvertFromInvariantString(id);
 		}
 
@@ -1832,7 +1832,7 @@ namespace LinqToDB.Identity
 		/// </summary>
 		/// <param name="id">The id to convert.</param>
 		/// <returns>An <see cref="string" /> representation of the provided <paramref name="id" />.</returns>
-		public virtual string ConvertIdToString(TKey id)
+		public virtual string? ConvertIdToString(TKey id)
 		{
 			if (Equals(id, default(TKey)))
 				return null;
@@ -1868,7 +1868,7 @@ namespace LinqToDB.Identity
 		/// <param name="user">The user whose security stamp should be set.</param>
 		/// <param name="cancellationToken">The <see cref="CancellationToken"/> used to propagate notifications that the operation should be canceled.</param>
 		/// <returns>The <see cref="Task"/> that represents the asynchronous operation, containing the security stamp for the specified <paramref name="user"/>.</returns>
-		public virtual Task<string> GetAuthenticatorKeyAsync(TUser user, CancellationToken cancellationToken)
+		public virtual Task<string?> GetAuthenticatorKeyAsync(TUser user, CancellationToken cancellationToken)
 			=> GetTokenAsync(user, InternalLoginProvider, AuthenticatorKeyTokenName, cancellationToken);
 	}
 }

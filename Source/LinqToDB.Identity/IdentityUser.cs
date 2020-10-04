@@ -1,4 +1,4 @@
-// Copyright (c) .NET Foundation. All rights reserved.
+﻿// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
@@ -109,43 +109,43 @@ namespace LinqToDB.Identity
 		/// </summary>
 		[PrimaryKey]
 		[Column(CanBeNull = false, IsPrimaryKey = true, Length = 255)]
-		public virtual TKey Id { get; set; }
+		public virtual TKey Id { get; set; } = default!;
 
 		/// <summary>
 		///     Gets or sets the user name for this user.
 		/// </summary>
-		public virtual string UserName { get; set; }
+		public virtual string UserName { get; set; } = default!;
 
 		/// <summary>
 		///     Gets or sets the normalized user name for this user.
 		/// </summary>
-		public virtual string NormalizedUserName { get; set; }
+		public virtual string NormalizedUserName { get; set; } = default!;
 
 		/// <summary>
 		///     Gets or sets the email address for this user.
 		/// </summary>
-		public virtual string Email { get; set; }
+		public virtual string Email { get; set; } = default!;
 
 		/// <summary>
 		///     Gets or sets the normalized email address for this user.
 		/// </summary>
-		public virtual string NormalizedEmail { get; set; }
+		public virtual string NormalizedEmail { get; set; } = default!;
 
 		/// <summary>
 		///     Gets or sets a flag indicating if a user has confirmed their email address.
 		/// </summary>
 		/// <value>True if the email address has been confirmed, otherwise false.</value>
-		public virtual bool EmailConfirmed { get; set; }
+		public virtual bool EmailConfirmed { get; set; } = default!;
 
 		/// <summary>
 		///     Gets or sets a salted and hashed representation of the password for this user.
 		/// </summary>
-		public virtual string PasswordHash { get; set; }
+		public virtual string PasswordHash { get; set; } = default!;
 
 		/// <summary>
 		///     A random value that must change whenever a users credentials change (password changed, login removed)
 		/// </summary>
-		public virtual string SecurityStamp { get; set; }
+		public virtual string SecurityStamp { get; set; } = default!;
 
 		/// <summary>
 		///     A random value that must change whenever a user is persisted to the store
@@ -155,19 +155,19 @@ namespace LinqToDB.Identity
 		/// <summary>
 		///     Gets or sets a telephone number for the user.
 		/// </summary>
-		public virtual string PhoneNumber { get; set; }
+		public virtual string PhoneNumber { get; set; } = default!;
 
 		/// <summary>
 		///     Gets or sets a flag indicating if a user has confirmed their telephone address.
 		/// </summary>
 		/// <value>True if the telephone number has been confirmed, otherwise false.</value>
-		public virtual bool PhoneNumberConfirmed { get; set; }
+		public virtual bool PhoneNumberConfirmed { get; set; } = default!;
 
 		/// <summary>
 		///     Gets or sets a flag indicating if two factor authentication is enabled for this user.
 		/// </summary>
 		/// <value>True if 2fa is enabled, otherwise false.</value>
-		public virtual bool TwoFactorEnabled { get; set; }
+		public virtual bool TwoFactorEnabled { get; set; } = default!;
 
 		/// <summary>
 		///     Gets or sets the date and time, in UTC, when any user lockout ends.
@@ -175,18 +175,18 @@ namespace LinqToDB.Identity
 		/// <remarks>
 		///     A value in the past means the user is not locked out.
 		/// </remarks>
-		public virtual DateTimeOffset? LockoutEnd { get; set; }
+		public virtual DateTimeOffset? LockoutEnd { get; set; } = default!;
 
 		/// <summary>
 		///     Gets or sets a flag indicating if the user could be locked out.
 		/// </summary>
 		/// <value>True if the user could be locked out, otherwise false.</value>
-		public virtual bool LockoutEnabled { get; set; }
+		public virtual bool LockoutEnabled { get; set; } = default!;
 
 		/// <summary>
 		///     Gets or sets the number of failed login attempts for the current user.
 		/// </summary>
-		public virtual int AccessFailedCount { get; set; }
+		public virtual int AccessFailedCount { get; set; } = default!;
 
 		/// <summary>
 		///     Returns the username for this user.

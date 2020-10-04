@@ -1,4 +1,4 @@
-// Copyright (c) .NET Foundation. All rights reserved.
+﻿// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
@@ -114,17 +114,17 @@ namespace LinqToDB.Identity
 		/// </summary>
 		[PrimaryKey]
 		[Column(CanBeNull = false, IsPrimaryKey = true, Length = 255)]
-		public virtual TKey Id { get; set; }
+		public virtual TKey Id { get; set; } = default!;
 
 		/// <summary>
 		///     Gets or sets the name for this role.
 		/// </summary>
-		public virtual string Name { get; set; }
+		public virtual string Name { get; set; } = default!;
 
 		/// <summary>
 		///     Gets or sets the normalized name for this role.
 		/// </summary>
-		public virtual string NormalizedName { get; set; }
+		public virtual string NormalizedName { get; set; } = default!;
 
 		/// <summary>
 		///     A random value that should change whenever a role is persisted to the store

@@ -7,7 +7,7 @@ namespace LinqToDB.Identity
 		/// <summary>
 		///     Gets a completed <see cref="Task" /> with the value of <c>default(T)</c>.
 		/// </summary>
-		public static Task<T> DefaultCompletedTask { get; } = Task.FromResult(default(T));
+		public static Task<T> DefaultCompletedTask { get; } = Task.FromResult(default(T)!);
 	}
 
 	internal static class TaskCache

@@ -1,4 +1,4 @@
-// Copyright (c) .NET Foundation. All rights reserved.
+﻿// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 using System;
 
@@ -18,12 +18,12 @@ namespace LinqToDB.Identity
 		/// <summary>
 		///     Gets or sets the primary key of the user that is linked to a role.
 		/// </summary>
-		public virtual TKey UserId { get; set; }
+		public virtual TKey UserId { get; set; } = default!;
 
 		/// <summary>
 		///     Gets or sets the primary key of the role that is linked to the user.
 		/// </summary>
-		public virtual TKey RoleId { get; set; }
+		public virtual TKey RoleId { get; set; } = default!;
 #endif
 	}
 }

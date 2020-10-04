@@ -1,4 +1,4 @@
-// Copyright (c) .NET Foundation. All rights reserved.
+﻿// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
@@ -27,7 +27,7 @@ namespace LinqToDB.Identity
 		///     <see cref="IConnectionFactory" />
 		/// </param>
 		/// <param name="describer">The <see cref="IdentityErrorDescriber" />.</param>
-		public RoleStore(IConnectionFactory factory, IdentityErrorDescriber describer = null)
+		public RoleStore(IConnectionFactory factory, IdentityErrorDescriber? describer = null)
 			: base(factory, describer)
 		{
 		}
@@ -50,7 +50,7 @@ namespace LinqToDB.Identity
 		///     <see cref="IConnectionFactory" />
 		/// </param>
 		/// <param name="describer">The <see cref="IdentityErrorDescriber" />.</param>
-		public RoleStore(IConnectionFactory factory, IdentityErrorDescriber describer = null)
+		public RoleStore(IConnectionFactory factory, IdentityErrorDescriber? describer = null)
 			: base(factory, describer)
 		{
 		}
@@ -92,7 +92,7 @@ namespace LinqToDB.Identity
 		///     <see cref="IConnectionFactory" />
 		/// </param>
 		/// <param name="describer">The <see cref="IdentityErrorDescriber" />.</param>
-		public RoleStore(IConnectionFactory factory, IdentityErrorDescriber describer = null)
+		public RoleStore(IConnectionFactory factory, IdentityErrorDescriber? describer = null)
 		{
 			if (factory == null)
 				throw new ArgumentNullException(nameof(factory));
@@ -209,7 +209,7 @@ namespace LinqToDB.Identity
 		///     should be canceled.
 		/// </param>
 		/// <returns>A <see cref="Task{TResult}" /> that contains the ID of the role.</returns>
-		public Task<string> GetRoleIdAsync(TRole role, CancellationToken cancellationToken = default(CancellationToken))
+		public Task<string?> GetRoleIdAsync(TRole role, CancellationToken cancellationToken = default(CancellationToken))
 		{
 			cancellationToken.ThrowIfCancellationRequested();
 			ThrowIfDisposed();
@@ -465,7 +465,7 @@ namespace LinqToDB.Identity
 		public virtual TKey ConvertIdFromString(string id)
 		{
 			if (id == null)
-				return default(TKey);
+				return default!;
 			return (TKey) TypeDescriptor.GetConverter(typeof(TKey)).ConvertFromInvariantString(id);
 		}
 
@@ -474,9 +474,9 @@ namespace LinqToDB.Identity
 		/// </summary>
 		/// <param name="id">The id to convert.</param>
 		/// <returns>An <see cref="string" /> representation of the provided <paramref name="id" />.</returns>
-		public virtual string ConvertIdToString(TKey id)
+		public virtual string? ConvertIdToString(TKey id)
 		{
-			if (id.Equals(default(TKey)))
+			if (id.Equals(default(TKey)!))
 				return null;
 			return id.ToString();
 		}
