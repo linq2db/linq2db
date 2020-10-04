@@ -93,7 +93,7 @@ namespace Tests.UserTests
 			{
 				var newRecord = new TestTable()
 				{
-					Id   = Guid.NewGuid(),
+					Id   = TestData.Guid1,
 					Json = new DbObject<TestJson>(new TestJson
 					{
 						String = "Test",

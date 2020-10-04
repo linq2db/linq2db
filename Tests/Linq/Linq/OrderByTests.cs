@@ -423,7 +423,7 @@ namespace Tests.Linq
 				Assert.That(field, Is.Not.Null);
 				Assert.That(field!.Name, Is.EqualTo("ParentID"));
 
-				Console.WriteLine(secondOrder.ToString());
+				TestContext.WriteLine(secondOrder.ToString());
 			}
 		}
 

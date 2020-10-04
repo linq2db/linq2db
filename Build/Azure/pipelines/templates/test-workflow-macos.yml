@@ -1,0 +1,123 @@
+parameters:
+  artifacts: ''
+  netcoreversion: ''
+  with_baselines: false
+
+steps:
+- checkout: none
+
+- task: CmdLine@2
+  inputs:
+    script: 'git clone https://$(BASELINES_GH_PAT)@github.com/linq2db/linq2db.baselines.git baselines && cd baselines && git checkout -b $(baselines_branch) origin/$(baselines_branch) && cd ..'
+    workingDirectory: '$(System.DefaultWorkingDirectory)'
+  displayName: Checkout test baselines
+  condition: and(variables.title, ${{ parameters.with_baselines }})
+
+- task: DownloadPipelineArtifact@2
+  inputs:
+    artifactName: ${{ parameters.artifacts }}
+    targetPath: '$(System.DefaultWorkingDirectory)'
+  condition: variables.title
+
+- task: CmdLine@2
+  inputs:
+    script: 'cp $(System.DefaultWorkingDirectory)/configs/$(config).json UserDataProviders.json'
+    workingDirectory: '$(System.DefaultWorkingDirectory)'
+  displayName: Copy test config
+  condition: variables.title
+
+- task: CmdLine@2
+  inputs:
+    script: 'chmod +x mac.docker.sh'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
+  condition: and(variables.title, variables.docker)
+  displayName: Mark docker install script as executable
+
+- task: CmdLine@2
+  inputs:
+    script: '$(System.DefaultWorkingDirectory)/scripts/mac.docker.sh'
+  condition: and(variables.title, variables.docker)
+  displayName: Install Docker
+
+- task: NuGet@0
+  displayName: Install nugets
+  inputs:
+    command: 'install'
+    arguments: '$(nuget) -ExcludeVersion'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
+  condition: and(variables.title, variables.nuget)
+
+- task: CmdLine@2
+  inputs:
+    script: 'chmod +x $(script)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
+  condition: and(variables.title, succeeded(), variables.script)
+  displayName: Mark script as executable
+      
+- task: CmdLine@2
+  inputs:
+    script: '$(System.DefaultWorkingDirectory)/scripts/$(script)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)'
+  condition: and(variables.title, succeeded(), variables.script)
+  displayName: Setup tests
+
+# just because there is no vstest handing in DotNetCoreCLI@2
+# https://github.com/microsoft/azure-pipelines-tasks/blob/master/Tasks/DotNetCoreCLIV2/dotnetcore.ts#L60
+- script: dotnet vstest linq2db.Tests.dll /TestCaseFilter:"TestCategory != SkipCI" /Framework:.NETCoreApp,Version=v${{ parameters.netcoreversion }} /logger:trx
+  condition: and(variables.title, succeeded())
+  displayName: 'Execute tests: $(title)'
+
+- task: PublishTestResults@2
+  condition: and(variables.title, succeededOrFailed())
+  inputs:
+    testRunner: VsTest
+    testResultsFiles: '**/*.trx'
+    testRunTitle: 'Mac / NETCOREAPP${{ parameters.netcoreversion }} / $(title)'
+
+- task: PowerShell@2
+  inputs:
+    targetType: 'inline'
+    script: |
+      Write-Host "Add baselines changes to commit (index)"
+      $output = git add -A
+      if ($LASTEXITCODE -ne 0) {
+          Write-Host "Failed to add baselines changes. Error code ${LASTEXITCODE}, output: ${output}"
+          exit 1
+      }
+      Write-Host "Create commit"
+      $output = git commit -m "[Mac / NETCOREAPP${{ parameters.netcoreversion }} / $(title)] baselines"
+      if ($output -match "nothing to commit") {
+          Write-Host "No baselines changes detected"
+          exit 0
+      }
+      if ($LASTEXITCODE -ne 0) {
+          Write-Host "Failed to create commit. Error code ${LASTEXITCODE}, output: ${output}"
+          exit 1
+      }
+      $rebaseAttempts = 10
+      do {
+          Write-Host "Pull with rebase"
+          $output = git pull --rebase
+          if ($LASTEXITCODE -ne 0) {
+              Write-Host "Failed to rebase. Error code ${LASTEXITCODE}, output: ${output}"
+              exit 1
+          }
+          Write-Host "Push baselines to server"
+          $output = git push https://$(BASELINES_GH_PAT)@github.com/linq2db/linq2db.baselines.git $(baselines_branch)
+          if ($LASTEXITCODE -ne 0) {
+              Write-Host "Failed to push baselines. Error code ${LASTEXITCODE}, output: ${output}"
+          } else {
+              exit 0
+          }
+          $rebaseAttempts = $rebaseAttempts - 1
+      } while ($rebaseAttempts -gt 0)
+      Write-Host "Failed to push baselines"
+      exit 1
+    workingDirectory: '$(System.DefaultWorkingDirectory)/baselines'
+  displayName: Commit test baselines
+  condition: and(variables.title, succeeded(), ${{ parameters.with_baselines }})
+  env:
+    GITHUB_TOKEN: $(BASELINES_GH_PAT)
+    EMAIL: azp@linq2db.com
+    GIT_AUTHOR_NAME: Azure Pipelines Bot
+    GIT_COMMITTER_NAME: Azure Pipelines Bot

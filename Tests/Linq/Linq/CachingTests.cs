@@ -61,7 +61,7 @@ namespace Tests.Linq
 					};
 
 				var sql = query.ToString();
-				Console.WriteLine(sql);
+				TestContext.WriteLine(sql);
 
 				Assert.That(sql, Contains.Substring(funcName).And.Contains(fieldName));
 			}
@@ -96,15 +96,13 @@ namespace Tests.Linq
 
 		[Test]
 		public void TestByCall(
+			[IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context,
 			[Values("tableName1", "tableName2")] string tableName,
 			[Values("database1",  "database2")]  string databaseName,
 			[Values("schema1",    "schema2")]    string schemaName
 		)
 		{
-			if (!UserProviders.Contains(ProviderName.SqlServer))
-				return;
-
-			using (var db = GetDataContext(ProviderName.SqlServer))
+			using (var db = GetDataContext(context))
 			{
 				var query =
 					from c in db.Child
@@ -116,7 +114,7 @@ namespace Tests.Linq
 					select cc;
 
 				var sql = query.ToString()!;
-				Console.WriteLine(sql);
+				TestContext.WriteLine(sql);
 
 				Assert.That(CountOccurrences(sql, tableName),    Is.EqualTo(2));
 				Assert.That(CountOccurrences(sql, databaseName), Is.EqualTo(2));
@@ -126,15 +124,13 @@ namespace Tests.Linq
 
 		[Test]
 		public void TestInlined(
+			[IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context,
 			[Values("tableName1", "tableName2")] string tableName,
 			[Values("database1",  "database2")]  string databaseName,
 			[Values("schema1",    "schema2")]    string schemaName
 		)
 		{
-			if (!UserProviders.Contains(ProviderName.SqlServer))
-				return;
-
-			using (var db = GetDataContext(ProviderName.SqlServer))
+			using (var db = GetDataContext(context))
 			{
 				var query =
 					from c in db.Child
@@ -147,7 +143,7 @@ namespace Tests.Linq
 					select cc;
 
 				var sql = query.ToString()!;
-				Console.WriteLine(sql);
+				TestContext.WriteLine(sql);
 
 				Assert.That(CountOccurrences(sql, tableName),    Is.EqualTo(2));
 				Assert.That(CountOccurrences(sql, databaseName), Is.EqualTo(2));
@@ -157,13 +153,10 @@ namespace Tests.Linq
 
 		[Test]
 		public void TakeHint(
-			[Values(TakeHints.Percent, TakeHints.WithTies, TakeHints.Percent | TakeHints.WithTies)] TakeHints takeHint
-		)
+			[IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context,
+			[Values(TakeHints.Percent, TakeHints.WithTies, TakeHints.Percent | TakeHints.WithTies)] TakeHints takeHint)
 		{
-			if (!UserProviders.Contains(ProviderName.SqlServer))
-				return;
-
-			using (var db = GetDataContext(ProviderName.SqlServer))
+			using (var db = GetDataContext(context))
 			{
 				var query =
 					from c1 in db.Child
@@ -171,7 +164,7 @@ namespace Tests.Linq
 					select new {c1, c2};
 
 				var sql = query.ToString();
-				Console.WriteLine(sql);
+				TestContext.WriteLine(sql);
 
 				if (takeHint.HasFlag(TakeHints.Percent))
 					Assert.That(sql, Contains.Substring("PERCENT"));

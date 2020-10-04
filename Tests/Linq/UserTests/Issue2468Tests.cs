@@ -112,7 +112,7 @@ namespace Tests.UserTests
 			{
 				var dto1 = new InventoryResourceDTO
 				{
-					Color = ColorEnum.Blue, Id = Guid.NewGuid(), CMYKColor = CMYKEnum.Cyan, Status = StatusEnum.Open
+					Color = ColorEnum.Blue, Id = TestData.Guid1, CMYKColor = CMYKEnum.Cyan, Status = StatusEnum.Open
 				};
 
 				db.Insert(dto1);

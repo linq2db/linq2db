@@ -1255,8 +1255,8 @@ namespace Tests.Linq
 						MaxValue = Sql.Ext.Min(q.MaxValue).Over().PartitionBy(q.ParentID).ToValue(),
 					};
 
-				Console.WriteLine(q1.ToString());
-				Console.WriteLine(q2.ToString());
+				TestContext.WriteLine(q1.ToString());
+				TestContext.WriteLine(q2.ToString());
 
 				Assert.AreEqual(2, q1.EnumQueries().Count());
 				Assert.AreEqual(3, q2.EnumQueries().Count());

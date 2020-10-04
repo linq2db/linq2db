@@ -163,6 +163,7 @@ namespace Tests.UserTests
 
 			var start = DateTimeOffset.Now;
 
+			using (new DisableBaseline("Multi-threading"))
 			using (new DisableLogging())
 				Parallel.ForEach(Enumerable.Range(1, threadCount), _ =>
 				{
@@ -217,7 +218,7 @@ namespace Tests.UserTests
 		{
 			db.Types2.Insert(() => new LinqDataTypes2()
 			{
-				DateTimeValue = DateTime.Now
+				DateTimeValue = TestData.DateTime
 			});
 		}
 
@@ -225,7 +226,7 @@ namespace Tests.UserTests
 		{
 			db.Types2.InsertWithIdentity(() => new LinqDataTypes2()
 			{
-				DateTimeValue = DateTime.Now
+				DateTimeValue = TestData.DateTime
 			});
 		}
 
@@ -234,10 +235,10 @@ namespace Tests.UserTests
 			db.Types2.InsertOrUpdate(() => new LinqDataTypes2()
 			{
 				ID = 100500,
-				DateTimeValue = DateTime.Now
+				DateTimeValue = TestData.DateTime
 			}, r => new LinqDataTypes2()
 			{
-				DateTimeValue = DateTime.Now
+				DateTimeValue = TestData.DateTime
 			});
 		}
 
@@ -246,7 +247,7 @@ namespace Tests.UserTests
 			db.Types2.Update(_ => new LinqDataTypes2()
 			{
 				ID = 100500,
-				DateTimeValue = DateTime.Now
+				DateTimeValue = TestData.DateTime
 			});
 		}
 

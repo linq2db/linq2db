@@ -468,6 +468,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestGuid([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
+			using (new DisableBaseline("Server-side guid generation test"))
 			using (var conn = new DataConnection(context))
 			{
 				var guid = conn.Execute<Guid>("SELECT guidDataType FROM AllTypes WHERE ID = 2");
@@ -659,8 +660,8 @@ namespace Tests.DataProvider
 							new ALLTYPE
 							{
 								ID                = 1000,
-								DATETIMEDATATYPE  = DateTime.Now,
-								DATETIME2DATATYPE = DateTime.Now
+								DATETIMEDATATYPE  = TestData.DateTime,
+								DATETIME2DATATYPE = TestData.DateTime
 							}
 						});
 				}
@@ -683,8 +684,8 @@ namespace Tests.DataProvider
 							new ALLTYPE
 							{
 								ID                = 1000,
-								DATETIMEDATATYPE  = DateTime.Now,
-								DATETIME2DATATYPE = DateTime.Now
+								DATETIMEDATATYPE  = TestData.DateTime,
+								DATETIME2DATATYPE = TestData.DateTime
 							}
 						});
 				}
@@ -771,7 +772,7 @@ namespace Tests.DataProvider
 
 				db.AddMappingSchema(ms);
 
-				var res = (db.GetTable<ALLTYPE>().Where(e => e.DATETIME2DATATYPE == DateTime.Now)).ToList();
+				var res = db.GetTable<ALLTYPE>().Where(e => e.DATETIME2DATATYPE == TestData.DateTime).ToList();
 				Debug.WriteLine(res.Count);
 			}
 		}
@@ -808,8 +809,8 @@ namespace Tests.DataProvider
 							new ALLTYPE
 							{
 								ID                = 1000,
-								DATETIMEDATATYPE  = DateTime.Now,
-								DATETIME2DATATYPE = DateTime.Now
+								DATETIMEDATATYPE  = TestData.DateTime,
+								DATETIME2DATATYPE = TestData.DateTime
 							}
 						});
 				}
@@ -848,8 +849,8 @@ namespace Tests.DataProvider
 							new ALLTYPE
 							{
 								ID                = 1000,
-								DATETIMEDATATYPE  = DateTime.Now,
-								DATETIME2DATATYPE = DateTime.Now
+								DATETIMEDATATYPE  = TestData.DateTime,
+								DATETIME2DATATYPE = TestData.DateTime
 							}
 						});
 				}
@@ -859,7 +860,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void ClauseDateTimeWithoutJointure([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			var date = DateTime.Today;
+			var date = TestData.Date;
 			using (var db = new DataConnection(context))
 			{
 				var query = from a in db.GetTable<ALLTYPE>()
@@ -878,7 +879,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void ClauseDateTimeWithJointure([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			var date = DateTime.Today;
+			var date = TestData.Date;
 			using (var db = new DataConnection(context))
 			{
 				var query = from a in db.GetTable<ALLTYPE>()
@@ -974,7 +975,7 @@ namespace Tests.DataProvider
 								MoneyValue    = 1000m + n,
 								DateTimeValue = new DateTime(2001,  1,  11,  1, 11, 21, 100),
 								BoolValue     = true,
-								GuidValue     = Guid.NewGuid(),
+								GuidValue     = TestData.SequentialGuid(n),
 								SmallIntValue = (short)n
 							}
 						));
@@ -1023,7 +1024,7 @@ namespace Tests.DataProvider
 								MoneyValue    = 1000m + n,
 								DateTimeValue = new DateTime(2001,  1,  11,  1, 11, 21, 100),
 								BoolValue     = true,
-								GuidValue     = Guid.NewGuid(),
+								GuidValue     = TestData.SequentialGuid(n),
 								SmallIntValue = (short)n
 							}
 						));
@@ -1496,10 +1497,10 @@ namespace Tests.DataProvider
 						new BulkCopyOptions { MaxBatchSize = 2, BulkCopyType = bulkCopyType },
 						new[]
 						{
-							new LinqDataTypes2 { ID = 1003, MoneyValue = 0m, DateTimeValue = null,         BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue = null, IntValue = null    },
-							new LinqDataTypes2 { ID = 1004, MoneyValue = 0m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 2,    IntValue = 1532334 },
-							new LinqDataTypes2 { ID = 1005, MoneyValue = 1m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 5,    IntValue = null    },
-							new LinqDataTypes2 { ID = 1006, MoneyValue = 2m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 6,    IntValue = 153     }
+							new LinqDataTypes2 { ID = 1003, MoneyValue = 0m, DateTimeValue = null,              BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue = null, IntValue = null    },
+							new LinqDataTypes2 { ID = 1004, MoneyValue = 0m, DateTimeValue = TestData.DateTime, BoolValue = false, GuidValue = null,                                             SmallIntValue = 2,    IntValue = 1532334 },
+							new LinqDataTypes2 { ID = 1005, MoneyValue = 1m, DateTimeValue = TestData.DateTime, BoolValue = false, GuidValue = null,                                             SmallIntValue = 5,    IntValue = null    },
+							new LinqDataTypes2 { ID = 1006, MoneyValue = 2m, DateTimeValue = TestData.DateTime, BoolValue = false, GuidValue = null,                                             SmallIntValue = 6,    IntValue = 153     }
 						});
 				}
 				finally
@@ -1534,10 +1535,10 @@ namespace Tests.DataProvider
 						new BulkCopyOptions { MaxBatchSize = 2, BulkCopyType = bulkCopyType },
 						new[]
 						{
-							new LinqDataTypes2 { ID = 1003, MoneyValue = 0m, DateTimeValue = null,         BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue = null, IntValue = null    },
-							new LinqDataTypes2 { ID = 1004, MoneyValue = 0m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 2,    IntValue = 1532334 },
-							new LinqDataTypes2 { ID = 1005, MoneyValue = 1m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 5,    IntValue = null    },
-							new LinqDataTypes2 { ID = 1006, MoneyValue = 2m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 6,    IntValue = 153     }
+							new LinqDataTypes2 { ID = 1003, MoneyValue = 0m, DateTimeValue = null,              BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue = null, IntValue = null    },
+							new LinqDataTypes2 { ID = 1004, MoneyValue = 0m, DateTimeValue = TestData.DateTime, BoolValue = false, GuidValue = null,                                             SmallIntValue = 2,    IntValue = 1532334 },
+							new LinqDataTypes2 { ID = 1005, MoneyValue = 1m, DateTimeValue = TestData.DateTime, BoolValue = false, GuidValue = null,                                             SmallIntValue = 5,    IntValue = null    },
+							new LinqDataTypes2 { ID = 1006, MoneyValue = 2m, DateTimeValue = TestData.DateTime, BoolValue = false, GuidValue = null,                                             SmallIntValue = 6,    IntValue = 153     }
 						});
 				}
 				finally
@@ -1653,10 +1654,10 @@ namespace Tests.DataProvider
 						new BulkCopyOptions { MaxBatchSize = 2, BulkCopyType = bulkCopyType },
 						new[]
 						{
-							new LinqDataTypes2 { ID = 1003, MoneyValue = 0m, DateTimeValue = DateTime.Now, BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue = null, IntValue = null    },
-							new LinqDataTypes2 { ID = 1004, MoneyValue = 0m, DateTimeValue = null,         BoolValue = false, GuidValue = null,                                             SmallIntValue = 2,    IntValue = 1532334 },
-							new LinqDataTypes2 { ID = 1005, MoneyValue = 1m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 5,    IntValue = null    },
-							new LinqDataTypes2 { ID = 1006, MoneyValue = 2m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 6,    IntValue = 153     }
+							new LinqDataTypes2 { ID = 1003, MoneyValue = 0m, DateTimeValue = TestData.DateTime, BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue = null, IntValue = null    },
+							new LinqDataTypes2 { ID = 1004, MoneyValue = 0m, DateTimeValue = null,              BoolValue = false, GuidValue = null,                                             SmallIntValue = 2,    IntValue = 1532334 },
+							new LinqDataTypes2 { ID = 1005, MoneyValue = 1m, DateTimeValue = TestData.DateTime, BoolValue = false, GuidValue = null,                                             SmallIntValue = 5,    IntValue = null    },
+							new LinqDataTypes2 { ID = 1006, MoneyValue = 2m, DateTimeValue = TestData.DateTime, BoolValue = false, GuidValue = null,                                             SmallIntValue = 6,    IntValue = 153     }
 						});
 				}
 				finally
@@ -1688,10 +1689,10 @@ namespace Tests.DataProvider
 						new BulkCopyOptions { MaxBatchSize = 2, BulkCopyType = bulkCopyType },
 						new[]
 						{
-							new LinqDataTypes2 { ID = 1003, MoneyValue = 0m, DateTimeValue = DateTime.Now, BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue = null, IntValue = null    },
-							new LinqDataTypes2 { ID = 1004, MoneyValue = 0m, DateTimeValue = null,         BoolValue = false, GuidValue = null,                                             SmallIntValue = 2,    IntValue = 1532334 },
-							new LinqDataTypes2 { ID = 1005, MoneyValue = 1m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 5,    IntValue = null    },
-							new LinqDataTypes2 { ID = 1006, MoneyValue = 2m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 6,    IntValue = 153     }
+							new LinqDataTypes2 { ID = 1003, MoneyValue = 0m, DateTimeValue = TestData.DateTime, BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue = null, IntValue = null    },
+							new LinqDataTypes2 { ID = 1004, MoneyValue = 0m, DateTimeValue = null,              BoolValue = false, GuidValue = null,                                             SmallIntValue = 2,    IntValue = 1532334 },
+							new LinqDataTypes2 { ID = 1005, MoneyValue = 1m, DateTimeValue = TestData.DateTime, BoolValue = false, GuidValue = null,                                             SmallIntValue = 5,    IntValue = null    },
+							new LinqDataTypes2 { ID = 1006, MoneyValue = 2m, DateTimeValue = TestData.DateTime, BoolValue = false, GuidValue = null,                                             SmallIntValue = 6,    IntValue = 153     }
 						});
 				}
 				finally
@@ -2679,8 +2680,8 @@ namespace Tests.DataProvider
 				var origin = new Issue731Table()
 				{
 					Id         = 1,
-					Guid       = Guid.NewGuid(),
-					BinaryGuid = Guid.NewGuid(),
+					Guid       = TestData.Guid1,
+					BinaryGuid = TestData.Guid2,
 					BlobValue  = new byte[] { 1, 2, 3 },
 					RawValue   = new byte[] { 4, 5, 6 }
 				};
@@ -2956,10 +2957,10 @@ namespace Tests.DataProvider
 					new DataParameter {Name = "floatDataType"         , Direction = ParameterDirection.InputOutput, DataType = DataType.Double,         Value = 1},
 					new DataParameter {Name = "realDataType"          , Direction = ParameterDirection.InputOutput, DataType = DataType.Single,         Value = 1},
 
-					new DataParameter {Name = "datetimeDataType"      , Direction = ParameterDirection.InputOutput, DataType = DataType.DateTime,       Value = DateTime.Now},
-					new DataParameter {Name = "datetime2DataType"     , Direction = ParameterDirection.InputOutput, DataType = DataType.DateTime2,      Value = DateTime.Now},
-					new DataParameter {Name = "datetimeoffsetDataType", Direction = ParameterDirection.InputOutput, DataType = DataType.DateTimeOffset, Value = DateTimeOffset.Now},
-					new DataParameter {Name = "localZoneDataType"     , Direction = ParameterDirection.InputOutput, DataType = DataType.DateTimeOffset, Value = DateTimeOffset.Now},
+					new DataParameter {Name = "datetimeDataType"      , Direction = ParameterDirection.InputOutput, DataType = DataType.DateTime,       Value = TestData.DateTime},
+					new DataParameter {Name = "datetime2DataType"     , Direction = ParameterDirection.InputOutput, DataType = DataType.DateTime2,      Value = TestData.DateTime},
+					new DataParameter {Name = "datetimeoffsetDataType", Direction = ParameterDirection.InputOutput, DataType = DataType.DateTimeOffset, Value = TestData.DateTimeOffset},
+					new DataParameter {Name = "localZoneDataType"     , Direction = ParameterDirection.InputOutput, DataType = DataType.DateTimeOffset, Value = TestData.DateTimeOffset},
 
 					new DataParameter {Name = "charDataType"          , Direction = ParameterDirection.InputOutput, DataType = DataType.Char,           Value = 'A'},
 					new DataParameter {Name = "char20DataType"        , Direction = ParameterDirection.InputOutput, DataType = DataType.Char,           Value = 'B'},
@@ -2973,7 +2974,7 @@ namespace Tests.DataProvider
 
 					new DataParameter {Name = "bfileDataType"         , Direction = ParameterDirection.InputOutput, DataType = DataType.BFile,          Value = new byte []{ 1,2,3 }},
 
-					new DataParameter {Name = "guidDataType"          , Direction = ParameterDirection.InputOutput, DataType = DataType.Guid,           Value = Guid.NewGuid()},
+					new DataParameter {Name = "guidDataType"          , Direction = ParameterDirection.InputOutput, DataType = DataType.Guid,           Value = TestData.Guid1},
 
 					// TODO: it is not clear which db type use for this parameter so oracle will accept it
 					//new DataParameter {Name = "uriDataType"           , Direction = ParameterDirection.InputOutput, DataType = DataType.Undefined,      Value = "http://uri.com" },
@@ -3032,8 +3033,8 @@ namespace Tests.DataProvider
 				if (!context.Contains("Native"))
 					Assert.That(pms[15].Value,
 						Is.EqualTo(new DateTimeOffset(2012, 12, 12, 11, 12, 12, isNative ? 0 : 12, TimeSpan.Zero)).
-						Or.EqualTo(new DateTimeOffset(2012, 12, 12, 11, 12, 12, isNative ? 0 : 12, DateTimeOffset.Now.Offset)).
-						Or.EqualTo(new DateTimeOffset(2012, 12, 12, 12, 12, 12, isNative ? 0 : 12, DateTimeOffset.Now.Offset.Add(new TimeSpan(-1, 0, 0)))));
+						Or.EqualTo(new DateTimeOffset(2012, 12, 12, 11, 12, 12, isNative ? 0 : 12, TestData.DateTimeOffset.Offset)).
+						Or.EqualTo(new DateTimeOffset(2012, 12, 12, 12, 12, 12, isNative ? 0 : 12, TestData.DateTimeOffset.Offset.Add(new TimeSpan(-1, 0, 0)))));
 
 				Assert.AreEqual("1"                   , pms[16].Value);
 				Assert.IsNull(pms[17].Value);
