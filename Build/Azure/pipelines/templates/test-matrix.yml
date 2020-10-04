@@ -82,7 +82,7 @@ jobs:
           enable_fw_net472: true
           enable_fw_netcore21: true
           enable_fw_netcore31: false
-          is_experimental: true
+          is_experimental: false
 
 # Access
         - name: Access_OLEDB_JET
