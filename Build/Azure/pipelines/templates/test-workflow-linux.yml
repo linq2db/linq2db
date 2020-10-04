@@ -72,7 +72,7 @@ steps:
           exit 1
       }
       Write-Host "Create commit"
-      $output = git commit -m "[Linux / NETCOREAPP${{ parameters.netcoreversion }} / $(title)]"
+      $output = git commit -m "[Linux / NETCOREAPP${{ parameters.netcoreversion }} / $(title)] baselines"
       if ($output -match "nothing to commit") {
           Write-Host "No baselines changes detected"
           exit 0
