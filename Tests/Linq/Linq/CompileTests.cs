@@ -116,68 +116,74 @@ namespace Tests.Linq
 		[Test, Order(100)]
 		public void ConcurrentTest1([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			var query = CompiledQuery.Compile((ITestDataContext db, int n) =>
+			using (new DisableBaseline("Multi-threading"))
+			{
+				var query = CompiledQuery.Compile((ITestDataContext db, int n) =>
 				db.GetTable<Parent>().Where(p => p.ParentID == n).First().ParentID);
 
-			const int count = 100;
+				const int count = 100;
 
-			var threads = new Thread[count];
-			var results = new int   [count, 2];
+				var threads = new Thread[count];
+				var results = new int   [count, 2];
 
-			for (var i = 0; i < count; i++)
-			{
-				var n = i;
-
-				threads[i] = new Thread(() =>
+				for (var i = 0; i < count; i++)
 				{
-					using (var db = GetDataContext(context))
+					var n = i;
+
+					threads[i] = new Thread(() =>
 					{
-						var id = (n % 6) + 1;
-						results[n,0] = id;
-						results[n,1] = query(db, id);
-					}
-				});
+						using (var db = GetDataContext(context))
+						{
+							var id = (n % 6) + 1;
+							results[n, 0] = id;
+							results[n, 1] = query(db, id);
+						}
+					});
+				}
+
+				for (var i = 0; i < count; i++)
+					threads[i].Start();
+
+				for (var i = 0; i < count; i++)
+					threads[i].Join();
+
+				for (var i = 0; i < count; i++)
+					Assert.AreEqual(results[i, 0], results[i, 1]);
 			}
-
-			for (var i = 0; i < count; i++)
-				threads[i].Start();
-
-			for (var i = 0; i < count; i++)
-				threads[i].Join();
-
-			for (var i = 0; i < count; i++)
-				Assert.AreEqual(results[i,0], results[i,1]);
 		}
 
 		[Test]
 		public void ConcurrentTest2([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			var threads = new Thread[100];
-			var results = new int   [100,2];
-
-			for (var i = 0; i < 100; i++)
+			using (new DisableBaseline("Multi-threading"))
 			{
-				var n = i;
+				var threads = new Thread[100];
+				var results = new int   [100,2];
 
-				threads[i] = new Thread(() =>
+				for (var i = 0; i < 100; i++)
 				{
-					using (var db = GetDataContext(context))
+					var n = i;
+
+					threads[i] = new Thread(() =>
 					{
-						var id = (n % 6) + 1;
-						results[n,0] = id;
-						results[n,1] = db.Parent.Where(p => p.ParentID == id).First().ParentID;
-					}
-				});
+						using (var db = GetDataContext(context))
+						{
+							var id = (n % 6) + 1;
+							results[n, 0] = id;
+							results[n, 1] = db.Parent.Where(p => p.ParentID == id).First().ParentID;
+						}
+					});
+				}
+
+				for (var i = 0; i < 100; i++)
+					threads[i].Start();
+
+				for (var i = 0; i < 100; i++)
+					threads[i].Join();
+
+				for (var i = 0; i < 100; i++)
+					Assert.AreEqual(results[i, 0], results[i, 1]);
 			}
-
-			for (var i = 0; i < 100; i++)
-				threads[i].Start();
-
-			for (var i = 0; i < 100; i++)
-				threads[i].Join();
-
-			for (var i = 0; i < 100; i++)
-				Assert.AreEqual(results[i,0], results[i,1]);
 		}
 
 		[Test]

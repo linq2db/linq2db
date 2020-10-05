@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -49,18 +49,13 @@ namespace LinqToDB.Reflection
 
 		readonly ConcurrentDictionary<string,MemberAccessor> _membersByName = new ConcurrentDictionary<string,MemberAccessor>();
 
-		public MemberAccessor this[string memberName]
-		{
-			get
+		public MemberAccessor this[string memberName] =>
+			_membersByName.GetOrAdd(memberName, name =>
 			{
-				return _membersByName.GetOrAdd(memberName, name =>
-				{
-					var ma = new MemberAccessor(this, name, null);
-					Members.Add(ma);
-					return ma;
-				});
-			}
-		}
+				var ma = new MemberAccessor(this, name, null);
+				Members.Add(ma);
+				return ma;
+			});
 
 		public MemberAccessor this[int index] => Members[index];
 

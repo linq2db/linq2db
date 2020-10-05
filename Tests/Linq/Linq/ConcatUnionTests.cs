@@ -600,7 +600,7 @@ namespace Tests.Linq
 
 				foreach (var item in q)
 				{
-					Console.WriteLine(item);
+					TestContext.WriteLine(item);
 				}
 			}
 		}

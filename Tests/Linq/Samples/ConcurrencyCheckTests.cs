@@ -50,8 +50,7 @@ namespace Tests.Samples
 				if (statement.QueryType == QueryType.Update || statement.QueryType == QueryType.InsertOrUpdate)
 				{
 					var query = statement.SelectQuery!;
-					var source = query.From.Tables[0].Source as SqlTable;
-					if (source == null)
+					if (!(query.From.Tables[0].Source is SqlTable source))
 						return statement;
 
 					var descriptor = MappingSchema.GetEntityDescriptor(source.ObjectType!);
@@ -64,10 +63,10 @@ namespace Tests.Samples
 
 					var newStatment = Clone(statement);
 					source        = (SqlTable)newStatment.SelectQuery!.From.Tables[0].Source;
-					var field     = source.Fields[rowVersion.ColumnName];
+					var field     = source[rowVersion.ColumnName] ?? throw new InvalidOperationException();
 
 					// get real value of RowVersion
-					var updateColumn = newStatment.RequireUpdateClause().Items.FirstOrDefault(ui => ui.Column is SqlField && ((SqlField)ui.Column).Equals(field));
+					var updateColumn = newStatment.RequireUpdateClause().Items.FirstOrDefault(ui => ui.Column is SqlField fld && fld.Equals(field));
 					if (updateColumn == null)
 					{
 						updateColumn = new SqlSetExpression(field, field);
@@ -132,7 +131,7 @@ namespace Tests.Samples
 
 			[Column(Name = "RowVer", Storage = "_rowVer", IsPrimaryKey = true, PrimaryKeyOrder = 1)]
 			[RowVersion]
-			public int RowVer { get { return _rowVer; } }
+			public int RowVer => _rowVer;
 		}
 
 		private InterceptDataConnection _connection = null!;

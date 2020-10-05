@@ -136,9 +136,10 @@ namespace LinqToDB.Linq.Builder
 
 								var table = new SqlTable(objType);
 
-								foreach (ColumnDescriptor c in ed.Columns.Where(c => !c.SkipOnInsert))
+								foreach (var c in ed.Columns.Where(c => !c.SkipOnInsert))
 								{
-									if (!table.Fields.TryGetValue(c.ColumnName, out var field))
+									var field = table[c.ColumnName];
+									if (field == null)
 										continue;
 
 									var pe = Expression.MakeMemberAccess(arg, c.MemberInfo);
@@ -192,10 +193,8 @@ namespace LinqToDB.Linq.Builder
 
 			var insert = insertStatement.Insert;
 
-			var q = insert.Into!.Fields.Values
-				.Except(insert.Items.Select(e => e.Column))
-				.OfType<SqlField>()
-				.Where(f => f.IsIdentity);
+			var q = insert.Into!.IdentityFields
+				.Except(insert.Items.Select(e => e.Column).OfType<SqlField>());
 
 			foreach (var field in q)
 			{

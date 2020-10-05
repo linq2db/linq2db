@@ -2791,7 +2791,7 @@ namespace LinqToDB.Linq.Builder
 			if (typeOperand == table.ObjectType && table.InheritanceMapping.All(m => m.Type != typeOperand))
 				return Convert(table, new SqlPredicate.Expr(new SqlValue(true)));
 
-			return MakeIsPredicate(table, table.InheritanceMapping, typeOperand, name => table.SqlTable.Fields.Values.First(f => f.Name == name));
+			return MakeIsPredicate(table, table.InheritanceMapping, typeOperand, name => table.SqlTable[name] ?? throw new LinqException($"Field {name} not found in table {table.SqlTable}"));
 		}
 
 		internal ISqlPredicate MakeIsPredicate(
@@ -2893,7 +2893,7 @@ namespace LinqToDB.Linq.Builder
 
 			foreach (var m in mapping)
 			{
-				var field = table.SqlTable.Fields[table.InheritanceMapping[m.i].DiscriminatorName];
+				var field = table.SqlTable[table.InheritanceMapping[m.i].DiscriminatorName] ?? throw new LinqException($"Field {table.InheritanceMapping[m.i].DiscriminatorName} not found in table {table.SqlTable}");
 				var ttype = field.ColumnDescriptor.MemberAccessor.TypeAccessor.Type;
 				var obj   = expression.Expression;
 
