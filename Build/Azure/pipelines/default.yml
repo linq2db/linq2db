@@ -122,6 +122,6 @@ stages:
 #############
   - template: templates/test-matrix.yml
     parameters:
-      enabled: succeeded()
+      enabled: and(eq(variables['System.PullRequest.TargetBranch'], 'release'), succeeded())
       experimental: false
       with_baselines: true
