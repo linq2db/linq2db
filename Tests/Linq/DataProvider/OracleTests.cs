@@ -3576,5 +3576,80 @@ namespace Tests.DataProvider
 				Assert.IsNull(matViewTable);
 			}
 		}
+
+		#region Issue 2504
+		[Test]
+		public async Task Issue2504Test([IncludeDataSources(false, TestProvName.AllOracle)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				db.Execute("CREATE SEQUENCE seq_A");
+				try
+				{
+					db.Execute(@"
+CREATE TABLE ""TABLE_A""(
+	""COLUMN_A"" NUMBER(20, 0) NOT NULL,
+	""COLUMN_B"" NUMBER(6, 0) NOT NULL,
+	""COLUMN_C"" NUMBER(6, 0) NOT NULL,
+	CONSTRAINT ""PK_TABLE_A"" PRIMARY KEY(""COLUMN_A"", ""COLUMN_B"", ""COLUMN_C"")
+)");
+
+					var id = await db.InsertWithInt64IdentityAsync(new Issue2504Table1()
+					{
+						COLUMNA = 1,
+						COLUMNB = 2
+					});
+
+					Assert.AreEqual(1, id);
+
+					id = await db.InsertWithInt64IdentityAsync(new Issue2504Table2()
+					{
+						COLUMNA = 1,
+						COLUMNB = 2
+					});
+
+					Assert.AreEqual(2, id);
+				}
+				finally
+				{
+					db.Execute("DROP SEQUENCE seq_A");
+					db.Execute("DROP TABLE \"TABLE_A\"");
+				}
+			}
+		}
+
+		[Table(Name = "TABLE_A")]
+		public sealed class Issue2504Table1
+		{
+			[PrimaryKey]
+			[Column(Name = "COLUMN_A"), NotNull]
+			public long COLUMNA { get; set; }
+
+			[PrimaryKey]
+			[Column(Name = "COLUMN_B"), NotNull]
+			public int COLUMNB { get; set; }
+
+			[PrimaryKey]
+			[Column(Name = "COLUMN_C"), NotNull, SequenceName("seq_A")]
+			public int COLUMNC { get; set; }
+		}
+
+		[Table(Name = "TABLE_A")]
+		public sealed class Issue2504Table2
+		{
+			[PrimaryKey]
+			[Column(Name = "COLUMN_A"), NotNull]
+			public long COLUMNA { get; set; }
+
+			[PrimaryKey]
+			[Column(Name = "COLUMN_B"), NotNull]
+			public int COLUMNB { get; set; }
+
+			[PrimaryKey]
+			[Column(Name = "COLUMN_C"), NotNull, SequenceName(ProviderName.Oracle, "seq_A")]
+			public int COLUMNC { get; set; }
+		}
+		#endregion
 	}
 }
