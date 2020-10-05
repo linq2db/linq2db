@@ -226,10 +226,10 @@ namespace LinqToDB.DataProvider.Firebird
 			switch (statement)
 			{
 				case SqlTruncateTableStatement truncate:
-					return truncate.ResetIdentity && truncate.Table!.Fields.Values.Any(f => f.IsIdentity) ? 2 : 1;
+					return truncate.ResetIdentity && truncate.Table!.IdentityFields.Count > 0 ? 2 : 1;
 
 				case SqlCreateTableStatement createTable:
-					_identityField = createTable.Table!.Fields.Values.FirstOrDefault(f => f.IsIdentity);
+					_identityField = createTable.Table!.IdentityFields.FirstOrDefault();
 					if (_identityField != null)
 						return 3;
 					break;
@@ -240,7 +240,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
-			var identityField = dropTable.Table!.Fields.Values.FirstOrDefault(f => f.IsIdentity);
+			var identityField = dropTable.Table!.IdentityFields.FirstOrDefault();
 
 			if (identityField == null && dropTable.IfExists == false)
 			{

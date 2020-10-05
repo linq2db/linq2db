@@ -47,13 +47,13 @@ namespace Tests.Linq
 		{
 			using (var ctx = new DataContext(context))
 			{
-				Console.WriteLine(ctx.GetTable<Person>().ToString());
+				NUnit.Framework.TestContext.WriteLine(ctx.GetTable<Person>().ToString());
 
 				var q =
 					from s in ctx.GetTable<Person>()
 					select s.FirstName;
 
-				Console.WriteLine(q.ToString());
+				NUnit.Framework.TestContext.WriteLine(q.ToString());
 			}
 		}
 

@@ -55,8 +55,8 @@ namespace Tests.Exceptions
 									{
 										var newTable = new SqlTable(oldTable) { Name = tableName, PhysicalName = tableName };
 
-										foreach (var field in oldTable.Fields.Values)
-											dic.Add(field, newTable.Fields[field.Name]);
+										foreach (var field in oldTable.Fields)
+											dic.Add(field, newTable[field.Name] ?? throw new InvalidOperationException());
 
 										return newTable;
 									}

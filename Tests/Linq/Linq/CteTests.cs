@@ -827,7 +827,7 @@ namespace Tests.Linq
 						q.Level
 					};
 
-				Assert.DoesNotThrow(() => Console.WriteLine(query.ToString()));
+				Assert.DoesNotThrow(() => TestContext.WriteLine(query.ToString()));
 			}
 		}
 
@@ -981,7 +981,7 @@ namespace Tests.Linq
 					select c;
 
 				var sql = query.ToString();
-				Console.WriteLine(sql);
+				TestContext.WriteLine(sql);
 
 				Assert.That(sql, Is.Not.Contains("WITH"));
 			}

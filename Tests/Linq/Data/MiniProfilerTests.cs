@@ -223,9 +223,8 @@ namespace Tests.Data
 				// just check schema (no api used)
 				db.DataProvider.GetSchemaProvider().GetSchema(db);
 
-
 				// assert api resolved and callable
-				SqlCeTools.CreateDatabase($"TestSqlCe_{Guid.NewGuid():N}");
+				SqlCeTools.CreateDatabase($"TestSqlCe_{TestData.Guid1:N}");
 			}
 		}
 
@@ -415,9 +414,12 @@ namespace Tests.Data
 				Assert.AreEqual(dtValue, ((MySqlConnectorDateTime)rawDtValue).GetDateTime());
 
 				// test provider-specific parameter values
-				Assert.AreEqual(dtValue, db.Execute<DateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", new MySqlConnectorDateTime(dtValue), DataType.Date)));
-				Assert.AreEqual(dtValue, db.Execute<DateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", new MySqlConnectorDateTime(dtValue), DataType.DateTime)));
-				Assert.AreEqual(dtValue, db.Execute<DateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", new MySqlConnectorDateTime(dtValue), DataType.DateTime2)));
+				using (new DisableBaseline("Output (datetime format) is culture-/system-dependent"))
+				{
+					Assert.AreEqual(dtValue, db.Execute<DateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", new MySqlConnectorDateTime(dtValue), DataType.Date)));
+					Assert.AreEqual(dtValue, db.Execute<DateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", new MySqlConnectorDateTime(dtValue), DataType.DateTime)));
+					Assert.AreEqual(dtValue, db.Execute<DateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", new MySqlConnectorDateTime(dtValue), DataType.DateTime2)));
+				}
 
 				// assert provider-specific parameter type name
 				Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE tinyintDataType = @p", new DataParameter("@p", (sbyte)111, DataType.SByte)));
@@ -567,6 +569,7 @@ namespace Tests.Data
 			var hierarchyidSupported = version >= SqlServerVersion.v2008;
 
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
+			using (new DisableBaseline("TODO: debug reason for inconsistent bulk copy sql"))
 #if NET472
 			using (var db = CreateDataConnection(new SqlServerDataProvider(providerName, version, SqlServerProvider.SystemDataSqlClient), context, type, typeof(SqlConnection)))
 #else
@@ -605,7 +608,7 @@ namespace Tests.Data
 				if (tvpSupported)
 				{
 					//// assert TVP type name
-					var record     = SqlServerTypesTests.TestData[0];
+					var record     = SqlServerTypesTests.TestUDTData[0];
 					var parameter  = new DataParameter("p", SqlServerTypesTests.GetSqlDataRecords()) { DbType = SqlServerTypesTests.TYPE_NAME };
 					var readRecord = (from r in db.FromSql<SqlServerTypesTests.TVPRecord>($"select * from {parameter}")
 									  where r.Id == record.Id
@@ -735,6 +738,7 @@ namespace Tests.Data
 			var tvpSupported = version >= SqlServerVersion.v2008;
 
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
+			using (new DisableBaseline("TODO: debug reason for inconsistent bulk copy sql"))
 			using (var db = CreateDataConnection(new SqlServerDataProvider(providerName, version, SqlServerProvider.MicrosoftDataSqlClient), context, type, "Microsoft.Data.SqlClient.SqlConnection, Microsoft.Data.SqlClient"))
 			{
 				var trace = string.Empty;
@@ -767,7 +771,7 @@ namespace Tests.Data
 				if (tvpSupported)
 				{
 					//// assert TVP type name
-					var record     = SqlServerTypesTests.TestData[0];
+					var record     = SqlServerTypesTests.TestUDTData[0];
 					var parameter  = new DataParameter("p", SqlServerTypesTests.GetSqlDataRecordsMS()) { DbType = SqlServerTypesTests.TYPE_NAME };
 					var readRecord = (from r in db.FromSql<SqlServerTypesTests.TVPRecord>($"select * from {parameter}")
 									  where r.Id == record.Id
@@ -1295,6 +1299,7 @@ namespace Tests.Data
 		}
 #endif
 
+		[ActiveIssue(2499)]
 		[Test]
 		public void TestOracleManaged([IncludeDataSources(TestProvName.AllOracleManaged)] string context, [Values] ConnectionType type)
 		{
@@ -1322,7 +1327,7 @@ namespace Tests.Data
 				Assert.AreEqual(decValue, (decimal)rawValue);
 
 				// OracleTimeStampTZ parameter creation and conversion to DateTimeOffset
-				var dtoVal = DateTimeOffset.Now;
+				var dtoVal = TestData.DateTimeOffset;
 				var dtoValue = db.Execute<DateTimeOffset>("SELECT :p FROM SYS.DUAL", new DataParameter("p", dtoVal, DataType.DateTimeOffset) { Precision = 6 });
 				dtoVal = dtoVal.AddTicks(-1 * (dtoVal.Ticks % 10));
 				Assert.AreEqual(dtoVal, dtoValue);

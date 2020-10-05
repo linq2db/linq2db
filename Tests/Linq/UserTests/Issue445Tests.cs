@@ -120,14 +120,17 @@ namespace Tests.UserTests
 		[Test]
 		public void ConnectionPoolException1([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			Assert.Throws<InvalidOperationException>(() =>
+			using (new DisableBaseline("Output depends on pool size"))
 			{
-				for (var i = 0; i < 1000; i++)
+				Assert.Throws<InvalidOperationException>(() =>
 				{
-					var db = GetDataContext(context);
-					AreEqual(Person.Where(_ => _.ID == 1), db.GetTable<Person>().Where(_ => _.ID == 1));
-				}
-			});
+					for (var i = 0; i < 1000; i++)
+					{
+						var db = GetDataContext(context);
+						AreEqual(Person.Where(_ => _.ID == 1), db.GetTable<Person>().Where(_ => _.ID == 1));
+					}
+				});
+			}
 		}
 	}
 }

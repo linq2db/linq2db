@@ -18,7 +18,6 @@ namespace LinqToDB.SqlQuery
 		public SqlTable()
 		{
 			SourceID = Interlocked.Increment(ref SelectQuery.SourceIDCounter);
-			Fields   = new Dictionary<string,SqlField>();
 		}
 
 		internal SqlTable(
@@ -40,20 +39,7 @@ namespace LinqToDB.SqlQuery
 			ObjectType         = objectType;
 			SequenceAttributes = sequenceAttributes;
 
-			Fields = new Dictionary<string, SqlField>();
-
 			AddRange(fields);
-
-			foreach (var field in fields)
-			{
-				if (field.Name == "*")
-				{
-					_all = field;
-					Fields.Remove("*");
-					_all.Table = this;
-					break;
-				}
-			}
 
 			SqlTableType   = sqlTableType;
 			TableArguments = tableArguments;
@@ -151,7 +137,7 @@ namespace LinqToDB.SqlQuery
 			ObjectType         = table.ObjectType;
 			SequenceAttributes = table.SequenceAttributes;
 
-			foreach (var field in table.Fields.Values)
+			foreach (var field in table.Fields)
 				Add(new SqlField(field));
 
 			SqlTableType   = table.SqlTableType;
@@ -193,7 +179,7 @@ namespace LinqToDB.SqlQuery
 		{
 			get
 			{
-				Fields.TryGetValue(fieldName, out var field);
+				_fieldsLookup.TryGetValue(fieldName, out var field);
 				return field;
 			}
 		}
@@ -208,7 +194,22 @@ namespace LinqToDB.SqlQuery
 		public virtual SqlTableType      SqlTableType   { get; set; }
 		public         ISqlExpression[]? TableArguments { get; set; }
 
-		public Dictionary<string,SqlField> Fields { get; }
+		private readonly Dictionary<string, SqlField> _fieldsLookup   = new Dictionary<string, SqlField>();
+
+		// list user to preserve order of fields in queries
+		private readonly List<SqlField>                  _orderedFields  = new List<SqlField>();
+		public IReadOnlyCollection<SqlField>   Fields => _orderedFields;
+
+		// identity fields cached, as it is most used fields filter
+		private readonly List<SqlField>                  _identityFields = new List<SqlField>();
+		public IReadOnlyList<SqlField> IdentityFields => _identityFields;
+
+		internal void ClearFields()
+		{
+			_fieldsLookup  .Clear();
+			_orderedFields .Clear();
+			_identityFields.Clear();
+		}
 
 		public SequenceNameAttribute[]? SequenceAttributes { get; protected set; }
 
@@ -218,8 +219,8 @@ namespace LinqToDB.SqlQuery
 		public SqlField? GetIdentityField()
 		{
 			foreach (var field in Fields)
-				if (field.Value.IsIdentity)
-					return field.Value;
+				if (field.IsIdentity)
+					return field;
 
 			var keys = GetKeys(true);
 
@@ -235,7 +236,16 @@ namespace LinqToDB.SqlQuery
 
 			field.Table = this;
 
-			Fields.Add(field.Name, field);
+			if (field.Name == "*")
+				_all = field;
+			else
+			{
+				_fieldsLookup.Add(field.Name, field);
+				_orderedFields.Add(field);
+
+				if (field.IsIdentity)
+					_identityFields.Add(field);
+			}
 		}
 
 		public void AddRange(IEnumerable<SqlField> collection)
@@ -257,7 +267,7 @@ namespace LinqToDB.SqlQuery
 			if (_keyFields == null)
 			{
 				_keyFields = (
-					from f in Fields.Values
+					from f in Fields
 					where   f.IsPrimaryKey
 					orderby f.PrimaryKeyOrder
 					select f as ISqlExpression
@@ -265,7 +275,7 @@ namespace LinqToDB.SqlQuery
 			}
 
 			if (_keyFields.Count == 0 && allIfEmpty)
-				return Fields.Values.Select(f => f as ISqlExpression).ToList();
+				return Fields.Select(f => f as ISqlExpression).ToList();
 
 			return _keyFields;
 		}
@@ -294,13 +304,13 @@ namespace LinqToDB.SqlQuery
 					SequenceAttributes = SequenceAttributes,
 				};
 
-				table.Fields.Clear();
+				table.ClearFields();
 
 				foreach (var field in Fields)
 				{
-					var fc = new SqlField(field.Value);
+					var fc = new SqlField(field);
 
-					objectTree.Add(field.Value, fc);
+					objectTree.Add(field, fc);
 					table.     Add(fc);
 				}
 

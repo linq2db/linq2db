@@ -36,7 +36,7 @@ namespace Tests.Linq
 
 				var test = result.GenerateTestString();
 
-				Console.WriteLine(test);
+				TestContext.WriteLine(test);
 
 				var _ = result.ToList();
 			}

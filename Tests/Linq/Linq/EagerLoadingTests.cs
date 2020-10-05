@@ -1043,7 +1043,7 @@ FROM
 
 			public static readonly Blog[] Data = new[]
 			{
-				new Blog() { Id = 1, Title = "Another .NET Core Guy", Slogan = "Doing .NET Core Stuff", UserId = Guid.NewGuid().ToString("N") }
+				new Blog() { Id = 1, Title = "Another .NET Core Guy", Slogan = "Doing .NET Core Stuff", UserId = TestData.Guid1.ToString("N") }
 			};
 		}
 
