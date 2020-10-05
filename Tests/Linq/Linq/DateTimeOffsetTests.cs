@@ -69,14 +69,23 @@ namespace Tests.Linq
 			 *     - Does not keep precision to the Tick level, only to the 100ns level.
 			 */
 			public static Transaction[] LocalTzData { get; } = AllData
-				.Where(t => t.TransactionDate.Offset == DateTimeOffset.Now.Offset) // only local TZ is accurate
-				.Where(t => t.TransactionId.NotIn(17, 18))                         // ignore items w/ 1-tick variance
+				.Where(t => t.TransactionDate.Offset == TestData.DateTimeOffset.Offset) // only local TZ is accurate
+				.Where(t => t.TransactionId.NotIn(17, 18))                              // ignore items w/ 1-tick variance
 				.ToArray();
 
-			public static Transaction[] GetDataForContext(string context) =>
+			public static Transaction[] GetDbDataForContext(string context) =>
 				context.StartsWith("SqlServer")
 					? AllData
 					: LocalTzData;
+
+			public static Transaction[] LocalTzDataInUtc { get; } = LocalTzData
+				.Select(t => new Transaction { TransactionId = t.TransactionId, TransactionDate = t.TransactionDate.ToLocalTime(), })
+				.ToArray();
+
+			public static Transaction[] GetTestDataForContext(string context) =>
+				context.StartsWith("SqlServer")
+					? AllData
+					: LocalTzDataInUtc;
 		}
 
 		#region Group By Tests
@@ -85,21 +94,19 @@ namespace Tests.Linq
 		public void GroupByDateTimeOffsetByDateTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 			{
-				using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
-				{
-					var actual   = db.GetTable<Transaction>()
-						.GroupBy(d => d.TransactionDate.Date)
-						.Select(x => new { x.Key, Count = x.Count() })
-						.OrderBy(x => x.Key);
+				var actual   = db.GetTable<Transaction>()
+					.GroupBy(d => d.TransactionDate.Date)
+					.Select(x => new { x.Key, Count = x.Count() })
+					.OrderBy(x => x.Key);
 
-					var expected = Transaction.GetDataForContext(context)
-						.GroupBy(d => d.TransactionDate.Date)
-						.Select(x => new { x.Key, Count = x.Count() })
-						.OrderBy(x => x.Key);
+				var expected = Transaction.GetDbDataForContext(context)
+					.GroupBy(d => d.TransactionDate.Date)
+					.Select(x => new { x.Key, Count = x.Count() })
+					.OrderBy(x => x.Key);
 
-					Assert.That(actual, Is.EqualTo(expected));
-				}
+				Assert.That(actual, Is.EqualTo(expected));
 			}
 		}
 
@@ -107,21 +114,19 @@ namespace Tests.Linq
 		public void GroupByDateTimeOffsetByTimeOfDayTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 			{
-				using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
-				{
-					var actual = db.GetTable<Transaction>()
-						.GroupBy(d => d.TransactionDate.TimeOfDay)
-						.Select(x => new { x.Key, Count = x.Count() })
-						.OrderBy(x => x.Key);
+				var actual = db.GetTable<Transaction>()
+					.GroupBy(d => d.TransactionDate.TimeOfDay)
+					.Select(x => new { x.Key, Count = x.Count() })
+					.OrderBy(x => x.Key);
 
-					var expected = Transaction.GetDataForContext(context)
-						.GroupBy(d => d.TransactionDate.TimeOfDay)
-						.Select(x => new { x.Key, Count = x.Count() })
-						.OrderBy(x => x.Key);
+				var expected = Transaction.GetDbDataForContext(context)
+					.GroupBy(d => d.TransactionDate.TimeOfDay)
+					.Select(x => new { x.Key, Count = x.Count() })
+					.OrderBy(x => x.Key);
 
-					Assert.That(actual, Is.EqualTo(expected));
-				}
+				Assert.That(actual, Is.EqualTo(expected));
 			}
 		}
 
@@ -129,21 +134,19 @@ namespace Tests.Linq
 		public void GroupByDateTimeOffsetTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 			{
-				using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
-				{
-					var actual = db.GetTable<Transaction>()
-						.GroupBy(d => d.TransactionDate)
-						.Select(x => new { x.Key, Count = x.Count() })
-						.OrderBy(x => x.Key);
+				var actual = db.GetTable<Transaction>()
+					.GroupBy(d => d.TransactionDate)
+					.Select(x => new { x.Key, Count = x.Count() })
+					.OrderBy(x => x.Key);
 
-					var expected = Transaction.GetDataForContext(context)
-						.GroupBy(d => d.TransactionDate)
-						.Select(x => new { x.Key, Count = x.Count() })
-						.OrderBy(x => x.Key);
+				var expected = Transaction.GetDbDataForContext(context)
+					.GroupBy(d => d.TransactionDate)
+					.Select(x => new { x.Key, Count = x.Count() })
+					.OrderBy(x => x.Key);
 
-					Assert.That(actual, Is.EqualTo(expected));
-				}
+				Assert.That(actual, Is.EqualTo(expected));
 			}
 		}
 
@@ -151,21 +154,19 @@ namespace Tests.Linq
 		public void GroupByDateTimeOffsetByDayTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 			{
-				using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
-				{
-					var actual = db.GetTable<Transaction>()
-						.GroupBy(d => d.TransactionDate.Day)
-						.Select(x => new { x.Key, Count = x.Count() })
-						.OrderBy(x => x.Key);
+				var actual = db.GetTable<Transaction>()
+					.GroupBy(d => d.TransactionDate.Day)
+					.Select(x => new { x.Key, Count = x.Count() })
+					.OrderBy(x => x.Key);
 
-					var expected = Transaction.GetDataForContext(context)
-						.GroupBy(d => d.TransactionDate.Day)
-						.Select(x => new { x.Key, Count = x.Count() })
-						.OrderBy(x => x.Key);
+				var expected = Transaction.GetDbDataForContext(context)
+					.GroupBy(d => d.TransactionDate.Day)
+					.Select(x => new { x.Key, Count = x.Count() })
+					.OrderBy(x => x.Key);
 
-					Assert.That(actual, Is.EqualTo(expected));
-				}
+				Assert.That(actual, Is.EqualTo(expected));
 			}
 		}
 
@@ -173,21 +174,19 @@ namespace Tests.Linq
 		public void GroupByDateTimeOffsetByDayOfWeekTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 			{
-				using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
-				{
-					var actual = db.GetTable<Transaction>()
-						.GroupBy(d => d.TransactionDate.DayOfWeek)
-						.Select(x => new { x.Key, Count = x.Count() })
-						.OrderBy(x => x.Key);
+				var actual = db.GetTable<Transaction>()
+					.GroupBy(d => d.TransactionDate.DayOfWeek)
+					.Select(x => new { x.Key, Count = x.Count() })
+					.OrderBy(x => x.Key);
 
-					var expected = Transaction.GetDataForContext(context)
-						.GroupBy(d => d.TransactionDate.DayOfWeek)
-						.Select(x => new { x.Key, Count = x.Count() })
-						.OrderBy(x => x.Key);
+				var expected = Transaction.GetDbDataForContext(context)
+					.GroupBy(d => d.TransactionDate.DayOfWeek)
+					.Select(x => new { x.Key, Count = x.Count() })
+					.OrderBy(x => x.Key);
 
-					Assert.That(actual, Is.EqualTo(expected));
-				}
+				Assert.That(actual, Is.EqualTo(expected));
 			}
 		}
 
@@ -195,21 +194,19 @@ namespace Tests.Linq
 		public void GroupByDateTimeOffsetByDayOfYearTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 			{
-				using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
-				{
-					var actual = db.GetTable<Transaction>()
-						.GroupBy(d => d.TransactionDate.DayOfYear)
-						.Select(x => new { x.Key, Count = x.Count() })
-						.OrderBy(x => x.Key);
+				var actual = db.GetTable<Transaction>()
+					.GroupBy(d => d.TransactionDate.DayOfYear)
+					.Select(x => new { x.Key, Count = x.Count() })
+					.OrderBy(x => x.Key);
 
-					var expected = Transaction.GetDataForContext(context)
-						.GroupBy(d => d.TransactionDate.DayOfYear)
-						.Select(x => new { x.Key, Count = x.Count() })
-						.OrderBy(x => x.Key);
+				var expected = Transaction.GetDbDataForContext(context)
+					.GroupBy(d => d.TransactionDate.DayOfYear)
+					.Select(x => new { x.Key, Count = x.Count() })
+					.OrderBy(x => x.Key);
 
-					Assert.That(actual, Is.EqualTo(expected));
-				}
+				Assert.That(actual, Is.EqualTo(expected));
 			}
 		}
 
@@ -217,21 +214,19 @@ namespace Tests.Linq
 		public void GroupByDateTimeOffsetByHourTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 			{
-				using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
-				{
-					var actual = db.GetTable<Transaction>()
-						.GroupBy(d => d.TransactionDate.Hour)
-						.Select(x => new { x.Key, Count = x.Count() })
-						.OrderBy(x => x.Key);
+				var actual = db.GetTable<Transaction>()
+					.GroupBy(d => d.TransactionDate.Hour)
+					.Select(x => new { x.Key, Count = x.Count() })
+					.OrderBy(x => x.Key);
 
-					var expected = Transaction.GetDataForContext(context)
-						.GroupBy(d => d.TransactionDate.Hour)
-						.Select(x => new { x.Key, Count = x.Count() })
-						.OrderBy(x => x.Key);
+				var expected = Transaction.GetDbDataForContext(context)
+					.GroupBy(d => d.TransactionDate.Hour)
+					.Select(x => new { x.Key, Count = x.Count() })
+					.OrderBy(x => x.Key);
 
-					Assert.That(actual, Is.EqualTo(expected));
-				}
+				Assert.That(actual, Is.EqualTo(expected));
 			}
 		}
 
@@ -239,21 +234,19 @@ namespace Tests.Linq
 		public void GroupByDateTimeOffsetByLocalDateTimeTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 			{
-				using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
-				{
-					var actual = db.GetTable<Transaction>()
-						.GroupBy(d => d.TransactionDate)
-						.Select(x => new { x.Key, Count = x.Count() })
-						.OrderBy(x => x.Key);
+				var actual = db.GetTable<Transaction>()
+					.GroupBy(d => d.TransactionDate)
+					.Select(x => new { x.Key, Count = x.Count() })
+					.OrderBy(x => x.Key);
 
-					var expected = Transaction.GetDataForContext(context)
-						.GroupBy(d => d.TransactionDate)
-						.Select(x => new { x.Key, Count = x.Count() })
-						.OrderBy(x => x.Key);
+				var expected = Transaction.GetDbDataForContext(context)
+					.GroupBy(d => d.TransactionDate)
+					.Select(x => new { x.Key, Count = x.Count() })
+					.OrderBy(x => x.Key);
 
-					Assert.That(actual, Is.EqualTo(expected));
-				}
+				Assert.That(actual, Is.EqualTo(expected));
 			}
 		}
 
@@ -261,21 +254,19 @@ namespace Tests.Linq
 		public void GroupByDateTimeOffsetByMillisecondTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 			{
-				using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
-				{
-					var actual = db.GetTable<Transaction>()
-						.GroupBy(d => d.TransactionDate.Millisecond)
-						.Select(x => new { x.Key, Count = x.Count() })
-						.OrderBy(x => x.Key);
+				var actual = db.GetTable<Transaction>()
+					.GroupBy(d => d.TransactionDate.Millisecond)
+					.Select(x => new { x.Key, Count = x.Count() })
+					.OrderBy(x => x.Key);
 
-					var expected = Transaction.GetDataForContext(context)
-						.GroupBy(d => d.TransactionDate.Millisecond)
-						.Select(x => new { x.Key, Count = x.Count() })
-						.OrderBy(x => x.Key);
+				var expected = Transaction.GetDbDataForContext(context)
+					.GroupBy(d => d.TransactionDate.Millisecond)
+					.Select(x => new { x.Key, Count = x.Count() })
+					.OrderBy(x => x.Key);
 
-					Assert.That(actual, Is.EqualTo(expected));
-				}
+				Assert.That(actual, Is.EqualTo(expected));
 			}
 		}
 
@@ -283,21 +274,19 @@ namespace Tests.Linq
 		public void GroupByDateTimeOffsetByMinuteTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 			{
-				using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
-				{
-					var actual = db.GetTable<Transaction>()
-						.GroupBy(d => d.TransactionDate.Minute)
-						.Select(x => new { x.Key, Count = x.Count() })
-						.OrderBy(x => x.Key);
+				var actual = db.GetTable<Transaction>()
+					.GroupBy(d => d.TransactionDate.Minute)
+					.Select(x => new { x.Key, Count = x.Count() })
+					.OrderBy(x => x.Key);
 
-					var expected = Transaction.GetDataForContext(context)
-						.GroupBy(d => d.TransactionDate.Minute)
-						.Select(x => new { x.Key, Count = x.Count() })
-						.OrderBy(x => x.Key);
+				var expected = Transaction.GetDbDataForContext(context)
+					.GroupBy(d => d.TransactionDate.Minute)
+					.Select(x => new { x.Key, Count = x.Count() })
+					.OrderBy(x => x.Key);
 
-					Assert.That(actual, Is.EqualTo(expected));
-				}
+				Assert.That(actual, Is.EqualTo(expected));
 			}
 		}
 
@@ -305,21 +294,19 @@ namespace Tests.Linq
 		public void GroupByDateTimeOffsetByMonthTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 			{
-				using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
-				{
-					var actual = db.GetTable<Transaction>()
-						.GroupBy(d => d.TransactionDate.Month)
-						.Select(x => new { x.Key, Count = x.Count() })
-						.OrderBy(x => x.Key);
+				var actual = db.GetTable<Transaction>()
+					.GroupBy(d => d.TransactionDate.Month)
+					.Select(x => new { x.Key, Count = x.Count() })
+					.OrderBy(x => x.Key);
 
-					var expected = Transaction.GetDataForContext(context)
-						.GroupBy(d => d.TransactionDate.Month)
-						.Select(x => new { x.Key, Count = x.Count() })
-						.OrderBy(x => x.Key);
+				var expected = Transaction.GetDbDataForContext(context)
+					.GroupBy(d => d.TransactionDate.Month)
+					.Select(x => new { x.Key, Count = x.Count() })
+					.OrderBy(x => x.Key);
 
-					Assert.That(actual, Is.EqualTo(expected));
-				}
+				Assert.That(actual, Is.EqualTo(expected));
 			}
 		}
 
@@ -327,21 +314,19 @@ namespace Tests.Linq
 		public void GroupByDateTimeOffsetBySecondTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 			{
-				using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
-				{
-					var actual = db.GetTable<Transaction>()
-						.GroupBy(d => d.TransactionDate.Second)
-						.Select(x => new { x.Key, Count = x.Count() })
-						.OrderBy(x => x.Key);
+				var actual = db.GetTable<Transaction>()
+					.GroupBy(d => d.TransactionDate.Second)
+					.Select(x => new { x.Key, Count = x.Count() })
+					.OrderBy(x => x.Key);
 
-					var expected = Transaction.GetDataForContext(context)
-						.GroupBy(d => d.TransactionDate.Second)
-						.Select(x => new { x.Key, Count = x.Count() })
-						.OrderBy(x => x.Key);
+				var expected = Transaction.GetDbDataForContext(context)
+					.GroupBy(d => d.TransactionDate.Second)
+					.Select(x => new { x.Key, Count = x.Count() })
+					.OrderBy(x => x.Key);
 
-					Assert.That(actual, Is.EqualTo(expected));
-				}
+				Assert.That(actual, Is.EqualTo(expected));
 			}
 		}
 
@@ -349,21 +334,19 @@ namespace Tests.Linq
 		public void GroupByDateTimeOffsetByYearTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 			{
-				using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
-				{
-					var actual = db.GetTable<Transaction>()
-						.GroupBy(d => d.TransactionDate.Year)
-						.Select(x => new { x.Key, Count = x.Count() })
-						.OrderBy(x => x.Key);
+				var actual = db.GetTable<Transaction>()
+					.GroupBy(d => d.TransactionDate.Year)
+					.Select(x => new { x.Key, Count = x.Count() })
+					.OrderBy(x => x.Key);
 
-					var expected = Transaction.GetDataForContext(context)
-						.GroupBy(d => d.TransactionDate.Year)
-						.Select(x => new { x.Key, Count = x.Count() })
-						.OrderBy(x => x.Key);
+				var expected = Transaction.GetDbDataForContext(context)
+					.GroupBy(d => d.TransactionDate.Year)
+					.Select(x => new { x.Key, Count = x.Count() })
+					.OrderBy(x => x.Key);
 
-					Assert.That(actual, Is.EqualTo(expected));
-				}
+				Assert.That(actual, Is.EqualTo(expected));
 			}
 		}
 
@@ -371,21 +354,19 @@ namespace Tests.Linq
 		public void GroupByDateTimeOffsetByAddDaysTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 			{
-				using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
-				{
-					var actual = db.GetTable<Transaction>()
-						.GroupBy(d => d.TransactionDate.AddDays(-1))
-						.Select(x => new { x.Key, Count = x.Count() })
-						.OrderBy(x => x.Key);
+				var actual = db.GetTable<Transaction>()
+					.GroupBy(d => d.TransactionDate.AddDays(-1))
+					.Select(x => new { x.Key, Count = x.Count() })
+					.OrderBy(x => x.Key);
 
-					var expected = Transaction.GetDataForContext(context)
-						.GroupBy(d => d.TransactionDate.AddDays(-1))
-						.Select(x => new { x.Key, Count = x.Count() })
-						.OrderBy(x => x.Key);
+				var expected = Transaction.GetDbDataForContext(context)
+					.GroupBy(d => d.TransactionDate.AddDays(-1))
+					.Select(x => new { x.Key, Count = x.Count() })
+					.OrderBy(x => x.Key);
 
-					Assert.That(actual, Is.EqualTo(expected));
-				}
+				Assert.That(actual, Is.EqualTo(expected));
 			}
 		}
 
@@ -393,21 +374,19 @@ namespace Tests.Linq
 		public void GroupByDateTimeOffsetByAddHoursTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 			{
-				using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
-				{
-					var actual = db.GetTable<Transaction>()
-						.GroupBy(d => d.TransactionDate.AddHours(-1))
-						.Select(x => new { x.Key, Count = x.Count() })
-						.OrderBy(x => x.Key);
+				var actual = db.GetTable<Transaction>()
+					.GroupBy(d => d.TransactionDate.AddHours(-1))
+					.Select(x => new { x.Key, Count = x.Count() })
+					.OrderBy(x => x.Key);
 
-					var expected = Transaction.GetDataForContext(context)
-						.GroupBy(d => d.TransactionDate.AddHours(-1))
-						.Select(x => new { x.Key, Count = x.Count() })
-						.OrderBy(x => x.Key);
+				var expected = Transaction.GetDbDataForContext(context)
+					.GroupBy(d => d.TransactionDate.AddHours(-1))
+					.Select(x => new { x.Key, Count = x.Count() })
+					.OrderBy(x => x.Key);
 
-					Assert.That(actual, Is.EqualTo(expected));
-				}
+				Assert.That(actual, Is.EqualTo(expected));
 			}
 		}
 
@@ -415,21 +394,19 @@ namespace Tests.Linq
 		public void GroupByDateTimeOffsetByAddMillisecondsTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 			{
-				using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
-				{
-					var actual = db.GetTable<Transaction>()
-						.GroupBy(d => d.TransactionDate.AddMilliseconds(-1))
-						.Select(x => new { x.Key, Count = x.Count() })
-						.OrderBy(x => x.Key);
+				var actual = db.GetTable<Transaction>()
+					.GroupBy(d => d.TransactionDate.AddMilliseconds(-1))
+					.Select(x => new { x.Key, Count = x.Count() })
+					.OrderBy(x => x.Key);
 
-					var expected = Transaction.GetDataForContext(context)
-						.GroupBy(d => d.TransactionDate.AddMilliseconds(-1))
-						.Select(x => new { x.Key, Count = x.Count() })
-						.OrderBy(x => x.Key);
+				var expected = Transaction.GetDbDataForContext(context)
+					.GroupBy(d => d.TransactionDate.AddMilliseconds(-1))
+					.Select(x => new { x.Key, Count = x.Count() })
+					.OrderBy(x => x.Key);
 
-					Assert.That(actual, Is.EqualTo(expected));
-				}
+				Assert.That(actual, Is.EqualTo(expected));
 			}
 		}
 
@@ -437,21 +414,19 @@ namespace Tests.Linq
 		public void GroupByDateTimeOffsetByAddMinutesTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 			{
-				using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
-				{
-					var actual = db.GetTable<Transaction>()
-						.GroupBy(d => d.TransactionDate.AddMinutes(-1))
-						.Select(x => new { x.Key, Count = x.Count() })
-						.OrderBy(x => x.Key);
+				var actual = db.GetTable<Transaction>()
+					.GroupBy(d => d.TransactionDate.AddMinutes(-1))
+					.Select(x => new { x.Key, Count = x.Count() })
+					.OrderBy(x => x.Key);
 
-					var expected = Transaction.GetDataForContext(context)
-						.GroupBy(d => d.TransactionDate.AddMinutes(-1))
-						.Select(x => new { x.Key, Count = x.Count() })
-						.OrderBy(x => x.Key);
+				var expected = Transaction.GetDbDataForContext(context)
+					.GroupBy(d => d.TransactionDate.AddMinutes(-1))
+					.Select(x => new { x.Key, Count = x.Count() })
+					.OrderBy(x => x.Key);
 
-					Assert.That(actual, Is.EqualTo(expected));
-				}
+				Assert.That(actual, Is.EqualTo(expected));
 			}
 		}
 
@@ -459,21 +434,19 @@ namespace Tests.Linq
 		public void GroupByDateTimeOffsetByAddMonthsTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 			{
-				using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
-				{
-					var actual = db.GetTable<Transaction>()
-						.GroupBy(d => d.TransactionDate.AddMonths(-1))
-						.Select(x => new { x.Key, Count = x.Count() })
-						.OrderBy(x => x.Key);
+				var actual = db.GetTable<Transaction>()
+					.GroupBy(d => d.TransactionDate.AddMonths(-1))
+					.Select(x => new { x.Key, Count = x.Count() })
+					.OrderBy(x => x.Key);
 
-					var expected = Transaction.GetDataForContext(context)
-						.GroupBy(d => d.TransactionDate.AddMonths(-1))
-						.Select(x => new { x.Key, Count = x.Count() })
-						.OrderBy(x => x.Key);
+				var expected = Transaction.GetDbDataForContext(context)
+					.GroupBy(d => d.TransactionDate.AddMonths(-1))
+					.Select(x => new { x.Key, Count = x.Count() })
+					.OrderBy(x => x.Key);
 
-					Assert.That(actual, Is.EqualTo(expected));
-				}
+				Assert.That(actual, Is.EqualTo(expected));
 			}
 		}
 
@@ -481,21 +454,19 @@ namespace Tests.Linq
 		public void GroupByDateTimeOffsetByAddSecondsTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 			{
-				using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
-				{
-					var actual = db.GetTable<Transaction>()
-						.GroupBy(d => d.TransactionDate.AddSeconds(-1))
-						.Select(x => new { x.Key, Count = x.Count() })
-						.OrderBy(x => x.Key);
+				var actual = db.GetTable<Transaction>()
+					.GroupBy(d => d.TransactionDate.AddSeconds(-1))
+					.Select(x => new { x.Key, Count = x.Count() })
+					.OrderBy(x => x.Key);
 
-					var expected = Transaction.GetDataForContext(context)
-						.GroupBy(d => d.TransactionDate.AddSeconds(-1))
-						.Select(x => new { x.Key, Count = x.Count() })
-						.OrderBy(x => x.Key);
+				var expected = Transaction.GetDbDataForContext(context)
+					.GroupBy(d => d.TransactionDate.AddSeconds(-1))
+					.Select(x => new { x.Key, Count = x.Count() })
+					.OrderBy(x => x.Key);
 
-					Assert.That(actual, Is.EqualTo(expected));
-				}
+				Assert.That(actual, Is.EqualTo(expected));
 			}
 		}
 
@@ -503,21 +474,19 @@ namespace Tests.Linq
 		public void GroupByDateTimeOffsetByAddYearsTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 			{
-				using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
-				{
-					var actual = db.GetTable<Transaction>()
-						.GroupBy(d => d.TransactionDate.AddYears(-1))
-						.Select(x => new { x.Key, Count = x.Count() })
-						.OrderBy(x => x.Key);
+				var actual = db.GetTable<Transaction>()
+					.GroupBy(d => d.TransactionDate.AddYears(-1))
+					.Select(x => new { x.Key, Count = x.Count() })
+					.OrderBy(x => x.Key);
 
-					var expected = Transaction.GetDataForContext(context)
-						.GroupBy(d => d.TransactionDate.AddYears(-1))
-						.Select(x => new { x.Key, Count = x.Count() })
-						.OrderBy(x => x.Key);
+				var expected = Transaction.GetDbDataForContext(context)
+					.GroupBy(d => d.TransactionDate.AddYears(-1))
+					.Select(x => new { x.Key, Count = x.Count() })
+					.OrderBy(x => x.Key);
 
-					Assert.That(actual, Is.EqualTo(expected));
-				}
+				Assert.That(actual, Is.EqualTo(expected));
 			}
 		}
 		#endregion
@@ -528,59 +497,59 @@ namespace Tests.Linq
 		public void DateAddYear([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
-					from t in Transaction.GetDataForContext(context) select           Sql.DateAdd(Sql.DateParts.Year, 11, t.TransactionDate)!. Value.Date,
-					from t in db.GetTable<Transaction>()             select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Year, 11, t.TransactionDate))!.Value.Date);
+					from t in Transaction.GetTestDataForContext(context) select           Sql.DateAdd(Sql.DateParts.Year, 11, t.TransactionDate)!. Value.Date,
+					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Year, 11, t.TransactionDate))!.Value.Date);
 		}
 
 		[Test]
 		public void DateAddQuarter([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
-					from t in Transaction.GetDataForContext(context) select           Sql.DateAdd(Sql.DateParts.Quarter, -1, t.TransactionDate)!. Value.Date,
-					from t in db.GetTable<Transaction>()             select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Quarter, -1, t.TransactionDate))!.Value.Date);
+					from t in Transaction.GetTestDataForContext(context) select           Sql.DateAdd(Sql.DateParts.Quarter, -1, t.TransactionDate)!. Value.Date,
+					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Quarter, -1, t.TransactionDate))!.Value.Date);
 		}
 
 		[Test]
 		public void DateAddMonth([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
-					from t in Transaction.GetDataForContext(context) select           Sql.DateAdd(Sql.DateParts.Month, 2, t.TransactionDate)!. Value.Date,
-					from t in db.GetTable<Transaction>()             select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Month, 2, t.TransactionDate))!.Value.Date);
+					from t in Transaction.GetTestDataForContext(context) select           Sql.DateAdd(Sql.DateParts.Month, 2, t.TransactionDate)!. Value.Date,
+					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Month, 2, t.TransactionDate))!.Value.Date);
 		}
 
 		[Test]
 		public void DateAddDayOfYear([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
-					from t in Transaction.GetDataForContext(context) select           Sql.DateAdd(Sql.DateParts.DayOfYear, 3, t.TransactionDate)!. Value.Date,
-					from t in db.GetTable<Transaction>()             select Sql.AsSql(Sql.DateAdd(Sql.DateParts.DayOfYear, 3, t.TransactionDate))!.Value.Date);
+					from t in Transaction.GetTestDataForContext(context) select           Sql.DateAdd(Sql.DateParts.DayOfYear, 3, t.TransactionDate)!. Value.Date,
+					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateAdd(Sql.DateParts.DayOfYear, 3, t.TransactionDate))!.Value.Date);
 		}
 
 		[Test]
 		public void DateAddDay([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
-					from t in Transaction.GetDataForContext(context) select           Sql.DateAdd(Sql.DateParts.Day, 5, t.TransactionDate)!. Value.Date,
-					from t in db.GetTable<Transaction>()             select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Day, 5, t.TransactionDate))!.Value.Date);
+					from t in Transaction.GetTestDataForContext(context) select           Sql.DateAdd(Sql.DateParts.Day, 5, t.TransactionDate)!. Value.Date,
+					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Day, 5, t.TransactionDate))!.Value.Date);
 		}
 
 		[Test]
 		public void DateAddWeek([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
-					from t in Transaction.GetDataForContext(context)  select           Sql.DateAdd(Sql.DateParts.Week, -1, t.TransactionDate)!. Value.Date,
+					from t in Transaction.GetTestDataForContext(context)  select           Sql.DateAdd(Sql.DateParts.Week, -1, t.TransactionDate)!. Value.Date,
 					from t in db.GetTable<Transaction>()              select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Week, -1, t.TransactionDate))!.Value.Date);
 		}
 
@@ -588,100 +557,100 @@ namespace Tests.Linq
 		public void DateAddWeekDay([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
-					from t in Transaction.GetDataForContext(context) select           Sql.DateAdd(Sql.DateParts.WeekDay, 1, t.TransactionDate)!. Value.Date,
-					from t in db.GetTable<Transaction>()             select Sql.AsSql(Sql.DateAdd(Sql.DateParts.WeekDay, 1, t.TransactionDate))!.Value.Date);
+					from t in Transaction.GetTestDataForContext(context) select           Sql.DateAdd(Sql.DateParts.WeekDay, 1, t.TransactionDate)!. Value.Date,
+					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateAdd(Sql.DateParts.WeekDay, 1, t.TransactionDate))!.Value.Date);
 		}
 
 		[Test]
 		public void DateAddHour([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
-					from t in Transaction.GetDataForContext(context) select           Sql.DateAdd(Sql.DateParts.Hour, 1, t.TransactionDate)!. Value.Hour,
-					from t in db.GetTable<Transaction>()             select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Hour, 1, t.TransactionDate))!.Value.Hour);
+					from t in Transaction.GetTestDataForContext(context) select           Sql.DateAdd(Sql.DateParts.Hour, 1, t.TransactionDate)!. Value.Hour,
+					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Hour, 1, t.TransactionDate))!.Value.Hour);
 		}
 
 		[Test]
 		public void DateAddMinute([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
-					from t in Transaction.GetDataForContext(context) select           Sql.DateAdd(Sql.DateParts.Minute, 5, t.TransactionDate)!. Value.Minute,
-					from t in db.GetTable<Transaction>()             select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Minute, 5, t.TransactionDate))!.Value.Minute);
+					from t in Transaction.GetTestDataForContext(context) select           Sql.DateAdd(Sql.DateParts.Minute, 5, t.TransactionDate)!. Value.Minute,
+					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Minute, 5, t.TransactionDate))!.Value.Minute);
 		}
 
 		[Test]
 		public void DateAddSecond([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
-					from t in Transaction.GetDataForContext(context) select           Sql.DateAdd(Sql.DateParts.Second, 41, t.TransactionDate)!. Value.Second,
-					from t in db.GetTable<Transaction>()             select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Second, 41, t.TransactionDate))!.Value.Second);
+					from t in Transaction.GetTestDataForContext(context) select           Sql.DateAdd(Sql.DateParts.Second, 41, t.TransactionDate)!. Value.Second,
+					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Second, 41, t.TransactionDate))!.Value.Second);
 		}
 
 		[Test]
 		public void AddYears([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
-					from t in Transaction.GetDataForContext(context) select           t.TransactionDate.AddYears(1). Date,
-					from t in db.GetTable<Transaction>()             select Sql.AsSql(t.TransactionDate.AddYears(1)).Date);
+					from t in Transaction.GetTestDataForContext(context) select           t.TransactionDate.AddYears(1). Date,
+					from t in db.GetTable<Transaction>()                 select Sql.AsSql(t.TransactionDate.AddYears(1)).Date);
 		}
 
 		[Test]
 		public void AddMonths([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
-					from t in Transaction.GetDataForContext(context) select           t.TransactionDate.AddMonths(-2). Date,
-					from t in db.GetTable<Transaction>()             select Sql.AsSql(t.TransactionDate.AddMonths(-2)).Date);
+					from t in Transaction.GetTestDataForContext(context) select           t.TransactionDate.AddMonths(-2). Date,
+					from t in db.GetTable<Transaction>()                 select Sql.AsSql(t.TransactionDate.AddMonths(-2)).Date);
 		}
 
 		[Test]
 		public void AddDays([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
-					from t in Transaction.GetDataForContext(context) select           t.TransactionDate.AddDays(5). Date,
-					from t in db.GetTable<Transaction>()             select Sql.AsSql(t.TransactionDate.AddDays(5)).Date);
+					from t in Transaction.GetTestDataForContext(context) select           t.TransactionDate.AddDays(5). Date,
+					from t in db.GetTable<Transaction>()                 select Sql.AsSql(t.TransactionDate.AddDays(5)).Date);
 		}
 
 		[Test]
 		public void AddHours([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
-					from t in Transaction.GetDataForContext(context) select           t.TransactionDate.AddHours(22). Hour,
-					from t in db.GetTable<Transaction>()             select Sql.AsSql(t.TransactionDate.AddHours(22)).Hour);
+					from t in Transaction.GetTestDataForContext(context) select           t.TransactionDate.AddHours(22). Hour,
+					from t in db.GetTable<Transaction>()                 select Sql.AsSql(t.TransactionDate.AddHours(22)).Hour);
 		}
 
 		[Test]
 		public void AddMinutes([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
-					from t in Transaction.GetDataForContext(context) select           t.TransactionDate.AddMinutes(-8). Minute,
-					from t in db.GetTable<Transaction>()             select Sql.AsSql(t.TransactionDate.AddMinutes(-8)).Minute);
+					from t in Transaction.GetTestDataForContext(context) select           t.TransactionDate.AddMinutes(-8). Minute,
+					from t in db.GetTable<Transaction>()                 select Sql.AsSql(t.TransactionDate.AddMinutes(-8)).Minute);
 		}
 
 		[Test]
 		public void AddSeconds([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
-					from t in Transaction.GetDataForContext(context) select           t.TransactionDate.AddSeconds(-35). Second,
-					from t in db.GetTable<Transaction>()             select Sql.AsSql(t.TransactionDate.AddSeconds(-35)).Second);
+					from t in Transaction.GetTestDataForContext(context) select           t.TransactionDate.AddSeconds(-35). Second,
+					from t in db.GetTable<Transaction>()                 select Sql.AsSql(t.TransactionDate.AddSeconds(-35)).Second);
 		}
 
 		#endregion
@@ -695,10 +664,10 @@ namespace Tests.Linq
 			var part2 = 5;
 
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
-					from t in Transaction.GetDataForContext(context) select           Sql.DateAdd(Sql.DateParts.Year, 11, t.TransactionDate)!.            Value.Date,
-					from t in db.GetTable<Transaction>()             select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Year, part1 + part2, t.TransactionDate))!.Value.Date);
+					from t in Transaction.GetTestDataForContext(context) select           Sql.DateAdd(Sql.DateParts.Year, 11, t.TransactionDate)!.            Value.Date,
+					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Year, part1 + part2, t.TransactionDate))!.Value.Date);
 		}
 
 		[Test]
@@ -708,10 +677,10 @@ namespace Tests.Linq
 			var part2 = 5;
 
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
-					from t in Transaction.GetDataForContext(context) select           Sql.DateAdd(Sql.DateParts.Quarter, -1, t.TransactionDate)!.            Value.Date,
-					from t in db.GetTable<Transaction>()             select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Quarter, part2 - part1, t.TransactionDate))!.Value.Date);
+					from t in Transaction.GetTestDataForContext(context) select           Sql.DateAdd(Sql.DateParts.Quarter, -1, t.TransactionDate)!.            Value.Date,
+					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Quarter, part2 - part1, t.TransactionDate))!.Value.Date);
 		}
 
 		[Test]
@@ -721,10 +690,10 @@ namespace Tests.Linq
 			var part2 = 3;
 
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
-					from t in Transaction.GetDataForContext(context) select           Sql.DateAdd(Sql.DateParts.Month, 2, t.TransactionDate)!.             Value.Date,
-					from t in db.GetTable<Transaction>()             select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Month, part1 - part2, t.TransactionDate))!.Value.Date);
+					from t in Transaction.GetTestDataForContext(context) select           Sql.DateAdd(Sql.DateParts.Month, 2, t.TransactionDate)!.             Value.Date,
+					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Month, part1 - part2, t.TransactionDate))!.Value.Date);
 		}
 
 		[Test]
@@ -734,10 +703,10 @@ namespace Tests.Linq
 			var part2 = 3;
 
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
-					from t in Transaction.GetDataForContext(context) select           Sql.DateAdd(Sql.DateParts.DayOfYear, 3, t.TransactionDate)!.             Value.Date,
-					from t in db.GetTable<Transaction>()             select Sql.AsSql(Sql.DateAdd(Sql.DateParts.DayOfYear, part1 - part2, t.TransactionDate))!.Value.Date);
+					from t in Transaction.GetTestDataForContext(context) select           Sql.DateAdd(Sql.DateParts.DayOfYear, 3, t.TransactionDate)!.             Value.Date,
+					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateAdd(Sql.DateParts.DayOfYear, part1 - part2, t.TransactionDate))!.Value.Date);
 		}
 
 		[Test]
@@ -747,10 +716,10 @@ namespace Tests.Linq
 			var part2 = 3;
 
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
-					from t in Transaction.GetDataForContext(context) select           Sql.DateAdd(Sql.DateParts.Day, 5, t.TransactionDate)!.             Value.Date,
-					from t in db.GetTable<Transaction>()             select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Day, part1 + part2, t.TransactionDate))!.Value.Date);
+					from t in Transaction.GetTestDataForContext(context) select           Sql.DateAdd(Sql.DateParts.Day, 5, t.TransactionDate)!.             Value.Date,
+					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Day, part1 + part2, t.TransactionDate))!.Value.Date);
 		}
 
 		[Test]
@@ -760,10 +729,10 @@ namespace Tests.Linq
 			var part2 = 3;
 
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
-					from t in Transaction.GetDataForContext(context) select           Sql.DateAdd(Sql.DateParts.Week, -1, t.TransactionDate)!.            Value.Date,
-					from t in db.GetTable<Transaction>()             select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Week, part1 - part2, t.TransactionDate))!.Value.Date);
+					from t in Transaction.GetTestDataForContext(context) select           Sql.DateAdd(Sql.DateParts.Week, -1, t.TransactionDate)!.            Value.Date,
+					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Week, part1 - part2, t.TransactionDate))!.Value.Date);
 		}
 
 		[Test]
@@ -773,10 +742,10 @@ namespace Tests.Linq
 			var part2 = 3;
 
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
-					from t in Transaction.GetDataForContext(context) select           Sql.DateAdd(Sql.DateParts.WeekDay, 1, t.TransactionDate)!.             Value.Date,
-					from t in db.GetTable<Transaction>()             select Sql.AsSql(Sql.DateAdd(Sql.DateParts.WeekDay, part2 - part1, t.TransactionDate))!.Value.Date);
+					from t in Transaction.GetTestDataForContext(context) select           Sql.DateAdd(Sql.DateParts.WeekDay, 1, t.TransactionDate)!.             Value.Date,
+					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateAdd(Sql.DateParts.WeekDay, part2 - part1, t.TransactionDate))!.Value.Date);
 		}
 
 		[Test]
@@ -786,10 +755,10 @@ namespace Tests.Linq
 			var part2 = 3;
 
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
-					from t in Transaction.GetDataForContext(context) select           Sql.DateAdd(Sql.DateParts.Hour, 1, t.TransactionDate)!.             Value.Hour,
-					from t in db.GetTable<Transaction>()             select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Hour, part2 - part1, t.TransactionDate))!.Value.Hour);
+					from t in Transaction.GetTestDataForContext(context) select           Sql.DateAdd(Sql.DateParts.Hour, 1, t.TransactionDate)!.             Value.Hour,
+					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Hour, part2 - part1, t.TransactionDate))!.Value.Hour);
 		}
 
 		[Test]
@@ -799,10 +768,10 @@ namespace Tests.Linq
 			var part2 = 3;
 
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
-					from t in Transaction.GetDataForContext(context) select           Sql.DateAdd(Sql.DateParts.Minute, 5, t.TransactionDate)!.             Value.Minute,
-					from t in db.GetTable<Transaction>()             select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Minute, part1 + part2, t.TransactionDate))!.Value.Minute);
+					from t in Transaction.GetTestDataForContext(context) select           Sql.DateAdd(Sql.DateParts.Minute, 5, t.TransactionDate)!.             Value.Minute,
+					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Minute, part1 + part2, t.TransactionDate))!.Value.Minute);
 		}
 
 		[Test]
@@ -812,10 +781,10 @@ namespace Tests.Linq
 			var part2 = 21;
 
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
-					from t in Transaction.GetDataForContext(context) select           Sql.DateAdd(Sql.DateParts.Second, 41, t.TransactionDate)!.            Value.Second,
-					from t in db.GetTable<Transaction>()             select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Second, part1 + part2, t.TransactionDate))!.Value.Second);
+					from t in Transaction.GetTestDataForContext(context) select           Sql.DateAdd(Sql.DateParts.Second, 41, t.TransactionDate)!.            Value.Second,
+					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Second, part1 + part2, t.TransactionDate))!.Value.Second);
 		}
 
 		[Test]
@@ -825,10 +794,10 @@ namespace Tests.Linq
 			var part2 = 4;
 
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
-					from t in Transaction.GetDataForContext(context) select           t.TransactionDate.AddYears(1)             .Date,
-					from t in db.GetTable<Transaction>()             select Sql.AsSql(t.TransactionDate.AddYears(part1 - part2)).Date);
+					from t in Transaction.GetTestDataForContext(context) select           t.TransactionDate.AddYears(1)             .Date,
+					from t in db.GetTable<Transaction>()                 select Sql.AsSql(t.TransactionDate.AddYears(part1 - part2)).Date);
 		}
 
 		[Test]
@@ -838,10 +807,10 @@ namespace Tests.Linq
 			var part2 = 4;
 
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
-					from t in Transaction.GetDataForContext(context) select           t.TransactionDate.AddMonths(-2)            .Date,
-					from t in db.GetTable<Transaction>()             select Sql.AsSql(t.TransactionDate.AddMonths(part1 - part2)).Date);
+					from t in Transaction.GetTestDataForContext(context) select           t.TransactionDate.AddMonths(-2)            .Date,
+					from t in db.GetTable<Transaction>()                 select Sql.AsSql(t.TransactionDate.AddMonths(part1 - part2)).Date);
 		}
 
 		[Test]
@@ -851,10 +820,10 @@ namespace Tests.Linq
 			var part2 = 3;
 
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
-					from t in Transaction.GetDataForContext(context) select           t.TransactionDate.AddDays(5)             .Date,
-					from t in db.GetTable<Transaction>()             select Sql.AsSql(t.TransactionDate.AddDays(part1 + part2)).Date);
+					from t in Transaction.GetTestDataForContext(context) select           t.TransactionDate.AddDays(5)             .Date,
+					from t in db.GetTable<Transaction>()                 select Sql.AsSql(t.TransactionDate.AddDays(part1 + part2)).Date);
 		}
 
 		[Test]
@@ -864,10 +833,10 @@ namespace Tests.Linq
 			var part2 = 11;
 
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
-					from t in Transaction.GetDataForContext(context) select           t.TransactionDate.AddHours(22)            .Hour,
-					from t in db.GetTable<Transaction>()             select Sql.AsSql(t.TransactionDate.AddHours(part1 + part2)).Hour);
+					from t in Transaction.GetTestDataForContext(context) select           t.TransactionDate.AddHours(22)            .Hour,
+					from t in db.GetTable<Transaction>()                 select Sql.AsSql(t.TransactionDate.AddHours(part1 + part2)).Hour);
 		}
 
 		[Test]
@@ -877,10 +846,10 @@ namespace Tests.Linq
 			var part2 = 9;
 
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
-					from t in Transaction.GetDataForContext(context) select           t.TransactionDate.AddMinutes(-8)            .Minute,
-					from t in db.GetTable<Transaction>()             select Sql.AsSql(t.TransactionDate.AddMinutes(part1 - part2)).Minute);
+					from t in Transaction.GetTestDataForContext(context) select           t.TransactionDate.AddMinutes(-8)            .Minute,
+					from t in db.GetTable<Transaction>()                 select Sql.AsSql(t.TransactionDate.AddMinutes(part1 - part2)).Minute);
 		}
 
 		[Test]
@@ -890,10 +859,10 @@ namespace Tests.Linq
 			var part2 = 40;
 
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
-					from t in Transaction.GetDataForContext(context) select           t.TransactionDate.AddSeconds(-35)           .Second,
-					from t in db.GetTable<Transaction>()             select Sql.AsSql(t.TransactionDate.AddSeconds(part1 - part2)).Second);
+					from t in Transaction.GetTestDataForContext(context) select           t.TransactionDate.AddSeconds(-35)           .Second,
+					from t in db.GetTable<Transaction>()                 select Sql.AsSql(t.TransactionDate.AddSeconds(part1 - part2)).Second);
 		}
 
 		[Test]
@@ -904,10 +873,10 @@ namespace Tests.Linq
 			var part2 = 76;
 
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
-					from t in Transaction.GetDataForContext(context) select           t.TransactionDate.AddMilliseconds(226)           .Millisecond,
-					from t in db.GetTable<Transaction>()             select Sql.AsSql(t.TransactionDate.AddMilliseconds(part1 + part2)).Millisecond);
+					from t in Transaction.GetTestDataForContext(context) select           t.TransactionDate.AddMilliseconds(226)           .Millisecond,
+					from t in db.GetTable<Transaction>()                 select Sql.AsSql(t.TransactionDate.AddMilliseconds(part1 + part2)).Millisecond);
 		}
 
 		#endregion
@@ -920,10 +889,10 @@ namespace Tests.Linq
 			string context)
 		{
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
-					from t in Transaction.GetDataForContext(context) select           (int)(t.TransactionDate.AddHours(96) - t.TransactionDate).TotalDays,
-					from t in db.GetTable<Transaction>()             select (int)Sql.AsSql((t.TransactionDate.AddHours(96) - t.TransactionDate).TotalDays));
+					from t in Transaction.GetTestDataForContext(context) select           (int)(t.TransactionDate.AddHours(96) - t.TransactionDate).TotalDays,
+					from t in db.GetTable<Transaction>()                 select (int)Sql.AsSql((t.TransactionDate.AddHours(96) - t.TransactionDate).TotalDays));
 		}
 
 		[Test]
@@ -932,10 +901,10 @@ namespace Tests.Linq
 			string context)
 		{
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
-					from t in Transaction.GetDataForContext(context) select           Sql.DateDiff(Sql.DateParts.Day, t.TransactionDate, t.TransactionDate.AddHours(96)),
-					from t in db.GetTable<Transaction>()             select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Day, t.TransactionDate, t.TransactionDate.AddHours(96))));
+					from t in Transaction.GetTestDataForContext(context) select           Sql.DateDiff(Sql.DateParts.Day, t.TransactionDate, t.TransactionDate.AddHours(96)),
+					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Day, t.TransactionDate, t.TransactionDate.AddHours(96))));
 		}
 
 		[Test]
@@ -944,10 +913,10 @@ namespace Tests.Linq
 			string context)
 		{
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
-					from t in Transaction.GetDataForContext(context) select           (int)(t.TransactionDate.AddHours(100) - t.TransactionDate).TotalHours,
-					from t in db.GetTable<Transaction>()             select (int)Sql.AsSql((t.TransactionDate.AddHours(100) - t.TransactionDate).TotalHours));
+					from t in Transaction.GetTestDataForContext(context) select           (int)(t.TransactionDate.AddHours(100) - t.TransactionDate).TotalHours,
+					from t in db.GetTable<Transaction>()                 select (int)Sql.AsSql((t.TransactionDate.AddHours(100) - t.TransactionDate).TotalHours));
 		}
 
 		[Test]
@@ -956,10 +925,10 @@ namespace Tests.Linq
 			string context)
 		{
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
-					from t in Transaction.GetDataForContext(context) select           Sql.DateDiff(Sql.DateParts.Hour, t.TransactionDate, t.TransactionDate.AddHours(100)),
-					from t in db.GetTable<Transaction>()             select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Hour, t.TransactionDate, t.TransactionDate.AddHours(100))));
+					from t in Transaction.GetTestDataForContext(context) select           Sql.DateDiff(Sql.DateParts.Hour, t.TransactionDate, t.TransactionDate.AddHours(100)),
+					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Hour, t.TransactionDate, t.TransactionDate.AddHours(100))));
 		}
 
 		[Test]
@@ -968,10 +937,10 @@ namespace Tests.Linq
 			string context)
 		{
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
-					from t in Transaction.GetDataForContext(context) select           (int)(t.TransactionDate.AddMinutes(100) - t.TransactionDate).TotalMinutes,
-					from t in db.GetTable<Transaction>()             select (int)Sql.AsSql((t.TransactionDate.AddMinutes(100) - t.TransactionDate).TotalMinutes));
+					from t in Transaction.GetTestDataForContext(context) select           (int)(t.TransactionDate.AddMinutes(100) - t.TransactionDate).TotalMinutes,
+					from t in db.GetTable<Transaction>()                 select (int)Sql.AsSql((t.TransactionDate.AddMinutes(100) - t.TransactionDate).TotalMinutes));
 		}
 
 		[Test]
@@ -980,10 +949,10 @@ namespace Tests.Linq
 			string context)
 		{
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
-					from t in Transaction.GetDataForContext(context) select           Sql.DateDiff(Sql.DateParts.Minute, t.TransactionDate, t.TransactionDate.AddMinutes(100)),
-					from t in db.GetTable<Transaction>()             select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Minute, t.TransactionDate, t.TransactionDate.AddMinutes(100))));
+					from t in Transaction.GetTestDataForContext(context) select           Sql.DateDiff(Sql.DateParts.Minute, t.TransactionDate, t.TransactionDate.AddMinutes(100)),
+					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Minute, t.TransactionDate, t.TransactionDate.AddMinutes(100))));
 		}
 
 		[Test]
@@ -992,10 +961,10 @@ namespace Tests.Linq
 			string context)
 		{
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
-					from t in Transaction.GetDataForContext(context) select           (int)(t.TransactionDate.AddMinutes(100) - t.TransactionDate).TotalSeconds,
-					from t in db.GetTable<Transaction>()             select (int)Sql.AsSql((t.TransactionDate.AddMinutes(100) - t.TransactionDate).TotalSeconds));
+					from t in Transaction.GetTestDataForContext(context) select           (int)(t.TransactionDate.AddMinutes(100) - t.TransactionDate).TotalSeconds,
+					from t in db.GetTable<Transaction>()                 select (int)Sql.AsSql((t.TransactionDate.AddMinutes(100) - t.TransactionDate).TotalSeconds));
 		}
 
 		[Test]
@@ -1004,10 +973,10 @@ namespace Tests.Linq
 			string context)
 		{
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
-					from t in Transaction.GetDataForContext(context) select           Sql.DateDiff(Sql.DateParts.Second, t.TransactionDate, t.TransactionDate.AddMinutes(100)),
-					from t in db.GetTable<Transaction>()             select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Second, t.TransactionDate, t.TransactionDate.AddMinutes(100))));
+					from t in Transaction.GetTestDataForContext(context) select           Sql.DateDiff(Sql.DateParts.Second, t.TransactionDate, t.TransactionDate.AddMinutes(100)),
+					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Second, t.TransactionDate, t.TransactionDate.AddMinutes(100))));
 		}
 
 		[Test]
@@ -1016,10 +985,10 @@ namespace Tests.Linq
 			string context)
 		{
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
-					from t in Transaction.GetDataForContext(context) select (int)          (t.TransactionDate.AddSeconds(1) - t.TransactionDate).TotalMilliseconds,
-					from t in db.GetTable<Transaction>()             select (int)Sql.AsSql((t.TransactionDate.AddSeconds(1) - t.TransactionDate).TotalMilliseconds));
+					from t in Transaction.GetTestDataForContext(context) select (int)          (t.TransactionDate.AddSeconds(1) - t.TransactionDate).TotalMilliseconds,
+					from t in db.GetTable<Transaction>()                 select (int)Sql.AsSql((t.TransactionDate.AddSeconds(1) - t.TransactionDate).TotalMilliseconds));
 		}
 
 		[Test]
@@ -1028,10 +997,10 @@ namespace Tests.Linq
 			string context)
 		{
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
-					from t in Transaction.GetDataForContext(context) select           Sql.DateDiff(Sql.DateParts.Millisecond, t.TransactionDate, t.TransactionDate.AddSeconds(1)),
-					from t in db.GetTable<Transaction>()             select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Millisecond, t.TransactionDate, t.TransactionDate.AddSeconds(1))));
+					from t in Transaction.GetTestDataForContext(context) select           Sql.DateDiff(Sql.DateParts.Millisecond, t.TransactionDate, t.TransactionDate.AddSeconds(1)),
+					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Millisecond, t.TransactionDate, t.TransactionDate.AddSeconds(1))));
 		}
 
 		#endregion
@@ -1041,10 +1010,10 @@ namespace Tests.Linq
 		public void Issue2508Test([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDataForContext(context)))
+			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
-					from t in Transaction.GetDataForContext(context) where           t.TransactionDate > DateTimeOffset.Now.AddMinutes(200)  select t.TransactionId,
-					from t in db.GetTable<Transaction>()             where Sql.AsSql(t.TransactionDate > DateTimeOffset.Now.AddMinutes(200)) select t.TransactionId);
+					from t in Transaction.GetTestDataForContext(context) where           t.TransactionDate > TestData.DateTimeOffset.AddMinutes(200).ToUniversalTime() select t.TransactionId,
+					from t in db.GetTable<Transaction>()                 where Sql.AsSql(t.TransactionDate > TestData.DateTimeOffset.AddMinutes(200))                  select t.TransactionId);
 		}
 		#endregion
 	}
