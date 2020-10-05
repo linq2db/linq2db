@@ -179,7 +179,6 @@ namespace Tests.xUpdate
 		[Test]
 		public void UpdateTestJoinSkip(
 			[IncludeDataSources(
-				ProviderName.SqlServer,
 				TestProvName.AllSqlServer2005Plus,
 				TestProvName.AllPostgreSQL)]
 			string context)

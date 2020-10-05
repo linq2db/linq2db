@@ -11,8 +11,11 @@ namespace LinqToDB.Metadata
 
 	public class FluentMetadataReader : IMetadataReader
 	{
-		readonly ConcurrentDictionary<Type,List<Attribute>>                       _types          = new ConcurrentDictionary<Type,List<Attribute>>();
-		readonly ConcurrentDictionary<Type,ConcurrentDictionary<MemberInfo,byte>> _dynamicColumns = new ConcurrentDictionary<Type,ConcurrentDictionary<MemberInfo,byte>>();
+		// don't forget to put lock on List<Attribute> when access it
+		readonly ConcurrentDictionary<Type,List<Attribute>>                            _types          = new ConcurrentDictionary<Type,List<Attribute>>();
+		// set used to guarantee uniqueness
+		// list used to guarantee same order for columns in select queries
+		readonly ConcurrentDictionary<Type,Tuple<ISet<MemberInfo>, IList<MemberInfo>>> _dynamicColumns = new ConcurrentDictionary<Type,Tuple<ISet<MemberInfo>, IList<MemberInfo>>>();
 
 		private static bool IsSystemOrNullType(Type? type)
 			=> type == null || type == typeof(object) || type == typeof(ValueType) || type == typeof(Enum);
@@ -21,7 +24,8 @@ namespace LinqToDB.Metadata
 			where T : Attribute
 		{
 			if (_types.TryGetValue(type, out var attrs))
-				return attrs.OfType<T>().ToArray();
+				lock (attrs)
+					return attrs.OfType<T>().ToArray();
 
 			if (!inherit)
 				return Array<T>.Empty;
@@ -42,7 +46,10 @@ namespace LinqToDB.Metadata
 
 		public void AddAttribute(Type type, Attribute attribute)
 		{
-			_types.GetOrAdd(type, t => new List<Attribute>()).Add(attribute);
+			var attrs = _types.GetOrAdd(type, t => new List<Attribute>());
+
+			lock (attrs)
+				attrs.Add(attribute);
 		}
 
 		readonly ConcurrentDictionary<MemberInfo,List<Attribute>> _members = new ConcurrentDictionary<MemberInfo,List<Attribute>>();
@@ -78,14 +85,26 @@ namespace LinqToDB.Metadata
 		public void AddAttribute(MemberInfo memberInfo, Attribute attribute)
 		{
 			if (memberInfo.IsDynamicColumnPropertyEx())
-				_dynamicColumns.GetOrAdd(memberInfo.DeclaringType!, new ConcurrentDictionary<MemberInfo, byte>()).TryAdd(memberInfo, 0);
+			{
+				var dynamicColumns = _dynamicColumns.GetOrAdd(memberInfo.DeclaringType!, new Tuple<ISet<MemberInfo>, IList<MemberInfo>>(new HashSet<MemberInfo>(), new List<MemberInfo>()));
+
+				lock (dynamicColumns)
+					if (dynamicColumns.Item1.Add(memberInfo))
+						dynamicColumns.Item2.Add(memberInfo);
+			}
 
 			_members.GetOrAdd(memberInfo, t => new List<Attribute>()).Add(attribute);
 		}
 
 		/// <inheritdoc cref="IMetadataReader.GetDynamicColumns"/>
 		public MemberInfo[] GetDynamicColumns(Type type)
-			=> _dynamicColumns.TryGetValue(type, out var dynamicColumns) ? dynamicColumns.Keys.ToArray() : new MemberInfo[0];
+		{
+			if (_dynamicColumns.TryGetValue(type, out var dynamicColumns))
+				lock (dynamicColumns)
+					return dynamicColumns.Item2.ToArray();
+			
+			return Array<MemberInfo>.Empty;
+		}
 
 		/// <summary>
 		/// Gets all types, registered by  by current fluent mapper.
@@ -95,6 +114,8 @@ namespace LinqToDB.Metadata
 		/// </returns>
 		public Type[] GetRegisteredTypes()
 		{
+			// CD.Keys is probably thread-safe for enumeration (but it is not documented behavior)
+			// https://stackoverflow.com/questions/10479867
 			return _types.Keys.ToArray();
 		}
 	}

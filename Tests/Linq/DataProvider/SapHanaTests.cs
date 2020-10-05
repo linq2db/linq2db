@@ -390,10 +390,10 @@ namespace Tests.DataProvider
 							floatDataType        = 7700 + n,
 							realDataType         = 7600 + n,
 
-							dateDataType       = DateTime.Now,
-							timeDataType       = DateTime.Now - DateTime.Today,
-							seconddateDataType = DateTime.Now,
-							timestampDataType  = DateTime.Now,
+							dateDataType       = TestData.DateTime,
+							timeDataType       = TestData.TimeOfDay,
+							seconddateDataType = TestData.DateTime,
+							timestampDataType  = TestData.DateTime,
 
 							charDataType      = 'A',
 							varcharDataType   = "AA",
@@ -431,10 +431,10 @@ namespace Tests.DataProvider
 							floatDataType        = 7700 + n,
 							realDataType         = 7600 + n,
 
-							dateDataType       = DateTime.Now,
-							timeDataType       = DateTime.Now - DateTime.Today,
-							seconddateDataType = DateTime.Now,
-							timestampDataType  = DateTime.Now,
+							dateDataType       = TestData.DateTime,
+							timeDataType       = TestData.TimeOfDay,
+							seconddateDataType = TestData.DateTime,
+							timestampDataType  = TestData.DateTime,
 
 							charDataType      = 'A',
 							varcharDataType   = "AA",
@@ -492,7 +492,7 @@ namespace Tests.DataProvider
 								MoneyValue    = 1000m + n,
 								DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
 								BoolValue     = true,
-								GuidValue     = Guid.NewGuid(),
+								GuidValue     = TestData.SequentialGuid(n),
 								SmallIntValue = (short)n
 							}
 						));
@@ -522,7 +522,7 @@ namespace Tests.DataProvider
 								MoneyValue    = 1000m + n,
 								DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
 								BoolValue     = true,
-								GuidValue     = Guid.NewGuid(),
+								GuidValue     = TestData.SequentialGuid(n),
 								SmallIntValue = (short)n
 							}
 						));
@@ -552,7 +552,7 @@ namespace Tests.DataProvider
 								MoneyValue    = 1000m + n,
 								DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
 								BoolValue     = true,
-								GuidValue     = Guid.NewGuid(),
+								GuidValue     = TestData.SequentialGuid(n),
 								SmallIntValue = (short)n
 							}
 						));
@@ -582,7 +582,7 @@ namespace Tests.DataProvider
 								MoneyValue = 1000m + n,
 								DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
 								BoolValue = true,
-								GuidValue = Guid.NewGuid(),
+								GuidValue = TestData.SequentialGuid(n),
 								SmallIntValue = (short)n
 							}
 						));
@@ -613,7 +613,7 @@ namespace Tests.DataProvider
 									MoneyValue    = 1000m + n,
 									DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
 									BoolValue     = true,
-									GuidValue     = Guid.NewGuid(),
+									GuidValue     = TestData.SequentialGuid(n),
 									SmallIntValue = (short)n
 								}
 							));
@@ -643,7 +643,7 @@ namespace Tests.DataProvider
 									MoneyValue    = 1000m + n,
 									DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
 									BoolValue     = true,
-									GuidValue     = Guid.NewGuid(),
+									GuidValue     = TestData.SequentialGuid(n),
 									SmallIntValue = (short)n
 								}
 							));

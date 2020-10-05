@@ -22,7 +22,7 @@ namespace Tests.UserTests
 	[Category(TestCategory.Explicit)]
 	public class Issue256Tests : TestBase
 	{
-		static readonly DateTime _date = DateTime.Now;
+		static readonly DateTime _date = TestData.DateTime;
 
 		[Table("LinqDataTypes")]
 		public class LinqDataTypesWithPK

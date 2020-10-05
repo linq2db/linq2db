@@ -57,7 +57,7 @@ namespace Tests
 		public static void Init()
 		{
 			// initialize miniprofiler or it will not wrap non-connection objects
-#if NET46
+#if NET472
 			MiniProfiler.Settings.ProfilerProvider = new SingletonProfilerProvider();
 			MiniProfiler.Start();
 #else

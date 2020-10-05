@@ -402,6 +402,9 @@ WHERE
 			if (IncludedSchemas.Count == 0)
 				sql += " AND PROCSCHEMA NOT IN ('SYSPROC', 'SYSIBMADM', 'SQLJ', 'SYSIBM')";
 
+			sql += @"
+ORDER BY PROCSCHEMA, PROCNAME";
+
 			return dataConnection
 				.Query(rd =>
 					{

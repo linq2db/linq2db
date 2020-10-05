@@ -34,7 +34,7 @@
 		</contentFiles>
 	</metadata>
 	<files>
-		<file src="..\Tests\Linq\bin\Azure\net46\Oracle.ManagedDataAccess.dll"     target="tools" />
+		<file src="..\Tests\Linq\bin\Azure\net472\Oracle.ManagedDataAccess.dll"    target="tools" />
 		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"               target="tools" />
 
 		<file src="_._"                                                            target="lib\net45" />

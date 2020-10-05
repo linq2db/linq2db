@@ -178,7 +178,7 @@ namespace Tests.Linq
 			}
 		}
 
-#if !NET46
+#if !NET472
 		[Test]
 		public async Task AsAsyncEnumerable1Test([DataSources] string context)
 		{

@@ -88,7 +88,9 @@ namespace Tests.SchemaProvider
 					case ProviderName.SqlServer2008 :
 					case ProviderName.SqlServer2012 :
 					case ProviderName.SqlServer2014 :
+					case TestProvName.SqlServer2016 :
 					case ProviderName.SqlServer2017 :
+					case TestProvName.SqlServer2019 :
 					case TestProvName.SqlAzure      :
 						{
 							var indexTable = dbSchema.Tables.Single(t => t.TableName == "IndexTable");
@@ -112,7 +114,9 @@ namespace Tests.SchemaProvider
 					case ProviderName.SqlServer2008 :
 					case ProviderName.SqlServer2012 :
 					case ProviderName.SqlServer2014 :
+					case TestProvName.SqlServer2016 :
 					case ProviderName.SqlServer2017 :
+					case TestProvName.SqlServer2019 :
 					case TestProvName.SqlAzure      :
 						{
 							var tbl = dbSchema.Tables.Single(at => at.TableName == "AllTypes");
@@ -268,6 +272,7 @@ namespace Tests.SchemaProvider
 		public void IncludeExcludeSchemaTest([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector)]
 			string context)
 		{
+			using (new DisableBaseline("TODO: exclude schema list is not stable, db2 schema provider needs refactoring", GetProviderName(context, out var _) == ProviderName.DB2))
 			using (var conn = new DataConnection(context))
 			{
 				var exclude = conn.DataProvider.GetSchemaProvider()

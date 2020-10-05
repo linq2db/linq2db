@@ -44,7 +44,7 @@ namespace Tests.Common
 			}
 		}
 
-#if !NET46
+#if !NET472
 		[Test]
 		public async Task BatchAsyncTest()
 		{

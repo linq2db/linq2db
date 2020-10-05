@@ -634,7 +634,7 @@ namespace Tests.Linq
 		{
 			var r = db.Types.Select(_ => ServerConvert<TTo, TFrom>(value)).First();
 
-			Console.WriteLine($"Expected {expected} result {r}");
+			TestContext.WriteLine($"Expected {expected} result {r}");
 
 			Assert.GreaterOrEqual(0.01m,
 				Math.Abs(LinqToDB.Common.Convert<TTo, decimal>.From(expected) - LinqToDB.Common.Convert<TTo, decimal>.From(r)));

@@ -7,11 +7,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 
-#if NET46
-using System.ServiceModel;
-using System.ServiceModel.Description;
-#endif
-
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
@@ -22,7 +17,9 @@ using LinqToDB.Reflection;
 using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
 
-#if NET46
+#if NET472
+using System.ServiceModel;
+using System.ServiceModel.Description;
 using LinqToDB.ServiceModel;
 #endif
 
@@ -30,16 +27,41 @@ using NUnit.Framework;
 
 namespace Tests
 {
-	using System.Diagnostics.CodeAnalysis;
 	using LinqToDB.DataProvider.Informix;
 	using Model;
 	using NUnit.Framework.Internal;
 	using Tools;
 
-	//	[Order(1000)]
 	public class TestBase
 	{
+		protected static class TestData
+		{
+			// offset 40 is not used by any timezone, so we can detect tz handling issues, which could be hidden when offset match current TZ
+			public static readonly DateTimeOffset DateTimeOffset          = new DateTimeOffset(2020, 2, 29, 17, 54, 55, 123, TimeSpan.FromMinutes(40)).AddTicks(1234);
+			public static readonly DateTimeOffset DateTimeOffsetUtc       = new DateTimeOffset(2020, 2, 29, 17, 9, 55, 123, TimeSpan.Zero).AddTicks(1234);
+			public static readonly DateTime DateTime                      = new DateTime(2020, 2, 29, 17, 54, 55, 123).AddTicks(1234);
+			public static readonly DateTime DateTimeUtc                   = new DateTime(2020, 2, 29, 17, 54, 55, 123, DateTimeKind.Utc).AddTicks(1234);
+			public static readonly DateTime Date                          = new DateTime(2020, 2, 29);
+			public static readonly TimeSpan TimeOfDay                     = new TimeSpan(0, 17, 54, 55, 123).Add(TimeSpan.FromTicks(1234));
+			public static readonly Guid     Guid1                         = new Guid("bc7b663d-0fde-4327-8f92-5d8cc3a11d11");
+			public static readonly Guid     Guid2                         = new Guid("a948600d-de21-4f74-8ac2-9516b287076e");
+			public static readonly Guid     Guid3                         = new Guid("bd3973a5-4323-4dd8-9f4f-df9f93e2a627");
+
+			public static byte[] Binary(int size)
+			{
+				var value = new byte[size];
+				for (var i = 0; i < value.Length; i++)
+					value[i] = (byte)(i % 256);
+
+				return value;
+			}
+
+			public static Guid SequentialGuid(int n)  => new Guid($"233bf399-9710-4e79-873d-2ec7bf1e{n:x4}");
+		}
+
 		private const int TRACES_LIMIT = 50000;
+		
+		private static string? _baselinesPath;
 
 		static TestBase()
 		{
@@ -53,32 +75,50 @@ namespace Tests
 			DataConnection.WriteTraceLine = (message, name, level) =>
 			{
 				var ctx   = CustomTestContext.Get();
-				var trace = ctx.Get<StringBuilder>(CustomTestContext.TRACE);
-				if (trace == null)
+
+				if (ctx.Get<bool>(CustomTestContext.BASELINE_DISABLED) != true)
 				{
-					trace = new StringBuilder();
-					ctx.Set(CustomTestContext.TRACE, trace);
+					if (message?.StartsWith("BeforeExecute") == true)
+					{
+						var baseline = ctx.Get<StringBuilder>(CustomTestContext.BASELINE);
+						if (baseline == null)
+						{
+							baseline = new StringBuilder();
+							ctx.Set(CustomTestContext.BASELINE, baseline);
+						}
+						baseline.AppendLine(message);
+					}
 				}
 
-				trace.AppendLine($"{name}: {message}");
-
-				if (traceCount < TRACES_LIMIT || level == TraceLevel.Error)
+				if (ctx.Get<bool>(CustomTestContext.TRACE_DISABLED) != true)
 				{
-					ctx.Set(CustomTestContext.LIMITED, true);
-					Console.WriteLine("{0}: {1}", name, message);
-					Debug.WriteLine(message, name);
-				}
+					var trace = ctx.Get<StringBuilder>(CustomTestContext.TRACE);
+					if (trace == null)
+					{
+						trace = new StringBuilder();
+						ctx.Set(CustomTestContext.TRACE, trace);
+					}
 
-				traceCount++;
+					trace.AppendLine($"{name}: {message}");
+
+					if (traceCount < TRACES_LIMIT || level == TraceLevel.Error)
+					{
+						ctx.Set(CustomTestContext.LIMITED, true);
+						Console.WriteLine("{0}: {1}", name, message);
+						Debug.WriteLine(message, name);
+					}
+
+					traceCount++;
+				}
 			};
 
 			//			Configuration.RetryPolicy.Factory = db => new Retry();
 
 			Configuration.Linq.TraceMapperExpression = false;
 			//			Configuration.Linq.GenerateExpressionTest  = true;
-			var assemblyPath = typeof(TestBase).Assembly.GetPath();
+			var assemblyPath = typeof(TestBase).Assembly.GetPath()!;
 
-#if NET46
+#if NET472
 			try
 			{
 				SqlServerTypes.Utilities.LoadNativeAssemblies(assemblyPath);
@@ -100,8 +140,8 @@ namespace Tests
 			var configName = "CORE21";
 #elif NETCOREAPP3_1
 			var configName = "CORE31";
-#elif NET46
-			var configName = "NET46";
+#elif NET472
+			var configName = "NET472";
 #else
 			var configName = "";
 #error Unknown framework
@@ -144,7 +184,7 @@ namespace Tests
 
 			Console.WriteLine("Connection strings:");
 
-#if !NET46
+#if !NET472
 			DataConnection.DefaultSettings            = TxtSettings.Instance;
 			TxtSettings.Instance.DefaultConfiguration = "SQLiteMs";
 
@@ -180,12 +220,12 @@ namespace Tests
 			if (!DefaultProvider.IsNullOrEmpty())
 			{
 				DataConnection.DefaultConfiguration = DefaultProvider;
-#if !NET46
+#if !NET472
 				TxtSettings.Instance.DefaultConfiguration = DefaultProvider;
 #endif
 			}
 
-#if NET46
+#if NET472
 			LinqService.TypeResolver = str =>
 			{
 				return str switch
@@ -196,6 +236,14 @@ namespace Tests
 				};
 			};
 #endif
+
+			// baselines
+			if (!string.IsNullOrWhiteSpace(testSettings.BaselinesPath))
+			{
+				var baselinesPath = Path.GetFullPath(testSettings.BaselinesPath);
+				if (Directory.Exists(baselinesPath))
+					_baselinesPath = baselinesPath;
+			}
 		}
 
 		protected static string? GetFilePath(string basePath, string findFileName)
@@ -220,7 +268,7 @@ namespace Tests
 			return fileName;
 		}
 
-#if NET46
+#if NET472
 		const  int          IP        = 22654;
 		static bool         _isHostOpen;
 		static LinqService? _service;
@@ -229,7 +277,7 @@ namespace Tests
 
 		static void OpenHost(MappingSchema? ms)
 		{
-#if NET46
+#if NET472
 			if (_isHostOpen)
 			{
 				_service!.MappingSchema = ms;
@@ -276,7 +324,7 @@ namespace Tests
 
 		public static readonly List<string> Providers = new List<string>
 		{
-#if NET46
+#if NET472
 			ProviderName.Sybase,
 			ProviderName.OracleNative,
 			TestProvName.Oracle11Native,
@@ -298,7 +346,9 @@ namespace Tests
 			ProviderName.SqlServer2008,
 			ProviderName.SqlServer2012,
 			ProviderName.SqlServer2014,
+			TestProvName.SqlServer2016,
 			ProviderName.SqlServer2017,
+			TestProvName.SqlServer2019,
 			ProviderName.SqlServer2000,
 			ProviderName.SqlServer2005,
 			TestProvName.SqlAzure,
@@ -321,7 +371,7 @@ namespace Tests
 		{
 			if (configuration.EndsWith(".LinqService"))
 			{
-#if NET46
+#if NET472
 				OpenHost(ms);
 
 				var str = configuration.Substring(0, configuration.Length - ".LinqService".Length);
@@ -501,13 +551,7 @@ namespace Tests
 		}
 
 		private   List<Parent4>? _parent4;
-		protected List<Parent4>   Parent4
-		{
-			get
-			{
-				return _parent4 ??= Parent.Select(p => new Parent4 { ParentID = p.ParentID, Value1 = ConvertTo<TypeValue>.From(p.Value1) }).ToList();
-			}
-		}
+		protected List<Parent4> Parent4 => _parent4 ??= Parent.Select(p => new Parent4 { ParentID = p.ParentID, Value1 = ConvertTo<TypeValue>.From(p.Value1) }).ToList();
 
 		private   List<Parent5>? _parent5;
 		protected List<Parent5>   Parent5
@@ -543,38 +587,22 @@ namespace Tests
 		}
 
 		private   List<ParentInheritanceValue>? _parentInheritanceValue;
-		protected List<ParentInheritanceValue>   ParentInheritanceValue
-		{
-			get
-			{
-				return _parentInheritanceValue ??=
+		protected List<ParentInheritanceValue> ParentInheritanceValue => _parentInheritanceValue ??=
 					ParentInheritance.Where(p => p is ParentInheritanceValue).Cast<ParentInheritanceValue>().ToList();
-			}
-		}
 
 		private   List<ParentInheritance1>? _parentInheritance1;
-		protected List<ParentInheritance1>  ParentInheritance1
-		{
-			get
-			{
-				return _parentInheritance1 ??=
-					ParentInheritance.Where(p => p is ParentInheritance1).Cast<ParentInheritance1>().ToList();
-			}
-		}
+		protected List<ParentInheritance1> ParentInheritance1 =>
+			_parentInheritance1 ??=
+				ParentInheritance.Where(p => p is ParentInheritance1).Cast<ParentInheritance1>().ToList();
 
 		private   List<ParentInheritanceBase4>? _parentInheritance4;
-		protected List<ParentInheritanceBase4>   ParentInheritance4
-		{
-			get
-			{
-				return _parentInheritance4 ??= Parent
+		protected List<ParentInheritanceBase4> ParentInheritance4 =>
+			_parentInheritance4 ??= Parent
 					.Where(p => p.Value1.HasValue && (new[] { 1, 2 }.Contains(p.Value1.Value)))
 					.Select(p => p.Value1 == 1 ?
 						(ParentInheritanceBase4)new ParentInheritance14 { ParentID = p.ParentID } :
 						(ParentInheritanceBase4)new ParentInheritance24 { ParentID = p.ParentID }
 				).ToList();
-			}
-		}
 
 		protected List<Child>?      _child;
 		protected IEnumerable<Child> Child
@@ -819,15 +847,9 @@ namespace Tests
 			}
 
 			private List<Northwind.ActiveProduct>? _activeProduct;
-			public List<Northwind.ActiveProduct>    ActiveProduct
-			{
-				get { return _activeProduct ??= Product.OfType<Northwind.ActiveProduct>().ToList(); }
-			}
+			public List<Northwind.ActiveProduct> ActiveProduct => _activeProduct ??= Product.OfType<Northwind.ActiveProduct>().ToList();
 
-			public IEnumerable<Northwind.DiscontinuedProduct> DiscontinuedProduct
-			{
-				get { return Product.OfType<Northwind.DiscontinuedProduct>(); }
-			}
+			public IEnumerable<Northwind.DiscontinuedProduct> DiscontinuedProduct => Product.OfType<Northwind.DiscontinuedProduct>();
 
 			private List<Northwind.Region>? _region;
 			public List<Northwind.Region>    Region
@@ -1107,8 +1129,10 @@ namespace Tests
 				case ProviderName.SqlServer2008:
 				case ProviderName.SqlServer2012:
 				case ProviderName.SqlServer2014:
+				case TestProvName.SqlServer2016:
 				case ProviderName.SqlServer2017:
-					{
+				case TestProvName.SqlServer2019:
+				{
 						if (!tableName.StartsWith("#"))
 							finalTableName = "#" + tableName;
 						break;
@@ -1129,25 +1153,30 @@ namespace Tests
 		[TearDown]
 		public virtual void OnAfterTest()
 		{
-			if (TestContext.CurrentContext.Result.FailCount > 0)
+			var ctx = CustomTestContext.Get();
+
+			if (_baselinesPath != null)
 			{
-				var ctx = CustomTestContext.Get();
-				var trace = ctx.Get<StringBuilder>(CustomTestContext.TRACE);
-				if (trace != null && ctx.Get<bool>(CustomTestContext.LIMITED))
-				{
-					// we need to set ErrorInfo.Message element text
-					// because Azure displays only ErrorInfo node data
-					TestExecutionContext.CurrentContext.CurrentResult.SetResult(
-						TestExecutionContext.CurrentContext.CurrentResult.ResultState,
-						TestExecutionContext.CurrentContext.CurrentResult.Message + "\r\n" + trace.ToString(),
-						TestExecutionContext.CurrentContext.CurrentResult.StackTrace);
-				}
+				var baseline = ctx.Get<StringBuilder>(CustomTestContext.BASELINE);
+				if (baseline != null)
+					BaselinesWriter.Write(_baselinesPath, baseline.ToString());
+			}
+
+			var trace = ctx.Get<StringBuilder>(CustomTestContext.TRACE);
+			if (trace != null && TestContext.CurrentContext.Result.FailCount > 0 && ctx.Get<bool>(CustomTestContext.LIMITED))
+			{
+				// we need to set ErrorInfo.Message element text
+				// because Azure displays only ErrorInfo node data
+				TestExecutionContext.CurrentContext.CurrentResult.SetResult(
+					TestExecutionContext.CurrentContext.CurrentResult.ResultState,
+					TestExecutionContext.CurrentContext.CurrentResult.Message + "\r\n" + trace.ToString(),
+					TestExecutionContext.CurrentContext.CurrentResult.StackTrace);
 			}
 
 			CustomTestContext.Release();
 		}
 
-		protected bool IsIDSProvider(string context)
+		protected static bool IsIDSProvider(string context)
 		{
 			if (!context.Contains("Informix"))
 				return false;
@@ -1336,17 +1365,37 @@ namespace Tests
 
 	public class DisableLogging : IDisposable
 	{
-		private TraceSwitch _traceSwitch;
+		private readonly CustomTestContext _ctx;
+		private readonly bool _oldState;
 
 		public DisableLogging()
 		{
-			_traceSwitch = DataConnection.TraceSwitch;
-			DataConnection.TurnTraceSwitchOn(TraceLevel.Off);
+			_ctx   = CustomTestContext.Get();
+			_oldState = _ctx.Get<bool>(CustomTestContext.TRACE_DISABLED);
+			_ctx.Set(CustomTestContext.TRACE_DISABLED, true);
 		}
 
 		public void Dispose()
 		{
-			DataConnection.TraceSwitch = _traceSwitch;
+			_ctx.Set(CustomTestContext.TRACE_DISABLED, _oldState);
+		}
+	}
+
+	public class DisableBaseline : IDisposable
+	{
+		private readonly CustomTestContext _ctx;
+		private readonly bool _oldState;
+
+		public DisableBaseline(string reason, bool disable = true)
+		{
+			_ctx = CustomTestContext.Get();
+			_oldState = _ctx.Get<bool>(CustomTestContext.BASELINE_DISABLED);
+			_ctx.Set(CustomTestContext.BASELINE_DISABLED, disable);
+		}
+
+		public void Dispose()
+		{
+			_ctx.Set(CustomTestContext.BASELINE_DISABLED, _oldState);
 		}
 	}
 
