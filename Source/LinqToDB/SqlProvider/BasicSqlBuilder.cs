@@ -2936,24 +2936,7 @@ namespace LinqToDB.SqlProvider
 				else
 					return null;
 
-			SequenceNameAttribute? defaultAttr = null;
-
-			foreach (var attr in attrs)
-			{
-				if (attr.Configuration == Name)
-					return attr;
-
-				if (defaultAttr == null && attr.Configuration == null)
-					defaultAttr = attr;
-			}
-
-			if (defaultAttr == null)
-				if (throwException)
-					throw new SqlException("Sequence name can not be retrieved for the '{0}' table.", table.Name);
-				else
-					return null;
-
-			return defaultAttr;
+			return attrs[0];
 		}
 
 		static bool Wrap(int precedence, int parentPrecedence)
