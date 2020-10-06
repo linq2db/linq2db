@@ -150,7 +150,7 @@ namespace LinqToDB.SqlQuery
 
 								if (targs != null && !ReferenceEquals(table.TableArguments, targs))
 								{
-									var newFields = table.Fields.Values.Select(f => new SqlField(f));
+									var newFields = table.Fields.Select(f => new SqlField(f));
 									newTable = new SqlTable(table, newFields, targs);
 								}
 							}
@@ -158,9 +158,10 @@ namespace LinqToDB.SqlQuery
 							if (!ReferenceEquals(table, newTable))
 							{
 								AddVisited(table.All, newTable.All);
-								foreach (var prevField in table.Fields.Values)
+								foreach (var prevField in table.Fields)
 								{
-									if (newTable.Fields.TryGetValue(prevField.Name, out var newField))
+									var newField = newTable[prevField.Name];
+									if (newField != null)
 										AddVisited(prevField, newField);
 								}
 							}
@@ -182,7 +183,7 @@ namespace LinqToDB.SqlQuery
 
 								if (ce)
 								{
-									var newFields = table.Fields.Values.Select(f => new SqlField(f));
+									var newFields = table.Fields.Select(f => new SqlField(f));
 									newTable = new SqlCteTable(table, newFields, cte!);
 								}
 							}
@@ -190,9 +191,10 @@ namespace LinqToDB.SqlQuery
 							if (!ReferenceEquals(table, newTable))
 							{
 								AddVisited(table.All, newTable.All);
-								foreach (var prevField in table.Fields.Values)
+								foreach (var prevField in table.Fields)
 								{
-									if (newTable.Fields.TryGetValue(prevField.Name, out var newField))
+									var newField = newTable[prevField.Name];
+									if (newField != null)
 										AddVisited(prevField, newField);
 								}
 							}
@@ -953,7 +955,7 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.SqlRawSqlTable:
 						{
 							var table   = (SqlRawSqlTable)element;
-							var fields1 = ToArray(table.Fields);
+							var fields1 = table.Fields.ToArray();
 							var fields2 = Convert(fields1, f => new SqlField(f));
 							var targs   = table.Parameters == null || table.Parameters.Length == 0 ?
 								null : Convert(table.Parameters);

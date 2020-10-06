@@ -114,7 +114,7 @@ namespace Tests.Linq
 						TableName_Database = Sql.TableName(t, Sql.TableQualification.DatabaseName),
 					};
 
-				Console.WriteLine(query.ToString());
+				TestContext.WriteLine(query.ToString());
 
 				var ast = query.GetSelectQuery();
 
@@ -179,7 +179,7 @@ namespace Tests.Linq
 						TableName_Database = Sql.TableExpr(t, Sql.TableQualification.DatabaseName),
 					};
 
-				Console.WriteLine(query.ToString());
+				TestContext.WriteLine(query.ToString());
 
 				var ast = query.GetSelectQuery();
 
@@ -241,7 +241,7 @@ namespace Tests.Linq
 
 				var query1Str = query1.ToString();
 
-				Console.WriteLine(query1Str);
+				TestContext.WriteLine(query1Str);
 
 				var query2 = from t in table
 					from ft in db.FromSql<FreeTextKey<int>>(
@@ -251,7 +251,7 @@ namespace Tests.Linq
 
 				var query2Str = query2.ToString();
 
-				Console.WriteLine(query2Str);
+				TestContext.WriteLine(query2Str);
 
 
 				var query3 = db.FromSql<FreeTextKey<int>>(
@@ -259,7 +259,7 @@ namespace Tests.Linq
 
 				var query3Str = query3.ToString();
 
-				Console.WriteLine(query3Str);
+				TestContext.WriteLine(query3Str);
 
 				StringAssert.Contains("FREETEXTTABLE([database].[schema].[table_name], [value],", query1Str);
 				StringAssert.Contains("FREETEXTTABLE([database].[schema].[table_name], [value],", query2Str);

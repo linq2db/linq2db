@@ -227,7 +227,7 @@ namespace LinqToDB.DataProvider.Sybase
 		public override int CommandCount(SqlStatement statement)
 		{
 			if (statement is SqlTruncateTableStatement trun)
-				return trun.ResetIdentity && trun.Table!.Fields.Values.Any(f => f.IsIdentity) ? 2 : 1;
+				return trun.ResetIdentity && trun.Table!.IdentityFields.Count > 0 ? 2 : 1;
 
 			return 1;
 		}

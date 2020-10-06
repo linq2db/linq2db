@@ -942,7 +942,7 @@ namespace LinqToDB.SqlQuery
 						correctedTables.Add(table, resultQuery);
 					}
 
-					var toMap = levelTables.SelectMany(t => t.Fields.Values);
+					var toMap = levelTables.SelectMany(t => t.Fields);
 
 					foreach (var field in toMap)
 						visitor.VisitedElements.Remove(field);

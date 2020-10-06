@@ -76,7 +76,7 @@ namespace Tests.UserTests
 				using (db.CreateLocalTable<TaskStage>())
 				using (db.CreateLocalTable<Assignment>())
 				{
-					var directionId = Guid.NewGuid();
+					var directionId = TestData.Guid1;
 					var taskId = db.GetTable<Task>().InsertWithInt32Identity(() => new Task
 					{
 						DirectionId = directionId,

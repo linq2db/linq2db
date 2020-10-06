@@ -30,7 +30,7 @@ namespace Tests.UserTests
 		{
 			using (var db = GetDataContext(context))
 			{
-				var date = DateTime.Today;
+				var date = TestData.Date;
 				var q = (from t1 in db.GetTable<LinqDataTypes>()
 					join t2 in db.GetTable<LinqDataTypes>() on t1.ID equals t2.ID
 					where t2.DateTimeValue == date
@@ -49,7 +49,7 @@ namespace Tests.UserTests
 		{
 			using (var db = GetDataContext(context))
 			{
-				var date = DateTime.Today;
+				var date = TestData.Date;
 				var q = (from t1 in db.GetTable<LinqDataTypes>()
 					where t1.DateTimeValue == date
 					select t1);

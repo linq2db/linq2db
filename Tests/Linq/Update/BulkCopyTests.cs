@@ -64,6 +64,7 @@ namespace Tests.xUpdate
 				Assert.Inconclusive("Oracle BulkCopy doesn't support identity triggers");
 
 			// don't use transactions as some providers will fallback to non-provider-specific implementation then
+			using (new DisableBaseline("Non-stable identity values"))
 			using (var db = new TestDataConnection(context))
 			{
 				var lastId = db.InsertWithInt32Identity(new TestTable2());
@@ -149,6 +150,7 @@ namespace Tests.xUpdate
 #endif
 		{
 			// don't use transactions as some providers will fallback to non-provider-specific implementation then
+			using (new DisableBaseline("Non-stable identity values"))
 			using (var db = new TestDataConnection(context))
 			{
 				var lastId = db.InsertWithInt32Identity(new TestTable1());

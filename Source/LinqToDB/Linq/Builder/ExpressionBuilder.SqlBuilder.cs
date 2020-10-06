@@ -814,6 +814,30 @@ namespace LinqToDB.Linq.Builder
 			return ConvertToSql(context, expression, false, columnDescriptor);
 		}
 
+		public ParameterAccessor? RegisterParameter(Expression expression) 
+		{
+			if (typeof(IToSqlConverter).IsSameOrParentOf(expression.Type))
+			{
+				//TODO: Check this
+				var sql = ConvertToSqlConvertible(expression);
+				if (sql != null)
+					return null;
+			}
+
+			if (!PreferServerSide(expression, false))
+			{
+				if (CanBeConstant(expression))
+					return null;
+
+				if (CanBeCompiled(expression))
+				{
+					return BuildParameter(expression, null);
+				}
+			}
+
+			return null;
+		}
+
 		public ISqlExpression ConvertToSql(IBuildContext? context, Expression expression, bool unwrap = false, ColumnDescriptor? columnDescriptor = null, bool isPureExpression = false)
 		{
 			if (typeof(IToSqlConverter).IsSameOrParentOf(expression.Type))
@@ -2719,7 +2743,7 @@ namespace LinqToDB.Linq.Builder
 			if (typeOperand == table.ObjectType && table.InheritanceMapping.All(m => m.Type != typeOperand))
 				return new SqlPredicate.Expr(new SqlValue(true));
 
-			return MakeIsPredicate(table, table.InheritanceMapping, typeOperand, name => table.SqlTable.Fields.Values.First(f => f.Name == name));
+			return MakeIsPredicate(table, table.InheritanceMapping, typeOperand, name => table.SqlTable[name] ?? throw new LinqException($"Field {name} not found in table {table.SqlTable}"));
 		}
 
 		internal ISqlPredicate MakeIsPredicate(
@@ -2817,7 +2841,7 @@ namespace LinqToDB.Linq.Builder
 
 			foreach (var m in mapping)
 			{
-				var field = table.SqlTable.Fields[table.InheritanceMapping[m.i].DiscriminatorName];
+				var field = table.SqlTable[table.InheritanceMapping[m.i].DiscriminatorName] ?? throw new LinqException($"Field {table.InheritanceMapping[m.i].DiscriminatorName} not found in table {table.SqlTable}");
 				var ttype = field.ColumnDescriptor.MemberAccessor.TypeAccessor.Type;
 				var obj   = expression.Expression;
 

@@ -98,7 +98,7 @@ namespace Tests.DataProvider
 									MoneyValue    = 1000m + n,
 									DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
 									BoolValue     = true,
-									GuidValue     = Guid.NewGuid(),
+									GuidValue     = TestData.SequentialGuid(n),
 									SmallIntValue = (short)n
 								}
 							));
@@ -129,7 +129,7 @@ namespace Tests.DataProvider
 									MoneyValue    = 1000m + n,
 									DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
 									BoolValue     = true,
-									GuidValue     = Guid.NewGuid(),
+									GuidValue     = TestData.SequentialGuid(n),
 									SmallIntValue = (short)n
 								}
 							));
@@ -241,7 +241,7 @@ namespace Tests.DataProvider
 								DateTimeValue  = new DateTime(2001, 1, 11, 1, 11, 21, 100),
 								DateTimeValue2 = new DateTime(2001, 1, 10, 1, 11, 21, 100),
 								BoolValue      = true,
-								GuidValue      = Guid.NewGuid(),
+								GuidValue      = TestData.SequentialGuid(n),
 								BinaryValue    = new byte[] { (byte)n },
 								SmallIntValue  = (short)n,
 								IntValue       = n,
@@ -278,7 +278,7 @@ namespace Tests.DataProvider
 								DateTimeValue  = new DateTime(2001, 1, 11, 1, 11, 21, 100),
 								DateTimeValue2 = new DateTime(2001, 1, 10, 1, 11, 21, 100),
 								BoolValue      = true,
-								GuidValue      = Guid.NewGuid(),
+								GuidValue      = TestData.SequentialGuid(n),
 								BinaryValue    = new byte[] { (byte)n },
 								SmallIntValue  = (short)n,
 								IntValue       = n,
@@ -315,7 +315,7 @@ namespace Tests.DataProvider
 								DateTimeValue  = new DateTime(2001, 1, 11, 1, 11, 21, 100),
 								DateTimeValue2 = new DateTime(2001, 1, 10, 1, 11, 21, 100),
 								BoolValue      = true,
-								GuidValue      = Guid.NewGuid(),
+								GuidValue      = TestData.SequentialGuid(n),
 								BinaryValue    = new byte[] { (byte)n },
 								SmallIntValue  = (short)n,
 								IntValue       = n,
@@ -352,7 +352,7 @@ namespace Tests.DataProvider
 								DateTimeValue  = new DateTime(2001, 1, 11, 1, 11, 21, 100),
 								DateTimeValue2 = new DateTime(2001, 1, 10, 1, 11, 21, 100),
 								BoolValue      = true,
-								GuidValue      = Guid.NewGuid(),
+								GuidValue      = TestData.SequentialGuid(n),
 								BinaryValue    = new byte[] { (byte)n },
 								SmallIntValue  = (short)n,
 								IntValue       = n,

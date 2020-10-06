@@ -9,6 +9,7 @@ namespace LinqToDB.SqlProvider
 {
 	using Common;
 	using Extensions;
+	using LinqToDB.Linq;
 	using SqlQuery;
 	using Tools;
 	using Mapping;
@@ -1592,9 +1593,7 @@ namespace LinqToDB.SqlProvider
 								statement.Walk(new WalkOptions(), e =>
 								{
 									if (e is SqlField field && field.Table == tableToUpdate)
-									{
-										return table.Fields[field.Name];
-									}
+										return table[field.Name] ?? throw new LinqException($"Field {field.Name} not found in table {table}");
 
 									return e;
 								});
@@ -1639,7 +1638,7 @@ namespace LinqToDB.SqlProvider
 								if (setField == null)
 									throw new LinqToDBException($"Unexpected element in setter expression: {item.Column}");
 
-								item.Column = tableToUpdate.Fields[setField.Name];
+								item.Column = tableToUpdate[setField.Name] ?? throw new LinqException($"Field {setField.Name} not found in table {tableToUpdate}");
 							}
 
 						}
@@ -1669,14 +1668,14 @@ namespace LinqToDB.SqlProvider
 					var newItem = ConvertVisitor.Convert(item, (v, e) =>
 					{
 						if (e is SqlField field && field.Table == tableToCompare)
-							return tableToUpdate.Fields[field.Name];
+							return tableToUpdate[field.Name] ?? throw new LinqException($"Field {field.Name} not found in table {tableToUpdate}");
 
 						return e;
 					});
 
 					var updateField = QueryHelper.GetUnderlyingField(newItem.Column);
 					if (updateField != null)
-						newItem.Column = tableToUpdate.Fields[updateField.Name];
+						newItem.Column = tableToUpdate[updateField.Name] ?? throw new LinqException($"Field {updateField.Name} not found in table {tableToUpdate}");
 
 					statement.Update.Items[i] = newItem;
 				}
@@ -1771,10 +1770,8 @@ namespace LinqToDB.SqlProvider
 				var tableToUpdateMapping = new Dictionary<ICloneableElement,ICloneableElement>(objectTree);
 				// remove mapping from updatable table
 				objectTree.Remove(tableToUpdate);
-				foreach (var field in tableToUpdate.Fields.Values)
-				{
+				foreach (var field in tableToUpdate.Fields)
 					objectTree.Remove(field);
-				} 
 
 				var tableToCompare = QueryHelper.EnumerateAccessibleSources(clonedQuery)
 					.Select(ts => ts as SqlTable)
@@ -1848,7 +1845,7 @@ namespace LinqToDB.SqlProvider
 						ex = innerQuery;
 					}
 
-					item.Column = tableToUpdate.Fields[QueryHelper.GetUnderlyingField(item.Column)!.Name];
+					item.Column     = tableToUpdate[QueryHelper.GetUnderlyingField(item.Column)!.Name] ?? throw new LinqException($"Field {QueryHelper.GetUnderlyingField(item.Column)!.Name} not found in table {tableToUpdate}");
 					item.Expression = ex;
 					newUpdateStatement.Update.Items.Add(item);
 				}
@@ -1907,7 +1904,7 @@ namespace LinqToDB.SqlProvider
 							{
 								if (exp is SqlField field && field.Table == updateTable)
 								{
-									return jt.Fields[field.Name];
+									return jt[field.Name] ?? throw new LinqException($"Field {field.Name} not found in table {jt}");
 								}
 								return exp;
 							});
@@ -1922,7 +1919,7 @@ namespace LinqToDB.SqlProvider
 					statement.Update = ConvertVisitor.Convert(statement.Update, (v, e) =>
 					{
 						if (e is SqlField field && field.Table == updateTable)
-							return newUpdateTable.Fields[field.Name];
+							return newUpdateTable[field.Name] ?? throw new LinqException($"Field {field.Name} not found in table {newUpdateTable}");
 
 						return e;
 					});

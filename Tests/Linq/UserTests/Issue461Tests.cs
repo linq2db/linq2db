@@ -32,8 +32,7 @@ namespace Tests.UserTests
 
 			public override bool Equals(object? obj)
 			{
-				var vh = obj as ValueHolder;
-				if (vh == null)
+				if (!(obj is ValueHolder vh))
 					return false;
 
 				if (ReferenceEquals(this, vh))
@@ -54,8 +53,7 @@ namespace Tests.UserTests
 
 			public override bool Equals(object? obj)
 			{
-				var vvh = obj as ValueValueHolder;
-				if (vvh == null)
+				if (!(obj is ValueValueHolder vvh))
 					return false;
 
 				if (ReferenceEquals(this, vvh))
@@ -91,7 +89,7 @@ namespace Tests.UserTests
 							  }).ToList();
 
 				if (db is DataConnection connection)
-					Console.WriteLine(connection.LastQuery);
+					TestContext.WriteLine(connection.LastQuery);
 
 				var expected = from sep in Parent
 							   select new
@@ -127,7 +125,7 @@ namespace Tests.UserTests
 							  }).ToList();
 
 				if (db is DataConnection connection)
-					Console.WriteLine(connection.LastQuery);
+					TestContext.WriteLine(connection.LastQuery);
 
 				var expected = from sep in Parent
 							   select new
@@ -163,7 +161,7 @@ namespace Tests.UserTests
 							  }).ToList();
 
 				if (db is DataConnection connection)
-					Console.WriteLine(connection.LastQuery);
+					TestContext.WriteLine(connection.LastQuery);
 
 				var expected = from sep in Parent
 							   select new ValueValueHolder
@@ -199,7 +197,7 @@ namespace Tests.UserTests
 							  }).ToList();
 
 				if (db is DataConnection connection)
-					Console.WriteLine(connection.LastQuery);
+					TestContext.WriteLine(connection.LastQuery);
 
 				var expected = from sep in Parent
 							   select new ValueValueHolder
@@ -226,9 +224,6 @@ namespace Tests.UserTests
 				var expected =    Parent.Select(p =>    Child.Select(c => c.ParentID + 1).FirstOrDefault());
 				var result   = db.Parent.Select(p => db.Child.Select(c => c.ParentID + 1).FirstOrDefault());
 
-				if (db is DataConnection connection)
-					Console.WriteLine(connection.LastQuery);
-
 				AreEqual(expected, result);
 			}
 		}
@@ -241,9 +236,6 @@ namespace Tests.UserTests
 			{
 				var expected =    Parent.Select(p => new { Id = p.ParentID, V =    Child.Select(c => c.ParentID + 1).FirstOrDefault() }).ToList().Select(_ => _.V);
 				var result   = db.Parent.Select(p => new { Id = p.ParentID, V = db.Child.Select(c => c.ParentID + 1).FirstOrDefault() }).ToList().Select(_ => _.V);
-
-				if (db is DataConnection connection)
-					Console.WriteLine(connection.LastQuery);
 
 				AreEqual(expected, result);
 			}

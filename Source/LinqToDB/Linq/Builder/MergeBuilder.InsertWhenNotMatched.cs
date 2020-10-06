@@ -44,7 +44,7 @@ namespace LinqToDB.Linq.Builder
 					var sqlTable   = (SqlTable)statement.Target.Source;
 					var param      = Expression.Parameter(sqlTable.ObjectType, "s");
 
-					foreach (var field in sqlTable.Fields.Values)
+					foreach (var field in sqlTable.Fields)
 					{
 						if (field.IsInsertable)
 						{

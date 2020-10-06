@@ -82,14 +82,14 @@ namespace Tests.UserTests
 				{
 					Name      = "NotVerified",
 					BoolValue = false,
-					GuidValue = Guid.NewGuid()
+					GuidValue = TestData.Guid1
 				};
 
 				var verified = new TypeConvertTable
 				{
 					Name      = "Verified",
 					BoolValue = true,
-					GuidValue = Guid.NewGuid()
+					GuidValue = TestData.Guid2
 				};
 
 				db.Insert(notVerified, tbl.TableName);

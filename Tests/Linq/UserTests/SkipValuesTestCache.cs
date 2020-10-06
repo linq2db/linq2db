@@ -1,10 +1,7 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
+using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
-
-using LinqToDB;
-using LinqToDB.Linq;
 
 namespace Tests.UserTests
 {
@@ -22,7 +19,7 @@ namespace Tests.UserTests
 		}
 		
 		[Test]
-		public void TestSkipInsertUpdate([DataSources] string context, [Values(1, 2, 1)] int value)
+		public void TestSkipInsertUpdate([DataSources] string context, [Values(1, 2)] int value)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -65,7 +62,7 @@ namespace Tests.UserTests
 		[Test]
 		public void TestSkipInsertOrReplace(
 			[DataSources(TestProvName.AllOracleNative)] string context,
-			[Values(1, 2, 1)] int value)
+			[Values(1, 2)] int value)
 		{
 			using (var db = GetDataContext(context))
 			{

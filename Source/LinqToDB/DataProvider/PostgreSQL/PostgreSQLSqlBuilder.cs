@@ -312,7 +312,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			StringBuilder.Append("TRUNCATE TABLE ");
 			BuildPhysicalTable(table!, null);
 
-			if (truncateTable.Table!.Fields.Values.Any(f => f.IsIdentity))
+			if (truncateTable.Table!.IdentityFields.Count > 0)
 			{
 				if (truncateTable.ResetIdentity)
 					StringBuilder.Append(" RESTART IDENTITY");
