@@ -1596,11 +1596,12 @@ namespace LinqToDB.Data
 		/// </summary>
 		public  List<string>  NextQueryHints => _nextQueryHints ??= new List<string>();
 		
-		private static readonly MemoryCache _combinedSchemas = new MemoryCache(new MemoryCacheOptions(){});
+		private static readonly MemoryCache _combinedSchemas = new MemoryCache(new MemoryCacheOptions());
 
 		/// <summary>
 		/// Adds additional mapping schema to current connection.
 		/// </summary>
+		/// <remarks><see cref="DataConnection"/> will share <see cref="LinqToDB.Mapping.MappingSchema"/> instances that were created by combining same mapping schemas.</remarks>
 		/// <param name="mappingSchema">Mapping schema.</param>
 		/// <returns>Current connection object.</returns>
 		public DataConnection AddMappingSchema(MappingSchema mappingSchema)
