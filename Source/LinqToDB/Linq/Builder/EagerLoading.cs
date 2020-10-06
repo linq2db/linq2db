@@ -1433,21 +1433,30 @@ namespace LinqToDB.Linq.Builder
 
 			correctedExpression = expr.Transform(e =>
 			{
-				if (knownParameters.TryGetValue(e, out var accessor))
+				if (e.NodeType == ExpressionType.MemberAccess)
 				{
-					if (!indexes.TryGetValue(accessor, out var accessExpression))
+					if (!knownParameters.TryGetValue(e, out var registered))
 					{
-						var idx = containerLocal.RegisterAccessor(accessor);
-
-						accessExpression = Expression.Call(Expression.Constant(containerLocal),
-							ParameterContainer.GetValueMethodInfo.MakeGenericMethod(e.Type), Expression.Constant(idx));
-
-						indexes.Add(accessor, accessExpression);
+						// registering missed parameters
+						registered = builder.RegisterParameter(e);
 					}
 
-					return accessExpression;
-				}
+					if (registered != null)
+					{
+						if (!indexes.TryGetValue(registered, out var accessExpression))
+						{
+							var idx = containerLocal.RegisterAccessor(registered);
 
+							accessExpression = Expression.Call(Expression.Constant(containerLocal),
+								ParameterContainer.GetValueMethodInfo.MakeGenericMethod(e.Type),
+								Expression.Constant(idx));
+
+							indexes.Add(registered, accessExpression);
+						}
+
+						return accessExpression;
+					}
+				}
 				return e;
 			});
 		}

@@ -814,6 +814,30 @@ namespace LinqToDB.Linq.Builder
 			return ConvertToSql(context, expression, false, columnDescriptor);
 		}
 
+		public ParameterAccessor? RegisterParameter(Expression expression) 
+		{
+			if (typeof(IToSqlConverter).IsSameOrParentOf(expression.Type))
+			{
+				//TODO: Check this
+				var sql = ConvertToSqlConvertible(expression);
+				if (sql != null)
+					return null;
+			}
+
+			if (!PreferServerSide(expression, false))
+			{
+				if (CanBeConstant(expression))
+					return null;
+
+				if (CanBeCompiled(expression))
+				{
+					return BuildParameter(expression, null);
+				}
+			}
+
+			return null;
+		}
+
 		public ISqlExpression ConvertToSql(IBuildContext? context, Expression expression, bool unwrap = false, ColumnDescriptor? columnDescriptor = null, bool isPureExpression = false)
 		{
 			if (typeof(IToSqlConverter).IsSameOrParentOf(expression.Type))

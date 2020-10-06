@@ -418,7 +418,7 @@ jobs:
   - test_ubuntu_16_netcoreapp21_job
   - test_macos_netcoreapp21_job
   - test_macos_netcoreapp31_job
-  condition: and(${{ parameters.enabled }}, ${{ parameters.with_baselines }})
+  condition: and(always(), ${{ parameters.enabled }}, ${{ parameters.with_baselines }})
   variables:
     baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
     baselines_head: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_head'] ]

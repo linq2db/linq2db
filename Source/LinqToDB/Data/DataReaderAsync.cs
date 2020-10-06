@@ -28,7 +28,7 @@ namespace LinqToDB.Data
 					CommandInfo.DataConnection.OnTraceConnection(new TraceInfo(CommandInfo.DataConnection, TraceInfoStep.Completed)
 					{
 						TraceLevel      = TraceLevel.Info,
-						Command         = CommandInfo.DataConnection.Command,
+						Command         = CommandInfo.DataConnection.GetCurrentCommand(),
 						StartTime       = StartedOn,
 						ExecutionTime   = Stopwatch.Elapsed,
 						RecordsAffected = ReadNumber,
