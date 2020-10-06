@@ -1302,16 +1302,17 @@ namespace LinqToDB.Linq.Builder
 
 			var dbType = columnDescriptor?.GetDbDataType(true) ?? new DbDataType(expr.Type);
 
+			var value = expr.EvaluateExpression();
+
 			if (columnDescriptor != null)
 			{
 				expr = columnDescriptor.ApplyConversions(expr, dbType, true);
 			}
 			else
 			{
-				expr = ColumnDescriptor.ApplyConversions(MappingSchema, expr, dbType, null, true);
+				if (!MappingSchema.ValueToSqlConverter.CanConvert(dbType.SystemType))
+					expr = ColumnDescriptor.ApplyConversions(MappingSchema, expr, dbType, null, true);
 			}
-
-			var value = expr.EvaluateExpression();
 
 			if (value != null && MappingSchema.ValueToSqlConverter.CanConvert(dbType.SystemType))
 				sqlValue = new SqlValue(dbType, value);

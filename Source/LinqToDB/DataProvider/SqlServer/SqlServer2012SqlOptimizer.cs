@@ -34,12 +34,16 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// </summary>
 		protected SqlStatement AddOrderByForSkip(SqlStatement statement)
 		{
-			throw new NotImplementedException("Bad visitor usage.");
-
 			statement = ConvertVisitor.Convert(statement, (visitor, element) => 
 			{
-				if (element is SelectQuery query && query.Select.SkipValue != null && query.OrderBy.IsEmpty)
-					query.OrderBy.ExprAsc(new SqlValue(typeof(int), 1));
+				if (element.ElementType == QueryElementType.OrderByClause)
+				{
+					var orderByClause = (SqlOrderByClause)element;
+					if (orderByClause.OrderBy.IsEmpty && orderByClause.SelectQuery.Select.SkipValue != null)
+					{
+						return new SqlOrderByClause(new[] { new SqlOrderByItem(new SqlValue(typeof(int), 1), false) });
+					}
+				}	
 				return element;
 			});
 			return statement;

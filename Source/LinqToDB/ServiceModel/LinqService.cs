@@ -3,18 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.ServiceModel;
 using System.Web.Services;
+using System.Threading.Tasks;
+using System.Data;
+using System.Linq.Expressions;
 
 namespace LinqToDB.ServiceModel
 {
+	using Common;
 	using Data;
 	using Linq;
 	using SqlQuery;
+	using LinqToDB.Extensions;
 	using LinqToDB.Expressions;
 	using LinqToDB.Mapping;
-	using System.Threading.Tasks;
-	using System.Data;
-	using System.Linq.Expressions;
-	using Common;
 
 	[ServiceBehavior  (InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]
 	[WebService       (Namespace  = "http://tempuri.org/")]
@@ -220,7 +221,7 @@ namespace LinqToDB.ServiceModel
 								fieldType = fieldType.GetGenericArguments()[0];
 
 
-							if (fieldType.IsEnum)
+							if (fieldType.IsEnum || fieldType.IsNullable() && fieldType.ToNullableUnderlying().IsEnum)
 							{
 								var stringConverter = db.MappingSchema.GetConverter(new DbDataType(typeof(string)), new DbDataType(fieldType), false);
 								if (stringConverter != null)
