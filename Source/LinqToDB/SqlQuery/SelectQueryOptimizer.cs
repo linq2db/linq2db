@@ -63,12 +63,12 @@ namespace LinqToDB.SqlQuery
 
 		void ResolveFields()
 		{
-			var root = GetQueryData(_rootElement, _selectQuery);
+			var root = GetQueryData(_rootElement, _selectQuery, new HashSet<IQueryElement>());
 
 			ResolveFields(root);
 		}
 
-		static QueryData GetQueryData(IQueryElement? root, SelectQuery selectQuery)
+		static QueryData GetQueryData(IQueryElement? root, SelectQuery selectQuery, HashSet<IQueryElement> visitedHash)
 		{
 			var data = new QueryData { Query = selectQuery };
 
@@ -90,7 +90,7 @@ namespace LinqToDB.SqlQuery
 						{
 							if (e != selectQuery)
 							{
-								data.Queries.Add(GetQueryData(null, (SelectQuery)e));
+								data.Queries.Add(GetQueryData(null, (SelectQuery)e, visitedHash));
 								return false;
 							}
 
@@ -105,6 +105,20 @@ namespace LinqToDB.SqlQuery
 
 					case QueryElementType.SqlCteTable :
 						return false;
+
+					case QueryElementType.CteClause :
+					{
+						var query = ((CteClause)e).Body;
+						if (query != selectQuery && query != null && visitedHash.Add(e))
+						{
+							data.Queries.Add(GetQueryData(null, query, visitedHash));
+							return false;
+						}
+
+						break;
+					}
+
+
 				}
 
 				return true;

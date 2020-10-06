@@ -20,6 +20,12 @@ namespace LinqToDB.SqlQuery
 
 		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
+			if (With?.Clauses.Count > 0)
+			{
+				With?.ToString(sb, dic);
+				sb.AppendLine("--------------------------");
+			}
+
 			return SelectQuery.ToString(sb, dic);
 		}
 

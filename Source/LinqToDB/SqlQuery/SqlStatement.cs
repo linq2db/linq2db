@@ -300,5 +300,6 @@ namespace LinqToDB.SqlQuery
 		{
 			return false;
 		}
+
 	}
 }

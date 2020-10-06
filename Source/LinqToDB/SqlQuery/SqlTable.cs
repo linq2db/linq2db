@@ -331,7 +331,7 @@ namespace LinqToDB.SqlQuery
 
 		public virtual QueryElementType ElementType { [DebuggerStepThrough] get; } = QueryElementType.SqlTable;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		public virtual StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{
 			if (Server   != null) sb.Append($"[{Server}].");
 			if (Database != null) sb.Append($"[{Database}].");
