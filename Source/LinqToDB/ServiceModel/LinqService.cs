@@ -1,19 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
+using System.Linq.Expressions;
 using System.ServiceModel;
+using System.Threading.Tasks;
 using System.Web.Services;
 
 namespace LinqToDB.ServiceModel
 {
 	using Data;
+	using Expressions;
 	using Linq;
+	using Mapping;
 	using SqlQuery;
-	using LinqToDB.Expressions;
-	using LinqToDB.Mapping;
-	using System.Threading.Tasks;
-	using System.Data;
-	using System.Linq.Expressions;
 
 	[ServiceBehavior  (InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]
 	[WebService       (Namespace  = "http://tempuri.org/")]

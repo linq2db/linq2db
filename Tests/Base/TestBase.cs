@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
+using System.Threading;
 
 #if NET472
 using System.ServiceModel;
@@ -27,6 +28,7 @@ using LinqToDB.ServiceModel;
 #endif
 
 using NUnit.Framework;
+using NUnit.Framework.Interfaces;
 
 namespace Tests
 {
@@ -49,7 +51,7 @@ namespace Tests
 
 			var traceCount = 0;
 
-			DataConnection.TurnTraceSwitchOn(TraceLevel.Info);
+			DataConnection.TurnTraceSwitchOn();
 			DataConnection.WriteTraceLine = (message, name, level) =>
 			{
 				var ctx   = CustomTestContext.Get();
@@ -72,10 +74,10 @@ namespace Tests
 				traceCount++;
 			};
 
-			//			Configuration.RetryPolicy.Factory = db => new Retry();
+			// Configuration.RetryPolicy.Factory = db => new Retry();
 
 			Configuration.Linq.TraceMapperExpression = false;
-			//			Configuration.Linq.GenerateExpressionTest  = true;
+			// Configuration.Linq.GenerateExpressionTest  = true;
 			var assemblyPath = typeof(TestBase).Assembly.GetPath();
 
 #if NET472
@@ -84,13 +86,20 @@ namespace Tests
 				SqlServerTypes.Utilities.LoadNativeAssemblies(assemblyPath);
 			}
 			catch // this can fail during tests discovering with NUnitTestAdapter
-			{ }
+			{
+				// ignore
+			}
 #endif
 
 			Environment.CurrentDirectory = assemblyPath;
 
+			TestExternals.Log($"CurrentDirectory          : {Environment.CurrentDirectory}");
+
 			var dataProvidersJsonFile     = GetFilePath(assemblyPath, @"DataProviders.json");
 			var userDataProvidersJsonFile = GetFilePath(assemblyPath, @"UserDataProviders.json");
+
+			TestExternals.Log($"dataProvidersJsonFile     : {dataProvidersJsonFile}");
+			TestExternals.Log($"userDataProvidersJsonFile : {userDataProvidersJsonFile}");
 
 			var dataProvidersJson     = File.ReadAllText(dataProvidersJsonFile);
 			var userDataProvidersJson =
@@ -112,20 +121,8 @@ namespace Tests
 			configName += ".Azure";
 #endif
 			var testSettings = SettingsReader.Deserialize(configName, dataProvidersJson, userDataProvidersJson);
-			var databasePath = Path.GetFullPath(Path.Combine("Database"));
-			var dataPath     = Path.Combine(databasePath, "Data");
 
-			if (Directory.Exists(dataPath))
-				Directory.Delete(dataPath, true);
-
-			Directory.CreateDirectory(dataPath);
-
-			foreach (var file in Directory.GetFiles(databasePath, "*.*"))
-			{
-				var destination = Path.Combine(dataPath, Path.GetFileName(file));
-				Console.WriteLine("{0} => {1}", file, destination);
-				File.Copy(file, destination, true);
-			}
+			CopyDatabases();
 
 			UserProviders  = new HashSet<string>(testSettings.Providers ?? Array<string>.Empty, StringComparer.OrdinalIgnoreCase);
 			SkipCategories = new HashSet<string>(testSettings.Skip ?? Array<string>.Empty, StringComparer.OrdinalIgnoreCase);
@@ -143,6 +140,7 @@ namespace Tests
 			DataConnection.TurnTraceSwitchOn(traceLevel);
 
 			Console.WriteLine("Connection strings:");
+			TestExternals.Log("Connection strings:");
 
 #if !NET472
 			DataConnection.DefaultSettings            = TxtSettings.Instance;
@@ -161,7 +159,10 @@ namespace Tests
 #else
 			foreach (var provider in testSettings.Connections)
 			{
-				Console.WriteLine($"\tName=\"{provider.Key}\", Provider=\"{provider.Value.Provider}\", ConnectionString=\"{provider.Value.ConnectionString}\"");
+				var str = $"\tName=\"{provider.Key}\", Provider=\"{provider.Value.Provider}\", ConnectionString=\"{provider.Value.ConnectionString}\"";
+
+				Console.WriteLine(str);
+				TestExternals.Log(str);
 
 				DataConnection.AddOrSetConfiguration(
 					provider.Key,
@@ -171,9 +172,13 @@ namespace Tests
 #endif
 
 			Console.WriteLine("Providers:");
+			TestExternals.Log("Providers:");
 
 			foreach (var userProvider in UserProviders)
+			{
 				Console.WriteLine($"\t{userProvider}");
+				TestExternals.Log($"\t{userProvider}");
+			}
 
 			DefaultProvider = testSettings.DefaultConfiguration;
 
@@ -196,6 +201,61 @@ namespace Tests
 				};
 			};
 #endif
+		}
+
+		static void CopyDatabases()
+		{
+			var databasePath = Path.GetFullPath("Database");
+			var dataPath     = Path.Combine(databasePath, "Data");
+
+			TestExternals.Log($"Copy databases {databasePath} => {dataPath}");
+
+			if (TestExternals.IsParallelRun && TestExternals.Configuration != null)
+			{
+				try
+				{
+					foreach (var file in Directory.GetFiles(databasePath, "*.*"))
+					{
+						var fileName = Path.GetFileName(file);
+
+						switch (TestExternals.Configuration, fileName)
+						{
+							case ("Access.Data",         "TestData.mdb")       :
+							case ("SqlCe.Data",          "TestData.sdf")       :
+							case ("SQLite.Classic.Data", "TestData.sqlite")    :
+							case ("SQLite.MS.Data",      "TestData.MS.sqlite") :
+							{
+								var destination = Path.Combine(dataPath, Path.GetFileName(file));
+
+								TestExternals.Log($"{file} => {destination}");
+								File.Copy(file, destination, true);
+
+								break;
+							}
+						}
+					}
+				}
+				catch (Exception e)
+				{
+					TestExternals.Log(e.ToString());
+					Console.WriteLine(e);
+					throw;
+				}
+			}
+			else
+			{
+				if (Directory.Exists(dataPath))
+					Directory.Delete(dataPath, true);
+
+				Directory.CreateDirectory(dataPath);
+
+				foreach (var file in Directory.GetFiles(databasePath, "*.*"))
+				{
+					var destination = Path.Combine(dataPath, Path.GetFileName(file));
+					Console.WriteLine("{0} => {1}", file, destination);
+					File.Copy(file, destination, true);
+				}
+			}
 		}
 
 		protected static string? GetFilePath(string basePath, string findFileName)
@@ -237,6 +297,7 @@ namespace Tests
 			}
 
 			ServiceHost host;
+
 			lock (_syncRoot)
 			{
 				if (_isHostOpen)
@@ -245,7 +306,7 @@ namespace Tests
 					return;
 				}
 
-				host        = new ServiceHost(_service = new LinqService(ms) { AllowUpdates = true }, new Uri("net.tcp://localhost:" + IP));
+				host        = new ServiceHost(_service = new LinqService(ms) { AllowUpdates = true }, new Uri("net.tcp://localhost:" + (IP + TestExternals.RunID)));
 				_isHostOpen = true;
 			}
 
@@ -267,11 +328,13 @@ namespace Tests
 				"LinqOverWCF");
 
 			host.Open();
+
+			TestExternals.Log($"host opened, Address : {host.BaseAddresses[0]}");
 #endif
 		}
 
 		public static readonly HashSet<string> UserProviders;
-		public static readonly string? DefaultProvider;
+		public static readonly string?         DefaultProvider;
 		public static readonly HashSet<string> SkipCategories;
 
 		public static readonly List<string> Providers = new List<string>
@@ -325,7 +388,7 @@ namespace Tests
 				OpenHost(ms);
 
 				var str = configuration.Substring(0, configuration.Length - ".LinqService".Length);
-				var dx  = new TestServiceModelDataContext(IP) { Configuration = str };
+				var dx  = new TestServiceModelDataContext(IP + TestExternals.RunID) { Configuration = str };
 
 				Debug.WriteLine(((IDataContext)dx).ContextID, "Provider ");
 
@@ -1410,6 +1473,28 @@ namespace Tests
 		{
 			Configuration.Linq.CompareNullsAsValues = true;
 			Query.ClearCaches();
+		}
+	}
+
+	public static class TestExternals
+	{
+		public static string? LogFilePath;
+		public static bool    IsParallelRun;
+		public static int     RunID;
+		public static string? Configuration;
+
+		static StreamWriter? _logWriter;
+
+		public static void Log(string text)
+		{
+			if (LogFilePath != null)
+			{
+				if (_logWriter == null)
+					_logWriter = File.CreateText(LogFilePath);
+
+				_logWriter.WriteLine(text);
+				_logWriter.Flush();
+			}
 		}
 	}
 }

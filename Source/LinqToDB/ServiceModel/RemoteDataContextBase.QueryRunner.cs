@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace LinqToDB.ServiceModel
 {
 	using Linq;
-	using LinqToDB.Common.Internal;
+	using Common.Internal;
 	using SqlProvider;
 
 	public abstract partial class RemoteDataContextBase
