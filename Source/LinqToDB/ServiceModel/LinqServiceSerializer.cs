@@ -1155,7 +1155,6 @@ namespace LinqToDB.ServiceModel
 							var elem = (SqlSelectStatement)e;
 							Append(elem.With);
 							Append(elem.SelectQuery);
-							Append(elem.Parameters);
 
 							break;
 						}
@@ -1167,7 +1166,6 @@ namespace LinqToDB.ServiceModel
 							Append(elem.Insert);
 							Append(elem.SelectQuery);
 							Append(elem.Output);
-							Append(elem.Parameters);
 
 							break;
 						}
@@ -1179,7 +1177,6 @@ namespace LinqToDB.ServiceModel
 							Append(elem.Insert);
 							Append(elem.Update);
 							Append(elem.SelectQuery);
-							Append(elem.Parameters);
 
 							break;
 						}
@@ -1190,7 +1187,6 @@ namespace LinqToDB.ServiceModel
 							Append(elem.With);
 							Append(elem.Update);
 							Append(elem.SelectQuery);
-							Append(elem.Parameters);
 
 							break;
 						}
@@ -1204,7 +1200,6 @@ namespace LinqToDB.ServiceModel
 							Append(elem.Output);
 							Append(elem.Top);
 							Append(elem.SelectQuery);
-							Append(elem.Parameters);
 
 							break;
 						}
@@ -1224,7 +1219,6 @@ namespace LinqToDB.ServiceModel
 							var elem = (SqlCreateTableStatement)e;
 
 							Append(elem.Table);
-							Append(elem.Parameters);
 							Append(elem.StatementHeader);
 							Append(elem.StatementFooter);
 							Append((int)elem.DefaultNullable);
@@ -1237,7 +1231,6 @@ namespace LinqToDB.ServiceModel
 						var elem = (SqlDropTableStatement)e;
 
 						Append(elem.Table);
-						Append(elem.Parameters);
 						Append(elem.IfExists);
 
 						break;
@@ -1249,7 +1242,6 @@ namespace LinqToDB.ServiceModel
 
 						Append(elem.Table);
 						Append(elem.ResetIdentity);
-						Append(elem.Parameters);
 
 						break;
 					}
@@ -1319,7 +1311,6 @@ namespace LinqToDB.ServiceModel
 							Append(elem.Source);
 							Append(elem.On);
 							Append(elem.Operations);
-							Append(elem.Parameters);
 
 							break;
 						}
@@ -1934,10 +1925,8 @@ namespace LinqToDB.ServiceModel
 						{
 							var with        = Read<SqlWithClause>();
 							var selectQuery = Read<SelectQuery>()!;
-							var parameters  = ReadArray<SqlParameter>();
 
 							obj = _statement = new SqlSelectStatement(selectQuery);
-							_statement.Parameters.AddRange(parameters);
 							((SqlSelectStatement)_statement).With = with;
 
 							break;
@@ -1949,10 +1938,8 @@ namespace LinqToDB.ServiceModel
 							var insert      = Read<SqlInsertClause>()!;
 							var selectQuery = Read<SelectQuery>()!;
 							var output      = Read<SqlOutputClause>();
-							var parameters  = ReadArray<SqlParameter>();
 
 							obj = _statement = new SqlInsertStatement(selectQuery) {Insert = insert, Output = output };
-							_statement.Parameters.AddRange(parameters);
 							((SqlInsertStatement)_statement).With = with;
 
 							break;
@@ -1963,10 +1950,8 @@ namespace LinqToDB.ServiceModel
 							var with        = Read<SqlWithClause>();
 							var update      = Read<SqlUpdateClause>()!;
 							var selectQuery = Read<SelectQuery>()!;
-							var parameters  = ReadArray<SqlParameter>();
 
 							obj = _statement = new SqlUpdateStatement(selectQuery) {Update = update};
-							_statement.Parameters.AddRange(parameters);
 							((SqlUpdateStatement)_statement).With = with;
 
 							break;
@@ -1978,10 +1963,8 @@ namespace LinqToDB.ServiceModel
 							var insert      = Read<SqlInsertClause>()!;
 							var update      = Read<SqlUpdateClause>()!;
 							var selectQuery = Read<SelectQuery>();
-							var parameters  = ReadArray<SqlParameter>()!;
 
 							obj = _statement = new SqlInsertOrUpdateStatement(selectQuery) {Insert = insert, Update = update};
-							_statement.Parameters.AddRange(parameters);
 							((SqlInsertOrUpdateStatement)_statement).With = with;
 
 							break;
@@ -1994,10 +1977,8 @@ namespace LinqToDB.ServiceModel
 							var output      = Read<SqlOutputClause>();
 							var top         = Read<ISqlExpression>()!;
 							var selectQuery = Read<SelectQuery>();
-							var parameters  = ReadArray<SqlParameter>();
 
 							obj = _statement = new SqlDeleteStatement { Table = table, Output = output, Top = top, SelectQuery = selectQuery };
-							_statement.Parameters.AddRange(parameters);
 							((SqlDeleteStatement)_statement).With = with;
 
 							break;
@@ -2006,7 +1987,6 @@ namespace LinqToDB.ServiceModel
 					case QueryElementType.CreateTableStatement :
 						{
 							var table           = Read<SqlTable>();
-							var parameters      = ReadArray<SqlParameter>();
 							var statementHeader = ReadString();
 							var statementFooter = ReadString();
 							var defaultNullable = (DefaultNullable)ReadInt();
@@ -2018,7 +1998,6 @@ namespace LinqToDB.ServiceModel
 								StatementFooter = statementFooter,
 								DefaultNullable = defaultNullable,
 							};
-							_statement.Parameters.AddRange(parameters);
 
 							break;
 						}
@@ -2026,14 +2005,12 @@ namespace LinqToDB.ServiceModel
 					case QueryElementType.DropTableStatement :
 					{
 						var table      = Read<SqlTable>();
-						var parameters = ReadArray<SqlParameter>();
 						var ifExists   = ReadBool();
 
 						obj = _statement = new SqlDropTableStatement(ifExists)
 						{
 							Table = table,
 						};
-						_statement.Parameters.AddRange(parameters);
 
 						break;
 					}
@@ -2042,14 +2019,12 @@ namespace LinqToDB.ServiceModel
 					{
 						var table      = Read<SqlTable>();
 						var reset      = ReadBool();
-						var parameters = ReadArray<SqlParameter>();
 
 						obj = _statement = new SqlTruncateTableStatement
 						{
 							Table         = table,
 							ResetIdentity = reset
 						};
-						_statement.Parameters.AddRange(parameters);
 
 						break;
 					}
@@ -2112,10 +2087,8 @@ namespace LinqToDB.ServiceModel
 							var source     = Read<SqlMergeSourceTable>()!;
 							var on         = Read<SqlSearchCondition>()!;
 							var operations = ReadArray<SqlMergeOperationClause>()!;
-							var parameters = ReadArray<SqlParameter>();
 
 							obj = _statement = new SqlMergeStatement(hint, target, source, on, operations);
-							_statement.Parameters.AddRange(parameters);
 
 							break;
 						}

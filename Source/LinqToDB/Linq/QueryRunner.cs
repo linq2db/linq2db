@@ -192,7 +192,7 @@ namespace LinqToDB.Linq
 		{
 #if !DEBUG
 			foreach (var q in query.Queries)
-				foreach (var sqlParameter in q.Parameters)
+				foreach (var sqlParameter in q.ParameterAccessors)
 					sqlParameter.Expression = null!;
 #endif
 		}

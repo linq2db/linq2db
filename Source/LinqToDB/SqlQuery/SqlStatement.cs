@@ -21,8 +21,6 @@ namespace LinqToDB.SqlQuery
 
 		public abstract QueryType QueryType { get; }
 
-		public List<SqlParameter> Parameters { get; } = new List<SqlParameter>();
-
 		public abstract bool IsParameterDependent { get; set; }
 
 		/// <summary>

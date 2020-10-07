@@ -98,9 +98,6 @@ namespace Tests.Model
 				commands[i] = sb.ToString();
 			}
 
-			statement.Parameters.Clear();
-			statement.Parameters.AddRange(provider.ActualParameters);
-
 			return string.Join("\n\n", commands);
 		}
 

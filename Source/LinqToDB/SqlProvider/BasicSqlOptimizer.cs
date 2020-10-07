@@ -9,11 +9,10 @@ namespace LinqToDB.SqlProvider
 {
 	using Common;
 	using Extensions;
-	using LinqToDB.Linq;
+	using Linq;
 	using SqlQuery;
 	using Tools;
 	using Mapping;
-	using DataProvider;
 
 	public class BasicSqlOptimizer : ISqlOptimizer
 	{
@@ -1546,10 +1545,7 @@ namespace LinqToDB.SqlProvider
 				}
 
 				newDeleteStatement.SelectQuery.From.Table(copy).Where.Exists(deleteStatement.SelectQuery);
-				newDeleteStatement.Parameters.AddRange(deleteStatement.Parameters);
 				newDeleteStatement.With = deleteStatement.With;
-
-				deleteStatement.Parameters.Clear();
 
 				deleteStatement = newDeleteStatement;
 			}
@@ -1852,11 +1848,9 @@ namespace LinqToDB.SqlProvider
 					newUpdateStatement.Update.Items.Add(item);
 				}
 
-				newUpdateStatement.Parameters.AddRange(updateStatement.Parameters);
 				newUpdateStatement.Update.Table = updateStatement.Update.Table != null ? tableToUpdate : null;
 				newUpdateStatement.With         = updateStatement.With;
 
-				updateStatement.Parameters.Clear();
 				updateStatement.Update.Items.Clear();
 
 				updateStatement = newUpdateStatement;
