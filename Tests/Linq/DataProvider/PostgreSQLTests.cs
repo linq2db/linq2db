@@ -1257,8 +1257,11 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestTableFunction([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = new DataConnection(context))
 			{
+				// needed for proper AllTypes columns mapping
+				db.AddMappingSchema(new MappingSchema(context));
+
 				var result = new TestPgFunctions(db).GetAllTypes().ToList();
 
 				var res1 = db.GetTable<AllTypes>().OrderBy(_ => _.ID).ToArray()[1];

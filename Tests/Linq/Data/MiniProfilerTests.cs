@@ -1389,6 +1389,9 @@ namespace Tests.Data
 			var provider = new PostgreSQLDataProvider(version);
 			using (var db = CreateDataConnection(provider, context, type, "Npgsql.NpgsqlConnection, Npgsql"))
 			{
+				// needed for proper AllTypes columns mapping
+				db.AddMappingSchema(new MappingSchema(context));
+
 				var trace = string.Empty;
 				db.OnTraceConnection += (TraceInfo ti) =>
 				{
