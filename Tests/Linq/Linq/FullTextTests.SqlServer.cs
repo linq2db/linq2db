@@ -409,7 +409,7 @@ namespace Tests.Linq
 			[IncludeDataSources(TestProvName.Northwind)] string context,
 			[Values("meat", "bread")] string search,
 			[Values(1033, 1048)] int lang,
-			[Values(1, 2, 3, 2)] int top)
+			[Values(1, 2, 3)] int top)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -749,7 +749,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void FreeTextTableByColumnsTopAsExpressionMethod([IncludeDataSources(TestProvName.Northwind)] string context, [Values(1, 2, 3, 2)] int top)
+		public void FreeTextTableByColumnsTopAsExpressionMethod([IncludeDataSources(TestProvName.Northwind)] string context, [Values(1, 2, 3)] int top)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -770,7 +770,7 @@ namespace Tests.Linq
 			[IncludeDataSources(TestProvName.Northwind)] string context,
 			[Values("meat", "bread")] string search,
 			[Values(1033, 1048)] int lang,
-			[Values(1, 2, 3, 2)] int top)
+			[Values(1, 2, 3)] int top)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -1123,7 +1123,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ContainsTableByColumnsTop([IncludeDataSources(TestProvName.Northwind)] string context, [Values(1, 2, 3, 2)] int top)
+		public void ContainsTableByColumnsTop([IncludeDataSources(TestProvName.Northwind)] string context, [Values(1, 2, 3)] int top)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -1460,7 +1460,7 @@ namespace Tests.Linq
 			[IncludeDataSources(TestProvName.Northwind)] string context,
 			[Values("meat", "bread")] string search,
 			[Values("English", "Russian")] string lang,
-			[Values(1, 2, 3, 2)] int top)
+			[Values(1, 2, 3)] int top)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -1704,7 +1704,7 @@ namespace Tests.Linq
 		public void FreeTextWithParameters(
 			[IncludeDataSources(TestProvName.Northwind)] string context,
 			[Values("sweetest candy bread and dry meat")] string search,
-			[Values("English", "French", "English")] string lang)
+			[Values("English", "French")] string lang)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -1958,7 +1958,7 @@ namespace Tests.Linq
 		public void ContainsWithParameters(
 			[IncludeDataSources(TestProvName.Northwind)] string context,
 			[Values("bread", "meat")] string search,
-			[Values(1033, 1036, 1033)] int code)
+			[Values(1033, 1036)] int code)
 		{
 			using (var db = new NorthwindDB(context))
 			{

@@ -96,7 +96,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AggregationOrderTest([IncludeDataSources(ProviderName.SqlServer2017)] string context)
+		public void AggregationOrderTest([IncludeDataSources(TestProvName.AllSqlServer2017Plus)] string context)
 		{
 			var data = GenerateData();
 
@@ -460,7 +460,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue1765TestParameter3([StringTestOrderSources] string context, [Values(" -> ", " => ", " -> ")] string separator)
+		public void Issue1765TestParameter3([StringTestOrderSources] string context, [Values(" -> ", " => ")] string separator)
 		{
 			var data = GenerateData();
 
@@ -488,7 +488,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue1765TestParameter4([StringTestSources] string context, [Values(" -> ", " => ", " -> ")] string separator)
+		public void Issue1765TestParameter4([StringTestSources] string context, [Values(" -> ", " => ")] string separator)
 		{
 			var data = GenerateData();
 

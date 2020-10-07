@@ -60,10 +60,7 @@ namespace Tests
 		public string[]? Configurations
 		{
 			get => _configurations;
-			set
-			{
-				_configurations = value.SelectMany(p => p.Split(',').Select(_ => _.Trim())).ToArray();
-			}
+			set => _configurations = value.SelectMany(p => p.Split(',').Select(_ => _.Trim())).ToArray();
 		}
 
 		/// <summary>
@@ -73,10 +70,7 @@ namespace Tests
 		public string Configuration
 		{
 			get => _configurations != null ? string.Join(",", _configurations) : string.Empty;
-			set
-			{
-				_configurations = value.Split(',').Select(_ => _.Trim()).ToArray();
-			}
+			set => _configurations = value.Split(',').Select(_ => _.Trim()).ToArray();
 		}
 
 		/// <summary>

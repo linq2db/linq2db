@@ -62,9 +62,9 @@ namespace Tests.UserTests
 			var query2 = GetSql(context);
 			var query3 = GetSql(context);
 
-			Console.WriteLine(query1);
-			Console.WriteLine(query2);
-			Console.WriteLine(query3);
+			TestContext.WriteLine(query1);
+			TestContext.WriteLine(query2);
+			TestContext.WriteLine(query3);
 
 			Assert.AreEqual(query1, query2);
 		}

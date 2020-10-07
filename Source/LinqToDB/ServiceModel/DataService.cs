@@ -98,7 +98,7 @@ namespace LinqToDB.ServiceModel
 					where typeof(ITable<>).IsSameOrParentOf(t)
 					let tt  = t.GetGenericArguments()[0]
 					let tbl = new SqlTable(_mappingSchema, tt)
-					where tbl.Fields.Values.Any(f => f.IsPrimaryKey)
+					where tbl.Fields.Any(f => f.IsPrimaryKey)
 					let m   = _mappingSchema.GetEntityDescriptor(tt)
 					select new
 					{
@@ -177,9 +177,9 @@ namespace LinqToDB.ServiceModel
 						Mapper = mapper,
 					};
 
-					foreach (var field in table.Fields.Values)
+					foreach (var field in table.Fields)
 					{
-						if (baseType != null && baseInfo!.Table.Fields.ContainsKey(field.Name))
+						if (baseType != null && baseInfo!.Table[field.Name] != null)
 							continue;
 
 						var kind  = ResourcePropertyKind.Primitive;

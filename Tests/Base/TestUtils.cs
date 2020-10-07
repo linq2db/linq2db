@@ -107,7 +107,9 @@ namespace Tests
 				case ProviderName.SqlServer2008:
 				case ProviderName.SqlServer2012:
 				case ProviderName.SqlServer2014:
+				case TestProvName.SqlServer2016:
 				case ProviderName.SqlServer2017:
+				case TestProvName.SqlServer2019:
 				case TestProvName.SqlAzure:
 				case ProviderName.SapHanaNative:
 				case ProviderName.SapHanaOdbc:
@@ -133,7 +135,9 @@ namespace Tests
 				case ProviderName.SqlServer2008:
 				case ProviderName.SqlServer2012:
 				case ProviderName.SqlServer2014:
+				case TestProvName.SqlServer2016:
 				case ProviderName.SqlServer2017:
+				case TestProvName.SqlServer2019:
 				case TestProvName.SqlAzure:
 				case ProviderName.OracleManaged:
 				case ProviderName.OracleNative:
@@ -211,7 +215,9 @@ namespace Tests
 				case ProviderName.SqlServer2008:
 				case ProviderName.SqlServer2012:
 				case ProviderName.SqlServer2014:
+				case TestProvName.SqlServer2016:
 				case ProviderName.SqlServer2017:
+				case TestProvName.SqlServer2019:
 				case TestProvName.SqlAzure:
 					return db.GetTable<LinqDataTypes>().Select(_ => DbName()).First();
 				case ProviderName.Informix:

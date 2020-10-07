@@ -292,7 +292,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			StringBuilder.Append("VALUES ");
 
-			foreach (var col in insertClause.Into!.Fields)
+			foreach (var _ in insertClause.Into!.Fields)
 				StringBuilder.Append("(DEFAULT)");
 
 			StringBuilder.AppendLine();
@@ -305,10 +305,10 @@ namespace LinqToDB.DataProvider.Oracle
 			switch (statement)
 			{
 				case SqlTruncateTableStatement truncateTable:
-					return truncateTable.ResetIdentity && truncateTable.Table!.Fields.Values.Any(f => f.IsIdentity) ? 2 : 1;
+					return truncateTable.ResetIdentity && truncateTable.Table!.IdentityFields.Count > 0 ? 2 : 1;
 
 				case SqlCreateTableStatement createTable:
-					_identityField = createTable.Table!.Fields.Values.FirstOrDefault(f => f.IsIdentity);
+					_identityField = createTable.Table!.IdentityFields.FirstOrDefault();
 					if (_identityField != null)
 						return 3;
 					break;
@@ -319,7 +319,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
-			var identityField = dropTable.Table!.Fields.Values.FirstOrDefault(f => f.IsIdentity);
+			var identityField = dropTable.Table!.IdentityFields.FirstOrDefault();
 
 			if (identityField == null && dropTable.IfExists == false)
 			{

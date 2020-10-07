@@ -32,6 +32,7 @@ namespace Tests.UserTests
 		[ActiveIssue("Fails due to connection limit for development version when run with nonmanaged provider", Configuration = ProviderName.SybaseManaged)]
 		public void Test([DataSources(ProviderName.SQLiteMS, TestProvName.AllInformix)] string context)
 		{
+			using (new DisableBaseline("Multi-threading"))
 			using (var semaphore = new Semaphore(0, 10))
 			{
 				var tasks = new Task[10];
@@ -41,7 +42,7 @@ namespace Tests.UserTests
 				for (var i = 0; i < 10; i++)
 					tasks[i].Start();
 
-				Thread   .Sleep(100);
+				Thread.Sleep(100);
 				semaphore.Release(10);
 
 				Task.WaitAll(tasks);

@@ -16,6 +16,7 @@
 		<WarningLevel>4</WarningLevel>
 		<ErrorReport>prompt</ErrorReport>
 		<NoWarn>1591</NoWarn>
+		<AnalysisLevel>preview</AnalysisLevel>
 
 		<AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>

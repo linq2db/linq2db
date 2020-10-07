@@ -599,7 +599,7 @@ namespace Tests.xUpdate
 			{
 				PrepareData(db);
 
-				var param = DateTime.Now;
+				var param = TestData.DateTime;
 
 				var table = GetTarget(db);
 

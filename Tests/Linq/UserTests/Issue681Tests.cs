@@ -38,6 +38,7 @@ namespace Tests.UserTests
 			string? schemaName;
 			string? dbName;
 
+			using (new DisableBaseline("Use instance name is SQL", context.Contains("SqlServer") && withServer))
 			using (var db = GetDataContext(context))
 			{
 				if (withServer && (!withDatabase || !withSchema) && (context.Contains("SqlServer") || context.Contains("Azure")))

@@ -124,7 +124,7 @@ namespace LinqToDB.Data
 					_dataConnection.OnTraceConnection(new TraceInfo(_dataConnection, TraceInfoStep.Completed)
 					{
 						TraceLevel       = TraceLevel.Info,
-						Command          = _dataConnection.Command,
+						Command          = _dataConnection.GetCurrentCommand(),
 						MapperExpression = MapperExpression,
 						StartTime        = _startedOn,
 						ExecutionTime    = _stopwatch.Elapsed,

@@ -20,8 +20,8 @@ namespace Tests.UserTests
 
 			var table = new SqlTable<Foo>(schema);
 
-			Assert.That(table.Fields.Single().Value.Type!.Value.Precision, Is.EqualTo(19));
-			Assert.That(table.Fields.Single().Value.Type!.Value.Scale, Is.EqualTo(4));
+			Assert.That(table.Fields.Single().Type!.Value.Precision, Is.EqualTo(19));
+			Assert.That(table.Fields.Single().Type!.Value.Scale, Is.EqualTo(4));
 		}
 
 		class Foo

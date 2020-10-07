@@ -54,6 +54,7 @@ namespace Tests.UserTests
 				                               return new MyString { Value = txt };
 			});
 
+			using (new DisableBaseline("Non-stable identity values"))
 			using (var db = GetDataContext(context, ms))
 			using (new DeletePerson(db))
 			{
