@@ -123,6 +123,7 @@ namespace LinqToDB.SqlProvider
 		protected virtual void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, IReadOnlyParameterValues? parameterValues, int indent, bool skipAlias)
 		{
 			Statement       = statement;
+			_aliases        = new HashSet<string>(Statement.GetCurrentAliases(), StringComparer.OrdinalIgnoreCase);
 			StringBuilder   = sb;
 			ParameterValues = parameterValues;
 			Indent          = indent;
@@ -766,8 +767,6 @@ namespace LinqToDB.SqlProvider
 
 			AppendIndent().Append("USING (SELECT ");
 
-			ExtractMergeParametersIfCannotCombine(insertOrUpdate, keys);
-
 			for (var i = 0; i < keys.Count; i++)
 			{
 				BuildExpression(keys[i].Expression!, false, false);
@@ -843,45 +842,6 @@ namespace LinqToDB.SqlProvider
 
 			while (EndLine.Contains(StringBuilder[StringBuilder.Length - 1]))
 				StringBuilder.Length--;
-		}
-
-		protected void ExtractMergeParametersIfCannotCombine(SqlInsertOrUpdateStatement insertOrUpdate, List<SqlSetExpression> keys)
-		{
-			if (!SqlProviderFlags.CanCombineParameters)
-			{
-				insertOrUpdate.Parameters.Clear();
-
-				for (var i = 0; i < keys.Count; i++)
-					ExtractParameters(insertOrUpdate, keys[i].Expression!);
-
-				foreach (var expr in insertOrUpdate.Update.Items)
-					ExtractParameters(insertOrUpdate, expr.Expression!);
-
-				foreach (var expr in insertOrUpdate.Insert.Items)
-					ExtractParameters(insertOrUpdate, expr.Expression!);
-
-				if (insertOrUpdate.Parameters.Count > 0)
-					insertOrUpdate.IsParameterDependent = true;
-			}
-		}
-
-		private void ExtractParameters(SqlStatement statement, ISqlExpression expression)
-		{
-			new QueryVisitor().Visit(expression, e =>
-			{
-				switch (e.ElementType)
-				{
-					case QueryElementType.SqlParameter:
-						{
-							var p = (SqlParameter)e;
-
-							if (p.IsQueryParameter)
-								statement.Parameters.Add(p);
-						}
-
-						break;
-				}
-			});
 		}
 
 		protected static readonly char[] EndLine = { ' ', '\r', '\n' };
@@ -2895,11 +2855,6 @@ namespace LinqToDB.SqlProvider
 					 parentPrecedence == Precedence.LogicalNegation));
 		}
 
-		protected string[] GetTempAliases(int n, string defaultAlias)
-		{
-			return Statement?.GetTempAliases(n, defaultAlias) ?? Array<string>.Empty;
-		}
-
 		protected string? GetTableAlias(ISqlTableSource table)
 		{
 			switch (table.ElementType)
@@ -3268,5 +3223,57 @@ namespace LinqToDB.SqlProvider
 		public virtual string Name => _name ??= GetType().Name.Replace("SqlBuilder", "");
 
 		#endregion
+
+		#region Aliases
+
+		HashSet<string>? _aliases;
+
+		public void RemoveAlias(string alias)
+		{
+			_aliases?.Remove(alias);
+		}
+
+		string GetAlias(string desiredAlias, string defaultAlias)
+		{
+			if (_aliases == null)
+				_aliases = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+			var alias = desiredAlias;
+
+			if (string.IsNullOrEmpty(desiredAlias) || desiredAlias.Length > 25)
+			{
+				desiredAlias = defaultAlias;
+				alias        = defaultAlias + "1";
+			}
+
+			for (var i = 1; ; i++)
+			{
+				if (!_aliases.Contains(alias) && !ReservedWords.IsReserved(alias))
+				{
+					_aliases.Add(alias);
+					break;
+				}
+
+				alias = desiredAlias + i;
+			}
+
+			return alias;
+		}
+
+		public string[] GetTempAliases(int n, string defaultAlias)
+		{
+			var aliases = new string[n];
+
+			for (var i = 0; i < aliases.Length; i++)
+				aliases[i] = GetAlias(defaultAlias, defaultAlias);
+
+			foreach (var t in aliases)
+				RemoveAlias(t);
+
+			return aliases;
+		}
+
+		#endregion
+
 	}
 }

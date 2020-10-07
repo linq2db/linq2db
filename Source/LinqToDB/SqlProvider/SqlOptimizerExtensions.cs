@@ -12,7 +12,8 @@ namespace LinqToDB.SqlProvider
 		{
 			var newStatement = optimizer.OptimizeStatement(statement, parameterValues);
 			newStatement     = optimizer.ConvertStatement(mappingSchema, newStatement, parameterValues);
-			newStatement.PrepareQueryAndAliases();
+			if (!ReferenceEquals(newStatement, statement))
+				newStatement.PrepareQueryAndAliases();
 			return newStatement;
 		}
 
@@ -21,7 +22,8 @@ namespace LinqToDB.SqlProvider
 		{
 			var newStatement = optimizer.OptimizeStatement(statement, parameterValues);
 			newStatement     = optimizer.ConvertStatement(mappingSchema, newStatement, parameterValues);
-			newStatement.PrepareQueryAndAliases();
+			if (!ReferenceEquals(newStatement, statement))
+				newStatement.PrepareQueryAndAliases();
 			return newStatement;
 		}
 

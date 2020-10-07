@@ -86,15 +86,10 @@ namespace LinqToDB.ServiceModel
 
 		class QueryContext : IQueryContext
 		{
-			public SqlStatement   Statement   { get; set; } = null!;
-			public object?        Context     { get; set; }
-			public SqlParameter[] Parameters  { get; set; } = null!;
-			public List<string>?  QueryHints  { get; set; }
-
-			public SqlParameter[] GetParameters()
-			{
-				return Parameters;
-			}
+			public SqlStatement    Statement   { get; set; } = null!;
+			public object?         Context     { get; set; }
+			public SqlParameter[]? Parameters  { get; set; }
+			public List<string>?   QueryHints  { get; set; }
 		}
 
 		[WebMethod]

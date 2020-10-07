@@ -136,8 +136,11 @@ namespace LinqToDB.SqlQuery
 		{
 			var hashCode = Type.GetHashCode();
 
-			if (Name != null)
-				hashCode = unchecked(hashCode + (hashCode * 397) ^ Name.GetHashCode());
+			if (AccessorId != null)
+				hashCode = unchecked(hashCode + (hashCode * 397) ^ AccessorId.Value.GetHashCode());
+			else
+				if (Name != null)
+					hashCode = unchecked(hashCode + (hashCode * 397) ^ Name.GetHashCode());
 
 			return hashCode;
 		}

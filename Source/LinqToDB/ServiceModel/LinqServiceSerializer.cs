@@ -744,7 +744,7 @@ namespace LinqToDB.ServiceModel
 							Append(paramValue.DbDataType);
 
 							var value = paramValue.Value;
-							var type  = paramValue.DbDataType.SystemType;
+							var type  = value == null ? paramValue.DbDataType.SystemType : value.GetType();
 
 							if (value == null || type.IsEnum || type.IsArray || type == typeof(string) || !(value is IEnumerable))
 							{

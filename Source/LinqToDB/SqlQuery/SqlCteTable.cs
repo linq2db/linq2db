@@ -75,7 +75,8 @@ namespace LinqToDB.SqlQuery
 
 		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
-			return Cte.ToString(sb, dic);
+			Cte?.ToString(sb, dic);
+			return sb;
 		}
 
 		#region IQueryElement Members

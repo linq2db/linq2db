@@ -81,7 +81,7 @@ namespace LinqToDB.Data
 
 				sb.AppendLine();
 
-				sqlProvider.PrintParameters(sb, _preparedQuery!.Parameters);
+				sqlProvider.PrintParameters(sb, _preparedQuery!.DbParameters);
 
 				var isFirst = true;
 
@@ -140,8 +140,8 @@ namespace LinqToDB.Data
 			public class PreparedQuery
 			{
 				public string[]                         Commands      = null!;
-				public List<SqlParameter>               SqlParameters = null!;
-				public IReadOnlyList<IDbDataParameter>? Parameters;
+				public SqlParameter[]?                  SqlParameters;
+				public IReadOnlyList<IDbDataParameter>? DbParameters;
 				public SqlStatement                     Statement     = null!;
 				public List<string>?                    QueryHints;
 			}
@@ -155,7 +155,7 @@ namespace LinqToDB.Data
 					return new PreparedQuery
 					{
 						Commands      = (string[])query.Context,
-						SqlParameters = query.Statement.Parameters,
+						SqlParameters = query.Parameters ?? throw new InvalidOperationException(),
 						Statement     = query.Statement,
 						QueryHints    = query.QueryHints,
 					};
@@ -184,12 +184,15 @@ namespace LinqToDB.Data
 					sql.IsParameterDependent = sqlOptimizer.IsParameterDependent(sql);
 
 				// optimize, optionally with parameters
-				sql = sqlOptimizer.OptimizeStatement(sql, sql.IsParameterDependent ? parameterValues : null);
+				if (sql.IsParameterDependent)
+					sql = sqlOptimizer.OptimizeStatement(sql, parameterValues);
 
 				// convert statement to be ready for Sql translation
 				sql = sqlOptimizer.ConvertStatement(dataConnection.MappingSchema, sql, sql.IsParameterDependent ? parameterValues : null);
 
-				sql.PrepareQueryAndAliases();
+				// PrepareQueryAndAliases is mutable function. Call only if query is copied. 
+				if (!ReferenceEquals(query.Statement, sql))
+					sql.PrepareQueryAndAliases();
 
 				for (var i = 0; i < cc; i++)
 				{
@@ -199,18 +202,18 @@ namespace LinqToDB.Data
 					commands[i] = sb.ToString();
 				}
 
+				var actualParameters = sqlBuilder.ActualParameters.ToArray();
+
 				if (!sql.IsParameterDependent)
 				{
-					query.Context = commands;
+					query.Context    = commands;
+					query.Parameters = actualParameters;
 				}
-
-				query.Statement.Parameters.Clear();
-				query.Statement.Parameters.AddRange(sqlBuilder.ActualParameters);
 
 				return new PreparedQuery
 				{
 					Commands      = commands,
-					SqlParameters = sqlBuilder.ActualParameters,
+					SqlParameters = actualParameters,
 					Statement     = sql,
 					QueryHints    = query.QueryHints,
 				};
@@ -218,19 +221,19 @@ namespace LinqToDB.Data
 
 			static void GetParameters(DataConnection dataConnection, PreparedQuery pq, IReadOnlyParameterValues? parameterValues)
 			{
-				if (pq.SqlParameters.Count == 0)
+				if (pq.SqlParameters == null || pq.SqlParameters.Length == 0)
 					return;
 
-				var parms = new List<IDbDataParameter>(pq.SqlParameters.Count);
+				var parms = new List<IDbDataParameter>(pq.SqlParameters.Length);
 
-				for (var i = 0; i < pq.SqlParameters.Count; i++)
+				for (var i = 0; i < pq.SqlParameters.Length; i++)
 				{
 					var sqlp = pq.SqlParameters[i];
 
 					AddParameter(dataConnection, parms, sqlp, sqlp.GetParameterValue(parameterValues));
 				}
 
-				pq.Parameters = parms;
+				pq.DbParameters = parms;
 			}
 
 			static void AddParameter(DataConnection dataConnection, ICollection<IDbDataParameter> parms, SqlParameter parameter, SqlParameterValue parmValue)
@@ -272,12 +275,12 @@ namespace LinqToDB.Data
 				var parameterValues = new SqlParameterValues();
 				SetCommand(true, parameterValues);
 
-				var hasParameters = _preparedQuery!.Parameters?.Count > 0;
+				var hasParameters = _preparedQuery!.DbParameters?.Count > 0;
 
 				_dataConnection.InitCommand(CommandType.Text, _preparedQuery.Commands[0], null, QueryHints, hasParameters);
 
 				if (hasParameters)
-					foreach (var p in _preparedQuery.Parameters!)
+					foreach (var p in _preparedQuery.DbParameters!)
 						_dataConnection.Command.Parameters.Add(p);
 			}
 
@@ -287,12 +290,12 @@ namespace LinqToDB.Data
 			{
 				if (preparedQuery.Commands.Length == 1)
 				{
-					var hasParameters = preparedQuery.Parameters?.Count > 0;
+					var hasParameters = preparedQuery.DbParameters?.Count > 0;
 
 					dataConnection.InitCommand(CommandType.Text, preparedQuery.Commands[0], null, preparedQuery.QueryHints, hasParameters);
 
 					if (hasParameters)
-						foreach (var p in preparedQuery.Parameters!)
+						foreach (var p in preparedQuery.DbParameters!)
 							dataConnection.Command.Parameters.Add(p);
 
 					return dataConnection.ExecuteNonQuery();
@@ -302,12 +305,12 @@ namespace LinqToDB.Data
 
 				for (var i = 0; i < preparedQuery.Commands.Length; i++)
 				{
-					var hasParameters = i == 0 && preparedQuery.Parameters?.Count > 0;
+					var hasParameters = i == 0 && preparedQuery.DbParameters?.Count > 0;
 
 					dataConnection.InitCommand(CommandType.Text, preparedQuery.Commands[i], null, i == 0 ? preparedQuery.QueryHints : null, hasParameters);
 
 					if (hasParameters)
-						foreach (var p in preparedQuery.Parameters!)
+						foreach (var p in preparedQuery.DbParameters!)
 							dataConnection.Command.Parameters.Add(p);
 
 					if (i < preparedQuery.Commands.Length - 1 && preparedQuery.Commands[i].StartsWith("DROP"))
@@ -397,12 +400,12 @@ namespace LinqToDB.Data
 
 				GetParameters(dataConnection, preparedQuery, parameterValues);
 
-				var hasParameters = preparedQuery.Parameters?.Count > 0;
+				var hasParameters = preparedQuery.DbParameters?.Count > 0;
 
 				dataConnection.InitCommand(CommandType.Text, preparedQuery.Commands[0], null, preparedQuery.QueryHints, hasParameters);
 
 				if (hasParameters)
-					foreach (var p in preparedQuery.Parameters!)
+					foreach (var p in preparedQuery.DbParameters!)
 						dataConnection.Command.Parameters.Add(p);
 
 				return ExecuteScalarImpl(dataConnection, preparedQuery);
@@ -424,12 +427,12 @@ namespace LinqToDB.Data
 
 				GetParameters(dataConnection, preparedQuery, parameterValues);
 
-				var hasParameters = preparedQuery.Parameters?.Count > 0;
+				var hasParameters = preparedQuery.DbParameters?.Count > 0;
 
 				dataConnection.InitCommand(CommandType.Text, preparedQuery.Commands[0], null, preparedQuery.QueryHints, hasParameters);
 
 				if (hasParameters)
-					foreach (var p in preparedQuery.Parameters!)
+					foreach (var p in preparedQuery.DbParameters!)
 						dataConnection.Command.Parameters.Add(p);
 
 				return dataConnection.ExecuteReader();
@@ -440,12 +443,12 @@ namespace LinqToDB.Data
 				var parameterValues = new SqlParameterValues();
 				SetCommand(true, parameterValues);
 
-				var hasParameters = _preparedQuery!.Parameters?.Count > 0;
+				var hasParameters = _preparedQuery!.DbParameters?.Count > 0;
 
 				_dataConnection.InitCommand(CommandType.Text, _preparedQuery.Commands[0], null, QueryHints, hasParameters);
 
 				if (hasParameters)
-					foreach (var p in _preparedQuery.Parameters!)
+					foreach (var p in _preparedQuery.DbParameters!)
 						_dataConnection.Command.Parameters.Add(p);
 
 				return _dataConnection.ExecuteReader();
@@ -499,12 +502,12 @@ namespace LinqToDB.Data
 				var parameterValues = new SqlParameterValues();
 				base.SetCommand(true, parameterValues);
 
-				var hasParameters = _preparedQuery!.Parameters?.Count > 0;
+				var hasParameters = _preparedQuery!.DbParameters?.Count > 0;
 
 				_dataConnection.InitCommand(CommandType.Text, _preparedQuery.Commands[0], null, QueryHints, hasParameters);
 
 				if (hasParameters)
-					foreach (var p in _preparedQuery.Parameters!)
+					foreach (var p in _preparedQuery.DbParameters!)
 						_dataConnection.Command.Parameters.Add(p);
 
 				var dataReader = await _dataConnection.ExecuteReaderAsync(_dataConnection.GetCommandBehavior(CommandBehavior.Default), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
@@ -523,13 +526,13 @@ namespace LinqToDB.Data
 
 				if (_preparedQuery!.Commands.Length == 1)
 				{
-					var hasParameters = _preparedQuery.Parameters?.Count > 0;
+					var hasParameters = _preparedQuery.DbParameters?.Count > 0;
 
 					_dataConnection.InitCommand(
 						CommandType.Text, _preparedQuery.Commands[0], null, _preparedQuery.QueryHints, hasParameters);
 
 					if (hasParameters)
-						foreach (var p in _preparedQuery.Parameters!)
+						foreach (var p in _preparedQuery.DbParameters!)
 							_dataConnection.Command.Parameters.Add(p);
 
 					return await _dataConnection.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
@@ -537,13 +540,13 @@ namespace LinqToDB.Data
 
 				for (var i = 0; i < _preparedQuery.Commands.Length; i++)
 				{
-					var hasParameters = i == 0 && _preparedQuery.Parameters?.Count > 0;
+					var hasParameters = i == 0 && _preparedQuery.DbParameters?.Count > 0;
 
 					_dataConnection.InitCommand(
 						CommandType.Text, _preparedQuery.Commands[i], null, i == 0 ? _preparedQuery.QueryHints : null, hasParameters);
 
 					if (hasParameters)
-						foreach (var p in _preparedQuery.Parameters!)
+						foreach (var p in _preparedQuery.DbParameters!)
 							_dataConnection.Command.Parameters.Add(p);
 
 					if (i < _preparedQuery.Commands.Length - 1 && _preparedQuery.Commands[i].StartsWith("DROP"))

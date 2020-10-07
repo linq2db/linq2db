@@ -59,7 +59,7 @@ namespace LinqToDB.Linq
 							if (!supported || !fieldDic.TryGetValue(field, out param))
 							{
 								param = GetParameter(type, dataContext, field);
-								ei.Queries[0].Parameters.Add(param);
+								ei.Queries[0].ParameterAccessors.Add(param);
 
 								if (supported)
 									fieldDic.Add(field, param);
@@ -106,7 +106,7 @@ namespace LinqToDB.Linq
 					if (!supported || !fieldDic.TryGetValue(field, out param))
 					{
 						param = GetParameter(type, dataContext, field);
-						ei.Queries[0].Parameters.Add(param);
+						ei.Queries[0].ParameterAccessors.Add(param);
 
 						if (supported)
 							fieldDic.Add(field, param);
@@ -204,18 +204,18 @@ namespace LinqToDB.Linq
 
 			query.Queries.Add(new QueryInfo
 			{
-				Statement   = insertStatement,
-				Parameters  = query.Queries[0].Parameters
+				Statement          = insertStatement,
+				ParameterAccessors = query.Queries[0].ParameterAccessors
 					.Select(p => new ParameterAccessor
-						(
-							p.Expression,
-							p.ValueAccessor,
-							p.OriginalAccessor,
-							p.DbDataTypeAccessor,
-							dic.ContainsKey(p.SqlParameter) ? (SqlParameter)dic[p.SqlParameter] : null!
-						))
+					(
+						p.Expression,
+						p.ValueAccessor,
+						p.OriginalAccessor,
+						p.DbDataTypeAccessor,
+						dic.ContainsKey(p.SqlParameter) ? (SqlParameter)dic[p.SqlParameter] : null!
+					))
 					.Where(p => p.SqlParameter != null)
-					.ToList(),
+					.ToList()
 			});
 
 			var keys = firstStatement.Update.Keys;
@@ -240,7 +240,7 @@ namespace LinqToDB.Linq
 			query.Queries.Add(new QueryInfo
 			{
 				Statement  = new SqlSelectStatement(firstStatement.SelectQuery),
-				Parameters = query.Queries[0].Parameters.ToList(),
+				ParameterAccessors = query.Queries[0].ParameterAccessors.ToList(),
 			});
 		}
 	}

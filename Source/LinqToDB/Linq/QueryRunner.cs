@@ -226,7 +226,7 @@ namespace LinqToDB.Linq
 		{
 			var queryContext = query.Queries[queryNumber];
 
-			foreach (var p in queryContext.Parameters)
+			foreach (var p in queryContext.ParameterAccessors)
 			{
 				var value = p.ValueAccessor(expression, parametersContext, parameters);
 

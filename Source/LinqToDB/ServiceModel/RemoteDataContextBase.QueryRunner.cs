@@ -49,6 +49,25 @@ namespace LinqToDB.ServiceModel
 				var query = Query.Queries[QueryNumber];
 				var sqlBuilder   = DataContext.CreateSqlProvider();
 				var sqlOptimizer = DataContext.GetSqlOptimizer();
+				var sqlStringBuilder = new StringBuilder();
+				var cc = sqlBuilder.CommandCount(query.Statement);
+
+				for (var i = 0; i < cc; i++)
+				{
+					var statement = sqlOptimizer.PrepareStatementForSql(query.Statement, DataContext.MappingSchema, parameterValues);
+					sqlBuilder.BuildSql(i, statement, sqlStringBuilder, parameterValues);
+
+					if (i == 0 && query.QueryHints != null && query.QueryHints.Count > 0)
+					{
+						var sql = sqlStringBuilder.ToString();
+
+						sql = sqlBuilder.ApplyQueryHints(sql, query.QueryHints);
+
+						sqlStringBuilder = new StringBuilder(sql);
+					}
+				}
+
+
 				var sb = new StringBuilder();
 
 				sb
@@ -60,11 +79,9 @@ namespace LinqToDB.ServiceModel
 					.Append(sqlBuilder.Name)
 					.AppendLine();
 
-				query.Statement.CollectParameters();
-
-				if (query.Statement.Parameters != null && query.Statement.Parameters.Count > 0)
+				if (sqlBuilder.ActualParameters.Count > 0)
 				{
-					foreach (var p in query.Statement.Parameters)
+					foreach (var p in sqlBuilder.ActualParameters)
 					{
 						var value = p.Value;
 
@@ -78,7 +95,7 @@ namespace LinqToDB.ServiceModel
 
 					sb.AppendLine();
 
-					foreach (var p in query.Statement.Parameters)
+					foreach (var p in sqlBuilder.ActualParameters)
 					{
 						var value = p.Value;
 
@@ -96,22 +113,7 @@ namespace LinqToDB.ServiceModel
 					sb.AppendLine();
 				}
 
-				var cc = sqlBuilder.CommandCount(query.Statement);
-
-				for (var i = 0; i < cc; i++)
-				{
-					var statement = sqlOptimizer.PrepareStatementForSql(query.Statement, DataContext.MappingSchema, parameterValues);
-					sqlBuilder.BuildSql(i, statement, sb, parameterValues);
-
-					if (i == 0 && query.QueryHints != null && query.QueryHints.Count > 0)
-					{
-						var sql = sb.ToString();
-
-						sql = sqlBuilder.ApplyQueryHints(sql, query.QueryHints);
-
-						sb = new StringBuilder(sql);
-					}
-				}
+				sb.Append(sqlStringBuilder);
 
 				return sb.ToString();
 			}
@@ -138,12 +140,12 @@ namespace LinqToDB.ServiceModel
 				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement,
 					_dataContext.MappingSchema, parameterValues);
 
-				q.CollectParameters();
+				var currentParameters = q.CollectParameters();
 
 				data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,
 					q,
-					queryContext.GetParameters(),
+					currentParameters,
 					parameterValues,
 					QueryHints);
 
@@ -172,11 +174,12 @@ namespace LinqToDB.ServiceModel
 
 				var sqlOptimizer = _dataContext.GetSqlOptimizer();
 				var q = sqlOptimizer.PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, parameterValues);
+				var currentParameters = q.CollectParameters();
 				
 				data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,
 					q,
-					q.IsParameterDependent ? q.Parameters.ToArray() : queryContext.GetParameters(), parameterValues, QueryHints);
+					currentParameters, parameterValues, QueryHints);
 
 				_client = _dataContext.GetClient();
 
@@ -199,12 +202,12 @@ namespace LinqToDB.ServiceModel
 
 				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, parameterValues);
 
-				q.CollectParameters();
+				var currentParameters = q.CollectParameters();
 
 				data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,
 					q,
-					q.IsParameterDependent ? q.Parameters.ToArray() : queryContext.GetParameters(),
+					currentParameters,
 					parameterValues,
 					QueryHints);
 
@@ -266,11 +269,12 @@ namespace LinqToDB.ServiceModel
 				var queryContext = Query.Queries[QueryNumber];
 
 				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, parameterValues);
+				var currentParameters = q.CollectParameters();
 
 				data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,
 					q,
-					q.IsParameterDependent ? q.Parameters.ToArray() : queryContext.GetParameters(),
+					currentParameters,
 					parameterValues,
 					QueryHints);
 
@@ -297,11 +301,12 @@ namespace LinqToDB.ServiceModel
 				var queryContext = Query.Queries[QueryNumber];
 
 				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, parameterValues);
+				var currentParameters = q.CollectParameters();
 
 				data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,
 					q,
-					q.IsParameterDependent ? q.Parameters.ToArray() : queryContext.GetParameters(), 
+					currentParameters, 
 					parameterValues,
 					QueryHints);
 
@@ -320,10 +325,12 @@ namespace LinqToDB.ServiceModel
 				var queryContext = Query.Queries[QueryNumber];
 
 				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, parameterValues);
+				var currentParameters = q.CollectParameters();
+
 				data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,
 					q,
-					q.IsParameterDependent ? q.Parameters.ToArray() : queryContext.GetParameters(),
+					currentParameters,
 					parameterValues,
 					QueryHints);
 

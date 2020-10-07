@@ -71,11 +71,15 @@ namespace LinqToDB.SqlQuery
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		void ReplaceVisited(IQueryElement element, IQueryElement? newElement)
 		{
-			var forDelete = VisitedElements.Where(pair => QueryHelper.ContainsElement(pair.Value, element)).Select(pair => pair.Key).ToList();
+			var forDelete = VisitedElements
+				.Where(pair => pair.Value != null && QueryHelper.ContainsElement(pair.Value, element))
+				.Select(pair => pair.Key).ToList();
+
 			foreach (var e in forDelete)
 			{
 				VisitedElements.Remove(e);
 			}
+
 			VisitedElements[element] = newElement;
 		}
 
@@ -838,36 +842,29 @@ namespace LinqToDB.SqlQuery
 
 							var enumerableSource          = (SqlValuesTable?)ConvertInternal(source.SourceEnumerable);
 							var querySource               = (SelectQuery?)   ConvertInternal(source.SourceQuery);
-							IEnumerable<SqlField>? fields = Convert(source.SourceFields, f => new SqlField(f));
-
-							var fe = fields != null && !ReferenceEquals(source.SourceFields, fields);
 
 							if (enumerableSource != null && !ReferenceEquals(source.SourceEnumerable, enumerableSource) ||
-								querySource      != null && !ReferenceEquals(source.SourceQuery, querySource)           ||
-								!fe)
+								querySource      != null && !ReferenceEquals(source.SourceQuery, querySource))
 							{
-								if (!fe)
+								var newFields = source.SourceFields.Select(f => new SqlField(f)).ToArray();
+								for (var i = 0; i < source.SourceFields.Count; i++)
 								{
-									var newFields = source.SourceFields.ToArray();
-									for (var i = 0; i < newFields.Length; i++)
-									{
-										var field              = newFields[i];
-										newFields[i]           = new SqlField(field);
-										VisitedElements[field] = newFields[i];
-									}
-									fields = newFields;
+									var newField           = newFields[i];
+									var oldField           = source.SourceFields[i];
+									ReplaceVisited(oldField, newField);
 								}
 
 								newElement = new SqlMergeSourceTable(
 									source.SourceID,
 									enumerableSource ?? source.SourceEnumerable!,
 									querySource ?? source.SourceQuery!,
-									fields!);
-								VisitedElements[((ISqlTableSource)source).All] = ((ISqlTableSource)newElement).All;
-						}
+									newFields);
 
-								break;
+								ReplaceVisited(((ISqlTableSource)source).All, ((ISqlTableSource)newElement).All);
 							}
+
+							break;
+						}
 
 					case QueryElementType.SqlValuesTable:
 						{
@@ -882,7 +879,7 @@ namespace LinqToDB.SqlQuery
 								foreach (var row in table.Rows)
 								{
 									var convertedRow = ConvertSafe(row);
-									rowsConverted    = rowsConverted || (row != null && !ReferenceEquals(convertedRow, row));
+									rowsConverted    = rowsConverted || (convertedRow != null && !ReferenceEquals(convertedRow, row));
 
 									convertedRows.Add(convertedRow?.ToArray() ?? row!);
 								}

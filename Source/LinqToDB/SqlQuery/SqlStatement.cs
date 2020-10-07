@@ -30,10 +30,9 @@ namespace LinqToDB.SqlQuery
 		/// </summary>
 		public SqlStatement? ParentStatement { get; set; }
 
-		public void CollectParameters()
+		public SqlParameter[] CollectParameters()
 		{
-			var alreadyAdded = new HashSet<SqlParameter>();
-			Parameters.Clear();
+			var parametersHash = new HashSet<SqlParameter>();
 
 			new QueryVisitor().VisitAll(this, expr =>
 			{
@@ -42,13 +41,15 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.SqlParameter :
 					{
 						var p = (SqlParameter)expr;
-						if (p.IsQueryParameter && alreadyAdded.Add(p))
-							Parameters.Add(p);
+						if (p.IsQueryParameter)
+							parametersHash.Add(p);
 
 						break;
 					}
 				}
 			});
+
+			return parametersHash.ToArray();
 		}
 
 		public abstract SelectQuery? SelectQuery { get; set; }
@@ -83,49 +84,9 @@ namespace LinqToDB.SqlQuery
 
 		HashSet<string>? _aliases;
 
-		public void RemoveAlias(string alias)
+		public string[] GetCurrentAliases()
 		{
-			_aliases?.Remove(alias);
-		}
-
-		public string GetAlias(string desiredAlias, string defaultAlias)
-		{
-			if (_aliases == null)
-				_aliases = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-			var alias = desiredAlias;
-
-			if (string.IsNullOrEmpty(desiredAlias) || desiredAlias.Length > 25)
-			{
-				desiredAlias = defaultAlias;
-				alias        = defaultAlias + "1";
-			}
-
-			for (var i = 1; ; i++)
-			{
-				if (!_aliases.Contains(alias) && !ReservedWords.IsReserved(alias))
-				{
-					_aliases.Add(alias);
-					break;
-				}
-
-				alias = desiredAlias + i;
-			}
-
-			return alias;
-		}
-
-		public string[] GetTempAliases(int n, string defaultAlias)
-		{
-			var aliases = new string[n];
-
-			for (var i = 0; i < aliases.Length; i++)
-				aliases[i] = GetAlias(defaultAlias, defaultAlias);
-
-			foreach (var t in aliases)
-				RemoveAlias(t);
-
-			return aliases;
+			return _aliases == null ? Array<string>.Empty : _aliases.ToArray();
 		}
 
 		static string? NormalizeParameterName(string? name)

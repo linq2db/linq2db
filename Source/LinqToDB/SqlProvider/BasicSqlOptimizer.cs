@@ -85,6 +85,8 @@ namespace LinqToDB.SqlProvider
 
 			BuildSqlValueTableParameters(statement);
 
+			statement = OptimizeStatement(statement, null);
+
 //statement.EnsureFindTables();
 			return statement;
 		}
@@ -2147,6 +2149,10 @@ namespace LinqToDB.SqlProvider
 				{
 					var statement = (SqlStatement)element;
 					return statement.IsParameterDependent;
+				}
+				case QueryElementType.SqlValuesTable:
+				{
+					return true;
 				}
 				case QueryElementType.SqlParameter:
 				{

@@ -242,8 +242,8 @@ namespace LinqToDB.Linq
 		{
 			Queries.Add(new QueryInfo
 			{
-				Statement   = parseContext.GetResultStatement(),
-				Parameters  = sqlParameters,
+				Statement          = parseContext.GetResultStatement(),
+				ParameterAccessors = sqlParameters,
 			});
 		}
 
@@ -539,21 +539,12 @@ namespace LinqToDB.Linq
 
 	class QueryInfo : IQueryContext
 	{
-		public SqlStatement  Statement   { get; set; } = null!;
-		public object?       Context     { get; set; }
-		public List<string>? QueryHints  { get; set; }
+		public SqlStatement    Statement   { get; set; } = null!;
+		public object?         Context     { get; set; }
+		public List<string>?   QueryHints  { get; set; }
+		public SqlParameter[]? Parameters  { get; set; }
 
-		public SqlParameter[] GetParameters()
-		{
-			var ps = new SqlParameter[Statement.Parameters.Count];
-
-			for (var i = 0; i < ps.Length; i++)
-				ps[i] = Statement.Parameters[i];
-
-			return ps;
-		}
-
-		public List<ParameterAccessor> Parameters = new List<ParameterAccessor>();
+		public List<ParameterAccessor> ParameterAccessors = new List<ParameterAccessor>();
 	}
 
 	class ParameterAccessor
