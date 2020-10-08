@@ -19,7 +19,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return base.Finalize(statement);
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlStatement TransformStatementMutable(SqlStatement statement)
 		{
 			statement = ReplaceTakeSkipWithRowNum(statement, false);
 

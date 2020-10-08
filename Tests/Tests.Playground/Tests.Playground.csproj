@@ -55,6 +55,7 @@
 		<Compile Include="..\Linq\UserTests\Issue1925Tests.cs" Link="Issue1925Tests.cs" />
 		<Compile Include="..\Linq\UserTests\Issue2478Tests.cs" Link="Issue2478Tests.cs" />
 		<Compile Include="..\Linq\UserTests\Issue358Tests.cs" Link="Issue358Tests.cs" />
+		<Compile Include="..\Linq\UserTests\PrePostConversionTests.cs" Link="PrePostConversionTests.cs" />
 	</ItemGroup>
 
 </Project>

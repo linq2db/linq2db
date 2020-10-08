@@ -17,7 +17,7 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlStatement TransformStatementMutable(SqlStatement statement)
 		{
 			switch (statement.QueryType)
 			{

@@ -12,7 +12,7 @@ namespace LinqToDB.DataProvider.MySql
 		{
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlStatement TransformStatementMutable(SqlStatement statement)
 		{
 			return statement.QueryType switch
 			{

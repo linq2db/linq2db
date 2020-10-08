@@ -12,10 +12,8 @@ namespace LinqToDB.DataProvider.SqlCe
 		{
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement)
+		public override SqlStatement TransformStatementMutable(SqlStatement statement)
 		{
-			statement = base.Finalize(statement);
-
 			// This function mutates statement which is allowed only in this place
 			CorrectSkipAndColumns(statement);
 
@@ -24,11 +22,6 @@ namespace LinqToDB.DataProvider.SqlCe
 
 			CorrectFunctionParameters(statement);
 
-			return statement;
-		}
-
-		public override SqlStatement TransformStatement(SqlStatement statement)
-		{
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete :

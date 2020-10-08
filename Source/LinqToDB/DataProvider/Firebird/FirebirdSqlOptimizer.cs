@@ -32,7 +32,7 @@ namespace LinqToDB.DataProvider.Firebird
 			return statement;
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlStatement TransformStatementMutable(SqlStatement statement)
 		{
 			return statement.QueryType switch
 			{
