@@ -18,6 +18,7 @@
 		<Compile Include="..\Linq\Linq\IdlTests.cs" Link="IdlTests.cs" />
 		<Compile Include="..\Linq\Linq\IssueTests.cs" Link="IssueTests.cs" />
 		<Compile Include="..\Linq\Linq\JoinTests.cs" Link="JoinTests.cs" />
+		<Compile Include="..\Linq\Linq\MappingTests.cs" Link="MappingTests.cs" />
 		<Compile Include="..\Linq\Linq\OrderByDistinctTests.cs" Link="OrderByDistinctTests.cs" />
 		<Compile Include="..\Linq\Linq\SetTests.cs" Link="SetTests.cs" />
 		<Compile Include="..\Linq\Linq\StringFunctionTests.cs" Link="StringFunctionTests.cs" />
@@ -48,6 +49,7 @@
 		<Compile Include="..\Linq\Update\MergeTests.Operations.UpdateWithDelete.cs" Link="MergeTests.Operations.UpdateWithDelete.cs" />
 		<Compile Include="..\Linq\Update\MergeTests.TargetSourceOn.cs" Link="MergeTests.TargetSourceOn.cs" />
 		<Compile Include="..\Linq\Update\MergeTests.Types.cs" Link="MergeTests.Types.cs" />
+		<Compile Include="..\Linq\Update\UpdateTests.cs" Link="UpdateTests.cs" />
 		<Compile Include="..\Linq\UserTests\Issue1238Tests.cs" Link="Issue1238Tests.cs" />
 		<Compile Include="..\Linq\UserTests\Issue1925Tests.cs" Link="Issue1925Tests.cs" />
 		<Compile Include="..\Linq\UserTests\Issue2478Tests.cs" Link="Issue2478Tests.cs" />

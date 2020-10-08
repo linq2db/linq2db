@@ -84,6 +84,9 @@ namespace LinqToDB.SqlProvider
 
 			statement = OptimizeStatement(statement, null);
 
+			// provider specific query correction
+			statement = TransformStatementMutable(statement);
+
 //statement.EnsureFindTables();
 			return statement;
 		}
@@ -96,6 +99,21 @@ namespace LinqToDB.SqlProvider
 				statement.SelectQuery!.Select.Add(new SqlValue(1));
 		}
 
+		/// <summary>
+		/// Used for correcting statement which needs mutation of it's properties
+		/// </summary>
+		/// <param name="statement"></param>
+		/// <returns></returns>
+		public virtual SqlStatement TransformStatementMutable(SqlStatement statement)
+		{
+			return statement;
+		}
+
+		/// <summary>
+		/// Used for correcting statement and should return new statement if changes were made.
+		/// </summary>
+		/// <param name="statement"></param>
+		/// <returns></returns>
 		public virtual SqlStatement TransformStatement(SqlStatement statement)
 		{
 			return statement;
