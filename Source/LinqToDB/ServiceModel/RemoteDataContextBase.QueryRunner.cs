@@ -47,6 +47,7 @@ namespace LinqToDB.ServiceModel
 			{
 				SetCommand(false);
 
+				var sb = new StringBuilder();
 				var query = Query.Queries[QueryNumber];
 				var sqlBuilder   = DataContext.CreateSqlProvider();
 				var sqlOptimizer = DataContext.GetSqlOptimizer();
@@ -64,57 +65,60 @@ namespace LinqToDB.ServiceModel
 
 						sql = sqlBuilder.ApplyQueryHints(sql, query.QueryHints);
 
-						sqlStringBuilder = new StringBuilder(sql);
+						sqlStringBuilder.Append(sql);
 					}
+
+					sb
+						.Append("-- ")
+						.Append("ServiceModel")
+						.Append(' ')
+						.Append(DataContext.ContextID)
+						.Append(' ')
+						.Append(sqlBuilder.Name)
+						.AppendLine();
+
+					if (sqlBuilder.ActualParameters.Count > 0)
+					{
+						foreach (var p in sqlBuilder.ActualParameters)
+						{
+							var parameterValue = p.GetParameterValue(_parameterValues);
+
+							var value = parameterValue.Value;
+
+							sb
+								.Append("-- DECLARE ")
+								.Append(p.Name)
+								.Append(' ')
+								.Append(value == null ? parameterValue.DbDataType.SystemType.ToString() : value.GetType().Name)
+								.AppendLine();
+						}
+
+						sb.AppendLine();
+
+						foreach (var p in sqlBuilder.ActualParameters)
+						{
+							var parameterValue = p.GetParameterValue(_parameterValues);
+
+							var value = parameterValue.Value;
+
+							if (value is string || value is char)
+								value = "'" + value.ToString().Replace("'", "''") + "'";
+
+							sb
+								.Append("-- SET ")
+								.Append(p.Name)
+								.Append(" = ")
+								.Append(value)
+								.AppendLine();
+						}
+
+						sb.AppendLine();
+					}
+
+					sb.Append(sqlStringBuilder);
+					sqlStringBuilder.Length = 0;
 				}
 
-
-				var sb = new StringBuilder();
-
-				sb
-					.Append("-- ")
-					.Append("ServiceModel")
-					.Append(' ')
-					.Append(DataContext.ContextID)
-					.Append(' ')
-					.Append(sqlBuilder.Name)
-					.AppendLine();
-
-				if (sqlBuilder.ActualParameters.Count > 0)
-				{
-					foreach (var p in sqlBuilder.ActualParameters)
-					{
-						var value = p.Value;
-
-						sb
-							.Append("-- DECLARE ")
-							.Append(p.Name)
-							.Append(' ')
-							.Append(value == null ? p.Type.SystemType.ToString() : value.GetType().Name)
-							.AppendLine();
-					}
-
-					sb.AppendLine();
-
-					foreach (var p in sqlBuilder.ActualParameters)
-					{
-						var value = p.Value;
-
-						if (value is string || value is char)
-							value = "'" + value.ToString().Replace("'", "''") + "'";
-
-						sb
-							.Append("-- SET ")
-							.Append(p.Name)
-							.Append(" = ")
-							.Append(value)
-							.AppendLine();
-					}
-
-					sb.AppendLine();
-				}
-
-				sb.Append(sqlStringBuilder);
 
 				return sb.ToString();
 			}
