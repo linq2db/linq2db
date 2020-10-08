@@ -27,7 +27,7 @@ namespace LinqToDB.Identity
 		///     <see cref="IConnectionFactory" />
 		/// </param>
 		/// <param name="describer">The <see cref="IdentityErrorDescriber" />.</param>
-		public RoleStore(IConnectionFactory factory, IdentityErrorDescriber? describer = null)
+		public RoleStore(IConnectionFactory? factory, IdentityErrorDescriber? describer = null)
 			: base(factory, describer)
 		{
 		}
@@ -50,7 +50,7 @@ namespace LinqToDB.Identity
 		///     <see cref="IConnectionFactory" />
 		/// </param>
 		/// <param name="describer">The <see cref="IdentityErrorDescriber" />.</param>
-		public RoleStore(IConnectionFactory factory, IdentityErrorDescriber? describer = null)
+		public RoleStore(IConnectionFactory? factory, IdentityErrorDescriber? describer = null)
 			: base(factory, describer)
 		{
 		}
@@ -92,12 +92,9 @@ namespace LinqToDB.Identity
 		///     <see cref="IConnectionFactory" />
 		/// </param>
 		/// <param name="describer">The <see cref="IdentityErrorDescriber" />.</param>
-		public RoleStore(IConnectionFactory factory, IdentityErrorDescriber? describer = null)
+		public RoleStore(IConnectionFactory? factory, IdentityErrorDescriber? describer = null)
 		{
-			if (factory == null)
-				throw new ArgumentNullException(nameof(factory));
-
-			_factory = factory;
+			_factory = factory ?? throw new ArgumentNullException(nameof(factory));
 
 			ErrorDescriber = describer ?? new IdentityErrorDescriber();
 		}

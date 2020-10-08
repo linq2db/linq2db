@@ -11,6 +11,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\Source\LinqToDB.AspNet\LinqToDB.AspNet.csproj" />
+		<ProjectReference Include="..\..\Source\LinqToDB.Identity\LinqToDB.Identity.csproj" />
 		<ProjectReference Include="..\VisualBasic\Tests.VisualBasic.vbproj" />
 		<ProjectReference Include="..\FSharp\Tests.FSharp.fsproj" />
 	</ItemGroup>
