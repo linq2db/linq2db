@@ -68,7 +68,7 @@ namespace LinqToDB.Linq.Builder
 			return builder.MakeIsPredicate(context, discriminators, toType,
 				name =>
 				{
-					var field  = table.Fields.Values.First(f => f.Name == name);
+					var field  = table[name] ?? throw new LinqException($"Field {name} not found in table {table}");
 					var member = field.ColumnDescriptor.MemberInfo;
 					var expr   = Expression.MakeMemberAccess(Expression.Parameter(member.DeclaringType, "p"), member);
 					var sql    = context.ConvertToSql(expr, 1, ConvertFlags.Field)[0].Sql;

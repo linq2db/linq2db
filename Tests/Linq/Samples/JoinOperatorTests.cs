@@ -23,7 +23,7 @@ namespace Tests.Samples
 
 				foreach (var category in query)
 				{
-					Console.WriteLine(category.CategoryID);
+					TestContext.WriteLine(category.CategoryID);
 				}
 			}
 		}

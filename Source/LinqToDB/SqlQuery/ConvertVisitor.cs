@@ -150,7 +150,7 @@ namespace LinqToDB.SqlQuery
 
 								if (targs != null && !ReferenceEquals(table.TableArguments, targs))
 								{
-									var newFields = table.Fields.Values.Select(f => new SqlField(f));
+									var newFields = table.Fields.Select(f => new SqlField(f));
 									newTable = new SqlTable(table, newFields, targs);
 								}
 							}
@@ -158,9 +158,10 @@ namespace LinqToDB.SqlQuery
 							if (!ReferenceEquals(table, newTable))
 							{
 								AddVisited(table.All, newTable.All);
-								foreach (var prevField in table.Fields.Values)
+								foreach (var prevField in table.Fields)
 								{
-									if (newTable.Fields.TryGetValue(prevField.Name, out var newField))
+									var newField = newTable[prevField.Name];
+									if (newField != null)
 										AddVisited(prevField, newField);
 								}
 							}
@@ -182,7 +183,7 @@ namespace LinqToDB.SqlQuery
 
 								if (ce)
 								{
-									var newFields = table.Fields.Values.Select(f => new SqlField(f));
+									var newFields = table.Fields.Select(f => new SqlField(f));
 									newTable = new SqlCteTable(table, newFields, cte!);
 								}
 							}
@@ -190,9 +191,10 @@ namespace LinqToDB.SqlQuery
 							if (!ReferenceEquals(table, newTable))
 							{
 								AddVisited(table.All, newTable.All);
-								foreach (var prevField in table.Fields.Values)
+								foreach (var prevField in table.Fields)
 								{
-									if (newTable.Fields.TryGetValue(prevField.Name, out var newField))
+									var newField = newTable[prevField.Name];
+									if (newField != null)
 										AddVisited(prevField, newField);
 								}
 							}
@@ -387,10 +389,17 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.FuncLikePredicate:
 						{
 							var p = (SqlPredicate.FuncLike)element;
-							var f = (SqlFunction?)ConvertInternal(p.Function);
+							var f = (ISqlExpression?)ConvertInternal(p.Function);
 
 							if (f != null && !ReferenceEquals(p.Function, f))
-								newElement = new SqlPredicate.FuncLike(f);
+							{
+								if (f is SqlFunction function)
+									newElement = new SqlPredicate.FuncLike(function);
+								else if (f is ISqlPredicate predicate)
+									newElement = predicate;
+								else
+									throw new InvalidCastException("Converted FuncLikePredicate expression is not a Predicate expression.");
+							}
 
 							break;
 						}
@@ -808,20 +817,35 @@ namespace LinqToDB.SqlQuery
 						{
 							var source = (SqlMergeSourceTable)element;
 
-							var enumerableSource = (SqlValuesTable?)ConvertInternal(source.SourceEnumerable);
-							var querySource      = (SelectQuery?)   ConvertInternal(source.SourceQuery);
-							var fields           = ConvertSafe(source.SourceFields);
+							var enumerableSource          = (SqlValuesTable?)ConvertInternal(source.SourceEnumerable);
+							var querySource               = (SelectQuery?)   ConvertInternal(source.SourceQuery);
+							IEnumerable<SqlField>? fields = Convert(source.SourceFields, f => new SqlField(f));
+
+							var fe = fields != null && !ReferenceEquals(source.SourceFields, fields);
 
 							if (enumerableSource != null && !ReferenceEquals(source.SourceEnumerable, enumerableSource) ||
 								querySource      != null && !ReferenceEquals(source.SourceQuery, querySource)           ||
-								fields           != null && !ReferenceEquals(source.SourceFields, fields))
+								!fe)
 							{
+								if (!fe)
+								{
+									var newFields = source.SourceFields.ToArray();
+									for (var i = 0; i < newFields.Length; i++)
+									{
+										var field              = newFields[i];
+										newFields[i]           = new SqlField(field);
+										VisitedElements[field] = newFields[i];
+									}
+									fields = newFields;
+								}
+
 								newElement = new SqlMergeSourceTable(
 									source.SourceID,
 									enumerableSource ?? source.SourceEnumerable!,
 									querySource ?? source.SourceQuery!,
-									fields ?? source.SourceFields);
-							}
+									fields!);
+								VisitedElements[((ISqlTableSource)source).All] = ((ISqlTableSource)newElement).All;
+						}
 
 								break;
 							}
@@ -918,7 +942,7 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.SqlRawSqlTable:
 						{
 							var table   = (SqlRawSqlTable)element;
-							var fields1 = ToArray(table.Fields);
+							var fields1 = table.Fields.ToArray();
 							var fields2 = Convert(fields1, f => new SqlField(f));
 							var targs   = table.Parameters == null || table.Parameters.Length == 0 ?
 								null : Convert(table.Parameters);
@@ -944,7 +968,7 @@ namespace LinqToDB.SqlQuery
 
 								newElement = new SqlRawSqlTable(table, fields2!, targs ?? table.Parameters!);
 
-								VisitedElements[((SqlRawSqlTable)newElement).All] = table.All;
+								VisitedElements[table.All] = ((SqlRawSqlTable)newElement).All;
 							}
 
 							break;

@@ -190,6 +190,7 @@ namespace Tests.xUpdate
 			ProviderName.DB2, ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix)]
 			string context)
 		{
+			using (new DisableBaseline("Non-stable identity values"))
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
 			{

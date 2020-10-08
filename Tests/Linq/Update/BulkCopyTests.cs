@@ -54,7 +54,7 @@ namespace Tests.xUpdate
 			[DataSources(false)]string context,
 			[Values(null, true, false)]bool? keepIdentity,
 			[Values] BulkCopyType copyType,
-#if NET46
+#if NET472
 			[Values(0, 1)] int asyncMode) // 0 == sync, 1 == async
 #else
 			[Values(0, 1, 2)] int asyncMode) // 0 == sync, 1 == async, 2 == async with IAsyncEnumerable
@@ -64,6 +64,7 @@ namespace Tests.xUpdate
 				Assert.Inconclusive("Oracle BulkCopy doesn't support identity triggers");
 
 			// don't use transactions as some providers will fallback to non-provider-specific implementation then
+			using (new DisableBaseline("Non-stable identity values"))
 			using (var db = new TestDataConnection(context))
 			{
 				var lastId = db.InsertWithInt32Identity(new TestTable2());
@@ -120,7 +121,7 @@ namespace Tests.xUpdate
 						}
 						else // asynchronous with IAsyncEnumerable
 						{
-#if !NET46
+#if !NET472
 							await db.BulkCopyAsync(
 								options,
 								AsAsyncEnumerable(values));
@@ -142,13 +143,14 @@ namespace Tests.xUpdate
 			[DataSources(false)]        string       context,
 			[Values(null, true, false)] bool?        keepIdentity,
 			[Values]                    BulkCopyType copyType,
-#if NET46
+#if NET472
 			[Values(0, 1)]              int          asyncMode) // 0 == sync, 1 == async
 #else
 			[Values(0, 1, 2)]           int          asyncMode) // 0 == sync, 1 == async, 2 == async with IAsyncEnumerable
 #endif
 		{
 			// don't use transactions as some providers will fallback to non-provider-specific implementation then
+			using (new DisableBaseline("Non-stable identity values"))
 			using (var db = new TestDataConnection(context))
 			{
 				var lastId = db.InsertWithInt32Identity(new TestTable1());
@@ -205,7 +207,7 @@ namespace Tests.xUpdate
 						}
 						else // asynchronous with IAsyncEnumerable
 						{
-#if !NET46
+#if !NET472
 							await db.BulkCopyAsync(
 								options,
 								AsAsyncEnumerable(values));
@@ -221,7 +223,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if !NET46
+#if !NET472
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 		private async IAsyncEnumerable<T> AsAsyncEnumerable<T>(IEnumerable<T> enumerable)
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously

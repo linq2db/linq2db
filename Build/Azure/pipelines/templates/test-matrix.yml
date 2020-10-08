@@ -1,0 +1,726 @@
+parameters:
+  enabled: false
+  experimental: false
+  with_baselines: false
+
+# Test matrix (list of all database test runs with configuration options)
+# Because azure pipelines doesn't support non-string variables and strategy templates
+# (see https://developercommunity.visualstudio.com/content/problem/812728/variables-in-yaml-pipeline-are-not-allowing-to-def.html)
+# we use parameter to define test matrix..
+# each test_matrix list entry could define following properties:
+
+# GENERAL PROPERTIES
+# - name            (string, required)            : name of test matrix entry (unique, no spaces/dots)
+# - title           (string, required)            : test run name, added to display name for testrun
+# - is_experimental (true/false string, required) : experimental pipeline switch, when true - testrun enabled only for experimental pipeline,
+#                                                   when false - only for test-all/default pipelines
+                    #                               switch used to debug testruns without running other testruns
+
+# OPERATION SYSTEM SELECTORS
+# - enable_os_win2019  (true/false string) : enables testrun for windows 2019 image (windows-2019)
+# - enable_os_win2016  (true/false string) : enables testrun for windows 2016 image (vs2017-win2016)
+# - enable_os_ubuntu16 (true/false string) : enables testrun for Ubuntu 16.04 image (ubuntu-16.04)
+# - enable_os_ubuntu20 (true/false string) : enables testrun for Ubuntu 20.04 image (ubuntu-20.04)
+# - enable_os_macos    (true/false string) : enables testrun for Mac OS image (macOS-10.15)
+
+# TARGET FRAMEWORK SELECTORS
+# - enable_fw_net472    (true/false string) : enables testrun against .net framework 4.7.2
+# - enable_fw_netcore21 (true/false string) : enables testrun against .net core 2.1
+# - enable_fw_netcore31 (true/false string) : enables testrun against .net core 3.1
+
+# TEST CONFIG SELECTOR
+# - config_win   (string) : contains name of test config json file for windows runs (without extension)
+# - config_linux (string) : contains name of test config json file for linux runs (without extension)
+# - config_macos (string) : contains name of test config json file for macos runs (without extension)
+
+# SETUP SCRIPT SELECTOR
+# - script_win   (string) : contains name of cmd setup script for windows runs (with extension)
+# - psscript_win (string) : contains name of powershell setup script for windows runs (with extension)
+# - script_linux (string) : contains name of shell setup script for linux runs (with extension)
+# - script_linux (string) : contains name of shell setup script for linux runs (with extension)
+
+# MISC
+# - docker_login         (true/false string) : enables docker hub authentication for testrun image download
+# - install_docker_macos (true/false string) : enables pre-installation of docker for macos testruns
+# - nuget_linux          (string)            : command line for 'npm install' nuget preinstall command for linux testrun
+# - nuget_macos          (string)            : command line for 'npm install' nuget preinstall command for macos testrun
+#                                              nuget preinstall e.g. used for DB2 provider, which have different nugets for different platforms
+
+jobs:
+  - template: test-jobs.yml
+    parameters:
+      enabled: ${{ parameters.enabled }}
+      experimental: ${{ parameters.experimental }}
+      with_baselines: ${{ parameters.with_baselines }}
+      test_matrix:
+# SQLite
+        - name: SQLite
+          title: SQLite
+          config_win: sqlite
+          config_linux: sqlite
+          config_macos: sqlite
+          enable_os_win2016: true
+          enable_os_win2019: false
+          enable_os_ubuntu16: false
+          enable_os_ubuntu20: true
+          enable_os_macos: true
+          enable_fw_net472: true
+          enable_fw_netcore21: true
+          enable_fw_netcore31: false
+          is_experimental: false
+
+        - name: SQLite_MS
+          title: SQLite.MS
+          config_win: sqlite.ms
+          config_linux: sqlite.ms
+          config_macos: sqlite.ms
+          enable_os_win2016: true
+          enable_os_win2019: false
+          enable_os_ubuntu16: false
+          enable_os_ubuntu20: true
+          enable_os_macos: true
+          enable_fw_net472: true
+          enable_fw_netcore21: true
+          enable_fw_netcore31: false
+          is_experimental: false
+
+# Access
+        - name: Access_OLEDB_JET
+          title: Access Jet
+          config_win: access
+          enable_os_win2016: false
+          enable_os_win2019: true
+          enable_os_ubuntu16: false
+          enable_os_ubuntu20: false
+          enable_os_macos: false
+          enable_fw_net472: true
+          enable_fw_netcore21: false
+          enable_fw_netcore31: false
+          is_experimental: false
+
+        - name: Access_OLEDB_ACE
+          title: Access ACE
+          config_win: access.ace
+          script_win: access.ace.cmd
+          enable_os_win2016: false
+          enable_os_win2019: true
+          enable_os_ubuntu16: false
+          enable_os_ubuntu20: false
+          enable_os_macos: false
+          enable_fw_net472: true
+          enable_fw_netcore21: false
+          enable_fw_netcore31: false
+          is_experimental: false
+
+        - name: Access_ODBC_MDB
+          title: Access ODBC MDB
+          config_win: access.odbc.mdb
+          enable_os_win2016: false
+          enable_os_win2019: true
+          enable_os_ubuntu16: false
+          enable_os_ubuntu20: false
+          enable_os_macos: false
+          enable_fw_net472: true
+          enable_fw_netcore21: false
+          enable_fw_netcore31: false
+          is_experimental: false
+
+        - name: Access_ODBC_ACE
+          title: Access ODBC ACE
+          config_win: access.odbc.ace
+          script_win: access.ace.cmd
+          enable_os_win2016: false
+          enable_os_win2019: true
+          enable_os_ubuntu16: false
+          enable_os_ubuntu20: false
+          enable_os_macos: false
+          enable_fw_net472: true
+          enable_fw_netcore21: false
+          enable_fw_netcore31: false
+          is_experimental: false
+
+        - name: Access_ODBC_ACE_x64
+          title: Access ODBC ACE x64
+          config_win: access.odbc.ace
+          script_win: access.ace.x64.cmd
+          enable_os_win2016: true
+          enable_os_win2019: false
+          enable_os_ubuntu16: false
+          enable_os_ubuntu20: false
+          enable_os_macos: false
+          enable_fw_net472: false
+          enable_fw_netcore21: true
+          enable_fw_netcore31: false
+          is_experimental: false
+
+        - name: Access_OLEDB_ACE_x64
+          title: Access OleDb ACE x64
+          config_win: access.ace
+          script_win: access.ace.x64.cmd
+          enable_os_win2016: false # true (disabled due to a lot of random crashes https://github.com/dotnet/runtime/issues/36954)
+          enable_os_win2019: false
+          enable_os_ubuntu16: false
+          enable_os_ubuntu20: false
+          enable_os_macos: false
+          enable_fw_net472: false
+          enable_fw_netcore21: false # true (disabled due to a lot of random crashes https://github.com/dotnet/runtime/issues/36954)
+          enable_fw_netcore31: false # true (disabled due to a lot of random crashes https://github.com/dotnet/runtime/issues/36954)
+          is_experimental: false
+
+# SQL CE
+        - name: SqlCE
+          title: SQL CE
+          config_win: sqlce
+          psscript_win: sqlce.ps1
+          enable_os_win2016: true
+          enable_os_win2019: false
+          enable_os_ubuntu16: false
+          enable_os_ubuntu20: false
+          enable_os_macos: false
+          enable_fw_net472: true
+          enable_fw_netcore21: true
+          enable_fw_netcore31: false
+          is_experimental: false
+
+# MySql/MariaDB
+        - name: MySQL
+          title: MySQL
+          config_linux: mysql
+          config_macos: mysql
+          script_linux: mysql.sh
+          script_macos: mac.mysql.sh
+          install_docker_macos: true
+          enable_os_win2016: false
+          enable_os_win2019: false
+          enable_os_ubuntu16: false
+          enable_os_ubuntu20: true
+          enable_os_macos: true
+          enable_fw_net472: false
+          enable_fw_netcore21: true
+          enable_fw_netcore31: true
+          is_experimental: false
+
+        - name: MySQL55
+          title: MySQL 5.5
+          config_linux: mysql55
+          config_macos: mysql55
+          script_linux: mysql55.sh
+          script_macos: mac.mysql55.sh
+          install_docker_macos: true
+          enable_os_win2016: false
+          enable_os_win2019: false
+          enable_os_ubuntu16: false
+          enable_os_ubuntu20: true
+          enable_os_macos: true
+          enable_fw_net472: false
+          enable_fw_netcore21: true
+          enable_fw_netcore31: false
+          is_experimental: false
+
+        - name: MariaDB
+          title: MariaDB
+          config_win: mariadb
+          config_linux: mariadb
+          config_macos: mariadb
+          script_win: mariadb.cmd
+          script_linux: mariadb.sh
+          script_macos: mac.mariadb.sh
+          install_docker_macos: true
+          enable_os_win2016: false # true (needs working docker image)
+          enable_os_win2019: false # true (needs working docker image)
+          enable_os_ubuntu16: false
+          enable_os_ubuntu20: true
+          enable_os_macos: true
+          enable_fw_net472: true
+          enable_fw_netcore21: true
+          enable_fw_netcore31: false
+          is_experimental: false
+
+# PostgreSQL
+        - name: PostgreSQL
+          title: PostgreSQL
+          config_linux: pgsql
+          config_macos: pgsql
+          script_linux: pgsql.sh
+          script_macos: mac.pgsql.sh
+          install_docker_macos: true
+          enable_os_win2016: false
+          enable_os_win2019: false
+          enable_os_ubuntu16: false
+          enable_os_ubuntu20: true
+          enable_os_macos: true
+          enable_fw_net472: false
+          enable_fw_netcore21: true
+          enable_fw_netcore31: true
+          is_experimental: false
+
+        - name: PostgreSQL92
+          title: PostgreSQL 9.2
+          config_linux: pgsql92
+          config_macos: pgsql92
+          script_linux: pgsql92.sh
+          script_macos: mac.pgsql92.sh
+          install_docker_macos: true
+          enable_os_win2016: false
+          enable_os_win2019: false
+          enable_os_ubuntu16: false
+          enable_os_ubuntu20: true
+          enable_os_macos: true
+          enable_fw_net472: false
+          enable_fw_netcore21: true
+          enable_fw_netcore31: false
+          is_experimental: false
+
+        - name: PostgreSQL93
+          title: PostgreSQL 9.3
+          config_linux: pgsql93
+          config_macos: pgsql93
+          script_linux: pgsql93.sh
+          script_macos: mac.pgsql93.sh
+          install_docker_macos: true
+          enable_os_win2016: false
+          enable_os_win2019: false
+          enable_os_ubuntu16: false
+          enable_os_ubuntu20: true
+          enable_os_macos: true
+          enable_fw_net472: false
+          enable_fw_netcore21: true
+          enable_fw_netcore31: false
+          is_experimental: false
+
+        - name: PostgreSQL95
+          title: PostgreSQL 9.5
+          config_linux: pgsql95
+          config_macos: pgsql95
+          script_linux: pgsql95.sh
+          script_macos: mac.pgsql95.sh
+          install_docker_macos: true
+          enable_os_win2016: false
+          enable_os_win2019: false
+          enable_os_ubuntu16: false
+          enable_os_ubuntu20: true
+          enable_os_macos: true
+          enable_fw_net472: false
+          enable_fw_netcore21: true
+          enable_fw_netcore31: false
+          is_experimental: false
+
+        - name: PostgreSQL10
+          title: PostgreSQL 10
+          config_win: pgsql10
+          config_linux: pgsql10
+          config_macos: pgsql10
+          script_win: pgsql10.cmd
+          script_linux: pgsql10.sh
+          script_macos: mac.pgsql10.sh
+          install_docker_macos: true
+          enable_os_win2016: false # true (needs working docker image)
+          enable_os_win2019: false # true (needs working docker image)
+          enable_os_ubuntu16: false
+          enable_os_ubuntu20: true
+          enable_os_macos: true
+          enable_fw_net472: true
+          enable_fw_netcore21: true
+          enable_fw_netcore31: false
+          is_experimental: false
+
+        - name: PostgreSQL11
+          title: PostgreSQL 11
+          config_linux: pgsql11
+          config_macos: pgsql11
+          script: pgsql11.sh
+          script_linux: pgsql11.sh
+          script_macos: mac.pgsql11.sh
+          install_docker_macos: true
+          enable_os_win2016: false
+          enable_os_win2019: false
+          enable_os_ubuntu16: false
+          enable_os_ubuntu20: true
+          enable_os_macos: true
+          enable_fw_net472: false
+          enable_fw_netcore21: true
+          enable_fw_netcore31: false
+          is_experimental: false
+
+# SQL Server
+        - name: SqlServer2005
+          title: SQL Server 2005 (System.Data.SqlClient)
+          config_win: sqlserver.2005
+          script_win: sqlserver.2005.cmd
+          enable_os_win2016: true
+          enable_os_win2019: false
+          enable_os_ubuntu16: false
+          enable_os_ubuntu20: false
+          enable_os_macos: false
+          enable_fw_net472: true
+          enable_fw_netcore21: true
+          enable_fw_netcore31: false
+          is_experimental: false
+
+        - name: SqlServer2005_MS
+          title: SQL Server 2005 (Microsoft.Data.SqlClient)
+          config_win: sqlserver.2005.ms
+          script_win: sqlserver.2005.cmd
+          enable_os_win2016: false # true (too many sqlserver tests)
+          enable_os_win2019: false
+          enable_os_ubuntu16: false
+          enable_os_ubuntu20: false
+          enable_os_macos: false
+          enable_fw_net472: true
+          enable_fw_netcore21: true
+          enable_fw_netcore31: false
+          is_experimental: false
+
+        - name: SqlServer2008
+          title: SQL Server 2008 (System.Data.SqlClient)
+          config_win: sqlserver.2008
+          script_win: sqlserver.2008.cmd
+          enable_os_win2016: true
+          enable_os_win2019: false
+          enable_os_ubuntu16: false
+          enable_os_ubuntu20: false
+          enable_os_macos: false
+          enable_fw_net472: true
+          enable_fw_netcore21: true
+          enable_fw_netcore31: false
+          is_experimental: false
+
+        - name: SqlServer2008_MS
+          title: SQL Server 2008 (Microsoft.Data.SqlClient)
+          config_win: sqlserver.2008.ms
+          script_win: sqlserver.2008.cmd
+          enable_os_win2016: false # true (too many sqlserver tests)
+          enable_os_win2019: false
+          enable_os_ubuntu16: false
+          enable_os_ubuntu20: false
+          enable_os_macos: false
+          enable_fw_net472: true
+          enable_fw_netcore21: true
+          enable_fw_netcore31: false
+          is_experimental: false
+
+        - name: SqlServer2012
+          title: SQL Server 2012 (System.Data.SqlClient)
+          config_win: sqlserver.2012
+          script_win: sqlserver.2012.cmd
+          enable_os_win2016: true
+          enable_os_win2019: false
+          enable_os_ubuntu16: false
+          enable_os_ubuntu20: false
+          enable_os_macos: false
+          enable_fw_net472: true
+          enable_fw_netcore21: true
+          enable_fw_netcore31: false
+          is_experimental: false
+
+        - name: SqlServer2012_MS
+          title: SQL Server 2012 (Microsoft.Data.SqlClient)
+          config_win: sqlserver.2012.ms
+          script_win: sqlserver.2012.cmd
+          enable_os_win2016: false # true (too many sqlserver tests)
+          enable_os_win2019: false
+          enable_os_ubuntu16: false
+          enable_os_ubuntu20: false
+          enable_os_macos: false
+          enable_fw_net472: true
+          enable_fw_netcore21: true
+          enable_fw_netcore31: false
+          is_experimental: false
+
+        - name: SqlServer2014
+          title: SQL Server 2014 (System.Data.SqlClient)
+          config_win: sqlserver.2014
+          script_win: sqlserver.2014.cmd
+          enable_os_win2016: true
+          enable_os_win2019: false
+          enable_os_ubuntu16: false
+          enable_os_ubuntu20: false
+          enable_os_macos: false
+          enable_fw_net472: true
+          enable_fw_netcore21: true
+          enable_fw_netcore31: false
+          is_experimental: false
+
+        - name: SqlServer2014_MS
+          title: SQL Server 2014 (Microsoft.Data.SqlClient)
+          config_win: sqlserver.2014.ms
+          script_win: sqlserver.2014.cmd
+          enable_os_win2016: false # true (too many sqlserver tests)
+          enable_os_win2019: false
+          enable_os_ubuntu16: false
+          enable_os_ubuntu20: false
+          enable_os_macos: false
+          enable_fw_net472: true
+          enable_fw_netcore21: true
+          enable_fw_netcore31: false
+          is_experimental: false
+
+        - name: SqlServer2016
+          title: SQL Server 2016 (System.Data.SqlClient)
+          config_win: sqlserver.2016
+          script_win: sqlserver.2016.cmd
+          enable_os_win2016: true
+          enable_os_win2019: false
+          enable_os_ubuntu16: false
+          enable_os_ubuntu20: false
+          enable_os_macos: false
+          enable_fw_net472: true
+          enable_fw_netcore21: true
+          enable_fw_netcore31: false
+          is_experimental: false
+
+        - name: SqlServer2016_MS
+          title: SQL Server 2016 (Microsoft.Data.SqlClient)
+          config_win: sqlserver.2016.ms
+          script_win: sqlserver.2016.cmd
+          enable_os_win2016: false # true (too many sqlserver tests)
+          enable_os_win2019: false
+          enable_os_ubuntu16: false
+          enable_os_ubuntu20: false
+          enable_os_macos: false
+          enable_fw_net472: true
+          enable_fw_netcore21: true
+          enable_fw_netcore31: false
+          is_experimental: false
+
+        - name: SqlServer2017
+          title: SQL Server 2017 (System.Data.SqlClient)
+          config_win: sqlserver.2017
+          config_linux: sqlserver.fts.2017
+          config_macos: sqlserver.fts.2017
+          script_win: sqlserver.2017.cmd
+          script_linux: sqlserver.2017.sh
+          script_macos: mac.sqlserver.2017.sh
+          install_docker_macos: true
+          enable_os_win2016: true
+          enable_os_win2019: false
+          enable_os_ubuntu16: false
+          enable_os_ubuntu20: true
+          enable_os_macos: false # true (disabled due to stack overflow exception during test run. needs investigation)
+          enable_fw_net472: true
+          enable_fw_netcore21: true
+          enable_fw_netcore31: false
+          is_experimental: false
+
+        - name: SqlServer2017_MS
+          title: SQL Server 2017 (Microsoft.Data.SqlClient)
+          config_win: sqlserver.2017.ms
+          config_linux: sqlserver.fts.2017.ms
+          config_macos: sqlserver.fts.2017.ms
+          script_win: sqlserver.2017.cmd
+          script_linux: sqlserver.2017.sh
+          script_macos: mac.sqlserver.2017.sh
+          install_docker_macos: true
+          enable_os_win2016: false # true (too many sqlserver tests)
+          enable_os_win2019: false
+          enable_os_ubuntu16: false
+          enable_os_ubuntu20: true
+          enable_os_macos: false # true (disabled due to stack overflow exception during test run. needs investigation)
+          enable_fw_net472: true
+          enable_fw_netcore21: true
+          enable_fw_netcore31: false
+          is_experimental: false
+
+        - name: SqlServer2019
+          title: SQL Server 2019 (System.Data.SqlClient)
+          config_win: sqlserver.2019
+          config_linux: sqlserver.fts.2019
+          config_macos: sqlserver.fts.2019
+          script_win: sqlserver.2019.cmd
+          script_linux: sqlserver.2019.sh
+          script_macos: mac.sqlserver.2019.sh
+          install_docker_macos: true
+          enable_os_win2016: false
+          enable_os_win2019: true
+          enable_os_ubuntu16: false
+          enable_os_ubuntu20: true
+          enable_os_macos:  false # true (disabled due to stack overflow exception during test run. needs investigation)
+          enable_fw_net472: true
+          enable_fw_netcore21: true
+          enable_fw_netcore31: false
+          is_experimental: false
+
+        - name: SqlServer2019_MS
+          title: SQL Server 2019 (Microsoft.Data.SqlClient)
+          config_win: sqlserver.2019.ms
+          config_linux: sqlserver.fts.2019.ms
+          config_macos: sqlserver.fts.2019.ms
+          script_win: sqlserver.2019.cmd
+          script_linux: sqlserver.2019.sh
+          script_macos: mac.sqlserver.2019.sh
+          install_docker_macos: true
+          enable_os_win2016: false
+          enable_os_win2019: true
+          enable_os_ubuntu16: false
+          enable_os_ubuntu20: true
+          enable_os_macos:  false # true (disabled due to stack overflow exception during test run. needs investigation)
+          enable_fw_net472: true
+          enable_fw_netcore21: true
+          enable_fw_netcore31: false
+          is_experimental: false
+
+# Sybase ASE
+        - name: Sybase
+          title: Sybase ASE 16
+          config_linux: sybase
+          config_macos: sybase
+          script_linux: sybase.sh
+          script_macos: sybase.sh
+          install_docker_macos: true
+          enable_os_win2016: false
+          enable_os_win2019: false
+          enable_os_ubuntu16: false
+          enable_os_ubuntu20: true
+          enable_os_macos: true
+          enable_fw_net472: false
+          enable_fw_netcore21: true
+          enable_fw_netcore31: false
+          is_experimental: false
+
+# Oracle
+        - name: Oracle11
+          title: Oracle 11g XE
+          config_linux: oracle11
+          config_macos: oracle11
+          script_linux: oracle11.sh
+          script_macos: oracle11.sh
+          install_docker_macos: true
+          enable_os_win2016: false
+          enable_os_win2019: false
+          enable_os_ubuntu16: false
+          enable_os_ubuntu20: true
+          enable_os_macos: true
+          enable_fw_net472: false
+          enable_fw_netcore21: true
+          enable_fw_netcore31: false
+          is_experimental: false
+
+        - name: Oracle12
+          title: Oracle 12c
+          config_linux: oracle12
+          config_macos: oracle12
+          script_linux: oracle12.sh
+          script_macos: oracle12.sh
+          install_docker_macos: true
+          enable_os_win2016: false
+          enable_os_win2019: false
+          enable_os_ubuntu16: false
+          enable_os_ubuntu20: true
+          enable_os_macos: true
+          enable_fw_net472: false
+          enable_fw_netcore21: true
+          enable_fw_netcore31: false
+          is_experimental: false
+
+# Firebird
+        - name: Firebird25
+          title: Firebird 2.5
+          config_linux: firebird25
+          config_macos: firebird25
+          script_linux: firebird25.sh
+          script_macos: firebird25.sh
+          install_docker_macos: true
+          enable_os_win2016: false
+          enable_os_win2019: false
+          enable_os_ubuntu16: false
+          enable_os_ubuntu20: true
+          enable_os_macos: true
+          enable_fw_net472: false
+          enable_fw_netcore21: true
+          enable_fw_netcore31: false
+          is_experimental: false
+
+        - name: Firebird3
+          title: Firebird 3.0
+          config_linux: firebird3
+          config_macos: firebird3
+          script_linux: firebird3.sh
+          script_macos: firebird3.sh
+          install_docker_macos: true
+          enable_os_win2016: false
+          enable_os_win2019: false
+          enable_os_ubuntu16: false
+          enable_os_ubuntu20: true
+          enable_os_macos: true
+          enable_fw_net472: false
+          enable_fw_netcore21: true
+          enable_fw_netcore31: false
+          is_experimental: false
+
+# DB2
+        - name: DB2
+          title: DB2 LUW 11.5
+          config_linux: db2
+          config_macos: db2
+          script_linux: db2.sh
+          script_macos: mac.db2.sh
+          nuget_linux: IBM.Data.DB2.Core-lnx -Version 2.2.0.100
+          nuget_macos: IBM.Data.DB2.Core-osx -Version 2.0.0.100
+          install_docker_macos: true
+          enable_os_win2016: false
+          enable_os_win2019: false
+          enable_os_ubuntu16: true
+          enable_os_ubuntu20: false
+          enable_os_macos: true
+          enable_fw_net472: false
+          enable_fw_netcore21: true
+          enable_fw_netcore31: false
+          is_experimental: false
+
+# Informix
+        - name: Informix12
+          title: Informix 12.10
+          config_linux: informix
+          config_macos: informix
+          script_linux: informix12.sh
+          script_macos: mac.informix12.sh
+          nuget_linux: IBM.Data.DB2.Core-lnx -Version 2.2.0.100
+          nuget_macos: IBM.Data.DB2.Core-osx -Version 2.0.0.100
+          install_docker_macos: true
+          enable_os_win2016: false
+          enable_os_win2019: false
+          enable_os_ubuntu16: # false true (needs working docker image)
+          enable_os_ubuntu20: false
+          enable_os_macos: # false true (needs working docker image)
+          enable_fw_net472: false
+          enable_fw_netcore21: true
+          enable_fw_netcore31: false
+          is_experimental: false
+
+        - name: Informix14
+          title: Informix 14.10
+          config_linux: informix
+          config_macos: informix
+          script_linux: informix14.sh
+          script_macos: mac.informix14.sh
+          nuget_linux: IBM.Data.DB2.Core-lnx -Version 2.2.0.100
+          nuget_macos: IBM.Data.DB2.Core-osx -Version 2.0.0.100
+          install_docker_macos: true
+          enable_os_win2016: false
+          enable_os_win2019: false
+          enable_os_ubuntu16: true
+          enable_os_ubuntu20: false
+          enable_os_macos: true
+          enable_fw_net472: false
+          enable_fw_netcore21: true
+          enable_fw_netcore31: false
+          is_experimental: false
+
+# SAP HANA
+        - name: SAPHANA2
+          title: SAP HANA 2
+          config_linux: hana2
+          config_macos: hana2
+          script_linux: hana2.sh
+          script_macos: mac.hana2.sh
+          install_docker_macos: true
+          enable_os_win2016: false
+          enable_os_win2019: false
+          enable_os_ubuntu16: false
+          enable_os_ubuntu20: # false true (needs working docker image)
+          enable_os_macos: # false true (needs working docker image)
+          enable_fw_net472: false
+          enable_fw_netcore21: true
+          enable_fw_netcore31: false
+          is_experimental: false
+          docker_login: true

@@ -14,7 +14,7 @@ namespace Tests.Tools
 		{
 			var str = new[] { 1, 2, 222 }.ToDiagnosticString();
 
-			Console.Write(str);
+			TestContext.Write(str);
 
 			Assert.AreEqual(str.Replace("\r", "").Replace("\n", ""), @"Count : 3
 +-------+
@@ -45,7 +45,7 @@ namespace Tests.Tools
 				new TestDiagnostic { StringValue = "dkjdkdjkl102398 3 1231233",   DateTimeValue = new DateTime(2016, 10, 23), DecimalValue = 1111111 },
 			}.ToDiagnosticString();
 
-			Console.Write(str);
+			TestContext.Write(str);
 
 			Assert.AreEqual(str.Replace("\r", "").Replace("\n", ""), @"Count : 4
 +---------------------+--------------+-----------------------------+

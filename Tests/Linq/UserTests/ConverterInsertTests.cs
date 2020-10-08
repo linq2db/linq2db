@@ -56,9 +56,9 @@ namespace Tests.UserTests
 			MappingSchema.Default.SetConverter<Dictionary<string,string>?, DataParameter?>(obj => obj == null ? null : new DataParameter { Value = obj.Keys.FirstOrDefault(), DataType = DataType.NVarChar});
 			MappingSchema.Default.SetConverter<string?, Dictionary<string,string>?>       (txt => txt == null ? null : new Dictionary<string,string> { { txt, txt } });
 
+			using (new DisableBaseline("Non-stable identity values"))
 			using (var db = GetDataContext(context))
 			{
-
 				var id = Convert.ToInt32(db.InsertWithIdentity(new Person
 				{
 					FirstName  = new Dictionary<string,string>{ { "123", "123" } },
@@ -125,6 +125,7 @@ namespace Tests.UserTests
 
 			initMappingSchema(ms);
 
+			using (new DisableBaseline("Non-stable identity values"))
 			using (var db = GetDataContext(context, ms))
 			{
 				var id = Convert.ToInt32(db.InsertWithIdentity(new Person2

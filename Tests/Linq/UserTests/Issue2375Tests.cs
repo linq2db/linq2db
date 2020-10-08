@@ -60,22 +60,22 @@ namespace Tests.UserTests
 				using (var itb = db.CreateLocalTable<InventoryResourceDTO>())
 				using (var lctb = db.CreateLocalTable<WmsLoadCarrierDTO>())
 				{
-					var res = new WmsLoadCarrierDTO { Id = Guid.NewGuid(), ResourceLabel = "b" };
+					var res = new WmsLoadCarrierDTO { Id = TestData.Guid1, ResourceLabel = "b" };
 					db.Insert(res);
 					var dto1 = new InventoryResourceDTO
 					{
-						ResourceID = res.Id,
-						Status = InventoryResourceStatus.Used,
-						ModifiedTimeStamp = DateTime.UtcNow - TimeSpan.FromHours(2),
-						Id = Guid.NewGuid()
+						ResourceID        = res.Id,
+						Status            = InventoryResourceStatus.Used,
+						ModifiedTimeStamp = TestData.DateTime - TimeSpan.FromHours(2),
+						Id                = TestData.Guid2
 					};
 					db.Insert(dto1);
 					var dto2 = new InventoryResourceDTO
 					{
-						ResourceID = res.Id,
-						Status = InventoryResourceStatus.Used,
-						ModifiedTimeStamp = DateTime.UtcNow- TimeSpan.FromHours(2),
-						Id = Guid.NewGuid()
+						ResourceID        = res.Id,
+						Status            = InventoryResourceStatus.Used,
+						ModifiedTimeStamp = TestData.DateTime- TimeSpan.FromHours(2),
+						Id                = TestData.Guid3
 					};
 					db.Insert(dto2);
 

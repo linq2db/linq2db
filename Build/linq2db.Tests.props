@@ -3,7 +3,7 @@
 	<Import Project="linq2db.Default.props" />
 
 	<PropertyGroup>
-		<TargetFrameworks>net46;netcoreapp2.1;netcoreapp3.1</TargetFrameworks>
+		<TargetFrameworks>net472;netcoreapp2.1;netcoreapp3.1</TargetFrameworks>
 		<Configurations>Debug;Release;Azure</Configurations>
 	</PropertyGroup>
 
@@ -23,7 +23,7 @@
 		<PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
 	</ItemGroup>
 
-	<ItemGroup Condition="'$(TargetFramework)' == 'net46' ">
+	<ItemGroup Condition="'$(TargetFramework)' == 'net472' ">
 		<Reference Include="System.Data.Linq" />
 		<Reference Include="System.ServiceModel" />
 

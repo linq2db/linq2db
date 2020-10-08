@@ -489,7 +489,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override void BuildTruncateTable(SqlTruncateTableStatement truncateTable)
 		{
-			if (truncateTable.ResetIdentity || truncateTable.Table!.Fields.Values.All(f => !f.IsIdentity))
+			if (truncateTable.ResetIdentity || truncateTable.Table!.IdentityFields.Count == 0)
 				StringBuilder.Append("TRUNCATE TABLE ");
 			else
 				StringBuilder.Append("DELETE FROM ");

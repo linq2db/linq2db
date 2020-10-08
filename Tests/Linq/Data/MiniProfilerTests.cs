@@ -36,7 +36,7 @@ using LinqToDB.DataProvider.Oracle;
 using LinqToDB.DataProvider.PostgreSQL;
 using System.Threading.Tasks;
 using LinqToDB.Common;
-#if NET46
+#if NET472
 using IBM.Data.Informix;
 #endif
 
@@ -89,7 +89,7 @@ namespace Tests.Data
 		public void TestAccessOleDb([IncludeDataSources(ProviderName.Access)] string context, [Values] ConnectionType type)
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
-#if NET46
+#if NET472
 			using (var db = CreateDataConnection(new AccessOleDbDataProvider(), context, type, cs => new System.Data.OleDb.OleDbConnection(cs)))
 #else
 			using (var db = CreateDataConnection(new AccessOleDbDataProvider(), context, type, "System.Data.OleDb.OleDbConnection, System.Data.OleDb"))
@@ -116,7 +116,7 @@ namespace Tests.Data
 				Assert.True    (trace.Contains("DECLARE @p LongVarWChar(3)"));
 
 				// TODO: reenable, when issue with OleDb transactions under .net core fixed
-#if NET46
+#if NET472
 				// assert custom schema table access
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 				Assert.AreEqual(!unmapped, schema.Tables.Any(t => t.ForeignKeys.Any()));
@@ -128,7 +128,7 @@ namespace Tests.Data
 		public void TestAccessODBC([IncludeDataSources(ProviderName.AccessOdbc)] string context, [Values] ConnectionType type)
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
-#if NET46
+#if NET472
 			using (var db = CreateDataConnection(new AccessODBCDataProvider(), context, type, cs => new System.Data.Odbc.OdbcConnection(cs)))
 #else
 			using (var db = CreateDataConnection(new AccessODBCDataProvider(), context, type, "System.Data.Odbc.OdbcConnection, System.Data.Odbc"))
@@ -151,7 +151,7 @@ namespace Tests.Data
 		[Test]
 		public void TestSapHanaOdbc([IncludeDataSources(ProviderName.SapHanaOdbc)] string context, [Values] ConnectionType type)
 		{
-#if NET46
+#if NET472
 			using (var db = CreateDataConnection(new SapHanaOdbcDataProvider(), context, type, cs => new System.Data.Odbc.OdbcConnection(cs)))
 #else
 			using (var db = CreateDataConnection(new SapHanaOdbcDataProvider(), context, type, "System.Data.Odbc.OdbcConnection, System.Data.Odbc"))
@@ -223,9 +223,8 @@ namespace Tests.Data
 				// just check schema (no api used)
 				db.DataProvider.GetSchemaProvider().GetSchema(db);
 
-
 				// assert api resolved and callable
-				SqlCeTools.CreateDatabase($"TestSqlCe_{Guid.NewGuid():N}");
+				SqlCeTools.CreateDatabase($"TestSqlCe_{TestData.Guid1:N}");
 			}
 		}
 
@@ -415,9 +414,12 @@ namespace Tests.Data
 				Assert.AreEqual(dtValue, ((MySqlConnectorDateTime)rawDtValue).GetDateTime());
 
 				// test provider-specific parameter values
-				Assert.AreEqual(dtValue, db.Execute<DateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", new MySqlConnectorDateTime(dtValue), DataType.Date)));
-				Assert.AreEqual(dtValue, db.Execute<DateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", new MySqlConnectorDateTime(dtValue), DataType.DateTime)));
-				Assert.AreEqual(dtValue, db.Execute<DateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", new MySqlConnectorDateTime(dtValue), DataType.DateTime2)));
+				using (new DisableBaseline("Output (datetime format) is culture-/system-dependent"))
+				{
+					Assert.AreEqual(dtValue, db.Execute<DateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", new MySqlConnectorDateTime(dtValue), DataType.Date)));
+					Assert.AreEqual(dtValue, db.Execute<DateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", new MySqlConnectorDateTime(dtValue), DataType.DateTime)));
+					Assert.AreEqual(dtValue, db.Execute<DateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", new MySqlConnectorDateTime(dtValue), DataType.DateTime2)));
+				}
 
 				// assert provider-specific parameter type name
 				Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE tinyintDataType = @p", new DataParameter("@p", (sbyte)111, DataType.SByte)));
@@ -481,7 +483,7 @@ namespace Tests.Data
 		public void TestDB2([IncludeDataSources(ProviderName.DB2)] string context, [Values] ConnectionType type)
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
-#if NET46
+#if NET472
 			using (var db = CreateDataConnection(new DB2DataProvider(ProviderName.DB2LUW, DB2Version.LUW), context, type, "IBM.Data.DB2.DB2Connection, IBM.Data.DB2"))
 #else
 			using (var db = CreateDataConnection(new DB2DataProvider(ProviderName.DB2LUW, DB2Version.LUW), context, type, "IBM.Data.DB2.Core.DB2Connection, IBM.Data.DB2.Core"))
@@ -567,7 +569,8 @@ namespace Tests.Data
 			var hierarchyidSupported = version >= SqlServerVersion.v2008;
 
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
-#if NET46
+			using (new DisableBaseline("TODO: debug reason for inconsistent bulk copy sql"))
+#if NET472
 			using (var db = CreateDataConnection(new SqlServerDataProvider(providerName, version, SqlServerProvider.SystemDataSqlClient), context, type, typeof(SqlConnection)))
 #else
 			using (var db = CreateDataConnection(new SqlServerDataProvider(providerName, version, SqlServerProvider.SystemDataSqlClient), context, type, "System.Data.SqlClient.SqlConnection, System.Data.SqlClient"))
@@ -605,7 +608,7 @@ namespace Tests.Data
 				if (tvpSupported)
 				{
 					//// assert TVP type name
-					var record     = SqlServerTypesTests.TestData[0];
+					var record     = SqlServerTypesTests.TestUDTData[0];
 					var parameter  = new DataParameter("p", SqlServerTypesTests.GetSqlDataRecords()) { DbType = SqlServerTypesTests.TYPE_NAME };
 					var readRecord = (from r in db.FromSql<SqlServerTypesTests.TVPRecord>($"select * from {parameter}")
 									  where r.Id == record.Id
@@ -735,6 +738,7 @@ namespace Tests.Data
 			var tvpSupported = version >= SqlServerVersion.v2008;
 
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
+			using (new DisableBaseline("TODO: debug reason for inconsistent bulk copy sql"))
 			using (var db = CreateDataConnection(new SqlServerDataProvider(providerName, version, SqlServerProvider.MicrosoftDataSqlClient), context, type, "Microsoft.Data.SqlClient.SqlConnection, Microsoft.Data.SqlClient"))
 			{
 				var trace = string.Empty;
@@ -767,7 +771,7 @@ namespace Tests.Data
 				if (tvpSupported)
 				{
 					//// assert TVP type name
-					var record     = SqlServerTypesTests.TestData[0];
+					var record     = SqlServerTypesTests.TestUDTData[0];
 					var parameter  = new DataParameter("p", SqlServerTypesTests.GetSqlDataRecordsMS()) { DbType = SqlServerTypesTests.TYPE_NAME };
 					var readRecord = (from r in db.FromSql<SqlServerTypesTests.TVPRecord>($"select * from {parameter}")
 									  where r.Id == record.Id
@@ -962,7 +966,7 @@ namespace Tests.Data
 							options,
 							Enumerable.Range(0, 1000).Select(n => new SapHanaTests.AllType() { ID = 2000 + n }));
 
-#if NET46
+#if NET472
 						Assert.AreEqual(!unmapped, trace.Contains("INSERT ASYNC BULK"));
 #else
 						Assert.AreEqual(!unmapped, trace.Contains("INSERT BULK"));
@@ -1051,7 +1055,7 @@ namespace Tests.Data
 			}
 		}
 
-#if NET46
+#if NET472
 		[Test]
 		public void TestInformixIFX([IncludeDataSources(ProviderName.Informix)] string context, [Values] ConnectionType type)
 		{
@@ -1136,7 +1140,7 @@ namespace Tests.Data
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
 			var provider = new InformixDataProvider(ProviderName.InformixDB2);
-#if NET46
+#if NET472
 			using (var db = CreateDataConnection(provider, context, type, "IBM.Data.DB2.DB2Connection, IBM.Data.DB2"))
 #else
 			using (var db = CreateDataConnection(provider, context, type, "IBM.Data.DB2.Core.DB2Connection, IBM.Data.DB2.Core"))
@@ -1200,7 +1204,7 @@ namespace Tests.Data
 			}
 		}
 
-#if NET46
+#if NET472
 		[Test]
 		public void TestOracleNative([IncludeDataSources(TestProvName.AllOracleNative)] string context, [Values] ConnectionType type)
 		{
@@ -1295,6 +1299,7 @@ namespace Tests.Data
 		}
 #endif
 
+		[ActiveIssue(2499)]
 		[Test]
 		public void TestOracleManaged([IncludeDataSources(TestProvName.AllOracleManaged)] string context, [Values] ConnectionType type)
 		{
@@ -1322,7 +1327,7 @@ namespace Tests.Data
 				Assert.AreEqual(decValue, (decimal)rawValue);
 
 				// OracleTimeStampTZ parameter creation and conversion to DateTimeOffset
-				var dtoVal = DateTimeOffset.Now;
+				var dtoVal = TestData.DateTimeOffset;
 				var dtoValue = db.Execute<DateTimeOffset>("SELECT :p FROM SYS.DUAL", new DataParameter("p", dtoVal, DataType.DateTimeOffset) { Precision = 6 });
 				dtoVal = dtoVal.AddTicks(-1 * (dtoVal.Ticks % 10));
 				Assert.AreEqual(dtoVal, dtoValue);
@@ -1384,6 +1389,9 @@ namespace Tests.Data
 			var provider = new PostgreSQLDataProvider(version);
 			using (var db = CreateDataConnection(provider, context, type, "Npgsql.NpgsqlConnection, Npgsql"))
 			{
+				// needed for proper AllTypes columns mapping
+				db.AddMappingSchema(new MappingSchema(context));
+
 				var trace = string.Empty;
 				db.OnTraceConnection += (TraceInfo ti) =>
 				{
@@ -1488,7 +1496,7 @@ namespace Tests.Data
 							options,
 							Enumerable.Range(0, 1000).Select(n => new PostgreSQLTests.AllTypes() { ID = 2000 + n }));
 
-#if NET46
+#if NET472
 						// we use 4.0.11 for tests, async added in 4.1.0
 						Assert.AreEqual(!unmapped, trace.Contains("INSERT BULK"));
 #else
@@ -1530,7 +1538,7 @@ namespace Tests.Data
 
 		private DataConnection CreateDataConnection(IDataProvider provider, string context, ConnectionType type, Func<string, IDbConnection> connectionFactory, string? csExtra = null)
 		{
-			var ms = new MappingSchema(context);
+			var ms = new MappingSchema();
 			DataConnection? db = null;
 			db = new DataConnection(provider, () =>
 			{

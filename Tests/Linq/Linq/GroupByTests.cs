@@ -937,7 +937,7 @@ namespace Tests.Linq
 						from sub in Types
 						where
 							sub.ID == 1 &&
-							sub.DateTimeValue <= DateTime.Today
+							sub.DateTimeValue <= TestData.Date
 						group sub by new
 						{
 							sub.ID
@@ -954,7 +954,7 @@ namespace Tests.Linq
 						from sub in db.Types
 						where
 							sub.ID == 1 &&
-							sub.DateTimeValue <= DateTime.Today
+							sub.DateTimeValue <= TestData.Date
 						group sub by new
 						{
 							sub.ID
@@ -1777,7 +1777,9 @@ namespace Tests.Linq
 		[Test]
 		public void GroupByCustomEntity1([DataSources] string context)
 		{
-			var rand = new Random().Next(5);
+			// I definitly selected it by random
+			var rand = 3;
+			//var rand = new Random().Next(5);
 			//var rand = new Random();
 
 			using (var db = GetDataContext(context))
@@ -2047,7 +2049,7 @@ namespace Tests.Linq
 							  group record by record.TimeStamp into g
 							  select new
 							  {
-								  res = g.Count(r => r.TimeStamp > DateTime.Now),
+								  res = g.Count(r => r.TimeStamp > TestData.DateTime),
 							  }).ToList();
 
 				var index = db.LastQuery!.IndexOf("SELECT");

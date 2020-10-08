@@ -234,7 +234,8 @@ namespace LinqToDB.Linq.Builder
 					return newField;
 				});
 
-				if (!SqlTable.Fields.TryGetValue(cteField.Name!, out var field))
+				var field = SqlTable[cteField.Name!];
+				if (field == null)
 				{
 					field = new SqlField(cteField);
 					SqlTable.Add(field);

@@ -50,6 +50,7 @@ namespace Tests.UserTests
 		[Test]
 		public void TestInheritance([DataSources] string context)
 		{
+			using (new DisableBaseline("TODO: debug reason for inconsistent column order"))
 			using (var db = GetDataContext(context))
 			{
 				using (db.CreateLocalTable<TaskTable>())
