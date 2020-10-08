@@ -152,6 +152,45 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test, Order(100)]
+		public void ConcurrentTestWithOptmization([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (new DisableBaseline("Multi-threading"))
+			{
+				var query = CompiledQuery.Compile((ITestDataContext db, int n, int n2) =>
+					db.GetTable<Parent>().Where(p => p.ParentID == n && n == n2).First().ParentID);
+
+				const int count = 100;
+
+				var threads = new Thread[count];
+				var results = new int   [count, 2];
+
+				for (var i = 0; i < count; i++)
+				{
+					var n = i;
+
+					threads[i] = new Thread(() =>
+					{
+						using (var db = GetDataContext(context))
+						{
+							var id = (n % 6) + 1;
+							results[n, 0] = id;
+							results[n, 1] = query(db, id, id);
+						}
+					});
+				}
+
+				for (var i = 0; i < count; i++)
+					threads[i].Start();
+
+				for (var i = 0; i < count; i++)
+					threads[i].Join();
+
+				for (var i = 0; i < count; i++)
+					Assert.AreEqual(results[i, 0], results[i, 1]);
+			}
+		}
+
 		[Test]
 		public void ConcurrentTest2([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
