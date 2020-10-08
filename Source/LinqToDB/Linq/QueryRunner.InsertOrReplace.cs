@@ -59,7 +59,7 @@ namespace LinqToDB.Linq
 							if (!supported || !fieldDic.TryGetValue(field, out param))
 							{
 								param = GetParameter(type, dataContext, field);
-								ei.Queries[0].ParameterAccessors.Add(param);
+								ei.Queries[0].AddParameterAccessor(param);
 
 								if (supported)
 									fieldDic.Add(field, param);
@@ -106,7 +106,7 @@ namespace LinqToDB.Linq
 					if (!supported || !fieldDic.TryGetValue(field, out param))
 					{
 						param = GetParameter(type, dataContext, field);
-						ei.Queries[0].ParameterAccessors.Add(param);
+						ei.Queries[0].AddParameterAccessor(param);
 
 						if (supported)
 							fieldDic.Add(field, param);
@@ -197,7 +197,9 @@ namespace LinqToDB.Linq
 			var dic = new Dictionary<ICloneableElement, ICloneableElement>();
 
 			var firstStatement = (SqlInsertOrUpdateStatement)query.Queries[0].Statement;
-			var cloned         = (SqlInsertOrUpdateStatement)firstStatement.Clone(dic, _ => true);
+
+			// Do not clone parameters
+			var cloned         = (SqlInsertOrUpdateStatement)firstStatement.Clone(dic, e => !(e is SqlParameter));
 
 			var insertStatement = new SqlInsertStatement(cloned.SelectQuery) {Insert = cloned.Insert};
 			insertStatement.SelectQuery.From.Tables.Clear();
@@ -206,16 +208,6 @@ namespace LinqToDB.Linq
 			{
 				Statement          = insertStatement,
 				ParameterAccessors = query.Queries[0].ParameterAccessors
-					.Select(p => new ParameterAccessor
-					(
-						p.Expression,
-						p.ValueAccessor,
-						p.OriginalAccessor,
-						p.DbDataTypeAccessor,
-						dic.ContainsKey(p.SqlParameter) ? (SqlParameter)dic[p.SqlParameter] : null!
-					))
-					.Where(p => p.SqlParameter != null)
-					.ToList()
 			});
 
 			var keys = firstStatement.Update.Keys;

@@ -2175,17 +2175,15 @@ namespace LinqToDB.SqlProvider
 					var exprExpr = (SqlPredicate.ExprExpr)element;
 
 					var isMutable1 = exprExpr.Expr1.CanBeEvaluated(true) && !exprExpr.Expr1.CanBeEvaluated(false);
-
-					if (isMutable1 && exprExpr.Expr2.CanBeEvaluated(false))
-						return true;
-
 					var isMutable2 = exprExpr.Expr2.CanBeEvaluated(true) && !exprExpr.Expr2.CanBeEvaluated(false);
 
-					if (isMutable2 && exprExpr.Expr1.CanBeEvaluated(false))
+					if (isMutable1 && isMutable2)
 						return true;
 
-					if ((isMutable1 || isMutable2) && exprExpr.WithNull != null 
-					                               && (exprExpr.Expr1.ShouldCheckForNull() || exprExpr.Expr2.ShouldCheckForNull()))
+					if (isMutable1 && exprExpr.Expr1.ShouldCheckForNull())
+						return true;
+
+					if (isMutable2 && exprExpr.Expr2.ShouldCheckForNull())
 						return true;
 
 					return false;

@@ -545,6 +545,12 @@ namespace LinqToDB.Linq
 		public SqlParameter[]? Parameters  { get; set; }
 
 		public List<ParameterAccessor> ParameterAccessors = new List<ParameterAccessor>();
+
+		public void AddParameterAccessor(ParameterAccessor accessor)
+		{
+			ParameterAccessors.Add(accessor);
+			accessor.SqlParameter.AccessorId = ParameterAccessors.Count - 1;
+		}
 	}
 
 	class ParameterAccessor

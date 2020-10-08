@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
-using LinqToDB.Common;
 
 namespace LinqToDB.SqlQuery
 {
+	using Common;
+
 	public class SqlParameter : ISqlExpression
 	{
 		public SqlParameter(DbDataType type, string? name, object? value)
@@ -122,27 +124,12 @@ namespace LinqToDB.SqlQuery
 
 		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
 		{
-			if (this == other)
-				return true;
-
-			return
-				other is SqlParameter p
-				&& Name == p.Name
-				&& Type.Equals(p.Type)
-				&& AccessorId == p.AccessorId;
+			return ReferenceEquals(this, other);
 		}
 
 		public override int GetHashCode()
 		{
-			var hashCode = Type.GetHashCode();
-
-			if (AccessorId != null)
-				hashCode = unchecked(hashCode + (hashCode * 397) ^ AccessorId.Value.GetHashCode());
-			else
-				if (Name != null)
-					hashCode = unchecked(hashCode + (hashCode * 397) ^ Name.GetHashCode());
-
-			return hashCode;
+			return RuntimeHelpers.GetHashCode(this);
 		}
 
 		#endregion

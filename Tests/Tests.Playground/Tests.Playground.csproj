@@ -48,6 +48,7 @@
 		<Compile Include="..\Linq\Update\MergeTests.Operations.UpdateWithDelete.cs" Link="MergeTests.Operations.UpdateWithDelete.cs" />
 		<Compile Include="..\Linq\Update\MergeTests.TargetSourceOn.cs" Link="MergeTests.TargetSourceOn.cs" />
 		<Compile Include="..\Linq\Update\MergeTests.Types.cs" Link="MergeTests.Types.cs" />
+		<Compile Include="..\Linq\UserTests\Issue1238Tests.cs" Link="Issue1238Tests.cs" />
 		<Compile Include="..\Linq\UserTests\Issue1925Tests.cs" Link="Issue1925Tests.cs" />
 		<Compile Include="..\Linq\UserTests\Issue2478Tests.cs" Link="Issue2478Tests.cs" />
 		<Compile Include="..\Linq\UserTests\Issue358Tests.cs" Link="Issue358Tests.cs" />

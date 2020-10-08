@@ -32,19 +32,20 @@ namespace LinqToDB.ServiceModel
 			readonly RemoteDataContextBase _dataContext;
 
 			ILinqClient? _client;
+			IReadOnlyParameterValues? _parameterValues;
 
 			public override Expression? MapperExpression { get; set; }
 
 			protected override void SetQuery(IReadOnlyParameterValues parameterValues)
 			{
+				_parameterValues = parameterValues;
 			}
 
 			#region GetSqlText
 
 			public override string GetSqlText()
 			{
-				var parameterValues = new SqlParameterValues();
-				SetCommand(false, parameterValues);
+				SetCommand(false);
 
 				var query = Query.Queries[QueryNumber];
 				var sqlBuilder   = DataContext.CreateSqlProvider();
@@ -54,8 +55,8 @@ namespace LinqToDB.ServiceModel
 
 				for (var i = 0; i < cc; i++)
 				{
-					var statement = sqlOptimizer.PrepareStatementForSql(query.Statement, DataContext.MappingSchema, parameterValues);
-					sqlBuilder.BuildSql(i, statement, sqlStringBuilder, parameterValues);
+					var statement = sqlOptimizer.PrepareStatementForSql(query.Statement, DataContext.MappingSchema, _parameterValues);
+					sqlBuilder.BuildSql(i, statement, sqlStringBuilder, _parameterValues);
 
 					if (i == 0 && query.QueryHints != null && query.QueryHints.Count > 0)
 					{
@@ -132,13 +133,12 @@ namespace LinqToDB.ServiceModel
 			{
 				string data;
 
-				var parameterValues = new SqlParameterValues();
-				SetCommand(true, parameterValues);
+				SetCommand(true);
 
 				var queryContext = Query.Queries[QueryNumber];
 
 				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement,
-					_dataContext.MappingSchema, parameterValues);
+					_dataContext.MappingSchema, _parameterValues);
 
 				var currentParameters = q.CollectParameters();
 
@@ -146,7 +146,7 @@ namespace LinqToDB.ServiceModel
 					_dataContext.SerializationMappingSchema,
 					q,
 					currentParameters,
-					parameterValues,
+					_parameterValues,
 					QueryHints);
 
 				if (_dataContext._batchCounter > 0)
@@ -167,19 +167,18 @@ namespace LinqToDB.ServiceModel
 
 				string data;
 
-				var parameterValues = new SqlParameterValues();
-				SetCommand(true, parameterValues);
+				SetCommand(true);
 
 				var queryContext = Query.Queries[QueryNumber];
 
 				var sqlOptimizer = _dataContext.GetSqlOptimizer();
-				var q = sqlOptimizer.PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, parameterValues);
+				var q = sqlOptimizer.PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, _parameterValues);
 				var currentParameters = q.CollectParameters();
 				
 				data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,
 					q,
-					currentParameters, parameterValues, QueryHints);
+					currentParameters, _parameterValues, QueryHints);
 
 				_client = _dataContext.GetClient();
 
@@ -195,12 +194,11 @@ namespace LinqToDB.ServiceModel
 
 				string data;
 
-				var parameterValues = new SqlParameterValues();
-				SetCommand(true, parameterValues);
+				SetCommand(true);
 
 				var queryContext = Query.Queries[QueryNumber];
 
-				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, parameterValues);
+				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, _parameterValues);
 
 				var currentParameters = q.CollectParameters();
 
@@ -208,7 +206,7 @@ namespace LinqToDB.ServiceModel
 					_dataContext.SerializationMappingSchema,
 					q,
 					currentParameters,
-					parameterValues,
+					_parameterValues,
 					QueryHints);
 
 				_client = _dataContext.GetClient();
@@ -263,19 +261,18 @@ namespace LinqToDB.ServiceModel
 
 				string data;
 
-				var parameterValues = new SqlParameterValues();
-				SetCommand(true, parameterValues);
+				SetCommand(true);
 
 				var queryContext = Query.Queries[QueryNumber];
 
-				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, parameterValues);
+				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, _parameterValues);
 				var currentParameters = q.CollectParameters();
 
 				data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,
 					q,
 					currentParameters,
-					parameterValues,
+					_parameterValues,
 					QueryHints);
 
 				_client = _dataContext.GetClient();
@@ -295,19 +292,18 @@ namespace LinqToDB.ServiceModel
 
 				string data;
 
-				var parameterValues = new SqlParameterValues();
-				SetCommand(true, parameterValues);
+				SetCommand(true);
 
 				var queryContext = Query.Queries[QueryNumber];
 
-				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, parameterValues);
+				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, _parameterValues);
 				var currentParameters = q.CollectParameters();
 
 				data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,
 					q,
 					currentParameters, 
-					parameterValues,
+					_parameterValues,
 					QueryHints);
 
 				_client = _dataContext.GetClient();
@@ -319,19 +315,18 @@ namespace LinqToDB.ServiceModel
 			{
 				string data;
 
-				var parameterValues = new SqlParameterValues();
-				SetCommand(true, parameterValues);
+				SetCommand(true);
 
 				var queryContext = Query.Queries[QueryNumber];
 
-				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, parameterValues);
+				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, _parameterValues);
 				var currentParameters = q.CollectParameters();
 
 				data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,
 					q,
 					currentParameters,
-					parameterValues,
+					_parameterValues,
 					QueryHints);
 
 				if (_dataContext._batchCounter > 0)

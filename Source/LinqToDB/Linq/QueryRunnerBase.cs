@@ -46,7 +46,7 @@ namespace LinqToDB.Linq
 				DataContext.Close();
 		}
 
-		protected virtual void SetCommand(bool clearQueryHints, SqlParameterValues parameterValues)
+		protected virtual void SetCommand(bool clearQueryHints)
 		{
 			if (QueryNumber == 0 && (DataContext.QueryHints.Count > 0 || DataContext.NextQueryHints.Count > 0))
 			{
@@ -65,6 +65,7 @@ namespace LinqToDB.Linq
 					DataContext.NextQueryHints.Clear();
 			}
 
+			var parameterValues = new SqlParameterValues();
 			QueryRunner.SetParameters(Query, Expression, DataContext, Parameters, QueryNumber, parameterValues);
 
 			SetQuery(parameterValues);
