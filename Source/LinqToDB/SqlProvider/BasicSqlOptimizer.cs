@@ -82,8 +82,6 @@ namespace LinqToDB.SqlProvider
 				FinalizeCte(statement);
 			}
 
-			BuildSqlValueTableParameters(statement);
-
 			statement = OptimizeStatement(statement, null);
 
 //statement.EnsureFindTables();
@@ -912,6 +910,11 @@ namespace LinqToDB.SqlProvider
 						return se.Parameters[0];
 
 					break;
+				}
+
+				case QueryElementType.SqlValuesTable:
+				{
+					return ReduceSqlValueTable((SqlValuesTable)expression, parameterValues);
 				}
 			}
 
@@ -2146,7 +2149,7 @@ namespace LinqToDB.SqlProvider
 				}
 				case QueryElementType.SqlValuesTable:
 				{
-					return true;
+					return !((SqlValuesTable)element).IsRowsBuilt;
 				}
 				case QueryElementType.SqlParameter:
 				{
@@ -2285,16 +2288,11 @@ namespace LinqToDB.SqlProvider
 			return statement;
 		}
 
-		static void BuildSqlValueTableParameters(SqlStatement statement)
+		static SqlValuesTable ReduceSqlValueTable(SqlValuesTable table, IReadOnlyParameterValues? parameterValues)
 		{
-			if (statement.IsParameterDependent)
-			{
-				new QueryVisitor().Visit(statement, e =>
-				{
-					if (e is SqlValuesTable table)
-						table.BuildRows();
-				});
-			}
+			if (parameterValues == null)
+				return table;
+			return table.BuildRows(parameterValues);
 		}
 
 		public SqlStatement OptimizeAggregates(SqlStatement statement)
