@@ -71,7 +71,7 @@ namespace LinqToDB.Data
 		/// </summary>
 		public string?      TableName              { get; set; }
 		/// <summary>
-		/// Gets or sets explicit IsTemporary flag instead of one, configured for copied entity in mapping schema.
+		/// Gets or sets <see cref="LinqToDB.TableOptions"/> flags overrides instead of configured for copied entity in mapping schema.
 		/// See <see cref="LinqExtensions.IsTemporary{T}(ITable{T}, bool)"/> method for support information per provider.
 		/// </summary>
 		public TableOptions TableOptions           { get; set; }

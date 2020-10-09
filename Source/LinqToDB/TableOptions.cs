@@ -12,12 +12,12 @@ namespace LinqToDB
 		NotSet            = 0b00000,
 		None              = 0b00001,
 		/// <summary>
-		/// Table is temporary. This option will have effect only for databases that support temporary tables.
+		/// Table is temporary (not visible to other sessions). This option will have effect only for databases that support temporary tables.
 		/// <para>Supported by: DB2, Firebird, Informix, MySql, Oracle, PostgreSQL, SQLite, SQL Server, SAP Hana, Sybase ASE.</para>
 		/// </summary>
 		IsTemporary       = 0b00010,
 		/// <summary>
-		/// Table is global temporary. This option will have effect only for databases that support temporary tables.
+		/// Table is global temporary (table is visible from other sessions, data visibility depends on database behavior). This option will have effect only for databases that support temporary tables.
 		/// <para>Supported by: DB2, SQL Server, SAP Hana, Sybase ASE.</para>
 		/// </summary>
 		IsGlobalTemporary = 0b00100,
