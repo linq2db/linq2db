@@ -350,6 +350,7 @@ namespace LinqToDB.SqlProvider
 				{
 					var value = row[j];
 					if (j > 0)
+						//Extra space needed by iDB2 OleDb provider
 						StringBuilder.Append(", ");
 
 					if (MergeSourceValueTypeRequired(source, rows, i, j))

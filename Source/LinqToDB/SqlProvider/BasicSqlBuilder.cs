@@ -501,6 +501,7 @@ namespace LinqToDB.SqlProvider
 
 			BuildSkipFirst(selectQuery);
 
+			//Extra space needed by iDB2 OleDb provider
 			StringBuilder.Append(' ').AppendLine();
 			BuildColumns(selectQuery);
 		}
@@ -519,6 +520,7 @@ namespace LinqToDB.SqlProvider
 			foreach (var col in GetSelectedColumns(selectQuery))
 			{
 				if (!first)
+					//Extra space needed by iDB2 OleDb provider
 					StringBuilder.Append(", ").AppendLine();
 				first = false;
 
@@ -1356,6 +1358,7 @@ namespace LinqToDB.SqlProvider
 					break;
 
 				case QueryElementType.SqlQuery        :
+					//Extra space needed by iDB2 OleDb provider
 					StringBuilder.Append("( ").AppendLine();
 					BuildSqlBuilder((SelectQuery)table, Indent + 1, false);
 					AppendIndent().Append(")");
