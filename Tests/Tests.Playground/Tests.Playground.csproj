@@ -27,6 +27,7 @@
 		<Compile Include="..\Linq\Linq\WhereTests.cs" Link="WhereTests.cs" />
 		<Compile Include="..\Linq\Samples\ConcurrencyCheckTests.cs" Link="ConcurrencyCheckTests.cs" />
 		<Compile Include="..\Linq\Update\DeleteTests.cs" Link="DeleteTests.cs" />
+		<Compile Include="..\Linq\Update\DeleteWithOutputTests.cs" Link="DeleteWithOutputTests.cs" />
 		<Compile Include="..\Linq\Update\InsertTests.cs" Link="InsertTests.cs" />
 		<Compile Include="..\Linq\Update\MergeTests.ApiParametersValidation.cs" Link="MergeTests.ApiParametersValidation.cs" />
 		<Compile Include="..\Linq\Update\MergeTests.Caching.cs" Link="MergeTests.Caching.cs" />

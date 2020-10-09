@@ -45,6 +45,9 @@ namespace LinqToDB.SqlQuery
 			if (With != null)
 				clone.With = (SqlWithClause)With.Clone(objectTree, doClone);
 
+			if (Output != null)
+				clone.Output = (SqlOutputClause)Output.Clone(objectTree, doClone);
+
 			objectTree.Add(this, clone);
 
 			return clone;

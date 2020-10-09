@@ -897,8 +897,8 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.Coalesce           :
 					{
 						var e = (BinaryExpression)expression;
-						var l = ConvertToSql(context, e.Left);
-						var r = ConvertToSql(context, e.Right);
+						var l = ConvertToSql(context, e.Left,  columnDescriptor: columnDescriptor);
+						var r = ConvertToSql(context, e.Right, columnDescriptor: columnDescriptor);
 						var t = e.Type;
 
 						switch (expression.NodeType)

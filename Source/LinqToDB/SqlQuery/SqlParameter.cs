@@ -149,21 +149,8 @@ namespace LinqToDB.SqlQuery
 
 		public ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
 		{
-			if (!doClone(this))
-				return this;
-
-			if (!objectTree.TryGetValue(this, out var clone))
-			{
-				var p = new SqlParameter(Type, Name, Value, _valueConverter)
-				{
-					IsQueryParameter = IsQueryParameter,
-					AccessorId       = AccessorId
-				};
-
-				objectTree.Add(this, clone = p);
-			}
-
-			return clone;
+			// we do not allow parameters cloning 
+			return this;
 		}
 
 		#endregion

@@ -503,13 +503,19 @@ namespace LinqToDB.SqlQuery
 							var with        = s.With        != null ? (SqlWithClause?)  ConvertInternal(s.With       ) : null;
 							var selectQuery = (SelectQuery?    )ConvertInternal(s.SelectQuery);
 							var insert      = (SqlInsertClause?)ConvertInternal(s.Insert);
+							var output      = s.Output      != null ? (SqlOutputClause?)ConvertInternal(s.Output     ) : null;
 
 							if (insert      != null && !ReferenceEquals(s.Insert,      insert)       ||
 								selectQuery != null && !ReferenceEquals(s.SelectQuery, selectQuery)  ||
-								with        != null && !ReferenceEquals(s.With,        with))
+								with        != null && !ReferenceEquals(s.With,        with)         ||
+								output      != null && !ReferenceEquals(s.Output,      output))
 							{
-								newElement = new SqlInsertStatement(selectQuery ?? s.SelectQuery) { Insert = insert ?? s.Insert };
-								((SqlInsertStatement)newElement).With = with ?? s.With;
+								newElement = new SqlInsertStatement(selectQuery ?? s.SelectQuery)
+								{
+									Insert = insert ?? s.Insert,
+									Output = output ?? s.Output,
+									With   = with   ?? s.With
+								};
 								CorrectQueryHierarchy(((SqlInsertStatement) newElement).SelectQuery);
 							}
 
@@ -560,21 +566,24 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.DeleteStatement:
 						{
 							var s = (SqlDeleteStatement)element;
-							var with        = s.With        != null ? (SqlWithClause?) ConvertInternal(s.With       ) : null;
-							var selectQuery = s.SelectQuery != null ? (SelectQuery?)   ConvertInternal(s.SelectQuery) : null;
-							var table       = s.Table       != null ? (SqlTable?)      ConvertInternal(s.Table      ) : null;
-							var top         = s.Top         != null ? (ISqlExpression?)ConvertInternal(s.Top        ) : null;
+							var with        = s.With        != null ? (SqlWithClause?)  ConvertInternal(s.With       ) : null;
+							var selectQuery = s.SelectQuery != null ? (SelectQuery?)    ConvertInternal(s.SelectQuery) : null;
+							var table       = s.Table       != null ? (SqlTable?)       ConvertInternal(s.Table      ) : null;
+							var top         = s.Top         != null ? (ISqlExpression?) ConvertInternal(s.Top        ) : null;
+							var output      = s.Output      != null ? (SqlOutputClause?)ConvertInternal(s.Output     ) : null;
 
 							if (table       != null && !ReferenceEquals(s.Table,       table)       ||
 								top         != null && !ReferenceEquals(s.Top,         top)         ||
 								selectQuery != null && !ReferenceEquals(s.SelectQuery, selectQuery) ||
-								with        != null && !ReferenceEquals(s.With,        with))
+								with        != null && !ReferenceEquals(s.With,        with)        ||
+								output      != null && !ReferenceEquals(s.Output,      output))
 							{
 								newElement = new SqlDeleteStatement
 								{
 									Table                = table       ?? s.Table,
 									SelectQuery          = selectQuery ?? s.SelectQuery,
 									Top                  = top         ?? s.Top!,
+									Output               = output      ?? s.Output,
 									IsParameterDependent = s.IsParameterDependent
 								};
 								((SqlDeleteStatement)newElement).With = with ?? s.With;
@@ -884,6 +893,36 @@ namespace LinqToDB.SqlQuery
 
 							break;
 						}
+
+					case QueryElementType.OutputClause:
+					{
+						var output    = (SqlOutputClause)element;
+						var sourceT   = (SqlTable)ConvertInternal(output.SourceTable);
+						var insertedT = (SqlTable)ConvertInternal(output.InsertedTable);
+						var deletedT  = (SqlTable)ConvertInternal(output.DeletedTable);
+						var outputT   = (SqlTable)ConvertInternal(output.OutputTable);
+						var outputQ   = output.OutputQuery != null ? (SelectQuery)ConvertInternal(output.OutputQuery) : null;
+
+						if (
+							sourceT   != null && !ReferenceEquals(output.SourceTable, sourceT)     ||
+							insertedT != null && !ReferenceEquals(output.InsertedTable, insertedT) ||
+							deletedT  != null && !ReferenceEquals(output.DeletedTable, deletedT)   ||
+							outputT   != null && !ReferenceEquals(output.OutputTable, outputT)     ||
+							outputQ   != null && !ReferenceEquals(output.OutputQuery, outputQ)
+						)
+						{
+							newElement = new SqlOutputClause
+							{
+								SourceTable   =  sourceT   ?? output.SourceTable,
+								InsertedTable =  insertedT ?? output.InsertedTable,
+								DeletedTable  =  deletedT  ?? output.DeletedTable,
+								OutputTable   =  outputT   ?? output.OutputTable,
+								OutputQuery   =  outputQ   ?? output.OutputQuery,
+							};                            
+						}
+						
+						break;
+					}
 
 					case QueryElementType.MergeOperationClause:
 						{
