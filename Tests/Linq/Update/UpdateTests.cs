@@ -1701,7 +1701,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		
+
 		class TextData
 		{
 			[Column]
@@ -1729,7 +1729,7 @@ namespace Tests.xUpdate
 			using (var table = db.CreateLocalTable(data))
 			{
 				var id = 1;
-				
+
 				table.Where(_ => _.Id >= id)
 					.Set(x => $"{x.Items1} += {str}")
 					.Set(x => $"{x.Items2} += {str}")
@@ -1761,7 +1761,7 @@ namespace Tests.xUpdate
 			using (var table = db.CreateLocalTable(data))
 			{
 				var id = 1;
-				
+
 				table.Where(_ => _.Id >= id)
 					.Set(x => x.Items1, x => $"{x.Items1}{str}")
 					.Set(x => x.Items2, x => $"{x.Items2}{str}")

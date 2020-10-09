@@ -444,7 +444,7 @@ namespace Tests.Linq
 		{
 			GetProviderName(context, out var isLinqService);
 
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, testLinqService : false))
 			{
 #if NET472
 				if (isLinqService)
@@ -469,7 +469,7 @@ namespace Tests.Linq
 		{
 			GetProviderName(context, out var isLinqService);
 
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, testLinqService : false))
 			{
 #if NET472
 				if (isLinqService)

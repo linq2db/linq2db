@@ -62,7 +62,7 @@ namespace Tests
 		}
 
 		private const int TRACES_LIMIT = 50000;
-		
+
 		private static string? _baselinesPath;
 
 		static TestBase()
@@ -329,10 +329,10 @@ namespace Tests
 		}
 
 #if NET472
-		const  int          IP        = 22654;
-		static bool         _isHostOpen;
-		static LinqService? _service;
-		static object       _syncRoot = new object();
+		const           int          IP = 22654;
+		static          bool         _isHostOpen;
+		static          LinqService? _service;
+		static readonly object       _syncRoot = new object();
 #endif
 
 		static void OpenHost(MappingSchema? ms)
@@ -430,7 +430,7 @@ namespace Tests
 			ProviderName.SapHanaOdbc
 		};
 
-		protected ITestDataContext GetDataContext(string configuration, MappingSchema? ms = null)
+		protected ITestDataContext GetDataContext(string configuration, MappingSchema? ms = null, bool testLinqService = true)
 		{
 			if (configuration.EndsWith(".LinqService"))
 			{
@@ -438,14 +438,17 @@ namespace Tests
 				OpenHost(ms);
 
 				var str = configuration.Substring(0, configuration.Length - ".LinqService".Length);
-				var dx  = new TestServiceModelDataContext(IP + TestExternals.RunID) { Configuration = str };
+
+				var dx  = testLinqService
+					? new ServiceModel.TestLinqServiceDataContext(new LinqService(ms) { AllowUpdates = true }) { Configuration = str }
+					: new TestServiceModelDataContext(IP + TestExternals.RunID) { Configuration = str } as RemoteDataContextBase;
 
 				Debug.WriteLine(((IDataContext)dx).ContextID, "Provider ");
 
 				if (ms != null)
 					dx.MappingSchema = new MappingSchema(dx.MappingSchema, ms);
 
-				return dx;
+				return (ITestDataContext)dx;
 #else
 				configuration = configuration.Substring(0, configuration.Length - ".LinqService".Length);
 #endif
