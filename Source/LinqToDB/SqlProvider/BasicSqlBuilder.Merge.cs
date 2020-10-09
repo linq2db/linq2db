@@ -350,7 +350,7 @@ namespace LinqToDB.SqlProvider
 				{
 					var value = row[j];
 					if (j > 0)
-						StringBuilder.Append(",");
+						StringBuilder.Append(", ");
 
 					if (MergeSourceValueTypeRequired(source, rows, i, j))
 						BuildTypedExpression(columnTypes[j], value);

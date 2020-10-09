@@ -501,7 +501,7 @@ namespace LinqToDB.SqlProvider
 
 			BuildSkipFirst(selectQuery);
 
-			StringBuilder.AppendLine();
+			StringBuilder.Append(' ').AppendLine();
 			BuildColumns(selectQuery);
 		}
 
@@ -519,7 +519,7 @@ namespace LinqToDB.SqlProvider
 			foreach (var col in GetSelectedColumns(selectQuery))
 			{
 				if (!first)
-					StringBuilder.Append(',').AppendLine();
+					StringBuilder.Append(", ").AppendLine();
 				first = false;
 
 				var addAlias = true;
@@ -1356,7 +1356,7 @@ namespace LinqToDB.SqlProvider
 					break;
 
 				case QueryElementType.SqlQuery        :
-					StringBuilder.Append("(").AppendLine();
+					StringBuilder.Append("( ").AppendLine();
 					BuildSqlBuilder((SelectQuery)table, Indent + 1, false);
 					AppendIndent().Append(")");
 					break;
