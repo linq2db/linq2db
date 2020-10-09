@@ -70,18 +70,19 @@ namespace LinqToDB.Data
 
 				var sb = new StringBuilder();
 
-				sb.Append("-- ").Append(_dataConnection.ConfigurationString);
+				var comments = new StringBuilder();
+
+				comments.Append(_dataConnection.ConfigurationString);
 
 				if (_dataConnection.ConfigurationString != _dataConnection.DataProvider.Name)
-					sb.Append(' ').Append(_dataConnection.DataProvider.Name);
+					comments.Append(' ').Append(_dataConnection.DataProvider.Name);
 
 				if (_dataConnection.DataProvider.Name != sqlProvider.Name)
-					sb.Append(' ').Append(sqlProvider.Name);
+					comments.Append(' ').Append(sqlProvider.Name);
 
-				sb.AppendLine();
-
+				sqlProvider.PrintComments(sb, comments.ToString());
 				sqlProvider.PrintParameters(sb, _preparedQuery.Parameters);
-
+				
 				var isFirst = true;
 
 				foreach (var command in _preparedQuery.Commands)

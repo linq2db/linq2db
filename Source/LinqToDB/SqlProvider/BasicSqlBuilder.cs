@@ -3254,6 +3254,14 @@ namespace LinqToDB.SqlProvider
 			return sb;
 		}
 
+		public virtual StringBuilder PrintComments(StringBuilder sb, string comments)
+		{
+			return sb
+				.Append("--")
+				.Append(comments)
+				.AppendLine();
+		}
+
 		// for values without literal support from provider we should generate debug string using fixed format
 		// to avoid deviations on different locales or locale settings
 		private static void FormatParameterValue(StringBuilder sb, object? value)

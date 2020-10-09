@@ -19,6 +19,7 @@ namespace LinqToDB.SqlProvider
 		ISqlExpression?  GetIdentityExpression(SqlTable table);
 
 		StringBuilder    PrintParameters      (StringBuilder sb, IEnumerable<IDbDataParameter>? parameters);
+		StringBuilder	 PrintComments		  (StringBuilder sb, string comments);
 		string           ApplyQueryHints      (string sqlText, List<string> queryHints);
 
 		string           GetReserveSequenceValuesSql(int count, string sequenceName);
