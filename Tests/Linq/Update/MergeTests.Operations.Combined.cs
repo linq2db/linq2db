@@ -112,7 +112,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void UpdateWithConditionDeleteWithConditionUpdate([MergeDataContextSource(
-			TestProvName.SqlAzure, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.SqlServer2017,
+			TestProvName.AllSqlServer2008Plus,
 			TestProvName.AllOracle, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird, ProviderName.Sybase)]
 			string context)
@@ -239,7 +239,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void InsertWithConditionInsertUpdateWithConditionDeleteWithConditionDelete([MergeDataContextSource(
-			TestProvName.SqlAzure, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.SqlServer2017,
+			TestProvName.AllSqlServer2008Plus,
 			TestProvName.AllOracle,
 			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
@@ -312,8 +312,8 @@ namespace Tests.xUpdate
 		[Test]
 		public void UpdateWithConditionUpdate([MergeDataContextSource(
 			TestProvName.AllOracle,
-			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.SqlServer2017,
-			TestProvName.SqlAzure, TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllSqlServer2008Plus,
+			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

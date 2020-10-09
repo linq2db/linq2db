@@ -11,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using JetBrains.Annotations;
+using LinqToDB.Common.Internal.Cache;
 
 namespace LinqToDB.Data
 {
@@ -1212,6 +1213,13 @@ namespace LinqToDB.Data
 		}
 
 		private IDbCommand? _command;
+
+		/// <summary>
+		/// Provides acess to current <see cref="_command"/> instance. Used for logs to avoid command instance creation
+		/// in <see cref="Command"/> getter if <see cref="_command"/> is not initialized.
+		/// </summary>
+		internal IDbCommand? GetCurrentCommand() => _command;
+
 		/// <summary>
 		/// Gets or sets command object, used by current connection.
 		/// </summary>
@@ -1270,7 +1278,7 @@ namespace LinqToDB.Data
 				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute)
 				{
 					TraceLevel     = TraceLevel.Info,
-					Command        = Command,
+					Command        = GetCurrentCommand(),
 					StartTime      = now,
 				});
 			}
@@ -1286,7 +1294,7 @@ namespace LinqToDB.Data
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute)
 					{
 						TraceLevel      = TraceLevel.Info,
-						Command         = Command,
+						Command         = GetCurrentCommand(),
 						StartTime       = now,
 						ExecutionTime   = sw.Elapsed,
 						RecordsAffected = ret,
@@ -1302,7 +1310,7 @@ namespace LinqToDB.Data
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error)
 					{
 						TraceLevel     = TraceLevel.Error,
-						Command        = Command,
+						Command        = GetCurrentCommand(),
 						StartTime      = now,
 						ExecutionTime  = sw.Elapsed,
 						Exception      = ex,
@@ -1336,7 +1344,7 @@ namespace LinqToDB.Data
 				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute)
 				{
 					TraceLevel     = TraceLevel.Info,
-					Command        = Command,
+					Command        = GetCurrentCommand(),
 					StartTime      = now,
 				});
 			}
@@ -1352,7 +1360,7 @@ namespace LinqToDB.Data
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute)
 					{
 						TraceLevel     = TraceLevel.Info,
-						Command        = Command,
+						Command        = GetCurrentCommand(),
 						StartTime      = now,
 						ExecutionTime  = sw.Elapsed,
 					});
@@ -1367,7 +1375,7 @@ namespace LinqToDB.Data
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error)
 					{
 						TraceLevel     = TraceLevel.Error,
-						Command        = Command,
+						Command        = GetCurrentCommand(),
 						StartTime      = now,
 						ExecutionTime  = sw.Elapsed,
 						Exception      = ex,
@@ -1406,7 +1414,7 @@ namespace LinqToDB.Data
 				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute)
 				{
 					TraceLevel     = TraceLevel.Info,
-					Command        = Command,
+					Command        = GetCurrentCommand(),
 					StartTime      = now,
 				});
 			}
@@ -1423,7 +1431,7 @@ namespace LinqToDB.Data
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute)
 					{
 						TraceLevel     = TraceLevel.Info,
-						Command        = Command,
+						Command        = GetCurrentCommand(),
 						StartTime      = now,
 						ExecutionTime  = sw.Elapsed,
 					});
@@ -1438,7 +1446,7 @@ namespace LinqToDB.Data
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error)
 					{
 						TraceLevel     = TraceLevel.Error,
-						Command        = Command,
+						Command        = GetCurrentCommand(),
 						StartTime      = now,
 						ExecutionTime  = sw.Elapsed,
 						Exception      = ex,
@@ -1587,15 +1595,24 @@ namespace LinqToDB.Data
 		/// Gets list of query hints (writable collection), that will be used only for next query, executed through current connection.
 		/// </summary>
 		public  List<string>  NextQueryHints => _nextQueryHints ??= new List<string>();
+		
+		private static readonly MemoryCache _combinedSchemas = new MemoryCache(new MemoryCacheOptions());
 
 		/// <summary>
 		/// Adds additional mapping schema to current connection.
 		/// </summary>
+		/// <remarks><see cref="DataConnection"/> will share <see cref="LinqToDB.Mapping.MappingSchema"/> instances that were created by combining same mapping schemas.</remarks>
 		/// <param name="mappingSchema">Mapping schema.</param>
 		/// <returns>Current connection object.</returns>
 		public DataConnection AddMappingSchema(MappingSchema mappingSchema)
 		{
-			MappingSchema = new MappingSchema(mappingSchema, MappingSchema);
+			var key = new { BaseSchema = MappingSchema.ConfigurationID, AddedSchema = mappingSchema.ConfigurationID };
+			MappingSchema = _combinedSchemas.GetOrCreate(key, 
+				o => 
+				{
+					o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+					return new MappingSchema(mappingSchema, MappingSchema);
+				});
 			_id            = null;
 
 			return this;

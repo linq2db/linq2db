@@ -266,11 +266,11 @@ namespace Tests.DataProvider
 				var series1 = db.GenerateSeries(1, 10).ToArray();
 				var series2 = db.GenerateSeries(1, 10, 2).ToArray();
 				
-				var dateSeries = db.GenerateSeries(DateTime.Now.AddDays(-10), DateTime.Now, TimeSpan.FromHours(5)).ToArray();
+				var dateSeries = db.GenerateSeries(TestData.DateTime.AddDays(-10), TestData.DateTime, TimeSpan.FromHours(5)).ToArray();
 
 				var allInQuery = from t1 in db.GenerateSeries(1, 10)
 					from t2 in db.GenerateSeries(1, 10, 2).LeftJoin(t2 => t2 == t1)
-					from d in db.GenerateSeries(Sql.CurrentTimestamp - TimeSpan.FromDays(10), Sql.CurrentTimestamp,
+					from d in db.GenerateSeries(TestData.DateTime - TimeSpan.FromDays(10), TestData.DateTime,
 						TimeSpan.FromHours(1))
 					select new
 					{

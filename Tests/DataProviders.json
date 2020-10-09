@@ -29,8 +29,8 @@
 			"Access.Odbc",
 			"SqlCe",
 			"SQLite.Classic",
-			"SQLite.Classic.MiniProfiler.Unmapped",
-			"SQLite.Classic.MiniProfiler.Mapped",
+			"SQLite.Classic.MPU",
+			"SQLite.Classic.MPM",
 			"SQLite.MS",
 			"Northwind.SQLite",
 			"Northwind.SQLite.MS",
@@ -88,12 +88,12 @@
 				"Provider": "SQLite",
 				"ConnectionString": "Data Source=Database/TestData.sqlite"
 			},
-			"SQLite.Classic.MiniProfiler.Unmapped": {
-				"Provider": "SQLite.Classic.MiniProfiler.Unmapped",
+			"SQLite.Classic.MPU": {
+				"Provider": "SQLite.Classic.MPU",
 				"ConnectionString": "Data Source=Database/TestData.MiniProfiler.Unmapped.sqlite"
 			},
-			"SQLite.Classic.MiniProfiler.Mapped": {
-				"Provider": "SQLite.Classic.MiniProfiler.Mapped",
+			"SQLite.Classic.MPM": {
+				"Provider": "SQLite.Classic.MPM",
 				"ConnectionString": "Data Source=Database/TestData.MiniProfiler.Mapped.sqlite"
 			},
 			"SQLite.Classic.Data": {
@@ -223,7 +223,8 @@
 	},
 
 	"AzureConnectionStrings": {
-		"BasedOn"             : "CommonConnectionStrings",
+		"BasedOn": "CommonConnectionStrings",
+		"BaselinesPath": "./baselines",
 		"Connections"         : {
 			"SqlServer"         : { "Provider": "System.Data.SqlClient",           "ConnectionString": "Server=localhost;Database=TestData;User Id=sa;Password=Password12!;"                                                                                      },
 			"Northwind"         : { "Provider": "System.Data.SqlClient",           "ConnectionString": "Server=localhost;Database=Northwind;User Id=sa;Password=Password12!;"                                                                                     },
@@ -262,8 +263,8 @@
 			"Access.Odbc",
 			"SqlCe",
 			"SQLite.Classic",
-			"SQLite.Classic.MiniProfiler.Unmapped",
-			"SQLite.Classic.MiniProfiler.Mapped",
+			"SQLite.Classic.MPU",
+			"SQLite.Classic.MPM",
 			"SQLite.MS",
 			"Northwind.SQLite",
 			"Northwind.SQLite.MS",
