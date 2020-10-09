@@ -401,7 +401,7 @@ namespace LinqToDB.DataProvider.Firebird
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
 			StringBuilder.Append(
-				table.TableOptions.HasIsGlobalTemporary() ?
+				table.TableOptions.HasIsTemporary() ?
 					"CREATE GLOBAL TEMPORARY TABLE " :
 					"CREATE TABLE ");
 		}
