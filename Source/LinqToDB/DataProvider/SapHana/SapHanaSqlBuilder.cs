@@ -267,5 +267,15 @@ namespace LinqToDB.DataProvider.SapHana
 
 			return sb.Append(table);
 		}
+
+		protected override void BuildCreateTableCommand(SqlTable table)
+		{
+			StringBuilder.Append(
+				table.TableOptions.HasIsGlobalTemporary() ?
+					"CREATE GLOBAL TEMPORARY TABLE " :
+				table.TableOptions.HasIsTemporary() ?
+					"CREATE LOCAL TEMPORARY TABLE " :
+					"CREATE TABLE ");
+		}
 	}
 }

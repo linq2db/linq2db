@@ -150,7 +150,7 @@ namespace LinqToDB.DataProvider.MySql
 							StringBuilder.Append("BINARY");
 						else
 							StringBuilder.Append($"BINARY({type.Type.Length})");
-					break;
+						break;
 					default                     : base.BuildDataTypeFromDataType(type, forCreateTable); break;
 				}
 
@@ -338,7 +338,7 @@ namespace LinqToDB.DataProvider.MySql
 		private static List<char>? _convertParameterSymbols;
 		public  static List<char>  ConvertParameterSymbols
 		{
-			get => _convertParameterSymbols == null ? (_convertParameterSymbols = new List<char>()) : _convertParameterSymbols;
+			get => _convertParameterSymbols ??= new List<char>();
 			set => _convertParameterSymbols = value ?? new List<char>();
 		}
 
@@ -547,6 +547,7 @@ namespace LinqToDB.DataProvider.MySql
 					throw new ArgumentOutOfRangeException();
 			}
 		}
+
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
 			StringBuilder.Append(table.TableOptions.HasIsTemporary()
