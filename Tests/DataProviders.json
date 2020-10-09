@@ -21,10 +21,12 @@
 //
 
 {
-	"NET472": {
+	"NET472":
+	{
 		"BasedOn": "LocalConnectionStrings",
 		"DefaultConfiguration": "SQLite.Classic",
-		"Providers": [
+		"Providers":
+		[
 			"Access",
 			"Access.Odbc",
 			"SqlCe",
@@ -38,46 +40,55 @@
 		]
 	},
 
-	"CORE21": {
+	"CORE21":
+	{
 		"BasedOn": "LocalConnectionStrings",
 		"DefaultConfiguration": "SQLite.MS",
-		"Providers": [
+		"Providers":
+		[
 			"SQLite.MS",
 			"Northwind.SQLite.MS",
 			"TestNoopProvider"
 		]
 	},
 
-	"CORE31": {
+	"CORE31":
+	{
 		"BasedOn": "LocalConnectionStrings",
 		"DefaultConfiguration": "SQLite.MS",
-		"Providers": [
+		"Providers":
+		[
 			"SQLite.MS",
 			"Northwind.SQLite.MS",
 			"TestNoopProvider"
 		]
 	},
 
-	"NET472.Azure": {
+	"NET472.Azure":
+	{
 		"BasedOn": "AzureConnectionStrings",
 		"DefaultConfiguration": "SQLite.Classic",
 		"TraceLevel": "Info"
 	},
 
-	"CORE21.Azure": {
+	"CORE21.Azure":
+	{
 		"BasedOn": "AzureConnectionStrings",
 		"DefaultConfiguration": "SQLite.MS",
 		"TraceLevel": "Info"
 	},
 
-	"CORE31.Azure": {
+	"CORE31.Azure":
+	{
 		"BasedOn": "AzureConnectionStrings",
 		"DefaultConfiguration": "SQLite.MS",
 		"TraceLevel": "Info"
 	},
 
-	"CommonConnectionStrings": {
-		"Connections": {
+	"CommonConnectionStrings":
+	{
+		"Connections":
+		{
 			"Access"             : {                                      "ConnectionString": "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=Database\\TestData.mdb;Locale Identifier=1033;Jet OLEDB:Engine Type=5;Persist Security Info=True" },
 			"Access.Data"        : {                                      "ConnectionString": "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=Database\\Data\\TestData.mdb;Locale Identifier=1033;Jet OLEDB:Engine Type=5;Persist Security Info=True" },
 			"Access.Odbc"        : {                                      "ConnectionString": "Driver={Microsoft Access Driver (*.mdb, *.accdb)};Dbq=Database\\TestData.ODBC.mdb;" },
@@ -96,7 +107,8 @@
 		}
 	},
 
-	"LocalConnectionStrings": {
+	"LocalConnectionStrings":
+	{
 		"BasedOn": "CommonConnectionStrings",
 		"Connections":
 		{
@@ -127,10 +139,12 @@
 		}
 	},
 
-	"AzureConnectionStrings": {
+	"AzureConnectionStrings":
+	{
 		"BasedOn": "CommonConnectionStrings",
 		"BaselinesPath": "./baselines",
-		"Connections"         : {
+		"Connections"         :
+		{
 			"SqlServer"         : { "Provider": "System.Data.SqlClient",           "ConnectionString": "Server=localhost;Database=TestData;User Id=sa;Password=Password12!;"                                                                                      },
 			"Northwind"         : { "Provider": "System.Data.SqlClient",           "ConnectionString": "Server=localhost;Database=Northwind;User Id=sa;Password=Password12!;"                                                                                     },
 			"SqlServer.2005"    : { "Provider": "System.Data.SqlClient",           "ConnectionString": "Server=localhost;Database=TestData2005;User Id=sa;Password=Password12!;"                                                                                  },
@@ -203,7 +217,8 @@
 		]
 	},
 
-	"Example Configuration": {
+	"Example Configuration":
+	{
 		// Base configuration. All the configuration properties are replaced,
 		// except for the Connection property that adds new and replaces existing values.
 		"BasedOn": "Base Example Configuration",
@@ -227,7 +242,8 @@
 		}
 	},
 
-	"Base Example Configuration": {
+	"Base Example Configuration":
+	{
 		// Default configuration is used to load etalon data to compare.
 		"DefaultConfiguration": "SQLite.Classic",
 		"Providers":
@@ -236,14 +252,16 @@
 			"SQLite.Classic",
 			"SQLite.MS"
 		],
-		"Connections": {
+		"Connections":
+		{
 			"Access":         {                          "ConnectionString": "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=Database\\TestData.mdb;Locale Identifier=1033;Jet OLEDB:Engine Type=5;Persist Security Info=True" },
 			"SQLite.Classic": { "Provider": "SQLite",    "ConnectionString": "Data Source=Database\\TestData.sqlite" },
 			"SQLite.MS":      { "Provider": "SQLite.MS", "ConnectionString": "Data Source=Database\\TestData..MS.sqlite" }
 		}
 	},
 
-	"Result Example Configuration": {
+	"Result Example Configuration":
+	{
 		"TraceLevel": "Error",
 		"DefaultConfiguration": "SQLite.Classic",
 		"Providers":

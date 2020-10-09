@@ -137,18 +137,22 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void IsTemporaryMethodTest([DataSources(false)] string context)
+		public void IsTemporaryMethodTest([DataSources(false, TestProvName.AllMySql)] string context)
 		{
 			using var db = GetDataContext(context);
 
 			db.DropTable<TestTable>(tableOptions:TableOptions.IsTemporary | TableOptions.DropIfExists);
 
-
 			using var table = db.CreateTempTable<TestTable>(tableOptions:TableOptions.IsTemporary);
 
-			_ = db.GetTable<TestTable>().IsTemporary().ToList();
-
-
+			_ =
+			(
+				from t1 in db.GetTable<TestTable>().IsTemporary()
+				join t2 in db.GetTable<TestTable>().IsTemporary() on t1.Id equals t2.Id
+				join t3 in table on t2.Id equals t3.Id
+				select new { t1, t2, t3 }
+			)
+			.ToList();
 		}
 	}
 }
