@@ -26,7 +26,7 @@ namespace Tests.UserTests
 			{
 				using (db.CreateLocalTable<Issue1110TestsClass>())
 				{
-					db.Insert(new Issue1110TestsClass() { Id = 10, TimeStamp = DateTime.UtcNow });
+					db.Insert(new Issue1110TestsClass() { Id = 10, TimeStamp = TestData.DateTime });
 				}
 			}
 		}

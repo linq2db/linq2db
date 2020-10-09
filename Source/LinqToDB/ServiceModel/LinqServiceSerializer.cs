@@ -859,7 +859,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.Fields.Count);
 
 							foreach (var field in elem.Fields)
-								Append(ObjectIndices[field.Value]);
+								Append(ObjectIndices[field]);
 
 							Append((int)elem.SqlTableType);
 
@@ -894,7 +894,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.Fields.Count);
 
 							foreach (var field in elem.Fields)
-								Append(ObjectIndices[field.Value]);
+								Append(ObjectIndices[field]);
 
 							break;
 						}
@@ -911,7 +911,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.Fields.Count);
 
 							foreach (var field in elem.Fields)
-								Append(ObjectIndices[field.Value]);
+								Append(ObjectIndices[field]);
 
 							Append(elem.SQL);
 

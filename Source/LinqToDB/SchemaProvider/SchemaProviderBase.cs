@@ -288,6 +288,7 @@ namespace LinqToDB.SchemaProvider
 							IsResultDynamic     = sp.IsResultDynamic,
 							IsAggregateFunction = sp.IsAggregateFunction,
 							IsDefaultSchema     = sp.IsDefaultSchema,
+							Description         = sp.Description,
 							Parameters          =
 							(
 								from pr in gr
@@ -310,7 +311,8 @@ namespace LinqToDB.SchemaProvider
 									SystemType           = systemType ?? typeof(object),
 									DataType             = GetDataType(pr.DataType, pr.DataTypeExact, pr.Length, pr.Precision, pr.Scale),
 									ProviderSpecificType = GetProviderSpecificType(pr.DataType),
-									IsNullable           = pr.IsNullable
+									IsNullable           = pr.IsNullable,
+									Description          = pr.Description
 								}
 							).ToList()
 						} into ps
@@ -486,7 +488,8 @@ namespace LinqToDB.SchemaProvider
 					p.SystemType == typeof(string) ?
 						"" :
 						p.SystemType == typeof(DateTime) ?
-							DateTime.Now :
+							// use fixed value to generate stable baselines
+							new DateTime(2020, 09, 23) :
 							DefaultValue.GetValue(p.SystemType),
 				DataType  = p.DataType,
 				DbType    = p.SchemaType,

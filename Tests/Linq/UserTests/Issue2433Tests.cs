@@ -41,20 +41,20 @@ namespace Tests.UserTests
 				{
 					var dto1 = new InventoryResourceDTO
 					{
-						ResourceID = Guid.NewGuid(),
-						Status = InventoryResourceStatus.Used,
-						ModifiedTimeStamp = DateTime.UtcNow - TimeSpan.FromHours(2),
-						Id = Guid.NewGuid()
+						ResourceID        = TestData.Guid1,
+						Status            = InventoryResourceStatus.Used,
+						ModifiedTimeStamp = TestData.DateTime - TimeSpan.FromHours(2),
+						Id                = TestData.Guid2
 					};
 					((DataConnection)db).BulkCopy(new BulkCopyOptions
 					{
-						CheckConstraints = true,
-						BulkCopyType = BulkCopyType.ProviderSpecific,
-						MaxBatchSize = 5000,
+						CheckConstraints       = true,
+						BulkCopyType           = BulkCopyType.ProviderSpecific,
+						MaxBatchSize           = 5000,
 						UseInternalTransaction = false,
-						NotifyAfter = 2000,
-						BulkCopyTimeout = 0,
-						RowsCopiedCallback = i =>
+						NotifyAfter            = 2000,
+						BulkCopyTimeout        = 0,
+						RowsCopiedCallback     = i =>
 						{
 						}
 					},

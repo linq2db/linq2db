@@ -31,7 +31,7 @@ namespace LinqToDB.SqlQuery
 			Cte = cte ?? throw new ArgumentNullException(nameof(cte));
 
 			// CTE has it's own names even there is mapping
-			foreach (var field in Fields.Values)
+			foreach (var field in Fields)
 				field.PhysicalName = field.Name;
 		}
 
@@ -106,13 +106,13 @@ namespace LinqToDB.SqlQuery
 					SqlTableType = SqlTableType,
 				};
 
-				table.Fields.Clear();
+				table.ClearFields();
 
 				foreach (var field in Fields)
 				{
-					var fc = new SqlField(field.Value);
+					var fc = new SqlField(field);
 
-					objectTree.Add(field.Value, fc);
+					objectTree.Add(field, fc);
 					table.     Add(fc);
 				}
 

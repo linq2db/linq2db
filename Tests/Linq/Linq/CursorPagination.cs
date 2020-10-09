@@ -247,7 +247,7 @@ namespace Tests.Linq
 			var take = 12;
 			var sampleData = Enumerable.Range(1, 100).Select(i => new Booking
 			{
-				ServiceDate = DateTime.Now.AddDays(-1 - i % 3),
+				ServiceDate = TestData.DateTime.AddDays(-1 - i % 3),
 				Value = i,
 				BookingID = i
 			}).ToArray();
@@ -255,7 +255,7 @@ namespace Tests.Linq
 			using (var db = (DataConnection)GetDataContext(context))
 			using (var table = db.CreateLocalTable(sampleData))
 			{
-				var dataQuery = table.Where(t => t.ServiceDate > Sql.CurrentTimestamp.AddDays(-2));
+				var dataQuery = table.Where(t => t.ServiceDate > TestData.DateTime.AddDays(-2));
 
 				var query = dataQuery.OrderByDescending(t => t.ServiceDate).ThenByDescending(tt => tt.BookingID);
 

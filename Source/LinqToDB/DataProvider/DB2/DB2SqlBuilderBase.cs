@@ -31,7 +31,7 @@ namespace LinqToDB.DataProvider.DB2
 		public override int CommandCount(SqlStatement statement)
 		{
 			if (statement is SqlTruncateTableStatement trun)
-				return trun.ResetIdentity ? 1 + trun.Table!.Fields.Values.Count(f => f.IsIdentity) : 1;
+				return trun.ResetIdentity ? 1 + trun.Table!.IdentityFields.Count : 1;
 
 			if (Version == DB2Version.LUW && statement is SqlInsertStatement insertStatement && insertStatement.Insert.WithIdentity)
 			{
@@ -48,7 +48,7 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			if (statement is SqlTruncateTableStatement trun)
 			{
-				var field = trun.Table!.Fields.Values.Skip(commandNumber - 1).First(f => f.IsIdentity);
+				var field = trun.Table!.IdentityFields[commandNumber - 1];
 
 				StringBuilder.Append("ALTER TABLE ");
 				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName!, trun.Table.TableOptions);
@@ -224,7 +224,7 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			StringBuilder.Append("VALUES ");
 
-			foreach (var col in insertClause.Into!.Fields)
+			foreach (var _ in insertClause.Into!.Fields)
 				StringBuilder.Append("(DEFAULT)");
 
 			StringBuilder.AppendLine();

@@ -102,6 +102,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDataTypes2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
+			using (new DisableBaseline("Provider-specific output", IsMsProvider(context)))
 			using (var conn = new DataConnection(context))
 			{
 				Assert.That(TestType<DateTime?>      (conn, "dateDataType",           DataType.Date,           "AllTypes2"), Is.EqualTo(new DateTime(2012, 12, 12)));
@@ -558,7 +559,7 @@ namespace Tests.DataProvider
 					conn.Execute<Guid?>("SELECT Cast('6F9619FF-8B86-D011-B42D-00C04FC964FF' as uniqueidentifier)"),
 					Is.EqualTo(new Guid("6F9619FF-8B86-D011-B42D-00C04FC964FF")));
 
-				var guid = Guid.NewGuid();
+				var guid = TestData.Guid1;
 
 				Assert.That(conn.Execute<Guid>("SELECT @p", DataParameter.Create("p", guid)),                Is.EqualTo(guid));
 				Assert.That(conn.Execute<Guid>("SELECT @p", new DataParameter { Name = "p", Value = guid }), Is.EqualTo(guid));
@@ -749,7 +750,7 @@ namespace Tests.DataProvider
 								MoneyValue    = 1000m + n,
 								DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
 								BoolValue     = true,
-								GuidValue     = Guid.NewGuid(),
+								GuidValue     = TestData.SequentialGuid(n),
 								SmallIntValue = (short)n
 							}
 						));
@@ -781,7 +782,7 @@ namespace Tests.DataProvider
 								MoneyValue    = 1000m + n,
 								DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
 								BoolValue     = true,
-								GuidValue     = Guid.NewGuid(),
+								GuidValue     = TestData.SequentialGuid(n),
 								SmallIntValue = (short)n
 							}
 						));
@@ -813,7 +814,7 @@ namespace Tests.DataProvider
 								MoneyValue    = 1000m + n,
 								DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
 								BoolValue     = true,
-								GuidValue     = Guid.NewGuid(),
+								GuidValue     = TestData.SequentialGuid(n),
 								SmallIntValue = (short)n
 							}
 						));
@@ -845,7 +846,7 @@ namespace Tests.DataProvider
 								MoneyValue    = 1000m + n,
 								DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
 								BoolValue     = true,
-								GuidValue     = Guid.NewGuid(),
+								GuidValue     = TestData.SequentialGuid(n),
 								SmallIntValue = (short)n
 							}
 						),
@@ -1091,16 +1092,16 @@ namespace Tests.DataProvider
 				if (column.MemberName == "timestampDataType")
 					continue;
 
-				if (actualValue is SqlGeometry)
+				if (actualValue is SqlGeometry geometry)
 				{
-					Assert.That(actualValue == null  || ((SqlGeometry) actualValue).IsNull ? null : actualValue.ToString(),
-						Is.EqualTo(testValue == null || ((SqlGeometry) testValue).IsNull   ? null : testValue.ToString()),
+					Assert.That(actualValue == null  || geometry.IsNull                  ? null : actualValue.ToString(),
+						Is.EqualTo(testValue == null || ((SqlGeometry) testValue).IsNull ? null : testValue.ToString()),
 						"Column  : {0}", column.MemberName);
 				}
-				else if (actualValue is SqlGeography)
+				else if (actualValue is SqlGeography geography)
 				{
-					Assert.That(actualValue == null  || ((SqlGeography) actualValue).IsNull ? null : actualValue.ToString(),
-						Is.EqualTo(testValue == null || ((SqlGeography) testValue).IsNull   ? null : testValue.ToString()),
+					Assert.That(actualValue == null  || geography.IsNull                  ? null : actualValue.ToString(),
+						Is.EqualTo(testValue == null || ((SqlGeography) testValue).IsNull ? null : testValue.ToString()),
 						"Column  : {0}", column.MemberName);
 				}
 				else
@@ -1134,9 +1135,9 @@ namespace Tests.DataProvider
 				yield return new AllTypes2
 				{
 					ID                     = startId + i,
-					dateDataType           = DateTime.Today.AddDays(i),
-					datetimeoffsetDataType = DateTime.Now.AddMinutes(i),
-					datetime2DataType      = DateTime.Today.AddDays(i),
+					dateDataType           = TestData.Date.AddDays(i),
+					datetimeoffsetDataType = TestData.DateTime.AddMinutes(i),
+					datetime2DataType      = TestData.Date.AddDays(i),
 					timeDataType           = TimeSpan.FromSeconds(i),
 					hierarchyidDataType    = SqlHierarchyId.Parse("/1/3/"),
 					geographyDataType      = SqlGeography.Parse("LINESTRING (-122.36 47.656, -122.343 47.656)"),
@@ -1429,10 +1430,10 @@ namespace Tests.DataProvider
 
 				var par = new
 				{
-					FirstName = Guid.NewGuid().ToString(),
-					LastName = "Person",
+					FirstName  = TestData.Guid1.ToString(),
+					LastName   = "Person",
 					MiddleName = "X",
-					Gender = "M"
+					Gender     = "M"
 				};
 				
 				var ret = db.ExecuteProc($"[{dbName}]..[Person_Insert]", par);
@@ -1451,10 +1452,10 @@ namespace Tests.DataProvider
 
 				var par = new
 				{
-					FirstName = Guid.NewGuid().ToString(),
-					LastName = "Person",
+					FirstName  = TestData.Guid2.ToString(),
+					LastName   = "Person",
 					MiddleName = "X",
-					Gender = "M"
+					Gender     = "M"
 				};
 
 				var ret = await db.ExecuteProcAsync($"[{dbName}]..[Person_Insert]", CancellationToken.None, par);
@@ -1473,10 +1474,10 @@ namespace Tests.DataProvider
 
 				var par = new
 				{
-					FirstName = Guid.NewGuid().ToString(),
-					LastName = "Person",
+					FirstName  = TestData.Guid3.ToString(),
+					LastName   = "Person",
 					MiddleName = "X",
-					Gender = "M"
+					Gender     = "M"
 				};
 				
 				var ret = db.ExecuteProc<int>($"[{dbName}]..[Person_Insert]", par);
@@ -1495,10 +1496,10 @@ namespace Tests.DataProvider
 
 				var par = new
 				{
-					FirstName = Guid.NewGuid().ToString(),
-					LastName = "Person",
+					FirstName  = TestData.SequentialGuid(1).ToString(),
+					LastName   = "Person",
 					MiddleName = "X",
-					Gender = "M"
+					Gender     = "M"
 				};
 
 				var ret = await db.ExecuteProcAsync($"[{dbName}]..[Person_Insert]", par);
@@ -1583,7 +1584,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestIssue1144([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void TestIssue1144([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
@@ -1606,11 +1607,11 @@ namespace Tests.DataProvider
 		{
 			var sampleData = new[]
 			{
-				new Issue1613Table { DateTimeOffset = DateTimeOffset.Now },
-				new Issue1613Table { DateTimeOffset = DateTimeOffset.Now.AddDays(1) },
-				new Issue1613Table { DateTimeOffset = DateTimeOffset.Now.AddDays(2) },
-				new Issue1613Table { DateTimeOffset = DateTimeOffset.Now.AddDays(3) },
-				new Issue1613Table { DateTimeOffset = DateTimeOffset.Now.AddDays(4) }
+				new Issue1613Table { DateTimeOffset = TestData.DateTimeOffset },
+				new Issue1613Table { DateTimeOffset = TestData.DateTimeOffset.AddDays(1) },
+				new Issue1613Table { DateTimeOffset = TestData.DateTimeOffset.AddDays(2) },
+				new Issue1613Table { DateTimeOffset = TestData.DateTimeOffset.AddDays(3) },
+				new Issue1613Table { DateTimeOffset = TestData.DateTimeOffset.AddDays(4) }
 			};
 			return sampleData;
 		}
@@ -1794,6 +1795,62 @@ AS
 				{
 					return db.GetTable<Issue1294Table>(this, methodInfo, p1, p2);
 				}
+			}
+		}
+
+		[Test]
+		[ActiveIssue(1468)]
+		public void Issue1468Test([IncludeDataSources(false, TestProvName.AllSqlServer)] string context, [Values] bool useFmtOnly)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				var options = new GetSchemaOptions();
+				options.GetTables     = false;
+				options.UseSchemaOnly = useFmtOnly;
+
+				var schema = db.DataProvider
+					.GetSchemaProvider()
+					.GetSchema(db, options);
+
+				var proc = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "PersonSearch");
+				Assert.NotNull(proc);
+				Assert.False(proc.IsFunction);
+				Assert.IsNull(proc.ResultException);
+			}
+		}
+
+		[Test]
+		public void TestDescriptions([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				var options = new GetSchemaOptions();
+				options.GetTables = false;
+
+				var schema = db.DataProvider
+					.GetSchemaProvider()
+					.GetSchema(db, options);
+
+				var proc = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "ExecuteProcStringParameters");
+				Assert.NotNull(proc);
+				Assert.AreEqual("This is <test> procedure!", proc.Description);
+				var param = proc.Parameters.FirstOrDefault(p => p.ParameterName == "@input");
+				Assert.NotNull(param);
+				Assert.AreEqual("This is <test> procedure parameter!", param.Description);
+
+				var func = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "GetParentByID");
+				Assert.NotNull(func);
+				Assert.AreEqual("This is <test> table function!", func.Description);
+				param = func.Parameters.FirstOrDefault(p => p.ParameterName == "@id");
+				Assert.NotNull(param);
+				Assert.AreEqual("This is <test> table function parameter!", param.Description);
+
+				func = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "ScalarFunction");
+				Assert.NotNull(func);
+				Assert.AreEqual("This is <test> scalar function!", func.Description);
+				param = func.Parameters.FirstOrDefault(p => p.ParameterName == "@value");
+				Assert.NotNull(param);
+				Assert.AreEqual("This is <test> scalar function parameter!", param.Description);
 			}
 		}
 	}

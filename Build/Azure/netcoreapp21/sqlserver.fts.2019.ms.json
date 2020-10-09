@@ -4,7 +4,7 @@
 			// SQL Server 2019 + generic sqlserver tests + northwind db tests
 			"SqlServer.2019",
 			"Northwind",
-			"SqlServer"
+			//"SqlServer"
 		],
 		"Connections": {
 			"SqlServer": {

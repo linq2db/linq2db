@@ -14,19 +14,19 @@
 		<dependencies>
 			<group targetFramework=".NETFramework4.5">
 				<dependency id="linq2db"                  version="3.0.0"/>
-				<dependency id="Oracle.ManagedDataAccess" version="19.8.0"/>
+				<dependency id="Oracle.ManagedDataAccess" version="19.9.0"/>
 			</group>
 			<group targetFramework=".NETFramework4.6">
 				<dependency id="linq2db"                  version="3.0.0"/>
-				<dependency id="Oracle.ManagedDataAccess" version="19.8.0"/>
+				<dependency id="Oracle.ManagedDataAccess" version="19.9.0"/>
 			</group>
 			<group targetFramework=".NETStandard2.0">
 				<dependency id="linq2db"                       version="3.0.0"/>
-				<dependency id="Oracle.ManagedDataAccess.Core" version="2.19.80"/>
+				<dependency id="Oracle.ManagedDataAccess.Core" version="2.19.90"/>
 			</group>
 			<group targetFramework=".NETCoreApp2.1">
 				<dependency id="linq2db"                       version="3.0.0"/>
-				<dependency id="Oracle.ManagedDataAccess.Core" version="2.19.80"/>
+				<dependency id="Oracle.ManagedDataAccess.Core" version="2.19.90"/>
 			</group>
 		</dependencies>
 		<contentFiles>
@@ -34,7 +34,7 @@
 		</contentFiles>
 	</metadata>
 	<files>
-		<file src="..\Tests\Linq\bin\Azure\net46\Oracle.ManagedDataAccess.dll"     target="tools" />
+		<file src="..\Tests\Linq\bin\Azure\net472\Oracle.ManagedDataAccess.dll"    target="tools" />
 		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"               target="tools" />
 
 		<file src="_._"                                                            target="lib\net45" />

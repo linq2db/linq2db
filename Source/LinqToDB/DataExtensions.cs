@@ -202,7 +202,7 @@ namespace LinqToDB
 		public static int Insert<T>(this IDataContext dataContext, T obj,
 			string? tableName = default, string? databaseName = default, string? schemaName = default, string? serverName = default, TableOptions tableOptions = default)
 		{
-			return Insert(dataContext, obj, null, tableName, serverName, databaseName, schemaName, tableOptions);
+			return Insert(dataContext, obj, null, tableName: tableName, databaseName: databaseName, schemaName: schemaName, serverName: serverName, tableOptions: tableOptions);
 		}
 
 		/// <summary>
@@ -223,7 +223,7 @@ namespace LinqToDB
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 
-			return QueryRunner.Insert<T>.Query(dataContext, obj, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions);
+			return QueryRunner.Insert<T>.Query(dataContext, obj, columnFilter, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, tableOptions: tableOptions);
 		}
 
 		/// <summary>
@@ -249,7 +249,7 @@ namespace LinqToDB
 			TableOptions      tableOptions = default,
 			CancellationToken token        = default)
 		{
-			return InsertAsync(dataContext, obj, null, tableName, serverName, databaseName, schemaName, tableOptions, token);
+			return InsertAsync(dataContext, obj, null, tableName: tableName, databaseName: databaseName, schemaName: schemaName, serverName: serverName, tableOptions: tableOptions, token);
 		}
 
 		/// <summary>
@@ -278,8 +278,7 @@ namespace LinqToDB
 			CancellationToken      token        = default)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-
-			return QueryRunner.Insert<T>.QueryAsync(dataContext, obj, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, token);
+			return QueryRunner.Insert<T>.QueryAsync(dataContext, obj, columnFilter, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, tableOptions: tableOptions, token);
 		}
 
 		#endregion
@@ -306,7 +305,7 @@ namespace LinqToDB
 			string?      serverName   = default,
 			TableOptions tableOptions = default)
 		{
-			return InsertOrReplace(dataContext, obj, null, tableName, serverName, databaseName, schemaName, tableOptions);
+			return InsertOrReplace(dataContext, obj, null, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, tableOptions: tableOptions);
 		}
 
 		/// <summary>
@@ -332,7 +331,7 @@ namespace LinqToDB
 			TableOptions tableOptions = default)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			return QueryRunner.InsertOrReplace<T>.Query(dataContext, obj, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions);
+			return QueryRunner.InsertOrReplace<T>.Query(dataContext, obj, columnFilter, tableName: tableName, serverName: serverName, databaseName: databaseName, schema: schemaName, tableOptions: tableOptions);
 		}
 
 		/// <summary>
@@ -359,7 +358,7 @@ namespace LinqToDB
 			TableOptions      tableOptions = default,
 			CancellationToken token        = default)
 		{
-			return InsertOrReplaceAsync(dataContext, obj, null, tableName, serverName, databaseName, schemaName, tableOptions, token);
+			return InsertOrReplaceAsync(dataContext, obj, null, tableName: tableName, databaseName: databaseName, schemaName: schemaName, serverName: serverName, tableOptions: tableOptions, token);
 		}
 
 		/// <summary>
@@ -389,7 +388,7 @@ namespace LinqToDB
 			CancellationToken              token        = default)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			return QueryRunner.InsertOrReplace<T>.QueryAsync(dataContext, obj, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, token);
+			return QueryRunner.InsertOrReplace<T>.QueryAsync(dataContext, obj, columnFilter, tableName: tableName, serverName: serverName, databaseName: databaseName, schema: schemaName, tableOptions: tableOptions, token);
 		}
 
 		#endregion
@@ -418,7 +417,7 @@ namespace LinqToDB
 			string?       serverName   = default,
 			TableOptions  tableOptions = default)
 		{
-			return InsertWithIdentity(dataContext, obj, null, tableName, serverName, databaseName, schemaName, tableOptions);
+			return InsertWithIdentity(dataContext, obj, null, tableName: tableName, databaseName: databaseName, schemaName: schemaName, serverName: serverName, tableOptions: tableOptions);
 		}
 
 		/// <summary>
@@ -446,7 +445,7 @@ namespace LinqToDB
 			TableOptions           tableOptions = default)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			return QueryRunner.InsertWithIdentity<T>.Query(dataContext, obj, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions);
+			return QueryRunner.InsertWithIdentity<T>.Query(dataContext, obj, columnFilter, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, tableOptions: tableOptions);
 		}
 
 		/// <summary>
@@ -471,7 +470,7 @@ namespace LinqToDB
 			string?           serverName   = default,
 			TableOptions      tableOptions = default)
 		{
-			return InsertWithInt32Identity(dataContext, obj, null, tableName, serverName, databaseName, schemaName, tableOptions);
+			return InsertWithInt32Identity(dataContext, obj, null, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, tableOptions: tableOptions);
 		}
 
 		/// <summary>
@@ -499,8 +498,7 @@ namespace LinqToDB
 			TableOptions           tableOptions = default)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			return dataContext.MappingSchema.ChangeTypeTo<int>(QueryRunner.InsertWithIdentity<T>.Query(
-				dataContext, obj, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions));
+			return dataContext.MappingSchema.ChangeTypeTo<int>(QueryRunner.InsertWithIdentity<T>.Query(dataContext, obj, columnFilter, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, tableOptions: tableOptions));
 		}
 
 		/// <summary>
@@ -525,7 +523,7 @@ namespace LinqToDB
 			string?           serverName   = default,
 			TableOptions      tableOptions = default)
 		{
-			return InsertWithInt64Identity(dataContext, obj, null, tableName, serverName, databaseName, schemaName, tableOptions);
+			return InsertWithInt64Identity(dataContext, obj, null, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, tableOptions: tableOptions);
 		}
 
 		/// <summary>
@@ -553,7 +551,7 @@ namespace LinqToDB
 			TableOptions           tableOptions = default)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			return dataContext.MappingSchema.ChangeTypeTo<long>(QueryRunner.InsertWithIdentity<T>.Query(dataContext, obj, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions));
+			return dataContext.MappingSchema.ChangeTypeTo<long>(QueryRunner.InsertWithIdentity<T>.Query(dataContext, obj, columnFilter, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, tableOptions: tableOptions));
 		}
 
 		/// <summary>
@@ -578,7 +576,7 @@ namespace LinqToDB
 			string?           serverName   = default,
 			TableOptions      tableOptions = default)
 		{
-			return InsertWithDecimalIdentity(dataContext, obj, null, tableName, serverName, databaseName, schemaName, tableOptions);
+			return InsertWithDecimalIdentity(dataContext, obj, null, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, tableOptions: tableOptions);
 		}
 
 		/// <summary>
@@ -606,7 +604,7 @@ namespace LinqToDB
 			TableOptions           tableOptions = default)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			return dataContext.MappingSchema.ChangeTypeTo<decimal>(QueryRunner.InsertWithIdentity<T>.Query(dataContext, obj, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions));
+			return dataContext.MappingSchema.ChangeTypeTo<decimal>(QueryRunner.InsertWithIdentity<T>.Query(dataContext, obj, columnFilter, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, tableOptions: tableOptions));
 		}
 
 		/// <summary>
@@ -633,7 +631,7 @@ namespace LinqToDB
 			TableOptions      tableOptions = default,
 			CancellationToken token        = default)
 		{
-			return InsertWithIdentityAsync(dataContext, obj, null, tableName, serverName, databaseName, schemaName, tableOptions, token);
+			return InsertWithIdentityAsync(dataContext, obj, null, tableName: tableName, databaseName: databaseName, schemaName: schemaName, serverName: serverName, tableOptions: tableOptions, token);
 		}
 
 		/// <summary>
@@ -663,7 +661,7 @@ namespace LinqToDB
 			CancellationToken      token        = default)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			return QueryRunner.InsertWithIdentity<T>.QueryAsync(dataContext, obj, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, token);
+			return QueryRunner.InsertWithIdentity<T>.QueryAsync(dataContext, obj, columnFilter, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, tableOptions: tableOptions, token);
 		}
 
 		/// <summary>
@@ -690,7 +688,7 @@ namespace LinqToDB
 			TableOptions      tableOptions = default,
 			CancellationToken token        = default)
 		{
-			return await InsertWithInt32IdentityAsync(dataContext, obj, null, tableName, serverName, databaseName, schemaName, tableOptions, token);
+			return await InsertWithInt32IdentityAsync(dataContext, obj, null, tableName: tableName, databaseName: databaseName, schemaName: schemaName, serverName: serverName, tableOptions: tableOptions, token);
 		}
 
 		/// <summary>
@@ -722,7 +720,7 @@ namespace LinqToDB
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 
 			var ret = await QueryRunner.InsertWithIdentity<T>
-				.QueryAsync(dataContext, obj, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, token)
+				.QueryAsync(dataContext, obj, columnFilter, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, tableOptions: tableOptions, token)
 				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			return dataContext.MappingSchema.ChangeTypeTo<int>(ret);
 		}
@@ -751,7 +749,7 @@ namespace LinqToDB
 			TableOptions      tableOptions = default,
 			CancellationToken token        = default)
 		{
-			return await InsertWithInt64IdentityAsync(dataContext, obj, null, tableName, serverName, databaseName, schemaName, tableOptions, token);
+			return await InsertWithInt64IdentityAsync(dataContext, obj, null, tableName: tableName, databaseName: databaseName, schemaName: schemaName, serverName: serverName, tableOptions: tableOptions, token);
 		}
 
 		/// <summary>
@@ -783,7 +781,7 @@ namespace LinqToDB
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 
 			var ret = await QueryRunner.InsertWithIdentity<T>
-				.QueryAsync(dataContext, obj, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, token)
+				.QueryAsync(dataContext, obj, columnFilter, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, tableOptions: tableOptions, token)
 				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			return dataContext.MappingSchema.ChangeTypeTo<long>(ret);
@@ -813,7 +811,7 @@ namespace LinqToDB
 			TableOptions      tableOptions = default,
 			CancellationToken token        = default)
 		{
-			return await InsertWithDecimalIdentityAsync(dataContext, obj, null, tableName, serverName, databaseName, schemaName, tableOptions, token);
+			return await InsertWithDecimalIdentityAsync(dataContext, obj, null, tableName: tableName, databaseName: databaseName, schemaName: schemaName, serverName: serverName, tableOptions: tableOptions, token);
 		}
 
 		/// <summary>
@@ -845,7 +843,7 @@ namespace LinqToDB
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 
 			var ret = await QueryRunner.InsertWithIdentity<T>
-				.QueryAsync(dataContext, obj, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, token)
+				.QueryAsync(dataContext, obj, columnFilter, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, tableOptions: tableOptions, token)
 				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			return dataContext.MappingSchema.ChangeTypeTo<decimal>(ret);
@@ -877,7 +875,7 @@ namespace LinqToDB
 			string?           serverName   = default,
 			TableOptions      tableOptions = default)
 		{
-			return Update(dataContext, obj, null, tableName, serverName, databaseName, schemaName, tableOptions);
+			return Update(dataContext, obj, null, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, tableOptions: tableOptions);
 		}
 
 		/// <summary>
@@ -905,7 +903,7 @@ namespace LinqToDB
 			TableOptions           tableOptions = default)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			return QueryRunner.Update<T>.Query(dataContext, obj, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions);
+			return QueryRunner.Update<T>.Query(dataContext, obj, columnFilter, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, tableOptions: tableOptions);
 		}
 
 		/// <summary>
@@ -932,7 +930,7 @@ namespace LinqToDB
 			TableOptions      tableOptions = default,
 			CancellationToken token        = default)
 		{
-			return UpdateAsync(dataContext, obj, null, tableName, serverName, databaseName, schemaName, tableOptions, token);
+			return UpdateAsync(dataContext, obj, null, tableName: tableName, databaseName: databaseName, schemaName: schemaName, serverName: serverName, tableOptions: tableOptions, token);
 		}
 
 		/// <summary>
@@ -962,7 +960,7 @@ namespace LinqToDB
 			CancellationToken      token        = default)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			return QueryRunner.Update<T>.QueryAsync(dataContext, obj, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, token);
+			return QueryRunner.Update<T>.QueryAsync(dataContext, obj, columnFilter, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, tableOptions: tableOptions, token);
 		}
 
 		#endregion
@@ -992,7 +990,7 @@ namespace LinqToDB
 			TableOptions      tableOptions = default)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			return QueryRunner.Delete<T>.Query(dataContext, obj, tableName, serverName, databaseName, schemaName, tableOptions);
+			return QueryRunner.Delete<T>.Query(dataContext, obj, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, tableOptions: tableOptions);
 		}
 
 		/// <summary>
@@ -1020,7 +1018,7 @@ namespace LinqToDB
 			CancellationToken token        = default)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			return QueryRunner.Delete<T>.QueryAsync(dataContext, obj, tableName, serverName, databaseName, schemaName, tableOptions, token);
+			return QueryRunner.Delete<T>.QueryAsync(dataContext, obj, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, tableOptions: tableOptions, token);
 		}
 
 		#endregion
@@ -1059,8 +1057,8 @@ namespace LinqToDB
 			TableOptions      tableOptions    = default)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			return QueryRunner.CreateTable<T>.Query(
-				dataContext, tableName, serverName, databaseName, schemaName, statementHeader, statementFooter, defaultNullable, tableOptions);
+			return QueryRunner.CreateTable<T>.Query(dataContext,
+				tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, statementHeader, statementFooter, defaultNullable, tableOptions: tableOptions);
 		}
 
 		/// <summary>
@@ -1098,7 +1096,7 @@ namespace LinqToDB
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			return QueryRunner.CreateTable<T>.QueryAsync(dataContext,
-				tableName, serverName, databaseName, schemaName, statementHeader, statementFooter, defaultNullable, tableOptions, token);
+				tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, statementHeader, statementFooter, defaultNullable, tableOptions: tableOptions, token);
 		}
 
 		#endregion
@@ -1132,7 +1130,7 @@ namespace LinqToDB
 
 			try
 			{
-				QueryRunner.DropTable<T>.Query(dataContext, tableName, serverName, databaseName, schemaName, !throwExceptionIfNotExists, tableOptions);
+				QueryRunner.DropTable<T>.Query(dataContext, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, !throwExceptionIfNotExists, tableOptions: tableOptions);
 			}
 			catch when (!throwExceptionIfNotExists ?? tableOptions.HasDropIfExists())
 			{
@@ -1169,10 +1167,10 @@ namespace LinqToDB
 			{
 				QueryRunner.DropTable<T>.Query(
 					table.DataContext,
-					tableName    ?? table.TableName,
-					serverName   ?? table.ServerName,
-					databaseName ?? table.DatabaseName,
-					schemaName   ?? table.SchemaName,
+					tableName:    tableName    ?? table.TableName,
+					serverName:   serverName   ?? table.ServerName,
+					databaseName: databaseName ?? table.DatabaseName,
+					schemaName:   schemaName   ?? table.SchemaName,
 					!throwExceptionIfNotExists,
 					tableOptions.IsSet() ? tableOptions : table.TableOptions);
 			}
@@ -1213,7 +1211,7 @@ namespace LinqToDB
 			try
 			{
 				await QueryRunner.DropTable<T>
-					.QueryAsync(dataContext, tableName, serverName, databaseName, schemaName, !throwExceptionIfNotExists, tableOptions, token)
+					.QueryAsync(dataContext, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, !throwExceptionIfNotExists, tableOptions: tableOptions, token)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 			catch when (!throwExceptionIfNotExists ?? tableOptions.HasDropIfExists())
@@ -1256,10 +1254,10 @@ namespace LinqToDB
 				await QueryRunner.DropTable<T>
 					.QueryAsync(
 						table.DataContext,
-						tableName    ?? table.TableName,
-						serverName   ?? table.ServerName,
-						databaseName ?? table.DatabaseName,
-						schemaName   ?? table.SchemaName,
+						tableName:    tableName    ?? table.TableName,
+						serverName:   serverName   ?? table.ServerName,
+						databaseName: databaseName ?? table.DatabaseName,
+						schemaName:   schemaName   ?? table.SchemaName,
 						!throwExceptionIfNotExists,
 						tableOptions.IsSet() ? tableOptions : table.TableOptions,
 						token)
@@ -1464,7 +1462,7 @@ namespace LinqToDB
 		///         LINQ operators - <code>context.FromSql&lt;Blogs&gt;("SELECT * FROM dbo.Blogs").OrderBy(b => b.Name);</code>
 		///     </para>
 		///     <para>
-		///         As with any API that accepts SQL it is important to parameterize any user input to protect against a SQL injection
+		///         As with any API that accepts SQL it is important to parametrize any user input to protect against a SQL injection
 		///         attack. You can include parameter place holders in the SQL query string and then supply parameter values as additional
 		///         arguments. Any parameter values you supply will automatically be converted to a DbParameter -
 		///         <code>context.FromSql&lt;Blogs&gt;("SELECT * FROM [dbo].[SearchBlogs]({0})", userSuppliedSearchTerm);</code>
@@ -1507,7 +1505,7 @@ namespace LinqToDB
 		/// <summary>
 		///     <para>
 		///         Creates a LINQ query based on expression. Returned <see cref="IQueryable{T}" /> represents single record.<para />
-		///         Could be useful for function calls, querying of database variables, properties or subqueries.
+		///         Could be useful for function calls, querying of database variables, properties or sub-queries.
 		///     </para>
 		/// </summary>
 		/// <typeparam name="TEntity">Type of result.</typeparam>

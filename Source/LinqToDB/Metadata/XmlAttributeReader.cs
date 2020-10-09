@@ -98,7 +98,7 @@ namespace LinqToDB.Metadata
 					return Tuple.Create(name, val);
 				});
 
-				return new AttributeInfo(aname, values.ToDictionary(v => v.Item1, v => v.Item2));
+				return new AttributeInfo(aname, values.ToDictionary(v => v.Item1, v => (object?)v.Item2));
 			});
 
 			return attrs.ToArray();

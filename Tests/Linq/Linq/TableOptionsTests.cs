@@ -5,7 +5,7 @@ using IBM.Data.DB2;
 
 using JetBrains.Annotations;
 
-#if !NET46
+#if !NET472
 using IBM.Data.DB2.Core;
 #endif
 

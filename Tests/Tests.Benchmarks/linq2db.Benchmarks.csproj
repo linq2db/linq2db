@@ -4,7 +4,7 @@
 	<PropertyGroup>
 		<AssemblyName>linq2db.Benchmarks</AssemblyName>
 		<RootNamespace>LinqToDB.Benchmarks</RootNamespace>
-		<TargetFrameworks>net462;netcoreapp2.1;netcoreapp3.1</TargetFrameworks>
+		<TargetFrameworks>net472;netcoreapp2.1;netcoreapp3.1</TargetFrameworks>
 		<OutputType>Exe</OutputType>
 		<MSBuildWarningsAsMessages>MSB3276</MSBuildWarningsAsMessages>
 	</PropertyGroup>

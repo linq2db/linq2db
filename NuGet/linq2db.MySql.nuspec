@@ -20,8 +20,8 @@
 	</metadata>
 	<files>
 		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"         target="tools" />
-		<file src="..\Tests\Linq\bin\Azure\net46\MySql.Data.dll"             target="tools" />
-		<file src="..\Tests\Linq\bin\Azure\net46\BouncyCastle.Crypto.dll"    target="tools" />
+		<file src="..\Tests\Linq\bin\Azure\net472\MySql.Data.dll"            target="tools" />
+		<file src="..\Tests\Linq\bin\Azure\net472\BouncyCastle.Crypto.dll"   target="tools" />
 
 		<file src="MySql\linq2db.MySql.props"                                target="build" />
 		

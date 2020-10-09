@@ -64,14 +64,6 @@ namespace DataModel
 
 		#endregion
 
-		#region Table Functions
-
-		#region Issue449
-
-		#endregion
-
-		#endregion
-
 		#region FreeTextTable
 
 		public IQueryable<SqlServerExtensions.FreeTextKey<TKey>> FreeTextTable<TTable, TKey>(ITable<TTable> table, Expression<Func<TTable,object?>> columns, string search)
@@ -1092,12 +1084,11 @@ namespace DataModel
 		#endregion
 	}
 
-	public partial class TestData2014DB : LinqToDB.Data.DataConnection
+	public partial class TestDataDB : LinqToDB.Data.DataConnection
 	{
 		public ITable<AllType>                 AllTypes                 { get { return this.GetTable<AllType>(); } }
 		public ITable<AllTypes2>               AllTypes2                { get { return this.GetTable<AllTypes2>(); } }
 		public ITable<Child>                   Children                 { get { return this.GetTable<Child>(); } }
-		public ITable<Customer0>               Customers                { get { return this.GetTable<Customer0>(); } }
 		public ITable<DecimalOverflow>         DecimalOverflows         { get { return this.GetTable<DecimalOverflow>(); } }
 		public ITable<Doctor>                  Doctors                  { get { return this.GetTable<Doctor>(); } }
 		public ITable<GrandChild>              GrandChildren            { get { return this.GetTable<GrandChild>(); } }
@@ -1118,10 +1109,8 @@ namespace DataModel
 		public ITable<ParentChildView>         ParentChildViews         { get { return this.GetTable<ParentChildView>(); } }
 		public ITable<ParentView>              ParentViews              { get { return this.GetTable<ParentView>(); } }
 		public ITable<Patient>                 Patients                 { get { return this.GetTable<Patient>(); } }
-		public ITable<Ref>                     Refs                     { get { return this.GetTable<Ref>(); } }
 		public ITable<SameTableName>           SameTableNames           { get { return this.GetTable<SameTableName>(); } }
 		public ITable<SqlType>                 SqlTypes                 { get { return this.GetTable<SqlType>(); } }
-		public ITable<TestDecimal>             TestDecimals             { get { return this.GetTable<TestDecimal>(); } }
 		public ITable<TestIdentity>            TestIdentities           { get { return this.GetTable<TestIdentity>(); } }
 		public ITable<TestMerge1>              TestMerge1               { get { return this.GetTable<TestMerge1>(); } }
 		public ITable<TestMerge2>              TestMerge2               { get { return this.GetTable<TestMerge2>(); } }
@@ -1145,28 +1134,17 @@ namespace DataModel
 
 		#region GetParentByID
 
+		/// <summary>
+		/// This is &lt;test&gt; table function!
+		/// </summary>
+		/// <param name="@id">
+		/// This is &lt;test&gt; table function parameter!
+		/// </param>
 		[Sql.TableFunction(Name="GetParentByID")]
 		public ITable<Parent> GetParentByID(int? @id)
 		{
 			return this.GetTable<Parent>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				@id);
-		}
-
-		#endregion
-
-		#region Issue1294
-
-		[Sql.TableFunction(Name="Issue1294")]
-		public ITable<Issue1294Result> Issue1294(int? @p1, int? @p2)
-		{
-			return this.GetTable<Issue1294Result>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				@p1,
-				@p2);
-		}
-
-		public partial class Issue1294Result
-		{
-			public int? Id { get; set; }
 		}
 
 		#endregion
@@ -1269,16 +1247,6 @@ namespace DataModel
 		/// </summary>
 		[Column(       DbType="int", DataType=DataType.Int32), Nullable            ] public int? ChildID  { get; set; } // int
 		[Column("_ID", DbType="int", DataType=DataType.Int32), PrimaryKey, Identity] public int  Id       { get; set; } // int
-	}
-
-	[Table("Customer")]
-	public partial class Customer0
-	{
-		[Column(           DbType="int",           DataType=DataType.Int32),                PrimaryKey, NotNull] public int      ID            { get; set; } // int
-		[Column(           DbType="nvarchar(255)", DataType=DataType.NVarChar, Length=255),             NotNull] public string   Name          { get; set; } = null!; // nvarchar(255)
-		[Column("Ref_ID",  DbType="int",           DataType=DataType.Int32),                            NotNull] public int      RefId         { get; set; } // int
-		[Column(           DbType="datetime",      DataType=DataType.DateTime),                         NotNull] public DateTime InsertUTCDate { get; set; } // datetime
-		[Column("Ref_ID2", DbType="int",           DataType=DataType.Int32),                            NotNull] public int      RefID2        { get; set; } // int
 	}
 
 	[Table("DecimalOverflow")]
@@ -1445,15 +1413,6 @@ namespace DataModel
 		[Column(DbType="nvarchar(256)", DataType=DataType.NVarChar, Length=256),             NotNull] public string Diagnosis { get; set; } = null!; // nvarchar(256)
 	}
 
-	[Table("Ref")]
-	public partial class Ref
-	{
-		[Column(DbType="int",           DataType=DataType.Int32),                PrimaryKey, NotNull] public int      ID            { get; set; } // int
-		[Column(DbType="int",           DataType=DataType.Int32),                            NotNull] public int      ID2           { get; set; } // int
-		[Column(DbType="nvarchar(255)", DataType=DataType.NVarChar, Length=255),             NotNull] public string   Name          { get; set; } = null!; // nvarchar(255)
-		[Column(DbType="datetime",      DataType=DataType.DateTime),                         NotNull] public DateTime InsertUTCDate { get; set; } // datetime
-	}
-
 	[Table("SameTableName")]
 	public partial class SameTableName
 	{
@@ -1465,15 +1424,6 @@ namespace DataModel
 	{
 		[Column(DbType="int",         DataType=DataType.Int32), PrimaryKey,  NotNull] public int             ID  { get; set; } // int
 		[Column(DbType="hierarchyid", DataType=DataType.Udt),      Nullable         ] public SqlHierarchyId? HID { get; set; } // hierarchyid
-	}
-
-	[Table("TestDecimal")]
-	public partial class TestDecimal
-	{
-		[Column("asint",   DbType="decimal(5, 0)", DataType=DataType.Decimal, Precision=5, Scale=0), NotNull    ] public decimal  Asint   { get; set; } // decimal(5, 0)
-		[Column("aslong",  DbType="decimal(9, 0)", DataType=DataType.Decimal, Precision=9, Scale=0), NotNull    ] public decimal  Aslong  { get; set; } // decimal(9, 0)
-		[Column("asintn",  DbType="decimal(5, 0)", DataType=DataType.Decimal, Precision=5, Scale=0),    Nullable] public decimal? Asintn  { get; set; } // decimal(5, 0)
-		[Column("aslongn", DbType="decimal(9, 0)", DataType=DataType.Decimal, Precision=9, Scale=0),    Nullable] public decimal? Aslongn { get; set; } // decimal(9, 0)
 	}
 
 	[Table("TestIdentity")]
@@ -1610,11 +1560,11 @@ namespace DataModel
 		#endregion
 	}
 
-	public static partial class TestData2014DBStoredProcedures
+	public static partial class TestDataDBStoredProcedures
 	{
 		#region AddIssue792Record
 
-		public static int AddIssue792Record(this TestData2014DB dataConnection)
+		public static int AddIssue792Record(this TestDataDB dataConnection)
 		{
 			return dataConnection.ExecuteProc("[AddIssue792Record]");
 		}
@@ -1623,7 +1573,7 @@ namespace DataModel
 
 		#region DuplicateColumnNames
 
-		public static List<DuplicateColumnNamesResult> DuplicateColumnNames(this TestData2014DB dataConnection)
+		public static List<DuplicateColumnNamesResult> DuplicateColumnNames(this TestDataDB dataConnection)
 		{
 			var ms = dataConnection.MappingSchema;
 
@@ -1644,9 +1594,57 @@ namespace DataModel
 
 		#endregion
 
+		#region ExecuteProcIntParameters
+
+		public static int ExecuteProcIntParameters(this TestDataDB dataConnection, int? @input, ref int? @output)
+		{
+			var ret = dataConnection.ExecuteProc("[ExecuteProcIntParameters]",
+				new DataParameter("@input",  @input,  DataType.Int32),
+				new DataParameter("@output", @output, DataType.Int32) { Direction = ParameterDirection.InputOutput });
+
+			@output = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@output"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region ExecuteProcStringParameters
+
+		/// <summary>
+		/// This is &lt;test&gt; procedure!
+		/// </summary>
+		/// <param name="@input">
+		/// This is &lt;test&gt; procedure parameter!
+		/// </param>
+		public static List<ExecuteProcStringParametersResult> ExecuteProcStringParameters(this TestDataDB dataConnection, int? @input, ref int? @output)
+		{
+			var ms = dataConnection.MappingSchema;
+
+			var ret = dataConnection.QueryProc(dataReader =>
+				new ExecuteProcStringParametersResult
+				{
+					Column1 = Converter.ChangeTypeTo<string>(dataReader.GetValue(0), ms),
+				},
+				"[ExecuteProcStringParameters]",
+				new DataParameter("@input",  @input,  DataType.Int32),
+				new DataParameter("@output", @output, DataType.Int32) { Direction = ParameterDirection.InputOutput }).ToList();
+
+			@output = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@output"]).Value);
+
+			return ret;
+		}
+
+		public partial class ExecuteProcStringParametersResult
+		{
+			[Column("")] public string Column1 { get; set; } = null!;
+		}
+
+		#endregion
+
 		#region Issue1897
 
-		public static int Issue1897(this TestData2014DB dataConnection, out int @return)
+		public static int Issue1897(this TestDataDB dataConnection, out int @return)
 		{
 			var ret = dataConnection.ExecuteProc("[Issue1897]",
 				new DataParameter("@return", null, DataType.Int32) { Direction = ParameterDirection.ReturnValue });
@@ -1660,7 +1658,7 @@ namespace DataModel
 
 		#region OutRefEnumTest
 
-		public static int OutRefEnumTest(this TestData2014DB dataConnection, string? @str, ref string? @outputStr, ref string? @inputOutputStr)
+		public static int OutRefEnumTest(this TestDataDB dataConnection, string? @str, ref string? @outputStr, ref string? @inputOutputStr)
 		{
 			var ret = dataConnection.ExecuteProc("[OutRefEnumTest]",
 				new DataParameter("@str",            @str,            DataType.VarChar),
@@ -1677,7 +1675,7 @@ namespace DataModel
 
 		#region OutRefTest
 
-		public static int OutRefTest(this TestData2014DB dataConnection, int? @ID, ref int? @outputID, ref int? @inputOutputID, string? @str, ref string? @outputStr, ref string? @inputOutputStr)
+		public static int OutRefTest(this TestDataDB dataConnection, int? @ID, ref int? @outputID, ref int? @inputOutputID, string? @str, ref string? @outputStr, ref string? @inputOutputStr)
 		{
 			var ret = dataConnection.ExecuteProc("[OutRefTest]",
 				new DataParameter("@ID",             @ID,             DataType.Int32),
@@ -1699,7 +1697,7 @@ namespace DataModel
 
 		#region PatientSelectAll
 
-		public static List<PatientSelectAllResult> PatientSelectAll(this TestData2014DB dataConnection)
+		public static List<PatientSelectAllResult> PatientSelectAll(this TestDataDB dataConnection)
 		{
 			return dataConnection.QueryProc<PatientSelectAllResult>("[Patient_SelectAll]").ToList();
 		}
@@ -1718,7 +1716,7 @@ namespace DataModel
 
 		#region PatientSelectByName
 
-		public static List<PatientSelectByNameResult> PatientSelectByName(this TestData2014DB dataConnection, string? @firstName, string? @lastName)
+		public static List<PatientSelectByNameResult> PatientSelectByName(this TestDataDB dataConnection, string? @firstName, string? @lastName)
 		{
 			return dataConnection.QueryProc<PatientSelectByNameResult>("[Patient_SelectByName]",
 				new DataParameter("@firstName", @firstName, DataType.NVarChar),
@@ -1739,7 +1737,7 @@ namespace DataModel
 
 		#region PersonDelete
 
-		public static int PersonDelete(this TestData2014DB dataConnection, int? @PersonID)
+		public static int PersonDelete(this TestDataDB dataConnection, int? @PersonID)
 		{
 			return dataConnection.ExecuteProc("[Person_Delete]",
 				new DataParameter("@PersonID", @PersonID, DataType.Int32));
@@ -1749,7 +1747,7 @@ namespace DataModel
 
 		#region PersonInsert
 
-		public static List<PersonInsertResult> PersonInsert(this TestData2014DB dataConnection, string? @FirstName, string? @LastName, string? @MiddleName, char? @Gender)
+		public static List<PersonInsertResult> PersonInsert(this TestDataDB dataConnection, string? @FirstName, string? @LastName, string? @MiddleName, char? @Gender)
 		{
 			return dataConnection.QueryProc<PersonInsertResult>("[Person_Insert]",
 				new DataParameter("@FirstName",  @FirstName,  DataType.NVarChar),
@@ -1767,7 +1765,7 @@ namespace DataModel
 
 		#region PersonInsertOutputParameter
 
-		public static int PersonInsertOutputParameter(this TestData2014DB dataConnection, string? @FirstName, string? @LastName, string? @MiddleName, char? @Gender, ref int? @PersonID)
+		public static int PersonInsertOutputParameter(this TestDataDB dataConnection, string? @FirstName, string? @LastName, string? @MiddleName, char? @Gender, ref int? @PersonID)
 		{
 			var ret = dataConnection.ExecuteProc("[Person_Insert_OutputParameter]",
 				new DataParameter("@FirstName", @FirstName, DataType.NVarChar),
@@ -1785,7 +1783,7 @@ namespace DataModel
 
 		#region PersonSelectAll
 
-		public static List<PersonSelectAllResult> PersonSelectAll(this TestData2014DB dataConnection)
+		public static List<PersonSelectAllResult> PersonSelectAll(this TestDataDB dataConnection)
 		{
 			return dataConnection.QueryProc<PersonSelectAllResult>("[Person_SelectAll]").ToList();
 		}
@@ -1803,7 +1801,7 @@ namespace DataModel
 
 		#region PersonSelectByKey
 
-		public static List<PersonSelectByKeyResult> PersonSelectByKey(this TestData2014DB dataConnection, int? @id)
+		public static List<PersonSelectByKeyResult> PersonSelectByKey(this TestDataDB dataConnection, int? @id)
 		{
 			return dataConnection.QueryProc<PersonSelectByKeyResult>("[Person_SelectByKey]",
 				new DataParameter("@id", @id, DataType.Int32)).ToList();
@@ -1822,7 +1820,7 @@ namespace DataModel
 
 		#region PersonSelectByKeyLowercase
 
-		public static List<PersonSelectByKeyLowercaseResult> PersonSelectByKeyLowercase(this TestData2014DB dataConnection, int? @id)
+		public static List<PersonSelectByKeyLowercaseResult> PersonSelectByKeyLowercase(this TestDataDB dataConnection, int? @id)
 		{
 			return dataConnection.QueryProc<PersonSelectByKeyLowercaseResult>("[Person_SelectByKeyLowercase]",
 				new DataParameter("@id", @id, DataType.Int32)).ToList();
@@ -1838,7 +1836,7 @@ namespace DataModel
 
 		#region PersonSelectByName
 
-		public static List<PersonSelectByNameResult> PersonSelectByName(this TestData2014DB dataConnection, string? @firstName, string? @lastName)
+		public static List<PersonSelectByNameResult> PersonSelectByName(this TestDataDB dataConnection, string? @firstName, string? @lastName)
 		{
 			return dataConnection.QueryProc<PersonSelectByNameResult>("[Person_SelectByName]",
 				new DataParameter("@firstName", @firstName, DataType.NVarChar),
@@ -1858,7 +1856,7 @@ namespace DataModel
 
 		#region PersonSelectListByName
 
-		public static List<PersonSelectListByNameResult> PersonSelectListByName(this TestData2014DB dataConnection, string? @firstName, string? @lastName)
+		public static List<PersonSelectListByNameResult> PersonSelectListByName(this TestDataDB dataConnection, string? @firstName, string? @lastName)
 		{
 			return dataConnection.QueryProc<PersonSelectListByNameResult>("[Person_SelectListByName]",
 				new DataParameter("@firstName", @firstName, DataType.NVarChar),
@@ -1878,7 +1876,7 @@ namespace DataModel
 
 		#region PersonUpdate
 
-		public static int PersonUpdate(this TestData2014DB dataConnection, int? @PersonID, string? @FirstName, string? @LastName, string? @MiddleName, char? @Gender)
+		public static int PersonUpdate(this TestDataDB dataConnection, int? @PersonID, string? @FirstName, string? @LastName, string? @MiddleName, char? @Gender)
 		{
 			return dataConnection.ExecuteProc("[Person_Update]",
 				new DataParameter("@PersonID",   @PersonID,   DataType.Int32),
@@ -1890,9 +1888,63 @@ namespace DataModel
 
 		#endregion
 
+		#region QueryProcMultipleParameters
+
+		public static List<QueryProcMultipleParametersResult> QueryProcMultipleParameters(this TestDataDB dataConnection, int? @input, ref int? @output1, ref int? @output2, ref int? @output3)
+		{
+			var ret = dataConnection.QueryProc<QueryProcMultipleParametersResult>("[QueryProcMultipleParameters]",
+				new DataParameter("@input",   @input,   DataType.Int32),
+				new DataParameter("@output1", @output1, DataType.Int32) { Direction = ParameterDirection.InputOutput },
+				new DataParameter("@output2", @output2, DataType.Int32) { Direction = ParameterDirection.InputOutput },
+				new DataParameter("@output3", @output3, DataType.Int32) { Direction = ParameterDirection.InputOutput }).ToList();
+
+			@output1 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@output1"]).Value);
+			@output2 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@output2"]).Value);
+			@output3 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@output3"]).Value);
+
+			return ret;
+		}
+
+		public partial class QueryProcMultipleParametersResult
+		{
+			public int     PersonID   { get; set; }
+			public string  FirstName  { get; set; } = null!;
+			public string  LastName   { get; set; } = null!;
+			public string? MiddleName { get; set; }
+			public char    Gender     { get; set; }
+		}
+
+		#endregion
+
+		#region QueryProcParameters
+
+		public static List<QueryProcParametersResult> QueryProcParameters(this TestDataDB dataConnection, int? @input, ref int? @output1, ref int? @output2)
+		{
+			var ret = dataConnection.QueryProc<QueryProcParametersResult>("[QueryProcParameters]",
+				new DataParameter("@input",   @input,   DataType.Int32),
+				new DataParameter("@output1", @output1, DataType.Int32) { Direction = ParameterDirection.InputOutput },
+				new DataParameter("@output2", @output2, DataType.Int32) { Direction = ParameterDirection.InputOutput }).ToList();
+
+			@output1 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@output1"]).Value);
+			@output2 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@output2"]).Value);
+
+			return ret;
+		}
+
+		public partial class QueryProcParametersResult
+		{
+			public int     PersonID   { get; set; }
+			public string  FirstName  { get; set; } = null!;
+			public string  LastName   { get; set; } = null!;
+			public string? MiddleName { get; set; }
+			public char    Gender     { get; set; }
+		}
+
+		#endregion
+
 		#region SelectImplicitColumn
 
-		public static List<SelectImplicitColumnResult> SelectImplicitColumn(this TestData2014DB dataConnection)
+		public static List<SelectImplicitColumnResult> SelectImplicitColumn(this TestDataDB dataConnection)
 		{
 			var ms = dataConnection.MappingSchema;
 
@@ -1913,7 +1965,7 @@ namespace DataModel
 
 		#region TableTypeTestProc
 
-		public static List<TableTypeTestProcResult> TableTypeTestProc(this TestData2014DB dataConnection, DataTable? @table)
+		public static List<TableTypeTestProcResult> TableTypeTestProc(this TestDataDB dataConnection, DataTable? @table)
 		{
 			return dataConnection.QueryProc<TableTypeTestProcResult>("[TableTypeTestProc]",
 				new DataParameter("@table", @table, DataType.Structured){ DbType = "[dbo].[TestTableType]" }).ToList();
@@ -1929,7 +1981,7 @@ namespace DataModel
 
 		#region VariableResults
 
-		public static List<VariableResultsResult> VariableResults(this TestData2014DB dataConnection, bool? @ReturnFullRow)
+		public static List<VariableResultsResult> VariableResults(this TestDataDB dataConnection, bool? @ReturnFullRow)
 		{
 			return dataConnection.QueryProc<VariableResultsResult>("[VariableResults]",
 				new DataParameter("@ReturnFullRow", @ReturnFullRow, DataType.Boolean)).ToList();
@@ -1940,6 +1992,25 @@ namespace DataModel
 			public int    Code   { get; set; }
 			public string Value1 { get; set; } = null!;
 			public string Value2 { get; set; } = null!;
+		}
+
+		#endregion
+	}
+
+	public static partial class SqlFunctions
+	{
+		#region ScalarFunction
+
+		/// <summary>
+		/// This is &lt;test&gt; scalar function!
+		/// </summary>
+		/// <param name="@value">
+		/// This is &lt;test&gt; scalar function parameter!
+		/// </param>
+		[Sql.Function(Name="ScalarFunction", ServerSideOnly=true)]
+		public static int? ScalarFunction(int? @value)
+		{
+			throw new InvalidOperationException();
 		}
 
 		#endregion
@@ -1963,12 +2034,6 @@ namespace DataModel
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
-		}
-
-		public static Customer0 Find(this ITable<Customer0> table, int ID)
-		{
-			return table.FirstOrDefault(t =>
-				t.ID == ID);
 		}
 
 		public static DecimalOverflow Find(this ITable<DecimalOverflow> table, decimal Decimal1)
@@ -2055,12 +2120,6 @@ namespace DataModel
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
-		}
-
-		public static Ref Find(this ITable<Ref> table, int ID)
-		{
-			return table.FirstOrDefault(t =>
-				t.ID == ID);
 		}
 
 		public static SqlType Find(this ITable<SqlType> table, int ID)
@@ -2408,11 +2467,11 @@ namespace DataModel
 			#endregion
 		}
 
-		public static partial class TestData2014DBStoredProcedures
+		public static partial class TestDataDBStoredProcedures
 		{
 			#region TestProcedure
 
-			public static List<TestProcedureResult> TestProcedure(TestData2014DB dataConnection)
+			public static List<TestProcedureResult> TestProcedure(TestDataDB dataConnection)
 			{
 				var ms = dataConnection.MappingSchema;
 

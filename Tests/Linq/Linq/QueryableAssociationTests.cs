@@ -8,7 +8,7 @@ using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
-namespace Tests.Playground
+namespace Tests.Linq
 {
 	[TestFixture]
 	public class QueryableAssociationTests : TestBase
@@ -505,7 +505,7 @@ WHERE
 				// Ensure that cross apply inlined in query
 				Assert.AreEqual(2, select.Select.From.Tables[0].Joins.Count);
 
-				Console.WriteLine(q.ToString());
+				TestContext.WriteLine(q.ToString());
 			}
 		}
 

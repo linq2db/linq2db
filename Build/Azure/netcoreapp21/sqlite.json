@@ -6,8 +6,8 @@
 			// System.Data.SQLite
 			"SQLite.Classic",
 			"Northwind.SQLite",
-			"SQLite.Classic.MiniProfiler.Unmapped",
-			"SQLite.Classic.MiniProfiler.Mapped"
+			"SQLite.Classic.MPU",
+			"SQLite.Classic.MPM"
 		]
 	}
 }

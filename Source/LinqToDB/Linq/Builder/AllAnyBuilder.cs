@@ -97,6 +97,7 @@ namespace LinqToDB.Linq.Builder
 				var expr   = Builder.BuildSql(typeof(bool), 0, sql);
 				var mapper = Builder.BuildMapper<object>(expr);
 
+				CompleteColumns();
 				QueryRunner.SetRunQuery(query, mapper);
 			}
 
@@ -146,7 +147,7 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				throw new NotImplementedException();
+				return IsExpressionResult.False;
 			}
 
 			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)

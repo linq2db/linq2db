@@ -115,7 +115,7 @@ namespace Tests.xUpdate
 			{
 				await db.DropTableAsync<int>("TempTable", throwExceptionIfNotExists: false);
 
-#if !NET46
+#if !NET472
 				await
 #endif
 				using (var tmp = await db.CreateTempTableAsync(
@@ -139,7 +139,7 @@ namespace Tests.xUpdate
 			{
 				db.DropTable<int>("TempTable", throwExceptionIfNotExists: false);
 
-#if !NET46
+#if !NET472
 				await
 #endif
 				using (var tmp = await db.CreateTempTableAsync(
@@ -167,7 +167,7 @@ namespace Tests.xUpdate
 
 				try
 				{
-#if !NET46
+#if !NET472
 					await
 #endif
 					using (var tmp = await db.CreateTempTableAsync(
@@ -210,7 +210,7 @@ namespace Tests.xUpdate
 
 				try
 				{
-#if !NET46
+#if !NET472
 					await
 #endif
 					using (var tmp = await db.CreateTempTableAsync(

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
-#if NET46
+#if NET472
 using System.ServiceModel;
 #endif
 
@@ -1734,7 +1734,7 @@ namespace Tests.Linq
 						TestField = 5
 					});
 
-#if NET46
+#if NET472
 					if (isLinqService)
 					{
 						Assert.Throws<FaultException<ExceptionDetail>>(() =>

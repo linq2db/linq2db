@@ -139,9 +139,11 @@ namespace Tests.xUpdate
 		[Test]
 		public void SameSourceDeleteWithPredicateDelete([MergeDataContextSource(
 			TestProvName.AllOracle,
-			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.SqlServer2008,
-			ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.SqlServer2017, TestProvName.SqlAzure,
-			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllSybase,
+			TestProvName.AllSqlServer2008Plus,
+			TestProvName.AllInformix,
+			TestProvName.AllSapHana,
+			ProviderName.Firebird)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

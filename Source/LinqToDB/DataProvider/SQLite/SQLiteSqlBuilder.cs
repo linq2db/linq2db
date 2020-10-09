@@ -24,7 +24,7 @@ namespace LinqToDB.DataProvider.SQLite
 		public override int CommandCount(SqlStatement statement)
 		{
 			if (statement is SqlTruncateTableStatement trun)
-				return trun.ResetIdentity && trun.Table!.Fields.Values.Any(f => f.IsIdentity) ? 2 : 1;
+				return trun.ResetIdentity && trun.Table!.IdentityFields.Count > 0 ? 2 : 1;
 			return statement.NeedsIdentity() ? 2 : 1;
 		}
 
@@ -114,7 +114,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		protected override void BuildCreateTablePrimaryKey(SqlCreateTableStatement createTable, string pkName, IEnumerable<string> fieldNames)
 		{
-			if (createTable.Table!.Fields.Values.Any(f => f.IsIdentity))
+			if (createTable.Table!.IdentityFields.Count > 0)
 			{
 				while (StringBuilder[StringBuilder.Length - 1] != ',')
 					StringBuilder.Length--;

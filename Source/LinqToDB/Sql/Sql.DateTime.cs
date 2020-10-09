@@ -32,7 +32,7 @@ namespace LinqToDB
 			/// Primitive (each 7 days counted as week) numbering schema: DB2, Oracle databases;
 			/// SQLite numbering logic cannot be classified by human being.
 			/// </summary>
-			Week =  5,
+			Week        =  5,
 			WeekDay     =  6,
 			Hour        =  7,
 			Minute      =  8,

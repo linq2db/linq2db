@@ -479,21 +479,42 @@ namespace LinqToDB.Linq.Builder
 											default                  : return new TransformInfo(e);
 										}
 
-										var ex     = (BinaryExpression)ma.Expression;
-										var method = MemberHelper.MethodOf(
-											() => Sql.DateDiff(Sql.DateParts.Day, DateTime.MinValue, DateTime.MinValue));
+										var ex = (BinaryExpression)ma.Expression;
+										if (ex.Left.Type == typeof(DateTime)
+											&& ex.Right.Type == typeof(DateTime))
+										{
+											var method = MemberHelper.MethodOf(
+												() => Sql.DateDiff(Sql.DateParts.Day, DateTime.MinValue, DateTime.MinValue));
 
-										var call   =
-											Expression.Convert(
-												Expression.Call(
-													null,
-													method,
-													Expression.Constant(datePart),
-													Expression.Convert(ex.Right, typeof(DateTime?)),
-													Expression.Convert(ex.Left,  typeof(DateTime?))),
-												typeof(double));
+											var call   =
+												Expression.Convert(
+													Expression.Call(
+														null,
+														method,
+														Expression.Constant(datePart),
+														Expression.Convert(ex.Right, typeof(DateTime?)),
+														Expression.Convert(ex.Left,  typeof(DateTime?))),
+													typeof(double));
 
-										return new TransformInfo(ConvertExpression(call));
+											return new TransformInfo(ConvertExpression(call));
+										}
+										else
+										{
+											var method = MemberHelper.MethodOf(
+												() => Sql.DateDiff(Sql.DateParts.Day, DateTimeOffset.MinValue, DateTimeOffset.MinValue));
+
+											var call   =
+												Expression.Convert(
+													Expression.Call(
+														null,
+														method,
+														Expression.Constant(datePart),
+														Expression.Convert(ex.Right, typeof(DateTimeOffset?)),
+														Expression.Convert(ex.Left,  typeof(DateTimeOffset?))),
+													typeof(double));
+
+											return new TransformInfo(ConvertExpression(call));
+										}
 								}
 							}
 
@@ -791,6 +812,30 @@ namespace LinqToDB.Linq.Builder
 				return context.ConvertToSql(null, 0, ConvertFlags.Field).Select(_ => _.Sql).FirstOrDefault();
 
 			return ConvertToSql(context, expression, false, columnDescriptor);
+		}
+
+		public ParameterAccessor? RegisterParameter(Expression expression) 
+		{
+			if (typeof(IToSqlConverter).IsSameOrParentOf(expression.Type))
+			{
+				//TODO: Check this
+				var sql = ConvertToSqlConvertible(expression);
+				if (sql != null)
+					return null;
+			}
+
+			if (!PreferServerSide(expression, false))
+			{
+				if (CanBeConstant(expression))
+					return null;
+
+				if (CanBeCompiled(expression))
+				{
+					return BuildParameter(expression, null);
+				}
+			}
+
+			return null;
 		}
 
 		public ISqlExpression ConvertToSql(IBuildContext? context, Expression expression, bool unwrap = false, ColumnDescriptor? columnDescriptor = null, bool isPureExpression = false)
@@ -2746,7 +2791,7 @@ namespace LinqToDB.Linq.Builder
 			if (typeOperand == table.ObjectType && table.InheritanceMapping.All(m => m.Type != typeOperand))
 				return Convert(table, new SqlPredicate.Expr(new SqlValue(true)));
 
-			return MakeIsPredicate(table, table.InheritanceMapping, typeOperand, name => table.SqlTable.Fields.Values.First(f => f.Name == name));
+			return MakeIsPredicate(table, table.InheritanceMapping, typeOperand, name => table.SqlTable[name] ?? throw new LinqException($"Field {name} not found in table {table.SqlTable}"));
 		}
 
 		internal ISqlPredicate MakeIsPredicate(
@@ -2848,7 +2893,7 @@ namespace LinqToDB.Linq.Builder
 
 			foreach (var m in mapping)
 			{
-				var field = table.SqlTable.Fields[table.InheritanceMapping[m.i].DiscriminatorName];
+				var field = table.SqlTable[table.InheritanceMapping[m.i].DiscriminatorName] ?? throw new LinqException($"Field {table.InheritanceMapping[m.i].DiscriminatorName} not found in table {table.SqlTable}");
 				var ttype = field.ColumnDescriptor.MemberAccessor.TypeAccessor.Type;
 				var obj   = expression.Expression;
 

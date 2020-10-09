@@ -15,9 +15,10 @@ namespace Tests.Linq
 		public static IEnumerable<TResult> SqlJoinInternal<TOuter, TInner, TResult>(
 			this IEnumerable<TOuter>      outer,
 			IEnumerable<TInner>           inner,
-			SqlJoinType                   joinType, 
+			SqlJoinType                   joinType,
 			Func<TOuter, TInner, bool>    predicate,
 			Func<TOuter, TInner, TResult> resultSelector)
+			where TOuter : class
 		{
 			if (outer          == null) throw new ArgumentNullException(nameof(outer));
 			if (inner          == null) throw new ArgumentNullException(nameof(inner));
@@ -36,12 +37,12 @@ namespace Tests.Linq
 					var firstItems = outer.ToList();
 					var secondItems = inner.ToList();
 					var firstResult = firstItems.SelectMany(f =>
-						secondItems.Where(s => predicate(f, s)).DefaultIfEmpty().Select(s => new {First = f, Second = s}));
+						secondItems.Where(s => predicate(f, s)).DefaultIfEmpty().Select(s => new {First = (TOuter?)f, Second = s}));
 
 					var secondResult = secondItems.Where(s => !firstItems.Any(f => predicate(f, s)))
 						.Select(s => new {First = default(TOuter), Second = s});
 
-					var res = firstResult.Concat(secondResult).Select(r => resultSelector(r.First, r.Second));
+					var res = firstResult.Concat(secondResult).Select(r => resultSelector(r.First!, r.Second));
 					return res;
 				default:
 					throw new ArgumentOutOfRangeException(nameof(joinType), joinType, null);
@@ -50,7 +51,7 @@ namespace Tests.Linq
 
 		public static IEnumerable<TResult> SqlJoinInternal<TOuter, TInner, TKey, TResult>(
 			this IEnumerable<TOuter>      outer,
-			IEnumerable<TInner>           inner, 
+			IEnumerable<TInner>           inner,
 			SqlJoinType                   joinType,
 			Func<TOuter, TKey>            outerKeySelector,
 			Func<TInner, TKey>            innerKeySelector,
@@ -372,8 +373,8 @@ namespace Tests.Linq
 					where p.ParentID >= 1
 					select lj1.OrderBy(c => c.ChildID).FirstOrDefault();
 
-				var expected = expectedQuery.ToArray(); 
-				var actual   = actualQuery.ToArray(); 
+				var expected = expectedQuery.ToArray();
+				var actual   = actualQuery.ToArray();
 
 				AreEqual(expected, actual);
 			}
@@ -1347,7 +1348,7 @@ namespace Tests.Linq
 					select new { ParentID = p.p == null ? (int?)null : p.p.ParentID, ChildID = p.c == null ? (int?)null : p.c.ChildID };
 
 				var actual = db.Parent.Where(p => p.ParentID > 0).Take(10)
-					.Join(db.Child, joinType, (p, c) => p.ParentID == c.ParentID, 
+					.Join(db.Child, joinType, (p, c) => p.ParentID == c.ParentID,
 						(p, c) => new { ParentID = (int?)p.ParentID, ChildID = (int?)c.ChildID });
 
 				AreEqual(expected.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.ChildID),

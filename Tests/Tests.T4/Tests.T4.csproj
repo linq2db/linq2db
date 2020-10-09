@@ -1,27 +1,58 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
 	<Import Project="..\..\Build\linq2db.Tests.props" />
 
 	<PropertyGroup>
-		<Configurations>Debug;Release</Configurations>
+		<AssemblyName>Tests.T4</AssemblyName>
 	</PropertyGroup>
+		
+	<ItemGroup>
+		<PackageReference Include="Humanizer.Core" Version="2.8.26" />
+		<PackageReference Include="System.ComponentModel.Annotations" Version="4.7.0" />
+
+		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+		<Reference Include="PresentationCore" />
+		<Reference Include="PresentationFramework" />
+		<Reference Include="WindowsBase" />
+
+	<PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.1016.290" />
+		<PackageReference Include="Npgsql" Version="4.0.11" />
+
+	</ItemGroup>
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.1' OR '$(TargetFramework)' == 'netcoreapp3.1' ">
+		<PackageReference Include="Npgsql" Version="4.1.4" />
+		<!--nuget doesn't have strong name, so we use local self-signed copy-->
+		<!--<PackageReference Include="dotMorten.Microsoft.SqlServer.Types" Version="1.2.0" />-->
+		<Reference Include="Microsoft.SqlServer.Types">
+			<HintPath>..\..\Redist\dotMorten.Microsoft.SqlServer.Types\Microsoft.SqlServer.Types.dll</HintPath>
+		</Reference>
+	</ItemGroup>
 
 	<ItemGroup>
 		<None Remove="Models\bbb.txt" />
 		<Content Include="Models\bbb.txt" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<ProjectReference Include="..\..\Source\LinqToDB\LinqToDB.csproj" />
-		<PackageReference Include="Humanizer.Core" Version="2.8.26" />
-		
-		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
-		
-		<None Update="Databases\AccessODBC.tt">
-		  <LastGenOutput>AccessODBC.generated.cs</LastGenOutput>
-		  <Generator>TextTemplatingFileGenerator</Generator>
-		</None>
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.1' OR '$(TargetFramework)' == 'netcoreapp3.1' ">
+		<Compile Remove="WPF\ViewModel.cs" />
+		<Compile Remove="WPF\ViewModel.generated.cs" />
+	</ItemGroup>
 
+	<ItemGroup Condition="'$(TargetFramework)' != 'net472'">
+		<None Remove="SqlServer.tt" />
+		<None Remove="SqlServerAzure.tt" />
+		<Compile Remove="SqlServer.generated.cs" />
+		<Compile Remove="SqlServerAzure.generated.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+
+		<None Update="Databases\AccessODBC.tt">
+			<LastGenOutput>AccessODBC.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
+		</None>
 		<None Update="Databases\Access.tt">
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>Access.generated.cs</LastGenOutput>
@@ -75,12 +106,12 @@
 			<LastGenOutput>SQLite.generated.cs</LastGenOutput>
 		</None>
 		<None Update="Databases\SqlServer.2017.ProceduresFromSchema.tt">
-		  <LastGenOutput>SqlServer.2017.ProceduresFromSchema.generated.cs</LastGenOutput>
-		  <Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>SqlServer.2017.ProceduresFromSchema.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
 		</None>
 		<None Update="Databases\SqlServer.MS.tt">
-		  <LastGenOutput>SqlServer.MS.generated.cs</LastGenOutput>
-		  <Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>SqlServer.MS.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
 		</None>
 		<None Update="Databases\SqlServer.2017.tt">
 			<LastGenOutput>SqlServer.2017.generated.cs</LastGenOutput>
@@ -103,8 +134,8 @@
 			<LastGenOutput>Firebird.generated.cs</LastGenOutput>
 		</None>
 		<None Update="Unlock.tt">
-		  <LastGenOutput>Unlock.generated.cs</LastGenOutput>
-		  <Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>Unlock.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
 		</None>
 		<None Update="Models\EditableModelTest.tt">
 			<LastGenOutput>EditableModelTest.generated.cs</LastGenOutput>
@@ -123,53 +154,20 @@
 			<Generator>TextTemplatingFileGenerator</Generator>
 		</None>
 		<None Update="WPF\ViewModel.tt">
-		  <LastGenOutput>ViewModel.generated.cs</LastGenOutput>
-		  <Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>ViewModel.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
 		</None>
-	</ItemGroup>
-
-	<ItemGroup Condition="'$(TargetFramework)' == 'net46'">
-		<PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.1016.290" />
-		<PackageReference Include="Npgsql" Version="4.0.11" />
-
 		<None Update="Databases\SqlServer.tt">
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>SqlServer.generated.cs</LastGenOutput>
 		</None>
 	</ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.1' OR '$(TargetFramework)' == 'netcoreapp3.1' ">
-		<PackageReference Include="Npgsql" Version="4.1.4" />
-		<!--nuget doesn't have strong name, so we use local self-signed copy-->
-		<!--<PackageReference Include="dotMorten.Microsoft.SqlServer.Types" Version="1.1.0" />-->
-		<Reference Include="Microsoft.SqlServer.Types">
-			<HintPath>..\..\Redist\dotMorten.Microsoft.SqlServer.Types\Microsoft.SqlServer.Types.dll</HintPath>
-		</Reference>
-	</ItemGroup>
-
 	<ItemGroup>
-		<PackageReference Include="System.ComponentModel.Annotations" Version="4.7.0" />
-	<None Remove="Models\bbb.txt" />
-	<Content Include="Models\bbb.txt" />
-	</ItemGroup>
-
-	<ItemGroup Condition="'$(TargetFramework)' != 'net46'">
-		<None Remove="SqlServer.tt" />
-		<None Remove="SqlServerAzure.tt" />
-		<Compile Remove="SqlServer.generated.cs" />
-		<Compile Remove="SqlServerAzure.generated.cs" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<Compile Update="Databases\Access - Copy.generated.cs">
-		  <DependentUpon>Access.tt</DependentUpon>
-		  <DesignTime>True</DesignTime>
-		  <AutoGen>True</AutoGen>
-		</Compile>
 		<Compile Update="Databases\Access.generated.cs">
-		  <DesignTime>True</DesignTime>
-		  <AutoGen>True</AutoGen>
-		  <DependentUpon>Access.tt</DependentUpon>
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Access.tt</DependentUpon>
 		</Compile>
 		<Compile Update="Databases\AccessODBC.generated.cs">
 			<DesignTime>True</DesignTime>
@@ -242,14 +240,14 @@
 			<DependentUpon>SQLite.tt</DependentUpon>
 		</Compile>
 		<Compile Update="Databases\SqlServer.2017.generated.cs">
-		  <DesignTime>True</DesignTime>
-		  <AutoGen>True</AutoGen>
-		  <DependentUpon>SqlServer.2017.tt</DependentUpon>
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>SqlServer.2017.tt</DependentUpon>
 		</Compile>
 		<Compile Update="Databases\SqlServer.2017.ProceduresFromSchema.generated.cs">
-		  <DesignTime>True</DesignTime>
-		  <AutoGen>True</AutoGen>
-		  <DependentUpon>SqlServer.2017.ProceduresFromSchema.tt</DependentUpon>
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>SqlServer.2017.ProceduresFromSchema.tt</DependentUpon>
 		</Compile>
 		<Compile Update="Databases\SqlServer.generated.cs">
 			<DesignTime>True</DesignTime>
@@ -257,9 +255,9 @@
 			<DependentUpon>SqlServer.tt</DependentUpon>
 		</Compile>
 		<Compile Update="Databases\SqlServer.MS.generated.cs">
-		  <DesignTime>True</DesignTime>
-		  <AutoGen>True</AutoGen>
-		  <DependentUpon>SqlServer.MS.tt</DependentUpon>
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>SqlServer.MS.tt</DependentUpon>
 		</Compile>
 		<Compile Update="Databases\SqlServerAzure.generated.cs">
 			<DesignTime>True</DesignTime>
@@ -297,24 +295,15 @@
 			<DependentUpon>MultipleFiles.tt</DependentUpon>
 		</Compile>
 		<Compile Update="Unlock.generated.cs">
-		  <DesignTime>True</DesignTime>
-		  <AutoGen>True</AutoGen>
-		  <DependentUpon>Unlock.tt</DependentUpon>
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Unlock.tt</DependentUpon>
 		</Compile>
 		<Compile Update="WPF\ViewModel.generated.cs">
-		  <DesignTime>True</DesignTime>
-		  <AutoGen>True</AutoGen>
-		  <DependentUpon>ViewModel.tt</DependentUpon>
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>ViewModel.tt</DependentUpon>
 		</Compile>
 	</ItemGroup>
-	
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net46' ">
-		<Reference Include="PresentationCore" />
-		<Reference Include="PresentationFramework" />
-		<Reference Include="WindowsBase" />
-	</ItemGroup>
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.1' OR '$(TargetFramework)' == 'netcoreapp3.1' ">
-		<Compile Remove="WPF\ViewModel.cs" />
-		<Compile Remove="WPF\ViewModel.generated.cs" />
-	</ItemGroup>
+
 </Project>

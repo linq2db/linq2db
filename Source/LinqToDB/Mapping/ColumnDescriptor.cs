@@ -42,7 +42,7 @@ namespace LinqToDB.Mapping
 
 			var dataType = mappingSchema.GetDataType(MemberType);
 			if (dataType.Type.DataType == DataType.Undefined)
-				dataType = mappingSchema.GetUnderlyingDataType(dataType.SystemType, out var _);
+				dataType = mappingSchema.GetUnderlyingDataType(MemberType, out var _);
 
 			if (columnAttribute == null)
 			{

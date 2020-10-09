@@ -35,7 +35,7 @@ namespace Tests.UserTests
 
 				var str = q.ToString()!;
 
-				Console.WriteLine(str);
+				TestContext.WriteLine(str);
 
 				Assert.False(str.Contains("N'CharValue'"));
 				Assert.False(str.Contains("N'VarCharValue'"));
@@ -67,7 +67,7 @@ namespace Tests.UserTests
 
 				var str = q.ToString()!;
 
-				Console.WriteLine(str);
+				TestContext.WriteLine(str);
 
 				Assert.False(str.Contains("N'CharValue'"));
 				Assert.False(str.Contains("N'VarCharValue'"));

@@ -9,7 +9,7 @@ using NUnit.Framework;
 
 using Tests.Model;
 
-namespace Tests.Update
+namespace Tests.xUpdate
 {
 	[TestFixture]
 	[Order(10000)]
