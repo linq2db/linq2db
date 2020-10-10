@@ -157,15 +157,15 @@ jobs:
           title: Access OleDb ACE x64
           config_win: access.ace
           script_win: access.ace.x64.cmd
-          enable_os_win2016: false # true (disabled due to a lot of random crashes https://github.com/dotnet/runtime/issues/36954)
+          enable_os_win2016: true # true (disabled due to a lot of random crashes https://github.com/dotnet/runtime/issues/36954)
           enable_os_win2019: false
           enable_os_ubuntu16: false
           enable_os_ubuntu20: false
           enable_os_macos: false
           enable_fw_net472: false
-          enable_fw_netcore21: false # true (disabled due to a lot of random crashes https://github.com/dotnet/runtime/issues/36954)
-          enable_fw_netcore31: false # true (disabled due to a lot of random crashes https://github.com/dotnet/runtime/issues/36954)
-          is_experimental: false
+          enable_fw_netcore21: true # true (disabled due to a lot of random crashes https://github.com/dotnet/runtime/issues/36954)
+          enable_fw_netcore31: true # true (disabled due to a lot of random crashes https://github.com/dotnet/runtime/issues/36954)
+          is_experimental: true
 
 # SQL CE
         - name: SqlCE
