@@ -21,6 +21,14 @@ Automatically triggered for all PR commits and runs solution build
 
 Runs manually using `/azp run test-all` command from PR comment by team member
 
+#### db-specific test pipelines
+
+Those pipelines used to run tests only for specific databases manually by team member:
+- `/azp run tests-db2` - IBM DB2 tests
+- `/azp run tests-sybase` - SAP/SYBASE ASE tests
+- `/azp run tests-informix` - IBM Informix tests
+- `/azp run tests-sqlserver-2019` - SQL Server 2019 tests
+
 #### `experimental` pipeline
 Runs manually using `/azp run experimental` command from PR and used for development and testing of new pipelines/test providers.
 Base pipeline template contains only solution build and should be reset to initial state before merge.
