@@ -18,11 +18,14 @@ if ($version) {
 		$branch = (git rev-parse --abbrev-ref HEAD)
 	}
 
+	# copy
+	xcopy $("..\NuGet\.Templates\*.nuspec") $path /y /e
+
 	Get-ChildItem $path | ForEach {
 		$xmlPath = Resolve-Path $_.FullName
 
 		$xml = [xml] (Get-Content "$xmlPath")
-		$xml.PreserveWhitespace = $true
+		$xml.PreserveWhitespace = $false
 
 		Select-Xml -Xml $xml -XPath '//ns:metadata/ns:version' -Namespace $ns |
 		Select -expand node |
