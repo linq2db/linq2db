@@ -273,7 +273,10 @@ namespace Tests.SchemaProvider
 			[IncludeDataSources(TestProvName.AllPostgreSQL)] string context,
 			[ValueSource(nameof(ProcedureTestCases))] ProcedureTestCase testCase)
 		{
-			var macaddr8Supported =  context.Contains(TestProvName.PostgreSQL10) || context.Contains(TestProvName.PostgreSQL11);
+			var macaddr8Supported =  context.Contains(TestProvName.PostgreSQL10)
+				|| context.Contains(TestProvName.PostgreSQL11)
+				|| context.Contains(TestProvName.PostgreSQL12)
+				|| context.Contains(TestProvName.PostgreSQL13);
 			var jsonbSupported    = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL93);
 			using (var db = (DataConnection)GetDataContext(context))
 			{

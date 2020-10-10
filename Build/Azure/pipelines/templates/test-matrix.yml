@@ -157,15 +157,15 @@ jobs:
           title: Access OleDb ACE x64
           config_win: access.ace
           script_win: access.ace.x64.cmd
-          enable_os_win2016: true # true (disabled due to a lot of random crashes https://github.com/dotnet/runtime/issues/36954)
+          enable_os_win2016: false # true (disabled due to a lot of random crashes https://github.com/dotnet/runtime/issues/36954)
           enable_os_win2019: false
           enable_os_ubuntu16: false
           enable_os_ubuntu20: false
           enable_os_macos: false
           enable_fw_net472: false
-          enable_fw_netcore21: true # true (disabled due to a lot of random crashes https://github.com/dotnet/runtime/issues/36954)
-          enable_fw_netcore31: true # true (disabled due to a lot of random crashes https://github.com/dotnet/runtime/issues/36954)
-          is_experimental: true
+          enable_fw_netcore21: false # true (disabled due to a lot of random crashes https://github.com/dotnet/runtime/issues/36954)
+          enable_fw_netcore31: false # true (disabled due to a lot of random crashes https://github.com/dotnet/runtime/issues/36954)
+          is_experimental: false
 
 # SQL CE
         - name: SqlCE
@@ -341,6 +341,42 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           is_experimental: false
+
+        - name: PostgreSQL12
+          title: PostgreSQL 12
+          config_linux: pgsql12
+          config_macos: pgsql12
+          script: pgsql12.sh
+          script_linux: pgsql12.sh
+          script_macos: mac.pgsql12.sh
+          install_docker_macos: true
+          enable_os_win2016: false
+          enable_os_win2019: false
+          enable_os_ubuntu16: false
+          enable_os_ubuntu20: true
+          enable_os_macos: true
+          enable_fw_net472: false
+          enable_fw_netcore21: true
+          enable_fw_netcore31: false
+          is_experimental: true
+
+        - name: PostgreSQL13
+          title: PostgreSQL 13
+          config_linux: pgsql13
+          config_macos: pgsql13
+          script: pgsql13.sh
+          script_linux: pgsql13.sh
+          script_macos: mac.pgsql13.sh
+          install_docker_macos: true
+          enable_os_win2016: false
+          enable_os_win2019: false
+          enable_os_ubuntu16: false
+          enable_os_ubuntu20: true
+          enable_os_macos: true
+          enable_fw_net472: false
+          enable_fw_netcore21: true
+          enable_fw_netcore31: false
+          is_experimental: true
 
 # SQL Server
         - name: SqlServer2005

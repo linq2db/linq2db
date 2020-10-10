@@ -86,6 +86,7 @@ Legend:
 |PostgreSQL 10<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.11 (netfx) / 4.1.4 (core)|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
 |PostgreSQL 11<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.11 (netfx) / 4.1.4 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |PostgreSQL 12<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.11 (netfx) / 4.1.4 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|PostgreSQL 13<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.11 (netfx) / 4.1.4 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |DB2 LUW 11.5.0.0a<br>[IBM.Data.DB2](https://www.nuget.org/packages/IBM.Data.DB.Provider/) 11.5.4000.4 (netfx)<br>[IBM.Data.DB2.Core](https://www.nuget.org/packages/IBM.Data.DB2.Core/) 2.2.0.100 ([osx](https://www.nuget.org/packages/IBM.Data.DB2.Core-osx/) 2.0.0.100, [lin](https://www.nuget.org/packages/IBM.Data.DB2.Core-lnx/) 2.2.0.100) (core)|:x:|:x:|:heavy_check_mark:<sup>[6](#notes)</sup>|:heavy_check_mark:|
 |Informix 12.10.FC12W1DE<br>IBM.Data.Informix (SQLI) 4.0.410.10|:x:|:heavy_minus_sign:|:heavy_minus_sign:|:heavy_minus_sign:|
 |Informix 14.10<br>IBM.Data.Informix (SQLI) 4.0.410.10|:x:|:heavy_minus_sign:|:heavy_minus_sign:|:heavy_minus_sign:|
@@ -147,12 +148,14 @@ Legend:
 |`ProviderName.OracleManaged`|Oracle 12c using managed provider (core version for .net core)||
 |`TestProvName.Oracle11Native`|Oracle 11g using native provider||
 |`TestProvName.Oracle11Managed`|Oracle 11g using managed provider (core version for .net core)||
-|`ProviderName.PostgreSQL`|Latest PostgreSQL (12)||
+|`ProviderName.PostgreSQL`|Latest PostgreSQL (13)||
 |`ProviderName.PostgreSQL92`|PostgreSQL 9.2-||
 |`ProviderName.PostgreSQL93`|PostgreSQL [9.3-9.5)||
 |`ProviderName.PostgreSQL95`|PostgreSQL 9.5+||
 |`TestProvName.PostgreSQL10`|PostgreSQL 10||
 |`TestProvName.PostgreSQL11`|PostgreSQL 11||
+|`TestProvName.PostgreSQL12`|PostgreSQL 12||
+|`TestProvName.PostgreSQL13`|PostgreSQL 13||
 |`ProviderName.SqlCe`|SQL CE||
 |`ProviderName.SQLite`|not used||
 |`ProviderName.SQLiteClassic`|System.Data.Sqlite||

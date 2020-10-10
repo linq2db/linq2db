@@ -17,6 +17,8 @@
 		public const string NorthwindSQLiteMS = "Northwind.SQLite.MS";
 		public const string PostgreSQL10      = "PostgreSQL.10";
 		public const string PostgreSQL11      = "PostgreSQL.11";
+		public const string PostgreSQL12      = "PostgreSQL.12";
+		public const string PostgreSQL13      = "PostgreSQL.13";
 		public const string Oracle11Native    = "Oracle.11.Native";
 		public const string Oracle11Managed   = "Oracle.11.Managed";
 		public const string SqlServer2016     = "SqlServer.2016";

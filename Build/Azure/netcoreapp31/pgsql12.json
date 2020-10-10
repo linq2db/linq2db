@@ -1,8 +1,8 @@
 ﻿{
 	"CORE31.Azure": {
 		"Providers": [
-			// posgresql latest (13)
-			"PostgreSQL"
+			// posgresql 12
+			"PostgreSQL.12"
 		]
 	}
 }
