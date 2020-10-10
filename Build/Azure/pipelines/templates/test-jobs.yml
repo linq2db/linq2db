@@ -100,7 +100,7 @@ jobs:
   strategy:
     matrix:
       ${{ each test_config in parameters.test_matrix }}:
-        ${{ if and(eq(test_config.enable_os_win2019, 'true'), eq(test_config.enable_fw_net472, 'true'), eq(test_config.is_experimental, parameters.experimental)) }}:
+        ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_win2019, 'true'), eq(test_config.enable_fw_net472, 'true'), eq(test_config.is_experimental, parameters.experimental)) }}:
           ${{ test_config.name }}:
             title: ${{ test_config.title }}
             config: ${{ test_config.config_win }}
@@ -132,7 +132,7 @@ jobs:
   strategy:
     matrix:
       ${{ each test_config in parameters.test_matrix }}:
-        ${{ if and(eq(test_config.enable_os_win2016, 'true'), eq(test_config.enable_fw_net472, 'true'), eq(test_config.is_experimental, parameters.experimental)) }}:
+        ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_win2016, 'true'), eq(test_config.enable_fw_net472, 'true'), eq(test_config.is_experimental, parameters.experimental)) }}:
           ${{ test_config.name }}:
             title: ${{ test_config.title }}
             config: ${{ test_config.config_win }}
@@ -164,7 +164,7 @@ jobs:
   strategy:
     matrix:
       ${{ each test_config in parameters.test_matrix }}:
-        ${{ if and(eq(test_config.enable_os_win2016, 'true'), eq(test_config.enable_fw_netcore21, 'true'), eq(test_config.is_experimental, parameters.experimental)) }}:
+        ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_win2016, 'true'), eq(test_config.enable_fw_netcore21, 'true'), eq(test_config.is_experimental, parameters.experimental)) }}:
           ${{ test_config.name }}:
             title: ${{ test_config.title }}
             config: ${{ test_config.config_win }}
@@ -196,7 +196,7 @@ jobs:
   strategy:
     matrix:
       ${{ each test_config in parameters.test_matrix }}:
-        ${{ if and(eq(test_config.enable_os_win2016, 'true'), eq(test_config.enable_fw_netcore31, 'true'), eq(test_config.is_experimental, parameters.experimental)) }}:
+        ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_win2016, 'true'), eq(test_config.enable_fw_netcore31, 'true'), eq(test_config.is_experimental, parameters.experimental)) }}:
           ${{ test_config.name }}:
             title: ${{ test_config.title }}
             config: ${{ test_config.config_win }}
@@ -228,7 +228,7 @@ jobs:
   strategy:
     matrix:
       ${{ each test_config in parameters.test_matrix }}:
-        ${{ if and(eq(test_config.enable_os_win2019, 'true'), eq(test_config.enable_fw_netcore21, 'true'), eq(test_config.is_experimental, parameters.experimental)) }}:
+        ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_win2019, 'true'), eq(test_config.enable_fw_netcore21, 'true'), eq(test_config.is_experimental, parameters.experimental)) }}:
           ${{ test_config.name }}:
             title: ${{ test_config.title }}
             config: ${{ test_config.config_win }}
@@ -259,7 +259,7 @@ jobs:
   strategy:
     matrix:
       ${{ each test_config in parameters.test_matrix }}:
-        ${{ if and(eq(test_config.enable_os_ubuntu20, 'true'), eq(test_config.enable_fw_netcore21, 'true'), eq(test_config.is_experimental, parameters.experimental)) }}:
+        ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_ubuntu20, 'true'), eq(test_config.enable_fw_netcore21, 'true'), eq(test_config.is_experimental, parameters.experimental)) }}:
           ${{ test_config.name }}:
             title: ${{ test_config.title }}
             config: ${{ test_config.config_linux }}
@@ -289,7 +289,7 @@ jobs:
   strategy:
     matrix:
       ${{ each test_config in parameters.test_matrix }}:
-        ${{ if and(eq(test_config.enable_os_ubuntu20, 'true'), eq(test_config.enable_fw_netcore31, 'true'), eq(test_config.is_experimental, parameters.experimental)) }}:
+        ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_ubuntu20, 'true'), eq(test_config.enable_fw_netcore31, 'true'), eq(test_config.is_experimental, parameters.experimental)) }}:
           ${{ test_config.name }}:
             title: ${{ test_config.title }}
             config: ${{ test_config.config_linux }}
@@ -319,7 +319,7 @@ jobs:
   strategy:
     matrix:
       ${{ each test_config in parameters.test_matrix }}:
-        ${{ if and(eq(test_config.enable_os_ubuntu16, 'true'), eq(test_config.enable_fw_netcore21, 'true'), eq(test_config.is_experimental, parameters.experimental)) }}:
+        ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_ubuntu16, 'true'), eq(test_config.enable_fw_netcore21, 'true'), eq(test_config.is_experimental, parameters.experimental)) }}:
           ${{ test_config.name }}:
             title: ${{ test_config.title }}
             config: ${{ test_config.config_linux }}
@@ -349,7 +349,7 @@ jobs:
   strategy:
     matrix:
       ${{ each test_config in parameters.test_matrix }}:
-        ${{ if and(eq(test_config.enable_os_macos, 'true'), eq(test_config.enable_fw_netcore21, 'true'), eq(test_config.is_experimental, parameters.experimental)) }}:
+        ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_macos, 'true'), eq(test_config.enable_fw_netcore21, 'true'), eq(test_config.is_experimental, parameters.experimental)) }}:
           ${{ test_config.name }}:
             title: ${{ test_config.title }}
             config: ${{ test_config.config_macos }}
@@ -380,7 +380,7 @@ jobs:
   strategy:
     matrix:
       ${{ each test_config in parameters.test_matrix }}:
-        ${{ if and(eq(test_config.enable_os_macos, 'true'), eq(test_config.enable_fw_netcore31, 'true'), eq(test_config.is_experimental, parameters.experimental)) }}:
+        ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_macos, 'true'), eq(test_config.enable_fw_netcore31, 'true'), eq(test_config.is_experimental, parameters.experimental)) }}:
           ${{ test_config.name }}:
             title: ${{ test_config.title }}
             config: ${{ test_config.config_macos }}

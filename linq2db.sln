@@ -419,6 +419,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "pipelines", "pipelines", "{
 		Build\Azure\pipelines\default.yml = Build\Azure\pipelines\default.yml
 		Build\Azure\pipelines\experimental.yml = Build\Azure\pipelines\experimental.yml
 		Build\Azure\pipelines\test-all.yml = Build\Azure\pipelines\test-all.yml
+		Build\Azure\pipelines\test.db.ase.yml = Build\Azure\pipelines\test.db.ase.yml
+		Build\Azure\pipelines\test.db.db2.yml = Build\Azure\pipelines\test.db.db2.yml
+		Build\Azure\pipelines\test.db.informix.yml = Build\Azure\pipelines\test.db.informix.yml
+		Build\Azure\pipelines\test.db.sqlserver2019.yml = Build\Azure\pipelines\test.db.sqlserver2019.yml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DB2.Core", "DB2.Core", "{F97046E3-8A95-42B2-8B23-A78B892A9C05}"

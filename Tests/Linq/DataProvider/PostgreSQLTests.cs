@@ -1458,7 +1458,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestCustomType([IncludeDataSources(TestProvName.AllPostgreSQLv3)] string context)
+		public void TestCustomType([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
 			using (new DisableBaseline("Output (datetime format) is culture-/system-dependent"))
 			using (var db = GetDataContext(context, CreateRangesMapping()))
@@ -1476,7 +1476,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestCustomTypeBulkCopy([IncludeDataSources(TestProvName.AllPostgreSQLv3)] string context)
+		public void TestCustomTypeBulkCopy([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
 			using (new DisableBaseline("Output (datetime format) is culture-/system-dependent"))
 			using (var db = (DataConnection)GetDataContext(context, CreateRangesMapping()))
@@ -1502,7 +1502,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public async Task TestCustomTypeBulkCopyAsync([IncludeDataSources(TestProvName.AllPostgreSQLv3)] string context)
+		public async Task TestCustomTypeBulkCopyAsync([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
 			using (new DisableBaseline("Output (datetime format) is culture-/system-dependent"))
 			using (var db = (DataConnection)GetDataContext(context, CreateRangesMapping()))
