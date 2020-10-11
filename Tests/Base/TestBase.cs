@@ -32,7 +32,7 @@ namespace Tests
 	using NUnit.Framework.Internal;
 	using Tools;
 
-	public class TestBase
+	public partial class TestBase
 	{
 		protected static class TestData
 		{

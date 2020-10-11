@@ -60,11 +60,12 @@ namespace Tests.xUpdate
 			[Values(0, 1, 2)] int asyncMode) // 0 == sync, 1 == async, 2 == async with IAsyncEnumerable
 #endif
 		{
+			ResetAllTypesIdentity(context);
+
 			if ((context == ProviderName.OracleNative || context == TestProvName.Oracle11Native) && copyType == BulkCopyType.ProviderSpecific)
 				Assert.Inconclusive("Oracle BulkCopy doesn't support identity triggers");
 
 			// don't use transactions as some providers will fallback to non-provider-specific implementation then
-			using (new DisableBaseline("Non-stable identity values"))
 			using (var db = new TestDataConnection(context))
 			{
 				var lastId = db.InsertWithInt32Identity(new TestTable2());
@@ -149,8 +150,9 @@ namespace Tests.xUpdate
 			[Values(0, 1, 2)]           int          asyncMode) // 0 == sync, 1 == async, 2 == async with IAsyncEnumerable
 #endif
 		{
+			ResetAllTypesIdentity(context);
+
 			// don't use transactions as some providers will fallback to non-provider-specific implementation then
-			using (new DisableBaseline("Non-stable identity values"))
 			using (var db = new TestDataConnection(context))
 			{
 				var lastId = db.InsertWithInt32Identity(new TestTable1());

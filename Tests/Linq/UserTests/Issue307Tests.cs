@@ -49,7 +49,8 @@ namespace Tests.UserTests
 		[Test]
 		public void Issue307Test([DataSources] string context)
 		{
-			using (new DisableBaseline("Non-stable identity values"))
+			ResetPersonIdentity(context);
+
 			using (var db = GetDataContext(context))
 			using (new DeletePerson(db))
 			{

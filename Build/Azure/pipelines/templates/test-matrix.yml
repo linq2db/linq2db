@@ -441,7 +441,7 @@ jobs:
           enable_fw_net472: false
           enable_fw_netcore21: true
           enable_fw_netcore31: false
-          is_experimental: true
+          is_experimental: false
           ${{ if contains(parameters.db_filter, 'all') }}:
             enabled: true
           ${{ if not(contains(parameters.db_filter, 'all')) }}:
@@ -463,7 +463,7 @@ jobs:
           enable_fw_net472: false
           enable_fw_netcore21: true
           enable_fw_netcore31: false
-          is_experimental: true
+          is_experimental: false
           ${{ if contains(parameters.db_filter, 'all') }}:
             enabled: true
           ${{ if not(contains(parameters.db_filter, 'all')) }}:
