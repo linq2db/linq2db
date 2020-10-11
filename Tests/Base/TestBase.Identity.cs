@@ -45,6 +45,11 @@ namespace Tests
 						$"DELETE FROM Person WHERE PersonID > {lastValue}",
 						// reset serial to next value
 						$"ALTER TABLE Person MODIFY (PersonID SERIAL({lastValue + 1}))",
+						// MODIFY erase all PK/FK constraints for modified column
+						$"ALTER TABLE Person ADD CONSTRAINT PRIMARY KEY (PersonID)",
+						$"ALTER TABLE Patient ADD CONSTRAINT(FOREIGN KEY (PersonID) REFERENCES Person (PersonID))",
+						$"ALTER TABLE Doctor ADD CONSTRAINT(FOREIGN KEY (PersonID) REFERENCES Person (PersonID))",
+
 					};
 					break;
 				case string prov when prov.StartsWith("MySql") || prov.StartsWith("MariaDB"):
@@ -141,6 +146,8 @@ CREATE COLUMN TABLE ""Person"" (
 						$"DELETE FROM AllTypes WHERE ID > {lastValue}",
 						// reset serial to next value
 						$"ALTER TABLE AllTypes MODIFY (ID SERIAL({lastValue + 1}))",
+						// MODIFY erase all PK/FK constraints for modified column
+						$"ALTER TABLE AllTypes ADD CONSTRAINT PRIMARY KEY (ID)",
 					};
 					break;
 				case string prov when prov.StartsWith("MySql") || prov.StartsWith("MariaDB"):
