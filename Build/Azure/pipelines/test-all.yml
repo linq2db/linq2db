@@ -32,3 +32,13 @@ stages:
       enabled: succeeded()
       experimental: false
       with_baselines: true
+      ${{ if eq(variables['Build.DefinitionName'], 'test-all') }}:
+        db_filter: 'all'
+      ${{ if eq(variables['Build.DefinitionName'], 'tests-db2') }}:
+        db_filter: 'db2'
+      ${{ if eq(variables['Build.DefinitionName'], 'tests-sybase') }}:
+        db_filter: 'sybase.ase'
+      ${{ if eq(variables['Build.DefinitionName'], 'tests-informix') }}:
+        db_filter: 'informix'
+      ${{ if eq(variables['Build.DefinitionName'], 'tests-sqlserver-2019') }}:
+        db_filter: 'sqlserver.2019'
