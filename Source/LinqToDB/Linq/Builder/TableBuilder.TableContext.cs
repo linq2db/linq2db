@@ -281,7 +281,7 @@ namespace LinqToDB.Linq.Builder
 						BuildRecordConstructor (entityDescriptor, objectType, index, true) :
 					IsAnonymous(objectType) ?
 						BuildRecordConstructor (entityDescriptor, objectType, index, false) :
-						BuildDefaultConstructor(entityDescriptor, objectType, index);
+						BuildDefaultConstructor(objectType, index);
 
 				expr = BuildCalculatedColumns(entityDescriptor, expr);
 				expr = ProcessExpression(expr);
@@ -380,13 +380,13 @@ namespace LinqToDB.Linq.Builder
 				return Expression.Block(new[] { variable }, expressions);
 			}
 
-			Expression BuildDefaultConstructor(EntityDescriptor entityDescriptor, Type objectType, Tuple<int, SqlField?>[] index)
+			Expression BuildDefaultConstructor(Type objectType, Tuple<int, SqlField?>[] index)
 			{
 				var members =
 				(
 					from idx in index
 					where idx.Item1 >= 0 && idx.Item2 != null
-					let   cd = entityDescriptor.Columns.FirstOrDefault(c => c.ColumnName == idx.Item2.PhysicalName)
+					let cd = idx.Item2.ColumnDescriptor
 					where
 						cd != null &&
 						(cd.Storage != null ||
@@ -542,7 +542,7 @@ namespace LinqToDB.Linq.Builder
 					(
 						from idx in index
 						where idx.Item1 >= 0 && idx.Item2 != null
-						let   cd = entityDescriptor.Columns.FirstOrDefault(c => c.ColumnName == idx.Item2!.PhysicalName)
+						let cd = idx.Item2.ColumnDescriptor
 						where cd != null
 						select new ColumnInfo
 						{
