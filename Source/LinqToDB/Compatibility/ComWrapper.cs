@@ -25,7 +25,7 @@ namespace LinqToDB
 		[SecurityCritical]
 		public static dynamic Create(string progID)
 		{
-			return new ComWrapper(Activator.CreateInstance(Type.GetTypeFromProgID(progID, true)));
+			return new ComWrapper(Activator.CreateInstance(Type.GetTypeFromProgID(progID, true)!)!);
 		}
 
 		public static dynamic Wrap(object instance)
@@ -44,21 +44,21 @@ namespace LinqToDB
 			_instance = instance;
 		}
 
-		public override bool TryGetMember(GetMemberBinder binder, out object result)
+		public override bool TryGetMember(GetMemberBinder binder, out object? result)
 		{
-			result = _instance.GetType().InvokeMember(binder.Name, BindingFlags.GetProperty, Type.DefaultBinder,  _instance, new object[] { });
+			result = _instance.GetType().InvokeMember(binder.Name, BindingFlags.GetProperty, Type.DefaultBinder, _instance, new object?[] { });
 
 			return true;
 		}
 
-		public override bool TrySetMember(SetMemberBinder binder, object value)
+		public override bool TrySetMember(SetMemberBinder binder, object? value)
 		{
-			_instance.GetType().InvokeMember(binder.Name, BindingFlags.SetProperty, Type.DefaultBinder, _instance, new object[] { value });
+			_instance.GetType().InvokeMember(binder.Name, BindingFlags.SetProperty, Type.DefaultBinder, _instance, new object?[] { value });
 
 			return true;
 		}
 
-		public override bool TryInvokeMember(InvokeMemberBinder binder, object[] args, out object result)
+		public override bool TryInvokeMember(InvokeMemberBinder binder, object[] args, out object? result)
 		{
 			result = _instance.GetType().InvokeMember(binder.Name, BindingFlags.InvokeMethod, Type.DefaultBinder, _instance, args);
 
@@ -68,7 +68,7 @@ namespace LinqToDB
 		[SecuritySafeCritical]
 		void IDisposable.Dispose()
 		{
-			var instance = Interlocked.Exchange(ref _instance, null);
+			var instance = Interlocked.Exchange(ref _instance, null!);
 			if (instance != null)
 			{
 				Marshal.ReleaseComObject(instance);

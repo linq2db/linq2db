@@ -407,7 +407,7 @@ namespace Tests.DataProvider
 			else
 				Assert.Inconclusive($"Provider not supported by test: {cs}");
 
-			AccessTools.CreateDatabase("TestDatabase", deleteIfExists: true, provider: providerName);
+			AccessTools.CreateDatabase("TestDatabase", deleteIfExists: true, provider: providerName!);
 			Assert.IsTrue(File.Exists("TestDatabase.mdb"));
 
 			using (var db = new DataConnection(AccessTools.GetDataProvider(), $"Provider={providerName};Data Source=TestDatabase.mdb;Locale Identifier=1033;Persist Security Info=True"))
