@@ -881,8 +881,12 @@ namespace Tests.DataProvider
 #pragma warning restore CS0618
 			[Column  (DbType = "macaddr")]             public PhysicalAddress? macaddrDataType          { get; set; }
 			// PGSQL10+
+			// also supported by ProviderName.PostgreSQL, but it is hard to setup...
+			[NotColumn]
 			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL10)]
 			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL11)]
+			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL12)]
+			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL13)]
 			                                           public PhysicalAddress? macaddr8DataType         { get; set; }
 			// json
 			[Column]                                   public string? jsonDataType                      { get; set; }
@@ -902,9 +906,13 @@ namespace Tests.DataProvider
 
 		// test that native bulk copy method inserts data properly
 		[Test]
-		public void BulkCopyTest([Values]BulkTestMode mode, [IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		public void BulkCopyTest([Values] BulkTestMode mode, [IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			var macaddr8Supported = context.Contains(TestProvName.PostgreSQL10) || context.Contains(TestProvName.PostgreSQL11);
+			var providerName      = GetProviderName(context, out var _);
+			var macaddr8Supported = providerName == TestProvName.PostgreSQL10
+				|| providerName == TestProvName.PostgreSQL11
+				|| providerName == TestProvName.PostgreSQL12
+				|| providerName == TestProvName.PostgreSQL13;
 			var lineSupported     = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL93);
 			var jsonbSupported    = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL93);
 			var testData = new[]
@@ -964,8 +972,9 @@ namespace Tests.DataProvider
 				}
 			};
 
-			using (var db = new DataConnection(context, new MappingSchema(context)))
+			using (var db = new DataConnection(context))
 			{
+				db.AddMappingSchema(new MappingSchema(context));
 				// color enum type will not work without this call if _create test was run in the same session
 				// More details here: https://github.com/npgsql/npgsql/issues/1357
 				// must be called before transaction opened due to: https://github.com/npgsql/npgsql/issues/2244
@@ -1049,7 +1058,11 @@ namespace Tests.DataProvider
 				[Test]
 		public async Task BulkCopyTestAsync([Values]BulkTestMode mode, [IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			var macaddr8Supported = context.Contains(TestProvName.PostgreSQL10) || context.Contains(TestProvName.PostgreSQL11);
+			var providerName      = GetProviderName(context, out var _);
+			var macaddr8Supported = providerName == TestProvName.PostgreSQL10
+				|| providerName == TestProvName.PostgreSQL11
+				|| providerName == TestProvName.PostgreSQL12
+				|| providerName == TestProvName.PostgreSQL13;
 			var lineSupported     = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL93);
 			var jsonbSupported    = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL93);
 			var testData = new[]
@@ -1109,8 +1122,9 @@ namespace Tests.DataProvider
 				}
 			};
 
-			using (var db = new DataConnection(context, new MappingSchema(context)))
+			using (var db = new DataConnection(context))
 			{
+				db.AddMappingSchema(new MappingSchema(context));
 				// color enum type will not work without this call if _create test was run in the same session
 				// More details here: https://github.com/npgsql/npgsql/issues/1357
 				// must be called before transaction opened due to: https://github.com/npgsql/npgsql/issues/2244
@@ -1251,8 +1265,11 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestTableFunction([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var db = GetDataContext(context, new MappingSchema(context)))
+			using (var db = new DataConnection(context))
 			{
+				// needed for proper AllTypes columns mapping
+				db.AddMappingSchema(new MappingSchema(context));
+
 				var result = new TestPgFunctions(db).GetAllTypes().ToList();
 
 				var res1 = db.GetTable<AllTypes>().OrderBy(_ => _.ID).ToArray()[1];
@@ -1441,7 +1458,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestCustomType([IncludeDataSources(TestProvName.AllPostgreSQLv3)] string context)
+		public void TestCustomType([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
 			using (new DisableBaseline("Output (datetime format) is culture-/system-dependent"))
 			using (var db = GetDataContext(context, CreateRangesMapping()))
@@ -1459,7 +1476,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestCustomTypeBulkCopy([IncludeDataSources(TestProvName.AllPostgreSQLv3)] string context)
+		public void TestCustomTypeBulkCopy([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
 			using (new DisableBaseline("Output (datetime format) is culture-/system-dependent"))
 			using (var db = (DataConnection)GetDataContext(context, CreateRangesMapping()))
@@ -1485,7 +1502,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public async Task TestCustomTypeBulkCopyAsync([IncludeDataSources(TestProvName.AllPostgreSQLv3)] string context)
+		public async Task TestCustomTypeBulkCopyAsync([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
 			using (new DisableBaseline("Output (datetime format) is culture-/system-dependent"))
 			using (var db = (DataConnection)GetDataContext(context, CreateRangesMapping()))

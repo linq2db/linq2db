@@ -525,7 +525,8 @@ namespace Tests.xUpdate
 		[Test]
 		public void TestUpdateWithColumnFilter1([DataSources] string context, [Values] bool withMiddleName)
 		{
-			using (new DisableBaseline("Non-stable identity values"))
+			ResetPersonIdentity(context);
+
 			using (var db = GetDataContext(context))
 			{
 				var newName = "UpdateColumnFilterUpdated";
@@ -564,7 +565,8 @@ namespace Tests.xUpdate
 		[Test]
 		public void TestUpdateWithColumnFilter2([DataSources] string context)
 		{
-			using (new DisableBaseline("Non-stable identity values"))
+			ResetPersonIdentity(context);
+
 			using (var db = GetDataContext(context))
 			{
 				var newName = "UpdateColumnFilterUpdated";
@@ -608,7 +610,8 @@ namespace Tests.xUpdate
 		[Test]
 		public void UpdateComplex1([DataSources] string context)
 		{
-			using (new DisableBaseline("Non-stable identity values"))
+			ResetPersonIdentity(context);
+
 			using (var db = GetDataContext(context))
 			{
 				db.Person.Where(_ => _.FirstName.StartsWith("UpdateComplex")).Delete();
@@ -644,7 +647,8 @@ namespace Tests.xUpdate
 		[Test]
 		public async Task UpdateComplex1Async([DataSources] string context)
 		{
-			using (new DisableBaseline("Non-stable identity values"))
+			ResetPersonIdentity(context);
+
 			using (var db = GetDataContext(context))
 			{
 				await db.Person.DeleteAsync(_ => _.FirstName.StartsWith("UpdateComplex"));
@@ -681,7 +685,8 @@ namespace Tests.xUpdate
 		[Test]
 		public void UpdateComplex2([DataSources] string context)
 		{
-			using (new DisableBaseline("Non-stable identity values"))
+			ResetPersonIdentity(context);
+
 			using (var db = GetDataContext(context))
 			{
 				db.Person.Where(_ => _.FirstName.StartsWith("UpdateComplex")).Delete();
