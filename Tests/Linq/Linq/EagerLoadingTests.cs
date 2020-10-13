@@ -324,8 +324,8 @@ namespace Tests.Linq
 				Assert.False(sql.Contains("LoadWithQueryable"));
 
 				// two queries generated, now returns sql for main query
-				CompareSql(@"SELECT
-	[t1].[ParentID],
+				CompareSql(@"SELECT 
+	[t1].[ParentID], 
 	[t1].[Value1]
 FROM
 	[Parent] [t1]", sql);
@@ -342,13 +342,13 @@ FROM
 				Assert.False(sql.Contains("LoadWithQueryable"));
 
 				// one query with join generated
-				CompareSql(@"SELECT
-	[t1].[FirstName],
-	[t1].[PersonID],
-	[t1].[LastName],
-	[t1].[MiddleName],
-	[t1].[Gender],
-	[a_Patient].[PersonID],
+				CompareSql(@"SELECT 
+	[t1].[FirstName], 
+	[t1].[PersonID], 
+	[t1].[LastName], 
+	[t1].[MiddleName], 
+	[t1].[Gender], 
+	[a_Patient].[PersonID], 
 	[a_Patient].[Diagnosis]
 FROM
 	[Person] [t1]
