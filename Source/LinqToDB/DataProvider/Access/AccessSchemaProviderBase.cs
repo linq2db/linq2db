@@ -32,7 +32,6 @@ namespace LinqToDB.DataProvider.Access
 			{
 				if (dataType.ToLower() == "text")
 					return length == 1 && !options.GenerateChar1AsString ? typeof(char) : typeof(string);
-				throw new InvalidOperationException();
 			}
 
 			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options);
