@@ -2,6 +2,15 @@ parameters:
   enabled: false
   experimental: false
   with_baselines: false
+  db_filter: 'all'
+
+# db_filter specify test db selection filter for pipeline. Current list of supported values:
+# - 'all' - any target supported
+# - 'informix' - informix db targets supported
+# - 'db2' - db2 db targets supported
+# - 'sybase.ase' - SAP/Sybase ASE db targets supported
+# - 'sqlserver.2019' - SQL Server 2019 db targets supported
+# Note that filter value cannot be a substring for another fiter value, as we check filter using contains substring function
 
 # Test matrix (list of all database test runs with configuration options)
 # Because azure pipelines doesn't support non-string variables and strategy templates
@@ -15,6 +24,8 @@ parameters:
 # - is_experimental (true/false string, required) : experimental pipeline switch, when true - testrun enabled only for experimental pipeline,
 #                                                   when false - only for test-all/default pipelines
                     #                               switch used to debug testruns without running other testruns
+# - enabled (true/false string, required)         : enables/disables test matrix entry completely for current run
+
 
 # OPERATION SYSTEM SELECTORS
 # - enable_os_win2019  (true/false string) : enables testrun for windows 2019 image (windows-2019)
@@ -68,6 +79,10 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           is_experimental: false
+          ${{ if contains(parameters.db_filter, 'all') }}:
+            enabled: true
+          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+            enabled: false
 
         - name: SQLite_MS
           title: SQLite.MS
@@ -83,6 +98,10 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           is_experimental: false
+          ${{ if contains(parameters.db_filter, 'all') }}:
+            enabled: true
+          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+            enabled: false
 
 # Access
         - name: Access_OLEDB_JET
@@ -97,6 +116,10 @@ jobs:
           enable_fw_netcore21: false
           enable_fw_netcore31: false
           is_experimental: false
+          ${{ if contains(parameters.db_filter, 'all') }}:
+            enabled: true
+          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+            enabled: false
 
         - name: Access_OLEDB_ACE
           title: Access ACE
@@ -111,6 +134,10 @@ jobs:
           enable_fw_netcore21: false
           enable_fw_netcore31: false
           is_experimental: false
+          ${{ if contains(parameters.db_filter, 'all') }}:
+            enabled: true
+          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+            enabled: false
 
         - name: Access_ODBC_MDB
           title: Access ODBC MDB
@@ -124,6 +151,10 @@ jobs:
           enable_fw_netcore21: false
           enable_fw_netcore31: false
           is_experimental: false
+          ${{ if contains(parameters.db_filter, 'all') }}:
+            enabled: true
+          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+            enabled: false
 
         - name: Access_ODBC_ACE
           title: Access ODBC ACE
@@ -138,6 +169,10 @@ jobs:
           enable_fw_netcore21: false
           enable_fw_netcore31: false
           is_experimental: false
+          ${{ if contains(parameters.db_filter, 'all') }}:
+            enabled: true
+          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+            enabled: false
 
         - name: Access_ODBC_ACE_x64
           title: Access ODBC ACE x64
@@ -152,6 +187,10 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           is_experimental: false
+          ${{ if contains(parameters.db_filter, 'all') }}:
+            enabled: true
+          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+            enabled: false
 
         - name: Access_OLEDB_ACE_x64
           title: Access OleDb ACE x64
@@ -166,6 +205,10 @@ jobs:
           enable_fw_netcore21: false # true (disabled due to a lot of random crashes https://github.com/dotnet/runtime/issues/36954)
           enable_fw_netcore31: false # true (disabled due to a lot of random crashes https://github.com/dotnet/runtime/issues/36954)
           is_experimental: false
+          ${{ if contains(parameters.db_filter, 'all') }}:
+            enabled: true
+          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+            enabled: false
 
 # SQL CE
         - name: SqlCE
@@ -181,6 +224,10 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           is_experimental: false
+          ${{ if contains(parameters.db_filter, 'all') }}:
+            enabled: true
+          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+            enabled: false
 
 # MySql/MariaDB
         - name: MySQL
@@ -199,6 +246,10 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: true
           is_experimental: false
+          ${{ if contains(parameters.db_filter, 'all') }}:
+            enabled: true
+          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+            enabled: false
 
         - name: MySQL55
           title: MySQL 5.5
@@ -216,6 +267,10 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           is_experimental: false
+          ${{ if contains(parameters.db_filter, 'all') }}:
+            enabled: true
+          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+            enabled: false
 
         - name: MariaDB
           title: MariaDB
@@ -235,6 +290,10 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           is_experimental: false
+          ${{ if contains(parameters.db_filter, 'all') }}:
+            enabled: true
+          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+            enabled: false
 
 # PostgreSQL
         - name: PostgreSQL
@@ -253,6 +312,10 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: true
           is_experimental: false
+          ${{ if contains(parameters.db_filter, 'all') }}:
+            enabled: true
+          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+            enabled: false
 
         - name: PostgreSQL92
           title: PostgreSQL 9.2
@@ -270,6 +333,10 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           is_experimental: false
+          ${{ if contains(parameters.db_filter, 'all') }}:
+            enabled: true
+          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+            enabled: false
 
         - name: PostgreSQL93
           title: PostgreSQL 9.3
@@ -287,6 +354,10 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           is_experimental: false
+          ${{ if contains(parameters.db_filter, 'all') }}:
+            enabled: true
+          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+            enabled: false
 
         - name: PostgreSQL95
           title: PostgreSQL 9.5
@@ -304,6 +375,10 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           is_experimental: false
+          ${{ if contains(parameters.db_filter, 'all') }}:
+            enabled: true
+          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+            enabled: false
 
         - name: PostgreSQL10
           title: PostgreSQL 10
@@ -323,6 +398,10 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           is_experimental: false
+          ${{ if contains(parameters.db_filter, 'all') }}:
+            enabled: true
+          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+            enabled: false
 
         - name: PostgreSQL11
           title: PostgreSQL 11
@@ -341,6 +420,54 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           is_experimental: false
+          ${{ if contains(parameters.db_filter, 'all') }}:
+            enabled: true
+          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+            enabled: false
+
+        - name: PostgreSQL12
+          title: PostgreSQL 12
+          config_linux: pgsql12
+          config_macos: pgsql12
+          script: pgsql12.sh
+          script_linux: pgsql12.sh
+          script_macos: mac.pgsql12.sh
+          install_docker_macos: true
+          enable_os_win2016: false
+          enable_os_win2019: false
+          enable_os_ubuntu16: false
+          enable_os_ubuntu20: true
+          enable_os_macos: true
+          enable_fw_net472: false
+          enable_fw_netcore21: true
+          enable_fw_netcore31: false
+          is_experimental: false
+          ${{ if contains(parameters.db_filter, 'all') }}:
+            enabled: true
+          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+            enabled: false
+
+        - name: PostgreSQL13
+          title: PostgreSQL 13
+          config_linux: pgsql13
+          config_macos: pgsql13
+          script: pgsql13.sh
+          script_linux: pgsql13.sh
+          script_macos: mac.pgsql13.sh
+          install_docker_macos: true
+          enable_os_win2016: false
+          enable_os_win2019: false
+          enable_os_ubuntu16: false
+          enable_os_ubuntu20: true
+          enable_os_macos: true
+          enable_fw_net472: false
+          enable_fw_netcore21: true
+          enable_fw_netcore31: false
+          is_experimental: false
+          ${{ if contains(parameters.db_filter, 'all') }}:
+            enabled: true
+          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+            enabled: false
 
 # SQL Server
         - name: SqlServer2005
@@ -356,6 +483,10 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           is_experimental: false
+          ${{ if contains(parameters.db_filter, 'all') }}:
+            enabled: true
+          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+            enabled: false
 
         - name: SqlServer2005_MS
           title: SQL Server 2005 (Microsoft.Data.SqlClient)
@@ -370,6 +501,10 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           is_experimental: false
+          ${{ if contains(parameters.db_filter, 'all') }}:
+            enabled: true
+          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+            enabled: false
 
         - name: SqlServer2008
           title: SQL Server 2008 (System.Data.SqlClient)
@@ -384,6 +519,10 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           is_experimental: false
+          ${{ if contains(parameters.db_filter, 'all') }}:
+            enabled: true
+          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+            enabled: false
 
         - name: SqlServer2008_MS
           title: SQL Server 2008 (Microsoft.Data.SqlClient)
@@ -398,6 +537,10 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           is_experimental: false
+          ${{ if contains(parameters.db_filter, 'all') }}:
+            enabled: true
+          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+            enabled: false
 
         - name: SqlServer2012
           title: SQL Server 2012 (System.Data.SqlClient)
@@ -412,6 +555,10 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           is_experimental: false
+          ${{ if contains(parameters.db_filter, 'all') }}:
+            enabled: true
+          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+            enabled: false
 
         - name: SqlServer2012_MS
           title: SQL Server 2012 (Microsoft.Data.SqlClient)
@@ -426,6 +573,10 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           is_experimental: false
+          ${{ if contains(parameters.db_filter, 'all') }}:
+            enabled: true
+          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+            enabled: false
 
         - name: SqlServer2014
           title: SQL Server 2014 (System.Data.SqlClient)
@@ -440,6 +591,10 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           is_experimental: false
+          ${{ if contains(parameters.db_filter, 'all') }}:
+            enabled: true
+          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+            enabled: false
 
         - name: SqlServer2014_MS
           title: SQL Server 2014 (Microsoft.Data.SqlClient)
@@ -454,6 +609,10 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           is_experimental: false
+          ${{ if contains(parameters.db_filter, 'all') }}:
+            enabled: true
+          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+            enabled: false
 
         - name: SqlServer2016
           title: SQL Server 2016 (System.Data.SqlClient)
@@ -468,6 +627,10 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           is_experimental: false
+          ${{ if contains(parameters.db_filter, 'all') }}:
+            enabled: true
+          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+            enabled: false
 
         - name: SqlServer2016_MS
           title: SQL Server 2016 (Microsoft.Data.SqlClient)
@@ -482,6 +645,10 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           is_experimental: false
+          ${{ if contains(parameters.db_filter, 'all') }}:
+            enabled: true
+          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+            enabled: false
 
         - name: SqlServer2017
           title: SQL Server 2017 (System.Data.SqlClient)
@@ -501,6 +668,10 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           is_experimental: false
+          ${{ if contains(parameters.db_filter, 'all') }}:
+            enabled: true
+          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+            enabled: false
 
         - name: SqlServer2017_MS
           title: SQL Server 2017 (Microsoft.Data.SqlClient)
@@ -520,6 +691,10 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           is_experimental: false
+          ${{ if contains(parameters.db_filter, 'all') }}:
+            enabled: true
+          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+            enabled: false
 
         - name: SqlServer2019
           title: SQL Server 2019 (System.Data.SqlClient)
@@ -539,6 +714,10 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           is_experimental: false
+          ${{ if or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'sqlserver.2019')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'sqlserver.2019'))) }}:
+            enabled: false
 
         - name: SqlServer2019_MS
           title: SQL Server 2019 (Microsoft.Data.SqlClient)
@@ -558,6 +737,10 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           is_experimental: false
+          ${{ if or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'sqlserver.2019')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'sqlserver.2019'))) }}:
+            enabled: false
 
 # Sybase ASE
         - name: Sybase
@@ -576,6 +759,10 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           is_experimental: false
+          ${{ if or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'sybase.ase')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'sybase.ase'))) }}:
+            enabled: false
 
 # Oracle
         - name: Oracle11
@@ -594,6 +781,10 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           is_experimental: false
+          ${{ if contains(parameters.db_filter, 'all') }}:
+            enabled: true
+          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+            enabled: false
 
         - name: Oracle12
           title: Oracle 12c
@@ -611,6 +802,10 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           is_experimental: false
+          ${{ if contains(parameters.db_filter, 'all') }}:
+            enabled: true
+          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+            enabled: false
 
 # Firebird
         - name: Firebird25
@@ -629,6 +824,10 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           is_experimental: false
+          ${{ if contains(parameters.db_filter, 'all') }}:
+            enabled: true
+          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+            enabled: false
 
         - name: Firebird3
           title: Firebird 3.0
@@ -646,6 +845,10 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           is_experimental: false
+          ${{ if contains(parameters.db_filter, 'all') }}:
+            enabled: true
+          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+            enabled: false
 
 # DB2
         - name: DB2
@@ -666,6 +869,10 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           is_experimental: false
+          ${{ if or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'db2')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'db2'))) }}:
+            enabled: false
 
 # Informix
         - name: Informix12
@@ -686,6 +893,10 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           is_experimental: false
+          ${{ if or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'informix')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'informix'))) }}:
+            enabled: false
 
         - name: Informix14
           title: Informix 14.10
@@ -705,6 +916,10 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           is_experimental: false
+          ${{ if or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'informix')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'informix'))) }}:
+            enabled: false
 
 # SAP HANA
         - name: SAPHANA2
@@ -724,3 +939,7 @@ jobs:
           enable_fw_netcore31: false
           is_experimental: false
           docker_login: true
+          ${{ if contains(parameters.db_filter, 'all') }}:
+            enabled: true
+          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+            enabled: false

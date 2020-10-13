@@ -17,6 +17,8 @@
 		public const string NorthwindSQLiteMS = "Northwind.SQLite.MS";
 		public const string PostgreSQL10      = "PostgreSQL.10";
 		public const string PostgreSQL11      = "PostgreSQL.11";
+		public const string PostgreSQL12      = "PostgreSQL.12";
+		public const string PostgreSQL13      = "PostgreSQL.13";
 		public const string Oracle11Native    = "Oracle.11.Native";
 		public const string Oracle11Managed   = "Oracle.11.Managed";
 		public const string SqlServer2016     = "SqlServer.2016";
@@ -50,12 +52,11 @@
 		public const string AllMySqlServer57Plus   = "MySql,MySqlConnector";
 		// MySql.Data server providers (no mysqlconnector)
 		public const string AllMySqlData           = "MySql,MySql55,MariaDB";
-		public const string AllPostgreSQL          = "PostgreSQL,PostgreSQL.9.2,PostgreSQL.9.3,PostgreSQL.9.5,PostgreSQL.10,PostgreSQL.11";
-		public const string AllPostgreSQLv3        = "PostgreSQL,PostgreSQL.9.2,PostgreSQL.9.3,PostgreSQL.9.5,PostgreSQL.10,PostgreSQL.11";
-		public const string AllPostgreSQLLess10    = "PostgreSQL,PostgreSQL.9.2,PostgreSQL.9.3,PostgreSQL.9.5";
-		public const string AllPostgreSQL93Plus    = "PostgreSQL,PostgreSQL.9.3,PostgreSQL.9.5,PostgreSQL.10,PostgreSQL.11";
-		public const string AllPostgreSQL95Plus    = "PostgreSQL,PostgreSQL.9.5,PostgreSQL.10,PostgreSQL.11";
-		public const string AllPostgreSQL10Plus    = "PostgreSQL.10,PostgreSQL.11";
+		public const string AllPostgreSQL          = "PostgreSQL,PostgreSQL.9.2,PostgreSQL.9.3,PostgreSQL.9.5,PostgreSQL.10,PostgreSQL.11,PostgreSQL.12,PostgreSQL.13";
+		public const string AllPostgreSQLLess10    = "PostgreSQL.9.2,PostgreSQL.9.3,PostgreSQL.9.5";
+		public const string AllPostgreSQL93Plus    = "PostgreSQL,PostgreSQL.9.3,PostgreSQL.9.5,PostgreSQL.10,PostgreSQL.11,PostgreSQL.12,PostgreSQL.13";
+		public const string AllPostgreSQL95Plus    = "PostgreSQL,PostgreSQL.9.5,PostgreSQL.10,PostgreSQL.11,PostgreSQL.12,PostgreSQL.13";
+		public const string AllPostgreSQL10Plus    = "PostgreSQL,PostgreSQL.10,PostgreSQL.11,PostgreSQL.12,PostgreSQL.13";
 		public const string AllOracle              = "Oracle.Native,Oracle.Managed,Oracle.11.Native,Oracle.11.Managed";
 		public const string AllOracleManaged       = "Oracle.Managed,Oracle.11.Managed";
 		public const string AllOracleNative        = "Oracle.Native,Oracle.11.Native";
