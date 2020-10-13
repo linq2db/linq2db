@@ -1433,7 +1433,8 @@ namespace LinqToDB.Linq.Builder
 
 			correctedExpression = expr.Transform(e =>
 			{
-				if (e.NodeType == ExpressionType.MemberAccess)
+				if (e.NodeType == ExpressionType.MemberAccess 
+				    || e.NodeType == ExpressionType.Call && ((MethodCallExpression)e).IsSameGenericMethod(ParameterContainer.GetValueMethodInfo))
 				{
 					if (!knownParameters.TryGetValue(e, out var registered))
 					{
