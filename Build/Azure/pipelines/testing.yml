@@ -30,10 +30,13 @@ stages:
   - template: templates/test-matrix.yml
     parameters:
       enabled: succeeded()
-      experimental: false
       with_baselines: true
-      ${{ if eq(variables['Build.DefinitionName'], 'test-all') }}:
-        db_filter: 'all'
+      # experimental parameter
+      ${{ if eq(variables['Build.DefinitionName'], 'experimental') }}:
+          experimental: true
+      ${{ if ne(variables['Build.DefinitionName'], 'experimental') }}:
+          experimental: false
+      # db_filter parameter
       ${{ if eq(variables['Build.DefinitionName'], 'tests-db2') }}:
         db_filter: 'db2'
       ${{ if eq(variables['Build.DefinitionName'], 'tests-sybase') }}:

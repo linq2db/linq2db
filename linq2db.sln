@@ -417,8 +417,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "pipelines", "pipelines", "{
 	ProjectSection(SolutionItems) = preProject
 		Build\Azure\pipelines\build.yml = Build\Azure\pipelines\build.yml
 		Build\Azure\pipelines\default.yml = Build\Azure\pipelines\default.yml
-		Build\Azure\pipelines\experimental.yml = Build\Azure\pipelines\experimental.yml
-		Build\Azure\pipelines\test-all.yml = Build\Azure\pipelines\test-all.yml
+		Build\Azure\pipelines\testing.yml = Build\Azure\pipelines\testing.yml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DB2.Core", "DB2.Core", "{F97046E3-8A95-42B2-8B23-A78B892A9C05}"
