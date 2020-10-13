@@ -37,11 +37,11 @@ stages:
       ${{ if ne(variables['Build.DefinitionName'], 'experimental') }}:
           experimental: false
       # db_filter parameter
-      ${{ if eq(variables['Build.DefinitionName'], 'tests-db2') }}:
+      ${{ if eq(variables['Build.DefinitionName'], 'test-db2') }}:
         db_filter: 'db2'
-      ${{ if eq(variables['Build.DefinitionName'], 'tests-sybase') }}:
+      ${{ if eq(variables['Build.DefinitionName'], 'test-sybase') }}:
         db_filter: 'sybase.ase'
-      ${{ if eq(variables['Build.DefinitionName'], 'tests-informix') }}:
+      ${{ if eq(variables['Build.DefinitionName'], 'test-informix') }}:
         db_filter: 'informix'
-      ${{ if eq(variables['Build.DefinitionName'], 'tests-sqlserver-2019') }}:
+      ${{ if eq(variables['Build.DefinitionName'], 'test-sqlserver-2019') }}:
         db_filter: 'sqlserver.2019'
