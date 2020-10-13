@@ -60,6 +60,44 @@ namespace LinqToDB.SqlQuery
 			return dependencyFound;
 		}
 
+		public static bool IsDependsOn(IQueryElement testedRoot, IQueryElement onElement, HashSet<IQueryElement>? elementsToIgnore = null)
+		{
+			var dependencyFound = false;
+
+			new QueryVisitor().VisitParentFirst(testedRoot, e =>
+			{
+				if (elementsToIgnore != null && elementsToIgnore.Contains(e))
+					return false;
+
+				if (e == onElement)
+					dependencyFound = true;
+
+				return !dependencyFound;
+			});
+
+			return dependencyFound;
+		}
+
+
+		public static int DependencyCount(IQueryElement testedRoot, IQueryElement onElement, HashSet<IQueryElement>? elementsToIgnore = null)
+		{
+			var dependencyCount = 0;
+
+			new QueryVisitor().VisitParentFirst(testedRoot, e =>
+			{
+				if (elementsToIgnore != null && elementsToIgnore.Contains(e))
+					return false;
+
+				if (e == onElement)
+					++dependencyCount;
+
+				return true;
+			});
+
+			return dependencyCount;
+		}
+
+
 		/// <summary>
 		/// Returns <see cref="IValueConverter"/> for <paramref name="expr"/>.
 		/// </summary>
@@ -202,6 +240,18 @@ namespace LinqToDB.SqlQuery
 			return false;
 		}
 
+		public static ISqlExpression UnwrapExpression(ISqlExpression expr)
+		{
+			if (expr.ElementType == QueryElementType.SqlExpression)
+			{
+				var underlying = GetUnderlyingExpressionValue((SqlExpression)expr);
+				if (!ReferenceEquals(expr, underlying))
+					return UnwrapExpression(underlying);
+			}
+
+			return expr;
+		}
+	
 		public static ISqlExpression GetUnderlyingExpressionValue(SqlExpression sqlExpression)
 		{
 			if (!IsTransitiveExpression(sqlExpression))

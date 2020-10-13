@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -1065,6 +1066,10 @@ namespace Tests
 		{
 			var expr = query.Expression;
 
+			var loaded = new Dictionary<Type, Expression>();
+
+			var actual = query.ToArray();
+
 			var newExpr = expr.Transform(e =>
 			{
 				if (e.NodeType == ExpressionType.Call)
@@ -1072,17 +1077,28 @@ namespace Tests
 					var mc = (MethodCallExpression)e;
 					if (mc.IsSameGenericMethod(Methods.LinqToDB.GetTable))
 					{
-						var newCall = LinqToDB.Common.TypeHelper.MakeMethodCall(Methods.Queryable.ToArray, mc);
-						newCall     = LinqToDB.Common.TypeHelper.MakeMethodCall(Methods.Enumerable.AsQueryable, newCall);
-						return newCall;
+						var entityType = mc.Method.ReturnType.GetGenericArguments()[0];
+						if (entityType != null)
+						{
+							if (!loaded.TryGetValue(entityType, out var itemsExpression))
+							{
+								var newCall = LinqToDB.Common.TypeHelper.MakeMethodCall(Methods.Queryable.ToArray, mc);
+								var items = newCall.EvaluateExpression();
+								itemsExpression = Expression.Constant(items, entityType.MakeArrayType());
+								loaded.Add(entityType, itemsExpression);
+
+							}
+							var queryCall =
+								LinqToDB.Common.TypeHelper.MakeMethodCall(Methods.Enumerable.AsQueryable,
+									itemsExpression);
+							return queryCall;
+						}
 					}
 				}
 
 				return e;
 			})!;
 
-
-			var actual = query.ToArray();
 
 			var empty = LinqToDB.Common.Tools.CreateEmptyQuery<T>();
 			T[]? expected;

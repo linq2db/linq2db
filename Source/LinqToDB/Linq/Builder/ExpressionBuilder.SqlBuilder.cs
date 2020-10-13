@@ -897,8 +897,21 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.Coalesce           :
 					{
 						var e = (BinaryExpression)expression;
-						var l = ConvertToSql(context, e.Left,  columnDescriptor: columnDescriptor);
-						var r = ConvertToSql(context, e.Right, columnDescriptor: columnDescriptor);
+						
+						ISqlExpression l;
+						ISqlExpression r;
+						var ls = GetContext(context, e.Left);
+						if (ls?.IsExpression(e.Left, 0, RequestFor.Field).Result == true)
+						{
+							l = ConvertToSql(context, e.Left);
+							r = ConvertToSql(context, e.Right, true, QueryHelper.GetColumnDescriptor(l) ?? columnDescriptor);
+						}
+						else
+						{
+							r = ConvertToSql(context, e.Right, true);
+							l = ConvertToSql(context, e.Left, false, QueryHelper.GetColumnDescriptor(r) ?? columnDescriptor);
+						}
+
 						var t = e.Type;
 
 						switch (expression.NodeType)
@@ -1921,10 +1934,20 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			if (l is SqlSearchCondition)
-				l = new SqlFunction(typeof(bool), "CASE", l, new SqlValue(true), new SqlValue(false));
+			{
+				l = new SqlFunction(typeof(bool), "CASE", l, new SqlValue(true), new SqlValue(false))
+				{
+					CanBeNull = false
+				};
+			}
 
 			if (r is SqlSearchCondition)
-				r = new SqlFunction(typeof(bool), "CASE", r, new SqlValue(true), new SqlValue(false));
+			{
+				r = new SqlFunction(typeof(bool), "CASE", r, new SqlValue(true), new SqlValue(false))
+				{
+					CanBeNull = false
+				};
+			}
 
 			ISqlPredicate? predicate = null;
 			if (op.In(SqlPredicate.Operator.Equal, SqlPredicate.Operator.NotEqual))

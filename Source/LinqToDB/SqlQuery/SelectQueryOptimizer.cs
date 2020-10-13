@@ -732,6 +732,7 @@ namespace LinqToDB.SqlQuery
 		}
 
 		SqlTableSource OptimizeSubQuery(
+			SelectQuery parentQuery,
 			SqlTableSource source,
 			bool optimizeWhere,
 			bool allColumns,
@@ -743,6 +744,7 @@ namespace LinqToDB.SqlQuery
 			foreach (var jt in source.Joins)
 			{
 				var table = OptimizeSubQuery(
+					parentQuery,
 					jt.Table,
 					jt.JoinType == JoinType.Inner || jt.JoinType == JoinType.CrossApply,
 					false,
@@ -777,7 +779,7 @@ namespace LinqToDB.SqlQuery
 					}
 				}
 				if (canRemove)
-					return RemoveSubQuery(source, optimizeWhere, allColumns && !isApplySupported, optimizeValues, optimizeColumns, parentJoin);
+					return RemoveSubQuery(parentQuery, source, optimizeWhere, allColumns && !isApplySupported, optimizeValues, optimizeColumns, parentJoin);
 			}
 
 			return source;
@@ -850,8 +852,10 @@ namespace LinqToDB.SqlQuery
 			return true;
 		}
 
-		static bool CheckColumn(SqlColumn column, ISqlExpression expr, SelectQuery query, bool optimizeValues, bool optimizeColumns)
+		static bool CheckColumn(SelectQuery parentQuery, SqlColumn column, ISqlExpression expr, SelectQuery query, bool optimizeValues, bool optimizeColumns)
 		{
+			expr = QueryHelper.UnwrapExpression(expr);
+
 			if (expr is SqlField || expr is SqlColumn || expr.ElementType == QueryElementType.SqlRawSqlTable)
 				return false;
 
@@ -863,27 +867,30 @@ namespace LinqToDB.SqlQuery
 				if (e1.Operation == "*" && e1.Expr1 is SqlValue value)
 				{
 					if (value.Value is int i && i == -1)
-						return CheckColumn(column, e1.Expr2, query, optimizeValues, optimizeColumns);
+						return CheckColumn(parentQuery, column, e1.Expr2, query, optimizeValues, optimizeColumns);
 				}
 			}
-
-			var visitor = new QueryVisitor();
 
 			if (optimizeColumns &&
 				new QueryVisitor().Find(expr, ex => ex is SelectQuery || QueryHelper.IsAggregationFunction(ex)) == null)
 			{
-				var n = 0;
-				var q = query.ParentSelect ?? query;
+				var elementsToIgnore = new HashSet<IQueryElement> { query };
 
-				visitor.VisitAll(q, e => { if (e == column) n++; });
+				var depends = QueryHelper.IsDependsOn(parentQuery.GroupBy, column, elementsToIgnore) || 
+				              QueryHelper.IsDependsOn(parentQuery.Where, column, elementsToIgnore);
+				if (depends)
+					return true;
 
-				return n > 2;
+				var dependsCount = QueryHelper.DependencyCount(parentQuery, column, elementsToIgnore);
+
+				return dependsCount > 1;
 			}
 
 			return true;
 		}
 
 		SqlTableSource RemoveSubQuery(
+			SelectQuery parentQuery, 
 			SqlTableSource childSource,
 			bool concatWhere,
 			bool allColumns,
@@ -909,7 +916,7 @@ namespace LinqToDB.SqlQuery
 
 			var isColumnsOK =
 				(allColumns && !query.Select.Columns.Any(c => QueryHelper.IsAggregationFunction(c.Expression))) ||
-				!query.Select.Columns.Any(c => CheckColumn(c, c.Expression, query, optimizeValues, optimizeColumns));
+				!query.Select.Columns.Any(c => CheckColumn(parentQuery, c, c.Expression, query, optimizeValues, optimizeColumns));
 
 			if (!isColumnsOK)
 				return childSource;
@@ -975,13 +982,13 @@ namespace LinqToDB.SqlQuery
 			return result;
 		}
 
-		void OptimizeApply(HashSet<ISqlTableSource> parentTableSources, SqlTableSource tableSource, SqlJoinedTable joinTable, bool isApplySupported, bool optimizeColumns)
+		void OptimizeApply(SelectQuery parentQuery, HashSet<ISqlTableSource> parentTableSources, SqlTableSource tableSource, SqlJoinedTable joinTable, bool isApplySupported, bool optimizeColumns)
 		{
 			var joinSource = joinTable.Table;
 
 			foreach (var join in joinSource.Joins)
 				if (join.JoinType == JoinType.CrossApply || join.JoinType == JoinType.OuterApply)
-					OptimizeApply(parentTableSources, joinSource, join, isApplySupported, optimizeColumns);
+					OptimizeApply(parentQuery, parentTableSources, joinSource, join, isApplySupported, optimizeColumns);
 
 			if (isApplySupported && !joinTable.CanConvertApply)
 				return;
@@ -1083,6 +1090,7 @@ namespace LinqToDB.SqlQuery
 					sql.Where.SearchCondition.Conditions.AddRange(searchCondition);
 
 					var table = OptimizeSubQuery(
+						parentQuery,
 						joinTable.Table,
 						joinTable.JoinType == JoinType.Inner || joinTable.JoinType == JoinType.CrossApply,
 						joinTable.JoinType == JoinType.CrossApply,
@@ -1098,7 +1106,7 @@ namespace LinqToDB.SqlQuery
 
 						joinTable.Table = table;
 
-						OptimizeApply(parentTableSources, tableSource, joinTable, isApplySupported, optimizeColumns);
+						OptimizeApply(parentQuery, parentTableSources, tableSource, joinTable, isApplySupported, optimizeColumns);
 					}
 				}
 			}
@@ -1146,7 +1154,7 @@ namespace LinqToDB.SqlQuery
 
 			for (var i = 0; i < _selectQuery.From.Tables.Count; i++)
 			{
-				var table = OptimizeSubQuery(_selectQuery.From.Tables[i], true, false, isApplySupported, true, optimizeColumns, JoinType.Inner);
+				var table = OptimizeSubQuery(_selectQuery, _selectQuery.From.Tables[i], true, false, isApplySupported, true, optimizeColumns, JoinType.Inner);
 
 				if (table != _selectQuery.From.Tables[i])
 				{
@@ -1229,7 +1237,7 @@ namespace LinqToDB.SqlQuery
 				foreach (var join in table.Joins)
 				{
 					if (join.JoinType == JoinType.CrossApply || join.JoinType == JoinType.OuterApply)
-						OptimizeApply(tableSources, table, join, isApplySupported, optimizeColumns);
+						OptimizeApply(_selectQuery, tableSources, table, join, isApplySupported, optimizeColumns);
 
 					join.Walk(new WalkOptions(), e =>
 					{

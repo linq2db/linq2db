@@ -635,7 +635,7 @@ namespace LinqToDB.SqlQuery
 								((SqlSelectClause)newElement).SetSqlQuery(sc.SelectQuery);
 							}
 
-							static SqlColumn CloneColumn(SqlColumn column) => new SqlColumn(column.Parent!, column.Expression);
+							static SqlColumn CloneColumn(SqlColumn column) => new SqlColumn(column.Parent!, column.Expression, column.RawAlias);
 							break;
 						}
 
@@ -897,10 +897,10 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.OutputClause:
 					{
 						var output    = (SqlOutputClause)element;
-						var sourceT   = (SqlTable)ConvertInternal(output.SourceTable);
-						var insertedT = (SqlTable)ConvertInternal(output.InsertedTable);
-						var deletedT  = (SqlTable)ConvertInternal(output.DeletedTable);
-						var outputT   = (SqlTable)ConvertInternal(output.OutputTable);
+						var sourceT   = ConvertInternal(output.SourceTable)   as SqlTable;
+						var insertedT = ConvertInternal(output.InsertedTable) as SqlTable;
+						var deletedT  = ConvertInternal(output.DeletedTable)  as SqlTable;
+						var outputT   = ConvertInternal(output.OutputTable)   as SqlTable;
 						var outputQ   = output.OutputQuery != null ? (SelectQuery)ConvertInternal(output.OutputQuery) : null;
 
 						if (

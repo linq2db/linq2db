@@ -939,6 +939,159 @@ namespace LinqToDB.SqlProvider
 			return expression;
 		}
 
+		static SqlPredicate.Operator InvertOperator(SqlPredicate.Operator op, bool preserveEqual)
+		{
+			switch (op)
+			{
+				case SqlPredicate.Operator.Equal          : return preserveEqual ? op : SqlPredicate.Operator.NotEqual;
+				case SqlPredicate.Operator.NotEqual       : return preserveEqual ? op : SqlPredicate.Operator.Equal;
+				case SqlPredicate.Operator.Greater        : return SqlPredicate.Operator.LessOrEqual;
+				case SqlPredicate.Operator.NotLess        :
+				case SqlPredicate.Operator.GreaterOrEqual : return preserveEqual ? SqlPredicate.Operator.LessOrEqual : SqlPredicate.Operator.Less;
+				case SqlPredicate.Operator.Less           : return SqlPredicate.Operator.GreaterOrEqual;
+				case SqlPredicate.Operator.NotGreater     :
+				case SqlPredicate.Operator.LessOrEqual    : return preserveEqual ? SqlPredicate.Operator.GreaterOrEqual : SqlPredicate.Operator.Greater;
+				default: throw new InvalidOperationException();
+			}
+		}
+
+		ISqlPredicate OptimizeCase(SqlPredicate.ExprExpr expr, IReadOnlyParameterValues? parameterValues)
+		{
+			SqlFunction? func;
+			var valueFirst = expr.Expr1.TryEvaluateExpression(parameterValues, out var value);
+			var isValue    = valueFirst;
+			if (valueFirst)
+				func = expr.Expr2 as SqlFunction;
+			else
+			{
+				func = expr.Expr1 as SqlFunction;
+				isValue = expr.Expr2.TryEvaluateExpression(parameterValues, out value);
+			}	
+
+			if (isValue && func != null && func.Name == "CASE")
+			{
+				if (value is int n && func.Parameters.Length == 5)
+				{
+					if (func.Parameters[0] is SqlSearchCondition c1 && c1.Conditions.Count == 1 &&
+					    func.Parameters[1].TryEvaluateExpression(parameterValues, out var value1) && value1 is int i1 &&
+					    func.Parameters[2] is SqlSearchCondition c2 && c2.Conditions.Count == 1 &&
+					    func.Parameters[3].TryEvaluateExpression(parameterValues, out var value2) && value2 is int i2 &&
+					    func.Parameters[4].TryEvaluateExpression(parameterValues, out var value3) && value3 is int i3)
+					{
+						if (c1.Conditions[0].Predicate is SqlPredicate.ExprExpr ee1 &&
+						    c2.Conditions[0].Predicate is SqlPredicate.ExprExpr ee2 &&
+						    ee1.Expr1.Equals(ee2.Expr1) && ee1.Expr2.Equals(ee2.Expr2))
+						{
+							int e = 0, g = 0, l = 0;
+
+							if (ee1.Operator == SqlPredicate.Operator.Equal   || ee2.Operator == SqlPredicate.Operator.Equal)   e = 1;
+							if (ee1.Operator == SqlPredicate.Operator.Greater || ee2.Operator == SqlPredicate.Operator.Greater) g = 1;
+							if (ee1.Operator == SqlPredicate.Operator.Less    || ee2.Operator == SqlPredicate.Operator.Less)    l = 1;
+
+							if (e + g + l == 2)
+							{
+								var n1 = Compare(valueFirst ? n : i1, valueFirst ? i1 : n, expr.Operator) ? 1 : 0;
+								var n2 = Compare(valueFirst ? n : i2, valueFirst ? i2 : n, expr.Operator) ? 1 : 0;
+								var n3 = Compare(valueFirst ? n : i3, valueFirst ? i3 : n, expr.Operator) ? 1 : 0;
+
+								if (n1 + n2 + n3 == 1)
+								{
+									if (n1 == 1) return ee1;
+									if (n2 == 1) return ee2;
+
+									return 
+										new SqlPredicate.ExprExpr(
+											ee1.Expr1,
+											e == 0 ? SqlPredicate.Operator.Equal :
+											g == 0 ? SqlPredicate.Operator.Greater :
+													 SqlPredicate.Operator.Less,
+											ee1.Expr2, null);
+								}
+
+								//	CASE
+								//		WHEN [p].[FirstName] > 'John'
+								//			THEN 1
+								//		WHEN [p].[FirstName] = 'John'
+								//			THEN 0
+								//		ELSE -1
+								//	END <= 0
+								if (ee1.Operator == SqlPredicate.Operator.Greater && i1 == 1 &&
+									ee2.Operator == SqlPredicate.Operator.Equal   && i2 == 0 &&
+									i3 == -1 && n == 0)
+								{
+									return new SqlPredicate.ExprExpr(
+											ee1.Expr1,
+											valueFirst ? InvertOperator(expr.Operator, true) : expr.Operator,
+											ee1.Expr2, null);
+								}
+							}
+						}
+					}
+				}
+				else if (value is bool bv && func.Parameters.Length == 3)
+				{
+					if (func.Parameters[0] is SqlSearchCondition c1 && c1.Conditions.Count == 1 &&
+					    func.Parameters[1].TryEvaluateExpression(parameterValues, out var v1) && v1 is bool bv1  &&
+					    func.Parameters[2].TryEvaluateExpression(parameterValues, out var v2) && v2 is bool bv2)
+					{
+						if (bv == bv1 && expr.Operator == SqlPredicate.Operator.Equal ||
+							bv != bv1 && expr.Operator == SqlPredicate.Operator.NotEqual)
+						{
+							return c1;
+						}
+
+						if (bv == bv2 && expr.Operator == SqlPredicate.Operator.NotEqual ||
+							bv != bv1 && expr.Operator == SqlPredicate.Operator.Equal)
+						{
+							if (c1.Conditions[0].Predicate is SqlPredicate.ExprExpr ee)
+							{
+								return (ISqlPredicate)ee.Invert();
+							}
+
+							var sc = new SqlSearchCondition();
+
+							sc.Conditions.Add(new SqlCondition(true, c1));
+
+							return sc;
+						}
+					}
+				}
+				else if (expr.Operator == SqlPredicate.Operator.Equal && func.Parameters.Length == 3)
+				{
+					if (func.Parameters[0] is SqlSearchCondition sc &&
+					    func.Parameters[1].TryEvaluateExpression(parameterValues, out var v1) &&
+					    func.Parameters[2].TryEvaluateExpression(parameterValues, out var v2))
+					{
+						if (Equals(value, v1))
+							return sc;
+
+						if (Equals(value, v2) && !sc.CanBeNull)
+							return new SqlPredicate.NotExpr(sc, true, Precedence.LogicalNegation);
+					}
+				}
+			}
+
+			return expr;
+		}
+
+		static bool Compare(int v1, int v2, SqlPredicate.Operator op)
+		{
+			switch (op)
+			{
+				case SqlPredicate.Operator.Equal:           return v1 == v2;
+				case SqlPredicate.Operator.NotEqual:        return v1 != v2;
+				case SqlPredicate.Operator.Greater:         return v1 >  v2;
+				case SqlPredicate.Operator.NotLess:
+				case SqlPredicate.Operator.GreaterOrEqual:  return v1 >= v2;
+				case SqlPredicate.Operator.Less:            return v1 <  v2;
+				case SqlPredicate.Operator.NotGreater:
+				case SqlPredicate.Operator.LessOrEqual:     return v1 <= v2;
+			}
+
+			throw new InvalidOperationException();
+		}
+
+
 		public virtual ISqlPredicate OptimizePredicate(ISqlPredicate predicate, IReadOnlyParameterValues? parameterValues)
 		{
 			// Avoiding infinite recursion
@@ -997,6 +1150,19 @@ namespace LinqToDB.SqlProvider
 							}
 						}
 					}
+
+					switch (expr.Operator)
+					{
+						case SqlPredicate.Operator.Equal          :
+						case SqlPredicate.Operator.NotEqual       :
+						case SqlPredicate.Operator.Greater        :
+						case SqlPredicate.Operator.GreaterOrEqual :
+						case SqlPredicate.Operator.Less           :
+						case SqlPredicate.Operator.LessOrEqual    :
+							predicate = OptimizeCase(expr, parameterValues);
+							break;
+					}
+
 
 					break;
 				}
@@ -2080,7 +2246,8 @@ namespace LinqToDB.SqlProvider
 
 		#region Optimizing Statement
 
-		public IQueryElement OptimizeElements(IQueryElement root, IReadOnlyParameterValues? parameterValues)
+		public T OptimizeElements<T>(T root, IReadOnlyParameterValues? parameterValues)
+			where T : class, IQueryElement
 		{
 			var newElement = ConvertVisitor.ConvertAll(root, (visitor, e) =>
 			{
@@ -2287,9 +2454,11 @@ namespace LinqToDB.SqlProvider
 
 		public SqlStatement ConvertStatement(MappingSchema mappingSchema, SqlStatement statement, IReadOnlyParameterValues? parameterValues)
 		{
-			statement = (SqlStatement)ConvertElements(mappingSchema, statement, parameterValues);
-			statement = FinalizeStatement(statement, parameterValues);
-			return statement;
+			var newStatement = (SqlStatement)ConvertElements(mappingSchema, statement, parameterValues);
+			if (!ReferenceEquals(newStatement, statement))
+				newStatement = OptimizeStatement(newStatement, parameterValues);
+			newStatement = FinalizeStatement(newStatement, parameterValues);
+			return newStatement;
 		}
 
 		public virtual SqlStatement FinalizeStatement(SqlStatement statement, IReadOnlyParameterValues? parameterValues)

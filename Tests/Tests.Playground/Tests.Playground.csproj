@@ -9,17 +9,22 @@
 
 	<ItemGroup>
 		<Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
+		<Compile Include="..\Linq\Linq\AllAnyTests.cs" Link="AllAnyTests.cs" />
 		<Compile Include="..\Linq\Linq\CompileTests.cs" Link="CompileTests.cs" />
 		<Compile Include="..\Linq\Linq\CompileTestsAsync.cs" Link="CompileTestsAsync.cs" />
 		<Compile Include="..\Linq\Linq\ComplexTests2.cs" Link="ComplexTests2.cs" />
+		<Compile Include="..\Linq\Linq\ConcatUnionTests.cs" Link="ConcatUnionTests.cs" />
 		<Compile Include="..\Linq\Linq\CteTests.cs" Link="CteTests.cs" />
+		<Compile Include="..\Linq\Linq\DateTimeFunctionsTests.cs" Link="DateTimeFunctionsTests.cs" />
 		<Compile Include="..\Linq\Linq\EnumMappingTests.cs" Link="EnumMappingTests.cs" />
 		<Compile Include="..\Linq\Linq\GroupByTests.cs" Link="GroupByTests.cs" />
 		<Compile Include="..\Linq\Linq\IdlTests.cs" Link="IdlTests.cs" />
 		<Compile Include="..\Linq\Linq\IssueTests.cs" Link="IssueTests.cs" />
 		<Compile Include="..\Linq\Linq\JoinTests.cs" Link="JoinTests.cs" />
 		<Compile Include="..\Linq\Linq\MappingTests.cs" Link="MappingTests.cs" />
+		<Compile Include="..\Linq\Linq\MathFunctionTests.cs" Link="MathFunctionTests.cs" />
 		<Compile Include="..\Linq\Linq\OrderByDistinctTests.cs" Link="OrderByDistinctTests.cs" />
+		<Compile Include="..\Linq\Linq\ProjectionTests.cs" Link="ProjectionTests.cs" />
 		<Compile Include="..\Linq\Linq\SelectTests.cs" Link="SelectTests.cs" />
 		<Compile Include="..\Linq\Linq\SetTests.cs" Link="SetTests.cs" />
 		<Compile Include="..\Linq\Linq\StringFunctionTests.cs" Link="StringFunctionTests.cs" />
@@ -29,30 +34,8 @@
 		<Compile Include="..\Linq\Update\DeleteTests.cs" Link="DeleteTests.cs" />
 		<Compile Include="..\Linq\Update\DeleteWithOutputTests.cs" Link="DeleteWithOutputTests.cs" />
 		<Compile Include="..\Linq\Update\InsertTests.cs" Link="InsertTests.cs" />
-		<Compile Include="..\Linq\Update\MergeTests.ApiParametersValidation.cs" Link="MergeTests.ApiParametersValidation.cs" />
-		<Compile Include="..\Linq\Update\MergeTests.Caching.cs" Link="MergeTests.Caching.cs" />
-		<Compile Include="..\Linq\Update\MergeTests.CommandValidation.cs" Link="MergeTests.CommandValidation.cs" />
-		<Compile Include="..\Linq\Update\MergeTests.cs" Link="MergeTests.cs" />
-		<Compile Include="..\Linq\Update\MergeTests.DynamicColumns.cs" Link="MergeTests.DynamicColumns.cs" />
-		<Compile Include="..\Linq\Update\MergeTests.EmptySource.cs" Link="MergeTests.EmptySource.cs" />
-		<Compile Include="..\Linq\Update\MergeTests.Hints.cs" Link="MergeTests.Hints.cs" />
-		<Compile Include="..\Linq\Update\MergeTests.Issues.cs" Link="MergeTests.Issues.cs" />
-		<Compile Include="..\Linq\Update\MergeTests.OldApiMigratedTests.cs" Link="MergeTests.OldApiMigratedTests.cs" />
-		<Compile Include="..\Linq\Update\MergeTests.Operations.Associations.cs" Link="MergeTests.Operations.Associations.cs" />
-		<Compile Include="..\Linq\Update\MergeTests.Operations.Combined.cs" Link="MergeTests.Operations.Combined.cs" />
-		<Compile Include="..\Linq\Update\MergeTests.Operations.Delete.cs" Link="MergeTests.Operations.Delete.cs" />
-		<Compile Include="..\Linq\Update\MergeTests.Operations.DeleteBySource.cs" Link="MergeTests.Operations.DeleteBySource.cs" />
-		<Compile Include="..\Linq\Update\MergeTests.Operations.IdentityInsert.cs" Link="MergeTests.Operations.IdentityInsert.cs" />
-		<Compile Include="..\Linq\Update\MergeTests.Operations.Insert.cs" Link="MergeTests.Operations.Insert.cs" />
-		<Compile Include="..\Linq\Update\MergeTests.Operations.LoadTests.cs" Link="MergeTests.Operations.LoadTests.cs" />
-		<Compile Include="..\Linq\Update\MergeTests.Operations.Parameters.cs" Link="MergeTests.Operations.Parameters.cs" />
-		<Compile Include="..\Linq\Update\MergeTests.Operations.Update.cs" Link="MergeTests.Operations.Update.cs" />
-		<Compile Include="..\Linq\Update\MergeTests.Operations.UpdateBySource.cs" Link="MergeTests.Operations.UpdateBySource.cs" />
-		<Compile Include="..\Linq\Update\MergeTests.Operations.UpdateWithDelete.cs" Link="MergeTests.Operations.UpdateWithDelete.cs" />
-		<Compile Include="..\Linq\Update\MergeTests.TargetSourceOn.cs" Link="MergeTests.TargetSourceOn.cs" />
-		<Compile Include="..\Linq\Update\MergeTests.Types.cs" Link="MergeTests.Types.cs" />
 		<Compile Include="..\Linq\Update\UpdateTests.cs" Link="UpdateTests.cs" />
-		<Compile Include="..\Linq\UserTests\Issue1238Tests.cs" Link="Issue1238Tests.cs" />
+		<Compile Include="..\Linq\UserTests\IndexOutOfRangeInUnions.cs" Link="IndexOutOfRangeInUnions.cs" />
 		<Compile Include="..\Linq\UserTests\Issue1925Tests.cs" Link="Issue1925Tests.cs" />
 		<Compile Include="..\Linq\UserTests\Issue2478Tests.cs" Link="Issue2478Tests.cs" />
 		<Compile Include="..\Linq\UserTests\Issue358Tests.cs" Link="Issue358Tests.cs" />
