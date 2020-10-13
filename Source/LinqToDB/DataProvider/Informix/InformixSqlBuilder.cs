@@ -140,7 +140,7 @@ namespace LinqToDB.DataProvider.Informix
 				case DataType.Date       : StringBuilder.Append("DATETIME YEAR TO DAY");      return;
 				case DataType.SByte      :
 				case DataType.Byte       : StringBuilder.Append("SmallInt");                  return;
-				case DataType.SmallMoney : StringBuilder.Append("Decimal(10,4)");             return;
+				case DataType.SmallMoney : StringBuilder.Append("Decimal(10, 4)");            return;
 				case DataType.Decimal    :
 					StringBuilder.Append("Decimal");
 					if (type.Type.Precision != null && type.Type.Scale != null)
@@ -234,7 +234,7 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			AppendIndent();
 			StringBuilder.Append("PRIMARY KEY (");
-			StringBuilder.Append(fieldNames.Aggregate((f1,f2) => f1 + ", " + f2));
+			StringBuilder.Append(fieldNames.Aggregate((f1,f2) => f1 + InlineComma + f2));
 			StringBuilder.Append(")");
 		}
 

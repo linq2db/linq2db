@@ -37,7 +37,7 @@ namespace LinqToDB.DataProvider.Access
 				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName!);
 				StringBuilder.Append(" ALTER COLUMN ");
 				Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
-				StringBuilder.AppendLine(" COUNTER(1,1)");
+				StringBuilder.AppendLine(" COUNTER(1, 1)");
 			}
 			else
 			{
@@ -385,7 +385,7 @@ namespace LinqToDB.DataProvider.Access
 		{
 			AppendIndent();
 			StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY CLUSTERED (");
-			StringBuilder.Append(fieldNames.Aggregate((f1,f2) => f1 + ", " + f2));
+			StringBuilder.Append(fieldNames.Aggregate((f1,f2) => f1 + InlineComma + f2));
 			StringBuilder.Append(")");
 		}
 

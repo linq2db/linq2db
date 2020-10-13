@@ -248,10 +248,10 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected override string? GetProviderTypeName(IDbDataParameter parameter)
 		{
-			if (parameter.DbType == DbType.Decimal && parameter.Value is decimal)
+			if (parameter.DbType == DbType.Decimal && parameter.Value is decimal decValue)
 			{
-				var d = new SqlDecimal((decimal)parameter.Value);
-				return "(" + d.Precision + "," + d.Scale + ")";
+				var d = new SqlDecimal(decValue);
+				return "(" + d.Precision + ", " + d.Scale + ")";
 			}
 
 			if (Provider != null)

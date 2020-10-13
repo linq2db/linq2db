@@ -109,8 +109,8 @@ namespace LinqToDB.DataProvider.Firebird
 					break;
 				case DataType.SByte         :
 				case DataType.Byte          : StringBuilder.Append("SmallInt");        break;
-				case DataType.Money         : StringBuilder.Append("Decimal(18,4)");   break;
-				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10,4)");   break;
+				case DataType.Money         : StringBuilder.Append("Decimal(18, 4)");  break;
+				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10, 4)");  break;
 				case DataType.DateTime2     :
 				case DataType.SmallDateTime :
 				case DataType.DateTime      : StringBuilder.Append("TimeStamp");       break;

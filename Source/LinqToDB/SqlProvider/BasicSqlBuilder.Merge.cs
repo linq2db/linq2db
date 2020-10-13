@@ -191,7 +191,7 @@ namespace LinqToDB.SqlProvider
 				foreach (var field in mergeSource.SourceFields)
 				{
 					if (!first)
-						StringBuilder.AppendLine(", ");
+						StringBuilder.AppendLine(Comma);
 
 					first = false;
 					AppendIndent();
@@ -259,7 +259,7 @@ namespace LinqToDB.SqlProvider
 				{
 					var value = row[j];
 					if (j > 0)
-						StringBuilder.Append(",");
+						StringBuilder.Append(InlineComma);
 
 					if (MergeSourceValueTypeRequired(source, rows, i, j))
 						BuildTypedExpression(columnTypes[j], value);
@@ -294,7 +294,7 @@ namespace LinqToDB.SqlProvider
 				var field = merge.Source.SourceFields[i];
 
 				if (i > 0)
-					StringBuilder.Append(", ");
+					StringBuilder.Append(InlineComma);
 
 				if (MergeSourceValueTypeRequired(merge.Source.SourceEnumerable!, Array<ISqlExpression[]>.Empty, -1, i))
 					BuildTypedExpression(new SqlDataType(field), new SqlValue(field.Type!.Value, null));
@@ -341,7 +341,7 @@ namespace LinqToDB.SqlProvider
 				var row = rows[i];
 
 				if (i != 0)
-					StringBuilder.AppendLine(",");
+					StringBuilder.AppendLine(Comma);
 				else
 					StringBuilder.AppendLine("\tVALUES");
 
@@ -350,7 +350,7 @@ namespace LinqToDB.SqlProvider
 				{
 					var value = row[j];
 					if (j > 0)
-						StringBuilder.Append(",");
+						StringBuilder.Append(InlineComma);
 
 					if (MergeSourceValueTypeRequired(source, rows, i, j))
 						BuildTypedExpression(columnTypes[j], value);

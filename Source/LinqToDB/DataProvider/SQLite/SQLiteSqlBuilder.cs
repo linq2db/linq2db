@@ -59,7 +59,7 @@ namespace LinqToDB.DataProvider.SQLite
 			return "OFFSET {0}";
 		}
 
-		public override bool IsNestedJoinSupported { get { return false; } }
+		public override bool IsNestedJoinSupported => false;
 
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
@@ -124,7 +124,7 @@ namespace LinqToDB.DataProvider.SQLite
 			{
 				AppendIndent();
 				StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY (");
-				StringBuilder.Append(fieldNames.Aggregate((f1,f2) => f1 + ", " + f2));
+				StringBuilder.Append(fieldNames.Aggregate((f1,f2) => f1 + InlineComma + f2));
 				StringBuilder.Append(")");
 			}
 		}
