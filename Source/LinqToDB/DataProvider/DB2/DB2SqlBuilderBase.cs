@@ -89,7 +89,7 @@ namespace LinqToDB.DataProvider.DB2
 				sb.AppendLine();
 				AppendIndent().AppendLine("FROM");
 				AppendIndent().AppendLine("\tNEW TABLE");
-				AppendIndent().AppendLine("\t(");
+				AppendIndent().Append("\t").AppendLine(OpenParens);
 			}
 
 			base.BuildSql(commandNumber, statement, sb, indent, skipAlias);

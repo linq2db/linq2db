@@ -84,18 +84,28 @@ namespace LinqToDB.SqlProvider
 
 		#endregion
 
-		#region BuildSql
-		// some providers could define different separator, e.g. DB2 iSeries OleDb provider needs ", " as separator
+		#region Formatting
 		/// <summary>
 		/// Inline comma separator.
 		/// Default value: <code>", "</code>
 		/// </summary>
 		protected virtual string InlineComma => ", ";
+
+		// some providers could define different separator, e.g. DB2 iSeries OleDb provider needs ", " as separator
 		/// <summary>
 		/// End-of-line comma separator.
 		/// Default value: <code>","</code>
 		/// </summary>
 		protected virtual string Comma => ",";
+
+		/// <summary>
+		/// End-of-line open parentheses element.
+		/// Default value: <code>"("</code>
+		/// </summary>
+		protected virtual string OpenParens => "(";
+		#endregion
+
+		#region BuildSql
 
 		public void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, int startIndent = 0)
 		{
@@ -253,7 +263,7 @@ namespace LinqToDB.SqlProvider
 				StringBuilder.Length--;
 
 			StringBuilder.AppendLine();
-			AppendIndent().AppendLine("(");
+			AppendIndent().AppendLine(OpenParens);
 
 			++Indent;
 
@@ -334,7 +344,7 @@ namespace LinqToDB.SqlProvider
 			BuildInsertClause(statement, insertClause, addAlias);
 
 			AppendIndent().AppendLine("SELECT * FROM");
-			AppendIndent().AppendLine("(");
+			AppendIndent().AppendLine(OpenParens);
 
 			++Indent;
 
@@ -444,7 +454,7 @@ namespace LinqToDB.SqlProvider
 				if (cte.Fields!.Length > 3)
 				{
 					StringBuilder.AppendLine();
-					AppendIndent(); StringBuilder.AppendLine("(");
+					AppendIndent(); StringBuilder.AppendLine(OpenParens);
 					++Indent;
 
 					var firstField = true;
@@ -483,7 +493,7 @@ namespace LinqToDB.SqlProvider
 				AppendIndent();
 				StringBuilder.AppendLine("AS");
 				AppendIndent();
-				StringBuilder.AppendLine("(");
+				StringBuilder.AppendLine(OpenParens);
 
 				Indent++;
 
@@ -695,7 +705,7 @@ namespace LinqToDB.SqlProvider
 			{
 				StringBuilder.AppendLine();
 
-				AppendIndent().AppendLine("(");
+				AppendIndent().AppendLine(OpenParens);
 
 				Indent++;
 
@@ -721,7 +731,7 @@ namespace LinqToDB.SqlProvider
 				if (statement.QueryType == QueryType.InsertOrUpdate || statement.EnsureQuery().From.Tables.Count == 0)
 				{
 					AppendIndent().AppendLine("VALUES");
-					AppendIndent().AppendLine("(");
+					AppendIndent().AppendLine(OpenParens);
 
 					Indent++;
 
@@ -791,7 +801,7 @@ namespace LinqToDB.SqlProvider
 
 			StringBuilder.Append(") ").Append(sourceAlias).AppendLine(" ON");
 
-			AppendIndent().AppendLine("(");
+			AppendIndent().AppendLine(OpenParens);
 
 			Indent++;
 
@@ -905,7 +915,7 @@ namespace LinqToDB.SqlProvider
 			}
 			else
 			{
-				AppendIndent().AppendLine("IF NOT EXISTS(");
+				AppendIndent().Append("IF NOT EXISTS").AppendLine(OpenParens);
 				Indent++;
 				AppendIndent().AppendLine("SELECT 1 ");
 				BuildFromClause(insertOrUpdate, insertOrUpdate.SelectQuery);
@@ -1059,7 +1069,7 @@ namespace LinqToDB.SqlProvider
 			BuildStartCreateTableStatement(createTable);
 
 			StringBuilder.AppendLine();
-			AppendIndent().Append("(");
+			AppendIndent().Append(OpenParens);
 			Indent++;
 
 			// Order columns by the Order field. Positive first then negative.
@@ -1367,7 +1377,7 @@ namespace LinqToDB.SqlProvider
 					break;
 
 				case QueryElementType.SqlQuery        :
-					StringBuilder.Append("(").AppendLine();
+					StringBuilder.AppendLine(OpenParens);
 					BuildSqlBuilder((SelectQuery)table, Indent + 1, false);
 					AppendIndent().Append(")");
 					break;
@@ -1385,8 +1395,8 @@ namespace LinqToDB.SqlProvider
 					var multiLine         = appendParentheses || rawSqlTable.SQL.Contains('\n');
 
 					if (appendParentheses)
-						StringBuilder.Append("(");
-					if (multiLine)
+						StringBuilder.AppendLine(OpenParens);
+					else if (multiLine)
 						StringBuilder.AppendLine();
 
 					var parameters = rawSqlTable.Parameters;
@@ -1590,9 +1600,9 @@ namespace LinqToDB.SqlProvider
 			}
 
 			if (groupingType != GroupingType.Default)
-				StringBuilder.Append(" (");
-
-			StringBuilder.AppendLine();
+				StringBuilder.Append(" ").AppendLine(OpenParens);
+			else
+				StringBuilder.AppendLine();
 
 			Indent++;
 
@@ -2345,8 +2355,9 @@ namespace LinqToDB.SqlProvider
 						var hasParentheses = checkParentheses && StringBuilder[StringBuilder.Length - 1] == '(';
 
 						if (!hasParentheses)
-							StringBuilder.Append("(");
-						StringBuilder.AppendLine();
+							StringBuilder.AppendLine(OpenParens);
+						else
+							StringBuilder.AppendLine();
 
 						BuildSqlBuilder((SelectQuery)expr, Indent + 1, BuildStep != Step.FromClause);
 
@@ -2754,16 +2765,16 @@ namespace LinqToDB.SqlProvider
 
 			var aliases = GetTempAliases(3, "t");
 
-			AppendIndent().Append("SELECT *").AppendLine();
-			AppendIndent().Append("FROM").    AppendLine();
-			AppendIndent().Append("(").       AppendLine();
+			AppendIndent().AppendLine("SELECT *");
+			AppendIndent().AppendLine("FROM");
+			AppendIndent().AppendLine(OpenParens);
 			Indent++;
 
 			AppendIndent().Append("SELECT TOP ");
 			BuildExpression(selectQuery.Select.TakeValue!);
-			StringBuilder.Append(" *").   AppendLine();
-			AppendIndent().Append("FROM").AppendLine();
-			AppendIndent().Append("(").   AppendLine();
+			StringBuilder .AppendLine(" *");
+			AppendIndent().AppendLine("FROM");
+			AppendIndent().AppendLine(OpenParens);
 			Indent++;
 
 			if (selectQuery.OrderBy.IsEmpty)
@@ -2777,9 +2788,9 @@ namespace LinqToDB.SqlProvider
 				else
 					BuildExpression(Add<int>(selectQuery.Select.SkipValue!, selectQuery.Select.TakeValue!));
 
-				StringBuilder.Append(" *").   AppendLine();
-				AppendIndent().Append("FROM").AppendLine();
-				AppendIndent().Append("(").   AppendLine();
+				StringBuilder .AppendLine(" *");
+				AppendIndent().AppendLine("FROM");
+				AppendIndent().AppendLine(OpenParens);
 				Indent++;
 			}
 

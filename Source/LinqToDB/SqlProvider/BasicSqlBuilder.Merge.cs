@@ -183,7 +183,7 @@ namespace LinqToDB.SqlProvider
 			if (MergeSupportsColumnAliasesInSource)
 			{
 				StringBuilder.AppendLine();
-				StringBuilder.AppendLine("(");
+				StringBuilder.AppendLine(OpenParens);
 
 				++Indent;
 
@@ -285,7 +285,7 @@ namespace LinqToDB.SqlProvider
 		private void BuildMergeEmptySource(SqlMergeStatement merge)
 		{
 			StringBuilder
-				.AppendLine("(")
+				.AppendLine(OpenParens)
 				.Append("\tSELECT ")
 				;
 

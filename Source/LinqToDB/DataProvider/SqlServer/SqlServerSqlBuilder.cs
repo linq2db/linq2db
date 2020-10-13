@@ -132,7 +132,7 @@ namespace LinqToDB.DataProvider.SqlServer
 						.AppendLine();
 
 					AppendIndent()
-						.AppendLine("(");
+						.AppendLine(OpenParens);
 
 					++Indent;
 
