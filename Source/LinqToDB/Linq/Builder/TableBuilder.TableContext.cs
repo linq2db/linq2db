@@ -281,7 +281,7 @@ namespace LinqToDB.Linq.Builder
 						BuildRecordConstructor (entityDescriptor, objectType, index, true) :
 					IsAnonymous(objectType) ?
 						BuildRecordConstructor (entityDescriptor, objectType, index, false) :
-						BuildDefaultConstructor(objectType, index);
+						BuildDefaultConstructor(entityDescriptor, objectType, index);
 
 				expr = BuildCalculatedColumns(entityDescriptor, expr);
 				expr = ProcessExpression(expr);
@@ -380,15 +380,14 @@ namespace LinqToDB.Linq.Builder
 				return Expression.Block(new[] { variable }, expressions);
 			}
 
-			Expression BuildDefaultConstructor(Type objectType, Tuple<int, SqlField?>[] index)
+			Expression BuildDefaultConstructor(EntityDescriptor entityDescriptor, Type objectType, Tuple<int, SqlField?>[] index)
 			{
 				var members =
 				(
 					from idx in index
 					where idx.Item1 >= 0 && idx.Item2 != null
-					let cd = idx.Item2.ColumnDescriptor
+					from cd in entityDescriptor.Columns.Where(c => c.ColumnName == idx.Item2.PhysicalName)
 					where
-						cd != null &&
 						(cd.Storage != null ||
 						 !(cd.MemberAccessor.MemberInfo is PropertyInfo info) ||
 						 info.GetSetMethod(true) != null)
@@ -542,8 +541,7 @@ namespace LinqToDB.Linq.Builder
 					(
 						from idx in index
 						where idx.Item1 >= 0 && idx.Item2 != null
-						let cd = idx.Item2.ColumnDescriptor
-						where cd != null
+						from cd in entityDescriptor.Columns.Where(c => c.ColumnName == idx.Item2.PhysicalName)
 						select new ColumnInfo
 						{
 							IsComplex  = cd.MemberAccessor.IsComplex,
