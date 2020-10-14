@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
@@ -20,8 +21,8 @@ namespace Tests.UserTests
 		{
 			[PrimaryKey, NotNull] public int Id { get; set; } // int
 			[Column, NotNull] public string Name { get; set; } = null!; // nvarchar(50)
-			[Column, NotNull] public TimeSpan TestSpan { get; set; }
-			[Column, NotNull] public AA TestEnum { get; set; }
+			[Column(DataType = DataType.Int64), NotNull] public TimeSpan TestSpan { get; set; }
+			[Column(DataType = DataType.VarChar), NotNull] public AA TestEnum { get; set; }
 		}
 
 		[Test]
@@ -61,9 +62,10 @@ namespace Tests.UserTests
 			};
 
 			using (var db = GetDataContext(context, mappingSchema))
-			using (db.CreateLocalTable(items))
+			using (var lt = db.CreateLocalTable(items))
 			{
-				
+				lt.Delete();
+				db.Insert(items[0]);
 			}
 		}
 	}
