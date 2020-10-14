@@ -8,7 +8,7 @@ using LinqToDB;
 using LinqToDB.Expressions;
 using NUnit.Framework;
 
-namespace Tests
+namespace Tests.TypeMapping
 {
 	namespace Dynamic
 	{

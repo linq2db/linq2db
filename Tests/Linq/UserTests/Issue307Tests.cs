@@ -49,6 +49,8 @@ namespace Tests.UserTests
 		[Test]
 		public void Issue307Test([DataSources] string context)
 		{
+			ResetPersonIdentity(context);
+
 			using (var db = GetDataContext(context))
 			using (new DeletePerson(db))
 			{

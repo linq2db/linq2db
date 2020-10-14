@@ -5,7 +5,7 @@ using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
-namespace Tests.Playground
+namespace Tests.UserTests
 {
 	[TestFixture]
 	public class Issue1925Tests : TestBase
@@ -19,7 +19,7 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void Issue1925Test([IncludeDataSources(TestProvName.AllAccess, ProviderName.SqlServer, ProviderName.Sybase)]  string context)
+		public void Issue1925Test([IncludeDataSources(TestProvName.AllAccess, TestProvName.AllSqlServer, ProviderName.Sybase)]  string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<SampleClass>())

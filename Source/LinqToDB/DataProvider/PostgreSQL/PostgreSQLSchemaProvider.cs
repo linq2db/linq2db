@@ -577,7 +577,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					}
 				}
 			}
-						
+
 			return foundType;
 		}
 

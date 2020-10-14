@@ -59,6 +59,7 @@ namespace Tests.Linq
 		[Test]
 		public void GetDate([DataSources] string context)
 		{
+			using (new DisableBaseline("Server-side date generation test"))
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where p.ID == 1 select new { Now = Sql.AsSql(Sql.GetDate()) };
@@ -69,6 +70,7 @@ namespace Tests.Linq
 		[Test]
 		public void CurrentTimestamp([DataSources] string context)
 		{
+			using (new DisableBaseline("Server-side date generation test"))
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where p.ID == 1 select new { Now = Sql.CurrentTimestamp };
@@ -90,6 +92,7 @@ namespace Tests.Linq
 				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
 			string context)
 		{
+			using (new DisableBaseline("Server-side date generation test"))
 			using (var db = GetDataContext(context))
 			{
 				var dbUtcNow = db.Select(() => Sql.CurrentTimestampUtc);
@@ -106,10 +109,29 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void CurrentTzTimestamp(
+			[IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)]
+			string context)
+		{
+			using (new DisableBaseline("Server-side date generation test"))
+			using (var db = GetDataContext(context))
+			{
+				var dbTzNow = db.Select(() => Sql.CurrentTzTimestamp);
+
+				var now   = DateTimeOffset.Now;
+				var delta = now - dbTzNow;
+				Assert.IsTrue(
+					delta.Between(TimeSpan.FromSeconds(-120), TimeSpan.FromSeconds(120)),
+					$"{now}, {dbTzNow}, {delta}");
+			}
+		}
+
+		[Test]
 		public void CurrentTimestampUtcClientSideParameter(
 			[IncludeDataSources(true, TestProvName.AllAccess, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SqlCe)]
 			string context)
 		{
+			using (new DisableBaseline("Server-side date generation test"))
 			using (var db = GetDataContext(context))
 			{
 				var dbUtcNow = db.Select(() => Sql.CurrentTimestampUtc);
@@ -141,6 +163,7 @@ namespace Tests.Linq
 		[Test]
 		public void Now([DataSources] string context)
 		{
+			using (new DisableBaseline("Server-side date generation test"))
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where p.ID == 1 select new { DateTime.Now };
@@ -1441,6 +1464,7 @@ namespace Tests.Linq
 		[Test]
 		public void GetDateTest1([DataSources] string context)
 		{
+			using (new DisableBaseline("Server-side date generation test"))
 			using (var db = GetDataContext(context))
 			{
 				var dates =

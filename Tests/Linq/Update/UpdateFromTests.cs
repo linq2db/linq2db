@@ -3,7 +3,7 @@ using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
-namespace Tests.Update
+namespace Tests.xUpdate
 {
 	[TestFixture]
 	public class UpdateFromTests : TestBase
@@ -179,7 +179,6 @@ namespace Tests.Update
 		[Test]
 		public void UpdateTestJoinSkip(
 			[IncludeDataSources(
-				ProviderName.SqlServer,
 				TestProvName.AllSqlServer2005Plus,
 				TestProvName.AllPostgreSQL)]
 			string context)

@@ -7,7 +7,7 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
-namespace Tests.ComplexTests2
+namespace Tests.Linq
 {
 	using Model;
 
@@ -235,6 +235,7 @@ namespace Tests.ComplexTests2
 		{
 			var ms = SetMappings();
 
+			using (new DisableBaseline("TODO: debug reason for inconsistent column order"))
 			using (var db = GetDataContext(context, ms))
 			{
 				try
@@ -255,6 +256,7 @@ namespace Tests.ComplexTests2
 		{
 			var ms = SetMappings();
 
+			using (new DisableBaseline("TODO: debug reason for inconsistent column order"))
 			using (var db = GetDataContext(context, ms))
 			{
 				try
@@ -275,6 +277,7 @@ namespace Tests.ComplexTests2
 		{
 			var ms = SetMappings();
 
+			using (new DisableBaseline("TODO: debug reason for inconsistent column order"))
 			using (var db = GetDataContext(context, ms))
 			{
 				try
@@ -302,6 +305,7 @@ namespace Tests.ComplexTests2
 		{
 			var ms = SetMappings();
 
+			using (new DisableBaseline("TODO: debug reason for inconsistent column order"))
 			using (var db = GetDataContext(context, ms))
 			{
 				try
@@ -324,6 +328,7 @@ namespace Tests.ComplexTests2
 		{
 			var ms = SetMappings();
 
+			using (new DisableBaseline("TODO: debug reason for inconsistent column order"))
 			using (var db = GetDataContext(context, ms))
 			{
 				try
@@ -353,6 +358,7 @@ namespace Tests.ComplexTests2
 		{
 			var ms = SetMappings();
 
+			using (new DisableBaseline("TODO: debug reason for inconsistent column order"))
 			using (var db = GetDataContext(context, ms))
 			{
 				try
@@ -383,6 +389,8 @@ namespace Tests.ComplexTests2
 		[Test]
 		public void TestInsertUsingDerivedObjectUsingAttributes([DataSources] string context)
 		{
+			ResetPersonIdentity(context);
+
 			var ms = SetMappings();
 			using (var db = GetDataContext(context, ms))
 			{
@@ -428,6 +436,7 @@ namespace Tests.ComplexTests2
 		{
 			var ms = SetMappings();
 
+			using (new DisableBaseline("TODO: debug reason for inconsistent column order"))
 			using (var db = GetDataContext(context, ms))
 			{
 				try
@@ -476,6 +485,7 @@ namespace Tests.ComplexTests2
 		{
 			var ms = SetMappings();
 
+			using (new DisableBaseline("TODO: debug reason for inconsistent column order"))
 			using (var db = GetDataContext(context, ms))
 			{
 				try

@@ -112,6 +112,6 @@ namespace LinqToDB.Reflection
 			return _createInstance();
 		}
 
-		public override Type Type { get { return typeof(T); } }
+		public override Type Type => typeof(T);
 	}
 }

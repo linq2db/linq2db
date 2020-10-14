@@ -1,0 +1,523 @@
+parameters:
+  enabled: false
+  experimental: false
+  with_baselines: false
+  test_matrix: []
+
+jobs:
+##############################################################################################
+#  This job runs before tests and ensures we have branch in baselines repository and         #
+#  creates it if it is missing                                                               #
+##############################################################################################
+- job: create_baselines_branch
+  pool:
+    vmImage: 'windows-2019'
+  displayName: 'Create Test Baselines Branch'
+  dependsOn: build_job
+  condition: and(${{ parameters.enabled }}, ${{ parameters.with_baselines }})
+  variables:
+    source_pr_id: $[coalesce(variables['system.pullRequest.pullRequestNumber'], '')]
+
+  steps:
+  - checkout: none
+  - task: PowerShell@2
+    inputs:
+      targetType: 'inline'
+      script: |
+        $prId = "$(source_pr_id)"
+        $orgName = "linq2db"
+        $baselinesRepo = "linq2db.baselines"
+        $baselinesRepoUrl = "https://${Env:GITHUB_TOKEN}@github.com/${orgName}/${baselinesRepo}.git"
+        Write-Host "Source PR ID: ${prId}"
+        if ($prId) {
+            $baselinesBranch = "baselines/pr_${prId}"
+        } else {
+            $baselinesBranch = "baselines/default"
+        }
+        Write-Host "Baselines branch name: ${baselinesBranch}"
+        $output = git ls-remote --heads $baselinesRepoUrl $baselinesBranch
+        Write-Host "Baselines HEAD: ${output}"
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "Baselines HEAD request failed with code ${LASTEXITCODE}"
+            exit 1
+        }
+        $baselinesNewBranch = 0
+        if ($output.Length -lt 40) {
+            Write-Host "Baselines branch not found"
+            Write-Host "Reading baselines repository HEAD hash..."
+            $output = git ls-remote $baselinesRepoUrl HEAD
+            if ($LASTEXITCODE -ne 0) {
+                Write-Host "Failed to read HEAD hash. Error code ${LASTEXITCODE}"
+                exit 1
+            }
+            if ($output.Length -lt 40) {
+                Write-Host "Baselines repo HEAD not found. Last output: ${output}"
+                exit 1
+            }
+            $baslinesHeadHash = ($output -split '\s+')[0]
+            Write-Host "Creating new baselines branch ${baselinesBranch}..."
+            $output = gh api /repos/$orgName/$baselinesRepo/git/refs -i -F ref=refs/heads/$baselinesBranch -F sha=$baslinesHeadHash
+            Write-Host "Create command output: ${output}"
+            if ($LASTEXITCODE -ne 0) {
+                Write-Host "Failed to create branch. Error code ${LASTEXITCODE}"
+                exit 1
+            }
+            if ($output -match "201 Created") {
+                Write-Host "Baselines branch created"
+                $baselinesNewBranch = 1
+            } else {
+                Write-Host "Baselines branch creation failed"
+                exit 1
+            }
+        } else {
+            Write-Host "Baselines branch already exists"
+            $baslinesHeadHash = ($output -split '\s+')[0]
+        }
+        Write-Host "Baselines branch head hash: ${baslinesHeadHash}"
+        # export branch name and hash to pipelines variables
+        echo "##vso[task.setvariable variable=baselines_branch;isOutput=true]${baselinesBranch}"
+        echo "##vso[task.setvariable variable=baselines_head;isOutput=true]${baslinesHeadHash}"
+        echo "##vso[task.setvariable variable=baselines_new_branch;isOutput=true]${baselinesNewBranch}"
+      workingDirectory: '$(System.DefaultWorkingDirectory)'
+    displayName: Checkout test baselines
+    name: baselines_init
+    env:
+      GITHUB_TOKEN: $(BASELINES_GH_PAT)
+
+##############################################################################################
+#  Tests: Windows (NETFX 4.7.2)                                                              #
+#  Windows 2019 (for Win2019 docker images, chocolatey-dependent tests and non-docker tests) #
+##############################################################################################
+- job: test_win_netfx472_job_2019
+  pool:
+    vmImage: 'windows-2019'
+  displayName: 'Tests: Win / NETFX 4.7.2 / '
+  dependsOn: create_baselines_branch
+  condition: ${{ parameters.enabled }}
+  variables:
+    baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
+
+  strategy:
+    matrix:
+      ${{ each test_config in parameters.test_matrix }}:
+        ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_win2019, 'true'), eq(test_config.enable_fw_net472, 'true'), eq(test_config.is_experimental, parameters.experimental)) }}:
+          ${{ test_config.name }}:
+            title: ${{ test_config.title }}
+            config: ${{ test_config.config_win }}
+            script: ${{ test_config.script_win }}
+            psscript: ${{ test_config.psscript_win }}
+
+  steps:
+  - template: test-workflow-windows.yml
+    parameters:
+      isCore: false
+      artifacts: $(netfx472_tests)
+      framework: '.NETFramework,Version=v4.7.2'
+      titleFramework: 'NET472'
+      with_baselines: ${{ parameters.with_baselines }}
+
+#############################################
+#  Tests: Windows (NETFX 4.7.2)             #
+#  Windows 2016 (for Win2016 docker images) #
+#############################################
+- job: test_win_netfx472_job_2016
+  pool:
+    vmImage: 'vs2017-win2016'
+  displayName: 'Tests: Win / NETFX 4.7.2 / '
+  dependsOn: create_baselines_branch
+  condition: ${{ parameters.enabled }}
+  variables:
+    baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
+
+  strategy:
+    matrix:
+      ${{ each test_config in parameters.test_matrix }}:
+        ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_win2016, 'true'), eq(test_config.enable_fw_net472, 'true'), eq(test_config.is_experimental, parameters.experimental)) }}:
+          ${{ test_config.name }}:
+            title: ${{ test_config.title }}
+            config: ${{ test_config.config_win }}
+            script: ${{ test_config.script_win }}
+            psscript: ${{ test_config.psscript_win }}
+
+  steps:
+  - template: test-workflow-windows.yml
+    parameters:
+      isCore: true
+      artifacts: $(netfx472_tests)
+      framework: '.NETFramework,Version=v4.7.2'
+      titleFramework: 'NET472'
+      with_baselines: ${{ parameters.with_baselines }}
+
+###################################
+#  Tests: Windows (NETCOREAPP2_1) #
+#  Windows 2016                   #
+###################################
+- job: test_win2016_netcoreapp21_job
+  pool:
+    vmImage: 'vs2017-win2016'
+  displayName: 'Tests: Win / NETCOREAPP2.1 / '
+  dependsOn: create_baselines_branch
+  condition: ${{ parameters.enabled }}
+  variables:
+    baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
+
+  strategy:
+    matrix:
+      ${{ each test_config in parameters.test_matrix }}:
+        ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_win2016, 'true'), eq(test_config.enable_fw_netcore21, 'true'), eq(test_config.is_experimental, parameters.experimental)) }}:
+          ${{ test_config.name }}:
+            title: ${{ test_config.title }}
+            config: ${{ test_config.config_win }}
+            script: ${{ test_config.script_win }}
+            psscript: ${{ test_config.psscript_win }}
+
+  steps:
+  - template: test-workflow-windows.yml
+    parameters:
+      isCore: true
+      artifacts: $(netcore21_tests)
+      framework: '.NETCoreApp,Version=v2.1'
+      titleFramework: 'NETCOREAPP2.1'
+      with_baselines: ${{ parameters.with_baselines }}
+
+###################################
+#  Tests: Windows (NETCOREAPP3_1) #
+#  Windows 2016                   #
+###################################
+- job: test_win2016_netcoreapp31_job
+  pool:
+    vmImage: 'vs2017-win2016'
+  displayName: 'Tests: Win / NETCOREAPP3.1 / '
+  dependsOn: create_baselines_branch
+  condition: ${{ parameters.enabled }}
+  variables:
+    baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
+
+  strategy:
+    matrix:
+      ${{ each test_config in parameters.test_matrix }}:
+        ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_win2016, 'true'), eq(test_config.enable_fw_netcore31, 'true'), eq(test_config.is_experimental, parameters.experimental)) }}:
+          ${{ test_config.name }}:
+            title: ${{ test_config.title }}
+            config: ${{ test_config.config_win }}
+            script: ${{ test_config.script_win }}
+            psscript: ${{ test_config.psscript_win }}
+
+  steps:
+  - template: test-workflow-windows.yml
+    parameters:
+      isCore: true
+      artifacts: $(netcore31_tests)
+      framework: '.NETCoreApp,Version=v3.1'
+      titleFramework: 'NETCOREAPP3.1'
+      with_baselines: ${{ parameters.with_baselines }}
+
+###################################
+#  Tests: Windows (NETCOREAPP2_1) #
+#  Windows 2019                   #
+###################################
+- job: test_win2019_netcoreapp21_job
+  pool:
+    vmImage: 'windows-2019'
+  displayName: 'Tests: Win / NETCOREAPP2.1 / '
+  dependsOn: create_baselines_branch
+  condition: ${{ parameters.enabled }}
+  variables:
+    baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
+
+  strategy:
+    matrix:
+      ${{ each test_config in parameters.test_matrix }}:
+        ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_win2019, 'true'), eq(test_config.enable_fw_netcore21, 'true'), eq(test_config.is_experimental, parameters.experimental)) }}:
+          ${{ test_config.name }}:
+            title: ${{ test_config.title }}
+            config: ${{ test_config.config_win }}
+            script: ${{ test_config.script_win }}
+            psscript: ${{ test_config.psscript_win }}
+
+  steps:
+  - template: test-workflow-windows.yml
+    parameters:
+      isCore: true
+      artifacts: $(netcore21_tests)
+      framework: '.NETCoreApp,Version=v2.1'
+      titleFramework: 'NETCOREAPP2.1'
+      with_baselines: ${{ parameters.with_baselines }}
+
+########################################
+#  Tests: Ubuntu 20.04 (NETCOREAPP2_1) #
+########################################
+- job: test_ubuntu_20_netcoreapp21_job
+  pool:
+    vmImage: 'ubuntu-20.04'
+  displayName: 'Tests: Lin / NETCOREAPP2.1 / '
+  dependsOn: create_baselines_branch
+  condition: ${{ parameters.enabled }}
+  variables:
+    baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
+
+  strategy:
+    matrix:
+      ${{ each test_config in parameters.test_matrix }}:
+        ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_ubuntu20, 'true'), eq(test_config.enable_fw_netcore21, 'true'), eq(test_config.is_experimental, parameters.experimental)) }}:
+          ${{ test_config.name }}:
+            title: ${{ test_config.title }}
+            config: ${{ test_config.config_linux }}
+            script: ${{ test_config.script_linux }}
+            docker_login: ${{ test_config.docker_login }}
+            nuget: ${{ test_config.nuget_linux }}
+
+  steps:
+  - template: test-workflow-linux.yml
+    parameters:
+      artifacts: $(netcore21_tests)
+      netcoreversion: '2.1'
+      with_baselines: ${{ parameters.with_baselines }}
+
+########################################
+#  Tests: Ubuntu 20.04 (NETCOREAPP3_1) #
+########################################
+- job: test_ubuntu_20_netcoreapp31_job
+  pool:
+    vmImage: 'ubuntu-20.04'
+  displayName: 'Tests: Lin / NETCOREAPP3.1 / '
+  dependsOn: create_baselines_branch
+  condition: ${{ parameters.enabled }}
+  variables:
+    baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
+
+  strategy:
+    matrix:
+      ${{ each test_config in parameters.test_matrix }}:
+        ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_ubuntu20, 'true'), eq(test_config.enable_fw_netcore31, 'true'), eq(test_config.is_experimental, parameters.experimental)) }}:
+          ${{ test_config.name }}:
+            title: ${{ test_config.title }}
+            config: ${{ test_config.config_linux }}
+            script: ${{ test_config.script_linux }}
+            docker_login: ${{ test_config.docker_login }}
+            nuget: ${{ test_config.nuget_linux }}
+
+  steps:
+  - template: test-workflow-linux.yml
+    parameters:
+      artifacts: $(netcore31_tests)
+      netcoreversion: '3.1'
+      with_baselines: ${{ parameters.with_baselines }}
+
+########################################
+#  Tests: Ubuntu 16.04 (NETCOREAPP2_1) #
+########################################
+- job: test_ubuntu_16_netcoreapp21_job
+  pool:
+    vmImage: 'ubuntu-16.04'
+  displayName: 'Tests: Lin / NETCOREAPP2.1 / '
+  dependsOn: create_baselines_branch
+  condition: ${{ parameters.enabled }}
+  variables:
+    baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
+
+  strategy:
+    matrix:
+      ${{ each test_config in parameters.test_matrix }}:
+        ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_ubuntu16, 'true'), eq(test_config.enable_fw_netcore21, 'true'), eq(test_config.is_experimental, parameters.experimental)) }}:
+          ${{ test_config.name }}:
+            title: ${{ test_config.title }}
+            config: ${{ test_config.config_linux }}
+            script: ${{ test_config.script_linux }}
+            docker_login: ${{ test_config.docker_login }}
+            nuget: ${{ test_config.nuget_linux }}
+
+  steps:
+  - template: test-workflow-linux.yml
+    parameters:
+      artifacts: $(netcore21_tests)
+      netcoreversion: '2.1'
+      with_baselines: ${{ parameters.with_baselines }}
+
+#################################
+#  Tests: MacOS (NETCOREAPP2_1) #
+#################################
+- job: test_macos_netcoreapp21_job
+  pool:
+    vmImage: 'macOS-10.15'
+  displayName: 'Tests: Mac / NETCOREAPP2.1 / '
+  dependsOn: create_baselines_branch
+  condition: ${{ parameters.enabled }}
+  variables:
+    baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
+
+  strategy:
+    matrix:
+      ${{ each test_config in parameters.test_matrix }}:
+        ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_macos, 'true'), eq(test_config.enable_fw_netcore21, 'true'), eq(test_config.is_experimental, parameters.experimental)) }}:
+          ${{ test_config.name }}:
+            title: ${{ test_config.title }}
+            config: ${{ test_config.config_macos }}
+            script: ${{ test_config.script_macos }}
+            docker: ${{ test_config.install_docker_macos }}
+            docker_login: ${{ test_config.docker_login }}
+            nuget: ${{ test_config.nuget_macos }}
+
+  steps:
+  - template: test-workflow-macos.yml
+    parameters:
+      artifacts: $(netcore21_tests)
+      netcoreversion: '2.1'
+      with_baselines: ${{ parameters.with_baselines }}
+
+#################################
+#  Tests: MacOS (NETCOREAPP3_1) #
+#################################
+- job: test_macos_netcoreapp31_job
+  pool:
+    vmImage: 'macOS-10.15'
+  displayName: 'Tests: Mac / NETCOREAPP3.1 / '
+  dependsOn: create_baselines_branch
+  condition: ${{ parameters.enabled }}
+  variables:
+    baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
+
+  strategy:
+    matrix:
+      ${{ each test_config in parameters.test_matrix }}:
+        ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_macos, 'true'), eq(test_config.enable_fw_netcore31, 'true'), eq(test_config.is_experimental, parameters.experimental)) }}:
+          ${{ test_config.name }}:
+            title: ${{ test_config.title }}
+            config: ${{ test_config.config_macos }}
+            script: ${{ test_config.script_macos }}
+            docker: ${{ test_config.install_docker_macos }}
+            docker_login: ${{ test_config.docker_login }}
+            nuget: ${{ test_config.nuget_macos }}
+
+  steps:
+  - template: test-workflow-macos.yml
+    parameters:
+      artifacts: $(netcore31_tests)
+      netcoreversion: '3.1'
+      with_baselines: ${{ parameters.with_baselines }}
+
+################################################################
+# This job runs after all tests and:                           #
+# - if baselines branch has commits create PR (if none exists) #
+# - if baselines branch has no commits - delete branch         #
+# - if PR created, post link to it to main PR                  #
+################################################################
+- job: create_baselines_pr
+  pool:
+    vmImage: 'windows-2019'
+  displayName: 'Create Test Baselines Pull Request'
+  dependsOn:
+  - create_baselines_branch # for variables flow
+  - test_win_netfx472_job_2019
+  - test_win_netfx472_job_2016
+  - test_win2016_netcoreapp21_job
+  - test_win2016_netcoreapp31_job
+  - test_win2019_netcoreapp21_job
+  - test_ubuntu_20_netcoreapp21_job
+  - test_ubuntu_20_netcoreapp31_job
+  - test_ubuntu_16_netcoreapp21_job
+  - test_macos_netcoreapp21_job
+  - test_macos_netcoreapp31_job
+  condition: and(always(), ne(variables['Build.SourceBranchName'], 'release'), ${{ parameters.with_baselines }})
+  variables:
+    baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
+    baselines_head: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_head'] ]
+    baselines_new_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_new_branch'] ]
+    source_pr_id: $[coalesce(variables['system.pullRequest.pullRequestNumber'], '')]
+
+  steps:
+  - checkout: none
+  - task: PowerShell@2
+    inputs:
+      targetType: 'inline'
+      script: |
+        $prId = "$(source_pr_id)"
+        $baselinesBranch = "$(baselines_branch)"
+        $baselinesHash = "$(baselines_head)"
+        $newBranch = $(baselines_new_branch)
+        $orgName = "linq2db"
+        $baselinesRepo = "linq2db.baselines"
+        $testsRepo = "linq2db"
+        $baselinesRepoUrl = "https://${Env:GITHUB_TOKEN}@github.com/${orgName}/${baselinesRepo}.git"
+        Write-Host "Source PR ID: ${prId}"
+        Write-Host "Baselines branch: ${baselinesBranch}"
+        Write-Host "Baselines branch hash: ${baselinesHash}"
+        if (-not ($baselinesBranch)) {
+            Write-Host "Baselines branch name missing"
+            exit 1
+        }
+        if (-not ($baselinesHash)) {
+            Write-Host "Baselines branch hash missing"
+            exit 1
+        }
+        $output = git ls-remote --heads $baselinesRepoUrl $baselinesBranch
+        Write-Host "Baselines current HEAD: ${output}"
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "Baselines HEAD request failed with code ${LASTEXITCODE}"
+            exit 1
+        }
+        if ($output.Length -lt 40) {
+            Write-Host "Baselines HEAD request returned no result"
+            exit 1
+        }
+        $baslinesCurrentHash = ($output -split '\s+')[0]
+        Write-Host "Baselines branch current head hash: ${baslinesCurrentHash}"
+        if ($baselinesHash -eq $baslinesCurrentHash) {
+            Write-Host "Baselines branch has no new commits"
+            if ($newBranch -eq 1) {
+                Write-Host "Remove empty baselines branch"
+                $output = gh api -XDELETE /repos/$orgName/$baselinesRepo/git/refs/heads/$baselinesBranch
+                Write-Host "Delete branch command output: ${output}"
+                if ($LASTEXITCODE -ne 0) {
+                    Write-Host "Failed to delete branch. Error code ${LASTEXITCODE}"
+                    exit 1
+                }
+                # delete operation returns nothing on both delete and missing branch
+                Write-Host "Baselines branch deleted"
+                exit 0
+            }
+            exit 0
+        }
+        Write-Host "New baselines commited, check if we need to create PR or it already created"
+        $output = gh api -XGET /repos/$orgName/$baselinesRepo/pulls -F state=open -F head=${orgName}:$baselinesBranch
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "PR search request failed. Error code ${LASTEXITCODE}, output: ${output}"
+            exit 1
+        }
+        if ($output -match "html_url") {
+            Write-Host "PR already exists"
+            exit 0
+        }
+        if ($prId) {
+            $sourcePrUrl = "https://github.com/${orgName}/${testsRepo}/pull/${prId}"
+            $prName = "Baselines for ${sourcePrUrl}"
+            $prMessage = "Baselines for [#${prId}](${sourcePrUrl})"
+        }
+        else {
+            $prName = "Baselines"
+            $prMessage = "Not associated with any pull request (tests pipeline triggered from admin console?)"
+        }
+        $output = gh api /repos/$orgName/$baselinesRepo/pulls -F title="${prName}" -F head=$baselinesBranch -F base=master -F draft=true -F body="${prMessage}"
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "PR creation failed. Error code ${LASTEXITCODE}, output: ${output}"
+            exit 1
+        }
+        if ($output -match "html_url") {
+            Write-Host "PR created"
+        }
+        if ($prId) {
+            Write-Host "Post notification to source PR about baselines PR creation"
+            $output = gh api /repos/$orgName/$testsRepo/issues/$prId/comments -F body="Test baselines changed by this PR. Don't forget to merge/close baselines PR after this pr merged/closed."
+            if ($LASTEXITCODE -ne 0) {
+                Write-Host "Message posting failed. Error code ${LASTEXITCODE}, output: ${output}"
+                exit 1
+            }
+            if (-not($output -match "html_url")) {
+                Write-Host "Message posting failed. Output: ${output}"
+                exit 1
+            }
+        }
+      workingDirectory: '$(System.DefaultWorkingDirectory)'
+    displayName: Create Baselines PR
+    env:
+      GITHUB_TOKEN: $(BASELINES_GH_PAT)

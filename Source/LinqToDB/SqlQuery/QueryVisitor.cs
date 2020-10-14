@@ -464,7 +464,7 @@ namespace LinqToDB.SqlQuery
 				return;
 
 			Visit1(table.All);
-			foreach (var field in table.Fields.Values) Visit1(field);
+			foreach (var field in table.Fields) Visit1(field);
 
 			if (table.TableArguments != null)
 				foreach (var a in table.TableArguments) Visit1(a);
@@ -495,7 +495,7 @@ namespace LinqToDB.SqlQuery
 		void Visit1X(SqlCteTable table)
 		{
 			Visit1(table.All);
-			foreach (var field in table.Fields.Values) Visit1(field);
+			foreach (var field in table.Fields) Visit1(field);
 
 			if (table.TableArguments != null)
 				foreach (var a in table.TableArguments) Visit1(a);
@@ -506,7 +506,7 @@ namespace LinqToDB.SqlQuery
 		void Visit1X(SqlRawSqlTable table)
 		{
 			Visit1(table.All);
-			foreach (var field in table.Fields.Values) Visit1(field);
+			foreach (var field in table.Fields) Visit1(field);
 
 			if (table.Parameters != null)
 				foreach (var a in table.Parameters) Visit1(a);
@@ -1050,7 +1050,7 @@ namespace LinqToDB.SqlQuery
 				return;
 
 			Visit2(table.All);
-			foreach (var field in table.Fields.Values) Visit2(field);
+			foreach (var field in table.Fields) Visit2(field);
 
 			if (table.TableArguments != null)
 				foreach (var a in table.TableArguments) Visit2(a);
@@ -1059,7 +1059,7 @@ namespace LinqToDB.SqlQuery
 		void Visit2X(SqlRawSqlTable table)
 		{
 			Visit2(table.All);
-			foreach (var field in table.Fields.Values) Visit2(field);
+			foreach (var field in table.Fields) Visit2(field);
 
 			if (table.Parameters != null)
 				foreach (var a in table.Parameters) Visit2(a);
@@ -1073,7 +1073,7 @@ namespace LinqToDB.SqlQuery
 		void Visit2X(SqlCteTable table)
 		{
 			Visit2(table.All);
-			foreach (var field in table.Fields.Values) Visit2(field);
+			foreach (var field in table.Fields) Visit2(field);
 
 			if (table.TableArguments != null)
 				foreach (var a in table.TableArguments) Visit2(a);
@@ -1235,7 +1235,7 @@ namespace LinqToDB.SqlQuery
 					{
 						return
 							Find(((SqlTable)element).All           ) ??
-							Find(((SqlTable)element).Fields.Values ) ??
+							Find(((SqlTable)element).Fields        ) ??
 							Find(((SqlTable)element).TableArguments);
 					}
 
@@ -1243,7 +1243,7 @@ namespace LinqToDB.SqlQuery
 					{
 						return
 							Find(((SqlCteTable)element).All           ) ??
-							Find(((SqlCteTable)element).Fields.Values ) ??
+							Find(((SqlCteTable)element).Fields        ) ??
 							Find(((SqlCteTable)element).TableArguments) ??
 							Find(((SqlCteTable)element).Cte);
 					}
@@ -1251,9 +1251,9 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SqlRawSqlTable:
 					{
 						return
-							Find(((SqlRawSqlTable)element).All          ) ??
-							Find(((SqlRawSqlTable)element).Fields.Values) ??
-							Find(((SqlRawSqlTable)element).Parameters   );
+							Find(((SqlRawSqlTable)element).All       ) ??
+							Find(((SqlRawSqlTable)element).Fields    ) ??
+							Find(((SqlRawSqlTable)element).Parameters);
 					}
 
 				case QueryElementType.OutputClause:

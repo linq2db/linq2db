@@ -34,6 +34,8 @@ namespace Tests.xUpdate
 				ProviderName.PostgreSQL95,
 				TestProvName.PostgreSQL10,
 				TestProvName.PostgreSQL11,
+				TestProvName.PostgreSQL12,
+				TestProvName.PostgreSQL13,
 				ProviderName.MySql,
 				ProviderName.MySqlConnector,
 				TestProvName.MySql55,
@@ -61,7 +63,9 @@ namespace Tests.xUpdate
 				ProviderName.SqlServer2008,
 				ProviderName.SqlServer2012,
 				ProviderName.SqlServer2014,
+				TestProvName.SqlServer2016,
 				ProviderName.SqlServer2017,
+				TestProvName.SqlServer2019,
 				TestProvName.SqlAzure
 			};
 

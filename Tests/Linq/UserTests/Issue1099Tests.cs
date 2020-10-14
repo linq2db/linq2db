@@ -31,6 +31,7 @@ namespace Tests.UserTests
 		[Test]
 		public void Test([DataSources] string context)
 		{
+			using (new DisableBaseline("TODO: debug reason for inconsistent column order (linux netcore2.1)"))
 			using (var db = GetDataContext(context))
 			{
 				using (db.CreateLocalTable<BackgroundTask>())

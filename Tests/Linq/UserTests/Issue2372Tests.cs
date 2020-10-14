@@ -68,7 +68,7 @@ namespace Tests.UserTests
 					var dto1 = new InventoryResourceDTO
 					{
 						Status = InventoryResourceStatus.Used,
-						Id = Guid.NewGuid()
+						Id     = TestData.Guid1
 					};
 					db2.Insert(dto1);
 				}

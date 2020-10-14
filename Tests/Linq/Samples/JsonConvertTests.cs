@@ -12,7 +12,7 @@ using LinqToDB.SqlQuery;
 using Newtonsoft.Json;
 using NUnit.Framework;
 
-namespace Tests.Playground
+namespace Tests.Samples
 {
 
 	[AttributeUsage(AttributeTargets.Property)]

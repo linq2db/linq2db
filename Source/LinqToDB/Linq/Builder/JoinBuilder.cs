@@ -273,6 +273,10 @@ namespace LinqToDB.Linq.Builder
 				: base(parent, lambda, outerContext, innerContext)
 			{
 			}
+
+			public override void CompleteColumns()
+			{
+			}
 		}
 
 		internal class GroupJoinContext : JoinContext
@@ -467,11 +471,6 @@ namespace LinqToDB.Linq.Builder
 			public GroupJoinSubQueryContext(IBuildContext subQuery)
 				: base(subQuery)
 			{
-			}
-
-			public override int ConvertToParentIndex(int index, IBuildContext context)
-			{
-				return GroupJoin!.ConvertToParentIndex(index, context);
 			}
 
 			public override IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)

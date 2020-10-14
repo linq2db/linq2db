@@ -100,6 +100,8 @@ namespace Tests
 				case ProviderName.PostgreSQL95:
 				case TestProvName.PostgreSQL10:
 				case TestProvName.PostgreSQL11:
+				case TestProvName.PostgreSQL12:
+				case TestProvName.PostgreSQL13:
 				case ProviderName.DB2:
 				case ProviderName.Sybase:
 				case ProviderName.SybaseManaged:
@@ -107,7 +109,9 @@ namespace Tests
 				case ProviderName.SqlServer2008:
 				case ProviderName.SqlServer2012:
 				case ProviderName.SqlServer2014:
+				case TestProvName.SqlServer2016:
 				case ProviderName.SqlServer2017:
+				case TestProvName.SqlServer2019:
 				case TestProvName.SqlAzure:
 				case ProviderName.SapHanaNative:
 				case ProviderName.SapHanaOdbc:
@@ -133,7 +137,9 @@ namespace Tests
 				case ProviderName.SqlServer2008:
 				case ProviderName.SqlServer2012:
 				case ProviderName.SqlServer2014:
+				case TestProvName.SqlServer2016:
 				case ProviderName.SqlServer2017:
+				case TestProvName.SqlServer2019:
 				case TestProvName.SqlAzure:
 				case ProviderName.OracleManaged:
 				case ProviderName.OracleNative:
@@ -166,7 +172,7 @@ namespace Tests
 
 		private static string GetContextName(IDataContext db)
 		{
-#if NET46
+#if NET472
 			if (db is TestServiceModelDataContext linqDb)
 				return linqDb.Configuration!;
 #endif
@@ -203,6 +209,8 @@ namespace Tests
 				case ProviderName.PostgreSQL95:
 				case TestProvName.PostgreSQL10:
 				case TestProvName.PostgreSQL11:
+				case TestProvName.PostgreSQL12:
+				case TestProvName.PostgreSQL13:
 				case ProviderName.DB2:
 				case ProviderName.Sybase:
 				case ProviderName.SybaseManaged:
@@ -211,7 +219,9 @@ namespace Tests
 				case ProviderName.SqlServer2008:
 				case ProviderName.SqlServer2012:
 				case ProviderName.SqlServer2014:
+				case TestProvName.SqlServer2016:
 				case ProviderName.SqlServer2017:
+				case TestProvName.SqlServer2019:
 				case TestProvName.SqlAzure:
 					return db.GetTable<LinqDataTypes>().Select(_ => DbName()).First();
 				case ProviderName.Informix:

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
+using System.Transactions;
 using LinqToDB;
 using LinqToDB.Expressions;
 using LinqToDB.Mapping;
@@ -334,6 +336,68 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void LoadWithFirstOrDefaultParameter([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(2, 3)] int id)
+		{
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			{
+				var q1 = db.Parent
+					.LoadWith(p => p.Children)
+					.ThenLoad(x => x.Parent)
+					.ThenLoad(x => x!.Children);
+					
+				var result = q1.FirstOrDefault(p=> p.ParentID == id);
+				Assert.That(result, Is.Not.Null);
+				Assert.That(result!.Children[0].Parent!.Children[0].ParentID, Is.EqualTo(id));
+			}
+		}
+
+		[Test]
+		public void TransactionScope([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllSQLite)] string context)
+		{
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			using (var transaction = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.Serializable }, TransactionScopeAsyncFlowOption.Enabled))
+			{
+				var result = db.Parent
+					.Where(x => x.ParentID == 1)
+					.Select(p => new 
+					{
+						Id = p.ParentID,
+						Children = p.Children.Select(c => new 
+						{
+							Id = c.ChildID,
+						}).ToArray() 
+					})
+					.FirstOrDefault();
+
+				transaction.Complete();
+			}
+		}
+
+		[Test]
+		public async Task TransactionScopeAsync([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllSQLite)] string context)
+		{
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			using (var transaction = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.Serializable }, TransactionScopeAsyncFlowOption.Enabled))
+			{
+				var result = await db.Parent
+					.Where(x => x.ParentID == 1)
+					.Select(p => new 
+					{
+						Id = p.ParentID,
+						Children = p.Children.Select(c => new 
+						{
+							Id = c.ChildID,
+						}).ToArray() 
+					})
+					.FirstOrDefaultAsync();
+
+				transaction.Complete();
+			}
+		}
 
 		class MainItem
 		{

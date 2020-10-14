@@ -117,8 +117,8 @@ namespace LinqToDB.Linq.Builder
 			var keySequence     = sequence;
 
 			var groupingType    = methodCall.Type.GetGenericArguments()[0];
-			var keySelector     = (LambdaExpression)methodCall.Arguments[1].Unwrap();
-			var elementSelector = (LambdaExpression)methodCall.Arguments[2].Unwrap();
+			var keySelector     = (LambdaExpression)methodCall.Arguments[1].Unwrap()!;
+			var elementSelector = (LambdaExpression)methodCall.Arguments[2].Unwrap()!;
 
 			if (wrapSequence)
 			{ 
@@ -131,7 +131,14 @@ namespace LinqToDB.Linq.Builder
 			{
 				var groupSql = builder.ConvertExpressions(key, keySelector.Body.Unwrap(), ConvertFlags.Key, null);
 
-				foreach (var sql in groupSql.Where(s => s.Sql.ElementType.NotIn(QueryElementType.SqlValue, QueryElementType.SqlParameter)))
+				var allowed = groupSql.Where(s =>
+				{
+					var underlying = QueryHelper.GetUnderlyingExpression(s.Sql);
+					return underlying != null &&
+					       underlying.ElementType.NotIn(QueryElementType.SqlValue, QueryElementType.SqlParameter);
+				});
+
+				foreach (var sql in allowed)
 					sequence.SelectQuery.GroupBy.Expr(sql.Sql);
 			}
 			else

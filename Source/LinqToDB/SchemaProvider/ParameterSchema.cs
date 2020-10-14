@@ -42,6 +42,10 @@ namespace LinqToDB.SchemaProvider
 		/// </summary>
 		public long?    Size                 { get; set; }
 
+		/// <summary>
+		/// Gets parameter description.
+		/// </summary>
+		public string?  Description          { get; set; }
 
 		/// <summary>
 		/// Gets C#-friendly parameter name.

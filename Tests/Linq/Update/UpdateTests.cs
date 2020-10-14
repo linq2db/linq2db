@@ -176,7 +176,7 @@ namespace Tests.xUpdate
 						.Set(c => c.ChildID, c => c.ChildID + 1);
 
 				var sql = updatable.ToString();
-				Console.WriteLine(sql);
+				TestContext.WriteLine(sql);
 
 				Assert.That(sql, Does.Contain("UPDATE"));
 			}
@@ -525,6 +525,8 @@ namespace Tests.xUpdate
 		[Test]
 		public void TestUpdateWithColumnFilter1([DataSources] string context, [Values] bool withMiddleName)
 		{
+			ResetPersonIdentity(context);
+
 			using (var db = GetDataContext(context))
 			{
 				var newName = "UpdateColumnFilterUpdated";
@@ -563,6 +565,8 @@ namespace Tests.xUpdate
 		[Test]
 		public void TestUpdateWithColumnFilter2([DataSources] string context)
 		{
+			ResetPersonIdentity(context);
+
 			using (var db = GetDataContext(context))
 			{
 				var newName = "UpdateColumnFilterUpdated";
@@ -606,6 +610,8 @@ namespace Tests.xUpdate
 		[Test]
 		public void UpdateComplex1([DataSources] string context)
 		{
+			ResetPersonIdentity(context);
+
 			using (var db = GetDataContext(context))
 			{
 				db.Person.Where(_ => _.FirstName.StartsWith("UpdateComplex")).Delete();
@@ -641,6 +647,8 @@ namespace Tests.xUpdate
 		[Test]
 		public async Task UpdateComplex1Async([DataSources] string context)
 		{
+			ResetPersonIdentity(context);
+
 			using (var db = GetDataContext(context))
 			{
 				await db.Person.DeleteAsync(_ => _.FirstName.StartsWith("UpdateComplex"));
@@ -677,6 +685,8 @@ namespace Tests.xUpdate
 		[Test]
 		public void UpdateComplex2([DataSources] string context)
 		{
+			ResetPersonIdentity(context);
+
 			using (var db = GetDataContext(context))
 			{
 				db.Person.Where(_ => _.FirstName.StartsWith("UpdateComplex")).Delete();
@@ -1506,7 +1516,7 @@ namespace Tests.xUpdate
 
 			public static UpdateSetTest[] Data = new UpdateSetTest[]
 			{
-				new UpdateSetTest() { Id = 1, Value1 = Guid.NewGuid(), Value2 = 10, Value3 = UpdateSetEnum.Value1 }
+				new UpdateSetTest() { Id = 1, Value1 = TestData.Guid3, Value2 = 10, Value3 = UpdateSetEnum.Value1 }
 			};
 		}
 
@@ -1524,7 +1534,7 @@ namespace Tests.xUpdate
 			using (var table = db.CreateLocalTable(UpdateSetTest.Data))
 			{
 				var id = 1;
-				var value = Guid.NewGuid();
+				var value = TestData.Guid1;
 
 				table.Where(_ => _.Id == id)
 					.Set(_ => _.Value1, value)
@@ -1532,7 +1542,7 @@ namespace Tests.xUpdate
 
 				Assert.AreEqual(value, table.Where(_ => _.Id == id).Select(_ => _.Value1).Single());
 
-				value = Guid.NewGuid();
+				value = TestData.Guid2;
 				table.Where(_ => _.Id == id)
 					.Set(_ => _.Value1, value)
 					.Update();
@@ -1617,7 +1627,7 @@ namespace Tests.xUpdate
 			using (var table = db.CreateLocalTable(UpdateSetTest.Data))
 			{
 				var id = 1;
-				var value = Guid.NewGuid();
+				var value = TestData.Guid1;
 
 				table.Where(_ => _.Id == id)
 					.Set(_ => _.Value4, value)
@@ -1625,7 +1635,7 @@ namespace Tests.xUpdate
 
 				Assert.AreEqual(value, table.Where(_ => _.Id == id).Select(_ => _.Value4).Single());
 
-				value = Guid.NewGuid();
+				value = TestData.Guid2;
 				table.Where(_ => _.Id == id)
 					.Set(_ => _.Value4, value)
 					.Update();

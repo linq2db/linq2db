@@ -82,5 +82,10 @@ namespace LinqToDB.Linq.Builder
 		{
 			return Context.GetResultStatement();
 		}
+
+		public void CompleteColumns()
+		{
+			Context.CompleteColumns();
+		}
 	}
 }

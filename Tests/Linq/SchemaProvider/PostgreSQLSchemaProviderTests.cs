@@ -20,12 +20,24 @@ namespace Tests.SchemaProvider
 	[TestFixture]
 	public class PostgreSQLTests : TestBase
 	{
-		public static IEnumerable<ProcedureSchema> ProcedureTestCases
+		public class ProcedureTestCase
+		{
+			public ProcedureTestCase(ProcedureSchema schema)
+			{
+				Schema = schema;
+			}
+
+			public ProcedureSchema Schema { get; }
+
+			public override string ToString() => Schema.ProcedureName;
+		}
+
+		public static IEnumerable<ProcedureTestCase> ProcedureTestCases
 		{
 			get
 			{
 				// test table function schema
-				yield return new ProcedureSchema()
+				yield return new ProcedureTestCase(new ProcedureSchema()
 				{
 					CatalogName         = "SET_BY_TEST",
 					SchemaName          = "public",
@@ -99,10 +111,10 @@ namespace Tests.SchemaProvider
 					{
 						new TableSchema { TableName = "AllTypes" }
 					}
-				};
+				});
 
 				// test parameters directions
-				yield return new ProcedureSchema
+				yield return new ProcedureTestCase(new ProcedureSchema
 				{
 					CatalogName         = "SET_BY_TEST",
 					SchemaName          = "public",
@@ -119,10 +131,10 @@ namespace Tests.SchemaProvider
 						new ParameterSchema { SchemaName = "param2", SchemaType = "integer", IsIn  = true, IsOut = true, ParameterName = "param2", ParameterType = "int?", SystemType = typeof(int), DataType = DataType.Int32 },
 						new ParameterSchema { SchemaName = "param3", SchemaType = "integer",               IsOut = true, ParameterName = "param3", ParameterType = "int?", SystemType = typeof(int), DataType = DataType.Int32 }
 					}
-				};
+				});
 
 				// table function with single column result
-				yield return new ProcedureSchema
+				yield return new ProcedureTestCase(new ProcedureSchema
 				{
 					CatalogName         = "SET_BY_TEST",
 					SchemaName          = "public",
@@ -147,10 +159,10 @@ namespace Tests.SchemaProvider
 							new ColumnSchema { ColumnName = "param2", ColumnType = "int4", MemberName = "param2", MemberType = "int?", SystemType = typeof(int), IsNullable = true, DataType = DataType.Int32 }
 						}
 					}
-				};
+				});
 
 				// table function with multiple columns result
-				yield return new ProcedureSchema
+				yield return new ProcedureTestCase(new ProcedureSchema
 				{
 					CatalogName         = "SET_BY_TEST",
 					SchemaName          = "public",
@@ -178,10 +190,10 @@ namespace Tests.SchemaProvider
 							new ColumnSchema { ColumnName = "param4", ColumnType = "int4", MemberName = "param4", MemberType = "int?", SystemType = typeof(int), IsNullable = true, DataType = DataType.Int32 }
 						}
 					}
-				};
+				});
 
 				// scalar function
-				yield return new ProcedureSchema
+				yield return new ProcedureTestCase(new ProcedureSchema
 				{
 					CatalogName         = "SET_BY_TEST",
 					SchemaName          = "public",
@@ -214,10 +226,10 @@ namespace Tests.SchemaProvider
 							DataType      = DataType.Int32
 						}
 					}
-				};
+				});
 
 				// scalar function
-				yield return new ProcedureSchema()
+				yield return new ProcedureTestCase(new ProcedureSchema()
 				{
 					CatalogName         = "SET_BY_TEST",
 					SchemaName          = "public",
@@ -233,10 +245,10 @@ namespace Tests.SchemaProvider
 						new ParameterSchema { SchemaName = "param1", SchemaType = "integer", IsIn  = true, ParameterName = "param1", ParameterType = "int?", SystemType = typeof(int), DataType = DataType.Int32 },
 						new ParameterSchema { SchemaName = "param2", SchemaType = "integer", IsOut = true, ParameterName = "param2", ParameterType = "int?", SystemType = typeof(int), DataType = DataType.Int32 }
 					}
-				};
+				});
 
 				// custom aggregate
-				yield return new ProcedureSchema()
+				yield return new ProcedureTestCase(new ProcedureSchema()
 				{
 					CatalogName         = "SET_BY_TEST",
 					SchemaName          = "public",
@@ -252,19 +264,23 @@ namespace Tests.SchemaProvider
 						new ParameterSchema { SchemaType = "double precision", IsResult = true, ParameterName = "__skip", ParameterType = "double?", SystemType = typeof(double), DataType = DataType.Double },
 						new ParameterSchema { SchemaType = "double precision", IsIn     = true, ParameterName = "__skip", ParameterType = "double?", SystemType = typeof(double), DataType = DataType.Double }
 					}
-				};
+				});
 			}
 		}
 
 		[Test]
 		public void ProceduresSchemaProviderTest(
 			[IncludeDataSources(TestProvName.AllPostgreSQL)] string context,
-			[ValueSource(nameof(ProcedureTestCases))] ProcedureSchema expectedProc)
+			[ValueSource(nameof(ProcedureTestCases))] ProcedureTestCase testCase)
 		{
-			var macaddr8Supported =  context.Contains(TestProvName.PostgreSQL10) || context.Contains(TestProvName.PostgreSQL11);
+			var macaddr8Supported =  context.Contains(TestProvName.PostgreSQL10)
+				|| context.Contains(TestProvName.PostgreSQL11)
+				|| context.Contains(TestProvName.PostgreSQL12)
+				|| context.Contains(TestProvName.PostgreSQL13);
 			var jsonbSupported    = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL93);
 			using (var db = (DataConnection)GetDataContext(context))
 			{
+				var expectedProc = testCase.Schema;
 				expectedProc.CatalogName = TestUtils.GetDatabaseName(db);
 
 				// schema load takes too long if system schema included

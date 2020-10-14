@@ -18,6 +18,7 @@ namespace Tests.Linq
 			SqlJoinType                   joinType, 
 			Func<TOuter, TInner, bool>    predicate,
 			Func<TOuter, TInner, TResult> resultSelector)
+			where TOuter : class
 		{
 			if (outer          == null) throw new ArgumentNullException(nameof(outer));
 			if (inner          == null) throw new ArgumentNullException(nameof(inner));
@@ -36,7 +37,7 @@ namespace Tests.Linq
 					var firstItems = outer.ToList();
 					var secondItems = inner.ToList();
 					var firstResult = firstItems.SelectMany(f =>
-						secondItems.Where(s => predicate(f, s)).DefaultIfEmpty().Select(s => new {First = f, Second = s}));
+						secondItems.Where(s => predicate(f, s)).DefaultIfEmpty().Select(s => new {First = (TOuter?)f, Second = s}));
 
 					var secondResult = secondItems.Where(s => !firstItems.Any(f => predicate(f, s)))
 						.Select(s => new {First = default(TOuter), Second = s});

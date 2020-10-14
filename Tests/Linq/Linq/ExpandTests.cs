@@ -6,7 +6,7 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
-namespace Tests.Playground
+namespace Tests.Linq
 {
 	using Tools;
 
@@ -92,7 +92,7 @@ namespace Tests.Playground
 
 				//DO NOT REMOVE, it forces caching query
 				var str = query.ToString();
-				Console.WriteLine(str);
+				TestContext.WriteLine(str);
 
 				var expected = from t in sampleData
 					from t2 in sampleData.Where(predicate.Compile())

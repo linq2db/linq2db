@@ -21,7 +21,7 @@
 //
 
 {
-	"NET46": {
+	"NET472": {
 		"BasedOn": "LocalConnectionStrings",
 		"DefaultConfiguration": "SQLite.Classic",
 		"Providers": [
@@ -29,8 +29,8 @@
 			"Access.Odbc",
 			"SqlCe",
 			"SQLite.Classic",
-			"SQLite.Classic.MiniProfiler.Unmapped",
-			"SQLite.Classic.MiniProfiler.Mapped",
+			"SQLite.Classic.MPU",
+			"SQLite.Classic.MPM",
 			"SQLite.MS",
 			"Northwind.SQLite",
 			"Northwind.SQLite.MS",
@@ -58,7 +58,7 @@
 		]
 	},
 
-	"NET46.Azure": {
+	"NET472.Azure": {
 		"BasedOn": "AzureConnectionStrings",
 		"DefaultConfiguration": "SQLite.Classic",
 		"TraceLevel": "Info"
@@ -88,12 +88,12 @@
 				"Provider": "SQLite",
 				"ConnectionString": "Data Source=Database/TestData.sqlite"
 			},
-			"SQLite.Classic.MiniProfiler.Unmapped": {
-				"Provider": "SQLite.Classic.MiniProfiler.Unmapped",
+			"SQLite.Classic.MPU": {
+				"Provider": "SQLite.Classic.MPU",
 				"ConnectionString": "Data Source=Database/TestData.MiniProfiler.Unmapped.sqlite"
 			},
-			"SQLite.Classic.MiniProfiler.Mapped": {
-				"Provider": "SQLite.Classic.MiniProfiler.Mapped",
+			"SQLite.Classic.MPM": {
+				"Provider": "SQLite.Classic.MPM",
 				"ConnectionString": "Data Source=Database/TestData.MiniProfiler.Mapped.sqlite"
 			},
 			"SQLite.Classic.Data": {
@@ -223,7 +223,8 @@
 	},
 
 	"AzureConnectionStrings": {
-		"BasedOn"             : "CommonConnectionStrings",
+		"BasedOn": "CommonConnectionStrings",
+		"BaselinesPath": "./baselines",
 		"Connections"         : {
 			"SqlServer"         : { "Provider": "System.Data.SqlClient",           "ConnectionString": "Server=localhost;Database=TestData;User Id=sa;Password=Password12!;"                                                                                      },
 			"Northwind"         : { "Provider": "System.Data.SqlClient",           "ConnectionString": "Server=localhost;Database=Northwind;User Id=sa;Password=Password12!;"                                                                                     },
@@ -240,6 +241,8 @@
 			"PostgreSQL.9.5"    : { "Provider": "Npgsql",                          "ConnectionString": "Server=localhost;Port=5432;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100"                           },
 			"PostgreSQL.10"     : { "Provider": "Npgsql",                          "ConnectionString": "Server=localhost;Port=5432;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100"                           },
 			"PostgreSQL.11"     : { "Provider": "Npgsql",                          "ConnectionString": "Server=localhost;Port=5432;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100"                           },
+			"PostgreSQL.12"     : { "Provider": "Npgsql",                          "ConnectionString": "Server=localhost;Port=5432;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100"                           },
+			"PostgreSQL.13"     : { "Provider": "Npgsql",                          "ConnectionString": "Server=localhost;Port=5432;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100"                           },
 			"MySql"             : { "Provider": "MySql.Data",                      "ConnectionString": "Server=localhost;Port=3306;Database=testdata;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;"                                                   },
 			"MySqlConnector"    : { "Provider": "MySqlConnector",                  "ConnectionString": "Server=localhost;Port=3306;Database=testdata2;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;AllowLoadLocalInfile=true;"                        },
 			"MySql55"           : { "Provider": "MySql.Data",                      "ConnectionString": "Server=localhost;Port=3306;Database=testdata;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;"                                                   },
@@ -262,8 +265,8 @@
 			"Access.Odbc",
 			"SqlCe",
 			"SQLite.Classic",
-			"SQLite.Classic.MiniProfiler.Unmapped",
-			"SQLite.Classic.MiniProfiler.Mapped",
+			"SQLite.Classic.MPU",
+			"SQLite.Classic.MPM",
 			"SQLite.MS",
 			"Northwind.SQLite",
 			"Northwind.SQLite.MS",
