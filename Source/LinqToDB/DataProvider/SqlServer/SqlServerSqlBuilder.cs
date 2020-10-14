@@ -344,7 +344,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(' ');
 
 			StringBuilder.Append("PRIMARY KEY CLUSTERED (");
-			StringBuilder.Append(fieldNames.Aggregate((f1,f2) => f1 + InlineComma + f2));
+			StringBuilder.Append(string.Join(InlineComma, fieldNames));
 			StringBuilder.Append(")");
 		}
 
