@@ -45,3 +45,5 @@ stages:
         db_filter: 'informix'
       ${{ if eq(variables['Build.DefinitionName'], 'test-sqlserver-2019') }}:
         db_filter: 'sqlserver.2019'
+      ${{ if eq(variables['Build.DefinitionName'], 'test-sqlite') }}:
+        db_filter: 'sqlite'
