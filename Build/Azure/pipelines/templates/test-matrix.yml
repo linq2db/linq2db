@@ -79,9 +79,9 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           is_experimental: false
-          ${{ if contains(parameters.db_filter, 'all') }}:
+          ${{ if or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'sqlite')) }}:
             enabled: true
-          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+          ${{ if not(or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'sqlite'))) }}:
             enabled: false
 
         - name: SQLite_MS
@@ -98,9 +98,9 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           is_experimental: false
-          ${{ if contains(parameters.db_filter, 'all') }}:
+          ${{ if or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'sqlite')) }}:
             enabled: true
-          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+          ${{ if not(or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'sqlite'))) }}:
             enabled: false
 
 # Access
