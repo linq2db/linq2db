@@ -532,7 +532,7 @@ namespace LinqToDB.Linq.Builder
 			var ctors = type.GetConstructors().Select(c =>
 			{
 				var attrs = c.GetCustomAttributesData();
-				var attr  = attrs.Count > 0 ? string.Join(string.Empty, attrs.Select(a => "\r\n\t\t" + a.ToString())) : string.Empty;
+				var attr  = string.Join(string.Empty, attrs.Select(a => "\r\n\t\t" + a.ToString()));
 				var ps    = c.GetParameters().Select(p => GetTypeName(p.ParameterType) + " " + MangleName(p.Name, "p")).ToArray();
 
 				return string.Format(@"{0}
@@ -542,7 +542,7 @@ namespace LinqToDB.Linq.Builder
 		}}",
 					attr,
 					name,
-					ps.Length == 0 ? "" : string.Join(", ", ps);
+					string.Join(", ", ps));
 			}).ToList();
 
 			if (ctors.Count == 1 && ctors[0].IndexOf("()") >= 0)
@@ -551,7 +551,7 @@ namespace LinqToDB.Linq.Builder
 			var members = type.GetFields().Intersect(_usedMembers.OfType<FieldInfo>()).Select(f =>
 			{
 				var attrs = f.GetCustomAttributesData();
-				var attr  = attrs.Count > 0 ? string.Join(string.Empty, attrs.Select(a => "\r\n\t\t" + a.ToString())) : string.Empty;
+				var attr  = string.Join(string.Empty, attrs.Select(a => "\r\n\t\t" + a.ToString()));
 
 				return string.Format(@"{0}
 		public {1} {2};",
@@ -565,7 +565,7 @@ namespace LinqToDB.Linq.Builder
 					var attrs = p.GetCustomAttributesData();
 					return string.Format(@"{0}
 		{3}{1} {2} {{ get; set; }}",
-						attrs.Count > 0 ? string.Join(string.Empty, attrs.Select(a => "\r\n\t\t" + a.ToString())) : string.Empty,
+						string.Join(string.Empty, attrs.Select(a => "\r\n\t\t" + a.ToString())),
 						GetTypeName(p.PropertyType),
 						MangleName(isUserName, p.Name, "P"),
 						type.IsInterface ? "" : "public ");
@@ -580,10 +580,10 @@ namespace LinqToDB.Linq.Builder
 		{{
 			throw new NotImplementedException();
 		}}",
-						attrs.Count > 0 ? string.Join(string.Empty, attrs.Select(a => "\r\n\t\t" + a.ToString())) : string.Empty,
+						string.Join(string.Empty, attrs.Select(a => "\r\n\t\t" + a.ToString())),
 						GetTypeName(m.ReturnType),
 						MangleName(isUserName, m.Name, "M"),
-						ps.Length == 0 ? "" : string.Join(", ", ps),
+						string.Join(", ", ps),
 						m.IsStatic   ? "static "   :
 						m.IsVirtual  ? "virtual "  :
 						m.IsAbstract ? "abstract " :
@@ -618,11 +618,11 @@ namespace {0}
 					type.IsInterface ? "interface" : type.IsClass ? "class" : "struct",
 					name,
 					type.IsGenericType ? GetTypeNames(type.GetGenericArguments(), ",") : null,
-					ctors.Count == 0 ? "" : string.Join("\r\n", ctors),
+					string.Join("\r\n", ctors),
 					baseClasses.Length == 0 ? "" : " : " + GetTypeNames(baseClasses),
 					type.IsPublic ? "public " : "",
 					type.IsAbstract && !type.IsInterface ? "abstract " : "",
-					attrs.Count > 0 ? string.Join(string.Empty, attrs.Select(a => "\r\n\t" + a.ToString())) : string.Empty,
+					string.Join(string.Empty, attrs.Select(a => "\r\n\t" + a.ToString())),
 					members.Length > 0 ? (ctors.Count != 0 ? "\r\n" : "") + string.Join("\r\n", members) : string.Empty);
 			}
 		}

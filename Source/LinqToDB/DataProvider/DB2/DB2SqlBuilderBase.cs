@@ -251,7 +251,7 @@ namespace LinqToDB.DataProvider.DB2
 			if (parameter.DbType == DbType.Decimal && parameter.Value is decimal decValue)
 			{
 				var d = new SqlDecimal(decValue);
-				return "(" + d.Precision + ", " + d.Scale + ")";
+				return "(" + d.Precision + InlineComma + d.Scale + ")";
 			}
 
 			if (Provider != null)
