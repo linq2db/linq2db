@@ -272,9 +272,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.Lambda:
 					{
 						var le = (LambdaExpression)expr;
-						var ps = le.Parameters
-							.Select(p => (/*GetTypeName(p.Type) + " " + */ MangleName(p.Name, "p")).TrimStart())
-							.Aggregate("", (p1, p2) => p1 + ", " + p2, p => p.TrimStart(',', ' '));
+						var ps = string.Join(", ", le.Parameters.Select(p => MangleName(p.Name, "p")));
 
 						if (le.Parameters.Count == 1)
 							_exprBuilder.Append(ps);
@@ -534,7 +532,7 @@ namespace LinqToDB.Linq.Builder
 			var ctors = type.GetConstructors().Select(c =>
 			{
 				var attrs = c.GetCustomAttributesData();
-				var attr  = attrs.Count > 0 ? attrs.Select(a => "\r\n\t\t" + a.ToString()).Aggregate((a1,a2) => a1 + a2) : "";
+				var attr  = attrs.Count > 0 ? string.Join(string.Empty, attrs.Select(a => "\r\n\t\t" + a.ToString())) : string.Empty;
 				var ps    = c.GetParameters().Select(p => GetTypeName(p.ParameterType) + " " + MangleName(p.Name, "p")).ToArray();
 
 				return string.Format(@"{0}
@@ -544,7 +542,7 @@ namespace LinqToDB.Linq.Builder
 		}}",
 					attr,
 					name,
-					ps.Length == 0 ? "" : ps.Aggregate((s, t) => s + ", " + t));
+					ps.Length == 0 ? "" : string.Join(", ", ps);
 			}).ToList();
 
 			if (ctors.Count == 1 && ctors[0].IndexOf("()") >= 0)
@@ -553,7 +551,7 @@ namespace LinqToDB.Linq.Builder
 			var members = type.GetFields().Intersect(_usedMembers.OfType<FieldInfo>()).Select(f =>
 			{
 				var attrs = f.GetCustomAttributesData();
-				var attr  = attrs.Count > 0 ? attrs.Select(a => "\r\n\t\t" + a.ToString()).Aggregate((a1,a2) => a1 + a2) : "";
+				var attr  = attrs.Count > 0 ? string.Join(string.Empty, attrs.Select(a => "\r\n\t\t" + a.ToString())) : string.Empty;
 
 				return string.Format(@"{0}
 		public {1} {2};",
@@ -567,7 +565,7 @@ namespace LinqToDB.Linq.Builder
 					var attrs = p.GetCustomAttributesData();
 					return string.Format(@"{0}
 		{3}{1} {2} {{ get; set; }}",
-						attrs.Count > 0 ? attrs.Select(a => "\r\n\t\t" + a.ToString()).Aggregate((a1,a2) => a1 + a2) : "",
+						attrs.Count > 0 ? string.Join(string.Empty, attrs.Select(a => "\r\n\t\t" + a.ToString())) : string.Empty,
 						GetTypeName(p.PropertyType),
 						MangleName(isUserName, p.Name, "P"),
 						type.IsInterface ? "" : "public ");
@@ -582,10 +580,10 @@ namespace LinqToDB.Linq.Builder
 		{{
 			throw new NotImplementedException();
 		}}",
-						attrs.Count > 0 ? attrs.Select(a => "\r\n\t\t" + a.ToString()).Aggregate((a1,a2) => a1 + a2) : "",
+						attrs.Count > 0 ? string.Join(string.Empty, attrs.Select(a => "\r\n\t\t" + a.ToString())) : string.Empty,
 						GetTypeName(m.ReturnType),
 						MangleName(isUserName, m.Name, "M"),
-						ps.Length == 0 ? "" : ps.Aggregate((s,t) => s + ", " + t),
+						ps.Length == 0 ? "" : string.Join(", ", ps),
 						m.IsStatic   ? "static "   :
 						m.IsVirtual  ? "virtual "  :
 						m.IsAbstract ? "abstract " :
@@ -620,23 +618,18 @@ namespace {0}
 					type.IsInterface ? "interface" : type.IsClass ? "class" : "struct",
 					name,
 					type.IsGenericType ? GetTypeNames(type.GetGenericArguments(), ",") : null,
-					ctors.Count == 0 ? "" : ctors.Aggregate((s,t) => s + "\r\n" + t),
+					ctors.Count == 0 ? "" : string.Join("\r\n", ctors),
 					baseClasses.Length == 0 ? "" : " : " + GetTypeNames(baseClasses),
 					type.IsPublic ? "public " : "",
 					type.IsAbstract && !type.IsInterface ? "abstract " : "",
-					attrs.Count > 0 ? attrs.Select(a => "\r\n\t" + a.ToString()).Aggregate((a1,a2) => a1 + a2) : "",
-					members.Length > 0 ?
-						(ctors.Count != 0 ? "\r\n" : "") + members.Aggregate((f1,f2) => f1 + "\r\n" + f2) :
-						"");
+					attrs.Count > 0 ? string.Join(string.Empty, attrs.Select(a => "\r\n\t" + a.ToString())) : string.Empty,
+					members.Length > 0 ? (ctors.Count != 0 ? "\r\n" : "") + string.Join("\r\n", members) : string.Empty);
 			}
 		}
 
 		string GetTypeNames(IEnumerable<Type> types, string separator = ", ")
 		{
-			return types.Select(GetTypeName).Aggregate(
-				"",
-				(t1,t2) => t1 + separator + t2,
-				p => p.TrimStart(separator.ToCharArray()));
+			return string.Join(separator, types.Select(GetTypeName));
 		}
 
 		bool IsAnonymous(Type type)
@@ -727,7 +720,7 @@ namespace {0}
 				{
 					name = string.Format("{0}<{1}>",
 						name,
-						args.Select(GetTypeName).Aggregate("", (s,t) => s + "," + t, p => p.TrimStart(',')));
+						string.Join(", ", args.Select(GetTypeName)));
 				}
 
 				_typeNames[type] = name;
