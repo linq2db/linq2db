@@ -622,7 +622,8 @@ namespace LinqToDB.SqlProvider
 			return new SqlValue(value);
 		}
 
-		public virtual ISqlExpression OptimizeExpression(ISqlExpression expression, IReadOnlyParameterValues? parameterValues)
+		public virtual ISqlExpression OptimizeExpression(ISqlExpression expression, ConvertVisitor convertVisitor,
+			IReadOnlyParameterValues? parameterValues)
 		{
 			switch (expression.ElementType)
 			{
@@ -790,8 +791,7 @@ namespace LinqToDB.SqlProvider
 										be2.Expr1.TryEvaluateExpression(parameterValues, out var be2v1)  &&
 										be2v1 is int bi :
 									{
-										return OptimizeExpression(
-											new SqlBinaryExpression(be2.SystemType, CreateSqlValue(i * bi, be), "*", be2.Expr2), parameterValues);
+										return new SqlBinaryExpression(be2.SystemType, CreateSqlValue(i * bi, be), "*", be2.Expr2);
 									}
 								}
 							}
@@ -875,7 +875,10 @@ namespace LinqToDB.SqlProvider
 							if (parms.Length != len)
 								return new SqlFunction(func.SystemType, func.Name, func.IsAggregate, func.Precedence, parms);
 
-							if (parms.Length == 3 && parms[0].ElementType == QueryElementType.SqlFunction)
+							if (convertVisitor.ParentElement?.ElementType != QueryElementType.Column
+								&& parms.Length == 3 
+								&& !parms[0].ShouldCheckForNull()
+								&& parms[0].ElementType.In(QueryElementType.SqlFunction, QueryElementType.SearchCondition))
 							{
 								var boolValue1 = QueryHelper.GetBoolValue(parms[1], parameterValues);
 								var boolValue2 = QueryHelper.GetBoolValue(parms[2], parameterValues);
@@ -1332,12 +1335,7 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.InListPredicate:
 				{
 					var inList = (SqlPredicate.InList)predicate;
-					var reduced = inList.Reduce(parameterValues);
-
-					if (ReferenceEquals(reduced, inList))
-						return ConvertInListPredicate(mappingSchema, inList, parameterValues);
-
-					return reduced;
+					return ConvertInListPredicate(mappingSchema, inList, parameterValues);
 				}
 			}
 			return predicate;
@@ -2255,7 +2253,7 @@ namespace LinqToDB.SqlProvider
 				for (;;)
 				{
 					if (ne is ISqlExpression sqlExpression)
-						ne = OptimizeExpression(sqlExpression, parameterValues);
+						ne = OptimizeExpression(sqlExpression, visitor, parameterValues);
 
 					if (ne is ISqlPredicate sqlPredicate)
 						ne = OptimizePredicate(sqlPredicate, parameterValues);
@@ -2409,6 +2407,12 @@ namespace LinqToDB.SqlProvider
 								if (testParam.CanBeEvaluated(true))
 									return true;
 							}
+							break;
+						}
+						case "Length":
+						{
+							if (sqlFunc.Parameters[0].CanBeEvaluated(true))
+								return true;
 							break;
 						}
 					}

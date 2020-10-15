@@ -1541,7 +1541,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (!typeof(DataParameter).IsSameOrParentOf(newExpr.ValueExpression.Type))
 				{
-					if (columnDescriptor != null)
+					if (columnDescriptor != null && !(originalAccessor is BinaryExpression))
 					{
 						newExpr.DataType = columnDescriptor.GetDbDataType(true);
 						if (newExpr.ValueExpression.Type != columnDescriptor.MemberType)
@@ -1958,13 +1958,13 @@ namespace LinqToDB.Linq.Builder
 				if ((typeof(bool) == left.Type || typeof(bool?) == left.Type) && left.Unwrap() is ConstantExpression lc)
 				{
 					value      = lc.Value as bool?;
-					isNullable = typeof(bool?) == left.Type;
+					isNullable = typeof(bool?) == left.Type || r.CanBeNull;
 					expression = r;
 				}
 				else if ((typeof(bool) == right.Type || typeof(bool?) == right.Type) && right.Unwrap() is ConstantExpression rc)
 				{
 					value      = rc.Value as bool?;
-					isNullable = typeof(bool?) == right.Type;
+					isNullable = typeof(bool?) == right.Type || l.CanBeNull;
 					expression = l;
 				}
 
@@ -1985,7 +1985,7 @@ namespace LinqToDB.Linq.Builder
 					                    (isNullable || NeedNullCheck(expression))
 						? withNull
 						: (bool?)null;
-					predicate = new SqlPredicate.IsTrue(expression, trueValue, falseValue, withNullValue, isNot); 
+					predicate = new SqlPredicate.IsTrue(expression, trueValue, falseValue, withNullValue, isNot);
 				}
 			}
 
@@ -2951,22 +2951,6 @@ namespace LinqToDB.Linq.Builder
 
 				default                    :
 					var predicate = ConvertPredicate(context, expression);
-
-					if (predicate is SqlPredicate.Expr ex)
-					{
-						var expr = ex.Expr1;
-
-						if (expr.ElementType == QueryElementType.SearchCondition)
-						{
-							var sc = (SqlSearchCondition)expr;
-
-							if (sc.Conditions.Count == 1)
-							{
-								conditions.Add(sc.Conditions[0]);
-								break;
-							}
-						}
-					}
 
 					conditions.Add(new SqlCondition(false, predicate));
 

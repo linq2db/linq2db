@@ -112,13 +112,6 @@ namespace LinqToDB.SqlQuery
 			}
 
 			public override QueryElementType ElementType => QueryElementType.NotExprPredicate;
-
-			protected override void ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
-			{
-				if (IsNot) sb.Append("NOT (");
-				base.ToString(sb, dic);
-				if (IsNot) sb.Append(")");
-			}
 		}
 
 		// { expression { = | <> | != | > | >= | ! > | < | <= | !< } expression
@@ -739,28 +732,6 @@ namespace LinqToDB.SqlQuery
 			public override IQueryElement Invert()
 			{
 				return new InList(Expr1, !WithNull, !IsNot, Values);
-			}
-
-			public ISqlPredicate Reduce(IReadOnlyParameterValues? parameterValues)
-			{
-				if (WithNull == null)
-					return this;
-
-				var predicate = new InList(Expr1, null, IsNot, Values);
-				if (WithNull == null || !Expr1.ShouldCheckForNull()) 
-					return predicate;
-
-				if (WithNull == false)
-					return predicate;
-
-				if (Expr1 is ObjectSqlExpression)
-					return predicate;
-
-				var search = new SqlSearchCondition();
-				search.Conditions.Add(new SqlCondition(false, predicate, WithNull.Value));
-				search.Conditions.Add(new SqlCondition(false, new IsNull(Expr1, !WithNull.Value), WithNull.Value));
-				return search;
-
 			}
 
 			protected override ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)

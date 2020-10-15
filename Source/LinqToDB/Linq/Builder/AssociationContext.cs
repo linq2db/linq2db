@@ -79,7 +79,10 @@ namespace LinqToDB.Linq.Builder
 				.ConvertToIndex(expression, level, flags)
 				.ToArray();
 
-			return indexes;
+			var corrected = indexes.Select(s => s.WithSql(SubqueryContext.SelectQuery.Select.Columns[s.Index]))
+				.ToArray();
+
+			return corrected;
 		}
 
 		public IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)

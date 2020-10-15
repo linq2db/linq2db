@@ -1483,14 +1483,15 @@ namespace LinqToDB.SqlQuery
 					switch (function.Name)
 					{
 						case "CASE":
-
+						{
 							if (function.Parameters.Length != 3)
 							{
 								errorMessage = "CASE function expected to have 3 parameters.";
 								return false;
 							}
 
-							if (!function.Parameters[0].TryEvaluateExpression(parameterValues, out var cond, out errorMessage))
+							if (!function.Parameters[0]
+								.TryEvaluateExpression(parameterValues, out var cond, out errorMessage))
 								return false;
 
 							if (!(cond is bool))
@@ -1501,9 +1502,30 @@ namespace LinqToDB.SqlQuery
 							}
 
 							if ((bool)cond!)
-								return function.Parameters[1].TryEvaluateExpression(parameterValues, out result, out errorMessage);
+								return function.Parameters[1]
+									.TryEvaluateExpression(parameterValues, out result, out errorMessage);
 							else
-								return function.Parameters[2].TryEvaluateExpression(parameterValues, out result, out errorMessage);
+								return function.Parameters[2]
+									.TryEvaluateExpression(parameterValues, out result, out errorMessage);
+						}
+
+						case "Length":
+						{
+							if (function.Parameters[0]
+								.TryEvaluateExpression(parameterValues, out var strValue, out errorMessage))
+							{
+								if (strValue == null)
+									return true;
+								if (strValue is string str)
+								{
+									result = str.Length;
+									return true;
+								}
+							}
+
+							return false;
+						}
+
 
 						default:
 							errorMessage = $"Unknown function '{function.Name}'.";

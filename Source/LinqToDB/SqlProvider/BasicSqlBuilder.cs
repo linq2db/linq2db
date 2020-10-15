@@ -2112,6 +2112,13 @@ namespace LinqToDB.SqlProvider
 					BuildPredicate(new SqlPredicate.IsNull(predicate.Expr1, predicate.IsNot));
 					StringBuilder.Append(")");
 				}
+				else if (predicate.WithNull == true && predicate.Expr1.ShouldCheckForNull())
+				{
+					StringBuilder.Insert(len, "(");
+					StringBuilder.Append(" OR ");
+					BuildPredicate(new SqlPredicate.IsNull(predicate.Expr1, false));
+					StringBuilder.Append(")");
+				}
 			}
 
 			if (longList && !hasNull)

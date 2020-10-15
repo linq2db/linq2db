@@ -1405,6 +1405,15 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void MakeDateTimeParametersMonth([DataSources] string context, [Values(1, 10)] int month)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in from p in    Types select Sql.MakeDateTime(2010 + p.ID, month, 1) select t,
+					from t in from p in db.Types select Sql.MakeDateTime(2010 + p.ID, month, 1) select t);
+		}
+
+		[Test]
 		public void NewDateTime1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

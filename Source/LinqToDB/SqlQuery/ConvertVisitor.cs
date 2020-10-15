@@ -901,7 +901,7 @@ namespace LinqToDB.SqlQuery
 						var insertedT = ConvertInternal(output.InsertedTable) as SqlTable;
 						var deletedT  = ConvertInternal(output.DeletedTable)  as SqlTable;
 						var outputT   = ConvertInternal(output.OutputTable)   as SqlTable;
-						var outputQ   = output.OutputQuery != null ? (SelectQuery)ConvertInternal(output.OutputQuery) : null;
+						var outputQ   = output.OutputQuery != null ? ConvertInternal(output.OutputQuery) as SelectQuery : null;
 
 						if (
 							sourceT   != null && !ReferenceEquals(output.SourceTable, sourceT)     ||
