@@ -259,6 +259,7 @@ public class a_CreateData : TestBase
 			case ProviderName.SqlServer2017                    : RunScript(context,          "\nGO\n",  "SqlServer");                      break;
 			case TestProvName.SqlServer2019                    : RunScript(context,          "\nGO\n",  "SqlServer");                      break;
 			case TestProvName.SqlAzure                         : RunScript(context,          "\nGO\n",  "SqlServer");                      break;
+			case TestProvName.Default                          : RunScript(context,          "\nGO\n",  "SQLite",   SQLiteAction);         break;
 			case ProviderName.SQLiteMS                         : RunScript(context,          "\nGO\n",  "SQLite",   SQLiteAction);
 			                                                     RunScript(context+ ".Data", "\nGO\n",  "SQLite",   SQLiteAction);         break;
 			case ProviderName.OracleManaged                    : RunScript(context,          "\n/\n",   "Oracle");                         break;
@@ -374,6 +375,20 @@ public class a_CreateData : TestBase
 					FIRSTNAME = "Jürgen",
 					LASTNAME  = "König",
 				});
+
+			var sp = conn.DataProvider.GetSchemaProvider();
+
+			var schema = sp.GetSchema(conn);
+
+			foreach (var table in schema.Tables)
+			{
+				if (table.TableName!.StartsWith("Animals") ||
+					table.TableName!.StartsWith("Eyes")    ||
+					table.TableName!.StartsWith("xxPatient"))
+				{
+					conn.Execute($"DROP TABLE \"{table.TableName}\"");
+				}
+			}
 		}
 	}
 

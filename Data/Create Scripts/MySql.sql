@@ -584,7 +584,7 @@ CREATE PROCEDURE `Issue2313Parameters`(
 	IN `GeometryCollection` GEOMETRYCOLLECTION
 )
 BEGIN
-	SELECT 
+	SELECT
 	`VarChar255`,
 	`VarChar1`,
 	`Char255`,
@@ -703,7 +703,7 @@ CREATE PROCEDURE `Issue2313Results`(
 	IN `Year` YEAR
 )
 BEGIN
-	SELECT 
+	SELECT
 	`VarChar255`,
 	`VarChar1`,
 	`Char255`,

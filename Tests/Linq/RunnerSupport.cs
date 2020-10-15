@@ -29,6 +29,7 @@ namespace Tests
 
 							switch (queue)
 							{
+								case "SQLite.Default"   : queue = "Default";        break;
 								case "SqlServer"        : queue = "SqlServer.2008"; break;
 								case "SqlServer.2005.1" : queue = "SqlServer.2005"; break;
 								case "SqlServer.2008.1" : queue = "SqlServer.2008"; break;
@@ -39,7 +40,7 @@ namespace Tests
 					}
 				}
 
-				return "SQLite.Classic";
+				return "Default";
 			}
 
 			return null;

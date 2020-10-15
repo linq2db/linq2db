@@ -587,7 +587,6 @@ namespace Tests
 					using (new DisableLogging())
 					using (var db = new TestDataConnection())
 					{
-						db.Parent.Delete(c => c.ParentID >= 1000);
 						_parent = db.Parent.ToList();
 						db.Close();
 
