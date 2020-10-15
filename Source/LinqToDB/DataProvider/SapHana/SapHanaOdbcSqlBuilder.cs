@@ -31,10 +31,10 @@
 			switch (type.Type.DataType)
 			{
 				case DataType.Money:
-					StringBuilder.Append("Decimal(19,4)");
+					StringBuilder.Append("Decimal(19, 4)");
 					break;
 				case DataType.SmallMoney:
-					StringBuilder.Append("Decimal(10,4)");
+					StringBuilder.Append("Decimal(10, 4)");
 					break;
 				default:
 					base.BuildDataTypeFromDataType(type, forCreateTable);
