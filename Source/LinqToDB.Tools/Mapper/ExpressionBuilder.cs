@@ -258,8 +258,8 @@ namespace LinqToDB.Tools.Mapper
 		Expression? ConvertCollection(Expression fromExpression, Type toType)
 		{
 			var fromType     = fromExpression.Type;
-			var fromItemType = fromType.GetItemType();
-			var toItemType   = toType.  GetItemType();
+			var fromItemType = fromType.GetItemType()!;
+			var toItemType   = toType.  GetItemType()!;
 
 			if (toType.IsGenericType && !toType.IsGenericTypeDefinition)
 			{
@@ -543,8 +543,8 @@ namespace LinqToDB.Tools.Mapper
 
 				if (toType.IsArray && fromType.IsSubClassOf(typeof(IEnumerable<>)))
 				{
-					var fromItemType = fromType.GetItemType();
-					var toItemType   = toType.  GetItemType();
+					var fromItemType = fromType.GetItemType()!;
+					var toItemType   = toType.  GetItemType()!;
 
 					var expr = ToArray(_builder, _fromExpression, fromItemType, toItemType);
 
@@ -569,8 +569,8 @@ namespace LinqToDB.Tools.Mapper
 				if (clearMethodInfo != null)
 					_expressions.Add(Call(_localObject, clearMethodInfo));
 
-				var fromItemType = fromListType.GetItemType();
-				var toItemType   = toListType.  GetItemType();
+				var fromItemType = fromListType.GetItemType()!;
+				var toItemType   = toListType.  GetItemType()!;
 
 				var addRangeMethodInfo = toListType.GetMethod("AddRange");
 

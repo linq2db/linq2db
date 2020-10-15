@@ -667,18 +667,17 @@ namespace LinqToDB.Extensions
 			return false;
 		}
 		
-		static readonly ConcurrentDictionary<Type,Type?> getItemTypeCache = new ConcurrentDictionary<Type, Type?>();
+		static readonly ConcurrentDictionary<Type,Type?> _getItemTypeCache = new ConcurrentDictionary<Type, Type?>();
 		
-		[return: NotNullIfNotNull("type")]
 		public static Type? GetItemType(this Type? type)
 		{
 			if (type == null)
 				return null;
-			return getItemTypeCache.GetOrAdd(type, (t) =>
+
+			return _getItemTypeCache.GetOrAdd(type, t =>
 			{
 				if (t == typeof(object))
-					// if it possible to have null here or we should remove check?
-					return t.HasElementType ? t.GetElementType() : null;
+					return null;
 
 				if (t.IsArray)
 					return t.GetElementType();

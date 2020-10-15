@@ -413,7 +413,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								var mi = EnumerableMethods
 									.First(m => m.Name == "Count" && m.GetParameters().Length == 1)
-									.MakeGenericMethod(me.Expression.Type.GetItemType());
+									.MakeGenericMethod(me.Expression.Type.GetItemType()!);
 
 								return new TransformInfo(Expression.Call(null, mi, me.Expression));
 							}
@@ -1504,7 +1504,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 
-		Dictionary<Expression, Expression?> _rootExpressions = new Dictionary<Expression, Expression?>();
+		Dictionary<Expression, Expression> _rootExpressions = new Dictionary<Expression, Expression>();
 
 		[return: NotNullIfNotNull("expr")]
 		internal Expression? GetRootObject(Expression? expr)

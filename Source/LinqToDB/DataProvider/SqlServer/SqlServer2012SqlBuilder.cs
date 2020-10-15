@@ -28,7 +28,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return "OFFSET {0} ROWS";
 		}
 
-		protected override bool   OffsetFirst         { get { return true;              } }
+		protected override bool OffsetFirst => true;
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{

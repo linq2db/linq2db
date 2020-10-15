@@ -57,7 +57,7 @@ namespace LinqToDB.DataProvider.SapHana
 			return selectQuery.Select.TakeValue == null ? "LIMIT 4200000000 OFFSET {0}" : "OFFSET {0}";
 		}
 
-		public override bool IsNestedJoinParenthesisRequired { get { return true; } }
+		public override bool IsNestedJoinParenthesisRequired => true;
 
 		protected override void BuildStartCreateTableStatement(SqlCreateTableStatement createTable)
 		{
@@ -192,7 +192,7 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 			AppendIndent();
 			StringBuilder.Append("PRIMARY KEY (");
-			StringBuilder.Append(fieldNames.Aggregate((f1,f2) => f1 + ", " + f2));
+			StringBuilder.Append(string.Join(InlineComma, fieldNames));
 			StringBuilder.Append(")");
 		}
 
