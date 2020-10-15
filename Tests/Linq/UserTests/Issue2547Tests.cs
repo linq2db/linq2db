@@ -26,7 +26,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Issue2547Test([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void Issue2547Test([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllOracle, TestProvName.AllPostgreSQL)] string context)
 		{
 			var mappingSchema = new MappingSchema();
 
