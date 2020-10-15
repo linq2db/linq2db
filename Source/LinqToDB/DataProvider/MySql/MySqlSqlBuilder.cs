@@ -81,7 +81,7 @@ namespace LinqToDB.DataProvider.MySql
 			{
 				AppendIndent()
 					.AppendFormat(
-						"LIMIT {0},{1}",
+						"LIMIT {0}, {1}",
 						WithStringBuilder(new StringBuilder(), () => BuildExpression(selectQuery.Select.SkipValue)),
 						selectQuery.Select.TakeValue == null ?
 							long.MaxValue.ToString() :
@@ -101,29 +101,29 @@ namespace LinqToDB.DataProvider.MySql
 					case DataType.SByte         :
 					case DataType.Int16         :
 					case DataType.Int32         :
-					case DataType.Int64         : StringBuilder.Append("SIGNED");        break;
+					case DataType.Int64         : StringBuilder.Append("SIGNED");         break;
 					case DataType.BitArray      : // wild guess
 					case DataType.Byte          :
 					case DataType.UInt16        :
 					case DataType.UInt32        :
-					case DataType.UInt64        : StringBuilder.Append("UNSIGNED");      break;
-					case DataType.Money         : StringBuilder.Append("DECIMAL(19,4)"); break;
-					case DataType.SmallMoney    : StringBuilder.Append("DECIMAL(10,4)"); break;
+					case DataType.UInt64        : StringBuilder.Append("UNSIGNED");       break;
+					case DataType.Money         : StringBuilder.Append("DECIMAL(19, 4)"); break;
+					case DataType.SmallMoney    : StringBuilder.Append("DECIMAL(10, 4)"); break;
 					case DataType.DateTime      :
 					case DataType.DateTime2     :
 					case DataType.SmallDateTime :
-					case DataType.DateTimeOffset: StringBuilder.Append("DATETIME");      break;
-					case DataType.Time          : StringBuilder.Append("TIME");          break;
-					case DataType.Date          : StringBuilder.Append("DATE");          break;
-					case DataType.Json          : StringBuilder.Append("JSON");          break;
-					case DataType.Guid          : StringBuilder.Append("CHAR(36)");      break;
+					case DataType.DateTimeOffset: StringBuilder.Append("DATETIME");       break;
+					case DataType.Time          : StringBuilder.Append("TIME");           break;
+					case DataType.Date          : StringBuilder.Append("DATE");           break;
+					case DataType.Json          : StringBuilder.Append("JSON");           break;
+					case DataType.Guid          : StringBuilder.Append("CHAR(36)");       break;
 					// TODO: FLOAT/DOUBLE support in CAST added just recently (v8.0.17)
 					// and needs version sniffing
 					case DataType.Double        :
 					case DataType.Single        : base.BuildDataTypeFromDataType(SqlDataType.Decimal, forCreateTable); break;
 					case DataType.Decimal       :
 						if (type.Type.Scale != null && type.Type.Scale != 0)
-							StringBuilder.Append($"DECIMAL({type.Type.Precision ?? 10},{type.Type.Scale})");
+							StringBuilder.Append($"DECIMAL({type.Type.Precision ?? 10}, {type.Type.Scale})");
 						else if (type.Type.Precision != null && type.Type.Precision != 10)
 							StringBuilder.Append($"DECIMAL({type.Type.Precision})");
 						else
@@ -168,11 +168,11 @@ namespace LinqToDB.DataProvider.MySql
 				case DataType.UInt16        : StringBuilder.Append("SMALLINT UNSIGNED");             break;
 				case DataType.UInt32        : StringBuilder.Append("INT UNSIGNED");                  break;
 				case DataType.UInt64        : StringBuilder.Append("BIGINT UNSIGNED");               break;
-				case DataType.Money         : StringBuilder.Append("DECIMAL(19,4)");                 break;
-				case DataType.SmallMoney    : StringBuilder.Append("DECIMAL(10,4)");                 break;
+				case DataType.Money         : StringBuilder.Append("DECIMAL(19, 4)");                break;
+				case DataType.SmallMoney    : StringBuilder.Append("DECIMAL(10, 4)");                break;
 				case DataType.Decimal       :
 					if (type.Type.Scale != null && type.Type.Scale != 0)
-						StringBuilder.Append($"DECIMAL({type.Type.Precision ?? 10},{type.Type.Scale})");
+						StringBuilder.Append($"DECIMAL({type.Type.Precision ?? 10}, {type.Type.Scale})");
 					else if (type.Type.Precision != null && type.Type.Precision != 10)
 						StringBuilder.Append($"DECIMAL({type.Type.Precision})");
 					else
@@ -422,7 +422,7 @@ namespace LinqToDB.DataProvider.MySql
 				foreach (var expr in insertOrUpdate.Update.Items)
 				{
 					if (!first)
-						StringBuilder.Append(',').AppendLine();
+						StringBuilder.AppendLine(Comma);
 					first = false;
 
 					AppendIndent();
@@ -461,7 +461,7 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			AppendIndent();
 			StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY CLUSTERED (");
-			StringBuilder.Append(fieldNames.Aggregate((f1,f2) => f1 + ", " + f2));
+			StringBuilder.Append(string.Join(InlineComma, fieldNames));
 			StringBuilder.Append(")");
 		}
 
@@ -528,9 +528,9 @@ namespace LinqToDB.DataProvider.MySql
 				BuildExpression(items[i]);
 
 				if (i + 1 < items.Count)
-					StringBuilder.Append(',');
-
-				StringBuilder.AppendLine();
+					StringBuilder.AppendLine(Comma);
+				else
+					StringBuilder.AppendLine();
 			}
 
 			Indent--;

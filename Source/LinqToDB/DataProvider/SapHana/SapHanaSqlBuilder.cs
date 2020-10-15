@@ -192,7 +192,7 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 			AppendIndent();
 			StringBuilder.Append("PRIMARY KEY (");
-			StringBuilder.Append(fieldNames.Aggregate((f1,f2) => f1 + ", " + f2));
+			StringBuilder.Append(string.Join(InlineComma, fieldNames));
 			StringBuilder.Append(")");
 		}
 

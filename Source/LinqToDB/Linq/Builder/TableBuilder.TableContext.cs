@@ -386,9 +386,8 @@ namespace LinqToDB.Linq.Builder
 				(
 					from idx in index
 					where idx.Item1 >= 0 && idx.Item2 != null
-					let   cd = entityDescriptor.Columns.FirstOrDefault(c => c.ColumnName == idx.Item2.PhysicalName)
+					from cd in entityDescriptor.Columns.Where(c => c.ColumnName == idx.Item2.PhysicalName)
 					where
-						cd != null &&
 						(cd.Storage != null ||
 						 !(cd.MemberAccessor.MemberInfo is PropertyInfo info) ||
 						 info.GetSetMethod(true) != null)
@@ -542,8 +541,7 @@ namespace LinqToDB.Linq.Builder
 					(
 						from idx in index
 						where idx.Item1 >= 0 && idx.Item2 != null
-						let   cd = entityDescriptor.Columns.FirstOrDefault(c => c.ColumnName == idx.Item2!.PhysicalName)
-						where cd != null
+						from cd in entityDescriptor.Columns.Where(c => c.ColumnName == idx.Item2.PhysicalName)
 						select new ColumnInfo
 						{
 							IsComplex  = cd.MemberAccessor.IsComplex,

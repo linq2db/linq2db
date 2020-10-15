@@ -124,7 +124,7 @@ namespace LinqToDB.DataProvider.SQLite
 			{
 				AppendIndent();
 				StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY (");
-				StringBuilder.Append(fieldNames.Aggregate((f1,f2) => f1 + ", " + f2));
+			StringBuilder.Append(string.Join(InlineComma, fieldNames));
 				StringBuilder.Append(")");
 			}
 		}

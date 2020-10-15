@@ -150,8 +150,8 @@ namespace LinqToDB.DataProvider.Oracle
 				case DataType.Int64          : StringBuilder.Append("Number(19)");                break;
 				case DataType.SByte          :
 				case DataType.Byte           : StringBuilder.Append("Number(3)");                 break;
-				case DataType.Money          : StringBuilder.Append("Number(19,4)");              break;
-				case DataType.SmallMoney     : StringBuilder.Append("Number(10,4)");              break;
+				case DataType.Money          : StringBuilder.Append("Number(19, 4)");             break;
+				case DataType.SmallMoney     : StringBuilder.Append("Number(10, 4)");             break;
 				case DataType.VarChar        :
 					if (type.Type.Length == null || type.Type.Length > 4000 || type.Type.Length < 1)
 						StringBuilder.Append("VarChar(4000)");

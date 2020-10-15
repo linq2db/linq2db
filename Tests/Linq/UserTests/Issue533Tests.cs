@@ -14,7 +14,6 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue533Tests : TestBase
 	{
-
 		public class MyString
 		{
 			public string Value = null!;
@@ -37,6 +36,8 @@ namespace Tests.UserTests
 		[Test]
 		public void Issue533Test([DataSources] string context)
 		{
+			ResetPersonIdentity(context);
+			
 			var ms = new MappingSchema();
 			ms.SetConverter<MyString, string?>((obj) =>
 			{
@@ -54,7 +55,6 @@ namespace Tests.UserTests
 				                               return new MyString { Value = txt };
 			});
 
-			using (new DisableBaseline("Non-stable identity values"))
 			using (var db = GetDataContext(context, ms))
 			using (new DeletePerson(db))
 			{

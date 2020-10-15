@@ -74,7 +74,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case DataType.SByte         :
 				case DataType.Byte          : StringBuilder.Append("SmallInt");       break;
 				case DataType.Money         : StringBuilder.Append("money");          break;
-				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10,4)");  break;
+				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10, 4)"); break;
 				case DataType.DateTime2     :
 				case DataType.SmallDateTime :
 				case DataType.DateTime      : StringBuilder.Append("TimeStamp");      break;
@@ -181,7 +181,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			foreach (var expr in insertOrUpdate.Update.Keys)
 			{
 				if (!firstKey)
-					StringBuilder.Append(',');
+					StringBuilder.Append(InlineComma);
 				firstKey = false;
 
 				BuildExpression(expr.Column, false, true);
@@ -198,7 +198,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				foreach (var expr in insertOrUpdate.Update.Items)
 				{
 					if (!first)
-						StringBuilder.Append(',').AppendLine();
+						StringBuilder.AppendLine(Comma);
 					first = false;
 
 					AppendIndent();
@@ -348,7 +348,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				foreach (var oi in output.OutputItems)
 				{
 					if (!first)
-						StringBuilder.Append(',').AppendLine();
+						StringBuilder.AppendLine(Comma);
 					first = false;
 
 					AppendIndent();

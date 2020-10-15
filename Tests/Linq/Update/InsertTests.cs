@@ -1043,7 +1043,8 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertOrUpdate1([DataSources] string context)
 		{
-			using (new DisableBaseline("Non-stable identity values"))
+			ResetPersonIdentity(context);
+
 			using (var db = GetDataContext(context))
 			{
 				var id = 0;
@@ -1084,7 +1085,8 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertOrUpdate2([DataSources] string context)
 		{
-			using (new DisableBaseline("Non-stable identity values"))
+			ResetPersonIdentity(context);
+
 			using (var db = GetDataContext(context))
 			{
 				int id;
@@ -1159,7 +1161,8 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertOrReplace1([DataSources] string context)
 		{
-			using (new DisableBaseline("Non-stable identity values"))
+			ResetPersonIdentity(context);
+
 			using (var db = GetDataContext(context))
 			{
 				var id = 0;
@@ -1195,7 +1198,8 @@ namespace Tests.xUpdate
 		[Test]
 		public async Task InsertOrReplace1Async([DataSources] string context)
 		{
-			using (new DisableBaseline("Non-stable identity values"))
+			ResetPersonIdentity(context);
+
 			using (var db = GetDataContext(context))
 			{
 				var id = 0;
@@ -1249,7 +1253,8 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertOrUpdate3([DataSources] string context)
 		{
-			using (new DisableBaseline("Non-stable identity values"))
+			ResetPersonIdentity(context);
+
 			using (var db = GetDataContext(context))
 			{
 				var id = 0;
@@ -1299,7 +1304,8 @@ namespace Tests.xUpdate
 		[Test]
 		public async Task InsertOrUpdate3Async([DataSources] string context)
 		{
-			using (new DisableBaseline("Non-stable identity values"))
+			ResetPersonIdentity(context);
+
 			using (var db = GetDataContext(context))
 			{
 				var id = 0;
@@ -1349,7 +1355,8 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertOrUpdate4([DataSources] string context)
 		{
-			using (new DisableBaseline("Non-stable identity values"))
+			ResetPersonIdentity(context);
+
 			using (var db = GetDataContext(context))
 			{
 				var id = 0;
@@ -1940,7 +1947,8 @@ namespace Tests.xUpdate
 		[Test]
 		public void TestUpdateWithColumnFilter([DataSources] string context, [Values] bool withMiddleName)
 		{
-			using (new DisableBaseline("Non-stable identity values"))
+			ResetPersonIdentity(context);
+
 			using (var db = GetDataContext(context))
 			{
 				var newName = "InsertColumnFilter";
