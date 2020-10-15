@@ -1,0 +1,49 @@
+variables:
+  - template: templates/test-vars.yml
+  - name: solution
+    value: linq2db.sln
+  - name: build_configuration
+    value: Azure
+  - name: assemblyVersion
+    value: 3.0.0
+
+trigger: none
+pr:
+  branches:
+    include:
+    - '*'
+
+stages:
+- stage: ''
+  displayName: ''
+  jobs:
+##############
+#  BUILD JOB #
+##############
+  - template: templates/build-job.yml
+    parameters:
+      for_nuget: false
+
+#############
+# TEST JOBS #
+#############
+  - template: templates/test-matrix.yml
+    parameters:
+      enabled: succeeded()
+      with_baselines: true
+      # experimental parameter
+      ${{ if eq(variables['Build.DefinitionName'], 'experimental') }}:
+          experimental: true
+      ${{ if ne(variables['Build.DefinitionName'], 'experimental') }}:
+          experimental: false
+      # db_filter parameter
+      ${{ if eq(variables['Build.DefinitionName'], 'test-db2') }}:
+        db_filter: 'db2'
+      ${{ if eq(variables['Build.DefinitionName'], 'test-sybase') }}:
+        db_filter: 'sybase.ase'
+      ${{ if eq(variables['Build.DefinitionName'], 'test-informix') }}:
+        db_filter: 'informix'
+      ${{ if eq(variables['Build.DefinitionName'], 'test-sqlserver-2019') }}:
+        db_filter: 'sqlserver.2019'
+      ${{ if eq(variables['Build.DefinitionName'], 'test-sqlite') }}:
+        db_filter: 'sqlite'

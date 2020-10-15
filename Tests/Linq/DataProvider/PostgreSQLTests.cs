@@ -885,6 +885,8 @@ namespace Tests.DataProvider
 			[NotColumn]
 			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL10)]
 			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL11)]
+			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL12)]
+			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL13)]
 			                                           public PhysicalAddress? macaddr8DataType         { get; set; }
 			// json
 			[Column]                                   public string? jsonDataType                      { get; set; }
@@ -907,7 +909,10 @@ namespace Tests.DataProvider
 		public void BulkCopyTest([Values] BulkTestMode mode, [IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
 			var providerName      = GetProviderName(context, out var _);
-			var macaddr8Supported = providerName == TestProvName.PostgreSQL10 || providerName == TestProvName.PostgreSQL11;
+			var macaddr8Supported = providerName == TestProvName.PostgreSQL10
+				|| providerName == TestProvName.PostgreSQL11
+				|| providerName == TestProvName.PostgreSQL12
+				|| providerName == TestProvName.PostgreSQL13;
 			var lineSupported     = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL93);
 			var jsonbSupported    = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL93);
 			var testData = new[]
@@ -1054,7 +1059,10 @@ namespace Tests.DataProvider
 		public async Task BulkCopyTestAsync([Values]BulkTestMode mode, [IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
 			var providerName      = GetProviderName(context, out var _);
-			var macaddr8Supported = providerName == TestProvName.PostgreSQL10 || providerName == TestProvName.PostgreSQL11;
+			var macaddr8Supported = providerName == TestProvName.PostgreSQL10
+				|| providerName == TestProvName.PostgreSQL11
+				|| providerName == TestProvName.PostgreSQL12
+				|| providerName == TestProvName.PostgreSQL13;
 			var lineSupported     = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL93);
 			var jsonbSupported    = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL93);
 			var testData = new[]
@@ -1450,7 +1458,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestCustomType([IncludeDataSources(TestProvName.AllPostgreSQLv3)] string context)
+		public void TestCustomType([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
 			using (new DisableBaseline("Output (datetime format) is culture-/system-dependent"))
 			using (var db = GetDataContext(context, CreateRangesMapping()))
@@ -1468,7 +1476,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestCustomTypeBulkCopy([IncludeDataSources(TestProvName.AllPostgreSQLv3)] string context)
+		public void TestCustomTypeBulkCopy([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
 			using (new DisableBaseline("Output (datetime format) is culture-/system-dependent"))
 			using (var db = (DataConnection)GetDataContext(context, CreateRangesMapping()))
@@ -1494,7 +1502,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public async Task TestCustomTypeBulkCopyAsync([IncludeDataSources(TestProvName.AllPostgreSQLv3)] string context)
+		public async Task TestCustomTypeBulkCopyAsync([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
 			using (new DisableBaseline("Output (datetime format) is culture-/system-dependent"))
 			using (var db = (DataConnection)GetDataContext(context, CreateRangesMapping()))

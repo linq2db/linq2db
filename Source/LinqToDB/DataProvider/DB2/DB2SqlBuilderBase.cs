@@ -89,7 +89,7 @@ namespace LinqToDB.DataProvider.DB2
 				sb.AppendLine();
 				AppendIndent().AppendLine("FROM");
 				AppendIndent().AppendLine("\tNEW TABLE");
-				AppendIndent().AppendLine("\t(");
+				AppendIndent().Append("\t").AppendLine(OpenParens);
 			}
 
 			base.BuildSql(commandNumber, statement, sb, indent, skipAlias);
@@ -248,10 +248,10 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected override string? GetProviderTypeName(IDbDataParameter parameter)
 		{
-			if (parameter.DbType == DbType.Decimal && parameter.Value is decimal)
+			if (parameter.DbType == DbType.Decimal && parameter.Value is decimal decValue)
 			{
-				var d = new SqlDecimal((decimal)parameter.Value);
-				return "(" + d.Precision + "," + d.Scale + ")";
+				var d = new SqlDecimal(decValue);
+				return "(" + d.Precision + InlineComma + d.Scale + ")";
 			}
 
 			if (Provider != null)

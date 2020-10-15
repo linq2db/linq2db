@@ -337,6 +337,23 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void LoadWithFirstOrDefaultParameter([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(2, 3)] int id)
+		{
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			{
+				var q1 = db.Parent
+					.LoadWith(p => p.Children)
+					.ThenLoad(x => x.Parent)
+					.ThenLoad(x => x!.Children);
+					
+				var result = q1.FirstOrDefault(p=> p.ParentID == id);
+				Assert.That(result, Is.Not.Null);
+				Assert.That(result!.Children[0].Parent!.Children[0].ParentID, Is.EqualTo(id));
+			}
+		}
+
+		[Test]
 		public void TransactionScope([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllSQLite)] string context)
 		{
 			using (new AllowMultipleQuery())
