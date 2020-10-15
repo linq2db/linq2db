@@ -389,8 +389,9 @@ namespace Tests.Linq
 		[Test]
 		public void TestInsertUsingDerivedObjectUsingAttributes([DataSources] string context)
 		{
+			ResetPersonIdentity(context);
+
 			var ms = SetMappings();
-			using (new DisableBaseline("Non-stable identity values"))
 			using (var db = GetDataContext(context, ms))
 			{
 				try

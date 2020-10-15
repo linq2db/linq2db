@@ -44,6 +44,8 @@
 		</None>
 
 		<Compile Remove="Compatibility\**\*.cs" />
+
+		<Compile Include="Compatibility\ComWrapper.cs" />
 		<Compile Include="Compatibility\System\Threading\Tasks\TaskEx.cs" />
 	</ItemGroup>
 

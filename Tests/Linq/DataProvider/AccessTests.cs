@@ -396,13 +396,21 @@ namespace Tests.DataProvider
 		public void CreateDatabase([IncludeDataSources(ProviderName.Access)] string context)
 		{
 			var cs = DataConnection.GetConnectionString(context);
-			if (!cs.Contains("Microsoft.Jet.OLEDB"))
-				Assert.Inconclusive("Test requires JET provider");
+			string? providerName = null;
 
-			AccessTools.CreateDatabase("TestDatabase", deleteIfExists: true);
+			if (cs.Contains("Microsoft.Jet.OLEDB.4.0"))
+				providerName = "Microsoft.Jet.OLEDB.4.0";
+			else if (cs.Contains("Microsoft.ACE.OLEDB.12.0"))
+				providerName = "Microsoft.ACE.OLEDB.12.0";
+			else if (cs.Contains("Microsoft.ACE.OLEDB.15.0"))
+				providerName = "Microsoft.ACE.OLEDB.15.0";
+			else
+				Assert.Inconclusive($"Provider not supported by test: {cs}");
+
+			AccessTools.CreateDatabase("TestDatabase", deleteIfExists: true, provider: providerName!);
 			Assert.IsTrue(File.Exists("TestDatabase.mdb"));
 
-			using (var db = new DataConnection(AccessTools.GetDataProvider(), "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=TestDatabase.mdb;Locale Identifier=1033;Jet OLEDB:Engine Type=5;Persist Security Info=True"))
+			using (var db = new DataConnection(AccessTools.GetDataProvider(), $"Provider={providerName};Data Source=TestDatabase.mdb;Locale Identifier=1033;Persist Security Info=True"))
 			{
 				db.CreateTable<SqlCeTests.CreateTableTest>();
 				db.DropTable<SqlCeTests.CreateTableTest>();

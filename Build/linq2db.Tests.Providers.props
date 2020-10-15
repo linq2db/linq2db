@@ -58,7 +58,7 @@
 		<PackageReference Include="Oracle.ManagedDataAccess" Version="19.9.0" />
 		<PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.1016.290" />
 		<PackageReference Include="Npgsql" Version="4.0.11" />
-		<PackageReference Include="Microsoft.AspNet.OData" Version="7.4.1" />
+		<PackageReference Include="Microsoft.AspNet.OData" Version="7.5.0" />
 
 		<PackageReference Include="Microsoft.Data.SQLite" Version="1.1.1" />
 		<!--Copy sqlite3.dll manually, as package copy scripts doesn't work properly for our project -->
@@ -86,7 +86,7 @@
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.1' OR '$(TargetFramework)' == 'netcoreapp3.1' ">
 		<PackageReference Include="Oracle.ManagedDataAccess.Core" Version="2.19.90" />
 		<PackageReference Include="Microsoft.Data.SQLite" Version="3.1.8" />
-		<PackageReference Include="Npgsql" Version="4.1.4" />
+		<PackageReference Include="Npgsql" Version="4.1.5" />
 		<PackageReference Include="System.Data.Odbc" Version="4.7.0" />
 		<PackageReference Include="System.Data.OleDb" Version="4.7.1" />
 		<PackageReference Include="MiniProfiler.Shared" Version="4.2.1" />

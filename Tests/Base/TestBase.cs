@@ -34,7 +34,7 @@ namespace Tests
 	using NUnit.Framework.Internal;
 	using Tools;
 
-	public class TestBase
+	public partial class TestBase
 	{
 		protected static class TestData
 		{
@@ -421,6 +421,8 @@ namespace Tests
 			ProviderName.PostgreSQL95,
 			TestProvName.PostgreSQL10,
 			TestProvName.PostgreSQL11,
+			TestProvName.PostgreSQL12,
+			TestProvName.PostgreSQL13,
 			ProviderName.MySql,
 			ProviderName.MySqlConnector,
 			TestProvName.MySql55,

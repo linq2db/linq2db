@@ -499,6 +499,9 @@ namespace LinqToDB.Linq.Builder
 								return Expression.NotEqual(obj, Expression.Constant(null, obj.Type));
 							}
 
+							if (CanBeCompiled(expr))
+								break;
+
 							var l  = ConvertMethodExpression(me.Expression?.Type ?? me.Member.ReflectedType!, me.Member, out var alias);
 
 							if (l != null)
