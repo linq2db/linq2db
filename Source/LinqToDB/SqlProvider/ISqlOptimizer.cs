@@ -18,9 +18,9 @@ namespace LinqToDB.SqlProvider
 		/// Optimizes statement.
 		/// </summary>
 		/// <param name="statement">Statement for optimization.</param>
-		/// <param name="parameterValues">Contains parameter values. If it is null, that means that parameters should be ignored from evaluation.</param>
+		/// <param name="context">Contains parameter values and evaluation cache. If ParameterValues it is null, that means that parameters should be ignored from evaluation.</param>
 		/// <returns>Optimized statement.</returns>
-		SqlStatement OptimizeStatement (SqlStatement statement, IReadOnlyParameterValues? parameterValues);
+		SqlStatement OptimizeStatement (SqlStatement statement, EvaluationContext context);
 
 		/// <summary>
 		/// Examine query for parameter dependency.
@@ -34,8 +34,8 @@ namespace LinqToDB.SqlProvider
 		/// </summary>
 		/// <param name="mappingSchema"></param>
 		/// <param name="statement"></param>
-		/// <param name="parameterValues">Contains parameter values. If it is null, that means that parameters should be ignored from evaluation.</param>
+		/// <param name="context">Contains parameter values and evaluation cache. If ParameterValues it is null, that means that parameters should be ignored from evaluation.</param>
 		/// <returns></returns>
-		SqlStatement ConvertStatement (MappingSchema mappingSchema, SqlStatement statement, IReadOnlyParameterValues? parameterValues);
+		SqlStatement ConvertStatement (MappingSchema mappingSchema, SqlStatement statement, EvaluationContext context);
 	}
 }

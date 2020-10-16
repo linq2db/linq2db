@@ -119,7 +119,7 @@ namespace LinqToDB.DataProvider.Access
 
 			_selectColumn = new SqlColumn(selectQuery, new SqlExpression(cond.Conditions[0].IsNot ? "Count(*) = 0" : "Count(*) > 0"), selectQuery.Select.Columns[0].Alias);
 
-			BuildSql(0, new SqlSelectStatement(query), StringBuilder, ParameterValues);
+			BuildSql(0, new SqlSelectStatement(query), StringBuilder, EvaluationContext);
 
 			_selectColumn = null;
 		}

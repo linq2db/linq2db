@@ -199,16 +199,16 @@ namespace LinqToDB.SqlQuery
 				return new ExprExpr(Expr1, InvertOperator(Operator), Expr2, !WithNull);
 			}
 
-			public ISqlPredicate Reduce(IReadOnlyParameterValues? parameterValues)
+			public ISqlPredicate Reduce(EvaluationContext context)
 			{
 				if (Operator.In(Operator.Equal, Operator.NotEqual))
 				{
-					if (Expr1.TryEvaluateExpression(parameterValues, out var value1))
+					if (Expr1.TryEvaluateExpression(context, out var value1))
 					{
 						if (value1 == null)
 							return new IsNull(Expr2, Operator != Operator.Equal);
 
-					} else if (Expr2.TryEvaluateExpression(parameterValues, out var value2))
+					} else if (Expr2.TryEvaluateExpression(context, out var value2))
 					{
 						if (value2 == null)
 							return new IsNull(Expr1, Operator != Operator.Equal);
@@ -230,9 +230,9 @@ namespace LinqToDB.SqlQuery
 
 				var search = new SqlSearchCondition();
 
-				if (Expr1.CanBeEvaluated(parameterValues))
+				if (Expr1.CanBeEvaluated(context))
 				{
-					if (!Expr2.CanBeEvaluated(parameterValues))
+					if (!Expr2.CanBeEvaluated(context))
 					{
 						if (canBeNull_2)
 						{
@@ -252,7 +252,7 @@ namespace LinqToDB.SqlQuery
 						}
 					}
 				}
-				else if (Expr2.CanBeEvaluated(parameterValues))
+				else if (Expr2.CanBeEvaluated(context))
 				{
 					if (canBeNull_1)
 					{

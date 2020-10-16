@@ -24,7 +24,7 @@ namespace LinqToDB.SqlProvider
 			SqlProviderFlags    = sqlProviderFlags;
 		}
 
-		public IReadOnlyParameterValues? ParameterValues { get; protected set; }
+		public EvaluationContext EvaluationContext { get; protected set; } = null!;
 
 		protected SqlStatement           Statement = null!;
 		protected readonly MappingSchema MappingSchema;
@@ -88,9 +88,9 @@ namespace LinqToDB.SqlProvider
 
 		#region BuildSql
 
-		public void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, IReadOnlyParameterValues? parameterValues, int startIndent = 0)
+		public void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, EvaluationContext context, int startIndent = 0)
 		{
-			BuildSql(commandNumber, statement, sb, parameterValues, startIndent, !Configuration.Sql.GenerateFinalAliases && CanSkipRootAliases(statement));
+			BuildSql(commandNumber, statement, sb, context, startIndent, !Configuration.Sql.GenerateFinalAliases && CanSkipRootAliases(statement));
 		}
 
 		protected virtual void BuildSetOperation(SetOperation operation, StringBuilder sb)
@@ -120,14 +120,14 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		protected virtual void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, IReadOnlyParameterValues? parameterValues, int indent, bool skipAlias)
+		protected virtual void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, EvaluationContext context, int indent, bool skipAlias)
 		{
-			Statement       = statement;
-			_aliases        = new HashSet<string>(Statement.GetCurrentAliases(), StringComparer.OrdinalIgnoreCase);
-			StringBuilder   = sb;
-			ParameterValues = parameterValues;
-			Indent          = indent;
-			SkipAlias       = skipAlias;
+			Statement         = statement;
+			_aliases          = new HashSet<string>(Statement.GetCurrentAliases(), StringComparer.OrdinalIgnoreCase);
+			StringBuilder     = sb;
+			EvaluationContext = context;
+			Indent            = indent;
+			SkipAlias         = skipAlias;
 
 			if (commandNumber == 0)
 			{
@@ -143,7 +143,7 @@ namespace LinqToDB.SqlProvider
 
 						var sqlBuilder = ((BasicSqlBuilder)CreateSqlBuilder());
 						sqlBuilder.BuildSql(commandNumber,
-							new SqlSelectStatement(union.SelectQuery) { ParentStatement = statement }, sb, parameterValues, indent,
+							new SqlSelectStatement(union.SelectQuery) { ParentStatement = statement }, sb, context, indent,
 							skipAlias);
 						AddParameters(sqlBuilder.ActualParameters);
 					}
@@ -174,7 +174,7 @@ namespace LinqToDB.SqlProvider
 
 			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
 			sqlBuilder.BuildSql(0,
-				new SqlSelectStatement(selectQuery) { ParentStatement = Statement }, StringBuilder, ParameterValues, indent, skipAlias);
+				new SqlSelectStatement(selectQuery) { ParentStatement = Statement }, StringBuilder, EvaluationContext, indent, skipAlias);
 			AddParameters(sqlBuilder.ActualParameters);
 		}
 
@@ -254,7 +254,7 @@ namespace LinqToDB.SqlProvider
 				{ ParentStatement = deleteStatement, With = deleteStatement.GetWithClause() };
 
 			var sqlBuilder = ((BasicSqlBuilder)CreateSqlBuilder());
-			sqlBuilder.BuildSql(0, selectStatement, StringBuilder, ParameterValues, Indent);
+			sqlBuilder.BuildSql(0, selectStatement, StringBuilder, EvaluationContext, Indent);
 			AddParameters(sqlBuilder.ActualParameters);
 
 			--Indent;
@@ -293,7 +293,7 @@ namespace LinqToDB.SqlProvider
 		protected virtual void BuildCteBody(SelectQuery selectQuery)
 		{
 			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
-			sqlBuilder.BuildSql(0, new SqlSelectStatement(selectQuery), StringBuilder, ParameterValues, Indent, SkipAlias);
+			sqlBuilder.BuildSql(0, new SqlSelectStatement(selectQuery), StringBuilder, EvaluationContext, Indent, SkipAlias);
 			AddParameters(sqlBuilder.ActualParameters);
 		}
 
@@ -1909,7 +1909,7 @@ namespace LinqToDB.SqlProvider
 
 				if (p.Values.Count == 1 && p.Values[0] is SqlParameter pr)
 				{
-						var paramValue = pr.GetParameterValue(ParameterValues);
+						var paramValue = pr.GetParameterValue(EvaluationContext.ParameterValues);
 						if (!(p.Expr1.SystemType == typeof(string) && paramValue.Value is string))
 						{
 							var prValue = paramValue.Value;
@@ -2049,7 +2049,7 @@ namespace LinqToDB.SqlProvider
 
 				object? val = value;
 
-				if (val is ISqlExpression sqlExpr && sqlExpr.TryEvaluateExpression(ParameterValues, out var evaluated))
+				if (val is ISqlExpression sqlExpr && sqlExpr.TryEvaluateExpression(EvaluationContext, out var evaluated))
 				{
 					val = evaluated;
 				}
@@ -2318,7 +2318,7 @@ namespace LinqToDB.SqlProvider
 						var inlining = !parm.IsQueryParameter;
 						if (inlining)
 						{
-							var paramValue = parm.GetParameterValue(ParameterValues);
+							var paramValue = parm.GetParameterValue(EvaluationContext.ParameterValues);
 							if (!MappingSchema.ValueToSqlConverter.TryConvert(StringBuilder, new SqlDataType(paramValue.DbDataType), paramValue.Value))
 								inlining = false;
 						}

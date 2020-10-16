@@ -215,7 +215,7 @@ namespace LinqToDB.Linq
 			var parameterValues = new SqlParameterValues();
 			SetParameters(query, expr, db, ps, qn, parameterValues);
 
-			var evaluated = sqlExpr.EvaluateExpression(parameterValues) as int?;
+			var evaluated = sqlExpr.EvaluateExpression(new EvaluationContext(parameterValues)) as int?;
 			if (evaluated == null)
 				throw new InvalidOperationException($"Can not evaluate integer expression from '{sqlExpr}'.");
 			return evaluated.Value;

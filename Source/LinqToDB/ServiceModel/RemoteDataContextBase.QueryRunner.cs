@@ -32,13 +32,13 @@ namespace LinqToDB.ServiceModel
 			readonly RemoteDataContextBase _dataContext;
 
 			ILinqClient? _client;
-			IReadOnlyParameterValues? _parameterValues;
+			EvaluationContext _evaluationContext = null!;
 
 			public override Expression? MapperExpression { get; set; }
 
 			protected override void SetQuery(IReadOnlyParameterValues parameterValues)
 			{
-				_parameterValues = parameterValues;
+				_evaluationContext = new EvaluationContext(parameterValues);
 			}
 
 			#region GetSqlText
@@ -56,8 +56,8 @@ namespace LinqToDB.ServiceModel
 
 				for (var i = 0; i < cc; i++)
 				{
-					var statement = sqlOptimizer.PrepareStatementForSql(query.Statement, DataContext.MappingSchema, _parameterValues);
-					sqlBuilder.BuildSql(i, statement, sqlStringBuilder, _parameterValues);
+					var statement = sqlOptimizer.PrepareStatementForSql(query.Statement, DataContext.MappingSchema, _evaluationContext);
+					sqlBuilder.BuildSql(i, statement, sqlStringBuilder, _evaluationContext);
 
 					if (i == 0 && query.QueryHints != null && query.QueryHints.Count > 0)
 					{
@@ -81,7 +81,7 @@ namespace LinqToDB.ServiceModel
 					{
 						foreach (var p in sqlBuilder.ActualParameters)
 						{
-							var parameterValue = p.GetParameterValue(_parameterValues);
+							var parameterValue = p.GetParameterValue(_evaluationContext.ParameterValues);
 
 							var value = parameterValue.Value;
 
@@ -97,7 +97,7 @@ namespace LinqToDB.ServiceModel
 
 						foreach (var p in sqlBuilder.ActualParameters)
 						{
-							var parameterValue = p.GetParameterValue(_parameterValues);
+							var parameterValue = p.GetParameterValue(_evaluationContext.ParameterValues);
 
 							var value = parameterValue.Value;
 
@@ -142,7 +142,7 @@ namespace LinqToDB.ServiceModel
 				var queryContext = Query.Queries[QueryNumber];
 
 				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement,
-					_dataContext.MappingSchema, _parameterValues);
+					_dataContext.MappingSchema, _evaluationContext);
 
 				var currentParameters = q.CollectParameters();
 
@@ -150,7 +150,7 @@ namespace LinqToDB.ServiceModel
 					_dataContext.SerializationMappingSchema,
 					q,
 					currentParameters,
-					_parameterValues,
+					_evaluationContext.ParameterValues,
 					QueryHints);
 
 				if (_dataContext._batchCounter > 0)
@@ -176,13 +176,13 @@ namespace LinqToDB.ServiceModel
 				var queryContext = Query.Queries[QueryNumber];
 
 				var sqlOptimizer = _dataContext.GetSqlOptimizer();
-				var q = sqlOptimizer.PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, _parameterValues);
+				var q = sqlOptimizer.PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, _evaluationContext);
 				var currentParameters = q.CollectParameters();
 				
 				data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,
 					q,
-					currentParameters, _parameterValues, QueryHints);
+					currentParameters, _evaluationContext.ParameterValues, QueryHints);
 
 				_client = _dataContext.GetClient();
 
@@ -202,7 +202,7 @@ namespace LinqToDB.ServiceModel
 
 				var queryContext = Query.Queries[QueryNumber];
 
-				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, _parameterValues);
+				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, _evaluationContext);
 
 				var currentParameters = q.CollectParameters();
 
@@ -210,7 +210,7 @@ namespace LinqToDB.ServiceModel
 					_dataContext.SerializationMappingSchema,
 					q,
 					currentParameters,
-					_parameterValues,
+					_evaluationContext.ParameterValues,
 					QueryHints);
 
 				_client = _dataContext.GetClient();
@@ -269,14 +269,14 @@ namespace LinqToDB.ServiceModel
 
 				var queryContext = Query.Queries[QueryNumber];
 
-				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, _parameterValues);
+				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, _evaluationContext);
 				var currentParameters = q.CollectParameters();
 
 				data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,
 					q,
 					currentParameters,
-					_parameterValues,
+					_evaluationContext.ParameterValues,
 					QueryHints);
 
 				_client = _dataContext.GetClient();
@@ -300,14 +300,14 @@ namespace LinqToDB.ServiceModel
 
 				var queryContext = Query.Queries[QueryNumber];
 
-				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, _parameterValues);
+				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, _evaluationContext);
 				var currentParameters = q.CollectParameters();
 
 				data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,
 					q,
 					currentParameters, 
-					_parameterValues,
+					_evaluationContext.ParameterValues,
 					QueryHints);
 
 				_client = _dataContext.GetClient();
@@ -323,14 +323,14 @@ namespace LinqToDB.ServiceModel
 
 				var queryContext = Query.Queries[QueryNumber];
 
-				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, _parameterValues);
+				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, _evaluationContext);
 				var currentParameters = q.CollectParameters();
 
 				data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,
 					q,
 					currentParameters,
-					_parameterValues,
+					_evaluationContext.ParameterValues,
 					QueryHints);
 
 				if (_dataContext._batchCounter > 0)

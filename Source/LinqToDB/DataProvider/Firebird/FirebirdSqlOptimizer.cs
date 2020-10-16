@@ -26,9 +26,9 @@ namespace LinqToDB.DataProvider.Firebird
 			return statement;
 		}
 
-		public override SqlStatement OptimizeStatement(SqlStatement statement, IReadOnlyParameterValues? parameterValues)
+		public override SqlStatement OptimizeStatement(SqlStatement statement, EvaluationContext context)
 		{
-			statement = base.OptimizeStatement(statement, parameterValues);
+			statement = base.OptimizeStatement(statement, context);
 			return statement;
 		}
 
@@ -82,9 +82,9 @@ namespace LinqToDB.DataProvider.Firebird
 			return base.ConvertFunction(func);
 		}
 
-		public override SqlStatement FinalizeStatement(SqlStatement statement, IReadOnlyParameterValues? parameterValues)
+		public override SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context)
 		{
-			statement = base.FinalizeStatement(statement, parameterValues);
+			statement = base.FinalizeStatement(statement, context);
 			statement = WrapParameters(statement);
 			return statement;
 		}

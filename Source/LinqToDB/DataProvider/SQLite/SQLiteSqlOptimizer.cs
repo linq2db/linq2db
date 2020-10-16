@@ -80,7 +80,7 @@ namespace LinqToDB.DataProvider.SQLite
 			return expr;
 		}
 
-		public override ISqlPredicate ConvertPredicate(MappingSchema mappingSchema, ISqlPredicate predicate, IReadOnlyParameterValues? parameterValues)
+		public override ISqlPredicate ConvertPredicate(MappingSchema mappingSchema, ISqlPredicate predicate, EvaluationContext context)
 		{
 			if (predicate is SqlPredicate.ExprExpr exprExpr)
 			{
@@ -88,8 +88,8 @@ namespace LinqToDB.DataProvider.SQLite
 				var rightType = QueryHelper.GetDbDataType(exprExpr.Expr2);
 
 				if ((IsDateTime(leftType) || IsDateTime(rightType)) &&
-				    !(exprExpr.Expr1.TryEvaluateExpression(parameterValues, out var value1) && value1 == null ||
-				      exprExpr.Expr2.TryEvaluateExpression(parameterValues, out var value2) && value2 == null))
+				    !(exprExpr.Expr1.TryEvaluateExpression(context, out var value1) && value1 == null ||
+				      exprExpr.Expr2.TryEvaluateExpression(context, out var value2) && value2 == null))
 				{
 					if (!(exprExpr.Expr1 is SqlFunction func1 && (func1.Name == "$Convert$" || func1.Name == "DateTime")))
 					{
@@ -109,7 +109,7 @@ namespace LinqToDB.DataProvider.SQLite
 				}
 			}
 
-			predicate = base.ConvertPredicate(mappingSchema, predicate, parameterValues);
+			predicate = base.ConvertPredicate(mappingSchema, predicate, context);
 			return predicate;
 		}
 

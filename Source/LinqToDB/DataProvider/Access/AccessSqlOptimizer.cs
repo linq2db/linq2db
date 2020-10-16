@@ -19,14 +19,14 @@ namespace LinqToDB.DataProvider.Access
 
 
 		public override ISqlPredicate ConvertLikePredicate(MappingSchema mappingSchema, SqlPredicate.Like predicate,
-			IReadOnlyParameterValues? parameterValues)
+			EvaluationContext context)
 		{
 			if (predicate.Escape != null)
 			{
 				return new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, predicate.Expr2, null, predicate.IsSqlLike);
 			}
 
-			return base.ConvertLikePredicate(mappingSchema, predicate, parameterValues);
+			return base.ConvertLikePredicate(mappingSchema, predicate, context);
 		}
 
 

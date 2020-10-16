@@ -73,13 +73,13 @@ namespace LinqToDB.DataProvider.DB2
 			StringBuilder.AppendLine();
 		}
 
-		protected override void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, IReadOnlyParameterValues? parameterValues, int indent, bool skipAlias)
+		protected override void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, EvaluationContext context, int indent, bool skipAlias)
 		{
-			Statement       = statement;
-			StringBuilder   = sb;
-			ParameterValues = parameterValues;
-			Indent          = indent;
-			SkipAlias       = skipAlias;
+			Statement         = statement;
+			StringBuilder     = sb;
+			EvaluationContext = context;
+			Indent            = indent;
+			SkipAlias         = skipAlias;
 
 			if (_identityField != null)
 			{
@@ -94,7 +94,7 @@ namespace LinqToDB.DataProvider.DB2
 				AppendIndent().AppendLine("\t(");
 			}
 
-			base.BuildSql(commandNumber, statement, sb, parameterValues, indent, skipAlias);
+			base.BuildSql(commandNumber, statement, sb, context, indent, skipAlias);
 
 			if (_identityField != null)
 				sb.AppendLine("\t)");

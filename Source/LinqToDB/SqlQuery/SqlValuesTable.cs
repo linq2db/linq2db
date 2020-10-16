@@ -89,7 +89,7 @@ namespace LinqToDB.SqlQuery
 
 		public bool IsRowsBuilt { get; }
 
-		internal SqlValuesTable BuildRows(IReadOnlyParameterValues parameterValues)
+		internal SqlValuesTable BuildRows(EvaluationContext context)
 		{
 			if (IsRowsBuilt)
 				return this;
@@ -98,7 +98,7 @@ namespace LinqToDB.SqlQuery
 
 			// rows pre-build for remote context
 
-			if (!(Source?.EvaluateExpression(parameterValues) is IEnumerable source))
+			if (!(Source?.EvaluateExpression(context) is IEnumerable source))
 				throw new LinqToDBException($"Merge source must be enumerable: {Source}");
 
 			var rows = new List<ISqlExpression[]>();

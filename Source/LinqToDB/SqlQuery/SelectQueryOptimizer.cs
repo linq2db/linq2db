@@ -443,22 +443,9 @@ namespace LinqToDB.SqlQuery
 
 			OptimizeDistinct();
 			OptimizeDistinctOrderBy();
-
-			// OptimizeSearchConditions();
 		}
 
-		private void OptimizeSearchConditions()
-		{
-			_selectQuery.Walk(new WalkOptions(), expr =>
-			{
-				if (expr is SqlSearchCondition cond)
-					return OptimizeSearchCondition(cond);
-
-				return expr;
-			});
-		}
-
-		internal static SqlSearchCondition OptimizeSearchCondition(SqlSearchCondition inputCondition, IReadOnlyParameterValues? parameterValues = null)
+		internal static SqlSearchCondition OptimizeSearchCondition(SqlSearchCondition inputCondition, EvaluationContext context)
 		{
 			var searchCondition = inputCondition;
 
@@ -514,7 +501,7 @@ namespace LinqToDB.SqlQuery
 
 					if (newCond.IsNot)
 					{
-						var boolValue = QueryHelper.GetBoolValue(expr.Expr1, parameterValues);
+						var boolValue = QueryHelper.GetBoolValue(expr.Expr1, context);
 						if (boolValue != null)
 						{
 							newCond = new SqlCondition(false, new SqlPredicate.Expr(new SqlValue(!boolValue.Value)), newCond.IsOr);
@@ -537,7 +524,7 @@ namespace LinqToDB.SqlQuery
 				if (cond.Predicate.ElementType == QueryElementType.ExprPredicate)
 				{
 					var expr = (SqlPredicate.Expr)cond.Predicate;
-					var boolValue = QueryHelper.GetBoolValue(expr.Expr1, parameterValues);
+					var boolValue = QueryHelper.GetBoolValue(expr.Expr1, context);
 
 					if (boolValue != null)
 					{
@@ -591,7 +578,7 @@ namespace LinqToDB.SqlQuery
 				}
 				else if (cond.Predicate is SqlSearchCondition sc)
 				{
-					var newSc = OptimizeSearchCondition(sc);
+					var newSc = OptimizeSearchCondition(sc, context);
 					if (!ReferenceEquals(newSc, sc))
 					{
 						EnsureCopy();

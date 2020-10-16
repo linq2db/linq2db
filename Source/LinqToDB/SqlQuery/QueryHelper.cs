@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -11,7 +12,7 @@ namespace LinqToDB.SqlQuery
 	using Common;
 	using Mapping;
 
-	public static class QueryHelper
+	public static partial class QueryHelper
 	{
 		public static bool ContainsElement(IQueryElement testedRoot, IQueryElement element)
 		{
@@ -1301,268 +1302,9 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		#region Expression Evaluation
-
-		public static SqlParameterValue GetParameterValue(this SqlParameter parameter, IReadOnlyParameterValues? parameterValues)
+		public static bool? GetBoolValue(ISqlExpression expression, EvaluationContext context)
 		{
-			if (parameterValues != null && parameterValues.TryGetValue(parameter, out var value))
-			{
-				return value;
-			}
-			return new SqlParameterValue(parameter.Value, parameter.Type);
-		}
-
-		public static bool TryEvaluateExpression(this IQueryElement expr, IReadOnlyParameterValues? parameterValues, out object? result)
-		{
-			return expr.TryEvaluateExpression(parameterValues, out result, out _);
-		}
-
-		public static bool CanBeEvaluated(this IQueryElement expr, bool withParameters)
-		{
-			return expr.TryEvaluateExpression(withParameters ? SqlParameterValues.Empty : null, out _, out _);
-		}
-
-		public static bool CanBeEvaluated(this IQueryElement expr, IReadOnlyParameterValues? parameterValues)
-		{
-			return expr.TryEvaluateExpression(parameterValues, out _, out _);
-		}
-
-		public static bool TryEvaluateExpression(this IQueryElement expr, IReadOnlyParameterValues? parameterValues, out object? result, out string? errorMessage)
-		{
-			result = null;
-			errorMessage = null;
-			switch (expr.ElementType)
-			{
-				case QueryElementType.SqlValue           : result = ((SqlValue)expr).Value; return true;
-				case QueryElementType.SqlParameter       :
-				{
-					var sqlParameter = (SqlParameter)expr;
-
-					if (parameterValues == null) 
-						return false;
-
-					result = sqlParameter.GetParameterValue(parameterValues).Value;
-					return true;
-				}
-				case QueryElementType.IsNullPredicate:
-				{
-					var isNullPredicate = (SqlPredicate.IsNull)expr;
-					if (!isNullPredicate.Expr1.TryEvaluateExpression(parameterValues, out var value))
-						return false;
-					result = isNullPredicate.IsNot == (value != null);
-					return true;
-				}
-				case QueryElementType.ExprExprPredicate:
-				{
-					var exprExpr = (SqlPredicate.ExprExpr)expr;
-					var reduced = exprExpr.Reduce(parameterValues);
-					if (!ReferenceEquals(reduced, expr))
-						return TryEvaluateExpression(reduced, parameterValues, out result, out errorMessage);
-
-					if (!exprExpr.Expr1.TryEvaluateExpression(parameterValues, out var value1) ||
-					    !exprExpr.Expr2.TryEvaluateExpression(parameterValues, out var value2))
-						return false;
-
-					switch (exprExpr.Operator)
-					{
-						case SqlPredicate.Operator.Equal:
-						{
-							if (value1 == null)
-							{
-								result = value2 == null;
-							}
-							else
-							{
-								result = (value2 != null) && value1.Equals(value2);
-							}
-							break;
-						}
-						case SqlPredicate.Operator.NotEqual:
-						{
-							if (value1 == null)
-							{
-								result = value2 != null;
-							}
-							else
-							{
-								result = value2 == null || !value1.Equals(value2);
-							}
-							break;
-						}
-						default:
-						{
-							if (!(value1 is IComparable comp1) || !(value2 is IComparable comp2))
-							{
-								result = false;
-								return true;
-							}
-
-							switch (exprExpr.Operator)
-							{
-								case SqlPredicate.Operator.Greater:
-									result = comp1.CompareTo(comp2) > 0;
-									break;
-								case SqlPredicate.Operator.GreaterOrEqual:
-									result = comp1.CompareTo(comp2) >= 0;
-									break;
-								case SqlPredicate.Operator.NotGreater:
-									result = !(comp1.CompareTo(comp2) > 0);
-									break;
-								case SqlPredicate.Operator.Less:
-									result = comp1.CompareTo(comp2) < 0;
-									break;
-								case SqlPredicate.Operator.LessOrEqual:
-									result = comp1.CompareTo(comp2) <= 0;
-									break;
-								case SqlPredicate.Operator.NotLess:
-									result = !(comp1.CompareTo(comp2) < 0);
-									break;
-
-								default:
-									return false;
-
-							}
-							break;
-						}
-					}
-
-					return true;
-				}
-				case QueryElementType.IsTruePredicate:
-				{
-					var isTruePredicate = (SqlPredicate.IsTrue)expr;
-					if (!isTruePredicate.Expr1.TryEvaluateExpression(parameterValues, out var value))
-						return false;
-
-					if (value == null)
-					{
-						throw new NotImplementedException();
-					}
-					else if (value is bool boolValue)
-					{
-						result = boolValue != isTruePredicate.IsNot;
-						return true;
-					}	
-					return false;
-				}
-				case QueryElementType.SqlBinaryExpression:
-				{
-					var binary = (SqlBinaryExpression)expr;
-					if (!binary.Expr1.TryEvaluateExpression(parameterValues, out var leftEvaluated, out errorMessage))
-						return false;
-					if (!binary.Expr2.TryEvaluateExpression(parameterValues, out var rightEvaluated, out errorMessage))
-						return false;
-					dynamic? left  = leftEvaluated;
-					dynamic? right = rightEvaluated;
-					if (left == null || right == null)
-						return true;
-					switch (binary.Operation)
-					{
-						case "+" : result = left + right; break;
-						case "-" : result = left - right; break;
-						case "*" : result = left * right; break;
-						case "/" : result = left / right; break;
-						case "%" : result = left % right; break;
-						case "^" : result = left ^ right; break;
-						case "&" : result = left & right; break;
-						case "<" : result = left < right; break;
-						case ">" : result = left > right; break;
-						case "<=": result = left <= right; break;
-						case ">=": result = left >= right; break;
-						default:
-							errorMessage = $"Unknown binary operation '{binary.Operation}'.";
-							return false;
-					}
-
-					return true;
-				}
-				case QueryElementType.SqlFunction        :
-				{
-					var function = (SqlFunction)expr;
-
-					switch (function.Name)
-					{
-						case "CASE":
-						{
-							if (function.Parameters.Length != 3)
-							{
-								errorMessage = "CASE function expected to have 3 parameters.";
-								return false;
-							}
-
-							if (!function.Parameters[0]
-								.TryEvaluateExpression(parameterValues, out var cond, out errorMessage))
-								return false;
-
-							if (!(cond is bool))
-							{
-								errorMessage =
-									$"CASE function expected to have boolean condition (was: {cond?.GetType()}).";
-								return false;
-							}
-
-							if ((bool)cond!)
-								return function.Parameters[1]
-									.TryEvaluateExpression(parameterValues, out result, out errorMessage);
-							else
-								return function.Parameters[2]
-									.TryEvaluateExpression(parameterValues, out result, out errorMessage);
-						}
-
-						case "Length":
-						{
-							if (function.Parameters[0]
-								.TryEvaluateExpression(parameterValues, out var strValue, out errorMessage))
-							{
-								if (strValue == null)
-									return true;
-								if (strValue is string str)
-								{
-									result = str.Length;
-									return true;
-								}
-							}
-
-							return false;
-						}
-
-
-						default:
-							errorMessage = $"Unknown function '{function.Name}'.";
-							return false;
-					}
-				}
-
-				default:
-				{
-					return false;
-				}
-			}
-		}
-
-		public static object? EvaluateExpression(this IQueryElement expr, IReadOnlyParameterValues? parameterValues)
-		{
-			if (!expr.TryEvaluateExpression(parameterValues, out var result, out var message))
-			{
-				message ??= GetEvaluationError(expr);
-
-				throw new LinqToDBException(message);
-			}
-
-			return result;
-		}
-
-		private static string GetEvaluationError(IQueryElement expr)
-		{
-			return $"Not implemented evaluation of '{expr.ElementType}': '{expr.ToDebugString()}'.";
-		}
-
-		#endregion
-
-
-		public static bool? GetBoolValue(ISqlExpression expression, IReadOnlyParameterValues? parameterValues)
-		{
-			if (expression.TryEvaluateExpression(parameterValues, out var value))
+			if (expression.TryEvaluateExpression(context, out var value))
 			{
 				if (value is bool b)
 					return b;
@@ -1576,7 +1318,7 @@ namespace LinqToDB.SqlQuery
 					var cond = searchCondition.Conditions[0];
 					if (cond.Predicate.ElementType == QueryElementType.ExprPredicate)
 					{
-						var boolValue = GetBoolValue(((SqlPredicate.Expr)cond.Predicate).Expr1, parameterValues);
+						var boolValue = GetBoolValue(((SqlPredicate.Expr)cond.Predicate).Expr1, context);
 						if (boolValue.HasValue)
 							return cond.IsNot ? !boolValue : boolValue;
 					}

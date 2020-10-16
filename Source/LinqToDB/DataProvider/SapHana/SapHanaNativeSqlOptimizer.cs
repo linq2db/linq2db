@@ -13,16 +13,16 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 		}
 
-		public override SqlStatement OptimizeStatement(SqlStatement statement, IReadOnlyParameterValues? parameterValues)
+		public override SqlStatement OptimizeStatement(SqlStatement statement, EvaluationContext context)
 		{
-			statement = base.OptimizeStatement(statement, parameterValues);
+			statement = base.OptimizeStatement(statement, context);
 
 			return statement;
 		}
 
-		public override SqlStatement FinalizeStatement(SqlStatement statement, IReadOnlyParameterValues? parameterValues)
+		public override SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context)
 		{
-			statement = base.FinalizeStatement(statement, parameterValues);
+			statement = base.FinalizeStatement(statement, context);
 
 			// SAP HANA parameters are not just order-dependent but also name-dependent, so we cannot use
 			// same parameter name
