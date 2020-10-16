@@ -334,5 +334,10 @@ END");
 					.AppendLine("END");
 			}
 		}
+
+		protected override string? GetTableSchemaName(SqlTable table)
+		{
+			return table.Schema == null && table.TableOptions.HasIsTemporary() ? "SESSION" : base.GetTableSchemaName(table);
+		}
 	}
 }

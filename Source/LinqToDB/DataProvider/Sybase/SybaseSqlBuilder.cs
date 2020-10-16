@@ -276,7 +276,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 		protected void BuildIdentityInsert(SqlTableSource table, bool enable)
 		{
-			StringBuilder.Append($"SET IDENTITY_INSERT ");
+			StringBuilder.Append("SET IDENTITY_INSERT ");
 			BuildTableName(table, true, false);
 			StringBuilder.AppendLine(enable ? " ON" : " OFF");
 		}

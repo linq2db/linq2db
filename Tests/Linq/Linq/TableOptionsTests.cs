@@ -125,6 +125,36 @@ namespace Tests.Linq
 
 			using var table = db.CreateTempTable<CreateIfNotExistsTable>();
 
+			table.Insert(() => new CreateIfNotExistsTable { Id = 1, Value = 2 });
+
+			_ = table.ToArray();
+			_ = db.CreateTempTable<CreateIfNotExistsTable>();
+		}
+
+		[Test]
+		public void CreateTempIfNotExistsTest([IncludeDataSources(
+			true,
+			ProviderName.DB2,
+			ProviderName.Informix,
+			ProviderName.Firebird,
+			TestProvName.AllMySql,
+			TestProvName.AllOracle,
+			ProviderName.PostgreSQL,
+			TestProvName.AllSQLite,
+			TestProvName.AllSqlServer2005Plus,
+			TestProvName.AllSybase)] string context)
+		{
+			if (context == "SqlServer.2008.LinqService" ||
+				context == "SqlServer.2012.LinqService" ||
+				context == "SqlServer.2014.LinqService")
+				return;
+
+			using var db = GetDataContext(context);
+
+			db.DropTable<CreateIfNotExistsTable>(throwExceptionIfNotExists:false);
+
+			using var table = db.CreateTempTable<CreateIfNotExistsTable>(tableOptions:TableOptions.IsTemporary);
+
 			_ = table.ToArray();
 			_ = db.CreateTempTable<CreateIfNotExistsTable>();
 		}
