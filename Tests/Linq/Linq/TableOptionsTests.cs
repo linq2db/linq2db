@@ -37,22 +37,8 @@ namespace Tests.Linq
 		public void IsTemporaryFlagTest([DataSources(false)] string context, [Values(true)] bool firstCall)
 		{
 			using var db = (DataConnection)GetDataContext(context);
-
-			try
-			{
-				using var table = db.CreateTempTable<IsTemporaryTable>();
-
-				var result = table.ToArray();
-			}
-			catch (DB2Exception ex) when (firstCall && ex.ErrorCode == -2147467259)
-			{
-				db.Execute("CREATE BUFFERPOOL DBHOST_32K IMMEDIATE SIZE 250 AUTOMATIC PAGESIZE 32K;");
-				db.Execute("CREATE LARGE TABLESPACE DBHOST_32K PAGESIZE 32K MANAGED BY AUTOMATIC STORAGE EXTENTSIZE 32 PREFETCHSIZE 32 BUFFERPOOL DBHOST_32K;");
-				db.Execute("CREATE USER TEMPORARY TABLESPACE DBHOSTTEMPU_32K PAGESIZE 32K MANAGED BY AUTOMATIC STORAGE BUFFERPOOL DBHOST_32K;");
-				db.Execute("CREATE SYSTEM TEMPORARY TABLESPACE DBHOSTTEMPS_32K PAGESIZE 32K MANAGED BY AUTOMATIC STORAGE BUFFERPOOL DBHOST_32K;");
-
-				IsGlobalTemporaryTest(context, false);
-			}
+			using var table = db.CreateTempTable<IsTemporaryTable>();
+			_ = table.ToArray();
 		}
 
 		[Table(TableOptions = TableOptions.IsGlobalTemporary)]
@@ -73,22 +59,8 @@ namespace Tests.Linq
 			[Values(true)] bool firstCall)
 		{
 			using var db = (DataConnection)GetDataContext(context);
-
-			try
-			{
-				using var table = db.CreateTempTable<IsGlobalTemporaryTable>();
-
-				var result = table.ToArray();
-			}
-			catch (DB2Exception ex) when (firstCall && ex.ErrorCode == -2147467259)
-			{
-				db.Execute("CREATE BUFFERPOOL DBHOST_32K IMMEDIATE SIZE 250 AUTOMATIC PAGESIZE 32K;");
-				db.Execute("CREATE LARGE TABLESPACE DBHOST_32K PAGESIZE 32K MANAGED BY AUTOMATIC STORAGE EXTENTSIZE 32 PREFETCHSIZE 32 BUFFERPOOL DBHOST_32K;");
-				db.Execute("CREATE USER TEMPORARY TABLESPACE DBHOSTTEMPU_32K PAGESIZE 32K MANAGED BY AUTOMATIC STORAGE BUFFERPOOL DBHOST_32K;");
-				db.Execute("CREATE SYSTEM TEMPORARY TABLESPACE DBHOSTTEMPS_32K PAGESIZE 32K MANAGED BY AUTOMATIC STORAGE BUFFERPOOL DBHOST_32K;");
-
-				IsGlobalTemporaryTest(context, false);
-			}
+			using var table = db.CreateTempTable<IsGlobalTemporaryTable>();
+			_ = table.ToArray();
 		}
 
 		[Table(TableOptions = TableOptions.CreateIfNotExists)]
@@ -114,9 +86,7 @@ namespace Tests.Linq
 			TestProvName.AllSqlServer2005Plus,
 			TestProvName.AllSybase)] string context)
 		{
-			if (context == "SqlServer.2008.LinqService" ||
-				context == "SqlServer.2012.LinqService" ||
-				context == "SqlServer.2014.LinqService")
+			if (context.StartsWith("SqlServer.20") && context.EndsWith(".LinqService"))
 				return;
 
 			using var db = GetDataContext(context);
@@ -144,9 +114,7 @@ namespace Tests.Linq
 			TestProvName.AllSqlServer2005Plus,
 			TestProvName.AllSybase)] string context)
 		{
-			if (context == "SqlServer.2008.LinqService" ||
-				context == "SqlServer.2012.LinqService" ||
-				context == "SqlServer.2014.LinqService")
+			if (context.StartsWith("SqlServer.20") && context.EndsWith(".LinqService"))
 				return;
 
 			using var db = GetDataContext(context);
