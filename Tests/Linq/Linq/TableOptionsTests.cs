@@ -133,7 +133,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void CreateTempIfNotExistsTest([IncludeDataSources(
-			true,
+			false,
 			ProviderName.DB2,
 			ProviderName.Informix,
 			ProviderName.Firebird,
