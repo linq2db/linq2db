@@ -508,7 +508,7 @@ namespace Tests.Linq
 					select new { p, j };
 
 				var list1 = q1.ToList();
-				var ch1   = list1[0].j.ToList();
+				var ch1   = list1[0].j.OrderBy(_ => _.ChildID).ThenBy(_ => _.ParentID).ToList();
 
 				var q2 =
 					from p in db.Parent
@@ -522,7 +522,7 @@ namespace Tests.Linq
 				Assert.AreEqual(list1[0].p.ParentID, list2[0].p.ParentID);
 				Assert.AreEqual(list1[0].j.Count(),  list2[0].j.Count());
 
-				var ch2 = list2[0].j.ToList();
+				var ch2 = list2[0].j.OrderBy(_ => _.ChildID).ThenBy(_ => _.ParentID).ToList();
 
 				Assert.AreEqual(ch1[0].ParentID, ch2[0].ParentID);
 				Assert.AreEqual(ch1[0].ChildID,  ch2[0].ChildID);

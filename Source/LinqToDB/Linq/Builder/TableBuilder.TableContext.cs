@@ -137,7 +137,7 @@ namespace LinqToDB.Linq.Builder
 
 				var args = mc.Arguments.Select(a => builder.ConvertToSql(this, a));
 
-				attr.SetTable(Builder.MappingSchema, SqlTable, mc.Method, mc.Arguments, args);
+				attr.SetTable(builder.DataContext.CreateSqlProvider(), Builder.MappingSchema, SqlTable, mc.Method, mc.Arguments, args);
 
 				Init(true);
 			}

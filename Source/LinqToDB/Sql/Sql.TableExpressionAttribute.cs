@@ -9,6 +9,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB
 {
+	using LinqToDB.SqlProvider;
 	using SqlQuery;
 
 	partial class Sql
@@ -45,7 +46,7 @@ namespace LinqToDB
 				set => base.Name = value;
 			}
 
-			public override void SetTable(MappingSchema mappingSchema, SqlTable table, MemberInfo member, IEnumerable<Expression> arguments, IEnumerable<ISqlExpression> sqlArgs)
+			public override void SetTable(ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MemberInfo member, IEnumerable<Expression> arguments, IEnumerable<ISqlExpression> sqlArgs)
 			{
 				table.SqlTableType   = SqlTableType.Expression;
 				table.Name           = Expression ?? member.Name;

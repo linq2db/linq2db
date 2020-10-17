@@ -10,7 +10,7 @@ using LinqToDB.Mapping;
 namespace LinqToDB
 {
 	using Extensions;
-
+	using LinqToDB.SqlProvider;
 	using SqlQuery;
 
 	partial class Sql
@@ -78,7 +78,7 @@ namespace LinqToDB
 				return args;
 			}
 
-			public virtual void SetTable(MappingSchema mappingSchema, SqlTable table, MemberInfo member, IEnumerable<Expression> arguments, IEnumerable<ISqlExpression> sqlArgs)
+			public virtual void SetTable(ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MemberInfo member, IEnumerable<Expression> arguments, IEnumerable<ISqlExpression> sqlArgs)
 			{
 				table.SqlTableType   = SqlTableType.Function;
 				table.Name           = Name ?? member.Name;

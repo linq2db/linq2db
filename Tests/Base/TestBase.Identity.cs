@@ -57,8 +57,8 @@ namespace Tests
 					break;
 				case string prov when prov.StartsWith("Oracle"):
 					sql = new[] {
-						$"DROP SEQUENCE PersonSeq",
-						$"CREATE SEQUENCE PersonSeq MINVALUE 1 START WITH {lastValue + 1}"
+						$"DROP SEQUENCE \"PersonSeq\"",
+						$"CREATE SEQUENCE \"PersonSeq\" MINVALUE 1 START WITH {lastValue + 1}"
 					};
 					break;
 				case string prov when prov.StartsWith("PostgreSQL"):
@@ -155,8 +155,8 @@ CREATE COLUMN TABLE ""Person"" (
 					break;
 				case string prov when prov.StartsWith("Oracle"):
 					sql = new[] {
-						$"DROP SEQUENCE AllTypesSeq",
-						$"CREATE SEQUENCE AllTypesSeq MINVALUE 1 START WITH {lastValue + 1}"
+						$"DROP SEQUENCE \"AllTypesSeq\"",
+						$"CREATE SEQUENCE \"AllTypesSeq\" MINVALUE 1 START WITH {lastValue + 1}"
 					};
 					break;
 				case string prov when prov.StartsWith("PostgreSQL"):

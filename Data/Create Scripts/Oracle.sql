@@ -1,7 +1,7 @@
 ﻿-- Cleanup schema
 
 BEGIN
-	EXECUTE IMMEDIATE 'DROP SEQUENCE ' || 'PersonSeq';
+	EXECUTE IMMEDIATE 'DROP SEQUENCE ' || '"PersonSeq"';
 EXCEPTION
 	WHEN OTHERS THEN
 		IF SQLCODE != -2289 THEN
@@ -9,29 +9,31 @@ EXCEPTION
 		END IF;
 END;
 /
-DROP TABLE Doctor
+DROP TABLE "Doctor"
 /
-DROP TABLE Patient
+DROP TABLE "Patient"
 /
-DROP TABLE Person
+DROP TABLE "Person"
 /
 DROP SEQUENCE BinaryDataSeq
 /
 DROP TABLE BinaryData
 /
-DROP SEQUENCE DataTypeTestSeq
+DROP SEQUENCE "DataTypeTestSeq"
 /
-DROP TABLE DataTypeTest
+DROP TABLE "DataTypeTest"
 /
-DROP TABLE GrandChild
+DROP TABLE "GrandChild"
 /
-DROP TABLE Child
+DROP TABLE "Child"
 /
-DROP TABLE Parent
+DROP TABLE "Parent"
 /
-DROP TABLE StringTest
+DROP TABLE "StringTest"
 /
-DROP TABLE LinqDataTypes
+DROP TABLE "LinqDataTypes"
+/
+DROP TABLE LINQDATATYPESBC
 /
 DROP SEQUENCE SequenceTestSeq
 /
@@ -39,81 +41,81 @@ DROP TABLE SequenceTest
 /
 DROP TABLE "STG_TRADE_INFORMATION"
 /
-DROP table t_test_user_contract
+DROP table "t_test_user_contract"
 /
-DROP table t_test_user
+DROP table "t_test_user"
 /
-DROP sequence sq_test_user
+DROP sequence "sq_test_user"
 /
-DROP sequence sq_test_user_contract
+DROP sequence "sq_test_user_contract"
 /
-DROP table t_entity
+DROP table "t_entity"
 /
 
 --StringTest Table
-CREATE TABLE StringTest
-	( StringValue1                VARCHAR2(50) NULL
-	, StringValue2                CHAR(50)     NULL
-	, KeyValue                    VARCHAR2(50) NOT NULL
+CREATE TABLE "StringTest"
+	( "StringValue1"                VARCHAR2(50) NULL
+	, "StringValue2"                CHAR(50)     NULL
+	, "KeyValue"                    VARCHAR2(50) NOT NULL
 	)
 /
 
-INSERT INTO StringTest (StringValue1, StringValue2, KeyValue) VALUES ('Value1', 'Value2', 'HasValues')
+INSERT INTO "StringTest" ("StringValue1", "StringValue2", "KeyValue") VALUES ('Value1', 'Value2', 'HasValues')
 /
-INSERT INTO StringTest (StringValue1, StringValue2, KeyValue) VALUES (null,     null,     'NullValues')
+INSERT INTO "StringTest" ("StringValue1", "StringValue2", "KeyValue") VALUES (null,     null,     'NullValues')
 
 
 -- Inheritance Parent/Child
 /
-DROP TABLE InheritanceParent
+DROP TABLE "InheritanceParent"
 /
 
-CREATE TABLE InheritanceParent
+CREATE TABLE "InheritanceParent"
 (
-	InheritanceParentId NUMBER        NOT NULL PRIMARY KEY,
-	TypeDiscriminator   NUMBER            NULL,
-	Name                NVARCHAR2(50)     NULL
+	"InheritanceParentId" NUMBER        NOT NULL PRIMARY KEY,
+	"TypeDiscriminator"   NUMBER            NULL,
+	"Name"                NVARCHAR2(50)     NULL
 )
 /
-DROP TABLE InheritanceChild
+DROP TABLE "InheritanceChild"
 /
 
-CREATE TABLE InheritanceChild
+CREATE TABLE "InheritanceChild"
 (
-	InheritanceChildId  NUMBER        NOT NULL PRIMARY KEY,
-	InheritanceParentId NUMBER        NOT NULL,
-	TypeDiscriminator   NUMBER            NULL,
-	Name                NVARCHAR2(50)     NULL
+	"InheritanceChildId"  NUMBER        NOT NULL PRIMARY KEY,
+	"InheritanceParentId" NUMBER        NOT NULL,
+	"TypeDiscriminator"   NUMBER            NULL,
+	"Name"                NVARCHAR2(50)     NULL
 )
 /
 
 -- Person Table
 
-CREATE SEQUENCE PersonSeq
+CREATE SEQUENCE "PersonSeq"
 /
 
-CREATE TABLE Person
-	( PersonID                     NUMBER NOT NULL PRIMARY KEY
-	, Firstname                    VARCHAR2(50) NOT NULL
-	, Lastname                     VARCHAR2(50) NOT NULL
-	, Middlename                   VARCHAR2(50)
-	, Gender                       CHAR(1) NOT NULL
+CREATE TABLE "Person"
+	( "PersonID"                     NUMBER NOT NULL PRIMARY KEY
+	, "FirstName"                    VARCHAR2(50) NOT NULL
+	, "LastName"                     VARCHAR2(50) NOT NULL
+	, "MiddleName"                   VARCHAR2(50)
+	, "Gender"                       CHAR(1) NOT NULL
 
-	, CONSTRAINT Ck_Person_Gender  CHECK (Gender IN ('M', 'F', 'U', 'O'))
+	, CONSTRAINT "Ck_Person_Gender"  CHECK ("Gender" IN ('M', 'F', 'U', 'O'))
 	)
 /
 
 -- Insert Trigger for Person
 
-CREATE OR REPLACE TRIGGER Person_Add
+CREATE OR REPLACE TRIGGER "Person_Add"
 BEFORE INSERT
-ON Person
+ON "Person"
 FOR EACH ROW
 BEGIN
 SELECT
-	PersonSeq.NEXTVAL
+	"PersonSeq".NEXTVAL
 INTO
-	:NEW.PersonID
+	:NEW."PersonID"
 FROM
 	dual;
 END;
@@ -121,39 +123,39 @@ END;
 
 -- Doctor Table Extension
 
-CREATE TABLE Doctor
-	( PersonID                       NUMBER NOT NULL PRIMARY KEY
-	, Taxonomy                       NVARCHAR2(50) NOT NULL
+CREATE TABLE "Doctor"
+	( "PersonID"                       NUMBER NOT NULL PRIMARY KEY
+	, "Taxonomy"                       NVARCHAR2(50) NOT NULL
 
-	, CONSTRAINT Fk_Doctor_Person FOREIGN KEY (PersonID)
-		REFERENCES Person (PersonID) ON DELETE CASCADE
+	, CONSTRAINT "Fk_Doctor_Person" FOREIGN KEY ("PersonID")
+		REFERENCES "Person" ("PersonID") ON DELETE CASCADE
 	)
 /
 
 -- Patient Table Extension
 
-CREATE TABLE Patient
-	( PersonID                       NUMBER NOT NULL PRIMARY KEY
-	, Diagnosis                      NVARCHAR2(256) NOT NULL
+CREATE TABLE "Patient"
+	( "PersonID"                       NUMBER NOT NULL PRIMARY KEY
+	, "Diagnosis"                      NVARCHAR2(256) NOT NULL
 
-	, CONSTRAINT Fk_Patient_Person FOREIGN KEY (PersonID)
-		REFERENCES Person (PersonID) ON DELETE CASCADE
+	, CONSTRAINT "Fk_Patient_Person" FOREIGN KEY ("PersonID")
+		REFERENCES "Person" ("PersonID") ON DELETE CASCADE
 	)
 /
 
 -- Sample data for Person/Doctor/Patient
 
-INSERT INTO Person  (FirstName, LastName, Gender) VALUES ('John',   'Pupkin',    'M')
+INSERT INTO "Person"  ("FirstName", "LastName", "Gender") VALUES ('John',   'Pupkin',    'M')
 /
-INSERT INTO Person  (FirstName, LastName, Gender) VALUES ('Tester', 'Testerson', 'M')
+INSERT INTO "Person"  ("FirstName", "LastName", "Gender") VALUES ('Tester', 'Testerson', 'M')
 /
-INSERT INTO Person  (FirstName, LastName, Gender) VALUES ('Jane',   'Doe',       'F')
+INSERT INTO "Person"  ("FirstName", "LastName", "Gender") VALUES ('Jane',   'Doe',       'F')
 /
-INSERT INTO Person  (FirstName, LastName, MiddleName, Gender) VALUES ('Jürgen', 'König', 'Ko', 'M')
+INSERT INTO "Person"  ("FirstName", "LastName", "MiddleName", "Gender") VALUES ('Jürgen', 'König', 'Ko', 'M')
 /
-INSERT INTO Doctor  (PersonID,  Taxonomy)  VALUES (1, 'Psychiatry')
+INSERT INTO "Doctor"  ("PersonID",  "Taxonomy")  VALUES (1, 'Psychiatry')
 /
-INSERT INTO Patient (PersonID,  Diagnosis) VALUES (2, 'Hallucination with Paranoid Bugs'' Delirium of Persecution')
+INSERT INTO "Patient" ("PersonID",  "Diagnosis") VALUES (2, 'Hallucination with Paranoid Bugs'' Delirium of Persecution')
 /
 
 -- Person_Delete
@@ -162,9 +164,9 @@ CREATE OR REPLACE
 PROCEDURE Person_Delete(pPersonID IN NUMBER) IS
 BEGIN
 DELETE FROM
-	Person
+	"Person"
 WHERE
-	PersonID = pPersonID;
+	"PersonID" = pPersonID;
 END;
 /
 
@@ -179,12 +181,12 @@ PROCEDURE Person_Insert_OutputParameter
 	, pPersonID   OUT NUMBER
 	) IS
 BEGIN
-INSERT INTO Person
-	( LastName,  FirstName,  MiddleName,  Gender)
+INSERT INTO "Person"
+	( "LastName",  "FirstName",  "MiddleName",  "Gender")
 VALUES
 	(pLastName, pFirstName, pMiddleName, pGender)
 RETURNING
-	PersonID
+	"PersonID"
 INTO
 	pPersonID;
 END;
@@ -201,22 +203,22 @@ RETURN SYS_REFCURSOR IS
 	retCursor SYS_REFCURSOR;
 	lPersonID NUMBER;
 BEGIN
-INSERT INTO Person
-	( LastName,  FirstName,  MiddleName,  Gender)
+INSERT INTO "Person"
+	( "LastName",  "FirstName",  "MiddleName",  "Gender")
 VALUES
 	(pLastName, pFirstName, pMiddleName, pGender)
 RETURNING
-	PersonID
+	"PersonID"
 INTO
 	lPersonID;
 
 OPEN retCursor FOR
 	SELECT
-		PersonID, Firstname, Lastname, Middlename, Gender
+		"PersonID", "FirstName", "LastName", "MiddleName", "Gender"
 	FROM
-		Person
+		"Person"
 	WHERE
-		PersonID = lPersonID;
+		"PersonID" = lPersonID;
 RETURN
 	retCursor;
 END;
@@ -231,9 +233,9 @@ RETURN SYS_REFCURSOR IS
 BEGIN
 OPEN retCursor FOR
 	SELECT
-		PersonID, Firstname, Lastname, Middlename, Gender
+		"PersonID", "FirstName", "LastName", "MiddleName", "Gender"
 	FROM
-		Person;
+		"Person";
 RETURN
 	retCursor;
 END;
@@ -248,11 +250,11 @@ RETURN SYS_REFCURSOR IS
 BEGIN
 OPEN retCursor FOR
 	SELECT
-		PersonID, Firstname, Lastname, Middlename, Gender
+		"PersonID", "FirstName", "LastName", "MiddleName", "Gender"
 	FROM
-		Person
+		"Person"
 	WHERE
-		Gender = pGender;
+		"Gender" = pGender;
 RETURN
 	retCursor;
 END;
@@ -267,11 +269,11 @@ RETURN SYS_REFCURSOR IS
 BEGIN
 OPEN retCursor FOR
 	SELECT
-		PersonID, Firstname, Lastname, Middlename, Gender
+		"PersonID", "FirstName", "LastName", "MiddleName", "Gender"
 	FROM
-		Person
+		"Person"
 	WHERE
-		PersonID = pID;
+		"PersonID" = pID;
 RETURN
 	retCursor;
 END;
@@ -289,11 +291,11 @@ RETURN SYS_REFCURSOR IS
 BEGIN
 OPEN retCursor FOR
 	SELECT
-		PersonID, Firstname, Lastname, Middlename, Gender
+		"PersonID", "FirstName", "LastName", "MiddleName", "Gender"
 	FROM
-		Person
+		"Person"
 	WHERE
-		FirstName = pFirstName AND LastName = pLastName;
+		"FirstName" = pFirstName AND "LastName" = pLastName;
 RETURN
 	retCursor;
 END;
@@ -311,11 +313,11 @@ RETURN SYS_REFCURSOR IS
 BEGIN
 OPEN retCursor FOR
 	SELECT
-		PersonID, Firstname, Lastname, Middlename, Gender
+		"PersonID", "FirstName", "LastName", "MiddleName", "Gender"
 	FROM
-		Person
+		"Person"
 	WHERE
-		FirstName LIKE pFirstName AND LastName LIKE pLastName;
+		"FirstName" LIKE pFirstName AND "LastName" LIKE pLastName;
 RETURN
 	retCursor;
 END;
@@ -331,14 +333,14 @@ PROCEDURE Person_Update
 	) IS
 BEGIN
 UPDATE
-	Person
+	"Person"
 SET
-	LastName   = pLastName,
-	FirstName  = pFirstName,
-	MiddleName = pMiddleName,
-	Gender     = pGender
+	"LastName"   = pLastName,
+	"FirstName"  = pFirstName,
+	"MiddleName" = pMiddleName,
+	"Gender"     = pGender
 WHERE
-	PersonID   = pPersonID;
+	"PersonID"   = pPersonID;
 END;
 /
 
@@ -351,11 +353,11 @@ RETURN SYS_REFCURSOR IS
 BEGIN
 OPEN retCursor FOR
 SELECT
-	Person.*, Patient.Diagnosis
+	"Person".*, "Patient"."Diagnosis"
 FROM
-	Patient, Person
+	"Patient", "Person"
 WHERE
-	Patient.PersonID = Person.PersonID;
+	"Patient"."PersonID" = "Person"."PersonID";
 RETURN
 	retCursor;
 END;
@@ -374,12 +376,12 @@ RETURN SYS_REFCURSOR IS
 BEGIN
 OPEN retCursor FOR
 SELECT
-	Person.*, Patient.Diagnosis
+	"Person".*, "Patient"."Diagnosis"
 FROM
-	Patient, Person
+	"Patient", "Person"
 WHERE
-	Patient.PersonID = Person.PersonID
-	AND FirstName = pFirstName AND LastName = pLastName;
+	"Patient"."PersonID" = "Person"."PersonID"
+	AND "FirstName" = pFirstName AND "LastName" = pLastName;
 RETURN
 	retCursor;
 END;
@@ -540,67 +542,66 @@ END;
 
 -- Data Types test
 
-CREATE SEQUENCE DataTypeTestSeq
+CREATE SEQUENCE "DataTypeTestSeq"
 /
 
-CREATE TABLE DataTypeTest
+CREATE TABLE "DataTypeTest"
 (
-	DataTypeID      INTEGER      NOT NULL PRIMARY KEY,
-	Binary_         RAW(50)          NULL,
-	Boolean_        NUMBER(1,0)      NULL,
-	Byte_           NUMBER(3,0)      NULL,
-	Bytes_          BLOB             NULL,
-	Char_           NCHAR            NULL,
-	DateTime_       DATE             NULL,
-	Decimal_        NUMBER(19,5)     NULL,
-	Double_         DOUBLE PRECISION NULL,
-	Guid_           RAW(16)          NULL,
-	Int16_          NUMBER(5,0)      NULL,
-	Int32_          NUMBER(10,0)     NULL,
-	Int64_          NUMBER(20,0)     NULL,
-	Money_          NUMBER           NULL,
-	SByte_          NUMBER(3,0)      NULL,
-	Single_         FLOAT            NULL,
-	Stream_         BLOB             NULL,
-	String_         NVARCHAR2(50)    NULL,
-	UInt16_         NUMBER(5,0)      NULL,
-	UInt32_         NUMBER(10,0)     NULL,
-	UInt64_         NUMBER(20,0)     NULL,
-	Xml_            XMLTYPE          NULL
+	"DataTypeID"      INTEGER      NOT NULL PRIMARY KEY,
+	"Binary_"         RAW(50)          NULL,
+	"Boolean_"        NUMBER(1,0)      NULL,
+	"Byte_"           NUMBER(3,0)      NULL,
+	"Bytes_"          BLOB             NULL,
+	"Char_"           NCHAR            NULL,
+	"DateTime_"       DATE             NULL,
+	"Decimal_"        NUMBER(19,5)     NULL,
+	"Double_"         DOUBLE PRECISION NULL,
+	"Guid_"           RAW(16)          NULL,
+	"Int16_"          NUMBER(5,0)      NULL,
+	"Int32_"          NUMBER(10,0)     NULL,
+	"Int64_"          NUMBER(20,0)     NULL,
+	"Money_"          NUMBER           NULL,
+	"SByte_"          NUMBER(3,0)      NULL,
+	"Single_"         FLOAT            NULL,
+	"Stream_"         BLOB             NULL,
+	"String_"         NVARCHAR2(50)    NULL,
+	"UInt16_"         NUMBER(5,0)      NULL,
+	"UInt32_"         NUMBER(10,0)     NULL,
+	"UInt64_"         NUMBER(20,0)     NULL,
+	"Xml_"            XMLTYPE          NULL
 )
 /
 
 -- Insert Trigger for DataTypeTest
 
-CREATE OR REPLACE TRIGGER DataTypeTest_Add
+CREATE OR REPLACE TRIGGER "DataTypeTest_Add"
 BEFORE INSERT
-ON DataTypeTest
+ON "DataTypeTest"
 FOR EACH ROW
 BEGIN
 SELECT
-	DataTypeTestSeq.NEXTVAL
+	"DataTypeTestSeq".NEXTVAL
 INTO
-	:NEW.DataTypeID
+	:NEW."DataTypeID"
 FROM
 	dual;
 END;
 /
 
-INSERT INTO DataTypeTest
-	(Binary_,      Boolean_,    Byte_,     Bytes_,   Char_, DateTime_, Decimal_,
-	 Double_,         Guid_,   Int16_,     Int32_,  Int64_,    Money_,   SByte_,
-	 Single_,       Stream_,  String_,    UInt16_, UInt32_,   UInt64_,     Xml_)
+INSERT INTO "DataTypeTest"
+	("Binary_",      "Boolean_",    "Byte_",     "Bytes_",   "Char_", "DateTime_", "Decimal_",
+	 "Double_",         "Guid_",   "Int16_",     "Int32_",  "Int64_",    "Money_",   "SByte_",
+	 "Single_",       "Stream_",  "String_",    "UInt16_", "UInt32_",   "UInt64_",     "Xml_")
 VALUES
 	(   NULL,          NULL,     NULL,       NULL,    NULL,      NULL,     NULL,
 	    NULL,          NULL,     NULL,       NULL,    NULL,      NULL,     NULL,
 	    NULL,          NULL,     NULL,       NULL,    NULL,      NULL,     NULL)
 /
 
-INSERT INTO DataTypeTest
-	(Binary_,      Boolean_,    Byte_,     Bytes_,   Char_, DateTime_, Decimal_,
-	 Double_,         Guid_,   Int16_,     Int32_,  Int64_,    Money_,   SByte_,
-	 Single_,       Stream_,  String_,    UInt16_, UInt32_,   UInt64_,
-	 Xml_)
+INSERT INTO "DataTypeTest"
+	("Binary_",      "Boolean_",    "Byte_",     "Bytes_",   "Char_", "DateTime_", "Decimal_",
+	 "Double_",         "Guid_",   "Int16_",     "Int32_",  "Int64_",    "Money_",   "SByte_",
+	 "Single_",       "Stream_",  "String_",    "UInt16_", "UInt32_",   "UInt64_",     "Xml_")
 VALUES
 	(SYS_GUID(),          1,      255, SYS_GUID(),     'B',   SYSDATE, 12345.67,
 	   1234.567, SYS_GUID(),    32767,      32768, 1000000,   12.3456,      127,
@@ -610,23 +611,39 @@ VALUES
 
 
 
-CREATE TABLE Parent      (ParentID int, Value1 int)
+CREATE TABLE "Parent"      ("ParentID" int, "Value1" int)
 /
-CREATE TABLE Child       (ParentID int, ChildID int)
+CREATE TABLE "Child"       ("ParentID" int, "ChildID" int)
 /
-CREATE TABLE GrandChild  (ParentID int, ChildID int, GrandChildID int)
+CREATE TABLE "GrandChild"  ("ParentID" int, "ChildID" int, "GrandChildID" int)
 /
 
 
-CREATE TABLE LinqDataTypes
+CREATE TABLE "LinqDataTypes"
 (
-	ID             int,
+	ID               int,
+	"MoneyValue"     decimal(10,4),
+	"DateTimeValue"  timestamp,
+	"DateTimeValue2" timestamp,
+	"BoolValue"      smallint,
+	"GuidValue"      raw(16),
+	"BinaryValue"    blob         NULL,
+	"SmallIntValue"  smallint,
+	"IntValue"       int          NULL,
+	"BigIntValue"    number(20,0) NULL,
+	"StringValue"    VARCHAR2(50) NULL
+)
+/
+
+-- uppercased table for native bulk copy
+CREATE TABLE LinqDataTypesBC
+(
+	ID               int,
 	MoneyValue     decimal(10,4),
 	DateTimeValue  timestamp,
 	DateTimeValue2 timestamp,
 	BoolValue      smallint,
 	GuidValue      raw(16),
-	BinaryValue    blob         NULL,
 	SmallIntValue  smallint,
 	IntValue       int          NULL,
 	BigIntValue    number(20,0) NULL,
@@ -641,9 +658,10 @@ CREATE SEQUENCE SequenceTestSeq
 	CACHE 10
 /
 
+-- names not escaped to test native bulk copy
 CREATE TABLE SequenceTest
 (
-	ID                 int NOT NULL PRIMARY KEY,
+	ID      int NOT NULL PRIMARY KEY,
 	Value VARCHAR2(50) NOT NULL
 )
 /
@@ -661,48 +679,48 @@ CREATE TABLE "STG_TRADE_INFORMATION"
 /
 
 
-create table t_test_user
+create table "t_test_user"
 (
-	user_id  number primary key,
-	name     varchar2(255) not null unique
+	"user_id"  number primary key,
+	"name"     varchar2(255) not null unique
 )
 /
 
-create table t_test_user_contract
+create table "t_test_user_contract"
 (
-	user_contract_id number primary key,
-	user_id          number not null references t_test_user on delete cascade,
-	contract_no      number not null,
-	name             varchar2(255) not null,
-	unique           (user_id, contract_no)
+	"user_contract_id" number primary key,
+	"user_id"          number not null references "t_test_user" on delete cascade,
+	"contract_no"      number not null,
+	"name"             varchar2(255) not null,
+	unique           ("user_id", "contract_no")
 )
 /
 
-create sequence sq_test_user
+create sequence "sq_test_user"
 /
-create sequence sq_test_user_contract
-/
-
-DROP SEQUENCE TestIdentitySeq
-/
-DROP TABLE TestIdentity
+create sequence "sq_test_user_contract"
 /
 
-CREATE TABLE TestIdentity (
-	ID NUMBER NOT NULL PRIMARY KEY
+DROP SEQUENCE "TestIdentitySeq"
+/
+DROP TABLE "TestIdentity"
+/
+
+CREATE TABLE "TestIdentity" (
+	"ID" NUMBER NOT NULL PRIMARY KEY
 )
 /
 
-CREATE SEQUENCE TestIdentitySeq
+CREATE SEQUENCE "TestIdentitySeq"
 /
 
-CREATE OR REPLACE TRIGGER TestIdentity_Add
+CREATE OR REPLACE TRIGGER "TestIdentity_Add"
 BEFORE INSERT
-ON TestIdentity
+ON "TestIdentity"
 FOR EACH ROW
 BEGIN
 SELECT
-	TestIdentitySeq.NEXTVAL
+	"TestIdentitySeq".NEXTVAL
 INTO
 	:NEW.ID
 FROM
@@ -711,98 +729,98 @@ END;
 /
 
 
-DROP TABLE AllTypes
+DROP TABLE "AllTypes"
 /
 
-CREATE TABLE AllTypes
+CREATE TABLE "AllTypes"
 (
-	ID                       int                        NOT NULL PRIMARY KEY,
+	"ID"                         int                        NOT NULL PRIMARY KEY,
 
-	bigintDataType           number(20,0)                   NULL,
-	numericDataType          numeric                        NULL,
-	bitDataType              number(1,0)                    NULL,
-	smallintDataType         number(5,0)                    NULL,
-	decimalDataType          number(*,6)                    NULL,
-	smallmoneyDataType       number(10,4)                   NULL,
-	intDataType              number(10,0)                   NULL,
-	tinyintDataType          number(3,0)                    NULL,
-	moneyDataType            number                         NULL,
-	floatDataType            binary_double                  NULL,
-	realDataType             binary_float                   NULL,
+	"bigintDataType"           number(20,0)                   NULL,
+	"numericDataType"          numeric                        NULL,
+	"bitDataType"              number(1,0)                    NULL,
+	"smallintDataType"         number(5,0)                    NULL,
+	"decimalDataType"          number(*,6)                    NULL,
+	"smallmoneyDataType"       number(10,4)                   NULL,
+	"intDataType"              number(10,0)                   NULL,
+	"tinyintDataType"          number(3,0)                    NULL,
+	"moneyDataType"            number                         NULL,
+	"floatDataType"            binary_double                  NULL,
+	"realDataType"             binary_float                   NULL,
 
-	datetimeDataType         date                           NULL,
-	datetime2DataType        timestamp                      NULL,
-	datetimeoffsetDataType   timestamp with time zone       NULL,
-	localZoneDataType        timestamp with local time zone NULL,
+	"datetimeDataType"         date                           NULL,
+	"datetime2DataType"        timestamp                      NULL,
+	"datetimeoffsetDataType"   timestamp with time zone       NULL,
+	"localZoneDataType"        timestamp with local time zone NULL,
 
-	charDataType             char(1)                        NULL,
-	char20DataType           char(20)                       NULL,
-	varcharDataType          varchar2(20)                   NULL,
-	textDataType             clob                           NULL,
-	ncharDataType            nchar(20)                      NULL,
-	nvarcharDataType         nvarchar2(20)                  NULL,
-	ntextDataType            nclob                          NULL,
+	"charDataType"             char(1)                        NULL,
+	"char20DataType"           char(20)                       NULL,
+	"varcharDataType"          varchar2(20)                   NULL,
+	"textDataType"             clob                           NULL,
+	"ncharDataType"            nchar(20)                      NULL,
+	"nvarcharDataType"         nvarchar2(20)                  NULL,
+	"ntextDataType"            nclob                          NULL,
 
-	binaryDataType           blob                           NULL,
-	bfileDataType            bfile                          NULL,
-	guidDataType             raw(16)                        NULL,
-	longDataType             long                           NULL,
+	"binaryDataType"           blob                           NULL,
+	"bfileDataType"            bfile                          NULL,
+	"guidDataType"             raw(16)                        NULL,
+	"longDataType"             long                           NULL,
 
-	uriDataType              UriType                        NULL,
-	xmlDataType              XmlType                        NULL
+	"uriDataType"              UriType                        NULL,
+	"xmlDataType"              XmlType                        NULL
 )
 /
 
-DROP SEQUENCE AllTypesSeq
+DROP SEQUENCE "AllTypesSeq"
 /
-CREATE SEQUENCE AllTypesSeq
+CREATE SEQUENCE "AllTypesSeq"
 /
 
-CREATE OR REPLACE TRIGGER AllTypes_Add
+CREATE OR REPLACE TRIGGER "AllTypes_Add"
 BEFORE INSERT
-ON AllTypes
+ON "AllTypes"
 FOR EACH ROW
 BEGIN
-	SELECT AllTypesSeq.NEXTVAL INTO :NEW.ID FROM dual;
+	SELECT "AllTypesSeq".NEXTVAL INTO :NEW.ID FROM dual;
 END;
 /
 
 CREATE OR REPLACE DIRECTORY DATA_DIR AS 'C:\DataFiles'
 /
 
-INSERT INTO AllTypes
+INSERT INTO "AllTypes"
 (
-	bigintDataType,
-	numericDataType,
-	bitDataType,
-	smallintDataType,
-	decimalDataType,
-	smallmoneyDataType,
-	intDataType,
-	tinyintDataType,
-	moneyDataType,
-	floatDataType,
-	realDataType,
+	"bigintDataType",
+	"numericDataType",
+	"bitDataType",
+	"smallintDataType",
+	"decimalDataType",
+	"smallmoneyDataType",
+	"intDataType",
+	"tinyintDataType",
+	"moneyDataType",
+	"floatDataType",
+	"realDataType",
 
-	datetimeDataType,
-	datetime2DataType,
-	datetimeoffsetDataType,
-	localZoneDataType,
+	"datetimeDataType",
+	"datetime2DataType",
+	"datetimeoffsetDataType",
+	"localZoneDataType",
 
-	charDataType,
-	varcharDataType,
-	textDataType,
-	ncharDataType,
-	nvarcharDataType,
-	ntextDataType,
+	"charDataType",
+	"varcharDataType",
+	"textDataType",
+	"ncharDataType",
+	"nvarcharDataType",
+	"ntextDataType",
 
-	binaryDataType,
-	bfileDataType,
-	guidDataType,
-	longDataType,
+	"binaryDataType",
+	"bfileDataType",
+	"guidDataType",
+	"longDataType",
 
-	uriDataType,
-	xmlDataType
+	"uriDataType",
+	"xmlDataType"
 )
 SELECT
 	NULL bigintDataType,
@@ -873,43 +891,43 @@ SELECT
 FROM dual
 /
 
-create table t_entity
+create table "t_entity"
 (
-	entity_id integer primary key,
-	time      date,
-	duration  interval day(3) to second(2)
+	"entity_id" integer primary key,
+	"time"      date,
+	"duration"  interval day(3) to second(2)
 )
 /
 
-DROP TABLE LongRawTable
+DROP TABLE "LongRawTable"
 /
 
-CREATE TABLE LongRawTable
+CREATE TABLE "LongRawTable"
 (
-	ID              NUMBER        NOT NULL PRIMARY KEY,
-	longRawDataType long raw      NULL
+	"ID"                NUMBER        NOT NULL PRIMARY KEY,
+	"longRawDataType" long raw      NULL
 )
 /
 
-INSERT INTO LongRawTable
+INSERT INTO "LongRawTable"
 SELECT 1, NULL                        FROM dual UNION ALL
 SELECT 2, to_blob('4c4f4e4720524157') FROM dual -- "LONG RAW"
 /
 
-DROP TABLE DecimalOverflow
+DROP TABLE "DecimalOverflow"
 /
 
-CREATE TABLE DecimalOverflow
+CREATE TABLE "DecimalOverflow"
 (
-	Decimal1 numeric(38,20),
-	Decimal2 numeric(31,2),
-	Decimal3 numeric(38,36),
-	Decimal4 numeric(29,0),
-	Decimal5 numeric(38,38)
+	"Decimal1" numeric(38,20),
+	"Decimal2" numeric(31,2),
+	"Decimal3" numeric(38,36),
+	"Decimal4" numeric(29,0),
+	"Decimal5" numeric(38,38)
 )
 /
 
-INSERT INTO DecimalOverflow
+INSERT INTO "DecimalOverflow"
 SELECT  123456789012345.12345678901234567890,  1234567890123456789.91,  12.345678901234512345678901234567890,  1234567890123456789,  .12345678901234512345678901234567890 FROM dual UNION ALL
 SELECT -123456789012345.12345678901234567890, -1234567890123456789.91, -12.345678901234512345678901234567890, -1234567890123456789, -.12345678901234512345678901234567890 FROM dual UNION ALL
 SELECT  12345678901234.567890123456789,                          NULL,                                  NULL,                 NULL,                                  NULL FROM dual UNION ALL
@@ -922,68 +940,68 @@ SELECT -12345678901234.5678901234567,                            NULL,          
 
 -- merge test tables
 /
-DROP TABLE TestMerge1
+DROP TABLE "TestMerge1"
 /
-DROP TABLE TestMerge2
+DROP TABLE "TestMerge2"
 /
 
-CREATE TABLE TestMerge1
+CREATE TABLE "TestMerge1"
 (
-	Id		NUMBER	NOT NULL PRIMARY KEY,
-	Field1	NUMBER	NULL,
-	Field2	NUMBER	NULL,
-	Field3	NUMBER	NULL,
-	Field4	NUMBER	NULL,
-	Field5	NUMBER	NULL,
+	"Id"		NUMBER	NOT NULL PRIMARY KEY,
+	"Field1"	NUMBER	NULL,
+	"Field2"	NUMBER	NULL,
+	"Field3"	NUMBER	NULL,
+	"Field4"	NUMBER	NULL,
+	"Field5"	NUMBER	NULL,
 
-	FieldInt64      NUMBER(20, 0)               NULL,
-	FieldBoolean    NUMBER(1, 0)                NULL,
-	FieldString     VARCHAR(20)                 NULL,
-	FieldNString    NVARCHAR2(20)               NULL,
-	FieldChar       CHAR(1)                     NULL,
-	FieldNChar      NCHAR(1)                    NULL,
-	FieldFloat      BINARY_FLOAT                NULL,
-	FieldDouble     BINARY_DOUBLE               NULL,
-	FieldDateTime   DATE                        NULL,
-	FieldDateTime2  TIMESTAMP(7) WITH TIME ZONE NULL,
-	FieldBinary     BLOB                        NULL,
-	FieldGuid       RAW(16)                     NULL,
-	FieldDecimal    DECIMAL(24, 10)             NULL,
-	FieldEnumString VARCHAR(20)                 NULL,
-	FieldEnumNumber NUMBER                      NULL
+	"FieldInt64"      NUMBER(20, 0)               NULL,
+	"FieldBoolean"    NUMBER(1, 0)                NULL,
+	"FieldString"     VARCHAR(20)                 NULL,
+	"FieldNString"    NVARCHAR2(20)               NULL,
+	"FieldChar"       CHAR(1)                     NULL,
+	"FieldNChar"      NCHAR(1)                    NULL,
+	"FieldFloat"      BINARY_FLOAT                NULL,
+	"FieldDouble"     BINARY_DOUBLE               NULL,
+	"FieldDateTime"   DATE                        NULL,
+	"FieldDateTime2"  TIMESTAMP(7) WITH TIME ZONE NULL,
+	"FieldBinary"     BLOB                        NULL,
+	"FieldGuid"       RAW(16)                     NULL,
+	"FieldDecimal"    DECIMAL(24, 10)             NULL,
+	"FieldEnumString" VARCHAR(20)                 NULL,
+	"FieldEnumNumber" NUMBER                      NULL
 )
 /
-CREATE TABLE TestMerge2
+CREATE TABLE "TestMerge2"
 (
-	Id		NUMBER	NOT NULL PRIMARY KEY,
-	Field1	NUMBER	NULL,
-	Field2	NUMBER	NULL,
-	Field3	NUMBER	NULL,
-	Field4	NUMBER	NULL,
-	Field5	NUMBER	NULL,
+	"Id"		NUMBER	NOT NULL PRIMARY KEY,
+	"Field1"	NUMBER	NULL,
+	"Field2"	NUMBER	NULL,
+	"Field3"	NUMBER	NULL,
+	"Field4"	NUMBER	NULL,
+	"Field5"	NUMBER	NULL,
 
-	FieldInt64      NUMBER(20, 0)               NULL,
-	FieldBoolean    NUMBER(1, 0)                NULL,
-	FieldString     VARCHAR(20)                 NULL,
-	FieldNString    NVARCHAR2(20)               NULL,
-	FieldChar       CHAR(1)                     NULL,
-	FieldNChar      NCHAR(1)                    NULL,
-	FieldFloat      BINARY_FLOAT                NULL,
-	FieldDouble     BINARY_DOUBLE               NULL,
-	FieldDateTime   DATE                        NULL,
-	FieldDateTime2  TIMESTAMP(7) WITH TIME ZONE NULL,
-	FieldBinary     BLOB                        NULL,
-	FieldGuid       RAW(16)                     NULL,
-	FieldDecimal    DECIMAL(24, 10)             NULL,
-	FieldEnumString VARCHAR(20)                 NULL,
-	FieldEnumNumber NUMBER                      NULL
+	"FieldInt64"      NUMBER(20, 0)               NULL,
+	"FieldBoolean"    NUMBER(1, 0)                NULL,
+	"FieldString"     VARCHAR(20)                 NULL,
+	"FieldNString"    NVARCHAR2(20)               NULL,
+	"FieldChar"       CHAR(1)                     NULL,
+	"FieldNChar"      NCHAR(1)                    NULL,
+	"FieldFloat"      BINARY_FLOAT                NULL,
+	"FieldDouble"     BINARY_DOUBLE               NULL,
+	"FieldDateTime"   DATE                        NULL,
+	"FieldDateTime2"  TIMESTAMP(7) WITH TIME ZONE NULL,
+	"FieldBinary"     BLOB                        NULL,
+	"FieldGuid"       RAW(16)                     NULL,
+	"FieldDecimal"    DECIMAL(24, 10)             NULL,
+	"FieldEnumString" VARCHAR(20)                 NULL,
+	"FieldEnumNumber" NUMBER                      NULL
 )
 /
 
 CREATE OR REPLACE
 PROCEDURE AddIssue792Record() IS
 BEGIN
-	INSERT INTO dbo.AllTypes(char20DataType) VALUES('issue792');
+	INSERT INTO dbo."AllTypes"("char20DataType") VALUES('issue792');
 END;
 /
 
@@ -991,7 +1009,7 @@ END;
 CREATE OR REPLACE
 PROCEDURE AllOutputParameters
 (
-	ID                       IN OUT int                            ,
+	ID                         IN OUT int                          ,
 
 	bigintDataType           IN OUT number                         ,
 	numericDataType          IN OUT number                         ,
@@ -1022,7 +1040,7 @@ PROCEDURE AllOutputParameters
  	bfileDataType            IN OUT bfile                          ,
 	guidDataType             IN OUT raw                            ,
 
-	--uriDataType              IN OUT UriType                        ,
+	--uriDataType              IN OUT UriType                      ,
 	xmlDataType              IN OUT XmlType
 
 ) IS
@@ -1030,37 +1048,37 @@ BEGIN
 	SELECT
 		at.ID,
 
-		at.bigintDataType,
-		at.numericDataType,
-		at.bitDataType,
-		at.smallintDataType,
-		at.decimalDataType,
-		at.smallmoneyDataType,
-		at.intDataType,
-		at.tinyintDataType,
-		at.moneyDataType,
-		at.floatDataType,
-		at.realDataType,
+		at."bigintDataType",
+		at."numericDataType",
+		at."bitDataType",
+		at."smallintDataType",
+		at."decimalDataType",
+		at."smallmoneyDataType",
+		at."intDataType",
+		at."tinyintDataType",
+		at."moneyDataType",
+		at."floatDataType",
+		at."realDataType",
 
-		at.datetimeDataType,
-		at.datetime2DataType,
-		at.datetimeoffsetDataType,
-		at.localZoneDataType,
+		at."datetimeDataType",
+		at."datetime2DataType",
+		at."datetimeoffsetDataType",
+		at."localZoneDataType",
 
-		at.charDataType,
-		at.char20DataType,
-		at.varcharDataType,
-		at.textDataType,
-		at.ncharDataType,
-		at.nvarcharDataType,
-		at.ntextDataType,
+		at."charDataType",
+		at."char20DataType",
+		at."varcharDataType",
+		at."textDataType",
+		at."ncharDataType",
+		at."nvarcharDataType",
+		at."ntextDataType",
 
-		at.binaryDataType,
- 		at.bfileDataType,
-		at.guidDataType,
+		at."binaryDataType",
+ 		at."bfileDataType",
+		at."guidDataType",
 
-		--at.uriDataType,
-		at.xmlDataType
+		--at."uriDataType",
+		at."xmlDataType"
 
 		INTO
 
@@ -1098,7 +1116,7 @@ BEGIN
 		--uriDataType,
 		xmlDataType
 
-	FROM ALLTYPES at
+	FROM "AllTypes" at
 	WHERE at.ID = 2;
 END;
 /
@@ -1122,28 +1140,28 @@ BEGIN
 END;
 -- schema test table, view and matview. doesn't have columns, as we test only object and it's atributes load
 /
-DROP VIEW SchemaTestView
+DROP VIEW "SchemaTestView"
 /
-DROP MATERIALIZED VIEW SchemaTestMatView
+DROP MATERIALIZED VIEW "SchemaTestMatView"
 /
-DROP TABLE SchemaTestTable
+DROP TABLE "SchemaTestTable"
 /
-CREATE TABLE SchemaTestTable
+CREATE TABLE "SchemaTestTable"
 (
-	Id  NUMBER NOT NULL PRIMARY KEY
+	"Id"  NUMBER NOT NULL PRIMARY KEY
 )
 /
-CREATE VIEW SchemaTestView AS SELECT Id FROM SchemaTestTable
+CREATE VIEW "SchemaTestView" AS SELECT "Id" FROM "SchemaTestTable"
 /
-CREATE MATERIALIZED VIEW SchemaTestMatView AS SELECT Id FROM SchemaTestTable
+CREATE MATERIALIZED VIEW "SchemaTestMatView" AS SELECT "Id" FROM "SchemaTestTable"
 /
-COMMENT ON TABLE SchemaTestTable IS 'This is table'
+COMMENT ON TABLE "SchemaTestTable" IS 'This is table'
 /
-COMMENT ON MATERIALIZED VIEW SchemaTestMatView IS 'This is matview'
+COMMENT ON MATERIALIZED VIEW "SchemaTestMatView" IS 'This is matview'
 /
-COMMENT ON COLUMN SchemaTestTable.Id IS 'This is column'
+COMMENT ON COLUMN "SchemaTestTable"."Id" IS 'This is column'
 /
-COMMENT ON COLUMN SchemaTestView.Id IS 'This is view column'
+COMMENT ON COLUMN "SchemaTestView"."Id" IS 'This is view column'
 /
-COMMENT ON COLUMN SchemaTestMatView.Id IS 'This is matview column'
+COMMENT ON COLUMN "SchemaTestMatView"."Id" IS 'This is matview column'
 /
