@@ -687,7 +687,7 @@ namespace Tests.Data
 					}
 					finally
 					{
-						db.GetTable<SqlServerTests.AllTypes>().Delete(p => p.ID >= 2000);
+						db.GetTable<SqlServerTests.AllTypes>().Delete(p => p.ID >= 3);
 
 						// test quotation works
 						Assert.True(trace.Contains("[AllTypes]"));

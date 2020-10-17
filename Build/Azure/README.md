@@ -21,6 +21,15 @@ Automatically triggered for all PR commits and runs solution build
 
 Runs manually using `/azp run test-all` command from PR comment by team member
 
+#### db-specific test pipelines
+
+Those pipelines used to run tests only for specific databases manually by team member:
+- `/azp run test-db2` - IBM DB2 tests
+- `/azp run test-sybase` - SAP/SYBASE ASE tests
+- `/azp run test-informix` - IBM Informix tests
+- `/azp run test-sqlserver-2019` - SQL Server 2019 tests
+- `/azp run test-sqlite` - SQLite tests
+
 #### `experimental` pipeline
 Runs manually using `/azp run experimental` command from PR and used for development and testing of new pipelines/test providers.
 Base pipeline template contains only solution build and should be reset to initial state before merge.
@@ -80,12 +89,13 @@ Legend:
 |MySQL 8<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/) 8.0.21|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |MySQL 8<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/) 1.0.1|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |MariaDB 10<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/) 8.0.21|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
-|PostgreSQL 9.2<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.11 (netfx) / 4.1.4 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
-|PostgreSQL 9.3<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.11 (netfx) / 4.1.4 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
-|PostgreSQL 9.5<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.11 (netfx) / 4.1.4 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
-|PostgreSQL 10<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.11 (netfx) / 4.1.4 (core)|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
-|PostgreSQL 11<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.11 (netfx) / 4.1.4 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
-|PostgreSQL 12<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.11 (netfx) / 4.1.4 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|PostgreSQL 9.2<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.11 (netfx) / 4.1.5 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|PostgreSQL 9.3<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.11 (netfx) / 4.1.5 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|PostgreSQL 9.5<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.11 (netfx) / 4.1.5 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|PostgreSQL 10<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.11 (netfx) / 4.1.5 (core)|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
+|PostgreSQL 11<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.11 (netfx) / 4.1.5 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|PostgreSQL 12<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.11 (netfx) / 4.1.5 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|PostgreSQL 13<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.11 (netfx) / 4.1.5 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |DB2 LUW 11.5.0.0a<br>[IBM.Data.DB2](https://www.nuget.org/packages/IBM.Data.DB.Provider/) 11.5.4000.4 (netfx)<br>[IBM.Data.DB2.Core](https://www.nuget.org/packages/IBM.Data.DB2.Core/) 2.2.0.100 ([osx](https://www.nuget.org/packages/IBM.Data.DB2.Core-osx/) 2.0.0.100, [lin](https://www.nuget.org/packages/IBM.Data.DB2.Core-lnx/) 2.2.0.100) (core)|:x:|:x:|:heavy_check_mark:<sup>[6](#notes)</sup>|:heavy_check_mark:|
 |Informix 12.10.FC12W1DE<br>IBM.Data.Informix (SQLI) 4.0.410.10|:x:|:heavy_minus_sign:|:heavy_minus_sign:|:heavy_minus_sign:|
 |Informix 14.10<br>IBM.Data.Informix (SQLI) 4.0.410.10|:x:|:heavy_minus_sign:|:heavy_minus_sign:|:heavy_minus_sign:|
@@ -147,12 +157,14 @@ Legend:
 |`ProviderName.OracleManaged`|Oracle 12c using managed provider (core version for .net core)||
 |`TestProvName.Oracle11Native`|Oracle 11g using native provider||
 |`TestProvName.Oracle11Managed`|Oracle 11g using managed provider (core version for .net core)||
-|`ProviderName.PostgreSQL`|Latest PostgreSQL (12)||
+|`ProviderName.PostgreSQL`|Latest PostgreSQL (13)||
 |`ProviderName.PostgreSQL92`|PostgreSQL 9.2-||
 |`ProviderName.PostgreSQL93`|PostgreSQL [9.3-9.5)||
 |`ProviderName.PostgreSQL95`|PostgreSQL 9.5+||
 |`TestProvName.PostgreSQL10`|PostgreSQL 10||
 |`TestProvName.PostgreSQL11`|PostgreSQL 11||
+|`TestProvName.PostgreSQL12`|PostgreSQL 12||
+|`TestProvName.PostgreSQL13`|PostgreSQL 13||
 |`ProviderName.SqlCe`|SQL CE||
 |`ProviderName.SQLite`|not used||
 |`ProviderName.SQLiteClassic`|System.Data.Sqlite||

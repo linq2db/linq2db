@@ -1570,6 +1570,37 @@ namespace Tests.Linq
 			}
 		}
 
+
+		[Table("test_mapping_column_2_prop")]
+		public partial class TestMappingColumn1PropInfo 
+		{
+			[Column("id"),          PrimaryKey] public long Id         { get; set; } // bigint
+			[Column("test_number"), NotNull   ] public long TestNumber { get; set; } // bigint
+		}
+
+		[Table("test_mapping_column_2_prop")]
+		public partial class TestMappingColumn2PropInfo 
+		{
+			[Column("test_number"), NotNull   ] public long TestNumber { get; set; } // bigint
+
+			[Column("test_number"), NotNull] public long TestNumber2 { get; set; } // bigint
+			[Column("test_number"), NotNull] public long TestNumber3 { get; set; } // bigint
+			[Column("id"),          PrimaryKey] public long Id         { get; set; } // bigint
+		}
+
+		[Test]
+		public void MaterializeTwoMapped([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var data = new[] { new TestMappingColumn1PropInfo  { Id = 1, TestNumber = 3 } };
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(data))
+			{
+				var value = db.GetTable<TestMappingColumn2PropInfo>().First();
+				Assert.That(value.TestNumber, Is.EqualTo(value.TestNumber2));
+				Assert.That(value.TestNumber, Is.EqualTo(value.TestNumber3));
+			}
+		}
+
 		[Table]
 		class Table860_1
 		{
