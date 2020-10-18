@@ -181,7 +181,7 @@ namespace Tests.Linq
 
 				TestContext.WriteLine(sql);
 
-				Assert.That(sql, Contains.Substring("(6,3)"));
+				Assert.That(sql, Contains.Substring("(6, 3)"));
 			}
 		}
 

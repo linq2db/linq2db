@@ -103,7 +103,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				foreach (var oi in output.OutputItems)
 				{
 					if (!first)
-						StringBuilder.Append(',').AppendLine();
+						StringBuilder.AppendLine(Comma);
 					first = false;
 
 					AppendIndent();
@@ -132,7 +132,7 @@ namespace LinqToDB.DataProvider.SqlServer
 						.AppendLine();
 
 					AppendIndent()
-						.AppendLine("(");
+						.AppendLine(OpenParens);
 
 					++Indent;
 
@@ -140,7 +140,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					foreach (var oi in output.OutputItems)
 					{
 						if (!firstColumn)
-							StringBuilder.Append(',').AppendLine();
+							StringBuilder.AppendLine(Comma);
 						firstColumn = false;
 
 						AppendIndent();
@@ -323,7 +323,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(' ');
 
 			StringBuilder.Append("PRIMARY KEY CLUSTERED (");
-			StringBuilder.Append(fieldNames.Aggregate((f1,f2) => f1 + ", " + f2));
+			StringBuilder.Append(string.Join(InlineComma, fieldNames));
 			StringBuilder.Append(")");
 		}
 

@@ -1409,8 +1409,8 @@ namespace Tests.DataProvider
 					Assert.True(sql.Contains("\t`UnsignedBigInt`   BIGINT UNSIGNED   NOT NULL"));
 					Assert.True(sql.Contains("\t`Decimal`          DECIMAL           NOT NULL"));
 					Assert.True(sql.Contains("\t`Decimal15_0`      DECIMAL(15)       NOT NULL"));
-					Assert.True(sql.Contains("\t`Decimal10_5`      DECIMAL(10,5)     NOT NULL"));
-					Assert.True(sql.Contains("\t`Decimal20_2`      DECIMAL(20,2)     NOT NULL"));
+					Assert.True(sql.Contains("\t`Decimal10_5`      DECIMAL(10, 5)    NOT NULL"));
+					Assert.True(sql.Contains("\t`Decimal20_2`      DECIMAL(20, 2)    NOT NULL"));
 					Assert.True(sql.Contains("\t`Float`            FLOAT             NOT NULL"));
 					Assert.True(sql.Contains("\t`Float10`          FLOAT(10)         NOT NULL"));
 					Assert.True(sql.Contains("\t`Double`           DOUBLE            NOT NULL"));

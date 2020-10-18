@@ -1,5 +1,4 @@
 ﻿using System.Data;
-using System.Linq;
 using System.Text;
 
 namespace LinqToDB.DataProvider.SqlCe
@@ -64,7 +63,7 @@ namespace LinqToDB.DataProvider.SqlCe
 				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName!);
 				StringBuilder.Append(" ALTER COLUMN ");
 				Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
-				StringBuilder.AppendLine(" IDENTITY(1,1)");
+				StringBuilder.AppendLine(" IDENTITY(1, 1)");
 			}
 			else
 		{
@@ -83,11 +82,11 @@ namespace LinqToDB.DataProvider.SqlCe
 			{
 				case DataType.Char          : base.BuildDataTypeFromDataType(new SqlDataType(DataType.NChar,    type.Type.Length), forCreateTable); return;
 				case DataType.VarChar       : base.BuildDataTypeFromDataType(new SqlDataType(DataType.NVarChar, type.Type.Length), forCreateTable); return;
-				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10,4)");                                                           return;
+				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10, 4)");                                                               return;
 				case DataType.DateTime2     :
 				case DataType.Time          :
 				case DataType.Date          :
-				case DataType.SmallDateTime : StringBuilder.Append("DateTime");                                                                return;
+				case DataType.SmallDateTime : StringBuilder.Append("DateTime");                                                                     return;
 				case DataType.NVarChar:
 					if (type.Type.Length == null || type.Type.Length > 4000 || type.Type.Length < 1)
 					{

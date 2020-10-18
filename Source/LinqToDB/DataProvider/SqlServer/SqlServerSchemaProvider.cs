@@ -512,8 +512,8 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			try
 			{
-				var tsql  = $"exec {commandText} {parameters.Select(p => p.Name).Aggregate("", (p1, p2) => $"{p1}, {p2}", p => p.TrimStart(',', ' '))}";
-				var parms = parameters.Select(p => $"{p.Name} {p.DbType}").Aggregate("", (p1, p2) => $"{p1}, {p2}", p => p.TrimStart(',', ' '));
+				var tsql  = $"exec {commandText} {string.Join(", ", parameters.Select(p => p.Name))}";
+				var parms = string.Join(", ", parameters.Select(p => $"{p.Name} {p.DbType}"));
 
 				var dt = new DataTable();
 

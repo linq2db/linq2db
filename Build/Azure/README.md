@@ -28,6 +28,7 @@ Those pipelines used to run tests only for specific databases manually by team m
 - `/azp run test-sybase` - SAP/SYBASE ASE tests
 - `/azp run test-informix` - IBM Informix tests
 - `/azp run test-sqlserver-2019` - SQL Server 2019 tests
+- `/azp run test-sqlite` - SQLite tests
 
 #### `experimental` pipeline
 Runs manually using `/azp run experimental` command from PR and used for development and testing of new pipelines/test providers.
