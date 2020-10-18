@@ -194,7 +194,8 @@ namespace LinqToDB.Data
 				var sql = query.Statement;
 
 				// custom query handling
-				var newSql = dataConnection.ProcessQuery(sql, parameterValues);
+				var preprocessContext = new EvaluationContext(parameterValues);
+				var newSql            = dataConnection.ProcessQuery(sql, preprocessContext);
 
 				if (!ReferenceEquals(sql, newSql))
 				{

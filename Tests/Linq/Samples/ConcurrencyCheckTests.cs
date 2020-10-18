@@ -37,7 +37,7 @@ namespace Tests.Samples
 				return clone;
 			}
 
-			protected override SqlStatement ProcessQuery(SqlStatement statement, IReadOnlyParameterValues? parameterValues)
+			protected override SqlStatement ProcessQuery(SqlStatement statement, EvaluationContext context)
 			{
 				#region Update
 

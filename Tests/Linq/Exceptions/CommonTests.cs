@@ -20,7 +20,7 @@ namespace Tests.Exceptions
 			{
 			}
 
-			protected override SqlStatement ProcessQuery(SqlStatement statement, IReadOnlyParameterValues? parameterValues)
+			protected override SqlStatement ProcessQuery(SqlStatement statement, EvaluationContext context)
 			{
 				if (statement.IsInsert() && statement.RequireInsertClause().Into!.Name == "Parent")
 				{
@@ -36,7 +36,7 @@ namespace Tests.Exceptions
 							return false;
 						}) as SqlSetExpression;
 
-					if (expr != null && expr.Expression!.TryEvaluateExpression(parameterValues, out var expressionValue))
+					if (expr != null && expr.Expression!.TryEvaluateExpression(context, out var expressionValue))
 					{
 						var value = ConvertTo<int>.From(expressionValue);
 
