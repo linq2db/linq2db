@@ -62,7 +62,15 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				switch (func.Name)
 				{
-					case "Coalesce"       : return new SqlFunction(func.SystemType, "Nvl", func.Parameters);
+					case "Coalesce":
+					{
+						var last = func.Parameters[func.Parameters.Length - 1];
+						for (int i = func.Parameters.Length - 2; i >= 0; i--)
+						{
+							last = new SqlFunction(func.SystemType, "Nvl", func.Parameters[i], last);
+						}
+						return last;
+					}
 					case "Convert"        :
 					{
 						var ftype = func.SystemType.ToUnderlying();

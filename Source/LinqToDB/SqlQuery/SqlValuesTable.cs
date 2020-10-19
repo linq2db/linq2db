@@ -91,7 +91,7 @@ namespace LinqToDB.SqlQuery
 
 		internal SqlValuesTable BuildRows(EvaluationContext context)
 		{
-			if (IsRowsBuilt)
+			if (IsRowsBuilt || context.ParameterValues == null)
 				return this;
 
 			var parameters = new Dictionary<Expression, ISqlExpression>(ExpressionEqualityComparer.Instance);

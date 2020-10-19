@@ -31,7 +31,8 @@ namespace Tests.Linq
 			{
 				var query = (IQueryable<Person>)CompilerServices.CompareString(db);
 				var str   = query.ToString();
-				Assert.That(str, Does.Contain("CASE"));
+				TestContext.WriteLine(str);
+				Assert.That(str, Does.Not.Contain("CASE"));
 			}
 		}
 

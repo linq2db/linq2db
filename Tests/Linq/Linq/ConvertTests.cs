@@ -669,6 +669,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("Conversion works properly, even without Sql.NoConvert")]
 		[Test]
 		public void ConvertDataToDecimalNoConvert([NorthwindDataContext] string context)
 		{

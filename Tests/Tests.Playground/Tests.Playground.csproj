@@ -14,6 +14,7 @@
 		<Compile Include="..\Linq\Linq\CompileTestsAsync.cs" Link="CompileTestsAsync.cs" />
 		<Compile Include="..\Linq\Linq\ComplexTests2.cs" Link="ComplexTests2.cs" />
 		<Compile Include="..\Linq\Linq\ConcatUnionTests.cs" Link="ConcatUnionTests.cs" />
+		<Compile Include="..\Linq\Linq\ConvertTests.cs" Link="ConvertTests.cs" />
 		<Compile Include="..\Linq\Linq\CteTests.cs" Link="CteTests.cs" />
 		<Compile Include="..\Linq\Linq\DateTimeFunctionsTests.cs" Link="DateTimeFunctionsTests.cs" />
 		<Compile Include="..\Linq\Linq\EnumMappingTests.cs" Link="EnumMappingTests.cs" />
@@ -35,6 +36,10 @@
 		<Compile Include="..\Linq\Update\DeleteTests.cs" Link="DeleteTests.cs" />
 		<Compile Include="..\Linq\Update\DeleteWithOutputTests.cs" Link="DeleteWithOutputTests.cs" />
 		<Compile Include="..\Linq\Update\InsertTests.cs" Link="InsertTests.cs" />
+		<Compile Include="..\Linq\Update\MergeTests.cs" Link="MergeTests.cs" />
+		<Compile Include="..\Linq\Update\MergeTests.Issues.cs" Link="MergeTests.Issues.cs" />
+		<Compile Include="..\Linq\Update\MergeTests.Operations.UpdateWithDelete.cs" Link="MergeTests.Operations.UpdateWithDelete.cs" />
+		<Compile Include="..\Linq\Update\MergeTests.Types.cs" Link="MergeTests.Types.cs" />
 		<Compile Include="..\Linq\Update\UpdateTests.cs" Link="UpdateTests.cs" />
 		<Compile Include="..\Linq\UserTests\IndexOutOfRangeInUnions.cs" Link="IndexOutOfRangeInUnions.cs" />
 		<Compile Include="..\Linq\UserTests\Issue1925Tests.cs" Link="Issue1925Tests.cs" />
