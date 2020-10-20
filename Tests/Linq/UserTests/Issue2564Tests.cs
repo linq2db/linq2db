@@ -33,10 +33,11 @@ namespace Tests.UserTests
 
 
 			using (var db = GetDataContext(context, ms))
+			using (var lt = db.CreateLocalTable< Issue2564Class>())
 			{
 				var from = DateTime.UtcNow.AddDays(-1);
 				var to = DateTime.UtcNow;
-				var qry = (from m in db.GetTable<Issue2564Class>()
+				var qry = (from m in lt
 						   where m.TimestampGone.HasValue &&
 							 m.TimestampGenerated >= @from &&
 							 m.TimestampGenerated <= to &&
