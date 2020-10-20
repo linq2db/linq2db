@@ -62,6 +62,16 @@ namespace Tests.UserTests
 									x.ServiceName == b &&
 									x.Script == c)
 						  .FirstOrDefault();
+
+				c = "aaa".PadLeft(2000, 'b');
+				var q2 = db.GetTable<Issue2561Class>()
+						  .Where(x =>
+									x.Archive == 0 &&
+									x.ScriptType == Issue2561ScriptType.Type1 &&
+									x.SubType == a &&
+									x.ServiceName == b &&
+									x.Script == c)
+						  .FirstOrDefault();
 			}
 		}
 	}
