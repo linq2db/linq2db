@@ -22,7 +22,6 @@ namespace Tests.UserTests
 			public long Archive { get; set; }
 			public string? ServiceName { get; set; }
 			public Issue2561ScriptType ScriptType { get; set; }
-			public string? SubType { get; set; }
 			public string? Script { get; set; }
 		}
 
@@ -40,7 +39,6 @@ namespace Tests.UserTests
 				.Property(e => e.ServiceName).IsPrimaryKey()
 				.Property(e => e.Name)
 				.Property(e => e.ScriptType)
-				.Property(e => e.SubType)
 				.Property(e => e.Script).HasDataType(DataType.NText);
 
 
@@ -51,14 +49,12 @@ namespace Tests.UserTests
 
 				var l = db.GetTable<Issue2561Class>().ToList();
 
-				var a = "a";
 				var b = "b";
 				var c = "aaa";
 				var q = db.GetTable<Issue2561Class>()
 						  .Where(x =>
 									x.Archive == 0 &&
 									x.ScriptType == Issue2561ScriptType.Type1 &&
-									x.SubType == a &&
 									x.ServiceName == b &&
 									x.Script == c)
 						  .FirstOrDefault();
@@ -68,7 +64,6 @@ namespace Tests.UserTests
 						  .Where(x =>
 									x.Archive == 0 &&
 									x.ScriptType == Issue2561ScriptType.Type1 &&
-									x.SubType == a &&
 									x.ServiceName == b &&
 									x.Script == c)
 						  .FirstOrDefault();
