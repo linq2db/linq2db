@@ -41,7 +41,7 @@ namespace Tests.UserTests
 				.Property(e => e.Name)
 				.Property(e => e.ScriptType)
 				.Property(e => e.SubType)
-				.Property(e => e.Script);
+				.Property(e => e.Script).HasDataType(DataType.NText);
 
 
 			using (var db = GetDataContext(context, ms))
