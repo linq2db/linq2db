@@ -469,14 +469,27 @@ namespace LinqToDB
 			{
 				if (t.IsAnonymous())
 				{
-					var nctor   = (NewExpression)items.Expression.Find(e => e.NodeType == ExpressionType.New && e.Type == t)!;
-					var members = nctor.Members
-						.Select(m => m is MethodInfo info ? info.GetPropertyInfo()! : m)
-						.ToList();
+					var nctor = (NewExpression?)items.Expression.Find(e => e.NodeType == ExpressionType.New && e.Type == t)!;
+
+					MemberInfo[]    members;
+					ConstructorInfo ctor;
+
+					if (nctor == null)
+					{
+						ctor    = t.GetConstructors().Single();
+						members = t.GetPublicInstanceValueMembers();
+					}
+					else
+					{
+						ctor    = nctor.Constructor;
+						members = nctor.Members
+							.Select(m => m is MethodInfo info ? info.GetPropertyInfo()! : m)
+							.ToArray();
+					}
 
 					return Expression.Lambda<Func<T,T>>(
 						Expression.New(
-							nctor.Constructor,
+							ctor,
 							members.Select(m => ExpressionHelper.PropertyOrField(p, m.Name)),
 							members),
 						p);
@@ -697,6 +710,33 @@ namespace LinqToDB
 		}
 
 		/// <summary>
+		/// Creates new temporary table and populate it using BulkCopy.
+		/// </summary>
+		/// <typeparam name="T">Table record mapping class.</typeparam>
+		/// <param name="db">Database connection instance.</param>
+		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
+		/// <param name="items">Initial records to insert into created table.</param>
+		/// <param name="options">Optional BulkCopy options.</param>
+		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
+		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
+		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
+		/// <param name="tableOptions">Optional Table options. If not specified, value from mapping will be used.</param>
+		/// <returns>Returns temporary table instance.</returns>
+		public static TempTable<T> CreateTempTable<T>(
+			this IDataContext db,
+			string?           tableName,
+			TableOptions      tableOptions,
+			IEnumerable<T>    items,
+			BulkCopyOptions?  options      = default,
+			string?           databaseName = default,
+			string?           schemaName   = default,
+			string?           serverName   = default)
+			where T : class
+		{
+			return new TempTable<T>(db, tableName, items, options, databaseName, schemaName, serverName, tableOptions);
+		}
+
+		/// <summary>
 		/// Creates new temporary table and populate it using data from provided query.
 		/// </summary>
 		/// <typeparam name="T">Table record mapping class.</typeparam>
@@ -779,6 +819,33 @@ namespace LinqToDB
 			Action<ITable<T>>? action       = default,
 			string?            serverName   = default,
 			TableOptions       tableOptions = default)
+			where T : class
+		{
+			return new TempTable<T>(db, tableName, items, databaseName, schemaName, action, serverName, tableOptions);
+		}
+
+		/// <summary>
+		/// Creates new temporary table and populate it using data from provided query.
+		/// </summary>
+		/// <typeparam name="T">Table record mapping class.</typeparam>
+		/// <param name="db">Database connection instance.</param>
+		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
+		/// <param name="items">Query to get records to populate created table with initial data.</param>
+		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
+		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
+		/// <param name="action">Optional action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
+		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
+		/// <param name="tableOptions">Optional Table options. If not specified, value from mapping will be used.</param>
+		/// <returns>Returns temporary table instance.</returns>
+		public static TempTable<T> CreateTempTable<T>(
+			this IDataContext  db,
+			string?            tableName,
+			TableOptions       tableOptions,
+			IQueryable<T>      items,
+			string?            databaseName = default,
+			string?            schemaName   = default,
+			Action<ITable<T>>? action       = default,
+			string?            serverName   = default)
 			where T : class
 		{
 			return new TempTable<T>(db, tableName, items, databaseName, schemaName, action, serverName, tableOptions);

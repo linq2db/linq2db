@@ -243,7 +243,7 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 			var identityField = dropTable.Table!.IdentityFields.FirstOrDefault();
 
-			if (identityField == null && dropTable.Table.TableOptions.HasDropIfExists() == false)
+			if (identityField == null && dropTable.Table.TableOptions.HasDropIfExists() == false && dropTable.Table.TableOptions.HasIsTemporary() == false)
 			{
 				base.BuildDropTableStatement(dropTable);
 				return;
@@ -270,7 +270,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 			void BuildDropWithSchemaCheck(string objectName, string schemaTable, string nameColumn, string identifier)
 			{
-				if (dropTable.Table.TableOptions.HasDropIfExists())
+				if (dropTable.Table.TableOptions.HasDropIfExists() || dropTable.Table.TableOptions.HasIsTemporary())
 				{
 					AppendIndent().AppendFormat("IF (EXISTS(SELECT 1 FROM {0} WHERE {1} = ", schemaTable, nameColumn);
 
@@ -303,7 +303,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 				StringBuilder.AppendLine(";");
 
-				if (dropTable.Table.TableOptions.HasDropIfExists())
+				if (dropTable.Table.TableOptions.HasDropIfExists() || dropTable.Table.TableOptions.HasIsTemporary())
 					Indent--;
 			}
 		}
@@ -400,15 +400,38 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
-			StringBuilder.Append(
-				table.TableOptions.HasIsTemporary() ?
-					"CREATE GLOBAL TEMPORARY TABLE " :
-					"CREATE TABLE ");
+			string command;
+
+			if (table.TableOptions.IsTemporaryOptionSet())
+			{
+				switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
+				{
+					case TableOptions.IsTemporary                                                                                     :
+					case TableOptions.IsTemporary |                                           TableOptions.IsLocalTemporaryData       :
+					case TableOptions.IsTemporary | TableOptions.IsGlobalTemporaryStructure                                           :
+					case TableOptions.IsTemporary | TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData       :
+					case                                                                      TableOptions.IsLocalTemporaryData       :
+					case                                                                      TableOptions.IsTransactionTemporaryData :
+					case                            TableOptions.IsGlobalTemporaryStructure                                           :
+					case                            TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData       :
+					case                            TableOptions.IsGlobalTemporaryStructure | TableOptions.IsTransactionTemporaryData :
+						command = "CREATE GLOBAL TEMPORARY TABLE ";
+						break;
+					case var value :
+						throw new InvalidOperationException($"Incompatible table options '{value}'");
+				}
+			}
+			else
+			{
+				command = "CREATE TABLE ";
+			}
+
+			StringBuilder.Append(command);
 		}
 
 		protected override void BuildStartCreateTableStatement(SqlCreateTableStatement createTable)
 		{
-			if (createTable.StatementHeader == null && createTable.Table!.TableOptions.HasCreateIfNotExists())
+			if (createTable.StatementHeader == null && (createTable.Table.TableOptions.HasCreateIfNotExists() || createTable.Table.TableOptions.HasIsTemporary()))
 			{
 				StringBuilder
 					.AppendLine("EXECUTE BLOCK AS BEGIN");
@@ -421,7 +444,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 				// if identifier is not quoted, it must be converted to upper case to match record in rdb$relation_name
 				if (FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.None ||
-				    FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && IsValidIdentifier(identifierValue))
+					FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && IsValidIdentifier(identifierValue))
 					identifierValue = identifierValue.ToUpper();
 
 				BuildValue(null, identifierValue);
@@ -443,17 +466,29 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 			base.BuildEndCreateTableStatement(createTable);
 
-			if (createTable.StatementHeader == null && createTable.Table!.TableOptions.HasCreateIfNotExists())
+			if (createTable.StatementHeader == null)
 			{
-				Indent--;
+				var table = createTable.Table;
 
-				AppendIndent()
-					.AppendLine("';");
+				if (table.TableOptions.IsTemporaryOptionSet())
+				{
+					AppendIndent().AppendLine(table.TableOptions.HasIsTransactionTemporaryData()
+						? "ON COMMIT DELETE ROWS"
+						: "ON COMMIT PRESERVE ROWS");
+				}
 
-				Indent--;
+				if ((table.TableOptions.HasCreateIfNotExists() || table.TableOptions.HasIsTemporary()))
+				{
+					Indent--;
 
-				StringBuilder
-					.AppendLine("END");
+					AppendIndent()
+						.AppendLine("';");
+
+					Indent--;
+
+					StringBuilder
+						.AppendLine("END");
+				}
 			}
 		}
 	}

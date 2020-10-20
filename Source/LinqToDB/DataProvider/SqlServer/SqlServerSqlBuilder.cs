@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq;
 using System.Text;
 
 namespace LinqToDB.DataProvider.SqlServer
@@ -264,7 +263,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override string? GetTableDatabaseName(SqlTable table)
 		{
-			if (table.PhysicalName!.StartsWith("#") || (table.TableOptions & (TableOptions.IsTemporary | TableOptions.IsGlobalTemporary)) != 0)
+			if (table.PhysicalName!.StartsWith("#") || table.TableOptions.IsTemporaryOptionSet())
 				return null;
 
 			return base.GetTableDatabaseName(table);
@@ -275,14 +274,34 @@ namespace LinqToDB.DataProvider.SqlServer
 			if (table.PhysicalName == null)
 				return null;
 
-			var physicalName =
-				table.PhysicalName.StartsWith("#") ?
-					table.PhysicalName :
-				table.TableOptions.HasIsTemporary() ?
-					$"#{table.PhysicalName}" :
-				table.TableOptions.HasIsGlobalTemporary() ?
-					$"##{table.PhysicalName}" :
-					table.PhysicalName;
+			var physicalName = table.PhysicalName.StartsWith("#") ? table.PhysicalName : GetName();
+
+			string GetName()
+			{
+				if (table.TableOptions.IsTemporaryOptionSet())
+				{
+					switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
+					{
+						case TableOptions.IsTemporary                                                                              :
+						case TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData :
+						case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     :
+						case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
+						case                                                                     TableOptions.IsLocalTemporaryData :
+						case                            TableOptions.IsLocalTemporaryStructure                                     :
+						case                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
+							return $"#{table.PhysicalName}";
+						case TableOptions.IsGlobalTemporaryStructure                                                               :
+						case TableOptions.IsGlobalTemporaryStructure | TableOptions.IsGlobalTemporaryData                          :
+							return $"##{table.PhysicalName}";
+						case var value :
+							throw new InvalidOperationException($"Incompatible table options '{value}'");
+					}
+				}
+				else
+				{
+					return table.PhysicalName;
+				}
+			}
 
 			return Convert(new StringBuilder(), physicalName, ConvertType.NameToQueryTable).ToString();
 		}
@@ -382,7 +401,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			if (dropTable.Table.TableOptions.HasDropIfExists())
 			{
 				var defaultDatabaseName =
-					table.PhysicalName!.StartsWith("#") || (table.TableOptions & (TableOptions.IsTemporary | TableOptions.IsGlobalTemporary)) != 0 ?
+					table.PhysicalName!.StartsWith("#") || table.TableOptions.IsTemporaryOptionSet() ?
 						"[tempdb]" : null;
 
 				StringBuilder.Append("IF (OBJECT_ID(N'");
@@ -501,7 +520,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				var table = createTable.Table;
 
 				var defaultDatabaseName =
-					table.PhysicalName!.StartsWith("#") || (table.TableOptions & (TableOptions.IsTemporary | TableOptions.IsGlobalTemporary)) != 0 ?
+					table.PhysicalName!.StartsWith("#") || table.TableOptions.IsTemporaryOptionSet() ?
 						"[tempdb]" : null;
 
 				StringBuilder.Append("IF (OBJECT_ID(N'");

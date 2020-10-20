@@ -322,7 +322,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			var identityField = dropTable.Table!.IdentityFields.FirstOrDefault();
 
-			if (identityField == null && dropTable.Table.TableOptions.HasDropIfExists() == false)
+			if (identityField == null && dropTable.Table.TableOptions.HasDropIfExists() == false && dropTable.Table.TableOptions.HasIsTemporary() == false)
 			{
 				base.BuildDropTableStatement(dropTable);
 			}
@@ -344,7 +344,7 @@ namespace LinqToDB.DataProvider.Oracle
 						.AppendLine("';")
 						;
 
-					if (dropTable.Table.TableOptions.HasDropIfExists())
+					if (dropTable.Table.TableOptions.HasDropIfExists() || dropTable.Table.TableOptions.HasIsTemporary())
 					{
 						StringBuilder
 							.AppendLine("EXCEPTION")
@@ -355,7 +355,7 @@ namespace LinqToDB.DataProvider.Oracle
 							;
 					}
 				}
-				else if (!dropTable.Table.TableOptions.HasDropIfExists())
+				else if (!dropTable.Table.TableOptions.HasDropIfExists() && !dropTable.Table.TableOptions.HasIsTemporary())
 				{
 					StringBuilder
 						.Append("\tEXECUTE IMMEDIATE 'DROP TRIGGER ")
@@ -526,15 +526,38 @@ END;",
 
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
-			StringBuilder.Append(
-				table.TableOptions.HasIsTemporary() ?
-					"CREATE GLOBAL TEMPORARY TABLE " :
-					"CREATE TABLE ");
+			string command;
+
+			if (table.TableOptions.IsTemporaryOptionSet())
+			{
+				switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
+				{
+					case TableOptions.IsTemporary                                                                                     :
+					case TableOptions.IsTemporary |                                           TableOptions.IsLocalTemporaryData       :
+					case TableOptions.IsTemporary | TableOptions.IsGlobalTemporaryStructure                                           :
+					case TableOptions.IsTemporary | TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData       :
+					case                                                                      TableOptions.IsLocalTemporaryData       :
+					case                                                                      TableOptions.IsTransactionTemporaryData :
+					case                            TableOptions.IsGlobalTemporaryStructure                                           :
+					case                            TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData       :
+					case                            TableOptions.IsGlobalTemporaryStructure | TableOptions.IsTransactionTemporaryData :
+						command = "CREATE GLOBAL TEMPORARY TABLE ";
+						break;
+					case var value :
+						throw new InvalidOperationException($"Incompatible table options '{value}'");
+				}
+			}
+			else
+			{
+				command = "CREATE TABLE ";
+			}
+
+			StringBuilder.Append(command);
 		}
 
 		protected override void BuildStartCreateTableStatement(SqlCreateTableStatement createTable)
 		{
-			if (createTable.StatementHeader == null && createTable.Table!.TableOptions.HasCreateIfNotExists())
+			if (createTable.StatementHeader == null && (createTable.Table.TableOptions.HasCreateIfNotExists() || createTable.Table.TableOptions.HasIsTemporary()))
 			{
 				AppendIndent().AppendLine(@"BEGIN");
 
@@ -554,13 +577,16 @@ END;",
 
 			if (createTable.StatementHeader == null)
 			{
-				if (createTable.Table!.TableOptions.HasIsTemporary())
+				var table = createTable.Table;
+
+				if (table.TableOptions.IsTemporaryOptionSet())
 				{
-					AppendIndent()
-						.AppendLine("ON COMMIT PRESERVE ROWS");
+					AppendIndent().AppendLine(table.TableOptions.HasIsTransactionTemporaryData()
+						? "ON COMMIT DELETE ROWS"
+						: "ON COMMIT PRESERVE ROWS");
 				}
 
-				if (createTable.Table!.TableOptions.HasCreateIfNotExists())
+				if (table.TableOptions.HasCreateIfNotExists() || table.TableOptions.HasIsTemporary())
 				{
 					Indent--;
 

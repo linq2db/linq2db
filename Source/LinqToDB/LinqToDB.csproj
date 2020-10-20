@@ -33,14 +33,14 @@
 			<DependentUpon>AsyncExtensions.tt</DependentUpon>
 		</Compile>
 		<Compile Update="Common\Internal\MutableTuple.generated.cs">
-		  <DesignTime>True</DesignTime>
-		  <AutoGen>True</AutoGen>
-		  <DependentUpon>MutableTuple.tt</DependentUpon>
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>MutableTuple.tt</DependentUpon>
 		</Compile>
 
 		<None Update="Common\Internal\MutableTuple.tt">
-		  <Generator>TextTemplatingFileGenerator</Generator>
-		  <LastGenOutput>MutableTuple.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>MutableTuple.generated.cs</LastGenOutput>
 		</None>
 
 		<Compile Remove="Compatibility\**\*.cs" />
@@ -92,7 +92,7 @@
 
 		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
 	</ItemGroup>
-	
+
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.1' OR '$(TargetFramework)' == 'netcoreapp3.1' OR '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netcoreapp2.1' ">
 		<Compile Remove="Async\IAsyncEnumerable.cs" />
 		<Compile Remove="Async\IAsyncEnumerator.cs" />

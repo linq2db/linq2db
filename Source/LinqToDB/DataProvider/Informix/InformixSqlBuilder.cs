@@ -288,9 +288,31 @@ namespace LinqToDB.DataProvider.Informix
 
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
-			StringBuilder.Append(table.TableOptions.HasIsTemporary()
-				? "CREATE TEMP TABLE "
-				: "CREATE TABLE ");
+			string command;
+
+			if (table.TableOptions.IsTemporaryOptionSet())
+			{
+				switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
+				{
+					case TableOptions.IsTemporary                                                                              :
+					case TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData :
+					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     :
+					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
+					case                                                                     TableOptions.IsLocalTemporaryData :
+					case                            TableOptions.IsLocalTemporaryStructure                                     :
+					case                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
+						command = "CREATE TEMP TABLE ";
+						break;
+					case var value :
+						throw new InvalidOperationException($"Incompatible table options '{value}'");
+				}
+			}
+			else
+			{
+				command = "CREATE TABLE ";
+			}
+
+			StringBuilder.Append(command);
 
 			if (table.TableOptions.HasCreateIfNotExists())
 				StringBuilder.Append("IF NOT EXISTS ");

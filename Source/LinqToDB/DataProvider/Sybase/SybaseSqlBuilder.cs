@@ -283,7 +283,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 		protected override string? GetTableDatabaseName(SqlTable table)
 		{
-			if (table.PhysicalName!.StartsWith("#") || (table.TableOptions & (TableOptions.IsTemporary | TableOptions.IsGlobalTemporary)) != 0)
+			if (table.PhysicalName!.StartsWith("#") || table.TableOptions.IsTemporaryOptionSet())
 				return null;
 
 			return base.GetTableDatabaseName(table);
@@ -294,14 +294,34 @@ namespace LinqToDB.DataProvider.Sybase
 			if (table.PhysicalName == null)
 				return null;
 
-			var physicalName =
-				table.PhysicalName.StartsWith("#") ?
-					table.PhysicalName :
-				table.TableOptions.HasIsTemporary() ?
-					$"#{table.PhysicalName}" :
-				table.TableOptions.HasIsGlobalTemporary() ?
-					$"##{table.PhysicalName}" :
-					table.PhysicalName;
+			var physicalName = table.PhysicalName.StartsWith("#") ? table.PhysicalName : GetName();
+
+			string GetName()
+			{
+				if (table.TableOptions.IsTemporaryOptionSet())
+				{
+					switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
+					{
+						case TableOptions.IsTemporary                                                                              :
+						case TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData :
+						case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     :
+						case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
+						case                                                                     TableOptions.IsLocalTemporaryData :
+						case                            TableOptions.IsLocalTemporaryStructure                                     :
+						case                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
+							return $"#{table.PhysicalName}";
+						case TableOptions.IsGlobalTemporaryStructure                                                               :
+						case TableOptions.IsGlobalTemporaryStructure | TableOptions.IsGlobalTemporaryData                          :
+							return $"##{table.PhysicalName}";
+						case var value :
+							throw new InvalidOperationException($"Incompatible table options '{value}'");
+					}
+				}
+				else
+				{
+					return table.PhysicalName;
+				}
+			}
 
 			return Convert(new StringBuilder(), physicalName, ConvertType.NameToQueryTable).ToString();
 		}
@@ -313,7 +333,7 @@ namespace LinqToDB.DataProvider.Sybase
 			if (dropTable.Table.TableOptions.HasDropIfExists())
 			{
 				var defaultDatabaseName =
-					table.PhysicalName!.StartsWith("#") || (table.TableOptions & (TableOptions.IsTemporary | TableOptions.IsGlobalTemporary)) != 0 ?
+					table.PhysicalName!.StartsWith("#") || table.TableOptions.IsTemporaryOptionSet() ?
 						"tempdb" : null;
 
 				_skipBrackets = true;
@@ -339,7 +359,7 @@ namespace LinqToDB.DataProvider.Sybase
 				var table = createTable.Table;
 
 				var defaultDatabaseName =
-					table.PhysicalName!.StartsWith("#") || (table.TableOptions & (TableOptions.IsTemporary | TableOptions.IsGlobalTemporary)) != 0 ?
+					table.PhysicalName!.StartsWith("#") || table.TableOptions.IsTemporaryOptionSet() ?
 						"tempdb" : null;
 
 				_skipBrackets = true;

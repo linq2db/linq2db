@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 
 using JetBrains.Annotations;
+
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB
@@ -9,56 +11,83 @@ namespace LinqToDB
 	[PublicAPI]
 	public enum TableOptions
 	{
-		NotSet            = 0b00000,
-		None              = 0b00001,
-		/// <summary>
-		/// Table is temporary (not visible to other sessions). This option will have effect only for databases that support temporary tables.
-		/// <para>Supported by: DB2, Firebird, Informix, MySql, Oracle, PostgreSQL, SQLite, SQL Server, SAP Hana, Sybase ASE.</para>
-		/// </summary>
-		IsTemporary       = 0b00010,
-		/// <summary>
-		/// Table is global temporary (table is visible from other sessions, data visibility depends on database behavior). This option will have effect only for databases that support temporary tables.
-		/// <para>Supported by: DB2, SQL Server, SAP Hana, Sybase ASE.</para>
-		/// </summary>
-		IsGlobalTemporary = 0b00100,
+		NotSet                     = 0b000000000,
+		None                       = 0b000000001,
 		/// <summary>
 		/// IF NOT EXISTS option of the CREATE statement. This option will have effect only for databases that support the option.
 		/// <para>Supported by: DB2, Firebird, Informix, MySql, Oracle, PostgreSQL, SQLite, SQL Server, Sybase ASE.</para>
 		/// </summary>
-		CreateIfNotExists = 0b01000,
+		CreateIfNotExists          = 0b000000010,
 		/// <summary>
 		/// IF EXISTS option of the DROP statement. This option will have effect only for databases that support the option.
 		/// <para>Supported by: DB2, Firebird, Informix, MySql, Oracle, PostgreSQL, SQLite, SQL Server, Sybase ASE.</para>
 		/// </summary>
-		DropIfExists      = 0b10000,
+		DropIfExists               = 0b000000100,
+		/// <summary>
+		/// Table is temporary (not visible to other sessions). This option will have effect only for databases that support temporary tables.
+		/// <para>Supported by: DB2, Firebird, Informix, MySql, Oracle, PostgreSQL, SQLite, SQL Server, SAP Hana, Sybase ASE.</para>
+		/// </summary>
+		IsTemporary                = 0b000001000,
+		/// <summary>
+		/// Table is temporary (table structure is not visible to other sessions). This option will have effect only for databases that support temporary tables.
+		/// <para>Supported by: DB2, Informix, MySql, PostgreSQL, SQLite, SAP Hana, SQL Server, Sybase ASE.</para>
+		/// </summary>
+		IsLocalTemporaryStructure  = 0b000010000,
+		/// <summary>
+		/// Table is global temporary (table structure is visible from other sessions). This option will have effect only for databases that support temporary tables.
+		/// <para>Supported by: DB2, Firebird, Oracle, SAP Hana, SQL Server, Sybase ASE.</para>
+		/// </summary>
+		IsGlobalTemporaryStructure = 0b000100000,
+		/// <summary>
+		/// Table data is temporary (table data is not visible to other sessions). This option will have effect only for databases that support temporary tables.
+		/// <para>Supported by: DB2, Informix, MySql, PostgreSQL, SQLite, SAP Hana, SQL Server, Sybase ASE.</para>
+		/// </summary>
+		IsLocalTemporaryData       = 0b001000000,
+		/// <summary>
+		/// Table data is global temporary (table data is visible from other sessions). This option will have effect only for databases that support temporary tables.
+		/// <para>Supported by: DB2, Firebird, Oracle, SAP Hana, SQL Server, Sybase ASE.</para>
+		/// </summary>
+		IsGlobalTemporaryData      = 0b010000000,
+		/// <summary>
+		/// Table data is temporary (table data is transaction level visible). This option will have effect only for databases that support temporary tables.
+		/// <para>Supported by: Firebird, Oracle, PostgreSQL.</para>
+		/// </summary>
+		IsTransactionTemporaryData = 0b100000000,
+
+		IsTemporaryOptionSet       = IsTemporary | IsLocalTemporaryStructure | IsGlobalTemporaryStructure | IsLocalTemporaryData | IsGlobalTemporaryData | IsTransactionTemporaryData,
 	}
 
 	public static partial class LinqExtensions
 	{
-		public static bool IsSet(this TableOptions tableOptions)
-		{
-			return tableOptions != LinqToDB.TableOptions.NotSet;
-		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsSet                        (this TableOptions tableOptions) => tableOptions != LinqToDB.TableOptions.NotSet;
 
-		public static bool HasIsTemporary(this TableOptions tableOptions)
-		{
-			return (tableOptions & LinqToDB.TableOptions.IsTemporary) != 0;
-		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsTemporaryOptionSet         (this TableOptions tableOptions) => (tableOptions & LinqToDB.TableOptions.IsTemporaryOptionSet) != 0;
 
-		public static bool HasIsGlobalTemporary(this TableOptions tableOptions)
-		{
-			return (tableOptions & LinqToDB.TableOptions.IsGlobalTemporary) != 0;
-		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool HasCreateIfNotExists         (this TableOptions tableOptions) => (tableOptions & LinqToDB.TableOptions.CreateIfNotExists) != 0;
 
-		public static bool HasCreateIfNotExists(this TableOptions tableOptions)
-		{
-			return (tableOptions & LinqToDB.TableOptions.CreateIfNotExists) != 0;
-		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool HasDropIfExists              (this TableOptions tableOptions) => (tableOptions & LinqToDB.TableOptions.DropIfExists) != 0;
 
-		public static bool HasDropIfExists(this TableOptions tableOptions)
-		{
-			return (tableOptions & LinqToDB.TableOptions.DropIfExists) != 0;
-		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool HasIsTemporary               (this TableOptions tableOptions) => (tableOptions & LinqToDB.TableOptions.IsTemporary) != 0;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool HasIsLocalTemporaryStructure (this TableOptions tableOptions) => (tableOptions & LinqToDB.TableOptions.IsLocalTemporaryStructure) != 0;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool HasIsGlobalTemporaryStructure(this TableOptions tableOptions) => (tableOptions & LinqToDB.TableOptions.IsGlobalTemporaryStructure) != 0;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool HasIsLocalTemporaryData      (this TableOptions tableOptions) => (tableOptions & LinqToDB.TableOptions.IsLocalTemporaryData) != 0;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool HasIsGlobalTemporaryData     (this TableOptions tableOptions) => (tableOptions & LinqToDB.TableOptions.IsGlobalTemporaryData) != 0;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool HasIsTransactionTemporaryData(this TableOptions tableOptions) => (tableOptions & LinqToDB.TableOptions.IsTransactionTemporaryData) != 0;
 
 		public static TableOptions Or(this TableOptions tableOptions, TableOptions additionalOptions)
 		{

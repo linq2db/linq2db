@@ -289,15 +289,35 @@ END");
 
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
-			StringBuilder.Append(
-				table.TableOptions.HasIsGlobalTemporary() ?
-					"CREATE GLOBAL TEMPORARY TABLE " :
-				table.TableOptions.HasIsTemporary() ?
-					"DECLARE GLOBAL TEMPORARY TABLE " :
-					"CREATE TABLE ");
-//
-//			if ((table.TableOptions.HasCreateIfNotExists) != 0)
-//				StringBuilder.Append("IF NOT EXISTS ");
+			string command;
+
+			if (table.TableOptions.IsTemporaryOptionSet())
+			{
+				switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
+				{
+					case TableOptions.IsTemporary                                                                              :
+					case TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData :
+					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     :
+					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
+					case                                                                     TableOptions.IsLocalTemporaryData :
+					case                            TableOptions.IsLocalTemporaryStructure                                     :
+					case                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
+						command = "DECLARE GLOBAL TEMPORARY TABLE ";
+						break;
+					case TableOptions.IsGlobalTemporaryStructure                                                               :
+					case TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData                           :
+						command = "CREATE GLOBAL TEMPORARY TABLE ";
+						break;
+					case var value :
+						throw new InvalidOperationException($"Incompatible table options '{value}'");
+				}
+			}
+			else
+			{
+				command = "CREATE TABLE ";
+			}
+
+			StringBuilder.Append(command);
 		}
 
 		protected override void BuildStartCreateTableStatement(SqlCreateTableStatement createTable)

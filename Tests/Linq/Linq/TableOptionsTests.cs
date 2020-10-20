@@ -1,25 +1,37 @@
 ﻿using System;
 using System.Linq;
 
-using IBM.Data.DB2;
-
 using JetBrains.Annotations;
 
-#if !NET472
-using IBM.Data.DB2.Core;
-#endif
+using LinqToDB;
+using LinqToDB.Data;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using LinqToDB;
-	using LinqToDB.Data;
-	using LinqToDB.Mapping;
-
 	[TestFixture]
 	public class TableOptionsTests : TestBase
 	{
+		[Test]
+		public void IsTemporaryOptionTest(
+			[DataSources(false)] string context,
+			[Values(TableOptions.CreateIfNotExists | TableOptions.DropIfExists, TableOptions.NotSet)] TableOptions tableOptions)
+		{
+			using var db = (DataConnection)GetDataContext(context);
+			using var t1 = db.CreateTempTable("temp_table1", TableOptions.IsTemporary | tableOptions, new[] { new { ID = 1, Value = 2 } });
+			using var t2 = db.CreateTempTable("temp_table2", TableOptions.IsTemporary | tableOptions, t1);
+
+			var l1 = t1.ToArray();
+			var l2 = t2.ToArray();
+
+			Assert.That(l1, Is.EquivalentTo(l2));
+
+			t1.Truncate();
+			t2.Truncate();
+		}
+
 		[Table(IsTemporary = true)]
 		[Table(IsTemporary = true, Configuration = ProviderName.SqlServer,  Database = "TestData", Schema = "TestSchema")]
 		[Table(IsTemporary = true, Configuration = ProviderName.Sybase,     Database = "TestData")]
@@ -41,8 +53,8 @@ namespace Tests.Linq
 			_ = table.ToArray();
 		}
 
-		[Table(TableOptions = TableOptions.IsGlobalTemporary)]
-		[Table(TableOptions = TableOptions.IsGlobalTemporary, Configuration = ProviderName.DB2, Schema = "SESSION")]
+		[Table(TableOptions = TableOptions.IsGlobalTemporaryStructure)]
+		[Table(TableOptions = TableOptions.IsGlobalTemporaryStructure, Configuration = ProviderName.DB2, Schema = "SESSION")]
 		[UsedImplicitly]
 		class IsGlobalTemporaryTable
 		{
