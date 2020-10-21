@@ -863,10 +863,19 @@ namespace LinqToDB.SqlQuery
 			{
 				var elementsToIgnore = new HashSet<IQueryElement> { query };
 
-				var depends = QueryHelper.IsDependsOn(parentQuery.GroupBy, column, elementsToIgnore) || 
-				              QueryHelper.IsDependsOn(parentQuery.Where, column, elementsToIgnore);
+				var depends = QueryHelper.IsDependsOn(parentQuery.GroupBy, column, elementsToIgnore);
 				if (depends)
 					return true;
+				
+				if (expr.IsComplexExpression())
+				{
+					depends =
+						   QueryHelper.IsDependsOn(parentQuery.Where, column, elementsToIgnore)
+						|| QueryHelper.IsDependsOn(parentQuery.OrderBy, column, elementsToIgnore);
+
+					if (depends)
+						return true;
+				}
 
 				var dependsCount = QueryHelper.DependencyCount(parentQuery, column, elementsToIgnore);
 

@@ -34,6 +34,10 @@ namespace LinqToDB.DataProvider.Oracle
 			return statement;
 		}
 
+		protected static string[] OracleLikeCharactersToEscape = {"%", "_"};
+
+		public override string[] LikeCharactersToEscape => OracleLikeCharactersToEscape;
+
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)
 		{
 			expr = base.ConvertExpression(expr);

@@ -1649,9 +1649,14 @@ namespace LinqToDB.SqlProvider
 				var sc = new SqlSearchCondition();
 
 				sc.Conditions.Add(
-					new SqlCondition(false, new SqlPredicate.ExprExpr(par, SqlPredicate.Operator.Equal, new SqlValue(0), Configuration.Linq.CompareNullsAsValues ? true : (bool?)null)));
+					new SqlCondition(false,
+						new SqlPredicate.ExprExpr(par, SqlPredicate.Operator.NotEqual, new SqlValue(0),
+							Configuration.Linq.CompareNullsAsValues ? false : (bool?)null)));
 
-				return ConvertExpression(new SqlFunction(func.SystemType, "CASE", sc, new SqlValue(false), new SqlValue(true)));
+				return new SqlFunction(func.SystemType, "CASE", sc, new SqlValue(true), new SqlValue(false))
+				{
+					CanBeNull = false
+				};
 			}
 
 			return null;

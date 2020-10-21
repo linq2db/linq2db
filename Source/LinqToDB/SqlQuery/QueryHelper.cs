@@ -1422,6 +1422,14 @@ namespace LinqToDB.SqlQuery
 			return hasParameter;
 		}
 
+		public static bool IsComplexExpression(this ISqlExpression expr)
+		{
+			if (null != new QueryVisitor().Find(expr, e => e.ElementType.In(QueryElementType.SqlQuery, QueryElementType.LikePredicate, QueryElementType.SearchStringPredicate)))
+				return true;
+
+			return false;
+		}
+
 		public static bool ShouldCheckForNull(this ISqlExpression expr)
 		{
 			if (!expr.CanBeNull)
