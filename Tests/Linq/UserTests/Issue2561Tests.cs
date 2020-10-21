@@ -26,7 +26,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestContainerParameter([IncludeDataSources(TestProvName.AllOracle)] string context)
+		public void TestContainerParameter([IncludeDataSources(TestProvName.AllOracle, TestProvName.AllPostgreSQL)] string context)
 		{
 			var createTable = "CREATE TABLE Common_Scripts (Id RAW(16), \"Archive\" NUMBER(20,0) NOT NULL, Name NVARCHAR2(255) NOT NULL, ScriptType NUMBER(10,0) NOT NULL, Script NCLOB NULL)";
 			var ms = new MappingSchema();
@@ -48,6 +48,9 @@ namespace Tests.UserTests
 				((DataConnection)db).Execute(createTable);
 
 				var l = db.GetTable<Issue2561Class>().ToList();
+
+				var dto = new Issue2561Class() {Id=Guid.NewGuid(), Script="aa".PadLeft(2500,'a') };
+				db.Insert(new[] { dto });
 
 				var b = "b";
 				var c = "aaa";
