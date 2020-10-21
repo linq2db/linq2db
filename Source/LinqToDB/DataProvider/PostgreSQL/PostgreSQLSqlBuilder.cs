@@ -406,9 +406,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			var table = createTable.Table;
 
-			StringBuilder.AppendLine(table.TableOptions.HasIsTransactionTemporaryData()
-				? "ON COMMIT DELETE ROWS"
-				: "ON COMMIT PRESERVE ROWS");
+			if (table.TableOptions.IsTemporaryOptionSet())
+			{
+				StringBuilder.AppendLine(table.TableOptions.HasIsTransactionTemporaryData()
+					? "ON COMMIT DELETE ROWS"
+					: "ON COMMIT PRESERVE ROWS");
+			}
 
 			base.BuildEndCreateTableStatement(createTable);
 		}
