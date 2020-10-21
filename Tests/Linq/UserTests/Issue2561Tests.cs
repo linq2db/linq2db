@@ -52,7 +52,7 @@ namespace Tests.UserTests
 
 				var l = db.GetTable<Issue2561Class>().ToList();
 
-				var dto = new Issue2561Class() {Id=Guid.NewGuid(), Script="aa".PadLeft(2500,'a') };
+				var dto = new Issue2561Class() {Id=Guid.NewGuid(), Name="Test", Script="aa".PadLeft(2500,'a') };
 				db.Insert(dto);
 
 				var c = "aaa";
@@ -95,7 +95,7 @@ namespace Tests.UserTests
 
 				var l = db.GetTable<Issue2561Class>().ToList();
 
-				var dto = new Issue2561Class() {Id=Guid.NewGuid(), Script="aa".PadLeft(2500,'a') };
+				var dto = new Issue2561Class() {Id=Guid.NewGuid(), Name="Test", Script="aa".PadLeft(2500,'a') };
 				db.Insert(dto);
 
 				var b = "b";
