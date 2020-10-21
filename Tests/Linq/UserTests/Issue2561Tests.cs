@@ -3,6 +3,7 @@ using System.Linq;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -27,6 +28,10 @@ namespace Tests.UserTests
 		[Test]
 		public void TestOracle([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
+			ReservedWords.Add("ARCHIVE", ProviderName.OracleManaged);
+			ReservedWords.Add("ARCHIVE", ProviderName.Oracle);
+			ReservedWords.Add("ARCHIVE", ProviderName.OracleNative);
+
 			var createTable = "CREATE TABLE Common_Scripts (Id RAW(16), \"Archive\" NUMBER(20,0) NOT NULL, Name NVARCHAR2(255) NOT NULL, ScriptType NUMBER(10,0) NOT NULL, Script NCLOB NULL)";
 			var ms = new MappingSchema();
 
