@@ -1210,7 +1210,6 @@ namespace Tests.Linq
 		public void SubDateDay(
 			[DataSources(
 				TestProvName.AllInformix,
-				TestProvName.AllOracle,
 				TestProvName.AllAccess)]
 			string context)
 		{
@@ -1224,7 +1223,6 @@ namespace Tests.Linq
 		public void DateDiffDay(
 			[DataSources(
 				TestProvName.AllInformix,
-				TestProvName.AllOracle,
 				TestProvName.AllAccess)]
 			string context)
 		{
@@ -1238,7 +1236,6 @@ namespace Tests.Linq
 		public void SubDateHour(
 			[DataSources(
 				TestProvName.AllInformix,
-				TestProvName.AllOracle,
 				TestProvName.AllAccess)]
 			string context)
 		{
@@ -1252,7 +1249,6 @@ namespace Tests.Linq
 		public void DateDiffHour(
 			[DataSources(
 				TestProvName.AllInformix,
-				TestProvName.AllOracle,
 				TestProvName.AllAccess)]
 			string context)
 		{
@@ -1266,7 +1262,6 @@ namespace Tests.Linq
 		public void SubDateMinute(
 			[DataSources(
 				TestProvName.AllInformix,
-				TestProvName.AllOracle,
 				TestProvName.AllAccess)]
 			string context)
 		{
@@ -1280,7 +1275,6 @@ namespace Tests.Linq
 		public void DateDiffMinute(
 			[DataSources(
 				TestProvName.AllInformix,
-				TestProvName.AllOracle,
 				TestProvName.AllAccess)]
 			string context)
 		{
@@ -1294,7 +1288,6 @@ namespace Tests.Linq
 		public void SubDateSecond(
 			[DataSources(
 				TestProvName.AllInformix,
-				TestProvName.AllOracle,
 				TestProvName.AllAccess)]
 			string context)
 		{
@@ -1308,7 +1301,6 @@ namespace Tests.Linq
 		public void DateDiffSecond(
 			[DataSources(
 				TestProvName.AllInformix,
-				TestProvName.AllOracle,
 				TestProvName.AllAccess)]
 			string context)
 		{
@@ -1330,7 +1322,6 @@ namespace Tests.Linq
 		public void SubDateMillisecond(
 			[DataSources(
 				TestProvName.AllInformix,
-				TestProvName.AllOracle,
 				TestProvName.AllMySql,
 				TestProvName.AllAccess)]
 			string context)
@@ -1358,7 +1349,6 @@ namespace Tests.Linq
 		public void DateDiffMillisecond(
 			[DataSources(
 				TestProvName.AllInformix,
-				TestProvName.AllOracle,
 				TestProvName.AllMySql,
 				TestProvName.AllAccess)]
 			string context)
@@ -1506,7 +1496,6 @@ namespace Tests.Linq
 		public void DateTimeSum(
 			[DataSources(
 				TestProvName.AllInformix,
-				TestProvName.AllOracle,
 				TestProvName.AllMySql,
 				TestProvName.AllSQLite,
 				TestProvName.AllAccess)]

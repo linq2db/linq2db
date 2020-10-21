@@ -901,14 +901,14 @@ namespace LinqToDB
 				var endDate = builder.GetExpression(2);
 				var expStr = part switch
 				{
-					// DateParts.Year        => "{1} - {0} / 365",
-					// DateParts.Month       => "{1} - {0} / 30",
-					DateParts.Week        => "{1} - {0} / 7",
-					DateParts.Day         => "{1} - {0}",
-					DateParts.Hour        => "{1} - {0} * 24",
-					DateParts.Minute      => "{1} - {0} * 24 * 60",
-					DateParts.Second      => "{1} - {0} * 24 * 60 * 60",
-					DateParts.Millisecond => "{1} - {0} * 24 * 60 * 60 * 1000",
+					// DateParts.Year        => "({1} - {0}) / 365",
+					// DateParts.Month       => "({1} - {0}) / 30",
+					DateParts.Week        => "({1} - {0}) / 7",
+					DateParts.Day         => "({1} - {0})",
+					DateParts.Hour        => "({1} - {0}) * 24",
+					DateParts.Minute      => "({1} - {0}) * 24 * 60",
+					DateParts.Second      => "({1} - {0}) * 24 * 60 * 60",
+					DateParts.Millisecond => "({1} - {0}) * 24 * 60 * 60 * 1000",
 					_                     => throw new ArgumentOutOfRangeException(),
 				};
 				builder.ResultExpression = new SqlExpression(typeof(int), expStr, Precedence.Multiplicative, startDate, endDate);
