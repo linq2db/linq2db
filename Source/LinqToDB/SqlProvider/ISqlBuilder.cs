@@ -15,6 +15,10 @@ namespace LinqToDB.SqlProvider
 
 		StringBuilder    ConvertTableName     (StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions);
 		StringBuilder    BuildTableName       (StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions);
+		string?          GetTableServerName   (SqlTable table);
+		string?          GetTableDatabaseName (SqlTable table);
+		string?          GetTableSchemaName   (SqlTable table);
+		string?          GetTablePhysicalName (SqlTable table);
 		string           ConvertInline        (string value, ConvertType convertType);
 		StringBuilder    Convert              (StringBuilder sb, string value, ConvertType convertType);
 		ISqlExpression?  GetIdentityExpression(SqlTable table);

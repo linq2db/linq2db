@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider
 {
@@ -191,20 +192,24 @@ namespace LinqToDB.DataProvider
 
 		protected internal static string GetTableName<T>(ISqlBuilder sqlBuilder, BulkCopyOptions options, ITable<T> table, bool escaped = true)
 		{
-			var serverName   = options.ServerName   ?? table.ServerName;
-			var databaseName = options.DatabaseName ?? table.DatabaseName;
-			var schemaName   = options.SchemaName   ?? table.SchemaName;
-			var tableName    = options.TableName    ?? table.TableName;
-			var tableOptions = options.TableOptions.Or(table.TableOptions);
+			var sqlTable = new SqlTable
+			{
+				ObjectType   = typeof(T),
+				Server       = options.ServerName   ?? table.ServerName,
+				Database     = options.DatabaseName ?? table.DatabaseName,
+				Schema       = options.SchemaName   ?? table.SchemaName,
+				PhysicalName = options.TableName    ?? table.TableName,
+				TableOptions = options.TableOptions.Or(table.TableOptions)
+			};
 
 			return sqlBuilder
 				.BuildTableName(
 					new StringBuilder(),
-					serverName   == null ? null : escaped ? sqlBuilder.ConvertInline(serverName,   ConvertType.NameToServer)     : serverName,
-					databaseName == null ? null : escaped ? sqlBuilder.ConvertInline(databaseName, ConvertType.NameToDatabase)   : databaseName,
-					schemaName   == null ? null : escaped ? sqlBuilder.ConvertInline(schemaName,   ConvertType.NameToSchema)     : schemaName,
-					                              escaped ? sqlBuilder.ConvertInline(tableName,    ConvertType.NameToQueryTable) : tableName,
-					                              tableOptions)
+					escaped ? sqlBuilder.GetTableServerName  (sqlTable)  : sqlTable.Server,
+					escaped ? sqlBuilder.GetTableDatabaseName(sqlTable)  : sqlTable.Database,
+					escaped ? sqlBuilder.GetTableSchemaName  (sqlTable)  : sqlTable.Schema,
+					escaped ? sqlBuilder.GetTablePhysicalName(sqlTable)! : sqlTable.PhysicalName,
+					sqlTable.TableOptions)
 				.ToString();
 		}
 
@@ -278,14 +283,14 @@ namespace LinqToDB.DataProvider
 		#region MultipleRows Support
 
 		protected static BulkCopyRowsCopied MultipleRowsCopyHelper(
-			MultipleRowsHelper                          helper,
-			IEnumerable                                 source,
-			string?                                     from,
-			Action<MultipleRowsHelper>                  prepFunction,
-			Action<MultipleRowsHelper, object, string?> addFunction,
-			Action<MultipleRowsHelper>                  finishFunction,
-			int                                         maxParameters = 10000,
-			int                                         maxSqlLength  = 100000)
+			MultipleRowsHelper                        helper,
+			IEnumerable                               source,
+			string?                                   from,
+			Action<MultipleRowsHelper>                prepFunction,
+			Action<MultipleRowsHelper,object,string?> addFunction,
+			Action<MultipleRowsHelper>                finishFunction,
+			int                                       maxParameters = 10000,
+			int                                       maxSqlLength  = 100000)
 		{
 			prepFunction(helper);
 

@@ -378,7 +378,12 @@ namespace LinqToDB.SqlProvider
 			throw new SqlException("Unknown query type '{0}'.", Statement.QueryType);
 		}
 
-		public virtual StringBuilder ConvertTableName(StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions)
+		public virtual StringBuilder ConvertTableName(StringBuilder sb,
+			string?      server,
+			string?      database,
+			string?      schema,
+			string       table,
+			TableOptions tableOptions)
 		{
 			if (server   != null) server   = ConvertInline(server,   ConvertType.NameToServer);
 			if (database != null) database = ConvertInline(database, ConvertType.NameToDatabase);
@@ -3027,22 +3032,22 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		protected virtual string? GetTableServerName(SqlTable table)
+		public virtual string? GetTableServerName(SqlTable table)
 		{
 			return table.Server == null ? null : ConvertInline(table.Server, ConvertType.NameToServer);
 		}
 
-		protected virtual string? GetTableDatabaseName(SqlTable table)
+		public virtual string? GetTableDatabaseName(SqlTable table)
 		{
 			return table.Database == null ? null : ConvertInline(table.Database, ConvertType.NameToDatabase);
 		}
 
-		protected virtual string? GetTableSchemaName(SqlTable table)
+		public virtual string? GetTableSchemaName(SqlTable table)
 		{
 			return table.Schema == null ? null : ConvertInline(table.Schema, ConvertType.NameToSchema);
 		}
 
-		protected virtual string? GetTablePhysicalName(SqlTable table)
+		public virtual string? GetTablePhysicalName(SqlTable table)
 		{
 			return table.PhysicalName == null ? null : ConvertInline(table.PhysicalName, ConvertType.NameToQueryTable);
 		}

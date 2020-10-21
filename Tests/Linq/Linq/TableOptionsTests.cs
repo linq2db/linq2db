@@ -21,17 +21,22 @@ namespace Tests.Linq
 		{
 			using var db = (DataConnection)GetDataContext(context);
 			using var t1 = db.CreateTempTable("temp_table1", TableOptions.IsTemporary | tableOptions, new[] { new { ID = 1, Value = 2 } });
-			using var t2 = db.CreateTempTable("temp_table2", TableOptions.IsTemporary | tableOptions, t1);
+			using var t2 = t1.IntoTempTable("temp_table2", tableOptions : tableOptions);
 
 			var l1 = t1.ToArray();
 			var l2 = t2.ToArray();
 
 			Assert.That(l1, Is.EquivalentTo(l2));
 
+			t1.BulkCopy(new BulkCopyOptions { BulkCopyType = BulkCopyType.MultipleRows     }, new[] { new { ID = 2, Value = 3 } });
+			t1.BulkCopy(new BulkCopyOptions { BulkCopyType = BulkCopyType.RowByRow         }, new[] { new { ID = 3, Value = 3 } });
+			t1.BulkCopy(new BulkCopyOptions { BulkCopyType = BulkCopyType.ProviderSpecific }, new[] { new { ID = 4, Value = 5 } });
+
 			t1.Truncate();
 			t2.Truncate();
 		}
 
+		/*
 		[Table(IsTemporary = true)]
 		[Table(IsTemporary = true, Configuration = ProviderName.SqlServer,  Database = "TestData", Schema = "TestSchema")]
 		[Table(IsTemporary = true, Configuration = ProviderName.Sybase,     Database = "TestData")]
@@ -164,5 +169,6 @@ namespace Tests.Linq
 			)
 			.ToList();
 		}
+		*/
 	}
 }

@@ -261,7 +261,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 
-		protected override string? GetTableDatabaseName(SqlTable table)
+		public override string? GetTableDatabaseName(SqlTable table)
 		{
 			if (table.PhysicalName!.StartsWith("#") || table.TableOptions.IsTemporaryOptionSet())
 				return null;
@@ -269,7 +269,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return base.GetTableDatabaseName(table);
 		}
 
-		protected override string? GetTablePhysicalName(SqlTable table)
+		public override string? GetTablePhysicalName(SqlTable table)
 		{
 			if (table.PhysicalName == null)
 				return null;

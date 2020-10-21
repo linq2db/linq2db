@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq;
 using System.Text;
 
 namespace LinqToDB.DataProvider.Sybase
@@ -281,7 +280,7 @@ namespace LinqToDB.DataProvider.Sybase
 			StringBuilder.AppendLine(enable ? " ON" : " OFF");
 		}
 
-		protected override string? GetTableDatabaseName(SqlTable table)
+		public override string? GetTableDatabaseName(SqlTable table)
 		{
 			if (table.PhysicalName!.StartsWith("#") || table.TableOptions.IsTemporaryOptionSet())
 				return null;
@@ -289,7 +288,7 @@ namespace LinqToDB.DataProvider.Sybase
 			return base.GetTableDatabaseName(table);
 		}
 
-		protected override string? GetTablePhysicalName(SqlTable table)
+		public override string? GetTablePhysicalName(SqlTable table)
 		{
 			if (table.PhysicalName == null)
 				return null;
@@ -367,27 +366,27 @@ namespace LinqToDB.DataProvider.Sybase
 				BuildPhysicalTable(table, null, defaultDatabaseName : defaultDatabaseName);
 				StringBuilder.AppendLine("') IS NULL)");
 				_skipBrackets = false;
-
-				Indent++;
-
-				AppendIndent().AppendLine("EXECUTE('");
-
-				Indent++;
+//
+//				Indent++;
+//
+//				AppendIndent().AppendLine("EXECUTE('");
+//
+//				Indent++;
 			}
 
 			base.BuildStartCreateTableStatement(createTable);
 		}
 
-		protected override void BuildEndCreateTableStatement(SqlCreateTableStatement createTable)
-		{
-			base.BuildEndCreateTableStatement(createTable);
-
-			if (createTable.StatementHeader == null && createTable.Table!.TableOptions.HasCreateIfNotExists())
-			{
-				Indent--;
-				AppendIndent().AppendLine("')");
-				Indent--;
-			}
-		}
+//		protected override void BuildEndCreateTableStatement(SqlCreateTableStatement createTable)
+//		{
+//			base.BuildEndCreateTableStatement(createTable);
+//
+//			if (createTable.StatementHeader == null && createTable.Table!.TableOptions.HasCreateIfNotExists())
+//			{
+//				Indent--;
+//				AppendIndent().AppendLine("')");
+//				Indent--;
+//			}
+//		}
 	}
 }
