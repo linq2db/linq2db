@@ -892,12 +892,36 @@ namespace LinqToDB
 			}
 		}
 
+		class DateDiffBuilderOracle : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var part = builder.GetValue<Sql.DateParts>(0);
+				var startDate = builder.GetExpression(1);
+				var endDate = builder.GetExpression(2);
+				var expStr = part switch
+				{
+					// DateParts.Year        => "{1} - {0} / 365",
+					// DateParts.Month       => "{1} - {0} / 30",
+					DateParts.Week        => "{1} - {0} / 7",
+					DateParts.Day         => "{1} - {0}",
+					DateParts.Hour        => "{1} - {0} * 24",
+					DateParts.Minute      => "{1} - {0} * 24 * 60",
+					DateParts.Second      => "{1} - {0} * 24 * 60 * 60",
+					DateParts.Millisecond => "{1} - {0} * 24 * 60 * 60 * 1000",
+					_                     => throw new ArgumentOutOfRangeException(),
+				};
+				builder.ResultExpression = new SqlExpression(typeof(int), expStr, Precedence.Multiplicative, startDate, endDate);
+			}
+		}
+
 		[CLSCompliant(false)]
 		[Sql.Extension(            "DateDiff",      BuilderType = typeof(DateDiffBuilder))]
 		[Sql.Extension(PN.MySql,   "TIMESTAMPDIFF", BuilderType = typeof(DateDiffBuilder))]
 		[Sql.Extension(PN.DB2,     "",              BuilderType = typeof(DateDiffBuilderDB2))]
 		[Sql.Extension(PN.SapHana, "",              BuilderType = typeof(DateDiffBuilderSapHana))]
 		[Sql.Extension(PN.SQLite,  "",              BuilderType = typeof(DateDiffBuilderSQLite))]
+		[Sql.Extension(PN.Oracle,  "",              BuilderType = typeof(DateDiffBuilderOracle))]
 		[Sql.Extension(PN.PostgreSQL,  "",          BuilderType = typeof(DateDiffBuilderPostgreSql))]
 		public static int? DateDiff(DateParts part, DateTime? startDate, DateTime? endDate)
 		{
