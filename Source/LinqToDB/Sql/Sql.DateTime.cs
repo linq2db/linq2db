@@ -903,12 +903,12 @@ namespace LinqToDB
 				{
 					// DateParts.Year        => "({1} - {0}) / 365",
 					// DateParts.Month       => "({1} - {0}) / 30",
-					DateParts.Week        => "({1} - {0}) / 7",
-					DateParts.Day         => "({1} - {0})",
-					DateParts.Hour        => "({1} - {0}) * 24",
-					DateParts.Minute      => "({1} - {0}) * 24 * 60",
-					DateParts.Second      => "({1} - {0}) * 24 * 60 * 60",
-					DateParts.Millisecond => "({1} - {0}) * 24 * 60 * 60 * 1000",
+					DateParts.Week        => "(CAST ({1} as DATE) - CAST ({0} as DATE)) / 7",
+					DateParts.Day         => "(CAST ({1} as DATE) - CAST ({0} as DATE))",
+					DateParts.Hour        => "(CAST ({1} as DATE) - CAST ({0} as DATE)) * 24",
+					DateParts.Minute      => "(CAST ({1} as DATE) - CAST ({0} as DATE)) * 1440",
+					DateParts.Second      => "(CAST ({1} as DATE) - CAST ({0} as DATE)) * 86400",
+					DateParts.Millisecond => "(CAST ({1} as DATE) - CAST ({0} as DATE)) * 86400000",
 					_                     => throw new ArgumentOutOfRangeException(),
 				};
 				builder.ResultExpression = new SqlExpression(typeof(int), expStr, Precedence.Multiplicative, startDate, endDate);
