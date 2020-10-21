@@ -312,9 +312,9 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: true
           is_experimental: false
-          ${{ if contains(parameters.db_filter, 'all') }}:
+          ${{ if or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'postgresql')) }}:
             enabled: true
-          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+          ${{ if not(or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'postgresql'))) }}:
             enabled: false
 
         - name: PostgreSQL92
@@ -333,9 +333,9 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           is_experimental: false
-          ${{ if contains(parameters.db_filter, 'all') }}:
+          ${{ if or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'postgresql')) }}:
             enabled: true
-          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+          ${{ if not(or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'postgresql'))) }}:
             enabled: false
 
         - name: PostgreSQL93
@@ -354,9 +354,9 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           is_experimental: false
-          ${{ if contains(parameters.db_filter, 'all') }}:
+          ${{ if or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'postgresql')) }}:
             enabled: true
-          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+          ${{ if not(or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'postgresql'))) }}:
             enabled: false
 
         - name: PostgreSQL95
@@ -375,9 +375,9 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           is_experimental: false
-          ${{ if contains(parameters.db_filter, 'all') }}:
+          ${{ if or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'postgresql')) }}:
             enabled: true
-          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+          ${{ if not(or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'postgresql'))) }}:
             enabled: false
 
         - name: PostgreSQL10
@@ -398,9 +398,9 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           is_experimental: false
-          ${{ if contains(parameters.db_filter, 'all') }}:
+          ${{ if or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'postgresql')) }}:
             enabled: true
-          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+          ${{ if not(or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'postgresql'))) }}:
             enabled: false
 
         - name: PostgreSQL11
@@ -420,9 +420,9 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           is_experimental: false
-          ${{ if contains(parameters.db_filter, 'all') }}:
+          ${{ if or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'postgresql')) }}:
             enabled: true
-          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+          ${{ if not(or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'postgresql'))) }}:
             enabled: false
 
         - name: PostgreSQL12
@@ -442,9 +442,9 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           is_experimental: false
-          ${{ if contains(parameters.db_filter, 'all') }}:
+          ${{ if or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'postgresql')) }}:
             enabled: true
-          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+          ${{ if not(or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'postgresql'))) }}:
             enabled: false
 
         - name: PostgreSQL13
@@ -464,9 +464,9 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           is_experimental: false
-          ${{ if contains(parameters.db_filter, 'all') }}:
+          ${{ if or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'postgresql')) }}:
             enabled: true
-          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+          ${{ if not(or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'postgresql'))) }}:
             enabled: false
 
 # SQL Server
@@ -781,9 +781,9 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           is_experimental: false
-          ${{ if contains(parameters.db_filter, 'all') }}:
+          ${{ if or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'oracle')) }}:
             enabled: true
-          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+          ${{ if not(or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'oracle'))) }}:
             enabled: false
 
         - name: Oracle12
@@ -802,9 +802,9 @@ jobs:
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           is_experimental: false
-          ${{ if contains(parameters.db_filter, 'all') }}:
+          ${{ if or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'oracle')) }}:
             enabled: true
-          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+          ${{ if not(or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'oracle'))) }}:
             enabled: false
 
 # Firebird
