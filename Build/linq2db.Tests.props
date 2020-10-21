@@ -21,6 +21,7 @@
 	<ItemGroup>
 		<PackageReference Include="NUnit" />
 		<PackageReference Include="Newtonsoft.Json" />
+		<PackageReference Include="NodaTime" Version="3.0.2" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net472' ">
