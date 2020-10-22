@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.MySql
 {
-	using System.Threading;
-	using System.Threading.Tasks;
+	using Common;
 	using Data;
-	using LinqToDB.Common;
 
 	class MySqlBulkCopy : BasicBulkCopy
 	{

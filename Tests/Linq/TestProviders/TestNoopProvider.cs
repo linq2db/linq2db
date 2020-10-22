@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.Mapping;
@@ -296,6 +297,7 @@ namespace Tests
 		public override ISqlBuilder     CreateSqlBuilder (MappingSchema mappingSchema) => new TestNoopSqlBuilder(MappingSchema);
 		public override ISchemaProvider GetSchemaProvider(                           ) => throw new NotImplementedException();
 		public override ISqlOptimizer   GetSqlOptimizer  (                           ) => TestNoopSqlOptimizer.Instance;
+		public override TableOptions    SupportedTableOptions => TableOptions.None;
 	}
 
 	internal class TestNoopSqlBuilder : BasicSqlBuilder

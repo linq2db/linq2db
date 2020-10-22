@@ -1,16 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.DB2
 {
-	using Data;
 	using Common;
+	using Data;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
-	using System.Threading.Tasks;
-	using System.Threading;
 
 	public class DB2DataProvider : DynamicDataProviderBase<DB2ProviderAdapter>
 	{
@@ -73,6 +73,14 @@ namespace LinqToDB.DataProvider.DB2
 				new DB2zOSSchemaProvider(this):
 				new DB2LUWSchemaProvider(this);
 		}
+
+		public override TableOptions SupportedTableOptions =>
+			TableOptions.IsTemporary                |
+			TableOptions.IsGlobalTemporaryStructure |
+			TableOptions.IsLocalTemporaryData       |
+			TableOptions.IsTransactionTemporaryData |
+			TableOptions.CreateIfNotExists          |
+			TableOptions.DropIfExists;
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{

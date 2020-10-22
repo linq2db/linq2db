@@ -17,7 +17,7 @@ namespace Tests.Linq
 		[Test]
 		public void IsTemporaryOptionTest(
 			[DataSources(false)] string context,
-			[Values(TableOptions.CreateIfNotExists | TableOptions.DropIfExists, TableOptions.NotSet)] TableOptions tableOptions)
+			[Values(TableOptions.CheckExistence, TableOptions.NotSet)] TableOptions tableOptions)
 		{
 			using var db = (DataConnection)GetDataContext(context);
 			using var t1 = db.CreateTempTable("temp_table1", TableOptions.IsTemporary | tableOptions, new[] { new { ID = 1, Value = 2 } });
@@ -34,6 +34,14 @@ namespace Tests.Linq
 
 			t1.Truncate();
 			t2.Truncate();
+		}
+
+		[Test]
+		public void CheckExistenceTest([DataSources(TestProvName.AllSapHana)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			//var dataProvider = db.Da
 		}
 
 		/*

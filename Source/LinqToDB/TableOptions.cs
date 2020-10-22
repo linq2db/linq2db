@@ -54,6 +54,7 @@ namespace LinqToDB
 		/// </summary>
 		IsTransactionTemporaryData = 0b100000000,
 
+		CheckExistence             = CreateIfNotExists | DropIfExists,
 		IsTemporaryOptionSet       = IsTemporary | IsLocalTemporaryStructure | IsGlobalTemporaryStructure | IsLocalTemporaryData | IsGlobalTemporaryData | IsTransactionTemporaryData,
 	}
 
