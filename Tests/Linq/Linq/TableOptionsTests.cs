@@ -36,12 +36,23 @@ namespace Tests.Linq
 			t2.Truncate();
 		}
 
+		[UsedImplicitly]
+		class DisposableTable
+		{
+			public int ID;
+		}
+
 		[Test]
-		public void CheckExistenceTest([DataSources(TestProvName.AllSapHana)] string context)
+		public void CheckExistenceTest([DataSources(
+			TestProvName.AllAccess,
+			ProviderName.SqlCe,
+			TestProvName.AllSapHana)] string context)
 		{
 			using var db = GetDataContext(context);
 
-			//var dataProvider = db.Da
+			Assert.That(db.SupportedTableOptions & TableOptions.CheckExistence, Is.EqualTo(TableOptions.CheckExistence));
+
+			using var tbl = db.CreateTempTable<DisposableTable>(tableOptions:TableOptions.CheckExistence);
 		}
 
 		/*
