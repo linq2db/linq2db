@@ -282,7 +282,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 		public override string? GetTableDatabaseName(SqlTable table)
 		{
-			if (table.PhysicalName!.StartsWith("#") || table.TableOptions.IsTemporaryOptionSet())
+			if (IsTemporary(table))
 				return null;
 
 			return base.GetTableDatabaseName(table);
@@ -331,9 +331,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 			if (dropTable.Table.TableOptions.HasDropIfExists())
 			{
-				var defaultDatabaseName =
-					table.PhysicalName!.StartsWith("#") || table.TableOptions.IsTemporaryOptionSet() ?
-						"tempdb" : null;
+				var defaultDatabaseName = IsTemporary(table) ? "tempdb" : null;
 
 				_skipBrackets = true;
 				StringBuilder.Append("IF (OBJECT_ID(N'");
@@ -357,36 +355,46 @@ namespace LinqToDB.DataProvider.Sybase
 			{
 				var table = createTable.Table;
 
-				var defaultDatabaseName =
-					table.PhysicalName!.StartsWith("#") || table.TableOptions.IsTemporaryOptionSet() ?
-						"tempdb" : null;
+				var isTemporary         = IsTemporary(table);
+				var defaultDatabaseName = isTemporary ? "tempdb" : null;
 
 				_skipBrackets = true;
 				StringBuilder.Append("IF (OBJECT_ID(N'");
 				BuildPhysicalTable(table, null, defaultDatabaseName : defaultDatabaseName);
 				StringBuilder.AppendLine("') IS NULL)");
 				_skipBrackets = false;
-//
-//				Indent++;
-//
-//				AppendIndent().AppendLine("EXECUTE('");
-//
-//				Indent++;
+
+				if (!isTemporary)
+				{
+					Indent++;
+					AppendIndent().AppendLine("EXECUTE('");
+				}
+
+				Indent++;
 			}
 
 			base.BuildStartCreateTableStatement(createTable);
 		}
 
-//		protected override void BuildEndCreateTableStatement(SqlCreateTableStatement createTable)
-//		{
-//			base.BuildEndCreateTableStatement(createTable);
-//
-//			if (createTable.StatementHeader == null && createTable.Table!.TableOptions.HasCreateIfNotExists())
-//			{
-//				Indent--;
-//				AppendIndent().AppendLine("')");
-//				Indent--;
-//			}
-//		}
+		protected override void BuildEndCreateTableStatement(SqlCreateTableStatement createTable)
+		{
+			base.BuildEndCreateTableStatement(createTable);
+
+			if (createTable.StatementHeader == null && createTable.Table!.TableOptions.HasCreateIfNotExists())
+			{
+				if (!IsTemporary(createTable.Table))
+				{
+					Indent--;
+					AppendIndent().AppendLine("')");
+				}
+
+				Indent--;
+			}
+		}
+
+		static bool IsTemporary(SqlTable table)
+		{
+			return table.TableOptions.IsTemporaryOptionSet() || table.PhysicalName!.StartsWith("#");
+		}
 	}
 }

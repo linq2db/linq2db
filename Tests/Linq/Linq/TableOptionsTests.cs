@@ -55,7 +55,6 @@ namespace Tests.Linq
 			using var tbl = db.CreateTempTable<DisposableTable>(tableOptions:TableOptions.CheckExistence);
 		}
 
-		/*
 		[Table(IsTemporary = true)]
 		[Table(IsTemporary = true, Configuration = ProviderName.SqlServer,  Database = "TestData", Schema = "TestSchema")]
 		[Table(IsTemporary = true, Configuration = ProviderName.Sybase,     Database = "TestData")]
@@ -72,7 +71,7 @@ namespace Tests.Linq
 		[Test]
 		public void IsTemporaryFlagTest([DataSources(false)] string context, [Values(true)] bool firstCall)
 		{
-			using var db = (DataConnection)GetDataContext(context);
+			using var db = GetDataContext(context);
 			using var table = db.CreateTempTable<IsTemporaryTable>();
 			_ = table.ToArray();
 		}
@@ -90,6 +89,7 @@ namespace Tests.Linq
 		public void IsGlobalTemporaryTest([IncludeDataSources(
 			ProviderName.DB2,
 			ProviderName.Firebird,
+			ProviderName.Oracle,
 			TestProvName.AllSqlServer2005Plus,
 			TestProvName.AllSybase)] string context,
 			[Values(true)] bool firstCall)
@@ -188,6 +188,185 @@ namespace Tests.Linq
 			)
 			.ToList();
 		}
-		*/
+
+		void TestTableOptions(string context, TableOptions tableOptions)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateTempTable<TestTable>(tableOptions:tableOptions);
+		}
+
+		[Test]
+		public void DB2TableOptionsTest(
+			[IncludeDataSources(ProviderName.DB2)] string context,
+			[Values(
+				TableOptions.IsTemporary,
+				TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData,
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure,
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData,
+				                                                                    TableOptions.IsLocalTemporaryData,
+				                           TableOptions.IsLocalTemporaryStructure,
+				                           TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData,
+				TableOptions.IsGlobalTemporaryStructure,
+				TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData)]
+			TableOptions tableOptions)
+		{
+			TestTableOptions(context, tableOptions);
+		}
+
+		[Test]
+		public void FirebirdTableOptionsTest(
+			[IncludeDataSources(TestProvName.AllFirebird)] string context,
+			[Values(
+				TableOptions.IsTemporary,
+				TableOptions.IsTemporary |                                           TableOptions.IsLocalTemporaryData,
+				TableOptions.IsTemporary | TableOptions.IsGlobalTemporaryStructure,
+				TableOptions.IsTemporary | TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData,
+				                                                                     TableOptions.IsLocalTemporaryData,
+				                                                                     TableOptions.IsTransactionTemporaryData,
+				                           TableOptions.IsGlobalTemporaryStructure,
+				                           TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData,
+				                           TableOptions.IsGlobalTemporaryStructure | TableOptions.IsTransactionTemporaryData)]
+			TableOptions tableOptions)
+		{
+			TestTableOptions(context, tableOptions);
+		}
+
+		[Test]
+		public void InformixTableOptionsTest(
+			[IncludeDataSources(TestProvName.AllInformix)] string context,
+			[Values(
+				TableOptions.IsTemporary,
+				TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData,
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure,
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData,
+				                                                                    TableOptions.IsLocalTemporaryData,
+				                           TableOptions.IsLocalTemporaryStructure,
+				                           TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData)]
+			TableOptions tableOptions)
+		{
+			TestTableOptions(context, tableOptions);
+		}
+
+		[Test]
+		public void MySqlTableOptionsTest(
+			[IncludeDataSources(TestProvName.AllMySql)] string context,
+			[Values(
+				TableOptions.IsTemporary,
+				TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData,
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure,
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData,
+				                                                                    TableOptions.IsLocalTemporaryData,
+				                           TableOptions.IsLocalTemporaryStructure,
+				                           TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData)]
+			TableOptions tableOptions)
+		{
+			TestTableOptions(context, tableOptions);
+		}
+
+		[Test]
+		public void OracleTableOptionsTest(
+			[IncludeDataSources(TestProvName.AllOracle)] string context,
+			[Values(
+				TableOptions.IsTemporary,
+				TableOptions.IsTemporary |                                           TableOptions.IsLocalTemporaryData,
+				TableOptions.IsTemporary | TableOptions.IsGlobalTemporaryStructure,
+				TableOptions.IsTemporary | TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData,
+				                                                                     TableOptions.IsLocalTemporaryData,
+				                                                                     TableOptions.IsTransactionTemporaryData,
+				                           TableOptions.IsGlobalTemporaryStructure,
+				                           TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData,
+				                           TableOptions.IsGlobalTemporaryStructure | TableOptions.IsTransactionTemporaryData)]
+			TableOptions tableOptions)
+		{
+			TestTableOptions(context, tableOptions);
+		}
+
+		[Test]
+		public void PostgreSQLTableOptionsTest(
+			[IncludeDataSources(TestProvName.AllPostgreSQL)] string context,
+			[Values(
+				TableOptions.IsTemporary,
+				TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData,
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure,
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData,
+				                                                                    TableOptions.IsLocalTemporaryData,
+				                                                                    TableOptions.IsTransactionTemporaryData,
+				                           TableOptions.IsLocalTemporaryStructure,
+				                           TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData,
+				                           TableOptions.IsLocalTemporaryStructure | TableOptions.IsTransactionTemporaryData)]
+			TableOptions tableOptions)
+		{
+			TestTableOptions(context, tableOptions);
+		}
+
+		[Test]
+		public void SapHanaTableOptionsTest(
+			[IncludeDataSources(TestProvName.AllSapHana)] string context,
+			[Values(
+				TableOptions.IsTemporary,
+				TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData,
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure,
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData,
+				                                                                    TableOptions.IsLocalTemporaryData,
+				                           TableOptions.IsLocalTemporaryStructure,
+				                           TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData,
+				TableOptions.IsGlobalTemporaryStructure,
+				TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData)]
+			TableOptions tableOptions)
+		{
+			TestTableOptions(context, tableOptions);
+		}
+
+		[Test]
+		public void SQLiteTableOptionsTest(
+			[IncludeDataSources(TestProvName.AllSQLite)] string context,
+			[Values(
+				TableOptions.IsTemporary,
+				TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData,
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure,
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData,
+				                                                                    TableOptions.IsLocalTemporaryData,
+				                           TableOptions.IsLocalTemporaryStructure,
+				                           TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData)]
+			TableOptions tableOptions)
+		{
+			TestTableOptions(context, tableOptions);
+		}
+
+		[Test]
+		public void SqlServerTableOptionsTest(
+			[IncludeDataSources(TestProvName.AllSqlServer)] string context,
+			[Values(
+				TableOptions.IsTemporary,
+				TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData,
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure,
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData,
+				                                                                    TableOptions.IsLocalTemporaryData,
+				                           TableOptions.IsLocalTemporaryStructure,
+				                           TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData,
+				TableOptions.IsGlobalTemporaryStructure,
+				TableOptions.IsGlobalTemporaryStructure | TableOptions.IsGlobalTemporaryData)]
+			TableOptions tableOptions)
+		{
+			TestTableOptions(context, tableOptions);
+		}
+
+		[Test]
+		public void SybaseTableOptionsTest(
+			[IncludeDataSources(TestProvName.AllSybase)] string context,
+			[Values(
+				TableOptions.IsTemporary,
+				TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData,
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure,
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData,
+				                                                                    TableOptions.IsLocalTemporaryData,
+				                           TableOptions.IsLocalTemporaryStructure,
+				                           TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData,
+				TableOptions.IsGlobalTemporaryStructure,
+				TableOptions.IsGlobalTemporaryStructure | TableOptions.IsGlobalTemporaryData)]
+			TableOptions tableOptions)
+		{
+			TestTableOptions(context, tableOptions);
+		}
 	}
 }

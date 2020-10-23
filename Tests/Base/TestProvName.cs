@@ -1,4 +1,8 @@
-﻿namespace Tests
+﻿using System;
+
+using LinqToDB;
+
+namespace Tests
 {
 	public static class TestProvName
 	{
@@ -42,7 +46,7 @@
 		/// </summary>
 		public const string NoopProvider  = "TestNoopProvider";
 
-		public const string AllMySql               = "MySql,MySqlConnector,MySql55,MariaDB";
+		public const string AllMySql               = ProviderName.MySql + "," + ProviderName.MySqlConnector + ",MySql55,MariaDB";
 		// MySql server providers (no mariaDB)
 		public const string AllMySqlServer         = "MySql,MySqlConnector,MySql55";
 		// MySql <5.7 has inadequate FTS behavior
@@ -62,7 +66,7 @@
 		public const string AllOracleNative        = "Oracle.Native,Oracle.11.Native";
 		public const string AllOracle11            = "Oracle.11.Native,Oracle.11.Managed";
 		public const string AllOracle12            = "Oracle.Native,Oracle.Managed";
-		public const string AllFirebird            = "Firebird,Firebird3";
+		public const string AllFirebird            = ProviderName.Firebird + ",Firebird3";
 		public const string AllSQLite              = "SQLite.Classic,SQLite.MS,SQLite.Classic.MPU,SQLite.Classic.MPM";
 		public const string AllSQLiteClassic       = "SQLite.Classic,SQLite.Classic.MPU,SQLite.Classic.MPM";
 		public const string AllSybase              = "Sybase,Sybase.Managed";
@@ -76,7 +80,7 @@
 		public const string AllSqlServer2017Plus   = "SqlServer.2017,SqlServer.2019,SqlAzure";
 		public const string AllSQLiteNorthwind     = "Northwind.SQLite,Northwind.SQLite.MS";
 		public const string AllSapHana             = "SapHana.Native,SapHana.Odbc";
-		public const string AllInformix            = "Informix,Informix.DB2";
+		public const string AllInformix            = ProviderName.Informix + "," + ProviderName.InformixDB2;
 		public const string AllAccess              = "Access,Access.Odbc";
 	}
 }
