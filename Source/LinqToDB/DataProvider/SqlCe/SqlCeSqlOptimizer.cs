@@ -41,6 +41,8 @@ namespace LinqToDB.DataProvider.SqlCe
 			return statement;
 		}
 
+		public override bool LikeIsEscapeSupported => false;
+
 		void CorrectInsertParameters(SqlStatement statement)
 		{
 			//SlqCe do not support parameters in columns for insert

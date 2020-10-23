@@ -328,11 +328,13 @@ namespace LinqToDB.SqlQuery
 							}
 							else if (Operator.In(Operator.NotEqual))
 							{
-								/*
-								search.Conditions.Add(new SqlCondition(false, predicate, false));
+								search.Conditions.Add(new SqlCondition(false, predicate, true));
+
 								search.Conditions.Add(new SqlCondition(false, new IsNull(Expr1, false), false));
+								search.Conditions.Add(new SqlCondition(false, new IsNull(Expr2, true), true));
+
+								search.Conditions.Add(new SqlCondition(false, new IsNull(Expr1, true), false));
 								search.Conditions.Add(new SqlCondition(false, new IsNull(Expr2, false), false));
-							*/
 							}
 						}
 						else

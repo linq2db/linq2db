@@ -231,7 +231,7 @@ namespace LinqToDB.SqlQuery
 
 		public static bool IsTransitiveExpression(SqlExpression sqlExpression)
 		{
-			if (sqlExpression.Parameters.Length == 1 && sqlExpression.Expr.Trim() == "{0}")
+			if (sqlExpression.Parameters.Length == 1 && sqlExpression.Expr.Trim() == "{0}" && sqlExpression.CanBeNull == sqlExpression.Parameters[0].CanBeNull)
 			{
 				if (sqlExpression.Parameters[0] is SqlExpression argExpression)
 					return IsTransitiveExpression(argExpression);

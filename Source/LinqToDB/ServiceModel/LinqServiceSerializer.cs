@@ -730,6 +730,8 @@ namespace LinqToDB.ServiceModel
 							Append(elem.IsAggregate);
 							Append(elem.Precedence);
 							Append(elem.Parameters);
+							Append(elem.CanBeNull);
+							Append(elem.DoNotOptimize);
 
 							break;
 						}
@@ -1485,13 +1487,19 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.SqlFunction :
 						{
-							var systemType  = Read<Type>()!;
-							var name        = ReadString()!;
-							var isAggregate = ReadBool();
-							var precedence  = ReadInt();
-							var parameters  = ReadArray<ISqlExpression>()!;
+							var systemType    = Read<Type>()!;
+							var name          = ReadString()!;
+							var isAggregate   = ReadBool();
+							var precedence    = ReadInt();
+							var parameters    = ReadArray<ISqlExpression>()!;
+							var canBeNull     = ReadBool();
+							var doNotOptimize = ReadBool();
 
-							obj = new SqlFunction(systemType, name, isAggregate, precedence, parameters);
+							obj = new SqlFunction(systemType, name, isAggregate, precedence, parameters)
+							{
+								CanBeNull = canBeNull, 
+								DoNotOptimize = doNotOptimize
+							};
 
 							break;
 						}

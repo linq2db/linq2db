@@ -831,6 +831,8 @@ namespace LinqToDB.SqlProvider
 					#region SqlFunction
 				{
 					var func = (SqlFunction)expression;
+					if (func.DoNotOptimize)
+						break;
 
 					switch (func.Name)
 					{
@@ -2824,7 +2826,11 @@ namespace LinqToDB.SqlProvider
 					func.Precedence,
 					func.Parameters.Select((p, i) =>
 						IsBooleanParameter(p, func.Parameters.Length, i) ?
-							new SqlFunction(typeof(bool), "CASE", p, new SqlValue(true), new SqlValue(false)) :
+							new SqlFunction(typeof(bool), "CASE", p, new SqlValue(true), new SqlValue(false))
+							{
+								CanBeNull = false, 
+								DoNotOptimize = true
+							} :
 							p
 					).ToArray());
 			}

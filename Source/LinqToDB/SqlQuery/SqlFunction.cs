@@ -52,6 +52,8 @@ namespace LinqToDB.SqlQuery
 		public bool             IsPure       { get; }
 		public ISqlExpression[] Parameters   { get; }
 
+		public bool DoNotOptimize { get; set; }
+
 		public static SqlFunction CreateCount (Type type, ISqlTableSource table) { return new SqlFunction(type, "Count", true, new SqlExpression("*")); }
 
 		public static SqlFunction CreateAll   (SelectQuery subQuery) { return new SqlFunction(typeof(bool), "ALL",    false, SqlQuery.Precedence.Comparison, subQuery); }
@@ -118,7 +120,10 @@ namespace LinqToDB.SqlQuery
 					Name,
 					IsAggregate,
 					Precedence,
-					Parameters.Select(e => (ISqlExpression)e.Clone(objectTree, doClone)).ToArray()));
+					Parameters.Select(e => (ISqlExpression)e.Clone(objectTree, doClone)).ToArray())
+				{
+					CanBeNull = CanBeNull, DoNotOptimize = DoNotOptimize
+				});
 			}
 
 			return clone;
@@ -129,6 +134,8 @@ namespace LinqToDB.SqlQuery
 			var hashCode = SystemType.GetHashCode();
 
 			hashCode = unchecked(hashCode + (hashCode * 397) ^ Name.GetHashCode());
+			hashCode = unchecked(hashCode + (hashCode * 397) ^ CanBeNull.GetHashCode());
+			hashCode = unchecked(hashCode + (hashCode * 397) ^ DoNotOptimize.GetHashCode());
 			for (var i = 0; i < Parameters.Length; i++)
 				hashCode = unchecked(hashCode + (hashCode * 397) ^ Parameters[i].GetHashCode());
 

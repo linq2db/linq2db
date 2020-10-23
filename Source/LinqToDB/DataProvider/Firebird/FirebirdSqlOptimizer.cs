@@ -26,6 +26,8 @@ namespace LinqToDB.DataProvider.Firebird
 			return statement;
 		}
 
+		public override bool LikeIsEscapeSupported => false;
+
 		public override SqlStatement OptimizeStatement(SqlStatement statement, EvaluationContext context)
 		{
 			statement = base.OptimizeStatement(statement, context);

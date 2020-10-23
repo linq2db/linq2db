@@ -125,7 +125,9 @@ namespace LinqToDB.SqlQuery
 							var parms = Convert(func.Parameters);
 
 							if (parms != null && !ReferenceEquals(parms, func.Parameters))
-								newElement = new SqlFunction(func.SystemType, func.Name, func.IsAggregate, func.Precedence, parms);
+								newElement =
+									new SqlFunction(func.SystemType, func.Name, func.IsAggregate, func.Precedence, parms) 
+										{ CanBeNull = func.CanBeNull, DoNotOptimize = func.DoNotOptimize };
 
 							break;
 						}
