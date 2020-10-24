@@ -28,7 +28,8 @@ namespace Tests.xUpdate
 
 				using (var tmp = db.CreateTempTable(
 					"TempTable",
-					db.Parent.Select(p => new IDTable { ID = p.ParentID })))
+					db.Parent.Select(p => new IDTable { ID = p.ParentID }),
+					tableOptions:TableOptions.CheckExistence))
 				{
 					var l = tmp.ToList();
 
@@ -51,7 +52,8 @@ namespace Tests.xUpdate
 
 				using (var tmp = db.CreateTempTable(
 					"TempTable",
-					db.Parent.Select(p => new { ID = p.ParentID })))
+					db.Parent.Select(p => new { ID = p.ParentID }),
+					tableOptions:TableOptions.CheckExistence))
 				{
 					var list =
 					(
@@ -75,7 +77,8 @@ namespace Tests.xUpdate
 					db.Parent.Select(p => new { ID = p.ParentID }),
 					em => em
 						.Property(e => e.ID)
-							.IsPrimaryKey()))
+							.IsPrimaryKey(),
+					tableOptions:TableOptions.CheckExistence))
 				{
 					var list =
 					(
@@ -96,7 +99,8 @@ namespace Tests.xUpdate
 
 				using (var tmp = db.CreateTempTable(
 					"TempTable",
-					db.Parent.Select(p => new IDTable { ID = p.ParentID }).ToList()))
+					db.Parent.Select(p => new IDTable { ID = p.ParentID }).ToList(),
+					tableOptions:TableOptions.CheckExistence))
 				{
 					var list =
 					(
@@ -120,7 +124,8 @@ namespace Tests.xUpdate
 #endif
 				using (var tmp = await db.CreateTempTableAsync(
 					"TempTable",
-					db.Parent.Select(p => new IDTable { ID = p.ParentID })))
+					db.Parent.Select(p => new IDTable { ID = p.ParentID }),
+					tableOptions:TableOptions.CheckExistence))
 				{
 					var list =
 					(
@@ -144,7 +149,8 @@ namespace Tests.xUpdate
 #endif
 				using (var tmp = await db.CreateTempTableAsync(
 					"TempTable",
-					db.Parent.Select(p => new IDTable { ID = p.ParentID }).ToList()))
+					db.Parent.Select(p => new IDTable { ID = p.ParentID }).ToList(),
+					tableOptions:TableOptions.CheckExistence))
 				{
 					var list =
 					(

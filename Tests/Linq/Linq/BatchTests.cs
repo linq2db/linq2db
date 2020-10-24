@@ -20,7 +20,7 @@ namespace Tests.Linq
 			{
 				db.BeginBatch();
 
-				var tbl = db.CreateTempTable("temp",
+				var tbl = db.CreateTableTemporarily("temp",
 					from p in db.Parent
 					where p.ParentID > 100
 					select new

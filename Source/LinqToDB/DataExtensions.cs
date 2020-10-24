@@ -1058,7 +1058,7 @@ namespace LinqToDB
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			return QueryRunner.CreateTable<T>.Query(dataContext,
-				tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, statementHeader, statementFooter, defaultNullable, tableOptions: tableOptions);
+				tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, statementHeader, statementFooter, defaultNullable, tableOptions);
 		}
 
 		/// <summary>
@@ -1096,7 +1096,7 @@ namespace LinqToDB
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			return QueryRunner.CreateTable<T>.QueryAsync(dataContext,
-				tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, statementHeader, statementFooter, defaultNullable, tableOptions: tableOptions, token);
+				tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, statementHeader, statementFooter, defaultNullable, tableOptions, token);
 		}
 
 		#endregion

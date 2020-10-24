@@ -20,8 +20,8 @@ namespace Tests.Linq
 			[Values(TableOptions.CheckExistence, TableOptions.NotSet)] TableOptions tableOptions)
 		{
 			using var db = (DataConnection)GetDataContext(context);
-			using var t1 = db.CreateTempTable("temp_table1", TableOptions.IsTemporary | tableOptions, new[] { new { ID = 1, Value = 2 } });
-			using var t2 = t1.IntoTempTable("temp_table2", tableOptions : tableOptions);
+			using var t1 = db.CreateTempTable("temp_table1", new[] { new { ID = 1, Value = 2 } }, tableOptions : TableOptions.IsTemporary | tableOptions);
+			using var t2 = t1.IntoTempTable  ("temp_table2", tableOptions : TableOptions.IsTemporary | tableOptions);
 
 			var l1 = t1.ToArray();
 			var l2 = t2.ToArray();
@@ -72,7 +72,7 @@ namespace Tests.Linq
 		public void IsTemporaryFlagTest([DataSources(false)] string context, [Values(true)] bool firstCall)
 		{
 			using var db = GetDataContext(context);
-			using var table = db.CreateTempTable<IsTemporaryTable>();
+			using var table = db.CreateTempTable<IsTemporaryTable>(tableOptions:TableOptions.NotSet);
 			_ = table.ToArray();
 		}
 
@@ -95,7 +95,7 @@ namespace Tests.Linq
 			[Values(true)] bool firstCall)
 		{
 			using var db = (DataConnection)GetDataContext(context);
-			using var table = db.CreateTempTable<IsGlobalTemporaryTable>();
+			using var table = db.CreateTempTable<IsGlobalTemporaryTable>(tableOptions:TableOptions.NotSet);
 			_ = table.ToArray();
 		}
 
@@ -129,12 +129,12 @@ namespace Tests.Linq
 
 			db.DropTable<CreateIfNotExistsTable>(throwExceptionIfNotExists:false);
 
-			using var table = db.CreateTempTable<CreateIfNotExistsTable>();
+			using var table = db.CreateTempTable<CreateIfNotExistsTable>(tableOptions:TableOptions.NotSet);
 
 			table.Insert(() => new CreateIfNotExistsTable { Id = 1, Value = 2 });
 
 			_ = table.ToArray();
-			_ = db.CreateTempTable<CreateIfNotExistsTable>();
+			_ = db.CreateTempTable<CreateIfNotExistsTable>(tableOptions:TableOptions.NotSet);
 		}
 
 		[Test]
@@ -157,7 +157,7 @@ namespace Tests.Linq
 
 			db.DropTable<CreateIfNotExistsTable>(throwExceptionIfNotExists:false);
 
-			using var table = db.CreateTempTable<CreateIfNotExistsTable>(tableOptions:TableOptions.IsTemporary);
+			using var table = db.CreateTempTable<CreateIfNotExistsTable>();
 
 			_ = table.ToArray();
 			_ = db.CreateTempTable<CreateIfNotExistsTable>();
@@ -177,7 +177,7 @@ namespace Tests.Linq
 
 			db.DropTable<TestTable>(tableOptions:TableOptions.IsTemporary | TableOptions.DropIfExists);
 
-			using var table = db.CreateTempTable<TestTable>(tableOptions:TableOptions.IsTemporary);
+			using var table = db.CreateTempTable<TestTable>();
 
 			_ =
 			(
