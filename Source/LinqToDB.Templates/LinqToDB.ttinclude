@@ -274,7 +274,7 @@ void GenerateTypesFromMetadata()
 		var dbTypeMaxLen   = t.Columns.Values.Max  (c => (int?)(c.ColumnType.Length)) ?? 0;
 		var dataTypeMaxLen = t.Columns.Values.Where(c => c.DataType != null).Max  (c => (int?)(c.DataType.Length)) ?? 0;
 		var nameConflict   = t.Columns.Values.Any  (c => c.MemberName == "DataType") ||
-								Tables.Values.Any  (tbl => tbl.Name   == "DataType");
+		                        Tables.Values.Any  (tbl => tbl.Name   == "DataType");
 		var dataTypePrefix = nameConflict ? "LinqToDB." : "";
 
 		foreach (var c in t.Columns.Values)
