@@ -160,7 +160,7 @@ namespace Tests.Linq
 			using var table = db.CreateTempTable<CreateIfNotExistsTable>();
 
 			_ = table.ToArray();
-			_ = db.CreateTempTable<CreateIfNotExistsTable>();
+			_ = db.CreateTempTable<CreateIfNotExistsTable>(tableOptions:TableOptions.NotSet);
 		}
 
 		[UsedImplicitly]
