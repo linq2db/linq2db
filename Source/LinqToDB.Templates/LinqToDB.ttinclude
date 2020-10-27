@@ -459,9 +459,9 @@ void GenerateTypesFromMetadata()
 
 					switch (key.AssociationType)
 					{
-						case AssociationType.OneToOne  : aa.Parameters.Add("Relationship=Relationship.OneToOne");  break;
-						case AssociationType.OneToMany : aa.Parameters.Add("Relationship=Relationship.OneToMany"); break;
-						case AssociationType.ManyToOne : aa.Parameters.Add("Relationship=Relationship.ManyToOne"); break;
+						case AssociationType.OneToOne  : aa.Parameters.Add("Relationship=LinqToDB.Mapping.Relationship.OneToOne");  break;
+						case AssociationType.OneToMany : aa.Parameters.Add("Relationship=LinqToDB.Mapping.Relationship.OneToMany"); break;
+						case AssociationType.ManyToOne : aa.Parameters.Add("Relationship=LinqToDB.Mapping.Relationship.ManyToOne"); break;
 					}
 
 					if (key.BackReference != null)
