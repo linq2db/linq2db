@@ -29,46 +29,9 @@ namespace LinqToDB.DataProvider.Access
 			return base.ConvertLikePredicate(mappingSchema, predicate, context);
 		}
 
-
-		/*
-		static ISqlExpression GenerateEscapeReplacement(ISqlExpression expression, ISqlExpression character)
-		{
-			var result = new SqlFunction(typeof(string), "Replace", false, true, expression, character,
-				new SqlBinaryExpression(typeof(string), new SqlValue("["), "+",
-					new SqlBinaryExpression(typeof(string), character, "+", new SqlValue("]"), Precedence.Additive),
-					Precedence.Additive));
-			return result;
-		}
-		*/
-
 		public override ISqlExpression EscapeLikeCharacters(ISqlExpression expression, ref ISqlExpression? escape)
 		{
-			throw new LinqException("Access does not supports `Replace` functions which is required for such query.");
-
-			/*var newExpr = expression;
-
-			var toEscape = AccessLikeCharactersToEscape;
-			foreach (var s in toEscape)
-			{
-				newExpr = GenerateEscapeReplacement(newExpr, new SqlValue(s));
-			}
-
-			return newExpr;*/
-		}
-
-		public override string EscapeLikeCharacters(string str, string escape)
-		{
-			var newStr = DataTools.EscapeUnterminatedBracket(str);
-			if (newStr == str)
-				newStr = newStr.Replace("[", "[[]");
-
-			var toEscape = AccessLikeCharactersToEscape;
-			foreach (var s in toEscape)
-			{
-				newStr = newStr.Replace(s, "[" + s + "]");
-			}
-
-			return newStr;
+			throw new LinqException("Access does not supports `Replace` function which is required for such query.");
 		}
 
 		public override SqlStatement TransformStatementMutable(SqlStatement statement)

@@ -19,14 +19,86 @@ namespace LinqToDB.DataProvider.Firebird
 
 			statement = base.Finalize(statement);
 
-			// called in both finalize and optimize to avoid query conversion on each call
-			// as most of cases will be handled with finalize
-			statement = WrapParameters(statement);
-
 			return statement;
 		}
 
-		public override bool LikeIsEscapeSupported => false;
+		protected static string[] LikeFirebirdEscapeSymbosl = { "_", "%" };
+
+		public override string[] LikeCharactersToEscape => LikeFirebirdEscapeSymbosl;
+
+
+		public override bool IsParameterDependedElement(IQueryElement element)
+		{
+			bool IsQueryParameter(ISqlExpression expr)
+			{
+				return expr.ElementType == QueryElementType.SqlParameter && ((SqlParameter)expr).IsQueryParameter;
+			}
+
+			var result = base.IsParameterDependedElement(element);
+			if (result)
+				return true;
+
+			switch (element.ElementType)
+			{
+				case QueryElementType.LikePredicate:
+				{
+					var like = (SqlPredicate.Like)element;
+					if (like.Expr1.ElementType != QueryElementType.SqlValue ||
+					    like.Expr2.ElementType != QueryElementType.SqlValue)
+						return true;
+					break;
+				}
+
+				case QueryElementType.Column:
+				{
+					return IsQueryParameter(((SqlColumn)element).Expression);
+				}
+
+				case QueryElementType.SearchStringPredicate:
+				{
+					var containsPredicate = (SqlPredicate.SearchString)element;
+					if (containsPredicate.Expr1.ElementType != QueryElementType.SqlValue || containsPredicate.Expr2.ElementType != QueryElementType.SqlValue)
+						return true;
+
+					return false;
+				}
+
+			}
+
+			return false;
+		}
+
+
+		public override ISqlPredicate ConvertLikePredicate(MappingSchema mappingSchema, SqlPredicate.Like predicate,
+			EvaluationContext context)
+		{
+			//Firebird can not process parameters in Like
+
+			if (context.ParameterValues != null)
+			{
+				var exp1 = predicate.Expr1;
+				var exp2 = predicate.Expr2;
+
+				if (exp1.ElementType != QueryElementType.SqlValue)
+				{
+					if (exp1.TryEvaluateExpression(context, out var value1))
+						exp1 = new SqlValue(exp1.GetExpressionType(), value1);
+				}
+
+				if (exp2.ElementType != QueryElementType.SqlValue)
+				{
+					if (exp2.TryEvaluateExpression(context, out var value2))
+						exp2 = new SqlValue(exp2.GetExpressionType(), value2);
+				}
+
+				if (!ReferenceEquals(exp1, predicate.Expr1) || !ReferenceEquals(exp2, predicate.Expr2))
+				{
+					predicate = new SqlPredicate.Like(exp1, predicate.IsNot, exp2, predicate.Escape, predicate.IsSqlLike);
+				}
+			}	
+
+			return predicate;
+		}
 
 		public override SqlStatement OptimizeStatement(SqlStatement statement, EvaluationContext context)
 		{
@@ -87,12 +159,12 @@ namespace LinqToDB.DataProvider.Firebird
 		public override SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context)
 		{
 			statement = base.FinalizeStatement(statement, context);
-			statement = WrapParameters(statement);
+			statement = WrapParameters(statement, context);
 			return statement;
 		}
 
 		#region Wrap Parameters
-		private SqlStatement WrapParameters(SqlStatement statement)
+		private SqlStatement WrapParameters(SqlStatement statement, EvaluationContext context)
 		{
 			// for some reason Firebird doesn't use parameter type information (not supported?) is some places, so
 			// we need to wrap parameter into CAST() to add type information explicitly
@@ -110,11 +182,13 @@ namespace LinqToDB.DataProvider.Firebird
 			{
 				if (e is SqlParameter p && p.IsQueryParameter)
 				{
+					var paramValue = p.GetParameterValue(context.ParameterValues);
+
 					// Don't cast in cast
 					if (visitor.ParentElement is SqlExpression expr && expr.Expr == CASTEXPR)
 						return e;
 
-					if (p.Type.SystemType == typeof(bool) && visitor.ParentElement is SqlFunction func && func.Name == "CASE")
+					if (paramValue.DbDataType.SystemType == typeof(bool) && visitor.ParentElement is SqlFunction func && func.Name == "CASE")
 						return e;
 
 					var replace = false;
@@ -165,7 +239,7 @@ namespace LinqToDB.DataProvider.Firebird
 					if (!replace)
 						return e;
 
-					return new SqlExpression(p.Type.SystemType, CASTEXPR, Precedence.Primary, p, new SqlDataType(p.Type));
+					return new SqlExpression(paramValue.DbDataType.SystemType, CASTEXPR, Precedence.Primary, p, new SqlDataType(paramValue.DbDataType));
 				}
 
 				return e;

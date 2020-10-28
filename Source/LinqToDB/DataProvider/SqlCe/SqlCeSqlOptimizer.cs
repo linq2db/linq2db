@@ -2,8 +2,8 @@
 
 namespace LinqToDB.DataProvider.SqlCe
 {
-	using LinqToDB.Extensions;
-	using LinqToDB.SqlQuery;
+	using Extensions;
+	using SqlQuery;
 	using SqlProvider;
 
 	class SqlCeSqlOptimizer : BasicSqlOptimizer
@@ -41,7 +41,9 @@ namespace LinqToDB.DataProvider.SqlCe
 			return statement;
 		}
 
-		public override bool LikeIsEscapeSupported => false;
+		protected static string[] LikeSqlCeCharactersToEscape = { "_", "%" };
+
+		public override string[] LikeCharactersToEscape => LikeSqlCeCharactersToEscape;
 
 		void CorrectInsertParameters(SqlStatement statement)
 		{

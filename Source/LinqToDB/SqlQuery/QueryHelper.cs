@@ -1447,6 +1447,21 @@ namespace LinqToDB.SqlQuery
 			return true;
 		}
 
+		public static DbDataType GetExpressionType(this ISqlExpression expr)
+		{
+			switch (expr.ElementType)
+			{
+				case QueryElementType.SqlParameter: return ((SqlParameter)expr).Type;
+				case QueryElementType.SqlValue    : return ((SqlValue)expr).ValueType;
+			}
+
+			var descriptor = GetColumnDescriptor(expr);
+			if (descriptor != null)
+				return descriptor.GetDbDataType(true);
+
+			return new DbDataType(expr.SystemType!);
+		}
+
 
 	}
 }

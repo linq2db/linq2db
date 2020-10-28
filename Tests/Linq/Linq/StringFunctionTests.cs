@@ -63,7 +63,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ContainsConstant4([DataSources(TestProvName.AllFirebird)] string context)
+		public void ContainsConstant4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

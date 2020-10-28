@@ -13,6 +13,7 @@ namespace LinqToDB.SqlProvider
 	using SqlQuery;
 	using Tools;
 	using Mapping;
+	using DataProvider;
 
 	public class BasicSqlOptimizer : ISqlOptimizer
 	{
@@ -613,13 +614,13 @@ namespace LinqToDB.SqlProvider
 				{
 					var param = (SqlParameter)element;
 					if (param.IsQueryParameter)
-						return new SqlParameter(param.Type, param.Name, value);
+						return new SqlParameter(param.Type.WithLength(null), param.Name, value);
 					foundParam ??= param;
 				}
 			}
 
 			if (foundParam != null)
-				return new SqlParameter(foundParam.Type, foundParam.Name, value) { IsQueryParameter = false };
+				return new SqlParameter(foundParam.Type.WithLength(null), foundParam.Name, value) { IsQueryParameter = false };
 
 			return new SqlValue(value);
 		}
@@ -1392,6 +1393,20 @@ namespace LinqToDB.SqlProvider
 			return result;
 		}
 
+		protected virtual string EscapeLikeCharactersBrackets(string str, string[] toEscape)
+		{
+			var newStr = DataTools.EscapeUnterminatedBracket(str);
+			if (newStr == str)
+				newStr = newStr.Replace("[", "[[]");
+
+			foreach (var s in toEscape)
+			{
+				if (s != "[" && s != "]")
+					newStr = newStr.Replace(s, "[" + s + "]");
+			}
+
+			return newStr;
+		}
 
 		public virtual ISqlExpression EscapeLikeCharacters(ISqlExpression expression, ref ISqlExpression? escape)
 		{
@@ -1432,7 +1447,9 @@ namespace LinqToDB.SqlProvider
 					return new SqlPredicate.IsTrue(new SqlValue(true), new SqlValue(true), new SqlValue(false), null, predicate.IsNot);
 				}
 
-				var patternValue = EscapeLikeCharacters(patternRawValue, LikeEscapeCharacter);
+				var patternValue = LikeIsEscapeSupported
+					? EscapeLikeCharacters(patternRawValue, LikeEscapeCharacter)
+					: EscapeLikeCharactersBrackets(patternRawValue, LikeCharactersToEscape);
 
 				patternValue = predicate.Kind switch
 				{

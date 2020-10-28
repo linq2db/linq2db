@@ -4,7 +4,7 @@ namespace LinqToDB.SqlQuery
 {
 	using Common;
 
-	[DebuggerDisplay("{Value}")]
+	[DebuggerDisplay("{Value, {DbDataType}}")]
 	public class SqlParameterValue
 	{
 		public SqlParameterValue(object? value, DbDataType dbDataType)
