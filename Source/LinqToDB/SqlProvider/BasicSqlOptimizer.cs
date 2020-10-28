@@ -1229,6 +1229,12 @@ namespace LinqToDB.SqlProvider
 							return new SqlCondition(condition.IsNot, predicate, condition.IsOr);
 						}
 					}
+
+					if (condition.IsNot && condition.Predicate is IInvertibleElement invertibleElement)
+					{
+						return new SqlCondition(false, (ISqlPredicate)invertibleElement.Invert(), condition.IsOr);
+					}
+
 					break;
 				}
 			}
