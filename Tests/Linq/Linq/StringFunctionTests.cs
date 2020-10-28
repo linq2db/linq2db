@@ -202,7 +202,7 @@ namespace Tests.Linq
 					select new
 					{
 						p,
-						Field1 = p.FirstName.Contains("jo")
+						Field1 = p.FirstName.Contains("Jo")
 					} into p
 					where p.Field1
 					orderby p.Field1
@@ -211,7 +211,7 @@ namespace Tests.Linq
 					select new
 					{
 						p,
-						Field1 = p.FirstName.Contains("jo")
+						Field1 = p.FirstName.Contains("Jo")
 					} into p
 					where p.Field1
 					orderby p.Field1
@@ -284,8 +284,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in    Person where "john123".StartsWith(p.FirstName) select p,
-					from p in db.Person where "john123".StartsWith(p.FirstName) select p);
+					from p in    Person where "John123".StartsWith(p.FirstName) select p,
+					from p in db.Person where "John123".StartsWith(p.FirstName) select p);
 		}
 
 		[Test]
