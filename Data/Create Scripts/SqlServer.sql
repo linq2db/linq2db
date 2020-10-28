@@ -1257,3 +1257,15 @@ EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'This is <test>
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'This is <test> scalar function!', @level0type=N'SCHEMA', @level0name=N'dbo',  @level1type=N'FUNCTION', @level1name=N'ScalarFunction'
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'This is <test> scalar function parameter!', @level0type=N'SCHEMA', @level0name=N'dbo',  @level1type=N'FUNCTION', @level1name=N'ScalarFunction', @level2type=N'PARAMETER', @level2name=N'@value'
 GO
+
+-- test T4 name conflict
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('dbo.DataType') AND type in (N'U'))
+BEGIN DROP TABLE dbo.DataType END
+GO
+
+CREATE TABLE DataType
+(
+	id INT NOT NULL
+
+)
+GO

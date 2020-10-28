@@ -1908,9 +1908,7 @@ namespace Tests.DataProvider
 	{
 		public static int TestOutputParametersWithoutTableProcedure(this DataConnection dataConnection, string aInParam, out sbyte? aOutParam)
 		{
-			// WORKAROUND: db name needed for MySql.Data 8.0.21, as they managed to break already escaped procedure name handling
-			var dbName = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema).ConvertInline(TestUtils.GetDatabaseName(dataConnection), ConvertType.NameToDatabase);
-			var ret = dataConnection.ExecuteProc($"{dbName}.`TestOutputParametersWithoutTableProcedure`",
+			var ret = dataConnection.ExecuteProc($"`TestOutputParametersWithoutTableProcedure`",
 				new DataParameter("aInParam", aInParam, DataType.VarChar),
 				new DataParameter("aOutParam", null, DataType.SByte) { Direction = ParameterDirection.Output });
 
@@ -1921,9 +1919,7 @@ namespace Tests.DataProvider
 
 		public static IEnumerable<Person> TestProcedure(this DataConnection dataConnection, int? param3, ref int? param2, out int? param1)
 		{
-			// WORKAROUND: db name needed for MySql.Data 8.0.21, as they managed to break already escaped procedure name handling
-			var dbName = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema).ConvertInline(TestUtils.GetDatabaseName(dataConnection), ConvertType.NameToDatabase);
-			var ret = dataConnection.QueryProc<Person>($"{dbName}.`TestProcedure`",
+			var ret = dataConnection.QueryProc<Person>($"`TestProcedure`",
 				new DataParameter("param3", param3, DataType.Int32),
 				new DataParameter("param2", param2, DataType.Int32) { Direction = ParameterDirection.InputOutput },
 				new DataParameter("param1", null, DataType.Int32) { Direction = ParameterDirection.Output }).ToList();
