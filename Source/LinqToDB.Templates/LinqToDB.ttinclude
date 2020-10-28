@@ -273,7 +273,9 @@ void GenerateTypesFromMetadata()
 			: ToStringLiteral(c.ColumnName).Length)) ?? 0;
 		var dbTypeMaxLen   = t.Columns.Values.Max  (c => (int?)(c.ColumnType.Length)) ?? 0;
 		var dataTypeMaxLen = t.Columns.Values.Where(c => c.DataType != null).Max  (c => (int?)(c.DataType.Length)) ?? 0;
-		var dataTypePrefix = t.Columns.Values.Any  (c => c.MemberName == "DataType") ? "LinqToDB." : "";
+		var nameConflict   = t.Columns.Values.Any  (c => c.MemberName == "DataType") ||
+		                        Tables.Values.Any  (tbl => tbl.TypeName == "DataType");
+		var dataTypePrefix = nameConflict ? "LinqToDB." : "";
 
 		foreach (var c in t.Columns.Values)
 		{
@@ -459,9 +461,9 @@ void GenerateTypesFromMetadata()
 
 					switch (key.AssociationType)
 					{
-						case AssociationType.OneToOne  : aa.Parameters.Add("Relationship=Relationship.OneToOne");  break;
-						case AssociationType.OneToMany : aa.Parameters.Add("Relationship=Relationship.OneToMany"); break;
-						case AssociationType.ManyToOne : aa.Parameters.Add("Relationship=Relationship.ManyToOne"); break;
+						case AssociationType.OneToOne  : aa.Parameters.Add("Relationship=LinqToDB.Mapping.Relationship.OneToOne");  break;
+						case AssociationType.OneToMany : aa.Parameters.Add("Relationship=LinqToDB.Mapping.Relationship.OneToMany"); break;
+						case AssociationType.ManyToOne : aa.Parameters.Add("Relationship=LinqToDB.Mapping.Relationship.ManyToOne"); break;
 					}
 
 					if (key.BackReference != null)

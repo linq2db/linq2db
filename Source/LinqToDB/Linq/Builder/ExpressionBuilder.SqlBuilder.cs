@@ -1337,7 +1337,15 @@ namespace LinqToDB.Linq.Builder
 			if (_constants.TryGetValue(key, out var sqlValue))
 				return sqlValue;
 
-			var dbType = columnDescriptor?.GetDbDataType(true) ?? new DbDataType(expr.Type);
+			var dbType = columnDescriptor?.GetDbDataType(true).WithSystemType(expr.Type) ?? new DbDataType(expr.Type);
+
+			var unwrapped = expr.Unwrap();
+			if (unwrapped != expr && !MappingSchema.ValueToSqlConverter.CanConvert(dbType.SystemType) &&
+			    MappingSchema.ValueToSqlConverter.CanConvert(unwrapped.Type))
+			{
+				dbType = dbType.WithSystemType(unwrapped.Type);
+				expr = unwrapped;
+			}
 
 			dbType = dbType.WithSystemType(expr.Type);
 
@@ -2703,6 +2711,8 @@ namespace LinqToDB.Linq.Builder
 					expr = new ObjectSqlExpression(MappingSchema, sql);
 			}
 
+			var columnDescriptor = QueryHelper.GetColumnDescriptor(expr);
+
 			switch (arr.NodeType)
 			{
 				case ExpressionType.NewArrayInit :
@@ -2715,7 +2725,7 @@ namespace LinqToDB.Linq.Builder
 						var exprs  = new ISqlExpression[newArr.Expressions.Count];
 
 						for (var i = 0; i < newArr.Expressions.Count; i++)
-							exprs[i] = ConvertToSql(context, newArr.Expressions[i]);
+							exprs[i] = ConvertToSql(context, newArr.Expressions[i], columnDescriptor: columnDescriptor);
 
 						return new SqlPredicate.InList(expr, Configuration.Linq.CompareNullsAsValues ? false : (bool?)null, false, exprs);
 					}
@@ -2724,7 +2734,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (CanBeCompiled(arr))
 					{
-						var p = BuildParameter(arr, null, false, BuildParameterType.InPredicate).SqlParameter;
+						var p = BuildParameter(arr, columnDescriptor, false, BuildParameterType.InPredicate).SqlParameter;
 						p.IsQueryParameter = false;
 						return new SqlPredicate.InList(expr, Configuration.Linq.CompareNullsAsValues ? false : (bool?)null, false, p);
 					}
