@@ -1336,7 +1336,7 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.LikePredicate:
 					return ConvertLikePredicate(mappingSchema, (SqlPredicate.Like)predicate, context);
 				case QueryElementType.SearchStringPredicate:
-					return ConvertContainsPredicate(mappingSchema, (SqlPredicate.SearchString)predicate, context);
+					return ConvertSearchStringPredicate(mappingSchema, (SqlPredicate.SearchString)predicate, context);
 				case QueryElementType.InListPredicate:
 				{
 					var inList = (SqlPredicate.InList)predicate;
@@ -1432,12 +1432,10 @@ namespace LinqToDB.SqlProvider
 			return predicate;
 		}
 
-		public virtual ISqlPredicate ConvertContainsPredicate(MappingSchema mappingSchema, SqlPredicate.SearchString predicate,
+		protected ISqlPredicate ConvertSearchStringPredicateViaLike(MappingSchema mappingSchema,
+			SqlPredicate.SearchString predicate,
 			EvaluationContext context)
 		{
-			if (!predicate.IgnoreCase)
-				throw new NotImplementedException("!predicate.IgnoreCase");
-
 			if (predicate.Expr2.TryEvaluateExpression(context, out var patternRaw))
 			{
 				var patternRawValue = patternRaw as string;
@@ -1482,12 +1480,21 @@ namespace LinqToDB.SqlProvider
 				};
 
 
-				patternExpr = (ISqlExpression)OptimizeElements(patternExpr, context);
+				patternExpr = OptimizeElements(patternExpr, context);
 
 				return new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, patternExpr,
 					LikeIsEscapeSupported ? escape : null,
 					true);
 			}
+		}
+
+		public virtual ISqlPredicate ConvertSearchStringPredicate(MappingSchema mappingSchema, SqlPredicate.SearchString predicate,
+			EvaluationContext context)
+		{
+			if (!predicate.IgnoreCase)
+				throw new NotImplementedException("!predicate.IgnoreCase");
+
+			return ConvertSearchStringPredicateViaLike(mappingSchema, predicate, context);
 		}
 
 		static SqlField ExpectsUnderlyingField(ISqlExpression expr)

@@ -1,4 +1,5 @@
-﻿using LinqToDB.Mapping;
+﻿using System;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.DataProvider.Firebird
 {
@@ -69,6 +70,17 @@ namespace LinqToDB.DataProvider.Firebird
 		}
 
 
+		static ISqlExpression TryConvertToValue(ISqlExpression expr, EvaluationContext context)
+		{
+			if (expr.ElementType != QueryElementType.SqlValue)
+			{
+				if (expr.TryEvaluateExpression(context, out var value))
+					expr = new SqlValue(expr.GetExpressionType(), value);
+			}
+
+			return expr;
+		}
+
 		public override ISqlPredicate ConvertLikePredicate(MappingSchema mappingSchema, SqlPredicate.Like predicate,
 			EvaluationContext context)
 		{
@@ -76,20 +88,8 @@ namespace LinqToDB.DataProvider.Firebird
 
 			if (context.ParameterValues != null)
 			{
-				var exp1 = predicate.Expr1;
-				var exp2 = predicate.Expr2;
-
-				if (exp1.ElementType != QueryElementType.SqlValue)
-				{
-					if (exp1.TryEvaluateExpression(context, out var value1))
-						exp1 = new SqlValue(exp1.GetExpressionType(), value1);
-				}
-
-				if (exp2.ElementType != QueryElementType.SqlValue)
-				{
-					if (exp2.TryEvaluateExpression(context, out var value2))
-						exp2 = new SqlValue(exp2.GetExpressionType(), value2);
-				}
+				var exp1 = TryConvertToValue(predicate.Expr1, context);
+				var exp2 = TryConvertToValue(predicate.Expr2, context);
 
 				if (!ReferenceEquals(exp1, predicate.Expr1) || !ReferenceEquals(exp2, predicate.Expr2))
 				{
@@ -99,6 +99,49 @@ namespace LinqToDB.DataProvider.Firebird
 
 			return predicate;
 		}
+
+
+		public override ISqlPredicate ConvertSearchStringPredicate(MappingSchema mappingSchema, SqlPredicate.SearchString predicate,
+			EvaluationContext context)
+		{
+			if (!predicate.IgnoreCase)
+				return ConvertSearchStringPredicateViaLike(mappingSchema, predicate, context);
+
+			ISqlExpression expr;
+			switch (predicate.Kind)
+			{
+				case SqlPredicate.SearchString.SearchKind.EndsWith:
+				{
+					predicate = new SqlPredicate.SearchString(
+						new SqlFunction(typeof(string), "$ToLower$", predicate.Expr1),
+						predicate.IsNot,
+						new SqlFunction(typeof(string), "$ToLower$", predicate.Expr2), predicate.Kind,
+						predicate.IgnoreCase);
+
+					return ConvertSearchStringPredicateViaLike(mappingSchema, predicate, context);
+				}	
+				case SqlPredicate.SearchString.SearchKind.StartsWith:
+				{
+					expr = new SqlExpression(typeof(bool),
+						predicate.IsNot ? "{0} NOT STARTING WITH {1}" : "{0} STARTING WITH {1}", 
+						Precedence.Comparison,
+						TryConvertToValue(predicate.Expr1, context), TryConvertToValue(predicate.Expr2, context));
+					break;
+				}	
+				case SqlPredicate.SearchString.SearchKind.Contains:
+					expr = new SqlExpression(typeof(bool),
+						predicate.IsNot ? "{0} NOT CONTAINING {1}" : "{0} CONTAINING {1}", 
+						Precedence.Comparison,
+						TryConvertToValue(predicate.Expr1, context), TryConvertToValue(predicate.Expr2, context));
+					break;
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
+
+			return new SqlSearchCondition(new SqlCondition(false, new SqlPredicate.Expr(expr)));
+		}
+
+
 
 		public override SqlStatement OptimizeStatement(SqlStatement statement, EvaluationContext context)
 		{
@@ -153,6 +196,15 @@ namespace LinqToDB.DataProvider.Firebird
 		protected override ISqlExpression ConvertFunction(SqlFunction func)
 		{
 			func = ConvertFunctionParameters(func, false);
+			
+			switch (func.Name)
+			{
+				case "$ToLower$":
+				{
+					return new SqlFunction(func.SystemType, "LOWER", func.Parameters);
+				}
+			}
+
 			return base.ConvertFunction(func);
 		}
 

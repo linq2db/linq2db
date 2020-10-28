@@ -1,5 +1,5 @@
 ﻿using System;
-
+using System.Globalization;
 #if NET472
 using System.Data.Linq.SqlClient;
 #else
@@ -99,7 +99,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void ContainsValueAll([DataSources(TestProvName.AllInformix)] string context, 
-			[Values("N", "-", "*", "?", "#", "%", "[", "]", "[]", "[[", "]]")]string toTest)
+			[Values("n", "-", "*", "?", "#", "%", "[", "]", "[]", "[[", "]]")]string toTest)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -107,12 +107,19 @@ namespace Tests.Linq
 
 				var q = from p in db.Person where p.ID == 1 && s.Contains(Sql.ToSql(toTest)) select p;
 				Assert.AreEqual(1, q.ToList().First().ID);
+
+				var s2 = s.ToUpper(CultureInfo.InvariantCulture);
+				if (s != s2)
+				{
+					var q2 = from p in db.Person where p.ID == 1 && s2.Contains(Sql.ToSql(toTest)) select p;
+					Assert.AreEqual(1, q2.ToList().First().ID);
+				}
 			}
 		}
 
 		[Test]
 		public void ContainsParameterAll([DataSources(TestProvName.AllInformix)] string context, 
-			[Values("N", "-", "*", "?", "#", "%", "[", "]", "[]", "[[", "]]")]string toTest)
+			[Values("n", "-", "*", "?", "#", "%", "[", "]", "[]", "[[", "]]")]string toTest)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -120,6 +127,13 @@ namespace Tests.Linq
 
 				var q = from p in db.Person where p.ID == 1 && s.Contains(toTest) select p;
 				Assert.AreEqual(1, q.ToList().First().ID);
+
+				var s2 = s.ToUpper(CultureInfo.InvariantCulture);
+				if (s != s2)
+				{
+					var q2 = from p in db.Person where p.ID == 1 && s2.Contains(toTest) select p;
+					Assert.AreEqual(1, q2.ToList().First().ID);
+				}
 			}
 		}
 
@@ -188,7 +202,7 @@ namespace Tests.Linq
 					select new
 					{
 						p,
-						Field1 = p.FirstName.Contains("Jo")
+						Field1 = p.FirstName.Contains("jo")
 					} into p
 					where p.Field1
 					orderby p.Field1
@@ -197,7 +211,7 @@ namespace Tests.Linq
 					select new
 					{
 						p,
-						Field1 = p.FirstName.Contains("Jo")
+						Field1 = p.FirstName.Contains("jo")
 					} into p
 					where p.Field1
 					orderby p.Field1
@@ -229,12 +243,11 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = from p in db.Person where p.FirstName.StartsWith("Jo") && p.ID == 1 select p;
+				var q = from p in db.Person where p.FirstName.StartsWith("jo") && p.ID == 1 select p;
 				Assert.AreEqual(1, q.ToList().First().ID);
 			}
 		}
 
-		[ActiveIssue(2005, Configuration = TestProvName.AllFirebird)]
 		[Test]
 		public void StartsWithSQL([DataSources(false)] string context)
 		{
@@ -271,8 +284,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in    Person where "John123".StartsWith(p.FirstName) select p,
-					from p in db.Person where "John123".StartsWith(p.FirstName) select p);
+					from p in    Person where "john123".StartsWith(p.FirstName) select p,
+					from p in db.Person where "john123".StartsWith(p.FirstName) select p);
 		}
 
 		[Test]
@@ -322,7 +335,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = from p in db.Person where p.FirstName.EndsWith("hn") && p.ID == 1 select p;
+				var q = from p in db.Person where p.FirstName.EndsWith("Hn") && p.ID == 1 select p;
 				Assert.AreEqual(1, q.ToList().First().ID);
 			}
 		}
@@ -333,7 +346,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = from p in db.Person where SqlMethods.Like(p.FirstName, "%hn%") && p.ID == 1 select p;
+				var q = from p in db.Person where SqlMethods.Like(p.FirstName, "%Hn%") && p.ID == 1 select p;
 				Assert.AreEqual(1, q.ToList().First().ID);
 			}
 		}
@@ -343,7 +356,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = from p in db.Person where !SqlMethods.Like(p.FirstName, @"%h~%n%", '~') && p.ID == 1 select p;
+				var q = from p in db.Person where !SqlMethods.Like(p.FirstName, @"%H~%n%", '~') && p.ID == 1 select p;
 				Assert.AreEqual(1, q.ToList().First().ID);
 			}
 		}
@@ -354,7 +367,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = from p in db.Person where Sql.Like(p.FirstName, "%hn%") && p.ID == 1 select p;
+				var q = from p in db.Person where Sql.Like(p.FirstName, "%Hn%") && p.ID == 1 select p;
 				Assert.AreEqual(1, q.ToList().First().ID);
 			}
 		}
@@ -364,7 +377,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = from p in db.Person where !Sql.Like(p.FirstName, @"%h~%n%", '~') && p.ID == 1 select p;
+				var q = from p in db.Person where !Sql.Like(p.FirstName, @"%H~%n%", '~') && p.ID == 1 select p;
 				Assert.AreEqual(1, q.ToList().First().ID);
 			}
 		}

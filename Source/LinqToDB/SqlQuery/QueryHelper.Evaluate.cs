@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 
 namespace LinqToDB.SqlQuery
 {
@@ -254,6 +255,23 @@ namespace LinqToDB.SqlQuery
 								if (strValue is string str)
 								{
 									result = str.Length;
+									return true;
+								}
+							}
+
+							return false;
+						}
+
+						case "$ToLower$":
+						{
+							if (function.Parameters[0]
+								.TryEvaluateExpression(context, out var strValue, out errorMessage))
+							{
+								if (strValue == null)
+									return true;
+								if (strValue is string str)
+								{
+									result = str.ToLower(CultureInfo.InvariantCulture);
 									return true;
 								}
 							}
