@@ -316,6 +316,30 @@ namespace LinqToDB.DataProvider.MySql
 			base.BuildUpdateSet(selectQuery, updateClause);
 		}
 
+		protected override void BuildInsertQuery(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
+		{
+			BuildStep = Step.InsertClause; BuildInsertClause(statement, insertClause, addAlias);
+
+			if (statement.QueryType == QueryType.Insert && statement.SelectQuery!.From.Tables.Count != 0)
+			{
+				BuildStep = Step.WithClause;    BuildWithClause(statement.GetWithClause());
+				BuildStep = Step.SelectClause;  BuildSelectClause(statement.SelectQuery);
+				BuildStep = Step.FromClause;    BuildFromClause(statement, statement.SelectQuery);
+				BuildStep = Step.WhereClause;   BuildWhereClause(statement.SelectQuery);
+				BuildStep = Step.GroupByClause; BuildGroupByClause(statement.SelectQuery);
+				BuildStep = Step.HavingClause;  BuildHavingClause(statement.SelectQuery);
+				BuildStep = Step.OrderByClause; BuildOrderByClause(statement.SelectQuery);
+				BuildStep = Step.OffsetLimit;   BuildOffsetLimit(statement.SelectQuery);
+			}
+
+			if (insertClause.WithIdentity)
+				BuildGetIdentity(insertClause);
+			else
+			{
+				BuildReturningSubclause(statement);
+			}
+		}
+
 		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
 		{
 			if (!statement.IsUpdate())
