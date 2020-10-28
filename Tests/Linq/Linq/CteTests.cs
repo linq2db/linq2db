@@ -24,7 +24,8 @@ namespace Tests.Linq
 			TestProvName.AllPostgreSQL,
 			ProviderName.DB2,
 			TestProvName.AllSQLite,
-			TestProvName.AllOracle
+			TestProvName.AllOracle,
+			TestProvName.AllMySqlServer8Plus,
 			// TODO: v14
 			//TestProvName.AllInformix,
 			// Will be supported in SQL 8.0 - ProviderName.MySql
