@@ -1206,6 +1206,36 @@ namespace LinqToDB.SqlProvider
 			return predicate;
 		}
 
+		public virtual IQueryElement OptimizeQueryElement(IQueryElement element, EvaluationContext context)
+		{
+			switch (element.ElementType)
+			{
+				case QueryElementType.Condition:
+				{
+					var condition = (SqlCondition)element;
+					if (condition.Predicate is SqlSearchCondition search)
+					{
+						if (search.Conditions.Count == 1)
+						{
+							var sc = search.Conditions[0];
+							return new SqlCondition(condition.IsNot != sc.IsNot, sc.Predicate, condition.IsOr);
+						}
+					}
+					else if (condition.Predicate.ElementType == QueryElementType.ExprPredicate)
+					{
+						var exprPredicate = (SqlPredicate.Expr)condition.Predicate;
+						if (exprPredicate.Expr1 is ISqlPredicate predicate)
+						{
+							return new SqlCondition(condition.IsNot, predicate, condition.IsOr);
+						}
+					}
+					break;
+				}
+			}
+
+			return element;
+		}
+
 		#endregion
 
 		#region Conversion
@@ -2306,6 +2336,8 @@ namespace LinqToDB.SqlProvider
 
 					if (ne is ISqlPredicate sqlPredicate)
 						ne = OptimizePredicate(sqlPredicate, context);
+
+					ne = OptimizeQueryElement(ne, context);
 
 					if (ReferenceEquals(ne, e))
 						break;
