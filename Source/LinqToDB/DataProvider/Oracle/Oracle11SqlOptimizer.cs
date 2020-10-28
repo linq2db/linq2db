@@ -68,12 +68,7 @@ namespace LinqToDB.DataProvider.Oracle
 				{
 					case "Coalesce":
 					{
-						var last = func.Parameters[func.Parameters.Length - 1];
-						for (int i = func.Parameters.Length - 2; i >= 0; i--)
-						{
-							last = new SqlFunction(func.SystemType, "Nvl", func.Parameters[i], last);
-						}
-						return last;
+						return ConvertCoalesceToBinaryFunc(func, "Nvl");
 					}
 					case "Convert"        :
 					{

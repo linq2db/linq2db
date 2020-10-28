@@ -1629,6 +1629,17 @@ namespace LinqToDB.SqlProvider
 			return p;
 		}
 
+
+		protected ISqlExpression ConvertCoalesceToBinaryFunc(SqlFunction func, string funcName)
+		{
+			var last = func.Parameters[func.Parameters.Length - 1];
+			for (int i = func.Parameters.Length - 2; i >= 0; i--)
+			{
+				last = new SqlFunction(func.SystemType, funcName, func.Parameters[i], last);
+			}
+			return last;
+		}
+
 		#endregion
 
 		#endregion

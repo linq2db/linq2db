@@ -87,7 +87,7 @@ namespace LinqToDB.DataProvider.Informix
 			{
 				switch (func.Name)
 				{
-					case "Coalesce" : return new SqlFunction(func.SystemType, "Nvl", func.Parameters);
+					case "Coalesce" : return ConvertCoalesceToBinaryFunc(func, "Nvl");
 					case "Convert"  :
 					{
 						var par0 = func.Parameters[0];
