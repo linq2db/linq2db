@@ -26,6 +26,7 @@ Runs manually using `/azp run test-all` command from PR comment by team member
 Those pipelines used to run tests only for specific databases manually by team member:
 - `/azp run test-db2` - IBM DB2 tests
 - `/azp run test-informix` - IBM Informix tests
+- `/azp run test-mysql` - MySQL and MariaDB tests
 - `/azp run test-oracle` - Oracle tests
 - `/azp run test-postgresql` - PostgreSQL tests
 - `/azp run test-sqlserver-2019` - SQL Server 2019 tests
