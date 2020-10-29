@@ -1603,9 +1603,11 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
+			name ??= columnDescriptor?.MemberName;
+
 			var p = CreateParameterAccessor(
 				DataContext, newExpr.ValueExpression, originalAccessor, newExpr.DbDataTypeExpression, valueExpression, ExpressionParam,
-				ParametersParam, DataContextParam, name!);
+				ParametersParam, DataContextParam, name);
 
 			return p;
 		}

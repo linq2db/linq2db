@@ -14,6 +14,7 @@ namespace LinqToDB.SqlProvider
 	using Tools;
 	using Mapping;
 	using DataProvider;
+	using Common.Internal;
 
 	public class BasicSqlOptimizer : ISqlOptimizer
 	{
@@ -631,202 +632,9 @@ namespace LinqToDB.SqlProvider
 			switch (expression.ElementType)
 			{
 				case QueryElementType.SqlBinaryExpression :
-					#region SqlBinaryExpression
 				{
-					var be = (SqlBinaryExpression)expression;
-
-					switch (be.Operation)
-					{
-						case "+":
-						{
-							var v1 = be.Expr1.TryEvaluateExpression(context, out var value1);
-							if (v1)
-							{
-								switch (value1)
-								{
-									case short   h when h == 0  :
-									case int     i when i == 0  :
-									case long    l when l == 0  :
-									case decimal d when d == 0  :
-									case string  s when s == "" : return be.Expr2;
-								}
-							}
-
-							var v2 = be.Expr2.TryEvaluateExpression(context, out var value2);
-							if (v2)
-							{
-								switch (value2)
-								{
-									case int vi when vi == 0 : return be.Expr1;
-									case int vi when
-										be.Expr1    is SqlBinaryExpression be1 &&
-										be1.Expr2.TryEvaluateExpression(context, out var be1v2) &&
-										be1v2 is int be1v2i :
-									{
-										switch (be1.Operation)
-										{
-											case "+":
-											{
-												var value = be1v2i + vi;
-												var oper  = be1.Operation;
-
-												if (value < 0)
-												{
-													value = -value;
-													oper  = "-";
-												}
-
-												return new SqlBinaryExpression(be.SystemType, be1.Expr1, oper, CreateSqlValue(value, be), be.Precedence);
-											}
-
-											case "-":
-											{
-												var value = be1v2i - vi;
-												var oper  = be1.Operation;
-
-												if (value < 0)
-												{
-													value = -value;
-													oper  = "+";
-												}
-
-												return new SqlBinaryExpression(be.SystemType, be1.Expr1, oper, CreateSqlValue(value, be), be.Precedence);
-											}
-										}
-
-										break;
-									}
-
-									case string vs when vs == "" : return be.Expr1;
-									case string vs when
-										be.Expr1    is SqlBinaryExpression be1 &&
-										//be1.Operation == "+"                   &&
-										be1.Expr2.TryEvaluateExpression(context, out var be1v2) &&
-										be1v2 is string be1v2s :
-									{
-										return new SqlBinaryExpression(
-											be1.SystemType,
-											be1.Expr1,
-											be1.Operation,
-											new SqlValue(string.Concat(be1v2s, vs)));
-									}
-								}
-							}
-
-							if (v1 && v2)
-							{
-								if (value1 is int i1 && value2 is int i2) return CreateSqlValue(i1 + i2, be);
-								if (value1 is string || value2 is string) return CreateSqlValue(value1?.ToString() + value2, be);
-							}
-
-							break;
-						}
-
-						case "-":
-						{
-							var v2 = be.Expr2.TryEvaluateExpression(context, out var value2);
-							if (v2)
-							{
-								switch (value2)
-								{
-									case int vi when vi == 0 : return be.Expr1;
-									case int vi when
-										be.Expr1 is SqlBinaryExpression be1 &&
-										be1.Expr2.TryEvaluateExpression(context, out var be1v2) &&
-										be1v2 is int be1v2i :
-									{
-										switch (be1.Operation)
-										{
-											case "+":
-											{
-												var value = be1v2i - vi;
-												var oper  = be1.Operation;
-
-												if (value < 0)
-												{
-													value = -value;
-													oper  = "-";
-												}
-
-												return new SqlBinaryExpression(be.SystemType, be1.Expr1, oper, CreateSqlValue(value, be), be.Precedence);
-											}
-
-											case "-":
-											{
-												var value = be1v2i + vi;
-												var oper  = be1.Operation;
-
-												if (value < 0)
-												{
-													value = -value;
-													oper  = "+";
-												}
-
-												return new SqlBinaryExpression(be.SystemType, be1.Expr1, oper, CreateSqlValue(value, be), be.Precedence);
-											}
-										}
-
-										break;
-									}
-								}
-							}
-
-							if (v2 && be.Expr1.TryEvaluateExpression(context, out var value1))
-							{
-								if (value1 is int i1 && value2 is int i2) return CreateSqlValue(i1 - i2, be);
-							}
-
-							break;
-						}
-
-						case "*":
-						{
-							var v1 = be.Expr1.TryEvaluateExpression(context, out var value1);
-							if (v1)
-							{
-								switch (value1)
-								{
-									case int i when i == 0 : return CreateSqlValue(0, be);
-									case int i when i == 1 : return be.Expr2;
-									case int i when
-										be.Expr2    is SqlBinaryExpression be2 &&
-										be2.Operation == "*"                   &&
-										be2.Expr1.TryEvaluateExpression(context, out var be2v1)  &&
-										be2v1 is int bi :
-									{
-										return new SqlBinaryExpression(be2.SystemType, CreateSqlValue(i * bi, be), "*", be2.Expr2);
-									}
-								}
-							}
-
-							var v2 = be.Expr2.TryEvaluateExpression(context, out var value2);
-							if (v2)
-							{
-								switch (value2)
-								{
-									case int i when i == 0 : return CreateSqlValue(0, be);
-									case int i when i == 1 : return be.Expr1;
-								}
-							}
-
-							if (v1 && v2)
-							{
-								switch (value1)
-								{
-									case int    i1 when value2 is int    i2 : return CreateSqlValue(i1 * i2, be);
-									case int    i1 when value2 is double d2 : return CreateSqlValue(i1 * d2, be);
-									case double d1 when value2 is int    i2 : return CreateSqlValue(d1 * i2, be);
-									case double d1 when value2 is double d2 : return CreateSqlValue(d1 * d2, be);
-								}
-							}
-
-							break;
-						}
-					}
-
-					break;
+					return OptimizeBinaryExpression((SqlBinaryExpression)expression, context);
 				}
-				#endregion
 
 				case QueryElementType.SqlFunction :
 					#region SqlFunction
@@ -1079,6 +887,158 @@ namespace LinqToDB.SqlProvider
 				}
 			}
 
+
+			if (!expr.Expr1.CanBeNull && !expr.Expr2.CanBeNull && expr.Expr1.SystemType.IsSignedType() && expr.Expr2.SystemType.IsSignedType())
+			{
+				var newExpr = expr switch
+				{
+					(SqlBinaryExpression binary, var op, var v, _) when v.CanBeEvaluated(context) =>
+				
+						// binary < v
+						binary switch
+						{
+							// e + some < v ===> some < v - e
+							(var e, "+", var some) when e.CanBeEvaluated(context) => new SqlPredicate.ExprExpr(some, op, new SqlBinaryExpression(v.SystemType!, v, "-", e), null),
+							// e - some < v ===>  e - v < some
+							(var e, "-", var some) when e.CanBeEvaluated(context) => new SqlPredicate.ExprExpr(new SqlBinaryExpression(v.SystemType!, e, "-", v), op, some, null),
+
+							// some + e < v ===> some < v - e
+							(var some, "+", var e) when e.CanBeEvaluated(context) => new SqlPredicate.ExprExpr(some, op, new SqlBinaryExpression(v.SystemType!, v, "-", e), null),
+							// some - e < v ===> some < v + e
+							(var some, "-", var e) when e.CanBeEvaluated(context) => new SqlPredicate.ExprExpr(some, op, new SqlBinaryExpression(v.SystemType!, v, "+", e), null),
+
+							_ => null
+						},
+
+					(var v, var op, SqlBinaryExpression binary, _) when v.CanBeEvaluated(context) =>
+				
+						// v < binary
+						binary switch
+						{
+							// v < e + some ===> v - e < some
+							(var e, "+", var some) when e.CanBeEvaluated(context) => new SqlPredicate.ExprExpr(new SqlBinaryExpression(v.SystemType!, v, "-", e), op, some, null),
+							// v < e - some ===> some < e - v
+							(var e, "-", var some) when e.CanBeEvaluated(context) => new SqlPredicate.ExprExpr(some, op, new SqlBinaryExpression(v.SystemType!, e, "-", v), null),
+
+							// v < some + e ===> v - e < some
+							(var some, "+", var e) when e.CanBeEvaluated(context) => new SqlPredicate.ExprExpr(new SqlBinaryExpression(v.SystemType!, v, "-", e), op, some, null),
+							// v < some - e ===> v + e < some
+							(var e, "-", var some) when e.CanBeEvaluated(context) => new SqlPredicate.ExprExpr(new SqlBinaryExpression(v.SystemType!, v, "+", e), op, some, null),
+
+							_ => null
+						},
+
+
+					_ => null
+				};
+
+				expr = newExpr ?? expr;
+			}
+
+			/*// handling the following expression types:
+			// some + 1 < 3 ===> some < 3 - 1
+			// 1 + some < 3 ===> some < 3 - 1
+			// some - 1 < 3 ===> some < 3 + 1
+			// 1 - some < 3 ===> 1 < 3 + some
+
+			var newExpr = Utils.PatternMatch(expr.Expr1, expr.Expr2, e =>
+				{
+					if (e.ElementType == QueryElementType.SqlBinaryExpression)
+					{
+						var binary = (SqlBinaryExpression)e;
+						if (binary.Operation.In("+", "-") && 
+						    binary.Expr1.SystemType.IsSignedType() &&
+						    binary.Expr2.SystemType.IsSignedType() &&
+						    (!binary.Expr2.CanBeNull && binary.Expr1.CanBeEvaluated(context) ||
+						     !binary.Expr1.CanBeNull && binary.Expr2.CanBeEvaluated(context)))
+						{
+							return binary;
+						}
+					}
+
+					return null;
+				},
+				e =>
+				{
+					if (e.CanBeEvaluated(context))
+						return e;
+					return null;
+				},
+				(binary, e, isSwapped) =>
+				{
+					if (binary.Operation == "+")
+					{
+						var converted = Utils.FirstMatch(binary.Expr1, binary.Expr2, ee => ee.CanBeEvaluated(context),
+							(evaluable, toStay, isSwapped) =>
+							{
+								if (!isSwapped)
+									return new SqlPredicate.ExprExpr(toStay, expr.Operator,
+										new SqlBinaryExpression(binary.SystemType, e, "-", evaluable), expr.WithNull);
+
+								return new SqlPredicate.ExprExpr(
+									new SqlBinaryExpression(binary.SystemType, e, "-", evaluable), expr.Operator,
+									toStay, expr.WithNull);
+							});
+						return converted;
+					}
+
+					// some - 1 < 3 ===> some < 3 + 1
+					// 1 - some < 3 ===> 1 < 3 + some
+
+
+					var converted = Utils.FirstMatch(binary.Expr1, binary.Expr2, ee => ee.CanBeEvaluated(context),
+						(evaluable, toStay, isSwapped2) =>
+						{
+							if (!isSwapped2)
+								return new SqlPredicate.ExprExpr(toStay, expr.Operator,
+									new SqlBinaryExpression(binary.SystemType, e, "-", evaluable), expr.WithNull);
+
+							return new SqlPredicate.ExprExpr(
+								new SqlBinaryExpression(binary.SystemType, e, "-", evaluable), expr.Operator,
+								toStay, expr.WithNull);
+						});
+
+					{
+						if (!isSwapped)
+						{
+							return new SqlPredicate.ExprExpr(binary.Expr1, expr.Operator,
+								new SqlBinaryExpression(binary.SystemType, e, "+", binary.Expr2), expr.WithNull);
+						}
+
+						return new SqlPredicate.ExprExpr(new SqlBinaryExpression(binary.SystemType, e, "+", binary.Expr2), expr.Operator,
+							binary.Expr1, expr.WithNull);
+					}
+				});
+
+			expr = newExpr ?? expr;
+
+			// handling the following expression types:
+			// some * x < x ===> some < 1
+			// x * some < x ===> some < 1
+			// some - 1 < 3 ===> some < 3 + 1
+			// 1 - some < 3 ===> 1 < 3 + some
+
+			/*newExpr = Utils.PatternMatch(expr.Expr1, expr.Expr2,
+				e =>
+				{
+					if (e.ElementType == QueryElementType.SqlBinaryExpression)
+					{
+						var binary = (SqlBinaryExpression)e;
+						if (binary.Operation == "*")
+							return binary;
+					}
+				},
+				e =>
+				{
+					return e;
+				},
+				(binary, e) =>
+				{
+					if (binary.Expr1.Equals(e))
+						return new SqlPredicate.ExprExpr(binary.Expr2, expr.Operator,
+							new SqlBinaryExpression(binary.SystemType, e, "+", binary.Expr2), expr.WithNull)
+				})#1#*/
+
 			return expr;
 		}
 
@@ -1240,6 +1200,293 @@ namespace LinqToDB.SqlProvider
 			}
 
 			return element;
+		}
+
+		public virtual ISqlExpression OptimizeBinaryExpression(SqlBinaryExpression be, EvaluationContext context)
+		{
+			switch (be.Operation)
+			{
+				case "+":
+				{
+					var v1 = be.Expr1.TryEvaluateExpression(context, out var value1);
+					if (v1)
+					{
+						switch (value1)
+						{
+							case short   h when h == 0  :
+							case int     i when i == 0  :
+							case long    l when l == 0  :
+							case decimal d when d == 0  :
+							case string  s when s == "" : return be.Expr2;
+						}
+					}
+
+					var v2 = be.Expr2.TryEvaluateExpression(context, out var value2);
+					if (v2)
+					{
+						switch (value2)
+						{
+							case int vi when vi == 0 : return be.Expr1;
+							case int vi when
+								be.Expr1    is SqlBinaryExpression be1 &&
+								be1.Expr2.TryEvaluateExpression(context, out var be1v2) &&
+								be1v2 is int be1v2i :
+							{
+								switch (be1.Operation)
+								{
+									case "+":
+									{
+										var value = be1v2i + vi;
+										var oper  = be1.Operation;
+
+										if (value < 0)
+										{
+											value = -value;
+											oper  = "-";
+										}
+
+										return new SqlBinaryExpression(be.SystemType, be1.Expr1, oper, CreateSqlValue(value, be), be.Precedence);
+									}
+
+									case "-":
+									{
+										var value = be1v2i - vi;
+										var oper  = be1.Operation;
+
+										if (value < 0)
+										{
+											value = -value;
+											oper  = "+";
+										}
+
+										return new SqlBinaryExpression(be.SystemType, be1.Expr1, oper, CreateSqlValue(value, be), be.Precedence);
+									}
+								}
+
+								break;
+							}
+
+							case string vs when vs == "" : return be.Expr1;
+							case string vs when
+								be.Expr1    is SqlBinaryExpression be1 &&
+								//be1.Operation == "+"                   &&
+								be1.Expr2.TryEvaluateExpression(context, out var be1v2) &&
+								be1v2 is string be1v2s :
+							{
+								return new SqlBinaryExpression(
+									be1.SystemType,
+									be1.Expr1,
+									be1.Operation,
+									new SqlValue(string.Concat(be1v2s, vs)));
+							}
+						}
+					}
+
+					if (v1 && v2)
+					{
+						if (value1 is int i1 && value2 is int i2) return CreateSqlValue(i1 + i2, be);
+						if (value1 is string || value2 is string) return CreateSqlValue(value1?.ToString() + value2, be);
+					}
+
+					break;
+				}
+
+				case "-":
+				{
+					var v2 = be.Expr2.TryEvaluateExpression(context, out var value2);
+					if (v2)
+					{
+						switch (value2)
+						{
+							case int vi when vi == 0 : return be.Expr1;
+							case int vi when
+								be.Expr1 is SqlBinaryExpression be1 &&
+								be1.Expr2.TryEvaluateExpression(context, out var be1v2) &&
+								be1v2 is int be1v2i :
+							{
+								switch (be1.Operation)
+								{
+									case "+":
+									{
+										var value = be1v2i - vi;
+										var oper  = be1.Operation;
+
+										if (value < 0)
+										{
+											value = -value;
+											oper  = "-";
+										}
+
+										return new SqlBinaryExpression(be.SystemType, be1.Expr1, oper, CreateSqlValue(value, be), be.Precedence);
+									}
+
+									case "-":
+									{
+										var value = be1v2i + vi;
+										var oper  = be1.Operation;
+
+										if (value < 0)
+										{
+											value = -value;
+											oper  = "+";
+										}
+
+										return new SqlBinaryExpression(be.SystemType, be1.Expr1, oper, CreateSqlValue(value, be), be.Precedence);
+									}
+								}
+
+								break;
+							}
+						}
+					}
+
+					if (v2 && be.Expr1.TryEvaluateExpression(context, out var value1))
+					{
+						if (value1 is int i1 && value2 is int i2) return CreateSqlValue(i1 - i2, be);
+					}
+
+					break;
+				}
+
+				case "*":
+				{
+					var v1 = be.Expr1.TryEvaluateExpression(context, out var value1);
+					if (v1)
+					{
+						switch (value1)
+						{
+							case int i when i == 0 : return CreateSqlValue(0, be);
+							case int i when i == 1 : return be.Expr2;
+							case int i when
+								be.Expr2    is SqlBinaryExpression be2 &&
+								be2.Operation == "*"                   &&
+								be2.Expr1.TryEvaluateExpression(context, out var be2v1)  &&
+								be2v1 is int bi :
+							{
+								return new SqlBinaryExpression(be2.SystemType, CreateSqlValue(i * bi, be), "*", be2.Expr2);
+							}
+						}
+					}
+
+					var v2 = be.Expr2.TryEvaluateExpression(context, out var value2);
+					if (v2)
+					{
+						switch (value2)
+						{
+							case int i when i == 0 : return CreateSqlValue(0, be);
+							case int i when i == 1 : return be.Expr1;
+						}
+					}
+
+					if (v1 && v2)
+					{
+						switch (value1)
+						{
+							case int    i1 when value2 is int    i2 : return CreateSqlValue(i1 * i2, be);
+							case int    i1 when value2 is double d2 : return CreateSqlValue(i1 * d2, be);
+							case double d1 when value2 is int    i2 : return CreateSqlValue(d1 * i2, be);
+							case double d1 when value2 is double d2 : return CreateSqlValue(d1 * d2, be);
+						}
+					}
+
+					break;
+				}
+			}
+
+			if (be.Operation.In("+", "-") && be.Expr1.SystemType == be.Expr2.SystemType)
+			{
+				ISqlExpression? newExpr = be switch
+				{
+					// (binary + v)
+					(SqlBinaryExpression binary, "+", var v) when v.CanBeEvaluated(context) =>
+						binary switch
+						{
+							// (some + e) + v ===> some + (e + v)
+							(var some, "+", var e) when e.CanBeEvaluated(context) => new SqlBinaryExpression(be.SystemType, some, "+", new SqlBinaryExpression(be.SystemType, e, "+", v)),
+
+							// (some - e) + v ===> some + (v - e)
+							(var some, "-", var e) when e.CanBeEvaluated(context) => new SqlBinaryExpression(be.SystemType, some, "+", new SqlBinaryExpression(be.SystemType, v, "-", e)),
+
+							// (e + some) + v ===> some + (e + v)
+							(var e, "+", var some) when e.SystemType.IsNumericType() && e.CanBeEvaluated(context) => new SqlBinaryExpression(be.SystemType, some, "+", new SqlBinaryExpression(be.SystemType, e, "+", v)),
+
+							// (e - some) + v ===> (e + v) - some
+							(var e, "-", var some) when e.CanBeEvaluated(context) => new SqlBinaryExpression(be.SystemType, new SqlBinaryExpression(be.SystemType, e, "+", v), "-", some),
+
+							_ => null
+						},
+
+					// (binary - v)
+					(SqlBinaryExpression binary, "-", var v) when v.CanBeEvaluated(context) =>
+						binary switch
+						{
+							// (some + e) - v ===> some + (e - v)
+							(var some, "+", var e) when e.CanBeEvaluated(context) => new SqlBinaryExpression(be.SystemType, some, "+", new SqlBinaryExpression(be.SystemType, e, "-", v)),
+
+							// (some - e) - v ===> some - (e + v)
+							(var some, "-", var e) when e.CanBeEvaluated(context) => new SqlBinaryExpression(be.SystemType, some, "+", new SqlBinaryExpression(be.SystemType, e, "+", v)),
+
+							// (e + some) - v ===> some + (e - v)
+							(var e, "+", var some) when e.CanBeEvaluated(context) => new SqlBinaryExpression(be.SystemType, some, "+", new SqlBinaryExpression(be.SystemType, e, "-", v)),
+
+							// (e - some) - v ===> (e - v) - some
+							(var e, "-", var some) when e.CanBeEvaluated(context) => new SqlBinaryExpression(be.SystemType, new SqlBinaryExpression(be.SystemType, e, "-", v), "-", some),
+
+							_ => null
+						},
+
+					// (v + binary)
+					(var v, "+", SqlBinaryExpression binary) when v.CanBeEvaluated(context) =>
+						binary switch
+						{
+							// v + (some + e) ===> (v + e) + some
+							(var some, "+", var e) when e.SystemType.IsNumericType() && e.CanBeEvaluated(context) => new SqlBinaryExpression(be.SystemType, new SqlBinaryExpression(be.SystemType, v, "+", e), "+", some),
+
+							// v + (some - e) + v ===> (v - e) + some
+							(var some, "-", var e) when e.CanBeEvaluated(context) => new SqlBinaryExpression(be.SystemType, new SqlBinaryExpression(be.SystemType, v, "-", e), "+", some),
+
+							// v + (e + some) ===> (v + e) + some
+							(var e, "+", var some) when e.CanBeEvaluated(context) => new SqlBinaryExpression(be.SystemType, new SqlBinaryExpression(be.SystemType, v, "+", e), "+", some),
+
+							// v + (e - some) ===> (v + e) - some
+							(var e, "-", var some) when e.CanBeEvaluated(context) => new SqlBinaryExpression(be.SystemType, new SqlBinaryExpression(be.SystemType, v, "+", e), "-", some),
+
+							_ => null
+						},
+
+					// (v - binary)
+					(var v, "+", SqlBinaryExpression binary) when v.CanBeEvaluated(context) =>
+						binary switch
+						{
+							// v - (some + e) ===> (v - e) - some
+							(var some, "+", var e) when e.CanBeEvaluated(context) => new SqlBinaryExpression(be.SystemType, new SqlBinaryExpression(be.SystemType, v, "-", e), "-", some),
+
+							// v - (some - e) + v ===> (v + e) - some
+							(var some, "-", var e) when e.CanBeEvaluated(context) => new SqlBinaryExpression(be.SystemType, new SqlBinaryExpression(be.SystemType, v, "+", e), "-", some),
+
+							// v - (e + some) ===> (v - e) - some
+							(var e, "+", var some) when e.CanBeEvaluated(context) => new SqlBinaryExpression(be.SystemType, new SqlBinaryExpression(be.SystemType, v, "-", e), "-", some),
+
+							// v - (e - some) ===> (v - e) + some
+							(var e, "-", var some) when e.CanBeEvaluated(context) => new SqlBinaryExpression(be.SystemType, new SqlBinaryExpression(be.SystemType, v, "-", e), "+", some),
+
+							_ => null
+						},
+
+					// (some - some) ==> 0
+					(var some1, "-", var some2) when some1.Equals(some2) => new SqlValue(be.SystemType, 0),
+
+					// (some - (s1 - s2)) ==> (some - s1) + s2
+					(var some, "-", SqlBinaryExpression(var s1, "-", var s2)) => new SqlBinaryExpression(be.SystemType, new SqlBinaryExpression(be.SystemType, some, "-", s1), "+", s2),
+
+					_ => null
+				};
+
+				if (newExpr != null)
+					return newExpr;
+			}
+
+			return be;
 		}
 
 		#endregion

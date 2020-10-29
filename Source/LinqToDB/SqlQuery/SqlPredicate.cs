@@ -370,6 +370,13 @@ namespace LinqToDB.SqlQuery
 				return search;
 			}
 
+			public void Deconstruct(out ISqlExpression expr1, out Operator @operator, out ISqlExpression expr2, out bool? withNull)
+			{
+				expr1 = Expr1;
+				@operator = Operator;
+				expr2 = Expr2;
+				withNull = WithNull;
+			}
 		}
 
 		// string_expression [ NOT ] LIKE string_expression [ ESCAPE 'escape_character' ]

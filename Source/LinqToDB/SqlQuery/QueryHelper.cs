@@ -1422,10 +1422,46 @@ namespace LinqToDB.SqlQuery
 			return hasParameter;
 		}
 
+		static IDictionary<QueryElementType, int> CountElements(this ISqlExpression expr)
+		{
+			var result = new Dictionary<QueryElementType, int>();
+			new QueryVisitor().VisitAll(expr, e =>
+			{
+				if (!result.TryGetValue(e.ElementType, out var cnt))
+				{
+					result[e.ElementType] = 1;
+				}
+				else
+				{
+					result[e.ElementType] = cnt + 1;
+				}
+			});
+
+			return result;
+		}
+
 		public static bool IsComplexExpression(this ISqlExpression expr)
 		{
-			if (null != new QueryVisitor().Find(expr, e => e.ElementType.In(QueryElementType.SqlQuery, QueryElementType.LikePredicate, QueryElementType.SearchStringPredicate)))
+			var counts = CountElements(expr);
+
+			if (counts.ContainsKey(QueryElementType.SqlQuery) ||
+			    counts.ContainsKey(QueryElementType.LikePredicate) ||
+			    counts.ContainsKey(QueryElementType.SearchStringPredicate)
+			)
+			{
 				return true;
+			}
+
+			int count;
+			if (counts.TryGetValue(QueryElementType.SqlBinaryExpression, out count) && count > 1)
+			{
+				return true;
+			}
+
+			if (counts.TryGetValue(QueryElementType.SqlFunction, out count) && count > 1)
+			{
+				return true;
+			}
 
 			return false;
 		}

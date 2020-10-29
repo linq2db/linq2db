@@ -133,5 +133,12 @@ namespace LinqToDB.SqlQuery
 		}
 
 		#endregion
+
+		public void Deconstruct(out ISqlExpression expr1, out string operation, out ISqlExpression expr2)
+		{
+			expr1     = Expr1;
+			operation = Operation;
+			expr2     = Expr2;
+		}
 	}
 }
