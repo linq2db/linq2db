@@ -11,7 +11,6 @@
 		/// - fractional seconds not supported
 		/// </summary>
 		public const string MySql55           = "MySql55";
-		public const string MySql8            = "MySql8";
 		public const string Firebird3         = "Firebird3";
 		public const string Northwind         = "Northwind";
 		public const string NorthwindSQLite   = "Northwind.SQLite";
@@ -43,17 +42,17 @@
 		/// </summary>
 		public const string NoopProvider  = "TestNoopProvider";
 
-		public const string AllMySql               = "MySql,MySqlConnector,MySql55,MariaDB,MySql8";
+		public const string AllMySql               = "MySql,MySqlConnector,MySql55,MariaDB";
 		// MySql server providers (no mariaDB)
-		public const string AllMySqlServer         = "MySql,MySqlConnector,MySql55,MySql8";
+		public const string AllMySqlServer         = "MySql,MySqlConnector,MySql55";
 		// MySql <5.7 has inadequate FTS behavior
-		public const string AllMySqlFullText       = "MySql,MySqlConnector,MySql8,MariaDB";
-		public const string AllMySql57Plus         = "MySql,MySqlConnector,MySql8,MariaDB";
+		public const string AllMySqlFullText       = "MySql,MySqlConnector,MariaDB";
+		public const string AllMySql57Plus         = "MySql,MySqlConnector,MariaDB";
 		// MySql server providers (no mariaDB) without MySQL 5.5
-		public const string AllMySqlServer57Plus   = "MySql,MySqlConnector,MySql8";
-		public const string AllMySqlServer8Plus    = "MySql8";
+		public const string AllMySqlServer57Plus   = "MySql,MySqlConnector";
 		// MySql.Data server providers (no mysqlconnector)
-		public const string AllMySqlData           = "MySql,MySql55,MySql8,MariaDB";
+		public const string AllMySqlData           = "MySql,MySql55,MariaDB";
+		public const string AllMySqlWithCTE        = "MySql,MariaDB";
 		public const string AllPostgreSQL          = "PostgreSQL,PostgreSQL.9.2,PostgreSQL.9.3,PostgreSQL.9.5,PostgreSQL.10,PostgreSQL.11,PostgreSQL.12,PostgreSQL.13";
 		public const string AllPostgreSQLLess10    = "PostgreSQL.9.2,PostgreSQL.9.3,PostgreSQL.9.5";
 		public const string AllPostgreSQL93Plus    = "PostgreSQL,PostgreSQL.9.3,PostgreSQL.9.5,PostgreSQL.10,PostgreSQL.11,PostgreSQL.12,PostgreSQL.13";
