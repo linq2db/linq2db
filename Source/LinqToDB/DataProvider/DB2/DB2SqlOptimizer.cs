@@ -26,6 +26,10 @@
 			};
 		}
 
+		protected static string[] DB2LikeCharactersToEscape = {"%", "_"};
+
+		public override string[] LikeCharactersToEscape => DB2LikeCharactersToEscape;
+
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)
 		{
 			expr = base.ConvertExpression(expr);
