@@ -558,8 +558,9 @@ namespace Tests.Linq
 			}
 		}
 
+		// MariaDB support expected in v10.6 : https://jira.mariadb.org/browse/MDEV-18511
 		[Test]
-		public void TestDelete([CteContextSource(ProviderName.Firebird, ProviderName.DB2)] string context)
+		public void TestDelete([CteContextSource(ProviderName.Firebird, ProviderName.DB2, TestProvName.MariaDB)] string context)
 		{
 			using (var db  = GetDataContext(context))
 			using (var tmp = db.CreateLocalTable("CteChild",
@@ -577,10 +578,11 @@ namespace Tests.Linq
 			}
 		}
 
+		// MariaDB support expected in v10.6 : https://jira.mariadb.org/browse/MDEV-18511
 		[ActiveIssue(Configuration = TestProvName.AllOracle, Details = "Oracle needs special syntax for CTE + UPDATE")]
 		[Test]
 		public void TestUpdate(
-			[CteContextSource(ProviderName.Firebird, ProviderName.DB2, TestProvName.AllOracle)]
+			[CteContextSource(ProviderName.Firebird, ProviderName.DB2, TestProvName.AllOracle, TestProvName.MariaDB)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1123,7 +1125,7 @@ namespace Tests.Linq
 				var result = from item in wipCte.AllowedNcCode() where item.NcCodeBo == ncCodeBo select item;
 				var sql = ((IExpressionQuery)result).SqlText;
 
-				Assert.True(sql.Replace("\"", "").Replace("[", "").Replace("]", "").ToLowerInvariant().Contains("WITH AllowedNcCode (NcCodeBo, NcCode, NcCodeDescription)".ToLowerInvariant()));
+				Assert.True(sql.Replace("\"", "").Replace("`", "").Replace("[", "").Replace("]", "").ToLowerInvariant().Contains("WITH AllowedNcCode (NcCodeBo, NcCode, NcCodeDescription)".ToLowerInvariant()));
 			}
 		}
 
