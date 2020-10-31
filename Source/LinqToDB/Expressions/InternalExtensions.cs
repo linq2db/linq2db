@@ -913,7 +913,28 @@ namespace LinqToDB.Expressions
 			{
 				case ExpressionType.ConvertChecked :
 				case ExpressionType.Convert        :
-					return ((UnaryExpression)ex).Operand.Unwrap();
+					return ((UnaryExpression)ex).Operand.UnwrapConvert();
+			}
+
+			return ex;
+		}
+
+		[return: NotNullIfNotNull("ex")]
+		public static Expression? UnwrapConvertToObject(this Expression? ex)
+		{
+			if (ex == null)
+				return null;
+
+			switch (ex.NodeType)
+			{
+				case ExpressionType.ConvertChecked:
+				case ExpressionType.Convert:
+				{
+					var unaryExpression = (UnaryExpression)ex;
+					if (unaryExpression.Type == typeof(object))
+						return unaryExpression.Operand.UnwrapConvertToObject();
+					break;
+				}
 			}
 
 			return ex;

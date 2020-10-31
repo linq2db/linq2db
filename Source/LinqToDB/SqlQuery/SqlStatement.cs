@@ -218,7 +218,7 @@ namespace LinqToDB.SqlQuery
 
 			Utils.MakeUniqueNames(
 				paramsVisited,
-				allAliases,
+				new HashSet<string>(), 
 				(n, a) => !a!.Contains(n) && !ReservedWords.IsReserved(n), p => p.Name, (p, n, a) =>
 				{
 					a!.Add(n);

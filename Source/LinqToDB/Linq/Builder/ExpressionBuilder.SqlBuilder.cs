@@ -656,7 +656,7 @@ namespace LinqToDB.Linq.Builder
 
 		public SqlInfo[] ConvertExpressions(IBuildContext context, Expression expression, ConvertFlags queryConvertFlag, ColumnDescriptor? columnDescriptor)
 		{
-			expression = ConvertExpression(expression);
+			expression = ConvertExpression(expression).UnwrapConvertToObject();
 
 			switch (expression.NodeType)
 			{
@@ -681,7 +681,7 @@ namespace LinqToDB.Linq.Builder
 
 								var descriptor = ed.FindColumnDescriptor(mi);
 
-								return ConvertExpressions(context, arg, queryConvertFlag, descriptor).Select(si => si.Clone(mi));
+								return ConvertExpressions(context, arg.UnwrapConvertToObject(), queryConvertFlag, descriptor).Select(si => si.Clone(mi));
 							})
 							.SelectMany(si => si)
 							.ToArray();

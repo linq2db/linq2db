@@ -52,6 +52,8 @@ namespace LinqToDB.SqlProvider
 				}
 			);
 
+			statement = OptimizeStatement(statement, evaluationContext);
+
 			statement.WalkQueries(
 				selectQuery =>
 				{
@@ -85,8 +87,6 @@ namespace LinqToDB.SqlProvider
 				// Do it again after JOIN Optimization
 				FinalizeCte(statement);
 			}
-
-			statement = OptimizeStatement(statement, evaluationContext);
 
 			// provider specific query correction
 			statement = TransformStatementMutable(statement);
@@ -1193,6 +1193,35 @@ namespace LinqToDB.SqlProvider
 					if (condition.IsNot && condition.Predicate is IInvertibleElement invertibleElement)
 					{
 						return new SqlCondition(false, (ISqlPredicate)invertibleElement.Invert(), condition.IsOr);
+					}
+
+					break;
+				}
+
+				case QueryElementType.GroupByClause:
+				{
+					var groupBy = (SqlGroupByClause)element;
+					if (groupBy.Items.Count > 0)
+					{
+						List<ISqlExpression>? items = null;
+						var processed = new HashSet<ISqlExpression>();
+						for (int i = 0; i < groupBy.Items.Count; i++)
+						{
+							var item = groupBy.Items[i];
+							if (!processed.Add(item) || item.ElementType.In(QueryElementType.SqlValue, QueryElementType.SqlParameter))
+							{
+								items ??= groupBy.Items.Take(i).ToList();
+							}
+							else
+							{
+								items?.Add(item);
+							}
+						}
+
+						if (items != null)
+						{
+							return new SqlGroupByClause(groupBy.GroupingType, items);
+						}
 					}
 
 					break;

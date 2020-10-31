@@ -131,12 +131,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var groupSql = builder.ConvertExpressions(key, keySelector.Body.Unwrap(), ConvertFlags.Key, null);
 
-				var allowed = groupSql.Where(s =>
-				{
-					var underlying = QueryHelper.GetUnderlyingExpression(s.Sql);
-					return underlying != null &&
-					       underlying.ElementType.NotIn(QueryElementType.SqlValue, QueryElementType.SqlParameter);
-				});
+				var allowed = groupSql.Where(s => s.Sql.ElementType.NotIn(QueryElementType.SqlValue, QueryElementType.SqlParameter));
 
 				foreach (var sql in allowed)
 					sequence.SelectQuery.GroupBy.Expr(sql.Sql);
@@ -728,13 +723,15 @@ namespace LinqToDB.Linq.Builder
 			{
 				var expr = SelectQuery.Select.Columns[index].Expression;
 
-				//if (!SelectQuery.GroupBy.EnumItems().Any(_ => QueryHelper.ContainsElement(expr, _)))
-				if (!SelectQuery.GroupBy.EnumItems().Any(_ => ReferenceEquals(_, expr) || (expr is SqlColumn column && ReferenceEquals(_, column.Expression))))
+				if (!SelectQuery.GroupBy.EnumItems().Any(_ => expr.Equals(_)))
 				{
-					if (SelectQuery.GroupBy.GroupingType == GroupingType.GroupBySets)
-						SelectQuery.GroupBy.Items.Add(new SqlGroupingSet(new[]{expr}));
-					else
-						SelectQuery.GroupBy.Items.Add(expr);
+					if (expr?.ElementType.In(QueryElementType.SqlValue, QueryElementType.SqlParameter) == false)
+					{
+						if (SelectQuery.GroupBy.GroupingType == GroupingType.GroupBySets)
+							SelectQuery.GroupBy.Items.Add(new SqlGroupingSet(new[] {expr}));
+						else
+							SelectQuery.GroupBy.Items.Add(expr);
+					}
 				}
 
 				return base.ConvertToParentIndex(index, this);

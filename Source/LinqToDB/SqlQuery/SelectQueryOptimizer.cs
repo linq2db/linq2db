@@ -866,7 +866,7 @@ namespace LinqToDB.SqlQuery
 				var depends = QueryHelper.IsDependsOn(parentQuery.GroupBy, column, elementsToIgnore);
 				if (depends)
 					return true;
-				
+
 				if (expr.IsComplexExpression())
 				{
 					depends =
