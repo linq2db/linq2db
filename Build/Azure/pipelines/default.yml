@@ -5,11 +5,11 @@ variables:
   - name: build_configuration
     value: Azure
   - name: assemblyVersion
-    value: 3.1.5
+    value: 3.1.6
   - name: nugetVersion
-    value: 3.1.5
+    value: 3.1.6
   - name: nugetDevVersion
-    value: 3.1.5
+    value: 3.1.7
   - name: artifact_nugets
     value: nugets
   - name: artifact_linq2db_binaries
