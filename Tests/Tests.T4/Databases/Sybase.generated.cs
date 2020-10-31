@@ -110,7 +110,7 @@ namespace SybaseDataContext
 		/// <summary>
 		/// FK_Doctor_Person
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Doctor_Person", BackReferenceName="Doctor")]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="FK_Doctor_Person", BackReferenceName="Doctor")]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -182,7 +182,7 @@ namespace SybaseDataContext
 		/// <summary>
 		/// FK_Patient_Person
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Patient_Person", BackReferenceName="Patient")]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="FK_Patient_Person", BackReferenceName="Patient")]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -202,13 +202,13 @@ namespace SybaseDataContext
 		/// <summary>
 		/// FK_Doctor_Person_BackReference
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
 		/// FK_Patient_Person_BackReference
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
 		public Patient? Patient { get; set; }
 
 		#endregion
@@ -337,7 +337,7 @@ namespace SybaseDataContext
 		public static int AddIssue792Record(this TestDataDB dataConnection, out int? RETURN_VALUE)
 		{
 			var ret = dataConnection.ExecuteProc("[dbo].[AddIssue792Record]",
-				new DataParameter("RETURN_VALUE", null, DataType.Int32) { Direction = ParameterDirection.ReturnValue, Size = 10 });
+				new DataParameter("RETURN_VALUE", null, LinqToDB.DataType.Int32) { Direction = ParameterDirection.ReturnValue, Size = 10 });
 
 			RETURN_VALUE = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["RETURN_VALUE"]).Value);
 
@@ -351,7 +351,7 @@ namespace SybaseDataContext
 		public static IEnumerable<PersonSelectAllResult> PersonSelectAll(this TestDataDB dataConnection, out int? RETURN_VALUE)
 		{
 			var ret = dataConnection.QueryProc<PersonSelectAllResult>("[dbo].[Person_SelectAll]",
-				new DataParameter("RETURN_VALUE", null, DataType.Int32) { Direction = ParameterDirection.ReturnValue, Size = 10 }).ToList();
+				new DataParameter("RETURN_VALUE", null, LinqToDB.DataType.Int32) { Direction = ParameterDirection.ReturnValue, Size = 10 }).ToList();
 
 			RETURN_VALUE = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["RETURN_VALUE"]).Value);
 
