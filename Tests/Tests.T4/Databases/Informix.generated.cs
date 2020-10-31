@@ -20,7 +20,6 @@ namespace InformixDataContext
 	public partial class TestdataidsDB : LinqToDB.Data.DataConnection
 	{
 		public ITable<Alltype>           Alltypes           { get { return this.GetTable<Alltype>(); } }
-		public ITable<Blobclass>         Blobclasses        { get { return this.GetTable<Blobclass>(); } }
 		public ITable<Child>             Children           { get { return this.GetTable<Child>(); } }
 		public ITable<Doctor>            Doctors            { get { return this.GetTable<Doctor>(); } }
 		public ITable<Grandchild>        Grandchilds        { get { return this.GetTable<Grandchild>(); } }
@@ -80,13 +79,6 @@ namespace InformixDataContext
 		[Column("bytedatatype"),     Nullable            ] public byte[]?   Bytedatatype     { get; set; } // BYTE
 	}
 
-	[Table(Schema="informix", Name="blobclass")]
-	public partial class Blobclass
-	{
-		[Column("id"),        PrimaryKey,  NotNull] public int     Id        { get; set; } // INTEGER
-		[Column("blobvalue"),    Nullable         ] public byte[]? Blobvalue { get; set; } // BYTE
-	}
-
 	[Table(Schema="informix", Name="child")]
 	public partial class Child
 	{
@@ -105,7 +97,7 @@ namespace InformixDataContext
 		/// <summary>
 		/// FK_doctor_person
 		/// </summary>
-		[Association(ThisKey="Personid", OtherKey="Personid", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_doctor_person", BackReferenceName="Doctor")]
+		[Association(ThisKey="Personid", OtherKey="Personid", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="FK_doctor_person", BackReferenceName="Doctor")]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -170,7 +162,7 @@ namespace InformixDataContext
 		/// <summary>
 		/// FK_patient_person
 		/// </summary>
-		[Association(ThisKey="Personid", OtherKey="Personid", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_patient_person", BackReferenceName="Patient")]
+		[Association(ThisKey="Personid", OtherKey="Personid", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="FK_patient_person", BackReferenceName="Patient")]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -190,13 +182,13 @@ namespace InformixDataContext
 		/// <summary>
 		/// FK_doctor_person_BackReference
 		/// </summary>
-		[Association(ThisKey="Personid", OtherKey="Personid", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
+		[Association(ThisKey="Personid", OtherKey="Personid", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
 		/// FK_patient_person_BackReference
 		/// </summary>
-		[Association(ThisKey="Personid", OtherKey="Personid", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
+		[Association(ThisKey="Personid", OtherKey="Personid", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
 		public Patient? Patient { get; set; }
 
 		#endregion
@@ -225,13 +217,13 @@ namespace InformixDataContext
 		/// <summary>
 		/// FK_testfkunique_testunique_1
 		/// </summary>
-		[Association(ThisKey="Id3, Id4", OtherKey="Id3, Id4", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_testfkunique_testunique_1", BackReferenceName="FkTestfkuniqueTestunique1BackReferences")]
+		[Association(ThisKey="Id3, Id4", OtherKey="Id3, Id4", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_testfkunique_testunique_1", BackReferenceName="FkTestfkuniqueTestunique1BackReferences")]
 		public Testunique FkTestfkuniqueTestunique1 { get; set; } = null!;
 
 		/// <summary>
 		/// FK_testfkunique_testunique
 		/// </summary>
-		[Association(ThisKey="Id1, Id2", OtherKey="Id1, Id2", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_testfkunique_testunique", BackReferenceName="Testfkuniques")]
+		[Association(ThisKey="Id1, Id2", OtherKey="Id1, Id2", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_testfkunique_testunique", BackReferenceName="Testfkuniques")]
 		public Testunique Testunique { get; set; } = null!;
 
 		#endregion
@@ -304,13 +296,13 @@ namespace InformixDataContext
 		/// <summary>
 		/// FK_testfkunique_testunique_1_BackReference
 		/// </summary>
-		[Association(ThisKey="Id3, Id4", OtherKey="Id3, Id4", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="Id3, Id4", OtherKey="Id3, Id4", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 		public IEnumerable<Testfkunique> FkTestfkuniqueTestunique1BackReferences { get; set; } = null!;
 
 		/// <summary>
 		/// FK_testfkunique_testunique_BackReference
 		/// </summary>
-		[Association(ThisKey="Id1, Id2", OtherKey="Id1, Id2", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="Id1, Id2", OtherKey="Id1, Id2", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 		public IEnumerable<Testfkunique> Testfkuniques { get; set; } = null!;
 
 		#endregion
@@ -319,12 +311,6 @@ namespace InformixDataContext
 	public static partial class TableExtensions
 	{
 		public static Alltype Find(this ITable<Alltype> table, int Id)
-		{
-			return table.FirstOrDefault(t =>
-				t.Id == Id);
-		}
-
-		public static Blobclass Find(this ITable<Blobclass> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
