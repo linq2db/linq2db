@@ -29,6 +29,7 @@ namespace TestAzureSQL
 		public ITable<AllTypes2>                AllTypes2                { get { return this.GetTable<AllTypes2>(); } }
 		public ITable<Child>                    Children                 { get { return this.GetTable<Child>(); } }
 		public ITable<sys_DatabaseFirewallRule> DatabaseFirewallRules    { get { return this.GetTable<sys_DatabaseFirewallRule>(); } }
+		public ITable<DataType>                 DataTypes                { get { return this.GetTable<DataType>(); } }
 		public ITable<DecimalOverflow>          DecimalOverflows         { get { return this.GetTable<DecimalOverflow>(); } }
 		public ITable<Doctor>                   Doctors                  { get { return this.GetTable<Doctor>(); } }
 		public ITable<GrandChild>               GrandChildren            { get { return this.GetTable<GrandChild>(); } }
@@ -211,6 +212,12 @@ namespace TestAzureSQL
 		[Column("modify_date"),      NotNull ] public DateTime ModifyDate     { get; set; } // datetime
 	}
 
+	[Table(Schema="dbo", Name="DataType")]
+	public partial class DataType
+	{
+		[Column("id"), NotNull] public int Id { get; set; } // int
+	}
+
 	[Table(Schema="dbo", Name="DecimalOverflow")]
 	public partial class DecimalOverflow
 	{
@@ -232,7 +239,7 @@ namespace TestAzureSQL
 		/// <summary>
 		/// FK_Doctor_Person
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Doctor_Person", BackReferenceName="Doctor")]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="FK_Doctor_Person", BackReferenceName="Doctor")]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -273,7 +280,7 @@ namespace TestAzureSQL
 		/// <summary>
 		/// FK_Patient2_IndexTable_BackReference
 		/// </summary>
-		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
+		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
 		public IndexTable2? Patient { get; set; }
 
 		#endregion
@@ -290,7 +297,7 @@ namespace TestAzureSQL
 		/// <summary>
 		/// FK_Patient2_IndexTable
 		/// </summary>
-		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Patient2_IndexTable", BackReferenceName="Patient")]
+		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="FK_Patient2_IndexTable", BackReferenceName="Patient")]
 		public IndexTable Patient2IndexTable { get; set; } = null!;
 
 		#endregion
@@ -383,7 +390,7 @@ namespace TestAzureSQL
 		/// <summary>
 		/// FK_Patient_Person
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Patient_Person", BackReferenceName="Patient")]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="FK_Patient_Person", BackReferenceName="Patient")]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -403,13 +410,13 @@ namespace TestAzureSQL
 		/// <summary>
 		/// FK_Doctor_Person_BackReference
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
 		/// FK_Patient_Person_BackReference
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
 		public Patient? Patient { get; set; }
 
 		#endregion
@@ -514,19 +521,19 @@ namespace TestAzureSQL
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2_BackReference
 		/// </summary>
-		[Association(ThisKey="TestSchemaAID", OtherKey="TargetTestSchemaAId", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="TestSchemaAID", OtherKey="TargetTestSchemaAId", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 		public IEnumerable<TestSchema_TestSchemaB> FkTestSchemaTestSchemaBYTargetTestSchemaA2BackReferences { get; set; } = null!;
 
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA_BackReference
 		/// </summary>
-		[Association(ThisKey="TestSchemaAID", OtherKey="OriginTestSchemaAID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="TestSchemaAID", OtherKey="OriginTestSchemaAID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 		public IEnumerable<TestSchema_TestSchemaB> TestSchemaBYOriginTestSchemaA { get; set; } = null!;
 
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA_BackReference
 		/// </summary>
-		[Association(ThisKey="TestSchemaAID", OtherKey="TargetTestSchemaAID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="TestSchemaAID", OtherKey="TargetTestSchemaAID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 		public IEnumerable<TestSchema_TestSchemaB> TestSchemaBYTargetTestSchemaA { get; set; } = null!;
 
 		#endregion
@@ -545,19 +552,19 @@ namespace TestAzureSQL
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA
 		/// </summary>
-		[Association(ThisKey="TargetTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_TargetTestSchemaA", BackReferenceName="TestSchemaBYTargetTestSchemaA")]
+		[Association(ThisKey="TargetTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_TargetTestSchemaA", BackReferenceName="TestSchemaBYTargetTestSchemaA")]
 		public TestSchema_TestSchemaA FKTargetTestSchemaA { get; set; } = null!;
 
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA
 		/// </summary>
-		[Association(ThisKey="OriginTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_OriginTestSchemaA", BackReferenceName="TestSchemaBYOriginTestSchemaA")]
+		[Association(ThisKey="OriginTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_OriginTestSchemaA", BackReferenceName="TestSchemaBYOriginTestSchemaA")]
 		public TestSchema_TestSchemaA OriginTestSchemaA { get; set; } = null!;
 
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2
 		/// </summary>
-		[Association(ThisKey="TargetTestSchemaAId", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_TargetTestSchemaA2", BackReferenceName="FkTestSchemaTestSchemaBYTargetTestSchemaA2BackReferences")]
+		[Association(ThisKey="TargetTestSchemaAId", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_TargetTestSchemaA2", BackReferenceName="FkTestSchemaTestSchemaBYTargetTestSchemaA2BackReferences")]
 		public TestSchema_TestSchemaA TargetTestSchemaA { get; set; } = null!;
 
 		#endregion
@@ -580,19 +587,19 @@ namespace TestAzureSQL
 		/// <summary>
 		/// FK_TestSchemaY_TestSchemaX_BackReference
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 		public IEnumerable<TestSchemaY> TestSchemaY { get; set; } = null!;
 
 		/// <summary>
 		/// FK_TestSchemaY_OtherID_BackReference
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 		public IEnumerable<TestSchemaY> TestSchemaYOtherIds { get; set; } = null!;
 
 		/// <summary>
 		/// FK_TestSchemaY_ParentTestSchemaX_BackReference
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="ParentTestSchemaXID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="TestSchemaXID", OtherKey="ParentTestSchemaXID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 		public IEnumerable<TestSchemaY> TestSchemaYParentTestSchemaX { get; set; } = null!;
 
 		#endregion
@@ -610,19 +617,19 @@ namespace TestAzureSQL
 		/// <summary>
 		/// FK_TestSchemaY_OtherID
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchemaY_OtherID", BackReferenceName="TestSchemaYOtherIds")]
+		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchemaY_OtherID", BackReferenceName="TestSchemaYOtherIds")]
 		public TestSchemaX FkTestSchemaYOtherID { get; set; } = null!;
 
 		/// <summary>
 		/// FK_TestSchemaY_ParentTestSchemaX
 		/// </summary>
-		[Association(ThisKey="ParentTestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchemaY_ParentTestSchemaX", BackReferenceName="TestSchemaYParentTestSchemaX")]
+		[Association(ThisKey="ParentTestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchemaY_ParentTestSchemaX", BackReferenceName="TestSchemaYParentTestSchemaX")]
 		public TestSchemaX ParentTestSchemaX { get; set; } = null!;
 
 		/// <summary>
 		/// FK_TestSchemaY_TestSchemaX
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_TestSchemaY_TestSchemaX", BackReferenceName="TestSchemaY")]
+		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchemaY_TestSchemaX", BackReferenceName="TestSchemaY")]
 		public TestSchemaX TestSchemaX { get; set; } = null!;
 
 		#endregion
@@ -667,8 +674,8 @@ namespace TestAzureSQL
 		public static int ExecuteProcIntParameters(this Issue1733DB dataConnection, int? @input, ref int? @output)
 		{
 			var ret = dataConnection.ExecuteProc("[dbo].[ExecuteProcIntParameters]",
-				new DataParameter("@input",  @input,  DataType.Int32),
-				new DataParameter("@output", @output, DataType.Int32) { Direction = ParameterDirection.InputOutput });
+				new DataParameter("@input",  @input,  LinqToDB.DataType.Int32),
+				new DataParameter("@output", @output, LinqToDB.DataType.Int32) { Direction = ParameterDirection.InputOutput });
 
 			@output = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@output"]).Value);
 
@@ -695,8 +702,8 @@ namespace TestAzureSQL
 					Column1 = Converter.ChangeTypeTo<string>(dataReader.GetValue(0), ms),
 				},
 				"[dbo].[ExecuteProcStringParameters]",
-				new DataParameter("@input",  @input,  DataType.Int32),
-				new DataParameter("@output", @output, DataType.Int32) { Direction = ParameterDirection.InputOutput }).ToList();
+				new DataParameter("@input",  @input,  LinqToDB.DataType.Int32),
+				new DataParameter("@output", @output, LinqToDB.DataType.Int32) { Direction = ParameterDirection.InputOutput }).ToList();
 
 			@output = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@output"]).Value);
 
@@ -724,9 +731,9 @@ namespace TestAzureSQL
 		public static int OutRefEnumTest(this Issue1733DB dataConnection, string? @str, ref string? @outputStr, ref string? @inputOutputStr)
 		{
 			var ret = dataConnection.ExecuteProc("[dbo].[OutRefEnumTest]",
-				new DataParameter("@str",            @str,            DataType.VarChar),
-				new DataParameter("@outputStr",      @outputStr,      DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 },
-				new DataParameter("@inputOutputStr", @inputOutputStr, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
+				new DataParameter("@str",            @str,            LinqToDB.DataType.VarChar),
+				new DataParameter("@outputStr",      @outputStr,      LinqToDB.DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 },
+				new DataParameter("@inputOutputStr", @inputOutputStr, LinqToDB.DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
 
 			@outputStr      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["@outputStr"]).     Value);
 			@inputOutputStr = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["@inputOutputStr"]).Value);
@@ -741,12 +748,12 @@ namespace TestAzureSQL
 		public static int OutRefTest(this Issue1733DB dataConnection, int? @ID, ref int? @outputID, ref int? @inputOutputID, string? @str, ref string? @outputStr, ref string? @inputOutputStr)
 		{
 			var ret = dataConnection.ExecuteProc("[dbo].[OutRefTest]",
-				new DataParameter("@ID",             @ID,             DataType.Int32),
-				new DataParameter("@outputID",       @outputID,       DataType.Int32) { Direction = ParameterDirection.InputOutput },
-				new DataParameter("@inputOutputID",  @inputOutputID,  DataType.Int32) { Direction = ParameterDirection.InputOutput },
-				new DataParameter("@str",            @str,            DataType.VarChar),
-				new DataParameter("@outputStr",      @outputStr,      DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 },
-				new DataParameter("@inputOutputStr", @inputOutputStr, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
+				new DataParameter("@ID",             @ID,             LinqToDB.DataType.Int32),
+				new DataParameter("@outputID",       @outputID,       LinqToDB.DataType.Int32) { Direction = ParameterDirection.InputOutput },
+				new DataParameter("@inputOutputID",  @inputOutputID,  LinqToDB.DataType.Int32) { Direction = ParameterDirection.InputOutput },
+				new DataParameter("@str",            @str,            LinqToDB.DataType.VarChar),
+				new DataParameter("@outputStr",      @outputStr,      LinqToDB.DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 },
+				new DataParameter("@inputOutputStr", @inputOutputStr, LinqToDB.DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
 
 			@outputID       = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["@outputID"]).      Value);
 			@inputOutputID  = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["@inputOutputID"]). Value);
@@ -782,8 +789,8 @@ namespace TestAzureSQL
 		public static IEnumerable<PatientSelectByNameResult> PatientSelectByName(this Issue1733DB dataConnection, string? @firstName, string? @lastName)
 		{
 			return dataConnection.QueryProc<PatientSelectByNameResult>("[dbo].[Patient_SelectByName]",
-				new DataParameter("@firstName", @firstName, DataType.NVarChar),
-				new DataParameter("@lastName",  @lastName,  DataType.NVarChar));
+				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NVarChar),
+				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NVarChar));
 		}
 
 		public partial class PatientSelectByNameResult
@@ -803,7 +810,7 @@ namespace TestAzureSQL
 		public static int PersonDelete(this Issue1733DB dataConnection, int? @PersonID)
 		{
 			return dataConnection.ExecuteProc("[dbo].[Person_Delete]",
-				new DataParameter("@PersonID", @PersonID, DataType.Int32));
+				new DataParameter("@PersonID", @PersonID, LinqToDB.DataType.Int32));
 		}
 
 		#endregion
@@ -813,10 +820,10 @@ namespace TestAzureSQL
 		public static IEnumerable<PersonInsertResult> PersonInsert(this Issue1733DB dataConnection, string? @FirstName, string? @LastName, string? @MiddleName, char? @Gender)
 		{
 			return dataConnection.QueryProc<PersonInsertResult>("[dbo].[Person_Insert]",
-				new DataParameter("@FirstName",  @FirstName,  DataType.NVarChar),
-				new DataParameter("@LastName",   @LastName,   DataType.NVarChar),
-				new DataParameter("@MiddleName", @MiddleName, DataType.NVarChar),
-				new DataParameter("@Gender",     @Gender,     DataType.Char));
+				new DataParameter("@FirstName",  @FirstName,  LinqToDB.DataType.NVarChar),
+				new DataParameter("@LastName",   @LastName,   LinqToDB.DataType.NVarChar),
+				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NVarChar),
+				new DataParameter("@Gender",     @Gender,     LinqToDB.DataType.Char));
 		}
 
 		public partial class PersonInsertResult
@@ -831,11 +838,11 @@ namespace TestAzureSQL
 		public static int PersonInsertOutputParameter(this Issue1733DB dataConnection, string? @FirstName, string? @LastName, string? @MiddleName, char? @Gender, ref int? @PersonID)
 		{
 			var ret = dataConnection.ExecuteProc("[dbo].[Person_Insert_OutputParameter]",
-				new DataParameter("@FirstName", @FirstName, DataType.NVarChar),
-				new DataParameter("@LastName", @LastName, DataType.NVarChar),
-				new DataParameter("@MiddleName", @MiddleName, DataType.NVarChar),
-				new DataParameter("@Gender",   @Gender,   DataType.Char),
-				new DataParameter("@PersonID", @PersonID, DataType.Int32) { Direction = ParameterDirection.InputOutput });
+				new DataParameter("@FirstName", @FirstName, LinqToDB.DataType.NVarChar),
+				new DataParameter("@LastName", @LastName, LinqToDB.DataType.NVarChar),
+				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NVarChar),
+				new DataParameter("@Gender",   @Gender,   LinqToDB.DataType.Char),
+				new DataParameter("@PersonID", @PersonID, LinqToDB.DataType.Int32) { Direction = ParameterDirection.InputOutput });
 
 			@PersonID = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@PersonID"]).Value);
 
@@ -858,7 +865,7 @@ namespace TestAzureSQL
 		public static IEnumerable<Person> PersonSelectByKey(this Issue1733DB dataConnection, int? @id)
 		{
 			return dataConnection.QueryProc<Person>("[dbo].[Person_SelectByKey]",
-				new DataParameter("@id", @id, DataType.Int32));
+				new DataParameter("@id", @id, LinqToDB.DataType.Int32));
 		}
 
 		#endregion
@@ -868,7 +875,7 @@ namespace TestAzureSQL
 		public static IEnumerable<PersonSelectByKeyLowercaseResult> PersonSelectByKeyLowercase(this Issue1733DB dataConnection, int? @id)
 		{
 			return dataConnection.QueryProc<PersonSelectByKeyLowercaseResult>("[dbo].[Person_SelectByKeyLowercase]",
-				new DataParameter("@id", @id, DataType.Int32));
+				new DataParameter("@id", @id, LinqToDB.DataType.Int32));
 		}
 
 		public partial class PersonSelectByKeyLowercaseResult
@@ -884,8 +891,8 @@ namespace TestAzureSQL
 		public static IEnumerable<Person> PersonSelectByName(this Issue1733DB dataConnection, string? @firstName, string? @lastName)
 		{
 			return dataConnection.QueryProc<Person>("[dbo].[Person_SelectByName]",
-				new DataParameter("@firstName", @firstName, DataType.NVarChar),
-				new DataParameter("@lastName",  @lastName,  DataType.NVarChar));
+				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NVarChar),
+				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NVarChar));
 		}
 
 		#endregion
@@ -895,8 +902,8 @@ namespace TestAzureSQL
 		public static IEnumerable<Person> PersonSelectListByName(this Issue1733DB dataConnection, string? @firstName, string? @lastName)
 		{
 			return dataConnection.QueryProc<Person>("[dbo].[Person_SelectListByName]",
-				new DataParameter("@firstName", @firstName, DataType.NVarChar),
-				new DataParameter("@lastName",  @lastName,  DataType.NVarChar));
+				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NVarChar),
+				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NVarChar));
 		}
 
 		#endregion
@@ -906,11 +913,11 @@ namespace TestAzureSQL
 		public static int PersonUpdate(this Issue1733DB dataConnection, int? @PersonID, string? @FirstName, string? @LastName, string? @MiddleName, char? @Gender)
 		{
 			return dataConnection.ExecuteProc("[dbo].[Person_Update]",
-				new DataParameter("@PersonID",   @PersonID,   DataType.Int32),
-				new DataParameter("@FirstName",  @FirstName,  DataType.NVarChar),
-				new DataParameter("@LastName",   @LastName,   DataType.NVarChar),
-				new DataParameter("@MiddleName", @MiddleName, DataType.NVarChar),
-				new DataParameter("@Gender",     @Gender,     DataType.Char));
+				new DataParameter("@PersonID",   @PersonID,   LinqToDB.DataType.Int32),
+				new DataParameter("@FirstName",  @FirstName,  LinqToDB.DataType.NVarChar),
+				new DataParameter("@LastName",   @LastName,   LinqToDB.DataType.NVarChar),
+				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NVarChar),
+				new DataParameter("@Gender",     @Gender,     LinqToDB.DataType.Char));
 		}
 
 		#endregion
@@ -920,10 +927,10 @@ namespace TestAzureSQL
 		public static IEnumerable<Person> QueryProcMultipleParameters(this Issue1733DB dataConnection, int? @input, ref int? @output1, ref int? @output2, ref int? @output3)
 		{
 			var ret = dataConnection.QueryProc<Person>("[dbo].[QueryProcMultipleParameters]",
-				new DataParameter("@input",   @input,   DataType.Int32),
-				new DataParameter("@output1", @output1, DataType.Int32) { Direction = ParameterDirection.InputOutput },
-				new DataParameter("@output2", @output2, DataType.Int32) { Direction = ParameterDirection.InputOutput },
-				new DataParameter("@output3", @output3, DataType.Int32) { Direction = ParameterDirection.InputOutput }).ToList();
+				new DataParameter("@input",   @input,   LinqToDB.DataType.Int32),
+				new DataParameter("@output1", @output1, LinqToDB.DataType.Int32) { Direction = ParameterDirection.InputOutput },
+				new DataParameter("@output2", @output2, LinqToDB.DataType.Int32) { Direction = ParameterDirection.InputOutput },
+				new DataParameter("@output3", @output3, LinqToDB.DataType.Int32) { Direction = ParameterDirection.InputOutput }).ToList();
 
 			@output1 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@output1"]).Value);
 			@output2 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@output2"]).Value);
@@ -939,9 +946,9 @@ namespace TestAzureSQL
 		public static IEnumerable<Person> QueryProcParameters(this Issue1733DB dataConnection, int? @input, ref int? @output1, ref int? @output2)
 		{
 			var ret = dataConnection.QueryProc<Person>("[dbo].[QueryProcParameters]",
-				new DataParameter("@input",   @input,   DataType.Int32),
-				new DataParameter("@output1", @output1, DataType.Int32) { Direction = ParameterDirection.InputOutput },
-				new DataParameter("@output2", @output2, DataType.Int32) { Direction = ParameterDirection.InputOutput }).ToList();
+				new DataParameter("@input",   @input,   LinqToDB.DataType.Int32),
+				new DataParameter("@output1", @output1, LinqToDB.DataType.Int32) { Direction = ParameterDirection.InputOutput },
+				new DataParameter("@output2", @output2, LinqToDB.DataType.Int32) { Direction = ParameterDirection.InputOutput }).ToList();
 
 			@output1 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@output1"]).Value);
 			@output2 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@output2"]).Value);
@@ -977,7 +984,7 @@ namespace TestAzureSQL
 		public static IEnumerable<TableTypeTestProcResult> TableTypeTestProc(this Issue1733DB dataConnection, DataTable? @table)
 		{
 			return dataConnection.QueryProc<TableTypeTestProcResult>("[dbo].[TableTypeTestProc]",
-				new DataParameter("@table", @table, DataType.Structured){ DbType = "[dbo].[TestTableType]" });
+				new DataParameter("@table", @table, LinqToDB.DataType.Structured){ DbType = "[dbo].[TestTableType]" });
 		}
 
 		public partial class TableTypeTestProcResult
@@ -1014,7 +1021,7 @@ namespace TestAzureSQL
 		public static IEnumerable<VariableResultsResult> VariableResults(this Issue1733DB dataConnection, bool? @ReturnFullRow)
 		{
 			return dataConnection.QueryProc<VariableResultsResult>("[dbo].[VariableResults]",
-				new DataParameter("@ReturnFullRow", @ReturnFullRow, DataType.Boolean));
+				new DataParameter("@ReturnFullRow", @ReturnFullRow, LinqToDB.DataType.Boolean));
 		}
 
 		public partial class VariableResultsResult

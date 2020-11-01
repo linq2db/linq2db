@@ -273,9 +273,7 @@ void GenerateTypesFromMetadata()
 			: ToStringLiteral(c.ColumnName).Length)) ?? 0;
 		var dbTypeMaxLen   = t.Columns.Values.Max  (c => (int?)(c.ColumnType.Length)) ?? 0;
 		var dataTypeMaxLen = t.Columns.Values.Where(c => c.DataType != null).Max  (c => (int?)(c.DataType.Length)) ?? 0;
-		var nameConflict   = t.Columns.Values.Any  (c => c.MemberName == "DataType") ||
-		                        Tables.Values.Any  (tbl => tbl.TypeName == "DataType");
-		var dataTypePrefix = nameConflict ? "LinqToDB." : "";
+		var dataTypePrefix = "LinqToDB.";
 
 		foreach (var c in t.Columns.Values)
 		{
@@ -871,7 +869,7 @@ void GenerateTypesFromMetadata()
 
 				var maxLenSchema = inputParameters.Max(pr => (int?)pr.SchemaName.   Length) ?? 0;
 				var maxLenParam  = inputParameters.Max(pr => (int?)pr.ParameterName.Length) ?? 0;
-				var maxLenType   = inputParameters.Max(pr => (int?)("DataType." + pr.DataType).Length) ?? 0;
+				var maxLenType   = inputParameters.Max(pr => (int?)("LinqToDB.DataType." + pr.DataType).Length) ?? 0;
 
 				for (var idx = 0; idx < inOrOutputParameters.Count; idx++)
 				{
@@ -888,12 +886,12 @@ void GenerateTypesFromMetadata()
 							LenDiff(maxLenSchema, pr.SchemaName),
 							pr.ParameterName,
 							LenDiff(maxLenParam, pr.ParameterName),
-							"DataType." + pr.DataType,
+							"LinqToDB.DataType." + pr.DataType,
 							ToStringLiteral(pr.SchemaType));
 
 						if (pr.IsOut || pr.IsResult)
 						{
-							str += LenDiff(maxLenType, "DataType." + pr.DataType);
+							str += LenDiff(maxLenType, "LinqToDB.DataType." + pr.DataType);
 							str += " { Direction = " + (pr.IsIn ? "ParameterDirection.InputOutput" : (pr.IsResult ? "ParameterDirection.ReturnValue" : "ParameterDirection.Output"));
 
 							if (pr.Size != null && pr.Size.Value != 0)

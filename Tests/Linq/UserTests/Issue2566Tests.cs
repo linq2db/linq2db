@@ -29,13 +29,13 @@ namespace Tests.UserTests
 
 		public class AnredeAuswahlliste
 		{
-			public string Value { get; set; }
+			public string? Value { get; set; }
 
 			public const string Herr = "Herr";
 
 			public const string Frau = "Frau";
 			
-			public AnredeAuswahlliste(string value)
+			public AnredeAuswahlliste(string? value)
 			{
 				Value = value;
 			}
@@ -43,14 +43,24 @@ namespace Tests.UserTests
 			public static implicit operator AnredeAuswahlliste(string value)
 				=> new AnredeAuswahlliste(value);
 
-			public static implicit operator string(AnredeAuswahlliste auswahlliste)
+			public static implicit operator string?(AnredeAuswahlliste auswahlliste)
 				=> auswahlliste.Value;
 
-			public static bool operator ==(AnredeAuswahlliste leftSide, string rightSide)
+			public static bool operator ==(AnredeAuswahlliste? leftSide, string? rightSide)
 				=> leftSide?.Value == rightSide;
 
-			public static bool operator !=(AnredeAuswahlliste leftSide, string rightSide)
+			public static bool operator !=(AnredeAuswahlliste? leftSide, string? rightSide)
 				=> leftSide?.Value != rightSide;
+
+			public override bool Equals(object? obj)
+			{
+				return base.Equals(obj);
+			}
+
+			public override int GetHashCode()
+			{
+				return base.GetHashCode();
+			}
 		}
 
 		[Test]
@@ -77,7 +87,7 @@ namespace Tests.UserTests
 				Assert.That(simple.Count, Is.EqualTo(1));
 
 				var inList = dataClasses
-					.Where(m => m.Value.In<AnredeAuswahlliste>(AnredeAuswahlliste.Frau, AnredeAuswahlliste.Herr))
+					.Where(m => m.Value!.In<AnredeAuswahlliste>(AnredeAuswahlliste.Frau, AnredeAuswahlliste.Herr))
 					.ToList();
 
 				Assert.That(inList.Count, Is.EqualTo(2));
@@ -95,7 +105,7 @@ namespace Tests.UserTests
 
 			var ms = new MappingSchema();
 			var builder = ms.GetFluentMappingBuilder();
-			builder.Entity<DataClass>().Property(e => e.Value).HasConversion(v => v.Value, s => new AnredeAuswahlliste(s));
+			builder.Entity<DataClass>().Property(e => e.Value).HasConversion(v => v!.Value, s => new AnredeAuswahlliste(s));
 
 			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context, ms))
@@ -108,7 +118,7 @@ namespace Tests.UserTests
 				Assert.That(simple.Count, Is.EqualTo(1));
 
 				var inList = dataClasses
-					.Where(m => m.Value.In<AnredeAuswahlliste>(AnredeAuswahlliste.Frau, AnredeAuswahlliste.Herr))
+					.Where(m => m.Value!.In<AnredeAuswahlliste>(AnredeAuswahlliste.Frau, AnredeAuswahlliste.Herr))
 					.ToList();
 
 				Assert.That(inList.Count, Is.EqualTo(2));

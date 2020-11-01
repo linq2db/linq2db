@@ -350,7 +350,7 @@ namespace LinqToDB
 		{
 			if (source is ExpressionQuery<TSource> query)
 			{
-				var dic = new Dictionary<TKey,TElement>();
+				var dic = new Dictionary<TKey,TElement>(comparer);
 				await query.GetForEachAsync(item => dic.Add(keySelector(item), elementSelector(item)), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 				return dic;
 			}
