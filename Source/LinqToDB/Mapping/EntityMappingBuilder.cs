@@ -512,7 +512,7 @@ namespace LinqToDB.Mapping
 
 		/// <summary>
 		/// Sets linked server name.
-		/// See <see cref="LinqExtensions.IsTemporary{T}(ITable{T},bool)"/> method for support information per provider.
+		/// See <see cref="TableExtensions.IsTemporary{T}(ITable{T},bool)"/> method for support information per provider.
 		/// </summary>
 		/// <param name="isTemporary">Linked server name.</param>
 		/// <returns>Returns current fluent entity mapping builder.</returns>
@@ -523,7 +523,7 @@ namespace LinqToDB.Mapping
 
 		/// <summary>
 		/// Sets Table options.
-		/// See <see cref="LinqExtensions.TableOptions{T}(ITable{T},LinqToDB.TableOptions)"/> method for support information per provider.
+		/// See <see cref="TableExtensions.TableOptions{T}(ITable{T},LinqToDB.TableOptions)"/> method for support information per provider.
 		/// </summary>
 		/// <param name="tableOptions">Table options.</param>
 		/// <returns>Returns current fluent entity mapping builder.</returns>

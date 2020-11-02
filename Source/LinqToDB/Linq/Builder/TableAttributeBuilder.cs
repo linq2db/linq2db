@@ -14,26 +14,26 @@ namespace LinqToDB.Linq.Builder
 				nameof(LinqExtensions.ServerName),
 				nameof(LinqExtensions.DatabaseName),
 				nameof(LinqExtensions.SchemaName),
-				nameof(LinqExtensions.IsTemporary),
-				nameof(LinqExtensions.TableOptions));
+				nameof(TableExtensions.IsTemporary),
+				nameof(TableExtensions.TableOptions));
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			var table    = (TableBuilder.TableContext)sequence;
-			var value    = methodCall.Arguments.Count == 1 && methodCall.Method.Name == nameof(LinqExtensions.IsTemporary) ?
+			var value    = methodCall.Arguments.Count == 1 && methodCall.Method.Name == nameof(TableExtensions.IsTemporary) ?
 				true :
 				methodCall.Arguments[1].EvaluateExpression();
 
 			switch (methodCall.Method.Name)
 			{
-				case nameof(LinqExtensions.TableName)    : table.SqlTable.PhysicalName = (string?)     value!; break;
-				case nameof(LinqExtensions.ServerName)   : table.SqlTable.Server       = (string?)     value;  break;
-				case nameof(LinqExtensions.DatabaseName) : table.SqlTable.Database     = (string?)     value;  break;
-				case nameof(LinqExtensions.SchemaName)   : table.SqlTable.Schema       = (string?)     value;  break;
-				case nameof(LinqExtensions.TableOptions) : table.SqlTable.TableOptions = (TableOptions)value!; break;
-				case nameof(LinqExtensions.IsTemporary)  : table.SqlTable.Set((bool)value!, TableOptions.IsTemporary); break;
+				case nameof(LinqExtensions.TableName)     : table.SqlTable.PhysicalName  = (string?)     value!; break;
+				case nameof(LinqExtensions.ServerName)    : table.SqlTable.Server        = (string?)     value;  break;
+				case nameof(LinqExtensions.DatabaseName)  : table.SqlTable.Database      = (string?)     value;  break;
+				case nameof(LinqExtensions.SchemaName)    : table.SqlTable.Schema        = (string?)     value;  break;
+				case nameof(TableExtensions.TableOptions) : table.SqlTable.TableOptions  = (TableOptions)value!; break;
+				case nameof(TableExtensions.IsTemporary)  : table.SqlTable.Set((bool)value!, TableOptions.IsTemporary); break;
 			}
 
 			return sequence;

@@ -57,7 +57,7 @@ namespace LinqToDB.Mapping
 		public string? Server                   { get; set; }
 
 		/// <summary>
-		/// Gets or sets IsTemporary flag. See <see cref="LinqExtensions.IsTemporary{T}(ITable{T}, bool)"/> method for support information per provider.
+		/// Gets or sets IsTemporary flag. See <see cref="TableExtensions.IsTemporary{T}(ITable{T}, bool)"/> method for support information per provider.
 		/// </summary>
 		public bool IsTemporary
 		{
