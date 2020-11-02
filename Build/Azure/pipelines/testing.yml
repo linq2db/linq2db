@@ -51,4 +51,6 @@ stages:
         db_filter: 'oracle'
       ${{ if eq(variables['Build.DefinitionName'], 'test-postgresql') }}:
         db_filter: 'postgresql'
+      ${{ if eq(variables['Build.DefinitionName'], 'test-mysql') }}:
+        db_filter: 'mysql'
 

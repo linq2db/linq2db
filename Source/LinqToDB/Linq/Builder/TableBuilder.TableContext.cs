@@ -352,23 +352,8 @@ namespace LinqToDB.Linq.Builder
 					var convertedExpression = Builder.ConvertExpressionTree(accessExpression);
 					var selectorLambda      = Expression.Lambda(convertedExpression, variable);
 
-					IBuildContext context;
-					var buildInfo = new BuildInfo(this, selectorLambda.Body, new SelectQuery());
-
-					if (Builder.IsSequence(buildInfo))
-					{
-						var saveParent    = Parent;
-						var expressionCtx = new ExpressionContext(Parent, this, selectorLambda);
-						buildInfo         = new BuildInfo(expressionCtx, selectorLambda.Body, new SelectQuery());
-						context           = Builder.BuildSequence(buildInfo);
-						Builder.ReplaceParent(expressionCtx, saveParent);
-					}
-					else
-					{
-						context = new SelectContext(Parent, selectorLambda, this);
-					}
-
-					var expression          = context.BuildExpression(null, 0, false);
+					var context    = new SelectContext(Parent, selectorLambda, this);
+					var expression = context.BuildExpression(null, 0, false);
 
 					expressions.Add(Expression.Assign(accessExpression, expression));
 				}
