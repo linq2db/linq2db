@@ -79,7 +79,6 @@ namespace LinqToDB.DataProvider.DB2
 			TableOptions.IsLocalTemporaryStructure  |
 			TableOptions.IsGlobalTemporaryStructure |
 			TableOptions.IsLocalTemporaryData       |
-			TableOptions.IsTransactionTemporaryData |
 			TableOptions.CreateIfNotExists          |
 			TableOptions.DropIfExists;
 
