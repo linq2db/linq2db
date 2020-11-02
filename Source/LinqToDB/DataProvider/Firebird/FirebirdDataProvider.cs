@@ -55,6 +55,7 @@ namespace LinqToDB.DataProvider.Firebird
 			TableOptions.IsTemporary                |
 			TableOptions.IsGlobalTemporaryStructure |
 			TableOptions.IsLocalTemporaryData       |
+			TableOptions.IsTransactionTemporaryData |
 			TableOptions.CreateIfNotExists          |
 			TableOptions.DropIfExists;
 
