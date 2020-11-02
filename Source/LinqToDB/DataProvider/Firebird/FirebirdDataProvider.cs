@@ -53,7 +53,6 @@ namespace LinqToDB.DataProvider.Firebird
 
 		public override TableOptions SupportedTableOptions =>
 			TableOptions.IsTemporary                |
-			TableOptions.IsLocalTemporaryStructure  |
 			TableOptions.IsGlobalTemporaryStructure |
 			TableOptions.IsLocalTemporaryData       |
 			TableOptions.CreateIfNotExists          |
