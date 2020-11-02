@@ -76,6 +76,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		public override TableOptions SupportedTableOptions =>
 			TableOptions.IsTemporary                |
+			TableOptions.IsLocalTemporaryStructure  |
 			TableOptions.IsGlobalTemporaryStructure |
 			TableOptions.IsLocalTemporaryData       |
 			TableOptions.IsTransactionTemporaryData |
