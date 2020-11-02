@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
@@ -20,8 +21,8 @@ namespace Tests.Linq
 			[Values(TableOptions.CheckExistence, TableOptions.NotSet)] TableOptions tableOptions)
 		{
 			using var db = (DataConnection)GetDataContext(context);
-			using var t1 = db.CreateTempTable("temp_table1", new[] { new { ID = 1, Value = 2 } }, tableOptions : TableOptions.IsTemporary | tableOptions);
-			using var t2 = t1.IntoTempTable  ("temp_table2", tableOptions : TableOptions.IsTemporary | tableOptions);
+			using var t1 = new[] { new { ID = 1, Value = 2 } }.IntoTempTable(db, "temp_table1", tableOptions : TableOptions.IsTemporary   | tableOptions);
+			using var t2 = t1.IntoTempTable("temp_table2", tableOptions : TableOptions.IsTemporary                                      | tableOptions);
 
 			var l1 = t1.ToArray();
 			var l2 = t2.ToArray();
@@ -34,6 +35,28 @@ namespace Tests.Linq
 
 			t1.Truncate();
 			t2.Truncate();
+		}
+
+		[Test]
+		public async Task IsTemporaryOptionAsyncTest(
+			[DataSources(false)] string context,
+			[Values(TableOptions.CheckExistence, TableOptions.NotSet)] TableOptions tableOptions)
+		{
+			using var db = (DataConnection)GetDataContext(context);
+			using var t1 = await new[] { new { ID = 1, Value = 2 } }.IntoTempTableAsync(db, "temp_table1", tableOptions : TableOptions.IsTemporary   | tableOptions);
+			using var t2 = await t1.IntoTempTableAsync("temp_table2", tableOptions : TableOptions.IsTemporary                                      | tableOptions);
+
+			var l1 = t1.ToArray();
+			var l2 = t2.ToArray();
+
+			Assert.That(l1, Is.EquivalentTo(l2));
+
+			await t1.BulkCopyAsync(new BulkCopyOptions { BulkCopyType = BulkCopyType.MultipleRows     }, new[] { new { ID = 2, Value = 3 } });
+			await t1.BulkCopyAsync(new BulkCopyOptions { BulkCopyType = BulkCopyType.RowByRow         }, new[] { new { ID = 3, Value = 3 } });
+			await t1.BulkCopyAsync(new BulkCopyOptions { BulkCopyType = BulkCopyType.ProviderSpecific }, new[] { new { ID = 4, Value = 5 } });
+
+			await t1.TruncateAsync();
+			await t2.TruncateAsync();
 		}
 
 		[UsedImplicitly]
@@ -189,6 +212,91 @@ namespace Tests.Linq
 			.ToList();
 		}
 
+		[Test]
+		public void IsTemporaryMethodTest2([DataSources(false, TestProvName.AllMySql)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db.DropTable<TestTable>(tableOptions:TableOptions.IsTemporary | TableOptions.DropIfExists);
+
+			using var table = db.CreateTempTable<TestTable>();
+
+			_ =
+			(
+				from t1 in db.GetTable<TestTable>().IsTemporary()
+				from t2 in db.GetTable<TestTable>().IsTemporary()
+				join t3 in table on t2.Id equals t3.Id
+				where t1.Id == t2.Id
+				select new { t1, t2, t3 }
+			)
+			.ToList();
+		}
+
+		[Test]
+		public void IsTemporaryMethodTest3([DataSources(false, TestProvName.AllMySql)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db.DropTable<TestTable>(tableOptions:TableOptions.IsTemporary | TableOptions.DropIfExists);
+
+			using var table = db.CreateTempTable<TestTable>();
+
+			_ =
+			(
+				from t1 in db.GetTable<TestTable>().IsTemporary(true)
+				from t2 in db.GetTable<TestTable>().IsTemporary(true)
+				join t3 in table on t2.Id equals t3.Id
+				where t1.Id == t2.Id
+				select new { t1, t2, t3 }
+			)
+			.ToList();
+		}
+
+		[Test]
+		public void TableOptionsMethodTest([DataSources(false, TestProvName.AllMySql)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db.DropTable<TestTable>(tableOptions:TableOptions.IsTemporary | TableOptions.DropIfExists);
+
+			using var table = db.CreateTempTable<TestTable>();
+
+			_ =
+			(
+				from t1 in db.GetTable<TestTable>().TableOptions(TableOptions.IsTemporary)
+				from t2 in db.GetTable<TestTable>().TableOptions(TableOptions.IsTemporary)
+				join t3 in table on t2.Id equals t3.Id
+				where t1.Id == t2.Id
+				select new { t1, t2, t3 }
+			)
+			.ToList();
+		}
+
+		[Test]
+		public void FluentMappingTest([DataSources(false, TestProvName.AllMySql)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db.MappingSchema.GetFluentMappingBuilder()
+				.Entity<TestTable>()
+				.HasIsTemporary()
+				.HasTableOptions(TableOptions.DropIfExists);
+
+			db.DropTable<TestTable>();
+
+			using var table = db.CreateTempTable<TestTable>();
+
+			_ =
+			(
+				from t1 in db.GetTable<TestTable>()
+				from t2 in db.GetTable<TestTable>()
+				join t3 in table on t2.Id equals t3.Id
+				where t1.Id == t2.Id
+				select new { t1, t2, t3 }
+			)
+			.ToList();
+		}
+
 		void TestTableOptions(string context, TableOptions tableOptions)
 		{
 			using var db    = GetDataContext(context);
@@ -200,14 +308,14 @@ namespace Tests.Linq
 			[IncludeDataSources(ProviderName.DB2)] string context,
 			[Values(
 				TableOptions.IsTemporary,
-				TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData,
+				TableOptions.IsTemporary |                                           TableOptions.IsLocalTemporaryData,
 				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure,
-				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData,
-				                                                                    TableOptions.IsLocalTemporaryData,
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure  | TableOptions.IsLocalTemporaryData,
+				                                                                     TableOptions.IsLocalTemporaryData,
 				                           TableOptions.IsLocalTemporaryStructure,
-				                           TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData,
-				TableOptions.IsGlobalTemporaryStructure,
-				TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData)]
+				                           TableOptions.IsLocalTemporaryStructure  | TableOptions.IsLocalTemporaryData,
+				                           TableOptions.IsGlobalTemporaryStructure,
+				                           TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData)]
 			TableOptions tableOptions)
 		{
 			TestTableOptions(context, tableOptions);
@@ -304,14 +412,14 @@ namespace Tests.Linq
 			[IncludeDataSources(TestProvName.AllSapHana)] string context,
 			[Values(
 				TableOptions.IsTemporary,
-				TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData,
+				TableOptions.IsTemporary |                                           TableOptions.IsLocalTemporaryData,
 				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure,
-				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData,
-				                                                                    TableOptions.IsLocalTemporaryData,
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure  | TableOptions.IsLocalTemporaryData,
+				                                                                     TableOptions.IsLocalTemporaryData,
 				                           TableOptions.IsLocalTemporaryStructure,
-				                           TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData,
-				TableOptions.IsGlobalTemporaryStructure,
-				TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData)]
+				                           TableOptions.IsLocalTemporaryStructure  | TableOptions.IsLocalTemporaryData,
+				                           TableOptions.IsGlobalTemporaryStructure,
+				                           TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData)]
 			TableOptions tableOptions)
 		{
 			TestTableOptions(context, tableOptions);
@@ -338,14 +446,14 @@ namespace Tests.Linq
 			[IncludeDataSources(TestProvName.AllSqlServer)] string context,
 			[Values(
 				TableOptions.IsTemporary,
-				TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData,
+				TableOptions.IsTemporary |                                           TableOptions.IsLocalTemporaryData,
 				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure,
-				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData,
-				                                                                    TableOptions.IsLocalTemporaryData,
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure  | TableOptions.IsLocalTemporaryData,
+				                                                                     TableOptions.IsLocalTemporaryData,
 				                           TableOptions.IsLocalTemporaryStructure,
-				                           TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData,
-				TableOptions.IsGlobalTemporaryStructure,
-				TableOptions.IsGlobalTemporaryStructure | TableOptions.IsGlobalTemporaryData)]
+				                           TableOptions.IsLocalTemporaryStructure  | TableOptions.IsLocalTemporaryData,
+				                           TableOptions.IsGlobalTemporaryStructure,
+				                           TableOptions.IsGlobalTemporaryStructure | TableOptions.IsGlobalTemporaryData)]
 			TableOptions tableOptions)
 		{
 			TestTableOptions(context, tableOptions);
@@ -356,14 +464,14 @@ namespace Tests.Linq
 			[IncludeDataSources(TestProvName.AllSybase)] string context,
 			[Values(
 				TableOptions.IsTemporary,
-				TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData,
+				TableOptions.IsTemporary |                                           TableOptions.IsLocalTemporaryData,
 				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure,
-				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData,
-				                                                                    TableOptions.IsLocalTemporaryData,
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure  | TableOptions.IsLocalTemporaryData,
+				                                                                     TableOptions.IsLocalTemporaryData,
 				                           TableOptions.IsLocalTemporaryStructure,
-				                           TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData,
-				TableOptions.IsGlobalTemporaryStructure,
-				TableOptions.IsGlobalTemporaryStructure | TableOptions.IsGlobalTemporaryData)]
+				                           TableOptions.IsLocalTemporaryStructure  | TableOptions.IsLocalTemporaryData,
+				                           TableOptions.IsGlobalTemporaryStructure,
+				                           TableOptions.IsGlobalTemporaryStructure | TableOptions.IsGlobalTemporaryData)]
 			TableOptions tableOptions)
 		{
 			TestTableOptions(context, tableOptions);

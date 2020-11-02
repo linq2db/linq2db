@@ -516,7 +516,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="isTemporary">Linked server name.</param>
 		/// <returns>Returns current fluent entity mapping builder.</returns>
-		public EntityMappingBuilder<TEntity> HasIsTemporary(bool isTemporary)
+		public EntityMappingBuilder<TEntity> HasIsTemporary(bool isTemporary = true)
 		{
 			return SetTable(a => a.IsTemporary = isTemporary);
 		}
@@ -529,7 +529,13 @@ namespace LinqToDB.Mapping
 		/// <returns>Returns current fluent entity mapping builder.</returns>
 		public EntityMappingBuilder<TEntity> HasTableOptions(TableOptions tableOptions)
 		{
-			return SetTable(a => a.TableOptions = tableOptions);
+			return SetTable(a =>
+			{
+				if ((tableOptions & TableOptions.None) != 0)
+					a.TableOptions = tableOptions;
+				else
+					a.TableOptions |= tableOptions;
+			});
 		}
 
 		/// <summary>

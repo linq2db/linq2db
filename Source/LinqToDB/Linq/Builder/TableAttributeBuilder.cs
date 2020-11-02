@@ -22,7 +22,9 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			var table    = (TableBuilder.TableContext)sequence;
-			var value    = methodCall.Arguments[1].EvaluateExpression();
+			var value    = methodCall.Arguments.Count == 1 && methodCall.Method.Name == nameof(LinqExtensions.IsTemporary) ?
+				true :
+				methodCall.Arguments[1].EvaluateExpression();
 
 			switch (methodCall.Method.Name)
 			{
