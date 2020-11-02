@@ -230,9 +230,9 @@
 			<DependentUpon>SapHana.tt</DependentUpon>
 		</Compile>
 		<Compile Update="Databases\SqlCe.generated.cs">
-			<DesignTime>True</DesignTime>
-			<AutoGen>True</AutoGen>
-			<DependentUpon>SqlCe.tt</DependentUpon>
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>SqlCe.tt</DependentUpon>
 		</Compile>
 		<Compile Update="Databases\SQLite.generated.cs">
 			<DesignTime>True</DesignTime>
@@ -250,9 +250,9 @@
 			<DependentUpon>SqlServer.2017.ProceduresFromSchema.tt</DependentUpon>
 		</Compile>
 		<Compile Update="Databases\SqlServer.generated.cs">
-			<DesignTime>True</DesignTime>
-			<AutoGen>True</AutoGen>
-			<DependentUpon>SqlServer.tt</DependentUpon>
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>SqlServer.tt</DependentUpon>
 		</Compile>
 		<Compile Update="Databases\SqlServer.MS.generated.cs">
 			<DesignTime>True</DesignTime>
@@ -260,9 +260,9 @@
 			<DependentUpon>SqlServer.MS.tt</DependentUpon>
 		</Compile>
 		<Compile Update="Databases\SqlServerAzure.generated.cs">
-			<DesignTime>True</DesignTime>
-			<AutoGen>True</AutoGen>
-			<DependentUpon>SqlServerAzure.tt</DependentUpon>
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>SqlServerAzure.tt</DependentUpon>
 		</Compile>
 		<Compile Update="Databases\Sybase.DataAction.generated.cs">
 			<DesignTime>True</DesignTime>

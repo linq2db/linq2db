@@ -761,13 +761,13 @@ namespace Tests.DataProvider
 				{
 					Assert.True(sql.Contains(") a_Owner ON")); // subquery alias
 					Assert.True(sql.Contains("Client cl")); // table alias
-					Assert.True(sql.Contains(") as cnt")); // column alias
+					Assert.True(sql.Contains(") as CountOfTCards")); // column alias
 				}
 				else
 				{
 					Assert.True(sql.Contains(") \"a_Owner\" ON")); // subquery alias
 					Assert.True(sql.Contains("\"Client\" \"cl\"")); // table alias
-					Assert.True(sql.Contains(") as \"cnt\"")); // column alias
+					Assert.True(sql.Contains(") as \"CountOfTCards\"")); // column alias
 				}
 			}
 			Query.ClearCaches();
