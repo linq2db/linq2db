@@ -12,7 +12,7 @@ namespace LinqToDB.Mapping
 	public class TableAttribute : Attribute
 	{
 		/// <summary>
-		/// Creates new table mapping atteribute.
+		/// Creates new table mapping attribute.
 		/// </summary>
 		public TableAttribute()
 		{
@@ -20,7 +20,7 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
-		/// Creates new table mapping atteribute.
+		/// Creates new table mapping attribute.
 		/// </summary>
 		/// <param name="tableName">Name of mapped table or view in database.</param>
 		public TableAttribute(string tableName) : this()
@@ -57,6 +57,26 @@ namespace LinqToDB.Mapping
 		public string? Server                   { get; set; }
 
 		/// <summary>
+		/// Gets or sets IsTemporary flag. See <see cref="TableExtensions.IsTemporary{T}(ITable{T}, bool)"/> method for support information per provider.
+		/// </summary>
+		public bool IsTemporary
+		{
+			get => TableOptions.HasIsTemporary();
+			set
+			{
+				if (value)
+					TableOptions |= TableOptions.IsTemporary;
+				else
+					TableOptions &= ~TableOptions.IsTemporary;
+			}
+		}
+
+		/// <summary>
+		/// Gets or sets Table options. See <see cref="TableOptions"/> enum for support information per provider.
+		/// </summary>
+		public TableOptions TableOptions        { get; set; }
+
+		/// <summary>
 		/// Gets or sets column mapping rules for current class or interface.
 		/// If <c>true</c>, properties and fields should be marked with one of those attributes to be used for mapping:
 		/// - <see cref="ColumnAttribute"/>;
@@ -65,7 +85,7 @@ namespace LinqToDB.Mapping
 		/// - <see cref="ColumnAliasAttribute"/>.
 		/// Otherwise all supported members of scalar type will be used:
 		/// - public instance fields and properties;
-		/// - explicit interface implmentation properties.
+		/// - explicit interface implementation properties.
 		/// Also see <seealso cref="LinqToDB.Common.Configuration.IsStructIsScalarType"/> and <seealso cref="ScalarTypeAttribute"/>.
 		/// Default value: <c>true</c>.
 		/// </summary>

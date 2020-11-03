@@ -150,7 +150,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				if (options.MaxBatchSize.HasValue)
 					bc.BatchSize = options.MaxBatchSize.Value;
 
-				if (options.BulkCopyTimeout.HasValue) 
+				if (options.BulkCopyTimeout.HasValue)
 					bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
 				else if (Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout)
 					bc.BulkCopyTimeout = connection.ConnectionTimeout;
@@ -169,8 +169,8 @@ namespace LinqToDB.DataProvider.SqlServer
 						if (runAsync)
 							await bc.WriteToServerAsync(rd, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 						else
-							bc.WriteToServer(rd); 
-						return rd.Count; 
+							bc.WriteToServer(rd);
+						return rd.Count;
 					}).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 
@@ -226,7 +226,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					ret = await MultipleRowsCopy2Async(helper, source, "", cancellationToken)
 						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 					break;
-				default: 
+				default:
 					ret = await MultipleRowsCopy1Async(helper, source, cancellationToken)
 						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 					break;

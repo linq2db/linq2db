@@ -8,13 +8,13 @@
 		<OutputType>Exe</OutputType>
 		<MSBuildWarningsAsMessages>MSB3276</MSBuildWarningsAsMessages>
 	</PropertyGroup>
+
 	<ItemGroup>
 		<PackageReference Include="BenchmarkDotNet" Version="0.12.1" />
 		<PackageReference Include="Npgsql" Version="4.0.11" />
 		<PackageReference Include="System.Data.SqlClient" Version="4.8.2" />
-	</ItemGroup>
-	<ItemGroup>
-	  <Compile Update="TestClasses\ProviderMocks\MockDataReader.cs" />
-	  <Compile Update="TestClasses\ProviderMocks\MockDbCommand.cs" />
+
+		<Compile Update="TestClasses\ProviderMocks\MockDataReader.cs" />
+		<Compile Update="TestClasses\ProviderMocks\MockDbCommand.cs" />
 	</ItemGroup>
 </Project>

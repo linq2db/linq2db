@@ -2,16 +2,16 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace LinqToDB.DataProvider
 {
+	using Common;
 	using Data;
 	using Mapping;
-	using Common;
 	using SchemaProvider;
 	using SqlProvider;
-	using System.Threading.Tasks;
-	using System.Threading;
 
 	public interface IDataProvider
 	{
@@ -20,6 +20,7 @@ namespace LinqToDB.DataProvider
 		Type               DataReaderType        { get; }
 		MappingSchema      MappingSchema         { get; }
 		SqlProviderFlags   SqlProviderFlags      { get; }
+		TableOptions       SupportedTableOptions { get; }
 		IDbConnection      CreateConnection      (string connectionString);
 		ISqlBuilder        CreateSqlBuilder      (MappingSchema mappingSchema);
 		ISqlOptimizer      GetSqlOptimizer       ();
@@ -53,7 +54,7 @@ namespace LinqToDB.DataProvider
 		ISchemaProvider    GetSchemaProvider     ();
 
 		BulkCopyRowsCopied       BulkCopy<T>     (ITable<T> table, BulkCopyOptions options, IEnumerable<T> source);
-		
+
 		Task<BulkCopyRowsCopied> BulkCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken);
 
 #if !NETFRAMEWORK

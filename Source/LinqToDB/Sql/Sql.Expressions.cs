@@ -129,20 +129,21 @@ namespace LinqToDB
 				var sqlBuilder = dataContext.CreateSqlProvider();
 				result         = sqlBuilder.ConvertInline(result, ConvertType.NameToQueryField);
 			}
-				
+
 			return result;
 		}
 
 		[Flags]
 		public enum TableQualification
 		{
-			None = 0x0,
-			TableName    = 0x1,
-			DatabaseName = 0x2,
-			SchemaName   = 0x4,
-			ServerName   = 0x8,
+			None         = 0b00000000,
+			TableName    = 0b00000001,
+			DatabaseName = 0b00000010,
+			SchemaName   = 0b00000100,
+			ServerName   = 0b00001000,
+			TableOptions = 0b00010000,
 
-			Full = TableName | DatabaseName | SchemaName | ServerName
+			Full         = TableName | DatabaseName | SchemaName | ServerName | TableOptions
 		}
 
 		[Sql.Extension("", BuilderType = typeof(FieldNameBuilderDirect), ServerSideOnly = false)]
@@ -166,7 +167,7 @@ namespace LinqToDB
 			{
 				return new SqlField(column);
 			}
-				
+
 			return new SqlExpression(column.ColumnName, Precedence.Primary);
 		}
 
@@ -216,8 +217,7 @@ namespace LinqToDB
 
 		private static ColumnDescriptor[] GetColumnsFromExpression(Type entityType, LambdaExpression fieldExpr, MappingSchema mappingSchema)
 		{
-			var init = fieldExpr.Body as NewExpression;
-			if (init == null)
+			if (!(fieldExpr.Body is NewExpression init))
 				return new[] { GetColumnFromExpression(entityType, fieldExpr, mappingSchema) };
 
 			if (init.Arguments == null || init.Arguments.Count == 0)
@@ -283,10 +283,11 @@ namespace LinqToDB
 
 		private abstract class TableHelper
 		{
-			public abstract string? ServerName   { get; }
-			public abstract string? DatabaseName { get; }
-			public abstract string? SchemaName   { get; }
-			public abstract string TableName    { get; }
+			public abstract string?      ServerName   { get; }
+			public abstract string?      DatabaseName { get; }
+			public abstract string?      SchemaName   { get; }
+			public abstract string       TableName    { get; }
+			public abstract TableOptions TableOptions { get; }
 		}
 
 		private class TableHelper<T> : TableHelper
@@ -298,12 +299,12 @@ namespace LinqToDB
 				_table = table;
 			}
 
-			public override string? ServerName   => _table.ServerName;
-			public override string? DatabaseName => _table.DatabaseName;
-			public override string? SchemaName   => _table.SchemaName;
-			public override string  TableName    => _table.TableName;
+			public override string?      ServerName   => _table.ServerName;
+			public override string?      DatabaseName => _table.DatabaseName;
+			public override string?      SchemaName   => _table.SchemaName;
+			public override string       TableName    => _table.TableName;
+			public override TableOptions TableOptions => _table.TableOptions;
 		}
-
 
 		private class TableNameBuilderDirect : IExtensionCallBuilder
 		{
@@ -322,11 +323,14 @@ namespace LinqToDB
 						builder.ResultExpression = new SqlExpression(typeof(string), tableHelper.TableName, Precedence.Primary);
 					else
 					{
-						var table = new SqlTable(tableType);
-						table.PhysicalName = tableHelper.TableName;
-						table.Server       = (qualified & TableQualification.ServerName)   != 0 ? tableHelper.ServerName   : null;
-						table.Database     = (qualified & TableQualification.DatabaseName) != 0 ? tableHelper.DatabaseName : null;
-						table.Schema       = (qualified & TableQualification.SchemaName)   != 0 ? tableHelper.SchemaName   : null;
+						var table = new SqlTable(tableType)
+						{
+							PhysicalName = tableHelper.TableName,
+							Server       = (qualified & TableQualification.ServerName)   != 0 ? tableHelper.ServerName   : null,
+							Database     = (qualified & TableQualification.DatabaseName) != 0 ? tableHelper.DatabaseName : null,
+							Schema       = (qualified & TableQualification.SchemaName)   != 0 ? tableHelper.SchemaName   : null,
+							TableOptions = (qualified & TableQualification.TableOptions) != 0 ? tableHelper.TableOptions : TableOptions.NotSet,
+						};
 
 						builder.ResultExpression = table;
 					}
@@ -338,11 +342,12 @@ namespace LinqToDB
 					if (qualified != TableQualification.None)
 					{
 						var sb = new StringBuilder();
-						builder.DataContext.CreateSqlProvider().ConvertTableName(sb, 
+						builder.DataContext.CreateSqlProvider().ConvertTableName(sb,
 							(qualified & TableQualification.ServerName)   != 0 ? tableHelper.ServerName   : null,
 							(qualified & TableQualification.DatabaseName) != 0 ? tableHelper.DatabaseName : null,
 							(qualified & TableQualification.SchemaName)   != 0 ? tableHelper.SchemaName   : null,
-							name);
+							name,
+							(qualified & TableQualification.TableOptions) != 0 ? tableHelper.TableOptions : TableOptions.NotSet);
 						name = sb.ToString();
 					}
 
@@ -355,18 +360,14 @@ namespace LinqToDB
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
-				var tableExpr      = builder.GetExpression(0);
-				SqlTable? sqlTable = null;
-				if (tableExpr is SqlTable t)
-					sqlTable = t;
-				else if (tableExpr is SqlField field)
+				var tableExpr = builder.GetExpression(0);
+				var sqlTable  = tableExpr switch
 				{
-					sqlTable = field.Table as SqlTable;
-				}
-				else if (tableExpr is SqlColumn column)
-				{
-					sqlTable = QueryHelper.GetUnderlyingField(column)?.Table as SqlTable;
-				}
+					SqlTable  t      => t,
+					SqlField  field  => field.Table as SqlTable,
+					SqlColumn column => QueryHelper.GetUnderlyingField(column)?.Table as SqlTable,
+					_                => null
+				};
 
 				//TODO: review, maybe we need here TableSource
 				if (sqlTable == null)
@@ -380,11 +381,14 @@ namespace LinqToDB
 				if (qualified != TableQualification.None)
 				{
 					var sb = new StringBuilder();
-					builder.DataContext.CreateSqlProvider().ConvertTableName(sb, 
-						(qualified & TableQualification.ServerName)   != 0 ? sqlTable.Server   : null,
-						(qualified & TableQualification.DatabaseName) != 0 ? sqlTable.Database : null,
-						(qualified & TableQualification.SchemaName)   != 0 ? sqlTable.Schema   : null,
-						sqlTable.PhysicalName!);
+
+					builder.DataContext.CreateSqlProvider().ConvertTableName(sb,
+						(qualified & TableQualification.ServerName)   != 0 ? sqlTable.Server       : null,
+						(qualified & TableQualification.DatabaseName) != 0 ? sqlTable.Database     : null,
+						(qualified & TableQualification.SchemaName)   != 0 ? sqlTable.Schema       : null,
+						sqlTable.PhysicalName!,
+						(qualified & TableQualification.TableOptions) != 0 ? sqlTable.TableOptions : TableOptions.NotSet);
+
 					name = sb.ToString();
 				}
 
@@ -483,6 +487,7 @@ namespace LinqToDB
 		public static string TableName<T>([NoEnumeration] ITable<T> table, [SqlQueryDependent] TableQualification qualification)
 		{
 			var result = table.TableName;
+
 			if (qualification != TableQualification.None)
 			{
 				var dataContext = GetDataContext(table);
@@ -491,14 +496,15 @@ namespace LinqToDB
 
 				var sqlBuilder = dataContext.CreateSqlProvider();
 				var sb = new StringBuilder();
-				sqlBuilder.ConvertTableName(sb, 
+				sqlBuilder.ConvertTableName(sb,
 					(qualification & TableQualification.ServerName)   != 0 ? table.ServerName   : null,
 					(qualification & TableQualification.DatabaseName) != 0 ? table.DatabaseName : null,
 					(qualification & TableQualification.SchemaName)   != 0 ? table.SchemaName   : null,
-					table.TableName);
+					table.TableName,
+					(qualification & TableQualification.TableOptions) != 0 ? table.TableOptions : TableOptions.NotSet);
 				result = sb.ToString();
 			}
-				
+
 			return result;
 		}
 
@@ -532,12 +538,15 @@ namespace LinqToDB
 					throw new LinqToDBException("Can not provide information for qualified table name");
 
 				var sqlBuilder = dataContext.CreateSqlProvider();
-				var sb = new StringBuilder();
+				var sb         = new StringBuilder();
+
 				sqlBuilder.ConvertTableName(sb,
 					(qualification & TableQualification.ServerName)   != 0 ? table.ServerName   : null,
 					(qualification & TableQualification.DatabaseName) != 0 ? table.DatabaseName : null,
 					(qualification & TableQualification.SchemaName)   != 0 ? table.SchemaName   : null,
-					table.TableName);
+					table.TableName,
+					(qualification & TableQualification.TableOptions) != 0 ? table.TableOptions : TableOptions.NotSet);
+
 				name = sb.ToString();
 			}
 
@@ -560,7 +569,7 @@ namespace LinqToDB
 		/// Useful for specifying place of alias when using <see cref="DataExtensions.FromSql{TEntity}(IDataContext, RawSqlString, object?[])"/> method.
 		/// </summary>
 		/// <remarks>
-		///		If <see cref="DataExtensions.FromSql{TEntity}(IDataContext, RawSqlString, object?[])"/> contains at least one <see cref="AliasExpr"/>, 
+		///		If <see cref="DataExtensions.FromSql{TEntity}(IDataContext, RawSqlString, object?[])"/> contains at least one <see cref="AliasExpr"/>,
 		///		automatic alias for the query will be not generated.
 		/// </remarks>
 		/// <returns>ISqlExpression which is Alias Placeholder.</returns>

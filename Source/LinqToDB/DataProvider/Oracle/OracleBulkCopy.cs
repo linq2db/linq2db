@@ -61,10 +61,10 @@ namespace LinqToDB.DataProvider.Oracle
 							};
 						}
 
-						if (options.MaxBatchSize.HasValue)    
+						if (options.MaxBatchSize.HasValue)
 							bc.BatchSize = options.MaxBatchSize.Value;
 
-						if (options.BulkCopyTimeout.HasValue) 
+						if (options.BulkCopyTimeout.HasValue)
 							bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
 						else if (Configuration.Data.BulkCopyUseConnectionCommandTimeout)
 							bc.BulkCopyTimeout = connection.ConnectionTimeout;
@@ -91,7 +91,7 @@ namespace LinqToDB.DataProvider.Oracle
 					return rc;
 				}
 			}
-			
+
 
 			return MultipleRowsCopy(table, options, source);
 		}

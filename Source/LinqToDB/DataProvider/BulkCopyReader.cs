@@ -46,10 +46,10 @@ namespace LinqToDB.DataProvider
 		protected override object Current
 			=> (_enumerator != null ? _enumerator.Current : _asyncEnumerator!.Current)!;
 #else
-		protected override bool MoveNext() 
+		protected override bool MoveNext()
 			=> _enumerator!.MoveNext();
 
-		protected override object Current 
+		protected override object Current
 			=> _enumerator!.Current!;
 #endif
 
@@ -229,7 +229,8 @@ namespace LinqToDB.DataProvider
 			for (var i = 0; i < _columns.Count; ++i)
 			{
 				var columnDescriptor = _columns[i];
-				var row = table.NewRow();
+				var row              = table.NewRow();
+
 				row[SchemaTableColumn.ColumnName]              = columnDescriptor.ColumnName;
 				row[SchemaTableColumn.DataType]                = _dataConnection.DataProvider.ConvertParameterType(columnDescriptor.MemberType, _columnTypes[i]);
 				row[SchemaTableColumn.IsKey]                   = columnDescriptor.IsPrimaryKey;
@@ -237,11 +238,13 @@ namespace LinqToDB.DataProvider
 				row[SchemaTableColumn.AllowDBNull]             = columnDescriptor.CanBeNull;
 				//length cannot be null(DBNull) or 0
 				row[SchemaTableColumn.ColumnSize]              =
-					columnDescriptor.Length.HasValue && columnDescriptor.Length.Value > 0 ?
+					columnDescriptor.Length.HasValue && columnDescriptor.Length > 0 ?
 						columnDescriptor.Length.Value : 0x7FFFFFFF;
-				if (columnDescriptor.Precision.HasValue)
+
+				if (columnDescriptor.Precision != null)
 					row[SchemaTableColumn.NumericPrecision] = (short)columnDescriptor.Precision.Value;
-				if (columnDescriptor.Scale.HasValue)
+
+				if (columnDescriptor.Scale != null)
 					row[SchemaTableColumn.NumericScale]     = (short)columnDescriptor.Scale.Value;
 
 				table.Rows.Add(row);

@@ -16,12 +16,16 @@ namespace LinqToDB.Linq
 		public static class Update<T>
 		{
 			static Query<int>? CreateQuery(
-				IDataContext dataContext,
-				EntityDescriptor descriptor,
-				T obj,
+				IDataContext           dataContext,
+				EntityDescriptor       descriptor,
+				T                      obj,
 				UpdateColumnFilter<T>? columnFilter,
-				string? tableName, string? serverName, string? databaseName, string? schemaName,
-				Type type)
+				string?                tableName,
+				string?                serverName,
+				string?                databaseName,
+				string?                schemaName,
+				TableOptions           tableOptions,
+				Type                   type)
 			{
 				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
 
@@ -29,6 +33,7 @@ namespace LinqToDB.Linq
 				if (serverName   != null) sqlTable.Server       = serverName;
 				if (databaseName != null) sqlTable.Database     = databaseName;
 				if (schemaName   != null) sqlTable.Schema       = schemaName;
+				if (tableOptions.IsSet()) sqlTable.TableOptions = tableOptions;
 
 				var sqlQuery = new SelectQuery();
 				var updateStatement = new SqlUpdateStatement(sqlQuery);
@@ -86,8 +91,14 @@ namespace LinqToDB.Linq
 			}
 
 			public static int Query(
-				IDataContext dataContext, T obj, UpdateColumnFilter<T>? columnFilter,
-				string? tableName, string? serverName, string? databaseName, string? schemaName)
+				IDataContext           dataContext,
+				T                      obj,
+				UpdateColumnFilter<T>? columnFilter,
+				string?                tableName,
+				string?                serverName,
+				string?                databaseName,
+				string?                schemaName,
+				TableOptions           tableOptions)
 			{
 				if (Equals(default(T), obj))
 					return 0;
@@ -95,22 +106,28 @@ namespace LinqToDB.Linq
 				var type = GetType<T>(obj!, dataContext);
 				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type);
 				var ei               = Configuration.Linq.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update) || columnFilter != null
-					? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schemaName, type)
+					? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, type)
 					: Cache<T>.QueryCache.GetOrCreate(
-						new { Operation = 'U', dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, columnFilter, tableName, schemaName, databaseName, serverName, type },
+						new { Operation = 'U', dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, columnFilter, tableName, schemaName, databaseName, serverName, tableOptions, type },
 						o =>
 						{
 							o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
-							return CreateQuery(dataContext, entityDescriptor, obj, null, tableName, serverName, databaseName, schemaName, type);
+							return CreateQuery(dataContext, entityDescriptor, obj, null, tableName, serverName, databaseName, schemaName, tableOptions, type);
 						});
 
 				return ei == null ? 0 : (int)ei.GetElement(dataContext, Expression.Constant(obj), null, null)!;
 			}
 
 			public static async Task<int> QueryAsync(
-				IDataContext dataContext, T obj, UpdateColumnFilter<T>? columnFilter,
-				string? tableName, string? serverName, string? databaseName, string? schemaName,
-				CancellationToken token)
+				IDataContext           dataContext,
+				T                      obj,
+				UpdateColumnFilter<T>? columnFilter,
+				string?                tableName,
+				string?                serverName,
+				string?                databaseName,
+				string?                schemaName,
+				TableOptions           tableOptions,
+				CancellationToken      token)
 			{
 				if (Equals(default(T), obj))
 					return 0;
@@ -118,13 +135,13 @@ namespace LinqToDB.Linq
 				var type = GetType<T>(obj!, dataContext);
 				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type);
 				var ei               = Configuration.Linq.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update) || columnFilter != null
-					? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schemaName, type)
+					? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, type)
 					: Cache<T>.QueryCache.GetOrCreate(
-						new { Operation = 'U', dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, columnFilter, tableName, schemaName, databaseName, serverName, type },
+						new { Operation = 'U', dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, columnFilter, tableName, schemaName, databaseName, serverName, tableOptions, type },
 						o =>
 						{
 							o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
-							return CreateQuery(dataContext, entityDescriptor, obj, null, tableName, serverName, databaseName, schemaName, type);
+							return CreateQuery(dataContext, entityDescriptor, obj, null, tableName, serverName, databaseName, schemaName, tableOptions, type);
 						});
 
 				var result = ei == null ? 0 : await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, null, token).ConfigureAwait(Configuration.ContinueOnCapturedContext);

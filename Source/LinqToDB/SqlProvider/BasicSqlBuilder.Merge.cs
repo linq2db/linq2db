@@ -178,7 +178,7 @@ namespace LinqToDB.SqlProvider
 		{
 			StringBuilder.Append(" ");
 
-			ConvertTableName(StringBuilder, null, null, null, mergeSource.Name);
+			ConvertTableName(StringBuilder, null, null, null, mergeSource.Name, TableOptions.NotSet);
 
 			if (MergeSupportsColumnAliasesInSource)
 			{
@@ -326,7 +326,7 @@ namespace LinqToDB.SqlProvider
 			if (FakeTable == null)
 				return false;
 
-			BuildTableName(StringBuilder, null, null, FakeTableSchema, FakeTable);
+			BuildTableName(StringBuilder, null, null, FakeTableSchema, FakeTable, TableOptions.NotSet);
 			return true;
 		}
 

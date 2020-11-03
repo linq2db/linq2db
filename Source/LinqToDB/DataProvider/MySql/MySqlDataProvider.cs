@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.MySql
 {
-	using System.Collections;
-	using System.Threading;
-	using System.Threading.Tasks;
 	using Common;
 	using Data;
 	using Mapping;
@@ -57,6 +56,13 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			return new MySqlSchemaProvider(this);
 		}
+
+		public override TableOptions SupportedTableOptions =>
+			TableOptions.IsTemporary               |
+			TableOptions.IsLocalTemporaryStructure |
+			TableOptions.IsLocalTemporaryData      |
+			TableOptions.CreateIfNotExists         |
+			TableOptions.DropIfExists;
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{

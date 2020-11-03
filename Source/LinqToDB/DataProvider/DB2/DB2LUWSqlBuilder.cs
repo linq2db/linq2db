@@ -1,6 +1,8 @@
-﻿namespace LinqToDB.DataProvider.DB2
+﻿using System;
+
+namespace LinqToDB.DataProvider.DB2
 {
-	using LinqToDB.Mapping;
+	using Mapping;
 	using SqlProvider;
 
 	class DB2LUWSqlBuilder : DB2SqlBuilderBase
