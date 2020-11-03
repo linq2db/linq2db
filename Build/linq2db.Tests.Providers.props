@@ -1,5 +1,4 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-
 	<Import Project="linq2db.Tests.props" />
 
 	<PropertyGroup>

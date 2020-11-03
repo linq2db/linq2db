@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Threading;
+using System.Threading.Tasks;
+
 using OleDbType = LinqToDB.DataProvider.OleDbProviderAdapter.OleDbType;
 
 namespace LinqToDB.DataProvider.Access
@@ -10,8 +13,6 @@ namespace LinqToDB.DataProvider.Access
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
-	using System.Threading;
-	using System.Threading.Tasks;
 
 	public class AccessOleDbDataProvider : DynamicDataProviderBase<OleDbProviderAdapter>
 	{
@@ -43,6 +44,8 @@ namespace LinqToDB.DataProvider.Access
 
 			_sqlOptimizer = new AccessSqlOptimizer(SqlProviderFlags);
 		}
+
+		public override TableOptions SupportedTableOptions => TableOptions.None;
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{

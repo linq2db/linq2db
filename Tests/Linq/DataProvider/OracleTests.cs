@@ -3505,12 +3505,15 @@ namespace Tests.DataProvider
 				OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertInto;
 				Configuration.RetryPolicy.Factory  = connection => new DummyRetryPolicy();
 
-				using (var db    = new TestDataConnection(context))
-				using (var table = db.CreateTempTable<Issue2342Entity>())
+				using var db    = new TestDataConnection(context);
+				using var table = db.CreateTempTable<Issue2342Entity>();
+
 				using (db.BeginTransaction())
 				{
 					table.BulkCopy(Enumerable.Range(1, 10).Select(id => new Issue2342Entity { Id = id, Name = $"Name_{id}" }));
 				}
+
+				table.Truncate();
 			}
 			finally
 			{

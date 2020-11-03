@@ -6,11 +6,11 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.MySql
 {
+	using Extensions;
+	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
-	using LinqToDB.Mapping;
-	using LinqToDB.Extensions;
-	using LinqToDB.Tools;
+	using Tools;
 
 	class MySqlSqlBuilder : BasicSqlBuilder
 	{
@@ -150,7 +150,7 @@ namespace LinqToDB.DataProvider.MySql
 							StringBuilder.Append("BINARY");
 						else
 							StringBuilder.Append($"BINARY({type.Type.Length})");
-					break;
+						break;
 					default                     : base.BuildDataTypeFromDataType(type, forCreateTable); break;
 				}
 
@@ -366,7 +366,7 @@ namespace LinqToDB.DataProvider.MySql
 		private static List<char>? _convertParameterSymbols;
 		public  static List<char>  ConvertParameterSymbols
 		{
-			get => _convertParameterSymbols == null ? (_convertParameterSymbols = new List<char>()) : _convertParameterSymbols;
+			get => _convertParameterSymbols ??= new List<char>();
 			set => _convertParameterSymbols = value ?? new List<char>();
 		}
 
@@ -493,7 +493,7 @@ namespace LinqToDB.DataProvider.MySql
 			StringBuilder.Append(")");
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions)
 		{
 			if (database != null && database.Length == 0) database = null;
 
@@ -506,7 +506,7 @@ namespace LinqToDB.DataProvider.MySql
 		protected override string? GetProviderTypeName(IDbDataParameter parameter)
 		{
 			if (_provider != null)
-		{
+			{
 				var param = _provider.TryGetProviderParameter(parameter, MappingSchema);
 				if (param != null)
 					return _provider.Adapter.GetDbType(param).ToString();
@@ -574,6 +574,38 @@ namespace LinqToDB.DataProvider.MySql
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
+		}
+
+		protected override void BuildCreateTableCommand(SqlTable table)
+		{
+			string command;
+
+			if (table.TableOptions.IsTemporaryOptionSet())
+			{
+				switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
+				{
+					case TableOptions.IsTemporary                                                                              :
+					case TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData :
+					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     :
+					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
+					case                                                                     TableOptions.IsLocalTemporaryData :
+					case                            TableOptions.IsLocalTemporaryStructure                                     :
+					case                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
+						command = "CREATE TEMPORARY TABLE ";
+						break;
+					case var value :
+						throw new InvalidOperationException($"Incompatible table options '{value}'");
+				}
+			}
+			else
+			{
+				command = "CREATE TABLE ";
+			}
+
+			StringBuilder.Append(command);
+
+			if (table.TableOptions.HasCreateIfNotExists())
+				StringBuilder.Append("IF NOT EXISTS ");
 		}
 	}
 }

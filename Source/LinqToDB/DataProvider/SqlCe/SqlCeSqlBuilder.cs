@@ -1,9 +1,10 @@
-﻿using System.Data;
+﻿using System;
+using System.Data;
 using System.Text;
 
 namespace LinqToDB.DataProvider.SqlCe
 {
-	using LinqToDB.Mapping;
+	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
 
@@ -60,15 +61,15 @@ namespace LinqToDB.DataProvider.SqlCe
 				var field = trun.Table!.IdentityFields[commandNumber - 1];
 
 				StringBuilder.Append("ALTER TABLE ");
-				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName!);
+				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName!, trun.Table.TableOptions);
 				StringBuilder.Append(" ALTER COLUMN ");
 				Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
 				StringBuilder.AppendLine(" IDENTITY(1, 1)");
 			}
 			else
-		{
-			StringBuilder.AppendLine("SELECT @@IDENTITY");
-		}
+			{
+				StringBuilder.AppendLine("SELECT @@IDENTITY");
+			}
 		}
 
 		protected override ISqlBuilder CreateSqlBuilder()
@@ -167,7 +168,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			StringBuilder.Append("IDENTITY");
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions)
 		{
 			return sb.Append(table);
 		}

@@ -1,19 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Threading.Tasks;
+using System.Threading;
 using System.Xml;
 using System.Xml.Linq;
 
 namespace LinqToDB.DataProvider.Sybase
 {
-	using Data;
-	using Mapping;
 	using Common;
+	using Data;
+	using Extensions;
+	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
-	using LinqToDB.Extensions;
-	using System.Threading.Tasks;
-	using System.Threading;
 
 	public class SybaseDataProvider : DynamicDataProviderBase<SybaseProviderAdapter>
 	{
@@ -75,6 +75,15 @@ namespace LinqToDB.DataProvider.Sybase
 
 			return type;
 		}
+
+		public override TableOptions SupportedTableOptions =>
+			TableOptions.IsTemporary                |
+			TableOptions.IsLocalTemporaryStructure  |
+			TableOptions.IsGlobalTemporaryStructure |
+			TableOptions.IsLocalTemporaryData       |
+			TableOptions.IsGlobalTemporaryData      |
+			TableOptions.CreateIfNotExists          |
+			TableOptions.DropIfExists;
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{

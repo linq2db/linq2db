@@ -1,12 +1,12 @@
 ﻿DROP SCHEMA IF EXISTS `{DBNAME}`
 GO
-CREATE SCHEMA `{DBNAME}`
-GO
 USE `{DBNAME}`
 GO
-
+SET GLOBAL local_infile=ON;
+GO
 SET @@global.sql_mode=(SELECT REPLACE(@@global.sql_mode, 'ONLY_FULL_GROUP_BY', ''))
 GO
+
 CREATE TABLE InheritanceParent
 (
 	InheritanceParentId int          NOT NULL,

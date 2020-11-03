@@ -219,7 +219,7 @@ namespace Tests.xUpdate
 					var id = 1001;
 
 					db.Child.Delete(c => c.ChildID > 1000);
-					db.Child.Insert(() => new Child { ParentID = 1, ChildID = id});
+					db.Child.Insert(() => new Child { ParentID = 1, ChildID = id });
 
 					Assert.AreEqual(1, db.Child.Count(c => c.ChildID == id));
 					Assert.AreEqual(1,

@@ -29,7 +29,8 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			sequence.Statement = new SqlDropTableStatement(ifExists) {Table = sequence.SqlTable};
+			sequence.SqlTable.Set(ifExists, TableOptions.DropIfExists);
+			sequence.Statement = new SqlDropTableStatement(sequence.SqlTable);
 
 			return new DropContext(buildInfo.Parent, sequence);
 		}
