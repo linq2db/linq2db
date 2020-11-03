@@ -25,6 +25,7 @@ namespace LinqToDB
 		DropIfExists               = 0b000000100,
 		/// <summary>
 		/// Table is temporary (not visible to other sessions). This option will have effect only for databases that support temporary tables.
+		/// If database supports both global and local temporary tables, local table will be used.
 		/// <para>Supported by: DB2, Firebird, Informix, MySql, Oracle, PostgreSQL, SQLite, SQL Server, SAP Hana, Sybase ASE.</para>
 		/// </summary>
 		IsTemporary                = 0b000001000,

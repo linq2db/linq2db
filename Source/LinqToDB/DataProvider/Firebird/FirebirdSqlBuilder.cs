@@ -228,12 +228,6 @@ namespace LinqToDB.DataProvider.Firebird
 			{
 				case SqlTruncateTableStatement truncate:
 					return truncate.ResetIdentity && truncate.Table!.IdentityFields.Count > 0 ? 2 : 1;
-
-				case SqlCreateTableStatement createTable:
-					_identityField = createTable.Table!.IdentityFields.FirstOrDefault();
-					if (_identityField != null)
-						return 3;
-					break;
 			}
 
 			return base.CommandCount(statement);
@@ -297,6 +291,7 @@ namespace LinqToDB.DataProvider.Firebird
 					.Append("DROP ")
 					.Append(objectName)
 					.Append(" ");
+
 				Convert(dropCommand, identifier, ConvertType.NameToQueryTable);
 
 				BuildValue(null, dropCommand.ToString());
@@ -318,42 +313,6 @@ namespace LinqToDB.DataProvider.Firebird
 					Convert(StringBuilder, "GIDENTITY_" + truncate.Table!.PhysicalName, ConvertType.NameToQueryTable);
 					StringBuilder.AppendLine(" TO 0");
 					break;
-
-				case SqlCreateTableStatement createTable:
-					{
-						if (commandNumber == 1)
-						{
-							StringBuilder.Append("CREATE GENERATOR ");
-							Convert(StringBuilder, "GIDENTITY_" + createTable.Table!.PhysicalName, ConvertType.NameToQueryTable);
-							StringBuilder.AppendLine();
-						}
-						else
-						{
-							StringBuilder
-								.Append("CREATE TRIGGER ");
-							Convert(StringBuilder, "TIDENTITY_" + createTable.Table!.PhysicalName, ConvertType.NameToQueryTable);
-							StringBuilder
-								.Append(" FOR ");
-							Convert(StringBuilder, createTable.Table.PhysicalName!, ConvertType.NameToQueryTable);
-							StringBuilder
-								.AppendLine  ()
-								.AppendLine  ("BEFORE INSERT POSITION 0")
-								.AppendLine  ("AS BEGIN");
-							StringBuilder
-								.Append("\tNEW.");
-							Convert(StringBuilder, _identityField!.PhysicalName, ConvertType.NameToQueryField);
-							StringBuilder
-								.Append(" = GEN_ID(");
-							Convert(StringBuilder, "GIDENTITY_" + createTable.Table.PhysicalName, ConvertType.NameToQueryTable);
-							StringBuilder
-								.Append(", 1);");
-							StringBuilder
-								.AppendLine  ()
-								.AppendLine  ("END");
-						}
-
-						break;
-					}
 			}
 		}
 
@@ -431,32 +390,42 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override void BuildStartCreateTableStatement(SqlCreateTableStatement createTable)
 		{
-			if (createTable.StatementHeader == null && (createTable.Table.TableOptions.HasCreateIfNotExists() || createTable.Table.TableOptions.HasIsTemporary()))
+			if (createTable.StatementHeader == null)
 			{
-				StringBuilder
-					.AppendLine("EXECUTE BLOCK AS BEGIN");
+				_identityField = createTable.Table!.IdentityFields.FirstOrDefault();
 
-				Indent++;
+				var checkExistence = createTable.Table.TableOptions.HasCreateIfNotExists() || createTable.Table.TableOptions.HasIsTemporary();
 
-				AppendIndent().Append("IF (NOT EXISTS(SELECT 1 FROM rdb$relations WHERE rdb$relation_name = ");
+				if (_identityField != null || checkExistence)
+				{
+					StringBuilder
+						.AppendLine("EXECUTE BLOCK AS BEGIN");
 
-				var identifierValue = createTable.Table.PhysicalName!;
+					Indent++;
 
-				// if identifier is not quoted, it must be converted to upper case to match record in rdb$relation_name
-				if (FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.None ||
-					FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && IsValidIdentifier(identifierValue))
-					identifierValue = identifierValue.ToUpper();
+					if (checkExistence)
+					{
+						AppendIndent().Append("IF (NOT EXISTS(SELECT 1 FROM rdb$relations WHERE rdb$relation_name = ");
 
-				BuildValue(null, identifierValue);
+						var identifierValue = createTable.Table.PhysicalName!;
 
-				StringBuilder
-					.AppendLine(")) THEN");
+						// if identifier is not quoted, it must be converted to upper case to match record in rdb$relation_name
+						if (FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.None ||
+							FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && IsValidIdentifier(identifierValue))
+							identifierValue = identifierValue.ToUpper();
 
-				Indent++;
+						BuildValue(null, identifierValue);
 
-				AppendIndent().AppendLine("EXECUTE STATEMENT '");
+						StringBuilder
+							.AppendLine(")) THEN");
 
-				Indent++;
+						Indent++;
+					}
+
+					AppendIndent().AppendLine("EXECUTE STATEMENT '");
+
+					Indent++;
+				}
 			}
 
 			base.BuildStartCreateTableStatement(createTable);
@@ -477,12 +446,100 @@ namespace LinqToDB.DataProvider.Firebird
 						: "ON COMMIT PRESERVE ROWS");
 				}
 
-				if ((table.TableOptions.HasCreateIfNotExists() || table.TableOptions.HasIsTemporary()))
+				var checkExistence = table.TableOptions.HasCreateIfNotExists() || table.TableOptions.HasIsTemporary();
+
+				if (_identityField != null || checkExistence)
 				{
+					var identifierValue = createTable.Table.PhysicalName!;
+
+					// if identifier is not quoted, it must be converted to upper case to match record in rdb$relation_name
+					if (FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.None ||
+						FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && IsValidIdentifier(identifierValue))
+						identifierValue = identifierValue.ToUpper();
+
 					Indent--;
 
 					AppendIndent()
 						.AppendLine("';");
+
+					if (checkExistence)
+					{
+						Indent--;
+
+						AppendIndent()
+							.Append("IF (NOT EXISTS(SELECT 1 FROM rdb$generators WHERE rdb$generator_name = '")
+							.Append("GIDENTITY_")
+							.Append(identifierValue)
+							.AppendLine("')) THEN")
+							;
+
+						Indent++;
+
+						AddGenerator();
+
+						Indent--;
+
+						AppendIndent()
+							.Append("IF (NOT EXISTS(SELECT 1 FROM rdb$triggers WHERE rdb$trigger_name = '")
+							.Append("TIDENTITY_")
+							.Append(identifierValue)
+							.AppendLine("')) THEN")
+							;
+
+						Indent++;
+
+						AddTrigger();
+
+						Indent--;
+					}
+					else
+					{
+						AddGenerator();
+						AddTrigger();
+					}
+
+					void AddGenerator()
+					{
+						AppendIndent()
+							.AppendLine("EXECUTE STATEMENT '");
+
+						Indent++;
+
+						AppendIndent().Append("CREATE GENERATOR ");
+						Convert(StringBuilder, "GIDENTITY_" + createTable.Table!.PhysicalName, ConvertType.NameToQueryTable);
+						StringBuilder.AppendLine();
+
+						Indent--;
+
+						AppendIndent()
+							.AppendLine("';");
+					}
+
+					void AddTrigger()
+					{
+						AppendIndent().AppendLine("EXECUTE STATEMENT '");
+
+						Indent++;
+
+						AppendIndent().Append("CREATE TRIGGER ");
+						Convert(StringBuilder, "TIDENTITY_" + createTable.Table!.PhysicalName, ConvertType.NameToQueryTable);
+						StringBuilder .Append(" FOR ");
+						Convert(StringBuilder, createTable.Table.PhysicalName!, ConvertType.NameToQueryTable);
+						StringBuilder .AppendLine();
+						AppendIndent().AppendLine("BEFORE INSERT POSITION 0");
+						AppendIndent().AppendLine("AS BEGIN");
+						AppendIndent().Append("\tNEW.");
+						Convert(StringBuilder, _identityField!.PhysicalName, ConvertType.NameToQueryField);
+						StringBuilder. Append(" = GEN_ID(");
+						Convert(StringBuilder, "GIDENTITY_" + createTable.Table.PhysicalName, ConvertType.NameToQueryTable);
+						StringBuilder. AppendLine(", 1);");
+						AppendIndent().AppendLine("END");
+
+						Indent--;
+
+						AppendIndent()
+							.AppendLine("';");
+					}
 
 					Indent--;
 
