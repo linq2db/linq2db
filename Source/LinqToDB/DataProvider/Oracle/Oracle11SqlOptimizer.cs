@@ -5,6 +5,8 @@ namespace LinqToDB.DataProvider.Oracle
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
+	using Mapping;
+	using Tools;
 
 	public class Oracle11SqlOptimizer : BasicSqlOptimizer
 	{
@@ -37,6 +39,78 @@ namespace LinqToDB.DataProvider.Oracle
 		protected static string[] OracleLikeCharactersToEscape = {"%", "_"};
 
 		public override string[] LikeCharactersToEscape => OracleLikeCharactersToEscape;
+
+		public override bool IsParameterDependedElement(IQueryElement element)
+		{
+			if (base.IsParameterDependedElement(element))
+				return true;
+
+			switch (element.ElementType)
+			{
+				case QueryElementType.ExprExprPredicate:
+				{
+					var expr = (SqlPredicate.ExprExpr)element;
+
+					// Oracle saves empty string as null to database, so we need predicate modification before sending query
+					//
+					if (expr.Operator.In(SqlPredicate.Operator.Equal, SqlPredicate.Operator.NotEqual, SqlPredicate.Operator.GreaterOrEqual, SqlPredicate.Operator.LessOrEqual) && expr.WithNull == true)
+					{
+						if (expr.Expr1.SystemType == typeof(string) && expr.Expr1.CanBeEvaluated(true))
+							return true;
+						if (expr.Expr2.SystemType == typeof(string) && expr.Expr2.CanBeEvaluated(true))
+							return true;
+					}
+					break;
+				}
+			}
+
+			return false;
+		}
+
+		public override ISqlPredicate ConvertPredicate(MappingSchema mappingSchema, ISqlPredicate predicate, EvaluationContext context)
+		{
+			switch (predicate.ElementType)
+			{
+				case QueryElementType.ExprExprPredicate:
+				{
+					var expr = (SqlPredicate.ExprExpr)predicate;
+
+					// Oracle saves empty string as null to database, so we need predicate modification before sending query
+					//
+					if (expr.Operator.In(SqlPredicate.Operator.Equal, SqlPredicate.Operator.NotEqual, SqlPredicate.Operator.GreaterOrEqual, SqlPredicate.Operator.LessOrEqual) && expr.WithNull == true)
+					{
+						if (expr.Expr1.SystemType == typeof(string) &&
+						    expr.Expr1.TryEvaluateExpression(context, out var value1) && value1 is string string1)
+						{
+							if (string1 == "")
+							{
+								var sc = new SqlSearchCondition();
+								sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(expr.Expr1, expr.Operator, expr.Expr2, null), true));
+								sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.IsNull(expr.Expr2, false), true));
+								return sc;
+							}
+						}
+
+						if (expr.Expr2.SystemType == typeof(string) &&
+						    expr.Expr2.TryEvaluateExpression(context, out var value2) && value2 is string string2)
+						{
+							if (string2 == "")
+							{
+								var sc = new SqlSearchCondition();
+								sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(expr.Expr1, expr.Operator, expr.Expr2, null), true));
+								sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.IsNull(expr.Expr1, false), true));
+								return sc;
+							}
+						}
+					}
+					break;
+				}
+			}
+
+			predicate = base.ConvertPredicate(mappingSchema, predicate, context);
+
+			return predicate;
+		}
 
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)
 		{
