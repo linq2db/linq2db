@@ -18,37 +18,23 @@ namespace Tests.xUpdate
 		[AttributeUsage(AttributeTargets.Parameter)]
 		public class MergeDataContextSourceAttribute : DataSourcesAttribute
 		{
-			static string[] Unsupported =
+			static string[] Unsupported = new[]
 			{
 				TestProvName.AllAccess,
 				ProviderName.SqlCe,
-				ProviderName.SQLiteClassic,
-				TestProvName.SQLiteClassicMiniProfilerMapped,
-				TestProvName.SQLiteClassicMiniProfilerUnmapped,
-				ProviderName.SQLiteMS,
-				ProviderName.SqlServer2000,
-				ProviderName.SqlServer2005,
-				ProviderName.PostgreSQL,
-				ProviderName.PostgreSQL92,
-				ProviderName.PostgreSQL93,
-				ProviderName.PostgreSQL95,
-				TestProvName.PostgreSQL10,
-				TestProvName.PostgreSQL11,
-				TestProvName.PostgreSQL12,
-				TestProvName.PostgreSQL13,
-				ProviderName.MySql,
-				ProviderName.MySqlConnector,
-				TestProvName.MySql55,
-				TestProvName.MariaDB
-			};
+				TestProvName.AllSQLite,
+				TestProvName.AllSqlServer2005Minus,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllMySql,
+			}.SelectMany(_ => _.Split(',')).ToArray();
 
 			public MergeDataContextSourceAttribute(params string[] except)
-				: base(true, Unsupported.Concat(except).ToArray())
+				: base(true, Unsupported.Concat(except.SelectMany(_ => _.Split(','))).ToArray())
 			{
 			}
 
 			public MergeDataContextSourceAttribute(bool includeLinqService, params string[] except)
-				: base(includeLinqService, Unsupported.Concat(except).ToArray())
+				: base(includeLinqService, Unsupported.Concat(except.SelectMany(_ => _.Split(','))).ToArray())
 			{
 			}
 		}

@@ -496,7 +496,7 @@ namespace Tests.DataProvider
 			SQLiteTools.CreateDatabase("TestDatabase");
 			Assert.IsTrue(File.Exists ("TestDatabase.sqlite"));
 
-			using (var db = new DataConnection(SQLiteTools.GetDataProvider(), "Data Source=TestDatabase.sqlite"))
+			using (var db = new DataConnection(SQLiteTools.GetDataProvider(context), "Data Source=TestDatabase.sqlite"))
 			{
 				db.CreateTable<CreateTableTest>();
 				db.DropTable  <CreateTableTest>();
