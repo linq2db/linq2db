@@ -462,83 +462,86 @@ namespace LinqToDB.DataProvider.Firebird
 					AppendIndent()
 						.AppendLine("';");
 
-					if (checkExistence)
+					if (_identityField != null)
 					{
-						Indent--;
+						if (checkExistence)
+						{
+							Indent--;
 
-						AppendIndent()
-							.Append("IF (NOT EXISTS(SELECT 1 FROM rdb$generators WHERE rdb$generator_name = '")
-							.Append("GIDENTITY_")
-							.Append(identifierValue)
-							.AppendLine("')) THEN")
-							;
+							AppendIndent()
+								.Append("IF (NOT EXISTS(SELECT 1 FROM rdb$generators WHERE rdb$generator_name = '")
+								.Append("GIDENTITY_")
+								.Append(identifierValue)
+								.AppendLine("')) THEN")
+								;
 
-						Indent++;
+							Indent++;
 
-						AddGenerator();
+							AddGenerator();
 
-						Indent--;
+							Indent--;
 
-						AppendIndent()
-							.Append("IF (NOT EXISTS(SELECT 1 FROM rdb$triggers WHERE rdb$trigger_name = '")
-							.Append("TIDENTITY_")
-							.Append(identifierValue)
-							.AppendLine("')) THEN")
-							;
+							AppendIndent()
+								.Append("IF (NOT EXISTS(SELECT 1 FROM rdb$triggers WHERE rdb$trigger_name = '")
+								.Append("TIDENTITY_")
+								.Append(identifierValue)
+								.AppendLine("')) THEN")
+								;
 
-						Indent++;
+							Indent++;
 
-						AddTrigger();
+							AddTrigger();
 
-						Indent--;
-					}
-					else
-					{
-						AddGenerator();
-						AddTrigger();
-					}
+							Indent--;
+						}
+						else
+						{
+							AddGenerator();
+							AddTrigger();
+						}
 
-					void AddGenerator()
-					{
-						AppendIndent()
-							.AppendLine("EXECUTE STATEMENT '");
+						void AddGenerator()
+						{
+							AppendIndent()
+								.AppendLine("EXECUTE STATEMENT '");
 
-						Indent++;
+							Indent++;
 
-						AppendIndent().Append("CREATE GENERATOR ");
-						Convert(StringBuilder, "GIDENTITY_" + createTable.Table!.PhysicalName, ConvertType.NameToQueryTable);
-						StringBuilder.AppendLine();
+							AppendIndent().Append("CREATE GENERATOR ");
+							Convert(StringBuilder, "GIDENTITY_" + createTable.Table!.PhysicalName, ConvertType.NameToQueryTable);
+							StringBuilder.AppendLine();
 
-						Indent--;
+							Indent--;
 
-						AppendIndent()
-							.AppendLine("';");
-					}
+							AppendIndent()
+								.AppendLine("';");
+						}
 
-					void AddTrigger()
-					{
-						AppendIndent().AppendLine("EXECUTE STATEMENT '");
+						void AddTrigger()
+						{
+							AppendIndent().AppendLine("EXECUTE STATEMENT '");
 
-						Indent++;
+							Indent++;
 
-						AppendIndent().Append("CREATE TRIGGER ");
-						Convert(StringBuilder, "TIDENTITY_" + createTable.Table!.PhysicalName, ConvertType.NameToQueryTable);
-						StringBuilder .Append(" FOR ");
-						Convert(StringBuilder, createTable.Table.PhysicalName!, ConvertType.NameToQueryTable);
-						StringBuilder .AppendLine();
-						AppendIndent().AppendLine("BEFORE INSERT POSITION 0");
-						AppendIndent().AppendLine("AS BEGIN");
-						AppendIndent().Append("\tNEW.");
-						Convert(StringBuilder, _identityField!.PhysicalName, ConvertType.NameToQueryField);
-						StringBuilder. Append(" = GEN_ID(");
-						Convert(StringBuilder, "GIDENTITY_" + createTable.Table.PhysicalName, ConvertType.NameToQueryTable);
-						StringBuilder. AppendLine(", 1);");
-						AppendIndent().AppendLine("END");
+							AppendIndent().Append("CREATE TRIGGER ");
+							Convert(StringBuilder, "TIDENTITY_" + createTable.Table!.PhysicalName, ConvertType.NameToQueryTable);
+							StringBuilder .Append(" FOR ");
+							Convert(StringBuilder, createTable.Table.PhysicalName!, ConvertType.NameToQueryTable);
+							StringBuilder .AppendLine();
+							AppendIndent().AppendLine("BEFORE INSERT POSITION 0");
+							AppendIndent().AppendLine("AS BEGIN");
+							AppendIndent().Append("\tNEW.");
+							Convert(StringBuilder, _identityField!.PhysicalName, ConvertType.NameToQueryField);
+							StringBuilder. Append(" = GEN_ID(");
+							Convert(StringBuilder, "GIDENTITY_" + createTable.Table.PhysicalName, ConvertType.NameToQueryTable);
+							StringBuilder. AppendLine(", 1);");
+							AppendIndent().AppendLine("END");
 
-						Indent--;
+							Indent--;
 
-						AppendIndent()
-							.AppendLine("';");
+							AppendIndent()
+								.AppendLine("';");
+						}
 					}
 
 					Indent--;
