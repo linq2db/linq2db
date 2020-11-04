@@ -265,7 +265,7 @@ namespace Tests
 		class FirebirdTempTable<T> : TempTable<T>
 		{
 			public FirebirdTempTable(IDataContext db, string? tableName = null, string? databaseName = null, string? schemaName = null, TableOptions tableOptions = TableOptions.NotSet)
-				: base(db, tableName, databaseName, schemaName, tableOptions : tableOptions)
+				: base(db, tableName, databaseName, schemaName, tableOptions : TableOptions.IsTemporary)
 			{
 			}
 
@@ -309,16 +309,14 @@ namespace Tests
 		{
 			var table = CreateLocalTable<T>(db, tableName, TableOptions.CheckExistence);
 
-			if (db is DataConnection)
-				using (new DisableLogging())
-					table.Copy(items
-						, new BulkCopyOptions { BulkCopyType = BulkCopyType.MultipleRows }
-						);
-			else
-				using (new DisableLogging())
+			using (new DisableLogging())
+			{
+				if (db is DataConnection)
+					table.Copy(items, new BulkCopyOptions { BulkCopyType = BulkCopyType.MultipleRows });
+				else
 					foreach (var item in items)
 						db.Insert(item, table.TableName);
-
+			}
 
 			return table;
 		}
