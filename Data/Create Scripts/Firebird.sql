@@ -18,7 +18,6 @@ DROP VIEW "PersonView";                         COMMIT;
 
 DROP TRIGGER "CREATE_PersonID";                 COMMIT;
 DROP TRIGGER "CREATE_DataTypeTest";             COMMIT;
-DROP TRIGGER "CREATE_BinaryDataID";             COMMIT;
 
 DROP TABLE "Dual";                              COMMIT;
 DROP TABLE "DataTypeTest";                      COMMIT;

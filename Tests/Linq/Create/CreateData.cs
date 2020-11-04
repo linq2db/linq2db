@@ -6,7 +6,7 @@ using System.Linq;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Access;
-
+using LinqToDB.SchemaProvider;
 using NUnit.Framework;
 using Tests;
 using Tests.Model;
@@ -380,7 +380,7 @@ public class a_CreateData : TestBase
 
 			var sp = conn.DataProvider.GetSchemaProvider();
 
-			var schema = sp.GetSchema(conn);
+			var schema = sp.GetSchema(conn, new GetSchemaOptions { GetProcedures = false });
 
 			foreach (var table in schema.Tables)
 			{

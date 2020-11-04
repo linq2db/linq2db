@@ -4,14 +4,15 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 
+using FirebirdSql.Data.FirebirdClient;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Firebird;
-using LinqToDB.SchemaProvider;
+
 
 namespace Tests
 {
-	using System.Diagnostics.CodeAnalysis;
 	using Model;
 
 	public static class TestUtils
@@ -265,12 +266,17 @@ namespace Tests
 		class FirebirdTempTable<T> : TempTable<T>
 		{
 			public FirebirdTempTable(IDataContext db, string? tableName = null, string? databaseName = null, string? schemaName = null, TableOptions tableOptions = TableOptions.NotSet)
-				: base(db, tableName, databaseName, schemaName, tableOptions : TableOptions.IsTemporary)
+				: base(db, tableName, databaseName, schemaName, tableOptions : tableOptions)
 			{
 			}
 
 			public override void Dispose()
 			{
+				if (DataContext is DataConnection dc && dc.Connection is FbConnection fbc )
+				{
+					FbConnection.ClearPool(fbc);
+				}
+
 				DataContext.Close();
 				FirebirdTools.ClearAllPools();
 				base.Dispose();

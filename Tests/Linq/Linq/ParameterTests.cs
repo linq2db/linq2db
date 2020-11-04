@@ -403,10 +403,10 @@ namespace Tests.Linq
 		public void Issue404Test([DataSources(TestProvName.AllSybase)] string context)
 		{
 			// executed twice to test issue #2174
-			execute(context);
-			execute(context);
+			Execute();
+			Execute();
 
-			void execute(string context)
+			void Execute()
 			{
 				using (new AllowMultipleQuery(true))
 				using (var db = GetDataContext(context))
@@ -439,10 +439,10 @@ namespace Tests.Linq
 					FirstTable Test()
 					{
 						return t1
-						  .GroupJoin(t2.Where(v =>
-							allUsages || v.Usage == usage.GetValueOrDefault()), c => c.Id, v => v.FirstTableId,
-							 (c, v) => new FirstTable { Id = c.Id, Values = v.ToList() })
-						  .FirstOrDefault();
+							.GroupJoin(t2.Where(v =>
+								allUsages || v.Usage == usage.GetValueOrDefault()), c => c.Id, v => v.FirstTableId,
+								(c, v) => new FirstTable { Id = c.Id, Values = v.ToList() })
+							.FirstOrDefault();
 					}
 				}
 			}
