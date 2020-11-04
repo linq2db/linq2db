@@ -24,7 +24,7 @@
 	"NET472":
 	{
 		"BasedOn": "LocalConnectionStrings",
-		"DefaultConfiguration": "SQLite.Classic",
+		"DefaultConfiguration": "SQLite.Default",
 		"Providers":
 		[
 			"Access",

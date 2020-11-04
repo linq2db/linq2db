@@ -307,7 +307,7 @@ namespace Tests
 
 		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string? tableName, IEnumerable<T> items)
 		{
-			var table = CreateLocalTable<T>(db, tableName);
+			var table = CreateLocalTable<T>(db, tableName, TableOptions.CheckExistence);
 
 			if (db is DataConnection)
 				using (new DisableLogging())

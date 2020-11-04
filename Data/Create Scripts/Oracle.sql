@@ -592,8 +592,8 @@ INSERT INTO DataTypeTest
 	 Single_,       Stream_,  String_,    UInt16_, UInt32_,   UInt64_,     Xml_)
 VALUES
 	(   NULL,          NULL,     NULL,       NULL,    NULL,      NULL,     NULL,
-	    NULL,          NULL,     NULL,       NULL,    NULL,      NULL,     NULL,
-	    NULL,          NULL,     NULL,       NULL,    NULL,      NULL,     NULL)
+		NULL,          NULL,     NULL,       NULL,    NULL,      NULL,     NULL,
+		NULL,          NULL,     NULL,       NULL,    NULL,      NULL,     NULL)
 /
 
 INSERT INTO DataTypeTest
@@ -1019,7 +1019,7 @@ PROCEDURE AllOutputParameters
 	ntextDataType            IN OUT nclob                          ,
 
 	binaryDataType           IN OUT blob                           ,
- 	bfileDataType            IN OUT bfile                          ,
+	bfileDataType            IN OUT bfile                          ,
 	guidDataType             IN OUT raw                            ,
 
 	--uriDataType              IN OUT UriType                        ,
@@ -1056,7 +1056,7 @@ BEGIN
 		at.ntextDataType,
 
 		at.binaryDataType,
- 		at.bfileDataType,
+		at.bfileDataType,
 		at.guidDataType,
 
 		--at.uriDataType,
@@ -1092,7 +1092,7 @@ BEGIN
 		ntextDataType,
 
 		binaryDataType,
- 		bfileDataType,
+		bfileDataType,
 		guidDataType,
 
 		--uriDataType,
