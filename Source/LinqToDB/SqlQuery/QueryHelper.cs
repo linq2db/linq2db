@@ -706,7 +706,12 @@ namespace LinqToDB.SqlQuery
 				visited ??= new HashSet<ISqlExpression>();
 				if (!visited.Add(current))
 					return null;
-				current = ((SqlColumn)current).Expression;
+
+				var column = (SqlColumn)current;
+				if (column.Parent != null && !column.Parent.HasSetOperators)
+					current = ((SqlColumn)current).Expression;
+				else
+					return null;
 			}
 
 			return current;
@@ -841,67 +846,6 @@ namespace LinqToDB.SqlQuery
 			}
 
 			return false;
-		}
-
-		/// <summary>
-		/// Removes not needed subqueries nesting. Very simple algorithm.
-		/// </summary>
-		/// <typeparam name="TStatement"></typeparam>
-		/// <param name="statement">Statement which may contain queries that needs optimization</param>
-		/// <returns>The same <paramref name="statement"/> or modified statement when optimization has been performed.</returns>
-		public static TStatement OptimizeSubqueries<TStatement>(TStatement statement)
-			where TStatement : SqlStatement
-		{
-			if (statement == null) throw new ArgumentNullException(nameof(statement));
-
-			statement = ConvertVisitor.Convert(statement, (visitor, element) =>
-			{
-				if (!(element is SelectQuery q))
-					return element;
-
-				if (!q.IsSimple || q.HasSetOperators)
-					return q;
-					
-				if (q.Select.From.Tables.Count != 1)
-					return q;
-
-				var tableSource = q.Select.From.Tables[0];
-				if (tableSource.Joins.Count > 0 || !(q.Select.From.Tables[0].Source is SelectQuery subQuery))
-					return q;
-
-				// column list should be equal
-				if (subQuery.HasSetOperators || q.Select.Columns.Count != subQuery.Select.Columns.Count)
-					return q;
-
-				for (var index = 0; index < q.Select.Columns.Count; index++)
-				{
-					var column = q.Select.Columns[index];
-					var idx = subQuery.Select.Columns.FindIndex(c => c.Equals(column.Expression));
-					if (idx < 0)
-						return q;
-				}
-
-				// correct column order
-				for (var index = 0; index < q.Select.Columns.Count; index++)
-				{
-					var column = q.Select.Columns[index];
-					var idx = subQuery.Select.Columns.FindIndex(c => c.Equals(column.Expression));
-					var subColumn = subQuery.Select.Columns[idx];
-					if (idx != index)
-					{
-						subQuery.Select.Columns.RemoveAt(idx);
-						subQuery.Select.Columns.Insert(index, subColumn);
-					}
-
-					// replace
-					visitor.VisitedElements[column] = subColumn;
-				}
-
-				return subQuery;
-
-			});
-
-			return statement;
 		}
 
 		/// <summary>

@@ -19,8 +19,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			statement = ReplaceDistinctOrderByWithRowNumber(statement, q => true);
 			if (statement.IsUpdate() || statement.IsDelete()) statement = WrapRootTakeSkipOrderBy(statement);
 			statement = ReplaceSkipWithRowNumber(statement);
-			if (statement.QueryType == QueryType.Select)
-				statement = QueryHelper.OptimizeSubqueries(statement); // OptimizeSubqueries can break update queries
 
 			return statement;
 		}

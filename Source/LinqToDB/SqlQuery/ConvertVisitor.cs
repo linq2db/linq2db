@@ -634,10 +634,9 @@ namespace LinqToDB.SqlQuery
 								skip != null && !ReferenceEquals(sc.SkipValue, skip))
 							{
 								newElement = new SqlSelectClause(sc.IsDistinct, take ?? sc.TakeValue, sc.TakeHints, skip ?? sc.SkipValue, cols ?? sc.Columns);
-								((SqlSelectClause)newElement).SetSqlQuery(sc.SelectQuery);
 							}
 
-							static SqlColumn CloneColumn(SqlColumn column) => new SqlColumn(column.Parent!, column.Expression, column.RawAlias);
+							static SqlColumn CloneColumn(SqlColumn column) => new SqlColumn(null, column.Expression, column.RawAlias);
 							break;
 						}
 

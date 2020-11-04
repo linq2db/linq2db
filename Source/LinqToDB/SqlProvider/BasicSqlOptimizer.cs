@@ -1166,7 +1166,81 @@ namespace LinqToDB.SqlProvider
 			return predicate;
 		}
 
-		public virtual IQueryElement OptimizeQueryElement(IQueryElement element, EvaluationContext context)
+		static SelectQuery? FindQuery(IReadOnlyList<IQueryElement> stack, int skip)
+		{
+			for (int i = stack.Count - 1; i >= 0; i--)
+			{
+				if (stack[i] is SelectQuery sc && skip-- == 0)
+					return sc;
+			}
+
+			return null;
+		}
+
+		static Tuple<SelectQuery?, SqlColumn?> FindQueryWithColumn(ConvertVisitor visitor, int skip)
+		{
+			SqlColumn? column = null;
+			SelectQuery? selectQuery = null;
+
+			for (int i = visitor.Stack.Count - 1; i >= 0; i--)
+			{
+				var element = visitor.Stack[i];
+				if (element.ElementType == QueryElementType.SqlQuery)
+				{
+					if (skip-- == 0)
+					{
+						selectQuery = (SelectQuery)element;
+						break;
+					}
+				}
+				else if (element.ElementType == QueryElementType.Column)
+				{
+					column = (SqlColumn)element;
+				}
+			}
+
+			return Tuple.Create(selectQuery, column);
+		}
+
+
+		static bool CheckColumn(SelectQuery parentQuery, SqlColumn column, EvaluationContext context)
+		{
+			var expr = QueryHelper.UnwrapExpression(column.Expression);
+
+			if (expr.ElementType.In(QueryElementType.SqlField, QueryElementType.Column, QueryElementType.SqlRawSqlTable))
+				return false;
+
+			if (expr.CanBeEvaluated(context))
+				return false;
+
+			if (new QueryVisitor().Find(expr, ex => QueryHelper.IsAggregationFunction(ex)) == null)
+			{
+				var elementsToIgnore = new HashSet<IQueryElement> { parentQuery };
+
+				var depends = QueryHelper.IsDependsOn(parentQuery.GroupBy, column, elementsToIgnore);
+				if (depends)
+					return true;
+
+				if (expr.IsComplexExpression())
+				{
+					depends =
+						QueryHelper.IsDependsOn(parentQuery.Where, column, elementsToIgnore)
+						|| QueryHelper.IsDependsOn(parentQuery.OrderBy, column, elementsToIgnore);
+
+					if (depends)
+						return true;
+				}
+
+				var dependsCount = QueryHelper.DependencyCount(parentQuery, column, elementsToIgnore);
+
+				return dependsCount > 1;
+			}
+
+			return true;
+		}
+
+		public virtual IQueryElement OptimizeQueryElement(ConvertVisitor visitor, IQueryElement root,
+			IQueryElement element, EvaluationContext context)
 		{
 			switch (element.ElementType)
 			{
@@ -1198,6 +1272,110 @@ namespace LinqToDB.SqlProvider
 					break;
 				}
 
+				case QueryElementType.TableSource:
+				{
+					var tableSource = (SqlTableSource)element;
+
+					var q = FindQuery(visitor.Stack, 1);
+					if (q == null)
+						break;
+
+					if (q.Select.From.Tables.Count != 1 || !ReferenceEquals(tableSource, q.Select.From.Tables[0]))
+						break;
+
+					if (tableSource.Joins.Count > 0)
+						break;
+
+					if (tableSource.Source is SelectQuery subQuery)
+					{
+						if (!subQuery.IsSimple)
+							break;
+
+						if (subQuery.From.Tables.Count != 1)
+							break;
+
+						var isColumnsOk = !subQuery.Select.Columns.Any(c => CheckColumn(q, c, context));
+
+						if (!isColumnsOk)
+							break;
+
+						for (int index = 0; index < subQuery.Select.Columns.Count; index++)
+						{
+							var column = subQuery.Select.Columns[index];
+							visitor.VisitedElements[column] = column.Expression;
+						}
+
+						return new SqlTableSource(subQuery.From.Tables[0].Source, tableSource.Alias, subQuery.From.Tables[0].Joins, subQuery.From.Tables[0].UniqueKeys);
+					}
+
+					break;
+				}
+
+				case QueryElementType.SelectClause:
+				{
+					var selectClause = (SqlSelectClause)element;
+
+					if (selectClause.SelectQuery == null)
+						break;
+
+					if (selectClause.SelectQuery.HasSetOperators || selectClause.SelectQuery.Select.IsDistinct)
+						break;
+
+					var findResult = FindQueryWithColumn(visitor, 1);
+					var parentQuery = findResult.Item1;
+					if (parentQuery == null || parentQuery.HasSetOperators || findResult.Item2 != null)
+						break;
+
+					var filter = new HashSet<IQueryElement> {selectClause};
+					List<SqlColumn>? columns = null;
+					for (int i = 0; i < selectClause.Columns.Count; i++)
+					{
+						var column = selectClause.Columns[i];
+
+						// Column is changed, waiting for another loop
+						if (column.Parent == null)
+							break;
+
+						// removing column which has no usage
+						//
+						if (!CheckColumn(parentQuery, column, context) &&
+						    !QueryHelper.IsDependsOn(parentQuery, column, filter) &&
+						    (columns == null && selectClause.Columns.Count > 1 || columns != null && columns.Count > 0))
+						{
+							columns ??= selectClause.Columns.Take(i).ToList();
+						}
+						else
+						{
+							columns?.Add(column);
+						}
+					}
+
+					if (columns != null)
+					{
+						var newClause = new SqlSelectClause(selectClause.IsDistinct, selectClause.TakeValue,
+							selectClause.TakeHints, selectClause.SkipValue, columns);
+						newClause.SetSqlQuery(selectClause.SelectQuery);
+						return newClause;
+					}
+
+					break;
+				}
+
+				case QueryElementType.Column:
+				{
+					var column = (SqlColumn)element;
+					var expr   = QueryHelper.GetUnderlyingExpression(column.Expression);
+
+					// optimizing out columns which are constants or evaluable
+					//
+					if (!ReferenceEquals(expr, column.Expression) && expr?.CanBeEvaluated(true) == true)
+					{
+						return new SqlColumn(null, expr, column.RawAlias);
+					}
+
+					break;
+				}
+
 				case QueryElementType.GroupByClause:
 				{
 					var groupBy = (SqlGroupByClause)element;
@@ -1208,7 +1386,11 @@ namespace LinqToDB.SqlProvider
 						for (int i = 0; i < groupBy.Items.Count; i++)
 						{
 							var item = groupBy.Items[i];
-							if (!processed.Add(item) || item.ElementType.In(QueryElementType.SqlValue, QueryElementType.SqlParameter))
+
+							var expr = QueryHelper.GetUnderlyingExpression(item);
+
+							// skipping evaluable grouping items
+							if (!processed.Add(item) || expr?.CanBeEvaluated(true) == true)
 							{
 								items ??= groupBy.Items.Take(i).ToList();
 							}
@@ -1226,6 +1408,7 @@ namespace LinqToDB.SqlProvider
 
 					break;
 				}
+
 			}
 
 			return element;
@@ -2619,7 +2802,7 @@ namespace LinqToDB.SqlProvider
 					if (ne is ISqlPredicate sqlPredicate)
 						ne = OptimizePredicate(sqlPredicate, context);
 
-					ne = OptimizeQueryElement(ne, context);
+					ne = OptimizeQueryElement(visitor, root, ne, context);
 
 					if (ReferenceEquals(ne, e))
 						break;
