@@ -14,6 +14,7 @@
 		<Compile Include="..\Linq\Linq\CommonTests.cs" Link="CommonTests.cs" />
 		<Compile Include="..\Linq\Linq\CompileTests.cs" Link="CompileTests.cs" />
 		<Compile Include="..\Linq\Linq\CompileTestsAsync.cs" Link="CompileTestsAsync.cs" />
+		<Compile Include="..\Linq\Linq\ComplexTests.cs" Link="ComplexTests.cs" />
 		<Compile Include="..\Linq\Linq\ComplexTests2.cs" Link="ComplexTests2.cs" />
 		<Compile Include="..\Linq\Linq\ConcatUnionTests.cs" Link="ConcatUnionTests.cs" />
 		<Compile Include="..\Linq\Linq\ConvertTests.cs" Link="ConvertTests.cs" />

@@ -1376,7 +1376,8 @@ namespace LinqToDB.SqlProvider
 						if (subColumn.Parent != null && !subColumn.Parent.HasSetOperators && subColumn.Expression.CanBeEvaluated(true))
 						{
 							// throw new NotImplementedException();
-							var ts = column.Parent?.GetTableSource(subColumn.Parent);
+							var ts = QueryHelper.EnumerateInnerJoined(column.Parent)
+								.FirstOrDefault(ts => ts.Source == subColumn.Parent);
 							if (ts != null)
 							{
 								return new SqlColumn(null, subColumn.Expression, column.RawAlias);

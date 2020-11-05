@@ -521,6 +521,32 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
+		public static IEnumerable<SqlTableSource> EnumerateInnerJoined(SqlTableSource tableSource)
+		{
+			yield return tableSource;
+
+			foreach (var tableSourceJoin in tableSource.Joins)
+			{
+				if (tableSourceJoin.JoinType == JoinType.Inner)
+					yield return tableSourceJoin.Table;
+			}
+
+			foreach (var tableSourceJoin in tableSource.Joins)
+			{
+				if (tableSourceJoin.JoinType == JoinType.Inner)
+				{
+					foreach (var subJoined in EnumerateInnerJoined(tableSourceJoin.Table))
+					{
+						yield return subJoined;
+					}
+				}
+			}
+		}
+
+		public static IEnumerable<SqlTableSource> EnumerateInnerJoined(SelectQuery selectQuery)
+		{
+			return selectQuery.Select.From.Tables.SelectMany(t => EnumerateInnerJoined(t));
+		}
 
 		/// <summary>
 		/// Converts ORDER BY DISTINCT to GROUP BY equivalent
