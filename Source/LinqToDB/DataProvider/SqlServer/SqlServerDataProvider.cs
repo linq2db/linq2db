@@ -132,6 +132,15 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
+		public override TableOptions SupportedTableOptions =>
+			TableOptions.IsTemporary                |
+			TableOptions.IsLocalTemporaryStructure  |
+			TableOptions.IsGlobalTemporaryStructure |
+			TableOptions.IsLocalTemporaryData       |
+			TableOptions.IsGlobalTemporaryData      |
+			TableOptions.CreateIfNotExists          |
+			TableOptions.DropIfExists;
+
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
 			return Version switch
@@ -322,7 +331,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			switch (dataType.DataType)
 			{
-				// including provider-specic fallbacks
+				// including provider-specific fallbacks
 				case DataType.Text          : parameter.DbType = DbType.AnsiString; break;
 				case DataType.NText         : parameter.DbType = DbType.String;     break;
 				case DataType.Binary        :
@@ -352,6 +361,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		#endregion
 
 		#region UDT support
+
 		private readonly ConcurrentDictionary<Type, string> _udtTypeNames = new ConcurrentDictionary<Type, string>();
 		private readonly ConcurrentDictionary<string, Type> _udtTypes     = new ConcurrentDictionary<string, Type>();
 
@@ -386,6 +396,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			return null;
 		}
+
 		#endregion
 
 		#region BulkCopy
@@ -394,8 +405,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public override BulkCopyRowsCopied BulkCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			if (_bulkCopy == null)
-				_bulkCopy = new SqlServerBulkCopy(this);
+			_bulkCopy ??= new SqlServerBulkCopy(this);
 
 			return _bulkCopy.BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? SqlServerTools.DefaultBulkCopyType : options.BulkCopyType,
@@ -406,8 +416,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			if (_bulkCopy == null)
-				_bulkCopy = new SqlServerBulkCopy(this);
+			_bulkCopy ??= new SqlServerBulkCopy(this);
 
 			return _bulkCopy.BulkCopyAsync(
 				options.BulkCopyType == BulkCopyType.Default ? SqlServerTools.DefaultBulkCopyType : options.BulkCopyType,
@@ -420,8 +429,7 @@ namespace LinqToDB.DataProvider.SqlServer
 #if !NETFRAMEWORK
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			if (_bulkCopy == null)
-				_bulkCopy = new SqlServerBulkCopy(this);
+			_bulkCopy ??= new SqlServerBulkCopy(this);
 
 			return _bulkCopy.BulkCopyAsync(
 				options.BulkCopyType == BulkCopyType.Default ? SqlServerTools.DefaultBulkCopyType : options.BulkCopyType,

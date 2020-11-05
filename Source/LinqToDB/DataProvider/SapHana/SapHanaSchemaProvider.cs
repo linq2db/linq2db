@@ -515,7 +515,7 @@ namespace LinqToDB.DataProvider.SapHana
 				commandType = CommandType.StoredProcedure;
 				parameters = HanaSchemaOptions != null
 					? (HanaSchemaOptions.GetStoredProcedureParameters(procedure) ??
-					   GetStoredProcedureDataParameters(procedure))
+					  GetStoredProcedureDataParameters(procedure))
 					: GetStoredProcedureDataParameters(procedure);
 			}
 

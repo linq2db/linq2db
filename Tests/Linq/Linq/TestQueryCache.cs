@@ -2,12 +2,14 @@
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Expressions;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -134,7 +136,7 @@ namespace Tests.Linq
 
 			TestMethod("Value1");
 			TestMethod("Value2");
-			
+
 			TestMethod("ValueF1", "FAIL");
 			Assert.Throws(Is.AssignableTo(typeof(Exception)), () => TestMethod("ValueF2", "FAIL"));
 		}
@@ -175,8 +177,8 @@ namespace Tests.Linq
 
 					var sqlStr = test.ToString();
 					TestContext.WriteLine(sqlStr);
-				}	
-				
+				}
+
 				Assert.That(Query<ManyFields>.CacheMissCount - currentMiss, Is.EqualTo(5));
 
 				currentMiss = Query<ManyFields>.CacheMissCount;
@@ -188,7 +190,7 @@ namespace Tests.Linq
 						.Where(x => Helper.GetField(x, i) == i);
 
 					var sqlStr = test.ToString();
-				}	
+				}
 
 				Assert.That(Query<ManyFields>.CacheMissCount, Is.EqualTo(currentMiss));
 			}

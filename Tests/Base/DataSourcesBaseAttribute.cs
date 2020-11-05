@@ -35,7 +35,11 @@ namespace Tests
 			if (NoLinqService || !IncludeLinqService)
 				return providers;
 
+#if NETFRAMEWORK
 			return providers.Concat(providers.Select(p => p + ".LinqService"));
+#else
+			return providers;
+#endif
 		}
 
 		protected abstract IEnumerable<string> GetProviders();

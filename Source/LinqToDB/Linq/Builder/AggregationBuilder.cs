@@ -15,7 +15,7 @@ namespace LinqToDB.Linq.Builder
 	{
 		public static string[] MethodNames = { "Average", "Min", "Max", "Sum" };
 
-		public static Sql.ExpressionAttribute GetAggregateDefinition(MethodCallExpression methodCall, MappingSchema mapping)
+		public static Sql.ExpressionAttribute? GetAggregateDefinition(MethodCallExpression methodCall, MappingSchema mapping)
 		{
 			var functions = mapping.GetAttributes<Sql.ExpressionAttribute>(methodCall.Method.ReflectedType!,
 				methodCall.Method,
@@ -177,7 +177,7 @@ namespace LinqToDB.Linq.Builder
 						}
 				}
 
-				
+
 				throw new InvalidOperationException();
 			}
 

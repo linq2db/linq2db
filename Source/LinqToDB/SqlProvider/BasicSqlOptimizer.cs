@@ -1364,6 +1364,14 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.Column:
 				{
 					var column = (SqlColumn)element;
+					if (column.Expression.ElementType == QueryElementType.Column)
+					{
+						var subColumn = (SqlColumn)column.Expression;
+						if (subColumn.Expression.CanBeEvaluated(true))
+						{
+							column.Parent.GetTableSource(subColumn.Parent)
+						}
+					}
 					var expr   = QueryHelper.GetUnderlyingExpression(column.Expression);
 
 					// optimizing out columns which are constants or evaluable

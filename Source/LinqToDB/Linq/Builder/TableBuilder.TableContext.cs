@@ -31,7 +31,7 @@ namespace LinqToDB.Linq.Builder
 
 			public ExpressionBuilder      Builder     { get; }
 			public Expression?            Expression  { get; }
-									    
+
 			public SelectQuery            SelectQuery { get; set; }
 			public SqlStatement?          Statement   { get; set; }
 
@@ -40,10 +40,10 @@ namespace LinqToDB.Linq.Builder
 			public virtual IBuildContext? Parent      { get; set; }
 			public bool                   IsScalar    { get; set; }
 
-			public Type             OriginalType = null!;
-			public Type             ObjectType = null!;
+			public Type             OriginalType     = null!;
+			public Type             ObjectType       = null!;
 			public EntityDescriptor EntityDescriptor = null!;
-			public SqlTable         SqlTable = null!;
+			public SqlTable         SqlTable         = null!;
 
 			internal bool           ForceLeftJoinAssociations { get; set; }
 
@@ -719,7 +719,7 @@ namespace LinqToDB.Linq.Builder
 
 			Expression BuildExpression(Expression? expression, int level, ParameterExpression? parentObject)
 			{
-	
+
 				if (expression == null)
 				{
 					return BuildQuery(OriginalType, this, parentObject);
@@ -737,7 +737,7 @@ namespace LinqToDB.Linq.Builder
 
 					return Builder.BuildMultipleQuery(this, expression, false);
 				}
- 
+
 				var contextInfo = FindContextExpression(expression, level, false, false);
 
 				if (contextInfo == null)
@@ -762,7 +762,7 @@ namespace LinqToDB.Linq.Builder
 						throw new InvalidOperationException("contextInfo.CurrentExpression is null");
 
 					var maxLevel = contextInfo.CurrentExpression.GetLevel(Builder.MappingSchema);
-					 
+
 					if (contextInfo.CurrentLevel + 1 > maxLevel)
 						expr = contextInfo.Context.BuildExpression(null, 0, false);
 					else
@@ -804,7 +804,7 @@ namespace LinqToDB.Linq.Builder
 										result = contextInfo.Context.ConvertToIndex(contextInfo.CurrentExpression, contextInfo.CurrentLevel, flags);
 									}
 									else
-									
+
 									{
 										result = SqlTable.Fields
 											.Where(field => !field.IsDynamic && !field.SkipOnEntityFetch)
@@ -820,7 +820,7 @@ namespace LinqToDB.Linq.Builder
 								{
 									result = new[]
 									{
-										new SqlInfo(SqlTable) 
+										new SqlInfo(SqlTable)
 									};
 								}
 
@@ -866,7 +866,7 @@ namespace LinqToDB.Linq.Builder
 								{
 									var result = new[]
 									{
-										new SqlInfo(SqlTable) 
+										new SqlInfo(SqlTable)
 									};
 									return result;
 								}
@@ -931,7 +931,7 @@ namespace LinqToDB.Linq.Builder
 								else
 									resultSql = contextInfo.Context.ConvertToSql(contextInfo.CurrentExpression,
 										contextInfo.CurrentLevel + 1, flags);
-							}							
+							}
 							else
 							{
 								if (maxLevel == 0)
@@ -983,7 +983,7 @@ namespace LinqToDB.Linq.Builder
 					SelectQuery,
 					index
 				);
-				
+
 				_indexes.Add(expr.Sql, newExpr);
 
 				return newExpr;
@@ -1028,7 +1028,7 @@ namespace LinqToDB.Linq.Builder
 							if (contextInfo.Field != null)
 								return IsExpressionResult.True;
 
-							if (contextInfo.CurrentExpression == null 
+							if (contextInfo.CurrentExpression == null
 							    || contextInfo.CurrentExpression.GetLevel(Builder.MappingSchema) == contextInfo.CurrentLevel)
 								return IsExpressionResult.False;
 
@@ -1045,7 +1045,7 @@ namespace LinqToDB.Linq.Builder
 									return new IsExpressionResult(true, this);
 								return IsExpressionResult.False;
 							}
-							
+
 							var contextInfo = FindContextExpression(expression, level, false, false);
 							if (contextInfo == null)
 								return IsExpressionResult.False;
@@ -1053,7 +1053,7 @@ namespace LinqToDB.Linq.Builder
 							if (contextInfo.Field != null)
 								return IsExpressionResult.False;
 
-							if (contextInfo.CurrentExpression == null 
+							if (contextInfo.CurrentExpression == null
 							    || contextInfo.CurrentExpression.GetLevel(Builder.MappingSchema) == contextInfo.CurrentLevel)
 								return new IsExpressionResult(true, contextInfo.Context);
 
@@ -1150,7 +1150,7 @@ namespace LinqToDB.Linq.Builder
 						    expression.NodeType == ExpressionType.Call)
 						{
 							var tableLevel  = FindContextExpression(expression, level, true, true)!;
-							
+
 							if (tableLevel.Descriptor?.IsList == true)
 							{
 								Expression ma;
@@ -1339,7 +1339,7 @@ namespace LinqToDB.Linq.Builder
 
 												pathName = !string.IsNullOrEmpty(suffix) ? name + "." + suffix : name;
 											}
-											
+
 											if (field.Name == pathName)
 												return field;
 										}
@@ -1438,7 +1438,7 @@ namespace LinqToDB.Linq.Builder
 					CurrentLevel      = currentLevel;
 				}
 
-				public ContextInfo(IBuildContext context, Expression? currentExpression, int currentLevel): 
+				public ContextInfo(IBuildContext context, Expression? currentExpression, int currentLevel):
 					this(context, null, currentExpression, currentLevel)
 				{
 				}
@@ -1489,7 +1489,7 @@ namespace LinqToDB.Linq.Builder
 									if (_associationContexts == null ||
 									    !_associationContexts.TryGetValue(accessorMember, out var foundInfo))
 									{
-										
+
 										if (forceInner)
 											isOuter = false;
 										else if (!isOuter)
@@ -1531,7 +1531,7 @@ namespace LinqToDB.Linq.Builder
 											new ContextRefExpression(levelExpression.Type, this));
 
 										associatedContext = AssociationHelper.BuildAssociationSelectMany(Builder,
-											new BuildInfo(Parent, newExpression, new SelectQuery()), 
+											new BuildInfo(Parent, newExpression, new SelectQuery()),
 											this, accessorMember, descriptor,
 											ref isOuter);
 
@@ -1595,7 +1595,7 @@ namespace LinqToDB.Linq.Builder
 			AssociationDescriptor? GetAssociationDescriptor(AccessorMember accessorMember, EntityDescriptor entityDescriptor)
 			{
 				AssociationDescriptor? descriptor = null;
-				
+
 				if (accessorMember.MemberInfo.MemberType == MemberTypes.Method)
 				{
 					var attribute = Builder.MappingSchema.GetAttribute<AssociationAttribute>(accessorMember.MemberInfo.DeclaringType!, accessorMember.MemberInfo, a => a.Configuration);

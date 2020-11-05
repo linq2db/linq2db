@@ -15,10 +15,10 @@ namespace LinqToDB.DataProvider.Informix
 	public class InformixDataProvider : DynamicDataProviderBase<InformixProviderAdapter>
 	{
 		public InformixDataProvider(string providerName)
-						: base(
-				  providerName,
-				  GetMappingSchema(providerName, InformixProviderAdapter.GetInstance(providerName).MappingSchema),
-				  InformixProviderAdapter.GetInstance(providerName))
+			: base(
+				providerName,
+				GetMappingSchema(providerName, InformixProviderAdapter.GetInstance(providerName).MappingSchema),
+				InformixProviderAdapter.GetInstance(providerName))
 
 		{
 			SqlProviderFlags.IsParameterOrderDependent         = !Adapter.IsIDSProvider;
@@ -77,6 +77,13 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			return new InvariantCultureRegion();
 		}
+
+		public override TableOptions SupportedTableOptions =>
+			TableOptions.IsTemporary               |
+			TableOptions.IsLocalTemporaryStructure |
+			TableOptions.IsLocalTemporaryData      |
+			TableOptions.CreateIfNotExists         |
+			TableOptions.DropIfExists;
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{

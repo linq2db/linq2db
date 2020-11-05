@@ -135,6 +135,14 @@ namespace LinqToDB.ServiceModel
 				Builder.Append(' ').Append(value ? '1' : '0');
 			}
 
+			protected void Append(bool? value)
+			{
+				Builder.Append(' ').Append(value.HasValue ? '1' : '0');
+
+				if (value.HasValue)
+					Builder.Append(value.Value ? '1' : '0');
+			}
+
 			protected void Append(DbDataType? type)
 			{
 				Append(type != null);
@@ -370,6 +378,22 @@ namespace LinqToDB.ServiceModel
 			protected bool ReadBool()
 			{
 				Get(' ');
+
+				var value = Peek() == '1';
+
+				Pos++;
+
+				return value;
+			}
+
+			protected bool? ReadNullableBool()
+			{
+				Get(' ');
+
+				if (Get('0'))
+					return null;
+
+				Get('1');
 
 				var value = Peek() == '1';
 
@@ -703,7 +727,6 @@ namespace LinqToDB.ServiceModel
 						{
 							var elem = (SqlField)e;
 
-
 							Append(elem.Type);
 							Append(elem.Name);
 							Append(elem.PhysicalName);
@@ -795,6 +818,7 @@ namespace LinqToDB.ServiceModel
 
 							Append(elem.ValueType);
 							Append(elem.ValueType.SystemType, elem.Value, false);
+
 							break;
 						}
 
@@ -853,6 +877,8 @@ namespace LinqToDB.ServiceModel
 										Append(ObjectIndices[expr]);
 								}
 							}
+
+							Append((int)elem.TableOptions);
 
 							break;
 						}
@@ -1233,7 +1259,6 @@ namespace LinqToDB.ServiceModel
 						var elem = (SqlDropTableStatement)e;
 
 						Append(elem.Table);
-						Append(elem.IfExists);
 
 						break;
 					}
@@ -1487,11 +1512,11 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.SqlFunction :
 						{
-							var systemType    = Read<Type>()!;
-							var name          = ReadString()!;
-							var isAggregate   = ReadBool();
-							var precedence    = ReadInt();
-							var parameters    = ReadArray<ISqlExpression>()!;
+							var systemType  = Read<Type>()!;
+							var name        = ReadString()!;
+							var isAggregate = ReadBool();
+							var precedence  = ReadInt();
+							var parameters  = ReadArray<ISqlExpression>()!;
 							var canBeNull     = ReadBool();
 							var doNotOptimize = ReadBool();
 
@@ -1595,10 +1620,11 @@ namespace LinqToDB.ServiceModel
 
 							var sqlTableType = (SqlTableType)ReadInt();
 							var tableArgs    = sqlTableType == SqlTableType.Table ? null : ReadArray<ISqlExpression>();
+							var tableOptions = (TableOptions)ReadInt();
 
 							obj = new SqlTable(
 								sourceID, name, alias, server, database, schema, physicalName, objectType, sequenceAttributes, flds,
-								sqlTableType, tableArgs);
+								sqlTableType, tableArgs, tableOptions);
 
 							break;
 						}
@@ -1724,7 +1750,7 @@ namespace LinqToDB.ServiceModel
 							var trueValue  = Read<ISqlExpression>()!;
 							var falseValue = Read<ISqlExpression>()!;
 							var withNull   = ReadInt();
-							
+
 							obj = new SqlPredicate.IsTrue(expr1, trueValue, falseValue, withNull == 3 ? (bool?)null : withNull == 1, isNot);
 
 							break;
@@ -1753,9 +1779,9 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.InListPredicate :
 						{
-							var expr1    = Read<ISqlExpression>()!;
-							var isNot    = ReadBool();
-							var values   = ReadList<ISqlExpression>()!;
+							var expr1  = Read<ISqlExpression>()!;
+							var isNot  = ReadBool();
+							var values = ReadList<ISqlExpression>()!;
 							var withNull = ReadInt();
 
 							obj = new SqlPredicate.InList(expr1, withNull == 3 ? (bool?)null : withNull == 1, isNot, values);
@@ -1994,14 +2020,13 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.CreateTableStatement :
 						{
-							var table           = Read<SqlTable>();
+							var table           = Read<SqlTable>()!;
 							var statementHeader = ReadString();
 							var statementFooter = ReadString();
 							var defaultNullable = (DefaultNullable)ReadInt();
 
-							obj = _statement = new SqlCreateTableStatement
+							obj = _statement = new SqlCreateTableStatement(table)
 							{
-								Table           = table,
 								StatementHeader = statementHeader,
 								StatementFooter = statementFooter,
 								DefaultNullable = defaultNullable,
@@ -2012,13 +2037,9 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.DropTableStatement :
 					{
-						var table      = Read<SqlTable>();
-						var ifExists   = ReadBool();
+						var table      = Read<SqlTable>()!;
 
-						obj = _statement = new SqlDropTableStatement(ifExists)
-						{
-							Table = table,
-						};
+						obj = _statement = new SqlDropTableStatement(table);
 
 						break;
 					}
@@ -2041,7 +2062,7 @@ namespace LinqToDB.ServiceModel
 					case QueryElementType.FromClause    : obj = new SqlFromClause   (ReadArray<SqlTableSource>()!);                break;
 					case QueryElementType.WhereClause   : obj = new SqlWhereClause  (Read     <SqlSearchCondition>()!);            break;
 					case QueryElementType.GroupByClause : obj = new SqlGroupByClause((GroupingType)ReadInt(), ReadArray<ISqlExpression>()!); break;
-					case QueryElementType.GroupingSet   : obj = new SqlGroupingSet(ReadArray<ISqlExpression>()!);                  break;
+					case QueryElementType.GroupingSet   : obj = new SqlGroupingSet  (ReadArray<ISqlExpression>()!);                          break;
 					case QueryElementType.OrderByClause : obj = new SqlOrderByClause(ReadArray<SqlOrderByItem>()!);                break;
 
 					case QueryElementType.OrderByItem :

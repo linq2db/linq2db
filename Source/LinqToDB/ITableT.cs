@@ -13,10 +13,11 @@ namespace LinqToDB
 	[PublicAPI]
 	public interface ITable<out T> : IExpressionQuery<T>
 	{
-		string? ServerName   { get; }
-		string? DatabaseName { get; }
-		string? SchemaName   { get; }
-		string  TableName    { get; }
+		string?      ServerName    { get; }
+		string?      DatabaseName  { get; }
+		string?      SchemaName    { get; }
+		string       TableName     { get; }
+		TableOptions TableOptions  { get; }
 
 		//TODO: replace with extension method
 		string GetTableName();

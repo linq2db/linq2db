@@ -2,12 +2,11 @@
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
-using LinqToDB.Common;
 
 namespace LinqToDB.Linq
 {
-	using LinqToDB.Extensions;
-	using LinqToDB.Reflection;
+	using Extensions;
+	using Reflection;
 
 	class Table<T> : ExpressionQuery<T>, ITable<T>, ITableMutable<T>, ITable
 	{
@@ -17,6 +16,7 @@ namespace LinqToDB.Linq
 				? null
 				: Expression.Call(Methods.LinqToDB.GetTable.MakeGenericMethod(typeof(T)),
 					Expression.Constant(dataContext));
+
 			InitTable(dataContext, expression);
 		}
 
@@ -35,6 +35,7 @@ namespace LinqToDB.Linq
 			_databaseName = ed.DatabaseName;
 			_schemaName   = ed.SchemaName;
 			_tableName    = ed.TableName;
+			_tableOptions = ed.TableOptions;
 		}
 
 		// ReSharper disable StaticMemberInGenericType
@@ -42,10 +43,11 @@ namespace LinqToDB.Linq
 		static MethodInfo? _databaseNameMethodInfo;
 		static MethodInfo? _schemaNameMethodInfo;
 		static MethodInfo? _tableNameMethodInfo;
+		static MethodInfo? _tableOptionsMethodInfo;
 		// ReSharper restore StaticMemberInGenericType
 
 		private string? _serverName;
-		public  string? ServerName
+		public  string?  ServerName
 		{
 			get => _serverName;
 			set
@@ -98,6 +100,24 @@ namespace LinqToDB.Linq
 			}
 		}
 
+		private TableOptions _tableOptions;
+		public  TableOptions  TableOptions
+		{
+			get => _tableOptions;
+			set
+			{
+				if (_tableOptions != value)
+				{
+					Expression = Expression.Call(
+						null,
+						_tableOptionsMethodInfo ??= Methods.LinqToDB.Table.TableOptions.MakeGenericMethod(typeof(T)),
+						Expression, Expression.Constant(value));
+
+					_tableOptions = value;
+				}
+			}
+		}
+
 		private string _tableName = null!;
 		public  string  TableName
 		{
@@ -118,51 +138,72 @@ namespace LinqToDB.Linq
 
 		public string GetTableName() =>
 			DataContext.CreateSqlProvider()
-				.ConvertTableName(new StringBuilder(), ServerName, DatabaseName, SchemaName, TableName)
+				.ConvertTableName(new StringBuilder(), ServerName, DatabaseName, SchemaName, TableName, TableOptions)
 				.ToString();
 
 		public ITable<T> ChangeServerName(string? serverName)
 		{
-			var table          = new Table<T>(DataContext);
-			table.TableName    = TableName;
-			table.SchemaName   = SchemaName;
-			table.DatabaseName = DatabaseName;
-			table.Expression   = Expression;
-			table.ServerName   = serverName;
-			return table;
+			return new Table<T>(DataContext)
+			{
+				TableName    = TableName,
+				SchemaName   = SchemaName,
+				DatabaseName = DatabaseName,
+				Expression   = Expression,
+				ServerName   = serverName,
+				TableOptions = TableOptions
+			};
 		}
 
 		public ITable<T> ChangeDatabaseName(string? databaseName)
 		{
-			var table          = new Table<T>(DataContext);
-			table.TableName    = TableName;
-			table.SchemaName   = SchemaName;
-			table.ServerName   = ServerName;
-			table.Expression   = Expression;
-			table.DatabaseName = databaseName;
-			return table;
+			return new Table<T>(DataContext)
+			{
+				TableName    = TableName,
+				SchemaName   = SchemaName,
+				ServerName   = ServerName,
+				Expression   = Expression,
+				DatabaseName = databaseName,
+				TableOptions = TableOptions
+			};
 		}
 
 		public ITable<T> ChangeSchemaName(string? schemaName)
 		{
-			var table          = new Table<T>(DataContext);
-			table.TableName    = TableName;
-			table.ServerName   = ServerName;
-			table.DatabaseName = DatabaseName;
-			table.Expression   = Expression;
-			table.SchemaName   = schemaName;
-			return table;
+			return new Table<T>(DataContext)
+			{
+				TableName    = TableName,
+				ServerName   = ServerName,
+				DatabaseName = DatabaseName,
+				Expression   = Expression,
+				SchemaName   = schemaName,
+				TableOptions = TableOptions
+			};
 		}
 
 		public ITable<T> ChangeTableName(string tableName)
 		{
-			var table          = new Table<T>(DataContext);
-			table.SchemaName   = SchemaName;
-			table.ServerName   = ServerName;
-			table.DatabaseName = DatabaseName;
-			table.Expression   = Expression;
-			table.TableName    = tableName;
-			return table;
+			return new Table<T>(DataContext)
+			{
+				SchemaName   = SchemaName,
+				ServerName   = ServerName,
+				DatabaseName = DatabaseName,
+				Expression   = Expression,
+				TableName    = tableName,
+				TableOptions = TableOptions
+			};
+		}
+
+		public ITable<T> ChangeTableOptions(TableOptions tableOptions)
+		{
+			return new Table<T>(DataContext)
+			{
+				SchemaName   = SchemaName,
+				ServerName   = ServerName,
+				DatabaseName = DatabaseName,
+				Expression   = Expression,
+				TableName    = TableName,
+				TableOptions = tableOptions
+			};
 		}
 
 		#region Overrides

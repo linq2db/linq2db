@@ -47,8 +47,9 @@ namespace LinqToDB.Data
 
 		#region IDataContext Members
 
-		SqlProviderFlags IDataContext.SqlProviderFlags => DataProvider.SqlProviderFlags;
-		Type             IDataContext.DataReaderType   => DataProvider.DataReaderType;
+		SqlProviderFlags IDataContext.SqlProviderFlags      => DataProvider.SqlProviderFlags;
+		TableOptions     IDataContext.SupportedTableOptions => DataProvider.SupportedTableOptions;
+		Type             IDataContext.DataReaderType        => DataProvider.DataReaderType;
 
 		bool             IDataContext.CloseAfterUse    { get; set; }
 
