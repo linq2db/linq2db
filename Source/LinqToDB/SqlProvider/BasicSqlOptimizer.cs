@@ -1364,21 +1364,24 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.Column:
 				{
 					var column = (SqlColumn)element;
+
+					if (column.Parent == null || column.Parent.HasSetOperators)
+						break;
+
 					if (column.Expression.ElementType == QueryElementType.Column)
 					{
 						var subColumn = (SqlColumn)column.Expression;
-						if (subColumn.Expression.CanBeEvaluated(true))
+						// optimizing out columns which are constants or evaluable
+						//
+						if (subColumn.Parent != null && !subColumn.Parent.HasSetOperators && subColumn.Expression.CanBeEvaluated(true))
 						{
-							column.Parent.GetTableSource(subColumn.Parent)
+							// throw new NotImplementedException();
+							var ts = column.Parent?.GetTableSource(subColumn.Parent);
+							if (ts != null)
+							{
+								return new SqlColumn(null, subColumn.Expression, column.RawAlias);
+							}
 						}
-					}
-					var expr   = QueryHelper.GetUnderlyingExpression(column.Expression);
-
-					// optimizing out columns which are constants or evaluable
-					//
-					if (!ReferenceEquals(expr, column.Expression) && expr?.CanBeEvaluated(true) == true)
-					{
-						return new SqlColumn(null, expr, column.RawAlias);
 					}
 
 					break;
@@ -1395,10 +1398,8 @@ namespace LinqToDB.SqlProvider
 						{
 							var item = groupBy.Items[i];
 
-							var expr = QueryHelper.GetUnderlyingExpression(item);
-
 							// skipping evaluable grouping items
-							if (!processed.Add(item) || expr?.CanBeEvaluated(true) == true)
+							if (!processed.Add(item) || item.CanBeEvaluated(true))
 							{
 								items ??= groupBy.Items.Take(i).ToList();
 							}
