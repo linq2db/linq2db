@@ -2282,5 +2282,22 @@ namespace Tests.Linq
 			}
 			Query.ClearCaches();
 		}
+
+		[Test]
+		public void IssueGroupByNonTableColumn([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = db.Person
+					.Select(_ => 1)
+					.Concat(db.Person.Select(_ => 2))
+					.GroupBy(_ => _)
+					.Select(_ => new { _.Key, Count = _.Count() })
+					.Where(_ => _.Key == 1)
+					.Select(_ => _.Count)
+					.Where(_ => _ > 1)
+					.Count();
+			}
+		}
 	}
 }
