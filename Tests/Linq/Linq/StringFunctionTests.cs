@@ -46,6 +46,17 @@ namespace Tests.Linq
 			Assert.AreEqual("st", Sql.Substring("test", 3,    3));
 		}
 
+		[Test]
+		public void Like()
+		{
+#if !NETFRAMEWORK
+			Assert.Throws<InvalidOperationException>(() => Sql.Like(null, null));
+			Assert.Throws<InvalidOperationException>(() => Sql.Like(null, null, null));
+#else
+			Assert.Pass("We don't test server-side method here.");
+#endif
+		}
+
 		#endregion
 
 		[Test]
