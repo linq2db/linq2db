@@ -417,7 +417,7 @@ namespace LinqToDB
 		[Sql.Function  (PN.SapHana,  "Substring",                       PreferServerSide = true)]
 		public static string? Substring(string? str, int? startIndex, int? length)
 		{
-			return str == null || startIndex == null || length == null ? null : str.Substring(startIndex.Value - 1, length.Value);
+			return str == null || startIndex == null || length == null ? null : str.Substring(startIndex.Value, length.Value);
 		}
 
 		[Sql.Function(ServerSideOnly = true)]
