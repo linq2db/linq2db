@@ -117,6 +117,17 @@ namespace Tests.Linq
 			Assert.AreEqual("dcba",       Sql.Reverse("abcd"));
 		}
 
+		[Test]
+		public void Left()
+		{
+			Assert.AreEqual(null,   Sql.Left(null,   0));
+			Assert.AreEqual(null,   Sql.Left("test", null));
+			Assert.AreEqual(null,   Sql.Left("test", -1));
+			Assert.AreEqual("",     Sql.Left("test", 0));
+			Assert.AreEqual("te",   Sql.Left("test", 2));
+			Assert.AreEqual("test", Sql.Left("test", 5));
+		}
+
 		#endregion
 
 		[Test]
