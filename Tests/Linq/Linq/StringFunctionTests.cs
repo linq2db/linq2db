@@ -139,6 +139,39 @@ namespace Tests.Linq
 			Assert.AreEqual("test", Sql.Right("test", 5));
 		}
 
+		[Test]
+		public void Stuff1()
+		{
+			// Disallowed null parameters
+			Assert.AreEqual(null,       Sql.Stuff((string)null!, 1,    1,    "test"));
+			Assert.AreEqual(null,       Sql.Stuff("test",        null, 1,    "test"));
+			Assert.AreEqual(null,       Sql.Stuff("test",        1,    null, "test"));
+			Assert.AreEqual(null,       Sql.Stuff("test",        1,    1,    null));
+
+			// Disallowed start
+			Assert.AreEqual(null,       Sql.Stuff("test",        0,    1,    "test"));
+			Assert.AreEqual(null,       Sql.Stuff("test",        5,    1,    "test"));
+
+			// Disallowed length
+			Assert.AreEqual(null,       Sql.Stuff("test",        1,    -1,   "test"));
+
+			// Correct start and length
+			Assert.AreEqual("5678",     Sql.Stuff("1234",        1,    4,    "5678"));
+
+			// Correct start
+			Assert.AreEqual("12356784", Sql.Stuff("1234",        4,    0,    "5678"));
+
+			// Correct length												 
+			Assert.AreEqual("125678",   Sql.Stuff("1234",        3,    5,    "5678"));
+		}
+
+		[Test]
+		public void Stuff2()
+		{
+			var expression = Enumerable.Empty<string>();
+			Assert.Throws<NotImplementedException>(() => Sql.Stuff(expression, 1, 1, "")); // ServerSideOnly
+		}
+
 		#endregion
 
 		[Test]
