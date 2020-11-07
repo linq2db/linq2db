@@ -540,11 +540,16 @@ namespace LinqToDB
 		}
 
 		[Sql.Function]
-		public static string? Stuff(string? str, int? startLocation, int? length, string? value)
+		public static string? Stuff(string? str, int? start, int? length, string? newString)
 		{
-			return str == null || value == null || startLocation == null || length == null ?
-				null :
-				str.Remove(startLocation.Value - 1, length.Value).Insert(startLocation.Value - 1, value);
+			if (str == null || start == null || length == null || newString == null) return null;
+			if (start.Value < 1 || start.Value > str.Length)                         return null;
+			if (length.Value < 0)                                                    return null;
+
+			var index = start.Value - 1;
+			var maxAllowedLength = Math.Min(str.Length - index, length.Value);
+
+			return str.Remove(index, maxAllowedLength).Insert(index, newString);
 		}
 
 		[Sql.Function(ServerSideOnly = true)]
