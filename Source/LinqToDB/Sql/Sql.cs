@@ -455,12 +455,20 @@ namespace LinqToDB
 		[Sql.Function(PN.MySql,    "Locate")]
 		[Sql.Function(PN.SapHana,  "Locate", 1, 0)]
 		[Sql.Function(PN.Firebird, "Position")]
-		public static int? CharIndex(string? value, string? str)
+		public static int? CharIndex(string? substring, string? str)
 		{
-			if (str == null || value == null)
-				return null;
+			if (str == null || substring == null) return null;
 
-			return str.IndexOf(value) + 1;
+			// Database CharIndex returns:
+			//  1-based position, when sequence is found
+			//  0 when substring is empty
+			//  0 when substring is not found
+
+			// IndexOf returns:
+			//  0 when substring is empty <= this needs to handled special way to mimic behavior.
+			//  -1 when substring is not found
+
+			return substring.Length == 0 ? 0 : str.IndexOf(substring) + 1;
 		}
 
 		[Sql.Function]
@@ -468,12 +476,12 @@ namespace LinqToDB
 		[Sql.Function  (PN.MySql,    "Locate")]
 		[Sql.Function  (PN.Firebird, "Position")]
 		[Sql.Expression(PN.SapHana,  "Locate(Substring({1},{2} + 1),{0}) + {2}")]
-		public static int? CharIndex(string? value, string? str, int? startLocation)
+		public static int? CharIndex(string? substring, string? str, int? start)
 		{
-			if (str == null || value == null || startLocation == null)
-				return null;
+			if (str == null || substring == null || start == null) return null;
 
-			return str.IndexOf(value, startLocation.Value - 1) + 1;
+			var index = start.Value < 1 ? 0 : start.Value > str.Length ? str.Length - 1 : start.Value - 1;
+			return substring.Length == 0 ? 0 : str.IndexOf(substring, index) + 1;
 		}
 
 		[Sql.Function]
@@ -482,8 +490,7 @@ namespace LinqToDB
 		[Sql.Function(PN.SapHana, "Locate")]
 		public static int? CharIndex(char? value, string? str)
 		{
-			if (value == null || str == null)
-				return null;
+			if (value == null || str == null) return null;
 
 			return str.IndexOf(value.Value) + 1;
 		}
@@ -492,12 +499,12 @@ namespace LinqToDB
 		[Sql.Function(PN.DB2,     "Locate")]
 		[Sql.Function(PN.MySql,   "Locate")]
 		[Sql.Function(PN.SapHana, "Locate")]
-		public static int? CharIndex(char? value, string? str, int? startLocation)
+		public static int? CharIndex(char? value, string? str, int? start)
 		{
-			if (str == null || value == null || startLocation == null)
-				return null;
+			if (str == null || value == null || start == null) return null;
 
-			return str.IndexOf(value.Value, startLocation.Value - 1) + 1;
+			var index = start.Value < 1 ? 0 : start.Value > str.Length ? str.Length - 1 : start.Value - 1;
+			return str.IndexOf(value.Value, index) + 1;
 		}
 
 		[Sql.Function]
