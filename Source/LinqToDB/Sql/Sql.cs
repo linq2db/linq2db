@@ -525,7 +525,7 @@ namespace LinqToDB
 			if (length.Value < 0)              return null;
 			if (length.Value > str.Length)     return str;
 
-			return str.Substring(0, length.Value);
+			return str[..length.Value];
 		}
 
 		[Sql.Function(                       PreferServerSide = true)]
