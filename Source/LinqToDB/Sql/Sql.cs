@@ -415,9 +415,16 @@ namespace LinqToDB
 		[Sql.Function  (PN.SQLite,   "Substr",                          PreferServerSide = true)]
 		[Sql.Expression(PN.Firebird, "Substring({0} from {1} for {2})", PreferServerSide = true)]
 		[Sql.Function  (PN.SapHana,  "Substring",                       PreferServerSide = true)]
-		public static string? Substring(string? str, int? startIndex, int? length)
+		public static string? Substring(string? str, int? start, int? length)
 		{
-			return str == null || startIndex == null || length == null ? null : str.Substring(startIndex.Value, length.Value);
+			if (str == null || start == null || length == null) return null;
+			if (start.Value < 1 || start.Value > str.Length) return null;
+			if (length.Value < 0) return null;
+
+			var index = start.Value - 1;
+			var maxAllowedLength = Math.Min(str.Length - index, length.Value);
+
+			return str.Substring(index, maxAllowedLength);
 		}
 
 		[Sql.Function(ServerSideOnly = true)]
