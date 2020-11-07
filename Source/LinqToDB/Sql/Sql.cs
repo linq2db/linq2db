@@ -510,8 +510,7 @@ namespace LinqToDB
 		[Sql.Function]
 		public static string? Reverse(string? str)
 		{
-			if (string.IsNullOrEmpty(str))
-				return str;
+			if (string.IsNullOrEmpty(str)) return str;
 
 			var chars = str!.ToCharArray();
 			Array.Reverse(chars);

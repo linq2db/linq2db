@@ -109,6 +109,14 @@ namespace Tests.Linq
 			Assert.AreEqual(0,    Sql.CharIndex('s',           "test", 5));
 		}
 
+		[Test]
+		public void Reverse()
+		{
+			Assert.AreEqual(null,         Sql.Reverse(null));
+			Assert.AreEqual(string.Empty, Sql.Reverse(string.Empty));
+			Assert.AreEqual("dcba",       Sql.Reverse("abcd"));
+		}
+
 		#endregion
 
 		[Test]
