@@ -128,6 +128,17 @@ namespace Tests.Linq
 			Assert.AreEqual("test", Sql.Left("test", 5));
 		}
 
+		[Test]
+		public void Right()
+		{
+			Assert.AreEqual(null,   Sql.Right(null,   0));
+			Assert.AreEqual(null,   Sql.Right("test", null));
+			Assert.AreEqual(null,   Sql.Right("test", -1));
+			Assert.AreEqual("",     Sql.Right("test", 0));
+			Assert.AreEqual("st",   Sql.Right("test", 2));
+			Assert.AreEqual("test", Sql.Right("test", 5));
+		}
+
 		#endregion
 
 		[Test]
