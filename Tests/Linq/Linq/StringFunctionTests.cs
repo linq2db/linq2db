@@ -57,6 +57,58 @@ namespace Tests.Linq
 #endif
 		}
 
+		[Test]
+		public void CharIndex1()
+		{
+			Assert.AreEqual(null, Sql.CharIndex("",            null));
+			Assert.AreEqual(null, Sql.CharIndex((string)null!, "test"));
+
+			Assert.AreEqual(0,    Sql.CharIndex("",            "test"));
+			Assert.AreEqual(0,    Sql.CharIndex("g",           "test"));
+			Assert.AreEqual(3,    Sql.CharIndex("st",          "test"));
+		}
+
+		[Test]
+		public void CharIndex2()
+		{
+			Assert.AreEqual(null, Sql.CharIndex("",            null,   0));
+			Assert.AreEqual(null, Sql.CharIndex((string)null!, "test", 0));
+			Assert.AreEqual(null, Sql.CharIndex("st",          "test", null));
+
+			Assert.AreEqual(0,    Sql.CharIndex("",            "test", 0));
+			Assert.AreEqual(0,    Sql.CharIndex("g",           "test", 0));
+			Assert.AreEqual(3,    Sql.CharIndex("st",          "test", -1));
+			Assert.AreEqual(3,    Sql.CharIndex("st",          "test", 2));
+			Assert.AreEqual(0,    Sql.CharIndex("st",          "test", 4));
+			Assert.AreEqual(0,    Sql.CharIndex("st",          "test", 5));
+		}
+
+		[Test]
+		public void CharIndex3()
+		{
+			Assert.AreEqual(null, Sql.CharIndex('t',           null));
+			Assert.AreEqual(null, Sql.CharIndex((char?)null!,  "test"));
+
+			Assert.AreEqual(0,    Sql.CharIndex(Char.MinValue, "test"));
+			Assert.AreEqual(0,    Sql.CharIndex('g',           "test"));
+			Assert.AreEqual(3,    Sql.CharIndex('s',           "test"));
+		}
+
+		[Test]
+		public void CharIndex4()
+		{
+			Assert.AreEqual(null, Sql.CharIndex('t',           null,   0));
+			Assert.AreEqual(null, Sql.CharIndex((char?)null!,  "test", 0));
+			Assert.AreEqual(null, Sql.CharIndex('t',           "test", null));
+
+			Assert.AreEqual(0,    Sql.CharIndex(Char.MinValue, "test", 0));
+			Assert.AreEqual(0,    Sql.CharIndex('g',           "test", 0));
+			Assert.AreEqual(3,    Sql.CharIndex('s',           "test", -1));
+			Assert.AreEqual(3,    Sql.CharIndex('s',           "test", 2));
+			Assert.AreEqual(0,    Sql.CharIndex('s',           "test", 4));
+			Assert.AreEqual(0,    Sql.CharIndex('s',           "test", 5));
+		}
+
 		#endregion
 
 		[Test]
