@@ -30,6 +30,22 @@ namespace Tests.Linq
 			Assert.AreEqual(4,    Sql.Length("test"));
 		}
 
+		[Test]
+		public void Substring()
+		{
+			Assert.AreEqual(null, Sql.Substring(null,   0,    0));
+			Assert.AreEqual(null, Sql.Substring("test", null, 0));
+			Assert.AreEqual(null, Sql.Substring("test", -1,   0));
+			Assert.AreEqual(null, Sql.Substring("test", 5,    0));
+			Assert.AreEqual(null, Sql.Substring("test", 0,    null));
+			Assert.AreEqual(null, Sql.Substring("test", 0,    -1));
+
+			Assert.AreEqual("",   Sql.Substring("test", 3,    0));
+			Assert.AreEqual("s",  Sql.Substring("test", 3,    1));
+			Assert.AreEqual("st", Sql.Substring("test", 3,    2));
+			Assert.AreEqual("st", Sql.Substring("test", 3,    3));
+		}
+
 		#endregion
 
 		[Test]
