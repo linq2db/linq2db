@@ -20,6 +20,18 @@ namespace Tests.Linq
 	[TestFixture]
 	public class StringFunctionTests : TestBase
 	{
+		#region Non-Database tests
+
+		[Test]
+		public void Length()
+		{
+			Assert.AreEqual(null, Sql.Length((string)null!));
+			Assert.AreEqual(0,    Sql.Length(string.Empty));
+			Assert.AreEqual(4,    Sql.Length("test"));
+		}
+
+		#endregion
+
 		[Test]
 		public void Length([DataSources] string context)
 		{
