@@ -508,7 +508,7 @@ namespace LinqToDB
 		[Sql.Function(PN.SQLite, "LeftStr", PreferServerSide = true)]
 		public static string? Left(string? str, int? length)
 		{
-			return length == null || str == null || str.Length < length? null: str.Substring(1, length.Value);
+			return length == null || str == null || str.Length < length? null: str.Substring(0, length.Value);
 		}
 
 		[Sql.Function(                       PreferServerSide = true)]
