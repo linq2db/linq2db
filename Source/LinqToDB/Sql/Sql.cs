@@ -566,19 +566,23 @@ namespace LinqToDB
 		}
 
 		[Sql.Function(Name = "LPad")]
-		public static string? PadLeft(string? str, int? totalWidth, char? paddingChar)
+		public static string? PadLeft(string? str, int? length, char? paddingChar)
 		{
-			return str == null || totalWidth == null || paddingChar == null ?
-				null :
-				str.PadLeft(totalWidth.Value, paddingChar.Value);
+			if (str == null || length == null || paddingChar == null) return null;
+			if (length.Value < 0)                                     return null;
+			if (length.Value <= str.Length)                           return str.Substring(0, length.Value);
+
+			return str.PadLeft(length.Value, paddingChar.Value);
 		}
 
 		[Sql.Function(Name = "RPad")]
-		public static string? PadRight(string? str, int? totalWidth, char? paddingChar)
+		public static string? PadRight(string? str, int? length, char? paddingChar)
 		{
-			return str == null || totalWidth == null || paddingChar == null ?
-				null :
-				str.PadRight(totalWidth.Value, paddingChar.Value);
+			if (str == null || length == null || paddingChar == null) return null;
+			if (length.Value < 0) return null;
+			if (length.Value <= str.Length) return str.Substring(0, length.Value);
+
+			return str.PadRight(length.Value, paddingChar.Value);
 		}
 
 		[Sql.Function]
