@@ -14,7 +14,7 @@ namespace Tests.Linq
 	[TestFixture]
 	public class DateTimeFunctionsTests : TestBase
 	{
-		//This custom comparers allows for an error of 1 millisecond.  
+		//This custom comparers allows for an error of 1 millisecond.
 		public class CustomIntComparer : IEqualityComparer<int>
 		{
 			public bool Equals(int x, int y) => (x >= (y - 1) && x <= (y + 1));
@@ -827,9 +827,9 @@ namespace Tests.Linq
 		public void AddDynamicFromColumn(
 			[DataSources(TestProvName.AllInformix)] string context, 
 			[Values(
-				Sql.DateParts.Day, 
-				Sql.DateParts.Hour, 
-				Sql.DateParts.Minute, 
+				Sql.DateParts.Day,
+				Sql.DateParts.Hour,
+				Sql.DateParts.Minute,
 				Sql.DateParts.Month,
 				Sql.DateParts.Year,
 				Sql.DateParts.Second
@@ -1331,20 +1331,20 @@ namespace Tests.Linq
 				if (context.Contains(ProviderName.SQLiteMS))
 				{
 					AreEqual(
-						from t in Types select (int)(t.DateTimeValue.AddSeconds(1) - t.DateTimeValue).TotalMilliseconds,
-						from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddSeconds(1) - t.DateTimeValue).TotalMilliseconds),
+						from t in Types select (int)(t.DateTimeValue.AddMilliseconds(123) - t.DateTimeValue).TotalMilliseconds,
+						from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddMilliseconds(123) - t.DateTimeValue).TotalMilliseconds),
 						new CustomIntComparer());
 				}
 				else
 				{
 					AreEqual(
-						from t in Types select (int)(t.DateTimeValue.AddSeconds(1) - t.DateTimeValue).TotalMilliseconds,
-						from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddSeconds(1) - t.DateTimeValue).TotalMilliseconds));
+						from t in Types select (int)(t.DateTimeValue.AddMilliseconds(123) - t.DateTimeValue).TotalMilliseconds,
+						from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddMilliseconds(123) - t.DateTimeValue).TotalMilliseconds));
 				}
 			}
 		}
 
-		// see SubDateMillisecond commet for SQLite.MS
+		// see SubDateMillisecond comment for SQLite.MS
 		[Test]
 		public void DateDiffMillisecond(
 			[DataSources(
@@ -1358,15 +1358,15 @@ namespace Tests.Linq
 				if(context.Contains(ProviderName.SQLiteMS))
 				{
 					AreEqual(
-						from t in Types select Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddSeconds(1)),
-						from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddSeconds(1))),
+						from t in Types select Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddMilliseconds(123)),
+						from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddMilliseconds(123))),
 						new CustomNullableIntComparer());
 				}
 				else
 				{
 					AreEqual(
-						from t in Types select Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddSeconds(1)),
-						from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddSeconds(1))));
+						from t in Types select Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddMilliseconds(123)),
+						from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddMilliseconds(123))));
 				}
 			}
 		}

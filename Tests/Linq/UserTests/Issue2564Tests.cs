@@ -47,11 +47,11 @@ namespace Tests.UserTests
 							   group m by new { m.ExternID1, m.TranslatedMessageGroup, m.TimestampGenerated.Hour } into tgGroup
 							   select new
 							   {
-								   MessageText = tgGroup.Min(x => x.TranslatedMessage1).Trim(),
+								   MessageText = tgGroup.Min(x => x.TranslatedMessage1)!.Trim(),
 								   GroupName = tgGroup.Key.TranslatedMessageGroup,
 								   Hour = tgGroup.Key.Hour,
 								   Count = tgGroup.Count(),
-								   DurationInSeconds = (long)tgGroup.Sum(x => (x.TimestampGone.Value - x.TimestampGenerated).TotalMilliseconds),
+								   DurationInSeconds = (long)tgGroup.Sum(x => (x.TimestampGone!.Value - x.TimestampGenerated).TotalMilliseconds),
 							   });
 					var data = qry.ToList();
 				}
