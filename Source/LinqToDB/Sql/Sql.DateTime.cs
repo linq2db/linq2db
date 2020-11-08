@@ -666,9 +666,9 @@ namespace LinqToDB
 				switch (part)
 				{
 					case Sql.DateParts.Year        : function = "Add_Years";   break;
-					case Sql.DateParts.Quarter     : 
+					case Sql.DateParts.Quarter     :
 						function = "Add_Months";
-						number   = builder.Mul(number, 3);  
+						number   = builder.Mul(number, 3);
 						break;
 					case Sql.DateParts.Month       : function = "Add_Months";  break;
 					case Sql.DateParts.DayOfYear   : 
@@ -676,17 +676,21 @@ namespace LinqToDB
 					case Sql.DateParts.WeekDay     : function = "Add_Days";    break;
 					case Sql.DateParts.Week        : 
 						function = "Add_Days";   
-						number   = builder.Mul(number, 7);  
+						number   = builder.Mul(number, 7);
 						break;
-					case Sql.DateParts.Hour        : 
+					case Sql.DateParts.Hour        :
 						function = "Add_Seconds";
 						number   = builder.Mul(number, 3600);
 						break;
-					case Sql.DateParts.Minute      : 
+					case Sql.DateParts.Minute      :
 						function = "Add_Seconds";
 						number   = builder.Mul(number, 60);
 						break;
 					case Sql.DateParts.Second      : function = "Add_Seconds"; break;
+					case Sql.DateParts.Millisecond:
+						function = "Add_Seconds";
+						number = builder.Div(number, 1000);
+						break;
 					default:
 						throw new ArgumentOutOfRangeException();
 				}
