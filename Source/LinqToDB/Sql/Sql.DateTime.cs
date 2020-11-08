@@ -492,7 +492,7 @@ namespace LinqToDB
 					case Sql.DateParts.Hour        : expStr = "{0} Hour";                 break;
 					case Sql.DateParts.Minute      : expStr = "{0} Minute";               break;
 					case Sql.DateParts.Second      : expStr = "{0} Second";               break;
-					case Sql.DateParts.Millisecond : expStr = "({0} * 1000) Microsecond"; break;
+					case Sql.DateParts.Millisecond : expStr = "({0} / 1000.0) Second";    break;
 					default:
 						throw new ArgumentOutOfRangeException();
 				}
