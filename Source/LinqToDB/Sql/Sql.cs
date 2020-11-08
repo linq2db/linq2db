@@ -589,18 +589,21 @@ namespace LinqToDB
 		[Sql.Function(PN.Sybase, "Str_Replace")]
 		public static string? Replace(string? str, string? oldValue, string? newValue)
 		{
-			return str == null || oldValue == null || newValue == null ?
-				null :
-				str.Replace(oldValue, newValue);
+			if (str == null || oldValue == null || newValue == null) return null;
+			if (str.Length == 0)                                     return str;
+			if (oldValue.Length == 0)                                return str; // Replace raises exception here.
+
+			return str.Replace(oldValue, newValue);
 		}
 
 		[Sql.Function]
 		[Sql.Function(PN.Sybase, "Str_Replace")]
 		public static string? Replace(string? str, char? oldValue, char? newValue)
 		{
-			return str == null || oldValue == null || newValue == null ?
-				null :
-				str.Replace(oldValue.Value, newValue.Value);
+			if (str == null || oldValue == null || newValue == null) return null;
+			if (str.Length == 0)                                     return str;
+
+			return str.Replace(oldValue.Value, newValue.Value);
 		}
 
 		[Sql.Function]
