@@ -912,7 +912,15 @@ namespace LinqToDB
 					DateParts.Hour        => "(CAST ({1} as DATE) - CAST ({0} as DATE)) * 24",
 					DateParts.Minute      => "(CAST ({1} as DATE) - CAST ({0} as DATE)) * 1440",
 					DateParts.Second      => "(CAST ({1} as DATE) - CAST ({0} as DATE)) * 86400",
-					DateParts.Millisecond => "(CAST ({1} as DATE) - CAST ({0} as DATE)) * 86400000",
+
+					// this is tempting to use but leads to precision loss on big intervals
+					//DateParts.Millisecond => "1000 * (EXTRACT(SECOND FROM CAST ({1} as TIMESTAMP) - CAST ({0} as TIMESTAMP)) + (CAST ({1} as DATE) - CAST ({0} as DATE)) * 86400)",
+
+					// could be really ugly on big start/end expressions
+					DateParts.Millisecond => "1000 * (EXTRACT(SECOND FROM CAST ({1} as TIMESTAMP) - CAST ({0} as TIMESTAMP))"
+					+ " + 60 * (EXTRACT(MINUTE FROM CAST ({1} as TIMESTAMP) - CAST ({0} as TIMESTAMP))"
+					+ " + 60 * (EXTRACT(HOUR FROM CAST ({1} as TIMESTAMP) - CAST ({0} as TIMESTAMP))"
+					+ " + 24 * EXTRACT(DAY FROM CAST ({1} as TIMESTAMP) - CAST ({0} as TIMESTAMP)))))",
 					_                     => throw new ArgumentOutOfRangeException(),
 				};
 				builder.ResultExpression = new SqlExpression(typeof(int), expStr, Precedence.Multiplicative, startDate, endDate);

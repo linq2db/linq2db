@@ -1331,15 +1331,15 @@ namespace Tests.Linq
 				if (context.Contains(ProviderName.SQLiteMS))
 				{
 					AreEqual(
-						from t in Types select (int)(t.DateTimeValue.AddMilliseconds(123) - t.DateTimeValue).TotalMilliseconds,
-						from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddMilliseconds(123) - t.DateTimeValue).TotalMilliseconds),
+						from t in Types select (int)(t.DateTimeValue.AddMilliseconds(2123456789) - t.DateTimeValue).TotalMilliseconds,
+						from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddMilliseconds(2123456789) - t.DateTimeValue).TotalMilliseconds),
 						new CustomIntComparer());
 				}
 				else
 				{
 					AreEqual(
-						from t in Types select (int)(t.DateTimeValue.AddMilliseconds(123) - t.DateTimeValue).TotalMilliseconds,
-						from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddMilliseconds(123) - t.DateTimeValue).TotalMilliseconds));
+						from t in Types select (int)(t.DateTimeValue.AddMilliseconds(2123456789) - t.DateTimeValue).TotalMilliseconds,
+						from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddMilliseconds(2123456789) - t.DateTimeValue).TotalMilliseconds));
 				}
 			}
 		}
@@ -1358,15 +1358,15 @@ namespace Tests.Linq
 				if(context.Contains(ProviderName.SQLiteMS))
 				{
 					AreEqual(
-						from t in Types select Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddMilliseconds(123)),
-						from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddMilliseconds(123))),
+						from t in Types select Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddMilliseconds(2123456789)),
+						from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddMilliseconds(2123456789))),
 						new CustomNullableIntComparer());
 				}
 				else
 				{
 					AreEqual(
-						from t in Types select Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddMilliseconds(123)),
-						from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddMilliseconds(123))));
+						from t in Types select Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddMilliseconds(2123456789)),
+						from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddMilliseconds(2123456789))));
 				}
 			}
 		}
