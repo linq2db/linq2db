@@ -1348,8 +1348,8 @@ namespace Tests.Linq
 						from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddMilliseconds(2023456789) - t.DateTimeValue).TotalMilliseconds),
 						new CustomIntComparer(1));
 				}
-				// used type for sqlserver/sybase has precision == 1/300 of second
-				else if (context.Contains("Sybase") || context.Contains("SqlServer") || context.Contains("Azure"))
+				// used type has precision == 1/300 of second
+				else if (context.Contains("Sybase") || context.Contains("SqlCe") || context.Contains("SqlServer") || context.Contains("Azure"))
 				{
 					AreEqual(
 						from t in Types select (int)(t.DateTimeValue.AddMilliseconds(2023456789) - t.DateTimeValue).TotalMilliseconds,
@@ -1383,8 +1383,8 @@ namespace Tests.Linq
 						from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddMilliseconds(2023456789))),
 						new CustomNullableIntComparer(1));
 				}
-				// used type for sqlserver/sybase has precision == 1/300 of second
-				else if (context.Contains("Sybase") || context.Contains("SqlServer") || context.Contains("Azure"))
+				// used type has precision == 1/300 of second
+				else if (context.Contains("Sybase") || context.Contains("SqlCe") || context.Contains("SqlServer") || context.Contains("Azure"))
 				{
 					AreEqual(
 						from t in Types select Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddMilliseconds(2023456789)),
