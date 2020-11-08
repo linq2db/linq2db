@@ -525,7 +525,7 @@ namespace LinqToDB
 			if (length.Value < 0)              return null;
 			if (length.Value > str.Length)     return str;
 
-			return str[..length.Value];
+			return str.Substring(0, length.Value);
 		}
 
 		[Sql.Function(                       PreferServerSide = true)]
@@ -536,7 +536,7 @@ namespace LinqToDB
 			if (length.Value < 0)              return null;
 			if (length.Value > str.Length)     return str;
 
-			return str[^length.Value..];
+			return str.Substring(str.Length - length.Value);
 		}
 
 		[Sql.Function]
@@ -562,7 +562,7 @@ namespace LinqToDB
 		[Sql.Expression(ProviderName.SapHana, "Lpad('',{0},' ')")]
 		public static string? Space(int? length)
 		{
-			return length == null ? null : "".PadRight(length.Value);
+			return length == null || length.Value < 0 ? null : "".PadRight(length.Value);
 		}
 
 		[Sql.Function(Name = "LPad")]

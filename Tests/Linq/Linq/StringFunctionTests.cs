@@ -172,6 +172,15 @@ namespace Tests.Linq
 			Assert.Throws<NotImplementedException>(() => Sql.Stuff(expression, 1, 1, "")); // ServerSideOnly
 		}
 
+		[Test]
+		public void Space()
+		{
+			Assert.AreEqual(null, Sql.Space(null));
+			Assert.AreEqual(null, Sql.Space(-1));
+			Assert.AreEqual("",   Sql.Space(0));
+			Assert.AreEqual(" ",  Sql.Space(1));
+		}
+
 		#endregion
 
 		[Test]
