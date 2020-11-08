@@ -36,7 +36,6 @@ namespace LinqToDB.Extensions
 
 			var members = type.GetMembers(BindingFlags.Instance | BindingFlags.Public)
 				.Where(m => m.IsFieldEx() || m.IsPropertyEx() && ((PropertyInfo)m).GetIndexParameters().Length == 0);
-			
 
 			var baseType = type.BaseType;
 			if (baseType == null || baseType == typeof(object) || baseType == typeof(ValueType))
@@ -666,9 +665,9 @@ namespace LinqToDB.Extensions
 					return true;
 			return false;
 		}
-		
+
 		static readonly ConcurrentDictionary<Type,Type?> _getItemTypeCache = new ConcurrentDictionary<Type, Type?>();
-		
+
 		public static Type? GetItemType(this Type? type)
 		{
 			if (type == null)

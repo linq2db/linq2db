@@ -498,7 +498,7 @@ namespace Tests.Linq
 				finally
 				{
 					Assert.AreEqual("INSERT INTO [FTS5_TABLE]([FTS5_TABLE], rowid, [text1], [text2]) VALUES('delete', 2, @p0, @p1)", db.LastQuery);
-					
+
 					Assert.AreEqual(2, db.Command.Parameters.Count);
 					Assert.AreEqual("one", ((DbParameter)db.Command.Parameters[0]!).Value);
 					Assert.AreEqual("two", ((DbParameter)db.Command.Parameters[1]!).Value);

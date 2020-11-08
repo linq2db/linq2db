@@ -88,7 +88,7 @@ CREATE TABLE "Person"
 	"LastName"   VARCHAR(50) CHARACTER SET UNICODE_FSS NOT NULL,
 	"MiddleName" VARCHAR(50) CHARACTER SET UNICODE_FSS,
 	"Gender"     CHAR(1)     NOT NULL CHECK ("Gender" in ('M', 'F', 'U', 'O'))
-); 
+);
 COMMIT;
 
 CREATE GENERATOR "PersonID";
@@ -181,7 +181,7 @@ COMMIT;
 CREATE TRIGGER "CREATE_DataTypeTest" FOR "DataTypeTest"
 BEFORE INSERT POSITION 0
 AS BEGIN
-	NEW."DataTypeID" = GEN_ID("DataTypeID", 1); 
+	NEW."DataTypeID" = GEN_ID("DataTypeID", 1);
 END;
 COMMIT;
 
@@ -413,7 +413,7 @@ RETURNS (
 	)
 AS
 BEGIN
-	FOR 
+	FOR
 		SELECT "PersonID", "FirstName", "LastName", "MiddleName", "Gender" FROM "Person"
 		INTO
 			:PersonID,
@@ -548,7 +548,7 @@ RETURNS (
 	)
 AS
 BEGIN
-	FOR 
+	FOR
 		SELECT
 			"Person"."PersonID",
 			"FirstName",
@@ -585,7 +585,7 @@ RETURNS (
 	)
 AS
 BEGIN
-	FOR 
+	FOR
 		SELECT
 			"Person"."PersonID",
 			"MiddleName",

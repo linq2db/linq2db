@@ -4,22 +4,22 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Data.Linq;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 using System.Xml;
 using System.Xml.Linq;
 
 namespace LinqToDB.DataProvider
 {
-	using Data;
 	using Common;
+	using Data;
 	using Expressions;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
-	using System.Diagnostics.CodeAnalysis;
-	using System.Threading.Tasks;
-	using System.Threading;
 
 	public abstract class DataProviderBase : IDataProvider
 	{
@@ -71,11 +71,13 @@ namespace LinqToDB.DataProvider
 		#endregion
 
 		#region Public Members
-		public          string           Name                { get; }
-		public abstract string?          ConnectionNamespace { get; }
-		public abstract Type             DataReaderType      { get; }
-		public virtual  MappingSchema    MappingSchema       { get; }
-		public          SqlProviderFlags SqlProviderFlags    { get; }
+
+		public          string           Name                  { get; }
+		public abstract string?          ConnectionNamespace   { get; }
+		public abstract Type             DataReaderType        { get; }
+		public virtual  MappingSchema    MappingSchema         { get; }
+		public          SqlProviderFlags SqlProviderFlags      { get; }
+		public abstract TableOptions     SupportedTableOptions { get; }
 
 		public static Func<IDataProvider,IDbConnection,IDbConnection>? OnConnectionCreated { get; set; }
 

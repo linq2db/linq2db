@@ -192,7 +192,7 @@ SELECT
 
 		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
 		{
-			return dataType?.ToLower() switch 
+			return dataType?.ToLower() switch
 			{
 				"tinyint unsigned"  => DataType.Byte,
 				"smallint unsigned" => DataType.UInt16,
@@ -375,14 +375,10 @@ SELECT
 					{
 						// C - "Consistency"
 						var size = precision > 0 ? precision : length;
-						if (size == 1)
-							return typeof(bool);
-						if (size <= 8)
-							return typeof(byte);
-						if (size <= 16)
-							return typeof(ushort);
-						if (size <= 32)
-							return typeof(uint);
+						if (size ==  1) return typeof(bool);
+						if (size <=  8) return typeof(byte);
+						if (size <= 16) return typeof(ushort);
+						if (size <= 32) return typeof(uint);
 						return typeof(ulong);
 					}
 				case "tinyint unsigned"  : return typeof(byte);
