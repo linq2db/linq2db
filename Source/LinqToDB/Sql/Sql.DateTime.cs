@@ -900,25 +900,25 @@ namespace LinqToDB
 				var startDate = builder.GetExpression(1);
 				var endDate = builder.GetExpression(2);
 
-				var expStr = "DATEDIFF(";
+				var expStr = "DATEDIFF('";
 
 				expStr += part switch
 				{
-					DateParts.Year        => "'yyyy'",
-					DateParts.Quarter     => "'q'",
-					DateParts.Month       => "'m'",
-					DateParts.DayOfYear   => "'y'",
-					DateParts.Day         => "'d'",
-					DateParts.WeekDay     => "'w'",
-					DateParts.Week        => "'ww'",
-					DateParts.Hour        => "'h'",
-					DateParts.Minute      => "'n'",
-					DateParts.Second      => "'s'",
-					DateParts.Millisecond => "'s'",
+					DateParts.Year        => "yyyy",
+					DateParts.Quarter     => "q",
+					DateParts.Month       => "m",
+					DateParts.DayOfYear   => "y",
+					DateParts.Day         => "d",
+					DateParts.WeekDay     => "w",
+					DateParts.Week        => "ww",
+					DateParts.Hour        => "h",
+					DateParts.Minute      => "n",
+					DateParts.Second      => "s",
+					DateParts.Millisecond => "s",
 					_                     => throw new ArgumentOutOfRangeException(),
 				};
 
-				expStr += ", {0}, {1})";
+				expStr += "', {0}, {1})";
 
 				if (part == DateParts.Millisecond)
 					expStr += " * 1000";
