@@ -181,6 +181,34 @@ namespace Tests.Linq
 			Assert.AreEqual(" ",  Sql.Space(1));
 		}
 
+		[Test]
+		public void PadLeft()
+		{
+			Assert.AreEqual(null,     Sql.PadLeft(null,   1,    '.'));
+			Assert.AreEqual(null,     Sql.PadLeft("test", null, '.'));
+			Assert.AreEqual(null,     Sql.PadLeft("test", 1,    null));
+
+			Assert.AreEqual(null,     Sql.PadLeft("test", -1,   '.'));
+			Assert.AreEqual("",       Sql.PadLeft("test", 0,    '.'));
+			Assert.AreEqual("tes",    Sql.PadLeft("test", 3,    '.'));
+			Assert.AreEqual("test",   Sql.PadLeft("test", 4,    '.'));
+			Assert.AreEqual(".test",  Sql.PadLeft("test", 5,    '.'));
+		}
+
+		[Test]
+		public void PadRight()
+		{
+			Assert.AreEqual(null,     Sql.PadRight(null,   1,    '.'));
+			Assert.AreEqual(null,     Sql.PadRight("test", null, '.'));
+			Assert.AreEqual(null,     Sql.PadRight("test", 1,    null));
+
+			Assert.AreEqual(null,     Sql.PadRight("test", -1,   '.'));
+			Assert.AreEqual("",       Sql.PadRight("test", 0,    '.'));
+			Assert.AreEqual("tes",    Sql.PadRight("test", 3,    '.'));
+			Assert.AreEqual("test",   Sql.PadRight("test", 4,    '.'));
+			Assert.AreEqual("test.",  Sql.PadRight("test", 5,    '.'));
+		}
+
 		#endregion
 
 		[Test]
