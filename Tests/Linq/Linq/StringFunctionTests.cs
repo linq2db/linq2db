@@ -209,6 +209,31 @@ namespace Tests.Linq
 			Assert.AreEqual("test.",  Sql.PadRight("test", 5,    '.'));
 		}
 
+		[Test]
+		public void Replace1()
+		{
+			Assert.AreEqual(null,    Sql.Replace(null,   "e",  "oa"));
+			Assert.AreEqual(null,    Sql.Replace("test", null, "oa"));
+			Assert.AreEqual(null,    Sql.Replace("test", "e",  null));
+
+			Assert.AreEqual("",      Sql.Replace("",     "e",  "oa"));
+			Assert.AreEqual("test",  Sql.Replace("test", "",   "oa"));
+			Assert.AreEqual("test",  Sql.Replace("test", "g",  "oa"));
+			Assert.AreEqual("toast", Sql.Replace("test", "e",  "oa"));
+		}
+
+		[Test]
+		public void Replace2()
+		{
+			Assert.AreEqual(null,    Sql.Replace(null,   'e',  'o'));
+			Assert.AreEqual(null,    Sql.Replace("test", null, 'o'));
+			Assert.AreEqual(null,    Sql.Replace("test", 'e',  null));
+
+			Assert.AreEqual("",      Sql.Replace("",     'e',  'o'));
+			Assert.AreEqual("test",  Sql.Replace("test", 'g',  'o'));
+			Assert.AreEqual("tost",  Sql.Replace("test", 'e',  'o'));
+		}
+
 		#endregion
 
 		[Test]
