@@ -914,14 +914,11 @@ namespace LinqToDB
 					DateParts.Hour        => "h",
 					DateParts.Minute      => "n",
 					DateParts.Second      => "s",
-					DateParts.Millisecond => "s",
+					DateParts.Millisecond => throw new ArgumentOutOfRangeException(nameof(part), part, "Access doesn't support milliseconds interval."),
 					_                     => throw new ArgumentOutOfRangeException(),
 				};
 
 				expStr += "', {0}, {1})";
-
-				if (part == DateParts.Millisecond)
-					expStr += " * 1000";
 
 				builder.ResultExpression = new SqlExpression(typeof(int), expStr, startDate, endDate);
 			}
