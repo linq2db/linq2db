@@ -1437,6 +1437,12 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (e.NodeType == ExpressionType.MemberAccess || e.NodeType == ExpressionType.Call)
 					{
+						if (e is MethodCallExpression mc)
+						{
+							if (mc.IsQueryable())
+								return e;
+						}
+
 						// registering missed parameters
 						registered = builder.RegisterParameter(e);
 					}
