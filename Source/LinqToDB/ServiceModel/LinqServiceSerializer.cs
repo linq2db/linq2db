@@ -751,6 +751,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.SystemType);
 							Append(elem.Name);
 							Append(elem.IsAggregate);
+							Append(elem.IsPure);
 							Append(elem.Precedence);
 							Append(elem.Parameters);
 							Append(elem.CanBeNull);
@@ -794,6 +795,8 @@ namespace LinqToDB.ServiceModel
 							Append(elem.SystemType);
 							Append(elem.Expr);
 							Append(elem.Precedence);
+							Append(elem.IsAggregate);
+							Append(elem.IsPure);
 							Append(elem.Parameters);
 
 							break;
@@ -974,6 +977,18 @@ namespace LinqToDB.ServiceModel
 							Append(elem.IsSqlLike);
 							break;
 						}
+
+					case QueryElementType.SearchStringPredicate:
+					{
+						var elem = (SqlPredicate.SearchString)e;
+
+						Append(elem.Expr1);
+						Append(elem.IsNot);
+						Append(elem.Expr2);
+						Append((int)elem.Kind);
+						Append(elem.IgnoreCase);
+						break;
+					}
 
 					case QueryElementType.BetweenPredicate :
 						{
@@ -1512,15 +1527,16 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.SqlFunction :
 						{
-							var systemType  = Read<Type>()!;
-							var name        = ReadString()!;
-							var isAggregate = ReadBool();
-							var precedence  = ReadInt();
-							var parameters  = ReadArray<ISqlExpression>()!;
+							var systemType    = Read<Type>()!;
+							var name          = ReadString()!;
+							var isAggregate   = ReadBool();
+							var isPure        = ReadBool();
+							var precedence    = ReadInt();
+							var parameters    = ReadArray<ISqlExpression>()!;
 							var canBeNull     = ReadBool();
 							var doNotOptimize = ReadBool();
 
-							obj = new SqlFunction(systemType, name, isAggregate, precedence, parameters)
+							obj = new SqlFunction(systemType, name, isAggregate, isPure, precedence, parameters)
 							{
 								CanBeNull = canBeNull, 
 								DoNotOptimize = doNotOptimize
@@ -1547,12 +1563,14 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.SqlExpression :
 						{
-							var systemType = Read<Type>();
-							var expr       = ReadString()!;
-							var precedence = ReadInt();
-							var parameters = ReadArray<ISqlExpression>()!;
+							var systemType  = Read<Type>();
+							var expr        = ReadString()!;
+							var precedence  = ReadInt();
+							var isAggregate = ReadBool();
+							var isPure      = ReadBool();
+							var parameters  = ReadArray<ISqlExpression>()!;
 
-							obj = new SqlExpression(systemType, expr, precedence, parameters);
+							obj = new SqlExpression(systemType, expr, precedence, isAggregate, isPure, parameters);
 
 							break;
 						}
@@ -1730,6 +1748,18 @@ namespace LinqToDB.ServiceModel
 
 							break;
 						}
+
+					case QueryElementType.SearchStringPredicate:
+					{
+						var expr1      = Read<ISqlExpression>()!;
+						var isNot      = ReadBool();
+						var expr2      = Read<ISqlExpression>()!;
+						var kind       = (SqlPredicate.SearchString.SearchKind)ReadInt();
+						var ignoreCase = ReadBool();
+						obj = new SqlPredicate.SearchString(expr1, isNot, expr2, kind, ignoreCase);
+
+						break;
+					}
 
 					case QueryElementType.BetweenPredicate :
 						{

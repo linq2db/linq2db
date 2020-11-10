@@ -1210,7 +1210,7 @@ namespace LinqToDB.SqlProvider
 			if (expr.ElementType.In(QueryElementType.SqlField, QueryElementType.Column, QueryElementType.SqlRawSqlTable))
 				return false;
 
-			if (expr.CanBeEvaluated(context))
+			if (expr.CanBeEvaluated(true))
 				return false;
 
 			if (new QueryVisitor().Find(expr, ex => QueryHelper.IsAggregationFunction(ex)) == null)
@@ -1274,9 +1274,11 @@ namespace LinqToDB.SqlProvider
 
 				case QueryElementType.TableSource:
 				{
+					// Removing simple subquery
+
 					var tableSource = (SqlTableSource)element;
 
-					var q = FindQuery(visitor.Stack, 1);
+					var q = FindQuery(visitor.Stack, 0);
 					if (q == null)
 						break;
 
