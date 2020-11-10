@@ -106,6 +106,14 @@ namespace LinqToDB.Linq.Builder
 			public int             FieldIndex;
 			public ISqlExpression? Sql;
 
+			static int CheckNullValue(IDataRecord reader, object context)
+			{
+				if (reader.IsDBNull(0))
+					throw new InvalidOperationException(
+						$"Function {context} returns non-nullable value, but result is NULL. Use nullable version of the function instead.");
+				return 0;
+			}
+
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
 				var expr   = BuildExpression(FieldIndex, Sql);
@@ -126,7 +134,19 @@ namespace LinqToDB.Linq.Builder
 
 			Expression BuildExpression(int fieldIndex, ISqlExpression? sqlExpression)
 			{
-				var expr = Builder.BuildSql(_returnType, fieldIndex, sqlExpression);
+				Expression expr;
+
+				if (_returnType.IsClass || _methodName == "Sum" || _returnType.IsNullable() || Sequence is DefaultIfEmptyBuilder.DefaultIfEmptyContext)
+				{
+					expr = Builder.BuildSql(_returnType, fieldIndex, sqlExpression);
+				}
+				else
+				{
+					expr = Expression.Block(
+						Expression.Call(null, MemberHelper.MethodOf(() => CheckNullValue(null!, null!)), ExpressionBuilder.DataReaderParam, Expression.Constant(_methodName)),
+						Builder.BuildSql(_returnType, fieldIndex, sqlExpression));
+				}
+
 				return expr;
 			}
 

@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -17,22 +18,22 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public async Task SampleSelectTest([DataSources] string context)
+		public async Task AggregationWithNull([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable<TestClass>())
-			{
-				var value1 = await db.GetTable<TestClass>()
+			using (db.CreateLocalTable<TestClass>())
+			{ 
+				Assert.ThrowsAsync<InvalidOperationException>(() => db.GetTable<TestClass>()
 					.Where(x => x.Id == 0)
 					.Select(x => x.Value)
-					.MaxAsync();
+					.MaxAsync());
 
-				var value2 = await db.GetTable<TestClass>()
+				var value1 = await db.GetTable<TestClass>()
 					.Where(x => x.Id == 0)
 					.Select(x => Sql.ToNullable(x.Value))
 					.MaxAsync();
 
-				var value3 = await db.GetTable<TestClass>()
+				var value2 = await db.GetTable<TestClass>()
 					.Where(x => x.Id == 0)
 					.Select(x => x.Value)
 					.DefaultIfEmpty()
