@@ -130,7 +130,7 @@ namespace LinqToDB.SqlQuery
 
 							if (parms != null && !ReferenceEquals(parms, func.Parameters))
 								newElement =
-									new SqlFunction(func.SystemType, func.Name, func.IsAggregate, func.Precedence, parms) 
+									new SqlFunction(func.SystemType, func.Name, func.IsAggregate, func.IsPure, func.Precedence, parms) 
 										{ CanBeNull = func.CanBeNull, DoNotOptimize = func.DoNotOptimize };
 
 							break;
@@ -142,7 +142,7 @@ namespace LinqToDB.SqlQuery
 							var parameter = Convert(expr.Parameters);
 
 							if (parameter != null && !ReferenceEquals(parameter, expr.Parameters))
-								newElement = new SqlExpression(expr.SystemType, expr.Expr, expr.Precedence, parameter);
+								newElement = new SqlExpression(expr.SystemType, expr.Expr, expr.Precedence, expr.IsAggregate, expr.IsPure, parameter);
 
 							break;
 						}
