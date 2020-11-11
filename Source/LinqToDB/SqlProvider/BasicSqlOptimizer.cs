@@ -1341,7 +1341,7 @@ namespace LinqToDB.SqlProvider
 						// removing column which has no usage
 						//
 						if (!CheckColumn(parentQuery, column, context) &&
-						    !QueryHelper.IsDependsOn(parentQuery, column, filter) &&
+						    !QueryHelper.IsDependsOn(root, column, filter) &&
 						    (columns == null && selectClause.Columns.Count > 1 || columns != null && columns.Count > 0))
 						{
 							columns ??= selectClause.Columns.Take(i).ToList();
