@@ -67,9 +67,9 @@ namespace LinqToDB.DataProvider.SqlCe
 				StringBuilder.AppendLine(" IDENTITY(1, 1)");
 			}
 			else
-		{
-			StringBuilder.AppendLine("SELECT @@IDENTITY");
-		}
+			{
+				StringBuilder.AppendLine("SELECT @@IDENTITY");
+			}
 		}
 
 		protected override ISqlBuilder CreateSqlBuilder()

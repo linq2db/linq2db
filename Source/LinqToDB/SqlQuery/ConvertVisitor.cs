@@ -198,12 +198,12 @@ namespace LinqToDB.SqlQuery
 							var table    = (SqlCteTable)element;
 								var cte = (CteClause?)ConvertInternal(table.Cte);
 
-						if (cte != null && !ReferenceEquals(table.Cte, cte))
-								{
-									var newFields = table.Fields.Select(f => new SqlField(f));
-							var newTable  = new SqlCteTable(table, newFields, cte!);
+							if (cte != null && !ReferenceEquals(table.Cte, cte))
+							{
+								var newFields = table.Fields.Select(f => new SqlField(f));
+								var newTable  = new SqlCteTable(table, newFields, cte!);
 
-							ReplaceVisited(table.All, newTable.All);
+								ReplaceVisited(table.All, newTable.All);
 								foreach (var prevField in table.Fields)
 								{
 									var newField = newTable[prevField.Name];
@@ -1013,51 +1013,50 @@ namespace LinqToDB.SqlQuery
 						{
 							var cte = (CteClause)element;
 
-						// for avoiding recursion
-						if (SecondParentElement?.ElementType != QueryElementType.WithClause)
-							break;
+							// for avoiding recursion
+							if (SecondParentElement?.ElementType != QueryElementType.WithClause)
+								break;
 
-								var body   = (SelectQuery?)ConvertInternal(cte.Body);
+							var body   = (SelectQuery?)ConvertInternal(cte.Body);
 
-						if (body   != null && !ReferenceEquals(cte.Body, body))
-								{
-							var objTree = new Dictionary<ICloneableElement, ICloneableElement>();
-
-									newElement = new CteClause(
-								body,
-								cte.Fields!.Select(f => (SqlField)f.Clone(objTree, e => true)).ToList(),
-										cte.ObjectType,
-										cte.IsRecursive,
-										cte.Name);
-
-
-							var correctedBody = ConvertVisitor.Convert(body,
-								(v, e) =>
-								{
-									if (e.ElementType == QueryElementType.CteClause)
+							if (body   != null && !ReferenceEquals(cte.Body, body))
 							{
-										var inner = (CteClause)e;
-										if (ReferenceEquals(inner, cte))
-											return newElement;
-									}	
-										
-									if (e is ICloneableElement clonable && objTree.TryGetValue(clonable, out var newValue))
-										return (IQueryElement)newValue;
-									return e;
+								var objTree = new Dictionary<ICloneableElement, ICloneableElement>();
 
-								});
+								newElement = new CteClause(
+									body,
+									cte.Fields!.Select(f => (SqlField)f.Clone(objTree, e => true)).ToList(),
+											cte.ObjectType,
+											cte.IsRecursive,
+											cte.Name);
 
-							// update visited for cloned fields
-							foreach (var pair in objTree)
-							{
-								if (pair.Key is IQueryElement queryElement)
-									VisitedElements[queryElement] = (IQueryElement)pair.Value;
-							}
+								var correctedBody = ConvertVisitor.Convert(body,
+									(v, e) =>
+									{
+										if (e.ElementType == QueryElementType.CteClause)
+										{
+											var inner = (CteClause)e;
+											if (ReferenceEquals(inner, cte))
+												return newElement;
+										}	
+											
+										if (e is ICloneableElement clonable && objTree.TryGetValue(clonable, out var newValue))
+											return (IQueryElement)newValue;
+										return e;
 
-							VisitedElements.Remove(element);
-							AddVisited(element, newElement);
+									});
 
-							((CteClause)newElement).Body = correctedBody;
+								// update visited for cloned fields
+								foreach (var pair in objTree)
+								{
+									if (pair.Key is IQueryElement queryElement)
+										VisitedElements[queryElement] = (IQueryElement)pair.Value;
+								}
+
+								VisitedElements.Remove(element);
+								AddVisited(element, newElement);
+
+								((CteClause)newElement).Body = correctedBody;
 							}
 
 							break;

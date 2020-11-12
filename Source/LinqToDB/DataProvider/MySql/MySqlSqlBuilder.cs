@@ -506,7 +506,7 @@ namespace LinqToDB.DataProvider.MySql
 		protected override string? GetProviderTypeName(IDbDataParameter parameter)
 		{
 			if (_provider != null)
-		{
+			{
 				var param = _provider.TryGetProviderParameter(parameter, MappingSchema);
 				if (param != null)
 					return _provider.Adapter.GetDbType(param).ToString();

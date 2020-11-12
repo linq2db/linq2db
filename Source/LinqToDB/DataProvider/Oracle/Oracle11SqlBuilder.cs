@@ -71,35 +71,6 @@ namespace LinqToDB.DataProvider.Oracle
 			return base.GetIdentityExpression(table);
 		}
 
-		static void ConvertEmptyStringToNullIfNeeded(ISqlExpression expr)
-		{
-			/*
-			var sqlParameter = expr as SqlParameter;
-			var sqlValue     = expr as SqlValue;
-
-			if (sqlParameter?.Value is string && sqlParameter.Value.ToString() == "")
-				sqlParameter.Value = null;
-
-			if (sqlValue?.Value is string && sqlValue.Value.ToString() == "")
-				sqlValue.Value = null;
-		*/
-		}
-
-		protected override void BuildPredicate(ISqlPredicate predicate)
-		{
-			if (predicate.ElementType == QueryElementType.ExprExprPredicate)
-			{
-				var expr = (SqlPredicate.ExprExpr)predicate;
-				if (expr.Operator == SqlPredicate.Operator.Equal ||
-					expr.Operator == SqlPredicate.Operator.NotEqual)
-				{
-					ConvertEmptyStringToNullIfNeeded(expr.Expr1);
-					ConvertEmptyStringToNullIfNeeded(expr.Expr2);
-				}
-			}
-			base.BuildPredicate(predicate);
-		}
-
 		protected override bool BuildWhere(SelectQuery selectQuery)
 		{
 			return
