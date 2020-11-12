@@ -646,12 +646,12 @@ namespace LinqToDB.SqlQuery
 		{
 			var current = expression;
 			HashSet<ISqlExpression>? visited = null;
-			while (current?.ElementType == QueryElementType.Column)
+			while (current is SqlColumn column && column.Parent?.HasSetOperators != true)
 			{
 				visited ??= new HashSet<ISqlExpression>();
-				if (!visited.Add(current))
+				if (!visited.Add(column))
 					return null;
-				current = ((SqlColumn)current).Expression;
+				current = column.Expression;
 			}
 
 			return current;
