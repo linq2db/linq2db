@@ -1500,7 +1500,7 @@ namespace LinqToDB.Linq.Builder
 			// Finalize keys for recursive processing
 			var expression = detailQuery.Expression;
 			expression     = builder.ExposeExpression(expression);
-			expression     = FinalizeExpressionKeys(expression);
+			expression     = FinalizeExpressionKeys(new HashSet<Expression>(), expression);
 
 			// Filler code is duplicated for the future usage with IAsyncEnumerable
 			var idx = builder.RegisterPreamble((dc, expr, ps) =>
@@ -1698,13 +1698,19 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		[return: NotNullIfNotNull("expr")]
-		internal static Expression? FinalizeExpressionKeys(Expression? expr)
+		internal static Expression? FinalizeExpressionKeys(HashSet<Expression> stable, Expression? expr)
 		{
 			if (expr == null)
 				return null;
 
+			if (stable.Contains(expr))
+				return expr;
+
 			var result = expr.Transform(e =>
 			{
+				if (stable.Contains(e))
+					return e;
+
 				switch (e.NodeType)
 				{
 					case ExpressionType.MemberInit:
@@ -1715,7 +1721,7 @@ namespace LinqToDB.Linq.Builder
 								var mi = (MemberInitExpression)e;
 								var newAssignments = mi.Bindings.Cast<MemberAssignment>().Select(a =>
 									{
-										var finalized = FinalizeExpressionKeys(a.Expression);
+										var finalized = FinalizeExpressionKeys(stable, a.Expression);
 										return Expression.Bind(GetMemberForType(newType, a.Member), finalized);
 									})
 									.ToArray();
@@ -1732,7 +1738,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							var unary      = (UnaryExpression)e;
 							var newType    = FinalizeType(unary.Type);
-							var newOperand = FinalizeExpressionKeys(unary.Operand);
+							var newOperand = FinalizeExpressionKeys(stable, unary.Operand);
 							if (newType != unary.Type || newOperand != unary.Operand)
 								return Expression.Convert(newOperand, newType);
 							break;
@@ -1744,7 +1750,7 @@ namespace LinqToDB.Linq.Builder
 							var changed = false;
 							var newArguments = mc.Arguments.Select(a =>
 							{
-								var n = FinalizeExpressionKeys(a);
+								var n = FinalizeExpressionKeys(stable, a);
 								changed = changed || n != a;
 								return n;
 							}).ToArray();
@@ -1774,7 +1780,7 @@ namespace LinqToDB.Linq.Builder
 					case ExpressionType.MemberAccess:
 						{
 							var ma     = (MemberExpression)e;
-							var newObj = FinalizeExpressionKeys(ma.Expression);
+							var newObj = FinalizeExpressionKeys(stable, ma.Expression);
 							if (newObj != ma.Expression)
 							{
 								return Expression.MakeMemberAccess(newObj, GetMemberForType(newObj.Type, ma.Member));
@@ -1802,7 +1808,7 @@ namespace LinqToDB.Linq.Builder
 								})
 								.ToArray();
 
-							var newBody = FinalizeExpressionKeys(lambda.Body);
+							var newBody = FinalizeExpressionKeys(stable, lambda.Body);
 							if (changed || newBody != lambda.Body)
 							{
 								newBody = ReplaceParametersWithChangedType(newBody, lambda.Parameters, newParameters);
@@ -1815,6 +1821,11 @@ namespace LinqToDB.Linq.Builder
 
 				return e;
 			});
+
+			if (ReferenceEquals(expr, result))
+			{
+				stable.Add(expr);
+			}
 
 			return result;
 		}
