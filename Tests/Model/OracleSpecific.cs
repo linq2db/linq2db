@@ -4,10 +4,12 @@ namespace Tests.Model
 {
 	public class OracleSpecific
 	{
+		[Table("SEQUENCETEST")]
 		public class SequenceTest
 		{
-			[Identity, SequenceName("SequenceTestSeq")]
+			[Identity, SequenceName("SEQUENCETESTSEQ")]
 			public int    ID;
+			[Column("VALUE")]
 			public string Value = null!;
 		}
 
@@ -19,8 +21,7 @@ namespace Tests.Model
 
 			public override bool Equals(object? obj)
 			{
-				var other = obj as StringTest;
-				if (other == null)
+				if (!(obj is StringTest other))
 					return false;
 
 				return    string.Equals(KeyValue, other.KeyValue)

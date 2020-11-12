@@ -492,7 +492,7 @@ namespace LinqToDB
 					case Sql.DateParts.Hour        : expStr = "{0} Hour";                 break;
 					case Sql.DateParts.Minute      : expStr = "{0} Minute";               break;
 					case Sql.DateParts.Second      : expStr = "{0} Second";               break;
-					case Sql.DateParts.Millisecond : expStr = "({0} * 1000) Microsecond"; break;
+					case Sql.DateParts.Millisecond : expStr = "({0} / 1000.0) Second";    break;
 					default:
 						throw new ArgumentOutOfRangeException();
 				}
@@ -687,6 +687,10 @@ namespace LinqToDB
 						number   = builder.Mul(number, 60);
 						break;
 					case Sql.DateParts.Second      : function = "Add_Seconds"; break;
+					case Sql.DateParts.Millisecond:
+						function = "Add_Seconds";
+						number = builder.Div(number, 1000);
+						break;
 					default:
 						throw new ArgumentOutOfRangeException();
 				}
@@ -892,13 +896,78 @@ namespace LinqToDB
 			}
 		}
 
+		class DateDiffBuilderAccess : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var part = builder.GetValue<Sql.DateParts>(0);
+				var startDate = builder.GetExpression(1);
+				var endDate = builder.GetExpression(2);
+
+				var expStr = "DATEDIFF('";
+
+				expStr += part switch
+				{
+					DateParts.Year        => "yyyy",
+					DateParts.Quarter     => "q",
+					DateParts.Month       => "m",
+					DateParts.DayOfYear   => "y",
+					DateParts.Day         => "d",
+					DateParts.WeekDay     => "w",
+					DateParts.Week        => "ww",
+					DateParts.Hour        => "h",
+					DateParts.Minute      => "n",
+					DateParts.Second      => "s",
+					DateParts.Millisecond => throw new ArgumentOutOfRangeException(nameof(part), part, "Access doesn't support milliseconds interval."),
+					_                     => throw new ArgumentOutOfRangeException(),
+				};
+
+				expStr += "', {0}, {1})";
+
+				builder.ResultExpression = new SqlExpression(typeof(int), expStr, startDate, endDate);
+			}
+		}
+
+		class DateDiffBuilderOracle : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var part = builder.GetValue<Sql.DateParts>(0);
+				var startDate = builder.GetExpression(1);
+				var endDate = builder.GetExpression(2);
+				var expStr = part switch
+				{
+					// DateParts.Year        => "({1} - {0}) / 365",
+					// DateParts.Month       => "({1} - {0}) / 30",
+					DateParts.Week        => "(CAST ({1} as DATE) - CAST ({0} as DATE)) / 7",
+					DateParts.Day         => "(CAST ({1} as DATE) - CAST ({0} as DATE))",
+					DateParts.Hour        => "(CAST ({1} as DATE) - CAST ({0} as DATE)) * 24",
+					DateParts.Minute      => "(CAST ({1} as DATE) - CAST ({0} as DATE)) * 1440",
+					DateParts.Second      => "(CAST ({1} as DATE) - CAST ({0} as DATE)) * 86400",
+
+					// this is tempting to use but leads to precision loss on big intervals
+					//DateParts.Millisecond => "1000 * (EXTRACT(SECOND FROM CAST ({1} as TIMESTAMP) - CAST ({0} as TIMESTAMP)) + (CAST ({1} as DATE) - CAST ({0} as DATE)) * 86400)",
+
+					// could be really ugly on big start/end expressions
+					DateParts.Millisecond => "1000 * (EXTRACT(SECOND FROM CAST ({1} as TIMESTAMP) - CAST ({0} as TIMESTAMP))"
+					+ " + 60 * (EXTRACT(MINUTE FROM CAST ({1} as TIMESTAMP) - CAST ({0} as TIMESTAMP))"
+					+ " + 60 * (EXTRACT(HOUR FROM CAST ({1} as TIMESTAMP) - CAST ({0} as TIMESTAMP))"
+					+ " + 24 * EXTRACT(DAY FROM CAST ({1} as TIMESTAMP) - CAST ({0} as TIMESTAMP)))))",
+					_                     => throw new ArgumentOutOfRangeException(),
+				};
+				builder.ResultExpression = new SqlExpression(typeof(int), expStr, Precedence.Multiplicative, startDate, endDate);
+			}
+		}
+
 		[CLSCompliant(false)]
-		[Sql.Extension(            "DateDiff",      BuilderType = typeof(DateDiffBuilder))]
-		[Sql.Extension(PN.MySql,   "TIMESTAMPDIFF", BuilderType = typeof(DateDiffBuilder))]
-		[Sql.Extension(PN.DB2,     "",              BuilderType = typeof(DateDiffBuilderDB2))]
-		[Sql.Extension(PN.SapHana, "",              BuilderType = typeof(DateDiffBuilderSapHana))]
-		[Sql.Extension(PN.SQLite,  "",              BuilderType = typeof(DateDiffBuilderSQLite))]
-		[Sql.Extension(PN.PostgreSQL,  "",          BuilderType = typeof(DateDiffBuilderPostgreSql))]
+		[Sql.Extension(               "DateDiff",      BuilderType = typeof(DateDiffBuilder))]
+		[Sql.Extension(PN.MySql,      "TIMESTAMPDIFF", BuilderType = typeof(DateDiffBuilder))]
+		[Sql.Extension(PN.DB2,        "",              BuilderType = typeof(DateDiffBuilderDB2))]
+		[Sql.Extension(PN.SapHana,    "",              BuilderType = typeof(DateDiffBuilderSapHana))]
+		[Sql.Extension(PN.SQLite,     "",              BuilderType = typeof(DateDiffBuilderSQLite))]
+		[Sql.Extension(PN.Oracle,     "",              BuilderType = typeof(DateDiffBuilderOracle))]
+		[Sql.Extension(PN.PostgreSQL, "",              BuilderType = typeof(DateDiffBuilderPostgreSql))]
+		[Sql.Extension(PN.Access,     "",              BuilderType = typeof(DateDiffBuilderAccess))]
 		public static int? DateDiff(DateParts part, DateTime? startDate, DateTime? endDate)
 		{
 			if (startDate == null || endDate == null)

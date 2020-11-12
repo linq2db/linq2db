@@ -8,6 +8,7 @@ namespace LinqToDB.DataProvider.SapHana
 	using System.Globalization;
 	using System.Linq.Expressions;
 	using System.Reflection;
+	using LinqToDB.SqlProvider;
 	using SqlQuery;
 
 	public class CalculationViewInputParametersExpressionAttribute : Sql.TableExpressionAttribute
@@ -34,7 +35,7 @@ namespace LinqToDB.DataProvider.SapHana
 			return value.ToString();
 		}
 
-		public override void SetTable(MappingSchema mappingSchema, SqlTable table, MemberInfo member, IEnumerable<Expression> expArgs, IEnumerable<ISqlExpression> sqlArgs)
+		public override void SetTable(ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MemberInfo member, IEnumerable<Expression> expArgs, IEnumerable<ISqlExpression> sqlArgs)
 		{
 			var method = member as MethodInfo;
 

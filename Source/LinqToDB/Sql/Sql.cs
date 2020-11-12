@@ -415,9 +415,16 @@ namespace LinqToDB
 		[Sql.Function  (PN.SQLite,   "Substr",                          PreferServerSide = true)]
 		[Sql.Expression(PN.Firebird, "Substring({0} from {1} for {2})", PreferServerSide = true)]
 		[Sql.Function  (PN.SapHana,  "Substring",                       PreferServerSide = true)]
-		public static string? Substring(string? str, int? startIndex, int? length)
+		public static string? Substring(string? str, int? start, int? length)
 		{
-			return str == null || startIndex == null || length == null ? null : str.Substring(startIndex.Value - 1, length.Value);
+			if (str == null || start == null || length == null) return null;
+			if (start.Value < 1 || start.Value > str.Length) return null;
+			if (length.Value < 0) return null;
+
+			var index = start.Value - 1;
+			var maxAllowedLength = Math.Min(str.Length - index, length.Value);
+
+			return str.Substring(index, maxAllowedLength);
 		}
 
 		[Sql.Function(ServerSideOnly = true)]
@@ -448,12 +455,20 @@ namespace LinqToDB
 		[Sql.Function(PN.MySql,    "Locate")]
 		[Sql.Function(PN.SapHana,  "Locate", 1, 0)]
 		[Sql.Function(PN.Firebird, "Position")]
-		public static int? CharIndex(string? value, string? str)
+		public static int? CharIndex(string? substring, string? str)
 		{
-			if (str == null || value == null)
-				return null;
+			if (str == null || substring == null) return null;
 
-			return str.IndexOf(value) + 1;
+			// Database CharIndex returns:
+			//  1-based position, when sequence is found
+			//  0 when substring is empty
+			//  0 when substring is not found
+
+			// IndexOf returns:
+			//  0 when substring is empty <= this needs to handled special way to mimic behavior.
+			//  -1 when substring is not found
+
+			return substring.Length == 0 ? 0 : str.IndexOf(substring) + 1;
 		}
 
 		[Sql.Function]
@@ -461,12 +476,12 @@ namespace LinqToDB
 		[Sql.Function  (PN.MySql,    "Locate")]
 		[Sql.Function  (PN.Firebird, "Position")]
 		[Sql.Expression(PN.SapHana,  "Locate(Substring({1},{2} + 1),{0}) + {2}")]
-		public static int? CharIndex(string? value, string? str, int? startLocation)
+		public static int? CharIndex(string? substring, string? str, int? start)
 		{
-			if (str == null || value == null || startLocation == null)
-				return null;
+			if (str == null || substring == null || start == null) return null;
 
-			return str.IndexOf(value, startLocation.Value - 1) + 1;
+			var index = start.Value < 1 ? 0 : start.Value > str.Length ? str.Length - 1 : start.Value - 1;
+			return substring.Length == 0 ? 0 : str.IndexOf(substring, index) + 1;
 		}
 
 		[Sql.Function]
@@ -475,8 +490,7 @@ namespace LinqToDB
 		[Sql.Function(PN.SapHana, "Locate")]
 		public static int? CharIndex(char? value, string? str)
 		{
-			if (value == null || str == null)
-				return null;
+			if (value == null || str == null) return null;
 
 			return str.IndexOf(value.Value) + 1;
 		}
@@ -485,19 +499,18 @@ namespace LinqToDB
 		[Sql.Function(PN.DB2,     "Locate")]
 		[Sql.Function(PN.MySql,   "Locate")]
 		[Sql.Function(PN.SapHana, "Locate")]
-		public static int? CharIndex(char? value, string? str, int? startLocation)
+		public static int? CharIndex(char? value, string? str, int? start)
 		{
-			if (str == null || value == null || startLocation == null)
-				return null;
+			if (str == null || value == null || start == null) return null;
 
-			return str.IndexOf(value.Value, startLocation.Value - 1) + 1;
+			var index = start.Value < 1 ? 0 : start.Value > str.Length ? str.Length - 1 : start.Value - 1;
+			return str.IndexOf(value.Value, index) + 1;
 		}
 
 		[Sql.Function]
 		public static string? Reverse(string? str)
 		{
-			if (string.IsNullOrEmpty(str))
-				return str;
+			if (string.IsNullOrEmpty(str)) return str;
 
 			var chars = str!.ToCharArray();
 			Array.Reverse(chars);
@@ -508,24 +521,35 @@ namespace LinqToDB
 		[Sql.Function(PN.SQLite, "LeftStr", PreferServerSide = true)]
 		public static string? Left(string? str, int? length)
 		{
-			return length == null || str == null || str.Length < length? null: str.Substring(1, length.Value);
+			if (length == null || str == null) return null;
+			if (length.Value < 0)              return null;
+			if (length.Value > str.Length)     return str;
+
+			return str.Substring(0, length.Value);
 		}
 
 		[Sql.Function(                       PreferServerSide = true)]
 		[Sql.Function(PN.SQLite, "RightStr", PreferServerSide = true)]
 		public static string? Right(string? str, int? length)
 		{
-			return length == null || str == null || str.Length < length?
-				null :
-				str.Substring(str.Length - length.Value);
+			if (length == null || str == null) return null;
+			if (length.Value < 0)              return null;
+			if (length.Value > str.Length)     return str;
+
+			return str.Substring(str.Length - length.Value);
 		}
 
 		[Sql.Function]
-		public static string? Stuff(string? str, int? startLocation, int? length, string? value)
+		public static string? Stuff(string? str, int? start, int? length, string? newString)
 		{
-			return str == null || value == null || startLocation == null || length == null ?
-				null :
-				str.Remove(startLocation.Value - 1, length.Value).Insert(startLocation.Value - 1, value);
+			if (str == null || start == null || length == null || newString == null) return null;
+			if (start.Value < 1 || start.Value > str.Length)                         return null;
+			if (length.Value < 0)                                                    return null;
+
+			var index = start.Value - 1;
+			var maxAllowedLength = Math.Min(str.Length - index, length.Value);
+
+			return str.Remove(index, maxAllowedLength).Insert(index, newString);
 		}
 
 		[Sql.Function(ServerSideOnly = true)]
@@ -538,41 +562,48 @@ namespace LinqToDB
 		[Sql.Expression(ProviderName.SapHana, "Lpad('',{0},' ')")]
 		public static string? Space(int? length)
 		{
-			return length == null ? null : "".PadRight(length.Value);
+			return length == null || length.Value < 0 ? null : "".PadRight(length.Value);
 		}
 
 		[Sql.Function(Name = "LPad")]
-		public static string? PadLeft(string? str, int? totalWidth, char? paddingChar)
+		public static string? PadLeft(string? str, int? length, char? paddingChar)
 		{
-			return str == null || totalWidth == null || paddingChar == null ?
-				null :
-				str.PadLeft(totalWidth.Value, paddingChar.Value);
+			if (str == null || length == null || paddingChar == null) return null;
+			if (length.Value < 0)                                     return null;
+			if (length.Value <= str.Length)                           return str.Substring(0, length.Value);
+
+			return str.PadLeft(length.Value, paddingChar.Value);
 		}
 
 		[Sql.Function(Name = "RPad")]
-		public static string? PadRight(string? str, int? totalWidth, char? paddingChar)
+		public static string? PadRight(string? str, int? length, char? paddingChar)
 		{
-			return str == null || totalWidth == null || paddingChar == null ?
-				null :
-				str.PadRight(totalWidth.Value, paddingChar.Value);
+			if (str == null || length == null || paddingChar == null) return null;
+			if (length.Value < 0) return null;
+			if (length.Value <= str.Length) return str.Substring(0, length.Value);
+
+			return str.PadRight(length.Value, paddingChar.Value);
 		}
 
 		[Sql.Function]
 		[Sql.Function(PN.Sybase, "Str_Replace")]
 		public static string? Replace(string? str, string? oldValue, string? newValue)
 		{
-			return str == null || oldValue == null || newValue == null ?
-				null :
-				str.Replace(oldValue, newValue);
+			if (str == null || oldValue == null || newValue == null) return null;
+			if (str.Length == 0)                                     return str;
+			if (oldValue.Length == 0)                                return str; // Replace raises exception here.
+
+			return str.Replace(oldValue, newValue);
 		}
 
 		[Sql.Function]
 		[Sql.Function(PN.Sybase, "Str_Replace")]
 		public static string? Replace(string? str, char? oldValue, char? newValue)
 		{
-			return str == null || oldValue == null || newValue == null ?
-				null :
-				str.Replace(oldValue.Value, newValue.Value);
+			if (str == null || oldValue == null || newValue == null) return null;
+			if (str.Length == 0)                                     return str;
+
+			return str.Replace(oldValue.Value, newValue.Value);
 		}
 
 		[Sql.Function]

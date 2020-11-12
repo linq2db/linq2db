@@ -922,9 +922,13 @@ namespace Tests.Linq
 					TestProvName.AllSapHana)]
 				string context)
 		{
+			var sql = "select PersonID, FirstName, MiddleName, LastName, Gender from Person where PersonID = 3";
+			if (context.Contains("Oracle"))
+				sql = "select \"PersonID\", \"FirstName\", \"MiddleName\", \"LastName\", \"Gender\" from \"Person\" where \"PersonID\" = 3";
+
 			using (var db = new TestDataConnection(context))
 			{
-				var person = db.Query<ComplexPerson>("select PersonID, FirstName, MiddleName, LastName, Gender from Person where PersonID = 3").FirstOrDefault();
+				var person = db.Query<ComplexPerson>(sql).FirstOrDefault();
 
 				Assert.NotNull(person);
 				Assert.AreEqual(3, person.ID);

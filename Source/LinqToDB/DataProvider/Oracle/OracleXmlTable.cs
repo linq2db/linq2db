@@ -9,6 +9,7 @@ using System.Text;
 namespace LinqToDB.DataProvider.Oracle
 {
 	using Expressions;
+	using LinqToDB.SqlProvider;
 	using Mapping;
 	using SqlQuery;
 
@@ -107,7 +108,7 @@ namespace LinqToDB.DataProvider.Oracle
 					o);
 			}
 
-			public override void SetTable(MappingSchema mappingSchema, SqlTable table, MemberInfo member, IEnumerable<Expression> expArgs, IEnumerable<ISqlExpression> sqlArgs)
+			public override void SetTable(ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MemberInfo member, IEnumerable<Expression> expArgs, IEnumerable<ISqlExpression> sqlArgs)
 			{
 				var arg = sqlArgs.ElementAt(1);
 				var ed  = mappingSchema.GetEntityDescriptor(table.ObjectType!);
@@ -136,7 +137,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 				var columns = ed.Columns
 					.Select((c,i) => string.Format("{0} {1} path 'c{2}'",
-						c.ColumnName,
+						sqlBuilder.ConvertInline(c.ColumnName, ConvertType.NameToQueryField),
 						string.IsNullOrEmpty(c.DbType) ?
 							GetDataTypeText(
 								new SqlDataType(

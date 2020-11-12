@@ -153,8 +153,7 @@ namespace LinqToDB.Linq.Builder
 
 		public static Expression ExpandExpression(Expression expression)
 		{
-			if (Common.Configuration.Linq.UseBinaryAggregateExpression)
-				expression = AggregateExpression(expression);
+			expression = AggregateExpression(expression);
 
 			var result = expression.Transform(expr =>
 			{
