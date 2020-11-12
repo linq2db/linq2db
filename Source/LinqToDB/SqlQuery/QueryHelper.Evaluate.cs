@@ -279,6 +279,22 @@ namespace LinqToDB.SqlQuery
 							return false;
 						}
 
+						case "$ToUpper$":
+						{
+							if (function.Parameters[0]
+								.TryEvaluateExpression(context, out var strValue, out errorMessage))
+							{
+								if (strValue == null)
+									return true;
+								if (strValue is string str)
+								{
+									result = str.ToUpper(CultureInfo.InvariantCulture);
+									return true;
+								}
+							}
+
+							return false;
+						}
 
 						default:
 							errorMessage = $"Unknown function '{function.Name}'.";

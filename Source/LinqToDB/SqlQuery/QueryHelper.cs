@@ -935,15 +935,19 @@ namespace LinqToDB.SqlQuery
 						queries.Add(newQuery);
 					}
 
-					queries.Add(query);
+					var objectTree = new Dictionary<ICloneableElement, ICloneableElement>();
+					var clonedQuery = (SelectQuery)query.Clone(objectTree, e => e == query || e is SqlColumn c && c.Parent == query);
+
+					queries.Add(clonedQuery);
 
 					for (int i = queries.Count - 2; i >= 0; i--)
 					{
 						queries[i].From.Table(queries[i + 1]);
 					}
 
-					foreach (var prevColumn in query.Select.Columns)
+					for (var index = 0; index < clonedQuery.Select.Columns.Count; index++)
 					{
+						var prevColumn = clonedQuery.Select.Columns[index];
 						var newColumn = prevColumn;
 						for (int ic = ec - 1; ic >= 0; ic--)
 						{
@@ -952,6 +956,7 @@ namespace LinqToDB.SqlQuery
 
 						// correct mapping
 						visitor.VisitedElements[prevColumn] = newColumn;
+						visitor.VisitedElements[query.Select.Columns[index]] = newColumn;
 					}
 
 					onWrap(queries);

@@ -36,6 +36,7 @@
 		<Compile Include="..\Linq\Linq\SetTests.cs" Link="SetTests.cs" />
 		<Compile Include="..\Linq\Linq\StringFunctionTests.cs" Link="StringFunctionTests.cs" />
 		<Compile Include="..\Linq\Linq\SubQueryTests.cs" Link="SubQueryTests.cs" />
+		<Compile Include="..\Linq\Linq\TableOptionsTests.cs" Link="TableOptionsTests.cs" />
 		<Compile Include="..\Linq\Linq\TakeSkipTests.cs" Link="TakeSkipTests.cs" />
 		<Compile Include="..\Linq\Linq\WhereTests.cs" Link="WhereTests.cs" />
 		<Compile Include="..\Linq\Samples\ConcurrencyCheckTests.cs" Link="ConcurrencyCheckTests.cs" />

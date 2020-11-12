@@ -935,110 +935,6 @@ namespace LinqToDB.SqlProvider
 				expr = newExpr ?? expr;
 			}
 
-			/*// handling the following expression types:
-			// some + 1 < 3 ===> some < 3 - 1
-			// 1 + some < 3 ===> some < 3 - 1
-			// some - 1 < 3 ===> some < 3 + 1
-			// 1 - some < 3 ===> 1 < 3 + some
-
-			var newExpr = Utils.PatternMatch(expr.Expr1, expr.Expr2, e =>
-				{
-					if (e.ElementType == QueryElementType.SqlBinaryExpression)
-					{
-						var binary = (SqlBinaryExpression)e;
-						if (binary.Operation.In("+", "-") && 
-						    binary.Expr1.SystemType.IsSignedType() &&
-						    binary.Expr2.SystemType.IsSignedType() &&
-						    (!binary.Expr2.CanBeNull && binary.Expr1.CanBeEvaluated(context) ||
-						     !binary.Expr1.CanBeNull && binary.Expr2.CanBeEvaluated(context)))
-						{
-							return binary;
-						}
-					}
-
-					return null;
-				},
-				e =>
-				{
-					if (e.CanBeEvaluated(context))
-						return e;
-					return null;
-				},
-				(binary, e, isSwapped) =>
-				{
-					if (binary.Operation == "+")
-					{
-						var converted = Utils.FirstMatch(binary.Expr1, binary.Expr2, ee => ee.CanBeEvaluated(context),
-							(evaluable, toStay, isSwapped) =>
-							{
-								if (!isSwapped)
-									return new SqlPredicate.ExprExpr(toStay, expr.Operator,
-										new SqlBinaryExpression(binary.SystemType, e, "-", evaluable), expr.WithNull);
-
-								return new SqlPredicate.ExprExpr(
-									new SqlBinaryExpression(binary.SystemType, e, "-", evaluable), expr.Operator,
-									toStay, expr.WithNull);
-							});
-						return converted;
-					}
-
-					// some - 1 < 3 ===> some < 3 + 1
-					// 1 - some < 3 ===> 1 < 3 + some
-
-
-					var converted = Utils.FirstMatch(binary.Expr1, binary.Expr2, ee => ee.CanBeEvaluated(context),
-						(evaluable, toStay, isSwapped2) =>
-						{
-							if (!isSwapped2)
-								return new SqlPredicate.ExprExpr(toStay, expr.Operator,
-									new SqlBinaryExpression(binary.SystemType, e, "-", evaluable), expr.WithNull);
-
-							return new SqlPredicate.ExprExpr(
-								new SqlBinaryExpression(binary.SystemType, e, "-", evaluable), expr.Operator,
-								toStay, expr.WithNull);
-						});
-
-					{
-						if (!isSwapped)
-						{
-							return new SqlPredicate.ExprExpr(binary.Expr1, expr.Operator,
-								new SqlBinaryExpression(binary.SystemType, e, "+", binary.Expr2), expr.WithNull);
-						}
-
-						return new SqlPredicate.ExprExpr(new SqlBinaryExpression(binary.SystemType, e, "+", binary.Expr2), expr.Operator,
-							binary.Expr1, expr.WithNull);
-					}
-				});
-
-			expr = newExpr ?? expr;
-
-			// handling the following expression types:
-			// some * x < x ===> some < 1
-			// x * some < x ===> some < 1
-			// some - 1 < 3 ===> some < 3 + 1
-			// 1 - some < 3 ===> 1 < 3 + some
-
-			/*newExpr = Utils.PatternMatch(expr.Expr1, expr.Expr2,
-				e =>
-				{
-					if (e.ElementType == QueryElementType.SqlBinaryExpression)
-					{
-						var binary = (SqlBinaryExpression)e;
-						if (binary.Operation == "*")
-							return binary;
-					}
-				},
-				e =>
-				{
-					return e;
-				},
-				(binary, e) =>
-				{
-					if (binary.Expr1.Equals(e))
-						return new SqlPredicate.ExprExpr(binary.Expr2, expr.Operator,
-							new SqlBinaryExpression(binary.SystemType, e, "+", binary.Expr2), expr.WithNull)
-				})#1#*/
-
 			return expr;
 		}
 
@@ -1809,7 +1705,7 @@ namespace LinqToDB.SqlProvider
 							break;
 					}
 
-					return ConvertFunction(func);
+					break;
 				}
 				#endregion
 
@@ -1829,6 +1725,12 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual ISqlExpression ConvertFunction(SqlFunction func)
 		{
+			switch (func.Name)
+			{
+				case "$ToLower$": return new SqlFunction(func.SystemType, "Lower", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
+				case "$ToUpper$": return new SqlFunction(func.SystemType, "Upper", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
+			}
+
 			return func;
 		}
 
@@ -3026,6 +2928,38 @@ namespace LinqToDB.SqlProvider
 			return newElement;
 		}
 
+		public IQueryElement ConvertFunctions(IQueryElement element, EvaluationContext context)
+		{
+			var alreadyStable = new HashSet<IQueryElement>();
+
+			var newElement = ConvertVisitor.ConvertAll(element, (visitor, e) =>
+			{
+				if (alreadyStable.Contains(e))
+					return e;
+
+				var ne = e;
+				for (;;)
+				{
+					if (ne.ElementType == QueryElementType.SqlFunction)
+						ne = ConvertFunction((SqlFunction)ne);
+
+					if (ReferenceEquals(ne, e))
+						break;
+
+					e = ne;
+				}
+
+				alreadyStable.Add(e);
+
+				return e;
+			});
+
+			if (!ReferenceEquals(newElement, element))
+				newElement = ConvertFunctions(newElement, context);
+
+			return newElement;
+		}
+
 		public SqlStatement ConvertStatement(MappingSchema mappingSchema, SqlStatement statement, EvaluationContext context)
 		{
 			var newStatement = (SqlStatement)ConvertElements(mappingSchema, statement, context);
@@ -3037,16 +2971,21 @@ namespace LinqToDB.SqlProvider
 
 		public virtual SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context)
 		{
-			statement = TransformStatement(statement);
-			statement = CorrectSkipTake(statement, context);
+			var newStatement = TransformStatement(statement);
+			newStatement = CorrectSkipTake(newStatement, context);
+
+			newStatement = (SqlStatement)ConvertFunctions(newStatement, context);
+
+			if (!ReferenceEquals(newStatement, statement))
+				newStatement = OptimizeStatement(newStatement, context);
 
 			if (SqlProviderFlags.IsParameterOrderDependent)
 			{
 				// ensure that parameters in expressions are well sorted
-				statement = NormalizeExpressions(statement);
+				newStatement = NormalizeExpressions(newStatement);
 			}
 
-			return statement;
+			return newStatement;
 		}
 
 		static SqlValuesTable ReduceSqlValueTable(SqlValuesTable table, EvaluationContext context)

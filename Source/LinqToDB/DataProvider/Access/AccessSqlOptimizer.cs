@@ -61,5 +61,15 @@ namespace LinqToDB.DataProvider.Access
 		{
 			return !subQuery.Where.IsEmpty;
 		}
+
+		protected override ISqlExpression ConvertFunction(SqlFunction func)
+		{
+			switch (func.Name)
+			{
+				case "$ToLower$" : return new SqlFunction(func.SystemType, "LCase", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
+				case "$ToUpper$" : return new SqlFunction(func.SystemType, "UCase", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
+			}
+			return base.ConvertFunction(func);
+		}
 	}
 }

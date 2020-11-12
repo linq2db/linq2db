@@ -614,15 +614,13 @@ namespace LinqToDB
 			return str == null || ch == null ? null : str.TrimEnd(ch.Value);
 		}
 
-		[Sql.Function(                    ServerSideOnly = true)]
-		[Sql.Function(PN.Access, "LCase", ServerSideOnly = true)]
+		[Sql.Function("$ToLower$", ServerSideOnly = true)]
 		public static string? Lower(string? str)
 		{
 			return str?.ToLower();
 		}
 
-		[Sql.Function(                    ServerSideOnly = true)]
-		[Sql.Function(PN.Access, "UCase", ServerSideOnly = true)]
+		[Sql.Function("$ToUpper$", ServerSideOnly = true)]
 		public static string? Upper(string? str)
 		{
 			return str?.ToUpper();

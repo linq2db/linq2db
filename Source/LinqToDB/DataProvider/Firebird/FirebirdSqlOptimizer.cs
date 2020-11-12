@@ -197,14 +197,6 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 			func = ConvertFunctionParameters(func, false);
 			
-			switch (func.Name)
-			{
-				case "$ToLower$":
-				{
-					return new SqlFunction(func.SystemType, "LOWER", func.Parameters);
-				}
-			}
-
 			return base.ConvertFunction(func);
 		}
 

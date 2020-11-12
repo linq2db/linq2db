@@ -222,12 +222,14 @@ namespace LinqToDB.SqlQuery
 
 					case QueryElementType.Column:
 						{
-							var col  = (SqlColumn)element;
-							var expr = (ISqlExpression?)ConvertInternal(col.Expression);
+							if (SecondParentElement?.ElementType == QueryElementType.SelectClause)
+							{
+								var col = (SqlColumn)element;
+								var expr = (ISqlExpression?)ConvertInternal(col.Expression);
 
-							if (expr != null && !ReferenceEquals(expr, col.Expression))
-								newElement = new SqlColumn(col.Parent, expr, col.RawAlias);
-
+								if (expr != null && !ReferenceEquals(expr, col.Expression))
+									newElement = new SqlColumn(col.Parent, expr, col.RawAlias);
+							}
 							break;
 						}
 
