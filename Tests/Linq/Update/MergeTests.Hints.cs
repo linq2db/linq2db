@@ -153,7 +153,7 @@ namespace Tests.xUpdate
 					.InsertWhenNotMatched()
 					.Merge();
 
-				Assert.True(db.LastQuery!.Contains("MERGE /*+ append */ INTO TestMerge1 Target"));
+				Assert.True(db.LastQuery!.Contains("MERGE /*+ append */ INTO \"TestMerge1\" Target"));
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 
