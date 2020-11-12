@@ -1210,8 +1210,7 @@ namespace Tests.Linq
 		public void SubDateDay(
 			[DataSources(
 				TestProvName.AllInformix,
-				TestProvName.AllOracle,
-				TestProvName.AllAccess)]
+				TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1224,8 +1223,7 @@ namespace Tests.Linq
 		public void DateDiffDay(
 			[DataSources(
 				TestProvName.AllInformix,
-				TestProvName.AllOracle,
-				TestProvName.AllAccess)]
+				TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1238,8 +1236,7 @@ namespace Tests.Linq
 		public void SubDateHour(
 			[DataSources(
 				TestProvName.AllInformix,
-				TestProvName.AllOracle,
-				TestProvName.AllAccess)]
+				TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1252,8 +1249,7 @@ namespace Tests.Linq
 		public void DateDiffHour(
 			[DataSources(
 				TestProvName.AllInformix,
-				TestProvName.AllOracle,
-				TestProvName.AllAccess)]
+				TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1266,8 +1262,7 @@ namespace Tests.Linq
 		public void SubDateMinute(
 			[DataSources(
 				TestProvName.AllInformix,
-				TestProvName.AllOracle,
-				TestProvName.AllAccess)]
+				TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1280,8 +1275,7 @@ namespace Tests.Linq
 		public void DateDiffMinute(
 			[DataSources(
 				TestProvName.AllInformix,
-				TestProvName.AllOracle,
-				TestProvName.AllAccess)]
+				TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1294,8 +1288,7 @@ namespace Tests.Linq
 		public void SubDateSecond(
 			[DataSources(
 				TestProvName.AllInformix,
-				TestProvName.AllOracle,
-				TestProvName.AllAccess)]
+				TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1308,8 +1301,7 @@ namespace Tests.Linq
 		public void DateDiffSecond(
 			[DataSources(
 				TestProvName.AllInformix,
-				TestProvName.AllOracle,
-				TestProvName.AllAccess)]
+				TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
