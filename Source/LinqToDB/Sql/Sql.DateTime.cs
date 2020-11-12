@@ -960,14 +960,14 @@ namespace LinqToDB
 		}
 
 		[CLSCompliant(false)]
-		[Sql.Extension(            "DateDiff",      BuilderType = typeof(DateDiffBuilder))]
-		[Sql.Extension(PN.MySql,   "TIMESTAMPDIFF", BuilderType = typeof(DateDiffBuilder))]
-		[Sql.Extension(PN.DB2,     "",              BuilderType = typeof(DateDiffBuilderDB2))]
-		[Sql.Extension(PN.SapHana, "",              BuilderType = typeof(DateDiffBuilderSapHana))]
-		[Sql.Extension(PN.SQLite,  "",              BuilderType = typeof(DateDiffBuilderSQLite))]
-		[Sql.Extension(PN.Oracle,  "",              BuilderType = typeof(DateDiffBuilderOracle))]
-		[Sql.Extension(PN.PostgreSQL, "",           BuilderType = typeof(DateDiffBuilderPostgreSql))]
-		[Sql.Extension(PN.Access,     "",           BuilderType = typeof(DateDiffBuilderAccess))]
+		[Sql.Extension(               "DateDiff",      BuilderType = typeof(DateDiffBuilder))]
+		[Sql.Extension(PN.MySql,      "TIMESTAMPDIFF", BuilderType = typeof(DateDiffBuilder))]
+		[Sql.Extension(PN.DB2,        "",              BuilderType = typeof(DateDiffBuilderDB2))]
+		[Sql.Extension(PN.SapHana,    "",              BuilderType = typeof(DateDiffBuilderSapHana))]
+		[Sql.Extension(PN.SQLite,     "",              BuilderType = typeof(DateDiffBuilderSQLite))]
+		[Sql.Extension(PN.Oracle,     "",              BuilderType = typeof(DateDiffBuilderOracle))]
+		[Sql.Extension(PN.PostgreSQL, "",              BuilderType = typeof(DateDiffBuilderPostgreSql))]
+		[Sql.Extension(PN.Access,     "",              BuilderType = typeof(DateDiffBuilderAccess))]
 		public static int? DateDiff(DateParts part, DateTime? startDate, DateTime? endDate)
 		{
 			if (startDate == null || endDate == null)
