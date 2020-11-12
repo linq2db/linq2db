@@ -178,12 +178,12 @@ namespace LinqToDB.SqlProvider
 		{
 			StringBuilder.Append(" ");
 
-			ConvertTableName(StringBuilder, null, null, null, mergeSource.Name);
+			ConvertTableName(StringBuilder, null, null, null, mergeSource.Name, TableOptions.NotSet);
 
 			if (MergeSupportsColumnAliasesInSource)
 			{
 				StringBuilder.AppendLine();
-				StringBuilder.AppendLine("(");
+				StringBuilder.AppendLine(OpenParens);
 
 				++Indent;
 
@@ -191,7 +191,7 @@ namespace LinqToDB.SqlProvider
 				foreach (var field in mergeSource.SourceFields)
 				{
 					if (!first)
-						StringBuilder.AppendLine(", ");
+						StringBuilder.AppendLine(Comma);
 
 					first = false;
 					AppendIndent();
@@ -259,7 +259,7 @@ namespace LinqToDB.SqlProvider
 				{
 					var value = row[j];
 					if (j > 0)
-						StringBuilder.Append(",");
+						StringBuilder.Append(InlineComma);
 
 					if (MergeSourceValueTypeRequired(source, rows, i, j))
 						BuildTypedExpression(columnTypes[j], value);
@@ -285,7 +285,7 @@ namespace LinqToDB.SqlProvider
 		private void BuildMergeEmptySource(SqlMergeStatement merge)
 		{
 			StringBuilder
-				.AppendLine("(")
+				.AppendLine(OpenParens)
 				.Append("\tSELECT ")
 				;
 
@@ -294,7 +294,7 @@ namespace LinqToDB.SqlProvider
 				var field = merge.Source.SourceFields[i];
 
 				if (i > 0)
-					StringBuilder.Append(", ");
+					StringBuilder.Append(InlineComma);
 
 				if (MergeSourceValueTypeRequired(merge.Source.SourceEnumerable!, Array<ISqlExpression[]>.Empty, -1, i))
 					BuildTypedExpression(new SqlDataType(field), new SqlValue(field.Type!.Value, null));
@@ -326,7 +326,7 @@ namespace LinqToDB.SqlProvider
 			if (FakeTable == null)
 				return false;
 
-			BuildTableName(StringBuilder, null, null, FakeTableSchema, FakeTable);
+			BuildTableName(StringBuilder, null, null, FakeTableSchema, FakeTable, TableOptions.NotSet);
 			return true;
 		}
 
@@ -341,7 +341,7 @@ namespace LinqToDB.SqlProvider
 				var row = rows[i];
 
 				if (i != 0)
-					StringBuilder.AppendLine(",");
+					StringBuilder.AppendLine(Comma);
 				else
 					StringBuilder.AppendLine("\tVALUES");
 
@@ -350,7 +350,7 @@ namespace LinqToDB.SqlProvider
 				{
 					var value = row[j];
 					if (j > 0)
-						StringBuilder.Append(",");
+						StringBuilder.Append(InlineComma);
 
 					if (MergeSourceValueTypeRequired(source, rows, i, j))
 						BuildTypedExpression(columnTypes[j], value);

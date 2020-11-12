@@ -20,15 +20,16 @@ namespace Tests.Linq
 		public static string[] CteSupportedProviders = new[]
 		{
 			TestProvName.AllSqlServer2008Plus,
-			ProviderName.Firebird,
+			TestProvName.AllFirebird,
 			TestProvName.AllPostgreSQL,
 			ProviderName.DB2,
 			TestProvName.AllSQLite,
-			TestProvName.AllOracle
+			TestProvName.AllOracle,
+			TestProvName.AllMySqlWithCTE,
 			// TODO: v14
 			//TestProvName.AllInformix,
 			// Will be supported in SQL 8.0 - ProviderName.MySql
-		};
+		}.SelectMany(_ => _.Split(',')).ToArray();
 
 		public class CteContextSourceAttribute : IncludeDataSourcesAttribute
 		{
@@ -42,12 +43,12 @@ namespace Tests.Linq
 			}
 
 			public CteContextSourceAttribute(params string[] excludedProviders)
-				: base(CteSupportedProviders.Except(excludedProviders).ToArray())
+				: base(CteSupportedProviders.Except(excludedProviders.SelectMany(_ => _.Split(','))).ToArray())
 			{
 			}
 
 			public CteContextSourceAttribute(bool includeLinqService, params string[] excludedProviders)
-				: base(includeLinqService, CteSupportedProviders.Except(excludedProviders).ToArray())
+				: base(includeLinqService, CteSupportedProviders.Except(excludedProviders.SelectMany(_ => _.Split(','))).ToArray())
 			{
 			}
 		}
@@ -557,8 +558,9 @@ namespace Tests.Linq
 			}
 		}
 
+		// MariaDB support expected in v10.6 : https://jira.mariadb.org/browse/MDEV-18511
 		[Test]
-		public void TestDelete([CteContextSource(ProviderName.Firebird, ProviderName.DB2)] string context)
+		public void TestDelete([CteContextSource(TestProvName.AllFirebird, ProviderName.DB2, TestProvName.MariaDB)] string context)
 		{
 			using (var db  = GetDataContext(context))
 			using (var tmp = db.CreateLocalTable("CteChild",
@@ -576,10 +578,11 @@ namespace Tests.Linq
 			}
 		}
 
+		// MariaDB support expected in v10.6 : https://jira.mariadb.org/browse/MDEV-18511
 		[ActiveIssue(Configuration = TestProvName.AllOracle, Details = "Oracle needs special syntax for CTE + UPDATE")]
 		[Test]
 		public void TestUpdate(
-			[CteContextSource(ProviderName.Firebird, ProviderName.DB2, TestProvName.AllOracle)]
+			[CteContextSource(TestProvName.AllFirebird, ProviderName.DB2, TestProvName.AllOracle, TestProvName.MariaDB)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1122,7 +1125,7 @@ namespace Tests.Linq
 				var result = from item in wipCte.AllowedNcCode() where item.NcCodeBo == ncCodeBo select item;
 				var sql = ((IExpressionQuery)result).SqlText;
 
-				Assert.True(sql.Replace("\"", "").Replace("[", "").Replace("]", "").ToLowerInvariant().Contains("WITH AllowedNcCode (NcCodeBo, NcCode, NcCodeDescription)".ToLowerInvariant()));
+				Assert.True(sql.Replace("\"", "").Replace("`", "").Replace("[", "").Replace("]", "").ToLowerInvariant().Contains("WITH AllowedNcCode (NcCodeBo, NcCode, NcCodeDescription)".ToLowerInvariant()));
 			}
 		}
 

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+
 using LinqToDB.Async;
 
 namespace LinqToDB.Linq
@@ -35,7 +36,7 @@ namespace LinqToDB.Linq
 			set => throw new NotImplementedException();
 		}
 
-		public string         SqlText        { get; } = null!;
+		public string         SqlText     { get; } = null!;
 		public IDataContext   DataContext => null!;
 		public Type           ElementType => _query.ElementType;
 		public IQueryProvider Provider    => _query.Provider;
@@ -72,10 +73,11 @@ namespace LinqToDB.Linq
 
 		Expression IExpressionQuery.Expression => Expression;
 
-		public string? DatabaseName { get; }
-		public string? SchemaName   { get; }
-		public string  TableName    { get; } = null!;
-		public string? ServerName   { get; }
+		public string?      DatabaseName { get; }
+		public string?      SchemaName   { get; }
+		public string       TableName    { get; } = null!;
+		public string?      ServerName   { get; }
+		public TableOptions TableOptions { get; }
 
 		public string GetTableName()
 		{

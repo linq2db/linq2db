@@ -219,7 +219,7 @@ namespace Tests.xUpdate
 					var id = 1001;
 
 					db.Child.Delete(c => c.ChildID > 1000);
-					db.Child.Insert(() => new Child { ParentID = 1, ChildID = id});
+					db.Child.Insert(() => new Child { ParentID = 1, ChildID = id });
 
 					Assert.AreEqual(1, db.Child.Count(c => c.ChildID == id));
 					Assert.AreEqual(1,
@@ -1706,7 +1706,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		
+
 		class TextData
 		{
 			[Column]
@@ -1734,7 +1734,7 @@ namespace Tests.xUpdate
 			using (var table = db.CreateLocalTable(data))
 			{
 				var id = 1;
-				
+
 				table.Where(_ => _.Id >= id)
 					.Set(x => $"{x.Items1} += {str}")
 					.Set(x => $"{x.Items2} += {str}")
@@ -1766,7 +1766,7 @@ namespace Tests.xUpdate
 			using (var table = db.CreateLocalTable(data))
 			{
 				var id = 1;
-				
+
 				table.Where(_ => _.Id >= id)
 					.Set(x => x.Items1, x => $"{x.Items1}{str}")
 					.Set(x => x.Items2, x => $"{x.Items2}{str}")

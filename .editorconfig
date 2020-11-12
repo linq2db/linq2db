@@ -9,24 +9,19 @@ end_of_line = crlf
 
 # Code files
 [*.{cs,csx,vb,vbx}]
-indent_size = 4
 charset = utf-8-bom
 
 # XML project files
 [*.{csproj,vbproj,vcxproj,vcxproj.filters,proj,projitems,shproj}]
-indent_size = 2
 
 # XML config files
 [*.{props,targets,ruleset,config,nuspec,resx,vsixmanifest,vsct}]
-indent_size = 2
 
 # JSON files
 [*.json]
-indent_size = 2
 
 # Powershell files
 [*.ps1]
-indent_size = 2
 
 # Azure files
 [*.{yml,sh,cmd,md}]

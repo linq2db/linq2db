@@ -14,7 +14,6 @@ namespace LinqToDB
 	using Expressions;
 	using Linq;
 	using Linq.Builder;
-	using Reflection;
 
 	/// <summary>
 	/// Contains extension methods for LINQ queries.
@@ -3091,7 +3090,7 @@ namespace LinqToDB
 		/// <exception cref="T:System.ArgumentNullException">
 		/// <paramref name="source" /> is <see langword="null" />.</exception>
 		public static IQueryable<TElement> AsQueryable<TElement>(
-			[SqlQueryDependent]  this IEnumerable<TElement> source, 
+			[SqlQueryDependent]  this IEnumerable<TElement> source,
 			                          IDataContext          dataContext)
 		{
 			if (source      == null) throw new ArgumentNullException(nameof(source));
@@ -3202,7 +3201,7 @@ namespace LinqToDB
 					null,
 					MethodHelper.GetMethodInfo(DisableGuard, grouping), grouping.Expression));
 		}
-		
+
 
 		#endregion
 
@@ -3230,9 +3229,9 @@ namespace LinqToDB
 					null,
 					MethodHelper.GetMethodInfo(HasUniqueKey, source, keySelector),
 					source.Expression,
-					Expression.Quote(keySelector) 
+					Expression.Quote(keySelector)
 				));
-		}		
+		}
 
 		#endregion
 

@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace LinqToDB.DataProvider.Access
 {
 	using Extensions;
-	using LinqToDB.Mapping;
+	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
 
@@ -34,10 +33,10 @@ namespace LinqToDB.DataProvider.Access
 				var field = trun.Table!.IdentityFields[commandNumber - 1];
 
 				StringBuilder.Append("ALTER TABLE ");
-				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName!);
+				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName!, trun.Table.TableOptions);
 				StringBuilder.Append(" ALTER COLUMN ");
 				Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
-				StringBuilder.AppendLine(" COUNTER(1,1)");
+				StringBuilder.AppendLine(" COUNTER(1, 1)");
 			}
 			else
 			{
@@ -169,7 +168,7 @@ namespace LinqToDB.DataProvider.Access
 				if (value != null)
 				{
 					var text  = value.ToString()!;
-		
+
 					var ntext = predicate.IsSqlLike ? text : DataTools.EscapeUnterminatedBracket(text);
 
 					if (text != ntext)
@@ -385,13 +384,14 @@ namespace LinqToDB.DataProvider.Access
 		{
 			AppendIndent();
 			StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY CLUSTERED (");
-			StringBuilder.Append(fieldNames.Aggregate((f1,f2) => f1 + ", " + f2));
+			StringBuilder.Append(string.Join(InlineComma, fieldNames));
 			StringBuilder.Append(")");
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions)
 		{
-			if (database != null && database.Length == 0) database = null;
+			if (database != null && database.Length == 0)
+				database = null;
 
 			if (database != null)
 				sb.Append(database).Append(".");

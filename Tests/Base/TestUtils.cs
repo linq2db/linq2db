@@ -264,8 +264,8 @@ namespace Tests
 
 		class FirebirdTempTable<T> : TempTable<T>
 		{
-			public FirebirdTempTable(IDataContext db, string? tableName = null, string? databaseName = null, string? schemaName = null) 
-				: base(db, tableName, databaseName, schemaName)
+			public FirebirdTempTable(IDataContext db, string? tableName = null, string? databaseName = null, string? schemaName = null, TableOptions tableOptions = TableOptions.NotSet)
+				: base(db, tableName, databaseName, schemaName, tableOptions : tableOptions)
 			{
 			}
 
@@ -277,10 +277,10 @@ namespace Tests
 			}
 		}
 
-		static TempTable<T> CreateTable<T>(IDataContext db, string? tableName) =>
+		static TempTable<T> CreateTable<T>(IDataContext db, string? tableName, TableOptions tableOptions = TableOptions.NotSet) =>
 			db.CreateSqlProvider() is FirebirdSqlBuilder ?
-				new FirebirdTempTable<T>(db, tableName) : 
-				new         TempTable<T>(db, tableName);
+				new FirebirdTempTable<T>(db, tableName, tableOptions : tableOptions) :
+				new         TempTable<T>(db, tableName, tableOptions : tableOptions);
 
 		static void ClearDataContext(IDataContext db)
 		{
@@ -291,17 +291,17 @@ namespace Tests
 			}
 		}
 
-		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string? tableName = null)
+		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string? tableName = null, TableOptions tableOptions = TableOptions.NotSet)
 		{
 			try
 			{
-				return CreateTable<T>(db, tableName);
+				return CreateTable<T>(db, tableName, tableOptions);
 			}
 			catch
 			{
 				ClearDataContext(db);
 				db.DropTable<T>(tableName, throwExceptionIfNotExists:false);
-				return CreateTable<T>(db, tableName);
+				return CreateTable<T>(db, tableName, tableOptions);
 			}
 		}
 

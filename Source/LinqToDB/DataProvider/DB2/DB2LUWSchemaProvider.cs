@@ -482,14 +482,14 @@ WHERE
 
 				if (IncludedSchemas.Count != 0)
 				{
-					sql += string.Format(" IN ({0})", IncludedSchemas.Select(n => '\'' + n + '\'') .Aggregate((s1,s2) => s1 + ',' + s2));
+					sql += string.Format(" IN ({0})", string.Join(", ", IncludedSchemas.Select(n => '\'' + n + '\'')));
 
 					if (ExcludedSchemas.Count != 0)
 						sql += " AND " + schemaNameField;
 				}
 
 				if (ExcludedSchemas.Count != 0)
-					sql += string.Format(" NOT IN ({0})", ExcludedSchemas.Select(n => '\'' + n + '\'') .Aggregate((s1,s2) => s1 + ',' + s2));
+					sql += string.Format(" NOT IN ({0})", string.Join(", ", ExcludedSchemas.Select(n => '\'' + n + '\'')));
 
 				return sql;
 			}

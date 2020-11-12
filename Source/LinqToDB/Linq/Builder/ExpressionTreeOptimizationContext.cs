@@ -153,8 +153,7 @@ namespace LinqToDB.Linq.Builder
 
 		public static Expression ExpandExpression(Expression expression)
 		{
-			if (Common.Configuration.Linq.UseBinaryAggregateExpression)
-				expression = AggregateExpression(expression);
+			expression = AggregateExpression(expression);
 
 			var result = expression.Transform(expr =>
 			{
@@ -498,6 +497,9 @@ namespace LinqToDB.Linq.Builder
 								var obj = ExposeExpression(me.Expression);
 								return Expression.NotEqual(obj, Expression.Constant(null, obj.Type));
 							}
+
+							if (CanBeCompiled(expr))
+								break;
 
 							var l  = ConvertMethodExpression(me.Expression?.Type ?? me.Member.ReflectedType!, me.Member, out var alias);
 

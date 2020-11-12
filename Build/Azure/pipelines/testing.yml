@@ -37,13 +37,30 @@ stages:
       ${{ if ne(variables['Build.DefinitionName'], 'experimental') }}:
           experimental: false
       # db_filter parameter
+      ${{ if eq(variables['Build.DefinitionName'], 'test-access') }}:
+        db_filter: '[access.all]'
       ${{ if eq(variables['Build.DefinitionName'], 'test-db2') }}:
-        db_filter: 'db2'
-      ${{ if eq(variables['Build.DefinitionName'], 'test-sybase') }}:
-        db_filter: 'sybase.ase'
+        db_filter: '[db2.all]'
+      ${{ if eq(variables['Build.DefinitionName'], 'test-firebird') }}:
+        db_filter: '[firebird.all]'
       ${{ if eq(variables['Build.DefinitionName'], 'test-informix') }}:
-        db_filter: 'informix'
-      ${{ if eq(variables['Build.DefinitionName'], 'test-sqlserver-2019') }}:
-        db_filter: 'sqlserver.2019'
+        db_filter: '[informix.all]'
+      ${{ if eq(variables['Build.DefinitionName'], 'test-mysql') }}:
+        db_filter: '[mysql.all]'
+      ${{ if eq(variables['Build.DefinitionName'], 'test-oracle') }}:
+        db_filter: '[oracle.all]'
+      ${{ if eq(variables['Build.DefinitionName'], 'test-postgresql') }}:
+        db_filter: '[postgresql.all]'
+      ${{ if eq(variables['Build.DefinitionName'], 'test-saphana') }}:
+        db_filter: '[saphana.all]'
+      ${{ if eq(variables['Build.DefinitionName'], 'test-sqlce') }}:
+        db_filter: '[sqlce.all]'
       ${{ if eq(variables['Build.DefinitionName'], 'test-sqlite') }}:
-        db_filter: 'sqlite'
+        db_filter: '[sqlite.all]'
+      ${{ if eq(variables['Build.DefinitionName'], 'test-sqlserver') }}:
+        db_filter: '[sqlserver.all]'
+      ${{ if eq(variables['Build.DefinitionName'], 'test-sqlserver-2019') }}:
+        db_filter: '[sqlserver.2019]'
+      ${{ if eq(variables['Build.DefinitionName'], 'test-sybase') }}:
+        db_filter: '[sybase.ase.all]'
+

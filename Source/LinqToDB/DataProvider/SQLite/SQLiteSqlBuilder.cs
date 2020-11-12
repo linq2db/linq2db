@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace LinqToDB.DataProvider.SQLite
@@ -59,7 +58,7 @@ namespace LinqToDB.DataProvider.SQLite
 			return "OFFSET {0}";
 		}
 
-		public override bool IsNestedJoinSupported { get { return false; } }
+		public override bool IsNestedJoinSupported => false;
 
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
@@ -124,7 +123,7 @@ namespace LinqToDB.DataProvider.SQLite
 			{
 				AppendIndent();
 				StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY (");
-				StringBuilder.Append(fieldNames.Aggregate((f1,f2) => f1 + ", " + f2));
+			StringBuilder.Append(string.Join(InlineComma, fieldNames));
 				StringBuilder.Append(")");
 			}
 		}
@@ -146,7 +145,7 @@ namespace LinqToDB.DataProvider.SQLite
 							new SqlDataType(leftType), exprExpr.Expr1);
 						exprExpr.Expr1 = l;
 					}
-					
+
 					if (!(exprExpr.Expr2 is SqlFunction func2 && (func2.Name == "$Convert$" || func2.Name == "DateTime")))
 					{
 						var r = new SqlFunction(rightType.SystemType, "$Convert$", new SqlDataType(rightType),
@@ -159,7 +158,7 @@ namespace LinqToDB.DataProvider.SQLite
 			base.BuildPredicate(predicate);
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions)
 		{
 			if (database != null && database.Length == 0) database = null;
 
@@ -183,10 +182,11 @@ namespace LinqToDB.DataProvider.SQLite
 
 		static bool IsDateTime(Type type)
 		{
-			return    type == typeof(DateTime)
-				   || type == typeof(DateTimeOffset)
-				   || type == typeof(DateTime?)
-				   || type == typeof(DateTimeOffset?);
+			return
+				type == typeof(DateTime) ||
+				type == typeof(DateTimeOffset) ||
+				type == typeof(DateTime?) ||
+				type == typeof(DateTimeOffset?);
 		}
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
@@ -197,6 +197,38 @@ namespace LinqToDB.DataProvider.SQLite
 		protected override void BuildMergeStatement(SqlMergeStatement merge)
 		{
 			throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
+		}
+
+		protected override void BuildCreateTableCommand(SqlTable table)
+		{
+			string command;
+
+			if (table.TableOptions.IsTemporaryOptionSet())
+			{
+				switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
+				{
+					case TableOptions.IsTemporary                                                                              :
+					case TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData :
+					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     :
+					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
+					case                                                                     TableOptions.IsLocalTemporaryData :
+					case                            TableOptions.IsLocalTemporaryStructure                                     :
+					case                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
+						command = "CREATE TEMPORARY TABLE ";
+						break;
+					case var value :
+						throw new InvalidOperationException($"Incompatible table options '{value}'");
+				}
+			}
+			else
+			{
+				command = "CREATE TABLE ";
+			}
+
+			StringBuilder.Append(command);
+
+			if (table.TableOptions.HasCreateIfNotExists())
+				StringBuilder.Append("IF NOT EXISTS ");
 		}
 	}
 }

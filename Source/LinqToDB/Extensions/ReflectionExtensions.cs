@@ -36,7 +36,6 @@ namespace LinqToDB.Extensions
 
 			var members = type.GetMembers(BindingFlags.Instance | BindingFlags.Public)
 				.Where(m => m.IsFieldEx() || m.IsPropertyEx() && ((PropertyInfo)m).GetIndexParameters().Length == 0);
-			
 
 			var baseType = type.BaseType;
 			if (baseType == null || baseType == typeof(object) || baseType == typeof(ValueType))
@@ -666,19 +665,18 @@ namespace LinqToDB.Extensions
 					return true;
 			return false;
 		}
-		
-		static readonly ConcurrentDictionary<Type,Type?> getItemTypeCache = new ConcurrentDictionary<Type, Type?>();
-		
-		[return: NotNullIfNotNull("type")]
+
+		static readonly ConcurrentDictionary<Type,Type?> _getItemTypeCache = new ConcurrentDictionary<Type, Type?>();
+
 		public static Type? GetItemType(this Type? type)
 		{
 			if (type == null)
 				return null;
-			return getItemTypeCache.GetOrAdd(type, (t) =>
+
+			return _getItemTypeCache.GetOrAdd(type, t =>
 			{
 				if (t == typeof(object))
-					// if it possible to have null here or we should remove check?
-					return t.HasElementType ? t.GetElementType() : null;
+					return null;
 
 				if (t.IsArray)
 					return t.GetElementType();

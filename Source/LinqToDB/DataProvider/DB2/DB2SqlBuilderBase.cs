@@ -1,13 +1,14 @@
-﻿using System.Data;
+﻿using System;
+using System.Data;
 using System.Data.SqlTypes;
 using System.Linq;
 using System.Text;
 
 namespace LinqToDB.DataProvider.DB2
 {
+	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
-	using LinqToDB.Mapping;
 
 	abstract partial class DB2SqlBuilderBase : BasicSqlBuilder
 	{
@@ -50,7 +51,7 @@ namespace LinqToDB.DataProvider.DB2
 				var field = trun.Table!.IdentityFields[commandNumber - 1];
 
 				StringBuilder.Append("ALTER TABLE ");
-				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName!);
+				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName!, trun.Table.TableOptions);
 				StringBuilder.Append(" ALTER ");
 				Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
 				StringBuilder.AppendLine(" RESTART WITH 1");
@@ -89,7 +90,7 @@ namespace LinqToDB.DataProvider.DB2
 				sb.AppendLine();
 				AppendIndent().AppendLine("FROM");
 				AppendIndent().AppendLine("\tNEW TABLE");
-				AppendIndent().AppendLine("\t(");
+				AppendIndent().Append("\t").AppendLine(OpenParens);
 			}
 
 			base.BuildSql(commandNumber, statement, sb, indent, skipAlias);
@@ -234,7 +235,7 @@ namespace LinqToDB.DataProvider.DB2
 			StringBuilder.Append("GENERATED ALWAYS AS IDENTITY");
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions)
 		{
 			if (database != null && database.Length == 0) database = null;
 			if (schema   != null && schema.  Length == 0) schema   = null;
@@ -243,15 +244,15 @@ namespace LinqToDB.DataProvider.DB2
 			if (database != null && schema == null)
 				throw new LinqToDBException("DB2 requires schema name if database name provided.");
 
-			return base.BuildTableName(sb, null, database, schema, table);
+			return base.BuildTableName(sb, null, database, schema, table, tableOptions);
 		}
 
 		protected override string? GetProviderTypeName(IDbDataParameter parameter)
 		{
-			if (parameter.DbType == DbType.Decimal && parameter.Value is decimal)
+			if (parameter.DbType == DbType.Decimal && parameter.Value is decimal decValue)
 			{
-				var d = new SqlDecimal((decimal)parameter.Value);
-				return "(" + d.Precision + "," + d.Scale + ")";
+				var d = new SqlDecimal(decValue);
+				return "(" + d.Precision + InlineComma + d.Scale + ")";
 			}
 
 			if (Provider != null)
@@ -268,11 +269,10 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			var table = dropTable.Table!;
 
-			if (dropTable.IfExists)
+			if (dropTable.Table.TableOptions.HasDropIfExists())
 			{
 				AppendIndent().Append(@"BEGIN
-	DECLARE CONTINUE HANDLER FOR SQLSTATE '42704'
-		BEGIN END;
+	DECLARE CONTINUE HANDLER FOR SQLSTATE '42704' BEGIN END;
 	EXECUTE IMMEDIATE 'DROP TABLE ");
 				BuildPhysicalTable(table, null);
 				StringBuilder.AppendLine(
@@ -285,6 +285,79 @@ END");
 				BuildPhysicalTable(table, null);
 				StringBuilder.AppendLine();
 			}
+		}
+
+		protected override void BuildCreateTableCommand(SqlTable table)
+		{
+			string command;
+
+			if (table.TableOptions.IsTemporaryOptionSet())
+			{
+				switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
+				{
+					case TableOptions.IsTemporary                                                                               :
+					case TableOptions.IsTemporary |                                           TableOptions.IsLocalTemporaryData :
+					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                      :
+					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure  | TableOptions.IsLocalTemporaryData :
+					case                                                                      TableOptions.IsLocalTemporaryData :
+					case                            TableOptions.IsLocalTemporaryStructure                                      :
+					case                            TableOptions.IsLocalTemporaryStructure  | TableOptions.IsLocalTemporaryData :
+						command = "DECLARE GLOBAL TEMPORARY TABLE ";
+						break;
+					case                            TableOptions.IsGlobalTemporaryStructure                                     :
+					case                            TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData :
+						command = "CREATE GLOBAL TEMPORARY TABLE ";
+						break;
+					case var value :
+						throw new InvalidOperationException($"Incompatible table options '{value}'");
+				}
+			}
+			else
+			{
+				command = "CREATE TABLE ";
+			}
+
+			StringBuilder.Append(command);
+		}
+
+		protected override void BuildStartCreateTableStatement(SqlCreateTableStatement createTable)
+		{
+			if (createTable.StatementHeader == null && createTable.Table!.TableOptions.HasCreateIfNotExists())
+			{
+				AppendIndent().AppendLine(@"BEGIN");
+
+				Indent++;
+
+				AppendIndent().AppendLine(@"DECLARE CONTINUE HANDLER FOR SQLSTATE '42710' BEGIN END;");
+				AppendIndent().AppendLine(@"EXECUTE IMMEDIATE '");
+
+				Indent++;
+			}
+
+			base.BuildStartCreateTableStatement(createTable);
+		}
+
+		protected override void BuildEndCreateTableStatement(SqlCreateTableStatement createTable)
+		{
+			base.BuildEndCreateTableStatement(createTable);
+
+			if (createTable.StatementHeader == null && createTable.Table!.TableOptions.HasCreateIfNotExists())
+			{
+				Indent--;
+
+				AppendIndent()
+					.AppendLine("';");
+
+				Indent--;
+
+				StringBuilder
+					.AppendLine("END");
+			}
+		}
+
+		public override string? GetTableSchemaName(SqlTable table)
+		{
+			return table.Schema == null && table.TableOptions.IsTemporaryOptionSet() ? "SESSION" : base.GetTableSchemaName(table);
 		}
 	}
 }

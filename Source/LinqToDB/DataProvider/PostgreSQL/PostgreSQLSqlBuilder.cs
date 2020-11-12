@@ -1,17 +1,18 @@
-﻿using System.Data;
+﻿using System;
+using System.Data;
+using System.Globalization;
 using System.Linq;
-using System.Text;
 using System.Net;
 using System.Net.NetworkInformation;
+using System.Text;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
 	using Common;
+	using Extensions;
+	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
-	using System.Globalization;
-	using LinqToDB.Extensions;
-	using LinqToDB.Mapping;
 
 	public class PostgreSQLSqlBuilder : BasicSqlBuilder
 	{
@@ -73,7 +74,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case DataType.SByte         :
 				case DataType.Byte          : StringBuilder.Append("SmallInt");       break;
 				case DataType.Money         : StringBuilder.Append("money");          break;
-				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10,4)");  break;
+				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10, 4)"); break;
 				case DataType.DateTime2     :
 				case DataType.SmallDateTime :
 				case DataType.DateTime      : StringBuilder.Append("TimeStamp");      break;
@@ -180,7 +181,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			foreach (var expr in insertOrUpdate.Update.Keys)
 			{
 				if (!firstKey)
-					StringBuilder.Append(',');
+					StringBuilder.Append(InlineComma);
 				firstKey = false;
 
 				BuildExpression(expr.Column, false, true);
@@ -197,7 +198,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				foreach (var expr in insertOrUpdate.Update.Items)
 				{
 					if (!first)
-						StringBuilder.Append(',').AppendLine();
+						StringBuilder.AppendLine(Comma);
 					first = false;
 
 					AppendIndent();
@@ -233,7 +234,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 					var sb = new StringBuilder();
 					sb.Append("nextval(");
-					ValueToSqlConverter.Convert(sb, BuildTableName(new StringBuilder(), server, database, schema, name).ToString());
+					ValueToSqlConverter.Convert(sb, BuildTableName(new StringBuilder(), server, database, schema, name, table.TableOptions).ToString());
 					sb.Append(")");
 					return new SqlExpression(sb.ToString(), Precedence.Primary);
 				}
@@ -279,7 +280,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return base.BuildJoinType(join);
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions)
 		{
 			if (database != null && database.Length == 0) database = null;
 			if (schema   != null && schema.  Length == 0) schema   = null;
@@ -289,7 +290,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			if (database != null && schema == null)
 				database = null;
 
-			return base.BuildTableName(sb, null, database, schema, table);
+			return base.BuildTableName(sb, null, database, schema, table, tableOptions);
 		}
 
 		protected override string? GetProviderTypeName(IDbDataParameter parameter)
@@ -347,7 +348,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				foreach (var oi in output.OutputItems)
 				{
 					if (!first)
-						StringBuilder.Append(',').AppendLine();
+						StringBuilder.AppendLine(Comma);
 					first = false;
 
 					AppendIndent();
@@ -362,5 +363,57 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			}
 		}
 
+		public override string? GetTableSchemaName(SqlTable table)
+		{
+			return table.Schema == null || table.TableOptions.HasIsTemporary() ? null : ConvertInline(table.Schema, ConvertType.NameToSchema);
+		}
+
+		protected override void BuildCreateTableCommand(SqlTable table)
+		{
+			string command;
+
+			if (table.TableOptions.IsTemporaryOptionSet())
+			{
+				switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
+				{
+					case TableOptions.IsTemporary                                                                                    :
+					case TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData       :
+					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                           :
+					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData       :
+					case                                                                     TableOptions.IsLocalTemporaryData       :
+					case                                                                     TableOptions.IsTransactionTemporaryData :
+					case                            TableOptions.IsLocalTemporaryStructure                                           :
+					case                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData       :
+					case                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsTransactionTemporaryData :
+						command = "CREATE TEMPORARY TABLE ";
+						break;
+					case var value :
+						throw new InvalidOperationException($"Incompatible table options '{value}'");
+				}
+			}
+			else
+			{
+				command = "CREATE TABLE ";
+			}
+
+			StringBuilder.Append(command);
+
+			if (table.TableOptions.HasCreateIfNotExists())
+				StringBuilder.Append("IF NOT EXISTS ");
+		}
+
+		protected override void BuildEndCreateTableStatement(SqlCreateTableStatement createTable)
+		{
+			var table = createTable.Table;
+
+			if (table.TableOptions.IsTemporaryOptionSet())
+			{
+				StringBuilder.AppendLine(table.TableOptions.HasIsTransactionTemporaryData()
+					? "ON COMMIT DELETE ROWS"
+					: "ON COMMIT PRESERVE ROWS");
+			}
+
+			base.BuildEndCreateTableStatement(createTable);
+		}
 	}
 }

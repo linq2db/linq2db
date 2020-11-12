@@ -168,7 +168,7 @@ namespace Tests
 			}
 
 			UserProviders  = new HashSet<string>(testSettings.Providers ?? Array<string>.Empty, StringComparer.OrdinalIgnoreCase);
-			SkipCategories = new HashSet<string>(testSettings.Skip ?? Array<string>.Empty, StringComparer.OrdinalIgnoreCase);
+			SkipCategories = new HashSet<string>(testSettings.Skip      ?? Array<string>.Empty, StringComparer.OrdinalIgnoreCase);
 
 			var logLevel = testSettings.TraceLevel;
 			var traceLevel = TraceLevel.Info;
@@ -1317,21 +1317,6 @@ namespace Tests
 		public void Dispose()
 		{
 			Configuration.Linq.DoNotClearOrderBys = _oldValue;
-		}
-	}
-
-	public class UseBinaryAggregateExpression : IDisposable
-	{
-		private readonly bool _oldValue = Configuration.Linq.UseBinaryAggregateExpression;
-
-		public UseBinaryAggregateExpression(bool enable)
-		{
-			Configuration.Linq.UseBinaryAggregateExpression = enable;
-		}
-
-		public void Dispose()
-		{
-			Configuration.Linq.UseBinaryAggregateExpression = _oldValue;
 		}
 	}
 
