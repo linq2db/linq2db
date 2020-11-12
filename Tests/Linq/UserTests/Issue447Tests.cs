@@ -9,12 +9,9 @@
 	[TestFixture]
 	public class Issue447Tests : TestBase
 	{
-		[Explicit("https://github.com/linq2db/linq2db/issues/447")]
-		[Category(TestCategory.Explicit)]
 		[Test]
 		public void TestLinq2DbComplexQuery2([DataSources] string context)
 		{
-			using (new UseBinaryAggregateExpression(false))
 			using (var db = GetDataContext(context))
 			{
 				var result = db.Child.Where(c => c.ChildID > 1 || c.ChildID > 0);
@@ -46,43 +43,8 @@
 		}
 
 		[Test]
-		public void TestLinq2DbComplexQuery3([DataSources] string context)
-		{
-			using (new UseBinaryAggregateExpression(true))
-			using (var db = GetDataContext(context))
-			{
-				var result = db.Child.Where(c => c.ChildID > 1 || c.ChildID > 0);
-
-				var array = Enumerable.Range(0, 3000).ToArray();
-
-				// Build "where" conditions
-				var param = Expression.Parameter(typeof(Model.Child));
-				Expression<Func<Model.Child, bool>>? predicate = null;
-
-				for (var i = 0; i < array.Length; i++)
-				{
-					var id = array[i];
-
-					var filterExpression = Expression.Lambda<Func<Model.Child, bool>>
-					(Expression.Equal(
-						Expression.Convert(Expression.Field(param, "ChildID"), typeof(int)),
-						Expression.Constant(id)
-					), param);
-
-					predicate = predicate != null ? Or(predicate, filterExpression) : filterExpression;
-				}
-
-				result = result.Where(predicate);
-
-				// StackOverflowException cannot be handled and will terminate process
-				var _ = result.ToString();
-			}
-		}
-
-		[Test]
 		public void TestLinq2DbComplexQueryCache([DataSources] string context)
 		{
-			using (new UseBinaryAggregateExpression(true))
 			using (var db = GetDataContext(context))
 			{
 				var result = db.Child.Where(c => c.ChildID > 1 || c.ChildID > 0);
@@ -124,7 +86,6 @@
 		{
 			var value = true;
 
-			using (new UseBinaryAggregateExpression(true))
 			using (var db = GetDataContext(context))
 			{
 				var query = from p in db.Parent where p.ParentID > 2 && value && true && !false select p;

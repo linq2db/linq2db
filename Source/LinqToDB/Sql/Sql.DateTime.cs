@@ -666,9 +666,9 @@ namespace LinqToDB
 				switch (part)
 				{
 					case Sql.DateParts.Year        : function = "Add_Years";   break;
-					case Sql.DateParts.Quarter     :
+					case Sql.DateParts.Quarter     : 
 						function = "Add_Months";
-						number   = builder.Mul(number, 3);
+						number   = builder.Mul(number, 3);  
 						break;
 					case Sql.DateParts.Month       : function = "Add_Months";  break;
 					case Sql.DateParts.DayOfYear   : 
@@ -676,13 +676,13 @@ namespace LinqToDB
 					case Sql.DateParts.WeekDay     : function = "Add_Days";    break;
 					case Sql.DateParts.Week        : 
 						function = "Add_Days";   
-						number   = builder.Mul(number, 7);
+						number   = builder.Mul(number, 7);  
 						break;
-					case Sql.DateParts.Hour        :
+					case Sql.DateParts.Hour        : 
 						function = "Add_Seconds";
 						number   = builder.Mul(number, 3600);
 						break;
-					case Sql.DateParts.Minute      :
+					case Sql.DateParts.Minute      : 
 						function = "Add_Seconds";
 						number   = builder.Mul(number, 60);
 						break;
@@ -896,6 +896,38 @@ namespace LinqToDB
 			}
 		}
 
+		class DateDiffBuilderAccess : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var part = builder.GetValue<Sql.DateParts>(0);
+				var startDate = builder.GetExpression(1);
+				var endDate = builder.GetExpression(2);
+
+				var expStr = "DATEDIFF('";
+
+				expStr += part switch
+				{
+					DateParts.Year        => "yyyy",
+					DateParts.Quarter     => "q",
+					DateParts.Month       => "m",
+					DateParts.DayOfYear   => "y",
+					DateParts.Day         => "d",
+					DateParts.WeekDay     => "w",
+					DateParts.Week        => "ww",
+					DateParts.Hour        => "h",
+					DateParts.Minute      => "n",
+					DateParts.Second      => "s",
+					DateParts.Millisecond => throw new ArgumentOutOfRangeException(nameof(part), part, "Access doesn't support milliseconds interval."),
+					_                     => throw new ArgumentOutOfRangeException(),
+				};
+
+				expStr += "', {0}, {1})";
+
+				builder.ResultExpression = new SqlExpression(typeof(int), expStr, startDate, endDate);
+			}
+		}
+
 		class DateDiffBuilderOracle : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
@@ -934,7 +966,8 @@ namespace LinqToDB
 		[Sql.Extension(PN.SapHana, "",              BuilderType = typeof(DateDiffBuilderSapHana))]
 		[Sql.Extension(PN.SQLite,  "",              BuilderType = typeof(DateDiffBuilderSQLite))]
 		[Sql.Extension(PN.Oracle,  "",              BuilderType = typeof(DateDiffBuilderOracle))]
-		[Sql.Extension(PN.PostgreSQL,  "",          BuilderType = typeof(DateDiffBuilderPostgreSql))]
+		[Sql.Extension(PN.PostgreSQL, "",           BuilderType = typeof(DateDiffBuilderPostgreSql))]
+		[Sql.Extension(PN.Access,     "",           BuilderType = typeof(DateDiffBuilderAccess))]
 		public static int? DateDiff(DateParts part, DateTime? startDate, DateTime? endDate)
 		{
 			if (startDate == null || endDate == null)

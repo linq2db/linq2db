@@ -13,7 +13,7 @@ namespace Tests.Linq
 	[TestFixture]
 	public class DateTimeFunctionsTests : TestBase
 	{
-		//This custom comparers allows for an error of 1 millisecond.
+		//This custom comparers allows for an error of 1 millisecond.  
 		public class CustomIntComparer : IEqualityComparer<int>
 		{
 			private readonly int _precision;
@@ -840,9 +840,9 @@ namespace Tests.Linq
 		public void AddDynamicFromColumn(
 			[DataSources(TestProvName.AllInformix)] string context, 
 			[Values(
-				Sql.DateParts.Day,
-				Sql.DateParts.Hour,
-				Sql.DateParts.Minute,
+				Sql.DateParts.Day, 
+				Sql.DateParts.Hour, 
+				Sql.DateParts.Minute, 
 				Sql.DateParts.Month,
 				Sql.DateParts.Year,
 				Sql.DateParts.Second
@@ -1221,9 +1221,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void SubDateDay(
-			[DataSources(
-				TestProvName.AllInformix,
-				TestProvName.AllAccess)]
+			[DataSources(TestProvName.AllInformix)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1234,9 +1232,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void DateDiffDay(
-			[DataSources(
-				TestProvName.AllInformix,
-				TestProvName.AllAccess)]
+			[DataSources(TestProvName.AllInformix)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1247,9 +1243,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void SubDateHour(
-			[DataSources(
-				TestProvName.AllInformix,
-				TestProvName.AllAccess)]
+			[DataSources(TestProvName.AllInformix)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1260,9 +1254,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void DateDiffHour(
-			[DataSources(
-				TestProvName.AllInformix,
-				TestProvName.AllAccess)]
+			[DataSources(TestProvName.AllInformix)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1273,9 +1265,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void SubDateMinute(
-			[DataSources(
-				TestProvName.AllInformix,
-				TestProvName.AllAccess)]
+			[DataSources(TestProvName.AllInformix)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1286,9 +1276,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void DateDiffMinute(
-			[DataSources(
-				TestProvName.AllInformix,
-				TestProvName.AllAccess)]
+			[DataSources(TestProvName.AllInformix)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1299,9 +1287,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void SubDateSecond(
-			[DataSources(
-				TestProvName.AllInformix,
-				TestProvName.AllAccess)]
+			[DataSources(TestProvName.AllInformix)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1312,9 +1298,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void DateDiffSecond(
-			[DataSources(
-				TestProvName.AllInformix,
-				TestProvName.AllAccess)]
+			[DataSources(TestProvName.AllInformix)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
