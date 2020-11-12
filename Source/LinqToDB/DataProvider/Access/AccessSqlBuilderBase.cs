@@ -59,12 +59,6 @@ namespace LinqToDB.DataProvider.Access
 			var selectQuery = Statement.SelectQuery;
 			if (selectQuery != null)
 			{
-				if (NeedSkip(selectQuery))
-				{
-					AlternativeBuildSql2(base.BuildSql);
-					return;
-				}
-
 				if (selectQuery.From.Tables.Count == 0 && selectQuery.Select.Columns.Count == 1)
 				{
 					if (selectQuery.Select.Columns[0].Expression is SqlFunction func)
@@ -132,24 +126,6 @@ namespace LinqToDB.DataProvider.Access
 				return AlternativeGetSelectedColumns(selectQuery, () => base.GetSelectedColumns(selectQuery));
 
 			return base.GetSelectedColumns(selectQuery);
-		}
-
-		protected override void BuildSkipFirst(SelectQuery selectQuery)
-		{
-			if (NeedSkip(selectQuery))
-			{
-				if (!NeedTake(selectQuery))
-				{
-					StringBuilder.AppendFormat(" TOP {0}", int.MaxValue);
-				}
-				else if (!selectQuery.OrderBy.IsEmpty)
-				{
-					StringBuilder.Append(" TOP ");
-					BuildExpression(Add<int>(selectQuery.Select.SkipValue!, selectQuery.Select.TakeValue!));
-				}
-			}
-			else
-				base.BuildSkipFirst(selectQuery);
 		}
 
 		#endregion

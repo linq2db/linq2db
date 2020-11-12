@@ -474,7 +474,7 @@ namespace LinqToDB.Linq.Builder
 			if (expression.Sql is SqlSearchCondition)
 			{
 				expression = expression.WithSql(
-					new SqlFunction(typeof(bool), "CASE", expression.Sql, new SqlValue(true), new SqlValue(false)));
+					new SqlFunction(typeof(bool), "CASE", expression.Sql, new SqlValue(true), new SqlValue(false)) { CanBeNull = false });
 			}
 
 			return expression;

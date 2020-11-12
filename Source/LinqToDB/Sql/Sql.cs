@@ -557,8 +557,7 @@ namespace LinqToDB
 				str.PadRight(totalWidth.Value, paddingChar.Value);
 		}
 
-		[Sql.Function]
-		[Sql.Function(PN.Sybase, "Str_Replace")]
+		[Sql.Function("$Replace$")]
 		public static string? Replace(string? str, string? oldValue, string? newValue)
 		{
 			return str == null || oldValue == null || newValue == null ?

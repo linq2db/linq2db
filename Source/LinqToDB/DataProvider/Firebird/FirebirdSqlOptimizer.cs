@@ -125,14 +125,14 @@ namespace LinqToDB.DataProvider.Firebird
 					expr = new SqlExpression(typeof(bool),
 						predicate.IsNot ? "{0} NOT STARTING WITH {1}" : "{0} STARTING WITH {1}", 
 						Precedence.Comparison,
-						TryConvertToValue(predicate.Expr1, context), TryConvertToValue(predicate.Expr2, context));
+						TryConvertToValue(predicate.Expr1, context), TryConvertToValue(predicate.Expr2, context)) { CanBeNull = false };
 					break;
 				}	
 				case SqlPredicate.SearchString.SearchKind.Contains:
 					expr = new SqlExpression(typeof(bool),
 						predicate.IsNot ? "{0} NOT CONTAINING {1}" : "{0} CONTAINING {1}", 
 						Precedence.Comparison,
-						TryConvertToValue(predicate.Expr1, context), TryConvertToValue(predicate.Expr2, context));
+						TryConvertToValue(predicate.Expr1, context), TryConvertToValue(predicate.Expr2, context)) { CanBeNull = false };
 					break;
 				default:
 					throw new ArgumentOutOfRangeException();

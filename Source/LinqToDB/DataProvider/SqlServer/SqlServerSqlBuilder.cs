@@ -228,9 +228,9 @@ namespace LinqToDB.DataProvider.SqlServer
 					wrap = true;
 				else
 				{
-					wrap = expr is SqlExpression ex 
-						&& ex.Expr == "{0}" 
-						&& ex.Parameters.Length == 1 
+					wrap = expr is SqlExpression ex
+						&& ex.Expr == "{0}"
+						&& ex.Parameters.Length == 1
 						&& ex.Parameters[0] is SqlSearchCondition;
 				}
 			}
@@ -240,10 +240,55 @@ namespace LinqToDB.DataProvider.SqlServer
 			if (wrap) StringBuilder.Append(" THEN 1 ELSE 0 END");
 		}
 
+		public override string? GetTableDatabaseName(SqlTable table)
+		{
+			if (table.PhysicalName!.StartsWith("#") || table.TableOptions.IsTemporaryOptionSet())
+				return null;
+
+			return base.GetTableDatabaseName(table);
+		}
+
+		public override string? GetTablePhysicalName(SqlTable table)
+		{
+			if (table.PhysicalName == null)
+				return null;
+
+			var physicalName = table.PhysicalName.StartsWith("#") ? table.PhysicalName : GetName();
+
+			string GetName()
+			{
+				if (table.TableOptions.IsTemporaryOptionSet())
+				{
+					switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
+					{
+						case TableOptions.IsTemporary                                                                              :
+						case TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData :
+						case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     :
+						case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
+						case                                                                     TableOptions.IsLocalTemporaryData :
+						case                            TableOptions.IsLocalTemporaryStructure                                     :
+						case                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
+							return $"#{table.PhysicalName}";
+						case TableOptions.IsGlobalTemporaryStructure                                                               :
+						case TableOptions.IsGlobalTemporaryStructure | TableOptions.IsGlobalTemporaryData                          :
+							return $"##{table.PhysicalName}";
+						case var value :
+							throw new InvalidOperationException($"Incompatible table options '{value}'");
+					}
+				}
+				else
+				{
+					return table.PhysicalName;
+				}
+			}
+
+			return Convert(new StringBuilder(), physicalName, ConvertType.NameToQueryTable).ToString();
+		}
+
 		public override StringBuilder BuildTableName(StringBuilder sb,
-			string? server,
-			string? database,
-			string? schema,
+			string?      server,
+			string?      database,
+			string?      schema,
 			string       table,
 			TableOptions tableOptions)
 		{
@@ -333,23 +378,23 @@ namespace LinqToDB.DataProvider.SqlServer
 			var table = dropTable.Table!;
 
 			if (dropTable.Table.TableOptions.HasDropIfExists())
-				{
+			{
 				var defaultDatabaseName =
 					table.PhysicalName!.StartsWith("#") || table.TableOptions.IsTemporaryOptionSet() ?
 						"[tempdb]" : null;
 
-					StringBuilder.Append("IF (OBJECT_ID(N'");
+				StringBuilder.Append("IF (OBJECT_ID(N'");
 				BuildPhysicalTable(table, alias: null, defaultDatabaseName: defaultDatabaseName);
-					StringBuilder.AppendLine("', N'U') IS NOT NULL)");
-					Indent++;
-				}
+				StringBuilder.AppendLine("', N'U') IS NOT NULL)");
+				Indent++;
+			}
 
-				AppendIndent().Append("DROP TABLE ");
+			AppendIndent().Append("DROP TABLE ");
 			BuildPhysicalTable(table, alias: null);
 
 			if (dropTable.Table.TableOptions.HasDropIfExists())
-					Indent--;
-			}
+				Indent--;
+		}
 
 		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{

@@ -1675,7 +1675,7 @@ namespace LinqToDB.SqlProvider
 							return ConvertExpression(new SqlFunction(func.SystemType, "CASE",
 								new SqlSearchCondition().Expr(func.Parameters[0]). Greater .Expr(func.Parameters[1]).ToExpr(), new SqlValue(1),
 								new SqlSearchCondition().Expr(func.Parameters[0]). Equal   .Expr(func.Parameters[1]).ToExpr(), new SqlValue(0),
-								new SqlValue(-1)));
+								new SqlValue(-1)) { CanBeNull = false });
 
 						case "$Convert$": return ConvertConvertion(func);
 						case "Average"  : return new SqlFunction(func.SystemType, "Avg", func.Parameters);
@@ -1685,7 +1685,7 @@ namespace LinqToDB.SqlProvider
 								if (func.SystemType == typeof(bool) || func.SystemType == typeof(bool?))
 								{
 									return new SqlFunction(typeof(int), func.Name,
-										new SqlFunction(func.SystemType, "CASE", func.Parameters[0], new SqlValue(1), new SqlValue(0)));
+										new SqlFunction(func.SystemType, "CASE", func.Parameters[0], new SqlValue(1), new SqlValue(0)) { CanBeNull = false });
 								}
 
 								break;
@@ -1727,8 +1727,9 @@ namespace LinqToDB.SqlProvider
 		{
 			switch (func.Name)
 			{
-				case "$ToLower$": return new SqlFunction(func.SystemType, "Lower", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
-				case "$ToUpper$": return new SqlFunction(func.SystemType, "Upper", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
+				case "$ToLower$": return new SqlFunction(func.SystemType, "Lower",   func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
+				case "$ToUpper$": return new SqlFunction(func.SystemType, "Upper",   func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
+				case "$Replace$": return new SqlFunction(func.SystemType, "Replace", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
 			}
 
 			return func;
@@ -1788,14 +1789,14 @@ namespace LinqToDB.SqlProvider
 
 		static ISqlExpression GenerateEscapeReplacement(ISqlExpression expression, ISqlExpression character, ISqlExpression escapeCharacter)
 		{
-			var result = new SqlFunction(typeof(string), "Replace", false, true, expression, character,
+			var result = new SqlFunction(typeof(string), "$Replace$", false, true, expression, character,
 				new SqlBinaryExpression(typeof(string), escapeCharacter, "+", character, Precedence.Additive));
 			return result;
 		}
 
 		public static ISqlExpression GenerateEscapeReplacement(ISqlExpression expression, ISqlExpression character)
 		{
-			var result = new SqlFunction(typeof(string), "Replace", false, true, expression, character,
+			var result = new SqlFunction(typeof(string), "$Replace$", false, true, expression, character,
 				new SqlBinaryExpression(typeof(string), new SqlValue("["), "+",
 					new SqlBinaryExpression(typeof(string), character, "+", new SqlValue("]"), Precedence.Additive),
 					Precedence.Additive));

@@ -398,9 +398,9 @@ namespace LinqToDB.SqlProvider
 		}
 
 		public virtual StringBuilder BuildTableName(StringBuilder sb,
-			string? server,
-			string? database,
-			string? schema,
+			string?      server,
+			string?      database,
+			string?      schema,
 			string       table,
 			TableOptions tableOptions)
 		{
@@ -1946,111 +1946,111 @@ namespace LinqToDB.SqlProvider
 
 				if (p.Values.Count == 1 && p.Values[0] is SqlParameter pr)
 				{
-						var paramValue = pr.GetParameterValue(EvaluationContext.ParameterValues);
-						if (!(p.Expr1.SystemType == typeof(string) && paramValue.Value is string))
-						{
-							var prValue = paramValue.Value;
-
-					if (prValue == null)
+					var paramValue = pr.GetParameterValue(EvaluationContext.ParameterValues);
+					if (!(p.Expr1.SystemType == typeof(string) && paramValue.Value is string))
 					{
-						BuildPredicate(new SqlPredicate.Expr(new SqlValue(false)));
-						return;
-					}
+						var prValue = paramValue.Value;
 
-					if (prValue is IEnumerable items)
-					{
-						if (p.Expr1 is ISqlTableSource table)
+						if (prValue == null)
 						{
-							var firstValue = true;
-							var keys       = table.GetKeys(true);
+							BuildPredicate(new SqlPredicate.Expr(new SqlValue(false)));
+							return;
+						}
 
-							if (keys == null || keys.Count == 0)
-								throw new SqlException("Cannot create IN expression.");
-
-							if (keys.Count == 1)
+						if (prValue is IEnumerable items)
+						{
+							if (p.Expr1 is ISqlTableSource table)
 							{
-								foreach (var item in items)
+								var firstValue = true;
+								var keys       = table.GetKeys(true);
+
+								if (keys == null || keys.Count == 0)
+									throw new SqlException("Cannot create IN expression.");
+
+								if (keys.Count == 1)
 								{
-									if (firstValue)
+									foreach (var item in items)
 									{
-										firstValue = false;
-										BuildExpression(GetPrecedence(p), keys[0]);
-										StringBuilder.Append(p.IsNot ? " NOT IN (" : " IN (");
-									}
+										if (firstValue)
+										{
+											firstValue = false;
+											BuildExpression(GetPrecedence(p), keys[0]);
+											StringBuilder.Append(p.IsNot ? " NOT IN (" : " IN (");
+										}
 
-									var field = GetUnderlayingField(keys[0]);
-									var value = field.ColumnDescriptor.MemberAccessor.GetValue(item!);
-
-									if (value is ISqlExpression expression)
-										BuildExpression(expression);
-									else
-										BuildValue(new SqlDataType(field), value);
-
-									StringBuilder.Append(InlineComma);
-								}
-							}
-							else
-							{
-								var len = StringBuilder.Length;
-								var rem = 1;
-
-								foreach (var item in items)
-								{
-									if (firstValue)
-									{
-										firstValue = false;
-										StringBuilder.Append('(');
-									}
-
-									foreach (var key in keys)
-									{
-										var field = GetUnderlayingField(key);
+										var field = GetUnderlayingField(keys[0]);
 										var value = field.ColumnDescriptor.MemberAccessor.GetValue(item!);
 
-										BuildExpression(GetPrecedence(p), key);
-
-										if (value == null)
-										{
-											StringBuilder.Append(" IS NULL");
-										}
+										if (value is ISqlExpression expression)
+											BuildExpression(expression);
 										else
-										{
-											StringBuilder.Append(" = ");
 											BuildValue(new SqlDataType(field), value);
-										}
 
-										StringBuilder.Append(" AND ");
-									}
-
-									StringBuilder.Remove(StringBuilder.Length - 4, 4).Append("OR ");
-
-									if (StringBuilder.Length - len >= 50)
-									{
-										StringBuilder.AppendLine();
-										AppendIndent();
-										StringBuilder.Append(' ');
-										len = StringBuilder.Length;
-										rem = 5 + Indent;
+										StringBuilder.Append(InlineComma);
 									}
 								}
+								else
+								{
+									var len = StringBuilder.Length;
+									var rem = 1;
 
-								if (!firstValue)
-									StringBuilder.Remove(StringBuilder.Length - rem, rem);
+									foreach (var item in items)
+									{
+										if (firstValue)
+										{
+											firstValue = false;
+											StringBuilder.Append('(');
+										}
+
+										foreach (var key in keys)
+										{
+											var field = GetUnderlayingField(key);
+											var value = field.ColumnDescriptor.MemberAccessor.GetValue(item!);
+
+											BuildExpression(GetPrecedence(p), key);
+
+											if (value == null)
+											{
+												StringBuilder.Append(" IS NULL");
+											}
+											else
+											{
+												StringBuilder.Append(" = ");
+												BuildValue(new SqlDataType(field), value);
+											}
+
+											StringBuilder.Append(" AND ");
+										}
+
+										StringBuilder.Remove(StringBuilder.Length - 4, 4).Append("OR ");
+
+										if (StringBuilder.Length - len >= 50)
+										{
+											StringBuilder.AppendLine();
+											AppendIndent();
+											StringBuilder.Append(' ');
+											len = StringBuilder.Length;
+											rem = 5 + Indent;
+										}
+									}
+
+									if (!firstValue)
+										StringBuilder.Remove(StringBuilder.Length - rem, rem);
+								}
+
+								if (firstValue)
+									BuildPredicate(new SqlPredicate.Expr(new SqlValue(p.IsNot)));
+								else
+									StringBuilder.Remove(StringBuilder.Length - 2, 2).Append(')');
+							}
+							else
+							{
+								BuildInListValues(p, items);
 							}
 
-							if (firstValue)
-								BuildPredicate(new SqlPredicate.Expr(new SqlValue(p.IsNot)));
-							else
-								StringBuilder.Remove(StringBuilder.Length - 2, 2).Append(')');
+							return;
 						}
-						else
-						{
-							BuildInListValues(p, items);
-						}
-
-						return;
 					}
-				}
 
 				}
 
@@ -2693,140 +2693,6 @@ namespace LinqToDB.SqlProvider
 
 		#region Alternative Builders
 
-		void BuildAliases(string table, List<SqlColumn> columns, string? postfix)
-		{
-			Indent++;
-
-			var first = true;
-
-			foreach (var col in columns)
-			{
-				if (!first)
-					StringBuilder.AppendLine(Comma);
-				first = false;
-
-				AppendIndent()
-					.Append(table)
-					.Append('.');
-				Convert(StringBuilder, col.Alias!, ConvertType.NameToQueryFieldAlias);
-
-				if (postfix != null)
-					StringBuilder.Append(postfix);
-			}
-
-			Indent--;
-
-			StringBuilder.AppendLine();
-		}
-
-		protected void AlternativeBuildSql2(Action buildSql)
-		{
-			// Move to Optimizer's ConvertMethod
-			throw new NotImplementedException("Move to Optimizer's ConvertMethod");
-
-			var selectQuery = Statement.SelectQuery;
-			if (selectQuery == null)
-				return;
-
-			var aliases = GetTempAliases(3, "t");
-
-			AppendIndent().AppendLine("SELECT *");
-			AppendIndent().AppendLine("FROM");
-			AppendIndent().AppendLine(OpenParens);
-			Indent++;
-
-			AppendIndent().Append("SELECT TOP ");
-			BuildExpression(selectQuery.Select.TakeValue!);
-			StringBuilder .AppendLine(" *");
-			AppendIndent().AppendLine("FROM");
-			AppendIndent().AppendLine(OpenParens);
-			Indent++;
-
-			if (selectQuery.OrderBy.IsEmpty)
-			{
-				AppendIndent().Append("SELECT TOP ");
-
-				if (selectQuery.Select.SkipValue is SqlParameter p &&
-					!p.IsQueryParameter &&
-					selectQuery.Select.TakeValue is SqlValue v)
-					BuildValue(null, (int)p.Value! + (int)v.Value!);
-				else
-					BuildExpression(Add<int>(selectQuery.Select.SkipValue!, selectQuery.Select.TakeValue!));
-
-				StringBuilder .AppendLine(" *");
-				AppendIndent().AppendLine("FROM");
-				AppendIndent().AppendLine(OpenParens);
-				Indent++;
-			}
-
-			buildSql();
-
-			if (selectQuery.OrderBy.IsEmpty)
-			{
-				Indent--;
-				AppendIndent().AppendFormat(") {0}", aliases[2]).AppendLine();
-				AppendIndent().Append("ORDER BY").               AppendLine();
-				BuildAliases(aliases[2], selectQuery.Select.Columns, null);
-			}
-
-			Indent--;
-			AppendIndent().AppendFormat(") {0}", aliases[1]).AppendLine();
-
-			if (selectQuery.OrderBy.IsEmpty)
-			{
-				AppendIndent().Append("ORDER BY").AppendLine();
-				BuildAliases(aliases[1], selectQuery.Select.Columns, " DESC");
-			}
-			else
-			{
-				BuildAlternativeOrderBy(false);
-			}
-
-			Indent--;
-			AppendIndent().AppendFormat(") {0}", aliases[0]).AppendLine();
-
-			if (selectQuery.OrderBy.IsEmpty)
-			{
-				AppendIndent().Append("ORDER BY").AppendLine();
-				BuildAliases(aliases[0], selectQuery.Select.Columns, null);
-			}
-			else
-			{
-				BuildAlternativeOrderBy(true);
-			}
-		}
-
-		void BuildAlternativeOrderBy(bool ascending)
-		{
-			var selectQuery = Statement.SelectQuery;
-			if (selectQuery == null)
-				return;
-
-			SkipAlias = false;
-
-			AppendIndent().Append("ORDER BY").AppendLine();
-
-			var obys = GetTempAliases(selectQuery.OrderBy.Items.Count, "oby");
-
-			Indent++;
-
-			for (var i = 0; i < obys.Length; i++)
-			{
-				AppendIndent().Append(obys[i]);
-
-				if ( ascending &&  selectQuery.OrderBy.Items[i].IsDescending ||
-					!ascending && !selectQuery.OrderBy.Items[i].IsDescending)
-					StringBuilder.Append(" DESC");
-
-				if (i + 1 < obys.Length)
-					StringBuilder.AppendLine(Comma);
-				else
-					StringBuilder.AppendLine();
-			}
-
-			Indent--;
-		}
-
 		protected delegate IEnumerable<SqlColumn> ColumnSelector();
 
 		protected IEnumerable<SqlColumn> AlternativeGetSelectedColumns(SelectQuery selectQuery, ColumnSelector columnSelector)
@@ -3046,16 +2912,6 @@ namespace LinqToDB.SqlProvider
 				StringBuilder.Append('\t', Indent);
 
 			return StringBuilder;
-		}
-
-		ISqlExpression Add(ISqlExpression expr1, ISqlExpression expr2, Type type)
-		{
-			return new SqlBinaryExpression(type, expr1, "+", expr2, Precedence.Additive);
-		}
-
-		protected ISqlExpression Add<T>(ISqlExpression expr1, ISqlExpression expr2)
-		{
-			return Add(expr1, expr2, typeof(T));
 		}
 
 		protected virtual bool IsReserved(string word)

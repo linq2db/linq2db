@@ -1014,10 +1014,10 @@ namespace LinqToDB.Linq.Builder
 							parms[1] = t;
 							c.Parameters.CopyTo(parms, 2);
 
-							return new SqlFunction(e.Type, "CASE", parms);
+							return new SqlFunction(e.Type, "CASE", parms) { CanBeNull = false };
 						}
 
-						return new SqlFunction(e.Type, "CASE", s, t, f);
+						return new SqlFunction(e.Type, "CASE", s, t, f) { CanBeNull = false };
 					}
 
 				case ExpressionType.MemberAccess :
@@ -3142,10 +3142,10 @@ namespace LinqToDB.Linq.Builder
 						Conditions = { new SqlCondition(true, new SqlPredicate.Expr(sqlExpression)) }
 					};
 
-					return new SqlFunction(sqlExpression.SystemType!, "CASE", sqlExpression, new SqlValue(1), notExpr, new SqlValue(0), new SqlValue(sqlExpression.SystemType!, null));
+					return new SqlFunction(sqlExpression.SystemType!, "CASE", sqlExpression, new SqlValue(1), notExpr, new SqlValue(0), new SqlValue(sqlExpression.SystemType!, null)) { CanBeNull = false };
 				}
 
-				return new SqlFunction(sqlExpression.SystemType!, "CASE", sqlExpression, new SqlValue(1), new SqlValue(0));
+				return new SqlFunction(sqlExpression.SystemType!, "CASE", sqlExpression, new SqlValue(1), new SqlValue(0)) { CanBeNull = false };
 			}
 
 			return sqlExpression;
