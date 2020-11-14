@@ -30,6 +30,7 @@
 		<Compile Include="..\Linq\Linq\MappingTests.cs" Link="MappingTests.cs" />
 		<Compile Include="..\Linq\Linq\MathFunctionTests.cs" Link="MathFunctionTests.cs" />
 		<Compile Include="..\Linq\Linq\OrderByDistinctTests.cs" Link="OrderByDistinctTests.cs" />
+		<Compile Include="..\Linq\Linq\OrderByTests.cs" Link="OrderByTests.cs" />
 		<Compile Include="..\Linq\Linq\ProjectionTests.cs" Link="ProjectionTests.cs" />
 		<Compile Include="..\Linq\Linq\QueryableAssociationTests.cs" Link="QueryableAssociationTests.cs" />
 		<Compile Include="..\Linq\Linq\SelectTests.cs" Link="SelectTests.cs" />

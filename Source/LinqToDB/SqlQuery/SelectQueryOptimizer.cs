@@ -901,6 +901,7 @@ namespace LinqToDB.SqlQuery
 			isQueryOK = isQueryOK && (concatWhere || query.Where.IsEmpty && query.Having.IsEmpty);
 			isQueryOK = isQueryOK && !query.HasSetOperators && query.GroupBy.IsEmpty && !query.Select.HasModifier;
 			//isQueryOK = isQueryOK && (_flags.IsDistinctOrderBySupported || query.Select.IsDistinct );
+			isQueryOK = isQueryOK && (!parentQuery.HasSetOperators || query.OrderBy.IsEmpty);
 
 			if (isQueryOK && parentJoin != JoinType.Inner && query.From.Tables[0].Joins.Count > 0)
 			{
