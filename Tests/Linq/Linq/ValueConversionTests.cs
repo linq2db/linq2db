@@ -58,6 +58,9 @@ namespace Tests.Linq
 			[Column(DataType = DataType.VarChar, Length = 1, CanBeNull = false)]
 			public bool BoolValue { get; set; }
 
+			[Column]
+			public DateTime? DateTimeNullable { get; set; }
+
 			public static MainClass[] TestData()
 			{
 				return Enumerable.Range(1, 10)
@@ -70,7 +73,8 @@ namespace Tests.Linq
 							EnumNullable = i % 4 == 1 ? EnumValue.Value1 : i % 4 == 2 ? EnumValue.Value2 : i % 4 == 3 ? EnumValue.Value3 : (EnumValue?)null,
 							EnumWithNull = i % 4 == 1 ? EnumValue.Value1 : i % 4 == 2 ? EnumValue.Value2 : i % 4 == 3 ? EnumValue.Value3 : EnumValue.Null,
 							EnumWithNullDeclarative = i % 4 == 1 ? EnumValue.Value1 : i % 4 == 2 ? EnumValue.Value2 : i % 4 == 3 ? EnumValue.Value3 : EnumValue.Null,
-							BoolValue = i % 4 == 1
+							BoolValue = i % 4 == 1,
+							DateTimeNullable = i % 3 == 1 ? (DateTime?)null : new DateTime(2020, 11, 13)
 						}
 					).ToArray();
 			}
@@ -111,6 +115,9 @@ namespace Tests.Linq
 
 			[Column(DataType = DataType.VarChar, Length = 1, CanBeNull = false)]
 			public char BoolValue { get; set; }
+
+			[Column]
+			public DateTime? DateTimeNullable { get; set; }
 		}
 
 		[Sql.Extension("{value1} = {value2}", ServerSideOnly = true, IsPredicate = true, Precedence = Precedence.Comparison)]
@@ -139,7 +146,12 @@ namespace Tests.Linq
 					true
 				)
 				.Property(e => e.BoolValue)
-				.HasConversion(v => v ? 'Y' : 'N', p => p == 'Y');
+				.HasConversion(v => v ? 'Y' : 'N', p => p == 'Y')
+				.Property(e => e.DateTimeNullable)
+				.HasConversion(
+					_ => _.HasValue ? _.Value.ToLocalTime() : new DateTime?(),
+					_ => _.HasValue ? new DateTime(_.Value.Ticks, DateTimeKind.Local) : new DateTime?()
+				);
 
 			return ms;
 		}
@@ -243,6 +255,32 @@ namespace Tests.Linq
 				var selectResult = query.ToArray();
 				
 				Assert.That(selectResult.Length, Is.EqualTo(1));
+			}
+		}
+
+		[Test]
+		public void ParameterTestsNullable([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			var ms = CreateMappingSchema();
+
+			var testData = MainClass.TestData();
+			using (var db = GetDataContext(context, ms))
+			using (var table = db.CreateLocalTable(testData))
+			{
+				var testDate = new DateTime(2020, 11, 13);
+
+				var query1 = from t in table
+					where testDate == t.DateTimeNullable.Value
+					select t.DateTimeNullable;
+
+				var query2 = from t in table
+					where t.DateTimeNullable.Value == testDate
+					select t.DateTimeNullable;
+
+				var result1 = query1.ToArray();
+				var result2 = query2.ToArray();
+
+				AreEqual(result1, result2);
 			}
 		}
 
