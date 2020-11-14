@@ -1421,7 +1421,8 @@ namespace LinqToDB.SqlQuery
 
 			if (counts.ContainsKey(QueryElementType.SqlQuery) ||
 			    counts.ContainsKey(QueryElementType.LikePredicate) ||
-			    counts.ContainsKey(QueryElementType.SearchStringPredicate)
+			    counts.ContainsKey(QueryElementType.SearchStringPredicate) ||
+			    counts.ContainsKey(QueryElementType.SearchCondition)
 			)
 			{
 				return true;
