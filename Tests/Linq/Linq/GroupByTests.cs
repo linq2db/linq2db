@@ -1020,7 +1020,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByAssociation102([DataSources(TestProvName.AllInformix)] string context)
+		public void GroupByAssociation102([DataSources()] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1037,7 +1037,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void GroupByAssociation1022([DataSources(
-			ProviderName.SqlCe, TestProvName.AllAccess, TestProvName.AllInformix /* Can be fixed*/)]
+			ProviderName.SqlCe, TestProvName.AllAccess /* Can be fixed*/)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1055,7 +1055,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void GroupByAssociation1023([DataSources(
-			ProviderName.SqlCe, TestProvName.AllAccess, TestProvName.AllInformix /* Can be fixed.*/)]
+			ProviderName.SqlCe, TestProvName.AllAccess /* Can be fixed.*/)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1079,7 +1079,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void GroupByAssociation1024([DataSources(
-			ProviderName.SqlCe, TestProvName.AllAccess, TestProvName.AllInformix) /* Can be fixed. */]
+			ProviderName.SqlCe, TestProvName.AllAccess) /* Can be fixed. */]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1318,7 +1318,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Scalar4([DataSources(ProviderName.SqlCe, TestProvName.AllAccess, TestProvName.AllInformix)] string context)
+		public void Scalar4([DataSources(ProviderName.SqlCe, TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1334,7 +1334,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Scalar41([DataSources(ProviderName.SqlCe, TestProvName.AllAccess, TestProvName.AllInformix)] string context)
+		public void Scalar41([DataSources(ProviderName.SqlCe, TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1819,7 +1819,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByCustomEntity2([DataSources(TestProvName.AllInformix, TestProvName.AllSybase)] string context)
+		public void GroupByCustomEntity2([DataSources(TestProvName.AllSybase)] string context)
 		{
 			var rand = new Random().Next(5);
 
@@ -2281,6 +2281,23 @@ namespace Tests.Linq
 				db.Person.GroupBy(p => p.ID).DisableGuard().ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
 			Query.ClearCaches();
+		}
+
+		[Test]
+		public void IssueGroupByNonTableColumn([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = db.Person
+					.Select(_ => 1)
+					.Concat(db.Person.Select(_ => 2))
+					.GroupBy(_ => _)
+					.Select(_ => new { _.Key, Count = _.Count() })
+					.Where(_ => _.Key == 1)
+					.Select(_ => _.Count)
+					.Where(_ => _ > 1)
+					.Count();
+			}
 		}
 	}
 }

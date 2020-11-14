@@ -37,8 +37,9 @@ namespace Tests.UserTests
 				db.DropTable<Issue2564Class>(throwExceptionIfNotExists: false);
 				db.CreateTable<Issue2564Class>();
 				{
-					var from = DateTime.UtcNow.AddDays(-1);
-					var to = DateTime.UtcNow;
+					var from = TestData.DateTime.AddDays(-1);
+					var to   = TestData.DateTime;
+
 					var qry = (from m in db.GetTable<Issue2564Class>()
 							   where m.TimestampGone.HasValue &&
 								 m.TimestampGenerated >= @from &&
@@ -47,12 +48,13 @@ namespace Tests.UserTests
 							   group m by new { m.ExternID1, m.TranslatedMessageGroup, m.TimestampGenerated.Hour } into tgGroup
 							   select new
 							   {
-								   MessageText = tgGroup.Min(x => x.TranslatedMessage1)!.Trim(),
-								   GroupName = tgGroup.Key.TranslatedMessageGroup,
-								   Hour = tgGroup.Key.Hour,
-								   Count = tgGroup.Count(),
+								   MessageText       = tgGroup.Min(x => x.TranslatedMessage1)!.Trim(),
+								   GroupName         = tgGroup.Key.TranslatedMessageGroup,
+								   Hour              = tgGroup.Key.Hour,
+								   Count             = tgGroup.Count(),
 								   DurationInSeconds = (long)tgGroup.Sum(x => (x.TimestampGone!.Value - x.TimestampGenerated).TotalMilliseconds),
 							   });
+
 					var data = qry.ToList();
 				}
 			}
