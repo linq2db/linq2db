@@ -1299,7 +1299,6 @@ namespace Tests.Data
 		}
 #endif
 
-		[ActiveIssue(2499)]
 		[Test]
 		public void TestOracleManaged([IncludeDataSources(TestProvName.AllOracleManaged)] string context, [Values] ConnectionType type)
 		{

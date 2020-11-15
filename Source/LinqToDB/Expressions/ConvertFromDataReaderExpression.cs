@@ -8,6 +8,7 @@ namespace LinqToDB.Expressions
 {
 	using Common;
 	using LinqToDB.Extensions;
+	using LinqToDB.Linq;
 	using Mapping;
 
 	class ConvertFromDataReaderExpression : Expression
@@ -58,6 +59,8 @@ namespace LinqToDB.Expressions
 
 		public Expression Reduce(IDataContext dataContext, IDataReader dataReader)
 		{
+			dataReader = DataReaderWrapCache.TryUnwrapDataReader(dataContext.MappingSchema, dataReader);
+
 			return GetColumnReader(dataContext, dataContext.MappingSchema, dataReader, _type, Converter, _idx, _dataReaderParam);
 		}
 
