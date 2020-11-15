@@ -49,16 +49,16 @@ namespace Tests.UserTests
 		{
 			var items = new Item[]
 			{
-				new Item { Id = 1, Name = "Item 1" }, 
+				new Item { Id = 1, Name = "Item 1" },
 				new Item { Id = 2, Name = "Item 2" }
 			};
 
 			var itemTexts = new ItemText[]
 			{
-				new ItemText{ ItemId = 1, Lang = "de", Text = "Item 1 german text"}, 
-				new ItemText{ ItemId = 1, Lang = "en", Text = "Item 1 english text"}, 
-				new ItemText{ ItemId = 2, Lang = "de", Text = "Item 2 german text"}, 
-				new ItemText{ ItemId = 2, Lang = "en", Text = "Item 2 english text"}, 
+				new ItemText{ ItemId = 1, Lang = "de", Text = "Item 1 german text"},
+				new ItemText{ ItemId = 1, Lang = "en", Text = "Item 1 english text"},
+				new ItemText{ ItemId = 2, Lang = "de", Text = "Item 2 german text"},
+				new ItemText{ ItemId = 2, Lang = "en", Text = "Item 2 english text"},
 			};
 
 			using (new AllowMultipleQuery())
