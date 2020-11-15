@@ -2771,7 +2771,7 @@ namespace LinqToDB.Linq.Builder
 			if (e.Arguments.Count == 3)
 				a3 = ConvertToSql(context, e.Arguments[2]);
 
-			return new SqlPredicate.Like(a1, false, a2, a3, true);
+			return new SqlPredicate.Like(a1, false, a2, a3);
 		}
 
 		#endregion

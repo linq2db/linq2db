@@ -1870,8 +1870,7 @@ namespace LinqToDB.SqlProvider
 				var patternExpr = LikeParameterSupport ? CreateSqlValue(patternValue, predicate.Expr2) : new SqlValue(patternValue);
 
 				return new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, patternExpr,
-					LikeIsEscapeSupported && (patternValue != patternRawValue) ? new SqlValue(LikeEscapeCharacter) : null,
-					true);
+					LikeIsEscapeSupported && (patternValue != patternRawValue) ? new SqlValue(LikeEscapeCharacter) : null);
 			}
 			else
 			{
@@ -1893,8 +1892,7 @@ namespace LinqToDB.SqlProvider
 				patternExpr = OptimizeElements(patternExpr, context);
 
 				return new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, patternExpr,
-					LikeIsEscapeSupported ? escape : null,
-					true);
+					LikeIsEscapeSupported ? escape : null);
 			}
 		}
 

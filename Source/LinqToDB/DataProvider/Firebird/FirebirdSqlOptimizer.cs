@@ -93,7 +93,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 				if (!ReferenceEquals(exp1, predicate.Expr1) || !ReferenceEquals(exp2, predicate.Expr2))
 				{
-					predicate = new SqlPredicate.Like(exp1, predicate.IsNot, exp2, predicate.Escape, predicate.IsSqlLike);
+					predicate = new SqlPredicate.Like(exp1, predicate.IsNot, exp2, predicate.Escape);
 				}
 			}	
 

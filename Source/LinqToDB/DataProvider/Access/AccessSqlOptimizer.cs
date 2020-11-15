@@ -23,7 +23,7 @@ namespace LinqToDB.DataProvider.Access
 		{
 			if (predicate.Escape != null)
 			{
-				return new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, predicate.Expr2, null, predicate.IsSqlLike);
+				return new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, predicate.Expr2, null);
 			}
 
 			return base.ConvertLikePredicate(mappingSchema, predicate, context);
