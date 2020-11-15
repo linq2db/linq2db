@@ -74,7 +74,7 @@ namespace Tests.Linq
 							EnumWithNull = i % 4 == 1 ? EnumValue.Value1 : i % 4 == 2 ? EnumValue.Value2 : i % 4 == 3 ? EnumValue.Value3 : EnumValue.Null,
 							EnumWithNullDeclarative = i % 4 == 1 ? EnumValue.Value1 : i % 4 == 2 ? EnumValue.Value2 : i % 4 == 3 ? EnumValue.Value3 : EnumValue.Null,
 							BoolValue = i % 4 == 1,
-							DateTimeNullable = i % 3 == 1 ? (DateTime?)null : new DateTime(2020, 11, 13)
+							DateTimeNullable = i % 3 == 1 ? (DateTime?)null : TestBase.TestData.Date
 						}
 					).ToArray();
 			}
@@ -267,14 +267,14 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context, ms))
 			using (var table = db.CreateLocalTable(testData))
 			{
-				var testDate = new DateTime(2020, 11, 13);
+				var testDate = TestData.Date;
 
 				var query1 = from t in table
-					where testDate == t.DateTimeNullable.Value
+					where testDate == t.DateTimeNullable!.Value
 					select t.DateTimeNullable;
 
 				var query2 = from t in table
-					where t.DateTimeNullable.Value == testDate
+					where t.DateTimeNullable!.Value == testDate
 					select t.DateTimeNullable;
 
 				var result1 = query1.ToArray();
