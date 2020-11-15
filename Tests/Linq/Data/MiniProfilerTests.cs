@@ -1326,11 +1326,18 @@ namespace Tests.Data
 				Assert.AreEqual(decValue, (decimal)rawValue);
 
 				// OracleTimeStampTZ parameter creation and conversion to DateTimeOffset
-				var dtoVal = TestData.DateTimeOffset;
-				var dtoValue = db.Execute<DateTimeOffset>("SELECT :p FROM SYS.DUAL", new DataParameter("p", dtoVal, DataType.DateTimeOffset) { Precision = 6 });
-				dtoVal = dtoVal.AddTicks(-1 * (dtoVal.Ticks % 10));
-				Assert.AreEqual(dtoVal, dtoValue);
-				Assert.AreEqual(((OracleDataProvider)db.DataProvider).Adapter.OracleTimeStampTZType, ((IDbDataParameter)db.Command.Parameters[0]!).Value.GetType());
+				var dtoVal   = TestData.DateTimeOffset;
+
+				// it is possible to define working reader expression for unmapped wrapper (at least for MiniProfiler)
+				// but it doesn't make sense to do it righ now without user request
+				// especially taking into account that more proper way is to define mappings
+				if (!unmapped)
+				{
+					var dtoValue = db.Execute<DateTimeOffset>("SELECT :p FROM SYS.DUAL", new DataParameter("p", dtoVal, DataType.DateTimeOffset) { Precision = 6 });
+					dtoVal = dtoVal.AddTicks(-1 * (dtoVal.Ticks % 10));
+					Assert.AreEqual(dtoVal, dtoValue);
+					Assert.AreEqual(((OracleDataProvider)db.DataProvider).Adapter.OracleTimeStampTZType, ((IDbDataParameter)db.Command.Parameters[0]!).Value.GetType());
+				}
 
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 				Assert.AreEqual(unmapped ? string.Empty : TestUtils.GetServerName(db), schema.Database);
