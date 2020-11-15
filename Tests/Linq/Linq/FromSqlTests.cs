@@ -19,11 +19,9 @@ namespace Tests.Linq
 	public class FromSqlTests : TestBase
 	{
 		[Table(Name = "sample_class")]
-		[Table(Name = "SAMPLE_CLASS", Configuration = ProviderName.Firebird)]
 		class SampleClass
 		{
 			[Column("id")]
-			[Column("ID", Configuration = ProviderName.Firebird)]
 			public int Id    { get; set; }
 
 			[Column("value", Length = 50)]
@@ -63,13 +61,36 @@ namespace Tests.Linq
 
 			public ISqlExpression ToSql(Expression expression)
 			{
-				return new SqlExpression(null, _table.TableName, Precedence.Primary, false, true);
+				return new SqlTable()
+				{
+					PhysicalName = _table.TableName
+				};
 			}
 		}
 
 		ToTableName<T> GetName<T>(ITable<T> table)
 		{
 			return new ToTableName<T>(table);
+		}
+
+		class ToColumnName : IToSqlConverter
+		{
+			public ToColumnName(string columnName)
+			{
+				_columnName = columnName;
+			}
+
+			readonly string _columnName;
+
+			public ISqlExpression ToSql(Expression expression)
+			{
+				return new SqlField(_columnName, _columnName);
+			}
+		}
+
+		IToSqlConverter GetColumn(string columnName)
+		{
+			return new ToColumnName(columnName);
 		}
 
 		[Test]
@@ -80,7 +101,7 @@ namespace Tests.Linq
 			{
 				int startId = 5;
 
-				var query = db.FromSql<SampleClass>($"SELECT * FROM {GetName(table)} where id >= {startId} and id < {endId}");
+				var query = db.FromSql<SampleClass>($"SELECT * FROM {GetName(table)} where {GetColumn("id")} >= {startId} and {GetColumn("id")} < {endId}");
 				var projection = query
 					.Where(c => c.Id > 10)
 					.Select(c => new { c.Value, c.Id })
@@ -105,7 +126,7 @@ namespace Tests.Linq
 				int startId = 5;
 
 				var query = db.FromSql<SampleClass>(
-					$"SELECT * FROM {GetName(table)} where id >= {new DataParameter("startId", startId, DataType.Int64)} and id < {endId}");
+					$"SELECT * FROM {GetName(table)} where {GetColumn("id")} >= {new DataParameter("startId", startId, DataType.Int64)} and {GetColumn("id")} < {endId}");
 				var projection = query
 					.Where(c => c.Id > 10)
 					.Select(c => new { c.Value, c.Id })
@@ -130,7 +151,7 @@ namespace Tests.Linq
 				int startId = 5;
 
 				var startIdParam = new DataParameter("startId", startId, DataType.Int64);
-				var query = db.FromSql<SampleClass>($"SELECT * FROM {GetName(table)} where id >= {startIdParam} and id < {endId}");
+				var query = db.FromSql<SampleClass>($"SELECT * FROM {GetName(table)} where {GetColumn("id")} >= {startIdParam} and {GetColumn("id")} < {endId}");
 				var queryWithProjection = query
 					.Where(c => c.Id > 10)
 					.Select(c => new { c.Value, c.Id });
@@ -157,7 +178,7 @@ namespace Tests.Linq
 
 				var query =
 					from t in table
-					from s in db.FromSql<SampleClass>($"SELECT * FROM {GetName(table)} where id >= {startId} and id < {endId}").InnerJoin(s => s.Id == t.Id)
+					from s in db.FromSql<SampleClass>($"SELECT * FROM {GetName(table)} where {GetColumn("id")} >= {startId} and {GetColumn("id")} < {endId}").InnerJoin(s => s.Id == t.Id)
 					select s;
 
 				var projection = query
@@ -185,7 +206,7 @@ namespace Tests.Linq
 
 				var query =
 					from t in table
-					from s in db.FromSql<SampleClass>($"SELECT * FROM {GetName(table)} where id >= {new DataParameter("startId", startId, DataType.Int64)} and id < {endId}").InnerJoin(s => s.Id == t.Id)
+					from s in db.FromSql<SampleClass>($"SELECT * FROM {GetName(table)} where {GetColumn("id")} >= {new DataParameter("startId", startId, DataType.Int64)} and {GetColumn("id")} < {endId}").InnerJoin(s => s.Id == t.Id)
 					select s;
 
 				var projection = query
@@ -211,8 +232,8 @@ namespace Tests.Linq
 			{
 				int startId = 5;
 
-				var query = db.FromSql<SampleClass>("SELECT * FROM\n{0}\nwhere id >= {1} and id < {2}",
-					GetName(table), new DataParameter("startId", startId, DataType.Int64), endId);
+				var query = db.FromSql<SampleClass>("SELECT * FROM\n{0}\nwhere {3} >= {1} and {3} < {2}",
+					GetName(table), new DataParameter("startId", startId, DataType.Int64), endId, GetColumn("id"));
 				var projection = query
 					.Where(c => c.Id > 10)
 					.Select(c => new { c.Value, c.Id })
@@ -238,8 +259,8 @@ namespace Tests.Linq
 
 				var query =
 					from t in table
-					from s in db.FromSql<SampleClass>("SELECT * FROM {0} where id >= {1} and id < {2}",
-						GetName(table), new DataParameter("startId", startId, DataType.Int64), endId).InnerJoin(s => s.Id == t.Id)
+					from s in db.FromSql<SampleClass>("SELECT * FROM {0} where {3} >= {1} and {3} < {2}",
+						GetName(table), new DataParameter("startId", startId, DataType.Int64), endId, GetColumn("id")).InnerJoin(s => s.Id == t.Id)
 					select s;
 
 				var projection = query
@@ -265,11 +286,11 @@ namespace Tests.Linq
 			{
 				int startId = 5;
 
-				var parameters = new object[] { GetName(table), new DataParameter("startId", startId, DataType.Int64), endId };
+				var parameters = new object[] { GetName(table), new DataParameter("startId", startId, DataType.Int64), endId, GetColumn("id") };
 
 				var query =
 					from t in table
-					from s in db.FromSql<SampleClass>("SELECT * FROM {0} where id >= {1} and id < {2}", parameters).InnerJoin(s => s.Id == t.Id)
+					from s in db.FromSql<SampleClass>("SELECT * FROM {0} where {3} >= {1} and {3} < {2}", parameters).InnerJoin(s => s.Id == t.Id)
 					select s;
 
 				var projection = query

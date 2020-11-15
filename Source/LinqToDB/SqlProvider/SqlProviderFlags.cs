@@ -31,6 +31,11 @@ namespace LinqToDB.SqlProvider
 		public TakeHints?  TakeHintsSupported             { get; set; }
 
 		/// <summary>
+		/// Provider requires that selected subquery column must be used in group by even for constant column.
+		/// </summary>
+		public bool        IsGroupByColumnRequred         { get; set; }
+
+		/// <summary>
 		/// Provider supports:
 		/// CROSS JOIN a Supported
 		/// </summary>

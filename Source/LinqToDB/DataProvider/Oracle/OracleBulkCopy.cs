@@ -35,63 +35,82 @@ namespace LinqToDB.DataProvider.Oracle
 					var ed        = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
 					var columns   = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
 					var sb        = _provider.CreateSqlBuilder(dataConnection.MappingSchema);
-					var rd        = new BulkCopyReader<T>(dataConnection, columns, source);
-					var sqlopt    = OracleProviderAdapter.OracleBulkCopyOptions.Default;
-					var rc        = new BulkCopyRowsCopied();
-					var tableName = GetTableName(sb, options, table);
 
-					if (options.UseInternalTransaction == true) sqlopt |= OracleProviderAdapter.OracleBulkCopyOptions.UseInternalTransaction;
+					// ODP.NET doesn't bulk copy doesn't work if columns that require escaping:
+					// - if escaping applied, pre-flight validation fails as it performs uppercase comparison and quotes make it fail with
+					//   InvalidOperationException: Column mapping is invalid
+					// - if escaping not applied - if fails as expected on server, because it treats passed name as uppercased name
+					//   and gives "ORA-00904: "STRINGVALUE": invalid identifier" error
+					// That's quite common error in bulk copy implementation error by providers...
+					var supported = true;
+					foreach (var column in columns)
+						if (column.ColumnName != sb.ConvertInline(column.ColumnName, ConvertType.NameToQueryField))
+						{
+							// fallback to sql-based copy
+							supported = false;
+							break;
+						}
 
-					using (var bc = _provider.Adapter.BulkCopy.Create(connection, sqlopt))
+					if (supported)
 					{
-						var notifyAfter = options.NotifyAfter == 0 && options.MaxBatchSize.HasValue
+						var rd        = new BulkCopyReader<T>(dataConnection, columns, source);
+						var sqlopt    = OracleProviderAdapter.OracleBulkCopyOptions.Default;
+						var rc        = new BulkCopyRowsCopied();
+						var tableName = GetTableName(sb, options, table);
+
+						if (options.UseInternalTransaction == true) sqlopt |= OracleProviderAdapter.OracleBulkCopyOptions.UseInternalTransaction;
+
+						using (var bc = _provider.Adapter.BulkCopy.Create(connection, sqlopt))
+						{
+							var notifyAfter = options.NotifyAfter == 0 && options.MaxBatchSize.HasValue
 							? options.MaxBatchSize.Value
 							: options.NotifyAfter;
 
-						if (notifyAfter != 0 && options.RowsCopiedCallback != null)
-						{
-							bc.NotifyAfter = options.NotifyAfter;
-
-							bc.OracleRowsCopied += (sender, args) =>
+							if (notifyAfter != 0 && options.RowsCopiedCallback != null)
 							{
-								rc.RowsCopied = args.RowsCopied;
-								options.RowsCopiedCallback(rc);
-								if (rc.Abort)
-									args.Abort = true;
-							};
+								bc.NotifyAfter = options.NotifyAfter;
+
+								bc.OracleRowsCopied += (sender, args) =>
+								{
+									rc.RowsCopied = args.RowsCopied;
+									options.RowsCopiedCallback(rc);
+									if (rc.Abort)
+										args.Abort = true;
+								};
+							}
+
+							if (options.MaxBatchSize.HasValue)
+								bc.BatchSize = options.MaxBatchSize.Value;
+
+							if (options.BulkCopyTimeout.HasValue)
+								bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
+							else if (Configuration.Data.BulkCopyUseConnectionCommandTimeout)
+								bc.BulkCopyTimeout = connection.ConnectionTimeout;
+
+							bc.DestinationTableName = tableName;
+
+							for (var i = 0; i < columns.Count; i++)
+								bc.ColumnMappings.Add(_provider.Adapter.BulkCopy.CreateColumnMapping(i, columns[i].ColumnName));
+
+							TraceAction(
+								dataConnection,
+								() => "INSERT BULK " + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + Environment.NewLine,
+								() => { bc.WriteToServer(rd); return rd.Count; });
 						}
 
-						if (options.MaxBatchSize.HasValue)
-							bc.BatchSize = options.MaxBatchSize.Value;
+						if (rc.RowsCopied != rd.Count)
+						{
+							rc.RowsCopied = rd.Count;
 
-						if (options.BulkCopyTimeout.HasValue)
-							bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
-						else if (Configuration.Data.BulkCopyUseConnectionCommandTimeout)
-							bc.BulkCopyTimeout = connection.ConnectionTimeout;
+							if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
+								options.RowsCopiedCallback(rc);
+						}
 
-						bc.DestinationTableName = tableName;
-
-						for (var i = 0; i < columns.Count; i++)
-							bc.ColumnMappings.Add(_provider.Adapter.BulkCopy.CreateColumnMapping(i, columns[i].ColumnName));
-
-						TraceAction(
-							dataConnection,
-							() => "INSERT BULK " + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + Environment.NewLine,
-							() => { bc.WriteToServer(rd); return rd.Count; });
+						return rc;
 					}
-
-					if (rc.RowsCopied != rd.Count)
-					{
-						rc.RowsCopied = rd.Count;
-
-						if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
-							options.RowsCopiedCallback(rc);
-					}
-
-					return rc;
 				}
 			}
-
+			
 
 			return MultipleRowsCopy(table, options, source);
 		}
