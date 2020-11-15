@@ -124,7 +124,7 @@ Legend:
 ###### Notes:
 1. `TestNoopProvider` is a fake test provider to perform tests without database dependencies
 2. `1.1.1` is the last version of `Microsoft.Data.SQLite`, that supports .NET Framework, so we use it for `net4.7.2` test configuration and recent version for `netcoreapp2.1`
-3. needs System.Data.OleDb 5.0.0+ for .Net Core support (4.7.1 contains critical issues that could crash application)
+3. needs System.Data.OleDb 4.7.1+ for .Net Core support (contains critical [issue](https://github.com/dotnet/runtime/issues/36954) that could crash application, so ODBC provider is recommended for .net core)
 4. for SQL CE right now we don't run .net core tests
 5. Northwind FTS SQL Server tests not enabled yet, as we need SQL Server images with full-text search included
 6. Informix and DB2 use ubuntu 16.04 vm due to locale issues on 18.04/20.04 with IBM.Data.DB2 linux provider
