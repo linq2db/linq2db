@@ -10,6 +10,8 @@ using LinqToDB.Mapping;
 using NUnit.Framework;
 
 using JetBrains.Annotations;
+using LinqToDB.Data;
+using LinqToDB.SqlQuery;
 
 namespace Tests.Linq
 {
@@ -1159,6 +1161,71 @@ namespace Tests.Linq
 				Assert.AreEqual(true, res[0].ActualStage.Actual);
 			}
 		}
+
+		internal class AssociationNullability
+		{
+			[Column(IsPrimaryKey = true)]
+			public int Id { get; set; }
+
+			[Column]
+			public int? ParentId { get; set; }
+
+			[Column]
+			public bool IsDeleted { get; set; }
+
+			[Association(ThisKey = nameof(ParentId), OtherKey = nameof(Id))]
+			public AssociationNullability? ParentNullable { get; set; }
+
+			[Association(ThisKey = nameof(ParentId), OtherKey = nameof(Id), CanBeNull = false)]
+			public AssociationNullability? ParentNullableForcedInner { get; set; }
+
+			[Association(ThisKey = nameof(ParentId), OtherKey = nameof(Id), CanBeNull = false)]
+			public AssociationNullability ParentNotNull { get; set; } = null!;
+
+			[Association(ThisKey = nameof(ParentId), OtherKey = nameof(Id), CanBeNull = true)]
+			public AssociationNullability ParentNotNullForcedOuter { get; set; } = null!;
+
+
+		}
+
+		[Test]
+		public void AssociationNullabilityTest([IncludeDataSources(false, TestProvName.AllSQLite)] string context, [Values] bool useFilter)
+		{
+			var ms = new MappingSchema();
+
+			if (useFilter)
+			{
+				ms.GetFluentMappingBuilder()
+					.Entity<AssociationNullability>()
+					.HasQueryFilter((e, dc) => !e.IsDeleted);
+			}
+			using (var db = (DataConnection)GetDataContext(context, ms))
+			using (db.CreateLocalTable<AssociationNullability>())
+			{
+				var table = db.CreateLocalTable<AssociationNullability>();
+
+				var query1 = from t in table
+							 select new {t.Id, t.ParentNullable};
+
+				Assert.IsTrue(query1.GetSelectQuery().EnumJoins().All(j => j.JoinType == JoinType.Left));
+
+				var query2 = from t in table
+							 select new {t.Id, t.ParentNullableForcedInner};
+
+				Assert.IsTrue(query2.GetSelectQuery().EnumJoins().All(j => j.JoinType == JoinType.Inner));
+
+				var query3 = from t in table
+							 select new {t.Id, t.ParentNotNull};
+
+				Assert.IsTrue(query3.GetSelectQuery().EnumJoins().All(j => j.JoinType == JoinType.Inner));
+
+				var query4 = from t in table
+					select new {t.Id, t.ParentNotNullForcedOuter};
+
+				Assert.IsTrue(query4.GetSelectQuery().EnumJoins().All(j => j.JoinType == JoinType.Left));
+			}
+		}
+
 	}
 
 	public static class AssociationExtension
@@ -1234,4 +1301,5 @@ namespace Tests.Linq
 			return p => p.ManyToMany.Select(m2m => m2m.Child);
 		}
 	}
+	
 }

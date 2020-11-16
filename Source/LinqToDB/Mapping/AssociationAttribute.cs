@@ -24,14 +24,6 @@ namespace LinqToDB.Mapping
 	public class AssociationAttribute : Attribute
 	{
 		/// <summary>
-		/// Creates attribute instance.
-		/// </summary>
-		public AssociationAttribute()
-		{
-			CanBeNull = true;
-		}
-
-		/// <summary>
 		/// Gets or sets mapping schema configuration name, for which this attribute should be taken into account.
 		/// <see cref="ProviderName"/> for standard names.
 		/// Attributes with <c>null</c> or empty string <see cref="Configuration"/> value applied to all configurations (if no attribute found for current configuration).
@@ -110,13 +102,28 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public string?      Storage             { get; set; }
 
+
+		private bool? _canBeNull;
+
 		/// <summary>
 		/// Defines type of join:
 		/// - inner join for <c>CanBeNull = false</c>;
 		/// - left join for <c>CanBeNull = true</c>.
 		/// Default value: <c>true</c>.
 		/// </summary>
-		public bool         CanBeNull           { get; set; }
+		public bool CanBeNull
+		{
+			get => _canBeNull ?? true;
+			set => _canBeNull = value;
+		}
+
+		/// <summary>
+		/// Defines type of join:
+		/// - inner join for <c>CanBeNull = false</c>;
+		/// - left join for <c>CanBeNull = true</c>;
+		/// - auto detect jon if value is <c>null</c>.
+		/// </summary>
+		public bool? CanBeNullNullable { get => _canBeNull; set => _canBeNull = value; }
 
 		/// <summary>
 		/// This property is not used by linq2db and could be used for informational purposes.

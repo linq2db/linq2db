@@ -194,7 +194,7 @@ namespace LinqToDB.Mapping
 
 			InitializeDynamicColumnsAccessors();
 
-			var attrs = new List<ColumnAttribute>();
+			var attrs   = new List<ColumnAttribute>();
 			var members = TypeAccessor.Members.Concat(
 				MappingSchema.GetDynamicColumns(ObjectType).Select(dc => new MemberAccessor(TypeAccessor, dc, this)));
 
@@ -206,8 +206,10 @@ namespace LinqToDB.Mapping
 				{
 					Associations.Add(new AssociationDescriptor(
 						TypeAccessor.Type, member.MemberInfo, aa.GetThisKeys(), aa.GetOtherKeys(),
-						aa.ExpressionPredicate, aa.Predicate, aa.QueryExpressionMethod, aa.QueryExpression, aa.Storage, aa.CanBeNull,
+						aa.ExpressionPredicate, aa.Predicate, aa.QueryExpressionMethod, aa.QueryExpression, aa.Storage,
+						aa.CanBeNullNullable,
 						aa.AliasName));
+
 					continue;
 				}
 

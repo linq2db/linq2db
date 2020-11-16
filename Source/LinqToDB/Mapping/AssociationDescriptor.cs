@@ -40,7 +40,7 @@ namespace LinqToDB.Mapping
 			string?     expressionQueryMethod,
 			Expression? expressionQuery,
 			string?     storage,
-			bool        canBeNull,
+			bool?       canBeNull,
 			string?     aliasName)
 		{
 			if (memberInfo == null) throw new ArgumentNullException(nameof(memberInfo));
@@ -102,13 +102,29 @@ namespace LinqToDB.Mapping
 		public string?     Storage             { get; set; }
 		/// <summary>
 		/// Gets or sets join type, generated for current association.
-		/// If <c>true</c>, association will generate outer join, otherwise - inner join.
+		/// If <c>true</c>, association will generate outer join, if <c>false</c> - inner join. Otherwise it will decide automatically which join to generated based on member nullability
 		/// </summary>
-		public bool        CanBeNull           { get; set; }
+		public bool?       CanBeNull           { get; set; }
 		/// <summary>
 		/// Gets or sets alias for association. Used in SQL generation process.
 		/// </summary>
 		public string? AliasName           { get; set; }
+
+		/// <summary>
+		/// Gets <see cref="CanBeNull"/> value or calculates value based on <see cref="MemberInfo"/>.
+		/// </summary>
+		/// <returns></returns>
+		public bool GetCanBeNull()
+		{
+			if (CanBeNull != null)
+				return CanBeNull.Value;
+
+			//TODO: Uncomment if need automatic detection
+			/*var isNullable = MemberInfo.IsNullable();
+			return isNullable ?? true;*/
+
+			return true;
+		}
 
 		/// <summary>
 		/// Parse comma-separated list of association key column members into string array.

@@ -400,6 +400,19 @@ namespace LinqToDB.Extensions
 		}
 
 		/// <summary>
+		/// Gets a value indicating whether a <paramref name="member"/> is nullable reference type.
+		/// </summary>
+		/// <param name="member">Member to test.</param>
+		/// <returns> <c>true</c>, if the <paramref name="member"/> is nullable reference type; otherwise, <c>false</c>. If function can not detect nullability, result will be <c>null</c></returns>
+		private static bool? IsNullable(this MemberInfo member)
+		{
+			// TODO: not complete, check this realization
+			// https://github.com/dotnet/efcore/blob/main/src/EFCore/Metadata/Conventions/NonNullableConventionBase.cs#L48
+
+			return null;
+		}
+
+		/// <summary>
 		/// Returns the underlying type argument of the specified type.
 		/// </summary>
 		/// <param name="type">A <see cref="System.Type"/> instance. </param>
