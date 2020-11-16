@@ -27,7 +27,7 @@
 		<Reference Include="System.Data.Linq" />
 		<Reference Include="System.ServiceModel" />
 
-		<PackageReference Include="System.Collections.Immutable" Version="1.7.1" />
+		<PackageReference Include="System.Collections.Immutable" Version="5.0.0" />
 	</ItemGroup>
 
 </Project>

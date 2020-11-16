@@ -1337,21 +1337,6 @@ namespace Tests
 		}
 	}
 
-	public class UseBinaryAggregateExpression : IDisposable
-	{
-		private readonly bool _oldValue = Configuration.Linq.UseBinaryAggregateExpression;
-
-		public UseBinaryAggregateExpression(bool enable)
-		{
-			Configuration.Linq.UseBinaryAggregateExpression = enable;
-		}
-
-		public void Dispose()
-		{
-			Configuration.Linq.UseBinaryAggregateExpression = _oldValue;
-		}
-	}
-
 	public class GenerateFinalAliases : IDisposable
 	{
 		private readonly bool _oldValue = Configuration.Sql.GenerateFinalAliases;

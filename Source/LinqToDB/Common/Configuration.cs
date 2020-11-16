@@ -159,13 +159,6 @@ namespace LinqToDB.Common
 			public static bool GuardGrouping = true;
 
 			/// <summary>
-			/// Used to optimize huge logical operations with large number of operands like expr1.and.expr2...and.exprN into balanced tree.
-			/// Without this option, such conditions could lead to <seealso cref="StackOverflowException"/>.
-			/// Default value: <c>false</c>.
-			/// </summary>
-			public static bool UseBinaryAggregateExpression;
-
-			/// <summary>
 			/// Used to disable LINQ expressions caching for queries.
 			/// This cache reduces time, required for query parsing but have several side-effects:
 			/// <para />

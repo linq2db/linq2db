@@ -442,7 +442,7 @@ namespace Tests.Linq
 						  .GroupJoin(t2.Where(v =>
 							allUsages || v.Usage == usage.GetValueOrDefault()), c => c.Id, v => v.FirstTableId,
 							 (c, v) => new FirstTable { Id = c.Id, Values = v.ToList() })
-						  .FirstOrDefault();
+						  .ToList().OrderBy(_ => _.Id).FirstOrDefault();
 					}
 				}
 			}
