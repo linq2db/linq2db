@@ -217,7 +217,7 @@ namespace LinqToDB.DataProvider.SQLite
 			var getValueMethodInfo = Expressions.MemberHelper.MethodOf<IDataReader>(r => r.GetValue(0));
 			return Expression.Convert(
 				Expression.Call(readerExpression, getValueMethodInfo, Expression.Constant(idx)),
-				fieldType);
+				toType);
 		}
 
 		#region BulkCopy

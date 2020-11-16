@@ -177,14 +177,10 @@ namespace LinqToDB.Expressions
 				_columnType    = columnType;
 				_columnIndex   = columnIndex;
 				_converter     = converter;
-				_defaultValue  = mappingSchema.GetDefaultValue(columnType);
 			}
 
 			public object? GetValue(IDataReader dataReader)
 			{
-				if (dataReader.IsDBNull(_columnIndex))
-					return _defaultValue;
-
 				var fromType = dataReader.GetFieldType(_columnIndex);
 
 				if (!_columnConverters.TryGetValue(fromType, out var func))
@@ -228,7 +224,6 @@ namespace LinqToDB.Expressions
 			readonly Type             _columnType;
 			readonly int              _columnIndex;
 			readonly IValueConverter? _converter;
-			readonly object?          _defaultValue;
 		}
 
 		public override string ToString()
