@@ -34,7 +34,7 @@ namespace LinqToDB.Linq
 
 			public static void ClearCache()
 			{
-				QueryCache.Compact(1);
+				QueryCache.Clear();
 			}
 
 			internal static MemoryCache QueryCache { get; } = new MemoryCache(new MemoryCacheOptions());

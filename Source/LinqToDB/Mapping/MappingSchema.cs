@@ -1548,7 +1548,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public static void ClearCache()
 		{
-			EntityDescriptorsCache.Compact(1);
+			EntityDescriptorsCache.Clear();
 		}
 
 		internal void ResetEntityDescriptor(Type type)
