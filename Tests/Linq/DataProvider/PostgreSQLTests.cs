@@ -1527,6 +1527,121 @@ namespace Tests.DataProvider
 			}
 		}
 
+		class ExtraBulkCopyTypesTable
+		{
+			[Column] public int     Id     { get; set; }
+			[Column] public byte?   Byte   { get; set; }
+			[Column] public sbyte?  SByte  { get; set; }
+			[Column] public short?  Int16  { get; set; }
+			[Column] public ushort? UInt16 { get; set; }
+			[Column] public int?    Int32  { get; set; }
+			[Column] public uint?   UInt32 { get; set; }
+			[Column] public long?   Int64  { get; set; }
+			[Column] public ulong?  UInt64 { get; set; }
+		}
+
+		[Test]
+		public void TestExtraTypesBulkCopy([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values] BulkCopyType type)
+		{
+			using (var db    = (DataConnection)GetDataContext(context))
+			using (var table = db.CreateLocalTable<ExtraBulkCopyTypesTable>())
+			{
+				var items = new []
+				{
+					new ExtraBulkCopyTypesTable() { Id = 1 },
+					new ExtraBulkCopyTypesTable()
+					{
+						Id     = 2,
+						Byte   = byte.MaxValue,
+						SByte  = sbyte.MaxValue,
+						Int16  = short.MaxValue,
+						UInt16 = ushort.MaxValue,
+						Int32  = int.MaxValue,
+						UInt32 = uint.MaxValue,
+						Int64  = long.MaxValue,
+						UInt64 = ulong.MaxValue,
+					}
+				};
+
+				db.BulkCopy(new BulkCopyOptions() { BulkCopyType = type }, items);
+
+				var result = table.OrderBy(_ => _.Id).ToArray();
+
+				Assert.AreEqual(2, result.Length);
+
+				Assert.AreEqual(1, result[0].Id);
+				Assert.IsNull(result[0].Byte);
+				Assert.IsNull(result[0].SByte);
+				Assert.IsNull(result[0].Int16);
+				Assert.IsNull(result[0].UInt16);
+				Assert.IsNull(result[0].Int32);
+				Assert.IsNull(result[0].UInt32);
+				Assert.IsNull(result[0].Int64);
+				Assert.IsNull(result[0].UInt64);
+
+				Assert.AreEqual(2              , result[1].Id);
+				Assert.AreEqual(byte.MaxValue  , result[1].Byte);
+				Assert.AreEqual(sbyte.MaxValue , result[1].SByte);
+				Assert.AreEqual(short.MaxValue , result[1].Int16);
+				Assert.AreEqual(ushort.MaxValue, result[1].UInt16);
+				Assert.AreEqual(int.MaxValue   , result[1].Int32);
+				Assert.AreEqual(uint.MaxValue  , result[1].UInt32);
+				Assert.AreEqual(long.MaxValue  , result[1].Int64);
+				Assert.AreEqual(ulong.MaxValue , result[1].UInt64);
+			}
+		}
+
+		[Test]
+		public async Task TestExtraTypesBulkCopyAsync([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values] BulkCopyType type)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			using (var table = db.CreateLocalTable<ExtraBulkCopyTypesTable>())
+			{
+				var items = new []
+				{
+					new ExtraBulkCopyTypesTable() { Id = 1 },
+					new ExtraBulkCopyTypesTable()
+					{
+						Id     = 2,
+						Byte   = byte.MaxValue,
+						SByte  = sbyte.MaxValue,
+						Int16  = short.MaxValue,
+						UInt16 = ushort.MaxValue,
+						Int32  = int.MaxValue,
+						UInt32 = uint.MaxValue,
+						Int64  = long.MaxValue,
+						UInt64 = ulong.MaxValue,
+					}
+				};
+
+				await db.BulkCopyAsync(new BulkCopyOptions() { BulkCopyType = type }, items);
+
+				var result = await table.OrderBy(_ => _.Id).ToArrayAsync();
+
+				Assert.AreEqual(2, result.Length);
+
+				Assert.AreEqual(1, result[0].Id);
+				Assert.IsNull(result[0].Byte);
+				Assert.IsNull(result[0].SByte);
+				Assert.IsNull(result[0].Int16);
+				Assert.IsNull(result[0].UInt16);
+				Assert.IsNull(result[0].Int32);
+				Assert.IsNull(result[0].UInt32);
+				Assert.IsNull(result[0].Int64);
+				Assert.IsNull(result[0].UInt64);
+
+				Assert.AreEqual(2              , result[1].Id);
+				Assert.AreEqual(byte.MaxValue  , result[1].Byte);
+				Assert.AreEqual(sbyte.MaxValue , result[1].SByte);
+				Assert.AreEqual(short.MaxValue , result[1].Int16);
+				Assert.AreEqual(ushort.MaxValue, result[1].UInt16);
+				Assert.AreEqual(int.MaxValue   , result[1].Int32);
+				Assert.AreEqual(uint.MaxValue  , result[1].UInt32);
+				Assert.AreEqual(long.MaxValue  , result[1].Int64);
+				Assert.AreEqual(ulong.MaxValue , result[1].UInt64);
+			}
+		}
+
 		public class NpgsqlTableWithDateRanges
 		{
 			[Column]
