@@ -11,7 +11,7 @@
 
 		<AppDesignerFolder>Properties</AppDesignerFolder>
 		<!--C# version, test VB/F# projects should redefine it-->
-		<LangVersion>8.0</LangVersion>
+		<LangVersion>9.0</LangVersion>
 		<Nullable>enable</Nullable>
 		<WarningLevel>4</WarningLevel>
 		<ErrorReport>prompt</ErrorReport>

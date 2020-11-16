@@ -915,7 +915,7 @@ namespace Tests.T4.Model
 				}
 			}
 
-			public static ValidationResult ValidateEditableString1(TestClass1 obj, string value)
+			public static ValidationResult? ValidateEditableString1(TestClass1 obj, string value)
 			{
 				var list = new List<ValidationResult>();
 
@@ -939,7 +939,7 @@ namespace Tests.T4.Model
 				return ValidationResult.Success;
 			}
 
-			public static ValidationResult ValidateEditableString2(TestClass1 obj, string? value)
+			public static ValidationResult? ValidateEditableString2(TestClass1 obj, string? value)
 			{
 				var list = new List<ValidationResult>();
 
@@ -963,7 +963,7 @@ namespace Tests.T4.Model
 				return ValidationResult.Success;
 			}
 
-			public static ValidationResult ValidateEditableLong1(TestClass1 obj, long value)
+			public static ValidationResult? ValidateEditableLong1(TestClass1 obj, long value)
 			{
 				var list = new List<ValidationResult>();
 
@@ -987,7 +987,7 @@ namespace Tests.T4.Model
 				return ValidationResult.Success;
 			}
 
-			public static ValidationResult ValidateEditableInt1(TestClass1 obj, int value)
+			public static ValidationResult? ValidateEditableInt1(TestClass1 obj, int value)
 			{
 				var list = new List<ValidationResult>();
 
