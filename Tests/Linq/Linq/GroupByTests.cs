@@ -1821,7 +1821,8 @@ namespace Tests.Linq
 		[Test]
 		public void GroupByCustomEntity2([DataSources(TestProvName.AllSybase)] string context)
 		{
-			var rand = new Random().Next(5);
+			// pure random
+			var rand = 3;
 
 			using (var db = GetDataContext(context))
 			{
