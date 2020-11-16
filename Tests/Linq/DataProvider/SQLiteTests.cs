@@ -18,6 +18,7 @@ namespace Tests.DataProvider
 {
 	using System.Diagnostics.CodeAnalysis;
 	using System.Globalization;
+	using System.Runtime.InteropServices;
 	using System.Threading.Tasks;
 	using Model;
 
@@ -599,7 +600,8 @@ namespace Tests.DataProvider
 				case ProviderName.SQLiteClassic:
 				case TestProvName.SQLiteClassicMiniProfilerMapped:
 				case TestProvName.SQLiteClassicMiniProfilerUnmapped:
-					expectedVersion = "3.31.1";
+					// https://system.data.sqlite.org/index.html/tktview/bc327ea1423cfd9c4fbe30f0df4775e727a98626
+					expectedVersion = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "3.32.1" : "3.31.1";
 					break;
 				case ProviderName.SQLiteMS:
 #if NET472
