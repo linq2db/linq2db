@@ -517,5 +517,72 @@ namespace Tests.Linq
 			}
 		}
 
+		public class Address
+		{
+			public string? City { get; set; }
+			public string? Street { get; set; }
+			public int Building { get; set; }
+		}
+
+		[Column("city", "Residence.City")]
+		[Column("user_name", "Name")]
+		public class User
+		{
+			public string? Name;
+
+			[Column("street", ".Street")]
+			[Column("building_number", MemberName = ".Building")]
+			public Address? Residence { get; set; }
+
+			public static readonly User[] TestData = new []
+			{
+				new User()
+				{
+					Name = "Freddy",
+					Residence = new Address()
+					{
+						Building = 13,
+						City     = "Springwood",
+						Street   = "Elm Street"
+					}
+				}
+			};
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/999")]
+		public void SelectCompositeTypeSpecificColumnTest([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var users = db.CreateLocalTable<User>())
+			{
+				var query = users.Select(u => u.Residence!.City);
+				Assert.AreEqual(1, query.GetSelectQuery().Select.Columns.Count);
+
+				query.ToList();
+
+				query = users.Select(u => u.Residence!.Street);
+				Assert.AreEqual(1, query.GetSelectQuery().Select.Columns.Count);
+
+				query.ToList();
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2590")]
+		public void SelectCompositeTypeAllColumnsTest([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var users = db.CreateLocalTable(User.TestData))
+			{
+				var result = users.ToList();
+
+				Assert.AreEqual(1, result.Count);
+				Assert.AreEqual(User.TestData[0].Name, result[0].Name);
+				Assert.IsNotNull(result[0].Residence);
+				Assert.AreEqual(User.TestData[0].Residence!.Building, result[0].Residence!.Building);
+				Assert.AreEqual(User.TestData[0].Residence!.City, result[0].Residence!.City);
+				Assert.AreEqual(User.TestData[0].Residence!.Street, result[0].Residence!.Street);
+			}
+		}
+
 	}
 }
