@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -231,6 +232,7 @@ namespace LinqToDB
 			}
 		}
 
+		[DebuggerDisplay("{ToDebugString()}")]
 		public class SqlExtensionParam
 		{
 			public SqlExtensionParam(string? name, ISqlExpression expression)
@@ -243,6 +245,25 @@ namespace LinqToDB
 			{
 				Name      = name;
 				Extension = extension;
+			}
+
+			public string ToDebugString()
+			{
+				string str;
+				if (Extension != null)
+				{
+					str = $"Param('{Name ?? ""}', {Extension.ChainPrecedence}): {Extension.Expr}";
+				}
+				else if (Expression != null)
+				{
+					var sb = new StringBuilder();
+					Expression.ToString(sb, new Dictionary<IQueryElement, IQueryElement>());
+					str = $"Param('{Name ?? ""}'): {sb}";
+				}
+				else
+					str = $"Param('{Name ?? ""}')";
+
+				return str;
 			}
 
 			public string?         Name       { get; set; }
@@ -844,7 +865,7 @@ namespace LinqToDB
 				var ordered = chain
 					.Select((c, i) => Tuple.Create(c, i))
 					.OrderByDescending(t => t.Item1.Extension?.ChainPrecedence ?? int.MinValue)
-					.ThenBy(t => t.Item2)
+					.ThenByDescending(t => t.Item2)
 					.Select(t => t.Item1)
 					.ToArray();
 
