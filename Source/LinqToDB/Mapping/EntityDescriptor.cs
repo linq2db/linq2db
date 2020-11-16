@@ -215,9 +215,10 @@ namespace LinqToDB.Mapping
 
 				if (columnAttributes.Length > 0)
 				{
+					var mappedMembers = new HashSet<string>();
 					foreach (var ca in columnAttributes)
 					{
-						if (ca.IsColumn)
+						if (mappedMembers.Add(ca.MemberName ?? string.Empty) && ca.IsColumn)
 						{
 							if (ca.MemberName != null)
 							{
