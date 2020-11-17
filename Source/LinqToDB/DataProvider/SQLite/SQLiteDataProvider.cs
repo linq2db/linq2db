@@ -48,6 +48,24 @@ namespace LinqToDB.DataProvider.SQLite
 			SetCharFieldToType<char>("nchar", (r, i) => DataTools.GetChar(r, i));
 
 			_sqlOptimizer = new SQLiteSqlOptimizer(SqlProviderFlags);
+
+			if (Name == ProviderName.SQLiteMS)
+			{
+				SetToType<IDataReader, float, byte >((r, i) => r.GetFloat(i));
+				SetToType<IDataReader, float, short>((r, i) => r.GetFloat(i));
+				SetToType<IDataReader, float, int  >((r, i) => r.GetFloat(i));
+				SetToType<IDataReader, float, long >((r, i) => r.GetFloat(i));
+
+				SetToType<IDataReader, double, byte >((r, i) => r.GetDouble(i));
+				SetToType<IDataReader, double, short>((r, i) => r.GetDouble(i));
+				SetToType<IDataReader, double, int  >((r, i) => r.GetDouble(i));
+				SetToType<IDataReader, double, long >((r, i) => r.GetDouble(i));
+
+				SetToType<IDataReader, decimal, byte >((r, i) => r.GetDecimal(i));
+				SetToType<IDataReader, decimal, short>((r, i) => r.GetDecimal(i));
+				SetToType<IDataReader, decimal, int  >((r, i) => r.GetDecimal(i));
+				SetToType<IDataReader, decimal, long >((r, i) => r.GetDecimal(i));
+			}
 		}
 
 		protected override string? NormalizeTypeName(string? typeName)
@@ -138,86 +156,6 @@ namespace LinqToDB.DataProvider.SQLite
 			}
 
 			base.SetParameterType(dataConnection, parameter, dataType);
-		}
-
-		public override Expression GetReaderExpression(IDataReader reader, int idx, Expression readerExpression, Type toType)
-		{
-			if (Name != ProviderName.SQLiteMS)
-				return base.GetReaderExpression(reader, idx, readerExpression, toType);
-
-			var fieldType    = ((DbDataReader)reader).GetFieldType(idx);
-			var providerType = ((DbDataReader)reader).GetProviderSpecificFieldType(idx);
-			var typeName     = ((DbDataReader)reader).GetDataTypeName(idx);
-
-			if (toType.IsFloatType() && fieldType.IsIntegerType())
-			{
-				providerType = fieldType = toType;
-			}
-
-			if (reader.IsDBNull(idx))
-				goto DEFAULT;
-
-			if (fieldType == null)
-			{
-				var name = ((DbDataReader)reader).GetName(idx);
-				throw new LinqToDBException($"Can't create '{typeName}' type or '{providerType}' specific type for {name}.");
-			}
-
-#if DEBUG1
-			Debug.WriteLine("ToType                ProviderFieldType     FieldType             DataTypeName          Expression");
-			Debug.WriteLine("--------------------- --------------------- --------------------- --------------------- ---------------------");
-			Debug.WriteLine("{0,-21} {1,-21} {2,-21} {3,-21}".Args(
-				toType       == null ? "(null)" : toType.Name,
-				providerType == null ? "(null)" : providerType.Name,
-				fieldType.Name,
-				typeName ?? "(null)"));
-			Debug.WriteLine("--------------------- --------------------- --------------------- --------------------- ---------------------");
-
-			foreach (var ex in ReaderExpressions)
-			{
-				Debug.WriteLine("{0,-21} {1,-21} {2,-21} {3,-21} {4}"
-					.Args(
-						ex.Key.ToType            == null ? null : ex.Key.ToType.Name,
-						ex.Key.ProviderFieldType == null ? null : ex.Key.ProviderFieldType.Name,
-						ex.Key.FieldType         == null ? null : ex.Key.FieldType.Name,
-						ex.Key.DataTypeName,
-						ex.Value));
-			}
-#endif
-			var dataReaderType = readerExpression.Type;
-
-			if (FindExpression(new ReaderInfo { DataReaderType = dataReaderType, ToType = toType, ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out var expr) ||
-			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType, ToType = toType, ProviderFieldType = providerType, FieldType = fieldType                          }, out expr) ||
-			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType, ToType = toType, ProviderFieldType = providerType                                                 }, out expr) ||
-			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType,                  ProviderFieldType = providerType                                                 }, out expr) ||
-			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType,                  ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out expr) ||
-			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType,                  ProviderFieldType = providerType, FieldType = fieldType                          }, out expr) ||
-			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType, ToType = toType,                                   FieldType = fieldType, DataTypeName = typeName }, out expr) ||
-			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType, ToType = toType,                                   FieldType = fieldType                          }, out expr) ||
-			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType,                                                    FieldType = fieldType, DataTypeName = typeName }, out expr) ||
-			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType, ToType = toType                                                                                   }, out expr) ||
-			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType,                                                    FieldType = fieldType                          }, out expr))
-				return expr;
-
-			if (FindExpression(new ReaderInfo { ToType = toType, ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out expr) ||
-			    FindExpression(new ReaderInfo { ToType = toType, ProviderFieldType = providerType, FieldType = fieldType                          }, out expr) ||
-			    FindExpression(new ReaderInfo { ToType = toType, ProviderFieldType = providerType                                                 }, out expr) ||
-			    FindExpression(new ReaderInfo {                  ProviderFieldType = providerType                                                 }, out expr) ||
-			    FindExpression(new ReaderInfo {                  ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out expr) ||
-			    FindExpression(new ReaderInfo {                  ProviderFieldType = providerType, FieldType = fieldType                          }, out expr) ||
-			    FindExpression(new ReaderInfo { ToType = toType,                                   FieldType = fieldType, DataTypeName = typeName }, out expr) ||
-			    FindExpression(new ReaderInfo { ToType = toType,                                   FieldType = fieldType                          }, out expr) ||
-			    FindExpression(new ReaderInfo {                                                    FieldType = fieldType, DataTypeName = typeName }, out expr) ||
-			    FindExpression(new ReaderInfo { ToType = toType                                                                                   }, out expr) ||
-			    FindExpression(new ReaderInfo {                                                    FieldType = fieldType                          }, out expr))
-				return expr;
-
-		DEFAULT:
-
-			var getValueMethodInfo = Expressions.MemberHelper.MethodOf<IDataReader>(r => r.GetValue(0));
-			return Expression.Convert(
-				Expression.Call(readerExpression, getValueMethodInfo, Expression.Constant(idx)),
-				toType);
 		}
 
 		#region BulkCopy
