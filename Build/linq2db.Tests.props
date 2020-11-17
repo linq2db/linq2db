@@ -5,6 +5,7 @@
 	<PropertyGroup>
 		<TargetFrameworks>net472;netcoreapp2.1;netcoreapp3.1</TargetFrameworks>
 		<Configurations>Debug;Release;Azure</Configurations>
+		<LangVersion>8.0</LangVersion>
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'Azure' ">
@@ -27,7 +28,7 @@
 		<Reference Include="System.Data.Linq" />
 		<Reference Include="System.ServiceModel" />
 
-		<PackageReference Include="System.Collections.Immutable" Version="1.7.1" />
+		<PackageReference Include="System.Collections.Immutable" Version="5.0.0" />
 	</ItemGroup>
 
 </Project>

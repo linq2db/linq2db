@@ -225,16 +225,16 @@ namespace LinqToDB.SqlQuery
 		}
 			
 		/// <summary>
-		/// Returns <c>true</c> if tested expression can be constant or immutable value based on parameters.
+		/// Returns <c>true</c> if tested expression is constant during query execution (e.g. value or parameter).
 		/// </summary>
 		/// <param name="expr">Tested expression.</param>
 		/// <returns></returns>
-		public static bool IsImmutable(ISqlExpression expr)
+		public static bool IsConstant(ISqlExpression expr)
 		{
 			var result = null == new QueryVisitor()
 				.Find(expr, e =>
 				{
-					// Constants and Parameters do not changes during query execution 
+					// constants and parameters do not change during query execution
 					if (e.ElementType.In(QueryElementType.SqlValue, QueryElementType.SqlParameter))
 						return false;
 
@@ -242,12 +242,14 @@ namespace LinqToDB.SqlQuery
 					{
 						var sqlColumn = (SqlColumn) e;
 						
-						// We can not guarantee order here
+						// we can not guarantee order here
+						// set operation contains at least two expressions for column
+						// (in theory we can test that they are equal, but it is not worth it)
 						if (sqlColumn.Parent != null && sqlColumn.Parent.SetOperators.Count > 0)
 							return true;
 						
-						// column can be generated from subquery which can reference to Immutable expression
-						return !IsImmutable(sqlColumn.Expression);
+						// column can be generated from subquery which can reference to constant expression
+						return !IsConstant(sqlColumn.Expression);
 					}
 
 					if (e.ElementType == QueryElementType.SqlExpression)
@@ -646,12 +648,12 @@ namespace LinqToDB.SqlQuery
 		{
 			var current = expression;
 			HashSet<ISqlExpression>? visited = null;
-			while (current?.ElementType == QueryElementType.Column)
+			while (current is SqlColumn column && column.Parent?.HasSetOperators != true)
 			{
 				visited ??= new HashSet<ISqlExpression>();
-				if (!visited.Add(current))
+				if (!visited.Add(column))
 					return null;
-				current = ((SqlColumn)current).Expression;
+				current = column.Expression;
 			}
 
 			return current;

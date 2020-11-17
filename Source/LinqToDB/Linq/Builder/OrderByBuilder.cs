@@ -70,7 +70,7 @@ namespace LinqToDB.Linq.Builder
 			    {
 				    // immutable expressions will be removed later
 				    //
-					var isImmutable = QueryHelper.IsImmutable(sqlInfo.Sql);
+					var isImmutable = QueryHelper.IsConstant(sqlInfo.Sql);
 					if (isImmutable)
 						continue;
 					
@@ -97,7 +97,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				// we do not need sorting by immutable values, like "Some", Func("Some"), "Some1" + "Some2". It does nothing for ordering
 				//
-				if (QueryHelper.IsImmutable(expr.Sql))
+				if (QueryHelper.IsConstant(expr.Sql))
 					continue;
 			
 				var e = builder.ConvertSearchCondition(expr.Sql);
