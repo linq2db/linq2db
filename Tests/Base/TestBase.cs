@@ -322,7 +322,7 @@ namespace Tests
 		public static readonly string? DefaultProvider;
 		public static readonly HashSet<string> SkipCategories;
 
-		public static readonly List<string> Providers = new List<string>
+		public static readonly List<string> Providers = CustomizationSupport.Interceptor.GetSupportedProviders(new List<string>
 		{
 #if NET472
 			ProviderName.Sybase,
@@ -367,7 +367,7 @@ namespace Tests
 			ProviderName.SQLiteMS,
 			ProviderName.SapHanaNative,
 			ProviderName.SapHanaOdbc
-		};
+		}).ToList();
 
 		protected ITestDataContext GetDataContext(string configuration, MappingSchema? ms = null)
 		{
