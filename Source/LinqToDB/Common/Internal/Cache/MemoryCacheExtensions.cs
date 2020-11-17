@@ -1,5 +1,5 @@
-﻿// Copyright (c) .NET Foundation. All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
 using System.Diagnostics.CodeAnalysis;
@@ -21,10 +21,16 @@ namespace LinqToDB.Common.Internal.Cache
 			return (TItem)(cache.Get(key) ?? default(TItem));
 		}
 
-		public static bool TryGetValue<TItem>(this IMemoryCache cache, object key, [MaybeNullWhen(false)] out TItem value)
+		public static bool TryGetValue<TItem>(this IMemoryCache cache, object key, out TItem? value)
 		{
 			if (cache.TryGetValue(key, out object? result))
 			{
+				if (result == null)
+				{
+					value = default;
+					return true;
+				}
+
 				if (result is TItem item)
 				{
 					value = item;
@@ -38,54 +44,48 @@ namespace LinqToDB.Common.Internal.Cache
 
 		public static TItem Set<TItem>(this IMemoryCache cache, object key, TItem value)
 		{
-			var entry = cache.CreateEntry(key);
+			using ICacheEntry entry = cache.CreateEntry(key);
 			entry.Value = value;
-			entry.Dispose();
 
 			return value;
 		}
 
 		public static TItem Set<TItem>(this IMemoryCache cache, object key, TItem value, DateTimeOffset absoluteExpiration)
 		{
-			var entry = cache.CreateEntry(key);
+			using ICacheEntry entry = cache.CreateEntry(key);
 			entry.AbsoluteExpiration = absoluteExpiration;
 			entry.Value = value;
-			entry.Dispose();
 
 			return value;
 		}
 
 		public static TItem Set<TItem>(this IMemoryCache cache, object key, TItem value, TimeSpan absoluteExpirationRelativeToNow)
 		{
-			var entry = cache.CreateEntry(key);
+			using ICacheEntry entry = cache.CreateEntry(key);
 			entry.AbsoluteExpirationRelativeToNow = absoluteExpirationRelativeToNow;
 			entry.Value = value;
-			entry.Dispose();
 
 			return value;
 		}
 
 		public static TItem Set<TItem>(this IMemoryCache cache, object key, TItem value, IChangeToken expirationToken)
 		{
-			var entry = cache.CreateEntry(key);
+			using ICacheEntry entry = cache.CreateEntry(key);
 			entry.AddExpirationToken(expirationToken);
 			entry.Value = value;
-			entry.Dispose();
 
 			return value;
 		}
 
 		public static TItem Set<TItem>(this IMemoryCache cache, object key, TItem value, MemoryCacheEntryOptions options)
 		{
-			using (var entry = cache.CreateEntry(key))
+			using ICacheEntry entry = cache.CreateEntry(key);
+			if (options != null)
 			{
-				if (options != null)
-				{
-					entry.SetOptions(options);
-				}
-
-				entry.Value = value;
+				entry.SetOptions(options);
 			}
+
+			entry.Value = value;
 
 			return value;
 		}
@@ -94,30 +94,24 @@ namespace LinqToDB.Common.Internal.Cache
 		{
 			if (!cache.TryGetValue(key, out var result))
 			{
-				var entry = cache.CreateEntry(key);
+				using ICacheEntry entry = cache.CreateEntry(key);
+
 				result = factory(entry);
-				entry.SetValue(result);
-				// need to manually call dispose instead of having a using
-				// in case the factory passed in throws, in which case we
-				// do not want to add the entry to the cache
-				entry.Dispose();
+				entry.Value = result;
 			}
 
 			return (TItem)result!;
 		}
 
 		public static TItem GetOrCreate<TItem, TKey, TContext>(this IMemoryCache cache, TKey key, TContext context, Func<ICacheEntry, TKey, TContext, TItem> factory)
-			where TKey: notnull
+					where TKey : notnull
 		{
 			if (!cache.TryGetValue(key, out var result))
 			{
-				var entry = cache.CreateEntry(key);
+				using ICacheEntry entry = cache.CreateEntry(key);
+
 				result = factory(entry, key, context);
-				entry.SetValue(result);
-				// need to manually call dispose instead of having a using
-				// in case the factory passed in throws, in which case we
-				// do not want to add the entry to the cache
-				entry.Dispose();
+				entry.Value = result;
 			}
 
 			return (TItem)result!;
@@ -127,13 +121,10 @@ namespace LinqToDB.Common.Internal.Cache
 		{
 			if (!cache.TryGetValue(key, out object? result))
 			{
-				var entry = cache.CreateEntry(key);
-				result = await factory(entry).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-				entry.SetValue(result);
-				// need to manually call dispose instead of having a using
-				// in case the factory passed in throws, in which case we
-				// do not want to add the entry to the cache
-				entry.Dispose();
+				using ICacheEntry entry = cache.CreateEntry(key);
+
+				result = await factory(entry).ConfigureAwait(false);
+				entry.Value = result;
 			}
 
 			return (TItem)result!;

@@ -1,5 +1,5 @@
-﻿// Copyright (c) .NET Foundation. All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
 using System.Collections.Concurrent;
@@ -18,9 +18,8 @@ namespace LinqToDB.Common.Internal.Cache
 	public class MemoryCache : IMemoryCache
 	{
 		private readonly ConcurrentDictionary<object, CacheEntry> _entries;
-		private long _cacheSize = 0;
+		private long _cacheSize;
 		private bool _disposed;
-//        private ILogger _logger;
 
 		// We store the delegates locally to prevent allocations
 		// every time a new CacheEntry is created.
@@ -41,13 +40,7 @@ namespace LinqToDB.Common.Internal.Cache
 				throw new ArgumentNullException(nameof(optionsAccessor));
 			}
 
-//            if (loggerFactory == null)
-//            {
-//                throw new ArgumentNullException(nameof(loggerFactory));
-//            }
-
 			_options = optionsAccessor;
-//            _logger = loggerFactory.CreateLogger<MemoryCache>();
 
 			_entries = new ConcurrentDictionary<object, CacheEntry>();
 			_setEntry = SetEntry;
@@ -72,13 +65,10 @@ namespace LinqToDB.Common.Internal.Cache
 		/// <summary>
 		/// Gets the count of the current entries for diagnostic purposes.
 		/// </summary>
-		public int Count
-		{
-			get { return _entries.Count; }
-		}
+		public int Count => _entries.Count;
 
 		// internal for testing
-		internal long Size { get => Interlocked.Read(ref _cacheSize); }
+		internal long Size => Interlocked.Read(ref _cacheSize);
 
 		private ICollection<KeyValuePair<object, CacheEntry>> EntriesCollection => _entries;
 
@@ -202,6 +192,14 @@ namespace LinqToDB.Common.Internal.Cache
 
 					TriggerOvercapacityCompaction();
 				}
+				else
+				{
+					if (_options.SizeLimit.HasValue)
+					{
+						// Entry could not be added due to being expired, reset cache size
+						Interlocked.Add(ref _cacheSize, -entry.Size!.Value);
+					}
+				}
 
 				entry.InvokeEvictionCallbacks();
 				if (priorEntry != null)
@@ -210,7 +208,7 @@ namespace LinqToDB.Common.Internal.Cache
 				}
 			}
 
-			StartScanForExpiredItems();
+			StartScanForExpiredItems(utcNow);
 		}
 
 		/// <inheritdoc />
@@ -245,7 +243,7 @@ namespace LinqToDB.Common.Internal.Cache
 				}
 			}
 
-			StartScanForExpiredItems();
+			StartScanForExpiredItems(utcNow);
 
 			return found;
 		}
@@ -253,10 +251,7 @@ namespace LinqToDB.Common.Internal.Cache
 		/// <inheritdoc />
 		public void Remove(object key)
 		{
-			if (key == null)
-			{
-				throw new ArgumentNullException(nameof(key));
-			}
+			ValidateCacheKey(key);
 
 			CheckDisposed();
 			if (_entries.TryRemove(key, out var entry))
@@ -294,9 +289,10 @@ namespace LinqToDB.Common.Internal.Cache
 
 		// Called by multiple actions to see how long it's been since we last checked for expired items.
 		// If sufficient time has elapsed then a scan is initiated on a background task.
-		private void StartScanForExpiredItems()
+		private void StartScanForExpiredItems(DateTimeOffset? utcNow = null)
 		{
-			var now = _options.Clock!.UtcNow;
+			// Since fetching time is expensive, minimize it in the hot paths
+			DateTimeOffset now = utcNow ?? _options.Clock!.UtcNow;
 			if (_options.ExpirationScanFrequency < now - _lastExpirationScan)
 			{
 				_lastExpirationScan = now;
@@ -332,7 +328,7 @@ namespace LinqToDB.Common.Internal.Cache
 
 				if (newSize < 0 || newSize > _options.SizeLimit)
 				{
-					// Overflow occured, return true without updating the cache size
+					// Overflow occurred, return true without updating the cache size
 					return true;
 				}
 
@@ -347,7 +343,6 @@ namespace LinqToDB.Common.Internal.Cache
 
 		private void TriggerOvercapacityCompaction()
 		{
-//            _logger.LogDebug("Overcapacity compaction triggered");
 
 			// Spawn background thread for compaction
 			ThreadPool.QueueUserWorkItem(s => OvercapacityCompaction((MemoryCache)s!), this);
@@ -357,7 +352,6 @@ namespace LinqToDB.Common.Internal.Cache
 		{
 			var currentSize = Interlocked.Read(ref cache._cacheSize);
 
-//            cache._logger.LogDebug($"Overcapacity compaction executing. Current size {currentSize}");
 
 			var lowWatermark = cache._options.SizeLimit * (1 - cache._options.CompactionPercentage);
 			if (currentSize > lowWatermark)
@@ -365,7 +359,6 @@ namespace LinqToDB.Common.Internal.Cache
 				cache.Compact(currentSize - (long)lowWatermark, entry => entry.Size!.Value);
 			}
 
-//            cache._logger.LogDebug($"Overcapacity compaction executed. New size {Interlocked.Read(ref cache._cacheSize)}");
 		}
 
 		/// Remove at least the given percentage (0.10 for 10%) of the total entries (or estimated memory?), according to the following policy:
