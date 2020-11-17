@@ -22,7 +22,7 @@ namespace LinqToDB.Linq
 			var converter = _readerMappings.GetOrCreate(
 				Tuple.Create(dataReader.GetType(), mappingSchema.ConfigurationID),
 				mappingSchema,
-				static (entry, key, ms) =>
+				/*static*/ (entry, key, ms) =>
 				{
 					var expr = ms.GetConvertExpression(key.Item1, typeof(IDataReader), false, false);
 					if (expr != null)
