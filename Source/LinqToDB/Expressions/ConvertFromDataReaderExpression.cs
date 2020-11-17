@@ -145,8 +145,8 @@ namespace LinqToDB.Expressions
 				}
 			}
 
-
-			ex = ConvertExpressionToType(ex, type, mappingSchema)!;
+			if (ex.Type != type)
+				ex = ConvertExpressionToType(ex, type, mappingSchema)!;
 
 			// Try to search postprocessing converter TType -> TType
 			//
