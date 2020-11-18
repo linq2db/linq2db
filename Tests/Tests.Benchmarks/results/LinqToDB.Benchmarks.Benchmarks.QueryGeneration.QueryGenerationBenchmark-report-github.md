@@ -4,99 +4,143 @@ BenchmarkDotNet=v0.12.1, OS=Windows 10.0.18363.1198 (1909/November2018Update/19H
 AMD Ryzen 9 3950X, 1 CPU, 32 logical and 16 physical cores
 .NET Core SDK=5.0.100
   [Host]     : .NET Core 3.1.9 (CoreCLR 4.700.20.47201, CoreFX 4.700.20.47203), X64 RyuJIT
-  Job-BEZTAO : .NET Framework 4.8 (4.8.4250.0), X64 RyuJIT
-  Job-TFLCPZ : .NET Core 2.1.23 (CoreCLR 4.6.29321.03, CoreFX 4.6.29321.01), X64 RyuJIT
-  Job-WVQBEJ : .NET Core 3.1.9 (CoreCLR 4.700.20.47201, CoreFX 4.700.20.47203), X64 RyuJIT
+  Job-RZNSOE : .NET Framework 4.8 (4.8.4250.0), X64 RyuJIT
+  Job-HJHMJA : .NET Core 2.1.23 (CoreCLR 4.6.29321.03, CoreFX 4.6.29321.01), X64 RyuJIT
+  Job-QJYWEE : .NET Core 3.1.9 (CoreCLR 4.700.20.47201, CoreFX 4.700.20.47203), X64 RyuJIT
 
-Jit=RyuJit  Platform=X64  
+Jit=RyuJit  Platform=X64  WarmupCount=0  
 
 ```
-|                Method |       Runtime |   DataProvider |     Mean |   Median | Ratio | Gen 0 | Gen 1 | Gen 2 | Allocated |
-|---------------------- |-------------- |--------------- |---------:|---------:|------:|------:|------:|------:|----------:|
-|         **VwSalesByYear** |    **.NET 4.7.2** |         **Access** | **425.0 μs** | **424.6 μs** |  **1.00** |     **-** |     **-** |     **-** |    **136 KB** |
-|         VwSalesByYear | .NET Core 2.1 |         Access | 407.8 μs | 407.8 μs |  0.96 |     - |     - |     - | 108.44 KB |
-|         VwSalesByYear | .NET Core 3.1 |         Access | 502.0 μs | 502.2 μs |  1.18 |     - |     - |     - | 108.56 KB |
-|                       |               |                |          |          |       |       |       |       |           |
-| VwSalesByYearMutation |    .NET 4.7.2 |         Access | 446.9 μs | 445.0 μs |  1.00 |     - |     - |     - |    136 KB |
-| VwSalesByYearMutation | .NET Core 2.1 |         Access | 431.8 μs | 432.6 μs |  0.97 |     - |     - |     - | 116.82 KB |
-| VwSalesByYearMutation | .NET Core 3.1 |         Access | 511.8 μs | 511.5 μs |  1.15 |     - |     - |     - | 114.95 KB |
-|                       |               |                |          |          |       |       |       |       |           |
-|         **VwSalesByYear** |    **.NET 4.7.2** |       **Firebird** | **442.4 μs** | **431.9 μs** |  **1.00** |     **-** |     **-** |     **-** |    **136 KB** |
-|         VwSalesByYear | .NET Core 2.1 |       Firebird | 407.2 μs | 406.3 μs |  0.94 |     - |     - |     - | 109.88 KB |
-|         VwSalesByYear | .NET Core 3.1 |       Firebird | 485.3 μs | 487.4 μs |  1.11 |     - |     - |     - |    110 KB |
-|                       |               |                |          |          |       |       |       |       |           |
-| VwSalesByYearMutation |    .NET 4.7.2 |       Firebird | 440.7 μs | 441.7 μs |  1.00 |     - |     - |     - |    144 KB |
-| VwSalesByYearMutation | .NET Core 2.1 |       Firebird | 429.7 μs | 431.6 μs |  0.98 |     - |     - |     - | 118.84 KB |
-| VwSalesByYearMutation | .NET Core 3.1 |       Firebird | 506.3 μs | 507.8 μs |  1.16 |     - |     - |     - | 117.29 KB |
-|                       |               |                |          |          |       |       |       |       |           |
-|         **VwSalesByYear** |    **.NET 4.7.2** | **MySqlConnector** | **415.8 μs** | **414.2 μs** |  **1.00** |     **-** |     **-** |     **-** |    **136 KB** |
-|         VwSalesByYear | .NET Core 2.1 | MySqlConnector | 408.7 μs | 408.1 μs |  0.98 |     - |     - |     - | 109.23 KB |
-|         VwSalesByYear | .NET Core 3.1 | MySqlConnector | 488.8 μs | 488.8 μs |  1.17 |     - |     - |     - | 109.35 KB |
-|                       |               |                |          |          |       |       |       |       |           |
-| VwSalesByYearMutation |    .NET 4.7.2 | MySqlConnector | 438.7 μs | 437.8 μs |  1.00 |     - |     - |     - |    144 KB |
-| VwSalesByYearMutation | .NET Core 2.1 | MySqlConnector | 433.4 μs | 434.0 μs |  1.00 |     - |     - |     - |  118.2 KB |
-| VwSalesByYearMutation | .NET Core 3.1 | MySqlConnector | 510.1 μs | 510.1 μs |  1.16 |     - |     - |     - | 116.64 KB |
-|                       |               |                |          |          |       |       |       |       |           |
-|         **VwSalesByYear** |    **.NET 4.7.2** |     **PostgreSQL** | **433.8 μs** | **426.3 μs** |  **1.00** |     **-** |     **-** |     **-** |    **136 KB** |
-|         VwSalesByYear | .NET Core 2.1 |     PostgreSQL | 410.0 μs | 408.7 μs |  0.94 |     - |     - |     - | 109.45 KB |
-|         VwSalesByYear | .NET Core 3.1 |     PostgreSQL | 489.8 μs | 489.6 μs |  1.06 |     - |     - |     - | 110.06 KB |
-|                       |               |                |          |          |       |       |       |       |           |
-| VwSalesByYearMutation |    .NET 4.7.2 |     PostgreSQL | 433.2 μs | 433.0 μs |  1.00 |     - |     - |     - |    144 KB |
-| VwSalesByYearMutation | .NET Core 2.1 |     PostgreSQL | 432.2 μs | 436.1 μs |  1.00 |     - |     - |     - | 118.05 KB |
-| VwSalesByYearMutation | .NET Core 3.1 |     PostgreSQL | 508.7 μs | 510.0 μs |  1.17 |     - |     - |     - | 115.48 KB |
-|                       |               |                |          |          |       |       |       |       |           |
-|         **VwSalesByYear** |    **.NET 4.7.2** | **SQLite.Classic** | **414.7 μs** | **416.3 μs** |  **1.00** |     **-** |     **-** |     **-** |    **136 KB** |
-|         VwSalesByYear | .NET Core 2.1 | SQLite.Classic | 399.5 μs | 401.4 μs |  0.96 |     - |     - |     - | 109.05 KB |
-|         VwSalesByYear | .NET Core 3.1 | SQLite.Classic | 484.2 μs | 486.3 μs |  1.16 |     - |     - |     - | 109.82 KB |
-|                       |               |                |          |          |       |       |       |       |           |
-| VwSalesByYearMutation |    .NET 4.7.2 | SQLite.Classic | 434.7 μs | 434.4 μs |  1.00 |     - |     - |     - |    144 KB |
-| VwSalesByYearMutation | .NET Core 2.1 | SQLite.Classic | 427.4 μs | 430.8 μs |  0.99 |     - |     - |     - | 118.72 KB |
-| VwSalesByYearMutation | .NET Core 3.1 | SQLite.Classic | 499.4 μs | 499.7 μs |  1.15 |     - |     - |     - | 117.19 KB |
-|                       |               |                |          |          |       |       |       |       |           |
-|         **VwSalesByYear** |    **.NET 4.7.2** |      **SQLite.MS** | **415.1 μs** | **413.9 μs** |  **1.00** |     **-** |     **-** |     **-** |    **136 KB** |
-|         VwSalesByYear | .NET Core 2.1 |      SQLite.MS | 402.9 μs | 404.6 μs |  0.96 |     - |     - |     - | 108.98 KB |
-|         VwSalesByYear | .NET Core 3.1 |      SQLite.MS | 483.1 μs | 481.1 μs |  1.15 |     - |     - |     - | 109.74 KB |
-|                       |               |                |          |          |       |       |       |       |           |
-| VwSalesByYearMutation |    .NET 4.7.2 |      SQLite.MS | 444.5 μs | 445.3 μs |  1.00 |     - |     - |     - |    144 KB |
-| VwSalesByYearMutation | .NET Core 2.1 |      SQLite.MS | 429.0 μs | 429.1 μs |  0.96 |     - |     - |     - | 118.64 KB |
-| VwSalesByYearMutation | .NET Core 3.1 |      SQLite.MS | 506.4 μs | 504.5 μs |  1.15 |     - |     - |     - | 117.09 KB |
-|                       |               |                |          |          |       |       |       |       |           |
-|         **VwSalesByYear** |    **.NET 4.7.2** | **SqlServer.2000** | **411.5 μs** | **409.9 μs** |  **1.00** |     **-** |     **-** |     **-** |    **136 KB** |
-|         VwSalesByYear | .NET Core 2.1 | SqlServer.2000 | 411.8 μs | 412.6 μs |  1.00 |     - |     - |     - | 109.19 KB |
-|         VwSalesByYear | .NET Core 3.1 | SqlServer.2000 | 490.2 μs | 490.6 μs |  1.19 |     - |     - |     - | 108.21 KB |
-|                       |               |                |          |          |       |       |       |       |           |
-| VwSalesByYearMutation |    .NET 4.7.2 | SqlServer.2000 | 443.0 μs | 443.1 μs |  1.00 |     - |     - |     - |    144 KB |
-| VwSalesByYearMutation | .NET Core 2.1 | SqlServer.2000 | 433.8 μs | 436.8 μs |  0.99 |     - |     - |     - | 117.85 KB |
-| VwSalesByYearMutation | .NET Core 3.1 | SqlServer.2000 | 517.5 μs | 516.6 μs |  1.17 |     - |     - |     - | 115.48 KB |
-|                       |               |                |          |          |       |       |       |       |           |
-|         **VwSalesByYear** |    **.NET 4.7.2** | **SqlServer.2005** | **418.3 μs** | **418.3 μs** |  **1.00** |     **-** |     **-** |     **-** |    **136 KB** |
-|         VwSalesByYear | .NET Core 2.1 | SqlServer.2005 | 408.6 μs | 408.9 μs |  0.98 |     - |     - |     - | 111.67 KB |
-|         VwSalesByYear | .NET Core 3.1 | SqlServer.2005 | 483.8 μs | 485.2 μs |  1.15 |     - |     - |     - | 110.71 KB |
-|                       |               |                |          |          |       |       |       |       |           |
-| VwSalesByYearMutation |    .NET 4.7.2 | SqlServer.2005 | 454.1 μs | 445.0 μs |  1.00 |     - |     - |     - |    144 KB |
-| VwSalesByYearMutation | .NET Core 2.1 | SqlServer.2005 | 432.7 μs | 434.6 μs |  0.91 |     - |     - |     - | 117.85 KB |
-| VwSalesByYearMutation | .NET Core 3.1 | SqlServer.2005 | 523.8 μs | 521.5 μs |  1.07 |     - |     - |     - | 115.48 KB |
-|                       |               |                |          |          |       |       |       |       |           |
-|         **VwSalesByYear** |    **.NET 4.7.2** | **SqlServer.2008** | **419.0 μs** | **420.9 μs** |  **1.00** |     **-** |     **-** |     **-** |    **136 KB** |
-|         VwSalesByYear | .NET Core 2.1 | SqlServer.2008 | 418.7 μs | 413.3 μs |  1.02 |     - |     - |     - | 109.19 KB |
-|         VwSalesByYear | .NET Core 3.1 | SqlServer.2008 | 484.2 μs | 484.5 μs |  1.15 |     - |     - |     - | 108.21 KB |
-|                       |               |                |          |          |       |       |       |       |           |
-| VwSalesByYearMutation |    .NET 4.7.2 | SqlServer.2008 | 447.3 μs | 447.1 μs |  1.00 |     - |     - |     - |    144 KB |
-| VwSalesByYearMutation | .NET Core 2.1 | SqlServer.2008 | 443.1 μs | 442.6 μs |  0.99 |     - |     - |     - | 117.85 KB |
-| VwSalesByYearMutation | .NET Core 3.1 | SqlServer.2008 | 520.1 μs | 521.6 μs |  1.16 |     - |     - |     - | 115.48 KB |
-|                       |               |                |          |          |       |       |       |       |           |
-|         **VwSalesByYear** |    **.NET 4.7.2** | **SqlServer.2012** | **416.2 μs** | **414.9 μs** |  **1.00** |     **-** |     **-** |     **-** |    **136 KB** |
-|         VwSalesByYear | .NET Core 2.1 | SqlServer.2012 | 453.2 μs | 437.1 μs |  1.11 |     - |     - |     - | 109.19 KB |
-|         VwSalesByYear | .NET Core 3.1 | SqlServer.2012 | 640.9 μs | 621.2 μs |  1.59 |     - |     - |     - | 108.21 KB |
-|                       |               |                |          |          |       |       |       |       |           |
-| VwSalesByYearMutation |    .NET 4.7.2 | SqlServer.2012 | 441.2 μs | 443.0 μs |  1.00 |     - |     - |     - |    144 KB |
-| VwSalesByYearMutation | .NET Core 2.1 | SqlServer.2012 | 475.3 μs | 455.3 μs |  1.08 |     - |     - |     - | 117.85 KB |
-| VwSalesByYearMutation | .NET Core 3.1 | SqlServer.2012 | 533.0 μs | 527.2 μs |  1.22 |     - |     - |     - | 115.48 KB |
-|                       |               |                |          |          |       |       |       |       |           |
-|         **VwSalesByYear** |    **.NET 4.7.2** | **SqlServer.2017** | **417.7 μs** | **418.5 μs** |  **1.00** |     **-** |     **-** |     **-** |    **136 KB** |
-|         VwSalesByYear | .NET Core 2.1 | SqlServer.2017 | 405.3 μs | 408.8 μs |  0.97 |     - |     - |     - | 109.19 KB |
-|         VwSalesByYear | .NET Core 3.1 | SqlServer.2017 | 491.4 μs | 488.4 μs |  1.18 |     - |     - |     - | 108.21 KB |
-|                       |               |                |          |          |       |       |       |       |           |
-| VwSalesByYearMutation |    .NET 4.7.2 | SqlServer.2017 | 438.4 μs | 438.9 μs |  1.00 |     - |     - |     - |    144 KB |
-| VwSalesByYearMutation | .NET Core 2.1 | SqlServer.2017 | 435.7 μs | 435.5 μs |  1.01 |     - |     - |     - | 117.85 KB |
-| VwSalesByYearMutation | .NET Core 3.1 | SqlServer.2017 | 519.6 μs | 517.6 μs |  1.19 |     - |     - |     - | 115.48 KB |
+|                    Method |       Runtime |   DataProvider |       Mean |     Median | Ratio | Gen 0 | Gen 1 | Gen 2 | Allocated |
+|-------------------------- |-------------- |--------------- |-----------:|-----------:|------:|------:|------:|------:|----------:|
+|             **VwSalesByYear** |    **.NET 4.7.2** |         **Access** |   **372.6 μs** |   **369.1 μs** |  **1.00** |     **-** |     **-** |     **-** |    **128 KB** |
+|             VwSalesByYear | .NET Core 2.1 |         Access |   361.4 μs |   361.6 μs |  0.97 |     - |     - |     - | 106.45 KB |
+|             VwSalesByYear | .NET Core 3.1 |         Access |   430.4 μs |   430.4 μs |  1.15 |     - |     - |     - | 102.95 KB |
+|                           |               |                |            |            |       |       |       |       |           |
+|     VwSalesByYearMutation |    .NET 4.7.2 |         Access |   392.4 μs |   391.9 μs |  1.00 |     - |     - |     - |    136 KB |
+|     VwSalesByYearMutation | .NET Core 2.1 |         Access |   375.0 μs |   375.2 μs |  0.96 |     - |     - |     - | 112.87 KB |
+|     VwSalesByYearMutation | .NET Core 3.1 |         Access |   466.8 μs |   468.5 μs |  1.18 |     - |     - |     - | 110.79 KB |
+|                           |               |                |            |            |       |       |       |       |           |
+| VwSalesByCategoryContains |    .NET 4.7.2 |         Access | 1,414.4 μs | 1,392.6 μs |  1.00 |     - |     - |     - |    560 KB |
+| VwSalesByCategoryContains | .NET Core 2.1 |         Access | 1,586.0 μs | 1,559.3 μs |  1.12 |     - |     - |     - | 532.55 KB |
+| VwSalesByCategoryContains | .NET Core 3.1 |         Access | 1,910.1 μs | 1,904.4 μs |  1.38 |     - |     - |     - |  533.8 KB |
+|                           |               |                |            |            |       |       |       |       |           |
+|             **VwSalesByYear** |    **.NET 4.7.2** |       **Firebird** |   **414.0 μs** |   **385.1 μs** |  **1.00** |     **-** |     **-** |     **-** |    **128 KB** |
+|             VwSalesByYear | .NET Core 2.1 |       Firebird |   361.3 μs |   362.2 μs |  0.87 |     - |     - |     - | 107.07 KB |
+|             VwSalesByYear | .NET Core 3.1 |       Firebird |   433.0 μs |   432.5 μs |  1.11 |     - |     - |     - | 103.55 KB |
+|                           |               |                |            |            |       |       |       |       |           |
+|     VwSalesByYearMutation |    .NET 4.7.2 |       Firebird |   416.9 μs |   404.6 μs |  1.00 |     - |     - |     - |    136 KB |
+|     VwSalesByYearMutation | .NET Core 2.1 |       Firebird |   377.6 μs |   377.3 μs |  0.88 |     - |     - |     - | 114.05 KB |
+|     VwSalesByYearMutation | .NET Core 3.1 |       Firebird |   455.3 μs |   454.9 μs |  1.06 |     - |     - |     - | 111.96 KB |
+|                           |               |                |            |            |       |       |       |       |           |
+| VwSalesByCategoryContains |    .NET 4.7.2 |       Firebird | 1,239.4 μs | 1,222.3 μs |  1.00 |     - |     - |     - |    512 KB |
+| VwSalesByCategoryContains | .NET Core 2.1 |       Firebird | 1,437.4 μs | 1,407.3 μs |  1.16 |     - |     - |     - | 485.95 KB |
+| VwSalesByCategoryContains | .NET Core 3.1 |       Firebird | 1,731.9 μs | 1,714.3 μs |  1.40 |     - |     - |     - | 486.84 KB |
+|                           |               |                |            |            |       |       |       |       |           |
+|             **VwSalesByYear** |    **.NET 4.7.2** | **MySqlConnector** |   **366.0 μs** |   **364.8 μs** |  **1.00** |     **-** |     **-** |     **-** |    **128 KB** |
+|             VwSalesByYear | .NET Core 2.1 | MySqlConnector |   358.0 μs |   358.1 μs |  0.98 |     - |     - |     - | 106.42 KB |
+|             VwSalesByYear | .NET Core 3.1 | MySqlConnector |   430.8 μs |   431.4 μs |  1.18 |     - |     - |     - |  102.9 KB |
+|                           |               |                |            |            |       |       |       |       |           |
+|     VwSalesByYearMutation |    .NET 4.7.2 | MySqlConnector |   396.6 μs |   394.3 μs |  1.00 |     - |     - |     - |    136 KB |
+|     VwSalesByYearMutation | .NET Core 2.1 | MySqlConnector |   381.6 μs |   380.3 μs |  0.96 |     - |     - |     - |  113.4 KB |
+|     VwSalesByYearMutation | .NET Core 3.1 | MySqlConnector |   455.4 μs |   454.9 μs |  1.13 |     - |     - |     - | 111.31 KB |
+|                           |               |                |            |            |       |       |       |       |           |
+| VwSalesByCategoryContains |    .NET 4.7.2 | MySqlConnector | 1,096.5 μs | 1,089.8 μs |  1.00 |     - |     - |     - |    424 KB |
+| VwSalesByCategoryContains | .NET Core 2.1 | MySqlConnector | 1,266.9 μs | 1,248.2 μs |  1.16 |     - |     - |     - | 393.04 KB |
+| VwSalesByCategoryContains | .NET Core 3.1 | MySqlConnector | 1,556.9 μs | 1,546.5 μs |  1.42 |     - |     - |     - | 394.61 KB |
+|                           |               |                |            |            |       |       |       |       |           |
+|             **VwSalesByYear** |    **.NET 4.7.2** |     **PostgreSQL** |   **364.6 μs** |   **362.3 μs** |  **1.00** |     **-** |     **-** |     **-** |    **128 KB** |
+|             VwSalesByYear | .NET Core 2.1 |     PostgreSQL |   352.5 μs |   353.0 μs |  0.97 |     - |     - |     - | 105.08 KB |
+|             VwSalesByYear | .NET Core 3.1 |     PostgreSQL |   429.4 μs |   426.3 μs |  1.18 |     - |     - |     - | 102.94 KB |
+|                           |               |                |            |            |       |       |       |       |           |
+|     VwSalesByYearMutation |    .NET 4.7.2 |     PostgreSQL |   389.7 μs |   390.8 μs |  1.00 |     - |     - |     - |    136 KB |
+|     VwSalesByYearMutation | .NET Core 2.1 |     PostgreSQL |   381.2 μs |   382.4 μs |  0.98 |     - |     - |     - | 113.99 KB |
+|     VwSalesByYearMutation | .NET Core 3.1 |     PostgreSQL |   501.3 μs |   506.4 μs |  1.42 |     - |     - |     - |  111.2 KB |
+|                           |               |                |            |            |       |       |       |       |           |
+| VwSalesByCategoryContains |    .NET 4.7.2 |     PostgreSQL | 1,102.7 μs | 1,104.2 μs |  1.00 |     - |     - |     - |    424 KB |
+| VwSalesByCategoryContains | .NET Core 2.1 |     PostgreSQL | 1,306.9 μs | 1,282.0 μs |  1.20 |     - |     - |     - | 396.24 KB |
+| VwSalesByCategoryContains | .NET Core 3.1 |     PostgreSQL | 1,563.6 μs | 1,555.5 μs |  1.41 |     - |     - |     - |  397.8 KB |
+|                           |               |                |            |            |       |       |       |       |           |
+|             **VwSalesByYear** |    **.NET 4.7.2** | **SQLite.Classic** |   **366.8 μs** |   **366.8 μs** |  **1.00** |     **-** |     **-** |     **-** |    **128 KB** |
+|             VwSalesByYear | .NET Core 2.1 | SQLite.Classic |   352.5 μs |   353.2 μs |  0.96 |     - |     - |     - | 106.63 KB |
+|             VwSalesByYear | .NET Core 3.1 | SQLite.Classic |   427.3 μs |   425.8 μs |  1.16 |     - |     - |     - |  103.4 KB |
+|                           |               |                |            |            |       |       |       |       |           |
+|     VwSalesByYearMutation |    .NET 4.7.2 | SQLite.Classic |   397.3 μs |   397.1 μs |  1.00 |     - |     - |     - |    136 KB |
+|     VwSalesByYearMutation | .NET Core 2.1 | SQLite.Classic |   370.3 μs |   370.7 μs |  0.94 |     - |     - |     - | 113.94 KB |
+|     VwSalesByYearMutation | .NET Core 3.1 | SQLite.Classic |   455.5 μs |   455.2 μs |  1.15 |     - |     - |     - | 111.84 KB |
+|                           |               |                |            |            |       |       |       |       |           |
+| VwSalesByCategoryContains |    .NET 4.7.2 | SQLite.Classic | 1,091.7 μs | 1,087.6 μs |  1.00 |     - |     - |     - |    424 KB |
+| VwSalesByCategoryContains | .NET Core 2.1 | SQLite.Classic | 1,275.3 μs | 1,258.0 μs |  1.17 |     - |     - |     - | 396.84 KB |
+| VwSalesByCategoryContains | .NET Core 3.1 | SQLite.Classic | 1,579.0 μs | 1,570.4 μs |  1.44 |     - |     - |     - | 402.14 KB |
+|                           |               |                |            |            |       |       |       |       |           |
+|             **VwSalesByYear** |    **.NET 4.7.2** |      **SQLite.MS** |   **367.3 μs** |   **364.6 μs** |  **1.00** |     **-** |     **-** |     **-** |    **128 KB** |
+|             VwSalesByYear | .NET Core 2.1 |      SQLite.MS |   353.3 μs |   352.4 μs |  0.96 |     - |     - |     - | 106.52 KB |
+|             VwSalesByYear | .NET Core 3.1 |      SQLite.MS |   439.1 μs |   437.9 μs |  1.19 |     - |     - |     - | 103.29 KB |
+|                           |               |                |            |            |       |       |       |       |           |
+|     VwSalesByYearMutation |    .NET 4.7.2 |      SQLite.MS |   389.1 μs |   390.1 μs |  1.00 |     - |     - |     - |    136 KB |
+|     VwSalesByYearMutation | .NET Core 2.1 |      SQLite.MS |   370.8 μs |   373.6 μs |  0.95 |     - |     - |     - | 113.84 KB |
+|     VwSalesByYearMutation | .NET Core 3.1 |      SQLite.MS |   471.5 μs |   469.1 μs |  1.22 |     - |     - |     - | 111.77 KB |
+|                           |               |                |            |            |       |       |       |       |           |
+| VwSalesByCategoryContains |    .NET 4.7.2 |      SQLite.MS | 1,088.6 μs | 1,090.0 μs |  1.00 |     - |     - |     - |    424 KB |
+| VwSalesByCategoryContains | .NET Core 2.1 |      SQLite.MS | 1,290.0 μs | 1,266.0 μs |  1.21 |     - |     - |     - | 396.77 KB |
+| VwSalesByCategoryContains | .NET Core 3.1 |      SQLite.MS | 1,575.8 μs | 1,572.4 μs |  1.55 |     - |     - |     - | 402.08 KB |
+|                           |               |                |            |            |       |       |       |       |           |
+|             **VwSalesByYear** |    **.NET 4.7.2** | **SqlServer.2000** |   **364.7 μs** |   **364.0 μs** |  **1.00** |     **-** |     **-** |     **-** |    **120 KB** |
+|             VwSalesByYear | .NET Core 2.1 | SqlServer.2000 |   458.2 μs |   451.4 μs |  1.31 |     - |     - |     - | 103.63 KB |
+|             VwSalesByYear | .NET Core 3.1 | SqlServer.2000 |   438.5 μs |   437.8 μs |  1.21 |     - |     - |     - | 102.74 KB |
+|                           |               |                |            |            |       |       |       |       |           |
+|     VwSalesByYearMutation |    .NET 4.7.2 | SqlServer.2000 |   400.5 μs |   397.1 μs |  1.00 |     - |     - |     - |    136 KB |
+|     VwSalesByYearMutation | .NET Core 2.1 | SqlServer.2000 |   392.2 μs |   392.1 μs |  0.97 |     - |     - |     - | 112.01 KB |
+|     VwSalesByYearMutation | .NET Core 3.1 | SqlServer.2000 |   465.3 μs |   466.6 μs |  1.17 |     - |     - |     - | 110.75 KB |
+|                           |               |                |            |            |       |       |       |       |           |
+| VwSalesByCategoryContains |    .NET 4.7.2 | SqlServer.2000 | 1,106.3 μs | 1,097.9 μs |  1.00 |     - |     - |     - |    416 KB |
+| VwSalesByCategoryContains | .NET Core 2.1 | SqlServer.2000 | 1,476.0 μs | 1,455.5 μs |  1.37 |     - |     - |     - | 395.38 KB |
+| VwSalesByCategoryContains | .NET Core 3.1 | SqlServer.2000 | 1,546.3 μs | 1,543.0 μs |  1.39 |     - |     - |     - | 391.13 KB |
+|                           |               |                |            |            |       |       |       |       |           |
+|             **VwSalesByYear** |    **.NET 4.7.2** | **SqlServer.2005** |   **364.3 μs** |   **364.6 μs** |  **1.00** |     **-** |     **-** |     **-** |    **128 KB** |
+|             VwSalesByYear | .NET Core 2.1 | SqlServer.2005 |   353.0 μs |   353.2 μs |  0.97 |     - |     - |     - | 106.23 KB |
+|             VwSalesByYear | .NET Core 3.1 | SqlServer.2005 |   436.5 μs |   437.3 μs |  1.20 |     - |     - |     - | 105.23 KB |
+|                           |               |                |            |            |       |       |       |       |           |
+|     VwSalesByYearMutation |    .NET 4.7.2 | SqlServer.2005 |   398.2 μs |   396.8 μs |  1.00 |     - |     - |     - |    136 KB |
+|     VwSalesByYearMutation | .NET Core 2.1 | SqlServer.2005 |   376.4 μs |   376.4 μs |  0.95 |     - |     - |     - | 112.01 KB |
+|     VwSalesByYearMutation | .NET Core 3.1 | SqlServer.2005 |   462.8 μs |   464.9 μs |  1.16 |     - |     - |     - | 110.75 KB |
+|                           |               |                |            |            |       |       |       |       |           |
+| VwSalesByCategoryContains |    .NET 4.7.2 | SqlServer.2005 | 1,586.8 μs | 1,586.4 μs |  1.00 |     - |     - |     - |    816 KB |
+| VwSalesByCategoryContains | .NET Core 2.1 | SqlServer.2005 | 1,861.3 μs | 1,850.5 μs |  1.18 |     - |     - |     - | 793.66 KB |
+| VwSalesByCategoryContains | .NET Core 3.1 | SqlServer.2005 | 2,347.4 μs | 2,352.9 μs |  1.48 |     - |     - |     - | 787.89 KB |
+|                           |               |                |            |            |       |       |       |       |           |
+|             **VwSalesByYear** |    **.NET 4.7.2** | **SqlServer.2008** |   **364.5 μs** |   **364.5 μs** |  **1.00** |     **-** |     **-** |     **-** |    **120 KB** |
+|             VwSalesByYear | .NET Core 2.1 | SqlServer.2008 |   354.6 μs |   355.4 μs |  0.97 |     - |     - |     - | 103.63 KB |
+|             VwSalesByYear | .NET Core 3.1 | SqlServer.2008 |   435.7 μs |   435.0 μs |  1.20 |     - |     - |     - | 102.74 KB |
+|                           |               |                |            |            |       |       |       |       |           |
+|     VwSalesByYearMutation |    .NET 4.7.2 | SqlServer.2008 |   396.2 μs |   394.7 μs |  1.00 |     - |     - |     - |    136 KB |
+|     VwSalesByYearMutation | .NET Core 2.1 | SqlServer.2008 |   380.0 μs |   382.6 μs |  0.96 |     - |     - |     - | 112.01 KB |
+|     VwSalesByYearMutation | .NET Core 3.1 | SqlServer.2008 |   465.5 μs |   465.4 μs |  1.17 |     - |     - |     - | 110.75 KB |
+|                           |               |                |            |            |       |       |       |       |           |
+| VwSalesByCategoryContains |    .NET 4.7.2 | SqlServer.2008 | 1,092.3 μs | 1,091.0 μs |  1.00 |     - |     - |     - |    416 KB |
+| VwSalesByCategoryContains | .NET Core 2.1 | SqlServer.2008 | 1,296.5 μs | 1,275.6 μs |  1.19 |     - |     - |     - | 395.38 KB |
+| VwSalesByCategoryContains | .NET Core 3.1 | SqlServer.2008 | 1,560.4 μs | 1,562.2 μs |  1.42 |     - |     - |     - | 391.13 KB |
+|                           |               |                |            |            |       |       |       |       |           |
+|             **VwSalesByYear** |    **.NET 4.7.2** | **SqlServer.2012** |   **427.8 μs** |   **397.5 μs** |  **1.00** |     **-** |     **-** |     **-** |    **120 KB** |
+|             VwSalesByYear | .NET Core 2.1 | SqlServer.2012 |   353.8 μs |   353.5 μs |  0.79 |     - |     - |     - | 103.63 KB |
+|             VwSalesByYear | .NET Core 3.1 | SqlServer.2012 |   442.1 μs |   439.8 μs |  0.97 |     - |     - |     - | 102.74 KB |
+|                           |               |                |            |            |       |       |       |       |           |
+|     VwSalesByYearMutation |    .NET 4.7.2 | SqlServer.2012 |   398.1 μs |   396.2 μs |  1.00 |     - |     - |     - |    136 KB |
+|     VwSalesByYearMutation | .NET Core 2.1 | SqlServer.2012 |   378.9 μs |   378.7 μs |  0.95 |     - |     - |     - | 112.01 KB |
+|     VwSalesByYearMutation | .NET Core 3.1 | SqlServer.2012 |   465.1 μs |   465.2 μs |  1.16 |     - |     - |     - | 110.75 KB |
+|                           |               |                |            |            |       |       |       |       |           |
+| VwSalesByCategoryContains |    .NET 4.7.2 | SqlServer.2012 | 1,094.3 μs | 1,085.2 μs |  1.00 |     - |     - |     - |    416 KB |
+| VwSalesByCategoryContains | .NET Core 2.1 | SqlServer.2012 | 1,294.3 μs | 1,274.3 μs |  1.19 |     - |     - |     - | 395.38 KB |
+| VwSalesByCategoryContains | .NET Core 3.1 | SqlServer.2012 | 1,545.3 μs | 1,548.9 μs |  1.40 |     - |     - |     - | 391.13 KB |
+|                           |               |                |            |            |       |       |       |       |           |
+|             **VwSalesByYear** |    **.NET 4.7.2** | **SqlServer.2017** |   **365.4 μs** |   **364.9 μs** |  **1.00** |     **-** |     **-** |     **-** |    **120 KB** |
+|             VwSalesByYear | .NET Core 2.1 | SqlServer.2017 |   353.9 μs |   355.6 μs |  0.97 |     - |     - |     - | 103.63 KB |
+|             VwSalesByYear | .NET Core 3.1 | SqlServer.2017 |   443.0 μs |   441.9 μs |  1.22 |     - |     - |     - | 102.74 KB |
+|                           |               |                |            |            |       |       |       |       |           |
+|     VwSalesByYearMutation |    .NET 4.7.2 | SqlServer.2017 |   396.8 μs |   396.9 μs |  1.00 |     - |     - |     - |    136 KB |
+|     VwSalesByYearMutation | .NET Core 2.1 | SqlServer.2017 |   378.0 μs |   379.9 μs |  0.96 |     - |     - |     - | 112.01 KB |
+|     VwSalesByYearMutation | .NET Core 3.1 | SqlServer.2017 |   462.1 μs |   461.6 μs |  1.16 |     - |     - |     - | 110.75 KB |
+|                           |               |                |            |            |       |       |       |       |           |
+| VwSalesByCategoryContains |    .NET 4.7.2 | SqlServer.2017 | 1,089.6 μs | 1,086.0 μs |  1.00 |     - |     - |     - |    416 KB |
+| VwSalesByCategoryContains | .NET Core 2.1 | SqlServer.2017 | 1,301.7 μs | 1,286.7 μs |  1.20 |     - |     - |     - | 395.38 KB |
+| VwSalesByCategoryContains | .NET Core 3.1 | SqlServer.2017 | 1,559.4 μs | 1,557.4 μs |  1.42 |     - |     - |     - | 391.13 KB |

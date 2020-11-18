@@ -27,7 +27,7 @@ namespace LinqToDB.SqlQuery
 
 		delegate T Clone<T>(T obj);
 
-		public Dictionary<IQueryElement,IQueryElement?> VisitedElements { get; } =  new Dictionary<IQueryElement,IQueryElement?>();
+		public Dictionary<IQueryElement,IQueryElement?>  VisitedElements { get; } =  new Dictionary<IQueryElement,IQueryElement?>();
 		public List<IQueryElement>                       Stack           { get; } =  new List<IQueryElement>();
 		public IQueryElement?                            ParentElement            => Stack.Count == 0 ? null : Stack[Stack.Count - 1];
 		public IQueryElement?                            SecondParentElement      => Stack.Count < 2 ? null  : Stack[Stack.Count - 2];
@@ -67,8 +67,7 @@ namespace LinqToDB.SqlQuery
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		void AddVisited(IQueryElement element, IQueryElement? newElement)
 		{
-			if (!VisitedElements.ContainsKey(element))
-				VisitedElements[element] = newElement;
+			VisitedElements[element] = newElement;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -639,7 +638,19 @@ namespace LinqToDB.SqlQuery
 								take != null && !ReferenceEquals(sc.TakeValue, take) ||
 								skip != null && !ReferenceEquals(sc.SkipValue, skip))
 							{
-								newElement = new SqlSelectClause(sc.IsDistinct, take ?? sc.TakeValue, sc.TakeHints, skip ?? sc.SkipValue, cols ?? sc.Columns);
+								if (cols == null)
+								{
+									cols = new List<SqlColumn>(sc.Columns.Count);
+									foreach(var column in sc.Columns)
+									{
+										var newColumn = CloneColumn(column);
+										cols.Add(newColumn);
+
+										AddVisited(column, newColumn);
+									}
+								}
+
+								newElement = new SqlSelectClause(sc.IsDistinct, take ?? sc.TakeValue, sc.TakeHints, skip ?? sc.SkipValue, cols);
 							}
 
 							static SqlColumn CloneColumn(SqlColumn column) => new SqlColumn(null, column.Expression, column.RawAlias);

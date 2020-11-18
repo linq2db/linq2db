@@ -129,8 +129,14 @@ namespace LinqToDB.SqlQuery
 			return clone;
 		}
 
+		int? _hashCode;
+
 		public override int GetHashCode()
 		{
+			// ReSharper disable NonReadonlyMemberInGetHashCode
+			if (_hashCode.HasValue)
+				return _hashCode.Value;
+
 			var hashCode = SystemType.GetHashCode();
 
 			hashCode = unchecked(hashCode + (hashCode * 397) ^ Name.GetHashCode());
@@ -139,7 +145,9 @@ namespace LinqToDB.SqlQuery
 			for (var i = 0; i < Parameters.Length; i++)
 				hashCode = unchecked(hashCode + (hashCode * 397) ^ Parameters[i].GetHashCode());
 
+			_hashCode = hashCode;
 			return hashCode;
+			// ReSharper restore NonReadonlyMemberInGetHashCode
 		}
 
 		public bool Equals(ISqlExpression? other, Func<ISqlExpression,ISqlExpression,bool> comparer)

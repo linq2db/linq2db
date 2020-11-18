@@ -12,6 +12,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="BenchmarkDotNet" Version="0.12.1" />
+		<PackageReference Include="JetBrains.Profiler.Api" Version="1.1.7" />
 
 		<Compile Update="TestClasses\ProviderMocks\MockDataReader.cs" />
 		<Compile Update="TestClasses\ProviderMocks\MockDbCommand.cs" />

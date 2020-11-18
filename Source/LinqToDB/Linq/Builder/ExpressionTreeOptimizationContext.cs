@@ -247,15 +247,12 @@ namespace LinqToDB.Linq.Builder
 
 		#region IsServerSideOnly
 
-		Expression? _lastIserverSideOnlyExpr;
-		bool        _lastIserverSideOnlyResult;
+		Dictionary<Expression, bool> _isServerSideOnlyCache = new Dictionary<Expression, bool>();
 
 		public bool IsServerSideOnly(Expression expr)
 		{
-			if (_lastIserverSideOnlyExpr == expr)
-				return _lastIserverSideOnlyResult;
-
-			var result = false;
+			if (_isServerSideOnlyCache.TryGetValue(expr, out var result))
+				return result;
 
 			switch (expr.NodeType)
 			{
@@ -318,8 +315,8 @@ namespace LinqToDB.Linq.Builder
 					}
 			}
 
-			_lastIserverSideOnlyExpr = expr;
-			return _lastIserverSideOnlyResult = result;
+			_isServerSideOnlyCache.Add(expr, result);
+			return result;
 		}
 
 		static bool IsQueryMember(Expression expr)
@@ -480,12 +477,20 @@ namespace LinqToDB.Linq.Builder
 		#endregion
 
 
+		Dictionary<Expression, Expression> _exposedCache = new Dictionary<Expression, Expression>();
+
 		public Expression ExposeExpression(Expression expression)
 		{
-			var result = expression;
-
-			result = result.Transform(expr =>
+			if (_exposedCache.TryGetValue(expression, out var result))
 			{
+				return result;
+			}
+
+			result = expression.Transform(expr =>
+			{
+				if (_exposedCache.TryGetValue(expr, out var aleradyExposed))
+					return new TransformInfo(aleradyExposed, true); 
+
 				switch (expr.NodeType)
 				{
 					case ExpressionType.MemberAccess:
@@ -494,8 +499,7 @@ namespace LinqToDB.Linq.Builder
 
 							if (me.Member.IsNullableHasValueMember())
 							{
-								var obj = ExposeExpression(me.Expression);
-								return Expression.NotEqual(obj, Expression.Constant(null, obj.Type));
+								return new TransformInfo(Expression.NotEqual(me.Expression, Expression.Constant(null, me.Expression.Type)), false, true); 
 							}
 
 							if (CanBeCompiled(expr))
@@ -531,9 +535,10 @@ namespace LinqToDB.Linq.Builder
 
 								if (ex.Type != expr.Type)
 									ex = new ChangeTypeExpression(ex, expr.Type);
-								ex = ExposeExpression(ex);
+
 								RegisterAlias(ex, alias!);
-								return ex;
+
+								return new TransformInfo(ex, false, true);
 							}
 
 							break;
@@ -548,9 +553,8 @@ namespace LinqToDB.Linq.Builder
 								if (l != null)
 								{
 									var exposed = l.GetBody(ex.Operand);
-									exposed = ExposeExpression(exposed);
 									RegisterAlias(exposed, alias!);
-									return exposed;
+									return new TransformInfo(exposed, false, true);
 								}
 							}
 							break;
@@ -572,7 +576,7 @@ namespace LinqToDB.Linq.Builder
 								if (!_visitedExpressions!.Contains(e))
 								{
 									_visitedExpressions!.Add(e);
-									return ExposeExpression(e);
+									return new TransformInfo(e, false, true);
 								}
 							}
 
@@ -604,7 +608,7 @@ namespace LinqToDB.Linq.Builder
 											return se;
 										});
 
-										return ExposeExpression(newBody);
+										return new TransformInfo(newBody, false, true);
 									}
 								}
 							}
@@ -613,10 +617,15 @@ namespace LinqToDB.Linq.Builder
 
 				}
 
-				return expr;
+				_exposedCache.Add(expr, expr);
+
+				return new TransformInfo(expr, false);
 			});
 
 			RelocateAlias(expression, result);
+
+			_exposedCache[expression] = result;
+
 			return result;
 		}
 

@@ -1,6 +1,13 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Threading.Tasks;
 using BenchmarkDotNet.Running;
+using JetBrains.Profiler.Api;
+using LinqToDB.Benchmarks.Benchmarks.QueryGeneration;
 using LinqToDB.Benchmarks.Queries;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Benchmarks
 {
@@ -8,12 +15,64 @@ namespace LinqToDB.Benchmarks
 	{
 		static void Main(string[] args)
 		{
+
+			/*
+			VwSalesByCategoryContainsMem();
+			return;
+			*/
+
 			BenchmarkSwitcher
 				.FromAssembly(typeof(Program).Assembly)
 				.Run(
 					args.Length > 0 ? args : new [] { "--filter=*" },
 					Config.Instance);
 		}
+
+		#region QueryGeneration
+
+		static void TestVwSalesByYear()
+		{
+			var benchmark = new QueryGenerationBenchmark();
+			benchmark.DataProvider = ProviderName.MySqlConnector;
+
+			for (int i = 0; i < 100000; i++)
+			{
+				benchmark.VwSalesByYear();
+			}
+		}
+
+		static void VwSalesByCategoryContainsPerf()
+		{
+			var benchmark = new QueryGenerationBenchmark();
+			benchmark.DataProvider = ProviderName.SqlServer2008;
+
+//			MeasureProfiler.StartCollectingData();
+//			benchmark.VwSalesByCategoryContains();
+			for (int i = 0; i < 1000; i++)
+			{
+				benchmark.VwSalesByCategoryContains();
+			}
+			//			MeasureProfiler.StopCollectingData();
+			MeasureProfiler.SaveData();
+		}
+
+		static void VwSalesByCategoryContainsMem()
+		{
+			var benchmark = new QueryGenerationBenchmark();
+			benchmark.DataProvider = ProviderName.SqlServer2008;
+
+			MemoryProfiler.CollectAllocations(true);
+			for (int c = 0; c < 5; c++)
+			{
+				for (int i = 0; i < 1000; i++)
+				{
+					benchmark.VwSalesByCategoryContains();
+				}
+				MemoryProfiler.GetSnapshot();
+			}
+		}
+
+		#endregion
 
 		#region InsertSet
 		static async Task Main_FetchGraph(string[] args)

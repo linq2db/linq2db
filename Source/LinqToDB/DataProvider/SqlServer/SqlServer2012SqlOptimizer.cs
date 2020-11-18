@@ -16,7 +16,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlStatement TransformStatementMutable(SqlStatement statement)
 		{
 			// SQL Server 2012 supports OFFSET/FETCH providing there is an ORDER BY
 			// UPDATE queries do not directly support ORDER BY, TOP, OFFSET, or FETCH, but they are supported in subqueries

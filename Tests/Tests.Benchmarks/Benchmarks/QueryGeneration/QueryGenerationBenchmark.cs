@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Engines;
 using LinqToDB.Benchmarks.Models;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.Access;
@@ -78,6 +79,18 @@ namespace LinqToDB.Benchmarks.Benchmarks.QueryGeneration
 			for (int i = 0; i < 2; i++)
 			{
 				var str = db.VwSalesByYear(2010 + i).Where(e => i == 1).ToString();
+			}
+		}
+
+		[Benchmark]
+		public void VwSalesByCategoryContains()
+		{
+			using var db = GetDataConnection(DataProvider);
+
+			for (int i = 0; i < 2; i++)
+			{
+				var param = i.ToString();
+				var str   = db.VwSalesByCategory(2010 + i).Where(e => e.CategoryName.Contains(param)).ToString();
 			}
 		}
 
