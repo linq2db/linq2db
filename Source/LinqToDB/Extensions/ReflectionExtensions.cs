@@ -1052,5 +1052,15 @@ namespace LinqToDB.Extensions
 
 			return mi;
 		}
+
+		static ConcurrentDictionary<MethodInfo, MethodInfo> _methodDefinitionCache = new ConcurrentDictionary<MethodInfo, MethodInfo>();
+
+		internal static MethodInfo GetGenericMethodDefinitionCached(this MethodInfo method)
+		{
+			if (!method.IsGenericMethod || method.IsGenericMethodDefinition)
+				return method;
+
+			return _methodDefinitionCache.GetOrAdd(method, mi => mi.GetGenericMethodDefinition());
+		}
 	}
 }

@@ -1156,17 +1156,34 @@ namespace LinqToDB.Expressions
 
 		public static bool IsSameGenericMethod(this MethodCallExpression method, MethodInfo genericMethodInfo)
 		{
-			if (!method.Method.IsGenericMethod)
+			if (!method.Method.IsGenericMethod || method.Method.Name != genericMethodInfo.Name)
 				return false;
-			return method.Method.GetGenericMethodDefinition() == genericMethodInfo;
+			return method.Method.GetGenericMethodDefinitionCached() == genericMethodInfo;
 		}
 
 		public static bool IsSameGenericMethod(this MethodCallExpression method, params MethodInfo[] genericMethodInfo)
 		{
 			if (!method.Method.IsGenericMethod)
 				return false;
-			var genericDefinition = method.Method.GetGenericMethodDefinition();
-			return Array.IndexOf(genericMethodInfo, genericDefinition) >= 0;
+
+			var         mi = method.Method;
+			MethodInfo? gd = null;
+
+			foreach (var current in genericMethodInfo)
+			{
+				if (current.Name == mi.Name)
+				{
+					if (gd == null)
+					{
+						gd = mi.GetGenericMethodDefinitionCached();
+					}
+
+					if (gd.Equals(current))
+						return true;
+				}
+			}
+
+			return false;
 		}
 
 		public static bool IsAssociation(this MethodCallExpression method, MappingSchema mappingSchema)
