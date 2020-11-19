@@ -10,15 +10,15 @@ namespace Tests
 {
 	public abstract class DataSourcesBaseAttribute : NUnitAttribute, IParameterDataSource
 	{
-		public bool     IncludeLinqService { get; }
-		public string[] Providers          { get; }
+		public bool IncludeLinqService { get; }
+		public string[] Providers { get; }
 
-		public static bool NoLinqService   { get; set; }
+		public static bool NoLinqService { get; set; }
 
 		protected DataSourcesBaseAttribute(bool includeLinqService, string[] providers)
 		{
 			IncludeLinqService = includeLinqService;
-			Providers          = providers.SelectMany(p => p.Split(',').Select(_ => _.Trim())).ToArray();
+			Providers = CustomizationSupport.Interceptor.InterceptDataSources(this, Split(providers)).ToArray();
 		}
 
 		public IEnumerable GetData(IParameterInfo parameter)
@@ -32,15 +32,15 @@ namespace Tests
 				GetProviders().ToList() :
 				GetProviders().Where(a => !skipAttrs.Contains(a)).ToList();
 
-			if (NoLinqService || !IncludeLinqService)
-				return providers;
-
 #if NETFRAMEWORK
-			return providers.Concat(providers.Select(p => p + ".LinqService"));
-#else
-			return providers;
+			if (!NoLinqService && IncludeLinqService)
+				providers.AddRange(providers.Select(p => p + ".LinqService"));
 #endif
+			return CustomizationSupport.Interceptor.InterceptTestDataSources(this, parameter.Method, providers);
 		}
+
+		protected static IEnumerable<string> Split(IEnumerable<string> providers)
+			=> providers.SelectMany(x => x.Split(',')).Select(x => x.Trim());
 
 		protected abstract IEnumerable<string> GetProviders();
 	}
