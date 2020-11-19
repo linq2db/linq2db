@@ -80,7 +80,7 @@ namespace LinqToDB.Linq
 					: Cache<T>.QueryCache.GetOrCreate(
 						key,
 						dataContext,
-						/*static*/ (entry, key, context) =>
+						static (entry, key, context) =>
 						{
 							entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
 							return CreateQuery(context, key.tableName, key.serverName, key.databaseName, key.schemaName, key.tableOptions, key.type);
@@ -109,7 +109,7 @@ namespace LinqToDB.Linq
 					: Cache<T>.QueryCache.GetOrCreate(
 						key,
 						dataContext,
-						/*static*/ (entry, key, context) =>
+						static (entry, key, context) =>
 						{
 							entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
 							return CreateQuery(context, key.tableName, key.serverName, key.databaseName, key.schemaName, key.tableOptions, key.type);

@@ -1523,7 +1523,7 @@ namespace LinqToDB.Mapping
 			var ed = EntityDescriptorsCache.GetOrCreate(
 				key,
 				this,
-				/*static*/ (o, key, context) =>
+				static (o, key, context) =>
 				{
 					o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
 					var edNew = new EntityDescriptor(context, key.Type);

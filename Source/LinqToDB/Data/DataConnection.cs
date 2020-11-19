@@ -1610,7 +1610,7 @@ namespace LinqToDB.Data
 			MappingSchema = _combinedSchemas.GetOrCreate(
 				key,
 				new { BaseSchema = MappingSchema, AddedSchema = mappingSchema },
-				/*static*/ (entry, key, context) => 
+				static (entry, key, context) => 
 				{
 					entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
 					return new MappingSchema(context.AddedSchema, context.BaseSchema);

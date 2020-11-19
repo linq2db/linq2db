@@ -164,7 +164,7 @@ namespace LinqToDB.Linq
 					: Cache<T>.QueryCache.GetOrCreate(
 					new { Operation = "IR", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schema, databaseName, serverName, tableOptions, type },
 					new { dataContext, entityDescriptor, obj},
-					/*static*/ (entry, key, context) =>
+					static (entry, key, context) =>
 					{
 						entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
 						return CreateQuery(context.dataContext, context.entityDescriptor, context.obj, null, key.tableName, key.serverName, key.databaseName, key.schema, key.tableOptions, key.type);
@@ -199,7 +199,7 @@ namespace LinqToDB.Linq
 					: Cache<T>.QueryCache.GetOrCreate(
 					new { Operation = "IR", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schema, databaseName, serverName, tableOptions, type },
 					new { dataContext, entityDescriptor, obj },
-					/*static*/ (entry, key, context) =>
+					static (entry, key, context) =>
 					{
 						entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
 						return CreateQuery(context.dataContext, context.entityDescriptor, context.obj, null, key.tableName, key.serverName, key.databaseName, key.schema, key.tableOptions, key.type);
