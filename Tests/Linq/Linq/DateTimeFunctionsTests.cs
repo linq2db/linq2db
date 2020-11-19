@@ -278,13 +278,13 @@ namespace Tests.Linq
 				};
 
 				// actually 53 should be 1st week of 2019, but..
-				var isoWeeks              = new[] { 52, 52, 52, 53, 1, 1, 1, 1, 1, 1, 2, 2 };
-				var sqliteParodyNumbering = new[] { 52, 52, 52, 53, 0, 0, 0, 0, 0, 0, 1, 1 };
-				var isoProperWeeks        = new[] { 52, 52, 52,  1, 1, 1, 1, 1, 1, 1, 2, 2 };
-				var usWeeks               = new[] { 52, 52, 53, 53, 1, 1, 1, 1, 1, 2, 2, 2 };
-				var usWeeksZeroBased      = new[] { 51, 51, 52, 52, 0, 0, 0, 0, 0, 1, 1, 1 };
-				var muslimWeeks           = new[] { 52, 53, 53, 53, 1, 1, 1, 1, 2, 2, 2, 2 };
-				var primitive             = new[] { 52, 52, 52, 53, 1, 1, 1, 1, 1, 1, 1, 2 };
+				var isoWeeks                     = new[] { 52, 52, 52, 53, 1, 1, 1, 1, 1, 1, 2, 2 };
+				var sqliteParodyNumbering        = new[] { 52, 52, 52, 53, 0, 0, 0, 0, 0, 0, 1, 1 };
+				var isoProperWeeks               = new[] { 52, 52, 52,  1, 1, 1, 1, 1, 1, 1, 2, 2 };
+				var usWeeks                      = new[] { 52, 52, 53, 53, 1, 1, 1, 1, 1, 2, 2, 2 };
+				var usWeeksZeroBased             = new[] { 51, 51, 52, 52, 0, 0, 0, 0, 0, 1, 1, 1 };
+				var muslimWeeks                  = new[] { 52, 53, 53, 53, 1, 1, 1, 1, 2, 2, 2, 2 };
+				var primitive                    = new[] { 52, 52, 52, 53, 1, 1, 1, 1, 1, 1, 1, 2 };
 				var usWeeksZeroBased_byDayOfYear = new[] { 51, 51, 52, 52, 0, 0, 0, 0, 0, 0, 1, 1 };
 
 				var results = dates
