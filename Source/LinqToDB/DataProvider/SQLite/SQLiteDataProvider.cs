@@ -129,14 +129,6 @@ namespace LinqToDB.DataProvider.SQLite
 				SetToType<IDataReader, float  , long>((r, i) => r.GetFloat(i));
 				SetToType<IDataReader, double , long>((r, i) => r.GetDouble(i));
 				SetToType<IDataReader, decimal, long>((r, i) => r.GetDecimal(i));
-
-				//SetToType<IDataReader, byte[], string>((r, i) => (byte[])r.GetValue(i));
-				//SetToType<IDataReader, System.Data.Linq.Binary, string>((r, i) => (byte[])r.GetValue(i));
-				//SetToType<IDataReader, Guid, string  >((r, i) => r.GetGuid(i));
-
-				//// those mappings are needed only for Microsoft.Data.Sqlite v1.x
-				//SetToType<IDataReader, string, int>((r, i) => r.GetString(i));
-				//SetToType<IDataReader, DateTime, int>((r, i) => r.GetDateTime(i));
 			}
 
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd(' '));
