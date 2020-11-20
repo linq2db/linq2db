@@ -1,5 +1,7 @@
 ﻿using NUnit.Framework.Interfaces;
+using System;
 using System.Collections.Generic;
+using System.Data;
 
 namespace Tests
 {
@@ -34,9 +36,26 @@ namespace Tests
 		/// <param name="dataSourcesAttribute">The DataSourcesAttribute instance associated with the test.</param>
 		/// <param name="testMethod">The reflected test method.</param>
 		/// <param name="contexts">The default datasources/contexts for given tests</param>
-		/// <returns></returns>
+		/// <returns>The actual datasources that test should run with.</returns>
 		public virtual IEnumerable<string> InterceptTestDataSources(DataSourcesBaseAttribute dataSourcesAttribute, IMethodInfo testMethod, IEnumerable<string> contexts)
 			=> contexts;
+
+		/// <summary>
+		/// Intercept calls to get parameter token character
+		/// </summary>
+		/// <param name="token">The original token for the provider.</param>
+		/// <param name="context">The provider context.</param>
+		/// <returns>The actual parameter token for this provider.</returns>
+		public virtual char GetParameterToken(char token, string context)
+			=> token;
+
+		/// <summary>
+		/// Intercepts the create data method for database intialization.
+		/// </summary>
+		/// <param name="context">The context/datasource for which to run create scripts.</param>
+		/// <returns>A CreateDataScript instance that describes the data creation script. Otherwise null.</returns>
+		public virtual CreateDataScript? InterceptCreateData(string context)
+			=> null;
 
 		/// <summary>
 		/// Helper method to extract the class name and method name of a test method.
@@ -45,5 +64,23 @@ namespace Tests
 		/// <returns></returns>
 		protected static (string className, string methodName) ExtractMethod(IMethodInfo testMethod)
 			=> (testMethod.TypeInfo.Name, testMethod.Name);
+	}
+
+	public class CreateDataScript
+	{
+		public string ConfigString { get; }
+		public string Divider { get; }
+		public string Name { get; }
+		public Action<IDbConnection>? Action { get; }
+		public string? Database { get; }
+
+		public CreateDataScript(string configString, string divider, string name, Action<IDbConnection>? action = null, string? database = null)
+		{
+			ConfigString = configString;
+			Divider = divider;
+			Name = name;
+			Action = action;
+			Database = database;
+		}
 	}
 }

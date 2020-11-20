@@ -398,6 +398,26 @@ namespace Tests
 			return res;
 		}
 
+		protected static char GetParameterToken(string context)
+		{
+			var token = '@';
+
+			switch (context)
+			{
+				case ProviderName.SapHanaOdbc:
+				case ProviderName.Informix:
+					token = '?'; break;
+				case ProviderName.SapHanaNative:
+				case TestProvName.Oracle11Managed:
+				case TestProvName.Oracle11Native:
+				case ProviderName.OracleManaged:
+				case ProviderName.OracleNative:
+					token = ':'; break;
+			}
+
+			return CustomizationSupport.Interceptor.GetParameterToken(token, context);
+		}
+
 		protected void TestOnePerson(int id, string firstName, IQueryable<Person> persons)
 		{
 			var list = persons.ToList();
