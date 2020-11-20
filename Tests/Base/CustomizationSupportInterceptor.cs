@@ -34,9 +34,18 @@ namespace Tests
 		/// <param name="dataSourcesAttribute">The DataSourcesAttribute instance associated with the test.</param>
 		/// <param name="testMethod">The reflected test method.</param>
 		/// <param name="contexts">The default datasources/contexts for given tests</param>
-		/// <returns></returns>
+		/// <returns>The actual datasources that test should run with.</returns>
 		public virtual IEnumerable<string> InterceptTestDataSources(DataSourcesBaseAttribute dataSourcesAttribute, IMethodInfo testMethod, IEnumerable<string> contexts)
 			=> contexts;
+
+		/// <summary>
+		/// Intercept calls to get parameter token character
+		/// </summary>
+		/// <param name="token">The original token for the provider.</param>
+		/// <param name="context">The provider context.</param>
+		/// <returns>The actual parameter token for this provider.</returns>
+		public virtual char GetParameterToken(char token, string context)
+			=> token;
 
 		/// <summary>
 		/// Helper method to extract the class name and method name of a test method.
