@@ -58,6 +58,22 @@ namespace Tests
 			=> null;
 
 		/// <summary>
+		/// Intercept the ResetPersonIdentity helper from TestBase.Identity.
+		/// </summary>
+		/// <param name="context">The context/datasource for which to reset Person identity.</param>
+		/// <returns>An array of SQL scripts to reset Person identiy for given provider or null for default behaviour.</returns>
+		internal string[]? InterceptResetPersonIdentity(string context)
+			=> null;
+
+		/// <summary>
+		/// Intercept the InterceptResetAllTypesIdentity helper from TestBase.Identity.
+		/// </summary>
+		/// <param name="context">The context/datasource for which to reset AllTypes identity.</param>
+		/// <returns>An array of SQL scripts to reset AllTypes identiy for given provider or null for default behaviour.</returns>
+		internal string[]? InterceptResetAllTypesIdentity(string context)
+			=> null;
+
+		/// <summary>
 		/// Helper method to extract the class name and method name of a test method.
 		/// </summary>
 		/// <param name="testMethod"></param>
