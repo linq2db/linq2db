@@ -62,7 +62,7 @@ namespace Tests
 		/// </summary>
 		/// <param name="context">The context/datasource for which to reset Person identity.</param>
 		/// <returns>An array of SQL scripts to reset Person identiy for given provider or null for default behaviour.</returns>
-		public virtual string[]? InterceptResetPersonIdentity(string context)
+		public virtual string[]? InterceptResetPersonIdentity(string context, int lastValue)
 			=> null;
 
 		/// <summary>
@@ -70,7 +70,7 @@ namespace Tests
 		/// </summary>
 		/// <param name="context">The context/datasource for which to reset AllTypes identity.</param>
 		/// <returns>An array of SQL scripts to reset AllTypes identiy for given provider or null for default behaviour.</returns>
-		public virtual string[]? InterceptResetAllTypesIdentity(string context)
+		public virtual string[]? InterceptResetAllTypesIdentity(string context, int lastValue, int keepIdentityLastValue)
 			=> null;
 
 		/// <summary>

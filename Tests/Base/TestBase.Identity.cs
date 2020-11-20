@@ -16,7 +16,7 @@ namespace Tests
 
 			var lastValue = 4;
 
-			string[]? sql = CustomizationSupport.Interceptor.InterceptResetPersonIdentity(context);
+			string[]? sql = CustomizationSupport.Interceptor.InterceptResetPersonIdentity(context, lastValue);
 
 			if (sql == null)
 			{
@@ -121,7 +121,7 @@ CREATE COLUMN TABLE ""Person"" (
 			var lastValue = 2;
 			var keepIdentityLastValue = 0;
 
-			string[]? sql = CustomizationSupport.Interceptor.InterceptResetAllTypesIdentity(context);
+			string[]? sql = CustomizationSupport.Interceptor.InterceptResetAllTypesIdentity(context, lastValue, keepIdentityLastValue);
 
 			if (sql == null)
 			{
