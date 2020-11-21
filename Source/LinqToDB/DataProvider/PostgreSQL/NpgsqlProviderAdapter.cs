@@ -57,7 +57,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			Action<IDbDataParameter, NpgsqlDbType> dbTypeSetter,
 			Func  <IDbDataParameter, NpgsqlDbType> dbTypeGetter,
 
-			bool binaryImporterHasCompleteMethod,
 			Func<IDbConnection, string, NpgsqlBinaryImporter> beginBinaryImport)
 		{
 			ConnectionType  = connectionType;
@@ -85,8 +84,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			SetDbType = dbTypeSetter;
 			GetDbType = dbTypeGetter;
 
-			BinaryImporterHasComplete = binaryImporterHasCompleteMethod;
-			BeginBinaryImport         = beginBinaryImport;
+			BeginBinaryImport          = beginBinaryImport;
 
 			// because NpgsqlDbType enumeration changes often (compared to other providers)
 			// we should create lookup list of mapped fields, defined in used npgsql version
@@ -150,7 +148,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		private readonly Func<string, NpgsqlConnection> _connectionCreator;
 		public NpgsqlConnection CreateConnection(string connectionString) => _connectionCreator(connectionString);
 
-		public bool BinaryImporterHasComplete { get; }
 		public Func<IDbConnection, string, NpgsqlBinaryImporter> BeginBinaryImport { get; }
 
 		public MappingSchema MappingSchema { get; }
@@ -336,7 +333,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 							dbTypeBuilder.BuildSetter<IDbDataParameter>(),
 							dbTypeBuilder.BuildGetter<IDbDataParameter>(),
 
-							npgsqlBinaryImporterType.GetMethod("Complete") != null,
 							beginBinaryImport);
 
 						void AddUdtType(Type type)
@@ -443,18 +439,18 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			/// </summary>
 			[Obsolete("Marked obsolete to avoid unintentional use")]
 			TimestampTz                    = 26,
-#pragma warning disable CS3005 // not CLS-compliant: members with same name but different case
+			// members with same name but different case
+			[CLSCompliant(false)]
 			TimestampTZ                    = 26,
-#pragma warning restore CS3005
 			/// <summary>
 			/// Added as alias to <see cref="TimeTZ"/> in npgsql 4.0.0.
 			/// Don't use it, as it will not work with 3.x.
 			/// </summary>
 			[Obsolete("Marked obsolete to avoid unintentional use")]
 			TimeTz                         = 31,
-#pragma warning disable CS3005 // not CLS-compliant: members with same name but different case
-			TimeTZ = 31,
-#pragma warning restore CS3005
+			// members with same name but different case
+			[CLSCompliant(false)]
+			TimeTZ                         = 31,
 			TsQuery                        = 46,
 			TsVector                       = 45,
 			Unknown                        = 40,
@@ -462,7 +458,14 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			Varbit                         = 39,
 			Varchar                        = 22,
 			Xid                            = 42,
-			Xml                            = 28
+			Xml                            = 28,
+			// v5+
+			JsonPath                       = 57,
+			LQuery                         = 61,
+			LTree                          = 60,
+			LTxtQuery                      = 62,
+			PgLsn                          = 59
+
 		}
 
 		[Wrapper]
@@ -503,34 +506,36 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				// depending on npgsql version, [0] or [1] will fail to compile and CompiledWrappers will contain null
 				// [0]: Cancel
 				new Tuple<LambdaExpression, bool>((Expression<Action<NpgsqlBinaryImporter>>)((NpgsqlBinaryImporter this_) => this_.Cancel()), true),
-				// [1]: Complete
+				// [1]: Complete: pre-v5
 				new Tuple<LambdaExpression, bool>((Expression<Action<NpgsqlBinaryImporter>>)((NpgsqlBinaryImporter this_) => this_.Complete()), true),
-				// [2]: Dispose
+				// [2]: Complete: v5+
+				new Tuple<LambdaExpression, bool>((Expression<Func<NpgsqlBinaryImporter, uint>>)((NpgsqlBinaryImporter this_) => this_.Complete5()), true),
+				// [3]: Dispose
 				(Expression<Action<NpgsqlBinaryImporter>>                                  )((NpgsqlBinaryImporter this_) => this_.Dispose()),
-				// [3]: StartRow
+				// [4]: StartRow
 				(Expression<Action<NpgsqlBinaryImporter>>                                  )((NpgsqlBinaryImporter this_) => this_.StartRow()),
 #if !NETFRAMEWORK
-				// [4]: CompleteAsync
+				// [5]: CompleteAsync
 				new Tuple<LambdaExpression, bool>
 				((Expression<Func<NpgsqlBinaryImporter, CancellationToken, ValueTask<ulong>>>)((NpgsqlBinaryImporter this_, CancellationToken token) => this_.CompleteAsync(token)),         true),
-				// [5]: DisposeAsync
+				// [6]: DisposeAsync
 				new Tuple<LambdaExpression, bool>
 				((Expression<Func<NpgsqlBinaryImporter, ValueTask                          >>)((NpgsqlBinaryImporter this_)                          => this_.DisposeAsync()),               true),
 #else
-				// [4]: CompleteAsync
+				// [5]: CompleteAsync
 				new Tuple<LambdaExpression, bool>
 				((Expression<Func<NpgsqlBinaryImporter, CancellationToken, Task<ulong>                >>)((NpgsqlBinaryImporter this_, CancellationToken token) => this_.CompleteAsync(token)),         true),
-				// [5]: DisposeAsync
+				// [6]: DisposeAsync
 				new Tuple<LambdaExpression, bool>
 				((Expression<Func<NpgsqlBinaryImporter, Task                                          >>)((NpgsqlBinaryImporter this_)                          => this_.DisposeAsync()),               true),
 #endif
-				// [6]: StartRowAsync
+				// [7]: StartRowAsync
 				new Tuple<LambdaExpression, bool>
 				((Expression<Func<NpgsqlBinaryImporter, CancellationToken, Task                       >>)((NpgsqlBinaryImporter this_, CancellationToken token) => this_.StartRowAsync(token)), true),
-				// [7]: WriteAsync
+				// [8]: WriteAsync
 				new Tuple<LambdaExpression, bool>
 				((Expression<Func<NpgsqlBinaryImporter, object?, NpgsqlDbType, CancellationToken, Task>>)((NpgsqlBinaryImporter this_, object? value, NpgsqlDbType type, CancellationToken token) => this_.WriteAsync(value, type, token)), true),
-				// [8]: Write
+				// [9]: Write
 				(Expression<Action<NpgsqlBinaryImporter, object?, NpgsqlDbType                        >>)((NpgsqlBinaryImporter this_, object? value, NpgsqlDbType type) => this_.Write(value, type)),
 			};
 
@@ -545,39 +550,43 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			/// </summary>
 			public void Cancel()   => ((Action<NpgsqlBinaryImporter>)CompiledWrappers[0])(this);
 			public void Complete() => ((Action<NpgsqlBinaryImporter>)CompiledWrappers[1])(this);
-			public void Dispose()  => ((Action<NpgsqlBinaryImporter>)CompiledWrappers[2])(this);
-			public void StartRow() => ((Action<NpgsqlBinaryImporter>)CompiledWrappers[3])(this);
-			public void Write<T>(T value, NpgsqlDbType npgsqlDbType) => ((Action<NpgsqlBinaryImporter, object?, NpgsqlDbType>)CompiledWrappers[8])(this, (object?)value, npgsqlDbType);
+			[CLSCompliant(false)]
+			[TypeWrapperName("Complete")]
+			public uint Complete5() => ((Func<NpgsqlBinaryImporter, uint>)CompiledWrappers[2])(this);
+			public void Dispose()  => ((Action<NpgsqlBinaryImporter>)CompiledWrappers[3])(this);
+			public void StartRow() => ((Action<NpgsqlBinaryImporter>)CompiledWrappers[4])(this);
+			public void Write<T>(T value, NpgsqlDbType npgsqlDbType) => ((Action<NpgsqlBinaryImporter, object?, NpgsqlDbType>)CompiledWrappers[9])(this, (object?)value, npgsqlDbType);
 
 #if !NETFRAMEWORK
 #pragma warning disable CS3002 // Return type is not CLS-compliant
 			public ValueTask<ulong> CompleteAsync(CancellationToken cancellationToken) 
-				=> ((Func<NpgsqlBinaryImporter, CancellationToken, ValueTask<ulong>>)CompiledWrappers[4])(this, cancellationToken);
+				=> ((Func<NpgsqlBinaryImporter, CancellationToken, ValueTask<ulong>>)CompiledWrappers[5])(this, cancellationToken);
 #pragma warning restore CS3002 // Return type is not CLS-compliant
 			public ValueTask DisposeAsync()
-				=> ((Func<NpgsqlBinaryImporter, ValueTask>)CompiledWrappers[5])(this);
+				=> ((Func<NpgsqlBinaryImporter, ValueTask>)CompiledWrappers[6])(this);
 			public Task StartRowAsync(CancellationToken cancellationToken) 
-				=> ((Func<NpgsqlBinaryImporter, CancellationToken, Task>)CompiledWrappers[6])(this, cancellationToken);
+				=> ((Func<NpgsqlBinaryImporter, CancellationToken, Task>)CompiledWrappers[7])(this, cancellationToken);
 
 #else
 #pragma warning disable CS3002 // Return type is not CLS-compliant
 			[return: CustomMapper(typeof(ValueTaskToTaskMapper))]
 			public Task<ulong> CompleteAsync(CancellationToken cancellationToken)
-				=> ((Func<NpgsqlBinaryImporter, CancellationToken, Task<ulong>>)CompiledWrappers[4])(this, cancellationToken);
+				=> ((Func<NpgsqlBinaryImporter, CancellationToken, Task<ulong>>)CompiledWrappers[5])(this, cancellationToken);
 #pragma warning restore CS3002 // Return type is not CLS-compliant
 			[return: CustomMapper(typeof(ValueTaskToTaskMapper))]
 			public Task DisposeAsync()
-				=> ((Func<NpgsqlBinaryImporter, Task>)CompiledWrappers[5])(this);
+				=> ((Func<NpgsqlBinaryImporter, Task>)CompiledWrappers[6])(this);
 			public Task StartRowAsync(CancellationToken cancellationToken)
-				=> ((Func<NpgsqlBinaryImporter, CancellationToken, Task>)CompiledWrappers[6])(this, cancellationToken);
+				=> ((Func<NpgsqlBinaryImporter, CancellationToken, Task>)CompiledWrappers[7])(this, cancellationToken);
 #endif
 
 			public Task WriteAsync<T>(T value, NpgsqlDbType npgsqlDbType, CancellationToken cancellationToken)
-				=> ((Func<NpgsqlBinaryImporter, object?, NpgsqlDbType, CancellationToken, Task>)CompiledWrappers[7])(this, (object?)value, npgsqlDbType, cancellationToken);
+				=> ((Func<NpgsqlBinaryImporter, object?, NpgsqlDbType, CancellationToken, Task>)CompiledWrappers[8])(this, (object?)value, npgsqlDbType, cancellationToken);
 
 			public bool HasComplete => CompiledWrappers[1] != null;
+			public bool HasComplete5 => CompiledWrappers[2] != null;
 
-			public bool SupportsAsync => CompiledWrappers[4] != null && CompiledWrappers[5] != null && CompiledWrappers[6] != null && CompiledWrappers[7] != null;
+			public bool SupportsAsync => CompiledWrappers[5] != null && CompiledWrappers[6] != null && CompiledWrappers[7] != null && CompiledWrappers[8] != null;
 		}
 
 		#endregion
