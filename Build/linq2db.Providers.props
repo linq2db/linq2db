@@ -4,12 +4,12 @@
 	<ItemGroup>
 		<PackageReference Include="System.Data.SQLite.Core" Version="1.0.113.6" />
 		<PackageReference Include="MySql.Data" Version="8.0.21" />
-		<PackageReference Include="MySqlConnector" Version="1.0.1" />
+		<PackageReference Include="MySqlConnector" Version="1.1.0" />
 		<PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="7.5.0" />
 		<PackageReference Include="AdoNetCore.AseClient" Version="0.18.0" />
 
 		<PackageReference Include="System.Data.SqlClient" Version="4.8.2" />
-		<PackageReference Include="Microsoft.Data.SqlClient" Version="2.0.1" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="2.1.0" />
 	</ItemGroup>
 
 	<PropertyGroup Condition="'$(TargetFramework)' == 'net472'">
@@ -34,7 +34,7 @@
 		</Reference>
 
 		<PackageReference Include="MiniProfiler" Version="3.2.0.157" />
-		<PackageReference Include="Oracle.ManagedDataAccess" Version="19.9.0" />
+		<PackageReference Include="Oracle.ManagedDataAccess" Version="19.10.0" />
 		<PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.1016.290" />
 		<PackageReference Include="Npgsql" Version="4.0.11" />
 		<PackageReference Include="Microsoft.AspNet.OData" Version="7.5.2" />
@@ -63,9 +63,9 @@
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.1' OR '$(TargetFramework)' == 'netcoreapp3.1' ">
-		<PackageReference Include="Oracle.ManagedDataAccess.Core" Version="2.19.91" />
+		<PackageReference Include="Oracle.ManagedDataAccess.Core" Version="2.19.100" />
 		<PackageReference Include="Microsoft.Data.SQLite" Version="5.0.0" />
-		<PackageReference Include="Npgsql" Version="4.1.6" />
+		<PackageReference Include="Npgsql" Version="5.0.0" />
 		<PackageReference Include="System.Data.Odbc" Version="5.0.0" />
 		<PackageReference Include="System.Data.OleDb" Version="5.0.0" />
 		<PackageReference Include="MiniProfiler.Shared" Version="4.2.1" />

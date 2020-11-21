@@ -7,6 +7,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{885042E3
 	ProjectSection(SolutionItems) = preProject
 		Build\BuildNuspecs.ps1 = Build\BuildNuspecs.ps1
 		Build\linq2db.Default.props = Build\linq2db.Default.props
+		Build\linq2db.Providers.props = Build\linq2db.Providers.props
 		Build\linq2db.snk = Build\linq2db.snk
 		Build\linq2db.Source.props = Build\linq2db.Source.props
 		Build\linq2db.Tests.props = Build\linq2db.Tests.props

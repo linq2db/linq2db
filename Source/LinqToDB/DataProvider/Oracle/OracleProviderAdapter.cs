@@ -239,11 +239,6 @@ namespace LinqToDB.DataProvider.Oracle
 
 		private static OracleProviderAdapter CreateAdapter(string assemblyName, string clientNamespace, string typesNamespace, string? factoryName)
 		{
-			var isNative = false;
-#if NETFRAMEWORK
-			isNative = assemblyName == NativeAssemblyName;
-#endif
-
 			var assembly = Common.Tools.TryLoadAssembly(assemblyName, factoryName);
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {assemblyName}");
@@ -287,9 +282,9 @@ namespace LinqToDB.DataProvider.Oracle
 			typeMapper.RegisterTypeWrapper<OracleTimeStampLTZ>(oracleTimeStampLTZType);
 			typeMapper.RegisterTypeWrapper<OracleDecimal>(oracleDecimalType);
 
-			if (isNative)
+			var bulkCopyType = assembly.GetType($"{clientNamespace}.OracleBulkCopy", false);
+			if (bulkCopyType != null)
 			{
-				var bulkCopyType                        = assembly.GetType($"{clientNamespace}.OracleBulkCopy", true)!;
 				var bulkCopyOptionsType                 = assembly.GetType($"{clientNamespace}.OracleBulkCopyOptions", true)!;
 				var bulkRowsCopiedEventHandlerType      = assembly.GetType($"{clientNamespace}.OracleRowsCopiedEventHandler", true)!;
 				var bulkCopyColumnMappingType           = assembly.GetType($"{clientNamespace}.OracleBulkCopyColumnMapping", true)!;
@@ -643,16 +638,20 @@ namespace LinqToDB.DataProvider.Oracle
 				(Expression<Func<OracleBulkCopy, int>>                                  )((OracleBulkCopy this_                    ) => this_.BulkCopyTimeout),
 				// [5]: get DestinationTableName
 				(Expression<Func<OracleBulkCopy, string?>>                              )((OracleBulkCopy this_                    ) => this_.DestinationTableName),
-				// [6]: get ColumnMappings
+				// [6]: get DestinationSchemaName
+				(Expression<Func<OracleBulkCopy, string?>>                              )((OracleBulkCopy this_                    ) => this_.DestinationSchemaName),
+				// [7]: get ColumnMappings
 				(Expression<Func<OracleBulkCopy, OracleBulkCopyColumnMappingCollection>>)((OracleBulkCopy this_                    ) => this_.ColumnMappings),
-				// [7]: set NotifyAfter
+				// [8]: set NotifyAfter
 				PropertySetter((OracleBulkCopy this_) => this_.NotifyAfter),
-				// [8]: set BatchSize
+				// [9]: set BatchSize
 				PropertySetter((OracleBulkCopy this_) => this_.BatchSize),
-				// [9]: set BulkCopyTimeout
+				// [10]: set BulkCopyTimeout
 				PropertySetter((OracleBulkCopy this_) => this_.BulkCopyTimeout),
-				// [10]: set DestinationTableName
+				// [11]: set DestinationTableName
 				PropertySetter((OracleBulkCopy this_) => this_.DestinationTableName),
+				// [12]: set DestinationSchemaName
+				PropertySetter((OracleBulkCopy this_) => this_.DestinationSchemaName),
 			};
 
 			private static string[] Events { get; }
@@ -673,28 +672,34 @@ namespace LinqToDB.DataProvider.Oracle
 			public int NotifyAfter
 			{
 				get => ((Func  <OracleBulkCopy, int>)CompiledWrappers[2])(this);
-				set => ((Action<OracleBulkCopy, int>)CompiledWrappers[7])(this, value);
+				set => ((Action<OracleBulkCopy, int>)CompiledWrappers[8])(this, value);
 			}
 
 			public int BatchSize
 			{
 				get => ((Func  <OracleBulkCopy, int>)CompiledWrappers[3])(this);
-				set => ((Action<OracleBulkCopy, int>)CompiledWrappers[8])(this, value);
+				set => ((Action<OracleBulkCopy, int>)CompiledWrappers[9])(this, value);
 			}
 
 			public int BulkCopyTimeout
 			{
 				get => ((Func  <OracleBulkCopy, int>)CompiledWrappers[4])(this);
-				set => ((Action<OracleBulkCopy, int>)CompiledWrappers[9])(this, value);
+				set => ((Action<OracleBulkCopy, int>)CompiledWrappers[10])(this, value);
 			}
 
 			public string? DestinationTableName
 			{
 				get => ((Func  <OracleBulkCopy, string?>)CompiledWrappers[5])(this);
-				set => ((Action<OracleBulkCopy, string?>)CompiledWrappers[10])(this, value);
+				set => ((Action<OracleBulkCopy, string?>)CompiledWrappers[11])(this, value);
 			}
 
-			public OracleBulkCopyColumnMappingCollection ColumnMappings => ((Func<OracleBulkCopy, OracleBulkCopyColumnMappingCollection>) CompiledWrappers[6])(this);
+			public string? DestinationSchemaName
+			{
+				get => ((Func  <OracleBulkCopy, string?>)CompiledWrappers[6])(this);
+				set => ((Action<OracleBulkCopy, string?>)CompiledWrappers[12])(this, value);
+			}
+
+			public OracleBulkCopyColumnMappingCollection ColumnMappings => ((Func<OracleBulkCopy, OracleBulkCopyColumnMappingCollection>) CompiledWrappers[7])(this);
 
 			private      OracleRowsCopiedEventHandler? _OracleRowsCopied;
 			public event OracleRowsCopiedEventHandler?  OracleRowsCopied

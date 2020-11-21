@@ -2185,9 +2185,9 @@ namespace Tests.DataProvider
 
 		static decimal GetDecimal(IDataReader rd, int idx)
 		{
-			if (rd is Oracle.ManagedDataAccess.Client.OracleDataReader)
+			if (rd is Oracle.ManagedDataAccess.Client.OracleDataReader reader)
 			{
-				var value  = ((Oracle.ManagedDataAccess.Client.OracleDataReader)rd).GetOracleDecimal(idx);
+				var value  = reader.GetOracleDecimal(idx);
 				var newval = Oracle.ManagedDataAccess.Types.OracleDecimal.SetPrecision(value, value > 0 ? ClrPrecision : (ClrPrecision - 1));
 
 				return newval.Value;
@@ -2780,9 +2780,8 @@ namespace Tests.DataProvider
 			//
 			ms.SetValueToSqlConverter(typeof(MyDate), (sb,tp,v) =>
 			{
-				var value = v as MyDate;
-				if (value == null) sb.Append("NULL");
-				else               sb.Append($"DATE '{value.Year}-{value.Month}-{value.Day}'");
+				if (!(v is MyDate value)) sb.Append("NULL");
+				else sb.Append($"DATE '{value.Year}-{value.Month}-{value.Day}'");
 			});
 
 			// Converts object property value to SQL.
@@ -3512,6 +3511,140 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Table("BULKCOPYTABLE")]
+		class BulkCopyTable
+		{
+			[Column("ID")] public int Id { get; set; }
+		}
+
+		[Table("BULKCOPYTABLE2")]
+		class BulkCopyTable2
+		{
+			[Column("id")] public int Id { get; set; }
+		}
+
+		[Test]
+		public void BulkCopyWithSchemaName(
+			[IncludeDataSources(false, TestProvName.AllOracle)] string context, [Values] bool withSchema)
+		{
+			using var db    = new TestDataConnection(context);
+			using var table = db.CreateLocalTable<BulkCopyTable>();
+			{
+				var schemaName = TestUtils.GetSchemaName(db);
+
+				var trace = string.Empty;
+				db.OnTraceConnection += ti =>
+				{
+					if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+						trace = ti.SqlText;
+				};
+
+				table.BulkCopy(
+						new BulkCopyOptions() { BulkCopyType = BulkCopyType.ProviderSpecific, SchemaName = withSchema ? schemaName : null },
+						Enumerable.Range(1, 10).Select(id => new BulkCopyTable { Id = id }));
+
+				if (withSchema)
+					Assert.True(trace.Contains($"INSERT BULK {schemaName}.BULKCOPYTABLE"));
+				else
+					Assert.True(trace.Contains("INSERT BULK BULKCOPYTABLE"));
+			}
+		}
+
+		[Test]
+		public void BulkCopyWithServerName(
+			[IncludeDataSources(false, TestProvName.AllOracle)] string context, [Values] bool withServer)
+		{
+			using var db    = new TestDataConnection(context);
+			using var table = db.CreateLocalTable<BulkCopyTable>();
+			{
+				var serverName = TestUtils.GetServerName(db);
+
+				var trace = string.Empty;
+				db.OnTraceConnection += ti =>
+				{
+					if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+						trace = ti.SqlText;
+				};
+
+				table.BulkCopy(
+						new BulkCopyOptions() { BulkCopyType = BulkCopyType.ProviderSpecific, ServerName = withServer ? serverName : null },
+						Enumerable.Range(1, 10).Select(id => new BulkCopyTable { Id = id }));
+
+				if (withServer)
+					Assert.False(trace.Contains($"INSERT BULK"));
+				else
+					Assert.True(trace.Contains("INSERT BULK BULKCOPYTABLE"));
+			}
+		}
+
+		[Test]
+		public void BulkCopyWithEscapedColumn(
+			[IncludeDataSources(false, TestProvName.AllOracle)] string context)
+		{
+			using var db    = new TestDataConnection(context);
+			using var table = db.CreateLocalTable<BulkCopyTable2>();
+			{
+				var serverName = TestUtils.GetServerName(db);
+
+				var trace = string.Empty;
+				db.OnTraceConnection += ti =>
+				{
+					if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+						trace = ti.SqlText;
+				};
+
+				table.BulkCopy(
+						new BulkCopyOptions() { BulkCopyType = BulkCopyType.ProviderSpecific },
+						Enumerable.Range(1, 10).Select(id => new BulkCopyTable2 { Id = id }));
+
+				Assert.False(trace.Contains($"INSERT BULK"));
+			}
+		}
+
+		[Test]
+		public void BulkCopyTransactionTest(
+			[IncludeDataSources(false, TestProvName.AllOracle)] string context, [Values] bool withTransaction, [Values] bool withInternalTransaction)
+		{
+			using var db    = new TestDataConnection(context);
+			using var table = db.CreateLocalTable<BulkCopyTable>();
+			{
+				IDisposable? tr = null;
+				if (withTransaction)
+					tr = db.BeginTransaction();
+
+				try
+				{
+
+					var trace = string.Empty;
+					db.OnTraceConnection += ti =>
+					{
+						if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+							trace = ti.SqlText;
+					};
+
+					if (withTransaction && withInternalTransaction)
+						Assert.Throws<InvalidOperationException>(() =>
+						{
+							table.BulkCopy(
+								new BulkCopyOptions() { BulkCopyType = BulkCopyType.ProviderSpecific, UseInternalTransaction = withInternalTransaction },
+								Enumerable.Range(1, 10).Select(id => new BulkCopyTable { Id = id }));
+						});
+					else
+					{
+						table.BulkCopy(
+							new BulkCopyOptions() { BulkCopyType = BulkCopyType.ProviderSpecific, UseInternalTransaction = withInternalTransaction },
+							Enumerable.Range(1, 10).Select(id => new BulkCopyTable { Id = id }));
+
+						Assert.True(trace.Contains($"INSERT BULK"));
+					}
+				}
+				finally
+				{
+					tr?.Dispose();
+				}
+			}
+		}
+
 		#region Issue 2342
 		[Test]
 		public void Issue2342Test([IncludeDataSources(false, TestProvName.AllOracle)] string context)
@@ -3523,7 +3656,7 @@ namespace Tests.DataProvider
 				Configuration.RetryPolicy.Factory  = connection => new DummyRetryPolicy();
 
 				using var db    = new TestDataConnection(context);
-				using var table = db.CreateTempTable<Issue2342Entity>();
+				using var table = db.CreateLocalTable<Issue2342Entity>();
 
 				using (db.BeginTransaction())
 				{

@@ -1333,6 +1333,9 @@ namespace Tests.Data
 				Assert.AreEqual(dtoVal, dtoValue);
 				Assert.AreEqual(((OracleDataProvider)db.DataProvider).Adapter.OracleTimeStampTZType, ((IDbDataParameter)db.Command.Parameters[0]!).Value.GetType());
 
+				// bulk copy without transaction (transaction not supported)
+				TestBulkCopy();
+
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 				Assert.AreEqual(unmapped ? string.Empty : TestUtils.GetServerName(db), schema.Database);
 				//schema.DataSource not asserted, as it returns db hostname
@@ -1363,6 +1366,28 @@ namespace Tests.Data
 					Assert.AreEqual(true, cmd.BindByName);
 					Assert.AreEqual(-1, cmd.InitialLONGFetchSize);
 					Assert.AreEqual(0, arrayBindCount);
+				}
+
+				void TestBulkCopy()
+				{
+					using (db.CreateLocalTable<OracleBulkCopyTable>())
+					{
+						long copied = 0;
+						var options = new BulkCopyOptions()
+						{
+							BulkCopyType       = BulkCopyType.ProviderSpecific,
+							NotifyAfter        = 500,
+							RowsCopiedCallback = arg => copied = arg.RowsCopied,
+							KeepIdentity       = true
+						};
+
+						db.BulkCopy(
+							options,
+							Enumerable.Range(0, 1000).Select(n => new OracleBulkCopyTable() { ID = 2000 + n }));
+
+						Assert.AreEqual(!unmapped, trace.Contains("INSERT BULK"));
+						Assert.AreEqual(1000, copied);
+					}
 				}
 			}
 		}
