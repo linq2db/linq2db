@@ -509,7 +509,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				// [1]: Complete: pre-v5
 				new Tuple<LambdaExpression, bool>((Expression<Action<NpgsqlBinaryImporter>>)((NpgsqlBinaryImporter this_) => this_.Complete()), true),
 				// [2]: Complete: v5+
-				new Tuple<LambdaExpression, bool>((Expression<Func<NpgsqlBinaryImporter, uint>>)((NpgsqlBinaryImporter this_) => this_.Complete5()), true),
+				new Tuple<LambdaExpression, bool>((Expression<Func<NpgsqlBinaryImporter, ulong>>)((NpgsqlBinaryImporter this_) => this_.Complete5()), true),
 				// [3]: Dispose
 				(Expression<Action<NpgsqlBinaryImporter>>                                  )((NpgsqlBinaryImporter this_) => this_.Dispose()),
 				// [4]: StartRow
@@ -552,7 +552,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			public void Complete() => ((Action<NpgsqlBinaryImporter>)CompiledWrappers[1])(this);
 			[CLSCompliant(false)]
 			[TypeWrapperName("Complete")]
-			public uint Complete5() => ((Func<NpgsqlBinaryImporter, uint>)CompiledWrappers[2])(this);
+			public ulong Complete5() => ((Func<NpgsqlBinaryImporter, ulong>)CompiledWrappers[2])(this);
 			public void Dispose()  => ((Action<NpgsqlBinaryImporter>)CompiledWrappers[3])(this);
 			public void StartRow() => ((Action<NpgsqlBinaryImporter>)CompiledWrappers[4])(this);
 			public void Write<T>(T value, NpgsqlDbType npgsqlDbType) => ((Action<NpgsqlBinaryImporter, object?, NpgsqlDbType>)CompiledWrappers[9])(this, (object?)value, npgsqlDbType);
