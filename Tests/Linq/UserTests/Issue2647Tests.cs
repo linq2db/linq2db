@@ -3,6 +3,7 @@ using System.Linq;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -10,40 +11,33 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue2647Tests : TestBase
 	{
+		[Table("Issue2647Table")]
 		class IssueClass
 		{
+			[PrimaryKey]
 			public int Id { get; set; }
+			[Column]
 			public string? LanguageId { get; set; }
+			[Column]
 			public string? Text { get; set; }
 		}
 
 		[Test]
-		public void Test2647([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void OrderBySybqueryTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			var ms = new MappingSchema();
-
-			ms.GetFluentMappingBuilder()
-				.Entity<IssueClass>()
-				.HasTableName("Issue2647Table")
-				.Property(e => e.Id).IsPrimaryKey();
-
-
-			using (var db = GetDataContext(context, ms))
+			using (var db = GetDataContext(context))
 			{
-				db.DropTable<IssueClass>(throwExceptionIfNotExists: false);
-				db.CreateTable<IssueClass>();
-				{
-					var qryUnsorted = from tt in db.GetTable<IssueClass>() select tt;
-					// sort language id 
-					var qry2 = qryUnsorted.OrderBy(x => x.LanguageId);
-					//after that sort with a complex sub-select 
-					qry2 = qry2.ThenByDescending(ss => db.GetTable<IssueClass>().Count(ss2 => ss2.Id == ss.Id) * 10000 /
-														db.GetTable<IssueClass>().Count(ss3 => ss3.Id == ss.Id));
-					var ll = qry2.Select(x=>x.Text).ToList();
-					var sql = ((DataConnection)db).LastQuery;
-					Assert.IsNotNull(sql);
-					Assert.Greater(sql.IndexOf("TextId", StringComparison.OrdinalIgnoreCase), sql.IndexOf("LanguageId", StringComparison.OrdinalIgnoreCase), "error in order by order");
-				}
+				var qryUnsorted = db.GetTable<IssueClass>();
+				var query = qryUnsorted.OrderBy(x => x.LanguageId);
+				query = query.ThenByDescending(ss => db.GetTable<IssueClass>().Count(ss2 => ss2.Id == ss.Id) * 10000 /
+				                                     db.GetTable<IssueClass>().Count(ss3 => ss3.Id == ss.Id));
+
+				var sql = query.ToString();
+				TestContext.WriteLine(sql);
+
+				var selectQuery = query.GetSelectQuery();
+				Assert.That(selectQuery.OrderBy.Items.Count, Is.EqualTo(2));
+				Assert.That(selectQuery.OrderBy.Items[0].Expression.ElementType, Is.EqualTo(QueryElementType.SqlField));
 			}
 		}
 	}
