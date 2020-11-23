@@ -1664,7 +1664,7 @@ namespace LinqToDB.Linq.Builder
 				if (b.NodeType == ExpressionType.MemberAccess)
 				{
 					var ma = (MemberExpression)b;
-					if (ma.Expression.NodeType == ExpressionType.Parameter)
+					if (ma.Expression?.NodeType == ExpressionType.Parameter)
 					{
 						var idx = before.IndexOf((ParameterExpression)ma.Expression);
 						if (idx >= 0)
