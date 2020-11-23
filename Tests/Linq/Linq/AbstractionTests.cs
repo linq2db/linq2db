@@ -128,7 +128,6 @@ namespace Tests.Linq
 		[Test]
 		public void AssociationSelect([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(SampleClass1.Seed()))
 			using (db.CreateLocalTable(SampleClass2.Seed()))

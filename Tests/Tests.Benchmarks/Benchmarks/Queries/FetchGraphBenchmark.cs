@@ -20,8 +20,6 @@ namespace LinqToDB.Benchmarks.Queries
 		[GlobalSetup]
 		public void Setup()
 		{
-			Common.Configuration.Linq.AllowMultipleQuery = true;
-
 			_results = new QueryResult[]
 			{
 				new QueryResult()
@@ -56,7 +54,6 @@ namespace LinqToDB.Benchmarks.Queries
 		[GlobalCleanup]
 		public void Cleanup()
 		{
-			Common.Configuration.Linq.AllowMultipleQuery = false;
 		}
 
 		[Benchmark]

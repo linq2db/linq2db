@@ -1025,7 +1025,6 @@ namespace Tests.Linq
 		public void TestConditionalInProjection([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (new AllowMultipleQuery())
 			using (db.CreateLocalTable(new []
 			{
 				new MainEntityObject{Id = 1, MainValue = "MainValue 1"}, 
