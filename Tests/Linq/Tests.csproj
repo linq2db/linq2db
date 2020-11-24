@@ -22,8 +22,8 @@
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
-		<!-- TEMP: explicitly reference specific version to avoid MSB3277 -->
-		<PackageReference Include="System.Security.Cryptography.Cng" Version="4.7.0" />
+		<!-- TEMP: explicitly reference specific version of transient dependency to avoid MSB3277 -->
+		<PackageReference Include="System.Security.Cryptography.Cng" Version="5.0.0" />
 	</ItemGroup>
 
 </Project>

@@ -755,7 +755,7 @@ jobs:
           enable_os_macos:  true # true (disabled due to stack overflow exception during test run. needs investigation)
           enable_fw_net472: true
           enable_fw_netcore21: false
-          enable_fw_netcore31: false
+          enable_fw_netcore31: true
           enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]')) }}:
@@ -779,7 +779,7 @@ jobs:
           enable_os_macos:  true # true (disabled due to stack overflow exception during test run. needs investigation)
           enable_fw_net472: true
           enable_fw_netcore21: false
-          enable_fw_netcore31: false
+          enable_fw_netcore31: true
           enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]')) }}:
