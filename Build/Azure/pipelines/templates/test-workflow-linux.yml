@@ -7,6 +7,12 @@ parameters:
 steps:
 - checkout: none
 
+- task: UseDotNet@2
+  displayName: 'Install .net 5'
+  inputs:
+    packageType: sdk
+    version: 5.x
+
 - task: CmdLine@2
   inputs:
     script: 'git clone https://$(BASELINES_GH_PAT)@github.com/linq2db/linq2db.baselines.git baselines && cd baselines && git checkout -b $(baselines_branch) origin/$(baselines_branch) && cd ..'
