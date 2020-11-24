@@ -54,7 +54,6 @@ namespace Tests.UserTests
 		[Test]
 		public void TestAttributesByKey([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Topic>())
 			using (db.CreateLocalTable<Message>())
@@ -75,7 +74,6 @@ namespace Tests.UserTests
 		[Test]
 		public void TestAttributesByExpression([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Topic>())
 			using (db.CreateLocalTable<Message>())
@@ -96,7 +94,6 @@ namespace Tests.UserTests
 		[Test]
 		public void TestAttributesByQuery([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Topic>())
 			using (db.CreateLocalTable<Message>())
@@ -117,7 +114,6 @@ namespace Tests.UserTests
 		[Test]
 		public void TestFluentAssociationByExpression([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				db.MappingSchema.GetFluentMappingBuilder()
@@ -151,7 +147,6 @@ namespace Tests.UserTests
 		[Test]
 		public void TestFluentAssociationByKeys([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				db.MappingSchema.GetFluentMappingBuilder()
@@ -185,7 +180,6 @@ namespace Tests.UserTests
 		[Test]
 		public void TestFluentAssociationByQuery([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				db.MappingSchema.GetFluentMappingBuilder()
@@ -224,7 +218,6 @@ namespace Tests.UserTests
 		[Test]
 		public void TestFluentAssociationByQueryWithKeys([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				db.MappingSchema.GetFluentMappingBuilder()

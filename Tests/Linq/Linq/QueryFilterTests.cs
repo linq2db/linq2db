@@ -113,7 +113,6 @@ namespace Tests.Linq
 
 			var ms = builder.MappingSchema;
 
-			using (new AllowMultipleQuery())
 			using (var db = new MyDataContext(context, ms))
 			using (db.CreateLocalTable(testData.Item1))
 			using (db.CreateLocalTable(testData.Item2))
@@ -165,7 +164,6 @@ namespace Tests.Linq
 
 			var ms = builder.MappingSchema;
 
-			using (new AllowMultipleQuery())
 			using (var db = new MyDataContext(context, ms))
 			using (db.CreateLocalTable(testData.Item1))
 			using (db.CreateLocalTable(testData.Item2))
@@ -192,7 +190,6 @@ namespace Tests.Linq
 
 			var ms = builder.MappingSchema;
 
-			using (new AllowMultipleQuery())
 			using (var db = new MyDataContext(context, ms))
 			using (db.CreateLocalTable(testData.Item1))
 			using (db.CreateLocalTable(testData.Item2))
@@ -234,7 +231,6 @@ namespace Tests.Linq
 
 			var ms = builder.MappingSchema;
 
-			using (new AllowMultipleQuery())
 			using (var db = new MyDataContext(context, ms))
 			using (db.CreateLocalTable(testData.Item1))
 			using (db.CreateLocalTable(testData.Item2))
