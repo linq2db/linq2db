@@ -2699,32 +2699,18 @@ namespace LinqToDB.SqlProvider
 		public T OptimizeElements<T>(T root, EvaluationContext context)
 			where T : class, IQueryElement
 		{
-			var alreadyStable = new HashSet<IQueryElement>();
-
-			var newElement = ConvertVisitor.ConvertAll(root, (visitor, e) =>
+			var newElement = ConvertVisitor.Convert(root, (visitor, e) =>
 			{
-				if (alreadyStable.Contains(e))
-					return e;
-
 				var ne = e;
-				for (;;)
-				{
-					if (ne is ISqlExpression sqlExpression)
-						ne = OptimizeExpression(sqlExpression, visitor, context);
+				if (ne is ISqlExpression sqlExpression)
+					ne = OptimizeExpression(sqlExpression, visitor, context);
 
-					if (ne is ISqlPredicate sqlPredicate)
-						ne = OptimizePredicate(sqlPredicate, context);
+				if (ne is ISqlPredicate sqlPredicate)
+					ne = OptimizePredicate(sqlPredicate, context);
 
-					ne = OptimizeQueryElement(visitor, root, ne, context);
+				ne = OptimizeQueryElement(visitor, root, ne, context);
 
-					if (ReferenceEquals(ne, e))
-						break;
-					e = ne;
-				}				
-
-				alreadyStable.Add(e);
-				
-				return e;
+				return ne;
 			});
 
 			if (!ReferenceEquals(newElement, root))
@@ -2894,35 +2880,34 @@ namespace LinqToDB.SqlProvider
 
 		public IQueryElement ConvertElements(MappingSchema mappingSchema, IQueryElement element, EvaluationContext context)
 		{
-			var alreadyStable = new HashSet<IQueryElement>();
-
-			var newElement = ConvertVisitor.ConvertAll(element, (visitor, e) =>
+			var newElement = element;
+			for (int i = 0; i < 2; i++)
 			{
-				if (alreadyStable.Contains(e))
-					return e;
-
-				var ne = e;
-				for (;;)
+				newElement = ConvertVisitor.Convert(element, (visitor, e) =>
 				{
-					if (ne is ISqlExpression sqlExpression)
-						ne = ConvertExpression(sqlExpression);
+					var ne = e;
+					for (;;)
+					{
+						if (ne is ISqlExpression sqlExpression)
+							ne = ConvertExpression(sqlExpression);
 
-					if (ne is SqlPredicate sqlPredicate)
-						ne = ConvertPredicate(mappingSchema, sqlPredicate, context);
+						if (ne is SqlPredicate sqlPredicate)
+							ne = ConvertPredicate(mappingSchema, sqlPredicate, context);
 
-					if (ReferenceEquals(ne, e))
-						break;
+						if (ReferenceEquals(ne, e))
+							break;
 
-					e = ne;
-				}
+						e = ne;
+					}
 
-				alreadyStable.Add(e);
-				
-				return e;
-			});
+					return e;
+				});
 
-			if (!ReferenceEquals(newElement, element))
-				newElement = ConvertElements(mappingSchema, newElement, context);
+				if (ReferenceEquals(newElement, element))
+					break;
+
+				element = newElement;
+			}
 
 			return newElement;
 		}
