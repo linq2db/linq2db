@@ -14,7 +14,7 @@ steps:
   inputs:
     packageType: sdk
     version: 5.x
-  condition: and(eq('${{ parameters.installnet5 }}', 'true'))
+  condition: eq('${{ parameters.installnet5 }}', 'true')
 
 - task: CmdLine@2
   inputs:
