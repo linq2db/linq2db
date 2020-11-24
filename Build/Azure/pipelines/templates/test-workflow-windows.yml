@@ -4,9 +4,17 @@ parameters:
   framework: ''
   titleFramework: ''
   with_baselines: false
+  installnet5: false # temporary flag
 
 steps:
 - checkout: none
+
+- task: UseDotNet@2
+  displayName: 'Install .net 5'
+  inputs:
+    packageType: sdk
+    version: 5.x
+  condition: and(eq('${{ parameters.installnet5 }}', 'true'))
 
 - task: CmdLine@2
   inputs:
