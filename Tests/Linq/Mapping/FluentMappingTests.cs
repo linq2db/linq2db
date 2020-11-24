@@ -570,7 +570,7 @@ namespace Tests.Mapping
 					DerivedClass1 item1 = new DerivedClass1 { NotACol = "test" };
 					db.Insert(item1);
 
-					DerivedClass res = db.GetTable<DerivedClass>().FirstOrDefault();
+					DerivedClass res = db.GetTable<DerivedClass>().First();
 					var count = db.GetTable<DerivedClass>().Count();
 
 					Assert.AreEqual(item.MyCol1, res.MyCol1);
@@ -605,7 +605,7 @@ namespace Tests.Mapping
 					DerivedClass1 item1 = new DerivedClass1 { NotACol = "test", MyCol1 = "MyCol2" };
 					db.Insert(item1);
 
-					DerivedClass res = db.GetTable<DerivedClass>().Where(o => o.MyCol1 == "MyCol1").FirstOrDefault();
+					DerivedClass res = db.GetTable<DerivedClass>().Where(o => o.MyCol1 == "MyCol1").First();
 					var count = db.GetTable<DerivedClass>().Count();
 
 					Assert.AreEqual(item.MyCol1, res.MyCol1);

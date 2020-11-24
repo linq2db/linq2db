@@ -632,7 +632,7 @@ namespace Tests.Data
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 				if (tvpSupported)
 				{
-					var proc = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "TableTypeTestProc");
+					var proc = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "TableTypeTestProc")!;
 					Assert.IsNotNull(proc);
 					Assert.AreEqual ("[dbo].[TestTableType]", proc.Parameters[0].SchemaType);
 				}
@@ -650,8 +650,8 @@ namespace Tests.Data
 				}
 
 				Assert.IsTrue  (SqlServerTransientExceptionDetector.IsHandled(sex!, out errors));
-				Assert.AreEqual(1, errors.Count());
-				Assert.AreEqual(8134, errors.Single());
+				Assert.AreEqual(1, errors!.Count());
+				Assert.AreEqual(8134, errors!.Single());
 
 				var cs = DataConnection.GetConnectionString(GetProviderName(context, out var _));
 
@@ -796,7 +796,7 @@ namespace Tests.Data
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 				if (tvpSupported)
 				{
-					var proc = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "TableTypeTestProc");
+					var proc = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "TableTypeTestProc")!;
 					Assert.IsNotNull(proc);
 					Assert.AreEqual("[dbo].[TestTableType]", proc.Parameters[0].SchemaType);
 				}
@@ -813,8 +813,8 @@ namespace Tests.Data
 					sex = ex;
 				}
 				Assert.IsTrue  (SqlServerTransientExceptionDetector.IsHandled(sex!, out errors));
-				Assert.AreEqual(1, errors.Count());
-				Assert.AreEqual(8134, errors.Single());
+				Assert.AreEqual(1, errors!.Count());
+				Assert.AreEqual(8134, errors!.Single());
 
 				var cs = DataConnection.GetConnectionString(GetProviderName(context, out var _));
 
@@ -1331,7 +1331,7 @@ namespace Tests.Data
 				var dtoValue = db.Execute<DateTimeOffset>("SELECT :p FROM SYS.DUAL", new DataParameter("p", dtoVal, DataType.DateTimeOffset) { Precision = 6 });
 				dtoVal = dtoVal.AddTicks(-1 * (dtoVal.Ticks % 10));
 				Assert.AreEqual(dtoVal, dtoValue);
-				Assert.AreEqual(((OracleDataProvider)db.DataProvider).Adapter.OracleTimeStampTZType, ((IDbDataParameter)db.Command.Parameters[0]!).Value.GetType());
+				Assert.AreEqual(((OracleDataProvider)db.DataProvider).Adapter.OracleTimeStampTZType, ((IDbDataParameter)db.Command.Parameters[0]!).Value!.GetType()!);
 
 				// bulk copy without transaction (transaction not supported)
 				TestBulkCopy();
@@ -1448,9 +1448,9 @@ namespace Tests.Data
 
 				// provider types support by schema
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
-				var allTypes = schema.Tables.Where(t => t.TableName == "AllTypes").SingleOrDefault();
+				var allTypes = schema.Tables.Where(t => t.TableName == "AllTypes").SingleOrDefault()!;
 				Assert.NotNull (allTypes);
-				var tsColumn = allTypes.Columns.Where(c => c.ColumnName == "timestampDataType").SingleOrDefault();
+				var tsColumn = allTypes.Columns.Where(c => c.ColumnName == "timestampDataType").SingleOrDefault()!;
 				Assert.NotNull (tsColumn);
 				Assert.AreEqual("NpgsqlDateTime", tsColumn.ProviderSpecificType);
 

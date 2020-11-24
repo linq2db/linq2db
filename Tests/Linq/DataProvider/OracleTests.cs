@@ -3063,7 +3063,7 @@ namespace Tests.DataProvider
 				Assert.AreEqual(new byte[] { 0, 0xAA }, pms[23].Value);
 
 				// default converter for BFile missing intentionally
-				var bfile = pms[24].Output!.Value;
+				var bfile = pms[24].Output!.Value!;
 				if (isNative)
 				{
 #if NET472
@@ -3490,7 +3490,7 @@ namespace Tests.DataProvider
 					GetProcedures = false
 				});
 
-				var table = schema.Tables.Where(t => t.TableName == nameof(TypesTest).ToUpperInvariant()).SingleOrDefault();
+				var table = schema.Tables.Where(t => t.TableName == nameof(TypesTest).ToUpperInvariant()).SingleOrDefault()!;
 				Assert.IsNotNull(table);
 				Assert.AreEqual(5, table.Columns.Count);
 
@@ -3502,7 +3502,7 @@ namespace Tests.DataProvider
 
 				void AssertColumn(string name, string dbType, int? length)
 				{
-					var column = table.Columns.SingleOrDefault(c => c.ColumnName == name);
+					var column = table.Columns.SingleOrDefault(c => c.ColumnName == name)!;
 
 					Assert.IsNotNull(column);
 					Assert.AreEqual(dbType, column.ColumnType);
@@ -3699,9 +3699,9 @@ namespace Tests.DataProvider
 
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, options);
 
-				var table        = schema.Tables.Where(t => t.TableName == "SchemaTestTable").FirstOrDefault();
-				var view         = schema.Tables.Where(t => t.TableName == "SchemaTestView").FirstOrDefault();
-				var matView      = schema.Tables.Where(t => t.TableName == "SchemaTestMatView" && t.IsView).FirstOrDefault();
+				var table        = schema.Tables.Where(t => t.TableName == "SchemaTestTable").FirstOrDefault()!;
+				var view         = schema.Tables.Where(t => t.TableName == "SchemaTestView").FirstOrDefault()!;
+				var matView      = schema.Tables.Where(t => t.TableName == "SchemaTestMatView" && t.IsView).FirstOrDefault()!;
 				var matViewTable = schema.Tables.Where(t => t.TableName == "SchemaTestMatView" && !t.IsView).FirstOrDefault();
 
 				Assert.IsNotNull(table);

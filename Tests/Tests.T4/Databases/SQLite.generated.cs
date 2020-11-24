@@ -318,19 +318,19 @@ namespace SQLiteDataContext
 
 	public static partial class TableExtensions
 	{
-		public static AllType Find(this ITable<AllType> table, long ID)
+		public static AllType? Find(this ITable<AllType> table, long ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static Doctor Find(this ITable<Doctor> table, long PersonID)
+		public static Doctor? Find(this ITable<Doctor> table, long PersonID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
 		}
 
-		public static FKTestPosition Find(this ITable<FKTestPosition> table, long Company, long Department, long PositionID)
+		public static FKTestPosition? Find(this ITable<FKTestPosition> table, long Company, long Department, long PositionID)
 		{
 			return table.FirstOrDefault(t =>
 				t.Company    == Company    &&
@@ -338,25 +338,25 @@ namespace SQLiteDataContext
 				t.PositionID == PositionID);
 		}
 
-		public static Patient Find(this ITable<Patient> table, long PersonID)
+		public static Patient? Find(this ITable<Patient> table, long PersonID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
 		}
 
-		public static Person Find(this ITable<Person> table, long PersonID)
+		public static Person? Find(this ITable<Person> table, long PersonID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
 		}
 
-		public static PrimaryKeyTable Find(this ITable<PrimaryKeyTable> table, long ID)
+		public static PrimaryKeyTable? Find(this ITable<PrimaryKeyTable> table, long ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static TestIdentity Find(this ITable<TestIdentity> table, long ID)
+		public static TestIdentity? Find(this ITable<TestIdentity> table, long ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
@@ -445,7 +445,7 @@ namespace SQLiteDataContext
 		/// FK_Doctor_0_0_BackReference
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
-		public static Person Doctor(this Doctor obj, IDataContext db)
+		public static Person? Doctor(this Doctor obj, IDataContext db)
 		{
 			return db.GetTable<Person>().Where(c => c.PersonID == obj.PersonID).FirstOrDefault();
 		}
@@ -463,7 +463,7 @@ namespace SQLiteDataContext
 		/// FK_Patient_0_0_BackReference
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
-		public static Person Patient(this Patient obj, IDataContext db)
+		public static Person? Patient(this Patient obj, IDataContext db)
 		{
 			return db.GetTable<Person>().Where(c => c.PersonID == obj.PersonID).FirstOrDefault();
 		}

@@ -224,12 +224,12 @@ namespace Tests.Linq
 					from p in Parent
 					let ch = p.Children
 					where ch.FirstOrDefault() != null
-					select ch.FirstOrDefault().ParentID
+					select ch.FirstOrDefault()!.ParentID
 					,
 					from p in db.Parent
 					let ch = p.Children
 					where ch.FirstOrDefault() != null
-					select ch.FirstOrDefault().ParentID);
+					select ch.FirstOrDefault()!.ParentID);
 			}
 		}
 
@@ -259,11 +259,11 @@ namespace Tests.Linq
 				AreEqual(
 					from p in Parent
 					let ch = Child
-					select ch.FirstOrDefault().ParentID
+					select ch.FirstOrDefault()!.ParentID
 					,
 					from p in db.Parent
 					let ch = db.Child
-					select ch.FirstOrDefault().ParentID);
+					select ch.FirstOrDefault()!.ParentID);
 			}
 		}
 
@@ -343,7 +343,7 @@ namespace Tests.Linq
 					{
 						Any    = ch2.Any(),
 						Count  = ch2.Count(),
-						First1 = ch2.FirstOrDefault(c => c.ParentID > 0) == null ? 0 : ch2.FirstOrDefault(c => c.ParentID > 0).ParentID,
+						First1 = ch2.FirstOrDefault(c => c.ParentID > 0) == null ? 0 : ch2.FirstOrDefault(c => c.ParentID > 0)!.ParentID,
 						First2 = ch2.FirstOrDefault()
 					}
 					,
@@ -354,7 +354,7 @@ namespace Tests.Linq
 					{
 						Any    = ch2.Any(),
 						Count  = ch2.Count(),
-						First1 = ch2.FirstOrDefault(c => c.ParentID > 0).ParentID,
+						First1 = ch2.FirstOrDefault(c => c.ParentID > 0)!.ParentID,
 						First2 = ch2.FirstOrDefault()
 					});
 			}
@@ -376,7 +376,7 @@ namespace Tests.Linq
 						p.ParentID,
 						Any    = ch2.Any(),
 						Count  = ch2.Count(),
-						First1 = ch2.FirstOrDefault(c => c.ParentID > 0) == null ? 0 : ch2.FirstOrDefault(c => c.ParentID > 0).ParentID,
+						First1 = ch2.FirstOrDefault(c => c.ParentID > 0) == null ? 0 : ch2.FirstOrDefault(c => c.ParentID > 0)!.ParentID,
 						First2 = ch2.FirstOrDefault()
 					})
 					.Where(t => t.ParentID > 0)
@@ -391,7 +391,7 @@ namespace Tests.Linq
 						p.ParentID,
 						Any    = ch2.Any(),
 						Count  = ch2.Count(),
-						First1 = ch2.FirstOrDefault(c => c.ParentID > 0).ParentID,
+						First1 = ch2.FirstOrDefault(c => c.ParentID > 0)!.ParentID,
 						First2 = ch2.FirstOrDefault()
 					}
 				)
@@ -420,7 +420,7 @@ namespace Tests.Linq
 						p.ParentID,
 						Any    = ch2.Any(),
 						Count  = ch2.Count(),
-						First1 = ch2.FirstOrDefault(c => c.ParentID > 0) == null ? 0 : ch2.FirstOrDefault(c => c.ParentID > 0).ParentID,
+						First1 = ch2.FirstOrDefault(c => c.ParentID > 0) == null ? 0 : ch2.FirstOrDefault(c => c.ParentID > 0)!.ParentID,
 						First2 = ch2.FirstOrDefault()
 					})
 					.Where(t => t.ParentID > 0)
@@ -435,7 +435,7 @@ namespace Tests.Linq
 						p.ParentID,
 						Any    = ch2.Any(),
 						Count  = ch2.Count(),
-						First1 = ch2.FirstOrDefault(c => c.ParentID > 0).ParentID,
+						First1 = ch2.FirstOrDefault(c => c.ParentID > 0)!.ParentID,
 						First2 = ch2.FirstOrDefault()
 					}
 				)
@@ -464,7 +464,7 @@ namespace Tests.Linq
 							p.ParentID,
 							Any    = ch2.Any(),
 							Count  = ch2.Count(),
-							First1 = ch2.FirstOrDefault(c => c.ParentID > 0) == null ? 0 : ch2.FirstOrDefault(c => c.ParentID > 0).ParentID,
+							First1 = ch2.FirstOrDefault(c => c.ParentID > 0) == null ? 0 : ch2.FirstOrDefault(c => c.ParentID > 0)!.ParentID,
 							First2 = ch2.FirstOrDefault()
 						}
 					).Where(t => t.ParentID > 0).Take(5000)
@@ -478,7 +478,7 @@ namespace Tests.Linq
 							p.ParentID,
 							Any    = ch2.Any(),
 							Count  = ch2.Count(),
-							First1 = ch2.FirstOrDefault(c => c.ParentID > 0).ParentID,
+							First1 = ch2.FirstOrDefault(c => c.ParentID > 0)!.ParentID,
 							First2 = ch2.FirstOrDefault()
 						}
 					).Where(t => t.ParentID > 0).Take(5000));
@@ -499,7 +499,7 @@ namespace Tests.Linq
 							p.ParentID,
 							Any    = ch2.Any(),
 							Count  = ch2.Count(),
-							First1 = ch2.FirstOrDefault(c => c.ParentID > 0) == null ? 0 : ch2.FirstOrDefault(c => c.ParentID > 0).ParentID,
+							First1 = ch2.FirstOrDefault(c => c.ParentID > 0) == null ? 0 : ch2.FirstOrDefault(c => c.ParentID > 0)!.ParentID,
 							First2 = ch2.FirstOrDefault()
 						}
 					).Where(t => t.ParentID > 0).Take(5000)
@@ -513,7 +513,7 @@ namespace Tests.Linq
 							p.ParentID,
 							Any    = ch2.Any(),
 							Count  = ch2.Count(),
-							First1 = ch2.FirstOrDefault(c => c.ParentID > 0).ParentID,
+							First1 = ch2.FirstOrDefault(c => c.ParentID > 0)!.ParentID,
 							First2 = ch2.FirstOrDefault()
 						}
 					).Where(t => t.ParentID > 0).Take(5000));

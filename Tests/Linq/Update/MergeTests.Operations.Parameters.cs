@@ -65,7 +65,7 @@ namespace Tests.xUpdate
 					.DeleteWhenMatchedAnd((t, s) => t.Field3 == parameterValues.Val2 + 123)
 					.Merge();
 
-				Assert.AreEqual(8, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
+				Assert.AreEqual(8, db.LastQuery!.Count(_ => _ == GetParameterToken(context)));
 			}
 		}
 
@@ -124,7 +124,7 @@ namespace Tests.xUpdate
 					.DeleteWhenMatchedAnd((t, s) => t.Field3 != parameterValues.Val2)
 					.Merge();
 
-				Assert.AreEqual(7, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
+				Assert.AreEqual(7, db.LastQuery!.Count(_ => _ == GetParameterToken(context)));
 			}
 		}
 
@@ -169,7 +169,7 @@ namespace Tests.xUpdate
 					.DeleteWhenNotMatchedBySourceAnd(t => t.Field3 != parameterValues.Val2)
 					.Merge();
 
-				Assert.AreEqual(4, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
+				Assert.AreEqual(4, db.LastQuery!.Count(_ => _ == GetParameterToken(context)));
 			}
 		}
 
@@ -202,7 +202,7 @@ namespace Tests.xUpdate
 					.DeleteWhenMatchedAnd((t, s) => t.Field3 != 1 || Sql.ToNullable(s.Field) != null)
 					.Merge();
 
-				Assert.AreEqual(4, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
+				Assert.AreEqual(4, db.LastQuery!.Count(_ => _ == GetParameterToken(context)));
 			}
 		}
 
@@ -226,7 +226,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
+				Assert.AreEqual(1, db.LastQuery!.Count(_ => _ == GetParameterToken(context)));
 			}
 		}
 
@@ -271,7 +271,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
+				Assert.AreEqual(1, db.LastQuery!.Count(_ => _ == GetParameterToken(context)));
 			}
 		}
 
@@ -298,7 +298,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
+				Assert.AreEqual(1, db.LastQuery!.Count(_ => _ == GetParameterToken(context)));
 			}
 		}
 
@@ -327,7 +327,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
+				Assert.AreEqual(1, db.LastQuery!.Count(_ => _ == GetParameterToken(context)));
 			}
 		}
 
@@ -350,7 +350,7 @@ namespace Tests.xUpdate
 					.Merge();
 
 				Assert.AreEqual(1, rows);
-				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
+				Assert.AreEqual(1, db.LastQuery!.Count(_ => _ == GetParameterToken(context)));
 			}
 		}
 
@@ -378,7 +378,7 @@ namespace Tests.xUpdate
 					.Merge();
 
 				Assert.AreEqual(1, rows);
-				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
+				Assert.AreEqual(1, db.LastQuery!.Count(_ => _ == GetParameterToken(context)));
 			}
 		}
 
@@ -414,7 +414,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
+				Assert.AreEqual(1, db.LastQuery!.Count(_ => _ == GetParameterToken(context)));
 
 				var result = GetTarget(db).Where(_ => _.Id == 5).ToList();
 
@@ -454,7 +454,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
+				Assert.AreEqual(1, db.LastQuery!.Count(_ => _ == GetParameterToken(context)));
 
 				var result = GetTarget(db).Where(_ => _.Id == 4).ToList();
 
@@ -492,7 +492,7 @@ namespace Tests.xUpdate
 				if (context == ProviderName.DB2)
 					paramcount = 0;
 
-				Assert.AreEqual(paramcount, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
+				Assert.AreEqual(paramcount, db.LastQuery!.Count(_ => _ == GetParameterToken(context)));
 
 				var result = GetTarget(db).Where(_ => _.Id == 1).ToList();
 
@@ -525,7 +525,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
+				Assert.AreEqual(1, db.LastQuery!.Count(_ => _ == GetParameterToken(context)));
 			}
 		}
 
@@ -557,7 +557,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
+				Assert.AreEqual(1, db.LastQuery!.Count(_ => _ == GetParameterToken(context)));
 
 				var result = GetTarget(db).Where(_ => _.Id == 3).ToList();
 
@@ -587,7 +587,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(2, rows, context);
 
-				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
+				Assert.AreEqual(1, db.LastQuery!.Count(_ => _ == GetParameterToken(context)));
 			}
 		}
 
@@ -615,7 +615,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(2, rows, context);
 
-				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
+				Assert.AreEqual(1, db.LastQuery!.Count(_ => _ == GetParameterToken(context)));
 
 				var result = GetTarget(db).Where(_ => _.Id == 3).ToList();
 
@@ -648,7 +648,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(2, rows, context);
 
-				Assert.AreEqual(4, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
+				Assert.AreEqual(4, db.LastQuery!.Count(_ => _ == GetParameterToken(context)));
 
 				var result = GetTarget(db).Where(_ => _.Id == 3).ToList();
 

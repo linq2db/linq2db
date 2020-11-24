@@ -213,7 +213,7 @@ namespace Tests.UserTests
 						{
 							Topic = x,
 							MessagesIds = x.MessagesF3.Select(t => t.Id).ToList()
-						}).FirstOrDefault();
+						}).FirstOrDefault()!;
 
 					Assert.IsNotNull(result);
 					Assert.AreEqual(60, result.MessagesIds.Single());
@@ -252,7 +252,7 @@ namespace Tests.UserTests
 						{
 							Topic = x,
 							MessagesIds = x.MessagesF3.Select(t => t.Id).ToList()
-						}).FirstOrDefault();
+						}).FirstOrDefault()!;
 
 					Assert.IsNotNull(result);
 					Assert.AreEqual(60, result.MessagesIds.Single());

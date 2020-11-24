@@ -90,7 +90,7 @@ namespace Tests.Linq
 					from t in db.Parent.LoadWithAsTable(p => p.Children.First().Parent)
 					select t;
 
-				var ch = q.FirstOrDefault();
+				var ch = q.FirstOrDefault()!;
 
 				Assert.IsNotNull(ch.Children[0].Parent);
 			}
@@ -188,7 +188,7 @@ namespace Tests.Linq
 						p
 					};
 
-				var ch = q.ToList().Select(t => t.p).SelectMany(p => p.Children).SelectMany(p => p.GrandChildren).FirstOrDefault();
+				var ch = q.ToList().Select(t => t.p).SelectMany(p => p.Children).SelectMany(p => p.GrandChildren).FirstOrDefault()!;
 
 				Assert.IsNotNull(ch);
 				Assert.IsNotNull(ch.Child);
@@ -210,7 +210,7 @@ namespace Tests.Linq
 						p
 					};
 
-				var ch = q.ToList().Select(t => t.p).SelectMany(p => p.GrandChildren2).FirstOrDefault();
+				var ch = q.ToList().Select(t => t.p).SelectMany(p => p.GrandChildren2).FirstOrDefault()!;
 
 				Assert.IsNotNull(ch);
 				Assert.IsNotNull(ch.Child);
@@ -232,7 +232,7 @@ namespace Tests.Linq
 						p
 					};
 
-				var ch = q.Select(t => t.p).SelectMany(p => p.GrandChildren2).FirstOrDefault();
+				var ch = q.Select(t => t.p).SelectMany(p => p.GrandChildren2).FirstOrDefault()!;
 
 				Assert.IsNotNull(ch);
 				Assert.IsNotNull(ch.Child);
@@ -250,7 +250,7 @@ namespace Tests.Linq
 					from p in db.GrandChild.LoadWith(p => p.Child!.GrandChildren[0].Child!.Parent)
 					select p;
 
-				var ch = q.SelectMany(p => p.Child!.GrandChildren).FirstOrDefault();
+				var ch = q.SelectMany(p => p.Child!.GrandChildren).FirstOrDefault()!;
 
 				Assert.IsNotNull(ch);
 				Assert.IsNotNull(ch.Child);
@@ -268,7 +268,7 @@ namespace Tests.Linq
 					from p in db.GrandChild.LoadWith(p => p.Child!.GrandChildren)
 					select p;
 
-				var ch = q.SelectMany(p => p.Child!.GrandChildren).FirstOrDefault();
+				var ch = q.SelectMany(p => p.Child!.GrandChildren).FirstOrDefault()!;
 
 				Assert.IsNotNull(ch);
 				Assert.IsNull   (ch.Child);
@@ -330,7 +330,7 @@ namespace Tests.Linq
 						p,
 					});
 
-				var result = q1.FirstOrDefault();
+				var result = q1.FirstOrDefault()!;
 
 				Assert.DoesNotThrow(() => result.p.Children.Single().Parent!.Children.Single());
 			}

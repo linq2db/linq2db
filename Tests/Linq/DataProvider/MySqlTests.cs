@@ -1151,7 +1151,7 @@ namespace Tests.DataProvider
 					{
 						var expectedColumn = expectedTable.Columns
 							.Where(_ => _.ColumnName == actualColumn.ColumnName)
-							.SingleOrDefault();
+							.SingleOrDefault()!;
 
 						Assert.IsNotNull(expectedColumn);
 
@@ -1178,7 +1178,7 @@ namespace Tests.DataProvider
 
 					foreach (var table in procedure.SimilarTables!)
 					{
-						var tbl = expectedProc.SimilarTables
+						var tbl = expectedProc.SimilarTables!
 							.SingleOrDefault(_ => _.TableName!.ToLower() == table.TableName!.ToLower());
 
 						Assert.IsNotNull(tbl);
@@ -1204,7 +1204,7 @@ namespace Tests.DataProvider
 			using (var db = (DataConnection)GetDataContext(context))
 			{
 				DatabaseSchema schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
-				var table = schema.Tables.FirstOrDefault(t => t.ID!.ToLower().Contains("issue1993"));
+				var table = schema.Tables.FirstOrDefault(t => t.ID!.ToLower().Contains("issue1993"))!;
 				Assert.IsNotNull(table);
 				Assert.AreEqual(2, table.Columns.Count);
 				Assert.AreEqual("id",          table.Columns[0].ColumnName);
@@ -1643,7 +1643,7 @@ namespace Tests.DataProvider
 				{
 					var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, new GetSchemaOptions() { GetProcedures = false });
 
-					var tableSchema = schema.Tables.Where(t => t.TableName!.ToLower() == "testschematypestable").SingleOrDefault();
+					var tableSchema = schema.Tables.Where(t => t.TableName!.ToLower() == "testschematypestable").SingleOrDefault()!;
 					Assert.IsNotNull(tableSchema);
 
 					assertColumn("VarChar255"        , "string"  , DataType.VarChar);
@@ -1725,7 +1725,7 @@ namespace Tests.DataProvider
 
 					void assertColumn(string name, string type, DataType dataType)
 					{
-						var column = tableSchema.Columns.Where(c => c.ColumnName == name).SingleOrDefault();
+						var column = tableSchema.Columns.Where(c => c.ColumnName == name).SingleOrDefault()!;
 						Assert.IsNotNull(column);
 						Assert.AreEqual(type, column.MemberType);
 						Assert.AreEqual(dataType, column.DataType);
@@ -1741,7 +1741,7 @@ namespace Tests.DataProvider
 			{
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, new GetSchemaOptions() { GetTables = false });
 
-				var proc = schema.Procedures.Where(t => t.ProcedureName == "Issue2313Parameters").SingleOrDefault();
+				var proc = schema.Procedures.Where(t => t.ProcedureName == "Issue2313Parameters").SingleOrDefault()!;
 
 				Assert.IsNotNull(proc);
 
@@ -1805,7 +1805,7 @@ namespace Tests.DataProvider
 
 				void assertParameter(string name, string type, DataType dataType)
 				{
-					var parameter = proc.Parameters.Where(c => c.ParameterName == name).SingleOrDefault();
+					var parameter = proc.Parameters.Where(c => c.ParameterName == name).SingleOrDefault()!;
 
 					Assert.IsNotNull(parameter);
 
@@ -1822,7 +1822,7 @@ namespace Tests.DataProvider
 			{
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, new GetSchemaOptions() { GetTables = false });
 
-				var proc = schema.Procedures.Where(t => t.ProcedureName == "Issue2313Results").SingleOrDefault();
+				var proc = schema.Procedures.Where(t => t.ProcedureName == "Issue2313Results").SingleOrDefault()!;
 
 				Assert.IsNotNull(proc);
 				Assert.IsNotNull(proc.ResultTable);
@@ -1893,7 +1893,7 @@ namespace Tests.DataProvider
 				{
 					// m'kaaaay...
 					name       = "`" + name + "`";
-					var column = proc.ResultTable!.Columns.Where(c => c.ColumnName == name).SingleOrDefault();
+					var column = proc.ResultTable!.Columns.Where(c => c.ColumnName == name).SingleOrDefault()!;
 
 					Assert.IsNotNull(column);
 

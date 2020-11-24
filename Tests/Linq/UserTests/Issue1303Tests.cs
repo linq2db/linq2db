@@ -42,7 +42,7 @@ namespace Tests.UserTests
 				var byId     = tbl.Where(_ => _.ID == 1).Single();
 
 				Assert.AreEqual(1, byId.ID);
-				Assert.True(new byte[] { 1, 2, 3 }.SequenceEqual(byId.Array));
+				Assert.True(new byte[] { 1, 2, 3 }.SequenceEqual(byId.Array!));
 				Assert.True(new byte[] { 4, 5 }   .SequenceEqual(byId.Binary!.ToArray()));
 
 				// Informix: doesn't support blobs in conditions
@@ -52,11 +52,11 @@ namespace Tests.UserTests
 					var byBinary = tbl.Where(_ => _.Binary == new Binary(new byte[] { 4, 5 })).Single();
 
 					Assert.AreEqual(1, byArray.ID);
-					Assert.True(new byte[] { 1, 2, 3 }.SequenceEqual(byArray.Array));
+					Assert.True(new byte[] { 1, 2, 3 }.SequenceEqual(byArray.Array!));
 					Assert.True(new byte[] { 4, 5 }   .SequenceEqual(byArray.Binary!.ToArray()));
 
 					Assert.AreEqual(1, byBinary.ID);
-					Assert.True(new byte[] { 1, 2, 3 }.SequenceEqual(byBinary.Array));
+					Assert.True(new byte[] { 1, 2, 3 }.SequenceEqual(byBinary.Array!));
 					Assert.True(new byte[] { 4, 5 }   .SequenceEqual(byBinary.Binary!.ToArray()));
 				}
 			}

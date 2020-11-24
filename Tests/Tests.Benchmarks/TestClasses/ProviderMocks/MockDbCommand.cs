@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.Benchmarks.TestProvider
 {
@@ -27,7 +28,8 @@ namespace LinqToDB.Benchmarks.TestProvider
 			_result     = result;
 		}
 
-		public    override string?               CommandText              { get; set; }
+		[AllowNull]
+		public    override string                CommandText              { get; set; } = null!;
 		public    override CommandType           CommandType              { get; set; }
 		protected override DbConnection?         DbConnection             { get; set; }
 		protected override DbParameterCollection DbParameterCollection => _parameters;

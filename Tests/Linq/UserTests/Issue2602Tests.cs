@@ -63,7 +63,7 @@ namespace Tests.UserTests
 				return id;
 			}
 
-			public Email GetEmail(string context)
+			public Email? GetEmail(string context)
 			{
 				using (var db = new DataConnection(context))
 				{

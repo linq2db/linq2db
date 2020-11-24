@@ -583,7 +583,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var arr = new List<Person> { new Person() };
-				var p = db.Person.Select(person => new { person.ID, Arr = arr.Take(1) }).FirstOrDefault();
+				var p = db.Person.Select(person => new { person.ID, Arr = arr.Take(1) }).FirstOrDefault()!;
 
 				p.Arr.Single();
 			}
@@ -928,7 +928,7 @@ namespace Tests.Linq
 
 			using (var db = new TestDataConnection(context))
 			{
-				var person = db.Query<ComplexPerson>(sql).FirstOrDefault();
+				var person = db.Query<ComplexPerson>(sql).FirstOrDefault()!;
 
 				Assert.NotNull(person);
 				Assert.AreEqual(3, person.ID);

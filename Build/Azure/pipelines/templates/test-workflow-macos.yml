@@ -1,6 +1,7 @@
 parameters:
   artifacts: ''
-  netcoreversion: ''
+  framework: ''
+  titleFramework: ''
   with_baselines: false
 
 steps:
@@ -63,7 +64,7 @@ steps:
 
 # just because there is no vstest handing in DotNetCoreCLI@2
 # https://github.com/microsoft/azure-pipelines-tasks/blob/master/Tasks/DotNetCoreCLIV2/dotnetcore.ts#L60
-- script: dotnet vstest linq2db.Tests.dll /TestCaseFilter:"TestCategory != SkipCI" /Framework:.NETCoreApp,Version=v${{ parameters.netcoreversion }} /logger:trx
+- script: dotnet vstest linq2db.Tests.dll /TestCaseFilter:"TestCategory != SkipCI" /Framework:${{ parameters.framework }} /logger:trx
   condition: and(variables.title, succeeded())
   displayName: 'Execute tests: $(title)'
 
@@ -72,7 +73,7 @@ steps:
   inputs:
     testRunner: VsTest
     testResultsFiles: '**/*.trx'
-    testRunTitle: 'Mac / NETCOREAPP${{ parameters.netcoreversion }} / $(title)'
+    testRunTitle: 'Mac / ${{ parameters.titleFramework }} / $(title)'
 
 - task: PowerShell@2
   inputs:
@@ -85,7 +86,7 @@ steps:
           exit 1
       }
       Write-Host "Create commit"
-      $output = git commit -m "[Mac / NETCOREAPP${{ parameters.netcoreversion }} / $(title)] baselines"
+      $output = git commit -m "[Mac / ${{ parameters.titleFramework }} / $(title)] baselines"
       if ($output -match "nothing to commit") {
           Write-Host "No baselines changes detected"
           exit 0

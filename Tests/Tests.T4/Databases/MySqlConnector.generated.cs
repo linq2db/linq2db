@@ -22,29 +22,29 @@ namespace MySqlConnectorDataContext
 {
 	public partial class TestmysqlconnectordbDB : LinqToDB.Data.DataConnection
 	{
-		public ITable<Alltype>           Alltypes           { get { return this.GetTable<Alltype>(); } }
-		public ITable<Alltypesnoyear>    Alltypesnoyears    { get { return this.GetTable<Alltypesnoyear>(); } }
-		public ITable<Child>             Children           { get { return this.GetTable<Child>(); } }
-		public ITable<Datatypetest>      Datatypetests      { get { return this.GetTable<Datatypetest>(); } }
-		public ITable<Doctor>            Doctors            { get { return this.GetTable<Doctor>(); } }
-		public ITable<Fact>              Facts              { get { return this.GetTable<Fact>(); } }
-		public ITable<Fulltextindextest> Fulltextindextests { get { return this.GetTable<Fulltextindextest>(); } }
-		public ITable<Grandchild>        Grandchilds        { get { return this.GetTable<Grandchild>(); } }
-		public ITable<Inheritancechild>  Inheritancechilds  { get { return this.GetTable<Inheritancechild>(); } }
-		public ITable<Inheritanceparent> Inheritanceparents { get { return this.GetTable<Inheritanceparent>(); } }
-		public ITable<Issue1993>         Issue1993          { get { return this.GetTable<Issue1993>(); } }
-		public ITable<Linqdatatype>      Linqdatatypes      { get { return this.GetTable<Linqdatatype>(); } }
-		public ITable<Parent>            Parents            { get { return this.GetTable<Parent>(); } }
-		public ITable<Patient>           Patients           { get { return this.GetTable<Patient>(); } }
-		public ITable<Person>            People             { get { return this.GetTable<Person>(); } }
+		public ITable<Alltype>                Alltypes                { get { return this.GetTable<Alltype>(); } }
+		public ITable<Alltypesnoyear>         Alltypesnoyears         { get { return this.GetTable<Alltypesnoyear>(); } }
+		public ITable<Child>                  Children                { get { return this.GetTable<Child>(); } }
+		public ITable<Createifnotexiststable> Createifnotexiststables { get { return this.GetTable<Createifnotexiststable>(); } }
+		public ITable<Datatypetest>           Datatypetests           { get { return this.GetTable<Datatypetest>(); } }
+		public ITable<Doctor>                 Doctors                 { get { return this.GetTable<Doctor>(); } }
+		public ITable<Fulltextindextest>      Fulltextindextests      { get { return this.GetTable<Fulltextindextest>(); } }
+		public ITable<Grandchild>             Grandchilds             { get { return this.GetTable<Grandchild>(); } }
+		public ITable<Inheritancechild>       Inheritancechilds       { get { return this.GetTable<Inheritancechild>(); } }
+		public ITable<Inheritanceparent>      Inheritanceparents      { get { return this.GetTable<Inheritanceparent>(); } }
+		public ITable<Issue1993>              Issue1993               { get { return this.GetTable<Issue1993>(); } }
+		public ITable<Linqdatatype>           Linqdatatypes           { get { return this.GetTable<Linqdatatype>(); } }
+		public ITable<Parent>                 Parents                 { get { return this.GetTable<Parent>(); } }
+		public ITable<Patient>                Patients                { get { return this.GetTable<Patient>(); } }
+		public ITable<Person>                 People                  { get { return this.GetTable<Person>(); } }
 		/// <summary>
 		/// VIEW
 		/// </summary>
-		public ITable<Personview>        Personviews        { get { return this.GetTable<Personview>(); } }
-		public ITable<Testidentity>      Testidentities     { get { return this.GetTable<Testidentity>(); } }
-		public ITable<Testmerge1>        Testmerge1         { get { return this.GetTable<Testmerge1>(); } }
-		public ITable<Testmerge2>        Testmerge2         { get { return this.GetTable<Testmerge2>(); } }
-		public ITable<Testsamename>      Testsamenames      { get { return this.GetTable<Testsamename>(); } }
+		public ITable<Personview>             Personviews             { get { return this.GetTable<Personview>(); } }
+		public ITable<Testidentity>           Testidentities          { get { return this.GetTable<Testidentity>(); } }
+		public ITable<Testmerge1>             Testmerge1              { get { return this.GetTable<Testmerge1>(); } }
+		public ITable<Testmerge2>             Testmerge2              { get { return this.GetTable<Testmerge2>(); } }
+		public ITable<Testsamename>           Testsamenames           { get { return this.GetTable<Testsamename>(); } }
 
 		public TestmysqlconnectordbDB()
 		{
@@ -135,6 +135,13 @@ namespace MySqlConnectorDataContext
 		[Column, Nullable] public int? ChildID  { get; set; } // int
 	}
 
+	[Table("createifnotexiststable")]
+	public partial class Createifnotexiststable
+	{
+		[Column, NotNull] public int Id    { get; set; } // int
+		[Column, NotNull] public int Value { get; set; } // int
+	}
+
 	[Table("datatypetest")]
 	public partial class Datatypetest
 	{
@@ -177,12 +184,6 @@ namespace MySqlConnectorDataContext
 		public Person Person { get; set; } = null!;
 
 		#endregion
-	}
-
-	[Table("fact")]
-	public partial class Fact
-	{
-		[PrimaryKey, NotNull] public int Id { get; set; } // int
 	}
 
 	[Table("fulltextindextest")]
@@ -425,91 +426,85 @@ namespace MySqlConnectorDataContext
 
 	public static partial class TableExtensions
 	{
-		public static Alltype Find(this ITable<Alltype> table, int ID)
+		public static Alltype? Find(this ITable<Alltype> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static Alltypesnoyear Find(this ITable<Alltypesnoyear> table, int ID)
+		public static Alltypesnoyear? Find(this ITable<Alltypesnoyear> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static Datatypetest Find(this ITable<Datatypetest> table, int DataTypeID)
+		public static Datatypetest? Find(this ITable<Datatypetest> table, int DataTypeID)
 		{
 			return table.FirstOrDefault(t =>
 				t.DataTypeID == DataTypeID);
 		}
 
-		public static Doctor Find(this ITable<Doctor> table, int PersonID)
+		public static Doctor? Find(this ITable<Doctor> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
 		}
 
-		public static Fact Find(this ITable<Fact> table, int Id)
+		public static Fulltextindextest? Find(this ITable<Fulltextindextest> table, uint Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static Fulltextindextest Find(this ITable<Fulltextindextest> table, uint Id)
-		{
-			return table.FirstOrDefault(t =>
-				t.Id == Id);
-		}
-
-		public static Inheritancechild Find(this ITable<Inheritancechild> table, int InheritanceChildId)
+		public static Inheritancechild? Find(this ITable<Inheritancechild> table, int InheritanceChildId)
 		{
 			return table.FirstOrDefault(t =>
 				t.InheritanceChildId == InheritanceChildId);
 		}
 
-		public static Inheritanceparent Find(this ITable<Inheritanceparent> table, int InheritanceParentId)
+		public static Inheritanceparent? Find(this ITable<Inheritanceparent> table, int InheritanceParentId)
 		{
 			return table.FirstOrDefault(t =>
 				t.InheritanceParentId == InheritanceParentId);
 		}
 
-		public static Issue1993 Find(this ITable<Issue1993> table, uint Id)
+		public static Issue1993? Find(this ITable<Issue1993> table, uint Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static Patient Find(this ITable<Patient> table, int PersonID)
+		public static Patient? Find(this ITable<Patient> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
 		}
 
-		public static Person Find(this ITable<Person> table, int PersonID)
+		public static Person? Find(this ITable<Person> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
 		}
 
-		public static Testidentity Find(this ITable<Testidentity> table, int ID)
+		public static Testidentity? Find(this ITable<Testidentity> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static Testmerge1 Find(this ITable<Testmerge1> table, int Id)
+		public static Testmerge1? Find(this ITable<Testmerge1> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static Testmerge2 Find(this ITable<Testmerge2> table, int Id)
+		public static Testmerge2? Find(this ITable<Testmerge2> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static Testsamename Find(this ITable<Testsamename> table, int ID)
+		public static Testsamename? Find(this ITable<Testsamename> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);

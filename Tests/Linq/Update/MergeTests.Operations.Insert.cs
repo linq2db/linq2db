@@ -446,7 +446,7 @@ namespace Tests.xUpdate
 				var results = source.ToList();
 
 				// 5 commas after selected columns and 1 comma in join
-				Assert.AreEqual(6, db.LastQuery.Count(c => c == ','));
+				Assert.AreEqual(6, db.LastQuery!.Count(c => c == ','));
 
 				Assert.AreEqual(16, results.Count);
 			}
@@ -478,7 +478,7 @@ namespace Tests.xUpdate
 				var results = source.ToList();
 
 				// 5 commas after selected columns and 1 comma in join
-				Assert.AreEqual(6, db.LastQuery.Count(c => c == ','));
+				Assert.AreEqual(6, db.LastQuery!.Count(c => c == ','));
 
 				Assert.AreEqual(16, results.Count);
 			}

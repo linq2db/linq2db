@@ -35,7 +35,7 @@
 					predicate = predicate != null ? Or(predicate, filterExpression) : filterExpression;
 				}
 
-				result = result.Where(predicate);
+				result = result.Where(predicate!);
 
 				// StackOverflowException cannot be handled and will terminate process
 				result.ToString();
@@ -70,8 +70,8 @@
 					predicate2 = predicate2 != null ? Or(predicate2, filterExpression) : filterExpression;
 				}
 
-				var result1 = result.Where(predicate1);
-				var result2 = result.Where(predicate2);
+				var result1 = result.Where(predicate1!);
+				var result2 = result.Where(predicate2!);
 
 				// StackOverflowException cannot be handled and will terminate process
 				result1.ToString();
