@@ -88,8 +88,8 @@ jobs:
           enable_os_macos: true
           enable_fw_net472: true
           enable_fw_netcore21: true
-          enable_fw_netcore31: false
-          enable_fw_net50: false
+          enable_fw_netcore31: true
+          enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlite.all]')) }}:
             enabled: true
@@ -108,8 +108,8 @@ jobs:
           enable_os_macos: true
           enable_fw_net472: true
           enable_fw_netcore21: true
-          enable_fw_netcore31: false
-          enable_fw_net50: false
+          enable_fw_netcore31: true
+          enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlite.all]')) }}:
             enabled: true
@@ -202,8 +202,8 @@ jobs:
           enable_os_macos: false
           enable_fw_net472: false
           enable_fw_netcore21: true
-          enable_fw_netcore31: false
-          enable_fw_net50: false
+          enable_fw_netcore31: true
+          enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
             enabled: true
@@ -222,7 +222,7 @@ jobs:
           enable_fw_net472: false
           enable_fw_netcore21: false # true (disabled due to a lot of random crashes https://github.com/dotnet/runtime/issues/36954)
           enable_fw_netcore31: false # true (disabled due to a lot of random crashes https://github.com/dotnet/runtime/issues/36954)
-          enable_fw_net50: false
+          enable_fw_net50: false # true (disabled due to a lot of random crashes https://github.com/dotnet/runtime/issues/36954)
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
             enabled: true
@@ -241,8 +241,8 @@ jobs:
           enable_os_macos: false
           enable_fw_net472: true
           enable_fw_netcore21: true
-          enable_fw_netcore31: false
-          enable_fw_net50: false
+          enable_fw_netcore31: true
+          enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlce.all]')) }}:
             enabled: true
@@ -265,7 +265,7 @@ jobs:
           enable_fw_net472: false
           enable_fw_netcore21: true
           enable_fw_netcore31: true
-          enable_fw_net50: false
+          enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]')) }}:
             enabled: true
@@ -286,8 +286,8 @@ jobs:
           enable_os_macos: true
           enable_fw_net472: false
           enable_fw_netcore21: true
-          enable_fw_netcore31: false
-          enable_fw_net50: false
+          enable_fw_netcore31: true
+          enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]')) }}:
             enabled: true
@@ -310,8 +310,8 @@ jobs:
           enable_os_macos: true
           enable_fw_net472: true
           enable_fw_netcore21: true
-          enable_fw_netcore31: false
-          enable_fw_net50: false
+          enable_fw_netcore31: true
+          enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]')) }}:
             enabled: true
@@ -334,7 +334,7 @@ jobs:
           enable_fw_net472: false
           enable_fw_netcore21: true
           enable_fw_netcore31: true
-          enable_fw_net50: false
+          enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
             enabled: true
@@ -355,8 +355,8 @@ jobs:
           enable_os_macos: true
           enable_fw_net472: false
           enable_fw_netcore21: true
-          enable_fw_netcore31: false
-          enable_fw_net50: false
+          enable_fw_netcore31: true
+          enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
             enabled: true
@@ -377,8 +377,8 @@ jobs:
           enable_os_macos: true
           enable_fw_net472: false
           enable_fw_netcore21: true
-          enable_fw_netcore31: false
-          enable_fw_net50: false
+          enable_fw_netcore31: true
+          enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
             enabled: true
@@ -399,8 +399,8 @@ jobs:
           enable_os_macos: true
           enable_fw_net472: false
           enable_fw_netcore21: true
-          enable_fw_netcore31: false
-          enable_fw_net50: false
+          enable_fw_netcore31: true
+          enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
             enabled: true
@@ -423,8 +423,8 @@ jobs:
           enable_os_macos: true
           enable_fw_net472: true
           enable_fw_netcore21: true
-          enable_fw_netcore31: false
-          enable_fw_net50: false
+          enable_fw_netcore31: true
+          enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
             enabled: true
@@ -446,8 +446,8 @@ jobs:
           enable_os_macos: true
           enable_fw_net472: false
           enable_fw_netcore21: true
-          enable_fw_netcore31: false
-          enable_fw_net50: false
+          enable_fw_netcore31: true
+          enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
             enabled: true
@@ -469,8 +469,8 @@ jobs:
           enable_os_macos: true
           enable_fw_net472: false
           enable_fw_netcore21: true
-          enable_fw_netcore31: false
-          enable_fw_net50: false
+          enable_fw_netcore31: true
+          enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
             enabled: true
@@ -492,8 +492,8 @@ jobs:
           enable_os_macos: true
           enable_fw_net472: false
           enable_fw_netcore21: true
-          enable_fw_netcore31: false
-          enable_fw_net50: false
+          enable_fw_netcore31: true
+          enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
             enabled: true
@@ -512,8 +512,8 @@ jobs:
           enable_os_macos: false
           enable_fw_net472: true
           enable_fw_netcore21: true
-          enable_fw_netcore31: false
-          enable_fw_net50: false
+          enable_fw_netcore31: true
+          enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
@@ -531,8 +531,8 @@ jobs:
           enable_os_macos: false
           enable_fw_net472: true
           enable_fw_netcore21: true
-          enable_fw_netcore31: false
-          enable_fw_net50: false
+          enable_fw_netcore31: true
+          enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
@@ -550,8 +550,8 @@ jobs:
           enable_os_macos: false
           enable_fw_net472: true
           enable_fw_netcore21: true
-          enable_fw_netcore31: false
-          enable_fw_net50: false
+          enable_fw_netcore31: true
+          enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
@@ -569,8 +569,8 @@ jobs:
           enable_os_macos: false
           enable_fw_net472: true
           enable_fw_netcore21: true
-          enable_fw_netcore31: false
-          enable_fw_net50: false
+          enable_fw_netcore31: true
+          enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
@@ -588,8 +588,8 @@ jobs:
           enable_os_macos: false
           enable_fw_net472: true
           enable_fw_netcore21: true
-          enable_fw_netcore31: false
-          enable_fw_net50: false
+          enable_fw_netcore31: true
+          enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
@@ -607,8 +607,8 @@ jobs:
           enable_os_macos: false
           enable_fw_net472: true
           enable_fw_netcore21: true
-          enable_fw_netcore31: false
-          enable_fw_net50: false
+          enable_fw_netcore31: true
+          enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
@@ -626,8 +626,8 @@ jobs:
           enable_os_macos: false
           enable_fw_net472: true
           enable_fw_netcore21: true
-          enable_fw_netcore31: false
-          enable_fw_net50: false
+          enable_fw_netcore31: true
+          enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
@@ -645,8 +645,8 @@ jobs:
           enable_os_macos: false
           enable_fw_net472: true
           enable_fw_netcore21: true
-          enable_fw_netcore31: false
-          enable_fw_net50: false
+          enable_fw_netcore31: true
+          enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
@@ -664,8 +664,8 @@ jobs:
           enable_os_macos: false
           enable_fw_net472: true
           enable_fw_netcore21: true
-          enable_fw_netcore31: false
-          enable_fw_net50: false
+          enable_fw_netcore31: true
+          enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
@@ -683,8 +683,8 @@ jobs:
           enable_os_macos: false
           enable_fw_net472: true
           enable_fw_netcore21: true
-          enable_fw_netcore31: false
-          enable_fw_net50: false
+          enable_fw_netcore31: true
+          enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
@@ -707,8 +707,8 @@ jobs:
           enable_os_macos: false # true (disabled due to stack overflow exception during test run. needs investigation)
           enable_fw_net472: true
           enable_fw_netcore21: true
-          enable_fw_netcore31: false
-          enable_fw_net50: false
+          enable_fw_netcore31: true
+          enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
@@ -731,8 +731,8 @@ jobs:
           enable_os_macos: false # true (disabled due to stack overflow exception during test run. needs investigation)
           enable_fw_net472: true
           enable_fw_netcore21: true
-          enable_fw_netcore31: false
-          enable_fw_net50: false
+          enable_fw_netcore31: true
+          enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
@@ -754,8 +754,8 @@ jobs:
           enable_os_ubuntu20: true
           enable_os_macos:  true
           enable_fw_net472: true
-          enable_fw_netcore21: false
-          enable_fw_netcore31: false
+          enable_fw_netcore21: true
+          enable_fw_netcore31: true
           enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]')) }}:
@@ -778,8 +778,8 @@ jobs:
           enable_os_ubuntu20: true
           enable_os_macos:  true
           enable_fw_net472: true
-          enable_fw_netcore21: false
-          enable_fw_netcore31: false
+          enable_fw_netcore21: true
+          enable_fw_netcore31: true
           enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]')) }}:
@@ -802,8 +802,8 @@ jobs:
           enable_os_macos: true
           enable_fw_net472: false
           enable_fw_netcore21: true
-          enable_fw_netcore31: false
-          enable_fw_net50: false
+          enable_fw_netcore31: true
+          enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sybase.ase.all]')) }}:
             enabled: true
@@ -825,8 +825,8 @@ jobs:
           enable_os_macos: true
           enable_fw_net472: false
           enable_fw_netcore21: true
-          enable_fw_netcore31: false
-          enable_fw_net50: false
+          enable_fw_netcore31: true
+          enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]')) }}:
             enabled: true
@@ -847,8 +847,8 @@ jobs:
           enable_os_macos: true
           enable_fw_net472: false
           enable_fw_netcore21: true
-          enable_fw_netcore31: false
-          enable_fw_net50: false
+          enable_fw_netcore31: true
+          enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]')) }}:
             enabled: true
@@ -870,8 +870,8 @@ jobs:
           enable_os_macos: true
           enable_fw_net472: false
           enable_fw_netcore21: true
-          enable_fw_netcore31: false
-          enable_fw_net50: false
+          enable_fw_netcore31: true
+          enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[firebird.all]')) }}:
             enabled: true
@@ -892,8 +892,8 @@ jobs:
           enable_os_macos: true
           enable_fw_net472: false
           enable_fw_netcore21: true
-          enable_fw_netcore31: false
-          enable_fw_net50: false
+          enable_fw_netcore31: true
+          enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[firebird.all]')) }}:
             enabled: true
@@ -917,8 +917,8 @@ jobs:
           enable_os_macos: true
           enable_fw_net472: false
           enable_fw_netcore21: true
-          enable_fw_netcore31: false
-          enable_fw_net50: false
+          enable_fw_netcore31: true
+          enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[db2.all]')) }}:
             enabled: true
@@ -942,8 +942,8 @@ jobs:
           enable_os_macos: # false true (needs working docker image)
           enable_fw_net472: false
           enable_fw_netcore21: true
-          enable_fw_netcore31: false
-          enable_fw_net50: false
+          enable_fw_netcore31: true
+          enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[informix.all]')) }}:
             enabled: true
@@ -966,8 +966,8 @@ jobs:
           enable_os_macos: true
           enable_fw_net472: false
           enable_fw_netcore21: true
-          enable_fw_netcore31: false
-          enable_fw_net50: false
+          enable_fw_netcore31: true
+          enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[informix.all]')) }}:
             enabled: true
@@ -989,8 +989,8 @@ jobs:
           enable_os_macos: # false true (needs working docker image)
           enable_fw_net472: false
           enable_fw_netcore21: true
-          enable_fw_netcore31: false
-          enable_fw_net50: false
+          enable_fw_netcore31: true
+          enable_fw_net50: true
           is_experimental: false
           docker_login: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[saphana.all]')) }}:
