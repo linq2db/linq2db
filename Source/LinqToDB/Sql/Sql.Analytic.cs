@@ -385,7 +385,8 @@ namespace LinqToDB
 
 		public interface IAndExpected<out TR>
 		{
-			[Sql.Extension("")]
+			// TokenName used only for chain continuation 
+			[Sql.Extension("", TokenName = "and_connector")]
 			ISecondBoundaryExpected<TR> And { get; }
 		}
 

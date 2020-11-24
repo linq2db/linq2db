@@ -457,6 +457,24 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void TestRowNumberOracleSorting([IncludeDataSources(false, TestProvName.AllOracle)] string context)
+		{
+			using (var db = (TestDataConnection)GetDataContext(context))
+			{
+				var q =
+					from p in db.Parent
+					join c in db.Child on p.ParentID equals c.ParentID
+					select new
+					{
+						DenseRank1     = Sql.Ext.RowNumber().Over().OrderBy(p.Value1).ThenByDesc(c.ChildID).ThenBy(p.ParentID).ToValue(),
+					};
+				Assert.IsNotEmpty(q.ToArray());
+
+				Assert.That(db.LastQuery, Does.Contain("(ORDER BY p.\"Value1\", c_1.\"ChildID\" DESC, p.\"ParentID\")"));
+			}
+		}
+
+		[Test]
 		public void TestFirstValueOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
