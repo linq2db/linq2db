@@ -276,6 +276,70 @@ jobs:
       titleFramework: 'NETCOREAPP2.1'
       with_baselines: ${{ parameters.with_baselines }}
 
+###################################
+#  Tests: Windows (NETCOREAPP3_1) #
+#  Windows 2019                   #
+###################################
+- job: test_win2019_netcoreapp31_job
+  pool:
+    vmImage: 'windows-2019'
+  displayName: 'Tests: Win / NETCOREAPP3.1 / '
+  dependsOn: create_baselines_branch
+  condition: ${{ parameters.enabled }}
+  variables:
+    baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
+
+  strategy:
+    matrix:
+      ${{ each test_config in parameters.test_matrix }}:
+        ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_win2019, 'true'), eq(test_config.enable_fw_netcore31, 'true'), eq(test_config.is_experimental, parameters.experimental)) }}:
+          ${{ test_config.name }}:
+            title: ${{ test_config.title }}
+            config: ${{ test_config.config_win }}
+            script: ${{ test_config.script_win }}
+            psscript: ${{ test_config.psscript_win }}
+
+  steps:
+  - template: test-workflow-windows.yml
+    parameters:
+      isCore: true
+      artifacts: $(netcore31_tests)
+      framework: '.NETCoreApp,Version=v3.1'
+      titleFramework: 'NETCOREAPP3.1'
+      with_baselines: ${{ parameters.with_baselines }}
+
+############################
+#  Tests: Windows (NET5_0) #
+#  Windows 2019            #
+############################
+- job: test_win2019_net50_job
+  pool:
+    vmImage: 'windows-2019'
+  displayName: 'Tests: Win / NET 5.0 / '
+  dependsOn: create_baselines_branch
+  condition: ${{ parameters.enabled }}
+  variables:
+    baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
+
+  strategy:
+    matrix:
+      ${{ each test_config in parameters.test_matrix }}:
+        ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_win2019, 'true'), eq(test_config.enable_fw_net50, 'true'), eq(test_config.is_experimental, parameters.experimental)) }}:
+          ${{ test_config.name }}:
+            title: ${{ test_config.title }}
+            config: ${{ test_config.config_win }}
+            script: ${{ test_config.script_win }}
+            psscript: ${{ test_config.psscript_win }}
+
+  steps:
+  - template: test-workflow-windows.yml
+    parameters:
+      isCore: true
+      artifacts: $(net50_tests)
+      framework: 'net5.0'
+      titleFramework: 'NET 5.0'
+      with_baselines: ${{ parameters.with_baselines }}
+
 ########################################
 #  Tests: Ubuntu 20.04 (NETCOREAPP2_1) #
 ########################################
@@ -514,6 +578,8 @@ jobs:
   - test_win2016_netcoreapp31_job
   - test_win2016_net50_job
   - test_win2019_netcoreapp21_job
+  - test_win2019_netcoreapp31_job
+  - test_win2019_net50_job
   - test_ubuntu_20_netcoreapp21_job
   - test_ubuntu_20_netcoreapp31_job
   - test_ubuntu_20_net50_job
