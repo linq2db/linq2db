@@ -724,7 +724,7 @@ namespace Tests.TypeMapping
 				var result         = ((ICustomMapper)mapper).Map(taskExpression);
 
 				Assert.AreEqual(typeof(Task<long>), result.Type);
-				Assert.IsAssignableFrom(typeof(Task<long>), result.EvaluateExpression()!.GetType());
+				Assert.IsAssignableFrom(typeof(Task<long>), result.EvaluateExpression());
 			}
 
 			[Test]
@@ -735,7 +735,7 @@ namespace Tests.TypeMapping
 				var result         = ((ICustomMapper)mapper).Map(taskExpression);
 
 				Assert.AreEqual(typeof(Task), result.Type);
-				Assert.IsAssignableFrom(typeof(Task), result.EvaluateExpression()!.GetType());
+				Assert.IsAssignableFrom(typeof(Task), result.EvaluateExpression());
 			}
 
 			[Test]

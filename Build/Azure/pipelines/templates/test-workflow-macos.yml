@@ -12,6 +12,7 @@ steps:
   inputs:
     packageType: sdk
     version: 5.x
+  condition: eq(${{ parameters.framework }}, 'net5.0')
 
 - task: CmdLine@2
   inputs:
