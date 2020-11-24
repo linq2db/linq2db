@@ -195,7 +195,7 @@ namespace LinqToDB.SqlProvider
 		static T NormalizeExpressions<T>(T expression) 
 			where T : class, IQueryElement
 		{
-			var result = ConvertVisitor.Convert(expression, (visitor, e) =>
+			var result = ConvertVisitor.ConvertAll(expression, (visitor, e) =>
 			{
 				if (e.ElementType == QueryElementType.SqlExpression)
 				{
@@ -2699,7 +2699,7 @@ namespace LinqToDB.SqlProvider
 		public T OptimizeElements<T>(T root, EvaluationContext context)
 			where T : class, IQueryElement
 		{
-			var newElement = ConvertVisitor.Convert(root, (visitor, e) =>
+			var newElement = ConvertVisitor.ConvertAll(root, (visitor, e) =>
 			{
 				var ne = e;
 				if (ne is ISqlExpression sqlExpression)
@@ -2883,7 +2883,7 @@ namespace LinqToDB.SqlProvider
 			var newElement = element;
 			for (int i = 0; i < 2; i++)
 			{
-				newElement = ConvertVisitor.Convert(element, (visitor, e) =>
+				newElement = ConvertVisitor.ConvertAll(element, (visitor, e) =>
 				{
 					var ne = e;
 					for (;;)
