@@ -130,6 +130,12 @@ namespace LinqToDB.Reflection
 
 			}
 
+			public static class SqlExt
+			{
+				public static readonly MethodInfo ToNotNull     = MemberHelper.MethodOfGeneric<int?>(i => Sql.ToNotNull(i));
+				public static readonly MethodInfo ToNotNullable = MemberHelper.MethodOfGeneric<int?>(i => Sql.ToNotNullable(i));
+			}
+
 			public static class Update
 			{
 				public static readonly MethodInfo UpdateUpdatable             = MemberHelper.MethodOfGeneric<IUpdatable<LW1>>(u => u.Update());

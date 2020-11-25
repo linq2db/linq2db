@@ -1261,6 +1261,8 @@ namespace LinqToDB.Linq.Builder
 
 			protected ISqlExpression? GetField(Expression expression, int level, bool throwException)
 			{
+				expression = expression.SkipPathThrough();
+
 				if (expression.NodeType == ExpressionType.MemberAccess)
 				{
 					var memberExpression = (MemberExpression)expression;
