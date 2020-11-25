@@ -58,12 +58,12 @@ namespace LinqToDB.Expressions
 
 		public Expression Reduce(IDataContext dataContext, IDataReader dataReader)
 		{
-			return GetColumnReader(dataContext, dataContext.MappingSchema, dataReader, _type, Converter, _idx, _dataReaderParam, false);
+			return GetColumnReader(dataContext, dataContext.MappingSchema, dataReader, _type, Converter, _idx, _dataReaderParam, forceNullCheck: false);
 		}
 
 		public Expression Reduce(IDataContext dataContext, IDataReader dataReader, Expression dataReaderParam)
 		{
-			return GetColumnReader(dataContext, dataContext.MappingSchema, dataReader, _type, Converter, _idx, dataReaderParam, false);
+			return GetColumnReader(dataContext, dataContext.MappingSchema, dataReader, _type, Converter, _idx, dataReaderParam, forceNullCheck: false);
 		}
 
 		static Expression ConvertExpressionToType(Expression current, Type toType, MappingSchema mappingSchema)

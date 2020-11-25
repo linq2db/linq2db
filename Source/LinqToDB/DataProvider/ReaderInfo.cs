@@ -51,7 +51,7 @@ namespace LinqToDB.DataProvider
 				_hashCode = _hashCode * -1521134295 + (FieldType         == null ? 0 : FieldType.        GetHashCode());
 				_hashCode = _hashCode * -1521134295 + (ProviderFieldType == null ? 0 : ProviderFieldType.GetHashCode());
 				_hashCode = _hashCode * -1521134295 + (DataTypeName      == null ? 0 : DataTypeName     .GetHashCode());
-				_hashCode = _hashCode * -1521134295 + (DataReaderType    == null ? 0 : DataReaderType.   GetHashCode());
+				_hashCode = _hashCode * -1521134295 + (DataReaderType    == null ? 0 : DataReaderType   .GetHashCode());
 			}
 		}
 
