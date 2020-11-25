@@ -220,7 +220,7 @@ void NotifyPropertyChangedImpl()
 						new Event("PropertyChangedEventHandler", "PropertyChanged", true)
 						{
 							IsVirtual  = true,
-							Attributes = { new Attribute("field : NonSerialized") { Conditional = "!SILVERLIGHT" } }
+							Attributes = { new Attribute("field : NonSerialized") }
 						},
 						new Method(() => "void", "OnPropertyChanged", new Func<string>[] { () => "string propertyName" }, () => OnPropertyChangedBody)
 						{
@@ -249,7 +249,7 @@ void NotifyPropertyChangedImpl()
 						new Event("PropertyChangingEventHandler", "PropertyChanging", true)
 						{
 							IsVirtual  = true,
-							Attributes = { new Attribute("field : NonSerialized") { Conditional = "!SILVERLIGHT" } }
+							Attributes = { new Attribute("field : NonSerialized") }
 						},
 						new Method(() => "void", "OnPropertyChanging", new Func<string>[] { () => "string propertyName" }, () => OnPropertyChangingBody)
 						{
