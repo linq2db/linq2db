@@ -68,7 +68,7 @@ namespace Tests.SchemaProvider
 					}
 				}
 
-				var table = dbSchema.Tables.SingleOrDefault(t => t.TableName!.ToLower() == "parent");
+				var table = dbSchema.Tables.SingleOrDefault(t => t.TableName!.ToLower() == "parent")!;
 
 				Assert.That(table,                                           Is.Not.Null);
 				Assert.That(table.Columns.Count(c => c.ColumnName != "_ID"), Is.EqualTo(2));
@@ -135,14 +135,14 @@ namespace Tests.SchemaProvider
 		{
 			var e = mappingSchema.GetEntityDescriptor(typeof(T));
 
-			var schemaTable = dbSchema.Tables.FirstOrDefault(_ => _.TableName!.Equals(e.TableName, StringComparison.OrdinalIgnoreCase));
+			var schemaTable = dbSchema.Tables.FirstOrDefault(_ => _.TableName!.Equals(e.TableName, StringComparison.OrdinalIgnoreCase))!;
 			Assert.IsNotNull(schemaTable, e.TableName);
 
 			Assert.That(schemaTable.Columns.Count >= e.Columns.Count);
 
 			foreach (var column in e.Columns)
 			{
-				var schemaColumn = schemaTable.Columns.FirstOrDefault(_ => _.ColumnName.Equals(column.ColumnName, StringComparison.InvariantCultureIgnoreCase));
+				var schemaColumn = schemaTable.Columns.FirstOrDefault(_ => _.ColumnName.Equals(column.ColumnName, StringComparison.InvariantCultureIgnoreCase))!;
 				Assert.IsNotNull(schemaColumn, column.ColumnName);
 
 				if (column.CanBeNull)

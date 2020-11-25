@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.Benchmarks.TestProvider
 {
@@ -29,6 +30,7 @@ namespace LinqToDB.Benchmarks.TestProvider
 			_state   = state;
 		}
 
+		[AllowNull]
 		public override string ConnectionString { get; set; } = "MockDbConnection";
 
 		public override string Database => throw new NotImplementedException();

@@ -1196,7 +1196,7 @@ namespace Tests.xUpdate
 					where p.ParentID == 1
 					select p
 				)
-				.Set(p => p.ParentID, p => db.Child.SingleOrDefault(c => c.ChildID == 11).ParentID + 1000)
+				.Set(p => p.ParentID, p => db.Child.SingleOrDefault(c => c.ChildID == 11)!.ParentID + 1000)
 				.Update();
 
 				Assert.AreEqual(1, res);
@@ -1482,7 +1482,7 @@ namespace Tests.xUpdate
 						(x1, y1) => new
 						{
 							gt    = x1.l,
-							theAM = y1.id
+							theAM = y1!.id
 						})
 					.Update(
 						gt_s_one,

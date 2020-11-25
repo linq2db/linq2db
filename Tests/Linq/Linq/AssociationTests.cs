@@ -536,7 +536,6 @@ namespace Tests.Linq
 		[Test]
 		public void Issue148Test([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q =

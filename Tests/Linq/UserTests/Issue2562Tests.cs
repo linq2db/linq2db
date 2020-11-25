@@ -31,9 +31,9 @@ namespace Tests.UserTests
 			public string? CardNumber { get; set; }
 
 			[ExpressionMethod(nameof(Person_LicPlates), IsColumn = true)]
-			public string Lics { get; set; } = null!;
+			public string? Lics { get; set; }
 
-			public static Expression<Func<Person2562, IDataContext, string>> Person_LicPlates()
+			public static Expression<Func<Person2562, IDataContext, string?>> Person_LicPlates()
 			{
 				return (person, db) => db.GetTable<ExternalId2562>()
 					.Where(x => x.CardTypeId == person.CardTypeId && x.CardNumber == person.CardNumber && x.TypeId == 2)

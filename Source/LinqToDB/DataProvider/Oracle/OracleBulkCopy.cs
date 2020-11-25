@@ -9,6 +9,7 @@ namespace LinqToDB.DataProvider.Oracle
 	using Data;
 	using LinqToDB.Common;
 	using SqlProvider;
+	using System.Text;
 	using System.Threading;
 	using System.Threading.Tasks;
 
@@ -26,7 +27,11 @@ namespace LinqToDB.DataProvider.Oracle
 			BulkCopyOptions options,
 			IEnumerable<T>  source)
 		{
-			if (table.DataContext is DataConnection dataConnection && dataConnection.Transaction == null && _provider.Adapter.BulkCopy != null)
+			// database name is not a part of table FQN in oracle
+			var serverName   = options.ServerName ?? table.ServerName;
+
+			if (table.DataContext is DataConnection dataConnection && _provider.Adapter.BulkCopy != null
+				&& serverName == null)
 			{
 				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
 
@@ -47,16 +52,21 @@ namespace LinqToDB.DataProvider.Oracle
 						if (column.ColumnName != sb.ConvertInline(column.ColumnName, ConvertType.NameToQueryField))
 						{
 							// fallback to sql-based copy
+							// TODO: we should add support for by-ordinal column mapping to workaround it
 							supported = false;
 							break;
 						}
 
 					if (supported)
 					{
-						var rd        = new BulkCopyReader<T>(dataConnection, columns, source);
-						var sqlopt    = OracleProviderAdapter.OracleBulkCopyOptions.Default;
-						var rc        = new BulkCopyRowsCopied();
-						var tableName = GetTableName(sb, options, table);
+						var rd         = new BulkCopyReader<T>(dataConnection, columns, source);
+						var sqlopt     = OracleProviderAdapter.OracleBulkCopyOptions.Default;
+						var rc         = new BulkCopyRowsCopied();
+
+						var tableName   = sb.ConvertInline(options.TableName  ?? table.TableName , ConvertType.NameToQueryTable);
+						var schemaName  = options.SchemaName ?? table.SchemaName;
+						if (schemaName != null)
+							schemaName  = sb.ConvertInline(schemaName, ConvertType.NameToSchema);
 
 						if (options.UseInternalTransaction == true) sqlopt |= OracleProviderAdapter.OracleBulkCopyOptions.UseInternalTransaction;
 
@@ -87,14 +97,15 @@ namespace LinqToDB.DataProvider.Oracle
 							else if (Configuration.Data.BulkCopyUseConnectionCommandTimeout)
 								bc.BulkCopyTimeout = connection.ConnectionTimeout;
 
-							bc.DestinationTableName = tableName;
+							bc.DestinationTableName  = tableName;
+							bc.DestinationSchemaName = schemaName;
 
 							for (var i = 0; i < columns.Count; i++)
 								bc.ColumnMappings.Add(_provider.Adapter.BulkCopy.CreateColumnMapping(i, columns[i].ColumnName));
 
 							TraceAction(
 								dataConnection,
-								() => "INSERT BULK " + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + Environment.NewLine,
+								() => "INSERT BULK " + (schemaName == null ? tableName : schemaName + "." + tableName) + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + ")" + Environment.NewLine,
 								() => { bc.WriteToServer(rd); return rd.Count; });
 						}
 

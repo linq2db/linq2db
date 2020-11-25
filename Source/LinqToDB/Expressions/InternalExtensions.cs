@@ -932,7 +932,7 @@ namespace LinqToDB.Expressions
 
 		public static Expression SkipPathThrough(this Expression expr)
 		{
-			while (expr is MethodCallExpression mce && mce.IsQueryable("AsQueryable"))
+			while (expr is MethodCallExpression mce && mce.IsSameGenericMethod(Methods.Enumerable.AsQueryable, Methods.LinqToDB.SqlExt.ToNotNull))
 				expr = mce.Arguments[0];
 			return expr;
 		}
@@ -994,6 +994,7 @@ namespace LinqToDB.Expressions
 				return null;
 
 			expr = expr.SkipMethodChain(mapping);
+			expr = expr.SkipPathThrough();
 
 			switch (expr.NodeType)
 			{
@@ -1235,7 +1236,10 @@ namespace LinqToDB.Expressions
 			     || call.IsAggregate(mapping)
 			     || call.IsExtensionMethod(mapping)
 			     || call.IsAssociation(mapping)
-			     || call.Method.IsSqlPropertyMethodEx()))
+				 || call.Method.IsSqlPropertyMethodEx()
+				 || call.IsSameGenericMethod(Methods.LinqToDB.SqlExt.ToNotNull)
+			     )
+			    )
 			{
 				expr = call.Arguments[0];
 			}

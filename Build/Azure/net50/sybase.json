@@ -1,0 +1,7 @@
+﻿{
+	"NET50.Azure": {
+		"Providers": [
+			"Sybase.Managed"
+		]
+	}
+}
