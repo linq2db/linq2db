@@ -61,7 +61,6 @@ namespace Tests.UserTests
 				TestProvName.AllSapHana)]
 					string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = new IssueDataConnection(context))
 			{
 				db.GetTable<Child>().LoadWith(p => p.Parent!.Children).First();
@@ -71,7 +70,6 @@ namespace Tests.UserTests
 		[Test]
 		public void TestFactory([DataSources(false)] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = new FactoryDataConnection(context))
 			{
 				db.GetTable<Child>().LoadWith(p => p.Parent!.Children).First();

@@ -46,6 +46,16 @@ jobs:
       nobuild: true
     displayName: Publish Test Project for netcore 3.1
 
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: 'publish'
+      projects: '**/Tests/Linq/Tests.csproj'
+      publishWebProjects: false
+      zipAfterPublish: false
+      arguments: -f net5.0 -c $(build_configuration)
+      nobuild: true
+    displayName: Publish Test Project for net 5.0
+
   - task: CopyFiles@2
     inputs:
       targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net472'
@@ -69,6 +79,13 @@ jobs:
 
   - task: CopyFiles@2
     inputs:
+      targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net5.0/publish'
+      sourceFolder: '$(Build.SourcesDirectory)/Tests'
+      contents: 'DataProviders.json'
+    displayName: Copy test settings for NET 5.0
+
+  - task: CopyFiles@2
+    inputs:
       targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net472/configs'
       sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/net472'
     displayName: Copy test configs for NETFX472
@@ -85,10 +102,22 @@ jobs:
       sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/netcoreapp31'
     displayName: Copy test configs for NETCOREAPP3.1
 
+  - task: CopyFiles@2
+    inputs:
+      targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net5.0/publish/configs'
+      sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/net50'
+    displayName: Copy test configs for NET 5.0
+
   - task: CmdLine@2
     inputs:
       script: 'copy "$(System.DefaultWorkingDirectory)\Data\Create Scripts\Northwind.sql" $(Build.SourcesDirectory)\Build\Azure\scripts\northwind.sql'
     displayName: Copy northwind.sql to scripts
+
+  - task: CopyFiles@2
+    inputs:
+      targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.1/publish/scripts'
+      sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/scripts'
+    displayName: Copy test scripts for NETCOREAPP2.1
 
   - task: CopyFiles@2
     inputs:
@@ -98,9 +127,9 @@ jobs:
 
   - task: CopyFiles@2
     inputs:
-      targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.1/publish/scripts'
+      targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net5.0/publish/scripts'
       sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/scripts'
-    displayName: Copy test scripts for NETCOREAPP2.1
+    displayName: Copy test scripts for NET5.0
 
   - task: CopyFiles@2
     inputs:
@@ -125,6 +154,12 @@ jobs:
       path: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp3.1/publish'
       artifact: '$(netcore31_tests)'
     displayName: Publish test artifacts for NETCOREAPP3.1
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      path: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net5.0/publish'
+      artifact: '$(net50_tests)'
+    displayName: Publish test artifacts for NET 5.0
 
   - task: PublishPipelineArtifact@1
     inputs:

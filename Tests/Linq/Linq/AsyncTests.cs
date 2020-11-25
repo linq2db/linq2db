@@ -227,6 +227,7 @@ namespace Tests.Linq
 			AreEqual(Parent.Where(x => x.ParentID > 1), list);
 		}
 
+		[ActiveIssue(Configuration = TestProvName.AllPostgreSQL, Details = "ngpsql 5.0.0 bug")]
 		[Test]
 		public void CancelableAsyncEnumerableTest([DataSources] string context)
 		{

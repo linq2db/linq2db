@@ -58,6 +58,9 @@ namespace Tests.Linq
 			[Column(DataType = DataType.VarChar, Length = 1, CanBeNull = false)]
 			public bool BoolValue { get; set; }
 
+			[Column]
+			public DateTime? DateTimeNullable { get; set; }
+
 			public static MainClass[] TestData()
 			{
 				return Enumerable.Range(1, 10)
@@ -70,7 +73,8 @@ namespace Tests.Linq
 							EnumNullable = i % 4 == 1 ? EnumValue.Value1 : i % 4 == 2 ? EnumValue.Value2 : i % 4 == 3 ? EnumValue.Value3 : (EnumValue?)null,
 							EnumWithNull = i % 4 == 1 ? EnumValue.Value1 : i % 4 == 2 ? EnumValue.Value2 : i % 4 == 3 ? EnumValue.Value3 : EnumValue.Null,
 							EnumWithNullDeclarative = i % 4 == 1 ? EnumValue.Value1 : i % 4 == 2 ? EnumValue.Value2 : i % 4 == 3 ? EnumValue.Value3 : EnumValue.Null,
-							BoolValue = i % 4 == 1
+							BoolValue = i % 4 == 1,
+							DateTimeNullable = i % 3 == 1 ? (DateTime?)null : TestBase.TestData.Date
 						}
 					).ToArray();
 			}
@@ -111,6 +115,9 @@ namespace Tests.Linq
 
 			[Column(DataType = DataType.VarChar, Length = 1, CanBeNull = false)]
 			public char BoolValue { get; set; }
+
+			[Column]
+			public DateTime? DateTimeNullable { get; set; }
 		}
 
 		[Sql.Extension("{value1} = {value2}", ServerSideOnly = true, IsPredicate = true, Precedence = Precedence.Comparison)]
@@ -139,7 +146,12 @@ namespace Tests.Linq
 					true
 				)
 				.Property(e => e.BoolValue)
-				.HasConversion(v => v ? 'Y' : 'N', p => p == 'Y');
+				.HasConversion(v => v ? 'Y' : 'N', p => p == 'Y')
+				.Property(e => e.DateTimeNullable)
+				.HasConversion(
+					_ => _.HasValue ? _.Value.ToLocalTime() : new DateTime?(),
+					_ => _.HasValue ? new DateTime(_.Value.Ticks, DateTimeKind.Local) : new DateTime?()
+				);
 
 			return ms;
 		}
@@ -243,6 +255,32 @@ namespace Tests.Linq
 				var selectResult = query.ToArray();
 				
 				Assert.That(selectResult.Length, Is.EqualTo(1));
+			}
+		}
+
+		[Test]
+		public void ParameterTestsNullable([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			var ms = CreateMappingSchema();
+
+			var testData = MainClass.TestData();
+			using (var db = GetDataContext(context, ms))
+			using (var table = db.CreateLocalTable(testData))
+			{
+				var testDate = TestData.Date;
+
+				var query1 = from t in table
+					where testDate == t.DateTimeNullable!.Value
+					select t.DateTimeNullable;
+
+				var query2 = from t in table
+					where t.DateTimeNullable!.Value == testDate
+					select t.DateTimeNullable;
+
+				var result1 = query1.ToArray();
+				var result2 = query2.ToArray();
+
+				AreEqual(result1, result2);
 			}
 		}
 
@@ -436,7 +474,7 @@ namespace Tests.Linq
 					.Set(e => e.EnumWithNullDeclarative, EnumValue.Null)
 					.Update();
 
-				var update1Check = rawTable.FirstOrDefault(e => e.Id == 1);
+				var update1Check = rawTable.FirstOrDefault(e => e.Id == 1)!;
 
 				Assert.That(update1Check.Value1, Is.EqualTo(JsonConvert.SerializeObject(testData[0].Value1)));
 				Assert.That(update1Check.Value2, Is.EqualTo(JsonConvert.SerializeObject(updated)));
@@ -455,7 +493,7 @@ namespace Tests.Linq
 
 				db.Update(toUpdate2);
 
-				var update2Check = rawTable.FirstOrDefault(e => e.Id == 2);
+				var update2Check = rawTable.FirstOrDefault(e => e.Id == 2)!;
 
 				Assert.That(update2Check.Value1, Is.EqualTo("{\"some\":\"updated2}\"}"));
 				Assert.That(update2Check.Value2, Is.EqualTo(JsonConvert.SerializeObject(new List<ItemClass> { new ItemClass { Value = "updated2" } })));
@@ -473,7 +511,7 @@ namespace Tests.Linq
 				};
 				db.Update(toUpdate3);
 
-				var update3Check = rawTable.FirstOrDefault(e => e.Id == 3);
+				var update3Check = rawTable.FirstOrDefault(e => e.Id == 3)!;
 
 				Assert.That(update3Check.Value1, Is.Null);
 				Assert.That(update3Check.Value2, Is.Null);
@@ -501,7 +539,7 @@ namespace Tests.Linq
 					.Value(e => e.Value2, inserted)
 					.Value(e => e.BoolValue, true)
 					.Insert();
-				var insert1Check = rawTable.FirstOrDefault(e => e.Id == 1);
+				var insert1Check = rawTable.FirstOrDefault(e => e.Id == 1)!;
 
 				Assert.That(insert1Check.Value1, Is.EqualTo(JsonConvert.SerializeObject(new JArray())));
 				Assert.That(insert1Check.Value2, Is.EqualTo(JsonConvert.SerializeObject(inserted)));
@@ -518,7 +556,7 @@ namespace Tests.Linq
 					.Value(e => e.BoolValue, false)
 					.Insert();
 
-				var insert2Check = rawTable.FirstOrDefault(e => e.Id == 2);
+				var insert2Check = rawTable.FirstOrDefault(e => e.Id == 2)!;
 
 				Assert.That(insert2Check.Value1, Is.Null);
 				Assert.That(insert2Check.Value2, Is.Null);
@@ -539,7 +577,7 @@ namespace Tests.Linq
 
 				db.Insert(toInsert);
 
-				var insert3Check = rawTable.FirstOrDefault(e => e.Id == 3);
+				var insert3Check = rawTable.FirstOrDefault(e => e.Id == 3)!;
 
 				Assert.That(insert3Check.Value1, Is.EqualTo("{\"some\":\"inserted3}\"}"));
 				Assert.That(insert3Check.Value2, Is.EqualTo(JsonConvert.SerializeObject(new List<ItemClass> { new ItemClass { Value = "inserted3" } })));

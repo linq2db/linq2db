@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 using NUnit.Framework;
@@ -57,7 +58,8 @@ namespace Tests
 		/// Gets or sets configuration names, to which this attribute should be applied.
 		/// Applied only to tests marked with attributes, based on <see cref="DataSourcesBaseAttribute"/>.
 		/// </summary>
-		public string[]? Configurations
+		[MaybeNull]
+		public string[] Configurations
 		{
 			get => _configurations;
 			set => _configurations = value.SelectMany(p => p.Split(',').Select(_ => _.Trim())).ToArray();

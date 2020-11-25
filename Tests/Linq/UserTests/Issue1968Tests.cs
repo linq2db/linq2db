@@ -67,7 +67,6 @@ namespace Tests.UserTests
 		[Test]
 		public void Issue1968Test([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<University>())
 			using (db.CreateLocalTable<Faculty>())

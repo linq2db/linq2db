@@ -29,7 +29,7 @@ namespace Tests.UserTests
 
 					Assert.Greater(count, 0);
 
-					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1);
+					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 
 					Assert.IsNotNull(r);
 					if (value == 2)
@@ -45,7 +45,7 @@ namespace Tests.UserTests
 					count = db.Update(r);
 
 					Assert.Greater(count, 0);
-					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1);
+					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 					Assert.IsNotNull(r);
 					if (value == 2)
 					{
@@ -72,7 +72,7 @@ namespace Tests.UserTests
 
 					Assert.Greater(count, 0);
 
-					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1);
+					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 
 					Assert.IsNotNull(r);
 					if (value == 2)
@@ -88,7 +88,7 @@ namespace Tests.UserTests
 					count = db.InsertOrReplace(r);
 
 					Assert.Greater(count, 0);
-					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1);
+					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 					Assert.IsNotNull(r);
 					if (value == 2)
 					{

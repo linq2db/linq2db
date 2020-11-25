@@ -1536,7 +1536,7 @@ namespace LinqToDB.Data
 			var key = new QueryKey(typeof(T), dataReader.GetType(), dataConnection.ID, sql, additionalKey);
 
 			var func = CreateObjectReader<T>(dataConnection, dataReader, (dc, dr, type, idx,dataReaderExpr) =>
-				new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr).Reduce(dc));
+				new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr).Reduce(dc, slowMode: true));
 
 			_objectReaders[key] = func;
 

@@ -25,6 +25,7 @@ namespace InformixDataContext
 		public ITable<Grandchild>        Grandchilds        { get { return this.GetTable<Grandchild>(); } }
 		public ITable<Inheritancechild>  Inheritancechilds  { get { return this.GetTable<Inheritancechild>(); } }
 		public ITable<Inheritanceparent> Inheritanceparents { get { return this.GetTable<Inheritanceparent>(); } }
+		public ITable<Issue913test>      Issue913tests      { get { return this.GetTable<Issue913test>(); } }
 		public ITable<Linqdatatype>      Linqdatatypes      { get { return this.GetTable<Linqdatatype>(); } }
 		public ITable<Parent>            Parents            { get { return this.GetTable<Parent>(); } }
 		public ITable<Patient>           Patients           { get { return this.GetTable<Patient>(); } }
@@ -126,6 +127,13 @@ namespace InformixDataContext
 		[Column("inheritanceparentid"), PrimaryKey,  NotNull] public int     Inheritanceparentid { get; set; } // INTEGER
 		[Column("typediscriminator"),      Nullable         ] public int?    Typediscriminator   { get; set; } // INTEGER
 		[Column("name"),                   Nullable         ] public string? Name                { get; set; } // NVARCHAR(50)
+	}
+
+	[Table(Schema="informix", Name="issue913test")]
+	public partial class Issue913test
+	{
+		[Column("instrumentid"),  PrimaryKey,  NotNull] public int   Instrumentid  { get; set; } // INTEGER
+		[Column("tradingstatus"),    Nullable         ] public char? Tradingstatus { get; set; } // NCHAR(1)
 	}
 
 	[Table(Schema="informix", Name="linqdatatypes")]
@@ -310,61 +318,67 @@ namespace InformixDataContext
 
 	public static partial class TableExtensions
 	{
-		public static Alltype Find(this ITable<Alltype> table, int Id)
+		public static Alltype? Find(this ITable<Alltype> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static Doctor Find(this ITable<Doctor> table, int Personid)
+		public static Doctor? Find(this ITable<Doctor> table, int Personid)
 		{
 			return table.FirstOrDefault(t =>
 				t.Personid == Personid);
 		}
 
-		public static Inheritancechild Find(this ITable<Inheritancechild> table, int Inheritancechildid)
+		public static Inheritancechild? Find(this ITable<Inheritancechild> table, int Inheritancechildid)
 		{
 			return table.FirstOrDefault(t =>
 				t.Inheritancechildid == Inheritancechildid);
 		}
 
-		public static Inheritanceparent Find(this ITable<Inheritanceparent> table, int Inheritanceparentid)
+		public static Inheritanceparent? Find(this ITable<Inheritanceparent> table, int Inheritanceparentid)
 		{
 			return table.FirstOrDefault(t =>
 				t.Inheritanceparentid == Inheritanceparentid);
 		}
 
-		public static Patient Find(this ITable<Patient> table, int Personid)
+		public static Issue913test? Find(this ITable<Issue913test> table, int Instrumentid)
+		{
+			return table.FirstOrDefault(t =>
+				t.Instrumentid == Instrumentid);
+		}
+
+		public static Patient? Find(this ITable<Patient> table, int Personid)
 		{
 			return table.FirstOrDefault(t =>
 				t.Personid == Personid);
 		}
 
-		public static Person Find(this ITable<Person> table, int Personid)
+		public static Person? Find(this ITable<Person> table, int Personid)
 		{
 			return table.FirstOrDefault(t =>
 				t.Personid == Personid);
 		}
 
-		public static Testidentity Find(this ITable<Testidentity> table, int Id)
+		public static Testidentity? Find(this ITable<Testidentity> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static Testmerge1 Find(this ITable<Testmerge1> table, int Id)
+		public static Testmerge1? Find(this ITable<Testmerge1> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static Testmerge2 Find(this ITable<Testmerge2> table, int Id)
+		public static Testmerge2? Find(this ITable<Testmerge2> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static Testunique Find(this ITable<Testunique> table, int Id1, int Id2)
+		public static Testunique? Find(this ITable<Testunique> table, int Id1, int Id2)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id1 == Id1 &&

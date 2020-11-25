@@ -88,7 +88,7 @@ namespace Tests.UserTests
 
 					Assert.Greater(count, 0);
 
-					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1);
+					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 
 					Assert.IsNotNull(r);
 					Assert.IsNull(r.Name);
@@ -97,7 +97,7 @@ namespace Tests.UserTests
 
 					Assert.Greater(count, 0);
 
-					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 2);
+					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 2)!;
 
 					Assert.IsNotNull(r);
 					Assert.IsNull(r.Name);
@@ -117,7 +117,7 @@ namespace Tests.UserTests
 
 					Assert.Greater(count, 0);
 
-					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1);
+					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 
 					Assert.IsNotNull(r);
 					Assert.AreEqual(r.Name, "Paul");
@@ -126,7 +126,7 @@ namespace Tests.UserTests
 
 					Assert.Greater(count, 0);
 
-					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 2);
+					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 2)!;
 
 					Assert.IsNotNull(r);
 					Assert.AreEqual(r.Name, "Mary");
@@ -146,7 +146,7 @@ namespace Tests.UserTests
 
 					Assert.Greater(count, 0);
 
-					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1);
+					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 
 					Assert.IsNotNull(r);
 					Assert.IsNull(r.Age);
@@ -155,7 +155,7 @@ namespace Tests.UserTests
 
 					Assert.Greater(count, 0);
 
-					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 2);
+					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 2)!;
 
 					Assert.IsNotNull(r);
 					Assert.IsNull(r.Age);
@@ -175,7 +175,7 @@ namespace Tests.UserTests
 
 					Assert.Greater(count, 0);
 
-					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1);
+					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 
 					Assert.IsNotNull(r);
 					Assert.AreEqual(r.Age, 55);
@@ -184,7 +184,7 @@ namespace Tests.UserTests
 
 					Assert.Greater(count, 0);
 
-					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 2);
+					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 2)!;
 
 					Assert.IsNotNull(r);
 					Assert.AreEqual(r.Age, 50);
@@ -205,7 +205,7 @@ namespace Tests.UserTests
 					var count = db.Insert(new TestTableNull() { Id = 1, Name = "Tommy", Age = null });
 
 					Assert.Greater(count, 0);
-					var r = db.GetTable<TestTableNull>().FirstOrDefault(t => t.Id == 1);
+					var r = db.GetTable<TestTableNull>().FirstOrDefault(t => t.Id == 1)!;
 
 					Assert.IsNotNull(r);
 					Assert.IsNotNull(r.Age);
@@ -229,7 +229,7 @@ namespace Tests.UserTests
 
 					Assert.Greater(count, 0);
 
-					var r = db.GetTable<TestTableFluent>().FirstOrDefault(t => t.Id == 1);
+					var r = db.GetTable<TestTableFluent>().FirstOrDefault(t => t.Id == 1)!;
 
 					Assert.IsNotNull(r);
 					Assert.AreEqual(r.Age, 0);
@@ -248,7 +248,7 @@ namespace Tests.UserTests
 
 					Assert.Greater(count, 0);
 
-					var r = db.GetTable<TestTableEnum>().FirstOrDefault(t => t.Id == 1);
+					var r = db.GetTable<TestTableEnum>().FirstOrDefault(t => t.Id == 1)!;
 
 					Assert.IsNotNull(r);
 					Assert.AreEqual(r.Gender, TestTableEnum.GenderType.Male);
@@ -257,7 +257,7 @@ namespace Tests.UserTests
 
 					Assert.Greater(count, 0);
 
-					r = db.GetTable<TestTableEnum>().FirstOrDefault(t => t.Id == 2);
+					r = db.GetTable<TestTableEnum>().FirstOrDefault(t => t.Id == 2)!;
 
 					Assert.IsNotNull(r);
 					Assert.AreEqual(r.Gender, TestTableEnum.GenderType.Undefined);
@@ -276,7 +276,7 @@ namespace Tests.UserTests
 
 					Assert.Greater(count, 0);
 
-					var r = db.GetTable<TestTableMixed>().FirstOrDefault(t => t.Id == 1);
+					var r = db.GetTable<TestTableMixed>().FirstOrDefault(t => t.Id == 1)!;
 
 					Assert.IsNotNull(r);
 					Assert.AreEqual(r.Name, "Jason");
@@ -284,7 +284,7 @@ namespace Tests.UserTests
 					r.Name = "Max";
 					count = db.Update(r);
 					Assert.Greater(count, 0);
-					r = db.GetTable<TestTableMixed>().FirstOrDefault(t => t.Id == 1);
+					r = db.GetTable<TestTableMixed>().FirstOrDefault(t => t.Id == 1)!;
 					Assert.IsNotNull(r);
 					Assert.AreEqual(r.Name, "Jason");
 
@@ -292,7 +292,7 @@ namespace Tests.UserTests
 
 					Assert.Greater(count, 0);
 
-					r = db.GetTable<TestTableMixed>().FirstOrDefault(t => t.Id == 2);
+					r = db.GetTable<TestTableMixed>().FirstOrDefault(t => t.Id == 2)!;
 
 					Assert.IsNotNull(r);
 					Assert.IsNull(r.Name);
@@ -300,7 +300,7 @@ namespace Tests.UserTests
 					r.Name = "Jessy";
 					count = db.Update(r);
 					Assert.Greater(count, 0);
-					r = db.GetTable<TestTableMixed>().FirstOrDefault(t => t.Id == 2);
+					r = db.GetTable<TestTableMixed>().FirstOrDefault(t => t.Id == 2)!;
 					Assert.IsNotNull(r);
 					Assert.AreEqual(r.Name, "Jessy");
 				}

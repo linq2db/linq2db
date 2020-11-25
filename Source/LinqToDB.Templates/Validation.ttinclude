@@ -66,7 +66,7 @@ void ValidationImpl()
 
 				ret += (i == 0 ? "" : " || ") + "flag" + i;
 
-				var validate = new Method(() => "ValidationResult?", mname,
+				var validate = new Method(() => new ModelType("ValidationResult", true, true).ToTypeName(), mname,
 					new Func<string>[] { () => cl.Name + " obj", () => p.BuildType().Trim() + " value" }) { IsStatic = true };
 
 				validate.BodyBuilders.Add(() => new []

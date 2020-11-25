@@ -129,7 +129,7 @@ namespace Tests.UserTests
 					);
 
 					// Ensure the expected records are returned
-					var records = query.ToArray();
+					var records = query!.ToArray();
 					Assert.IsNotNull(records);
 					Assert.AreEqual(1, records.Length);
 
