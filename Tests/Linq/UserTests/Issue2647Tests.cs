@@ -33,6 +33,7 @@ namespace Tests.UserTests
 				query = query.ThenByDescending(ss => db.GetTable<IssueClass>().Count(ss2 => ss2.Id == ss.Id) * 10000 /
 				                                     db.GetTable<IssueClass>().Count(ss3 => ss3.Id == ss.Id));
 
+				query.ToList();
 				var sql = query.ToString();
 				TestContext.WriteLine(sql);
 
