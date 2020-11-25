@@ -105,7 +105,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 							TraceAction(
 								dataConnection,
-								() => "INSERT BULK " + (schemaName == null ? tableName : schemaName + "." + tableName) + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + Environment.NewLine,
+								() => "INSERT BULK " + (schemaName == null ? tableName : schemaName + "." + tableName) + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + ")" + Environment.NewLine,
 								() => { bc.WriteToServer(rd); return rd.Count; });
 						}
 
