@@ -324,7 +324,7 @@ namespace Tests
 		public static readonly string? DefaultProvider;
 		public static readonly HashSet<string> SkipCategories;
 
-		public static readonly List<string> Providers = new List<string>
+		public static readonly List<string> Providers = CustomizationSupport.Interceptor.GetSupportedProviders(new List<string>
 		{
 #if NET472
 			ProviderName.Sybase,
@@ -369,7 +369,7 @@ namespace Tests
 			ProviderName.SQLiteMS,
 			ProviderName.SapHanaNative,
 			ProviderName.SapHanaOdbc
-		};
+		}).ToList();
 
 		protected ITestDataContext GetDataContext(string configuration, MappingSchema? ms = null)
 		{
@@ -398,6 +398,26 @@ namespace Tests
 			if (ms != null)
 				res.AddMappingSchema(ms);
 			return res;
+		}
+
+		protected static char GetParameterToken(string context)
+		{
+			var token = '@';
+
+			switch (context)
+			{
+				case ProviderName.SapHanaOdbc:
+				case ProviderName.Informix:
+					token = '?'; break;
+				case ProviderName.SapHanaNative:
+				case TestProvName.Oracle11Managed:
+				case TestProvName.Oracle11Native:
+				case ProviderName.OracleManaged:
+				case ProviderName.OracleNative:
+					token = ':'; break;
+			}
+
+			return CustomizationSupport.Interceptor.GetParameterToken(token, context);
 		}
 
 		protected void TestOnePerson(int id, string firstName, IQueryable<Person> persons)

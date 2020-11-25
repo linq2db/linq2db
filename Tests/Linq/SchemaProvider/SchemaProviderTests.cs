@@ -68,7 +68,12 @@ namespace Tests.SchemaProvider
 					}
 				}
 
-				var table = dbSchema.Tables.SingleOrDefault(t => t.TableName!.ToLower() == "parent")!;
+				//Get table from default schema and fall back to schema indifferent
+				TableSchema getTable(string name) =>
+								dbSchema.Tables.SingleOrDefault(t => t.IsDefaultSchema && t.TableName!.ToLower() == name)
+							??  dbSchema.Tables.SingleOrDefault(t => t.TableName!.ToLower() == name)!;
+
+				var table = getTable("parent");
 
 				Assert.That(table,                                           Is.Not.Null);
 				Assert.That(table.Columns.Count(c => c.ColumnName != "_ID"), Is.EqualTo(2));
@@ -77,7 +82,7 @@ namespace Tests.SchemaProvider
 				AssertType<Model.Parent>       (conn.MappingSchema, dbSchema);
 
 				if (context != ProviderName.AccessOdbc)
-					Assert.That(dbSchema.Tables.Single(t => t.TableName!.ToLower() == "doctor").ForeignKeys.Count, Is.EqualTo(1));
+					Assert.That(getTable("doctor").ForeignKeys.Count, Is.EqualTo(1));
 				else // no FK information for ACCESS ODBC
 					Assert.That(dbSchema.Tables.Single(t => t.TableName!.ToLower() == "doctor").ForeignKeys.Count, Is.EqualTo(0));
 

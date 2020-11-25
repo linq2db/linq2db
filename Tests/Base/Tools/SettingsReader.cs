@@ -104,6 +104,20 @@ namespace Tests.Tools
 					Merge(settings, baseOnSettings);
 				}
 
+				//Translate connection strings enclosed in brackets as references to other existing connection strings.
+				foreach (var connection in settings.Connections)
+				{
+					var cs = connection.Value.ConnectionString;
+					if (cs.StartsWith("[") && cs.EndsWith("]"))
+					{
+						cs = cs.Substring(1, cs.Length - 2);
+						if (settings.Connections.TryGetValue(cs, out var baseConnection))
+							connection.Value.ConnectionString = baseConnection.ConnectionString;
+						else
+							throw new InvalidOperationException($"Connection {cs} not found.");
+					}
+				}
+
 				return settings;
 			}
 

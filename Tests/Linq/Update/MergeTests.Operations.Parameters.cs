@@ -230,24 +230,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-		private static char GetParameterToken([MergeDataContextSource] string context)
-		{
-			switch (context)
-			{
-				case ProviderName.SapHanaOdbc    :
-				case ProviderName.Informix       :
-					return '?';
-				case ProviderName.SapHanaNative  :
-				case TestProvName.Oracle11Managed:
-				case TestProvName.Oracle11Native :
-				case ProviderName.OracleManaged  :
-				case ProviderName.OracleNative   :
-					return ':';
-			}
-
-			return '@';
-		}
-
 		[Test]
 		public void TestParametersInUpdateCondition([MergeDataContextSource(
 			false,

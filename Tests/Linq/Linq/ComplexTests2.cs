@@ -432,7 +432,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestInsertUsingDerivedObjectUsingFluentMapping([DataSources] string context)
+		public void TestInsertUsingDerivedObjectUsingFluentMapping([InsertOrUpdateDataSources] string context)
 		{
 			var ms = SetMappings();
 
@@ -481,7 +481,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestInheritanceByBaseType([DataSources] string context)
+		public void TestInheritanceByBaseType([InsertOrUpdateDataSources] string context)
 		{
 			var ms = SetMappings();
 
