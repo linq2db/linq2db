@@ -26,6 +26,7 @@ namespace Tests.UserTests
 		public void OrderBySybqueryTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable<IssueClass>())
 			{
 				var qryUnsorted = db.GetTable<IssueClass>();
 				var query = qryUnsorted.OrderBy(x => x.LanguageId);
