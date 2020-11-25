@@ -42,7 +42,6 @@ namespace Tests.UserTests
 		[Test]
 		public void SampleSelectTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Email>())
 			using (db.CreateLocalTable<EmailAttachment>())
