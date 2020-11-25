@@ -273,7 +273,6 @@ namespace Tests.UserTests
 		{
 			using (var db = GetDataContext(context))
 			{
-				LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
 				var query = db
 					.GetTable<CustomInvoice>()
 					.LoadWith(i => i.Invoice)

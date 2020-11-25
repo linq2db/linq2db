@@ -152,7 +152,6 @@ namespace Tests.Linq
 			var (masterRecords, detailRecords) = GenerateData();
 			var intParam = 0;
 
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
@@ -185,7 +184,6 @@ namespace Tests.Linq
 			var (masterRecords, detailRecords) = GenerateData();
 			var intParam = 0;
 
-			using (new AllowMultipleQuery())
 			using (var db     = GetDataContext(context))
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
@@ -221,7 +219,6 @@ namespace Tests.Linq
 		{
 			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
 			
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
@@ -248,7 +245,6 @@ namespace Tests.Linq
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 			
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
@@ -283,7 +279,6 @@ namespace Tests.Linq
 		{
 			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
 			
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
@@ -316,7 +311,6 @@ namespace Tests.Linq
 		[Test]
 		public void TestLoadWithToString1([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var sql = db.Parent.LoadWith(p => p.Children).ToString()!;
@@ -362,7 +356,6 @@ FROM
 			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
 			var intParam = 1;
 
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
@@ -401,7 +394,6 @@ FROM
 			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
 			var intParam = 1;
 
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
@@ -434,7 +426,6 @@ FROM
 			var (masterRecords, detailRecords) = GenerateData();
 			var intParam = 0;
 
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
@@ -458,7 +449,6 @@ FROM
 			var (masterRecords, detailRecords) = GenerateData();
 			var intParam = 0;
 
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
@@ -483,7 +473,6 @@ FROM
 			var (masterRecords, detailRecords) = GenerateData();
 			var intParam = 0;
 
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
@@ -509,7 +498,6 @@ FROM
 		{
 			var (masterRecords, detailRecords) = GenerateDataManyId();
 
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
@@ -533,7 +521,6 @@ FROM
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
@@ -558,7 +545,6 @@ FROM
 			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
 
 			var masterFilter = 5;
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
@@ -600,7 +586,6 @@ FROM
 		{
 			var (masterRecords, detailRecords) = GenerateDataManyId();
 
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
@@ -635,7 +620,6 @@ FROM
 		{
 			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
 
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
@@ -671,7 +655,6 @@ FROM
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
@@ -704,7 +687,6 @@ FROM
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
@@ -729,7 +711,6 @@ FROM
 		{
 			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
 
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
@@ -771,7 +752,6 @@ FROM
 		{
 			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
 
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
@@ -813,7 +793,6 @@ FROM
 		{
 			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
 
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
@@ -855,7 +834,6 @@ FROM
 		{
 			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
 
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
@@ -891,7 +869,6 @@ FROM
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
@@ -1015,7 +992,6 @@ FROM
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
@@ -1113,7 +1089,6 @@ FROM
 		[Test]
 		public void Issue1862TestProjections([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db      = GetDataContext(context))
 			using (var blog    = db.CreateLocalTable(Blog.Data))
 			using (var post    = db.CreateLocalTable(Post.Data))
@@ -1275,7 +1250,6 @@ FROM
 		[Test]
 		public void Issue2196([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(EventScheduleItem.Items))
 			using (db.CreateLocalTable(EventScheduleItemPerson.Items))
@@ -1353,7 +1327,6 @@ FROM
 		[Test]
 		public void Issue2307([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (var sheets = db.CreateLocalTable(AttendanceSheet.Items))
 			using (var sheetRows   = db.CreateLocalTable(AttendanceSheetRow.Items))

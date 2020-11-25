@@ -273,7 +273,6 @@ AS RETURN
 		{
 			var (entities, others) = GenerateEntities();
 
-			using (new AllowMultipleQuery())
 			using (var db = (DataConnection)GetDataContext(context, GetMapping()))
 			using (db.CreateLocalTable("SomeTable", entities))
 			using (db.CreateLocalTable(others))
@@ -388,7 +387,6 @@ AS RETURN
 		{
 			var (entities, others) = GenerateEntities();
 
-			using (new AllowMultipleQuery())
 			using (var db = (DataConnection)GetDataContext(context, GetMapping()))
 			using (db.CreateLocalTable(entities))
 			using (db.CreateLocalTable(others))
@@ -415,7 +413,6 @@ AS RETURN
 		{
 			var (entities, others) = GenerateEntities();
 
-			using (new AllowMultipleQuery())
 			using (var db = (DataConnection)GetDataContext(context, GetMapping()))
 			using (db.CreateLocalTable(entities))
 			using (db.CreateLocalTable(others))
@@ -536,7 +533,6 @@ WHERE
 		[Test]
 		public void AssociationFromInterfaceInGenericMethod([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = (DataConnection)GetDataContext(context, GetMapping()))
 			using (db.CreateLocalTable<TreeItem>())
 			{

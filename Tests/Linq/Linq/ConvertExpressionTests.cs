@@ -270,7 +270,6 @@ namespace Tests.Linq
 		[Test]
 		public void LetTest4([DataSources(TestProvName.AllInformix, TestProvName.AllSapHana)] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				AreEqual(
@@ -301,7 +300,6 @@ namespace Tests.Linq
 		[Test]
 		public void LetTest41([DataSources(TestProvName.AllInformix, TestProvName.AllSapHana)] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				AreEqual(
@@ -332,7 +330,6 @@ namespace Tests.Linq
 		[Test]
 		public void LetTest5([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				AreEqual(
@@ -365,7 +362,6 @@ namespace Tests.Linq
 		{
 			//LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true;
 
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var expected = (from p in Parent
@@ -409,7 +405,6 @@ namespace Tests.Linq
 		{
 			//LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true;
 
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var expected = (from p in Parent
@@ -452,7 +447,6 @@ namespace Tests.Linq
 		[Test]
 		public void LetTest7([DataSources(TestProvName.AllInformix, ProviderName.PostgreSQL92, TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllAccess)] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					(
@@ -487,7 +481,6 @@ namespace Tests.Linq
 		[Test]
 		public void LetTest71([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana, ProviderName.Access)] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					(
@@ -522,7 +515,6 @@ namespace Tests.Linq
 		[Test]
 		public void LetTest8([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in Parent
@@ -553,7 +545,6 @@ namespace Tests.Linq
 		[Test]
 		public void LetTest9([DataSources(TestProvName.AllSybase)] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					(
@@ -578,7 +569,6 @@ namespace Tests.Linq
 		[Test]
 		public void LetTest10([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
 					(
@@ -603,7 +593,6 @@ namespace Tests.Linq
 		[Test]
 		public void LetTest11([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in Parent

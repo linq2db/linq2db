@@ -408,7 +408,6 @@ namespace Tests.Linq
 
 			void execute(string context)
 			{
-				using (new AllowMultipleQuery(true))
 				using (var db = GetDataContext(context))
 				using (var t1 = db.CreateLocalTable(Table404One.Data))
 				using (var t2 = db.CreateLocalTable(Table404Two.Data))

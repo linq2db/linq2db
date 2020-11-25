@@ -772,7 +772,6 @@ namespace Tests.Linq
 		[Test]
 		public void Issue383Test1([DataSources(false)] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = new TestDataConnection(context))
 			using (db.CreateLocalTable(Contract_Distributor_Agent.Data))
 			using (db.CreateLocalTable(Agent.Data))

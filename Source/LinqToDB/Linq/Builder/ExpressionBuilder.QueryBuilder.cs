@@ -821,9 +821,6 @@ namespace LinqToDB.Linq.Builder
 		static Expression GetMultipleQueryExpression(IBuildContext context, MappingSchema mappingSchema,
 			Expression expression, HashSet<ParameterExpression> parameters, out bool isLazy)
 		{
-			if (!Common.Configuration.Linq.AllowMultipleQuery)
-				throw new LinqException("Multiple queries are not allowed. Set the 'LinqToDB.Common.Configuration.Linq.AllowMultipleQuery' flag to 'true' to allow multiple queries.");
-
 			var valueExpression = EagerLoading.GenerateDetailsExpression(context, mappingSchema, expression);
 
 			if (valueExpression == null)

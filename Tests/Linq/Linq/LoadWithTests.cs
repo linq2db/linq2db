@@ -83,7 +83,6 @@ namespace Tests.Linq
 		[Test]
 		public void LoadWithAsTable4([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q =
@@ -99,7 +98,6 @@ namespace Tests.Linq
 		[Test]
 		public void LoadWith3([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				db.MappingSchema.SetConvertExpression<IEnumerable<Child>,ImmutableList<Child>>(
@@ -122,7 +120,6 @@ namespace Tests.Linq
 		[Test]
 		public void LoadWithAsTable3([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				db.MappingSchema.SetConvertExpression<IEnumerable<Child>,ImmutableList<Child>>(
@@ -157,7 +154,6 @@ namespace Tests.Linq
 			var ms = new MappingSchema();
 			ms.SetGenericConvertProvider(typeof(EnumerableToImmutableListConvertProvider<>));
 
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context, ms))
 			{
 				var q =
@@ -177,7 +173,6 @@ namespace Tests.Linq
 		[Test]
 		public void LoadWith5([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q =
@@ -199,7 +194,6 @@ namespace Tests.Linq
 		[Test]
 		public void LoadWith6([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q =
@@ -221,7 +215,6 @@ namespace Tests.Linq
 		[Test]
 		public void LoadWith7([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q =
@@ -243,7 +236,6 @@ namespace Tests.Linq
 		[Test]
 		public void LoadWith8([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q =
@@ -261,7 +253,6 @@ namespace Tests.Linq
 		[Test]
 		public void LoadWith9([DataSources(TestProvName.AllAccess)] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q =
@@ -279,7 +270,6 @@ namespace Tests.Linq
 //		[Timeout(15000)]
 		public void LoadWith10([DataSources(ProviderName.Access)] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q =
@@ -297,7 +287,6 @@ namespace Tests.Linq
 		[Test]
 		public void LoadWith11([DataSources(ProviderName.Access)] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q =
@@ -319,7 +308,6 @@ namespace Tests.Linq
 		[Test]
 		public void LoadWith12([DataSources(TestProvName.AllAccess)] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q1 =
@@ -339,7 +327,6 @@ namespace Tests.Linq
 		[Test]
 		public void LoadWithFirstOrDefaultParameter([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(2, 3)] int id)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q1 = db.Parent
@@ -356,7 +343,6 @@ namespace Tests.Linq
 		[Test]
 		public void TransactionScope([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllSQLite)] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (var transaction = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.Serializable }, TransactionScopeAsyncFlowOption.Enabled))
 			{
@@ -379,7 +365,6 @@ namespace Tests.Linq
 		[Test]
 		public async Task TransactionScopeAsync([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllSQLite)] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (var transaction = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.Serializable }, TransactionScopeAsyncFlowOption.Enabled))
 			{
@@ -516,7 +501,6 @@ namespace Tests.Linq
 		{
 			var testData = GenerateTestData();
 
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(testData.Item1))
 			using (db.CreateLocalTable(testData.Item2))
@@ -571,7 +555,6 @@ namespace Tests.Linq
 		{
 			var testData = GenerateTestData();
 
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(testData.Item1))
 			using (db.CreateLocalTable(testData.Item2))
@@ -632,7 +615,6 @@ namespace Tests.Linq
 		{
 			var testData = GenerateTestData();
 
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(testData.Item1))
 			using (db.CreateLocalTable(testData.Item2))
@@ -676,7 +658,6 @@ namespace Tests.Linq
 		{
 			var testData = GenerateTestData();
 
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(testData.Item1))
 			using (db.CreateLocalTable(testData.Item2))
@@ -710,7 +691,6 @@ namespace Tests.Linq
 		{
 			var testData = GenerateTestData();
 
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(testData.Item1))
 			using (db.CreateLocalTable(testData.Item2))
@@ -768,7 +748,6 @@ namespace Tests.Linq
 		[Test]
 		public void LoadWithAssociationPredicateExpression([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db      = GetDataContext(context))
 			using (var parents = db.CreateLocalTable(ParentRecord.Items))
 			using (              db.CreateLocalTable(ChildRecord.Items))

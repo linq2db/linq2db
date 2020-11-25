@@ -75,6 +75,7 @@ namespace LinqToDB.Common
 			/// This option required, if you want to select related collections, e.g. using <see cref="LinqExtensions.LoadWith{TEntity,TProperty}(System.Linq.IQueryable{TEntity},System.Linq.Expressions.Expression{System.Func{TEntity,TProperty}})"/> method.
 			/// Default value: <c>false</c>.
 			/// </summary>
+			[Obsolete("AllowMultipleQuery flag has no effect and will be removed in future.")]
 			public static bool AllowMultipleQuery;
 
 			/// <summary>
