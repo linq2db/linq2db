@@ -49,7 +49,7 @@ namespace Tests.UserTests
 			{
 				var query = from p in db.GetTable<Email>().LoadWith(c => c.Attachments)
 					join i in db.GetTable<Iir>() on p.Id equals i.Id
-					where p.AddTime > DateTime.Now
+					where p.AddTime > TestData.DateTime
 					orderby p.AddTime
 					select p;
 
