@@ -2,12 +2,13 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
-
+using System.Threading;
 using LinqToDB.Mapping;
 
 using JetBrains.Annotations;
@@ -231,18 +232,57 @@ namespace LinqToDB
 			}
 		}
 
+		[DebuggerDisplay("{ToDebugString()}")]
 		public class SqlExtensionParam
 		{
+#if DEBUG
+			private static int _paramCounter;
+			private readonly int _paramNumber;
+			public int ParamNumber => _paramNumber;
+#endif
+
 			public SqlExtensionParam(string? name, ISqlExpression expression)
 			{
 				Name       = name;
 				Expression = expression;
+#if DEBUG
+				_paramNumber = Interlocked.Add(ref _paramCounter, 1);
+#endif
 			}
 
 			public SqlExtensionParam(string? name, SqlExtension extension)
 			{
 				Name      = name;
 				Extension = extension;
+#if DEBUG
+				_paramNumber = Interlocked.Add(ref _paramCounter, 1);
+#endif
+			}
+
+			public string ToDebugString()
+			{
+				string str;
+
+#if DEBUG
+				var paramPrefix = $"Param[{ParamNumber}]";
+#else
+				var paramPrefix = $"Param";
+#endif
+
+				if (Extension != null)
+				{
+					str = $"{paramPrefix}('{Name ?? ""}', {Extension.ChainPrecedence}): {Extension.Expr}";
+				}
+				else if (Expression != null)
+				{
+					var sb = new StringBuilder();
+					Expression.ToString(sb, new Dictionary<IQueryElement, IQueryElement>());
+					str = $"{paramPrefix}('{Name ?? ""}'): {sb}";
+				}
+				else
+					str = $"{paramPrefix}('{Name ?? ""}')";
+
+				return str;
 			}
 
 			public string?         Name       { get; set; }
@@ -537,12 +577,18 @@ namespace LinqToDB
 					if (memberInfo != null)
 					{
 						var attributes = GetExtensionAttributes(current, dataContext.MappingSchema);
+						var continueChain = false;
 
 						foreach (var attr in attributes)
 						{
 							var param = attr.BuildExtensionParam(dataContext, query, memberInfo, arguments!, convertHelper);
+							continueChain = continueChain || !string.IsNullOrEmpty(param.Name) ||
+							                param.Extension != null && param.Extension.ChainPrecedence != -1;
 							chains.Add(param);
 						}
+
+						if (!continueChain)
+							break;
 					}
 
 					current = next;
@@ -844,7 +890,7 @@ namespace LinqToDB
 				var ordered = chain
 					.Select((c, i) => Tuple.Create(c, i))
 					.OrderByDescending(t => t.Item1.Extension?.ChainPrecedence ?? int.MinValue)
-					.ThenBy(t => t.Item2)
+					.ThenByDescending(t => t.Item2)
 					.Select(t => t.Item1)
 					.ToArray();
 
