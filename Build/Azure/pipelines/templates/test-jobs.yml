@@ -112,7 +112,7 @@ jobs:
     parameters:
       isCore: false
       artifacts: $(netfx472_tests)
-      framework: '.NETFramework,Version=v4.7.2'
+      framework: 'net472'
       titleFramework: 'NET472'
       with_baselines: ${{ parameters.with_baselines }}
 
@@ -144,7 +144,7 @@ jobs:
     parameters:
       isCore: true
       artifacts: $(netfx472_tests)
-      framework: '.NETFramework,Version=v4.7.2'
+      framework: 'net472'
       titleFramework: 'NET472'
       with_baselines: ${{ parameters.with_baselines }}
 
@@ -176,7 +176,7 @@ jobs:
     parameters:
       isCore: true
       artifacts: $(netcore21_tests)
-      framework: '.NETCoreApp,Version=v2.1'
+      framework: 'netcoreapp2.1'
       titleFramework: 'NETCOREAPP2.1'
       with_baselines: ${{ parameters.with_baselines }}
 
@@ -208,7 +208,7 @@ jobs:
     parameters:
       isCore: true
       artifacts: $(netcore31_tests)
-      framework: '.NETCoreApp,Version=v3.1'
+      framework: 'netcoreapp3.1'
       titleFramework: 'NETCOREAPP3.1'
       with_baselines: ${{ parameters.with_baselines }}
 
@@ -273,7 +273,7 @@ jobs:
     parameters:
       isCore: true
       artifacts: $(netcore21_tests)
-      framework: '.NETCoreApp,Version=v2.1'
+      framework: 'netcoreapp2.1'
       titleFramework: 'NETCOREAPP2.1'
       with_baselines: ${{ parameters.with_baselines }}
 
@@ -305,7 +305,7 @@ jobs:
     parameters:
       isCore: true
       artifacts: $(netcore31_tests)
-      framework: '.NETCoreApp,Version=v3.1'
+      framework: 'netcoreapp3.1'
       titleFramework: 'NETCOREAPP3.1'
       with_baselines: ${{ parameters.with_baselines }}
 
@@ -368,7 +368,7 @@ jobs:
   - template: test-workflow-linux.yml
     parameters:
       artifacts: $(netcore21_tests)
-      framework: '.NETCoreApp,Version=2.1'
+      framework: 'netcoreapp2.1'
       titleFramework: 'NETCOREAPP2.1'
       with_baselines: ${{ parameters.with_baselines }}
 
@@ -399,7 +399,7 @@ jobs:
   - template: test-workflow-linux.yml
     parameters:
       artifacts: $(netcore31_tests)
-      framework: '.NETCoreApp,Version=3.1'
+      framework: 'netcoreapp3.1'
       titleFramework: 'NETCOREAPP3.1'
       with_baselines: ${{ parameters.with_baselines }}
 
@@ -461,7 +461,7 @@ jobs:
   - template: test-workflow-linux.yml
     parameters:
       artifacts: $(netcore21_tests)
-      framework: '.NETCoreApp,Version=2.1'
+      framework: 'netcoreapp2.1'
       titleFramework: 'NETCOREAPP2.1'
       with_baselines: ${{ parameters.with_baselines }}
 
@@ -493,7 +493,7 @@ jobs:
   - template: test-workflow-macos.yml
     parameters:
       artifacts: $(netcore21_tests)
-      framework: '.NETCoreApp,Version=2.1'
+      framework: 'netcoreapp2.1'
       titleFramework: 'NETCOREAPP2.1'
       with_baselines: ${{ parameters.with_baselines }}
 
@@ -525,7 +525,7 @@ jobs:
   - template: test-workflow-macos.yml
     parameters:
       artifacts: $(netcore31_tests)
-      framework: '.NETCoreApp,Version=3.1'
+      framework: 'netcoreapp3.1'
       titleFramework: 'NETCOREAPP3.1'
       with_baselines: ${{ parameters.with_baselines }}
 

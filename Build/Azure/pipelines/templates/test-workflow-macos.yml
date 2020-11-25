@@ -69,9 +69,7 @@ steps:
   condition: and(variables.title, succeeded(), variables.script)
   displayName: Setup tests
 
-# just because there is no vstest handing in DotNetCoreCLI@2
-# https://github.com/microsoft/azure-pipelines-tasks/blob/master/Tasks/DotNetCoreCLIV2/dotnetcore.ts#L60
-- script: dotnet vstest linq2db.Tests.dll /TestCaseFilter:"TestCategory != SkipCI" /Framework:${{ parameters.framework }} /logger:trx
+- script: dotnet test linq2db.Tests.dll /TestCaseFilter:"TestCategory != SkipCI" /Framework:${{ parameters.framework }} /logger:trx
   condition: and(variables.title, succeeded())
   displayName: 'Execute tests: $(title)'
 

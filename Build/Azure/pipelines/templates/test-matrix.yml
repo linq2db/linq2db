@@ -87,9 +87,9 @@ jobs:
           enable_os_ubuntu20: true
           enable_os_macos: true
           enable_fw_net472: true
-          enable_fw_netcore21: true
+          enable_fw_netcore21: false
           enable_fw_netcore31: false
-          enable_fw_net50: false
+          enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlite.all]')) }}:
             enabled: true

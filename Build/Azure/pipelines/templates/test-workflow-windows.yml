@@ -56,10 +56,22 @@ steps:
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
     testFilterCriteria: 'TestCategory != SkipCI'
-    otherConsoleOptions: '/Framework:${{ parameters.framework }}'
+    otherConsoleOptions: '/Framework:.NETFramework,Version=v4.7.2'
     testRunTitle: 'Windows / ${{ parameters.titleFramework }} / $(title)'
   displayName: '$(title)'
-  condition: variables.title
+  condition: and(eq('${{ parameters.framework }}', 'net472'), variables.title)
+
+- script: dotnet test linq2db.Tests.dll /TestCaseFilter:"TestCategory != SkipCI" /Framework:${{ parameters.framework }} /logger:trx
+  displayName: 'Execute tests: $(title)'
+  condition: and(ne('${{ parameters.framework }}', 'net472'), variables.title, succeeded())
+
+- task: PublishTestResults@2
+  condition: and(ne('${{ parameters.framework }}', 'net472'), variables.title, succeededOrFailed())
+  inputs:
+    testRunner: VsTest
+    testResultsFiles: '**/*.trx'
+    testRunTitle: 'Windows / ${{ parameters.titleFramework }} / $(title)'
+
 
 - task: PowerShell@2
   inputs:
