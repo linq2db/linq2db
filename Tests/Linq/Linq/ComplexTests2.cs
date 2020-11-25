@@ -415,7 +415,7 @@ namespace Tests.Linq
 
 					void Validate()
 					{
-						var data = db.GetTable<Person>().FirstOrDefault(_ => _.FirstName == "test_inherited_insert");
+						var data = db.GetTable<Person>().FirstOrDefault(_ => _.FirstName == "test_inherited_insert")!;
 						Assert.IsNotNull(data);
 						Assert.AreEqual(person.ID        , data.ID);
 						Assert.AreEqual(person.FirstName , data.FirstName);
@@ -467,7 +467,7 @@ namespace Tests.Linq
 						else
 							Assert.AreEqual(1, cnt);
 
-						var data = db.GetTable<Eye>().Where(_ => _.Id == 123).FirstOrDefault();
+						var data = db.GetTable<Eye>().Where(_ => _.Id == 123).FirstOrDefault()!;
 						Assert.IsNotNull(data);
 						Assert.AreEqual(eye.Id, data.Id);
 						Assert.AreEqual(eye.Xy, data.Xy);
@@ -524,7 +524,7 @@ namespace Tests.Linq
 						else
 							Assert.AreEqual(1, cnt);
 
-						var data = db.GetTable<Dog>().Where(_ => _.Id == 666).FirstOrDefault();
+						var data = db.GetTable<Dog>().Where(_ => _.Id == 666).FirstOrDefault()!;
 						Assert.IsNotNull(data);
 						Assert.AreEqual(dog.Id            , data.Id);
 						Assert.AreEqual(dog.AnimalType    , data.AnimalType);

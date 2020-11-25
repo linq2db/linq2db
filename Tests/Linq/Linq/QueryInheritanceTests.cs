@@ -198,8 +198,8 @@ namespace Tests.Linq
 			{
 				var dd = GetNorthwindAsList(context);
 				Assert.AreEqual(
-					dd.DiscontinuedProduct.FirstOrDefault().ProductID,
-					QueryTable<Northwind.DiscontinuedProduct>(db).Where(p => p.Discontinued).FirstOrDefault().ProductID);
+					dd.DiscontinuedProduct.FirstOrDefault()!.ProductID,
+					QueryTable<Northwind.DiscontinuedProduct>(db).Where(p => p.Discontinued).FirstOrDefault()!.ProductID);
 			}
 		}
 

@@ -909,7 +909,7 @@ namespace Tests.Linq
 		{
 			return outer
 				.GroupJoin(inner, outerKeySelector, innerKeySelector, (o, gr) => new { o, gr })
-				.SelectMany(t => t.gr.DefaultIfEmpty(), (o,i) => new LeftJoinInfo<TOuter,TInner> { Outer = o.o, Inner = i });
+				.SelectMany(t => t.gr.DefaultIfEmpty(), (o,i) => new LeftJoinInfo<TOuter,TInner> { Outer = o.o, Inner = i! });
 		}
 
 		static Expression<Func<
@@ -922,7 +922,7 @@ namespace Tests.Linq
 		{
 			return (outer,inner,outerKeySelector,innerKeySelector) => outer
 				.GroupJoin(inner, outerKeySelector, innerKeySelector, (o, gr) => new { o, gr })
-				.SelectMany(t => t.gr.DefaultIfEmpty(), (o,i) => new LeftJoinInfo<TOuter,TInner> { Outer = o.o, Inner = i });
+				.SelectMany(t => t.gr.DefaultIfEmpty(), (o,i) => new LeftJoinInfo<TOuter,TInner> { Outer = o.o, Inner = i! });
 		}
 
 		/*

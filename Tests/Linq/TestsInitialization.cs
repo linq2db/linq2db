@@ -61,7 +61,7 @@ public class TestsInitialization
 				// if you run tests from path with spaces - it will not help you
 				File.Copy(srcPath, targetPath, true);
 				var sapHanaAssembly = Assembly.LoadFrom(targetPath);
-				DbProviderFactories.RegisterFactory("Sap.Data.Hana", sapHanaAssembly.GetType("Sap.Data.Hana.HanaFactory"));
+				DbProviderFactories.RegisterFactory("Sap.Data.Hana", sapHanaAssembly.GetType("Sap.Data.Hana.HanaFactory")!);
 			}
 		}
 		catch { }
@@ -78,7 +78,7 @@ public class TestsInitialization
 			var pathx86 = @"c:\Program Files (x86)\Microsoft SQL Server Compact Edition\v4.0\Private\System.Data.SqlServerCe.dll";
 			var path = IntPtr.Size == 4 ? pathx86 : pathx64;
 			var assembly = Assembly.LoadFrom(path);
-			DbProviderFactories.RegisterFactory("System.Data.SqlServerCe.4.0", assembly.GetType("System.Data.SqlServerCe.SqlCeProviderFactory"));
+			DbProviderFactories.RegisterFactory("System.Data.SqlServerCe.4.0", assembly.GetType("System.Data.SqlServerCe.SqlCeProviderFactory")!);
 		}
 		catch { }
 #endif

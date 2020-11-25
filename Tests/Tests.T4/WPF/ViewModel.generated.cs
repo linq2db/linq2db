@@ -253,7 +253,7 @@ namespace Tests.T4.Wpf
 				}
 			}
 
-			public static ValidationResult ValidateConditionalProp(ViewModel obj, string value)
+			public static ValidationResult? ValidateConditionalProp(ViewModel obj, string value)
 			{
 				var list = new List<ValidationResult>();
 
@@ -277,7 +277,7 @@ namespace Tests.T4.Wpf
 				return ValidationResult.Success;
 			}
 
-			public static ValidationResult ValidateNotifiedProp3(ViewModel obj, string value)
+			public static ValidationResult? ValidateNotifiedProp3(ViewModel obj, string value)
 			{
 				var list = new List<ValidationResult>();
 

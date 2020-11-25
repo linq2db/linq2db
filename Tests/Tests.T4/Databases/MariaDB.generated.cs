@@ -370,6 +370,101 @@ namespace MariaDBDataContext
 
 		#endregion
 
+		#region Issue2313Results
+
+		public static IEnumerable<Issue2313ResultsResult> Issue2313Results(this TestmariadbDB dataConnection, string? VarChar255, char? VarChar1, string? Char255, char? Char1, byte[]? VarBinary255, byte[]? Binary255, byte[]? TinyBlob, byte[]? Blob, byte[]? MediumBlob, byte[]? LongBlob, string? TinyText, string? Text, string? MediumText, string? LongText, DateTime? Date, DateTime? DateTime, DateTime? TimeStamp, TimeSpan? Time, sbyte? TinyInt, byte? TinyIntUnsigned, short? SmallInt, ushort? SmallIntUnsigned, int? MediumInt, uint? MediumIntUnsigned, int? Int, uint? IntUnsigned, long? BigInt, ulong? BigIntUnsigned, decimal? Decimal, float? Float, double? Double, bool? Boolean, bool? Bit1, byte? Bit8, ushort? Bit10, ushort? Bit16, uint? Bit32, ulong? Bit64, string? Enum, string? Set, int? Year)
+		{
+			return dataConnection.QueryProc<Issue2313ResultsResult>("`Issue2313Results`",
+				new DataParameter("VarChar255",        VarChar255,        LinqToDB.DataType.VarChar),
+				new DataParameter("VarChar1",          VarChar1,          LinqToDB.DataType.VarChar),
+				new DataParameter("Char255",           Char255,           LinqToDB.DataType.Char),
+				new DataParameter("Char1",             Char1,             LinqToDB.DataType.Char),
+				new DataParameter("VarBinary255",      VarBinary255,      LinqToDB.DataType.VarBinary),
+				new DataParameter("Binary255",         Binary255,         LinqToDB.DataType.Binary),
+				new DataParameter("TinyBlob",          TinyBlob,          LinqToDB.DataType.Blob),
+				new DataParameter("Blob",              Blob,              LinqToDB.DataType.Blob),
+				new DataParameter("MediumBlob",        MediumBlob,        LinqToDB.DataType.Blob),
+				new DataParameter("LongBlob",          LongBlob,          LinqToDB.DataType.Blob),
+				new DataParameter("TinyText",          TinyText,          LinqToDB.DataType.Text),
+				new DataParameter("Text",              Text,              LinqToDB.DataType.Text),
+				new DataParameter("MediumText",        MediumText,        LinqToDB.DataType.Text),
+				new DataParameter("LongText",          LongText,          LinqToDB.DataType.Text),
+				new DataParameter("Date",              Date,              LinqToDB.DataType.Date),
+				new DataParameter("DateTime",          DateTime,          LinqToDB.DataType.DateTime),
+				new DataParameter("TimeStamp",         TimeStamp,         LinqToDB.DataType.DateTime),
+				new DataParameter("Time",              Time,              LinqToDB.DataType.Time),
+				new DataParameter("TinyInt",           TinyInt,           LinqToDB.DataType.SByte),
+				new DataParameter("TinyIntUnsigned",   TinyIntUnsigned,   LinqToDB.DataType.Byte),
+				new DataParameter("SmallInt",          SmallInt,          LinqToDB.DataType.Int16),
+				new DataParameter("SmallIntUnsigned",  SmallIntUnsigned,  LinqToDB.DataType.UInt16),
+				new DataParameter("MediumInt",         MediumInt,         LinqToDB.DataType.Int32),
+				new DataParameter("MediumIntUnsigned", MediumIntUnsigned, LinqToDB.DataType.UInt32),
+				new DataParameter("Int",               Int,               LinqToDB.DataType.Int32),
+				new DataParameter("IntUnsigned",       IntUnsigned,       LinqToDB.DataType.UInt32),
+				new DataParameter("BigInt",            BigInt,            LinqToDB.DataType.Int64),
+				new DataParameter("BigIntUnsigned",    BigIntUnsigned,    LinqToDB.DataType.UInt64),
+				new DataParameter("Decimal",           Decimal,           LinqToDB.DataType.Decimal),
+				new DataParameter("Float",             Float,             LinqToDB.DataType.Single),
+				new DataParameter("Double",            Double,            LinqToDB.DataType.Double),
+				new DataParameter("Boolean",           Boolean,           LinqToDB.DataType.SByte),
+				new DataParameter("Bit1",              Bit1,              LinqToDB.DataType.BitArray),
+				new DataParameter("Bit8",              Bit8,              LinqToDB.DataType.BitArray),
+				new DataParameter("Bit10",             Bit10,             LinqToDB.DataType.BitArray),
+				new DataParameter("Bit16",             Bit16,             LinqToDB.DataType.BitArray),
+				new DataParameter("Bit32",             Bit32,             LinqToDB.DataType.BitArray),
+				new DataParameter("Bit64",             Bit64,             LinqToDB.DataType.BitArray),
+				new DataParameter("Enum",              Enum,              LinqToDB.DataType.VarChar),
+				new DataParameter("Set",               Set,               LinqToDB.DataType.VarChar),
+				new DataParameter("Year",              Year,              LinqToDB.DataType.Int32));
+		}
+
+		public partial class Issue2313ResultsResult
+		{
+			[Column("`VarChar255`")       ] public string?   VarChar255        { get; set; }
+			[Column("`VarChar1`")         ] public char?     VarChar1          { get; set; }
+			[Column("`Char255`")          ] public string?   Char255           { get; set; }
+			[Column("`Char1`")            ] public char?     Char1             { get; set; }
+			[Column("`VarBinary255`")     ] public byte[]?   VarBinary255      { get; set; }
+			[Column("`Binary255`")        ] public byte[]?   Binary255         { get; set; }
+			[Column("`TinyBlob`")         ] public byte[]?   TinyBlob          { get; set; }
+			[Column("`Blob`")             ] public byte[]?   Blob              { get; set; }
+			[Column("`MediumBlob`")       ] public byte[]?   MediumBlob        { get; set; }
+			[Column("`LongBlob`")         ] public byte[]?   LongBlob          { get; set; }
+			[Column("`TinyText`")         ] public string?   TinyText          { get; set; }
+			[Column("`Text`")             ] public string?   Text              { get; set; }
+			[Column("`MediumText`")       ] public string?   MediumText        { get; set; }
+			[Column("`LongText`")         ] public string?   LongText          { get; set; }
+			[Column("`Date`")             ] public DateTime? Date              { get; set; }
+			[Column("`DateTime`")         ] public DateTime? DateTime          { get; set; }
+			[Column("`TimeStamp`")        ] public DateTime? TimeStamp         { get; set; }
+			[Column("`Time`")             ] public TimeSpan? Time              { get; set; }
+			[Column("`TinyInt`")          ] public sbyte?    TinyInt           { get; set; }
+			[Column("`TinyIntUnsigned`")  ] public byte?     TinyIntUnsigned   { get; set; }
+			[Column("`SmallInt`")         ] public short?    SmallInt          { get; set; }
+			[Column("`SmallIntUnsigned`") ] public ushort?   SmallIntUnsigned  { get; set; }
+			[Column("`MediumInt`")        ] public int?      MediumInt         { get; set; }
+			[Column("`MediumIntUnsigned`")] public uint?     MediumIntUnsigned { get; set; }
+			[Column("`Int`")              ] public int?      Int               { get; set; }
+			[Column("`IntUnsigned`")      ] public uint?     IntUnsigned       { get; set; }
+			[Column("`BigInt`")           ] public long?     BigInt            { get; set; }
+			[Column("`BigIntUnsigned`")   ] public ulong?    BigIntUnsigned    { get; set; }
+			[Column("`Decimal`")          ] public decimal?  Decimal           { get; set; }
+			[Column("`Float`")            ] public float?    Float             { get; set; }
+			[Column("`Double`")           ] public double?   Double            { get; set; }
+			[Column("`Boolean`")          ] public bool?     Boolean           { get; set; }
+			[Column("`Bit1`")             ] public bool?     Bit1              { get; set; }
+			[Column("`Bit8`")             ] public byte?     Bit8              { get; set; }
+			[Column("`Bit10`")            ] public ushort?   Bit10             { get; set; }
+			[Column("`Bit16`")            ] public ushort?   Bit16             { get; set; }
+			[Column("`Bit32`")            ] public uint?     Bit32             { get; set; }
+			[Column("`Bit64`")            ] public ulong?    Bit64             { get; set; }
+			[Column("`Enum`")             ] public string?   Enum              { get; set; }
+			[Column("`Set`")              ] public string?   Set               { get; set; }
+			[Column("`Year`")             ] public int?      Year              { get; set; }
+		}
+
+		#endregion
+
 		#region TestOutputParametersWithoutTableProcedure
 
 		public static int TestOutputParametersWithoutTableProcedure(this TestmariadbDB dataConnection, string? aInParam, out bool? aOutParam)
@@ -418,85 +513,85 @@ namespace MariaDBDataContext
 
 	public static partial class TableExtensions
 	{
-		public static Alltype Find(this ITable<Alltype> table, int ID)
+		public static Alltype? Find(this ITable<Alltype> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static Alltypesnoyear Find(this ITable<Alltypesnoyear> table, int ID)
+		public static Alltypesnoyear? Find(this ITable<Alltypesnoyear> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static Datatypetest Find(this ITable<Datatypetest> table, int DataTypeID)
+		public static Datatypetest? Find(this ITable<Datatypetest> table, int DataTypeID)
 		{
 			return table.FirstOrDefault(t =>
 				t.DataTypeID == DataTypeID);
 		}
 
-		public static Doctor Find(this ITable<Doctor> table, int PersonID)
+		public static Doctor? Find(this ITable<Doctor> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
 		}
 
-		public static Fulltextindextest Find(this ITable<Fulltextindextest> table, uint Id)
+		public static Fulltextindextest? Find(this ITable<Fulltextindextest> table, uint Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static Inheritancechild Find(this ITable<Inheritancechild> table, int InheritanceChildId)
+		public static Inheritancechild? Find(this ITable<Inheritancechild> table, int InheritanceChildId)
 		{
 			return table.FirstOrDefault(t =>
 				t.InheritanceChildId == InheritanceChildId);
 		}
 
-		public static Inheritanceparent Find(this ITable<Inheritanceparent> table, int InheritanceParentId)
+		public static Inheritanceparent? Find(this ITable<Inheritanceparent> table, int InheritanceParentId)
 		{
 			return table.FirstOrDefault(t =>
 				t.InheritanceParentId == InheritanceParentId);
 		}
 
-		public static Issue1993 Find(this ITable<Issue1993> table, uint Id)
+		public static Issue1993? Find(this ITable<Issue1993> table, uint Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static Patient Find(this ITable<Patient> table, int PersonID)
+		public static Patient? Find(this ITable<Patient> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
 		}
 
-		public static Person Find(this ITable<Person> table, int PersonID)
+		public static Person? Find(this ITable<Person> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
 		}
 
-		public static Testidentity Find(this ITable<Testidentity> table, int ID)
+		public static Testidentity? Find(this ITable<Testidentity> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static Testmerge1 Find(this ITable<Testmerge1> table, int Id)
+		public static Testmerge1? Find(this ITable<Testmerge1> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static Testmerge2 Find(this ITable<Testmerge2> table, int Id)
+		public static Testmerge2? Find(this ITable<Testmerge2> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static Testsamename Find(this ITable<Testsamename> table, int ID)
+		public static Testsamename? Find(this ITable<Testsamename> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);

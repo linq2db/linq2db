@@ -13,12 +13,13 @@ namespace Tests.Linq
 	public static class EnumerableExtensions
 	{
 		public static IEnumerable<TResult> SqlJoinInternal<TOuter, TInner, TResult>(
-			this IEnumerable<TOuter>      outer,
-			IEnumerable<TInner>           inner,
-			SqlJoinType                   joinType,
-			Func<TOuter, TInner, bool>    predicate,
-			Func<TOuter, TInner, TResult> resultSelector)
+			this IEnumerable<TOuter>        outer,
+			IEnumerable<TInner>             inner,
+			SqlJoinType                     joinType,
+			Func<TOuter, TInner, bool>      predicate,
+			Func<TOuter?, TInner?, TResult> resultSelector)
 			where TOuter : class
+			where TInner : class
 		{
 			if (outer          == null) throw new ArgumentNullException(nameof(outer));
 			if (inner          == null) throw new ArgumentNullException(nameof(inner));
@@ -37,10 +38,10 @@ namespace Tests.Linq
 					var firstItems = outer.ToList();
 					var secondItems = inner.ToList();
 					var firstResult = firstItems.SelectMany(f =>
-						secondItems.Where(s => predicate(f, s)).DefaultIfEmpty().Select(s => new {First = (TOuter?)f, Second = s}));
+						secondItems.Where(s => predicate(f, s)).DefaultIfEmpty().Select(s => new {First = (TOuter?)f, Second = (TInner?)s }));
 
 					var secondResult = secondItems.Where(s => !firstItems.Any(f => predicate(f, s)))
-						.Select(s => new {First = default(TOuter), Second = s});
+						.Select(s => new {First = default(TOuter), Second = (TInner?)s });
 
 					var res = firstResult.Concat(secondResult).Select(r => resultSelector(r.First!, r.Second));
 					return res;
@@ -50,12 +51,14 @@ namespace Tests.Linq
 		}
 
 		public static IEnumerable<TResult> SqlJoinInternal<TOuter, TInner, TKey, TResult>(
-			this IEnumerable<TOuter>      outer,
-			IEnumerable<TInner>           inner,
-			SqlJoinType                   joinType,
-			Func<TOuter, TKey>            outerKeySelector,
-			Func<TInner, TKey>            innerKeySelector,
-			Func<TOuter, TInner, TResult> resultSelector)
+			this IEnumerable<TOuter>        outer,
+			IEnumerable<TInner>             inner,
+			SqlJoinType                     joinType,
+			Func<TOuter, TKey>              outerKeySelector,
+			Func<TInner, TKey>              innerKeySelector,
+			Func<TOuter?, TInner?, TResult> resultSelector)
+			where TOuter: class
+			where TInner: class
 		{
 			if (outer            == null) throw new ArgumentNullException(nameof(outer));
 			if (inner            == null) throw new ArgumentNullException(nameof(inner));
@@ -1254,7 +1257,7 @@ namespace Tests.Linq
 					from p2 in db.Parent.Join(joinType, p => p1.ParentID == p.ParentID && p1.Value1 == p.Value1)
 					select p2;
 
-				AreEqual(expected.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.Value1),
+				AreEqual(expected.ToList().OrderBy(r => r!.ParentID).ThenBy(r => r!.Value1),
 					actual.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.Value1));
 			}
 		}
@@ -1271,7 +1274,7 @@ namespace Tests.Linq
 					from p2 in db.Parent.Take(10).Join(joinType, p => p1.ParentID == p.ParentID && p1.Value1 == p.Value1)
 					select p2;
 
-				AreEqual(expected.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.Value1),
+				AreEqual(expected.ToList().OrderBy(r => r!.ParentID).ThenBy(r => r!.Value1),
 					actual.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.Value1));
 			}
 		}
@@ -1355,7 +1358,7 @@ namespace Tests.Linq
 				var actual = db.Parent.Join(db.Parent, joinType, (p1, p2) => p1.ParentID == p2.ParentID && p1.Value1 == p2.Value1,
 					(p1, p2) => p2);
 
-				AreEqual(expected.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.Value1),
+				AreEqual(expected.ToList().OrderBy(r => r!.ParentID).ThenBy(r => r!.Value1),
 					actual.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.Value1));
 			}
 		}
@@ -1371,7 +1374,7 @@ namespace Tests.Linq
 				var actual = db.Parent.Take(10).Join(db.Parent.Take(10), joinType,
 					(p1, p2) => p1.ParentID == p2.ParentID && p1.Value1 == p2.Value1, (p1, p2) => p2);
 
-				AreEqual(expected.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.Value1),
+				AreEqual(expected.ToList().OrderBy(r => r!.ParentID).ThenBy(r => r!.Value1),
 					actual.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.Value1));
 			}
 		}
@@ -2574,12 +2577,12 @@ namespace Tests.Linq
 								 q.MaxQuantity
 							 };
 
-				var r = query2.SingleOrDefault(x => x.LinkId == 1);
+				var r = query2.SingleOrDefault(x => x.LinkId == 1)!;
 				Assert.IsNotNull(r);
 				Assert.AreEqual(1, r.MinQuantity);
 				Assert.AreEqual(2, r.MaxQuantity);
 
-				var r2 = query2.SingleOrDefault(x => x.LinkId == 2);
+				var r2 = query2.SingleOrDefault(x => x.LinkId == 2)!;
 				Assert.IsNotNull(r2);
 				Assert.AreEqual(3, r2.MinQuantity);
 				Assert.AreEqual(4, r2.MaxQuantity);
@@ -2610,12 +2613,12 @@ namespace Tests.Linq
 								 q.MaxQuantity
 							 };
 
-				var r = query2.SingleOrDefault(x => x.LinkId == 1);
+				var r = query2.SingleOrDefault(x => x.LinkId == 1)!;
 				Assert.IsNotNull(r);
 				Assert.AreEqual(1, r.MinQuantity);
 				Assert.AreEqual(2, r.MaxQuantity);
 
-				var r2 = query2.SingleOrDefault(x => x.LinkId == 2);
+				var r2 = query2.SingleOrDefault(x => x.LinkId == 2)!;
 				Assert.IsNotNull(r2);
 				Assert.AreEqual(3, r2.MinQuantity);
 				Assert.AreEqual(4, r2.MaxQuantity);
@@ -2646,12 +2649,12 @@ namespace Tests.Linq
 								 MaxQuantity = Sql.AsSql(q.MaxQuantity)
 							 };
 
-				var r = query2.SingleOrDefault(x => x.LinkId == 1);
+				var r = query2.SingleOrDefault(x => x.LinkId == 1)!;
 				Assert.IsNotNull(r);
 				Assert.AreEqual(1, r.MinQuantity);
 				Assert.AreEqual(2, r.MaxQuantity);
 
-				var r2 = query2.SingleOrDefault(x => x.LinkId == 2);
+				var r2 = query2.SingleOrDefault(x => x.LinkId == 2)!;
 				Assert.IsNotNull(r2);
 				Assert.AreEqual(3, r2.MinQuantity);
 				Assert.AreEqual(4, r2.MaxQuantity);

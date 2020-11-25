@@ -129,8 +129,8 @@ namespace Tests
 
 			Environment.CurrentDirectory = assemblyPath;
 
-			var dataProvidersJsonFile     = GetFilePath(assemblyPath, @"DataProviders.json");
-			var userDataProvidersJsonFile = GetFilePath(assemblyPath, @"UserDataProviders.json");
+			var dataProvidersJsonFile     = GetFilePath(assemblyPath, @"DataProviders.json")!;
+			var userDataProvidersJsonFile = GetFilePath(assemblyPath, @"UserDataProviders.json")!;
 
 			var dataProvidersJson     = File.ReadAllText(dataProvidersJsonFile);
 			var userDataProvidersJson =
@@ -140,6 +140,8 @@ namespace Tests
 			var configName = "CORE21";
 #elif NETCOREAPP3_1
 			var configName = "CORE31";
+#elif NET5_0
+			var configName = "NET50";
 #elif NET472
 			var configName = "NET472";
 #else

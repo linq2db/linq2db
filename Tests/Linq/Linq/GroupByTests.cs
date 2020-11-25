@@ -1915,6 +1915,7 @@ namespace Tests.Linq
 		}
 
 		void CheckGuardedQuery<TKey, TEntity>(IQueryable<IGrouping<TKey, TEntity>> grouping)
+			where TKey: notnull
 		{
 			Assert.Throws<LinqToDBException>(() =>
 			{

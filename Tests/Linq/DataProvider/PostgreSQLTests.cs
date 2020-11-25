@@ -806,7 +806,7 @@ namespace Tests.DataProvider
 				db.Insert(e);
 
 				var e2 = db.GetTable<CreateTableTestClass>()
-					.FirstOrDefault(_ => _.Guid == e.Guid);
+					.FirstOrDefault(_ => _.Guid == e.Guid)!;
 
 				Assert.IsNotNull(e2);
 				Assert.AreEqual(e.Guid, e2.Guid);
@@ -1047,7 +1047,7 @@ namespace Tests.DataProvider
 				finally
 				{
 					if (mode == BulkTestMode.WithoutTransaction)
-						db.GetTable<AllTypes>().Where(_ => ids.Contains(_.ID)).Delete();
+						db.GetTable<AllTypes>().Where(_ => ids!.Contains(_.ID)).Delete();
 				}
 
 				if (mode == BulkTestMode.WithRollback)
@@ -1197,11 +1197,11 @@ namespace Tests.DataProvider
 				finally
 				{
 					if (mode == BulkTestMode.WithoutTransaction)
-						db.GetTable<AllTypes>().Where(_ => ids.Contains(_.ID)).Delete();
+						db.GetTable<AllTypes>().Where(_ => ids!.Contains(_.ID)).Delete();
 				}
 
 				if (mode == BulkTestMode.WithRollback)
-					Assert.AreEqual(0, db.GetTable<AllTypes>().Where(_ => ids.Contains(_.ID)).Count());
+					Assert.AreEqual(0, db.GetTable<AllTypes>().Where(_ => ids!.Contains(_.ID)).Count());
 			}
 		}
 

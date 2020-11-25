@@ -170,7 +170,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(testData.Item3))
 			{
 				var query = from m in db.GetTable<MasterClass>().IgnoreFilters()
-					from d in m.Details
+					from d in m.Details!
 					select d;
 
 				CheckFiltersForQuery(db, query);
@@ -196,7 +196,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(testData.Item3))
 			{
 				var query = from m in db.GetTable<MasterClass>().IgnoreFilters()
-					from d in m.Details
+					from d in m.Details!
 					select d;
 
 				CheckFiltersForQuery(db, query);
@@ -237,7 +237,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(testData.Item3))
 			{
 				var query = from m in db.GetTable<MasterClass>().IgnoreFilters()
-					from d in m.Details
+					from d in m.Details!
 					select d;
 
 				CheckFiltersForQuery(db, query);

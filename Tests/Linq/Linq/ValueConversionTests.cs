@@ -436,7 +436,7 @@ namespace Tests.Linq
 					.Set(e => e.EnumWithNullDeclarative, EnumValue.Null)
 					.Update();
 
-				var update1Check = rawTable.FirstOrDefault(e => e.Id == 1);
+				var update1Check = rawTable.FirstOrDefault(e => e.Id == 1)!;
 
 				Assert.That(update1Check.Value1, Is.EqualTo(JsonConvert.SerializeObject(testData[0].Value1)));
 				Assert.That(update1Check.Value2, Is.EqualTo(JsonConvert.SerializeObject(updated)));
@@ -455,7 +455,7 @@ namespace Tests.Linq
 
 				db.Update(toUpdate2);
 
-				var update2Check = rawTable.FirstOrDefault(e => e.Id == 2);
+				var update2Check = rawTable.FirstOrDefault(e => e.Id == 2)!;
 
 				Assert.That(update2Check.Value1, Is.EqualTo("{\"some\":\"updated2}\"}"));
 				Assert.That(update2Check.Value2, Is.EqualTo(JsonConvert.SerializeObject(new List<ItemClass> { new ItemClass { Value = "updated2" } })));
@@ -473,7 +473,7 @@ namespace Tests.Linq
 				};
 				db.Update(toUpdate3);
 
-				var update3Check = rawTable.FirstOrDefault(e => e.Id == 3);
+				var update3Check = rawTable.FirstOrDefault(e => e.Id == 3)!;
 
 				Assert.That(update3Check.Value1, Is.Null);
 				Assert.That(update3Check.Value2, Is.Null);
@@ -501,7 +501,7 @@ namespace Tests.Linq
 					.Value(e => e.Value2, inserted)
 					.Value(e => e.BoolValue, true)
 					.Insert();
-				var insert1Check = rawTable.FirstOrDefault(e => e.Id == 1);
+				var insert1Check = rawTable.FirstOrDefault(e => e.Id == 1)!;
 
 				Assert.That(insert1Check.Value1, Is.EqualTo(JsonConvert.SerializeObject(new JArray())));
 				Assert.That(insert1Check.Value2, Is.EqualTo(JsonConvert.SerializeObject(inserted)));
@@ -518,7 +518,7 @@ namespace Tests.Linq
 					.Value(e => e.BoolValue, false)
 					.Insert();
 
-				var insert2Check = rawTable.FirstOrDefault(e => e.Id == 2);
+				var insert2Check = rawTable.FirstOrDefault(e => e.Id == 2)!;
 
 				Assert.That(insert2Check.Value1, Is.Null);
 				Assert.That(insert2Check.Value2, Is.Null);
@@ -539,7 +539,7 @@ namespace Tests.Linq
 
 				db.Insert(toInsert);
 
-				var insert3Check = rawTable.FirstOrDefault(e => e.Id == 3);
+				var insert3Check = rawTable.FirstOrDefault(e => e.Id == 3)!;
 
 				Assert.That(insert3Check.Value1, Is.EqualTo("{\"some\":\"inserted3}\"}"));
 				Assert.That(insert3Check.Value2, Is.EqualTo(JsonConvert.SerializeObject(new List<ItemClass> { new ItemClass { Value = "inserted3" } })));

@@ -668,7 +668,7 @@ namespace Tests.Linq
 
 				query.ToList();
 
-				Assert.AreEqual(1, System.Text.RegularExpressions.Regex.Matches(db.LastQuery, "Types").Count);
+				Assert.AreEqual(1, System.Text.RegularExpressions.Regex.Matches(db.LastQuery!, "Types").Count);
 			}
 		}
 
