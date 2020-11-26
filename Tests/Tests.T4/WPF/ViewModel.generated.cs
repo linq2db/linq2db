@@ -200,9 +200,7 @@ namespace Tests.T4.Wpf
 
 		#region INotifyPropertyChanged support
 
-#if !SILVERLIGHT
 		[field : NonSerialized]
-#endif
 		public virtual event PropertyChangedEventHandler? PropertyChanged;
 
 		protected void OnPropertyChanged(string propertyName)
@@ -229,9 +227,7 @@ namespace Tests.T4.Wpf
 
 		#region Validation
 
-#if !SILVERLIGHT
 		[field : NonSerialized]
-#endif
 		public int _isValidCounter;
 
 		public static partial class CustomValidator
@@ -242,16 +238,22 @@ namespace Tests.T4.Wpf
 				{
 					obj._isValidCounter++;
 
+					#if DEBUG
 					var flag0 = ValidationResult.Success == ValidateConditionalProp(obj, obj.ConditionalProp);
+					#else
+					var flag0 = true;
+					#endif
 					var flag1 = ValidationResult.Success == ValidateNotifiedProp3(obj, obj.NotifiedProp3);
 
-					return flag0 || flag1;
+					return flag0 && flag1;
 				}
 				finally
 				{
 					obj._isValidCounter--;
 				}
 			}
+
+#if DEBUG
 
 			public static ValidationResult? ValidateConditionalProp(ViewModel obj, string value)
 			{
@@ -276,6 +278,8 @@ namespace Tests.T4.Wpf
 
 				return ValidationResult.Success;
 			}
+
+#endif
 
 			public static ValidationResult? ValidateNotifiedProp3(ViewModel obj, string value)
 			{
@@ -302,21 +306,19 @@ namespace Tests.T4.Wpf
 			}
 		}
 
+#if DEBUG
 		partial void ValidateConditionalProp(string value, List<ValidationResult> validationResults);
+#endif
 		partial void ValidateNotifiedProp3  (string value, List<ValidationResult> validationResults);
 
 		#endregion
 
 		#region INotifyDataErrorInfo support
 
-#if !SILVERLIGHT
 		[field : NonSerialized]
-#endif
 		public virtual event EventHandler<DataErrorsChangedEventArgs>? ErrorsChanged;
 
-#if !SILVERLIGHT
 		[field : NonSerialized]
-#endif
 		private readonly Dictionary<string,List<string>> _validationErrors = new Dictionary<string,List<string>>();
 
 		public void AddError(string propertyName, string error)

@@ -831,9 +831,7 @@ namespace Tests.T4.Model
 
 		#region INotifyPropertyChanged support
 
-#if !SILVERLIGHT
 		[field : NonSerialized]
-#endif
 		public virtual event PropertyChangedEventHandler? PropertyChanged;
 
 		protected void OnPropertyChanged(string propertyName)
@@ -860,9 +858,7 @@ namespace Tests.T4.Model
 
 		#region INotifyPropertyChanging support
 
-#if !SILVERLIGHT
 		[field : NonSerialized]
-#endif
 		public virtual event PropertyChangingEventHandler? PropertyChanging;
 
 		protected void OnPropertyChanging(string propertyName)
@@ -889,9 +885,7 @@ namespace Tests.T4.Model
 
 		#region Validation
 
-#if !SILVERLIGHT
 		[field : NonSerialized]
-#endif
 		public int _isValidCounter;
 
 		public static partial class CustomValidator
@@ -907,7 +901,7 @@ namespace Tests.T4.Model
 					var flag2 = ValidationResult.Success == ValidateEditableLong1(obj, obj.EditableLong1);
 					var flag3 = ValidationResult.Success == ValidateEditableInt1(obj, obj.EditableInt1);
 
-					return flag0 || flag1 || flag2 || flag3;
+					return flag0 && flag1 && flag2 && flag3;
 				}
 				finally
 				{
