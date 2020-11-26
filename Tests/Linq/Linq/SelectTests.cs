@@ -17,6 +17,11 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using System.Data;
+	using System.Data.Common;
+	using System.Threading;
+	using System.Threading.Tasks;
+	using LinqToDB.Data.DbCommandProcessor;
 	using Model;
 
 	[TestFixture]
@@ -1656,5 +1661,54 @@ namespace Tests.Linq
 				q.ToArray();
 			}
 		}
+
+		#region SequentialAccess (#2116)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2116")]
+		public void SequentialAccessTest([DataSources] string context)
+		{
+			// providers that support SequentialAccess:
+			// Access (OleDb)
+			// MySql.Data
+			// npgsql
+			// System.Data.SqlClient
+			// Microsoft.Data.SqlClient
+			// SqlCe
+			DbCommandProcessorExtensions.Instance = new TestBehaviorProcessor();
+			try
+			{
+				using (var db = GetDataContext(context))
+				{
+					var q = db.Person
+					.Select(p => new
+					{
+						p.FirstName,
+						p.LastName,
+						FullName = $"{p.FirstName} {p.LastName}"
+					});
+
+					foreach (var p in q.ToArray())
+						Assert.AreEqual($"{p.FirstName} {p.LastName}", p.FullName);
+				}
+			}
+			finally
+			{
+				DbCommandProcessorExtensions.Instance = null;
+			}
+		}
+
+		private class TestBehaviorProcessor : IDbCommandProcessor
+		{
+			DbDataReader IDbCommandProcessor.ExecuteReader(DbCommand command, CommandBehavior commandBehavior)
+			{
+				return command.ExecuteReader(CommandBehavior.SequentialAccess);
+			}
+
+			int IDbCommandProcessor.ExecuteNonQuery(DbCommand command) => command.ExecuteNonQuery();
+			Task<int> IDbCommandProcessor.ExecuteNonQueryAsync(DbCommand command, CancellationToken cancellationToken) => command.ExecuteNonQueryAsync(cancellationToken);
+			Task<DbDataReader> IDbCommandProcessor.ExecuteReaderAsync(DbCommand command, CommandBehavior commandBehavior, CancellationToken cancellationToken) => command.ExecuteReaderAsync(commandBehavior, cancellationToken);
+			object? IDbCommandProcessor.ExecuteScalar(DbCommand command) => command.ExecuteScalar();
+			Task<object?> IDbCommandProcessor.ExecuteScalarAsync(DbCommand command, CancellationToken cancellationToken) => command.ExecuteScalarAsync(cancellationToken);
+		}
+		#endregion
 	}
 }
