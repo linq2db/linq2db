@@ -13,13 +13,6 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 		}
 
-		public override SqlStatement OptimizeStatement(SqlStatement statement, EvaluationContext context)
-		{
-			statement = base.OptimizeStatement(statement, context);
-
-			return statement;
-		}
-
 		public override SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context)
 		{
 			statement = base.FinalizeStatement(statement, context);

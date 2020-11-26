@@ -142,13 +142,6 @@ namespace LinqToDB.DataProvider.Firebird
 		}
 
 
-
-		public override SqlStatement OptimizeStatement(SqlStatement statement, EvaluationContext context)
-		{
-			statement = base.OptimizeStatement(statement, context);
-			return statement;
-		}
-
 		public override SqlStatement TransformStatementMutable(SqlStatement statement)
 		{
 			return statement.QueryType switch
