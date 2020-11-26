@@ -1699,7 +1699,7 @@ namespace Tests.DataProvider
 					.GetSchemaProvider()
 					.GetSchema(db, options);
 
-				var proc = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "Issue1921");
+				var proc = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "Issue1921")!;
 				Assert.NotNull(proc);
 				Assert.AreEqual("Issue1921", proc.ProcedureName);
 				Assert.AreEqual(true       , proc.IsTableFunction);
@@ -1738,7 +1738,7 @@ AS
 					.GetSchemaProvider()
 					.GetSchema(db, options);
 
-				var proc = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "Issue449");
+				var proc = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "Issue449")!;
 				Assert.NotNull(proc);
 				Assert.True(proc.IsFunction);
 				Assert.True(proc.IsTableFunction);
@@ -1812,7 +1812,7 @@ AS
 					.GetSchemaProvider()
 					.GetSchema(db, options);
 
-				var proc = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "PersonSearch");
+				var proc = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "PersonSearch")!;
 				Assert.NotNull(proc);
 				Assert.False(proc.IsFunction);
 				Assert.IsNull(proc.ResultException);
@@ -1831,24 +1831,24 @@ AS
 					.GetSchemaProvider()
 					.GetSchema(db, options);
 
-				var proc = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "ExecuteProcStringParameters");
+				var proc = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "ExecuteProcStringParameters")!;
 				Assert.NotNull(proc);
 				Assert.AreEqual("This is <test> procedure!", proc.Description);
-				var param = proc.Parameters.FirstOrDefault(p => p.ParameterName == "@input");
+				var param = proc.Parameters.FirstOrDefault(p => p.ParameterName == "@input")!;
 				Assert.NotNull(param);
 				Assert.AreEqual("This is <test> procedure parameter!", param.Description);
 
-				var func = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "GetParentByID");
+				var func = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "GetParentByID")!;
 				Assert.NotNull(func);
 				Assert.AreEqual("This is <test> table function!", func.Description);
-				param = func.Parameters.FirstOrDefault(p => p.ParameterName == "@id");
+				param = func.Parameters.FirstOrDefault(p => p.ParameterName == "@id")!;
 				Assert.NotNull(param);
 				Assert.AreEqual("This is <test> table function parameter!", param.Description);
 
-				func = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "ScalarFunction");
+				func = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "ScalarFunction")!;
 				Assert.NotNull(func);
 				Assert.AreEqual("This is <test> scalar function!", func.Description);
-				param = func.Parameters.FirstOrDefault(p => p.ParameterName == "@value");
+				param = func.Parameters.FirstOrDefault(p => p.ParameterName == "@value")!;
 				Assert.NotNull(param);
 				Assert.AreEqual("This is <test> scalar function parameter!", param.Description);
 			}

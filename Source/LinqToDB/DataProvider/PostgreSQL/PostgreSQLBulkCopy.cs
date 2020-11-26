@@ -103,10 +103,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			// batch size numbers not based on any strong grounds as I didn't found any recommendations for it
 			var batchSize = Math.Max(10, options.MaxBatchSize ?? 10000);
 
-			var useComplete = _provider.Adapter.BinaryImporterHasComplete;
 			var writer      = _provider.Adapter.BeginBinaryImport(connection, copyCommand);
 
-			return ProviderSpecificCopySyncImpl(dataConnection, options, source, connection, tableName, columns, npgsqlTypes, copyCommand, batchSize, useComplete, writer);
+			return ProviderSpecificCopySyncImpl(dataConnection, options, source, connection, tableName, columns, npgsqlTypes, copyCommand, batchSize, writer);
 		}
 
 		private BulkCopyRowsCopied ProviderSpecificCopySyncImpl<T>(
@@ -119,7 +118,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			NpgsqlProviderAdapter.NpgsqlDbType[]       npgsqlTypes,
 			string                                     copyCommand,
 			int                                        batchSize,
-			bool                                       useComplete,
 			NpgsqlProviderAdapter.NpgsqlBinaryImporter writer)
 		{
 			var currentCount = 0;
@@ -143,7 +141,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 						if (rowsCopied.Abort)
 						{
-							if (!useComplete)
+							if (!writer.HasComplete && !writer.HasComplete5)
 								writer.Cancel();
 							break;
 						}
@@ -151,8 +149,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 					if (currentCount >= batchSize)
 					{
-						if (useComplete)
+						if (writer.HasComplete)
 							writer.Complete();
+						else if (writer.HasComplete5)
+							writer.Complete5();
 
 						writer.Dispose();
 
@@ -168,8 +168,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						() => "INSERT BULK " + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + Environment.NewLine,
 						() =>
 						{
-							if (useComplete)
+							if (writer.HasComplete)
 								writer.Complete();
+							else if (writer.HasComplete5)
+								writer.Complete5();
 							return (int)rowsCopied.RowsCopied;
 						});
 				}
@@ -177,7 +179,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
 					options.RowsCopiedCallback(rowsCopied);
 			}
-			catch when (!useComplete)
+			catch when (!writer.HasComplete && !writer.HasComplete5)
 			{
 				writer.Cancel();
 				throw;
@@ -235,7 +237,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			if (!writer.SupportsAsync)
 			{
 				// seems to be missing one of the required async methods; fallback to sync importer
-				return ProviderSpecificCopySyncImpl(dataConnection, options, source, connection, tableName, columns, npgsqlTypes, copyCommand, batchSize, true, writer);
+				return ProviderSpecificCopySyncImpl(dataConnection, options, source, connection, tableName, columns, npgsqlTypes, copyCommand, batchSize, writer);
 			}
 
 			var rowsCopied = new BulkCopyRowsCopied();
@@ -351,7 +353,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				var enumerator = source.GetAsyncEnumerator(cancellationToken);
 				await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 				{
-					return ProviderSpecificCopySyncImpl(dataConnection, options, EnumerableHelper.AsyncToSyncEnumerable(enumerator), connection, tableName, columns, npgsqlTypes, copyCommand, batchSize, true, writer);
+					return ProviderSpecificCopySyncImpl(dataConnection, options, EnumerableHelper.AsyncToSyncEnumerable(enumerator), connection, tableName, columns, npgsqlTypes, copyCommand, batchSize, writer);
 				}
 			}
 

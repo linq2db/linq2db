@@ -1,0 +1,8 @@
+﻿{
+	"NET50.Azure": {
+		"Providers": [
+			// posgresql 9.2
+			"PostgreSQL.9.2"
+		]
+	}
+}

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.Benchmarks.TestProvider
 {
@@ -15,7 +16,9 @@ namespace LinqToDB.Benchmarks.TestProvider
 			ParameterName = name;
 			Value = value;
 		}
-		public override string? ParameterName { get; set; }
+
+		[AllowNull]
+		public override string  ParameterName { get; set; } = null!;
 		public override DbType  DbType        { get; set; }
 		public override object? Value         { get; set; }
 
@@ -29,6 +32,7 @@ namespace LinqToDB.Benchmarks.TestProvider
 			}
 		}
 
+		[AllowNull]
 		public override string SourceColumn { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 		public override bool SourceColumnNullMapping { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 

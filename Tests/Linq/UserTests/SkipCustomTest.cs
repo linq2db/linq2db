@@ -55,7 +55,7 @@ namespace Tests.UserTests
 
 					Assert.Greater(count, 0);
 
-					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1);
+					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 
 					Assert.IsNotNull(r);
 					Assert.AreEqual(r.Age, 15);
@@ -64,7 +64,7 @@ namespace Tests.UserTests
 
 					Assert.Greater(count, 0);
 
-					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 2);
+					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 2)!;
 
 					Assert.IsNotNull(r);
 					Assert.IsNull(r.Age);

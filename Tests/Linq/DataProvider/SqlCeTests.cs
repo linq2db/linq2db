@@ -577,7 +577,7 @@ namespace Tests.DataProvider
 
 				var id = db.InsertWithInt32Identity(testItem);
 
-				var item = db.GetTable<ImageDataType>().FirstOrDefault(_ => _.ID == id);
+				var item = db.GetTable<ImageDataType>().First(_ => _.ID == id);
 
 				Assert.That(testItem.imageDataType, Is.EqualTo(item.imageDataType));
 			}

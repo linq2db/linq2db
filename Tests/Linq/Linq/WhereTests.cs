@@ -1618,7 +1618,19 @@ namespace Tests.Linq
 								   && (!flag.HasValue || flag.Value && c.Value1 == null || !flag.Value && c.Value1 != null)
 							   select c);
 
-				AssertQuery(results);
+				var sql = results.ToString()!;
+
+				AreEqual(
+					from c in db.Parent.AsEnumerable()
+					where c.ParentID == id
+						&& (!flag.HasValue || flag.Value && c.Value1 == null || !flag.Value && c.Value1 != null)
+					select c,
+					results,
+					true);
+
+				// remote context doesn't have access to final SQL
+				if (!context.EndsWith(".LinqService"))
+					Assert.AreEqual(flag == null ? 0 : 1, Regex.Matches(sql, " AND ").Count);
 			}
 		}
 
@@ -1632,7 +1644,19 @@ namespace Tests.Linq
 								   && (flag == null || flag.Value && c.Value1 == null || !flag.Value && c.Value1 != null)
 							   select c);
 
-				AssertQuery(results);
+				var sql = results.ToString()!;
+
+				AreEqual(
+					from c in db.Parent.AsEnumerable()
+					where c.ParentID == id
+						&& (flag == null || flag.Value && c.Value1 == null || !flag.Value && c.Value1 != null)
+					select c,
+					results,
+					true);
+
+				// remote context doesn't have access to final SQL
+				if (!context.EndsWith(".LinqService"))
+					Assert.AreEqual(flag == null ? 0 : 1, Regex.Matches(sql, " AND ").Count);
 			}
 		}
 

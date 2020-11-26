@@ -1758,7 +1758,6 @@ namespace Tests.Linq
 		public void FirstGroupBy([DataSources] string context)
 		{
 			using (new GuardGrouping(false))
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				Assert.AreEqual(
@@ -1916,6 +1915,7 @@ namespace Tests.Linq
 		}
 
 		void CheckGuardedQuery<TKey, TEntity>(IQueryable<IGrouping<TKey, TEntity>> grouping)
+			where TKey: notnull
 		{
 			Assert.Throws<LinqToDBException>(() =>
 			{
@@ -1931,7 +1931,6 @@ namespace Tests.Linq
 		[Test]
 		public void GroupByGuard([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using(new AllowMultipleQuery())
 			using(new GuardGrouping(true))
 			using (var db = GetDataContext(context))
 			{
@@ -2072,7 +2071,6 @@ namespace Tests.Linq
 		{
 			var input = "test";
 
-			using (new AllowMultipleQuery(true))
 			using (var db = GetDataContext(context))
 			{
 				var result = db.Person.GroupJoin(db.Patient, re => re.ID, ri => ri.PersonID, (re, ri) => new
@@ -2086,7 +2084,6 @@ namespace Tests.Linq
 		[Test]
 		public void Issue434Test2([DataSources] string context)
 		{
-			using (new AllowMultipleQuery(true))
 			using (var db = GetDataContext(context))
 			{
 				var result = db.Person.GroupJoin(db.Patient, re => re.ID, ri => ri.PersonID, (re, ri) => new

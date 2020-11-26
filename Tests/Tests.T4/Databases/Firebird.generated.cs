@@ -203,9 +203,9 @@ namespace FirebirdDataContext
 		#region Associations
 
 		/// <summary>
-		/// INTEG_84
+		/// INTEG_296
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="INTEG_84", BackReferenceName="INTEG")]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="INTEG_296", BackReferenceName="INTEG")]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -229,7 +229,7 @@ namespace FirebirdDataContext
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
-		/// INTEG_84_BackReference
+		/// INTEG_296_BackReference
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
 		public Patient? INTEG { get; set; }
@@ -677,73 +677,73 @@ namespace FirebirdDataContext
 
 	public static partial class TableExtensions
 	{
-		public static AllType Find(this ITable<AllType> table, int ID)
+		public static AllType? Find(this ITable<AllType> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static CamelCaseName Find(this ITable<CamelCaseName> table, int Id)
+		public static CamelCaseName? Find(this ITable<CamelCaseName> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static DataTypeTest Find(this ITable<DataTypeTest> table, int DataTypeID)
+		public static DataTypeTest? Find(this ITable<DataTypeTest> table, int DataTypeID)
 		{
 			return table.FirstOrDefault(t =>
 				t.DataTypeID == DataTypeID);
 		}
 
-		public static Doctor Find(this ITable<Doctor> table, int PersonID)
+		public static Doctor? Find(this ITable<Doctor> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
 		}
 
-		public static InheritanceChild Find(this ITable<InheritanceChild> table, int InheritanceChildId)
+		public static InheritanceChild? Find(this ITable<InheritanceChild> table, int InheritanceChildId)
 		{
 			return table.FirstOrDefault(t =>
 				t.InheritanceChildId == InheritanceChildId);
 		}
 
-		public static InheritanceParent Find(this ITable<InheritanceParent> table, int InheritanceParentId)
+		public static InheritanceParent? Find(this ITable<InheritanceParent> table, int InheritanceParentId)
 		{
 			return table.FirstOrDefault(t =>
 				t.InheritanceParentId == InheritanceParentId);
 		}
 
-		public static Patient Find(this ITable<Patient> table, int PersonID)
+		public static Patient? Find(this ITable<Patient> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
 		}
 
-		public static Person Find(this ITable<Person> table, int PersonID)
+		public static Person? Find(this ITable<Person> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
 		}
 
-		public static SequenceTest Find(this ITable<SequenceTest> table, int ID)
+		public static SequenceTest? Find(this ITable<SequenceTest> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static TestIdentity Find(this ITable<TestIdentity> table, int ID)
+		public static TestIdentity? Find(this ITable<TestIdentity> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static TestMerge1 Find(this ITable<TestMerge1> table, int Id)
+		public static TestMerge1? Find(this ITable<TestMerge1> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static TestMerge2 Find(this ITable<TestMerge2> table, int Id)
+		public static TestMerge2? Find(this ITable<TestMerge2> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);

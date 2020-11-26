@@ -4,11 +4,15 @@
 	<PropertyGroup>
 		<AssemblyName>linq2db.Benchmarks</AssemblyName>
 		<RootNamespace>LinqToDB.Benchmarks</RootNamespace>
-		<TargetFrameworks>net472;netcoreapp2.1;netcoreapp3.1</TargetFrameworks>
+		<TargetFrameworks>net472;netcoreapp2.1;netcoreapp3.1;net5.0</TargetFrameworks>
 		<OutputType>Exe</OutputType>
-		<MSBuildWarningsAsMessages>MSB3276</MSBuildWarningsAsMessages>
+		<MSBuildWarningsAsMessages>MSB3270</MSBuildWarningsAsMessages>
 		<PlatformTarget>AnyCPU</PlatformTarget>
 	</PropertyGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'netcoreapp2.1' ">
+	  <Compile Include="..\..\Source\LinqToDB\Compatibility\System\Diagnostics\CodeAnalysis\NullableAttributes.cs" Link="NullableAttributes.cs" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="BenchmarkDotNet" Version="0.12.1" />

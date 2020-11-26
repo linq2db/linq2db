@@ -7,6 +7,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{885042E3
 	ProjectSection(SolutionItems) = preProject
 		Build\BuildNuspecs.ps1 = Build\BuildNuspecs.ps1
 		Build\linq2db.Default.props = Build\linq2db.Default.props
+		Build\linq2db.Providers.props = Build\linq2db.Providers.props
 		Build\linq2db.snk = Build\linq2db.snk
 		Build\linq2db.Source.props = Build\linq2db.Source.props
 		Build\linq2db.Tests.props = Build\linq2db.Tests.props
@@ -495,6 +496,55 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "templates", "templates", "{
 		Build\Azure\pipelines\templates\test-workflow-windows.yml = Build\Azure\pipelines\templates\test-workflow-windows.yml
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net50", "net50", "{B528C8AE-AF7A-4D8C-919E-2E3FA4C99EEE}"
+	ProjectSection(SolutionItems) = preProject
+		Build\Azure\net50\access.ace.json = Build\Azure\net50\access.ace.json
+		Build\Azure\net50\access.json = Build\Azure\net50\access.json
+		Build\Azure\net50\access.odbc.ace.json = Build\Azure\net50\access.odbc.ace.json
+		Build\Azure\net50\access.odbc.mdb.json = Build\Azure\net50\access.odbc.mdb.json
+		Build\Azure\net50\db2.json = Build\Azure\net50\db2.json
+		Build\Azure\net50\firebird25.json = Build\Azure\net50\firebird25.json
+		Build\Azure\net50\firebird3.json = Build\Azure\net50\firebird3.json
+		Build\Azure\net50\hana2.json = Build\Azure\net50\hana2.json
+		Build\Azure\net50\informix.json = Build\Azure\net50\informix.json
+		Build\Azure\net50\mariadb.json = Build\Azure\net50\mariadb.json
+		Build\Azure\net50\mariadb.win.json = Build\Azure\net50\mariadb.win.json
+		Build\Azure\net50\mysql.json = Build\Azure\net50\mysql.json
+		Build\Azure\net50\mysql55.json = Build\Azure\net50\mysql55.json
+		Build\Azure\net50\oracle11.json = Build\Azure\net50\oracle11.json
+		Build\Azure\net50\oracle12.json = Build\Azure\net50\oracle12.json
+		Build\Azure\net50\pgsql.json = Build\Azure\net50\pgsql.json
+		Build\Azure\net50\pgsql10.json = Build\Azure\net50\pgsql10.json
+		Build\Azure\net50\pgsql11.json = Build\Azure\net50\pgsql11.json
+		Build\Azure\net50\pgsql12.json = Build\Azure\net50\pgsql12.json
+		Build\Azure\net50\pgsql13.json = Build\Azure\net50\pgsql13.json
+		Build\Azure\net50\pgsql92.json = Build\Azure\net50\pgsql92.json
+		Build\Azure\net50\pgsql93.json = Build\Azure\net50\pgsql93.json
+		Build\Azure\net50\pgsql95.json = Build\Azure\net50\pgsql95.json
+		Build\Azure\net50\sqlce.json = Build\Azure\net50\sqlce.json
+		Build\Azure\net50\sqlite.json = Build\Azure\net50\sqlite.json
+		Build\Azure\net50\sqlite.ms.json = Build\Azure\net50\sqlite.ms.json
+		Build\Azure\net50\sqlserver.2005.json = Build\Azure\net50\sqlserver.2005.json
+		Build\Azure\net50\sqlserver.2005.ms.json = Build\Azure\net50\sqlserver.2005.ms.json
+		Build\Azure\net50\sqlserver.2008.json = Build\Azure\net50\sqlserver.2008.json
+		Build\Azure\net50\sqlserver.2008.ms.json = Build\Azure\net50\sqlserver.2008.ms.json
+		Build\Azure\net50\sqlserver.2012.json = Build\Azure\net50\sqlserver.2012.json
+		Build\Azure\net50\sqlserver.2012.ms.json = Build\Azure\net50\sqlserver.2012.ms.json
+		Build\Azure\net50\sqlserver.2014.json = Build\Azure\net50\sqlserver.2014.json
+		Build\Azure\net50\sqlserver.2014.ms.json = Build\Azure\net50\sqlserver.2014.ms.json
+		Build\Azure\net50\sqlserver.2016.json = Build\Azure\net50\sqlserver.2016.json
+		Build\Azure\net50\sqlserver.2016.ms.json = Build\Azure\net50\sqlserver.2016.ms.json
+		Build\Azure\net50\sqlserver.2017.json = Build\Azure\net50\sqlserver.2017.json
+		Build\Azure\net50\sqlserver.2017.ms.json = Build\Azure\net50\sqlserver.2017.ms.json
+		Build\Azure\net50\sqlserver.2019.json = Build\Azure\net50\sqlserver.2019.json
+		Build\Azure\net50\sqlserver.2019.ms.json = Build\Azure\net50\sqlserver.2019.ms.json
+		Build\Azure\net50\sqlserver.fts.2017.json = Build\Azure\net50\sqlserver.fts.2017.json
+		Build\Azure\net50\sqlserver.fts.2017.ms.json = Build\Azure\net50\sqlserver.fts.2017.ms.json
+		Build\Azure\net50\sqlserver.fts.2019.json = Build\Azure\net50\sqlserver.fts.2019.json
+		Build\Azure\net50\sqlserver.fts.2019.ms.json = Build\Azure\net50\sqlserver.fts.2019.ms.json
+		Build\Azure\net50\sybase.json = Build\Azure\net50\sybase.json
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Azure|Any CPU = Azure|Any CPU
@@ -606,6 +656,7 @@ Global
 		{16894D8D-697E-49B7-BC72-02D2462FC80E} = {3A081B6E-D3B3-433F-A3CA-EE29CD24C324}
 		{BD5FA19A-4092-45F0-A7AF-D46666718EB5} = {51E64464-E257-4984-A4D5-BF9FF8B7DF1D}
 		{DAD073A0-C4D2-4C92-AB6D-F8162DB2D5D3} = {C937AC8E-2714-4850-A1EA-1710D980DF0B}
+		{B528C8AE-AF7A-4D8C-919E-2E3FA4C99EEE} = {51E64464-E257-4984-A4D5-BF9FF8B7DF1D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {15BBD7CE-1C8E-4407-9DCF-674982CEB3F7}

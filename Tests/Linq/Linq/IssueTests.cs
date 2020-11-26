@@ -569,7 +569,6 @@ namespace Tests.Linq
 		public void Issue173([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (new AllowMultipleQuery())
 			{
 				var result =
 					from r in db.GetTable<Parent>()

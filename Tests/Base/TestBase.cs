@@ -130,8 +130,8 @@ namespace Tests
 
 			Environment.CurrentDirectory = assemblyPath;
 
-			var dataProvidersJsonFile     = GetFilePath(assemblyPath, @"DataProviders.json");
-			var userDataProvidersJsonFile = GetFilePath(assemblyPath, @"UserDataProviders.json");
+			var dataProvidersJsonFile     = GetFilePath(assemblyPath, @"DataProviders.json")!;
+			var userDataProvidersJsonFile = GetFilePath(assemblyPath, @"UserDataProviders.json")!;
 
 			var dataProvidersJson     = File.ReadAllText(dataProvidersJsonFile);
 			var userDataProvidersJson =
@@ -141,6 +141,8 @@ namespace Tests
 			var configName = "CORE21";
 #elif NETCOREAPP3_1
 			var configName = "CORE31";
+#elif NET5_0
+			var configName = "NET50";
 #elif NET472
 			var configName = "NET472";
 #else
@@ -323,7 +325,7 @@ namespace Tests
 		public static readonly string? DefaultProvider;
 		public static readonly HashSet<string> SkipCategories;
 
-		public static readonly List<string> Providers = new List<string>
+		public static readonly List<string> Providers = CustomizationSupport.Interceptor.GetSupportedProviders(new List<string>
 		{
 #if NET472
 			ProviderName.Sybase,
@@ -368,7 +370,7 @@ namespace Tests
 			ProviderName.SQLiteMS,
 			ProviderName.SapHanaNative,
 			ProviderName.SapHanaOdbc
-		};
+		}).ToList();
 
 		protected ITestDataContext GetDataContext(string configuration, MappingSchema? ms = null)
 		{
@@ -397,6 +399,26 @@ namespace Tests
 			if (ms != null)
 				res.AddMappingSchema(ms);
 			return res;
+		}
+
+		protected static char GetParameterToken(string context)
+		{
+			var token = '@';
+
+			switch (context)
+			{
+				case ProviderName.SapHanaOdbc:
+				case ProviderName.Informix:
+					token = '?'; break;
+				case ProviderName.SapHanaNative:
+				case TestProvName.Oracle11Managed:
+				case TestProvName.Oracle11Native:
+				case ProviderName.OracleManaged:
+				case ProviderName.OracleNative:
+					token = ':'; break;
+			}
+
+			return CustomizationSupport.Interceptor.GetParameterToken(token, context);
 		}
 
 		protected void TestOnePerson(int id, string firstName, IQueryable<Person> persons)
@@ -1244,21 +1266,6 @@ namespace Tests
 		{
 			return string.Format(CultureInfo.InvariantCulture, "{0}", data)
 				.Replace(',', '.').Trim(' ', '.', '0');
-		}
-	}
-
-	public class AllowMultipleQuery : IDisposable
-	{
-		private readonly bool _oldValue = Configuration.Linq.AllowMultipleQuery;
-
-		public AllowMultipleQuery(bool value = true)
-		{
-			Configuration.Linq.AllowMultipleQuery = value;
-		}
-
-		public void Dispose()
-		{
-			Configuration.Linq.AllowMultipleQuery = _oldValue;
 		}
 	}
 

@@ -207,8 +207,8 @@ namespace Tests.Linq
 			{
 				var dd = GetNorthwindAsList(context);
 				Assert.AreEqual(
-					dd.DiscontinuedProduct.FirstOrDefault().ProductID,
-					db.DiscontinuedProduct.FirstOrDefault().ProductID);
+					dd.DiscontinuedProduct.FirstOrDefault()!.ProductID,
+					db.DiscontinuedProduct.FirstOrDefault()!.ProductID);
 			}
 		}
 
@@ -408,8 +408,8 @@ namespace Tests.Linq
 
 		}
 
-		T FindById<T>(IQueryable<T> queryable, int id)
-			where T : IChildTest14
+		T? FindById<T>(IQueryable<T> queryable, int id)
+			where T : class, IChildTest14
 		{
 			return queryable.Where(x => x.ChildID == id).FirstOrDefault();
 		}

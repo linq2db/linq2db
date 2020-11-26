@@ -10,6 +10,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using System.Threading;
+using System.Timers;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -600,6 +601,10 @@ namespace LinqToDB.Mapping
 					ExpressionHelper.Property(param, nameof(Nullable<int>.HasValue)),
 					Expression.Convert(body, type),
 					new DefaultValueExpression(this, type));
+			}
+			else if (type.IsNullable())
+			{
+				body = Expression.Convert(param, type);
 			}
 			else if (fromType.IsClass || fromType.IsInterface)
 			{

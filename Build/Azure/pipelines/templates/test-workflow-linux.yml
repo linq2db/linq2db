@@ -1,10 +1,18 @@
 parameters:
   artifacts: ''
-  netcoreversion: ''
+  framework: ''
+  titleFramework: ''
   with_baselines: false
 
 steps:
 - checkout: none
+
+- task: UseDotNet@2
+  displayName: 'Install .net 5'
+  inputs:
+    packageType: sdk
+    version: 5.x
+  condition: eq('${{ parameters.framework }}', 'net5.0')
 
 - task: CmdLine@2
   inputs:
@@ -48,9 +56,7 @@ steps:
   condition: and(variables.title, variables.script)
   displayName: Setup tests
 
-# just because there is no vstest handing in DotNetCoreCLI@2
-# https://github.com/microsoft/azure-pipelines-tasks/blob/master/Tasks/DotNetCoreCLIV2/dotnetcore.ts#L60
-- script: dotnet vstest ./linq2db.Tests.dll /TestCaseFilter:"TestCategory != SkipCI" /Framework:.NETCoreApp,Version=v${{ parameters.netcoreversion }} /logger:trx
+- script: dotnet test ./linq2db.Tests.dll /TestCaseFilter:"TestCategory != SkipCI" /Framework:${{ parameters.framework }} /logger:trx
   condition: and(variables.title, succeeded())
   displayName: 'Execute tests: $(title)'
 
@@ -59,7 +65,7 @@ steps:
   inputs:
     testRunner: VsTest
     testResultsFiles: '**/*.trx'
-    testRunTitle: 'Linux / NETCOREAPP${{ parameters.netcoreversion }} / $(title)'
+    testRunTitle: 'Linux / ${{ parameters.titleFramework }} / $(title)'
 
 - task: PowerShell@2
   inputs:
@@ -72,7 +78,7 @@ steps:
           exit 1
       }
       Write-Host "Create commit"
-      $output = git commit -m "[Linux / NETCOREAPP${{ parameters.netcoreversion }} / $(title)] baselines"
+      $output = git commit -m "[Linux / ${{ parameters.titleFramework }} / $(title)] baselines"
       if ($output -match "nothing to commit") {
           Write-Host "No baselines changes detected"
           exit 0

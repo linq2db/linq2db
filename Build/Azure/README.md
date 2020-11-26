@@ -71,34 +71,34 @@ Legend:
 |Access<br>MDB+ACCDB ODBC|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
 |MS SQL CE<sup>[4](#notes)</sup>|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
 |MS SQL Server 2000<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.8.2|:x:|:x:|:heavy_minus_sign:|:heavy_minus_sign:|
-|MS SQL Server 2000<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) 2.0.1|:x:|:x:|:heavy_minus_sign:|:heavy_minus_sign:|
+|MS SQL Server 2000<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) 2.1.0|:x:|:x:|:heavy_minus_sign:|:heavy_minus_sign:|
 |MS SQL Server 2005<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.8.2|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
-|MS SQL Server 2005<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) 2.0.1|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
+|MS SQL Server 2005<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) 2.1.0|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
 |MS SQL Server 2008<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.8.2|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
-|MS SQL Server 2008<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) 2.0.1|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
+|MS SQL Server 2008<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) 2.1.0|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
 |MS SQL Server 2012<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.8.2|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
-|MS SQL Server 2012<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) 2.0.1|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
+|MS SQL Server 2012<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) 2.1.0|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
 |MS SQL Server 2014<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.8.2|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
-|MS SQL Server 2014<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) 2.0.1|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
+|MS SQL Server 2014<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) 2.1.0|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
 |MS SQL Server 2016<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.8.2|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
-|MS SQL Server 2016<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) 2.0.1|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
+|MS SQL Server 2016<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) 2.1.0|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
 |MS SQL Server 2017<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.8.2<br>with FTS Tests|:heavy_check_mark:<sup>[5](#notes)</sup>|:heavy_check_mark:<sup>[5](#notes)</sup>|:heavy_check_mark:|:heavy_check_mark:|
-|MS SQL Server 2017<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) 2.0.1<br>with FTS Tests|:heavy_check_mark:<sup>[5](#notes)</sup>|:heavy_check_mark:<sup>[5](#notes)</sup>|:heavy_check_mark:|:heavy_check_mark:|
+|MS SQL Server 2017<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) 2.1.0<br>with FTS Tests|:heavy_check_mark:<sup>[5](#notes)</sup>|:heavy_check_mark:<sup>[5](#notes)</sup>|:heavy_check_mark:|:heavy_check_mark:|
 |MS SQL Server 2019<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.8.2<br>with FTS Tests|:heavy_check_mark:<sup>[5](#notes)</sup>|:heavy_check_mark:<sup>[5](#notes)</sup>|:heavy_check_mark:|:heavy_check_mark:|
-|MS SQL Server 2019<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) 2.0.1<br>with FTS Tests|:heavy_check_mark:<sup>[5](#notes)</sup>|:heavy_check_mark:<sup>[5](#notes)</sup>|:heavy_check_mark:|:heavy_check_mark:|
+|MS SQL Server 2019<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) 2.1.0<br>with FTS Tests|:heavy_check_mark:<sup>[5](#notes)</sup>|:heavy_check_mark:<sup>[5](#notes)</sup>|:heavy_check_mark:|:heavy_check_mark:|
 |Azure SQL<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.8.2|:x:|:x:|:x:|:x:|
-|Azure SQL<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) 2.0.1|:x:|:x:|:x:|:x:|
+|Azure SQL<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) 2.1.0|:x:|:x:|:x:|:x:|
 |MySQL 5.6<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/) 8.0.21|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |MySQL 8<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/) 8.0.21|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
-|MySQL 8<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/) 1.0.1|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|MySQL 8<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/) 1.1.0|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |MariaDB 10<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/) 8.0.21|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
-|PostgreSQL 9.2<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.11 (netfx) / 4.1.6 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
-|PostgreSQL 9.3<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.11 (netfx) / 4.1.6 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
-|PostgreSQL 9.5<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.11 (netfx) / 4.1.6 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
-|PostgreSQL 10<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.11 (netfx) / 4.1.6 (core)|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
-|PostgreSQL 11<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.11 (netfx) / 4.1.6 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
-|PostgreSQL 12<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.11 (netfx) / 4.1.6 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
-|PostgreSQL 13<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.11 (netfx) / 4.1.6 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|PostgreSQL 9.2<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.11 (netfx) / 5.0.0 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|PostgreSQL 9.3<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.11 (netfx) / 5.0.0 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|PostgreSQL 9.5<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.11 (netfx) / 5.0.0 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|PostgreSQL 10<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.11 (netfx) / 5.0.0 (core)|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
+|PostgreSQL 11<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.11 (netfx) / 5.0.0 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|PostgreSQL 12<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.11 (netfx) / 5.0.0 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|PostgreSQL 13<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.0.11 (netfx) / 5.0.0 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |DB2 LUW 11.5.0.0a<br>[IBM.Data.DB2](https://www.nuget.org/packages/IBM.Data.DB.Provider/) 11.5.4000.4 (netfx)<br>[IBM.Data.DB2.Core](https://www.nuget.org/packages/IBM.Data.DB2.Core/) 2.2.0.100 ([osx](https://www.nuget.org/packages/IBM.Data.DB2.Core-osx/) 2.0.0.100, [lin](https://www.nuget.org/packages/IBM.Data.DB2.Core-lnx/) 2.2.0.100) (core)|:x:|:x:|:heavy_check_mark:<sup>[6](#notes)</sup>|:heavy_check_mark:|
 |Informix 12.10.FC12W1DE<br>IBM.Data.Informix (SQLI) 4.0.410.10|:x:|:heavy_minus_sign:|:heavy_minus_sign:|:heavy_minus_sign:|
 |Informix 14.10<br>IBM.Data.Informix (SQLI) 4.0.410.10|:x:|:heavy_minus_sign:|:heavy_minus_sign:|:heavy_minus_sign:|
@@ -111,11 +111,11 @@ Legend:
 |SAP/Sybase ASE 16.2<br>[AdoNetCore.AseClient](https://www.nuget.org/packages/AdoNetCore.AseClient/) 0.18.0|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |SAP/Sybase ASE 16.2<br>Native Client|:x:|:x:|:x:|:x:|
 |Oracle 11g XE<br>Native Client 4.122.19.1 |:x:|:heavy_minus_sign:|:heavy_minus_sign:|:heavy_minus_sign:|
-|Oracle 11g XE<br>[Oracle.ManagedDataAccess](https://www.nuget.org/packages/Oracle.ManagedDataAccess/) 19.9.0 (netfx)<br>[Oracle.ManagedDataAccess.Core](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core/) 2.19.91 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|Oracle 11g XE<br>[Oracle.ManagedDataAccess](https://www.nuget.org/packages/Oracle.ManagedDataAccess/) 19.10.0 (netfx)<br>[Oracle.ManagedDataAccess.Core](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core/) 2.19.100 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |Oracle 12c<br>Native Client|:x:|:heavy_minus_sign:|:heavy_minus_sign:|:heavy_minus_sign:|
-|Oracle 12c<br>[Oracle.ManagedDataAccess](https://www.nuget.org/packages/Oracle.ManagedDataAccess/) 19.9.0 (netfx)<br>[Oracle.ManagedDataAccess.Core](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core/) 2.19.91 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|Oracle 12c<br>[Oracle.ManagedDataAccess](https://www.nuget.org/packages/Oracle.ManagedDataAccess/) 19.10.0 (netfx)<br>[Oracle.ManagedDataAccess.Core](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core/) 2.19.100 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |Oracle 18c XE<br>Native Client|:x:|:heavy_minus_sign:|:heavy_minus_sign:|:heavy_minus_sign:|
-|Oracle 18c XE<br>[Oracle.ManagedDataAccess](https://www.nuget.org/packages/Oracle.ManagedDataAccess/) 19.9.0 (netfx)<br>[Oracle.ManagedDataAccess.Core](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core/) 2.19.91 (core)|:x:|:x:|:x:|:x:|
+|Oracle 18c XE<br>[Oracle.ManagedDataAccess](https://www.nuget.org/packages/Oracle.ManagedDataAccess/) 19.10.0 (netfx)<br>[Oracle.ManagedDataAccess.Core](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core/) 2.19.100 (core)|:x:|:x:|:x:|:x:|
 |Firebird 2.1<br>[FirebirdSql.Data.FirebirdClient](https://www.nuget.org/packages/FirebirdSql.Data.FirebirdClient/) 7.5.0|:x:|:x:|:x:|:x:|
 |Firebird 2.5<br>[FirebirdSql.Data.FirebirdClient](https://www.nuget.org/packages/FirebirdSql.Data.FirebirdClient/) 7.5.0|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |Firebird 3.0<br>[FirebirdSql.Data.FirebirdClient](https://www.nuget.org/packages/FirebirdSql.Data.FirebirdClient/) 7.5.0|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
