@@ -165,7 +165,6 @@ namespace LinqToDB.Linq
 						});
 				}
 
-				// TODO: right now transform visit elemenents from top to bottom, so it is not possible to use one Transform call
 				expression = expression.Transform(e =>
 				{
 					if (e is BlockExpression block && variables.Count > 0)
@@ -180,7 +179,7 @@ namespace LinqToDB.Linq
 
 				return (Expression<Func<IQueryRunner, IDataReader, T>>)expression;
 
-			   Expression replaceVariable(Expression e)
+				Expression replaceVariable(Expression e)
 				{
 					if (e is ParameterExpression vex && vex.Name == "ldr")
 					{
