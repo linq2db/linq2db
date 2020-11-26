@@ -1682,6 +1682,8 @@ namespace Tests.Linq
 					.Select(p => new
 					{
 						p.FirstName,
+						ID = p.ID,
+						IDNullable = Sql.ToNullable(p.ID),
 						p.LastName,
 						FullName = $"{p.FirstName} {p.LastName}"
 					});
