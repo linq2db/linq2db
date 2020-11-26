@@ -192,10 +192,10 @@ namespace LinqToDB.SqlProvider
 			return hasParameters;
 		}
 
-		static T NormalizeExpressions<T>(T expression) 
+		static T NormalizeExpressions<T>(T expression, bool allowMutation) 
 			where T : class, IQueryElement
 		{
-			var result = ConvertVisitor.ConvertAll(expression, (visitor, e) =>
+			var result = ConvertVisitor.ConvertAll(expression, allowMutation, (visitor, e) =>
 			{
 				if (e.ElementType == QueryElementType.SqlExpression)
 				{
@@ -218,7 +218,7 @@ namespace LinqToDB.SqlProvider
 								if (idx >= 0 && idx < expr.Parameters.Length)
 								{
 									var paramExpr  = expr.Parameters[idx];
-									var normalized = NormalizeExpressions(paramExpr);
+									var normalized = NormalizeExpressions(paramExpr, allowMutation);
 
 									if (!changed && !ReferenceEquals(normalized, paramExpr))
 										changed = true;
@@ -337,47 +337,37 @@ namespace LinqToDB.SqlProvider
 
 						if (new QueryVisitor().Find(cond, CheckTable) == null)
 							continue;
-
-						var replaced = new Dictionary<IQueryElement,IQueryElement>();
-
-						var nc = ConvertVisitor.Convert(cond, (v, e) =>
+						var modified = false;
+						var nc = ConvertVisitor.ConvertAll(cond, true, (v, e) =>
 						{
 							var ne = e;
-
 							switch (e.ElementType)
 							{
-								case QueryElementType.SqlField :
-									if (replaced.TryGetValue(e, out ne))
-										return ne;
+								case QueryElementType.SqlField:
 
 									if (levelTables.Contains(((SqlField)e).Table!))
 									{
 										subQuery.GroupBy.Expr((SqlField)e);
-										ne = subQuery.Select.Columns[subQuery.Select.Add((SqlField)e)];
+										ne = subQuery.Select.AddColumn((SqlField)e);
 									}
 
 									break;
 
-								case QueryElementType.Column   :
-									if (replaced.TryGetValue(e, out ne))
-										return ne;
-
+								case QueryElementType.Column:
 									if (levelTables.Contains(((SqlColumn)e).Parent!))
 									{
 										subQuery.GroupBy.Expr((SqlColumn)e);
-										ne = subQuery.Select.Columns[subQuery.Select.Add((SqlColumn)e)];
+										ne = subQuery.Select.AddColumn((SqlColumn)e);
 									}
 
 									break;
 							}
 
-							if (ne != null && !ReferenceEquals(e, ne))
-								replaced.Add(e, ne);
-
-							return ne ?? e;
+							modified = modified || !ReferenceEquals(e, ne);
+							return e;
 						});
 
-						if (nc != null && !ReferenceEquals(nc, cond))
+						if (modified)
 						{
 							join.JoinedTable.Condition.Conditions.Add(nc);
 							subQuery.Where.SearchCondition.Conditions.RemoveAt(j);
@@ -410,8 +400,6 @@ namespace LinqToDB.SqlProvider
 
 		SelectQuery MoveSubQueryColumn(SelectQuery selectQuery, EvaluationContext context)
 		{
-			var dic = new Dictionary<IQueryElement,IQueryElement>();
-
 			new QueryVisitor().Visit(selectQuery, element =>
 			{
 				if (element.ElementType != QueryElementType.SqlQuery)
@@ -506,51 +494,56 @@ namespace LinqToDB.SqlProvider
 							if (new QueryVisitor().Find(cond, CheckTable) == null)
 								continue;
 
-							var replaced = new Dictionary<IQueryElement,IQueryElement>();
-
-							var nc = ConvertVisitor.Convert(cond, (v, e) =>
+							var nc = ConvertVisitor.ConvertAll(cond, true, (v, e) =>
 							{
 								var ne = e;
+								/*
+								if (v.ParentElement?.ElementType == QueryElementType.Column)
+								{
+									var column = (SqlColumn)v.ParentElement;
+									if (column.Parent != null && levelTables.Contains(column.Parent!))
+									{
+										if (isAggregated)
+											subQuery.GroupBy.Expr((ISqlExpression)e);
+										var newColumn = subQuery.Select.AddColumn(column);
+										replaced[e] = newColumn;
+										return newColumn;
+									}
+								}
 
+								*/
 								switch (e.ElementType)
 								{
-									case QueryElementType.SqlField :
-										if (replaced.TryGetValue(e, out ne))
-											return ne;
+									case QueryElementType.SqlField:
 
 										if (levelTables.Contains(((SqlField)e).Table!))
 										{
+
 											if (isAggregated)
 												subQuery.GroupBy.Expr((SqlField)e);
-											ne = subQuery.Select.Columns[subQuery.Select.Add((SqlField)e)]!;
+											ne = subQuery.Select.AddColumn((SqlField)e);
 										}
 
 										break;
 
-									case QueryElementType.Column   :
-										if (replaced.TryGetValue(e, out ne))
-											return ne;
-
+									case QueryElementType.Column:
 										if (levelTables.Contains(((SqlColumn)e).Parent!))
 										{
+
 											if (isAggregated)
 												subQuery.GroupBy.Expr((SqlColumn)e);
-											ne = subQuery.Select.Columns[subQuery.Select.Add((SqlColumn)e)]!;
+											ne = subQuery.Select.AddColumn((SqlColumn)e);
 										}
 
 										break;
 								}
 
-								if (ne != null && !ReferenceEquals(e, ne))
-									replaced.Add(e, ne);
-
-								return ne ?? e;
+								modified = modified || !ReferenceEquals(e, ne);
+								return ne;
 							});
 
-							if (nc != null && !ReferenceEquals(nc, cond))
+							if (modified)
 							{
-								modified = true;
-
 								join.JoinedTable.Condition.Conditions.Add(nc);
 								subQuery.Where.SearchCondition.Conditions.RemoveAt(j);
 								j--;
@@ -587,13 +580,11 @@ namespace LinqToDB.SqlProvider
 								newColumn = new SqlColumn(query, subQuery.Select.Columns[0]);
 							}
 
-							dic.Add(col, newColumn);
+							col.Expression = newColumn.Expression;
 						}
 					}
 				}
 			});
-
-			selectQuery = ConvertVisitor.Convert(selectQuery, (v, e) => dic.TryGetValue(e, out var ne) ? ne : e);
 
 			return selectQuery;
 		}
@@ -2696,10 +2687,12 @@ namespace LinqToDB.SqlProvider
 
 		#region Optimizing Statement
 
-		public T OptimizeElements<T>(T root, EvaluationContext context)
+		public T OptimizeElements<T>(T root, EvaluationContext context, bool allowMutation)
 			where T : class, IQueryElement
 		{
-			var newElement = ConvertVisitor.ConvertAll(root, (visitor, e) =>
+			// return root;
+			var mutated = false;
+			var newElement = ConvertVisitor.ConvertAll(root, allowMutation, (visitor, e) =>
 			{
 				var ne = e;
 				if (ne is ISqlExpression sqlExpression)
@@ -2710,23 +2703,26 @@ namespace LinqToDB.SqlProvider
 
 				ne = OptimizeQueryElement(visitor, root, ne, context);
 
+				mutated = mutated || !ReferenceEquals(e, ne);
+
 				return ne;
 			});
 
-			if (!ReferenceEquals(newElement, root))
-				newElement = OptimizeElements(newElement, context);
+			if (mutated)
+				newElement = OptimizeElements(newElement, context, allowMutation);
 
 			return newElement;
 		}
 
-		public virtual SqlStatement OptimizeStatement(SqlStatement statement, EvaluationContext context)
+		public SqlStatement OptimizeStatement(SqlStatement statement, EvaluationContext context)
 		{
-			statement = OptimizeElements(statement, context);
+			statement = OptimizeElements(statement, context, context.ParameterValues == null);
 
-			statement = OptimizeAggregates(statement);
+			// statement = OptimizeAggregates(statement);
 
 			return statement;
 		}
+
 
 		public virtual bool IsParameterDependedQuery(SelectQuery query)
 		{
@@ -2878,36 +2874,33 @@ namespace LinqToDB.SqlProvider
 			return null != new QueryVisitor().Find(statement, e => IsParameterDependedElement(e));
 		}
 
-		public IQueryElement ConvertElements(MappingSchema mappingSchema, IQueryElement element, EvaluationContext context)
+		public IQueryElement ConvertElements(MappingSchema mappingSchema, IQueryElement element, EvaluationContext context, bool allowMutation)
 		{
-			var newElement = element;
-			for (int i = 0; i < 2; i++)
+			var mutated = false;
+			var newElement = ConvertVisitor.ConvertAll(element, allowMutation, (visitor, e) =>
 			{
-				newElement = ConvertVisitor.ConvertAll(element, (visitor, e) =>
+				var ne = e;
+				for (;;)
 				{
-					var ne = e;
-					for (;;)
-					{
-						if (ne is ISqlExpression sqlExpression)
-							ne = ConvertExpression(sqlExpression);
+					if (ne is ISqlExpression sqlExpression)
+						ne = ConvertExpression(sqlExpression);
 
-						if (ne is SqlPredicate sqlPredicate)
-							ne = ConvertPredicate(mappingSchema, sqlPredicate, context);
+					if (ne is SqlPredicate sqlPredicate)
+						ne = ConvertPredicate(mappingSchema, sqlPredicate, context);
 
-						if (ReferenceEquals(ne, e))
-							break;
+					if (ReferenceEquals(ne, e))
+						break;
 
-						e = ne;
-					}
+					mutated = true;
 
-					return e;
-				});
+					e = ne;
+				}
 
-				if (ReferenceEquals(newElement, element))
-					break;
+				return e;
+			});
 
-				element = newElement;
-			}
+			if (mutated)
+				newElement = ConvertElements(mappingSchema, newElement, context, allowMutation);
 
 			return newElement;
 		}
@@ -2946,7 +2939,7 @@ namespace LinqToDB.SqlProvider
 
 		public SqlStatement ConvertStatement(MappingSchema mappingSchema, SqlStatement statement, EvaluationContext context)
 		{
-			var newStatement = (SqlStatement)ConvertElements(mappingSchema, statement, context);
+			var newStatement = (SqlStatement)ConvertElements(mappingSchema, statement, context, context.ParameterValues == null);
 			if (!ReferenceEquals(newStatement, statement))
 				newStatement = OptimizeStatement(newStatement, context);
 			newStatement = FinalizeStatement(newStatement, context);
@@ -2966,7 +2959,7 @@ namespace LinqToDB.SqlProvider
 			if (SqlProviderFlags.IsParameterOrderDependent)
 			{
 				// ensure that parameters in expressions are well sorted
-				newStatement = NormalizeExpressions(newStatement);
+				newStatement = NormalizeExpressions(newStatement, context.ParameterValues == null);
 			}
 
 			return newStatement;
@@ -3007,10 +3000,7 @@ namespace LinqToDB.SqlProvider
 
 		public virtual SqlStatement CorrectSkipTake(SqlStatement statement, EvaluationContext context)
 		{
-			if (context == null)
-				return statement;
-
-			statement = ConvertVisitor.ConvertAll(statement, (visitor, e) =>
+			statement = ConvertVisitor.ConvertAll(statement, context.ParameterValues == null, (visitor, e) =>
 			{
 				// make skip take as parameters or evaluate otherwise
 				if (visitor.ParentElement?.ElementType == QueryElementType.SelectClause && e is ISqlExpression expr)

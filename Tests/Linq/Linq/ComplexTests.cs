@@ -481,9 +481,9 @@ namespace Tests.Linq
 		public void Issue413Test([DataSources(false)] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (db.CreateTempTable<T1>(tableOptions:TableOptions.CheckExistence))
-			using (db.CreateTempTable<T2>(tableOptions:TableOptions.CheckExistence))
-			using (db.CreateTempTable<T3>(tableOptions:TableOptions.CheckExistence))
+			using (db.CreateLocalTable<T1>())
+			using (db.CreateLocalTable<T2>())
+			using (db.CreateLocalTable<T3>())
 			{
 				string cond = "aaa";
 				DateTime uptoDate = TestData.DateTime;

@@ -118,7 +118,8 @@ namespace Tests.Linq
 					HasChildren    = db.Child.Any  (c2 => c2.ParentID == c.ParentID),
 					HasChildren2   = db.Child.Any  (c2 => c2.ParentID == c.ParentID),
 					AllChildren    = db.Child.All  (c2 => c2.ParentID == c.ParentID),
-					AllChildrenMin = db.Child.Where(c2 => c2.ParentID == c.ParentID).Min(c2 => c2.ChildID)
+					AllChildrenMin = db.Child.Where(c2 => c2.ParentID == c.ParentID).Min(c2 => c2.ChildID),
+					AllChildrenMax = db.Child.Where(c2 => c2.ParentID == c.ParentID).Max(c2 => c2.ChildID)
 				});
 
 				result =
@@ -136,7 +137,8 @@ namespace Tests.Linq
 					HasChildren    = Child.Any  (c2 => c2.ParentID == c.ParentID),
 					HasChildren2   = Child.Any  (c2 => c2.ParentID == c.ParentID),
 					AllChildren    = Child.All  (c2 => c2.ParentID == c.ParentID),
-					AllChildrenMin = Child.Where(c2 => c2.ParentID == c.ParentID).Min(c2 => c2.ChildID)
+					AllChildrenMin = Child.Where(c2 => c2.ParentID == c.ParentID).Min(c2 => c2.ChildID),
+					AllChildrenMax = Child.Where(c2 => c2.ParentID == c.ParentID).Max(c2 => c2.ChildID)
 				});
 
 				expected =
