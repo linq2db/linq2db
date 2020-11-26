@@ -1673,12 +1673,10 @@ namespace Tests.Linq
 			// System.Data.SqlClient
 			// Microsoft.Data.SqlClient
 			// SqlCe
-			DbCommandProcessorExtensions.Instance = new TestBehaviorProcessor();
-			try
+			using (new CustomCommandProcessor(new SequentialAccessCommandProcessor()))
+			using (var db = GetDataContext(context))
 			{
-				using (var db = GetDataContext(context))
-				{
-					var q = db.Person
+				var q = db.Person
 					.Select(p => new
 					{
 						p.FirstName,
@@ -1688,28 +1686,25 @@ namespace Tests.Linq
 						FullName = $"{p.FirstName} {p.LastName}"
 					});
 
-					foreach (var p in q.ToArray())
-						Assert.AreEqual($"{p.FirstName} {p.LastName}", p.FullName);
-				}
-			}
-			finally
-			{
-				DbCommandProcessorExtensions.Instance = null;
+				foreach (var p in q.ToArray())
+					Assert.AreEqual($"{p.FirstName} {p.LastName}", p.FullName);
 			}
 		}
 
-		private class TestBehaviorProcessor : IDbCommandProcessor
+		[Test]
+		public void SequentialAccessTest_Complex([DataSources] string context)
 		{
-			DbDataReader IDbCommandProcessor.ExecuteReader(DbCommand command, CommandBehavior commandBehavior)
+			// fields read out-of-order, multiple times and with different types
+			using (new CustomCommandProcessor(new SequentialAccessCommandProcessor()))
+			using (var db = GetDataContext(context))
 			{
-				return command.ExecuteReader(CommandBehavior.SequentialAccess);
-			}
+				Assert.AreEqual(typeof(InheritanceParentBase), InheritanceParent[0].GetType());
+				Assert.AreEqual(typeof(InheritanceParent1), InheritanceParent[1].GetType());
+				Assert.AreEqual(typeof(InheritanceParent2), InheritanceParent[2].GetType());
 
-			int IDbCommandProcessor.ExecuteNonQuery(DbCommand command) => command.ExecuteNonQuery();
-			Task<int> IDbCommandProcessor.ExecuteNonQueryAsync(DbCommand command, CancellationToken cancellationToken) => command.ExecuteNonQueryAsync(cancellationToken);
-			Task<DbDataReader> IDbCommandProcessor.ExecuteReaderAsync(DbCommand command, CommandBehavior commandBehavior, CancellationToken cancellationToken) => command.ExecuteReaderAsync(commandBehavior, cancellationToken);
-			object? IDbCommandProcessor.ExecuteScalar(DbCommand command) => command.ExecuteScalar();
-			Task<object?> IDbCommandProcessor.ExecuteScalarAsync(DbCommand command, CancellationToken cancellationToken) => command.ExecuteScalarAsync(cancellationToken);
+				AreEqual(InheritanceParent, db.InheritanceParent);
+				AreEqual(InheritanceChild, db.InheritanceChild);
+			}
 		}
 		#endregion
 	}

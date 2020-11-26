@@ -27,6 +27,7 @@ using NUnit.Framework;
 
 namespace Tests
 {
+	using LinqToDB.Data.DbCommandProcessor;
 	using LinqToDB.DataProvider.Informix;
 	using Model;
 	using NUnit.Framework.Internal;
@@ -1453,6 +1454,20 @@ namespace Tests
 		{
 			Configuration.Linq.CompareNullsAsValues = true;
 			Query.ClearCaches();
+		}
+	}
+
+	public class CustomCommandProcessor : IDisposable
+	{
+		private readonly IDbCommandProcessor? _original = DbCommandProcessorExtensions.Instance;
+		public CustomCommandProcessor(IDbCommandProcessor? processor)
+		{
+			DbCommandProcessorExtensions.Instance = processor;
+		}
+
+		public void Dispose()
+		{
+			DbCommandProcessorExtensions.Instance = _original;
 		}
 	}
 }
