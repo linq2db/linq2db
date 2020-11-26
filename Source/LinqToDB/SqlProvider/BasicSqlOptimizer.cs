@@ -1880,7 +1880,7 @@ namespace LinqToDB.SqlProvider
 				};
 
 
-				patternExpr = OptimizeElements(patternExpr, context);
+				patternExpr = OptimizeElements(patternExpr, context, context.ParameterValues == null);
 
 				return new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, patternExpr,
 					LikeIsEscapeSupported ? escape : null);
