@@ -124,29 +124,63 @@ namespace LinqToDB.Linq
 				ParameterExpression? oldVariable = null;
 				ParameterExpression? newVariable = null;
 
+				var variables = new Dictionary<int, ParameterExpression>();
+
+				Expression expression;
 				if (slowMode)
 				{
-					return (Expression<Func<IQueryRunner, IDataReader, T>>)_expression.Transform(e =>
+					expression = _expression.Transform(e =>
 					{
 						if (e is ConvertFromDataReaderExpression ex)
-							return new ConvertFromDataReaderExpression(ex.Type, ex.Index, ex.Converter, newVariable!, context);
+						{
+							if (variables.TryGetValue(ex.Index, out var variable))
+								return variable;
+
+							variable = Expression.Variable(ex.Type, $"col{ex.Index}");
+							variables.Add(ex.Index, variable);
+
+							return Expression.Assign(variable, new ConvertFromDataReaderExpression(ex.Type, ex.Index, ex.Converter, newVariable!, context));
+						}
 
 						return replaceVariable(e);
 					});
 				}
 				else
 				{
-					return (Expression<Func<IQueryRunner, IDataReader, T>>)_expression.Transform(
+					expression = _expression.Transform(
 						e =>
 						{
 							if (e is ConvertFromDataReaderExpression ex)
-								return ex.Reduce(context, dataReader, newVariable!).Transform(replaceVariable);
+							{
+								if (variables.TryGetValue(ex.Index, out var variable))
+									return variable;
+
+								variable = Expression.Variable(ex.Type, $"col{ex.Index}");
+								variables.Add(ex.Index, variable);
+
+								return Expression.Assign(variable, ex.Reduce(context, dataReader, newVariable!).Transform(replaceVariable));
+							}
 
 							return replaceVariable(e);
 						});
 				}
 
-				Expression replaceVariable(Expression e)
+				// TODO: right now transform visit elemenents from top to bottom, so it is not possible to use one Transform call
+				expression = expression.Transform(e =>
+				{
+					if (e is BlockExpression block && variables.Count > 0)
+					{
+						block = block.Update(block.Variables.Concat(variables.Values), block.Expressions);
+						variables.Clear();
+						return block;
+					}
+
+					return e;
+				});
+
+				return (Expression<Func<IQueryRunner, IDataReader, T>>)expression;
+
+			   Expression replaceVariable(Expression e)
 				{
 					if (e is ParameterExpression vex && vex.Name == "ldr")
 					{
