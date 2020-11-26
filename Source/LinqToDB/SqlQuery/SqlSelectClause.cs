@@ -364,16 +364,53 @@ namespace LinqToDB.SqlQuery
 			if (Columns.Count == 0)
 				sb.Append("\t*, \n");
 			else
+			{
+				var columnNames = new List<string>();
+				var csb         = new StringBuilder();
+				var maxLength   = 0;
 				for (var i = 0; i < Columns.Count; i++)
 				{
+					csb.Length = 0;
 					var c = Columns[i];
-					sb.Append("\t");
-					((IQueryElement)c).ToString(sb, dic);
+					csb.Append("\t");
+
+					csb
+						.Append('t')
+						.Append(c.Parent?.SourceID ?? -1)
+#if DEBUG
+						.Append('[').Append(c.ColumnNumber).Append(']')
+#endif
+						.Append(".")
+						.Append(c.Alias ?? "c" + (i + 1));
+
+					var columnName = csb.ToString();
+					columnNames.Add(columnName);
+					maxLength = Math.Max(maxLength, columnName.Length);
+				}
+
+				for (var i = 0; i < Columns.Count; i++)
+				{
+					var c          = Columns[i];
+					var columnName = columnNames[i];
+					sb.Append(columnName)
+						.Append(' ', maxLength - columnName.Length)
+						.Append(" = ");
+
+					csb.Length = 0;
+					c.Expression.ToString(csb, dic);
+
+					var expressionText = csb.ToString();
+					if (expressionText.Contains("\n"))
+					{
+						var ident = "\t" + new string(' ', maxLength + 2);
+						expressionText = expressionText.Replace("\n", "\n" + ident);
+					}
+
 					sb
-						.Append(" as ")
-						.Append(c.Alias ?? "c" + (i + 1))
+						.Append(expressionText)
 						.Append(", \n");
 				}
+			}
 
 			sb.Length -= 3;
 
