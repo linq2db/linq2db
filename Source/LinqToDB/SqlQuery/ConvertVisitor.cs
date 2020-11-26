@@ -11,6 +11,7 @@ namespace LinqToDB.SqlQuery
 		// when true, only changed (and explicitly added) elements added to VisitedElements
 		// greatly reduce memory allocation for majority of cases, where there is nothing to replace
 		private readonly bool                                             _visitAll;
+		private readonly bool                                             _allowMutation;
 		private readonly Func<ConvertVisitor,IQueryElement,IQueryElement> _convert;
 
 		static TE[] ToArray<TK,TE>(IDictionary<TK,TE> dic)
@@ -35,19 +36,27 @@ namespace LinqToDB.SqlQuery
 		public static T Convert<T>(T element, Func<ConvertVisitor,IQueryElement,IQueryElement> convertAction)
 			where T : class, IQueryElement
 		{
-			return (T?)new ConvertVisitor(convertAction, false).ConvertInternal(element) ?? element;
+			return (T?)new ConvertVisitor(convertAction, false, false).ConvertInternal(element) ?? element;
 		}
 
-		public static T ConvertAll<T>(T element, Func<ConvertVisitor,IQueryElement,IQueryElement> convertAction)
+
+		public static T ConvertAll<T>(T element, Func<ConvertVisitor, IQueryElement, IQueryElement> convertAction)
 			where T : class, IQueryElement
 		{
-			return (T?)new ConvertVisitor(convertAction, true).ConvertInternal(element) ?? element;
+			return (T?)new ConvertVisitor(convertAction, true, false).ConvertInternal(element) ?? element;
 		}
 
-		ConvertVisitor(Func<ConvertVisitor,IQueryElement,IQueryElement> convertAction, bool visitAll)
+		public static T ConvertAll<T>(T element, bool allowMutation, Func<ConvertVisitor,IQueryElement,IQueryElement> convertAction)
+			where T : class, IQueryElement
 		{
-			_visitAll = visitAll;
-			_convert  = convertAction;
+			return (T?)new ConvertVisitor(convertAction, true, allowMutation).ConvertInternal(element) ?? element;
+		}
+
+		ConvertVisitor(Func<ConvertVisitor,IQueryElement,IQueryElement> convertAction, bool visitAll, bool allowMutation)
+		{
+			_visitAll      = visitAll;
+			_convert       = convertAction;
+			_allowMutation = allowMutation;
 		}
 
 		void CorrectQueryHierarchy(SelectQuery? parentQuery)
@@ -220,17 +229,9 @@ namespace LinqToDB.SqlQuery
 						}
 
 					case QueryElementType.Column:
-						{
-							if (SecondParentElement?.ElementType == QueryElementType.SelectClause)
-							{
-								var col = (SqlColumn)element;
-								var expr = (ISqlExpression?)ConvertInternal(col.Expression);
-
-								if (expr != null && !ReferenceEquals(expr, col.Expression))
-									newElement = new SqlColumn(col.Parent, expr, col.RawAlias);
-							}
-							break;
-						}
+					{
+						break;
+					}
 
 					case QueryElementType.TableSource:
 						{
@@ -629,7 +630,52 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.SelectClause:
 						{
 							var sc   = (SqlSelectClause)element;
-							var cols = Convert(sc.Columns, CloneColumn);
+
+							List<SqlColumn>? cols = null;
+
+							if (_allowMutation)
+							{
+								for (int i = 0; i < sc.Columns.Count; i++)
+								{
+									var column = sc.Columns[i];
+
+									Stack.Add(column);
+									var expr = (ISqlExpression)ConvertInternal(column.Expression);
+									Stack.RemoveAt(Stack.Count - 1);
+
+									if (!ReferenceEquals(column.Expression, expr))
+										column.Expression = expr;
+								}
+							}
+							else
+							{
+								for (int i = 0; i < sc.Columns.Count; i++)
+								{
+									var column = sc.Columns[i];
+
+									Stack.Add(column);
+									var expr = (ISqlExpression)ConvertInternal(column.Expression);
+									Stack.RemoveAt(Stack.Count - 1);
+
+									if (!ReferenceEquals(expr, column.Expression))
+									{
+										if (cols == null)
+										{
+											cols = new List<SqlColumn>(sc.Columns.Take(i));
+										}
+
+										var newColumn = new SqlColumn(null, expr, column.Alias);
+										cols.Add(newColumn);
+										AddVisited(column, newColumn);
+									}
+									else
+									{
+										cols?.Add(column);
+										AddVisited(column, column);
+									}
+								}
+							}
+
 							var take = (ISqlExpression?)ConvertInternal(sc.TakeValue);
 							var skip = (ISqlExpression?)ConvertInternal(sc.SkipValue);
 
@@ -638,22 +684,9 @@ namespace LinqToDB.SqlQuery
 								take != null && !ReferenceEquals(sc.TakeValue, take) ||
 								skip != null && !ReferenceEquals(sc.SkipValue, skip))
 							{
-								if (cols == null)
-								{
-									cols = new List<SqlColumn>(sc.Columns.Count);
-									foreach(var column in sc.Columns)
-									{
-										var newColumn = CloneColumn(column);
-										cols.Add(newColumn);
-
-										AddVisited(column, newColumn);
-									}
-								}
-
-								newElement = new SqlSelectClause(sc.IsDistinct, take ?? sc.TakeValue, sc.TakeHints, skip ?? sc.SkipValue, cols);
+								newElement = new SqlSelectClause(sc.IsDistinct, take ?? sc.TakeValue, sc.TakeHints, skip ?? sc.SkipValue, cols ?? sc.Columns);
 							}
 
-							static SqlColumn CloneColumn(SqlColumn column) => new SqlColumn(null, column.Expression, column.RawAlias);
 							break;
 						}
 
@@ -1124,6 +1157,17 @@ namespace LinqToDB.SqlQuery
 		T[]? Convert<T>(T[] arr1, Clone<T>? clone)
 			where T : class, IQueryElement
 		{
+			if (_allowMutation)
+			{
+				for (var i = 0; i < arr1.Length; i++)
+				{
+					var elem = (T?)ConvertInternal(arr1[i]);
+					if (elem != null)
+						arr1[i] = elem;
+				}
+				return arr1;
+			}
+
 			T[]? arr2 = null;
 
 			for (var i = 0; i < arr1.Length; i++)
@@ -1159,6 +1203,17 @@ namespace LinqToDB.SqlQuery
 		List<T>? ConvertSafe<T>(IList<T> list1, Clone<T>? clone)
 			where T : class, IQueryElement
 		{
+			if (_allowMutation)
+			{
+				for (var i = 0; i < list1.Count; i++)
+				{
+					var elem = (T?)ConvertInternal(list1[i]);
+					if (elem != null)
+						list1[i] = elem;
+				}
+				return null;
+			}
+
 			List<T>? list2 = null;
 
 			for (var i = 0; i < list1.Count; i++)
@@ -1193,6 +1248,17 @@ namespace LinqToDB.SqlQuery
 		List<T>? Convert<T>(List<T> list1, Clone<T>? clone)
 			where T : class, IQueryElement
 		{
+			if (_allowMutation)
+			{
+				for (var i = 0; i < list1.Count; i++)
+				{
+					var elem = (T?)ConvertInternal(list1[i]);
+					if (elem != null)
+						list1[i] = elem;
+				}
+				return list1;
+			}
+
 			List<T>? list2 = null;
 
 			for (var i = 0; i < list1.Count; i++)
@@ -1233,6 +1299,17 @@ namespace LinqToDB.SqlQuery
 		List<T[]>? ConvertListArray<T>(List<T[]> list1, Clone<T>? clone)
 			where T : class, IQueryElement
 		{
+			if (_allowMutation)
+			{
+				for (var i = 0; i < list1.Count; i++)
+				{
+					var elem = Convert(list1[i]);
+					if (elem != null)
+						list1[i] = elem;
+				}
+				return list1;
+			}
+
 			List<T[]>? list2 = null;
 
 			for (var i = 0; i < list1.Count; i++)
