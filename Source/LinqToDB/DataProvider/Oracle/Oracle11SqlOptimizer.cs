@@ -65,7 +65,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return false;
 		}
 
-		public override ISqlPredicate ConvertPredicate(MappingSchema mappingSchema, ISqlPredicate predicate, EvaluationContext context)
+		public override ISqlPredicate ConvertPredicateImpl(MappingSchema mappingSchema, ISqlPredicate predicate, ConvertVisitor visitor, EvaluationContext context)
 		{
 			switch (predicate.ElementType)
 			{
@@ -105,14 +105,14 @@ namespace LinqToDB.DataProvider.Oracle
 				}
 			}
 
-			predicate = base.ConvertPredicate(mappingSchema, predicate, context);
+			predicate = base.ConvertPredicateImpl(mappingSchema, predicate, visitor, context);
 
 			return predicate;
 		}
 
-		public override ISqlExpression ConvertExpression(ISqlExpression expr)
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expr, EvaluationContext context)
 		{
-			expr = base.ConvertExpression(expr);
+			expr = base.ConvertExpressionImpl(expr, context);
 
 			if (expr is SqlBinaryExpression be)
 			{

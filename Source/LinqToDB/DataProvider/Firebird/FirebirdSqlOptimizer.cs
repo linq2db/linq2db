@@ -102,10 +102,11 @@ namespace LinqToDB.DataProvider.Firebird
 
 
 		public override ISqlPredicate ConvertSearchStringPredicate(MappingSchema mappingSchema, SqlPredicate.SearchString predicate,
+			ConvertVisitor visitor,
 			EvaluationContext context)
 		{
 			if (!predicate.IgnoreCase)
-				return ConvertSearchStringPredicateViaLike(mappingSchema, predicate, context);
+				return ConvertSearchStringPredicateViaLike(mappingSchema, predicate, visitor, context);
 
 			ISqlExpression expr;
 			switch (predicate.Kind)
@@ -118,7 +119,7 @@ namespace LinqToDB.DataProvider.Firebird
 						new SqlFunction(typeof(string), "$ToLower$", predicate.Expr2), predicate.Kind,
 						predicate.IgnoreCase);
 
-					return ConvertSearchStringPredicateViaLike(mappingSchema, predicate, context);
+					return ConvertSearchStringPredicateViaLike(mappingSchema, predicate, visitor, context);
 				}	
 				case SqlPredicate.SearchString.SearchKind.StartsWith:
 				{
@@ -152,9 +153,9 @@ namespace LinqToDB.DataProvider.Firebird
 			};
 		}
 
-		public override ISqlExpression ConvertExpression(ISqlExpression expr)
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expr, EvaluationContext context)
 		{
-			expr = base.ConvertExpression(expr);
+			expr = base.ConvertExpressionImpl(expr, context);
 
 			if (expr is SqlBinaryExpression be)
 			{

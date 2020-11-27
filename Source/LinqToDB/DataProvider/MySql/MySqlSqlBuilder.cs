@@ -416,13 +416,12 @@ namespace LinqToDB.DataProvider.MySql
 			return sb.Append(value);
 		}
 
-		protected override StringBuilder BuildExpression(
-			ISqlExpression expr,
-			bool           buildTableName,
-			bool           checkParentheses,
-			string?        alias,
-			ref bool       addAlias,
-			bool           throwExceptionIfTableNotFound = true)
+		protected override StringBuilder BuildExpression(ISqlExpression expr,
+			bool buildTableName,
+			bool checkParentheses,
+			string? alias,
+			ref bool addAlias,
+			bool throwExceptionIfTableNotFound = true)
 		{
 			return base.BuildExpression(
 				expr,

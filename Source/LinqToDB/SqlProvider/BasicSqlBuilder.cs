@@ -577,6 +577,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
 		{
+			expr = SqlOptimizer.ConvertExpression(MappingSchema, expr, EvaluationContext);
 			BuildExpression(expr, true, true, alias, ref addAlias, true);
 		}
 
@@ -1760,6 +1761,8 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildSearchCondition(SqlSearchCondition condition)
 		{
+			condition = (SqlSearchCondition)SqlOptimizer.ConvertPredicate(MappingSchema, condition, EvaluationContext);
+
 			var isOr = (bool?)null;
 			var len = StringBuilder.Length;
 			var parentPrecedence = condition.Precedence + 1;
@@ -1798,6 +1801,8 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildSearchCondition(int parentPrecedence, SqlSearchCondition condition)
 		{
+			condition = (SqlSearchCondition)SqlOptimizer.ConvertPredicate(MappingSchema, condition, EvaluationContext);
+
 			var wrap = Wrap(GetPrecedence(condition as ISqlExpression), parentPrecedence);
 
 			if (wrap) StringBuilder.Append('(');

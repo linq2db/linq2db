@@ -216,11 +216,15 @@ namespace LinqToDB.Data
 
 				// optimize, optionally with parameters
 				var evaluationContext = new EvaluationContext(sql.IsParameterDependent ? parameterValues : null);
+				/*
 				if (sql.IsParameterDependent)
 					sql = sqlOptimizer.OptimizeStatement(sql, evaluationContext);
+					*/
 
 				// convert statement to be ready for Sql translation
+				/*
 				sql = sqlOptimizer.ConvertStatement(dataConnection.MappingSchema, sql, evaluationContext);
+				*/
 
 				// PrepareQueryAndAliases is mutable function. Call only if query is copied. 
 				if (!ReferenceEquals(query.Statement, sql))

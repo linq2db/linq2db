@@ -33,10 +33,17 @@ namespace LinqToDB.SqlQuery
 		public IQueryElement?                            ParentElement            => Stack.Count == 0 ? null : Stack[Stack.Count - 1];
 		public IQueryElement?                            SecondParentElement      => Stack.Count < 2 ? null  : Stack[Stack.Count - 2];
 
-		public static T Convert<T>(T element, Func<ConvertVisitor,IQueryElement,IQueryElement> convertAction)
+		public static T Convert<T>(T element, Func<ConvertVisitor, IQueryElement, IQueryElement> convertAction)
 			where T : class, IQueryElement
 		{
 			return (T?)new ConvertVisitor(convertAction, false, false).ConvertInternal(element) ?? element;
+		}
+
+
+		public static T Convert<T>(T element, bool allowMutation, Func<ConvertVisitor,IQueryElement,IQueryElement> convertAction)
+			where T : class, IQueryElement
+		{
+			return (T?)new ConvertVisitor(convertAction, false, allowMutation).ConvertInternal(element) ?? element;
 		}
 
 

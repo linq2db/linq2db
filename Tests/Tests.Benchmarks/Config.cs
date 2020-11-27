@@ -30,7 +30,7 @@ namespace LinqToDB.Benchmarks
 				.AddExporter       (MarkdownExporter.GitHub)
 				.AddDiagnoser      (MemoryDiagnoser.Default)
 				.WithArtifactsPath (@"..\..\..")
-				.AddJob            (net472, core21, core31, net50);
+				.AddJob            (net472, core21, core31);
 		}
 
 		private static Job WithDefault(this Job job)

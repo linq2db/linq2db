@@ -36,6 +36,9 @@ namespace LinqToDB.SqlProvider
 		/// <param name="statement"></param>
 		/// <param name="context">Contains parameter values and evaluation cache. If ParameterValues it is null, that means that parameters should be ignored from evaluation.</param>
 		/// <returns></returns>
-		SqlStatement ConvertStatement (MappingSchema mappingSchema, SqlStatement statement, EvaluationContext context);
+		SqlStatement ConvertStatement(MappingSchema mappingSchema, SqlStatement statement, EvaluationContext context);
+
+		ISqlExpression ConvertExpression(MappingSchema mappingSchema, ISqlExpression expr, EvaluationContext context);
+		ISqlPredicate ConvertPredicate(MappingSchema mappingSchema, ISqlPredicate predicate, EvaluationContext context);
 	}
 }

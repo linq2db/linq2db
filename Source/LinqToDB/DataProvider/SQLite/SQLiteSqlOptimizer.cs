@@ -34,9 +34,9 @@ namespace LinqToDB.DataProvider.SQLite
 			return statement;
 		}
 
-		public override ISqlExpression ConvertExpression(ISqlExpression expr)
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expr, EvaluationContext context)
 		{
-			expr = base.ConvertExpression(expr);
+			expr = base.ConvertExpressionImpl(expr, context);
 
 			if (expr is SqlBinaryExpression be)
 			{
@@ -80,7 +80,7 @@ namespace LinqToDB.DataProvider.SQLite
 			return expr;
 		}
 
-		public override ISqlPredicate ConvertPredicate(MappingSchema mappingSchema, ISqlPredicate predicate, EvaluationContext context)
+		public override ISqlPredicate ConvertPredicateImpl(MappingSchema mappingSchema, ISqlPredicate predicate, ConvertVisitor visitor, EvaluationContext context)
 		{
 			if (predicate is SqlPredicate.ExprExpr exprExpr)
 			{
@@ -109,7 +109,7 @@ namespace LinqToDB.DataProvider.SQLite
 				}
 			}
 
-			predicate = base.ConvertPredicate(mappingSchema, predicate, context);
+			predicate = base.ConvertPredicateImpl(mappingSchema, predicate, visitor, context);
 			return predicate;
 		}
 

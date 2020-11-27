@@ -34,9 +34,9 @@ namespace LinqToDB.DataProvider.MySql
 			return statement;
 		}
 
-		public override ISqlExpression ConvertExpression(ISqlExpression expr)
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expr, EvaluationContext context)
 		{
-			expr = base.ConvertExpression(expr);
+			expr = base.ConvertExpressionImpl(expr, context);
 
 			if (expr is SqlBinaryExpression be)
 			{

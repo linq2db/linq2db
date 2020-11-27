@@ -16,10 +16,8 @@ namespace LinqToDB.Benchmarks
 		static void Main(string[] args)
 		{
 
-			/*
-			VwSalesByCategoryContainsMem();
-			return;
-			*/
+			/*VwSalesByCategoryContainsPerf();
+			return;*/
 
 			BenchmarkSwitcher
 				.FromAssembly(typeof(Program).Assembly)
@@ -44,14 +42,15 @@ namespace LinqToDB.Benchmarks
 		static void VwSalesByCategoryContainsPerf()
 		{
 			var benchmark = new QueryGenerationBenchmark();
-			benchmark.DataProvider = ProviderName.SqlServer2008;
+			benchmark.DataProvider = ProviderName.Access;
 
-//			MeasureProfiler.StartCollectingData();
-//			benchmark.VwSalesByCategoryContains();
-			for (int i = 0; i < 1000; i++)
+			MeasureProfiler.StartCollectingData();
+			benchmark.VwSalesByCategoryContains();
+			for (int i = 0; i < 100; i++)
 			{
 				benchmark.VwSalesByCategoryContains();
 			}
+			MeasureProfiler.StopCollectingData();
 			//			MeasureProfiler.StopCollectingData();
 			MeasureProfiler.SaveData();
 		}
@@ -59,7 +58,7 @@ namespace LinqToDB.Benchmarks
 		static void VwSalesByCategoryContainsMem()
 		{
 			var benchmark = new QueryGenerationBenchmark();
-			benchmark.DataProvider = ProviderName.SqlServer2008;
+			benchmark.DataProvider = ProviderName.Access;
 
 			MemoryProfiler.CollectAllocations(true);
 			for (int c = 0; c < 5; c++)

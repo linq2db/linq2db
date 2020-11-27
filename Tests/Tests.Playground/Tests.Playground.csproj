@@ -9,7 +9,6 @@
 
 	<ItemGroup>
 		<Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
-		<Compile Include="..\Linq\DataProvider\OracleTests.cs" Link="OracleTests.cs" />
 		<Compile Include="..\Linq\Linq\AllAnyTests.cs" Link="AllAnyTests.cs" />
 		<Compile Include="..\Linq\Linq\CommonTests.cs" Link="CommonTests.cs" />
 		<Compile Include="..\Linq\Linq\CompileTests.cs" Link="CompileTests.cs" />

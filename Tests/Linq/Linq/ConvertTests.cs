@@ -589,6 +589,11 @@ namespace Tests.Linq
 		[Test]
 		public void ConvertToBoolean1([DataSources] string context)
 		{
+			/*
+			if (context != "Firebird")
+				return;
+
+			*/
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in from t in    Types select Convert.ToBoolean(t.MoneyValue) where p == true select p,

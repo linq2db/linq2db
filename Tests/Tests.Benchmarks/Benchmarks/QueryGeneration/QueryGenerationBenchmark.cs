@@ -32,6 +32,7 @@ namespace LinqToDB.Benchmarks.Benchmarks.QueryGeneration
 
 			_dataProviders.Add(ProviderName.Access,                new AccessOleDbDataProvider());
 			_dataProviders.Add(ProviderName.Firebird,              new FirebirdDataProvider());
+			/*
 			_dataProviders.Add(ProviderName.SQLiteMS,              new SQLiteDataProvider(ProviderName.SQLiteMS));
 			_dataProviders.Add(ProviderName.SQLiteClassic,         new SQLiteDataProvider(ProviderName.SQLiteClassic));
 			//_dataProviders.Add(ProviderName.OracleManaged + ".11", new OracleDataProvider(ProviderName.OracleManaged, OracleVersion.v11));
@@ -46,6 +47,7 @@ namespace LinqToDB.Benchmarks.Benchmarks.QueryGeneration
 			_dataProviders.Add(ProviderName.SqlServer2008,         new SqlServerDataProvider(ProviderName.SqlServer2008, SqlServerVersion.v2008));
 			_dataProviders.Add(ProviderName.SqlServer2012,         new SqlServerDataProvider(ProviderName.SqlServer2012, SqlServerVersion.v2012));
 			_dataProviders.Add(ProviderName.SqlServer2017,         new SqlServerDataProvider(ProviderName.SqlServer2017, SqlServerVersion.v2017));
+		*/
 		}
 
 		Dictionary<string, IDataProvider> _dataProviders = new Dictionary<string, IDataProvider>();

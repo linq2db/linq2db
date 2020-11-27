@@ -136,9 +136,9 @@ namespace LinqToDB.DataProvider.SqlCe
 			// already fixed by CorrectSkipAndColumns
 		}
 
-		public override ISqlExpression ConvertExpression(ISqlExpression expr)
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expr, EvaluationContext context)
 		{
-			expr = base.ConvertExpression(expr);
+			expr = base.ConvertExpressionImpl(expr, context);
 
 			switch (expr)
 			{

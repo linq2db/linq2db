@@ -52,7 +52,7 @@ namespace LinqToDB.SqlProvider
 				}
 			);
 
-			statement = OptimizeStatement(statement, evaluationContext);
+//			statement = OptimizeStatement(statement, evaluationContext);
 
 			statement.WalkQueries(
 				selectQuery =>
@@ -965,6 +965,9 @@ namespace LinqToDB.SqlProvider
 
 			switch (predicate.ElementType)
 			{
+				case QueryElementType.SearchCondition:
+					return SelectQueryOptimizer.OptimizeSearchCondition((SqlSearchCondition)predicate, context);
+
 				case QueryElementType.ExprExprPredicate:
 				{
 					var expr = (SqlPredicate.ExprExpr)predicate;
@@ -1604,7 +1607,28 @@ namespace LinqToDB.SqlProvider
 
 		#region Conversion
 
-		public virtual ISqlExpression ConvertExpression(ISqlExpression expression)
+		public virtual ISqlExpression ConvertExpression(MappingSchema mappingSchema, ISqlExpression expression, EvaluationContext context)
+		{
+			var newExpression = (ISqlExpression)ApplyMutation(mappingSchema, expression, context, this,  
+				static (ms, ctx, opt, visitor, e) =>
+			{
+				var ne = e;
+				if (ne is ISqlExpression expr1)
+					ne = opt.OptimizeExpression(expr1, visitor, ctx);
+
+				if (!ReferenceEquals(ne, e))
+					return ne;
+
+				if (ne is ISqlExpression expr2)
+					ne = opt.ConvertExpressionImpl(expr2, ctx);
+
+				return ne;
+			});
+
+			return newExpression;
+		}
+
+		public virtual ISqlExpression ConvertExpressionImpl(ISqlExpression expression, EvaluationContext context)
 		{
 			switch (expression.ElementType)
 			{
@@ -1628,7 +1652,7 @@ namespace LinqToDB.SqlProvider
 									be.SystemType,
 									be.Expr1,
 									be.Operation,
-									ConvertExpression(new SqlFunction(typeof(string), "Convert", new SqlDataType(DataType.VarChar, len), be.Expr2)),
+									ConvertExpressionImpl(new SqlFunction(typeof(string), "Convert", new SqlDataType(DataType.VarChar, len), be.Expr2), context),
 									be.Precedence);
 							}
 
@@ -1641,7 +1665,7 @@ namespace LinqToDB.SqlProvider
 
 								return new SqlBinaryExpression(
 									be.SystemType,
-									ConvertExpression(new SqlFunction(typeof(string), "Convert", new SqlDataType(DataType.VarChar, len), be.Expr1)),
+									ConvertExpressionImpl(new SqlFunction(typeof(string), "Convert", new SqlDataType(DataType.VarChar, len), be.Expr1), context),
 									be.Operation,
 									be.Expr2,
 									be.Precedence);
@@ -1657,46 +1681,9 @@ namespace LinqToDB.SqlProvider
 
 				case QueryElementType.SqlFunction :
 				#region SqlFunction
+
 				{
-					var func = (SqlFunction)expression;
-
-					switch (func.Name)
-					{
-						case "ConvertToCaseCompareTo":
-							return ConvertExpression(new SqlFunction(func.SystemType, "CASE",
-								new SqlSearchCondition().Expr(func.Parameters[0]). Greater .Expr(func.Parameters[1]).ToExpr(), new SqlValue(1),
-								new SqlSearchCondition().Expr(func.Parameters[0]). Equal   .Expr(func.Parameters[1]).ToExpr(), new SqlValue(0),
-								new SqlValue(-1)) { CanBeNull = false });
-
-						case "$Convert$": return ConvertConvertion(func);
-						case "Average"  : return new SqlFunction(func.SystemType, "Avg", func.Parameters);
-						case "Max"      :
-						case "Min"      :
-							{
-								if (func.SystemType == typeof(bool) || func.SystemType == typeof(bool?))
-								{
-									return new SqlFunction(typeof(int), func.Name,
-										new SqlFunction(func.SystemType, "CASE", func.Parameters[0], new SqlValue(1), new SqlValue(0)) { CanBeNull = false });
-								}
-
-								break;
-							}
-
-						case "Convert":
-							{
-								var typef = func.SystemType.ToUnderlying();
-
-								if (func.Parameters[1] is SqlFunction from && from.Name == "Convert" && from.Parameters[1].SystemType!.ToUnderlying() == typef)
-									return from.Parameters[1];
-
-								if (func.Parameters[1] is SqlExpression fe && fe.Expr == "Cast({0} as {1})" && fe.Parameters[0].SystemType!.ToUnderlying() == typef)
-									return fe.Parameters[0];
-							}
-
-							break;
-					}
-
-					break;
+					return ConvertFunction((SqlFunction)expression);
 				}
 				#endregion
 
@@ -1718,15 +1705,110 @@ namespace LinqToDB.SqlProvider
 		{
 			switch (func.Name)
 			{
-				case "$ToLower$": return new SqlFunction(func.SystemType, "Lower",   func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
-				case "$ToUpper$": return new SqlFunction(func.SystemType, "Upper",   func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
+				case "ConvertToCaseCompareTo":
+					return new SqlFunction(func.SystemType, "CASE",
+							new SqlSearchCondition().Expr(func.Parameters[0]).Greater.Expr(func.Parameters[1]).ToExpr(), new SqlValue(1),
+							new SqlSearchCondition().Expr(func.Parameters[0]).Equal.Expr(func.Parameters[1]).ToExpr(), new SqlValue(0),
+							new SqlValue(-1))
+						{ CanBeNull = false };
+
+				case "$Convert$": return ConvertConvertion(func);
+				case "Average": return new SqlFunction(func.SystemType, "Avg", func.Parameters);
+				case "Max":
+				case "Min":
+				{
+					if (func.SystemType == typeof(bool) || func.SystemType == typeof(bool?))
+					{
+						return new SqlFunction(typeof(int), func.Name,
+							new SqlFunction(func.SystemType, "CASE", func.Parameters[0], new SqlValue(1), new SqlValue(0)) { CanBeNull = false });
+					}
+
+					break;
+				}
+
+				case "Convert":
+				{
+					var typef = func.SystemType.ToUnderlying();
+
+					if (func.Parameters[1] is SqlFunction from && from.Name == "Convert" && from.Parameters[1].SystemType!.ToUnderlying() == typef)
+						return from.Parameters[1];
+
+					if (func.Parameters[1] is SqlExpression fe && fe.Expr == "Cast({0} as {1})" && fe.Parameters[0].SystemType!.ToUnderlying() == typef)
+						return fe.Parameters[0];
+
+					break;
+				}
+
+
+				case "$ToLower$": return new SqlFunction(func.SystemType, "Lower", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
+				case "$ToUpper$": return new SqlFunction(func.SystemType, "Upper", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
 				case "$Replace$": return new SqlFunction(func.SystemType, "Replace", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
+
 			}
 
 			return func;
 		}
 
-		public virtual ISqlPredicate ConvertPredicate(MappingSchema mappingSchema, ISqlPredicate predicate, EvaluationContext context)
+		static IQueryElement ApplyMutation(MappingSchema mappingSchema, IQueryElement element,
+			EvaluationContext context, BasicSqlOptimizer optimizer, Func<MappingSchema, EvaluationContext, BasicSqlOptimizer, ConvertVisitor, IQueryElement, IQueryElement> func)
+		{
+			for (;;)
+			{
+				var newElement = ConvertVisitor.ConvertAll(element, (visitor, e) =>
+				{
+					var ne = e;
+					for (;;)
+					{
+						ne = func(mappingSchema, context, optimizer, visitor, ne);
+
+						if (ReferenceEquals(ne, e))
+							break;
+
+						e = ne;
+					}
+
+					return e;
+				});
+
+				if (ReferenceEquals(newElement, element))
+					return element;
+
+				element = newElement;
+			}
+		}
+
+		public ISqlPredicate ConvertPredicate(MappingSchema mappingSchema, ISqlPredicate predicate,
+			EvaluationContext context)
+		{
+			var newPredicate = (ISqlPredicate)ApplyMutation(mappingSchema, predicate, context, this,  
+				static (ms, ctx, opt, visitor, e) =>
+			{
+				var ne = e;
+				if (ne is ISqlExpression expr1)
+					ne = opt.OptimizeExpression(expr1, visitor, ctx);
+
+				if (ne is ISqlPredicate pred1)
+					ne = opt.OptimizePredicate(pred1, ctx);
+
+				if (!ReferenceEquals(ne, e))
+					return ne;
+
+				if (ne is ISqlExpression expr2)
+					ne = opt.ConvertExpressionImpl(expr2, ctx);
+
+				if (!ReferenceEquals(ne, e))
+					return ne;
+
+				if (ne is SqlPredicate pred2)
+					ne = opt.ConvertPredicateImpl(ms, pred2, visitor, ctx);
+
+				return ne;
+			});
+			
+			return newPredicate;
+		}
+
+		public virtual ISqlPredicate ConvertPredicateImpl(MappingSchema mappingSchema, ISqlPredicate predicate, ConvertVisitor visitor, EvaluationContext context)
 		{
 			switch (predicate.ElementType)
 			{
@@ -1737,7 +1819,7 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.LikePredicate:
 					return ConvertLikePredicate(mappingSchema, (SqlPredicate.Like)predicate, context);
 				case QueryElementType.SearchStringPredicate:
-					return ConvertSearchStringPredicate(mappingSchema, (SqlPredicate.SearchString)predicate, context);
+					return ConvertSearchStringPredicate(mappingSchema, (SqlPredicate.SearchString)predicate, visitor, context);
 				case QueryElementType.InListPredicate:
 				{
 					var inList = (SqlPredicate.InList)predicate;
@@ -1835,6 +1917,7 @@ namespace LinqToDB.SqlProvider
 
 		protected ISqlPredicate ConvertSearchStringPredicateViaLike(MappingSchema mappingSchema,
 			SqlPredicate.SearchString predicate,
+			ConvertVisitor visitor,
 			EvaluationContext context)
 		{
 			if (predicate.Expr2.TryEvaluateExpression(context, out var patternRaw))
@@ -1880,7 +1963,7 @@ namespace LinqToDB.SqlProvider
 				};
 
 
-				patternExpr = OptimizeElements(patternExpr, context, context.ParameterValues == null);
+				patternExpr = OptimizeExpression(patternExpr, visitor, context);
 
 				return new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, patternExpr,
 					LikeIsEscapeSupported ? escape : null);
@@ -1888,12 +1971,13 @@ namespace LinqToDB.SqlProvider
 		}
 
 		public virtual ISqlPredicate ConvertSearchStringPredicate(MappingSchema mappingSchema, SqlPredicate.SearchString predicate,
+			ConvertVisitor visitor,
 			EvaluationContext context)
 		{
 			if (!predicate.IgnoreCase)
 				throw new NotImplementedException("!predicate.IgnoreCase");
 
-			return ConvertSearchStringPredicateViaLike(mappingSchema, predicate, context);
+			return ConvertSearchStringPredicateViaLike(mappingSchema, predicate, visitor, context);
 		}
 
 		static SqlField ExpectsUnderlyingField(ISqlExpression expr)
@@ -2069,7 +2153,7 @@ namespace LinqToDB.SqlProvider
 			else if (from.Type.SystemType == typeof(short) && to.Type.SystemType == typeof(int))
 				return func.Parameters[2];
 
-			return ConvertExpression(new SqlFunction(func.SystemType, "Convert", to, func.Parameters[2]));
+			return new SqlFunction(func.SystemType, "Convert", to, func.Parameters[2]);
 		}
 
 		#endregion
@@ -2687,6 +2771,7 @@ namespace LinqToDB.SqlProvider
 
 		#region Optimizing Statement
 
+		/*
 		public T OptimizeElements<T>(T root, EvaluationContext context, bool allowMutation)
 			where T : class, IQueryElement
 		{
@@ -2714,9 +2799,10 @@ namespace LinqToDB.SqlProvider
 			return newElement;
 		}
 
+		*/
 		public SqlStatement OptimizeStatement(SqlStatement statement, EvaluationContext context)
 		{
-			statement = OptimizeElements(statement, context, context.ParameterValues == null);
+			//statement = OptimizeElements(statement, context, context.ParameterValues == null);
 
 			// statement = OptimizeAggregates(statement);
 
@@ -2874,6 +2960,7 @@ namespace LinqToDB.SqlProvider
 			return null != new QueryVisitor().Find(statement, e => IsParameterDependedElement(e));
 		}
 
+		/*
 		public IQueryElement ConvertElements(MappingSchema mappingSchema, IQueryElement element, EvaluationContext context, bool allowMutation)
 		{
 			var mutated = false;
@@ -2883,7 +2970,7 @@ namespace LinqToDB.SqlProvider
 				for (;;)
 				{
 					if (ne is ISqlExpression sqlExpression)
-						ne = ConvertExpression(sqlExpression);
+						ne = ConvertExpressionImpl(sqlExpression, TODO);
 
 					if (ne is SqlPredicate sqlPredicate)
 						ne = ConvertPredicate(mappingSchema, sqlPredicate, context);
@@ -2904,6 +2991,7 @@ namespace LinqToDB.SqlProvider
 
 			return newElement;
 		}
+		*/
 
 		public IQueryElement ConvertFunctions(IQueryElement element, EvaluationContext context)
 		{
@@ -2939,10 +3027,12 @@ namespace LinqToDB.SqlProvider
 
 		public SqlStatement ConvertStatement(MappingSchema mappingSchema, SqlStatement statement, EvaluationContext context)
 		{
+			/*
 			var newStatement = (SqlStatement)ConvertElements(mappingSchema, statement, context, context.ParameterValues == null);
 			if (!ReferenceEquals(newStatement, statement))
 				newStatement = OptimizeStatement(newStatement, context);
-			newStatement = FinalizeStatement(newStatement, context);
+			*/
+			var newStatement = FinalizeStatement(statement, context);
 			return newStatement;
 		}
 

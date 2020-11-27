@@ -445,6 +445,33 @@ namespace LinqToDB.SqlQuery
 			OptimizeDistinctOrderBy();
 		}
 
+		public static SqlCondition OptimizeCondition(SqlCondition condition)
+		{
+			if (condition.Predicate is SqlSearchCondition search)
+			{
+				if (search.Conditions.Count == 1)
+				{
+					var sc = search.Conditions[0];
+					return new SqlCondition(condition.IsNot != sc.IsNot, sc.Predicate, condition.IsOr);
+				}
+			}
+			else if (condition.Predicate.ElementType == QueryElementType.ExprPredicate)
+			{
+				var exprPredicate = (SqlPredicate.Expr)condition.Predicate;
+				if (exprPredicate.Expr1 is ISqlPredicate predicate)
+				{
+					return new SqlCondition(condition.IsNot, predicate, condition.IsOr);
+				}
+			}
+
+			if (condition.IsNot && condition.Predicate is IInvertibleElement invertibleElement)
+			{
+				return new SqlCondition(false, (ISqlPredicate)invertibleElement.Invert(), condition.IsOr);
+			}
+
+			return condition;
+		}
+
 		internal static SqlSearchCondition OptimizeSearchCondition(SqlSearchCondition inputCondition, EvaluationContext context)
 		{
 			var searchCondition = inputCondition;
@@ -464,7 +491,7 @@ namespace LinqToDB.SqlQuery
 
 			for (var i = 0; i < searchCondition.Conditions.Count; i++)
 			{
-				var cond = searchCondition.Conditions[i];
+				var cond = OptimizeCondition(searchCondition.Conditions[i]);
 				var newCond = cond;
 				if (cond.Predicate.ElementType == QueryElementType.ExprExprPredicate)
 				{
