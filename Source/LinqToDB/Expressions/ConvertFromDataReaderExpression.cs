@@ -2,12 +2,12 @@
 using System.Collections.Concurrent;
 using System.Data;
 using System.Linq.Expressions;
-using System.Reflection;
 
 namespace LinqToDB.Expressions
 {
 	using Common;
 	using LinqToDB.Extensions;
+	using LinqToDB.Reflection;
 	using Mapping;
 
 	class ConvertFromDataReaderExpression : Expression
@@ -41,8 +41,6 @@ namespace LinqToDB.Expressions
 		public override bool           CanReduce   => true;
 		public          int            Index       => _idx;
 
-		static readonly MethodInfo _columnReaderGetValueInfo = MemberHelper.MethodOf<ColumnReader>(r => r.GetValue(null!));
-
 		public override Expression Reduce()
 		{
 			return Reduce(_slowModeDataContext!, true);
@@ -51,10 +49,12 @@ namespace LinqToDB.Expressions
 		public Expression Reduce(IDataContext dataContext, bool slowMode)
 		{
 			var columnReader = new ColumnReader(dataContext, dataContext.MappingSchema, _type, _idx, Converter, slowMode);
-			return Convert(Call(Constant(columnReader), _columnReaderGetValueInfo, _dataReaderParam), _type);
-		}
 
-		static readonly MethodInfo _isDBNullInfo = MemberHelper.MethodOf<IDataReader>(rd => rd.IsDBNull(0));
+			if (slowMode && Configuration.OptimizeForSequentialAccess)
+				return Convert(Call(Constant(columnReader), Methods.LinqToDB.ColumnReader.GetValueSequential, _dataReaderParam, Expression.Call(_dataReaderParam, Methods.ADONet.IsDBNull, Expression.Constant(_idx))), _type);
+			else
+				return Convert(Call(Constant(columnReader), Methods.LinqToDB.ColumnReader.GetValue, _dataReaderParam), _type);
+		}
 
 		public Expression Reduce(IDataContext dataContext, IDataReader dataReader)
 		{
@@ -114,7 +114,7 @@ namespace LinqToDB.Expressions
 				if (converter.HandlesNulls)
 				{
 					ex = Condition(
-						Call(dataReaderExpr, _isDBNullInfo, Constant(idx)),
+						Call(dataReaderExpr, Methods.ADONet.IsDBNull, Constant(idx)),
 						Constant(mappingSchema.GetDefaultValue(expectedType), expectedType),
 						ex);
 				}
@@ -162,7 +162,7 @@ namespace LinqToDB.Expressions
 			    (forceNullCheck || (dataContext.IsDBNullAllowed(dataReader, idx) ?? true)))
 			{
 				ex = Condition(
-					Call(dataReaderExpr, _isDBNullInfo, Constant(idx)),
+					Call(dataReaderExpr, Methods.ADONet.IsDBNull, Constant(idx)),
 					Constant(mappingSchema.GetDefaultValue(type), type),
 					ex);
 			}
@@ -177,21 +177,62 @@ namespace LinqToDB.Expressions
 				_dataContext   = dataContext;
 				_mappingSchema = mappingSchema;
 				_columnType    = columnType;
-				_columnIndex   = columnIndex;
+				ColumnIndex    = columnIndex;
 				_converter     = converter;
 				_slowMode      = slowMode;
 			}
 
+			public object? GetValueSequential(IDataReader dataReader, bool isNull)
+			{
+				var fromType = dataReader.GetFieldType(ColumnIndex);
+
+				if (!_slowColumnConverters.TryGetValue(fromType, out var func))
+				{
+					var dataReaderParameter = Parameter(typeof(IDataReader));
+					var isNullParameter     = Parameter(typeof(bool));
+					var dataReaderExpr      = Convert(dataReaderParameter, dataReader.GetType());
+
+					var expr = GetColumnReader(_dataContext, _mappingSchema, dataReader, _columnType, _converter, ColumnIndex, dataReaderExpr, _slowMode);
+
+					expr = OptimizeForSequentialAccess(expr, isNullParameter);
+
+					var lex  = Lambda<Func<IDataReader, bool, object>>(
+						expr.Type == typeof(object) ? expr : Convert(expr, typeof(object)),
+						dataReaderParameter, isNullParameter);
+
+					_slowColumnConverters[fromType] = func = lex.Compile();
+				}
+
+				try
+				{
+					return func(dataReader, isNull);
+				}
+				catch (LinqToDBConvertException ex)
+				{
+					ex.ColumnName = dataReader.GetName(ColumnIndex);
+					throw;
+				}
+				catch (Exception ex)
+				{
+					var name = dataReader.GetName(ColumnIndex);
+					throw new LinqToDBConvertException(
+							$"Mapping of column {name} value failed, see inner exception for details", ex)
+					{
+						ColumnName = name
+					};
+				}
+			}
+
 			public object? GetValue(IDataReader dataReader)
 			{
-				var fromType = dataReader.GetFieldType(_columnIndex);
+				var fromType = dataReader.GetFieldType(ColumnIndex);
 
 				if (!_columnConverters.TryGetValue(fromType, out var func))
 				{
 					var parameter      = Parameter(typeof(IDataReader));
 					var dataReaderExpr = Convert(parameter, dataReader.GetType());
 
-					var expr = GetColumnReader(_dataContext, _mappingSchema, dataReader, _columnType, _converter, _columnIndex, dataReaderExpr, _slowMode);
+					var expr = GetColumnReader(_dataContext, _mappingSchema, dataReader, _columnType, _converter, ColumnIndex, dataReaderExpr, _slowMode);
 
 					var lex  = Lambda<Func<IDataReader, object>>(
 						expr.Type == typeof(object) ? expr : Convert(expr, typeof(object)),
@@ -206,12 +247,12 @@ namespace LinqToDB.Expressions
 				}
 				catch (LinqToDBConvertException ex)
 				{
-					ex.ColumnName = dataReader.GetName(_columnIndex);
+					ex.ColumnName = dataReader.GetName(ColumnIndex);
 					throw;
 				}
 				catch (Exception ex)
 				{
-					var name = dataReader.GetName(_columnIndex);
+					var name = dataReader.GetName(ColumnIndex);
 					throw new LinqToDBConvertException(
 							$"Mapping of column {name} value failed, see inner exception for details", ex)
 					{
@@ -220,14 +261,80 @@ namespace LinqToDB.Expressions
 				}
 			}
 
-			readonly ConcurrentDictionary<Type,Func<IDataReader,object>> _columnConverters = new ConcurrentDictionary<Type,Func<IDataReader,object>>();
+			private Expression OptimizeForSequentialAccess(Expression expression, Expression isNullParameter)
+			{
+				var     failed      = false;
+				string? failMessage = null;
+
+				expression = expression.Transform(e =>
+				{
+					if (failed)
+						return e;
+
+					if (e is MethodCallExpression call)
+					{
+						// we work only with instance method of data reader
+						if (!call.Method.IsStatic && typeof(IDataReader).IsAssignableFrom(call.Object.Type))
+						{
+							// check that method accept singe integer constant as parameter
+							// this is currently how we detect method that we must process
+							if (call.Arguments.Count == 1
+								&& call.Arguments[0] is ConstantExpression c
+								&& c.Type == typeof(int))
+							{
+								var idx = (int)c.Value;
+								if (idx != ColumnIndex)
+								{
+									failed      = true;
+									failMessage = $"Expected column index: {ColumnIndex}, but found {idx}";
+									return e;
+								}
+
+
+								// test IsDBNull method by-name to support overrides
+								if (call.Method.Name == nameof(IDataReader.IsDBNull))
+									return isNullParameter;
+
+								// TODO: add additional validation for other methods?
+								return e;
+							}
+
+							failed      = true;
+							failMessage = $"Unsupported reader method call: {call.Method.DeclaringType?.Name}.{call.Method.Name}";
+							return e;
+						}
+
+						foreach (var arg in call.Arguments)
+						{
+							// unknown method or constructor call with data reader parameter
+							if (typeof(IDataReader).IsAssignableFrom(arg.Unwrap().Type))
+							{
+								failMessage = $"Method {call.Method.DeclaringType?.Name}.{call.Method.Name} with {nameof(IDataReader)} not supported";
+								failed = true;
+							}
+						}
+					}
+
+					return e;
+				});
+
+				// expression cannot be optimized
+				if (failed)
+					throw new LinqToDBException($"{nameof(OptimizeForSequentialAccess)} optimization failed (slow mode): {failMessage}");
+
+				return expression;
+			}
+
+			readonly ConcurrentDictionary<Type,Func<IDataReader,object>>       _columnConverters     = new ConcurrentDictionary<Type,Func<IDataReader,object>>();
+			readonly ConcurrentDictionary<Type,Func<IDataReader, bool,object>> _slowColumnConverters = new ConcurrentDictionary<Type,Func<IDataReader,bool,object>>();
 
 			readonly IDataContext     _dataContext;
 			readonly MappingSchema    _mappingSchema;
 			readonly Type             _columnType;
-			readonly int              _columnIndex;
 			readonly IValueConverter? _converter;
 			readonly bool             _slowMode;
+
+			public int ColumnIndex { get; }
 		}
 
 		public override string ToString()

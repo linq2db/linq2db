@@ -130,8 +130,8 @@ namespace LinqToDB.Data
 			(
 				from info in GetReadIndexes(entityDescriptor)
 				where info.Column.Storage != null ||
-				      !(info.Column.MemberAccessor.MemberInfo is PropertyInfo) ||
-				      ((PropertyInfo) info.Column.MemberAccessor.MemberInfo).GetSetMethod(true) != null
+				      !(info.Column.MemberAccessor.MemberInfo is PropertyInfo pi) ||
+				      pi.GetSetMethod(true) != null
 				select new
 				{
 					Column = info.Column,

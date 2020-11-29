@@ -376,44 +376,24 @@ namespace LinqToDB.Linq.Builder
 					var itemReader      = CompiledQuery.Compile(lambda);
 					var keyExpr         = context._key.BuildExpression(null, 0, false);
 
-					var keyReader  = Expression.Lambda<Func<IQueryRunner,IDataContext,IDataReader,Expression,object?[]?,TKey>>(
-						keyExpr,
-						new []
-						{
-							ExpressionBuilder.QueryRunnerParam,
-							ExpressionBuilder.DataContextParam,
-							ExpressionBuilder.DataReaderParam,
-							ExpressionBuilder.ExpressionParam,
-							ExpressionBuilder.ParametersParam
-						});
-
 					return Expression.Call(
 						null,
-						MemberHelper.MethodOf(() => GetGrouping(null!, null!, null!, null!, null!, null!, null!, null!)),
+						MemberHelper.MethodOf(() => GetGrouping(null!, null!, default!, null!)),
 						new Expression[]
 						{
 							ExpressionBuilder.QueryRunnerParam,
-							ExpressionBuilder.DataContextParam,
-							ExpressionBuilder.DataReaderParam,
 							Expression.Constant(context.Builder.CurrentSqlParameters),
-							ExpressionBuilder.ExpressionParam,
-							ExpressionBuilder.ParametersParam,
-							keyReader,
+							keyExpr,
 							Expression.Constant(itemReader)
 						});
 				}
 
 				static IGrouping<TKey,TElement> GetGrouping(
-					IQueryRunner                                                           runner,
-					IDataContext                                                           dataContext,
-					IDataReader                                                            dataReader,
-					List<ParameterAccessor>                                                parameterAccessor,
-					Expression                                                             expr,
-					object?[]?                                                             ps,
-					Func<IQueryRunner,IDataContext,IDataReader,Expression,object?[]?,TKey> keyReader,
-					Func<IDataContext,TKey,object?[]?,IQueryable<TElement>>                itemReader)
+					IQueryRunner                                            runner,
+					List<ParameterAccessor>                                 parameterAccessor,
+					TKey                                                    key,
+					Func<IDataContext,TKey,object?[]?,IQueryable<TElement>> itemReader)
 				{
-					var key = keyReader(runner, dataContext, dataReader, expr, ps);
 					return new Grouping<TKey,TElement>(key, runner, parameterAccessor, itemReader);
 				}
 			}

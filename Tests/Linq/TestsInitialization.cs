@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Configuration;
 using System.Data.Common;
 using System.IO;
 using System.Reflection;
@@ -18,6 +19,7 @@ public class TestsInitialization
 	public void TestAssemblySetup()
 	{
 		// use SeqentialAccess behavior for all reader queries to detect breaking changes to behavior support
+		LinqToDB.Common.Configuration.OptimizeForSequentialAccess = true;
 		DbCommandProcessorExtensions.Instance = new SequentialAccessCommandProcessor();
 
 		// netcoreapp2.1 adds DbProviderFactories support, but providers should be registered by application itself

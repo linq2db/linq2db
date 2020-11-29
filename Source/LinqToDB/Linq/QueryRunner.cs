@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
+	using System.Data.Common;
 	using Builder;
 	using Common;
 	using Common.Internal.Cache;
@@ -21,6 +22,7 @@ namespace LinqToDB.Linq
 	using Extensions;
 	using LinqToDB.Async;
 	using LinqToDB.Expressions;
+	using LinqToDB.Reflection;
 	using SqlQuery;
 
 	static partial class QueryRunner
@@ -124,23 +126,14 @@ namespace LinqToDB.Linq
 				ParameterExpression? oldVariable = null;
 				ParameterExpression? newVariable = null;
 
-				var variables = new Dictionary<int, ParameterExpression>();
-
 				Expression expression;
-				if (slowMode)
+				if (slowMode || true)
+				//if (slowMode)
 				{
 					expression = _expression.Transform(e =>
 					{
 						if (e is ConvertFromDataReaderExpression ex)
-						{
-							if (variables.TryGetValue(ex.Index, out var variable))
-								return variable;
-
-							variable = Expression.Variable(ex.Type, $"col{ex.Index}");
-							variables.Add(ex.Index, variable);
-
-							return Expression.Assign(variable, new ConvertFromDataReaderExpression(ex.Type, ex.Index, ex.Converter, newVariable!, context));
-						}
+							return new ConvertFromDataReaderExpression(ex.Type, ex.Index, ex.Converter, newVariable!, context).Reduce();
 
 						return replaceVariable(e);
 					});
@@ -151,31 +144,14 @@ namespace LinqToDB.Linq
 						e =>
 						{
 							if (e is ConvertFromDataReaderExpression ex)
-							{
-								if (variables.TryGetValue(ex.Index, out var variable))
-									return variable;
-
-								variable = Expression.Variable(ex.Type, $"col{ex.Index}");
-								variables.Add(ex.Index, variable);
-
-								return Expression.Assign(variable, ex.Reduce(context, dataReader, newVariable!).Transform(replaceVariable));
-							}
+								return ex.Reduce(context, dataReader, newVariable!).Transform(replaceVariable);
 
 							return replaceVariable(e);
 						});
 				}
 
-				expression = expression.Transform(e =>
-				{
-					if (e is BlockExpression block && variables.Count > 0)
-					{
-						block = block.Update(block.Variables.Concat(variables.Values), block.Expressions);
-						variables.Clear();
-						return block;
-					}
-
-					return e;
-				});
+				if (Configuration.OptimizeForSequentialAccess)
+					expression = OptimizeForSequentialAccess(expression, dataReader.FieldCount);
 
 				return (Expression<Func<IQueryRunner, IDataReader, T>>)expression;
 
@@ -203,6 +179,181 @@ namespace LinqToDB.Linq
 
 					return e;
 				}
+			}
+
+			private Expression OptimizeForSequentialAccess(Expression expression, int fieldCount)
+			{
+				var     failed      = false;
+				string? failMessage = null;
+
+				var newVariables        = new ParameterExpression?[fieldCount * 2];
+				var insertedExpressions = new Expression?[fieldCount * 2];
+				var replacements        = new Expression?[fieldCount * 2];
+				var replacedMethods     = new MethodInfo[fieldCount];
+
+				expression = expression.Transform(e =>
+				{
+					if (failed)
+						return e;
+
+					if (e is MethodCallExpression call)
+					{
+						// we work only with instance method of data reader
+						if (!call.Method.IsStatic && typeof(IDataReader).IsAssignableFrom(call.Object.Type))
+						{
+							// check that method accept singe integer constant as parameter
+							// this is currently how we detect method that we must process
+							if (call.Arguments.Count == 1
+								&& call.Arguments[0] is ConstantExpression c
+								&& c.Type == typeof(int))
+							{
+								var idx = (int)c.Value;
+
+								// test IsDBNull method by-name to support overrides
+								if (call.Method.Name == nameof(IDataReader.IsDBNull))
+								{
+									var index = idx * 2;
+									if (newVariables[index] == null)
+									{
+										var variable               = Expression.Variable(typeof(bool), $"is_null_{idx}");
+										newVariables[index]        = variable;
+										replacements[index]        = variable;
+										insertedExpressions[index] = Expression.Assign(variable, call);
+									}
+
+									return replacements[index]!;
+								}
+								else if (call.Method.Name == nameof(DbDataReader.IsDBNullAsync))
+								{
+									// fail on IsDBNullAsync call
+									failed      = true;
+									failMessage = $"{nameof(DbDataReader.IsDBNullAsync)} call not supported";
+									return e;
+								}
+								else
+								{
+									// other methods we treat as Get* methods
+									var index = idx * 2 + 1;
+									if (newVariables[index] == null)
+									{
+										if (newVariables[index - 1] == null)
+										{
+											// there is a call to Get* method without prior IsDBNull call
+											failed      = true;
+											failMessage = $"{nameof(DbDataReader.IsDBNull)} call not found";
+											return e;
+										}
+
+										var type       = call.Type;
+										var isNullable = type.IsValueType && !type.IsNullable();
+										if (isNullable)
+											type = typeof(Nullable<>).MakeGenericType(type);
+
+										var variable               = Expression.Variable(type, $"get_value_{idx}");
+										newVariables[index]        = variable;
+										insertedExpressions[index] = Expression.Assign(
+												variable,
+												Expression.Condition(
+													newVariables[index - 1],
+													Expression.Constant(null, type),
+													isNullable ? Expression.Convert(call, type) : call));
+										replacements[index]        = isNullable ? Expression.Property(variable, "Value") : variable;
+										replacedMethods[idx]       = call.Method;
+									}
+									else if (replacedMethods[idx] != call.Method)
+									{
+										// tried to replace multiple methods
+										failed      = true;
+										failMessage = $"Multiple data reader methods called for column: {replacedMethods[idx]} vs {call.Method}";
+										return e;
+									}
+
+									return replacements[index]!;
+								}
+							}
+
+							failed      = true;
+							failMessage = $"Unsupported reader method call: {call.Method.DeclaringType?.Name}.{call.Method.Name}";
+							return e;
+						}
+						else if (call.Method == Methods.LinqToDB.ColumnReader.GetValueSequential
+							&& call.Object is ConstantExpression constant
+							&& constant.Value is ConvertFromDataReaderExpression.ColumnReader columnReader)
+						{
+							var idx   = columnReader.ColumnIndex;
+							var index = idx * 2 + 1;
+
+							if (replacedMethods[idx] == null)
+							{
+								var type       = call.Type;
+								var isNullable = type.IsValueType && !type.IsNullable();
+								if (isNullable)
+									type = typeof(Nullable<>).MakeGenericType(type);
+
+								var variable               = Expression.Variable(typeof(object), $"get_value_{idx}");
+								newVariables[index]        = variable;
+								insertedExpressions[index] = Expression.Assign(variable, call);
+								replacements[index]        = variable;
+								replacedMethods[idx]       = call.Method;
+							}
+							else if (replacedMethods[idx] != call.Method)
+							{
+								// tried to replace multiple methods
+								failed      = true;
+								failMessage = $"Multiple data reader methods called for column: {replacedMethods[idx]} vs {call.Method}";
+								return e;
+							}
+
+							return replacements[index]!;
+						}
+
+						foreach (var arg in call.Arguments)
+						{
+							// unknown method call with data reader parameter
+							if (typeof(IDataReader).IsAssignableFrom(arg.Unwrap().Type))
+							{
+								failMessage = $"Method {call.Method.DeclaringType?.Name}.{call.Method.Name} with {nameof(IDataReader)} parameter not supported";
+								failed = true;
+							}
+						}
+					}
+					if (e is NewExpression newExpr)
+					{
+						foreach (var arg in newExpr.Arguments)
+						{
+							// unknown constructor call with data reader parameter
+							if (typeof(IDataReader).IsAssignableFrom(arg.Unwrap().Type))
+							{
+								failMessage = $"{newExpr.Type} constructor with {nameof(IDataReader)} parameter not supported";
+								failed = true;
+							}
+						}
+					}
+
+					return e;
+				});
+
+				// expression cannot be optimized
+				if (failed)
+					throw new LinqToDBException($"{nameof(OptimizeForSequentialAccess)} optimization failed: {failMessage}");
+
+				// insert variables and variable init code to mapping expression
+				var updated = false;
+				expression = expression.Transform(e =>
+				{
+					if (!updated && e is BlockExpression block)
+					{
+						updated = true;
+						// first expression is reader parameter assignment/cast
+						return block.Update(
+							block.Variables.Concat(newVariables.Where(v => v != null)),
+							block.Expressions.Take(1).Concat(insertedExpressions.Where(e => e != null)).Concat(block.Expressions.Skip(1)));
+					}
+
+					return e;
+				});
+
+				return expression;
 			}
 		}
 

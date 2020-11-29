@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -7,6 +6,8 @@ using System.Reflection;
 
 namespace LinqToDB.Reflection
 {
+	using System.Data;
+	using System.Data.Common;
 	using Expressions;
 	using Linq;
 
@@ -16,8 +17,14 @@ namespace LinqToDB.Reflection
 	/// </summary>
 	public static class Methods
 	{
-		public static class Enumerable
+		public static class ADONet
 		{
+			public static readonly MethodInfo IsDBNull      = MemberHelper.MethodOf<IDataRecord> (r => r.IsDBNull(0));
+			public static readonly MethodInfo IsDBNullAsync = MemberHelper.MethodOf<DbDataReader>(r => r.IsDBNullAsync(0));
+		}
+
+		public static class Enumerable
+		{	
 			public static readonly MethodInfo ToArray     = MemberHelper.MethodOfGeneric<IEnumerable<int>>(e => e.ToArray());
 			public static readonly MethodInfo ToList      = MemberHelper.MethodOfGeneric<IEnumerable<int>>(e => e.ToList());
 			public static readonly MethodInfo AsQueryable = MemberHelper.MethodOfGeneric<IEnumerable<int>>(e => e.AsQueryable());
@@ -253,6 +260,12 @@ namespace LinqToDB.Reflection
 			public static class Tools
 			{
 				public static readonly MethodInfo CreateEmptyQuery  = MemberHelper.MethodOfGeneric(() => Common.Tools.CreateEmptyQuery<int>());
+			}
+
+			public static class ColumnReader
+			{
+				public static readonly MethodInfo GetValue            = MemberHelper.MethodOf<ConvertFromDataReaderExpression.ColumnReader>(cr => cr.GetValue(null!));
+				public static readonly MethodInfo GetValueSequential  = MemberHelper.MethodOf<ConvertFromDataReaderExpression.ColumnReader>(cr => cr.GetValueSequential(null!, false));
 			}
 		}
 
