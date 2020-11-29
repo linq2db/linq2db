@@ -189,6 +189,7 @@ namespace LinqToDB.Linq
 				var insertedExpressions = new Expression?[fieldCount * 2];
 				var replacements        = new Expression?[fieldCount * 2];
 				var replacedMethods     = new MethodInfo[fieldCount];
+				var isNullableStruct    = new bool[fieldCount];
 
 				Func<Expression, Expression> tranformFunc = null!;
 				tranformFunc = e =>
@@ -235,27 +236,38 @@ namespace LinqToDB.Linq
 									var index = idx * 2 + 1;
 									if (newVariables[index] == null)
 									{
+										var type = call.Type;
+										ParameterExpression variable;
+
 										if (newVariables[index - 1] == null)
 										{
-											// there is a call to Get* method without prior IsDBNull call
-											failMessage = $"{nameof(DbDataReader.IsDBNull)} call not found";
-											return e;
+											// no IsDBNull call: column is not nullable
+											// (also could be a bad expression)
+
+											variable                   = Expression.Variable(type, $"get_value_{idx}");
+											insertedExpressions[index] = Expression.Assign(variable, Expression.Convert(call, type));
+										}
+										else
+										{
+											var isNullable = type.IsValueType && !type.IsNullable();
+											if (isNullable)
+											{
+												type = typeof(Nullable<>).MakeGenericType(type);
+												isNullableStruct[idx] = true;
+											}
+
+											variable               = Expression.Variable(type, $"get_value_{idx}");
+
+											insertedExpressions[index] = Expression.Assign(
+												variable,
+												Expression.Condition(
+													newVariables[index - 1],
+													Expression.Constant(null, type),
+													isNullable ? Expression.Convert(call, type) : call));
 										}
 
-										var type       = call.Type;
-										var isNullable = type.IsValueType && !type.IsNullable();
-										if (isNullable)
-											type = typeof(Nullable<>).MakeGenericType(type);
-
-										var variable               = Expression.Variable(type, $"get_value_{idx}");
-										newVariables[index] = variable;
-										insertedExpressions[index] = Expression.Assign(
-											variable,
-											Expression.Condition(
-												newVariables[index - 1],
-												Expression.Constant(null, type),
-												isNullable ? Expression.Convert(call, type) : call));
-										replacements[index] = isNullable ? Expression.Property(variable, "Value") : variable;
+										newVariables[index]  = variable;
+										replacements[index]  = isNullableStruct[idx] ? Expression.Property(variable, "Value") : variable;
 										replacedMethods[idx] = call.Method;
 									}
 									else if (replacedMethods[idx] != call.Method)
@@ -282,8 +294,8 @@ namespace LinqToDB.Linq
 							if (replacedMethods[idx] == null)
 							{
 								var type       = call.Type;
-								var isNullable = type.IsValueType && !type.IsNullable();
-								if (isNullable)
+								isNullableStruct[idx] = type.IsValueType && !type.IsNullable();
+								if (isNullableStruct[idx])
 									type = typeof(Nullable<>).MakeGenericType(type);
 
 								var variable               = Expression.Variable(typeof(object), $"get_value_{idx}");

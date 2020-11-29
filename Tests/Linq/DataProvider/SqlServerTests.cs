@@ -23,6 +23,7 @@ using Microsoft.SqlServer.Types;
 
 using NUnit.Framework;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq.Expressions;
 
 namespace Tests.DataProvider
 {
@@ -1332,11 +1333,13 @@ namespace Tests.DataProvider
 		[Test]
 		public void OverflowTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			var func = SqlServerTools.DataReaderGetDecimal;
+			var func = SqlServerTools.DataReaderGetDecimalExpression;
 			try
 			{
-				SqlServerTools.DataReaderGetDecimal = GetDecimal;
+				SqlServerTools.DataReaderGetDecimalExpression = (rd, i) => GetDecimal(rd, i);
 
+				// mapping expression not compatible with SequenceAccess optimization
+				// using (new CustomCommandProcessor(null))
 				using (var db = new DataConnection(context))
 				{
 					var list = db.GetTable<DecimalOverflow>().ToList();
@@ -1344,7 +1347,7 @@ namespace Tests.DataProvider
 			}
 			finally
 			{
-				SqlServerTools.DataReaderGetDecimal = func;
+				SqlServerTools.DataReaderGetDecimalExpression = func;
 			}
 		}
 
@@ -1385,11 +1388,10 @@ namespace Tests.DataProvider
 		[Test]
 		public void OverflowTest2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			var func = SqlServerTools.DataReaderGetDecimal;
-
+			var func = SqlServerTools.DataReaderGetDecimalExpression;
 			try
 			{
-				SqlServerTools.DataReaderGetDecimal = (rd, idx) => { throw new Exception(); };
+				SqlServerTools.DataReaderGetDecimalExpression = (rd, idx) => Throw();
 
 				using (var db = new DataConnection(context))
 				{
@@ -1398,9 +1400,11 @@ namespace Tests.DataProvider
 			}
 			finally
 			{
-				SqlServerTools.DataReaderGetDecimal = func;
+				SqlServerTools.DataReaderGetDecimalExpression = func;
 			}
 		}
+
+		private static decimal Throw() => throw new Exception();
 
 		[Test]
 		public void SelectTableWithHintTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
