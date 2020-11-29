@@ -33,7 +33,7 @@ namespace LinqToDB.DataProvider.Firebird
 			SqlProviderFlags.IsUpdateFromSupported             = false;
 
 			SetCharField("CHAR", (r,i) => r.GetString(i).TrimEnd(' '));
-			SetCharFieldToType<char>("CHAR", (r, i) => DataTools.GetChar(r, i));
+			SetCharFieldToType<char>("CHAR", DataTools.GetCharExpression);
 
 			SetProviderField<IDataReader,TimeSpan,DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1970, 1, 1));
 			SetProviderField<IDataReader,DateTime,DateTime>((r,i) => GetDateTime(r, i));

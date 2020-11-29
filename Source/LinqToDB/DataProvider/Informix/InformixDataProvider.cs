@@ -33,8 +33,8 @@ namespace LinqToDB.DataProvider.Informix
 
 			SetCharField("CHAR",  (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("NCHAR", (r,i) => r.GetString(i).TrimEnd(' '));
-			SetCharFieldToType<char>("CHAR",  (r, i) => DataTools.GetChar(r, i));
-			SetCharFieldToType<char>("NCHAR", (r, i) => DataTools.GetChar(r, i));
+			SetCharFieldToType<char>("CHAR",  DataTools.GetCharExpression);
+			SetCharFieldToType<char>("NCHAR", DataTools.GetCharExpression);
 
 			SetProviderField<IDataReader,float,  float  >((r,i) => GetFloat  (r, i));
 			SetProviderField<IDataReader,double, double >((r,i) => GetDouble (r, i));

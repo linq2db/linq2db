@@ -35,7 +35,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			SqlProviderFlags.IsDistinctSetOperationsSupported     = false;
 			SqlProviderFlags.IsUpdateFromSupported                = false;
 
-			SetCharFieldToType<char>("NChar", (r, i) => DataTools.GetChar(r, i));
+			SetCharFieldToType<char>("NChar", DataTools.GetCharExpression);
 
 			SetCharField("NChar",    (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("NVarChar", (r,i) => r.GetString(i).TrimEnd(' '));

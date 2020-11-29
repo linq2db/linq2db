@@ -133,8 +133,8 @@ namespace LinqToDB.DataProvider.SQLite
 
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd(' '));
-			SetCharFieldToType<char>("char",  (r, i) => DataTools.GetChar(r, i));
-			SetCharFieldToType<char>("nchar", (r, i) => DataTools.GetChar(r, i));
+			SetCharFieldToType<char>("char" , DataTools.GetCharExpression);
+			SetCharFieldToType<char>("nchar", DataTools.GetCharExpression);
 
 		}
 
