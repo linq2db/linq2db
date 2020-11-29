@@ -6,6 +6,7 @@ using System.Reflection;
 namespace LinqToDB.DataProvider.SqlServer
 {
 	using System.Collections.Concurrent;
+	using System.Linq.Expressions;
 	using System.Text;
 	using Common;
 	using Configuration;
@@ -368,7 +369,12 @@ namespace LinqToDB.DataProvider.SqlServer
 			public const string OptionRecompile = "OPTION(RECOMPILE)";
 		}
 
+		[Obsolete("Use expression-based " + nameof(DataReaderGetMoneyExpression) + " for mapping")]
 		public static Func<IDataReader,int,decimal> DataReaderGetMoney   = (dr, i) => dr.GetDecimal(i);
+		[Obsolete("Use expression-based " + nameof(DataReaderGetDecimalExpression) + " for mapping")]
 		public static Func<IDataReader,int,decimal> DataReaderGetDecimal = (dr, i) => dr.GetDecimal(i);
+
+		public static Expression<Func<IDataReader,int,decimal>> DataReaderGetMoneyExpression   = (dr, i) => dr.GetDecimal(i);
+		public static Expression<Func<IDataReader,int,decimal>> DataReaderGetDecimalExpression = (dr, i) => dr.GetDecimal(i);
 	}
 }

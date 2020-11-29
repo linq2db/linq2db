@@ -127,8 +127,8 @@ namespace LinqToDB.Linq
 				ParameterExpression? newVariable = null;
 
 				Expression expression;
-				if (slowMode || true)
-				//if (slowMode)
+				//if (slowMode || true)
+				if (slowMode)
 				{
 					expression = _expression.Transform(e =>
 					{
@@ -287,10 +287,10 @@ namespace LinqToDB.Linq
 									type = typeof(Nullable<>).MakeGenericType(type);
 
 								var variable               = Expression.Variable(typeof(object), $"get_value_{idx}");
-								newVariables[index] = variable;
-								insertedExpressions[index] = Expression.Assign(variable, call.Transform(tranformFunc));
-								replacements[index] = variable;
-								replacedMethods[idx] = call.Method;
+								newVariables[index]        = variable;
+								insertedExpressions[index] = Expression.Assign(variable, call.Update(call.Object, call.Arguments.Select(a => a.Transform(tranformFunc))));
+								replacements[index]        = variable;
+								replacedMethods[idx]       = call.Method;
 							}
 							else if (replacedMethods[idx] != call.Method)
 							{
@@ -350,10 +350,28 @@ namespace LinqToDB.Linq
 					if (!updated && e is BlockExpression block)
 					{
 						updated = true;
-						// first 5 expressions init context variables
+
+						var found = false;
+						int skip;
+						for (skip = 0; skip < block.Expressions.Count; skip++)
+						{
+							if (block.Expressions[skip] is BinaryExpression binary
+								&& binary.NodeType == ExpressionType.Assign
+								&& binary.Left is ParameterExpression pe
+								&& pe.Name == "ldr")
+							{
+								found = true;
+								break;
+							}
+						}
+
+						if (!found)
+							throw new LinqToDBException($"{nameof(OptimizeForSequentialAccess)} optimization failed: cannot find data reader assignment");
+
+						// first N expressions init context variables
 						return block.Update(
 							block.Variables.Concat(newVariables.Where(v => v != null)),
-							block.Expressions.Take(5).Concat(insertedExpressions.Where(e => e != null)).Concat(block.Expressions.Skip(5)));
+							block.Expressions.Take(skip + 1).Concat(insertedExpressions.Where(e => e != null)).Concat(block.Expressions.Skip(skip + 1)));
 					}
 
 					return e;
@@ -866,19 +884,32 @@ namespace LinqToDB.Linq
 			var queryRunnerParam = Expression.Parameter(typeof(IQueryRunner), "qr");
 			var dataReaderParam  = Expression.Parameter(typeof(IDataReader),  "dr");
 
-			var l =
-				Expression.Lambda<Func<IQueryRunner,IDataReader,T>>(
-					Expression.Invoke(
-						expression, new Expression[]
+			var dataContextVar = expression.Parameters[1];
+			var expressionVar  = expression.Parameters[3];
+			var parametersVar  = expression.Parameters[4];
+			var preamblesVar   = expression.Parameters[5];
+			var rowsCountVar   = expression.Parameters[6];
+
+			// we can safely assume it is block expression
+			var block = (BlockExpression)expression.Body;
+			var l     = Expression.Lambda<Func<IQueryRunner, IDataReader, T>>(
+					block.Update(
+						new[]
 						{
-							queryRunnerParam,
-							Expression.Property(queryRunnerParam, _dataContextInfo),
-							dataReaderParam,
-							Expression.Property(queryRunnerParam, _expressionInfo),
-							Expression.Property(queryRunnerParam, _parametersInfo),
-							Expression.Property(queryRunnerParam, _preamblesInfo),
-							Expression.Property(queryRunnerParam, _rowsCountnfo),
-						}),
+							dataContextVar,
+							expressionVar,
+							parametersVar,
+							preamblesVar,
+							rowsCountVar
+						}.Concat(block.Variables),
+						new[]
+						{
+							Expression.Assign(dataContextVar, Expression.Property(queryRunnerParam, _dataContextInfo)),
+							Expression.Assign(expressionVar , Expression.Property(queryRunnerParam, _expressionInfo)),
+							Expression.Assign(parametersVar , Expression.Property(queryRunnerParam, _parametersInfo)),
+							Expression.Assign(preamblesVar  , Expression.Property(queryRunnerParam, _preamblesInfo)),
+							Expression.Assign(rowsCountVar  , Expression.Property(queryRunnerParam, _rowsCountnfo))
+						}.Concat(block.Expressions)),
 					queryRunnerParam,
 					dataReaderParam);
 

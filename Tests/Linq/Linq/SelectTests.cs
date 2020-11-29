@@ -1262,6 +1262,8 @@ namespace Tests.Linq
 		[Test]
 		public void Select_TernaryNullableValue([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
+			// mapping fails and fallbacks to slow-mapper
+			using (new CustomCommandProcessor(null))
 			using (var db = GetDataContext(context))
 			{
 				var result = db.Select(() => Sql.AsSql(value) == null ? (int?)null : Sql.AsSql(value!.Value));
@@ -1276,6 +1278,8 @@ namespace Tests.Linq
 		[Test]
 		public void Select_TernaryNullableValueReversed([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
+			// mapping fails and fallbacks to slow-mapper
+			using (new CustomCommandProcessor(null))
 			using (var db = GetDataContext(context))
 			{
 				var result = db.Select(() => Sql.AsSql(value) != null ? Sql.AsSql(value!.Value) : (int?)null);
@@ -1290,6 +1294,8 @@ namespace Tests.Linq
 		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix, ProviderName.DB2 })]
 		public void Select_TernaryNullableValue_Nested([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
+			// mapping fails and fallbacks to slow-mapper
+			using (new CustomCommandProcessor(null))
 			using (var db = GetDataContext(context))
 			{
 				var result = db.Select(() => Sql.AsSql(value) == null ? (int?)null : (Sql.AsSql(value!.Value) < 2 ? Sql.AsSql(value.Value) : 2 + Sql.AsSql(value.Value)));
@@ -1304,6 +1310,8 @@ namespace Tests.Linq
 		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix, ProviderName.DB2 })]
 		public void Select_TernaryNullableValueReversed_Nested([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
+			// mapping fails and fallbacks to slow-mapper
+			using (new CustomCommandProcessor(null))
 			using (var db = GetDataContext(context))
 			{
 				var result = db.Select(() => Sql.AsSql(value) != null ? (Sql.AsSql(value!.Value) < 2 ? Sql.AsSql(value.Value) : Sql.AsSql(value.Value) + 4) : (int?)null);
