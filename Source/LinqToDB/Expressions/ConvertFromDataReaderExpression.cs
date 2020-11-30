@@ -7,6 +7,7 @@ namespace LinqToDB.Expressions
 {
 	using Common;
 	using LinqToDB.Extensions;
+	using LinqToDB.Linq;
 	using LinqToDB.Reflection;
 	using Mapping;
 
@@ -194,7 +195,7 @@ namespace LinqToDB.Expressions
 
 					var expr = GetColumnReader(_dataContext, _mappingSchema, dataReader, _columnType, _converter, ColumnIndex, dataReaderExpr, _slowMode);
 
-					expr = OptimizeForSequentialAccess(expr, isNullParameter);
+					expr = SequentialAccessHelper.OptimizeColumnReaderForSequentialAccess(expr, isNullParameter, ColumnIndex);
 
 					var lex  = Lambda<Func<IDataReader, bool, object>>(
 						expr.Type == typeof(object) ? expr : Convert(expr, typeof(object)),
@@ -259,70 +260,6 @@ namespace LinqToDB.Expressions
 						ColumnName = name
 					};
 				}
-			}
-
-			private Expression OptimizeForSequentialAccess(Expression expression, Expression isNullParameter)
-			{
-				var     failed      = false;
-				string? failMessage = null;
-
-				expression = expression.Transform(e =>
-				{
-					if (failed)
-						return e;
-
-					if (e is MethodCallExpression call)
-					{
-						// we work only with instance method of data reader
-						if (!call.Method.IsStatic && typeof(IDataReader).IsAssignableFrom(call.Object.Type))
-						{
-							// check that method accept singe integer constant as parameter
-							// this is currently how we detect method that we must process
-							if (call.Arguments.Count == 1
-								&& call.Arguments[0] is ConstantExpression c
-								&& c.Type == typeof(int))
-							{
-								var idx = (int)c.Value;
-								if (idx != ColumnIndex)
-								{
-									failed      = true;
-									failMessage = $"Expected column index: {ColumnIndex}, but found {idx}";
-									return e;
-								}
-
-
-								// test IsDBNull method by-name to support overrides
-								if (call.Method.Name == nameof(IDataReader.IsDBNull))
-									return isNullParameter;
-
-								// TODO: add additional validation for other methods?
-								return e;
-							}
-
-							failed      = true;
-							failMessage = $"Unsupported reader method call: {call.Method.DeclaringType?.Name}.{call.Method.Name}";
-							return e;
-						}
-
-						foreach (var arg in call.Arguments)
-						{
-							// unknown method or constructor call with data reader parameter
-							if (typeof(IDataReader).IsAssignableFrom(arg.Unwrap().Type))
-							{
-								failMessage = $"Method {call.Method.DeclaringType?.Name}.{call.Method.Name} with {nameof(IDataReader)} not supported";
-								failed = true;
-							}
-						}
-					}
-
-					return e;
-				});
-
-				// expression cannot be optimized
-				if (failed)
-					throw new LinqToDBException($"{nameof(OptimizeForSequentialAccess)} optimization failed (slow mode): {failMessage}");
-
-				return expression;
 			}
 
 			readonly ConcurrentDictionary<Type,Func<IDataReader,object>>       _columnConverters     = new ConcurrentDictionary<Type,Func<IDataReader,object>>();
