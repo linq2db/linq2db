@@ -301,7 +301,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void FinalAggregationSubqueryrTest([StringTestSources] string context)
+		public void FinalAggregationSubqueryTest([StringTestSources] string context)
 		{
 			var data = GenerateData();
 

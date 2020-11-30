@@ -333,11 +333,10 @@ namespace LinqToDB.Data
 				if (dindex >= 0)
 				{
 					expr = Expression.Convert(
-						Expression.Call(null, exceptionMethod,
-							Expression.Call(
-								DataReaderLocal,
-								ReflectionHelper.DataReader.GetValue,
-								Expression.Constant(dindex)),
+						Expression.Call(
+							null,
+							exceptionMethod,
+							new ConvertFromDataReaderExpression(typeof(object), dindex, null, DataReaderLocal, DataContext),
 							Expression.Constant(ObjectType)),
 						ObjectType);
 				}

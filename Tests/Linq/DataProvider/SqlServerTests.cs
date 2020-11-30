@@ -15,6 +15,7 @@ using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.Linq.Internal;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 using Microsoft.SqlServer.Types;
@@ -1351,6 +1352,9 @@ namespace Tests.DataProvider
 
 		const int ClrPrecision = 29;
 
+		// attribute is just a workaround to make test pass with SequenceAccess optimization enabled
+		// method still not compatible with SequenceAccess behavior as it two getters for column
+		[ColumnReader(1)]
 		static decimal GetDecimal(IDataReader rd, int idx)
 		{
 			try
