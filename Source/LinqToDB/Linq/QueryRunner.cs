@@ -22,6 +22,7 @@ namespace LinqToDB.Linq
 	using Extensions;
 	using LinqToDB.Async;
 	using LinqToDB.Expressions;
+	using LinqToDB.Linq.Internal;
 	using LinqToDB.Reflection;
 	using SqlQuery;
 
@@ -199,115 +200,116 @@ namespace LinqToDB.Linq
 
 					if (e is MethodCallExpression call)
 					{
-						// we work only with instance method of data reader
-						if (!call.Method.IsStatic && typeof(IDataReader).IsAssignableFrom(call.Object.Type))
-						{
-							// check that method accept singe integer constant as parameter
-							// this is currently how we detect method that we must process
-							if (call.Arguments.Count == 1
-								&& call.Arguments[0] is ConstantExpression c
-								&& c.Type == typeof(int))
-							{
-								var idx = (int)c.Value;
+						// column index
+						int? columnIndex = null;
 
-								// test IsDBNull method by-name to support overrides
-								if (call.Method.Name == nameof(IDataReader.IsDBNull))
+						// we work only with:
+						// - instance method of data reader
+						// - method, marked with ColumnReaderAttribute
+						// - ColumnReader.GetValueSequential
+
+						// ColumnReaderAttribute method
+						var attr = call.Method.GetCustomAttribute<ColumnReaderAttribute>();
+						if (attr != null && call.Arguments[attr.IndexParameterIndex] is ConstantExpression c1 && c1.Type == typeof(int))
+							columnIndex = (int)c1.Value;
+
+						// instance method of data reader
+						// check that method accept singe integer constant as parameter
+						// this is currently how we detect method that we must process
+						if (attr == null && !call.Method.IsStatic && typeof(IDataReader).IsAssignableFrom(call.Object.Type)
+							&& call.Arguments.Count == 1 && call.Arguments[0] is ConstantExpression c2 && c2.Type == typeof(int))
+							columnIndex = (int)c2.Value;
+
+						if (columnIndex != null)
+						{
+							// test IsDBNull method by-name to support overrides
+							if (call.Object != null && typeof(IDataReader).IsAssignableFrom(call.Object.Type) && call.Method.Name == nameof(IDataReader.IsDBNull))
+							{
+								var index = columnIndex.Value * 2;
+								if (newVariables[index] == null)
 								{
-									var index = idx * 2;
-									if (newVariables[index] == null)
+									var variable               = Expression.Variable(typeof(bool), $"is_null_{columnIndex}");
+									newVariables[index]        = variable;
+									replacements[index]        = variable;
+									insertedExpressions[index] = Expression.Assign(variable, call);
+								}
+
+								return replacements[index]!;
+							}
+							else
+							{
+								// other methods we treat as Get* methods
+								var index = columnIndex.Value * 2 + 1;
+								if (newVariables[index] == null)
+								{
+									var type = call.Type;
+									ParameterExpression variable;
+
+									if (newVariables[index - 1] == null)
 									{
-										var variable               = Expression.Variable(typeof(bool), $"is_null_{idx}");
-										newVariables[index] = variable;
-										replacements[index] = variable;
-										insertedExpressions[index] = Expression.Assign(variable, call);
+										// no IsDBNull call: column is not nullable
+										// (also could be a bad expression)
+
+										variable                   = Expression.Variable(type, $"get_value_{columnIndex}");
+										insertedExpressions[index] = Expression.Assign(variable, Expression.Convert(call, type));
+									}
+									else
+									{
+										var isNullable = type.IsValueType && !type.IsNullable();
+										if (isNullable)
+										{
+											type = typeof(Nullable<>).MakeGenericType(type);
+											isNullableStruct[columnIndex.Value] = true;
+										}
+
+										variable               = Expression.Variable(type, $"get_value_{columnIndex}");
+
+										insertedExpressions[index] = Expression.Assign(
+											variable,
+											Expression.Condition(
+												newVariables[index - 1],
+												Expression.Constant(null, type),
+												isNullable ? Expression.Convert(call, type) : call));
 									}
 
-									return replacements[index]!;
+									newVariables[index]                = variable;
+									replacements[index]                = isNullableStruct[columnIndex.Value] ? Expression.Property(variable, "Value") : variable;
+									replacedMethods[columnIndex.Value] = call.Method;
 								}
-								else if (call.Method.Name == nameof(DbDataReader.IsDBNullAsync))
+								else if (replacedMethods[columnIndex.Value] != call.Method)
 								{
-									// fail on IsDBNullAsync call
-									failMessage = $"{nameof(DbDataReader.IsDBNullAsync)} call not supported";
+									// tried to replace multiple methods
+										failMessage = $"Multiple data reader methods called for column: {replacedMethods[columnIndex.Value]} vs {call.Method}";
 									return e;
 								}
-								else
-								{
-									// other methods we treat as Get* methods
-									var index = idx * 2 + 1;
-									if (newVariables[index] == null)
-									{
-										var type = call.Type;
-										ParameterExpression variable;
 
-										if (newVariables[index - 1] == null)
-										{
-											// no IsDBNull call: column is not nullable
-											// (also could be a bad expression)
-
-											variable                   = Expression.Variable(type, $"get_value_{idx}");
-											insertedExpressions[index] = Expression.Assign(variable, Expression.Convert(call, type));
-										}
-										else
-										{
-											var isNullable = type.IsValueType && !type.IsNullable();
-											if (isNullable)
-											{
-												type = typeof(Nullable<>).MakeGenericType(type);
-												isNullableStruct[idx] = true;
-											}
-
-											variable               = Expression.Variable(type, $"get_value_{idx}");
-
-											insertedExpressions[index] = Expression.Assign(
-												variable,
-												Expression.Condition(
-													newVariables[index - 1],
-													Expression.Constant(null, type),
-													isNullable ? Expression.Convert(call, type) : call));
-										}
-
-										newVariables[index]  = variable;
-										replacements[index]  = isNullableStruct[idx] ? Expression.Property(variable, "Value") : variable;
-										replacedMethods[idx] = call.Method;
-									}
-									else if (replacedMethods[idx] != call.Method)
-									{
-										// tried to replace multiple methods
-										failMessage = $"Multiple data reader methods called for column: {replacedMethods[idx]} vs {call.Method}";
-										return e;
-									}
-
-									return replacements[index]!;
-								}
+								return replacements[index]!;
 							}
-
-							failMessage = $"Unsupported reader method call: {call.Method.DeclaringType?.Name}.{call.Method.Name}";
-							return e;
 						}
 						else if (call.Method == Methods.LinqToDB.ColumnReader.GetValueSequential
-							&& call.Object is ConstantExpression constant
-							&& constant.Value is ConvertFromDataReaderExpression.ColumnReader columnReader)
+							&& call.Object is ConstantExpression c3
+							&& c3.Value is ConvertFromDataReaderExpression.ColumnReader columnReader)
 						{
-							var idx   = columnReader.ColumnIndex;
-							var index = idx * 2 + 1;
+							columnIndex = columnReader.ColumnIndex;
+							var index   = columnIndex.Value * 2 + 1;
 
-							if (replacedMethods[idx] == null)
+							if (replacedMethods[columnIndex.Value] == null)
 							{
 								var type       = call.Type;
-								isNullableStruct[idx] = type.IsValueType && !type.IsNullable();
-								if (isNullableStruct[idx])
+								isNullableStruct[columnIndex.Value] = type.IsValueType && !type.IsNullable();
+								if (isNullableStruct[columnIndex.Value])
 									type = typeof(Nullable<>).MakeGenericType(type);
 
-								var variable               = Expression.Variable(typeof(object), $"get_value_{idx}");
-								newVariables[index]        = variable;
-								insertedExpressions[index] = Expression.Assign(variable, call.Update(call.Object, call.Arguments.Select(a => a.Transform(tranformFunc))));
-								replacements[index]        = variable;
-								replacedMethods[idx]       = call.Method;
+								var variable                       = Expression.Variable(typeof(object), $"get_value_{columnIndex}");
+								newVariables[index]                = variable;
+								insertedExpressions[index]         = Expression.Assign(variable, call.Update(call.Object, call.Arguments.Select(a => a.Transform(tranformFunc))));
+								replacements[index]                = variable;
+								replacedMethods[columnIndex.Value] = call.Method;
 							}
-							else if (replacedMethods[idx] != call.Method)
+							else if (replacedMethods[columnIndex.Value] != call.Method)
 							{
 								// tried to replace multiple methods
-								failMessage = $"Multiple data reader methods called for column: {replacedMethods[idx]} vs {call.Method}";
+								failMessage = $"Multiple data reader methods called for column: {replacedMethods[columnIndex.Value]} vs {call.Method}";
 								return e;
 							}
 
