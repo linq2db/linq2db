@@ -4,26 +4,22 @@ using System.Data;
 using System.Data.Linq;
 using System.Data.SqlTypes;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
-
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
-using System.Threading;
-using Tests.Model;
-
 using Microsoft.SqlServer.Types;
-
 using NUnit.Framework;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
+using Tests.Model;
 
 namespace Tests.DataProvider
 {
@@ -40,6 +36,8 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestParameters([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
+			// mapping fails and fallbacks to slow-mapper
+			using (new CustomCommandProcessor(null))
 			using (var conn = new DataConnection(context))
 			{
 				Assert.That(conn.Execute<string>("SELECT @p",        new { p =  1  }), Is.EqualTo("1"));
@@ -1339,7 +1337,7 @@ namespace Tests.DataProvider
 				SqlServerTools.DataReaderGetDecimalExpression = (rd, i) => GetDecimal(rd, i);
 
 				// mapping expression not compatible with SequenceAccess optimization
-				// using (new CustomCommandProcessor(null))
+				using (new CustomCommandProcessor(null))
 				using (var db = new DataConnection(context))
 				{
 					var list = db.GetTable<DecimalOverflow>().ToList();

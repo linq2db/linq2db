@@ -36,8 +36,6 @@ namespace Tests.Linq
 		[Test]
 		public void Test1([DataSources(false)] string context)
 		{
-			// QueryTable generates "SELECT *" query, currently incompatible with with SequentialAccess
-			using (new CustomCommandProcessor(null))
 			using (var db = GetDataContext(context))
 				AreEqual(ParentInheritance, QueryTable<ParentInheritanceBase>(db));
 		}
@@ -45,8 +43,6 @@ namespace Tests.Linq
 		[Test]
 		public void Test2([DataSources(false)] string context)
 		{
-			// QueryTable generates "SELECT *" query, currently incompatible with with SequentialAccess
-			using (new CustomCommandProcessor(null))
 			using (var db = GetDataContext(context))
 				AreEqual(ParentInheritance, QueryTable<ParentInheritanceBase>(db).Select(p => p));
 		}
@@ -54,8 +50,6 @@ namespace Tests.Linq
 		[Test]
 		public void Test3([DataSources(false)] string context)
 		{
-			// QueryTable generates "SELECT *" query, currently incompatible with with SequentialAccess
-			using (new CustomCommandProcessor(null))
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in    ParentInheritance where p is ParentInheritance1 select p,
@@ -65,8 +59,6 @@ namespace Tests.Linq
 		[Test]
 		public void Test4([DataSources(false)] string context)
 		{
-			// QueryTable generates "SELECT *" query, currently incompatible with with SequentialAccess
-			using (new CustomCommandProcessor(null))
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in    ParentInheritance where !(p is ParentInheritanceNull) select p,
@@ -76,8 +68,6 @@ namespace Tests.Linq
 		[Test]
 		public void Test5([DataSources(false)] string context)
 		{
-			// QueryTable generates "SELECT *" query, currently incompatible with with SequentialAccess
-			using (new CustomCommandProcessor(null))
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in    ParentInheritance where p is ParentInheritanceValue select p,
@@ -97,8 +87,6 @@ namespace Tests.Linq
 		[Test]
 		public void Test7([DataSources(false)] string context)
 		{
-			// QueryTable generates "SELECT *" query, currently incompatible with with SequentialAccess
-			using (new CustomCommandProcessor(null))
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in    ParentInheritance where p is ParentInheritanceBase select p,
@@ -108,8 +96,6 @@ namespace Tests.Linq
 		[Test]
 		public void Test8([DataSources(false)] string context)
 		{
-			// QueryTable generates "SELECT *" query, currently incompatible with with SequentialAccess
-			using (new CustomCommandProcessor(null))
 			using (var db = GetDataContext(context))
 				AreEqual(
 					ParentInheritance.OfType<ParentInheritance1>(),
@@ -119,8 +105,6 @@ namespace Tests.Linq
 		[Test]
 		public void Test9([DataSources(false)] string context)
 		{
-			// QueryTable generates "SELECT *" query, currently incompatible with with SequentialAccess
-			using (new CustomCommandProcessor(null))
 			using (var db = GetDataContext(context))
 				AreEqual(
 					ParentInheritance
@@ -134,8 +118,6 @@ namespace Tests.Linq
 		[Test]
 		public void Test10([DataSources(false)] string context)
 		{
-			// QueryTable generates "SELECT *" query, currently incompatible with with SequentialAccess
-			using (new CustomCommandProcessor(null))
 			using (var db = GetDataContext(context))
 				AreEqual(
 					ParentInheritance.OfType<ParentInheritanceValue>(),
@@ -224,8 +206,6 @@ namespace Tests.Linq
 		[Test]
 		public void Cast1([DataSources(false)] string context)
 		{
-			// QueryTable generates "SELECT *" query, currently incompatible with with SequentialAccess
-			using (new CustomCommandProcessor(null))
 			using (var db = GetDataContext(context))
 				AreEqual(
 					ParentInheritance.OfType<ParentInheritance1>().Cast<ParentInheritanceBase>(),
