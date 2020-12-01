@@ -295,7 +295,7 @@ namespace LinqToDB.Data
 			var lambda = Expression.Lambda<Func<IDataReader,T>>(BuildBlock(expr), DataReaderParam);
 
 			if (Common.Configuration.OptimizeForSequentialAccess)
-				lambda = (Expression<Func<IDataReader, T>>)SequentialAccessHelper.OptimizeMapingExpressionForSequentialAccess(lambda, Reader.FieldCount, true);
+				lambda = (Expression<Func<IDataReader, T>>)SequentialAccessHelper.OptimizeMappingExpressionForSequentialAccess(lambda, Reader.FieldCount, reduce: true);
 
 			return lambda.Compile();
 		}
