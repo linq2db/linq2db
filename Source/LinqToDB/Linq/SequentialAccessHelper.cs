@@ -66,8 +66,8 @@ namespace LinqToDB.Linq
 							if (newVariables[index] == null)
 							{
 								var variable               = Expression.Variable(typeof(bool), $"is_null_{columnIndex}");
-								newVariables[index] = variable;
-								replacements[index] = variable;
+								newVariables[index]        = variable;
+								replacements[index]        = variable;
 								insertedExpressions[index] = Expression.Assign(variable, call);
 							}
 
@@ -87,7 +87,7 @@ namespace LinqToDB.Linq
 									// no IsDBNull call: column is not nullable
 									// (also could be a bad expression)
 
-									variable = Expression.Variable(type, $"get_value_{columnIndex}");
+									variable                   = Expression.Variable(type, $"get_value_{columnIndex}");
 									insertedExpressions[index] = Expression.Assign(variable, Expression.Convert(call, type));
 								}
 								else
@@ -95,12 +95,11 @@ namespace LinqToDB.Linq
 									var isNullable = type.IsValueType && !type.IsNullable();
 									if (isNullable)
 									{
-										type = typeof(Nullable<>).MakeGenericType(type);
+										type                                = typeof(Nullable<>).MakeGenericType(type);
 										isNullableStruct[columnIndex.Value] = true;
 									}
 
-									variable = Expression.Variable(type, $"get_value_{columnIndex}");
-
+									variable                   = Expression.Variable(type, $"get_value_{columnIndex}");
 									insertedExpressions[index] = Expression.Assign(
 										variable,
 										Expression.Condition(
@@ -109,8 +108,8 @@ namespace LinqToDB.Linq
 											isNullable ? Expression.Convert(call, type) : call));
 								}
 
-								newVariables[index] = variable;
-								replacements[index] = isNullableStruct[columnIndex.Value] ? Expression.Property(variable, "Value") : variable;
+								newVariables[index]                = variable;
+								replacements[index]                = isNullableStruct[columnIndex.Value] ? Expression.Property(variable, "Value") : variable;
 								replacedMethods[columnIndex.Value] = call.Method;
 							}
 							else if (replacedMethods[columnIndex.Value] != call.Method)
@@ -138,9 +137,9 @@ namespace LinqToDB.Linq
 								type = typeof(Nullable<>).MakeGenericType(type);
 
 							var variable                       = Expression.Variable(typeof(object), $"get_value_{columnIndex}");
-							newVariables[index] = variable;
-							insertedExpressions[index] = Expression.Assign(variable, call.Update(call.Object, call.Arguments.Select(a => a.Transform(tranformFunc))));
-							replacements[index] = variable;
+							newVariables[index]                = variable;
+							insertedExpressions[index]         = Expression.Assign(variable, call.Update(call.Object, call.Arguments.Select(a => a.Transform(tranformFunc))));
+							replacements[index]                = variable;
 							replacedMethods[columnIndex.Value] = call.Method;
 						}
 						else if (replacedMethods[columnIndex.Value] != call.Method)
