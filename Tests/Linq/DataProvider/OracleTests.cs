@@ -2170,7 +2170,7 @@ namespace Tests.DataProvider
 
 			using (var db = new DataConnection(context))
 			{
-				provider = new OracleDataProvider(db.DataProvider.Name);
+				provider = new OracleDataProvider(db.DataProvider.Name, ((OracleDataProvider)db.DataProvider).Version);
 			}
 
 			provider.ReaderExpressions[new ReaderInfo { FieldType = typeof(decimal) }] = (Expression<Func<IDataReader, int, decimal>>)((r,i) => GetDecimal(r, i));

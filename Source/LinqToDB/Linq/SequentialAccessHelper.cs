@@ -37,25 +37,11 @@ namespace LinqToDB.Linq
 
 				if (e is MethodCallExpression call)
 				{
-					// column index
-					int? columnIndex = null;
-
 					// we work only with:
 					// - instance method of data reader
 					// - method, marked with ColumnReaderAttribute
 					// - ColumnReader.GetValueSequential
-
-					// ColumnReaderAttribute method
-					var attr = call.Method.GetCustomAttribute<ColumnReaderAttribute>();
-					if (attr != null && call.Arguments[attr.IndexParameterIndex] is ConstantExpression c1 && c1.Type == typeof(int))
-						columnIndex = (int)c1.Value;
-
-					// instance method of data reader
-					// check that method accept single integer constant as parameter
-					// this is currently how we detect method that we must process
-					if (attr == null && !call.Method.IsStatic && typeof(IDataReader).IsAssignableFrom(call.Object.Type)
-						&& call.Arguments.Count == 1 && call.Arguments[0] is ConstantExpression c2 && c2.Type == typeof(int))
-						columnIndex = (int)c2.Value;
+					var columnIndex = TryGetColumnIndex(call);
 
 					if (columnIndex != null)
 					{
@@ -66,8 +52,8 @@ namespace LinqToDB.Linq
 							if (newVariables[index] == null)
 							{
 								var variable               = Expression.Variable(typeof(bool), $"is_null_{columnIndex}");
-								newVariables[index]        = variable;
-								replacements[index]        = variable;
+								newVariables[index] = variable;
+								replacements[index] = variable;
 								insertedExpressions[index] = Expression.Assign(variable, call);
 							}
 
@@ -87,7 +73,7 @@ namespace LinqToDB.Linq
 									// no IsDBNull call: column is not nullable
 									// (also could be a bad expression)
 
-									variable                   = Expression.Variable(type, $"get_value_{columnIndex}");
+									variable = Expression.Variable(type, $"get_value_{columnIndex}");
 									insertedExpressions[index] = Expression.Assign(variable, Expression.Convert(call, type));
 								}
 								else
@@ -95,11 +81,11 @@ namespace LinqToDB.Linq
 									var isNullable = type.IsValueType && !type.IsNullable();
 									if (isNullable)
 									{
-										type                                = typeof(Nullable<>).MakeGenericType(type);
+										type = typeof(Nullable<>).MakeGenericType(type);
 										isNullableStruct[columnIndex.Value] = true;
 									}
 
-									variable                   = Expression.Variable(type, $"get_value_{columnIndex}");
+									variable = Expression.Variable(type, $"get_value_{columnIndex}");
 									insertedExpressions[index] = Expression.Assign(
 										variable,
 										Expression.Condition(
@@ -108,8 +94,8 @@ namespace LinqToDB.Linq
 											isNullable ? Expression.Convert(call, type) : call));
 								}
 
-								newVariables[index]                = variable;
-								replacements[index]                = isNullableStruct[columnIndex.Value] ? Expression.Property(variable, "Value") : variable;
+								newVariables[index] = variable;
+								replacements[index] = isNullableStruct[columnIndex.Value] ? Expression.Property(variable, "Value") : variable;
 								replacedMethods[columnIndex.Value] = call.Method;
 							}
 							else if (replacedMethods[columnIndex.Value] != call.Method)
@@ -137,9 +123,9 @@ namespace LinqToDB.Linq
 								type = typeof(Nullable<>).MakeGenericType(type);
 
 							var variable                       = Expression.Variable(typeof(object), $"get_value_{columnIndex}");
-							newVariables[index]                = variable;
-							insertedExpressions[index]         = Expression.Assign(variable, call.Update(call.Object, call.Arguments.Select(a => a.Transform(tranformFunc))));
-							replacements[index]                = variable;
+							newVariables[index] = variable;
+							insertedExpressions[index] = Expression.Assign(variable, call.Update(call.Object, call.Arguments.Select(a => a.Transform(tranformFunc))));
+							replacements[index] = variable;
 							replacedMethods[columnIndex.Value] = call.Method;
 						}
 						else if (replacedMethods[columnIndex.Value] != call.Method)
@@ -230,46 +216,53 @@ namespace LinqToDB.Linq
 			return expression;
 		}
 
+		private static int? TryGetColumnIndex(MethodCallExpression call)
+		{
+			// ColumnReaderAttribute method
+			var attr = call.Method.GetCustomAttribute<ColumnReaderAttribute>();
+			if (attr != null && call.Arguments[attr.IndexParameterIndex] is ConstantExpression c1 && c1.Type == typeof(int))
+				return (int)c1.Value;
+
+			// instance method of data reader
+			// check that method accept single integer constant as parameter
+			// this is currently how we detect method that we must process
+			if (attr == null && !call.Method.IsStatic && typeof(IDataReader).IsAssignableFrom(call.Object.Type)
+				&& call.Arguments.Count == 1 && call.Arguments[0] is ConstantExpression c2 && c2.Type == typeof(int))
+				return (int)c2.Value;
+
+			return null;
+		}
+
 		public static Expression OptimizeColumnReaderForSequentialAccess(Expression expression, Expression isNullParameter, int columnIndex)
 		{
-			var     failed      = false;
 			string? failMessage = null;
 
 			expression = expression.Transform(e =>
 			{
-				if (failed)
+				if (failMessage != null)
 					return e;
 
 				if (e is MethodCallExpression call)
 				{
-					// we work only with instance method of data reader
-					if (!call.Method.IsStatic && typeof(IDataReader).IsAssignableFrom(call.Object.Type))
+					// we work only with instance method of data reader or method marked with ColumnReaderAttribute
+					var idx = TryGetColumnIndex(call);
+
+					if (idx != null)
 					{
 						// check that method accept single integer constant as parameter
 						// this is currently how we detect method that we must process
-						if (call.Arguments.Count == 1
-							&& call.Arguments[0] is ConstantExpression c
-							&& c.Type == typeof(int))
+						if (idx != columnIndex)
 						{
-							var idx = (int)c.Value;
-							if (idx != columnIndex)
-							{
-								failed = true;
-								failMessage = $"Expected column index: {columnIndex}, but found {idx}";
-								return e;
-							}
-
-
-							// test IsDBNull method by-name to support overrides
-							if (call.Method.Name == nameof(IDataReader.IsDBNull))
-								return isNullParameter;
-
-							// TODO: add additional validation for other methods?
+							failMessage = $"Expected column index: {columnIndex}, but found {idx}";
 							return e;
 						}
 
-						failed = true;
-						failMessage = $"Unsupported reader method call: {call.Method.DeclaringType?.Name}.{call.Method.Name}";
+
+						// test IsDBNull method by-name to support overrides
+						if (call.Method.Name == nameof(IDataReader.IsDBNull))
+							return isNullParameter;
+
+						// TODO: add additional validation for other methods?
 						return e;
 					}
 
@@ -279,7 +272,6 @@ namespace LinqToDB.Linq
 						if (typeof(IDataReader).IsAssignableFrom(arg.Unwrap().Type))
 						{
 							failMessage = $"Method {call.Method.DeclaringType?.Name}.{call.Method.Name} with {nameof(IDataReader)} not supported";
-							failed = true;
 						}
 					}
 				}
@@ -288,7 +280,7 @@ namespace LinqToDB.Linq
 			});
 
 			// expression cannot be optimized
-			if (failed)
+			if (failMessage != null)
 				throw new LinqToDBException($"{nameof(OptimizeColumnReaderForSequentialAccess)} optimization failed (slow mode): {failMessage}");
 
 			return expression;
