@@ -51,7 +51,7 @@ namespace LinqToDB.Linq
 						columnIndex = (int)c1.Value;
 
 					// instance method of data reader
-					// check that method accept singe integer constant as parameter
+					// check that method accept single integer constant as parameter
 					// this is currently how we detect method that we must process
 					if (attr == null && !call.Method.IsStatic && typeof(IDataReader).IsAssignableFrom(call.Object.Type)
 						&& call.Arguments.Count == 1 && call.Arguments[0] is ConstantExpression c2 && c2.Type == typeof(int))
