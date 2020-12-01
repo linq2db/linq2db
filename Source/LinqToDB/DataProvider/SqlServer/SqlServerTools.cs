@@ -369,12 +369,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			public const string OptionRecompile = "OPTION(RECOMPILE)";
 		}
 
-		[Obsolete("Use expression-based " + nameof(DataReaderGetMoneyExpression) + " for mapping")]
+		[Obsolete("This field is not used by linq2db. Configure reader expressions on DataProvider directly")]
 		public static Func<IDataReader,int,decimal> DataReaderGetMoney   = (dr, i) => dr.GetDecimal(i);
-		[Obsolete("Use expression-based " + nameof(DataReaderGetDecimalExpression) + " for mapping")]
+		[Obsolete("This field is not used by linq2db. Configure reader expressions on DataProvider directly")]
 		public static Func<IDataReader,int,decimal> DataReaderGetDecimal = (dr, i) => dr.GetDecimal(i);
-
-		public static Expression<Func<IDataReader,int,decimal>> DataReaderGetMoneyExpression   = (dr, i) => dr.GetDecimal(i);
-		public static Expression<Func<IDataReader,int,decimal>> DataReaderGetDecimalExpression = (dr, i) => dr.GetDecimal(i);
 	}
 }

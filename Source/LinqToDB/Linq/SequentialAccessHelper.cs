@@ -19,7 +19,7 @@ namespace LinqToDB.Linq
 				expression = expression.Transform(e =>
 					e is ConvertFromDataReaderExpression conv
 						? conv.Reduce()
-						: e;
+						: e);
 
 			string? failMessage = null;
 
@@ -216,7 +216,7 @@ namespace LinqToDB.Linq
 					}
 
 					if (!found)
-						throw new LinqToDBException($"{nameof(OptimizeMapingExpressionForSequentialAccess)} optimization failed: cannot find data reader assignment");
+						throw new LinqToDBException($"{nameof(OptimizeMappingExpressionForSequentialAccess)} optimization failed: cannot find data reader assignment");
 
 					// first N expressions init context variables
 					return block.Update(

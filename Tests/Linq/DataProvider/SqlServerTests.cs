@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
@@ -14,6 +15,7 @@ using System.Xml.Linq;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Linq;
 using LinqToDB.Linq.Internal;
@@ -1333,51 +1335,37 @@ namespace Tests.DataProvider
 		[Test]
 		public void OverflowTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			var func = SqlServerTools.DataReaderGetDecimalExpression;
-			try
-			{
-				SqlServerTools.DataReaderGetDecimalExpression = (rd, i) => GetDecimal(rd, i);
+			SqlServerDataProvider provider;
 
-				// mapping expression not compatible with SequenceAccess optimization
-				using (new CustomCommandProcessor(null))
-				using (var db = new DataConnection(context))
-				{
-					var list = db.GetTable<DecimalOverflow>().ToList();
-				}
-			}
-			finally
+			using (var db = new DataConnection(context))
 			{
-				SqlServerTools.DataReaderGetDecimalExpression = func;
+				provider = new SqlServerDataProvider(db.DataProvider.Name, ((SqlServerDataProvider)db.DataProvider).Version);
+			}
+
+			provider.ReaderExpressions[new ReaderInfo { FieldType = typeof(decimal) }] = (Expression<Func<IDataReader, int, decimal>>)((r, i) => GetDecimal(r, i));
+
+			using (var db = new DataConnection(provider, DataConnection.GetConnectionString(context)))
+			{
+				var list = db.GetTable<DecimalOverflow>().ToList();
 			}
 		}
 
 		const int ClrPrecision = 29;
 
-		// attribute is just a workaround to make test pass with SequenceAccess optimization enabled
-		// method still not compatible with SequenceAccess behavior as it two getters for column
 		[ColumnReader(1)]
 		static decimal GetDecimal(IDataReader rd, int idx)
 		{
-			try
+			SqlDecimal value = ((dynamic)rd).GetSqlDecimal(idx);
+
+			if (value.Precision > ClrPrecision)
 			{
-				SqlDecimal value = ((dynamic)rd).GetSqlDecimal(idx);
+				var str = value.ToString();
+				var val = decimal.Parse(str, CultureInfo.InvariantCulture);
 
-				if (value.Precision > ClrPrecision)
-				{
-					var str = value.ToString();
-					var val = decimal.Parse(str, CultureInfo.InvariantCulture);
-
-					return val;
-				}
-
-				return value.Value;
+				return val;
 			}
-			catch (Exception)
-			{
-				var vvv=  rd.GetValue(idx);
 
-				throw;
-			}
+			return value.Value;
 		}
 
 		[Table("DecimalOverflow")]
@@ -1391,23 +1379,11 @@ namespace Tests.DataProvider
 		[Test]
 		public void OverflowTest2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			var func = SqlServerTools.DataReaderGetDecimalExpression;
-			try
+			using (var db = new DataConnection(context))
 			{
-				SqlServerTools.DataReaderGetDecimalExpression = (rd, idx) => Throw();
-
-				using (var db = new DataConnection(context))
-				{
-					var list = db.GetTable<DecimalOverflow2>().ToList();
-				}
-			}
-			finally
-			{
-				SqlServerTools.DataReaderGetDecimalExpression = func;
+				var list = db.GetTable<DecimalOverflow2>().ToList();
 			}
 		}
-
-		private static decimal Throw() => throw new Exception();
 
 		[Test]
 		public void SelectTableWithHintTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)

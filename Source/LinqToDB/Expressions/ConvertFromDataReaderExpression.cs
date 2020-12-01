@@ -255,7 +255,7 @@ namespace LinqToDB.Expressions
 				{
 					var name = dataReader.GetName(ColumnIndex);
 					throw new LinqToDBConvertException(
-							$"Mapping of column {name} value failed, see inner exception for details", ex)
+							$"Mapping of column '{name}' value failed, see inner exception for details", ex)
 					{
 						ColumnName = name
 					};
