@@ -17,12 +17,9 @@ namespace LinqToDB.Linq
 		{
 			if (reduce)
 				expression = expression.Transform(e =>
-				{
-					if (e is ConvertFromDataReaderExpression conv)
-						return conv.Reduce();
-
-					return e;
-				});
+					e is ConvertFromDataReaderExpression conv
+						? conv.Reduce()
+						: e;
 
 			string? failMessage = null;
 
