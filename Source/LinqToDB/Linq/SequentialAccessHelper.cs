@@ -13,7 +13,7 @@ namespace LinqToDB.Linq
 
 	internal static class SequentialAccessHelper
 	{
-		public static Expression OptimizeMapingExpressionForSequentialAccess(Expression expression, int fieldCount, bool reduce)
+		public static Expression OptimizeMappingExpressionForSequentialAccess(Expression expression, int fieldCount, bool reduce)
 		{
 			if (reduce)
 				expression = expression.Transform(e =>
