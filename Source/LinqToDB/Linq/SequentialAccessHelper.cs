@@ -192,7 +192,7 @@ namespace LinqToDB.Linq
 
 			// expression cannot be optimized
 			if (failMessage != null)
-				throw new LinqToDBException($"{nameof(OptimizeMapingExpressionForSequentialAccess)} optimization failed: {failMessage}");
+				throw new LinqToDBException($"{nameof(OptimizeMappingExpressionForSequentialAccess)} optimization failed: {failMessage}");
 
 			// insert variables and variable init code to mapping expression
 			var updated = false;
