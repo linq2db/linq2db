@@ -636,7 +636,8 @@ namespace LinqToDB.Linq
 			var preamblesVar   = expression.Parameters[5];
 
 			// we can safely assume it is block expression
-			var block = (BlockExpression)expression.Body;
+			if (expression.Body is not BlockExpression block)
+				throw new LinqException("???");
 			return
 				Expression.Lambda<Func<IQueryRunner, IDataReader, T>>(
 					block.Update(
