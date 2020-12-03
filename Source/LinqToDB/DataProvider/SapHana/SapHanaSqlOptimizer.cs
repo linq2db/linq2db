@@ -13,7 +13,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 		}
 
-		public override SqlStatement TransformStatementMutable(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
 			switch (statement.QueryType)
 			{
@@ -23,9 +23,10 @@ namespace LinqToDB.DataProvider.SapHana
 			return statement;
 		}
 
-		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expr, EvaluationContext context)
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expr, ConvertVisitor visitor,
+			EvaluationContext context)
 		{
-			expr = base.ConvertExpressionImpl(expr, context);
+			expr = base.ConvertExpressionImpl(expr, visitor, context);
 
 			if (expr is SqlFunction func)
 			{

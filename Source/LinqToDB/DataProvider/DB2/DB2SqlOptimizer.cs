@@ -10,12 +10,12 @@
 		{
 		}
 
-		public override SqlStatement TransformStatementMutable(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
 			// DB2 LUW 9/10 supports only FETCH, v11 adds OFFSET, but for that we need to introduce versions into DB2 provider first
 			statement = SeparateDistinctFromPagination(statement, q => q.Select.SkipValue != null);
 			statement = ReplaceDistinctOrderByWithRowNumber(statement, q => q.Select.SkipValue != null);
-			statement = ReplaceTakeSkipWithRowNumber(statement, query => query.Select.SkipValue != null && SqlProviderFlags.GetIsSkipSupportedFlag(query), true);
+			statement = ReplaceTakeSkipWithRowNumber(statement, query => query.Select.SkipValue != null && SqlProviderFlags.GetIsSkipSupportedFlag(query.Select.TakeValue, query.Select.SkipValue), true);
 
 			// This is mutable part
 			return statement.QueryType switch
@@ -30,9 +30,10 @@
 
 		public override string[] LikeCharactersToEscape => DB2LikeCharactersToEscape;
 
-		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expr, EvaluationContext context)
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expr, ConvertVisitor visitor,
+			EvaluationContext context)
 		{
-			expr = base.ConvertExpressionImpl(expr, context);
+			expr = base.ConvertExpressionImpl(expr, visitor, context);
 
 			if (expr is SqlBinaryExpression be)
 			{

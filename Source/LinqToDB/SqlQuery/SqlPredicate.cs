@@ -600,6 +600,13 @@ namespace LinqToDB.SqlQuery
 
 			public ISqlPredicate Reduce()
 			{
+				if (Expr1.ElementType == QueryElementType.SearchCondition)
+				{
+					if (!IsNot)
+						return (ISqlPredicate)Expr1;
+					return new SqlSearchCondition(new SqlCondition(true, (ISqlPredicate)Expr1));
+				}
+
 				var predicate = new ExprExpr(Expr1, Operator.Equal, IsNot ? FalseValue : TrueValue, null);
 				if (WithNull == null || !Expr1.ShouldCheckForNull()) 
 					return predicate;

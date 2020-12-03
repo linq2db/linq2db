@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading;
@@ -54,10 +55,12 @@ namespace LinqToDB.ServiceModel
 				var sqlStringBuilder = new StringBuilder();
 				var cc = sqlBuilder.CommandCount(query.Statement);
 
+				var optimizationContext = new OptimizationContext(_evaluationContext, null, false);
+
 				for (var i = 0; i < cc; i++)
 				{
 					var statement = sqlOptimizer.PrepareStatementForSql(query.Statement, DataContext.MappingSchema, _evaluationContext);
-					sqlBuilder.BuildSql(i, statement, sqlStringBuilder, _evaluationContext);
+					sqlBuilder.BuildSql(i, statement, sqlStringBuilder, optimizationContext);
 
 					if (i == 0 && query.QueryHints != null && query.QueryHints.Count > 0)
 					{
@@ -77,9 +80,10 @@ namespace LinqToDB.ServiceModel
 						.Append(sqlBuilder.Name)
 						.AppendLine();
 
-					if (sqlBuilder.ActualParameters.Count > 0)
+					if (optimizationContext.HasParameters())
 					{
-						foreach (var p in sqlBuilder.ActualParameters)
+						var sqlParameters = optimizationContext.GetParameters().ToList();
+						foreach (var p in sqlParameters)
 						{
 							var parameterValue = p.GetParameterValue(_evaluationContext.ParameterValues);
 
@@ -95,7 +99,7 @@ namespace LinqToDB.ServiceModel
 
 						sb.AppendLine();
 
-						foreach (var p in sqlBuilder.ActualParameters)
+						foreach (var p in sqlParameters)
 						{
 							var parameterValue = p.GetParameterValue(_evaluationContext.ParameterValues);
 

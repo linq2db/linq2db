@@ -21,7 +21,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return base.Finalize(statement);
 		}
 
-		public override SqlStatement TransformStatementMutable(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
 			statement = ReplaceTakeSkipWithRowNum(statement, false);
 
@@ -65,7 +65,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return false;
 		}
 
-		public override ISqlPredicate ConvertPredicateImpl(MappingSchema mappingSchema, ISqlPredicate predicate, ConvertVisitor visitor, EvaluationContext context)
+		public override ISqlPredicate ConvertPredicateImpl(MappingSchema mappingSchema, ISqlPredicate predicate, ConvertVisitor visitor, OptimizationContext optimizationContext)
 		{
 			switch (predicate.ElementType)
 			{
@@ -78,7 +78,7 @@ namespace LinqToDB.DataProvider.Oracle
 					if (expr.Operator.In(SqlPredicate.Operator.Equal, SqlPredicate.Operator.NotEqual, SqlPredicate.Operator.GreaterOrEqual, SqlPredicate.Operator.LessOrEqual) && expr.WithNull == true)
 					{
 						if (expr.Expr1.SystemType == typeof(string) &&
-						    expr.Expr1.TryEvaluateExpression(context, out var value1) && value1 is string string1)
+						    expr.Expr1.TryEvaluateExpression(optimizationContext.Context, out var value1) && value1 is string string1)
 						{
 							if (string1 == "")
 							{
@@ -90,7 +90,7 @@ namespace LinqToDB.DataProvider.Oracle
 						}
 
 						if (expr.Expr2.SystemType == typeof(string) &&
-						    expr.Expr2.TryEvaluateExpression(context, out var value2) && value2 is string string2)
+						    expr.Expr2.TryEvaluateExpression(optimizationContext.Context, out var value2) && value2 is string string2)
 						{
 							if (string2 == "")
 							{
@@ -105,14 +105,15 @@ namespace LinqToDB.DataProvider.Oracle
 				}
 			}
 
-			predicate = base.ConvertPredicateImpl(mappingSchema, predicate, visitor, context);
+			predicate = base.ConvertPredicateImpl(mappingSchema, predicate, visitor, optimizationContext);
 
 			return predicate;
 		}
 
-		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expr, EvaluationContext context)
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expr, ConvertVisitor visitor,
+			EvaluationContext context)
 		{
-			expr = base.ConvertExpressionImpl(expr, context);
+			expr = base.ConvertExpressionImpl(expr, visitor, context);
 
 			if (expr is SqlBinaryExpression be)
 			{

@@ -17,7 +17,7 @@
 			return base.Finalize(statement);
 		}
 
-		public override SqlStatement TransformStatementMutable(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
 			return statement.QueryType switch
 			{
@@ -27,9 +27,10 @@
 			};
 		}
 
-		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expr, EvaluationContext context)
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expr, ConvertVisitor visitor,
+			EvaluationContext context)
 		{
-			expr = base.ConvertExpressionImpl(expr, context);
+			expr = base.ConvertExpressionImpl(expr, visitor, context);
 
 			if (expr is SqlBinaryExpression be)
 			{
@@ -68,7 +69,7 @@
 										func.Parameters[2],
 										Sub<int>(
 											ConvertExpressionImpl(
-												new SqlFunction(typeof(int), "Length", func.Parameters[1]), context), func.Parameters[2])), context)),
+												new SqlFunction(typeof(int), "Length", func.Parameters[1]), visitor, context), func.Parameters[2])), visitor, context)),
 								Sub(func.Parameters[2], 1));
 				}
 			}

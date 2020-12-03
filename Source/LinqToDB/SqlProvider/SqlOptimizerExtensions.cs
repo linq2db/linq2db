@@ -8,13 +8,13 @@
 		public static SqlStatement PrepareStatementForRemoting(this ISqlOptimizer optimizer, SqlStatement statement,
 			MappingSchema mappingSchema, EvaluationContext context)
 		{
-			var newStatement = optimizer.OptimizeStatement(statement, context);
-
+			var optimizationContext = new OptimizationContext(context, null, false);
 			// We need convert. Some functions works with real objects and can not be serialized
 			//
-			newStatement     = optimizer.ConvertStatement(mappingSchema, newStatement, context);
+			var newStatement = optimizer.ConvertStatement(mappingSchema, statement, optimizationContext);
+
 			if (!ReferenceEquals(newStatement, statement))
-				newStatement.PrepareQueryAndAliases();
+				newStatement.PrepareQueryAndAliases(out _);
 
 			return newStatement;
 		}
@@ -22,10 +22,11 @@
 		public static SqlStatement PrepareStatementForSql(this ISqlOptimizer optimizer, SqlStatement statement,
 			MappingSchema mappingSchema, EvaluationContext context)
 		{
-			var newStatement = optimizer.OptimizeStatement(statement, context);
-			newStatement     = optimizer.ConvertStatement(mappingSchema, newStatement, context);
+			var optimizationContext = new OptimizationContext(context, null, false);
+			var newStatement        = optimizer.ConvertStatement(mappingSchema, statement, optimizationContext);
+
 			if (!ReferenceEquals(newStatement, statement))
-				newStatement.PrepareQueryAndAliases();
+				newStatement.PrepareQueryAndAliases(out _);
 			return newStatement;
 		}
 

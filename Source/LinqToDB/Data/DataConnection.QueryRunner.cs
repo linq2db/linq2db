@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -14,6 +15,7 @@ namespace LinqToDB.Data
 	using Linq;
 	using Common;
 	using SqlQuery;
+	using SqlProvider;
 
 	public partial class DataConnection
 	{
@@ -216,27 +218,24 @@ namespace LinqToDB.Data
 
 				// optimize, optionally with parameters
 				var evaluationContext = new EvaluationContext(sql.IsParameterDependent ? parameterValues : null);
-				/*
-				if (sql.IsParameterDependent)
-					sql = sqlOptimizer.OptimizeStatement(sql, evaluationContext);
-					*/
-
-				// convert statement to be ready for Sql translation
-				/*
-				sql = sqlOptimizer.ConvertStatement(dataConnection.MappingSchema, sql, evaluationContext);
-				*/
 
 				// PrepareQueryAndAliases is mutable function. Call only if query is copied. 
+				HashSet<SqlParameter>? staticParameters = null;
 				if (!ReferenceEquals(query.Statement, sql))
-					sql.PrepareQueryAndAliases();
+				{
+					sql.PrepareQueryAndAliases(out staticParameters);
+				}
+
+				if (staticParameters == null && query.Parameters != null)
+					staticParameters = new HashSet<SqlParameter>(query.Parameters);
 
 				for (var i = 0; i < cc; i++)
 				{
+					var optimizationContext = new OptimizationContext(evaluationContext, staticParameters, dataConnection.DataProvider.SqlProviderFlags.IsParameterOrderDependent);
 					sb.Length = 0;
 
-					sqlBuilder.BuildSql(i, sql, sb, evaluationContext, startIndent);
-					commands[i] = new CommandWithParameters(sb.ToString(), sqlBuilder.ActualParameters.ToArray()); 
-					sqlBuilder.ActualParameters.Clear();
+					sqlBuilder.BuildSql(i, sql, sb, optimizationContext, startIndent);
+					commands[i] = new CommandWithParameters(sb.ToString(), optimizationContext.GetParameters().ToArray());
 				}
 
 				if (!sql.IsParameterDependent)

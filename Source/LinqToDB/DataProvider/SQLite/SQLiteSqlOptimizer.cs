@@ -17,7 +17,7 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 		}
 
-		public override SqlStatement TransformStatementMutable(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
 			switch (statement.QueryType)
 			{
@@ -34,9 +34,10 @@ namespace LinqToDB.DataProvider.SQLite
 			return statement;
 		}
 
-		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expr, EvaluationContext context)
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expr, ConvertVisitor visitor,
+			EvaluationContext context)
 		{
-			expr = base.ConvertExpressionImpl(expr, context);
+			expr = base.ConvertExpressionImpl(expr, visitor, context);
 
 			if (expr is SqlBinaryExpression be)
 			{
@@ -80,7 +81,7 @@ namespace LinqToDB.DataProvider.SQLite
 			return expr;
 		}
 
-		public override ISqlPredicate ConvertPredicateImpl(MappingSchema mappingSchema, ISqlPredicate predicate, ConvertVisitor visitor, EvaluationContext context)
+		public override ISqlPredicate ConvertPredicateImpl(MappingSchema mappingSchema, ISqlPredicate predicate, ConvertVisitor visitor, OptimizationContext optimizationContext)
 		{
 			if (predicate is SqlPredicate.ExprExpr exprExpr)
 			{
@@ -88,8 +89,8 @@ namespace LinqToDB.DataProvider.SQLite
 				var rightType = QueryHelper.GetDbDataType(exprExpr.Expr2);
 
 				if ((IsDateTime(leftType) || IsDateTime(rightType)) &&
-				    !(exprExpr.Expr1.TryEvaluateExpression(context, out var value1) && value1 == null ||
-				      exprExpr.Expr2.TryEvaluateExpression(context, out var value2) && value2 == null))
+				    !(exprExpr.Expr1.TryEvaluateExpression(optimizationContext.Context, out var value1) && value1 == null ||
+				      exprExpr.Expr2.TryEvaluateExpression(optimizationContext.Context, out var value2) && value2 == null))
 				{
 					if (!(exprExpr.Expr1 is SqlFunction func1 && (func1.Name == "$Convert$" || func1.Name == "DateTime")))
 					{
@@ -109,7 +110,7 @@ namespace LinqToDB.DataProvider.SQLite
 				}
 			}
 
-			predicate = base.ConvertPredicateImpl(mappingSchema, predicate, visitor, context);
+			predicate = base.ConvertPredicateImpl(mappingSchema, predicate, visitor, optimizationContext);
 			return predicate;
 		}
 

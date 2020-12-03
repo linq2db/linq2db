@@ -104,7 +104,7 @@ namespace LinqToDB.Linq.Builder
 
 			if ( sql.Select.SkipValue != null &&
 				 builder.DataContext.SqlProviderFlags.IsTakeSupported &&
-				!builder.DataContext.SqlProviderFlags.GetIsSkipSupportedFlag(sql))
+				!builder.DataContext.SqlProviderFlags.GetIsSkipSupportedFlag(sql.Select.TakeValue, sql.Select.SkipValue))
 				sql.Select.Take(
 					new SqlBinaryExpression(typeof(int), sql.Select.SkipValue, "+", sql.Select.TakeValue!, Precedence.Additive), hints);
 		}
@@ -123,7 +123,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (sql.Select.TakeValue != null)
 			{
-				if (builder.DataContext.SqlProviderFlags.GetIsSkipSupportedFlag(sql) ||
+				if (builder.DataContext.SqlProviderFlags.GetIsSkipSupportedFlag(sql.Select.TakeValue, sql.Select.SkipValue) ||
 					!builder.DataContext.SqlProviderFlags.IsTakeSupported)
 					sql.Select.Take(
 						new SqlBinaryExpression(typeof(int), sql.Select.TakeValue, "-", expr, Precedence.Additive), sql.Select.TakeHints);

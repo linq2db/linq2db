@@ -69,9 +69,9 @@ namespace LinqToDB.DataProvider.Informix
 			return new InformixSqlBuilder(_provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
-		protected override void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, EvaluationContext context, int indent, bool skipAlias)
+		protected override void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, int indent, bool skipAlias)
 		{
-			base.BuildSql(commandNumber, statement, sb, context, indent, skipAlias);
+			base.BuildSql(commandNumber, statement, sb, optimizationContext, indent, skipAlias);
 
 			sb
 				.Replace("NULL IS NOT NULL", "1=0")

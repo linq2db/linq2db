@@ -9,7 +9,7 @@
 		{
 		}
 
-		public override SqlStatement TransformStatementMutable(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
 			// very limited provider, it do not support Window functions.
 

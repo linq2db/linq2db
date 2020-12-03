@@ -184,7 +184,9 @@ namespace LinqToDB.Linq
 			{
 				sql.Statement = query.SqlOptimizer.Finalize(sql.Statement);
 
-				sql.Statement.PrepareQueryAndAliases();
+				sql.Statement.PrepareQueryAndAliases(out var staticParameters);
+
+				sql.Parameters = staticParameters.ToArray();
 			}
 		}
 
@@ -336,7 +338,7 @@ namespace LinqToDB.Linq
 			var selectQuery = query.Queries[0].Statement.SelectQuery!;
 			var select      = selectQuery.Select;
 
-			if (select.SkipValue != null && !query.SqlProviderFlags.GetIsSkipSupportedFlag(selectQuery))
+			if (select.SkipValue != null && !query.SqlProviderFlags.GetIsSkipSupportedFlag(select.TakeValue, select.SkipValue))
 			{
 				var q = queryFunc;
 

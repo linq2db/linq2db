@@ -112,7 +112,7 @@ namespace LinqToDB.DataProvider.Access
 
 			_selectColumn = new SqlColumn(selectQuery, new SqlExpression(cond.Conditions[0].IsNot ? "Count(*) = 0" : "Count(*) > 0"), selectQuery.Select.Columns[0].Alias);
 
-			BuildSql(0, new SqlSelectStatement(query), StringBuilder, EvaluationContext);
+			BuildSql(0, new SqlSelectStatement(query), StringBuilder, OptimizationContext);
 
 			_selectColumn = null;
 		}
@@ -122,7 +122,7 @@ namespace LinqToDB.DataProvider.Access
 			if (_selectColumn != null)
 				return new[] { _selectColumn };
 
-			if (NeedSkip(selectQuery) && !selectQuery.OrderBy.IsEmpty)
+			if (NeedSkip(selectQuery.Select.TakeValue, selectQuery.Select.SkipValue) && !selectQuery.OrderBy.IsEmpty)
 				return AlternativeGetSelectedColumns(selectQuery, () => base.GetSelectedColumns(selectQuery));
 
 			return base.GetSelectedColumns(selectQuery);

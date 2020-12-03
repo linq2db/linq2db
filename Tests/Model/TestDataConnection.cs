@@ -82,9 +82,9 @@ namespace Tests.Model
 			var provider  = ((IDataContext)this).CreateSqlProvider();
 			var optimizer = ((IDataContext)this).GetSqlOptimizer  ();
 
-			var evaluationContext = new EvaluationContext(SqlParameterValues.Empty);
+			var optimizationContext = new OptimizationContext(new EvaluationContext(SqlParameterValues.Empty), null, false);
 			var statement = (SqlSelectStatement)optimizer.Finalize(new SqlSelectStatement(query));
-			statement = (SqlSelectStatement)optimizer.PrepareStatementForRemoting(statement, MappingSchema, evaluationContext);
+			statement = (SqlSelectStatement)optimizer.PrepareStatementForRemoting(statement, MappingSchema, optimizationContext.Context);
 
 			var cc = provider.CommandCount(statement);
 			var sb = new StringBuilder();
@@ -95,7 +95,7 @@ namespace Tests.Model
 			{
 				sb.Length = 0;
 
-				provider.BuildSql(i, statement, sb, evaluationContext);
+				provider.BuildSql(i, statement, sb, optimizationContext);
 				commands[i] = sb.ToString();
 			}
 

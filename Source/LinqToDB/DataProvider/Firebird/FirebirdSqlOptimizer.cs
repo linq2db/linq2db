@@ -81,32 +81,12 @@ namespace LinqToDB.DataProvider.Firebird
 			return expr;
 		}
 
-		public override ISqlPredicate ConvertLikePredicate(MappingSchema mappingSchema, SqlPredicate.Like predicate,
-			EvaluationContext context)
-		{
-			//Firebird can not process parameters in Like
-
-			if (context.ParameterValues != null)
-			{
-				var exp1 = TryConvertToValue(predicate.Expr1, context);
-				var exp2 = TryConvertToValue(predicate.Expr2, context);
-
-				if (!ReferenceEquals(exp1, predicate.Expr1) || !ReferenceEquals(exp2, predicate.Expr2))
-				{
-					predicate = new SqlPredicate.Like(exp1, predicate.IsNot, exp2, predicate.Escape);
-				}
-			}	
-
-			return predicate;
-		}
-
-
 		public override ISqlPredicate ConvertSearchStringPredicate(MappingSchema mappingSchema, SqlPredicate.SearchString predicate,
 			ConvertVisitor visitor,
-			EvaluationContext context)
+			OptimizationContext optimizationContext)
 		{
 			if (!predicate.IgnoreCase)
-				return ConvertSearchStringPredicateViaLike(mappingSchema, predicate, visitor, context);
+				return ConvertSearchStringPredicateViaLike(mappingSchema, predicate, visitor, optimizationContext);
 
 			ISqlExpression expr;
 			switch (predicate.Kind)
@@ -119,21 +99,21 @@ namespace LinqToDB.DataProvider.Firebird
 						new SqlFunction(typeof(string), "$ToLower$", predicate.Expr2), predicate.Kind,
 						predicate.IgnoreCase);
 
-					return ConvertSearchStringPredicateViaLike(mappingSchema, predicate, visitor, context);
+					return ConvertSearchStringPredicateViaLike(mappingSchema, predicate, visitor, optimizationContext);
 				}	
 				case SqlPredicate.SearchString.SearchKind.StartsWith:
 				{
 					expr = new SqlExpression(typeof(bool),
 						predicate.IsNot ? "{0} NOT STARTING WITH {1}" : "{0} STARTING WITH {1}", 
 						Precedence.Comparison,
-						TryConvertToValue(predicate.Expr1, context), TryConvertToValue(predicate.Expr2, context)) { CanBeNull = false };
+						TryConvertToValue(predicate.Expr1, optimizationContext.Context), TryConvertToValue(predicate.Expr2, optimizationContext.Context)) { CanBeNull = false };
 					break;
 				}	
 				case SqlPredicate.SearchString.SearchKind.Contains:
 					expr = new SqlExpression(typeof(bool),
 						predicate.IsNot ? "{0} NOT CONTAINING {1}" : "{0} CONTAINING {1}", 
 						Precedence.Comparison,
-						TryConvertToValue(predicate.Expr1, context), TryConvertToValue(predicate.Expr2, context)) { CanBeNull = false };
+						TryConvertToValue(predicate.Expr1, optimizationContext.Context), TryConvertToValue(predicate.Expr2, optimizationContext.Context)) { CanBeNull = false };
 					break;
 				default:
 					throw new ArgumentOutOfRangeException();
@@ -143,7 +123,7 @@ namespace LinqToDB.DataProvider.Firebird
 		}
 
 
-		public override SqlStatement TransformStatementMutable(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
 			return statement.QueryType switch
 			{
@@ -153,9 +133,53 @@ namespace LinqToDB.DataProvider.Firebird
 			};
 		}
 
-		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expr, EvaluationContext context)
+		public override ISqlExpression OptimizeExpression(ISqlExpression expression, ConvertVisitor convertVisitor,
+			OptimizationContext optimizationContext)
 		{
-			expr = base.ConvertExpressionImpl(expr, context);
+			var newExpr = base.OptimizeExpression(expression, convertVisitor, optimizationContext);
+
+			switch (newExpr.ElementType)
+			{
+				case QueryElementType.SqlFunction:
+				{
+					var func = (SqlFunction)newExpr;
+
+					switch (func.Name)
+					{
+						case "Convert":
+						{
+							if (func.SystemType.ToUnderlying() == typeof(bool))
+							{
+								var ex = AlternativeConvertToBoolean(func, 1);
+								if (ex != null)
+									return ex;
+							}
+							break;
+						}
+						case "$Convert$":
+						{
+							if (func.SystemType.ToUnderlying() == typeof(bool))
+							{
+								var ex = AlternativeConvertToBoolean(func, 2);
+								if (ex != null)
+									return ex;
+							}
+							break;
+						}
+					}
+
+					break;
+
+				}
+			}
+
+			return newExpr;
+		}
+
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expr, ConvertVisitor visitor,
+			EvaluationContext context)
+		{
+			expr = base.ConvertExpressionImpl(expr, visitor, context);
 
 			if (expr is SqlBinaryExpression be)
 			{
@@ -173,13 +197,6 @@ namespace LinqToDB.DataProvider.Firebird
 				switch (func.Name)
 				{
 					case "Convert" :
-						if (func.SystemType.ToUnderlying() == typeof(bool))
-						{
-							var ex = AlternativeConvertToBoolean(func, 1);
-							if (ex != null)
-								return ex;
-						}
-
 						return new SqlExpression(func.SystemType, CASTEXPR, Precedence.Primary, FloorBeforeConvert(func), func.Parameters[0]);
 				}
 			}
@@ -223,7 +240,7 @@ namespace LinqToDB.DataProvider.Firebird
 					var paramValue = p.GetParameterValue(context.ParameterValues);
 
 					// Don't cast in cast
-					if (visitor.ParentElement is SqlExpression expr && expr.Expr == CASTEXPR)
+					if (visitor.ParentElement is SqlFunction convertFunc && convertFunc.Name == "$Convert$")
 						return e;
 
 					if (paramValue.DbDataType.SystemType == typeof(bool) && visitor.ParentElement is SqlFunction func && func.Name == "CASE")

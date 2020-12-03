@@ -11,7 +11,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 		}
 
-		public override SqlStatement TransformStatementMutable(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
 			//SQL Server 2005 supports ROW_NUMBER but not OFFSET/FETCH
 

@@ -9,7 +9,7 @@
 		{
 		}
 
-		public override SqlStatement TransformStatementMutable(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
 			if (statement.IsUpdate() || statement.IsInsert() || statement.IsDelete())
 				statement = ReplaceTakeSkipWithRowNum(statement, false);

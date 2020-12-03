@@ -73,10 +73,12 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override bool BuildWhere(SelectQuery selectQuery)
 		{
+			SqlOptimizer.ConvertSkipTake(MappingSchema, selectQuery, OptimizationContext, out var takeExpr, out var skipEpr);
+
 			return
 				base.BuildWhere(selectQuery) ||
-				!NeedSkip(selectQuery) &&
-				 NeedTake(selectQuery) &&
+				!NeedSkip(takeExpr, skipEpr) &&
+				 NeedTake(takeExpr) &&
 				selectQuery.OrderBy.IsEmpty && selectQuery.Having.IsEmpty;
 		}
 
@@ -181,27 +183,6 @@ namespace LinqToDB.DataProvider.Oracle
 			//
 			// V$RESERVED_WORDS: https://docs.oracle.com/cd/B28359_01/server.111/b28320/dynviews_2126.htm
 			return ReservedWords.IsReserved(word, ProviderName.Oracle);
-		}
-
-		protected override void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
-		{
-			var wrap = false;
-
-			if (expr.SystemType == typeof(bool))
-			{
-				if (expr is SqlSearchCondition)
-					wrap = true;
-				else
-					wrap =
-						expr is SqlExpression ex      &&
-						ex.Expr              == "{0}" &&
-						ex.Parameters.Length == 1     &&
-						ex.Parameters[0] is SqlSearchCondition;
-			}
-
-			if (wrap) StringBuilder.Append("CASE WHEN ");
-			base.BuildColumnExpression(selectQuery, expr, alias, ref addAlias);
-			if (wrap) StringBuilder.Append(" THEN 1 ELSE 0 END");
 		}
 
 		/// <summary>

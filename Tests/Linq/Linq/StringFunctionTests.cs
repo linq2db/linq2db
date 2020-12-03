@@ -606,6 +606,17 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void Like23([DataSources] string context)
+		{
+			var pattern = @"%h~%n%";
+			using (var db = GetDataContext(context))
+			{
+				var q = from p in db.Person where !Sql.Like(p.FirstName, pattern, '~') && p.ID == 1 select p;
+				Assert.AreEqual(1, q.ToList().First().ID);
+			}
+		}
+
+		[Test]
 		public void IndexOf11([DataSources(TestProvName.AllInformix, ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))

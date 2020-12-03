@@ -1,8 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.SqlQuery
 {
+	using Common;
+
 	public class EvaluationContext
 	{
 		public class EvaluationInfo
@@ -41,8 +44,9 @@ namespace LinqToDB.SqlQuery
 
 		public void Register(IQueryElement expr, EvaluationInfo info)
 		{
-			_evaluationCache ??= new Dictionary<IQueryElement, EvaluationInfo>();
+			_evaluationCache ??= new Dictionary<IQueryElement, EvaluationInfo>(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
 			_evaluationCache.Add(expr, info);
 		}
+
 	}
 }

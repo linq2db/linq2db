@@ -193,7 +193,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (sql.Select.SkipValue != null &&
 				 DataContext.SqlProviderFlags.IsTakeSupported &&
-				!DataContext.SqlProviderFlags.GetIsSkipSupportedFlag(sql))
+				!DataContext.SqlProviderFlags.GetIsSkipSupportedFlag(sql.Select.TakeValue, sql.Select.SkipValue))
 				sql.Select.Take(
 					new SqlBinaryExpression(typeof(int), sql.Select.SkipValue, "+", sql.Select.TakeValue!, Precedence.Additive), hints);
 		}

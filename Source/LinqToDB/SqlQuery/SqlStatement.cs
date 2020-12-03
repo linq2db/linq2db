@@ -97,7 +97,7 @@ namespace LinqToDB.SqlQuery
 			return name;
 		}
 
-		internal void PrepareQueryAndAliases()
+		internal void PrepareQueryAndAliases(out HashSet<SqlParameter> staticParameters)
 		{
 			_aliases = null;
 
@@ -224,10 +224,12 @@ namespace LinqToDB.SqlQuery
 					a!.Add(n);
 					p.Name = n;
 				},
-				p => p.Name.IsNullOrEmpty() ? "p1" : p.Name + "_1",
+				p => p.Name.IsNullOrEmpty() ? "p_1" :
+					char.IsDigit(p.Name[p.Name.Length - 1]) ? p.Name : p.Name + "_1",
 				StringComparer.OrdinalIgnoreCase);
 
 			_aliases = allAliases;
+			staticParameters = paramsVisited;
 		}
 
 		#endregion
