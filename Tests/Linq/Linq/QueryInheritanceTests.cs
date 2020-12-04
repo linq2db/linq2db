@@ -6,6 +6,7 @@ using System.Text;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
@@ -28,7 +29,7 @@ namespace Tests.Linq
 
 			var sqlBuilder = connection.DataProvider.CreateSqlBuilder(connection.MappingSchema);
 			var sb = new StringBuilder();
-			sqlBuilder.BuildSql(0, query, sb, null);
+			sqlBuilder.BuildSql(0, query, sb, new OptimizationContext(new EvaluationContext(), null, false));
 
 			return connection.Query<T>(sb.ToString());
 		}
