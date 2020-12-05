@@ -17,9 +17,9 @@ public class TestsInitialization
 	[OneTimeSetUp]
 	public void TestAssemblySetup()
 	{
-		// use SeqentialAccess behavior for all reader queries to detect breaking changes to behavior support
-		LinqToDB.Common.Configuration.OptimizeForSequentialAccess = true;
-		DbCommandProcessorExtensions.Instance = new SequentialAccessCommandProcessor();
+		// uncomment it to run tests with SeqentialAccess command behavior
+		//LinqToDB.Common.Configuration.OptimizeForSequentialAccess = true;
+		//DbCommandProcessorExtensions.Instance = new SequentialAccessCommandProcessor();
 
 		// netcoreapp2.1 adds DbProviderFactories support, but providers should be registered by application itself
 		// this code allows to load assembly using factory without adding explicit reference to project
