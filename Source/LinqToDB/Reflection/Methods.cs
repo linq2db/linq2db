@@ -264,8 +264,10 @@ namespace LinqToDB.Reflection
 
 			public static class ColumnReader
 			{
-				public static readonly MethodInfo GetValue            = MemberHelper.MethodOf<ConvertFromDataReaderExpression.ColumnReader>(cr => cr.GetValue(null!));
-				public static readonly MethodInfo GetValueSequential  = MemberHelper.MethodOf<ConvertFromDataReaderExpression.ColumnReader>(cr => cr.GetValueSequential(null!, false));
+				public static readonly MethodInfo GetValue              = MemberHelper.MethodOf<ConvertFromDataReaderExpression.ColumnReader>(cr => cr.GetValue(null!));
+				public static readonly MethodInfo GetValueSequential    = MemberHelper.MethodOf<ConvertFromDataReaderExpression.ColumnReader>(cr => cr.GetValueSequential(null!, false, null));
+				public static readonly MethodInfo GetRawValueSequential = MemberHelper.MethodOf<ConvertFromDataReaderExpression.ColumnReader>(cr => cr.GetRawValueSequential(null!, null!));
+				public static readonly MethodInfo RawValuePlaceholder   = MemberHelper.MethodOf(() => ConvertFromDataReaderExpression.ColumnReader.RawValuePlaceholder());
 			}
 		}
 

@@ -52,7 +52,7 @@ namespace LinqToDB.Expressions
 			var columnReader = new ColumnReader(dataContext, dataContext.MappingSchema, _type, _idx, Converter, slowMode);
 
 			if (slowMode && Configuration.OptimizeForSequentialAccess)
-				return Convert(Call(Constant(columnReader), Methods.LinqToDB.ColumnReader.GetValueSequential, _dataReaderParam, Expression.Call(_dataReaderParam, Methods.ADONet.IsDBNull, Expression.Constant(_idx))), _type);
+				return Convert(Call(Constant(columnReader), Methods.LinqToDB.ColumnReader.GetValueSequential, _dataReaderParam, Expression.Call(_dataReaderParam, Methods.ADONet.IsDBNull, Expression.Constant(_idx)), Expression.Call(Methods.LinqToDB.ColumnReader.RawValuePlaceholder)), _type);
 			else
 				return Convert(Call(Constant(columnReader), Methods.LinqToDB.ColumnReader.GetValue, _dataReaderParam), _type);
 		}
@@ -177,13 +177,34 @@ namespace LinqToDB.Expressions
 			{
 				_dataContext   = dataContext;
 				_mappingSchema = mappingSchema;
-				_columnType    = columnType;
+				ColumnType     = columnType;
 				ColumnIndex    = columnIndex;
 				_converter     = converter;
 				_slowMode      = slowMode;
 			}
 
-			public object? GetValueSequential(IDataReader dataReader, bool isNull)
+			/// <summary>
+			/// This method is used as placeholder, which will be replaced with raw value variable.
+			/// </summary>
+			/// <returns></returns>
+			public static object? RawValuePlaceholder() => throw new InvalidOperationException("Raw value placeholder replacement failed");
+
+			/*
+			 * We could have column readers for same column with different ColumnType types  which results in different
+			 * reader expressions.
+			 * To make it work with sequential mode we should perform actual column value read from reader only
+			 * once and then use it in reader expressions for all types.
+			 * For that we add additional method to read raw value and then pass it to GetValueSequential.
+			 * We need extra method as we cannot store raw value in field: ColumnReader instance could be used
+			 * from multiple threads, so it cannot have state. For same reason it doesn't make much sense to reduce number
+			 * of ColumnReader instances in mapper expression to one for single column. It could be done later if we will
+			 * see benefits of it, but frankly speaking it doesn't make sense to optimize slow-mode reader.
+			 * 
+			 * Limitation is the same as for non-slow mapper:
+			 * column mapping expressions should use same reader method to get column value. This limitation enforced
+			 * in GetRawValueSequential method.
+			 */
+			public object? GetValueSequential(IDataReader dataReader, bool isNull, object? rawValue)
 			{
 				var fromType = dataReader.GetFieldType(ColumnIndex);
 
@@ -191,22 +212,23 @@ namespace LinqToDB.Expressions
 				{
 					var dataReaderParameter = Parameter(typeof(IDataReader));
 					var isNullParameter     = Parameter(typeof(bool));
+					var rawValueParameter   = Parameter(typeof(object));
 					var dataReaderExpr      = Convert(dataReaderParameter, dataReader.GetType());
 
-					var expr = GetColumnReader(_dataContext, _mappingSchema, dataReader, _columnType, _converter, ColumnIndex, dataReaderExpr, _slowMode);
+					var expr = GetColumnReader(_dataContext, _mappingSchema, dataReader, ColumnType, _converter, ColumnIndex, dataReaderExpr, _slowMode);
+					expr     = SequentialAccessHelper.OptimizeColumnReaderForSequentialAccess(expr, isNullParameter, rawValueParameter, ColumnIndex);
 
-					expr = SequentialAccessHelper.OptimizeColumnReaderForSequentialAccess(expr, isNullParameter, ColumnIndex);
-
-					var lex  = Lambda<Func<IDataReader, bool, object>>(
+					var lex  = Lambda<Func<bool, object?, object?>>(
 						expr.Type == typeof(object) ? expr : Convert(expr, typeof(object)),
-						dataReaderParameter, isNullParameter);
+						isNullParameter,
+						rawValueParameter);
 
-					_slowColumnConverters[fromType] = func = lex.Compile();
+					_slowColumnConverters[fromType] = func      = lex.Compile();
 				}
 
 				try
 				{
-					return func(dataReader, isNull);
+					return func(isNull, rawValue);
 				}
 				catch (LinqToDBConvertException ex)
 				{
@@ -224,6 +246,40 @@ namespace LinqToDB.Expressions
 				}
 			}
 
+			public object GetRawValueSequential(IDataReader dataReader, Type[] forTypes)
+			{
+				var fromType = dataReader.GetFieldType(ColumnIndex);
+
+				if (!_slowRawReaders.TryGetValue(fromType, out var func))
+				{
+					var dataReaderParameter = Parameter(typeof(IDataReader));
+					var isNullParameter     = Parameter(typeof(bool));
+					var dataReaderExpr      = Convert(dataReaderParameter, dataReader.GetType());
+
+					MethodCallExpression rawExpr = null!;
+					foreach (var type in forTypes)
+					{
+						var expr           = GetColumnReader(_dataContext, _mappingSchema, dataReader, type, _converter, ColumnIndex, dataReaderExpr, _slowMode);
+						var currentRawExpr = SequentialAccessHelper.ExtractRawValueReader(expr, isNullParameter, ColumnIndex);
+
+						if (rawExpr == null)
+							rawExpr = currentRawExpr;
+						else if (rawExpr.Method != currentRawExpr.Method)
+							throw new LinqToDBConvertException(
+								$"Different data reader methods used for same column: '{rawExpr.Method.DeclaringType?.Name}.{rawExpr.Method.Name}' vs '{currentRawExpr.Method.DeclaringType?.Name}.{currentRawExpr.Method.Name}'");
+
+					}
+
+					var lex  = Lambda<Func<IDataReader, object>>(
+						rawExpr.Type == typeof(object) ? rawExpr : Convert(rawExpr, typeof(object)),
+						dataReaderParameter);
+
+					_slowRawReaders[fromType] = func = lex.Compile();
+				}
+
+				return func(dataReader);
+			}
+
 			public object? GetValue(IDataReader dataReader)
 			{
 				var fromType = dataReader.GetFieldType(ColumnIndex);
@@ -233,7 +289,7 @@ namespace LinqToDB.Expressions
 					var parameter      = Parameter(typeof(IDataReader));
 					var dataReaderExpr = Convert(parameter, dataReader.GetType());
 
-					var expr = GetColumnReader(_dataContext, _mappingSchema, dataReader, _columnType, _converter, ColumnIndex, dataReaderExpr, _slowMode);
+					var expr = GetColumnReader(_dataContext, _mappingSchema, dataReader, ColumnType, _converter, ColumnIndex, dataReaderExpr, _slowMode);
 
 					var lex  = Lambda<Func<IDataReader, object>>(
 						expr.Type == typeof(object) ? expr : Convert(expr, typeof(object)),
@@ -262,16 +318,17 @@ namespace LinqToDB.Expressions
 				}
 			}
 
-			readonly ConcurrentDictionary<Type,Func<IDataReader,object>>       _columnConverters     = new ConcurrentDictionary<Type,Func<IDataReader,object>>();
-			readonly ConcurrentDictionary<Type,Func<IDataReader, bool,object>> _slowColumnConverters = new ConcurrentDictionary<Type,Func<IDataReader,bool,object>>();
+			readonly ConcurrentDictionary<Type, Func<IDataReader, object?>>   _columnConverters     = new ConcurrentDictionary<Type,Func<IDataReader,object?>>();
+			readonly ConcurrentDictionary<Type, Func<bool, object?, object?>> _slowColumnConverters = new ConcurrentDictionary<Type,Func<bool,object?,object?>>();
+			readonly ConcurrentDictionary<Type, Func<IDataReader, object>>    _slowRawReaders       = new ConcurrentDictionary<Type,Func<IDataReader,object>>();
 
 			readonly IDataContext     _dataContext;
 			readonly MappingSchema    _mappingSchema;
-			readonly Type             _columnType;
 			readonly IValueConverter? _converter;
 			readonly bool             _slowMode;
 
-			public int ColumnIndex { get; }
+			public int  ColumnIndex { get; }
+			public Type ColumnType  { get; }
 		}
 
 		public override string ToString()

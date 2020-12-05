@@ -6,7 +6,9 @@ using System.Reflection;
 
 namespace LinqToDB.Linq
 {
+	using System.Collections.Generic;
 	using Extensions;
+	using LinqToDB.Common;
 	using LinqToDB.Expressions;
 	using LinqToDB.Linq.Internal;
 	using LinqToDB.Reflection;
@@ -28,6 +30,10 @@ namespace LinqToDB.Linq
 			var replacements        = new Expression?[fieldCount * 2];
 			var replacedMethods     = new MethodInfo[fieldCount];
 			var isNullableStruct    = new bool[fieldCount];
+
+			// slow mode column types
+			Dictionary<int, Tuple<ConvertFromDataReaderExpression.ColumnReader, ISet<Type>>>? slowColumnTypes = null;
+			Expression? dataReaderExpr = null;
 
 			Func<Expression, Expression> tranformFunc = null!;
 			tranformFunc = e =>
@@ -52,8 +58,8 @@ namespace LinqToDB.Linq
 							if (newVariables[index] == null)
 							{
 								var variable               = Expression.Variable(typeof(bool), $"is_null_{columnIndex}");
-								newVariables[index] = variable;
-								replacements[index] = variable;
+								newVariables[index]        = variable;
+								replacements[index]        = variable;
 								insertedExpressions[index] = Expression.Assign(variable, call);
 							}
 
@@ -72,8 +78,7 @@ namespace LinqToDB.Linq
 								{
 									// no IsDBNull call: column is not nullable
 									// (also could be a bad expression)
-
-									variable = Expression.Variable(type, $"get_value_{columnIndex}");
+									variable                   = Expression.Variable(type, $"get_value_{columnIndex}");
 									insertedExpressions[index] = Expression.Assign(variable, Expression.Convert(call, type));
 								}
 								else
@@ -81,11 +86,11 @@ namespace LinqToDB.Linq
 									var isNullable = type.IsValueType && !type.IsNullable();
 									if (isNullable)
 									{
-										type = typeof(Nullable<>).MakeGenericType(type);
+										type                                = typeof(Nullable<>).MakeGenericType(type);
 										isNullableStruct[columnIndex.Value] = true;
 									}
 
-									variable = Expression.Variable(type, $"get_value_{columnIndex}");
+									variable                   = Expression.Variable(type, $"get_value_{columnIndex}");
 									insertedExpressions[index] = Expression.Assign(
 										variable,
 										Expression.Condition(
@@ -94,8 +99,8 @@ namespace LinqToDB.Linq
 											isNullable ? Expression.Convert(call, type) : call));
 								}
 
-								newVariables[index] = variable;
-								replacements[index] = isNullableStruct[columnIndex.Value] ? Expression.Property(variable, "Value") : variable;
+								newVariables[index]                = variable;
+								replacements[index]                = isNullableStruct[columnIndex.Value] ? Expression.Property(variable, "Value") : variable;
 								replacedMethods[columnIndex.Value] = call.Method;
 							}
 							else if (replacedMethods[columnIndex.Value] != call.Method)
@@ -115,27 +120,24 @@ namespace LinqToDB.Linq
 						columnIndex = columnReader.ColumnIndex;
 						var index   = columnIndex.Value * 2 + 1;
 
-						if (replacedMethods[columnIndex.Value] == null)
+						if (newVariables[index] == null)
 						{
-							var type       = call.Type;
-							isNullableStruct[columnIndex.Value] = type.IsValueType && !type.IsNullable();
-							if (isNullableStruct[columnIndex.Value])
-								type = typeof(Nullable<>).MakeGenericType(type);
+							newVariables[index] = Expression.Variable(typeof(object), $"get_value_{columnIndex}");
+							if (slowColumnTypes == null)
+							{
+								slowColumnTypes = new Dictionary<int, Tuple<ConvertFromDataReaderExpression.ColumnReader, ISet<Type>>>();
+								dataReaderExpr  = call.Arguments[0];
+							}
 
-							var variable                       = Expression.Variable(typeof(object), $"get_value_{columnIndex}");
-							newVariables[index] = variable;
-							insertedExpressions[index] = Expression.Assign(variable, call.Update(call.Object, call.Arguments.Select(a => a.Transform(tranformFunc))));
-							replacements[index] = variable;
-							replacedMethods[columnIndex.Value] = call.Method;
-						}
-						else if (replacedMethods[columnIndex.Value] != call.Method)
-						{
-							// tried to replace multiple methods
-							failMessage = $"Multiple data reader methods called for column: {replacedMethods[columnIndex.Value]} vs {call.Method}";
-							return e;
+							slowColumnTypes.Add(columnIndex.Value, new Tuple<ConvertFromDataReaderExpression.ColumnReader, ISet<Type>>(columnReader, new HashSet<Type>()));
 						}
 
-						return replacements[index]!;
+						slowColumnTypes![columnIndex.Value].Item2.Add(columnReader.ColumnType);
+
+						// replacement expression build later when we know all types
+						return call.Update(
+							call.Object,
+							call.Arguments.Take(2).Select(a => a.Transform(tranformFunc)).Concat(new[] { newVariables[index] }));
 					}
 
 					foreach (var arg in call.Arguments)
@@ -179,8 +181,30 @@ namespace LinqToDB.Linq
 			if (failMessage != null)
 				throw new LinqToDBException($"{nameof(OptimizeMappingExpressionForSequentialAccess)} optimization failed: {failMessage}");
 
+			// generate value readers for slow mode
+			if (slowColumnTypes != null)
+			{
+				foreach (var kvp in slowColumnTypes)
+				{
+					var isNullVariable = newVariables[kvp.Key * 2]!;
+					var valueVariable  = newVariables[kvp.Key * 2 + 1]!;
+
+					insertedExpressions[kvp.Key * 2 + 1] = Expression.Assign(
+						valueVariable,
+						Expression.Condition(
+							isNullVariable,
+							Expression.Constant(null, valueVariable.Type),
+							Expression.Call(
+								Expression.Constant(kvp.Value.Item1),
+								Methods.LinqToDB.ColumnReader.GetRawValueSequential,
+								dataReaderExpr!,
+								Expression.Constant(kvp.Value.Item2.ToArray())),
+							valueVariable.Type));
+				}
+			}
+
 			// insert variables and variable init code to mapping expression
-			var updated = false;
+				var updated = false;
 			expression = expression.Transform(e =>
 			{
 				if (!updated && e is BlockExpression block)
@@ -233,7 +257,7 @@ namespace LinqToDB.Linq
 			return null;
 		}
 
-		public static Expression OptimizeColumnReaderForSequentialAccess(Expression expression, Expression isNullParameter, int columnIndex)
+		public static Expression OptimizeColumnReaderForSequentialAccess(Expression expression, Expression isNullParameter, Expression rawValueParameter, int columnIndex)
 		{
 			string? failMessage = null;
 
@@ -261,9 +285,8 @@ namespace LinqToDB.Linq
 						// test IsDBNull method by-name to support overrides
 						if (call.Method.Name == nameof(IDataReader.IsDBNull))
 							return isNullParameter;
-
-						// TODO: add additional validation for other methods?
-						return e;
+						else // otherwise we treat it as Get*Value method (as we already extracted index without errors for it)
+							return call.Type != rawValueParameter.Type ? Expression.Convert(rawValueParameter, call.Type) : rawValueParameter;
 					}
 
 					foreach (var arg in call.Arguments)
@@ -284,6 +307,49 @@ namespace LinqToDB.Linq
 				throw new LinqToDBException($"{nameof(OptimizeColumnReaderForSequentialAccess)} optimization failed (slow mode): {failMessage}");
 
 			return expression;
+		}
+
+		public static MethodCallExpression ExtractRawValueReader(Expression expression, Expression isNullParameter, int columnIndex)
+		{
+			string? failMessage = null;
+			MethodCallExpression? rawCall = null;
+
+			expression.Visit(e =>
+			{
+				if (failMessage != null)
+					return;
+
+				if (e is MethodCallExpression call)
+				{
+					var idx = TryGetColumnIndex(call);
+
+					if (idx != null)
+					{
+						if (idx != columnIndex)
+						{
+							failMessage = $"Expected column index: {columnIndex}, but found {idx}";
+							return;
+						}
+
+						if (call.Method.Name != nameof(IDataReader.IsDBNull))
+						{
+							if (rawCall == null)
+								rawCall = call;
+							else if (rawCall.Method != call.Method)
+								throw new LinqToDBConvertException(
+									$"Different data reader methods used for same column: '{rawCall.Method.DeclaringType?.Name}.{rawCall.Method.Name}' vs '{call.Method.DeclaringType?.Name}.{call.Method.Name}'");
+						}
+					}
+				}
+			});
+
+			if (failMessage != null)
+				throw new LinqToDBException($"{nameof(OptimizeColumnReaderForSequentialAccess)} optimization failed (slow mode): {failMessage}");
+
+			if (rawCall == null)
+				throw new LinqToDBException($"Cannot find column value reader in expression");
+
+			return rawCall;
 		}
 	}
 }
