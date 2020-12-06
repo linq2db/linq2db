@@ -1681,17 +1681,18 @@ namespace Tests.Linq
 			// System.Data.SqlClient
 			// Microsoft.Data.SqlClient
 			// SqlCe
+			using (new OptimizeForSequentialAccess(true))
 			using (new CustomCommandProcessor(new SequentialAccessCommandProcessor()))
 			using (var db = GetDataContext(context))
 			{
 				var q = db.Person
 					.Select(p => new
 					{
-						p.FirstName,
-						ID = p.ID,
+						FirstName  = p.FirstName,
+						ID         = p.ID,
 						IDNullable = Sql.ToNullable(p.ID),
-						p.LastName,
-						FullName = $"{p.FirstName} {p.LastName}"
+						LastName   = p.LastName,
+						FullName   = $"{p.FirstName} {p.LastName}"
 					});
 
 				foreach (var p in q.ToArray())
@@ -1703,12 +1704,13 @@ namespace Tests.Linq
 		public void SequentialAccessTest_Complex([DataSources] string context)
 		{
 			// fields read out-of-order, multiple times and with different types
+			using (new OptimizeForSequentialAccess(true))
 			using (new CustomCommandProcessor(new SequentialAccessCommandProcessor()))
 			using (var db = GetDataContext(context))
 			{
 				Assert.AreEqual(typeof(InheritanceParentBase), InheritanceParent[0].GetType());
-				Assert.AreEqual(typeof(InheritanceParent1), InheritanceParent[1].GetType());
-				Assert.AreEqual(typeof(InheritanceParent2), InheritanceParent[2].GetType());
+				Assert.AreEqual(typeof(InheritanceParent1)   , InheritanceParent[1].GetType());
+				Assert.AreEqual(typeof(InheritanceParent2)   , InheritanceParent[2].GetType());
 
 				AreEqual(InheritanceParent, db.InheritanceParent);
 				AreEqual(InheritanceChild, db.InheritanceChild);

@@ -1470,4 +1470,18 @@ namespace Tests
 			DbCommandProcessorExtensions.Instance = _original;
 		}
 	}
+
+	public class OptimizeForSequentialAccess : IDisposable
+	{
+		private readonly bool _original = Configuration.OptimizeForSequentialAccess;
+		public OptimizeForSequentialAccess(bool enable)
+		{
+			Configuration.OptimizeForSequentialAccess = enable;
+		}
+
+		public void Dispose()
+		{
+			Configuration.OptimizeForSequentialAccess = _original;
+		}
+	}
 }

@@ -125,8 +125,7 @@ namespace LinqToDB.Linq
 				ParameterExpression? newVariable = null;
 
 				Expression expression;
-				if (slowMode || true)
-				//if (slowMode)
+				if (slowMode)
 				{
 					expression = _expression.Transform(e =>
 					{
