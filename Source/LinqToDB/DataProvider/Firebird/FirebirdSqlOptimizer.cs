@@ -134,9 +134,9 @@ namespace LinqToDB.DataProvider.Firebird
 		}
 
 		public override ISqlExpression OptimizeExpression(ISqlExpression expression, ConvertVisitor convertVisitor,
-			OptimizationContext optimizationContext)
+			EvaluationContext context)
 		{
-			var newExpr = base.OptimizeExpression(expression, convertVisitor, optimizationContext);
+			var newExpr = base.OptimizeExpression(expression, convertVisitor, context);
 
 			switch (newExpr.ElementType)
 			{

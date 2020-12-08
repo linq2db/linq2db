@@ -103,20 +103,6 @@ namespace LinqToDB.SqlProvider
 				statement.SelectQuery!.Select.Add(new SqlValue(1));
 		}
 
-		public SqlStatement ConvertStatement(MappingSchema mappingSchema, SqlStatement statement, OptimizationContext optimizationContext)
-		{
-			var newStatement = (SqlStatement)OptimizeElement(mappingSchema, statement, optimizationContext)!;
-			newStatement = TransformStatementImmutable(newStatement, optimizationContext);
-			return newStatement;
-		}
-
-		public SqlStatement FinalizeStatement(MappingSchema mappingSchema, SqlStatement statement, OptimizationContext optimizationContext)
-		{
-			var newStatement = statement;
-			newStatement = TransformStatementImmutable(newStatement, optimizationContext);
-			return newStatement;
-		}
-
 		/// <summary>
 		/// Used for correcting statement and should return new statement if changes were made.
 		/// </summary>
@@ -125,12 +111,6 @@ namespace LinqToDB.SqlProvider
 		public virtual SqlStatement TransformStatement(SqlStatement statement)
 		{
 			return statement;
-		}
-
-		public virtual SqlStatement TransformStatementImmutable(SqlStatement statement, OptimizationContext optimizationContext)
-		{
-			var newStatement = statement;
-			return newStatement;
 		}
 
 		void FinalizeCte(SqlStatement statement)
@@ -257,6 +237,9 @@ namespace LinqToDB.SqlProvider
 
 		SelectQuery MoveCountSubQuery(SelectQuery selectQuery, EvaluationContext context)
 		{
+			// OptimizeElement() selectQuery
+
+
 			new QueryVisitor().Visit(selectQuery, e => MoveCountSubQuery(e, context));
 			return selectQuery;
 		}
@@ -294,7 +277,7 @@ namespace LinqToDB.SqlProvider
 
 					// Check if subquery where clause does not have ORs.
 					//
-					subQuery.Where.SearchCondition = SelectQueryOptimizer.OptimizeSearchCondition(subQuery.Where.SearchCondition, context);
+					subQuery.Where.SearchCondition = (SqlSearchCondition)OptimizeElement(null, subQuery.Where.SearchCondition, new OptimizationContext(context, null, false), false)!;
 
 					var allAnd = true;
 
@@ -347,6 +330,7 @@ namespace LinqToDB.SqlProvider
 
 						if (new QueryVisitor().Find(cond, CheckTable) == null)
 							continue;
+						
 						var modified = false;
 						var nc = ConvertVisitor.ConvertAll(cond, true, (v, e) =>
 						{
@@ -459,7 +443,7 @@ namespace LinqToDB.SqlProvider
 
 						query.From.Tables[0].Joins.Add(join.JoinedTable);
 
-						subQuery.Where.SearchCondition = SelectQueryOptimizer.OptimizeSearchCondition(subQuery.Where.SearchCondition, context);
+						subQuery.Where.SearchCondition = (SqlSearchCondition)OptimizeElement(null, subQuery.Where.SearchCondition, new OptimizationContext(context, null, false), false)!;
 
 						var isCount      = false;
 						var isAggregated = false;
@@ -507,21 +491,7 @@ namespace LinqToDB.SqlProvider
 							var nc = ConvertVisitor.ConvertAll(cond, true, (v, e) =>
 							{
 								var ne = e;
-								/*
-								if (v.ParentElement?.ElementType == QueryElementType.Column)
-								{
-									var column = (SqlColumn)v.ParentElement;
-									if (column.Parent != null && levelTables.Contains(column.Parent!))
-									{
-										if (isAggregated)
-											subQuery.GroupBy.Expr((ISqlExpression)e);
-										var newColumn = subQuery.Select.AddColumn(column);
-										replaced[e] = newColumn;
-										return newColumn;
-									}
-								}
-
-								*/
+								
 								switch (e.ElementType)
 								{
 									case QueryElementType.SqlField:
@@ -601,12 +571,12 @@ namespace LinqToDB.SqlProvider
 
 		#region Optimization
 
-		public static ISqlExpression CreateSqlValue(object value, OptimizationContext optimizationContext, SqlBinaryExpression be)
+		public static ISqlExpression CreateSqlValue(object value, SqlBinaryExpression be)
 		{
-			return CreateSqlValue(value, optimizationContext, be.Expr1, be.Expr2);
+			return CreateSqlValue(value, be.Expr1, be.Expr2);
 		}
 
-		public static ISqlExpression CreateSqlValue(object value, OptimizationContext optimizationContext, params ISqlExpression[] basedOn)
+		public static ISqlExpression CreateSqlValue(object value, params ISqlExpression[] basedOn)
 		{
 			SqlParameter? foundParam = null;
 
@@ -638,13 +608,13 @@ namespace LinqToDB.SqlProvider
 		}
 
 		public virtual ISqlExpression OptimizeExpression(ISqlExpression expression, ConvertVisitor convertVisitor,
-			OptimizationContext optimizationContext)
+			EvaluationContext context)
 		{
 			switch (expression.ElementType)
 			{
 				case QueryElementType.SqlBinaryExpression :
 				{
-					return OptimizeBinaryExpression((SqlBinaryExpression)expression, optimizationContext);
+					return OptimizeBinaryExpression((SqlBinaryExpression)expression, context);
 				}
 
 				case QueryElementType.SqlFunction :
@@ -663,7 +633,7 @@ namespace LinqToDB.SqlProvider
 
 							for (var i = 0; i < parms.Length - 1; i += 2)
 							{
-								var boolValue = QueryHelper.GetBoolValue(parms[i], optimizationContext.Context);
+								var boolValue = QueryHelper.GetBoolValue(parms[i], context);
 								if (boolValue != null)
 								{
 									if (boolValue == false)
@@ -703,8 +673,8 @@ namespace LinqToDB.SqlProvider
 								&& !parms[0].ShouldCheckForNull()
 								&& parms[0].ElementType.In(QueryElementType.SqlFunction, QueryElementType.SearchCondition))
 							{
-								var boolValue1 = QueryHelper.GetBoolValue(parms[1], optimizationContext.Context);
-								var boolValue2 = QueryHelper.GetBoolValue(parms[2], optimizationContext.Context);
+								var boolValue1 = QueryHelper.GetBoolValue(parms[1], context);
+								var boolValue2 = QueryHelper.GetBoolValue(parms[2], context);
 
 								if (boolValue1 != null && boolValue2 != null)
 								{
@@ -784,7 +754,7 @@ namespace LinqToDB.SqlProvider
 
 				case QueryElementType.SqlValuesTable:
 				{
-					return ReduceSqlValueTable((SqlValuesTable)expression, optimizationContext.Context);
+					return ReduceSqlValueTable((SqlValuesTable)expression, context);
 				}
 			}
 
@@ -1340,13 +1310,13 @@ namespace LinqToDB.SqlProvider
 			return element;
 		}
 
-		public virtual ISqlExpression OptimizeBinaryExpression(SqlBinaryExpression be, OptimizationContext optimizationContext)
+		public virtual ISqlExpression OptimizeBinaryExpression(SqlBinaryExpression be, EvaluationContext context)
 		{
 			switch (be.Operation)
 			{
 				case "+":
 				{
-					var v1 = be.Expr1.TryEvaluateExpression(optimizationContext.Context, out var value1);
+					var v1 = be.Expr1.TryEvaluateExpression(context, out var value1);
 					if (v1)
 					{
 						switch (value1)
@@ -1359,7 +1329,7 @@ namespace LinqToDB.SqlProvider
 						}
 					}
 
-					var v2 = be.Expr2.TryEvaluateExpression(optimizationContext.Context, out var value2);
+					var v2 = be.Expr2.TryEvaluateExpression(context, out var value2);
 					if (v2)
 					{
 						switch (value2)
@@ -1367,7 +1337,7 @@ namespace LinqToDB.SqlProvider
 							case int vi when vi == 0 : return be.Expr1;
 							case int vi when
 								be.Expr1    is SqlBinaryExpression be1 &&
-								be1.Expr2.TryEvaluateExpression(optimizationContext.Context, out var be1v2) &&
+								be1.Expr2.TryEvaluateExpression(context, out var be1v2) &&
 								be1v2 is int be1v2i :
 							{
 								switch (be1.Operation)
@@ -1383,7 +1353,7 @@ namespace LinqToDB.SqlProvider
 											oper  = "-";
 										}
 
-										return new SqlBinaryExpression(be.SystemType, be1.Expr1, oper, CreateSqlValue(value, optimizationContext, be), be.Precedence);
+										return new SqlBinaryExpression(be.SystemType, be1.Expr1, oper, CreateSqlValue(value, be), be.Precedence);
 									}
 
 									case "-":
@@ -1397,7 +1367,7 @@ namespace LinqToDB.SqlProvider
 											oper  = "+";
 										}
 
-										return new SqlBinaryExpression(be.SystemType, be1.Expr1, oper, CreateSqlValue(value, optimizationContext, be), be.Precedence);
+										return new SqlBinaryExpression(be.SystemType, be1.Expr1, oper, CreateSqlValue(value, be), be.Precedence);
 									}
 								}
 
@@ -1408,7 +1378,7 @@ namespace LinqToDB.SqlProvider
 							case string vs when
 								be.Expr1    is SqlBinaryExpression be1 &&
 								//be1.Operation == "+"                   &&
-								be1.Expr2.TryEvaluateExpression(optimizationContext.Context, out var be1v2) &&
+								be1.Expr2.TryEvaluateExpression(context, out var be1v2) &&
 								be1v2 is string be1v2s :
 							{
 								return new SqlBinaryExpression(
@@ -1422,8 +1392,8 @@ namespace LinqToDB.SqlProvider
 
 					if (v1 && v2)
 					{
-						if (value1 is int i1 && value2 is int i2) return CreateSqlValue(i1 + i2, optimizationContext, be);
-						if (value1 is string || value2 is string) return CreateSqlValue(value1?.ToString() + value2, optimizationContext, be);
+						if (value1 is int i1 && value2 is int i2) return CreateSqlValue(i1 + i2, be);
+						if (value1 is string || value2 is string) return CreateSqlValue(value1?.ToString() + value2, be);
 					}
 
 					break;
@@ -1431,7 +1401,7 @@ namespace LinqToDB.SqlProvider
 
 				case "-":
 				{
-					var v2 = be.Expr2.TryEvaluateExpression(optimizationContext.Context, out var value2);
+					var v2 = be.Expr2.TryEvaluateExpression(context, out var value2);
 					if (v2)
 					{
 						switch (value2)
@@ -1439,7 +1409,7 @@ namespace LinqToDB.SqlProvider
 							case int vi when vi == 0 : return be.Expr1;
 							case int vi when
 								be.Expr1 is SqlBinaryExpression be1 &&
-								be1.Expr2.TryEvaluateExpression(optimizationContext.Context, out var be1v2) &&
+								be1.Expr2.TryEvaluateExpression(context, out var be1v2) &&
 								be1v2 is int be1v2i :
 							{
 								switch (be1.Operation)
@@ -1455,7 +1425,7 @@ namespace LinqToDB.SqlProvider
 											oper  = "-";
 										}
 
-										return new SqlBinaryExpression(be.SystemType, be1.Expr1, oper, CreateSqlValue(value, optimizationContext, be), be.Precedence);
+										return new SqlBinaryExpression(be.SystemType, be1.Expr1, oper, CreateSqlValue(value, be), be.Precedence);
 									}
 
 									case "-":
@@ -1469,7 +1439,7 @@ namespace LinqToDB.SqlProvider
 											oper  = "+";
 										}
 
-										return new SqlBinaryExpression(be.SystemType, be1.Expr1, oper, CreateSqlValue(value, optimizationContext, be), be.Precedence);
+										return new SqlBinaryExpression(be.SystemType, be1.Expr1, oper, CreateSqlValue(value, be), be.Precedence);
 									}
 								}
 
@@ -1478,9 +1448,9 @@ namespace LinqToDB.SqlProvider
 						}
 					}
 
-					if (v2 && be.Expr1.TryEvaluateExpression(optimizationContext.Context, out var value1))
+					if (v2 && be.Expr1.TryEvaluateExpression(context, out var value1))
 					{
-						if (value1 is int i1 && value2 is int i2) return CreateSqlValue(i1 - i2, optimizationContext, be);
+						if (value1 is int i1 && value2 is int i2) return CreateSqlValue(i1 - i2, be);
 					}
 
 					break;
@@ -1488,30 +1458,30 @@ namespace LinqToDB.SqlProvider
 
 				case "*":
 				{
-					var v1 = be.Expr1.TryEvaluateExpression(optimizationContext.Context, out var value1);
+					var v1 = be.Expr1.TryEvaluateExpression(context, out var value1);
 					if (v1)
 					{
 						switch (value1)
 						{
-							case int i when i == 0 : return CreateSqlValue(0, optimizationContext, be);
+							case int i when i == 0 : return CreateSqlValue(0, be);
 							case int i when i == 1 : return be.Expr2;
 							case int i when
 								be.Expr2    is SqlBinaryExpression be2 &&
 								be2.Operation == "*"                   &&
-								be2.Expr1.TryEvaluateExpression(optimizationContext.Context, out var be2v1)  &&
+								be2.Expr1.TryEvaluateExpression(context, out var be2v1)  &&
 								be2v1 is int bi :
 							{
-								return new SqlBinaryExpression(be2.SystemType, CreateSqlValue(i * bi, optimizationContext, be), "*", be2.Expr2);
+								return new SqlBinaryExpression(be2.SystemType, CreateSqlValue(i * bi, be), "*", be2.Expr2);
 							}
 						}
 					}
 
-					var v2 = be.Expr2.TryEvaluateExpression(optimizationContext.Context, out var value2);
+					var v2 = be.Expr2.TryEvaluateExpression(context, out var value2);
 					if (v2)
 					{
 						switch (value2)
 						{
-							case int i when i == 0 : return CreateSqlValue(0, optimizationContext, be);
+							case int i when i == 0 : return CreateSqlValue(0, be);
 							case int i when i == 1 : return be.Expr1;
 						}
 					}
@@ -1520,10 +1490,10 @@ namespace LinqToDB.SqlProvider
 					{
 						switch (value1)
 						{
-							case int    i1 when value2 is int    i2 : return CreateSqlValue(i1 * i2, optimizationContext, be);
-							case int    i1 when value2 is double d2 : return CreateSqlValue(i1 * d2, optimizationContext, be);
-							case double d1 when value2 is int    i2 : return CreateSqlValue(d1 * i2, optimizationContext, be);
-							case double d1 when value2 is double d2 : return CreateSqlValue(d1 * d2, optimizationContext, be);
+							case int    i1 when value2 is int    i2 : return CreateSqlValue(i1 * i2, be);
+							case int    i1 when value2 is double d2 : return CreateSqlValue(i1 * d2, be);
+							case double d1 when value2 is int    i2 : return CreateSqlValue(d1 * i2, be);
+							case double d1 when value2 is double d2 : return CreateSqlValue(d1 * d2, be);
 						}
 					}
 
@@ -1536,77 +1506,77 @@ namespace LinqToDB.SqlProvider
 				ISqlExpression? newExpr = be switch
 				{
 					// (binary + v)
-					(SqlBinaryExpression binary, "+", var v) when v.CanBeEvaluated(optimizationContext.Context) =>
+					(SqlBinaryExpression binary, "+", var v) when v.CanBeEvaluated(context) =>
 						binary switch
 						{
 							// (some + e) + v ===> some + (e + v)
-							(var some, "+", var e) when e.CanBeEvaluated(optimizationContext.Context) => new SqlBinaryExpression(be.SystemType, some, "+", new SqlBinaryExpression(be.SystemType, e, "+", v)),
+							(var some, "+", var e) when e.CanBeEvaluated(context) => new SqlBinaryExpression(be.SystemType, some, "+", new SqlBinaryExpression(be.SystemType, e, "+", v)),
 
 							// (some - e) + v ===> some + (v - e)
-							(var some, "-", var e) when e.CanBeEvaluated(optimizationContext.Context) => new SqlBinaryExpression(be.SystemType, some, "+", new SqlBinaryExpression(be.SystemType, v, "-", e)),
+							(var some, "-", var e) when e.CanBeEvaluated(context) => new SqlBinaryExpression(be.SystemType, some, "+", new SqlBinaryExpression(be.SystemType, v, "-", e)),
 
 							// (e + some) + v ===> some + (e + v)
-							(var e, "+", var some) when e.SystemType.IsNumericType() && e.CanBeEvaluated(optimizationContext.Context) => new SqlBinaryExpression(be.SystemType, some, "+", new SqlBinaryExpression(be.SystemType, e, "+", v)),
+							(var e, "+", var some) when e.SystemType.IsNumericType() && e.CanBeEvaluated(context) => new SqlBinaryExpression(be.SystemType, some, "+", new SqlBinaryExpression(be.SystemType, e, "+", v)),
 
 							// (e - some) + v ===> (e + v) - some
-							(var e, "-", var some) when e.CanBeEvaluated(optimizationContext.Context) => new SqlBinaryExpression(be.SystemType, new SqlBinaryExpression(be.SystemType, e, "+", v), "-", some),
+							(var e, "-", var some) when e.CanBeEvaluated(context) => new SqlBinaryExpression(be.SystemType, new SqlBinaryExpression(be.SystemType, e, "+", v), "-", some),
 
 							_ => null
 						},
 
 					// (binary - v)
-					(SqlBinaryExpression binary, "-", var v) when v.CanBeEvaluated(optimizationContext.Context) =>
+					(SqlBinaryExpression binary, "-", var v) when v.CanBeEvaluated(context) =>
 						binary switch
 						{
 							// (some + e) - v ===> some + (e - v)
-							(var some, "+", var e) when e.CanBeEvaluated(optimizationContext.Context) => new SqlBinaryExpression(be.SystemType, some, "+", new SqlBinaryExpression(be.SystemType, e, "-", v)),
+							(var some, "+", var e) when e.CanBeEvaluated(context) => new SqlBinaryExpression(be.SystemType, some, "+", new SqlBinaryExpression(be.SystemType, e, "-", v)),
 
 							// (some - e) - v ===> some - (e + v)
-							(var some, "-", var e) when e.CanBeEvaluated(optimizationContext.Context) => new SqlBinaryExpression(be.SystemType, some, "+", new SqlBinaryExpression(be.SystemType, e, "+", v)),
+							(var some, "-", var e) when e.CanBeEvaluated(context) => new SqlBinaryExpression(be.SystemType, some, "+", new SqlBinaryExpression(be.SystemType, e, "+", v)),
 
 							// (e + some) - v ===> some + (e - v)
-							(var e, "+", var some) when e.CanBeEvaluated(optimizationContext.Context) => new SqlBinaryExpression(be.SystemType, some, "+", new SqlBinaryExpression(be.SystemType, e, "-", v)),
+							(var e, "+", var some) when e.CanBeEvaluated(context) => new SqlBinaryExpression(be.SystemType, some, "+", new SqlBinaryExpression(be.SystemType, e, "-", v)),
 
 							// (e - some) - v ===> (e - v) - some
-							(var e, "-", var some) when e.CanBeEvaluated(optimizationContext.Context) => new SqlBinaryExpression(be.SystemType, new SqlBinaryExpression(be.SystemType, e, "-", v), "-", some),
+							(var e, "-", var some) when e.CanBeEvaluated(context) => new SqlBinaryExpression(be.SystemType, new SqlBinaryExpression(be.SystemType, e, "-", v), "-", some),
 
 							_ => null
 						},
 
 					// (v + binary)
-					(var v, "+", SqlBinaryExpression binary) when v.CanBeEvaluated(optimizationContext.Context) =>
+					(var v, "+", SqlBinaryExpression binary) when v.CanBeEvaluated(context) =>
 						binary switch
 						{
 							// v + (some + e) ===> (v + e) + some
-							(var some, "+", var e) when e.SystemType.IsNumericType() && e.CanBeEvaluated(optimizationContext.Context) => new SqlBinaryExpression(be.SystemType, new SqlBinaryExpression(be.SystemType, v, "+", e), "+", some),
+							(var some, "+", var e) when e.SystemType.IsNumericType() && e.CanBeEvaluated(context) => new SqlBinaryExpression(be.SystemType, new SqlBinaryExpression(be.SystemType, v, "+", e), "+", some),
 
 							// v + (some - e) + v ===> (v - e) + some
-							(var some, "-", var e) when e.CanBeEvaluated(optimizationContext.Context) => new SqlBinaryExpression(be.SystemType, new SqlBinaryExpression(be.SystemType, v, "-", e), "+", some),
+							(var some, "-", var e) when e.CanBeEvaluated(context) => new SqlBinaryExpression(be.SystemType, new SqlBinaryExpression(be.SystemType, v, "-", e), "+", some),
 
 							// v + (e + some) ===> (v + e) + some
-							(var e, "+", var some) when e.CanBeEvaluated(optimizationContext.Context) => new SqlBinaryExpression(be.SystemType, new SqlBinaryExpression(be.SystemType, v, "+", e), "+", some),
+							(var e, "+", var some) when e.CanBeEvaluated(context) => new SqlBinaryExpression(be.SystemType, new SqlBinaryExpression(be.SystemType, v, "+", e), "+", some),
 
 							// v + (e - some) ===> (v + e) - some
-							(var e, "-", var some) when e.CanBeEvaluated(optimizationContext.Context) => new SqlBinaryExpression(be.SystemType, new SqlBinaryExpression(be.SystemType, v, "+", e), "-", some),
+							(var e, "-", var some) when e.CanBeEvaluated(context) => new SqlBinaryExpression(be.SystemType, new SqlBinaryExpression(be.SystemType, v, "+", e), "-", some),
 
 							_ => null
 						},
 
 					// (v - binary)
-					(var v, "+", SqlBinaryExpression binary) when v.CanBeEvaluated(optimizationContext.Context) =>
+					(var v, "+", SqlBinaryExpression binary) when v.CanBeEvaluated(context) =>
 						binary switch
 						{
 							// v - (some + e) ===> (v - e) - some
-							(var some, "+", var e) when e.CanBeEvaluated(optimizationContext.Context) => new SqlBinaryExpression(be.SystemType, new SqlBinaryExpression(be.SystemType, v, "-", e), "-", some),
+							(var some, "+", var e) when e.CanBeEvaluated(context) => new SqlBinaryExpression(be.SystemType, new SqlBinaryExpression(be.SystemType, v, "-", e), "-", some),
 
 							// v - (some - e) + v ===> (v + e) - some
-							(var some, "-", var e) when e.CanBeEvaluated(optimizationContext.Context) => new SqlBinaryExpression(be.SystemType, new SqlBinaryExpression(be.SystemType, v, "+", e), "-", some),
+							(var some, "-", var e) when e.CanBeEvaluated(context) => new SqlBinaryExpression(be.SystemType, new SqlBinaryExpression(be.SystemType, v, "+", e), "-", some),
 
 							// v - (e + some) ===> (v - e) - some
-							(var e, "+", var some) when e.CanBeEvaluated(optimizationContext.Context) => new SqlBinaryExpression(be.SystemType, new SqlBinaryExpression(be.SystemType, v, "-", e), "-", some),
+							(var e, "+", var some) when e.CanBeEvaluated(context) => new SqlBinaryExpression(be.SystemType, new SqlBinaryExpression(be.SystemType, v, "-", e), "-", some),
 
 							// v - (e - some) ===> (v - e) + some
-							(var e, "-", var some) when e.CanBeEvaluated(optimizationContext.Context) => new SqlBinaryExpression(be.SystemType, new SqlBinaryExpression(be.SystemType, v, "-", e), "+", some),
+							(var e, "-", var some) when e.CanBeEvaluated(context) => new SqlBinaryExpression(be.SystemType, new SqlBinaryExpression(be.SystemType, v, "-", e), "+", some),
 
 							_ => null
 						},
@@ -1631,10 +1601,10 @@ namespace LinqToDB.SqlProvider
 
 		#region Conversion
 
-		[return: NotNullIfNotNull("expr")]
-		public virtual ISqlExpression? ConvertExpression(MappingSchema mappingSchema, ISqlExpression? expression, OptimizationContext optimizationContext)
+		[return: NotNullIfNotNull("element")]
+		public virtual IQueryElement? ConvertElement(MappingSchema mappingSchema, IQueryElement? element, OptimizationContext optimizationContext)
 		{
-			return OptimizeElement(mappingSchema, expression, optimizationContext) as ISqlExpression;
+			return OptimizeElement(mappingSchema, element, optimizationContext, true);
 		}
 
 		public virtual ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor visitor, EvaluationContext context)
@@ -1782,7 +1752,42 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		public IQueryElement? OptimizeElement(MappingSchema mappingSchema, IQueryElement? element, OptimizationContext optimizationContext)
+		static IQueryElement RunOptimization<TContext>(IQueryElement element, OptimizationContext optimizationContext, BasicSqlOptimizer optimizer,
+			TContext context, bool register, Func<OptimizationContext, BasicSqlOptimizer, ConvertVisitor, TContext, IQueryElement, IQueryElement> func)
+		{
+			for (; ; )
+			{
+				var newElement = ConvertVisitor.ConvertAll(element, (visitor, e) =>
+				{
+					if (optimizationContext.IsOptimized(e, out var expr))
+						return expr!;
+
+					var prev = e;
+					var ne   = e;
+					for (;;)
+					{
+						ne = func(optimizationContext, optimizer, visitor, context, e);
+
+						if (ReferenceEquals(ne, e))
+							break;
+
+						e = ne;
+					}
+
+					if (register)
+						optimizationContext.RegisterOptimized(prev, e);
+
+					return e;
+				});
+
+				if (ReferenceEquals(newElement, element))
+					return element;
+
+				element = newElement;
+			}
+		}
+
+		public IQueryElement? OptimizeElement(MappingSchema? mappingSchema, IQueryElement? element, OptimizationContext optimizationContext, bool withConversion)
 		{
 			if (element == null)
 				return null;
@@ -1790,12 +1795,32 @@ namespace LinqToDB.SqlProvider
 			if (optimizationContext.IsOptimized(element, out var newElement))
 				return newElement!;
 
-			newElement = ApplyMutation(mappingSchema, element, optimizationContext, this, false,
+			var paramContext = new {mappingSchema, root = element};
+			
+			newElement = RunOptimization(element, optimizationContext, this, paramContext, !withConversion,
+				static (ctx, opt, visitor, pc, e) =>
+				{
+					var ne = e;
+					if (ne is ISqlExpression expr1)
+						ne = opt.OptimizeExpression(expr1, visitor, ctx.Context);
+
+					if (ne is ISqlPredicate pred1)
+						ne = opt.OptimizePredicate(pred1, ctx.Context);
+
+					if (!ReferenceEquals(ne, e))
+						return ne;
+
+					ne = opt.OptimizeQueryElement(visitor, pc.root, ne, ctx.Context);
+
+					return ne;
+				});
+
+			/*newElement = ApplyMutation(mappingSchema, element, optimizationContext, this, false,
 				static (ms, ctx, opt, visitor, root, e) =>
 				{
 					var ne = e;
 					if (ne is ISqlExpression expr1)
-						ne = opt.OptimizeExpression(expr1, visitor, ctx);
+						ne = opt.OptimizeExpression(expr1, visitor, ctx.Context);
 
 					if (ne is ISqlPredicate pred1)
 						ne = opt.OptimizePredicate(pred1, ctx.Context);
@@ -1806,8 +1831,9 @@ namespace LinqToDB.SqlProvider
 					ne = opt.OptimizeQueryElement(visitor, root, ne, ctx.Context);
 
 					return ne;
-				});
+				});*/
 
+			/*
 			newElement = ApplyMutation(mappingSchema, newElement, optimizationContext, this, true,
 				static (ms, ctx, opt, visitor, root, e) =>
 				{
@@ -1824,15 +1850,34 @@ namespace LinqToDB.SqlProvider
 
 					return ne;
 				});
+				*/
 
+			if (withConversion)
+			{
+				if (mappingSchema == null)
+					throw new InvalidOperationException("MappingSchema is required for conversion");
+				
+				newElement = RunOptimization(newElement, optimizationContext, this, paramContext, true,
+					static(ctx, opt, visitor, pc, e) =>
+					{
+						var ne = e;
+
+						if (ne is ISqlExpression expr2)
+							ne = opt.ConvertExpressionImpl(expr2, visitor, ctx.Context);
+
+						if (!ReferenceEquals(ne, e))
+							return ne;
+
+						if (ne is ISqlPredicate pred3)
+							ne = opt.ConvertPredicateImpl(pc.mappingSchema!, pred3, visitor, ctx);
+
+						return ne;
+					});
+
+			}
 			return newElement;
 		}
 
-
-		public ISqlPredicate ConvertPredicate(MappingSchema mappingSchema, ISqlPredicate predicate, OptimizationContext optimizationContext)
-		{
-			return (ISqlPredicate)OptimizeElement(mappingSchema, predicate, optimizationContext)!;
-		}
 
 		public virtual ISqlPredicate ConvertPredicateImpl(MappingSchema mappingSchema, ISqlPredicate predicate, ConvertVisitor visitor, OptimizationContext optimizationContext)
 		{
@@ -1967,7 +2012,7 @@ namespace LinqToDB.SqlProvider
 					_ => throw new ArgumentOutOfRangeException()
 				};
 
-				var patternExpr = LikeParameterSupport ? CreateSqlValue(patternValue, optimizationContext, predicate.Expr2) : new SqlValue(patternValue);
+				var patternExpr = LikeParameterSupport ? CreateSqlValue(patternValue, predicate.Expr2) : new SqlValue(patternValue);
 
 				return new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, patternExpr,
 					LikeIsEscapeSupported && (patternValue != patternRawValue) ? new SqlValue(LikeEscapeCharacter) : null);
@@ -1989,7 +2034,7 @@ namespace LinqToDB.SqlProvider
 				};
 
 
-				patternExpr = OptimizeExpression(patternExpr, visitor, optimizationContext);
+				patternExpr = OptimizeExpression(patternExpr, visitor, optimizationContext.Context);
 
 				return new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, patternExpr,
 					LikeIsEscapeSupported ? escape : null);
@@ -3068,8 +3113,8 @@ namespace LinqToDB.SqlProvider
 		{
 			// make skip take as parameters or evaluate otherwise
 
-			takeExpr = ConvertExpression(mappingSchema, selectQuery.Select.TakeValue, optimizationContext);
-			skipExpr = ConvertExpression(mappingSchema, selectQuery.Select.SkipValue, optimizationContext);
+			takeExpr = ConvertElement(mappingSchema, selectQuery.Select.TakeValue, optimizationContext) as ISqlExpression;
+			skipExpr = ConvertElement(mappingSchema, selectQuery.Select.SkipValue, optimizationContext) as ISqlExpression;
 
 			if (takeExpr != null)
 			{

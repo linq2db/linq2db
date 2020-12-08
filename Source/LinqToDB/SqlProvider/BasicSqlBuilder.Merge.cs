@@ -169,6 +169,8 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildMergeSourceQuery(SqlMergeSourceTable mergeSource)
 		{
+			mergeSource = ConvertElement(mergeSource);
+			
 			BuildPhysicalTable(mergeSource.Source, null);
 
 			BuildMergeAsSourceClause(mergeSource);
@@ -176,6 +178,7 @@ namespace LinqToDB.SqlProvider
 
 		private void BuildMergeAsSourceClause(SqlMergeSourceTable mergeSource)
 		{
+			mergeSource = ConvertElement(mergeSource);
 			StringBuilder.Append(" ");
 
 			ConvertTableName(StringBuilder, null, null, null, mergeSource.Name, TableOptions.NotSet);
@@ -208,6 +211,7 @@ namespace LinqToDB.SqlProvider
 
 		private void BuildMergeSourceEnumerable(SqlMergeStatement merge)
 		{
+			merge = ConvertElement(merge);
 			var rows = merge.Source.SourceEnumerable!.Rows!;
 			if (rows.Count > 0)
 			{

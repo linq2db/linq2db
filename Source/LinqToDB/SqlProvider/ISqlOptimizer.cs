@@ -31,25 +31,16 @@ namespace LinqToDB.SqlProvider
 		/// <param name="takeExpr"></param>
 		/// <param name="skipExpr"></param>
 		void ConvertSkipTake(MappingSchema mappingSchema, SelectQuery selectQuery, OptimizationContext optimizationContext, out ISqlExpression? takeExpr, out ISqlExpression? skipExpr);
-		SqlStatement ConvertStatement(MappingSchema mappingSchema, SqlStatement statement, OptimizationContext optimizationContext);
 
 		/// <summary>
-		/// Converts expression to specific provider dialect. 
+		/// Converts query element to specific provider dialect. 
 		/// </summary>
 		/// <param name="mappingSchema"></param>
-		/// <param name="expression"></param>
+		/// <param name="element"></param>
 		/// <param name="context"></param>
 		/// <returns></returns>
-		[return: NotNullIfNotNull("expression")]
-		ISqlExpression? ConvertExpression(MappingSchema mappingSchema, ISqlExpression? expression, OptimizationContext context);
+		[return: NotNullIfNotNull("element")]
+		IQueryElement? ConvertElement(MappingSchema mappingSchema, IQueryElement? element, OptimizationContext context);
 
-		/// <summary>
-		/// Converts predicate to specific provider dialect. 
-		/// </summary>
-		/// <param name="mappingSchema"></param>
-		/// <param name="predicate"></param>
-		/// <param name="context"></param>
-		/// <returns></returns>
-		ISqlPredicate ConvertPredicate(MappingSchema mappingSchema, ISqlPredicate predicate, OptimizationContext context);
 	}
 }
