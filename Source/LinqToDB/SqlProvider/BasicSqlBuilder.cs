@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlTypes;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -85,6 +86,17 @@ namespace LinqToDB.SqlProvider
 		/// Default value: <code>"("</code>
 		/// </summary>
 		protected virtual string OpenParens => "(";
+		#endregion
+
+		#region Helpers
+
+		[return: NotNullIfNotNull("element")]
+		public T? ConvertElement<T>(T? element)
+			where T : class, IQueryElement
+		{
+			return SqlOptimizer.ConvertElement(MappingSchema, element, OptimizationContext) as T;
+		}
+
 		#endregion
 
 		#region BuildSql
@@ -535,7 +547,7 @@ namespace LinqToDB.SqlProvider
 
 				var addAlias = true;
 
-				var expr = SqlOptimizer.ConvertExpression(MappingSchema, col.Expression, OptimizationContext)!;
+				var expr = ConvertElement(col.Expression);
 
 				AppendIndent();
 				BuildColumnExpression(selectQuery, expr, col.Alias, ref addAlias);
@@ -582,7 +594,7 @@ namespace LinqToDB.SqlProvider
 				{
 					DoNotOptimize = true
 				};
-				expr = SqlOptimizer.ConvertExpression(MappingSchema, expr, OptimizationContext)!;
+				expr = ConvertElement(expr);
 			}
 
 			BuildExpression(expr, true, true, alias, ref addAlias, true);
@@ -1526,7 +1538,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual bool BuildWhere(SelectQuery selectQuery)
 		{
-			var condition = (SqlSearchCondition)SqlOptimizer.ConvertPredicate(MappingSchema, selectQuery.Where.SearchCondition, OptimizationContext);
+			var condition = ConvertElement(selectQuery.Where.SearchCondition);
 
 			return condition.Conditions.Count > 0;
 		}
@@ -1622,7 +1634,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildHavingClause(SelectQuery selectQuery)
 		{
-			var condition = (SqlSearchCondition)SqlOptimizer.ConvertPredicate(MappingSchema, selectQuery.Where.Having.SearchCondition, OptimizationContext);
+			var condition = ConvertElement(selectQuery.Where.Having.SearchCondition);
 			if (condition.Conditions.Count == 0)
 				return;
 
@@ -1775,7 +1787,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildSearchCondition(SqlSearchCondition condition, bool isWhere = false)
 		{
-			condition = (SqlSearchCondition)SqlOptimizer.ConvertPredicate(MappingSchema, condition, OptimizationContext);
+			condition = ConvertElement(condition);
 
 			var isOr = (bool?)null;
 			var len = StringBuilder.Length;
@@ -1812,7 +1824,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildSearchCondition(int parentPrecedence, SqlSearchCondition condition)
 		{
-			condition = (SqlSearchCondition)SqlOptimizer.ConvertPredicate(MappingSchema, condition, OptimizationContext);
+			condition = ConvertElement(condition);
 
 			var wrap = Wrap(GetPrecedence(condition as ISqlExpression), parentPrecedence);
 
@@ -2217,7 +2229,7 @@ namespace LinqToDB.SqlProvider
 			ref bool       addAlias,
 			bool           throwExceptionIfTableNotFound = true)
 		{
-			expr = SqlOptimizer.ConvertExpression(MappingSchema, expr, OptimizationContext);
+			expr = ConvertElement(expr);
 
 			switch (expr.ElementType)
 			{

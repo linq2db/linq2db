@@ -11,7 +11,7 @@
 			var optimizationContext = new OptimizationContext(context, null, false);
 			// We need convert. Some functions works with real objects and can not be serialized
 			//
-			var newStatement = optimizer.ConvertStatement(mappingSchema, statement, optimizationContext);
+			var newStatement = (SqlStatement)optimizer.ConvertElement(mappingSchema, statement, optimizationContext);
 
 			if (!ReferenceEquals(newStatement, statement))
 				newStatement.PrepareQueryAndAliases(out _);
@@ -23,7 +23,7 @@
 			MappingSchema mappingSchema, EvaluationContext context)
 		{
 			var optimizationContext = new OptimizationContext(context, null, false);
-			var newStatement        = optimizer.ConvertStatement(mappingSchema, statement, optimizationContext);
+			var newStatement = (SqlStatement)optimizer.ConvertElement(mappingSchema, statement, optimizationContext);
 
 			if (!ReferenceEquals(newStatement, statement))
 				newStatement.PrepareQueryAndAliases(out _);
