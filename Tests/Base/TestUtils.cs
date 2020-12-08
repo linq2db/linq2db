@@ -112,6 +112,7 @@ namespace Tests
 				case TestProvName.SqlServer2016:
 				case ProviderName.SqlServer2017:
 				case TestProvName.SqlServer2019:
+				case TestProvName.SqlServer2019SequentialAccess:
 				case TestProvName.SqlAzure:
 				case ProviderName.SapHanaNative:
 				case ProviderName.SapHanaOdbc:
@@ -140,6 +141,7 @@ namespace Tests
 				case TestProvName.SqlServer2016:
 				case ProviderName.SqlServer2017:
 				case TestProvName.SqlServer2019:
+				case TestProvName.SqlServer2019SequentialAccess:
 				case TestProvName.SqlAzure:
 				case ProviderName.OracleManaged:
 				case ProviderName.OracleNative:
@@ -222,6 +224,7 @@ namespace Tests
 				case TestProvName.SqlServer2016:
 				case ProviderName.SqlServer2017:
 				case TestProvName.SqlServer2019:
+				case TestProvName.SqlServer2019SequentialAccess:
 				case TestProvName.SqlAzure:
 					return db.GetTable<LinqDataTypes>().Select(_ => DbName()).First();
 				case ProviderName.Informix:

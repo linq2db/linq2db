@@ -52,6 +52,7 @@ namespace Tests.xUpdate
 				TestProvName.SqlServer2016,
 				ProviderName.SqlServer2017,
 				TestProvName.SqlServer2019,
+				TestProvName.SqlServer2019SequentialAccess,
 				TestProvName.SqlAzure
 			};
 
