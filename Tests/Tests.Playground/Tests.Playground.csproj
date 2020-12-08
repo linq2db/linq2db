@@ -10,6 +10,7 @@
 	<ItemGroup>
 		<Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
 		<Compile Include="..\Linq\Linq\AllAnyTests.cs" Link="AllAnyTests.cs" />
+		<Compile Include="..\Linq\Linq\AssociationTests.cs" Link="AssociationTests.cs" />
 		<Compile Include="..\Linq\Linq\CommonTests.cs" Link="CommonTests.cs" />
 		<Compile Include="..\Linq\Linq\CompileTests.cs" Link="CompileTests.cs" />
 		<Compile Include="..\Linq\Linq\CompileTestsAsync.cs" Link="CompileTestsAsync.cs" />
@@ -21,6 +22,7 @@
 		<Compile Include="..\Linq\Linq\CteTests.cs" Link="CteTests.cs" />
 		<Compile Include="..\Linq\Linq\DateTimeFunctionsTests.cs" Link="DateTimeFunctionsTests.cs" />
 		<Compile Include="..\Linq\Linq\EnumMappingTests.cs" Link="EnumMappingTests.cs" />
+		<Compile Include="..\Linq\Linq\ExpressionsTests.cs" Link="ExpressionsTests.cs" />
 		<Compile Include="..\Linq\Linq\FullTextTests.SQLite.cs" Link="FullTextTests.SQLite.cs" />
 		<Compile Include="..\Linq\Linq\GroupByTests.cs" Link="GroupByTests.cs" />
 		<Compile Include="..\Linq\Linq\IdlTests.cs" Link="IdlTests.cs" />

@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using LinqToDB.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -8,7 +9,7 @@ namespace LinqToDB.Linq.Builder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsQueryable("AsQueryable");
+			return methodCall.IsSameGenericMethod(Methods.Enumerable.AsQueryable, Methods.LinqToDB.SqlExt.Alias);
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
