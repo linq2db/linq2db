@@ -134,6 +134,7 @@ namespace LinqToDB.Reflection
 			{
 				public static readonly MethodInfo ToNotNull     = MemberHelper.MethodOfGeneric<int?>(i => Sql.ToNotNull(i));
 				public static readonly MethodInfo ToNotNullable = MemberHelper.MethodOfGeneric<int?>(i => Sql.ToNotNullable(i));
+				public static readonly MethodInfo Alias         = MemberHelper.MethodOfGeneric<int>(i => Sql.Alias(i, ""));
 			}
 
 			public static class Update

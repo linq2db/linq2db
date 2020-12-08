@@ -381,8 +381,6 @@ namespace LinqToDB.Linq.Builder
 
 			_optimizedExpressions[expression] = expr;
 
-			_optimizationContext.RelocateAlias(expression, expr);
-
 			return expr;
 		}
 
@@ -489,7 +487,6 @@ namespace LinqToDB.Linq.Builder
 						if (l != null)
 						{
 							var optimized = OptimizeExpression(ConvertMethod(call, l));
-							_optimizationContext.RegisterAlias(optimized, alias!);
 							return new TransformInfo(optimized);
 						}
 

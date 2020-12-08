@@ -1027,7 +1027,11 @@ namespace LinqToDB.Expressions
 							return GetRootObject(e.Object, mapping);
 
 						if (e.Arguments?.Count > 0 &&
-						    (e.IsQueryable() || e.IsAggregate(mapping) || e.IsAssociation(mapping) || e.Method.IsSqlPropertyMethodEx()))
+						    (e.IsQueryable()
+						     || e.IsAggregate(mapping)
+						     || e.IsAssociation(mapping)
+						     || e.Method.IsSqlPropertyMethodEx()
+						     || e.IsSameGenericMethod(Methods.LinqToDB.SqlExt.ToNotNull, Methods.LinqToDB.SqlExt.Alias)))
 							return GetRootObject(e.Arguments[0], mapping);
 
 						break;
@@ -1275,7 +1279,7 @@ namespace LinqToDB.Expressions
 			     || call.IsExtensionMethod(mapping)
 			     || call.IsAssociation(mapping)
 				 || call.Method.IsSqlPropertyMethodEx()
-				 || call.IsSameGenericMethod(Methods.LinqToDB.SqlExt.ToNotNull)
+				 || call.IsSameGenericMethod(Methods.LinqToDB.SqlExt.ToNotNull, Methods.LinqToDB.SqlExt.Alias)
 			     )
 			    )
 			{

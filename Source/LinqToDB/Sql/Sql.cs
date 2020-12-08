@@ -147,6 +147,18 @@ namespace LinqToDB
 			throw new LinqException("'Property' is only server-side method.");
 		}
 
+		/// <summary>
+		/// Used internally for keeping Alias information with expression.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="obj"></param>
+		/// <param name="alias"></param>
+		/// <returns></returns>
+		internal static T Alias<T>(T obj, [SqlQueryDependent] string alias)
+		{
+			return obj;
+		}
+
 		#endregion
 
 		#region NoConvert

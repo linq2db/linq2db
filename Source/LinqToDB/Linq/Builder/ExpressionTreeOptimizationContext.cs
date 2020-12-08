@@ -12,6 +12,7 @@ namespace LinqToDB.Linq.Builder
 	using Extensions;
 	using Mapping;
 	using SqlQuery;
+	using Reflection;
 
 	public class ExpressionTreeOptimizationContext
 	{
@@ -477,6 +478,12 @@ namespace LinqToDB.Linq.Builder
 		#endregion
 
 
+		static Expression AliasCall(Expression expression, string alias)
+		{
+			return Expression.Call(Methods.LinqToDB.SqlExt.Alias.MakeGenericMethod(expression.Type), expression,
+				Expression.Constant(alias));
+		}
+
 		Dictionary<Expression, Expression> _exposedCache = new Dictionary<Expression, Expression>();
 
 		public Expression ExposeExpression(Expression expression)
@@ -536,9 +543,7 @@ namespace LinqToDB.Linq.Builder
 								if (ex.Type != expr.Type)
 									ex = new ChangeTypeExpression(ex, expr.Type);
 
-								RegisterAlias(ex, alias!);
-
-								return new TransformInfo(ex, false, true);
+								return new TransformInfo(AliasCall(ex, alias!), false, true);
 							}
 
 							break;
@@ -553,7 +558,6 @@ namespace LinqToDB.Linq.Builder
 								if (l != null)
 								{
 									var exposed = l.GetBody(ex.Operand);
-									RegisterAlias(exposed, alias!);
 									return new TransformInfo(exposed, false, true);
 								}
 							}
@@ -622,8 +626,6 @@ namespace LinqToDB.Linq.Builder
 				return new TransformInfo(expr, false);
 			});
 
-			RelocateAlias(expression, result);
-
 			_exposedCache[expression] = result;
 
 			return result;
@@ -670,37 +672,5 @@ namespace LinqToDB.Linq.Builder
 			return null;
 		}
 
-
-		#region Aliases
-
-		private readonly Dictionary<Expression, string> _expressionAliases = new Dictionary<Expression, string>();
-
-		public void RegisterAlias(Expression expression, string alias, bool force = false)
-		{
-			if (_expressionAliases.ContainsKey(expression))
-			{
-				if (!force)
-					return;
-				_expressionAliases.Remove(expression);
-			}
-			_expressionAliases.Add(expression, alias);
-		}
-
-		public void RelocateAlias(Expression oldExpression, Expression newExpression)
-		{
-			if (ReferenceEquals(oldExpression, newExpression))
-				return;
-
-			if (_expressionAliases.TryGetValue(oldExpression, out var alias))
-				RegisterAlias(newExpression, alias);
-		}
-
-		public string? GetExpressionAlias(Expression expression)
-		{
-			_expressionAliases.TryGetValue(expression, out var value);
-			return value;
-		}
-
-		#endregion
 	}
 }

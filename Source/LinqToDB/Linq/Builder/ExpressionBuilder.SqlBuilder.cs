@@ -1165,6 +1165,12 @@ namespace LinqToDB.Linq.Builder
 							return ConvertFormatToSql(context, e, isPureExpression);
 						}
 
+						if (e.IsSameGenericMethod(Methods.LinqToDB.SqlExt.Alias))
+						{
+							var sql = ConvertToSql(context, e.Arguments[0], unwrap);
+							return sql;
+						}
+
 						break;
 					}
 
