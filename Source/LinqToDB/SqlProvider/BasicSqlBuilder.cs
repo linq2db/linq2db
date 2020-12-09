@@ -1456,7 +1456,8 @@ namespace LinqToDB.SqlProvider
 			Indent++;
 			AppendIndent();
 
-			var buildOn = BuildJoinType(join);
+			var condition = ConvertElement(join.Condition);
+			var buildOn = BuildJoinType(join.JoinType, condition);
 
 			if (IsNestedJoinParenthesisRequired && join.Table.Joins.Count != 0)
 				StringBuilder.Append('(');
@@ -1481,18 +1482,18 @@ namespace LinqToDB.SqlProvider
 			else if (buildOn)
 				StringBuilder.Append(" ON ");
 
-			if (WrapJoinCondition && join.Condition.Conditions.Count > 0)
+			if (WrapJoinCondition && condition.Conditions.Count > 0)
 				StringBuilder.Append("(");
 
 			if (buildOn)
 			{
-				if (join.Condition.Conditions.Count != 0)
-					BuildSearchCondition(Precedence.Unknown, join.Condition);
+				if (condition.Conditions.Count != 0)
+					BuildSearchCondition(Precedence.Unknown, condition, wrapCondition: false);
 				else
 					StringBuilder.Append("1=1");
 			}
 
-			if (WrapJoinCondition && join.Condition.Conditions.Count > 0)
+			if (WrapJoinCondition && condition.Conditions.Count > 0)
 				StringBuilder.Append(")");
 
 			if (joinCounter > 0)
@@ -1508,12 +1509,12 @@ namespace LinqToDB.SqlProvider
 			Indent--;
 		}
 
-		protected virtual bool BuildJoinType(SqlJoinedTable join)
+		protected virtual bool BuildJoinType(JoinType joinType, SqlSearchCondition condition)
 		{
-			switch (join.JoinType)
+			switch (joinType)
 			{
 				case JoinType.Inner     :
-					if (SqlProviderFlags.IsCrossJoinSupported && join.Condition.Conditions.IsNullOrEmpty())
+					if (SqlProviderFlags.IsCrossJoinSupported && condition.Conditions.IsNullOrEmpty())
 					{
 						StringBuilder.Append("CROSS JOIN ");
 						return false;
@@ -1782,10 +1783,10 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildWhereSearchCondition(SelectQuery selectQuery, SqlSearchCondition condition)
 		{
-			BuildSearchCondition(Precedence.Unknown, condition);
+			BuildSearchCondition(Precedence.Unknown, condition, wrapCondition: true);
 		}
 
-		protected virtual void BuildSearchCondition(SqlSearchCondition condition, bool isWhere = false)
+		protected virtual void BuildSearchCondition(SqlSearchCondition condition, bool wrapCondition)
 		{
 			condition = ConvertElement(condition);
 
@@ -1799,7 +1800,7 @@ namespace LinqToDB.SqlProvider
 				{
 					StringBuilder.Append(isOr.Value ? " OR" : " AND");
 
-					if (condition.Conditions.Count < 4 && StringBuilder.Length - len < 50 || !isWhere)
+					if (condition.Conditions.Count < 4 && StringBuilder.Length - len < 50 || !wrapCondition)
 					{
 						StringBuilder.Append(' ');
 					}
@@ -1822,14 +1823,14 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		protected virtual void BuildSearchCondition(int parentPrecedence, SqlSearchCondition condition)
+		protected virtual void BuildSearchCondition(int parentPrecedence, SqlSearchCondition condition, bool wrapCondition)
 		{
 			condition = ConvertElement(condition);
 
 			var wrap = Wrap(GetPrecedence(condition as ISqlExpression), parentPrecedence);
 
 			if (wrap) StringBuilder.Append('(');
-			BuildSearchCondition(condition);
+			BuildSearchCondition(condition, wrapCondition);
 			if (wrap) StringBuilder.Append(')');
 		}
 
@@ -1887,7 +1888,7 @@ namespace LinqToDB.SqlProvider
 					break;
 
 				case QueryElementType.SearchCondition:
-					BuildSearchCondition(predicate.Precedence, (SqlSearchCondition)predicate);
+					BuildSearchCondition(predicate.Precedence, (SqlSearchCondition)predicate, wrapCondition: false);
 					break;
 
 				case QueryElementType.NotExprPredicate:
@@ -2409,7 +2410,7 @@ namespace LinqToDB.SqlProvider
 					break;
 
 				case QueryElementType.SearchCondition:
-					BuildSearchCondition(expr.Precedence, (SqlSearchCondition)expr);
+					BuildSearchCondition(expr.Precedence, (SqlSearchCondition)expr, wrapCondition: false);
 					break;
 
 				case QueryElementType.SqlTable:

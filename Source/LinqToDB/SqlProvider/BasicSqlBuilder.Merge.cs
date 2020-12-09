@@ -92,7 +92,7 @@ namespace LinqToDB.SqlProvider
 			if (operation.Where != null)
 			{
 				StringBuilder.Append(" AND ");
-				BuildSearchCondition(Precedence.Unknown, operation.Where);
+				BuildSearchCondition(Precedence.Unknown, operation.Where, wrapCondition: true);
 			}
 
 			StringBuilder.AppendLine(" THEN");
@@ -111,7 +111,7 @@ namespace LinqToDB.SqlProvider
 			if (operation.Where != null)
 			{
 				StringBuilder.Append(" AND ");
-				BuildSearchCondition(Precedence.Unknown, operation.Where);
+				BuildSearchCondition(Precedence.Unknown, operation.Where, wrapCondition: true);
 			}
 
 			StringBuilder.AppendLine(" THEN DELETE");
@@ -126,7 +126,7 @@ namespace LinqToDB.SqlProvider
 			if (operation.Where != null)
 			{
 				StringBuilder.Append(" AND ");
-				BuildSearchCondition(Precedence.Unknown, operation.Where);
+				BuildSearchCondition(Precedence.Unknown, operation.Where, wrapCondition: true);
 			}
 
 			StringBuilder
@@ -162,7 +162,7 @@ namespace LinqToDB.SqlProvider
 		{
 			StringBuilder.Append("ON (");
 
-			BuildSearchCondition(Precedence.Unknown, mergeStatement.On);
+			BuildSearchCondition(Precedence.Unknown, mergeStatement.On, wrapCondition: true);
 
 			StringBuilder.AppendLine(")");
 		}
