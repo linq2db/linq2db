@@ -25,6 +25,11 @@
 
 		protected override bool MergeSourceValueTypeRequired(SqlValuesTable source, IReadOnlyList<ISqlExpression[]> rows, int row, int column)
 		{
+			if (rows[row][column] is SqlParameter parameter && parameter.IsQueryParameter)
+			{
+				return true;
+			}
+
 			if (row == 0)
 			{
 				// without type Firebird with convert string values in column to CHAR(LENGTH_OF_BIGGEST_VALUE_IN_COLUMN) with
