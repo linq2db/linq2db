@@ -6,8 +6,8 @@ using NUnit.Framework;
 namespace Tests.UserTests
 {
 	[TestFixture]
-    public class Issue2665Tests : TestBase
-    {
+	public class Issue2665Tests : TestBase
+	{
 		[Table]
 		class ProductTable
 		{
@@ -19,7 +19,7 @@ namespace Tests.UserTests
 
 			[Association(
 				ThisKey  = nameof(Id),
-        		OtherKey = nameof(ProductAttributeMapping.ProductId))]
+				OtherKey = nameof(ProductAttributeMapping.ProductId))]
 			public ProductAttributeMapping? AtributeMapping { get; set; }
 		}
 
@@ -34,7 +34,7 @@ namespace Tests.UserTests
 
 			[Association(
 				ThisKey  = nameof(Id),
-        		OtherKey = nameof(ProductAttributeMapping.ProductAttributeId))]
+				OtherKey = nameof(ProductAttributeMapping.ProductAttributeId))]
 			public ProductAttributeMapping? AtributeMapping { get; set; }
 
 		}
@@ -49,7 +49,7 @@ namespace Tests.UserTests
 			public int ProductAttributeId { get; set; }
 		}
 
-        [Test]
+		[Test]
 		public void IssueTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -75,5 +75,5 @@ namespace Tests.UserTests
 				}
 			}
 		}
-    }
+	}
 }
