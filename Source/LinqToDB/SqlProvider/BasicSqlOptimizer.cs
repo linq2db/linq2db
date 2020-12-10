@@ -237,9 +237,6 @@ namespace LinqToDB.SqlProvider
 
 		SelectQuery MoveCountSubQuery(SelectQuery selectQuery, EvaluationContext context)
 		{
-			// OptimizeElement() selectQuery
-
-
 			new QueryVisitor().Visit(selectQuery, e => MoveCountSubQuery(e, context));
 			return selectQuery;
 		}
@@ -618,129 +615,13 @@ namespace LinqToDB.SqlProvider
 				}
 
 				case QueryElementType.SqlFunction :
-					#region SqlFunction
 				{
 					var func = (SqlFunction)expression;
 					if (func.DoNotOptimize)
 						break;
 
-					switch (func.Name)
-					{
-						case "CASE"     :
-						{
-							var parms = func.Parameters;
-							var len   = parms.Length;
-
-							for (var i = 0; i < parms.Length - 1; i += 2)
-							{
-								var boolValue = QueryHelper.GetBoolValue(parms[i], context);
-								if (boolValue != null)
-								{
-									if (boolValue == false)
-									{
-										var newParms = new ISqlExpression[parms.Length - 2];
-
-										if (i != 0)
-											Array.Copy(parms, 0, newParms, 0, i);
-
-										Array.Copy(parms, i + 2, newParms, i, parms.Length - i - 2);
-
-										parms = newParms;
-										i -= 2;
-									}
-									else
-									{
-										var newParms = new ISqlExpression[i + 1];
-
-										if (i != 0)
-											Array.Copy(parms, 0, newParms, 0, i);
-
-										newParms[i] = parms[i + 1];
-
-										parms = newParms;
-										break;
-									}
-								}
-							}
-
-							if (parms.Length == 1)
-								return parms[0];
-
-							if (parms.Length != len)
-								return new SqlFunction(func.SystemType, func.Name, func.IsAggregate, func.Precedence, parms);
-
-							if (parms.Length == 3 
-								&& !parms[0].ShouldCheckForNull()
-								&& parms[0].ElementType.In(QueryElementType.SqlFunction, QueryElementType.SearchCondition))
-							{
-								var boolValue1 = QueryHelper.GetBoolValue(parms[1], context);
-								var boolValue2 = QueryHelper.GetBoolValue(parms[2], context);
-
-								if (boolValue1 != null && boolValue2 != null)
-								{
-									if (boolValue1 == boolValue2)
-										return new SqlValue(true);
-										
-									if (!boolValue1.Value)
-										return new SqlSearchCondition(new SqlCondition(true, new SqlPredicate.Expr(parms[0], parms[0].Precedence)));
-
-									return parms[0];
-								}
-							}
-						}
-
-						break;
-
-						case "EXISTS":
-						{
-							if (func.Parameters.Length == 1 && func.Parameters[0] is SelectQuery query && query.Select.Columns.Count > 0)
-							{
-								var isAggregateQuery =
-									query.Select.Columns.All(c => QueryHelper.IsAggregationFunction(c.Expression));
-
-								if (isAggregateQuery)
-									return new SqlValue(true);
-							}
-
-							break;
-						}
-
-						case "$Convert$":
-						{
-							var typef = func.SystemType.ToUnderlying();
-
-							if (func.Parameters[2] is SqlFunction from && from.Name == "$Convert$" && from.Parameters[1].SystemType!.ToUnderlying() == typef)
-								return from.Parameters[2];
-
-							break;
-						}
-
-						case "Convert":
-						{
-							var typef = func.SystemType.ToUnderlying();
-
-							if (func.Parameters[1] is SqlFunction from && from.Name == "Convert" && from.Parameters[1].SystemType!.ToUnderlying() == typef)
-								return from.Parameters[1];
-
-							if (func.Parameters[1] is SqlExpression fe && fe.Expr == "Cast({0} as {1})" && fe.Parameters[0].SystemType!.ToUnderlying() == typef)
-								return fe.Parameters[0];
-
-							break;
-						}
-
-					}
-
-					break;
+					return OptimizeFunction(func, convertVisitor, context);
 				}
-				#endregion
-
-				/*
-				case QueryElementType.SearchCondition :
-				{
-					expression = SelectQueryOptimizer.OptimizeSearchCondition((SqlSearchCondition)expression, context);
-					break;
-				}
-				*/
 
 				case QueryElementType.SqlExpression   :
 				{
@@ -759,6 +640,118 @@ namespace LinqToDB.SqlProvider
 			}
 
 			return expression;
+		}
+
+		public virtual ISqlExpression OptimizeFunction(SqlFunction func, ConvertVisitor convertVisitor,
+			EvaluationContext context)
+		{
+			switch (func.Name)
+			{
+				case "CASE":
+				{
+					var parms = func.Parameters;
+					var len   = parms.Length;
+
+					for (var i = 0; i < parms.Length - 1; i += 2)
+					{
+						var boolValue = QueryHelper.GetBoolValue(parms[i], context);
+						if (boolValue != null)
+						{
+							if (boolValue == false)
+							{
+								var newParms = new ISqlExpression[parms.Length - 2];
+
+								if (i != 0)
+									Array.Copy(parms, 0, newParms, 0, i);
+
+								Array.Copy(parms, i + 2, newParms, i, parms.Length - i - 2);
+
+								parms = newParms;
+								i -= 2;
+							}
+							else
+							{
+								var newParms = new ISqlExpression[i + 1];
+
+								if (i != 0)
+									Array.Copy(parms, 0, newParms, 0, i);
+
+								newParms[i] = parms[i + 1];
+
+								parms = newParms;
+								break;
+							}
+						}
+					}
+
+					if (parms.Length == 1)
+						return parms[0];
+
+					if (parms.Length != len)
+						return new SqlFunction(func.SystemType, func.Name, func.IsAggregate, func.Precedence, parms);
+
+					if (parms.Length == 3
+						&& !parms[0].ShouldCheckForNull()
+						&& parms[0].ElementType.In(QueryElementType.SqlFunction, QueryElementType.SearchCondition))
+					{
+						var boolValue1 = QueryHelper.GetBoolValue(parms[1], context);
+						var boolValue2 = QueryHelper.GetBoolValue(parms[2], context);
+
+						if (boolValue1 != null && boolValue2 != null)
+						{
+							if (boolValue1 == boolValue2)
+								return new SqlValue(true);
+
+							if (!boolValue1.Value)
+								return new SqlSearchCondition(new SqlCondition(true, new SqlPredicate.Expr(parms[0], parms[0].Precedence)));
+
+							return parms[0];
+						}
+					}
+				}
+
+				break;
+
+				case "EXISTS":
+				{
+					if (func.Parameters.Length == 1 && func.Parameters[0] is SelectQuery query && query.Select.Columns.Count > 0)
+					{
+						var isAggregateQuery =
+									query.Select.Columns.All(c => QueryHelper.IsAggregationFunction(c.Expression));
+
+						if (isAggregateQuery)
+							return new SqlValue(true);
+					}
+
+					break;
+				}
+
+				case "$Convert$":
+				{
+					var typef = func.SystemType.ToUnderlying();
+
+					if (func.Parameters[2] is SqlFunction from && from.Name == "$Convert$" && from.Parameters[1].SystemType!.ToUnderlying() == typef)
+						return from.Parameters[2];
+
+					break;
+				}
+
+				case "Convert":
+				{
+					var typef = func.SystemType.ToUnderlying();
+
+					if (func.Parameters[1] is SqlFunction from && from.Name == "Convert" && from.Parameters[1].SystemType!.ToUnderlying() == typef)
+						return from.Parameters[1];
+
+					if (func.Parameters[1] is SqlExpression fe && fe.Expr == "Cast({0} as {1})" && fe.Parameters[0].SystemType!.ToUnderlying() == typef)
+						return fe.Parameters[0];
+
+					break;
+				}
+
+			}
+
+			return func;
 		}
 
 		static SqlPredicate.Operator InvertOperator(SqlPredicate.Operator op, bool preserveEqual)
@@ -1071,79 +1064,6 @@ namespace LinqToDB.SqlProvider
 			return predicate;
 		}
 
-		static SelectQuery? FindQuery(IReadOnlyList<IQueryElement> stack, int skip)
-		{
-			for (int i = stack.Count - 1; i >= 0; i--)
-			{
-				if (stack[i] is SelectQuery sc && skip-- == 0)
-					return sc;
-			}
-
-			return null;
-		}
-
-		static Tuple<SelectQuery?, SqlColumn?> FindQueryWithColumn(ConvertVisitor visitor, int skip)
-		{
-			SqlColumn? column = null;
-			SelectQuery? selectQuery = null;
-
-			for (int i = visitor.Stack.Count - 1; i >= 0; i--)
-			{
-				var element = visitor.Stack[i];
-				if (element.ElementType == QueryElementType.SqlQuery)
-				{
-					if (skip-- == 0)
-					{
-						selectQuery = (SelectQuery)element;
-						break;
-					}
-				}
-				else if (element.ElementType == QueryElementType.Column)
-				{
-					column = (SqlColumn)element;
-				}
-			}
-
-			return Tuple.Create(selectQuery, column);
-		}
-
-
-		static bool CheckColumn(SelectQuery parentQuery, SqlColumn column, EvaluationContext context)
-		{
-			var expr = QueryHelper.UnwrapExpression(column.Expression);
-
-			if (expr.ElementType.In(QueryElementType.SqlField, QueryElementType.Column, QueryElementType.SqlRawSqlTable))
-				return false;
-
-			if (expr.CanBeEvaluated(true))
-				return false;
-
-			if (new QueryVisitor().Find(expr, ex => QueryHelper.IsAggregationFunction(ex)) == null)
-			{
-				var elementsToIgnore = new HashSet<IQueryElement> { parentQuery };
-
-				var depends = QueryHelper.IsDependsOn(parentQuery.GroupBy, column, elementsToIgnore);
-				if (depends)
-					return true;
-
-				if (expr.IsComplexExpression())
-				{
-					depends =
-						QueryHelper.IsDependsOn(parentQuery.Where, column, elementsToIgnore)
-						|| QueryHelper.IsDependsOn(parentQuery.OrderBy, column, elementsToIgnore);
-
-					if (depends)
-						return true;
-				}
-
-				var dependsCount = QueryHelper.DependencyCount(parentQuery, column, elementsToIgnore);
-
-				return dependsCount > 1;
-			}
-
-			return true;
-		}
-
 		public virtual IQueryElement OptimizeQueryElement(ConvertVisitor visitor, IQueryElement root,
 			IQueryElement element, EvaluationContext context)
 		{
@@ -1155,156 +1075,6 @@ namespace LinqToDB.SqlProvider
 
 					return SelectQueryOptimizer.OptimizeCondition(condition);
 				}
-
-				/*case QueryElementType.TableSource:
-				{
-					// Removing simple subquery
-
-					var tableSource = (SqlTableSource)element;
-
-					var q = FindQuery(visitor.Stack, 0);
-					if (q == null)
-						break;
-
-					if (q.Select.From.Tables.Count != 1 || !ReferenceEquals(tableSource, q.Select.From.Tables[0]))
-						break;
-
-					if (tableSource.Joins.Count > 0)
-						break;
-
-					if (tableSource.Source is SelectQuery subQuery)
-					{
-						if (!subQuery.IsSimple)
-							break;
-
-						if (subQuery.From.Tables.Count != 1)
-							break;
-
-						var isColumnsOk = !subQuery.Select.Columns.Any(c => CheckColumn(q, c, context));
-
-						if (!isColumnsOk)
-							break;
-
-						for (int index = 0; index < subQuery.Select.Columns.Count; index++)
-						{
-							var column = subQuery.Select.Columns[index];
-							visitor.VisitedElements[column] = column.Expression;
-						}
-
-						return new SqlTableSource(subQuery.From.Tables[0].Source, tableSource.Alias, subQuery.From.Tables[0].Joins, subQuery.From.Tables[0].UniqueKeys);
-					}
-
-					break;
-				}
-
-				case QueryElementType.SelectClause:
-				{
-					var selectClause = (SqlSelectClause)element;
-
-					if (selectClause.SelectQuery == null)
-						break;
-
-					if (selectClause.SelectQuery.HasSetOperators || selectClause.SelectQuery.Select.IsDistinct)
-						break;
-
-					var findResult = FindQueryWithColumn(visitor, 1);
-					var parentQuery = findResult.Item1;
-					if (parentQuery == null || parentQuery.HasSetOperators || findResult.Item2 != null)
-						break;
-
-					var filter = new HashSet<IQueryElement> {selectClause};
-					List<SqlColumn>? columns = null;
-					for (int i = 0; i < selectClause.Columns.Count; i++)
-					{
-						var column = selectClause.Columns[i];
-
-						// Column is changed, waiting for another loop
-						if (column.Parent == null)
-							break;
-
-						// removing column which has no usage
-						//
-						if (!CheckColumn(parentQuery, column, context) &&
-						    !QueryHelper.IsDependsOn(root, column, filter) &&
-						    (columns == null && selectClause.Columns.Count > 1 || columns != null && columns.Count > 0))
-						{
-							columns ??= selectClause.Columns.Take(i).ToList();
-						}
-						else
-						{
-							columns?.Add(column);
-						}
-					}
-
-					if (columns != null)
-					{
-						var newClause = new SqlSelectClause(selectClause.IsDistinct, selectClause.TakeValue,
-							selectClause.TakeHints, selectClause.SkipValue, columns);
-						newClause.SetSqlQuery(selectClause.SelectQuery);
-						return newClause;
-					}
-
-					break;
-				}
-
-				case QueryElementType.Column:
-				{
-					var column = (SqlColumn)element;
-
-					if (column.Parent == null || column.Parent.HasSetOperators)
-						break;
-
-					if (column.Expression.ElementType == QueryElementType.Column)
-					{
-						var subColumn = (SqlColumn)column.Expression;
-						// optimizing out columns which are constants or evaluable
-						//
-						if (subColumn.Parent != null && !subColumn.Parent.HasSetOperators && subColumn.Expression.CanBeEvaluated(true))
-						{
-							// throw new NotImplementedException();
-							var ts = QueryHelper.EnumerateInnerJoined(column.Parent)
-								.FirstOrDefault(ts => ts.Source == subColumn.Parent);
-							if (ts != null)
-							{
-								return new SqlColumn(null, subColumn.Expression, column.RawAlias);
-							}
-						}
-					}
-
-					break;
-				}
-
-				case QueryElementType.GroupByClause:
-				{
-					var groupBy = (SqlGroupByClause)element;
-					if (groupBy.Items.Count > 0)
-					{
-						List<ISqlExpression>? items = null;
-						var processed = new HashSet<ISqlExpression>();
-						for (int i = 0; i < groupBy.Items.Count; i++)
-						{
-							var item = groupBy.Items[i];
-
-							// skipping evaluable grouping items
-							if (!processed.Add(item) || item.CanBeEvaluated(true))
-							{
-								items ??= groupBy.Items.Take(i).ToList();
-							}
-							else
-							{
-								items?.Add(item);
-							}
-						}
-
-						if (items != null)
-						{
-							return new SqlGroupByClause(groupBy.GroupingType, items);
-						}
-					}
-
-					break;
-				}*/
-
 			}
 
 			return element;
