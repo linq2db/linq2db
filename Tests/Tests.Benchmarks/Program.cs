@@ -16,8 +16,10 @@ namespace LinqToDB.Benchmarks
 		static void Main(string[] args)
 		{
 
-			/*VwSalesByCategoryContainsPerf();
-			return;*/
+			/*
+			VwSalesByCategoryContainsPerf();
+			return;
+			*/
 
 			BenchmarkSwitcher
 				.FromAssembly(typeof(Program).Assembly)

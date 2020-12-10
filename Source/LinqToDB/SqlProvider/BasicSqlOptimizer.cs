@@ -1759,9 +1759,6 @@ namespace LinqToDB.SqlProvider
 			{
 				var newElement = ConvertVisitor.ConvertAll(element, (visitor, e) =>
 				{
-					if (optimizationContext.IsOptimized(e, out var expr))
-						return expr!;
-
 					var prev = e;
 					var ne   = e;
 					for (;;)
@@ -1778,6 +1775,14 @@ namespace LinqToDB.SqlProvider
 						optimizationContext.RegisterOptimized(prev, e);
 
 					return e;
+				}, args =>
+				{
+					if (optimizationContext.IsOptimized(args.Element, out var expr))
+					{
+						args.Element = expr;
+						return false;
+					}	
+					return true;
 				});
 
 				if (ReferenceEquals(newElement, element))

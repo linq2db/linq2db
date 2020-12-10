@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using LinqToDB.Common;
 using LinqToDB.SqlQuery;
@@ -27,7 +28,7 @@ namespace LinqToDB.SqlProvider
 		public bool IsParameterOrderDepended { get; }
 
 
-		public bool IsOptimized(IQueryElement element, out IQueryElement? newExpr)
+		public bool IsOptimized(IQueryElement element, [NotNullWhen(true)] out IQueryElement? newExpr)
 		{
 			if (_optimized.TryGetValue(element, out var replaced))
 			{

@@ -13,6 +13,8 @@ namespace LinqToDB.SqlQuery
 		private readonly bool                                             _visitAll;
 		private readonly bool                                             _allowMutation;
 		private readonly Func<ConvertVisitor,IQueryElement,IQueryElement> _convert;
+		private readonly Func<VisitArgs, bool>?                           _parentAction;
+		private readonly VisitArgs?                                       _visitArgs;
 
 		static TE[] ToArray<TK,TE>(IDictionary<TK,TE> dic)
 			where TK : notnull
@@ -24,6 +26,17 @@ namespace LinqToDB.SqlQuery
 				es[i++] = e;
 
 			return es;
+		}
+		
+		public class VisitArgs
+		{
+			public VisitArgs(ConvertVisitor visitor)
+			{
+				Visitor = visitor;
+			}
+
+			public readonly ConvertVisitor Visitor;
+			public          IQueryElement  Element = null!;
 		}
 
 		delegate T Clone<T>(T obj);
@@ -53,17 +66,28 @@ namespace LinqToDB.SqlQuery
 			return (T?)new ConvertVisitor(convertAction, true, false).ConvertInternal(element) ?? element;
 		}
 
+		public static T ConvertAll<T>(T element, Func<ConvertVisitor, IQueryElement, IQueryElement> convertAction, Func<VisitArgs, bool> parentAction)
+			where T : class, IQueryElement
+		{
+			return (T?)new ConvertVisitor(convertAction, true, false, parentAction).ConvertInternal(element) ?? element;
+		}
+
 		public static T ConvertAll<T>(T element, bool allowMutation, Func<ConvertVisitor,IQueryElement,IQueryElement> convertAction)
 			where T : class, IQueryElement
 		{
 			return (T?)new ConvertVisitor(convertAction, true, allowMutation).ConvertInternal(element) ?? element;
 		}
 
-		ConvertVisitor(Func<ConvertVisitor,IQueryElement,IQueryElement> convertAction, bool visitAll, bool allowMutation)
+		ConvertVisitor(Func<ConvertVisitor,IQueryElement,IQueryElement> convertAction, bool visitAll, bool allowMutation, Func<VisitArgs, bool>? parentAction = default)
 		{
 			_visitAll      = visitAll;
 			_convert       = convertAction;
 			_allowMutation = allowMutation;
+			_parentAction  = parentAction;
+			if (_parentAction != null)
+			{
+				_visitArgs = new VisitArgs(this);
+			}
 		}
 
 		void CorrectQueryHierarchy(SelectQuery? parentQuery)
@@ -133,8 +157,16 @@ namespace LinqToDB.SqlQuery
 			if (newElement != null)
 				return newElement;
 
+			if (_parentAction != null)
+			{
+				_visitArgs!.Element = element;
+				var stop = !_parentAction(_visitArgs!);
+				element = _visitArgs!.Element;
+				if (stop)
+					return element;
+			}
+
 			Stack.Add(element);
-			try
 			{
 				switch (element.ElementType)
 				{
@@ -1142,10 +1174,7 @@ namespace LinqToDB.SqlQuery
 						throw new InvalidOperationException($"Convert visitor not implemented for element {element.ElementType}");
 				}
 			}
-			finally
-			{
-				Stack.RemoveAt(Stack.Count - 1);
-			}
+			Stack.RemoveAt(Stack.Count - 1);
 
 			newElement = _convert(this, newElement ?? element);
 
