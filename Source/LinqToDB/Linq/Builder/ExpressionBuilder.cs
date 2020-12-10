@@ -34,6 +34,7 @@ namespace LinqToDB.Linq.Builder
 			new OrderByBuilder             (),
 			new RemoveOrderByBuilder       (),
 			new GroupByBuilder             (),
+			new GroupByElementBuilder      (),
 			new JoinBuilder                (),
 			new AllJoinsBuilder            (),
 			new AllJoinsLinqBuilder        (),

@@ -443,6 +443,18 @@ namespace LinqToDB.SqlQuery
 
 			OptimizeDistinct();
 			OptimizeDistinctOrderBy();
+			CorrectColumns();
+		}
+
+		private void CorrectColumns()
+		{
+			if (!_selectQuery.GroupBy.IsEmpty && _selectQuery.Select.Columns.Count == 0)
+			{
+				foreach (var item in _selectQuery.GroupBy.Items)
+				{
+					_selectQuery.Select.Add(item);
+				}
+			}
 		}
 
 		public static SqlCondition OptimizeCondition(SqlCondition condition)
