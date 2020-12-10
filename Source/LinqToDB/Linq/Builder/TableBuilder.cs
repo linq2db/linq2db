@@ -115,9 +115,16 @@ namespace LinqToDB.Linq.Builder
 					{
 						if (buildInfo.IsSubQuery && buildInfo.SelectQuery.From.Tables.Count == 0)
 						{
+							// It should be handled by GroupByElementBuilder 
+							//
+							if (typeof(IGrouping<,>).IsSameOrParentOf(expression.Type))
+								break;
+							
 							parentContext = builder.GetContext(buildInfo.Parent, expression);
 							if (parentContext != null)
+							{
 								return BuildContextType.Association;
+							}
 						}
 
 						break;
