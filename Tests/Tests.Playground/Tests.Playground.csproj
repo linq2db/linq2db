@@ -59,6 +59,7 @@
 		<Compile Include="..\Linq\Update\UpdateTests.cs" Link="UpdateTests.cs" />
 		<Compile Include="..\Linq\UserTests\IndexOutOfRangeInUnions.cs" Link="IndexOutOfRangeInUnions.cs" />
 		<Compile Include="..\Linq\UserTests\Issue1225Tests.cs" Link="Issue1225Tests.cs" />
+		<Compile Include="..\Linq\UserTests\Issue1284Tests.cs" Link="Issue1284Tests.cs" />
 		<Compile Include="..\Linq\UserTests\Issue1925Tests.cs" Link="Issue1925Tests.cs" />
 		<Compile Include="..\Linq\UserTests\Issue2199Tests.cs" Link="Issue2199Tests.cs" />
 		<Compile Include="..\Linq\UserTests\Issue2478Tests.cs" Link="Issue2478Tests.cs" />
