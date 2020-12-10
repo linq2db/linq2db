@@ -815,6 +815,36 @@ namespace Tests.Linq
 			throw new InvalidOperationException();
 		}
 
+		[Test(Description = "Regression test against null.Value invocation")]
+		public void TernaryNullableNullExpressionTest([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Person.Where(p => p.ID != GetTernaryExpressionValue(null)).ToList();
+			}
+		}
+
+		[ExpressionMethod(nameof(GetTernaryExpressionValueExpr))]
+		public static int? GetTernaryExpressionValue(int? value)
+		{
+			if (value == null)
+			{
+				return null;
+			}
+
+			return GetTernaryExpressionValue(value.Value);
+		}
+
+		private static Expression<Func<int?, int?>> GetTernaryExpressionValueExpr()
+		{
+			return value => value == null ? null : (int?)GetTernaryExpressionValueFunction(value.Value, int.MaxValue);
+		}
+
+		[Sql.Function("COALESCE", ServerSideOnly = true)]
+		private static int GetTernaryExpressionValueFunction(int value, int defaultValue)
+		{
+			throw new InvalidOperationException();
+		}
 
 		#region issue 2431
 		[Table]
