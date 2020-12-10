@@ -25,7 +25,7 @@
 
 		protected override bool MergeSourceValueTypeRequired(SqlValuesTable source, IReadOnlyList<ISqlExpression[]> rows, int row, int column)
 		{
-			if (rows[row][column] is SqlParameter parameter && parameter.IsQueryParameter)
+			if (row >= 0 && rows[row][column] is SqlParameter parameter && parameter.IsQueryParameter)
 			{
 				return true;
 			}

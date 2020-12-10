@@ -52,6 +52,7 @@
 		<Compile Include="..\Linq\Update\InsertTests.cs" Link="InsertTests.cs" />
 		<Compile Include="..\Linq\Update\MergeTests.cs" Link="MergeTests.cs" />
 		<Compile Include="..\Linq\Update\MergeTests.Issues.cs" Link="MergeTests.Issues.cs" />
+		<Compile Include="..\Linq\Update\MergeTests.Operations.Insert.cs" Link="MergeTests.Operations.Insert.cs" />
 		<Compile Include="..\Linq\Update\MergeTests.Operations.Parameters.cs" Link="MergeTests.Operations.Parameters.cs" />
 		<Compile Include="..\Linq\Update\MergeTests.Operations.UpdateWithDelete.cs" Link="MergeTests.Operations.UpdateWithDelete.cs" />
 		<Compile Include="..\Linq\Update\MergeTests.Types.cs" Link="MergeTests.Types.cs" />
