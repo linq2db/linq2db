@@ -53,8 +53,6 @@ namespace LinqToDB.SqlProvider
 				}
 			);
 
-//			statement = OptimizeStatement(statement, evaluationContext);
-
 			statement.WalkQueries(
 				selectQuery =>
 				{
@@ -2615,47 +2613,6 @@ namespace LinqToDB.SqlProvider
 
 		#endregion
 
-		#region Optimizing Statement
-
-		/*
-		public T OptimizeElements<T>(T root, EvaluationContext context, bool allowMutation)
-			where T : class, IQueryElement
-		{
-			// return root;
-			var mutated = false;
-			var newElement = ConvertVisitor.ConvertAll(root, allowMutation, (visitor, e) =>
-			{
-				var ne = e;
-				if (ne is ISqlExpression sqlExpression)
-					ne = OptimizeExpression(sqlExpression, visitor, context);
-
-				if (ne is ISqlPredicate sqlPredicate)
-					ne = OptimizePredicate(sqlPredicate, context);
-
-				ne = OptimizeQueryElement(visitor, root, ne, context);
-
-				mutated = mutated || !ReferenceEquals(e, ne);
-
-				return ne;
-			});
-
-			if (mutated)
-				newElement = OptimizeElements(newElement, context, allowMutation);
-
-			return newElement;
-		}
-
-		*/
-		public SqlStatement OptimizeStatement(SqlStatement statement, EvaluationContext context)
-		{
-			//statement = OptimizeElements(statement, context, context.ParameterValues == null);
-
-			// statement = OptimizeAggregates(statement);
-
-			return statement;
-		}
-
-
 		public virtual bool IsParameterDependedQuery(SelectQuery query)
 		{
 			var takeValue = query.Select.TakeValue;
@@ -2744,6 +2701,12 @@ namespace LinqToDB.SqlProvider
 					if (isMutable1 && isMutable2)
 						return true;
 
+					if (isMutable1 && exprExpr.Expr2.CanBeEvaluated(false))
+						return true;
+
+					if (isMutable2 && exprExpr.Expr1.CanBeEvaluated(false))
+						return true;
+
 					if (isMutable1 && exprExpr.Expr1.ShouldCheckForNull())
 						return true;
 
@@ -2804,38 +2767,6 @@ namespace LinqToDB.SqlProvider
 		public bool IsParameterDependent(SqlStatement statement)
 		{
 			return null != new QueryVisitor().Find(statement, e => IsParameterDependedElement(e));
-		}
-
-		public IQueryElement ConvertFunctions(IQueryElement element, EvaluationContext context)
-		{
-			var alreadyStable = new HashSet<IQueryElement>();
-
-			var newElement = ConvertVisitor.ConvertAll(element, (visitor, e) =>
-			{
-				if (alreadyStable.Contains(e))
-					return e;
-
-				var ne = e;
-				for (;;)
-				{
-					if (ne.ElementType == QueryElementType.SqlFunction)
-						ne = ConvertFunction((SqlFunction)ne);
-
-					if (ReferenceEquals(ne, e))
-						break;
-
-					e = ne;
-				}
-
-				alreadyStable.Add(e);
-
-				return e;
-			});
-
-			if (!ReferenceEquals(newElement, element))
-				newElement = ConvertFunctions(newElement, context);
-
-			return newElement;
 		}
 
 		public virtual SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context)
@@ -2935,8 +2866,6 @@ namespace LinqToDB.SqlProvider
 
 			}
 		}
-
-		#endregion
 
 		/// <summary>
 		/// Moves Distinct query into another subquery. Useful when preserving ordering is required, because some providers do not support DISTINCT ORDER BY.

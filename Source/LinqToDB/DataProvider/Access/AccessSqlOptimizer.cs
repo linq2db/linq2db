@@ -17,6 +17,7 @@ namespace LinqToDB.DataProvider.Access
 
 		public override bool   LikeIsEscapeSupported => false;
 
+		public override string[] LikeCharactersToEscape => AccessLikeCharactersToEscape;
 
 		public override ISqlPredicate ConvertLikePredicate(MappingSchema mappingSchema, SqlPredicate.Like predicate,
 			EvaluationContext context)

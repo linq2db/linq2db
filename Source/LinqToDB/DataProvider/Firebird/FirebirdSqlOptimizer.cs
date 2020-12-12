@@ -30,11 +30,6 @@ namespace LinqToDB.DataProvider.Firebird
 
 		public override bool IsParameterDependedElement(IQueryElement element)
 		{
-			bool IsQueryParameter(ISqlExpression expr)
-			{
-				return expr.ElementType == QueryElementType.SqlParameter && ((SqlParameter)expr).IsQueryParameter;
-			}
-
 			var result = base.IsParameterDependedElement(element);
 			if (result)
 				return true;
@@ -48,11 +43,6 @@ namespace LinqToDB.DataProvider.Firebird
 					    like.Expr2.ElementType != QueryElementType.SqlValue)
 						return true;
 					break;
-				}
-
-				case QueryElementType.Column:
-				{
-					return IsQueryParameter(((SqlColumn)element).Expression);
 				}
 
 				case QueryElementType.SearchStringPredicate:
