@@ -73,12 +73,13 @@ namespace LinqToDB.Metadata
 
 					var attr = new ColumnAttribute
 					{
-						Name         = c.Name,
-                        DbType       = c.DbType,
-						CanBeNull    = c.CanBeNull,
-						Storage      = c.Storage,
-						IsPrimaryKey = c.IsPrimaryKey,
-						IsIdentity   = c.IsDbGenerated,
+						Name            = c.Name,
+                        DbType          = c.DbType,
+						CanBeNull       = c.CanBeNull,
+						Storage         = c.Storage,
+						IsPrimaryKey    = c.IsPrimaryKey,
+						IsIdentity      = c.IsDbGenerated,
+						IsDiscriminator = c.IsDiscriminator,
                     };
 
 					return new[] { (T)(Attribute)attr };
