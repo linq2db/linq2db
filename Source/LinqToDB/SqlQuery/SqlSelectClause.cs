@@ -324,13 +324,6 @@ namespace LinqToDB.SqlQuery
 						Columns[i] = new SqlColumn(col.Parent, expr, col.Alias);
 				}
 			}
-			else
-			{
-				foreach (var col in Columns)
-				{
-					col.Expression = col.Expression.Walk(options, func)!;
-				}
-			}
 
 			TakeValue = TakeValue?.Walk(options, func);
 			SkipValue = SkipValue?.Walk(options, func);
