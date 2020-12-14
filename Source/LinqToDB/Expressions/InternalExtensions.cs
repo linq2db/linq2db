@@ -1294,6 +1294,16 @@ namespace LinqToDB.Expressions
 				case ExpressionType.Constant:
 					return ((ConstantExpression)expr).Value;
 
+				case ExpressionType.Convert:
+				case ExpressionType.ConvertChecked:
+					{
+						var unary = (UnaryExpression)expr;
+						var operand = unary.Operand.EvaluateExpression();
+						if (operand == null)
+							return null;
+						break;
+					}
+
 				case ExpressionType.MemberAccess:
 					{
 						var member = (MemberExpression) expr;
@@ -1302,8 +1312,13 @@ namespace LinqToDB.Expressions
 							return ((FieldInfo)member.Member).GetValue(member.Expression.EvaluateExpression());
 
 						if (member.Member.IsPropertyEx())
-							return ((PropertyInfo)member.Member).GetValue(member.Expression.EvaluateExpression(), null);
-
+						{
+							var obj = member.Expression.EvaluateExpression();
+							if (obj == null && ((PropertyInfo)member.Member).IsNullableValueMember())
+								return null;
+							return ((PropertyInfo)member.Member).GetValue(obj, null);
+						}
+						
 						break;
 					}
 				case ExpressionType.Call:
@@ -1311,6 +1326,10 @@ namespace LinqToDB.Expressions
 						var mc = (MethodCallExpression)expr;
 						var arguments = mc.Arguments.Select(EvaluateExpression).ToArray();
 						var instance  = mc.Object.EvaluateExpression();
+
+						if (instance == null && mc.Method.IsNullableGetValueOrDefault())
+							return null;
+						
 						return mc.Method.Invoke(instance, arguments);
 					}
 			}
