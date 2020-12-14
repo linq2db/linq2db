@@ -311,15 +311,25 @@ namespace LinqToDB.SqlQuery
 
 		ISqlExpression? ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
-			for (var i = 0; i < Columns.Count; i++)
+			if (!options.SkipColumnDeclaration)
 			{
-				var col  = Columns[i];
-				var expr = col.Walk(options, func);
+				for (var i = 0; i < Columns.Count; i++)
+				{
+					var col = Columns[i];
+					var expr = col.Walk(options, func);
 
-				if (expr is SqlColumn column)
-					Columns[i] = column;
-				else
-					Columns[i] = new SqlColumn(col.Parent, expr, col.Alias);
+					if (expr is SqlColumn column)
+						Columns[i] = column;
+					else
+						Columns[i] = new SqlColumn(col.Parent, expr, col.Alias);
+				}
+			}
+			else
+			{
+				foreach (var col in Columns)
+				{
+					col.Expression = col.Expression.Walk(options, func)!;
+				}
 			}
 
 			TakeValue = TakeValue?.Walk(options, func);

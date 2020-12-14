@@ -859,14 +859,14 @@ namespace LinqToDB.SqlQuery
 				QueryHelper.CollectDependencies(baseTable,         sources, foundFields);
 
 				var toReplace = foundFields.ToDictionary(f => f,
-					f => subQuery.Select.Columns[subQuery.Select.Add(f)] as ISqlExpression);
+					f => subQuery.Select.AddColumn(f) as ISqlExpression);
 
 				ISqlExpression TransformFunc(ISqlExpression e)
 				{
 					return toReplace.TryGetValue(e, out var newValue) ? newValue : e;
 				}
 
-				((ISqlExpressionWalkable)query.RootQuery()).Walk(new WalkOptions(), TransformFunc);
+				((ISqlExpressionWalkable)query.RootQuery()).Walk(new WalkOptions{ SkipColumnDeclaration = true }, TransformFunc);
 				foreach (var j in joins)
 				{
 					((ISqlExpressionWalkable) j).Walk(new WalkOptions(), TransformFunc);
