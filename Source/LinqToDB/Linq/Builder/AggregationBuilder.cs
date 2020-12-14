@@ -136,7 +136,30 @@ namespace LinqToDB.Linq.Builder
 			{
 				Expression expr;
 
-				if (_returnType.IsClass || _methodName == "Sum" || _returnType.IsNullable() || Sequence is DefaultIfEmptyBuilder.DefaultIfEmptyContext)
+				if (Sequence is DefaultIfEmptyBuilder.DefaultIfEmptyContext defaultIfEmpty)
+				{
+					expr = Builder.BuildSql(_returnType, fieldIndex, sqlExpression);
+					if (defaultIfEmpty.DefaultValue != null && expr is ConvertFromDataReaderExpression convert)
+					{
+						var generator = new ExpressionGenerator();
+						expr = convert.MakeNullable();
+						if (expr.Type.IsNullable())
+						{
+							var exprVar = generator.AssignToVariable(expr, "nullable");
+							var resultVar = generator.AssignToVariable(defaultIfEmpty.DefaultValue, "result");
+							
+							generator.AddExpression(Expression.IfThen(
+								Expression.NotEqual(exprVar, Expression.Constant(null)),
+								Expression.Assign(resultVar, Expression.Convert(exprVar, resultVar.Type))));
+
+							generator.AddExpression(resultVar);
+
+							expr = generator.Build();
+						}
+					}
+				}
+				else
+				if (_returnType.IsClass || _methodName == "Sum" || _returnType.IsNullable())
 				{
 					expr = Builder.BuildSql(_returnType, fieldIndex, sqlExpression);
 				}

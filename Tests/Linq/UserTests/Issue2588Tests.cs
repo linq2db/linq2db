@@ -43,13 +43,13 @@ namespace Tests.UserTests
 
 				Assert.AreEqual(0, value2);
 
-				//var value3 = await db.GetTable<TestClass>()
-				//	.Where(x => x.Id == 0)
-				//	.Select(x => x.Value)
-				//	.DefaultIfEmpty(5)
-				//	.MaxAsync();
+				var value3 = await db.GetTable<TestClass>()
+					.Where(x => x.Id == 0)
+					.Select(x => x.Value)
+					.DefaultIfEmpty(5)
+					.MaxAsync();
 
-				//Assert.AreEqual(5, value2);
+				Assert.AreEqual(5, value3);
 			}
 		}
 	}
