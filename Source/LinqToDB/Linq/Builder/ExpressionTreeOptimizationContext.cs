@@ -500,6 +500,43 @@ namespace LinqToDB.Linq.Builder
 
 				switch (expr.NodeType)
 				{
+					case ExpressionType.ArrayLength:
+						var ue = (UnaryExpression)expr;
+						var ll  = Expressions.ConvertMember(MappingSchema, ue.Operand?.Type, ue.Operand.Type.GetProperty("Length"));
+						if (ll != null)
+						{
+							var body  = ll.Body.Unwrap();
+							var parms = ll.Parameters.ToDictionary(p => p);
+							var ex    = body.Transform(wpi =>
+							{
+								if (wpi.NodeType == ExpressionType.Parameter && parms.ContainsKey((ParameterExpression)wpi))
+								{
+									var o=ue;
+									if (wpi.Type.IsSameOrParentOf(ue.Operand!.Type))
+									{
+										return ue.Operand;
+									}
+
+									if (ExpressionBuilder.DataContextParam.Type.IsSameOrParentOf(wpi.Type))
+									{
+										if (ExpressionBuilder.DataContextParam.Type != wpi.Type)
+											return Expression.Convert(ExpressionBuilder.DataContextParam, wpi.Type);
+										return ExpressionBuilder.DataContextParam;
+									}
+
+									throw new LinqToDBException($"Can't convert {wpi} to expression.");
+								}
+
+								return wpi;
+							});
+
+							if (ex.Type != expr.Type)
+								ex = new ChangeTypeExpression(ex, expr.Type);
+							ex = ExposeExpression(ex);
+							//RegisterAlias(ex, alias!);
+							return ex;
+						}
+						break;
 					case ExpressionType.MemberAccess:
 						{
 							var me = (MemberExpression)expr;
