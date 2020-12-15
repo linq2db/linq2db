@@ -545,6 +545,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net50", "net50", "{B528C8AE
 		Build\Azure\net50\sybase.json = Build\Azure\net50\sybase.json
 	EndProjectSection
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LinqToDB.Generators", "Source\LinqToDB.Generators\LinqToDB.Generators.csproj", "{678254A8-DDA6-4A1A-9980-7B3C5A23653E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Azure|Any CPU = Azure|Any CPU
@@ -615,6 +617,12 @@ Global
 		{52EABB0B-0C56-43F1-B98B-6461FA841E5F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{52EABB0B-0C56-43F1-B98B-6461FA841E5F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{52EABB0B-0C56-43F1-B98B-6461FA841E5F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{678254A8-DDA6-4A1A-9980-7B3C5A23653E}.Azure|Any CPU.ActiveCfg = Debug|Any CPU
+		{678254A8-DDA6-4A1A-9980-7B3C5A23653E}.Azure|Any CPU.Build.0 = Debug|Any CPU
+		{678254A8-DDA6-4A1A-9980-7B3C5A23653E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{678254A8-DDA6-4A1A-9980-7B3C5A23653E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{678254A8-DDA6-4A1A-9980-7B3C5A23653E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{678254A8-DDA6-4A1A-9980-7B3C5A23653E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -657,6 +665,7 @@ Global
 		{BD5FA19A-4092-45F0-A7AF-D46666718EB5} = {51E64464-E257-4984-A4D5-BF9FF8B7DF1D}
 		{DAD073A0-C4D2-4C92-AB6D-F8162DB2D5D3} = {C937AC8E-2714-4850-A1EA-1710D980DF0B}
 		{B528C8AE-AF7A-4D8C-919E-2E3FA4C99EEE} = {51E64464-E257-4984-A4D5-BF9FF8B7DF1D}
+		{678254A8-DDA6-4A1A-9980-7B3C5A23653E} = {AF93451E-198C-4A94-8EB4-C330D886E102}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {15BBD7CE-1C8E-4407-9DCF-674982CEB3F7}

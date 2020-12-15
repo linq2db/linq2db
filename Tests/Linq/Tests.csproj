@@ -13,6 +13,9 @@
 		<ProjectReference Include="..\..\Source\LinqToDB.AspNet\LinqToDB.AspNet.csproj" />
 		<ProjectReference Include="..\VisualBasic\Tests.VisualBasic.vbproj" />
 		<ProjectReference Include="..\FSharp\Tests.FSharp.fsproj" />
+		<ProjectReference Include="..\..\Source\LinqToDB.Generators\LinqToDB.Generators.csproj"
+											ReferenceOutputAssembly="false"
+                      OutputItemType="Analyzer" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' != 'net472'">

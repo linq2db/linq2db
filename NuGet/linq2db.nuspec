@@ -33,8 +33,13 @@
 	</metadata>
 
 	<files>
+		<!-- Primary reference files -->
 		<file src="..\Source\LinqToDB\bin\Release\**\linq2db.pdb" target="lib\" />
 		<file src="..\Source\LinqToDB\bin\Release\**\linq2db.xml" target="lib\" />
 		<file src="..\Source\LinqToDB\bin\Release\**\linq2db.dll" target="lib\" />
+
+		<!-- Generators -->
+		<file src="..\Source\LinqToDB.Generators\bin\Release\netstandard2.0\LinqToDB.Generators.dll" 
+					target="analyzers\dotnet\cs" />
 	</files>
 </package>
