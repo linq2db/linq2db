@@ -5,11 +5,59 @@ namespace LinqToDB.DataProvider.Informix
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
+	using Mapping;
 
 	class InformixSqlOptimizer : BasicSqlOptimizer
 	{
 		public InformixSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
+		}
+
+		public override bool IsParameterDependedElement(IQueryElement element)
+		{
+			if (base.IsParameterDependedElement(element))
+				return true;
+
+			switch (element.ElementType)
+			{
+				case QueryElementType.LikePredicate:
+				{
+					var like = (SqlPredicate.Like)element;
+					if (like.Expr2.ElementType != QueryElementType.SqlValue)
+						return true;
+					break;
+				}
+
+				case QueryElementType.SearchStringPredicate:
+				{
+					var containsPredicate = (SqlPredicate.SearchString)element;
+					if (containsPredicate.Expr2.ElementType != QueryElementType.SqlValue)
+						return true;
+
+					return false;
+				}
+
+			}
+
+			return false;
+		}
+
+		public override ISqlPredicate ConvertLikePredicate(MappingSchema mappingSchema, SqlPredicate.Like predicate,
+			EvaluationContext context)
+		{
+			//Informix cannot process parameters in Like
+			//
+			if (context.ParameterValues != null)
+			{
+				var exp2 = TryConvertToValue(predicate.Expr2, context);
+
+				if (!ReferenceEquals(exp2, predicate.Expr2))
+				{
+					predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, exp2, predicate.Escape);
+				}
+			}
+
+			return predicate;
 		}
 
 		static void SetQueryParameter(IQueryElement element)

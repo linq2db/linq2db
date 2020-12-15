@@ -60,17 +60,6 @@ namespace LinqToDB.DataProvider.Firebird
 		}
 
 
-		static ISqlExpression TryConvertToValue(ISqlExpression expr, EvaluationContext context)
-		{
-			if (expr.ElementType != QueryElementType.SqlValue)
-			{
-				if (expr.TryEvaluateExpression(context, out var value))
-					expr = new SqlValue(expr.GetExpressionType(), value);
-			}
-
-			return expr;
-		}
-
 		public override ISqlPredicate ConvertSearchStringPredicate(MappingSchema mappingSchema, SqlPredicate.SearchString predicate,
 			ConvertVisitor visitor,
 			OptimizationContext optimizationContext)

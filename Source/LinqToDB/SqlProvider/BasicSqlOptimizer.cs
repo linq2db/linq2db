@@ -3068,6 +3068,17 @@ namespace LinqToDB.SqlProvider
 
 		#region Helper functions
 
+		protected static ISqlExpression TryConvertToValue(ISqlExpression expr, EvaluationContext context)
+		{
+			if (expr.ElementType != QueryElementType.SqlValue)
+			{
+				if (expr.TryEvaluateExpression(context, out var value))
+					expr = new SqlValue(expr.GetExpressionType(), value);
+			}
+
+			return expr;
+		}
+		
 		protected static bool IsBooleanParameter(ISqlExpression expr, int count, int i)
 		{
 			if ((i % 2 == 1 || i == count - 1) && expr.SystemType == typeof(bool) || expr.SystemType == typeof(bool?))
