@@ -34,7 +34,7 @@ namespace LinqToDB.Linq
 
 			public static void ClearCache()
 			{
-				QueryCache.Compact(1);
+				QueryCache.Clear();
 			}
 
 			internal static MemoryCache QueryCache { get; } = new MemoryCache(new MemoryCacheOptions());
@@ -52,6 +52,7 @@ namespace LinqToDB.Linq
 			readonly Expression<Func<IQueryRunner,IDataReader,T>> _expression;
 			readonly ConcurrentDictionary<Type, ReaderMapperInfo> _mappers = new ConcurrentDictionary<Type, ReaderMapperInfo>();
 
+
 			class ReaderMapperInfo
 			{
 				public Expression<Func<IQueryRunner, IDataReader, T>> MapperExpression = null!;
@@ -61,6 +62,10 @@ namespace LinqToDB.Linq
 
 			public T Map(IDataContext context, IQueryRunner queryRunner, IDataReader dataReader)
 			{
+				// unwrap early
+				// https://github.com/linq2db/linq2db/issues/2499
+				dataReader = DataReaderWrapCache.TryUnwrapDataReader(context.MappingSchema, dataReader);
+
 				var dataReaderType = dataReader.GetType();
 
 				if (!_mappers.TryGetValue(dataReaderType, out var mapperInfo))
@@ -118,8 +123,7 @@ namespace LinqToDB.Linq
 				Type         dataReaderType,
 				bool         slowMode)
 			{
-				var converterExpr = context.MappingSchema.GetConvertExpression(dataReaderType, typeof(IDataReader), false, false);
-				var variableType  = converterExpr != null ? context.DataReaderType : dataReaderType;
+				var variableType  = dataReader.GetType();
 
 				ParameterExpression? oldVariable = null;
 				ParameterExpression? newVariable = null;
@@ -159,11 +163,6 @@ namespace LinqToDB.Linq
 						&& bex.Left == oldVariable)
 					{
 						Expression dataReaderExpression = Expression.Convert(_expression.Parameters[1], dataReaderType);
-
-						if (converterExpr != null)
-						{
-							dataReaderExpression = Expression.Convert(converterExpr.GetBody(dataReaderExpression), variableType);
-						}
 
 						return Expression.Assign(newVariable, dataReaderExpression);
 					}

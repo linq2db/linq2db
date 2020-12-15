@@ -1607,11 +1607,13 @@ namespace LinqToDB.Data
 		public DataConnection AddMappingSchema(MappingSchema mappingSchema)
 		{
 			var key = new { BaseSchema = MappingSchema.ConfigurationID, AddedSchema = mappingSchema.ConfigurationID };
-			MappingSchema = _combinedSchemas.GetOrCreate(key, 
-				o => 
+			MappingSchema = _combinedSchemas.GetOrCreate(
+				key,
+				new { BaseSchema = MappingSchema, AddedSchema = mappingSchema },
+				static (entry, key, context) => 
 				{
-					o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
-					return new MappingSchema(mappingSchema, MappingSchema);
+					entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+					return new MappingSchema(context.AddedSchema, context.BaseSchema);
 				});
 			_id            = null;
 
