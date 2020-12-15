@@ -69,6 +69,11 @@ namespace LinqToDB.Expressions
 				return new DynamicColumnInfo(arg1.Type, methodCall.Method.GetGenericArguments()[0], memberName);
 			}
 
+			if (expr.NodeType == ExpressionType.ArrayLength)
+			{
+				return ((UnaryExpression)expr).Operand.Type.GetProperty("Length");
+			}
+
 			return
 				expr is MemberExpression me
 					? me.Member

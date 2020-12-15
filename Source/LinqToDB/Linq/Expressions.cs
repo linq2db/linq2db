@@ -574,6 +574,12 @@ namespace LinqToDB.Linq
 
 			#endregion
 
+			#region Byte[]
+
+			{ M(() => ((byte[])null!).Length ), N(() => L<byte[],int>((byte[] obj) => Sql.Length(obj)!.Value)) },
+
+			#endregion
+
 			#region DateTime
 
 			{ M(() => Sql.GetDate()                  ), N(() => L<DateTime>                (()                        => Sql.CurrentTimestamp2)) },
