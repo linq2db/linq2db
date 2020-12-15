@@ -9,7 +9,7 @@ using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
-namespace Tests.Playground
+namespace Tests.Linq
 {
 	public static class DynamicWindowFunctionsExtensions
 	{
@@ -195,8 +195,8 @@ namespace Tests.Playground
 		[Table]
 		class SampleClass
 		{
-			[Column] public int Id    { get; set; }
-			[Column] public int Value { get; set; }
+			[Column] public int Id     { get; set; }
+			[Column] public int Value1 { get; set; }
 		}
 
 		[Test]
@@ -205,7 +205,7 @@ namespace Tests.Playground
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<SampleClass>())
 			{
-				var query = table.OrderBy(t => t.Id).ThenByDescending(t => t.Value).SelectRanked(x => x.Value);
+				var query = table.OrderBy(t => t.Id).ThenByDescending(t => t.Value1).SelectRanked(x => x.Value1);
 				var result = query.ToArray();
 			}
 		}

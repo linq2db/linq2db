@@ -1588,43 +1588,6 @@ namespace LinqToDB.SqlProvider
 					return ne;
 				});
 
-			/*newElement = ApplyMutation(mappingSchema, element, optimizationContext, this, false,
-				static (ms, ctx, opt, visitor, root, e) =>
-				{
-					var ne = e;
-					if (ne is ISqlExpression expr1)
-						ne = opt.OptimizeExpression(expr1, visitor, ctx.Context);
-
-					if (ne is ISqlPredicate pred1)
-						ne = opt.OptimizePredicate(pred1, ctx.Context);
-
-					if (!ReferenceEquals(ne, e))
-						return ne;
-
-					ne = opt.OptimizeQueryElement(visitor, root, ne, ctx.Context);
-
-					return ne;
-				});*/
-
-			/*
-			newElement = ApplyMutation(mappingSchema, newElement, optimizationContext, this, true,
-				static (ms, ctx, opt, visitor, root, e) =>
-				{
-					var ne = e;
-
-					if (ne is ISqlExpression expr2)
-						ne = opt.ConvertExpressionImpl(expr2, visitor, ctx.Context);
-
-					if (!ReferenceEquals(ne, e))
-						return ne;
-
-					if (ne is ISqlPredicate pred3)
-						ne = opt.ConvertPredicateImpl(ms, pred3, visitor, ctx);
-
-					return ne;
-				});
-				*/
-
 			if (withConversion)
 			{
 				if (mappingSchema == null)
@@ -1687,9 +1650,6 @@ namespace LinqToDB.SqlProvider
 		public virtual string EscapeLikeCharacters(string str, string escape)
 		{
 			var newStr = str;
-
-			/*if (LikeHasCharacterSetSupport)
-				newStr = DataTools.EscapeUnterminatedBracket(newStr);*/
 
 			newStr = newStr.Replace(escape, escape + escape);
 

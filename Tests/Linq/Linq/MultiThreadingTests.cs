@@ -19,8 +19,8 @@ namespace Tests.Linq
 		{
 			if (obj == null)
 				return;
-			
-			Console.WriteLine(JsonConvert.SerializeObject(obj, Formatting.Indented));
+
+			TestContext.WriteLine(JsonConvert.SerializeObject(obj, Formatting.Indented));
 		}
 		
 		[Table]
@@ -103,7 +103,7 @@ namespace Tests.Linq
 				var result = results[i];
 				if (result.Item5 != null)
 				{
-					Console.WriteLine($"Exception in query ({result.Item1}):\n\n{result.Item5}");
+					TestContext.WriteLine($"Exception in query ({result.Item1}):\n\n{result.Item5}");
 					throw result.Item5;
 				}
 				try
@@ -113,16 +113,16 @@ namespace Tests.Linq
 				catch
 				{
 					var testResult = queryFunc(dc, result!.Item1);
-					
-					Console.WriteLine($"Failed query ({result.Item1}):\n");
+
+					TestContext.WriteLine($"Failed query ({result.Item1}):\n");
 					if (result.Item4 != null)
 					{
 						var sb = new StringBuilder();
 						dc.DataProvider.CreateSqlBuilder(dc.MappingSchema).PrintParameters(sb, result.Item4.OfType<IDbDataParameter>());
-						Console.WriteLine(sb);
+						TestContext.WriteLine(sb);
 					}
-					Console.WriteLine();
-					Console.WriteLine(result.Item3);
+					TestContext.WriteLine();
+					TestContext.WriteLine(result.Item3);
 
 					DumpObject(result.Item2);
 					
@@ -136,8 +136,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		// "Firebird may return different result with the same query. WTF" 
-		[ActiveIssue(Configurations = new[] { TestProvName.AllFirebird })]
 		public void StartsWithTests([DataSources(false)] string context)
 		{
 			using var d1 = new DisableBaseline("Multi-threading");
@@ -146,9 +144,14 @@ namespace Tests.Linq
 			var testData = MultiThreadedData.TestData();
 			
 			using (var db = (DataConnection)GetDataContext(context))
+			using (db.BeginTransaction())
 			using (db.CreateLocalTable(testData))
 			{
-				Thread.Sleep(1000);
+				// transaction (or delay) required for Access and Firebird, otherwise it is possible for other threads
+				// to read incomplete results, because inserted data is not made available yet to other threads by
+				// database engine
+				db.CommitTransaction();
+
 				ConcurrentRunner(db, context, 10,
 					(threadDb, p) =>
 					{
@@ -189,7 +192,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ActiveIssue(Configurations = new []{TestProvName.AllAccess, TestProvName.AllFirebird})]
 		public void ParamOptimization([DataSources(false, TestProvName.AllAccess)] string context)
 		{
 			using var d1 = new DisableBaseline("Multi-threading");
@@ -198,8 +200,14 @@ namespace Tests.Linq
 			var testData = MultiThreadedData.TestData();
 
 			using (var db = (DataConnection)GetDataContext(context))
+			using (db.BeginTransaction())
 			using (var table = db.CreateLocalTable(testData))
 			{
+				// transaction (or delay) required for Access and Firebird, otherwise it is possible for other threads
+				// to read incomplete results, because inserted data is not made available yet to other threads by
+				// database engine
+				db.CommitTransaction();
+
 				ConcurrentRunner(db, context, 2,
 					(threadDb, p) =>
 					{
@@ -215,7 +223,6 @@ namespace Tests.Linq
 		}		
 		
 		[Test]
-		[ActiveIssue(Configurations = new []{TestProvName.AllAccess, TestProvName.AllFirebird})]
 		public void MergeInsert([MergeTests.MergeDataContextSource(false)] string context)
 		{
 			using var d1 = new DisableBaseline("Multi-threading");
@@ -224,8 +231,14 @@ namespace Tests.Linq
 			var testData = MultiThreadedData.TestData();
 
 			using (var db = (DataConnection)GetDataContext(context))
+			using (db.BeginTransaction())
 			using (var table = db.CreateLocalTable(testData))
 			{
+				// transaction (or delay) required for Access and Firebird, otherwise it is possible for other threads
+				// to read incomplete results, because inserted data is not made available yet to other threads by
+				// database engine
+				db.CommitTransaction();
+
 				ConcurrentRunner(db, context, 1,
 					(threadDb, p) =>
 					{

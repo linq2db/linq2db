@@ -67,9 +67,9 @@ namespace Tests
 
 		static TestBase()
 		{
-			Console.WriteLine("Tests started in {0}...", Environment.CurrentDirectory);
+			TestContext.WriteLine("Tests started in {0}...", Environment.CurrentDirectory);
 
-			Console.WriteLine("CLR Version: {0}...", Environment.Version);
+			TestContext.WriteLine("CLR Version: {0}...", Environment.Version);
 
 			var traceCount = 0;
 
@@ -106,7 +106,7 @@ namespace Tests
 					if (traceCount < TRACES_LIMIT || level == TraceLevel.Error)
 					{
 						ctx.Set(CustomTestContext.LIMITED, true);
-						Console.WriteLine("{0}: {1}", name, message);
+						TestContext.WriteLine("{0}: {1}", name, message);
 						Debug.WriteLine(message, name);
 					}
 
@@ -152,7 +152,7 @@ namespace Tests
 #endif
 
 #if AZURE
-			Console.WriteLine("Azure configuration detected.");
+			TestContext.WriteLine("Azure configuration detected.");
 			configName += ".Azure";
 #endif
 			var testSettings = SettingsReader.Deserialize(configName, dataProvidersJson, userDataProvidersJson);
@@ -167,7 +167,7 @@ namespace Tests
 			foreach (var file in Directory.GetFiles(databasePath, "*.*"))
 			{
 				var destination = Path.Combine(dataPath, Path.GetFileName(file));
-				Console.WriteLine("{0} => {1}", file, destination);
+				TestContext.WriteLine("{0} => {1}", file, destination);
 				File.Copy(file, destination, true);
 			}
 
@@ -186,7 +186,7 @@ namespace Tests
 
 			DataConnection.TurnTraceSwitchOn(traceLevel);
 
-			Console.WriteLine("Connection strings:");
+			TestContext.WriteLine("Connection strings:");
 
 #if !NET472
 			DataConnection.DefaultSettings            = TxtSettings.Instance;
@@ -197,7 +197,7 @@ namespace Tests
 				if (string.IsNullOrWhiteSpace(provider.Value.ConnectionString))
 					throw new InvalidOperationException("ConnectionString should be provided");
 
-				Console.WriteLine($"\tName=\"{provider.Key}\", Provider=\"{provider.Value.Provider}\", ConnectionString=\"{provider.Value.ConnectionString}\"");
+				TestContext.WriteLine($"\tName=\"{provider.Key}\", Provider=\"{provider.Value.Provider}\", ConnectionString=\"{provider.Value.ConnectionString}\"");
 
 				TxtSettings.Instance.AddConnectionString(
 					provider.Key, provider.Value.Provider ?? "", provider.Value.ConnectionString);
@@ -205,7 +205,7 @@ namespace Tests
 #else
 			foreach (var provider in testSettings.Connections)
 			{
-				Console.WriteLine($"\tName=\"{provider.Key}\", Provider=\"{provider.Value.Provider}\", ConnectionString=\"{provider.Value.ConnectionString}\"");
+				TestContext.WriteLine($"\tName=\"{provider.Key}\", Provider=\"{provider.Value.Provider}\", ConnectionString=\"{provider.Value.ConnectionString}\"");
 
 				DataConnection.AddOrSetConfiguration(
 					provider.Key,
@@ -214,10 +214,10 @@ namespace Tests
 			}
 #endif
 
-			Console.WriteLine("Providers:");
+			TestContext.WriteLine("Providers:");
 
 			foreach (var userProvider in UserProviders)
-				Console.WriteLine($"\t{userProvider}");
+				TestContext.WriteLine($"\t{userProvider}");
 
 			DefaultProvider = testSettings.DefaultConfiguration;
 
@@ -257,7 +257,7 @@ namespace Tests
 			string? path = basePath;
 			while (!File.Exists(fileName))
 			{
-				Console.WriteLine($"File not found: {fileName}");
+				TestContext.WriteLine($"File not found: {fileName}");
 
 				path = Path.GetDirectoryName(path);
 
@@ -267,7 +267,7 @@ namespace Tests
 				fileName = Path.GetFullPath(Path.Combine(path, findFileName));
 			}
 
-			Console.WriteLine($"Base path found: {fileName}");
+			TestContext.WriteLine($"Base path found: {fileName}");
 
 			return fileName;
 		}
