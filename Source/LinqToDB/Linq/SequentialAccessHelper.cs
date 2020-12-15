@@ -8,10 +8,10 @@ namespace LinqToDB.Linq
 {
 	using System.Collections.Generic;
 	using Extensions;
-	using LinqToDB.Common;
+	using Common;
 	using LinqToDB.Expressions;
-	using LinqToDB.Linq.Internal;
-	using LinqToDB.Reflection;
+	using Internal;
+	using Reflection;
 
 	internal static class SequentialAccessHelper
 	{
@@ -204,7 +204,7 @@ namespace LinqToDB.Linq
 			}
 
 			// insert variables and variable init code to mapping expression
-				var updated = false;
+			var updated = false;
 			expression = expression.Transform(e =>
 			{
 				if (!updated && e is BlockExpression block)
