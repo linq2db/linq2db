@@ -308,15 +308,24 @@ namespace Tests
 			}
 		}
 
-		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string? tableName, IEnumerable<T> items)
+		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string? tableName, IEnumerable<T> items, bool insertInTransaction = false)
 		{
 			var table = CreateLocalTable<T>(db, tableName);
 
-			if (db is DataConnection)
+			if (db is DataConnection dc)
+			{
+				// apply transation only on insert, as not all dbs support DDL within transaction
+				if (insertInTransaction)
+					dc.BeginTransaction();
+
 				using (new DisableLogging())
 					table.Copy(items
 						, new BulkCopyOptions { BulkCopyType = BulkCopyType.MultipleRows }
 						);
+
+				if (insertInTransaction)
+					dc.CommitTransaction();
+			}
 			else
 				using (new DisableLogging())
 					foreach (var item in items)
@@ -326,9 +335,9 @@ namespace Tests
 			return table;
 		}
 
-		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, IEnumerable<T> items)
+		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, IEnumerable<T> items, bool insertInTransaction = false)
 		{
-			return CreateLocalTable(db, null, items);
+			return CreateLocalTable(db, null, items, insertInTransaction);
 		}
 	}
 }

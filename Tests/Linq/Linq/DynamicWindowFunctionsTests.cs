@@ -200,7 +200,13 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SampleSelectTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void SampleSelectTest([IncludeDataSources(
+#if NET472 // SQLite.MS for NETFX use old sqlite version without window functions
+		TestProvName.AllSQLiteClassic
+#else
+			TestProvName.AllSQLite
+#endif
+			)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<SampleClass>())
