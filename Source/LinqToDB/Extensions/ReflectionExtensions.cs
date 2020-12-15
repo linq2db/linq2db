@@ -894,6 +894,14 @@ namespace LinqToDB.Extensions
 				member.DeclaringType.GetGenericTypeDefinition() == typeof(Nullable<>);
 		}
 
+		public static bool IsNullableGetValueOrDefault(this MemberInfo member)
+		{
+			return
+				member.Name == "GetValueOrDefault" &&
+				member.DeclaringType!.IsGenericType &&
+				member.DeclaringType.GetGenericTypeDefinition() == typeof(Nullable<>);
+		}
+
 		static readonly Dictionary<Type,HashSet<Type>> _castDic = new Dictionary<Type,HashSet<Type>>
 		{
 			{ typeof(decimal), new HashSet<Type> { typeof(sbyte), typeof(byte),   typeof(short), typeof(ushort), typeof(int), typeof(uint), typeof(long), typeof(ulong), typeof(char)                } },
