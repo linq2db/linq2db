@@ -299,7 +299,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configuration = TestProvName.AllInformix, Details = "Informix doesn't support LIKE applied to parameter. We should generate literal here")]
 		[Test]
 		public void ContainsConstant41([DataSources] string context)
 		{
@@ -337,7 +336,6 @@ namespace Tests.Linq
 		}
 
 
-		[ActiveIssue(Configuration = TestProvName.AllInformix, Details = "Informix doesn't support LIKE applied to parameter. We should generate literal here")]
 		[Test]
 		public void ContainsParameterAll([DataSources] string context,
 			[Values("n", "-", "*", "?", "#", "%", "[", "]", "[]", "[[", "]]")]string toTest)

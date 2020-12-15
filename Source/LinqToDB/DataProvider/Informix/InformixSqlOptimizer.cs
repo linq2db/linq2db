@@ -45,7 +45,7 @@ namespace LinqToDB.DataProvider.Informix
 		public override ISqlPredicate ConvertLikePredicate(MappingSchema mappingSchema, SqlPredicate.Like predicate,
 			EvaluationContext context)
 		{
-			//Informix cannot process parameters in Like
+			//Informix cannot process parameter in Like template (only Informix provider, not InformixDB2)
 			//
 			if (context.ParameterValues != null)
 			{

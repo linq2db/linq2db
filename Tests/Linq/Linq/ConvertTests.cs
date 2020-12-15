@@ -669,7 +669,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("Conversion works properly, even without Sql.NoConvert")]
 		[Test]
 		public void ConvertDataToDecimalNoConvert([NorthwindDataContext] string context)
 		{
@@ -688,8 +687,8 @@ namespace Tests.Linq
 				var sqlActual   = qActual.  ToString();
 				var sqlExpected = qExpected.ToString();
 
-				Assert.That(sqlActual,   Is.Not.Contains   ("Convert").Or.Contains("Cast"));
-				Assert.That(sqlExpected, Contains.Substring("Convert").Or.Contains("Cast"));
+				Assert.That(sqlActual,   Is.Not.Contains("Convert").Or.Contains("Cast"));
+				Assert.That(sqlExpected, Is.Not.Contains("Convert").Or.Contains("Cast"));
 
 				var actual   = qActual.  ToArray();
 				var expected = qExpected.ToArray();
