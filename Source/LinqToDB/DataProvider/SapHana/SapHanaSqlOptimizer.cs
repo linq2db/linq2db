@@ -72,7 +72,7 @@ namespace LinqToDB.DataProvider.SapHana
 		}
 
 		//this is for Tests.Linq.Common.CoalesceLike test
-		static SqlFunction ConvertCase(Type systemType, ISqlExpression[] parameters, int start)
+		static SqlFunction ConvertCase(SqlFunction? func, Type systemType, ISqlExpression[] parameters, int start)
 		{
 			var len  = parameters.Length - start;
 			var cond = parameters[start];
@@ -88,12 +88,18 @@ namespace LinqToDB.DataProvider.SapHana
 			const string name = "CASE";
 
 			if (len == 3)
+			{
+				if (func != null && start == 0 && ReferenceEquals(parameters[start], cond))
+				{
+					return func;
+				}
 				return new SqlFunction(systemType, name, cond, parameters[start + 1], parameters[start + 2]);
-
+			}
+			
 			return new SqlFunction(systemType, name,
 				cond,
 				parameters[start + 1],
-				ConvertCase(systemType, parameters, start + 2));
+				ConvertCase(null, systemType, parameters, start + 2));
 		}
 
 		//this is for Tests.Linq.Common.CoalesceLike test
@@ -102,7 +108,7 @@ namespace LinqToDB.DataProvider.SapHana
 			func = ConvertFunctionParameters(func, false);
 			switch (func.Name)
 			{
-				case "CASE": func = ConvertCase(func.SystemType, func.Parameters, 0);
+				case "CASE": func = ConvertCase(func, func.SystemType, func.Parameters, 0);
 					break;
 			}
 			return base.ConvertFunction(func);
