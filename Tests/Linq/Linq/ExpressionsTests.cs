@@ -815,6 +815,119 @@ namespace Tests.Linq
 			throw new InvalidOperationException();
 		}
 
+		#region issue 2688
+		[Test]
+		public void NullableNullValueTest1([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Person.Where(p => p.ID != GetTernaryExpressionValue1(null)).ToList();
+			}
+		}
+
+		[Test]
+		public void NullableNullValueTest2([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Person.Where(p => p.ID != GetTernaryExpressionValue2(null)).ToList();
+			}
+		}
+
+		[Test]
+		public void NullableNullValueTest3([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Person.Where(p => p.ID != GetTernaryExpressionValue3(null)).ToList();
+			}
+		}
+
+		[Test]
+		public void NullableNullValueTest4([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Person.Where(p => p.ID != GetTernaryExpressionValue4(null)).ToList();
+			}
+		}
+
+		[Test]
+		public void NullableNullValueTest5([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Person.Where(p => p.ID != GetTernaryExpressionValue5(null)).ToList();
+			}
+		}
+
+		[ExpressionMethod(nameof(GetTernaryExpressionValue1Expr))]
+		public static int? GetTernaryExpressionValue1(int? value)
+		{
+			throw new InvalidOperationException();
+		}
+
+		private static Expression<Func<int?, int?>> GetTernaryExpressionValue1Expr()
+		{
+			// null.Value
+			return value => value == null ? null : (int?)GetTernaryExpressionValueFunction(value.Value, int.MaxValue);
+		}
+
+		[ExpressionMethod(nameof(GetTernaryExpressionValue2Expr))]
+		public static int? GetTernaryExpressionValue2(int? value)
+		{
+			throw new InvalidOperationException();
+		}
+
+		private static Expression<Func<int?, int?>> GetTernaryExpressionValue2Expr()
+		{
+			// (int)null
+			return value => value == null ? null : (int?)GetTernaryExpressionValueFunction((int)value, int.MaxValue);
+		}
+
+		[ExpressionMethod(nameof(GetTernaryExpressionValue3Expr))]
+		public static int? GetTernaryExpressionValue3(int? value)
+		{
+			throw new InvalidOperationException();
+		}
+
+		private static Expression<Func<int?, int?>> GetTernaryExpressionValue3Expr()
+		{
+			// null.GetValueOrDefault()
+			return value => value == null ? null : (int?)GetTernaryExpressionValueFunction(value.GetValueOrDefault(), int.MaxValue);
+		}
+
+		[ExpressionMethod(nameof(GetTernaryExpressionValue4Expr))]
+		public static int? GetTernaryExpressionValue4(int? value)
+		{
+			throw new InvalidOperationException();
+		}
+
+		private static Expression<Func<int?, int?>> GetTernaryExpressionValue4Expr()
+		{
+			// null.GetValueOrDefault(0)
+			return value => value == null ? null : (int?)GetTernaryExpressionValueFunction(value.GetValueOrDefault(0), int.MaxValue);
+		}
+
+		[ExpressionMethod(nameof(GetTernaryExpressionValue5Expr))]
+		public static int? GetTernaryExpressionValue5(int? value)
+		{
+			throw new InvalidOperationException();
+		}
+
+		private static Expression<Func<int?, int?>> GetTernaryExpressionValue5Expr()
+		{
+			// this actually works
+			// null.HasValue
+			return value => value.HasValue ? null : (int?)GetTernaryExpressionValueFunction(1, int.MaxValue);
+		}
+
+		[Sql.Function("COALESCE", ServerSideOnly = true)]
+		private static int GetTernaryExpressionValueFunction(int value, int defaultValue)
+		{
+			throw new InvalidOperationException();
+		}
+		#endregion
 
 		#region issue 2431
 		[Table]

@@ -340,19 +340,20 @@ namespace LinqToDB.DataProvider.Oracle
 			var readDateTimeOffsetFromOracleTimeStampLTZ = (Expression<Func<IDataReader, int, DateTimeOffset>>)Expression.Lambda(body, rdParam, indexParam);
 
 			// rd.GetOracleDecimal(i) => decimal
-			generator            = new ExpressionGenerator(typeMapper);
-			var decExpr          = generator.MapExpression((IDataReader rd, int i) => ((OracleDataReader)rd).GetOracleDecimal(i), rdParam, indexParam);
-			var oracleDecimalVar = generator.AssignToVariable(decExpr, "dec");
-			var precision        = generator.AssignToVariable(Expression.Constant(29), "precision");
-			var decimalVar       = generator.AddVariable(Expression.Parameter(typeof(decimal), "dec"));
-			var label            = Expression.Label(typeof(decimal));
+			var readOracleDecimal  = typeMapper.MapLambda<IDataReader, int, OracleDecimal>((rd, i) => ((OracleDataReader)rd).GetOracleDecimal(i));
+			var oracleDecimalParam = Expression.Parameter(readOracleDecimal.ReturnType, "dec");
+
+			generator      = new ExpressionGenerator(typeMapper);
+			var precision  = generator.AssignToVariable(Expression.Constant(29), "precision");
+			var decimalVar = generator.AddVariable(Expression.Parameter(typeof(decimal), "dec"));
+			var label      = Expression.Label(typeof(decimal));
 
 			generator.AddExpression(
 				Expression.Loop(
 					Expression.TryCatch(
 						Expression.Block(
-							Expression.Assign(oracleDecimalVar, generator.MapExpression((OracleDecimal d, int p) => OracleDecimal.SetPrecision(d, p), oracleDecimalVar, precision)),
-							Expression.Assign(decimalVar, Expression.Convert(oracleDecimalVar, typeof(decimal))),
+							Expression.Assign(oracleDecimalParam, generator.MapExpression((OracleDecimal d, int p) => OracleDecimal.SetPrecision(d, p), oracleDecimalParam, precision)),
+							Expression.Assign(decimalVar, Expression.Convert(oracleDecimalParam, typeof(decimal))),
 							Expression.Break(label, decimalVar)),
 						Expression.Catch(
 							typeof(OverflowException),
@@ -364,12 +365,13 @@ namespace LinqToDB.DataProvider.Oracle
 
 			body = generator.Build();
 
-			var readOracleDecimalToDecimalAdv = (Expression<Func<IDataReader, int, decimal>>)Expression.Lambda(body, rdParam, indexParam);
 			// workaround for mapper issue with complex reader expressions handling
 			// https://github.com/linq2db/linq2db/issues/2032
-			var compiledReader                = readOracleDecimalToDecimalAdv.Compile();
-			readOracleDecimalToDecimalAdv     = (Expression<Func<IDataReader, int, decimal>>)Expression.Lambda(
-				Expression.Invoke(Expression.Constant(compiledReader), rdParam, indexParam),
+			var compiledReader                = Expression.Lambda(body, oracleDecimalParam).Compile();
+			var readOracleDecimalToDecimalAdv = (Expression<Func<IDataReader, int, decimal>>)Expression.Lambda(
+				Expression.Invoke(
+					Expression.Constant(compiledReader),
+					readOracleDecimal.GetBody(rdParam, indexParam)),
 				rdParam,
 				indexParam);
 

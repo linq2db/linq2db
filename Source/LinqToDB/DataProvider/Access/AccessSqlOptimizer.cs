@@ -32,7 +32,7 @@ namespace LinqToDB.DataProvider.Access
 
 		public override ISqlExpression EscapeLikeCharacters(ISqlExpression expression, ref ISqlExpression? escape)
 		{
-			throw new LinqException("Access does not supports `Replace` function which is required for such query.");
+			throw new LinqException("Access does not support `Replace` function which is required for such query.");
 		}
 
 		public override SqlStatement TransformStatement(SqlStatement statement)

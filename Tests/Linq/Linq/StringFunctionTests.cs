@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Globalization;
 #if NET472
 using System.Data.Linq.SqlClient;
 #else
@@ -300,8 +299,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(Configuration = TestProvName.AllInformix, Details = "Informix doesn't support LIKE applied to parameter. We should generate literal here")]
 		[Test]
-		public void ContainsConstant41([DataSources(TestProvName.AllInformix)] string context)
+		public void ContainsConstant41([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -314,7 +314,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ContainsValueAll([DataSources(TestProvName.AllInformix)] string context, 
+		public void ContainsValueAll([DataSources] string context,
 			[Values("n", "-", "*", "?", "#", "%", "[", "]", "[]", "[[", "]]")]string toTest)
 		{
 			using (var db = GetDataContext(context))
@@ -336,8 +336,10 @@ namespace Tests.Linq
 			}
 		}
 
+
+		[ActiveIssue(Configuration = TestProvName.AllInformix, Details = "Informix doesn't support LIKE applied to parameter. We should generate literal here")]
 		[Test]
-		public void ContainsParameterAll([DataSources(TestProvName.AllInformix)] string context, 
+		public void ContainsParameterAll([DataSources] string context,
 			[Values("n", "-", "*", "?", "#", "%", "[", "]", "[]", "[[", "]]")]string toTest)
 		{
 			using (var db = GetDataContext(context))
@@ -443,7 +445,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ContainsNull([DataSources(ProviderName.Access, TestProvName.AllInformix)] string context)
+		public void ContainsNull([DataSources(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -617,7 +619,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void IndexOf11([DataSources(TestProvName.AllInformix, ProviderName.SQLiteMS)] string context)
+		public void IndexOf11([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -627,7 +629,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void IndexOf12([DataSources(TestProvName.AllInformix, ProviderName.SQLiteMS)] string context)
+		public void IndexOf12([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -637,7 +639,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void IndexOf2([DataSources(TestProvName.AllInformix, ProviderName.SQLiteMS)] string context)
+		public void IndexOf2([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -666,7 +668,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void LastIndexOf1([DataSources(
-			ProviderName.DB2, TestProvName.AllInformix,
+			ProviderName.DB2,
 			ProviderName.SqlCe, TestProvName.AllAccess, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
 			string context)
 		{
@@ -679,7 +681,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void LastIndexOf2([DataSources(
-			ProviderName.DB2, TestProvName.AllInformix, ProviderName.SqlCe,
+			ProviderName.DB2, ProviderName.SqlCe,
 			TestProvName.AllAccess, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
 			string context)
 		{
@@ -693,7 +695,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void LastIndexOf3([DataSources(
-			ProviderName.DB2, TestProvName.AllInformix, ProviderName.SqlCe,
+			ProviderName.DB2, ProviderName.SqlCe,
 			TestProvName.AllAccess, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
 			string context)
 		{
@@ -706,7 +708,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CharIndex1([DataSources(TestProvName.AllInformix, ProviderName.SQLiteMS)] string context)
+		public void CharIndex1([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -716,7 +718,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CharIndex2([DataSources(TestProvName.AllInformix, ProviderName.SQLiteMS)] string context)
+		public void CharIndex2([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -777,7 +779,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Reverse([DataSources(
-			ProviderName.DB2, TestProvName.AllInformix, ProviderName.SqlCe,
+			ProviderName.DB2, ProviderName.SqlCe,
 			TestProvName.AllAccess, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
 			string context)
 		{

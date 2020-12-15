@@ -137,7 +137,7 @@ namespace Tests.Data
 		[Test]
 		public void TestObjectProjection([DataSources(false)] string context)
 		{
-			using (var conn = new TestDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				var result = conn.Person.Where(p => p.ID == 1).Select(p => new { p.ID, p.Name })
 					.Take(1)

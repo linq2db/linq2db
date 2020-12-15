@@ -3,6 +3,7 @@ using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 
 namespace LinqToDB.DataProvider
@@ -191,6 +192,7 @@ namespace LinqToDB.DataProvider
 			}
 		}
 
+		[Obsolete("Use expression-based " + nameof(GetCharExpression) + " for mapping")]
 		public static Func<IDataReader, int, string> GetChar = (dr, i) =>
 		{
 			var str = dr.GetString(i);
@@ -200,6 +202,16 @@ namespace LinqToDB.DataProvider
 
 			return string.Empty;
 		};
+
+		public static Expression<Func<IDataReader, int, string>> GetCharExpression = (dr, i) => GetCharFromString(dr.GetString(i));
+
+		private static string GetCharFromString(string str)
+		{
+			if (str.Length > 0)
+				return str[0].ToString();
+
+			return string.Empty;
+		}
 
 		#region Create/Drop Database
 

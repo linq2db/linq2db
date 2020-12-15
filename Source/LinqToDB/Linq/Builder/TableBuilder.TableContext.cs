@@ -639,15 +639,12 @@ namespace LinqToDB.Linq.Builder
 				else
 				{
 					var exceptionMethod = MemberHelper.MethodOf(() => DefaultInheritanceMappingException(null!, null!));
-					var field  = SqlTable[InheritanceMapping[0].DiscriminatorName] ?? throw new LinqException($"Field {InheritanceMapping[0].DiscriminatorName} not found in table {SqlTable}");
-					var dindex = ConvertToParentIndex(_indexes[field].Index, this);
+					var field           = SqlTable[InheritanceMapping[0].DiscriminatorName] ?? throw new LinqException($"Field {InheritanceMapping[0].DiscriminatorName} not found in table {SqlTable}");
+					var dindex          = ConvertToParentIndex(_indexes[field].Index, this);
 
 					expr = Expression.Convert(
 						Expression.Call(null, exceptionMethod,
-							Expression.Call(
-								ExpressionBuilder.DataReaderParam,
-								ReflectionHelper.DataReader.GetValue,
-								Expression.Constant(dindex)),
+							new ConvertFromDataReaderExpression(typeof(object), dindex, null, ExpressionBuilder.DataReaderParam),
 							Expression.Constant(ObjectType)),
 						ObjectType);
 				}
