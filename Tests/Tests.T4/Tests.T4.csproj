@@ -18,7 +18,7 @@
 		<Reference Include="WindowsBase" />
 
 	<PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.1016.290" />
-		<PackageReference Include="Npgsql" Version="4.0.11" />
+		<PackageReference Include="Npgsql" Version="4.1.6" />
 
 	</ItemGroup>
 	<ItemGroup Condition="'$(TargetFramework)' != 'net472'">

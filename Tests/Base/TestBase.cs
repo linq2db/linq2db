@@ -28,6 +28,7 @@ using NUnit.Framework;
 
 namespace Tests
 {
+	using LinqToDB.Data.DbCommandProcessor;
 	using LinqToDB.DataProvider.Informix;
 	using Model;
 	using NUnit.Framework.Internal;
@@ -352,6 +353,7 @@ namespace Tests
 			TestProvName.SqlServer2016,
 			ProviderName.SqlServer2017,
 			TestProvName.SqlServer2019,
+			TestProvName.SqlServer2019SequentialAccess,
 			ProviderName.SqlServer2000,
 			ProviderName.SqlServer2005,
 			TestProvName.SqlAzure,
@@ -398,8 +400,16 @@ namespace Tests
 			var res = new TestDataConnection(configuration);
 			if (ms != null)
 				res.AddMappingSchema(ms);
+
+			// add extra mapping schema to not share mappers with other sql2017/2019 providers
+			// use same schema to use cache within test provider scope
+			if (configuration == TestProvName.SqlServer2019SequentialAccess)
+				res.AddMappingSchema(_sequentialAccessMS);
+
 			return res;
 		}
+
+		private static readonly MappingSchema _sequentialAccessMS = new MappingSchema();
 
 		protected static char GetParameterToken(string context)
 		{
@@ -1173,6 +1183,7 @@ namespace Tests
 				case TestProvName.SqlServer2016:
 				case ProviderName.SqlServer2017:
 				case TestProvName.SqlServer2019:
+				case TestProvName.SqlServer2019SequentialAccess:
 				{
 						if (!tableName.StartsWith("#"))
 							finalTableName = "#" + tableName;
@@ -1191,9 +1202,30 @@ namespace Tests
 			return context.Replace(".LinqService", "");
 		}
 
+		[SetUp]
+		public virtual void OnBeforeTest()
+		{
+			// SequentialAccess-enabled provider setup
+			var (provider, _) = NUnitUtils.GetContext(TestExecutionContext.CurrentContext.CurrentTest);
+			if (provider == TestProvName.SqlServer2019SequentialAccess)
+			{
+				Configuration.OptimizeForSequentialAccess = true;
+				DbCommandProcessorExtensions.Instance = new SequentialAccessCommandProcessor();
+			}
+		}
+
 		[TearDown]
 		public virtual void OnAfterTest()
 		{
+			// SequentialAccess-enabled provider cleanup
+			var (provider, _) = NUnitUtils.GetContext(TestExecutionContext.CurrentContext.CurrentTest);
+			if (provider == TestProvName.SqlServer2019SequentialAccess)
+			{
+				Configuration.OptimizeForSequentialAccess = false;
+				DbCommandProcessorExtensions.Instance = null;
+			}
+
+			// dump baselines
 			var ctx = CustomTestContext.Get();
 
 			if (_baselinesPath != null)
@@ -1470,6 +1502,34 @@ namespace Tests
 		{
 			Configuration.Linq.CompareNullsAsValues = true;
 			Query.ClearCaches();
+		}
+	}
+
+	public class CustomCommandProcessor : IDisposable
+	{
+		private readonly IDbCommandProcessor? _original = DbCommandProcessorExtensions.Instance;
+		public CustomCommandProcessor(IDbCommandProcessor? processor)
+		{
+			DbCommandProcessorExtensions.Instance = processor;
+		}
+
+		public void Dispose()
+		{
+			DbCommandProcessorExtensions.Instance = _original;
+		}
+	}
+
+	public class OptimizeForSequentialAccess : IDisposable
+	{
+		private readonly bool _original = Configuration.OptimizeForSequentialAccess;
+		public OptimizeForSequentialAccess(bool enable)
+		{
+			Configuration.OptimizeForSequentialAccess = enable;
+		}
+
+		public void Dispose()
+		{
+			Configuration.OptimizeForSequentialAccess = _original;
 		}
 	}
 }

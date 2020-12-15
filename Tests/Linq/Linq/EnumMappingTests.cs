@@ -1725,6 +1725,8 @@ namespace Tests.Linq
 		{
 			GetProviderName(context, out var isLinqService);
 
+			// mapping fails and fallbacks to slow-mapper
+			using (new CustomCommandProcessor(null))
 			using (var db = GetDataContext(context))
 			{
 				using (new Cleaner(db))
@@ -1765,11 +1767,11 @@ namespace Tests.Linq
 		public void Issue1622Test([DataSources] string context)
 		{
 			var ms = new MappingSchema();
-			ms.SetValueToSqlConverter(typeof(Issue1622Enum),
-				(sb, dt, v) =>
-				{
-					sb.Append("'").Append(((Issue1622Enum)v).ToString()).Append("_suffix'");
-				});
+				ms.SetValueToSqlConverter(typeof(Issue1622Enum),
+					(sb, dt, v) =>
+					{
+						sb.Append("'").Append(((Issue1622Enum)v).ToString()).Append("_suffix'");
+					});
 
 			using (var db = GetDataContext(context, ms))
 			{

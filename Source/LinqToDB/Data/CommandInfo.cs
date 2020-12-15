@@ -21,6 +21,7 @@ namespace LinqToDB.Data
 	using Async;
 	using Reflection;
 	using System.Diagnostics.CodeAnalysis;
+	using LinqToDB.Linq;
 
 	/// <summary>
 	/// Provides database connection command abstraction.
@@ -1646,11 +1647,14 @@ namespace LinqToDB.Data
 
 			if (expr.GetCount(e => e == dataReaderExpr) > 1)
 			{
-				var dataReaderVar = Expression.Variable(dataReaderExpr.Type, "dr");
+				var dataReaderVar = Expression.Variable(dataReaderExpr.Type, "ldr");
 				var assignment    = Expression.Assign(dataReaderVar, dataReaderExpr);
 
 				expr = expr.Transform(e => e == dataReaderExpr ? dataReaderVar : e);
 				expr = Expression.Block(new[] { dataReaderVar }, assignment, expr);
+
+				if (Configuration.OptimizeForSequentialAccess)
+					expr = SequentialAccessHelper.OptimizeMappingExpressionForSequentialAccess(expr, dataReader.FieldCount, reduce: false);
 			}
 
 			var lex = Expression.Lambda<Func<IDataReader,T>>(expr, parameter);

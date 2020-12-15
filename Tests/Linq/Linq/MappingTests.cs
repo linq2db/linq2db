@@ -444,6 +444,7 @@ namespace Tests.Linq
 		{
 			GetProviderName(context, out var isLinqService);
 
+			using (new CustomCommandProcessor(null))
 			using (var db = GetDataContext(context))
 			{
 #if NET472
@@ -469,6 +470,7 @@ namespace Tests.Linq
 		{
 			GetProviderName(context, out var isLinqService);
 
+			using (new CustomCommandProcessor(null))
 			using (var db = GetDataContext(context))
 			{
 				var ex = Assert.Throws<LinqToDBConvertException>(() => db.GetTable<BadMapping>().Select(_ => new { _.BadEnum }).ToList());

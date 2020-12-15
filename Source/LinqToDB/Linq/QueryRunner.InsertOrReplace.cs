@@ -163,10 +163,11 @@ namespace LinqToDB.Linq
 					? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schema, tableOptions, type)
 					: Cache<T>.QueryCache.GetOrCreate(
 					new { Operation = "IR", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schema, databaseName, serverName, tableOptions, type },
-					o =>
+					new { dataContext, entityDescriptor, obj},
+					static (entry, key, context) =>
 					{
-						o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
-						return CreateQuery(dataContext, entityDescriptor, obj, null, tableName, serverName, databaseName, schema, tableOptions, type);
+						entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+						return CreateQuery(context.dataContext, context.entityDescriptor, context.obj, null, key.tableName, key.serverName, key.databaseName, key.schema, key.tableOptions, key.type);
 					});
 
 				return (int)ei.GetElement(dataContext, Expression.Constant(obj), null, null)!;
@@ -197,10 +198,11 @@ namespace LinqToDB.Linq
 					? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schema, tableOptions, type)
 					: Cache<T>.QueryCache.GetOrCreate(
 					new { Operation = "IR", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schema, databaseName, serverName, tableOptions, type },
-					o =>
+					new { dataContext, entityDescriptor, obj },
+					static (entry, key, context) =>
 					{
-						o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
-						return CreateQuery(dataContext, entityDescriptor, obj, null, tableName, serverName, databaseName, schema, tableOptions, type);
+						entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+						return CreateQuery(context.dataContext, context.entityDescriptor, context.obj, null, key.tableName, key.serverName, key.databaseName, key.schema, key.tableOptions, key.type);
 					});
 
 				var result = await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, null, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);

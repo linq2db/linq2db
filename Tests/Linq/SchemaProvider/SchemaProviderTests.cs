@@ -96,6 +96,7 @@ namespace Tests.SchemaProvider
 					case TestProvName.SqlServer2016 :
 					case ProviderName.SqlServer2017 :
 					case TestProvName.SqlServer2019 :
+					case TestProvName.SqlServer2019SequentialAccess :
 					case TestProvName.SqlAzure      :
 						{
 							var indexTable = dbSchema.Tables.Single(t => t.TableName == "IndexTable");
@@ -122,6 +123,7 @@ namespace Tests.SchemaProvider
 					case TestProvName.SqlServer2016 :
 					case ProviderName.SqlServer2017 :
 					case TestProvName.SqlServer2019 :
+					case TestProvName.SqlServer2019SequentialAccess:
 					case TestProvName.SqlAzure      :
 						{
 							var tbl = dbSchema.Tables.Single(at => at.TableName == "AllTypes");

@@ -1139,7 +1139,7 @@ namespace Tests.Data
 			TransactionScope? scope = withScope ? new TransactionScope() : null;
 			try
 			{
-				using (var db = new DataConnection(context))
+				using (var db = GetDataContext(context))
 				using (db.CreateLocalTable(Category.Data))
 				using (db.CreateLocalTable(Product.Data))
 				{

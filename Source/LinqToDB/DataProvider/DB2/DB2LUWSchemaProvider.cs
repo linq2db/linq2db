@@ -88,6 +88,7 @@ namespace LinqToDB.DataProvider.DB2
 				from pk in dataConnection.Query(
 					rd => new
 					{
+						// IMPORTANT: reader calls must be ordered to support SequentialAccess
 						id   = dataConnection.Connection.Database + "." + rd.ToString(0) + "." + rd.ToString(1),
 						name = rd.ToString(2),
 						cols = rd.ToString(3)!.Split('+').Skip(1).ToArray(),
@@ -136,24 +137,33 @@ WHERE
 
 			return _columns = dataConnection.Query(rd =>
 				{
-					var typeName = rd.ToString(8);
-					var cp   = Converter.ChangeTypeTo<int>(rd[10]);
+					// IMPORTANT: reader calls must be ordered to support SequentialAccess
+					var tableId     = dataConnection.Connection.Database + "." + rd.GetString(0) + "." + rd.GetString(1);
+					var name        = rd.ToString(2)!;
+					var size        = Converter.ChangeTypeTo<long?>(rd[3]);
+					var scale       = Converter.ChangeTypeTo<int?>(rd[4]);
+					var isNullable  = rd.ToString(5) == "Y";
+					var isIdentity  = rd.ToString(6) == "Y";
+					var ordinal     = Converter.ChangeTypeTo<int>(rd[7]);
+					var typeName    = rd.ToString(8);
+					var description = rd.ToString(9);
+					var cp          = Converter.ChangeTypeTo<int>(rd[10]);
 
 					     if (typeName == "CHARACTER" && cp == 0) typeName = "CHAR () FOR BIT DATA";
 					else if (typeName == "VARCHAR"   && cp == 0) typeName = "VARCHAR () FOR BIT DATA";
 
 					var ci = new ColumnInfo
 					{
-						TableID     = dataConnection.Connection.Database + "." + rd.GetString(0) + "." + rd.GetString(1),
-						Name        = rd.ToString(2)!,
-						IsNullable  = rd.ToString(5) == "Y",
-						IsIdentity  = rd.ToString(6) == "Y",
-						Ordinal     = Converter.ChangeTypeTo<int>(rd[7]),
+						TableID     = tableId,
+						Name        = name,
+						IsNullable  = isNullable,
+						IsIdentity  = isIdentity,
+						Ordinal     = ordinal,
 						DataType    = typeName,
-						Description = rd.ToString(9),
+						Description = description,
 					};
 
-					SetColumnParameters(ci, Converter.ChangeTypeTo<long?>(rd[3]), Converter.ChangeTypeTo<int?> (rd[4]));
+					SetColumnParameters(ci, size, scale);
 
 					return ci;
 				},
@@ -196,6 +206,7 @@ WHERE
 			return dataConnection
 				.Query(rd => new
 				{
+					// IMPORTANT: reader calls must be ordered to support SequentialAccess
 					name         = rd.ToString(0)!,
 					thisTable    = dataConnection.Connection.Database + "." + rd.ToString(1)  + "." + rd.ToString(2),
 					thisColumns  = rd.ToString(3)!,
@@ -408,6 +419,7 @@ ORDER BY PROCSCHEMA, PROCNAME";
 			return dataConnection
 				.Query(rd =>
 					{
+						// IMPORTANT: reader calls must be ordered to support SequentialAccess
 						var schema = rd.ToString(0);
 						var name   = rd.ToString(1)!;
 
@@ -429,18 +441,22 @@ ORDER BY PROCSCHEMA, PROCNAME";
 			return dataConnection
 				.Query(rd =>
 				{
+					// IMPORTANT: reader calls must be ordered to support SequentialAccess
 					var schema   = rd.ToString(0);
 					var procname = rd.ToString(1);
-					var length   = ConvertTo<long?>.From(rd["LENGTH"]);
-					var scale    = ConvertTo<int?>. From(rd["SCALE"]);
+					var pName    = rd.ToString(2);
+					var dataType = rd.ToString(3);
 					var mode     = ConvertTo<string>.From(rd[4]);
+					var ordinal  = ConvertTo<int>.From(rd[5]);
+					var length   = ConvertTo<long?>.From(rd[6]);
+					var scale    = ConvertTo<int?>. From(rd[7]);
 
 					var ppi = new ProcedureParameterInfo
 					{
 						ProcedureID   = dataConnection.Connection.Database + "." + schema + "." + procname,
-						ParameterName = rd.ToString(2),
-						DataType      = rd.ToString(3),
-						Ordinal       = ConvertTo<int>.From(rd["ORDINAL"]),
+						ParameterName = pName,
+						DataType      = dataType,
+						Ordinal       = ordinal,
 						IsIn          = mode.Contains("IN"),
 						IsOut         = mode.Contains("OUT"),
 						IsResult      = false,

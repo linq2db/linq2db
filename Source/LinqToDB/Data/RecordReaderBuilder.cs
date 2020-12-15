@@ -130,8 +130,8 @@ namespace LinqToDB.Data
 			(
 				from info in GetReadIndexes(entityDescriptor)
 				where info.Column.Storage != null ||
-				      !(info.Column.MemberAccessor.MemberInfo is PropertyInfo) ||
-				      ((PropertyInfo) info.Column.MemberAccessor.MemberInfo).GetSetMethod(true) != null
+				      info.Column.MemberAccessor.MemberInfo is not PropertyInfo pi ||
+				      pi.GetSetMethod(true) != null
 				select new
 				{
 					Column = info.Column,
@@ -294,6 +294,9 @@ namespace LinqToDB.Data
 
 			var lambda = Expression.Lambda<Func<IDataReader,T>>(BuildBlock(expr), DataReaderParam);
 
+			if (Common.Configuration.OptimizeForSequentialAccess)
+				lambda = (Expression<Func<IDataReader, T>>)SequentialAccessHelper.OptimizeMappingExpressionForSequentialAccess(lambda, Reader.FieldCount, reduce: true);
+
 			return lambda.Compile();
 		}
 
@@ -330,11 +333,10 @@ namespace LinqToDB.Data
 				if (dindex >= 0)
 				{
 					expr = Expression.Convert(
-						Expression.Call(null, exceptionMethod,
-							Expression.Call(
-								DataReaderLocal,
-								ReflectionHelper.DataReader.GetValue,
-								Expression.Constant(dindex)),
+						Expression.Call(
+							null,
+							exceptionMethod,
+							new ConvertFromDataReaderExpression(typeof(object), dindex, null, DataReaderLocal, DataContext),
 							Expression.Constant(ObjectType)),
 						ObjectType);
 				}

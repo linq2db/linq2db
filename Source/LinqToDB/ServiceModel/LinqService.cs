@@ -159,15 +159,7 @@ namespace LinqToDB.ServiceModel
 					QueryHints = query.QueryHints
 				}, SqlParameterValues.Empty);
 
-				var reader = rd;
-				var converterExpr = db.MappingSchema.GetConvertExpression(rd.GetType(), typeof(IDataReader), false, false);
-
-				if (converterExpr != null)
-				{
-					var param     = Expression.Parameter(typeof(IDataReader));
-					converterExpr = Expression.Lambda(converterExpr.GetBody(Expression.Convert(param, rd.GetType())), param);
-					reader        = ((Func<IDataReader, IDataReader>)converterExpr.Compile())(rd);
-				}
+				var reader = DataReaderWrapCache.TryUnwrapDataReader(db.MappingSchema, rd);
 
 				var ret = new LinqServiceResult
 				{
