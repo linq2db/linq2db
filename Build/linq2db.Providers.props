@@ -4,8 +4,8 @@
 	<ItemGroup>
 		<PackageReference Include="System.Data.SQLite.Core" Version="1.0.113.6" />
 		<PackageReference Include="MySql.Data" Version="8.0.21" />
-		<PackageReference Include="MySqlConnector" Version="1.1.0" />
 		<PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="7.5.0" />
+		<PackageReference Include="MySqlConnector" Version="1.2.0" />
 		<PackageReference Include="AdoNetCore.AseClient" Version="0.18.0" />
 
 		<PackageReference Include="System.Data.SqlClient" Version="4.8.2" />

@@ -430,6 +430,7 @@ namespace LinqToDB.SqlQuery
 			OptimizeDistinct();
 			OptimizeDistinctOrderBy();
 			OptimizeSkipTake(inlineParameters);
+			CorrectColumns();
 
 			OptimizeSearchConditions();
 		}
@@ -486,6 +487,17 @@ namespace LinqToDB.SqlQuery
 						else
 							_selectQuery.Select.Skip(new SqlValue(value));
 					}
+				}
+			}
+		}
+
+		private void CorrectColumns()
+		{
+			if (!_selectQuery.GroupBy.IsEmpty && _selectQuery.Select.Columns.Count == 0)
+			{
+				foreach (var item in _selectQuery.GroupBy.Items)
+				{
+					_selectQuery.Select.Add(item);
 				}
 			}
 		}
