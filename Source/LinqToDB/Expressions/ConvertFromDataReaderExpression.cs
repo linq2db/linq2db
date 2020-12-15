@@ -46,12 +46,12 @@ namespace LinqToDB.Expressions
 
 		public override Expression Reduce()
 		{
-			return Reduce(_slowModeDataContext!);
+			return Reduce(_slowModeDataContext!, true);
 		}
 
-		public Expression Reduce(IDataContext dataContext)
+		public Expression Reduce(IDataContext dataContext, bool slowMode)
 		{
-			var columnReader = new ColumnReader(dataContext, dataContext.MappingSchema, _type, _idx, Converter);
+			var columnReader = new ColumnReader(dataContext, dataContext.MappingSchema, _type, _idx, Converter, slowMode);
 			return Convert(Call(Constant(columnReader), _columnReaderGetValueInfo, _dataReaderParam), _type);
 		}
 
@@ -61,12 +61,12 @@ namespace LinqToDB.Expressions
 		{
 			dataReader = DataReaderWrapCache.TryUnwrapDataReader(dataContext.MappingSchema, dataReader);
 
-			return GetColumnReader(dataContext, dataContext.MappingSchema, dataReader, _type, Converter, _idx, _dataReaderParam);
+			return GetColumnReader(dataContext, dataContext.MappingSchema, dataReader, _type, Converter, _idx, _dataReaderParam, forceNullCheck: false);
 		}
 
 		public Expression Reduce(IDataContext dataContext, IDataReader dataReader, Expression dataReaderParam)
 		{
-			return GetColumnReader(dataContext, dataContext.MappingSchema, dataReader, _type, Converter, _idx, dataReaderParam);
+			return GetColumnReader(dataContext, dataContext.MappingSchema, dataReader, _type, Converter, _idx, dataReaderParam, forceNullCheck: false);
 		}
 
 		static Expression ConvertExpressionToType(Expression current, Type toType, MappingSchema mappingSchema)
@@ -82,7 +82,7 @@ namespace LinqToDB.Expressions
 		}
 
 		static Expression GetColumnReader(
-			IDataContext dataContext, MappingSchema mappingSchema, IDataReader dataReader, Type type, IValueConverter? converter, int idx, Expression dataReaderExpr)
+			IDataContext dataContext, MappingSchema mappingSchema, IDataReader dataReader, Type type, IValueConverter? converter, int idx, Expression dataReaderExpr, bool forceNullCheck)
 		{
 			var toType = type.ToNullableUnderlying();
 
@@ -148,7 +148,7 @@ namespace LinqToDB.Expressions
 				}
 			}
 
-
+			if (ex.Type != type)
 			ex = ConvertExpressionToType(ex, type, mappingSchema)!;
 
 			// Try to search postprocessing converter TType -> TType
@@ -157,10 +157,12 @@ namespace LinqToDB.Expressions
 
 			// Add check null expression.
 			// If converter handles nulls, do not provide IsNull check
-			// Note: Oracle may return wrong IsDBNullAllowed, so added additional check toType != type, that means nullable type
-			//
+			// Note: some providers may return wrong IsDBNullAllowed, so we enforce null check in slow mode. E.g.:
+			// Microsoft.Data.SQLite
+			// Oracle (group by columns)
+			// MySql.Data and some other providers enforce null check in IsDBNullAllowed implementation
 			if (converter?.HandlesNulls != true &&
-			    (toType != type || (dataContext.IsDBNullAllowed(dataReader, idx) ?? true)))
+			    (forceNullCheck || (dataContext.IsDBNullAllowed(dataReader, idx) ?? true)))
 			{
 				ex = Condition(
 					Call(dataReaderExpr, _isDBNullInfo, Constant(idx)),
@@ -173,21 +175,18 @@ namespace LinqToDB.Expressions
 
 		internal class ColumnReader
 		{
-			public ColumnReader(IDataContext dataContext, MappingSchema mappingSchema, Type columnType, int columnIndex, IValueConverter? converter)
+			public ColumnReader(IDataContext dataContext, MappingSchema mappingSchema, Type columnType, int columnIndex, IValueConverter? converter, bool slowMode)
 			{
 				_dataContext   = dataContext;
 				_mappingSchema = mappingSchema;
 				_columnType    = columnType;
 				_columnIndex   = columnIndex;
 				_converter     = converter;
-				_defaultValue  = mappingSchema.GetDefaultValue(columnType);
+				_slowMode      = slowMode;
 			}
 
 			public object? GetValue(IDataReader dataReader)
 			{
-				if (dataReader.IsDBNull(_columnIndex))
-					return _defaultValue;
-
 				var fromType = dataReader.GetFieldType(_columnIndex);
 
 				if (!_columnConverters.TryGetValue(fromType, out var func))
@@ -195,7 +194,7 @@ namespace LinqToDB.Expressions
 					var parameter      = Parameter(typeof(IDataReader));
 					var dataReaderExpr = Convert(parameter, dataReader.GetType());
 
-					var expr = GetColumnReader(_dataContext, _mappingSchema, dataReader, _columnType, _converter, _columnIndex, dataReaderExpr);
+					var expr = GetColumnReader(_dataContext, _mappingSchema, dataReader, _columnType, _converter, _columnIndex, dataReaderExpr, _slowMode);
 
 					var lex  = Lambda<Func<IDataReader, object>>(
 						expr.Type == typeof(object) ? expr : Convert(expr, typeof(object)),
@@ -231,7 +230,7 @@ namespace LinqToDB.Expressions
 			readonly Type             _columnType;
 			readonly int              _columnIndex;
 			readonly IValueConverter? _converter;
-			readonly object?          _defaultValue;
+			readonly bool             _slowMode;
 		}
 
 		public override string ToString()

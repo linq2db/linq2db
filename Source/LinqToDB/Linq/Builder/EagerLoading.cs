@@ -651,9 +651,6 @@ namespace LinqToDB.Linq.Builder
 
 		public static Expression? GenerateAssociationExpression(ExpressionBuilder builder, IBuildContext context, Expression expression, AssociationDescriptor association)
 		{
-			if (!Common.Configuration.Linq.AllowMultipleQuery)
-				throw new LinqException("Multiple queries are not allowed. Set the 'LinqToDB.Common.Configuration.Linq.AllowMultipleQuery' flag to 'true' to allow multiple queries.");
-
 			var initialMainQuery = ValidateMainQuery(builder.Expression);
 			var mainQuery        = RemoveProjection(initialMainQuery);
 			var mappingSchema    = builder.MappingSchema;
@@ -1664,7 +1661,7 @@ namespace LinqToDB.Linq.Builder
 				if (b.NodeType == ExpressionType.MemberAccess)
 				{
 					var ma = (MemberExpression)b;
-					if (ma.Expression.NodeType == ExpressionType.Parameter)
+					if (ma.Expression?.NodeType == ExpressionType.Parameter)
 					{
 						var idx = before.IndexOf((ParameterExpression)ma.Expression);
 						if (idx >= 0)

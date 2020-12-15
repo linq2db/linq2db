@@ -1,0 +1,10 @@
+{
+  "solution": {
+    "path": "linq2db.sln",
+    "projects": [
+      "Source\\LinqToDB.Tools\\LinqToDB.Tools.csproj",
+      "Source\\LinqToDB\\LinqToDB.csproj",
+      "Tests\\Tests.Benchmarks\\linq2db.Benchmarks.csproj"
+    ]
+  }
+}

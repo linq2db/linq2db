@@ -164,7 +164,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 				await TraceActionAsync(
 					dataConnection,
-					() => (runAsync ? "INSERT ASYNC BULK " : "INSERT BULK ") + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + Environment.NewLine,
+					() => (runAsync ? "INSERT ASYNC BULK " : "INSERT BULK ") + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + ")" + Environment.NewLine,
 					async () => {
 						if (runAsync)
 							await bc.WriteToServerAsync(rd, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);

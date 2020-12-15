@@ -38,14 +38,14 @@ void NotifyDataErrorInfoImpl()
 						new Event("EventHandler<DataErrorsChangedEventArgs>", "ErrorsChanged", true)
 						{
 							IsVirtual  = true,
-							Attributes = { new Attribute("field : NonSerialized") { Conditional = "!SILVERLIGHT" } }
+							Attributes = { new Attribute("field : NonSerialized") }
 						},
 						new Field(() => "Dictionary<string,List<string>>", "_validationErrors")
 						{
 							InitValue      = "new Dictionary<string,List<string>>()",
 							AccessModifier = AccessModifier.Private,
 							IsReadonly     = true,
-							Attributes     = { new Attribute("field : NonSerialized") { Conditional = "!SILVERLIGHT" } }
+							Attributes     = { new Attribute("field : NonSerialized") }
 						},
 						new Method(() => "void", "AddError",
 							new Func<string>[]

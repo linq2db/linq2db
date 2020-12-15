@@ -706,76 +706,76 @@ namespace DataContextMS
 
 	public static partial class TableExtensions
 	{
-		public static Category Find(this ITable<Category> table, int CategoryID)
+		public static Category? Find(this ITable<Category> table, int CategoryID)
 		{
 			return table.FirstOrDefault(t =>
 				t.CategoryID == CategoryID);
 		}
 
-		public static Customer Find(this ITable<Customer> table, string CustomerID)
+		public static Customer? Find(this ITable<Customer> table, string CustomerID)
 		{
 			return table.FirstOrDefault(t =>
 				t.CustomerID == CustomerID);
 		}
 
-		public static CustomerCustomerDemo Find(this ITable<CustomerCustomerDemo> table, string CustomerID, string CustomerTypeID)
+		public static CustomerCustomerDemo? Find(this ITable<CustomerCustomerDemo> table, string CustomerID, string CustomerTypeID)
 		{
 			return table.FirstOrDefault(t =>
 				t.CustomerID     == CustomerID &&
 				t.CustomerTypeID == CustomerTypeID);
 		}
 
-		public static CustomerDemographic Find(this ITable<CustomerDemographic> table, string CustomerTypeID)
+		public static CustomerDemographic? Find(this ITable<CustomerDemographic> table, string CustomerTypeID)
 		{
 			return table.FirstOrDefault(t =>
 				t.CustomerTypeID == CustomerTypeID);
 		}
 
-		public static Employee Find(this ITable<Employee> table, int EmployeeID)
+		public static Employee? Find(this ITable<Employee> table, int EmployeeID)
 		{
 			return table.FirstOrDefault(t =>
 				t.EmployeeID == EmployeeID);
 		}
 
-		public static EmployeeTerritory Find(this ITable<EmployeeTerritory> table, int EmployeeID, string TerritoryID)
+		public static EmployeeTerritory? Find(this ITable<EmployeeTerritory> table, int EmployeeID, string TerritoryID)
 		{
 			return table.FirstOrDefault(t =>
 				t.EmployeeID  == EmployeeID &&
 				t.TerritoryID == TerritoryID);
 		}
 
-		public static Order Find(this ITable<Order> table, int OrderID)
+		public static Order? Find(this ITable<Order> table, int OrderID)
 		{
 			return table.FirstOrDefault(t =>
 				t.OrderID == OrderID);
 		}
 
-		public static OrderDetail Find(this ITable<OrderDetail> table, int ID, int ProductID)
+		public static OrderDetail? Find(this ITable<OrderDetail> table, int ID, int ProductID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID        == ID &&
 				t.ProductID == ProductID);
 		}
 
-		public static Region Find(this ITable<Region> table, int RegionID)
+		public static Region? Find(this ITable<Region> table, int RegionID)
 		{
 			return table.FirstOrDefault(t =>
 				t.RegionID == RegionID);
 		}
 
-		public static Shipper Find(this ITable<Shipper> table, int ShipperID)
+		public static Shipper? Find(this ITable<Shipper> table, int ShipperID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ShipperID == ShipperID);
 		}
 
-		public static Supplier Find(this ITable<Supplier> table, int SupplierID)
+		public static Supplier? Find(this ITable<Supplier> table, int SupplierID)
 		{
 			return table.FirstOrDefault(t =>
 				t.SupplierID == SupplierID);
 		}
 
-		public static Territory Find(this ITable<Territory> table, string TerritoryID)
+		public static Territory? Find(this ITable<Territory> table, string TerritoryID)
 		{
 			return table.FirstOrDefault(t =>
 				t.TerritoryID == TerritoryID);
@@ -882,7 +882,7 @@ namespace DataContextMS
 		/// FK_Employees_Employees
 		/// </summary>
 		[Association(ThisKey="ReportsTo", OtherKey="EmployeeID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Employees_Employees", BackReferenceName="FkEmployeesEmployeesBackReferences")]
-		public static Employee FkEmployeesEmployee(this Employee obj, IDataContext db)
+		public static Employee? FkEmployeesEmployee(this Employee obj, IDataContext db)
 		{
 			return db.GetTable<Employee>().Where(c => c.ReportsTo == obj.EmployeeID).FirstOrDefault();
 		}
@@ -962,7 +962,7 @@ namespace DataContextMS
 		/// FK_Orders_Customers
 		/// </summary>
 		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Orders_Customers", BackReferenceName="Orders")]
-		public static Order Customer0(this Customer obj, IDataContext db)
+		public static Order? Customer0(this Customer obj, IDataContext db)
 		{
 			return db.GetTable<Order>().Where(c => c.CustomerID == obj.CustomerID).FirstOrDefault();
 		}
@@ -980,7 +980,7 @@ namespace DataContextMS
 		/// FK_Orders_Employees
 		/// </summary>
 		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Orders_Employees", BackReferenceName="Orders")]
-		public static Order Employee0(this Employee obj, IDataContext db)
+		public static Order? Employee0(this Employee obj, IDataContext db)
 		{
 			return db.GetTable<Order>().Where(c => c.EmployeeID == obj.EmployeeID).FirstOrDefault();
 		}
@@ -1007,7 +1007,7 @@ namespace DataContextMS
 		/// FK_Orders_Shippers
 		/// </summary>
 		[Association(ThisKey="ShipVia", OtherKey="ShipperID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Orders_Shippers", BackReferenceName="Orders")]
-		public static Order Shipper(this Shipper obj, IDataContext db)
+		public static Order? Shipper(this Shipper obj, IDataContext db)
 		{
 			return db.GetTable<Order>().Where(c => c.ShipVia == obj.ShipperID).FirstOrDefault();
 		}
@@ -2094,153 +2094,153 @@ namespace DataContextMS
 
 	public static partial class TableExtensions
 	{
-		public static AllType Find(this ITable<AllType> table, int ID)
+		public static AllType? Find(this ITable<AllType> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static AllTypes2 Find(this ITable<AllTypes2> table, int ID)
+		public static AllTypes2? Find(this ITable<AllTypes2> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static Child Find(this ITable<Child> table, int Id)
+		public static Child? Find(this ITable<Child> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static Customer0 Find(this ITable<Customer0> table, int ID)
+		public static Customer0? Find(this ITable<Customer0> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static DecimalOverflow Find(this ITable<DecimalOverflow> table, decimal Decimal1)
+		public static DecimalOverflow? Find(this ITable<DecimalOverflow> table, decimal Decimal1)
 		{
 			return table.FirstOrDefault(t =>
 				t.Decimal1 == Decimal1);
 		}
 
-		public static Doctor Find(this ITable<Doctor> table, int PersonID)
+		public static Doctor? Find(this ITable<Doctor> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
 		}
 
-		public static GrandChild Find(this ITable<GrandChild> table, int Id)
+		public static GrandChild? Find(this ITable<GrandChild> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static GuidID Find(this ITable<GuidID> table, Guid ID)
+		public static GuidID? Find(this ITable<GuidID> table, Guid ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static GuidID2 Find(this ITable<GuidID2> table, Guid ID)
+		public static GuidID2? Find(this ITable<GuidID2> table, Guid ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static IndexTable Find(this ITable<IndexTable> table, int PKField1, int PKField2)
+		public static IndexTable? Find(this ITable<IndexTable> table, int PKField1, int PKField2)
 		{
 			return table.FirstOrDefault(t =>
 				t.PKField1 == PKField1 &&
 				t.PKField2 == PKField2);
 		}
 
-		public static IndexTable2 Find(this ITable<IndexTable2> table, int PKField1, int PKField2)
+		public static IndexTable2? Find(this ITable<IndexTable2> table, int PKField1, int PKField2)
 		{
 			return table.FirstOrDefault(t =>
 				t.PKField1 == PKField1 &&
 				t.PKField2 == PKField2);
 		}
 
-		public static InheritanceChild Find(this ITable<InheritanceChild> table, int InheritanceChildId)
+		public static InheritanceChild? Find(this ITable<InheritanceChild> table, int InheritanceChildId)
 		{
 			return table.FirstOrDefault(t =>
 				t.InheritanceChildId == InheritanceChildId);
 		}
 
-		public static InheritanceParent Find(this ITable<InheritanceParent> table, int InheritanceParentId)
+		public static InheritanceParent? Find(this ITable<InheritanceParent> table, int InheritanceParentId)
 		{
 			return table.FirstOrDefault(t =>
 				t.InheritanceParentId == InheritanceParentId);
 		}
 
-		public static Issue1115 Find(this ITable<Issue1115> table, SqlHierarchyId Id)
+		public static Issue1115? Find(this ITable<Issue1115> table, SqlHierarchyId Id)
 		{
 			return table.FirstOrDefault(t =>
 				(bool)(t.Id == Id));
 		}
 
-		public static Issue1144 Find(this ITable<Issue1144> table, int Id)
+		public static Issue1144? Find(this ITable<Issue1144> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static LinqDataType Find(this ITable<LinqDataType> table, int Id)
+		public static LinqDataType? Find(this ITable<LinqDataType> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static Parent Find(this ITable<Parent> table, int Id)
+		public static Parent? Find(this ITable<Parent> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static Patient Find(this ITable<Patient> table, int PersonID)
+		public static Patient? Find(this ITable<Patient> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
 		}
 
-		public static Ref Find(this ITable<Ref> table, int ID)
+		public static Ref? Find(this ITable<Ref> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static SqlType Find(this ITable<SqlType> table, int ID)
+		public static SqlType? Find(this ITable<SqlType> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static TestIdentity Find(this ITable<TestIdentity> table, int ID)
+		public static TestIdentity? Find(this ITable<TestIdentity> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static TestMerge1 Find(this ITable<TestMerge1> table, int Id)
+		public static TestMerge1? Find(this ITable<TestMerge1> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static TestMerge2 Find(this ITable<TestMerge2> table, int Id)
+		public static TestMerge2? Find(this ITable<TestMerge2> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static TestMergeIdentity Find(this ITable<TestMergeIdentity> table, int Id)
+		public static TestMergeIdentity? Find(this ITable<TestMergeIdentity> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static TestSchemaX Find(this ITable<TestSchemaX> table, int TestSchemaXID)
+		public static TestSchemaX? Find(this ITable<TestSchemaX> table, int TestSchemaXID)
 		{
 			return table.FirstOrDefault(t =>
 				t.TestSchemaXID == TestSchemaXID);
@@ -2263,7 +2263,7 @@ namespace DataContextMS
 		/// FK_Patient2_IndexTable_BackReference
 		/// </summary>
 		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
-		public static IndexTable Patient(this IndexTable2 obj, IDataContext db)
+		public static IndexTable? Patient(this IndexTable2 obj, IDataContext db)
 		{
 			return db.GetTable<IndexTable>().Where(c => c.PKField2 == obj.PKField2 && c.PKField1 == obj.PKField1).FirstOrDefault();
 		}
@@ -2581,13 +2581,13 @@ namespace DataContextMS
 
 		#region Table Extensions
 
-		public static TestSchemaA Find(this ITable<TestSchemaA> table, int TestSchemaAID)
+		public static TestSchemaA? Find(this ITable<TestSchemaA> table, int TestSchemaAID)
 		{
 			return table.FirstOrDefault(t =>
 				t.TestSchemaAID == TestSchemaAID);
 		}
 
-		public static TestSchemaB Find(this ITable<TestSchemaB> table, int TestSchemaBID)
+		public static TestSchemaB? Find(this ITable<TestSchemaB> table, int TestSchemaBID)
 		{
 			return table.FirstOrDefault(t =>
 				t.TestSchemaBID == TestSchemaBID);

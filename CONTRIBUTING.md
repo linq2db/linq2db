@@ -64,22 +64,23 @@ Allowed debugging defines:
 
 #### Test projects
 
-| Project \ Target                                   |.NET 4.7.2 | .NET Core 2.1 | .NET Core 3.1 | Xamarin.Forms Android v8.1 |
-|---------------------------------------------------:|:---------:|:-------------:|:-------------:|:--------------------------:|
-| `.\Tests\Base\Tests.Base.csproj`                   |     √     |       √       |       √       |                            |
-| `.\Tests\FSharp\Tests.FSharp.fsproj`               |     √     |       √       |       √       |                            |
-| `.\Tests\Linq\Tests.csproj`                        |     √     |       √       |       √       |                            |
-| `.\Tests\Model\Tests.Model.csproj`                 |     √     |       √       |       √       |                            |
-| `.\Tests\Tests.Android\Tests.Android.csproj`       |           |               |               |              √             |
-| `.\Tests\Tests.Benchmarks\Tests.Benchmarks.csproj` |     √     |       √       |       √       |                            |
-| `.\Tests\Tests.Playground\Tests.Playground.csproj` |     √     |       √       |       √       |                            |
-| `.\Tests\Tests.T4\Tests.T4.csproj`                 |     √     |       √       |       √       |                            |
-| `.\Tests\VisualBasic\Tests.VisualBasic.vbproj`     |     √     |       √       |       √       |                            |
+| Project \ Target                                   |.NET 4.7.2 | .NET Core 2.1 | .NET Core 3.1 | .NET 5.0 | Xamarin.Forms Android v8.1 |
+|---------------------------------------------------:|:---------:|:-------------:|:-------------:|:--------:|:--------------------------:|
+| `.\Tests\Base\Tests.Base.csproj`                   |     √     |       √       |       √       |    √     |                            |
+| `.\Tests\FSharp\Tests.FSharp.fsproj`               |     √     |       √       |       √       |    √     |                            |
+| `.\Tests\Linq\Tests.csproj`                        |     √     |       √       |       √       |    √     |                            |
+| `.\Tests\Model\Tests.Model.csproj`                 |     √     |       √       |       √       |    √     |                            |
+| `.\Tests\Tests.Android\Tests.Android.csproj`       |           |               |               |          |              √             |
+| `.\Tests\Tests.Benchmarks\Tests.Benchmarks.csproj` |     √     |       √       |       √       |    √     |                            |
+| `.\Tests\Tests.Playground\Tests.Playground.csproj` |     √     |       √       |       √       |    √     |                            |
+| `.\Tests\Tests.T4\Tests.T4.csproj`                 |     √     |       √       |       √       |    √     |                            |
+| `.\Tests\VisualBasic\Tests.VisualBasic.vbproj`     |     √     |       √       |       √       |    √     |                            |
 
 
 Allowed target defines:
 - `NETCOREAPP3_1` - `netcoreapp3.1` target ifdef
 - `NETCOREAPP2_1` - `netcoreapp2.1` target ifdef
+- `NET5_0` - `net5.0` target ifdef
 - `NET472` - `net472` target ifdef
 - `AZURE` - for Azure Pipelines CI builds
 
@@ -91,11 +92,11 @@ You can use the solution to build and run tests. Also you can build whole soluti
 * `.\Build.cmd` - builds all the projects in the solution for Debug, Release and Azure configurations
 * `.\Compile.cmd` - builds LinqToDB project for Debug and Release configurations
 * `.\Clean.cmd` - cleanups solution projects for Debug, Release and Azure configurations
-* `.\Test.cmd` - build `Debug` configuration and run tests for `net472`,  `netcoreapp2.1` and `netcoreapp3.1` targets. You can set other configuration by passing it as first paramenter, disable test targets by passing 0 to second(for `net472`),  third (for `netcoreapp2.1`) or fourth (for `netcoreapp3.1`) parameter and format (default:html) as 5th parameter.
+* `.\Test.cmd` - build `Debug` configuration and run tests for `net472`,  `netcoreapp2.1`, `netcoreapp3.1` and `net5.0` targets. You can set other configuration by passing it as first paramenter, disable test targets by passing 0 to second(for `net472`),  third (for `netcoreapp2.1`), fourth (for `netcoreapp3.1`) or fifth (for `net5.0`) parameter and format (default:html) as 6th parameter.
 
 Example of running Release build tests for `netcoreapp2.1` only with trx as output:
 ```
-test.cmd Release 0 1 trx
+test.cmd Release 0 1 0 0 0 trx
 ```
 
 ### Different platforms support
@@ -268,6 +269,7 @@ It builds solution, generate and publish nugets and runs tests for:
   * .Net 4.7.2
   * .Net Core 2.1 (Windows/Linux and MacOS)
   * .Net Core 3.1 (Windows/Linux and MacOS) (currently for limited set of providers to reduce test time)
+  * .Net 5.0 (Windows/Linux and MacOS) (currently for limited set of providers to reduce test time)
 For more details check [readme](https://github.com/linq2db/linq2db/blob/master/Build/Azure/README.md)
 
 CI builds are done for all branches and PRs.

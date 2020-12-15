@@ -41,10 +41,10 @@ namespace LinqToDB.Linq.Builder
 			public DefaultIfEmptyContext(IBuildContext? parent, IBuildContext sequence, Expression? defaultValue)
 				: base(parent, sequence, null)
 			{
-				_defaultValue = defaultValue;
+				DefaultValue = defaultValue;
 			}
 
-			private readonly Expression? _defaultValue;
+			public Expression? DefaultValue { get; }
 
 			public bool Disabled { get; set; }
 
@@ -76,7 +76,7 @@ namespace LinqToDB.Linq.Builder
 						ReflectionHelper.DataReader.IsDBNull,
 						Expression.Constant(n));
 
-					var defaultValue = _defaultValue ?? new DefaultValueExpression(Builder.MappingSchema, expr.Type);
+					var defaultValue = DefaultValue ?? new DefaultValueExpression(Builder.MappingSchema, expr.Type);
 
 					if (expr.NodeType == ExpressionType.Parameter)
 					{

@@ -577,7 +577,7 @@ namespace Tests.DataProvider
 				var sp = db.DataProvider.GetSchemaProvider();
 				var s  = sp.GetSchema(db);
 
-				var table = s.Tables.FirstOrDefault(_ => _.TableName!.Equals("ForeignKeyTable", StringComparison.OrdinalIgnoreCase));
+				var table = s.Tables.FirstOrDefault(_ => _.TableName!.Equals("ForeignKeyTable", StringComparison.OrdinalIgnoreCase))!;
 				Assert.IsNotNull(table);
 
 				Assert.AreEqual(1,                   table.ForeignKeys                   .Count);
@@ -618,7 +618,7 @@ namespace Tests.DataProvider
 			using (var cmd = db.CreateCommand())
 			{
 				cmd.CommandText = "select sqlite_version();";
-				var version     = (string)cmd.ExecuteScalar();
+				var version     = (string)cmd.ExecuteScalar()!;
 
 				Assert.AreEqual(expectedVersion, version);
 			}

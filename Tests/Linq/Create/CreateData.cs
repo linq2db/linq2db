@@ -233,6 +233,11 @@ public class a_CreateData : TestBase
 		}
 	}
 
+	static void RunScript(CreateDataScript script)
+	{
+		RunScript(script.ConfigString, script.Divider, script.Name, script.Action, script.Database);
+	}
+
 	[Test, Order(0)]
 	public void CreateDatabase([CreateDatabaseSources] string context)
 	{
@@ -285,7 +290,14 @@ public class a_CreateData : TestBase
 			case ProviderName.OracleNative                     :
 			case TestProvName.Oracle11Native                   : RunScript(context,          "\n/\n",   "Oracle");                         break;
 #endif
-			default: throw new InvalidOperationException(context);
+			default:
+				var script = CustomizationSupport.Interceptor.InterceptCreateData(context);
+				if (script != null)
+				{
+					RunScript(script);
+					break;
+				}
+				throw new InvalidOperationException(context);
 		}
 	}
 

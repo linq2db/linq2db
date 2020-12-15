@@ -16,13 +16,16 @@ namespace Tests
 
 			var lastValue = 4;
 
-			string[]? sql = null;
+			string[]? sql = CustomizationSupport.Interceptor.InterceptResetPersonIdentity(context, lastValue);
 
-			switch (provider)
+			if (sql == null)
 			{
-				case string prov when prov.StartsWith("Access"):
-					sql = new[]
-					{
+
+				switch (provider)
+				{
+					case string prov when prov.StartsWith("Access"):
+						sql = new[]
+						{
 						"ALTER TABLE Doctor DROP CONSTRAINT PersonDoctor",
 						"ALTER TABLE Patient DROP CONSTRAINT PersonPatient",
 						$"ALTER TABLE Person ALTER COLUMN PersonID COUNTER({lastValue + 1}, 1)",
@@ -30,15 +33,15 @@ namespace Tests
 						"ALTER TABLE Patient ADD CONSTRAINT PersonPatient FOREIGN KEY (PersonID) REFERENCES Person ON UPDATE CASCADE ON DELETE CASCADE",
 					};
 						break;
-				case string prov when prov.StartsWith("DB2"):
-					sql = new[] { $"ALTER TABLE \"Person\" ALTER COLUMN \"PersonID\" RESTART WITH {lastValue + 1}" };
-					break;
-				case string prov when prov.StartsWith("Firebird"):
-					sql = new[] { $"SET GENERATOR \"PersonID\" TO {lastValue}" };
-					break;
-				case string prov when prov.StartsWith("Informix"):
-					sql = new[]
-					{
+					case string prov when prov.StartsWith("DB2"):
+						sql = new[] { $"ALTER TABLE \"Person\" ALTER COLUMN \"PersonID\" RESTART WITH {lastValue + 1}" };
+						break;
+					case string prov when prov.StartsWith("Firebird"):
+						sql = new[] { $"SET GENERATOR \"PersonID\" TO {lastValue}" };
+						break;
+					case string prov when prov.StartsWith("Informix"):
+						sql = new[]
+						{
 						// reset serial to 0 (without it MODIFY will not work as it cannot decrease SERIAL value)
 						"INSERT INTO Person (PersonID, FirstName, LastName, MiddleName, Gender) VALUES (2147483647, '1', '2', '3', 'M')",
 						// cleanup
@@ -51,23 +54,23 @@ namespace Tests
 						$"ALTER TABLE Doctor ADD CONSTRAINT(FOREIGN KEY (PersonID) REFERENCES Person (PersonID))",
 
 					};
-					break;
-				case string prov when prov.StartsWith("MySql") || prov.StartsWith("MariaDB"):
-					sql = new[] { $"ALTER TABLE Person AUTO_INCREMENT = {lastValue + 1}" };
-					break;
-				case string prov when prov.StartsWith("Oracle"):
-					sql = new[] {
+						break;
+					case string prov when prov.StartsWith("MySql") || prov.StartsWith("MariaDB"):
+						sql = new[] { $"ALTER TABLE Person AUTO_INCREMENT = {lastValue + 1}" };
+						break;
+					case string prov when prov.StartsWith("Oracle"):
+						sql = new[] {
 						$"DROP SEQUENCE \"PersonSeq\"",
 						$"CREATE SEQUENCE \"PersonSeq\" MINVALUE 1 START WITH {lastValue + 1}"
 					};
-					break;
-				case string prov when prov.StartsWith("PostgreSQL"):
-					sql = new[] { $"ALTER SEQUENCE \"Person_PersonID_seq\" RESTART WITH {lastValue + 1}" };
-					break;
-				case string prov when prov.StartsWith("SapHana"):
-					// SAP HANA doesn't allow identity management at all
-					sql = new[]
-					{
+						break;
+					case string prov when prov.StartsWith("PostgreSQL"):
+						sql = new[] { $"ALTER SEQUENCE \"Person_PersonID_seq\" RESTART WITH {lastValue + 1}" };
+						break;
+					case string prov when prov.StartsWith("SapHana"):
+						// SAP HANA doesn't allow identity management at all
+						sql = new[]
+						{
 						"ALTER TABLE \"Doctor\" DROP CONSTRAINT \"FK_Doctor_Person\"",
 						"ALTER TABLE \"Patient\" DROP CONSTRAINT \"FK_Patient_Person\"",
 						"RENAME TABLE \"Person\" TO \"Person_OLD\"",
@@ -85,19 +88,20 @@ CREATE COLUMN TABLE ""Person"" (
 						"ALTER TABLE \"Doctor\" ADD CONSTRAINT \"FK_Doctor_Person\" FOREIGN KEY (\"PersonID\") REFERENCES \"Person\" (\"PersonID\") ON UPDATE CASCADE ON DELETE CASCADE",
 						"ALTER TABLE \"Patient\" ADD CONSTRAINT \"FK_Patient_Person\" FOREIGN KEY (\"PersonID\") REFERENCES \"Person\" (\"PersonID\") ON UPDATE CASCADE ON DELETE CASCADE"
 					};
-					break;
-				case string prov when prov.StartsWith("SqlServer") || prov.StartsWith("SqlAzure"):
-					sql = new[] { $"DBCC CHECKIDENT ('Person', RESEED, {lastValue})" };
-					break;
-				case string prov when prov.StartsWith("SqlCe"):
-					sql = new[] { $"ALTER TABLE Person ALTER COLUMN PersonID IDENTITY({lastValue + 1},1)" };
-					break;
-				case string prov when prov.StartsWith("Sybase"):
-					sql = new[] { $"sp_chgattribute Person, 'identity_burn_max', 0, '{lastValue}'" };
-					break;
-				case string prov when prov.StartsWith("SQLite"):
-					sql = new[] { $"UPDATE sqlite_sequence SET seq = {lastValue} WHERE name = 'Person'" };
-					break;
+						break;
+					case string prov when prov.StartsWith("SqlServer") || prov.StartsWith("SqlAzure"):
+						sql = new[] { $"DBCC CHECKIDENT ('Person', RESEED, {lastValue})" };
+						break;
+					case string prov when prov.StartsWith("SqlCe"):
+						sql = new[] { $"ALTER TABLE Person ALTER COLUMN PersonID IDENTITY({lastValue + 1},1)" };
+						break;
+					case string prov when prov.StartsWith("Sybase"):
+						sql = new[] { $"sp_chgattribute Person, 'identity_burn_max', 0, '{lastValue}'" };
+						break;
+					case string prov when prov.StartsWith("SQLite"):
+						sql = new[] { $"UPDATE sqlite_sequence SET seq = {lastValue} WHERE name = 'Person'" };
+						break;
+				}
 			}
 
 			if (sql != null)
@@ -117,29 +121,31 @@ CREATE COLUMN TABLE ""Person"" (
 			var lastValue = 2;
 			var keepIdentityLastValue = 0;
 
-			string[]? sql = null;
+			string[]? sql = CustomizationSupport.Interceptor.InterceptResetAllTypesIdentity(context, lastValue, keepIdentityLastValue);
 
-			switch (provider)
+			if (sql == null)
 			{
-				case string prov when prov.StartsWith("Access"):
-					sql = new[]
-					{
+				switch (provider)
+				{
+					case string prov when prov.StartsWith("Access"):
+						sql = new[]
+						{
 						$"ALTER TABLE AllTypes ALTER COLUMN ID COUNTER({lastValue + 1}, 1)",
 					};
-					break;
-				case string prov when prov.StartsWith("DB2"):
-					sql = new[]
-					{
+						break;
+					case string prov when prov.StartsWith("DB2"):
+						sql = new[]
+						{
 						$"ALTER TABLE AllTypes ALTER COLUMN ID RESTART WITH {lastValue + 1}",
 						$"ALTER TABLE \"KeepIdentityTest\" ALTER COLUMN \"ID\" RESTART WITH {keepIdentityLastValue + 1}",
-					};
-					break;
-				case string prov when prov.StartsWith("Firebird"):
-					sql = new[] { $"SET GENERATOR \"AllTypesID\" TO {lastValue}" };
-					break;
-				case string prov when prov.StartsWith("Informix"):
-					sql = new[]
-					{
+						};
+						break;
+					case string prov when prov.StartsWith("Firebird"):
+						sql = new[] { $"SET GENERATOR \"AllTypesID\" TO {lastValue}" };
+						break;
+					case string prov when prov.StartsWith("Informix"):
+						sql = new[]
+						{
 						// reset serial to 0 (without it MODIFY will not work as it cannot decrease SERIAL value)
 						"INSERT INTO AllTypes (ID) VALUES (2147483647)",
 						// cleanup
@@ -149,23 +155,23 @@ CREATE COLUMN TABLE ""Person"" (
 						// MODIFY erase all PK/FK constraints for modified column
 						$"ALTER TABLE AllTypes ADD CONSTRAINT PRIMARY KEY (ID)",
 					};
-					break;
-				case string prov when prov.StartsWith("MySql") || prov.StartsWith("MariaDB"):
-					sql = new[] { $"ALTER TABLE `AllTypes` AUTO_INCREMENT = {lastValue + 1}" };
-					break;
-				case string prov when prov.StartsWith("Oracle"):
-					sql = new[] {
+						break;
+					case string prov when prov.StartsWith("MySql") || prov.StartsWith("MariaDB"):
+						sql = new[] { $"ALTER TABLE `AllTypes` AUTO_INCREMENT = {lastValue + 1}" };
+						break;
+					case string prov when prov.StartsWith("Oracle"):
+						sql = new[] {
 						$"DROP SEQUENCE \"AllTypesSeq\"",
 						$"CREATE SEQUENCE \"AllTypesSeq\" MINVALUE 1 START WITH {lastValue + 1}"
 					};
-					break;
-				case string prov when prov.StartsWith("PostgreSQL"):
-					sql = new[] { $"ALTER SEQUENCE \"AllTypes_ID_seq\" RESTART WITH {lastValue + 1}" };
-					break;
-				case string prov when prov.StartsWith("SapHana"):
-					// SAP HANA doesn't allow identity management at all
-					sql = new[]
-					{
+						break;
+					case string prov when prov.StartsWith("PostgreSQL"):
+						sql = new[] { $"ALTER SEQUENCE \"AllTypes_ID_seq\" RESTART WITH {lastValue + 1}" };
+						break;
+					case string prov when prov.StartsWith("SapHana"):
+						// SAP HANA doesn't allow identity management at all
+						sql = new[]
+						{
 						"RENAME TABLE \"AllTypes\" TO \"AllTypes_OLD\"",
 						@"
 CREATE COLUMN TABLE ""AllTypes""
@@ -206,23 +212,24 @@ CREATE COLUMN TABLE ""AllTypes""
 						"INSERT INTO \"AllTypes\" SELECT ID, \"bigintDataType\", \"smallintDataType\", \"decimalDataType\", \"smalldecimalDataType\", \"intDataType\", \"tinyintDataType\", \"floatDataType\", \"realDataType\", \"dateDataType\", \"timeDataType\", \"seconddateDataType\", \"timestampDataType\", \"charDataType\", \"char20DataType\", \"varcharDataType\", \"textDataType\", \"shorttextDataType\", \"ncharDataType\", \"nchar20DataType\", \"nvarcharDataType\", \"alphanumDataType\", \"binaryDataType\", \"varbinaryDataType\", \"blobDataType\", \"clobDataType\", \"nclobDataType\" FROM \"AllTypes_OLD\"",
 						"DROP TABLE \"AllTypes_OLD\"",
 					};
-					break;
-				case string prov when prov.StartsWith("SqlServer") || prov.StartsWith("SqlAzure"):
-					sql = new[] { $"DBCC CHECKIDENT ('AllTypes', RESEED, {lastValue})" };
-					break;
-				case string prov when prov.StartsWith("SqlCe"):
-					sql = new[] { $"ALTER TABLE AllTypes ALTER COLUMN ID IDENTITY({lastValue + 1},1)" };
-					break;
-				case string prov when prov.StartsWith("Sybase"):
-					sql = new[]
-					{
+						break;
+					case string prov when prov.StartsWith("SqlServer") || prov.StartsWith("SqlAzure"):
+						sql = new[] { $"DBCC CHECKIDENT ('AllTypes', RESEED, {lastValue})" };
+						break;
+					case string prov when prov.StartsWith("SqlCe"):
+						sql = new[] { $"ALTER TABLE AllTypes ALTER COLUMN ID IDENTITY({lastValue + 1},1)" };
+						break;
+					case string prov when prov.StartsWith("Sybase"):
+						sql = new[]
+						{
 						$"sp_chgattribute AllTypes, 'identity_burn_max', 0, '{lastValue}'",
 						$"sp_chgattribute KeepIdentityTest, 'identity_burn_max', 0, '{keepIdentityLastValue}'"
 					};
-					break;
-				case string prov when prov.StartsWith("SQLite"):
-					sql = new[] { $"UPDATE sqlite_sequence SET seq = {lastValue} WHERE name = 'AllTypes'" };
-					break;
+						break;
+					case string prov when prov.StartsWith("SQLite"):
+						sql = new[] { $"UPDATE sqlite_sequence SET seq = {lastValue} WHERE name = 'AllTypes'" };
+						break;
+				}
 			}
 
 			if (sql != null)

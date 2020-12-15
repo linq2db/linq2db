@@ -273,7 +273,6 @@ AS RETURN
 		{
 			var (entities, others) = GenerateEntities();
 
-			using (new AllowMultipleQuery())
 			using (var db = (DataConnection)GetDataContext(context, GetMapping()))
 			using (db.CreateLocalTable("SomeTable", entities))
 			using (db.CreateLocalTable(others))
@@ -388,7 +387,6 @@ AS RETURN
 		{
 			var (entities, others) = GenerateEntities();
 
-			using (new AllowMultipleQuery())
 			using (var db = (DataConnection)GetDataContext(context, GetMapping()))
 			using (db.CreateLocalTable(entities))
 			using (db.CreateLocalTable(others))
@@ -415,7 +413,6 @@ AS RETURN
 		{
 			var (entities, others) = GenerateEntities();
 
-			using (new AllowMultipleQuery())
 			using (var db = (DataConnection)GetDataContext(context, GetMapping()))
 			using (db.CreateLocalTable(entities))
 			using (db.CreateLocalTable(others))
@@ -536,7 +533,6 @@ WHERE
 		[Test]
 		public void AssociationFromInterfaceInGenericMethod([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = (DataConnection)GetDataContext(context, GetMapping()))
 			using (db.CreateLocalTable<TreeItem>())
 			{
@@ -760,7 +756,7 @@ UsersWithLanguageLikeExpression().Compile()
 			private static Func<UserGroup, IDataContext, string, IQueryable<User>>? _usersWithLanguageLikeExpression;
 
 			[Association(QueryExpressionMethod = nameof(FirstUserWithMultipleParametersExpression), Relationship = Relationship.OneToOne, CanBeNull = true)]
-			public User FirstUserWithMultipleParameters(IDataContext db, int parameter1, string parameter2, decimal parameter3)
+			public User? FirstUserWithMultipleParameters(IDataContext db, int parameter1, string parameter2, decimal parameter3)
 			{
 				return (_firstUserWithMultipleParametersExpression ??=
 						FirstUserWithMultipleParametersExpression().Compile()
@@ -783,7 +779,7 @@ UsersWithLanguageLikeExpression().Compile()
 			
 			
 			[Association(QueryExpressionMethod = nameof(FirstUserWithLanguageExpression), Relationship = Relationship.OneToOne, CanBeNull = true)]
-			public User FirstUsersWithLanguage(IDataContext db, int languageId)
+			public User? FirstUsersWithLanguage(IDataContext db, int languageId)
 			{
 				return (_firstUserWithLanguageExpression ??= FirstUserWithLanguageExpression().Compile())(this, db, languageId).FirstOrDefault();
 			}
@@ -850,8 +846,8 @@ UsersWithLanguageLikeExpression().Compile()
 					.Select(x => new
 					{
 						x.Id,
-						FirstUserId = x.FirstUsersWithLanguage(db, 1).Id,
-						LanguageName = x.FirstUsersWithLanguage(db, 1).Language!.Name
+						FirstUserId = x.FirstUsersWithLanguage(db, 1)!.Id,
+						LanguageName = x.FirstUsersWithLanguage(db, 1)!.Language!.Name
 					})
 					.First();
 
@@ -886,9 +882,9 @@ UsersWithLanguageLikeExpression().Compile()
 					{
 						x.Id,
 						FirstUserId  = x
-							.FirstUsersWithLanguage(db, 1)
+							.FirstUsersWithLanguage(db, 1)!
 							.UserGroup
-							.FirstUsersWithLanguage(db, 2)
+							.FirstUsersWithLanguage(db, 2)!
 							.Id
 					})
 					.First();
@@ -957,7 +953,7 @@ UsersWithLanguageLikeExpression().Compile()
 					.Select(x => new
 					{
 						x.Id,
-						FirstUserId = x.FirstUserWithMultipleParameters(db, default, string.Empty, default).Id
+						FirstUserId = x.FirstUserWithMultipleParameters(db, default, string.Empty, default)!.Id
 					})
 					.First();
 

@@ -49,7 +49,6 @@ namespace Tests.UserTests
 		[Test]
 		public void TestLoadWithDiscriminator([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Order>(new []{new OrderType1() { OrderId = 1, OrderName = "Order1" }}))
 			using (db.CreateLocalTable<OrderDetail>(new []{new OrderDetail() { OrderDetailId = 100, OrderId = 1, Title = "Detail1" }}))

@@ -1470,7 +1470,7 @@ namespace Tests.Linq
 								   && (!flag.HasValue || flag.Value && c.Value1 == null || !flag.Value && c.Value1 != null)
 							   select c);
 
-				var sql = results.ToString();
+				var sql = results.ToString()!;
 
 				AreEqual(
 					from c in db.Parent.AsEnumerable()
@@ -1496,7 +1496,7 @@ namespace Tests.Linq
 								   && (flag == null || flag.Value && c.Value1 == null || !flag.Value && c.Value1 != null)
 							   select c);
 
-				var sql = results.ToString();
+				var sql = results.ToString()!;
 
 				AreEqual(
 					from c in db.Parent.AsEnumerable()

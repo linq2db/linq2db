@@ -3,8 +3,9 @@
 	<Import Project="linq2db.Default.props" />
 
 	<PropertyGroup>
-		<TargetFrameworks>net472;netcoreapp2.1;netcoreapp3.1</TargetFrameworks>
+		<TargetFrameworks>net472;netcoreapp2.1;netcoreapp3.1;net5.0</TargetFrameworks>
 		<Configurations>Debug;Release;Azure</Configurations>
+		<LangVersion>8.0</LangVersion>
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'Azure' ">

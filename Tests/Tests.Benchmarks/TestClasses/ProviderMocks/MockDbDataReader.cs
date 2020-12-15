@@ -45,7 +45,7 @@ namespace LinqToDB.Benchmarks.TestProvider
 			return (byte)_result.Data![_row][ordinal]!;
 		}
 
-		public override long GetBytes(int ordinal, long dataOffset, byte[] buffer, int bufferOffset, int length)
+		public override long GetBytes(int ordinal, long dataOffset, byte[]? buffer, int bufferOffset, int length)
 		{
 			throw new NotImplementedException();
 		}
@@ -55,7 +55,7 @@ namespace LinqToDB.Benchmarks.TestProvider
 			throw new NotImplementedException();
 		}
 
-		public override long GetChars(int ordinal, long dataOffset, char[] buffer, int bufferOffset, int length)
+		public override long GetChars(int ordinal, long dataOffset, char[]? buffer, int bufferOffset, int length)
 		{
 			throw new NotImplementedException();
 		}
