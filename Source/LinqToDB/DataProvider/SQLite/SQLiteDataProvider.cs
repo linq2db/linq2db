@@ -1,16 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
 using System.Linq.Expressions;
-using System.Threading.Tasks;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.SQLite
 {
-	using Data;
 	using Common;
-	using Extensions;
+	using Data;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
@@ -133,8 +131,8 @@ namespace LinqToDB.DataProvider.SQLite
 
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd(' '));
-			SetCharFieldToType<char>("char",  (r, i) => DataTools.GetChar(r, i));
-			SetCharFieldToType<char>("nchar", (r, i) => DataTools.GetChar(r, i));
+			SetCharFieldToType<char>("char" , DataTools.GetCharExpression);
+			SetCharFieldToType<char>("nchar", DataTools.GetCharExpression);
 
 		}
 

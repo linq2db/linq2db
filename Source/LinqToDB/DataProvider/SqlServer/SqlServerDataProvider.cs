@@ -53,10 +53,10 @@ namespace LinqToDB.DataProvider.SqlServer
 				SqlProviderFlags.IsCommonTableExpressionsSupported = version >= SqlServerVersion.v2008;
 			}
 
-			SetCharField("char", (r, i) => r.GetString(i).TrimEnd(' '));
+			SetCharField("char" , (r, i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r, i) => r.GetString(i).TrimEnd(' '));
-			SetCharFieldToType<char>("char", (r, i) => DataTools.GetChar(r, i));
-			SetCharFieldToType<char>("nchar", (r, i) => DataTools.GetChar(r, i));
+			SetCharFieldToType<char>("char" , DataTools.GetCharExpression);
+			SetCharFieldToType<char>("nchar", DataTools.GetCharExpression);
 
 			_sqlOptimizer = version switch
 			{
@@ -66,10 +66,6 @@ namespace LinqToDB.DataProvider.SqlServer
 				SqlServerVersion.v2017 => new SqlServer2017SqlOptimizer(SqlProviderFlags),
 				_                      => new SqlServer2008SqlOptimizer(SqlProviderFlags),
 			};
-			SetField<IDataReader, decimal>((r, i) => r.GetDecimal(i));
-			SetField<IDataReader, decimal>("money"     , (r, i) => SqlServerTools.DataReaderGetMoney(r, i));
-			SetField<IDataReader, decimal>("smallmoney", (r, i) => SqlServerTools.DataReaderGetMoney(r, i));
-			SetField<IDataReader, decimal>("decimal"   , (r, i) => SqlServerTools.DataReaderGetDecimal(r, i));
 
 			// missing:
 			// GetSqlBytes

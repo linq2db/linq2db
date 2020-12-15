@@ -112,55 +112,22 @@ namespace Tests
 
 			if (configurations.Count > 0 || SkipForLinqService || SkipForNonLinqService)
 			{
-				if (test.Arguments.Length == 0)
+				var (provider, isLinqService) = NUnitUtils.GetContext(test);
+
+				if (provider == null)
 					return;
 
-				var provider       = null as string;
-				var isLinqService  = false;
-				var hasLinqService = configurations.Any(c => c.EndsWith(".LinqService"));
-				var parameters     = test.Method.GetParameters();
-
-				for (var i = 0; i < parameters.Length; i++)
-				{
-					var attr = parameters[i].GetCustomAttributes<DataSourcesBaseAttribute>(true);
-
-					if (attr.Length != 0)
-					{
-						var context = (string)test.Arguments[i];
-
-						if (hasLinqService)
-						{
-							if (configurations.Contains(context))
-								break;
-							return;
-						}
-
-						provider = context;
-
-						if (provider.EndsWith(".LinqService"))
-						{
-							provider = provider.Replace(".LinqService", "");
-							isLinqService = true;
-						}
-
-						break;
-					}
-				}
-
-				if (provider != null)
-				{
-					// first check that wcf/non-wcf flags applicable for current case
-					var matched =
+				// first check that wcf/non-wcf flags applicable for current case
+				var applyAttribute =
 						!SkipForLinqService    && isLinqService == true ||
 						!SkipForNonLinqService && isLinqService == false;
 
-					// next check configuration name
-					matched = matched && (configurations.Count == 0 || configurations.Contains(provider));
+				// next check configuration name
+				applyAttribute = applyAttribute && (configurations.Count == 0 || configurations.Contains(provider));
 
-					// attribute is not applicable to current test case
-					if (!matched)
-						return;
-				}
+				// attribute is not applicable to current test case
+				if (!applyAttribute)
+					return;
 			}
 
 			var reason = string.IsNullOrWhiteSpace(_issue) ? "Active issue" : $"Issue {_issue}";

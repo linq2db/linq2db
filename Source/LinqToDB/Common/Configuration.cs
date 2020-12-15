@@ -6,6 +6,7 @@ namespace LinqToDB.Common
 {
 	using Data;
 	using Data.RetryPolicy;
+	using System.Data;
 	using System.Threading.Tasks;
 
 	/// <summary>
@@ -32,6 +33,13 @@ namespace LinqToDB.Common
 		/// Default value: <c>true</c>.
 		/// </summary>
 		public static bool ContinueOnCapturedContext = true;
+
+		/// <summary>
+		/// Enables mapping expression to be compatible with <see cref="CommandBehavior.SequentialAccess"/> behavior.
+		/// Note that it doesn't switch linq2db to use <see cref="CommandBehavior.SequentialAccess"/> behavior for
+		/// queries, so this optimization could be used for <see cref="CommandBehavior.Default"/> too.
+		/// </summary>
+		public static bool OptimizeForSequentialAccess = false;
 
 		public static class Data
 		{

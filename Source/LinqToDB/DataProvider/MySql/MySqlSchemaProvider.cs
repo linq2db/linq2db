@@ -50,6 +50,7 @@ namespace LinqToDB.DataProvider.MySql
 			return dataConnection
 				.Query(rd =>
 				{
+					// IMPORTANT: reader calls must be ordered to support SequentialAccess
 					var catalog = rd.GetString(0);
 					var name    = rd.GetString(1);
 					// BASE TABLE/VIEW/SYSTEM VIEW
@@ -112,18 +113,29 @@ SELECT
 			return dataConnection
 				.Query(rd =>
 				{
+					// IMPORTANT: reader calls must be ordered to support SequentialAccess
+					var dataType   = rd.GetString(0);
+					var columnType = rd.GetString(1);
+					var tableId    = rd.GetString(2).ToLower() + ".." + rd.GetString(3);
+					var name       = rd.GetString(4);
+					var isNullable = rd.GetString(5) == "YES";
+					var ordinal    = Converter.ChangeTypeTo<int>(rd[6]);
+					var length     = Converter.ChangeTypeTo<long?>(rd[7]);
+					var precision  = Converter.ChangeTypeTo<int?>(rd[8]);
+					var scale      = Converter.ChangeTypeTo<int?>(rd[9]);
 					var extra      = rd.GetString(10);
+
 					return new ColumnInfo()
 					{
-						TableID      = rd.GetString(2).ToLower() + ".." + rd.GetString(3),
-						Name         = rd.GetString(4),
-						IsNullable   = rd.GetString(5) == "YES",
-						Ordinal      = Converter.ChangeTypeTo<int>(rd[6]),
-						DataType     = rd.GetString(0),
-						Length       = Converter.ChangeTypeTo<long?>(rd[7]),
-						Precision    = Converter.ChangeTypeTo<int?>(rd[8]),
-						Scale        = Converter.ChangeTypeTo<int?>(rd[9]),
-						ColumnType   = rd.GetString(1),
+						TableID      = tableId,
+						Name         = name,
+						IsNullable   = isNullable,
+						Ordinal      = ordinal,
+						DataType     = dataType,
+						Length       = length,
+						Precision    = precision,
+						Scale        = scale,
+						ColumnType   = columnType,
 						IsIdentity   = extra.Contains("auto_increment"),
 						Description  = rd.GetString(11),
 						// also starting from 5.1 we can utilise provileges column for skip properties
@@ -160,10 +172,11 @@ SELECT
 			return dataConnection
 				.Query(rd =>
 				{
+					// IMPORTANT: reader calls must be ordered to support SequentialAccess
 					return new ForeignKeyInfo()
 					{
+						ThisTableID  = rd.GetString(0).ToLower() + ".." + rd.GetString(1),
 						Name         = rd.GetString(2),
-						ThisTableID  = rd.GetString(1).ToLower() + ".." + rd.GetString(0),
 						ThisColumn   = rd.GetString(3),
 						OtherTableID = rd.GetString(4).ToLower() + ".." + rd.GetString(5),
 						OtherColumn  = rd.GetString(6),
@@ -171,8 +184,8 @@ SELECT
 					};
 				}, @"
 SELECT
-		c.TABLE_NAME,
 		c.TABLE_SCHEMA,
+		c.TABLE_NAME,
 		c.CONSTRAINT_NAME,
 		c.COLUMN_NAME,
 		c.REFERENCED_TABLE_SCHEMA,
@@ -240,8 +253,10 @@ SELECT
 			return dataConnection
 				.Query(rd =>
 				{
+					// IMPORTANT: reader calls must be ordered to support SequentialAccess
 					var catalog = Converter.ChangeTypeTo<string>(rd[0]);
 					var name    = Converter.ChangeTypeTo<string>(rd[1]);
+
 					return new ProcedureInfo()
 					{
 						ProcedureID         = catalog + "." + name,
@@ -265,20 +280,24 @@ SELECT
 			return dataConnection
 				.Query(rd =>
 				{
-					var mode = Converter.ChangeTypeTo<string>(rd[2]);
+					// IMPORTANT: reader calls must be ordered to support SequentialAccess
+					var procId  = rd.GetString(0) + "." + rd.GetString(1);
+					var mode    = Converter.ChangeTypeTo<string>(rd[2]);
+					var ordinal = Converter.ChangeTypeTo<int>(rd[3]);
+
 					return new ProcedureParameterInfo()
 					{
-						ProcedureID   = rd.GetString(0) + "." + rd.GetString(1),
+						ProcedureID   = procId,
 						ParameterName = Converter.ChangeTypeTo<string>(rd[4]),
 						IsIn          = mode == "IN"  || mode == "INOUT",
 						IsOut         = mode == "OUT" || mode == "INOUT",
-						Precision     = Converter.ChangeTypeTo<int?>(rd["NUMERIC_PRECISION"]),
-						Scale         = Converter.ChangeTypeTo<int?>(rd["NUMERIC_SCALE"]),
-						Ordinal       = Converter.ChangeTypeTo<int>(rd["ORDINAL_POSITION"]),
+						Precision     = Converter.ChangeTypeTo<int?>(rd[5]),
+						Scale         = Converter.ChangeTypeTo<int?>(rd[6]),
+						Ordinal       = ordinal,
 						IsResult      = mode == null,
 						DataType      = rd.GetString(7).ToUpper(),
+						Length        = Converter.ChangeTypeTo<long?>(rd[8]),
 						DataTypeExact = Converter.ChangeTypeTo<string>(rd[9]),
-						Length        = Converter.ChangeTypeTo<long?>(rd["CHARACTER_MAXIMUM_LENGTH"]),
 						IsNullable    = true
 					};
 				}, "SELECT SPECIFIC_SCHEMA, SPECIFIC_NAME, PARAMETER_MODE, ORDINAL_POSITION, PARAMETER_NAME, NUMERIC_PRECISION, NUMERIC_SCALE, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH, DTD_IDENTIFIER FROM INFORMATION_SCHEMA.parameters WHERE SPECIFIC_SCHEMA = database()")

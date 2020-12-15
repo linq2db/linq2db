@@ -1724,6 +1724,8 @@ namespace Tests.Linq
 		{
 			GetProviderName(context, out var isLinqService);
 
+			// mapping fails and fallbacks to slow-mapper
+			using (new CustomCommandProcessor(null))
 			using (var db = GetDataContext(context))
 			{
 				using (new Cleaner(db))
@@ -1745,11 +1747,11 @@ namespace Tests.Linq
 					}
 					else
 #endif
-					Assert.Throws<LinqToDBConvertException>(() =>
-						db.GetTable<UndefinedValueTest>()
-							.Select(r => new { r.Id, r.TestField })
-							.Where(r => r.Id == RID)
-							.ToList());
+						Assert.Throws<LinqToDBConvertException>(() =>
+							db.GetTable<UndefinedValueTest>()
+								.Select(r => new { r.Id, r.TestField })
+								.Where(r => r.Id == RID)
+								.ToList());
 				}
 			}
 		}

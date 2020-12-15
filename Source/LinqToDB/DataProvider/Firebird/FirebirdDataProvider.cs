@@ -33,18 +33,16 @@ namespace LinqToDB.DataProvider.Firebird
 			SqlProviderFlags.IsUpdateFromSupported             = false;
 
 			SetCharField("CHAR", (r,i) => r.GetString(i).TrimEnd(' '));
-			SetCharFieldToType<char>("CHAR", (r, i) => DataTools.GetChar(r, i));
+			SetCharFieldToType<char>("CHAR", DataTools.GetCharExpression);
 
 			SetProviderField<IDataReader,TimeSpan,DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1970, 1, 1));
-			SetProviderField<IDataReader,DateTime,DateTime>((r,i) => GetDateTime(r, i));
+			SetProviderField<IDataReader,DateTime,DateTime>((r,i) => GetDateTime(r.GetDateTime(i)));
 
 			_sqlOptimizer = sqlOptimizer ?? new FirebirdSqlOptimizer(SqlProviderFlags);
 		}
 
-		static DateTime GetDateTime(IDataReader dr, int idx)
+		static DateTime GetDateTime(DateTime value)
 		{
-			var value = dr.GetDateTime(idx);
-
 			if (value.Year == 1970 && value.Month == 1 && value.Day == 1)
 				return new DateTime(1, 1, 1, value.Hour, value.Minute, value.Second, value.Millisecond);
 
@@ -83,9 +81,9 @@ namespace LinqToDB.DataProvider.Firebird
 
 		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
 		{
-			if (value is bool)
+			if (value is bool boolVal)
 			{
-				value = (bool)value ? "1" : "0";
+				value    = boolVal ? "1" : "0";
 				dataType = dataType.WithDataType(DataType.Char);
 			}
 
