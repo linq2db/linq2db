@@ -2398,8 +2398,8 @@ namespace LinqToDB.SqlProvider
 
 						if (!inlining)
 						{
-							Convert(StringBuilder, OptimizationContext.GetParameterName(parm), ConvertType.NameToQueryParameter);
-							OptimizationContext.AddParameter(parm);
+							var newParm = OptimizationContext.AddParameter(parm);
+							Convert(StringBuilder, OptimizationContext.GetParameterName(newParm), ConvertType.NameToQueryParameter);
 						}
 					}
 

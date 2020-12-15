@@ -24,7 +24,7 @@ namespace LinqToDB.SqlProvider
 			IsParameterOrderDepended = isParameterOrderDepended;
 		}
 
-		public EvaluationContext Context { get; }
+		public EvaluationContext Context     { get; }
 		public bool IsParameterOrderDepended { get; }
 
 
@@ -66,13 +66,25 @@ namespace LinqToDB.SqlProvider
 			return _actualParameters;
 		}
 
-		public void AddParameter(SqlParameter parameter)
+		public SqlParameter AddParameter(SqlParameter parameter)
 		{
 			_actualParameters ??= new List<SqlParameter>();
-			if (IsParameterOrderDepended || !_actualParameters.Contains(parameter))
+
+			var alreadyRegistered = _actualParameters.Contains(parameter);
+			if (IsParameterOrderDepended || !alreadyRegistered)
 			{
+				if (alreadyRegistered)
+				{
+					parameter = new SqlParameter(parameter.Type, parameter.Name, parameter.Value)
+					{
+						AccessorId = parameter.AccessorId
+					};
+				}
+				
 				_actualParameters.Add(parameter);
 			}
+
+			return parameter;
 		}
 
 		private void CorrectParamName(SqlParameter parameter)
