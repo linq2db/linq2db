@@ -236,6 +236,7 @@ namespace LinqToDB.Data
 
 					sqlBuilder.BuildSql(i, sql, sb, optimizationContext, startIndent);
 					commands[i] = new CommandWithParameters(sb.ToString(), optimizationContext.GetParameters().ToArray());
+					optimizationContext.ClearParameters();
 				}
 
 				if (!sql.IsParameterDependent)

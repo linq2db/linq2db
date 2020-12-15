@@ -10,11 +10,12 @@ namespace LinqToDB.SqlProvider
 	public class OptimizationContext
 	{
 		readonly HashSet<SqlParameter>? _staticParameters;
-		readonly Dictionary<IQueryElement, IQueryElement> _optimized = new(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
+
+		readonly Dictionary<IQueryElement, IQueryElement> _optimized =
+			new(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
 
 		private List<SqlParameter>? _actualParameters;
-		private List<SqlParameter>? _newParameters;
-		private HashSet<string>?    _usedParameterNames;
+		private HashSet<string>? _usedParameterNames;
 
 		public OptimizationContext(EvaluationContext context, HashSet<SqlParameter>? staticParameters,
 			bool isParameterOrderDepended)
@@ -24,7 +25,7 @@ namespace LinqToDB.SqlProvider
 			IsParameterOrderDepended = isParameterOrderDepended;
 		}
 
-		public EvaluationContext Context     { get; }
+		public EvaluationContext Context { get; }
 		public bool IsParameterOrderDepended { get; }
 
 
@@ -80,7 +81,9 @@ namespace LinqToDB.SqlProvider
 						AccessorId = parameter.AccessorId
 					};
 				}
-				
+
+				CorrectParamName(parameter);
+
 				_actualParameters.Add(parameter);
 			}
 
@@ -98,7 +101,8 @@ namespace LinqToDB.SqlProvider
 						StringComparer.InvariantCultureIgnoreCase);
 			}
 
-			if (string.IsNullOrEmpty(parameter.Name) || _usedParameterNames.Contains(parameter.Name!))
+			if (!(_staticParameters?.Contains(parameter) == true) 
+			    && (string.IsNullOrEmpty(parameter.Name) || _usedParameterNames.Contains(parameter.Name!)))
 			{
 				Utils.MakeUniqueNames(new[] {parameter}, _usedParameterNames, p => p.Name,
 					(p, v, s) => p.Name = v,
@@ -106,26 +110,15 @@ namespace LinqToDB.SqlProvider
 						char.IsDigit(p.Name[p.Name.Length - 1]) ? p.Name : p.Name + "_1",
 					StringComparer.InvariantCultureIgnoreCase);
 
-				_usedParameterNames.Add(parameter.Name!);
 			}
+
+			_usedParameterNames.Add(parameter.Name!);
 		}
 
-		public string GetParameterName(SqlParameter parameter)
+		public void ClearParameters()
 		{
-			if (_staticParameters != null && !_staticParameters.Contains(parameter))
-			{
-				if (_newParameters == null || !_newParameters.Contains(parameter))
-				{
-					_newParameters ??= new List<SqlParameter>();
-					_newParameters.Add(parameter);
-
-					CorrectParamName(parameter);
-				}
-
-			}
-
-			return parameter.Name!;
+			_usedParameterNames = null;
+			_actualParameters = null;
 		}
-
 	}
 }

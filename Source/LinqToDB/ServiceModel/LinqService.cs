@@ -106,7 +106,7 @@ namespace LinqToDB.ServiceModel
 					Statement  = query.Statement,
 					Parameters = query.Parameters,
 					QueryHints = query.QueryHints
-				}, null);
+				}, new SqlParameterValues());
 			}
 			catch (Exception exception)
 			{
