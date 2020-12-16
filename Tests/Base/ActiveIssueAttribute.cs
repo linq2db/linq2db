@@ -87,11 +87,11 @@ namespace Tests
 		/// </summary>
 		public bool SkipForNonLinqService { get; set; }
 
-		HashSet<string>? _configurationsToSkip;
+		HashSet<string>? _issueConfigurations;
 
-		HashSet<string> GetConfigurations()
+		HashSet<string> GetIssueConfigurations()
 		{
-			return _configurationsToSkip ??= new HashSet<string>(Configurations ?? new string[0]);
+			return _issueConfigurations ??= new HashSet<string>(Configurations ?? new string[0]);
 		}
 
 		IEnumerable<TestMethod> ITestBuilder.BuildFrom(IMethodInfo method, Test suite)
@@ -108,27 +108,24 @@ namespace Tests
 			if (test.RunState != RunState.Runnable)
 				return;
 
-			var configurations = GetConfigurations();
+			var issueConfigurations = GetIssueConfigurations();
 
-			if (configurations.Count > 0 || SkipForLinqService || SkipForNonLinqService)
+			var explicitTest = issueConfigurations.Count == 0;
+
+			if (!explicitTest)
 			{
 				var (provider, isLinqService) = NUnitUtils.GetContext(test);
 
-				if (provider == null)
-					return;
-
-				// first check that wcf/non-wcf flags applicable for current case
-				var applyAttribute =
-						!SkipForLinqService    && isLinqService == true ||
-						!SkipForNonLinqService && isLinqService == false;
-
-				// next check configuration name
-				applyAttribute = applyAttribute && (configurations.Count == 0 || configurations.Contains(provider));
-
-				// attribute is not applicable to current test case
-				if (!applyAttribute)
-					return;
+				if (provider != null)
+				{
+					explicitTest = issueConfigurations.Contains(provider)
+						&& ((!SkipForLinqService && isLinqService == true)
+							|| (!SkipForNonLinqService && isLinqService == false));
+				}
 			}
+
+			if (!explicitTest)
+				return;
 
 			var reason = string.IsNullOrWhiteSpace(_issue) ? "Active issue" : $"Issue {_issue}";
 

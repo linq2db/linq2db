@@ -40,7 +40,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		public void ConcurrentRunner<TParam, TResult>(DataConnection dc, string context, int threadsPerParam, Func<DataConnection, TParam, TResult> queryFunc,
 			Action<TResult, TParam> checkAction, params TParam[] parameters)
 		{
@@ -132,26 +131,22 @@ namespace Tests.Linq
 					throw;
 				}
 			}
-
 		}
 
 		[Test]
-		public void StartsWithTests([DataSources(false)] string context)
+		public void StartsWithTests([DataSources(false, ProviderName.Sybase)] string context)
 		{
 			using var d1 = new DisableBaseline("Multi-threading");
 			using var d2 = new DisableLogging();
 			
 			var testData = MultiThreadedData.TestData();
-			
-			using (var db = (DataConnection)GetDataContext(context))
-			using (db.BeginTransaction())
-			using (db.CreateLocalTable(testData))
-			{
-				// transaction (or delay) required for Access and Firebird, otherwise it is possible for other threads
-				// to read incomplete results, because inserted data is not made available yet to other threads by
-				// database engine
-				db.CommitTransaction();
 
+			// transaction (or delay) required for Access and Firebird, otherwise it is possible for other threads
+			// to read incomplete results, because inserted data is not made available yet to other threads by
+			// database engine
+			using (var db = (DataConnection)GetDataContext(context))
+			using (db.CreateLocalTable(testData, true))
+			{
 				ConcurrentRunner(db, context, 10,
 					(threadDb, p) =>
 					{
@@ -167,15 +162,18 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void EndsWithTests([DataSources(false)] string context)
+		public void EndsWithTests([DataSources(false, ProviderName.Sybase)] string context)
 		{
 			using var d1 = new DisableBaseline("Multi-threading");
 			using var d2 = new DisableLogging();
 
 			var testData = MultiThreadedData.TestData();
 
+			// transaction (or delay) required for Access and Firebird, otherwise it is possible for other threads
+			// to read incomplete results, because inserted data is not made available yet to other threads by
+			// database engine
 			using (var db = (DataConnection)GetDataContext(context))
-			using (var table = db.CreateLocalTable(testData))
+			using (var table = db.CreateLocalTable(testData, true))
 			{
 				ConcurrentRunner(db, context, 10,
 					(threadDb, p) =>
@@ -192,22 +190,19 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ParamOptimization([DataSources(false, TestProvName.AllAccess)] string context)
+		public void ParamOptimization([DataSources(false, ProviderName.Sybase)] string context)
 		{
 			using var d1 = new DisableBaseline("Multi-threading");
 			using var d2 = new DisableLogging();
 
 			var testData = MultiThreadedData.TestData();
 
-			using (var db = (DataConnection)GetDataContext(context))
-			using (db.BeginTransaction())
-			using (var table = db.CreateLocalTable(testData))
+			// transaction (or delay) required for Access and Firebird, otherwise it is possible for other threads
+			// to read incomplete results, because inserted data is not made available yet to other threads by
+			// database engine
+			using (var db    = (DataConnection)GetDataContext(context))
+			using (var table = db.CreateLocalTable(testData, true))
 			{
-				// transaction (or delay) required for Access and Firebird, otherwise it is possible for other threads
-				// to read incomplete results, because inserted data is not made available yet to other threads by
-				// database engine
-				db.CommitTransaction();
-
 				ConcurrentRunner(db, context, 2,
 					(threadDb, p) =>
 					{
@@ -223,22 +218,19 @@ namespace Tests.Linq
 		}		
 		
 		[Test]
-		public void MergeInsert([MergeTests.MergeDataContextSource(false)] string context)
+		public void MergeInsert([MergeTests.MergeDataContextSource(false, ProviderName.Sybase, TestProvName.AllInformix)] string context)
 		{
 			using var d1 = new DisableBaseline("Multi-threading");
 			using var d2 = new DisableLogging();
 
 			var testData = MultiThreadedData.TestData();
 
-			using (var db = (DataConnection)GetDataContext(context))
-			using (db.BeginTransaction())
-			using (var table = db.CreateLocalTable(testData))
+			// transaction (or delay) required for Access and Firebird, otherwise it is possible for other threads
+			// to read incomplete results, because inserted data is not made available yet to other threads by
+			// database engine
+			using (var db    = (DataConnection)GetDataContext(context))
+			using (var table = db.CreateLocalTable(testData, true))
 			{
-				// transaction (or delay) required for Access and Firebird, otherwise it is possible for other threads
-				// to read incomplete results, because inserted data is not made available yet to other threads by
-				// database engine
-				db.CommitTransaction();
-
 				ConcurrentRunner(db, context, 1,
 					(threadDb, p) =>
 					{
