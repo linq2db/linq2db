@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.Informix
 {
@@ -9,8 +11,7 @@ namespace LinqToDB.DataProvider.Informix
 	using LinqToDB.Linq.Internal;
 	using Mapping;
 	using SqlProvider;
-	using System.Threading;
-	using System.Threading.Tasks;
+	using SqlQuery;
 
 	public class InformixDataProvider : DynamicDataProviderBase<InformixProviderAdapter>
 	{

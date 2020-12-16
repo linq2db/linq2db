@@ -5,6 +5,7 @@ using System.Text;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
 
 namespace Tests.Model
@@ -81,10 +82,9 @@ namespace Tests.Model
 			var provider  = ((IDataContext)this).CreateSqlProvider();
 			var optimizer = ((IDataContext)this).GetSqlOptimizer  ();
 
-			//provider.SqlQuery = sql;
-
-			var statement = (SqlSelectStatement)optimizer.Finalize(new SqlSelectStatement(query), false);
-			statement.PrepareQueryAndAliases();
+			var optimizationContext = new OptimizationContext(new EvaluationContext(SqlParameterValues.Empty), null, false);
+			var statement = (SqlSelectStatement)optimizer.Finalize(new SqlSelectStatement(query));
+			statement = (SqlSelectStatement)optimizer.PrepareStatementForRemoting(statement, MappingSchema, optimizationContext.Context);
 
 			var cc = provider.CommandCount(statement);
 			var sb = new StringBuilder();
@@ -95,12 +95,9 @@ namespace Tests.Model
 			{
 				sb.Length = 0;
 
-				provider.BuildSql(i, statement, sb);
+				provider.BuildSql(i, statement, sb, optimizationContext);
 				commands[i] = sb.ToString();
 			}
-
-			statement.Parameters.Clear();
-			statement.Parameters.AddRange(provider.ActualParameters);
 
 			return string.Join("\n\n", commands);
 		}

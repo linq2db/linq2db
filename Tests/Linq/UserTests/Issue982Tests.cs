@@ -18,9 +18,9 @@ namespace Tests.UserTests
 			{
 			}
 
-			public override SqlStatement Finalize(SqlStatement statement, bool inlineParameters)
+			public override SqlStatement Finalize(SqlStatement statement)
 			{
-				statement = base.Finalize(statement, inlineParameters);
+				statement = base.Finalize(statement);
 
 				AddConditions(statement);
 

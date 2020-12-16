@@ -214,9 +214,8 @@ namespace LinqToDB.Linq.Builder
 				predicate = new SqlPredicate.ExprExpr(
 					builder.ConvertToSql(outerKeyContext, outerKeySelector),
 					SqlPredicate.Operator.Equal,
-					builder.ConvertToSql(innerKeyContext, innerKeySelector));
-
-				predicate = builder.Convert(outerKeyContext, predicate);
+					builder.ConvertToSql(innerKeyContext, innerKeySelector), 
+					Common.Configuration.Linq.CompareNullsAsValues ? true : (bool?)null);
 			}
 
 			condition.Conditions.Add(new SqlCondition(false, predicate));
@@ -238,9 +237,8 @@ namespace LinqToDB.Linq.Builder
 				predicate = new SqlPredicate.ExprExpr(
 					builder.ConvertToSql(outerKeyContext, outerKeySelector),
 					SqlPredicate.Operator.Equal,
-					builder.ConvertToSql(subQueryKeyContext, innerKeySelector));
-
-				predicate = builder.Convert(outerKeyContext, predicate);
+					builder.ConvertToSql(subQueryKeyContext, innerKeySelector),
+					Common.Configuration.Linq.CompareNullsAsValues ? true : (bool?)null);
 			}
 
 			subQuerySelect.Where.SearchCondition.Conditions.Add(new SqlCondition(false, predicate));

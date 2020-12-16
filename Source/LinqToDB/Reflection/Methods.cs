@@ -115,6 +115,8 @@ namespace LinqToDB.Reflection
 
 			internal static readonly MethodInfo SelectDistinct    = MemberHelper.MethodOfGeneric<IQueryable<IGrouping<int, object>>>(q => q.SelectDistinct());
 
+			public static readonly MethodInfo AsQueryable         = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.AsQueryable(null!));
+
 			public static class Table
 			{
 				public static readonly MethodInfo TableName    = MemberHelper.MethodOfGeneric<ITable<int>>(t => t.TableName   (null!));
@@ -141,6 +143,7 @@ namespace LinqToDB.Reflection
 			{
 				public static readonly MethodInfo ToNotNull     = MemberHelper.MethodOfGeneric<int?>(i => Sql.ToNotNull(i));
 				public static readonly MethodInfo ToNotNullable = MemberHelper.MethodOfGeneric<int?>(i => Sql.ToNotNullable(i));
+				public static readonly MethodInfo Alias         = MemberHelper.MethodOfGeneric<int>(i => Sql.Alias(i, ""));
 			}
 
 			public static class Update

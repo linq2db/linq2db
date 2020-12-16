@@ -1173,6 +1173,11 @@ namespace LinqToDB.Data
 		/// </summary>
 		public string? LastQuery;
 
+		/// <summary>
+		/// Contains last parameters, sent to database using current connection.
+		/// </summary>
+		public IDataParameterCollection? LastParameters;
+
 		internal void InitCommand(CommandType commandType, string sql, DataParameter[]? parameters, List<string>? queryHints, bool withParameters)
 		{
 			if (queryHints?.Count > 0)
@@ -1184,6 +1189,7 @@ namespace LinqToDB.Data
 
 			DataProvider.InitCommand(this, commandType, sql, parameters, withParameters);
 			LastQuery = Command.CommandText;
+			LastParameters = Command.Parameters;
 		}
 
 		private int? _commandTimeout;

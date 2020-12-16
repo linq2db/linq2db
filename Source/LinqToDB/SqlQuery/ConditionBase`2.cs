@@ -45,7 +45,7 @@
 				readonly Expr_              _expr;
 				readonly SqlPredicate.Operator _op;
 
-				public T2 Expr    (ISqlExpression expr)       { return _expr.Add(new SqlPredicate.ExprExpr(_expr._expr, _op, expr)); }
+				public T2 Expr    (ISqlExpression expr)       { return _expr.Add(new SqlPredicate.ExprExpr(_expr._expr, _op, expr, null)); }
 				public T2 Field   (SqlField      field)       { return Expr(field);               }
 				public T2 SubQuery(SelectQuery   selectQuery) { return Expr(selectQuery);         }
 				public T2 Value   (object        value)       { return Expr(new SqlValue(value)); }
@@ -68,7 +68,7 @@
 
 			#region Predicate.Like
 
-			public T2 Like(ISqlExpression expression, SqlValue? escape) { return Add(new SqlPredicate.Like(_expr, false, expression, escape, true)); }
+			public T2 Like(ISqlExpression expression, SqlValue? escape) { return Add(new SqlPredicate.Like(_expr, false, expression, escape)); }
 			public T2 Like(ISqlExpression expression)                   { return Like(expression, null); }
 			public T2 Like(string expression,         SqlValue escape)  { return Like(new SqlValue(expression), escape); }
 			public T2 Like(string expression)                           { return Like(new SqlValue(expression), null);   }
@@ -96,7 +96,7 @@
 
 			SqlPredicate.InList CreateInList(bool isNot, object[] exprs)
 			{
-				var list = new SqlPredicate.InList(_expr, isNot, null);
+				var list = new SqlPredicate.InList(_expr, Common.Configuration.Linq.CompareNullsAsValues ? false : (bool?)null, isNot, null);
 
 				if (exprs != null && exprs.Length > 0)
 				{

@@ -20,8 +20,6 @@
 				case QueryType.Update : statement = GetAlternativeUpdate((SqlUpdateStatement) statement); break;
 			}
 			
-			statement = QueryHelper.OptimizeSubqueries(statement);
-
 			return statement;
 		}
 	}

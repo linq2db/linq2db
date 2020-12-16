@@ -5,10 +5,10 @@ using System.Linq;
 namespace LinqToDB.DataProvider.Oracle
 {
 	using Common;
-	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
 	using System.Text;
+	using Mapping;
 
 	partial class Oracle11SqlBuilder : BasicSqlBuilder
 	{
@@ -71,39 +71,14 @@ namespace LinqToDB.DataProvider.Oracle
 			return base.GetIdentityExpression(table);
 		}
 
-		static void ConvertEmptyStringToNullIfNeeded(ISqlExpression expr)
-		{
-			var sqlParameter = expr as SqlParameter;
-			var sqlValue     = expr as SqlValue;
-
-			if (sqlParameter?.Value is string && sqlParameter.Value.ToString() == "")
-				sqlParameter.Value = null;
-
-			if (sqlValue?.Value is string && sqlValue.Value.ToString() == "")
-				sqlValue.Value = null;
-		}
-
-		protected override void BuildPredicate(ISqlPredicate predicate)
-		{
-			if (predicate.ElementType == QueryElementType.ExprExprPredicate)
-			{
-				var expr = (SqlPredicate.ExprExpr)predicate;
-				if (expr.Operator == SqlPredicate.Operator.Equal ||
-					expr.Operator == SqlPredicate.Operator.NotEqual)
-				{
-					ConvertEmptyStringToNullIfNeeded(expr.Expr1);
-					ConvertEmptyStringToNullIfNeeded(expr.Expr2);
-				}
-			}
-			base.BuildPredicate(predicate);
-		}
-
 		protected override bool BuildWhere(SelectQuery selectQuery)
 		{
+			SqlOptimizer.ConvertSkipTake(MappingSchema, selectQuery, OptimizationContext, out var takeExpr, out var skipEpr);
+
 			return
 				base.BuildWhere(selectQuery) ||
-				!NeedSkip(selectQuery) &&
-				 NeedTake(selectQuery) &&
+				!NeedSkip(takeExpr, skipEpr) &&
+				 NeedTake(takeExpr) &&
 				selectQuery.OrderBy.IsEmpty && selectQuery.Having.IsEmpty;
 		}
 
@@ -120,12 +95,6 @@ namespace LinqToDB.DataProvider.Oracle
 				case SetOperation.ExceptAll : sb.Append("MINUS ALL"); return;
 			}
 			base.BuildSetOperation(operation, sb);
-		}
-
-		protected override void BuildFunction(SqlFunction func)
-		{
-			func = ConvertFunctionParameters(func);
-			base.BuildFunction(func);
 		}
 
 		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
@@ -214,27 +183,6 @@ namespace LinqToDB.DataProvider.Oracle
 			//
 			// V$RESERVED_WORDS: https://docs.oracle.com/cd/B28359_01/server.111/b28320/dynviews_2126.htm
 			return ReservedWords.IsReserved(word, ProviderName.Oracle);
-		}
-
-		protected override void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
-		{
-			var wrap = false;
-
-			if (expr.SystemType == typeof(bool))
-			{
-				if (expr is SqlSearchCondition)
-					wrap = true;
-				else
-					wrap =
-						expr is SqlExpression ex      &&
-						ex.Expr              == "{0}" &&
-						ex.Parameters.Length == 1     &&
-						ex.Parameters[0] is SqlSearchCondition;
-			}
-
-			if (wrap) StringBuilder.Append("CASE WHEN ");
-			base.BuildColumnExpression(selectQuery, expr, alias, ref addAlias);
-			if (wrap) StringBuilder.Append(" THEN 1 ELSE 0 END");
 		}
 
 		/// <summary>

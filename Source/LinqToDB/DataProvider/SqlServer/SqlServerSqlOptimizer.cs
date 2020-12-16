@@ -22,14 +22,17 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			return QueryHelper.WrapQuery(
 				statement,
-				query => query.ParentSelect == null && (query.Select.SkipValue != null || query.Select.TakeValue != null || query.Select.TakeHints != null || !query.OrderBy.IsEmpty),
+				query => query.ParentSelect == null && (query.Select.SkipValue != null ||
+				                                        query.Select.TakeValue != null ||
+				                                        query.Select.TakeHints != null || !query.OrderBy.IsEmpty),
 				(query, wrappedQuery) => { }
-				);
+			);
 		}
 
-		public override ISqlExpression ConvertExpression(ISqlExpression expr, bool withParameters)
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expr, ConvertVisitor visitor,
+			EvaluationContext context)
 		{
-			expr = base.ConvertExpression(expr, withParameters);
+			expr = base.ConvertExpressionImpl(expr, visitor, context);
 
 			switch (expr.ElementType)
 			{

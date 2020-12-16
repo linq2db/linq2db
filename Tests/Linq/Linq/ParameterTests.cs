@@ -67,8 +67,8 @@ namespace Tests.Linq
 
 				var queryInlined = query.InlineParameters();
 
-				Assert.That(query.GetStatement().Parameters.Count,        Is.EqualTo(1));
-				Assert.That(queryInlined.GetStatement().Parameters.Count, Is.EqualTo(0));
+				Assert.That(query.GetStatement().CollectParameters().Length,        Is.EqualTo(1));
+				Assert.That(queryInlined.GetStatement().CollectParameters().Length, Is.EqualTo(0));
 			}
 		}
 
@@ -463,7 +463,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(1189)]
 		[Test]
 		public void Issue1189Test([DataSources] string context)
 		{

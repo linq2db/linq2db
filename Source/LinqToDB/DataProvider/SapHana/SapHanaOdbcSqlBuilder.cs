@@ -1,8 +1,9 @@
-﻿namespace LinqToDB.DataProvider.SapHana
+﻿using System.Text;
+
+namespace LinqToDB.DataProvider.SapHana
 {
-	using System.Text;
-	using LinqToDB.Mapping;
-	using LinqToDB.SqlQuery;
+	using Mapping;
+	using SqlQuery;
 	using SqlProvider;
 
 	class SapHanaOdbcSqlBuilder : SapHanaSqlBuilder

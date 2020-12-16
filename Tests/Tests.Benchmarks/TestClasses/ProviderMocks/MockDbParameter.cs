@@ -24,7 +24,13 @@ namespace LinqToDB.Benchmarks.TestProvider
 
 		public override ParameterDirection Direction { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 		public override bool IsNullable { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-		public override int Size { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+		public override int Size
+		{
+			get => 100;
+			set
+			{
+			}
+		}
 
 		[AllowNull]
 		public override string SourceColumn { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }

@@ -484,7 +484,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void SubSub212([DataSources(
-			ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2,
+			ProviderName.SqlCe, TestProvName.AllAccess, ProviderName.DB2,
 			TestProvName.AllOracle)]
 			string context)
 		{

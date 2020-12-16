@@ -14,6 +14,8 @@ namespace LinqToDB.ServiceModel
 	using SqlQuery;
 	using Expressions;
 	using Mapping;
+	using Common;
+	using Extensions;
 
 	[ServiceBehavior  (InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]
 	[WebService       (Namespace  = "http://tempuri.org/")]
@@ -81,15 +83,10 @@ namespace LinqToDB.ServiceModel
 
 		class QueryContext : IQueryContext
 		{
-			public SqlStatement   Statement   { get; set; } = null!;
-			public object?        Context     { get; set; }
-			public SqlParameter[] Parameters  { get; set; } = null!;
-			public List<string>?  QueryHints  { get; set; }
-
-			public SqlParameter[] GetParameters()
-			{
-				return Parameters;
-			}
+			public SqlStatement    Statement   { get; set; } = null!;
+			public object?         Context     { get; set; }
+			public SqlParameter[]? Parameters  { get; set; }
+			public List<string>?   QueryHints  { get; set; }
 		}
 
 		[WebMethod]
@@ -109,7 +106,7 @@ namespace LinqToDB.ServiceModel
 					Statement  = query.Statement,
 					Parameters = query.Parameters,
 					QueryHints = query.QueryHints
-				});
+				}, new SqlParameterValues());
 			}
 			catch (Exception exception)
 			{
@@ -135,7 +132,7 @@ namespace LinqToDB.ServiceModel
 					Statement  = query.Statement,
 					Parameters = query.Parameters,
 					QueryHints = query.QueryHints
-				});
+				}, null);
 			}
 			catch (Exception exception)
 			{
@@ -160,7 +157,7 @@ namespace LinqToDB.ServiceModel
 					Statement  = query.Statement,
 					Parameters = query.Parameters,
 					QueryHints = query.QueryHints
-				});
+				}, SqlParameterValues.Empty);
 
 				var reader = DataReaderWrapCache.TryUnwrapDataReader(db.MappingSchema, rd);
 
@@ -199,11 +196,30 @@ namespace LinqToDB.ServiceModel
 					ret.FieldNames[i] = name;
 					// ugh...
 					// still if it fails here due to empty columns - it is a bug in columns generation
-					ret.FieldTypes[i] = select.Select.Columns[i].SystemType!;
+
+					var fieldType = select.Select.Columns[i].SystemType!;
 
 					// async compiled query support
-					if (ret.FieldTypes[i].IsGenericType && ret.FieldTypes[i].GetGenericTypeDefinition() == typeof(Task<>))
-						ret.FieldTypes[i] = ret.FieldTypes[i].GetGenericArguments()[0];
+					if (fieldType.IsGenericType && fieldType.GetGenericTypeDefinition() == typeof(Task<>))
+						fieldType = fieldType.GetGenericArguments()[0];
+
+
+					if (fieldType.IsEnum || fieldType.IsNullable() && fieldType.ToNullableUnderlying().IsEnum)
+					{
+						var stringConverter = db.MappingSchema.GetConverter(new DbDataType(typeof(string)), new DbDataType(fieldType), false);
+						if (stringConverter != null)
+							fieldType = typeof(string);
+						else
+						{
+							var type = Converter.GetDefaultMappingFromEnumType(db.MappingSchema, fieldType);
+							if (type != null)
+							{
+								fieldType = type;
+							}
+						}
+					}
+
+					ret.FieldTypes[i] = fieldType;
 				}
 
 				var columnReaders = new ConvertFromDataReaderExpression.ColumnReader[rd.FieldCount];
@@ -264,7 +280,7 @@ namespace LinqToDB.ServiceModel
 						Statement  = query.Statement,
 						Parameters = query.Parameters,
 						QueryHints = query.QueryHints
-					});
+					}, null);
 				}
 
 				db.CommitTransaction();

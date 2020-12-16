@@ -1,5 +1,4 @@
 ﻿using System;
-
 #if NET472
 using System.Data.Linq.SqlClient;
 #else
@@ -279,7 +278,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ContainsConstant4([DataSources(TestProvName.AllFirebird)] string context)
+		public void ContainsConstant4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -301,7 +300,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ContainsConstant41([DataSources(TestProvName.AllInformix)] string context)
+		public void ContainsConstant41([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -310,6 +309,54 @@ namespace Tests.Linq
 
 				var q = from p in db.Person where p.ID == 1 && s.Contains(ps) select p;
 				Assert.AreEqual(1, q.ToList().First().ID);
+			}
+		}
+
+		[Test]
+		public void ContainsValueAll([DataSources] string context,
+			[Values("n", "-", "*", "?", "#", "%", "[", "]", "[]", "[[", "]]")]string toTest)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var s  = "123" + toTest + "456";
+
+				var q = from p in db.Person where p.ID == 1 && s.Contains(Sql.ToSql(toTest)) select p;
+				Assert.AreEqual(1, q.ToList().First().ID);
+
+				//TODO: check case sensitivity for each provider
+				/*
+				var s2 = s.ToUpper(CultureInfo.InvariantCulture);
+				if (s != s2)
+				{
+					var q2 = from p in db.Person where p.ID == 1 && s2.Contains(Sql.ToSql(toTest)) select p;
+					Assert.AreEqual(1, q2.ToList().First().ID);
+				}
+				*/
+			}
+		}
+
+
+		[Test]
+		public void ContainsParameterAll([DataSources] string context,
+			[Values("n", "-", "*", "?", "#", "%", "[", "]", "[]", "[[", "]]")]string toTest)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var s  = "123" + toTest + "456";
+
+				var q = from p in db.Person where p.ID == 1 && s.Contains(toTest) select p;
+				Assert.AreEqual(1, q.ToList().First().ID);
+
+				//TODO: check case sensitivity for each provider
+				/*
+				var s2 = s.ToUpper(CultureInfo.InvariantCulture);
+				if (s != s2)
+				{
+					var q2 = from p in db.Person where p.ID == 1 && s2.Contains(toTest) select p;
+					Assert.AreEqual(1, q2.ToList().First().ID);
+				}
+				*/
+
 			}
 		}
 
@@ -396,7 +443,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ContainsNull([DataSources(ProviderName.Access, TestProvName.AllInformix)] string context)
+		public void ContainsNull([DataSources(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -424,7 +471,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(2005, Configuration = TestProvName.AllFirebird)]
 		[Test]
 		public void StartsWithSQL([DataSources(false)] string context)
 		{
@@ -560,7 +606,18 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void IndexOf11([DataSources(TestProvName.AllInformix, ProviderName.SQLiteMS)] string context)
+		public void Like23([DataSources] string context)
+		{
+			var pattern = @"%h~%n%";
+			using (var db = GetDataContext(context))
+			{
+				var q = from p in db.Person where !Sql.Like(p.FirstName, pattern, '~') && p.ID == 1 select p;
+				Assert.AreEqual(1, q.ToList().First().ID);
+			}
+		}
+
+		[Test]
+		public void IndexOf11([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -570,7 +627,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void IndexOf12([DataSources(TestProvName.AllInformix, ProviderName.SQLiteMS)] string context)
+		public void IndexOf12([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -580,7 +637,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void IndexOf2([DataSources(TestProvName.AllInformix, ProviderName.SQLiteMS)] string context)
+		public void IndexOf2([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -609,7 +666,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void LastIndexOf1([DataSources(
-			ProviderName.DB2, TestProvName.AllInformix,
+			ProviderName.DB2,
 			ProviderName.SqlCe, TestProvName.AllAccess, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
 			string context)
 		{
@@ -622,7 +679,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void LastIndexOf2([DataSources(
-			ProviderName.DB2, TestProvName.AllInformix, ProviderName.SqlCe,
+			ProviderName.DB2, ProviderName.SqlCe,
 			TestProvName.AllAccess, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
 			string context)
 		{
@@ -636,7 +693,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void LastIndexOf3([DataSources(
-			ProviderName.DB2, TestProvName.AllInformix, ProviderName.SqlCe,
+			ProviderName.DB2, ProviderName.SqlCe,
 			TestProvName.AllAccess, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
 			string context)
 		{
@@ -649,7 +706,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CharIndex1([DataSources(TestProvName.AllInformix, ProviderName.SQLiteMS)] string context)
+		public void CharIndex1([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -659,7 +716,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CharIndex2([DataSources(TestProvName.AllInformix, ProviderName.SQLiteMS)] string context)
+		public void CharIndex2([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -720,7 +777,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Reverse([DataSources(
-			ProviderName.DB2, TestProvName.AllInformix, ProviderName.SqlCe,
+			ProviderName.DB2, ProviderName.SqlCe,
 			TestProvName.AllAccess, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
 			string context)
 		{

@@ -361,7 +361,7 @@ namespace Tests.DataProvider
 
 						// compare only 10 records
 						// as we don't compare all, we must ensure we inserted all records
-						Assert.AreEqual(source.Count(), result.Count());
+						Assert.AreEqual(source.Count, result.Count());
 						AreEqual(source.Take(10), result.Take(10), ComparerBuilder.GetEqualityComparer<AllTypeBaseProviderSpecific>());
 					}
 					else
@@ -373,7 +373,7 @@ namespace Tests.DataProvider
 
 						// compare only 10 records
 						// as we don't compare all, we must ensure we inserted all records
-						Assert.AreEqual(source.Count(), result.Count());
+						Assert.AreEqual(source.Count, result.Count());
 						AreEqual(source.Take(10), result.Take(10), ComparerBuilder.GetEqualityComparer<AllType>());
 					}
 				}
@@ -447,7 +447,7 @@ namespace Tests.DataProvider
 
 						// compare only 10 records
 						// as we don't compare all, we must ensure we inserted all records
-						Assert.AreEqual(source.Count(), result.Count());
+						Assert.AreEqual(source.Count, result.Count());
 						AreEqual(source.Take(10), result.Take(10), ComparerBuilder.GetEqualityComparer<AllTypeBaseProviderSpecific>());
 					}
 					else
@@ -459,7 +459,7 @@ namespace Tests.DataProvider
 
 						// compare only 10 records
 						// as we don't compare all, we must ensure we inserted all records
-						Assert.AreEqual(source.Count(), result.Count());
+						Assert.AreEqual(source.Count, result.Count());
 						AreEqual(source.Take(10), result.Take(10), ComparerBuilder.GetEqualityComparer<AllType>());
 					}
 				}

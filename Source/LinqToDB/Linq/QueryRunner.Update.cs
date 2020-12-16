@@ -55,7 +55,7 @@ namespace LinqToDB.Linq
 				{
 					var param = GetParameter(type, dataContext, field);
 
-					ei.Queries[0].Parameters.Add(param);
+					ei.Queries[0].AddParameterAccessor(param);
 
 					updateStatement.Update.Items.Add(new SqlSetExpression(field, param.SqlParameter));
 
@@ -77,7 +77,7 @@ namespace LinqToDB.Linq
 				{
 					var param = GetParameter(type, dataContext, field);
 
-					ei.Queries[0].Parameters.Add(param);
+					ei.Queries[0].AddParameterAccessor(param);
 
 					sqlQuery.Where.Field(field).Equal.Expr(param.SqlParameter);
 

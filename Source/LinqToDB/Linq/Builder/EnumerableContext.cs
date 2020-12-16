@@ -29,7 +29,7 @@ namespace LinqToDB.Linq.Builder
 		public SqlValuesTable Table { get; }
 
 		public EnumerableContext(ExpressionBuilder builder, BuildInfo buildInfo, SelectQuery query, Type elementType,
-			Expression source)
+			ISqlExpression source)
 		{
 			Parent            = buildInfo.Parent;
 			Builder           = builder;

@@ -2,7 +2,7 @@
 {
 	using SqlQuery;
 	using SqlProvider;
-	using LinqToDB.Mapping;
+	using Mapping;
 
 	partial class SqlServer2008SqlBuilder : SqlServerSqlBuilder
 	{
@@ -25,12 +25,6 @@
 		{
 			BuildInsertOrUpdateQueryAsMerge(insertOrUpdate, null);
 			StringBuilder.AppendLine(";");
-		}
-
-		protected override void BuildFunction(SqlFunction func)
-		{
-			func = ConvertFunctionParameters(func);
-			base.BuildFunction(func);
 		}
 
 		public override string  Name => ProviderName.SqlServer2008;

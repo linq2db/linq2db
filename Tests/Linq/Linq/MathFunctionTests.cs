@@ -319,9 +319,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Round12([DataSources(TestProvName.AllSQLite)] string context)
+		public void Round12([DataSources(TestProvName.AllSQLite)] string context, [Values(MidpointRounding.AwayFromZero, MidpointRounding.ToEven)] MidpointRounding mp)
 		{
-			var mp = MidpointRounding.AwayFromZero;
 
 			using (var db = GetDataContext(context))
 			{

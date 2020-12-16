@@ -118,7 +118,8 @@ namespace Tests.Linq
 					HasChildren    = db.Child.Any  (c2 => c2.ParentID == c.ParentID),
 					HasChildren2   = db.Child.Any  (c2 => c2.ParentID == c.ParentID),
 					AllChildren    = db.Child.All  (c2 => c2.ParentID == c.ParentID),
-					AllChildrenMin = db.Child.Where(c2 => c2.ParentID == c.ParentID).Min(c2 => c2.ChildID)
+					AllChildrenMin = db.Child.Where(c2 => c2.ParentID == c.ParentID).Min(c2 => c2.ChildID),
+					AllChildrenMax = db.Child.Where(c2 => c2.ParentID == c.ParentID).Max(c2 => c2.ChildID)
 				});
 
 				result =
@@ -136,7 +137,8 @@ namespace Tests.Linq
 					HasChildren    = Child.Any  (c2 => c2.ParentID == c.ParentID),
 					HasChildren2   = Child.Any  (c2 => c2.ParentID == c.ParentID),
 					AllChildren    = Child.All  (c2 => c2.ParentID == c.ParentID),
-					AllChildrenMin = Child.Where(c2 => c2.ParentID == c.ParentID).Min(c2 => c2.ChildID)
+					AllChildrenMin = Child.Where(c2 => c2.ParentID == c.ParentID).Min(c2 => c2.ChildID),
+					AllChildrenMax = Child.Where(c2 => c2.ParentID == c.ParentID).Max(c2 => c2.ChildID)
 				});
 
 				expected =
@@ -593,17 +595,13 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var values = new int?[] { 123 };
+				var values = new int?[] { 1, 2, 3 };
 
-				var expected = from p in Parent
-					where !values.Contains(p.Value1)
-					select p;
-
-				var actual = from p in db.GetTable<Parent>()
+				var query = from p in db.GetTable<Parent>()
 						where !values.Contains(p.Value1)
 						select p;
 
-				AreEqual(expected, actual);
+				AssertQuery(query);
 			}
 		}
 
@@ -612,19 +610,14 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var values = new int?[] { 123 };
+				var values = new int?[] { 1, 2, 3 };
 
-				var expected = from c in Child
-					from p in Parent
-					where p.ParentID == c.ParentID && !values.Contains(p.Value1)
-					select c;
-
-				var actual = from c in db.GetTable<Child>()
+				var query = from c in db.GetTable<Child>()
 					from p in db.GetTable<Parent>()
 					where p.ParentID == c.ParentID && !values.Contains(p.Value1)
 					select c;
 
-				AreEqual(expected, actual);
+				AssertQuery(query);
 			}
 		}
 		[Test]
@@ -632,7 +625,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var values = new[] { 123 };
+				var values = new int?[] { 1, 2, 3 };
 
 				var expected = from c in Child
 					where (from p in Parent

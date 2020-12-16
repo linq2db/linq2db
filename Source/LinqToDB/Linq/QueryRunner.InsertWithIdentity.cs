@@ -51,7 +51,7 @@ namespace LinqToDB.Linq
 					if (field.IsInsertable && !field.ColumnDescriptor.ShouldSkip(obj!, descriptor, SkipModification.Insert))
 					{
 						var param = GetParameter(type, dataContext, field);
-						ei.Queries[0].Parameters.Add(param);
+						ei.Queries[0].AddParameterAccessor(param);
 
 						insertStatement.Insert.Items.Add(new SqlSetExpression(field, param.SqlParameter));
 					}

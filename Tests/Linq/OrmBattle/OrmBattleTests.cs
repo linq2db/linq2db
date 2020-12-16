@@ -810,10 +810,9 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(71, firstGroupList.Count);
 		}
 
-		[Test, ActiveIssue(573)]
+		[Test]
 		public void ComplexGroupingTest([NorthwindDataContext] string context)
 		{
-			//TODO: sdanyliv: Nested queries support is not implemented. Possible in V2
 			Setup(context);
 			var result =
 				from c in db.Customer

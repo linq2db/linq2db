@@ -10,5 +10,4 @@
 	<ItemGroup>
 		<Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
 	</ItemGroup>
-
 </Project>

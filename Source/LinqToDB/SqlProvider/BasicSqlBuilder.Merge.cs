@@ -92,7 +92,7 @@ namespace LinqToDB.SqlProvider
 			if (operation.Where != null)
 			{
 				StringBuilder.Append(" AND ");
-				BuildSearchCondition(Precedence.Unknown, operation.Where);
+				BuildSearchCondition(Precedence.Unknown, operation.Where, wrapCondition: true);
 			}
 
 			StringBuilder.AppendLine(" THEN");
@@ -111,7 +111,7 @@ namespace LinqToDB.SqlProvider
 			if (operation.Where != null)
 			{
 				StringBuilder.Append(" AND ");
-				BuildSearchCondition(Precedence.Unknown, operation.Where);
+				BuildSearchCondition(Precedence.Unknown, operation.Where, wrapCondition: true);
 			}
 
 			StringBuilder.AppendLine(" THEN DELETE");
@@ -126,7 +126,7 @@ namespace LinqToDB.SqlProvider
 			if (operation.Where != null)
 			{
 				StringBuilder.Append(" AND ");
-				BuildSearchCondition(Precedence.Unknown, operation.Where);
+				BuildSearchCondition(Precedence.Unknown, operation.Where, wrapCondition: true);
 			}
 
 			StringBuilder
@@ -162,13 +162,15 @@ namespace LinqToDB.SqlProvider
 		{
 			StringBuilder.Append("ON (");
 
-			BuildSearchCondition(Precedence.Unknown, mergeStatement.On);
+			BuildSearchCondition(Precedence.Unknown, mergeStatement.On, wrapCondition: true);
 
 			StringBuilder.AppendLine(")");
 		}
 
 		protected virtual void BuildMergeSourceQuery(SqlMergeSourceTable mergeSource)
 		{
+			mergeSource = ConvertElement(mergeSource);
+			
 			BuildPhysicalTable(mergeSource.Source, null);
 
 			BuildMergeAsSourceClause(mergeSource);
@@ -176,6 +178,7 @@ namespace LinqToDB.SqlProvider
 
 		private void BuildMergeAsSourceClause(SqlMergeSourceTable mergeSource)
 		{
+			mergeSource = ConvertElement(mergeSource);
 			StringBuilder.Append(" ");
 
 			ConvertTableName(StringBuilder, null, null, null, mergeSource.Name, TableOptions.NotSet);
@@ -208,6 +211,7 @@ namespace LinqToDB.SqlProvider
 
 		private void BuildMergeSourceEnumerable(SqlMergeStatement merge)
 		{
+			merge = ConvertElement(merge);
 			var rows = merge.Source.SourceEnumerable!.Rows!;
 			if (rows.Count > 0)
 			{

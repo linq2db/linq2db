@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Text;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
+	using Mapping;
 
 	abstract class SqlServerSqlBuilder : BasicSqlBuilder
 	{
@@ -216,50 +217,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			else
 				Convert(StringBuilder, GetTableAlias(table)!, ConvertType.NameToQueryTableAlias);
 		}
-
-		protected override void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
-		{
-			var wrap = false;
-
-			if (expr.SystemType == typeof(bool))
-			{
-				if (expr is SqlSearchCondition)
-					wrap = true;
-				else
-				{
-					wrap = expr is SqlExpression ex
-						&& ex.Expr == "{0}"
-						&& ex.Parameters.Length == 1
-						&& ex.Parameters[0] is SqlSearchCondition;
-				}
-			}
-
-			if (wrap) StringBuilder.Append("CASE WHEN ");
-			base.BuildColumnExpression(selectQuery, expr, alias, ref addAlias);
-			if (wrap) StringBuilder.Append(" THEN 1 ELSE 0 END");
-		}
-
-		protected override void BuildLikePredicate(SqlPredicate.Like predicate)
-		{
-			if (predicate.Expr2 is SqlValue sqlValue)
-			{
-				var value = sqlValue.Value;
-
-				if (value != null)
-				{
-					var text  = value.ToString()!;
-					var ntext = predicate.IsSqlLike ? text :  DataTools.EscapeUnterminatedBracket(text);
-
-					if (text != ntext)
-						predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, new SqlValue(ntext), predicate.Escape, predicate.IsSqlLike);
-				}
-			}
-			else if (predicate.Expr2 is SqlParameter p)
-				p.ReplaceLike = predicate.IsSqlLike != true;
-
-			base.BuildLikePredicate(predicate);
-		}
-
 
 		public override string? GetTableDatabaseName(SqlTable table)
 		{
