@@ -752,6 +752,13 @@ namespace LinqToDB.SqlProvider
 					break;
 				}
 
+				case "ConvertToCaseCompareTo":
+					return new SqlFunction(func.SystemType, "CASE",
+							new SqlSearchCondition().Expr(func.Parameters[0]).Greater.Expr(func.Parameters[1]).ToExpr(), new SqlValue(1),
+							new SqlSearchCondition().Expr(func.Parameters[0]).Equal.Expr(func.Parameters[1]).ToExpr(), new SqlValue(0),
+							new SqlValue(-1))
+						{ CanBeNull = false };
+
 			}
 
 			return func;
@@ -1457,13 +1464,6 @@ namespace LinqToDB.SqlProvider
 		{
 			switch (func.Name)
 			{
-				case "ConvertToCaseCompareTo":
-					return new SqlFunction(func.SystemType, "CASE",
-							new SqlSearchCondition().Expr(func.Parameters[0]).Greater.Expr(func.Parameters[1]).ToExpr(), new SqlValue(1),
-							new SqlSearchCondition().Expr(func.Parameters[0]).Equal.Expr(func.Parameters[1]).ToExpr(), new SqlValue(0),
-							new SqlValue(-1))
-						{ CanBeNull = false };
-
 				case "Average": return new SqlFunction(func.SystemType, "Avg", func.Parameters);
 				case "Max":
 				case "Min":
