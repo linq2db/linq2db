@@ -19,6 +19,7 @@ namespace LinqToDB.Benchmarks
 		static void Main(string[] args)
 		{
 
+			//TestConcurrent();
 			/*
 			VwSalesByCategoryContainsPerf();
 			return;
@@ -27,11 +28,20 @@ namespace LinqToDB.Benchmarks
 			BenchmarkSwitcher
 				.FromAssembly(typeof(Program).Assembly)
 				.Run(
-					args.Length > 0 ? args : new [] { "--filter=*" },
+					args.Length > 0 ? args : new[] { "--filter=*" },
 					Config.Instance);
 		}
 
-#region QueryGeneration
+		#region Concurrent
+		static void TestConcurrent()
+		{
+			var benchmark = new ConcurrentBenchmark();
+			benchmark.Setup();
+			benchmark.Linq();
+			benchmark.Compiled();
+		}
+		#endregion
+		#region QueryGeneration
 
 		static void TestVwSalesByYear()
 		{

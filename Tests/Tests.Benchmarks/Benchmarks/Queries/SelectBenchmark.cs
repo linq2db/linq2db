@@ -138,7 +138,7 @@ namespace LinqToDB.Benchmarks.Queries
 
 			using (var cmd = _cn.CreateCommand())
 			{
-				cmd.CommandText = "SELECT * FROM public.user_tbl WHERE id = {_userId}";
+				cmd.CommandText = $"SELECT * FROM public.user_tbl WHERE id = {_userId}";
 				using (var rd = cmd.ExecuteReader())
 				{
 					if (rd.Read())
