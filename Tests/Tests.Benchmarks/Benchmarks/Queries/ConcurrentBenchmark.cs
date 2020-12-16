@@ -6,6 +6,7 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.Benchmarks.TestProvider;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 
 namespace LinqToDB.Benchmarks.Queries
@@ -51,7 +52,7 @@ namespace LinqToDB.Benchmarks.Queries
 						  where userId == null || c.Id == userId
 						  select c);
 
-			var threadCount = Environment.ProcessorCount * _threadsMultiplier;
+			var threadCount = ThreadCount;
 			_threads        = new Thread[threadCount];
 			_db             = new DataConnection[threadCount];
 			_threadEvents   = new AutoResetEvent[threadCount];
@@ -87,6 +88,11 @@ namespace LinqToDB.Benchmarks.Queries
 			_endJob.Set();
 		}
 
+		[ParamsSource(nameof(ThreadCountDataProvider))]
+		public int ThreadCount { get; set; }
+
+		public IEnumerable<int> ThreadCountDataProvider => new[] {16, 32, 64};
+		
 		[Benchmark]
 		public void Linq()
 		{

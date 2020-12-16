@@ -34,7 +34,7 @@ namespace LinqToDB.Benchmarks
 				.AddDiagnoser      (MemoryDiagnoser.Default)
 				.WithArtifactsPath (@"..\..\..")
 				// disable 2.1/3.1 for now to save time
-				.AddJob            (net472/*, core21, core31*/, net50);
+				.AddJob            (net472/*, core21*/, core31, net50);
 		}
 
 		private static Job WithDefault(this Job job)
