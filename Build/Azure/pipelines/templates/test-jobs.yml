@@ -3,6 +3,7 @@ parameters:
   experimental: false
   with_baselines: false
   test_matrix: []
+  mac_enabled: false # true / disable temporary
 
 jobs:
 ##############################################################################################
@@ -473,7 +474,7 @@ jobs:
     vmImage: 'macOS-10.15'
   displayName: 'Tests: Mac / NETCOREAPP2.1 / '
   dependsOn: create_baselines_branch
-  condition: ${{ parameters.enabled }}
+  condition: and(eq(${{ parameters.enabled }}, 'true'), eq(${{ parameters.mac_enabled }}, 'true'))
   variables:
     baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
 
@@ -505,7 +506,7 @@ jobs:
     vmImage: 'macOS-10.15'
   displayName: 'Tests: Mac / NETCOREAPP3.1 / '
   dependsOn: create_baselines_branch
-  condition: ${{ parameters.enabled }}
+  condition: and(eq(${{ parameters.enabled }}, 'true'), eq(${{ parameters.mac_enabled }}, 'true'))
   variables:
     baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
 
@@ -537,7 +538,7 @@ jobs:
     vmImage: 'macOS-10.15'
   displayName: 'Tests: Mac / NET 5.0 / '
   dependsOn: create_baselines_branch
-  condition: ${{ parameters.enabled }}
+  condition: and(eq(${{ parameters.enabled }}, 'true'), eq(${{ parameters.mac_enabled }}, 'true'))
   variables:
     baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
 
