@@ -2774,7 +2774,6 @@ namespace Tests.Linq
 			public DateTime? TransactionDate      { get; set; }
 		}
 
-		[ActiveIssue(1455)]
 		[Test]
 		public void Issue1455Test1([DataSources] string context)
 		{
