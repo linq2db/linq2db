@@ -566,12 +566,12 @@ namespace LinqToDB.SqlProvider
 
 		#region Optimization
 
-		public static ISqlExpression CreateSqlValue(object value, SqlBinaryExpression be)
+		public static ISqlExpression CreateSqlValue(object? value, SqlBinaryExpression be)
 		{
-			return CreateSqlValue(value, be.Expr1, be.Expr2);
+			return CreateSqlValue(value, be.GetExpressionType(), be.Expr1, be.Expr2);
 		}
 
-		public static ISqlExpression CreateSqlValue(object value, params ISqlExpression[] basedOn)
+		public static ISqlExpression CreateSqlValue(object? value, DbDataType dbDataType, params ISqlExpression[] basedOn)
 		{
 			SqlParameter? foundParam = null;
 
@@ -591,7 +591,7 @@ namespace LinqToDB.SqlProvider
 
 			if (foundParam != null)
 			{
-				var newParam = new SqlParameter(foundParam.Type.WithLength(null), foundParam.Name, value)
+				var newParam = new SqlParameter(dbDataType, foundParam.Name, value)
 				{
 					IsQueryParameter = foundParam.IsQueryParameter
 				};
@@ -599,7 +599,7 @@ namespace LinqToDB.SqlProvider
 				return newParam;
 			}
 
-			return new SqlValue(value);
+			return new SqlValue(dbDataType, value);
 		}
 
 		public virtual ISqlExpression OptimizeExpression(ISqlExpression expression, ConvertVisitor convertVisitor,
@@ -643,6 +643,11 @@ namespace LinqToDB.SqlProvider
 		public virtual ISqlExpression OptimizeFunction(SqlFunction func, ConvertVisitor convertVisitor,
 			EvaluationContext context)
 		{
+			if (func.TryEvaluateExpression(context, out var value))
+			{
+				return CreateSqlValue(value, func.GetExpressionType(), func.Parameters);
+			}
+			
 			switch (func.Name)
 			{
 				case "CASE":
@@ -1745,7 +1750,9 @@ namespace LinqToDB.SqlProvider
 					_ => throw new ArgumentOutOfRangeException()
 				};
 
-				var patternExpr = LikeParameterSupport ? CreateSqlValue(patternValue, predicate.Expr2) : new SqlValue(patternValue);
+				var patternExpr = LikeParameterSupport
+					? CreateSqlValue(patternValue, predicate.Expr2.GetExpressionType(), predicate.Expr2)
+					: new SqlValue(patternValue);
 
 				return new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, patternExpr,
 					LikeIsEscapeSupported && (patternValue != patternRawValue) ? new SqlValue(LikeEscapeCharacter) : null);

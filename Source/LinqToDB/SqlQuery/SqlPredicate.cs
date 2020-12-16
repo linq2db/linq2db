@@ -365,7 +365,7 @@ namespace LinqToDB.SqlQuery
 
 
 				if (search.Conditions.Count == 0)
-					return this;
+					return predicate;
 				
 				return search;
 			}
