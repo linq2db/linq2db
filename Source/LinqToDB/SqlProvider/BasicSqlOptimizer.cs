@@ -1490,41 +1490,6 @@ namespace LinqToDB.SqlProvider
 			return func;
 		}
 
-		static IQueryElement ApplyMutation(MappingSchema mappingSchema, IQueryElement element,
-			OptimizationContext optimizationContext, BasicSqlOptimizer optimizer, bool register, Func<MappingSchema, OptimizationContext, BasicSqlOptimizer, ConvertVisitor, IQueryElement, IQueryElement, IQueryElement> func)
-		{
-			for (;;)
-			{
-				var newElement = ConvertVisitor.ConvertAll(element, (visitor, e) =>
-				{
-					if (optimizationContext.IsOptimized(e, out var expr))
-						return expr!;
-
-					var prev = e;
-					var ne   = e;
-					for (;;)
-					{
-						ne = func(mappingSchema, optimizationContext, optimizer, visitor, element, e);
-
-						if (ReferenceEquals(ne, e))
-							break;
-
-						e = ne;
-					}
-
-					if (register)
-						optimizationContext.RegisterOptimized(prev, e);
-
-					return e;
-				});
-
-				if (ReferenceEquals(newElement, element))
-					return element;
-
-				element = newElement;
-			}
-		}
-
 		static IQueryElement RunOptimization<TContext>(IQueryElement element, OptimizationContext optimizationContext, BasicSqlOptimizer optimizer,
 			TContext context, bool register, Func<OptimizationContext, BasicSqlOptimizer, ConvertVisitor, TContext, IQueryElement, IQueryElement> func)
 		{

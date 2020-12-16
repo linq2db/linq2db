@@ -463,7 +463,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(1189)]
 		[Test]
 		public void Issue1189Test([DataSources] string context)
 		{

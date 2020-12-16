@@ -16,18 +16,6 @@ namespace LinqToDB.SqlQuery
 		private readonly Func<VisitArgs, bool>?                           _parentAction;
 		private readonly VisitArgs?                                       _visitArgs;
 
-		static TE[] ToArray<TK,TE>(IDictionary<TK,TE> dic)
-			where TK : notnull
-		{
-			var es = new TE[dic.Count];
-			var i  = 0;
-
-			foreach (var e in dic.Values)
-				es[i++] = e;
-
-			return es;
-		}
-		
 		public class VisitArgs
 		{
 			public VisitArgs(ConvertVisitor visitor)

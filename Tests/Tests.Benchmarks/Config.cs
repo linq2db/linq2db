@@ -19,7 +19,10 @@ namespace LinqToDB.Benchmarks
 			var net472 = Job.Default.WithRuntime(ClrRuntime.Net472).WithDefault().AsBaseline();
 			var core21 = Job.Default.WithRuntime(CoreRuntime.Core21).WithDefault();
 			var core31 = Job.Default.WithRuntime(CoreRuntime.Core31).WithDefault();
-			var net50  = Job.Default.WithRuntime(CoreRuntime.CreateForNewVersion("net5.0", ".NET 5.0")).WithDefault();
+
+			// TODO: workaround, remove after BDN update released
+			//var net50  = Job.Default.WithRuntime(CoreRuntime.CreateForNewVersion("net5.0", ".NET 5.0")).WithDefault();
+			var net50  = Job.Default.WithRuntime(CoreRuntime.CreateForNewVersion("netcoreapp5.0", ".NET 5.0")).WithDefault();
 
 			return new ManualConfig()
 				.AddLogger         (DefaultConfig.Instance.GetLoggers        ().ToArray())
@@ -30,7 +33,8 @@ namespace LinqToDB.Benchmarks
 				.AddExporter       (MarkdownExporter.GitHub)
 				.AddDiagnoser      (MemoryDiagnoser.Default)
 				.WithArtifactsPath (@"..\..\..")
-				.AddJob            (net472, core21, core31, net50);
+				// disable 2.1/3.1 for now to save time
+				.AddJob            (net472/*, core21*/, core31, net50);
 		}
 
 		private static Job WithDefault(this Job job)
@@ -57,6 +61,9 @@ namespace LinqToDB.Benchmarks
 					// Job is not useful at all, other columns could be enabled later if somebody will find them useful
 					.Where(c => c.ColumnName != "Job"
 							&& c.ColumnName != "Error"
+							&& c.ColumnName != "Gen 0"
+							&& c.ColumnName != "Gen 1"
+							&& c.ColumnName != "Gen 2"
 							&& c.ColumnName != "StdDev"
 							&& c.ColumnName != "RatioSD");
 			}
