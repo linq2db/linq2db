@@ -463,6 +463,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("SQL0418N", Configuration = ProviderName.DB2)]
 		[Test]
 		public void Issue1189Test([DataSources] string context)
 		{
