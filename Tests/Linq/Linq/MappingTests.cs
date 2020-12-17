@@ -445,7 +445,7 @@ namespace Tests.Linq
 			GetProviderName(context, out var isLinqService);
 
 			using (new CustomCommandProcessor(null))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, testLinqService : false))
 			{
 #if NET472
 				if (isLinqService)
@@ -459,9 +459,7 @@ namespace Tests.Linq
 					var ex = Assert.Throws<LinqToDBConvertException>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList());
 					// field name casing depends on database
 					Assert.AreEqual("firstname", ex.ColumnName!.ToLowerInvariant());
-
 				}
-
 			}
 		}
 

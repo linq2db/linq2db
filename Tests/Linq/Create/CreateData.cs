@@ -268,9 +268,9 @@ public class a_CreateData : TestBase
 			case TestProvName.SqlServer2016                    :
 			case ProviderName.SqlServer2017                    :
 			case TestProvName.SqlServer2019                    :
-			case TestProvName.Default                          : RunScript(context,          "\nGO\n",  "SQLite",   SQLiteAction);      break;
 			case TestProvName.SqlServer2019SequentialAccess    :
 			case TestProvName.SqlAzure                         : RunScript(context,          "\nGO\n",  "SqlServer");                   break;
+			case TestProvName.Default                          : RunScript(context,          "\nGO\n",  "SQLite",   SQLiteAction);      break;
 			case ProviderName.SQLiteClassic                    :
 			case ProviderName.SQLiteMS                         : RunScript(context,          "\nGO\n",  "SQLite",   SQLiteAction);
 			                                                     RunScript(context+ ".Data", "\nGO\n",  "SQLite",   SQLiteAction);      break;
