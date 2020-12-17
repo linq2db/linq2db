@@ -172,13 +172,15 @@ namespace LinqToDB.SqlQuery
 
 					if (value == null)
 					{
-						throw new NotImplementedException();
+						result = false;
+						return true;
 					}
-					else if (value is bool boolValue)
+
+					if (value is bool boolValue)
 					{
 						result = boolValue != isTruePredicate.IsNot;
 						return true;
-					}	
+					}
 					return false;
 				}
 				case QueryElementType.SqlBinaryExpression:

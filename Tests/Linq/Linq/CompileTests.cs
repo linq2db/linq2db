@@ -228,34 +228,37 @@ namespace Tests.Linq
 		[Test]
 		public void ConcurrentTest3([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			var threadCount = 100;
-
-			var threads = new Thread[threadCount];
-			var results = new int   [threadCount,2];
-
-			for (var i = 0; i < threadCount; i++)
+			using (new DisableBaseline("Multi-threading"))
 			{
-				var n = i;
+				var threadCount = 100;
 
-				threads[i] = new Thread(() =>
+				var threads = new Thread[threadCount];
+				var results = new int   [threadCount,2];
+
+				for (var i = 0; i < threadCount; i++)
 				{
-					using (var db = GetDataContext(context))
+					var n = i;
+
+					threads[i] = new Thread(() =>
 					{
-						var id = (n % 6) + 1;
-						results[n,0] = id;
-						results[n,1] = db.Parent.Where(p => p.ParentID == id && id >= 0).First().ParentID;
-					}
-				});
+						using (var db = GetDataContext(context))
+						{
+							var id = (n % 6) + 1;
+							results[n, 0] = id;
+							results[n, 1] = db.Parent.Where(p => p.ParentID == id && id >= 0).First().ParentID;
+						}
+					});
+				}
+
+				for (var i = 0; i < threadCount; i++)
+					threads[i].Start();
+
+				for (var i = 0; i < threadCount; i++)
+					threads[i].Join();
+
+				for (var i = 0; i < threadCount; i++)
+					Assert.AreEqual(results[i, 0], results[i, 1]);
 			}
-
-			for (var i = 0; i < threadCount; i++)
-				threads[i].Start();
-
-			for (var i = 0; i < threadCount; i++)
-				threads[i].Join();
-
-			for (var i = 0; i < threadCount; i++)
-				Assert.AreEqual(results[i,0], results[i,1]);
 		}
 
 		[Test]
