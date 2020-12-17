@@ -1006,26 +1006,43 @@ namespace Tests.Linq
 		#region Null check generated
 
 		[Test]
-		public void TestNullCheckInExpression([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestNullCheckInExpressionLeft([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.Person.Any(p => p.ID == Function2(Function1(null)));
+				db.Person.Any(p => p.ID == Function2(Function1Left(null)));
+			}
+		}
+
+		[Test]
+		public void TestNullCheckInExpressionRight([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Person.Any(p => p.ID == Function2(Function1Right(null)));
 			}
 		}
 
 		[Sql.Expression("{0}", ServerSideOnly = true, IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
 		public static int? Function2(int? Value) => throw new InvalidOperationException();
 
-		[ExpressionMethod(nameof(Function1Expr))]
-		public static int? Function1(int? value) => throw new InvalidOperationException();
+		[ExpressionMethod(nameof(Function1LeftExpr))]
+		public static int? Function1Left(int? value) => throw new InvalidOperationException();
+
+		[ExpressionMethod(nameof(Function1RightExpr))]
+		public static int? Function1Right(int? value) => throw new InvalidOperationException();
 
 		[Sql.Expression("CAST(N'SHOULD NOT BE CALLED' AS INT)", ServerSideOnly = true)]
 		private static int Fail(int value) => throw new InvalidOperationException();
 
-		private static Expression<Func<int?, int?>> Function1Expr()
+		private static Expression<Func<int?, int?>> Function1LeftExpr()
 		{
 			return value => value == null ? null : Fail(value.Value);
+		}
+
+		private static Expression<Func<int?, int?>> Function1RightExpr()
+		{
+			return value => value != null ? Fail(value.Value) : null;
 		}
 
 		#endregion
