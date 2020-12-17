@@ -1003,6 +1003,33 @@ namespace Tests.Linq
 		}
 		#endregion
 
+		#region Null check generated
+
+		[Test]
+		public void TestNullCheckInExpression([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Person.Any(p => p.ID == Function2(Function1(null)));
+			}
+		}
+
+		[Sql.Expression("{0}", ServerSideOnly = true, IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
+		public static int? Function2(int? Value) => throw new InvalidOperationException();
+
+		[ExpressionMethod(nameof(Function1Expr))]
+		public static int? Function1(int? value) => throw new InvalidOperationException();
+
+		[Sql.Expression("CAST(N'SHOULD NOT BE CALLED' AS INT)", ServerSideOnly = true)]
+		private static int Fail(int value) => throw new InvalidOperationException();
+
+		private static Expression<Func<int?, int?>> Function1Expr()
+		{
+			return value => value == null ? null : Fail(value.Value);
+		}
+
+		#endregion
+
 	}
 
 	static class ExpressionTestExtensions
