@@ -112,7 +112,7 @@ namespace LinqToDB.Linq.Builder
 				//TODO: Why it is not handled by main optimizer
 				var sqlFlags = builder.DataContext.SqlProviderFlags;
 				new SelectQueryOptimizer(sqlFlags, query, query, 0, statement)
-					.FinalizeAndValidate(sqlFlags.IsApplyJoinSupported, sqlFlags.IsGroupByExpressionSupported, builder.DataContext.InlineParameters);
+					.FinalizeAndValidate(sqlFlags.IsApplyJoinSupported, sqlFlags.IsGroupByExpressionSupported);
 				
 				if (query.From.Tables.Count == 0)
 				{
@@ -133,8 +133,7 @@ namespace LinqToDB.Linq.Builder
 				builder.BuildSearchCondition(
 					new ExpressionContext(null, secondContext == null? new[] { onContext } : new[] { onContext, secondContext }, condition),
 					conditionExpr,
-					result.Conditions,
-					false);
+					result.Conditions);
 							
 			}
 

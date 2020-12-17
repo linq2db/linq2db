@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -26,24 +27,17 @@ namespace Tests.Samples
 			/// <param name="original"></param>
 			SqlStatement Clone(SqlStatement original)
 			{
-				var clone = original.Clone();
-
-				var pairs = from o in original.Parameters.Distinct()
-							join n in clone.Parameters.Distinct() on o.Name equals n.Name
-							select new { Old = o, New = n };
-
-				var dic = pairs.ToDictionary(p => p.New, p => p.Old);
-
-				clone = ConvertVisitor.Convert(clone, (v, e) =>
-					e is SqlParameter param && dic.TryGetValue(param, out var newParam) ? newParam : e);
-
-				clone.Parameters.Clear();
-				clone.Parameters.AddRange(original.Parameters);
+				var clone = original.Clone(e =>
+				{
+					if (!(e is IQueryElement queryElement))
+						return false;
+					return queryElement.ElementType != QueryElementType.SqlParameter;
+				});
 
 				return clone;
 			}
 
-			protected override SqlStatement ProcessQuery(SqlStatement statement)
+			protected override SqlStatement ProcessQuery(SqlStatement statement, EvaluationContext context)
 			{
 				#region Update
 

@@ -88,7 +88,7 @@ namespace Tests.Linq
 					join c in cte1 on p.ParentID equals c.ParentID
 					join c2 in cte2 on p.ParentID equals c2.ParentID
 					join c3 in cte3 on p.ParentID equals c3.ParentID
-					from c4 in db.Child.Where(c4 => c4.ParentID % 2 == 0).AsCte("LAST").InnerJoin(c4 => c4.ParentID == c3.ParentID)
+					from c4 in db.Child.Where(c4 => c4.ParentID % 2 == 0).AsCte("LATEST").InnerJoin(c4 => c4.ParentID == c3.ParentID)
 					select c3;
 
 				var ncte1 = db.GetTable<Child>().Where(c => c.ParentID > 1);

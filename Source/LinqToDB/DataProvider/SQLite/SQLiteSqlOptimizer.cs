@@ -1,10 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace LinqToDB.DataProvider.SQLite
 {
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
+	using Common;
+	using Mapping;
+	using Tools;
 
 	class SQLiteSqlOptimizer : BasicSqlOptimizer
 	{
@@ -30,9 +34,10 @@ namespace LinqToDB.DataProvider.SQLite
 			return statement;
 		}
 
-		public override ISqlExpression ConvertExpression(ISqlExpression expr, bool withParameters)
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expr, ConvertVisitor visitor,
+			EvaluationContext context)
 		{
-			expr = base.ConvertExpression(expr, withParameters);
+			expr = base.ConvertExpressionImpl(expr, visitor, context);
 
 			if (expr is SqlBinaryExpression be)
 			{
@@ -56,7 +61,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 						if (ftype == typeof(bool))
 						{
-							var ex = AlternativeConvertToBoolean(func, 1, withParameters);
+							var ex = AlternativeConvertToBoolean(func, 1);
 							if (ex != null)
 								return ex;
 						}
@@ -74,6 +79,60 @@ namespace LinqToDB.DataProvider.SQLite
 			}
 
 			return expr;
+		}
+
+		public override ISqlPredicate ConvertPredicateImpl(MappingSchema mappingSchema, ISqlPredicate predicate, ConvertVisitor visitor, OptimizationContext optimizationContext)
+		{
+			if (predicate is SqlPredicate.ExprExpr exprExpr)
+			{
+				var leftType  = QueryHelper.GetDbDataType(exprExpr.Expr1);
+				var rightType = QueryHelper.GetDbDataType(exprExpr.Expr2);
+
+				if ((IsDateTime(leftType) || IsDateTime(rightType)) &&
+				    !(exprExpr.Expr1.TryEvaluateExpression(optimizationContext.Context, out var value1) && value1 == null ||
+				      exprExpr.Expr2.TryEvaluateExpression(optimizationContext.Context, out var value2) && value2 == null))
+				{
+					if (!(exprExpr.Expr1 is SqlFunction func1 && (func1.Name == "$Convert$" || func1.Name == "DateTime")))
+					{
+						var left = new SqlFunction(leftType.SystemType, "$Convert$", SqlDataType.GetDataType(leftType.SystemType),
+							new SqlDataType(leftType), exprExpr.Expr1);
+						exprExpr = new SqlPredicate.ExprExpr(left, exprExpr.Operator, exprExpr.Expr2, null);
+					}
+					
+					if (!(exprExpr.Expr2 is SqlFunction func2 && (func2.Name == "$Convert$" || func2.Name == "DateTime")))
+					{
+						var right = new SqlFunction(rightType.SystemType, "$Convert$", new SqlDataType(rightType),
+							new SqlDataType(rightType), exprExpr.Expr2);
+						exprExpr = new SqlPredicate.ExprExpr(exprExpr.Expr1, exprExpr.Operator, right, null);
+					}
+
+					predicate = exprExpr;
+				}
+			}
+
+			predicate = base.ConvertPredicateImpl(mappingSchema, predicate, visitor, optimizationContext);
+			return predicate;
+		}
+
+
+		private static bool IsDateTime(DbDataType dbDataType)
+		{
+			if (dbDataType.DataType.In(DataType.Date, DataType.Time, DataType.DateTime, DataType.DateTime2,
+				DataType.DateTimeOffset, DataType.SmallDateTime, DataType.Timestamp))
+				return true;
+
+			if (dbDataType.DataType != DataType.Undefined)
+				return false;
+
+			return IsDateTime(dbDataType.SystemType);
+		}
+
+		private static bool IsDateTime(Type type)
+		{
+			return    type == typeof(DateTime)
+			          || type == typeof(DateTimeOffset)
+			          || type == typeof(DateTime?)
+			          || type == typeof(DateTimeOffset?);
 		}
 	}
 }

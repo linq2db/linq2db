@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
@@ -24,12 +25,14 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CompareString1([DataSources] string context)
+		public void CompareString1([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var str = CompilerServices.CompareString(db).ToString()!;
-				Assert.That(str.IndexOf("CASE"), Is.EqualTo(-1));
+				var query = (IQueryable<Person>)CompilerServices.CompareString(db);
+				var str   = query.ToString();
+				TestContext.WriteLine(str);
+				Assert.That(str, Does.Not.Contain("CASE"));
 			}
 		}
 

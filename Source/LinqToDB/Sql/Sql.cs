@@ -147,6 +147,18 @@ namespace LinqToDB
 			throw new LinqException("'Property' is only server-side method.");
 		}
 
+		/// <summary>
+		/// Used internally for keeping Alias information with expression.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="obj"></param>
+		/// <param name="alias"></param>
+		/// <returns></returns>
+		internal static T Alias<T>(T obj, [SqlQueryDependent] string alias)
+		{
+			return obj;
+		}
+
 		#endregion
 
 		#region NoConvert
@@ -585,8 +597,7 @@ namespace LinqToDB
 			return str.PadRight(length.Value, paddingChar.Value);
 		}
 
-		[Sql.Function]
-		[Sql.Function(PN.Sybase, "Str_Replace")]
+		[Sql.Function("$Replace$")]
 		public static string? Replace(string? str, string? oldValue, string? newValue)
 		{
 			if (str == null || oldValue == null || newValue == null) return null;
@@ -645,15 +656,13 @@ namespace LinqToDB
 			return str == null || ch == null ? null : str.TrimEnd(ch.Value);
 		}
 
-		[Sql.Function(                    ServerSideOnly = true)]
-		[Sql.Function(PN.Access, "LCase", ServerSideOnly = true)]
+		[Sql.Function("$ToLower$", ServerSideOnly = true)]
 		public static string? Lower(string? str)
 		{
 			return str?.ToLower();
 		}
 
-		[Sql.Function(                    ServerSideOnly = true)]
-		[Sql.Function(PN.Access, "UCase", ServerSideOnly = true)]
+		[Sql.Function("$ToUpper$", ServerSideOnly = true)]
 		public static string? Upper(string? str)
 		{
 			return str?.ToUpper();

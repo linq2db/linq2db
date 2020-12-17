@@ -122,8 +122,6 @@ namespace LinqToDB.Linq.Builder
 			if (_skippedExpressions.Contains(expr))
 				return new TransformInfo(expr, true);
 
-			alias ??= _optimizationContext.GetExpressionAlias(expr);
-
 			switch (expr.NodeType)
 			{
 				case ExpressionType.Convert       :
@@ -328,11 +326,17 @@ namespace LinqToDB.Linq.Builder
 							return new TransformInfo(GetSubQueryExpression(context, ce, enforceServerSide, alias));
 						}
 
-						if (IsServerSideOnly(expr) || PreferServerSide(expr, enforceServerSide) || ce.Method.IsSqlPropertyMethodEx())
-							return new TransformInfo(BuildSql(context, expr, alias));
-					}
+						if (ce.IsSameGenericMethod(Methods.LinqToDB.SqlExt.Alias))
+						{
+							return new TransformInfo(BuildSql(context, ce.Arguments[0], alias ?? ce.Arguments[1].EvaluateExpression<string>()));
+						}
 
-					break;
+
+						if (IsServerSideOnly(expr) || PreferServerSide(expr, enforceServerSide) || ce.Method.IsSqlPropertyMethodEx())
+								return new TransformInfo(BuildSql(context, expr, alias));
+
+						break;
+					}
 
 				case ExpressionType.New:
 					{
@@ -396,7 +400,6 @@ namespace LinqToDB.Linq.Builder
 
 						return new TransformInfo(mi, true);
 					}
-
 			}
 
 			if (enforceServerSide || EnforceServerSide(context))
@@ -821,9 +824,6 @@ namespace LinqToDB.Linq.Builder
 		static Expression GetMultipleQueryExpression(IBuildContext context, MappingSchema mappingSchema,
 			Expression expression, HashSet<ParameterExpression> parameters, out bool isLazy)
 		{
-			if (!Common.Configuration.Linq.AllowMultipleQuery)
-				throw new LinqException("Multiple queries are not allowed. Set the 'LinqToDB.Common.Configuration.Linq.AllowMultipleQuery' flag to 'true' to allow multiple queries.");
-
 			var valueExpression = EagerLoading.GenerateDetailsExpression(context, mappingSchema, expression);
 
 			if (valueExpression == null)

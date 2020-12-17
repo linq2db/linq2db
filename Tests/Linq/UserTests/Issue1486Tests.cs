@@ -1,6 +1,7 @@
 ﻿using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
+using LinqToDB.Mapping;
 using NUnit.Framework;
 using System.Data;
 using System.Linq;
@@ -16,6 +17,8 @@ namespace Tests.UserTests
 			public IssueDataConnection(string configuration)
 				: base(GetDataProvider(configuration), GetConnection(configuration), true)
 			{
+				// to avoid mapper conflict with SequentialAccess test provider
+				AddMappingSchema(new MappingSchema());
 			}
 
 			private new static IDataProvider GetDataProvider(string configuration)
@@ -36,6 +39,8 @@ namespace Tests.UserTests
 			public FactoryDataConnection(string configuration)
 				: base(GetDataProvider(configuration), () => GetConnection(configuration))
 			{
+				// to avoid mapper conflict with SequentialAccess test provider
+				AddMappingSchema(new MappingSchema());
 			}
 
 			private new static IDataProvider GetDataProvider(string configuration)
@@ -61,7 +66,6 @@ namespace Tests.UserTests
 				TestProvName.AllSapHana)]
 					string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = new IssueDataConnection(context))
 			{
 				db.GetTable<Child>().LoadWith(p => p.Parent!.Children).First();
@@ -71,7 +75,6 @@ namespace Tests.UserTests
 		[Test]
 		public void TestFactory([DataSources(false)] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = new FactoryDataConnection(context))
 			{
 				db.GetTable<Child>().LoadWith(p => p.Parent!.Children).First();

@@ -33,6 +33,7 @@ namespace PostreSQLDataContext
 		public ITable<AllType>                        AllTypes                  { get { return this.GetTable<AllType>(); } }
 		public ITable<Book>                           Books                     { get { return this.GetTable<Book>(); } }
 		public ITable<Child>                          Children                  { get { return this.GetTable<Child>(); } }
+		public ITable<CreateIfNotExistsTable>         CreateIfNotExistsTables   { get { return this.GetTable<CreateIfNotExistsTable>(); } }
 		public ITable<Doctor>                         Doctors                   { get { return this.GetTable<Doctor>(); } }
 		public ITable<Entity>                         Entities                  { get { return this.GetTable<Entity>(); } }
 		public ITable<GrandChild>                     GrandChildren             { get { return this.GetTable<GrandChild>(); } }
@@ -43,7 +44,9 @@ namespace PostreSQLDataContext
 		/// This is the Issue2023 matview
 		/// </summary>
 		public ITable<Issue2023>                      Issue2023                 { get { return this.GetTable<Issue2023>(); } }
+		public ITable<League>                         Leagues                   { get { return this.GetTable<League>(); } }
 		public ITable<LinqDataType>                   LinqDataTypes             { get { return this.GetTable<LinqDataType>(); } }
+		public ITable<Org>                            Orgs                      { get { return this.GetTable<Org>(); } }
 		public ITable<Parent>                         Parents                   { get { return this.GetTable<Parent>(); } }
 		public ITable<Patient>                        Patients                  { get { return this.GetTable<Patient>(); } }
 		/// <summary>
@@ -54,6 +57,7 @@ namespace PostreSQLDataContext
 		public ITable<SequenceTest1>                  SequenceTest1             { get { return this.GetTable<SequenceTest1>(); } }
 		public ITable<SequenceTest2>                  SequenceTest2             { get { return this.GetTable<SequenceTest2>(); } }
 		public ITable<SequenceTest3>                  SequenceTest3             { get { return this.GetTable<SequenceTest3>(); } }
+		public ITable<Test>                           Tests                     { get { return this.GetTable<Test>(); } }
 		public ITable<TestIdentity>                   TestIdentities            { get { return this.GetTable<TestIdentity>(); } }
 		public ITable<TestMerge1>                     TestMerge1                { get { return this.GetTable<TestMerge1>(); } }
 		public ITable<TestMerge2>                     TestMerge2                { get { return this.GetTable<TestMerge2>(); } }
@@ -304,6 +308,13 @@ namespace PostreSQLDataContext
 		[Column(DataType=LinqToDB.DataType.Int32, Precision=32, Scale=0), Nullable] public int? ChildID  { get; set; } // integer
 	}
 
+	[Table(Schema="public", Name="CreateIfNotExistsTable")]
+	public partial class CreateIfNotExistsTable
+	{
+		[Column(DataType=LinqToDB.DataType.Int32, Precision=32, Scale=0), NotNull] public int Id    { get; set; } // integer
+		[Column(DataType=LinqToDB.DataType.Int32, Precision=32, Scale=0), NotNull] public int Value { get; set; } // integer
+	}
+
 	[Table(Schema="public", Name="Doctor")]
 	public partial class Doctor
 	{
@@ -375,6 +386,19 @@ namespace PostreSQLDataContext
 		[Column(DataType=LinqToDB.DataType.NChar,    Length=1, SkipOnInsert=true, SkipOnUpdate=true),              Nullable] public char?   Gender     { get; set; } // character(1)
 	}
 
+	[Table(Schema="public", Name="leagues")]
+	public partial class League
+	{
+		[Column("id",           DataType=LinqToDB.DataType.Int32,   Precision=32, Scale=0), PrimaryKey,  Identity] public int     Id         { get; set; } // integer
+		[Column("state",        DataType=LinqToDB.DataType.Int32,   Precision=32, Scale=0), NotNull              ] public int     State      { get; set; } // integer
+		[Column("channel_id",   DataType=LinqToDB.DataType.Decimal),                        NotNull              ] public decimal ChannelId  { get; set; } // numeric
+		[Column("initials",     DataType=LinqToDB.DataType.Text),                           NotNull              ] public string  Initials   { get; set; } = null!; // text
+		[Column("image",        DataType=LinqToDB.DataType.Text),                              Nullable          ] public string? Image      { get; set; } // text
+		[Column("org_id",       DataType=LinqToDB.DataType.Int32,   Precision=32, Scale=0), NotNull              ] public int     OrgId      { get; set; } // integer
+		[Column("season",       DataType=LinqToDB.DataType.Int32,   Precision=32, Scale=0), NotNull              ] public int     Season     { get; set; } // integer
+		[Column("war_match_id", DataType=LinqToDB.DataType.Int32,   Precision=32, Scale=0),    Nullable          ] public int?    WarMatchId { get; set; } // integer
+	}
+
 	[Table(Schema="public", Name="LinqDataTypes")]
 	public partial class LinqDataType
 	{
@@ -389,6 +413,19 @@ namespace PostreSQLDataContext
 		[Column(DataType=LinqToDB.DataType.Int32,     Precision=32, Scale=0), Nullable] public int?            IntValue       { get; set; } // integer
 		[Column(DataType=LinqToDB.DataType.Int64,     Precision=64, Scale=0), Nullable] public long?           BigIntValue    { get; set; } // bigint
 		[Column(DataType=LinqToDB.DataType.NVarChar,  Length=50),             Nullable] public string?         StringValue    { get; set; } // character varying(50)
+	}
+
+	[Table(Schema="public", Name="orgs")]
+	public partial class Org
+	{
+		[Column("id",             DataType=LinqToDB.DataType.Int32,   Precision=32, Scale=0), PrimaryKey,  Identity] public int     Id            { get; set; } // integer
+		[Column("name",           DataType=LinqToDB.DataType.Text),                           NotNull              ] public string  Name          { get; set; } = null!; // text
+		[Column("initials",       DataType=LinqToDB.DataType.Text),                           NotNull              ] public string  Initials      { get; set; } = null!; // text
+		[Column("image",          DataType=LinqToDB.DataType.Text),                              Nullable          ] public string? Image         { get; set; } // text
+		[Column("state",          DataType=LinqToDB.DataType.Int32,   Precision=32, Scale=0), NotNull              ] public int     State         { get; set; } // integer
+		[Column("discord_server", DataType=LinqToDB.DataType.Text),                              Nullable          ] public string? DiscordServer { get; set; } // text
+		[Column("category_id",    DataType=LinqToDB.DataType.Decimal),                        NotNull              ] public decimal CategoryId    { get; set; } // numeric
+		[Column("rep_id",         DataType=LinqToDB.DataType.Decimal),                        NotNull              ] public decimal RepId         { get; set; } // numeric
 	}
 
 	[Table(Schema="public", Name="Parent")]
@@ -473,6 +510,12 @@ namespace PostreSQLDataContext
 	{
 		[Column(DataType=LinqToDB.DataType.Int32,    Precision=32, Scale=0), PrimaryKey, Identity] public int     ID    { get; set; } // integer
 		[Column(DataType=LinqToDB.DataType.NVarChar, Length=50),             Nullable            ] public string? Value { get; set; } // character varying(50)
+	}
+
+	[Table(Schema="public", Name="test")]
+	public partial class Test
+	{
+		[Column("id", DataType=LinqToDB.DataType.Int32, Precision=32, Scale=0), Nullable] public int? Id { get; set; } // integer
 	}
 
 	[Table(Schema="public", Name="TestIdentity")]
@@ -1160,115 +1203,127 @@ namespace PostreSQLDataContext
 
 	public static partial class TableExtensions
 	{
-		public static _testsamename Find(this ITable<_testsamename> table, int Id)
+		public static _testsamename? Find(this ITable<_testsamename> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static AllType Find(this ITable<AllType> table, int ID)
+		public static AllType? Find(this ITable<AllType> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static Book Find(this ITable<Book> table, int Id)
+		public static Book? Find(this ITable<Book> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static Doctor Find(this ITable<Doctor> table, int PersonID)
+		public static Doctor? Find(this ITable<Doctor> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
 		}
 
-		public static InheritanceChild Find(this ITable<InheritanceChild> table, int InheritanceChildId)
+		public static InheritanceChild? Find(this ITable<InheritanceChild> table, int InheritanceChildId)
 		{
 			return table.FirstOrDefault(t =>
 				t.InheritanceChildId == InheritanceChildId);
 		}
 
-		public static InheritanceParent Find(this ITable<InheritanceParent> table, int InheritanceParentId)
+		public static InheritanceParent? Find(this ITable<InheritanceParent> table, int InheritanceParentId)
 		{
 			return table.FirstOrDefault(t =>
 				t.InheritanceParentId == InheritanceParentId);
 		}
 
-		public static InventoryResource Find(this ITable<InventoryResource> table, Guid Id)
+		public static InventoryResource? Find(this ITable<InventoryResource> table, Guid Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static Patient Find(this ITable<Patient> table, int PersonID)
+		public static League? Find(this ITable<League> table, int Id)
+		{
+			return table.FirstOrDefault(t =>
+				t.Id == Id);
+		}
+
+		public static Org? Find(this ITable<Org> table, int Id)
+		{
+			return table.FirstOrDefault(t =>
+				t.Id == Id);
+		}
+
+		public static Patient? Find(this ITable<Patient> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
 		}
 
-		public static Person Find(this ITable<Person> table, int PersonID)
+		public static Person? Find(this ITable<Person> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
 		}
 
-		public static SequenceCustomNamingTest Find(this ITable<SequenceCustomNamingTest> table, int ID)
+		public static SequenceCustomNamingTest? Find(this ITable<SequenceCustomNamingTest> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static SequenceTest1 Find(this ITable<SequenceTest1> table, int ID)
+		public static SequenceTest1? Find(this ITable<SequenceTest1> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static SequenceTest2 Find(this ITable<SequenceTest2> table, int ID)
+		public static SequenceTest2? Find(this ITable<SequenceTest2> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static SequenceTest3 Find(this ITable<SequenceTest3> table, int ID)
+		public static SequenceTest3? Find(this ITable<SequenceTest3> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static TestIdentity Find(this ITable<TestIdentity> table, int ID)
+		public static TestIdentity? Find(this ITable<TestIdentity> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static TestMerge1 Find(this ITable<TestMerge1> table, int Id)
+		public static TestMerge1? Find(this ITable<TestMerge1> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static TestMerge2 Find(this ITable<TestMerge2> table, int Id)
+		public static TestMerge2? Find(this ITable<TestMerge2> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static test_schema_Testsamename Find(this ITable<test_schema_Testsamename> table, int Id)
+		public static test_schema_Testsamename? Find(this ITable<test_schema_Testsamename> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static test_schema_TestSchemaIdentity Find(this ITable<test_schema_TestSchemaIdentity> table, int ID)
+		public static test_schema_TestSchemaIdentity? Find(this ITable<test_schema_TestSchemaIdentity> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static test_schema_Testserialidentity Find(this ITable<test_schema_Testserialidentity> table, int ID)
+		public static test_schema_Testserialidentity? Find(this ITable<test_schema_Testserialidentity> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);

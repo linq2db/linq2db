@@ -54,7 +54,7 @@ namespace Tests.DataProvider
 							where t.Value > TestData.DateTime
 							select t;
 
-				Assert.That(query.GetStatement().Parameters.Count, Is.EqualTo(0));
+				Assert.That(query.GetStatement().CollectParameters().Length, Is.EqualTo(0));
 
 				Assert.That(query.ToString(), Does.Not.Contain("DateTime("));
 			}

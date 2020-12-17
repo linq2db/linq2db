@@ -913,7 +913,28 @@ namespace LinqToDB.Expressions
 			{
 				case ExpressionType.ConvertChecked :
 				case ExpressionType.Convert        :
-					return ((UnaryExpression)ex).Operand.Unwrap();
+					return ((UnaryExpression)ex).Operand.UnwrapConvert();
+			}
+
+			return ex;
+		}
+
+		[return: NotNullIfNotNull("ex")]
+		public static Expression? UnwrapConvertToObject(this Expression? ex)
+		{
+			if (ex == null)
+				return null;
+
+			switch (ex.NodeType)
+			{
+				case ExpressionType.ConvertChecked:
+				case ExpressionType.Convert:
+				{
+					var unaryExpression = (UnaryExpression)ex;
+					if (unaryExpression.Type == typeof(object))
+						return unaryExpression.Operand.UnwrapConvertToObject();
+					break;
+				}
 			}
 
 			return ex;
@@ -932,7 +953,7 @@ namespace LinqToDB.Expressions
 
 		public static Expression SkipPathThrough(this Expression expr)
 		{
-			while (expr is MethodCallExpression mce && mce.IsQueryable("AsQueryable"))
+			while (expr is MethodCallExpression mce && mce.IsSameGenericMethod(Methods.Enumerable.AsQueryable, Methods.LinqToDB.SqlExt.ToNotNull))
 				expr = mce.Arguments[0];
 			return expr;
 		}
@@ -994,6 +1015,7 @@ namespace LinqToDB.Expressions
 				return null;
 
 			expr = expr.SkipMethodChain(mapping);
+			expr = expr.SkipPathThrough();
 
 			switch (expr.NodeType)
 			{
@@ -1005,7 +1027,11 @@ namespace LinqToDB.Expressions
 							return GetRootObject(e.Object, mapping);
 
 						if (e.Arguments?.Count > 0 &&
-						    (e.IsQueryable() || e.IsAggregate(mapping) || e.IsAssociation(mapping) || e.Method.IsSqlPropertyMethodEx()))
+						    (e.IsQueryable()
+						     || e.IsAggregate(mapping)
+						     || e.IsAssociation(mapping)
+						     || e.Method.IsSqlPropertyMethodEx()
+						     || e.IsSameGenericMethod(Methods.LinqToDB.SqlExt.ToNotNull, Methods.LinqToDB.SqlExt.Alias)))
 							return GetRootObject(e.Arguments[0], mapping);
 
 						break;
@@ -1135,17 +1161,34 @@ namespace LinqToDB.Expressions
 
 		public static bool IsSameGenericMethod(this MethodCallExpression method, MethodInfo genericMethodInfo)
 		{
-			if (!method.Method.IsGenericMethod)
+			if (!method.Method.IsGenericMethod || method.Method.Name != genericMethodInfo.Name)
 				return false;
-			return method.Method.GetGenericMethodDefinition() == genericMethodInfo;
+			return method.Method.GetGenericMethodDefinitionCached() == genericMethodInfo;
 		}
 
 		public static bool IsSameGenericMethod(this MethodCallExpression method, params MethodInfo[] genericMethodInfo)
 		{
 			if (!method.Method.IsGenericMethod)
 				return false;
-			var genericDefinition = method.Method.GetGenericMethodDefinition();
-			return Array.IndexOf(genericMethodInfo, genericDefinition) >= 0;
+
+			var         mi = method.Method;
+			MethodInfo? gd = null;
+
+			foreach (var current in genericMethodInfo)
+			{
+				if (current.Name == mi.Name)
+				{
+					if (gd == null)
+					{
+						gd = mi.GetGenericMethodDefinitionCached();
+					}
+
+					if (gd.Equals(current))
+						return true;
+				}
+			}
+
+			return false;
 		}
 
 		public static bool IsAssociation(this MethodCallExpression method, MappingSchema mappingSchema)
@@ -1235,7 +1278,10 @@ namespace LinqToDB.Expressions
 			     || call.IsAggregate(mapping)
 			     || call.IsExtensionMethod(mapping)
 			     || call.IsAssociation(mapping)
-			     || call.Method.IsSqlPropertyMethodEx()))
+				 || call.Method.IsSqlPropertyMethodEx()
+				 || call.IsSameGenericMethod(Methods.LinqToDB.SqlExt.ToNotNull, Methods.LinqToDB.SqlExt.Alias)
+			     )
+			    )
 			{
 				expr = call.Arguments[0];
 			}
@@ -1290,6 +1336,16 @@ namespace LinqToDB.Expressions
 				case ExpressionType.Constant:
 					return ((ConstantExpression)expr).Value;
 
+				case ExpressionType.Convert:
+				case ExpressionType.ConvertChecked:
+					{
+						var unary = (UnaryExpression)expr;
+						var operand = unary.Operand.EvaluateExpression();
+						if (operand == null)
+							return null;
+						break;
+					}
+
 				case ExpressionType.MemberAccess:
 					{
 						var member = (MemberExpression) expr;
@@ -1298,8 +1354,13 @@ namespace LinqToDB.Expressions
 							return ((FieldInfo)member.Member).GetValue(member.Expression.EvaluateExpression());
 
 						if (member.Member.IsPropertyEx())
-							return ((PropertyInfo)member.Member).GetValue(member.Expression.EvaluateExpression(), null);
-
+						{
+							var obj = member.Expression.EvaluateExpression();
+							if (obj == null && ((PropertyInfo)member.Member).IsNullableValueMember())
+								return null;
+							return ((PropertyInfo)member.Member).GetValue(obj, null);
+						}
+						
 						break;
 					}
 				case ExpressionType.Call:
@@ -1307,6 +1368,10 @@ namespace LinqToDB.Expressions
 						var mc = (MethodCallExpression)expr;
 						var arguments = mc.Arguments.Select(EvaluateExpression).ToArray();
 						var instance  = mc.Object.EvaluateExpression();
+
+						if (instance == null && mc.Method.IsNullableGetValueOrDefault())
+							return null;
+						
 						return mc.Method.Invoke(instance, arguments);
 					}
 			}
@@ -1401,7 +1466,7 @@ namespace LinqToDB.Expressions
 									if (leftBool == true)
 										e = be.Right;
 									else if (leftBool == false)
-										newExpr = Expression.Constant(false);
+										newExpr = ExpressionHelper.FalseConstant;
 								}
 								else if (IsEvaluable(be.Right))
 								{
@@ -1409,7 +1474,7 @@ namespace LinqToDB.Expressions
 									if (rightBool == true)
 										newExpr = be.Left;
 									else if (rightBool == false)
-										newExpr = Expression.Constant(false);
+										newExpr = ExpressionHelper.FalseConstant;
 								}
 
 								break;
@@ -1422,7 +1487,7 @@ namespace LinqToDB.Expressions
 									if (leftBool == false)
 										newExpr = be.Right;
 									else if (leftBool == true)
-										newExpr = Expression.Constant(true);
+										newExpr = ExpressionHelper.TrueConstant;
 								}
 								else if (IsEvaluable(be.Right))
 								{
@@ -1430,7 +1495,7 @@ namespace LinqToDB.Expressions
 									if (rightBool == false)
 										newExpr = be.Left;
 									else if (rightBool == true)
-										newExpr = Expression.Constant(true);
+										newExpr = ExpressionHelper.TrueConstant;
 								}
 
 								break;

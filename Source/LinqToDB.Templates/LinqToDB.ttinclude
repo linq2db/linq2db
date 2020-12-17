@@ -523,7 +523,7 @@ void GenerateTypesFromMetadata()
 
 					if (key.AssociationType != AssociationType.OneToMany)
 					{
-						var single = new Method(() => t.TypePrefix + t.TypeName, GetAssociationExtensionSinglularName(key));
+						var single = new Method(() => new ModelType(t.TypePrefix + t.TypeName, true, key.CanBeNull).ToTypeName(), GetAssociationExtensionSinglularName(key));
 
 						single.ParameterBuilders.Add(() => string.Format("this {0}{1} obj", key.OtherTable.TypePrefix, key.OtherTable.TypeName));
 
@@ -588,7 +588,7 @@ void GenerateTypesFromMetadata()
 
 			tableExtensions.Members.Add(
 				new Method(
-					() => t.TypeName,
+					() => new ModelType(t.TypeName, true, true).ToTypeName(),
 					"Find",
 					new Func<string>[] { () => (string.Format("this ITable<{0}> table", t.TypeName)) }
 						.Union(PKs.Select(c => (Func<string>)(() => c.BuildType() + " " + c.MemberName))),
@@ -809,10 +809,11 @@ void GenerateTypesFromMetadata()
 				var spName =
 					SqlBuilder.BuildTableName(
 						new System.Text.StringBuilder(),
-						ServerName   == null ? null : (string)SqlBuilder.ConvertInline(ServerName,   LinqToDB.SqlProvider.ConvertType.NameToServer),
-						DatabaseName == null ? null : (string)SqlBuilder.ConvertInline(DatabaseName, LinqToDB.SqlProvider.ConvertType.NameToDatabase),
-						p.Schema     == null ? null : (string)SqlBuilder.ConvertInline(p.Schema,     LinqToDB.SqlProvider.ConvertType.NameToSchema),
-						                              (string)SqlBuilder.ConvertInline(p.ProcedureName, LinqToDB.SqlProvider.ConvertType.NameToQueryTable)
+						ServerName   == null ? null : (string)SqlBuilder.ConvertInline(ServerName,      LinqToDB.SqlProvider.ConvertType.NameToServer),
+						DatabaseName == null ? null : (string)SqlBuilder.ConvertInline(DatabaseName,    LinqToDB.SqlProvider.ConvertType.NameToDatabase),
+						p.Schema     == null ? null : (string)SqlBuilder.ConvertInline(p.Schema,        LinqToDB.SqlProvider.ConvertType.NameToSchema),
+						                              (string)SqlBuilder.ConvertInline(p.ProcedureName, LinqToDB.SqlProvider.ConvertType.NameToQueryTable),
+						LinqToDB.TableOptions.NotSet
 					).ToString();
 
 				spName = ToStringLiteral(spName);

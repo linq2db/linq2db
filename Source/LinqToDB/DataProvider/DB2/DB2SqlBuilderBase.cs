@@ -73,12 +73,13 @@ namespace LinqToDB.DataProvider.DB2
 			StringBuilder.AppendLine();
 		}
 
-		protected override void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, int indent, bool skipAlias)
+		protected override void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, int indent, bool skipAlias)
 		{
-			Statement     = statement;
-			StringBuilder = sb;
-			Indent        = indent;
-			SkipAlias     = skipAlias;
+			Statement           = statement;
+			StringBuilder       = sb;
+			OptimizationContext = optimizationContext;
+			Indent              = indent;
+			SkipAlias           = skipAlias;
 
 			if (_identityField != null)
 			{
@@ -93,7 +94,7 @@ namespace LinqToDB.DataProvider.DB2
 				AppendIndent().Append("\t").AppendLine(OpenParens);
 			}
 
-			base.BuildSql(commandNumber, statement, sb, indent, skipAlias);
+			base.BuildSql(commandNumber, statement, sb, optimizationContext, indent, skipAlias);
 
 			if (_identityField != null)
 				sb.AppendLine("\t)");
@@ -124,29 +125,6 @@ namespace LinqToDB.DataProvider.DB2
 		protected override string? LimitFormat(SelectQuery selectQuery)
 		{
 			return selectQuery.Select.SkipValue == null ? "FETCH FIRST {0} ROWS ONLY" : null;
-		}
-
-		protected override void BuildFunction(SqlFunction func)
-		{
-			func = ConvertFunctionParameters(func);
-			base.BuildFunction(func);
-		}
-
-		protected override void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
-		{
-			var wrap = false;
-
-			if (expr.SystemType == typeof(bool))
-			{
-				if (expr is SqlSearchCondition)
-					wrap = true;
-				else
-					wrap = expr is SqlExpression ex && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SqlSearchCondition;
-			}
-
-			if (wrap) StringBuilder.Append("CASE WHEN ");
-			base.BuildColumnExpression(selectQuery, expr, alias, ref addAlias);
-			if (wrap) StringBuilder.Append(" THEN 1 ELSE 0 END");
 		}
 
 		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)

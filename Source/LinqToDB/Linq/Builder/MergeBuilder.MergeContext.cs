@@ -96,7 +96,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
-				throw new NotImplementedException();
+				return SourceContext.IsExpression(expression, level, requestFlag);
 			}
 		}
 	}

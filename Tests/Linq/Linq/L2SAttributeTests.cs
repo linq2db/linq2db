@@ -77,6 +77,8 @@ namespace Tests.Linq
 		[Test]
 		public void IsDbGeneratedTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
+			ResetPersonIdentity(context);
+
 			using (var db = GetDataContext(context))
 			{
 				db.BeginTransaction();

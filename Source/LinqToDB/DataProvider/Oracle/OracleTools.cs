@@ -303,6 +303,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public static AlternativeBulkCopy UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
 
+		[Obsolete("This field is not used by linq2db. Configure reader expressions on DataProvider directly")]
 		public static Func<IDataReader,int,decimal> DataReaderGetDecimal = (dr, i) => dr.GetDecimal(i);
 
 		/// <summary>

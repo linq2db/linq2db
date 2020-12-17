@@ -2,3 +2,4 @@ variables:
   netfx472_tests: netfx472_tests
   netcore21_tests: netcoreapp21_tests
   netcore31_tests: netcoreapp31_tests
+  net50_tests: net50_tests

@@ -24,6 +24,8 @@ namespace Tests
 			var target = "core21";
 #elif NETCOREAPP3_1
 			var target = "core31";
+#elif NET5_0
+			var target = "net50";
 #else
 #error "Build Target must be specified here."
 #endif
@@ -53,6 +55,8 @@ namespace Tests
 				.Replace("<" , $"0x{(ushort)'<':X4}")
 				.Replace("/" , $"0x{(ushort)'/':X4}")
 				.Replace(":" , $"0x{(ushort)':':X4}")
+				.Replace("*" , $"0x{(ushort)'*':X4}")
+				.Replace("?" , $"0x{(ushort)'?':X4}")
 				;
 		}
 

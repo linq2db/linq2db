@@ -14,7 +14,7 @@ namespace LinqToDB.Benchmarks.Queries
 	public class FetchIndividualBenchmark
 	{
 		private string ConnectionString = "test";
-		private Func<Db, int, SalesOrderHeader> _compiled = null!;
+		private Func<Db, int, SalesOrderHeader?> _compiled = null!;
 		private QueryResult _result = null!;
 		private int _key = 124;
 		private string CommandText = "SELECT [SalesOrderID],[RevisionNumber],[OrderDate],[DueDate],[ShipDate],[Status],[OnlineOrderFlag],[SalesOrderNumber],[PurchaseOrderNumber],[AccountNumber],[CustomerID],[SalesPersonID],[TerritoryID],[BillToAddressID],[ShipToAddressID],[ShipMethodID],[CreditCardID],[CreditCardApprovalCode],[CurrencyRateID],[SubTotal],[TaxAmt],[Freight],[TotalDue],[Comment],[rowguid],[ModifiedDate] FROM [Sales].[SalesOrderHeader]";

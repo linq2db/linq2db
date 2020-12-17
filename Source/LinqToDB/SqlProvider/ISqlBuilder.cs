@@ -11,7 +11,7 @@ namespace LinqToDB.SqlProvider
 	public interface ISqlBuilder
 	{
 		int              CommandCount         (SqlStatement statement);
-		void             BuildSql             (int commandNumber, SqlStatement statement, StringBuilder sb, int startIndent = 0);
+		void             BuildSql             (int commandNumber, SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, int startIndent = 0);
 
 		StringBuilder    ConvertTableName     (StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions);
 		StringBuilder    BuildTableName       (StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions);
@@ -29,8 +29,6 @@ namespace LinqToDB.SqlProvider
 		string           GetReserveSequenceValuesSql(int count, string sequenceName);
 		string           GetMaxValueSql       (EntityDescriptor entity, ColumnDescriptor column);
 
-		string           Name { get; }
-
-		List<SqlParameter> ActualParameters { get; }
+		string Name { get; }
 	}
 }

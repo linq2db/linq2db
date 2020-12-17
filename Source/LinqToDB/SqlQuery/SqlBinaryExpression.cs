@@ -10,9 +10,9 @@ namespace LinqToDB.SqlQuery
 	{
 		public SqlBinaryExpression(Type systemType, ISqlExpression expr1, string operation, ISqlExpression expr2, int precedence)
 		{
-			Expr1      = expr1     ?? throw new ArgumentNullException(nameof(expr1));
+			_expr1     = expr1     ?? throw new ArgumentNullException(nameof(expr1));
 			Operation  = operation ?? throw new ArgumentNullException(nameof(operation));
-			Expr2      = expr2     ?? throw new ArgumentNullException(nameof(expr2));
+			_expr2     = expr2     ?? throw new ArgumentNullException(nameof(expr2));
 			SystemType = systemType;
 			Precedence = precedence;
 		}
@@ -22,9 +22,32 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
-		public ISqlExpression Expr1      { get; internal set; }
+		private ISqlExpression _expr1;
+
+		public ISqlExpression Expr1
+		{
+			get => _expr1;
+			internal set
+			{
+				_expr1    = value;
+				_hashCode = null;
+			}
+		}
+
 		public string         Operation  { get; }
-		public ISqlExpression Expr2      { get; internal set; }
+
+		private ISqlExpression _expr2;
+
+		public ISqlExpression Expr2
+		{
+			get => _expr2;
+			internal set
+			{
+				_expr2    = value;
+				_hashCode = null;
+			}
+		}
+
 		public Type           SystemType { get; }
 		public int            Precedence { get; }
 
@@ -64,15 +87,23 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
+		int?                   _hashCode;
+
 		public override int GetHashCode()
 		{
+			// ReSharper disable NonReadonlyMemberInGetHashCode
+			if (_hashCode.HasValue)
+				return _hashCode.Value;
+
 			var hashCode = Operation.GetHashCode();
 
 			hashCode = unchecked(hashCode + (hashCode * 397) ^ SystemType.GetHashCode());
 			hashCode = unchecked(hashCode + (hashCode * 397) ^ Expr1.GetHashCode());
 			hashCode = unchecked(hashCode + (hashCode * 397) ^ Expr2.GetHashCode());
 
+			_hashCode = hashCode;
 			return hashCode;
+			// ReSharper restore NonReadonlyMemberInGetHashCode
 		}
 
 		#region ISqlExpression Members
@@ -133,5 +164,12 @@ namespace LinqToDB.SqlQuery
 		}
 
 		#endregion
+
+		public void Deconstruct(out ISqlExpression expr1, out string operation, out ISqlExpression expr2)
+		{
+			expr1     = Expr1;
+			operation = Operation;
+			expr2     = Expr2;
+		}
 	}
 }

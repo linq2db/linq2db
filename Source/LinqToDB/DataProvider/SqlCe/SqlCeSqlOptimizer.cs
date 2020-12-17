@@ -2,8 +2,8 @@
 
 namespace LinqToDB.DataProvider.SqlCe
 {
-	using LinqToDB.Extensions;
-	using LinqToDB.SqlQuery;
+	using Extensions;
+	using SqlQuery;
 	using SqlProvider;
 
 	class SqlCeSqlOptimizer : BasicSqlOptimizer
@@ -14,6 +14,14 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
+			// This function mutates statement which is allowed only in this place
+			CorrectSkipAndColumns(statement);
+
+			// This function mutates statement which is allowed only in this place
+			CorrectInsertParameters(statement);
+
+			CorrectFunctionParameters(statement);
+
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete :
@@ -26,9 +34,6 @@ namespace LinqToDB.DataProvider.SqlCe
 					break;
 			}
 
-			statement = CorrectSkipAndColumns(statement);
-
-			statement = CorrectInsertParameters(statement);
 
 			// call fixer after CorrectSkipAndColumns for remaining cases
 			base.FixEmptySelect(statement);
@@ -36,7 +41,11 @@ namespace LinqToDB.DataProvider.SqlCe
 			return statement;
 		}
 
-		public SqlStatement CorrectInsertParameters(SqlStatement statement)
+		protected static string[] LikeSqlCeCharactersToEscape = { "_", "%" };
+
+		public override string[] LikeCharactersToEscape => LikeSqlCeCharactersToEscape;
+
+		void CorrectInsertParameters(SqlStatement statement)
 		{
 			//SlqCe do not support parameters in columns for insert
 			//
@@ -54,11 +63,9 @@ namespace LinqToDB.DataProvider.SqlCe
 					}
 				}
 			}
-
-			return statement;
 		}
 
-		public SqlStatement CorrectSkipAndColumns(SqlStatement statement)
+		void CorrectSkipAndColumns(SqlStatement statement)
 		{
 			new QueryVisitor().Visit(statement, e =>
 			{
@@ -100,8 +107,28 @@ namespace LinqToDB.DataProvider.SqlCe
 						}
 				}
 			});
+		}
 
-			return statement;
+		void CorrectFunctionParameters(SqlStatement statement)
+		{
+			if (!SqlCeConfiguration.InlineFunctionParameters)
+				return;
+
+			new QueryVisitor().Visit(statement, e =>
+			{
+				if (e.ElementType == QueryElementType.SqlFunction)
+				{
+					var sqlFunction = (SqlFunction)e;
+					foreach (var parameter in sqlFunction.Parameters)
+					{
+						if (parameter.ElementType == QueryElementType.SqlParameter &&
+						    parameter is SqlParameter sqlParameter)
+						{
+							sqlParameter.IsQueryParameter = false;
+						}
+					}
+				}
+			});
 		}
 
 		protected override void FixEmptySelect(SqlStatement statement)
@@ -109,20 +136,10 @@ namespace LinqToDB.DataProvider.SqlCe
 			// already fixed by CorrectSkipAndColumns
 		}
 
-		public override ISqlExpression ConvertExpression(ISqlExpression expr, bool withParameters)
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expr, ConvertVisitor visitor,
+			EvaluationContext context)
 		{
-			if (SqlCeConfiguration.InlineFunctionParameters && expr is SqlFunction sqlFunction)
-			{
-				foreach (var parameter in sqlFunction.Parameters)
-				{
-					if (parameter.ElementType == QueryElementType.SqlParameter && parameter is SqlParameter sqlParameter)
-					{
-						sqlParameter.IsQueryParameter = false;
-					}
-				}
-			}
-
-			expr = base.ConvertExpression(expr, withParameters);
+			expr = base.ConvertExpressionImpl(expr, visitor, context);
 
 			switch (expr)
 			{
@@ -194,5 +211,12 @@ namespace LinqToDB.DataProvider.SqlCe
 
 			return expr;
 		}
+
+		protected override ISqlExpression ConvertFunction(SqlFunction func)
+		{
+			func = ConvertFunctionParameters(func, false);
+			return base.ConvertFunction(func);
+		}
+
 	}
 }

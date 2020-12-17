@@ -366,80 +366,80 @@ namespace DB2DataContext
 
 	public static partial class TableExtensions
 	{
-		public static DB2ADMIN_ALLTYPE Find(this ITable<DB2ADMIN_ALLTYPE> table, int ID)
+		public static DB2ADMIN_ALLTYPE? Find(this ITable<DB2ADMIN_ALLTYPE> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static DB2ADMIN_Doctor Find(this ITable<DB2ADMIN_Doctor> table, int PersonID)
+		public static DB2ADMIN_Doctor? Find(this ITable<DB2ADMIN_Doctor> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
 		}
 
-		public static DB2ADMIN_InheritanceChild Find(this ITable<DB2ADMIN_InheritanceChild> table, int InheritanceChildId)
+		public static DB2ADMIN_InheritanceChild? Find(this ITable<DB2ADMIN_InheritanceChild> table, int InheritanceChildId)
 		{
 			return table.FirstOrDefault(t =>
 				t.InheritanceChildId == InheritanceChildId);
 		}
 
-		public static DB2ADMIN_InheritanceParent Find(this ITable<DB2ADMIN_InheritanceParent> table, int InheritanceParentId)
+		public static DB2ADMIN_InheritanceParent? Find(this ITable<DB2ADMIN_InheritanceParent> table, int InheritanceParentId)
 		{
 			return table.FirstOrDefault(t =>
 				t.InheritanceParentId == InheritanceParentId);
 		}
 
-		public static DB2ADMIN_KeepIdentityTest Find(this ITable<DB2ADMIN_KeepIdentityTest> table, int ID)
+		public static DB2ADMIN_KeepIdentityTest? Find(this ITable<DB2ADMIN_KeepIdentityTest> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static DB2ADMIN_MASTERTABLE Find(this ITable<DB2ADMIN_MASTERTABLE> table, int ID1, int ID2)
+		public static DB2ADMIN_MASTERTABLE? Find(this ITable<DB2ADMIN_MASTERTABLE> table, int ID1, int ID2)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID1 == ID1 &&
 				t.ID2 == ID2);
 		}
 
-		public static DB2ADMIN_Patient Find(this ITable<DB2ADMIN_Patient> table, int PersonID)
+		public static DB2ADMIN_Patient? Find(this ITable<DB2ADMIN_Patient> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
 		}
 
-		public static DB2ADMIN_Person Find(this ITable<DB2ADMIN_Person> table, int PersonID)
+		public static DB2ADMIN_Person? Find(this ITable<DB2ADMIN_Person> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
 		}
 
-		public static DB2ADMIN_TestIdentity Find(this ITable<DB2ADMIN_TestIdentity> table, int ID)
+		public static DB2ADMIN_TestIdentity? Find(this ITable<DB2ADMIN_TestIdentity> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static DB2ADMIN_Testmerge1 Find(this ITable<DB2ADMIN_Testmerge1> table, int Id)
+		public static DB2ADMIN_Testmerge1? Find(this ITable<DB2ADMIN_Testmerge1> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static DB2ADMIN_TestMerge1 Find(this ITable<DB2ADMIN_TestMerge1> table, int Id)
+		public static DB2ADMIN_TestMerge1? Find(this ITable<DB2ADMIN_TestMerge1> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static DB2ADMIN_Testmerge2 Find(this ITable<DB2ADMIN_Testmerge2> table, int Id)
+		public static DB2ADMIN_Testmerge2? Find(this ITable<DB2ADMIN_Testmerge2> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static DB2ADMIN_TestMerge2 Find(this ITable<DB2ADMIN_TestMerge2> table, int Id)
+		public static DB2ADMIN_TestMerge2? Find(this ITable<DB2ADMIN_TestMerge2> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);

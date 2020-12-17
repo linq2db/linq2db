@@ -162,7 +162,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 				TraceAction(
 					dataConnection,
-					() => "INSERT BULK " + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + Environment.NewLine,
+					() => "INSERT BULK " + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + ")" + Environment.NewLine,
 					() => { bc.WriteToServer(rd); return rd.Count; });
 			}
 

@@ -7,7 +7,9 @@ using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Access;
 using LinqToDB.SchemaProvider;
+
 using NUnit.Framework;
+
 using Tests;
 using Tests.Model;
 
@@ -20,7 +22,7 @@ using Tests.Model;
 // ReSharper disable once TestClassNameSuffixWarning
 public class a_CreateData : TestBase
 {
-	static void RunScript(string configString, string divider, string name, Action<IDbConnection>? action = null)
+	static void RunScript(string configString, string divider, string name, Action<IDbConnection>? action = null, string? databaseName = null)
 	{
 		TestContext.WriteLine("=== " + name + " === \n");
 
@@ -48,7 +50,7 @@ public class a_CreateData : TestBase
 		{
 			//db.CommandTimeout = 20;
 
-			var database = db.Connection.Database;
+			var database = databaseName ?? db.Connection.Database;
 
 			var cmds = text
 				.Replace("{DBNAME}", database)
@@ -234,6 +236,11 @@ public class a_CreateData : TestBase
 		}
 	}
 
+	static void RunScript(CreateDataScript script)
+	{
+		RunScript(script.ConfigString, script.Divider, script.Name, script.Action, script.Database);
+	}
+
 	[Test, Order(0)]
 	public void CreateDatabase([CreateDatabaseSources] string context)
 	{
@@ -261,8 +268,9 @@ public class a_CreateData : TestBase
 			case TestProvName.SqlServer2016                    :
 			case ProviderName.SqlServer2017                    :
 			case TestProvName.SqlServer2019                    :
-			case TestProvName.SqlAzure                         : RunScript(context,          "\nGO\n",  "SqlServer");                   break;
 			case TestProvName.Default                          : RunScript(context,          "\nGO\n",  "SQLite",   SQLiteAction);      break;
+			case TestProvName.SqlServer2019SequentialAccess    :
+			case TestProvName.SqlAzure                         : RunScript(context,          "\nGO\n",  "SqlServer");                   break;
 			case ProviderName.SQLiteClassic                    :
 			case ProviderName.SQLiteMS                         : RunScript(context,          "\nGO\n",  "SQLite",   SQLiteAction);
 			                                                     RunScript(context+ ".Data", "\nGO\n",  "SQLite",   SQLiteAction);      break;
@@ -287,7 +295,14 @@ public class a_CreateData : TestBase
 			case ProviderName.OracleNative                     :
 			case TestProvName.Oracle11Native                   : RunScript(context,          "\n/\n",   "Oracle");                      break;
 #endif
-			default: throw new InvalidOperationException(context);
+			default:
+				var script = CustomizationSupport.Interceptor.InterceptCreateData(context);
+				if (script != null)
+				{
+					RunScript(script);
+					break;
+				}
+				throw new InvalidOperationException(context);
 		}
 	}
 

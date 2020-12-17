@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Text;
 
-using LinqToDB.Common;
-using LinqToDB.Mapping;
-
 namespace LinqToDB.SqlQuery
 {
+	using Common;
+	using Mapping;
+
 	public class SqlCteTable : SqlTable, ICloneableElement
 	{
 		public          CteClause? Cte  { get; private set; }
@@ -73,9 +73,10 @@ namespace LinqToDB.SqlQuery
 		public override QueryElementType ElementType  => QueryElementType.SqlCteTable;
 		public override SqlTableType     SqlTableType => SqlTableType.Cte;
 
-		public StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
-			return sb.Append(Name);
+			Cte?.ToString(sb, dic);
+			return sb;
 		}
 
 		#region IQueryElement Members
@@ -96,14 +97,14 @@ namespace LinqToDB.SqlQuery
 			{
 				var table = new SqlCteTable(this, Array<SqlField>.Empty, Cte == null ? throw new ArgumentException() : (CteClause)Cte.Clone(objectTree, doClone))
 				{
-					Name         = base.Name,
-					Alias        = Alias,
-					Server       = Server,
-					Database     = Database,
-					Schema       = Schema,
-					PhysicalName = base.PhysicalName,
-					ObjectType   = ObjectType,
-					SqlTableType = SqlTableType,
+					Name               = base.Name,
+					Alias              = Alias,
+					Server             = Server,
+					Database           = Database,
+					Schema             = Schema,
+					PhysicalName       = base.PhysicalName,
+					ObjectType         = ObjectType,
+					SqlTableType       = SqlTableType,
 				};
 
 				table.ClearFields();

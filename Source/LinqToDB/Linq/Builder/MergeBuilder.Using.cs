@@ -39,7 +39,9 @@ namespace LinqToDB.Linq.Builder
 					var enumerableBuildInfo = new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery());
 
 					var type = FindType(builder, enumerableBuildInfo);
-					var sourceContext = new EnumerableContext(builder, enumerableBuildInfo, enumerableBuildInfo.SelectQuery, type, enumerableBuildInfo.Expression);
+					var sourceContext = new EnumerableContext(builder, enumerableBuildInfo,
+						enumerableBuildInfo.SelectQuery, type,
+						builder.ConvertToSql(buildInfo.Parent, enumerableBuildInfo.Expression));
 
 					var source = new MergeSourceQueryContext(mergeContext.Merge, sourceContext);
 					mergeContext.Sequences = new IBuildContext[] { mergeContext.Sequence, source };

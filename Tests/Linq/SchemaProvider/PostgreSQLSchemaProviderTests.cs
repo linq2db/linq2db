@@ -370,7 +370,7 @@ namespace Tests.SchemaProvider
 					{
 						var expectedColumn = expectedColumns
 							.Where(_ => _.ColumnName == actualColumn.ColumnName)
-							.SingleOrDefault();
+							.SingleOrDefault()!;
 
 						Assert.IsNotNull(expectedColumn);
 
@@ -425,7 +425,7 @@ namespace Tests.SchemaProvider
 
 					foreach (var table in procedure.SimilarTables!)
 					{
-						var tbl = expectedProc.SimilarTables
+						var tbl = expectedProc.SimilarTables!
 							.Where(_ => _.TableName == table.TableName)
 							.SingleOrDefault();
 
@@ -468,7 +468,7 @@ namespace Tests.SchemaProvider
 				
 				Assert.IsNotNull(view);
 
-				Assert.That(view.ID, Is.EqualTo(view.CatalogName + ".public.Issue2023"));
+				Assert.That(view!.ID, Is.EqualTo(view.CatalogName + ".public.Issue2023"));
 				Assert.IsNotNull(view.CatalogName);
 				Assert.AreEqual("public", view.SchemaName);
 				Assert.AreEqual("Issue2023", view.TableName);

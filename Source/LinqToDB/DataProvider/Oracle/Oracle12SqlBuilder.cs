@@ -1,6 +1,6 @@
 ﻿namespace LinqToDB.DataProvider.Oracle
 {
-	using LinqToDB.Mapping;
+	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
 
@@ -31,7 +31,8 @@
 
 		protected override bool BuildWhere(SelectQuery selectQuery)
 		{
-			return selectQuery.Where.SearchCondition.Conditions.Count != 0;
+			var condition = ConvertElement(selectQuery.Where.SearchCondition);
+			return condition.Conditions.Count != 0;
 		}
 
 		protected override string? LimitFormat(SelectQuery selectQuery)

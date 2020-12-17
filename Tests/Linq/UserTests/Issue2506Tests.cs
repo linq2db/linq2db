@@ -61,7 +61,6 @@ namespace Tests.UserTests
 				new ItemText{ ItemId = 2, Lang = "en", Text = "Item 2 english text"},
 			};
 
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(items))
 			using (db.CreateLocalTable(itemTexts))

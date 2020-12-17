@@ -24,9 +24,9 @@ namespace Tests.Linq
 
 				var id = 1;
 
-				var parent1 = db.Parent.FirstOrDefault(p => p.ParentID == id);
+				var parent1 = db.Parent.FirstOrDefault(p => p.ParentID == id)!;
 				id++;
-				var parent2 = db.Parent.FirstOrDefault(p => p.ParentID == id);
+				var parent2 = db.Parent.FirstOrDefault(p => p.ParentID == id)!;
 
 				Assert.That(parent1.ParentID, Is.Not.EqualTo(parent2.ParentID));
 			}
@@ -67,8 +67,8 @@ namespace Tests.Linq
 
 				var queryInlined = query.InlineParameters();
 
-				Assert.That(query.GetStatement().Parameters.Count,        Is.EqualTo(1));
-				Assert.That(queryInlined.GetStatement().Parameters.Count, Is.EqualTo(0));
+				Assert.That(query.GetStatement().CollectParameters().Length,        Is.EqualTo(1));
+				Assert.That(queryInlined.GetStatement().CollectParameters().Length, Is.EqualTo(0));
 			}
 		}
 
@@ -221,9 +221,9 @@ namespace Tests.Linq
 			{
 				int id1 = 1, id2 = 10000;
 
-				var parent1 = db.Parent.OrderBy(p => p.ParentID).FirstOrDefault(p => p.ParentID == id1 || p.ParentID >= id1 || p.ParentID >= id2);
+				var parent1 = db.Parent.OrderBy(p => p.ParentID).FirstOrDefault(p => p.ParentID == id1 || p.ParentID >= id1 || p.ParentID >= id2)!;
 				id1++;
-				var parent2 = db.Parent.OrderBy(p => p.ParentID).FirstOrDefault(p => p.ParentID == id1 || p.ParentID >= id1 || p.ParentID >= id2);
+				var parent2 = db.Parent.OrderBy(p => p.ParentID).FirstOrDefault(p => p.ParentID == id1 || p.ParentID >= id1 || p.ParentID >= id2)!;
 
 				Assert.That(parent1.ParentID, Is.Not.EqualTo(parent2.ParentID));
 			}
@@ -408,35 +408,34 @@ namespace Tests.Linq
 
 			void Execute()
 			{
-				using (new AllowMultipleQuery(true))
 				using (var db = GetDataContext(context))
 				using (var t1 = db.CreateLocalTable(Table404One.Data))
 				using (var t2 = db.CreateLocalTable(Table404Two.Data))
 				{
 					Issue404? usage = null;
 					var allUsages = !usage.HasValue;
-					var res1 = Test();
+					var res1 = Test()!;
 					Assert.AreEqual(1, res1.Id);
-					Assert.AreEqual(3, res1.Values.Count());
+					Assert.AreEqual(3, res1.Values!.Count());
 					Assert.AreEqual(3, res1.Values.Where(v => v.FirstTableId == 1).Count());
 
 					usage = Issue404.Value1;
 					allUsages = false;
-					var res2 = Test();
+					var res2 = Test()!;
 					Assert.AreEqual(1, res2.Id);
-					Assert.AreEqual(2, res2.Values.Count());
+					Assert.AreEqual(2, res2.Values!.Count());
 					Assert.AreEqual(2, res2.Values.Where(v => v.Usage == usage).Count());
 					Assert.AreEqual(2, res2.Values.Where(v => v.FirstTableId == 1).Count());
 
 					usage = Issue404.Value2;
 					allUsages = false;
-					var res3 = Test();
+					var res3 = Test()!;
 					Assert.AreEqual(1, res2.Id);
-					Assert.AreEqual(1, res3.Values.Count());
+					Assert.AreEqual(1, res3.Values!.Count());
 					Assert.AreEqual(1, res3.Values.Where(v => v.Usage == usage).Count());
 					Assert.AreEqual(1, res3.Values.Where(v => v.FirstTableId == 1).Count());
 
-					FirstTable Test()
+					FirstTable? Test()
 					{
 						return t1
 						  .GroupJoin(t2.Where(v =>
@@ -464,7 +463,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(1189)]
+		[ActiveIssue("SQL0418N", Configuration = ProviderName.DB2)]
 		[Test]
 		public void Issue1189Test([DataSources] string context)
 		{

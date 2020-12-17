@@ -1,13 +1,13 @@
-﻿namespace LinqToDB.ServiceModel
+﻿using System;
+using System.Linq.Expressions;
+
+namespace LinqToDB.ServiceModel
 {
-	using LinqToDB.Common;
-	using LinqToDB.Expressions;
-	using LinqToDB.Extensions;
+	using Common;
+	using Common.Internal.Cache;
+	using Expressions;
+	using Extensions;
 	using Mapping;
-	using System;
-	using System.Collections.Concurrent;
-	using System.Collections.Generic;
-	using System.Linq.Expressions;
 
 	/// <summary>
 	/// Implements conversions support between raw values and string to support de-/serialization of remote data context
@@ -15,9 +15,15 @@
 	/// </summary>
 	internal class SerializationConverter
 	{
-		private static readonly Type _stringType = typeof(string);
-		private static readonly IDictionary<object, Func<object, string>> _serializeConverters   = new ConcurrentDictionary<object, Func<object, string>>();
-		private static readonly IDictionary<object, Func<string, object>> _deserializeConverters = new ConcurrentDictionary<object, Func<string, object>>();
+		static readonly Type _stringType = typeof(string);
+		static readonly MemoryCache _serializeConverters   = new MemoryCache(new MemoryCacheOptions());
+		static readonly MemoryCache _deserializeConverters = new MemoryCache(new MemoryCacheOptions());
+
+		public static void ClearCaches()
+		{
+			_serializeConverters.Compact(1);
+			_deserializeConverters.Compact(1);
+		}
 
 		public static string Serialize(MappingSchema ms, object value)
 		{
@@ -26,20 +32,24 @@
 
 			var from = value.GetType();
 
-			// don't see much sense to have multiple schema-dependent serialziation logic for same type
-			// otherwise we should care about converters cleanup
-			var key  = from;
+			var key = new { from, ms.ConfigurationID };
 
-			if (!_serializeConverters.TryGetValue(key, out var converter))
+			var converter = _serializeConverters.GetOrCreate(key, o =>
 			{
+				o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
+
 				Type? enumType = null;
-				if (from.IsEnum)
+
+				var li = ms.GetConverter(new DbDataType(from), new DbDataType(_stringType), false);
+				if (li == null && from.IsEnum)
 				{
 					enumType = from;
 					from     = Enum.GetUnderlyingType(from);
 				}
 
-				var li = ms.GetConverter(new DbDataType(from), new DbDataType(_stringType), true)!;
+				if (li == null)
+					li = ms.GetConverter(new DbDataType(from), new DbDataType(_stringType), true)!;
+
 				var b  = li.CheckNullLambda.Body;
 				var ps = li.CheckNullLambda.Parameters;
 
@@ -53,10 +63,8 @@
 							: e),
 					p);
 
-				converter = ex.Compile();
-
-				_serializeConverters[key] = converter;
-			}
+				return ex.Compile();
+			});
 
 			return converter(value);
 		}
@@ -71,20 +79,33 @@
 
 			to = to.ToNullableUnderlying();
 
-			// don't see much sense to have multiple schema-dependent serialziation logic for same type
-			// otherwise we should care about converters cleanup
-			var key = to;
+			var key = new { to, ms.ConfigurationID };
 
-			if (!_deserializeConverters.TryGetValue(key, out var converter))
+			var converter = _deserializeConverters.GetOrCreate(key, o =>
 			{
+				o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
+
 				Type? enumType = null;
-				if (to.IsEnum)
+
+				var li = ms.GetConverter(new DbDataType(_stringType), new DbDataType(to), false);
+				if (li == null && to.IsEnum)
 				{
-					enumType = to;
-					to       = Enum.GetUnderlyingType(to);
+					var type = Converter.GetDefaultMappingFromEnumType(ms, to);
+					if (type != null)
+					{
+						if (type == typeof(int) || type == typeof(long))
+							enumType = to;
+						to = type;
+					}	
+					else
+					{
+						enumType = to;
+						to = Enum.GetUnderlyingType(to);
+					}
 				}
 
-				var li = ms.GetConverter(new DbDataType(_stringType), new DbDataType(to), true)!;
+				if (li == null)
+					li = ms.GetConverter(new DbDataType(_stringType), new DbDataType(to), true)!;
 
 				var b  = li.CheckNullLambda.Body;
 				var ps = li.CheckNullLambda.Parameters;
@@ -97,10 +118,8 @@
 					Expression.Convert(b, typeof(object)).Transform(e => e == ps[0] ? p : e),
 					p);
 
-				converter = ex.Compile();
-
-				_deserializeConverters[key] = converter;
-			}
+				return ex.Compile();
+			});
 
 			return converter(value);
 		}

@@ -113,7 +113,6 @@ namespace Tests.Linq
 
 			var ms = builder.MappingSchema;
 
-			using (new AllowMultipleQuery())
 			using (var db = new MyDataContext(context, ms))
 			using (db.CreateLocalTable(testData.Item1))
 			using (db.CreateLocalTable(testData.Item2))
@@ -165,14 +164,13 @@ namespace Tests.Linq
 
 			var ms = builder.MappingSchema;
 
-			using (new AllowMultipleQuery())
 			using (var db = new MyDataContext(context, ms))
 			using (db.CreateLocalTable(testData.Item1))
 			using (db.CreateLocalTable(testData.Item2))
 			using (db.CreateLocalTable(testData.Item3))
 			{
 				var query = from m in db.GetTable<MasterClass>().IgnoreFilters()
-					from d in m.Details
+					from d in m.Details!
 					select d;
 
 				CheckFiltersForQuery(db, query);
@@ -192,14 +190,13 @@ namespace Tests.Linq
 
 			var ms = builder.MappingSchema;
 
-			using (new AllowMultipleQuery())
 			using (var db = new MyDataContext(context, ms))
 			using (db.CreateLocalTable(testData.Item1))
 			using (db.CreateLocalTable(testData.Item2))
 			using (db.CreateLocalTable(testData.Item3))
 			{
 				var query = from m in db.GetTable<MasterClass>().IgnoreFilters()
-					from d in m.Details
+					from d in m.Details!
 					select d;
 
 				CheckFiltersForQuery(db, query);
@@ -234,14 +231,13 @@ namespace Tests.Linq
 
 			var ms = builder.MappingSchema;
 
-			using (new AllowMultipleQuery())
 			using (var db = new MyDataContext(context, ms))
 			using (db.CreateLocalTable(testData.Item1))
 			using (db.CreateLocalTable(testData.Item2))
 			using (db.CreateLocalTable(testData.Item3))
 			{
 				var query = from m in db.GetTable<MasterClass>().IgnoreFilters()
-					from d in m.Details
+					from d in m.Details!
 					select d;
 
 				CheckFiltersForQuery(db, query);

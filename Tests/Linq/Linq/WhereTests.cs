@@ -301,7 +301,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				AreEqual(
 					   Parent.Where(p => p.Value1 != 1 && p.Value1 != null),
-					db.Parent.Where(p => p.Value1 != 1));
+					db.Parent.Where(p => p.Value1 != 1 && p.Value1 != null));
 		}
 
 		[Test]
@@ -495,6 +495,154 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(1, (from p in db.Parent where p.Value1 == p.ParentID && p.Value1 == 1 select p).ToList().Count);
+		}
+
+		class WhereCompareData
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+
+			[Column(CanBeNull = false)]
+			public int NotNullable { get; set; }
+
+			[Column(CanBeNull = true)]
+			public int? Nullable { get; set; }
+
+			[Column(CanBeNull = true)]
+			public int? OtherNullable { get; set; }
+
+			public static WhereCompareData[] Seed()
+			{
+				return new WhereCompareData[]
+				{
+					new WhereCompareData{Id = 1, NotNullable = 1, Nullable = null, OtherNullable = 10}, 
+					new WhereCompareData{Id = 2, NotNullable = 1, Nullable = 10,   OtherNullable = 10}, 
+					new WhereCompareData{Id = 3, NotNullable = 1, Nullable = 10,   OtherNullable = null}, 
+					new WhereCompareData{Id = 4, NotNullable = 1, Nullable = null, OtherNullable = null}, 
+
+					new WhereCompareData{Id = 5, NotNullable = 1, Nullable = null, OtherNullable = 20}, 
+					new WhereCompareData{Id = 6, NotNullable = 1, Nullable = 10,   OtherNullable = 20}, 
+					new WhereCompareData{Id = 7, NotNullable = 1, Nullable = 10,   OtherNullable = null}, 
+					new WhereCompareData{Id = 8, NotNullable = 1, Nullable = null, OtherNullable = null}, 
+
+					new WhereCompareData{Id = 9,  NotNullable = 1, Nullable = null, OtherNullable = 20}, 
+					new WhereCompareData{Id = 10, NotNullable = 1, Nullable = 30,   OtherNullable = 20}, 
+					new WhereCompareData{Id = 11, NotNullable = 1, Nullable = 30,   OtherNullable = null}, 
+					new WhereCompareData{Id = 12, NotNullable = 1, Nullable = null, OtherNullable = null}, 
+
+				};
+			}
+		}
+
+		[Test]
+		public void CompareEqual([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(WhereCompareData.Seed()))
+			{
+				AssertQuery(table.Where(p => p.Nullable == p.OtherNullable));
+				AssertQuery(table.Where(p => !(p.Nullable == p.OtherNullable)));
+				AssertQuery(table.Where(p => p.OtherNullable == p.Nullable));
+				AssertQuery(table.Where(p => !(p.OtherNullable == p.Nullable)));
+			}
+		}
+
+		[Test]
+		public void CompareGreat([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(WhereCompareData.Seed()))
+			{
+				AssertQuery(table.Where(p => p.Nullable > p.OtherNullable));
+				AssertQuery(table.Where(p => !(p.Nullable > p.OtherNullable)));
+				AssertQuery(table.Where(p => p.OtherNullable < p.Nullable));
+				AssertQuery(table.Where(p => !(p.OtherNullable < p.Nullable)));
+			}
+		}
+
+		[Test]
+		public void CompareLess([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(WhereCompareData.Seed()))
+			{
+				AssertQuery(table.Where(p => p.Nullable < p.OtherNullable));
+				AssertQuery(table.Where(p => !(p.Nullable < p.OtherNullable)));
+				AssertQuery(table.Where(p => p.OtherNullable > p.Nullable));
+				AssertQuery(table.Where(p => !(p.OtherNullable > p.Nullable)));
+			}
+		}
+
+		[Test]
+		public void CompareNullableEqual([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AssertQuery(db.Parent.Where(p => p.Value1 == 1));
+				AssertQuery(db.Parent.Where(p => !(p.Value1 == 1)));
+				AssertQuery(db.Parent.Where(p => 1 == p.Value1));
+				AssertQuery(db.Parent.Where(p => !(1 == p.Value1)));
+			}
+		}
+
+		[Test]
+		public void CompareNullableNotEqual([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AssertQuery(db.Parent.Where(p => p.Value1 != 1));
+				AssertQuery(db.Parent.Where(p => !(p.Value1 != 1)));
+				AssertQuery(db.Parent.Where(p => 1 != p.Value1));
+				AssertQuery(db.Parent.Where(p => !(1 != p.Value1)));
+			}
+		}
+
+		[Test]
+		public void CompareNullableGreatOrEqual([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AssertQuery(db.Parent.Where(p => p.Value1 >= 2));
+				AssertQuery(db.Parent.Where(p => !(p.Value1 >= 2)));
+				AssertQuery(db.Parent.Where(p => 2 <= p.Value1));
+				AssertQuery(db.Parent.Where(p => !(2 <= p.Value1)));
+			}
+		}
+
+		[Test]
+		public void CompareNullableGreat([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AssertQuery(db.Parent.Where(p => p.Value1 > 2));
+				AssertQuery(db.Parent.Where(p => !(p.Value1 > 2)));
+				AssertQuery(db.Parent.Where(p => 2 < p.Value1));
+				AssertQuery(db.Parent.Where(p => !(2 < p.Value1)));
+			}
+		}
+
+		[Test]
+		public void CompareNullableLessOrEqual([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AssertQuery(db.Parent.Where(p => p.Value1 <= 2));
+				AssertQuery(db.Parent.Where(p => !(p.Value1 <= 2)));
+				AssertQuery(db.Parent.Where(p => 2 >= p.Value1));
+				AssertQuery(db.Parent.Where(p => !(2 >= p.Value1)));
+			}
+		}
+
+		[Test]
+		public void CompareNullableLess([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AssertQuery(db.Parent.Where(p => p.Value1 < 2));
+				AssertQuery(db.Parent.Where(p => !(p.Value1 < 2)));
+				AssertQuery(db.Parent.Where(p => 2 > p.Value1));
+				AssertQuery(db.Parent.Where(p => !(2 > p.Value1)));
+			}
 		}
 
 		[Test]
@@ -1470,7 +1618,7 @@ namespace Tests.Linq
 								   && (!flag.HasValue || flag.Value && c.Value1 == null || !flag.Value && c.Value1 != null)
 							   select c);
 
-				var sql = results.ToString();
+				var sql = results.ToString()!;
 
 				AreEqual(
 					from c in db.Parent.AsEnumerable()
@@ -1496,7 +1644,7 @@ namespace Tests.Linq
 								   && (flag == null || flag.Value && c.Value1 == null || !flag.Value && c.Value1 != null)
 							   select c);
 
-				var sql = results.ToString();
+				var sql = results.ToString()!;
 
 				AreEqual(
 					from c in db.Parent.AsEnumerable()
@@ -1571,7 +1719,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SrtingInterpolationTests([DataSources(false)] string context)
+		public void StringInterpolationTests([DataSources(false)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1587,6 +1735,41 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void NullableBooleanConditionEvaluationTrueTests([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(true, null, false)] bool? value1)
+		{
+			using (var db = GetDataContext(context))
+			{
+				Assert.AreEqual(value1 == true, db.Person.Where(_ => value1 == true).Any());
+			}
+		}
+
+		[Test]
+		public void NullableBooleanConditionEvaluationTrueTestsNot([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(true, null, false)] bool? value1)
+		{
+			using (var db = GetDataContext(context))
+			{
+				Assert.AreEqual(!(value1 == true), db.Person.Where(_ => !(value1 == true)).Any());
+			}
+		}
+
+		[Test]
+		public void NullableBooleanConditionEvaluationFalseTests([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(true, null, false)] bool? value1)
+		{
+			using (var db = GetDataContext(context))
+			{
+				Assert.AreEqual(value1 == false, db.Person.Where(_ => value1 == false).Any());
+			}
+		}
+
+		[Test]
+		public void NullableBooleanConditionEvaluationFalseTestsNot([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(true, null, false)] bool? value1)
+		{
+			using (var db = GetDataContext(context))
+			{
+				Assert.AreEqual(!(value1 == false), db.Person.Where(_ => !(value1 == false)).Any());
+			}
+		}
 
 		#region issue 2424
 		class Isue2424Table

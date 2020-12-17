@@ -64,7 +64,7 @@ namespace LinqToDB.Linq
 							if (!supported || !fieldDic.TryGetValue(field, out param))
 							{
 								param = GetParameter(type, dataContext, field);
-								ei.Queries[0].Parameters.Add(param);
+								ei.Queries[0].AddParameterAccessor(param);
 
 								if (supported)
 									fieldDic.Add(field, param);
@@ -113,7 +113,7 @@ namespace LinqToDB.Linq
 					if (!supported || !fieldDic.TryGetValue(field, out param))
 					{
 						param = GetParameter(type, dataContext, field);
-						ei.Queries[0].Parameters.Add(param);
+						ei.Queries[0].AddParameterAccessor(param);
 
 						if (supported)
 							fieldDic.Add(field, param);
@@ -163,10 +163,11 @@ namespace LinqToDB.Linq
 					? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schema, tableOptions, type)
 					: Cache<T>.QueryCache.GetOrCreate(
 					new { Operation = "IR", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schema, databaseName, serverName, tableOptions, type },
-					o =>
+					new { dataContext, entityDescriptor, obj},
+					static (entry, key, context) =>
 					{
-						o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
-						return CreateQuery(dataContext, entityDescriptor, obj, null, tableName, serverName, databaseName, schema, tableOptions, type);
+						entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+						return CreateQuery(context.dataContext, context.entityDescriptor, context.obj, null, key.tableName, key.serverName, key.databaseName, key.schema, key.tableOptions, key.type);
 					});
 
 				return (int)ei.GetElement(dataContext, Expression.Constant(obj), null, null)!;
@@ -197,10 +198,11 @@ namespace LinqToDB.Linq
 					? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schema, tableOptions, type)
 					: Cache<T>.QueryCache.GetOrCreate(
 					new { Operation = "IR", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schema, databaseName, serverName, tableOptions, type },
-					o =>
+					new { dataContext, entityDescriptor, obj },
+					static (entry, key, context) =>
 					{
-						o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
-						return CreateQuery(dataContext, entityDescriptor, obj, null, tableName, serverName, databaseName, schema, tableOptions, type);
+						entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+						return CreateQuery(context.dataContext, context.entityDescriptor, context.obj, null, key.tableName, key.serverName, key.databaseName, key.schema, key.tableOptions, key.type);
 					});
 
 				var result = await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, null, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -214,25 +216,17 @@ namespace LinqToDB.Linq
 			var dic = new Dictionary<ICloneableElement, ICloneableElement>();
 
 			var firstStatement = (SqlInsertOrUpdateStatement)query.Queries[0].Statement;
-			var cloned         = (SqlInsertOrUpdateStatement)firstStatement.Clone(dic, _ => true);
+
+			// Do not clone parameters
+			var cloned         = (SqlInsertOrUpdateStatement)firstStatement.Clone(dic, e => !(e is SqlParameter));
 
 			var insertStatement = new SqlInsertStatement(cloned.SelectQuery) {Insert = cloned.Insert};
 			insertStatement.SelectQuery.From.Tables.Clear();
 
 			query.Queries.Add(new QueryInfo
 			{
-				Statement   = insertStatement,
-				Parameters  = query.Queries[0].Parameters
-					.Select(p => new ParameterAccessor
-						(
-							p.Expression,
-							p.ValueAccessor,
-							p.OriginalAccessor,
-							p.DbDataTypeAccessor,
-							dic.ContainsKey(p.SqlParameter) ? (SqlParameter)dic[p.SqlParameter] : null!
-						))
-					.Where(p => p.SqlParameter != null)
-					.ToList(),
+				Statement          = insertStatement,
+				ParameterAccessors = query.Queries[0].ParameterAccessors
 			});
 
 			var keys = firstStatement.Update.Keys;
@@ -257,7 +251,7 @@ namespace LinqToDB.Linq
 			query.Queries.Add(new QueryInfo
 			{
 				Statement  = new SqlSelectStatement(firstStatement.SelectQuery),
-				Parameters = query.Queries[0].Parameters.ToList(),
+				ParameterAccessors = query.Queries[0].ParameterAccessors.ToList(),
 			});
 		}
 	}

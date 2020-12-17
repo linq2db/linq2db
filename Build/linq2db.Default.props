@@ -11,7 +11,7 @@
 
 		<AppDesignerFolder>Properties</AppDesignerFolder>
 		<!--C# version, test VB/F# projects should redefine it-->
-		<LangVersion>8</LangVersion>
+		<LangVersion>9.0</LangVersion>
 		<Nullable>enable</Nullable>
 		<WarningLevel>4</WarningLevel>
 		<ErrorReport>prompt</ErrorReport>
@@ -33,7 +33,7 @@
 		<GenerateNeutralResourcesLanguageAttribute>false</GenerateNeutralResourcesLanguageAttribute>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.1' OR '$(TargetFramework)' == 'netcoreapp3.1'">
+	<PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.1' OR '$(TargetFramework)' == 'netcoreapp3.1' OR '$(TargetFramework)' == 'net5.0'">
 		<DefineConstants>NETSTANDARD2_1PLUS;$(DefineConstants)</DefineConstants>
 	</PropertyGroup>
 </Project>

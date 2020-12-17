@@ -1,20 +1,26 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	<Import Project="..\..\Build\linq2db.Tests.props" />
+	<Import Project="..\..\Build\linq2db.Providers.props" />
 
 	<PropertyGroup>
 		<AssemblyName>linq2db.Benchmarks</AssemblyName>
 		<RootNamespace>LinqToDB.Benchmarks</RootNamespace>
-		<TargetFrameworks>net472;netcoreapp2.1;netcoreapp3.1</TargetFrameworks>
+		<TargetFrameworks>net472;netcoreapp2.1;netcoreapp3.1;net5.0</TargetFrameworks>
 		<OutputType>Exe</OutputType>
-		<MSBuildWarningsAsMessages>MSB3276</MSBuildWarningsAsMessages>
+		<MSBuildWarningsAsMessages>MSB3270</MSBuildWarningsAsMessages>
+		<PlatformTarget>AnyCPU</PlatformTarget>
+		<!--<DefineConstants>JETBRAINS;$(DefineConstants)</DefineConstants>-->
 	</PropertyGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'netcoreapp2.1' ">
+	  <Compile Include="..\..\Source\LinqToDB\Compatibility\System\Diagnostics\CodeAnalysis\NullableAttributes.cs" Link="NullableAttributes.cs" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="BenchmarkDotNet" Version="0.12.1" />
-		<PackageReference Include="Npgsql" Version="4.0.11" />
-		<PackageReference Include="System.Data.SqlClient" Version="4.8.2" />
+		<PackageReference Condition="$(DefineConstants.Contains('JETBRAINS'))" Include="JetBrains.Profiler.Api" Version="1.1.7" />
 
 		<Compile Update="TestClasses\ProviderMocks\MockDataReader.cs" />
 		<Compile Update="TestClasses\ProviderMocks\MockDbCommand.cs" />
 	</ItemGroup>
+
 </Project>

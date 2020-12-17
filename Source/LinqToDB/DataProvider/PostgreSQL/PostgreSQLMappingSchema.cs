@@ -5,6 +5,7 @@ using System.Text;
 namespace LinqToDB.DataProvider.PostgreSQL
 {
 	using LinqToDB.Common;
+	using LinqToDB.Data;
 	using LinqToDB.SqlQuery;
 	using Mapping;
 	using System.Data.Linq;
@@ -36,6 +37,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			AddScalarType(typeof(string),          DataType.Text);
 			AddScalarType(typeof(TimeSpan),        DataType.Interval);
 			AddScalarType(typeof(TimeSpan?),       DataType.Interval);
+
+			// npgsql doesn't support unsigned types except byte (and sbyte)
+			SetConvertExpression<ushort?, DataParameter>(value => new DataParameter(null, value == null ? (int?)null     : (int)value    , DataType.Int32)  , false);
+			SetConvertExpression<uint?  , DataParameter>(value => new DataParameter(null, value == null ? (long?)null    : (long)value   , DataType.Int64)  , false);
+			SetConvertExpression<ulong? , DataParameter>(value => new DataParameter(null, value == null ? (decimal?)null : (decimal)value, DataType.Decimal), false);
 		}
 
 		static void BuildDateTime(StringBuilder stringBuilder, SqlDataType dt, DateTime value)

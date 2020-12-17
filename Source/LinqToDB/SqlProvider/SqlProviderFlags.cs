@@ -93,9 +93,9 @@ namespace LinqToDB.SqlProvider
 			return AcceptsTakeAsParameter || AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null;
 		}
 
-		public bool GetIsSkipSupportedFlag(SelectQuery selectQuery)
+		public bool GetIsSkipSupportedFlag(ISqlExpression? takeExpression, ISqlExpression? skipExpression)
 		{
-			return IsSkipSupported || IsSkipSupportedIfTake && selectQuery.Select.TakeValue != null;
+			return IsSkipSupported || IsSkipSupportedIfTake && takeExpression != null;
 		}
 
 		public bool GetIsTakeHintsSupported(TakeHints hints)

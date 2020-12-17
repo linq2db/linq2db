@@ -444,7 +444,8 @@ namespace Tests.Linq
 		{
 			GetProviderName(context, out var isLinqService);
 
-			using (var db = GetDataContext(context, testLinqService : false))
+			using (new CustomCommandProcessor(null))
+			using (var db = GetDataContext(context))
 			{
 #if NET472
 				if (isLinqService)
@@ -469,20 +470,11 @@ namespace Tests.Linq
 		{
 			GetProviderName(context, out var isLinqService);
 
-			using (var db = GetDataContext(context, testLinqService : false))
+			using (new CustomCommandProcessor(null))
+			using (var db = GetDataContext(context))
 			{
-#if NET472
-				if (isLinqService)
-				{
-					var fe = Assert.Throws<FaultException<ExceptionDetail>>(() => db.GetTable<BadMapping>().Select(_ => new { _.BadEnum }).ToList());
-					Assert.True(fe.Message.Contains("Cannot convert value 'Pupkin' to type 'Tests.Linq.MappingTests+BadEnum'"));
-				}
-				else
-#endif
-				{
-					var ex = Assert.Throws<LinqToDBConvertException>(() => db.GetTable<BadMapping>().Select(_ => new { _.BadEnum }).ToList());
-					Assert.AreEqual("lastname", ex.ColumnName!.ToLower());
-				}
+				var ex = Assert.Throws<LinqToDBConvertException>(() => db.GetTable<BadMapping>().Select(_ => new { _.BadEnum }).ToList());
+				Assert.AreEqual("lastname", ex.ColumnName!.ToLower());
 			}
 		}
 

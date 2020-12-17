@@ -127,7 +127,7 @@ namespace Tests.Data
 				conn.InlineParameters = true;
 				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.Name).Take(1).ToString()!;
 				sql = string.Join(Environment.NewLine, sql.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
-					.Where(line => !line.StartsWith("-- Access")));
+					.Where(line => !line.StartsWith("--")));
 				var res = conn.Execute<string>(sql);
 
 				Assert.That(res, Is.EqualTo("John"));
@@ -137,7 +137,7 @@ namespace Tests.Data
 		[Test]
 		public void TestObjectProjection([DataSources(false)] string context)
 		{
-			using (var conn = new TestDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				var result = conn.Person.Where(p => p.ID == 1).Select(p => new { p.ID, p.Name })
 					.Take(1)

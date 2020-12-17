@@ -34,7 +34,7 @@ namespace Tests.UserTests
 
 				Assert.DoesNotThrow(() => TestContext.WriteLine(query?.ToString()));
 
-				query.ToList();
+				query!.ToList();
 			}
 		}
 

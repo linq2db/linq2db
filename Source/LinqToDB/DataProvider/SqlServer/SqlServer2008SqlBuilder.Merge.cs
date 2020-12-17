@@ -33,7 +33,7 @@
 			if (operation.Where != null)
 			{
 				StringBuilder.Append(" AND ");
-				BuildSearchCondition(Precedence.Unknown, operation.Where);
+				BuildSearchCondition(Precedence.Unknown, operation.Where, wrapCondition: true);
 			}
 
 			StringBuilder.AppendLine(" THEN DELETE");
@@ -58,7 +58,7 @@
 			if (operation.Where != null)
 			{
 				StringBuilder.Append(" AND ");
-				BuildSearchCondition(Precedence.Unknown, operation.Where);
+				BuildSearchCondition(Precedence.Unknown, operation.Where, wrapCondition: true);
 			}
 
 			StringBuilder.AppendLine(" THEN UPDATE");

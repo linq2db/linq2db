@@ -1,46 +1,34 @@
-﻿using System;
-using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
-
-namespace LinqToDB.SqlProvider
+﻿namespace LinqToDB.SqlProvider
 {
+	using Mapping;
+	using SqlQuery;
+
 	internal static class SqlOptimizerExtensions
 	{
-		public static SqlStatement OptimizeStatement(this ISqlOptimizer optimizer, SqlStatement statement,
-			MappingSchema mappingSchema, bool inlineParameters, bool remoteContext)
+		public static SqlStatement PrepareStatementForRemoting(this ISqlOptimizer optimizer, SqlStatement statement,
+			MappingSchema mappingSchema, EvaluationContext context)
 		{
-			if (optimizer     == null) throw new ArgumentNullException(nameof(optimizer));
-			if (statement     == null) throw new ArgumentNullException(nameof(statement));
-			if (mappingSchema == null) throw new ArgumentNullException(nameof(mappingSchema));
+			var optimizationContext = new OptimizationContext(context, null, false);
+			// We need convert. Some functions works with real objects and can not be serialized
+			//
+			var newStatement = (SqlStatement)optimizer.ConvertElement(mappingSchema, statement, optimizationContext);
 
-			BuildSqlValueTableParameters(statement);
-
-			// transforming parameters to values
-			var newStatement = statement.ProcessParameters(mappingSchema);
-
-			newStatement.UpdateIsParameterDepended();
-
-			// optimizing expressions according to new values
-			newStatement = optimizer.OptimizeStatement(newStatement, inlineParameters,
-				newStatement.IsParameterDependent || inlineParameters, remoteContext);
-
-			newStatement.PrepareQueryAndAliases();
+			if (!ReferenceEquals(newStatement, statement))
+				newStatement.PrepareQueryAndAliases(out _);
 
 			return newStatement;
 		}
 
-		static void BuildSqlValueTableParameters(SqlStatement statement)
+		public static SqlStatement PrepareStatementForSql(this ISqlOptimizer optimizer, SqlStatement statement,
+			MappingSchema mappingSchema, EvaluationContext context)
 		{
-			if (statement.IsParameterDependent)
-			{
-				new QueryVisitor().Visit(statement, e =>
-				{
-					if (e is SqlValuesTable table)
-						table.BuildRows();
-				});
-			}
-		}
+			var optimizationContext = new OptimizationContext(context, null, false);
+			var newStatement = (SqlStatement)optimizer.ConvertElement(mappingSchema, statement, optimizationContext);
 
+			if (!ReferenceEquals(newStatement, statement))
+				newStatement.PrepareQueryAndAliases(out _);
+			return newStatement;
+		}
 
 	}
 }

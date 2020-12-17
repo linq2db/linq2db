@@ -1,18 +1,18 @@
 ﻿using System;
 using System.Data;
-using System.Globalization;
 using System.Linq;
+using System.Text;
 using System.Net;
 using System.Net.NetworkInformation;
-using System.Text;
+using System.Globalization;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
 	using Common;
-	using Extensions;
-	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
+	using Extensions;
+	using Mapping;
 
 	public class PostgreSQLSqlBuilder : BasicSqlBuilder
 	{
@@ -269,15 +269,15 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			base.BuildCreateTableFieldType(field);
 		}
 
-		protected override bool BuildJoinType(SqlJoinedTable join)
+		protected override bool BuildJoinType(JoinType joinType, SqlSearchCondition condition)
 		{
-			switch (join.JoinType)
+			switch (joinType)
 			{
 				case JoinType.CrossApply : StringBuilder.Append("INNER JOIN LATERAL "); return true;
 				case JoinType.OuterApply : StringBuilder.Append("LEFT JOIN LATERAL ");  return true;
 			}
 
-			return base.BuildJoinType(join);
+			return base.BuildJoinType(joinType, condition);
 		}
 
 		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions)

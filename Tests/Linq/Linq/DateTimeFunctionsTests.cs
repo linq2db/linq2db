@@ -278,13 +278,14 @@ namespace Tests.Linq
 				};
 
 				// actually 53 should be 1st week of 2019, but..
-				var isoWeeks              = new[] { 52, 52, 52, 53, 1, 1, 1, 1, 1, 1, 2, 2 };
-				var sqliteParodyNumbering = new[] { 52, 52, 52, 53, 0, 0, 0, 0, 0, 0, 1, 1 };
-				var isoProperWeeks        = new[] { 52, 52, 52,  1, 1, 1, 1, 1, 1, 1, 2, 2 };
-				var usWeeks               = new[] { 52, 52, 53, 53, 1, 1, 1, 1, 1, 2, 2, 2 };
-				var usWeeksZeroBased      = new[] { 51, 51, 52, 52, 0, 0, 0, 0, 0, 1, 1, 1 };
-				var muslimWeeks           = new[] { 52, 53, 53, 53, 1, 1, 1, 1, 2, 2, 2, 2 };
-				var primitive             = new[] { 52, 52, 52, 53, 1, 1, 1, 1, 1, 1, 1, 2 };
+				var isoWeeks                     = new[] { 52, 52, 52, 53, 1, 1, 1, 1, 1, 1, 2, 2 };
+				var sqliteParodyNumbering        = new[] { 52, 52, 52, 53, 0, 0, 0, 0, 0, 0, 1, 1 };
+				var isoProperWeeks               = new[] { 52, 52, 52,  1, 1, 1, 1, 1, 1, 1, 2, 2 };
+				var usWeeks                      = new[] { 52, 52, 53, 53, 1, 1, 1, 1, 1, 2, 2, 2 };
+				var usWeeksZeroBased             = new[] { 51, 51, 52, 52, 0, 0, 0, 0, 0, 1, 1, 1 };
+				var muslimWeeks                  = new[] { 52, 53, 53, 53, 1, 1, 1, 1, 2, 2, 2, 2 };
+				var primitive                    = new[] { 52, 52, 52, 53, 1, 1, 1, 1, 1, 1, 1, 2 };
+				var usWeeksZeroBased_byDayOfYear = new[] { 51, 51, 52, 52, 0, 0, 0, 0, 0, 0, 1, 1 };
 
 				var results = dates
 					.Select(date => db.Select(() => Sql.AsSql(Sql.DatePart(Sql.DateParts.Week, Sql.ToSql(date)))))
@@ -319,6 +320,10 @@ namespace Tests.Linq
 				else if (usWeeksZeroBased.SequenceEqual(results))
 				{
 					Assert.Pass($"Context {db.DataProvider.Name} uses US 0-based week numbering schema");
+				}
+				else if (usWeeksZeroBased_byDayOfYear.SequenceEqual(results))
+				{
+					Assert.Pass($"Context {db.DataProvider.Name} uses US 0-based week numbering schema by day of year divided by 7");
 				}
 				else
 				{
@@ -1408,6 +1413,15 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void MakeDateTimeParametersMonth([DataSources] string context, [Values(1, 10)] int month)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in from p in    Types select Sql.MakeDateTime(2010 + p.ID, month, 1) select t,
+					from t in from p in db.Types select Sql.MakeDateTime(2010 + p.ID, month, 1) select t);
+		}
+
+		[Test]
 		public void NewDateTime1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1523,9 +1537,9 @@ namespace Tests.Linq
 					{
 						ID              = g.Key,
 						Count           = g.Count(),
-						Duration        = g.Sum(x => Sql.DateDiff(Sql.DateParts.Millisecond, x.DateTimeValue, x.DateTimeValue))!.Value,
-						HasDuration     = g.Sum(x => Sql.DateDiff(Sql.DateParts.Millisecond, x.DateTimeValue, x.DateTimeValue)).HasValue,
-						LongestDuration = g.Max(x => Sql.DateDiff(Sql.DateParts.Millisecond, x.DateTimeValue, x.DateTimeValue)!.Value),
+						Duration        = g.Sum(x => Sql.DateDiff(Sql.DateParts.Millisecond, x.DateTimeValue, x.DateTimeValue.AddDays(1)))!.Value,
+						HasDuration     = g.Sum(x => Sql.DateDiff(Sql.DateParts.Millisecond, x.DateTimeValue, x.DateTimeValue.AddDays(1))).HasValue,
+						LongestDuration = g.Max(x => Sql.DateDiff(Sql.DateParts.Millisecond, x.DateTimeValue, x.DateTimeValue.AddDays(1))!.Value),
 					},
 					from t in db.Types
 					group t by t.ID into g
@@ -1533,9 +1547,9 @@ namespace Tests.Linq
 					{
 						ID              = g.Key,
 						Count           = g.Count(),
-						Duration        = g.Sum(x => Sql.DateDiff(Sql.DateParts.Millisecond, x.DateTimeValue, x.DateTimeValue))!.Value,
-						HasDuration     = g.Sum(x => Sql.DateDiff(Sql.DateParts.Millisecond, x.DateTimeValue, x.DateTimeValue)).HasValue,
-						LongestDuration = g.Max(x => Sql.DateDiff(Sql.DateParts.Millisecond, x.DateTimeValue, x.DateTimeValue)!.Value),
+						Duration        = g.Sum(x => Sql.DateDiff(Sql.DateParts.Millisecond, x.DateTimeValue, x.DateTimeValue.AddDays(1)))!.Value,
+						HasDuration     = g.Sum(x => Sql.DateDiff(Sql.DateParts.Millisecond, x.DateTimeValue, x.DateTimeValue.AddDays(1))).HasValue,
+						LongestDuration = g.Max(x => Sql.DateDiff(Sql.DateParts.Millisecond, x.DateTimeValue, x.DateTimeValue.AddDays(1))!.Value),
 					});
 			}
 		}

@@ -21,20 +21,37 @@ namespace Tests.UserTests
 		[Test]
 		public void Issue1925Test([IncludeDataSources(TestProvName.AllAccess, TestProvName.AllSqlServer, ProviderName.Sybase)]  string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable<SampleClass>())
+			var data = new[]
 			{
+				new SampleClass() { Id = 1, Value = "6" }, 
+				new SampleClass() { Id = 2, Value = "x[0-9]x" },
+				new SampleClass() { Id = 3, Value = "x[0x" },
+				new SampleClass() { Id = 4, Value = "x[]x" },
+				new SampleClass() { Id = 5, Value = "x]" },
+				new SampleClass() { Id = 6, Value = "]x" },
+			};
 
-				table.Insert(() => new SampleClass() { Id = 1, Value = "6" });
-				Assert.AreEqual(1, table.ToList().Count());
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(data))
+			{
 				var asParam = "[0-9]";
 				var asParamUnterm = "[0";
+				
 
-				Assert.AreEqual(0, table.Where(r => r.Value!.Contains("[0")).ToList().Count());
+				Assert.AreEqual(5, table.Where(r => r.Value!.EndsWith("]")).Select(r => r.Id).Single());
+				Assert.AreEqual(6, table.Where(r => r.Value!.StartsWith("]")).Select(r => r.Id).Single());
 
-				Assert.AreEqual(0, table.Where(r => r.Value!.Contains(asParamUnterm)).ToList().Count());
+				Assert.AreEqual(2, table.Where(r => r.Value!.Contains("-")).Select(r => r.Id).Single());
+
+				Assert.AreEqual(1, table.Where(r => r.Value!.Contains("[]")).ToList().Count());
+
+				Assert.AreEqual(2, table.Where(r => r.Value!.Contains("[0")).ToList().Count());
+				
+				Assert.AreEqual(2, table.Where(r => r.Value!.Contains(asParamUnterm)).ToList().Count());
 
 				Assert.AreEqual(1, table.Where(r => r.Value!.Contains("[0-9]")).ToList().Count());
+
+				Assert.AreEqual(1, table.Where(r => r.Value!.Contains("6")).ToList().Count());
 
 				if (context == ProviderName.Access)
 				{

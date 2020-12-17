@@ -39,6 +39,7 @@ namespace AccessDataContext
 		public ITable<PatientSelectAll>    PatientSelectAll     { get { return this.GetTable<PatientSelectAll>(); } }
 		public ITable<Person>              People               { get { return this.GetTable<Person>(); } }
 		public ITable<PersonSelectAll>     PersonSelectAll      { get { return this.GetTable<PersonSelectAll>(); } }
+		public ITable<RelationsTable>      RelationsTables      { get { return this.GetTable<RelationsTable>(); } }
 		public ITable<ScalarDataReader>    ScalarDataReaders    { get { return this.GetTable<ScalarDataReader>(); } }
 		public ITable<TestIdentity>        TestIdentities       { get { return this.GetTable<TestIdentity>(); } }
 		public ITable<TestMerge1>          TestMerge1           { get { return this.GetTable<TestMerge1>(); } }
@@ -275,6 +276,47 @@ namespace AccessDataContext
 		[Column(DbType="VarChar(1)",  DataType=LinqToDB.DataType.VarChar, Length=1),  Nullable] public char?   Gender     { get; set; } // VarChar(1)
 	}
 
+	[Table("RelationsTable")]
+	public partial class RelationsTable
+	{
+		[Column(DbType="Long", DataType=LinqToDB.DataType.Int32), PrimaryKey(1), Identity] public int  ID1   { get; set; } // Long
+		[Column(DbType="Long", DataType=LinqToDB.DataType.Int32), PrimaryKey(2), Identity] public int  ID2   { get; set; } // Long
+		[Column(DbType="Long", DataType=LinqToDB.DataType.Int32),                Identity] public int  Int1  { get; set; } // Long
+		[Column(DbType="Long", DataType=LinqToDB.DataType.Int32),                Identity] public int  Int2  { get; set; } // Long
+		[Column(DbType="Long", DataType=LinqToDB.DataType.Int32), Nullable               ] public int? IntN1 { get; set; } // Long
+		[Column(DbType="Long", DataType=LinqToDB.DataType.Int32), Nullable               ] public int? IntN2 { get; set; } // Long
+		[Column(DbType="Long", DataType=LinqToDB.DataType.Int32),                Identity] public int  FK    { get; set; } // Long
+		[Column(DbType="Long", DataType=LinqToDB.DataType.Int32), Nullable               ] public int? FKN   { get; set; } // Long
+
+		#region Associations
+
+		/// <summary>
+		/// FK_NotNullable_BackReference
+		/// </summary>
+		[Association(ThisKey="ID1, ID2", OtherKey="Int1, Int2", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		public IEnumerable<RelationsTable> FkNotNullableBackReferences { get; set; } = null!;
+
+		/// <summary>
+		/// FK_Nullable_BackReference
+		/// </summary>
+		[Association(ThisKey="ID1, ID2", OtherKey="IntN1, IntN2", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		public IEnumerable<RelationsTable> FkNullableBackReferences { get; set; } = null!;
+
+		/// <summary>
+		/// FK_NotNullable
+		/// </summary>
+		[Association(ThisKey="Int1, Int2", OtherKey="ID1, ID2", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_NotNullable", BackReferenceName="FkNotNullableBackReferences")]
+		public RelationsTable NotNullable { get; set; } = null!;
+
+		/// <summary>
+		/// FK_Nullable
+		/// </summary>
+		[Association(ThisKey="IntN1, IntN2", OtherKey="ID1, ID2", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Nullable", BackReferenceName="FkNullableBackReferences")]
+		public RelationsTable? Nullable { get; set; }
+
+		#endregion
+	}
+
 	[Table("Scalar_DataReader", IsView=true)]
 	public partial class ScalarDataReader
 	{
@@ -344,9 +386,10 @@ namespace AccessDataContext
 	{
 		#region AddIssue792Record
 
-		public static int AddIssue792Record(this TestDataDB dataConnection)
+		public static int AddIssue792Record(this TestDataDB dataConnection, int? id)
 		{
-			return dataConnection.ExecuteProc("[AddIssue792Record]");
+			return dataConnection.ExecuteProc("[AddIssue792Record]",
+				new DataParameter("id", id, LinqToDB.DataType.Int32));
 		}
 
 		#endregion
@@ -419,11 +462,10 @@ namespace AccessDataContext
 
 		#region PersonUpdate
 
-		public static int PersonUpdate(this TestDataDB dataConnection, int? @id, int? @PersonID, string? @FirstName, string? @MiddleName, string? @LastName, char? @Gender)
+		public static int PersonUpdate(this TestDataDB dataConnection, int? @id, string? @FirstName, string? @MiddleName, string? @LastName, char? @Gender)
 		{
 			return dataConnection.ExecuteProc("[Person_Update]",
 				new DataParameter("@id",         @id,         LinqToDB.DataType.Int32),
-				new DataParameter("@PersonID",   @PersonID,   LinqToDB.DataType.Int32),
 				new DataParameter("@FirstName",  @FirstName,  LinqToDB.DataType.NText),
 				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NText),
 				new DataParameter("@LastName",   @LastName,   LinqToDB.DataType.NText),
@@ -431,59 +473,75 @@ namespace AccessDataContext
 		}
 
 		#endregion
+
+		#region ThisProcedureNotVisibleFromODBC
+
+		public static int ThisProcedureNotVisibleFromODBC(this TestDataDB dataConnection)
+		{
+			return dataConnection.ExecuteProc("[ThisProcedureNotVisibleFromODBC]");
+		}
+
+		#endregion
 	}
 
 	public static partial class TableExtensions
 	{
-		public static DataTypeTest Find(this ITable<DataTypeTest> table, int DataTypeID)
+		public static DataTypeTest? Find(this ITable<DataTypeTest> table, int DataTypeID)
 		{
 			return table.FirstOrDefault(t =>
 				t.DataTypeID == DataTypeID);
 		}
 
-		public static Doctor Find(this ITable<Doctor> table, int PersonID)
+		public static Doctor? Find(this ITable<Doctor> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
 		}
 
-		public static InheritanceChild Find(this ITable<InheritanceChild> table, int InheritanceChildId)
+		public static InheritanceChild? Find(this ITable<InheritanceChild> table, int InheritanceChildId)
 		{
 			return table.FirstOrDefault(t =>
 				t.InheritanceChildId == InheritanceChildId);
 		}
 
-		public static InheritanceParent Find(this ITable<InheritanceParent> table, int InheritanceParentId)
+		public static InheritanceParent? Find(this ITable<InheritanceParent> table, int InheritanceParentId)
 		{
 			return table.FirstOrDefault(t =>
 				t.InheritanceParentId == InheritanceParentId);
 		}
 
-		public static Patient Find(this ITable<Patient> table, int PersonID)
+		public static Patient? Find(this ITable<Patient> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
 		}
 
-		public static Person Find(this ITable<Person> table, int PersonID)
+		public static Person? Find(this ITable<Person> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
 		}
 
-		public static TestIdentity Find(this ITable<TestIdentity> table, int ID)
+		public static RelationsTable? Find(this ITable<RelationsTable> table, int ID1, int ID2)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID1 == ID1 &&
+				t.ID2 == ID2);
+		}
+
+		public static TestIdentity? Find(this ITable<TestIdentity> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static TestMerge1 Find(this ITable<TestMerge1> table, int Id)
+		public static TestMerge1? Find(this ITable<TestMerge1> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static TestMerge2 Find(this ITable<TestMerge2> table, int Id)
+		public static TestMerge2? Find(this ITable<TestMerge2> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);

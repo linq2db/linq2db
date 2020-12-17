@@ -6,10 +6,10 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.MySql
 {
-	using Extensions;
-	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
+	using Mapping;
+	using Extensions;
 	using Tools;
 
 	class MySqlSqlBuilder : BasicSqlBuilder
@@ -150,7 +150,7 @@ namespace LinqToDB.DataProvider.MySql
 							StringBuilder.Append("BINARY");
 						else
 							StringBuilder.Append($"BINARY({type.Type.Length})");
-						break;
+					break;
 					default                     : base.BuildDataTypeFromDataType(type, forCreateTable); break;
 				}
 
@@ -416,13 +416,12 @@ namespace LinqToDB.DataProvider.MySql
 			return sb.Append(value);
 		}
 
-		protected override StringBuilder BuildExpression(
-			ISqlExpression expr,
-			bool           buildTableName,
-			bool           checkParentheses,
-			string?        alias,
-			ref bool       addAlias,
-			bool           throwExceptionIfTableNotFound = true)
+		protected override StringBuilder BuildExpression(ISqlExpression expr,
+			bool buildTableName,
+			bool checkParentheses,
+			string? alias,
+			ref bool addAlias,
+			bool throwExceptionIfTableNotFound = true)
 		{
 			return base.BuildExpression(
 				expr,
