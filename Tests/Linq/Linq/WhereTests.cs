@@ -1745,11 +1745,29 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void NullableBooleanConditionEvaluationTrueTestsNot([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(true, null, false)] bool? value1)
+		{
+			using (var db = GetDataContext(context))
+			{
+				Assert.AreEqual(!(value1 == true), db.Person.Where(_ => !(value1 == true)).Any());
+			}
+		}
+
+		[Test]
 		public void NullableBooleanConditionEvaluationFalseTests([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(true, null, false)] bool? value1)
 		{
 			using (var db = GetDataContext(context))
 			{
 				Assert.AreEqual(value1 == false, db.Person.Where(_ => value1 == false).Any());
+			}
+		}
+
+		[Test]
+		public void NullableBooleanConditionEvaluationFalseTestsNot([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(true, null, false)] bool? value1)
+		{
+			using (var db = GetDataContext(context))
+			{
+				Assert.AreEqual(!(value1 == false), db.Person.Where(_ => !(value1 == false)).Any());
 			}
 		}
 
