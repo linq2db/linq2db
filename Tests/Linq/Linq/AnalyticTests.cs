@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
+using LinqToDB.Data;
+using Tests.Model;
 
 namespace Tests.Linq
 {
@@ -433,6 +435,42 @@ namespace Tests.Linq
 						DenseRank1     = Sql.Ext.DenseRank(1, 2).WithinGroup.OrderBy(p.Value1).ThenByDesc(c.ChildID).ToValue(),
 					};
 				Assert.IsNotEmpty(q2.ToArray());
+			}
+		}
+
+		[Test]
+		public void TestDenseRankOracleSorting([IncludeDataSources(false, TestProvName.AllOracle)] string context)
+		{
+			using (var db = (TestDataConnection)GetDataContext(context))
+			{
+				var q =
+					from p in db.Parent
+					join c in db.Child on p.ParentID equals c.ParentID
+					select new
+					{
+						DenseRank1     = Sql.Ext.DenseRank(1, 2).WithinGroup.OrderBy(p.Value1).ThenByDesc(c.ChildID).ToValue(),
+					};
+				Assert.IsNotEmpty(q.ToArray());
+
+				Assert.That(db.LastQuery, Does.Contain("(ORDER BY p.\"Value1\", c_1.\"ChildID\" DESC)"));
+			}
+		}
+
+		[Test]
+		public void TestRowNumberOracleSorting([IncludeDataSources(false, TestProvName.AllOracle)] string context)
+		{
+			using (var db = (TestDataConnection)GetDataContext(context))
+			{
+				var q =
+					from p in db.Parent
+					join c in db.Child on p.ParentID equals c.ParentID
+					select new
+					{
+						DenseRank1     = Sql.Ext.RowNumber().Over().OrderBy(p.Value1).ThenByDesc(c.ChildID).ThenBy(p.ParentID).ToValue(),
+					};
+				Assert.IsNotEmpty(q.ToArray());
+
+				Assert.That(db.LastQuery, Does.Contain("(ORDER BY p.\"Value1\", c_1.\"ChildID\" DESC, p.\"ParentID\")"));
 			}
 		}
 

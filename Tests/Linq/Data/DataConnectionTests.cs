@@ -1139,8 +1139,7 @@ namespace Tests.Data
 			TransactionScope? scope = withScope ? new TransactionScope() : null;
 			try
 			{
-				using (new AllowMultipleQuery())
-				using (var db = new DataConnection(context))
+				using (var db = GetDataContext(context))
 				using (db.CreateLocalTable(Category.Data))
 				using (db.CreateLocalTable(Product.Data))
 				{
@@ -1197,7 +1196,6 @@ namespace Tests.Data
 			TransactionScope? scope = withScope ? new TransactionScope() : null;
 			try
 			{
-				using (new AllowMultipleQuery())
 				using (var db = new DataConnection(context))
 				{
 					// test cloned data connection without LoadWith, as it doesn't use cloning in v3

@@ -15,15 +15,10 @@
 		<ProjectReference Include="..\FSharp\Tests.FSharp.fsproj" />
 	</ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.1' OR '$(TargetFramework)' == 'netcoreapp3.1' ">
+	<ItemGroup Condition="'$(TargetFramework)' != 'net472'">
 		<Compile Remove="Metadata\AttributeReaderTests.cs" />
 		<Compile Remove="Linq\DataServiceTests.cs" />
 		<Compile Remove="Metadata\XmlReaderTests.cs" />
-	</ItemGroup>
-
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
-		<!-- TEMP: explicitly reference specific version to avoid MSB3277 --> 
-		<PackageReference Include="System.Security.Cryptography.Cng" Version="4.7.0" />
 	</ItemGroup>
 
 </Project>

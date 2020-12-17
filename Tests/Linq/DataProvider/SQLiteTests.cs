@@ -18,6 +18,7 @@ namespace Tests.DataProvider
 {
 	using System.Diagnostics.CodeAnalysis;
 	using System.Globalization;
+	using System.Runtime.InteropServices;
 	using System.Threading.Tasks;
 	using Model;
 
@@ -576,7 +577,7 @@ namespace Tests.DataProvider
 				var sp = db.DataProvider.GetSchemaProvider();
 				var s  = sp.GetSchema(db);
 
-				var table = s.Tables.FirstOrDefault(_ => _.TableName!.Equals("ForeignKeyTable", StringComparison.OrdinalIgnoreCase));
+				var table = s.Tables.FirstOrDefault(_ => _.TableName!.Equals("ForeignKeyTable", StringComparison.OrdinalIgnoreCase))!;
 				Assert.IsNotNull(table);
 
 				Assert.AreEqual(1,                   table.ForeignKeys                   .Count);
@@ -599,13 +600,14 @@ namespace Tests.DataProvider
 				case ProviderName.SQLiteClassic:
 				case TestProvName.SQLiteClassicMiniProfilerMapped:
 				case TestProvName.SQLiteClassicMiniProfilerUnmapped:
-					expectedVersion = "3.32.1";
+					// https://system.data.sqlite.org/index.html/tktview/bc327ea1423cfd9c4fbe30f0df4775e727a98626
+					expectedVersion = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "3.32.1" : "3.31.1";
 					break;
 				case ProviderName.SQLiteMS:
 #if NET472
 					expectedVersion = "3.13.0";
 #else
-					expectedVersion = "3.28.0";
+					expectedVersion = "3.33.0";
 #endif
 					break;
 				default:
@@ -616,7 +618,7 @@ namespace Tests.DataProvider
 			using (var cmd = db.CreateCommand())
 			{
 				cmd.CommandText = "select sqlite_version();";
-				var version     = (string)cmd.ExecuteScalar();
+				var version     = (string)cmd.ExecuteScalar()!;
 
 				Assert.AreEqual(expectedVersion, version);
 			}

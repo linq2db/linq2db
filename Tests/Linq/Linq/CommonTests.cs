@@ -215,7 +215,7 @@ namespace Tests.Linq
 
 				var exp = Expression.Call(((MethodCallExpression)m.Body).Method, emp.Expression);
 
-				var _ = (int)((IQueryable)emp).Provider.Execute(exp);
+				var _ = (int)((IQueryable)emp).Provider.Execute(exp)!;
 			}
 		}
 

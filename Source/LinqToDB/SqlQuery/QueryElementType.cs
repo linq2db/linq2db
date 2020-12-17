@@ -16,6 +16,7 @@
 		NotExprPredicate,
 		ExprExprPredicate,
 		LikePredicate,
+		SearchStringPredicate,
 		BetweenPredicate,
 		IsNullPredicate,
 		IsTruePredicate,

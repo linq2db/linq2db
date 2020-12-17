@@ -1055,159 +1055,159 @@ namespace TestAzureSQL
 
 	public static partial class TableExtensions
 	{
-		public static AllType Find(this ITable<AllType> table, int ID)
+		public static AllType? Find(this ITable<AllType> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static AllTypes2 Find(this ITable<AllTypes2> table, int ID)
+		public static AllTypes2? Find(this ITable<AllTypes2> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static Child Find(this ITable<Child> table, int Id)
+		public static Child? Find(this ITable<Child> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static DecimalOverflow Find(this ITable<DecimalOverflow> table, decimal Decimal1)
+		public static DecimalOverflow? Find(this ITable<DecimalOverflow> table, decimal Decimal1)
 		{
 			return table.FirstOrDefault(t =>
 				t.Decimal1 == Decimal1);
 		}
 
-		public static Doctor Find(this ITable<Doctor> table, int PersonID)
+		public static Doctor? Find(this ITable<Doctor> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
 		}
 
-		public static GrandChild Find(this ITable<GrandChild> table, int Id)
+		public static GrandChild? Find(this ITable<GrandChild> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static GuidID Find(this ITable<GuidID> table, Guid ID)
+		public static GuidID? Find(this ITable<GuidID> table, Guid ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static GuidID2 Find(this ITable<GuidID2> table, Guid ID)
+		public static GuidID2? Find(this ITable<GuidID2> table, Guid ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static IndexTable Find(this ITable<IndexTable> table, int PKField1, int PKField2)
+		public static IndexTable? Find(this ITable<IndexTable> table, int PKField1, int PKField2)
 		{
 			return table.FirstOrDefault(t =>
 				t.PKField1 == PKField1 &&
 				t.PKField2 == PKField2);
 		}
 
-		public static IndexTable2 Find(this ITable<IndexTable2> table, int PKField1, int PKField2)
+		public static IndexTable2? Find(this ITable<IndexTable2> table, int PKField1, int PKField2)
 		{
 			return table.FirstOrDefault(t =>
 				t.PKField1 == PKField1 &&
 				t.PKField2 == PKField2);
 		}
 
-		public static InheritanceChild Find(this ITable<InheritanceChild> table, int InheritanceChildId)
+		public static InheritanceChild? Find(this ITable<InheritanceChild> table, int InheritanceChildId)
 		{
 			return table.FirstOrDefault(t =>
 				t.InheritanceChildId == InheritanceChildId);
 		}
 
-		public static InheritanceParent Find(this ITable<InheritanceParent> table, int InheritanceParentId)
+		public static InheritanceParent? Find(this ITable<InheritanceParent> table, int InheritanceParentId)
 		{
 			return table.FirstOrDefault(t =>
 				t.InheritanceParentId == InheritanceParentId);
 		}
 
-		public static Issue1115 Find(this ITable<Issue1115> table, SqlHierarchyId Id)
+		public static Issue1115? Find(this ITable<Issue1115> table, SqlHierarchyId Id)
 		{
 			return table.FirstOrDefault(t =>
 				(bool)(t.Id == Id));
 		}
 
-		public static Issue1144 Find(this ITable<Issue1144> table, int Id)
+		public static Issue1144? Find(this ITable<Issue1144> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static LinqDataType Find(this ITable<LinqDataType> table, int Id)
+		public static LinqDataType? Find(this ITable<LinqDataType> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static Parent Find(this ITable<Parent> table, int Id)
+		public static Parent? Find(this ITable<Parent> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static Patient Find(this ITable<Patient> table, int PersonID)
+		public static Patient? Find(this ITable<Patient> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
 		}
 
-		public static Person Find(this ITable<Person> table, int PersonID)
+		public static Person? Find(this ITable<Person> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
 		}
 
-		public static SqlType Find(this ITable<SqlType> table, int ID)
+		public static SqlType? Find(this ITable<SqlType> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static TestIdentity Find(this ITable<TestIdentity> table, int ID)
+		public static TestIdentity? Find(this ITable<TestIdentity> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static TestMerge1 Find(this ITable<TestMerge1> table, int Id)
+		public static TestMerge1? Find(this ITable<TestMerge1> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static TestMerge2 Find(this ITable<TestMerge2> table, int Id)
+		public static TestMerge2? Find(this ITable<TestMerge2> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static TestMergeIdentity Find(this ITable<TestMergeIdentity> table, int Id)
+		public static TestMergeIdentity? Find(this ITable<TestMergeIdentity> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static TestSchema_TestSchemaA Find(this ITable<TestSchema_TestSchemaA> table, int TestSchemaAID)
+		public static TestSchema_TestSchemaA? Find(this ITable<TestSchema_TestSchemaA> table, int TestSchemaAID)
 		{
 			return table.FirstOrDefault(t =>
 				t.TestSchemaAID == TestSchemaAID);
 		}
 
-		public static TestSchema_TestSchemaB Find(this ITable<TestSchema_TestSchemaB> table, int TestSchemaBID)
+		public static TestSchema_TestSchemaB? Find(this ITable<TestSchema_TestSchemaB> table, int TestSchemaBID)
 		{
 			return table.FirstOrDefault(t =>
 				t.TestSchemaBID == TestSchemaBID);
 		}
 
-		public static TestSchemaX Find(this ITable<TestSchemaX> table, int TestSchemaXID)
+		public static TestSchemaX? Find(this ITable<TestSchemaX> table, int TestSchemaXID)
 		{
 			return table.FirstOrDefault(t =>
 				t.TestSchemaXID == TestSchemaXID);

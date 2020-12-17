@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
@@ -8,7 +9,7 @@ namespace LinqToDB.DataProvider.Informix
 	using SqlQuery;
 	using SqlProvider;
 	using System.Globalization;
-	using LinqToDB.Mapping;
+	using Mapping;
 
 	partial class InformixSqlBuilder : BasicSqlBuilder
 	{
@@ -47,7 +48,7 @@ namespace LinqToDB.DataProvider.Informix
 				var field = trun.Table!.IdentityFields[commandNumber - 1];
 
 				StringBuilder.Append("ALTER TABLE ");
-				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName!);
+				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName!, trun.Table.TableOptions);
 				StringBuilder.Append(" MODIFY ");
 				Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
 				StringBuilder.AppendLine(" SERIAL(1)");
@@ -68,9 +69,9 @@ namespace LinqToDB.DataProvider.Informix
 			return new InformixSqlBuilder(_provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
-		protected override void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, int indent, bool skipAlias)
+		protected override void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, int indent, bool skipAlias)
 		{
-			base.BuildSql(commandNumber, statement, sb, indent, skipAlias);
+			base.BuildSql(commandNumber, statement, sb, optimizationContext, indent, skipAlias);
 
 			sb
 				.Replace("NULL IS NOT NULL", "1=0")
@@ -117,12 +118,6 @@ namespace LinqToDB.DataProvider.Informix
 				StringBuilder.Append(" ESCAPE ");
 				BuildExpression(precedence, predicate.Escape);
 			}
-		}
-
-		protected override void BuildFunction(SqlFunction func)
-		{
-			func = ConvertFunctionParameters(func);
-			base.BuildFunction(func);
 		}
 
 		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
@@ -239,7 +234,7 @@ namespace LinqToDB.DataProvider.Informix
 		}
 
 		// https://www.ibm.com/support/knowledgecenter/en/SSGU8G_12.1.0/com.ibm.sqls.doc/ids_sqs_1652.htm
-		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions)
 		{
 			if (server   != null && server  .Length == 0) server   = null;
 			if (database != null && database.Length == 0) database = null;
@@ -283,6 +278,43 @@ namespace LinqToDB.DataProvider.Informix
 			BuildExpression(value);
 			StringBuilder.Append("::");
 			BuildDataType(dataType, false);
+		}
+
+		protected override void BuildCreateTableCommand(SqlTable table)
+		{
+			string command;
+
+			if (table.TableOptions.IsTemporaryOptionSet())
+			{
+				switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
+				{
+					case TableOptions.IsTemporary                                                                              :
+					case TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData :
+					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     :
+					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
+					case                                                                     TableOptions.IsLocalTemporaryData :
+					case                            TableOptions.IsLocalTemporaryStructure                                     :
+					case                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
+						command = "CREATE TEMP TABLE ";
+						break;
+					case var value :
+						throw new InvalidOperationException($"Incompatible table options '{value}'");
+				}
+			}
+			else
+			{
+				command = "CREATE TABLE ";
+			}
+
+			StringBuilder.Append(command);
+
+			if (table.TableOptions.HasCreateIfNotExists())
+				StringBuilder.Append("IF NOT EXISTS ");
+		}
+
+		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
+		{
+			BuildDropTableStatementIfExists(dropTable);
 		}
 	}
 }

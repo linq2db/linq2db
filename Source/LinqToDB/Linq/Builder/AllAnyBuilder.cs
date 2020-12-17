@@ -165,6 +165,8 @@ namespace LinqToDB.Linq.Builder
 						_methodCall.Method.Name.StartsWith("All"),
 						new SqlPredicate.FuncLike(SqlFunction.CreateExists(SelectQuery)));
 
+					Sequence.CompleteColumns();
+
 					_subQuerySql = new SqlSearchCondition(cond);
 				}
 

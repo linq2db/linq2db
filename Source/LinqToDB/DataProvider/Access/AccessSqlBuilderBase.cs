@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace LinqToDB.DataProvider.Access
 {
 	using Extensions;
-	using LinqToDB.Mapping;
+	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
 
@@ -34,7 +33,7 @@ namespace LinqToDB.DataProvider.Access
 				var field = trun.Table!.IdentityFields[commandNumber - 1];
 
 				StringBuilder.Append("ALTER TABLE ");
-				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName!);
+				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName!, trun.Table.TableOptions);
 				StringBuilder.Append(" ALTER COLUMN ");
 				Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
 				StringBuilder.AppendLine(" COUNTER(1, 1)");
@@ -60,12 +59,6 @@ namespace LinqToDB.DataProvider.Access
 			var selectQuery = Statement.SelectQuery;
 			if (selectQuery != null)
 			{
-				if (NeedSkip(selectQuery))
-				{
-					AlternativeBuildSql2(base.BuildSql);
-					return;
-				}
-
 				if (selectQuery.From.Tables.Count == 0 && selectQuery.Select.Columns.Count == 1)
 				{
 					if (selectQuery.Select.Columns[0].Expression is SqlFunction func)
@@ -119,7 +112,7 @@ namespace LinqToDB.DataProvider.Access
 
 			_selectColumn = new SqlColumn(selectQuery, new SqlExpression(cond.Conditions[0].IsNot ? "Count(*) = 0" : "Count(*) > 0"), selectQuery.Select.Columns[0].Alias);
 
-			BuildSql(0, new SqlSelectStatement(query), StringBuilder);
+			BuildSql(0, new SqlSelectStatement(query), StringBuilder, OptimizationContext);
 
 			_selectColumn = null;
 		}
@@ -129,28 +122,10 @@ namespace LinqToDB.DataProvider.Access
 			if (_selectColumn != null)
 				return new[] { _selectColumn };
 
-			if (NeedSkip(selectQuery) && !selectQuery.OrderBy.IsEmpty)
+			if (NeedSkip(selectQuery.Select.TakeValue, selectQuery.Select.SkipValue) && !selectQuery.OrderBy.IsEmpty)
 				return AlternativeGetSelectedColumns(selectQuery, () => base.GetSelectedColumns(selectQuery));
 
 			return base.GetSelectedColumns(selectQuery);
-		}
-
-		protected override void BuildSkipFirst(SelectQuery selectQuery)
-		{
-			if (NeedSkip(selectQuery))
-			{
-				if (!NeedTake(selectQuery))
-				{
-					StringBuilder.AppendFormat(" TOP {0}", int.MaxValue);
-				}
-				else if (!selectQuery.OrderBy.IsEmpty)
-				{
-					StringBuilder.Append(" TOP ");
-					BuildExpression(Add<int>(selectQuery.Select.SkipValue!, selectQuery.Select.TakeValue!));
-				}
-			}
-			else
-				base.BuildSkipFirst(selectQuery);
 		}
 
 		#endregion
@@ -158,84 +133,6 @@ namespace LinqToDB.DataProvider.Access
 		protected override bool ParenthesizeJoin(List<SqlJoinedTable> tsJoins)
 		{
 			return true;
-		}
-
-		protected override void BuildLikePredicate(SqlPredicate.Like predicate)
-		{
-			if (predicate.Expr2 is SqlValue sqlValue)
-			{
-				var value = sqlValue.Value;
-
-				if (value != null)
-				{
-					var text  = value.ToString()!;
-		
-					var ntext = predicate.IsSqlLike ? text : DataTools.EscapeUnterminatedBracket(text);
-
-					if (text != ntext)
-						predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, new SqlValue(ntext), predicate.Escape, predicate.IsSqlLike);
-				}
-			}
-			else if (predicate.Expr2 is SqlParameter p)
-			{
-				p.ReplaceLike = predicate.IsSqlLike != true;
-			}
-
-			if (predicate.Escape != null)
-			{
-				if (predicate.Expr2 is SqlValue escSqlValue && predicate.Escape is SqlValue escapeValue)
-				{
-					var value = escSqlValue.Value;
-
-					if (value != null)
-					{
-						var text = value.ToString()!;
-						var val  = new SqlValue(ReescapeLikeText(text, (char)escapeValue.Value!));
-
-						predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, val, null, predicate.IsSqlLike);
-					}
-				}
-				else if (predicate.Expr2 is SqlParameter p)
-				{
-					if (p.LikeStart != null)
-					{
-						var value = (string?)p.Value;
-
-						if (value != null)
-						{
-							value = (predicate.IsSqlLike ? value : DataTools.EscapeUnterminatedBracket(value)!)
-								.Replace("~%", "[%]").Replace("~_", "[_]").Replace("~~", "[~]");
-							p         = new SqlParameter(p.Type, p.Name, value) { IsQueryParameter = p.IsQueryParameter };
-							predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, p, null, predicate.IsSqlLike);
-						}
-					}
-				}
-			}
-
-			base.BuildLikePredicate(predicate);
-		}
-
-		static string ReescapeLikeText(string text, char esc)
-		{
-			var sb = new StringBuilder(text.Length);
-
-			for (var i = 0; i < text.Length; i++)
-			{
-				var c = text[i];
-
-				if (c == esc)
-				{
-					sb.Append('[');
-					sb.Append(text[++i]);
-					sb.Append(']');
-				}
-				else if (c == '[')
-					sb.Append("[[]");
-				else
-					sb.Append(c);
-			}
-
-			return sb.ToString();
 		}
 
 		protected override void BuildBinaryExpression(SqlBinaryExpression expr)
@@ -389,9 +286,10 @@ namespace LinqToDB.DataProvider.Access
 			StringBuilder.Append(")");
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions)
 		{
-			if (database != null && database.Length == 0) database = null;
+			if (database != null && database.Length == 0)
+				database = null;
 
 			if (database != null)
 				sb.Append(database).Append(".");

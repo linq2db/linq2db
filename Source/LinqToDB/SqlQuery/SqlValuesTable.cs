@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using LinqToDB.Expressions;
@@ -13,7 +14,7 @@ namespace LinqToDB.SqlQuery
 		/// To create new instance in build context.
 		/// </summary>
 		/// <param name="source">Expression, that contains enumerable source.</param>
-		internal SqlValuesTable(Expression source)
+		internal SqlValuesTable(ISqlExpression source)
 		{
 			Source        = source;
 			ValueBuilders = new Dictionary<string, Func<object, IDictionary<Expression, ISqlExpression>, ISqlExpression>>();
@@ -23,7 +24,7 @@ namespace LinqToDB.SqlQuery
 		/// <summary>
 		/// Constructor for convert visitor.
 		/// </summary>
-		internal SqlValuesTable(Expression source, Dictionary<string, Func<object, IDictionary<Expression, ISqlExpression>, ISqlExpression>> valueBuilders, SqlField[] fields, IReadOnlyList<ISqlExpression[]>? rows)
+		internal SqlValuesTable(ISqlExpression source, Dictionary<string, Func<object, IDictionary<Expression, ISqlExpression>, ISqlExpression>> valueBuilders, SqlField[] fields, IReadOnlyList<ISqlExpression[]>? rows)
 		{
 			Source        = source;
 			ValueBuilders = valueBuilders;
@@ -36,7 +37,7 @@ namespace LinqToDB.SqlQuery
 
 			if (rows != null)
 			{
-				_rowsBuilt = true;
+				IsRowsBuilt = true;
 				Rows       = rows;
 			}
 		}
@@ -44,9 +45,9 @@ namespace LinqToDB.SqlQuery
 		/// <summary>
 		/// Constructor for remote context.
 		/// </summary>
-		internal SqlValuesTable(SqlField[] fields, ISqlExpression[][] rows)
+		internal SqlValuesTable(SqlField[] fields, IReadOnlyList<ISqlExpression[]> rows)
 		{
-			_rowsBuilt = true;
+			IsRowsBuilt = true;
 			Rows       = rows;
 
 			foreach (var field in fields)
@@ -59,7 +60,7 @@ namespace LinqToDB.SqlQuery
 		/// <summary>
 		/// Source value expression.
 		/// </summary>
-		internal Expression? Source { get; }
+		internal ISqlExpression? Source { get; }
 
 		/// <summary>
 		/// Used only during build.
@@ -84,21 +85,20 @@ namespace LinqToDB.SqlQuery
 			ValueBuilders!.Add(field.Name, valueBuilder);
 		}
 
-		internal IReadOnlyList<ISqlExpression[]>? Rows { get; private set; }
+		internal IReadOnlyList<ISqlExpression[]>? Rows { get; }
 
-		private readonly bool _rowsBuilt;
+		public bool IsRowsBuilt { get; }
 
-		internal void BuildRows()
+		internal SqlValuesTable BuildRows(EvaluationContext context)
 		{
-			if (_rowsBuilt)
-				return;
+			if (IsRowsBuilt || context.ParameterValues == null)
+				return this;
 
 			var parameters = new Dictionary<Expression, ISqlExpression>(ExpressionEqualityComparer.Instance);
 
 			// rows pre-build for remote context
-			var source = Source.EvaluateExpression<IEnumerable>();
 
-			if (source == null)
+			if (!(Source?.EvaluateExpression(context) is IEnumerable source))
 				throw new LinqToDBException($"Merge source must be enumerable: {Source}");
 
 			var rows = new List<ISqlExpression[]>();
@@ -119,7 +119,8 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-			Rows = rows;
+
+			return new SqlValuesTable(_fields.Select(f => new SqlField(f)).ToArray(), rows);
 		}
 
 		#region ISqlTableSource

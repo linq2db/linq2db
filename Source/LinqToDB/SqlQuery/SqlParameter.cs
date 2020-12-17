@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
-using LinqToDB.Common;
-using LinqToDB.DataProvider;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlParameter : ISqlExpression, IValueContainer
+	using Common;
+
+	public class SqlParameter : ISqlExpression
 	{
 		public SqlParameter(DbDataType type, string? name, object? value)
 		{
@@ -35,43 +36,20 @@ namespace LinqToDB.SqlQuery
 		public string?    Name             { get; set; }
 		public DbDataType Type             { get; set; }
 		public bool       IsQueryParameter { get; set; }
-		public string?    LikeStart        { get; set; }
-		public string?    LikeEnd          { get; set; }
-		public bool       ReplaceLike      { get; set; }
 		internal int?     AccessorId       { get; set; }
 
 		Type ISqlExpression.SystemType => Type.SystemType;
 
-		private object? _value;
-		public  object?  Value
+		//TODO: Setter used only in EnumerableContext and should be hidden.
+		public object?  Value { get; internal set; }
+
+		public object? CorrectParameterValue(object? rawValue)
 		{
-			get
-			{
-				var value = _value;
+			var value = rawValue;
 
-				if (ReplaceLike)
-				{
-					value = DataTools.EscapeUnterminatedBracket(value?.ToString());
-				}
-
-				if (LikeStart != null)
-				{
-					if (value != null)
-					{
-						return value.ToString()!.IndexOfAny(new[] { '%', '_' }) < 0 ?
-							LikeStart + value + LikeEnd :
-							LikeStart + EscapeLikeText(value.ToString()!) + LikeEnd;
-					}
-				}
-
-				var valueConverter = ValueConverter;
-				return valueConverter == null ? value : valueConverter(value);
-			}
-
-			set => _value = value;
+			var valueConverter = ValueConverter;
+			return valueConverter == null ? value : valueConverter(value);
 		}
-
-		internal object? RawValue => _value;
 
 		#region Value Converter
 
@@ -112,30 +90,6 @@ namespace LinqToDB.SqlQuery
 				_valueConverter = v => v == null ? null : (object) ((int) conv(v)! + take);
 		}
 
-		static string EscapeLikeText(string text)
-		{
-			if (text.IndexOfAny(new[] { '%', '_' }) < 0)
-				return text;
-
-			var builder = new StringBuilder(text.Length);
-
-			foreach (var ch in text)
-			{
-				switch (ch)
-				{
-					case '%':
-					case '_':
-					case '~':
-						builder.Append('~');
-						break;
-				}
-
-				builder.Append(ch);
-			}
-
-			return builder.ToString();
-		}
-
 		#endregion
 
 		#region Overrides
@@ -170,24 +124,12 @@ namespace LinqToDB.SqlQuery
 
 		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
 		{
-			if (this == other)
-				return true;
-
-			return
-				other is SqlParameter p
-				&& Name == p.Name
-				&& Type.Equals(p.Type)
-				&& AccessorId == p.AccessorId;
+			return ReferenceEquals(this, other);
 		}
 
 		public override int GetHashCode()
 		{
-			var hashCode = Type.GetHashCode();
-
-			if (Name != null)
-				hashCode = unchecked(hashCode + (hashCode * 397) ^ Name.GetHashCode());
-
-			return hashCode;
+			return RuntimeHelpers.GetHashCode(this);
 		}
 
 		#endregion
@@ -207,24 +149,8 @@ namespace LinqToDB.SqlQuery
 
 		public ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
 		{
-			if (!doClone(this))
-				return this;
-
-			if (!objectTree.TryGetValue(this, out var clone))
-			{
-				var p = new SqlParameter(Type, Name, _value, _valueConverter)
-				{
-					IsQueryParameter = IsQueryParameter,
-					LikeStart        = LikeStart,
-					LikeEnd          = LikeEnd,
-					ReplaceLike      = ReplaceLike,
-					AccessorId       = AccessorId
-				};
-
-				objectTree.Add(this, clone = p);
-			}
-
-			return clone;
+			// we do not allow parameters cloning 
+			return this;
 		}
 
 		#endregion
@@ -242,10 +168,12 @@ namespace LinqToDB.SqlQuery
 #if DEBUG
 			sb.Append('(').Append(_paramNumber).Append(')');
 #endif
-			return sb
-				.Append('[')
-				.Append(Value ?? "NULL")
-				.Append(']');
+			if (Value != null)
+				sb
+					.Append('[')
+					.Append(Value)
+					.Append(']');
+			return sb;
 		}
 
 		#endregion

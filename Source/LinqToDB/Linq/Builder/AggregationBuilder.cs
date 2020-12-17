@@ -10,12 +10,13 @@ namespace LinqToDB.Linq.Builder
 	using Extensions;
 	using Mapping;
 	using SqlQuery;
+	using LinqToDB.Reflection;
 
 	class AggregationBuilder : MethodCallBuilder
 	{
 		public static string[] MethodNames = { "Average", "Min", "Max", "Sum" };
 
-		public static Sql.ExpressionAttribute GetAggregateDefinition(MethodCallExpression methodCall, MappingSchema mapping)
+		public static Sql.ExpressionAttribute? GetAggregateDefinition(MethodCallExpression methodCall, MappingSchema mapping)
 		{
 			var functions = mapping.GetAttributes<Sql.ExpressionAttribute>(methodCall.Method.ReflectedType!,
 				methodCall.Method,
@@ -106,9 +107,9 @@ namespace LinqToDB.Linq.Builder
 			public int             FieldIndex;
 			public ISqlExpression? Sql;
 
-			static int CheckNullValue(IDataRecord reader, object context)
+			static int CheckNullValue(bool isNull, object context)
 			{
-				if (reader.IsDBNull(0))
+				if (isNull)
 					throw new InvalidOperationException(
 						$"Function {context} returns non-nullable value, but result is NULL. Use nullable version of the function instead.");
 				return 0;
@@ -136,6 +137,29 @@ namespace LinqToDB.Linq.Builder
 			{
 				Expression expr;
 
+				if (Sequence is DefaultIfEmptyBuilder.DefaultIfEmptyContext defaultIfEmpty)
+				{
+					expr = Builder.BuildSql(_returnType, fieldIndex, sqlExpression);
+					if (defaultIfEmpty.DefaultValue != null && expr is ConvertFromDataReaderExpression convert)
+					{
+						var generator = new ExpressionGenerator();
+						expr = convert.MakeNullable();
+						if (expr.Type.IsNullable())
+						{
+							var exprVar = generator.AssignToVariable(expr, "nullable");
+							var resultVar = generator.AssignToVariable(defaultIfEmpty.DefaultValue, "result");
+							
+							generator.AddExpression(Expression.IfThen(
+								Expression.NotEqual(exprVar, Expression.Constant(null)),
+								Expression.Assign(resultVar, Expression.Convert(exprVar, resultVar.Type))));
+
+							generator.AddExpression(resultVar);
+
+							expr = generator.Build();
+						}
+					}
+				}
+				else
 				if (_returnType.IsClass || _methodName == "Sum" || _returnType.IsNullable())
 				{
 					expr = Builder.BuildSql(_returnType, fieldIndex, sqlExpression);
@@ -143,7 +167,7 @@ namespace LinqToDB.Linq.Builder
 				else
 				{
 					expr = Expression.Block(
-						Expression.Call(null, MemberHelper.MethodOf(() => CheckNullValue(null!, null!)), ExpressionBuilder.DataReaderParam, Expression.Constant(_methodName)),
+						Expression.Call(null, MemberHelper.MethodOf(() => CheckNullValue(false, null!)), Expression.Call(ExpressionBuilder.DataReaderParam, Methods.ADONet.IsDBNull, Expression.Constant(0)), Expression.Constant(_methodName)),
 						Builder.BuildSql(_returnType, fieldIndex, sqlExpression));
 				}
 
@@ -177,7 +201,7 @@ namespace LinqToDB.Linq.Builder
 						}
 				}
 
-				
+
 				throw new InvalidOperationException();
 			}
 

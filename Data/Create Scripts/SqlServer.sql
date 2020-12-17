@@ -479,6 +479,7 @@ CREATE TABLE AllTypes
 -- SKIP SqlServer.2016 BEGIN
 -- SKIP SqlServer.2017 BEGIN
 -- SKIP SqlServer.2019 BEGIN
+-- SKIP SqlServer.2019.SA BEGIN
 -- SKIP SqlAzure BEGIN
 	datetime2DataType        varchar(50)       NULL,
 	datetimeoffsetDataType   varchar(50)       NULL,
@@ -498,6 +499,7 @@ CREATE TABLE AllTypes
 -- SKIP SqlServer.2016 END
 -- SKIP SqlServer.2017 END
 -- SKIP SqlServer.2019 END
+-- SKIP SqlServer.2019.SA END
 -- SKIP SqlAzure END
 
 ) ON [PRIMARY]
@@ -682,6 +684,7 @@ GO
 -- SKIP SqlServer.2016 BEGIN
 -- SKIP SqlServer.2017 BEGIN
 -- SKIP SqlServer.2019 BEGIN
+-- SKIP SqlServer.2019.SA BEGIN
 -- SKIP SqlAzure BEGIN
 CREATE TABLE LinqDataTypes
 (
@@ -704,6 +707,7 @@ GO
 -- SKIP SqlServer.2016 END
 -- SKIP SqlServer.2017 END
 -- SKIP SqlServer.2019 END
+-- SKIP SqlServer.2019.SA END
 -- SKIP SqlServer.2008 END
 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('TestIdentity') AND type in (N'U'))
@@ -1104,12 +1108,12 @@ BEGIN
 	Create Table #PeopleIds (
 		PersonID int
 	);
-	INSERT INTO #PeopleIds 
-	SELECT Person.PersonID 
+	INSERT INTO #PeopleIds
+	SELECT Person.PersonID
 	FROM Person
 	WHERE LOWER(FirstName) like '%' + @nameFilter + '%'
 	OR LOWER(LastName) like '%' + @nameFilter + '%';
-	
+
 	-- 0: List of matching person ids.
 	SELECT PersonID FROM #PeopleIds;
 
@@ -1122,20 +1126,20 @@ BEGIN
 	IN (SELECT PersonID FROM #PeopleIds);
 
 	-- 3: Is doctor in the results.
-	SELECT 
+	SELECT
 	CASE WHEN COUNT(*) >= 1 THEN
 		CAST (1 as BIT)
 	ELSE
 		CAST (0 as BIT)
 	END
-	FROM Doctor 
+	FROM Doctor
 	WHERE Doctor.PersonID
 	IN (SELECT PersonID FROM #PeopleIds);
-	
+
 	-- 4: List of matching persons again.
 	SELECT * FROM Person WHERE Person.PersonID
 	IN (SELECT PersonID FROM #PeopleIds) ORDER BY LastName;
-	
+
 	-- 5: Number of matched people.
 	SELECT COUNT(*) FROM #PeopleIds;
 

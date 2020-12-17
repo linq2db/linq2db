@@ -5,7 +5,6 @@ using System.Data;
 namespace LinqToDB.DataProvider.Access
 {
 	using System.IO;
-	using System.Runtime.InteropServices;
 	using System.Security;
 	using Data;
 	using LinqToDB.Configuration;

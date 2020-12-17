@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.MySql
 {
-	using System.Threading;
-	using System.Threading.Tasks;
+	using Common;
 	using Data;
-	using LinqToDB.Common;
 
 	class MySqlBulkCopy : BasicBulkCopy
 	{
@@ -133,10 +133,10 @@ namespace LinqToDB.DataProvider.MySql
 				};
 			}
 
-			if (options.BulkCopyTimeout.HasValue) 
+			if (options.BulkCopyTimeout.HasValue)
 				bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
-				else if (Configuration.Data.BulkCopyUseConnectionCommandTimeout)
-					bc.BulkCopyTimeout = connection.ConnectionTimeout;
+			else if (Configuration.Data.BulkCopyUseConnectionCommandTimeout)
+				bc.BulkCopyTimeout = connection.ConnectionTimeout;
 
 			var tableName = GetTableName(sb, options, table);
 
@@ -175,8 +175,8 @@ namespace LinqToDB.DataProvider.MySql
 									bc.WriteToServer(rd);
 						}
 						else
-							bc.WriteToServer(rd); 
-						return rd.Count; 
+							bc.WriteToServer(rd);
+						return rd.Count;
 					}).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				rc.RowsCopied += rd.Count;
@@ -245,7 +245,7 @@ namespace LinqToDB.DataProvider.MySql
 								await bc.WriteToServerAsync(rd, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 							else
 								bc.WriteToServer(rd);
-						return rd.Count; 
+						return rd.Count;
 					}).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				rc.RowsCopied += rd.Count;

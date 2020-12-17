@@ -126,7 +126,7 @@ namespace Tests.Samples
 					pathList.Add(current);
 					if (current.NodeType == ExpressionType.MemberAccess)
 					{
-						current = ((MemberExpression) current).Expression;
+						current = ((MemberExpression) current).Expression!;
 					}
 					else
 						break;

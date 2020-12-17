@@ -193,7 +193,7 @@ namespace LinqToDB.Tools.Comparers
 			});
 
 			var expression = expressions
-				.DefaultIfEmpty(Expression.Constant(true))
+				.DefaultIfEmpty(ExpressionHelper.TrueConstant)
 				.Aggregate(Expression.AndAlso);
 
 			return Expression.Lambda<Func<T,T,bool>>(expression, x, y).Compile();

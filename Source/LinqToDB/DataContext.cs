@@ -109,7 +109,7 @@ namespace LinqToDB
 		/// <summary>
 		/// Gets or sets trace handler, used for data connection instance.
 		/// </summary>
-		public Action<TraceInfo>? OnTraceConnection { get; set; } 
+		public Action<TraceInfo>? OnTraceConnection { get; set; }
 
 		private bool _keepConnectionAlive;
 		/// <summary>
@@ -300,10 +300,11 @@ namespace LinqToDB
 			}
 		}
 
-		Func<ISqlBuilder>   IDataContext.CreateSqlProvider => () => DataProvider.CreateSqlBuilder(MappingSchema);
-		Func<ISqlOptimizer> IDataContext.GetSqlOptimizer   => DataProvider.GetSqlOptimizer;
-		Type                IDataContext.DataReaderType    => DataProvider.DataReaderType;
-		SqlProviderFlags    IDataContext.SqlProviderFlags  => DataProvider.SqlProviderFlags;
+		Func<ISqlBuilder>   IDataContext.CreateSqlProvider     => () => DataProvider.CreateSqlBuilder(MappingSchema);
+		Func<ISqlOptimizer> IDataContext.GetSqlOptimizer       => DataProvider.GetSqlOptimizer;
+		Type                IDataContext.DataReaderType        => DataProvider.DataReaderType;
+		SqlProviderFlags    IDataContext.SqlProviderFlags      => DataProvider.SqlProviderFlags;
+		TableOptions        IDataContext.SupportedTableOptions => DataProvider.SupportedTableOptions;
 
 		Expression IDataContext.GetReaderExpression(IDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
@@ -325,7 +326,7 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Creates instance of <see cref="DataConnection"/> class, attached to same database connection/transaction.
-		/// Used by <see cref="IDataContext.Clone(bool)"/> API only if <see cref="DataConnection.IsMarsEnabled"/> 
+		/// Used by <see cref="IDataContext.Clone(bool)"/> API only if <see cref="DataConnection.IsMarsEnabled"/>
 		/// is <c>true</c> and there is an active connection associated with current context.
 		/// <paramref name="dbConnection"/> and <paramref name="dbTransaction"/> parameters are mutually exclusive.
 		/// One and only one parameter will have value - if there is active transaction, <paramref name="dbTransaction"/>

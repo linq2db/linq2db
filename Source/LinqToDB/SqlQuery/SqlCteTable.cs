@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using LinqToDB.Common;
-using LinqToDB.Mapping;
-using LinqToDB.Reflection;
 
 namespace LinqToDB.SqlQuery
 {
+	using Common;
+	using Mapping;
+
 	public class SqlCteTable : SqlTable, ICloneableElement
 	{
 		public          CteClause? Cte  { get; private set; }
@@ -37,13 +36,13 @@ namespace LinqToDB.SqlQuery
 		}
 
 		internal SqlCteTable(int id, string alias, SqlField[] fields, CteClause cte)
-			: base(id, cte.Name, alias, string.Empty, string.Empty, string.Empty, cte.Name, cte.ObjectType, null, fields, SqlTableType.Cte, null)
+			: base(id, cte.Name, alias, string.Empty, string.Empty, string.Empty, cte.Name, cte.ObjectType, null, fields, SqlTableType.Cte, null, TableOptions.NotSet)
 		{
 			Cte = cte ?? throw new ArgumentNullException(nameof(cte));
 		}
 
 		internal SqlCteTable(int id, string alias, SqlField[] fields)
-			: base(id, null, alias, string.Empty, string.Empty, string.Empty, null, null, null, fields, SqlTableType.Cte, null)
+			: base(id, null, alias, string.Empty, string.Empty, string.Empty, null, null, null, fields, SqlTableType.Cte, null, TableOptions.NotSet)
 		{
 		}
 
@@ -74,9 +73,10 @@ namespace LinqToDB.SqlQuery
 		public override QueryElementType ElementType  => QueryElementType.SqlCteTable;
 		public override SqlTableType     SqlTableType => SqlTableType.Cte;
 
-		public StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
-			return sb.Append(Name);
+			Cte?.ToString(sb, dic);
+			return sb;
 		}
 
 		#region IQueryElement Members

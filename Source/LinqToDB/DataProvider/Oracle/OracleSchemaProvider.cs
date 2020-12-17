@@ -227,16 +227,22 @@ namespace LinqToDB.DataProvider.Oracle
 
 			return dataConnection.Query(rd =>
 			{
+				// IMPORTANT: reader calls must be ordered to support SequentialAccess
+				var tableId    = rd.GetString(0);
+				var name       = rd.GetString(1);
 				var dataType   = rd.IsDBNull(2) ?       null : rd.GetString(2);
+				var isNullable = rd.GetInt32(3) != 0;
+				var ordinal    = rd.IsDBNull(4) ? 0 : rd.GetInt32(4);
 				var dataLength = rd.IsDBNull(5) ? (int?)null : rd.GetInt32(5);
 				var charLength = rd.IsDBNull(6) ? (int?)null : rd.GetInt32(6);
+
 				return new ColumnInfo
 				{
-					TableID     = rd.GetString(0),
-					Name        = rd.GetString(1),
-					DataType    = rd.IsDBNull(2) ? null : rd.GetString(2),
-					IsNullable  = rd.GetInt32(3) != 0,
-					Ordinal     = rd.IsDBNull(4) ? 0 : rd.GetInt32(4),
+					TableID     = tableId,
+					Name        = name,
+					DataType    = dataType,
+					IsNullable  = isNullable,
+					Ordinal     = ordinal,
 					Precision   = rd.IsDBNull(7) ? (int?)null : rd.GetInt32(7),
 					Scale       = rd.IsDBNull(8) ? (int?)null : rd.GetInt32(8),
 					IsIdentity  = rd.GetInt32(9) != 0,

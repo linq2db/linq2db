@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -7,10 +9,8 @@ namespace LinqToDB.Data
 {
 	using DataProvider;
 	using Linq;
-	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
-	using System.Linq;
 
 	public partial class DataConnection : IDataContext
 	{
@@ -40,15 +40,16 @@ namespace LinqToDB.Data
 			return DataExtensions.GetTable<T>(this, instance, methodInfo, parameters);
 		}
 
-		protected virtual SqlStatement ProcessQuery(SqlStatement statement)
+		protected virtual SqlStatement ProcessQuery(SqlStatement statement, EvaluationContext context)
 		{
 			return statement;
 		}
 
 		#region IDataContext Members
 
-		SqlProviderFlags IDataContext.SqlProviderFlags => DataProvider.SqlProviderFlags;
-		Type             IDataContext.DataReaderType   => DataProvider.DataReaderType;
+		SqlProviderFlags IDataContext.SqlProviderFlags      => DataProvider.SqlProviderFlags;
+		TableOptions     IDataContext.SupportedTableOptions => DataProvider.SupportedTableOptions;
+		Type             IDataContext.DataReaderType        => DataProvider.DataReaderType;
 
 		bool             IDataContext.CloseAfterUse    { get; set; }
 

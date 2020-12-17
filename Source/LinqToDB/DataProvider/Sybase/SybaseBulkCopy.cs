@@ -145,7 +145,7 @@ namespace LinqToDB.DataProvider.Sybase
 				if (options.MaxBatchSize.HasValue)
 					bc.BatchSize = options.MaxBatchSize.Value;
 
-				if (options.BulkCopyTimeout.HasValue) 
+				if (options.BulkCopyTimeout.HasValue)
 					bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
 				else if (Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout)
 					bc.BulkCopyTimeout = connection.ConnectionTimeout;
@@ -162,7 +162,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 				TraceAction(
 					dataConnection,
-					() => "INSERT BULK " + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + Environment.NewLine,
+					() => "INSERT BULK " + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + ")" + Environment.NewLine,
 					() => { bc.WriteToServer(rd); return rd.Count; });
 			}
 

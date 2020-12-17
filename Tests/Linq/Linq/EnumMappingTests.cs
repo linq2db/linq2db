@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Text;
 #if NET472
 using System.ServiceModel;
 #endif
@@ -381,7 +382,7 @@ namespace Tests.Linq
 				var result = db.GetTable<TestTable1>()
 					.Where(r => r.Id == RID && r.TestField == TestEnum1.Value2)
 					.Select(r => new { r.TestField })
-					.FirstOrDefault();
+					.FirstOrDefault()!;
 
 				Assert.NotNull(result);
 				Assert.That(result.TestField, Is.EqualTo(TestEnum1.Value2));
@@ -403,7 +404,7 @@ namespace Tests.Linq
 				var result = db.GetTable<TestTable2>()
 					.Where(r => r.Id == RID && r.TestField == TestEnum21.Value2)
 					.Select(r => new { r.TestField })
-					.FirstOrDefault();
+					.FirstOrDefault()!;
 
 				Assert.NotNull(result);
 				Assert.True(result.TestField == TestEnum21.Value2);
@@ -425,7 +426,7 @@ namespace Tests.Linq
 				var result = db.GetTable<NullableTestTable1>()
 					.Where(r => r.Id == RID && r.TestField == TestEnum1.Value2)
 					.Select(r => new { r.TestField })
-					.FirstOrDefault();
+					.FirstOrDefault()!;
 
 				Assert.NotNull(result);
 				Assert.True(result.TestField == TestEnum1.Value2);
@@ -447,7 +448,7 @@ namespace Tests.Linq
 				var result = db.GetTable<NullableTestTable2>()
 					.Where(r => r.Id == RID && r.TestField == TestEnum21.Value2)
 					.Select(r => new { r.TestField })
-					.FirstOrDefault();
+					.FirstOrDefault()!;
 
 				Assert.NotNull(result);
 				Assert.True(result.TestField == TestEnum21.Value2);
@@ -719,7 +720,7 @@ namespace Tests.Linq
 				var result = db.GetTable<NullableTestTable1>()
 					.Where(r => r.Id == RID)
 					.Select(r => new { r.TestField })
-					.FirstOrDefault();
+					.FirstOrDefault()!;
 
 				Assert.NotNull(result);
 				Assert.True(result.TestField == null);
@@ -740,7 +741,7 @@ namespace Tests.Linq
 				var result = db.GetTable<NullableTestTable2>()
 					.Where(r => r.Id == RID)
 					.Select(r => new { r.TestField })
-					.FirstOrDefault();
+					.FirstOrDefault()!;
 
 				Assert.NotNull(result);
 				Assert.True(result.TestField == null);
@@ -760,7 +761,7 @@ namespace Tests.Linq
 
 				var result = db.GetTable<NullableTestTable1>()
 					.Where(r => r.Id == RID && r.TestField == null)
-					.Select(r => new { r.TestField }).FirstOrDefault();
+					.Select(r => new { r.TestField }).FirstOrDefault()!;
 				Assert.NotNull(result);
 				Assert.Null(result.TestField);
 			}
@@ -779,7 +780,7 @@ namespace Tests.Linq
 
 				var result = db.GetTable<NullableTestTable2>()
 					.Where(r => r.Id == RID && r.TestField == null)
-					.Select(r => new { r.TestField }).FirstOrDefault();
+					.Select(r => new { r.TestField }).FirstOrDefault()!;
 				Assert.NotNull(result);
 				Assert.Null(result.TestField);
 			}
@@ -1193,7 +1194,7 @@ namespace Tests.Linq
 				var result = db.GetTable<TestTable1>()
 					.Where(r => r.Id == RID)
 					.Select(r => new NullableResult { Value = Convert(r.TestField) })
-					.FirstOrDefault();
+					.FirstOrDefault()!;
 
 				Assert.NotNull(result);
 				Assert.That(result.Value, Is.EqualTo(TestEnum1.Value2));
@@ -1724,6 +1725,8 @@ namespace Tests.Linq
 		{
 			GetProviderName(context, out var isLinqService);
 
+			// mapping fails and fallbacks to slow-mapper
+			using (new CustomCommandProcessor(null))
 			using (var db = GetDataContext(context))
 			{
 				using (new Cleaner(db))
@@ -1734,17 +1737,6 @@ namespace Tests.Linq
 						TestField = 5
 					});
 
-#if NET472
-					if (isLinqService)
-					{
-						Assert.Throws<FaultException<ExceptionDetail>>(() =>
-							db.GetTable<UndefinedValueTest>()
-								.Select(r => new { r.Id, r.TestField })
-								.Where(r => r.Id == RID)
-								.ToList());
-					}
-					else
-#endif
 					Assert.Throws<LinqToDBConvertException>(() =>
 						db.GetTable<UndefinedValueTest>()
 							.Select(r => new { r.Id, r.TestField })
@@ -1775,14 +1767,14 @@ namespace Tests.Linq
 		public void Issue1622Test([DataSources] string context)
 		{
 			var ms = new MappingSchema();
-			using (var db = GetDataContext(context, ms))
-			{
 				ms.SetValueToSqlConverter(typeof(Issue1622Enum),
 					(sb, dt, v) =>
 					{
 						sb.Append("'").Append(((Issue1622Enum)v).ToString()).Append("_suffix'");
 					});
 
+			using (var db = GetDataContext(context, ms))
+			{
 				using (var table = db.CreateLocalTable<Issue1622Table>())
 				{
 					var item = new Issue1622Table() { Id = 1, SomeText = "Value1_suffix" };

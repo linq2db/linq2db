@@ -53,7 +53,7 @@
 			if (operation.Where != null)
 			{
 				StringBuilder.Append(" WHERE ");
-				BuildSearchCondition(Precedence.Unknown, operation.Where);
+				BuildSearchCondition(Precedence.Unknown, operation.Where, wrapCondition: true);
 			}
 		}
 
@@ -74,7 +74,7 @@
 					.AppendLine("WHERE")
 					.Append("\t");
 
-				BuildSearchCondition(Precedence.Unknown, operation.Where);
+				BuildSearchCondition(Precedence.Unknown, operation.Where, wrapCondition: true);
 			}
 		}
 
@@ -87,7 +87,7 @@
 				.AppendLine("DELETE WHERE")
 				.Append("\t");
 
-			BuildSearchCondition(Precedence.Unknown, operation.WhereDelete!);
+			BuildSearchCondition(Precedence.Unknown, operation.WhereDelete!, wrapCondition: true);
 		}
 	}
 }

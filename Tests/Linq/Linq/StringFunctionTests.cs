@@ -1,5 +1,4 @@
 ﻿using System;
-
 #if NET472
 using System.Data.Linq.SqlClient;
 #else
@@ -20,6 +19,222 @@ namespace Tests.Linq
 	[TestFixture]
 	public class StringFunctionTests : TestBase
 	{
+		#region Non-Database tests
+
+		[Test]
+		public void Length()
+		{
+			Assert.AreEqual(null, Sql.Length((string)null!));
+			Assert.AreEqual(0,    Sql.Length(string.Empty));
+			Assert.AreEqual(4,    Sql.Length("test"));
+		}
+
+		[Test]
+		public void Substring()
+		{
+			Assert.AreEqual(null, Sql.Substring(null,   0,    0));
+			Assert.AreEqual(null, Sql.Substring("test", null, 0));
+			Assert.AreEqual(null, Sql.Substring("test", -1,   0));
+			Assert.AreEqual(null, Sql.Substring("test", 5,    0));
+			Assert.AreEqual(null, Sql.Substring("test", 0,    null));
+			Assert.AreEqual(null, Sql.Substring("test", 0,    -1));
+
+			Assert.AreEqual("",   Sql.Substring("test", 3,    0));
+			Assert.AreEqual("s",  Sql.Substring("test", 3,    1));
+			Assert.AreEqual("st", Sql.Substring("test", 3,    2));
+			Assert.AreEqual("st", Sql.Substring("test", 3,    3));
+		}
+
+		[Test]
+		public void Like()
+		{
+#if !NETFRAMEWORK
+			Assert.Throws<InvalidOperationException>(() => Sql.Like(null, null));
+			Assert.Throws<InvalidOperationException>(() => Sql.Like(null, null, null));
+#else
+			Assert.Pass("We don't test server-side method here.");
+#endif
+		}
+
+		[Test]
+		public void CharIndex1()
+		{
+			Assert.AreEqual(null, Sql.CharIndex("",            null));
+			Assert.AreEqual(null, Sql.CharIndex((string)null!, "test"));
+
+			Assert.AreEqual(0,    Sql.CharIndex("",            "test"));
+			Assert.AreEqual(0,    Sql.CharIndex("g",           "test"));
+			Assert.AreEqual(3,    Sql.CharIndex("st",          "test"));
+		}
+
+		[Test]
+		public void CharIndex2()
+		{
+			Assert.AreEqual(null, Sql.CharIndex("",            null,   0));
+			Assert.AreEqual(null, Sql.CharIndex((string)null!, "test", 0));
+			Assert.AreEqual(null, Sql.CharIndex("st",          "test", null));
+
+			Assert.AreEqual(0,    Sql.CharIndex("",            "test", 0));
+			Assert.AreEqual(0,    Sql.CharIndex("g",           "test", 0));
+			Assert.AreEqual(3,    Sql.CharIndex("st",          "test", -1));
+			Assert.AreEqual(3,    Sql.CharIndex("st",          "test", 2));
+			Assert.AreEqual(0,    Sql.CharIndex("st",          "test", 4));
+			Assert.AreEqual(0,    Sql.CharIndex("st",          "test", 5));
+		}
+
+		[Test]
+		public void CharIndex3()
+		{
+			Assert.AreEqual(null, Sql.CharIndex('t',           null));
+			Assert.AreEqual(null, Sql.CharIndex((char?)null!,  "test"));
+
+			Assert.AreEqual(0,    Sql.CharIndex(Char.MinValue, "test"));
+			Assert.AreEqual(0,    Sql.CharIndex('g',           "test"));
+			Assert.AreEqual(3,    Sql.CharIndex('s',           "test"));
+		}
+
+		[Test]
+		public void CharIndex4()
+		{
+			Assert.AreEqual(null, Sql.CharIndex('t',           null,   0));
+			Assert.AreEqual(null, Sql.CharIndex((char?)null!,  "test", 0));
+			Assert.AreEqual(null, Sql.CharIndex('t',           "test", null));
+
+			Assert.AreEqual(0,    Sql.CharIndex(Char.MinValue, "test", 0));
+			Assert.AreEqual(0,    Sql.CharIndex('g',           "test", 0));
+			Assert.AreEqual(3,    Sql.CharIndex('s',           "test", -1));
+			Assert.AreEqual(3,    Sql.CharIndex('s',           "test", 2));
+			Assert.AreEqual(0,    Sql.CharIndex('s',           "test", 4));
+			Assert.AreEqual(0,    Sql.CharIndex('s',           "test", 5));
+		}
+
+		[Test]
+		public void Reverse()
+		{
+			Assert.AreEqual(null,         Sql.Reverse(null));
+			Assert.AreEqual(string.Empty, Sql.Reverse(string.Empty));
+			Assert.AreEqual("dcba",       Sql.Reverse("abcd"));
+		}
+
+		[Test]
+		public void Left()
+		{
+			Assert.AreEqual(null,   Sql.Left(null,   0));
+			Assert.AreEqual(null,   Sql.Left("test", null));
+			Assert.AreEqual(null,   Sql.Left("test", -1));
+			Assert.AreEqual("",     Sql.Left("test", 0));
+			Assert.AreEqual("te",   Sql.Left("test", 2));
+			Assert.AreEqual("test", Sql.Left("test", 5));
+		}
+
+		[Test]
+		public void Right()
+		{
+			Assert.AreEqual(null,   Sql.Right(null,   0));
+			Assert.AreEqual(null,   Sql.Right("test", null));
+			Assert.AreEqual(null,   Sql.Right("test", -1));
+			Assert.AreEqual("",     Sql.Right("test", 0));
+			Assert.AreEqual("st",   Sql.Right("test", 2));
+			Assert.AreEqual("test", Sql.Right("test", 5));
+		}
+
+		[Test]
+		public void Stuff1()
+		{
+			// Disallowed null parameters
+			Assert.AreEqual(null,       Sql.Stuff((string)null!, 1,    1,    "test"));
+			Assert.AreEqual(null,       Sql.Stuff("test",        null, 1,    "test"));
+			Assert.AreEqual(null,       Sql.Stuff("test",        1,    null, "test"));
+			Assert.AreEqual(null,       Sql.Stuff("test",        1,    1,    null));
+
+			// Disallowed start
+			Assert.AreEqual(null,       Sql.Stuff("test",        0,    1,    "test"));
+			Assert.AreEqual(null,       Sql.Stuff("test",        5,    1,    "test"));
+
+			// Disallowed length
+			Assert.AreEqual(null,       Sql.Stuff("test",        1,    -1,   "test"));
+
+			// Correct start and length
+			Assert.AreEqual("5678",     Sql.Stuff("1234",        1,    4,    "5678"));
+
+			// Correct start
+			Assert.AreEqual("12356784", Sql.Stuff("1234",        4,    0,    "5678"));
+
+			// Correct length												 
+			Assert.AreEqual("125678",   Sql.Stuff("1234",        3,    5,    "5678"));
+		}
+
+		[Test]
+		public void Stuff2()
+		{
+			var expression = Enumerable.Empty<string>();
+			Assert.Throws<NotImplementedException>(() => Sql.Stuff(expression, 1, 1, "")); // ServerSideOnly
+		}
+
+		[Test]
+		public void Space()
+		{
+			Assert.AreEqual(null, Sql.Space(null));
+			Assert.AreEqual(null, Sql.Space(-1));
+			Assert.AreEqual("",   Sql.Space(0));
+			Assert.AreEqual(" ",  Sql.Space(1));
+		}
+
+		[Test]
+		public void PadLeft()
+		{
+			Assert.AreEqual(null,     Sql.PadLeft(null,   1,    '.'));
+			Assert.AreEqual(null,     Sql.PadLeft("test", null, '.'));
+			Assert.AreEqual(null,     Sql.PadLeft("test", 1,    null));
+
+			Assert.AreEqual(null,     Sql.PadLeft("test", -1,   '.'));
+			Assert.AreEqual("",       Sql.PadLeft("test", 0,    '.'));
+			Assert.AreEqual("tes",    Sql.PadLeft("test", 3,    '.'));
+			Assert.AreEqual("test",   Sql.PadLeft("test", 4,    '.'));
+			Assert.AreEqual(".test",  Sql.PadLeft("test", 5,    '.'));
+		}
+
+		[Test]
+		public void PadRight()
+		{
+			Assert.AreEqual(null,     Sql.PadRight(null,   1,    '.'));
+			Assert.AreEqual(null,     Sql.PadRight("test", null, '.'));
+			Assert.AreEqual(null,     Sql.PadRight("test", 1,    null));
+
+			Assert.AreEqual(null,     Sql.PadRight("test", -1,   '.'));
+			Assert.AreEqual("",       Sql.PadRight("test", 0,    '.'));
+			Assert.AreEqual("tes",    Sql.PadRight("test", 3,    '.'));
+			Assert.AreEqual("test",   Sql.PadRight("test", 4,    '.'));
+			Assert.AreEqual("test.",  Sql.PadRight("test", 5,    '.'));
+		}
+
+		[Test]
+		public void Replace1()
+		{
+			Assert.AreEqual(null,    Sql.Replace(null,   "e",  "oa"));
+			Assert.AreEqual(null,    Sql.Replace("test", null, "oa"));
+			Assert.AreEqual(null,    Sql.Replace("test", "e",  null));
+
+			Assert.AreEqual("",      Sql.Replace("",     "e",  "oa"));
+			Assert.AreEqual("test",  Sql.Replace("test", "",   "oa"));
+			Assert.AreEqual("test",  Sql.Replace("test", "g",  "oa"));
+			Assert.AreEqual("toast", Sql.Replace("test", "e",  "oa"));
+		}
+
+		[Test]
+		public void Replace2()
+		{
+			Assert.AreEqual(null,    Sql.Replace(null,   'e',  'o'));
+			Assert.AreEqual(null,    Sql.Replace("test", null, 'o'));
+			Assert.AreEqual(null,    Sql.Replace("test", 'e',  null));
+
+			Assert.AreEqual("",      Sql.Replace("",     'e',  'o'));
+			Assert.AreEqual("test",  Sql.Replace("test", 'g',  'o'));
+			Assert.AreEqual("tost",  Sql.Replace("test", 'e',  'o'));
+		}
+
+		#endregion
+
 		[Test]
 		public void Length([DataSources] string context)
 		{
@@ -63,7 +278,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ContainsConstant4([DataSources(TestProvName.AllFirebird)] string context)
+		public void ContainsConstant4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -85,7 +300,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ContainsConstant41([DataSources(TestProvName.AllInformix)] string context)
+		public void ContainsConstant41([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -94,6 +309,54 @@ namespace Tests.Linq
 
 				var q = from p in db.Person where p.ID == 1 && s.Contains(ps) select p;
 				Assert.AreEqual(1, q.ToList().First().ID);
+			}
+		}
+
+		[Test]
+		public void ContainsValueAll([DataSources] string context,
+			[Values("n", "-", "*", "?", "#", "%", "[", "]", "[]", "[[", "]]")]string toTest)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var s  = "123" + toTest + "456";
+
+				var q = from p in db.Person where p.ID == 1 && s.Contains(Sql.ToSql(toTest)) select p;
+				Assert.AreEqual(1, q.ToList().First().ID);
+
+				//TODO: check case sensitivity for each provider
+				/*
+				var s2 = s.ToUpper(CultureInfo.InvariantCulture);
+				if (s != s2)
+				{
+					var q2 = from p in db.Person where p.ID == 1 && s2.Contains(Sql.ToSql(toTest)) select p;
+					Assert.AreEqual(1, q2.ToList().First().ID);
+				}
+				*/
+			}
+		}
+
+
+		[Test]
+		public void ContainsParameterAll([DataSources] string context,
+			[Values("n", "-", "*", "?", "#", "%", "[", "]", "[]", "[[", "]]")]string toTest)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var s  = "123" + toTest + "456";
+
+				var q = from p in db.Person where p.ID == 1 && s.Contains(toTest) select p;
+				Assert.AreEqual(1, q.ToList().First().ID);
+
+				//TODO: check case sensitivity for each provider
+				/*
+				var s2 = s.ToUpper(CultureInfo.InvariantCulture);
+				if (s != s2)
+				{
+					var q2 = from p in db.Person where p.ID == 1 && s2.Contains(toTest) select p;
+					Assert.AreEqual(1, q2.ToList().First().ID);
+				}
+				*/
+
 			}
 		}
 
@@ -180,7 +443,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ContainsNull([DataSources(ProviderName.Access, TestProvName.AllInformix)] string context)
+		public void ContainsNull([DataSources(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -208,7 +471,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(2005, Configuration = TestProvName.AllFirebird)]
 		[Test]
 		public void StartsWithSQL([DataSources(false)] string context)
 		{
@@ -344,7 +606,18 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void IndexOf11([DataSources(TestProvName.AllInformix, ProviderName.SQLiteMS)] string context)
+		public void Like23([DataSources] string context)
+		{
+			var pattern = @"%h~%n%";
+			using (var db = GetDataContext(context))
+			{
+				var q = from p in db.Person where !Sql.Like(p.FirstName, pattern, '~') && p.ID == 1 select p;
+				Assert.AreEqual(1, q.ToList().First().ID);
+			}
+		}
+
+		[Test]
+		public void IndexOf11([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -354,7 +627,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void IndexOf12([DataSources(TestProvName.AllInformix, ProviderName.SQLiteMS)] string context)
+		public void IndexOf12([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -364,7 +637,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void IndexOf2([DataSources(TestProvName.AllInformix, ProviderName.SQLiteMS)] string context)
+		public void IndexOf2([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -393,7 +666,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void LastIndexOf1([DataSources(
-			ProviderName.DB2, TestProvName.AllInformix,
+			ProviderName.DB2,
 			ProviderName.SqlCe, TestProvName.AllAccess, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
 			string context)
 		{
@@ -406,7 +679,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void LastIndexOf2([DataSources(
-			ProviderName.DB2, TestProvName.AllInformix, ProviderName.SqlCe,
+			ProviderName.DB2, ProviderName.SqlCe,
 			TestProvName.AllAccess, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
 			string context)
 		{
@@ -420,7 +693,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void LastIndexOf3([DataSources(
-			ProviderName.DB2, TestProvName.AllInformix, ProviderName.SqlCe,
+			ProviderName.DB2, ProviderName.SqlCe,
 			TestProvName.AllAccess, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
 			string context)
 		{
@@ -433,7 +706,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CharIndex1([DataSources(TestProvName.AllInformix, ProviderName.SQLiteMS)] string context)
+		public void CharIndex1([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -443,7 +716,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CharIndex2([DataSources(TestProvName.AllInformix, ProviderName.SQLiteMS)] string context)
+		public void CharIndex2([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -504,7 +777,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Reverse([DataSources(
-			ProviderName.DB2, TestProvName.AllInformix, ProviderName.SqlCe,
+			ProviderName.DB2, ProviderName.SqlCe,
 			TestProvName.AllAccess, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
 			string context)
 		{

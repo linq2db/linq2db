@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Data;
 using System.Xml;
 using System.Xml.Linq;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace LinqToDB.DataProvider.Sybase
 {
@@ -11,10 +13,8 @@ namespace LinqToDB.DataProvider.Sybase
 	using Common;
 	using SchemaProvider;
 	using SqlProvider;
-	using LinqToDB.Extensions;
-	using System.Threading.Tasks;
-	using System.Threading;
-
+	using Extensions;
+	
 	public class SybaseDataProvider : DynamicDataProviderBase<SybaseProviderAdapter>
 	{
 		#region Init
@@ -35,19 +35,17 @@ namespace LinqToDB.DataProvider.Sybase
 
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd(' '));
-			SetCharFieldToType<char>("char",  (r, i) => DataTools.GetChar(r, i));
-			SetCharFieldToType<char>("nchar", (r, i) => DataTools.GetChar(r, i));
+			SetCharFieldToType<char>("char",  DataTools.GetCharExpression);
+			SetCharFieldToType<char>("nchar", DataTools.GetCharExpression);
 
 			SetProviderField<IDataReader,TimeSpan,DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1900, 1, 1));
-			SetField<IDataReader,DateTime>("time", (r,i) => GetDateTimeAsTime(r, i));
+			SetField<IDataReader,DateTime>("time", (r,i) => GetDateTimeAsTime(r.GetDateTime(i)));
 
 			_sqlOptimizer = new SybaseSqlOptimizer(SqlProviderFlags);
 		}
 
-		static DateTime GetDateTimeAsTime(IDataReader dr, int idx)
+		static DateTime GetDateTimeAsTime(DateTime value)
 		{
-			var value = dr.GetDateTime(idx);
-
 			if (value.Year == 1900 && value.Month == 1 && value.Day == 1)
 				return new DateTime(1, 1, 1, value.Hour, value.Minute, value.Second, value.Millisecond);
 
@@ -75,6 +73,15 @@ namespace LinqToDB.DataProvider.Sybase
 
 			return type;
 		}
+
+		public override TableOptions SupportedTableOptions =>
+			TableOptions.IsTemporary                |
+			TableOptions.IsLocalTemporaryStructure  |
+			TableOptions.IsGlobalTemporaryStructure |
+			TableOptions.IsLocalTemporaryData       |
+			TableOptions.IsGlobalTemporaryData      |
+			TableOptions.CreateIfNotExists          |
+			TableOptions.DropIfExists;
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{

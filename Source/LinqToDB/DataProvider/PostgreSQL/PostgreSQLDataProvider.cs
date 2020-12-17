@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
@@ -8,8 +10,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using Data;
 	using Mapping;
 	using SqlProvider;
-	using System.Threading;
-	using System.Threading.Tasks;
 
 	public class PostgreSQLDataProvider : DynamicDataProviderBase<NpgsqlProviderAdapter>
 	{
@@ -34,8 +34,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.IsAllSetOperationsSupported       = true;
 
-			SetCharFieldToType<char>("bpchar"   , (r, i) => DataTools.GetChar(r, i));
-			SetCharFieldToType<char>("character", (r, i) => DataTools.GetChar(r, i));
+			SetCharFieldToType<char>("bpchar"   , DataTools.GetCharExpression);
+			SetCharFieldToType<char>("character", DataTools.GetCharExpression);
 
 			SetCharField("bpchar"   , (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("character", (r,i) => r.GetString(i).TrimEnd(' '));
@@ -162,6 +162,14 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				_                     => ProviderName.PostgreSQL95,
 			};
 		}
+
+		public override TableOptions SupportedTableOptions =>
+			TableOptions.IsTemporary                |
+			TableOptions.IsLocalTemporaryStructure  |
+			TableOptions.IsLocalTemporaryData       |
+			TableOptions.IsTransactionTemporaryData |
+			TableOptions.CreateIfNotExists          |
+			TableOptions.DropIfExists;
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{

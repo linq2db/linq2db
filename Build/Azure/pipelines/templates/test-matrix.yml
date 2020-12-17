@@ -2,15 +2,25 @@ parameters:
   enabled: false
   experimental: false
   with_baselines: false
-  db_filter: 'all'
+  db_filter: '[all]'
 
 # db_filter specify test db selection filter for pipeline. Current list of supported values:
-# - 'all' - any target supported
-# - 'informix' - informix db targets supported
-# - 'db2' - db2 db targets supported
-# - 'sybase.ase' - SAP/Sybase ASE db targets supported
-# - 'sqlserver.2019' - SQL Server 2019 db targets supported
-# Note that filter value cannot be a substring for another fiter value, as we check filter using contains substring function
+# - '[all]' - any target supported
+# - '[access.all]' - Access targets supported
+# - '[db2.all]' - DB2 targets supported
+# - '[firebird.all]' - Firebird targets supported
+# - '[informix.all]' - Informix targets supported
+# - '[mysql.all]' - MySql/MariaDB targets supported
+# - '[oracle.all]' - Oracle targets supported
+# - '[postgresql.all]' - PostgreSQL targets supported
+# - '[saphana.all]' - SAP HANA targets supported
+# - '[sqlce.all]' - SqlCE targets supported
+# - '[sqlite.all]' - SQLite targets supported
+# - '[sqlserver.all]' - SQL Server targets supported
+# - '[sqlserver.2019]' - SQL Server 2019 targets supported
+# - '[sybase.ase.all]' - SAP/Sybase ASE targets supported
+# Note that filter value enclosed in [] brackets as we check filter using contains substring function and this allows
+# us to avoid naming conflicts
 
 # Test matrix (list of all database test runs with configuration options)
 # Because azure pipelines doesn't support non-string variables and strategy templates
@@ -38,6 +48,7 @@ parameters:
 # - enable_fw_net472    (true/false string) : enables testrun against .net framework 4.7.2
 # - enable_fw_netcore21 (true/false string) : enables testrun against .net core 2.1
 # - enable_fw_netcore31 (true/false string) : enables testrun against .net core 3.1
+# - enable_fw_net50     (true/false string) : enables testrun against .net 5.0
 
 # TEST CONFIG SELECTOR
 # - config_win   (string) : contains name of test config json file for windows runs (without extension)
@@ -76,12 +87,13 @@ jobs:
           enable_os_ubuntu20: true
           enable_os_macos: true
           enable_fw_net472: true
-          enable_fw_netcore21: true
+          enable_fw_netcore21: false
           enable_fw_netcore31: false
+          enable_fw_net50: true
           is_experimental: false
-          ${{ if or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'sqlite')) }}:
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlite.all]')) }}:
             enabled: true
-          ${{ if not(or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'sqlite'))) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlite.all]'))) }}:
             enabled: false
 
         - name: SQLite_MS
@@ -97,10 +109,11 @@ jobs:
           enable_fw_net472: true
           enable_fw_netcore21: true
           enable_fw_netcore31: false
+          enable_fw_net50: false
           is_experimental: false
-          ${{ if or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'sqlite')) }}:
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlite.all]')) }}:
             enabled: true
-          ${{ if not(or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'sqlite'))) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlite.all]'))) }}:
             enabled: false
 
 # Access
@@ -115,10 +128,11 @@ jobs:
           enable_fw_net472: true
           enable_fw_netcore21: false
           enable_fw_netcore31: false
+          enable_fw_net50: false
           is_experimental: false
-          ${{ if contains(parameters.db_filter, 'all') }}:
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
             enabled: true
-          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
             enabled: false
 
         - name: Access_OLEDB_ACE
@@ -133,10 +147,11 @@ jobs:
           enable_fw_net472: true
           enable_fw_netcore21: false
           enable_fw_netcore31: false
+          enable_fw_net50: false
           is_experimental: false
-          ${{ if contains(parameters.db_filter, 'all') }}:
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
             enabled: true
-          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
             enabled: false
 
         - name: Access_ODBC_MDB
@@ -150,10 +165,11 @@ jobs:
           enable_fw_net472: true
           enable_fw_netcore21: false
           enable_fw_netcore31: false
+          enable_fw_net50: false
           is_experimental: false
-          ${{ if contains(parameters.db_filter, 'all') }}:
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
             enabled: true
-          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
             enabled: false
 
         - name: Access_ODBC_ACE
@@ -168,10 +184,11 @@ jobs:
           enable_fw_net472: true
           enable_fw_netcore21: false
           enable_fw_netcore31: false
+          enable_fw_net50: false
           is_experimental: false
-          ${{ if contains(parameters.db_filter, 'all') }}:
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
             enabled: true
-          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
             enabled: false
 
         - name: Access_ODBC_ACE_x64
@@ -186,10 +203,11 @@ jobs:
           enable_fw_net472: false
           enable_fw_netcore21: true
           enable_fw_netcore31: false
+          enable_fw_net50: false
           is_experimental: false
-          ${{ if contains(parameters.db_filter, 'all') }}:
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
             enabled: true
-          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
             enabled: false
 
         - name: Access_OLEDB_ACE_x64
@@ -204,10 +222,11 @@ jobs:
           enable_fw_net472: false
           enable_fw_netcore21: false # true (disabled due to a lot of random crashes https://github.com/dotnet/runtime/issues/36954)
           enable_fw_netcore31: false # true (disabled due to a lot of random crashes https://github.com/dotnet/runtime/issues/36954)
+          enable_fw_net50: false # true (disabled due to a lot of random crashes https://github.com/dotnet/runtime/issues/36954)
           is_experimental: false
-          ${{ if contains(parameters.db_filter, 'all') }}:
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
             enabled: true
-          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
             enabled: false
 
 # SQL CE
@@ -223,10 +242,11 @@ jobs:
           enable_fw_net472: true
           enable_fw_netcore21: true
           enable_fw_netcore31: false
+          enable_fw_net50: false
           is_experimental: false
-          ${{ if contains(parameters.db_filter, 'all') }}:
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlce.all]')) }}:
             enabled: true
-          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlce.all]'))) }}:
             enabled: false
 
 # MySql/MariaDB
@@ -243,12 +263,13 @@ jobs:
           enable_os_ubuntu20: true
           enable_os_macos: true
           enable_fw_net472: false
-          enable_fw_netcore21: true
+          enable_fw_netcore21: false
           enable_fw_netcore31: true
+          enable_fw_net50: false
           is_experimental: false
-          ${{ if or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'mysql')) }}:
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]')) }}:
             enabled: true
-          ${{ if not(or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'mysql'))) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]'))) }}:
             enabled: false
 
         - name: MySQL55
@@ -266,10 +287,11 @@ jobs:
           enable_fw_net472: false
           enable_fw_netcore21: true
           enable_fw_netcore31: false
+          enable_fw_net50: false
           is_experimental: false
-          ${{ if or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'mysql')) }}:
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]')) }}:
             enabled: true
-          ${{ if not(or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'mysql'))) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]'))) }}:
             enabled: false
 
         - name: MariaDB
@@ -289,10 +311,11 @@ jobs:
           enable_fw_net472: true
           enable_fw_netcore21: true
           enable_fw_netcore31: false
+          enable_fw_net50: false
           is_experimental: false
-          ${{ if or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'mysql')) }}:
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]')) }}:
             enabled: true
-          ${{ if not(or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'mysql'))) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]'))) }}:
             enabled: false
 
 # PostgreSQL
@@ -309,12 +332,13 @@ jobs:
           enable_os_ubuntu20: true
           enable_os_macos: true
           enable_fw_net472: false
-          enable_fw_netcore21: true
+          enable_fw_netcore21: false
           enable_fw_netcore31: true
+          enable_fw_net50: false
           is_experimental: false
-          ${{ if or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'postgresql')) }}:
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
             enabled: true
-          ${{ if not(or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'postgresql'))) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]'))) }}:
             enabled: false
 
         - name: PostgreSQL92
@@ -332,10 +356,11 @@ jobs:
           enable_fw_net472: false
           enable_fw_netcore21: true
           enable_fw_netcore31: false
+          enable_fw_net50: false
           is_experimental: false
-          ${{ if or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'postgresql')) }}:
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
             enabled: true
-          ${{ if not(or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'postgresql'))) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]'))) }}:
             enabled: false
 
         - name: PostgreSQL93
@@ -353,10 +378,11 @@ jobs:
           enable_fw_net472: false
           enable_fw_netcore21: true
           enable_fw_netcore31: false
+          enable_fw_net50: false
           is_experimental: false
-          ${{ if or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'postgresql')) }}:
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
             enabled: true
-          ${{ if not(or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'postgresql'))) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]'))) }}:
             enabled: false
 
         - name: PostgreSQL95
@@ -374,10 +400,11 @@ jobs:
           enable_fw_net472: false
           enable_fw_netcore21: true
           enable_fw_netcore31: false
+          enable_fw_net50: false
           is_experimental: false
-          ${{ if or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'postgresql')) }}:
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
             enabled: true
-          ${{ if not(or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'postgresql'))) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]'))) }}:
             enabled: false
 
         - name: PostgreSQL10
@@ -397,10 +424,11 @@ jobs:
           enable_fw_net472: true
           enable_fw_netcore21: true
           enable_fw_netcore31: false
+          enable_fw_net50: false
           is_experimental: false
-          ${{ if or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'postgresql')) }}:
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
             enabled: true
-          ${{ if not(or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'postgresql'))) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]'))) }}:
             enabled: false
 
         - name: PostgreSQL11
@@ -419,10 +447,11 @@ jobs:
           enable_fw_net472: false
           enable_fw_netcore21: true
           enable_fw_netcore31: false
+          enable_fw_net50: false
           is_experimental: false
-          ${{ if or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'postgresql')) }}:
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
             enabled: true
-          ${{ if not(or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'postgresql'))) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]'))) }}:
             enabled: false
 
         - name: PostgreSQL12
@@ -441,10 +470,11 @@ jobs:
           enable_fw_net472: false
           enable_fw_netcore21: true
           enable_fw_netcore31: false
+          enable_fw_net50: false
           is_experimental: false
-          ${{ if or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'postgresql')) }}:
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
             enabled: true
-          ${{ if not(or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'postgresql'))) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]'))) }}:
             enabled: false
 
         - name: PostgreSQL13
@@ -461,12 +491,13 @@ jobs:
           enable_os_ubuntu20: true
           enable_os_macos: true
           enable_fw_net472: false
-          enable_fw_netcore21: true
+          enable_fw_netcore21: false
           enable_fw_netcore31: false
+          enable_fw_net50: true
           is_experimental: false
-          ${{ if or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'postgresql')) }}:
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
             enabled: true
-          ${{ if not(or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'postgresql'))) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]'))) }}:
             enabled: false
 
 # SQL Server
@@ -482,10 +513,11 @@ jobs:
           enable_fw_net472: true
           enable_fw_netcore21: true
           enable_fw_netcore31: false
+          enable_fw_net50: false
           is_experimental: false
-          ${{ if contains(parameters.db_filter, 'all') }}:
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
-          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
             enabled: false
 
         - name: SqlServer2005_MS
@@ -500,10 +532,11 @@ jobs:
           enable_fw_net472: true
           enable_fw_netcore21: true
           enable_fw_netcore31: false
+          enable_fw_net50: false
           is_experimental: false
-          ${{ if contains(parameters.db_filter, 'all') }}:
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
-          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
             enabled: false
 
         - name: SqlServer2008
@@ -518,10 +551,11 @@ jobs:
           enable_fw_net472: true
           enable_fw_netcore21: true
           enable_fw_netcore31: false
+          enable_fw_net50: false
           is_experimental: false
-          ${{ if contains(parameters.db_filter, 'all') }}:
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
-          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
             enabled: false
 
         - name: SqlServer2008_MS
@@ -536,10 +570,11 @@ jobs:
           enable_fw_net472: true
           enable_fw_netcore21: true
           enable_fw_netcore31: false
+          enable_fw_net50: false
           is_experimental: false
-          ${{ if contains(parameters.db_filter, 'all') }}:
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
-          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
             enabled: false
 
         - name: SqlServer2012
@@ -554,10 +589,11 @@ jobs:
           enable_fw_net472: true
           enable_fw_netcore21: true
           enable_fw_netcore31: false
+          enable_fw_net50: false
           is_experimental: false
-          ${{ if contains(parameters.db_filter, 'all') }}:
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
-          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
             enabled: false
 
         - name: SqlServer2012_MS
@@ -572,10 +608,11 @@ jobs:
           enable_fw_net472: true
           enable_fw_netcore21: true
           enable_fw_netcore31: false
+          enable_fw_net50: false
           is_experimental: false
-          ${{ if contains(parameters.db_filter, 'all') }}:
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
-          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
             enabled: false
 
         - name: SqlServer2014
@@ -590,10 +627,11 @@ jobs:
           enable_fw_net472: true
           enable_fw_netcore21: true
           enable_fw_netcore31: false
+          enable_fw_net50: false
           is_experimental: false
-          ${{ if contains(parameters.db_filter, 'all') }}:
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
-          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
             enabled: false
 
         - name: SqlServer2014_MS
@@ -608,10 +646,11 @@ jobs:
           enable_fw_net472: true
           enable_fw_netcore21: true
           enable_fw_netcore31: false
+          enable_fw_net50: false
           is_experimental: false
-          ${{ if contains(parameters.db_filter, 'all') }}:
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
-          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
             enabled: false
 
         - name: SqlServer2016
@@ -626,10 +665,11 @@ jobs:
           enable_fw_net472: true
           enable_fw_netcore21: true
           enable_fw_netcore31: false
+          enable_fw_net50: false
           is_experimental: false
-          ${{ if contains(parameters.db_filter, 'all') }}:
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
-          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
             enabled: false
 
         - name: SqlServer2016_MS
@@ -644,10 +684,11 @@ jobs:
           enable_fw_net472: true
           enable_fw_netcore21: true
           enable_fw_netcore31: false
+          enable_fw_net50: false
           is_experimental: false
-          ${{ if contains(parameters.db_filter, 'all') }}:
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
-          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
             enabled: false
 
         - name: SqlServer2017
@@ -663,14 +704,15 @@ jobs:
           enable_os_win2019: false
           enable_os_ubuntu16: false
           enable_os_ubuntu20: true
-          enable_os_macos: false # true (disabled due to stack overflow exception during test run. needs investigation)
+          enable_os_macos: true
           enable_fw_net472: true
           enable_fw_netcore21: true
           enable_fw_netcore31: false
+          enable_fw_net50: false
           is_experimental: false
-          ${{ if contains(parameters.db_filter, 'all') }}:
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
-          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
             enabled: false
 
         - name: SqlServer2017_MS
@@ -686,14 +728,15 @@ jobs:
           enable_os_win2019: false
           enable_os_ubuntu16: false
           enable_os_ubuntu20: true
-          enable_os_macos: false # true (disabled due to stack overflow exception during test run. needs investigation)
+          enable_os_macos: true
           enable_fw_net472: true
           enable_fw_netcore21: true
           enable_fw_netcore31: false
+          enable_fw_net50: false
           is_experimental: false
-          ${{ if contains(parameters.db_filter, 'all') }}:
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
-          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
             enabled: false
 
         - name: SqlServer2019
@@ -709,14 +752,15 @@ jobs:
           enable_os_win2019: true
           enable_os_ubuntu16: false
           enable_os_ubuntu20: true
-          enable_os_macos:  false # true (disabled due to stack overflow exception during test run. needs investigation)
+          enable_os_macos:  true
           enable_fw_net472: true
-          enable_fw_netcore21: true
+          enable_fw_netcore21: false
           enable_fw_netcore31: false
+          enable_fw_net50: true
           is_experimental: false
-          ${{ if or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'sqlserver.2019')) }}:
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]')) }}:
             enabled: true
-          ${{ if not(or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'sqlserver.2019'))) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]'))) }}:
             enabled: false
 
         - name: SqlServer2019_MS
@@ -732,14 +776,15 @@ jobs:
           enable_os_win2019: true
           enable_os_ubuntu16: false
           enable_os_ubuntu20: true
-          enable_os_macos:  false # true (disabled due to stack overflow exception during test run. needs investigation)
+          enable_os_macos:  true
           enable_fw_net472: true
-          enable_fw_netcore21: true
+          enable_fw_netcore21: false
           enable_fw_netcore31: false
+          enable_fw_net50: true
           is_experimental: false
-          ${{ if or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'sqlserver.2019')) }}:
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]')) }}:
             enabled: true
-          ${{ if not(or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'sqlserver.2019'))) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]'))) }}:
             enabled: false
 
 # Sybase ASE
@@ -758,10 +803,11 @@ jobs:
           enable_fw_net472: false
           enable_fw_netcore21: true
           enable_fw_netcore31: false
+          enable_fw_net50: false
           is_experimental: false
-          ${{ if or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'sybase.ase')) }}:
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sybase.ase.all]')) }}:
             enabled: true
-          ${{ if not(or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'sybase.ase'))) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sybase.ase.all]'))) }}:
             enabled: false
 
 # Oracle
@@ -780,10 +826,11 @@ jobs:
           enable_fw_net472: false
           enable_fw_netcore21: true
           enable_fw_netcore31: false
+          enable_fw_net50: false
           is_experimental: false
-          ${{ if or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'oracle')) }}:
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]')) }}:
             enabled: true
-          ${{ if not(or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'oracle'))) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]'))) }}:
             enabled: false
 
         - name: Oracle12
@@ -801,10 +848,11 @@ jobs:
           enable_fw_net472: false
           enable_fw_netcore21: true
           enable_fw_netcore31: false
+          enable_fw_net50: false
           is_experimental: false
-          ${{ if or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'oracle')) }}:
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]')) }}:
             enabled: true
-          ${{ if not(or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'oracle'))) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]'))) }}:
             enabled: false
 
 # Firebird
@@ -823,10 +871,11 @@ jobs:
           enable_fw_net472: false
           enable_fw_netcore21: true
           enable_fw_netcore31: false
+          enable_fw_net50: false
           is_experimental: false
-          ${{ if contains(parameters.db_filter, 'all') }}:
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[firebird.all]')) }}:
             enabled: true
-          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[firebird.all]'))) }}:
             enabled: false
 
         - name: Firebird3
@@ -844,10 +893,11 @@ jobs:
           enable_fw_net472: false
           enable_fw_netcore21: true
           enable_fw_netcore31: false
+          enable_fw_net50: false
           is_experimental: false
-          ${{ if contains(parameters.db_filter, 'all') }}:
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[firebird.all]')) }}:
             enabled: true
-          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[firebird.all]'))) }}:
             enabled: false
 
 # DB2
@@ -868,10 +918,11 @@ jobs:
           enable_fw_net472: false
           enable_fw_netcore21: true
           enable_fw_netcore31: false
+          enable_fw_net50: false
           is_experimental: false
-          ${{ if or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'db2')) }}:
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[db2.all]')) }}:
             enabled: true
-          ${{ if not(or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'db2'))) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[db2.all]'))) }}:
             enabled: false
 
 # Informix
@@ -892,10 +943,11 @@ jobs:
           enable_fw_net472: false
           enable_fw_netcore21: true
           enable_fw_netcore31: false
+          enable_fw_net50: false
           is_experimental: false
-          ${{ if or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'informix')) }}:
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[informix.all]')) }}:
             enabled: true
-          ${{ if not(or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'informix'))) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[informix.all]'))) }}:
             enabled: false
 
         - name: Informix14
@@ -915,10 +967,11 @@ jobs:
           enable_fw_net472: false
           enable_fw_netcore21: true
           enable_fw_netcore31: false
+          enable_fw_net50: false
           is_experimental: false
-          ${{ if or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'informix')) }}:
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[informix.all]')) }}:
             enabled: true
-          ${{ if not(or(contains(parameters.db_filter, 'all'), contains(parameters.db_filter, 'informix'))) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[informix.all]'))) }}:
             enabled: false
 
 # SAP HANA
@@ -937,9 +990,10 @@ jobs:
           enable_fw_net472: false
           enable_fw_netcore21: true
           enable_fw_netcore31: false
+          enable_fw_net50: false
           is_experimental: false
           docker_login: true
-          ${{ if contains(parameters.db_filter, 'all') }}:
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[saphana.all]')) }}:
             enabled: true
-          ${{ if not(contains(parameters.db_filter, 'all')) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[saphana.all]'))) }}:
             enabled: false

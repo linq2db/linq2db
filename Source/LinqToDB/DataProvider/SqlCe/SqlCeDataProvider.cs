@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlTypes;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -11,8 +13,6 @@ namespace LinqToDB.DataProvider.SqlCe
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
-	using System.Threading;
-	using System.Threading.Tasks;
 
 	public class SqlCeDataProvider : DynamicDataProviderBase<SqlCeProviderAdapter>
 	{
@@ -34,7 +34,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			SqlProviderFlags.IsDistinctSetOperationsSupported     = false;
 			SqlProviderFlags.IsUpdateFromSupported                = false;
 
-			SetCharFieldToType<char>("NChar", (r, i) => DataTools.GetChar(r, i));
+			SetCharFieldToType<char>("NChar", DataTools.GetCharExpression);
 
 			SetCharField("NChar",    (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("NVarChar", (r,i) => r.GetString(i).TrimEnd(' '));
@@ -43,6 +43,8 @@ namespace LinqToDB.DataProvider.SqlCe
 		}
 
 		#region Overrides
+
+		public override TableOptions SupportedTableOptions => TableOptions.None;
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{

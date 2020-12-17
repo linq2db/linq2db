@@ -632,7 +632,7 @@ namespace Tests.Data
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 				if (tvpSupported)
 				{
-					var proc = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "TableTypeTestProc");
+					var proc = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "TableTypeTestProc")!;
 					Assert.IsNotNull(proc);
 					Assert.AreEqual ("[dbo].[TestTableType]", proc.Parameters[0].SchemaType);
 				}
@@ -650,8 +650,8 @@ namespace Tests.Data
 				}
 
 				Assert.IsTrue  (SqlServerTransientExceptionDetector.IsHandled(sex!, out errors));
-				Assert.AreEqual(1, errors.Count());
-				Assert.AreEqual(8134, errors.Single());
+				Assert.AreEqual(1, errors!.Count());
+				Assert.AreEqual(8134, errors!.Single());
 
 				var cs = DataConnection.GetConnectionString(GetProviderName(context, out var _));
 
@@ -796,7 +796,7 @@ namespace Tests.Data
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 				if (tvpSupported)
 				{
-					var proc = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "TableTypeTestProc");
+					var proc = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "TableTypeTestProc")!;
 					Assert.IsNotNull(proc);
 					Assert.AreEqual("[dbo].[TestTableType]", proc.Parameters[0].SchemaType);
 				}
@@ -813,8 +813,8 @@ namespace Tests.Data
 					sex = ex;
 				}
 				Assert.IsTrue  (SqlServerTransientExceptionDetector.IsHandled(sex!, out errors));
-				Assert.AreEqual(1, errors.Count());
-				Assert.AreEqual(8134, errors.Single());
+				Assert.AreEqual(1, errors!.Count());
+				Assert.AreEqual(8134, errors!.Single());
 
 				var cs = DataConnection.GetConnectionString(GetProviderName(context, out var _));
 
@@ -1299,7 +1299,6 @@ namespace Tests.Data
 		}
 #endif
 
-		[ActiveIssue(2499)]
 		[Test]
 		public void TestOracleManaged([IncludeDataSources(TestProvName.AllOracleManaged)] string context, [Values] ConnectionType type)
 		{
@@ -1328,10 +1327,20 @@ namespace Tests.Data
 
 				// OracleTimeStampTZ parameter creation and conversion to DateTimeOffset
 				var dtoVal = TestData.DateTimeOffset;
-				var dtoValue = db.Execute<DateTimeOffset>("SELECT :p FROM SYS.DUAL", new DataParameter("p", dtoVal, DataType.DateTimeOffset) { Precision = 6 });
-				dtoVal = dtoVal.AddTicks(-1 * (dtoVal.Ticks % 10));
-				Assert.AreEqual(dtoVal, dtoValue);
-				Assert.AreEqual(((OracleDataProvider)db.DataProvider).Adapter.OracleTimeStampTZType, ((IDbDataParameter)db.Command.Parameters[0]!).Value.GetType());
+
+				// it is possible to define working reader expression for unmapped wrapper (at least for MiniProfiler)
+				// but it doesn't make sense to do it righ now without user request
+				// especially taking into account that more proper way is to define mappings
+				if (!unmapped)
+				{
+					var dtoValue = db.Execute<DateTimeOffset>("SELECT :p FROM SYS.DUAL", new DataParameter("p", dtoVal, DataType.DateTimeOffset) { Precision = 6 });
+					dtoVal = dtoVal.AddTicks(-1 * (dtoVal.Ticks % 10));
+					Assert.AreEqual(dtoVal, dtoValue);
+					Assert.AreEqual(((OracleDataProvider)db.DataProvider).Adapter.OracleTimeStampTZType, ((IDbDataParameter)db.Command.Parameters[0]!).Value!.GetType()!);
+				}
+
+				// bulk copy without transaction (transaction not supported)
+				TestBulkCopy();
 
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 				Assert.AreEqual(unmapped ? string.Empty : TestUtils.GetServerName(db), schema.Database);
@@ -1364,12 +1373,34 @@ namespace Tests.Data
 					Assert.AreEqual(-1, cmd.InitialLONGFetchSize);
 					Assert.AreEqual(0, arrayBindCount);
 				}
+
+				void TestBulkCopy()
+				{
+					using (db.CreateLocalTable<OracleBulkCopyTable>())
+					{
+						long copied = 0;
+						var options = new BulkCopyOptions()
+						{
+							BulkCopyType       = BulkCopyType.ProviderSpecific,
+							NotifyAfter        = 500,
+							RowsCopiedCallback = arg => copied = arg.RowsCopied,
+							KeepIdentity       = true
+						};
+
+						db.BulkCopy(
+							options,
+							Enumerable.Range(0, 1000).Select(n => new OracleBulkCopyTable() { ID = 2000 + n }));
+
+						Assert.AreEqual(!unmapped, trace.Contains("INSERT BULK"));
+						Assert.AreEqual(1000, copied);
+					}
+				}
 			}
 		}
 
 		[Table]
 		public class OracleBulkCopyTable
-		{ 
+		{
 			[Column]
 			public int ID { get; set; }
 		}
@@ -1423,9 +1454,9 @@ namespace Tests.Data
 
 				// provider types support by schema
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
-				var allTypes = schema.Tables.Where(t => t.TableName == "AllTypes").SingleOrDefault();
+				var allTypes = schema.Tables.Where(t => t.TableName == "AllTypes").SingleOrDefault()!;
 				Assert.NotNull (allTypes);
-				var tsColumn = allTypes.Columns.Where(c => c.ColumnName == "timestampDataType").SingleOrDefault();
+				var tsColumn = allTypes.Columns.Where(c => c.ColumnName == "timestampDataType").SingleOrDefault()!;
 				Assert.NotNull (tsColumn);
 				Assert.AreEqual("NpgsqlDateTime", tsColumn.ProviderSpecificType);
 
@@ -1496,12 +1527,7 @@ namespace Tests.Data
 							options,
 							Enumerable.Range(0, 1000).Select(n => new PostgreSQLTests.AllTypes() { ID = 2000 + n }));
 
-#if NET472
-						// we use 4.0.11 for tests, async added in 4.1.0
-						Assert.AreEqual(!unmapped, trace.Contains("INSERT BULK"));
-#else
 						Assert.AreEqual(!unmapped, trace.Contains("INSERT ASYNC BULK"));
-#endif
 						Assert.AreEqual(1000, copied);
 					}
 					finally
@@ -1514,7 +1540,7 @@ namespace Tests.Data
 
 		[Table]
 		public class TestPostgreSQLTypeName
-		{ 
+		{
 			[Column]
 			public NpgsqlTypes.NpgsqlCircle? Column { get; set; }
 		}

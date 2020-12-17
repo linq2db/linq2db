@@ -3,12 +3,14 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data.Linq;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using System.Threading;
+using System.Timers;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -599,6 +601,10 @@ namespace LinqToDB.Mapping
 					ExpressionHelper.Property(param, nameof(Nullable<int>.HasValue)),
 					Expression.Convert(body, type),
 					new DefaultValueExpression(this, type));
+			}
+			else if (type.IsNullable())
+			{
+				body = Expression.Convert(param, type);
 			}
 			else if (fromType.IsClass || fromType.IsInterface)
 			{
@@ -1520,12 +1526,14 @@ namespace LinqToDB.Mapping
 		public EntityDescriptor GetEntityDescriptor(Type type)
 		{
 			var key = new { Type = type, ConfigurationID };
-			var ed = EntityDescriptorsCache.GetOrCreate(key,
-				o =>
+			var ed = EntityDescriptorsCache.GetOrCreate(
+				key,
+				this,
+				static (o, key, context) =>
 				{
 					o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
-					var edNew = new EntityDescriptor(this, type);
-					EntityDescriptorCreatedCallback?.Invoke(this, edNew);
+					var edNew = new EntityDescriptor(context, key.Type);
+					context.EntityDescriptorCreatedCallback?.Invoke(context, edNew);
 					return edNew;
 				});
 
@@ -1548,7 +1556,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public static void ClearCache()
 		{
-			EntityDescriptorsCache.Compact(1);
+			EntityDescriptorsCache.Clear();
 		}
 
 		internal void ResetEntityDescriptor(Type type)

@@ -18,7 +18,7 @@ namespace Tests.xUpdate
 		[AttributeUsage(AttributeTargets.Parameter)]
 		public class MergeDataContextSourceAttribute : DataSourcesAttribute
 		{
-			static string[] Unsupported = new[]
+			public static List<string> Unsupported = new[]
 			{
 				TestProvName.AllAccess,
 				ProviderName.SqlCe,
@@ -26,7 +26,7 @@ namespace Tests.xUpdate
 				TestProvName.AllSqlServer2005Minus,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllMySql,
-			}.SelectMany(_ => _.Split(',')).ToArray();
+			}.SelectMany(_ => _.Split(',')).ToList();
 
 			public MergeDataContextSourceAttribute(params string[] except)
 				: base(true, Unsupported.Concat(except.SelectMany(_ => _.Split(','))).ToArray())
@@ -52,6 +52,7 @@ namespace Tests.xUpdate
 				TestProvName.SqlServer2016,
 				ProviderName.SqlServer2017,
 				TestProvName.SqlServer2019,
+				TestProvName.SqlServer2019SequentialAccess,
 				TestProvName.SqlAzure
 			};
 

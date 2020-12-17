@@ -1,19 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
 using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.SQLite
 {
-	using Data;
 	using Common;
-	using Extensions;
+	using Data;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
-	using System.Threading.Tasks;
-	using System.Threading;
 
 	public class SQLiteDataProvider : DynamicDataProviderBase<SQLiteProviderAdapter>
 	{
@@ -42,12 +40,118 @@ namespace LinqToDB.DataProvider.SQLite
 			SqlProviderFlags.IsUpdateFromSupported             = false;
 			SqlProviderFlags.DefaultMultiQueryIsolationLevel   = IsolationLevel.Serializable;
 
+			_sqlOptimizer = new SQLiteSqlOptimizer(SqlProviderFlags);
+
+			/*
+			 * WHAT'S WRONG WITH SQLITE:
+			 * - sqlite has only 5 types: https://sqlite.org/datatype3.html
+			 * - types applied to value, not to column => column could contain value of any type (e.g. all 5 types)
+			 * - there is "column type affinity" thingy, which doesn't help with data read
+			 * 
+			 * Which means our general approach to build column read expression, where we ask data reader
+			 * about column type and read value using corresponding Get*() method, doesn't work as provider cannot
+			 * give us detailed type information.
+			 * 
+			 * How it works for supported providers
+			 * System.Data.Sqlite:
+			 * This provider actually works fine, as it use column type name from create table statement to infer column
+			 * type. In other words, while you use proper type names to create your table and don't mix values of different
+			 * types in your column - you are safe.
+			 * 
+			 * Microsoft.Data.Sqlite:
+			 * This provider decides to leave typing to user and return data to user only using 5 basic types
+			 * (v1.x also could return int-typed value, which is just casted long value).
+			 * 
+			 * Which means we need to handle Microsoft.Data.Sqlite in special way to be able to read data from database
+			 * without fallback to slow-mode mapping
+			 * 
+			 * There are two ways to fix it:
+			 * 1. implement extra type-name resolve as it is done by System.Data.Sqlite (we can still get type name from provider)
+			 * 2. implement mixed type support using target field type
+			 * 
+			 * in other words use column type name vs target field type to decide value of which type we should create (read)
+			 * 
+			 * While 2 sounds tempting, it doesn't work well with mapping to custom field types. Also VARIANT-like columns is
+			 * not something users usually do, even with sqlite, so we will implement first approach here.
+			 * 
+			 * Type information we can get from provider:
+			 * 1. column type name from GetDataTypeName(): could be type name from CREATE TABLE statement or if this
+			 *    information missing - standard type: INTEGER, REAL, TEXT, BLOB
+			 *    for null/unknown type will be BLOB (or INTEGER in v1)
+			 * 2. .net type of value: long, double, string, byte[]
+			 *    for null/unknown type it will be byte[] (or int in v1)
+			 *
+			 * So, in code below we will map default type names and type names, used by System.Data.Sqlite to reader expressions.
+			 * With additional fixes for cases, where it doesn't work well due to provider being unable to convert value to
+			 * requested type.
+			 */
+			if (Name == ProviderName.SQLiteMS)
+			{
+				SetSqliteField((r, i) => r.GetInt64(i), new[] { typeof(long), typeof(string), typeof(double) },
+					"INTEGER", "BIGINT", "COUNTER", "IDENTITY", "INT64", "INTEGER64", "LONG", "MEDIUMINT", "UINT", "UINT32", "UNSIGNEDINTEGER32");
+
+				SetSqliteField((r, i) => r.GetDecimal(i), new[] { typeof(long), typeof(string), typeof(double) },
+					"CURRENCY", "DECIMAL", "DECIMALTEXT", "MONEY", "NUMBER", "NUMERIC", "VARNUMERIC", "NUMERICTEXT", "SMALLMONEY", "BIGUINT", "UINT64", "ULONG", "UNSIGNEDINTEGER", "UNSIGNEDINTEGER64");
+
+				SetSqliteField((r, i) => r.GetInt32(i), new[] { typeof(long), typeof(string), typeof(double) },
+					"INT", "INT32", "INTEGER32", "MEDIUMINT", "SMALLUINT", "UINT16", "UNSIGNEDINTEGER16");
+
+				SetSqliteField((r, i) => r.GetInt16(i), new[] { typeof(long), typeof(string), typeof(double) },
+					"INT8", "INT16", "INTEGER8", "INTEGER16", "SMALLINT", "TINYSINT", "SBYTE");
+
+				SetSqliteField((r, i) => r.GetByte(i), new[] { typeof(long), typeof(string), typeof(double) },
+					"TINYINT", "UINT8", "UNSIGNEDINTEGER8", "BYTE");
+
+				SetSqliteField((r, i) => r.GetDouble(i), new[] { typeof(long), typeof(string), typeof(double) },
+					"REAL", "DOUBLE", "FLOAT");
+
+				SetSqliteField((r, i) => r.GetByte(i), new[] { typeof(long), typeof(string), typeof(double) },
+					"SINGLE");
+
+				SetSqliteField((r, i) => r.GetString(i), new[] { typeof(string) },
+					"TEXT", "CHAR", "CLOB", "LONGCHAR", "LONGTEXT", "LONGVARCHAR", "MEMO", "NCHAR", "NOTE", "NTEXT", "NVARCHAR", "STRING", "VARCHAR", "VARCHAR2");
+
+				SetSqliteField((r, i) => (byte[])r.GetValue(i), new[] { typeof(byte[]), typeof(string) },
+					"BLOB", "BINARY", "GENERAL", "IMAGE", "OLEOBJECT", "RAW", "VARBINARY");
+
+				SetSqliteField((r, i) => r.GetGuid(i), new[] { typeof(string), typeof(byte[]) },
+					"GUID", "UNIQUEIDENTIFIER");
+
+				SetSqliteField((r, i) => r.GetBoolean(i), new[] { typeof(long), typeof(string), typeof(double) },
+					"BIT", "BOOL", "BOOLEAN", "LOGICAL", "YESNO");
+
+				SetSqliteField((r, i) => r.GetDateTime(i), new[] { typeof(long), typeof(string), typeof(double) },
+					"DATETIME", "DATETIME2", "DATE", "SMALLDATE", "SMALLDATETIME", "TIME", "TIMESTAMP", "DATETIMEOFFSET");
+
+				// also specify explicit converter for non-integer numerics, repored as integer by provider
+				SetToType<IDataReader, float  , long>((r, i) => r.GetFloat(i));
+				SetToType<IDataReader, double , long>((r, i) => r.GetDouble(i));
+				SetToType<IDataReader, decimal, long>((r, i) => r.GetDecimal(i));
+			}
+
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd(' '));
-			SetCharFieldToType<char>("char",  (r, i) => DataTools.GetChar(r, i));
-			SetCharFieldToType<char>("nchar", (r, i) => DataTools.GetChar(r, i));
+			SetCharFieldToType<char>("char" , DataTools.GetCharExpression);
+			SetCharFieldToType<char>("nchar", DataTools.GetCharExpression);
 
-			_sqlOptimizer = new SQLiteSqlOptimizer(SqlProviderFlags);
+		}
+
+		private void SetSqliteField<T>(Expression<Func<IDataReader, int, T>> expr, Type[] fieldTypes, params string[] typeNames)
+		{
+			foreach (var fieldType in fieldTypes)
+			{
+				foreach (var typeName in typeNames)
+					SetField<IDataReader, T>(typeName, fieldType, expr);
+
+				// defaults: v2
+				if (fieldType != typeof(byte[]))
+					foreach (var typeName in typeNames)
+						SetField<IDataReader, T>(typeName, typeof(byte[]), expr);
+
+				// defaults: v1
+				foreach (var typeName in typeNames)
+					SetField<IDataReader, T>(typeName, typeof(int), expr);
+			}
 		}
 
 		protected override string? NormalizeTypeName(string? typeName)
@@ -55,11 +159,9 @@ namespace LinqToDB.DataProvider.SQLite
 			if (typeName == null)
 				return null;
 
-			if (typeName.StartsWith("char("))
-				return "char";
-
-			if (typeName.StartsWith("nchar("))
-				return "nchar";
+			var idx = typeName.IndexOf('(');
+			if (idx != -1)
+				return typeName.Substring(0, idx);
 
 			return typeName;
 		}
@@ -71,6 +173,13 @@ namespace LinqToDB.DataProvider.SQLite
 
 			return base.ExecuteScope(dataConnection);
 		}
+
+		public override TableOptions SupportedTableOptions =>
+			TableOptions.IsTemporary               |
+			TableOptions.IsLocalTemporaryStructure |
+			TableOptions.IsLocalTemporaryData      |
+			TableOptions.CreateIfNotExists         |
+			TableOptions.DropIfExists;
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
@@ -131,86 +240,6 @@ namespace LinqToDB.DataProvider.SQLite
 			}
 
 			base.SetParameterType(dataConnection, parameter, dataType);
-		}
-
-		public override Expression GetReaderExpression(IDataReader reader, int idx, Expression readerExpression, Type toType)
-		{
-			if (Name != ProviderName.SQLiteMS)
-				return base.GetReaderExpression(reader, idx, readerExpression, toType);
-
-			var fieldType    = ((DbDataReader)reader).GetFieldType(idx);
-			var providerType = ((DbDataReader)reader).GetProviderSpecificFieldType(idx);
-			var typeName     = ((DbDataReader)reader).GetDataTypeName(idx);
-
-			if (toType.IsFloatType() && fieldType.IsIntegerType())
-			{
-				providerType = fieldType = toType;
-			}
-
-			if (reader.IsDBNull(idx))
-				goto DEFAULT;
-
-			if (fieldType == null)
-			{
-				var name = ((DbDataReader)reader).GetName(idx);
-				throw new LinqToDBException($"Can't create '{typeName}' type or '{providerType}' specific type for {name}.");
-			}
-
-#if DEBUG1
-			Debug.WriteLine("ToType                ProviderFieldType     FieldType             DataTypeName          Expression");
-			Debug.WriteLine("--------------------- --------------------- --------------------- --------------------- ---------------------");
-			Debug.WriteLine("{0,-21} {1,-21} {2,-21} {3,-21}".Args(
-				toType       == null ? "(null)" : toType.Name,
-				providerType == null ? "(null)" : providerType.Name,
-				fieldType.Name,
-				typeName ?? "(null)"));
-			Debug.WriteLine("--------------------- --------------------- --------------------- --------------------- ---------------------");
-
-			foreach (var ex in ReaderExpressions)
-			{
-				Debug.WriteLine("{0,-21} {1,-21} {2,-21} {3,-21} {4}"
-					.Args(
-						ex.Key.ToType            == null ? null : ex.Key.ToType.Name,
-						ex.Key.ProviderFieldType == null ? null : ex.Key.ProviderFieldType.Name,
-						ex.Key.FieldType         == null ? null : ex.Key.FieldType.Name,
-						ex.Key.DataTypeName,
-						ex.Value));
-			}
-#endif
-			var dataReaderType = readerExpression.Type;
-
-			if (FindExpression(new ReaderInfo { DataReaderType = dataReaderType, ToType = toType, ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out var expr) ||
-			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType, ToType = toType, ProviderFieldType = providerType, FieldType = fieldType                          }, out expr) ||
-			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType, ToType = toType, ProviderFieldType = providerType                                                 }, out expr) ||
-			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType,                  ProviderFieldType = providerType                                                 }, out expr) ||
-			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType,                  ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out expr) ||
-			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType,                  ProviderFieldType = providerType, FieldType = fieldType                          }, out expr) ||
-			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType, ToType = toType,                                   FieldType = fieldType, DataTypeName = typeName }, out expr) ||
-			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType, ToType = toType,                                   FieldType = fieldType                          }, out expr) ||
-			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType,                                                    FieldType = fieldType, DataTypeName = typeName }, out expr) ||
-			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType, ToType = toType                                                                                   }, out expr) ||
-			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType,                                                    FieldType = fieldType                          }, out expr))
-				return expr;
-
-			if (FindExpression(new ReaderInfo { ToType = toType, ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out expr) ||
-			    FindExpression(new ReaderInfo { ToType = toType, ProviderFieldType = providerType, FieldType = fieldType                          }, out expr) ||
-			    FindExpression(new ReaderInfo { ToType = toType, ProviderFieldType = providerType                                                 }, out expr) ||
-			    FindExpression(new ReaderInfo {                  ProviderFieldType = providerType                                                 }, out expr) ||
-			    FindExpression(new ReaderInfo {                  ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out expr) ||
-			    FindExpression(new ReaderInfo {                  ProviderFieldType = providerType, FieldType = fieldType                          }, out expr) ||
-			    FindExpression(new ReaderInfo { ToType = toType,                                   FieldType = fieldType, DataTypeName = typeName }, out expr) ||
-			    FindExpression(new ReaderInfo { ToType = toType,                                   FieldType = fieldType                          }, out expr) ||
-			    FindExpression(new ReaderInfo {                                                    FieldType = fieldType, DataTypeName = typeName }, out expr) ||
-			    FindExpression(new ReaderInfo { ToType = toType                                                                                   }, out expr) ||
-			    FindExpression(new ReaderInfo {                                                    FieldType = fieldType                          }, out expr))
-				return expr;
-
-		DEFAULT:
-
-			var getValueMethodInfo = Expressions.MemberHelper.MethodOf<IDataReader>(r => r.GetValue(0));
-			return Expression.Convert(
-				Expression.Call(readerExpression, getValueMethodInfo, Expression.Constant(idx)),
-				fieldType);
 		}
 
 		#region BulkCopy

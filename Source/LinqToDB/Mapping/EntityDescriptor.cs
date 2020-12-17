@@ -84,6 +84,17 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
+		/// Gets or sets table options. See <see cref="TableOptions"/> enum for support information per provider.
+		/// </summary>
+		public TableOptions TableOptions { get; private set; }
+
+		TableOptions IEntityChangeDescriptor.TableOptions
+		{
+			get => TableOptions;
+			set => TableOptions = value;
+		}
+
+		/// <summary>
 		/// Gets or sets column mapping rules for current mapping class or interface.
 		/// If <c>true</c>, properties and fields should be marked with one of those attributes to be used for mapping:
 		/// - <see cref="ColumnAttribute"/>;
@@ -92,7 +103,7 @@ namespace LinqToDB.Mapping
 		/// - <see cref="ColumnAliasAttribute"/>.
 		/// Otherwise all supported members of scalar type will be used:
 		/// - public instance fields and properties;
-		/// - explicit interface implmentation properties.
+		/// - explicit interface implementation properties.
 		/// Also see <seealso cref="Configuration.IsStructIsScalarType"/> and <seealso cref="ScalarTypeAttribute"/>.
 		/// </summary>
 		public bool IsColumnAttributeRequired { get; private set; }
@@ -107,7 +118,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public List<ColumnDescriptor> Columns { get; private set; }
 
-		IEnumerable<IColumnChangeDescriptor> IEntityChangeDescriptor.Columns => Columns.Cast<IColumnChangeDescriptor>();
+		IEnumerable<IColumnChangeDescriptor> IEntityChangeDescriptor.Columns => Columns;
 
 		/// <summary>
 		/// Gets list of association descriptors for current entity.
@@ -132,14 +143,14 @@ namespace LinqToDB.Mapping
 
 		private List<InheritanceMapping> _inheritanceMappings = null!;
 		/// <summary>
-		/// Gets list of inheritace mapping descriptors for current entity.
+		/// Gets list of inheritance mapping descriptors for current entity.
 		/// </summary>
 		public List<InheritanceMapping> InheritanceMapping => _inheritanceMappings;
 
 		/// <summary>
 		/// Gets mapping class type.
 		/// </summary>
-		public Type ObjectType { get { return TypeAccessor.Type; } }
+		public Type ObjectType => TypeAccessor.Type;
 
 		/// <summary>
 		/// Returns <c>true</c>, if entity has complex columns (with <see cref="MemberAccessor.IsComplex"/> flag set).
@@ -152,24 +163,30 @@ namespace LinqToDB.Mapping
 		{
 			var ta = MappingSchema.GetAttribute<TableAttribute>(TypeAccessor.Type, a => a.Configuration);
 
+			string? tableName = null;
+
 			if (ta != null)
 			{
-				TableName                 = ta.Name!;
+				tableName                 = ta.Name!;
 				SchemaName                = ta.Schema;
 				DatabaseName              = ta.Database;
 				ServerName                = ta.Server;
+				TableOptions              = ta.TableOptions;
 				IsColumnAttributeRequired = ta.IsColumnAttributeRequired;
 			}
 
-			if (TableName == null)
+			if (tableName == null)
 			{
-				TableName = TypeAccessor.Type.Name;
+				tableName = TypeAccessor.Type.Name;
 
-				if (TypeAccessor.Type.IsInterface && TableName.Length > 1 && TableName[0] == 'I')
-					TableName = TableName.Substring(1);
+				if (TypeAccessor.Type.IsInterface && tableName.Length > 1 && tableName[0] == 'I')
+					tableName = tableName.Substring(1);
 			}
 
+			TableName = tableName;
+
 			var qf = MappingSchema.GetAttribute<QueryFilterAttribute>(TypeAccessor.Type);
+
 			if (qf != null)
 			{
 				QueryFilterFunc = qf.FilterFunc;
@@ -194,21 +211,25 @@ namespace LinqToDB.Mapping
 					continue;
 				}
 
-				var ca = MappingSchema.GetAttribute<ColumnAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
+				var columnAttributes = MappingSchema.GetAttributes<ColumnAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
 
-				if (ca != null)
+				if (columnAttributes.Length > 0)
 				{
-					if (ca.IsColumn)
+					var mappedMembers = new HashSet<string>();
+					foreach (var ca in columnAttributes)
 					{
-						if (ca.MemberName != null)
+						if (mappedMembers.Add(ca.MemberName ?? string.Empty) && ca.IsColumn)
 						{
-							attrs.Add(new ColumnAttribute(member.Name, ca));
-						}
-						else
-						{
-							var cd = new ColumnDescriptor(MappingSchema, ca, member);
-							AddColumn(cd);
-							_columnNames.Add(member.Name, cd);
+							if (ca.MemberName != null)
+							{
+								attrs.Add(new ColumnAttribute(member.Name, ca));
+							}
+							else
+							{
+								var cd = new ColumnDescriptor(MappingSchema, ca, member);
+								AddColumn(cd);
+								_columnNames.Add(member.Name, cd);
+							}
 						}
 					}
 				}

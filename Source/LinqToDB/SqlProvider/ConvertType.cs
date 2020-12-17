@@ -134,5 +134,10 @@ namespace LinqToDB.SqlProvider
 		/// Provided name should be converted to sequence name.
 		/// </summary>
 		SequenceName,
+
+		/// <summary>
+		/// Provided name should be converted to trigger name.
+		/// </summary>
+		TriggerName,
 	}
 }

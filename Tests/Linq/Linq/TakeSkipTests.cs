@@ -849,7 +849,7 @@ namespace Tests.Linq
 							.Select(x => new
 							{
 								BatchId = x.Id,
-								CreationDate = x.Confirmations.FirstOrDefault().Date,
+								CreationDate = x.Confirmations.FirstOrDefault()!.Date,
 								x.Value
 							})
 							.Take(2)

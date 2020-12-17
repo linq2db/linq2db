@@ -226,7 +226,11 @@ namespace Tests.xUpdate
 				throw new NotImplementedException();
 			}
 
+#if NET472
+			Task<LinqToDB.Async.IAsyncEnumerable<TResult>> IQueryProviderAsync.ExecuteAsyncEnumerable<TResult>(Expression expression, CancellationToken token)
+#else
 			Task<IAsyncEnumerable<TResult>> IQueryProviderAsync.ExecuteAsyncEnumerable<TResult>(Expression expression, CancellationToken token)
+#endif
 			{
 				throw new NotImplementedException();
 			}
@@ -241,10 +245,11 @@ namespace Tests.xUpdate
 				throw new NotImplementedException();
 			}
 
-			public string? ServerName   { get; }
-			public string? DatabaseName { get; }
-			public string? SchemaName   { get; }
-			public string TableName     { get; } = null!;
+			public string?      ServerName   { get; }
+			public string?      DatabaseName { get; }
+			public string?      SchemaName   { get; }
+			public string       TableName    { get; } = null!;
+			public TableOptions TableOptions { get; }
 
 			public string GetTableName()
 			{

@@ -27,7 +27,8 @@ namespace LinqToDB.SqlQuery
 			SequenceNameAttribute[]? sequenceAttributes,
 			SqlField[]               fields,
 			SqlTableType             sqlTableType,
-			ISqlExpression[]?        tableArguments)
+			ISqlExpression[]?        tableArguments,
+			TableOptions             tableOptions)
 		{
 			SourceID           = id;
 			Name               = name;
@@ -43,13 +44,15 @@ namespace LinqToDB.SqlQuery
 
 			SqlTableType   = sqlTableType;
 			TableArguments = tableArguments;
+			TableOptions   = tableOptions;
 		}
 
 		#endregion
 
 		#region Init from type
 
-		public SqlTable(MappingSchema mappingSchema, Type objectType, string? physicalName = null) : this()
+		public SqlTable(MappingSchema mappingSchema, Type objectType, string? physicalName = null)
+			: this()
 		{
 			if (mappingSchema == null) throw new ArgumentNullException(nameof(mappingSchema));
 
@@ -61,6 +64,7 @@ namespace LinqToDB.SqlQuery
 			Name         = ed.TableName;
 			ObjectType   = objectType;
 			PhysicalName = physicalName ?? Name;
+			TableOptions = ed.TableOptions;
 
 			foreach (var column in ed.Columns)
 			{
@@ -193,6 +197,7 @@ namespace LinqToDB.SqlQuery
 		public virtual string?           PhysicalName   { get; set; }
 		public virtual SqlTableType      SqlTableType   { get; set; }
 		public         ISqlExpression[]? TableArguments { get; set; }
+		public         TableOptions      TableOptions   { get; set; }
 
 		private readonly Dictionary<string, SqlField> _fieldsLookup   = new Dictionary<string, SqlField>();
 
@@ -214,7 +219,7 @@ namespace LinqToDB.SqlQuery
 		public SequenceNameAttribute[]? SequenceAttributes { get; protected set; }
 
 		private SqlField? _all;
-		public  SqlField  All => _all ??= SqlField.All(this);
+		public  SqlField   All => _all ??= SqlField.All(this);
 
 		public SqlField? GetIdentityField()
 		{
@@ -224,7 +229,7 @@ namespace LinqToDB.SqlQuery
 
 			var keys = GetKeys(true);
 
-			if (keys != null && keys.Count == 1)
+			if (keys.Count == 1)
 				return (SqlField)keys[0];
 
 			return null;
@@ -258,21 +263,20 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlTableSource Members
 
-		public   int  SourceID { get; protected set; }
+		public int SourceID { get; protected set; }
 
 		List<ISqlExpression>? _keyFields;
 
 		public IList<ISqlExpression> GetKeys(bool allIfEmpty)
 		{
-			if (_keyFields == null)
-			{
-				_keyFields = (
-					from f in Fields
-					where   f.IsPrimaryKey
-					orderby f.PrimaryKeyOrder
-					select f as ISqlExpression
-				).ToList();
-			}
+			_keyFields ??=
+			(
+				from f in Fields
+				where f.IsPrimaryKey
+				orderby f.PrimaryKeyOrder
+				select f as ISqlExpression
+			)
+			.ToList();
 
 			if (_keyFields.Count == 0 && allIfEmpty)
 				return Fields.Select(f => f as ISqlExpression).ToList();
@@ -331,7 +335,7 @@ namespace LinqToDB.SqlQuery
 
 		public virtual QueryElementType ElementType { [DebuggerStepThrough] get; } = QueryElementType.SqlTable;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		public virtual StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{
 			if (Server   != null) sb.Append($"[{Server}].");
 			if (Database != null) sb.Append($"[{Database}].");

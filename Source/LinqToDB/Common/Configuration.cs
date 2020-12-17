@@ -6,6 +6,7 @@ namespace LinqToDB.Common
 {
 	using Data;
 	using Data.RetryPolicy;
+	using System.Data;
 	using System.Threading.Tasks;
 
 	/// <summary>
@@ -32,6 +33,13 @@ namespace LinqToDB.Common
 		/// Default value: <c>true</c>.
 		/// </summary>
 		public static bool ContinueOnCapturedContext = true;
+
+		/// <summary>
+		/// Enables mapping expression to be compatible with <see cref="CommandBehavior.SequentialAccess"/> behavior.
+		/// Note that it doesn't switch linq2db to use <see cref="CommandBehavior.SequentialAccess"/> behavior for
+		/// queries, so this optimization could be used for <see cref="CommandBehavior.Default"/> too.
+		/// </summary>
+		public static bool OptimizeForSequentialAccess = false;
 
 		public static class Data
 		{
@@ -75,6 +83,7 @@ namespace LinqToDB.Common
 			/// This option required, if you want to select related collections, e.g. using <see cref="LinqExtensions.LoadWith{TEntity,TProperty}(System.Linq.IQueryable{TEntity},System.Linq.Expressions.Expression{System.Func{TEntity,TProperty}})"/> method.
 			/// Default value: <c>false</c>.
 			/// </summary>
+			[Obsolete("AllowMultipleQuery flag has no effect and will be removed in future.")]
 			public static bool AllowMultipleQuery;
 
 			/// <summary>
@@ -157,13 +166,6 @@ namespace LinqToDB.Common
 			/// <a href="https://github.com/linq2db/linq2db/issues/365">More details</a>.
 			/// </remarks>
 			public static bool GuardGrouping = true;
-
-			/// <summary>
-			/// Used to optimize huge logical operations with large number of operands like expr1.and.expr2...and.exprN into balanced tree.
-			/// Without this option, such conditions could lead to <seealso cref="StackOverflowException"/>.
-			/// Default value: <c>false</c>.
-			/// </summary>
-			public static bool UseBinaryAggregateExpression;
 
 			/// <summary>
 			/// Used to disable LINQ expressions caching for queries.

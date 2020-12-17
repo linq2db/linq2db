@@ -242,8 +242,8 @@ namespace LinqToDB.Linq
 		{
 			Queries.Add(new QueryInfo
 			{
-				Statement   = parseContext.GetResultStatement(),
-				Parameters  = sqlParameters,
+				Statement          = parseContext.GetResultStatement(),
+				ParameterAccessors = sqlParameters,
 			});
 		}
 
@@ -376,7 +376,7 @@ namespace LinqToDB.Linq
 								return;
 					}
 
-					// create new cache instance and reorder items according to priorities to inprove Find without
+					// create new cache instance and reorder items according to priorities to improve Find without
 					// reorder lock
 					var newCache      = new QueryCacheEntry[cache.Length == CacheSize ? CacheSize : cache.Length + 1];
 					var newPriorities = new int[newCache.Length];
@@ -395,7 +395,6 @@ namespace LinqToDB.Linq
 					version  = _version;
 				}
 			}
-
 
 			/// <summary>
 			/// Search for query in cache and of found, try to move it to better position in cache.
@@ -477,8 +476,10 @@ namespace LinqToDB.Linq
 
 			// calculate query flags
 			var flags = QueryFlags.None;
+
 			if (dataContext.InlineParameters)
 				flags |= QueryFlags.InlineParameters;
+
 			// TODO: here we have race condition due to flag being global setting
 			// to fix it we must move flags to context level and remove global flags or invalidate caches on
 			// global flag change
@@ -534,26 +535,24 @@ namespace LinqToDB.Linq
 
 			return query;
 		}
+
 		#endregion
 	}
 
 	class QueryInfo : IQueryContext
 	{
-		public SqlStatement  Statement   { get; set; } = null!;
-		public object?       Context     { get; set; }
-		public List<string>? QueryHints  { get; set; }
+		public SqlStatement    Statement   { get; set; } = null!;
+		public object?         Context     { get; set; }
+		public List<string>?   QueryHints  { get; set; }
+		public SqlParameter[]? Parameters  { get; set; }
 
-		public SqlParameter[] GetParameters()
+		public List<ParameterAccessor> ParameterAccessors = new List<ParameterAccessor>();
+
+		public void AddParameterAccessor(ParameterAccessor accessor)
 		{
-			var ps = new SqlParameter[Statement.Parameters.Count];
-
-			for (var i = 0; i < ps.Length; i++)
-				ps[i] = Statement.Parameters[i];
-
-			return ps;
+			ParameterAccessors.Add(accessor);
+			accessor.SqlParameter.AccessorId = ParameterAccessors.Count - 1;
 		}
-
-		public List<ParameterAccessor> Parameters = new List<ParameterAccessor>();
 	}
 
 	class ParameterAccessor

@@ -25,9 +25,9 @@ namespace Tests.UserTests
 			builder.AddParameter("path", $"$.{member.Member.Name}");
 
 			var propertyExpression = (MemberExpression) builder.Arguments[2];
-			var memberExpression = (MemberExpression) propertyExpression.Expression;
+			var memberExpression = (MemberExpression) propertyExpression.Expression!;
 			var fieldInfo = (FieldInfo) memberExpression.Member;
-			var valueExpression = (ConstantExpression) memberExpression.Expression;
+			var valueExpression = (ConstantExpression) memberExpression.Expression!;
 			var value = ((PropertyInfo) propertyExpression.Member).GetValue(fieldInfo.GetValue(valueExpression.Value))!;
 
 			builder.AddParameter("value", value.ToString()!);

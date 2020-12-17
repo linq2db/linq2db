@@ -6,6 +6,9 @@ namespace LinqToDB.Expressions
 {
 	public static class ExpressionHelper
 	{
+		public static Expression TrueConstant  = Expression.Constant(true);
+		public static Expression FalseConstant = Expression.Constant(false);
+		
 		/// <summary>
 		/// Compared to <see cref="Expression.Field(Expression, string)"/>, performs case-sensitive field search.
 		/// </summary>

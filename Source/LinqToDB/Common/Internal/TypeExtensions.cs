@@ -1,10 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using JetBrains.Annotations;
 using LinqToDB.Extensions;
+using LinqToDB.Tools;
 
 namespace LinqToDB.Common.Internal
 {
@@ -153,5 +154,35 @@ namespace LinqToDB.Common.Internal
 				}
 			}
 		}
+
+		public static bool IsNumericType(this Type? type)
+		{
+			return type != null && type.In(
+				typeof(byte),
+				typeof(decimal),
+				typeof(double),
+				typeof(float),
+				typeof(int),
+				typeof(long),
+				typeof(sbyte),
+				typeof(short),
+				typeof(uint),
+				typeof(ulong),
+				typeof(ushort)
+			);
+		}
+
+		public static bool IsSignedType(this Type? type)
+		{
+			return type != null && type.In(
+				typeof(decimal),
+				typeof(double),
+				typeof(float),
+				typeof(int),
+				typeof(long),
+				typeof(short)
+			);
+		}
+
 	}
 }

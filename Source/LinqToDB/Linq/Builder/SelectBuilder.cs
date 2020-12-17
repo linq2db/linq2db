@@ -53,10 +53,8 @@ namespace LinqToDB.Linq.Builder
 
 #if DEBUG
 			context.MethodCall = methodCall;
-#endif
-
 			Debug.WriteLine("BuildMethodCall Select:\n" + context.SelectQuery);
-
+#endif
 			return context;
 		}
 

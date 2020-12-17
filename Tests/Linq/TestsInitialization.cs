@@ -2,7 +2,7 @@
 using System.Data.Common;
 using System.IO;
 using System.Reflection;
-
+using LinqToDB.Data.DbCommandProcessor;
 using NUnit.Framework;
 
 using Tests;
@@ -17,6 +17,10 @@ public class TestsInitialization
 	[OneTimeSetUp]
 	public void TestAssemblySetup()
 	{
+		// uncomment it to run tests with SeqentialAccess command behavior
+		//LinqToDB.Common.Configuration.OptimizeForSequentialAccess = true;
+		//DbCommandProcessorExtensions.Instance = new SequentialAccessCommandProcessor();
+
 		// netcoreapp2.1 adds DbProviderFactories support, but providers should be registered by application itself
 		// this code allows to load assembly using factory without adding explicit reference to project
 		RegisterSapHanaFactory();
@@ -61,7 +65,7 @@ public class TestsInitialization
 				// if you run tests from path with spaces - it will not help you
 				File.Copy(srcPath, targetPath, true);
 				var sapHanaAssembly = Assembly.LoadFrom(targetPath);
-				DbProviderFactories.RegisterFactory("Sap.Data.Hana", sapHanaAssembly.GetType("Sap.Data.Hana.HanaFactory"));
+				DbProviderFactories.RegisterFactory("Sap.Data.Hana", sapHanaAssembly.GetType("Sap.Data.Hana.HanaFactory")!);
 			}
 		}
 		catch { }
@@ -78,7 +82,7 @@ public class TestsInitialization
 			var pathx86 = @"c:\Program Files (x86)\Microsoft SQL Server Compact Edition\v4.0\Private\System.Data.SqlServerCe.dll";
 			var path = IntPtr.Size == 4 ? pathx86 : pathx64;
 			var assembly = Assembly.LoadFrom(path);
-			DbProviderFactories.RegisterFactory("System.Data.SqlServerCe.4.0", assembly.GetType("System.Data.SqlServerCe.SqlCeProviderFactory"));
+			DbProviderFactories.RegisterFactory("System.Data.SqlServerCe.4.0", assembly.GetType("System.Data.SqlServerCe.SqlCeProviderFactory")!);
 		}
 		catch { }
 #endif

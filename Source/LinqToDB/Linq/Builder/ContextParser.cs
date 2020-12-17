@@ -38,7 +38,6 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			public ISqlOptimizer? SqlOptimizer;
-			public Action?        SetParameters;
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
@@ -47,7 +46,6 @@ namespace LinqToDB.Linq.Builder
 				QueryRunner.SetNonQueryQuery(query);
 
 				SqlOptimizer  = query.SqlOptimizer;
-				SetParameters = () => QueryRunner.SetParameters(query, query.Expression!, null, null, 0);
 
 				query.GetElement = (db, expr, ps, preambles) => this;
 			}

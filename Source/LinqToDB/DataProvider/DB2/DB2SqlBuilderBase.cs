@@ -1,13 +1,14 @@
-﻿using System.Data;
+﻿using System;
+using System.Data;
 using System.Data.SqlTypes;
 using System.Linq;
 using System.Text;
 
 namespace LinqToDB.DataProvider.DB2
 {
+	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
-	using LinqToDB.Mapping;
 
 	abstract partial class DB2SqlBuilderBase : BasicSqlBuilder
 	{
@@ -50,7 +51,7 @@ namespace LinqToDB.DataProvider.DB2
 				var field = trun.Table!.IdentityFields[commandNumber - 1];
 
 				StringBuilder.Append("ALTER TABLE ");
-				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName!);
+				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName!, trun.Table.TableOptions);
 				StringBuilder.Append(" ALTER ");
 				Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
 				StringBuilder.AppendLine(" RESTART WITH 1");
@@ -72,12 +73,13 @@ namespace LinqToDB.DataProvider.DB2
 			StringBuilder.AppendLine();
 		}
 
-		protected override void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, int indent, bool skipAlias)
+		protected override void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, int indent, bool skipAlias)
 		{
-			Statement     = statement;
-			StringBuilder = sb;
-			Indent        = indent;
-			SkipAlias     = skipAlias;
+			Statement           = statement;
+			StringBuilder       = sb;
+			OptimizationContext = optimizationContext;
+			Indent              = indent;
+			SkipAlias           = skipAlias;
 
 			if (_identityField != null)
 			{
@@ -92,7 +94,7 @@ namespace LinqToDB.DataProvider.DB2
 				AppendIndent().Append("\t").AppendLine(OpenParens);
 			}
 
-			base.BuildSql(commandNumber, statement, sb, indent, skipAlias);
+			base.BuildSql(commandNumber, statement, sb, optimizationContext, indent, skipAlias);
 
 			if (_identityField != null)
 				sb.AppendLine("\t)");
@@ -123,29 +125,6 @@ namespace LinqToDB.DataProvider.DB2
 		protected override string? LimitFormat(SelectQuery selectQuery)
 		{
 			return selectQuery.Select.SkipValue == null ? "FETCH FIRST {0} ROWS ONLY" : null;
-		}
-
-		protected override void BuildFunction(SqlFunction func)
-		{
-			func = ConvertFunctionParameters(func);
-			base.BuildFunction(func);
-		}
-
-		protected override void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
-		{
-			var wrap = false;
-
-			if (expr.SystemType == typeof(bool))
-			{
-				if (expr is SqlSearchCondition)
-					wrap = true;
-				else
-					wrap = expr is SqlExpression ex && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SqlSearchCondition;
-			}
-
-			if (wrap) StringBuilder.Append("CASE WHEN ");
-			base.BuildColumnExpression(selectQuery, expr, alias, ref addAlias);
-			if (wrap) StringBuilder.Append(" THEN 1 ELSE 0 END");
 		}
 
 		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
@@ -234,7 +213,7 @@ namespace LinqToDB.DataProvider.DB2
 			StringBuilder.Append("GENERATED ALWAYS AS IDENTITY");
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions)
 		{
 			if (database != null && database.Length == 0) database = null;
 			if (schema   != null && schema.  Length == 0) schema   = null;
@@ -243,7 +222,7 @@ namespace LinqToDB.DataProvider.DB2
 			if (database != null && schema == null)
 				throw new LinqToDBException("DB2 requires schema name if database name provided.");
 
-			return base.BuildTableName(sb, null, database, schema, table);
+			return base.BuildTableName(sb, null, database, schema, table, tableOptions);
 		}
 
 		protected override string? GetProviderTypeName(IDbDataParameter parameter)
@@ -268,11 +247,10 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			var table = dropTable.Table!;
 
-			if (dropTable.IfExists)
+			if (dropTable.Table.TableOptions.HasDropIfExists())
 			{
 				AppendIndent().Append(@"BEGIN
-	DECLARE CONTINUE HANDLER FOR SQLSTATE '42704'
-		BEGIN END;
+	DECLARE CONTINUE HANDLER FOR SQLSTATE '42704' BEGIN END;
 	EXECUTE IMMEDIATE 'DROP TABLE ");
 				BuildPhysicalTable(table, null);
 				StringBuilder.AppendLine(
@@ -285,6 +263,79 @@ END");
 				BuildPhysicalTable(table, null);
 				StringBuilder.AppendLine();
 			}
+		}
+
+		protected override void BuildCreateTableCommand(SqlTable table)
+		{
+			string command;
+
+			if (table.TableOptions.IsTemporaryOptionSet())
+			{
+				switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
+				{
+					case TableOptions.IsTemporary                                                                               :
+					case TableOptions.IsTemporary |                                           TableOptions.IsLocalTemporaryData :
+					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                      :
+					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure  | TableOptions.IsLocalTemporaryData :
+					case                                                                      TableOptions.IsLocalTemporaryData :
+					case                            TableOptions.IsLocalTemporaryStructure                                      :
+					case                            TableOptions.IsLocalTemporaryStructure  | TableOptions.IsLocalTemporaryData :
+						command = "DECLARE GLOBAL TEMPORARY TABLE ";
+						break;
+					case                            TableOptions.IsGlobalTemporaryStructure                                     :
+					case                            TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData :
+						command = "CREATE GLOBAL TEMPORARY TABLE ";
+						break;
+					case var value :
+						throw new InvalidOperationException($"Incompatible table options '{value}'");
+				}
+			}
+			else
+			{
+				command = "CREATE TABLE ";
+			}
+
+			StringBuilder.Append(command);
+		}
+
+		protected override void BuildStartCreateTableStatement(SqlCreateTableStatement createTable)
+		{
+			if (createTable.StatementHeader == null && createTable.Table!.TableOptions.HasCreateIfNotExists())
+			{
+				AppendIndent().AppendLine(@"BEGIN");
+
+				Indent++;
+
+				AppendIndent().AppendLine(@"DECLARE CONTINUE HANDLER FOR SQLSTATE '42710' BEGIN END;");
+				AppendIndent().AppendLine(@"EXECUTE IMMEDIATE '");
+
+				Indent++;
+			}
+
+			base.BuildStartCreateTableStatement(createTable);
+		}
+
+		protected override void BuildEndCreateTableStatement(SqlCreateTableStatement createTable)
+		{
+			base.BuildEndCreateTableStatement(createTable);
+
+			if (createTable.StatementHeader == null && createTable.Table!.TableOptions.HasCreateIfNotExists())
+			{
+				Indent--;
+
+				AppendIndent()
+					.AppendLine("';");
+
+				Indent--;
+
+				StringBuilder
+					.AppendLine("END");
+			}
+		}
+
+		public override string? GetTableSchemaName(SqlTable table)
+		{
+			return table.Schema == null && table.TableOptions.IsTemporaryOptionSet() ? "SESSION" : base.GetTableSchemaName(table);
 		}
 	}
 }
