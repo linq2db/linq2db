@@ -3176,10 +3176,16 @@ namespace LinqToDB.Linq.Builder
 					var conditional = (ConditionalExpression)expr;
 					if (conditional.Test.NodeType == ExpressionType.NotEqual)
 					{
-						var binary = (BinaryExpression)conditional.Test;
-						if (IsNullConstant(binary.Right) ^ IsNullConstant(binary.Left))
+						var binary    = (BinaryExpression)conditional.Test;
+						var nullRight = IsNullConstant(binary.Right);
+						var nullLeft  = IsNullConstant(binary.Left);
+						if (nullRight || nullLeft)
 						{
-							if (IsNullConstant(conditional.IfFalse))
+							if (nullRight && nullLeft)
+							{
+								return conditional.IfFalse.Transform(e => RemoveNullPropagation(e));
+							}
+							else if (IsNullConstant(conditional.IfFalse))
 							{
 								return conditional.IfTrue.Transform(e => RemoveNullPropagation(e));
 							}
@@ -3187,10 +3193,16 @@ namespace LinqToDB.Linq.Builder
 					}
 					else if (conditional.Test.NodeType == ExpressionType.Equal)
 					{
-						var binary = (BinaryExpression)conditional.Test;
-						if (IsNullConstant(binary.Right) ^ IsNullConstant(binary.Left))
+						var binary    = (BinaryExpression)conditional.Test;
+						var nullRight = IsNullConstant(binary.Right);
+						var nullLeft  = IsNullConstant(binary.Left);
+						if (nullRight || nullLeft)
 						{
-							if (IsNullConstant(conditional.IfTrue))
+							if (nullRight && nullLeft)
+							{
+								return conditional.IfTrue.Transform(e => RemoveNullPropagation(e));
+							}
+							else if (IsNullConstant(conditional.IfTrue))
 							{
 								return conditional.IfFalse.Transform(e => RemoveNullPropagation(e));
 							}
