@@ -40,6 +40,6 @@
 
 		<!-- Generators -->
 		<file src="..\Source\LinqToDB.Generators\bin\Release\netstandard2.0\LinqToDB.Generators.dll" 
-					target="analyzers\dotnet\cs" />
+		      target="analyzers\dotnet\cs" />
 	</files>
 </package>
