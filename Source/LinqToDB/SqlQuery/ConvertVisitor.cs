@@ -11,42 +11,71 @@ namespace LinqToDB.SqlQuery
 		// when true, only changed (and explicitly added) elements added to VisitedElements
 		// greatly reduce memory allocation for majority of cases, where there is nothing to replace
 		private readonly bool                                             _visitAll;
+		private readonly bool                                             _allowMutation;
 		private readonly Func<ConvertVisitor,IQueryElement,IQueryElement> _convert;
+		private readonly Func<VisitArgs, bool>?                           _parentAction;
+		private readonly VisitArgs?                                       _visitArgs;
 
-		static TE[] ToArray<TK,TE>(IDictionary<TK,TE> dic)
-			where TK : notnull
+		public class VisitArgs
 		{
-			var es = new TE[dic.Count];
-			var i  = 0;
+			public VisitArgs(ConvertVisitor visitor)
+			{
+				Visitor = visitor;
+			}
 
-			foreach (var e in dic.Values)
-				es[i++] = e;
-
-			return es;
+			public readonly ConvertVisitor Visitor;
+			public          IQueryElement  Element = null!;
 		}
 
 		delegate T Clone<T>(T obj);
 
-		public Dictionary<IQueryElement,IQueryElement?> VisitedElements { get; } =  new Dictionary<IQueryElement,IQueryElement?>();
-		public List<IQueryElement>                      Stack           { get; } =  new List<IQueryElement>();
-		public IQueryElement?                           ParentElement            => Stack.Count == 0 ? null : Stack[Stack.Count - 1];
+		public Dictionary<IQueryElement,IQueryElement?>  VisitedElements { get; } =  new Dictionary<IQueryElement,IQueryElement?>();
+		public List<IQueryElement>                       Stack           { get; } =  new List<IQueryElement>();
+		public IQueryElement?                            ParentElement            => Stack.Count == 0 ? null : Stack[Stack.Count - 1];
+		public IQueryElement?                            SecondParentElement      => Stack.Count < 2 ? null  : Stack[Stack.Count - 2];
 
-		public static T Convert<T>(T element, Func<ConvertVisitor,IQueryElement,IQueryElement> convertAction)
+		public static T Convert<T>(T element, Func<ConvertVisitor, IQueryElement, IQueryElement> convertAction)
 			where T : class, IQueryElement
 		{
-			return (T?)new ConvertVisitor(convertAction, false).ConvertInternal(element) ?? element;
+			return (T?)new ConvertVisitor(convertAction, false, false).ConvertInternal(element) ?? element;
 		}
 
-		public static T ConvertAll<T>(T element, Func<ConvertVisitor,IQueryElement,IQueryElement> convertAction)
+
+		public static T Convert<T>(T element, bool allowMutation, Func<ConvertVisitor,IQueryElement,IQueryElement> convertAction)
 			where T : class, IQueryElement
 		{
-			return (T?)new ConvertVisitor(convertAction, true).ConvertInternal(element) ?? element;
+			return (T?)new ConvertVisitor(convertAction, false, allowMutation).ConvertInternal(element) ?? element;
 		}
 
-		ConvertVisitor(Func<ConvertVisitor,IQueryElement,IQueryElement> convertAction, bool visitAll)
+
+		public static T ConvertAll<T>(T element, Func<ConvertVisitor, IQueryElement, IQueryElement> convertAction)
+			where T : class, IQueryElement
 		{
-			_visitAll = visitAll;
-			_convert  = convertAction;
+			return (T?)new ConvertVisitor(convertAction, true, false).ConvertInternal(element) ?? element;
+		}
+
+		public static T ConvertAll<T>(T element, Func<ConvertVisitor, IQueryElement, IQueryElement> convertAction, Func<VisitArgs, bool> parentAction)
+			where T : class, IQueryElement
+		{
+			return (T?)new ConvertVisitor(convertAction, true, false, parentAction).ConvertInternal(element) ?? element;
+		}
+
+		public static T ConvertAll<T>(T element, bool allowMutation, Func<ConvertVisitor,IQueryElement,IQueryElement> convertAction)
+			where T : class, IQueryElement
+		{
+			return (T?)new ConvertVisitor(convertAction, true, allowMutation).ConvertInternal(element) ?? element;
+		}
+
+		ConvertVisitor(Func<ConvertVisitor,IQueryElement,IQueryElement> convertAction, bool visitAll, bool allowMutation, Func<VisitArgs, bool>? parentAction = default)
+		{
+			_visitAll      = visitAll;
+			_convert       = convertAction;
+			_allowMutation = allowMutation;
+			_parentAction  = parentAction;
+			if (_parentAction != null)
+			{
+				_visitArgs = new VisitArgs(this);
+			}
 		}
 
 		void CorrectQueryHierarchy(SelectQuery? parentQuery)
@@ -66,8 +95,22 @@ namespace LinqToDB.SqlQuery
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		void AddVisited(IQueryElement element, IQueryElement? newElement)
 		{
-			if (!VisitedElements.ContainsKey(element))
-				VisitedElements[element] = newElement;
+			VisitedElements[element] = newElement;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		void ReplaceVisited(IQueryElement element, IQueryElement? newElement)
+		{
+			var forDelete = VisitedElements
+				.Where(pair => pair.Value != null && QueryHelper.ContainsElement(pair.Value, element))
+				.Select(pair => pair.Key).ToList();
+
+			foreach (var e in forDelete)
+			{
+				VisitedElements.Remove(e);
+			}
+
+			VisitedElements[element] = newElement;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -102,8 +145,16 @@ namespace LinqToDB.SqlQuery
 			if (newElement != null)
 				return newElement;
 
+			if (_parentAction != null)
+			{
+				_visitArgs!.Element = element;
+				var stop = !_parentAction(_visitArgs!);
+				element = _visitArgs!.Element;
+				if (stop)
+					return element;
+			}
+
 			Stack.Add(element);
-			try
 			{
 				switch (element.ElementType)
 				{
@@ -113,7 +164,9 @@ namespace LinqToDB.SqlQuery
 							var parms = Convert(func.Parameters);
 
 							if (parms != null && !ReferenceEquals(parms, func.Parameters))
-								newElement = new SqlFunction(func.SystemType, func.Name, func.IsAggregate, func.Precedence, parms);
+								newElement =
+									new SqlFunction(func.SystemType, func.Name, func.IsAggregate, func.IsPure, func.Precedence, parms) 
+										{ CanBeNull = func.CanBeNull, DoNotOptimize = func.DoNotOptimize };
 
 							break;
 						}
@@ -124,7 +177,7 @@ namespace LinqToDB.SqlQuery
 							var parameter = Convert(expr.Parameters);
 
 							if (parameter != null && !ReferenceEquals(parameter, expr.Parameters))
-								newElement = new SqlExpression(expr.SystemType, expr.Expr, expr.Precedence, parameter);
+								newElement = new SqlExpression(expr.SystemType, expr.Expr, expr.Precedence, expr.IsAggregate, expr.IsPure, parameter);
 
 							break;
 						}
@@ -178,46 +231,34 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.SqlCteTable:
 						{
 							var table    = (SqlCteTable)element;
-							var newTable = (SqlCteTable)_convert(this, table);
-
-							if (ReferenceEquals(newTable, table))
-							{
 								var cte = (CteClause?)ConvertInternal(table.Cte);
-								var ce  = cte   != null && !ReferenceEquals(table.Cte, cte);
 
-								if (ce)
-								{
-									var newFields = table.Fields.Select(f => new SqlField(f));
-									newTable = new SqlCteTable(table, newFields, cte!);
-								}
-							}
-
-							if (!ReferenceEquals(table, newTable))
+							if (cte != null && !ReferenceEquals(table.Cte, cte))
 							{
-								AddVisited(table.All, newTable.All);
+								var newFields = table.Fields.Select(f => new SqlField(f));
+								var newTable  = new SqlCteTable(table, newFields, cte!);
+
+								ReplaceVisited(table.All, newTable.All);
 								foreach (var prevField in table.Fields)
 								{
 									var newField = newTable[prevField.Name];
 									if (newField != null)
-										AddVisited(prevField, newField);
+								{
+									ReplaceVisited(prevField, newField);
 								}
 							}
 
 							newElement = newTable;
+						}
+
 
 							break;
 						}
 
 					case QueryElementType.Column:
-						{
-							var col  = (SqlColumn)element;
-							var expr = (ISqlExpression?)ConvertInternal(col.Expression);
-
-							if (expr != null && !ReferenceEquals(expr, col.Expression))
-								newElement = new SqlColumn(col.Parent, expr, col.RawAlias);
-
-							break;
-						}
+					{
+						break;
+					}
 
 					case QueryElementType.TableSource:
 						{
@@ -304,7 +345,7 @@ namespace LinqToDB.SqlQuery
 							var e2 = (ISqlExpression?)ConvertInternal(p.Expr2);
 
 							if (e1 != null && !ReferenceEquals(p.Expr1, e1) || e2 != null && !ReferenceEquals(p.Expr2, e2))
-								newElement = new SqlPredicate.ExprExpr(e1 ?? p.Expr1, p.Operator, e2 ?? p.Expr2);
+								newElement = new SqlPredicate.ExprExpr(e1 ?? p.Expr1, p.Operator, e2 ?? p.Expr2, p.WithNull);
 
 							break;
 						}
@@ -319,7 +360,20 @@ namespace LinqToDB.SqlQuery
 							if (e1 != null && !ReferenceEquals(p.Expr1, e1) ||
 								e2 != null && !ReferenceEquals(p.Expr2, e2) ||
 								es != null && !ReferenceEquals(p.Escape, es))
-								newElement = new SqlPredicate.Like(e1 ?? p.Expr1, p.IsNot, e2 ?? p.Expr2, es ?? p.Escape, p.IsSqlLike);
+								newElement = new SqlPredicate.Like(e1 ?? p.Expr1, p.IsNot, e2 ?? p.Expr2, es ?? p.Escape);
+
+							break;
+						}
+
+					case QueryElementType.SearchStringPredicate:
+						{
+							var p  = (SqlPredicate.SearchString)element;
+							var e1 = (ISqlExpression?)ConvertInternal(p.Expr1 );
+							var e2 = (ISqlExpression?)ConvertInternal(p.Expr2 );
+
+							if (e1 != null && !ReferenceEquals(p.Expr1, e1) ||
+								e2 != null && !ReferenceEquals(p.Expr2, e2))
+								newElement = new SqlPredicate.SearchString(e1 ?? p.Expr1, p.IsNot, e2 ?? p.Expr2, p.Kind, p.IgnoreCase);
 
 							break;
 						}
@@ -385,7 +439,7 @@ namespace LinqToDB.SqlQuery
 							var v = Convert(p.Values);
 
 							if (e != null && !ReferenceEquals(p.Expr1, e) || v != null && !ReferenceEquals(p.Values, v))
-								newElement = new SqlPredicate.InList(e ?? p.Expr1, p.IsNot, v ?? p.Values);
+								newElement = new SqlPredicate.InList(e ?? p.Expr1, p.WithNull, p.IsNot, v ?? p.Values);
 
 							break;
 						}
@@ -464,16 +518,13 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.SelectStatement:
 						{
 							var s = (SqlSelectStatement)element;
-							var selectQuery = (SelectQuery?)ConvertInternal(s.SelectQuery);
 							var with        = s.With        != null ? (SqlWithClause?)ConvertInternal(s.With       ) : null;
-							var ps          = ConvertSafe(s.Parameters);
+							var selectQuery = (SelectQuery?)ConvertInternal(s.SelectQuery);
 
-							if (ps          != null && !ReferenceEquals(s.Parameters,  ps)           ||
-								selectQuery != null && !ReferenceEquals(s.SelectQuery, selectQuery)  ||
+							if (selectQuery != null && !ReferenceEquals(s.SelectQuery, selectQuery)  ||
 								with        != null && !ReferenceEquals(s.With,        with))
 							{
 								newElement = new SqlSelectStatement(selectQuery ?? s.SelectQuery);
-								((SqlSelectStatement)newElement).Parameters.AddRange(ps ?? s.Parameters);
 								((SqlSelectStatement)newElement).With = with ?? s.With;
 								CorrectQueryHierarchy(((SqlSelectStatement) newElement).SelectQuery);
 							}
@@ -484,19 +535,22 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.InsertStatement:
 						{
 							var s = (SqlInsertStatement)element;
+							var with        = s.With        != null ? (SqlWithClause?)  ConvertInternal(s.With       ) : null;
 							var selectQuery = (SelectQuery?    )ConvertInternal(s.SelectQuery);
 							var insert      = (SqlInsertClause?)ConvertInternal(s.Insert);
-							var with        = s.With        != null ? (SqlWithClause?)  ConvertInternal(s.With       ) : null;
-							var ps          = ConvertSafe(s.Parameters);
+							var output      = s.Output      != null ? (SqlOutputClause?)ConvertInternal(s.Output     ) : null;
 
 							if (insert      != null && !ReferenceEquals(s.Insert,      insert)       ||
-								ps          != null && !ReferenceEquals(s.Parameters,  ps)           ||
 								selectQuery != null && !ReferenceEquals(s.SelectQuery, selectQuery)  ||
-								with        != null && !ReferenceEquals(s.With,        with))
+								with        != null && !ReferenceEquals(s.With,        with)         ||
+								output      != null && !ReferenceEquals(s.Output,      output))
 							{
-								newElement = new SqlInsertStatement(selectQuery ?? s.SelectQuery) { Insert = insert ?? s.Insert };
-								((SqlInsertStatement)newElement).Parameters.AddRange(ps ?? s.Parameters);
-								((SqlInsertStatement)newElement).With = with ?? s.With;
+								newElement = new SqlInsertStatement(selectQuery ?? s.SelectQuery)
+							{
+									Insert = insert ?? s.Insert,
+									Output = output ?? s.Output,
+									With   = with   ?? s.With
+								};
 								CorrectQueryHierarchy(((SqlInsertStatement) newElement).SelectQuery);
 							}
 
@@ -506,18 +560,15 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.UpdateStatement:
 						{
 							var s = (SqlUpdateStatement)element;
+							var with        = s.With        != null ? (SqlWithClause?)  ConvertInternal(s.With       ) : null;
 							var selectQuery = (SelectQuery?    )ConvertInternal(s.SelectQuery);
 							var update      = (SqlUpdateClause?)ConvertInternal(s.Update);
-							var with        = s.With        != null ? (SqlWithClause?)  ConvertInternal(s.With       ) : null;
-							var ps          = ConvertSafe(s.Parameters);
 
 							if (update      != null && !ReferenceEquals(s.Update,      update)       ||
-								ps          != null && !ReferenceEquals(s.Parameters,  ps)           ||
 								selectQuery != null && !ReferenceEquals(s.SelectQuery, selectQuery)  ||
 								with        != null && !ReferenceEquals(s.With,        with))
 							{
 								newElement = new SqlUpdateStatement(selectQuery ?? s.SelectQuery) { Update = update ?? s.Update };
-								((SqlUpdateStatement)newElement).Parameters.AddRange(ps ?? s.Parameters);
 								((SqlUpdateStatement)newElement).With = with ?? s.With;
 								CorrectQueryHierarchy(((SqlUpdateStatement) newElement).SelectQuery);
 							}
@@ -529,20 +580,17 @@ namespace LinqToDB.SqlQuery
 						{
 							var s = (SqlInsertOrUpdateStatement)element;
 
+							var with        = s.With        != null ? (SqlWithClause?)  ConvertInternal(s.With       ) : null;
 							var selectQuery = (SelectQuery?    )ConvertInternal(s.SelectQuery);
 							var insert      = (SqlInsertClause?)ConvertInternal(s.Insert);
 							var update      = (SqlUpdateClause?)ConvertInternal(s.Update);
-							var with        = s.With        != null ? (SqlWithClause?)  ConvertInternal(s.With       ) : null;
-							var ps          = ConvertSafe(s.Parameters);
 
 							if (insert      != null && !ReferenceEquals(s.Insert,      insert)       ||
 								update      != null && !ReferenceEquals(s.Update,      update)       ||
-								ps          != null && !ReferenceEquals(s.Parameters,  ps)           ||
 								selectQuery != null && !ReferenceEquals(s.SelectQuery, selectQuery)  ||
 								with        != null && !ReferenceEquals(s.With,        with))
 							{
 								newElement = new SqlInsertOrUpdateStatement(selectQuery ?? s.SelectQuery) { Insert = insert ?? s.Insert, Update = update ?? s.Update };
-								((SqlInsertOrUpdateStatement)newElement).Parameters.AddRange(ps ?? s.Parameters);
 								((SqlInsertOrUpdateStatement)newElement).With = with ?? s.With;
 								CorrectQueryHierarchy(((SqlInsertOrUpdateStatement) newElement).SelectQuery);
 							}
@@ -553,26 +601,26 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.DeleteStatement:
 						{
 							var s = (SqlDeleteStatement)element;
+							var with        = s.With        != null ? (SqlWithClause?)  ConvertInternal(s.With       ) : null;
 							var selectQuery = s.SelectQuery != null ? (SelectQuery?)   ConvertInternal(s.SelectQuery) : null;
 							var table       = s.Table       != null ? (SqlTable?)      ConvertInternal(s.Table      ) : null;
-							var top         = s.Top         != null ? (ISqlExpression?)ConvertInternal(s.Top        ) : null;
-							var with        = s.With        != null ? (SqlWithClause?) ConvertInternal(s.With       ) : null;
-							var ps          = ConvertSafe(s.Parameters);
+							var top         = s.Top         != null ? (ISqlExpression?) ConvertInternal(s.Top        ) : null;
+							var output      = s.Output      != null ? (SqlOutputClause?)ConvertInternal(s.Output     ) : null;
 
 							if (table       != null && !ReferenceEquals(s.Table,       table)       ||
 								top         != null && !ReferenceEquals(s.Top,         top)         ||
-								ps          != null && !ReferenceEquals(s.Parameters,  ps)          ||
 								selectQuery != null && !ReferenceEquals(s.SelectQuery, selectQuery) ||
-								with        != null && !ReferenceEquals(s.With,        with))
+								with        != null && !ReferenceEquals(s.With,        with)        ||
+								output      != null && !ReferenceEquals(s.Output,      output))
 							{
 								newElement = new SqlDeleteStatement
 								{
 									Table                = table       ?? s.Table,
 									SelectQuery          = selectQuery ?? s.SelectQuery,
 									Top                  = top         ?? s.Top!,
+									Output               = output      ?? s.Output,
 									IsParameterDependent = s.IsParameterDependent
 								};
-								((SqlDeleteStatement)newElement).Parameters.AddRange(ps ?? s.Parameters);
 								((SqlDeleteStatement)newElement).With = with ?? s.With;
 								CorrectQueryHierarchy(((SqlDeleteStatement)newElement).SelectQuery);
 							}
@@ -584,16 +632,10 @@ namespace LinqToDB.SqlQuery
 						{
 							var s  = (SqlCreateTableStatement)element;
 							var t  = (SqlTable)ConvertInternal(s.Table);
-							var ps = ConvertSafe(s.Parameters);
 
-							if (t  != null && !ReferenceEquals(s.Table, t) ||
-								ps != null && !ReferenceEquals(s.Parameters,  ps))
+							if (t != null && !ReferenceEquals(s.Table, t))
 							{
 								newElement = new SqlCreateTableStatement(t ?? s.Table);
-								if (ps != null)
-									((SqlCreateTableStatement)newElement).Parameters.AddRange(ps);
-								else
-									((SqlCreateTableStatement)newElement).Parameters.AddRange(s.Parameters);
 							}
 
 							break;
@@ -603,16 +645,10 @@ namespace LinqToDB.SqlQuery
 						{
 							var s  = (SqlDropTableStatement)element;
 							var t  = (SqlTable)ConvertInternal(s.Table);
-							var ps = ConvertSafe(s.Parameters);
 
-							if (!ReferenceEquals(s.Table, t) || ps != null && !ReferenceEquals(s.Parameters,  ps))
+							if (!ReferenceEquals(s.Table, t))
 							{
 								newElement = new SqlDropTableStatement(t);
-
-								if (ps != null)
-									((SqlDropTableStatement)newElement).Parameters.AddRange(ps);
-								else
-									((SqlDropTableStatement)newElement).Parameters.AddRange(s.Parameters);
 							}
 
 							break;
@@ -621,7 +657,52 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.SelectClause:
 						{
 							var sc   = (SqlSelectClause)element;
-							var cols = Convert(sc.Columns, CloneColumn);
+
+							List<SqlColumn>? cols = null;
+
+							if (_allowMutation)
+							{
+								for (int i = 0; i < sc.Columns.Count; i++)
+								{
+									var column = sc.Columns[i];
+
+									Stack.Add(column);
+									var expr = (ISqlExpression)ConvertInternal(column.Expression);
+									Stack.RemoveAt(Stack.Count - 1);
+
+									if (!ReferenceEquals(column.Expression, expr))
+										column.Expression = expr;
+								}
+							}
+							else
+							{
+								for (int i = 0; i < sc.Columns.Count; i++)
+								{
+									var column = sc.Columns[i];
+
+									Stack.Add(column);
+									var expr = (ISqlExpression)ConvertInternal(column.Expression);
+									Stack.RemoveAt(Stack.Count - 1);
+
+									if (!ReferenceEquals(expr, column.Expression))
+									{
+										if (cols == null)
+										{
+											cols = new List<SqlColumn>(sc.Columns.Take(i));
+										}
+
+										var newColumn = new SqlColumn(null, expr, column.Alias);
+										cols.Add(newColumn);
+										AddVisited(column, newColumn);
+									}
+									else
+									{
+										cols?.Add(column);
+										AddVisited(column, column);
+									}
+								}
+							}
+
 							var take = (ISqlExpression?)ConvertInternal(sc.TakeValue);
 							var skip = (ISqlExpression?)ConvertInternal(sc.SkipValue);
 
@@ -631,10 +712,8 @@ namespace LinqToDB.SqlQuery
 								skip != null && !ReferenceEquals(sc.SkipValue, skip))
 							{
 								newElement = new SqlSelectClause(sc.IsDistinct, take ?? sc.TakeValue, sc.TakeHints, skip ?? sc.SkipValue, cols ?? sc.Columns);
-								((SqlSelectClause)newElement).SetSqlQuery(sc.SelectQuery);
 							}
 
-							static SqlColumn CloneColumn(SqlColumn column) => new SqlColumn(column.Parent!, column.Expression);
 							break;
 						}
 
@@ -823,36 +902,29 @@ namespace LinqToDB.SqlQuery
 
 							var enumerableSource          = (SqlValuesTable?)ConvertInternal(source.SourceEnumerable);
 							var querySource               = (SelectQuery?)   ConvertInternal(source.SourceQuery);
-							IEnumerable<SqlField>? fields = Convert(source.SourceFields, f => new SqlField(f));
-
-							var fe = fields != null && !ReferenceEquals(source.SourceFields, fields);
 
 							if (enumerableSource != null && !ReferenceEquals(source.SourceEnumerable, enumerableSource) ||
-								querySource      != null && !ReferenceEquals(source.SourceQuery, querySource)           ||
-								!fe)
+								querySource      != null && !ReferenceEquals(source.SourceQuery, querySource))
 							{
-								if (!fe)
+								var newFields = source.SourceFields.Select(f => new SqlField(f)).ToArray();
+								for (var i = 0; i < source.SourceFields.Count; i++)
 								{
-									var newFields = source.SourceFields.ToArray();
-									for (var i = 0; i < newFields.Length; i++)
-									{
-										var field              = newFields[i];
-										newFields[i]           = new SqlField(field);
-										VisitedElements[field] = newFields[i];
-									}
-									fields = newFields;
+									var newField           = newFields[i];
+									var oldField           = source.SourceFields[i];
+									ReplaceVisited(oldField, newField);
 								}
 
 								newElement = new SqlMergeSourceTable(
 									source.SourceID,
 									enumerableSource ?? source.SourceEnumerable!,
 									querySource ?? source.SourceQuery!,
-									fields!);
-								VisitedElements[((ISqlTableSource)source).All] = ((ISqlTableSource)newElement).All;
+									newFields);
+
+								ReplaceVisited(((ISqlTableSource)source).All, ((ISqlTableSource)newElement).All);
 						}
 
-							break;
-						}
+								break;
+							}
 
 					case QueryElementType.SqlValuesTable:
 						{
@@ -867,7 +939,7 @@ namespace LinqToDB.SqlQuery
 								foreach (var row in table.Rows)
 								{
 									var convertedRow = ConvertSafe(row);
-									rowsConverted    = rowsConverted || (row != null && !ReferenceEquals(convertedRow, row));
+									rowsConverted    = rowsConverted || (convertedRow != null && !ReferenceEquals(convertedRow, row));
 
 									convertedRows.Add(convertedRow?.ToArray() ?? row!);
 								}
@@ -899,6 +971,36 @@ namespace LinqToDB.SqlQuery
 
 							break;
 						}
+
+					case QueryElementType.OutputClause:
+					{
+						var output    = (SqlOutputClause)element;
+						var sourceT   = ConvertInternal(output.SourceTable)   as SqlTable;
+						var insertedT = ConvertInternal(output.InsertedTable) as SqlTable;
+						var deletedT  = ConvertInternal(output.DeletedTable)  as SqlTable;
+						var outputT   = ConvertInternal(output.OutputTable)   as SqlTable;
+						var outputQ   = output.OutputQuery != null ? ConvertInternal(output.OutputQuery) as SelectQuery : null;
+
+						if (
+							sourceT   != null && !ReferenceEquals(output.SourceTable, sourceT)     ||
+							insertedT != null && !ReferenceEquals(output.InsertedTable, insertedT) ||
+							deletedT  != null && !ReferenceEquals(output.DeletedTable, deletedT)   ||
+							outputT   != null && !ReferenceEquals(output.OutputTable, outputT)     ||
+							outputQ   != null && !ReferenceEquals(output.OutputQuery, outputQ)
+						)
+						{
+							newElement = new SqlOutputClause
+							{
+								SourceTable   =  sourceT   ?? output.SourceTable,
+								InsertedTable =  insertedT ?? output.InsertedTable,
+								DeletedTable  =  deletedT  ?? output.DeletedTable,
+								OutputTable   =  outputT   ?? output.OutputTable,
+								OutputQuery   =  outputQ   ?? output.OutputQuery,
+							};                            
+						}
+						
+						break;
+					}
 
 					case QueryElementType.MergeOperationClause:
 						{
@@ -982,38 +1084,50 @@ namespace LinqToDB.SqlQuery
 						{
 							var cte = (CteClause)element;
 
-							if (new QueryVisitor().Find(cte.Body, e => e == cte) == null)
-							{
-								// non-recursive
-								var body   = (SelectQuery?)ConvertInternal(cte.Body);
-								var fields = Convert(cte.Fields!);
+							// for avoiding recursion
+							if (SecondParentElement?.ElementType != QueryElementType.WithClause)
+								break;
 
-								if (body   != null && !ReferenceEquals(cte.Body, body) ||
-									fields != null && !ReferenceEquals(cte.Fields, fields))
+							var body   = (SelectQuery?)ConvertInternal(cte.Body);
+
+							if (body   != null && !ReferenceEquals(cte.Body, body))
+							{
+								var objTree = new Dictionary<ICloneableElement, ICloneableElement>();
+
+								newElement = new CteClause(
+									body,
+									cte.Fields!.Select(f => (SqlField)f.Clone(objTree, e => true)).ToList(),
+											cte.ObjectType,
+											cte.IsRecursive,
+											cte.Name);
+
+								var correctedBody = ConvertVisitor.Convert(body,
+									(v, e) =>
+									{
+										if (e.ElementType == QueryElementType.CteClause)
+										{
+											var inner = (CteClause)e;
+											if (ReferenceEquals(inner, cte))
+												return newElement;
+										}	
+											
+										if (e is ICloneableElement clonable && objTree.TryGetValue(clonable, out var newValue))
+											return (IQueryElement)newValue;
+										return e;
+
+									});
+
+								// update visited for cloned fields
+								foreach (var pair in objTree)
 								{
-									newElement = new CteClause(
-										body ?? cte.Body,
-										fields ?? cte.Fields!,
-										cte.ObjectType,
-										cte.IsRecursive,
-										cte.Name);
+									if (pair.Key is IQueryElement queryElement)
+										VisitedElements[queryElement] = (IQueryElement)pair.Value;
 								}
-							}
-							else
-							{
-								var newCte = new CteClause(cte.ObjectType, cte.IsRecursive, cte.Name);
 
-								VisitedElements.Add(cte, newCte);
+								VisitedElements.Remove(element);
+								AddVisited(element, newElement);
 
-								var body   = (SelectQuery?)ConvertInternal(cte.Body);
-								var fields = Convert(cte.Fields!);
-
-								newCte.Init(body ?? cte.Body, fields ?? cte.Fields!);
-
-								var elem = _convert(this, newCte);
-								VisitedElements[cte] = elem;
-
-								return elem;
+								((CteClause)newElement).Body = correctedBody;
 							}
 
 							break;
@@ -1026,11 +1140,14 @@ namespace LinqToDB.SqlQuery
 							var clauses = ConvertSafe(with.Clauses);
 
 							if (clauses != null && !ReferenceEquals(with.Clauses, clauses))
+							{
 								newElement = new SqlWithClause()
 								{
 									Clauses = clauses
 								};
 
+								newElement = new SqlWithClause() { Clauses = clauses };
+							}
 							break;
 						}
 
@@ -1045,10 +1162,7 @@ namespace LinqToDB.SqlQuery
 						throw new InvalidOperationException($"Convert visitor not implemented for element {element.ElementType}");
 				}
 			}
-			finally
-			{
-				Stack.RemoveAt(Stack.Count - 1);
-			}
+			Stack.RemoveAt(Stack.Count - 1);
 
 			newElement = _convert(this, newElement ?? element);
 
@@ -1067,6 +1181,17 @@ namespace LinqToDB.SqlQuery
 		T[]? Convert<T>(T[] arr1, Clone<T>? clone)
 			where T : class, IQueryElement
 		{
+			if (_allowMutation)
+			{
+				for (var i = 0; i < arr1.Length; i++)
+				{
+					var elem = (T?)ConvertInternal(arr1[i]);
+					if (elem != null)
+						arr1[i] = elem;
+				}
+				return arr1;
+			}
+
 			T[]? arr2 = null;
 
 			for (var i = 0; i < arr1.Length; i++)
@@ -1102,6 +1227,17 @@ namespace LinqToDB.SqlQuery
 		List<T>? ConvertSafe<T>(IList<T> list1, Clone<T>? clone)
 			where T : class, IQueryElement
 		{
+			if (_allowMutation)
+			{
+				for (var i = 0; i < list1.Count; i++)
+				{
+					var elem = (T?)ConvertInternal(list1[i]);
+					if (elem != null)
+						list1[i] = elem;
+				}
+				return null;
+			}
+
 			List<T>? list2 = null;
 
 			for (var i = 0; i < list1.Count; i++)
@@ -1136,6 +1272,17 @@ namespace LinqToDB.SqlQuery
 		List<T>? Convert<T>(List<T> list1, Clone<T>? clone)
 			where T : class, IQueryElement
 		{
+			if (_allowMutation)
+			{
+				for (var i = 0; i < list1.Count; i++)
+				{
+					var elem = (T?)ConvertInternal(list1[i]);
+					if (elem != null)
+						list1[i] = elem;
+				}
+				return list1;
+			}
+
 			List<T>? list2 = null;
 
 			for (var i = 0; i < list1.Count; i++)
@@ -1176,6 +1323,17 @@ namespace LinqToDB.SqlQuery
 		List<T[]>? ConvertListArray<T>(List<T[]> list1, Clone<T>? clone)
 			where T : class, IQueryElement
 		{
+			if (_allowMutation)
+			{
+				for (var i = 0; i < list1.Count; i++)
+				{
+					var elem = Convert(list1[i]);
+					if (elem != null)
+						list1[i] = elem;
+				}
+				return list1;
+			}
+
 			List<T[]>? list2 = null;
 
 			for (var i = 0; i < list1.Count; i++)

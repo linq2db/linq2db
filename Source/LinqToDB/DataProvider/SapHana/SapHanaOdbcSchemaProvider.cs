@@ -51,14 +51,15 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 			return dataConnection.Query(rd =>
 			{
+				// IMPORTANT: reader calls must be ordered to support SequentialAccess
+				var schema     = rd.GetString(0);
+				var tableName  = rd.GetString(1);
+				var indexName  = rd.GetString(2);
 				var constraint = rd.IsDBNull(3) ? null : rd.GetString(3);
 
 				if (constraint != "PRIMARY KEY")
 					return null;
 
-				var schema     = rd.GetString(0);
-				var tableName  = rd.GetString(1);
-				var indexName  = rd.GetString(2);
 				var columnName = rd.GetString(4);
 				var position   = rd.GetInt32(5);
 

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Threading;
@@ -35,8 +34,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.IsAllSetOperationsSupported       = true;
 
-			SetCharFieldToType<char>("bpchar"   , (r, i) => DataTools.GetChar(r, i));
-			SetCharFieldToType<char>("character", (r, i) => DataTools.GetChar(r, i));
+			SetCharFieldToType<char>("bpchar"   , DataTools.GetCharExpression);
+			SetCharFieldToType<char>("character", DataTools.GetCharExpression);
 
 			SetCharField("bpchar"   , (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("character", (r,i) => r.GetString(i).TrimEnd(' '));

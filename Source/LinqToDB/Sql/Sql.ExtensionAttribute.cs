@@ -597,18 +597,20 @@ namespace LinqToDB
 				return chains;
 			}
 
+
+			const  string MatchParamPattern = @"{([0-9a-z_A-Z?]*)(,\s'(.*)')?}";
+			static Regex  _matchParamRegEx  = new Regex(MatchParamPattern, RegexOptions.Compiled);
+
 			public static string ResolveExpressionValues(string expression, Func<string, string?, string?> valueProvider)
 			{
 				if (expression    == null) throw new ArgumentNullException(nameof(expression));
 				if (valueProvider == null) throw new ArgumentNullException(nameof(valueProvider));
 
-				const string pattern = @"{([0-9a-z_A-Z?]*)(,\s'(.*)')?}";
-
 				int  prevMatch         = -1;
 				int  prevNotEmptyMatch = -1;
 				bool spaceNeeded       = false;
 
-				var str = Regex.Replace(expression, pattern, match =>
+				var str = _matchParamRegEx.Replace(expression, match =>
 				{
 					var paramName = match.Groups[1].Value;
 					var canBeOptional = paramName.EndsWith("?");

@@ -137,6 +137,13 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
+				case QueryElementType.SearchStringPredicate:
+					{
+						Visit1(((SqlPredicate.SearchString)element).Expr1);
+						Visit1(((SqlPredicate.SearchString)element).Expr2);
+						break;
+					}
+
 				case QueryElementType.BetweenPredicate:
 					{
 						Visit1(((SqlPredicate.Between)element).Expr1);
@@ -685,6 +692,13 @@ namespace LinqToDB.SqlQuery
 						Visit2(((SqlPredicate.Like)element).Expr1);
 						Visit2(((SqlPredicate.Like)element).Expr2);
 						Visit2(((SqlPredicate.Like)element).Escape);
+						break;
+					}
+
+				case QueryElementType.SearchStringPredicate:
+					{
+						Visit2(((SqlPredicate.SearchString)element).Expr1);
+						Visit2(((SqlPredicate.SearchString)element).Expr2);
 						break;
 					}
 
@@ -1293,6 +1307,13 @@ namespace LinqToDB.SqlQuery
 							Find(((SqlPredicate.Like)element).Expr1 ) ??
 							Find(((SqlPredicate.Like)element).Expr2 ) ??
 							Find(((SqlPredicate.Like)element).Escape);
+					}
+
+				case QueryElementType.SearchStringPredicate:
+					{
+						return
+							Find(((SqlPredicate.SearchString)element).Expr1 ) ??
+							Find(((SqlPredicate.SearchString)element).Expr2 );
 					}
 
 				case QueryElementType.BetweenPredicate:

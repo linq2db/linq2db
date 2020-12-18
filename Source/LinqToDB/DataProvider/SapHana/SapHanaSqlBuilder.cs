@@ -195,60 +195,6 @@ namespace LinqToDB.DataProvider.SapHana
 			StringBuilder.Append(")");
 		}
 
-		protected override void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
-		{
-			var wrap = false;
-
-			if (expr.SystemType == typeof(bool))
-			{
-				if (expr is SqlSearchCondition)
-					wrap = true;
-				else
-					wrap = expr is SqlExpression ex && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SqlSearchCondition;
-			}
-
-			if (wrap) StringBuilder.Append("CASE WHEN ");
-			base.BuildColumnExpression(selectQuery, expr, alias, ref addAlias);
-			if (wrap) StringBuilder.Append(" THEN 1 ELSE 0 END");
-		}
-
-		//this is for Tests.Linq.Common.CoalesceLike test
-		protected override void BuildFunction(SqlFunction func)
-		{
-			func = ConvertFunctionParameters(func);
-			switch (func.Name)
-			{
-				case "CASE": func = ConvertCase(func.SystemType, func.Parameters, 0);
-					break;
-			}
-			base.BuildFunction(func);
-		}
-
-		//this is for Tests.Linq.Common.CoalesceLike test
-		static SqlFunction ConvertCase(Type systemType, ISqlExpression[] parameters, int start)
-		{
-			var len  = parameters.Length - start;
-			var cond = parameters[start];
-
-			if (start == 0 && SqlExpression.NeedsEqual(cond))
-			{
-				cond = new SqlSearchCondition(
-					new SqlCondition(
-						false,
-						new SqlPredicate.ExprExpr(cond, SqlPredicate.Operator.Equal, new SqlValue(1))));
-			}
-
-			const string name = "CASE";
-
-			if (len == 3)
-				return new SqlFunction(systemType, name, cond, parameters[start + 1], parameters[start + 2]);
-
-			return new SqlFunction(systemType, name,
-				cond,
-				parameters[start + 1],
-				ConvertCase(systemType, parameters, start + 2));
-		}
-
 		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions)
 		{
 			if (server   != null && server.Length == 0) server = null;

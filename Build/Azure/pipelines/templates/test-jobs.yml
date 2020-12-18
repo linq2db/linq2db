@@ -3,6 +3,7 @@ parameters:
   experimental: false
   with_baselines: false
   test_matrix: []
+  mac_enabled: false # true / disable temporary
 
 jobs:
 ##############################################################################################
@@ -14,7 +15,7 @@ jobs:
     vmImage: 'windows-2019'
   displayName: 'Create Test Baselines Branch'
   dependsOn: build_job
-  condition: and(${{ parameters.enabled }}, ${{ parameters.with_baselines }})
+  condition: and(eq(${{ parameters.enabled }}, 'true'), eq(${{ parameters.with_baselines }}, 'true'))
   variables:
     source_pr_id: $[coalesce(variables['system.pullRequest.pullRequestNumber'], '')]
 
@@ -473,7 +474,7 @@ jobs:
     vmImage: 'macOS-10.15'
   displayName: 'Tests: Mac / NETCOREAPP2.1 / '
   dependsOn: create_baselines_branch
-  condition: ${{ parameters.enabled }}
+  condition: and(eq(${{ parameters.enabled }}, 'true'), eq(${{ parameters.mac_enabled }}, 'true'))
   variables:
     baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
 
@@ -505,7 +506,7 @@ jobs:
     vmImage: 'macOS-10.15'
   displayName: 'Tests: Mac / NETCOREAPP3.1 / '
   dependsOn: create_baselines_branch
-  condition: ${{ parameters.enabled }}
+  condition: and(eq(${{ parameters.enabled }}, 'true'), eq(${{ parameters.mac_enabled }}, 'true'))
   variables:
     baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
 
@@ -537,7 +538,7 @@ jobs:
     vmImage: 'macOS-10.15'
   displayName: 'Tests: Mac / NET 5.0 / '
   dependsOn: create_baselines_branch
-  condition: ${{ parameters.enabled }}
+  condition: and(eq(${{ parameters.enabled }}, 'true'), eq(${{ parameters.mac_enabled }}, 'true'))
   variables:
     baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
 
@@ -588,7 +589,7 @@ jobs:
   - test_macos_netcoreapp21_job
   - test_macos_netcoreapp31_job
   - test_macos_net50_job
-  condition: and(always(), ne(variables['Build.SourceBranchName'], 'release'), ${{ parameters.with_baselines }})
+  condition: and(always(), ne('$(baselines_branch)', ''), eq(${{ parameters.with_baselines }}, 'true'))
   variables:
     baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
     baselines_head: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_head'] ]

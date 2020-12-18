@@ -20,6 +20,12 @@ namespace LinqToDB.SqlQuery
 
 		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
+			if (With?.Clauses.Count > 0)
+			{
+				With?.ToString(sb, dic);
+				sb.AppendLine("--------------------------");
+			}
+
 			return SelectQuery.ToString(sb, dic);
 		}
 
@@ -41,8 +47,6 @@ namespace LinqToDB.SqlQuery
 
 			if (With != null)
 				clone.With = (SqlWithClause)With.Clone(objectTree, doClone);
-
-			clone.Parameters.AddRange(Parameters.Select(p => (SqlParameter)p.Clone(objectTree, doClone)));
 
 			objectTree.Add(this, clone);
 

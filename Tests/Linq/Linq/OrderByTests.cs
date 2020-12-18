@@ -591,5 +591,21 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void OrderByInUnion([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+
+				var query1 =
+					db.Child.OrderBy(c => c.ChildID).Concat(db.Child.OrderByDescending(c => c.ChildID));
+				var query2 =
+					db.Child.Concat(db.Child.OrderByDescending(c => c.ChildID));
+
+				Assert.DoesNotThrow(() => query1.ToArray());
+				Assert.DoesNotThrow(() => query2.ToArray());
+			}
+		}
+
 	}
 }

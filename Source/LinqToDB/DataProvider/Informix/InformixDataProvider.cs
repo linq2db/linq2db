@@ -1,15 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.Informix
 {
 	using Common;
 	using Data;
+	using LinqToDB.Linq.Internal;
 	using Mapping;
 	using SqlProvider;
-	using System.Threading;
-	using System.Threading.Tasks;
+	using SqlQuery;
 
 	public class InformixDataProvider : DynamicDataProviderBase<InformixProviderAdapter>
 	{
@@ -33,8 +35,8 @@ namespace LinqToDB.DataProvider.Informix
 
 			SetCharField("CHAR",  (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("NCHAR", (r,i) => r.GetString(i).TrimEnd(' '));
-			SetCharFieldToType<char>("CHAR",  (r, i) => DataTools.GetChar(r, i));
-			SetCharFieldToType<char>("NCHAR", (r, i) => DataTools.GetChar(r, i));
+			SetCharFieldToType<char>("CHAR",  DataTools.GetCharExpression);
+			SetCharFieldToType<char>("NCHAR", DataTools.GetCharExpression);
 
 			SetProviderField<IDataReader,float,  float  >((r,i) => GetFloat  (r, i));
 			SetProviderField<IDataReader,double, double >((r,i) => GetDouble (r, i));
@@ -55,18 +57,21 @@ namespace LinqToDB.DataProvider.Informix
 			if (Adapter.TimeSpanType != null) SetProviderField(Adapter.TimeSpanType, typeof(TimeSpan), Adapter.GetTimeSpanReaderMethod, dataReaderType: Adapter.DataReaderType);
 		}
 
+		[ColumnReader(1)]
 		static float GetFloat(IDataReader dr, int idx)
 		{
 			using (new InvariantCultureRegion())
 				return dr.GetFloat(idx);
 		}
 
+		[ColumnReader(1)]
 		static double GetDouble(IDataReader dr, int idx)
 		{
 			using (new InvariantCultureRegion())
 				return dr.GetDouble(idx);
 		}
 
+		[ColumnReader(1)]
 		static decimal GetDecimal(IDataReader dr, int idx)
 		{
 			using (new InvariantCultureRegion())

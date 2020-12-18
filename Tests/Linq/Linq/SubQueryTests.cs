@@ -484,7 +484,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void SubSub212([DataSources(
-			ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2,
+			ProviderName.SqlCe, TestProvName.AllAccess, ProviderName.DB2,
 			TestProvName.AllOracle)]
 			string context)
 		{
@@ -772,7 +772,7 @@ namespace Tests.Linq
 		[Test]
 		public void Issue383Test1([DataSources(false)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Contract_Distributor_Agent.Data))
 			using (db.CreateLocalTable(Agent.Data))
 			using (db.CreateLocalTable(Distributor.Data))
@@ -820,7 +820,7 @@ namespace Tests.Linq
 		[Test]
 		public void Issue383Test2([DataSources(false)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Contract_Distributor_Agent.Data))
 			using (db.CreateLocalTable(Agent.Data))
 			using (db.CreateLocalTable(Distributor.Data))

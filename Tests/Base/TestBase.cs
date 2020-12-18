@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -27,6 +28,7 @@ using NUnit.Framework;
 
 namespace Tests
 {
+	using LinqToDB.Data.DbCommandProcessor;
 	using LinqToDB.DataProvider.Informix;
 	using Model;
 	using NUnit.Framework.Internal;
@@ -65,9 +67,9 @@ namespace Tests
 
 		static TestBase()
 		{
-			Console.WriteLine("Tests started in {0}...", Environment.CurrentDirectory);
+			TestContext.WriteLine("Tests started in {0}...", Environment.CurrentDirectory);
 
-			Console.WriteLine("CLR Version: {0}...", Environment.Version);
+			TestContext.WriteLine("CLR Version: {0}...", Environment.Version);
 
 			var traceCount = 0;
 
@@ -104,7 +106,7 @@ namespace Tests
 					if (traceCount < TRACES_LIMIT || level == TraceLevel.Error)
 					{
 						ctx.Set(CustomTestContext.LIMITED, true);
-						Console.WriteLine("{0}: {1}", name, message);
+						TestContext.WriteLine("{0}: {1}", name, message);
 						Debug.WriteLine(message, name);
 					}
 
@@ -150,7 +152,7 @@ namespace Tests
 #endif
 
 #if AZURE
-			Console.WriteLine("Azure configuration detected.");
+			TestContext.WriteLine("Azure configuration detected.");
 			configName += ".Azure";
 #endif
 			var testSettings = SettingsReader.Deserialize(configName, dataProvidersJson, userDataProvidersJson);
@@ -165,7 +167,7 @@ namespace Tests
 			foreach (var file in Directory.GetFiles(databasePath, "*.*"))
 			{
 				var destination = Path.Combine(dataPath, Path.GetFileName(file));
-				Console.WriteLine("{0} => {1}", file, destination);
+				TestContext.WriteLine("{0} => {1}", file, destination);
 				File.Copy(file, destination, true);
 			}
 
@@ -184,7 +186,7 @@ namespace Tests
 
 			DataConnection.TurnTraceSwitchOn(traceLevel);
 
-			Console.WriteLine("Connection strings:");
+			TestContext.WriteLine("Connection strings:");
 
 #if !NET472
 			DataConnection.DefaultSettings            = TxtSettings.Instance;
@@ -195,7 +197,7 @@ namespace Tests
 				if (string.IsNullOrWhiteSpace(provider.Value.ConnectionString))
 					throw new InvalidOperationException("ConnectionString should be provided");
 
-				Console.WriteLine($"\tName=\"{provider.Key}\", Provider=\"{provider.Value.Provider}\", ConnectionString=\"{provider.Value.ConnectionString}\"");
+				TestContext.WriteLine($"\tName=\"{provider.Key}\", Provider=\"{provider.Value.Provider}\", ConnectionString=\"{provider.Value.ConnectionString}\"");
 
 				TxtSettings.Instance.AddConnectionString(
 					provider.Key, provider.Value.Provider ?? "", provider.Value.ConnectionString);
@@ -203,7 +205,7 @@ namespace Tests
 #else
 			foreach (var provider in testSettings.Connections)
 			{
-				Console.WriteLine($"\tName=\"{provider.Key}\", Provider=\"{provider.Value.Provider}\", ConnectionString=\"{provider.Value.ConnectionString}\"");
+				TestContext.WriteLine($"\tName=\"{provider.Key}\", Provider=\"{provider.Value.Provider}\", ConnectionString=\"{provider.Value.ConnectionString}\"");
 
 				DataConnection.AddOrSetConfiguration(
 					provider.Key,
@@ -212,10 +214,10 @@ namespace Tests
 			}
 #endif
 
-			Console.WriteLine("Providers:");
+			TestContext.WriteLine("Providers:");
 
 			foreach (var userProvider in UserProviders)
-				Console.WriteLine($"\t{userProvider}");
+				TestContext.WriteLine($"\t{userProvider}");
 
 			DefaultProvider = testSettings.DefaultConfiguration;
 
@@ -255,7 +257,7 @@ namespace Tests
 			string? path = basePath;
 			while (!File.Exists(fileName))
 			{
-				Console.WriteLine($"File not found: {fileName}");
+				TestContext.WriteLine($"File not found: {fileName}");
 
 				path = Path.GetDirectoryName(path);
 
@@ -265,7 +267,7 @@ namespace Tests
 				fileName = Path.GetFullPath(Path.Combine(path, findFileName));
 			}
 
-			Console.WriteLine($"Base path found: {fileName}");
+			TestContext.WriteLine($"Base path found: {fileName}");
 
 			return fileName;
 		}
@@ -351,6 +353,7 @@ namespace Tests
 			TestProvName.SqlServer2016,
 			ProviderName.SqlServer2017,
 			TestProvName.SqlServer2019,
+			TestProvName.SqlServer2019SequentialAccess,
 			ProviderName.SqlServer2000,
 			ProviderName.SqlServer2005,
 			TestProvName.SqlAzure,
@@ -397,8 +400,16 @@ namespace Tests
 			var res = new TestDataConnection(configuration);
 			if (ms != null)
 				res.AddMappingSchema(ms);
+
+			// add extra mapping schema to not share mappers with other sql2017/2019 providers
+			// use same schema to use cache within test provider scope
+			if (configuration == TestProvName.SqlServer2019SequentialAccess)
+				res.AddMappingSchema(_sequentialAccessMS);
+
 			return res;
 		}
+
+		private static readonly MappingSchema _sequentialAccessMS = new MappingSchema();
 
 		protected static char GetParameterToken(string context)
 		{
@@ -1089,6 +1100,10 @@ namespace Tests
 		{
 			var expr = query.Expression;
 
+			var loaded = new Dictionary<Type, Expression>();
+
+			var actual = query.ToArray();
+
 			var newExpr = expr.Transform(e =>
 			{
 				if (e.NodeType == ExpressionType.Call)
@@ -1096,17 +1111,28 @@ namespace Tests
 					var mc = (MethodCallExpression)e;
 					if (mc.IsSameGenericMethod(Methods.LinqToDB.GetTable))
 					{
-						var newCall = LinqToDB.Common.TypeHelper.MakeMethodCall(Methods.Queryable.ToArray, mc);
-						newCall     = LinqToDB.Common.TypeHelper.MakeMethodCall(Methods.Enumerable.AsQueryable, newCall);
-						return newCall;
+						var entityType = mc.Method.ReturnType.GetGenericArguments()[0];
+						if (entityType != null)
+						{
+							if (!loaded.TryGetValue(entityType, out var itemsExpression))
+							{
+								var newCall = LinqToDB.Common.TypeHelper.MakeMethodCall(Methods.Queryable.ToArray, mc);
+								var items = newCall.EvaluateExpression();
+								itemsExpression = Expression.Constant(items, entityType.MakeArrayType());
+								loaded.Add(entityType, itemsExpression);
+
+							}
+							var queryCall =
+								LinqToDB.Common.TypeHelper.MakeMethodCall(Methods.Enumerable.AsQueryable,
+									itemsExpression);
+							return queryCall;
+						}
 					}
 				}
 
 				return e;
 			})!;
 
-
-			var actual = query.ToArray();
 
 			var empty = LinqToDB.Common.Tools.CreateEmptyQuery<T>();
 			T[]? expected;
@@ -1115,7 +1141,8 @@ namespace Tests
 				expected = empty.Provider.CreateQuery<T>(newExpr).ToArray();
 			}
 
-			AreEqual(expected, actual, ComparerBuilder.GetEqualityComparer<T>());
+			if (actual.Length > 0 || expected.Length > 0)
+				AreEqual(expected, actual, ComparerBuilder.GetEqualityComparer<T>());
 
 			return actual;
 		}
@@ -1156,6 +1183,7 @@ namespace Tests
 				case TestProvName.SqlServer2016:
 				case ProviderName.SqlServer2017:
 				case TestProvName.SqlServer2019:
+				case TestProvName.SqlServer2019SequentialAccess:
 				{
 						if (!tableName.StartsWith("#"))
 							finalTableName = "#" + tableName;
@@ -1174,9 +1202,30 @@ namespace Tests
 			return context.Replace(".LinqService", "");
 		}
 
+		[SetUp]
+		public virtual void OnBeforeTest()
+		{
+			// SequentialAccess-enabled provider setup
+			var (provider, _) = NUnitUtils.GetContext(TestExecutionContext.CurrentContext.CurrentTest);
+			if (provider == TestProvName.SqlServer2019SequentialAccess)
+			{
+				Configuration.OptimizeForSequentialAccess = true;
+				DbCommandProcessorExtensions.Instance = new SequentialAccessCommandProcessor();
+			}
+		}
+
 		[TearDown]
 		public virtual void OnAfterTest()
 		{
+			// SequentialAccess-enabled provider cleanup
+			var (provider, _) = NUnitUtils.GetContext(TestExecutionContext.CurrentContext.CurrentTest);
+			if (provider == TestProvName.SqlServer2019SequentialAccess)
+			{
+				Configuration.OptimizeForSequentialAccess = false;
+				DbCommandProcessorExtensions.Instance = null;
+			}
+
+			// dump baselines
 			var ctx = CustomTestContext.Get();
 
 			if (_baselinesPath != null)
@@ -1453,6 +1502,34 @@ namespace Tests
 		{
 			Configuration.Linq.CompareNullsAsValues = true;
 			Query.ClearCaches();
+		}
+	}
+
+	public class CustomCommandProcessor : IDisposable
+	{
+		private readonly IDbCommandProcessor? _original = DbCommandProcessorExtensions.Instance;
+		public CustomCommandProcessor(IDbCommandProcessor? processor)
+		{
+			DbCommandProcessorExtensions.Instance = processor;
+		}
+
+		public void Dispose()
+		{
+			DbCommandProcessorExtensions.Instance = _original;
+		}
+	}
+
+	public class OptimizeForSequentialAccess : IDisposable
+	{
+		private readonly bool _original = Configuration.OptimizeForSequentialAccess;
+		public OptimizeForSequentialAccess(bool enable)
+		{
+			Configuration.OptimizeForSequentialAccess = enable;
+		}
+
+		public void Dispose()
+		{
+			Configuration.OptimizeForSequentialAccess = _original;
 		}
 	}
 }

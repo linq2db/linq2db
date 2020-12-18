@@ -2,7 +2,7 @@
 using System.Data.Common;
 using System.IO;
 using System.Reflection;
-
+using LinqToDB.Data.DbCommandProcessor;
 using NUnit.Framework;
 
 using Tests;
@@ -17,6 +17,10 @@ public class TestsInitialization
 	[OneTimeSetUp]
 	public void TestAssemblySetup()
 	{
+		// uncomment it to run tests with SeqentialAccess command behavior
+		//LinqToDB.Common.Configuration.OptimizeForSequentialAccess = true;
+		//DbCommandProcessorExtensions.Instance = new SequentialAccessCommandProcessor();
+
 		// netcoreapp2.1 adds DbProviderFactories support, but providers should be registered by application itself
 		// this code allows to load assembly using factory without adding explicit reference to project
 		RegisterSapHanaFactory();

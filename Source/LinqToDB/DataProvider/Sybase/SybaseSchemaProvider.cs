@@ -168,6 +168,7 @@ WHERE
 			{
 				return reader.Query(rd =>
 				{
+					// IMPORTANT: reader calls must be ordered to support SequentialAccess
 					var catalog = rd.GetString(0);
 					var schema  = rd.GetString(1);
 					var name    = rd.GetString(2).Split(';')[0];
@@ -198,12 +199,17 @@ WHERE
 			{
 				return reader.Query(rd =>
 				{
-					var catalog   = rd.GetString(0);
-					var schema    = rd.GetString(1);
-					var name      = rd.GetString(2);
-					var direction = rd.IsDBNull(5) ? (short?)null : rd.GetInt16(5);
-					var length    = rd.IsDBNull(10) ? (int?)null : rd.GetInt32(10);
-					var type      = rd.GetString(15);
+					// IMPORTANT: reader calls must be ordered to support SequentialAccess
+					var catalog    = rd.GetString(0);
+					var schema     = rd.GetString(1);
+					var name       = rd.GetString(2);
+					var pName      = rd.GetString(3).TrimStart('@');
+					var ordinal    = rd.GetInt32(4);
+					var direction  = rd.IsDBNull(5) ? (short?)null : rd.GetInt16(5);
+					var isNullable = rd.GetBoolean(8);
+					var length     = rd.IsDBNull(10) ? (int?)null : rd.GetInt32(10);
+					var scale      = rd.IsDBNull(13) ? (int?)null : rd.GetInt32(13);
+					var type       = rd.GetString(15);
 
 					if (type == "nchar" || type == "nvarchar")
 						length /= 3; // that's right...
@@ -211,16 +217,16 @@ WHERE
 					return new ProcedureParameterInfo()
 					{
 						ProcedureID   = catalog + "." + schema + "." + name,
-						ParameterName = rd.GetString(3).TrimStart('@'),
+						ParameterName = pName,
 						IsIn          = direction == 1 || direction == 2,
 						IsOut         = direction == 3 || direction == 2,
 						Length        = length,
 						Precision     = length, // this is also correct...
-						Scale         = rd.IsDBNull(13) ? (int?)null : rd.GetInt32(13),
-						Ordinal       = rd.GetInt32(4),
+						Scale         = scale,
+						Ordinal       = ordinal,
 						IsResult      = direction == 4,
 						DataType      = type,
-						IsNullable    = rd.GetBoolean(8)
+						IsNullable    = isNullable
 					};
 				}).ToList();
 			}

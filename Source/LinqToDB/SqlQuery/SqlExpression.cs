@@ -197,6 +197,13 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SqlParameter:
 				case QueryElementType.SqlField    :
 				case QueryElementType.Column      : return true;
+				case QueryElementType.SqlExpression:
+				{
+					var expr = (SqlExpression)ex;
+					if (QueryHelper.IsTransitiveExpression(expr))
+						return NeedsEqual(expr.Parameters[0]);
+					return true;
+				}
 				case QueryElementType.SqlFunction :
 
 					var f = (SqlFunction)ex;

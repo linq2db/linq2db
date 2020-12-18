@@ -112,6 +112,7 @@ namespace Tests
 				case TestProvName.SqlServer2016:
 				case ProviderName.SqlServer2017:
 				case TestProvName.SqlServer2019:
+				case TestProvName.SqlServer2019SequentialAccess:
 				case TestProvName.SqlAzure:
 				case ProviderName.SapHanaNative:
 				case ProviderName.SapHanaOdbc:
@@ -140,6 +141,7 @@ namespace Tests
 				case TestProvName.SqlServer2016:
 				case ProviderName.SqlServer2017:
 				case TestProvName.SqlServer2019:
+				case TestProvName.SqlServer2019SequentialAccess:
 				case TestProvName.SqlAzure:
 				case ProviderName.OracleManaged:
 				case ProviderName.OracleNative:
@@ -222,6 +224,7 @@ namespace Tests
 				case TestProvName.SqlServer2016:
 				case ProviderName.SqlServer2017:
 				case TestProvName.SqlServer2019:
+				case TestProvName.SqlServer2019SequentialAccess:
 				case TestProvName.SqlAzure:
 					return db.GetTable<LinqDataTypes>().Select(_ => DbName()).First();
 				case ProviderName.Informix:
@@ -305,15 +308,24 @@ namespace Tests
 			}
 		}
 
-		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string? tableName, IEnumerable<T> items)
+		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string? tableName, IEnumerable<T> items, bool insertInTransaction = false)
 		{
 			var table = CreateLocalTable<T>(db, tableName);
 
-			if (db is DataConnection)
+			if (db is DataConnection dc)
+			{
+				// apply transation only on insert, as not all dbs support DDL within transaction
+				if (insertInTransaction)
+					dc.BeginTransaction();
+
 				using (new DisableLogging())
 					table.Copy(items
 						, new BulkCopyOptions { BulkCopyType = BulkCopyType.MultipleRows }
 						);
+
+				if (insertInTransaction)
+					dc.CommitTransaction();
+			}
 			else
 				using (new DisableLogging())
 					foreach (var item in items)
@@ -323,9 +335,9 @@ namespace Tests
 			return table;
 		}
 
-		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, IEnumerable<T> items)
+		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, IEnumerable<T> items, bool insertInTransaction = false)
 		{
-			return CreateLocalTable(db, null, items);
+			return CreateLocalTable(db, null, items, insertInTransaction);
 		}
 	}
 }

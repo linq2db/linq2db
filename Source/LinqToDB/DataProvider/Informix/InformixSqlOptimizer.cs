@@ -5,11 +5,59 @@ namespace LinqToDB.DataProvider.Informix
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
+	using Mapping;
 
 	class InformixSqlOptimizer : BasicSqlOptimizer
 	{
 		public InformixSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
+		}
+
+		public override bool IsParameterDependedElement(IQueryElement element)
+		{
+			if (base.IsParameterDependedElement(element))
+				return true;
+
+			switch (element.ElementType)
+			{
+				case QueryElementType.LikePredicate:
+				{
+					var like = (SqlPredicate.Like)element;
+					if (like.Expr2.ElementType != QueryElementType.SqlValue)
+						return true;
+					break;
+				}
+
+				case QueryElementType.SearchStringPredicate:
+				{
+					var containsPredicate = (SqlPredicate.SearchString)element;
+					if (containsPredicate.Expr2.ElementType != QueryElementType.SqlValue)
+						return true;
+
+					return false;
+				}
+
+			}
+
+			return false;
+		}
+
+		public override ISqlPredicate ConvertLikePredicate(MappingSchema mappingSchema, SqlPredicate.Like predicate,
+			EvaluationContext context)
+		{
+			//Informix cannot process parameter in Like template (only Informix provider, not InformixDB2)
+			//
+			if (context.ParameterValues != null)
+			{
+				var exp2 = TryConvertToValue(predicate.Expr2, context);
+
+				if (!ReferenceEquals(exp2, predicate.Expr2))
+				{
+					predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, exp2, predicate.Escape);
+				}
+			}
+
+			return predicate;
 		}
 
 		static void SetQueryParameter(IQueryElement element)
@@ -30,7 +78,7 @@ namespace LinqToDB.DataProvider.Informix
 				p.IsQueryParameter = false;
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement, bool inlineParameters)
+		public override SqlStatement Finalize(SqlStatement statement)
 		{
 			CheckAliases(statement, int.MaxValue);
 
@@ -46,7 +94,7 @@ namespace LinqToDB.DataProvider.Informix
 						new QueryVisitor().VisitAll(select, ClearQueryParameter);
 				});
 
-			return base.Finalize(statement, inlineParameters);
+			return base.Finalize(statement);
 		}
 
 		public override SqlStatement TransformStatement(SqlStatement statement)
@@ -68,9 +116,10 @@ namespace LinqToDB.DataProvider.Informix
 			return statement;
 		}
 
-		public override ISqlExpression ConvertExpression(ISqlExpression expr, bool withParameters)
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expr, ConvertVisitor visitor,
+			EvaluationContext context)
 		{
-			expr = base.ConvertExpression(expr, withParameters);
+			expr = base.ConvertExpressionImpl(expr, visitor, context);
 
 			if (expr is SqlBinaryExpression be)
 			{
@@ -87,7 +136,7 @@ namespace LinqToDB.DataProvider.Informix
 			{
 				switch (func.Name)
 				{
-					case "Coalesce" : return new SqlFunction(func.SystemType, "Nvl", func.Parameters);
+					case "Coalesce" : return ConvertCoalesceToBinaryFunc(func, "Nvl");
 					case "Convert"  :
 					{
 						var par0 = func.Parameters[0];
@@ -98,7 +147,7 @@ namespace LinqToDB.DataProvider.Informix
 							case TypeCode.String   : return new SqlFunction(func.SystemType, "To_Char", func.Parameters[1]);
 							case TypeCode.Boolean  :
 							{
-								var ex = AlternativeConvertToBoolean(func, 1, withParameters);
+								var ex = AlternativeConvertToBoolean(func, 1);
 								if (ex != null)
 									return ex;
 								break;
@@ -142,5 +191,10 @@ namespace LinqToDB.DataProvider.Informix
 			return expr;
 		}
 
+		protected override ISqlExpression ConvertFunction(SqlFunction func)
+		{
+			func = ConvertFunctionParameters(func, false);
+			return base.ConvertFunction(func);
+		}
 	}
 }

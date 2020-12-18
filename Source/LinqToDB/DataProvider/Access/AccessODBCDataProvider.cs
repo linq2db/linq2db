@@ -38,7 +38,7 @@ namespace LinqToDB.DataProvider.Access
 			SqlProviderFlags.DefaultMultiQueryIsolationLevel  = IsolationLevel.Unspecified;
 
 			SetCharField            ("CHAR", (r, i) => r.GetString(i).TrimEnd(' '));
-			SetCharFieldToType<char>("CHAR", (r, i) => DataTools.GetChar(r, i));
+			SetCharFieldToType<char>("CHAR", DataTools.GetCharExpression);
 
 			SetToType<IDataReader, sbyte , int>  ("INTEGER" , (r, i) => unchecked((sbyte )r.GetInt32(i)));
 			SetToType<IDataReader, uint  , int>  ("INTEGER" , (r, i) => unchecked((uint  )r.GetInt32(i)));

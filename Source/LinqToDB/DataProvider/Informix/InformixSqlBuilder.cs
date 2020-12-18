@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Globalization;
 using System.Linq;
 using System.Text;
 
 namespace LinqToDB.DataProvider.Informix
 {
-	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
+	using System.Globalization;
+	using Mapping;
 
 	partial class InformixSqlBuilder : BasicSqlBuilder
 	{
@@ -69,9 +69,9 @@ namespace LinqToDB.DataProvider.Informix
 			return new InformixSqlBuilder(_provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
-		protected override void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, int indent, bool skipAlias)
+		protected override void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, int indent, bool skipAlias)
 		{
-			base.BuildSql(commandNumber, statement, sb, indent, skipAlias);
+			base.BuildSql(commandNumber, statement, sb, optimizationContext, indent, skipAlias);
 
 			sb
 				.Replace("NULL IS NOT NULL", "1=0")
@@ -118,12 +118,6 @@ namespace LinqToDB.DataProvider.Informix
 				StringBuilder.Append(" ESCAPE ");
 				BuildExpression(precedence, predicate.Escape);
 			}
-		}
-
-		protected override void BuildFunction(SqlFunction func)
-		{
-			func = ConvertFunctionParameters(func);
-			base.BuildFunction(func);
 		}
 
 		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)

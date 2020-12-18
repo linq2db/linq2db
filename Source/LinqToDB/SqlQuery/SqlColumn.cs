@@ -25,6 +25,7 @@ namespace LinqToDB.SqlQuery
 
 #if DEBUG
 		readonly int _columnNumber;
+		public   int  ColumnNumber => _columnNumber;
 		static   int _columnCounter;
 #endif
 
@@ -161,7 +162,23 @@ namespace LinqToDB.SqlQuery
 		public override string ToString()
 		{
 #if OVERRIDETOSTRING
-				return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+			var sb  = new StringBuilder();
+			var dic = new Dictionary<IQueryElement, IQueryElement>();
+
+			sb
+				.Append('t')
+				.Append(Parent?.SourceID ?? -1)
+#if DEBUG
+				.Append('[').Append(_columnNumber).Append(']')
+#endif
+				.Append(".")
+				.Append(Alias ?? "c")
+				.Append(" => ");
+
+			Expression.ToString(sb, dic);
+
+			return sb.ToString();
+
 #else
 			if (Expression is SqlField)
 				return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
@@ -259,33 +276,20 @@ namespace LinqToDB.SqlQuery
 
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{
-			if (dic.ContainsKey(this))
-				return sb.Append("...");
-
-			dic.Add(this, this);
+			var parentIndex = -1;
+			if (Parent != null)
+			{
+				parentIndex = Parent.Select.Columns.IndexOf(this);
+			}
 
 			sb
 				.Append('t')
-				.Append(Parent!.SourceID)
-				.Append(".");
-
+				.Append(Parent?.SourceID ?? - 1)
 #if DEBUG
-			sb.Append('[').Append(_columnNumber).Append(']');
+				.Append('[').Append(_columnNumber).Append(']')
 #endif
-
-			if (Expression is SelectQuery)
-			{
-				sb.Append("(\n\t\t");
-				var len = sb.Length;
-				Expression.ToString(sb, dic).Replace("\n", "\n\t\t", len, sb.Length - len);
-				sb.Append("\n\t)");
-			}
-			else
-			{
-				Expression.ToString(sb, dic);
-			}
-
-			dic.Remove(this);
+				.Append(".")
+				.Append(Alias ?? "c" + (parentIndex >= 0 ? parentIndex + 1 : parentIndex));
 
 			return sb;
 		}

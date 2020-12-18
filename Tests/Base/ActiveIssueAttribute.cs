@@ -87,11 +87,11 @@ namespace Tests
 		/// </summary>
 		public bool SkipForNonLinqService { get; set; }
 
-		HashSet<string>? _configurationsToSkip;
+		HashSet<string>? _issueConfigurations;
 
-		HashSet<string> GetConfigurations()
+		HashSet<string> GetIssueConfigurations()
 		{
-			return _configurationsToSkip ??= new HashSet<string>(Configurations ?? new string[0]);
+			return _issueConfigurations ??= new HashSet<string>(Configurations ?? new string[0]);
 		}
 
 		IEnumerable<TestMethod> ITestBuilder.BuildFrom(IMethodInfo method, Test suite)
@@ -108,60 +108,24 @@ namespace Tests
 			if (test.RunState != RunState.Runnable)
 				return;
 
-			var configurations = GetConfigurations();
+			var issueConfigurations = GetIssueConfigurations();
 
-			if (configurations.Count > 0 || SkipForLinqService || SkipForNonLinqService)
+			var explicitTest = issueConfigurations.Count == 0;
+
+			if (!explicitTest)
 			{
-				if (test.Arguments.Length == 0)
-					return;
-
-				var provider       = null as string;
-				var isLinqService  = false;
-				var hasLinqService = configurations.Any(c => c.EndsWith(".LinqService"));
-				var parameters     = test.Method.GetParameters();
-
-				for (var i = 0; i < parameters.Length; i++)
-				{
-					var attr = parameters[i].GetCustomAttributes<DataSourcesBaseAttribute>(true);
-
-					if (attr.Length != 0)
-					{
-						var context = (string)test.Arguments[i];
-
-						if (hasLinqService)
-						{
-							if (configurations.Contains(context))
-								break;
-							return;
-						}
-
-						provider = context;
-
-						if (provider.EndsWith(".LinqService"))
-						{
-							provider = provider.Replace(".LinqService", "");
-							isLinqService = true;
-						}
-
-						break;
-					}
-				}
+				var (provider, isLinqService) = NUnitUtils.GetContext(test);
 
 				if (provider != null)
 				{
-					// first check that wcf/non-wcf flags applicable for current case
-					var matched =
-						!SkipForLinqService    && isLinqService == true ||
-						!SkipForNonLinqService && isLinqService == false;
-
-					// next check configuration name
-					matched = matched && (configurations.Count == 0 || configurations.Contains(provider));
-
-					// attribute is not applicable to current test case
-					if (!matched)
-						return;
+					explicitTest = issueConfigurations.Contains(provider)
+						&& ((!SkipForLinqService && isLinqService == true)
+							|| (!SkipForNonLinqService && isLinqService == false));
 				}
 			}
+
+			if (!explicitTest)
+				return;
 
 			var reason = string.IsNullOrWhiteSpace(_issue) ? "Active issue" : $"Issue {_issue}";
 

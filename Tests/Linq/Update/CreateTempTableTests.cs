@@ -162,9 +162,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if !NET472
-		[ActiveIssue(Configuration = TestProvName.AllPostgreSQL, Details = "ngpsql 5.0.0 bug")]
-#endif
 		[Test]
 		public async Task CreateTableAsyncCanceled([DataSources(false)] string context)
 		{
@@ -209,9 +206,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if !NET472
-		[ActiveIssue(Configuration = TestProvName.AllPostgreSQL, Details = "ngpsql 5.0.0 bug")]
-#endif
 		[Test]
 		public async Task CreateTableAsyncCanceled2([DataSources(false)] string context)
 		{

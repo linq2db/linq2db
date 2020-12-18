@@ -55,7 +55,7 @@ namespace LinqToDB.Linq
 				{
 					var param = GetParameter(type, dataContext, field);
 
-					ei.Queries[0].Parameters.Add(param);
+					ei.Queries[0].AddParameterAccessor(param);
 
 					updateStatement.Update.Items.Add(new SqlSetExpression(field, param.SqlParameter));
 
@@ -77,7 +77,7 @@ namespace LinqToDB.Linq
 				{
 					var param = GetParameter(type, dataContext, field);
 
-					ei.Queries[0].Parameters.Add(param);
+					ei.Queries[0].AddParameterAccessor(param);
 
 					sqlQuery.Where.Field(field).Equal.Expr(param.SqlParameter);
 
@@ -109,10 +109,11 @@ namespace LinqToDB.Linq
 					? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, type)
 					: Cache<T>.QueryCache.GetOrCreate(
 						new { Operation = 'U', dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, columnFilter, tableName, schemaName, databaseName, serverName, tableOptions, type },
-						o =>
+						new { dataContext, entityDescriptor, obj},
+						static (entry, key, context) =>
 						{
-							o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
-							return CreateQuery(dataContext, entityDescriptor, obj, null, tableName, serverName, databaseName, schemaName, tableOptions, type);
+							entry.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
+							return CreateQuery(context.dataContext, context.entityDescriptor, context.obj, null, key.tableName, key.serverName, key.databaseName, key.schemaName, key.tableOptions, key.type);
 						});
 
 				return ei == null ? 0 : (int)ei.GetElement(dataContext, Expression.Constant(obj), null, null)!;
@@ -138,10 +139,11 @@ namespace LinqToDB.Linq
 					? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, type)
 					: Cache<T>.QueryCache.GetOrCreate(
 						new { Operation = 'U', dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, columnFilter, tableName, schemaName, databaseName, serverName, tableOptions, type },
-						o =>
+						new { dataContext, entityDescriptor, obj },
+						static (entry, key, context) =>
 						{
-							o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
-							return CreateQuery(dataContext, entityDescriptor, obj, null, tableName, serverName, databaseName, schemaName, tableOptions, type);
+							entry.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
+							return CreateQuery(context.dataContext, context.entityDescriptor, context.obj, null, key.tableName, key.serverName, key.databaseName, key.schemaName, key.tableOptions, key.type);
 						});
 
 				var result = ei == null ? 0 : await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, null, token).ConfigureAwait(Configuration.ContinueOnCapturedContext);

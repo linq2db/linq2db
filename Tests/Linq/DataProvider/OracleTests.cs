@@ -29,6 +29,7 @@ namespace Tests.DataProvider
 	using System.Threading.Tasks;
 	using LinqToDB.Data.RetryPolicy;
 	using LinqToDB.Linq;
+	using LinqToDB.Linq.Internal;
 	using LinqToDB.SchemaProvider;
 	using Model;
 
@@ -2165,24 +2166,24 @@ namespace Tests.DataProvider
 		[Test]
 		public void OverflowTest([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			var func = OracleTools.DataReaderGetDecimal;
-			try
-			{
-				OracleTools.DataReaderGetDecimal = GetDecimal;
+			OracleDataProvider provider;
 
-				using (var db = new DataConnection(context))
-				{
-					var list = db.GetTable<DecimalOverflow>().ToList();
-				}
-			}
-			finally
+			using (var db = new DataConnection(context))
 			{
-				OracleTools.DataReaderGetDecimal = func;
+				provider = new OracleDataProvider(db.DataProvider.Name, ((OracleDataProvider)db.DataProvider).Version);
+			}
+
+			provider.ReaderExpressions[new ReaderInfo { FieldType = typeof(decimal) }] = (Expression<Func<IDataReader, int, decimal>>)((r,i) => GetDecimal(r, i));
+
+			using (var db = new DataConnection(provider, DataConnection.GetConnectionString(context)))
+			{
+				var list = db.GetTable<DecimalOverflow>().ToList();
 			}
 		}
 
 		const int ClrPrecision = 29;
 
+		[ColumnReader(1)]
 		static decimal GetDecimal(IDataReader rd, int idx)
 		{
 			if (rd is Oracle.ManagedDataAccess.Client.OracleDataReader reader)
@@ -2212,20 +2213,9 @@ namespace Tests.DataProvider
 		[Test]
 		public void OverflowTest2([IncludeDataSources(TestProvName.AllOracleManaged)] string context)
 		{
-			var func = OracleTools.DataReaderGetDecimal;
-			try
+			using (var db = new DataConnection(context))
 			{
-
-				OracleTools.DataReaderGetDecimal = (rd, idx) => { throw new Exception(); };
-
-				using (var db = new DataConnection(context))
-				{
-					var list = db.GetTable<DecimalOverflow2>().ToList();
-				}
-			}
-			finally
-			{
-				OracleTools.DataReaderGetDecimal = func;
+				var list = db.GetTable<DecimalOverflow2>().ToList();
 			}
 		}
 

@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
 	using Builder;
-	using Mapping;
+	using Common.Internal.Cache;
 
 	class CompiledTable<T>
 	{
@@ -19,70 +17,30 @@ namespace LinqToDB.Linq
 
 		readonly LambdaExpression _lambda;
 		readonly Expression       _expression;
-		readonly object           _sync = new object();
-
-		string?        _lastContextID;
-		Type?          _lastContextType;
-		MappingSchema? _lastMappingSchema;
-		Query<T>?      _lastQuery;
-
-		readonly Dictionary<object,Query<T>> _infos = new Dictionary<object, Query<T>>();
 
 		Query<T> GetInfo(IDataContext dataContext)
 		{
-			string?        lastContextID;
-			Type?          lastContextType;
-			MappingSchema? lastMappingSchema;
-			Query<T>?      query;
+			var contextID       = dataContext.ContextID;
+			var contextType     = dataContext.GetType();
+			var mappingSchemaID = dataContext.MappingSchema.ConfigurationID;
 
-			lock (_sync)
+			var key = new { Operation = "CT", contextID, contextType, mappingSchemaID, Expression = _expression };
+
+			var result = QueryRunner.Cache<T>.QueryCache.GetOrCreate(key, o =>
 			{
-				lastContextID     = _lastContextID;
-				lastContextType   = _lastContextType;
-				lastMappingSchema = _lastMappingSchema;
-				query             = _lastQuery;
-			}
+				o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
 
-			var contextID     = dataContext.ContextID;
-			var contextType   = dataContext.GetType();
-			var mappingSchema = dataContext.MappingSchema;
+				var query = new Query<T>(dataContext, _expression);
 
-			if (lastContextID != contextID || lastContextType != contextType || lastMappingSchema != mappingSchema)
-				query = null;
+				query = new ExpressionBuilder(query, dataContext, _expression, _lambda.Parameters.ToArray())
+					.Build<T>();
 
-			if (query == null)
-			{
-				var key = new { contextID, contextType, mappingSchema };
+				query.ClearMemberQueryableInfo();
+				return query;
+			});
 
-				lock (_sync)
-					_infos.TryGetValue(key, out query);
 
-				if (query == null)
-				{
-					lock (_sync)
-					{
-						_infos.TryGetValue(key, out query);
-
-						if (query == null)
-						{
-							query = new Query<T>(dataContext, _expression);
-
-							query = new ExpressionBuilder(query, dataContext, _expression, _lambda.Parameters.ToArray())
-								.Build<T>();
-
-							query.ClearMemberQueryableInfo();
-							_infos.Add(key, query);
-
-							_lastContextID     = contextID;
-							_lastContextType   = contextType;
-							_lastMappingSchema = mappingSchema;
-							_lastQuery         = query;
-						}
-					}
-				}
-			}
-
-			return query;
+			return result;
 		}
 
 		public IQueryable<T> Create(object[] parameters, object[] preambles)

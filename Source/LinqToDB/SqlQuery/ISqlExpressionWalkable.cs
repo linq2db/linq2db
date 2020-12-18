@@ -14,6 +14,7 @@ namespace LinqToDB.SqlQuery
 		}
 
 		public bool SkipColumns;
+		public bool SkipColumnDeclaration;
 		public bool ProcessParent;
 	}
 

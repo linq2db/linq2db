@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.DataProvider.SqlServer
+﻿using LinqToDB.Common;
+
+namespace LinqToDB.DataProvider.SqlServer
 {
 	using SqlProvider;
 	using SqlQuery;
@@ -17,10 +19,14 @@
 			statement = ReplaceDistinctOrderByWithRowNumber(statement, q => true);
 			if (statement.IsUpdate() || statement.IsDelete()) statement = WrapRootTakeSkipOrderBy(statement);
 			statement = ReplaceSkipWithRowNumber(statement);
-			if (statement.QueryType == QueryType.Select)
-				statement = QueryHelper.OptimizeSubqueries(statement); // OptimizeSubqueries can break update queries
 
 			return statement;
+		}
+
+		protected override ISqlExpression ConvertFunction(SqlFunction func)
+		{
+			func = ConvertFunctionParameters(func, false);
+			return base.ConvertFunction(func);
 		}
 
 	}

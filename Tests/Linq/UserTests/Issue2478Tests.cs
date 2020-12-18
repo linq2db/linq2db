@@ -32,6 +32,29 @@ namespace Tests.UserTests
 		}
 
 		[Test]
+		public void CrossApplyParameter([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context, [Values] bool shouldFilter, [Values] bool isPositive)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query =
+					from p in db.GetTable<Parent>()
+					from c in (from t in db.GetTable<Child>()
+						where t.ParentID == p.ParentID
+						group t by 1
+						into g
+						select new { Count = g.Count(), Sum = g.Sum(_ => _.ChildID) })
+					select new { p.ParentID, Count = c.Count, Sum = c.Sum };
+
+				query = query.Where(q => shouldFilter ? q.Count > 0 : isPositive);
+
+				var result = query.ToArray();
+				var cnt    = query.Count();
+				
+				Assert.That(cnt, Is.EqualTo(result.Length));
+			}
+		}
+
+		[Test]
 		public void CrossApplyTestExt([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -93,5 +116,30 @@ namespace Tests.UserTests
 				Assert.That(cnt, Is.EqualTo(result.Length));
 			}
 		}
+
+		[ActiveIssue]
+		[Test]
+		public void ExistsRemoval([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context, [Values] bool shouldFilter, [Values] bool isPositive)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query =
+					from p in db.GetTable<Parent>()
+					where (from t in db.GetTable<Child>()
+						where t.ParentID == p.ParentID
+						group t by 1
+						into g
+						select new { Count = g.Count(), Sum = g.Sum(_ => _.ChildID) }).Any()
+					select p;
+
+				var result = query.ToArray();
+				var cnt    = query.Count();
+
+				Assert.That(query.ToString(), Does.Not.Contains("EXISTS"));
+				
+				Assert.That(cnt, Is.EqualTo(result.Length));
+			}
+		}
+
 	}
 }

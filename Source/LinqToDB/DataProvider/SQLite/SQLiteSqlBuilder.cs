@@ -7,8 +7,6 @@ namespace LinqToDB.DataProvider.SQLite
 	using SqlQuery;
 	using SqlProvider;
 	using Mapping;
-	using Common;
-	using Tools;
 
 	public class SQLiteSqlBuilder : BasicSqlBuilder
 	{
@@ -128,36 +126,6 @@ namespace LinqToDB.DataProvider.SQLite
 			}
 		}
 
-		protected override void BuildPredicate(ISqlPredicate predicate)
-		{
-			if (predicate is SqlPredicate.ExprExpr exprExpr)
-			{
-				var leftType  = QueryHelper.GetDbDataType(exprExpr.Expr1);
-				var rightType = QueryHelper.GetDbDataType(exprExpr.Expr2);
-
-				if ((IsDateTime(leftType) || IsDateTime(rightType)) &&
-					!(exprExpr.Expr1 is IValueContainer container1 && container1.Value == null ||
-					  exprExpr.Expr2 is IValueContainer container2 && container2.Value == null))
-				{
-					if (!(exprExpr.Expr1 is SqlFunction func1 && (func1.Name == "$Convert$" || func1.Name == "DateTime")))
-					{
-						var l = new SqlFunction(leftType.SystemType, "$Convert$", SqlDataType.GetDataType(leftType.SystemType),
-							new SqlDataType(leftType), exprExpr.Expr1);
-						exprExpr.Expr1 = l;
-					}
-
-					if (!(exprExpr.Expr2 is SqlFunction func2 && (func2.Name == "$Convert$" || func2.Name == "DateTime")))
-					{
-						var r = new SqlFunction(rightType.SystemType, "$Convert$", new SqlDataType(rightType),
-							new SqlDataType(rightType), exprExpr.Expr2);
-						exprExpr.Expr2 = r;
-					}
-				}
-			}
-
-			base.BuildPredicate(predicate);
-		}
-
 		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions)
 		{
 			if (database != null && database.Length == 0) database = null;
@@ -166,27 +134,6 @@ namespace LinqToDB.DataProvider.SQLite
 				sb.Append(database).Append(".");
 
 			return sb.Append(table);
-		}
-
-		static bool IsDateTime(DbDataType dbDataType)
-		{
-			if (dbDataType.DataType.In(DataType.Date, DataType.Time, DataType.DateTime, DataType.DateTime2,
-				DataType.DateTimeOffset, DataType.SmallDateTime, DataType.Timestamp))
-				return true;
-
-			if (dbDataType.DataType != DataType.Undefined)
-				return false;
-
-			return IsDateTime(dbDataType.SystemType);
-		}
-
-		static bool IsDateTime(Type type)
-		{
-			return
-				type == typeof(DateTime) ||
-				type == typeof(DateTimeOffset) ||
-				type == typeof(DateTime?) ||
-				type == typeof(DateTimeOffset?);
 		}
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
