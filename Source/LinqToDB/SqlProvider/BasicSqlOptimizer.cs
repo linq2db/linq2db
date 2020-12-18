@@ -1975,7 +1975,6 @@ namespace LinqToDB.SqlProvider
 				return new SqlFunction(func.SystemType, "CASE", sc, new SqlValue(true), new SqlValue(false))
 				{
 					CanBeNull = false,
-					DoNotOptimize = true
 				};
 			}
 
