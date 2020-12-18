@@ -10,7 +10,10 @@ using System.Text;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.Data.DbCommandProcessor;
+using LinqToDB.DataProvider.Informix;
 using LinqToDB.Expressions;
+using LinqToDB.Extensions;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.Reflection;
@@ -24,13 +27,11 @@ using LinqToDB.ServiceModel;
 #endif
 
 using NUnit.Framework;
+using NUnit.Framework.Internal;
 
 namespace Tests
 {
-	using LinqToDB.Data.DbCommandProcessor;
-	using LinqToDB.DataProvider.Informix;
 	using Model;
-	using NUnit.Framework.Internal;
 	using Tools;
 
 	public partial class TestBase
@@ -1160,20 +1161,19 @@ namespace Tests
 
 		public T[] AssertQuery<T>(IQueryable<T> query)
 		{
-			var expr = query.Expression;
-
-			var loaded = new Dictionary<Type, Expression>();
-
-			var actual = query.ToArray();
-
+			var expr    = query.Expression;
+			var loaded  = new Dictionary<Type, Expression>();
+			var actual  = query.ToArray();
 			var newExpr = expr.Transform(e =>
 			{
 				if (e.NodeType == ExpressionType.Call)
 				{
 					var mc = (MethodCallExpression)e;
-					if (mc.IsSameGenericMethod(Methods.LinqToDB.GetTable))
+
+					if (typeof(ITable<>).IsSameOrParentOf(mc.Type))
 					{
 						var entityType = mc.Method.ReturnType.GetGenericArguments()[0];
+
 						if (entityType != null)
 						{
 							if (!loaded.TryGetValue(entityType, out var itemsExpression))
@@ -1195,9 +1195,9 @@ namespace Tests
 				return e;
 			})!;
 
-
 			var empty = LinqToDB.Common.Tools.CreateEmptyQuery<T>();
 			T[]? expected;
+
 			using (new DisableLogging())
 			{
 				expected = empty.Provider.CreateQuery<T>(newExpr).ToArray();

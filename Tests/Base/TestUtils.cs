@@ -303,6 +303,8 @@ namespace Tests
 		{
 			try
 			{
+				if ((tableOptions & TableOptions.CheckExistence) == TableOptions.CheckExistence)
+					db.DropTable<T>(tableName, tableOptions:tableOptions);
 				return CreateTable<T>(db, tableName, tableOptions);
 			}
 			catch
