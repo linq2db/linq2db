@@ -12,6 +12,8 @@ namespace LinqToDB.DataProvider.MySql
 		{
 		}
 
+		public override bool CanCompareSearchConditions => true;
+		
 		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
 			return statement.QueryType switch
