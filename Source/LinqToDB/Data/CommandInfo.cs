@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Dynamic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -1521,12 +1522,24 @@ namespace LinqToDB.Data
 
 		static Func<IDataReader,T> GetObjectReader<T>(DataConnection dataConnection, IDataReader dataReader, string sql, string? additionalKey)
 		{
-			var key = new QueryKey(typeof(T), dataReader.GetType(), dataConnection.ID, sql, additionalKey);
-
-			if (!_objectReaders.TryGetValue(key, out var func))
+			Delegate? func;
+			
+			if (typeof(object) == typeof(T) || typeof(ExpandoObject) == typeof(T))
 			{
-				_objectReaders[key] = func = CreateObjectReader<T>(dataConnection, dataReader, (dc, dr, type, idx,dataReaderExpr) =>
+				// dynamic case
+				//
+				func = CreateDynamicObjectReader<T>(dataConnection, dataReader, (dc, dr, type, idx, dataReaderExpr) =>
 					new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr).Reduce(dc, dr));
+			}
+			else
+			{
+				var key = new QueryKey(typeof(T), dataReader.GetType(), dataConnection.ID, sql, additionalKey);
+
+				if (!_objectReaders.TryGetValue(key, out func))
+				{
+					_objectReaders[key] = func = CreateObjectReader<T>(dataConnection, dataReader, (dc, dr, type, idx, dataReaderExpr) =>
+						new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr).Reduce(dc, dr));
+				}
 			}
 
 			return (Func<IDataReader,T>)func;
@@ -1661,6 +1674,73 @@ namespace LinqToDB.Data
 
 			return lex.Compile();
 		}
+
+
+		static ConstructorInfo _expandoObjectConstructor = MemberHelper.ConstructorOf(() => new ExpandoObject());
+		
+		static Func<IDataReader, T> CreateDynamicObjectReader<T>(
+			DataConnection dataConnection,
+			IDataReader dataReader,
+			Func<DataConnection, IDataReader, Type, int, Expression, Expression> getMemberExpression)
+		{
+			var parameter      = Expression.Parameter(typeof(IDataReader));
+			var dataReaderExpr = (Expression)Expression.Convert(parameter, dataReader.GetType());
+
+			Expression? expr;
+
+			var readerType = dataReader.GetType();
+			LambdaExpression? converterExpr = null;
+			if (dataConnection.DataProvider.DataReaderType != readerType)
+			{
+				var converterKey  = Tuple.Create(readerType, dataConnection.DataProvider.DataReaderType);
+				converterExpr = _dataReaderConverter.GetOrAdd(converterKey, _ =>
+				{
+					var expr = dataConnection.MappingSchema.GetConvertExpression(readerType, typeof(IDataReader), false, false);
+					if (expr != null)
+					{
+						var param = Expression.Parameter(typeof(IDataReader));
+						expr = Expression.Lambda(Expression.Convert(expr.Body, dataConnection.DataProvider.DataReaderType), expr.Parameters);
+					}
+
+					return expr;
+				});
+			}
+
+			dataReaderExpr = converterExpr != null ? converterExpr.GetBody(dataReaderExpr) : dataReaderExpr;
+
+			{
+				var names = new string[dataReader.FieldCount];
+
+				for (var i = 0; i < dataReader.FieldCount; i++)
+					names[i] = (dataReader.GetName(i));
+
+				expr = null;
+
+				if (expr == null)
+				{
+					/*
+					expr = Expression.MemberInit(
+						Expression.New(_expandoObjectConstructor,
+						members.Select(m => Expression.Bind(m.Member.MemberInfo, m.Expr)));
+				*/
+				}
+			}
+
+			if (expr.GetCount(e => e == dataReaderExpr) > 1)
+			{
+				var dataReaderVar = Expression.Variable(dataReaderExpr.Type, "ldr");
+				var assignment    = Expression.Assign(dataReaderVar, dataReaderExpr);
+
+				expr = expr.Transform(e => e == dataReaderExpr ? dataReaderVar : e);
+				expr = Expression.Block(new[] { dataReaderVar }, assignment, expr);
+
+			}
+
+			var lex = Expression.Lambda<Func<IDataReader,T>>(expr, parameter);
+
+			return lex.Compile();
+		}
+
 
 		#endregion
 	}
