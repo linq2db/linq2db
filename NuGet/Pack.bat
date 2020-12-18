@@ -3,10 +3,11 @@ call Build.cmd
 cd NuGet
 
 del *.nupkg
+del *.snupkg
 
-..\Redist\NuGet Pack linq2db.nuspec
-..\Redist\NuGet Pack linq2db.AspNet.nuspec
-..\Redist\NuGet Pack linq2db.Tools.nuspec
+..\Redist\NuGet Pack linq2db.nuspec -Symbols -SymbolPackageFormat snupkg
+..\Redist\NuGet Pack linq2db.AspNet.nuspec -Symbols -SymbolPackageFormat snupkg
+..\Redist\NuGet Pack linq2db.Tools.nuspec -Symbols -SymbolPackageFormat snupkg
 
 ..\Redist\NuGet Pack linq2db.Access.nuspec
 ..\Redist\NuGet Pack linq2db.DB2.nuspec
