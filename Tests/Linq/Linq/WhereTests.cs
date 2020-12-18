@@ -1771,6 +1771,24 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void BinaryComparisonTest1([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Person.Where(_ => (_.FirstName == _.FirstName) == (_.MiddleName != _.LastName)).Any();
+			}
+		}
+
+		[Test]
+		public void BinaryComparisonTest2([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Person.Where(_ => (_.FirstName == _.FirstName) != (_.MiddleName != _.LastName)).Any();
+			}
+		}
+
 		#region issue 2424
 		class Isue2424Table
 		{
