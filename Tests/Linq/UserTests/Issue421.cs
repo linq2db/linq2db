@@ -106,9 +106,9 @@ namespace Tests.UserTests
 		[Test]
 		public void Test4([DataSources] string context)
 		{
-			var tableName = nameof(BlobClass) + TestUtils.GetNext().ToString();
+			var tableName = nameof(BlobClass) + (context.Contains("Firebird") ? TestUtils.GetNext().ToString() : string.Empty);
 			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable<BlobClass>(tableName))
+			using (var table = db.CreateLocalTable<BlobClass>())
 			{
 				db.InlineParameters = true;
 
