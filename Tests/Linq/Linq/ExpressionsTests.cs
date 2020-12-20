@@ -13,6 +13,7 @@ using NUnit.Framework;
 namespace Tests.Linq
 {
 	using Model;
+	using Tests.DataProvider;
 
 	[TestFixture]
 	public class ExpressionsTests : TestBase
@@ -1047,6 +1048,19 @@ namespace Tests.Linq
 
 		#endregion
 
+		[Test]
+		public void TestDateTimeNAddTimeSpan([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				db.GetTable<SqlServerTests.AllTypes2>()
+					.Update(_ => new SqlServerTests.AllTypes2()
+					{
+						dateDataType = _.dateDataType + TimeSpan.FromDays(1)
+					});
+			}
+		}
 	}
 
 	static class ExpressionTestExtensions
