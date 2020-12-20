@@ -8,7 +8,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
-namespace LinqToDB.Generators
+namespace LinqToDB.Analyzers
 {
 	[Generator]
 	public class ExpressionMethodGenerator : ISourceGenerator

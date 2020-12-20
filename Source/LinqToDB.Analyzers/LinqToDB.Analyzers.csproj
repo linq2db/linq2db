@@ -2,8 +2,8 @@
 	<Import Project="..\..\Build\linq2db.Default.props" />
 
 	<PropertyGroup>
-		<AssemblyName>linq2db.Generators</AssemblyName>
-		<RootNamespace>LinqToDB.Generators</RootNamespace>
+		<AssemblyName>linq2db.Analyzers</AssemblyName>
+		<RootNamespace>LinqToDB.Analyzers</RootNamespace>
 	</PropertyGroup>
 
 	<PropertyGroup>
@@ -15,13 +15,6 @@
 		<DebugType>pdbonly</DebugType>
 		<DebugSymbols>true</DebugSymbols>
 	</PropertyGroup>
-
-	<ItemGroup>
-		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-		</PackageReference>
-	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.8.0" PrivateAssets="all" />

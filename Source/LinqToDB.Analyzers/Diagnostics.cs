@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Microsoft.CodeAnalysis;
 
-namespace LinqToDB.Generators
+namespace LinqToDB.Analyzers
 {
 	internal static class Diagnostics
 	{
