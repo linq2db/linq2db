@@ -17,6 +17,8 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 		}
 
+		public override bool CanCompareSearchConditions => true;
+
 		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
 			switch (statement.QueryType)

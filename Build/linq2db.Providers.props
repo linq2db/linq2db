@@ -9,7 +9,7 @@
 		<PackageReference Include="AdoNetCore.AseClient" Version="0.18.0" />
 
 		<PackageReference Include="System.Data.SqlClient" Version="4.8.2" />
-		<PackageReference Include="Microsoft.Data.SqlClient" Version="2.1.0" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="2.1.1" />
 	</ItemGroup>
 
 	<PropertyGroup Condition="'$(TargetFramework)' == 'net472'">
