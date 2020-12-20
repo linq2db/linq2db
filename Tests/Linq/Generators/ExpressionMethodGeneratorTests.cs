@@ -49,7 +49,7 @@ namespace Tests.Generators
 		}
 
 		[GenerateExpressionMethod]
-		public static partial PersonDto ToDtoArrow(Person person) 
+		public static partial PersonDto ToDtoArrow(Person person)
 			=> new PersonDto
 			{
 				Id = person.Id,
@@ -60,6 +60,29 @@ namespace Tests.Generators
 		public void VerifyExpressionMethodGeneratedOnArrow()
 		{
 			var baseMethod = typeof(ExpressionMethodGeneratorTests).GetMethod(nameof(ToDtoArrow));
+
+			var expressionMethodAttributes = baseMethod!.GetCustomAttributes(typeof(ExpressionMethodAttribute), false);
+			Assert.IsTrue(expressionMethodAttributes.Any());
+
+			var methodName = (expressionMethodAttributes[0] as ExpressionMethodAttribute)!.MethodName;
+			Assert.IsTrue(typeof(ExpressionMethodGeneratorTests)
+				.GetMethods(BindingFlags.Static | BindingFlags.NonPublic)
+				.Any(m => m.Name == methodName));
+		}
+
+
+		[GenerateExpressionMethod]
+		public static partial PersonDto ToDtoComplex(int id, string firstName, string lastName, TaskStatus status)
+			=> new PersonDto
+			{
+				Id = id + (int)status,
+				Name = firstName + lastName,
+			};
+
+		[Test]
+		public void VerifyExpressionMethodGeneratedOnComplex()
+		{
+			var baseMethod = typeof(ExpressionMethodGeneratorTests).GetMethod(nameof(ToDtoComplex));
 
 			var expressionMethodAttributes = baseMethod!.GetCustomAttributes(typeof(ExpressionMethodAttribute), false);
 			Assert.IsTrue(expressionMethodAttributes.Any());
