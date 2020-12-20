@@ -39,7 +39,7 @@
 		<file src="..\Source\LinqToDB\bin\Release\**\linq2db.dll" target="lib\" />
 
 		<!-- Generators -->
-		<file src="..\Source\LinqToDB.Generators\bin\Release\netstandard2.0\LinqToDB.Generators.dll" 
+		<file src="..\Source\LinqToDB.Analyzers\bin\Release\netstandard2.0\linq2db.Analyzers.dll" 
 		      target="analyzers\dotnet\cs" />
 	</files>
 </package>

@@ -144,7 +144,10 @@ namespace LinqToDB.Analyzers
 					arrowMethodsSyntax.Concat(bodyMethodsSyntax)));
 
 			var newFile = SyntaxFactory.CompilationUnit()
-				.WithUsings(unit.Usings.Add(SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName("System.Linq.Expressions").WithLeadingTrivia(SyntaxFactory.Space))))
+				.WithUsings(unit.Usings
+					// in case user did not include them in original file
+					.Add(SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName("System").WithLeadingTrivia(SyntaxFactory.Space)))
+					.Add(SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName("System.Linq.Expressions").WithLeadingTrivia(SyntaxFactory.Space))))
 				.WithMembers(SyntaxFactory.SingletonList<MemberDeclarationSyntax>(
 					SyntaxFactory.NamespaceDeclaration(SyntaxFactory.IdentifierName(ns.ToString()).WithLeadingTrivia(SyntaxFactory.Space))
 						.WithMembers(SyntaxFactory.SingletonList<MemberDeclarationSyntax>(classSyntax))));
