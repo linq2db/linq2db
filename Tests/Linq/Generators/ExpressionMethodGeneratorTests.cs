@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using LinqToDB;
@@ -24,7 +25,7 @@ namespace Tests.Generators
 		}
 
 		[GenerateExpressionMethod]
-		public static PersonDto ToDtoReturn(Person person)
+		public static partial PersonDto ToDtoReturn(Person person)
 		{
 			return new PersonDto
 			{
@@ -32,14 +33,6 @@ namespace Tests.Generators
 				Name = person.Name
 			};
 		}
-
-		[GenerateExpressionMethod]
-		public static PersonDto ToDtoArrow(Person person) 
-			=> new PersonDto
-			{
-				Id = person.Id,
-				Name = person.Name
-			};
 
 		[Test]
 		public void VerifyExpressionMethodGeneratedOnReturn()
@@ -50,8 +43,18 @@ namespace Tests.Generators
 			Assert.IsTrue(expressionMethodAttributes.Any());
 
 			var methodName = (expressionMethodAttributes[0] as ExpressionMethodAttribute)!.MethodName;
-			Assert.IsTrue(typeof(ExpressionMethodGeneratorTests).GetMethods().Any(m => m.Name == methodName));
+			Assert.IsTrue(typeof(ExpressionMethodGeneratorTests)
+				.GetMethods(BindingFlags.Static | BindingFlags.NonPublic)
+				.Any(m => m.Name == methodName));
 		}
+
+		[GenerateExpressionMethod]
+		public static partial PersonDto ToDtoArrow(Person person) 
+			=> new PersonDto
+			{
+				Id = person.Id,
+				Name = person.Name
+			};
 
 		[Test]
 		public void VerifyExpressionMethodGeneratedOnArrow()
@@ -62,7 +65,9 @@ namespace Tests.Generators
 			Assert.IsTrue(expressionMethodAttributes.Any());
 
 			var methodName = (expressionMethodAttributes[0] as ExpressionMethodAttribute)!.MethodName;
-			Assert.IsTrue(typeof(ExpressionMethodGeneratorTests).GetMethods().Any(m => m.Name == methodName));
+			Assert.IsTrue(typeof(ExpressionMethodGeneratorTests)
+				.GetMethods(BindingFlags.Static | BindingFlags.NonPublic)
+				.Any(m => m.Name == methodName));
 		}
 	}
 }

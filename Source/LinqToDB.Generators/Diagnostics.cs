@@ -11,21 +11,21 @@ namespace LinqToDB.Generators
 			new DiagnosticDescriptor(
 				id: "LDBGEN001",
 				title: "Containing class is not marked 'partial'",
-				messageFormat: "Class '{0}' must be marked partial in order to build expression methods in generated files",
+				messageFormat: "Class '{0}' must be marked partial",
 				category: "LinqToDB.ExpressionMethodGenerator",
 				DiagnosticSeverity.Error,
 				isEnabledByDefault: true);
 
-		internal static readonly DiagnosticDescriptor MethodHasIncorrectParameterCount =
+		internal static readonly DiagnosticDescriptor MethodIsNotPartialError =
 			new DiagnosticDescriptor(
 				id: "LDBGEN002",
-				title: "Method has too many parameters",
-				messageFormat: "Method '{0}' must have exactly one parameter",
+				title: "Method is not marked 'partial'",
+				messageFormat: "Method '{0}' must be marked partial",
 				category: "LinqToDB.ExpressionMethodGenerator",
 				DiagnosticSeverity.Error,
 				isEnabledByDefault: true);
 
-		internal static readonly DiagnosticDescriptor MethodReturnsVoid =
+		internal static readonly DiagnosticDescriptor MethodReturnsVoidError =
 			new DiagnosticDescriptor(
 				id: "LDBGEN003",
 				title: "Method has incorrect return type",
@@ -34,7 +34,7 @@ namespace LinqToDB.Generators
 				DiagnosticSeverity.Error,
 				isEnabledByDefault: true);
 
-		internal static readonly DiagnosticDescriptor MethodHasIncorrectShape =
+		internal static readonly DiagnosticDescriptor MethodHasIncorrectShapeError =
 			new DiagnosticDescriptor(
 				id: "LDBGEN004",
 				title: "Method has too many statements",
