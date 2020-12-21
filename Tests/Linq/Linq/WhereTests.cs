@@ -1883,5 +1883,19 @@ namespace Tests.Linq
 			}
 		}
 		#endregion
+
+		[Test]
+		public void Issue2652([DataSources] string context, [Values] bool flag)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = from ch in GrandChild1
+							group ch by ch.Parent into g
+							where
+							flag ? g.Sum(_ => _.ParentID) > 50 : g.Sum(_ => _.ParentID) > 10
+							select g.Key;
+				query.ToList();
+			}
+		}
 	}
 }
