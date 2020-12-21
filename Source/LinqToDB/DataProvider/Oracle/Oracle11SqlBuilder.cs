@@ -65,7 +65,11 @@ namespace LinqToDB.DataProvider.Oracle
 				var attr = GetSequenceNameAttribute(table, false);
 
 				if (attr != null)
-					return new SqlExpression(ConvertInline(attr.SequenceName, ConvertType.SequenceName) + ".nextval", Precedence.Primary);
+					return new SqlExpression(
+							(attr.Schema != null ? ConvertInline(attr.Schema, ConvertType.NameToSchema) + "." : null) +
+							ConvertInline(attr.SequenceName, ConvertType.SequenceName) +
+							".nextval",
+						Precedence.Primary);
 			}
 
 			return base.GetIdentityExpression(table);
@@ -220,6 +224,7 @@ namespace LinqToDB.DataProvider.Oracle
 				case ConvertType.NameToQueryTable:
 				case ConvertType.NameToServer:
 				case ConvertType.SequenceName:
+				case ConvertType.NameToSchema:
 				case ConvertType.TriggerName:
 					if (!IsValidIdentifier(value))
 						return sb.Append('"').Append(value).Append('"');
