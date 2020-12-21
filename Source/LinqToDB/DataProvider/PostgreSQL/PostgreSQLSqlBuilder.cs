@@ -143,6 +143,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case ConvertType.NameToQueryTableAlias:
 				case ConvertType.NameToDatabase:
 				case ConvertType.NameToSchema:
+				case ConvertType.SequenceName:
 					if (IdentifierQuoteMode != PostgreSQLIdentifierQuoteMode.None)
 					{
 						if (value.Length > 0 && value[0] == '"')
@@ -225,7 +226,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 				if (attr != null)
 				{
-					var name     = ConvertInline(attr.SequenceName, ConvertType.NameToQueryTable);
+					var name     = ConvertInline(attr.SequenceName, ConvertType.SequenceName);
 					var server   = GetTableServerName(table);
 					var database = GetTableDatabaseName(table);
 					var schema   = attr.Schema != null

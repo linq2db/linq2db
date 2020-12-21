@@ -7,6 +7,7 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using System.Linq;
 	using Model;
 
 	[TestFixture]
@@ -16,7 +17,7 @@ namespace Tests.Linq
 		public sealed class User
 		{
 			[Column("user_id"), PrimaryKey, Identity]
-			[SequenceName("sq_test_user")]
+			[SequenceName("sq_test_user", Schema = "sequence_schema")]
 			public long Id { get; set; }
 
 			[Column("name", SkipOnUpdate=true), NotNull]
@@ -184,6 +185,25 @@ namespace Tests.Linq
 				{
 					UserId = x.Id, ContractNo = 1, Name = "contract"
 				});
+			}
+		}
+
+		[Test]
+		public void SequenceNameTest([IncludeDataSources(false, TestProvName.AllOracle)]
+			string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				db.BeginTransaction();
+
+				var user = new User { Name = "user" };
+				user.Id = Convert.ToInt64(db.InsertWithIdentity(user));
+
+				Assert.True(db.LastQuery?.Contains("\"sequence_schema\".\"sq_test_user\".nextval"));
+
+				db.Insert(new Contract { UserId = user.Id, ContractNo = 1, Name = "contract1" });
+
+				Assert.True(db.LastQuery?.Contains("\t\"sq_test_user_contract\".nextval"));
 			}
 		}
 	}

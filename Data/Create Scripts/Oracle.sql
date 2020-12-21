@@ -45,7 +45,11 @@ DROP table "t_test_user_contract"
 /
 DROP table "t_test_user"
 /
-DROP sequence "sq_test_user"
+DROP USER "sequence_schema" CASCADE
+/
+CREATE USER "sequence_schema" IDENTIFIED BY "secret_password"
+/
+GRANT CREATE SEQUENCE TO "sequence_schema"
 /
 DROP sequence "sq_test_user_contract"
 /
@@ -696,7 +700,7 @@ create table "t_test_user_contract"
 )
 /
 
-create sequence "sq_test_user"
+create sequence "sequence_schema"."sq_test_user"
 /
 create sequence "sq_test_user_contract"
 /
