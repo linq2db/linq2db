@@ -1885,15 +1885,19 @@ namespace Tests.Linq
 		#endregion
 
 		[Test]
-		public void Issue2652([DataSources] string context, [Values] bool flag)
+		public void Issue2652([DataSources] string context, [Values(null, 3, 4)] int? deptCode, [Values] bool subquery)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var query = from ch in GrandChild1
-							group ch by ch.Parent into g
-							where
-							flag ? g.Sum(_ => _.ParentID) > 50 : g.Sum(_ => _.ParentID) > 10
+				var query = from p in db.Parent
+							group p by p.Value1 into g
+							where deptCode != 4 && deptCode != 5 ? g.Sum(_ => _.Value1) > 50 : g.Sum(_ => _.Value1) > 1
+							//where g.Sum(_ => _.Value1) > 1
 							select g.Key;
+
+				if (subquery)
+					query = query.AsSubQuery();
+
 				query.ToList();
 			}
 		}
