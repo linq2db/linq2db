@@ -1836,5 +1836,20 @@ AS
 				Assert.AreEqual("This is <test> scalar function parameter!", param.Description);
 			}
 		}
+
+		[Test]
+		public void TestDateTimeNAddTimeSpan([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				db.GetTable<AllTypes2>()
+					.Update(_ => new AllTypes2()
+					{
+						dateDataType = _.dateDataType + TimeSpan.FromHours(1)
+					});
+			}
+		}
+
 	}
 }
