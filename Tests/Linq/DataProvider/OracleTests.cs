@@ -3795,5 +3795,29 @@ CREATE TABLE ""TABLE_A""(
 			public int COLUMNC { get; set; }
 		}
 		#endregion
+
+		[Test]
+		public void TestDateTimeNAddTimeSpan([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			var ts = TimeSpan.FromHours(1);
+
+			using (var db = GetDataContext(context))
+			{
+				// ORA-00975: date + date not allowed
+				// ORA-0087: Adding two datetime values is not allowed
+				//db.GetTable<AllTypes>()
+				//	.Where(_ =>
+				//		_.datetimeDataType       > _.datetimeDataType       + ts ||
+				//		_.datetimeoffsetDataType > _.datetimeoffsetDataType + ts ||
+				//		_.localZoneDataType      > _.datetimeDataType       + ts ||
+				//		_.datetime2DataType > _.datetime2DataType + ts
+				//	).ToArray();
+
+				db.GetTable<AllTypes>()
+					.Where(_ =>
+						 Sql.CurrentTimestamp > _.datetime2DataType + ts
+					).ToArray();
+			}
+		}
 	}
 }

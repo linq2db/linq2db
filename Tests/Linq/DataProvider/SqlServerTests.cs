@@ -1838,18 +1838,19 @@ AS
 		}
 
 		[Test]
-		public void TestDateTimeNAddTimeSpan([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestDateTimeNAddTimeSpan([IncludeDataSources(true, TestProvName.AllSqlServer2005Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
+			var ts = TimeSpan.FromHours(1);
+
+			using (var db = GetDataContext(context))
 			{
 				db.GetTable<AllTypes2>()
-					.Update(_ => new AllTypes2()
-					{
-						dateDataType = _.dateDataType + TimeSpan.FromHours(1)
-					});
+					.Where(_ =>
+						_.dateDataType           > _.dateDataType           + ts ||
+						_.datetime2DataType      > _.datetime2DataType      + ts ||
+						_.datetimeoffsetDataType > _.datetimeoffsetDataType + ts
+					).ToArray();
 			}
 		}
-
 	}
 }
