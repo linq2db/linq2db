@@ -333,23 +333,36 @@ namespace LinqToDB.SqlProvider
 							switch (e.ElementType)
 							{
 								case QueryElementType.SqlField:
-
-									if (levelTables.Contains(((SqlField)e).Table!))
+								{
+									var field = (SqlField)e;
+									if (levelTables.Contains(field.Table!))
 									{
-										subQuery.GroupBy.Expr((SqlField)e);
-										ne = subQuery.Select.AddColumn((SqlField)e);
+										subQuery.GroupBy.Expr(field);
+										ne = subQuery.Select.AddColumn(field);
+									}
+									else if (!allTables.Contains(field.Table!))
+									{
+										modified = true;
 									}
 
 									break;
-
+								}
+								
 								case QueryElementType.Column:
-									if (levelTables.Contains(((SqlColumn)e).Parent!))
+								{
+									var column = (SqlColumn)e;
+									if (levelTables.Contains(column.Parent!))
 									{
-										subQuery.GroupBy.Expr((SqlColumn)e);
-										ne = subQuery.Select.AddColumn((SqlColumn)e);
+										subQuery.GroupBy.Expr(column);
+										ne = subQuery.Select.AddColumn(column);
+									}
+									else if (!allTables.Contains(column.Parent!))
+									{
+										modified = true;
 									}
 
 									break;
+								}
 							}
 
 							modified = modified || !ReferenceEquals(e, ne);

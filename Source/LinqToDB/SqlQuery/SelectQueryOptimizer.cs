@@ -953,6 +953,14 @@ namespace LinqToDB.SqlQuery
 			var isColumnsOK =
 				(allColumns && !query.Select.Columns.Any(c => QueryHelper.IsAggregationFunction(c.Expression))) ||
 				!query.Select.Columns.Any(c => CheckColumn(parentQuery, c, c.Expression, query, optimizeValues, optimizeColumns));
+			
+			if (isColumnsOK && !parentQuery.GroupBy.IsEmpty)
+			{
+				if (query.Select.Columns.Where(c => parentQuery.GroupBy.Items.Exists(g => g.Equals(c))).All(c => QueryHelper.IsConstant(c.Expression)))
+				{ 
+					isColumnsOK = false;
+				}
+			}
 
 			if (!isColumnsOK)
 				return childSource;
