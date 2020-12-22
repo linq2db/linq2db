@@ -3729,7 +3729,7 @@ namespace Tests.DataProvider
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
 			{
-				db.Execute("CREATE SEQUENCE SEQ_A MINVALUE 0");
+				db.Execute("CREATE SEQUENCE SEQ_A START WITH 0 MINVALUE 0");
 				try
 				{
 					db.Execute(@"
