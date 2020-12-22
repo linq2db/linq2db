@@ -20,3 +20,4 @@ linq2db.sln.ide/
 !Redist/**
 /.vs/*
 *.lock.json
+/.idea/
