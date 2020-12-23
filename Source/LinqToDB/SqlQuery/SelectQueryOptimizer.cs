@@ -953,13 +953,35 @@ namespace LinqToDB.SqlQuery
 			var isColumnsOK =
 				(allColumns && !query.Select.Columns.Any(c => QueryHelper.IsAggregationFunction(c.Expression))) ||
 				!query.Select.Columns.Any(c => CheckColumn(parentQuery, c, c.Expression, query, optimizeValues, optimizeColumns));
-			
+
 			if (isColumnsOK && !parentQuery.GroupBy.IsEmpty)
 			{
-				if (query.Select.Columns.Where(c => parentQuery.GroupBy.Items.Exists(g => g.Equals(c))).All(c => QueryHelper.IsConstant(c.Expression)))
-				{ 
-					isColumnsOK = false;
+				var cntCount = 0;
+				foreach (var item in parentQuery.GroupBy.Items)
+				{
+					if (item is SqlGroupingSet groupingSet && groupingSet.Items.Count > 0)
+					{
+						var constCount = groupingSet.Items.OfType<SqlColumn>()
+							.Count(c => c.Parent == query && QueryHelper.IsConstantFast(c.Expression));
+						
+						if (constCount == groupingSet.Items.Count)
+						{
+							isColumnsOK = false;
+							break;
+						}
+					}
+					else
+					{
+						if (item is SqlColumn column && column.Parent == query)
+						{
+							if (QueryHelper.IsConstantFast(column.Expression))
+								++cntCount;
+						}
+					}
 				}
+
+				if (isColumnsOK && cntCount == parentQuery.GroupBy.Items.Count)
+					isColumnsOK = false;
 			}
 
 			if (!isColumnsOK)

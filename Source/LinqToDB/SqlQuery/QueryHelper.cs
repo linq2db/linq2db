@@ -278,7 +278,12 @@ namespace LinqToDB.SqlQuery
 			}
 			return expr.ElementType.NotIn(QueryElementType.Column, QueryElementType.SqlField);
 		}
-			
+
+		public static bool IsConstantFast(ISqlExpression expr)
+		{
+			return expr.ElementType == QueryElementType.SqlValue || expr.ElementType == QueryElementType.SqlParameter;
+		}
+		
 		/// <summary>
 		/// Returns <c>true</c> if tested expression is constant during query execution (e.g. value or parameter).
 		/// </summary>
