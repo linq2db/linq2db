@@ -1771,6 +1771,41 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void BinaryComparisonTest1([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Person.Where(_ => (_.FirstName == _.FirstName) == (_.MiddleName != _.LastName)).Any();
+			}
+		}
+
+		[Test]
+		public void BinaryComparisonTest2([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Person.Where(_ => (_.FirstName == _.FirstName) != (_.MiddleName != _.LastName)).Any();
+			}
+		}
+
+		[Test]
+		public void ComplexIsNullPredicateTest([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Person.Where(_ => (_.MiddleName == "123") == (ComplexIsNullPredicateTestFunc(_.MiddleName) == "test")).Any();
+			}
+		}
+
+		[ExpressionMethod(nameof(ComplexIsNullPredicateTestFuncExpr))]
+		public static string? ComplexIsNullPredicateTestFunc(string? value) => throw new NotImplementedException();
+
+		private static Expression<Func<string?, string?>> ComplexIsNullPredicateTestFuncExpr()
+		{
+			return value => value == "1" ? "test" : value;
+		}
+
 		#region issue 2424
 		class Isue2424Table
 		{

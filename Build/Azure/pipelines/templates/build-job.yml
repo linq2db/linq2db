@@ -23,7 +23,7 @@ jobs:
     inputs:
       solution: '$(solution)'
       configuration: '$(build_configuration)'
-      msbuildArguments: '/t:Restore;Rebuild -m'
+      msbuildArguments: '/t:Restore;Rebuild -m /p:ContinuousIntegrationBuild=true'
     displayName: Build Solution
 
   - task: DotNetCoreCLI@2
