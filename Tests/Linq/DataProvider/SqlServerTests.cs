@@ -1837,9 +1837,9 @@ AS
 			}
 		}
 
-		static TimeSpan[] TimespansForTest()
+		static TimeSpan?[] TimespansForTest()
 		{
-			return new[]
+			return new TimeSpan?[]
 			{
 				TimeSpan.FromHours(1), 
 				TimeSpan.FromMinutes(61), 
@@ -1847,6 +1847,7 @@ AS
 				TimeSpan.FromSeconds(61),
 				TimeSpan.FromHours(24),
 				TimeSpan.FromHours(24) + TimeSpan.FromMilliseconds(1),
+				null
 			};
 		}
 
