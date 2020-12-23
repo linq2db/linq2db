@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
+using LinqToDB.Common;
+using LinqToDB.Tools;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
@@ -29,6 +32,113 @@ namespace LinqToDB.DataProvider.SqlServer
 			);
 		}
 
+		public override bool IsParameterDependedElement(IQueryElement element)
+		{
+			if (base.IsParameterDependedElement(element))
+				return true;
+
+			switch (element.ElementType)
+			{
+				case QueryElementType.SqlBinaryExpression:
+				{
+					var be = (SqlBinaryExpression)element;
+
+					switch (be.Operation)
+					{
+						case "+":
+						case "-":
+						{
+							var dbType1 = be.Expr1.GetExpressionType();
+							var dbType2 = be.Expr2.GetExpressionType();
+
+							if (dbType1.SystemType.ToNullableUnderlying().In(typeof(DateTime), typeof(DateTimeOffset)) && dbType2.SystemType.ToNullableUnderlying() == typeof(TimeSpan) && be.Expr2.CanBeEvaluated(true))
+							{
+								return true;
+							}
+
+							if (dbType2.SystemType.ToNullableUnderlying().In(typeof(DateTime), typeof(DateTimeOffset)) && dbType1.SystemType.ToNullableUnderlying() == typeof(TimeSpan) && be.Expr1.CanBeEvaluated(true))
+							{
+								return true;
+							}
+
+							break;
+						}
+					}
+
+
+					break;
+				}
+			}
+
+			return false;
+		}
+
+		static bool GenerateDateAdd(ISqlExpression expr1, ISqlExpression expr2, bool isSubstraction, EvaluationContext context,
+			[MaybeNullWhen(false)] out ISqlExpression generated)
+		{
+			var dbType1 = expr1.GetExpressionType();
+			var dbType2 = expr2.GetExpressionType();
+
+			if (dbType1.SystemType.ToNullableUnderlying().In(typeof(DateTime), typeof(DateTimeOffset)) 
+			    && dbType2.SystemType.ToNullableUnderlying() == typeof(TimeSpan) 
+			    && expr2.TryEvaluateExpression(context, out var value))
+			{
+				var ts = value as TimeSpan?;
+				var interval = "day";
+				long? increment;
+
+				if (ts == null)
+				{
+					generated = new SqlValue(dbType1, null);
+					return true;
+				}
+
+				if (ts.Value.Milliseconds > 0)
+				{
+					increment = (long)ts.Value.TotalMilliseconds;
+					interval = "millisecond";
+				}
+				else if (ts.Value.Seconds > 0)
+				{
+					increment = (long)ts.Value.TotalSeconds;
+					interval = "second";
+				}
+				else if (ts.Value.Minutes > 0)
+				{
+					increment = (long)ts.Value.TotalMinutes;
+					interval = "minute";
+				}
+				else if (ts.Value.Hours > 0)
+				{
+					increment = (long)ts.Value.TotalHours;
+					interval = "hour";
+				}
+				else
+				{
+					increment = (long)ts.Value.TotalDays;
+				}
+
+				if (isSubstraction)
+					increment = -increment;
+
+				generated = new SqlFunction(
+						dbType1.SystemType!,
+						"DateAdd",
+						false,
+						true,
+						new SqlExpression(typeof(string), interval, Precedence.Primary),
+						CreateSqlValue(increment, new DbDataType(typeof(long)), expr2),
+						expr1)
+					{ CanBeNull = expr1.CanBeNull || expr2.CanBeNull };
+				return true;
+			}
+
+
+			generated = null;
+			return false;
+
+		}
+
 		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expr, ConvertVisitor visitor,
 			EvaluationContext context)
 		{
@@ -43,23 +153,41 @@ namespace LinqToDB.DataProvider.SqlServer
 						switch (be.Operation)
 						{
 							case "%":
+							{
+								var type1 = be.Expr1.SystemType!.ToUnderlying();
+
+								if (type1 == typeof(double) || type1 == typeof(float))
 								{
-									var type1 = be.Expr1.SystemType!.ToUnderlying();
-
-									if (type1 == typeof(double) || type1 == typeof(float))
-									{
-										return new SqlBinaryExpression(
-											be.Expr2.SystemType!,
-											new SqlFunction(typeof(int), "Convert", SqlDataType.Int32, be.Expr1),
-											be.Operation,
-											be.Expr2);
-									}
-
-									break;
+									return new SqlBinaryExpression(
+										be.Expr2.SystemType!,
+										new SqlFunction(typeof(int), "Convert", SqlDataType.Int32, be.Expr1),
+										be.Operation,
+										be.Expr2);
 								}
+
+								break;
+							}
+							case "+":
+							{
+								if (GenerateDateAdd(be.Expr1, be.Expr2, false, context, out var generated))
+									return generated;
+
+								if (GenerateDateAdd(be.Expr2, be.Expr1, false, context, out generated))
+									return generated;
+
+								break;
+							}
+							case "-":
+							{
+								if (GenerateDateAdd(be.Expr1, be.Expr2, true, context, out var generated))
+									return generated;
+
+								break;
+							}
 						}
 
-						break;
+
+					break;
 					}
 
 				case QueryElementType.SqlFunction:

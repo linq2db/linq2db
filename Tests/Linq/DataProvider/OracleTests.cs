@@ -3815,8 +3815,8 @@ CREATE TABLE ""TABLE_A""(
 
 				db.GetTable<AllTypes>()
 					.Where(_ =>
-						 Sql.CurrentTimestamp > _.datetime2DataType + ts
-					).ToArray();
+						 Sql.CurrentTimestamp > _.datetime2DataType + TimeSpan.FromHours(1)
+					).Select(x => x.ID).ToArray();
 			}
 		}
 	}

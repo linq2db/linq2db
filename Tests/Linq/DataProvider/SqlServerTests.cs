@@ -1837,19 +1837,47 @@ AS
 			}
 		}
 
-		[Test]
-		public void TestDateTimeNAddTimeSpan([IncludeDataSources(true, TestProvName.AllSqlServer2005Plus)] string context)
+		static TimeSpan[] TimespansForTest()
 		{
-			var ts = TimeSpan.FromHours(1);
+			return new[]
+			{
+				TimeSpan.FromHours(1), 
+				TimeSpan.FromMinutes(61), 
+				TimeSpan.FromMinutes(120), 
+				TimeSpan.FromSeconds(61),
+				TimeSpan.FromHours(24),
+				TimeSpan.FromHours(24) + TimeSpan.FromMilliseconds(1),
+			};
+		}
 
+		[Test]
+		public void TestDateTimeNAddTimeSpan([IncludeDataSources(true, TestProvName.AllSqlServer2005Plus)] string context, 
+			[ParamSource(nameof(TimespansForTest))] TimeSpan? ts)
+		{
 			using (var db = GetDataContext(context))
 			{
-				db.GetTable<AllTypes2>()
-					.Where(_ =>
-						_.dateDataType           > _.dateDataType           + ts ||
-						_.datetime2DataType      > _.datetime2DataType      + ts ||
-						_.datetimeoffsetDataType > _.datetimeoffsetDataType + ts
-					).ToArray();
+
+				var query =
+					from t in db.GetTable<AllTypes>()
+					select new
+					{
+						DT = t.dateDataType + ts,
+						DT2 = t.datetime2DataType + ts,
+						DTO = t.datetimeoffsetDataType + ts,
+
+						M_DT = t.dateDataType - ts,
+						M_DT2 = t.datetime2DataType - ts,
+						M_DTO = t.datetimeoffsetDataType - ts,
+
+						C_DT = t.dateDataType + Sql.ToSql(ts),
+						C_DT2 = t.datetime2DataType + Sql.ToSql(ts),
+						C_DTO = t.datetimeoffsetDataType + Sql.ToSql(ts),
+
+					};
+
+				var concated = query.Concat(query);
+
+				AssertQuery(concated);
 			}
 		}
 	}

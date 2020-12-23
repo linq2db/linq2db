@@ -1555,7 +1555,9 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (!typeof(DataParameter).IsSameOrParentOf(newExpr.ValueExpression.Type))
 				{
-					if (columnDescriptor != null && !(originalAccessor is BinaryExpression))
+					if (columnDescriptor != null 
+					    && !(originalAccessor is BinaryExpression) 
+					    && columnDescriptor.GetDbDataType(false).SystemType.ToNullableUnderlying().IsAssignableFrom(originalAccessor.Type.ToNullableUnderlying()))
 					{
 						newExpr.DataType = columnDescriptor.GetDbDataType(true);
 						if (newExpr.ValueExpression.Type != columnDescriptor.MemberType)
