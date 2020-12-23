@@ -1213,7 +1213,53 @@ namespace Tests.Data
 				scope?.Dispose();
 			}
 		}
-#endregion
+		#endregion
 
+		[Table]
+		class TransactionScopeTable
+		{
+			[Column] public int Id { get; set; }
+		}
+		[Test]
+		public void Issue2676TransactionScopeTest1([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (var table = db.CreateLocalTable<TransactionScopeTable>())
+			{
+				table.Insert(() => new TransactionScopeTable() { Id = 1 });
+				using (var transaction = new TransactionScope(TransactionScopeOption.Required, TransactionScopeAsyncFlowOption.Enabled))
+				{
+					table.Insert(() => new TransactionScopeTable() { Id = 2 });
+				}
+
+				table.Insert(() => new TransactionScopeTable() { Id = 3 });
+
+				var ids = table.Select(_ => _.Id).OrderBy(_ => _).ToArray();
+
+				Assert.AreEqual(2, ids.Length);
+				Assert.AreEqual(1, ids[0]);
+				Assert.AreEqual(3, ids[1]);
+			}
+		}
+
+		[Test]
+		public void Issue2676TransactionScopeTest2([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (var table = db.CreateLocalTable<TransactionScopeTable>())
+			{
+				using (var transaction = new TransactionScope(TransactionScopeOption.Required, TransactionScopeAsyncFlowOption.Enabled))
+				{
+					table.Insert(() => new TransactionScopeTable() { Id = 2 });
+				}
+
+				table.Insert(() => new TransactionScopeTable() { Id = 3 });
+
+				var ids = table.Select(_ => _.Id).OrderBy(_ => _).ToArray();
+
+				Assert.AreEqual(1, ids.Length);
+				Assert.AreEqual(3, ids[0]);
+			}
+		}
 	}
 }
