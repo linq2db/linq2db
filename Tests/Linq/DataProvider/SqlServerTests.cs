@@ -269,10 +269,10 @@ namespace Tests.DataProvider
 		{
 			using (var conn = new DataConnection(context))
 			{
-				var dateTime2 = new DateTime(2012, 12, 12, 12, 12, 12, 12);
+				var dateTime2 = new DateTime(2012, 12, 12, 12, 12, 12, 12).AddTicks(1);
 
-				Assert.That(conn.Execute<DateTime> ("SELECT Cast('2012-12-12 12:12:12.012' as datetime2)"), Is.EqualTo(dateTime2));
-				Assert.That(conn.Execute<DateTime?>("SELECT Cast('2012-12-12 12:12:12.012' as datetime2)"), Is.EqualTo(dateTime2));
+				Assert.That(conn.Execute<DateTime> ("SELECT Cast('2012-12-12 12:12:12.0120001' as datetime2)"), Is.EqualTo(dateTime2));
+				Assert.That(conn.Execute<DateTime?>("SELECT Cast('2012-12-12 12:12:12.0120001' as datetime2)"), Is.EqualTo(dateTime2));
 
 				Assert.That(conn.Execute<DateTime> ("SELECT @p", DataParameter.DateTime2("p", dateTime2)),               Is.EqualTo(dateTime2));
 				Assert.That(conn.Execute<DateTime> ("SELECT @p", DataParameter.Create   ("p", dateTime2)),               Is.EqualTo(dateTime2));
