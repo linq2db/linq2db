@@ -25,6 +25,8 @@
 		<file src="..\Tests\Linq\bin\Azure\net472\BouncyCastle.Crypto.dll"               target="tools" />
 		<file src="..\Tests\Linq\bin\Azure\net472\Oracle.ManagedDataAccess.dll"          target="tools" />
 		<file src="..\Tests\Linq\bin\Azure\net472\System.Threading.Tasks.Extensions.dll" target="tools" />
+		<file src="..\Tests\Linq\bin\Azure\net472\Microsoft.Bcl.AsyncInterfaces.dll"     target="tools" />
+		<file src="..\Tests\Linq\bin\Azure\net472\System.Text.Json.dll"                  target="tools" />
 		<file src="..\Tests\Linq\bin\Azure\net472\System.Data.SQLite.dll"                target="tools" />
 		<file src="..\Tests\Linq\bin\Azure\net472\x86\SQLite.Interop.dll"                target="tools" />
 		<file src="..\Tests\Linq\bin\Azure\net472\Microsoft.SqlServer.Types.dll"         target="tools" />
