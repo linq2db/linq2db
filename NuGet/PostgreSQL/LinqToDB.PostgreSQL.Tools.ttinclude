@@ -9,11 +9,11 @@
 var toolsPath = Path.GetDirectoryName(
     AppDomain.CurrentDomain.GetAssemblies().Single(a => a.GetName().Name == "linq2db").CodeBase.Replace("file:///", ""));
 
-LoadAssembly("Microsoft.Bcl.AsyncInterfaces"    , "System.IAsyncDisposable"         , toolsPath);
-LoadAssembly("System.Threading.Tasks.Extensions", "System.Threading.Tasks.ValueTask", toolsPath);
-LoadAssembly("System.Text.Json"                 , "System.Text.Json.JsonDocument"   , toolsPath);
+LoadAssembly("Microsoft.Bcl.AsyncInterfaces"    , toolsPath);
+LoadAssembly("System.Threading.Tasks.Extensions", toolsPath);
+LoadAssembly("System.Text.Json"                 , toolsPath);
 
-static void LoadAssembly(string assemblyName, string typeName, string toolsPath)
+static void LoadAssembly(string assemblyName, string toolsPath)
 {
     // check if already loaded
     if (AppDomain.CurrentDomain.GetAssemblies().SingleOrDefault(a => a.GetName().Name == assemblyName) != null)
@@ -21,7 +21,7 @@ static void LoadAssembly(string assemblyName, string typeName, string toolsPath)
     try
     {
         // try to load using VS (host) lookup pathes
-        Type.GetType($"{typeName},{assemblyName}", true);
+        Assembly.Load(assemblyName);
         return;
     }
     catch {}
