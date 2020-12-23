@@ -27,6 +27,6 @@ static void LoadAssembly(string assemblyName, string toolsPath)
     catch {}
 
     // load from tools
-    Assembly.LoadFrom($"{toolsPath}\\{assemblyName}.dll");
+    Assembly.LoadFrom(Path.Combine(toolsPath, $"{assemblyName}.dll"));
 }
 #>
