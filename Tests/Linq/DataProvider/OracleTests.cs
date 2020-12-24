@@ -3727,7 +3727,6 @@ namespace Tests.DataProvider
 		public async Task Issue2504Test([IncludeDataSources(false, TestProvName.AllOracle)] string context)
 		{
 			using (var db = new TestDataConnection(context))
-			//using (db.BeginTransaction())
 			{
 				db.Execute("CREATE SEQUENCE SEQ_A START WITH 0 MINVALUE 0");
 				try

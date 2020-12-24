@@ -1,4 +1,7 @@
-﻿-- Cleanup schema
+﻿ALTER SYSTEM SET DEFERRED_SEGMENT_CREATION=FALSE
+/
+
+-- Cleanup schema
 
 BEGIN
 	EXECUTE IMMEDIATE 'DROP SEQUENCE ' || '"PersonSeq"';
@@ -1130,7 +1133,7 @@ procedure test;
 END;
 /
 
-CREATE OR REPLACE PACKAGE BODY ISSUE2132 AS 
+CREATE OR REPLACE PACKAGE BODY ISSUE2132 AS
 procedure test is
 	begin
 		return 4;
