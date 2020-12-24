@@ -251,9 +251,6 @@ namespace LinqToDB.Data
 					DataProvider     = ci.DataProvider;
 					ConnectionString = ci.ConnectionString;
 					MappingSchema    = DataProvider.MappingSchema;
-					RetryPolicy      = Configuration.RetryPolicy.Factory != null
-										? Configuration.RetryPolicy.Factory(this)
-										: null;
 					break;
 
 				case ConnectionSetupType.ConnectionString:
@@ -319,6 +316,10 @@ namespace LinqToDB.Data
 				default:
 					throw new NotImplementedException($"SetupType: {options.SetupType}");
 			}
+
+			RetryPolicy = Configuration.RetryPolicy.Factory != null
+					? Configuration.RetryPolicy.Factory(this)
+					: null;
 
 			if (options.DataProvider != null)
 			{
@@ -1091,6 +1092,8 @@ namespace LinqToDB.Data
 				if (RetryPolicy != null)
 					_connection = new RetryingDbConnection(this, _connection, RetryPolicy);
 			}
+			else if (RetryPolicy != null && _connection is not RetryingDbConnection)
+				_connection = new RetryingDbConnection(this, _connection, RetryPolicy);
 
 			if (_connection.State == ConnectionState.Closed)
 			{
