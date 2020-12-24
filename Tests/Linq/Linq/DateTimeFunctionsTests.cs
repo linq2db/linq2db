@@ -1614,11 +1614,16 @@ namespace Tests.Linq
 		[Test]
 		public void DateTimeOffsetAddTimeSpan(
 			[DataSources(
-				TestProvName.AllAccess, 
+				TestProvName.AllAccess,
 				TestProvName.AllFirebird,
 				TestProvName.AllSQLite,
 				TestProvName.AllSqlServer2005Minus,
-				ProviderName.SqlCe)] 
+				ProviderName.DB2,
+				TestProvName.AllInformix,
+				TestProvName.AllSapHana,
+				TestProvName.AllSybase,
+				TestProvName.AllMySqlData, // TODO: mysql.data doesn't support DateTimeOffset
+				ProviderName.SqlCe)]
 			string context,
 			[ParamSource(nameof(TimespansForTest))] TimeSpan? ts)
 		{
