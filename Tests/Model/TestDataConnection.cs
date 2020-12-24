@@ -102,13 +102,13 @@ namespace Tests.Model
 			return string.Join("\n\n", commands);
 		}
 
-		[ExpressionMethod("Expression9")]
+		[ExpressionMethod(nameof(Expression9))]
 		public static IQueryable<Parent> GetParent9(ITestDataContext db, Child ch)
 		{
 			throw new InvalidOperationException();
 		}
 
-		[ExpressionMethod("Expression9")]
+		[ExpressionMethod(nameof(Expression9))]
 		public IQueryable<Parent> GetParent10(Child ch)
 		{
 			throw new InvalidOperationException();

@@ -45,7 +45,11 @@ DROP table "t_test_user_contract"
 /
 DROP table "t_test_user"
 /
-DROP sequence "sq_test_user"
+DROP USER "c##sequence_schema" CASCADE
+/
+CREATE USER "c##sequence_schema" IDENTIFIED BY "secret_password"
+/
+GRANT CREATE SEQUENCE TO "c##sequence_schema"
 /
 DROP sequence "sq_test_user_contract"
 /
@@ -696,7 +700,7 @@ create table "t_test_user_contract"
 )
 /
 
-create sequence "sq_test_user"
+create sequence "c##sequence_schema"."sq_test_user"
 /
 create sequence "sq_test_user_contract"
 /
