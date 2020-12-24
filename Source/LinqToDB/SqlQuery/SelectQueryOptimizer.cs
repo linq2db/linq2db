@@ -4,6 +4,7 @@ using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
+	using Tools;
 	using Common;
 	using SqlProvider;
 
@@ -436,16 +437,43 @@ namespace LinqToDB.SqlQuery
 
 			ResolveWeakJoins();
 			RemoveEmptyJoins();
+			OptimizeGroupBy();
 			OptimizeColumns();
 			OptimizeApplies   (isApplySupported, optimizeColumns);
 			OptimizeSubQueries(isApplySupported, optimizeColumns);
 			OptimizeApplies   (isApplySupported, optimizeColumns);
 
+			OptimizeGroupBy();
 			OptimizeDistinct();
 			OptimizeDistinctOrderBy();
 			CorrectColumns();
 		}
 
+		private void OptimizeGroupBy()
+		{
+			if (!_selectQuery.GroupBy.IsEmpty)
+			{
+				// Remove constants. 
+				//
+				for (int i = _selectQuery.GroupBy.Items.Count - 1; i >= 0; i--)
+				{
+					if (QueryHelper.IsConstant(_selectQuery.GroupBy.Items[i]))
+					{
+						if (i == 0 && _selectQuery.GroupBy.Items.Count == 1)
+						{
+							// we cannot remove all group items if there is at least one aggregation function
+							//
+							var lastShouldStay = _selectQuery.Select.Columns.Any(c => QueryHelper.IsAggregationFunction(c.Expression));
+							if (lastShouldStay)
+								break;
+						}
+
+						_selectQuery.GroupBy.Items.RemoveAt(i);
+					}
+				}
+			}
+		}
+		
 		private void CorrectColumns()
 		{
 			if (!_selectQuery.GroupBy.IsEmpty && _selectQuery.Select.Columns.Count == 0)
@@ -882,7 +910,7 @@ namespace LinqToDB.SqlQuery
 		{
 			expr = QueryHelper.UnwrapExpression(expr);
 
-			if (expr is SqlField || expr is SqlColumn || expr.ElementType == QueryElementType.SqlRawSqlTable)
+			if (expr.ElementType.In(QueryElementType.SqlField, QueryElementType.Column, QueryElementType.SqlParameter, QueryElementType.SqlRawSqlTable)) 
 				return false;
 
 			if (expr is SqlValue sqlValue)
