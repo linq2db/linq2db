@@ -2645,7 +2645,7 @@ namespace LinqToDB.SqlProvider
 				}
 				case QueryElementType.SqlBinaryExpression:
 				{
-					if (element.CanBeEvaluated(true) && !element.CanBeEvaluated(false))
+					if (element.IsEvaluableMutable())
 						return true;
 					return IsParameterDependedBinary((SqlBinaryExpression)element);
 				}
@@ -2745,12 +2745,16 @@ namespace LinqToDB.SqlProvider
 					var dbType1 = binary.Expr1.GetExpressionType();
 					var dbType2 = binary.Expr2.GetExpressionType();
 
-					if (dbType1.SystemType.ToNullableUnderlying().In(typeof(DateTime), typeof(DateTimeOffset)) && dbType2.SystemType.ToNullableUnderlying() == typeof(TimeSpan) && binary.Expr2.CanBeEvaluated(true))
+					if (dbType1.SystemType.ToNullableUnderlying().In(typeof(DateTime), typeof(DateTimeOffset)) 
+					    && dbType2.SystemType.ToNullableUnderlying() == typeof(TimeSpan) 
+					    && binary.Expr2.IsEvaluableMutable())
 					{
 						return true;
 					}
 
-					if (dbType2.SystemType.ToNullableUnderlying().In(typeof(DateTime), typeof(DateTimeOffset)) && dbType1.SystemType.ToNullableUnderlying() == typeof(TimeSpan) && binary.Expr1.CanBeEvaluated(true))
+					if (dbType2.SystemType.ToNullableUnderlying().In(typeof(DateTime), typeof(DateTimeOffset)) 
+					    && dbType1.SystemType.ToNullableUnderlying() == typeof(TimeSpan) 
+					    && binary.Expr2.IsEvaluableMutable())
 					{
 						return true;
 					}
