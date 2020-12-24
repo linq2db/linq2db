@@ -3728,7 +3728,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = new TestDataConnection(context))
 			{
-				db.Execute("CREATE SEQUENCE SEQ_A START WITH 0 MINVALUE 0");
+				db.Execute("CREATE SEQUENCE SEQ_A START WITH 1 MINVALUE 0");
 				try
 				{
 					db.Execute(@"
@@ -3739,7 +3739,7 @@ CREATE TABLE ""TABLE_A""(
 	CONSTRAINT ""PK_TABLE_A"" PRIMARY KEY(""COLUMN_A"", ""COLUMN_B"", ""COLUMN_C"")
 )");
 
-					var id = await db.InsertWithInt64IdentityAsync(new Issue2504Table1()
+					var id = await db.InsertWithInt64IdentityAsync(new Issue2504Table1
 					{
 						COLUMNA = 1,
 						COLUMNB = 2
