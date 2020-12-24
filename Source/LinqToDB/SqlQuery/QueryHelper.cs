@@ -304,8 +304,8 @@ namespace LinqToDB.SqlQuery
 					// we can not guarantee order here
 					// set operation contains at least two expressions for column
 					// (in theory we can test that they are equal, but it is not worth it)
-					if (sqlColumn.Parent != null && sqlColumn.Parent.SetOperators.Count > 0)
-						return true;
+					if (sqlColumn.Parent != null && sqlColumn.Parent.HasSetOperators)
+						return false;
 
 					// column can be generated from subquery which can reference to constant expression
 					return IsConstant(sqlColumn.Expression);
