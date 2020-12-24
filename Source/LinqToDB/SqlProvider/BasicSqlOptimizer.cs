@@ -2645,7 +2645,9 @@ namespace LinqToDB.SqlProvider
 				}
 				case QueryElementType.SqlBinaryExpression:
 				{
-					return element.CanBeEvaluated(true) && !element.CanBeEvaluated(false);
+					if (element.CanBeEvaluated(true) && !element.CanBeEvaluated(false))
+						return true;
+					return IsParameterDependedBinary((SqlBinaryExpression)element);
 				}
 				case QueryElementType.ExprPredicate:
 				{
@@ -2721,6 +2723,38 @@ namespace LinqToDB.SqlProvider
 							break;
 						}
 					}
+					break;
+				}
+			}
+
+			return false;
+		}
+
+		public virtual bool HasSpecialTimeSpanProcessing => false;
+
+		public virtual bool IsParameterDependedBinary(SqlBinaryExpression binary)
+		{
+			if (!HasSpecialTimeSpanProcessing)
+				return false;
+			
+			switch (binary.Operation)
+			{
+				case "+":
+				case "-":
+				{
+					var dbType1 = binary.Expr1.GetExpressionType();
+					var dbType2 = binary.Expr2.GetExpressionType();
+
+					if (dbType1.SystemType.ToNullableUnderlying().In(typeof(DateTime), typeof(DateTimeOffset)) && dbType2.SystemType.ToNullableUnderlying() == typeof(TimeSpan) && binary.Expr2.CanBeEvaluated(true))
+					{
+						return true;
+					}
+
+					if (dbType2.SystemType.ToNullableUnderlying().In(typeof(DateTime), typeof(DateTimeOffset)) && dbType1.SystemType.ToNullableUnderlying() == typeof(TimeSpan) && binary.Expr1.CanBeEvaluated(true))
+					{
+						return true;
+					}
+
 					break;
 				}
 			}

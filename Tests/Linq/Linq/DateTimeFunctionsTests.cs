@@ -2,7 +2,7 @@
 using System.Linq;
 
 using LinqToDB;
-
+using LinqToDB.Mapping;
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -1475,7 +1475,183 @@ namespace Tests.Linq
 					from t in from p in db.Types select new DateTime(p.DateTimeValue.Year + 1, 10, 1) where t.Month == 10 select t);
 		}
 
-#endregion
+		#endregion
+
+		#region DateAddViaTimeSpan
+
+		static TimeSpan?[] TimespansForTest()
+		{
+			return new TimeSpan?[]
+			{
+//				TimeSpan.FromMilliseconds(1),
+				TimeSpan.FromHours(1),
+				TimeSpan.FromMinutes(61),
+				TimeSpan.FromMinutes(120),
+				TimeSpan.FromSeconds(61),
+				TimeSpan.FromHours(24),
+				TimeSpan.FromHours(24) + TimeSpan.FromSeconds(1),
+				null
+			};
+		}
+
+		class DateTypes
+		{
+			[Column(CanBeNull = false, IsPrimaryKey = true)]
+			public int Id { get; set; }
+
+			[Column(DataType = DataType.DateTime, CanBeNull = false)]
+			public DateTime DateTime { get; set; }
+			[Column(DataType = DataType.DateTime, CanBeNull = true)]
+			public DateTime? DateTimeNullable { get; set; }
+
+			[Column(DataType = DataType.DateTime2, CanBeNull = false)]
+			[Column(DataType = DataType.DateTime, CanBeNull = false, Configuration = ProviderName.AccessOdbc)]
+			public DateTime DateTime2 { get; set; }
+			
+			[Column(DataType = DataType.DateTime2, CanBeNull = true)]
+			[Column(DataType = DataType.DateTime, CanBeNull = true, Configuration = ProviderName.AccessOdbc)]
+			public DateTime? DateTime2Nullable { get; set; }
+			
+			public static DateTypes[] Seed()
+			{
+				return new DateTypes[]
+				{
+					new DateTypes
+					{
+						Id = 1,
+						DateTime = TestData.DateTime,
+						DateTimeNullable = TestData.DateTime,
+						DateTime2 = TestData.DateTime,
+						DateTime2Nullable = TestData.DateTime,
+					},
+					new DateTypes
+					{
+						Id = 2,
+						DateTime = TestData.DateTime,
+						DateTimeNullable = null,
+						DateTime2 = TestData.DateTime,
+						DateTime2Nullable = null,
+					},
+				};
+			}
+		}
+
+
+		class DateTypesOffset
+		{
+			[Column(CanBeNull = false, IsPrimaryKey = true)]
+			public int Id { get; set; }
+
+			[Column(DataType = DataType.DateTimeOffset, CanBeNull = false)]
+			public DateTimeOffset DateTimeOffset { get; set; }
+			
+			[Column(DataType = DataType.DateTimeOffset, CanBeNull = true)]
+			public DateTimeOffset? DateTimeOffsetNullable { get; set; }
+
+			public static DateTypesOffset[] Seed()
+			{
+				return new DateTypesOffset[]
+				{
+					new DateTypesOffset
+					{
+						Id = 1,
+						DateTimeOffset = TestData.DateTimeOffset,
+						DateTimeOffsetNullable = TestData.DateTimeOffset,
+					},
+					new DateTypesOffset
+					{
+						Id = 2,
+						DateTimeOffset = TestData.DateTimeOffset,
+						DateTimeOffsetNullable = null,
+					},
+				};
+			}
+		}
+
+
+		[Test]
+		public void DateTimeAddTimeSpan([DataSources(ProviderName.SQLiteMS)] string context,
+			[ParamSource(nameof(TimespansForTest))] TimeSpan? ts)
+		{
+			// something wrong with retrieving DateTime values for SQLite
+			if (context.StartsWith("SQLite") && context.EndsWith(".LinqService"))
+				return;
+			
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(DateTypes.Seed()))
+			{
+
+				var query =
+					from t in table
+					select new
+					{
+						Id = t.Id,
+						
+						DateTime = t.DateTime + ts,
+						DateTimeNullable = t.DateTimeNullable + ts,
+						DateTime2 = t.DateTime2 + ts,
+						DateTime2Nullable = t.DateTime2Nullable + ts,
+
+
+						M_DateTime = t.DateTime - ts,
+						M_DateTimeNullable = t.DateTimeNullable - ts,
+						M_DateTime2 = t.DateTime2 - ts,
+						M_DateTime2Nullable = t.DateTime2Nullable - ts,
+
+						C_DateTime = ts == null ? null : t.DateTime + Sql.ToSql(ts),
+						C_DateTimeNullable = ts == null ? null : t.DateTimeNullable + Sql.ToSql(ts),
+						C_DateTime2 = ts == null ? null : t.DateTime2 + Sql.ToSql(ts),
+						C_DateTime2Nullable = ts == null ? null : t.DateTime2Nullable + Sql.ToSql(ts),
+					};
+
+				var concated = query.Concat(query);
+
+				AssertQuery(concated);
+			}
+		}
+
+		
+		[Test]
+		public void DateTimeOffsetAddTimeSpan(
+			[DataSources(
+				TestProvName.AllAccess, 
+				TestProvName.AllFirebird,
+				TestProvName.AllSQLite,
+				TestProvName.AllSqlServer2005Minus,
+				ProviderName.SqlCe)] 
+			string context,
+			[ParamSource(nameof(TimespansForTest))] TimeSpan? ts)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(DateTypesOffset.Seed()))
+			{
+
+				var query =
+					from t in table
+					select new
+					{
+						Id = t.Id,
+						
+						DateTimeOffset = t.DateTimeOffset + ts,
+						DateTimeOffsetNullable = t.DateTimeOffsetNullable + ts,
+
+
+						M_DateTimeOffset = t.DateTimeOffset - ts,
+						M_DateTimeOffsetNullable = t.DateTimeOffsetNullable - ts,
+
+						C_DateTimeOffset = t.DateTimeOffset + Sql.ToSql(ts),
+						C_DateTimeOffsetNullable = t.DateTimeOffsetNullable + Sql.ToSql(ts),
+					};
+
+				var concated = query.Concat(query);
+
+				AssertQuery(concated);
+			}
+		}
+
+		
+
+		#endregion
 
 		[ActiveIssue("SQL0418N", Configuration = ProviderName.DB2)]
 		[Test]

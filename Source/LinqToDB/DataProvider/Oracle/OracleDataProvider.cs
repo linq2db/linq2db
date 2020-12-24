@@ -186,7 +186,7 @@ namespace LinqToDB.DataProvider.Oracle
 				case DataType.Time:
 					// According to https://docs.oracle.com/database/121/ODPNT/featOraCommand.htm#ODPNT0026
 					// Inference of DbType and OracleDbType from Value: TimeSpan - Object - IntervalDS
-					if (value is TimeSpan)
+					if (value == null || value is TimeSpan)
 						dataType = dataType.WithDataType(DataType.Undefined);
 					break;
 				case DataType.BFile:

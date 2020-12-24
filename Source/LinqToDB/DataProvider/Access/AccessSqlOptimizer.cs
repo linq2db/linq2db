@@ -1,8 +1,13 @@
-﻿using LinqToDB.Linq;
-using LinqToDB.Mapping;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.DataProvider.Access
 {
+	using Common;
+	using Extensions;
+	using Linq;
+	using Mapping;
+	using Tools;
 	using SqlProvider;
 	using SqlQuery;
 
@@ -72,6 +77,105 @@ namespace LinqToDB.DataProvider.Access
 				case "$ToUpper$" : return new SqlFunction(func.SystemType, "UCase", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
 			}
 			return base.ConvertFunction(func);
+		}
+
+		static bool GenerateDateAdd(ISqlExpression expr1, ISqlExpression expr2, bool isSubstraction, EvaluationContext context,
+			[MaybeNullWhen(false)] out ISqlExpression generated)
+		{
+			var dbType1 = expr1.GetExpressionType();
+			var dbType2 = expr2.GetExpressionType();
+
+			if (dbType1.SystemType.ToNullableUnderlying().In(typeof(DateTime), typeof(DateTimeOffset))
+			    && dbType2.SystemType.ToNullableUnderlying() == typeof(TimeSpan)
+			    && expr2.TryEvaluateExpression(context, out var value))
+			{
+				var ts = value as TimeSpan?;
+				var interval = "d";
+				long? increment;
+
+				if (ts == null)
+				{
+					generated = new SqlValue(dbType1, null);
+					return true;
+				}
+
+				if (ts.Value.Seconds > 0)
+				{
+					increment = (long)ts.Value.TotalSeconds;
+					interval = "s";
+				}
+				else if (ts.Value.Minutes > 0)
+				{
+					increment = (long)ts.Value.TotalMinutes;
+					interval = "n";
+				}
+				else if (ts.Value.Hours > 0)
+				{
+					increment = (long)ts.Value.TotalHours;
+					interval = "h";
+				}
+				else
+				{
+					increment = (long)ts.Value.TotalDays;
+				}
+
+				if (isSubstraction)
+					increment = -increment;
+
+				generated = new SqlFunction(
+						dbType1.SystemType!,
+						"DateAdd",
+						false,
+						true,
+						new SqlValue(interval),
+						CreateSqlValue(increment, new DbDataType(typeof(long)), expr2),
+						expr1)
+					{ CanBeNull = expr1.CanBeNull || expr2.CanBeNull };
+				return true;
+			}
+
+
+			generated = null;
+			return false;
+		}
+
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expr, ConvertVisitor visitor, EvaluationContext context)
+		{
+			expr = base.ConvertExpressionImpl(expr, visitor, context);
+
+			switch (expr.ElementType)
+			{
+				case QueryElementType.SqlBinaryExpression:
+				{
+					var be = (SqlBinaryExpression)expr;
+
+					switch (be.Operation)
+					{
+						case "+":
+						{
+							if (GenerateDateAdd(be.Expr1, be.Expr2, false, context, out var generated))
+								return generated;
+
+							if (GenerateDateAdd(be.Expr2, be.Expr1, false, context, out generated))
+								return generated;
+
+							break;
+						}
+						case "-":
+						{
+							if (GenerateDateAdd(be.Expr1, be.Expr2, true, context, out var generated))
+								return generated;
+
+							break;
+						}
+					}
+
+					break;
+				}
+
+			}
+
+			return expr;
 		}
 	}
 }

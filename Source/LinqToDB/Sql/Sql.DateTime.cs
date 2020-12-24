@@ -606,7 +606,7 @@ namespace LinqToDB
 				var date    = builder.GetExpression("date");
 				var number  = builder.GetExpression("number");
 
-				string expStr = "strftime('%Y-%m-%d %H:%M:%f', {0},";
+				string expStr = "strftime('%Y-%m-%d %H:%M:%f', {0}, ";
 				switch (part)
 				{
 					case Sql.DateParts.Year        : expStr +=            "{1} || ' Year')"; break;

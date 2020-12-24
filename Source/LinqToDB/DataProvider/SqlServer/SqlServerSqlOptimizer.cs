@@ -32,46 +32,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			);
 		}
 
-		public override bool IsParameterDependedElement(IQueryElement element)
-		{
-			if (base.IsParameterDependedElement(element))
-				return true;
-
-			switch (element.ElementType)
-			{
-				case QueryElementType.SqlBinaryExpression:
-				{
-					var be = (SqlBinaryExpression)element;
-
-					switch (be.Operation)
-					{
-						case "+":
-						case "-":
-						{
-							var dbType1 = be.Expr1.GetExpressionType();
-							var dbType2 = be.Expr2.GetExpressionType();
-
-							if (dbType1.SystemType.ToNullableUnderlying().In(typeof(DateTime), typeof(DateTimeOffset)) && dbType2.SystemType.ToNullableUnderlying() == typeof(TimeSpan) && be.Expr2.CanBeEvaluated(true))
-							{
-								return true;
-							}
-
-							if (dbType2.SystemType.ToNullableUnderlying().In(typeof(DateTime), typeof(DateTimeOffset)) && dbType1.SystemType.ToNullableUnderlying() == typeof(TimeSpan) && be.Expr1.CanBeEvaluated(true))
-							{
-								return true;
-							}
-
-							break;
-						}
-					}
-
-
-					break;
-				}
-			}
-
-			return false;
-		}
+		public override bool HasSpecialTimeSpanProcessing => true;
 
 		static bool GenerateDateAdd(ISqlExpression expr1, ISqlExpression expr2, bool isSubstraction, EvaluationContext context,
 			[MaybeNullWhen(false)] out ISqlExpression generated)
@@ -136,7 +97,6 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			generated = null;
 			return false;
-
 		}
 
 		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expr, ConvertVisitor visitor,
