@@ -3795,5 +3795,19 @@ CREATE TABLE ""TABLE_A""(
 			public int COLUMNC { get; set; }
 		}
 		#endregion
+
+		[Test]
+		public void TestDateTimeNAddTimeSpan([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			var ts = TimeSpan.FromHours(1);
+
+			using (var db = GetDataContext(context))
+			{
+				db.GetTable<AllTypes>()
+					.Where(_ =>
+						 Sql.CurrentTimestamp > _.datetime2DataType + TimeSpan.FromHours(1)
+					).Select(x => x.ID).ToArray();
+			}
+		}
 	}
 }

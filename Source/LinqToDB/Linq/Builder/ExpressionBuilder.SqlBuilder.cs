@@ -900,16 +900,27 @@ namespace LinqToDB.Linq.Builder
 						
 						ISqlExpression l;
 						ISqlExpression r;
-						var ls = GetContext(context, e.Left);
-						if (ls?.IsExpression(e.Left, 0, RequestFor.Field).Result == true)
+						var shouldCheckColumn =
+							e.Left.Type.ToNullableUnderlying() == e.Right.Type.ToNullableUnderlying();
+
+						if (shouldCheckColumn)
 						{
-							l = ConvertToSql(context, e.Left);
-							r = ConvertToSql(context, e.Right, true, QueryHelper.GetColumnDescriptor(l) ?? columnDescriptor);
+							var ls = GetContext(context, e.Left);
+							if (ls?.IsExpression(e.Left, 0, RequestFor.Field).Result == true)
+							{
+								l = ConvertToSql(context, e.Left);
+								r = ConvertToSql(context, e.Right, true, QueryHelper.GetColumnDescriptor(l) ?? columnDescriptor);
+							}
+							else
+							{
+								r = ConvertToSql(context, e.Right, true);
+								l = ConvertToSql(context, e.Left, false, QueryHelper.GetColumnDescriptor(r) ?? columnDescriptor);
+							}
 						}
 						else
 						{
-							r = ConvertToSql(context, e.Right, true);
-							l = ConvertToSql(context, e.Left, false, QueryHelper.GetColumnDescriptor(r) ?? columnDescriptor);
+							l = ConvertToSql(context, e.Left, true, columnDescriptor);
+							r = ConvertToSql(context, e.Right, true, null);
 						}
 
 						var t = e.Type;
