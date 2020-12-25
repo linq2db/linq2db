@@ -2290,5 +2290,23 @@ namespace Tests.Linq
 					.Count();
 			}
 		}
+
+		[Test]
+		public void GroupByWithSubquery([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var emptyEquery = db.Person
+					.Select(_ => 1)
+					.Where(_ => false);
+
+				var query = emptyEquery
+					.GroupBy(_ => _)
+					.Select(_ => new { _.Key, Count = _.Count() })
+					.ToList();
+
+				Assert.AreEqual(0, query.Count);
+			}
+		}
 	}
 }
