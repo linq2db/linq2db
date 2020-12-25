@@ -1028,7 +1028,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.Parent.Any(p => p.ParentID == Function2(Function1Left(p.Value1)));
+				db.Parent.Where(p => p.Value1 == null).Any(p => p.ParentID == Function2(Function1Left(p.Value1)));
 			}
 		}
 
@@ -1037,7 +1037,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.Parent.Any(p => p.ParentID == Function2(Function1Right(p.Value1)));
+				db.Parent.Where(p => p.Value1 == null).Any(p => p.ParentID == Function2(Function1Right(p.Value1)));
 			}
 		}
 

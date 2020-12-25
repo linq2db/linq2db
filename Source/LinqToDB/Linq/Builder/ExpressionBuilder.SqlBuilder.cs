@@ -3183,11 +3183,13 @@ namespace LinqToDB.Linq.Builder
 						{
 							if (nullRight && nullLeft)
 							{
-								return conditional.IfFalse.Transform(e => RemoveNullPropagation(e));
+								return conditional.IfFalse.Transform(RemoveNullPropagation);
 							}
-							else if (IsNullConstant(conditional.IfFalse))
+							else if (IsNullConstant(conditional.IfFalse)
+								&& ((nullRight && !MappingSchema.IsScalarType(binary.Left.Type)) ||
+									(nullLeft  && !MappingSchema.IsScalarType(binary.Right.Type))))
 							{
-								return conditional.IfTrue.Transform(e => RemoveNullPropagation(e));
+								return conditional.IfTrue.Transform(RemoveNullPropagation);
 							}
 						}
 					}
@@ -3200,11 +3202,13 @@ namespace LinqToDB.Linq.Builder
 						{
 							if (nullRight && nullLeft)
 							{
-								return conditional.IfTrue.Transform(e => RemoveNullPropagation(e));
+								return conditional.IfTrue.Transform(RemoveNullPropagation);
 							}
-							else if (IsNullConstant(conditional.IfTrue))
+							else if (IsNullConstant(conditional.IfTrue)
+								&& ((nullRight && !MappingSchema.IsScalarType(binary.Left.Type)) ||
+									(nullLeft  && !MappingSchema.IsScalarType(binary.Right.Type))))
 							{
-								return conditional.IfFalse.Transform(e => RemoveNullPropagation(e));
+								return conditional.IfFalse.Transform(RemoveNullPropagation);
 							}
 						}
 					}
