@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.DataProvider.SqlCe
 {
+	using Common;
+	using Tools;
 	using Extensions;
 	using SqlQuery;
 	using SqlProvider;
@@ -155,6 +158,23 @@ namespace LinqToDB.DataProvider.SqlCe
 									be.Operation,
 									be.Expr2,
 									be.Precedence);
+						case "+":
+						{
+							if (GenerateDateAdd(be.Expr1, be.Expr2, false, context, out var generated))
+								return generated;
+
+							if (GenerateDateAdd(be.Expr2, be.Expr1, false, context, out generated))
+								return generated;
+
+							break;
+						}
+						case "-":
+						{
+							if (GenerateDateAdd(be.Expr1, be.Expr2, true, context, out var generated))
+								return generated;
+
+							break;
+						}
 					}
 
 					break;
@@ -217,6 +237,74 @@ namespace LinqToDB.DataProvider.SqlCe
 			func = ConvertFunctionParameters(func, false);
 			return base.ConvertFunction(func);
 		}
+
+		public override bool HasSpecialTimeSpanProcessing => true;
+
+		static bool GenerateDateAdd(ISqlExpression expr1, ISqlExpression expr2, bool isSubstraction, EvaluationContext context,
+			[MaybeNullWhen(false)] out ISqlExpression generated)
+		{
+			var dbType1 = expr1.GetExpressionType();
+			var dbType2 = expr2.GetExpressionType();
+
+			if (dbType1.SystemType.ToNullableUnderlying().In(typeof(DateTime), typeof(DateTimeOffset))
+			    && dbType2.SystemType.ToNullableUnderlying() == typeof(TimeSpan)
+			    && expr2.TryEvaluateExpression(context, out var value))
+			{
+				var ts = value as TimeSpan?;
+				var interval = "day";
+				long? increment;
+
+				if (ts == null)
+				{
+					generated = new SqlValue(dbType1, null);
+					return true;
+				}
+
+				if (ts.Value.Milliseconds > 0)
+				{
+					increment = (long)ts.Value.TotalMilliseconds;
+					interval = "millisecond";
+				}
+				else if (ts.Value.Seconds > 0)
+				{
+					increment = (long)ts.Value.TotalSeconds;
+					interval = "second";
+				}
+				else if (ts.Value.Minutes > 0)
+				{
+					increment = (long)ts.Value.TotalMinutes;
+					interval = "minute";
+				}
+				else if (ts.Value.Hours > 0)
+				{
+					increment = (long)ts.Value.TotalHours;
+					interval = "hour";
+				}
+				else
+				{
+					increment = (long)ts.Value.TotalDays;
+				}
+
+				if (isSubstraction)
+					increment = -increment;
+
+				generated = new SqlFunction(
+						dbType1.SystemType!,
+						"DateAdd",
+						false,
+						true,
+						new SqlExpression(typeof(string), interval, Precedence.Primary),
+						CreateSqlValue(increment, new DbDataType(typeof(long)), expr2),
+						expr1)
+					{ CanBeNull = expr1.CanBeNull || expr2.CanBeNull };
+				return true;
+			}
+
+
+			generated = null;
+			return false;
+		}
+
 
 	}
 }

@@ -13,6 +13,7 @@ using NUnit.Framework;
 namespace Tests.Linq
 {
 	using Model;
+	using Tests.DataProvider;
 
 	[TestFixture]
 	public class ExpressionsTests : TestBase

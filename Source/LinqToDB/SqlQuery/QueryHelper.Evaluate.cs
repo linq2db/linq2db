@@ -32,6 +32,11 @@ namespace LinqToDB.SqlQuery
 			return expr.TryEvaluateExpression(context).IsEvaluated;
 		}
 
+		public static bool IsEvaluableMutable(this IQueryElement expr)
+		{
+			return expr.CanBeEvaluated(true) && !expr.CanBeEvaluated(false);
+		}
+
 		public static EvaluationContext.EvaluationInfo TryEvaluateExpression(this IQueryElement expr, EvaluationContext context)
 		{
 			if (!context.TryGetValue(expr, out var info))

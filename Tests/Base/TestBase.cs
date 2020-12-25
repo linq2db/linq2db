@@ -17,7 +17,7 @@ using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
-
+using Newtonsoft.Json;
 #if NET472
 using System.ServiceModel;
 using System.ServiceModel.Description;
@@ -1140,6 +1140,11 @@ namespace Tests
 			{
 				expected = empty.Provider.CreateQuery<T>(newExpr).ToArray();
 			}
+
+			/*
+			var actualJson = JsonConvert.SerializeObject(actual, Formatting.Indented);
+			var exptectedJson = JsonConvert.SerializeObject(expected, Formatting.Indented);
+			*/
 
 			if (actual.Length > 0 || expected.Length > 0)
 				AreEqual(expected, actual, ComparerBuilder.GetEqualityComparer<T>());

@@ -604,7 +604,7 @@ namespace LinqToDB.Mapping
 			}
 			else if (type.IsNullable())
 			{
-				body = Expression.Convert(param, type);
+				body = Expression.Convert(param, type); 
 			}
 			else if (fromType.IsClass || fromType.IsInterface)
 			{

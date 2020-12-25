@@ -1197,7 +1197,7 @@ namespace Tests.DataProvider
 		}
 
 		[Table(Name="AllTypes2")]
-		class AllTypes2
+		internal class AllTypes2
 		{
 			[Column(DbType="int"),   PrimaryKey, Identity] public int             ID                     { get; set; } // int
 			[Column(DbType="date"),              Nullable] public DateTime?       dateDataType           { get; set; } // date
@@ -1914,5 +1914,6 @@ AS
 				Assert.AreEqual("This is <test> scalar function parameter!", param.Description);
 			}
 		}
+
 	}
 }

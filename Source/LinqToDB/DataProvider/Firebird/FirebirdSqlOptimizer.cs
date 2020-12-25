@@ -1,9 +1,12 @@
 ﻿using System;
-using LinqToDB.Mapping;
+using System.Linq;
+using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.DataProvider.Firebird
 {
-	using System.Linq;
+	using Common;
+	using Mapping;
+	using Tools;
 	using Extensions;
 	using SqlQuery;
 	using SqlProvider;
@@ -26,6 +29,8 @@ namespace LinqToDB.DataProvider.Firebird
 		protected static string[] LikeFirebirdEscapeSymbosl = { "_", "%" };
 
 		public override string[] LikeCharactersToEscape => LikeFirebirdEscapeSymbosl;
+
+		public override bool HasSpecialTimeSpanProcessing => true;
 
 
 		public override bool IsParameterDependedElement(IQueryElement element)
@@ -155,6 +160,72 @@ namespace LinqToDB.DataProvider.Firebird
 			return newExpr;
 		}
 
+		static bool GenerateDateAdd(ISqlExpression expr1, ISqlExpression expr2, bool isSubstraction, EvaluationContext context,
+			[MaybeNullWhen(false)] out ISqlExpression generated)
+		{
+			var dbType1 = expr1.GetExpressionType();
+			var dbType2 = expr2.GetExpressionType();
+
+			if (dbType1.SystemType.ToNullableUnderlying().In(typeof(DateTime), typeof(DateTimeOffset))
+			    && dbType2.SystemType.ToNullableUnderlying() == typeof(TimeSpan)
+			    && expr2.TryEvaluateExpression(context, out var value))
+			{
+				var ts = value as TimeSpan?;
+				var interval = "day";
+				long? increment;
+
+				if (ts == null)
+				{
+					generated = new SqlValue(dbType1, null);
+					return true;
+				}
+
+				if (ts.Value.Milliseconds > 0)
+				{
+					increment = (long)ts.Value.TotalMilliseconds;
+					interval = "millisecond";
+				}
+				else if (ts.Value.Seconds > 0)
+				{
+					increment = (long)ts.Value.TotalSeconds;
+					interval = "second";
+				}
+				else if (ts.Value.Minutes > 0)
+				{
+					increment = (long)ts.Value.TotalMinutes;
+					interval = "minute";
+				}
+				else if (ts.Value.Hours > 0)
+				{
+					increment = (long)ts.Value.TotalHours;
+					interval = "hour";
+				}
+				else
+				{
+					increment = (long)ts.Value.TotalDays;
+				}
+
+				if (isSubstraction)
+					increment = -increment;
+
+				generated = new SqlFunction(
+						dbType1.SystemType!,
+						"DateAdd",
+						false,
+						true,
+						new SqlExpression(typeof(string), interval, Precedence.Primary),
+						CreateSqlValue(increment, new DbDataType(typeof(long)), expr2),
+						expr1)
+					{ CanBeNull = expr1.CanBeNull || expr2.CanBeNull };
+				return true;
+			}
+
+
+			generated = null;
+			return false;
+		}
+
+
 		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expr, ConvertVisitor visitor,
 			EvaluationContext context)
 		{
@@ -168,7 +239,26 @@ namespace LinqToDB.DataProvider.Firebird
 					case "&": return new SqlFunction(be.SystemType, "Bin_And", be.Expr1, be.Expr2);
 					case "|": return new SqlFunction(be.SystemType, "Bin_Or", be.Expr1, be.Expr2);
 					case "^": return new SqlFunction(be.SystemType, "Bin_Xor", be.Expr1, be.Expr2);
-					case "+": return be.SystemType == typeof(string) ? new SqlBinaryExpression(be.SystemType, be.Expr1, "||", be.Expr2, be.Precedence) : expr;
+					case "+":
+					{
+						if (be.SystemType == typeof(string))
+							return new SqlBinaryExpression(be.SystemType, be.Expr1, "||", be.Expr2, be.Precedence);
+
+						if (GenerateDateAdd(be.Expr1, be.Expr2, false, context, out var generated))
+							return generated;
+
+						if (GenerateDateAdd(be.Expr2, be.Expr1, false, context, out generated))
+							return generated;
+						
+						break;
+					}
+					case "-":
+					{
+						if (GenerateDateAdd(be.Expr1, be.Expr2, true, context, out var generated))
+							return generated;
+
+						break;
+					}
 				}
 			}
 			else if (expr is SqlFunction func)
@@ -193,7 +283,8 @@ namespace LinqToDB.DataProvider.Firebird
 		public override SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context)
 		{
 			statement = base.FinalizeStatement(statement, context);
-			statement = WrapParameters(statement, context);
+			//TODO: candidate to remove
+			//statement = WrapParameters(statement, context);
 			return statement;
 		}
 

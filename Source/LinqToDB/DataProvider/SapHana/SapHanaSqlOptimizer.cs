@@ -2,7 +2,10 @@
 
 namespace LinqToDB.DataProvider.SapHana
 {
+	using System.Diagnostics.CodeAnalysis;
 	using Extensions;
+	using LinqToDB.Common;
+	using LinqToDB.Tools;
 	using SqlProvider;
 	using SqlQuery;
 
@@ -21,6 +24,45 @@ namespace LinqToDB.DataProvider.SapHana
 				case QueryType.Update: statement = GetAlternativeUpdate((SqlUpdateStatement) statement); break;
 			}
 			return statement;
+		}
+
+		static bool GenerateDateAdd(ISqlExpression expr1, ISqlExpression expr2, bool isSubstraction, EvaluationContext context,
+			[MaybeNullWhen(false)] out ISqlExpression generated)
+		{
+			var dbType1 = expr1.GetExpressionType();
+			var dbType2 = expr2.GetExpressionType();
+
+			if (dbType1.SystemType.ToNullableUnderlying().In(typeof(DateTime), typeof(DateTimeOffset))
+				&& dbType2.SystemType.ToNullableUnderlying() == typeof(TimeSpan)
+				&& expr2.TryEvaluateExpression(context, out var value))
+			{
+				var ts = value as TimeSpan?;
+
+				if (ts == null)
+				{
+					generated = new SqlValue(dbType1, null);
+					return true;
+				}
+
+				var increment = ts.Value.Ticks;
+
+				if (isSubstraction)
+					increment = -increment;
+
+				generated = new SqlFunction(
+						dbType1.SystemType!,
+						"ADD_NANO100",
+						false,
+						true,
+						expr1,
+						CreateSqlValue(increment, new DbDataType(typeof(long)), expr2))
+					{ CanBeNull = expr1.CanBeNull || expr2.CanBeNull };
+
+				return true;
+			}
+
+			generated = null;
+			return false;
 		}
 
 		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expr, ConvertVisitor visitor,
@@ -61,10 +103,26 @@ namespace LinqToDB.DataProvider.SapHana
 							Add(be.Expr1, be.Expr2, be.SystemType),
 							Mul(new SqlFunction(be.SystemType, "BITAND", be.Expr1, be.Expr2), 2),
 							be.SystemType);
-					case "+": 
-						return be.SystemType == typeof(string) ? 
-							new SqlBinaryExpression(be.SystemType, be.Expr1, "||", be.Expr2, be.Precedence) : 
-							expr;
+					case "+":
+					{
+						if (be.SystemType == typeof(string))
+							return new SqlBinaryExpression(be.SystemType, be.Expr1, "||", be.Expr2, be.Precedence);
+
+						if (GenerateDateAdd(be.Expr1, be.Expr2, false, context, out var generated))
+							return generated;
+
+						if (GenerateDateAdd(be.Expr2, be.Expr1, false, context, out generated))
+							return generated;
+
+						break;
+					}
+					case "-":
+					{
+						if (GenerateDateAdd(be.Expr1, be.Expr2, true, context, out var generated))
+							return generated;
+
+						break;
+					}
 				}
 			}
 
