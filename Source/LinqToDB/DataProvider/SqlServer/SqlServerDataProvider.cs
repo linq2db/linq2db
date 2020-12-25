@@ -192,6 +192,12 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			switch (dataType.DataType)
 			{
+				case DataType.DateTime2  :
+					{
+						if (value is DateTime dt)
+							value = DataTools.AdjustPrecision(dt, (byte)(dataType.Precision ?? 7));
+						break;
+					}
 				case DataType.Udt        :
 					{
 						if (param    != null

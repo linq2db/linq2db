@@ -148,14 +148,14 @@ namespace LinqToDB.DataProvider.SqlServer
 		internal static void ConvertDateTimeToSql(StringBuilder stringBuilder, SqlDataType? dt, DateTime value)
 		{
 			var format =
-				value.Millisecond == 0
-					? "yyyy-MM-ddTHH:mm:ss"
-					: dt == null || dt.Type.DataType != DataType.DateTime2
-						? "yyyy-MM-ddTHH:mm:ss.fff"
-						: dt.Type.Precision == 0
-							? "yyyy-MM-ddTHH:mm:ss"
-							: "yyyy-MM-ddTHH:mm:ss." + new string('f', dt.Type.Precision ?? 7);
-
+				dt?.Type.DataType == DataType.DateTime2
+					? dt.Type.Precision == 0
+						  ? "yyyy-MM-ddTHH:mm:ss"
+						  : "yyyy-MM-ddTHH:mm:ss." + new string('f', dt.Type.Precision ?? 7)
+					: value.Millisecond == 0
+						? "yyyy-MM-ddTHH:mm:ss"
+						: "yyyy-MM-ddTHH:mm:ss.fff";
+			
 			stringBuilder
 				.Append('\'')
 				.Append(value.ToString(format))
