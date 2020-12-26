@@ -838,8 +838,13 @@ namespace LinqToDB.SqlQuery
 
 								var objTree = new Dictionary<ICloneableElement, ICloneableElement>();
 
+								// try to correct if there q.* in columns expressions
+								// TODO: not performant, it is bad that Columns has reference on this select query
+								sc = ConvertAll(sc, (v, e) => ReferenceEquals(e, q.All) ? nq.All : e);
+								
 								if (ReferenceEquals(sc, q.Select))
-									sc = new SqlSelectClause (nq, sc, objTree, e => e is SqlColumn c && c.Parent == q);
+									sc = new SqlSelectClause(nq, sc, objTree, e => e is SqlColumn c && c.Parent == q);
+								
 								if (ReferenceEquals(fc, q.From))
 									fc = new SqlFromClause   (nq, fc, objTree, e => false);
 								if (ReferenceEquals(wc, q.Where))

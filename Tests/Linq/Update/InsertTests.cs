@@ -1828,7 +1828,7 @@ namespace Tests.xUpdate
 		public void InsertOrReplaceByTableName([InsertOrUpdateDataSources] string context)
 		{
 			const string? schemaName = null;
-			var tableName  = "xxPatient" + TestUtils.GetNext().ToString();
+			var tableName  = "xxPatient" + (context.Contains("Firebird") ? TestUtils.GetNext().ToString() : string.Empty);
 
 			using (var db = GetDataContext(context))
 			{
@@ -1874,7 +1874,7 @@ namespace Tests.xUpdate
 		public async Task InsertOrReplaceByTableNameAsync([DataSources] string context)
 		{
 			const string? schemaName = null;
-			var tableName  = "xxPatient" + TestUtils.GetNext().ToString();
+			var tableName  = "xxPatient" + (context.Contains("Firebird") ? TestUtils.GetNext().ToString() : string.Empty);
 
 			using (var db = GetDataContext(context))
 			{

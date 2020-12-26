@@ -1,4 +1,32 @@
 <#@ assembly name="$(LinqToDBT4PostgreSQLToolsDirectory)Npgsql.dll" #>
-<#@ assembly name="$(LinqToDBT4PostgreSQLToolsDirectory)System.Threading.Tasks.Extensions.dll" #>
-<#@ include file="LinqToDB.Tools.ttinclude" #>
-<#@ include file="LinqToDB.PostgreSQL.ttinclude" #>
+<#@ include  file="LinqToDB.Tools.ttinclude"                        #>
+<#@ include  file="LinqToDB.PostgreSQL.ttinclude"                   #>
+<#@ import   namespace="System.Reflection"                          #>
+<#@ import   namespace="System.IO"                                  #>
+<#
+
+// don't use Location as it could point to shadow copy
+var toolsPath = Path.GetDirectoryName(
+    AppDomain.CurrentDomain.GetAssemblies().Single(a => a.GetName().Name == "linq2db").CodeBase.Replace("file:///", ""));
+
+LoadAssembly("Microsoft.Bcl.AsyncInterfaces"    , toolsPath);
+LoadAssembly("System.Threading.Tasks.Extensions", toolsPath);
+LoadAssembly("System.Text.Json"                 , toolsPath);
+
+static void LoadAssembly(string assemblyName, string toolsPath)
+{
+    // check if already loaded
+    if (AppDomain.CurrentDomain.GetAssemblies().SingleOrDefault(a => a.GetName().Name == assemblyName) != null)
+        return;
+    try
+    {
+        // try to load using VS (host) lookup pathes
+        Assembly.Load(assemblyName);
+        return;
+    }
+    catch {}
+
+    // load from tools
+    Assembly.LoadFrom(Path.Combine(toolsPath, $"{assemblyName}.dll"));
+}
+#>

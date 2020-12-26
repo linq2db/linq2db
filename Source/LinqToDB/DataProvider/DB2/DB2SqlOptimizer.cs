@@ -26,6 +26,8 @@
 			};
 		}
 
+		public override bool CanCompareSearchConditions => true;
+		
 		protected static string[] DB2LikeCharactersToEscape = {"%", "_"};
 
 		public override string[] LikeCharactersToEscape => DB2LikeCharactersToEscape;

@@ -10,6 +10,8 @@
 		{
 		}
 
+		public override bool CanCompareSearchConditions => true;
+
 		public override SqlStatement Finalize(SqlStatement statement)
 		{
 			CheckAliases(statement, int.MaxValue);

@@ -12,6 +12,7 @@ namespace LinqToDB.DataProvider.Access
 		{
 		}
 
+		public override bool CanCompareSearchConditions => true;
 
 		protected static string[] AccessLikeCharactersToEscape = {"_", "?", "*", "%", "#", "-", "!"};
 

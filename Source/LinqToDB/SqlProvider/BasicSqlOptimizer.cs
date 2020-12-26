@@ -333,23 +333,36 @@ namespace LinqToDB.SqlProvider
 							switch (e.ElementType)
 							{
 								case QueryElementType.SqlField:
-
-									if (levelTables.Contains(((SqlField)e).Table!))
+								{
+									var field = (SqlField)e;
+									if (levelTables.Contains(field.Table!))
 									{
-										subQuery.GroupBy.Expr((SqlField)e);
-										ne = subQuery.Select.AddColumn((SqlField)e);
+										subQuery.GroupBy.Expr(field);
+										ne = subQuery.Select.AddColumn(field);
+									}
+									else if (!allTables.Contains(field.Table!))
+									{
+										modified = true;
 									}
 
 									break;
-
+								}
+								
 								case QueryElementType.Column:
-									if (levelTables.Contains(((SqlColumn)e).Parent!))
+								{
+									var column = (SqlColumn)e;
+									if (levelTables.Contains(column.Parent!))
 									{
-										subQuery.GroupBy.Expr((SqlColumn)e);
-										ne = subQuery.Select.AddColumn((SqlColumn)e);
+										subQuery.GroupBy.Expr(column);
+										ne = subQuery.Select.AddColumn(column);
+									}
+									else if (!allTables.Contains(column.Parent!))
+									{
+										modified = true;
 									}
 
 									break;
+								}
 							}
 
 							modified = modified || !ReferenceEquals(e, ne);
@@ -693,7 +706,7 @@ namespace LinqToDB.SqlProvider
 					if (parms.Length != len)
 						return new SqlFunction(func.SystemType, func.Name, func.IsAggregate, func.Precedence, parms);
 
-					if (parms.Length == 3
+					if (!func.DoNotOptimize && parms.Length == 3
 						&& !parms[0].ShouldCheckForNull()
 						&& parms[0].ElementType.In(QueryElementType.SqlFunction, QueryElementType.SearchCondition))
 					{
@@ -1584,13 +1597,36 @@ namespace LinqToDB.SqlProvider
 			return newElement;
 		}
 
+		public virtual bool CanCompareSearchConditions => false;
 
 		public virtual ISqlPredicate ConvertPredicateImpl(MappingSchema mappingSchema, ISqlPredicate predicate, ConvertVisitor visitor, OptimizationContext optimizationContext)
 		{
 			switch (predicate.ElementType)
 			{
 				case QueryElementType.ExprExprPredicate:
-					return ((SqlPredicate.ExprExpr)predicate).Reduce(optimizationContext.Context);
+				{
+					var exprExpr = (SqlPredicate.ExprExpr)predicate;
+					var reduced = exprExpr.Reduce(optimizationContext.Context);
+					if (!ReferenceEquals(reduced, exprExpr))
+					{
+						return reduced;
+					}
+
+					if (!CanCompareSearchConditions && (exprExpr.Expr1.ElementType == QueryElementType.SearchCondition || exprExpr.Expr2.ElementType == QueryElementType.SearchCondition))
+					{
+						var expr1 = exprExpr.Expr1;
+						if (expr1.ElementType == QueryElementType.SearchCondition)
+							expr1 = ConvertBooleanExprToCase(expr1);
+
+						var expr2 = exprExpr.Expr2;
+						if (expr2.ElementType == QueryElementType.SearchCondition)
+							expr2 = ConvertBooleanExprToCase(expr2);
+
+						return new SqlPredicate.ExprExpr(expr1, exprExpr.Operator, expr2, exprExpr.WithNull);
+					}
+					
+					break;
+				}	
 				case QueryElementType.IsTruePredicate:
 					return ((SqlPredicate.IsTrue)predicate).Reduce();
 				case QueryElementType.LikePredicate:
@@ -1951,11 +1987,20 @@ namespace LinqToDB.SqlProvider
 
 				return new SqlFunction(func.SystemType, "CASE", sc, new SqlValue(true), new SqlValue(false))
 				{
-					CanBeNull = false
+					CanBeNull = false,
 				};
 			}
 
 			return null;
+		}
+
+		protected ISqlExpression ConvertBooleanExprToCase(ISqlExpression expression)
+		{
+			return new SqlFunction(typeof(bool), "CASE", expression, new SqlValue(true), new SqlValue(false))
+			{
+				CanBeNull = false,
+				DoNotOptimize = true
+			};
 		}
 
 		protected static bool IsDateDataType(ISqlExpression expr, string dateName)
