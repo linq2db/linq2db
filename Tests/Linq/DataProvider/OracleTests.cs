@@ -3041,7 +3041,8 @@ namespace Tests.DataProvider
 					Assert.That(pms[15].Value,
 						Is.EqualTo(new DateTimeOffset(2012, 12, 12, 11, 12, 12, isNative ? 0 : 12, TimeSpan.Zero)).
 						Or.EqualTo(new DateTimeOffset(2012, 12, 12, 11, 12, 12, isNative ? 0 : 12, TestData.DateTimeOffset.Offset)).
-						Or.EqualTo(new DateTimeOffset(2012, 12, 12, 12, 12, 12, isNative ? 0 : 12, TestData.DateTimeOffset.Offset.Add(new TimeSpan(-1, 0, 0)))));
+						Or.EqualTo(new DateTimeOffset(2012, 12, 12, 12, 12, 12, isNative ? 0 : 12, TestData.DateTimeOffset.Offset.Add(new TimeSpan(-1, 0, 0)))).
+						Or.EqualTo(new DateTimeOffset(2012, 12, 12, 12, 12, 12, isNative ? 0 : 12, new TimeSpan(-5, 0, 0))));
 
 				Assert.AreEqual("1"                   , pms[16].Value);
 				Assert.IsNull(pms[17].Value);
@@ -3726,9 +3727,8 @@ namespace Tests.DataProvider
 		public async Task Issue2504Test([IncludeDataSources(false, TestProvName.AllOracle)] string context)
 		{
 			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
 			{
-				db.Execute("CREATE SEQUENCE SEQ_A");
+				db.Execute("CREATE SEQUENCE SEQ_A START WITH 1 MINVALUE 0");
 				try
 				{
 					db.Execute(@"
@@ -3739,7 +3739,7 @@ CREATE TABLE ""TABLE_A""(
 	CONSTRAINT ""PK_TABLE_A"" PRIMARY KEY(""COLUMN_A"", ""COLUMN_B"", ""COLUMN_C"")
 )");
 
-					var id = await db.InsertWithInt64IdentityAsync(new Issue2504Table1()
+					var id = await db.InsertWithInt64IdentityAsync(new Issue2504Table1
 					{
 						COLUMNA = 1,
 						COLUMNB = 2

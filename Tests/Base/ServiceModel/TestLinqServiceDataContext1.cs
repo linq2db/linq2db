@@ -1,27 +1,17 @@
 ﻿using System;
-using System.ServiceModel;
 
 using LinqToDB;
 using LinqToDB.ServiceModel;
 
-namespace Tests.Model
+namespace Tests.ServiceModel
 {
-	public class TestServiceModelDataContext : ServiceModelDataContext, ITestDataContext
+	using Model;
+
+	public class TestLinqServiceDataContext : TestLinqServiceDataContextBase, ITestDataContext
 	{
-		public TestServiceModelDataContext(int ip) : base(
-			new NetTcpBinding(SecurityMode.None)
-			{
-				MaxReceivedMessageSize = 10000000,
-				MaxBufferPoolSize      = 10000000,
-				MaxBufferSize          = 10000000,
-				CloseTimeout           = new TimeSpan(00, 01, 00),
-				OpenTimeout            = new TimeSpan(00, 01, 00),
-				ReceiveTimeout         = new TimeSpan(00, 10, 00),
-				SendTimeout            = new TimeSpan(00, 10, 00),
-			},
-			new EndpointAddress("net.tcp://localhost:" + ip + "/LinqOverWCF"))
+		public TestLinqServiceDataContext(LinqService linqService)
+			: base(linqService)
 		{
-			((NetTcpBinding)Binding!).ReaderQuotas.MaxStringContentLength = 1000000;
 		}
 
 		public ITable<Person>                 Person                 => this.GetTable<Person>();
