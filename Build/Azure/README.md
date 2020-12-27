@@ -19,18 +19,23 @@ Automatically triggered for all PR commits and runs solution build
 
 #### `test-all` pipeline
 
-Runs manually using `/azp run test-all` command from PR comment by team member
+Runs manually using `/azp run test-all` command from PR comment by team member. Currently this pipeline will skip testing targeting macos (you need to use db-specific pipeline for it) due to incredible slowness of docker for macos.
 
 #### db-specific test pipelines
 
 Those pipelines used to run tests only for specific databases manually by team member:
+- `/azp run test-access` - MS Access tests
 - `/azp run test-db2` - IBM DB2 tests
+- `/azp run test-firebird` - Firebird tests
 - `/azp run test-informix` - IBM Informix tests
 - `/azp run test-mysql` - MySQL and MariaDB tests
 - `/azp run test-oracle` - Oracle tests
 - `/azp run test-postgresql` - PostgreSQL tests
-- `/azp run test-sqlserver-2019` - SQL Server 2019 tests
+- `/azp run test-saphana` - SAP HANA 2 tests
+- `/azp run test-sqlce` - SQL CE tests
 - `/azp run test-sqlite` - SQLite tests
+- `/azp run test-sqlserver` - SQL Server tests (all versions)
+- `/azp run test-sqlserver-2019` - SQL Server 2019 tests
 - `/azp run test-sybase` - SAP/SYBASE ASE tests
 
 #### `experimental` pipeline
