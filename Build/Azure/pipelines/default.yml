@@ -139,3 +139,4 @@ stages:
       enabled: and(eq(variables['System.PullRequest.TargetBranch'], 'release'), succeeded())
       experimental: false
       with_baselines: true
+      mac_enabled: and(eq(variables['System.PullRequest.TargetBranch'], 'release'), succeeded()) # enable macos testing only for release

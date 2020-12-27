@@ -2,6 +2,7 @@ parameters:
   enabled: false
   experimental: false
   with_baselines: false
+  mac_enabled: false
   db_filter: '[all]'
 
 # db_filter specify test db selection filter for pipeline. Current list of supported values:
@@ -74,6 +75,7 @@ jobs:
       enabled: ${{ parameters.enabled }}
       experimental: ${{ parameters.experimental }}
       with_baselines: ${{ parameters.with_baselines }}
+      mac_enabled: ${{ parameters.mac_enabled }}
       test_matrix:
 # SQLite
         - name: SQLite
