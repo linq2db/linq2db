@@ -3,7 +3,7 @@ parameters:
   experimental: false
   with_baselines: false
   test_matrix: []
-  mac_enabled: false # true / disable temporary
+  mac_enabled: true
 
 jobs:
 ##############################################################################################

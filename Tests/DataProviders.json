@@ -171,7 +171,7 @@
 			"SqlServer.2016"    : { "Provider": "System.Data.SqlClient",           "ConnectionString": "Server=localhost;Database=TestData2016;User Id=sa;Password=Password12!;"                                                                                  },
 			"SqlServer.2017"    : { "Provider": "System.Data.SqlClient",           "ConnectionString": "Server=localhost;Database=TestData2017;User Id=sa;Password=Password12!;"                                                                                  },
 			"SqlServer.2019"    : { "Provider": "System.Data.SqlClient",           "ConnectionString": "Server=localhost;Database=TestData2019;User Id=sa;Password=Password12!;"                                                                                  },
-			"SqlServer.2019.SA" : { "Provider": "System.Data.SqlClient",           "ConnectionString": "Server=localhost;Database=TestData2019SA;User Id=sa;Password=Password12!;"                                                                                  },
+			"SqlServer.2019.SA" : { "Provider": "System.Data.SqlClient",           "ConnectionString": "Server=localhost;Database=TestData2019SA;User Id=sa;Password=Password12!;"                                                                                },
 			"PostgreSQL"        : { "Provider": "Npgsql",                          "ConnectionString": "Server=localhost;Port=5432;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100"                           },
 			"PostgreSQL.9.2"    : { "Provider": "Npgsql",                          "ConnectionString": "Server=localhost;Port=5432;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100"                           },
 			"PostgreSQL.9.3"    : { "Provider": "Npgsql",                          "ConnectionString": "Server=localhost;Port=5432;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100"                           },
@@ -192,7 +192,7 @@
 			"Informix"          : { "Provider": "Informix",                        "ConnectionString": "Server=localhost:9089;Database=testdb;userid=informix;password=in4mix"                                                                                    },
 			"Informix.DB2"      : {                                                "ConnectionString": "Server=localhost:9089;Database=testdb;userid=informix;password=in4mix"                                                                                    },
 			"DB2"               : { "Provider": "IBM.Data.DB2.Core",               "ConnectionString": "Server=localhost:50000;Database=testdb;UID=db2inst1;PWD=Password12!"                                                                                      },
-			"SapHana"           : { "Provider": "Sap.Data.Hana",                   "ConnectionString": "Server=localhost:39013;Current Schema=testdb;UserID=SYSTEM;Password=HXEHana1;"                                                                            },
+			"SapHana.Odbc"      : { "Provider": "SapHana.Odbc",                    "ConnectionString": "<SET BY SCRIPT>"                                                                                                                                          },
 		}
 	},
 

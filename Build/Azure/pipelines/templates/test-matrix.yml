@@ -985,8 +985,8 @@ jobs:
           enable_os_win2016: false
           enable_os_win2019: false
           enable_os_ubuntu16: false
-          enable_os_ubuntu20: # false true (needs working docker image)
-          enable_os_macos: # false true (needs working docker image)
+          enable_os_ubuntu20: true
+          enable_os_macos: false # start takes 'forever'
           enable_fw_net472: false
           enable_fw_netcore21: true
           enable_fw_netcore31: false
