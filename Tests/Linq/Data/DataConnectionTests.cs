@@ -1241,7 +1241,7 @@ namespace Tests.Data
 						// this query will be executed outside of TransactionScope transaction as it wasn't enlisted into connection
 						db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 2 });
 
-						Transaction.Current.Rollback();
+						Transaction.Current!.Rollback();
 					}
 
 					db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 3 });
@@ -1277,7 +1277,7 @@ namespace Tests.Data
 					{
 						db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 2 });
 
-						Transaction.Current.Rollback();
+						Transaction.Current!.Rollback();
 					}
 
 					db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 3 });
@@ -1316,7 +1316,7 @@ namespace Tests.Data
 						((DbConnection)db.Connection).EnlistTransaction(Transaction.Current);
 						db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 2 });
 
-						Transaction.Current.Rollback();
+						Transaction.Current!.Rollback();
 					}
 
 					db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 3 });

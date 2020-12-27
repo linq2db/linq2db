@@ -28,10 +28,12 @@ while ! docker info 2>/dev/null ; do
         #open -g -a Docker.app || exit
         open -g /Applications/Docker.app || exit
     fi
-    if [ $retries -gt 30 ]; then
+    if [ $retries -gt 60 ]; then
         >&2 echo 'Failed to run docker'
         exit 1
     fi;
 
     echo 'Waiting for docker service to be in the running state'
 done
+
+echo "docker started after ${retries} wait cycles"

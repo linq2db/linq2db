@@ -1287,6 +1287,17 @@ namespace Tests
 				DbCommandProcessorExtensions.Instance = null;
 			}
 
+			if (provider?.Contains("SapHana") == true)
+			{
+				using (new DisableLogging())
+				using (new DisableBaseline("isn't baseline query"))
+				using (var db = new TestDataConnection(provider))
+				{
+					// release memory
+					db.Execute("ALTER SYSTEM CLEAR SQL PLAN CACHE");
+				}
+			}
+
 			// dump baselines
 			var ctx = CustomTestContext.Get();
 

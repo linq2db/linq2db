@@ -747,7 +747,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Table(Schema = "TESTHANA", Name = "AllTypesGeo")]
+		[Table(Name = "AllTypesGeo")]
 		public partial class AllTypesGeo
 		{
 			[PrimaryKey, Identity        ] public int     ID                 { get; set; } // INTEGER
