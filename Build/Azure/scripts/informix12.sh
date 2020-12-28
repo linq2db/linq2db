@@ -34,3 +34,6 @@ until docker logs informix | grep -q 'Informix container login Information'; do
 done
 
 docker logs informix
+
+docker exec informix cat /opt/ibm/informix/etc/sqlhosts
+docker exec informix ls /opt/ibm/data
