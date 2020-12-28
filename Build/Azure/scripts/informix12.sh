@@ -9,6 +9,7 @@ echo "##vso[task.setvariable variable=PATH]$PATH:$PWD/clidriver/bin:$PWD/clidriv
 echo "##vso[task.setvariable variable=LD_LIBRARY_PATH]$PWD/clidriver/lib/"
 
 mkdir ~/ifx
+chmod 0775 ~/ifx
 echo Generate CREATE DATABASE script
 cat <<-EOSQL > ~/ifx/sch_init_informix.small.sql
 CREATE DATABASE testdb WITH BUFFERED LOG
