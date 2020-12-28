@@ -31,5 +31,6 @@ until docker logs informix | grep -q 'Informix container login Information'; do
     fi;
 done
 
+docker start informix
 docker logs informix
 
