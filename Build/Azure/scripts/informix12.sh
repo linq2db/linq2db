@@ -8,14 +8,8 @@ cp -f ./IBM.Data.DB2.Core-lnx/lib/netstandard2.0/IBM.Data.DB2.Core.dll ./IBM.Dat
 echo "##vso[task.setvariable variable=PATH]$PATH:$PWD/clidriver/bin:$PWD/clidriver/lib"
 echo "##vso[task.setvariable variable=LD_LIBRARY_PATH]$PWD/clidriver/lib/"
 
-echo Generate CREATE DATABASE script
-cat <<-EOSQL > linq2db.sql
-CREATE DATABASE testdb WITH BUFFERED LOG
-EOSQL
-
 docker run -d --name informix -e LICENSE=ACCEPT --privileged -it -p 9089:9089 ibmcom/informix-developer-database:12.10.FC12W1DE
 
-# docker cp linq2db.sql informix:/opt/ibm/data/sch_init_informix.small.sql
 
 docker ps -a
 
@@ -31,6 +25,18 @@ until docker logs informix | grep -q 'Informix container login Information'; do
     fi;
 done
 
+docker ps -a
+
 docker start informix
+
+docker ps -a
+
+echo Generate CREATE DATABASE script
+cat <<-EOSQL > linq2db.sql
+CREATE DATABASE testdb WITH BUFFERED LOG
+EOSQL
+docker cp linq2db.sql informix:/opt/ibm/data/linq2db.sql
+docker exec informix dbaccess sysadmin /opt/ibm/data/linq2db.sql
+
 docker logs informix
 
