@@ -339,7 +339,7 @@ namespace LinqToDB.Data
 					{
 						var additionalKey = GetCommandAdditionalKey(rd, typeof(T));
 						var objectReader  = GetObjectReader<T>(DataConnection, rd, DataConnection.Command.CommandText,
-							additionalKey);
+							additionalKey, isSingleValue: false);
 						var isFaulted = false;
 
 						do
@@ -357,7 +357,7 @@ namespace LinqToDB.Data
 
 								isFaulted    = true;
 								objectReader = GetObjectReader2<T>(DataConnection, rd, DataConnection.Command.CommandText,
-									additionalKey);
+									additionalKey, isSingleValue: false);
 								result = objectReader(rd);
 							}
 
@@ -430,7 +430,7 @@ namespace LinqToDB.Data
 				if (await rd.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 				{
 					var additionalKey = GetCommandAdditionalKey(rd, typeof(T));
-					var objectReader  = GetObjectReader<T>(DataConnection, rd, DataConnection.Command.CommandText, additionalKey);
+					var objectReader  = GetObjectReader<T>(DataConnection, rd, DataConnection.Command.CommandText, additionalKey, isSingleValue: false);
 					var isFaulted     = false;
 
 					do
@@ -447,7 +447,7 @@ namespace LinqToDB.Data
 								throw;
 
 							isFaulted    = true;
-							objectReader = GetObjectReader2<T>(DataConnection, rd, DataConnection.Command.CommandText, additionalKey);
+							objectReader = GetObjectReader2<T>(DataConnection, rd, DataConnection.Command.CommandText, additionalKey, isSingleValue: false);
 							result       = objectReader(rd);
 						}
 
@@ -726,7 +726,7 @@ namespace LinqToDB.Data
 				_commandInfo       = commandInfo;
 				_rd                = rd;
 				_additionalKey     = commandInfo.GetCommandAdditionalKey(rd, typeof(T));
-				_objectReader      = GetObjectReader<T>(commandInfo.DataConnection, rd, commandInfo.DataConnection.Command.CommandText, _additionalKey);
+				_objectReader      = GetObjectReader<T>(commandInfo.DataConnection, rd, commandInfo.DataConnection.Command.CommandText, _additionalKey, isSingleValue: false);
 				_isFaulted         = false;
 				_cancellationToken = cancellationToken;
 			}
@@ -769,7 +769,7 @@ namespace LinqToDB.Data
 					_isFaulted = true;
 					_objectReader = GetObjectReader2<T>(_commandInfo.DataConnection, _rd,
 						_commandInfo.DataConnection.Command.CommandText,
-						_additionalKey);
+						_additionalKey, isSingleValue: false);
 					Current = _objectReader(_rd);
 				}
 
@@ -953,7 +953,7 @@ namespace LinqToDB.Data
 				if (rd.Read())
 				{
 					var additionalKey = GetCommandAdditionalKey(rd, typeof(T));
-					var objectReader  = GetObjectReader<T>(DataConnection, rd, CommandText, additionalKey);
+					var objectReader  = GetObjectReader<T>(DataConnection, rd, CommandText, additionalKey, isSingleValue: true);
 
 #if DEBUG
 					//var value = rd.GetValue(0);
@@ -966,11 +966,11 @@ namespace LinqToDB.Data
 					}
 					catch (InvalidCastException)
 					{
-						result = GetObjectReader2<T>(DataConnection, rd, CommandText, additionalKey)(rd);
+						result = GetObjectReader2<T>(DataConnection, rd, CommandText, additionalKey, isSingleValue: true)(rd);
 					}
 					catch (FormatException)
 					{
-						result = GetObjectReader2<T>(DataConnection, rd, CommandText, additionalKey)(rd);
+						result = GetObjectReader2<T>(DataConnection, rd, CommandText, additionalKey, isSingleValue: true)(rd);
 					}
 				}
 			}
@@ -1025,11 +1025,11 @@ namespace LinqToDB.Data
 					var additionalKey = GetCommandAdditionalKey(rd, typeof(T));
 					try
 					{
-						result = GetObjectReader<T>(DataConnection, rd, CommandText, additionalKey)(rd);
+						result = GetObjectReader<T>(DataConnection, rd, CommandText, additionalKey, isSingleValue: true)(rd);
 					}
 					catch (InvalidCastException)
 					{
-						result = GetObjectReader2<T>(DataConnection, rd, CommandText, additionalKey)(rd);
+						result = GetObjectReader2<T>(DataConnection, rd, CommandText, additionalKey, isSingleValue: true)(rd);
 					}
 				}
 			}
@@ -1086,7 +1086,7 @@ namespace LinqToDB.Data
 			if (rd.Read())
 			{
 				var additionalKey = GetCommandAdditionalKey(rd, typeof(T));
-				var objectReader  = GetObjectReader<T>(DataConnection, rd, sql, additionalKey);
+				var objectReader  = GetObjectReader<T>(DataConnection, rd, sql, additionalKey, isSingleValue: false);
 				var isFaulted     = false;
 
 				do
@@ -1103,7 +1103,7 @@ namespace LinqToDB.Data
 							throw;
 
 						isFaulted    = true;
-						objectReader = GetObjectReader2<T>(DataConnection, rd, sql, additionalKey);
+						objectReader = GetObjectReader2<T>(DataConnection, rd, sql, additionalKey, isSingleValue: false);
 						result       = objectReader(rd);
 					}
 
@@ -1121,11 +1121,11 @@ namespace LinqToDB.Data
 				var additionalKey = GetCommandAdditionalKey(rd, typeof(T));
 				try
 				{
-					return GetObjectReader<T>(DataConnection, rd, sql, additionalKey)(rd);
+					return GetObjectReader<T>(DataConnection, rd, sql, additionalKey, isSingleValue: true)(rd);
 				}
 				catch (InvalidCastException)
 				{
-					return GetObjectReader2<T>(DataConnection, rd, sql, additionalKey)(rd);
+					return GetObjectReader2<T>(DataConnection, rd, sql, additionalKey, isSingleValue: true)(rd);
 				}
 			}
 
@@ -1160,7 +1160,7 @@ namespace LinqToDB.Data
 			if (await rd.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 			{
 				var additionalKey = GetCommandAdditionalKey(rd, typeof(T));
-				var objectReader  = GetObjectReader<T>(DataConnection, rd, sql, additionalKey);
+				var objectReader  = GetObjectReader<T>(DataConnection, rd, sql, additionalKey, isSingleValue: false);
 				var isFaulted     = false;
 
 				do
@@ -1177,7 +1177,7 @@ namespace LinqToDB.Data
 							throw;
 
 						isFaulted    = true;
-						objectReader = GetObjectReader2<T>(DataConnection, rd, sql, additionalKey);
+						objectReader = GetObjectReader2<T>(DataConnection, rd, sql, additionalKey, isSingleValue: false);
 						result       = objectReader(rd);
 					}
 
@@ -1194,11 +1194,11 @@ namespace LinqToDB.Data
 				var additionalKey = GetCommandAdditionalKey(rd, typeof(T));
 				try
 				{
-					return GetObjectReader<T>(DataConnection, rd, sql, additionalKey)(rd);
+					return GetObjectReader<T>(DataConnection, rd, sql, additionalKey, isSingleValue: true)(rd);
 				}
 				catch (InvalidCastException)
 				{
-					return GetObjectReader2<T>(DataConnection, rd, sql, additionalKey)(rd);
+					return GetObjectReader2<T>(DataConnection, rd, sql, additionalKey, isSingleValue: true)(rd);
 				}
 			}
 
@@ -1439,13 +1439,14 @@ namespace LinqToDB.Data
 
 		struct QueryKey : IEquatable<QueryKey>
 		{
-			public QueryKey(Type type, Type readerType, int configID, string sql, string? additionalKey)
+			public QueryKey(Type type, Type readerType, int configID, string sql, string? additionalKey, bool isSingleValue)
 			{
 				_type          = type;
 				_readerType    = readerType;
 				_configID      = configID;
 				_sql           = sql;
 				_additionalKey = additionalKey;
+				_isSingleValue = isSingleValue;
 
 				unchecked
 				{
@@ -1454,6 +1455,7 @@ namespace LinqToDB.Data
 					hashCode = (hashCode * 397) ^ _configID;
 					hashCode = (hashCode * 397) ^ _sql.GetHashCode();
 					hashCode = (hashCode * 397) ^ (_additionalKey?.GetHashCode() ?? 0);
+					hashCode = (hashCode * 397) ^ isSingleValue.GetHashCode();
 					_hashCode = hashCode;
 				}
 			}
@@ -1472,6 +1474,7 @@ namespace LinqToDB.Data
 			readonly int     _configID;
 			readonly string  _sql;
 			readonly string? _additionalKey;
+			readonly bool    _isSingleValue;
 
 			public override int GetHashCode()
 			{
@@ -1484,6 +1487,7 @@ namespace LinqToDB.Data
 					_type          == other._type          &&
 					_readerType    == other._readerType    &&
 					_sql           == other._sql           &&
+					_isSingleValue == other._isSingleValue &&
 					_additionalKey == other._additionalKey &&
 					_configID      == other._configID
 					;
@@ -1525,13 +1529,14 @@ namespace LinqToDB.Data
 			return sb.ToString();
 		}
 
-		static Func<IDataReader,T> GetObjectReader<T>(DataConnection dataConnection, IDataReader dataReader, string sql, string? additionalKey)
+		static Func<IDataReader, T> GetObjectReader<T>(DataConnection dataConnection, IDataReader dataReader,
+			string sql, string? additionalKey, bool isSingleValue)
 		{
-			var key = new QueryKey(typeof(T), dataReader.GetType(), dataConnection.ID, sql, additionalKey);
+			var key = new QueryKey(typeof(T), dataReader.GetType(), dataConnection.ID, sql, additionalKey, isSingleValue);
 
 			var func = _objectReaders.GetOrAdd(key, k =>
 			{
-				if (IsDynamicType(typeof(T)))
+				if (!isSingleValue && IsDynamicType(typeof(T)))
 				{
 					// dynamic case
 					//
@@ -1546,13 +1551,14 @@ namespace LinqToDB.Data
 			return (Func<IDataReader,T>)func;
 		}
 
-		static Func<IDataReader,T> GetObjectReader2<T>(DataConnection dataConnection, IDataReader dataReader, string sql, string? additionalKey)
+		static Func<IDataReader, T> GetObjectReader2<T>(DataConnection dataConnection, IDataReader dataReader,
+			string sql, string? additionalKey, bool isSingleValue)
 		{
-			var key = new QueryKey(typeof(T), dataReader.GetType(), dataConnection.ID, sql, additionalKey);
+			var key = new QueryKey(typeof(T), dataReader.GetType(), dataConnection.ID, sql, additionalKey, isSingleValue);
 
 			var func = _objectReaders.GetOrAdd(key, k =>
 			{
-				if (IsDynamicType(typeof(T)))
+				if (!isSingleValue && IsDynamicType(typeof(T)))
 				{
 					// dynamic case
 					//
