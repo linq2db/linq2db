@@ -325,6 +325,11 @@ namespace LinqToDB.Data
 				DataConnection.DataProvider.ExecuteScope(DataConnection));
 		}
 
+		static bool IsDynamicType(Type type)
+		{
+			return typeof(object) == type || typeof(ExpandoObject) == type;
+		}
+		
 		IEnumerable<T> ReadEnumerator<T>(IDataReader rd, IDisposable? scope, bool disposeReader = true)
 		{
 			using (scope)
@@ -332,7 +337,7 @@ namespace LinqToDB.Data
 				{
 					if (rd.Read())
 					{
-						var additionalKey = GetCommandAdditionalKey(rd);
+						var additionalKey = GetCommandAdditionalKey(rd, typeof(T));
 						var objectReader  = GetObjectReader<T>(DataConnection, rd, DataConnection.Command.CommandText,
 							additionalKey);
 						var isFaulted = false;
@@ -424,7 +429,7 @@ namespace LinqToDB.Data
 			{
 				if (await rd.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 				{
-					var additionalKey = GetCommandAdditionalKey(rd);
+					var additionalKey = GetCommandAdditionalKey(rd, typeof(T));
 					var objectReader  = GetObjectReader<T>(DataConnection, rd, DataConnection.Command.CommandText, additionalKey);
 					var isFaulted     = false;
 
@@ -720,7 +725,7 @@ namespace LinqToDB.Data
 			{
 				_commandInfo       = commandInfo;
 				_rd                = rd;
-				_additionalKey     = commandInfo.GetCommandAdditionalKey(rd);
+				_additionalKey     = commandInfo.GetCommandAdditionalKey(rd, typeof(T));
 				_objectReader      = GetObjectReader<T>(commandInfo.DataConnection, rd, commandInfo.DataConnection.Command.CommandText, _additionalKey);
 				_isFaulted         = false;
 				_cancellationToken = cancellationToken;
@@ -947,7 +952,7 @@ namespace LinqToDB.Data
 			{
 				if (rd.Read())
 				{
-					var additionalKey = GetCommandAdditionalKey(rd);
+					var additionalKey = GetCommandAdditionalKey(rd, typeof(T));
 					var objectReader  = GetObjectReader<T>(DataConnection, rd, CommandText, additionalKey);
 
 #if DEBUG
@@ -1017,7 +1022,7 @@ namespace LinqToDB.Data
 			{
 				if (await rd.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 				{
-					var additionalKey = GetCommandAdditionalKey(rd);
+					var additionalKey = GetCommandAdditionalKey(rd, typeof(T));
 					try
 					{
 						result = GetObjectReader<T>(DataConnection, rd, CommandText, additionalKey)(rd);
@@ -1080,7 +1085,7 @@ namespace LinqToDB.Data
 		{
 			if (rd.Read())
 			{
-				var additionalKey = GetCommandAdditionalKey(rd);
+				var additionalKey = GetCommandAdditionalKey(rd, typeof(T));
 				var objectReader  = GetObjectReader<T>(DataConnection, rd, sql, additionalKey);
 				var isFaulted     = false;
 
@@ -1113,7 +1118,7 @@ namespace LinqToDB.Data
 		{
 			if (rd.Read())
 			{
-				var additionalKey = GetCommandAdditionalKey(rd);
+				var additionalKey = GetCommandAdditionalKey(rd, typeof(T));
 				try
 				{
 					return GetObjectReader<T>(DataConnection, rd, sql, additionalKey)(rd);
@@ -1154,7 +1159,7 @@ namespace LinqToDB.Data
 		{
 			if (await rd.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 			{
-				var additionalKey = GetCommandAdditionalKey(rd);
+				var additionalKey = GetCommandAdditionalKey(rd, typeof(T));
 				var objectReader  = GetObjectReader<T>(DataConnection, rd, sql, additionalKey);
 				var isFaulted     = false;
 
@@ -1186,7 +1191,7 @@ namespace LinqToDB.Data
 		{
 			if (await rd.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 			{
-				var additionalKey = GetCommandAdditionalKey(rd);
+				var additionalKey = GetCommandAdditionalKey(rd, typeof(T));
 				try
 				{
 					return GetObjectReader<T>(DataConnection, rd, sql, additionalKey)(rd);
@@ -1498,9 +1503,9 @@ namespace LinqToDB.Data
 			_parameterReaders.   Clear();
 		}
 
-		string? GetCommandAdditionalKey(IDataReader rd)
+		string? GetCommandAdditionalKey(IDataReader rd, Type resultType)
 		{
-			return DataConnection.Command.CommandType == CommandType.StoredProcedure
+			return IsDynamicType(resultType) || DataConnection.Command.CommandType == CommandType.StoredProcedure
 				? GetFieldsKey(rd)
 				: null;
 		}
@@ -1522,25 +1527,21 @@ namespace LinqToDB.Data
 
 		static Func<IDataReader,T> GetObjectReader<T>(DataConnection dataConnection, IDataReader dataReader, string sql, string? additionalKey)
 		{
-			Delegate? func;
-			
-			if (typeof(object) == typeof(T) || typeof(ExpandoObject) == typeof(T))
-			{
-				// dynamic case
-				//
-				func = CreateDynamicObjectReader<T>(dataConnection, dataReader, (dc, dr, type, idx, dataReaderExpr) =>
-					new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr).Reduce(dc, dr));
-			}
-			else
-			{
-				var key = new QueryKey(typeof(T), dataReader.GetType(), dataConnection.ID, sql, additionalKey);
+			var key = new QueryKey(typeof(T), dataReader.GetType(), dataConnection.ID, sql, additionalKey);
 
-				if (!_objectReaders.TryGetValue(key, out func))
+			var func = _objectReaders.GetOrAdd(key, k =>
+			{
+				if (IsDynamicType(typeof(T)))
 				{
-					_objectReaders[key] = func = CreateObjectReader<T>(dataConnection, dataReader, (dc, dr, type, idx, dataReaderExpr) =>
+					// dynamic case
+					//
+					return CreateDynamicObjectReader<T>(dataConnection, dataReader, (dc, dr, type, idx, dataReaderExpr) =>
 						new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr).Reduce(dc, dr));
 				}
-			}
+
+				return CreateObjectReader<T>(dataConnection, dataReader, (dc, dr, type, idx, dataReaderExpr) =>
+					new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr).Reduce(dc, dr));
+			});
 
 			return (Func<IDataReader,T>)func;
 		}
@@ -1549,12 +1550,21 @@ namespace LinqToDB.Data
 		{
 			var key = new QueryKey(typeof(T), dataReader.GetType(), dataConnection.ID, sql, additionalKey);
 
-			var func = CreateObjectReader<T>(dataConnection, dataReader, (dc, dr, type, idx,dataReaderExpr) =>
-				new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr).Reduce(dc, slowMode: true));
+			var func = _objectReaders.GetOrAdd(key, k =>
+			{
+				if (IsDynamicType(typeof(T)))
+				{
+					// dynamic case
+					//
+					return CreateDynamicObjectReader<T>(dataConnection, dataReader, (dc, dr, type, idx, dataReaderExpr) =>
+							new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr).Reduce(dc, slowMode: true));
+				}
 
-			_objectReaders[key] = func;
-
-			return func;
+				return CreateObjectReader<T>(dataConnection, dataReader, (dc, dr, type, idx, dataReaderExpr) =>
+					new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr).Reduce(dc, slowMode: true));
+			});
+			
+			return (Func<IDataReader, T>)func;
 		}
 
 		static Func<IDataReader,T> CreateObjectReader<T>(
@@ -1577,7 +1587,6 @@ namespace LinqToDB.Data
 					var expr = dataConnection.MappingSchema.GetConvertExpression(readerType, typeof(IDataReader), false, false);
 					if (expr != null)
 					{
-						var param = Expression.Parameter(typeof(IDataReader));
 						expr      = Expression.Lambda(Expression.Convert(expr.Body, dataConnection.DataProvider.DataReaderType), expr.Parameters);
 					}
 
@@ -1601,10 +1610,10 @@ namespace LinqToDB.Data
 					return readerBuilder.BuildReaderFunction<T>();
 				}
 
-				var names = new List<string>(dataReader.FieldCount);
+				var names = new string[dataReader.FieldCount];
 
 				for (var i = 0; i < dataReader.FieldCount; i++)
-					names.Add(dataReader.GetName(i));
+					names[i] = dataReader.GetName(i);
 
 				expr = null;
 
@@ -1677,6 +1686,7 @@ namespace LinqToDB.Data
 
 
 		static ConstructorInfo _expandoObjectConstructor = MemberHelper.ConstructorOf(() => new ExpandoObject());
+		static MethodInfo      _expandoAddMethodInfo     = MemberHelper.MethodOf(() => ((IDictionary<string, object>)null!).Add("", ""));
 		
 		static Func<IDataReader, T> CreateDynamicObjectReader<T>(
 			DataConnection dataConnection,
@@ -1685,8 +1695,6 @@ namespace LinqToDB.Data
 		{
 			var parameter      = Expression.Parameter(typeof(IDataReader));
 			var dataReaderExpr = (Expression)Expression.Convert(parameter, dataReader.GetType());
-
-			Expression? expr;
 
 			var readerType = dataReader.GetType();
 			LambdaExpression? converterExpr = null;
@@ -1698,7 +1706,6 @@ namespace LinqToDB.Data
 					var expr = dataConnection.MappingSchema.GetConvertExpression(readerType, typeof(IDataReader), false, false);
 					if (expr != null)
 					{
-						var param = Expression.Parameter(typeof(IDataReader));
 						expr = Expression.Lambda(Expression.Convert(expr.Body, dataConnection.DataProvider.DataReaderType), expr.Parameters);
 					}
 
@@ -1708,23 +1715,14 @@ namespace LinqToDB.Data
 
 			dataReaderExpr = converterExpr != null ? converterExpr.GetBody(dataReaderExpr) : dataReaderExpr;
 
-			{
-				var names = new string[dataReader.FieldCount];
-
-				for (var i = 0; i < dataReader.FieldCount; i++)
-					names[i] = (dataReader.GetName(i));
-
-				expr = null;
-
-				if (expr == null)
+			var expr = (Expression)Expression.ListInit(
+				Expression.New(_expandoObjectConstructor),
+				Enumerable.Range(0, dataReader.FieldCount).Select(idx =>
 				{
-					/*
-					expr = Expression.MemberInit(
-						Expression.New(_expandoObjectConstructor,
-						members.Select(m => Expression.Bind(m.Member.MemberInfo, m.Expr)));
-				*/
-				}
-			}
+					var readerExpr = getMemberExpression(dataConnection, dataReader, typeof(object), idx,
+						dataReaderExpr);
+					return Expression.ElementInit(_expandoAddMethodInfo, Expression.Constant(dataReader.GetName(idx)), readerExpr);
+				}));
 
 			if (expr.GetCount(e => e == dataReaderExpr) > 1)
 			{
@@ -1733,7 +1731,6 @@ namespace LinqToDB.Data
 
 				expr = expr.Transform(e => e == dataReaderExpr ? dataReaderVar : e);
 				expr = Expression.Block(new[] { dataReaderVar }, assignment, expr);
-
 			}
 
 			var lex = Expression.Lambda<Func<IDataReader,T>>(expr, parameter);
