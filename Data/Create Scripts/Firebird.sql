@@ -18,7 +18,6 @@ DROP VIEW "PersonView";                         COMMIT;
 
 DROP TRIGGER "CREATE_PersonID";                 COMMIT;
 DROP TRIGGER "CREATE_DataTypeTest";             COMMIT;
-DROP TRIGGER "CREATE_BinaryDataID";             COMMIT;
 
 DROP TABLE "Dual";                              COMMIT;
 DROP TABLE "DataTypeTest";                      COMMIT;
@@ -29,8 +28,8 @@ DROP TABLE "Person";                            COMMIT;
 DROP GENERATOR "DataTypeID";                    COMMIT;
 DROP GENERATOR "PersonID";                      COMMIT;
 
-DROP EXTERNAL FUNCTION RTRIM;                 COMMIT;
-DROP EXTERNAL FUNCTION LTRIM;                 COMMIT;
+DROP EXTERNAL FUNCTION RTRIM;                   COMMIT;
+DROP EXTERNAL FUNCTION LTRIM;                   COMMIT;
 
 
 DECLARE EXTERNAL FUNCTION LTRIM

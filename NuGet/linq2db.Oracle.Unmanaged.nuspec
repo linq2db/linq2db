@@ -22,15 +22,15 @@
 		<file src="..\Tests\Linq\bin\Azure\net472\Oracle.ManagedDataAccess.dll"    target="tools" />
 		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"               target="tools" />
 		
-		<file src="Oracle\linq2db.Oracle.props"                                    target="build\linq2db.Oracle.Unmanaged.props" />
+		<file src="..\NuGet\Oracle\linq2db.Oracle.props"                           target="build\linq2db.Oracle.Unmanaged.props" />
 		
-		<file src="Oracle\*.*"                                                     target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
-		<file src="t4models\*.ttinclude"                                           target="contentFiles\any\any\LinqToDB.Templates"/>
+		<file src="..\NuGet\Oracle\*.*"                                            target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
+		<file src="..\NuGet\t4models\*.ttinclude"                                  target="contentFiles\any\any\LinqToDB.Templates"/>
 		<file src="..\Source\LinqToDB.Templates\*.ttinclude"                       target="contentFiles\any\any\LinqToDB.Templates" exclude="**\LinqToDB.*.ttinclude"/>
 		<file src="..\Source\LinqToDB.Templates\*.Oracle.ttinclude"                target="contentFiles\any\any\LinqToDB.Templates" />
 		
-		<file src="Oracle\*.*"                                                     target="content\LinqToDB.Templates" exclude="**\*.props" />
-		<file src="t4models\*.ttinclude"                                           target="content\LinqToDB.Templates"/>
+		<file src="..\NuGet\Oracle\*.*"                                            target="content\LinqToDB.Templates" exclude="**\*.props" />
+		<file src="..\NuGet\t4models\*.ttinclude"                                  target="content\LinqToDB.Templates"/>
 		<file src="..\Source\LinqToDB.Templates\*.ttinclude"                       target="content\LinqToDB.Templates" exclude="**\LinqToDB.*.ttinclude"/>
 		<file src="..\Source\LinqToDB.Templates\*.Oracle.ttinclude"                target="content\LinqToDB.Templates" />
 	</files>

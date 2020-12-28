@@ -1,30 +1,35 @@
-cd ..
-call Build.cmd
-cd NuGet
+rmdir built /S /Q
+md built
 
-del *.nupkg
+IF [%1] EQU [snupkg] (
+nuget.exe Pack ..\BuiltNuGet\linq2db.nuspec -OutputDirectory ..\BuiltNuGet\built -Symbols -SymbolPackageFormat snupkg
+nuget.exe Pack ..\BuiltNuGet\linq2db.AspNet.nuspec -OutputDirectory ..\BuiltNuGet\built -Symbols -SymbolPackageFormat snupkg
+nuget.exe Pack ..\BuiltNuGet\linq2db.Tools.nuspec -OutputDirectory ..\BuiltNuGet\built -Symbols -SymbolPackageFormat snupkg
+) ELSE (
+REM Azure Artifacts doesn't support snupkg yet/still
+REM https://developercommunity.visualstudio.com/idea/657354/add-snupkg-support-to-azure-devops-artifacts.html
+nuget.exe Pack ..\BuiltNuGet\linq2db.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack ..\BuiltNuGet\linq2db.AspNet.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack ..\BuiltNuGet\linq2db.Tools.nuspec -OutputDirectory ..\BuiltNuGet\built
+)
 
-..\Redist\NuGet Pack linq2db.nuspec
-..\Redist\NuGet Pack linq2db.AspNet.nuspec
-..\Redist\NuGet Pack linq2db.Tools.nuspec
-
-..\Redist\NuGet Pack linq2db.Access.nuspec
-..\Redist\NuGet Pack linq2db.DB2.nuspec
-..\Redist\NuGet Pack linq2db.DB2.Core.nuspec
-..\Redist\NuGet Pack linq2db.Firebird.nuspec
-..\Redist\NuGet Pack linq2db.Informix.nuspec
-..\Redist\NuGet Pack linq2db.Informix.Core.nuspec
-..\Redist\NuGet Pack linq2db.MySql.nuspec
-..\Redist\NuGet Pack linq2db.MySqlConnector.nuspec
-..\Redist\NuGet Pack linq2db.Oracle.Managed.nuspec
-..\Redist\NuGet Pack linq2db.Oracle.Unmanaged.nuspec
-..\Redist\NuGet Pack linq2db.PostgreSQL.nuspec
-..\Redist\NuGet Pack linq2db.SapHana.nuspec
-..\Redist\NuGet Pack linq2db.SqlCe.nuspec
-..\Redist\NuGet Pack linq2db.SQLite.nuspec
-..\Redist\NuGet Pack linq2db.SQLite.MS.nuspec
-..\Redist\NuGet Pack linq2db.SqlServer.nuspec
-..\Redist\NuGet Pack linq2db.SqlServer.MS.nuspec
-..\Redist\NuGet Pack linq2db.Sybase.nuspec
-..\Redist\NuGet Pack linq2db.Sybase.DataAction.nuspec
-..\Redist\NuGet Pack linq2db.t4models.nuspec
+nuget.exe Pack ..\BuiltNuGet\linq2db.Access.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack ..\BuiltNuGet\linq2db.DB2.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack ..\BuiltNuGet\linq2db.DB2.Core.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack ..\BuiltNuGet\linq2db.Firebird.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack ..\BuiltNuGet\linq2db.Informix.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack ..\BuiltNuGet\linq2db.Informix.Core.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack ..\BuiltNuGet\linq2db.MySql.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack ..\BuiltNuGet\linq2db.MySqlConnector.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack ..\BuiltNuGet\linq2db.Oracle.Managed.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack ..\BuiltNuGet\linq2db.Oracle.Unmanaged.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack ..\BuiltNuGet\linq2db.PostgreSQL.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack ..\BuiltNuGet\linq2db.SapHana.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack ..\BuiltNuGet\linq2db.SqlCe.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack ..\BuiltNuGet\linq2db.SQLite.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack ..\BuiltNuGet\linq2db.SQLite.MS.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack ..\BuiltNuGet\linq2db.SqlServer.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack ..\BuiltNuGet\linq2db.SqlServer.MS.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack ..\BuiltNuGet\linq2db.Sybase.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack ..\BuiltNuGet\linq2db.Sybase.DataAction.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack ..\BuiltNuGet\linq2db.t4models.nuspec -OutputDirectory ..\BuiltNuGet\built

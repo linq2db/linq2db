@@ -278,7 +278,12 @@ namespace LinqToDB.SqlQuery
 			}
 			return expr.ElementType.NotIn(QueryElementType.Column, QueryElementType.SqlField);
 		}
-			
+
+		public static bool IsConstantFast(ISqlExpression expr)
+		{
+			return expr.ElementType == QueryElementType.SqlValue || expr.ElementType == QueryElementType.SqlParameter;
+		}
+		
 		/// <summary>
 		/// Returns <c>true</c> if tested expression is constant during query execution (e.g. value or parameter).
 		/// </summary>
@@ -286,44 +291,44 @@ namespace LinqToDB.SqlQuery
 		/// <returns></returns>
 		public static bool IsConstant(ISqlExpression expr)
 		{
-			var result = null == new QueryVisitor()
-				.Find(expr, e =>
+			switch (expr.ElementType)
+			{
+				case QueryElementType.SqlValue :
+				case QueryElementType.SqlParameter :
+					return true;
+
+				case QueryElementType.Column:
 				{
-					// constants and parameters do not change during query execution
-					if (e.ElementType.In(QueryElementType.SqlValue, QueryElementType.SqlParameter))
+					var sqlColumn = (SqlColumn) expr;
+
+					// we can not guarantee order here
+					// set operation contains at least two expressions for column
+					// (in theory we can test that they are equal, but it is not worth it)
+					if (sqlColumn.Parent != null && sqlColumn.Parent.HasSetOperators)
 						return false;
 
-					if (e.ElementType == QueryElementType.Column)
-					{
-						var sqlColumn = (SqlColumn) e;
-						
-						// we can not guarantee order here
-						// set operation contains at least two expressions for column
-						// (in theory we can test that they are equal, but it is not worth it)
-						if (sqlColumn.Parent != null && sqlColumn.Parent.SetOperators.Count > 0)
-							return true;
-						
-						// column can be generated from subquery which can reference to constant expression
-						return !IsConstant(sqlColumn.Expression);
-					}
+					// column can be generated from subquery which can reference to constant expression
+					return IsConstant(sqlColumn.Expression);
+				}
+				
+				case QueryElementType.SqlExpression:
+				{
+					var sqlExpr = (SqlExpression) expr;
+					if (!sqlExpr.IsPure || sqlExpr.IsAggregate)
+						return false;
+					return sqlExpr.Parameters.All(p => IsConstant(p));
+				}
 
-					if (e.ElementType == QueryElementType.SqlExpression)
-					{
-						var sqlExpr = (SqlExpression) e;
-						return !sqlExpr.IsPure || sqlExpr.IsAggregate;
-					}
-					
-					if (e.ElementType == QueryElementType.SqlFunction)
-					{
-						var sqlFunc = (SqlFunction) e;
-						return !sqlFunc.IsPure || sqlFunc.IsAggregate;
-					}
-
-					return e.ElementType.In(QueryElementType.SqlField,
-						QueryElementType.SelectClause);
-				});
-
-			return result;
+				case QueryElementType.SqlFunction:
+				{
+					var sqlFunc = (SqlFunction) expr;
+					if (!sqlFunc.IsPure || sqlFunc.IsAggregate)
+						return false;
+					return sqlFunc.Parameters.All(p => IsConstant(p));
+				}
+			}
+			
+			return false;
 		}
 
 		public static SelectQuery RootQuery(this SelectQuery query)

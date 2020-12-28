@@ -7,8 +7,8 @@ using System.Linq.Expressions;
 namespace LinqToDB.ServiceModel
 {
 	using Extensions;
+	using Expressions;
 	using Linq;
-	using LinqToDB.Expressions;
 	using Mapping;
 	using SqlQuery;
 

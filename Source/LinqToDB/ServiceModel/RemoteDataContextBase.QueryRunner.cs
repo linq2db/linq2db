@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
@@ -10,8 +9,8 @@ using System.Threading.Tasks;
 namespace LinqToDB.ServiceModel
 {
 	using Linq;
-	using LinqToDB.SqlQuery;
-	using LinqToDB.Common.Internal;
+	using Common.Internal;
+	using SqlQuery;
 	using SqlProvider;
 
 	public abstract partial class RemoteDataContextBase
@@ -182,7 +181,7 @@ namespace LinqToDB.ServiceModel
 				var sqlOptimizer = _dataContext.GetSqlOptimizer();
 				var q = sqlOptimizer.PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, _evaluationContext);
 				var currentParameters = q.CollectParameters();
-				
+
 				data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,
 					q,
@@ -310,7 +309,7 @@ namespace LinqToDB.ServiceModel
 				data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,
 					q,
-					currentParameters, 
+					currentParameters,
 					_evaluationContext.ParameterValues,
 					QueryHints);
 

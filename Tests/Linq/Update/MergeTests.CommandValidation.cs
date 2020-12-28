@@ -1,23 +1,11 @@
 ﻿using System;
-using System.Data;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Threading;
-using System.Threading.Tasks;
 
 using LinqToDB;
-using LinqToDB.Data;
-using LinqToDB.DataProvider;
-using LinqToDB.Mapping;
-using LinqToDB.SchemaProvider;
-using LinqToDB.SqlProvider;
 
 using NUnit.Framework;
 
 namespace Tests.xUpdate
 {
-	using Model;
 #if NET472
 	using System.ServiceModel;
 #endif
@@ -34,7 +22,7 @@ namespace Tests.xUpdate
 			TestProvName.AllSapHana)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, testLinqService : false))
 			{
 				var table = GetTarget(db);
 

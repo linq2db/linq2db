@@ -20,15 +20,15 @@
 	<files>
 		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"              target="tools" />
 		
-		<file src="SqlCe\linq2db.SqlCe.props"                                     target="build" />
+		<file src="..\NuGet\SqlCe\linq2db.SqlCe.props"                            target="build" />
 		
-		<file src="SqlCe\*.*"                                                     target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
-		<file src="t4models\*.ttinclude"                                          target="contentFiles\any\any\LinqToDB.Templates"/>
+		<file src="..\NuGet\SqlCe\*.*"                                            target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
+		<file src="..\NuGet\t4models\*.ttinclude"                                 target="contentFiles\any\any\LinqToDB.Templates"/>
 		<file src="..\Source\LinqToDB.Templates\*.ttinclude"                      target="contentFiles\any\any\LinqToDB.Templates" exclude="**\LinqToDB.*.ttinclude"/>
 		<file src="..\Source\LinqToDB.Templates\*.SqlCe.ttinclude"                target="contentFiles\any\any\LinqToDB.Templates" />
 		
-		<file src="SqlCe\*.*"                                                     target="content\LinqToDB.Templates" exclude="**\*.props" />
-		<file src="t4models\*.ttinclude"                                          target="content\LinqToDB.Templates"/>
+		<file src="..\NuGet\SqlCe\*.*"                                            target="content\LinqToDB.Templates" exclude="**\*.props" />
+		<file src="..\NuGet\t4models\*.ttinclude"                                 target="content\LinqToDB.Templates"/>
 		<file src="..\Source\LinqToDB.Templates\*.ttinclude"                      target="content\LinqToDB.Templates" exclude="**\LinqToDB.*.ttinclude"/>
 		<file src="..\Source\LinqToDB.Templates\*.SqlCe.ttinclude"                target="content\LinqToDB.Templates" />
 	</files>

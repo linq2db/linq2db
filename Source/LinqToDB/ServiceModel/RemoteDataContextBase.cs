@@ -59,7 +59,7 @@ namespace LinqToDB.ServiceModel
 				}
 				finally
 				{
-					((IDisposable)client).Dispose();
+					(client as IDisposable)?.Dispose();
 				}
 			}
 
@@ -276,7 +276,7 @@ namespace LinqToDB.ServiceModel
 				}
 				finally
 				{
-					((IDisposable)client).Dispose();
+					(client as IDisposable)?.Dispose();
 					_queryBatch = null;
 				}
 			}
@@ -300,7 +300,7 @@ namespace LinqToDB.ServiceModel
 				}
 				finally
 				{
-					((IDisposable)client).Dispose();
+					(client as IDisposable)?.Dispose();
 					_queryBatch = null;
 				}
 			}

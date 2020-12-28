@@ -58,7 +58,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				case "CASE"     :
 
 					if (func.Parameters.Length <= 5)
-						func = ConvertCase(func.SystemType, func.Parameters, 0);
+						func = ConvertCase(func.CanBeNull, func.SystemType, func.Parameters, 0);
 
 					break;
 
@@ -80,7 +80,10 @@ namespace LinqToDB.DataProvider.SqlServer
 
 					sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.IsNull(func.Parameters[0], false)));
 
-					func = new SqlFunction(func.SystemType, "IIF", sc, func.Parameters[1], func.Parameters[0]);
+					func = new SqlFunction(func.SystemType, "IIF", sc, func.Parameters[1], func.Parameters[0])
+					{
+						CanBeNull = func.CanBeNull
+					};
 
 					break;
 			}
@@ -88,7 +91,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return base.ConvertFunction(func);
 		}
 
-		static SqlFunction ConvertCase(Type systemType, ISqlExpression[] parameters, int start)
+		static SqlFunction ConvertCase(bool canBeNull, Type systemType, ISqlExpression[] parameters, int start)
 		{
 			var len  = parameters.Length - start;
 			var name = start == 0 ? "IIF" : "CASE";
@@ -101,14 +104,14 @@ namespace LinqToDB.DataProvider.SqlServer
 						false,
 						new SqlPredicate.ExprExpr(cond, SqlPredicate.Operator.Equal, new SqlValue(1), null)));
 			}
-
+			
 			if (len == 3)
-				return new SqlFunction(systemType, name, cond, parameters[start + 1], parameters[start + 2]);
+				return new SqlFunction(systemType, name, cond, parameters[start + 1], parameters[start + 2]) { CanBeNull = canBeNull };
 
 			return new SqlFunction(systemType, name,
 				cond,
 				parameters[start + 1],
-				ConvertCase(systemType, parameters, start + 2));
+				ConvertCase(canBeNull, systemType, parameters, start + 2)) { CanBeNull = canBeNull };
 		}
 
 	}

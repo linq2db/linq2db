@@ -115,6 +115,7 @@ steps:
     GIT_AUTHOR_NAME: Azure Pipelines Bot
     GIT_COMMITTER_NAME: Azure Pipelines Bot
 
+# dunno why, but it is not needed for now for linux images
 #    - task: Docker@2
 #      displayName: Auth on hub.docker.com
 #      inputs:

@@ -900,16 +900,27 @@ namespace LinqToDB.Linq.Builder
 						
 						ISqlExpression l;
 						ISqlExpression r;
-						var ls = GetContext(context, e.Left);
-						if (ls?.IsExpression(e.Left, 0, RequestFor.Field).Result == true)
+						var shouldCheckColumn =
+							e.Left.Type.ToNullableUnderlying() == e.Right.Type.ToNullableUnderlying();
+
+						if (shouldCheckColumn)
 						{
-							l = ConvertToSql(context, e.Left);
-							r = ConvertToSql(context, e.Right, true, QueryHelper.GetColumnDescriptor(l) ?? columnDescriptor);
+							var ls = GetContext(context, e.Left);
+							if (ls?.IsExpression(e.Left, 0, RequestFor.Field).Result == true)
+							{
+								l = ConvertToSql(context, e.Left);
+								r = ConvertToSql(context, e.Right, true, QueryHelper.GetColumnDescriptor(l) ?? columnDescriptor);
+							}
+							else
+							{
+								r = ConvertToSql(context, e.Right, true);
+								l = ConvertToSql(context, e.Left, false, QueryHelper.GetColumnDescriptor(r) ?? columnDescriptor);
+							}
 						}
 						else
 						{
-							r = ConvertToSql(context, e.Right, true);
-							l = ConvertToSql(context, e.Left, false, QueryHelper.GetColumnDescriptor(r) ?? columnDescriptor);
+							l = ConvertToSql(context, e.Left, true, columnDescriptor);
+							r = ConvertToSql(context, e.Right, true, null);
 						}
 
 						var t = e.Type;
@@ -3183,11 +3194,13 @@ namespace LinqToDB.Linq.Builder
 						{
 							if (nullRight && nullLeft)
 							{
-								return conditional.IfFalse.Transform(e => RemoveNullPropagation(e));
+								return conditional.IfFalse.Transform(RemoveNullPropagation);
 							}
-							else if (IsNullConstant(conditional.IfFalse))
+							else if (IsNullConstant(conditional.IfFalse)
+								&& ((nullRight && !MappingSchema.IsScalarType(binary.Left.Type)) ||
+									(nullLeft  && !MappingSchema.IsScalarType(binary.Right.Type))))
 							{
-								return conditional.IfTrue.Transform(e => RemoveNullPropagation(e));
+								return conditional.IfTrue.Transform(RemoveNullPropagation);
 							}
 						}
 					}
@@ -3200,11 +3213,13 @@ namespace LinqToDB.Linq.Builder
 						{
 							if (nullRight && nullLeft)
 							{
-								return conditional.IfTrue.Transform(e => RemoveNullPropagation(e));
+								return conditional.IfTrue.Transform(RemoveNullPropagation);
 							}
-							else if (IsNullConstant(conditional.IfTrue))
+							else if (IsNullConstant(conditional.IfTrue)
+								&& ((nullRight && !MappingSchema.IsScalarType(binary.Left.Type)) ||
+									(nullLeft  && !MappingSchema.IsScalarType(binary.Right.Type))))
 							{
-								return conditional.IfFalse.Transform(e => RemoveNullPropagation(e));
+								return conditional.IfFalse.Transform(RemoveNullPropagation);
 							}
 						}
 					}
