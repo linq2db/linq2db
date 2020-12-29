@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -10,6 +9,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Diagnostics.CodeAnalysis;
 
 using JetBrains.Annotations;
 
@@ -21,8 +21,8 @@ namespace LinqToDB.Data
 	using Mapping;
 	using Async;
 	using Reflection;
-	using System.Diagnostics.CodeAnalysis;
-	using LinqToDB.Linq;
+	using Linq;
+	using Common.Internal.Cache;
 
 	/// <summary>
 	/// Provides database connection command abstraction.
@@ -1312,8 +1312,7 @@ namespace LinqToDB.Data
 			}
 		}
 
-		static readonly ConcurrentDictionary<ParamKey,Func<object,DataParameter[]>> _parameterReaders =
-			new ConcurrentDictionary<ParamKey,Func<object,DataParameter[]>>();
+		static readonly MemoryCache  _parameterReaders        = new MemoryCache(new MemoryCacheOptions());
 
 		static readonly PropertyInfo _dataParameterName       = MemberHelper.PropertyOf<DataParameter>(p => p.Name);
 		static readonly PropertyInfo _dataParameterDbDataType = MemberHelper.PropertyOf<DataParameter>(p => p.DbDataType);
@@ -1333,8 +1332,10 @@ namespace LinqToDB.Data
 			var type = parameters.GetType();
 			var key  = new ParamKey(type, dataConnection.ID);
 
-			if (!_parameterReaders.TryGetValue(key, out var func))
+			var func = _parameterReaders.GetOrCreate(key, o =>
 			{
+				o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+
 				var td  = dataConnection.MappingSchema.GetEntityDescriptor(type);
 				var p   = Expression.Parameter(typeof(object), "p");
 				var obj = Expression.Parameter(type, "obj");
@@ -1417,8 +1418,8 @@ namespace LinqToDB.Data
 					),
 					p);
 
-				_parameterReaders[key] = func = expr.Compile();
-			}
+				return expr.Compile();
+			});
 
 			return func(parameters);
 		}
@@ -1496,8 +1497,8 @@ namespace LinqToDB.Data
 			}
 		}
 
-		static readonly ConcurrentDictionary<QueryKey,Delegate>                    _objectReaders       = new ConcurrentDictionary<QueryKey,Delegate>();
-		static readonly ConcurrentDictionary<Tuple<Type, Type>, LambdaExpression?> _dataReaderConverter = new ConcurrentDictionary<Tuple<Type, Type>, LambdaExpression?>();
+		static readonly MemoryCache  _objectReaders       = new MemoryCache(new MemoryCacheOptions());
+		static readonly MemoryCache  _dataReaderConverter = new MemoryCache(new MemoryCacheOptions());
 
 		/// <summary>
 		/// Clears global cache of object mapping functions from query results and mapping functions from value to <see cref="DataParameter"/>.
@@ -1536,9 +1537,11 @@ namespace LinqToDB.Data
 		{
 			var key = new QueryKey(typeof(T), dataReader.GetType(), dataConnection.ID, sql, additionalKey, dataReader.FieldCount <= 1);
 
-			var func = _objectReaders.GetOrAdd(key, k =>
+			var func = _objectReaders.GetOrCreate(key, e =>
 			{
-				if (!k.IsScalar && IsDynamicType(typeof(T)))
+				e.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+
+				if (!((QueryKey)e.Key).IsScalar && IsDynamicType(typeof(T)))
 				{
 					// dynamic case
 					//
@@ -1550,7 +1553,7 @@ namespace LinqToDB.Data
 					new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr).Reduce(dc, dr));
 			});
 
-			return (Func<IDataReader,T>)func;
+			return func;
 		}
 
 		static Func<IDataReader, T> GetObjectReader2<T>(DataConnection dataConnection, IDataReader dataReader,
@@ -1572,7 +1575,7 @@ namespace LinqToDB.Data
 					new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr).Reduce(dc, slowMode: true));
 			}
 
-			_objectReaders[key] = func;
+			_objectReaders.Set(key, func);
 			
 			return (Func<IDataReader, T>)func;
 		}
@@ -1592,8 +1595,10 @@ namespace LinqToDB.Data
 			if (dataConnection.DataProvider.DataReaderType != readerType)
 			{
 				var converterKey  = Tuple.Create(readerType, dataConnection.DataProvider.DataReaderType);
-				converterExpr = _dataReaderConverter.GetOrAdd(converterKey, _ =>
+				converterExpr = _dataReaderConverter.GetOrCreate(converterKey, o =>
 				{
+					o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+
 					var expr = dataConnection.MappingSchema.GetConvertExpression(readerType, typeof(IDataReader), false, false);
 					if (expr != null)
 					{
@@ -1711,8 +1716,10 @@ namespace LinqToDB.Data
 			if (dataConnection.DataProvider.DataReaderType != readerType)
 			{
 				var converterKey  = Tuple.Create(readerType, dataConnection.DataProvider.DataReaderType);
-				converterExpr = _dataReaderConverter.GetOrAdd(converterKey, _ =>
+				converterExpr = _dataReaderConverter.GetOrCreate(converterKey, o =>
 				{
+					o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+
 					var expr = dataConnection.MappingSchema.GetConvertExpression(readerType, typeof(IDataReader), false, false);
 					if (expr != null)
 					{
