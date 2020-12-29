@@ -26,7 +26,7 @@ done
 
 docker ps -a
 
-sleep 50
+sleep 150
 
 echo Generate CREATE DATABASE script
 cat <<-EOSQL > linq2db.sql
