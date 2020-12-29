@@ -26,13 +26,13 @@ done
 
 docker ps -a
 
+sleep 50
+
 echo Generate CREATE DATABASE script
 cat <<-EOSQL > linq2db.sql
 CREATE DATABASE testdb WITH BUFFERED LOG
 EOSQL
 docker cp linq2db.sql informix:/opt/ibm/data/linq2db.sql
 docker exec informix /opt/ibm/informix/bin/dbaccess sysadmin /opt/ibm/data/linq2db.sql
-
-sleep 50
 
 docker logs informix
