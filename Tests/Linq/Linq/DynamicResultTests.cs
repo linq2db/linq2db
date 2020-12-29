@@ -27,7 +27,7 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void DynamicQueryViaDynamic([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(1, 10)] int param)
+		public void DynamicQueryViaDynamic([IncludeDataSources(TestProvName.AllSQLite, TestProvName.SqlServer2019SequentialAccess)] string context, [Values(1, 10)] int param)
 		{
 			var data = RawDynamicData.Seed();
 
@@ -51,7 +51,7 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void DynamicQueryViaObject([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(1, 10)] int param)
+		public void DynamicQueryViaObject([IncludeDataSources(TestProvName.AllSQLite, TestProvName.SqlServer2019SequentialAccess)] string context, [Values(1, 10)] int param)
 		{
 			var data = RawDynamicData.Seed();
 
