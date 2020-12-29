@@ -33,5 +33,6 @@ EOSQL
 docker cp linq2db.sql informix:/opt/ibm/data/linq2db.sql
 docker exec informix /opt/ibm/informix/bin/dbaccess sysadmin /opt/ibm/data/linq2db.sql
 
-docker logs informix
+sleep 50
 
+docker logs informix
