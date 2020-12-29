@@ -34,10 +34,7 @@ namespace LinqToDB.DataProvider.SapHana
 				if (identityField == null || table == null)
 					throw new SqlException("Identity field must be defined for '{0}'.", insertClause.Into.Name);
 
-				StringBuilder.Append("SELECT MAX(");
-				BuildExpression(identityField, false, true);
-				StringBuilder.Append(") FROM ");
-				BuildPhysicalTable(table, null);
+				StringBuilder.Append("SELECT CURRENT_IDENTITY_VALUE() FROM DUMMY");
 			}
 		}
 
