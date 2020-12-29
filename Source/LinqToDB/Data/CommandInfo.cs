@@ -1575,7 +1575,8 @@ namespace LinqToDB.Data
 					new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr).Reduce(dc, slowMode: true));
 			}
 
-			_objectReaders.Set(key, func);
+			_objectReaders.Set(key, func,
+				new MemoryCacheEntryOptions {SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration});
 			
 			return (Func<IDataReader, T>)func;
 		}
