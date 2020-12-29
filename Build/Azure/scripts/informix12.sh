@@ -14,7 +14,7 @@ docker ps -a
 
 retries=0
 status="1"
-until docker logs informix | grep -q 'Informix container login Information'; do
+until docker logs informix | grep -q 'starting mqtt listener'; do
     sleep 5
     retries=`expr $retries + 1`
     echo waiting for informix to start
