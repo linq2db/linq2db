@@ -9,7 +9,7 @@ namespace LinqToDB.SqlProvider
 {
 	public class OptimizationContext
 	{
-		readonly HashSet<SqlParameter>? _staticParameters;
+		readonly SqlParameter[]? _staticParameters;
 
 		readonly Dictionary<IQueryElement, IQueryElement> _optimized =
 			new(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
@@ -17,7 +17,7 @@ namespace LinqToDB.SqlProvider
 		private List<SqlParameter>? _actualParameters;
 		private HashSet<string>? _usedParameterNames;
 
-		public OptimizationContext(EvaluationContext context, HashSet<SqlParameter>? staticParameters,
+		public OptimizationContext(EvaluationContext context, SqlParameter[]? staticParameters,
 			bool isParameterOrderDepended)
 		{
 			_staticParameters = staticParameters;

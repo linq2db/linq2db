@@ -97,7 +97,7 @@ namespace LinqToDB.SqlQuery
 			return name;
 		}
 
-		internal void PrepareQueryAndAliases(out HashSet<SqlParameter> staticParameters)
+		internal void PrepareQueryAndAliases(out SqlParameter[] staticParameters)
 		{
 			_aliases = null;
 
@@ -229,7 +229,7 @@ namespace LinqToDB.SqlQuery
 				StringComparer.OrdinalIgnoreCase);
 
 			_aliases = allAliases;
-			staticParameters = paramsVisited;
+			staticParameters = paramsVisited.ToArray();
 		}
 
 		#endregion

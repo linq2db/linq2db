@@ -219,19 +219,9 @@ namespace LinqToDB.Data
 				// optimize, optionally with parameters
 				var evaluationContext = new EvaluationContext(sql.IsParameterDependent ? parameterValues : null);
 
-				// PrepareQueryAndAliases is mutable function. Call only if query is copied. 
-				HashSet<SqlParameter>? staticParameters = null;
-				if (!ReferenceEquals(query.Statement, sql))
-				{
-					sql.PrepareQueryAndAliases(out staticParameters);
-				}
-
-				if (staticParameters == null && query.Parameters != null)
-					staticParameters = new HashSet<SqlParameter>(query.Parameters);
-
 				for (var i = 0; i < cc; i++)
 				{
-					var optimizationContext = new OptimizationContext(evaluationContext, staticParameters, dataConnection.DataProvider.SqlProviderFlags.IsParameterOrderDependent);
+					var optimizationContext = new OptimizationContext(evaluationContext, query.Parameters, dataConnection.DataProvider.SqlProviderFlags.IsParameterOrderDependent);
 					sb.Length = 0;
 
 					sqlBuilder.BuildSql(i, sql, sb, optimizationContext, startIndent);

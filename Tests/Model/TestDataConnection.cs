@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
@@ -84,7 +85,9 @@ namespace Tests.Model
 
 			var optimizationContext = new OptimizationContext(new EvaluationContext(SqlParameterValues.Empty), null, false);
 			var statement = (SqlSelectStatement)optimizer.Finalize(new SqlSelectStatement(query));
-			statement = (SqlSelectStatement)optimizer.PrepareStatementForRemoting(statement, MappingSchema, optimizationContext.Context);
+			SqlParameter[] staticParameters;
+			statement.PrepareQueryAndAliases(out staticParameters);
+			statement = (SqlSelectStatement)optimizer.PrepareStatementForRemoting(statement, MappingSchema, staticParameters, optimizationContext.Context);
 
 			var cc = provider.CommandCount(statement);
 			var sb = new StringBuilder();

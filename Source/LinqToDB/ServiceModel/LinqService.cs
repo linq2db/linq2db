@@ -102,7 +102,6 @@ namespace LinqToDB.ServiceModel
 				return DataConnection.QueryRunner.ExecuteNonQuery(db, new QueryContext
 				{
 					Statement  = query.Statement,
-					Parameters = query.Parameters,
 					QueryHints = query.QueryHints
 				}, new SqlParameterValues());
 			}
@@ -128,7 +127,6 @@ namespace LinqToDB.ServiceModel
 				return DataConnection.QueryRunner.ExecuteScalar(db, new QueryContext
 				{
 					Statement  = query.Statement,
-					Parameters = query.Parameters,
 					QueryHints = query.QueryHints
 				}, null);
 			}
@@ -153,7 +151,6 @@ namespace LinqToDB.ServiceModel
 				using var rd = DataConnection.QueryRunner.ExecuteReader(db, new QueryContext
 				{
 					Statement  = query.Statement,
-					Parameters = query.Parameters,
 					QueryHints = query.QueryHints
 				}, SqlParameterValues.Empty);
 
@@ -276,7 +273,6 @@ namespace LinqToDB.ServiceModel
 					DataConnection.QueryRunner.ExecuteNonQuery(db, new QueryContext
 					{
 						Statement  = query.Statement,
-						Parameters = query.Parameters,
 						QueryHints = query.QueryHints
 					}, null);
 				}
