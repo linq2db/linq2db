@@ -38,14 +38,6 @@ namespace LinqToDB.SqlQuery
 
 		}
 
-		public HashSet<string> GetUsedParameterAliases()
-		{
-			return new(_aliasesSet.Where(e => e.ElementType == QueryElementType.SqlParameter)
-					.Select(e => ((SqlParameter)e).Name!),
-				StringComparer.OrdinalIgnoreCase);
-
-		}
-
 		public SqlParameter[] GetParameters()
 		{
 			return _aliasesSet.Where(e => e.ElementType == QueryElementType.SqlParameter)

@@ -92,19 +92,41 @@ namespace LinqToDB.SqlQuery
 
 		public static void PrepareQueryAndAliases(SqlStatement statement, AliasesContext? prevAliasContext, out AliasesContext newAliasContext)
 		{
-			var allAliases = prevAliasContext == null
-				? new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-				: prevAliasContext.GetUsedTableAliases();
+			var allAliases = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+			HashSet<string>? allParameterNames = null;
 
 			HashSet<SqlParameter>?   paramsVisited = null;
 			HashSet<SqlTableSource>? tablesVisited = null;
 
 			var newAliases = new AliasesContext();
 
-			new QueryVisitor().VisitParentFirst(statement, expr =>
+			new QueryVisitor().VisitAll(statement, expr =>
 			{
 				if (prevAliasContext != null && prevAliasContext.IsAliased(expr))
-					return false;
+				{
+					// Copy aliased from previous run
+					//
+					newAliases.RegisterAliased(expr);
+
+					// Remember already used aliases from previous run
+					if (expr.ElementType == QueryElementType.TableSource)
+					{
+						var alias = ((SqlTableSource)expr).Alias;
+						if (!string.IsNullOrEmpty(alias))
+							allAliases.Add(alias!);
+					}
+					else if (expr.ElementType == QueryElementType.SqlParameter)
+					{
+						var alias = ((SqlParameter)expr).Name;
+						if (!string.IsNullOrEmpty(alias))
+						{
+							allParameterNames ??= new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+							allParameterNames.Add(alias!);
+						}
+					}
+
+					return;
+				}
 
 				switch (expr.ElementType)
 				{
@@ -208,8 +230,6 @@ namespace LinqToDB.SqlQuery
 							break;
 						}
 				}
-
-				return true;
 			});
 
 			if (tablesVisited != null)
@@ -218,7 +238,6 @@ namespace LinqToDB.SqlQuery
 					allAliases,
 					(n, a) => !a!.Contains(n) && !ReservedWords.IsReserved(n), ts => ts.Alias, (ts, n, a) =>
 					{
-						a!.Add(n);
 						ts.Alias = n;
 					},
 					ts =>
@@ -231,27 +250,16 @@ namespace LinqToDB.SqlQuery
 
 			if (paramsVisited != null)
 			{
-				var usedParameterAliases = prevAliasContext == null
-					? new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-					: prevAliasContext.GetUsedParameterAliases();
-
 				Utils.MakeUniqueNames(
 					paramsVisited,
-					usedParameterAliases,
-					(n, a) => !a!.Contains(n) && !ReservedWords.IsReserved(n), p => p.Name, (p, n, a) =>
+					allParameterNames,
+					(n, a) => a?.Contains(n) != true && !ReservedWords.IsReserved(n), p => p.Name, (p, n, a) =>
 					{
-						a!.Add(n);
 						p.Name = n;
 					},
 					p => p.Name.IsNullOrEmpty() ? "p_1" :
 						char.IsDigit(p.Name[p.Name.Length - 1]) ? p.Name : p.Name + "_1",
 					StringComparer.OrdinalIgnoreCase);
-			}
-
-			if (prevAliasContext != null)
-			{
-				// Copy all aliased from previous run
-				newAliases.RegisterAliased(prevAliasContext.GetAliased());
 			}
 
 			newAliasContext = newAliases;
