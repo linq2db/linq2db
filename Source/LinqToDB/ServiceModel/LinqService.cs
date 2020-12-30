@@ -84,6 +84,7 @@ namespace LinqToDB.ServiceModel
 			public SqlStatement    Statement   { get; set; } = null!;
 			public object?         Context     { get; set; }
 			public SqlParameter[]? Parameters  { get; set; }
+			public AliasesContext? Aliases     { get; set; }
 			public List<string>?   QueryHints  { get; set; }
 		}
 
@@ -151,7 +152,7 @@ namespace LinqToDB.ServiceModel
 				using var rd = DataConnection.QueryRunner.ExecuteReader(db, new QueryContext
 				{
 					Statement  = query.Statement,
-					QueryHints = query.QueryHints
+					QueryHints = query.QueryHints,
 				}, SqlParameterValues.Empty);
 
 				var reader = DataReaderWrapCache.TryUnwrapDataReader(db.MappingSchema, rd);

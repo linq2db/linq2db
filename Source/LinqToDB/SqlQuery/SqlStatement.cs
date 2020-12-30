@@ -80,13 +80,6 @@ namespace LinqToDB.SqlQuery
 
 		#region Aliases
 
-		HashSet<string>? _aliases;
-
-		public string[] GetCurrentAliases()
-		{
-			return _aliases == null ? Array<string>.Empty : _aliases.ToArray();
-		}
-
 		static string? NormalizeParameterName(string? name)
 		{
 			if (string.IsNullOrEmpty(name))
@@ -97,16 +90,22 @@ namespace LinqToDB.SqlQuery
 			return name;
 		}
 
-		internal void PrepareQueryAndAliases(out SqlParameter[] staticParameters)
+		public static void PrepareQueryAndAliases(SqlStatement statement, AliasesContext? prevAliasContext, out AliasesContext newAliasContext)
 		{
-			_aliases = null;
+			var allAliases = prevAliasContext == null
+				? new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+				: prevAliasContext.GetUsedTableAliases();
 
-			var allAliases    = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-			var paramsVisited = new HashSet<SqlParameter>();
-			var tablesVisited = new HashSet<SqlTableSource>();
+			HashSet<SqlParameter>?   paramsVisited = null;
+			HashSet<SqlTableSource>? tablesVisited = null;
 
-			new QueryVisitor().VisitAll(this, expr =>
+			var newAliases = new AliasesContext();
+
+			new QueryVisitor().VisitParentFirst(statement, expr =>
 			{
+				if (prevAliasContext != null && prevAliasContext.IsAliased(expr))
+					return false;
+
 				switch (expr.ElementType)
 				{
 					case QueryElementType.MergeSourceTable:
@@ -133,6 +132,8 @@ namespace LinqToDB.SqlQuery
 								for (var i = 0; i < source.SourceFields.Count; i++)
 									source.SourceQuery.Select.Columns[i].Alias = source.SourceFields[i].PhysicalName;
 
+							newAliases.RegisterAliased(expr);
+
 							break;
 						}
 					case QueryElementType.SqlQuery:
@@ -141,11 +142,9 @@ namespace LinqToDB.SqlQuery
 
 							if (query.Select.Columns.Count > 0)
 							{
-								var isRootQuery = query.ParentSelect == null;
-
 								Utils.MakeUniqueNames(
 									query.Select.Columns.Where(c => c.Alias != "*"),
-									isRootQuery ? allAliases : null,
+									null,
 									(n, a) => !ReservedWords.IsReserved(n), 
 									c => c.Alias, 
 									(c, n, a) =>
@@ -177,59 +176,85 @@ namespace LinqToDB.SqlQuery
 								}
 							}
 
+							newAliases.RegisterAliased(query);
+
 							break;
 						}
 					case QueryElementType.SqlParameter:
 						{
 							var p = (SqlParameter)expr;
+							paramsVisited ??= new HashSet<SqlParameter>();
 							if (paramsVisited.Add(p))
 							{
 								p.Name = NormalizeParameterName(p.Name);
 							}
+
+							newAliases.RegisterAliased(expr);
 
 							break;
 						}
 					case QueryElementType.TableSource:
 						{
 							var table = (SqlTableSource)expr;
+							tablesVisited ??= new HashSet<SqlTableSource>();
 							if (tablesVisited.Add(table))
 							{
 								if (table.Source is SqlTable sqlTable)
 									allAliases.Add(sqlTable.PhysicalName!);
 							}
+
+							newAliases.RegisterAliased(expr);
+
 							break;
 						}
 				}
+
+				return true;
 			});
 
-			Utils.MakeUniqueNames(tablesVisited,
-				allAliases,
-				(n, a) => !a!.Contains(n) && !ReservedWords.IsReserved(n), ts => ts.Alias, (ts, n, a) =>
-				{
-					a!.Add(n);
-					ts.Alias = n;
-				},
-				ts =>
-				{
-					var a = ts.Alias;
-					return a.IsNullOrEmpty() ? "t1" : a + (a!.EndsWith("_") ? string.Empty : "_") + "1";
-				},
-				StringComparer.OrdinalIgnoreCase);
+			if (tablesVisited != null)
+			{
+				Utils.MakeUniqueNames(tablesVisited,
+					allAliases,
+					(n, a) => !a!.Contains(n) && !ReservedWords.IsReserved(n), ts => ts.Alias, (ts, n, a) =>
+					{
+						a!.Add(n);
+						ts.Alias = n;
+					},
+					ts =>
+					{
+						var a = ts.Alias;
+						return a.IsNullOrEmpty() ? "t1" : a + (a!.EndsWith("_") ? string.Empty : "_") + "1";
+					},
+					StringComparer.OrdinalIgnoreCase);
+			}
 
-			Utils.MakeUniqueNames(
-				paramsVisited,
-				new HashSet<string>(), 
-				(n, a) => !a!.Contains(n) && !ReservedWords.IsReserved(n), p => p.Name, (p, n, a) =>
-				{
-					a!.Add(n);
-					p.Name = n;
-				},
-				p => p.Name.IsNullOrEmpty() ? "p_1" :
-					char.IsDigit(p.Name[p.Name.Length - 1]) ? p.Name : p.Name + "_1",
-				StringComparer.OrdinalIgnoreCase);
+			if (paramsVisited != null)
+			{
+				var usedParameterAliases = prevAliasContext == null
+					? new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+					: prevAliasContext.GetUsedParameterAliases();
 
-			_aliases = allAliases;
-			staticParameters = paramsVisited.ToArray();
+				Utils.MakeUniqueNames(
+					paramsVisited,
+					usedParameterAliases,
+					(n, a) => !a!.Contains(n) && !ReservedWords.IsReserved(n), p => p.Name, (p, n, a) =>
+					{
+						a!.Add(n);
+						p.Name = n;
+					},
+					p => p.Name.IsNullOrEmpty() ? "p_1" :
+						char.IsDigit(p.Name[p.Name.Length - 1]) ? p.Name : p.Name + "_1",
+					StringComparer.OrdinalIgnoreCase);
+			}
+
+			if (prevAliasContext != null)
+			{
+				// Copy all aliased from previous run
+				newAliases.RegisterAliased(prevAliasContext.GetAliased());
+			}
+
+			newAliasContext = newAliases;
 		}
 
 		#endregion

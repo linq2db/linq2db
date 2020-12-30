@@ -219,9 +219,16 @@ namespace LinqToDB.Data
 				// optimize, optionally with parameters
 				var evaluationContext = new EvaluationContext(sql.IsParameterDependent ? parameterValues : null);
 
+				var aliases = query.Aliases;
+				if (aliases == null || !ReferenceEquals(query.Statement, sql))
+				{
+					// correct aliases if needed
+					SqlStatement.PrepareQueryAndAliases(sql, query.Aliases, out aliases);
+				}
+
 				for (var i = 0; i < cc; i++)
 				{
-					var optimizationContext = new OptimizationContext(evaluationContext, query.Parameters, dataConnection.DataProvider.SqlProviderFlags.IsParameterOrderDependent);
+					var optimizationContext = new OptimizationContext(evaluationContext, aliases, dataConnection.DataProvider.SqlProviderFlags.IsParameterOrderDependent);
 					sb.Length = 0;
 
 					sqlBuilder.BuildSql(i, sql, sb, optimizationContext, startIndent);
@@ -231,7 +238,11 @@ namespace LinqToDB.Data
 
 				if (!sql.IsParameterDependent)
 				{
-					query.Context    = commands;
+					query.Context = commands;
+
+					// clear aliases, they are not needed after SQL generation.
+					//
+					query.Aliases = null;
 				}
 
 				return new PreparedQuery

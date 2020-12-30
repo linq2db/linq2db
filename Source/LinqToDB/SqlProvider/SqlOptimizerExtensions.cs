@@ -6,9 +6,9 @@
 	internal static class SqlOptimizerExtensions
 	{
 		public static SqlStatement PrepareStatementForRemoting(this ISqlOptimizer optimizer, SqlStatement statement,
-			MappingSchema mappingSchema, SqlParameter[]? parameters, EvaluationContext context)
+			MappingSchema mappingSchema, AliasesContext aliases, EvaluationContext context)
 		{
-			var optimizationContext = new OptimizationContext(context, parameters, false);
+			var optimizationContext = new OptimizationContext(context, aliases, false);
 
 			var newStatement = (SqlStatement)optimizer.ConvertElement(mappingSchema, statement, optimizationContext);
 
@@ -16,7 +16,7 @@
 		}
 
 		public static SqlStatement PrepareStatementForSql(this ISqlOptimizer optimizer, SqlStatement statement,
-			MappingSchema mappingSchema, SqlParameter[]? parameters, OptimizationContext optimizationContext)
+			MappingSchema mappingSchema, OptimizationContext optimizationContext)
 		{
 			var newStatement = (SqlStatement)optimizer.ConvertElement(mappingSchema, statement, optimizationContext);
 

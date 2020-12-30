@@ -55,11 +55,11 @@ namespace LinqToDB.ServiceModel
 				var sqlStringBuilder = new StringBuilder();
 				var cc = sqlBuilder.CommandCount(query.Statement);
 
-				var optimizationContext = new OptimizationContext(_evaluationContext, null, false);
+				var optimizationContext = new OptimizationContext(_evaluationContext, query.Aliases!, false);
 
 				for (var i = 0; i < cc; i++)
 				{
-					var statement = sqlOptimizer.PrepareStatementForSql(query.Statement, DataContext.MappingSchema, query.Parameters, optimizationContext);
+					var statement = sqlOptimizer.PrepareStatementForSql(query.Statement, DataContext.MappingSchema, optimizationContext);
 					sqlBuilder.BuildSql(i, statement, sqlStringBuilder, optimizationContext);
 
 					if (i == 0 && query.QueryHints != null && query.QueryHints.Count > 0)
@@ -146,7 +146,7 @@ namespace LinqToDB.ServiceModel
 				var queryContext = Query.Queries[QueryNumber];
 
 				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement,
-					_dataContext.MappingSchema, queryContext.Parameters, _evaluationContext);
+					_dataContext.MappingSchema, queryContext.Aliases!, _evaluationContext);
 
 				data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,
@@ -177,7 +177,7 @@ namespace LinqToDB.ServiceModel
 				var queryContext = Query.Queries[QueryNumber];
 
 				var sqlOptimizer = _dataContext.GetSqlOptimizer();
-				var q = sqlOptimizer.PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, queryContext.Parameters, _evaluationContext);
+				var q = sqlOptimizer.PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, queryContext.Aliases!, _evaluationContext);
 
 				data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,
@@ -202,7 +202,7 @@ namespace LinqToDB.ServiceModel
 
 				var queryContext = Query.Queries[QueryNumber];
 
-				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, queryContext.Parameters, _evaluationContext);
+				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, queryContext.Aliases!, _evaluationContext);
 
 				data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,
@@ -266,7 +266,7 @@ namespace LinqToDB.ServiceModel
 
 				var queryContext = Query.Queries[QueryNumber];
 
-				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, queryContext.Parameters, _evaluationContext);
+				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, queryContext.Aliases!, _evaluationContext);
 
 				data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,
@@ -295,7 +295,7 @@ namespace LinqToDB.ServiceModel
 
 				var queryContext = Query.Queries[QueryNumber];
 
-				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, queryContext.Parameters, _evaluationContext);
+				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, queryContext.Aliases!, _evaluationContext);
 
 				data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,
@@ -316,7 +316,7 @@ namespace LinqToDB.ServiceModel
 
 				var queryContext = Query.Queries[QueryNumber];
 
-				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, queryContext.Parameters, _evaluationContext);
+				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, queryContext.Aliases!, _evaluationContext);
 
 				data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,

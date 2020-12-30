@@ -83,11 +83,11 @@ namespace Tests.Model
 			var provider  = ((IDataContext)this).CreateSqlProvider();
 			var optimizer = ((IDataContext)this).GetSqlOptimizer  ();
 
-			var optimizationContext = new OptimizationContext(new EvaluationContext(SqlParameterValues.Empty), null, false);
 			var statement = (SqlSelectStatement)optimizer.Finalize(new SqlSelectStatement(query));
-			SqlParameter[] staticParameters;
-			statement.PrepareQueryAndAliases(out staticParameters);
-			statement = (SqlSelectStatement)optimizer.PrepareStatementForRemoting(statement, MappingSchema, staticParameters, optimizationContext.Context);
+			SqlStatement.PrepareQueryAndAliases(statement, null, out var aliasesContext);
+			var optimizationContext = new OptimizationContext(new EvaluationContext(SqlParameterValues.Empty), aliasesContext, false);
+
+			statement = (SqlSelectStatement)optimizer.PrepareStatementForRemoting(statement, MappingSchema, aliasesContext, optimizationContext.Context);
 
 			var cc = provider.CommandCount(statement);
 			var sb = new StringBuilder();
