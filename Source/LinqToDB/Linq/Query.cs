@@ -545,6 +545,7 @@ namespace LinqToDB.Linq
 		public object?         Context     { get; set; }
 		public List<string>?   QueryHints  { get; set; }
 		public SqlParameter[]? Parameters  { get; set; }
+		public AliasesContext? Aliases     { get; set; }
 
 		public List<ParameterAccessor> ParameterAccessors = new List<ParameterAccessor>();
 

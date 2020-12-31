@@ -29,7 +29,7 @@ namespace Tests.Linq
 
 			var sqlBuilder = connection.DataProvider.CreateSqlBuilder(connection.MappingSchema);
 			var sb = new StringBuilder();
-			sqlBuilder.BuildSql(0, query, sb, new OptimizationContext(new EvaluationContext(), null, false));
+			sqlBuilder.BuildSql(0, query, sb, new OptimizationContext(new EvaluationContext(), new AliasesContext(), false));
 
 			return connection.Query<T>(sb.ToString());
 		}
