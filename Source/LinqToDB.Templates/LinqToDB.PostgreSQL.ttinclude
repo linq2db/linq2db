@@ -79,6 +79,8 @@ void FixFunctionNames()
 	{
 		if (proc.ProcedureName.Any(char.IsUpper))
 			proc.ProcedureName = "\"" + proc.ProcedureName + "\"";
+		if (proc.Schema?.Any(char.IsUpper) == true)
+			proc.Schema = "\"" + proc.Schema + "\"";
 	}
 }
 
