@@ -569,23 +569,20 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual bool SupportsBooleanInColumn => false;
 
-		protected virtual void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
+		protected virtual ISqlExpression WrapBooleanExpression(ISqlExpression expr)
 		{
 			var wrap = false;
-			if (!SupportsBooleanInColumn)
-			{
 
-				if (expr.SystemType == typeof(bool))
-				{
-					if (expr is SqlSearchCondition)
-						wrap = true;
-					else
-						wrap =
-							expr is SqlExpression ex &&
-							ex.Expr == "{0}" &&
-							ex.Parameters.Length == 1 &&
-							ex.Parameters[0] is SqlSearchCondition;
-				}
+			if (expr.SystemType == typeof(bool))
+			{
+				if (expr is SqlSearchCondition)
+					wrap = true;
+				else
+					wrap =
+						expr is SqlExpression ex &&
+						ex.Expr == "{0}" &&
+						ex.Parameters.Length == 1 &&
+						ex.Parameters[0] is SqlSearchCondition;
 			}
 
 			if (wrap)
@@ -594,7 +591,16 @@ namespace LinqToDB.SqlProvider
 				{
 					DoNotOptimize = true
 				};
-				expr = ConvertElement(expr);
+			}
+
+			return expr;
+		}
+
+		protected virtual void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
+		{
+			if (!SupportsBooleanInColumn)
+			{
+				expr = WrapBooleanExpression(expr);
 			}
 
 			BuildExpression(expr, true, true, alias, ref addAlias, true);
@@ -1672,7 +1678,7 @@ namespace LinqToDB.SqlProvider
 
 				var item = selectQuery.OrderBy.Items[i];
 
-				BuildExpression(item.Expression);
+				BuildExpression(WrapBooleanExpression(item.Expression));
 
 				if (item.IsDescending)
 					StringBuilder.Append(" DESC");

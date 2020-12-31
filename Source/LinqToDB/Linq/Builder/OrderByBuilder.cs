@@ -102,8 +102,7 @@ namespace LinqToDB.Linq.Builder
 				if (QueryHelper.IsConstant(expr.Sql))
 					continue;
 			
-				var e = builder.ConvertSearchCondition(expr.Sql);
-				sequence.SelectQuery.OrderBy.Expr(e, methodCall.Method.Name.EndsWith("Descending"));
+				sequence.SelectQuery.OrderBy.Expr(expr.Sql, methodCall.Method.Name.EndsWith("Descending"));
 			}
 
 			return sequence;

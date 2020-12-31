@@ -3148,26 +3148,6 @@ namespace LinqToDB.Linq.Builder
 			return MappingSchema.GetAttribute<Sql.TableFunctionAttribute>(member.ReflectedType!, member, a => a.Configuration);
 		}
 
-		internal ISqlExpression ConvertSearchCondition(ISqlExpression sqlExpression)
-		{
-			if (sqlExpression is SqlSearchCondition)
-			{
-				if (sqlExpression.CanBeNull)
-				{
-					var notExpr = new SqlSearchCondition
-					{
-						Conditions = { new SqlCondition(true, new SqlPredicate.Expr(sqlExpression)) }
-					};
-
-					return new SqlFunction(sqlExpression.SystemType!, "CASE", sqlExpression, new SqlValue(1), notExpr, new SqlValue(0), new SqlValue(sqlExpression.SystemType!, null)) { CanBeNull = false };
-				}
-
-				return new SqlFunction(sqlExpression.SystemType!, "CASE", sqlExpression, new SqlValue(1), new SqlValue(0)) { CanBeNull = false };
-			}
-
-			return sqlExpression;
-		}
-
 		bool IsNullConstant(Expression expr)
 		{
 			return expr.NodeType == ExpressionType.Constant  && ((ConstantExpression)expr).Value == null 
