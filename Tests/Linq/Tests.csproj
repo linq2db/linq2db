@@ -2,7 +2,6 @@
 	<Import Project="..\..\Build\linq2db.Tests.Providers.props" />
 
 	<PropertyGroup>
-		<TargetFrameworks>net5.0</TargetFrameworks>
 		<AssemblyName>linq2db.Tests</AssemblyName>
 		<!--suppress complains about IBM.Data.DB2.Core.dll-->
 		<ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
@@ -14,7 +13,9 @@
 		<ProjectReference Include="..\..\Source\LinqToDB.AspNet\LinqToDB.AspNet.csproj" />
 		<ProjectReference Include="..\VisualBasic\Tests.VisualBasic.vbproj" />
 		<ProjectReference Include="..\FSharp\Tests.FSharp.fsproj" />
-		<ProjectReference Include="..\..\Source\LinqToDB.Analyzers\LinqToDB.Analyzers.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
+		<ProjectReference Include="..\..\Source\LinqToDB.Analyzers\LinqToDB.Analyzers.csproj" 
+		                  ReferenceOutputAssembly="false" 
+		                  OutputItemType="Analyzer" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' != 'net472'">
