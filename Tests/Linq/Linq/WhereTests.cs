@@ -1885,16 +1885,5 @@ namespace Tests.Linq
 		}
 		#endregion
 
-		#region issue 2746
-
-		[Test]
-		public void Issue2746([DataSources] string context)
-		{
-			using (var db = GetDataContext(context))
-			{
-				VBTests.Issue2746Test(db, "1");
-			}
-		}
-		#endregion
 	}
 }
