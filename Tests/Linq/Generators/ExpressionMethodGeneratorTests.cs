@@ -21,7 +21,7 @@ namespace Tests.Generators
 			public string Name { get; set; } = null!;
 		}
 
-		public partial class Person
+		public partial class ExprPerson
 		{
 			public int Id { get; set; }
 			public string Name { get; set; } = null!;
@@ -45,14 +45,14 @@ namespace Tests.Generators
 				}
 			}
 
-			public static Person[] GenerateTestData() =>
+			public static ExprPerson[] GenerateTestData() =>
 				Enumerable.Range(0, 20)
-					.Select(i => new Person { Id = i, Name = $"Person{i}", })
+					.Select(i => new ExprPerson { Id = i, Name = $"Person{i}", })
 					.ToArray();
 		}
 
 		[GenerateExpressionMethod]
-		public static PersonDto ToDtoReturn(Person person)
+		public static PersonDto ToDtoReturn(ExprPerson person)
 		{
 			return new PersonDto
 			{
@@ -62,7 +62,7 @@ namespace Tests.Generators
 		}
 
 		[GenerateExpressionMethod]
-		public static PersonDto ToDtoArrow(Person person)
+		public static PersonDto ToDtoArrow(ExprPerson person)
 			=> new PersonDto
 			{
 				Id = person.Id,
@@ -80,12 +80,12 @@ namespace Tests.Generators
 		[Test]
 		public void VerifyGeneratedExpressions()
 		{
-			Expression<Func<Person, PersonDto>> expr = p => new PersonDto { Id = p.Id, Name = p.Name, };
+			Expression<Func<ExprPerson, PersonDto>> expr = p => new PersonDto { Id = p.Id, Name = p.Name, };
 			var comparer = ExpressionEqualityComparer.Instance;
 
-			Assert.True(comparer.Equals(expr, Person.Test1()));
-			Assert.True(comparer.Equals(expr, Person.Test2()));
-			Assert.True(comparer.Equals(expr, Person.Test3()));
+			Assert.True(comparer.Equals(expr, ExprPerson.Test1()));
+			Assert.True(comparer.Equals(expr, ExprPerson.Test2()));
+			Assert.True(comparer.Equals(expr, ExprPerson.Test3()));
 			Assert.True(comparer.Equals(expr, __ToDtoArrowExpression()));
 			Assert.True(comparer.Equals(expr, __ToDtoReturnExpression()));
 
@@ -101,7 +101,7 @@ namespace Tests.Generators
 		[Test]
 		public void VerifyUseInQuery([DataSources] string context)
 		{
-			var testData = Person.GenerateTestData();
+			var testData = ExprPerson.GenerateTestData();
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(testData))
 			{
