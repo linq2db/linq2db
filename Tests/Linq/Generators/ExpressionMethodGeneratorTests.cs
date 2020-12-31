@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using LinqToDB;
+using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -23,27 +25,27 @@ namespace Tests.Generators
 			public int Id { get; set; }
 			public string Name { get; set; } = null!;
 
-			[GenerateExpressionMethod(MethodName = "PersonDtoExpression")]
+			[GenerateExpressionMethod(MethodName = "Test1")]
 			public PersonDto PersonDto1 =>
 				new PersonDto { Id = Id, Name = Name, };
 
-			[GenerateExpressionMethod]
+			[GenerateExpressionMethod(MethodName = "Test2")]
 			public PersonDto PersonDto2
 			{
 				get => new PersonDto { Id = this.Id, Name = this.Name, };
 			}
 
-			[GenerateExpressionMethod]
+			[GenerateExpressionMethod(MethodName = "Test3")]
 			public PersonDto PersonDto3
 			{
 				get
 				{
-					return new PersonDto { Id = Id , Name = Name, };
+					return new PersonDto { Id = Id, Name = Name, };
 				}
 			}
 		}
 
-		[GenerateExpressionMethod(MethodName = "asdf")]
+		[GenerateExpressionMethod]
 		public static PersonDto ToDtoReturn(Person person)
 		{
 			return new PersonDto
@@ -51,20 +53,6 @@ namespace Tests.Generators
 				Id = person.Id,
 				Name = person.Name,
 			};
-		}
-
-		[Test]
-		public void VerifyExpressionMethodGeneratedOnReturn()
-		{
-			var baseMethod = typeof(ExpressionMethodGeneratorTests).GetMethod(nameof(ToDtoReturn));
-
-			var expressionMethodAttributes = baseMethod!.GetCustomAttributes(typeof(ExpressionMethodAttribute), false);
-			Assert.IsTrue(expressionMethodAttributes.Any());
-
-			var methodName = (expressionMethodAttributes[0] as ExpressionMethodAttribute)!.MethodName;
-			Assert.IsTrue(typeof(ExpressionMethodGeneratorTests)
-				.GetMethods(BindingFlags.Static | BindingFlags.NonPublic)
-				.Any(m => m.Name == methodName));
 		}
 
 		[GenerateExpressionMethod]
@@ -75,21 +63,6 @@ namespace Tests.Generators
 				Name = person.Name
 			};
 
-		[Test]
-		public void VerifyExpressionMethodGeneratedOnArrow()
-		{
-			var baseMethod = typeof(ExpressionMethodGeneratorTests).GetMethod(nameof(ToDtoArrow));
-
-			var expressionMethodAttributes = baseMethod!.GetCustomAttributes(typeof(ExpressionMethodAttribute), false);
-			Assert.IsTrue(expressionMethodAttributes.Any());
-
-			var methodName = (expressionMethodAttributes[0] as ExpressionMethodAttribute)!.MethodName;
-			Assert.IsTrue(typeof(ExpressionMethodGeneratorTests)
-				.GetMethods(BindingFlags.Static | BindingFlags.NonPublic)
-				.Any(m => m.Name == methodName));
-		}
-
-
 		[GenerateExpressionMethod]
 		public static PersonDto ToDtoComplex(int id, string firstName, string lastName, TaskStatus status)
 			=> new PersonDto
@@ -99,17 +72,24 @@ namespace Tests.Generators
 			};
 
 		[Test]
-		public void VerifyExpressionMethodGeneratedOnComplex()
+		public void VerifyGeneratedExpressionsAreCorrect()
 		{
-			var baseMethod = typeof(ExpressionMethodGeneratorTests).GetMethod(nameof(ToDtoComplex));
+			Expression<Func<Person, PersonDto>> expr = p => new PersonDto { Id = p.Id, Name = p.Name, };
+			var comparer = ExpressionEqualityComparer.Instance;
 
-			var expressionMethodAttributes = baseMethod!.GetCustomAttributes(typeof(ExpressionMethodAttribute), false);
-			Assert.IsTrue(expressionMethodAttributes.Any());
+			Assert.True(comparer.Equals(expr, Person.Test1()));
+			Assert.True(comparer.Equals(expr, Person.Test2()));
+			Assert.True(comparer.Equals(expr, Person.Test3()));
+			Assert.True(comparer.Equals(expr, __ToDtoArrowExpression()));
+			Assert.True(comparer.Equals(expr, __ToDtoReturnExpression()));
 
-			var methodName = (expressionMethodAttributes[0] as ExpressionMethodAttribute)!.MethodName;
-			Assert.IsTrue(typeof(ExpressionMethodGeneratorTests)
-				.GetMethods(BindingFlags.Static | BindingFlags.NonPublic)
-				.Any(m => m.Name == methodName));
+			Expression<Func<int, string, string, TaskStatus, PersonDto>> expr2 = (int id, string firstName, string lastName, TaskStatus status)
+				=> new PersonDto
+				{
+					Id = id + (int)status,
+					Name = firstName + lastName,
+				};
+			Assert.True(comparer.Equals(expr2, __ToDtoComplexExpression()));
 		}
 	}
 }
