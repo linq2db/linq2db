@@ -92,7 +92,7 @@ You can use the solution to build and run tests. Also you can build whole soluti
 * `.\Build.cmd` - builds all the projects in the solution for Debug, Release and Azure configurations
 * `.\Compile.cmd` - builds LinqToDB project for Debug and Release configurations
 * `.\Clean.cmd` - cleanups solution projects for Debug, Release and Azure configurations
-* `.\Test.cmd` - build `Debug` configuration and run tests for `net472`,  `netcoreapp2.1`, `netcoreapp3.1` and `net5.0` targets. You can set other configuration by passing it as first paramenter, disable test targets by passing 0 to second(for `net472`),  third (for `netcoreapp2.1`), fourth (for `netcoreapp3.1`) or fifth (for `net5.0`) parameter and format (default:html) as 6th parameter.
+* `.\Test.cmd` - build `Debug` configuration and run tests for `net472`,  `netcoreapp2.1`, `netcoreapp3.1` and `net5.0` targets. You can set other configuration by passing it as first parameter, disable test targets by passing 0 to second (for `net472`),  third (for `netcoreapp2.1`), fourth (for `netcoreapp3.1`) or fifth (for `net5.0`) parameter and format (default:html) as 6th parameter.
 
 Example of running Release build tests for `netcoreapp2.1` only with trx as output:
 ```
