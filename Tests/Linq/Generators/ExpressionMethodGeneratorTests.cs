@@ -107,7 +107,7 @@ namespace Tests.Generators
 			{
 				Assert.AreEqual(
 					testData.Length,
-					testData.Select(p => p.PersonDto1).ToArray());
+					testData.Select(p => p.PersonDto1).ToArray().Length);
 			}
 		}
 	}
