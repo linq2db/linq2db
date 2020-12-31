@@ -1039,6 +1039,11 @@ namespace Tests
 			return data;
 		}
 
+		protected bool IsCaseSensitiveDB(string context)
+		{
+			return GetProviderName(context, out var _) == TestProvName.SqlServer2019;
+		}
+
 		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result, bool allowEmpty = false)
 		{
 			AreEqual(t => t, expected, result, EqualityComparer<T>.Default, allowEmpty);
