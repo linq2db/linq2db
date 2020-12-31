@@ -48,6 +48,7 @@ static IEnumerable<Method> GetConstructorsImpl(string defaultConfiguration, stri
 	else
 		yield return new Method(null, name) { AfterSignature = { ": base(\"" + defaultConfiguration + "\")" } };
 	yield return new Method(null, name, new Func<string>[] { () => "string configuration" }) { AfterSignature = { ": base(configuration)" } };
+	yield return new Method(null, name, new Func<string>[] { () => "LinqToDbConnectionOptions options" }) { AfterSignature = { ": base(options)" } };
 }
 
 void GenerateTypesFromMetadata()
@@ -56,6 +57,7 @@ void GenerateTypesFromMetadata()
 
 	Model.Usings.Add("LinqToDB");
 	Model.Usings.Add("LinqToDB.Mapping");
+	Model.Usings.Add("LinqToDB.Configuration");
 
 	if (NamespaceName == null)
 		NamespaceName = "DataModel";
