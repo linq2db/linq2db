@@ -12,7 +12,8 @@ using NUnit.Framework;
 
 namespace Tests.Generators
 {
-	public partial class ExpressionMethodGeneratorTests
+	[TestFixture]
+	public partial class ExpressionMethodGeneratorTests : TestBase
 	{
 		public class PersonDto
 		{
@@ -43,6 +44,11 @@ namespace Tests.Generators
 					return new PersonDto { Id = Id, Name = Name, };
 				}
 			}
+
+			public static Person[] GenerateTestData() =>
+				Enumerable.Range(0, 20)
+					.Select(i => new Person { Id = i, Name = $"Person{i}", })
+					.ToArray();
 		}
 
 		[GenerateExpressionMethod]
@@ -72,7 +78,7 @@ namespace Tests.Generators
 			};
 
 		[Test]
-		public void VerifyGeneratedExpressionsAreCorrect()
+		public void VerifyGeneratedExpressions()
 		{
 			Expression<Func<Person, PersonDto>> expr = p => new PersonDto { Id = p.Id, Name = p.Name, };
 			var comparer = ExpressionEqualityComparer.Instance;
@@ -90,6 +96,19 @@ namespace Tests.Generators
 					Name = firstName + lastName,
 				};
 			Assert.True(comparer.Equals(expr2, __ToDtoComplexExpression()));
+		}
+
+		[Test]
+		public void VerifyUseInQuery([DataSources] string context)
+		{
+			var testData = Person.GenerateTestData();
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(testData))
+			{
+				Assert.AreEqual(
+					testData.Length,
+					testData.Select(p => p.PersonDto1).ToArray());
+			}
 		}
 	}
 }
