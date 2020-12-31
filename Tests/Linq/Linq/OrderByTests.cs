@@ -607,5 +607,15 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void OrderByContains([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var ids = new int[]{ 1, 3 };
+				db.Person.Select(_ => new { _.ID, _.LastName, flag = ids.Contains(_.ID) }).OrderBy(_ => _.flag).ToList();
+			}
+		}
+
 	}
 }
