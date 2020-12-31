@@ -14,6 +14,7 @@ namespace Tests.Linq
 {
 	using Model;
 	using System.Text.RegularExpressions;
+	using Tests.VisualBasic;
 
 	[TestFixture]
 	public class WhereTests : TestBase
@@ -1880,6 +1881,18 @@ namespace Tests.Linq
 				Assert.AreEqual(1, record.Id);
 				record = db.GetTable<Isue2424Table>().Single(i => i.StrValue.CompareTo("1") <= 0);
 				Assert.AreEqual(1, record.Id);
+			}
+		}
+		#endregion
+
+		#region issue 2746
+
+		[Test]
+		public void Issue2746([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				VBTests.Issue2746Test(db, "1");
 			}
 		}
 		#endregion
