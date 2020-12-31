@@ -18,19 +18,38 @@ namespace Tests.Generators
 			public string Name { get; set; } = null!;
 		}
 
-		public class Person
+		public partial class Person
 		{
 			public int Id { get; set; }
 			public string Name { get; set; } = null!;
+
+			[GenerateExpressionMethod(MethodName = "PersonDtoExpression")]
+			public PersonDto PersonDto1 =>
+				new PersonDto { Id = Id, Name = Name, };
+
+			[GenerateExpressionMethod]
+			public PersonDto PersonDto2
+			{
+				get => new PersonDto { Id = this.Id, Name = this.Name, };
+			}
+
+			[GenerateExpressionMethod]
+			public PersonDto PersonDto3
+			{
+				get
+				{
+					return new PersonDto { Id = Id , Name = Name, };
+				}
+			}
 		}
 
-		[GenerateExpressionMethod]
-		public static partial PersonDto ToDtoReturn(Person person)
+		[GenerateExpressionMethod(MethodName = "asdf")]
+		public static PersonDto ToDtoReturn(Person person)
 		{
 			return new PersonDto
 			{
 				Id = person.Id,
-				Name = person.Name
+				Name = person.Name,
 			};
 		}
 
@@ -49,7 +68,7 @@ namespace Tests.Generators
 		}
 
 		[GenerateExpressionMethod]
-		public static partial PersonDto ToDtoArrow(Person person)
+		public static PersonDto ToDtoArrow(Person person)
 			=> new PersonDto
 			{
 				Id = person.Id,
@@ -72,7 +91,7 @@ namespace Tests.Generators
 
 
 		[GenerateExpressionMethod]
-		public static partial PersonDto ToDtoComplex(int id, string firstName, string lastName, TaskStatus status)
+		public static PersonDto ToDtoComplex(int id, string firstName, string lastName, TaskStatus status)
 			=> new PersonDto
 			{
 				Id = id + (int)status,

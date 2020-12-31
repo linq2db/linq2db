@@ -9,7 +9,7 @@ namespace LinqToDB.Mapping
 {
 	/// <summary>
 	/// <para>
-	/// When applied to method or propoerty, tells linq2db to create an expression version of the member.
+	/// When applied to method or property, tells linq2db to create an expression version of the member.
 	/// This is only supported in C# 9 or later, using Source Generators.
 	/// </para>
 	/// 
