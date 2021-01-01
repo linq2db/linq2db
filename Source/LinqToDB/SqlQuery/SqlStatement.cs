@@ -86,6 +86,9 @@ namespace LinqToDB.SqlQuery
 				return name;
 
 			name = name!.Replace(' ', '_');
+			const string vbPrefix = "$VB$";
+			if (name.StartsWith(vbPrefix))
+				name = name.Substring(vbPrefix.Length, name.Length - vbPrefix.Length);
 
 			return name;
 		}

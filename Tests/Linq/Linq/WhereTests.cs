@@ -14,6 +14,7 @@ namespace Tests.Linq
 {
 	using Model;
 	using System.Text.RegularExpressions;
+	using Tests.VisualBasic;
 
 	[TestFixture]
 	public class WhereTests : TestBase
@@ -1883,5 +1884,6 @@ namespace Tests.Linq
 			}
 		}
 		#endregion
+
 	}
 }
