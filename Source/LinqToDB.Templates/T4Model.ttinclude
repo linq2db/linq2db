@@ -1,5 +1,6 @@
 <#@ assembly name="System.Core"                   #>
 <#@ import namespace="System"                     #>
+<#@ import namespace="System.Linq"                #>
 <#@ import namespace="System.Collections.Generic" #>
 <#@ import namespace="System.Text"                #>
 <#+

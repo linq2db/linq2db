@@ -1,6 +1,5 @@
 ﻿<#@ template language="C#" debug="True" hostSpecific="True"                     #>
 <#@ output extension=".generated.cs"                                            #>
-<#@ assembly name="$(SolutionDir)Tests\Tests.T4\bin\Debug\net472\Humanizer.dll" #>
 
 <#@ include file="..\Shared.ttinclude"                                         once="true" #>
 <#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.SqlCe.ttinclude" once="true" #>

@@ -15,6 +15,7 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Common;
+using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
@@ -49,6 +50,13 @@ namespace Firebird3DataContext
 
 		public TESTDB30DB(string configuration)
 			: base(configuration)
+		{
+			InitDataContext();
+			InitMappingSchema();
+		}
+
+		public TESTDB30DB(LinqToDbConnectionOptions options)
+			: base(options)
 		{
 			InitDataContext();
 			InitMappingSchema();
@@ -203,9 +211,9 @@ namespace Firebird3DataContext
 		#region Associations
 
 		/// <summary>
-		/// INTEG_296
+		/// INTEG_668
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="INTEG_296", BackReferenceName="INTEG")]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="INTEG_668", BackReferenceName="INTEG")]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -229,7 +237,7 @@ namespace Firebird3DataContext
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
-		/// INTEG_296_BackReference
+		/// INTEG_668_BackReference
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
 		public Patient? INTEG { get; set; }

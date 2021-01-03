@@ -1,4 +1,5 @@
 <#@ include file="LinqToDB.ttinclude" once="true" #>
+<#@ import namespace="System.IO"                  #>
 <#
 	LinqToDB.DataProvider.SQLite.SQLiteTools.ResolveSQLite(typeof(System.Data.SQLite.SQLiteConnection).Assembly);
 
