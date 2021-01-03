@@ -1041,6 +1041,8 @@ namespace Tests
 
 		protected bool IsCaseSensitiveDB(string context)
 		{
+			// we intentionally configure Sql Server 2019 test database to be case-sensitive to test
+			// linq2db support for this configuration
 			return GetProviderName(context, out var _) == TestProvName.SqlServer2019;
 		}
 
