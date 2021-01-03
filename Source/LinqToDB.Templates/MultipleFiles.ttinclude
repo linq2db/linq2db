@@ -15,7 +15,7 @@ readonly Dictionary<string,int> _fileNames = new Dictionary<string,int>();
 
 Func<string,string,bool> CompareContent = (s1,s2) => s1 == s2;
 
-void SaveOutput(string fileName, int fileType = 1)
+public void SaveOutput(string fileName, int fileType = 1)
 {
 	var dir        = Path.GetDirectoryName(Host.TemplateFile);
 	var output     = Path.Combine(dir, fileName);
@@ -35,7 +35,7 @@ void SaveOutput(string fileName, int fileType = 1)
 	_fileNames.Add(output, fileType);
 }
 
-void SyncProject()
+public void SyncProject()
 {
 	var keepFileNames      = _fileNames.ToDictionary(f => f.Key);
 	var projectFiles       = new Dictionary<string,ProjectItem>();

@@ -1,4 +1,5 @@
-<#@ include file="LinqToDB.ttinclude" #>
+<#@ include file="T4Model.ttinclude"  once="true" #>
+<#@ include file="LinqToDB.ttinclude" once="true" #>
 <#
 	LinqToDB.DataProvider.PostgreSQL.PostgreSQLTools.ResolvePostgreSQL(
 		typeof(Npgsql.NpgsqlConnection).Assembly);
@@ -47,7 +48,7 @@ void FixRecordResultFunctions()
 			foreach (var outParam in proc.ProcParameters.Where(_ => _.IsOut))
 			{
 				var type = outParam.Type;
-				result.Members.Add(new Property(type, outParam.ParameterName, null, null));
+				result.Members.Add(new Property(type, outParam.ParameterName));
 				mappings.Add($"{outParam.ParameterName} = ({type.ToTypeName()})tuple[{mappings.Count}]");
 
 				if (outParam.IsIn)
@@ -134,18 +135,19 @@ LinqToDB.Data.DataConnection GetPostgreSQLConnection(string connectionString)
 
 LinqToDB.Data.DataConnection GetPostgreSQLConnection(string server, string port, string database, string uid, string password)
 {
-	return GetPostgreSQLConnection(string.Format(@"Server={0};Port={1};Database={2};User Id={3};Password={4};Pooling=true;MinPoolSize=10;MaxPoolSize=100;", server, port, database, uid, password));
+	return GetPostgreSQLConnection($"Server={server};Port={port};Database={database};User Id={uid};Password={password};Pooling=true;MinPoolSize=10;MaxPoolSize=100;");
 }
 
-void LoadPostgreSQLMetadata(string connectionString)
+public void LoadPostgreSQLMetadata(string connectionString)
 {
 	using (var dataConnection = GetPostgreSQLConnection(connectionString))
 		LoadMetadata(dataConnection);
 }
 
-void LoadPostgreSQLMetadata(string server, string port, string database, string uid, string password)
+public void LoadPostgreSQLMetadata(string server, string port, string database, string uid, string password)
 {
 	using (var dataConnection = GetPostgreSQLConnection(server, port, database, uid, password))
 		LoadMetadata(dataConnection);
 }
+
 #>

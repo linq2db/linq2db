@@ -1,9 +1,10 @@
 ﻿<#@ template language="C#" debug="True" hostSpecific="True"                     #>
 <#@ output extension=".generated.cs"                                            #>
-<#@ include file="..\Shared.ttinclude"                                          #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.SqlCe.ttinclude"  #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\Humanizer.ttinclude"       #>
 <#@ assembly name="$(SolutionDir)Tests\Tests.T4\bin\Debug\net472\Humanizer.dll" #>
+
+<#@ include file="..\Shared.ttinclude"                                         once="true" #>
+<#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.SqlCe.ttinclude" once="true" #>
+<#@ include file="..\..\..\Source\LinqToDB.Templates\Humanizer.ttinclude"      once="true" #>
 <#
 	NamespaceName = "SqlCeDataContext";
 

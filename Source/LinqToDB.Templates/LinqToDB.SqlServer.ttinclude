@@ -1,4 +1,5 @@
-<#@ include file="LinqToDB.ttinclude"                  #>
+<#@ include file="T4Model.ttinclude"  once="true"      #>
+<#@ include file="LinqToDB.ttinclude" once="true"      #>
 <#@ import namespace="LinqToDB.DataProvider.SqlServer" #>
 <#
 	{
@@ -70,17 +71,17 @@ LinqToDB.Data.DataConnection GetSqlServerConnection(
 	SqlServerVersion  version  = SqlServerVersion.v2008,
 	SqlServerProvider provider = SqlServerProvider.SystemDataSqlClient)
 {
-	return GetSqlServerConnection(string.Format("Data Source={0};Database={1};Integrated Security=SSPI", server, database), version, provider);
+	return GetSqlServerConnection($"Data Source={server};Database={database};Integrated Security=SSPI", version, provider);
 }
 
 LinqToDB.Data.DataConnection GetSqlServerConnection(string server, string database, string user, string password,
 	SqlServerVersion  version  = SqlServerVersion.v2008,
 	SqlServerProvider provider = SqlServerProvider.SystemDataSqlClient)
 {
-	return GetSqlServerConnection(string.Format("Server={0};Database={1};User Id={2};Password={3};", server, database, user, password), version, provider);
+	return GetSqlServerConnection($"Server={server};Database={database};User Id={user};Password={password};", version, provider);
 }
 
-void LoadSqlServerMetadata(string connectionString,
+public void LoadSqlServerMetadata(string connectionString,
 	SqlServerVersion  version  = SqlServerVersion.v2008,
 	SqlServerProvider provider = SqlServerProvider.SystemDataSqlClient)
 {
@@ -88,7 +89,7 @@ void LoadSqlServerMetadata(string connectionString,
 		LoadMetadata(dataConnection);
 }
 
-void LoadSqlServerMetadata(string server, string database,
+public void LoadSqlServerMetadata(string server, string database,
 	SqlServerVersion  version  = SqlServerVersion.v2008,
 	SqlServerProvider provider = SqlServerProvider.SystemDataSqlClient)
 {
@@ -96,7 +97,7 @@ void LoadSqlServerMetadata(string server, string database,
 		LoadMetadata(dataConnection);
 }
 
-void LoadSqlServerMetadata(string server, string database, string user, string password,
+public void LoadSqlServerMetadata(string server, string database, string user, string password,
 	SqlServerVersion  version  = SqlServerVersion.v2008,
 	SqlServerProvider provider = SqlServerProvider.SystemDataSqlClient)
 {

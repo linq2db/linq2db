@@ -1,4 +1,4 @@
-<#@ include file="LinqToDB.ttinclude" #>
+<#@ include file="LinqToDB.ttinclude" once="true" #>
 <#+
 LinqToDB.Data.DataConnection GetSqlCeConnection(string connectionString)
 {
@@ -7,16 +7,16 @@ LinqToDB.Data.DataConnection GetSqlCeConnection(string connectionString)
 
 LinqToDB.Data.DataConnection GetSqlCeConnection(string path, string database)
 {
-	return GetSqlCeConnection(string.Format("Data Source={0}", System.IO.Path.Combine(path, database)));
+	return GetSqlCeConnection($"Data Source={Path.Combine(path, database)}");
 }
 
-void LoadSqlCeMetadata(string connectionString)
+public void LoadSqlCeMetadata(string connectionString)
 {
 	using (var dataConnection = GetSqlCeConnection(connectionString))
 		LoadMetadata(dataConnection);
 }
 
-void LoadSqlCeMetadata(string path, string database)
+public void LoadSqlCeMetadata(string path, string database)
 {
 	using (var dataConnection = GetSqlCeConnection(path, database))
 		LoadMetadata(dataConnection);

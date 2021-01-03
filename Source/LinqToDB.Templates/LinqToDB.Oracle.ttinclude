@@ -1,4 +1,4 @@
-<#@ include file="LinqToDB.ttinclude" #>
+<#@ include file="LinqToDB.ttinclude" once="true" #>
 <#
 	LinqToDB.DataProvider.Oracle.OracleTools.ResolveOracle(
 		typeof(Oracle.ManagedDataAccess.Client.OracleConnection).Assembly);
@@ -11,16 +11,16 @@ LinqToDB.Data.DataConnection GetOracleConnection(string connectionString)
 
 LinqToDB.Data.DataConnection GetOracleConnection(string server, string port, string database, string uid, string password)
 {
-	return GetOracleConnection(string.Format("Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST={0})(PORT={1}))(CONNECT_DATA=(SERVICE_NAME={2})));User Id={3};Password={4};", server, port, database, uid, password));
+	return GetOracleConnection($"Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST={server})(PORT={port}))(CONNECT_DATA=(SERVICE_NAME={database})));User Id={uid};Password={password};");
 }
 
-void LoadOracleMetadata(string connectionString)
+public void LoadOracleMetadata(string connectionString)
 {
 	using (var dataConnection = GetOracleConnection(connectionString))
 		LoadMetadata(dataConnection);
 }
 
-void LoadOracleMetadata(string server, string port, string database, string uid, string password)
+public void LoadOracleMetadata(string server, string port, string database, string uid, string password)
 {
 	using (var dataConnection = GetOracleConnection(server, port, database, uid, password))
 		LoadMetadata(dataConnection);

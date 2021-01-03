@@ -1,8 +1,9 @@
 ﻿<#@ template language="C#" debug="True" hostSpecific="True"                                #>
 <#@ output extension=".generated.cs"                                                       #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.Oracle.ttinclude"            #>
-<#@ include file="..\Shared.ttinclude"                                                     #>
 <#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net472\Oracle.ManagedDataAccess.dll" #>
+
+<#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.Oracle.ttinclude" once="true" #>
+<#@ include file="..\Shared.ttinclude"                                          once="true" #>
 <#
 	NamespaceName = "OracleDataContext";
 

@@ -1,4 +1,4 @@
-<#@ include file="LinqToDB.ttinclude" #>
+<#@ include file="LinqToDB.ttinclude" once="true" #>
 <#+
 LinqToDB.Data.DataConnection GetAccessConnection(string connectionString)
 {
@@ -12,24 +12,22 @@ LinqToDB.Data.DataConnection GetAccessConnectionForProvider(string connectionStr
 
 LinqToDB.Data.DataConnection GetAccessConnection(string path, string database)
 {
-	return GetAccessConnection(string.Format(
-		"Provider=Microsoft.Jet.OLEDB.4.0;Data Source={0};Locale Identifier=1033;Jet OLEDB:Engine Type=5;Persist Security Info=True",
-		System.IO.Path.Combine(path, database)));
+	return GetAccessConnection($"Provider=Microsoft.Jet.OLEDB.4.0;Data Source={Path.Combine(path, database)};Locale Identifier=1033;Jet OLEDB:Engine Type=5;Persist Security Info=True");
 }
 
-void LoadAccessMetadata(string connectionString)
+public void LoadAccessMetadata(string connectionString)
 {
 	using (var dataConnection = GetAccessConnection(connectionString))
 		LoadMetadata(dataConnection);
 }
 
-void LoadAccessMetadataByProvider(string connectionString, string providerName)
+public void LoadAccessMetadataByProvider(string connectionString, string providerName)
 {
 	using (var dataConnection = GetAccessConnectionForProvider(connectionString, providerName))
 		LoadMetadata(dataConnection);
 }
 
-void LoadAccessMetadata(string path, string database)
+public void LoadAccessMetadata(string path, string database)
 {
 	using(var dataConnection = GetAccessConnection(path, database))
 		LoadMetadata(dataConnection);

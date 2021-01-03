@@ -1,9 +1,10 @@
 ﻿<#@ template language="C#" debug="True" hostSpecific="True"                          #>
 <#@ output extension=".generated.cs"                                                 #>
 <#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net472\System.Data.SQLite.dll" #>
-<#@ include file="..\Shared.ttinclude"                                               #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.SQLite.ttinclude"      #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\Equatable.ttinclude"            #>
+
+<#@ include file="..\Shared.ttinclude"                                          once="true" #>
+<#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.SQLite.ttinclude" once="true" #>
+<#@ include file="..\..\..\Source\LinqToDB.Templates\Equatable.ttinclude"       once="true" #>
 <#
 
 	EnableNullableReferenceTypes  = true;

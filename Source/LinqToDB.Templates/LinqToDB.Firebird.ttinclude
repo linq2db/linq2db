@@ -1,4 +1,4 @@
-<#@ include file="LinqToDB.ttinclude" #>
+<#@ include file="LinqToDB.ttinclude" once="true" #>
 <#
 	LinqToDB.DataProvider.Firebird.FirebirdTools.ResolveFirebird(
 		typeof(FirebirdSql.Data.FirebirdClient.FbConnection).Assembly);
@@ -16,24 +16,22 @@ LinqToDB.Data.DataConnection GetFirebirdConnection(string server, string databas
 
 LinqToDB.Data.DataConnection GetFirebirdConnection(string server, string database, string uid, string password)
 {
-	return GetFirebirdConnection(string.Format(
-		"DataSource={0};Database={1};User Id={2};Password={3}",
-		server, database, uid, password));
+	return GetFirebirdConnection($"DataSource={server};Database={database};User Id={uid};Password={password}");
 }
 
-void LoadFirebirdMetadata(string connectionString)
+public void LoadFirebirdMetadata(string connectionString)
 {
 	using (var dataConnection = GetFirebirdConnection(connectionString))
 		LoadMetadata(dataConnection);
 }
 
-void LoadFirebirdMetadata(string server, string database, string uid, string password)
+public void LoadFirebirdMetadata(string server, string database, string uid, string password)
 {
 	using (var dataConnection = GetFirebirdConnection(server, database, uid, password))
 		LoadMetadata(dataConnection);
 }
 
-void LoadFirebirdMetadata(string server, string database)
+public void LoadFirebirdMetadata(string server, string database)
 {
 	using (var dataConnection = GetFirebirdConnection(server, database))
 		LoadMetadata(dataConnection);

@@ -1,10 +1,11 @@
 ﻿<#@ template language="C#" debug="True" hostSpecific="True"                                 #>
 <#@ output extension=".generated.cs"                                                        #>
-<#@ include file="..\Shared.ttinclude"                                                      #>
-<#@ include file="SqlServer.ttinclude"                                                      #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.SqlServer.ttinclude"          #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\ObsoleteAttributes.ttinclude"          #>
 <#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net472\Microsoft.SqlServer.Types.dll" #>
+
+<#@ include file="..\Shared.ttinclude"                                             once="true" #>
+<#@ include file="SqlServer.ttinclude"                                             once="true" #>
+<#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.SqlServer.ttinclude" once="true" #>
+<#@ include file="..\..\..\Source\LinqToDB.Templates\ObsoleteAttributes.ttinclude" once="true" #>
 <#
 	GetSchemaOptions.UseSchemaOnly = true;
 	NamespaceName   = "Sql2017ProcSchema";

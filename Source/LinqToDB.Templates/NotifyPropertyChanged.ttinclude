@@ -25,10 +25,9 @@ void NotifyPropertyChangedImpl()
 
 		MemberGroup gr = null;
 
-		if (prop.Parent is Class)
+		if (prop.Parent is Class cls)
 		{
-			var parent = (Class)prop.Parent;
-			parentMembers = parent.Members;
+			parentMembers = cls.Members;
 		}
 		else
 		{
@@ -312,7 +311,7 @@ partial class Property
 	public List<string> Dependents = new List<string>();
 }
 
-class NotifyingProperty : Property
+public class NotifyingProperty : Property
 {
 	public NotifyingProperty()
 	{
@@ -320,7 +319,7 @@ class NotifyingProperty : Property
 	}
 
 	public NotifyingProperty(ModelType type, string name, params string[] dependents)
-		: base(() => type.ToTypeName(), name, null, null)
+		: base(type.ToTypeName, name)
 	{
 		IsNotifying = true;
 
@@ -331,7 +330,7 @@ class NotifyingProperty : Property
 	}
 
 	public NotifyingProperty(string type, string name, params string[] dependents)
-		: base(() => type, name, null, null)
+		: base(() => type, name)
 	{
 		IsNotifying = true;
 

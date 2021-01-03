@@ -1,8 +1,9 @@
-﻿<#@ template language="C#" debug="True" hostSpecific="True"                      #>
-<#@ output extension=".generated.cs"                                             #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.SapHana.ttinclude" #>
-<#@ include file="..\Shared.ttinclude"                                           #>
-<#@ import namespace="System.Reflection"                                         #>
+﻿<#@ template language="C#" debug="True" hostSpecific="True" #>
+<#@ output extension=".generated.cs"                        #>
+<#@ import namespace="System.Reflection"                    #>
+
+<#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.SapHana.ttinclude" once="true" #>
+<#@ include file="..\Shared.ttinclude"                                           once="true" #>
 <#
 	NamespaceName = "SapHanaDataContext";
 

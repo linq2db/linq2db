@@ -1,7 +1,8 @@
-﻿<#@ template language="C#" debug="True" hostSpecific="True"                       #>
-<#@ output extension=".generated.cs"                                              #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.Informix.ttinclude" #>
-<#@ include file="..\Shared.ttinclude"                                            #>
+﻿<#@ template language="C#" debug="True" hostSpecific="True" #>
+<#@ output extension=".generated.cs"                        #>
+
+<#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.Informix.ttinclude" once="true" #>
+<#@ include file="..\Shared.ttinclude"                                            once="true" #>
 <#
 	NamespaceName = "InformixDataContext";
 

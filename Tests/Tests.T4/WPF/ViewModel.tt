@@ -1,10 +1,11 @@
-﻿<#@ template language="C#" debug="True" hostSpecific="True"                           #>
-<#@ output extension=".generated.cs"                                                  #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\T4Model.ttinclude"               #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\NotifyPropertyChanged.ttinclude" #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\Validation.ttinclude"            #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\NotifyDataErrorInfo.ttinclude"   #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\DataAnnotations.ttinclude"       #>
+﻿<#@ template language="C#" debug="True" hostSpecific="True" #>
+<#@ output extension=".generated.cs"                        #>
+
+<#@ include file="..\..\..\Source\LinqToDB.Templates\T4Model.ttinclude"               once="true" #>
+<#@ include file="..\..\..\Source\LinqToDB.Templates\NotifyPropertyChanged.ttinclude" once="true" #>
+<#@ include file="..\..\..\Source\LinqToDB.Templates\Validation.ttinclude"            once="true" #>
+<#@ include file="..\..\..\Source\LinqToDB.Templates\NotifyDataErrorInfo.ttinclude"   once="true" #>
+<#@ include file="..\..\..\Source\LinqToDB.Templates\DataAnnotations.ttinclude"       once="true" #>
 <#
 	EnableNullableReferenceTypes = true;
 	Model.Usings.Add("System.Windows.Media");

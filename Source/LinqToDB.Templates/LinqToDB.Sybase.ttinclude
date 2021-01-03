@@ -1,4 +1,5 @@
-<#@ include file="LinqToDB.ttinclude" #>
+<#@ include file="T4Model.ttinclude"  once="true" #>
+<#@ include file="LinqToDB.ttinclude" once="true" #>
 <#
 	{
 		var beforeGenerateLinqToDBModel = BeforeGenerateLinqToDBModel;
@@ -55,23 +56,23 @@ LinqToDB.Data.DataConnection GetSybaseConnection(string connectionString)
 	return LinqToDB.DataProvider.Sybase.SybaseTools.CreateDataConnection(connectionString);
 }
 
-LinqToDB.Data.DataConnection GetSybaseConnection(string server, string database)
+public LinqToDB.Data.DataConnection GetSybaseConnection(string server, string database)
 {
-	return GetSybaseConnection(string.Format("Data Source={0};Database={1};Integrated Security=SSPI", server, database));
+	return GetSybaseConnection($"Data Source={server};Database={database};Integrated Security=SSPI");
 }
 
 LinqToDB.Data.DataConnection GetSybaseConnection(string server, string port, string database, string uid, string password)
 {
-	return GetSybaseConnection(string.Format("Data Source={0};Port={1};Database={2};Uid={3};Password={4};Charset=utf8;", server, port, database, uid, password));
+	return GetSybaseConnection($"Data Source={server};Port={port};Database={database};Uid={uid};Password={password};Charset=utf8;");
 }
 
-void LoadSybaseMetadata(string connectionString)
+public void LoadSybaseMetadata(string connectionString)
 {
 	using (var dataConnection = GetSybaseConnection(connectionString))
 		LoadMetadata(dataConnection);
 }
 
-void LoadSybaseMetadata(string server, string port, string database, string uid, string password)
+public void LoadSybaseMetadata(string server, string port, string database, string uid, string password)
 {
 	using (var dataConnection = GetSybaseConnection(server, port, database, uid, password))
 		LoadMetadata(dataConnection);

@@ -1,9 +1,10 @@
-﻿<#@ template language="C#" debug="True" hostSpecific="True"                           #>
-<#@ output extension=".generated.cs"                                                  #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\T4Model.ttinclude"               #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\EditableObject.ttinclude"        #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\NotifyPropertyChanged.ttinclude" #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\Validation.ttinclude"            #>
+﻿<#@ template language="C#" debug="True" hostSpecific="True" #>
+<#@ output extension=".generated.cs"                        #>
+
+<#@ include file="..\..\..\Source\LinqToDB.Templates\T4Model.ttinclude"               once="true" #>
+<#@ include file="..\..\..\Source\LinqToDB.Templates\EditableObject.ttinclude"        once="true" #>
+<#@ include file="..\..\..\Source\LinqToDB.Templates\NotifyPropertyChanged.ttinclude" once="true" #>
+<#@ include file="..\..\..\Source\LinqToDB.Templates\Validation.ttinclude"            once="true" #>
 <#
 	EnableNullableReferenceTypes = true;
 

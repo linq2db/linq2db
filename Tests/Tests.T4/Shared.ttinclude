@@ -1,6 +1,7 @@
-﻿<#@ include file="..\..\Source\LinqToDB.Templates\PluralizationService.ttinclude"    #>
-<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net472\linq2db.dll"            #>
+﻿<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net472\linq2db.dll"            #>
 <#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net472\linq2db.Tests.Base.dll" #>
+
+<#@ include file="..\..\Source\LinqToDB.Templates\PluralizationService.ttinclude" once="true" #>
 <#
 	EnableNullableReferenceTypes = true;
 	GenerateDatabaseInfo = false;
