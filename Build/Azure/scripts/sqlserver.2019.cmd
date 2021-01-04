@@ -12,8 +12,7 @@ docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "SELECT @@Version"
 echo "create TestData"
 docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestData;"
 echo "create TestData2019"
-REM CATALOG_COLLATION not supported by sql express we use right now
-REM docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestData2019 COLLATE Latin1_General_CS_AS WITH CATALOG_COLLATION = SQL_Latin1_General_CP1_CI_AS;"
+REM both db and catalog are case-sensitive
 docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestData2019 COLLATE Latin1_General_CS_AS;"
 echo "create TestData2019SA"
 docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestData2019SA;"

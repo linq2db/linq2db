@@ -75,8 +75,8 @@ namespace LinqToDB.Metadata
 									?
 									string.Format("{0}::{1}({2})",
 										memberInfo.DeclaringType!.Name.ToLower().StartsWith("sql")
-											? memberInfo.DeclaringType.Name.Substring(3)
-											: memberInfo.DeclaringType.Name,
+											? memberInfo.DeclaringType.Name.ToLower().Substring(3)
+											: memberInfo.DeclaringType.Name.ToLower(),
 											((dynamic)ma[0]).Name ?? memberInfo.Name,
 										string.Join(", ", ps.Select((_, i) => '{' + i.ToString() + '}').ToArray()))
 									:

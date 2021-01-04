@@ -696,6 +696,8 @@ namespace Tests.DataProvider
 		[Test]
 		public void NVarchar2InsertTest([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
+			ResetAllTypesIdentity(context);
+
 			using (var db = new DataConnection(context))
 			using (db.BeginTransaction())
 			{
@@ -721,6 +723,8 @@ namespace Tests.DataProvider
 		[Test]
 		public void NVarchar2UpdateTest([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
+			ResetAllTypesIdentity(context);
+
 			using (var db = new DataConnection(context))
 			using (db.BeginTransaction())
 			{
@@ -2564,6 +2568,8 @@ namespace Tests.DataProvider
 		[Test]
 		public void Issue539([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
+			ResetAllTypesIdentity(context);
+
 			using (var db = GetDataContext(context))
 			{
 				var n = 0;
@@ -3115,6 +3121,8 @@ namespace Tests.DataProvider
 		[Test]
 		public void LongDataTypeTest([IncludeDataSources(false, TestProvName.AllOracle)] string context)
 		{
+			ResetAllTypesIdentity(context);
+
 			using (var db = GetDataContext(context))
 			{
 				db.GetTable<AllTypes>()
