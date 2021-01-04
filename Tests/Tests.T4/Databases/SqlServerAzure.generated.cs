@@ -16,6 +16,7 @@ using System.Reflection;
 
 using LinqToDB;
 using LinqToDB.Common;
+using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 

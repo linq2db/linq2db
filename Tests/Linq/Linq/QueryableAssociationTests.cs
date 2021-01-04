@@ -918,13 +918,13 @@ UsersWithLanguageLikeExpression().Compile()
 					.Select(x => new
 					{
 						x.Id,
-						LanguagesWithEnCount = x.UsersWithLanguageLike(db, "_En").Count(),
+						LanguagesWithEnCount  = x.UsersWithLanguageLike(db, "_En").Count(),
 						LanguagesWithLisCount = x.UsersWithLanguageLike(db, "Lis").Count()
 					})
 					.First();
 
-				Assert.AreEqual(3, data.LanguagesWithEnCount);
-				Assert.AreEqual(2, data.LanguagesWithLisCount);
+				Assert.AreEqual(IsCaseSensitiveDB(context) ? 2 : 3, data.LanguagesWithEnCount);
+				Assert.AreEqual(IsCaseSensitiveDB(context) ? 0 : 2, data.LanguagesWithLisCount);
 			}
 		}
 		

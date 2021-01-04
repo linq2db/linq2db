@@ -652,8 +652,11 @@ namespace LinqToDB.SchemaProvider
 				.Replace('-',  '_')
 				.Replace('/',  '_')
 				.Replace('\\', '_')
-				.Replace(':', '_')
-				.Replace('`', '_')
+				.Replace('\r', '_')
+				.Replace('\n', '_')
+				.Replace('\t', '_')
+				.Replace(':' , '_')
+				.Replace('`' , '_')
 				;
 		}
 

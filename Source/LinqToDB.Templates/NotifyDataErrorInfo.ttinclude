@@ -1,3 +1,5 @@
+<#@ include file="T4Model.ttinclude"    once="true" #>
+<#@ include file="Validation.ttinclude" once="true" #>
 <#
 	{
 		var beforeGenerateModel = BeforeGenerateModel;
@@ -113,7 +115,7 @@ void NotifyDataErrorInfoImpl()
 						new Method(() => ModelType.Create<System.Collections.IEnumerable>(true).ToTypeName(), "GetErrors",
 							new Func<string>[]
 							{
-								() => $"{ModelType.Create<string>(true).ToTypeName()} propertyName",
+								() => string.Format("{0} propertyName", ModelType.Create<string>(true).ToTypeName()),
 							},
 							() => new[]
 							{
