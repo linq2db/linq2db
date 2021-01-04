@@ -79,7 +79,8 @@ public static class Pluralization
 
 		var word = GetLastWord(str);
 
-		if (!Dictionary.TryGetValue(word.ToLower(), out var newWord))
+		string newWord;
+		if (!Dictionary.TryGetValue(word.ToLower(), out newWord))
 			newWord = _service.IsPlural(word) ? word : _service.Pluralize(word);
 
 		if (string.Compare(word, newWord, true, _service.Culture) != 0)
@@ -140,7 +141,8 @@ public static class Pluralization
 
 		var word = GetLastWordVersion1(str);
 
-		if (!Dictionary.TryGetValue(word.ToLower(), out var newWord))
+		string newWord;
+		if (!Dictionary.TryGetValue(word.ToLower(), out newWord))
 			newWord = _service.IsPlural(word) ? word : _service.Pluralize(word);
 
 		if (string.Compare(word, newWord, true, _service.Culture) != 0)

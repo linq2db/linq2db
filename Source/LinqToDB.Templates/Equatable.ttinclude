@@ -104,6 +104,6 @@ partial class Class
 
 static bool EqualityPropertiesFilterDefault(Class cl, Property prop)
 {
-	return cl is Table && prop is Column col && col.IsPrimaryKey;
+	return cl is Table && prop is Column && ((Column)prop).IsPrimaryKey;
 }
 #>

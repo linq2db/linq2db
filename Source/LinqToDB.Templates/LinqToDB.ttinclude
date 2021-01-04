@@ -1014,11 +1014,11 @@ void MakeMembersNamesUnique(IEnumerable<IClassMember> members, string defaultNam
 	LinqToDB.Common.Utils.MakeUniqueNames(
 		members,
 		reservedNames,
-		m => m is Table tbl ? (tbl.Schema != null && (PrefixTableMappingForDefaultSchema || !tbl.IsDefaultSchema) && PrefixTableMappingWithSchema ? tbl.Schema + "_" : null) + tbl.Name : (m is TypeBase t ? t.Name : ((MemberBase)m).Name),
+		m => m is Table ? (((Table)m).Schema != null && (PrefixTableMappingForDefaultSchema || !((Table)m).IsDefaultSchema) && PrefixTableMappingWithSchema ? ((Table)m).Schema + "_" : null) + ((Table)m).Name : (m is TypeBase ? ((TypeBase)m).Name : ((MemberBase)m).Name),
 		(m, newName, _) =>
 		{
-			if (m is TypeBase t)
-				t.Name = newName;
+			if (m is TypeBase)
+				((TypeBase)m).Name = newName;
 			else
 				((MemberBase)m).Name = newName;
 		},
@@ -1029,11 +1029,11 @@ IEnumerable<IClassMember> GetAllClassMembers(IEnumerable<IClassMember> members, 
 {
 	foreach (var member in members)
 	{
-		if (member is MemberGroup mg)
-			foreach (var m in GetAllClassMembers(mg.Members, exceptMethods))
+		if (member is MemberGroup)
+			foreach (var m in GetAllClassMembers(((MemberGroup)member).Members, exceptMethods))
 				yield return m;
 		// constructors don't have own type/flag
-		else if (!(member is Method method && (method.BuildType() == null || (exceptMethods != null && exceptMethods.Contains(method.Name)))))
+		else if (!(member is Method && (((Method)member).BuildType() == null || (exceptMethods != null && exceptMethods.Contains(((Method)member).Name)))))
 			yield return member;
 	}
 }

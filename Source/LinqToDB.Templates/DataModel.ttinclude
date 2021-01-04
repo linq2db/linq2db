@@ -14,8 +14,8 @@
 
 string   NamespaceName
 {
-	get => Model.Namespace.Name;
-	set => Model.Namespace.Name = value;
+	get { return Model.Namespace.Name;  }
+	set { Model.Namespace.Name = value; }
 }
 
 public string   ServerName;
@@ -49,29 +49,29 @@ public static bool EnforceModelNullability      = true;
 private Func<string, bool, string> _toValidName;
 public Func<string, bool, string> ToValidName
 {
-	get => _toValidName ?? ToValidNameDefault;
-	set => _toValidName = value;
+	get { return _toValidName ?? ToValidNameDefault; }
+	set { _toValidName = value;                      }
 }
 
 private Func<string, bool, string> _convertToCompilabl;
 public Func<string, bool, string> ConvertToCompilable
 {
-	get => _convertToCompilabl ?? ConvertToCompilableDefault;
-	set => _convertToCompilabl = value;
+	get { return _convertToCompilabl ?? ConvertToCompilableDefault; }
+	set { _convertToCompilabl = value;                              }
 }
 
 private Func<ForeignKey, string> _getAssociationExtensionPluralName;
 public Func<ForeignKey, string> GetAssociationExtensionPluralName
 {
-	get => _getAssociationExtensionPluralName ?? GetAssociationExtensionPluralNameDefault;
-	set => _getAssociationExtensionPluralName = value;
+	get { return _getAssociationExtensionPluralName ?? GetAssociationExtensionPluralNameDefault; }
+	set { _getAssociationExtensionPluralName = value;                                            }
 }
 
 private Func<ForeignKey, string> _getAssociationExtensionSingularName;
 public Func<ForeignKey, string> GetAssociationExtensionSingularName
 {
-	get => _getAssociationExtensionSingularName ?? GetAssociationExtensionSingularNameDefault;
-	set => _getAssociationExtensionSingularName = value;
+	get { return _getAssociationExtensionSingularName ?? GetAssociationExtensionSingularNameDefault; }
+	set { _getAssociationExtensionSingularName = value;                                              }
 }
 
 public LinqToDB.SchemaProvider.GetSchemaOptions GetSchemaOptions =
@@ -568,7 +568,8 @@ string ConvertToCompilableDefault(string name, bool mayRemoveUnderscore)
 
 Table GetTable(string name)
 {
-	if (Tables.TryGetValue(name, out var tbl))
+	Table tbl;
+	if (Tables.TryGetValue(name, out tbl))
 		return tbl;
 
 	WriteLine("#error Table '" + name +  "' not found.");
@@ -586,7 +587,8 @@ Table GetTable(string name)
 
 Procedure GetProcedure(string name)
 {
-	if (Procedures.TryGetValue(name, out var proc))
+	Procedure proc;
+	if (Procedures.TryGetValue(name, out proc))
 		return proc;
 
 	WriteLine("#error Procedure '" + name +  "' not found.");
@@ -607,7 +609,8 @@ Column GetColumn(string tableName, string columnName)
 {
 	var tbl = GetTable(tableName);
 
-	if (tbl.Columns.TryGetValue(columnName, out var col))
+	Column col;
+	if (tbl.Columns.TryGetValue(columnName, out col))
 		return col;
 
 	WriteLine("#error Column '" + tableName + "'.'" + columnName +  "' not found.");
@@ -633,7 +636,8 @@ ForeignKey GetForeignKey(string tableName, string fkName)
 {
 	var tbl = GetTable(tableName);
 
-	if (tbl.ForeignKeys.TryGetValue(fkName, out var fk))
+	ForeignKey fk;
+	if (tbl.ForeignKeys.TryGetValue(fkName, out fk))
 		return fk;
 
 	WriteLine("#error FK '" + tableName + "'.'" + fkName +  "' not found.");

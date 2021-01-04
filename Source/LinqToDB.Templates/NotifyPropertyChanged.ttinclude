@@ -25,9 +25,9 @@ void NotifyPropertyChangedImpl()
 
 		MemberGroup gr = null;
 
-		if (prop.Parent is Class cls)
+		if (prop.Parent is Class)
 		{
-			parentMembers = cls.Members;
+			parentMembers = ((Class)prop.Parent).Members;
 		}
 		else
 		{

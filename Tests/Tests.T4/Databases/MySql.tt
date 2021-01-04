@@ -1,9 +1,8 @@
-﻿<#@ template language="C#" debug="True" hostSpecific="True"                  #>
-<#@ output extension=".generated.cs"                                         #>
-<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net472\MySql.Data.dll" #>
-
-<#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.MySql.ttinclude" once="true" #>
-<#@ include file="..\Shared.ttinclude"                                         once="true" #>
+﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6" #>
+<#@ output extension=".generated.cs"                                                         #>
+<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net472\MySql.Data.dll"                 #>
+<#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.MySql.ttinclude" once="true"   #>
+<#@ include file="..\Shared.ttinclude"                                         once="true"   #>
 <#
 	NamespaceName = "MySqlDataContext";
 

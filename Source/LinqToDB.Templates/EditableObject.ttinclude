@@ -24,9 +24,9 @@ void EditableObjectImpl()
 
 		List<IClassMember> parentMembers;
 
-		if (prop.Parent is Class cls)
+		if (prop.Parent is Class)
 		{
-		    parentMembers = cls.Members;
+		    parentMembers = ((Class)prop.Parent).Members;
 		}
 		else
 		{

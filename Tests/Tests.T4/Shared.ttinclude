@@ -4,8 +4,9 @@
 <#@ include file="..\..\Source\LinqToDB.Templates\PluralizationService.ttinclude" once="true" #>
 <#
 	EnableNullableReferenceTypes = true;
-	GenerateDatabaseInfo = false;
-
+	GenerateDatabaseInfo         = false;
+#>
+<#+
 	string GetConnectionString(string config)
 	{
 		var settings = Tests.Tools.SettingsReader.Deserialize(

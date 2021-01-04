@@ -1,7 +1,6 @@
-﻿<#@ template language="C#" debug="True" hostSpecific="True" #>
-<#@ output extension=".generated.cs"                        #>
-<#@ import namespace="System.Reflection"                    #>
-
+﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6" #>
+<#@ output extension=".generated.cs"                                                         #>
+<#@ import namespace="System.Reflection"                                                     #>
 <#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.SapHana.ttinclude" once="true" #>
 <#@ include file="..\Shared.ttinclude"                                           once="true" #>
 <#
