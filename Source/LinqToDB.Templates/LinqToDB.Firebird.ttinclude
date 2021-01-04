@@ -16,7 +16,7 @@ LinqToDB.Data.DataConnection GetFirebirdConnection(string server, string databas
 
 LinqToDB.Data.DataConnection GetFirebirdConnection(string server, string database, string uid, string password)
 {
-	return GetFirebirdConnection($"DataSource={server};Database={database};User Id={uid};Password={password}");
+	return GetFirebirdConnection(string.Format("DataSource={0};Database={1};User Id={2};Password={3}", server, database, uid, password));
 }
 
 public void LoadFirebirdMetadata(string connectionString)

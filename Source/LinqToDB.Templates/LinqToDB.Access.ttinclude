@@ -13,7 +13,7 @@ LinqToDB.Data.DataConnection GetAccessConnectionForProvider(string connectionStr
 
 LinqToDB.Data.DataConnection GetAccessConnection(string path, string database)
 {
-	return GetAccessConnection($"Provider=Microsoft.Jet.OLEDB.4.0;Data Source={Path.Combine(path, database)};Locale Identifier=1033;Jet OLEDB:Engine Type=5;Persist Security Info=True");
+	return GetAccessConnection(string.Format("Provider=Microsoft.Jet.OLEDB.4.0;Data Source={0};Locale Identifier=1033;Jet OLEDB:Engine Type=5;Persist Security Info=True", Path.Combine(path, database)));
 }
 
 public void LoadAccessMetadata(string connectionString)

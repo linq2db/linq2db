@@ -58,12 +58,12 @@ LinqToDB.Data.DataConnection GetSybaseConnection(string connectionString)
 
 public LinqToDB.Data.DataConnection GetSybaseConnection(string server, string database)
 {
-	return GetSybaseConnection($"Data Source={server};Database={database};Integrated Security=SSPI");
+	return GetSybaseConnection(string.Format("Data Source={0};Database={1};Integrated Security=SSPI", server, database));
 }
 
 LinqToDB.Data.DataConnection GetSybaseConnection(string server, string port, string database, string uid, string password)
 {
-	return GetSybaseConnection($"Data Source={server};Port={port};Database={database};Uid={uid};Password={password};Charset=utf8;");
+	return GetSybaseConnection(string.Format("Data Source={0};Port={1};Database={2};Uid={3};Password={4};Charset=utf8;", server, port, database, uid, password));
 }
 
 public void LoadSybaseMetadata(string connectionString)

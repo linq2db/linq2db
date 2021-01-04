@@ -28,7 +28,7 @@ LinqToDB.Data.DataConnection GetSQLiteConnection(string connectionString)
 
 LinqToDB.Data.DataConnection GetSQLiteConnection(string path, string database)
 {
-	return GetSQLiteConnection($"Data Source={Path.Combine(path, database)}");
+	return GetSQLiteConnection(string.Format("Data Source={0}", Path.Combine(path, database)));
 }
 
 public void LoadSQLiteMetadata(string connectionString)

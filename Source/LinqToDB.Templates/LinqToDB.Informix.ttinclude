@@ -7,7 +7,7 @@ LinqToDB.Data.DataConnection GetInformixConnection(string connectionString)
 
 LinqToDB.Data.DataConnection GetInformixConnection(string host, string port, string server, string database, string uid, string password)
 {
-	return GetInformixConnection($"Host={host};Service={port};Server={server};Protocol=onsoctcp;Database={database};UID={uid};PWD={password}");
+	return GetInformixConnection(string.Format("Host={0};Service={1};Server={2};Protocol=onsoctcp;Database={3};UID={4};PWD={5}", host, port, server, database, uid, password));
 }
 
 public void LoadInformixMetadata(string connectionString)

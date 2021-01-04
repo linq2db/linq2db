@@ -49,7 +49,7 @@ void FixRecordResultFunctions()
 			{
 				var type = outParam.Type;
 				result.Members.Add(new Property(type, outParam.ParameterName));
-				mappings.Add($"{outParam.ParameterName} = ({type.ToTypeName()})tuple[{mappings.Count}]");
+				mappings.Add(string.Format("{0} = ({1})tuple[{2}]", outParam.ParameterName, type.ToTypeName(), mappings.Count));
 
 				if (outParam.IsIn)
 					outParam.IsOut = false;
@@ -58,7 +58,7 @@ void FixRecordResultFunctions()
 			proc.ProcParameters = proc.ProcParameters.Where(_ => !_.IsOut).ToList();
 			var recordType      = ModelType.Array(ModelType.Create<object>(true), false);
 
-			initMappingSchema.BodyBuilders.Add(() => new [] { $"MappingSchema.SetConvertExpression<{recordType.ToTypeName()}, {result.Name}>(tuple => new {result.Name}() {{ {string.Join(", ", mappings)} }});" });
+			initMappingSchema.BodyBuilders.Add(() => new [] { string.Format("MappingSchema.SetConvertExpression<{0}, {1}>(tuple => new {1}() {{ {2} }});", recordType.ToTypeName(), result.Name, string.Join(", ", mappings)) });
 		}
 		else // one parameter
 		{
@@ -135,7 +135,7 @@ LinqToDB.Data.DataConnection GetPostgreSQLConnection(string connectionString)
 
 LinqToDB.Data.DataConnection GetPostgreSQLConnection(string server, string port, string database, string uid, string password)
 {
-	return GetPostgreSQLConnection($"Server={server};Port={port};Database={database};User Id={uid};Password={password};Pooling=true;MinPoolSize=10;MaxPoolSize=100;");
+	return GetPostgreSQLConnection(string.Format("Server={0};Port={1};Database={2};User Id={3};Password={4};Pooling=true;MinPoolSize=10;MaxPoolSize=100;", server, port, database, uid, password));
 }
 
 public void LoadPostgreSQLMetadata(string connectionString)

@@ -8,7 +8,7 @@
 	GenerateProviderSpecificTable = t =>
 	{
 		var method = new Method(
-			() => $"ITable<{t.TypeName}>",
+			() => string.Format("ITable<{0}>", t.TypeName),
 			t.DataContextPropertyName,
 			t.Parameters.Select(p => (Func<string>)(() => p.Type.ToTypeName() + " " + p.ParameterName)),
 			() => new []
@@ -85,7 +85,7 @@
 
 	LinqToDB.Data.DataConnection GetSapHanaConnection(string server, string schema, string uid, string password)
 	{
-		return GetSapHanaConnection($"Server={server};Current Schema={schema};UserID={uid};Password={password};");
+		return GetSapHanaConnection(string.Format("Server={0};Current Schema={1};UserID={2};Password={3};", server, schema, uid, password));
 	}
 
 	public void LoadSapHanaMetadata(DataConnection dataConnection)

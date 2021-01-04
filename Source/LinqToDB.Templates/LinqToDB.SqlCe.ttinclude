@@ -8,7 +8,7 @@ LinqToDB.Data.DataConnection GetSqlCeConnection(string connectionString)
 
 LinqToDB.Data.DataConnection GetSqlCeConnection(string path, string database)
 {
-	return GetSqlCeConnection($"Data Source={Path.Combine(path, database)}");
+	return GetSqlCeConnection(string.Format("Data Source={0}", Path.Combine(path, database)));
 }
 
 public void LoadSqlCeMetadata(string connectionString)

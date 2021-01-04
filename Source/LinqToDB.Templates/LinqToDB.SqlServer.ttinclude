@@ -44,7 +44,7 @@ void DoGenerateSqlServerFreeText()
 			Members =
 			{
 				new Method(() => "IQueryable<SqlServerExtensions.FreeTextKey<TKey>>", "FreeTextTable",
-					new Func<string>[] { () => "ITable<TTable> table", () => $"Expression<Func<TTable,{ModelType.Create<object>(true).ToTypeName()}>> columns", () => "string search" },
+					new Func<string>[] { () => "ITable<TTable> table", () => string.Format("Expression<Func<TTable,{0}>> columns", ModelType.Create<object>(true).ToTypeName()), () => "string search" },
 					() => new[]
 					{
 						"return Sql.Ext.SqlServer().FreeTextTable<TTable, TKey>(table, columns, search);"
@@ -71,14 +71,14 @@ LinqToDB.Data.DataConnection GetSqlServerConnection(
 	SqlServerVersion  version  = SqlServerVersion.v2008,
 	SqlServerProvider provider = SqlServerProvider.SystemDataSqlClient)
 {
-	return GetSqlServerConnection($"Data Source={server};Database={database};Integrated Security=SSPI", version, provider);
+	return GetSqlServerConnection(string.Format("Data Source={0};Database={1};Integrated Security=SSPI", server, database), version, provider);
 }
 
 LinqToDB.Data.DataConnection GetSqlServerConnection(string server, string database, string user, string password,
 	SqlServerVersion  version  = SqlServerVersion.v2008,
 	SqlServerProvider provider = SqlServerProvider.SystemDataSqlClient)
 {
-	return GetSqlServerConnection($"Server={server};Database={database};User Id={user};Password={password};", version, provider);
+	return GetSqlServerConnection(string.Format("Server={0};Database={1};User Id={2};Password={3};", server, database, user, password), version, provider);
 }
 
 public void LoadSqlServerMetadata(string connectionString,

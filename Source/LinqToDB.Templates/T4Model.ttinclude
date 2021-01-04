@@ -29,7 +29,7 @@ public void GenerateModel()
 	WriteLine("");
 	WriteLine("#pragma warning disable 1591");
 	if (EnableNullableReferenceTypes)
-		WriteLine($"#nullable enable");
+		WriteLine("#nullable enable");
 	WriteLine("");
 
 	BeforeGenerateModel();
@@ -222,7 +222,7 @@ static Action<GeneratedTextTransformation,Class> WriteBeginClass = (tt,cl) =>
 	tt.Write(cl.AccessModifier.ToString().ToLower() + " ");
 	if (cl.IsStatic)  tt.Write("static ");
 	if (cl.IsPartial) tt.Write("partial ", cl.Name);
-	tt.Write("{0} {1}{2}", cl.ClassKeyword, cl.Name, cl.GenericArguments.Count > 0 ? $"<{string.Join(", ", cl.GenericArguments)}>" : string.Empty);
+	tt.Write("{0} {1}{2}", cl.ClassKeyword, cl.Name, cl.GenericArguments.Count > 0 ? string.Format("<{0}>", string.Join(", ", cl.GenericArguments)) : string.Empty);
 
 	if (!string.IsNullOrEmpty(cl.BaseClass) || cl.Interfaces.Count > 0)
 	{
@@ -1257,7 +1257,7 @@ static Action<GeneratedTextTransformation,Method,bool> WriteMethod = (tt,m,compa
 		m.BuildType() == null ? "" : " ",
 		m.BuildType(), LenDiff(m.TypeLen,     m.BuildType() ?? ""),
 		m.Name,
-		m.GenericArguments.Count > 0 ? $"<{string.Join(", ", m.GenericArguments)}>" : string.Empty);
+		m.GenericArguments.Count > 0 ? string.Format("<{0}>", string.Join(", ", m.GenericArguments)) : string.Empty);
 
 	Action writeComment = () =>
 	{
@@ -1578,17 +1578,17 @@ static string ToStringLiteral(string value)
 	{
 		switch (chr)
 		{
-			case '\t':     sb.Append("\\t");            break;
-			case '\n':     sb.Append("\\n");            break;
-			case '\r':     sb.Append("\\r");            break;
-			case '\\':     sb.Append("\\\\");           break;
-			case '"' :     sb.Append("\\\"");           break;
-			case '\0':     sb.Append("\\0");            break;
+			case '\t':     sb.Append("\\t");                    break;
+			case '\n':     sb.Append("\\n");                    break;
+			case '\r':     sb.Append("\\r");                    break;
+			case '\\':     sb.Append("\\\\");                   break;
+			case '"' :     sb.Append("\\\"");                   break;
+			case '\0':     sb.Append("\\0");                    break;
 			case '\u0085':
 			case '\u2028':
 			case '\u2029':
-					 sb.Append($"\\u{(ushort)chr:X4}"); break;
-			default: sb.Append(chr);                    break;
+					 sb.AppendFormat("\\u{0:X4}", (ushort)chr); break;
+			default: sb.Append(chr);                            break;
 		}
 	}
 
@@ -1624,7 +1624,7 @@ public class ModelType
 		if (type.IsConstructedGenericType)
 		{
 			if (typeArguments != null && typeArguments.Length > 0)
-				throw new ArgumentException($"{type} must be open generic type or {typeArguments} should be empty");
+				throw new ArgumentException(string.Format("{0} must be open generic type or {1} should be empty", type, typeArguments));
 
 			if (!_aliasedTypes.ContainsKey(type))
 				_arguments = new List<ModelType>(type.GetGenericArguments().Select(a => new ModelType(a, /* we don't have type info here */ false)));

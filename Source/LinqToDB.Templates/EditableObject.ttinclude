@@ -137,9 +137,9 @@ void EditableObjectImpl()
 			{
 				var name = p.Name.Trim();
 
-				ac.BodyBuilders.Add(() => new [] { $"Accept{name}Changes();" });
-				rc.BodyBuilders.Add(() => new [] { $"Reject{name}Changes();" });
-				id.GetBodyBuilders.Add(() => new [] { $"\tIs{name}Dirty{LenDiff(maxLen, name)} ||" });
+				ac.BodyBuilders.Add(() => new [] { string.Format("Accept{0}Changes();", name) });
+				rc.BodyBuilders.Add(() => new [] { string.Format("Reject{0}Changes();", name) });
+				id.GetBodyBuilders.Add(() => new [] { string.Format("\tIs{0}Dirty{1} ||", name, LenDiff(maxLen, name)) });
 			}
 
 			ac.BodyBuilders.Add(() => new[]

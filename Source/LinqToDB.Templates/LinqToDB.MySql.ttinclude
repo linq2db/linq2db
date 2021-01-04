@@ -8,7 +8,7 @@ LinqToDB.Data.DataConnection GetMySqlConnection(string connectionString)
 
 LinqToDB.Data.DataConnection GetMySqlConnection(string server, string database, string uid, string password, int port=3306)
 {
-	return GetMySqlConnection($"Server={server};Port={port};Database={database};Uid={uid};Pwd={password};charset=utf8;");
+	return GetMySqlConnection(string.Format("Server={0};Port={1};Database={2};Uid={3};Pwd={4};charset=utf8;", server, port, database, uid, password));
 }
 
 public void LoadMySqlMetadata(string connectionString)
