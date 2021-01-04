@@ -156,7 +156,7 @@ namespace Tests.Data
 		{
 			using (var conn = GetDataContext(context))
 			{
-				var result = 
+				var result =
 					from p in conn.Person
 					from pp in conn.Person.LeftJoin(pp => pp.ID + 1 == p.ID)
 					select new { p.ID, pp.Name };

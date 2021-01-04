@@ -136,7 +136,6 @@ namespace LinqToDB.SqlProvider
 		protected virtual void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, int indent, bool skipAlias)
 		{
 			Statement           = statement;
-			_aliases            = new HashSet<string>(Statement.GetCurrentAliases(), StringComparer.OrdinalIgnoreCase);
 			StringBuilder       = sb;
 			OptimizationContext = optimizationContext;
 			Indent              = indent;
@@ -156,7 +155,8 @@ namespace LinqToDB.SqlProvider
 
 						var sqlBuilder = ((BasicSqlBuilder)CreateSqlBuilder());
 						sqlBuilder.BuildSql(commandNumber,
-							new SqlSelectStatement(union.SelectQuery) { ParentStatement = statement }, sb, optimizationContext, indent,
+							new SqlSelectStatement(union.SelectQuery) { ParentStatement = statement }, sb, 
+							optimizationContext, indent,
 							skipAlias);
 					}
 				}
@@ -569,23 +569,20 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual bool SupportsBooleanInColumn => false;
 
-		protected virtual void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
+		protected virtual ISqlExpression WrapBooleanExpression(ISqlExpression expr)
 		{
 			var wrap = false;
-			if (!SupportsBooleanInColumn)
-			{
 
-				if (expr.SystemType == typeof(bool))
-				{
-					if (expr is SqlSearchCondition)
-						wrap = true;
-					else
-						wrap =
-							expr is SqlExpression ex &&
-							ex.Expr == "{0}" &&
-							ex.Parameters.Length == 1 &&
-							ex.Parameters[0] is SqlSearchCondition;
-				}
+			if (expr.SystemType == typeof(bool))
+			{
+				if (expr is SqlSearchCondition)
+					wrap = true;
+				else
+					wrap =
+						expr is SqlExpression ex &&
+						ex.Expr == "{0}" &&
+						ex.Parameters.Length == 1 &&
+						ex.Parameters[0] is SqlSearchCondition;
 			}
 
 			if (wrap)
@@ -594,7 +591,16 @@ namespace LinqToDB.SqlProvider
 				{
 					DoNotOptimize = true
 				};
-				expr = ConvertElement(expr);
+			}
+
+			return expr;
+		}
+
+		protected virtual void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
+		{
+			if (!SupportsBooleanInColumn)
+			{
+				expr = WrapBooleanExpression(expr);
 			}
 
 			BuildExpression(expr, true, true, alias, ref addAlias, true);
@@ -1672,7 +1678,7 @@ namespace LinqToDB.SqlProvider
 
 				var item = selectQuery.OrderBy.Items[i];
 
-				BuildExpression(item.Expression);
+				BuildExpression(WrapBooleanExpression(item.Expression));
 
 				if (item.IsDescending)
 					StringBuilder.Append(" DESC");
@@ -3170,7 +3176,7 @@ namespace LinqToDB.SqlProvider
 		string GetAlias(string desiredAlias, string defaultAlias)
 		{
 			if (_aliases == null)
-				_aliases = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+				_aliases = OptimizationContext.Aliases.GetUsedTableAliases();
 
 			var alias = desiredAlias;
 

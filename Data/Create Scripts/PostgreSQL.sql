@@ -642,3 +642,12 @@ COMMENT ON MATERIALIZED VIEW  "Issue2023" IS 'This is the Issue2023 matview';
 COMMENT ON COLUMN             "Issue2023"."PersonID" IS 'This is the Issue2023.PersonID column';
 -- SKIP PostgreSQL.9.2 END
 GO
+
+DROP SCHEMA IF EXISTS "SchemaName"
+GO
+
+CREATE SCHEMA "SchemaName"
+GO
+CREATE OR REPLACE FUNCTION "SchemaName"."fnTest"(param INT) RETURNS VARCHAR(20)
+AS $$ BEGIN RETURN 'issue2679test'; END $$ LANGUAGE PLPGSQL;
+GO

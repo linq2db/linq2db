@@ -1,7 +1,7 @@
-﻿<#@ template language="C#" debug="True" hostSpecific="True"                     #>
-<#@ output extension=".generated.cs"                                            #>
-<#@ include file="..\Shared.ttinclude"                                          #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.Sybase.ttinclude" #>
+﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6" #>
+<#@ output extension=".generated.cs"                                                         #>
+<#@ include file="..\Shared.ttinclude"                                          once="true"  #>
+<#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.Sybase.ttinclude" once="true"  #>
 <#
 	NamespaceName = "SybaseDataContext";
 

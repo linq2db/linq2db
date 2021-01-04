@@ -1,13 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using LinqToDB.Common;
 
 namespace LinqToDB.SqlQuery
 {
-	public interface IReadOnlyParameterValues
-	{
-		bool TryGetValue(SqlParameter parameter, [NotNullWhen(true)] out SqlParameterValue? value);
-	}
+	using Common;
 
 	public class SqlParameterValues : IReadOnlyParameterValues
 	{

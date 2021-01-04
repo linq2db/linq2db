@@ -6,6 +6,8 @@ namespace Tests
 {
 	public static class TestProvName
 	{
+		public const string Default           = "SQLite.Default";
+
 		public const string SqlAzure          = "SqlAzure";
 		public const string MariaDB           = "MariaDB";
 		/// <summary>

@@ -1,8 +1,7 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 	<PropertyGroup>
-		<LinqToDBT4DB2TemplatesDirectory>$(MSBuildThisFileDirectory)..\contentFiles\any\any\LinqToDB.Templates\</LinqToDBT4DB2TemplatesDirectory>
-		<LinqToDBT4DB2ToolsDirectory>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4DB2ToolsDirectory>
-		<LinqToDBT4ToolsDirectory>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4ToolsDirectory>
+		<LinqToDBT4SharedTools>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4SharedTools>
+		<LinqToDBT4DB2TemplatesPath>$(MSBuildThisFileDirectory)..\contentFiles\any\any\LinqToDB.Templates\</LinqToDBT4DB2TemplatesPath>
 	</PropertyGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
@@ -10,7 +9,7 @@
 		<PackageReference Include="IBM.Data.DB2.Core-lnx" Version="2.2.0.100" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' " />
 		<PackageReference Include="IBM.Data.DB2.Core-osx" Version="2.0.0.100" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' "/>
 	</ItemGroup>
-	
+
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.1' ">
 		<PackageReference Include="IBM.Data.DB2.Core" Version="3.1.0.300"  Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' " />
 		<PackageReference Include="IBM.Data.DB2.Core-lnx" Version="3.1.0.300" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' " />

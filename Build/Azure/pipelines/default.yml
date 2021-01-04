@@ -5,11 +5,11 @@ variables:
   - name: build_configuration
     value: Azure
   - name: assemblyVersion
-    value: 3.2.2
+    value: 3.2.3
   - name: nugetVersion
-    value: 3.2.2
+    value: 3.2.3
   - name: nugetDevVersion
-    value: 3.2.2
+    value: 3.2.3
   - name: artifact_nugets
     value: nugets
   - name: artifact_linq2db_binaries
@@ -80,10 +80,16 @@ stages:
         targetPath: '$(Build.SourcesDirectory)/Source/LinqToDB.AspNet/bin/Release'
 
     - task: DownloadPipelineArtifact@2
-      displayName: Download test files (for t4 tools)
+      displayName: Download test files (for t4 tools, part 1)
       inputs:
         artifactName: '$(netfx472_tests)'
         targetPath: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net472'
+
+    - task: DownloadPipelineArtifact@2
+      displayName: Download test files (for t4 tools, part 2)
+      inputs:
+        artifactName: '$(netfx472_tests_t4)'
+        targetPath: '$(Build.SourcesDirectory)/Tests/Tests.T4/bin/$(build_configuration)/net472'
 
     - task: PowerShell@2
       inputs:
@@ -139,3 +145,4 @@ stages:
       enabled: and(eq(variables['System.PullRequest.TargetBranch'], 'release'), succeeded())
       experimental: false
       with_baselines: true
+      mac_enabled: and(eq(variables['System.PullRequest.TargetBranch'], 'release'), succeeded()) # enable macos testing only for release

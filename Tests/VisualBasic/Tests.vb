@@ -1,5 +1,6 @@
 ﻿Imports LinqToDB
 Imports LinqToDB.Mapping
+Imports Tests.Model
 
 Public Module VBTests
 
@@ -59,6 +60,13 @@ Public Module VBTests
 					.personname = f.Key.personname,
 					.LastAdded = f.Max(Function(g) g.added)
 				}).ToList
+
+	End Function
+
+	Public Function Issue2746Test(ByVal db As IDataContext, SelectedValue As String) As IEnumerable(Of GrandChild1)
+		Return db.GetTable(Of GrandChild1).
+			Where(Function(w) w.ChildID.HasValue AndAlso w.ChildID.Value = CType(SelectedValue, Integer)).
+			ToList
 
 	End Function
 

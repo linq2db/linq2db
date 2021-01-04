@@ -913,7 +913,11 @@ namespace LinqToDB.Expressions
 			{
 				case ExpressionType.ConvertChecked :
 				case ExpressionType.Convert        :
-					return ((UnaryExpression)ex).Operand.UnwrapConvert();
+				{
+					if (((UnaryExpression)ex).Method == null)
+						return ((UnaryExpression)ex).Operand.UnwrapConvert();
+					break;
+				}
 			}
 
 			return ex;

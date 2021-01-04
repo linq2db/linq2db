@@ -4,14 +4,14 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 
+using FirebirdSql.Data.FirebirdClient;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Firebird;
-using LinqToDB.SchemaProvider;
 
 namespace Tests
 {
-	using System.Diagnostics.CodeAnalysis;
 	using Model;
 
 	public static class TestUtils
@@ -274,6 +274,11 @@ namespace Tests
 
 			public override void Dispose()
 			{
+				if (DataContext is DataConnection dc && dc.Connection is FbConnection fbc )
+				{
+					FbConnection.ClearPool(fbc);
+				}
+
 				DataContext.Close();
 				FirebirdTools.ClearAllPools();
 				base.Dispose();
@@ -298,6 +303,8 @@ namespace Tests
 		{
 			try
 			{
+				if ((tableOptions & TableOptions.CheckExistence) == TableOptions.CheckExistence)
+					db.DropTable<T>(tableName, tableOptions:tableOptions);
 				return CreateTable<T>(db, tableName, tableOptions);
 			}
 			catch
@@ -310,27 +317,25 @@ namespace Tests
 
 		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string? tableName, IEnumerable<T> items, bool insertInTransaction = false)
 		{
-			var table = CreateLocalTable<T>(db, tableName);
+			var table = CreateLocalTable<T>(db, tableName, TableOptions.CheckExistence);
 
-			if (db is DataConnection dc)
+			using (new DisableLogging())
 			{
-				// apply transation only on insert, as not all dbs support DDL within transaction
-				if (insertInTransaction)
-					dc.BeginTransaction();
+				if (db is DataConnection dc)
+				{
+					// apply transaction only on insert, as not all dbs support DDL within transaction
+					if (insertInTransaction)
+						dc.BeginTransaction();
 
-				using (new DisableLogging())
-					table.Copy(items
-						, new BulkCopyOptions { BulkCopyType = BulkCopyType.MultipleRows }
-						);
+					table.Copy(items, new BulkCopyOptions { BulkCopyType = BulkCopyType.MultipleRows });
 
-				if (insertInTransaction)
-					dc.CommitTransaction();
-			}
-			else
-				using (new DisableLogging())
+					if (insertInTransaction)
+						dc.CommitTransaction();
+				}
+				else
 					foreach (var item in items)
 						db.Insert(item, table.TableName);
-
+			}
 
 			return table;
 		}

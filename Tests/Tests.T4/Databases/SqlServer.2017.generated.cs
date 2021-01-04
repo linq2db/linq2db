@@ -16,6 +16,7 @@ using System.Reflection;
 
 using LinqToDB;
 using LinqToDB.Common;
+using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
@@ -1593,10 +1594,10 @@ namespace Sql2017
 		#region Associations
 
 		/// <summary>
-		/// FK_TestSchemaY_OtherID
+		/// FK_TestSchemaY_TestSchemaX
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchemaY_OtherID", BackReferenceName="TestSchemaYOtherIds")]
-		public TestSchemaX FkTestSchemaYOtherID { get; set; } = null!;
+		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchemaY_TestSchemaX", BackReferenceName="TestSchemaY")]
+		public TestSchemaX FkTestSchemaYTestSchemaX { get; set; } = null!;
 
 		/// <summary>
 		/// FK_TestSchemaY_ParentTestSchemaX
@@ -1605,9 +1606,9 @@ namespace Sql2017
 		public TestSchemaX ParentTestSchemaX { get; set; } = null!;
 
 		/// <summary>
-		/// FK_TestSchemaY_TestSchemaX
+		/// FK_TestSchemaY_OtherID
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchemaY_TestSchemaX", BackReferenceName="TestSchemaY")]
+		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchemaY_OtherID", BackReferenceName="TestSchemaYOtherIds")]
 		public TestSchemaX TestSchemaX { get; set; } = null!;
 
 		#endregion
@@ -2380,19 +2381,19 @@ namespace Sql2017
 		#region TestSchemaY Associations
 
 		/// <summary>
-		/// FK_TestSchemaY_OtherID
+		/// FK_TestSchemaY_TestSchemaX
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchemaY_OtherID", BackReferenceName="TestSchemaYOtherIds")]
-		public static IQueryable<TestSchemaX> FkTestSchemaYOtherIds(this TestSchemaY obj, IDataContext db)
+		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchemaY_TestSchemaX", BackReferenceName="TestSchemaY")]
+		public static IQueryable<TestSchemaX> FkTestSchemaYTestSchemaX(this TestSchemaY obj, IDataContext db)
 		{
 			return db.GetTable<TestSchemaX>().Where(c => c.TestSchemaXID == obj.TestSchemaXID);
 		}
 
 		/// <summary>
-		/// FK_TestSchemaY_OtherID
+		/// FK_TestSchemaY_TestSchemaX
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchemaY_OtherID", BackReferenceName="TestSchemaYOtherIds")]
-		public static TestSchemaY FkTestSchemaYOtherID(this TestSchemaX obj, IDataContext db)
+		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchemaY_TestSchemaX", BackReferenceName="TestSchemaY")]
+		public static TestSchemaY FkTestSchemaYTestSchemaX0(this TestSchemaX obj, IDataContext db)
 		{
 			return db.GetTable<TestSchemaY>().Where(c => c.TestSchemaXID == obj.TestSchemaXID).First();
 		}
@@ -2416,18 +2417,18 @@ namespace Sql2017
 		}
 
 		/// <summary>
-		/// FK_TestSchemaY_TestSchemaX
+		/// FK_TestSchemaY_OtherID
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchemaY_TestSchemaX", BackReferenceName="TestSchemaY")]
+		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchemaY_OtherID", BackReferenceName="TestSchemaYOtherIds")]
 		public static IQueryable<TestSchemaX> TestSchemaX(this TestSchemaY obj, IDataContext db)
 		{
 			return db.GetTable<TestSchemaX>().Where(c => c.TestSchemaXID == obj.TestSchemaXID);
 		}
 
 		/// <summary>
-		/// FK_TestSchemaY_TestSchemaX
+		/// FK_TestSchemaY_OtherID
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchemaY_TestSchemaX", BackReferenceName="TestSchemaY")]
+		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchemaY_OtherID", BackReferenceName="TestSchemaYOtherIds")]
 		public static TestSchemaY TestSchemaX0(this TestSchemaX obj, IDataContext db)
 		{
 			return db.GetTable<TestSchemaY>().Where(c => c.TestSchemaXID == obj.TestSchemaXID).First();
