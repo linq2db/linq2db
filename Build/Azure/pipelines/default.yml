@@ -80,10 +80,16 @@ stages:
         targetPath: '$(Build.SourcesDirectory)/Source/LinqToDB.AspNet/bin/Release'
 
     - task: DownloadPipelineArtifact@2
-      displayName: Download test files (for t4 tools)
+      displayName: Download test files (for t4 tools, part 1)
       inputs:
         artifactName: '$(netfx472_tests)'
         targetPath: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net472'
+
+    - task: DownloadPipelineArtifact@2
+      displayName: Download test files (for t4 tools, part 2)
+      inputs:
+        artifactName: '$(netfx472_tests_t4)'
+        targetPath: '$(Build.SourcesDirectory)/Tests/Tests.T4/bin/$(build_configuration)/net472'
 
     - task: PowerShell@2
       inputs:
