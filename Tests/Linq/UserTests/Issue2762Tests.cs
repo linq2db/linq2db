@@ -324,18 +324,18 @@ namespace Tests.UserTests.Issue2762Tests
 
 		private void InitDb(CountContext context)
 		{
-			context.CreateTable<Alps>();
-			context.CreateTable<Beach>();
-			context.CreateTable<Samantha>();
-			context.CreateTable<SamanthaName>();
-			context.CreateTable<Stone>();
-			context.CreateTable<Apple>();
-			context.CreateTable<Flint>();
-			context.CreateTable<Car>();
-			context.CreateTable<Bicycle>();
-			context.CreateTable<PowerVersion>();
-			context.CreateTable<Power>();
-			context.CreateTable<PowerHistory>();
+			context.CreateLocalTable<Alps>();
+			context.CreateLocalTable<Beach>();
+			context.CreateLocalTable<Samantha>();
+			context.CreateLocalTable<SamanthaName>();
+			context.CreateLocalTable<Stone>();
+			context.CreateLocalTable<Apple>();
+			context.CreateLocalTable<Flint>();
+			context.CreateLocalTable<Car>();
+			context.CreateLocalTable<Bicycle>();
+			context.CreateLocalTable<PowerVersion>();
+			context.CreateLocalTable<Power>();
+			context.CreateLocalTable<PowerHistory>();
 		}
 
 		private MappingSchema GetMappingSchema()
@@ -349,47 +349,47 @@ namespace Tests.UserTests.Issue2762Tests
 			aBuilder.Property(x => x.Issue);
 			aBuilder.Property(x => x.RaceStartId);
 
-			var bBuilder = fluentMappingBuilder.Entity<Beach>();
+			var bBuilder = fluentMappingBuilder.Entity<Beach>().HasTableName("Issue2762Beach");
 			bBuilder.Property(x => x.Id);
 			//bBuilder.Property(x => x.Name);
 
-			var cBuilder = fluentMappingBuilder.Entity<Samantha>();
+			var cBuilder = fluentMappingBuilder.Entity<Samantha>().HasTableName("Issue2762Samantha");
 			cBuilder.Property(x => x.Id);
 			//cBuilder.Property(x => x.Name);
 
-			var dBuilder = fluentMappingBuilder.Entity<SamanthaName>();
+			var dBuilder = fluentMappingBuilder.Entity<SamanthaName>().HasTableName("Issue2762SamanthaName");
 			dBuilder.Property(x => x.Id);
 			//dBuilder.Property(x => x.Name);
 
-			var eBuilder = fluentMappingBuilder.Entity<Stone>();
+			var eBuilder = fluentMappingBuilder.Entity<Stone>().HasTableName("Issue2762Stone");
 			eBuilder.Property(x => x.Id);
 			//eBuilder.Property(x => x.Name);
 
-			var fBuilder = fluentMappingBuilder.Entity<Apple>();
+			var fBuilder = fluentMappingBuilder.Entity<Apple>().HasTableName("Issue2762Apple");
 			fBuilder.Property(x => x.Id);
 			//fBuilder.Property(x => x.Name);
 
-			var gBuilder = fluentMappingBuilder.Entity<Flint>();
+			var gBuilder = fluentMappingBuilder.Entity<Flint>().HasTableName("Issue2762Flint");
 			gBuilder.Property(x => x.Id);
 			//gBuilder.Property(x => x.Name);
 
-			var hBuilder = fluentMappingBuilder.Entity<Car>();
+			var hBuilder = fluentMappingBuilder.Entity<Car>().HasTableName("Issue2762Car");
 			hBuilder.Property(x => x.Id);
 			//hBuilder.Property(x => x.Name);
 
-			var iBuilder = fluentMappingBuilder.Entity<Bicycle>();
+			var iBuilder = fluentMappingBuilder.Entity<Bicycle>().HasTableName("Issue2762Bicycle");
 			iBuilder.Property(x => x.Id);
 			//iBuilder.Property(x => x.Name);
 
-			var jBuilder = fluentMappingBuilder.Entity<PowerVersion>();
+			var jBuilder = fluentMappingBuilder.Entity<PowerVersion>().HasTableName("Issue2762PowerVersion");
 			jBuilder.Property(x => x.Id);
 			// jBuilder.Property(x => x.Name);
 
-			var kBuilder = fluentMappingBuilder.Entity<Power>();
+			var kBuilder = fluentMappingBuilder.Entity<Power>().HasTableName("Issue2762Power");
 			kBuilder.Property(x => x.Id);
 			// kBuilder.Property(x => x.Name);
 
-			var lBuilder = fluentMappingBuilder.Entity<PowerHistory>();
+			var lBuilder = fluentMappingBuilder.Entity<PowerHistory>().HasTableName("Issue2762PowerHistory");
 			lBuilder.Property(x => x.Id);
 			// lBuilder.Property(x => x.Name);
 
@@ -397,7 +397,7 @@ namespace Tests.UserTests.Issue2762Tests
 		}
 
 		[Test]
-		public void Issue2762Test([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void Issue2762Test([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracleManaged)] string context)
 		{
 			using (var db = new CountContext(context, GetMappingSchema()))
 			{
