@@ -44,8 +44,8 @@ Code examples and demos can be found [here](https://github.com/linq2db/examples)
 - [LINQPad Driver](https://github.com/linq2db/linq2db.LINQPad)
 - [DB2 iSeries Provider](https://github.com/LinqToDB4iSeries/Linq2DB4iSeries)
 - [ASP.NET CORE 2 Template](https://github.com/David-Mawer/LINQ2DB-MVC-Core-2/tree/master/LINQ2DB-MVC-Core-2)
-- [ASP.NET CORE 3 Template](https://github.com/David-Mawer/LINQ2DB-MVC-Core-3)
 - [ASP.NET CORE 3 Template with Angular](https://github.com/David-Mawer/LINQ2DB-AngularWebApp-Core-3)
+- [ASP.NET CORE 5 Template](https://github.com/David-Mawer/LINQ2DB-MVC-Core-5)
 
 
 Notable open-source users:
