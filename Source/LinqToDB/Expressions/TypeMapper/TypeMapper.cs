@@ -274,7 +274,7 @@ namespace LinqToDB.Expressions
 						if (_typeMappingReverseCache.TryGetValue(parameterType, out var parameterWrapperType))
 						{
 							parameterValues[i] = Expression.Convert(MapExpression((object? value) => Wrap(parameterWrapperType, value), parameterValues[i]), parameterWrapperType);
-							parameterTypes[i] = parameterWrapperType;
+							parameterTypes[i]  = parameterWrapperType;
 						}
 					}
 

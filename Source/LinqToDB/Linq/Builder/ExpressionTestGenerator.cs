@@ -11,25 +11,29 @@ namespace LinqToDB.Linq.Builder
 {
 	using Extensions;
 	using LinqToDB.Expressions;
+	using LinqToDB.Mapping;
 
 	class ExpressionTestGenerator
 	{
 		readonly bool          _mangleNames;
 		readonly StringBuilder _exprBuilder = new StringBuilder();
+		readonly Assembly      _linq2dbAssembly;
+		IDataContext?          _dataContext;
 
 		string _indent = "\t\t\t\t";
 
-		public ExpressionTestGenerator(): this(true)
+		public ExpressionTestGenerator() : this(true)
 		{
 		}
 
 		public ExpressionTestGenerator(bool mangleNames)
 		{
 			_mangleNames = mangleNames;
+			_linq2dbAssembly = typeof(ExpressionTestGenerator).Assembly;
 		}
 
 		void PushIndent() { _indent += '\t'; }
-		void PopIndent () { _indent = _indent.Substring(1); }
+		void PopIndent() { _indent = _indent.Substring(1); }
 
 		readonly HashSet<Expression> _visitedExprs = new HashSet<Expression>();
 
@@ -61,435 +65,435 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.RightShift:
 				case ExpressionType.Subtract:
 				case ExpressionType.SubtractChecked:
+				{
+					var e = (BinaryExpression)expr;
+
+					_exprBuilder.Append("(");
+
+					e.Left.Visit(BuildExpression);
+
+					switch (expr.NodeType)
 					{
-						var e = (BinaryExpression)expr;
-
-						_exprBuilder.Append("(");
-
-						e.Left.Visit(BuildExpression);
-
-						switch (expr.NodeType)
-						{
-							case ExpressionType.Add                :
-							case ExpressionType.AddChecked         : _exprBuilder.Append(" + ");  break;
-							case ExpressionType.And                : _exprBuilder.Append(" & ");  break;
-							case ExpressionType.AndAlso            : _exprBuilder.Append(" && "); break;
-							case ExpressionType.Assign             : _exprBuilder.Append(" = ");  break;
-							case ExpressionType.Coalesce           : _exprBuilder.Append(" ?? "); break;
-							case ExpressionType.Divide             : _exprBuilder.Append(" / ");  break;
-							case ExpressionType.Equal              : _exprBuilder.Append(" == "); break;
-							case ExpressionType.ExclusiveOr        : _exprBuilder.Append(" ^ ");  break;
-							case ExpressionType.GreaterThan        : _exprBuilder.Append(" > ");  break;
-							case ExpressionType.GreaterThanOrEqual : _exprBuilder.Append(" >= "); break;
-							case ExpressionType.LeftShift          : _exprBuilder.Append(" << "); break;
-							case ExpressionType.LessThan           : _exprBuilder.Append(" < ");  break;
-							case ExpressionType.LessThanOrEqual    : _exprBuilder.Append(" <= "); break;
-							case ExpressionType.Modulo             : _exprBuilder.Append(" % ");  break;
-							case ExpressionType.Multiply           :
-							case ExpressionType.MultiplyChecked    : _exprBuilder.Append(" * ");  break;
-							case ExpressionType.NotEqual           : _exprBuilder.Append(" != "); break;
-							case ExpressionType.Or                 : _exprBuilder.Append(" | ");  break;
-							case ExpressionType.OrElse             : _exprBuilder.Append(" || "); break;
-							case ExpressionType.Power              : _exprBuilder.Append(" ** "); break;
-							case ExpressionType.RightShift         : _exprBuilder.Append(" >> "); break;
-							case ExpressionType.Subtract           :
-							case ExpressionType.SubtractChecked    : _exprBuilder.Append(" - ");  break;
-						}
-
-						e.Right.Visit(BuildExpression);
-
-						_exprBuilder.Append(")");
-
-						return false;
+						case ExpressionType.Add:
+						case ExpressionType.AddChecked: _exprBuilder.Append(" + "); break;
+						case ExpressionType.And: _exprBuilder.Append(" & "); break;
+						case ExpressionType.AndAlso: _exprBuilder.Append(" && "); break;
+						case ExpressionType.Assign: _exprBuilder.Append(" = "); break;
+						case ExpressionType.Coalesce: _exprBuilder.Append(" ?? "); break;
+						case ExpressionType.Divide: _exprBuilder.Append(" / "); break;
+						case ExpressionType.Equal: _exprBuilder.Append(" == "); break;
+						case ExpressionType.ExclusiveOr: _exprBuilder.Append(" ^ "); break;
+						case ExpressionType.GreaterThan: _exprBuilder.Append(" > "); break;
+						case ExpressionType.GreaterThanOrEqual: _exprBuilder.Append(" >= "); break;
+						case ExpressionType.LeftShift: _exprBuilder.Append(" << "); break;
+						case ExpressionType.LessThan: _exprBuilder.Append(" < "); break;
+						case ExpressionType.LessThanOrEqual: _exprBuilder.Append(" <= "); break;
+						case ExpressionType.Modulo: _exprBuilder.Append(" % "); break;
+						case ExpressionType.Multiply:
+						case ExpressionType.MultiplyChecked: _exprBuilder.Append(" * "); break;
+						case ExpressionType.NotEqual: _exprBuilder.Append(" != "); break;
+						case ExpressionType.Or: _exprBuilder.Append(" | "); break;
+						case ExpressionType.OrElse: _exprBuilder.Append(" || "); break;
+						case ExpressionType.Power: _exprBuilder.Append(" ** "); break;
+						case ExpressionType.RightShift: _exprBuilder.Append(" >> "); break;
+						case ExpressionType.Subtract:
+						case ExpressionType.SubtractChecked: _exprBuilder.Append(" - "); break;
 					}
+
+					e.Right.Visit(BuildExpression);
+
+					_exprBuilder.Append(")");
+
+					return false;
+				}
 
 				case ExpressionType.ArrayLength:
-					{
-						var e = (UnaryExpression)expr;
+				{
+					var e = (UnaryExpression)expr;
 
-						e.Operand.Visit(BuildExpression);
-						_exprBuilder.Append(".Length");
+					e.Operand.Visit(BuildExpression);
+					_exprBuilder.Append(".Length");
 
-						return false;
-					}
+					return false;
+				}
 
 				case ExpressionType.Convert:
 				case ExpressionType.ConvertChecked:
-					{
-						var e = (UnaryExpression)expr;
+				{
+					var e = (UnaryExpression)expr;
 
-						_exprBuilder.AppendFormat("({0})", GetTypeName(e.Type));
-						e.Operand.Visit(BuildExpression);
+					_exprBuilder.AppendFormat("({0})", GetTypeName(e.Type));
+					e.Operand.Visit(BuildExpression);
 
-						return false;
-					}
+					return false;
+				}
 
 				case ExpressionType.Negate:
 				case ExpressionType.NegateChecked:
-					{
-						_exprBuilder.Append("-");
-						return true;
-					}
+				{
+					_exprBuilder.Append("-");
+					return true;
+				}
 
 				case ExpressionType.Not:
-					{
-						_exprBuilder.Append("!");
-						return true;
-					}
+				{
+					_exprBuilder.Append("!");
+					return true;
+				}
 
 				case ExpressionType.Quote:
 					return true;
 
 				case ExpressionType.TypeAs:
-					{
-						var e = (UnaryExpression)expr;
+				{
+					var e = (UnaryExpression)expr;
 
-						_exprBuilder.Append("(");
-						e.Operand.Visit(BuildExpression);
-						_exprBuilder.AppendFormat(" as {0})", GetTypeName(e.Type));
+					_exprBuilder.Append("(");
+					e.Operand.Visit(BuildExpression);
+					_exprBuilder.AppendFormat(" as {0})", GetTypeName(e.Type));
 
-						return false;
-					}
+					return false;
+				}
 
 				case ExpressionType.UnaryPlus:
-					{
-						_exprBuilder.Append("+");
-						return true;
-					}
+				{
+					_exprBuilder.Append("+");
+					return true;
+				}
 
 				case ExpressionType.ArrayIndex:
+				{
+					var e = (BinaryExpression)expr;
+
+					e.Left.Visit(BuildExpression);
+					_exprBuilder.Append("[");
+					e.Right.Visit(BuildExpression);
+					_exprBuilder.Append("]");
+
+					return false;
+				}
+
+				case ExpressionType.MemberAccess:
+				{
+					var e = (MemberExpression)expr;
+
+					e.Expression.Visit(BuildExpression);
+					_exprBuilder.AppendFormat(".{0}", MangleName(e.Member.DeclaringType!, e.Member.Name, "P"));
+
+					return false;
+				}
+
+				case ExpressionType.Parameter:
+				{
+					var e = (ParameterExpression)expr;
+					_exprBuilder.Append(MangleName(e.Name, "p"));
+					return false;
+				}
+
+				case ExpressionType.Call:
+				{
+					var ex = (MethodCallExpression)expr;
+					var mi = ex.Method;
+
+					var attrs = mi.GetCustomAttributes(typeof(ExtensionAttribute), false);
+
+					if (attrs.Length != 0)
 					{
-						var e = (BinaryExpression)expr;
+						ex.Arguments[0].Visit(BuildExpression);
+						PushIndent();
+						_exprBuilder.AppendLine().Append(_indent);
+					}
+					else if (ex.Object != null)
+						ex.Object.Visit(BuildExpression);
+					else
+						_exprBuilder.Append(GetTypeName(mi.DeclaringType!));
 
-						e.Left.Visit(BuildExpression);
-						_exprBuilder.Append("[");
-						e.Right.Visit(BuildExpression);
-						_exprBuilder.Append("]");
+					_exprBuilder.Append(".").Append(MangleName(mi.DeclaringType!, mi.Name, "M"));
 
-						return false;
+					if (!ex.IsQueryable() && mi.IsGenericMethod && mi.GetGenericArguments().Select(GetTypeName).All(t => t != null))
+					{
+						_exprBuilder
+							.Append("<")
+							.Append(GetTypeNames(mi.GetGenericArguments(), ","))
+							.Append(">");
 					}
 
-				case ExpressionType.MemberAccess :
+					_exprBuilder.Append("(");
+
+					PushIndent();
+
+					var n = attrs.Length != 0 ? 1 : 0;
+
+					for (var i = n; i < ex.Arguments.Count; i++)
 					{
-						var e = (MemberExpression)expr;
+						if (i != n)
+							_exprBuilder.Append(",");
 
-						e.Expression.Visit(BuildExpression);
-						_exprBuilder.AppendFormat(".{0}", MangleName(e.Member.DeclaringType!, e.Member.Name, "P"));
+						_exprBuilder.AppendLine().Append(_indent);
 
-						return false;
+						ex.Arguments[i].Visit(BuildExpression);
 					}
 
-				case ExpressionType.Parameter :
+					PopIndent();
+
+					_exprBuilder.Append(")");
+
+					if (attrs.Length != 0)
 					{
-						var e = (ParameterExpression)expr;
-						_exprBuilder.Append(MangleName(e.Name, "p"));
-						return false;
+						PopIndent();
 					}
 
-				case ExpressionType.Call :
+					return false;
+				}
+
+				case ExpressionType.Constant:
+				{
+					var c = (ConstantExpression)expr;
+
+					if (c.Value is IQueryable queryable)
 					{
-						var ex = (MethodCallExpression)expr;
-						var mi = ex.Method;
+						var e = queryable.Expression;
 
-						var attrs = mi.GetCustomAttributes(typeof(ExtensionAttribute), false);
-
-						if (attrs.Length != 0)
+						if (_visitedExprs.Add(e))
 						{
-							ex.Arguments[0].Visit(BuildExpression);
-							PushIndent();
-							_exprBuilder.AppendLine().Append(_indent);
+							e.Visit(BuildExpression);
+							return false;
 						}
-						else if (ex.Object != null)
-							ex.Object.Visit(BuildExpression);
+					}
+
+					if (typeof(Table<>).IsSameOrParentOf(expr.Type))
+					{
+						_exprBuilder.AppendFormat("db.GetTable<{0}>()", GetTypeName(expr.Type.GetGenericArguments()[0]));
+					}
+					else if (expr.ToString() == "value(" + expr.Type + ")")
+						_exprBuilder.Append("value(").Append(GetTypeName(expr.Type)).Append(")");
+					else
+						_exprBuilder.Append(expr);
+
+					return true;
+				}
+
+				case ExpressionType.Lambda:
+				{
+					var le = (LambdaExpression)expr;
+					var ps = string.Join(", ", le.Parameters.Select(p => MangleName(p.Name, "p")));
+
+					if (le.Parameters.Count == 1)
+						_exprBuilder.Append(ps);
+					else
+						_exprBuilder.Append("(").Append(ps).Append(")");
+					_exprBuilder.Append(" => ");
+
+					le.Body.Visit(BuildExpression);
+					return false;
+				}
+
+				case ExpressionType.Conditional:
+				{
+					var e = (ConditionalExpression)expr;
+
+					_exprBuilder.Append("(");
+					e.Test.Visit(BuildExpression);
+					_exprBuilder.Append(" ? ");
+					e.IfTrue.Visit(BuildExpression);
+					_exprBuilder.Append(" : ");
+					e.IfFalse.Visit(BuildExpression);
+					_exprBuilder.Append(")");
+
+					return false;
+				}
+
+				case ExpressionType.New:
+				{
+					var ne = (NewExpression)expr;
+
+					if (IsAnonymous(ne.Type))
+					{
+						if (ne.Members.Count == 1)
+						{
+							_exprBuilder.AppendFormat("new {{ {0} = ", MangleName(ne.Members[0].DeclaringType!, ne.Members[0].Name, "P"));
+							ne.Arguments[0].Visit(BuildExpression);
+							_exprBuilder.Append(" }}");
+						}
 						else
-							_exprBuilder.Append(GetTypeName(mi.DeclaringType!));
-
-						_exprBuilder.Append(".").Append(MangleName(mi.DeclaringType!, mi.Name, "M"));
-
-						if (!ex.IsQueryable() && mi.IsGenericMethod && mi.GetGenericArguments().Select(GetTypeName).All(t => t != null))
 						{
-							_exprBuilder
-								.Append("<")
-								.Append(GetTypeNames(mi.GetGenericArguments(), ","))
-								.Append(">");
+							_exprBuilder.AppendLine("new").Append(_indent).Append("{");
+
+							PushIndent();
+
+							for (var i = 0; i < ne.Members.Count; i++)
+							{
+								_exprBuilder.AppendLine().Append(_indent).AppendFormat("{0} = ", MangleName(ne.Members[i].DeclaringType!, ne.Members[i].Name, "P"));
+								ne.Arguments[i].Visit(BuildExpression);
+
+								if (i + 1 < ne.Members.Count)
+									_exprBuilder.Append(",");
+							}
+
+							PopIndent();
+							_exprBuilder.AppendLine().Append(_indent).Append("}");
+						}
+					}
+					else
+					{
+						_exprBuilder.AppendFormat("new {0}(", GetTypeName(ne.Type));
+
+						for (var i = 0; i < ne.Arguments.Count; i++)
+						{
+							ne.Arguments[i].Visit(BuildExpression);
+							if (i + 1 < ne.Arguments.Count)
+								_exprBuilder.Append(", ");
 						}
 
-						_exprBuilder.Append("(");
+						_exprBuilder.Append(")");
+					}
+
+					return false;
+				}
+
+				case ExpressionType.MemberInit:
+				{
+					void Modify(MemberBinding b)
+					{
+						switch (b.BindingType)
+						{
+							case MemberBindingType.Assignment:
+								var ma = (MemberAssignment) b;
+								_exprBuilder.AppendFormat("{0} = ", MangleName(ma.Member.DeclaringType!, ma.Member.Name, "P"));
+								ma.Expression.Visit(BuildExpression);
+								break;
+							default:
+								_exprBuilder.Append(b);
+								break;
+						}
+					}
+
+					var e = (MemberInitExpression)expr;
+
+					e.NewExpression.Visit(BuildExpression);
+
+					if (e.Bindings.Count == 1)
+					{
+						_exprBuilder.Append(" { ");
+						Modify(e.Bindings[0]);
+						_exprBuilder.Append(" }");
+					}
+					else
+					{
+						_exprBuilder.AppendLine().Append(_indent).Append("{");
 
 						PushIndent();
 
-						var n = attrs.Length != 0 ? 1 : 0;
-
-						for (var i = n; i < ex.Arguments.Count; i++)
+						for (var i = 0; i < e.Bindings.Count; i++)
 						{
-							if (i != n)
-								_exprBuilder.Append(",");
-
 							_exprBuilder.AppendLine().Append(_indent);
-
-							ex.Arguments[i].Visit(BuildExpression);
+							Modify(e.Bindings[i]);
+							if (i + 1 < e.Bindings.Count)
+								_exprBuilder.Append(",");
 						}
 
 						PopIndent();
-
-						_exprBuilder.Append(")");
-
-						if (attrs.Length != 0)
-						{
-							PopIndent();
-						}
-
-						return false;
+						_exprBuilder.AppendLine().Append(_indent).Append("}");
 					}
 
-				case ExpressionType.Constant:
-					{
-						var c = (ConstantExpression)expr;
-
-						if (c.Value is IQueryable queryable)
-						{
-							var e = queryable.Expression;
-
-							if (_visitedExprs.Add(e))
-							{
-								e.Visit(BuildExpression);
-								return false;
-							}
-						}
-
-						if (typeof(Table<>).IsSameOrParentOf(expr.Type))
-						{
-							_exprBuilder.AppendFormat("db.GetTable<{0}>()", GetTypeName(expr.Type.GetGenericArguments()[0]));
-						}
-						else if (expr.ToString() == "value(" + expr.Type + ")")
-							_exprBuilder.Append("value(").Append(GetTypeName(expr.Type)).Append(")");
-						else
-							_exprBuilder.Append(expr);
-
-						return true;
-					}
-
-				case ExpressionType.Lambda:
-					{
-						var le = (LambdaExpression)expr;
-						var ps = string.Join(", ", le.Parameters.Select(p => MangleName(p.Name, "p")));
-
-						if (le.Parameters.Count == 1)
-							_exprBuilder.Append(ps);
-						else
-							_exprBuilder.Append("(").Append(ps).Append(")");
-						_exprBuilder.Append(" => ");
-
-						le.Body.Visit(BuildExpression);
-						return false;
-					}
-
-				case ExpressionType.Conditional:
-					{
-						var e = (ConditionalExpression)expr;
-
-						_exprBuilder.Append("(");
-						e.Test.Visit(BuildExpression);
-						_exprBuilder.Append(" ? ");
-						e.IfTrue.Visit(BuildExpression);
-						_exprBuilder.Append(" : ");
-						e.IfFalse.Visit(BuildExpression);
-						_exprBuilder.Append(")");
-
-						return false;
-					}
-
-				case ExpressionType.New:
-					{
-						var ne = (NewExpression)expr;
-
-						if (IsAnonymous(ne.Type))
-						{
-							if (ne.Members.Count == 1)
-							{
-								_exprBuilder.AppendFormat("new {{ {0} = ", MangleName(ne.Members[0].DeclaringType!, ne.Members[0].Name, "P"));
-								ne.Arguments[0].Visit(BuildExpression);
-								_exprBuilder.Append(" }}");
-							}
-							else
-							{
-								_exprBuilder.AppendLine("new").Append(_indent).Append("{");
-
-								PushIndent();
-
-								for (var i = 0; i < ne.Members.Count; i++)
-								{
-									_exprBuilder.AppendLine().Append(_indent).AppendFormat("{0} = ", MangleName(ne.Members[i].DeclaringType!, ne.Members[i].Name, "P"));
-									ne.Arguments[i].Visit(BuildExpression);
-
-									if (i + 1 < ne.Members.Count)
-										_exprBuilder.Append(",");
-								}
-
-								PopIndent();
-								_exprBuilder.AppendLine().Append(_indent).Append("}");
-							}
-						}
-						else
-						{
-							_exprBuilder.AppendFormat("new {0}(", GetTypeName(ne.Type));
-
-							for (var i = 0; i < ne.Arguments.Count; i++)
-							{
-								ne.Arguments[i].Visit(BuildExpression);
-								if (i + 1 < ne.Arguments.Count)
-									_exprBuilder.Append(", ");
-							}
-
-							_exprBuilder.Append(")");
-						}
-
-						return false;
-					}
-
-				case ExpressionType.MemberInit:
-					{
-						void Modify(MemberBinding b)
-						{
-							switch (b.BindingType)
-							{
-								case MemberBindingType.Assignment:
-									var ma = (MemberAssignment) b;
-									_exprBuilder.AppendFormat("{0} = ", MangleName(ma.Member.DeclaringType!, ma.Member.Name, "P"));
-									ma.Expression.Visit(BuildExpression);
-									break;
-								default:
-									_exprBuilder.Append(b);
-									break;
-							}
-						}
-
-						var e = (MemberInitExpression)expr;
-
-						e.NewExpression.Visit(BuildExpression);
-
-						if (e.Bindings.Count == 1)
-						{
-							_exprBuilder.Append(" { ");
-							Modify(e.Bindings[0]);
-							_exprBuilder.Append(" }");
-						}
-						else
-						{
-							_exprBuilder.AppendLine().Append(_indent).Append("{");
-
-							PushIndent();
-
-							for (var i = 0; i < e.Bindings.Count; i++)
-							{
-								_exprBuilder.AppendLine().Append(_indent);
-								Modify(e.Bindings[i]);
-								if (i + 1 < e.Bindings.Count)
-									_exprBuilder.Append(",");
-							}
-
-							PopIndent();
-							_exprBuilder.AppendLine().Append(_indent).Append("}");
-						}
-
-						return false;
-					}
+					return false;
+				}
 
 				case ExpressionType.NewArrayInit:
+				{
+					var e = (NewArrayExpression)expr;
+
+					_exprBuilder.AppendFormat("new {0}[]", GetTypeName(e.Type.GetElementType()!));
+
+					if (e.Expressions.Count == 1)
 					{
-						var e = (NewArrayExpression)expr;
-
-						_exprBuilder.AppendFormat("new {0}[]", GetTypeName(e.Type.GetElementType()!));
-
-						if (e.Expressions.Count == 1)
-						{
-							_exprBuilder.Append(" { ");
-							e.Expressions[0].Visit(BuildExpression);
-							_exprBuilder.Append(" }");
-						}
-						else
-						{
-							_exprBuilder.AppendLine().Append(_indent).Append("{");
-
-							PushIndent();
-
-							for (var i = 0; i < e.Expressions.Count; i++)
-							{
-								_exprBuilder.AppendLine().Append(_indent);
-								e.Expressions[i].Visit(BuildExpression);
-								if (i + 1 < e.Expressions.Count)
-									_exprBuilder.Append(",");
-							}
-
-							PopIndent();
-							_exprBuilder.AppendLine().Append(_indent).Append("}");
-						}
-
-						return false;
+						_exprBuilder.Append(" { ");
+						e.Expressions[0].Visit(BuildExpression);
+						_exprBuilder.Append(" }");
 					}
+					else
+					{
+						_exprBuilder.AppendLine().Append(_indent).Append("{");
+
+						PushIndent();
+
+						for (var i = 0; i < e.Expressions.Count; i++)
+						{
+							_exprBuilder.AppendLine().Append(_indent);
+							e.Expressions[i].Visit(BuildExpression);
+							if (i + 1 < e.Expressions.Count)
+								_exprBuilder.Append(",");
+						}
+
+						PopIndent();
+						_exprBuilder.AppendLine().Append(_indent).Append("}");
+					}
+
+					return false;
+				}
 
 				case ExpressionType.TypeIs:
-					{
-						var e = (TypeBinaryExpression)expr;
+				{
+					var e = (TypeBinaryExpression)expr;
 
-						_exprBuilder.Append("(");
-						e.Expression.Visit(BuildExpression);
-						_exprBuilder.AppendFormat(" is {0})", e.TypeOperand);
+					_exprBuilder.Append("(");
+					e.Expression.Visit(BuildExpression);
+					_exprBuilder.AppendFormat(" is {0})", e.TypeOperand);
 
-						return false;
-					}
+					return false;
+				}
 
 				case ExpressionType.ListInit:
+				{
+					var e = (ListInitExpression)expr;
+
+					e.NewExpression.Visit(BuildExpression);
+
+					if (e.Initializers.Count == 1)
 					{
-						var e = (ListInitExpression)expr;
-
-						e.NewExpression.Visit(BuildExpression);
-
-						if (e.Initializers.Count == 1)
-						{
-							_exprBuilder.Append(" { ");
-							e.Initializers[0].Arguments[0].Visit(BuildExpression);
-							_exprBuilder.Append(" }");
-						}
-						else
-						{
-							_exprBuilder.AppendLine().Append(_indent).Append("{");
-
-							PushIndent();
-
-							for (var i = 0; i < e.Initializers.Count; i++)
-							{
-								_exprBuilder.AppendLine().Append(_indent);
-								e.Initializers[i].Arguments[0].Visit(BuildExpression);
-								if (i + 1 < e.Initializers.Count)
-									_exprBuilder.Append(",");
-							}
-
-							PopIndent();
-							_exprBuilder.AppendLine().Append(_indent).Append("}");
-						}
-
-						return false;
+						_exprBuilder.Append(" { ");
+						e.Initializers[0].Arguments[0].Visit(BuildExpression);
+						_exprBuilder.Append(" }");
 					}
+					else
+					{
+						_exprBuilder.AppendLine().Append(_indent).Append("{");
+
+						PushIndent();
+
+						for (var i = 0; i < e.Initializers.Count; i++)
+						{
+							_exprBuilder.AppendLine().Append(_indent);
+							e.Initializers[i].Arguments[0].Visit(BuildExpression);
+							if (i + 1 < e.Initializers.Count)
+								_exprBuilder.Append(",");
+						}
+
+						PopIndent();
+						_exprBuilder.AppendLine().Append(_indent).Append("}");
+					}
+
+					return false;
+				}
 
 				case ExpressionType.Invoke:
+				{
+					var e = (InvocationExpression)expr;
+
+					_exprBuilder.Append("Expression.Invoke(");
+					e.Expression.Visit(BuildExpression);
+					_exprBuilder.Append(", (");
+
+					for (var i = 0; i < e.Arguments.Count; i++)
 					{
-						var e = (InvocationExpression)expr;
-
-						_exprBuilder.Append("Expression.Invoke(");
-						e.Expression.Visit(BuildExpression);
-						_exprBuilder.Append(", (");
-
-						for (var i = 0; i < e.Arguments.Count; i++)
-						{
-							e.Arguments[i].Visit(BuildExpression);
-							if (i + 1 < e.Arguments.Count)
-								_exprBuilder.Append(", ");
-						}
-						_exprBuilder.Append("))");
-
-						return false;
+						e.Arguments[i].Visit(BuildExpression);
+						if (i + 1 < e.Arguments.Count)
+							_exprBuilder.Append(", ");
 					}
+					_exprBuilder.Append("))");
+
+					return false;
+				}
 
 				default:
 					_exprBuilder.AppendLine("// Unknown expression.").Append(_indent).Append(expr);
@@ -507,7 +511,7 @@ namespace LinqToDB.Linq.Builder
 
 		readonly StringBuilder _typeBuilder = new StringBuilder();
 
-		void BuildType(Type type)
+		void BuildType(Type type, MappingSchema mappingSchema)
 		{
 			if (!IsUserType(type) ||
 				IsAnonymous(type) ||
@@ -525,7 +529,26 @@ namespace LinqToDB.Linq.Builder
 			if (type.IsGenericType)
 				type = type.GetGenericTypeDefinition();
 
-			Type[] baseClasses = new[] { type.BaseType }
+			if (type.IsEnum)
+			{
+				// var ed = mappingSchema.GetEntityDescriptor(type); -> todo entity descriptor should contain enum mappings, otherwise fluent mappings will not be included
+				_typeBuilder.AppendLine("\tenum " + MangleName(isUserName, type.Name, "T") + " {");
+				foreach (var nm in Enum.GetNames(type))
+				{
+					var attr = "";
+					var valueAttribute = type.GetField(nm)!.GetCustomAttribute<MapValueAttribute>();
+					if (valueAttribute != null)
+					{
+						attr = "[MapValue(\"" + valueAttribute.Value + "\")] ";
+					}
+					_typeBuilder.AppendLine("\t\t" + attr + nm + " = " + Convert.ToInt64(Enum.Parse(type, nm)) + ",");
+				}
+				_typeBuilder.Remove(_typeBuilder.Length - 1, 1);
+				_typeBuilder.AppendLine("\t}");
+				return;
+			}
+
+			var baseClasses = new[] { type.BaseType! }
 				.Where(t => t != null && t != typeof(object))
 				.Concat(type.GetInterfaces()).ToArray()!;
 
@@ -538,7 +561,7 @@ namespace LinqToDB.Linq.Builder
 				return string.Format(@"{0}
 		public {1}({2})
 		{{
-			throw new NotImplementedException();
+			// throw new NotImplementedException();
 		}}",
 					attr,
 					name,
@@ -550,11 +573,26 @@ namespace LinqToDB.Linq.Builder
 
 			var members = type.GetFields().Intersect(_usedMembers.OfType<FieldInfo>()).Select(f =>
 			{
-				var attrs = f.GetCustomAttributesData();
-				var attr  = string.Join(string.Empty, attrs.Select(a => "\r\n\t\t" + a.ToString()));
-
-				return string.Format(@"{0}
-		public {1} {2};",
+				var attr = "";
+				var ed = mappingSchema.GetEntityDescriptor(type);
+				if (ed != null)
+				{
+					var colum = ed.Columns.FirstOrDefault(x => x.MemberInfo == f);
+					if (colum != null)
+					{
+						attr += "\t\t[Column(" + (string.IsNullOrEmpty(colum.ColumnName) ? "" : "\"" + colum.ColumnName + "\"") + ")]" + Environment.NewLine;
+					}
+					else
+					{
+						attr += "\t\t[NotColumn]" + Environment.NewLine;
+					}
+					if (colum != null && colum.IsPrimaryKey)
+					{
+						attr += "\t\t[PrimaryKey]" + Environment.NewLine;
+					}
+				}
+				return string.Format(@"
+{0}		public {1} {2};",
 					attr,
 					GetTypeName(f.FieldType),
 					MangleName(isUserName, f.Name, "P"));
@@ -562,10 +600,27 @@ namespace LinqToDB.Linq.Builder
 			.Concat(
 				type.GetPropertiesEx().Intersect(_usedMembers.OfType<PropertyInfo>()).Select(p =>
 				{
-					var attrs = p.GetCustomAttributesData();
-					return string.Format(@"{0}
-		{3}{1} {2} {{ get; set; }}",
-						string.Join(string.Empty, attrs.Select(a => "\r\n\t\t" + a.ToString())),
+					var attr = "";
+					var ed = mappingSchema.GetEntityDescriptor(type);
+					if (ed != null)
+					{
+						var colum = ed.Columns.FirstOrDefault(x => x.MemberInfo == p);
+						if (colum != null)
+						{
+							attr += "\t\t[Column(" + (string.IsNullOrEmpty(colum.ColumnName) ? "" : "\"" + colum.ColumnName + "\"") + ")]" + Environment.NewLine;
+						}
+						else
+						{
+							attr += "\t\t[NotColumn]" + Environment.NewLine;
+						}
+						if (colum != null && colum.IsPrimaryKey)
+						{
+							attr += "\t\t[PrimaryKey]" + Environment.NewLine;
+						}
+					}
+					return string.Format(@"
+{0}		{3}{1} {2} {{ get; set; }}",
+						attr,
 						GetTypeName(p.PropertyType),
 						MangleName(isUserName, p.Name, "P"),
 						type.IsInterface ? "" : "public ");
@@ -587,32 +642,31 @@ namespace LinqToDB.Linq.Builder
 						m.IsStatic   ? "static "   :
 						m.IsVirtual  ? "virtual "  :
 						m.IsAbstract ? "abstract " :
-						               "",
+									   "",
 						type.IsInterface ? "" : "public ");
 				}))
 			.ToArray();
 
 			{
-				var attrs = type.GetCustomAttributesData();
+				var attr = "";
+				var ed = mappingSchema.GetEntityDescriptor(type);
+				if (ed != null && !type.IsInterface)
+				{
+					attr += "\t[Table(" + (string.IsNullOrEmpty(ed.TableName) ? "" : "\"" + ed.TableName + "\"") + ")]" + Environment.NewLine;
+				}
 
 				_typeBuilder.AppendFormat(
 					type.IsGenericType ?
 @"
-namespace {0}
-{{{8}
-	{6}{7}{1} {2}<{3}>{5}
+{8}	{6}{7}{1} {2}<{3}>{5}
 	{{{4}{9}
 	}}
-}}
 "
 :
 @"
-namespace {0}
-{{{8}
-	{6}{7}{1} {2}{5}
+{8}	{6}{7}{1} {2}{5}
 	{{{4}{9}
 	}}
-}}
 ",
 					MangleName(isUserName, type.Namespace, "T"),
 					type.IsInterface ? "interface" : type.IsClass ? "class" : "struct",
@@ -622,7 +676,7 @@ namespace {0}
 					baseClasses.Length == 0 ? "" : " : " + GetTypeNames(baseClasses),
 					type.IsPublic ? "public " : "",
 					type.IsAbstract && !type.IsInterface ? "abstract " : "",
-					string.Join(string.Empty, attrs.Select(a => "\r\n\t" + a.ToString())),
+					attr,
 					members.Length > 0 ? (ctors.Count != 0 ? "\r\n" : "") + string.Join("\r\n", members) : string.Empty);
 			}
 		}
@@ -634,7 +688,7 @@ namespace {0}
 
 		bool IsAnonymous(Type type)
 		{
-			return type.Name.StartsWith("<>f__AnonymousType");
+			return type.Name.StartsWith("<>");
 		}
 
 		readonly Dictionary<string,string> _nameDic = new Dictionary<string,string>();
@@ -651,7 +705,7 @@ namespace {0}
 
 		string MangleName(string? name, string prefix)
 		{
-			name ??= ""; 
+			name ??= "";
 			if (!_mangleNames)
 				return name;
 
@@ -676,7 +730,12 @@ namespace {0}
 
 		bool IsUserType(Type type)
 		{
-			return type.Namespace == null || SystemNamespaces.All(ns => type.Namespace != ns && !type.Namespace.StartsWith(ns + '.'));
+			return IsUserNamespace(type.Namespace);
+		}
+
+		bool IsUserNamespace(string? @namespace)
+		{
+			return @namespace == null || SystemNamespaces.All(ns => @namespace != ns && !@namespace.StartsWith(ns + '.'));
 		}
 
 		string? GetTypeName(Type type)
@@ -740,56 +799,74 @@ namespace {0}
 		{
 			switch (expr.NodeType)
 			{
-				case ExpressionType.Call :
+				case ExpressionType.Call:
+				{
+					var ex = (MethodCallExpression)expr;
+					_usedMembers.Add(ex.Method);
+
+					if (ex.Method.IsGenericMethod)
 					{
-						var ex = (MethodCallExpression)expr;
-						_usedMembers.Add(ex.Method);
+						var gmd = ex.Method.GetGenericMethodDefinition();
 
-						if (ex.Method.IsGenericMethod)
-						{
-							var gmd = ex.Method.GetGenericMethodDefinition();
+						if (gmd != ex.Method)
+							_usedMembers.Add(gmd);
 
-							if (gmd != ex.Method)
-								_usedMembers.Add(gmd);
+						var ga = ex.Method.GetGenericArguments();
 
-							var ga = ex.Method.GetGenericArguments();
-
-							foreach (var type in ga)
-								_usedMembers.Add(type);
-						}
-
-						break;
+						foreach (var type in ga)
+							_usedMembers.Add(type);
 					}
 
-				case ExpressionType.MemberAccess :
-					{
-						var ex = (MemberExpression)expr;
-						_usedMembers.Add(ex.Member);
-						break;
-					}
+					break;
+				}
 
-				case ExpressionType.MemberInit :
-					{
-						var ex = (MemberInitExpression)expr;
+				case ExpressionType.MemberAccess:
+				{
+					var ex = (MemberExpression)expr;
+					_usedMembers.Add(ex.Member);
+					break;
+				}
 
-						void Visit(IEnumerable<MemberBinding> bs)
+				case ExpressionType.MemberInit:
+				{
+					var ex = (MemberInitExpression)expr;
+
+					void Visit(IEnumerable<MemberBinding> bs)
+					{
+						foreach (var b in bs)
 						{
-							foreach (var b in bs)
+							_usedMembers.Add(b.Member);
+
+							switch (b.BindingType)
 							{
-								_usedMembers.Add(b.Member);
-
-								switch (b.BindingType)
-								{
-									case MemberBindingType.MemberBinding:
-										Visit(((MemberMemberBinding) b).Bindings);
-										break;
-								}
+								case MemberBindingType.MemberBinding:
+									Visit(((MemberMemberBinding)b).Bindings);
+									break;
 							}
 						}
-
-						Visit(ex.Bindings);
-						break;
 					}
+
+					Visit(ex.Bindings);
+					break;
+				}
+			}
+		}
+
+		void VisitForDataContext(Expression expr)
+		{
+			switch (expr)
+			{
+				case ConstantExpression cont:
+				{
+					if (_dataContext == null)
+					{
+						if (cont.Value is IDataContext ctx)
+							_dataContext = ctx;
+						else if (cont.Value is IExpressionQuery expressionQuery)
+							_dataContext = expressionQuery.DataContext;
+					}
+					break;
+				}
 			}
 		}
 
@@ -821,19 +898,19 @@ namespace {0}
 
 			switch (expr.NodeType)
 			{
-				case ExpressionType.Call :
-					{
-						var ex = (MethodCallExpression)expr;
-						var mi = ex.Method;
+				case ExpressionType.Call:
+				{
+					var ex = (MethodCallExpression)expr;
+					var mi = ex.Method;
 
-						AddType(mi.DeclaringType);
-						AddType(mi.ReturnType);
+					AddType(mi.DeclaringType);
+					AddType(mi.ReturnType);
 
-						foreach (var arg in mi.GetGenericArguments())
-							AddType(arg);
+					foreach (var arg in mi.GetGenericArguments())
+						AddType(arg);
 
-						break;
-					}
+					break;
+				}
 			}
 		}
 
@@ -878,16 +955,33 @@ namespace {0}
 
 		public string GenerateSourceString(Expression expr)
 		{
-			expr.Visit(new Action<Expression>(VisitMembers));
-			expr.Visit(new Action<Expression>(VisitTypes));
+			expr.Visit(VisitForDataContext);
+			expr.Visit(VisitMembers);
+			expr.Visit(VisitTypes);
 
-			foreach (var type in _usedTypes.OrderBy(t => t.Namespace).ThenBy(t => t.Name))
-				BuildType(type);
+			foreach (var typeNamespaceList in _usedTypes.OrderBy(t => t.Namespace).GroupBy(x => x.Namespace))
+			{
+				if (typeNamespaceList.All(type =>
+				{
+					return (!IsUserType(type) ||
+							IsAnonymous(type) ||
+							type.Assembly == GetType().Assembly ||
+							type.IsGenericType && type.GetGenericTypeDefinition() != type);
+				}))
+					continue;
+				_typeBuilder.AppendLine("namespace " + MangleName(IsUserNamespace(typeNamespaceList.Key), typeNamespaceList.Key, "T"));
+				_typeBuilder.AppendLine("{");
+				foreach (var type in typeNamespaceList.OrderBy(t => t.Name))
+				{
+					BuildType(type, _dataContext!.MappingSchema);
+				}
+				_typeBuilder.AppendLine("}");
+			}
 
 			expr.Visit(BuildExpression);
 
 			_exprBuilder.Replace("<>h__TransparentIdentifier", "tp");
-			_exprBuilder.Insert(0, "var quey = ");
+			_exprBuilder.Insert(0, "var query = ");
 
 			var result = string.Format(
 @"//---------------------------------------------------------------------------------------------------
@@ -897,16 +991,16 @@ using System;
 using System.Linq;
 using System.Linq.Expressions;
 using LinqToDB;
-
 using NUnit.Framework;
+
 {0}
 namespace Tests.UserTests
 {{
 	[TestFixture]
 	public class UserTest : TestBase
 	{{
-		[Test, DataContextSource]
-		public void Test(string context)
+		[Test]
+		public void Test([DataSources(ProviderName.SQLite)] string context)
 		{{
 			// {1}
 			using (var db = GetDataContext(context))
