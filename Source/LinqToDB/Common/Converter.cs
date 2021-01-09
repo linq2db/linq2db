@@ -146,7 +146,7 @@ namespace LinqToDB.Common
 						typeof(object)),
 					p);
 
-				l = ex.Compile();
+				l = ex.CompileExpression();
 
 				converters[key] = l;
 			}
@@ -195,7 +195,7 @@ namespace LinqToDB.Common
 								e),
 					p);
 
-				l = ex.Compile();
+				l = ex.CompileExpression();
 
 				ExprHolder<T>.Converters[from] = l;
 			}
@@ -213,9 +213,7 @@ namespace LinqToDB.Common
 		/// <returns><c>true</c>, if expression represents default value.</returns>
 		internal static bool IsDefaultValuePlaceHolder(Expression expr)
 		{
-			var me = expr as MemberExpression;
-
-			if (me != null)
+			if (expr is MemberExpression me)
 			{
 				if (me.Member.Name == "Value" && me.Member.DeclaringType!.IsGenericType)
 					return me.Member.DeclaringType.GetGenericTypeDefinition() == typeof(DefaultValue<>);

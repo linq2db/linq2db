@@ -1307,7 +1307,7 @@ namespace LinqToDB.Linq.Builder
 		static ISqlExpression ConvertToSqlConvertible(Expression expression)
 		{
 			var l = Expression.Lambda<Func<IToSqlConverter>>(expression);
-			var f = l.Compile();
+			var f = l.CompileExpression();
 			var c = f();
 
 			return c.ToSql(expression);
@@ -2682,9 +2682,9 @@ namespace LinqToDB.Linq.Builder
 			return new ParameterAccessor
 			(
 				expression,
-				mapper.Compile(),
-				original.Compile(),
-				dbDataTypeAccessor.Compile(),
+				mapper.CompileExpression(),
+				original.CompileExpression(),
+				dbDataTypeAccessor.CompileExpression(),
 				new SqlParameter(new DbDataType(accessorExpression.Type), name, null)
 				{
 					IsQueryParameter = !dataContext.InlineParameters

@@ -11,6 +11,7 @@ namespace LinqToDB.ServiceModel
 	using Linq;
 	using Mapping;
 	using SqlQuery;
+	using LinqToDB.Common;
 
 	public class DataService<T> : System.Data.Services.DataService<T>, IServiceProvider
 		where T : IDataContext
@@ -287,7 +288,7 @@ namespace LinqToDB.ServiceModel
 								resourceSet.Name),
 							p);
 
-						func = l.Compile();
+						func = l.CompileExpression();
 
 						_data.RootGetters.Add(resourceSet.Name, func);
 					}

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -292,7 +292,7 @@ namespace LinqToDB.Reflection
 			var getterExpr = GetterExpression.GetBody(Expression.Convert(objParam, TypeAccessor.Type));
 			var getter     = Expression.Lambda<Func<object,object?>>(Expression.Convert(getterExpr, typeof(object)), objParam);
 
-			Getter = getter.Compile();
+			Getter = getter.CompileExpression();
 
 			var valueParam = Expression.Parameter(typeof(object), "value");
 
@@ -303,7 +303,7 @@ namespace LinqToDB.Reflection
 					Expression.Convert(valueParam, Type));
 				var setter = Expression.Lambda<Action<object, object?>>(setterExpr, objParam, valueParam);
 
-				Setter = setter.Compile();
+				Setter = setter.CompileExpression();
 			}
 		}
 

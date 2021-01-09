@@ -9,6 +9,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using Mapping;
 	using Expressions;
 	using Linq;
+	using LinqToDB.Common;
 
 	public interface IPostgreSQLExtensions
 	{
@@ -319,7 +320,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		[ExpressionMethod(nameof(GenerateSeriesIntImpl))]
 		public static IQueryable<int> GenerateSeries(this IDataContext dc, [ExprParameter] int start, [ExprParameter] int stop)
 		{
-			return (_generateSeriesIntFunc ??= GenerateSeriesIntImpl().Compile())(dc, start, stop);
+			return (_generateSeriesIntFunc ??= GenerateSeriesIntImpl().CompileExpression())(dc, start, stop);
 		}
 
 		static Expression<Func<IDataContext, int, int, IQueryable<int>>> GenerateSeriesIntImpl()
@@ -333,7 +334,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		[ExpressionMethod(nameof(GenerateSeriesIntStepImpl))]
 		public static IQueryable<int> GenerateSeries(this IDataContext dc, [ExprParameter] int start, [ExprParameter] int stop, [ExprParameter] int step)
 		{
-			return (_generateSeriesIntStepFunc ??= GenerateSeriesIntStepImpl().Compile())(dc, start, stop, step);
+			return (_generateSeriesIntStepFunc ??= GenerateSeriesIntStepImpl().CompileExpression())(dc, start, stop, step);
 		}
 
 		static Expression<Func<IDataContext, int, int, int, IQueryable<int>>> GenerateSeriesIntStepImpl()
@@ -347,7 +348,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		[ExpressionMethod(nameof(GenerateSeriesDateImpl))]
 		public static IQueryable<DateTime> GenerateSeries(this IDataContext dc, [ExprParameter] DateTime start, [ExprParameter] DateTime stop, [ExprParameter] TimeSpan step)
 		{
-			return (_generateSeriesDateFunc ??= GenerateSeriesDateImpl().Compile())(dc, start, stop, step);
+			return (_generateSeriesDateFunc ??= GenerateSeriesDateImpl().CompileExpression())(dc, start, stop, step);
 		}
 
 		static Expression<Func<IDataContext, DateTime, DateTime, TimeSpan, IQueryable<DateTime>>> GenerateSeriesDateImpl()

@@ -31,6 +31,7 @@ using NUnit.Framework.Internal;
 
 namespace Tests
 {
+	using FastExpressionCompiler;
 	using Model;
 	using Tools;
 
@@ -415,6 +416,7 @@ namespace Tests
 			ProviderName.SqlServer2017,
 			TestProvName.SqlServer2019,
 			TestProvName.SqlServer2019SequentialAccess,
+			TestProvName.SqlServer2019FastExpressionCompiler,
 			ProviderName.SqlServer2000,
 			ProviderName.SqlServer2005,
 			TestProvName.SqlAzure,
@@ -468,12 +470,15 @@ namespace Tests
 			// add extra mapping schema to not share mappers with other sql2017/2019 providers
 			// use same schema to use cache within test provider scope
 			if (configuration == TestProvName.SqlServer2019SequentialAccess)
-				res.AddMappingSchema(_sequentialAccessMS);
+				res.AddMappingSchema(_sequentialAccessSchema);
+			else if (configuration == TestProvName.SqlServer2019FastExpressionCompiler)
+				res.AddMappingSchema(_fecScehma);
 
 			return res;
 		}
 
-		private static readonly MappingSchema _sequentialAccessMS = new MappingSchema();
+		private static readonly MappingSchema _sequentialAccessSchema = new MappingSchema();
+		private static readonly MappingSchema _fecScehma = new MappingSchema();
 
 		protected static char GetParameterToken(string context)
 		{
@@ -1253,6 +1258,7 @@ namespace Tests
 				case ProviderName.SqlServer2017:
 				case TestProvName.SqlServer2019:
 				case TestProvName.SqlServer2019SequentialAccess:
+				case TestProvName.SqlServer2019FastExpressionCompiler:
 				{
 						if (!tableName.StartsWith("#"))
 							finalTableName = "#" + tableName;
@@ -1281,6 +1287,10 @@ namespace Tests
 				Configuration.OptimizeForSequentialAccess = true;
 				DbCommandProcessorExtensions.Instance = new SequentialAccessCommandProcessor();
 			}
+			else if (provider == TestProvName.SqlServer2019FastExpressionCompiler)
+			{
+				Compilation.SetExpressionCompiler(_ => ExpressionCompiler.CompileFast(_, true));
+			}
 		}
 
 		[TearDown]
@@ -1292,6 +1302,11 @@ namespace Tests
 			{
 				Configuration.OptimizeForSequentialAccess = false;
 				DbCommandProcessorExtensions.Instance = null;
+			}
+			if (provider == TestProvName.SqlServer2019FastExpressionCompiler)
+			{
+				// TODO: uncomment before merge
+				//Compilation.SetExpressionCompiler(null);
 			}
 
 			if (provider?.Contains("SapHana") == true)

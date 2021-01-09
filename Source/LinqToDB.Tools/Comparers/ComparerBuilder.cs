@@ -5,7 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using JetBrains.Annotations;
-
+using LinqToDB.Common;
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using LinqToDB.Reflection;
@@ -196,7 +196,7 @@ namespace LinqToDB.Tools.Comparers
 				.DefaultIfEmpty(ExpressionHelper.TrueConstant)
 				.Aggregate(Expression.AndAlso);
 
-			return Expression.Lambda<Func<T,T,bool>>(expression, x, y).Compile();
+			return Expression.Lambda<Func<T,T,bool>>(expression, x, y).CompileExpression();
 		}
 
 		static Expression GetEqualityComparerExpression(Type type)
@@ -248,7 +248,7 @@ namespace LinqToDB.Tools.Comparers
 						Expression.Call(eq, mi, ma));
 				});
 
-			return Expression.Lambda<Func<T, int>>(expression, parameter).Compile();
+			return Expression.Lambda<Func<T, int>>(expression, parameter).CompileExpression();
 		}
 
 		[Pure]

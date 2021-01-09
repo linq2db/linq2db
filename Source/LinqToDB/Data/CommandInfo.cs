@@ -1411,7 +1411,7 @@ namespace LinqToDB.Data
 					),
 					p);
 
-				_parameterReaders[key] = func = expr.Compile();
+				_parameterReaders[key] = func = expr.CompileExpression();
 			}
 
 			return func(parameters);
@@ -1659,7 +1659,7 @@ namespace LinqToDB.Data
 
 			var lex = Expression.Lambda<Func<IDataReader,T>>(expr, parameter);
 
-			return lex.Compile();
+			return lex.CompileExpression();
 		}
 
 		#endregion

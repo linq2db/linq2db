@@ -246,56 +246,57 @@ public class a_CreateData : TestBase
 	{
 		switch (context)
 		{
-			case ProviderName.Firebird                         :
-			case TestProvName.Firebird3                        : RunScript(context,          "COMMIT;", "Firebird", FirebirdAction);    break;
-			case ProviderName.PostgreSQL                       :
-			case ProviderName.PostgreSQL92                     :
-			case ProviderName.PostgreSQL93                     :
-			case ProviderName.PostgreSQL95                     :
-			case TestProvName.PostgreSQL10                     :
-			case TestProvName.PostgreSQL11                     :
-			case TestProvName.PostgreSQL12                     :
-			case TestProvName.PostgreSQL13                     : RunScript(context,          "\nGO\n",  "PostgreSQL");                  break;
-			case ProviderName.MySql                            :
-			case ProviderName.MySqlConnector                   :
-			case TestProvName.MySql55                          :
-			case TestProvName.MariaDB                          : RunScript(context,          "\nGO\n",  "MySql");                       break;
-			case ProviderName.SqlServer2000                    : RunScript(context,          "\nGO\n",  "SqlServer2000");               break;
-			case ProviderName.SqlServer2005                    :
-			case ProviderName.SqlServer2008                    :
-			case ProviderName.SqlServer2012                    :
-			case ProviderName.SqlServer2014                    :
-			case TestProvName.SqlServer2016                    :
-			case ProviderName.SqlServer2017                    :
-			case TestProvName.SqlServer2019                    :
-			case TestProvName.SqlServer2019SequentialAccess    :
-			case TestProvName.SqlAzure                         : RunScript(context,          "\nGO\n",  "SqlServer");                   break;
-			case TestProvName.Default                          : RunScript(context,          "\nGO\n",  "SQLite",   SQLiteAction);      break;
-			case ProviderName.SQLiteClassic                    :
-			case ProviderName.SQLiteMS                         : RunScript(context,          "\nGO\n",  "SQLite",   SQLiteAction);
-			                                                     RunScript(context+ ".Data", "\nGO\n",  "SQLite",   SQLiteAction);      break;
-			case TestProvName.SQLiteClassicMiniProfilerMapped  :
-			case TestProvName.SQLiteClassicMiniProfilerUnmapped: RunScript(context,          "\nGO\n",  "SQLite",   SQLiteAction);      break;
-			case ProviderName.OracleManaged                    :
-			case TestProvName.Oracle11Managed                  : RunScript(context,          "\n/\n",   "Oracle");                      break;
-			case ProviderName.SybaseManaged                    : RunScript(context,          "\nGO\n",  "Sybase");                      break;
-			case ProviderName.Informix                         : RunScript(context,          "\nGO\n",  "Informix", InformixAction);    break;
-			case ProviderName.InformixDB2                      : RunScript(context,          "\nGO\n",  "Informix", InformixDB2Action); break;
-			case ProviderName.DB2                              : RunScript(context,          "\nGO\n",  "DB2");                         break;
-			case ProviderName.SapHanaNative                    :
-			case ProviderName.SapHanaOdbc                      : RunScript(context,          ";;\n"  ,  "SapHana");                     break;
-			case ProviderName.Access                           : RunScript(context,          "\nGO\n",  "Access",   AccessAction);
-			                                                     RunScript(context+ ".Data", "\nGO\n",  "Access",   AccessAction);      break;
-			case ProviderName.AccessOdbc                       : RunScript(context,          "\nGO\n",  "Access",   AccessODBCAction);
-			                                                     RunScript(context+ ".Data", "\nGO\n",  "Access",   AccessODBCAction);  break;
-			case ProviderName.SqlCe                            : RunScript(context,          "\nGO\n",  "SqlCe");
-			                                                     RunScript(context+ ".Data", "\nGO\n",  "SqlCe");                       break;
+			case ProviderName.Firebird                            :
+			case TestProvName.Firebird3                           : RunScript(context,          "COMMIT;", "Firebird", FirebirdAction);    break;
+			case ProviderName.PostgreSQL                          :
+			case ProviderName.PostgreSQL92                        :
+			case ProviderName.PostgreSQL93                        :
+			case ProviderName.PostgreSQL95                        :
+			case TestProvName.PostgreSQL10                        :
+			case TestProvName.PostgreSQL11                        :
+			case TestProvName.PostgreSQL12                        :
+			case TestProvName.PostgreSQL13                        : RunScript(context,          "\nGO\n",  "PostgreSQL");                  break;
+			case ProviderName.MySql                               :
+			case ProviderName.MySqlConnector                      :
+			case TestProvName.MySql55                             :
+			case TestProvName.MariaDB                             : RunScript(context,          "\nGO\n",  "MySql");                       break;
+			case ProviderName.SqlServer2000                       : RunScript(context,          "\nGO\n",  "SqlServer2000");               break;
+			case ProviderName.SqlServer2005                       :
+			case ProviderName.SqlServer2008                       :
+			case ProviderName.SqlServer2012                       :
+			case ProviderName.SqlServer2014                       :
+			case TestProvName.SqlServer2016                       :
+			case ProviderName.SqlServer2017                       :
+			case TestProvName.SqlServer2019                       :
+			case TestProvName.SqlServer2019SequentialAccess       :
+			case TestProvName.SqlServer2019FastExpressionCompiler :
+			case TestProvName.SqlAzure                            : RunScript(context,          "\nGO\n",  "SqlServer");                   break;
+			case TestProvName.Default                             : RunScript(context,          "\nGO\n",  "SQLite",   SQLiteAction);      break;
+			case ProviderName.SQLiteClassic                       :
+			case ProviderName.SQLiteMS                            : RunScript(context,          "\nGO\n",  "SQLite",   SQLiteAction);
+			                                                        RunScript(context+ ".Data", "\nGO\n",  "SQLite",   SQLiteAction);      break;
+			case TestProvName.SQLiteClassicMiniProfilerMapped     :
+			case TestProvName.SQLiteClassicMiniProfilerUnmapped   : RunScript(context,          "\nGO\n",  "SQLite",   SQLiteAction);      break;
+			case ProviderName.OracleManaged                       :
+			case TestProvName.Oracle11Managed                     : RunScript(context,          "\n/\n",   "Oracle");                      break;
+			case ProviderName.SybaseManaged                       : RunScript(context,          "\nGO\n",  "Sybase");                      break;
+			case ProviderName.Informix                            : RunScript(context,          "\nGO\n",  "Informix", InformixAction);    break;
+			case ProviderName.InformixDB2                         : RunScript(context,          "\nGO\n",  "Informix", InformixDB2Action); break;
+			case ProviderName.DB2                                 : RunScript(context,          "\nGO\n",  "DB2");                         break;
+			case ProviderName.SapHanaNative                       :
+			case ProviderName.SapHanaOdbc                         : RunScript(context,          ";;\n"  ,  "SapHana");                     break;
+			case ProviderName.Access                              : RunScript(context,          "\nGO\n",  "Access",   AccessAction);
+			                                                        RunScript(context+ ".Data", "\nGO\n",  "Access",   AccessAction);      break;
+			case ProviderName.AccessOdbc                          : RunScript(context,          "\nGO\n",  "Access",   AccessODBCAction);
+			                                                        RunScript(context+ ".Data", "\nGO\n",  "Access",   AccessODBCAction);  break;
+			case ProviderName.SqlCe                               : RunScript(context,          "\nGO\n",  "SqlCe");
+			                                                        RunScript(context+ ".Data", "\nGO\n",  "SqlCe");                       break;
 #if NET472
-			case ProviderName.Sybase                           : RunScript(context,          "\nGO\n",  "Sybase");                      break;
-			case ProviderName.OracleNative                     :
-			case TestProvName.Oracle11Native                   : RunScript(context,          "\n/\n",   "Oracle");                      break;
+			case ProviderName.Sybase                              : RunScript(context,          "\nGO\n",  "Sybase");                      break;
+			case ProviderName.OracleNative                        :
+			case TestProvName.Oracle11Native                      : RunScript(context,          "\n/\n",   "Oracle");                      break;
 #endif
-			default:
+			default                                               :
 				var script = CustomizationSupport.Interceptor.InterceptCreateData(context);
 				if (script != null)
 				{

@@ -2,6 +2,7 @@
 using System.Data.Common;
 using System.IO;
 using System.Reflection;
+using FastExpressionCompiler;
 using LinqToDB.Data.DbCommandProcessor;
 using NUnit.Framework;
 
@@ -49,6 +50,9 @@ public class TestsInitialization
 		// register test providers
 		TestNoopProvider.Init();
 		SQLiteMiniprofilerProvider.Init();
+
+		// TODO: comment before merge
+		LinqToDB.Common.Compilation.SetExpressionCompiler(_ => ExpressionCompiler.CompileFast(_, true));
 	}
 
 	private void RegisterSapHanaFactory()

@@ -12,6 +12,7 @@
 		<PackageReference Include="NUnit3TestAdapter" Version="3.17.0" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.3" />
 		<PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="7.5.0" />
+		<PackageReference Include="FastExpressionCompiler" Version="3.0.0-preview-07" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net472' ">

@@ -829,8 +829,8 @@ namespace Tests.DataProvider
 			Assert.IsNotNull(c1);
 			Assert.IsNotNull(c2);
 
-			Assert.AreEqual(o, c1!.Compile()(d));
-			Assert.AreEqual(o, c2!.Compile()(d)!.Value);
+			Assert.AreEqual(o, c1!.CompileExpression()(d));
+			Assert.AreEqual(o, c2!.CompileExpression()(d)!.Value);
 		}
 
 		[Table]

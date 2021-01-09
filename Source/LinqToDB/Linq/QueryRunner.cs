@@ -74,7 +74,7 @@ namespace LinqToDB.Linq
 
 					queryRunner.MapperExpression = mapperExpression;
 
-					var mapper = mapperExpression.Compile();
+					var mapper = mapperExpression.CompileExpression();
 					mapperInfo = new ReaderMapperInfo() { MapperExpression = mapperExpression, Mapper = mapper };
 					_mappers.TryAdd(dataReaderType, mapperInfo);
 				}
@@ -106,7 +106,7 @@ namespace LinqToDB.Linq
 					mapperInfo = new ReaderMapperInfo()
 					{
 						MapperExpression = expr,
-						Mapper           = expression.Compile(),
+						Mapper           = expression.CompileExpression(),
 						IsFaulted        = true
 					};
 

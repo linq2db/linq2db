@@ -419,7 +419,7 @@ namespace LinqToDB.Mapping
 			if (li.Delegate == null)
 			{
 				var rex = (Expression<Func<TFrom,TTo>>)ReduceDefaultValue(li.CheckNullLambda);
-				var l   = rex.Compile();
+				var l   = rex.CompileExpression();
 
 				Schemas[0].SetConvertInfo(from, to, new ConvertInfo.LambdaInfo(li.CheckNullLambda, null, l, li.IsSchemaSpecific));
 

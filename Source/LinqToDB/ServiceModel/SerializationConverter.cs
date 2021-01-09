@@ -63,7 +63,7 @@ namespace LinqToDB.ServiceModel
 							: e),
 					p);
 
-				return ex.Compile();
+				return ex.CompileExpression();
 			});
 
 			return converter(value);
@@ -118,7 +118,7 @@ namespace LinqToDB.ServiceModel
 					Expression.Convert(b, typeof(object)).Transform(e => e == ps[0] ? p : e),
 					p);
 
-				return ex.Compile();
+				return ex.CompileExpression();
 			});
 
 			return converter(value);
