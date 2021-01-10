@@ -17,7 +17,6 @@ namespace LinqToDB.Linq.Builder
 	{
 		readonly bool          _mangleNames;
 		readonly StringBuilder _exprBuilder = new StringBuilder();
-		readonly Assembly      _linq2dbAssembly;
 		IDataContext?          _dataContext;
 
 		string _indent = "\t\t\t\t";
@@ -29,7 +28,6 @@ namespace LinqToDB.Linq.Builder
 		public ExpressionTestGenerator(bool mangleNames)
 		{
 			_mangleNames = mangleNames;
-			_linq2dbAssembly = typeof(ExpressionTestGenerator).Assembly;
 		}
 
 		void PushIndent() { _indent += '\t'; }
@@ -41,30 +39,30 @@ namespace LinqToDB.Linq.Builder
 		{
 			switch (expr.NodeType)
 			{
-				case ExpressionType.Add:
-				case ExpressionType.AddChecked:
-				case ExpressionType.And:
-				case ExpressionType.AndAlso:
-				case ExpressionType.Assign:
-				case ExpressionType.Coalesce:
-				case ExpressionType.Divide:
-				case ExpressionType.Equal:
-				case ExpressionType.ExclusiveOr:
-				case ExpressionType.GreaterThan:
+				case ExpressionType.Add               :
+				case ExpressionType.AddChecked        :
+				case ExpressionType.And               :
+				case ExpressionType.AndAlso           :
+				case ExpressionType.Assign            :
+				case ExpressionType.Coalesce          :
+				case ExpressionType.Divide            :
+				case ExpressionType.Equal             :
+				case ExpressionType.ExclusiveOr       :
+				case ExpressionType.GreaterThan       :
 				case ExpressionType.GreaterThanOrEqual:
-				case ExpressionType.LeftShift:
-				case ExpressionType.LessThan:
-				case ExpressionType.LessThanOrEqual:
-				case ExpressionType.Modulo:
-				case ExpressionType.Multiply:
-				case ExpressionType.MultiplyChecked:
-				case ExpressionType.NotEqual:
-				case ExpressionType.Or:
-				case ExpressionType.OrElse:
-				case ExpressionType.Power:
-				case ExpressionType.RightShift:
-				case ExpressionType.Subtract:
-				case ExpressionType.SubtractChecked:
+				case ExpressionType.LeftShift         :
+				case ExpressionType.LessThan          :
+				case ExpressionType.LessThanOrEqual   :
+				case ExpressionType.Modulo            :
+				case ExpressionType.Multiply          :
+				case ExpressionType.MultiplyChecked   :
+				case ExpressionType.NotEqual          :
+				case ExpressionType.Or                :
+				case ExpressionType.OrElse            :
+				case ExpressionType.Power             :
+				case ExpressionType.RightShift        :
+				case ExpressionType.Subtract          :
+				case ExpressionType.SubtractChecked   :
 				{
 					var e = (BinaryExpression)expr;
 
@@ -74,30 +72,30 @@ namespace LinqToDB.Linq.Builder
 
 					switch (expr.NodeType)
 					{
-						case ExpressionType.Add:
-						case ExpressionType.AddChecked: _exprBuilder.Append(" + "); break;
-						case ExpressionType.And: _exprBuilder.Append(" & "); break;
-						case ExpressionType.AndAlso: _exprBuilder.Append(" && "); break;
-						case ExpressionType.Assign: _exprBuilder.Append(" = "); break;
-						case ExpressionType.Coalesce: _exprBuilder.Append(" ?? "); break;
-						case ExpressionType.Divide: _exprBuilder.Append(" / "); break;
-						case ExpressionType.Equal: _exprBuilder.Append(" == "); break;
-						case ExpressionType.ExclusiveOr: _exprBuilder.Append(" ^ "); break;
-						case ExpressionType.GreaterThan: _exprBuilder.Append(" > "); break;
+						case ExpressionType.Add               :
+						case ExpressionType.AddChecked        : _exprBuilder.Append(" + "); break;
+						case ExpressionType.And               : _exprBuilder.Append(" & "); break;
+						case ExpressionType.AndAlso           : _exprBuilder.Append(" && "); break;
+						case ExpressionType.Assign            : _exprBuilder.Append(" = "); break;
+						case ExpressionType.Coalesce          : _exprBuilder.Append(" ?? "); break;
+						case ExpressionType.Divide            : _exprBuilder.Append(" / "); break;
+						case ExpressionType.Equal             : _exprBuilder.Append(" == "); break;
+						case ExpressionType.ExclusiveOr       : _exprBuilder.Append(" ^ "); break;
+						case ExpressionType.GreaterThan       : _exprBuilder.Append(" > "); break;
 						case ExpressionType.GreaterThanOrEqual: _exprBuilder.Append(" >= "); break;
-						case ExpressionType.LeftShift: _exprBuilder.Append(" << "); break;
-						case ExpressionType.LessThan: _exprBuilder.Append(" < "); break;
-						case ExpressionType.LessThanOrEqual: _exprBuilder.Append(" <= "); break;
-						case ExpressionType.Modulo: _exprBuilder.Append(" % "); break;
-						case ExpressionType.Multiply:
-						case ExpressionType.MultiplyChecked: _exprBuilder.Append(" * "); break;
-						case ExpressionType.NotEqual: _exprBuilder.Append(" != "); break;
-						case ExpressionType.Or: _exprBuilder.Append(" | "); break;
-						case ExpressionType.OrElse: _exprBuilder.Append(" || "); break;
-						case ExpressionType.Power: _exprBuilder.Append(" ** "); break;
-						case ExpressionType.RightShift: _exprBuilder.Append(" >> "); break;
-						case ExpressionType.Subtract:
-						case ExpressionType.SubtractChecked: _exprBuilder.Append(" - "); break;
+						case ExpressionType.LeftShift         : _exprBuilder.Append(" << "); break;
+						case ExpressionType.LessThan          : _exprBuilder.Append(" < "); break;
+						case ExpressionType.LessThanOrEqual   : _exprBuilder.Append(" <= "); break;
+						case ExpressionType.Modulo            : _exprBuilder.Append(" % "); break;
+						case ExpressionType.Multiply          :
+						case ExpressionType.MultiplyChecked   : _exprBuilder.Append(" * "); break;
+						case ExpressionType.NotEqual          : _exprBuilder.Append(" != "); break;
+						case ExpressionType.Or                : _exprBuilder.Append(" | "); break;
+						case ExpressionType.OrElse            : _exprBuilder.Append(" || "); break;
+						case ExpressionType.Power             : _exprBuilder.Append(" ** "); break;
+						case ExpressionType.RightShift        : _exprBuilder.Append(" >> "); break;
+						case ExpressionType.Subtract          :
+						case ExpressionType.SubtractChecked   : _exprBuilder.Append(" - "); break;
 					}
 
 					e.Right.Visit(BuildExpression);
@@ -210,7 +208,8 @@ namespace LinqToDB.Linq.Builder
 
 					_exprBuilder.Append(".").Append(MangleName(mi.DeclaringType!, mi.Name, "M"));
 
-					if (!ex.IsQueryable() && mi.IsGenericMethod && mi.GetGenericArguments().Select(GetTypeName).All(t => t != null))
+					if ((!ex.IsQueryable() || ex.Method.DeclaringType == typeof(DataExtensions))
+						&& mi.IsGenericMethod && mi.GetGenericArguments().Select(GetTypeName).All(t => t != null))
 					{
 						_exprBuilder
 							.Append("<")
@@ -262,9 +261,9 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					if (typeof(Table<>).IsSameOrParentOf(expr.Type))
-					{
 						_exprBuilder.AppendFormat("db.GetTable<{0}>()", GetTypeName(expr.Type.GetGenericArguments()[0]));
-					}
+					else if (c.Value == _dataContext)
+						_exprBuilder.Append("db");
 					else if (expr.ToString() == "value(" + expr.Type + ")")
 						_exprBuilder.Append("value(").Append(GetTypeName(expr.Type)).Append(")");
 					else
@@ -548,9 +547,7 @@ namespace LinqToDB.Linq.Builder
 				return;
 			}
 
-			var baseClasses = new[] { type.BaseType! }
-				.Where(t => t != null && t != typeof(object))
-				.Concat(type.GetInterfaces()).ToArray()!;
+			var baseClasses = CollectBaseTypes(type);
 
 			var ctors = type.GetConstructors().Select(c =>
 			{
@@ -681,6 +678,34 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
+		private static Type[] CollectBaseTypes(Type type)
+		{
+			var types = new List<Type>();
+			var duplicateInterfaces = new HashSet<Type>();
+
+			if (type.BaseType != null && type.BaseType != typeof(object))
+			{
+				types.Add(type.BaseType);
+
+				populateBaseInterfaces(type.BaseType, duplicateInterfaces);
+			}
+
+			foreach (var iface in type.GetInterfaces())
+				if (duplicateInterfaces.Add(iface))
+				{
+					types.Add(iface);
+					populateBaseInterfaces(iface, duplicateInterfaces);
+				}
+
+			return types.ToArray();
+
+			static void populateBaseInterfaces(Type type, HashSet<Type> duplicateInterfaces)
+			{
+				foreach (var iface in type.GetInterfaces())
+					duplicateInterfaces.Add(iface);
+			}
+		}
+
 		string GetTypeNames(IEnumerable<Type> types, string separator = ", ")
 		{
 			return string.Join(separator, types.Select(GetTypeName));
@@ -723,7 +748,7 @@ namespace LinqToDB.Linq.Builder
 			return string.Join(".", newNames);
 		}
 
-		public static List<string> SystemNamespaces = new List<string>
+		public static List<string> SystemNamespaces = new List<string>()
 		{
 			"System", "LinqToDB", "Microsoft"
 		};
