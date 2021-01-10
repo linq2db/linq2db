@@ -2857,6 +2857,37 @@ namespace LinqToDB
 		}
 
 		/// <summary>
+		/// Defines inner join between two sub-queries or tables.
+		/// It is special case of INNER JOIN which can be removed by optimizer if joined data is not used for projection or in other parts of SQL.
+		/// </summary>
+		/// <typeparam name="TSource">Type of record for right join operand.</typeparam>
+		/// <param name="source">Right join operand.</param>
+		/// <param name="predicate">Join predicate.</param>
+		/// <remarks>Ensure that INNER JOIN do not filter out or multiply records, otherwise for different projections count of result records can be changed.</remarks>
+		/// <returns>Right operand.</returns>
+		[Pure]
+		[LinqTunnel]
+		public static IQueryable<TSource> WeakInnerJoin<TSource>(
+			[NotNull] this IQueryable<TSource>        source,
+			[NotNull, InstantHandle] Expression<Func<TSource, bool>> predicate)
+		{
+			if (source    == null) throw new ArgumentNullException(nameof(source));
+			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			return currentSource.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(WeakInnerJoin, source, predicate),
+					new[]
+					{
+						currentSource.Expression,
+						Expression.Quote(predicate)
+					}));
+		}
+
+		/// <summary>
 		/// Defines inner or outer join between two sub-queries or tables.
 		/// </summary>
 		/// <typeparam name="TOuter">Type of record for left join operand.</typeparam>
@@ -2893,6 +2924,38 @@ namespace LinqToDB
 		{
 			return Join(source, SqlJoinType.Left, predicate);
 		}
+
+		/// <summary>
+		/// Defines weak left outer join between two sub-queries or tables.
+		/// It is special case of LEFT JOIN which can be removed by optimizer if joined data is not used for projection or in other parts of SQL.
+		/// </summary>
+		/// <typeparam name="TSource">Type of record for right join operand.</typeparam>
+		/// <param name="source">Right join operand.</param>
+		/// <param name="predicate">Join predicate.</param>
+		/// <remarks>Ensure that LEFT JOIN do not multiply records, otherwise for different projections count of result records can be changed.</remarks>
+		/// <returns>Right operand.</returns>
+		[Pure]
+		[LinqTunnel]
+		public static IQueryable<TSource> WeakLeftJoin<TSource>(
+			[NotNull] this IQueryable<TSource>        source,
+			[NotNull, InstantHandle] Expression<Func<TSource, bool>> predicate)
+		{
+			if (source    == null) throw new ArgumentNullException(nameof(source));
+			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			return currentSource.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(WeakLeftJoin, source, predicate),
+					new[]
+					{
+						currentSource.Expression,
+						Expression.Quote(predicate)
+					}));
+		}
+
 
 		/// <summary>
 		/// Defines left outer join between two sub-queries or tables.

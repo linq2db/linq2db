@@ -17,7 +17,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			return
 				methodCall.IsQueryable("Join") && methodCall.Arguments.Count == 3
-				|| !rightNullableOnly && methodCall.IsQueryable("InnerJoin", "LeftJoin", "RightJoin", "FullJoin") && methodCall.Arguments.Count == 2
+				|| !rightNullableOnly && methodCall.IsQueryable("InnerJoin", "WeakInnerJoin", "LeftJoin", "WeakLeftJoin", "RightJoin", "FullJoin") && methodCall.Arguments.Count == 2
 				|| rightNullableOnly && methodCall.IsQueryable("RightJoin", "FullJoin") && methodCall.Arguments.Count == 2;
 		}
 
@@ -30,10 +30,12 @@ namespace LinqToDB.Linq.Builder
 
 			switch (methodCall.Method.Name)
 			{
-				case "InnerJoin" : joinType = JoinType.Inner; break;
-				case "LeftJoin"  : joinType = JoinType.Left;  break;
-				case "RightJoin" : joinType = JoinType.Right; break;
-				case "FullJoin"  : joinType = JoinType.Full;  break;
+				case "InnerJoin"     : joinType = JoinType.Inner; break;
+				case "WeakInnerJoin" : joinType = JoinType.Inner; buildInfo.IsWeakJoin = true; break;
+				case "LeftJoin"      : joinType = JoinType.Left;  break;
+				case "WeakLeftJoin"  : joinType = JoinType.Left;  buildInfo.IsWeakJoin = true; break;
+				case "RightJoin"     : joinType = JoinType.Right; break;
+				case "FullJoin"      : joinType = JoinType.Full;  break;
 				default:
 					conditionIndex = 2;
 
