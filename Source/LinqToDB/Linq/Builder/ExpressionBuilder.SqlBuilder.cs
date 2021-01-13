@@ -2602,6 +2602,14 @@ namespace LinqToDB.Linq.Builder
 			// see #820
 			accessorExpression = accessorExpression.Transform(e =>
 			{
+				if (e.NodeType != ExpressionType.Parameter && dataContextParam.Type.IsSameOrParentOf(e.Type))
+				{
+					var newExpr = (Expression) dataContextParam;
+					if (newExpr.Type != e.Type)
+						newExpr = Expression.Convert(newExpr, e.Type);
+					return newExpr;
+				}
+
 				switch (e.NodeType)
 				{
 					case ExpressionType.Parameter:
@@ -2614,6 +2622,7 @@ namespace LinqToDB.Linq.Builder
 						return e;
 					}
 					case ExpressionType.MemberAccess:
+					{
 						var ma = (MemberExpression) e;
 
 						if (ma.Member.IsNullableValueMember())
@@ -2625,7 +2634,9 @@ namespace LinqToDB.Linq.Builder
 						}
 
 						return e;
+					}
 					case ExpressionType.Convert:
+					{
 						var ce = (UnaryExpression) e;
 						if (ce.Operand.Type.IsNullable() && !ce.Type.IsNullable())
 						{
@@ -2634,7 +2645,9 @@ namespace LinqToDB.Linq.Builder
 								Expression.Default(e.Type),
 								e);
 						}
+
 						return e;
+					}
 					default:
 						return e;
 				}
