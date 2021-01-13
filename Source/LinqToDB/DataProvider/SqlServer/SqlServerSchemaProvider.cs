@@ -51,7 +51,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					t.object_id IS NULL OR t.is_ms_shipped <> 1"
 				: @"
 				SELECT
-					TABLE_CATALOG + '.' + TABLE_SCHEMA + '.' + TABLE_NAME                          as TableID,
+					TABLE_CATALOG COLLATE DATABASE_DEFAULT + '.' + TABLE_SCHEMA + '.' + TABLE_NAME as TableID,
 					TABLE_CATALOG                                                                  as CatalogName,
 					TABLE_SCHEMA                                                                   as SchemaName,
 					TABLE_NAME                                                                     as TableName,
@@ -91,26 +91,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
 			return dataConnection.Query<PrimaryKeyInfo>(
-				IsAzure
-				? @"
+				@"
 				SELECT
 					k.TABLE_CATALOG COLLATE DATABASE_DEFAULT + '.' + k.TABLE_SCHEMA + '.' + k.TABLE_NAME as TableID,
-					k.CONSTRAINT_NAME                                                                    as PrimaryKeyName,
-					k.COLUMN_NAME                                                                        as ColumnName,
-					k.ORDINAL_POSITION                                                                   as Ordinal
-				FROM
-					INFORMATION_SCHEMA.KEY_COLUMN_USAGE k
-					JOIN
-						INFORMATION_SCHEMA.TABLE_CONSTRAINTS c
-					ON
-						k.CONSTRAINT_CATALOG = c.CONSTRAINT_CATALOG AND
-						k.CONSTRAINT_SCHEMA  = c.CONSTRAINT_SCHEMA AND
-						k.CONSTRAINT_NAME    = c.CONSTRAINT_NAME
-				WHERE
-					c.CONSTRAINT_TYPE='PRIMARY KEY'"
-				: @"
-				SELECT
-					k.TABLE_CATALOG + '.' + k.TABLE_SCHEMA + '.' + k.TABLE_NAME                          as TableID,
 					k.CONSTRAINT_NAME                                                                    as PrimaryKeyName,
 					k.COLUMN_NAME                                                                        as ColumnName,
 					k.ORDINAL_POSITION                                                                   as Ordinal
@@ -152,7 +135,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					INFORMATION_SCHEMA.COLUMNS c"
 				: @"
 				SELECT
-					TABLE_CATALOG + '.' + TABLE_SCHEMA + '.' + TABLE_NAME                                               as TableID,
+					TABLE_CATALOG COLLATE DATABASE_DEFAULT + '.' + TABLE_SCHEMA + '.' + TABLE_NAME                                               as TableID,
 					COLUMN_NAME                                                                                         as Name,
 					CASE WHEN IS_NULLABLE = 'YES' THEN 1 ELSE 0 END                                                     as IsNullable,
 					ORDINAL_POSITION                                                                                    as Ordinal,
@@ -266,8 +249,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			return dataConnection.Query<ProcedureInfo>(
-				IsAzure
-				? @"SELECT
+				@"SELECT
 					SPECIFIC_CATALOG COLLATE DATABASE_DEFAULT + '.' + SPECIFIC_SCHEMA + '.' + SPECIFIC_NAME as ProcedureID,
 					SPECIFIC_CATALOG                                                                        as CatalogName,
 					SPECIFIC_SCHEMA                                                                         as SchemaName,
@@ -280,23 +262,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					ISNULL(CONVERT(varchar(8000), x.Value), '')                                             as Description
 				FROM
 					INFORMATION_SCHEMA.ROUTINES
-					LEFT JOIN SYS.EXTENDED_PROPERTIES x
-						ON OBJECT_ID('[' + SPECIFIC_SCHEMA + '].[' + SPECIFIC_NAME + ']') = x.major_id AND
-							x.name = 'MS_Description' AND x.class = 1"
-				: @"SELECT
-					SPECIFIC_CATALOG + '.' + SPECIFIC_SCHEMA + '.' + SPECIFIC_NAME                          as ProcedureID,
-					SPECIFIC_CATALOG                                                                        as CatalogName,
-					SPECIFIC_SCHEMA                                                                         as SchemaName,
-					SPECIFIC_NAME                                                                           as ProcedureName,
-					CASE WHEN ROUTINE_TYPE = 'FUNCTION'                         THEN 1 ELSE 0 END           as IsFunction,
-					CASE WHEN ROUTINE_TYPE = 'FUNCTION' AND DATA_TYPE = 'TABLE' THEN 1 ELSE 0 END           as IsTableFunction,
-					CASE WHEN EXISTS(SELECT * FROM sys.objects where name = SPECIFIC_NAME AND type='AF')
-					                                                            THEN 1 ELSE 0 END           as IsAggregateFunction,
-					CASE WHEN SPECIFIC_SCHEMA = 'dbo'                           THEN 1 ELSE 0 END           as IsDefaultSchema,
-					ISNULL(CONVERT(varchar(8000), x.Value), '')                                             as Description
-				FROM
-					INFORMATION_SCHEMA.ROUTINES
-					LEFT JOIN SYS.EXTENDED_PROPERTIES x
+					LEFT JOIN sys.extended_properties x
 						ON OBJECT_ID('[' + SPECIFIC_SCHEMA + '].[' + SPECIFIC_NAME + ']') = x.major_id AND
 							x.name = 'MS_Description' AND x.class = 1")
 				.ToList();
@@ -305,8 +271,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)
 		{
 			return dataConnection.Query<ProcedureParameterInfo>(
-				IsAzure
-				? @"SELECT
+				@"SELECT
 					SPECIFIC_CATALOG COLLATE DATABASE_DEFAULT + '.' + SPECIFIC_SCHEMA + '.' + SPECIFIC_NAME as ProcedureID,
 					ORDINAL_POSITION                                                                        as Ordinal,
 					PARAMETER_MODE                                                                          as Mode,
@@ -325,30 +290,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					ISNULL(CONVERT(varchar(8000), x.Value), '')                                             as Description
 				FROM
 					INFORMATION_SCHEMA.PARAMETERS
-					LEFT JOIN SYS.EXTENDED_PROPERTIES x
-						ON OBJECT_ID('[' + SPECIFIC_SCHEMA + '].[' + SPECIFIC_NAME + ']') = x.major_id AND
-							ORDINAL_POSITION = x.minor_id AND
-							x.name = 'MS_Description' AND x.class = 2"
-				: @"SELECT
-					SPECIFIC_CATALOG + '.' + SPECIFIC_SCHEMA + '.' + SPECIFIC_NAME                          as ProcedureID,
-					ORDINAL_POSITION                                                                        as Ordinal,
-					PARAMETER_MODE                                                                          as Mode,
-					PARAMETER_NAME                                                                          as ParameterName,
-					DATA_TYPE                                                                               as DataType,
-					CHARACTER_MAXIMUM_LENGTH                                                                as Length,
-					NUMERIC_PRECISION                                                                       as [Precision],
-					NUMERIC_SCALE                                                                           as Scale,
-					CASE WHEN PARAMETER_MODE = 'IN'  OR PARAMETER_MODE = 'INOUT' THEN 1 ELSE 0 END          as IsIn,
-					CASE WHEN PARAMETER_MODE = 'OUT' OR PARAMETER_MODE = 'INOUT' THEN 1 ELSE 0 END          as IsOut,
-					CASE WHEN IS_RESULT      = 'YES'                             THEN 1 ELSE 0 END          as IsResult,
-					USER_DEFINED_TYPE_CATALOG                                                               as UDTCatalog,
-					USER_DEFINED_TYPE_SCHEMA                                                                as UDTSchema,
-					USER_DEFINED_TYPE_NAME                                                                  as UDTName,
-					1                                                                                       as IsNullable,
-					ISNULL(CONVERT(varchar(8000), x.Value), '')                                             as Description
-				FROM
-					INFORMATION_SCHEMA.PARAMETERS
-					LEFT JOIN SYS.EXTENDED_PROPERTIES x
+					LEFT JOIN sys.extended_properties x
 						ON OBJECT_ID('[' + SPECIFIC_SCHEMA + '].[' + SPECIFIC_NAME + ']') = x.major_id AND
 							ORDINAL_POSITION = x.minor_id AND
 							x.name = 'MS_Description' AND x.class = 2")

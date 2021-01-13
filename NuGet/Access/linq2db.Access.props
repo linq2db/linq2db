@@ -1,7 +1,6 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 	<PropertyGroup>
-		<LinqToDBT4AccessTemplatesDirectory>$(MSBuildThisFileDirectory)..\contentFiles\any\any\LinqToDB.Templates\</LinqToDBT4AccessTemplatesDirectory>
-		<LinqToDBT4AccessToolsDirectory>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4AccessToolsDirectory>
-		<LinqToDBT4ToolsDirectory>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4ToolsDirectory>
+		<LinqToDBT4SharedTools>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4SharedTools>
+		<LinqToDBT4AccessTemplatesPath>$(MSBuildThisFileDirectory)..\contentFiles\any\any\LinqToDB.Templates\</LinqToDBT4AccessTemplatesPath>
 	</PropertyGroup>
 </Project>

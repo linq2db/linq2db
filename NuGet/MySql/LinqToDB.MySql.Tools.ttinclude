@@ -1,5 +1,10 @@
-<#@ assembly name="$(LinqToDBT4MySqlToolsDirectory)linq2db.dll"             #>
-<#@ assembly name="$(LinqToDBT4MySqlToolsDirectory)MySql.Data.dll"          #>
-<#@ assembly name="$(LinqToDBT4MySqlToolsDirectory)BouncyCastle.Crypto.dll" #>
-<#@ include file="LinqToDB.Tools.ttinclude"                                 #>
-<#@ include file="LinqToDB.MySql.ttinclude"                                 #>
+<#@ assembly name="$(LinqToDBT4MySqlConnectorClientPath)MySqlConnector.dll" #>
+<#@ include file="LinqToDB.Tools.ttinclude" once="true"                     #>
+<#@ include file="LinqToDB.MySql.ttinclude" once="true"                     #>
+<#
+var toolsPath = GetProviderToolsPath("MySqlConnector", "MySqlConnector, Version=1.0.0.0, Culture=neutral, PublicKeyToken=d33d3e53aa5f8c92");
+
+LoadAssembly("System.Memory"                    , toolsPath);
+LoadAssembly("System.Buffers"                   , toolsPath);
+LoadAssembly("System.Threading.Tasks.Extensions", toolsPath);
+#>

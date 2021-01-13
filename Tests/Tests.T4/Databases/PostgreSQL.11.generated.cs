@@ -20,6 +20,7 @@ using System.Reflection;
 
 using LinqToDB;
 using LinqToDB.Common;
+using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
@@ -73,6 +74,13 @@ namespace PostreSQL11DataContext
 
 		public TestdbDB(string configuration)
 			: base(configuration)
+		{
+			InitDataContext();
+			InitMappingSchema();
+		}
+
+		public TestdbDB(LinqToDbConnectionOptions options)
+			: base(options)
 		{
 			InitDataContext();
 			InitMappingSchema();
@@ -547,6 +555,16 @@ namespace PostreSQL11DataContext
 
 		#endregion
 
+		#region FnTest
+
+		[Sql.Function(Name="\"SchemaName\".\"fnTest\"", ServerSideOnly=true)]
+		public static string? FnTest(int? param)
+		{
+			throw new InvalidOperationException();
+		}
+
+		#endregion
+
 		#region Issue1742Date
 
 		[Sql.Function(Name="public.issue_1742_date", ServerSideOnly=true)]
@@ -580,7 +598,7 @@ namespace PostreSQL11DataContext
 		#region Reverse
 
 		[Sql.Function(Name="public.reverse", ServerSideOnly=true)]
-		public static string? Reverse(string? par6)
+		public static string? Reverse(string? par7)
 		{
 			throw new InvalidOperationException();
 		}
@@ -590,7 +608,7 @@ namespace PostreSQL11DataContext
 		#region TestAvg
 
 		[Sql.Function(Name="public.test_avg", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
-		public static double? TestAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par8)
+		public static double? TestAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par9)
 		{
 			throw new InvalidOperationException();
 		}

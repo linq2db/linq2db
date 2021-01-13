@@ -1039,6 +1039,16 @@ namespace Tests
 			return data;
 		}
 
+		protected bool IsCaseSensitiveDB(string context)
+		{
+			// we intentionally configure Sql Server 2019 test database to be case-sensitive to test
+			// linq2db support for this configuration
+			// on CI we test two configurations:
+			// linux/mac: db is case sensitive, catalog is case insensitive
+			// windows: both db and catalog are case sensitive
+			return GetProviderName(context, out var _) == TestProvName.SqlServer2019;
+		}
+
 		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result, bool allowEmpty = false)
 		{
 			AreEqual(t => t, expected, result, EqualityComparer<T>.Default, allowEmpty);

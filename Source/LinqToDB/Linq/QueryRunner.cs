@@ -188,9 +188,10 @@ namespace LinqToDB.Linq
 			{
 				sql.Statement = query.SqlOptimizer.Finalize(sql.Statement);
 
-				sql.Statement.PrepareQueryAndAliases(out var staticParameters);
+				SqlStatement.PrepareQueryAndAliases(sql.Statement, null, out var aliasesContext);
 
-				sql.Parameters = staticParameters.ToArray();
+				sql.Parameters = aliasesContext.GetParameters();
+				sql.Aliases    = aliasesContext;
 			}
 		}
 

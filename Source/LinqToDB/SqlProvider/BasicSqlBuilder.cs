@@ -136,7 +136,6 @@ namespace LinqToDB.SqlProvider
 		protected virtual void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, int indent, bool skipAlias)
 		{
 			Statement           = statement;
-			_aliases            = new HashSet<string>(Statement.GetCurrentAliases(), StringComparer.OrdinalIgnoreCase);
 			StringBuilder       = sb;
 			OptimizationContext = optimizationContext;
 			Indent              = indent;
@@ -156,7 +155,8 @@ namespace LinqToDB.SqlProvider
 
 						var sqlBuilder = ((BasicSqlBuilder)CreateSqlBuilder());
 						sqlBuilder.BuildSql(commandNumber,
-							new SqlSelectStatement(union.SelectQuery) { ParentStatement = statement }, sb, optimizationContext, indent,
+							new SqlSelectStatement(union.SelectQuery) { ParentStatement = statement }, sb, 
+							optimizationContext, indent,
 							skipAlias);
 					}
 				}
@@ -3176,7 +3176,7 @@ namespace LinqToDB.SqlProvider
 		string GetAlias(string desiredAlias, string defaultAlias)
 		{
 			if (_aliases == null)
-				_aliases = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+				_aliases = OptimizationContext.Aliases.GetUsedTableAliases();
 
 			var alias = desiredAlias;
 

@@ -14,6 +14,7 @@ using System.Data;
 
 using LinqToDB;
 using LinqToDB.Common;
+using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
@@ -38,7 +39,6 @@ namespace AccessODBCDataContext
 		public ITable<PatientSelectAll>    PatientSelectAll     { get { return this.GetTable<PatientSelectAll>(); } }
 		public ITable<Person>              People               { get { return this.GetTable<Person>(); } }
 		public ITable<PersonSelectAll>     PersonSelectAll      { get { return this.GetTable<PersonSelectAll>(); } }
-		public ITable<RelationsTable>      RelationsTables      { get { return this.GetTable<RelationsTable>(); } }
 		public ITable<ScalarDataReader>    ScalarDataReaders    { get { return this.GetTable<ScalarDataReader>(); } }
 		public ITable<TestIdentity>        TestIdentities       { get { return this.GetTable<TestIdentity>(); } }
 		public ITable<TestMerge1>          TestMerge1           { get { return this.GetTable<TestMerge1>(); } }
@@ -52,6 +52,13 @@ namespace AccessODBCDataContext
 
 		public TestDataDB(string configuration)
 			: base(configuration)
+		{
+			InitDataContext();
+			InitMappingSchema();
+		}
+
+		public TestDataDB(LinqToDbConnectionOptions options)
+			: base(options)
 		{
 			InitDataContext();
 			InitMappingSchema();
@@ -239,19 +246,6 @@ namespace AccessODBCDataContext
 		[Column(DbType="VARCHAR(1)",  DataType=LinqToDB.DataType.VarChar, Length=1),  Nullable] public char?   Gender     { get; set; } // VARCHAR(1)
 	}
 
-	[Table("RelationsTable")]
-	public partial class RelationsTable
-	{
-		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable] public int? ID1   { get; set; } // INTEGER
-		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable] public int? ID2   { get; set; } // INTEGER
-		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable] public int? Int1  { get; set; } // INTEGER
-		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable] public int? Int2  { get; set; } // INTEGER
-		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable] public int? IntN1 { get; set; } // INTEGER
-		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable] public int? IntN2 { get; set; } // INTEGER
-		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable] public int? FK    { get; set; } // INTEGER
-		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable] public int? FKN   { get; set; } // INTEGER
-	}
-
 	[Table("Scalar_DataReader", IsView=true)]
 	public partial class ScalarDataReader
 	{
@@ -319,16 +313,6 @@ namespace AccessODBCDataContext
 
 	public static partial class TestDataDBStoredProcedures
 	{
-		#region AddIssue792Record
-
-		public static int AddIssue792Record(this TestDataDB dataConnection, int? id)
-		{
-			return dataConnection.ExecuteProc("[AddIssue792Record]",
-				new DataParameter("id", id, LinqToDB.DataType.Int32));
-		}
-
-		#endregion
-
 		#region PatientSelectByName
 
 		public static IEnumerable<PatientSelectByNameResult> PatientSelectByName(this TestDataDB dataConnection, string? @firstName, string? @lastName)
@@ -434,10 +418,11 @@ namespace AccessODBCDataContext
 
 		#region PersonUpdate
 
-		public static int PersonUpdate(this TestDataDB dataConnection, int? @id, string? @FirstName, string? @MiddleName, string? @LastName, string? @Gender)
+		public static int PersonUpdate(this TestDataDB dataConnection, int? @id, int? @PersonID, string? @FirstName, string? @MiddleName, string? @LastName, string? @Gender)
 		{
 			return dataConnection.ExecuteProc("[Person_Update]",
 				new DataParameter("@id",         @id,         LinqToDB.DataType.Int32),
+				new DataParameter("@PersonID",   @PersonID,   LinqToDB.DataType.Int32),
 				new DataParameter("@FirstName",  @FirstName,  LinqToDB.DataType.VarChar),
 				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.VarChar),
 				new DataParameter("@LastName",   @LastName,   LinqToDB.DataType.VarChar),

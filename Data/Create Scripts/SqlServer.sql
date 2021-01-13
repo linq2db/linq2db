@@ -133,7 +133,7 @@ CREATE Procedure Person_SelectByKeyLowercase
 	@id int
 AS
 
-SELECT personid, firstname FROM Person WHERE PersonID = @id
+SELECT PersonID, FirstName FROM Person WHERE PersonID = @id
 
 GO
 
@@ -966,7 +966,7 @@ BEGIN
 END
 GO
 
-IF EXISTS (SELECT  schema_name FROM    information_schema.schemata WHERE   schema_name = 'TestSchema')
+IF EXISTS (SELECT  SCHEMA_NAME FROM    INFORMATION_SCHEMA.SCHEMATA WHERE   SCHEMA_NAME = 'TestSchema')
 BEGIN
 	DROP SCHEMA [TestSchema]
 END
@@ -1111,8 +1111,8 @@ BEGIN
 	INSERT INTO #PeopleIds
 	SELECT Person.PersonID
 	FROM Person
-	WHERE LOWER(FirstName) like '%' + @nameFilter + '%'
-	OR LOWER(LastName) like '%' + @nameFilter + '%';
+	WHERE FirstName like '%' + @nameFilter + '%'
+	OR LastName like '%' + @nameFilter + '%';
 
 	-- 0: List of matching person ids.
 	SELECT PersonID FROM #PeopleIds;
