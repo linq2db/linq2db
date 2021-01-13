@@ -2602,7 +2602,8 @@ namespace LinqToDB.Linq.Builder
 			// see #820
 			accessorExpression = accessorExpression.Transform(e =>
 			{
-				if (e.NodeType != ExpressionType.Parameter && dataContextParam.Type.IsSameOrParentOf(e.Type))
+				if (e.NodeType.NotIn(ExpressionType.Parameter, ExpressionType.Convert, ExpressionType.ConvertChecked)
+				    && dataContextParam.Type.IsSameOrParentOf(e.Type))
 				{
 					var newExpr = (Expression) dataContextParam;
 					if (newExpr.Type != e.Type)
