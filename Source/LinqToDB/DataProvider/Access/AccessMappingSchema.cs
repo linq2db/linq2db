@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using LinqToDB.Common;
 
 namespace LinqToDB.DataProvider.Access
 {
@@ -34,8 +35,7 @@ namespace LinqToDB.DataProvider.Access
 		{
 			stringBuilder.Append("0x");
 
-			foreach (var b in value)
-				stringBuilder.Append(b.ToString("X2"));
+			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
 		}
 
 		static void AppendConversion(StringBuilder stringBuilder, int value)

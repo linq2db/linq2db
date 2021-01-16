@@ -75,8 +75,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			stringBuilder.Append("E'\\\\x");
 
-			foreach (var b in value)
-				stringBuilder.Append(b.ToString("X2"));
+			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
 
 			stringBuilder.Append("'");
 		}

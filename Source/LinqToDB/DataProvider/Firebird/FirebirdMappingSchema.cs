@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using LinqToDB.Common;
 
 namespace LinqToDB.DataProvider.Firebird
 {
@@ -44,8 +45,7 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 			stringBuilder.Append("X'");
 
-			foreach (var b in value)
-				stringBuilder.Append(b.ToString("X2"));
+			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
 
 			stringBuilder.Append("'");
 		}

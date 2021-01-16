@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.DataProvider.SapHana
+﻿using LinqToDB.Common;
+
+namespace LinqToDB.DataProvider.SapHana
 {
 	using Mapping;
 	using SqlQuery;
@@ -36,8 +38,7 @@
 		{
 			stringBuilder.Append("x'");
 
-			foreach (var b in value)
-				stringBuilder.Append(b.ToString("X2"));
+			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
 
 			stringBuilder.Append("'");
 		}

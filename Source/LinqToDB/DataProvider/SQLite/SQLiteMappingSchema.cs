@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.Text;
+using LinqToDB.Common;
 
 namespace LinqToDB.DataProvider.SQLite
 {
@@ -32,8 +33,7 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 			stringBuilder.Append("X'");
 
-			foreach (var b in value)
-				stringBuilder.Append(b.ToString("X2"));
+			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
 
 			stringBuilder.Append("'");
 		}

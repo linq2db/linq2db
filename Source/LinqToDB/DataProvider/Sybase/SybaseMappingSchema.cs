@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using LinqToDB.Common;
 
 namespace LinqToDB.DataProvider.Sybase
 {
@@ -28,8 +29,7 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 			stringBuilder.Append("0x");
 
-			foreach (var b in value)
-				stringBuilder.Append(b.ToString("X2"));
+			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
 		}
 
 		static void ConvertTimeSpanToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, TimeSpan value)
