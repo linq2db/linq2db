@@ -2727,7 +2727,7 @@ namespace LinqToDB.Linq.Builder
 				if (sql.Length == 1 && sql[0].MemberChain.Length == 0)
 					expr = sql[0].Sql;
 				else
-					expr = new ObjectSqlExpression(MappingSchema, sql);
+					expr = new SqlObjectExpression(MappingSchema, sql);
 			}
 
 			var columnDescriptor = QueryHelper.GetColumnDescriptor(expr);

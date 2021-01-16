@@ -1872,22 +1872,26 @@ namespace LinqToDB.SqlProvider
 						}
 					}
 
-					if (p.Expr1 is ObjectSqlExpression expr)
+					if (p.Expr1 is SqlObjectExpression expr)
 					{
-						if (expr.Parameters.Length == 1)
+						var parameters = expr.InfoParameters;
+						if (parameters.Length == 1)
 						{
 							var values = new List<ISqlExpression>();
 
 							foreach (var item in items)
 							{
 								var value = expr.GetValue(item!, 0);
-								values.Add(new SqlValue(value));
+								var systemType = parameters[0].Sql.SystemType ?? value?.GetType();
+								if (systemType == null)
+									throw new InvalidOperationException("Cannot calculate SystemType for constant.");
+								values.Add(new SqlValue(systemType, value));
 							}
 
 							if (values.Count == 0)
 								return new SqlPredicate.Expr(new SqlValue(p.IsNot));
 
-							return new SqlPredicate.InList(expr.Parameters[0], null, p.IsNot, values);
+							return new SqlPredicate.InList(parameters[0].Sql, null, p.IsNot, values);
 						}
 
 						var sc = new SqlSearchCondition();
@@ -1896,9 +1900,9 @@ namespace LinqToDB.SqlProvider
 						{
 							var itemCond = new SqlSearchCondition();
 
-							for (var i = 0; i < expr.Parameters.Length; i++)
+							for (var i = 0; i < parameters.Length; i++)
 							{
-								var sql   = expr.Parameters[i];
+								var sql   = parameters[i].Sql;
 								var value = expr.GetValue(item!, i);
 								var cond  = value == null ?
 									new SqlCondition(false, new SqlPredicate.IsNull  (sql, false)) :
