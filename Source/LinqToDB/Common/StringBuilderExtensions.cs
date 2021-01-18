@@ -35,9 +35,9 @@ namespace LinqToDB.Common
 		public static void AppendByteArrayAsHexViaLookup32(this StringBuilder sb, byte[] bytes)
 		{
 			var lookup32 = _lookup32;
-			for (int i = 0; i < bytes.Length; i++)
+			foreach (var b in bytes)
 			{
-				var val = lookup32[bytes[i]];
+				var val = lookup32[b];
 				sb.Append((char)val);
 				sb.Append((char) (val >> 16));
 			}
