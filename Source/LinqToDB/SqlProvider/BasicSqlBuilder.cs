@@ -2,11 +2,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Linq;
 using System.Data.SqlTypes;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using LinqToDB.Linq;
 
 namespace LinqToDB.SqlProvider
 {
@@ -3081,7 +3083,33 @@ namespace LinqToDB.SqlProvider
 					sb.Append("SET     ");
 					PrintParameterName(sb, p);
 					sb.Append(" = ");
-					if (!ValueToSqlConverter.TryConvert(sb, p.Value))
+					if (p.Value is byte[] bytes                           &&
+					    bytes.Length > Configuration.MaxByteLengthLogging &&
+					    ValueToSqlConverter.CanConvert(typeof(byte[])))
+					{
+						var trimmed =
+							new byte[Configuration.MaxByteLengthLogging];
+						Array.Copy(bytes, 0, trimmed, 0,
+							Configuration.MaxByteLengthLogging);
+						ValueToSqlConverter.TryConvert(sb, trimmed);
+						sb.Append(
+							$"-- Truncated for logging, actual length is {bytes.Length}");
+					}
+					else if (p.Value is Binary binaryData && 
+					         binaryData.Length > Configuration.MaxByteLengthLogging &&
+					         ValueToSqlConverter.CanConvert(typeof(Binary)))
+					{
+						//We aren't going to create a new Binary here,
+						//since ValueToSql always just .ToArray() anyway
+						var trimmed =
+							new byte[Configuration.MaxByteLengthLogging];
+						Array.Copy(binaryData.ToArray(), 0, trimmed, 0,
+							Configuration.MaxByteLengthLogging);
+						ValueToSqlConverter.TryConvert(sb, trimmed);
+						sb.Append(
+							$"-- Truncated for logging, actual length is {bytes.Length}");
+					}
+					else if (!ValueToSqlConverter.TryConvert(sb, p.Value))
 						FormatParameterValue(sb, p.Value);
 					sb.AppendLine();
 				}
