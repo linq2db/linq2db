@@ -3107,7 +3107,7 @@ namespace LinqToDB.SqlProvider
 							Configuration.MaxByteLengthLogging);
 						ValueToSqlConverter.TryConvert(sb, trimmed);
 						sb.Append(
-							$"-- Truncated for logging, actual length is {bytes.Length}");
+							$"-- Truncated for logging, actual length is {binaryData.Length}");
 					}
 					else if (!ValueToSqlConverter.TryConvert(sb, p.Value))
 						FormatParameterValue(sb, p.Value);
