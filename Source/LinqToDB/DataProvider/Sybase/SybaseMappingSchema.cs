@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Text;
-using LinqToDB.Common;
+
 
 namespace LinqToDB.DataProvider.Sybase
 {
+	using Common;
 	using Mapping;
 	using SqlQuery;
 	using System.Data.Linq;

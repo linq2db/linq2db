@@ -1,10 +1,11 @@
 ﻿using System;
 
 using JetBrains.Annotations;
-using LinqToDB.Linq;
+
 
 namespace LinqToDB.Common
 {
+	using LinqToDB.Linq;
 	using Data;
 	using Data.RetryPolicy;
 	using System.Data;

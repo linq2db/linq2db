@@ -1,7 +1,8 @@
-﻿using LinqToDB.Common;
+﻿
 
 namespace LinqToDB.DataProvider.SapHana
 {
+	using Common;
 	using Mapping;
 	using SqlQuery;
 	using System.Data.Linq;

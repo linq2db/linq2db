@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Globalization;
 using System.Text;
-using LinqToDB.Common;
+
 
 namespace LinqToDB.DataProvider.SQLite
 {
+	using Common;
 	using Mapping;
 	using SqlQuery;
 	using System.Data.Linq;

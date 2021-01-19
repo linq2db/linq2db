@@ -8,10 +8,10 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using LinqToDB.Linq;
 
 namespace LinqToDB.SqlProvider
 {
+	using LinqToDB.Linq;
 	using Common;
 	using Mapping;
 	using SqlQuery;
