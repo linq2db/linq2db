@@ -44,6 +44,7 @@ namespace LinqToDB.Common
 		
 		/// <summary>
 		/// Determines the length after which logging of binary data in SQL will be truncated.
+		/// Use a value of -1 to disable. Set to 0 to truncate all binary data.
 		/// This is to avoid Out-Of-Memory exceptions when getting SqlText from <see cref="TraceInfo"/>
 		/// or <see cref="IExpressionQuery"/> for logging or other purposes.
 		/// </summary>
@@ -51,6 +52,7 @@ namespace LinqToDB.Common
 
 		/// <summary>
 		/// Determines the length after which logging of string data in SQL will be truncated.
+		/// Use a value of -1 to disable. Set to 0 to truncate all binary data.
 		/// This is to avoid Out-Of-Memory exceptions when getting SqlText from <see cref="TraceInfo"/>
 		/// or <see cref="IExpressionQuery"/> for logging or other purposes.
 		/// </summary>
