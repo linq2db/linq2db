@@ -12,7 +12,7 @@ namespace LinqToDB.Common
 			var result = new uint[256];
 			for (int i = 0; i < 256; i++)
 			{
-				string s =i.ToString("X2");
+				string s = i.ToString("X2");
 				result[i] = ((uint)s[0]) + ((uint)s[1] << 16);
 			}
 			return result;

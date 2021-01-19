@@ -3084,30 +3084,41 @@ namespace LinqToDB.SqlProvider
 					PrintParameterName(sb, p);
 					sb.Append(" = ");
 					if (p.Value is byte[] bytes                           &&
-					    bytes.Length > Configuration.MaxByteLengthLogging &&
+					    bytes.Length > Configuration.MaxBinaryParameterLengthLogging &&
 					    ValueToSqlConverter.CanConvert(typeof(byte[])))
 					{
 						var trimmed =
-							new byte[Configuration.MaxByteLengthLogging];
+							new byte[Configuration.MaxBinaryParameterLengthLogging];
 						Array.Copy(bytes, 0, trimmed, 0,
-							Configuration.MaxByteLengthLogging);
+							Configuration.MaxBinaryParameterLengthLogging);
 						ValueToSqlConverter.TryConvert(sb, trimmed);
 						sb.Append(
-							$"-- Truncated for logging, actual length is {bytes.Length}");
+							$"-- value above truncated for logging, actual length is {bytes.Length}");
 					}
 					else if (p.Value is Binary binaryData && 
-					         binaryData.Length > Configuration.MaxByteLengthLogging &&
+					         binaryData.Length > Configuration.MaxBinaryParameterLengthLogging &&
 					         ValueToSqlConverter.CanConvert(typeof(Binary)))
 					{
 						//We aren't going to create a new Binary here,
 						//since ValueToSql always just .ToArray() anyway
 						var trimmed =
-							new byte[Configuration.MaxByteLengthLogging];
+							new byte[Configuration.MaxBinaryParameterLengthLogging];
 						Array.Copy(binaryData.ToArray(), 0, trimmed, 0,
-							Configuration.MaxByteLengthLogging);
+							Configuration.MaxBinaryParameterLengthLogging);
 						ValueToSqlConverter.TryConvert(sb, trimmed);
 						sb.Append(
-							$"-- Truncated for logging, actual length is {binaryData.Length}");
+							$"-- value above truncated for logging, actual length is {binaryData.Length}");
+					}
+					else if (p.Value is string s && 
+					         s.Length > Configuration.MaxStringParameterLengthLogging &&
+					         ValueToSqlConverter.CanConvert(typeof(string)))
+					{
+						var trimmed =
+							s.Substring(0,
+								Configuration.MaxStringParameterLengthLogging);
+						ValueToSqlConverter.TryConvert(sb, trimmed);
+						sb.Append(
+							$"-- value above truncated for logging, actual length is {s.Length}");
 					}
 					else if (!ValueToSqlConverter.TryConvert(sb, p.Value))
 						FormatParameterValue(sb, p.Value);

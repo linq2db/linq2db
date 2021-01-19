@@ -47,7 +47,14 @@ namespace LinqToDB.Common
 		/// This is to avoid Out-Of-Memory exceptions when getting SqlText from <see cref="TraceInfo"/>
 		/// or <see cref="IExpressionQuery"/> for logging or other purposes.
 		/// </summary>
-		public static int MaxByteLengthLogging { get; set; } = 1024;
+		public static int MaxBinaryParameterLengthLogging { get; set; } = 100;
+
+		/// <summary>
+		/// Determines the length after which logging of string data in SQL will be truncated.
+		/// This is to avoid Out-Of-Memory exceptions when getting SqlText from <see cref="TraceInfo"/>
+		/// or <see cref="IExpressionQuery"/> for logging or other purposes.
+		/// </summary>
+		public static int MaxStringParameterLengthLogging { get; set; } = 200;
 
 		public static class Data
 		{
