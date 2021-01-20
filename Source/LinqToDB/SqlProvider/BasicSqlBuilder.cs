@@ -3093,6 +3093,7 @@ namespace LinqToDB.SqlProvider
 						Array.Copy(bytes, 0, trimmed, 0,
 							Configuration.MaxBinaryParameterLengthLogging);
 						ValueToSqlConverter.TryConvert(sb, trimmed);
+						sb.AppendLine();
 						sb.Append(
 							$"-- value above truncated for logging, actual length is {bytes.Length}");
 					}
@@ -3108,6 +3109,7 @@ namespace LinqToDB.SqlProvider
 						Array.Copy(binaryData.ToArray(), 0, trimmed, 0,
 							Configuration.MaxBinaryParameterLengthLogging);
 						ValueToSqlConverter.TryConvert(sb, trimmed);
+						sb.AppendLine();
 						sb.Append(
 							$"-- value above truncated for logging, actual length is {binaryData.Length}");
 					}
@@ -3120,6 +3122,7 @@ namespace LinqToDB.SqlProvider
 							s.Substring(0,
 								Configuration.MaxStringParameterLengthLogging);
 						ValueToSqlConverter.TryConvert(sb, trimmed);
+						sb.AppendLine();
 						sb.Append(
 							$"-- value above truncated for logging, actual length is {s.Length}");
 					}
