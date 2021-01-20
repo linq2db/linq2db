@@ -1246,6 +1246,9 @@ namespace LinqToDB.Linq.Builder
 					return memberExpression;
 			}
 
+			if (!memberExpression.Type.IsAssignableFrom(levelExpression.Type))
+				return memberExpression;
+
 			return !ReferenceEquals(levelExpression, expression) ?
 				expression.Transform(ex => ReferenceEquals(ex, levelExpression) ? memberExpression : ex) :
 				memberExpression;
