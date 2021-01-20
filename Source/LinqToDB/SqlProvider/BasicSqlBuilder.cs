@@ -3084,7 +3084,7 @@ namespace LinqToDB.SqlProvider
 					PrintParameterName(sb, p);
 					sb.Append(" = ");
 					if (p.Value is byte[] bytes                           &&
-					    Configuration.MaxBinaryParameterLengthLogging >=0 &&
+					    Configuration.MaxBinaryParameterLengthLogging >= 0 &&
 					    bytes.Length > Configuration.MaxBinaryParameterLengthLogging &&
 					    ValueToSqlConverter.CanConvert(typeof(byte[])))
 					{
@@ -3097,7 +3097,7 @@ namespace LinqToDB.SqlProvider
 							$"-- value above truncated for logging, actual length is {bytes.Length}");
 					}
 					else if (p.Value is Binary binaryData &&
-					         Configuration.MaxBinaryParameterLengthLogging >=0 &&
+					         Configuration.MaxBinaryParameterLengthLogging >= 0 &&
 					         binaryData.Length > Configuration.MaxBinaryParameterLengthLogging &&
 					         ValueToSqlConverter.CanConvert(typeof(Binary)))
 					{
@@ -3112,7 +3112,7 @@ namespace LinqToDB.SqlProvider
 							$"-- value above truncated for logging, actual length is {binaryData.Length}");
 					}
 					else if (p.Value is string s && 
-					         Configuration.MaxStringParameterLengthLogging >=0 &&
+					         Configuration.MaxStringParameterLengthLogging >= 0 &&
 					         s.Length > Configuration.MaxStringParameterLengthLogging &&
 					         ValueToSqlConverter.CanConvert(typeof(string)))
 					{
