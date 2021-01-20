@@ -10,54 +10,24 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue2787Tests : TestBase
 	{
-		[Table]
-		class Car
-		{
-			[PrimaryKey]
-			public int Id { get; set; }
-
-			[Column(CanBeNull = false)]
-			public string? Name { get; set; }
-		}
-
-		[Table]
-		class Tyre
-		{
-			[PrimaryKey]
-			public int CarId { get; set; }
-		}
-
-		class MyProjection
-		{
-			public Car? Car { get; set; }
-			public Tyre? Tyre { get; set; }
-		}
-
 		[Test]
 		public void Issue2787Test([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.DropTable<Car>(throwExceptionIfNotExists: false);
-				db.DropTable<Tyre>(throwExceptionIfNotExists: false);
-				using (var carTable = db.CreateLocalTable<Car>())
-				using (var tyreTable = db.CreateLocalTable<Tyre>())
-				{
-					var query  = (from car in carTable
-								  from tyre in tyreTable.Where(x => x.CarId == car.Id)
-								  select new MyProjection
+					var query  = (from pers in db.Person
+								  from patient in db.Patient.Where(x => x.PersonID == pers.ID)
+								  select new 
 								  {
-									  Car = car,
-									  Tyre = tyre
+									  Pers = pers,
+									  Patient = patient
 								  });
 
-
-					var res = query.Select(x => new {a = x.Car.Id == 3 ? x.Car.Name : string.Empty}).ToList();
+					var res = query.Select(x => new {a = x.Pers.ID == 3 ? x.Pers.Name : string.Empty}).ToList();
 
 					var lastQuery = ((DataConnection) db).LastQuery;
 
 					Assert.IsTrue(lastQuery?.ToLower().Contains("case"));
-				}
 			}
 		}
 	}
