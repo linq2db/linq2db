@@ -687,7 +687,7 @@ namespace Tests.xUpdate
 						.Using(table.Select(_ => new TestMapping1() { Id = _.Id, Field1 = _.Field1 }))
 						.OnTargetKey()
 						.InsertWhenNotMatched()
-						.Merge());
+						.Merge())!;
 
 				Assert.IsInstanceOf<LinqToDBException>(exception);
 				Assert.AreEqual("'s.Field2' cannot be converted to SQL.", exception.Message);
@@ -713,7 +713,7 @@ namespace Tests.xUpdate
 							Id     = s.Id,
 							Field1 = s.Field3
 						})
-						.Merge());
+						.Merge())!;
 
 				Assert.IsInstanceOf<LinqToDBException>(exception);
 				Assert.AreEqual("'s.Field3' cannot be converted to SQL.", exception.Message);
@@ -1109,7 +1109,7 @@ namespace Tests.xUpdate
 							Field4 = 999,
 							Field5 = 888
 						})
-					.Merge());
+					.Merge())!;
 
 				Assert.IsInstanceOf<LinqToDBException>(exception);
 				Assert.AreEqual("'_.Field2' cannot be converted to SQL.", exception.Message);

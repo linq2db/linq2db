@@ -112,7 +112,7 @@ namespace Tests.DataProvider
 
 			readonly string _providerName;
 
-			public IEnumerable<TestMethod> BuildFrom(IMethodInfo method, Test suite)
+			public IEnumerable<TestMethod> BuildFrom(IMethodInfo method, Test? suite)
 			{
 				var tests = UserProviders.Contains(_providerName) ?
 					new[]

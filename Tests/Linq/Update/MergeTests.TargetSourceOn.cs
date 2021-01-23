@@ -33,7 +33,7 @@ namespace Tests.xUpdate
 					.MergeInto(table)
 					.OnTargetKey()
 					.InsertWhenNotMatched()
-					.Merge());
+					.Merge())!;
 
 				Assert.IsInstanceOf<LinqToDBException>(exception);
 				Assert.AreEqual("Method OnTargetKey() needs at least one primary key column", exception.Message);
@@ -405,7 +405,7 @@ namespace Tests.xUpdate
 						{
 							Field3 = 321
 						})
-						.Merge());
+						.Merge())!;
 
 				Assert.IsInstanceOf<LinqToDBException>(exception);
 				Assert.AreEqual("'s.Field2' cannot be converted to SQL.", exception.Message);

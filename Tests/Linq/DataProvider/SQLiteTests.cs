@@ -600,8 +600,7 @@ namespace Tests.DataProvider
 				case ProviderName.SQLiteClassic:
 				case TestProvName.SQLiteClassicMiniProfilerMapped:
 				case TestProvName.SQLiteClassicMiniProfilerUnmapped:
-					// https://system.data.sqlite.org/index.html/tktview/bc327ea1423cfd9c4fbe30f0df4775e727a98626
-					expectedVersion = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "3.32.1" : "3.31.1";
+					expectedVersion = "3.32.1";
 					break;
 				case ProviderName.SQLiteMS:
 #if NET472

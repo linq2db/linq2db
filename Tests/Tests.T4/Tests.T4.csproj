@@ -18,11 +18,11 @@
 		<Reference Include="WindowsBase" />
 
 		<PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.1016.290" />
-		<PackageReference Include="Npgsql" Version="4.1.7" />
+		<PackageReference Include="Npgsql" Version="4.1.8" />
 
 	</ItemGroup>
 	<ItemGroup Condition="'$(TargetFramework)' != 'net472'">
-		<PackageReference Include="Npgsql" Version="5.0.1.1" />
+		<PackageReference Include="Npgsql" Version="5.0.2" />
 		<!--nuget doesn't have strong name, so we use local self-signed copy-->
 		<!--<PackageReference Include="dotMorten.Microsoft.SqlServer.Types" Version="1.3.0" />-->
 		<Reference Include="Microsoft.SqlServer.Types">

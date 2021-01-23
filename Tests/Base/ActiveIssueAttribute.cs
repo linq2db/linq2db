@@ -94,7 +94,7 @@ namespace Tests
 			return _issueConfigurations ??= new HashSet<string>(Configurations ?? new string[0]);
 		}
 
-		IEnumerable<TestMethod> ITestBuilder.BuildFrom(IMethodInfo method, Test suite)
+		IEnumerable<TestMethod> ITestBuilder.BuildFrom(IMethodInfo method, Test? suite)
 		{
 			foreach (var testMethod in base.BuildFrom(method, suite))
 			{
