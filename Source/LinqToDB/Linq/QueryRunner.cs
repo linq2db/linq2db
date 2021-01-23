@@ -204,18 +204,6 @@ namespace LinqToDB.Linq
 #endif
 		}
 
-		static ParameterAccessor? GetParameterAccessor(List<ParameterAccessor> parameters, ISqlExpression parameter)
-		{
-			for (var i = 0; i < parameters.Count; i++)
-			{
-				var accessor = parameters[i];
-				if (accessor.SqlParameter == parameter)
-					return accessor;
-			}
-
-			return null;
-		}
-
 		static int EvaluateTakeSkipValue(Query query, Expression expr, IDataContext? db, object?[]? ps, int qn,
 			ISqlExpression sqlExpr)
 				{

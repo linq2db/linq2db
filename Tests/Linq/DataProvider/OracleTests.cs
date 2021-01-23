@@ -3765,8 +3765,8 @@ CREATE TABLE ""TABLE_A""(
 				}
 				finally
 				{
-					db.Execute("DROP SEQUENCE SEQ_A");
-					db.Execute("DROP TABLE \"TABLE_A\"");
+					try { db.Execute("DROP SEQUENCE SEQ_A"); } catch { }
+					try { db.Execute("DROP TABLE \"TABLE_A\""); } catch { }
 				}
 			}
 		}

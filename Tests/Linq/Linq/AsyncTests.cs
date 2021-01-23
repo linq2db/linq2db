@@ -117,6 +117,9 @@ namespace Tests.Linq
 				sql = string.Join(Environment.NewLine, sql.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
 					.Where(line => !line.StartsWith("--")));
 
+#if !NET472
+			await
+#endif
 				using (var rd = await conn.SetCommand(sql).ExecuteReaderAsync())
 				{
 					var list = await rd.QueryToArrayAsync<string>();

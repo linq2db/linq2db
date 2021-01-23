@@ -9,6 +9,9 @@ namespace LinqToDB.DataProvider.Sybase
 {
 	using Data;
 
+	// !table.TableOptions.HasIsTemporary() check:
+	// native bulk copy produce following error for insert into temp table:
+	// AseException : Incorrect syntax near ','.
 	class SybaseBulkCopy : BasicBulkCopy
 	{
 		private readonly SybaseDataProvider _provider;
@@ -24,7 +27,7 @@ namespace LinqToDB.DataProvider.Sybase
 			IEnumerable<T> source)
 		{
 			var connections = GetProviderConnection(table);
-			if (connections.HasValue)
+			if (connections.HasValue && !table.TableOptions.HasIsTemporary())
 			{
 				return ProviderSpecificCopyInternal(
 					connections.Value,
@@ -43,7 +46,7 @@ namespace LinqToDB.DataProvider.Sybase
 			CancellationToken cancellationToken)
 		{
 			var connections = GetProviderConnection(table);
-			if (connections.HasValue)
+			if (connections.HasValue && !table.TableOptions.HasIsTemporary())
 			{
 				// call the synchronous provider-specific implementation
 				return Task.FromResult(ProviderSpecificCopyInternal(
@@ -64,7 +67,7 @@ namespace LinqToDB.DataProvider.Sybase
 			CancellationToken   cancellationToken)
 		{
 			var connections = GetProviderConnection(table);
-			if (connections.HasValue)
+			if (connections.HasValue && !table.TableOptions.HasIsTemporary())
 			{
 				// call the synchronous provider-specific implementation
 				return Task.FromResult(ProviderSpecificCopyInternal(
