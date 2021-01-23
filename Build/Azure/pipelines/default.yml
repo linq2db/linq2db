@@ -55,14 +55,14 @@ stages:
     variables:
       - template: templates/nuget-vars.yml
     dependsOn: build_job
-    condition: and(succeeded(), or(eq(variables['Build.SourceBranchName'], '$(release_branch)'), eq(variables['Build.SourceBranchName'], '$(master_branch)')))
+    condition: and(succeeded(), or(eq(variables['Build.SourceBranchName'], variables['release_branch']), eq(variables['Build.SourceBranchName'], variables['master_branch'])))
 
     steps:
 
     - task: NuGetToolInstaller@1
 
     - powershell: echo "##vso[task.setvariable variable=packageVersion]$(packageVersion)-rc.$(Build.BuildId)"
-      condition: ne(variables['Build.SourceBranchName'], '$(release_branch)')
+      condition: ne(variables['Build.SourceBranchName'], variables['release_branch'])
       displayName: Update nuget version
 
     - task: DownloadPipelineArtifact@2
@@ -107,14 +107,14 @@ stages:
         script: $(Build.SourcesDirectory)/NuGet/Pack.bat
         workingDirectory: $(Build.SourcesDirectory)/BuiltNuGet
       displayName: Build nugets for Azure Artifacts
-      condition: and(succeeded(), eq(variables['Build.SourceBranchName'], '$(master_branch)'))
+      condition: and(succeeded(), eq(variables['Build.SourceBranchName'], variables['master_branch']))
 
     - task: CmdLine@2
       inputs:
         script: $(Build.SourcesDirectory)/NuGet/Pack.bat snupkg
         workingDirectory: $(Build.SourcesDirectory)/BuiltNuGet
       displayName: Build nugets for Nuget.org
-      condition: and(succeeded(), eq(variables['Build.SourceBranchName'], '$(release_branch)'))
+      condition: and(succeeded(), eq(variables['Build.SourceBranchName'], variables['release_branch']))
 
     - task: PublishBuildArtifacts@1
       inputs:
@@ -129,7 +129,7 @@ stages:
         nuGetFeedType: 'internal'
         publishVstsFeed: '0dcc414b-ea54-451e-a54f-d63f05367c4b/967a4107-9788-41a4-9f6d-a2318aab1410'
       displayName: Publish to Azure Artifacts feed
-      condition: and(succeeded(), eq(variables['Build.SourceBranchName'], '$(master_branch)'))
+      condition: and(succeeded(), eq(variables['Build.SourceBranchName'], variables['master_branch']))
 
 # apikey exires around 31/07/2020
     - task: NuGetCommand@2
@@ -139,14 +139,14 @@ stages:
         nuGetFeedType: 'external'
         publishFeedCredentials: 'linq2db nuget.org feed'
       displayName: Publish to Nuget.org
-      condition: and(succeeded(), eq(variables['Build.SourceBranchName'], '$(release_branch)'))
+      condition: and(succeeded(), eq(variables['Build.SourceBranchName'], variables['release_branch']))
 
 #############
 # TEST JOBS #
 #############
   - template: templates/test-matrix.yml
     parameters:
-      enabled: and(eq(variables['System.PullRequest.TargetBranch'], '$(release_branch)'), succeeded())
+      enabled: and(eq(variables['System.PullRequest.TargetBranch'], variables['release_branch']), succeeded())
       experimental: false
       with_baselines: true
-      mac_enabled: and(eq(variables['System.PullRequest.TargetBranch'], '$(release_branch)'), succeeded()) # enable macos testing only for release
+      mac_enabled: and(eq(variables['System.PullRequest.TargetBranch'], variables['release_branch']), succeeded()) # enable macos testing only for release
