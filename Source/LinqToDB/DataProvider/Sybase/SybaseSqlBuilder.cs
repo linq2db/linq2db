@@ -140,7 +140,10 @@ namespace LinqToDB.DataProvider.Sybase
 					if (value.Length > 26)
 						value = value.Substring(0, 26);
 
-					return sb.Append('@').Append(value);
+					if (value.Length == 0 || value[0] != '@')
+						sb.Append('@');
+
+					return sb.Append(value);
 
 				case ConvertType.NameToQueryField:
 				case ConvertType.NameToQueryFieldAlias:

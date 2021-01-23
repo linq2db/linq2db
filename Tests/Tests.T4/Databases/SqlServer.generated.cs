@@ -579,8 +579,15 @@ namespace DataModel
 
 		public static List<CustOrderHistResult> CustOrderHist(this NorthwindDB dataConnection, string? @CustomerID)
 		{
-			return dataConnection.QueryProc<CustOrderHistResult>("[CustOrderHist]",
-				new DataParameter("@CustomerID", @CustomerID, LinqToDB.DataType.NChar)).ToList();
+			var parameters = new []
+			{
+				new DataParameter("@CustomerID", @CustomerID, LinqToDB.DataType.NChar)
+				{
+					Size = 5
+				}
+			};
+
+			return dataConnection.QueryProc<CustOrderHistResult>("[CustOrderHist]", parameters).ToList();
 		}
 
 		public partial class CustOrderHistResult
@@ -595,8 +602,12 @@ namespace DataModel
 
 		public static List<CustOrdersDetailResult> CustOrdersDetail(this NorthwindDB dataConnection, int? @OrderID)
 		{
-			return dataConnection.QueryProc<CustOrdersDetailResult>("[CustOrdersDetail]",
-				new DataParameter("@OrderID", @OrderID, LinqToDB.DataType.Int32)).ToList();
+			var parameters = new []
+			{
+				new DataParameter("@OrderID", @OrderID, LinqToDB.DataType.Int32)
+			};
+
+			return dataConnection.QueryProc<CustOrdersDetailResult>("[CustOrdersDetail]", parameters).ToList();
 		}
 
 		public partial class CustOrdersDetailResult
@@ -614,8 +625,15 @@ namespace DataModel
 
 		public static List<CustOrdersOrdersResult> CustOrdersOrders(this NorthwindDB dataConnection, string? @CustomerID)
 		{
-			return dataConnection.QueryProc<CustOrdersOrdersResult>("[CustOrdersOrders]",
-				new DataParameter("@CustomerID", @CustomerID, LinqToDB.DataType.NChar)).ToList();
+			var parameters = new []
+			{
+				new DataParameter("@CustomerID", @CustomerID, LinqToDB.DataType.NChar)
+				{
+					Size = 5
+				}
+			};
+
+			return dataConnection.QueryProc<CustOrdersOrdersResult>("[CustOrdersOrders]", parameters).ToList();
 		}
 
 		public partial class CustOrdersOrdersResult
@@ -632,9 +650,13 @@ namespace DataModel
 
 		public static List<EmployeeSalesByCountryResult> EmployeeSalesByCountry(this NorthwindDB dataConnection, DateTime? @Beginning_Date, DateTime? @Ending_Date)
 		{
-			return dataConnection.QueryProc<EmployeeSalesByCountryResult>("[Employee Sales by Country]",
+			var parameters = new []
+			{
 				new DataParameter("@Beginning_Date", @Beginning_Date, LinqToDB.DataType.DateTime),
-				new DataParameter("@Ending_Date",    @Ending_Date,    LinqToDB.DataType.DateTime)).ToList();
+				new DataParameter("@Ending_Date",    @Ending_Date,    LinqToDB.DataType.DateTime)
+			};
+
+			return dataConnection.QueryProc<EmployeeSalesByCountryResult>("[Employee Sales by Country]", parameters).ToList();
 		}
 
 		public partial class EmployeeSalesByCountryResult
@@ -653,9 +675,13 @@ namespace DataModel
 
 		public static List<SalesByYearResult> SalesByYear(this NorthwindDB dataConnection, DateTime? @Beginning_Date, DateTime? @Ending_Date)
 		{
-			return dataConnection.QueryProc<SalesByYearResult>("[Sales by Year]",
+			var parameters = new []
+			{
 				new DataParameter("@Beginning_Date", @Beginning_Date, LinqToDB.DataType.DateTime),
-				new DataParameter("@Ending_Date",    @Ending_Date,    LinqToDB.DataType.DateTime)).ToList();
+				new DataParameter("@Ending_Date",    @Ending_Date,    LinqToDB.DataType.DateTime)
+			};
+
+			return dataConnection.QueryProc<SalesByYearResult>("[Sales by Year]", parameters).ToList();
 		}
 
 		public partial class SalesByYearResult
@@ -672,9 +698,19 @@ namespace DataModel
 
 		public static List<SalesByCategoryResult> SalesByCategory(this NorthwindDB dataConnection, string? @CategoryName, string? @OrdYear)
 		{
-			return dataConnection.QueryProc<SalesByCategoryResult>("[SalesByCategory]",
-				new DataParameter("@CategoryName", @CategoryName, LinqToDB.DataType.NVarChar),
-				new DataParameter("@OrdYear",      @OrdYear,      LinqToDB.DataType.NVarChar)).ToList();
+			var parameters = new []
+			{
+				new DataParameter("@CategoryName", @CategoryName, LinqToDB.DataType.NVarChar)
+				{
+					Size = 15
+				},
+				new DataParameter("@OrdYear",      @OrdYear,      LinqToDB.DataType.NVarChar)
+				{
+					Size = 4
+				}
+			};
+
+			return dataConnection.QueryProc<SalesByCategoryResult>("[SalesByCategory]", parameters).ToList();
 		}
 
 		public partial class SalesByCategoryResult
@@ -1662,11 +1698,18 @@ namespace DataModel
 
 		public static int ExecuteProcIntParameters(this TestData2014DB dataConnection, int? @input, ref int? @output)
 		{
-			var ret = dataConnection.ExecuteProc("[ExecuteProcIntParameters]",
+			var parameters = new []
+			{
 				new DataParameter("@input",  @input,  LinqToDB.DataType.Int32),
-				new DataParameter("@output", @output, LinqToDB.DataType.Int32) { Direction = ParameterDirection.InputOutput });
+				new DataParameter("@output", @output, LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.InputOutput
+				}
+			};
 
-			@output = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@output"]).Value);
+			var ret = dataConnection.ExecuteProc("[ExecuteProcIntParameters]", parameters);
+
+			@output = Converter.ChangeTypeTo<int?>(parameters[1].Value);
 
 			return ret;
 		}
@@ -1683,6 +1726,15 @@ namespace DataModel
 		/// </param>
 		public static List<ExecuteProcStringParametersResult> ExecuteProcStringParameters(this TestData2014DB dataConnection, int? @input, ref int? @output)
 		{
+			var parameters = new []
+			{
+				new DataParameter("@input",  @input,  LinqToDB.DataType.Int32),
+				new DataParameter("@output", @output, LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.InputOutput
+				}
+			};
+
 			var ms = dataConnection.MappingSchema;
 
 			var ret = dataConnection.QueryProc(dataReader =>
@@ -1690,11 +1742,9 @@ namespace DataModel
 				{
 					Column1 = Converter.ChangeTypeTo<string>(dataReader.GetValue(0), ms),
 				},
-				"[ExecuteProcStringParameters]",
-				new DataParameter("@input",  @input,  LinqToDB.DataType.Int32),
-				new DataParameter("@output", @output, LinqToDB.DataType.Int32) { Direction = ParameterDirection.InputOutput }).ToList();
+				"[ExecuteProcStringParameters]", parameters).ToList();
 
-			@output = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@output"]).Value);
+			@output = Converter.ChangeTypeTo<int?>(parameters[1].Value);
 
 			return ret;
 		}
@@ -1710,10 +1760,17 @@ namespace DataModel
 
 		public static int Issue1897(this TestData2014DB dataConnection, out int @return)
 		{
-			var ret = dataConnection.ExecuteProc("[Issue1897]",
-				new DataParameter("@return", null, LinqToDB.DataType.Int32) { Direction = ParameterDirection.ReturnValue });
+			var parameters = new []
+			{
+				new DataParameter("@return", null, LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.ReturnValue
+				}
+			};
 
-			@return = Converter.ChangeTypeTo<int>(((IDbDataParameter)dataConnection.Command.Parameters["@return"]).Value);
+			var ret = dataConnection.ExecuteProc("[Issue1897]", parameters);
+
+			@return = Converter.ChangeTypeTo<int>(parameters[0].Value);
 
 			return ret;
 		}
@@ -1724,13 +1781,28 @@ namespace DataModel
 
 		public static int OutRefEnumTest(this TestData2014DB dataConnection, string? @str, ref string? @outputStr, ref string? @inputOutputStr)
 		{
-			var ret = dataConnection.ExecuteProc("[OutRefEnumTest]",
-				new DataParameter("@str",            @str,            LinqToDB.DataType.VarChar),
-				new DataParameter("@outputStr",      @outputStr,      LinqToDB.DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 },
-				new DataParameter("@inputOutputStr", @inputOutputStr, LinqToDB.DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
+			var parameters = new []
+			{
+				new DataParameter("@str",            @str,            LinqToDB.DataType.VarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@outputStr",      @outputStr,      LinqToDB.DataType.VarChar)
+				{
+					Direction = ParameterDirection.InputOutput,
+					Size      = 50
+				},
+				new DataParameter("@inputOutputStr", @inputOutputStr, LinqToDB.DataType.VarChar)
+				{
+					Direction = ParameterDirection.InputOutput,
+					Size      = 50
+				}
+			};
 
-			@outputStr      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["@outputStr"]).     Value);
-			@inputOutputStr = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["@inputOutputStr"]).Value);
+			var ret = dataConnection.ExecuteProc("[OutRefEnumTest]", parameters);
+
+			@outputStr      = Converter.ChangeTypeTo<string?>(parameters[1].Value);
+			@inputOutputStr = Converter.ChangeTypeTo<string?>(parameters[2].Value);
 
 			return ret;
 		}
@@ -1741,18 +1813,39 @@ namespace DataModel
 
 		public static int OutRefTest(this TestData2014DB dataConnection, int? @ID, ref int? @outputID, ref int? @inputOutputID, string? @str, ref string? @outputStr, ref string? @inputOutputStr)
 		{
-			var ret = dataConnection.ExecuteProc("[OutRefTest]",
+			var parameters = new []
+			{
 				new DataParameter("@ID",             @ID,             LinqToDB.DataType.Int32),
-				new DataParameter("@outputID",       @outputID,       LinqToDB.DataType.Int32) { Direction = ParameterDirection.InputOutput },
-				new DataParameter("@inputOutputID",  @inputOutputID,  LinqToDB.DataType.Int32) { Direction = ParameterDirection.InputOutput },
-				new DataParameter("@str",            @str,            LinqToDB.DataType.VarChar),
-				new DataParameter("@outputStr",      @outputStr,      LinqToDB.DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 },
-				new DataParameter("@inputOutputStr", @inputOutputStr, LinqToDB.DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
+				new DataParameter("@outputID",       @outputID,       LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.InputOutput
+				},
+				new DataParameter("@inputOutputID",  @inputOutputID,  LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.InputOutput
+				},
+				new DataParameter("@str",            @str,            LinqToDB.DataType.VarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@outputStr",      @outputStr,      LinqToDB.DataType.VarChar)
+				{
+					Direction = ParameterDirection.InputOutput,
+					Size      = 50
+				},
+				new DataParameter("@inputOutputStr", @inputOutputStr, LinqToDB.DataType.VarChar)
+				{
+					Direction = ParameterDirection.InputOutput,
+					Size      = 50
+				}
+			};
 
-			@outputID       = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["@outputID"]).      Value);
-			@inputOutputID  = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["@inputOutputID"]). Value);
-			@outputStr      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["@outputStr"]).     Value);
-			@inputOutputStr = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["@inputOutputStr"]).Value);
+			var ret = dataConnection.ExecuteProc("[OutRefTest]", parameters);
+
+			@outputID       = Converter.ChangeTypeTo<int?>   (parameters[1].Value);
+			@inputOutputID  = Converter.ChangeTypeTo<int?>   (parameters[2].Value);
+			@outputStr      = Converter.ChangeTypeTo<string?>(parameters[4].Value);
+			@inputOutputStr = Converter.ChangeTypeTo<string?>(parameters[5].Value);
 
 			return ret;
 		}
@@ -1782,9 +1875,19 @@ namespace DataModel
 
 		public static List<PatientSelectByNameResult> PatientSelectByName(this TestData2014DB dataConnection, string? @firstName, string? @lastName)
 		{
-			return dataConnection.QueryProc<PatientSelectByNameResult>("[Patient_SelectByName]",
-				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NVarChar),
-				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NVarChar)).ToList();
+			var parameters = new []
+			{
+				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				}
+			};
+
+			return dataConnection.QueryProc<PatientSelectByNameResult>("[Patient_SelectByName]", parameters).ToList();
 		}
 
 		public partial class PatientSelectByNameResult
@@ -1803,8 +1906,12 @@ namespace DataModel
 
 		public static int PersonDelete(this TestData2014DB dataConnection, int? @PersonID)
 		{
-			return dataConnection.ExecuteProc("[Person_Delete]",
-				new DataParameter("@PersonID", @PersonID, LinqToDB.DataType.Int32));
+			var parameters = new []
+			{
+				new DataParameter("@PersonID", @PersonID, LinqToDB.DataType.Int32)
+			};
+
+			return dataConnection.ExecuteProc("[Person_Delete]", parameters);
 		}
 
 		#endregion
@@ -1813,11 +1920,27 @@ namespace DataModel
 
 		public static List<PersonInsertResult> PersonInsert(this TestData2014DB dataConnection, string? @FirstName, string? @LastName, string? @MiddleName, char? @Gender)
 		{
-			return dataConnection.QueryProc<PersonInsertResult>("[Person_Insert]",
-				new DataParameter("@FirstName",  @FirstName,  LinqToDB.DataType.NVarChar),
-				new DataParameter("@LastName",   @LastName,   LinqToDB.DataType.NVarChar),
-				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NVarChar),
-				new DataParameter("@Gender",     @Gender,     LinqToDB.DataType.Char)).ToList();
+			var parameters = new []
+			{
+				new DataParameter("@FirstName",  @FirstName,  LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@LastName",   @LastName,   LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@Gender",     @Gender,     LinqToDB.DataType.Char)
+				{
+					Size = 1
+				}
+			};
+
+			return dataConnection.QueryProc<PersonInsertResult>("[Person_Insert]", parameters).ToList();
 		}
 
 		public partial class PersonInsertResult
@@ -1831,14 +1954,33 @@ namespace DataModel
 
 		public static int PersonInsertOutputParameter(this TestData2014DB dataConnection, string? @FirstName, string? @LastName, string? @MiddleName, char? @Gender, ref int? @PersonID)
 		{
-			var ret = dataConnection.ExecuteProc("[Person_Insert_OutputParameter]",
-				new DataParameter("@FirstName", @FirstName, LinqToDB.DataType.NVarChar),
-				new DataParameter("@LastName", @LastName, LinqToDB.DataType.NVarChar),
-				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NVarChar),
-				new DataParameter("@Gender",   @Gender,   LinqToDB.DataType.Char),
-				new DataParameter("@PersonID", @PersonID, LinqToDB.DataType.Int32) { Direction = ParameterDirection.InputOutput });
+			var parameters = new []
+			{
+				new DataParameter("@FirstName", @FirstName, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@LastName", @LastName, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@Gender",   @Gender,   LinqToDB.DataType.Char)
+				{
+					Size = 1
+				},
+				new DataParameter("@PersonID", @PersonID, LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.InputOutput
+				}
+			};
 
-			@PersonID = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@PersonID"]).Value);
+			var ret = dataConnection.ExecuteProc("[Person_Insert_OutputParameter]", parameters);
+
+			@PersonID = Converter.ChangeTypeTo<int?>(parameters[4].Value);
 
 			return ret;
 		}
@@ -1867,8 +2009,12 @@ namespace DataModel
 
 		public static List<PersonSelectByKeyResult> PersonSelectByKey(this TestData2014DB dataConnection, int? @id)
 		{
-			return dataConnection.QueryProc<PersonSelectByKeyResult>("[Person_SelectByKey]",
-				new DataParameter("@id", @id, LinqToDB.DataType.Int32)).ToList();
+			var parameters = new []
+			{
+				new DataParameter("@id", @id, LinqToDB.DataType.Int32)
+			};
+
+			return dataConnection.QueryProc<PersonSelectByKeyResult>("[Person_SelectByKey]", parameters).ToList();
 		}
 
 		public partial class PersonSelectByKeyResult
@@ -1886,14 +2032,18 @@ namespace DataModel
 
 		public static List<PersonSelectByKeyLowercaseResult> PersonSelectByKeyLowercase(this TestData2014DB dataConnection, int? @id)
 		{
-			return dataConnection.QueryProc<PersonSelectByKeyLowercaseResult>("[Person_SelectByKeyLowercase]",
-				new DataParameter("@id", @id, LinqToDB.DataType.Int32)).ToList();
+			var parameters = new []
+			{
+				new DataParameter("@id", @id, LinqToDB.DataType.Int32)
+			};
+
+			return dataConnection.QueryProc<PersonSelectByKeyLowercaseResult>("[Person_SelectByKeyLowercase]", parameters).ToList();
 		}
 
 		public partial class PersonSelectByKeyLowercaseResult
 		{
-			public int    personid  { get; set; }
-			public string firstname { get; set; } = null!;
+			public int    PersonID  { get; set; }
+			public string FirstName { get; set; } = null!;
 		}
 
 		#endregion
@@ -1902,9 +2052,19 @@ namespace DataModel
 
 		public static List<PersonSelectByNameResult> PersonSelectByName(this TestData2014DB dataConnection, string? @firstName, string? @lastName)
 		{
-			return dataConnection.QueryProc<PersonSelectByNameResult>("[Person_SelectByName]",
-				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NVarChar),
-				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NVarChar)).ToList();
+			var parameters = new []
+			{
+				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				}
+			};
+
+			return dataConnection.QueryProc<PersonSelectByNameResult>("[Person_SelectByName]", parameters).ToList();
 		}
 
 		public partial class PersonSelectByNameResult
@@ -1922,9 +2082,19 @@ namespace DataModel
 
 		public static List<PersonSelectListByNameResult> PersonSelectListByName(this TestData2014DB dataConnection, string? @firstName, string? @lastName)
 		{
-			return dataConnection.QueryProc<PersonSelectListByNameResult>("[Person_SelectListByName]",
-				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NVarChar),
-				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NVarChar)).ToList();
+			var parameters = new []
+			{
+				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				}
+			};
+
+			return dataConnection.QueryProc<PersonSelectListByNameResult>("[Person_SelectListByName]", parameters).ToList();
 		}
 
 		public partial class PersonSelectListByNameResult
@@ -1942,12 +2112,28 @@ namespace DataModel
 
 		public static int PersonUpdate(this TestData2014DB dataConnection, int? @PersonID, string? @FirstName, string? @LastName, string? @MiddleName, char? @Gender)
 		{
-			return dataConnection.ExecuteProc("[Person_Update]",
+			var parameters = new []
+			{
 				new DataParameter("@PersonID",   @PersonID,   LinqToDB.DataType.Int32),
-				new DataParameter("@FirstName",  @FirstName,  LinqToDB.DataType.NVarChar),
-				new DataParameter("@LastName",   @LastName,   LinqToDB.DataType.NVarChar),
-				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NVarChar),
-				new DataParameter("@Gender",     @Gender,     LinqToDB.DataType.Char));
+				new DataParameter("@FirstName",  @FirstName,  LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@LastName",   @LastName,   LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@Gender",     @Gender,     LinqToDB.DataType.Char)
+				{
+					Size = 1
+				}
+			};
+
+			return dataConnection.ExecuteProc("[Person_Update]", parameters);
 		}
 
 		#endregion
@@ -1956,15 +2142,28 @@ namespace DataModel
 
 		public static List<QueryProcMultipleParametersResult> QueryProcMultipleParameters(this TestData2014DB dataConnection, int? @input, ref int? @output1, ref int? @output2, ref int? @output3)
 		{
-			var ret = dataConnection.QueryProc<QueryProcMultipleParametersResult>("[QueryProcMultipleParameters]",
+			var parameters = new []
+			{
 				new DataParameter("@input",   @input,   LinqToDB.DataType.Int32),
-				new DataParameter("@output1", @output1, LinqToDB.DataType.Int32) { Direction = ParameterDirection.InputOutput },
-				new DataParameter("@output2", @output2, LinqToDB.DataType.Int32) { Direction = ParameterDirection.InputOutput },
-				new DataParameter("@output3", @output3, LinqToDB.DataType.Int32) { Direction = ParameterDirection.InputOutput }).ToList();
+				new DataParameter("@output1", @output1, LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.InputOutput
+				},
+				new DataParameter("@output2", @output2, LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.InputOutput
+				},
+				new DataParameter("@output3", @output3, LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.InputOutput
+				}
+			};
 
-			@output1 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@output1"]).Value);
-			@output2 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@output2"]).Value);
-			@output3 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@output3"]).Value);
+			var ret = dataConnection.QueryProc<QueryProcMultipleParametersResult>("[QueryProcMultipleParameters]", parameters).ToList();
+
+			@output1 = Converter.ChangeTypeTo<int?>(parameters[1].Value);
+			@output2 = Converter.ChangeTypeTo<int?>(parameters[2].Value);
+			@output3 = Converter.ChangeTypeTo<int?>(parameters[3].Value);
 
 			return ret;
 		}
@@ -1984,13 +2183,23 @@ namespace DataModel
 
 		public static List<QueryProcParametersResult> QueryProcParameters(this TestData2014DB dataConnection, int? @input, ref int? @output1, ref int? @output2)
 		{
-			var ret = dataConnection.QueryProc<QueryProcParametersResult>("[QueryProcParameters]",
+			var parameters = new []
+			{
 				new DataParameter("@input",   @input,   LinqToDB.DataType.Int32),
-				new DataParameter("@output1", @output1, LinqToDB.DataType.Int32) { Direction = ParameterDirection.InputOutput },
-				new DataParameter("@output2", @output2, LinqToDB.DataType.Int32) { Direction = ParameterDirection.InputOutput }).ToList();
+				new DataParameter("@output1", @output1, LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.InputOutput
+				},
+				new DataParameter("@output2", @output2, LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.InputOutput
+				}
+			};
 
-			@output1 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@output1"]).Value);
-			@output2 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@output2"]).Value);
+			var ret = dataConnection.QueryProc<QueryProcParametersResult>("[QueryProcParameters]", parameters).ToList();
+
+			@output1 = Converter.ChangeTypeTo<int?>(parameters[1].Value);
+			@output2 = Converter.ChangeTypeTo<int?>(parameters[2].Value);
 
 			return ret;
 		}
@@ -2031,8 +2240,15 @@ namespace DataModel
 
 		public static List<TableTypeTestProcResult> TableTypeTestProc(this TestData2014DB dataConnection, DataTable? @table)
 		{
-			return dataConnection.QueryProc<TableTypeTestProcResult>("[TableTypeTestProc]",
-				new DataParameter("@table", @table, LinqToDB.DataType.Structured){ DbType = "[dbo].[TestTableType]" }).ToList();
+			var parameters = new []
+			{
+				new DataParameter("@table", @table, LinqToDB.DataType.Structured)
+				{
+					DbType = "[dbo].[TestTableType]"
+				}
+			};
+
+			return dataConnection.QueryProc<TableTypeTestProcResult>("[TableTypeTestProc]", parameters).ToList();
 		}
 
 		public partial class TableTypeTestProcResult
@@ -2047,8 +2263,12 @@ namespace DataModel
 
 		public static List<VariableResultsResult> VariableResults(this TestData2014DB dataConnection, bool? @ReturnFullRow)
 		{
-			return dataConnection.QueryProc<VariableResultsResult>("[VariableResults]",
-				new DataParameter("@ReturnFullRow", @ReturnFullRow, LinqToDB.DataType.Boolean)).ToList();
+			var parameters = new []
+			{
+				new DataParameter("@ReturnFullRow", @ReturnFullRow, LinqToDB.DataType.Boolean)
+			};
+
+			return dataConnection.QueryProc<VariableResultsResult>("[VariableResults]", parameters).ToList();
 		}
 
 		public partial class VariableResultsResult

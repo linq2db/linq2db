@@ -352,13 +352,33 @@ namespace Tests.DataProvider
 			}
 		}
 
-		public static IEnumerable<Tuple<string, string>> StringTestCases
+		public static IEnumerable<StringTestCase> StringTestCases
 		{
 			get
 			{
-				yield return Tuple.Create("'\u2000\u2001\u2002\u2003\uabab\u03bctесt", "u&'''\\2000\\2001\\2002\\2003\\abab\\03bctесt'");
+				yield return new StringTestCase("'\u2000\u2001\u2002\u2003\uabab\u03bctесt", "u&'''\\2000\\2001\\2002\\2003\\abab\\03bctесt'", "Test case 1");
 				// this case fails for parameters, because driver terminates parameter value at \0 character
 				//yield return Tuple.Create("\0test", "char(0) + 'test'");
+			}
+		}
+
+		public class StringTestCase
+		{
+			private readonly string _caseName;
+
+			public StringTestCase(string value, string literal, string caseName)
+			{
+				_caseName = caseName;
+				Value = value;
+				Literal = literal;
+			}
+
+			public string Value   { get; }
+			public string Literal { get; }
+
+			public override string ToString()
+			{
+				return _caseName;
 			}
 		}
 
@@ -366,12 +386,12 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestUnicodeString(
 			[IncludeDataSources(TestProvName.AllSybase)] string context,
-			[ValueSource(nameof(StringTestCases))] Tuple<string,string> testCase)
+			[ValueSource(nameof(StringTestCases))] StringTestCase testCase)
 		{
 			using (var conn = new DataConnection(context))
 			{
-				var value = testCase.Item1;
-				var literal = testCase.Item2;
+				var value = testCase.Value;
+				var literal = testCase.Literal;
 
 				// test raw literals queries
 				Assert.That(conn.Execute<string>($"SELECT Cast({literal} as char)"),               Is.EqualTo(value));

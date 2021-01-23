@@ -6,10 +6,13 @@ namespace LinqToDB
 {
 	internal class InvariantCultureRegion : IDisposable
 	{
+		private readonly IDisposable? _parentRegion;
 		private readonly CultureInfo? _original;
 
-		public InvariantCultureRegion()
+		public InvariantCultureRegion(IDisposable? parentRegion)
 		{
+			_parentRegion = parentRegion;
+
 			if (!Thread.CurrentThread.CurrentCulture.Equals(CultureInfo.InvariantCulture))
 			{
 				_original = Thread.CurrentThread.CurrentCulture;
@@ -21,6 +24,8 @@ namespace LinqToDB
 		{
 			if (_original != null)
 				Thread.CurrentThread.CurrentCulture = _original;
+
+			_parentRegion?.Dispose();
 		}
 	}
 }

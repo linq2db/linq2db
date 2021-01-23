@@ -3,6 +3,7 @@ using System.Data;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using LinqToDB.Data;
 
 namespace LinqToDB.Linq
 {
@@ -22,7 +23,7 @@ namespace LinqToDB.Linq
 		/// Executes query and returns data reader.
 		/// </summary>
 		/// <returns>Data reader with query results.</returns>
-		IDataReader           ExecuteReader  ();
+		DataReaderWrapper     ExecuteReader  ();
 
 		/// <summary>
 		/// Executes query asynchronously and returns number of affected records.

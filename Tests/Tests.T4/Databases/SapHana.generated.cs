@@ -401,10 +401,23 @@ namespace SapHanaDataContext
 
 		public static int DROPCONSTRAINTFROMTABLE(this HXEDB dataConnection, string? TABLENAME, string? CONSTRAINTNAME, string? SCHEMANAME)
 		{
-			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPCONSTRAINTFROMTABLE\"",
-				new DataParameter("TABLENAME",      TABLENAME,      LinqToDB.DataType.VarChar),
-				new DataParameter("CONSTRAINTNAME", CONSTRAINTNAME, LinqToDB.DataType.VarChar),
-				new DataParameter("SCHEMANAME",     SCHEMANAME,     LinqToDB.DataType.VarChar));
+			var parameters = new []
+			{
+				new DataParameter("TABLENAME",      TABLENAME,      LinqToDB.DataType.VarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("CONSTRAINTNAME", CONSTRAINTNAME, LinqToDB.DataType.VarChar)
+				{
+					Size = 100
+				},
+				new DataParameter("SCHEMANAME",     SCHEMANAME,     LinqToDB.DataType.VarChar)
+				{
+					Size = 50
+				}
+			};
+
+			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPCONSTRAINTFROMTABLE\"", parameters);
 		}
 
 		#endregion
@@ -413,9 +426,19 @@ namespace SapHanaDataContext
 
 		public static int DROPEXISTINGFUNCTION(this HXEDB dataConnection, string? FUNCTIONNAME, string? SCHEMANAME)
 		{
-			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPEXISTINGFUNCTION\"",
-				new DataParameter("FUNCTIONNAME", FUNCTIONNAME, LinqToDB.DataType.VarChar),
-				new DataParameter("SCHEMANAME",   SCHEMANAME,   LinqToDB.DataType.VarChar));
+			var parameters = new []
+			{
+				new DataParameter("FUNCTIONNAME", FUNCTIONNAME, LinqToDB.DataType.VarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("SCHEMANAME",   SCHEMANAME,   LinqToDB.DataType.VarChar)
+				{
+					Size = 50
+				}
+			};
+
+			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPEXISTINGFUNCTION\"", parameters);
 		}
 
 		#endregion
@@ -424,9 +447,19 @@ namespace SapHanaDataContext
 
 		public static int DROPEXISTINGPROCEDURE(this HXEDB dataConnection, string? PROCEDURENAME, string? SCHEMANAME)
 		{
-			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPEXISTINGPROCEDURE\"",
-				new DataParameter("PROCEDURENAME", PROCEDURENAME, LinqToDB.DataType.VarChar),
-				new DataParameter("SCHEMANAME",    SCHEMANAME,    LinqToDB.DataType.VarChar));
+			var parameters = new []
+			{
+				new DataParameter("PROCEDURENAME", PROCEDURENAME, LinqToDB.DataType.VarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("SCHEMANAME",    SCHEMANAME,    LinqToDB.DataType.VarChar)
+				{
+					Size = 50
+				}
+			};
+
+			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPEXISTINGPROCEDURE\"", parameters);
 		}
 
 		#endregion
@@ -435,9 +468,19 @@ namespace SapHanaDataContext
 
 		public static int DROPEXISTINGTABLE(this HXEDB dataConnection, string? TABLENAME, string? SCHEMANAME)
 		{
-			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPEXISTINGTABLE\"",
-				new DataParameter("TABLENAME",  TABLENAME,  LinqToDB.DataType.VarChar),
-				new DataParameter("SCHEMANAME", SCHEMANAME, LinqToDB.DataType.VarChar));
+			var parameters = new []
+			{
+				new DataParameter("TABLENAME",  TABLENAME,  LinqToDB.DataType.VarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("SCHEMANAME", SCHEMANAME, LinqToDB.DataType.VarChar)
+				{
+					Size = 50
+				}
+			};
+
+			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPEXISTINGTABLE\"", parameters);
 		}
 
 		#endregion
@@ -446,9 +489,19 @@ namespace SapHanaDataContext
 
 		public static int DROPEXISTINGVIEW(this HXEDB dataConnection, string? VIEWNAME, string? SCHEMANAME)
 		{
-			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPEXISTINGVIEW\"",
-				new DataParameter("VIEWNAME",   VIEWNAME,   LinqToDB.DataType.VarChar),
-				new DataParameter("SCHEMANAME", SCHEMANAME, LinqToDB.DataType.VarChar));
+			var parameters = new []
+			{
+				new DataParameter("VIEWNAME",   VIEWNAME,   LinqToDB.DataType.VarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("SCHEMANAME", SCHEMANAME, LinqToDB.DataType.VarChar)
+				{
+					Size = 50
+				}
+			};
+
+			return dataConnection.ExecuteProc("\"TESTHANA\".\"DROPEXISTINGVIEW\"", parameters);
 		}
 
 		#endregion
@@ -480,13 +533,28 @@ namespace SapHanaDataContext
 
 		public static int OutRefEnumTest(this HXEDB dataConnection, string? STR, out string? OUTPUTSTR, ref string? INPUTOUTPUTSTR)
 		{
-			var ret = dataConnection.ExecuteProc("\"TESTHANA\".\"OutRefEnumTest\"",
-				new DataParameter("STR",            STR,            LinqToDB.DataType.VarChar),
-				new DataParameter("OUTPUTSTR", null,      LinqToDB.DataType.VarChar) { Direction = ParameterDirection.Output, Size = 50 },
-				new DataParameter("INPUTOUTPUTSTR", INPUTOUTPUTSTR, LinqToDB.DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
+			var parameters = new []
+			{
+				new DataParameter("STR",            STR,            LinqToDB.DataType.VarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("OUTPUTSTR", null,      LinqToDB.DataType.VarChar)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 50
+				},
+				new DataParameter("INPUTOUTPUTSTR", INPUTOUTPUTSTR, LinqToDB.DataType.VarChar)
+				{
+					Direction = ParameterDirection.InputOutput,
+					Size      = 50
+				}
+			};
 
-			OUTPUTSTR      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
-			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
+			var ret = dataConnection.ExecuteProc("\"TESTHANA\".\"OutRefEnumTest\"", parameters);
+
+			OUTPUTSTR      = Converter.ChangeTypeTo<string?>(parameters[1].Value);
+			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(parameters[2].Value);
 
 			return ret;
 		}
@@ -497,18 +565,44 @@ namespace SapHanaDataContext
 
 		public static int OutRefTest(this HXEDB dataConnection, int? ID, out int? OUTPUTID, ref int? INPUTOUTPUTID, string? STR, out string? OUTPUTSTR, ref string? INPUTOUTPUTSTR)
 		{
-			var ret = dataConnection.ExecuteProc("\"TESTHANA\".\"OutRefTest\"",
-				new DataParameter("ID",             ID,             LinqToDB.DataType.Int32),
-				new DataParameter("OUTPUTID", null,       LinqToDB.DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 },
-				new DataParameter("INPUTOUTPUTID",  INPUTOUTPUTID,  LinqToDB.DataType.Int32) { Direction = ParameterDirection.InputOutput, Size = 10 },
-				new DataParameter("STR",            STR,            LinqToDB.DataType.VarChar),
-				new DataParameter("OUTPUTSTR", null,      LinqToDB.DataType.VarChar) { Direction = ParameterDirection.Output, Size = 50 },
-				new DataParameter("INPUTOUTPUTSTR", INPUTOUTPUTSTR, LinqToDB.DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
+			var parameters = new []
+			{
+				new DataParameter("ID",             ID,             LinqToDB.DataType.Int32)
+				{
+					Size = 10
+				},
+				new DataParameter("OUTPUTID", null,       LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 10
+				},
+				new DataParameter("INPUTOUTPUTID",  INPUTOUTPUTID,  LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.InputOutput,
+					Size      = 10
+				},
+				new DataParameter("STR",            STR,            LinqToDB.DataType.VarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("OUTPUTSTR", null,      LinqToDB.DataType.VarChar)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 50
+				},
+				new DataParameter("INPUTOUTPUTSTR", INPUTOUTPUTSTR, LinqToDB.DataType.VarChar)
+				{
+					Direction = ParameterDirection.InputOutput,
+					Size      = 50
+				}
+			};
 
-			OUTPUTID       = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTID"]).      Value);
-			INPUTOUTPUTID  = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTID"]). Value);
-			OUTPUTSTR      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
-			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
+			var ret = dataConnection.ExecuteProc("\"TESTHANA\".\"OutRefTest\"", parameters);
+
+			OUTPUTID       = Converter.ChangeTypeTo<int?>   (parameters[1].Value);
+			INPUTOUTPUTID  = Converter.ChangeTypeTo<int?>   (parameters[2].Value);
+			OUTPUTSTR      = Converter.ChangeTypeTo<string?>(parameters[4].Value);
+			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(parameters[5].Value);
 
 			return ret;
 		}
@@ -538,9 +632,19 @@ namespace SapHanaDataContext
 
 		public static IEnumerable<PatientSelectByNameResult> PatientSelectByName(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME)
 		{
-			return dataConnection.QueryProc<PatientSelectByNameResult>("\"TESTHANA\".\"Patient_SelectByName\"",
-				new DataParameter("FIRSTNAME", FIRSTNAME, LinqToDB.DataType.NVarChar),
-				new DataParameter("LASTNAME",  LASTNAME,  LinqToDB.DataType.NVarChar));
+			var parameters = new []
+			{
+				new DataParameter("FIRSTNAME", FIRSTNAME, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("LASTNAME",  LASTNAME,  LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				}
+			};
+
+			return dataConnection.QueryProc<PatientSelectByNameResult>("\"TESTHANA\".\"Patient_SelectByName\"", parameters);
 		}
 
 		public partial class PatientSelectByNameResult
@@ -559,8 +663,15 @@ namespace SapHanaDataContext
 
 		public static int PersonDelete(this HXEDB dataConnection, int? PERSONID)
 		{
-			return dataConnection.ExecuteProc("\"TESTHANA\".\"Person_Delete\"",
-				new DataParameter("PERSONID", PERSONID, LinqToDB.DataType.Int32));
+			var parameters = new []
+			{
+				new DataParameter("PERSONID", PERSONID, LinqToDB.DataType.Int32)
+				{
+					Size = 10
+				}
+			};
+
+			return dataConnection.ExecuteProc("\"TESTHANA\".\"Person_Delete\"", parameters);
 		}
 
 		#endregion
@@ -569,11 +680,27 @@ namespace SapHanaDataContext
 
 		public static int PersonInsert(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
 		{
-			return dataConnection.ExecuteProc("\"TESTHANA\".\"Person_Insert\"",
-				new DataParameter("FIRSTNAME",  FIRSTNAME,  LinqToDB.DataType.NVarChar),
-				new DataParameter("LASTNAME",   LASTNAME,   LinqToDB.DataType.NVarChar),
-				new DataParameter("MIDDLENAME", MIDDLENAME, LinqToDB.DataType.NVarChar),
-				new DataParameter("GENDER",     GENDER,     LinqToDB.DataType.Char));
+			var parameters = new []
+			{
+				new DataParameter("FIRSTNAME",  FIRSTNAME,  LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("LASTNAME",   LASTNAME,   LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("MIDDLENAME", MIDDLENAME, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("GENDER",     GENDER,     LinqToDB.DataType.Char)
+				{
+					Size = 1
+				}
+			};
+
+			return dataConnection.ExecuteProc("\"TESTHANA\".\"Person_Insert\"", parameters);
 		}
 
 		#endregion
@@ -582,14 +709,34 @@ namespace SapHanaDataContext
 
 		public static int PersonInsertOutputParameter(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER, out int? PERSONID)
 		{
-			var ret = dataConnection.ExecuteProc("\"TESTHANA\".\"Person_Insert_OutputParameter\"",
-				new DataParameter("FIRSTNAME", FIRSTNAME, LinqToDB.DataType.NVarChar),
-				new DataParameter("LASTNAME", LASTNAME, LinqToDB.DataType.NVarChar),
-				new DataParameter("MIDDLENAME", MIDDLENAME, LinqToDB.DataType.NVarChar),
-				new DataParameter("GENDER",   GENDER,   LinqToDB.DataType.Char),
-				new DataParameter("PERSONID", null, LinqToDB.DataType.Int32) { Direction = ParameterDirection.Output, Size = 10 });
+			var parameters = new []
+			{
+				new DataParameter("FIRSTNAME", FIRSTNAME, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("LASTNAME", LASTNAME, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("MIDDLENAME", MIDDLENAME, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("GENDER",   GENDER,   LinqToDB.DataType.Char)
+				{
+					Size = 1
+				},
+				new DataParameter("PERSONID", null, LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 10
+				}
+			};
 
-			PERSONID = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).Value);
+			var ret = dataConnection.ExecuteProc("\"TESTHANA\".\"Person_Insert_OutputParameter\"", parameters);
+
+			PERSONID = Converter.ChangeTypeTo<int?>(parameters[4].Value);
 
 			return ret;
 		}
@@ -618,8 +765,15 @@ namespace SapHanaDataContext
 
 		public static IEnumerable<PersonSelectByKeyResult> PersonSelectByKey(this HXEDB dataConnection, int? ID)
 		{
-			return dataConnection.QueryProc<PersonSelectByKeyResult>("\"TESTHANA\".\"Person_SelectByKey\"",
-				new DataParameter("ID", ID, LinqToDB.DataType.Int32));
+			var parameters = new []
+			{
+				new DataParameter("ID", ID, LinqToDB.DataType.Int32)
+				{
+					Size = 10
+				}
+			};
+
+			return dataConnection.QueryProc<PersonSelectByKeyResult>("\"TESTHANA\".\"Person_SelectByKey\"", parameters);
 		}
 
 		public partial class PersonSelectByKeyResult
@@ -637,9 +791,19 @@ namespace SapHanaDataContext
 
 		public static IEnumerable<PersonSelectByNameResult> PersonSelectByName(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME)
 		{
-			return dataConnection.QueryProc<PersonSelectByNameResult>("\"TESTHANA\".\"Person_SelectByName\"",
-				new DataParameter("FIRSTNAME", FIRSTNAME, LinqToDB.DataType.NVarChar),
-				new DataParameter("LASTNAME",  LASTNAME,  LinqToDB.DataType.NVarChar));
+			var parameters = new []
+			{
+				new DataParameter("FIRSTNAME", FIRSTNAME, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("LASTNAME",  LASTNAME,  LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				}
+			};
+
+			return dataConnection.QueryProc<PersonSelectByNameResult>("\"TESTHANA\".\"Person_SelectByName\"", parameters);
 		}
 
 		public partial class PersonSelectByNameResult
@@ -657,9 +821,19 @@ namespace SapHanaDataContext
 
 		public static IEnumerable<PersonSelectListByNameResult> PersonSelectListByName(this HXEDB dataConnection, string? FIRSTNAME, string? LASTNAME)
 		{
-			return dataConnection.QueryProc<PersonSelectListByNameResult>("\"TESTHANA\".\"Person_SelectListByName\"",
-				new DataParameter("FIRSTNAME", FIRSTNAME, LinqToDB.DataType.NVarChar),
-				new DataParameter("LASTNAME",  LASTNAME,  LinqToDB.DataType.NVarChar));
+			var parameters = new []
+			{
+				new DataParameter("FIRSTNAME", FIRSTNAME, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("LASTNAME",  LASTNAME,  LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				}
+			};
+
+			return dataConnection.QueryProc<PersonSelectListByNameResult>("\"TESTHANA\".\"Person_SelectListByName\"", parameters);
 		}
 
 		public partial class PersonSelectListByNameResult
@@ -677,12 +851,31 @@ namespace SapHanaDataContext
 
 		public static int PersonUpdate(this HXEDB dataConnection, int? PERSONID, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
 		{
-			return dataConnection.ExecuteProc("\"TESTHANA\".\"Person_Update\"",
-				new DataParameter("PERSONID",   PERSONID,   LinqToDB.DataType.Int32),
-				new DataParameter("FIRSTNAME",  FIRSTNAME,  LinqToDB.DataType.NVarChar),
-				new DataParameter("LASTNAME",   LASTNAME,   LinqToDB.DataType.NVarChar),
-				new DataParameter("MIDDLENAME", MIDDLENAME, LinqToDB.DataType.NVarChar),
-				new DataParameter("GENDER",     GENDER,     LinqToDB.DataType.Char));
+			var parameters = new []
+			{
+				new DataParameter("PERSONID",   PERSONID,   LinqToDB.DataType.Int32)
+				{
+					Size = 10
+				},
+				new DataParameter("FIRSTNAME",  FIRSTNAME,  LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("LASTNAME",   LASTNAME,   LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("MIDDLENAME", MIDDLENAME, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("GENDER",     GENDER,     LinqToDB.DataType.Char)
+				{
+					Size = 1
+				}
+			};
+
+			return dataConnection.ExecuteProc("\"TESTHANA\".\"Person_Update\"", parameters);
 		}
 
 		#endregion

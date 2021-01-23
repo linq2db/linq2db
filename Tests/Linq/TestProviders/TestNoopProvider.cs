@@ -14,43 +14,43 @@ using LinqToDB.SqlQuery;
 
 namespace Tests
 {
-	internal class TestNoopConnection : IDbConnection
+	internal class TestNoopConnection : DbConnection
 	{
+		private ConnectionState _state;
+
 		public TestNoopConnection(string connectionString)
 		{
 			ConnectionString = connectionString;
 		}
 
-		public bool            Disposed          { get; private set; }
 		[AllowNull]
-		public string          ConnectionString  { get; set; }
-		public int             ConnectionTimeout { get; }
-		public string          Database          { get; } = null!;
-		public ConnectionState State             { get; private set; }
+		public override string          ConnectionString { get; set; }
+		public override string          Database         { get; } = null!;
+		public override string          DataSource       => throw new NotImplementedException();
+		public override string          ServerVersion    => throw new NotImplementedException();
+		public override ConnectionState State            => _state;
 
-		public IDbTransaction BeginTransaction(                   ) => throw new NotImplementedException();
-		public IDbTransaction BeginTransaction(IsolationLevel il  ) => throw new NotImplementedException();
-		public void           ChangeDatabase  (string databaseName) => throw new NotImplementedException();
+		public bool IsDisposed { get; private set; }
 
-		public void Close()
+		public override void Close()
 		{
-			State = ConnectionState.Closed;
+			_state = ConnectionState.Closed;
 		}
 
-		public IDbCommand CreateCommand()
+		public override void Open()
 		{
-			return new TestNoopDbCommand();
+			_state = ConnectionState.Open;
 		}
 
-		public void Open()
-		{
-			State = ConnectionState.Open;
-		}
+		public    override void          ChangeDatabase    (string databaseName          ) => throw new NotImplementedException();
+		protected override DbTransaction BeginDbTransaction(IsolationLevel isolationLevel) => throw new NotImplementedException();
+		protected override DbCommand     CreateDbCommand   (                             ) => new TestNoopDbCommand();
 
-		public void Dispose()
+		protected override void Dispose(bool disposing)
 		{
 			Close();
-			Disposed = true;
+			base.Dispose(disposing);
+			IsDisposed = true;
 		}
 	}
 

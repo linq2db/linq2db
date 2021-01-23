@@ -373,8 +373,12 @@ namespace DB2DataContext
 
 		public static int PersonSelectbykey(this TESTDATADB dataConnection, int? ID)
 		{
-			return dataConnection.ExecuteProc("DB2ADMIN.PERSON_SELECTBYKEY",
-				new DataParameter("ID", ID, LinqToDB.DataType.Int32));
+			var parameters = new []
+			{
+				new DataParameter("ID", ID, LinqToDB.DataType.Int32)
+			};
+
+			return dataConnection.ExecuteProc("DB2ADMIN.PERSON_SELECTBYKEY", parameters);
 		}
 
 		#endregion

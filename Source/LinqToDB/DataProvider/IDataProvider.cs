@@ -7,6 +7,7 @@ using System.Threading;
 
 namespace LinqToDB.DataProvider
 {
+	using System.Data.Common;
 	using Common;
 	using Data;
 	using Mapping;
@@ -28,12 +29,14 @@ namespace LinqToDB.DataProvider
 		/// Initializes <see cref="DataConnection.Command"/> object.
 		/// </summary>
 		/// <param name="dataConnection">Data connection instance to initialize with new command.</param>
+		/// <param name="command">Command instance to initialize.</param>
 		/// <param name="commandType">Type of command.</param>
 		/// <param name="commandText">Command SQL.</param>
 		/// <param name="parameters">Optional list of parameters to add to initialized command.</param>
 		/// <param name="withParameters">Flag to indicate that command has parameters. Used to configure parameters support when method called without parameters and parameters added later to command.</param>
-		void InitCommand           (DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[]? parameters, bool withParameters);
-		void               DisposeCommand        (DataConnection dataConnection);
+		/// <returns>Initialized command instance.</returns>
+		DbCommand          InitCommand           (DataConnection dataConnection, DbCommand command, CommandType commandType, string commandText, DataParameter[]? parameters, bool withParameters);
+		void               DisposeCommand        (IDbCommand command);
 		object?            GetConnectionInfo     (DataConnection dataConnection, string parameterName);
 		Expression         GetReaderExpression   (IDataReader reader, int idx, Expression readerExpression, Type toType);
 		bool?              IsDBNullAllowed       (IDataReader reader, int idx);

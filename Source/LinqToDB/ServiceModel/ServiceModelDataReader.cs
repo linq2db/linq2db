@@ -4,9 +4,11 @@ using System.Data;
 
 namespace LinqToDB.ServiceModel
 {
+	using System.Collections;
+	using System.Data.Common;
 	using Mapping;
 
-	class ServiceModelDataReader : IDataReader
+	class ServiceModelDataReader : DbDataReader
 	{
 		public ServiceModelDataReader(MappingSchema mappingSchema, LinqServiceResult result)
 		{
@@ -24,64 +26,48 @@ namespace LinqToDB.ServiceModel
 		string?[]? _data;
 		int        _current = -1;
 
-		#region IDataRecord
+		#region DbDataRecord
 
-		object? IDataRecord.this[int i]       => GetValue(i);
+		public override object? this[int ordinal] => GetValue(ordinal);
+		public override object? this[string name] => GetValue(GetOrdinal(name));
 
-		object? IDataRecord.this[string name] => GetValue(GetOrdinal(name));
+		public override int  FieldCount => _result.FieldCount;
+		public override bool HasRows    => _result.Data.Count > 0;
+		public override int  Depth      => 0;
 
-		int IDataRecord.FieldCount           => _result.FieldCount;
+		public override bool     GetBoolean (int ordinal) => (bool    )GetValue(ordinal)!;
+		public override byte     GetByte    (int ordinal) => (byte    )GetValue(ordinal)!;
+		public override char     GetChar    (int ordinal) => (char    )GetValue(ordinal)!;
+		public override DateTime GetDateTime(int ordinal) => (DateTime)GetValue(ordinal)!;
+		public override decimal  GetDecimal (int ordinal) => (decimal )GetValue(ordinal)!;
+		public override double   GetDouble  (int ordinal) => (double  )GetValue(ordinal)!;
+		public override float    GetFloat   (int ordinal) => (float   )GetValue(ordinal)!;
+		public override Guid     GetGuid    (int ordinal) => (Guid    )GetValue(ordinal)!;
+		public override short    GetInt16   (int ordinal) => (short   )GetValue(ordinal)!;
+		public override int      GetInt32   (int ordinal) => (int     )GetValue(ordinal)!;
+		public override long     GetInt64   (int ordinal) => (long    )GetValue(ordinal)!;
+		public override string   GetString  (int ordinal) => (string  )GetValue(ordinal)!;
 
-		long IDataRecord.GetBytes(int i, long fieldOffset, byte[] buffer, int bufferoffset, int length)
+		public override object? GetValue(int ordinal)
 		{
-			throw new NotImplementedException();
-		}
-
-		long IDataRecord.GetChars(int i, long fieldoffset, char[] buffer, int bufferoffset, int length)
-		{
-			throw new NotImplementedException();
-		}
-
-		IDataReader IDataRecord.GetData(int i) => throw new NotImplementedException();
-
-		string IDataRecord.GetDataTypeName(int i) => GetFieldType(i).FullName;
-
-		public Type GetFieldType(int i) => _result.FieldTypes[i];
-
-		bool     IDataRecord.GetBoolean (int i) => (bool)    GetValue(i)!;
-		byte     IDataRecord.GetByte    (int i) => (byte)    GetValue(i)!;
-		char     IDataRecord.GetChar    (int i) => (char)    GetValue(i)!;
-		DateTime IDataRecord.GetDateTime(int i) => (DateTime)GetValue(i)!;
-		decimal  IDataRecord.GetDecimal (int i) => (decimal) GetValue(i)!;
-		double   IDataRecord.GetDouble  (int i) => (double)  GetValue(i)!;
-		float    IDataRecord.GetFloat   (int i) => (float)   GetValue(i)!;
-		Guid     IDataRecord.GetGuid    (int i) => (Guid)    GetValue(i)!;
-		short    IDataRecord.GetInt16   (int i) => (short)   GetValue(i)!;
-		int      IDataRecord.GetInt32   (int i) => (int)     GetValue(i)!;
-		long     IDataRecord.GetInt64   (int i) => (long)    GetValue(i)!;
-
-		string IDataRecord.GetName(int i) => _result.FieldNames[i];
-
-		public int GetOrdinal(string name) => _ordinal[name];
-
-		string IDataRecord.GetString(int i) => (string)GetValue(i)!;
-
-		public object? GetValue(int i)
-		{
-			var type = _result.FieldTypes[i];
-			var value = _data![i];
+			var type = _result.FieldTypes[ordinal];
+			var value = _data![ordinal];
 
 			return SerializationConverter.Deserialize(_mappingSchema, type, value);
 		}
 
-		int IDataRecord.GetValues(object[] values) => throw new NotImplementedException();
+		public override bool IsDBNull(int ordinal) => _data![ordinal] == null;
 
-		bool IDataRecord.IsDBNull(int i) => _data![i] == null;
+		public override string GetDataTypeName(int ordinal) => GetFieldType(ordinal).FullName;
+		public override Type   GetFieldType   (int ordinal) => _result.FieldTypes[ordinal];
+		public override string GetName        (int ordinal) => _result.FieldNames[ordinal];
+		public override int    GetOrdinal     (string name) => _ordinal[name];
 
-		#endregion
+		public override void Close()
+		{
+		}
 
-		#region IDataReader
-		bool IDataReader.Read()
+		public override bool Read()
 		{
 			if (++_current < _result.RowCount)
 			{
@@ -95,25 +81,15 @@ namespace LinqToDB.ServiceModel
 			return false;
 		}
 
-		int IDataReader.Depth => 0;
+		public override long        GetBytes      (int ordinal, long dataOffset, byte[] buffer, int bufferOffset, int length) => throw new NotImplementedException();
+		public override long        GetChars      (int ordinal, long dataOffset, char[] buffer, int bufferOffset, int length) => throw new NotImplementedException();
+		public override int         GetValues     (object[] values) => throw new NotImplementedException();
+		public override IEnumerator GetEnumerator () => throw new NotImplementedException();
+		public override DataTable   GetSchemaTable() => throw new NotImplementedException();
+		public override bool        NextResult    () => throw new NotImplementedException();
 
-		void IDataReader.Close()
-		{
-		}
-
-		bool      IDataReader.IsClosed         => throw new NotImplementedException();
-		int       IDataReader.RecordsAffected  => throw new NotImplementedException();
-		DataTable IDataReader.GetSchemaTable() => throw new NotImplementedException();
-		bool      IDataReader.NextResult()     => throw new NotImplementedException();
-
-		#endregion
-
-		#region IDisposable
-
-		void IDisposable.Dispose()
-		{
-		}
-
+		public override bool IsClosed       => throw new NotImplementedException();
+		public override int RecordsAffected => throw new NotImplementedException();
 		#endregion
 	}
 }

@@ -1014,17 +1014,17 @@ namespace Tests.Data
 						var options = new BulkCopyOptions()
 						{
 							BulkCopyType       = BulkCopyType.ProviderSpecific,
-							NotifyAfter        = 500,
+							NotifyAfter        = 100,
 							RowsCopiedCallback = arg => copied = arg.RowsCopied,
 							KeepIdentity       = true
 						};
 
 						db.BulkCopy(
 							options,
-							Enumerable.Range(0, 1000).Select(n => new SybaseTests.AllType() { ID = 2000 + n, bitDataType = true }));
+							Enumerable.Range(0, 500).Select(n => new SybaseTests.AllType() { ID = 2000 + n, bitDataType = true }));
 
 						Assert.AreEqual(!unmapped, trace.Contains("INSERT BULK"));
-						Assert.AreEqual(1000, copied);
+						Assert.AreEqual(500, copied);
 					}
 					finally
 					{
@@ -1219,6 +1219,17 @@ namespace Tests.Data
 						trace = ti.SqlText;
 				};
 
+				dynamic       cmd        = null!;
+				DbParameter[] parameters = null!;
+				db.OnCommandInitialized += args =>
+				{
+					parameters = args.Command.Parameters.Cast<DbParameter>().ToArray();
+					cmd        = args.Command;
+
+					if (wrapped)
+						cmd = cmd.InternalCommand;
+				};
+
 				var ntextValue = "тест";
 				Assert.AreEqual(ntextValue, db.Execute<string>("SELECT :p FROM SYS.DUAL", new DataParameter("p", ntextValue, DataType.NText)));
 				Assert.True(trace.Contains("DECLARE @p NClob "));
@@ -1236,7 +1247,7 @@ namespace Tests.Data
 				var dtoValue = db.Execute<DateTimeOffset>("SELECT :p FROM SYS.DUAL", new DataParameter("p", dtoVal, DataType.DateTimeOffset) { Precision = 6});
 				dtoVal = dtoVal.AddTicks(-1 * (dtoVal.Ticks % 10));
 				Assert.AreEqual(dtoVal, dtoValue);
-				Assert.AreEqual(((OracleDataProvider)db.DataProvider).Adapter.OracleTimeStampTZType, ((IDbDataParameter)db.Command.Parameters[0]).Value.GetType());
+				Assert.AreEqual(((OracleDataProvider)db.DataProvider).Adapter.OracleTimeStampTZType, parameters[0].Value.GetType());
 
 				// bulk copy without transaction (transaction not supported)
 				TestBulkCopy();
@@ -1248,30 +1259,20 @@ namespace Tests.Data
 
 				// dbcommand properties
 				db.DisposeCommand();
-				// clean instance
-				dynamic cmd = wrapped ? ((ProfiledDbCommand)db.Command).InternalCommand : db.Command;
 
-				Assert.AreEqual(((OracleDataProvider)db.DataProvider).Adapter.CommandType, cmd.GetType());
-				var bindByName = cmd.BindByName;
-				var initialLONGFetchSizeSetter = cmd.InitialLONGFetchSize;
-				var arrayBindCount = cmd.ArrayBindCount;
-				Assert.AreEqual(false, bindByName);
-				Assert.AreEqual(0, initialLONGFetchSizeSetter);
-				Assert.AreEqual(0, arrayBindCount);
 				db.Execute<DateTimeOffset>("SELECT :p FROM SYS.DUAL", new DataParameter("p", dtoVal, DataType.DateTimeOffset));
-				// instance, used for query
-				cmd = wrapped ? ((ProfiledDbCommand)db.Command).InternalCommand : db.Command;
+
 				if (unmapped)
 				{
 					Assert.AreEqual(false, cmd.BindByName);
 					Assert.AreEqual(0, cmd.InitialLONGFetchSize);
-					Assert.AreEqual(0, arrayBindCount);
+					Assert.AreEqual(0, cmd.ArrayBindCount);
 				}
 				else
 				{
 					Assert.AreEqual(true, cmd.BindByName);
 					Assert.AreEqual(-1, cmd.InitialLONGFetchSize);
-					Assert.AreEqual(0, arrayBindCount);
+					Assert.AreEqual(0, cmd.ArrayBindCount);
 				}
 
 				void TestBulkCopy()
@@ -1313,6 +1314,17 @@ namespace Tests.Data
 						trace = ti.SqlText;
 				};
 
+				dynamic       cmd        = null!;
+				DbParameter[] parameters = null!;
+				db.OnCommandInitialized += args =>
+				{
+					parameters = args.Command.Parameters.Cast<DbParameter>().ToArray();
+					cmd = args.Command;
+
+					if (wrapped)
+						cmd = cmd.InternalCommand;
+				};
+
 				var ntextValue = "тест";
 				Assert.AreEqual(ntextValue, db.Execute<string>("SELECT :p FROM SYS.DUAL", new DataParameter("p", ntextValue, DataType.NText)));
 				Assert.True(trace.Contains("DECLARE @p NClob "));
@@ -1336,7 +1348,7 @@ namespace Tests.Data
 					var dtoValue = db.Execute<DateTimeOffset>("SELECT :p FROM SYS.DUAL", new DataParameter("p", dtoVal, DataType.DateTimeOffset) { Precision = 6 });
 					dtoVal = dtoVal.AddTicks(-1 * (dtoVal.Ticks % 10));
 					Assert.AreEqual(dtoVal, dtoValue);
-					Assert.AreEqual(((OracleDataProvider)db.DataProvider).Adapter.OracleTimeStampTZType, ((IDbDataParameter)db.Command.Parameters[0]!).Value!.GetType()!);
+					Assert.AreEqual(((OracleDataProvider)db.DataProvider).Adapter.OracleTimeStampTZType, parameters[0].Value!.GetType()!);
 				}
 
 				// bulk copy without transaction (transaction not supported)
@@ -1348,30 +1360,20 @@ namespace Tests.Data
 
 				// dbcommand properties
 				db.DisposeCommand();
-				// clean instance
-				dynamic cmd = wrapped ? ((ProfiledDbCommand)db.Command).InternalCommand : db.Command;
 
-				Assert.AreEqual(((OracleDataProvider)db.DataProvider).Adapter.CommandType, cmd.GetType());
-				var bindByName = cmd.BindByName;
-				var initialLONGFetchSizeSetter = cmd.InitialLONGFetchSize;
-				var arrayBindCount = cmd.ArrayBindCount;
-				Assert.AreEqual(false, bindByName);
-				Assert.AreEqual(0, initialLONGFetchSizeSetter);
-				Assert.AreEqual(0, arrayBindCount);
 				db.Execute<DateTimeOffset>("SELECT :p FROM SYS.DUAL", new DataParameter("p", dtoVal, DataType.DateTimeOffset));
-				// instance, used for query
-				cmd = wrapped ? ((ProfiledDbCommand)db.Command).InternalCommand : db.Command;
+
 				if (unmapped)
 				{
 					Assert.AreEqual(false, cmd.BindByName);
 					Assert.AreEqual(0, cmd.InitialLONGFetchSize);
-					Assert.AreEqual(0, arrayBindCount);
+					Assert.AreEqual(0, cmd.ArrayBindCount);
 				}
 				else
 				{
 					Assert.AreEqual(true, cmd.BindByName);
 					Assert.AreEqual(-1, cmd.InitialLONGFetchSize);
-					Assert.AreEqual(0, arrayBindCount);
+					Assert.AreEqual(0, cmd.ArrayBindCount);
 				}
 
 				void TestBulkCopy()

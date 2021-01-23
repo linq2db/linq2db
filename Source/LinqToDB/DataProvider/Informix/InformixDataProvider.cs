@@ -60,28 +60,25 @@ namespace LinqToDB.DataProvider.Informix
 		[ColumnReader(1)]
 		static float GetFloat(IDataReader dr, int idx)
 		{
-			using (new InvariantCultureRegion())
+			using (new InvariantCultureRegion(null))
 				return dr.GetFloat(idx);
 		}
 
 		[ColumnReader(1)]
 		static double GetDouble(IDataReader dr, int idx)
 		{
-			using (new InvariantCultureRegion())
+			using (new InvariantCultureRegion(null))
 				return dr.GetDouble(idx);
 		}
 
 		[ColumnReader(1)]
 		static decimal GetDecimal(IDataReader dr, int idx)
 		{
-			using (new InvariantCultureRegion())
+			using (new InvariantCultureRegion(null))
 				return dr.GetDecimal(idx);
 		}
 
-		public override IDisposable ExecuteScope(DataConnection dataConnection)
-		{
-			return new InvariantCultureRegion();
-		}
+		public override IDisposable ExecuteScope(DataConnection dataConnection) => new InvariantCultureRegion(base.ExecuteScope(dataConnection));
 
 		public override TableOptions SupportedTableOptions =>
 			TableOptions.IsTemporary               |

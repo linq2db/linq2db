@@ -10,6 +10,7 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using System.Data.Common;
 	using LinqToDB.Linq;
 	using Model;
 
@@ -27,9 +28,15 @@ namespace Tests.Linq
 			if (!(dc is DataConnection db))
 				return;
 
+			DbParameter[]? parameters = null!;
+			db.OnCommandInitialized += args =>
+			{
+				parameters = args.Command.Parameters.Cast<DbParameter>().ToArray();
+			};
+
 			// check only strong providers
 			if (!inline && db.DataProvider.SqlProviderFlags.AcceptsTakeAsParameter && db.DataProvider.SqlProviderFlags.AcceptsTakeAsParameterIfSkip)
-				Assert.That(db.Command.Parameters.Count, Is.GreaterThan(additional));
+				Assert.That(parameters.Length, Is.GreaterThan(additional));
 		}
 
 		static void CheckTakeSkipParameterized(IDataContext dc, int additional = 0)

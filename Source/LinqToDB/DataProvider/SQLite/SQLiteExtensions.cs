@@ -1,4 +1,4 @@
-using LinqToDB.Data;
+﻿using LinqToDB.Data;
 using LinqToDB.Linq;
 using LinqToDB.SqlProvider;
 using System;
@@ -543,7 +543,7 @@ namespace LinqToDB.DataProvider.SQLite
 			{
 				columns[i]         = sqlBuilder.ConvertInline(ed.Columns[i].ColumnName, ConvertType.NameToQueryField);
 				parameterTokens[i] = $"@p{i}";
-				parameters[i]      = DataParameter.VarChar($"p{i}", (string)ed.Columns[i].GetValue(record)!);
+				parameters[i]      = DataParameter.VarChar($"@p{i}", (string)ed.Columns[i].GetValue(record)!);
 			}
 
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rowid, {string.Join(", ", columns)}) VALUES('delete', {rowid.ToString(NumberFormatInfo.InvariantInfo)}, {string.Join(", ", parameterTokens)})", parameters);
@@ -628,7 +628,7 @@ namespace LinqToDB.DataProvider.SQLite
 		public static void FTS5Rank<TEntity>(this DataConnection dc, ITable<TEntity> table, string function)
 			where TEntity : class
 		{
-			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('rank', @rank)", DataParameter.VarChar("rank", function));
+			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('rank', @rank)", DataParameter.VarChar("@rank", function));
 		}
 
 		/// <summary>

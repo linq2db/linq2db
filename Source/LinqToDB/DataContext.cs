@@ -510,7 +510,7 @@ namespace LinqToDB
 				return _queryRunner!.ExecuteScalar();
 			}
 
-			public IDataReader ExecuteReader()
+			public DataReaderWrapper ExecuteReader()
 			{
 				return _queryRunner!.ExecuteReader();
 			}

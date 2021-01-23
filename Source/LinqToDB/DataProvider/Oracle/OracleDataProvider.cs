@@ -114,29 +114,24 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider() => new OracleSchemaProvider(this);
 
-		public override void InitCommand(DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[]? parameters, bool withParameters)
+		public override DbCommand InitCommand(DataConnection dataConnection, DbCommand command, CommandType commandType, string commandText, DataParameter[]? parameters, bool withParameters)
 		{
-			dataConnection.DisposeCommand();
+			command = base.InitCommand(dataConnection, command, commandType, commandText, parameters, withParameters);
 
-			var command = TryGetProviderCommand(dataConnection.Command, dataConnection.MappingSchema);
+			var rawCommand = TryGetProviderCommand(command, dataConnection.MappingSchema);
 
-			if (command != null)
+			if (rawCommand != null)
 			{
 				// binding disabled for native provider without parameters to reduce changes to fail when SQL contains
 				// parameter-like token.
 				// This is mostly issue with triggers creation, because they can have record tokens like :NEW
 				// incorectly identified by native provider as parameter
 				var bind = Name != ProviderName.OracleNative || parameters?.Length > 0 || withParameters;
-				Adapter.SetBindByName(command, bind);
-			}
+				Adapter.SetBindByName(rawCommand, bind);
 
-			base.InitCommand(dataConnection, commandType, commandText, parameters, withParameters);
-
-			if (command != null)
-			{
 				// https://docs.oracle.com/cd/B19306_01/win.102/b14307/featData.htm
 				// For LONG data type fetching initialization
-				Adapter.SetInitialLONGFetchSize(command, -1);
+				Adapter.SetInitialLONGFetchSize(rawCommand, -1);
 
 				if (parameters != null)
 					foreach (var parameter in parameters)
@@ -145,22 +140,28 @@ namespace LinqToDB.DataProvider.Oracle
 							&& parameter.Value is object[] value
 							&& value.Length != 0)
 						{
-							Adapter.SetArrayBindCount(command, value.Length);
+							Adapter.SetArrayBindCount(rawCommand, value.Length);
 							break;
 						}
 					}
 			}
+
+			return command;
 		}
 
-		public override void DisposeCommand(DataConnection dataConnection)
+		public override void ClearCommandParameters(IDbCommand command)
 		{
-			foreach (DbParameter? param in dataConnection.Command.Parameters)
+			// both native and managed providers implement IDisposable for parameters
+			if (command.Parameters.Count > 0)
 			{
-				if (param is IDisposable disposable)
-					disposable.Dispose();
-			}
+				foreach (DbParameter? param in command.Parameters)
+				{
+					if (param is IDisposable disposable)
+						disposable.Dispose();
+				}
 
-			base.DisposeCommand(dataConnection);
+				command.Parameters.Clear();
+			}
 		}
 
 		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)

@@ -292,7 +292,7 @@ namespace LinqToDB
 #if NETFRAMEWORK
 					table.Dispose();
 #else
-					await table.DisposeAsync();
+					await table.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 #endif
 				}
 				catch
@@ -350,7 +350,7 @@ namespace LinqToDB
 #if NETFRAMEWORK
 					table.Dispose();
 #else
-					await table.DisposeAsync();
+					await table.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 #endif
 				}
 				catch

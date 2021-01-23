@@ -9,35 +9,75 @@ using System.Threading.Tasks;
 namespace LinqToDB.Data
 {
 	public class DataReaderAsync : IDisposable
+#if !NETFRAMEWORK
+		, IAsyncDisposable
+#endif
 	{
-		public   CommandInfo?      CommandInfo       { get; set; }
-		public   DbDataReader?     Reader            { get; set; }
-		internal int               ReadNumber        { get; set; }
-		internal CancellationToken CancellationToken { get; set; }
-		private  DateTime          StartedOn         { get; }      = DateTime.UtcNow;
-		private  Stopwatch         Stopwatch         { get; }      = Stopwatch.StartNew();
-		internal Action?           OnDispose         { get; set; }
+		internal DataReaderWrapper?       ReaderWrapper     { get; private set; }
+		public   DbDataReader?            Reader            => ReaderWrapper?.DataReader;
+		public   CommandInfo?             CommandInfo       { get; }
+		internal int                      ReadNumber        { get; set; }
+		internal CancellationToken        CancellationToken { get; set; }
+		private  DateTime                 StartedOn         { get; }      = DateTime.UtcNow;
+		private  Stopwatch                Stopwatch         { get; }      = Stopwatch.StartNew();
+
+		public DataReaderAsync(CommandInfo commandInfo, DataReaderWrapper dataReader)
+		{
+			CommandInfo   = commandInfo;
+			ReaderWrapper = dataReader;
+		}
+
 		public void Dispose()
 		{
-			if (Reader != null)
+			if (ReaderWrapper != null)
 			{
-				Reader.Dispose();
-
 				if (CommandInfo?.DataConnection.TraceSwitchConnection.TraceInfo == true)
 				{
 					CommandInfo.DataConnection.OnTraceConnection(new TraceInfo(CommandInfo.DataConnection, TraceInfoStep.Completed)
 					{
 						TraceLevel      = TraceLevel.Info,
-						Command         = CommandInfo.DataConnection.GetCurrentCommand(),
+						Command         = ReaderWrapper.Command,
 						StartTime       = StartedOn,
 						ExecutionTime   = Stopwatch.Elapsed,
 						RecordsAffected = ReadNumber,
 					});
 				}
+
+				ReaderWrapper.Dispose();
+				ReaderWrapper = null;
 			}
 
-			OnDispose?.Invoke();
 		}
+
+#if NETSTANDARD2_1PLUS
+		public async ValueTask DisposeAsync()
+		{
+			if (ReaderWrapper != null)
+			{
+				if (CommandInfo?.DataConnection.TraceSwitchConnection.TraceInfo == true)
+				{
+					CommandInfo.DataConnection.OnTraceConnection(new TraceInfo(CommandInfo.DataConnection, TraceInfoStep.Completed)
+					{
+						TraceLevel      = TraceLevel.Info,
+						Command         = ReaderWrapper.Command,
+						StartTime       = StartedOn,
+						ExecutionTime   = Stopwatch.Elapsed,
+						RecordsAffected = ReadNumber,
+					});
+				}
+
+				await ReaderWrapper.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				ReaderWrapper = null;
+			}
+		}
+#elif !NETFRAMEWORK
+		public ValueTask DisposeAsync()
+		{
+			Dispose();
+			return new ValueTask(Task.CompletedTask);
+		}
+#endif
+
 
 		#region Query with object reader
 
@@ -117,7 +157,7 @@ namespace LinqToDB.Data
 
 			ReadNumber++;
 
-			await CommandInfo!.ExecuteQueryAsync(Reader!, CommandInfo.DataConnection.Command.CommandText + "$$$" + ReadNumber, action, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			await CommandInfo!.ExecuteQueryAsync(Reader!, CommandInfo.CommandText + "$$$" + ReadNumber, action, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
 		#endregion
@@ -175,7 +215,7 @@ namespace LinqToDB.Data
 
 			ReadNumber++;
 
-			var sql = CommandInfo!.DataConnection.Command.CommandText + "$$$" + ReadNumber;
+			var sql = CommandInfo!.CommandText + "$$$" + ReadNumber;
 
 			return await CommandInfo.ExecuteScalarAsync<T>(Reader!, sql, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}

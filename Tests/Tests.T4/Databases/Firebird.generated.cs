@@ -211,9 +211,9 @@ namespace FirebirdDataContext
 		#region Associations
 
 		/// <summary>
-		/// INTEG_3658
+		/// INTEG_3856
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="INTEG_3658", BackReferenceName="INTEG")]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="INTEG_3856", BackReferenceName="INTEG")]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -237,7 +237,7 @@ namespace FirebirdDataContext
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
-		/// INTEG_3658_BackReference
+		/// INTEG_3856_BackReference
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
 		public Patient? INTEG { get; set; }
@@ -337,14 +337,32 @@ namespace FirebirdDataContext
 
 		public static IEnumerable<OutRefEnumTestResult> OutRefEnumTest(this TESTDB25DB dataConnection, string? STR, string? IN_INPUTOUTPUTSTR, out string? INPUTOUTPUTSTR, out string? OUTPUTSTR)
 		{
-			var ret = dataConnection.QueryProc<OutRefEnumTestResult>("\"OutRefEnumTest\"",
-				new DataParameter("STR",            STR,            LinqToDB.DataType.NVarChar),
-				new DataParameter("IN_INPUTOUTPUTSTR", IN_INPUTOUTPUTSTR, LinqToDB.DataType.NVarChar),
-				new DataParameter("INPUTOUTPUTSTR", null, LinqToDB.DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
-				new DataParameter("OUTPUTSTR", null,      LinqToDB.DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 }).ToList();
+			var parameters = new []
+			{
+				new DataParameter("STR",            STR,            LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("IN_INPUTOUTPUTSTR", IN_INPUTOUTPUTSTR, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("INPUTOUTPUTSTR", null, LinqToDB.DataType.NVarChar)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 50
+				},
+				new DataParameter("OUTPUTSTR", null,      LinqToDB.DataType.NVarChar)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 50
+				}
+			};
 
-			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
-			OUTPUTSTR      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
+			var ret = dataConnection.QueryProc<OutRefEnumTestResult>("\"OutRefEnumTest\"", parameters).ToList();
+
+			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(parameters[2].Value);
+			OUTPUTSTR      = Converter.ChangeTypeTo<string?>(parameters[3].Value);
 
 			return ret;
 		}
@@ -361,20 +379,52 @@ namespace FirebirdDataContext
 
 		public static IEnumerable<OutRefTestResult> OutRefTest(this TESTDB25DB dataConnection, int? ID, int? IN_INPUTOUTPUTID, string? STR, string? IN_INPUTOUTPUTSTR, out int? INPUTOUTPUTID, out string? INPUTOUTPUTSTR, out int? OUTPUTID, out string? OUTPUTSTR)
 		{
-			var ret = dataConnection.QueryProc<OutRefTestResult>("\"OutRefTest\"",
-				new DataParameter("ID",             ID,             LinqToDB.DataType.Int32),
-				new DataParameter("IN_INPUTOUTPUTID", IN_INPUTOUTPUTID, LinqToDB.DataType.Int32),
-				new DataParameter("STR",            STR,            LinqToDB.DataType.NVarChar),
-				new DataParameter("IN_INPUTOUTPUTSTR", IN_INPUTOUTPUTSTR, LinqToDB.DataType.NVarChar),
-				new DataParameter("INPUTOUTPUTID", null,  LinqToDB.DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
-				new DataParameter("INPUTOUTPUTSTR", null, LinqToDB.DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
-				new DataParameter("OUTPUTID", null,       LinqToDB.DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
-				new DataParameter("OUTPUTSTR", null,      LinqToDB.DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 }).ToList();
+			var parameters = new []
+			{
+				new DataParameter("ID",             ID,             LinqToDB.DataType.Int32)
+				{
+					Size = 4
+				},
+				new DataParameter("IN_INPUTOUTPUTID", IN_INPUTOUTPUTID, LinqToDB.DataType.Int32)
+				{
+					Size = 4
+				},
+				new DataParameter("STR",            STR,            LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("IN_INPUTOUTPUTSTR", IN_INPUTOUTPUTSTR, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("INPUTOUTPUTID", null,  LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 4
+				},
+				new DataParameter("INPUTOUTPUTSTR", null, LinqToDB.DataType.NVarChar)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 50
+				},
+				new DataParameter("OUTPUTID", null,       LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 4
+				},
+				new DataParameter("OUTPUTSTR", null,      LinqToDB.DataType.NVarChar)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 50
+				}
+			};
 
-			INPUTOUTPUTID  = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTID"]). Value);
-			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["INPUTOUTPUTSTR"]).Value);
-			OUTPUTID       = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTID"]).      Value);
-			OUTPUTSTR      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTR"]).     Value);
+			var ret = dataConnection.QueryProc<OutRefTestResult>("\"OutRefTest\"", parameters).ToList();
+
+			INPUTOUTPUTID  = Converter.ChangeTypeTo<int?>   (parameters[4].Value);
+			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(parameters[5].Value);
+			OUTPUTID       = Converter.ChangeTypeTo<int?>   (parameters[6].Value);
+			OUTPUTSTR      = Converter.ChangeTypeTo<string?>(parameters[7].Value);
 
 			return ret;
 		}
@@ -393,20 +443,48 @@ namespace FirebirdDataContext
 
 		public static IEnumerable<PatientSelectAllResult> PatientSelectAll(this TESTDB25DB dataConnection, out int? PERSONID, out string? FIRSTNAME, out string? LASTNAME, out string? MIDDLENAME, out char? GENDER, out string? DIAGNOSIS)
 		{
-			var ret = dataConnection.QueryProc<PatientSelectAllResult>("\"Patient_SelectAll\"",
-				new DataParameter("PERSONID", null,   LinqToDB.DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
-				new DataParameter("FIRSTNAME", null,  LinqToDB.DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
-				new DataParameter("LASTNAME", null,   LinqToDB.DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
-				new DataParameter("MIDDLENAME", null, LinqToDB.DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
-				new DataParameter("GENDER", null,     LinqToDB.DataType.NChar) { Direction = ParameterDirection.Output, Size = 1 },
-				new DataParameter("DIAGNOSIS", null,  LinqToDB.DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 256 }).ToList();
+			var parameters = new []
+			{
+				new DataParameter("PERSONID", null,   LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 4
+				},
+				new DataParameter("FIRSTNAME", null,  LinqToDB.DataType.NVarChar)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 50
+				},
+				new DataParameter("LASTNAME", null,   LinqToDB.DataType.NVarChar)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 50
+				},
+				new DataParameter("MIDDLENAME", null, LinqToDB.DataType.NVarChar)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 50
+				},
+				new DataParameter("GENDER", null,     LinqToDB.DataType.NChar)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 1
+				},
+				new DataParameter("DIAGNOSIS", null,  LinqToDB.DataType.NVarChar)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 256
+				}
+			};
 
-			PERSONID   = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).  Value);
-			FIRSTNAME  = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["FIRSTNAME"]). Value);
-			LASTNAME   = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["LASTNAME"]).  Value);
-			MIDDLENAME = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["MIDDLENAME"]).Value);
-			GENDER     = Converter.ChangeTypeTo<char?>  (((IDbDataParameter)dataConnection.Command.Parameters["GENDER"]).    Value);
-			DIAGNOSIS  = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["DIAGNOSIS"]). Value);
+			var ret = dataConnection.QueryProc<PatientSelectAllResult>("\"Patient_SelectAll\"", parameters).ToList();
+
+			PERSONID   = Converter.ChangeTypeTo<int?>   (parameters[0].Value);
+			FIRSTNAME  = Converter.ChangeTypeTo<string?>(parameters[1].Value);
+			LASTNAME   = Converter.ChangeTypeTo<string?>(parameters[2].Value);
+			MIDDLENAME = Converter.ChangeTypeTo<string?>(parameters[3].Value);
+			GENDER     = Converter.ChangeTypeTo<char?>  (parameters[4].Value);
+			DIAGNOSIS  = Converter.ChangeTypeTo<string?>(parameters[5].Value);
 
 			return ret;
 		}
@@ -427,18 +505,44 @@ namespace FirebirdDataContext
 
 		public static IEnumerable<PatientSelectByNameResult> PatientSelectByName(this TESTDB25DB dataConnection, string? FIRSTNAME, string? LASTNAME, out int? PERSONID, out string? MIDDLENAME, out char? GENDER, out string? DIAGNOSIS)
 		{
-			var ret = dataConnection.QueryProc<PatientSelectByNameResult>("\"Patient_SelectByName\"",
-				new DataParameter("FIRSTNAME",  FIRSTNAME,  LinqToDB.DataType.NVarChar),
-				new DataParameter("LASTNAME",   LASTNAME,   LinqToDB.DataType.NVarChar),
-				new DataParameter("PERSONID", null,   LinqToDB.DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
-				new DataParameter("MIDDLENAME", null, LinqToDB.DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
-				new DataParameter("GENDER", null,     LinqToDB.DataType.NChar) { Direction = ParameterDirection.Output, Size = 1 },
-				new DataParameter("DIAGNOSIS", null,  LinqToDB.DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 256 }).ToList();
+			var parameters = new []
+			{
+				new DataParameter("FIRSTNAME",  FIRSTNAME,  LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("LASTNAME",   LASTNAME,   LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("PERSONID", null,   LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 4
+				},
+				new DataParameter("MIDDLENAME", null, LinqToDB.DataType.NVarChar)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 50
+				},
+				new DataParameter("GENDER", null,     LinqToDB.DataType.NChar)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 1
+				},
+				new DataParameter("DIAGNOSIS", null,  LinqToDB.DataType.NVarChar)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 256
+				}
+			};
 
-			PERSONID   = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).  Value);
-			MIDDLENAME = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["MIDDLENAME"]).Value);
-			GENDER     = Converter.ChangeTypeTo<char?>  (((IDbDataParameter)dataConnection.Command.Parameters["GENDER"]).    Value);
-			DIAGNOSIS  = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["DIAGNOSIS"]). Value);
+			var ret = dataConnection.QueryProc<PatientSelectByNameResult>("\"Patient_SelectByName\"", parameters).ToList();
+
+			PERSONID   = Converter.ChangeTypeTo<int?>   (parameters[2].Value);
+			MIDDLENAME = Converter.ChangeTypeTo<string?>(parameters[3].Value);
+			GENDER     = Converter.ChangeTypeTo<char?>  (parameters[4].Value);
+			DIAGNOSIS  = Converter.ChangeTypeTo<string?>(parameters[5].Value);
 
 			return ret;
 		}
@@ -457,8 +561,15 @@ namespace FirebirdDataContext
 
 		public static int PersonDelete(this TESTDB25DB dataConnection, int? PERSONID)
 		{
-			return dataConnection.ExecuteProc("\"Person_Delete\"",
-				new DataParameter("PERSONID", PERSONID, LinqToDB.DataType.Int32));
+			var parameters = new []
+			{
+				new DataParameter("PERSONID", PERSONID, LinqToDB.DataType.Int32)
+				{
+					Size = 4
+				}
+			};
+
+			return dataConnection.ExecuteProc("\"Person_Delete\"", parameters);
 		}
 
 		#endregion
@@ -467,14 +578,34 @@ namespace FirebirdDataContext
 
 		public static IEnumerable<PersonInsertResult> PersonInsert(this TESTDB25DB dataConnection, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER, out int? PERSONID)
 		{
-			var ret = dataConnection.QueryProc<PersonInsertResult>("\"Person_Insert\"",
-				new DataParameter("FIRSTNAME", FIRSTNAME, LinqToDB.DataType.NVarChar),
-				new DataParameter("LASTNAME", LASTNAME, LinqToDB.DataType.NVarChar),
-				new DataParameter("MIDDLENAME", MIDDLENAME, LinqToDB.DataType.NVarChar),
-				new DataParameter("GENDER",   GENDER,   LinqToDB.DataType.NChar),
-				new DataParameter("PERSONID", null, LinqToDB.DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 }).ToList();
+			var parameters = new []
+			{
+				new DataParameter("FIRSTNAME", FIRSTNAME, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("LASTNAME", LASTNAME, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("MIDDLENAME", MIDDLENAME, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("GENDER",   GENDER,   LinqToDB.DataType.NChar)
+				{
+					Size = 1
+				},
+				new DataParameter("PERSONID", null, LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 4
+				}
+			};
 
-			PERSONID = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).Value);
+			var ret = dataConnection.QueryProc<PersonInsertResult>("\"Person_Insert\"", parameters).ToList();
+
+			PERSONID = Converter.ChangeTypeTo<int?>(parameters[4].Value);
 
 			return ret;
 		}
@@ -490,14 +621,34 @@ namespace FirebirdDataContext
 
 		public static IEnumerable<PersonInsertOutputParameterResult> PersonInsertOutputParameter(this TESTDB25DB dataConnection, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER, out int? PERSONID)
 		{
-			var ret = dataConnection.QueryProc<PersonInsertOutputParameterResult>("\"Person_Insert_OutputParameter\"",
-				new DataParameter("FIRSTNAME", FIRSTNAME, LinqToDB.DataType.NVarChar),
-				new DataParameter("LASTNAME", LASTNAME, LinqToDB.DataType.NVarChar),
-				new DataParameter("MIDDLENAME", MIDDLENAME, LinqToDB.DataType.NVarChar),
-				new DataParameter("GENDER",   GENDER,   LinqToDB.DataType.NChar),
-				new DataParameter("PERSONID", null, LinqToDB.DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 }).ToList();
+			var parameters = new []
+			{
+				new DataParameter("FIRSTNAME", FIRSTNAME, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("LASTNAME", LASTNAME, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("MIDDLENAME", MIDDLENAME, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("GENDER",   GENDER,   LinqToDB.DataType.NChar)
+				{
+					Size = 1
+				},
+				new DataParameter("PERSONID", null, LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 4
+				}
+			};
 
-			PERSONID = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).Value);
+			var ret = dataConnection.QueryProc<PersonInsertOutputParameterResult>("\"Person_Insert_OutputParameter\"", parameters).ToList();
+
+			PERSONID = Converter.ChangeTypeTo<int?>(parameters[4].Value);
 
 			return ret;
 		}
@@ -513,18 +664,42 @@ namespace FirebirdDataContext
 
 		public static IEnumerable<PersonSelectAllResult> PersonSelectAll(this TESTDB25DB dataConnection, out int? PERSONID, out string? FIRSTNAME, out string? LASTNAME, out string? MIDDLENAME, out char? GENDER)
 		{
-			var ret = dataConnection.QueryProc<PersonSelectAllResult>("\"Person_SelectAll\"",
-				new DataParameter("PERSONID", null,   LinqToDB.DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
-				new DataParameter("FIRSTNAME", null,  LinqToDB.DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
-				new DataParameter("LASTNAME", null,   LinqToDB.DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
-				new DataParameter("MIDDLENAME", null, LinqToDB.DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
-				new DataParameter("GENDER", null,     LinqToDB.DataType.NChar) { Direction = ParameterDirection.Output, Size = 1 }).ToList();
+			var parameters = new []
+			{
+				new DataParameter("PERSONID", null,   LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 4
+				},
+				new DataParameter("FIRSTNAME", null,  LinqToDB.DataType.NVarChar)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 50
+				},
+				new DataParameter("LASTNAME", null,   LinqToDB.DataType.NVarChar)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 50
+				},
+				new DataParameter("MIDDLENAME", null, LinqToDB.DataType.NVarChar)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 50
+				},
+				new DataParameter("GENDER", null,     LinqToDB.DataType.NChar)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 1
+				}
+			};
 
-			PERSONID   = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).  Value);
-			FIRSTNAME  = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["FIRSTNAME"]). Value);
-			LASTNAME   = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["LASTNAME"]).  Value);
-			MIDDLENAME = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["MIDDLENAME"]).Value);
-			GENDER     = Converter.ChangeTypeTo<char?>  (((IDbDataParameter)dataConnection.Command.Parameters["GENDER"]).    Value);
+			var ret = dataConnection.QueryProc<PersonSelectAllResult>("\"Person_SelectAll\"", parameters).ToList();
+
+			PERSONID   = Converter.ChangeTypeTo<int?>   (parameters[0].Value);
+			FIRSTNAME  = Converter.ChangeTypeTo<string?>(parameters[1].Value);
+			LASTNAME   = Converter.ChangeTypeTo<string?>(parameters[2].Value);
+			MIDDLENAME = Converter.ChangeTypeTo<string?>(parameters[3].Value);
+			GENDER     = Converter.ChangeTypeTo<char?>  (parameters[4].Value);
 
 			return ret;
 		}
@@ -544,19 +719,46 @@ namespace FirebirdDataContext
 
 		public static IEnumerable<PersonSelectByKeyResult> PersonSelectByKey(this TESTDB25DB dataConnection, int? ID, out int? PERSONID, out string? FIRSTNAME, out string? LASTNAME, out string? MIDDLENAME, out char? GENDER)
 		{
-			var ret = dataConnection.QueryProc<PersonSelectByKeyResult>("\"Person_SelectByKey\"",
-				new DataParameter("ID",         ID,         LinqToDB.DataType.Int32),
-				new DataParameter("PERSONID", null,   LinqToDB.DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
-				new DataParameter("FIRSTNAME", null,  LinqToDB.DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
-				new DataParameter("LASTNAME", null,   LinqToDB.DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
-				new DataParameter("MIDDLENAME", null, LinqToDB.DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
-				new DataParameter("GENDER", null,     LinqToDB.DataType.NChar) { Direction = ParameterDirection.Output, Size = 1 }).ToList();
+			var parameters = new []
+			{
+				new DataParameter("ID",         ID,         LinqToDB.DataType.Int32)
+				{
+					Size = 4
+				},
+				new DataParameter("PERSONID", null,   LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 4
+				},
+				new DataParameter("FIRSTNAME", null,  LinqToDB.DataType.NVarChar)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 50
+				},
+				new DataParameter("LASTNAME", null,   LinqToDB.DataType.NVarChar)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 50
+				},
+				new DataParameter("MIDDLENAME", null, LinqToDB.DataType.NVarChar)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 50
+				},
+				new DataParameter("GENDER", null,     LinqToDB.DataType.NChar)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 1
+				}
+			};
 
-			PERSONID   = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).  Value);
-			FIRSTNAME  = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["FIRSTNAME"]). Value);
-			LASTNAME   = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["LASTNAME"]).  Value);
-			MIDDLENAME = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["MIDDLENAME"]).Value);
-			GENDER     = Converter.ChangeTypeTo<char?>  (((IDbDataParameter)dataConnection.Command.Parameters["GENDER"]).    Value);
+			var ret = dataConnection.QueryProc<PersonSelectByKeyResult>("\"Person_SelectByKey\"", parameters).ToList();
+
+			PERSONID   = Converter.ChangeTypeTo<int?>   (parameters[1].Value);
+			FIRSTNAME  = Converter.ChangeTypeTo<string?>(parameters[2].Value);
+			LASTNAME   = Converter.ChangeTypeTo<string?>(parameters[3].Value);
+			MIDDLENAME = Converter.ChangeTypeTo<string?>(parameters[4].Value);
+			GENDER     = Converter.ChangeTypeTo<char?>  (parameters[5].Value);
 
 			return ret;
 		}
@@ -576,20 +778,50 @@ namespace FirebirdDataContext
 
 		public static IEnumerable<PersonSelectByNameResult> PersonSelectByName(this TESTDB25DB dataConnection, string? IN_FIRSTNAME, string? IN_LASTNAME, out int? PERSONID, out string? FIRSTNAME, out string? LASTNAME, out string? MIDDLENAME, out char? GENDER)
 		{
-			var ret = dataConnection.QueryProc<PersonSelectByNameResult>("\"Person_SelectByName\"",
-				new DataParameter("IN_FIRSTNAME", IN_FIRSTNAME, LinqToDB.DataType.NVarChar),
-				new DataParameter("IN_LASTNAME", IN_LASTNAME, LinqToDB.DataType.NVarChar),
-				new DataParameter("PERSONID", null,   LinqToDB.DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
-				new DataParameter("FIRSTNAME", null,  LinqToDB.DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
-				new DataParameter("LASTNAME", null,   LinqToDB.DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
-				new DataParameter("MIDDLENAME", null, LinqToDB.DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 },
-				new DataParameter("GENDER", null,     LinqToDB.DataType.NChar) { Direction = ParameterDirection.Output, Size = 1 }).ToList();
+			var parameters = new []
+			{
+				new DataParameter("IN_FIRSTNAME", IN_FIRSTNAME, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("IN_LASTNAME", IN_LASTNAME, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("PERSONID", null,   LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 4
+				},
+				new DataParameter("FIRSTNAME", null,  LinqToDB.DataType.NVarChar)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 50
+				},
+				new DataParameter("LASTNAME", null,   LinqToDB.DataType.NVarChar)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 50
+				},
+				new DataParameter("MIDDLENAME", null, LinqToDB.DataType.NVarChar)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 50
+				},
+				new DataParameter("GENDER", null,     LinqToDB.DataType.NChar)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 1
+				}
+			};
 
-			PERSONID   = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).  Value);
-			FIRSTNAME  = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["FIRSTNAME"]). Value);
-			LASTNAME   = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["LASTNAME"]).  Value);
-			MIDDLENAME = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["MIDDLENAME"]).Value);
-			GENDER     = Converter.ChangeTypeTo<char?>  (((IDbDataParameter)dataConnection.Command.Parameters["GENDER"]).    Value);
+			var ret = dataConnection.QueryProc<PersonSelectByNameResult>("\"Person_SelectByName\"", parameters).ToList();
+
+			PERSONID   = Converter.ChangeTypeTo<int?>   (parameters[2].Value);
+			FIRSTNAME  = Converter.ChangeTypeTo<string?>(parameters[3].Value);
+			LASTNAME   = Converter.ChangeTypeTo<string?>(parameters[4].Value);
+			MIDDLENAME = Converter.ChangeTypeTo<string?>(parameters[5].Value);
+			GENDER     = Converter.ChangeTypeTo<char?>  (parameters[6].Value);
 
 			return ret;
 		}
@@ -609,12 +841,31 @@ namespace FirebirdDataContext
 
 		public static int PersonUpdate(this TESTDB25DB dataConnection, int? PERSONID, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
 		{
-			return dataConnection.ExecuteProc("\"Person_Update\"",
-				new DataParameter("PERSONID",   PERSONID,   LinqToDB.DataType.Int32),
-				new DataParameter("FIRSTNAME",  FIRSTNAME,  LinqToDB.DataType.NVarChar),
-				new DataParameter("LASTNAME",   LASTNAME,   LinqToDB.DataType.NVarChar),
-				new DataParameter("MIDDLENAME", MIDDLENAME, LinqToDB.DataType.NVarChar),
-				new DataParameter("GENDER",     GENDER,     LinqToDB.DataType.NChar));
+			var parameters = new []
+			{
+				new DataParameter("PERSONID",   PERSONID,   LinqToDB.DataType.Int32)
+				{
+					Size = 4
+				},
+				new DataParameter("FIRSTNAME",  FIRSTNAME,  LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("LASTNAME",   LASTNAME,   LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("MIDDLENAME", MIDDLENAME, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("GENDER",     GENDER,     LinqToDB.DataType.NChar)
+				{
+					Size = 1
+				}
+			};
+
+			return dataConnection.ExecuteProc("\"Person_Update\"", parameters);
 		}
 
 		#endregion
@@ -623,12 +874,24 @@ namespace FirebirdDataContext
 
 		public static IEnumerable<ScalarDataReaderResult> ScalarDataReader(this TESTDB25DB dataConnection, out int? INTFIELD, out string? STRINGFIELD)
 		{
-			var ret = dataConnection.QueryProc<ScalarDataReaderResult>("\"Scalar_DataReader\"",
-				new DataParameter("INTFIELD", null,    LinqToDB.DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
-				new DataParameter("STRINGFIELD", null, LinqToDB.DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 }).ToList();
+			var parameters = new []
+			{
+				new DataParameter("INTFIELD", null,    LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 4
+				},
+				new DataParameter("STRINGFIELD", null, LinqToDB.DataType.NVarChar)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 50
+				}
+			};
 
-			INTFIELD    = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["INTFIELD"]).   Value);
-			STRINGFIELD = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["STRINGFIELD"]).Value);
+			var ret = dataConnection.QueryProc<ScalarDataReaderResult>("\"Scalar_DataReader\"", parameters).ToList();
+
+			INTFIELD    = Converter.ChangeTypeTo<int?>   (parameters[0].Value);
+			STRINGFIELD = Converter.ChangeTypeTo<string?>(parameters[1].Value);
 
 			return ret;
 		}
@@ -645,12 +908,24 @@ namespace FirebirdDataContext
 
 		public static IEnumerable<ScalarOutputParameterResult> ScalarOutputParameter(this TESTDB25DB dataConnection, out int? OUTPUTINT, out string? OUTPUTSTRING)
 		{
-			var ret = dataConnection.QueryProc<ScalarOutputParameterResult>("\"Scalar_OutputParameter\"",
-				new DataParameter("OUTPUTINT", null,    LinqToDB.DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 },
-				new DataParameter("OUTPUTSTRING", null, LinqToDB.DataType.NVarChar) { Direction = ParameterDirection.Output, Size = 50 }).ToList();
+			var parameters = new []
+			{
+				new DataParameter("OUTPUTINT", null,    LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 4
+				},
+				new DataParameter("OUTPUTSTRING", null, LinqToDB.DataType.NVarChar)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 50
+				}
+			};
 
-			OUTPUTINT    = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTINT"]).   Value);
-			OUTPUTSTRING = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTRING"]).Value);
+			var ret = dataConnection.QueryProc<ScalarOutputParameterResult>("\"Scalar_OutputParameter\"", parameters).ToList();
+
+			OUTPUTINT    = Converter.ChangeTypeTo<int?>   (parameters[0].Value);
+			OUTPUTSTRING = Converter.ChangeTypeTo<string?>(parameters[1].Value);
 
 			return ret;
 		}
@@ -667,10 +942,18 @@ namespace FirebirdDataContext
 
 		public static IEnumerable<ScalarReturnParameterResult> ScalarReturnParameter(this TESTDB25DB dataConnection, out int? RETURN_VALUE)
 		{
-			var ret = dataConnection.QueryProc<ScalarReturnParameterResult>("\"Scalar_ReturnParameter\"",
-				new DataParameter("RETURN_VALUE", null, LinqToDB.DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 }).ToList();
+			var parameters = new []
+			{
+				new DataParameter("RETURN_VALUE", null, LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 4
+				}
+			};
 
-			RETURN_VALUE = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["RETURN_VALUE"]).Value);
+			var ret = dataConnection.QueryProc<ScalarReturnParameterResult>("\"Scalar_ReturnParameter\"", parameters).ToList();
+
+			RETURN_VALUE = Converter.ChangeTypeTo<int?>(parameters[0].Value);
 
 			return ret;
 		}

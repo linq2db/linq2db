@@ -405,13 +405,7 @@ SELECT
 				case "mediumint unsigned": return typeof(uint);
 				case "int unsigned"      : return typeof(uint);
 				case "bigint unsigned"   : return typeof(ulong);
-				case "tinyint"           :
-					{
-						var size = precision > 0 ? precision : length;
-						if (columnType == "tinyint(1)" || size == 1)
-							return typeof(bool);
-						return columnType?.Contains("unsigned") == true ? typeof(byte) : typeof(sbyte);
-					}
+				case "tinyint"           : return columnType?.Contains("unsigned") == true ? typeof(byte)   : typeof(sbyte);
 				case "smallint"          : return columnType?.Contains("unsigned") == true ? typeof(ushort) : typeof(short);
 				case "mediumint"         :
 				case "int"               : return columnType?.Contains("unsigned") == true ? typeof(uint)   : typeof(int);
@@ -419,7 +413,7 @@ SELECT
 				case "json"              :
 				case "longtext"          : return typeof(string);
 				case "timestamp"         : return typeof(DateTime);
-				case "bool"              : return typeof(bool);
+				case "bool"              : return typeof(sbyte);
 				case "point"             :
 				case "linestring"        :
 				case "polygon"           :

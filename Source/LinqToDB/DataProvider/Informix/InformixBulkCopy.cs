@@ -199,14 +199,14 @@ namespace LinqToDB.DataProvider.Informix
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
 			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			using (new InvariantCultureRegion())
+			using (new InvariantCultureRegion(null))
 				return base.MultipleRowsCopy(table, options, source);
 		}
 
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			using (new InvariantCultureRegion())
+			using (new InvariantCultureRegion(null))
 				return base.MultipleRowsCopyAsync(table, options, source, cancellationToken);
 		}
 
@@ -214,7 +214,7 @@ namespace LinqToDB.DataProvider.Informix
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			using (new InvariantCultureRegion())
+			using (new InvariantCultureRegion(null))
 				return base.MultipleRowsCopyAsync(table, options, source, cancellationToken);
 		}
 #endif

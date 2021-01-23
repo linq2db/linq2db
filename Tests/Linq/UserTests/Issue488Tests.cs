@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Data.Common;
 using System.Data.Linq;
 using System.Linq;
 
@@ -30,6 +31,12 @@ namespace Tests.UserTests
 		{
 			using (var db = GetDataContext(context))
 			{
+				DbParameter[]? parameters = null!;
+				((DataConnection)db).OnCommandInitialized += args =>
+				{
+					parameters = args.Command.Parameters.Cast<DbParameter>().ToArray();
+				};
+
 				var date = TestData.Date;
 				var q = (from t1 in db.GetTable<LinqDataTypes>()
 					join t2 in db.GetTable<LinqDataTypes>() on t1.ID equals t2.ID
@@ -38,9 +45,9 @@ namespace Tests.UserTests
 
 				var _ = q.FirstOrDefault();
 
-				Assert.AreEqual(2, ((DataConnection)db).Command.Parameters.Count);
-				Assert.True(DbType.Date == ((IDbDataParameter) ((DataConnection)db).Command.Parameters[0]!).DbType
-					^ DbType.Date == ((IDbDataParameter)((DataConnection)db).Command.Parameters[1]!).DbType);
+				var dc = (DataConnection)db;
+				Assert.AreEqual(2, parameters.Length);
+				Assert.AreEqual(1, parameters.Count(p => p.DbType == DbType.Date));
 			}
 		}
 
@@ -49,6 +56,12 @@ namespace Tests.UserTests
 		{
 			using (var db = GetDataContext(context))
 			{
+				DbParameter[]? parameters = null!;
+				((DataConnection)db).OnCommandInitialized += args =>
+				{
+					parameters = args.Command.Parameters.Cast<DbParameter>().ToArray();
+				};
+
 				var date = TestData.Date;
 				var q = (from t1 in db.GetTable<LinqDataTypes>()
 					where t1.DateTimeValue == date
@@ -56,9 +69,9 @@ namespace Tests.UserTests
 
 				var _ = q.FirstOrDefault();
 
-				Assert.AreEqual(2, ((DataConnection)db).Command.Parameters.Count);
-				Assert.True(DbType.Date == ((IDbDataParameter)((DataConnection)db).Command.Parameters[0]!).DbType
-					^ DbType.Date == ((IDbDataParameter)((DataConnection)db).Command.Parameters[1]!).DbType);
+				var dc = (DataConnection)db;
+				Assert.AreEqual(2, parameters.Length);
+				Assert.AreEqual(1, parameters.Count(p => p.DbType == DbType.Date));
 			}
 		}
 	}

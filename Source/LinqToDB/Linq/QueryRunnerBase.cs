@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
+	using LinqToDB.Data;
 	using SqlQuery;
 
 	abstract class QueryRunnerBase : IQueryRunner
@@ -32,7 +33,7 @@ namespace LinqToDB.Linq
 
 		public abstract int                    ExecuteNonQuery();
 		public abstract object?                ExecuteScalar  ();
-		public abstract IDataReader            ExecuteReader  ();
+		public abstract DataReaderWrapper      ExecuteReader  ();
 		public abstract Task<object?>          ExecuteScalarAsync  (CancellationToken cancellationToken);
 		public abstract Task<IDataReaderAsync> ExecuteReaderAsync  (CancellationToken cancellationToken);
 		public abstract Task<int>              ExecuteNonQueryAsync(CancellationToken cancellationToken);

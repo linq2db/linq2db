@@ -18,27 +18,26 @@ namespace Tests.DataProvider
 
 			using (var conn = new DataConnection(dataProvider, connectionString))
 			{
-				conn.InitCommand(CommandType.Text, "SELECT 1", null, null, false);
-
-				var rd = conn.Command.ExecuteReader();
-
-				if (rd.Read())
+				using (var rd = conn.ExecuteReader("SELECT 1"))
 				{
-					var dp   = conn.DataProvider;
-					var p    = Expression.Parameter(typeof(IDataReader));
-					var dr   = Expression.Convert(p, dp.DataReaderType);
-					var ex   = (Expression<Func<IDataReader,int,int>>)dp.GetReaderExpression(rd, 0, dr, typeof(int));
-					var func = ex.Compile();
-
-					do
+					if (rd.Reader!.Read())
 					{
-						var value = func(rd, 0);
-						Assert.AreEqual(1, value);
-					} while (rd.Read());
-				}
-				else
-				{
-					Assert.Fail();
+						var dp   = conn.DataProvider;
+						var p    = Expression.Parameter(typeof(IDataReader));
+						var dr   = Expression.Convert(p, dp.DataReaderType);
+						var ex   = (Expression<Func<IDataReader,int,int>>)dp.GetReaderExpression(rd.Reader, 0, dr, typeof(int));
+						var func = ex.Compile();
+
+						do
+						{
+							var value = func(rd.Reader, 0);
+							Assert.AreEqual(1, value);
+						} while (rd.Reader!.Read());
+					}
+					else
+					{
+						Assert.Fail();
+					}
 				}
 			}
 		}

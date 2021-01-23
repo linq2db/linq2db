@@ -204,18 +204,6 @@ namespace LinqToDB.Linq
 #endif
 		}
 
-		static ParameterAccessor? GetParameterAccessor(List<ParameterAccessor> parameters, ISqlExpression parameter)
-		{
-			for (var i = 0; i < parameters.Count; i++)
-			{
-				var accessor = parameters[i];
-				if (accessor.SqlParameter == parameter)
-					return accessor;
-			}
-
-			return null;
-		}
-
 		static int EvaluateTakeSkipValue(Query query, Expression expr, IDataContext? db, object?[]? ps, int qn,
 			ISqlExpression sqlExpr)
 				{
@@ -372,11 +360,11 @@ namespace LinqToDB.Linq
 			int          queryNumber)
 		{
 			using (var runner = dataContext.GetQueryRunner(query, queryNumber, expression, ps, preambles))
-			using (var dr = runner.ExecuteReader())
+			using (var dr     = runner.ExecuteReader())
 			{
-				while (dr.Read())
+				while (dr.DataReader!.Read())
 				{
-					var value = mapper.Map(dataContext, runner, dr);
+					var value = mapper.Map(dataContext, runner, dr.DataReader!);
 					runner.RowsCount++;
 					yield return value;
 				}
@@ -506,6 +494,7 @@ namespace LinqToDB.Linq
 				_dataReader ?.Dispose();
 
 				_queryRunner = null;
+				_dataReader  = null;
 			}
 
 #if NETFRAMEWORK
@@ -518,8 +507,11 @@ namespace LinqToDB.Linq
 			public async ValueTask DisposeAsync()
 			{
 				_queryRunner?.Dispose();
-				if (_dataReader != null) 
+				if (_dataReader != null)
+				{
 					await _dataReader.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					_dataReader = null;
+				}
 				
 				_queryRunner = null;
 			}
@@ -736,9 +728,9 @@ namespace LinqToDB.Linq
 			{
 				using (var dr = runner.ExecuteReader())
 				{
-					while (dr.Read())
+					while (dr.DataReader!.Read())
 					{
-						var value = mapper.Map(dataContext, runner, dr);
+						var value = mapper.Map(dataContext, runner, dr.DataReader!);
 						runner.RowsCount++;
 						return value;
 					}

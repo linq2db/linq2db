@@ -2,6 +2,7 @@
 using System.Data.Common;
 using System.IO;
 using System.Reflection;
+using LinqToDB.Common;
 using LinqToDB.Data.DbCommandProcessor;
 using NUnit.Framework;
 

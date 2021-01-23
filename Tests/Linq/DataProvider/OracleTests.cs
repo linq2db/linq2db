@@ -24,6 +24,7 @@ using Oracle.ManagedDataAccess.Types;
 
 namespace Tests.DataProvider
 {
+	using System.Data.Common;
 	using System.Diagnostics.CodeAnalysis;
 	using System.Threading;
 	using System.Threading.Tasks;
@@ -868,16 +869,21 @@ namespace Tests.DataProvider
 			var date = TestData.Date;
 			using (var db = new DataConnection(context))
 			{
+				DbParameter[] parameters = null!;
+				db.OnCommandInitialized += args =>
+				{
+					parameters = args.Command.Parameters.Cast<DbParameter>().ToArray();
+				};
+
 				var query = from a in db.GetTable<AllTypes>()
 							where a.datetimeDataType == date
 							select a;
 
 				query.FirstOrDefault();
 
-				Assert.That(db.Command.Parameters.Count, Is.EqualTo(2));
+				Assert.That(parameters.Length, Is.EqualTo(2));
 
-				var parm = (IDbDataParameter)db.Command.Parameters[0]!;
-				Assert.That(parm.DbType, Is.EqualTo(DbType.Date));
+				Assert.True(parameters.Any(p => p.DbType == DbType.Date));
 			}
 		}
 
@@ -887,6 +893,12 @@ namespace Tests.DataProvider
 			var date = TestData.Date;
 			using (var db = new DataConnection(context))
 			{
+				DbParameter[] parameters = null!;
+				db.OnCommandInitialized += args =>
+				{
+					parameters = args.Command.Parameters.Cast<DbParameter>().ToArray();
+				};
+
 				var query = from a in db.GetTable<AllTypes>()
 							join b in db.GetTable<AllTypes>() on a.ID equals b.ID
 							where a.datetimeDataType == date
@@ -894,10 +906,9 @@ namespace Tests.DataProvider
 
 				query.FirstOrDefault();
 
-				Assert.That(db.Command.Parameters.Count, Is.EqualTo(2));
+				Assert.That(parameters.Length, Is.EqualTo(2));
 
-				var parm = (IDbDataParameter)db.Command.Parameters[0]!;
-				Assert.That(parm.DbType, Is.EqualTo(DbType.Date));
+				Assert.True(parameters.Any(p => p.DbType == DbType.Date));
 			}
 		}
 
@@ -3095,11 +3106,11 @@ namespace Tests.DataProvider
 			{
 			}
 
-			protected override IDataReader ExecuteReader(IDbCommand command, CommandBehavior commandBehavior)
+			protected override DataReaderWrapper ExecuteReader(CommandBehavior commandBehavior)
 			{
-				var reader = base.ExecuteReader(command, commandBehavior);
+				var reader = base.ExecuteReader(commandBehavior);
 
-				if (reader is OracleDataReader or1 && command is OracleCommand oc1)
+				if (reader.DataReader is OracleDataReader or1 && CurrentCommand is OracleCommand oc1)
 				{
 					or1.FetchSize = oc1.RowSize * 10000;
 				}
@@ -3736,9 +3747,9 @@ namespace Tests.DataProvider
 		{
 			using (var db = new TestDataConnection(context))
 			{
-				db.Execute("CREATE SEQUENCE SEQ_A START WITH 1 MINVALUE 0");
 				try
 				{
+					db.Execute("CREATE SEQUENCE SEQ_A START WITH 1 MINVALUE 0");
 					db.Execute(@"
 CREATE TABLE ""TABLE_A""(
 	""COLUMN_A"" NUMBER(20, 0) NOT NULL,
@@ -3765,8 +3776,8 @@ CREATE TABLE ""TABLE_A""(
 				}
 				finally
 				{
-					db.Execute("DROP SEQUENCE SEQ_A");
-					db.Execute("DROP TABLE \"TABLE_A\"");
+					try { db.Execute("DROP SEQUENCE SEQ_A");    } catch { }
+					try { db.Execute("DROP TABLE \"TABLE_A\""); } catch { }
 				}
 			}
 		}

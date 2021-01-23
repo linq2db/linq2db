@@ -1200,6 +1200,16 @@ namespace PostreSQLDataContext
 		}
 
 		#endregion
+
+		#region FnTest
+
+		[Sql.Function(Name="\"SchemaName\".\"fnTest\"", ServerSideOnly=true)]
+		public static string? FnTest(int? param)
+		{
+			throw new InvalidOperationException();
+		}
+
+		#endregion
 	}
 
 	public static partial class TableExtensions

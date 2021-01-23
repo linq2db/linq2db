@@ -1047,8 +1047,8 @@ namespace Tests.DataProvider
 							SchemaType    = "TINYINT",
 							IsOut         = true,
 							ParameterName = "aOutParam",
-							ParameterType = "bool?",
-							SystemType    = typeof(bool),
+							ParameterType = "sbyte?",
+							SystemType    = typeof(sbyte),
 							DataType      = DataType.SByte
 						}
 					}
@@ -1689,7 +1689,7 @@ namespace Tests.DataProvider
 					assertColumn("Float10"           , "float"   , DataType.Single);
 					assertColumn("Double"            , "double"  , DataType.Double);
 					assertColumn("Float30"           , "double"  , DataType.Double);
-					assertColumn("Bool"              , "bool"    , DataType.SByte);
+					assertColumn("Bool"              , "sbyte"   , DataType.SByte);
 					assertColumn("Bit1"              , "bool"    , DataType.BitArray);
 					assertColumn("Bit8"              , "byte"    , DataType.BitArray);
 					assertColumn("Bit16"             , "ushort"  , DataType.BitArray);
@@ -1776,7 +1776,7 @@ namespace Tests.DataProvider
 				assertParameter("Decimal"           , "decimal?" , DataType.Decimal);
 				assertParameter("Float"             , "float?"   , DataType.Single);
 				assertParameter("Double"            , "double?"  , DataType.Double);
-				assertParameter("Boolean"           , "bool?"    , DataType.SByte);
+				assertParameter("Boolean"           , "sbyte?"   , DataType.SByte);
 				assertParameter("Bit1"              , "bool?"    , DataType.BitArray);
 				assertParameter("Bit8"              , "byte?"    , DataType.BitArray);
 				assertParameter("Bit10"             , "ushort?"  , DataType.BitArray);
@@ -1858,7 +1858,7 @@ namespace Tests.DataProvider
 				assertColumn("Decimal"           , "decimal?" , DataType.Decimal);
 				assertColumn("Float"             , "float?"   , DataType.Single);
 				assertColumn("Double"            , "double?"  , DataType.Double);
-				assertColumn("Boolean"           , "bool?"    , DataType.SByte);
+				assertColumn("Boolean"           , "sbyte?"   , DataType.SByte);
 				assertColumn("Bit1"              , "bool?"    , DataType.BitArray);
 				assertColumn("Bit8"              , "byte?"    , DataType.BitArray);
 				assertColumn("Bit10"             , "ushort?"  , DataType.BitArray);
@@ -1870,13 +1870,13 @@ namespace Tests.DataProvider
 				// mysql.data cannot handle json procedure parameter
 				if (context == ProviderName.MySqlConnector)
 				{
-					assertColumn("Point"               , "byte[]", DataType.Undefined);
-					assertColumn("LineString"          , "byte[]", DataType.Undefined);
-					assertColumn("Polygon"             , "byte[]", DataType.Undefined);
-					assertColumn("MultiPoint"          , "byte[]", DataType.Undefined);
-					assertColumn("MultiLineString"     , "byte[]", DataType.Undefined);
-					assertColumn("MultiPolygon"        , "byte[]", DataType.Undefined);
-					assertColumn("Geometry"            , "byte[]", DataType.Undefined);
+					assertColumn("Point"             , "byte[]", DataType.Undefined);
+					assertColumn("LineString"        , "byte[]", DataType.Undefined);
+					assertColumn("Polygon"           , "byte[]", DataType.Undefined);
+					assertColumn("MultiPoint"        , "byte[]", DataType.Undefined);
+					assertColumn("MultiLineString"   , "byte[]", DataType.Undefined);
+					assertColumn("MultiPolygon"      , "byte[]", DataType.Undefined);
+					assertColumn("Geometry"          , "byte[]", DataType.Undefined);
 					assertColumn("GeometryCollection", "byte[]", DataType.Undefined);
 
 					assertColumn("Json"    , "string", DataType.Json);
@@ -1906,30 +1906,52 @@ namespace Tests.DataProvider
 
 	internal static class MySqlTestFunctions
 	{
-		public static int TestOutputParametersWithoutTableProcedure(this DataConnection dataConnection, string aInParam, out sbyte? aOutParam)
+		public static int TestOutputParametersWithoutTableProcedure(this DataConnection dataConnection, string? aInParam, out sbyte? aOutParam)
 		{
+			var parameters = new []
+			{
+				new DataParameter("aInParam",  aInParam,  LinqToDB.DataType.VarChar)
+				{
+					Size = 256
+				},
+				new DataParameter("aOutParam", null, LinqToDB.DataType.SByte)
+				{
+					Direction = ParameterDirection.Output
+				}
+			};
+
 			// WORKAROUND: db name needed for MySql.Data 8.0.21, as they managed to break already escaped procedure name handling
 			var dbName = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema).ConvertInline(TestUtils.GetDatabaseName(dataConnection), ConvertType.NameToDatabase);
-			var ret = dataConnection.ExecuteProc($"{dbName}.`TestOutputParametersWithoutTableProcedure`",
-				new DataParameter("aInParam", aInParam, DataType.VarChar),
-				new DataParameter("aOutParam", null, DataType.SByte) { Direction = ParameterDirection.Output });
 
-			aOutParam = Converter.ChangeTypeTo<sbyte?>(((IDbDataParameter)dataConnection.Command.Parameters["aOutParam"]).Value);
+			var ret = dataConnection.ExecuteProc($"{dbName}.`TestOutputParametersWithoutTableProcedure`", parameters);
+
+			aOutParam = Converter.ChangeTypeTo<sbyte?>(parameters[1].Value);
 
 			return ret;
 		}
 
 		public static IEnumerable<Person> TestProcedure(this DataConnection dataConnection, int? param3, ref int? param2, out int? param1)
 		{
+			var parameters = new []
+			{
+				new DataParameter("param3", param3, LinqToDB.DataType.Int32),
+				new DataParameter("param2", param2, LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.InputOutput
+				},
+				new DataParameter("param1", null, LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.Output
+				}
+			};
+
 			// WORKAROUND: db name needed for MySql.Data 8.0.21, as they managed to break already escaped procedure name handling
 			var dbName = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema).ConvertInline(TestUtils.GetDatabaseName(dataConnection), ConvertType.NameToDatabase);
-			var ret = dataConnection.QueryProc<Person>($"{dbName}.`TestProcedure`",
-				new DataParameter("param3", param3, DataType.Int32),
-				new DataParameter("param2", param2, DataType.Int32) { Direction = ParameterDirection.InputOutput },
-				new DataParameter("param1", null, DataType.Int32) { Direction = ParameterDirection.Output }).ToList();
 
-			param2 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["param2"]).Value);
-			param1 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["param1"]).Value);
+			var ret = dataConnection.QueryProc<Person>($"{dbName}.`TestProcedure`", parameters).ToList();
+
+			param2 = Converter.ChangeTypeTo<int?>(parameters[1].Value);
+			param1 = Converter.ChangeTypeTo<int?>(parameters[2].Value);
 
 			return ret;
 		}

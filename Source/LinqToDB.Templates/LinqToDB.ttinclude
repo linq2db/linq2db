@@ -1,5 +1,6 @@
 <#@ assembly name="System.Data"                    #>
 <#@ import namespace="System.Data"                 #>
+<#@ import namespace="System.Globalization"        #>
 <#@ import namespace="LinqToDB.Data"               #>
 <#@ include file="DataModel.ttinclude" once="true" #>
 <#
@@ -815,10 +816,6 @@ void GenerateTypesFromMetadata()
 				var outputParameters     = p.ProcParameters.Where(pp => pp.IsOut || pp.IsResult).            ToList();
 				var inOrOutputParameters = p.ProcParameters.Where(pp => pp.IsIn  || pp.IsOut || pp.IsResult).ToList();
 
-				spName += inOrOutputParameters.Count == 0
-					? (p.ResultTable == null || !GenerateProcedureResultAsList ? ");" : ").ToList();")
-					: ",";
-
 				var retName = "ret";
 				var retNo   = 0;
 
@@ -828,8 +825,92 @@ void GenerateTypesFromMetadata()
 				var hasOut = outputParameters.Any(pr => pr.IsOut || pr.IsResult);
 				var prefix = hasOut ? "var " + retName + " = " : "return ";
 
+				var cnt = 0;
+				var parametersVarName = "parameters";
+				while (p.ProcParameters.Where(par => !par.IsResult || !p.IsFunction).Any(par => par.ParameterName == parametersVarName))
+					parametersVarName = string.Format("parameters{0}", cnt++);
+
+				var maxLenSchema = inputParameters.Max(pr => (int?)pr.SchemaName.   Length) ?? 0;
+				var maxLenParam  = inputParameters.Max(pr => (int?)pr.ParameterName.Length) ?? 0;
+				var maxLenType   = inputParameters.Max(pr => (int?)("LinqToDB.DataType." + pr.DataType).Length) ?? 0;
+
+				if (inOrOutputParameters.Count > 0)
+				{
+					p.BodyBuilders.Add(() =>
+					{
+						var code = new List<string>();
+						code.Add(string.Format("var {0} = new []", parametersVarName));
+						code.Add("{");
+
+						for (var i = 0; i < inOrOutputParameters.Count; i++)
+						{
+							var pr            = inOrOutputParameters[i];
+							var hasInputValue = pr.IsIn || (pr.IsOut && pr.IsResult);
+
+							var extraInitializers = new List<Tuple<string, string>>();
+							if (GenerateProcedureDbType(pr))
+								extraInitializers.Add(Tuple.Create("DbType", ToStringLiteral(pr.SchemaType)));
+
+							if (pr.IsOut || pr.IsResult)
+								extraInitializers.Add(Tuple.Create("Direction", pr.IsIn ? "ParameterDirection.InputOutput" : (pr.IsResult ? "ParameterDirection.ReturnValue" : "ParameterDirection.Output")));
+
+							if (pr.Size != null && pr.Size.Value != 0 && pr.Size.Value >= int.MinValue && pr.Size.Value <= int.MaxValue)
+								extraInitializers.Add(Tuple.Create("Size", pr.Size.Value.ToString(CultureInfo.InvariantCulture)));
+
+							var endLine = i < inOrOutputParameters.Count - 1 && extraInitializers.Count == 0 ? "," : "";
+
+							if (hasInputValue)
+								code.Add(string.Format(
+									"\tnew DataParameter({0}, {1}{2}, {3}{4}){5}",
+									ToStringLiteral(pr.SchemaName),
+									LenDiff(maxLenSchema, pr.SchemaName),
+									pr.ParameterName,
+									LenDiff(maxLenParam, pr.ParameterName),
+									"LinqToDB.DataType." + pr.DataType,
+									endLine));
+							else
+								code.Add(string.Format(
+									"\tnew DataParameter({0}, null, {1}{2}){3}",
+									ToStringLiteral(pr.SchemaName),
+									LenDiff(maxLenParam, pr.ParameterName),
+									"LinqToDB.DataType." + pr.DataType,
+									endLine));
+
+							if (extraInitializers.Count > 0)
+							{
+								code.Add("\t{");
+
+								var maxPropertyLength = extraInitializers.Select(ei => ei.Item1.Length).Max();
+
+								for (var j = 0; j < extraInitializers.Count; j++)
+									code.Add(string.Format(
+										"\t\t{0}{1} = {2}{3}",
+										extraInitializers[j].Item1,
+										LenDiff(maxPropertyLength, extraInitializers[j].Item1),
+										extraInitializers[j].Item2,
+										j < extraInitializers.Count - 1 ? "," : ""));
+
+								code.Add(i < inOrOutputParameters.Count - 1 ? "\t}," : "\t}");
+							}
+						}
+
+						code.Add("};");
+						code.Add("");
+
+						return code;
+					});
+				}
+
+				// we need to call ToList(), because otherwise output parameters will not be updated
+				// with values. See https://docs.microsoft.com/en-us/previous-versions/dotnet/articles/ms971497(v=msdn.10)#capturing-the-gazoutas
+				var terminator = (GenerateProcedureResultAsList || outputParameters.Count > 0) && p.ResultTable != null ? ").ToList();" : ");";
+
+				if (inOrOutputParameters.Count > 0)
+					terminator = string.Format(", {0}{1}", parametersVarName, terminator);
+
+
 				if (p.ResultTable == null)
-					p.BodyBuilders.Add(() => new [] { prefix + "dataConnection.ExecuteProc(" + spName });
+					p.BodyBuilders.Add(() => new [] { prefix + "dataConnection.ExecuteProc(" + spName + terminator });
 				else
 				{
 					if (p.ResultTable.Columns.Values.Any(c => c.IsDuplicateOrEmpty))
@@ -861,55 +942,12 @@ void GenerateTypesFromMetadata()
 							});
 						}
 
-						p.BodyBuilders.Add(() => new [] {"\t},", "\t" + spName });
+						p.BodyBuilders.Add(() => new [] {"\t},", "\t" + spName + terminator });
 					}
 					else
 					{
-						p.BodyBuilders.Add(() => new [] { prefix + "dataConnection.QueryProc<" + p.ResultTable.TypeName + ">(" + spName });
+						p.BodyBuilders.Add(() => new [] { prefix + "dataConnection.QueryProc<" + p.ResultTable.TypeName + ">(" + spName + terminator });
 					}
-				}
-
-				var maxLenSchema = inputParameters.Max(pr => (int?)pr.SchemaName.   Length) ?? 0;
-				var maxLenParam  = inputParameters.Max(pr => (int?)pr.ParameterName.Length) ?? 0;
-				var maxLenType   = inputParameters.Max(pr => (int?)("LinqToDB.DataType." + pr.DataType).Length) ?? 0;
-
-				for (var idx = 0; idx < inOrOutputParameters.Count; idx++)
-				{
-					var i = idx;
-					var pr = inOrOutputParameters[i];
-
-					p.BodyBuilders.Add(() =>
-					{
-						var str = string.Format(
-							!pr.IsIn && (pr.IsOut || pr.IsResult)
-								? "\tnew DataParameter({0}, null, {3}{4})"
-								: "\tnew DataParameter({0}, {1}{2}, {3}{4})" + (GenerateProcedureDbType(pr) ? "{{ DbType = {5} }}" : null),
-							ToStringLiteral(pr.SchemaName),
-							LenDiff(maxLenSchema, pr.SchemaName),
-							pr.ParameterName,
-							LenDiff(maxLenParam, pr.ParameterName),
-							"LinqToDB.DataType." + pr.DataType,
-							ToStringLiteral(pr.SchemaType));
-
-						if (pr.IsOut || pr.IsResult)
-						{
-							str += LenDiff(maxLenType, "LinqToDB.DataType." + pr.DataType);
-							str += " { Direction = " + (pr.IsIn ? "ParameterDirection.InputOutput" : (pr.IsResult ? "ParameterDirection.ReturnValue" : "ParameterDirection.Output"));
-
-							if (pr.Size != null && pr.Size.Value != 0)
-								str += ", Size = " + pr.Size.Value;
-
-							str += " }";
-						}
-
-						// we need to call ToList(), because otherwise output parameters will not be updated
-						// with values. See https://docs.microsoft.com/en-us/previous-versions/dotnet/articles/ms971497(v=msdn.10)#capturing-the-gazoutas
-						str += i + 1 == inOrOutputParameters.Count
-							? ((GenerateProcedureResultAsList || outputParameters.Count > 0) && p.ResultTable != null ? ").ToList();" : ");")
-							: ",";
-
-						return new [] { str };
-					});
 				}
 
 				if (hasOut)
@@ -925,13 +963,13 @@ void GenerateTypesFromMetadata()
 						p.BodyBuilders.Add(() => new []
 						{
 							string.Format(
-								"{0} {1}= Converter.ChangeTypeTo<{2}>{3}(((IDbDataParameter)dataConnection.Command.Parameters[{4}]).{5}Value);",
+								"{0} {1}= Converter.ChangeTypeTo<{2}>{3}({4}[{5}].Value);",
 								pr.ParameterName,
 								LenDiff(maxLenParam,  pr.ParameterName),
 								pr.Type.ToTypeName(),
 								LenDiff(maxLenType, pr.Type.ToTypeName()),
-								ToStringLiteral(pr.SchemaName),
-								LenDiff(maxLenSchema, pr.SchemaName))
+								parametersVarName,
+								inOrOutputParameters.IndexOf(pr))
 						});
 					}
 

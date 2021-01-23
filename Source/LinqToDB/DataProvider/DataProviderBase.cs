@@ -95,19 +95,27 @@ namespace LinqToDB.DataProvider
 		public    abstract ISqlBuilder   CreateSqlBuilder(MappingSchema mappingSchema);
 		public    abstract ISqlOptimizer GetSqlOptimizer ();
 
-		public virtual void InitCommand(DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[]? parameters, bool withParameters)
+		public virtual DbCommand InitCommand(DataConnection dataConnection, DbCommand command, CommandType commandType, string commandText, DataParameter[]? parameters, bool withParameters)
 		{
-			dataConnection.Command.CommandType = commandType;
+			command.CommandType = commandType;
 
-			if (dataConnection.Command.Parameters.Count != 0)
-				dataConnection.Command.Parameters.Clear();
+			ClearCommandParameters(command);
 
-			dataConnection.Command.CommandText = commandText;
+			command.CommandText = commandText;
+
+			return command;
 		}
 
-		public virtual void DisposeCommand(DataConnection dataConnection)
+		public virtual void ClearCommandParameters(IDbCommand command)
 		{
-			dataConnection.Command.Dispose();
+			if (command.Parameters.Count != 0)
+				command.Parameters.Clear();
+		}
+
+		public virtual void DisposeCommand(IDbCommand command)
+		{
+			ClearCommandParameters(command);
+			command.Dispose();
 		}
 
 		public virtual object? GetConnectionInfo(DataConnection dataConnection, string parameterName)
@@ -120,10 +128,7 @@ namespace LinqToDB.DataProvider
 			return commandBehavior;
 		}
 
-		public virtual IDisposable? ExecuteScope(DataConnection dataConnection)
-		{
-			return null;
-		}
+		public virtual IDisposable? ExecuteScope(DataConnection dataConnection) => null;
 
 		#endregion
 

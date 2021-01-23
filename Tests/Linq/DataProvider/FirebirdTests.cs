@@ -657,11 +657,11 @@ namespace Tests.DataProvider
 				{
 					var id1 = db.PersonInsert("Имя", "Фамилия", "Отчество", 'M', out id).ToList();
 					Assert.AreEqual(1, id1.Count);
-					Assert.IsNotNull(id1[0].PersonID);
+					Assert.IsNotNull(id1[0].PERSONID);
 
 					// TODO: see TestProcedureNonLatinParameters2
 					// output parameter value is not set
-					id = id1[0].PersonID;
+					id = id1[0].PERSONID;
 
 					var record = db.Person.Single(p => p.ID == id);
 
@@ -670,7 +670,7 @@ namespace Tests.DataProvider
 					Assert.AreEqual("Отчество", record.MiddleName);
 					Assert.AreEqual(Gender.Male, record.Gender);
 					Assert.IsNotNull(id);
-					Assert.AreEqual(id, id1[0].PersonID);
+					Assert.AreEqual(id, id1[0].PERSONID);
 				}
 				finally
 				{
@@ -691,7 +691,7 @@ namespace Tests.DataProvider
 				{
 					var id1 = db.PersonInsert("Имя", "Фамилия", "Отчество", 'M', out id).ToList();
 					Assert.AreEqual(1, id1.Count);
-					Assert.IsNotNull(id1[0].PersonID);
+					Assert.IsNotNull(id1[0].PERSONID);
 
 					var record = db.Person.Single(p => p.ID == id);
 
@@ -700,7 +700,7 @@ namespace Tests.DataProvider
 					Assert.AreEqual("Отчество", record.MiddleName);
 					Assert.AreEqual(Gender.Male, record.Gender);
 					Assert.IsNotNull(id);
-					Assert.AreEqual(id, id1[0].PersonID);
+					Assert.AreEqual(id, id1[0].PERSONID);
 				}
 				finally
 				{
@@ -779,19 +779,39 @@ namespace Tests.DataProvider
 	{
 		public partial class PersonInsertResult
 		{
-			public int? PersonID { get; set; }
+			public int? PERSONID { get; set; }
 		}
 
 		public static IEnumerable<PersonInsertResult> PersonInsert(this DataConnection dataConnection, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER, out int? PERSONID)
 		{
-			var ret = dataConnection.QueryProc<PersonInsertResult>("\"Person_Insert\"",
-				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
-				new DataParameter("LASTNAME", LASTNAME, DataType.NVarChar),
-				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar),
-				new DataParameter("GENDER",   GENDER,   DataType.NChar),
-				new DataParameter("PERSONID", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 }).ToList();
+			var parameters = new []
+			{
+				new DataParameter("FIRSTNAME", FIRSTNAME, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("LASTNAME", LASTNAME, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("MIDDLENAME", MIDDLENAME, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("GENDER",   GENDER,   LinqToDB.DataType.NChar)
+				{
+					Size = 1
+				},
+				new DataParameter("PERSONID", null, LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 4
+				}
+			};
 
-			PERSONID = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).Value);
+			var ret = dataConnection.QueryProc<PersonInsertResult>("\"Person_Insert\"", parameters).ToList();
+
+			PERSONID = Converter.ChangeTypeTo<int?>(parameters[4].Value);
 
 			return ret;
 		}

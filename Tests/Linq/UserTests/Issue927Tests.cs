@@ -23,7 +23,7 @@ namespace Tests.UserTests
 			}
 
 			Assert.AreEqual(ConnectionState.Closed, connection.State);
-			Assert.AreEqual(dispose,                connection.Disposed);
+			Assert.AreEqual(dispose,                connection.IsDisposed);
 		}
 
 		[Test]
@@ -39,7 +39,7 @@ namespace Tests.UserTests
 			}
 
 			Assert.AreEqual(ConnectionState.Closed, connection.State);
-			Assert.True    (connection.Disposed);
+			Assert.True    (connection.IsDisposed);
 		}
 
 		[Test]
@@ -57,7 +57,7 @@ namespace Tests.UserTests
 			}
 
 			Assert.AreEqual(ConnectionState.Open, connection.State);
-			Assert.AreEqual(false,                connection.Disposed);
+			Assert.AreEqual(false,                connection.IsDisposed);
 		}
 
 		[Test]
@@ -85,11 +85,11 @@ namespace Tests.UserTests
 			}
 
 			Assert.AreEqual(ConnectionState.Open, connection.State);
-			Assert.AreEqual(false,                connection.Disposed);
+			Assert.AreEqual(false,                connection.IsDisposed);
 
 			Assert.IsNotNull(cloneConnection);
 			Assert.AreEqual (ConnectionState.Closed, cloneConnection.State);
-			Assert.AreEqual (true,                   cloneConnection.Disposed);
+			Assert.AreEqual (true,                   cloneConnection.IsDisposed);
 
 		}
 	}

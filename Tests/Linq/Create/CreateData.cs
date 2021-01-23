@@ -48,6 +48,15 @@ public class a_CreateData : TestBase
 
 		using (var db = new TestDataConnection(configString))
 		{
+			if (configString == ProviderName.OracleNative || configString == TestProvName.Oracle11Native)
+			{
+				// we need this to avoid errors in trigger creation when native provider
+				// recognize ":NEW" as parameter
+				db.OnCommandInitialized += args =>
+				{
+					((dynamic)args.Command).BindByName = false;
+				};
+			}
 			//db.CommandTimeout = 20;
 
 			var database = databaseName ?? db.Connection.Database;
@@ -71,17 +80,7 @@ public class a_CreateData : TestBase
 					if (DataConnection.TraceSwitch.TraceInfo)
 						TestContext.WriteLine(command);
 
-					if (configString == ProviderName.OracleNative || configString == TestProvName.Oracle11Native)
-					{
-						// we need this to avoid errors in trigger creation when native provider
-						// recognize ":NEW" as parameter
-						var cmd = db.CreateCommand();
-						cmd.CommandText = command;
-						((dynamic)cmd).BindByName = false;
-						cmd.ExecuteNonQuery();
-					}
-					else
-						db.Execute(command);
+					db.Execute(command);
 
 					if (DataConnection.TraceSwitch.TraceInfo)
 						TestContext.WriteLine("\nOK\n");

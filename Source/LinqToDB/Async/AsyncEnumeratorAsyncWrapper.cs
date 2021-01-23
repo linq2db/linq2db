@@ -54,7 +54,8 @@ namespace LinqToDB.Async
 		async ValueTask IAsyncDisposable.DisposeAsync()
 		{
 			await _enumerator!.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-			_disposable?.DisposeAsync();
+			if (_disposable != null)
+				await _disposable.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
 		async ValueTask<bool> IAsyncEnumerator<T>.MoveNextAsync()

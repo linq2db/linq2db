@@ -344,10 +344,18 @@ namespace SybaseDataContext
 
 		public static int AddIssue792Record(this TestDataDB dataConnection, out int? RETURN_VALUE)
 		{
-			var ret = dataConnection.ExecuteProc("[dbo].[AddIssue792Record]",
-				new DataParameter("RETURN_VALUE", null, LinqToDB.DataType.Int32) { Direction = ParameterDirection.ReturnValue, Size = 10 });
+			var parameters = new []
+			{
+				new DataParameter("RETURN_VALUE", null, LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.ReturnValue,
+					Size      = 10
+				}
+			};
 
-			RETURN_VALUE = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["RETURN_VALUE"]).Value);
+			var ret = dataConnection.ExecuteProc("[dbo].[AddIssue792Record]", parameters);
+
+			RETURN_VALUE = Converter.ChangeTypeTo<int?>(parameters[0].Value);
 
 			return ret;
 		}
@@ -358,10 +366,18 @@ namespace SybaseDataContext
 
 		public static IEnumerable<PersonSelectAllResult> PersonSelectAll(this TestDataDB dataConnection, out int? RETURN_VALUE)
 		{
-			var ret = dataConnection.QueryProc<PersonSelectAllResult>("[dbo].[Person_SelectAll]",
-				new DataParameter("RETURN_VALUE", null, LinqToDB.DataType.Int32) { Direction = ParameterDirection.ReturnValue, Size = 10 }).ToList();
+			var parameters = new []
+			{
+				new DataParameter("RETURN_VALUE", null, LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.ReturnValue,
+					Size      = 10
+				}
+			};
 
-			RETURN_VALUE = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["RETURN_VALUE"]).Value);
+			var ret = dataConnection.QueryProc<PersonSelectAllResult>("[dbo].[Person_SelectAll]", parameters).ToList();
+
+			RETURN_VALUE = Converter.ChangeTypeTo<int?>(parameters[0].Value);
 
 			return ret;
 		}

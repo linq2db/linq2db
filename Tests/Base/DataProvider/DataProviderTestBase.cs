@@ -58,7 +58,7 @@ namespace Tests.DataProvider
 					// Get NULL ID with dataType.
 					//
 					Debug.WriteLine("{0} {1}:{2} -> NULL ID with dataType", fieldName, (object)type.Name, dataType);
-					var parameters = Enumerable.Range(0, paramCount).Select(_ => new DataParameter("p", value, dataType)).ToArray();
+					var parameters = Enumerable.Range(0, paramCount).Select((_, i) => new DataParameter(paramCount == 1 ? "p" : $"p{i}", value, dataType)).ToArray();
 					id = conn.Execute<int?>(sql, parameters);
 					Assert.That(id, Is.EqualTo(1));
 				}
@@ -77,7 +77,7 @@ namespace Tests.DataProvider
 					// Get NULL ID without dataType.
 					//
 					Debug.WriteLine("{0} {1}:{2} -> NULL ID without dataType", fieldName, (object)type.Name, dataType);
-					var parameters = Enumerable.Range(0, paramCount).Select(_ => new DataParameter("p", value)).ToArray();
+					var parameters = Enumerable.Range(0, paramCount).Select((_, i) => new DataParameter(paramCount == 1 ? "p" : $"p{i}", value)).ToArray();
 					id = conn.Execute<int?>(sql, parameters);
 					Assert.That(id, Is.EqualTo(1));
 				}
