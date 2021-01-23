@@ -46,6 +46,7 @@ Code examples and demos can be found [here](https://github.com/linq2db/examples)
 - [ASP.NET CORE 2 Template](https://github.com/David-Mawer/LINQ2DB-MVC-Core-2/tree/master/LINQ2DB-MVC-Core-2)
 - [ASP.NET CORE 3 Template with Angular](https://github.com/David-Mawer/LINQ2DB-AngularWebApp-Core-3)
 - [ASP.NET CORE 5 Template](https://github.com/David-Mawer/LINQ2DB-MVC-Core-5)
+- [PostGIS extensions for linq2db](https://github.com/apdevelop/linq2db-postgis-extensions)
 
 
 Notable open-source users:
