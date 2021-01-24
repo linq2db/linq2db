@@ -216,7 +216,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			var helper = new MultipleRowsHelper<T>(table, options);
 
 			if (options.KeepIdentity == true)
-				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " ON")
+				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " ON", cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			switch (((SqlServerDataProvider)helper.DataConnection.DataProvider).Version)
@@ -233,7 +233,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 
 			if (options.KeepIdentity == true)
-				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " OFF")
+				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " OFF", cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			return ret;
@@ -248,7 +248,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			var helper = new MultipleRowsHelper<T>(table, options);
 
 			if (options.KeepIdentity == true)
-				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " ON")
+				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " ON", cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			switch (((SqlServerDataProvider)helper.DataConnection.DataProvider).Version)
@@ -265,7 +265,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 
 			if (options.KeepIdentity == true)
-				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " OFF")
+				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " OFF", cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			return ret;

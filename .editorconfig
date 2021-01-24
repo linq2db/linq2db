@@ -118,9 +118,12 @@ dotnet_style_prefer_compound_assignment = true:warning
 
 # general settings
 # enable all analyzers by default
+# https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/quality-rules/
 dotnet_analyzer_diagnostic.severity = error
+dotnet_code_quality.api_surface = all
 
 # active diagnostics (explicitly configured)
+dotnet_diagnostic.CA2016.severity = error # CA2016: Forward the CancellationToken parameter to methods that take one
 
 # inactive diagnostics (not reviewed yet => disabled to not fail build)
 dotnet_diagnostic.CA1000.severity = none
@@ -158,12 +161,12 @@ dotnet_diagnostic.CA1830.severity = none
 dotnet_diagnostic.CA1834.severity = none
 dotnet_diagnostic.CA1836.severity = none
 dotnet_diagnostic.CA2012.severity = none
-dotnet_diagnostic.CA2016.severity = none
 dotnet_diagnostic.CA2101.severity = none
 dotnet_diagnostic.CA2201.severity = none
 dotnet_diagnostic.CA2208.severity = none
 dotnet_diagnostic.CA2211.severity = none
 dotnet_diagnostic.CA2215.severity = none
+dotnet_diagnostic.CA2231.severity = none
 dotnet_diagnostic.CA2249.severity = none
 dotnet_diagnostic.CA3075.severity = none
 

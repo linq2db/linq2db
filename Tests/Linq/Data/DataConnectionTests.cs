@@ -419,7 +419,7 @@ namespace Tests.Data
 				{
 					if (cn.State == ConnectionState.Closed)
 						openAsync = true;
-				});
+				}, default);
 				Assert.False(open);
 				Assert.False(openAsync);
 				Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
@@ -444,7 +444,7 @@ namespace Tests.Data
 						{
 							if (cn.State == ConnectionState.Closed)
 								openAsync = true;
-						});
+						}, default);
 				Assert.False(open);
 				Assert.False(openAsync);
 				await conn.SelectAsync(() => 1);
