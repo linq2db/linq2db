@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -14,9 +14,7 @@ namespace LinqToDB.Reflection
 
 	public class MemberAccessor
 	{
-		static readonly ConstructorInfo ArgumentExceptionConstructorInfo =
-			typeof(ArgumentException).GetConstructor(new[] {typeof(string)}) ??
-				throw new Exception($"Can not retrieve information about constructor for {nameof(ArgumentException)}");
+		static readonly ConstructorInfo ArgumentExceptionConstructorInfo = typeof(ArgumentException).GetConstructor(new[] {typeof(string)})!;
 
 		internal MemberAccessor(TypeAccessor typeAccessor, string memberName, EntityDescriptor? ed)
 		{

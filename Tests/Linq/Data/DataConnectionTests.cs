@@ -415,7 +415,7 @@ namespace Tests.Data
 					if (cn.State == ConnectionState.Closed)
 						open = true;
 				};
-				conn.OnBeforeConnectionOpenAsync += async (dc, cn, token) => await Task.Run(() =>
+				conn.OnBeforeConnectionOpenAsync += (dc, cn, token) => Task.Run(() =>
 				{
 					if (cn.State == ConnectionState.Closed)
 						openAsync = true;

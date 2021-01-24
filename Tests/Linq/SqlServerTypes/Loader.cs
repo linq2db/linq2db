@@ -35,7 +35,7 @@ namespace SqlServerTypes
 			var ptr = LoadLibrary(path);
 			if (ptr == IntPtr.Zero)
 			{
-				throw new Exception(string.Format(
+				throw new InvalidOperationException(string.Format(
 					"Error loading {0} (ErrorCode: {1})",
 					assemblyName,
 					Marshal.GetLastWin32Error()));

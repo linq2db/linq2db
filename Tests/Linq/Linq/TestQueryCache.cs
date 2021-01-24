@@ -130,7 +130,7 @@ namespace Tests.Linq
 				{
 					db.Insert(new SampleClass() { Id = 1, StrKey = "K1", Value = "V1" });
 					if (!db.LastQuery!.Contains(columnName))
-						throw new Exception("Invalid schema");
+						throw new AssertionException("Invalid schema");
 				}
 			}
 

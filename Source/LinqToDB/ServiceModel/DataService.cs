@@ -388,7 +388,7 @@ namespace LinqToDB.ServiceModel
 					return resource;
 				}
 
-				throw new Exception($"Type '{fullTypeName}' not found");
+				throw new LinqException($"Type '{fullTypeName}' not found");
 			}
 
 			public void DeleteResource(object targetResource)

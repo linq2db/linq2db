@@ -86,7 +86,7 @@ namespace Tests.DataProvider
 			if (throwException)
 			{
 				if (!EqualityComparer<T>.Default.Equals((T)actualValue, (T)expectedValue))
-					throw new Exception($"Expected: {expectedValue} But was: {actualValue}");
+					throw new AssertionException($"Expected: {expectedValue} But was: {actualValue}");
 			}
 			else
 			{

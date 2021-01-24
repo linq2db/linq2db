@@ -123,7 +123,13 @@ dotnet_analyzer_diagnostic.severity = error
 dotnet_code_quality.api_surface = all
 
 # active diagnostics (explicitly configured)
+
+# not really useful (just generates a lot of noise in tests)
+dotnet_diagnostic.CA2007.severity = none # CA2007: Do not directly await a Task
+dotnet_diagnostic.CA2012.severity = error # CA2012: Use ValueTasks correctly
 dotnet_diagnostic.CA2016.severity = error # CA2016: Forward the CancellationToken parameter to methods that take one
+dotnet_diagnostic.CA2200.severity = error # CA2200: Rethrow to preserve stack details
+dotnet_diagnostic.CA2201.severity = error # CA2201: Do not raise reserved exception types
 
 # inactive diagnostics (not reviewed yet => disabled to not fail build)
 dotnet_diagnostic.CA1000.severity = none
@@ -162,7 +168,6 @@ dotnet_diagnostic.CA1834.severity = none
 dotnet_diagnostic.CA1836.severity = none
 dotnet_diagnostic.CA2012.severity = none
 dotnet_diagnostic.CA2101.severity = none
-dotnet_diagnostic.CA2201.severity = none
 dotnet_diagnostic.CA2208.severity = none
 dotnet_diagnostic.CA2211.severity = none
 dotnet_diagnostic.CA2215.severity = none
