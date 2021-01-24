@@ -17,9 +17,6 @@
 		<ErrorReport>prompt</ErrorReport>
 		<NoWarn>1591</NoWarn>
 
-		<EnableNETAnalyzers>true</EnableNETAnalyzers>
-		<AnalysisLevel>preview</AnalysisLevel>
-
 		<AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<SignAssembly>True</SignAssembly>
@@ -33,6 +30,17 @@
 		<GenerateAssemblyVersionAttribute>true</GenerateAssemblyVersionAttribute>
 		<GenerateAssemblyFileVersionAttribute>true</GenerateAssemblyFileVersionAttribute>
 		<GenerateNeutralResourcesLanguageAttribute>false</GenerateNeutralResourcesLanguageAttribute>
+	</PropertyGroup>
+	
+	<PropertyGroup>
+		<AnalysisLevel>preview</AnalysisLevel>
+		
+		<EnableNETAnalyzers>false</EnableNETAnalyzers>
+		<RunAnalyzers>false</RunAnalyzers>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)' == 'Azure' OR '$(Configuration)' == 'Release' ">
+		<EnableNETAnalyzers>true</EnableNETAnalyzers>
+		<RunAnalyzers>true</RunAnalyzers>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.1' OR '$(TargetFramework)' == 'netcoreapp3.1' OR '$(TargetFramework)' == 'net5.0'">

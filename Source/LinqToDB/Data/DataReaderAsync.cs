@@ -47,7 +47,7 @@ namespace LinqToDB.Data
 		{
 			if (Reader != null)
 			{
-				await Reader.DisposeAsync();
+				await Reader.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				if (CommandInfo?.DataConnection.TraceSwitchConnection.TraceInfo == true)
 				{

@@ -38,7 +38,13 @@ namespace LinqToDB.DataProvider
 		}
 
 		protected override bool MoveNext()
-			=> _enumerator != null ? _enumerator.MoveNext() : _asyncEnumerator!.MoveNextAsync().GetAwaiter().GetResult();
+		{
+			if (_enumerator != null)
+				return _enumerator.MoveNext();
+			
+			var result = _asyncEnumerator!.MoveNextAsync();
+			return result.IsCompleted ? result.Result : result.AsTask().GetAwaiter().GetResult();
+		}
 
 		protected override ValueTask<bool> MoveNextAsync()
 			=> _enumerator != null ? new ValueTask<bool>(_enumerator.MoveNext()) : _asyncEnumerator!.MoveNextAsync();
@@ -58,9 +64,12 @@ namespace LinqToDB.DataProvider
 #if !NETFRAMEWORK
 		protected override void Dispose(bool disposing)
 		{
-			if (disposing)
+			if (disposing && _asyncEnumerator != null)
 			{
-				_asyncEnumerator?.DisposeAsync().GetAwaiter().GetResult();
+				var result = _asyncEnumerator.DisposeAsync();
+
+				if (!result.IsCompleted)
+					result.AsTask().GetAwaiter().GetResult();
 			}
 		}
 

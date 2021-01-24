@@ -116,64 +116,70 @@ dotnet_style_prefer_compound_assignment = true:warning
 # Analyzers #
 #############
 
-# general settings
+# general settings applied to all source files
+# Source folder contains additional .editorconfig with overrides
+#
 # enable all analyzers by default
 # https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/quality-rules/
 dotnet_analyzer_diagnostic.severity = error
 dotnet_code_quality.api_surface = all
+dotnet_code_quality.enable_platform_analyzer_on_pre_net5_target = true
 
-# active diagnostics (explicitly configured)
+##############################################
+# active diagnostics (explicitly configured) #
+##############################################
 
-# not really useful (just generates a lot of noise in tests)
+# generates a lot of noise in tests, enabled in source .editorconfig
 dotnet_diagnostic.CA2007.severity = none # CA2007: Do not directly await a Task
 dotnet_diagnostic.CA2012.severity = error # CA2012: Use ValueTasks correctly
 dotnet_diagnostic.CA2016.severity = error # CA2016: Forward the CancellationToken parameter to methods that take one
 dotnet_diagnostic.CA2200.severity = error # CA2200: Rethrow to preserve stack details
 dotnet_diagnostic.CA2201.severity = error # CA2201: Do not raise reserved exception types
 
-# inactive diagnostics (not reviewed yet => disabled to not fail build)
-dotnet_diagnostic.CA1000.severity = none
-dotnet_diagnostic.CA1001.severity = none
-dotnet_diagnostic.CA1010.severity = none
-dotnet_diagnostic.CA1018.severity = none
-dotnet_diagnostic.CA1050.severity = none
-dotnet_diagnostic.CA1036.severity = none
-dotnet_diagnostic.CA1051.severity = none
-dotnet_diagnostic.CA1067.severity = none
-dotnet_diagnostic.CA1068.severity = none
-dotnet_diagnostic.CA1069.severity = none
-dotnet_diagnostic.CA1200.severity = none
-dotnet_diagnostic.CA1304.severity = none
-dotnet_diagnostic.CA1305.severity = none
-dotnet_diagnostic.CA1309.severity = none
-dotnet_diagnostic.CA1310.severity = none
-dotnet_diagnostic.CA1507.severity = none
-dotnet_diagnostic.CA1707.severity = none
-dotnet_diagnostic.CA1708.severity = none
-dotnet_diagnostic.CA1711.severity = none
-dotnet_diagnostic.CA1715.severity = none
-dotnet_diagnostic.CA1716.severity = none
-dotnet_diagnostic.CA1720.severity = none
-dotnet_diagnostic.CA1725.severity = none
-dotnet_diagnostic.CA1805.severity = none
-dotnet_diagnostic.CA1806.severity = none
-dotnet_diagnostic.CA1816.severity = none
-dotnet_diagnostic.CA1822.severity = none
-dotnet_diagnostic.CA1825.severity = none
-dotnet_diagnostic.CA1826.severity = none
-dotnet_diagnostic.CA1827.severity = none
-dotnet_diagnostic.CA1829.severity = none
-dotnet_diagnostic.CA1830.severity = none
-dotnet_diagnostic.CA1834.severity = none
-dotnet_diagnostic.CA1836.severity = none
-dotnet_diagnostic.CA2012.severity = none
-dotnet_diagnostic.CA2101.severity = none
-dotnet_diagnostic.CA2208.severity = none
-dotnet_diagnostic.CA2211.severity = none
-dotnet_diagnostic.CA2215.severity = none
-dotnet_diagnostic.CA2231.severity = none
-dotnet_diagnostic.CA2249.severity = none
-dotnet_diagnostic.CA3075.severity = none
+#########################################################################
+# inactive diagnostics (not reviewed yet => disabled to not fail build) #
+#########################################################################
+dotnet_diagnostic.CA1000.severity = none # CA1000: Do not declare static members on generic types
+dotnet_diagnostic.CA1001.severity = none # CA1001: Types that own disposable fields should be disposable
+dotnet_diagnostic.CA1010.severity = none # CA1010: Collections should implement generic interface
+dotnet_diagnostic.CA1018.severity = none # CA1018: Mark attributes with AttributeUsageAttribute
+dotnet_diagnostic.CA1050.severity = none # CA1050: Declare types in namespaces
+dotnet_diagnostic.CA1036.severity = none # CA1036: Override methods on comparable types
+dotnet_diagnostic.CA1051.severity = none # CA1051: Do not declare visible instance fields
+dotnet_diagnostic.CA1067.severity = none # CA1067: Override Equals when implementing IEquatable
+dotnet_diagnostic.CA1068.severity = none # CA1068: CancellationToken parameters must come last
+dotnet_diagnostic.CA1069.severity = none # CA1069: Enums should not have duplicate values
+dotnet_diagnostic.CA1200.severity = none # CA1200: Avoid using cref tags with a prefix
+dotnet_diagnostic.CA1304.severity = none # CA1304: Specify CultureInfo
+dotnet_diagnostic.CA1305.severity = none # CA1305: Specify IFormatProvider
+dotnet_diagnostic.CA1309.severity = none # CA1309: Use ordinal StringComparison
+dotnet_diagnostic.CA1310.severity = none # CA1310: Specify StringComparison for correctness
+dotnet_diagnostic.CA1507.severity = none # CA1507: Use nameof in place of string
+dotnet_diagnostic.CA1707.severity = none # CA1707: Identifiers should not contain underscores
+dotnet_diagnostic.CA1708.severity = none # CA1708: Identifiers should differ by more than case
+dotnet_diagnostic.CA1711.severity = none # CA1711: Identifiers should not have incorrect suffix
+dotnet_diagnostic.CA1715.severity = none # CA1715: Identifiers should have correct prefix
+dotnet_diagnostic.CA1716.severity = none # CA1716: Identifiers should not match keywords
+dotnet_diagnostic.CA1720.severity = none # CA1720: Identifiers should not contain type names
+dotnet_diagnostic.CA1725.severity = none # CA1725: Parameter names should match base declaration
+dotnet_diagnostic.CA1805.severity = none # CA1805: Do not initialize unnecessarily
+dotnet_diagnostic.CA1806.severity = none # CA1806: Do not ignore method results
+dotnet_diagnostic.CA1816.severity = none # CA1816: Call GC.SuppressFinalize correctly
+dotnet_diagnostic.CA1822.severity = none # CA1822: Mark members as static
+dotnet_diagnostic.CA1825.severity = none # CA1825: Avoid zero-length array allocations
+dotnet_diagnostic.CA1826.severity = none # CA1826: Use property instead of Linq Enumerable method
+dotnet_diagnostic.CA1827.severity = none # CA1827: Do not use Count/LongCount when Any can be used
+dotnet_diagnostic.CA1829.severity = none # CA1829: Use Length/Count property instead of Enumerable.Count method
+dotnet_diagnostic.CA1830.severity = none # CA1830: Prefer strongly-typed Append and Insert method overloads on StringBuilder
+dotnet_diagnostic.CA1834.severity = none # CA1834: Use StringBuilder.Append(char) for single character strings
+dotnet_diagnostic.CA1836.severity = none # CA1836: Prefer IsEmpty over Count when available
+dotnet_diagnostic.CA2101.severity = none # CA2101: Specify marshaling for P/Invoke string arguments
+dotnet_diagnostic.CA2208.severity = none # CA2208: Instantiate argument exceptions correctly
+dotnet_diagnostic.CA2211.severity = none # CA2211: Non-constant fields should not be visible
+dotnet_diagnostic.CA2215.severity = none # CA2215: Dispose methods should call base class dispose
+dotnet_diagnostic.CA2231.severity = none # CA2231: Overload operator equals on overriding ValueType.Equals
+dotnet_diagnostic.CA2249.severity = none # CA2249: Consider using String.Contains instead of String.IndexOf
+dotnet_diagnostic.CA3075.severity = none # CA3075: Insecure DTD Processing
 
 ################
 # VS analyzers #
