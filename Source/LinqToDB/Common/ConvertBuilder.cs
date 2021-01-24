@@ -142,7 +142,7 @@ namespace LinqToDB.Common
 		{
 			if (to == typeof(string) && !from.IsNullable())
 			{
-				var mi = from.GetMethodEx("ToString", new Type[0]);
+				var mi = from.GetMethodEx("ToString", Array<Type>.Empty);
 				return mi != null ? Expression.Call(p, mi) : null;
 			}
 

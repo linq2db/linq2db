@@ -124,8 +124,8 @@ namespace LinqToDB.Expressions
 				var w2oType = typeof(Dictionary<,>).MakeGenericType(wrapperType, originalType);
 				var o2wType = typeof(Dictionary<,>).MakeGenericType(originalType, wrapperType);
 
-				var wrapperToOriginal = w2oType.GetConstructor(new Type[0])!.Invoke(Array<object>.Empty);
-				var originalToWrapper = o2wType.GetConstructor(new Type[0])!.Invoke(Array<object>.Empty);
+				var wrapperToOriginal = w2oType.GetConstructor(Array<Type>.Empty)!.Invoke(Array<object>.Empty);
+				var originalToWrapper = o2wType.GetConstructor(Array<Type>.Empty)!.Invoke(Array<object>.Empty);
 
 				var w2o = (IDictionary)wrapperToOriginal;
 				var o2w = (IDictionary)originalToWrapper;

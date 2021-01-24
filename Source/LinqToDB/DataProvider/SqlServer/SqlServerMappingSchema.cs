@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Data.Linq;
 using System.Data.SqlTypes;
 using System.IO;
@@ -85,13 +85,13 @@ namespace LinqToDB.DataProvider.SqlServer
 				var p = Expression.Parameter(@from);
 
 				return Expression.Lambda(
-					Expression.Call(to, "Parse", new Type[0],
+					Expression.Call(to, "Parse", Array<Type>.Empty,
 						Expression.New(
 							MemberHelper.ConstructorOf(() => new SqlString("")),
 							Expression.Call(
 								Expression.Convert(p, typeof(object)),
 								"ToString",
-								new Type[0]))),
+								Array<Type>.Empty))),
 					p);
 			}
 

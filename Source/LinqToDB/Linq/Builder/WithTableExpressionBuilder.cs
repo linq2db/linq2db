@@ -2,6 +2,7 @@
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Common;
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
@@ -19,7 +20,7 @@ namespace LinqToDB.Linq.Builder
 			var value    = (string)methodCall.Arguments[1].EvaluateExpression()!;
 
 			table.SqlTable.SqlTableType   = SqlTableType.Expression;
-			table.SqlTable.TableArguments = new ISqlExpression[0];
+			table.SqlTable.TableArguments = Array<ISqlExpression>.Empty;
 
 			switch (methodCall.Method.Name)
 			{

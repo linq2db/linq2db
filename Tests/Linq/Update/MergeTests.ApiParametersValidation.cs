@@ -14,6 +14,7 @@ using NUnit.Framework;
 
 namespace Tests.xUpdate
 {
+	using LinqToDB.Common;
 	using Model;
 
 	public partial class MergeTests
@@ -30,16 +31,16 @@ namespace Tests.xUpdate
 					() => LinqExtensions.Merge<Child>(new FakeTable<Child>(), null!),
 
 					() => LinqExtensions.MergeInto<Child, Child>(null!, new FakeTable<Child>()),
-					() => LinqExtensions.MergeInto<Child, Child>(new Child[0].AsQueryable(), null!),
+					() => LinqExtensions.MergeInto<Child, Child>(Array<Child>.Empty.AsQueryable(), null!),
 
 					() => LinqExtensions.MergeInto<Child, Child>(null!, new FakeTable<Child>(), "hint"),
-					() => LinqExtensions.MergeInto<Child, Child>(new Child[0].AsQueryable(), null!, "hint"),
-					() => LinqExtensions.MergeInto<Child, Child>(new Child[0].AsQueryable(), new FakeTable<Child>(), null!),
+					() => LinqExtensions.MergeInto<Child, Child>(Array<Child>.Empty.AsQueryable(), null!, "hint"),
+					() => LinqExtensions.MergeInto<Child, Child>(Array<Child>.Empty.AsQueryable(), new FakeTable<Child>(), null!),
 
-					() => LinqExtensions.Using<Child, Child>(null!, new Child[0].AsQueryable()),
+					() => LinqExtensions.Using<Child, Child>(null!, Array<Child>.Empty.AsQueryable()),
 					() => LinqExtensions.Using<Child, Child>(new FakeMergeUsing<Child>(), null!),
 
-					() => LinqExtensions.Using<Child, Child>(null!, new Child[0]),
+					() => LinqExtensions.Using<Child, Child>(null!, Array<Child>.Empty),
 					() => LinqExtensions.Using<Child, Child>(new FakeMergeUsing<Child>(), null!),
 
 					() => LinqExtensions.UsingTarget<Child>(null!),

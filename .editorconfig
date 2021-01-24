@@ -129,6 +129,7 @@ dotnet_code_quality.enable_platform_analyzer_on_pre_net5_target = true
 # active diagnostics (explicitly configured) #
 ##############################################
 
+dotnet_diagnostic.CA1825.severity = error # CA1825: Avoid zero-length array allocations
 # generates a lot of noise in tests, enabled in source .editorconfig
 dotnet_diagnostic.CA2007.severity = none # CA2007: Do not directly await a Task
 dotnet_diagnostic.CA2012.severity = error # CA2012: Use ValueTasks correctly
@@ -136,9 +137,9 @@ dotnet_diagnostic.CA2016.severity = error # CA2016: Forward the CancellationToke
 dotnet_diagnostic.CA2200.severity = error # CA2200: Rethrow to preserve stack details
 dotnet_diagnostic.CA2201.severity = error # CA2201: Do not raise reserved exception types
 
-#########################################################################
-# inactive diagnostics (not reviewed yet => disabled to not fail build) #
-#########################################################################
+#########################################################################################################
+# inactive diagnostics (not reviewed yet => disabled to not fail build, basically TODO list for future) #
+#########################################################################################################
 dotnet_diagnostic.CA1000.severity = none # CA1000: Do not declare static members on generic types
 dotnet_diagnostic.CA1001.severity = none # CA1001: Types that own disposable fields should be disposable
 dotnet_diagnostic.CA1010.severity = none # CA1010: Collections should implement generic interface
@@ -166,7 +167,6 @@ dotnet_diagnostic.CA1805.severity = none # CA1805: Do not initialize unnecessari
 dotnet_diagnostic.CA1806.severity = none # CA1806: Do not ignore method results
 dotnet_diagnostic.CA1816.severity = none # CA1816: Call GC.SuppressFinalize correctly
 dotnet_diagnostic.CA1822.severity = none # CA1822: Mark members as static
-dotnet_diagnostic.CA1825.severity = none # CA1825: Avoid zero-length array allocations
 dotnet_diagnostic.CA1826.severity = none # CA1826: Use property instead of Linq Enumerable method
 dotnet_diagnostic.CA1827.severity = none # CA1827: Do not use Count/LongCount when Any can be used
 dotnet_diagnostic.CA1829.severity = none # CA1829: Use Length/Count property instead of Enumerable.Count method

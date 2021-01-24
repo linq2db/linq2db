@@ -39,7 +39,7 @@ namespace Tests.xUpdate
 			{
 				db.GetTable<Person>()
 					.Merge()
-					.Using(new Person[] { })
+					.Using(Array<Person>.Empty)
 					.OnTargetKey()
 					.UpdateWhenMatched()
 					.InsertWhenNotMatched()

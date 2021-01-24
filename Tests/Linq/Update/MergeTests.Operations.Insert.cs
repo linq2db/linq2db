@@ -8,6 +8,7 @@ using LinqToDB;
 
 using NUnit.Framework;
 using LinqToDB.Mapping;
+using LinqToDB.Common;
 
 namespace Tests.xUpdate
 {
@@ -310,7 +311,7 @@ namespace Tests.xUpdate
 
 				var rows = table
 					.Merge()
-					.Using(new TestMapping1[0])
+					.Using(Array<TestMapping1>.Empty)
 					.OnTargetKey()
 					.InsertWhenNotMatched()
 					.Merge();
@@ -402,7 +403,7 @@ namespace Tests.xUpdate
 
 				var rows = table
 					.Merge()
-					.Using(new TestMapping1[0])
+					.Using(Array<TestMapping1>.Empty)
 					.On((t, s) => t.Id == s.Id && s.Field3 != null)
 					.InsertWhenNotMatched()
 					.Merge();
@@ -1322,7 +1323,7 @@ namespace Tests.xUpdate
 
 				var rows = table
 					.Merge()
-					.Using(new TestMapping2[0])
+					.Using(Array<TestMapping2>.Empty)
 					.On((t, s) => t.Id == s.OtherId)
 					.InsertWhenNotMatched(s => new TestMapping1()
 					{
