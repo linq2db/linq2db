@@ -16,6 +16,8 @@
 		<WarningLevel>4</WarningLevel>
 		<ErrorReport>prompt</ErrorReport>
 		<NoWarn>1591</NoWarn>
+
+		<EnableNETAnalyzers>true</EnableNETAnalyzers>
 		<AnalysisLevel>preview</AnalysisLevel>
 
 		<AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>

@@ -111,6 +111,65 @@ csharp_style_prefer_switch_expression = true:warning
 
 dotnet_style_prefer_compound_assignment = true:warning
 
+[*.{cs,vb}]
+#############
+# Analyzers #
+#############
+
+# general settings
+# enable all analyzers by default
+dotnet_analyzer_diagnostic.severity = error
+
+# active diagnostics (explicitly configured)
+
+# inactive diagnostics (not reviewed yet => disabled to not fail build)
+dotnet_diagnostic.CA1000.severity = none
+dotnet_diagnostic.CA1001.severity = none
+dotnet_diagnostic.CA1010.severity = none
+dotnet_diagnostic.CA1018.severity = none
+dotnet_diagnostic.CA1050.severity = none
+dotnet_diagnostic.CA1036.severity = none
+dotnet_diagnostic.CA1051.severity = none
+dotnet_diagnostic.CA1067.severity = none
+dotnet_diagnostic.CA1068.severity = none
+dotnet_diagnostic.CA1069.severity = none
+dotnet_diagnostic.CA1200.severity = none
+dotnet_diagnostic.CA1304.severity = none
+dotnet_diagnostic.CA1305.severity = none
+dotnet_diagnostic.CA1309.severity = none
+dotnet_diagnostic.CA1310.severity = none
+dotnet_diagnostic.CA1507.severity = none
+dotnet_diagnostic.CA1707.severity = none
+dotnet_diagnostic.CA1708.severity = none
+dotnet_diagnostic.CA1711.severity = none
+dotnet_diagnostic.CA1715.severity = none
+dotnet_diagnostic.CA1716.severity = none
+dotnet_diagnostic.CA1720.severity = none
+dotnet_diagnostic.CA1725.severity = none
+dotnet_diagnostic.CA1805.severity = none
+dotnet_diagnostic.CA1806.severity = none
+dotnet_diagnostic.CA1816.severity = none
+dotnet_diagnostic.CA1822.severity = none
+dotnet_diagnostic.CA1825.severity = none
+dotnet_diagnostic.CA1826.severity = none
+dotnet_diagnostic.CA1827.severity = none
+dotnet_diagnostic.CA1829.severity = none
+dotnet_diagnostic.CA1830.severity = none
+dotnet_diagnostic.CA1834.severity = none
+dotnet_diagnostic.CA1836.severity = none
+dotnet_diagnostic.CA2012.severity = none
+dotnet_diagnostic.CA2016.severity = none
+dotnet_diagnostic.CA2101.severity = none
+dotnet_diagnostic.CA2201.severity = none
+dotnet_diagnostic.CA2208.severity = none
+dotnet_diagnostic.CA2211.severity = none
+dotnet_diagnostic.CA2215.severity = none
+dotnet_diagnostic.CA2249.severity = none
+dotnet_diagnostic.CA3075.severity = none
+
+################
+# VS analyzers #
+################
 # IDE0051: Remove unused private members
 dotnet_diagnostic.IDE0051.severity = warning
 
