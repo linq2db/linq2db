@@ -609,7 +609,7 @@ namespace Tests.DataProvider
 					var sb = new StringBuilder();
 
 					for (var i = 0; i < 100000; i++)
-						sb.Append(((char)((i % byte.MaxValue) + 32)).ToString());
+						sb.Append((char)((i % byte.MaxValue) + 32));
 
 					var data = sb.ToString();
 
