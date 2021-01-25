@@ -356,7 +356,7 @@ namespace Tests.Data
 				foreach (var thread in threads) thread.Start();
 				foreach (var thread in threads) thread.Join();
 
-				if (exceptions.Count > 0)
+				if (!exceptions.IsEmpty)
 					throw new AggregateException(exceptions);
 			}
 		}
