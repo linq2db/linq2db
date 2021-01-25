@@ -265,7 +265,7 @@ namespace LinqToDB.DataProvider.Oracle
 					return truncateTable.ResetIdentity && truncateTable.Table!.IdentityFields.Count > 0 ? 2 : 1;
 
 				case SqlCreateTableStatement createTable:
-					_identityField = createTable.Table!.IdentityFields.FirstOrDefault();
+					_identityField = createTable.Table!.IdentityFields.Count > 0 ? createTable.Table!.IdentityFields[0] : null;
 					if (_identityField != null)
 						return 3;
 					break;
@@ -276,7 +276,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
-			var identityField = dropTable.Table!.IdentityFields.FirstOrDefault();
+			var identityField = dropTable.Table!.IdentityFields.Count > 0 ? dropTable.Table!.IdentityFields[0] : null;
 
 			if (identityField == null && dropTable.Table.TableOptions.HasDropIfExists() == false && dropTable.Table.TableOptions.HasIsTemporary() == false)
 			{
