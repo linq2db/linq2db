@@ -55,18 +55,18 @@ namespace Tests.UserTests
 
 				if (context == ProviderName.Access)
 				{
-					Assert.Throws<OleDbException>(() => table.Where(r => Sql.Like(r.Value, "[0")).ToList().Count);
-					Assert.Throws<OleDbException>(() => table.Where(r => Sql.Like(r.Value, asParamUnterm)).ToList().Count);
+					Assert.Throws<OleDbException>(() => table.Where(r => Sql.Like(r.Value, "[0")).ToList());
+					Assert.Throws<OleDbException>(() => table.Where(r => Sql.Like(r.Value, asParamUnterm)).ToList());
 				}
 				else if (context == ProviderName.AccessOdbc)
 				{
-					Assert.Throws<OdbcException>(() => table.Where(r => Sql.Like(r.Value, "[0")).ToList().Count);
-					Assert.Throws<OdbcException>(() => table.Where(r => Sql.Like(r.Value, asParamUnterm)).ToList().Count);
+					Assert.Throws<OdbcException>(() => table.Where(r => Sql.Like(r.Value, "[0")).ToList());
+					Assert.Throws<OdbcException>(() => table.Where(r => Sql.Like(r.Value, asParamUnterm)).ToList());
 				}
 				else
 				{
-					table.Where(r => Sql.Like(r.Value, "[0")).ToList().Count;
-					table.Where(r => Sql.Like(r.Value, asParamUnterm)).ToList().Count;
+					table.Where(r => Sql.Like(r.Value, "[0")).ToList();
+					table.Where(r => Sql.Like(r.Value, asParamUnterm)).ToList();
 				}
 
 				Assert.AreEqual(1, table.Where(r => Sql.Like(r.Value, "[0-9]")).ToList().Count);

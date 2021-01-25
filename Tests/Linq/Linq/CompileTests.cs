@@ -110,7 +110,7 @@ namespace Tests.Linq
 				db.GetTable<Child>());
 
 			using (var db = GetDataContext(context))
-				query(db).ToList().Count;
+				query(db).ToList();
 		}
 
 		[Test, Order(100)]
