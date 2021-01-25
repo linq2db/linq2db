@@ -39,7 +39,7 @@ namespace LinqToDB.Common
 		/// Note that it doesn't switch linq2db to use <see cref="CommandBehavior.SequentialAccess"/> behavior for
 		/// queries, so this optimization could be used for <see cref="CommandBehavior.Default"/> too.
 		/// </summary>
-		public static bool OptimizeForSequentialAccess = false;
+		public static bool OptimizeForSequentialAccess;
 
 		public static class Data
 		{
@@ -51,7 +51,7 @@ namespace LinqToDB.Common
 			/// - if <c>false</c> - command timeout is infinite.
 			/// Default value: <c>false</c>.
 			/// </summary>
-			public static bool BulkCopyUseConnectionCommandTimeout = false;
+			public static bool BulkCopyUseConnectionCommandTimeout;
 		}
 
 		/// <summary>
@@ -215,10 +215,10 @@ namespace LinqToDB.Common
 		public static class SqlServer
 		{
 			/// <summary>
-			/// if set to true, SchemaProvider uses <see cref="System.Data.CommandBehavior.SchemaOnly"/> to get metadata.
+			/// if set to true, SchemaProvider uses <see cref="CommandBehavior.SchemaOnly"/> to get metadata.
 			/// Otherwise the sp_describe_first_result_set sproc is used.
 			/// </summary>
-			public static bool UseSchemaOnlyToGetSchema = false;
+			public static bool UseSchemaOnlyToGetSchema;
 		}
 
 		/// <summary>
@@ -367,7 +367,7 @@ namespace LinqToDB.Common
 			/// </code>
 			/// </example>
 			/// </summary>
-			public static bool GenerateFinalAliases { get; set; } = false;
+			public static bool GenerateFinalAliases { get; set; }
 		}
 	}
 }
