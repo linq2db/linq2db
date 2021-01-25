@@ -20,8 +20,8 @@ namespace LinqToDB.Metadata
 
 		public XmlAttributeReader(string xmlFile, Assembly assembly)
 		{
-			if (xmlFile  == null) throw new ArgumentNullException("xmlFile");
-			if (assembly == null) throw new ArgumentNullException("assembly");
+			if (xmlFile  == null) throw new ArgumentNullException(nameof(xmlFile));
+			if (assembly == null) throw new ArgumentNullException(nameof(assembly));
 
 			StreamReader? streamReader = null;
 

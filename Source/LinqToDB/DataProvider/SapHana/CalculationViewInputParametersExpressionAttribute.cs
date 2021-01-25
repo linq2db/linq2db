@@ -40,7 +40,7 @@ namespace LinqToDB.DataProvider.SapHana
 			var method = member as MethodInfo;
 
 			if (method == null)
-				throw new ArgumentNullException("member");
+				throw new ArgumentNullException(nameof(member));
 
 			var paramsList = method.GetParameters().ToList();
 			var valuesList = expArgs.Cast<ConstantExpression>().ToList();
