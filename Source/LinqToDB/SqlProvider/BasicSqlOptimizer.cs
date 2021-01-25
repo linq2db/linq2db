@@ -1748,7 +1748,7 @@ namespace LinqToDB.SqlProvider
 					SqlPredicate.SearchString.SearchKind.StartsWith => patternValue + LikeWildcardCharacter,
 					SqlPredicate.SearchString.SearchKind.EndsWith   => LikeWildcardCharacter + patternValue,
 					SqlPredicate.SearchString.SearchKind.Contains   => LikeWildcardCharacter + patternValue + LikeWildcardCharacter,
-					_ => throw new ArgumentOutOfRangeException()
+					_ => throw new InvalidOperationException($"Unexpected predicate kind: {predicate.Kind}")
 				};
 
 				var patternExpr = LikeParameterSupport
@@ -1771,7 +1771,7 @@ namespace LinqToDB.SqlProvider
 					SqlPredicate.SearchString.SearchKind.StartsWith => new SqlBinaryExpression(typeof(string), patternExpr, "+", anyCharacterExpr, Precedence.Additive),
 					SqlPredicate.SearchString.SearchKind.EndsWith   => new SqlBinaryExpression(typeof(string), anyCharacterExpr, "+", patternExpr, Precedence.Additive),
 					SqlPredicate.SearchString.SearchKind.Contains   => new SqlBinaryExpression(typeof(string), new SqlBinaryExpression(typeof(string), anyCharacterExpr, "+", patternExpr, Precedence.Additive), "+", anyCharacterExpr, Precedence.Additive),
-					_ => throw new ArgumentOutOfRangeException()
+					_ => throw new InvalidOperationException($"Unexpected predicate kind: {predicate.Kind}")
 				};
 
 

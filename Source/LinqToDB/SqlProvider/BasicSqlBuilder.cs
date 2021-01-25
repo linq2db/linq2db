@@ -1604,7 +1604,7 @@ namespace LinqToDB.SqlProvider
 					StringBuilder.Append(" CUBE");
 					break;
 				default:
-					throw new ArgumentOutOfRangeException();
+					throw new InvalidOperationException($"Unexpected grouping type: {groupingType}");
 			}
 
 			if (groupingType != GroupingType.Default)

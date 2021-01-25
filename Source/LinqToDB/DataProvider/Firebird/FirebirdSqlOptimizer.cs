@@ -95,7 +95,7 @@ namespace LinqToDB.DataProvider.Firebird
 						TryConvertToValue(predicate.Expr1, optimizationContext.Context), TryConvertToValue(predicate.Expr2, optimizationContext.Context)) { CanBeNull = false };
 					break;
 				default:
-					throw new ArgumentOutOfRangeException();
+					throw new InvalidOperationException($"Unexpected predicate: {predicate.Kind}");
 			}
 
 			return new SqlSearchCondition(new SqlCondition(false, new SqlPredicate.Expr(expr)));

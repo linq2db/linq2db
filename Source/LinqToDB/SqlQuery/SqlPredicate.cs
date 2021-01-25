@@ -503,7 +503,7 @@ namespace LinqToDB.SqlQuery
 						sb.Append(" CONTAINS ");
 						break;
 					default:
-						throw new ArgumentOutOfRangeException();
+						throw new InvalidOperationException($"Unexpected search kind: {Kind}");
 				}
 
 				Expr2.ToString(sb, dic);

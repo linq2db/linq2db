@@ -610,7 +610,7 @@ namespace LinqToDB.Expressions
 													throw new NotImplementedException();
 												}
 											default:
-												throw new ArgumentOutOfRangeException();
+												throw new InvalidOperationException($"Unexpected binding type: {b.BindingType}");
 										}
 									});
 

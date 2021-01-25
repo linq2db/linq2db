@@ -82,7 +82,7 @@ namespace LinqToDB
 					case Sql.DateParts.Second      : expStr = "{0} * Interval '1 Second'";       break;
 					case Sql.DateParts.Millisecond : expStr = "{0} * Interval '1 Millisecond'";  break;
 					default:
-						throw new ArgumentOutOfRangeException();
+						throw new InvalidOperationException($"Unexpected datepart: {part}");
 				}
 
 				builder.ResultExpression = builder.Add(

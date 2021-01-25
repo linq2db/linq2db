@@ -571,7 +571,7 @@ namespace LinqToDB.DataProvider.MySql
 					StringBuilder.Append("WITH CUBE");
 					break;
 				default:
-					throw new ArgumentOutOfRangeException();
+					throw new InvalidOperationException($"Unexpected grouping type: {groupingType}");
 			}
 		}
 

@@ -126,7 +126,7 @@ namespace LinqToDB.SqlQuery
 					sb.Append(" CUBE (\n");
 					break;
 				default:
-					throw new ArgumentOutOfRangeException();
+					throw new InvalidOperationException($"Unexpected grouping type: {GroupingType}");
 			}
 
 			foreach (var item in Items)

@@ -650,7 +650,7 @@ namespace LinqToDB.SqlQuery
 					case QueryInformation.HierarchyType.InnerQuery:
 						return true;
 					default:
-						throw new ArgumentOutOfRangeException();
+						throw new InvalidOperationException($"Unexpected hierarchy type: {info.HierarchyType}");
 				}
 
 			} while (current != null);
