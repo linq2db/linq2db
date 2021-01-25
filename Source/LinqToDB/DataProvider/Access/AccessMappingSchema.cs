@@ -19,7 +19,7 @@ namespace LinqToDB.DataProvider.Access
 			SetDataType(typeof(DateTime?), DataType.DateTime);
 
 			SetValueToSqlConverter(typeof(bool),     (sb,dt,v) => sb.Append(v));
-			SetValueToSqlConverter(typeof(Guid),     (sb,dt,v) => sb.Append("'").Append(((Guid)v).ToString("B")).Append("'"));
+			SetValueToSqlConverter(typeof(Guid),     (sb,dt,v) => sb.Append('\'').Append(((Guid)v).ToString("B")).Append('\''));
 			SetValueToSqlConverter(typeof(DateTime), (sb,dt,v) => ConvertDateTimeToSql(sb, (DateTime)v));
 
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
@@ -43,7 +43,7 @@ namespace LinqToDB.DataProvider.Access
 			stringBuilder
 				.Append("chr(")
 				.Append(value)
-				.Append(")")
+				.Append(')')
 				;
 		}
 

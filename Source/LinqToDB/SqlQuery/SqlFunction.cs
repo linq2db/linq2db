@@ -176,7 +176,7 @@ namespace LinqToDB.SqlQuery
 		{
 			sb
 				.Append(Name)
-				.Append("(");
+				.Append('(');
 
 			foreach (var p in Parameters)
 			{
@@ -187,7 +187,7 @@ namespace LinqToDB.SqlQuery
 			if (Parameters.Length > 0)
 				sb.Length -= 2;
 
-			return sb.Append(")");
+			return sb.Append(')');
 		}
 
 		#endregion

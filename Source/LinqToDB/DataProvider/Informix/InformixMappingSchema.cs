@@ -20,7 +20,7 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
-			SetValueToSqlConverter(typeof(bool), (sb,dt,v) => sb.Append("'").Append((bool)v ? 't' : 'f').Append("'"));
+			SetValueToSqlConverter(typeof(bool), (sb,dt,v) => sb.Append('\'').Append((bool)v ? 't' : 'f').Append('\''));
 
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
 
@@ -52,7 +52,7 @@ namespace LinqToDB.DataProvider.Informix
 			stringBuilder
 				.Append("chr(")
 				.Append(value)
-				.Append(")")
+				.Append(')')
 				;
 		}
 

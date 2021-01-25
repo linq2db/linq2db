@@ -83,7 +83,7 @@ namespace LinqToDB.DataProvider.Firebird
 				throw new SqlException("Identity field must be defined for '{0}'.", insertClause.Into.Name);
 
 			AppendIndent().AppendLine("RETURNING");
-			AppendIndent().Append("\t");
+			AppendIndent().Append('\t');
 			BuildExpression(identityField, false, true);
 		}
 
@@ -263,7 +263,7 @@ namespace LinqToDB.DataProvider.Firebird
 				dropCommand
 					.Append("DROP ")
 					.Append(objectName)
-					.Append(" ");
+					.Append(' ');
 
 				Convert(dropCommand, identifier, ConvertType.NameToQueryTable);
 

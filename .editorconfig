@@ -145,6 +145,7 @@ dotnet_diagnostic.CA1827.severity = none # CA1827: Do not use Count/LongCount wh
 # reported for valid test linq code, rule enabled in source .editorconfig
 dotnet_diagnostic.CA1829.severity = none # CA1829: Use Length/Count property instead of Enumerable.Count method
 dotnet_diagnostic.CA1830.severity = error # CA1830: Prefer strongly-typed Append and Insert method overloads on StringBuilder
+dotnet_diagnostic.CA1834.severity = error # CA1834: Use StringBuilder.Append(char) for single character strings
 dotnet_diagnostic.CA2200.severity = error # CA2200: Rethrow to preserve stack details
 dotnet_diagnostic.CA2201.severity = error # CA2201: Do not raise reserved exception types
 dotnet_diagnostic.CA3075.severity = error # CA3075: Insecure DTD Processing
@@ -174,7 +175,6 @@ dotnet_diagnostic.CA1720.severity = none # CA1720: Identifiers should not contai
 dotnet_diagnostic.CA1806.severity = none # CA1806: Do not ignore method results
 dotnet_diagnostic.CA1816.severity = none # CA1816: Call GC.SuppressFinalize correctly
 dotnet_diagnostic.CA1822.severity = none # CA1822: Mark members as static
-dotnet_diagnostic.CA1834.severity = none # CA1834: Use StringBuilder.Append(char) for single character strings
 dotnet_diagnostic.CA1836.severity = none # CA1836: Prefer IsEmpty over Count when available
 dotnet_diagnostic.CA2101.severity = none # CA2101: Specify marshaling for P/Invoke string arguments
 dotnet_diagnostic.CA2208.severity = none # CA2208: Instantiate argument exceptions correctly

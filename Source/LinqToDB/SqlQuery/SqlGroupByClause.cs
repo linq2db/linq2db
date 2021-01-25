@@ -114,7 +114,7 @@ namespace LinqToDB.SqlQuery
 			switch (GroupingType)
 			{
 				case GroupingType.Default:
-					sb.Append("\n");
+					sb.Append('\n');
 					break;
 				case GroupingType.GroupBySets:
 					sb.Append(" GROUPING SETS (\n");
@@ -133,13 +133,13 @@ namespace LinqToDB.SqlQuery
 			{
 				sb.Append('\t');
 				item.ToString(sb, dic);
-				sb.Append(",");
+				sb.Append(',');
 			}
 
 			sb.Length--;
 
 			if (GroupingType != GroupingType.Default)
-				sb.Append(")");
+				sb.Append(')');
 
 			return sb;
 		}

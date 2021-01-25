@@ -84,7 +84,7 @@ namespace LinqToDB.SqlQuery
 			{
 				if (IsNot) sb.Append("NOT (");
 				base.ToString(sb, dic);
-				if (IsNot) sb.Append(")");
+				if (IsNot) sb.Append(')');
 			}
 		}
 
@@ -168,7 +168,7 @@ namespace LinqToDB.SqlQuery
 					Operator.NotLess        => "!<",
 					_                       => throw new InvalidOperationException(),
 				};
-				sb.Append(" ").Append(op).Append(" ");
+				sb.Append(' ').Append(op).Append(' ');
 
 				Expr2.ToString(sb, dic);
 			}
@@ -710,7 +710,7 @@ namespace LinqToDB.SqlQuery
 				sb.Append(" IN (");
 
 				((IQueryElement)SubQuery).ToString(sb, dic);
-				sb.Append(")");
+				sb.Append(')');
 			}
 		}
 
@@ -783,7 +783,7 @@ namespace LinqToDB.SqlQuery
 				if (Values.Count > 0)
 					sb.Length--;
 
-				sb.Append(")");
+				sb.Append(')');
 			}
 		}
 

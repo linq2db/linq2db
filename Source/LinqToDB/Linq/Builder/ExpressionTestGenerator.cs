@@ -64,7 +64,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var e = (BinaryExpression)expr;
 
-						_exprBuilder.Append("(");
+						_exprBuilder.Append('(');
 
 						e.Left.Visit(BuildExpression);
 
@@ -98,7 +98,7 @@ namespace LinqToDB.Linq.Builder
 
 						e.Right.Visit(BuildExpression);
 
-						_exprBuilder.Append(")");
+						_exprBuilder.Append(')');
 
 						return false;
 					}
@@ -127,13 +127,13 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.Negate:
 				case ExpressionType.NegateChecked:
 					{
-						_exprBuilder.Append("-");
+						_exprBuilder.Append('-');
 						return true;
 					}
 
 				case ExpressionType.Not:
 					{
-						_exprBuilder.Append("!");
+						_exprBuilder.Append('!');
 						return true;
 					}
 
@@ -144,7 +144,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var e = (UnaryExpression)expr;
 
-						_exprBuilder.Append("(");
+						_exprBuilder.Append('(');
 						e.Operand.Visit(BuildExpression);
 						_exprBuilder.AppendFormat(" as {0})", GetTypeName(e.Type));
 
@@ -153,7 +153,7 @@ namespace LinqToDB.Linq.Builder
 
 				case ExpressionType.UnaryPlus:
 					{
-						_exprBuilder.Append("+");
+						_exprBuilder.Append('+');
 						return true;
 					}
 
@@ -162,9 +162,9 @@ namespace LinqToDB.Linq.Builder
 						var e = (BinaryExpression)expr;
 
 						e.Left.Visit(BuildExpression);
-						_exprBuilder.Append("[");
+						_exprBuilder.Append('[');
 						e.Right.Visit(BuildExpression);
-						_exprBuilder.Append("]");
+						_exprBuilder.Append(']');
 
 						return false;
 					}
@@ -204,17 +204,17 @@ namespace LinqToDB.Linq.Builder
 						else
 							_exprBuilder.Append(GetTypeName(mi.DeclaringType!));
 
-						_exprBuilder.Append(".").Append(MangleName(mi.DeclaringType!, mi.Name, "M"));
+						_exprBuilder.Append('.').Append(MangleName(mi.DeclaringType!, mi.Name, "M"));
 
 						if (!ex.IsQueryable() && mi.IsGenericMethod && mi.GetGenericArguments().Select(GetTypeName).All(t => t != null))
 						{
 							_exprBuilder
-								.Append("<")
+								.Append('<')
 								.Append(GetTypeNames(mi.GetGenericArguments(), ","))
-								.Append(">");
+								.Append('>');
 						}
 
-						_exprBuilder.Append("(");
+						_exprBuilder.Append('(');
 
 						PushIndent();
 
@@ -223,7 +223,7 @@ namespace LinqToDB.Linq.Builder
 						for (var i = n; i < ex.Arguments.Count; i++)
 						{
 							if (i != n)
-								_exprBuilder.Append(",");
+								_exprBuilder.Append(',');
 
 							_exprBuilder.AppendLine().Append(_indent);
 
@@ -232,7 +232,7 @@ namespace LinqToDB.Linq.Builder
 
 						PopIndent();
 
-						_exprBuilder.Append(")");
+						_exprBuilder.Append(')');
 
 						if (attrs.Length != 0)
 						{
@@ -262,7 +262,7 @@ namespace LinqToDB.Linq.Builder
 							_exprBuilder.AppendFormat("db.GetTable<{0}>()", GetTypeName(expr.Type.GetGenericArguments()[0]));
 						}
 						else if (expr.ToString() == "value(" + expr.Type + ")")
-							_exprBuilder.Append("value(").Append(GetTypeName(expr.Type)).Append(")");
+							_exprBuilder.Append("value(").Append(GetTypeName(expr.Type)).Append(')');
 						else
 							_exprBuilder.Append(expr);
 
@@ -277,7 +277,7 @@ namespace LinqToDB.Linq.Builder
 						if (le.Parameters.Count == 1)
 							_exprBuilder.Append(ps);
 						else
-							_exprBuilder.Append("(").Append(ps).Append(")");
+							_exprBuilder.Append('(').Append(ps).Append(')');
 						_exprBuilder.Append(" => ");
 
 						le.Body.Visit(BuildExpression);
@@ -288,13 +288,13 @@ namespace LinqToDB.Linq.Builder
 					{
 						var e = (ConditionalExpression)expr;
 
-						_exprBuilder.Append("(");
+						_exprBuilder.Append('(');
 						e.Test.Visit(BuildExpression);
 						_exprBuilder.Append(" ? ");
 						e.IfTrue.Visit(BuildExpression);
 						_exprBuilder.Append(" : ");
 						e.IfFalse.Visit(BuildExpression);
-						_exprBuilder.Append(")");
+						_exprBuilder.Append(')');
 
 						return false;
 					}
@@ -313,7 +313,7 @@ namespace LinqToDB.Linq.Builder
 							}
 							else
 							{
-								_exprBuilder.AppendLine("new").Append(_indent).Append("{");
+								_exprBuilder.AppendLine("new").Append(_indent).Append('{');
 
 								PushIndent();
 
@@ -323,11 +323,11 @@ namespace LinqToDB.Linq.Builder
 									ne.Arguments[i].Visit(BuildExpression);
 
 									if (i + 1 < ne.Members.Count)
-										_exprBuilder.Append(",");
+										_exprBuilder.Append(',');
 								}
 
 								PopIndent();
-								_exprBuilder.AppendLine().Append(_indent).Append("}");
+								_exprBuilder.AppendLine().Append(_indent).Append('}');
 							}
 						}
 						else
@@ -341,7 +341,7 @@ namespace LinqToDB.Linq.Builder
 									_exprBuilder.Append(", ");
 							}
 
-							_exprBuilder.Append(")");
+							_exprBuilder.Append(')');
 						}
 
 						return false;
@@ -376,7 +376,7 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
-							_exprBuilder.AppendLine().Append(_indent).Append("{");
+							_exprBuilder.AppendLine().Append(_indent).Append('{');
 
 							PushIndent();
 
@@ -385,11 +385,11 @@ namespace LinqToDB.Linq.Builder
 								_exprBuilder.AppendLine().Append(_indent);
 								Modify(e.Bindings[i]);
 								if (i + 1 < e.Bindings.Count)
-									_exprBuilder.Append(",");
+									_exprBuilder.Append(',');
 							}
 
 							PopIndent();
-							_exprBuilder.AppendLine().Append(_indent).Append("}");
+							_exprBuilder.AppendLine().Append(_indent).Append('}');
 						}
 
 						return false;
@@ -409,7 +409,7 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
-							_exprBuilder.AppendLine().Append(_indent).Append("{");
+							_exprBuilder.AppendLine().Append(_indent).Append('{');
 
 							PushIndent();
 
@@ -418,11 +418,11 @@ namespace LinqToDB.Linq.Builder
 								_exprBuilder.AppendLine().Append(_indent);
 								e.Expressions[i].Visit(BuildExpression);
 								if (i + 1 < e.Expressions.Count)
-									_exprBuilder.Append(",");
+									_exprBuilder.Append(',');
 							}
 
 							PopIndent();
-							_exprBuilder.AppendLine().Append(_indent).Append("}");
+							_exprBuilder.AppendLine().Append(_indent).Append('}');
 						}
 
 						return false;
@@ -432,7 +432,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var e = (TypeBinaryExpression)expr;
 
-						_exprBuilder.Append("(");
+						_exprBuilder.Append('(');
 						e.Expression.Visit(BuildExpression);
 						_exprBuilder.AppendFormat(" is {0})", e.TypeOperand);
 
@@ -453,7 +453,7 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
-							_exprBuilder.AppendLine().Append(_indent).Append("{");
+							_exprBuilder.AppendLine().Append(_indent).Append('{');
 
 							PushIndent();
 
@@ -462,11 +462,11 @@ namespace LinqToDB.Linq.Builder
 								_exprBuilder.AppendLine().Append(_indent);
 								e.Initializers[i].Arguments[0].Visit(BuildExpression);
 								if (i + 1 < e.Initializers.Count)
-									_exprBuilder.Append(",");
+									_exprBuilder.Append(',');
 							}
 
 							PopIndent();
-							_exprBuilder.AppendLine().Append(_indent).Append("}");
+							_exprBuilder.AppendLine().Append(_indent).Append('}');
 						}
 
 						return false;

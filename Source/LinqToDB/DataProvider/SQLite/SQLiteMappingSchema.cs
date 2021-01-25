@@ -35,7 +35,7 @@ namespace LinqToDB.DataProvider.SQLite
 			foreach (var b in value)
 				stringBuilder.Append(b.ToString("X2"));
 
-			stringBuilder.Append("'");
+			stringBuilder.Append('\'');
 		}
 
 		static void ConvertGuidToSql(StringBuilder stringBuilder, Guid value)

@@ -409,21 +409,21 @@ namespace LinqToDB.DataProvider
 		{
 			helper.StringBuilder
 				.AppendFormat("INSERT INTO {0}", helper.TableName).AppendLine()
-				.Append("(");
+				.Append('(');
 
 			foreach (var column in helper.Columns)
 			{
 				helper.StringBuilder
 					.AppendLine()
-					.Append("\t");
+					.Append('\t');
 				helper.SqlBuilder.Convert(helper.StringBuilder, column.ColumnName, ConvertType.NameToQueryField);
-				helper.StringBuilder.Append(",");
+				helper.StringBuilder.Append(',');
 			}
 
 			helper.StringBuilder.Length--;
 			helper.StringBuilder
 				.AppendLine()
-				.Append(")");
+				.Append(')');
 
 			helper.StringBuilder
 				.AppendLine()
@@ -436,7 +436,7 @@ namespace LinqToDB.DataProvider
 		{
 			helper.StringBuilder
 				.AppendLine()
-				.Append("(");
+				.Append('(');
 			helper.BuildColumns(item!);
 			helper.StringBuilder.Append("),");
 
@@ -473,21 +473,21 @@ namespace LinqToDB.DataProvider
 		{
 			helper.StringBuilder
 				.AppendFormat("INSERT INTO {0}", helper.TableName).AppendLine()
-				.Append("(");
+				.Append('(');
 
 			foreach (var column in helper.Columns)
 			{
 				helper.StringBuilder
 					.AppendLine()
-					.Append("\t");
+					.Append('\t');
 				helper.SqlBuilder.Convert(helper.StringBuilder, column.ColumnName, ConvertType.NameToQueryField);
-				helper.StringBuilder.Append(",");
+				helper.StringBuilder.Append(',');
 			}
 
 			helper.StringBuilder.Length--;
 			helper.StringBuilder
 				.AppendLine()
-				.Append(")");
+				.Append(')');
 
 			helper.SetHeader();
 		}
@@ -525,15 +525,15 @@ namespace LinqToDB.DataProvider
 		{
 			helper.StringBuilder
 				.AppendFormat("INSERT INTO {0}", helper.TableName).AppendLine()
-				.Append("(");
+				.Append('(');
 
 			foreach (var column in helper.Columns)
 			{
 				helper.StringBuilder
 					.AppendLine()
-					.Append("\t");
+					.Append('\t');
 				helper.SqlBuilder.Convert(helper.StringBuilder, column.ColumnName, ConvertType.NameToQueryField);
-				helper.StringBuilder.Append(",");
+				helper.StringBuilder.Append(',');
 			}
 
 			helper.StringBuilder.Length--;
@@ -541,7 +541,7 @@ namespace LinqToDB.DataProvider
 				.AppendLine()
 				.AppendLine(")")
 				.AppendLine("SELECT * FROM")
-				.Append("(");
+				.Append('(');
 
 			helper.SetHeader();
 		}
@@ -564,7 +564,7 @@ namespace LinqToDB.DataProvider
 			helper.StringBuilder.Length -= " UNION ALL".Length;
 			helper.StringBuilder
 				.AppendLine()
-				.Append(")");
+				.Append(')');
 		}
 
 		#endregion

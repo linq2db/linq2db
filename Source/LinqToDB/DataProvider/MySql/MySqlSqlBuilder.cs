@@ -489,7 +489,7 @@ namespace LinqToDB.DataProvider.MySql
 			AppendIndent();
 			StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY CLUSTERED (");
 			StringBuilder.Append(string.Join(InlineComma, fieldNames));
-			StringBuilder.Append(")");
+			StringBuilder.Append(')');
 		}
 
 		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions)
@@ -497,7 +497,7 @@ namespace LinqToDB.DataProvider.MySql
 			if (database != null && database.Length == 0) database = null;
 
 			if (database != null)
-				sb.Append(database).Append(".");
+				sb.Append(database).Append('.');
 
 			return sb.Append(table);
 		}

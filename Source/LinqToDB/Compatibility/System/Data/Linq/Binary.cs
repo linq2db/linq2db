@@ -79,9 +79,9 @@ namespace System.Data.Linq
 		public override string ToString()
 		{
 			var sb = new StringBuilder();
-			sb.Append("\"");
+			sb.Append('"');
 			sb.Append(Convert.ToBase64String(_bytes, 0, _bytes.Length));
-			sb.Append("\"");
+			sb.Append('"');
 			return sb.ToString();
 		}
 

@@ -79,7 +79,7 @@ namespace LinqToDB.SchemaProvider
 				stringLiteralBuilder(sb, schema);
 			}
 
-			sb.Append(")");
+			sb.Append(')');
 
 			return sb.ToString();
 		}

@@ -53,7 +53,7 @@ namespace LinqToDB.DataProvider.Oracle
 				throw new SqlException("Identity field must be defined for '{0}'.", insertClause.Into.Name);
 
 			AppendIndent().AppendLine("RETURNING ");
-			AppendIndent().Append("\t");
+			AppendIndent().Append('\t');
 			BuildExpression(identityField, false, true);
 			StringBuilder.AppendLine(" INTO :IDENTITY_PARAMETER");
 		}
@@ -146,7 +146,7 @@ namespace LinqToDB.DataProvider.Oracle
 					if (type.Type.Length == null || type.Type.Length == 0)
 						StringBuilder.Append("BLOB");
 					else
-						StringBuilder.Append("Raw(").Append(type.Type.Length).Append(")");
+						StringBuilder.Append("Raw(").Append(type.Type.Length).Append(')');
 					break;
 				default: base.BuildDataTypeFromDataType(type, forCreateTable);                    break;
 			}
@@ -474,12 +474,12 @@ END;",
 			if (schema != null && schema.Length == 0) schema = null;
 
 			if (schema != null)
-				sb.Append(schema).Append(".");
+				sb.Append(schema).Append('.');
 
 			sb.Append(table);
 
 			if (server != null)
-				sb.Append("@").Append(server);
+				sb.Append('@').Append(server);
 
 			return sb;
 		}
@@ -489,7 +489,7 @@ END;",
 			if (schema != null)
 			{
 				Convert(sb, schema, ConvertType.NameToSchema);
-				sb.Append(".");
+				sb.Append('.');
 			}
 		}
 

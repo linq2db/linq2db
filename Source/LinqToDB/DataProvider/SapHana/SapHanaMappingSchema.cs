@@ -28,7 +28,7 @@
 			stringBuilder
 				.Append("char(")
 				.Append(value)
-				.Append(")")
+				.Append(')')
 				;
 		}
 
@@ -39,7 +39,7 @@
 			foreach (var b in value)
 				stringBuilder.Append(b.ToString("X2"));
 
-			stringBuilder.Append("'");
+			stringBuilder.Append('\'');
 		}
 
 		internal static void ConvertStringToSql(StringBuilder stringBuilder, string value)

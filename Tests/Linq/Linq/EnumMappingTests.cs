@@ -1769,7 +1769,7 @@ namespace Tests.Linq
 				ms.SetValueToSqlConverter(typeof(Issue1622Enum),
 					(sb, dt, v) =>
 					{
-						sb.Append("'").Append(((Issue1622Enum)v).ToString()).Append("_suffix'");
+						sb.Append('\'').Append(((Issue1622Enum)v).ToString()).Append("_suffix'");
 					});
 
 			using (var db = GetDataContext(context, ms))
