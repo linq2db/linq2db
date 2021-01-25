@@ -109,6 +109,7 @@ namespace Tests.Samples
 			}
 		}
 
+		[AttributeUsage(AttributeTargets.Property)]
 		public class RowVersionAttribute: Attribute
 		{ }
 

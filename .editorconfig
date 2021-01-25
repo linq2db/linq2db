@@ -134,6 +134,7 @@ dotnet_diagnostic.CA1825.severity = error # CA1825: Avoid zero-length array allo
 dotnet_diagnostic.CA2007.severity = none # CA2007: Do not directly await a Task
 dotnet_diagnostic.CA2012.severity = error # CA2012: Use ValueTasks correctly
 dotnet_diagnostic.CA2016.severity = error # CA2016: Forward the CancellationToken parameter to methods that take one
+dotnet_diagnostic.CA1018.severity = error # CA1018: Mark attributes with AttributeUsageAttribute
 dotnet_diagnostic.CA2200.severity = error # CA2200: Rethrow to preserve stack details
 dotnet_diagnostic.CA2201.severity = error # CA2201: Do not raise reserved exception types
 
@@ -143,7 +144,6 @@ dotnet_diagnostic.CA2201.severity = error # CA2201: Do not raise reserved except
 dotnet_diagnostic.CA1000.severity = none # CA1000: Do not declare static members on generic types
 dotnet_diagnostic.CA1001.severity = none # CA1001: Types that own disposable fields should be disposable
 dotnet_diagnostic.CA1010.severity = none # CA1010: Collections should implement generic interface
-dotnet_diagnostic.CA1018.severity = none # CA1018: Mark attributes with AttributeUsageAttribute
 dotnet_diagnostic.CA1050.severity = none # CA1050: Declare types in namespaces
 dotnet_diagnostic.CA1036.severity = none # CA1036: Override methods on comparable types
 dotnet_diagnostic.CA1051.severity = none # CA1051: Do not declare visible instance fields
