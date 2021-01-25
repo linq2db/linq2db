@@ -35,7 +35,7 @@ namespace LinqToDB.DataProvider.SapHana
 			return value.ToString();
 		}
 
-		public override void SetTable(ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MemberInfo member, IEnumerable<Expression> expArgs, IEnumerable<ISqlExpression> sqlArgs)
+		public override void SetTable(ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MemberInfo member, IEnumerable<Expression> arguments, IEnumerable<ISqlExpression> sqlArgs)
 		{
 			var method = member as MethodInfo;
 
@@ -43,7 +43,7 @@ namespace LinqToDB.DataProvider.SapHana
 				throw new ArgumentNullException(nameof(member));
 
 			var paramsList = method.GetParameters().ToList();
-			var valuesList = expArgs.Cast<ConstantExpression>().ToList();
+			var valuesList = arguments.Cast<ConstantExpression>().ToList();
 
 			if (paramsList.Count != valuesList.Count)
 				throw new TargetParameterCountException("Invalid number of parameters");

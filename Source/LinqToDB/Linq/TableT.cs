@@ -193,7 +193,7 @@ namespace LinqToDB.Linq
 			};
 		}
 
-		public ITable<T> ChangeTableOptions(TableOptions tableOptions)
+		public ITable<T> ChangeTableOptions(TableOptions options)
 		{
 			return new Table<T>(DataContext)
 			{
@@ -202,7 +202,7 @@ namespace LinqToDB.Linq
 				DatabaseName = DatabaseName,
 				Expression   = Expression,
 				TableName    = TableName,
-				TableOptions = tableOptions
+				TableOptions = options
 			};
 		}
 

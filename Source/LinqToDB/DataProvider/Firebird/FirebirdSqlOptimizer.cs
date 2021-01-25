@@ -155,12 +155,12 @@ namespace LinqToDB.DataProvider.Firebird
 			return newExpr;
 		}
 
-		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expr, ConvertVisitor visitor,
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor visitor,
 			EvaluationContext context)
 		{
-			expr = base.ConvertExpressionImpl(expr, visitor, context);
+			expression = base.ConvertExpressionImpl(expression, visitor, context);
 
-			if (expr is SqlBinaryExpression be)
+			if (expression is SqlBinaryExpression be)
 			{
 				switch (be.Operation)
 				{
@@ -168,10 +168,10 @@ namespace LinqToDB.DataProvider.Firebird
 					case "&": return new SqlFunction(be.SystemType, "Bin_And", be.Expr1, be.Expr2);
 					case "|": return new SqlFunction(be.SystemType, "Bin_Or", be.Expr1, be.Expr2);
 					case "^": return new SqlFunction(be.SystemType, "Bin_Xor", be.Expr1, be.Expr2);
-					case "+": return be.SystemType == typeof(string) ? new SqlBinaryExpression(be.SystemType, be.Expr1, "||", be.Expr2, be.Precedence) : expr;
+					case "+": return be.SystemType == typeof(string) ? new SqlBinaryExpression(be.SystemType, be.Expr1, "||", be.Expr2, be.Precedence) : expression;
 				}
 			}
-			else if (expr is SqlFunction func)
+			else if (expression is SqlFunction func)
 			{
 				switch (func.Name)
 				{
@@ -180,7 +180,7 @@ namespace LinqToDB.DataProvider.Firebird
 				}
 			}
 
-			return expr;
+			return expression;
 		}
 
 		protected override ISqlExpression ConvertFunction(SqlFunction func)

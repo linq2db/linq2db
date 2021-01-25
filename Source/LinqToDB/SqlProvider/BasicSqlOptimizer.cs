@@ -1395,9 +1395,9 @@ namespace LinqToDB.SqlProvider
 		#region Conversion
 
 		[return: NotNullIfNotNull("element")]
-		public virtual IQueryElement? ConvertElement(MappingSchema mappingSchema, IQueryElement? element, OptimizationContext optimizationContext)
+		public virtual IQueryElement? ConvertElement(MappingSchema mappingSchema, IQueryElement? element, OptimizationContext context)
 		{
-			return OptimizeElement(mappingSchema, element, optimizationContext, true);
+			return OptimizeElement(mappingSchema, element, context, true);
 		}
 
 		public virtual ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor visitor, EvaluationContext context)

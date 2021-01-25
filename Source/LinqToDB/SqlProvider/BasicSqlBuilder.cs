@@ -3116,7 +3116,7 @@ namespace LinqToDB.SqlProvider
 				sb.Append(value);
 		}
 
-		public string ApplyQueryHints(string sql, List<string> queryHints)
+		public string ApplyQueryHints(string sqlText, List<string> queryHints)
 		{
 			var sb = new StringBuilder();
 
@@ -3124,7 +3124,7 @@ namespace LinqToDB.SqlProvider
 				if (hint?.Length >= 2 && hint.StartsWith("**"))
 					sb.AppendLine(hint.Substring(2));
 
-			sb.Append(sql);
+			sb.Append(sqlText);
 
 			foreach (var hint in queryHints)
 				if (!(hint?.Length >= 2 && hint.StartsWith("**")))

@@ -598,7 +598,7 @@ namespace LinqToDB.SchemaProvider
 			return systemType;
 		}
 
-		protected virtual string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, long? length, int? prec, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
+		protected virtual string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, long? length, int? precision, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
 		{
 			var dbType = columnType;
 
@@ -619,8 +619,8 @@ namespace LinqToDB.SchemaProvider
 							case "size"       :
 							case "length"     : paramValues[i] = length; break;
 							case "max length" : paramValues[i] = length == int.MaxValue ? "max" : length?.ToString(); break;
-							case "precision"  : paramValues[i] = prec;   break;
-							case "scale"      : paramValues[i] = scale.HasValue || paramNames.Length == 2 ? scale : prec; break;
+							case "precision"  : paramValues[i] = precision;   break;
+							case "scale"      : paramValues[i] = scale.HasValue || paramNames.Length == 2 ? scale : precision; break;
 						}
 					}
 

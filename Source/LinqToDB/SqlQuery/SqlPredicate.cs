@@ -736,11 +736,11 @@ namespace LinqToDB.SqlQuery
 
 			public   List<ISqlExpression>  Values { get; } = new List<ISqlExpression>();
 
-			protected override void Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> action)
+			protected override void Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 			{
-				base.Walk(options, action);
+				base.Walk(options, func);
 				for (var i = 0; i < Values.Count; i++)
-					Values[i] = Values[i].Walk(options, action)!;
+					Values[i] = Values[i].Walk(options, func)!;
 			}
 
 			public override IQueryElement Invert()
@@ -852,7 +852,7 @@ namespace LinqToDB.SqlQuery
 
 		public    abstract bool              CanBeNull  { get; }
 		protected abstract ICloneableElement Clone    (Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone);
-		protected abstract void              Walk     (WalkOptions options, Func<ISqlExpression,ISqlExpression> action);
+		protected abstract void              Walk     (WalkOptions options, Func<ISqlExpression,ISqlExpression> func);
 
 		ISqlExpression? ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{

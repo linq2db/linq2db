@@ -108,14 +108,14 @@ namespace LinqToDB.DataProvider.Oracle
 					o);
 			}
 
-			public override void SetTable(ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MemberInfo member, IEnumerable<Expression> expArgs, IEnumerable<ISqlExpression> sqlArgs)
+			public override void SetTable(ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MemberInfo member, IEnumerable<Expression> arguments, IEnumerable<ISqlExpression> sqlArgs)
 			{
 				var arg = sqlArgs.ElementAt(1);
 				var ed  = mappingSchema.GetEntityDescriptor(table.ObjectType!);
 
 				if (arg is SqlParameter p)
 				{
-					var exp = expArgs.ElementAt(1).Unwrap();
+					var exp = arguments.ElementAt(1).Unwrap();
 
 					// TODO: ValueConverter contract nullability violations
 					if (exp is ConstantExpression constExpr)
