@@ -1,2 +1,3 @@
 [*.cs]
+dotnet_diagnostic.CA1827.severity = error # CA1827: Do not use Count/LongCount when Any can be used
 dotnet_diagnostic.CA2007.severity = error # CA2007: Do not directly await a Task
