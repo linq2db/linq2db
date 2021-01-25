@@ -62,7 +62,9 @@ namespace LinqToDB.DataProvider
 		#region Implementation of IDisposable
 
 #if !NETFRAMEWORK
+#pragma warning disable CA2215 // CA2215: Dispose methods should call base class dispose
 		protected override void Dispose(bool disposing)
+#pragma warning restore CA2215 // CA2215: Dispose methods should call base class dispose
 		{
 			if (disposing && _asyncEnumerator != null)
 			{
@@ -74,7 +76,9 @@ namespace LinqToDB.DataProvider
 		}
 
 #if NETSTANDARD2_1PLUS
+#pragma warning disable CA2215 // CA2215: Dispose methods should call base class dispose
 		public override ValueTask DisposeAsync()
+#pragma warning restore CA2215 // CA2215: Dispose methods should call base class dispose
 #else
 		public ValueTask DisposeAsync()
 #endif
