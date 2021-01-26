@@ -210,3 +210,15 @@ dotnet_diagnostic.CS8618.severity = error
 
 # CS4014: Because this call is not awaited, execution of the current method continues before the call is completed
 dotnet_diagnostic.CS4014.severity = error
+
+dotnet_diagnostic.IDE0058.severity = none # IDE0058: Expression value is never used
+dotnet_diagnostic.IDE0040.severity = none # IDE0040: Add accessibility modifiers
+dotnet_diagnostic.IDE0046.severity = suggestion # IDE0046: Convert to conditional expression
+dotnet_diagnostic.IDE0065.severity = none # IDE0065: Misplaced using directive
+dotnet_diagnostic.IDE0011.severity = suggestion # IDE0011: Add braces
+dotnet_diagnostic.IDE0050.severity = suggestion # IDE0050: Convert to tuple
+dotnet_diagnostic.IDE0072.severity = suggestion # IDE0072: Add missing cases
+dotnet_diagnostic.IDE0054.severity = suggestion # IDE0054: Use compound assignment
+dotnet_diagnostic.IDE0010.severity = suggestion # IDE0010: Add missing cases
+dotnet_diagnostic.IDE0066.severity = suggestion # IDE0066: Convert switch statement to expression
+dotnet_diagnostic.IDE0007.severity = suggestion # IDE0007: Use implicit type
