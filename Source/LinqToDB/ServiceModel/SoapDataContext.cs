@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NETFRAMEWORK
+using System;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
 
@@ -81,3 +82,4 @@ namespace LinqToDB.ServiceModel
 		#endregion
 	}
 }
+#endif

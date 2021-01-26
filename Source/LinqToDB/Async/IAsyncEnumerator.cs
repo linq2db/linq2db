@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NETFRAMEWORK
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -31,3 +32,4 @@ namespace LinqToDB.Async
 		Task DisposeAsync();
 	}
 }
+#endif

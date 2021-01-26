@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NET472
+using System;
 using System.Threading.Tasks;
 
 using LinqToDB.ServiceModel;
@@ -7,7 +8,7 @@ namespace Tests.ServiceModel
 {
 	class TestLinqServiceClient : ILinqClient
 	{
-		#region Init
+#region Init
 
 		public TestLinqServiceClient(LinqService linqService)
 		{
@@ -16,9 +17,9 @@ namespace Tests.ServiceModel
 
 		readonly LinqService _linqService;
 
-		#endregion
+#endregion
 
-		#region ILinqService Members
+#region ILinqService Members
 
 		public LinqServiceInfo GetInfo(string? configuration)
 		{
@@ -70,6 +71,7 @@ namespace Tests.ServiceModel
 			return Task.Run(() => _linqService.ExecuteBatch(configuration, queryData));
 		}
 
-		#endregion
+#endregion
 	}
 }
+#endif

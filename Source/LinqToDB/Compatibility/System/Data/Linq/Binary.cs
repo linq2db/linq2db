@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !NETFRAMEWORK
+using System;
 using System.Text;
 using System.Runtime.Serialization;
 using LinqToDB.Common;
@@ -42,23 +43,25 @@ namespace System.Data.Linq
 
 		public static bool operator ==(Binary? binary1, Binary? binary2)
 		{
-			if(binary1 == binary2)
+			if (binary1 is null && binary1 is null)
 				return true;
-			if(binary1 == null && binary2 == null)
-				return true;
-			if(binary1 == null || binary2 == null)
+			if (binary1 is null || binary2 is null)
 				return false;
+			if (ReferenceEquals(binary1, binary2))
+				return true;
+
 			return binary1.EqualsTo(binary2);
 		}
 
 		public static bool operator !=(Binary? binary1, Binary? binary2)
 		{
-			if(binary1 == binary2)
+			if (binary1 is null && binary1 is null)
 				return false;
-			if(binary1 == null && binary2 == null)
-				return false;
-			if(binary1 == null || binary2 == null)
+			if (binary1 is null || binary2 is null)
 				return true;
+			if (ReferenceEquals(binary1, binary2))
+				return false;
+
 			return !binary1.EqualsTo(binary2);
 		}
 
@@ -87,10 +90,10 @@ namespace System.Data.Linq
 
 		private bool EqualsTo(Binary? binary)
 		{
-			if(this == binary)
-				return true;
-			if(binary == null)
+			if (binary == null)
 				return false;
+			if(ReferenceEquals(this, binary))
+				return true;
 			if(_bytes.Length != binary._bytes.Length)
 				return false;
 			if(GetHashCode() != binary.GetHashCode())
@@ -119,3 +122,4 @@ namespace System.Data.Linq
 		}
 	}
 }
+#endif

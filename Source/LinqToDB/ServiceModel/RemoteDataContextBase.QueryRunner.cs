@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NETFRAMEWORK
+using System;
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
@@ -42,7 +43,7 @@ namespace LinqToDB.ServiceModel
 				_evaluationContext = new EvaluationContext(parameterValues);
 			}
 
-			#region GetSqlText
+#region GetSqlText
 
 			public override string GetSqlText()
 			{
@@ -127,7 +128,7 @@ namespace LinqToDB.ServiceModel
 				return sb.ToString();
 			}
 
-			#endregion
+#endregion
 
 			public override void Dispose()
 			{
@@ -337,3 +338,4 @@ namespace LinqToDB.ServiceModel
 		}
 	}
 }
+#endif

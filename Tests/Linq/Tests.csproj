@@ -15,10 +15,4 @@
 		<ProjectReference Include="..\FSharp\Tests.FSharp.fsproj" />
 	</ItemGroup>
 
-	<ItemGroup Condition="'$(TargetFramework)' != 'net472'">
-		<Compile Remove="Metadata\AttributeReaderTests.cs" />
-		<Compile Remove="Linq\DataServiceTests.cs" />
-		<Compile Remove="Metadata\XmlReaderTests.cs" />
-	</ItemGroup>
-
 </Project>
