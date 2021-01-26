@@ -186,21 +186,18 @@ dotnet_diagnostic.CA1806.severity = none # CA1806: Do not ignore method results
 dotnet_diagnostic.CA1822.severity = none # CA1822: Mark members as static
 dotnet_diagnostic.CA2211.severity = none # CA2211: Non-constant fields should not be visible
 
-################
-# VS analyzers #
-################
-# IDE0051: Remove unused private members
-dotnet_diagnostic.IDE0051.severity = warning
-
-# IDE0055: Fix whitespace formatting
-dotnet_diagnostic.IDE0055.severity = none
-
-# IDE0057: Use range operators (requires .net core 3 or higher)
-dotnet_diagnostic.IDE0056.severity = none
-dotnet_diagnostic.IDE0057.severity = none
-
-# IDE0060: unused parameters should be removed or have a discard symbol name
-dotnet_diagnostic.IDE0060.severity = none
+###################################################################################
+# VS analyzers                                                                    #
+# https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ #
+###################################################################################
+dotnet_diagnostic.IDE0011.severity = none # IDE0011: Add braces
+dotnet_diagnostic.IDE0040.severity = none # IDE0040: Add accessibility modifiers
+dotnet_diagnostic.IDE0051.severity = warning # IDE0051: Remove unused private members
+dotnet_diagnostic.IDE0055.severity = none # IDE0055: Formatting rules
+dotnet_diagnostic.IDE0056.severity = none # IDE0056: Use index operator
+dotnet_diagnostic.IDE0057.severity = none # IDE0057: Use range operator
+dotnet_diagnostic.IDE0058.severity = none # IDE0058: computed value is never used
+dotnet_diagnostic.IDE0060.severity = none # IDE0060: Remove unused parameter
 
 # CS1998: Async method lacks 'await' operators and will run synchronously
 dotnet_diagnostic.CS1998.severity = error
