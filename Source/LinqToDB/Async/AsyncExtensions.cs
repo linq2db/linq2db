@@ -15,24 +15,6 @@ namespace LinqToDB.Async
 	/// </summary>
 	public static class AsyncExtensions
 	{
-		#region AsAsyncEnumerable
-
-		/// <summary>
-		/// This API supports the LinqToDB infrastructure and is not intended to be used  directly from your code.
-		/// This API may change or be removed in future releases.
-		/// </summary>
-		public static IAsyncEnumerable<TSource> AsAsyncEnumerable<TSource>(this IQueryable<TSource> source)
-		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-
-			if (source is ExpressionQuery<TSource> query)
-				return query.GetAsyncEnumerable();
-
-			throw new InvalidOperationException("ExpressionQuery expected.");
-		}
-
-		#endregion
-
 		///// <summary>
 		/////     Asynchronously creates a <see cref="List{T}" /> from <see cref="IAsyncEnumerable{T}" />
 		/////     by enumerating it asynchronously.
@@ -62,7 +44,7 @@ namespace LinqToDB.Async
 
 			var result = new List<T>();
 #if NETFRAMEWORK
-			using (var enumerator = source.GetAsyncEnumerator(cancellationToken))
+			await using (var enumerator = source.GetAsyncEnumerator(cancellationToken))
 #else
 			var enumerator = source.GetAsyncEnumerator(cancellationToken);
 			await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
@@ -98,7 +80,7 @@ namespace LinqToDB.Async
 		/// This API may change or be removed in future releases.
 		/// </summary>
 		public static async Task<T[]> ToArrayAsync<T>(
-			this IAsyncEnumerable<T> source, 
+			this IAsyncEnumerable<T> source,
 			CancellationToken        cancellationToken = default)
 		{
 			return (await source.ToListAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext)).ToArray();
@@ -126,13 +108,13 @@ namespace LinqToDB.Async
 		/// This API may change or be removed in future releases.
 		/// </summary>
 		public static async Task<T> FirstOrDefaultAsync<T>(
-			this IAsyncEnumerable<T> source, 
+			this IAsyncEnumerable<T> source,
 			CancellationToken        cancellationToken = default)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
 #if NETFRAMEWORK
-			using (var enumerator = source.GetAsyncEnumerator(cancellationToken))
+			await using (var enumerator = source.GetAsyncEnumerator(cancellationToken))
 #else
 			var enumerator = source.GetAsyncEnumerator(cancellationToken);
 			await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
@@ -157,7 +139,7 @@ namespace LinqToDB.Async
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
 #if NETFRAMEWORK
-			using (var enumerator = source.GetAsyncEnumerator(token))
+			await using (var enumerator = source.GetAsyncEnumerator(token))
 #else
 			var enumerator = source.GetAsyncEnumerator(token);
 			await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))

@@ -7,15 +7,15 @@ using System.Threading.Tasks;
 
 namespace LinqToDB
 {
+	using Async;
+
 	/// <summary>
 	/// Interface to override default implementation of LINQ To DB async operations.
 	/// </summary>
 	public interface IExtensionsAdapter
 	{
-#if !NETFRAMEWORK
 		IAsyncEnumerable<TSource> AsAsyncEnumerable<TSource>(
 			IQueryable<TSource> source);
-#endif
 
 		Task ForEachAsync<TSource>(
 			IQueryable<TSource> source,
