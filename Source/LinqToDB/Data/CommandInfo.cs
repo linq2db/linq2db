@@ -253,12 +253,16 @@ namespace LinqToDB.Data
 				SetParameters(DataConnection, Parameters!);
 
 			using (DataConnection.DataProvider.ExecuteScope(DataConnection))
+			{
 #if NETSTANDARD2_1PLUS
-			await
+				var rd = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await using (rd.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+#else
+				using (var rd = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 #endif
-			using (var rd = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
-				while (await rd.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
-					action(objectReader(rd));
+					while (await rd.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+						action(objectReader(rd));
+			}
 		}
 
 		#endregion
@@ -422,38 +426,42 @@ namespace LinqToDB.Data
 				SetParameters(DataConnection, Parameters!);
 
 			using (DataConnection.DataProvider.ExecuteScope(DataConnection))
-#if NETSTANDARD2_1PLUS
-			await
-#endif
-			using (var rd = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 			{
-				if (await rd.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+#if NETSTANDARD2_1PLUS
+				var rd = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await using (rd.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+#else
+				using (var rd = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+#endif
 				{
-					var additionalKey = GetCommandAdditionalKey(rd);
-					var objectReader  = GetObjectReader<T>(DataConnection, rd, DataConnection.Command.CommandText, additionalKey);
-					var isFaulted     = false;
-
-					do
+					if (await rd.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 					{
-						T result;
+						var additionalKey = GetCommandAdditionalKey(rd);
+						var objectReader  = GetObjectReader<T>(DataConnection, rd, DataConnection.Command.CommandText, additionalKey);
+						var isFaulted     = false;
 
-						try
+						do
 						{
-							result = objectReader(rd);
-						}
-						catch (InvalidCastException)
-						{
-							if (isFaulted)
-								throw;
+							T result;
 
-							isFaulted    = true;
-							objectReader = GetObjectReader2<T>(DataConnection, rd, DataConnection.Command.CommandText, additionalKey);
-							result       = objectReader(rd);
-						}
+							try
+							{
+								result = objectReader(rd);
+							}
+							catch (InvalidCastException)
+							{
+								if (isFaulted)
+									throw;
 
-						action(result);
+								isFaulted    = true;
+								objectReader = GetObjectReader2<T>(DataConnection, rd, DataConnection.Command.CommandText, additionalKey);
+								result       = objectReader(rd);
+							}
 
-					} while (await rd.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext));
+							action(result);
+
+						} while (await rd.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext));
+					}
 				}
 			}
 		}
@@ -584,12 +592,16 @@ namespace LinqToDB.Data
 			T result;
 
 			using (DataConnection.DataProvider.ExecuteScope(DataConnection))
-#if NETSTANDARD2_1PLUS
-			await
-#endif
-			using (var rd = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 			{
-				result = await ReadMultipleResultSetsAsync<T>(rd, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+#if NETSTANDARD2_1PLUS
+				var rd = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await using (rd.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+#else
+				using (var rd = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+#endif
+				{
+					result = await ReadMultipleResultSetsAsync<T>(rd, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				}
 			}
 
 			if (hasParameters)
@@ -1021,21 +1033,25 @@ namespace LinqToDB.Data
 			T result = default!;
 
 			using (DataConnection.DataProvider.ExecuteScope(DataConnection))
-#if NETSTANDARD2_1PLUS
-			await
-#endif
-			using (var rd = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 			{
-				if (await rd.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+#if NETSTANDARD2_1PLUS
+				var rd = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await using (rd.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+#else
+				using (var rd = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+#endif
 				{
-					var additionalKey = GetCommandAdditionalKey(rd);
-					try
+					if (await rd.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 					{
-						result = GetObjectReader<T>(DataConnection, rd, CommandText, additionalKey)(rd);
-					}
-					catch (InvalidCastException)
-					{
-						result = GetObjectReader2<T>(DataConnection, rd, CommandText, additionalKey)(rd);
+						var additionalKey = GetCommandAdditionalKey(rd);
+						try
+						{
+							result = GetObjectReader<T>(DataConnection, rd, CommandText, additionalKey)(rd);
+						}
+						catch (InvalidCastException)
+						{
+							result = GetObjectReader2<T>(DataConnection, rd, CommandText, additionalKey)(rd);
+						}
 					}
 				}
 			}

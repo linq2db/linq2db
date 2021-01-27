@@ -43,10 +43,10 @@ namespace LinqToDB.Async
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			var result = new List<T>();
-#if NETFRAMEWORK
-			await using (var enumerator = source.GetAsyncEnumerator(cancellationToken))
-#else
 			var enumerator = source.GetAsyncEnumerator(cancellationToken);
+#if NETFRAMEWORK
+			await using (enumerator)
+#else
 			await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 #endif
 			{
@@ -113,10 +113,10 @@ namespace LinqToDB.Async
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-#if NETFRAMEWORK
-			await using (var enumerator = source.GetAsyncEnumerator(cancellationToken))
-#else
 			var enumerator = source.GetAsyncEnumerator(cancellationToken);
+#if NETFRAMEWORK
+			await using (enumerator)
+#else
 			await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 #endif
 			{
@@ -126,22 +126,27 @@ namespace LinqToDB.Async
 			}
 		}
 
-		/// <summary>Returns the first element of a sequence.</summary>
-		/// <param name="source">The <see cref="IEnumerable{T}" /> to return the first element of.</param>
-		/// <param name="token">Cancellation token</param>
-		/// <typeparam name="TSource">The type of the elements of <paramref name="source" />.</typeparam>
-		/// <returns>The first element in the specified sequence.</returns>
-		/// <exception cref="ArgumentNullException">
-		/// <paramref name="source" /> is <see langword="null" />.</exception>
-		/// <exception cref="InvalidOperationException">The source sequence is empty.</exception>
+		///// <summary>Returns the first element of a sequence.</summary>
+		///// <param name="source">The <see cref="IEnumerable{T}" /> to return the first element of.</param>
+		///// <param name="token">Cancellation token</param>
+		///// <typeparam name="TSource">The type of the elements of <paramref name="source" />.</typeparam>
+		///// <returns>The first element in the specified sequence.</returns>
+		///// <exception cref="ArgumentNullException">
+		///// <paramref name="source" /> is <see langword="null" />.</exception>
+		///// <exception cref="InvalidOperationException">The source sequence is empty.</exception>
+
+		/// <summary>
+		/// This API supports the LinqToDB infrastructure and is not intended to be used  directly from your code.
+		/// This API may change or be removed in future releases.
+		/// </summary>
 		public static async Task<TSource> FirstAsync<TSource>(this IAsyncEnumerable<TSource> source, CancellationToken token = default)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-#if NETFRAMEWORK
-			await using (var enumerator = source.GetAsyncEnumerator(token))
-#else
 			var enumerator = source.GetAsyncEnumerator(token);
+#if NETFRAMEWORK
+			await using (enumerator)
+#else
 			await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 #endif
 			{
