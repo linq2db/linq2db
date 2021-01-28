@@ -288,7 +288,7 @@ namespace Tests
 				catch (Exception e)
 				{
 					TestExternals.Log(e.ToString());
-					Console.WriteLine(e);
+					TestContext.WriteLine(e);
 					throw;
 				}
 			}
@@ -302,7 +302,7 @@ namespace Tests
 				foreach (var file in Directory.GetFiles(databasePath, "*.*"))
 				{
 					var destination = Path.Combine(dataPath, Path.GetFileName(file));
-					Console.WriteLine("{0} => {1}", file, destination);
+					TestContext.WriteLine("{0} => {1}", file, destination);
 					File.Copy(file, destination, true);
 				}
 			}
