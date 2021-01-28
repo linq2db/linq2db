@@ -1,10 +1,10 @@
 ﻿namespace Tests
 {
-	using NUnit.Framework.Internal;
+	using NUnit.Framework.Interfaces;
 
 	internal static class NUnitUtils
 	{
-		public static (string? context, bool isLinqService) GetContext(Test test)
+		public static (string? context, bool isLinqService) GetContext(ITest test)
 		{
 			if (test.Arguments.Length > 0)
 			{
