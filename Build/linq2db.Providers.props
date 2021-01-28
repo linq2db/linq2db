@@ -65,7 +65,7 @@
 	<ItemGroup Condition="'$(TargetFramework)' != 'net472'">
 		<PackageReference Include="Oracle.ManagedDataAccess.Core" Version="2.19.101" />
 		<PackageReference Include="Microsoft.Data.SQLite" Version="5.0.2" />
-		<PackageReference Include="Npgsql" Version="5.0.2" />
+		<PackageReference Include="Npgsql" Version="5.0.3" />
 		<PackageReference Include="System.Data.Odbc" Version="5.0.0" />
 		<PackageReference Include="System.Data.OleDb" Version="5.0.0" />
 		<PackageReference Include="MiniProfiler.Shared" Version="4.2.22" />
