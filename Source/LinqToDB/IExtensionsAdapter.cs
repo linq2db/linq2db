@@ -67,11 +67,11 @@ namespace LinqToDB
 			Expression<Func<TSource,bool>> predicate,
 			CancellationToken              token);
 
-		Task<TSource> FirstOrDefaultAsync<TSource>(
+		Task<TSource?> FirstOrDefaultAsync<TSource>(
 			IQueryable<TSource> source,
 			CancellationToken   token);
 
-		Task<TSource> FirstOrDefaultAsync<TSource>(
+		Task<TSource?> FirstOrDefaultAsync<TSource>(
 			IQueryable<TSource>            source,
 			Expression<Func<TSource,bool>> predicate,
 			CancellationToken              token);
@@ -85,11 +85,11 @@ namespace LinqToDB
 			Expression<Func<TSource,bool>> predicate,
 			CancellationToken              token);
 
-		Task<TSource> SingleOrDefaultAsync<TSource>(
+		Task<TSource?> SingleOrDefaultAsync<TSource>(
 			IQueryable<TSource> source,
 			CancellationToken   token);
 
-		Task<TSource> SingleOrDefaultAsync<TSource>(
+		Task<TSource?> SingleOrDefaultAsync<TSource>(
 			IQueryable<TSource>            source,
 			Expression<Func<TSource,bool>> predicate,
 			CancellationToken              token);
