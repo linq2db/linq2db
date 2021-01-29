@@ -1223,7 +1223,7 @@ namespace Tests
 		{
 			Assert.AreEqual(normalize(expected), normalize(result));
 
-			string normalize(string sql)
+			static string normalize(string sql)
 			{
 				var lines = sql.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
 				return string.Join("\n", lines.Where(l => !l.StartsWith("-- ")).Select(l => l.TrimStart('\t', ' ')));
