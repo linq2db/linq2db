@@ -5,13 +5,15 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Data;
-
 using NUnit.Framework;
+
+#if !NET472
+using System.Threading;
+#endif
 
 namespace Tests.Linq
 {
 	using Model;
-	using System.Threading;
 	using UserTests;
 
 	[TestFixture]

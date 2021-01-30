@@ -1,5 +1,4 @@
 ﻿#if NET472
-using System;
 using System.Data.Services.Providers;
 
 using LinqToDB.ServiceModel;

@@ -5,11 +5,10 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Data;
-	using LinqToDB.Linq;
-	using SqlProvider;
 	using System.Data;
 	using System.Threading;
+	using Data;
+	using SqlProvider;
 
 	class SqlServerBulkCopy : BasicBulkCopy
 	{

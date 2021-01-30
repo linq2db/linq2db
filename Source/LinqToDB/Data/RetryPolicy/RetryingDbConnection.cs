@@ -69,7 +69,7 @@ namespace LinqToDB.Data.RetryPolicy
 
 		void IDisposable.Dispose()
 		{
-			((IDisposable)_connection).Dispose();
+			_connection.Dispose();
 		}
 
 		public DbConnection UnderlyingObject => _dbConnection;

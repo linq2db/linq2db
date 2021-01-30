@@ -9,7 +9,6 @@ using JetBrains.Annotations;
 namespace LinqToDB.Tools.EntityServices
 {
 	using System.Diagnostics.CodeAnalysis;
-	using Common;
 
 	[PublicAPI]
 	public class IdentityMap : IDisposable

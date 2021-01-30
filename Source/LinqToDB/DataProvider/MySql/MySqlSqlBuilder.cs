@@ -6,10 +6,10 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.MySql
 {
-	using SqlQuery;
-	using SqlProvider;
-	using Mapping;
 	using Extensions;
+	using Mapping;
+	using SqlProvider;
+	using SqlQuery;
 	using Tools;
 
 	class MySqlSqlBuilder : BasicSqlBuilder

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Linq;
-
-using LinqToDB.Data;
+﻿using System.Linq;
 
 using NUnit.Framework;
 
@@ -9,7 +6,6 @@ namespace Tests.xUpdate
 {
 	using LinqToDB;
 	using LinqToDB.Mapping;
-	using Model;
 
 	// tests for target/source/match condition configuration methods, not covered by other tests
 	public partial class MergeTests

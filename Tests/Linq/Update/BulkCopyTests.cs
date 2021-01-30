@@ -1,18 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
-
+using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.Informix;
 using LinqToDB.Mapping;
-
 using NUnit.Framework;
 
 namespace Tests.xUpdate
 {
-	using LinqToDB.DataProvider.Informix;
 	using Model;
-	using System.Collections.Generic;
-	using System.Threading.Tasks;
 
 	[TestFixture]
 	[Order(10000)]

@@ -71,7 +71,7 @@ namespace LinqToDB.Reflection
 
 								return Expression.Block(
 									new[] { local },
-									Expression.Assign(local, next) as Expression,
+									Expression.Assign(local, next),
 									Expression.IfThen(
 										Expression.NotEqual(local, Expression.Constant(null)),
 										MakeGetter(local, i + 1)));

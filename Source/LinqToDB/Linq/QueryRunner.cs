@@ -13,13 +13,13 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
+	using Async;
 	using Builder;
 	using Common;
 	using Common.Internal.Cache;
 	using Common.Logging;
 	using Data;
 	using Extensions;
-	using Async;
 	using LinqToDB.Expressions;
 	using SqlQuery;
 

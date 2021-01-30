@@ -311,7 +311,7 @@ namespace LinqToDB.ServiceModel
 				var value = 0;
 
 				for (var c = Peek(); char.IsDigit(c); c = Next())
-					value = value * 10 + ((int)c - '0');
+					value = value * 10 + (c - '0');
 
 				return minus ? -value : value;
 			}
@@ -329,7 +329,7 @@ namespace LinqToDB.ServiceModel
 				var value = 0;
 
 				for (var c = Peek(); char.IsDigit(c); c = Next())
-					value = value * 10 + ((int)c - '0');
+					value = value * 10 + (c - '0');
 
 				return minus ? -value : value;
 			}
@@ -344,7 +344,7 @@ namespace LinqToDB.ServiceModel
 				var value = 0;
 
 				for (var c = Peek(); char.IsDigit(c); c = Next())
-					value = value * 10 + ((int)c - '0');
+					value = value * 10 + (c - '0');
 
 				return value;
 			}

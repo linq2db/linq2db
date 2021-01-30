@@ -2,7 +2,6 @@
 using LinqToDB;
 using LinqToDB.Metadata;
 using NUnit.Framework;
-using System;
 using System.ComponentModel;
 using System.Linq;
 

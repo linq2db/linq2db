@@ -1,12 +1,10 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 
 using NUnit.Framework;
 
 namespace Tests.xUpdate
 {
 	using LinqToDB;
-	using Model;
 
 	public partial class MergeTests
 	{

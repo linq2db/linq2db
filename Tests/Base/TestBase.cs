@@ -699,7 +699,7 @@ namespace Tests
 					.Where(p => p.Value1.HasValue && (new[] { 1, 2 }.Contains(p.Value1.Value)))
 					.Select(p => p.Value1 == 1 ?
 						(ParentInheritanceBase4)new ParentInheritance14 { ParentID = p.ParentID } :
-						(ParentInheritanceBase4)new ParentInheritance24 { ParentID = p.ParentID }
+												new ParentInheritance24 { ParentID = p.ParentID }
 				).ToList();
 
 		protected List<Child>?      _child;
@@ -1086,7 +1086,7 @@ namespace Tests
 
 		protected void AreEqual<T>(Func<T, T> fixSelector, IEnumerable<T> expected, IEnumerable<T> result, IEqualityComparer<T> comparer, bool allowEmpty = false)
 		{
-			AreEqual<T>(fixSelector, expected, result, comparer, null, allowEmpty);
+			AreEqual(fixSelector, expected, result, comparer, null, allowEmpty);
 		}
 
 		protected void AreEqual<T>(

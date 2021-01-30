@@ -6,12 +6,11 @@ using System.Linq;
 
 namespace LinqToDB.DataProvider.Oracle
 {
+	using System.Threading;
+	using System.Threading.Tasks;
 	using Data;
 	using LinqToDB.Common;
 	using SqlProvider;
-	using System.Text;
-	using System.Threading;
-	using System.Threading.Tasks;
 
 	class OracleBulkCopy : BasicBulkCopy
 	{

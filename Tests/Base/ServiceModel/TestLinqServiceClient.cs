@@ -1,5 +1,4 @@
 ﻿#if NET472
-using System;
 using System.Threading.Tasks;
 
 using LinqToDB.ServiceModel;

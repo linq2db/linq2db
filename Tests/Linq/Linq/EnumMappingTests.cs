@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
-#if NET472
-using System.ServiceModel;
-#endif
 
 using LinqToDB;
 using LinqToDB.Mapping;

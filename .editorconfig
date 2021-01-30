@@ -40,12 +40,6 @@ end_of_line = lf
 dotnet_sort_system_directives_first = true
 dotnet_separate_import_directive_groups = false
 
-# Avoid "this." and "Me." if not necessary
-dotnet_style_qualification_for_field = false:refactoring
-dotnet_style_qualification_for_property = false:refactoring
-dotnet_style_qualification_for_method = false:refactoring
-dotnet_style_qualification_for_event = false:refactoring
-
 # Use language keywords instead of framework type names for type references
 dotnet_style_predefined_type_for_locals_parameters_members = true:error
 dotnet_style_predefined_type_for_member_access = true:suggestion
@@ -192,7 +186,15 @@ dotnet_diagnostic.CA2211.severity = none # CA2211: Non-constant fields should no
 ###################################################################################
 dotnet_diagnostic.IDE0001.severity = error # IDE0001: Simplify name
 dotnet_diagnostic.IDE0002.severity = error # IDE0002: Simplify member access
-dotnet_diagnostic.IDE0003.severity = error # IDE0003: Remove this or Me qualification
+
+# IDE0003: Remove this or Me qualification
+# IDE0009: Add this or Me qualification
+dotnet_diagnostic.IDE0003.severity = error
+dotnet_style_qualification_for_field = false:refactoring
+dotnet_style_qualification_for_property = false:refactoring
+dotnet_style_qualification_for_method = false:refactoring
+dotnet_style_qualification_for_event = false:refactoring
+
 dotnet_diagnostic.IDE0004.severity = error # IDE0004: Remove unnecessary cast
 dotnet_diagnostic.IDE0005.severity = error # IDE0005: Remove unnecessary import
 
@@ -205,9 +207,14 @@ dotnet_diagnostic.IDE0017.severity = none # IDE0017: Use object initializers
 dotnet_diagnostic.IDE0018.severity = none # IDE0018: Inline variable declaration
 dotnet_diagnostic.IDE0019.severity = none # IDE0019: Use pattern matching to avoid 'as' followed by a 'null' check
 dotnet_diagnostic.IDE0025.severity = none # IDE0025: Use expression body for properties
+dotnet_diagnostic.IDE0026.severity = none # IDE0026: Use expression body for indexers
 dotnet_diagnostic.IDE0027.severity = none # IDE0027: Use expression body for accessors
+dotnet_diagnostic.IDE0028.severity = none # IDE0028: Use collection initializers
+dotnet_diagnostic.IDE0029.severity = none # IDE0029: Use coalesce expression (non-nullable types)
 dotnet_diagnostic.IDE0030.severity = none # IDE0030: Use coalesce expression
+dotnet_diagnostic.IDE0031.severity = none # IDE0031: Use null propagation
 dotnet_diagnostic.IDE0032.severity = none # IDE0032: Use auto property
+dotnet_diagnostic.IDE0034.severity = none # IDE0034: Simplify 'default' expression
 dotnet_diagnostic.IDE0036.severity = none # IDE0036: Order modifiers
 dotnet_diagnostic.IDE0037.severity = none # IDE0037: Use inferred member name
 dotnet_diagnostic.IDE0038.severity = none # IDE0038: Use pattern matching to avoid 'is' check followed by a cast
@@ -218,6 +225,7 @@ dotnet_diagnostic.IDE0045.severity = none # IDE0045: Use conditional expression 
 dotnet_diagnostic.IDE0046.severity = none # IDE0046: Convert to conditional expression
 dotnet_diagnostic.IDE0047.severity = none # IDE0047: Remove unnecessary parentheses
 dotnet_diagnostic.IDE0048.severity = none # IDE0048: Add parentheses for clarity
+dotnet_diagnostic.IDE0049.severity = none # IDE0049: Use language keywords instead of framework type names for type references
 dotnet_diagnostic.IDE0050.severity = none # IDE0050: Convert to tuple
 dotnet_diagnostic.IDE0051.severity = none # IDE0051: Remove unused private members
 dotnet_diagnostic.IDE0052.severity = none # IDE0052: Remove unread private member
@@ -228,12 +236,16 @@ dotnet_diagnostic.IDE0057.severity = none # IDE0057: Use range operator
 dotnet_diagnostic.IDE0058.severity = none # IDE0058: computed value is never used
 dotnet_diagnostic.IDE0059.severity = none # IDE0059: Remove unnecessary value assignment
 dotnet_diagnostic.IDE0060.severity = none # IDE0060: Remove unused parameter
+dotnet_diagnostic.IDE0061.severity = none # IDE0061: Use expression body for local functions
 dotnet_diagnostic.IDE0062.severity = none # IDE0062: Make local function static
 dotnet_diagnostic.IDE0065.severity = none # IDE0065: Misplaced using directive
 dotnet_diagnostic.IDE0066.severity = none # IDE0066: Convert switch statement to expression
 dotnet_diagnostic.IDE0070.severity = none # IDE0070: Use 'System.HashCode.Combine'
 dotnet_diagnostic.IDE0072.severity = none # IDE0072: Add missing cases
+dotnet_diagnostic.IDE0075.severity = none # IDE0075: Simplify conditional expression
 dotnet_diagnostic.IDE0078.severity = none # IDE0078: Use pattern matching
+dotnet_diagnostic.IDE0079.severity = none # IDE0079: Remove unnecessary suppression
+dotnet_diagnostic.IDE0080.severity = none # IDE0080: Remove unnecessary suppression operator
 dotnet_diagnostic.IDE0081.severity = none # IDE0081: Remove ByVal
 dotnet_diagnostic.IDE0083.severity = none # IDE0083: Use pattern matching (not operator)
 dotnet_diagnostic.IDE1006.severity = none # IDE1006: Naming rule violation

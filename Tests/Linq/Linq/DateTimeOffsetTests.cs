@@ -1,15 +1,13 @@
-﻿using LinqToDB;
-using NUnit.Framework;
-using System;
+﻿using System;
 using System.Linq;
+using LinqToDB;
+using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using System.Collections.Generic;
 	using System.Runtime.InteropServices;
 	using LinqToDB.Mapping;
 	using LinqToDB.Tools;
-	using Tests.Model;
 
 	[TestFixture]
 	public class DateTimeOffsetTests : TestBase
