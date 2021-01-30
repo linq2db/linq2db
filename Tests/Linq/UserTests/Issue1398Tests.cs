@@ -57,7 +57,7 @@ namespace Tests.UserTests
 
 		// TODO: disabled providers lacks connections
 		[Test]
-		public void TestInsert([DataSources(false, TestProvName.AllFirebird, TestProvName.AllSybase, TestProvName.AllInformix, TestProvName.AllOracle12)] string context)
+		public void TestInsert([DataSources(false, TestProvName.AllFirebird3Minus, TestProvName.AllSybase, TestProvName.AllInformix, TestProvName.AllOracle12)] string context)
 		{
 			const int recordsCount = 20;
 
@@ -90,7 +90,7 @@ namespace Tests.UserTests
 		[Retry(3)] // could fail due to deadlock
 		[Test]
 		public void TestMerge([MergeDataContextSource(
-			ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SybaseManaged, TestProvName.AllInformix)]
+			TestProvName.AllFirebird3Minus, ProviderName.SybaseManaged, TestProvName.AllInformix)]
 			string context)
 		{
 			const int repeatsCount = 20;

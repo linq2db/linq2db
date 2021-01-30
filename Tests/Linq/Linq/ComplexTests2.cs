@@ -50,8 +50,8 @@ namespace Tests.Linq
 
 		public class Name
 		{
-			public string? First  { get; set; }
-			public string? Second { get; set; }
+			public string? First      { get; set; }
+			public string? SecondName { get; set; }
 		}
 
 		public class Animal
@@ -120,7 +120,7 @@ namespace Tests.Linq
 				Discriminator = "Dog",
 				EyeId         = 1,
 				Name          = "FirstDog",
-				DogName       = new Name { First = "a", Second = "b" },
+				DogName       = new Name { First = "a", SecondName = "b" },
 				AnimalType    = AnimalType.Big,
 				AnimalType2   = AnimalType2.Big
 			};
@@ -203,7 +203,7 @@ namespace Tests.Linq
 				.HasTableName(animalsTableName)
 				.Property(x => x.Bla           ).IsNotColumn()
 				.Property(x => x.EyeId         ).IsColumn().IsNullable().HasColumnName("EyeId")
-				.Property(x => x.DogName!.Second).HasColumnName("Second").HasDataType(DataType.NVarChar).HasLength(40)
+				.Property(x => x.DogName!.SecondName).HasColumnName("SecondName").HasDataType(DataType.NVarChar).HasLength(40)
 				.Property(x => x.DogName!.First ).HasColumnName("First").HasDataType(DataType.NVarChar).HasLength(40)
 				.Association(x => x.Bla, x => x.EyeId, x => x!.Id);
 
@@ -291,7 +291,7 @@ namespace Tests.Linq
 					Assert.Null(data.First().TestAnimal);
 					Assert.NotNull(((Dog)data.Skip(1).First().TestAnimal!).Bla);
 					Assert.NotNull(((Dog)data.Skip(1).First().TestAnimal!).DogName!.First);
-					Assert.NotNull(((Dog)data.Skip(1).First().TestAnimal!).DogName!.Second);
+					Assert.NotNull(((Dog)data.Skip(1).First().TestAnimal!).DogName!.SecondName);
 				}
 				finally
 				{
@@ -314,7 +314,7 @@ namespace Tests.Linq
 					var data = db.GetTable<Dog>().ToList();
 
 					Assert.NotNull(data[0].DogName!.First);
-					Assert.NotNull(data[0].DogName!.Second);
+					Assert.NotNull(data[0].DogName!.SecondName);
 				}
 				finally
 				{
@@ -500,8 +500,8 @@ namespace Tests.Linq
 						Name        = "Cerberus",
 						DogName     = new Name()
 						{
-							First  = "Good",
-							Second = "Dog"
+							First      = "Good",
+							SecondName = "Dog"
 						},
 						EyeId = 2
 					};
@@ -531,7 +531,7 @@ namespace Tests.Linq
 						Assert.AreEqual(dog.AnimalType2   , data.AnimalType2);
 						Assert.AreEqual(dog.Name          , data.Name);
 						Assert.AreEqual(dog.DogName.First , data.DogName!.First);
-						Assert.AreEqual(dog.DogName.Second, data.DogName!.Second);
+						Assert.AreEqual(dog.DogName.SecondName, data.DogName!.SecondName);
 						Assert.AreEqual(dog.EyeId         , data.EyeId);
 					}
 				}

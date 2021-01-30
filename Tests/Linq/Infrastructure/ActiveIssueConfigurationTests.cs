@@ -28,8 +28,12 @@ namespace Tests.Infrastructure
 			{
 				case TestProvName.NoopProvider:
 					return;
-				case TestProvName.Firebird3:
-				case ProviderName.Firebird:
+				case ProviderName.Firebird25:
+				case ProviderName.Firebird25Dialect1:
+				case ProviderName.Firebird3:
+				case ProviderName.Firebird3Dialect1:
+				case ProviderName.Firebird4:
+				case ProviderName.Firebird4Dialect1:
 					Assert.Fail("This test should be available only for explicit run");
 					break;
 			}
@@ -48,8 +52,12 @@ namespace Tests.Infrastructure
 			{
 				case TestProvName.NoopProvider:
 					return;
-				case TestProvName.Firebird3:
-				case ProviderName.Firebird:
+				case ProviderName.Firebird25:
+				case ProviderName.Firebird25Dialect1:
+				case ProviderName.Firebird3:
+				case ProviderName.Firebird3Dialect1:
+				case ProviderName.Firebird4:
+				case ProviderName.Firebird4Dialect1:
 					Assert.Fail("This test should be available only for explicit run");
 					break;
 			}

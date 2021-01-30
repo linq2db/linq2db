@@ -44,12 +44,11 @@ public class a_CreateData : TestBase
 				break;
 		}
 
-		Exception? exception = null;
+		Exception? exception     = null;
+		string?    failedCommand = null;
 
 		using (var db = new TestDataConnection(configString))
 		{
-			//db.CommandTimeout = 20;
-
 			var database = databaseName ?? db.Connection.Database;
 
 			var cmds = text
@@ -108,14 +107,17 @@ public class a_CreateData : TestBase
 							TestContext.WriteLine("\nFAILED\n");
 
 							if (exception == null)
-								exception = ex;
+							{
+								exception     = ex;
+								failedCommand = command;
+							}
 						}
 					}
 				}
 			}
 
 			if (exception != null)
-				throw exception;
+				throw new Exception($"{exception.Message}:\n{failedCommand}", exception);
 
 			if (DataConnection.TraceSwitch.TraceInfo)
 				TestContext.WriteLine("\nBulkCopy LinqDataTypes\n");
@@ -246,8 +248,12 @@ public class a_CreateData : TestBase
 	{
 		switch (context)
 		{
-			case ProviderName.Firebird                         :
-			case TestProvName.Firebird3                        : RunScript(context,          "COMMIT;", "Firebird", FirebirdAction);    break;
+			case ProviderName.Firebird25                       :
+			case ProviderName.Firebird3                        :
+			case ProviderName.Firebird4                        : RunScript(context,          "COMMIT;", "Firebird", FirebirdAction);       break;
+			case ProviderName.Firebird25Dialect1               :
+			case ProviderName.Firebird3Dialect1                :
+			case ProviderName.Firebird4Dialect1                : RunScript(context,          "COMMIT;", "Firebird_Dialect1", FirebirdDialect1Action); break;
 			case ProviderName.PostgreSQL                       :
 			case ProviderName.PostgreSQL92                     :
 			case ProviderName.PostgreSQL93                     :
@@ -255,12 +261,12 @@ public class a_CreateData : TestBase
 			case TestProvName.PostgreSQL10                     :
 			case TestProvName.PostgreSQL11                     :
 			case TestProvName.PostgreSQL12                     :
-			case TestProvName.PostgreSQL13                     : RunScript(context,          "\nGO\n",  "PostgreSQL");                  break;
+			case TestProvName.PostgreSQL13                     : RunScript(context,          "\nGO\n",  "PostgreSQL");                     break;
 			case ProviderName.MySql                            :
 			case ProviderName.MySqlConnector                   :
 			case TestProvName.MySql55                          :
-			case TestProvName.MariaDB                          : RunScript(context,          "\nGO\n",  "MySql");                       break;
-			case ProviderName.SqlServer2000                    : RunScript(context,          "\nGO\n",  "SqlServer2000");               break;
+			case TestProvName.MariaDB                          : RunScript(context,          "\nGO\n",  "MySql");                          break;
+			case ProviderName.SqlServer2000                    : RunScript(context,          "\nGO\n",  "SqlServer2000");                  break;
 			case ProviderName.SqlServer2005                    :
 			case ProviderName.SqlServer2008                    :
 			case ProviderName.SqlServer2012                    :
@@ -269,31 +275,31 @@ public class a_CreateData : TestBase
 			case ProviderName.SqlServer2017                    :
 			case TestProvName.SqlServer2019                    :
 			case TestProvName.SqlServer2019SequentialAccess    :
-			case TestProvName.SqlAzure                         : RunScript(context,          "\nGO\n",  "SqlServer");                   break;
+			case TestProvName.SqlAzure                         : RunScript(context,          "\nGO\n",  "SqlServer");                      break;
 			case TestProvName.Default                          : RunScript(context,          "\nGO\n",  "SQLite",   SQLiteAction);      break;
 			case ProviderName.SQLiteClassic                    :
 			case ProviderName.SQLiteMS                         : RunScript(context,          "\nGO\n",  "SQLite",   SQLiteAction);
-			                                                     RunScript(context+ ".Data", "\nGO\n",  "SQLite",   SQLiteAction);      break;
+			                                                     RunScript(context+ ".Data", "\nGO\n",  "SQLite",   SQLiteAction);         break;
 			case TestProvName.SQLiteClassicMiniProfilerMapped  :
-			case TestProvName.SQLiteClassicMiniProfilerUnmapped: RunScript(context,          "\nGO\n",  "SQLite",   SQLiteAction);      break;
+			case TestProvName.SQLiteClassicMiniProfilerUnmapped: RunScript(context,          "\nGO\n",  "SQLite",   SQLiteAction);         break;
 			case ProviderName.OracleManaged                    :
-			case TestProvName.Oracle11Managed                  : RunScript(context,          "\n/\n",   "Oracle");                      break;
+			case TestProvName.Oracle11Managed                  : RunScript(context,          "\n/\n",   "Oracle");                         break;
 			case ProviderName.SybaseManaged                    : RunScript(context,          "\nGO\n",  "Sybase");                      break;
-			case ProviderName.Informix                         : RunScript(context,          "\nGO\n",  "Informix", InformixAction);    break;
-			case ProviderName.InformixDB2                      : RunScript(context,          "\nGO\n",  "Informix", InformixDB2Action); break;
-			case ProviderName.DB2                              : RunScript(context,          "\nGO\n",  "DB2");                         break;
+			case ProviderName.Informix                         : RunScript(context,          "\nGO\n",  "Informix", InformixAction);       break;
+			case ProviderName.InformixDB2                      : RunScript(context,          "\nGO\n",  "Informix", InformixDB2Action);    break;
+			case ProviderName.DB2                              : RunScript(context,          "\nGO\n",  "DB2");                            break;
 			case ProviderName.SapHanaNative                    :
-			case ProviderName.SapHanaOdbc                      : RunScript(context,          ";;\n"  ,  "SapHana");                     break;
+			case ProviderName.SapHanaOdbc                      : RunScript(context,          ";;\n"  ,  "SapHana");                        break;
 			case ProviderName.Access                           : RunScript(context,          "\nGO\n",  "Access",   AccessAction);
-			                                                     RunScript(context+ ".Data", "\nGO\n",  "Access",   AccessAction);      break;
+			                                                     RunScript(context+ ".Data", "\nGO\n",  "Access",   AccessAction);         break;
 			case ProviderName.AccessOdbc                       : RunScript(context,          "\nGO\n",  "Access",   AccessODBCAction);
-			                                                     RunScript(context+ ".Data", "\nGO\n",  "Access",   AccessODBCAction);  break;
+			                                                     RunScript(context+ ".Data", "\nGO\n",  "Access",   AccessODBCAction);     break;
 			case ProviderName.SqlCe                            : RunScript(context,          "\nGO\n",  "SqlCe");
-			                                                     RunScript(context+ ".Data", "\nGO\n",  "SqlCe");                       break;
+			                                                     RunScript(context+ ".Data", "\nGO\n",  "SqlCe");                          break;
 #if NET472
 			case ProviderName.Sybase                           : RunScript(context,          "\nGO\n",  "Sybase");                      break;
 			case ProviderName.OracleNative                     :
-			case TestProvName.Oracle11Native                   : RunScript(context,          "\n/\n",   "Oracle");                      break;
+			case TestProvName.Oracle11Native                   : RunScript(context,          "\n/\n",   "Oracle");                         break;
 #endif
 			default:
 				var script = CustomizationSupport.Interceptor.InterceptCreateData(context);
@@ -406,6 +412,24 @@ public class a_CreateData : TestBase
 					conn.Execute($"DROP TABLE \"{table.TableName}\"");
 				}
 			}
+		}
+	}
+
+	void FirebirdDialect1Action(IDbConnection connection)
+	{
+		using (var conn = LinqToDB.DataProvider.Firebird.FirebirdTools.CreateDataConnection(connection))
+		{
+			conn.Execute(@"
+				UPDATE Person
+				SET
+					FirstName = @FIRSTNAME,
+					LastName  = @LASTNAME
+				WHERE PersonID = 4",
+				new
+				{
+					FIRSTNAME = "Jürgen",
+					LASTNAME = "König",
+				});
 		}
 	}
 

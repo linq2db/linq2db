@@ -28,7 +28,7 @@ namespace Tests.UserTests
 		{
 			TestProvName.AllAccess,
 			ProviderName.DB2,
-			TestProvName.AllFirebird,
+			TestProvName.AllFirebird3Minus,
 			TestProvName.AllInformix,
 			ProviderName.SqlCe,
 			TestProvName.AllSybase,

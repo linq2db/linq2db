@@ -17,7 +17,6 @@ namespace Tests
 		/// - fractional seconds not supported
 		/// </summary>
 		public const string MySql55           = "MySql55";
-		public const string Firebird3         = "Firebird3";
 		public const string Northwind         = "Northwind";
 		public const string NorthwindSQLite   = "Northwind.SQLite";
 		public const string NorthwindSQLiteMS = "Northwind.SQLite.MS";
@@ -70,7 +69,13 @@ namespace Tests
 		public const string AllOracleNative        = "Oracle.Native,Oracle.11.Native";
 		public const string AllOracle11            = "Oracle.11.Native,Oracle.11.Managed";
 		public const string AllOracle12            = "Oracle.Native,Oracle.Managed";
-		public const string AllFirebird            = ProviderName.Firebird + ",Firebird3";
+		public const string AllFirebird25Minus     = ProviderName.Firebird25 + "," + ProviderName.Firebird25Dialect1;
+		public const string AllFirebird3Minus      = ProviderName.Firebird25 + "," + ProviderName.Firebird25Dialect1+ "," + ProviderName.Firebird3+ "," + ProviderName.Firebird3Dialect1;
+		public const string AllFirebird3Plus       = ProviderName.Firebird3+ "," + ProviderName.Firebird3Dialect1 + "," + ProviderName.Firebird4+ "," + ProviderName.Firebird4Dialect1;
+		public const string AllFirebird4Plus       = ProviderName.Firebird4+ "," + ProviderName.Firebird4Dialect1;
+		public const string AllFirebird            = ProviderName.Firebird25 + "," + ProviderName.Firebird25Dialect1+ "," + ProviderName.Firebird3 + "," + ProviderName.Firebird3Dialect1 + "," + ProviderName.Firebird4 + "," + ProviderName.Firebird4Dialect1;
+		public const string AllFirebirdDialect3    = ProviderName.Firebird25 + "," + ProviderName.Firebird3+ "," + ProviderName.Firebird4;
+		public const string AllFirebirdDialect1    = ProviderName.Firebird25Dialect1 + "," + ProviderName.Firebird3Dialect1+ "," + ProviderName.Firebird4Dialect1;
 		public const string AllSQLite              = "SQLite.Classic,SQLite.MS,SQLite.Classic.MPU,SQLite.Classic.MPM";
 		public const string AllSQLiteClassic       = "SQLite.Classic,SQLite.Classic.MPU,SQLite.Classic.MPM";
 		public const string AllSybase              = "Sybase,Sybase.Managed";

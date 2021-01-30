@@ -649,7 +649,7 @@ namespace Tests.Linq
 		[ActiveIssue(Details = "Sql.CharIndex(string, string, int) have incorrect SQL logic for all providers (except HANA)")]
 		[Test]
 		public void IndexOf3([DataSources(
-			ProviderName.DB2, TestProvName.AllFirebird,
+			ProviderName.DB2, TestProvName.AllFirebird3Minus,
 			ProviderName.SqlCe, TestProvName.AllAccess, ProviderName.SQLiteMS)]
 			string context)
 		{

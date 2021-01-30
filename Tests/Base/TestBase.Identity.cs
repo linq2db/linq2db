@@ -37,7 +37,10 @@ namespace Tests
 						sql = new[] { $"ALTER TABLE \"Person\" ALTER COLUMN \"PersonID\" RESTART WITH {lastValue + 1}" };
 						break;
 					case string prov when prov.StartsWith("Firebird"):
-						sql = new[] { $"SET GENERATOR \"PersonID\" TO {lastValue}" };
+						if (prov.Contains("D1"))
+							sql = new[] { $"SET GENERATOR PersonID TO {lastValue}" };
+						else
+							sql = new[] { $"SET GENERATOR \"PersonID\" TO {lastValue}" };
 						break;
 					case string prov when prov.StartsWith("Informix"):
 						sql = new[]
@@ -141,7 +144,10 @@ CREATE COLUMN TABLE ""Person"" (
 						};
 						break;
 					case string prov when prov.StartsWith("Firebird"):
-						sql = new[] { $"SET GENERATOR \"AllTypesID\" TO {lastValue}" };
+						if (prov.Contains("D1"))
+							sql = new[] { $"SET GENERATOR AllTypesID TO {lastValue}" };
+						else
+							sql = new[] { $"SET GENERATOR \"AllTypesID\" TO {lastValue}" };
 						break;
 					case string prov when prov.StartsWith("Informix"):
 						sql = new[]

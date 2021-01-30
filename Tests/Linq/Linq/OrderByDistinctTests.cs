@@ -292,7 +292,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void OrderByDistinctNoTransformTests(
-			[DataSources(TestProvName.AllFirebird, ProviderName.SqlCe)]  // Firebird incorrectly sorts strings
+			[DataSources(TestProvName.AllFirebird3Minus, ProviderName.SqlCe)]  // Firebird incorrectly sorts strings
 			string context)
 		{
 			var testData = GetTestData();
@@ -322,7 +322,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void OrderByDistinctPartialTransformTests(
-			[DataSources(TestProvName.AllFirebird, ProviderName.SqlCe)]  // Firebird incorrectly sorts strings
+			[DataSources(TestProvName.AllFirebird3Minus, ProviderName.SqlCe)]  // Firebird incorrectly sorts strings
 			string context)
 		{
 			var testData = GetTestData();

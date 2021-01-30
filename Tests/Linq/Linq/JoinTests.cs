@@ -489,7 +489,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupJoin7([DataSources(TestProvName.AllFirebird)] string context)
+		public void GroupJoin7([DataSources(TestProvName.AllFirebird3Minus)] string context)
 		{
 			var n = 1;
 
@@ -1165,7 +1165,7 @@ namespace Tests.Linq
 			public AllJoinsSourceAttribute() : base(
 				TestProvName.AllSqlServer2005Plus,
 				TestProvName.AllOracle,
-				TestProvName.AllFirebird,
+				TestProvName.AllFirebird3Minus,
 				TestProvName.AllPostgreSQL)
 			{
 			}

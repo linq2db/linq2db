@@ -359,7 +359,7 @@ namespace Tests.Linq
 					db.Child.Sum(c => c.ParentID));
 		}
 
-		[ExpressionMethod("ChildCountExpression")]
+		[ExpressionMethod(nameof(ChildCountExpression))]
 		public static int ChildCount(Parent parent)
 		{
 			throw new NotSupportedException();

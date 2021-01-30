@@ -12,169 +12,194 @@ namespace LinqToDB
 		/// Microsoft Access OleDb provider (both JET or ACE).
 		/// Used as configuration name for Access mapping schema <see cref="DataProvider.Access.AccessMappingSchema"/>.
 		/// </summary>
-		public const string Access        = "Access";
+		public const string Access             = "Access";
 
 		/// <summary>
 		/// Microsoft Access ODBC provider.
 		/// Used as configuration name for Access mapping schema <see cref="DataProvider.Access.AccessMappingSchema"/>.
 		/// </summary>
-		public const string AccessOdbc    = "Access.Odbc";
+		public const string AccessOdbc         = "Access.Odbc";
 
 		/// <summary>
 		/// IBM DB2 default provider (DB2 LUW).
 		/// Used as configuration name for both DB2 base mapping schema <see cref="DataProvider.DB2.DB2MappingSchema"/>.
 		/// </summary>
-		public const string DB2           = "DB2";
+		public const string DB2                = "DB2";
 		/// <summary>
 		/// IBM DB2 LUW provider.
 		/// Used as configuration name for DB2 LUW mapping schema <see cref="DataProvider.DB2.DB2LUWMappingSchema"/>.
 		/// </summary>
-		public const string DB2LUW        = "DB2.LUW";
+		public const string DB2LUW             = "DB2.LUW";
 		/// <summary>
 		/// IBM DB2 for z/OS provider.
 		/// Used as configuration name for DB2 z/OS mapping schema <see cref="DataProvider.DB2.DB2zOSMappingSchema"/>.
 		/// </summary>
-		public const string DB2zOS        = "DB2.z/OS";
+		public const string DB2zOS             = "DB2.z/OS";
 		/// <summary>
-		/// Firebird provider.
+		/// Firebird 2.5 dialect 3 provider.
 		/// Used as configuration name for Firebird mapping schema <see cref="DataProvider.Firebird.FirebirdMappingSchema"/>.
 		/// </summary>
-		public const string Firebird      = "Firebird";
+		/// <remarks>It is recommended to use explicit version <see cref="Firebird25"/> directly.</remarks>
+		public const string Firebird           = "Firebird";
+		/// <summary>
+		/// Firebird 2.5 dialect 3 provider.
+		/// </summary>
+		public const string Firebird25         = "Firebird.25";
+		/// <summary>
+		/// Firebird 2.5 dialect 1 provider.
+		/// </summary>
+		public const string Firebird25Dialect1 = "Firebird.25.D1";
+		/// <summary>
+		/// Firebird 3 dialect 3 provider.
+		/// </summary>
+		public const string Firebird3          = "Firebird.3";
+		/// <summary>
+		/// Firebird 3 dialect 1 provider.
+		/// </summary>
+		public const string Firebird3Dialect1  = "Firebird.3.D1";
+		/// <summary>
+		/// Firebird 4 dialect 3 provider.
+		/// </summary>
+		public const string Firebird4          = "Firebird.4";
+		/// <summary>
+		/// Firebird 4 dialect 1 provider.
+		/// </summary>
+		public const string Firebird4Dialect1  = "Firebird.4.D1";
 		/// <summary>
 		/// Informix IBM.Data.Informix provider (including IDS provider).
 		/// Used as configuration name for Informix mapping schema <see cref="DataProvider.Informix.InformixMappingSchema"/>.
 		/// </summary>
-		public const string Informix      = "Informix";
+		public const string Informix           = "Informix";
 		/// <summary>
 		/// Informix over IBM.Data.DB2 IDS provider.
 		/// Used as configuration name for Informix mapping schema <see cref="DataProvider.Informix.InformixMappingSchema"/>.
 		/// </summary>
-		public const string InformixDB2   = "Informix.DB2";
+		public const string InformixDB2        = "Informix.DB2";
 		/// <summary>
 		/// Microsoft SQL Server default provider (SQL Server 2008).
 		/// Used as configuration name for SQL Server base mapping schema <see cref="DataProvider.SqlServer.SqlServerMappingSchema"/>.
 		/// </summary>
-		public const string SqlServer     = "SqlServer";
+		public const string SqlServer          = "SqlServer";
 		/// <summary>
 		/// Microsoft SQL Server 2000 provider.
 		/// Used as configuration name for SQL Server 2000 mapping schema <see cref="DataProvider.SqlServer.SqlServer2000MappingSchema"/>.
 		/// </summary>
-		public const string SqlServer2000 = "SqlServer.2000";
+		public const string SqlServer2000      = "SqlServer.2000";
 		/// <summary>
 		/// Microsoft SQL Server 2005 provider.
 		/// Used as configuration name for SQL Server 2005 mapping schema <see cref="DataProvider.SqlServer.SqlServer2005MappingSchema"/>.
 		/// </summary>
-		public const string SqlServer2005 = "SqlServer.2005";
+		public const string SqlServer2005      = "SqlServer.2005";
 		/// <summary>
 		/// Microsoft SQL Server 2008 provider.
 		/// Used as configuration name for SQL Server 2008 mapping schema <see cref="DataProvider.SqlServer.SqlServer2008MappingSchema"/>.
 		/// </summary>
-		public const string SqlServer2008 = "SqlServer.2008";
+		public const string SqlServer2008      = "SqlServer.2008";
 		/// <summary>
 		/// Microsoft SQL Server 2012 provider.
 		/// Used as configuration name for SQL Server 2012 mapping schema <see cref="DataProvider.SqlServer.SqlServer2012MappingSchema"/>.
 		/// </summary>
-		public const string SqlServer2012 = "SqlServer.2012";
+		public const string SqlServer2012      = "SqlServer.2012";
 		/// <summary>
 		/// Microsoft SQL Server 2012 provider.
 		/// </summary>
-		public const string SqlServer2014 = "SqlServer.2014";
+		public const string SqlServer2014      = "SqlServer.2014";
 		/// <summary>
 		/// Microsoft SQL Server 2017 provider.
 		/// Used as configuration name for SQL Server 2017 mapping schema <see cref="DataProvider.SqlServer.SqlServer2017MappingSchema"/>.
 		/// </summary>
-		public const string SqlServer2017 = "SqlServer.2017";
+		public const string SqlServer2017      = "SqlServer.2017";
 		/// <summary>
 		/// MySql provider.
 		/// Used as configuration name for MySql mapping schema <see cref="DataProvider.MySql.MySqlMappingSchema"/>.
 		/// </summary>
-		public const string MySql         = "MySql";
+		public const string MySql              = "MySql";
 		/// <summary>
 		/// MySql provider.
 		/// Used as configuration name for MySql mapping schema <see cref="DataProvider.MySql.MySqlMappingSchema"/>.
 		/// </summary>
-		public const string MySqlOfficial = "MySql.Official";
+		public const string MySqlOfficial      = "MySql.Official";
 		/// <summary>
 		/// MySqlConnector provider.
 		/// Used as configuration name for MySql mapping schema <see cref="DataProvider.MySql.MySqlMappingSchema"/>.
 		/// </summary>
-		public const string MySqlConnector= "MySqlConnector";
+		public const string MySqlConnector     = "MySqlConnector";
 		/// <summary>
 		/// Oracle ODP.NET autodetected provider (native or managed).
 		/// Used as configuration name for Oracle base mapping schema <see cref="DataProvider.Oracle.OracleMappingSchema"/>.
 		/// </summary>
-		public const string Oracle        = "Oracle";
+		public const string Oracle             = "Oracle";
 		/// <summary>
 		/// Oracle ODP.NET native provider.
 		/// Used as configuration name for Oracle native provider mapping schema <see cref="DataProvider.Oracle.OracleMappingSchema.NativeMappingSchema"/>.
 		/// </summary>
-		public const string OracleNative  = "Oracle.Native";
+		public const string OracleNative       = "Oracle.Native";
 		/// <summary>
 		/// Oracle ODP.NET managed provider.
 		/// Used as configuration name for Oracle managed provider mapping schema <see cref="DataProvider.Oracle.OracleMappingSchema.ManagedMappingSchema"/>.
 		/// </summary>
-		public const string OracleManaged = "Oracle.Managed";
+		public const string OracleManaged      = "Oracle.Managed";
 		/// <summary>
 		/// PostgreSQL 9.2- data provider.
 		/// Used as configuration name for PostgreSQL mapping schema <see cref="DataProvider.PostgreSQL.PostgreSQLMappingSchema"/>.
 		/// </summary>
-		public const string PostgreSQL    = "PostgreSQL";
+		public const string PostgreSQL         = "PostgreSQL";
 		/// <summary>
 		/// PostgreSQL 9.2- data provider.
 		/// </summary>
-		public const string PostgreSQL92  = "PostgreSQL.9.2";
+		public const string PostgreSQL92       = "PostgreSQL.9.2";
 		/// <summary>
 		/// PostgreSQL 9.3+ data provider.
 		/// </summary>
-		public const string PostgreSQL93  = "PostgreSQL.9.3";
+		public const string PostgreSQL93       = "PostgreSQL.9.3";
 		/// <summary>
 		/// PostgreSQL 9.5+ data provider.
 		/// </summary>
-		public const string PostgreSQL95  = "PostgreSQL.9.5";
+		public const string PostgreSQL95       = "PostgreSQL.9.5";
 		/// <summary>
 		/// Microsoft SQL Server Compact Edition provider.
 		/// Used as configuration name for SQL CE mapping schema <see cref="DataProvider.SqlCe.SqlCeMappingSchema"/>.
 		/// </summary>
-		public const string SqlCe         = "SqlCe";
+		public const string SqlCe              = "SqlCe";
 		/// <summary>
 		/// SQLite provider.
 		/// Used as configuration name for SQLite mapping schema <see cref="DataProvider.SQLite.SQLiteMappingSchema"/>.
 		/// </summary>
-		public const string SQLite        = "SQLite";
+		public const string SQLite             = "SQLite";
 		/// <summary>
 		/// System.Data.Sqlite provider.
 		/// </summary>
-		public const string SQLiteClassic = "SQLite.Classic";
+		public const string SQLiteClassic      = "SQLite.Classic";
 		/// <summary>
 		/// Microsoft.Data.Sqlite provider.
 		/// </summary>
-		public const string SQLiteMS      = "SQLite.MS";
+		public const string SQLiteMS           = "SQLite.MS";
 		/// <summary>
 		/// Native SAP/Sybase ASE provider.
 		/// Used as configuration name for Sybase ASE mapping schema <see cref="DataProvider.Sybase.SybaseMappingSchema.NativeMappingSchema"/>.
 		/// </summary>
-		public const string Sybase        = "Sybase";
+		public const string Sybase             = "Sybase";
 		/// <summary>
 		/// Managed Sybase/SAP ASE provider from <a href="https://github.com/DataAction/AdoNetCore.AseClient">DataAction</a>.
 		/// Used as configuration name for Sybase ASE mapping schema <see cref="DataProvider.Sybase.SybaseMappingSchema.ManagedMappingSchema"/>.
 		/// </summary>
-		public const string SybaseManaged = "Sybase.Managed";
+		public const string SybaseManaged      = "Sybase.Managed";
 		/// <summary>
 		/// SAP HANA provider.
 		/// Used as configuration name for SAP HANA mapping schema <see cref="DataProvider.SapHana.SapHanaMappingSchema"/>.
 		/// </summary>
-		public const string SapHana       = "SapHana";
+		public const string SapHana            = "SapHana";
 #if NETFRAMEWORK || NETCOREAPP
 		/// <summary>
 		/// SAP HANA provider.
 		/// Used as configuration name for SAP HANA mapping schema <see cref="DataProvider.SapHana.SapHanaMappingSchema.NativeMappingSchema"/>.
 		/// </summary>
-		public const string SapHanaNative = "SapHana.Native";
+		public const string SapHanaNative      = "SapHana.Native";
 #endif
 		/// <summary>
 		/// SAP HANA ODBC provider.
 		/// Used as configuration name for SAP HANA mapping schema <see cref="DataProvider.SapHana.SapHanaMappingSchema.OdbcMappingSchema"/>.
 		/// </summary>
-		public const string SapHanaOdbc = "SapHana.Odbc";
+		public const string SapHanaOdbc        = "SapHana.Odbc";
 	}
 }

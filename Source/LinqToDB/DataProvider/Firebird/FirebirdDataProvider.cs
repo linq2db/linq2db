@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Data;
 
 namespace LinqToDB.DataProvider.Firebird
@@ -10,23 +8,32 @@ namespace LinqToDB.DataProvider.Firebird
 	using Data;
 	using Mapping;
 	using SqlProvider;
-	using SqlQuery;
+	using System.Threading;
+	using System.Threading.Tasks;
 
 	public class FirebirdDataProvider : DynamicDataProviderBase<FirebirdProviderAdapter>
 	{
-		public FirebirdDataProvider()
-			: this(ProviderName.Firebird, new FirebirdMappingSchema(), null)
+		public FirebirdDataProvider(FirebirdVersion version = FirebirdVersion.v2_5, FirebirdDialect dialect = FirebirdDialect.Dialect3)
+			: this(GetProviderName(version, dialect), version, dialect)
 		{
 		}
 
+		[Obsolete("To specify custom sql optimizer, subclass provider and override GetSqlOptimizer() method")]
 		public FirebirdDataProvider(ISqlOptimizer sqlOptimizer)
-			: this(ProviderName.Firebird, new FirebirdMappingSchema(), sqlOptimizer)
+			: this(ProviderName.Firebird, FirebirdVersion.v2_5, FirebirdDialect.Dialect3)
 		{
+			_sqlOptimizer = sqlOptimizer;
 		}
 
-		protected FirebirdDataProvider(string name, MappingSchema mappingSchema, ISqlOptimizer? sqlOptimizer)
-			: base(name, mappingSchema, FirebirdProviderAdapter.GetInstance())
+		protected FirebirdDataProvider(string name, FirebirdVersion version, FirebirdDialect dialect)
+			: base(
+				  name,
+				  GetMappingSchema(version, dialect, FirebirdProviderAdapter.GetInstance().MappingSchema),
+				  FirebirdProviderAdapter.GetInstance())
 		{
+			Version = version;
+			Dialect = dialect;
+
 			SqlProviderFlags.IsIdentityParameterRequired       = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
@@ -39,8 +46,11 @@ namespace LinqToDB.DataProvider.Firebird
 			SetProviderField<IDataReader,TimeSpan,DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1970, 1, 1));
 			SetProviderField<IDataReader,DateTime,DateTime>((r,i) => GetDateTime(r.GetDateTime(i)));
 
-			_sqlOptimizer = sqlOptimizer ?? new FirebirdSqlOptimizer(SqlProviderFlags);
+			_sqlOptimizer = new FirebirdSqlOptimizer(SqlProviderFlags);
 		}
+
+		public FirebirdVersion Version { get; }
+		public FirebirdDialect Dialect { get; }
 
 		static DateTime GetDateTime(DateTime value)
 		{
@@ -60,36 +70,32 @@ namespace LinqToDB.DataProvider.Firebird
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
-			return new FirebirdSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
+			return Version switch
+			{
+				FirebirdVersion.v3 => Dialect == FirebirdDialect.Dialect1 ? new Firebird3Dialect1SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags)  : new Firebird3SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
+				FirebirdVersion.v4 => Dialect == FirebirdDialect.Dialect1 ? new Firebird4Dialect1SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags)  : new Firebird4SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
+				_                  => Dialect == FirebirdDialect.Dialect1 ? new Firebird25Dialect1SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags) : new Firebird25SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
+			};
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
 
-		public override ISqlOptimizer GetSqlOptimizer()
-		{
-			return _sqlOptimizer;
-		}
+		public override ISqlOptimizer GetSqlOptimizer() => _sqlOptimizer;
 
-		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
-		{
-			return new FirebirdSchemaProvider();
-		}
-
-		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
-		{
-			return true;
-		}
+		public override SchemaProvider.ISchemaProvider GetSchemaProvider() => new FirebirdSchemaProvider();
 
 		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
 		{
-			if (value is bool boolVal)
+			if (value is bool)
 			{
-				value    = boolVal ? "1" : "0";
+				value = (bool)value ? "1" : "0";
 				dataType = dataType.WithDataType(DataType.Char);
 			}
 
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
+
+		public override bool? IsDBNullAllowed(IDataReader reader, int idx) => true;
 
 		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
 		{
@@ -104,6 +110,26 @@ namespace LinqToDB.DataProvider.Firebird
 			}
 
 			base.SetParameterType(dataConnection, parameter, dataType);
+		}
+
+		private static string GetProviderName(FirebirdVersion version, FirebirdDialect dialect)
+		{
+			return version switch
+			{
+				FirebirdVersion.v3 => dialect == FirebirdDialect.Dialect1 ? ProviderName.Firebird3Dialect1  : ProviderName.Firebird3,
+				FirebirdVersion.v4 => dialect == FirebirdDialect.Dialect1 ? ProviderName.Firebird4Dialect1  : ProviderName.Firebird4,
+				_                  => dialect == FirebirdDialect.Dialect1 ? ProviderName.Firebird25Dialect1 : ProviderName.Firebird25,
+			};
+		}
+
+		private static MappingSchema GetMappingSchema(FirebirdVersion version, FirebirdDialect dialect, MappingSchema providerSchema)
+		{
+			return version switch
+			{
+				FirebirdVersion.v3 => dialect == FirebirdDialect.Dialect1 ? new Firebird3Dialect1MappingSchema(providerSchema)  : new Firebird3MappingSchema(providerSchema),
+				FirebirdVersion.v4 => dialect == FirebirdDialect.Dialect1 ? new Firebird4Dialect1MappingSchema(providerSchema)  : new Firebird4MappingSchema(providerSchema),
+				_                  => dialect == FirebirdDialect.Dialect1 ? new Firebird25Dialect1MappingSchema(providerSchema) : new Firebird25MappingSchema(providerSchema),
+			};
 		}
 
 		#region BulkCopy

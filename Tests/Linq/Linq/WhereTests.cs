@@ -1428,7 +1428,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void WhereBooleanTest2([DataSources(TestProvName.AllSybase, TestProvName.AllFirebird)] string context)
+		public void WhereBooleanTest2([DataSources(TestProvName.AllSybase, TestProvName.AllFirebird3Minus)] string context)
 		{
 			void AreEqualLocal(IEnumerable<WhereCases> expected, IQueryable<WhereCases> actual, Expression<Func<WhereCases, bool>> predicate)
 			{

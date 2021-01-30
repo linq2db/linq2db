@@ -60,7 +60,10 @@ namespace Tests.UserTests
 		}
 
 		// default name hits 31-length limit for generator name (till FB 4.0)
-		[Table(Name = "billing_DevReadType", Configuration = ProviderName.Firebird)]
+		[Table(Name = "billing_DevReadType", Configuration = ProviderName.Firebird25)]
+		[Table(Name = "billing_DevReadType", Configuration = ProviderName.Firebird25Dialect1)]
+		[Table(Name = "billing_DevReadType", Configuration = ProviderName.Firebird3)]
+		[Table(Name = "billing_DevReadType", Configuration = ProviderName.Firebird3Dialect1)]
 		[Table(Name = "billing_DevReadingType")]
 		public partial class billing_DevReadingType
 		{

@@ -1,0 +1,15 @@
+﻿<#@ template language="C#" debug="True" hostSpecific="True"                                       #>
+<#@ output extension=".generated.cs"                                                              #>
+<#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.Firebird.ttinclude"                 #>
+<#@ include file="..\Shared.ttinclude"                                                            #>
+<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net472\FirebirdSql.Data.FirebirdClient.dll" #>
+<#
+	NamespaceName = "Firebird3DataContext";
+
+	IncludeDefaultSchema = false;
+	GenerateDataTypes = true;
+	GenerateDbTypes   = true;
+
+	LoadFirebirdMetadata(GetConnectionString("Firebird.3.D1"));
+	GenerateModel();
+#>

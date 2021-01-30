@@ -24,10 +24,14 @@ namespace Tests.xUpdate
 
 				// hard limit around 100 records
 				// also big queries could kill connection with server
-				case ProviderName.Firebird       : batchSize = 100; break;
+				case ProviderName.Firebird25         :
+				case ProviderName.Firebird25Dialect1 : batchSize = 100; break;
 
 				// hard limit around 250 records
-				case TestProvName.Firebird3      : batchSize = 250; break;
+				case ProviderName.Firebird3         :
+				case ProviderName.Firebird3Dialect1 : batchSize = 250; break;
+
+				//case ProviderName.Firebird       : batchSize = 2500; break;
 
 				// takes too long
 				case ProviderName.Informix       : batchSize = 500; break;

@@ -60,9 +60,25 @@
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>DB2.generated.cs</LastGenOutput>
 		</None>
+		<None Update="Databases\Firebird25D1.tt">
+		  <LastGenOutput>Firebird25D1.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Databases\Firebird3D1.tt">
+		  <LastGenOutput>Firebird3D1.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Databases\Firebird4D1.tt">
+		  <LastGenOutput>Firebird4D1.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Databases\Firebird4.tt">
+		  <LastGenOutput>Firebird4.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
 		<None Update="Databases\Firebird3.tt">
 			<Generator>TextTemplatingFileGenerator</Generator>
-			<LastGenOutput>Firebird3.generated.cs</LastGenOutput>
+			<LastGenOutput>Firebird4.generated.cs</LastGenOutput>
 		</None>
 		<None Update="Databases\Informix.tt">
 			<Generator>TextTemplatingFileGenerator</Generator>
@@ -128,9 +144,9 @@
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>Sybase.generated.cs</LastGenOutput>
 		</None>
-		<None Update="Databases\Firebird.tt">
+		<None Update="Databases\Firebird25.tt">
 			<Generator>TextTemplatingFileGenerator</Generator>
-			<LastGenOutput>Firebird.generated.cs</LastGenOutput>
+			<LastGenOutput>Firebird25D1.generated.cs</LastGenOutput>
 		</None>
 		<None Update="Unlock.tt">
 			<LastGenOutput>Unlock.generated.cs</LastGenOutput>
@@ -178,15 +194,30 @@
 			<AutoGen>True</AutoGen>
 			<DependentUpon>DB2.tt</DependentUpon>
 		</Compile>
-		<Compile Update="Databases\Firebird.generated.cs">
-			<DesignTime>True</DesignTime>
-			<AutoGen>True</AutoGen>
-			<DependentUpon>Firebird.tt</DependentUpon>
+		<Compile Update="Databases\Firebird25 - Copy.generated.cs">
+		  <DependentUpon>Firebird25.tt</DependentUpon>
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
 		</Compile>
-		<Compile Update="Databases\Firebird3.generated.cs">
+		<Compile Update="Databases\Firebird25D1.generated.cs">
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>
-			<DependentUpon>Firebird3.tt</DependentUpon>
+			<DependentUpon>Firebird25D1.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Databases\Firebird3D1.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Firebird3D1.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Databases\Firebird4.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>Firebird4.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Databases\Firebird4D1.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>Firebird4D1.tt</DependentUpon>
 		</Compile>
 		<Compile Update="Databases\Informix.generated.cs">
 			<DesignTime>True</DesignTime>

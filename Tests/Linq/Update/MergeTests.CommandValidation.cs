@@ -14,7 +14,8 @@ namespace Tests.xUpdate
 	{
 		[Test]
 		public void NotSupportedProviders([DataSources(
-			ProviderName.DB2, TestProvName.AllFirebird,
+			ProviderName.DB2,
+			TestProvName.AllFirebird,
 			TestProvName.AllOracle,
 			TestProvName.AllSybase,
 			TestProvName.AllSqlServer,

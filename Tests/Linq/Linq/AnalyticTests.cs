@@ -1302,18 +1302,18 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Position
+		class PositionTable
 		{
-			[Column] public int  Group { get; set; }
-			[Column] public int  Order { get; set; }
-			[Column] public int? Id    { get; set; }
+			[Column] public int  GroupColumn { get; set; }
+			[Column] public int  OrderColumn { get; set; }
+			[Column] public int? Id          { get; set; }
 
-			public static Position[] TestData = new []
+			public static PositionTable[] TestData = new []
 			{
-				new Position() { Id = 5,    Group = 7, Order = 10 },
-				new Position() { Id = 6,    Group = 7, Order = 20 },
-				new Position() { Id = null, Group = 7, Order = 30 },
-				new Position() { Id = null, Group = 7, Order = 40 }
+				new PositionTable() { Id = 5,    GroupColumn = 7, OrderColumn = 10 },
+				new PositionTable() { Id = 6,    GroupColumn = 7, OrderColumn = 20 },
+				new PositionTable() { Id = null, GroupColumn = 7, OrderColumn = 30 },
+				new PositionTable() { Id = null, GroupColumn = 7, OrderColumn = 40 }
 			};
 		}
 
@@ -1324,23 +1324,23 @@ namespace Tests.Linq
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
-			ProviderName.Firebird,
+			TestProvName.AllFirebird25Minus,
 			TestProvName.MySql55,
 			// doesn't support LAG with 3 parameters
 			TestProvName.MariaDB)] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(Position.TestData))
+			using (var table = db.CreateLocalTable(PositionTable.TestData))
 			{
 				var group = 7;
 
 				var q =
-					from p in db.GetTable<Position>()
-					where p.Group == @group
+					from p in db.GetTable<PositionTable>()
+					where p.GroupColumn == @group
 					select new
 					{
 						Id         = p.Id,
-						PreviousId = (int?)Sql.Ext.Lag(p.Id, Sql.Nulls.Respect, 1, -1).Over().OrderBy(p.Order).ToValue(),
+						PreviousId = (int?)Sql.Ext.Lag(p.Id, Sql.Nulls.Respect, 1, -1).Over().OrderBy(p.OrderColumn).ToValue(),
 
 					};
 
@@ -1368,23 +1368,23 @@ namespace Tests.Linq
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
-			ProviderName.Firebird,
+			TestProvName.AllFirebird25Minus,
 			TestProvName.MySql55,
 			// doesn't support 3-rd parameter for LEAD
 			TestProvName.MariaDB)] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(Position.TestData))
+			using (var table = db.CreateLocalTable(PositionTable.TestData))
 			{
 				var group = 7;
 
 				var q =
-					from p in db.GetTable<Position>()
-					where p.Group == @group
+					from p in db.GetTable<PositionTable>()
+					where p.GroupColumn == @group
 					select new
 					{
 						Id         = p.Id,
-						PreviousId = (int?)Sql.Ext.Lead(p.Id, Sql.Nulls.Respect, 1, -1).Over().OrderBy(p.Order).ToValue(),
+						PreviousId = (int?)Sql.Ext.Lead(p.Id, Sql.Nulls.Respect, 1, -1).Over().OrderBy(p.OrderColumn).ToValue(),
 
 					};
 
@@ -1410,21 +1410,21 @@ namespace Tests.Linq
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
-			ProviderName.Firebird,
+			TestProvName.AllFirebird25Minus,
 			TestProvName.MySql55)] string context)
 		{
 			using (var db    = GetDataContext(context))
-			using (var table = db.CreateLocalTable(Position.TestData))
+			using (var table = db.CreateLocalTable(PositionTable.TestData))
 			{
 				var group = 7;
 
 				var q =
-					from p in db.GetTable<Position>()
-					where p.Group == @group
+					from p in db.GetTable<PositionTable>()
+					where p.GroupColumn == @group
 					select new
 					{
 						Id         = p.Id,
-						PreviousId = (int?)Sql.Ext.FirstValue(p.Id, Sql.Nulls.Respect).Over().OrderByDesc(p.Order).ToValue(),
+						PreviousId = (int?)Sql.Ext.FirstValue(p.Id, Sql.Nulls.Respect).Over().OrderByDesc(p.OrderColumn).ToValue(),
 
 					};
 
@@ -1450,21 +1450,21 @@ namespace Tests.Linq
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
-			ProviderName.Firebird,
+			TestProvName.AllFirebird25Minus,
 			TestProvName.MySql55)] string context)
 		{
 			using (var db    = GetDataContext(context))
-			using (var table = db.CreateLocalTable(Position.TestData))
+			using (var table = db.CreateLocalTable(PositionTable.TestData))
 			{
 				var group = 7;
 
 				var q =
-					from p in db.GetTable<Position>()
-					where p.Group == @group
+					from p in db.GetTable<PositionTable>()
+					where p.GroupColumn == @group
 					select new
 					{
 						Id         = p.Id,
-						PreviousId = (int?)Sql.Ext.LastValue(p.Id, Sql.Nulls.Respect).Over().OrderBy(p.Order).ToValue(),
+						PreviousId = (int?)Sql.Ext.LastValue(p.Id, Sql.Nulls.Respect).Over().OrderBy(p.OrderColumn).ToValue(),
 
 					};
 
@@ -1491,24 +1491,24 @@ namespace Tests.Linq
 			TestProvName.AllInformix,
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
-			ProviderName.Firebird,
+			TestProvName.AllFirebird25Minus,
 			TestProvName.AllSQLite,
 			TestProvName.AllSapHana,
 			TestProvName.MySql55,
 			TestProvName.MariaDB)] string context)
 		{
 			using (var db    = GetDataContext(context))
-			using (var table = db.CreateLocalTable(Position.TestData))
+			using (var table = db.CreateLocalTable(PositionTable.TestData))
 			{
 				var group = 7;
 
 				var q =
-					from p in db.GetTable<Position>()
-					where p.Group == @group
+					from p in db.GetTable<PositionTable>()
+					where p.GroupColumn == @group
 					select new
 					{
 						Id         = p.Id,
-						PreviousId = (int?)Sql.Ext.NthValue(p.Id, 2, Sql.From.First, Sql.Nulls.Respect).Over().OrderByDesc(p.Order).ToValue(),
+						PreviousId = (int?)Sql.Ext.NthValue(p.Id, 2, Sql.From.First, Sql.Nulls.Respect).Over().OrderByDesc(p.OrderColumn).ToValue(),
 
 					};
 
@@ -1556,7 +1556,7 @@ namespace Tests.Linq
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
-			ProviderName.Firebird,
+			TestProvName.AllFirebird25Minus,
 			TestProvName.AllInformix,
 			TestProvName.AllOracle,
 			TestProvName.MySql55)] string context)
@@ -1611,7 +1611,7 @@ namespace Tests.Linq
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
-			ProviderName.Firebird,
+			TestProvName.AllFirebird25Minus,
 			TestProvName.AllInformix,
 			TestProvName.AllOracle,
 			TestProvName.MySql55)] string context)

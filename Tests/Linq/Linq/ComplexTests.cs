@@ -526,7 +526,7 @@ namespace Tests.Linq
 
 		[Column("city", "Residence.City")]
 		[Column("user_name", "Name")]
-		public class User
+		public class UserTable
 		{
 			public string? Name;
 
@@ -534,9 +534,9 @@ namespace Tests.Linq
 			[Column("building_number", MemberName = ".Building")]
 			public Address? Residence { get; set; }
 
-			public static readonly User[] TestData = new []
+			public static readonly UserTable[] TestData = new []
 			{
-				new User()
+				new UserTable()
 				{
 					Name = "Freddy",
 					Residence = new Address()
@@ -553,7 +553,7 @@ namespace Tests.Linq
 		public void SelectCompositeTypeSpecificColumnTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (var users = db.CreateLocalTable<User>())
+			using (var users = db.CreateLocalTable<UserTable>())
 			{
 				var query = users.Select(u => u.Residence!.City);
 				Assert.AreEqual(1, query.GetSelectQuery().Select.Columns.Count);
@@ -571,16 +571,16 @@ namespace Tests.Linq
 		public void SelectCompositeTypeAllColumnsTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (var users = db.CreateLocalTable(User.TestData))
+			using (var users = db.CreateLocalTable(UserTable.TestData))
 			{
 				var result = users.ToList();
 
 				Assert.AreEqual(1, result.Count);
-				Assert.AreEqual(User.TestData[0].Name, result[0].Name);
+				Assert.AreEqual(UserTable.TestData[0].Name, result[0].Name);
 				Assert.IsNotNull(result[0].Residence);
-				Assert.AreEqual(User.TestData[0].Residence!.Building, result[0].Residence!.Building);
-				Assert.AreEqual(User.TestData[0].Residence!.City, result[0].Residence!.City);
-				Assert.AreEqual(User.TestData[0].Residence!.Street, result[0].Residence!.Street);
+				Assert.AreEqual(UserTable.TestData[0].Residence!.Building, result[0].Residence!.Building);
+				Assert.AreEqual(UserTable.TestData[0].Residence!.City, result[0].Residence!.City);
+				Assert.AreEqual(UserTable.TestData[0].Residence!.Street, result[0].Residence!.Street);
 			}
 		}
 

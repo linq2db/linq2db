@@ -166,7 +166,7 @@ namespace Tests.xUpdate
 				TestProvName.AllPostgreSQL,
 				ProviderName.SqlCe,
 				TestProvName.AllSQLite,
-				TestProvName.AllFirebird,
+				TestProvName.AllFirebird3Minus,
 				TestProvName.AllSapHana)]
 			string context)
 		{
@@ -204,7 +204,7 @@ namespace Tests.xUpdate
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
-				TestProvName.AllFirebird,
+				TestProvName.AllFirebird3Minus,
 				ProviderName.SqlCe,
 				TestProvName.AllSapHana)]
 			string context)
@@ -252,7 +252,7 @@ namespace Tests.xUpdate
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
-				TestProvName.AllFirebird,
+				TestProvName.AllFirebird3Minus,
 				ProviderName.SqlCe,
 				TestProvName.AllSapHana)]
 			string context)
@@ -297,7 +297,7 @@ namespace Tests.xUpdate
 				ProviderName.DB2,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
-				TestProvName.AllFirebird,
+				TestProvName.AllFirebird3Minus,
 				TestProvName.AllInformix,
 				TestProvName.AllMySql,
 				ProviderName.SqlCe,

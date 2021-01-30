@@ -1,7 +1,8 @@
 ﻿{
 	"NET50.Azure": {
 		"Providers": [
-			"Firebird3"
+			"Firebird.3",
+			"Firebird.3.D1"
 		]
 	}
 }

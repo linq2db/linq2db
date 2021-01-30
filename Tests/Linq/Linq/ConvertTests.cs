@@ -39,7 +39,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ToBigInt([DataSources(TestProvName.AllMySql)] string context)
+		public void ToBigInt([DataSources(TestProvName.AllMySql, TestProvName.AllFirebirdDialect1)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(

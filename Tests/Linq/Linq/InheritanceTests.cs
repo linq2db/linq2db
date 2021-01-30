@@ -656,7 +656,7 @@ namespace Tests.Linq
 
 		public abstract class Root
 		{
-			public abstract int Value { get; set; }
+			public abstract int Value1 { get; set; }
 			public abstract int GetValue();
 		}
 
@@ -664,19 +664,19 @@ namespace Tests.Linq
 		public class BaseTable : Root
 		{
 			[PrimaryKey, NotNull  ] public int Id { get; set; }
-			[Column(nameof(Value))] public int BaseValue { get; set; }
+			[Column(nameof(Value1))] public int BaseValue { get; set; }
 
 			private static Expression<Func<BaseTable, int>> GeValueImpl() => e => e.BaseValue;
 
 			[ExpressionMethod(nameof(GeValueImpl), IsColumn = true)]
-			public override int Value { get => BaseValue; set => BaseValue = value; }
+			public override int Value1 { get => BaseValue; set => BaseValue = value; }
 
 			[ExpressionMethod(nameof(GeValueImpl))]
 			public override int GetValue() => BaseValue;
 
 			public static readonly BaseTable[] Data = new []
 			{
-				new BaseTable() { Id = 1, Value = 100 }
+				new BaseTable() { Id = 1, Value1 = 100 }
 			};
 		}
 
@@ -718,11 +718,11 @@ namespace Tests.Linq
 			{
 					var baseTableRecordById = db.GetTable<BaseTable>().FirstOrDefault(x => x.Id == 1);
 					Assert.AreEqual(1, baseTableRecordById?.Id);
-					Assert.AreEqual(100, baseTableRecordById?.Value);
+					Assert.AreEqual(100, baseTableRecordById?.Value1);
 
-					var baseTableRecordWithValuePredicate = db.GetTable<BaseTable>().FirstOrDefault(x => x.Id == 1 && x.Value == 100);
+					var baseTableRecordWithValuePredicate = db.GetTable<BaseTable>().FirstOrDefault(x => x.Id == 1 && x.Value1 == 100);
 					Assert.AreEqual(1, baseTableRecordWithValuePredicate?.Id);
-					Assert.AreEqual(100, baseTableRecordWithValuePredicate?.Value);
+					Assert.AreEqual(100, baseTableRecordWithValuePredicate?.Value1);
 			}
 		}
 
@@ -734,11 +734,11 @@ namespace Tests.Linq
 			{
 				var baseTableRecordById = db.GetTable<BaseTable>().FirstOrDefault(x => x.Id == 1);
 				Assert.AreEqual(1, baseTableRecordById?.Id);
-				Assert.AreEqual(100, baseTableRecordById?.Value);
+				Assert.AreEqual(100, baseTableRecordById?.Value1);
 
 				var baseTableRecordWithValuePredicate = db.GetTable<BaseTable>().FirstOrDefault(x => x.Id == 1 && x.GetValue() == 100);
 				Assert.AreEqual(1, baseTableRecordWithValuePredicate?.Id);
-				Assert.AreEqual(100, baseTableRecordWithValuePredicate?.Value);
+				Assert.AreEqual(100, baseTableRecordWithValuePredicate?.Value1);
 			}
 		}
 

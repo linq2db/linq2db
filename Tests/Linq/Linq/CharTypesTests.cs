@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 
 using LinqToDB;
@@ -117,10 +117,7 @@ namespace Tests.Linq
 						if (!SkipChar(context))
 							query = query.Value(_ => _.String, record.String);
 
-						if (   context == ProviderName.Firebird
-							|| context == ProviderName.Firebird + ".LinqService"
-							|| context == TestProvName.Firebird3
-							|| context == TestProvName.Firebird3 + ".LinqService")
+						if (context.Contains("Firebird"))
 							query = db.GetTable<StringTestTable>().Value(_ => _.String, record.String);
 
 						query.Insert();
@@ -140,10 +137,7 @@ namespace Tests.Linq
 								Assert.AreEqual(testData[i].String?.TrimEnd(' '), records[i].String);
 						}
 
-						if (context != ProviderName.Firebird
-							  && context != ProviderName.Firebird + ".LinqService"
-							  && context != TestProvName.Firebird3
-							  && context != TestProvName.Firebird3 + ".LinqService")
+						if (!context.Contains("Firebird"))
 						{
 							if (context.Contains("Sybase"))
 								Assert.AreEqual(testData[i].NString?.TrimEnd(' ')?.TrimEnd('\0'), records[i].NString);

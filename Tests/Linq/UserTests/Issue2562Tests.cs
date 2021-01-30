@@ -51,7 +51,7 @@ namespace Tests.UserTests
 
 
 		[Test]
-		public void DynamicColumn([IncludeDataSources(ProviderName.Firebird)] string context)
+		public void DynamicColumn([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<Person2562>())

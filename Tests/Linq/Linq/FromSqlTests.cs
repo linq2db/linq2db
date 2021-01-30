@@ -24,7 +24,7 @@ namespace Tests.Linq
 			[Column("id")]
 			public int Id    { get; set; }
 
-			[Column("value", Length = 50)]
+			[Column("value1", Length = 50)]
 			public string? Value { get; set; }
 
 
@@ -41,7 +41,7 @@ namespace Tests.Linq
 			[Column("parent_id")]
 			public int ParentId { get; set; }
 
-			[Column("value", Length = 50)]
+			[Column("value1", Length = 50)]
 			public string? Value { get; set; }
 		}
 

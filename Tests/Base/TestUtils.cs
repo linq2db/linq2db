@@ -32,7 +32,7 @@ namespace Tests
 			return Interlocked.Increment(ref _cnt);
 		}
 
-		public const string NO_SCHEMA_NAME = "UNUSED_SCHEMA";
+		public const string NO_SCHEMA_NAME   = "UNUSED_SCHEMA";
 		public const string NO_DATABASE_NAME = "UNUSED_DB";
 		public const string NO_SERVER_NAME   = "UNUSED_SERVER";
 
@@ -286,13 +286,13 @@ namespace Tests
 		}
 
 		static TempTable<T> CreateTable<T>(IDataContext db, string? tableName, TableOptions tableOptions = TableOptions.NotSet) =>
-			db.CreateSqlProvider() is FirebirdSqlBuilder ?
+			db.CreateSqlProvider() is Firebird25SqlBuilder ?
 				new FirebirdTempTable<T>(db, tableName, tableOptions : tableOptions) :
 				new         TempTable<T>(db, tableName, tableOptions : tableOptions);
 
 		static void ClearDataContext(IDataContext db)
 		{
-			if (db.CreateSqlProvider() is FirebirdSqlBuilder)
+			if (db.CreateSqlProvider() is Firebird25SqlBuilder)
 			{
 				db.Close();
 				FirebirdTools.ClearAllPools();
