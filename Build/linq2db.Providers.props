@@ -57,8 +57,8 @@
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' OR '$(TargetFramework)' == 'net5.0' ">
 		<!--magic-->
-		<PackageReference Include="IBM.Data.DB2.Core" Version="3.1.0.300"  Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' " />
-		<PackageReference Include="IBM.Data.DB2.Core-lnx" Version="3.1.0.300" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' " />
+		<PackageReference Include="IBM.Data.DB2.Core" Version="3.1.0.400"  Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' " />
+		<PackageReference Include="IBM.Data.DB2.Core-lnx" Version="3.1.0.400" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' " />
 		<PackageReference Include="IBM.Data.DB2.Core-osx" Version="3.1.0.300" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' "/>
 	</ItemGroup>
 
