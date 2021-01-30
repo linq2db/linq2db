@@ -34,11 +34,6 @@
 	
 	<PropertyGroup>
 		<AnalysisLevel>preview</AnalysisLevel>
-		
-		<EnableNETAnalyzers>false</EnableNETAnalyzers>
-		<RunAnalyzers>false</RunAnalyzers>
-	</PropertyGroup>
-	<PropertyGroup Condition=" '$(Configuration)' == 'Azure' OR '$(Configuration)' == 'Release' ">
 		<EnableNETAnalyzers>true</EnableNETAnalyzers>
 		<RunAnalyzers>true</RunAnalyzers>
 	</PropertyGroup>

@@ -153,6 +153,9 @@ dotnet_diagnostic.CA2231.severity = none # CA2231: Overload operator equals on o
 # disabled, as NETFX doesn't have string.Contains overloads with comparison type
 dotnet_diagnostic.CA2249.severity = none # CA2249: Consider using String.Contains instead of String.IndexOf
 dotnet_diagnostic.CA3075.severity = error # CA3075: Insecure DTD Processing
+# very slow (https://github.com/dotnet/roslyn-analyzers/issues/4754)
+# also we don't have code that could be targeted by it
+dotnet_diagnostic.CA3076.severity = none # CA3076: Insecure XSLT Script Execution
 
 #########################################################################################################
 # inactive diagnostics (not reviewed yet => disabled to not fail build, basically TODO list for future) #

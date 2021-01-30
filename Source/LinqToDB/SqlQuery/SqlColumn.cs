@@ -171,7 +171,7 @@ namespace LinqToDB.SqlQuery
 #if DEBUG
 				.Append('[').Append(_columnNumber).Append(']')
 #endif
-				.Append(".")
+				.Append('.')
 				.Append(Alias ?? "c")
 				.Append(" => ");
 
