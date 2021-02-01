@@ -115,6 +115,27 @@ namespace LinqToDB.DataProvider.Firebird
 		internal static MappingSchema Instance { get; } = new FirebirdMappingSchema();
 	}
 
+	/// <summary>
+	/// Contains generic dialect1 mappings, not bound to specific version.
+	/// </summary>
+	public class FirebirdDialect1MappingSchema : MappingSchema
+	{
+		public FirebirdDialect1MappingSchema()
+			: base(ProviderName.FirebirdDialect1)
+		{
+			SetConvertExpression<double, TimeSpan>(v => new TimeSpan((long)v));
+
+			//SetConvertExpression<uint  , DataParameter>(v => new DataParameter(null, (decimal )v, DataType.Decimal));
+			//SetConvertExpression<uint? , DataParameter>(v => new DataParameter(null, (decimal?)v, DataType.Decimal));
+			//SetConvertExpression<long  , DataParameter>(v => new DataParameter(null, (decimal )v, DataType.Decimal));
+			//SetConvertExpression<long? , DataParameter>(v => new DataParameter(null, (decimal?)v, DataType.Decimal));
+			//SetConvertExpression<ulong , DataParameter>(v => new DataParameter(null, (decimal )v, DataType.Decimal));
+			//SetConvertExpression<ulong?, DataParameter>(v => new DataParameter(null, (decimal?)v, DataType.Decimal));
+		}
+
+		internal static MappingSchema Instance { get; } = new FirebirdDialect1MappingSchema();
+	}
+
 	public class Firebird25MappingSchema : MappingSchema
 	{
 		public Firebird25MappingSchema()
@@ -149,7 +170,7 @@ namespace LinqToDB.DataProvider.Firebird
 		}
 
 		protected Firebird25Dialect1MappingSchema(string providerName, params MappingSchema[] schemas)
-				: base(providerName, schemas)
+				: base(providerName, Array<MappingSchema>.Append(schemas, FirebirdDialect1MappingSchema.Instance))
 		{
 		}
 	}
@@ -197,7 +218,7 @@ namespace LinqToDB.DataProvider.Firebird
 		}
 
 		protected Firebird3Dialect1MappingSchema(string providerName, params MappingSchema[] schemas)
-				: base(providerName, schemas)
+				: base(providerName, Array<MappingSchema>.Append(schemas, FirebirdDialect1MappingSchema.Instance))
 		{
 		}
 	}
@@ -233,7 +254,7 @@ namespace LinqToDB.DataProvider.Firebird
 		}
 
 		protected Firebird4Dialect1MappingSchema(string providerName, params MappingSchema[] schemas)
-				: base(providerName, schemas)
+				: base(providerName, Array<MappingSchema>.Append(schemas, FirebirdDialect1MappingSchema.Instance))
 		{
 		}
 	}

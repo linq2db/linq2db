@@ -1,32 +1,27 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Configuration;
 using System.Data;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-
-using NUnit.Framework;
-
 using LinqToDB;
 using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.DB2;
 using LinqToDB.DataProvider.SqlServer;
+using NUnit.Framework;
 
 namespace Tests.Data
 {
-	using Microsoft.Extensions.DependencyInjection;
-
 	using System.Collections.Generic;
-	using System.Runtime.InteropServices;
+	using System.Data.Common;
 	using System.Transactions;
 	using LinqToDB.AspNet;
 	using LinqToDB.Data.RetryPolicy;
 	using LinqToDB.Mapping;
+	using Microsoft.Extensions.DependencyInjection;
 	using Model;
-	using System.Data.Common;
 
 	[TestFixture]
 	public class DataConnectionTests : TestBase

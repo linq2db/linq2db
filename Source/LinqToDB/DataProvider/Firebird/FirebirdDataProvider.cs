@@ -46,7 +46,7 @@ namespace LinqToDB.DataProvider.Firebird
 			SetProviderField<IDataReader,TimeSpan,DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1970, 1, 1));
 			SetProviderField<IDataReader,DateTime,DateTime>((r,i) => GetDateTime(r.GetDateTime(i)));
 
-			_sqlOptimizer = new FirebirdSqlOptimizer(SqlProviderFlags);
+			_sqlOptimizer = Dialect == FirebirdDialect.Dialect1 ? new FirebirdDialect1SqlOptimizer(SqlProviderFlags) : new FirebirdSqlOptimizer(SqlProviderFlags);
 		}
 
 		public FirebirdVersion Version { get; }
@@ -86,13 +86,36 @@ namespace LinqToDB.DataProvider.Firebird
 
 		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
 		{
-			if (value is bool)
+			switch (dataType.DataType)
 			{
-				value = (bool)value ? "1" : "0";
+				case DataType.Int64:
+					if (Dialect == FirebirdDialect.Dialect1 && value is TimeSpan span)
+					{
+						value    = (decimal)span.Ticks;
+						dataType = dataType.WithDataType(DataType.Decimal);
+					}
+					break;
+			}
+
+			if (value is bool boolVal)
+			{
+				value   = boolVal ? "1" : "0";
 				dataType = dataType.WithDataType(DataType.Char);
 			}
 
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
+		}
+
+		public override Type ConvertParameterType(Type type, DbDataType dataType)
+		{
+			switch (dataType.DataType)
+			{
+				case DataType.Int64:
+					if (Dialect == FirebirdDialect.Dialect1 && type == typeof(TimeSpan)) return typeof(decimal);
+					break;
+			}
+
+			return type;
 		}
 
 		public override bool? IsDBNullAllowed(IDataReader reader, int idx) => true;

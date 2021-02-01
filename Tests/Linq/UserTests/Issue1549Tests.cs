@@ -97,7 +97,7 @@ namespace Tests.UserTests
 
 			[Column("devid", Length = 50), Nullable] public string? Devid           { get; set; } // character varying(255)
 			[Column("tsdevice"), NotNull]            public DateTime Ts             { get; set; } // timestamp (6) without time zone
-			[Column("value"), NotNull]               public decimal Value           { get; set; } // numeric(18,2)
+			[Column("value_col"), NotNull]           public decimal Value           { get; set; } // numeric(18,2)
 			[Column(), Nullable]                     public int? Devtypeid          { get; set; } // integer
 			[Column(), Nullable]                     public int? DevReadingTypeId   { get; set; } // integer
 			[Column(Length = 50), Nullable]          public string? ReadingTypeName { get; set; } // text

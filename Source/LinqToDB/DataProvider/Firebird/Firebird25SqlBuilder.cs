@@ -268,7 +268,8 @@ namespace LinqToDB.DataProvider.Firebird
 					var identifierValue = identifier;
 
 					// if identifier is not quoted, it must be converted to upper case to match record in rdb$relation_name
-					if (FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.None ||
+					if (Dialect1 ||
+						FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.None ||
 						FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && IsValidIdentifier(identifierValue))
 						identifierValue = identifierValue.ToUpper();
 
@@ -407,7 +408,8 @@ namespace LinqToDB.DataProvider.Firebird
 						var identifierValue = createTable.Table.PhysicalName!;
 
 						// if identifier is not quoted, it must be converted to upper case to match record in rdb$relation_name
-						if (FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.None ||
+						if (Dialect1 ||
+							FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.None ||
 							FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && IsValidIdentifier(identifierValue))
 							identifierValue = identifierValue.ToUpper();
 
@@ -450,7 +452,8 @@ namespace LinqToDB.DataProvider.Firebird
 					var identifierValue = createTable.Table.PhysicalName!;
 
 					// if identifier is not quoted, it must be converted to upper case to match record in rdb$relation_name
-					if (FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.None ||
+					if (Dialect1 ||
+						FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.None ||
 						FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && IsValidIdentifier(identifierValue))
 						identifierValue = identifierValue.ToUpper();
 

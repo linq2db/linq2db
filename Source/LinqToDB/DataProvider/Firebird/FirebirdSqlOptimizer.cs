@@ -282,7 +282,7 @@ namespace LinqToDB.DataProvider.Firebird
 			return statement;
 		}
 
-		private const string CASTEXPR = "Cast({0} as {1})";
+		protected const string CASTEXPR = "Cast({0} as {1})";
 		#endregion
 	}
 }

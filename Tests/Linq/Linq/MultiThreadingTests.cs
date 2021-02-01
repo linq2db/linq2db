@@ -26,16 +26,14 @@ namespace Tests.Linq
 		[Table]
 		class MultiThreadedData
 		{
-			[Column(IsPrimaryKey = true)] 
-			public int Id    { get; set; }
-			[Column] public int Value { get; set; }
-			[Column(Length = 50, DataType = DataType.Char)] 
-			public string StrValue { get; set; } = null!;
+			[Column(IsPrimaryKey = true)                  ] public int    Id       { get; set; }
+			[Column                                       ] public int    IntValue { get; set; }
+			[Column(Length = 50, DataType = DataType.Char)] public string StrValue { get; set; } = null!;
 			
 			public static MultiThreadedData[] TestData()
 			{
 				return Enumerable.Range(1, 100)
-					.Select(i => new MultiThreadedData {Id = i, Value = i * 10, StrValue = "Strx" + i})
+					.Select(i => new MultiThreadedData {Id = i, IntValue = i * 10, StrValue = "Strx" + i})
 					.ToArray();
 			}
 		}

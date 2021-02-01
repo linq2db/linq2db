@@ -1271,6 +1271,10 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.RoundToEven(0.0,0)), N(() => L<double?,int?,double?>((double? v,int? p) => (double?)Sql.RoundToEven((decimal)v!, p))) },
 				}},
 
+				{ ProviderName.FirebirdDialect1, new Dictionary<MemberInfo,IExpressionInfo> {
+					{ M(() => Sql.MakeDateTime(0, 0, 0)          ), N(() => L<int?,int?,int?,DateTime?>               ((int? y,int? m,int? d)                       => (DateTime?)Sql.Convert(Sql.DateTime, y.ToString() + "-" + m.ToString() + "-" + d.ToString() + " 00:00"))) },
+				}},
+
 				#endregion
 
 				#region MySql

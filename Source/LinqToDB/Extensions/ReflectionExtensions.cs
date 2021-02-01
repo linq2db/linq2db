@@ -812,6 +812,26 @@ namespace LinqToDB.Extensions
 			return false;
 		}
 
+		/// <summary>
+		/// Type is integer type up to <see cref="int"/> including nullable types.
+		/// </summary>
+		public static bool IsInteger32Type(this Type type)
+		{
+			if (type.IsNullable())
+				type = type.GetGenericArguments()[0];
+
+			switch (type.GetTypeCodeEx())
+			{
+				case TypeCode.SByte  :
+				case TypeCode.Byte   :
+				case TypeCode.Int16  :
+				case TypeCode.UInt16 :
+				case TypeCode.Int32  : return true;
+			}
+
+			return false;
+		}
+
 		interface IGetDefaultValueHelper
 		{
 			object? GetDefaultValue();

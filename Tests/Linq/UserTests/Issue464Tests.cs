@@ -33,7 +33,7 @@ namespace Tests.UserTests
 				  .Entity<Entity>()
 				  .HasTableName("Issue464")
 				  .HasColumn(x => x.Id)
-				  .HasColumn(x => x.Value);
+				  .HasColumn(x => x.ValueColumn);
 
 			using (var db = new  DataConnection(context).AddMappingSchema(schema))
 			using (new FirebirdQuoteMode(FirebirdIdentifierQuoteMode.Auto))
@@ -44,9 +44,9 @@ namespace Tests.UserTests
 
 					var data = new[]
 					{
-						new Entity {Id = 1, Value = new MyInt {Value = 1}},
-						new Entity {Id = 2, Value = new MyInt {Value = 2}},
-						new Entity {Id = 3, Value = new MyInt {Value = 3}}
+						new Entity {Id = 1, ValueColumn = new MyInt {Value = 1}},
+						new Entity {Id = 2, ValueColumn = new MyInt {Value = 2}},
+						new Entity {Id = 3, ValueColumn = new MyInt {Value = 3}}
 					};
 
 					temptable.BulkCopy(data);
@@ -63,14 +63,14 @@ namespace Tests.UserTests
 
 		public class Entity
 		{
-			public int    Id    { get; set; }
-			public MyInt? Value { get; set; }
+			public int    Id          { get; set; }
+			public MyInt? ValueColumn { get; set; }
 
 			public override bool Equals(object? obj)
 			{
 				return obj is Entity e
 					&& Id == e.Id
-					&& Value!.Value == Id;
+					&& ValueColumn!.Value == Id;
 			}
 
 			public override int GetHashCode()

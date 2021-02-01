@@ -10,14 +10,14 @@ namespace Tests.Mapping
 		class InstanceClass : IProjected
 		{
 			public int     Id       { get; set; }
-			public int     Value    { get; set; }
+			public int     ValueCol { get; set; }
 			public string? ValueStr { get; set; }
 
-			public int     EntityValue       { get => Value;    set => Value    = value; }
+			public int     EntityValue       { get => ValueCol; set => ValueCol = value; }
 			public string? EntityValueStr    { get => ValueStr; set => ValueStr = value; }
 
 			[ColumnAlias("Id")]
-			public int    EntityId          { get => Id;       set => Id       = value; }
+			public int    EntityId           { get => Id;       set => Id       = value; }
 		}
 
 		interface IProjected
@@ -35,9 +35,9 @@ namespace Tests.Mapping
 			fluent.Entity<InstanceClass>().IsColumnRequired()
 				.IsColumnRequired()
 				.Property(e => e.Id)
-				.Property(e => e.Value)
+				.Property(e => e.ValueCol)
 				.Property(e => e.ValueStr).HasLength(10)
-				.Member(e => e.EntityValue).IsAlias(e => e.Value)
+				.Member(e => e.EntityValue).IsAlias(e => e.ValueCol)
 				.Member(e => e.EntityValueStr).IsAlias("ValueStr");
 
 			return fluent.MappingSchema;
@@ -46,7 +46,7 @@ namespace Tests.Mapping
 		InstanceClass[] GenerateData()
 		{
 			return Enumerable.Range(1, 20)
-				.Select(i => new InstanceClass { Id = i, Value = 100 + i, ValueStr = "Str_" + i }).ToArray();
+				.Select(i => new InstanceClass { Id = i, ValueCol = 100 + i, ValueStr = "Str_" + i }).ToArray();
 		}
 
 		[Test]

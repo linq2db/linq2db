@@ -14,10 +14,10 @@ namespace Tests.Mapping
 	{
 		class InstanceClass
 		{
-			public int    Id       { get; set; }
-			public int    Value    { get; set; }
+			public int    Id          { get; set; }
+			public int    ValueColumn { get; set; }
 
-			public string EntityValue => Id.ToString() + Value;
+			public string  EntityValue => Id.ToString() + ValueColumn;
 			public string? EntityMaterialized { get; set; }
 		}
 
@@ -29,8 +29,8 @@ namespace Tests.Mapping
 			fluent.Entity<InstanceClass>().IsColumnRequired()
 				.IsColumnRequired()
 				.Property(e => e.Id)
-				.Property(e => e.Value)
-				.Member(e => e.EntityValue).IsExpression(e => e.Id.ToString() + e.Value.ToString())
+				.Property(e => e.ValueColumn)
+				.Member(e => e.EntityValue).IsExpression(e => e.Id.ToString() + e.ValueColumn.ToString())
 				.Member(e => e.EntityMaterialized).IsExpression(e => "M" + e.Id.ToString(), true);
 
 			return fluent.MappingSchema;
@@ -39,7 +39,7 @@ namespace Tests.Mapping
 		InstanceClass[] GenerateData()
 		{
 			return Enumerable.Range(1, 20)
-				.Select(i => new InstanceClass { Id = i, Value = 100 + i }).ToArray();
+				.Select(i => new InstanceClass { Id = i, ValueColumn = 100 + i }).ToArray();
 		}
 
 		[Test]
@@ -51,7 +51,7 @@ namespace Tests.Mapping
 				using (var table = db.CreateLocalTable(testData))
 				{
 					Assert.AreEqual(testData.Length,
-						table.Where(t => Sql.AsNotNull(t.EntityValue) == t.Id.ToString() + t.Value).Count());
+						table.Where(t => Sql.AsNotNull(t.EntityValue) == t.Id.ToString() + t.ValueColumn).Count());
 				}
 			}
 		}
@@ -67,7 +67,7 @@ namespace Tests.Mapping
 				{
 					var meterialized = table.ToArray();
 					var expected     = meterialized.Select(e => new InstanceClass
-						{ Id = e.Id, Value = e.Value, EntityMaterialized = "M" + e.Id.ToString() });
+						{ Id = e.Id, ValueColumn = e.ValueColumn, EntityMaterialized = "M" + e.Id.ToString() });
 
 					AreEqualWithComparer(expected, meterialized);
 				}

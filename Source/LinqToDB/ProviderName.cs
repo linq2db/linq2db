@@ -42,6 +42,11 @@ namespace LinqToDB
 		/// <remarks>It is recommended to use explicit version <see cref="Firebird25"/> directly.</remarks>
 		public const string Firebird           = "Firebird";
 		/// <summary>
+		/// Generic Firebird dialect 1 mapping schema name.
+		/// </summary>
+		/// <remarks>It is recommended to use explicit version (e.g. <see cref="Firebird25Dialect1"/>) directly.</remarks>
+		public const string FirebirdDialect1   = "Firebird.D1";
+		/// <summary>
 		/// Firebird 2.5 dialect 3 provider.
 		/// </summary>
 		public const string Firebird25         = "Firebird.25";
