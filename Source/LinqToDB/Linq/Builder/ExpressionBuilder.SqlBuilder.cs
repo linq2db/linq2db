@@ -3333,7 +3333,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					// Handling case when all columns are aggregates, it cause query to produce only single record and we have to include at least one aggregation in Select statement.
 					// 
-					var allAggregate = sql.All(s => QueryHelper.IsAggregationFunction(s.Sql));
+					var allAggregate = sql.All(s => QueryHelper.IsAggregationOrWindowFunction(s.Sql));
 					if (allAggregate)
 					{
 						query.Select.Add(sql[0].Sql);

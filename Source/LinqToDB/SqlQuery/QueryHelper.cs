@@ -314,7 +314,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SqlExpression:
 				{
 					var sqlExpr = (SqlExpression) expr;
-					if (!sqlExpr.IsPure || sqlExpr.IsAggregate)
+					if (!sqlExpr.IsPure || (sqlExpr.Flags & (SqlFlags.IsAggregate | SqlFlags.IsWindowFunction)) != 0)
 						return false;
 					return sqlExpr.Parameters.All(p => IsConstant(p));
 				}
@@ -1210,13 +1210,13 @@ namespace LinqToDB.SqlQuery
 			return result;
 		}
 
-		public static bool IsAggregationFunction(IQueryElement expr)
+		public static bool IsAggregationOrWindowFunction(IQueryElement expr)
 		{
 			if (expr is SqlFunction func)
 				return func.IsAggregate;
 
 			if (expr is SqlExpression expression)
-				return expression.IsAggregate;
+				return (expression.Flags & (SqlFlags.IsAggregate | SqlFlags.IsWindowFunction)) != 0;
 
 			return false;
 		}

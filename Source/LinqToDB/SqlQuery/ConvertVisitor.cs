@@ -179,7 +179,7 @@ namespace LinqToDB.SqlQuery
 							var parameter = Convert(expr.Parameters);
 
 							if (parameter != null && !ReferenceEquals(parameter, expr.Parameters))
-								newElement = new SqlExpression(expr.SystemType, expr.Expr, expr.Precedence, expr.IsAggregate, expr.IsPure, parameter);
+								newElement = new SqlExpression(expr.SystemType, expr.Expr, expr.Precedence, expr.Flags, parameter);
 
 							break;
 						}

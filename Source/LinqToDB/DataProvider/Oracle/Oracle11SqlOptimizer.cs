@@ -209,7 +209,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return expr;
 		}
 
-		static readonly ISqlExpression RowNumExpr = new SqlExpression(typeof(long), "ROWNUM", Precedence.Primary, true, true);
+		static readonly ISqlExpression RowNumExpr = new SqlExpression(typeof(long), "ROWNUM", Precedence.Primary, SqlFlags.IsWindowFunction);
 
 		/// <summary>
 		/// Replaces Take/Skip by ROWNUM usage.

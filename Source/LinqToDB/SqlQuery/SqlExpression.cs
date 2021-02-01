@@ -8,7 +8,7 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlExpression : ISqlExpression
 	{
-		public SqlExpression(Type? systemType, string expr, int precedence, bool isAggregate, bool isPure, params ISqlExpression[] parameters)
+		public SqlExpression(Type? systemType, string expr, int precedence, SqlFlags flags, params ISqlExpression[] parameters)
 		{
 			if (parameters == null) throw new ArgumentNullException(nameof(parameters));
 
@@ -19,12 +19,11 @@ namespace LinqToDB.SqlQuery
 			Expr        = expr;
 			Precedence  = precedence;
 			Parameters  = parameters;
-			IsAggregate = isAggregate;
-			IsPure      = isPure;
+			Flags       = flags;
 		}
 
 		public SqlExpression(Type? systemType, string expr, int precedence, params ISqlExpression[] parameters)
-			: this(systemType, expr, precedence, false, true, parameters)
+			: this(systemType, expr, precedence, SqlFlags.IsPure, parameters)
 		{
 		}
 
@@ -47,8 +46,12 @@ namespace LinqToDB.SqlQuery
 		public string           Expr        { get; }
 		public int              Precedence  { get; }
 		public ISqlExpression[] Parameters  { get; }
-		public bool             IsAggregate { get; }
-		public bool             IsPure      { get; }
+		public SqlFlags         Flags       { get; }
+
+		public bool             IsAggregate      => (Flags & SqlFlags.IsAggregate)      != 0;
+		public bool             IsPure           => (Flags & SqlFlags.IsPure)           != 0;
+		public bool             IsPredicate      => (Flags & SqlFlags.IsPredicate)      != 0;
+		public bool             IsWindowFunction => (Flags & SqlFlags.IsWindowFunction) != 0;
 
 		#region Overrides
 
@@ -200,6 +203,8 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SqlExpression:
 				{
 					var expr = (SqlExpression)ex;
+					if (expr.IsPredicate)
+						return false;
 					if (QueryHelper.IsTransitiveExpression(expr))
 						return NeedsEqual(expr.Parameters[0]);
 					return true;

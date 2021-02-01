@@ -780,8 +780,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.SystemType);
 							Append(elem.Expr);
 							Append(elem.Precedence);
-							Append(elem.IsAggregate);
-							Append(elem.IsPure);
+							Append((int)elem.Flags);
 							Append(elem.Parameters);
 
 							break;
@@ -1548,11 +1547,10 @@ namespace LinqToDB.ServiceModel
 							var systemType  = Read<Type>();
 							var expr        = ReadString()!;
 							var precedence  = ReadInt();
-							var isAggregate = ReadBool();
-							var isPure      = ReadBool();
+							var flags       = (SqlFlags)ReadInt();
 							var parameters  = ReadArray<ISqlExpression>()!;
 
-							obj = new SqlExpression(systemType, expr, precedence, isAggregate, isPure, parameters);
+							obj = new SqlExpression(systemType, expr, precedence, flags, parameters);
 
 							break;
 						}
