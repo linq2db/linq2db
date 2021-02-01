@@ -968,7 +968,7 @@ namespace Tests.Linq
 			public ComplexParent? Parent { get; }
 		}
 
-		public class User
+		public class UserTable
 		{
 			public int Id { get; set; }
 		}
@@ -992,18 +992,18 @@ namespace Tests.Linq
 				Relationship = Relationship.ManyToOne)]
 			public Lookup? AssociationTypeCode { get; set; }
 
-			public static Expression<Func<Resource, IDataContext, IQueryable<User>>> UserExpression =>
-				(r, db) => db.GetTable<User>().Where(c => r.AssociationTypeCode!.Type == "us" && c.Id == r.AssociatedObjectId);
+			public static Expression<Func<Resource, IDataContext, IQueryable<UserTable>>> UserExpression =>
+				(r, db) => db.GetTable<UserTable>().Where(c => r.AssociationTypeCode!.Type == "us" && c.Id == r.AssociatedObjectId);
 
 			[Association(QueryExpressionMethod = nameof(UserExpression))]
-			public User? User { get; set; }
+			public UserTable? User { get; set; }
 		}
 
 		[Test]
 		public void Issue1614Test([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable<User>())
+			using (db.CreateLocalTable<UserTable>())
 			using (db.CreateLocalTable<Resource>())
 			using (db.CreateLocalTable<Lookup>())
 			{

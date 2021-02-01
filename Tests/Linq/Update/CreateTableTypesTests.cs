@@ -32,7 +32,7 @@ namespace Tests.xUpdate
 			public int?        Int32Nullable      { get; set; }
 			public long        Int64              { get; set; }
 			public long?       Int64Nullable      { get; set; }
-			public double      Double             { get; set; }
+			public double      DoubleColumn       { get; set; }
 			public double?     DoubleNullable     { get; set; }
 			public bool        Boolean            { get; set; }
 			public bool?       BooleanNullable    { get; set; }
@@ -125,9 +125,9 @@ namespace Tests.xUpdate
 				// Access doesn't have 64bit integer type
 				yield return new TestCreateTableColumnTypeParameters("Int64Nullable"                  , e => e.HasColumn(_ => _.Int64Nullable),                          v => v.Int64Nullable      = 4                                   , null,                                                                                                                        null,                            ctx => ctx.Contains("Access"));
 				// Firebird looses precision of double
-				yield return new TestCreateTableColumnTypeParameters("Double"                         , e => e.HasColumn(_ => _.Double),                                 v => v.Double             = 3.14                                , null,                                                                                                                        ctx => ctx.Contains("Firebird"), null);
+				yield return new TestCreateTableColumnTypeParameters("DoubleColumn"                   , e => e.HasColumn(_ => _.DoubleColumn),                           v => v.DoubleColumn       = 3.14                                , null,                                                                                                                        ctx => ctx.Contains(ProviderName.Firebird25) || ctx.Contains(ProviderName.Firebird3), null);
 				// Firebird looses precision of double
-				yield return new TestCreateTableColumnTypeParameters("DoubleNullable"                 , e => e.HasColumn(_ => _.DoubleNullable),                         v => v.DoubleNullable     = 4.13                                , null,                                                                                                                        ctx => ctx.Contains("Firebird"), null);
+				yield return new TestCreateTableColumnTypeParameters("DoubleNullable"                 , e => e.HasColumn(_ => _.DoubleNullable),                         v => v.DoubleNullable     = 4.13                                , null,                                                                                                                        ctx => ctx.Contains(ProviderName.Firebird25) || ctx.Contains(ProviderName.Firebird3), null);
 				yield return new TestCreateTableColumnTypeParameters("Boolean"                        , e => e.HasColumn(_ => _.Boolean),                                v => v.Boolean            = true                                , null,                                                                                                                        null,                            null);
 				// Sybase doesn't support nullable bits
 				// Access allows you to define nullable bits, but returns null as false

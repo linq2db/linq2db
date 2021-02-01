@@ -12,6 +12,18 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue982Tests : TestBase
 	{
+		class Issue982FirebirdDataProvider : FirebirdDataProvider
+		{
+			private readonly ISqlOptimizer _optimizer;
+			public Issue982FirebirdDataProvider(FirebirdVersion version, FirebirdDialect dialect)
+				: base(version, dialect)
+			{
+				_optimizer = new Issue982FirebirdSqlOptimizer(SqlProviderFlags);
+			}
+
+			public override ISqlOptimizer GetSqlOptimizer() => _optimizer;
+		}
+
 		private class Issue982FirebirdSqlOptimizer : FirebirdSqlOptimizer
 		{
 			public Issue982FirebirdSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
@@ -118,14 +130,23 @@ namespace Tests.UserTests
 		public void Test([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
 			var connectionString = DataConnection.GetConnectionString(context);
-			var oldProvider      = DataConnection.GetDataProvider(context);
+			FirebirdDataProvider originalProvider;
+
+			FirebirdVersion version;
+			FirebirdDialect dialect;
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				originalProvider = (FirebirdDataProvider)db.DataProvider;
+				version          = originalProvider.Version;
+				dialect          = originalProvider.Dialect;
+			}
 
 			try
 			{
 				DataConnection.AddConfiguration(
 					context,
 					connectionString,
-					new FirebirdDataProvider(new Issue982FirebirdSqlOptimizer(oldProvider.SqlProviderFlags)));
+					new Issue982FirebirdDataProvider(version, dialect));
 
 				using (var db = GetDataContext(context))
 				{
@@ -152,7 +173,7 @@ namespace Tests.UserTests
 			finally
 			{
 				// restore
-				DataConnection.AddConfiguration(context, connectionString, oldProvider);
+				DataConnection.AddConfiguration(context, connectionString, originalProvider);
 			}
 		}
 	}

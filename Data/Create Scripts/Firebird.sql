@@ -225,7 +225,14 @@ CREATE TABLE "LinqDataTypes"
 	"MoneyValue"     decimal(10,4),
 	"DateTimeValue"  timestamp,
 	"DateTimeValue2" timestamp,
+-- SKIP Firebird.4 BEGIN
+-- SKIP Firebird.3 BEGIN
 	"BoolValue"      char(1),
+-- SKIP Firebird.3 END
+-- SKIP Firebird.4 END
+-- SKIP Firebird.25 BEGIN
+	"BoolValue"      boolean,
+-- SKIP Firebird.25 END
 	"GuidValue"      char(38),
 	"BinaryValue"    blob,
 	"SmallIntValue"  smallint,
@@ -287,15 +294,18 @@ COMMIT;
 
 CREATE TABLE "AllTypes"
 (
-	ID                       integer      NOT NULL PRIMARY KEY,
+	ID                         integer      NOT NULL PRIMARY KEY,
 
 	"bigintDataType"           bigint,
 	"smallintDataType"         smallint,
 	"decimalDataType"          decimal(18),
 	"intDataType"              int,
+	"doubleDataType"           double precision,
 	"floatDataType"            float,
 	"realDataType"             real,
 
+	"timeDataType"             time,
+	"dateDataType"             date,
 	"timestampDataType"        timestamp,
 
 	"charDataType"             char(1),
@@ -304,6 +314,19 @@ CREATE TABLE "AllTypes"
 	"textDataType"             blob sub_type TEXT,
 	"ncharDataType"            char(20) character set UNICODE_FSS,
 	"nvarcharDataType"         varchar(20) character set UNICODE_FSS,
+
+-- SKIP Firebird.25 BEGIN
+	"booleanDataType"          boolean,
+-- SKIP Firebird.25 END
+
+-- SKIP Firebird.25 BEGIN
+-- SKIP Firebird.3 BEGIN
+	"timestampTZDataType"      timestamp with time zone,
+	"timeTZDataType"           time with time zone,
+	"decfloat16DataType"       decfloat(16),
+	"decfloat346DataType"      decfloat(34),
+-- SKIP Firebird.3 END
+-- SKIP Firebird.25 END
 
 	"blobDataType"             blob
 );
@@ -330,15 +353,31 @@ VALUES
 	NULL,
 	NULL,
 	NULL,
-
 	NULL,
 
 	NULL,
 	NULL,
 	NULL,
+
 	NULL,
 	NULL,
 	NULL,
+	NULL,
+	NULL,
+	NULL,
+
+-- SKIP Firebird.25 BEGIN
+	NULL,
+-- SKIP Firebird.25 END
+
+-- SKIP Firebird.25 BEGIN
+-- SKIP Firebird.3 BEGIN
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+-- SKIP Firebird.3 END
+-- SKIP Firebird.25 END
 
 	NULL
 );
@@ -353,9 +392,12 @@ VALUES
 	25555,
 	2222222,
 	7777777,
+	321.123,
 	20.31,
 	16,
 
+	Cast('12:12:12' as time),
+	Cast('2012-12-12' as date),
 	Cast('2012-12-12 12:12:12' as timestamp),
 
 	'1',
@@ -364,6 +406,19 @@ VALUES
 	'567',
 	'23233',
 	'3323',
+
+-- SKIP Firebird.25 BEGIN
+	true,
+-- SKIP Firebird.25 END
+
+-- SKIP Firebird.25 BEGIN
+-- SKIP Firebird.3 BEGIN
+	'2020-12-12 12:24:35 -01:30',
+	'12:13 +01:30',
+	1234567890.123456,
+	123456789012345678901234567890.1234,
+-- SKIP Firebird.3 END
+-- SKIP Firebird.25 END
 
 	'12345'
 );
@@ -724,7 +779,14 @@ CREATE TABLE "TestMerge1"
 	"Field5" INTEGER,
 
 	"FieldInt64"      BIGINT,
+-- SKIP Firebird.4 BEGIN
+-- SKIP Firebird.3 BEGIN
 	"FieldBoolean"    CHAR(1),
+-- SKIP Firebird.3 END
+-- SKIP Firebird.4 END
+-- SKIP Firebird.25 BEGIN
+	"FieldBoolean"    BOOLEAN,
+-- SKIP Firebird.25 END
 	"FieldString"     VARCHAR(20),
 	"FieldNString"    VARCHAR(20) CHARACTER SET UNICODE_FSS,
 	"FieldChar"       CHAR(1),
@@ -736,7 +798,7 @@ CREATE TABLE "TestMerge1"
 	"FieldGuid"       CHAR(38),
 	"FieldDecimal"    DECIMAL(18, 10),
 	"FieldDate"       DATE,
-	"FieldTime"       TIMESTAMP,
+	"FieldTime"       TIME,
 	"FieldEnumString" VARCHAR(20),
 	"FieldEnumNumber" INT
 );
@@ -752,7 +814,14 @@ CREATE TABLE "TestMerge2"
 	"Field5" INTEGER,
 
 	"FieldInt64"      BIGINT,
+-- SKIP Firebird.4 BEGIN
+-- SKIP Firebird.3 BEGIN
 	"FieldBoolean"    CHAR(1),
+-- SKIP Firebird.3 END
+-- SKIP Firebird.4 END
+-- SKIP Firebird.25 BEGIN
+	"FieldBoolean"    BOOLEAN,
+-- SKIP Firebird.25 END
 	"FieldString"     VARCHAR(20),
 	"FieldNString"    VARCHAR(20) CHARACTER SET UNICODE_FSS,
 	"FieldChar"       CHAR(1),
@@ -764,7 +833,7 @@ CREATE TABLE "TestMerge2"
 	"FieldGuid"       CHAR(38),
 	"FieldDecimal"    DECIMAL(18, 10),
 	"FieldDate"       DATE,
-	"FieldTime"       TIMESTAMP,
+	"FieldTime"       TIME,
 	"FieldEnumString" VARCHAR(20),
 	"FieldEnumNumber" INT
 );
@@ -774,6 +843,5 @@ CREATE PROCEDURE "AddIssue792Record"
 AS
 BEGIN
 	INSERT INTO "AllTypes"("char20DataType") VALUES('issue792');
-	SUSPEND;
 END;
 COMMIT;

@@ -17,7 +17,7 @@ namespace Tests.xUpdate
 			TestProvName.AllOracle,
 			TestProvName.AllSybase,
 			TestProvName.AllSapHana,
-			TestProvName.AllFirebird)]
+			TestProvName.AllFirebird3Minus)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -50,7 +50,7 @@ namespace Tests.xUpdate
 			TestProvName.AllInformix,
 			TestProvName.AllSybase,
 			TestProvName.AllSapHana,
-			TestProvName.AllFirebird)]
+			TestProvName.AllFirebird3Minus)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -82,7 +82,7 @@ namespace Tests.xUpdate
 		public void DeletePartialSourceProjection_KnownFieldInCondition([MergeDataContextSource(
 			TestProvName.AllOracle,
 			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
-			TestProvName.AllSapHana, TestProvName.AllFirebird)]
+			TestProvName.AllSapHana, TestProvName.AllFirebird3Minus)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -114,7 +114,7 @@ namespace Tests.xUpdate
 		public void DeleteWithPredicatePartialSourceProjection_UnknownFieldInCondition([MergeDataContextSource(
 			TestProvName.AllOracle,
 			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
-			TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllSapHana, TestProvName.AllFirebird25Minus)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -143,7 +143,7 @@ namespace Tests.xUpdate
 			TestProvName.AllSqlServer2008Plus,
 			TestProvName.AllInformix,
 			TestProvName.AllSapHana,
-			ProviderName.Firebird)]
+			TestProvName.AllFirebird25Minus)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -174,7 +174,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void OtherSourceDelete([MergeDataContextSource(
 			TestProvName.AllOracle,
-			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllSapHana, ProviderName.Firebird)]
+			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllSapHana, TestProvName.AllFirebird25Minus)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -205,7 +205,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void OtherSourceDeletePartialSourceProjection_UnknownFieldInMatch([MergeDataContextSource(
 			TestProvName.AllOracle,
-			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllSapHana, ProviderName.Firebird)]
+			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllSapHana, TestProvName.AllFirebird25Minus)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -231,7 +231,7 @@ namespace Tests.xUpdate
 		public void OtherSourceDeleteWithPredicate([MergeDataContextSource(
 			TestProvName.AllOracle,
 			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
-			TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllSapHana, TestProvName.AllFirebird25Minus)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -263,7 +263,7 @@ namespace Tests.xUpdate
 		public void AnonymousSourceDeleteWithPredicate([MergeDataContextSource(
 			TestProvName.AllOracle,
 			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
-			TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllSapHana, TestProvName.AllFirebird25Minus)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -304,7 +304,7 @@ namespace Tests.xUpdate
 		public void AnonymousListSourceDeleteWithPredicate([MergeDataContextSource(
 			TestProvName.AllOracle,
 			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
-			TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllSapHana, TestProvName.AllFirebird25Minus)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -344,7 +344,7 @@ namespace Tests.xUpdate
 		public void DeleteReservedAndCaseNames([MergeDataContextSource(
 			TestProvName.AllOracle,
 			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
-			TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllSapHana, TestProvName.AllFirebird25Minus)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -384,7 +384,7 @@ namespace Tests.xUpdate
 		public void DeleteReservedAndCaseNamesFromList([MergeDataContextSource(
 			TestProvName.AllOracle,
 			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
-			TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllSapHana, TestProvName.AllFirebird25Minus)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

@@ -381,7 +381,7 @@ namespace Tests.Linq
 					from d in db.GetTable<DynamicTable>()
 					select new
 					{
-						NI = Sql.Property<int>(d, "Not Identifier")
+						NI = Sql.Property<int>(d, "Not_Identifier")
 					};
 
 				var result = query.ToArray();
@@ -403,13 +403,13 @@ namespace Tests.Linq
 			{
 				var query =
 					from d in db.GetTable<DynamicTable>()
-					group d by new { NI = Sql.Property<int>(d, "Not Identifier") }
+					group d by new { NI = Sql.Property<int>(d, "Not_Identifier") }
 					into g
 					select new
 					{
 						g.Key.NI,
 						Count = g.Count(),
-						Sum = g.Sum(i => Sql.Property<int>(i, "Some Value"))
+						Sum = g.Sum(i => Sql.Property<int>(i, "Some_Value"))
 					};
 
 				var result = query.ToArray();
@@ -457,10 +457,10 @@ namespace Tests.Linq
 			[Column, Identity, PrimaryKey]
 			public int ID { get; set; }
 
-			[Column("Not Identifier")]
+			[Column("Not_Identifier")]
 			public int NotIdentifier { get; set; }
 
-			[Column("Some Value")]
+			[Column("Some_Value")]
 			public int Value { get; set; }
 		}
 

@@ -45,7 +45,10 @@ namespace Tests.xUpdate
 			[Column("FieldFloat")]
 			public float? FieldFloat;
 
-			[Column(IsColumn = false, Configuration = ProviderName.Firebird)] // disabled due to test data
+			[Column(IsColumn = false, Configuration = ProviderName.Firebird25)] // disabled due to test data
+			[Column(IsColumn = false, Configuration = ProviderName.Firebird25Dialect1)] // disabled due to test data
+			[Column(IsColumn = false, Configuration = ProviderName.Firebird3)] // disabled due to test data
+			[Column(IsColumn = false, Configuration = ProviderName.Firebird3Dialect1)] // disabled due to test data
 			[Column("FieldDouble")]
 			public double? FieldDouble;
 
@@ -59,7 +62,10 @@ namespace Tests.xUpdate
 			[Column(IsColumn = false, Configuration = ProviderName.SqlServer2005)]
 			[Column(IsColumn = false, Configuration = ProviderName.SqlCe)]
 			[Column(IsColumn = false, Configuration = ProviderName.Informix)]
-			[Column(IsColumn = false, Configuration = ProviderName.Firebird)]
+			[Column(IsColumn = false, Configuration = ProviderName.Firebird25)]
+			[Column(IsColumn = false, Configuration = ProviderName.Firebird25Dialect1)]
+			[Column(IsColumn = false, Configuration = ProviderName.Firebird3)]
+			[Column(IsColumn = false, Configuration = ProviderName.Firebird3Dialect1)]
 			[Column(IsColumn = false, Configuration = ProviderName.Access)]
 			[Column(IsColumn = false, Configuration = ProviderName.MySql)]
 			[Column(IsColumn = false, Configuration = ProviderName.MySqlConnector)]
@@ -69,7 +75,10 @@ namespace Tests.xUpdate
 			[Column("FieldDateTime2")]
 			public DateTimeOffset? FieldDateTime2;
 
-			[Column(IsColumn = false, Configuration = ProviderName.Firebird)]
+			[Column(IsColumn = false, Configuration = ProviderName.Firebird25)]
+			[Column(IsColumn = false, Configuration = ProviderName.Firebird25Dialect1)]
+			[Column(IsColumn = false, Configuration = ProviderName.Firebird3)]
+			[Column(IsColumn = false, Configuration = ProviderName.Firebird3Dialect1)]
 			[Column(IsColumn = false, Configuration = ProviderName.Oracle)]
 			[Column(IsColumn = false, Configuration = ProviderName.Informix)] // for some reason it breaks merge
 			[Column("FieldBinary")]
@@ -92,7 +101,10 @@ namespace Tests.xUpdate
 			[Column("FieldDate")]
 			public DateTime? FieldDate;
 
-			[Column(IsColumn = false, Configuration = ProviderName.Firebird)]
+			[Column(IsColumn = false, Configuration = ProviderName.Firebird25)]
+			[Column(IsColumn = false, Configuration = ProviderName.Firebird25Dialect1)]
+			[Column(IsColumn = false, Configuration = ProviderName.Firebird3)]
+			[Column(IsColumn = false, Configuration = ProviderName.Firebird3Dialect1)]
 			[Column(IsColumn = false, Configuration = ProviderName.SqlServer2000)]
 			[Column(IsColumn = false, Configuration = ProviderName.SqlServer2005)]
 			[Column(IsColumn = false, Configuration = TestProvName.MySql55)]
@@ -396,8 +408,8 @@ namespace Tests.xUpdate
 
 			Assert.AreEqual(expected.FieldFloat, actual.FieldFloat);
 
-			if (   provider != ProviderName.Firebird
-				&& provider != TestProvName.Firebird3)
+			if (   !provider.StartsWith(ProviderName.Firebird25)
+				&& !provider.StartsWith(ProviderName.Firebird3))
 				Assert.AreEqual(expected.FieldDouble, actual.FieldDouble);
 
 			AssertDateTime(expected.FieldDateTime, actual.FieldDateTime, provider);
@@ -449,8 +461,8 @@ namespace Tests.xUpdate
 		{
 			if (provider.Contains(ProviderName.Informix)
 				|| provider.Contains("Oracle")
-				|| provider == ProviderName.Firebird
-				|| provider == TestProvName.Firebird3)
+				|| provider.StartsWith(ProviderName.Firebird25)
+				|| provider.StartsWith(ProviderName.Firebird3))
 				return;
 
 			if (expected != null)
@@ -480,8 +492,8 @@ namespace Tests.xUpdate
 				&& provider != ProviderName.SqlServer2005
 				&& provider != ProviderName.SqlCe
 				&& !provider.Contains(ProviderName.Informix)
-				&& provider != ProviderName.Firebird
-				&& provider != TestProvName.Firebird3
+				&& !provider.StartsWith(ProviderName.Firebird25)
+				&& !provider.StartsWith(ProviderName.Firebird3)
 				&& provider != ProviderName.MySql
 				&& provider != ProviderName.MySqlConnector
 				&& provider != TestProvName.MySql55
@@ -602,8 +614,8 @@ namespace Tests.xUpdate
 				|| provider == TestProvName.SQLiteClassicMiniProfilerUnmapped
 				|| provider == ProviderName.SQLiteMS
 				|| provider == TestProvName.MySql55
-				|| provider == ProviderName.Firebird
-				|| provider == TestProvName.Firebird3)
+				|| provider.StartsWith(ProviderName.Firebird25)
+				|| provider.StartsWith(ProviderName.Firebird3))
 				return;
 
 			if (expected != null)
@@ -634,8 +646,10 @@ namespace Tests.xUpdate
 							expected = expected.Value.Add(TimeSpan.FromMilliseconds(-4));
 
 						break;
-					case ProviderName.Firebird      :
-					case TestProvName.Firebird3     :
+					case ProviderName.Firebird25:
+					case ProviderName.Firebird25Dialect1:
+					case ProviderName.Firebird3:
+					case ProviderName.Firebird3Dialect1:
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 1000) * 1000);
 						break;
 					case ProviderName.InformixDB2   :

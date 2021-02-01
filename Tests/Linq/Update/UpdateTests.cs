@@ -328,7 +328,7 @@ namespace Tests.xUpdate
 				TestProvName.AllInformix,
 				ProviderName.SqlCe,
 				ProviderName.DB2,
-				TestProvName.AllFirebird,
+				TestProvName.AllFirebird3Minus,
 				TestProvName.AllOracle,
 				TestProvName.AllMySql,
 				TestProvName.AllSQLite,
@@ -368,7 +368,7 @@ namespace Tests.xUpdate
 				TestProvName.AllInformix,
 				ProviderName.SqlCe,
 				ProviderName.DB2,
-				TestProvName.AllFirebird,
+				TestProvName.AllFirebird3Minus,
 				TestProvName.AllOracle,
 				TestProvName.AllMySql,
 				TestProvName.AllSQLite,
@@ -423,7 +423,7 @@ namespace Tests.xUpdate
 				ProviderName.SqlCe,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
-				TestProvName.AllFirebird,
+				TestProvName.AllFirebird3Minus,
 				TestProvName.AllOracle,
 				TestProvName.AllSQLite,
 				TestProvName.AllSapHana)]
@@ -447,7 +447,7 @@ namespace Tests.xUpdate
 				ProviderName.SqlCe,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
-				TestProvName.AllFirebird,
+				TestProvName.AllFirebird3Minus,
 				TestProvName.AllOracle,
 				TestProvName.AllSQLite,
 				TestProvName.AllSapHana)]
@@ -471,7 +471,7 @@ namespace Tests.xUpdate
 				ProviderName.SqlCe,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
-				TestProvName.AllFirebird,
+				TestProvName.AllFirebird3Minus,
 				TestProvName.AllOracle,
 				TestProvName.AllSQLite,
 				TestProvName.AllSapHana)]
@@ -922,7 +922,7 @@ namespace Tests.xUpdate
 				TestProvName.AllInformix,
 				TestProvName.AllOracle,
 				TestProvName.AllSQLite,
-				TestProvName.AllFirebird,
+				TestProvName.AllFirebird3Minus,
 				ProviderName.SqlCe,
 				TestProvName.AllSapHana)]
 			string context)
@@ -1008,7 +1008,7 @@ namespace Tests.xUpdate
 				TestProvName.AllAccess,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
-				TestProvName.AllFirebird,
+				TestProvName.AllFirebird3Minus,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
 				ProviderName.SqlCe,
@@ -1052,7 +1052,7 @@ namespace Tests.xUpdate
 				ProviderName.SqlCe,
 				ProviderName.SqlServer2000,
 				TestProvName.AllSapHana,
-				TestProvName.AllFirebird,
+				TestProvName.AllFirebird3Minus,
 				TestProvName.AllSQLite,
 				TestProvName.AllMySql,
 				TestProvName.AllSybase,
@@ -1098,7 +1098,7 @@ namespace Tests.xUpdate
 				ProviderName.SqlCe,
 				ProviderName.SqlServer2000,
 				TestProvName.AllSapHana,
-				TestProvName.AllFirebird,
+				TestProvName.AllFirebird3Minus,
 				TestProvName.AllSQLite,
 				TestProvName.AllMySql,
 				TestProvName.AllSybase,
@@ -1144,7 +1144,7 @@ namespace Tests.xUpdate
 				TestProvName.AllAccess,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
-				TestProvName.AllFirebird,
+				TestProvName.AllFirebird3Minus,
 				TestProvName.AllSQLite,
 				ProviderName.SqlCe,
 				ProviderName.SqlServer2000,
@@ -1211,7 +1211,7 @@ namespace Tests.xUpdate
 			[DataSources(
 				TestProvName.AllAccess,
 				TestProvName.AllInformix,
-				TestProvName.AllFirebird,
+				TestProvName.AllFirebird3Minus,
 				TestProvName.AllSQLite,
 				TestProvName.AllMySql,
 				TestProvName.AllSybase,
@@ -1257,7 +1257,7 @@ namespace Tests.xUpdate
 		// maybe we need to do the same for unmanaged
 		[ActiveIssue("AseException : Null value is not allowed in BIT TYPE", Configuration = ProviderName.Sybase)]
 		[Test]
-		public void UpdateIssue321Regression([DataSources(ProviderName.DB2, TestProvName.AllInformix, TestProvName.AllFirebird)] string context)
+		public void UpdateIssue321Regression([DataSources(ProviderName.DB2, TestProvName.AllInformix, TestProvName.AllFirebird3Minus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1525,7 +1525,7 @@ namespace Tests.xUpdate
 			[DataSources(
 			TestProvName.AllSybase,
 			TestProvName.AllMySql,
-			TestProvName.AllFirebird,
+			TestProvName.AllFirebird3Minus,
 			TestProvName.AllInformix,
 			ProviderName.DB2,
 			ProviderName.SqlCe)] string context)
@@ -1556,7 +1556,7 @@ namespace Tests.xUpdate
 			[DataSources(
 			TestProvName.AllSybase,
 			TestProvName.AllMySql,
-			TestProvName.AllFirebird,
+			TestProvName.AllFirebird3Minus,
 			TestProvName.AllInformix,
 			ProviderName.DB2,
 			ProviderName.SqlCe)] string context)
@@ -1587,7 +1587,7 @@ namespace Tests.xUpdate
 			[DataSources(
 			TestProvName.AllSybase,
 			TestProvName.AllMySql,
-			TestProvName.AllFirebird,
+			TestProvName.AllFirebird3Minus,
 			TestProvName.AllInformix,
 			ProviderName.DB2,
 			ProviderName.SqlCe)] string context)
@@ -1618,7 +1618,7 @@ namespace Tests.xUpdate
 			[DataSources(
 			TestProvName.AllSybase,
 			TestProvName.AllMySql,
-			TestProvName.AllFirebird,
+			TestProvName.AllFirebird3Minus,
 			TestProvName.AllInformix,
 			ProviderName.DB2,
 			ProviderName.SqlCe)] string context)
@@ -1649,7 +1649,7 @@ namespace Tests.xUpdate
 			[DataSources(
 			TestProvName.AllSybase,
 			TestProvName.AllMySql,
-			TestProvName.AllFirebird,
+			TestProvName.AllFirebird3Minus,
 			TestProvName.AllInformix,
 			ProviderName.DB2,
 			ProviderName.SqlCe)] string context)
@@ -1680,7 +1680,7 @@ namespace Tests.xUpdate
 			[DataSources(
 			TestProvName.AllSybase,
 			TestProvName.AllMySql,
-			TestProvName.AllFirebird,
+			TestProvName.AllFirebird3Minus,
 			TestProvName.AllInformix,
 			ProviderName.DB2,
 			ProviderName.SqlCe)] string context)

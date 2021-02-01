@@ -60,7 +60,10 @@ namespace Tests.UserTests
 		}
 
 		// default name hits 31-length limit for generator name (till FB 4.0)
-		[Table(Name = "billing_DevReadType", Configuration = ProviderName.Firebird)]
+		[Table(Name = "billing_DevReadType", Configuration = ProviderName.Firebird25)]
+		[Table(Name = "billing_DevReadType", Configuration = ProviderName.Firebird25Dialect1)]
+		[Table(Name = "billing_DevReadType", Configuration = ProviderName.Firebird3)]
+		[Table(Name = "billing_DevReadType", Configuration = ProviderName.Firebird3Dialect1)]
 		[Table(Name = "billing_DevReadingType")]
 		public partial class billing_DevReadingType
 		{
@@ -94,7 +97,7 @@ namespace Tests.UserTests
 
 			[Column("devid", Length = 50), Nullable] public string? Devid           { get; set; } // character varying(255)
 			[Column("tsdevice"), NotNull]            public DateTime Ts             { get; set; } // timestamp (6) without time zone
-			[Column("value"), NotNull]               public decimal Value           { get; set; } // numeric(18,2)
+			[Column("value_col"), NotNull]           public decimal Value           { get; set; } // numeric(18,2)
 			[Column(), Nullable]                     public int? Devtypeid          { get; set; } // integer
 			[Column(), Nullable]                     public int? DevReadingTypeId   { get; set; } // integer
 			[Column(Length = 50), Nullable]          public string? ReadingTypeName { get; set; } // text

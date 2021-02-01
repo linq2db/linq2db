@@ -46,7 +46,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertDelete([MergeDataContextSource(
 			TestProvName.AllOracle,
-			TestProvName.AllSapHana, TestProvName.AllFirebird)]
+			TestProvName.AllSapHana, TestProvName.AllFirebird3Minus)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -81,7 +81,7 @@ namespace Tests.xUpdate
 		public void UpdateWithConditionDelete([MergeDataContextSource(
 			TestProvName.AllOracle,
 			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
-			TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllSapHana, TestProvName.AllFirebird25Minus)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -114,7 +114,7 @@ namespace Tests.xUpdate
 		public void UpdateWithConditionDeleteWithConditionUpdate([MergeDataContextSource(
 			TestProvName.AllSqlServer2008Plus,
 			TestProvName.AllOracle, TestProvName.AllInformix,
-			TestProvName.AllSapHana, ProviderName.Firebird, ProviderName.Sybase)]
+			TestProvName.AllSapHana, TestProvName.AllFirebird25Minus, ProviderName.Sybase)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -241,7 +241,7 @@ namespace Tests.xUpdate
 		public void InsertWithConditionInsertUpdateWithConditionDeleteWithConditionDelete([MergeDataContextSource(
 			TestProvName.AllSqlServer2008Plus,
 			TestProvName.AllOracle,
-			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllInformix, TestProvName.AllSapHana, TestProvName.AllFirebird25Minus)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -313,7 +313,7 @@ namespace Tests.xUpdate
 		public void UpdateWithConditionUpdate([MergeDataContextSource(
 			TestProvName.AllOracle,
 			TestProvName.AllSqlServer2008Plus,
-			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllInformix, TestProvName.AllSapHana, TestProvName.AllFirebird25Minus)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -346,7 +346,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void DeleteInsert([MergeDataContextSource(
 			TestProvName.AllOracle,
-			TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllSapHana, TestProvName.AllFirebird25Minus)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -381,7 +381,7 @@ namespace Tests.xUpdate
 		public void DeleteWithConditionUpdate([MergeDataContextSource(
 			TestProvName.AllOracle,
 			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
-			TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllSapHana, TestProvName.AllFirebird25Minus)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -444,7 +444,7 @@ namespace Tests.xUpdate
 		public void InsertUpdateWithConditionDeleteWithCondition([MergeDataContextSource(
 			TestProvName.AllOracle,
 			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
-			TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllSapHana, TestProvName.AllFirebird25Minus)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -512,7 +512,7 @@ namespace Tests.xUpdate
 		public void InsertDeleteWithConditionUpdate([MergeDataContextSource(
 			TestProvName.AllOracle,
 			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
-			TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllSapHana, TestProvName.AllFirebird25Minus)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -549,7 +549,7 @@ namespace Tests.xUpdate
 		public void UpdateWithConditionInsertDeleteWithCondition([MergeDataContextSource(
 			TestProvName.AllOracle,
 			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
-			TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllSapHana, TestProvName.AllFirebird25Minus)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -586,7 +586,7 @@ namespace Tests.xUpdate
 		public void UpdateWithConditionDeleteWithConditionInsert([MergeDataContextSource(
 			TestProvName.AllOracle,
 			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
-			TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllSapHana, TestProvName.AllFirebird25Minus)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -623,7 +623,7 @@ namespace Tests.xUpdate
 		public void DeleteWithConditionUpdateWithConditionInsert([MergeDataContextSource(
 			TestProvName.AllOracle,
 			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
-			TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllSapHana, TestProvName.AllFirebird25Minus)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -660,7 +660,7 @@ namespace Tests.xUpdate
 		public void DeleteWithConditionInsertUpdateWithCondition([MergeDataContextSource(
 			TestProvName.AllOracle,
 			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
-			TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllSapHana, TestProvName.AllFirebird25Minus)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

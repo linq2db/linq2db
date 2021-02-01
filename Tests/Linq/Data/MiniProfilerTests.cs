@@ -165,8 +165,16 @@ namespace Tests.Data
 		[Test]
 		public void TestFirebird([IncludeDataSources(TestProvName.AllFirebird)] string context, [Values] ConnectionType type)
 		{
+			FirebirdVersion version;
+			FirebirdDialect dialect;
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				version = ((FirebirdDataProvider)db.DataProvider).Version;
+				dialect = ((FirebirdDataProvider)db.DataProvider).Dialect;
+			}
+
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
-			using (var db = CreateDataConnection(new FirebirdDataProvider(), context, type, "FirebirdSql.Data.FirebirdClient.FbConnection, FirebirdSql.Data.FirebirdClient"))
+			using (var db = CreateDataConnection(new FirebirdDataProvider(version, dialect), context, type, "FirebirdSql.Data.FirebirdClient.FbConnection, FirebirdSql.Data.FirebirdClient"))
 			{
 				var trace = string.Empty;
 				db.OnTraceConnection += (TraceInfo ti) =>
@@ -176,8 +184,16 @@ namespace Tests.Data
 				};
 
 				// assert provider-specific parameter type name
-				Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM \"AllTypes\" WHERE \"nvarcharDataType\" = @p", new DataParameter("@p", "3323", DataType.NVarChar)));
+				var sql = dialect == FirebirdDialect.Dialect1
+					? "SELECT ID FROM AllTypes WHERE nvarcharDataType = @p"
+					: "SELECT ID FROM \"AllTypes\" WHERE \"nvarcharDataType\" = @p";
+				Assert.AreEqual(2, db.Execute<int>(sql, new DataParameter("@p", "3323", DataType.NVarChar)));
 				Assert.True(trace.Contains("DECLARE @p VarChar"));
+
+				if (version == FirebirdVersion.v4)
+				{
+					// TODO: test FbXXX types
+				}
 
 				// just check schema (no api used)
 				db.DataProvider.GetSchemaProvider().GetSchema(db);

@@ -16,7 +16,7 @@ namespace Tests.UserTests
 			public int Id { get; set; }
 
 			[Column(IsDiscriminator = true)]
-			public DateTime TimeStamp { get; set; }
+			public DateTime TimeStampColumn { get; set; }
 		}
 
 		[Test]
@@ -26,7 +26,7 @@ namespace Tests.UserTests
 			{
 				using (db.CreateLocalTable<Issue1110TestsClass>())
 				{
-					db.Insert(new Issue1110TestsClass() { Id = 10, TimeStamp = TestData.DateTime });
+					db.Insert(new Issue1110TestsClass() { Id = 10, TimeStampColumn = TestData.DateTime });
 				}
 			}
 		}

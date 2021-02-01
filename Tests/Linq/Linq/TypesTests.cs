@@ -200,7 +200,7 @@ namespace Tests.Linq
 			[DataSources(
 				ProviderName.DB2,
 				TestProvName.AllInformix,
-				TestProvName.AllFirebird,
+				TestProvName.AllFirebird3Minus,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
 				TestProvName.AllAccess,
@@ -355,10 +355,10 @@ namespace Tests.Linq
 			[DataSources(
 				ProviderName.SqlCe,
 				TestProvName.AllAccess,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005,
+				TestProvName.AllSqlServer2005Minus,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
-				TestProvName.AllFirebird,
+				TestProvName.AllFirebird3Minus,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllMySql,
@@ -386,10 +386,10 @@ namespace Tests.Linq
 			[DataSources(
 				ProviderName.SqlCe,
 				TestProvName.AllAccess,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005,
+				TestProvName.AllSqlServer2005Minus,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
-				TestProvName.AllFirebird,
+				TestProvName.AllFirebird3Minus,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllMySql,
@@ -420,10 +420,10 @@ namespace Tests.Linq
 			[DataSources(
 				ProviderName.SqlCe,
 				TestProvName.AllAccess,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005,
+				TestProvName.AllSqlServer2005Minus,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
-				TestProvName.AllFirebird,
+				TestProvName.AllFirebird3Minus,
 				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllMySql,
@@ -524,7 +524,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Unicode([DataSources(
-			TestProvName.AllInformix, TestProvName.AllFirebird, TestProvName.AllSybase)]
+			TestProvName.AllInformix, TestProvName.AllFirebird3Minus, TestProvName.AllSybase)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

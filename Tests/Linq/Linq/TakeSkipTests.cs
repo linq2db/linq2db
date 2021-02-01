@@ -870,15 +870,14 @@ namespace Tests.Linq
 			}
 		}
 
-
 		class TakeSkipClass
 		{
 			[Column(DataType = DataType.VarChar, Length = 10)]
-			public string? Value { get; set; }
+			public string? ValueColumn { get; set; }
 
 			protected bool Equals(TakeSkipClass other)
 			{
-				return Value == other.Value;
+				return ValueColumn == other.ValueColumn;
 			}
 
 			public override bool Equals(object? obj)
@@ -891,7 +890,7 @@ namespace Tests.Linq
 
 			public override int GetHashCode()
 			{
-				return (Value != null ? Value.GetHashCode() : 0);
+				return (ValueColumn != null ? ValueColumn.GetHashCode() : 0);
 			}
 		}
 
@@ -901,10 +900,10 @@ namespace Tests.Linq
 		{
 			var testData = new[]
 			{
-				new TakeSkipClass { Value = "PIPPO" },
-				new TakeSkipClass { Value = "PLUTO" },
-				new TakeSkipClass { Value = "PLUTO" },
-				new TakeSkipClass { Value = "BOLTO" }
+				new TakeSkipClass { ValueColumn = "PIPPO" },
+				new TakeSkipClass { ValueColumn = "PLUTO" },
+				new TakeSkipClass { ValueColumn = "PLUTO" },
+				new TakeSkipClass { ValueColumn = "BOLTO" }
 			};
 
 			using (new ParameterizeTakeSkip(withParameters))
@@ -913,14 +912,14 @@ namespace Tests.Linq
 			{
 
 				var actual = tempTable
-					.GroupBy(item => item.Value)
+					.GroupBy(item => item.ValueColumn)
 					.Where(group => group.Count() > 1)
 					.Select(item => item.Key)
 					.Take(1)
 					.Any();
 
 				var expected = testData
-					.GroupBy(item => item.Value)
+					.GroupBy(item => item.ValueColumn)
 					.Where(group => group.Count() > 1)
 					.Select(item => item.Key)
 					.Take(1)
@@ -937,10 +936,10 @@ namespace Tests.Linq
 		{
 			var testData = new[]
 			{
-				new TakeSkipClass { Value = "PLUTO" },
-				new TakeSkipClass { Value = "PIPPO" },
-				new TakeSkipClass { Value = "PLUTO" },
-				new TakeSkipClass { Value = "BOLTO" }
+				new TakeSkipClass { ValueColumn = "PLUTO" },
+				new TakeSkipClass { ValueColumn = "PIPPO" },
+				new TakeSkipClass { ValueColumn = "PLUTO" },
+				new TakeSkipClass { ValueColumn = "BOLTO" }
 			};
 
 			using (new ParameterizeTakeSkip(withParameters))
@@ -968,10 +967,10 @@ namespace Tests.Linq
 		{
 			var testData = new[]
 			{
-				new TakeSkipClass { Value = "PLUTO" },
-				new TakeSkipClass { Value = "PIPPO" },
-				new TakeSkipClass { Value = "PLUTO" },
-				new TakeSkipClass { Value = "BOLTO" }
+				new TakeSkipClass { ValueColumn = "PLUTO" },
+				new TakeSkipClass { ValueColumn = "PIPPO" },
+				new TakeSkipClass { ValueColumn = "PLUTO" },
+				new TakeSkipClass { ValueColumn = "BOLTO" }
 			};
 
 			using (new ParameterizeTakeSkip(withParameters))
@@ -980,12 +979,12 @@ namespace Tests.Linq
 			{
 
 				var actual = tempTable
-					.OrderBy(t => t.Value)
+					.OrderBy(t => t.ValueColumn)
 					.Take(2)
 					.ToArray();
 
 				var expected = testData
-					.OrderBy(t => t.Value)
+					.OrderBy(t => t.ValueColumn)
 					.Take(2)
 					.ToArray();
 
@@ -999,10 +998,10 @@ namespace Tests.Linq
 		{
 			var testData = new[]
 			{
-				new TakeSkipClass { Value = "PLUTO" },
-				new TakeSkipClass { Value = "PIPPO" },
-				new TakeSkipClass { Value = "PLUTO" },
-				new TakeSkipClass { Value = "BOLTO" }
+				new TakeSkipClass { ValueColumn = "PLUTO" },
+				new TakeSkipClass { ValueColumn = "PIPPO" },
+				new TakeSkipClass { ValueColumn = "PLUTO" },
+				new TakeSkipClass { ValueColumn = "BOLTO" }
 			};
 
 			using (new ParameterizeTakeSkip(withParameters))
@@ -1011,13 +1010,13 @@ namespace Tests.Linq
 			{
 
 				var actual = tempTable
-					.OrderBy(t => t.Value)
+					.OrderBy(t => t.ValueColumn)
 					.Take(3)
 					.Take(2)
 					.ToArray();
 
 				var expected = testData
-					.OrderBy(t => t.Value)
+					.OrderBy(t => t.ValueColumn)
 					.Take(3)
 					.Take(2)
 					.ToArray();
@@ -1038,10 +1037,10 @@ namespace Tests.Linq
 		{
 			var testData = new[]
 			{
-				new TakeSkipClass { Value = "PLUTO" },
-				new TakeSkipClass { Value = "PIPPO" },
-				new TakeSkipClass { Value = "PLUTO" },
-				new TakeSkipClass { Value = "BOLTO" }
+				new TakeSkipClass { ValueColumn = "PLUTO" },
+				new TakeSkipClass { ValueColumn = "PIPPO" },
+				new TakeSkipClass { ValueColumn = "PLUTO" },
+				new TakeSkipClass { ValueColumn = "BOLTO" }
 			};
 
 			using (new ParameterizeTakeSkip(withParameters))
@@ -1050,13 +1049,13 @@ namespace Tests.Linq
 			{
 
 				var actual = tempTable
-					.OrderBy(t => t.Value)
+					.OrderBy(t => t.ValueColumn)
 					.Take(2)
 					.Take(3)
 					.ToArray();
 
 				var expected = testData
-					.OrderBy(t => t.Value)
+					.OrderBy(t => t.ValueColumn)
 					.Take(2)
 					.Take(3)
 					.ToArray();
@@ -1077,14 +1076,14 @@ namespace Tests.Linq
 		{
 			var testData = new[]
 			{
-				new TakeSkipClass { Value = "Value1" },
-				new TakeSkipClass { Value = "Value2" },
-				new TakeSkipClass { Value = "Value3" },
-				new TakeSkipClass { Value = "Value4" },
-				new TakeSkipClass { Value = "Value5" },
-				new TakeSkipClass { Value = "Value6" },
-				new TakeSkipClass { Value = "Value7" },
-				new TakeSkipClass { Value = "Value8" },
+				new TakeSkipClass { ValueColumn = "Value1" },
+				new TakeSkipClass { ValueColumn = "Value2" },
+				new TakeSkipClass { ValueColumn = "Value3" },
+				new TakeSkipClass { ValueColumn = "Value4" },
+				new TakeSkipClass { ValueColumn = "Value5" },
+				new TakeSkipClass { ValueColumn = "Value6" },
+				new TakeSkipClass { ValueColumn = "Value7" },
+				new TakeSkipClass { ValueColumn = "Value8" },
 			};
 
 			using (new ParameterizeTakeSkip(withParameters))
@@ -1093,14 +1092,14 @@ namespace Tests.Linq
 			{
 
 				var actual = tempTable
-					.OrderBy(t => t.Value)
+					.OrderBy(t => t.ValueColumn)
 					.Take(1)
 					.Take(3)
 					.Take(2)
 					.ToArray();
 
 				var expected = testData
-					.OrderBy(t => t.Value)
+					.OrderBy(t => t.ValueColumn)
 					.Take(1)
 					.Take(3)
 					.Take(2)
@@ -1122,14 +1121,14 @@ namespace Tests.Linq
 		{
 			var testData = new[]
 			{
-				new TakeSkipClass { Value = "Value1" },
-				new TakeSkipClass { Value = "Value2" },
-				new TakeSkipClass { Value = "Value3" },
-				new TakeSkipClass { Value = "Value4" },
-				new TakeSkipClass { Value = "Value5" },
-				new TakeSkipClass { Value = "Value6" },
-				new TakeSkipClass { Value = "Value7" },
-				new TakeSkipClass { Value = "Value8" },
+				new TakeSkipClass { ValueColumn = "Value1" },
+				new TakeSkipClass { ValueColumn = "Value2" },
+				new TakeSkipClass { ValueColumn = "Value3" },
+				new TakeSkipClass { ValueColumn = "Value4" },
+				new TakeSkipClass { ValueColumn = "Value5" },
+				new TakeSkipClass { ValueColumn = "Value6" },
+				new TakeSkipClass { ValueColumn = "Value7" },
+				new TakeSkipClass { ValueColumn = "Value8" },
 			};
 
 			using (new ParameterizeTakeSkip(withParameters))
@@ -1138,14 +1137,14 @@ namespace Tests.Linq
 			{
 
 				var actual = tempTable
-					.OrderBy(t => t.Value)
+					.OrderBy(t => t.ValueColumn)
 					.Take(2)
 					.Take(3)
 					.Take(1)
 					.ToArray();
 
 				var expected = testData
-					.OrderBy(t => t.Value)
+					.OrderBy(t => t.ValueColumn)
 					.Take(2)
 					.Take(3)
 					.Take(1)
@@ -1167,10 +1166,10 @@ namespace Tests.Linq
 		{
 			var testData = new[]
 			{
-				new TakeSkipClass { Value = "PLUTO" },
-				new TakeSkipClass { Value = "PIPPO" },
-				new TakeSkipClass { Value = "PLUTO" },
-				new TakeSkipClass { Value = "BOLTO" }
+				new TakeSkipClass { ValueColumn = "PLUTO" },
+				new TakeSkipClass { ValueColumn = "PIPPO" },
+				new TakeSkipClass { ValueColumn = "PLUTO" },
+				new TakeSkipClass { ValueColumn = "BOLTO" }
 			};
 
 			using (var db = GetDataContext(context))
@@ -1178,13 +1177,13 @@ namespace Tests.Linq
 			{
 
 				var actual = tempTable
-					.OrderBy(t => t.Value)
+					.OrderBy(t => t.ValueColumn)
 					.Skip(1)
 					.Skip(2)
 					.ToArray();
 
 				var expected = testData
-					.OrderBy(t => t.Value)
+					.OrderBy(t => t.ValueColumn)
 					.Skip(1)
 					.Skip(2)
 					.ToArray();
@@ -1204,10 +1203,10 @@ namespace Tests.Linq
 		{
 			var testData = new[]
 			{
-				new TakeSkipClass { Value = "PLUTO" },
-				new TakeSkipClass { Value = "PIPPO" },
-				new TakeSkipClass { Value = "PLUTO" },
-				new TakeSkipClass { Value = "BOLTO" }
+				new TakeSkipClass { ValueColumn = "PLUTO" },
+				new TakeSkipClass { ValueColumn = "PIPPO" },
+				new TakeSkipClass { ValueColumn = "PLUTO" },
+				new TakeSkipClass { ValueColumn = "BOLTO" }
 			};
 
 			using (new ParameterizeTakeSkip(withParameters))
@@ -1219,13 +1218,13 @@ namespace Tests.Linq
 					var missCount = Query<TakeSkipClass>.CacheMissCount;
 
 					var actual = tempTable
-						.OrderBy(t => t.Value)
+						.OrderBy(t => t.ValueColumn)
 						.Skip(2)
 						.Skip(i)
 						.ToArray();
 
 					var expected = testData
-						.OrderBy(t => t.Value)
+						.OrderBy(t => t.ValueColumn)
 						.Skip(2)
 						.Skip(i)
 						.ToArray();
@@ -1250,14 +1249,14 @@ namespace Tests.Linq
 		{
 			var testData = new[]
 			{
-				new TakeSkipClass { Value = "Value1" },
-				new TakeSkipClass { Value = "Value2" },
-				new TakeSkipClass { Value = "Value3" },
-				new TakeSkipClass { Value = "Value4" },
-				new TakeSkipClass { Value = "Value5" },
-				new TakeSkipClass { Value = "Value6" },
-				new TakeSkipClass { Value = "Value7" },
-				new TakeSkipClass { Value = "Value8" },
+				new TakeSkipClass { ValueColumn = "Value1" },
+				new TakeSkipClass { ValueColumn = "Value2" },
+				new TakeSkipClass { ValueColumn = "Value3" },
+				new TakeSkipClass { ValueColumn = "Value4" },
+				new TakeSkipClass { ValueColumn = "Value5" },
+				new TakeSkipClass { ValueColumn = "Value6" },
+				new TakeSkipClass { ValueColumn = "Value7" },
+				new TakeSkipClass { ValueColumn = "Value8" },
 			};
 
 			using (new ParameterizeTakeSkip(withParameters))
@@ -1266,14 +1265,14 @@ namespace Tests.Linq
 			{
 
 				var actual = tempTable
-					.OrderBy(t => t.Value)
+					.OrderBy(t => t.ValueColumn)
 					.Skip(2)
 					.Skip(3)
 					.Skip(1)
 					.ToArray();
 
 				var expected = testData
-					.OrderBy(t => t.Value)
+					.OrderBy(t => t.ValueColumn)
 					.Skip(2)
 					.Skip(3)
 					.Skip(1)
@@ -1294,14 +1293,14 @@ namespace Tests.Linq
 		{
 			var testData = new[]
 			{
-				new TakeSkipClass { Value = "Value1" },
-				new TakeSkipClass { Value = "Value2" },
-				new TakeSkipClass { Value = "Value3" },
-				new TakeSkipClass { Value = "Value4" },
-				new TakeSkipClass { Value = "Value5" },
-				new TakeSkipClass { Value = "Value6" },
-				new TakeSkipClass { Value = "Value7" },
-				new TakeSkipClass { Value = "Value8" },
+				new TakeSkipClass { ValueColumn = "Value1" },
+				new TakeSkipClass { ValueColumn = "Value2" },
+				new TakeSkipClass { ValueColumn = "Value3" },
+				new TakeSkipClass { ValueColumn = "Value4" },
+				new TakeSkipClass { ValueColumn = "Value5" },
+				new TakeSkipClass { ValueColumn = "Value6" },
+				new TakeSkipClass { ValueColumn = "Value7" },
+				new TakeSkipClass { ValueColumn = "Value8" },
 			};
 
 			using (new ParameterizeTakeSkip(withParameters))
@@ -1310,14 +1309,14 @@ namespace Tests.Linq
 			{
 
 				var actual = tempTable
-					.OrderBy(t => t.Value)
+					.OrderBy(t => t.ValueColumn)
 					.Skip(1)
 					.Skip(3)
 					.Skip(2)
 					.ToArray();
 
 				var expected = testData
-					.OrderBy(t => t.Value)
+					.OrderBy(t => t.ValueColumn)
 					.Skip(1)
 					.Skip(3)
 					.Skip(2)
@@ -1338,14 +1337,14 @@ namespace Tests.Linq
 		{
 			var testData = new[]
 			{
-				new TakeSkipClass { Value = "Value1" },
-				new TakeSkipClass { Value = "Value2" },
-				new TakeSkipClass { Value = "Value3" },
-				new TakeSkipClass { Value = "Value4" },
-				new TakeSkipClass { Value = "Value5" },
-				new TakeSkipClass { Value = "Value6" },
-				new TakeSkipClass { Value = "Value7" },
-				new TakeSkipClass { Value = "Value8" },
+				new TakeSkipClass { ValueColumn = "Value1" },
+				new TakeSkipClass { ValueColumn = "Value2" },
+				new TakeSkipClass { ValueColumn = "Value3" },
+				new TakeSkipClass { ValueColumn = "Value4" },
+				new TakeSkipClass { ValueColumn = "Value5" },
+				new TakeSkipClass { ValueColumn = "Value6" },
+				new TakeSkipClass { ValueColumn = "Value7" },
+				new TakeSkipClass { ValueColumn = "Value8" },
 			};
 
 			using (new ParameterizeTakeSkip(withParameters))
@@ -1354,7 +1353,7 @@ namespace Tests.Linq
 			{
 
 				var actual = tempTable
-					.OrderBy(t => t.Value)
+					.OrderBy(t => t.ValueColumn)
 					.Take(6)
 					.Skip(2)
 					.Take(2)
@@ -1362,7 +1361,7 @@ namespace Tests.Linq
 					.ToArray();
 
 				var expected = testData
-					.OrderBy(t => t.Value)
+					.OrderBy(t => t.ValueColumn)
 					.Take(6)
 					.Skip(2)
 					.Take(2)
@@ -1385,14 +1384,14 @@ namespace Tests.Linq
 		{
 			var testData = new[]
 			{
-				new TakeSkipClass { Value = "Value1" },
-				new TakeSkipClass { Value = "Value2" },
-				new TakeSkipClass { Value = "Value3" },
-				new TakeSkipClass { Value = "Value4" },
-				new TakeSkipClass { Value = "Value5" },
-				new TakeSkipClass { Value = "Value6" },
-				new TakeSkipClass { Value = "Value7" },
-				new TakeSkipClass { Value = "Value8" },
+				new TakeSkipClass { ValueColumn = "Value1" },
+				new TakeSkipClass { ValueColumn = "Value2" },
+				new TakeSkipClass { ValueColumn = "Value3" },
+				new TakeSkipClass { ValueColumn = "Value4" },
+				new TakeSkipClass { ValueColumn = "Value5" },
+				new TakeSkipClass { ValueColumn = "Value6" },
+				new TakeSkipClass { ValueColumn = "Value7" },
+				new TakeSkipClass { ValueColumn = "Value8" },
 			};
 
 			using (new ParameterizeTakeSkip(withParameters))
@@ -1401,7 +1400,7 @@ namespace Tests.Linq
 			{
 
 				var actual = tempTable
-					.OrderBy(t => t.Value)
+					.OrderBy(t => t.ValueColumn)
 					.Skip(2)
 					.Take(5)
 					.Skip(1)
@@ -1409,7 +1408,7 @@ namespace Tests.Linq
 					.ToArray();
 
 				var expected = testData
-					.OrderBy(t => t.Value)
+					.OrderBy(t => t.ValueColumn)
 					.Skip(2)
 					.Take(5)
 					.Skip(1)
@@ -1432,15 +1431,15 @@ namespace Tests.Linq
 		{
 			var testData = new[]
 			{
-				new TakeSkipClass { Value = "Value1" },
-				new TakeSkipClass { Value = "Value2" },
-				new TakeSkipClass { Value = "Value3" },
-				new TakeSkipClass { Value = "Value4" },
-				new TakeSkipClass { Value = "Value5" },
-				new TakeSkipClass { Value = "Value6" },
-				new TakeSkipClass { Value = "Value7" },
-				new TakeSkipClass { Value = "Value8" },
-				new TakeSkipClass { Value = "Value9" },
+				new TakeSkipClass { ValueColumn = "Value1" },
+				new TakeSkipClass { ValueColumn = "Value2" },
+				new TakeSkipClass { ValueColumn = "Value3" },
+				new TakeSkipClass { ValueColumn = "Value4" },
+				new TakeSkipClass { ValueColumn = "Value5" },
+				new TakeSkipClass { ValueColumn = "Value6" },
+				new TakeSkipClass { ValueColumn = "Value7" },
+				new TakeSkipClass { ValueColumn = "Value8" },
+				new TakeSkipClass { ValueColumn = "Value9" },
 			};
 
 			using (new ParameterizeTakeSkip(withParameters))
@@ -1449,7 +1448,7 @@ namespace Tests.Linq
 			{
 
 				var actual = tempTable
-					.OrderBy(t => t.Value)
+					.OrderBy(t => t.ValueColumn)
 					.Take(8)
 					.Skip(1)
 					.Take(4)
@@ -1459,7 +1458,7 @@ namespace Tests.Linq
 					.ToArray();
 
 				var expected = testData
-					.OrderBy(t => t.Value)
+					.OrderBy(t => t.ValueColumn)
 					.Take(8)
 					.Skip(1)
 					.Take(4)
@@ -1484,15 +1483,15 @@ namespace Tests.Linq
 		{
 			var testData = new[]
 			{
-				new TakeSkipClass { Value = "Value1" },
-				new TakeSkipClass { Value = "Value2" },
-				new TakeSkipClass { Value = "Value3" },
-				new TakeSkipClass { Value = "Value4" },
-				new TakeSkipClass { Value = "Value5" },
-				new TakeSkipClass { Value = "Value6" },
-				new TakeSkipClass { Value = "Value7" },
-				new TakeSkipClass { Value = "Value8" },
-				new TakeSkipClass { Value = "Value9" },
+				new TakeSkipClass { ValueColumn = "Value1" },
+				new TakeSkipClass { ValueColumn = "Value2" },
+				new TakeSkipClass { ValueColumn = "Value3" },
+				new TakeSkipClass { ValueColumn = "Value4" },
+				new TakeSkipClass { ValueColumn = "Value5" },
+				new TakeSkipClass { ValueColumn = "Value6" },
+				new TakeSkipClass { ValueColumn = "Value7" },
+				new TakeSkipClass { ValueColumn = "Value8" },
+				new TakeSkipClass { ValueColumn = "Value9" },
 			};
 
 			using (new ParameterizeTakeSkip(withParameters))
@@ -1501,7 +1500,7 @@ namespace Tests.Linq
 			{
 
 				var actual = tempTable
-					.OrderBy(t => t.Value)
+					.OrderBy(t => t.ValueColumn)
 					.Skip(1)
 					.Take(8)
 					.Skip(1)
@@ -1511,7 +1510,7 @@ namespace Tests.Linq
 					.ToArray();
 
 				var expected = testData
-					.OrderBy(t => t.Value)
+					.OrderBy(t => t.ValueColumn)
 					.Skip(1)
 					.Take(8)
 					.Skip(1)

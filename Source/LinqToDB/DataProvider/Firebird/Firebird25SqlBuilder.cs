@@ -1,46 +1,54 @@
 ﻿using System;
 using System.Data;
 using System.Linq;
-using System.Text;
-
-#region ReSharper disable
-// ReSharper disable SuggestUseVarKeywordEverywhere
-// ReSharper disable SuggestUseVarKeywordEvident
-#endregion
 
 namespace LinqToDB.DataProvider.Firebird
 {
+	using System.Text;
 	using Common;
 	using Mapping;
-	using SqlQuery;
 	using SqlProvider;
+	using SqlQuery;
 
-	public partial class FirebirdSqlBuilder : BasicSqlBuilder
+	public partial class Firebird25SqlBuilder : BasicSqlBuilder
 	{
-		private readonly FirebirdDataProvider? _provider;
+		protected FirebirdDataProvider? Provider { get; }
+		protected bool                  Dialect1 { get; }
 
-		public FirebirdSqlBuilder(
+		public Firebird25SqlBuilder(
 			FirebirdDataProvider? provider,
 			MappingSchema         mappingSchema,
 			ISqlOptimizer         sqlOptimizer,
 			SqlProviderFlags      sqlProviderFlags)
+			: this(provider, mappingSchema, sqlOptimizer, sqlProviderFlags, false)
+		{
+		}
+
+		// for derived builders
+		protected Firebird25SqlBuilder(
+			FirebirdDataProvider? provider,
+			MappingSchema         mappingSchema,
+			ISqlOptimizer         sqlOptimizer,
+			SqlProviderFlags      sqlProviderFlags,
+			bool                  dialect1)
 			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
-			_provider = provider;
+			Provider = provider;
+			Dialect1 = dialect1;
 		}
 
 		// remote context
-		public FirebirdSqlBuilder(
+		public Firebird25SqlBuilder(
 			MappingSchema    mappingSchema,
 			ISqlOptimizer    sqlOptimizer,
 			SqlProviderFlags sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+			: this(null, mappingSchema, sqlOptimizer, sqlProviderFlags, false)
 		{
 		}
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new FirebirdSqlBuilder(_provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
+			return new Firebird25SqlBuilder(Provider, MappingSchema, SqlOptimizer, SqlProviderFlags, Dialect1);
 		}
 
 		protected override void BuildSelectClause(SelectQuery selectQuery)
@@ -108,7 +116,14 @@ namespace LinqToDB.DataProvider.Firebird
 				case DataType.SmallMoney    : StringBuilder.AppendFormat("Decimal(10{0}4)", InlineComma); break;
 				case DataType.DateTime2     :
 				case DataType.SmallDateTime :
-				case DataType.DateTime      : StringBuilder.Append("TimeStamp");                          break;
+				case DataType.DateTime      :
+					// DATE and TIMESTAMP are same types in Dialect1 (TIMESTAMP in Dialect3)
+					// we use DATE for better backward compatibility
+					if (Dialect1)
+						StringBuilder.Append("DATE");
+					else 
+						StringBuilder.Append("TIMESTAMP");
+					break;
 				case DataType.NVarChar      :
 					StringBuilder.Append("VarChar");
 
@@ -126,6 +141,14 @@ namespace LinqToDB.DataProvider.Firebird
 				// BOOLEAN type available since FB 3.0, but FirebirdDataProvider.SetParameter converts boolean to '1'/'0'
 				// so for now we will use type, compatible with SetParameter by default
 				case DataType.Boolean       : StringBuilder.Append("CHAR");                               break;
+				case DataType.UInt32        :
+				case DataType.Int64         :
+					// there is no BIGINT type and NUMERIC(18) is nearest storage
+					if (Dialect1)
+						StringBuilder.Append("NUMERIC(18)");
+					else
+						base.BuildDataTypeFromDataType(type, forCreateTable);
+					break;
 				default: base.BuildDataTypeFromDataType(type, forCreateTable);                            break;
 			}
 		}
@@ -159,8 +182,9 @@ namespace LinqToDB.DataProvider.Firebird
 				case ConvertType.NameToQueryField      :
 				case ConvertType.NameToQueryTable      :
 				case ConvertType.SequenceName          :
-					if (FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Quote ||
-					   (FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && !IsValidIdentifier(value)))
+					if (!Dialect1 &&
+							(FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Quote ||
+							(FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && !IsValidIdentifier(value))))
 					{
 						// I wonder what to do if identifier has " in name?
 						return sb.Append('"').Append(value).Append('"');
@@ -244,7 +268,8 @@ namespace LinqToDB.DataProvider.Firebird
 					var identifierValue = identifier;
 
 					// if identifier is not quoted, it must be converted to upper case to match record in rdb$relation_name
-					if (FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.None ||
+					if (Dialect1 ||
+						FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.None ||
 						FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && IsValidIdentifier(identifierValue))
 						identifierValue = identifierValue.ToUpper();
 
@@ -296,11 +321,11 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override string? GetProviderTypeName(IDbDataParameter parameter)
 		{
-			if (_provider != null)
+			if (Provider != null)
 			{
-				var param = _provider.TryGetProviderParameter(parameter, MappingSchema);
+				var param = Provider.TryGetProviderParameter(parameter, MappingSchema);
 				if (param != null)
-					return _provider.Adapter.GetDbType(param).ToString();
+					return Provider.Adapter.GetDbType(param).ToString();
 			}
 
 			return base.GetProviderTypeName(parameter);
@@ -383,7 +408,8 @@ namespace LinqToDB.DataProvider.Firebird
 						var identifierValue = createTable.Table.PhysicalName!;
 
 						// if identifier is not quoted, it must be converted to upper case to match record in rdb$relation_name
-						if (FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.None ||
+						if (Dialect1 ||
+							FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.None ||
 							FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && IsValidIdentifier(identifierValue))
 							identifierValue = identifierValue.ToUpper();
 
@@ -426,7 +452,8 @@ namespace LinqToDB.DataProvider.Firebird
 					var identifierValue = createTable.Table.PhysicalName!;
 
 					// if identifier is not quoted, it must be converted to upper case to match record in rdb$relation_name
-					if (FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.None ||
+					if (Dialect1 ||
+						FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.None ||
 						FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && IsValidIdentifier(identifierValue))
 						identifierValue = identifierValue.ToUpper();
 

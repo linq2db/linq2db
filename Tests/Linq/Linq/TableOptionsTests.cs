@@ -21,17 +21,17 @@ namespace Tests.Linq
 			[Values(TableOptions.CheckExistence, TableOptions.NotSet)] TableOptions tableOptions)
 		{
 			using var db = (DataConnection)GetDataContext(context);
-			using var t1 = new[] { new { ID = 1, Value = 2 } }.IntoTempTable(db, "temp_table1", tableOptions : TableOptions.IsTemporary   | tableOptions);
-			using var t2 = t1.IntoTempTable("temp_table2", tableOptions : TableOptions.IsTemporary                                      | tableOptions);
+			using var t1 = new[] { new { ID = 1, ValueColumn = 2 } }.IntoTempTable(db, "temp_table1", tableOptions : TableOptions.IsTemporary   | tableOptions);
+			using var t2 = t1.IntoTempTable("temp_table2", tableOptions : TableOptions.IsTemporary                                              | tableOptions);
 
 			var l1 = t1.ToArray();
 			var l2 = t2.ToArray();
 
 			Assert.That(l1, Is.EquivalentTo(l2));
 
-			t1.BulkCopy(new BulkCopyOptions { BulkCopyType = BulkCopyType.MultipleRows     }, new[] { new { ID = 2, Value = 3 } });
-			t1.BulkCopy(new BulkCopyOptions { BulkCopyType = BulkCopyType.RowByRow         }, new[] { new { ID = 3, Value = 3 } });
-			t1.BulkCopy(new BulkCopyOptions { BulkCopyType = BulkCopyType.ProviderSpecific }, new[] { new { ID = 4, Value = 5 } });
+			t1.BulkCopy(new BulkCopyOptions { BulkCopyType = BulkCopyType.MultipleRows     }, new[] { new { ID = 2, ValueColumn = 3 } });
+			t1.BulkCopy(new BulkCopyOptions { BulkCopyType = BulkCopyType.RowByRow         }, new[] { new { ID = 3, ValueColumn = 3 } });
+			t1.BulkCopy(new BulkCopyOptions { BulkCopyType = BulkCopyType.ProviderSpecific }, new[] { new { ID = 4, ValueColumn = 5 } });
 
 			t1.Truncate();
 			t2.Truncate();
@@ -43,17 +43,17 @@ namespace Tests.Linq
 			[Values(TableOptions.CheckExistence, TableOptions.NotSet)] TableOptions tableOptions)
 		{
 			using var db = (DataConnection)GetDataContext(context);
-			using var t1 = await new[] { new { ID = 1, Value = 2 } }.IntoTempTableAsync(db, "temp_table1", tableOptions : TableOptions.IsTemporary   | tableOptions);
-			using var t2 = await t1.IntoTempTableAsync("temp_table2", tableOptions : TableOptions.IsTemporary                                      | tableOptions);
+			using var t1 = await new[] { new { ID = 1, ValueColumn = 2 } }.IntoTempTableAsync(db, "temp_table1", tableOptions : TableOptions.IsTemporary   | tableOptions);
+			using var t2 = await t1.IntoTempTableAsync("temp_table2", tableOptions : TableOptions.IsTemporary                                              | tableOptions);
 
 			var l1 = t1.ToArray();
 			var l2 = t2.ToArray();
 
 			Assert.That(l1, Is.EquivalentTo(l2));
 
-			await t1.BulkCopyAsync(new BulkCopyOptions { BulkCopyType = BulkCopyType.MultipleRows     }, new[] { new { ID = 2, Value = 3 } });
-			await t1.BulkCopyAsync(new BulkCopyOptions { BulkCopyType = BulkCopyType.RowByRow         }, new[] { new { ID = 3, Value = 3 } });
-			await t1.BulkCopyAsync(new BulkCopyOptions { BulkCopyType = BulkCopyType.ProviderSpecific }, new[] { new { ID = 4, Value = 5 } });
+			await t1.BulkCopyAsync(new BulkCopyOptions { BulkCopyType = BulkCopyType.MultipleRows     }, new[] { new { ID = 2, ValueColumn = 3 } });
+			await t1.BulkCopyAsync(new BulkCopyOptions { BulkCopyType = BulkCopyType.RowByRow         }, new[] { new { ID = 3, ValueColumn = 3 } });
+			await t1.BulkCopyAsync(new BulkCopyOptions { BulkCopyType = BulkCopyType.ProviderSpecific }, new[] { new { ID = 4, ValueColumn = 5 } });
 
 			await t1.TruncateAsync();
 			await t2.TruncateAsync();
@@ -87,8 +87,8 @@ namespace Tests.Linq
 		[UsedImplicitly]
 		class IsTemporaryTable
 		{
-			[Column] public int Id    { get; set; }
-			[Column] public int Value { get; set; }
+			[Column] public int Id          { get; set; }
+			[Column] public int ValueColumn { get; set; }
 		}
 
 		[Test]
@@ -104,15 +104,15 @@ namespace Tests.Linq
 		[UsedImplicitly]
 		class IsGlobalTemporaryTable
 		{
-			[Column] public int Id    { get; set; }
-			[Column] public int Value { get; set; }
+			[Column] public int Id          { get; set; }
+			[Column] public int ValueColumn { get; set; }
 		}
 
 		[Test]
 		public void IsGlobalTemporaryTest([IncludeDataSources(
 			ProviderName.DB2,
-			ProviderName.Firebird,
-			ProviderName.Oracle,
+			TestProvName.AllFirebird,
+			TestProvName.AllOracle,
 			TestProvName.AllSqlServer2005Plus,
 			TestProvName.AllSybase)] string context,
 			[Values(true)] bool firstCall)
@@ -128,19 +128,19 @@ namespace Tests.Linq
 		[UsedImplicitly]
 		class CreateIfNotExistsTable
 		{
-			[Column] public int Id    { get; set; }
-			[Column] public int Value { get; set; }
+			[Column] public int Id          { get; set; }
+			[Column] public int ValueColumn { get; set; }
 		}
 
 		[Test]
 		public void CreateIfNotExistsTest([IncludeDataSources(
 			true,
 			ProviderName.DB2,
-			ProviderName.Informix,
-			ProviderName.Firebird,
+			TestProvName.AllInformix,
+			TestProvName.AllFirebird,
 			TestProvName.AllMySql,
 			TestProvName.AllOracle,
-			ProviderName.PostgreSQL,
+			TestProvName.AllPostgreSQL,
 			TestProvName.AllSQLite,
 			TestProvName.AllSqlServer2005Plus,
 			TestProvName.AllSybase)] string context)
@@ -154,7 +154,7 @@ namespace Tests.Linq
 
 			using var table = db.CreateTempTable<CreateIfNotExistsTable>(tableOptions:TableOptions.NotSet);
 
-			table.Insert(() => new CreateIfNotExistsTable { Id = 1, Value = 2 });
+			table.Insert(() => new CreateIfNotExistsTable { Id = 1, ValueColumn = 2 });
 
 			_ = table.ToArray();
 			_ = db.CreateTempTable<CreateIfNotExistsTable>(tableOptions:TableOptions.NotSet);
@@ -164,11 +164,11 @@ namespace Tests.Linq
 		public void CreateTempIfNotExistsTest([IncludeDataSources(
 			false,
 			ProviderName.DB2,
-			ProviderName.Informix,
-			ProviderName.Firebird,
+			TestProvName.AllInformix,
+			TestProvName.AllFirebird,
 			TestProvName.AllMySql,
 			TestProvName.AllOracle,
-			ProviderName.PostgreSQL,
+			TestProvName.AllPostgreSQL,
 			TestProvName.AllSQLite,
 			TestProvName.AllSqlServer2005Plus,
 			TestProvName.AllSybase)] string context)
@@ -189,8 +189,8 @@ namespace Tests.Linq
 		[UsedImplicitly]
 		class TestTable
 		{
-			[Column] public int Id    { get; set; }
-			[Column] public int Value { get; set; }
+			[Column] public int Id          { get; set; }
+			[Column] public int ValueColumn { get; set; }
 		}
 
 		[Test]

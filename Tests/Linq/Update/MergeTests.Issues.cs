@@ -361,22 +361,22 @@ namespace Tests.xUpdate
 		#region issue 2388
 		public interface IReviewIndex
 		{
-			int       Id   { get; set; }
-			string?   Value   { get; set; }
+			int       Id     { get; set; }
+			string?   Value1 { get; set; }
 		}
 
 		[Table("ReviewIndexes")]
 		public class ReviewIndex : IReviewIndex
 		{
-			[PrimaryKey] public int     Id    { get; set; }
-			[Column    ] public string? Value { get; set; }
+			[PrimaryKey] public int     Id     { get; set; }
+			[Column    ] public string? Value1 { get; set; }
 
 			public static readonly IReviewIndex[] Data = new IReviewIndex[]
 			{
 				new ReviewIndex()
 				{
 					Id = 1,
-					Value = "2"
+					Value1 = "2"
 				}
 			};
 		}
@@ -462,7 +462,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestMergeWithInterfaces6([MergeDataContextSource(TestProvName.AllInformix, ProviderName.Firebird)] string context)
+		public void TestMergeWithInterfaces6([MergeDataContextSource(TestProvName.AllInformix, TestProvName.AllFirebird25Minus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<ReviewIndex>())
@@ -489,14 +489,14 @@ namespace Tests.xUpdate
 					.InsertWhenNotMatched(s => new ReviewIndex()
 					{
 						Id    = 2,
-						Value = "3"
+						Value1 = "3"
 					})
 					.Merge();
 			}
 		}
 
 		[Test]
-		public void TestMergeWithInterfaces8([MergeDataContextSource(TestProvName.AllInformix, ProviderName.Firebird)] string context)
+		public void TestMergeWithInterfaces8([MergeDataContextSource(TestProvName.AllInformix, TestProvName.AllFirebird25Minus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<ReviewIndex>())
@@ -510,14 +510,14 @@ namespace Tests.xUpdate
 						s => new ReviewIndex()
 						{
 							Id = 2,
-							Value = "3"
+							Value1 = "3"
 						})
 					.Merge();
 			}
 		}
 
 		[Test]
-		public void TestMergeWithInterfaces9([MergeDataContextSource(TestProvName.AllInformix, ProviderName.Firebird)] string context)
+		public void TestMergeWithInterfaces9([MergeDataContextSource(TestProvName.AllInformix, TestProvName.AllFirebird25Minus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<ReviewIndex>())
@@ -544,14 +544,14 @@ namespace Tests.xUpdate
 					.UpdateWhenMatched((t, s) => new ReviewIndex()
 					{
 						Id    = 2,
-						Value = "3"
+						Value1 = "3"
 					})
 					.Merge();
 			}
 		}
 
 		[Test]
-		public void TestMergeWithInterfaces11([MergeDataContextSource(TestProvName.AllInformix, ProviderName.Firebird, TestProvName.AllOracle)] string context)
+		public void TestMergeWithInterfaces11([MergeDataContextSource(TestProvName.AllInformix, TestProvName.AllFirebird25Minus, TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<ReviewIndex>())
@@ -565,7 +565,7 @@ namespace Tests.xUpdate
 						(t, s) => new ReviewIndex()
 						{
 							Id = 2,
-							Value = "3"
+							Value1 = "3"
 						})
 					.Merge();
 			}
@@ -611,7 +611,7 @@ namespace Tests.xUpdate
 					.Merge()
 					.Using(ReviewIndex.Data)
 					.OnTargetKey()
-					.UpdateWhenMatchedThenDelete((s, t) => new ReviewIndex() { Value = "3" }, (s, t) => s.Value != t.Value)
+					.UpdateWhenMatchedThenDelete((s, t) => new ReviewIndex() { Value1 = "3" }, (s, t) => s.Value1 != t.Value1)
 					.Merge();
 			}
 		}
@@ -626,13 +626,13 @@ namespace Tests.xUpdate
 					.Merge()
 					.Using(ReviewIndex.Data)
 					.OnTargetKey()
-					.UpdateWhenMatchedAndThenDelete((s, t) => s.Value != t.Value, (s, t) => new ReviewIndex() { Value = "3" }, (s, t) => s.Value != t.Value)
+					.UpdateWhenMatchedAndThenDelete((s, t) => s.Value1 != t.Value1, (s, t) => new ReviewIndex() { Value1 = "3" }, (s, t) => s.Value1 != t.Value1)
 					.Merge();
 			}
 		}
 
 		[Test]
-		public void TestMergeWithInterfaces16([MergeDataContextSource(ProviderName.Firebird, TestProvName.AllOracle, TestProvName.AllSybase)] string context)
+		public void TestMergeWithInterfaces16([MergeDataContextSource(TestProvName.AllFirebird25Minus, TestProvName.AllOracle, TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<ReviewIndex>())
@@ -647,7 +647,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestMergeWithInterfaces17([MergeDataContextSource(ProviderName.Firebird, TestProvName.AllInformix, TestProvName.AllOracle, TestProvName.AllSybase)] string context)
+		public void TestMergeWithInterfaces17([MergeDataContextSource(TestProvName.AllFirebird25Minus, TestProvName.AllInformix, TestProvName.AllOracle, TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<ReviewIndex>())
@@ -671,7 +671,7 @@ namespace Tests.xUpdate
 					.Merge()
 					.Using(ReviewIndex.Data)
 					.OnTargetKey()
-					.UpdateWhenNotMatchedBySource(t =>  new ReviewIndex() { Id = 2, Value = "3"})
+					.UpdateWhenNotMatchedBySource(t =>  new ReviewIndex() { Id = 2, Value1 = "3"})
 					.Merge();
 			}
 		}
@@ -686,7 +686,7 @@ namespace Tests.xUpdate
 					.Merge()
 					.Using(ReviewIndex.Data)
 					.OnTargetKey()
-					.UpdateWhenNotMatchedBySourceAnd(t => t.Id == 3, t => new ReviewIndex() { Id = 2, Value = "3" })
+					.UpdateWhenNotMatchedBySourceAnd(t => t.Id == 3, t => new ReviewIndex() { Id = 2, Value1 = "3" })
 					.Merge();
 			}
 		}
@@ -726,7 +726,7 @@ namespace Tests.xUpdate
 		class CacheTestTable
 		{
 			[PrimaryKey] public int Id;
-			[Column    ] public int Value;
+			[Column    ] public int Value1;
 		}
 
 		[Test(Description = "")]
@@ -737,8 +737,8 @@ namespace Tests.xUpdate
 			{
 				var source = new List<CacheTestTable>()
 				{
-					new CacheTestTable() { Id = 1, Value = 1 },
-					new CacheTestTable() { Id = 2, Value = 2 },
+					new CacheTestTable() { Id = 1, Value1 = 1 },
+					new CacheTestTable() { Id = 2, Value1 = 2 },
 				};
 
 				table
@@ -753,12 +753,12 @@ namespace Tests.xUpdate
 
 				Assert.AreEqual(2, res.Length);
 				Assert.AreEqual(1, res[0].Id);
-				Assert.AreEqual(1, res[0].Value);
+				Assert.AreEqual(1, res[0].Value1);
 				Assert.AreEqual(2, res[1].Id);
-				Assert.AreEqual(2, res[1].Value);
+				Assert.AreEqual(2, res[1].Value1);
 
-				source[1].Value = 4;
-				source.Add(new CacheTestTable() { Id = 3, Value = 3 });
+				source[1].Value1 = 4;
+				source.Add(new CacheTestTable() { Id = 3, Value1 = 3 });
 
 				table
 					.Merge()
@@ -772,11 +772,11 @@ namespace Tests.xUpdate
 
 				Assert.AreEqual(3, res.Length);
 				Assert.AreEqual(1, res[0].Id);
-				Assert.AreEqual(1, res[0].Value);
+				Assert.AreEqual(1, res[0].Value1);
 				Assert.AreEqual(2, res[1].Id);
-				Assert.AreEqual(4, res[1].Value);
+				Assert.AreEqual(4, res[1].Value1);
 				Assert.AreEqual(3, res[2].Id);
-				Assert.AreEqual(3, res[2].Value);
+				Assert.AreEqual(3, res[2].Value1);
 			}
 		}
 

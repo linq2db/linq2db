@@ -4,12 +4,12 @@
 <#@ include file="..\Shared.ttinclude"                                            once="true"     #>
 <#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.Firebird.ttinclude" once="true"     #>
 <#
-	NamespaceName = "FirebirdDataContext";
+	NamespaceName = "Firebird4DataContext";
 
 	IncludeDefaultSchema = false;
 	GenerateDataTypes = true;
 	GenerateDbTypes   = true;
 
-	LoadFirebirdMetadata(GetConnectionString("Firebird"));
+	LoadFirebirdMetadata(GetConnectionString("Firebird.4"));
 	GenerateModel();
 #>

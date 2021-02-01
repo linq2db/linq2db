@@ -3,17 +3,24 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.Firebird
 {
+	using LinqToDB.Common;
+	using LinqToDB.Data;
 	using Mapping;
 	using SqlQuery;
 	using System.Data.Linq;
+	using System.Linq.Expressions;
 
 	public class FirebirdMappingSchema : MappingSchema
 	{
-		public FirebirdMappingSchema() : this(ProviderName.Firebird)
+		public FirebirdMappingSchema() : this(ProviderName.Firebird, null)
 		{
 		}
 
-		protected FirebirdMappingSchema(string configuration) : base(configuration)
+		public FirebirdMappingSchema(params MappingSchema[] mappingSchemas) : this(ProviderName.Firebird, mappingSchemas)
+		{
+		}
+
+		protected FirebirdMappingSchema(string configuration, MappingSchema[]? mappingSchemas) : base(configuration, mappingSchemas)
 		{
 			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
@@ -103,6 +110,152 @@ namespace LinqToDB.DataProvider.Firebird
 			}
 
 			stringBuilder.Append("'");
+		}
+
+		internal static MappingSchema Instance { get; } = new FirebirdMappingSchema();
+	}
+
+	/// <summary>
+	/// Contains generic dialect1 mappings, not bound to specific version.
+	/// </summary>
+	public class FirebirdDialect1MappingSchema : MappingSchema
+	{
+		public FirebirdDialect1MappingSchema()
+			: base(ProviderName.FirebirdDialect1)
+		{
+			SetConvertExpression<double, TimeSpan>(v => new TimeSpan((long)v));
+
+			//SetConvertExpression<uint  , DataParameter>(v => new DataParameter(null, (decimal )v, DataType.Decimal));
+			//SetConvertExpression<uint? , DataParameter>(v => new DataParameter(null, (decimal?)v, DataType.Decimal));
+			//SetConvertExpression<long  , DataParameter>(v => new DataParameter(null, (decimal )v, DataType.Decimal));
+			//SetConvertExpression<long? , DataParameter>(v => new DataParameter(null, (decimal?)v, DataType.Decimal));
+			//SetConvertExpression<ulong , DataParameter>(v => new DataParameter(null, (decimal )v, DataType.Decimal));
+			//SetConvertExpression<ulong?, DataParameter>(v => new DataParameter(null, (decimal?)v, DataType.Decimal));
+		}
+
+		internal static MappingSchema Instance { get; } = new FirebirdDialect1MappingSchema();
+	}
+
+	public class Firebird25MappingSchema : MappingSchema
+	{
+		public Firebird25MappingSchema()
+			: this(ProviderName.Firebird25)
+		{
+		}
+
+		public Firebird25MappingSchema(params MappingSchema[] schemas)
+				: this(ProviderName.Firebird25, schemas)
+		{
+		}
+
+		protected Firebird25MappingSchema(string providerName, params MappingSchema[] schemas)
+				: base(providerName, Array<MappingSchema>.Append(schemas, FirebirdMappingSchema.Instance))
+		{
+			//SetValueToSqlConverter(typeof(bool), (sb, dt, v) => sb.Append((bool)v ? "'1'" : "'0'"));
+			//SetConvertExpression<bool, DataParameter>(v => new DataParameter(null, v ? '1' : '0', DataType.Char));
+			//SetConvertExpression<bool?, DataParameter>(v => new DataParameter(null, v == null ? null : (v.Value ? '1' : '0'), DataType.Char));
+		}
+	}
+
+	public class Firebird25Dialect1MappingSchema : Firebird25MappingSchema
+	{
+		public Firebird25Dialect1MappingSchema()
+			: this(ProviderName.Firebird25Dialect1)
+		{
+		}
+
+		public Firebird25Dialect1MappingSchema(params MappingSchema[] schemas)
+				: this(ProviderName.Firebird25Dialect1, schemas)
+		{
+		}
+
+		protected Firebird25Dialect1MappingSchema(string providerName, params MappingSchema[] schemas)
+				: base(providerName, Array<MappingSchema>.Append(schemas, FirebirdDialect1MappingSchema.Instance))
+		{
+		}
+	}
+
+	public class Firebird3MappingSchema : Firebird25MappingSchema
+	{
+		public Firebird3MappingSchema()
+			: this(ProviderName.Firebird3)
+		{
+		}
+
+		public Firebird3MappingSchema(params MappingSchema[] schemas)
+				: this(ProviderName.Firebird3, schemas)
+		{
+		}
+
+		protected Firebird3MappingSchema(string providerName, params MappingSchema[] schemas)
+				: base(providerName, schemas)
+		{
+			// restore boolean mapping
+			SetValueToSqlConverter(typeof(bool), (sb, dt, v) => sb.Append((bool)v ? "true" : "false"));
+			SetConvertExpression<bool, DataParameter>(v => new DataParameter(null, v, DataType.Boolean));
+			SetConvertExpression<bool?, DataParameter>(v => new DataParameter(null, v, DataType.Boolean));
+
+			// remap char-based mapping
+			// TODO
+			//SetValueToSqlConverter(typeof(bool), (sb, dt, v) => sb.Append((bool)v ? "'1'" : "'0'"));
+			Expression<Func<bool, DataParameter>> converter = v => new DataParameter(null, v ? '1' : '0', DataType.Char);
+			Expression<Func<bool?, DataParameter>> converterN = v => new DataParameter(null, v == null ? null : (v.Value ? '1' : '0'), DataType.Char);
+			SetConvertExpression(new DbDataType(typeof(bool), DataType.Char), new DbDataType(typeof(DataParameter)), converter);
+			SetConvertExpression(new DbDataType(typeof(bool?), DataType.Char), new DbDataType(typeof(DataParameter)), converterN);
+		}
+	}
+
+	public class Firebird3Dialect1MappingSchema : Firebird3MappingSchema
+	{
+		public Firebird3Dialect1MappingSchema()
+			: this(ProviderName.Firebird3Dialect1)
+		{
+		}
+
+		public Firebird3Dialect1MappingSchema(params MappingSchema[] schemas)
+				: this(ProviderName.Firebird3Dialect1, schemas)
+		{
+		}
+
+		protected Firebird3Dialect1MappingSchema(string providerName, params MappingSchema[] schemas)
+				: base(providerName, Array<MappingSchema>.Append(schemas, FirebirdDialect1MappingSchema.Instance))
+		{
+		}
+	}
+
+	public class Firebird4MappingSchema : Firebird3MappingSchema
+	{
+		public Firebird4MappingSchema()
+			: this(ProviderName.Firebird4)
+		{
+		}
+
+		public Firebird4MappingSchema(params MappingSchema[] schemas)
+				: this(ProviderName.Firebird4, schemas)
+		{
+		}
+
+		protected Firebird4MappingSchema(string providerName, params MappingSchema[] schemas)
+				: base(providerName, schemas)
+		{
+		}
+	}
+
+	public class Firebird4Dialect1MappingSchema : Firebird4MappingSchema
+	{
+		public Firebird4Dialect1MappingSchema()
+			: this(ProviderName.Firebird4Dialect1)
+		{
+		}
+
+		public Firebird4Dialect1MappingSchema(params MappingSchema[] schemas)
+				: this(ProviderName.Firebird4Dialect1, schemas)
+		{
+		}
+
+		protected Firebird4Dialect1MappingSchema(string providerName, params MappingSchema[] schemas)
+				: base(providerName, Array<MappingSchema>.Append(schemas, FirebirdDialect1MappingSchema.Instance))
+		{
 		}
 	}
 }

@@ -71,7 +71,7 @@ namespace Tests.UserTests
 
 		public class ValueItem
 		{
-			public int Value { get; set; }
+			public int ValueColumn { get; set; }
 		}
 
 		[Test]
@@ -112,7 +112,7 @@ namespace Tests.UserTests
 			{
 				using (var table = db.CreateLocalTable<ValueItem>())
 				{
-					table.Insert(() => new ValueItem { Value = 123 });
+					table.Insert(() => new ValueItem { ValueColumn = 123 });
 
 					IQueryable<I1313_Derived>? query = null;
 					Assert.DoesNotThrow(() =>
@@ -120,11 +120,11 @@ namespace Tests.UserTests
 							from row in table
 							select new I1313_Derived
 							{
-								MarkerProperty = false,
-								ChangeToProp = row.Value,
+								MarkerProperty  = false,
+								ChangeToProp    = row.ValueColumn,
 								ChangeFieldType = 2,
-								ChangeToField = 3,
-								ChangePropType = 4,
+								ChangeToField   = 3,
+								ChangePropType  = 4,
 							}
 					);
 

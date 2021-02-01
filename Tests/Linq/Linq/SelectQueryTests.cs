@@ -11,8 +11,8 @@ namespace Tests.Linq
 		[Table]
 		class SampleClass
 		{
-			[Column] public int Id    { get; set; }
-			[Column] public int Value { get; set; }
+			[Column] public int Id          { get; set; }
+			[Column] public int ValueColumn { get; set; }
 		}
 
 		[ActiveIssue(Configuration = TestProvName.AllInformix, Details = "Informix interval cannot be created from non-literal value")]
@@ -23,10 +23,10 @@ namespace Tests.Linq
 			using (var table = db.CreateLocalTable<SampleClass>())
 			{
 				var values1 = from t in db.GetTable<SampleClass>()
-					where t.Value == 1
+					where t.ValueColumn == 1
 					select new
 					{
-						Value1 = Sql.DateAdd(Sql.DateParts.Day, t.Value, Sql.CurrentTimestamp),
+						Value1 = Sql.DateAdd(Sql.DateParts.Day, t.ValueColumn, Sql.CurrentTimestamp),
 						Value2 = Sql.DateAdd(Sql.DateParts.Day, 2, Sql.CurrentTimestamp)
 					};
 
@@ -52,10 +52,10 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(data))
 			{
 				var values1 = from t in db.GetTable<SampleClass>()
-					where t.Value == 1
+					where t.ValueColumn == 1
 					select new
 					{
-						Value1 = Sql.DateAdd(Sql.DateParts.Day, t.Value, Sql.CurrentTimestamp),
+						Value1 = Sql.DateAdd(Sql.DateParts.Day, t.ValueColumn, Sql.CurrentTimestamp),
 						Value2 = Sql.DateAdd(Sql.DateParts.Day, 2, Sql.CurrentTimestamp)
 					};
 
@@ -145,7 +145,7 @@ namespace Tests.Linq
 
 		private static SampleClass[] GenerateData()
 		{
-			return Enumerable.Range(1, 1).Select(i => new SampleClass() { Id = i, Value = i * 100 }).ToArray();
+			return Enumerable.Range(1, 1).Select(i => new SampleClass() { Id = i, ValueColumn = i * 100 }).ToArray();
 		}
 
 		[Test]

@@ -1,0 +1,8 @@
+﻿{
+	"CORE31.Azure": {
+		"Providers": [
+			"Firebird.4",
+			"Firebird.4.D1"
+		]
+	}
+}

@@ -276,6 +276,16 @@ namespace LinqToDB
 		/// <summary>
 		/// Oracle BFILE data type.
 		/// </summary>
-		BFile
+		BFile,
+
+		/// <summary>
+		/// A simple type representing values with fixed precision and floating scale.
+		/// </summary>
+		DecFloat,
+
+		/// <summary>
+		/// A type representing a time value with timezone or offset.
+		/// </summary>
+		TimeTZ,
 	}
 }
