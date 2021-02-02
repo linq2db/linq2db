@@ -6,10 +6,18 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using LinqToDB;
-#if NET472
-using LinqToDB.Async;
-#endif
 using LinqToDB.Expressions;
+
+#if NETFRAMEWORK
+using LinqToDB.Async;
+namespace System
+{
+	// Magic (see https://github.com/dotnet/roslyn/issues/45111)
+	internal class IAsyncDisposable
+	{
+	}
+}
+#endif
 
 namespace Tests.Linq
 {
@@ -125,7 +133,7 @@ namespace Tests.Linq
 				.FirstOrDefault(m => m != null);
 
 			if (method == null)
-				throw new Exception($"Method '{methodName}' not found in type '{type.Name}'.");
+				throw new LinqToDBException($"Method '{methodName}' not found in type '{type.Name}'.");
 
 			return method;
 		}
