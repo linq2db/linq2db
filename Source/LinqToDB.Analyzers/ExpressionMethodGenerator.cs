@@ -81,7 +81,7 @@ namespace LinqToDB.Analyzers
 				var (valid, containingTypes) = ValidateMethod(ref context, m, symbol, processedClasses);
 				if (!valid) continue;
 
-				var newMethod = GetNewMethodName(context, attributeSymbol!, m, model, methodName, ref valid);
+				var newMethod = GetNewMethodName(ref context, attributeSymbol!, m, model, methodName, ref valid);
 				if (!valid) continue;
 
 				var method = BuildMethod(model, symbol, m, newMethod);
@@ -206,7 +206,13 @@ namespace LinqToDB.Analyzers
 			return (valid, containingTypes);
 		}
 
-		private static (string name, bool isPublic) GetNewMethodName(GeneratorExecutionContext context, INamedTypeSymbol attributeSymbol, MemberDeclarationSyntax m, SemanticModel model, string methodName, ref bool valid)
+		private static (string name, bool isPublic) GetNewMethodName(
+			ref GeneratorExecutionContext context,
+			INamedTypeSymbol attributeSymbol,
+			MemberDeclarationSyntax m,
+			SemanticModel model,
+			string methodName,
+			ref bool valid)
 		{
 			var attribute = m.AttributeLists
 				.SelectMany(al => al.Attributes)
@@ -239,7 +245,20 @@ namespace LinqToDB.Analyzers
 				}
 			}
 
-			return (name: $"__{methodName}Expression", isPublic: false);
+			var name = $"__Expression_{methodName}";
+			if (m is MethodDeclarationSyntax mds)
+			{
+				name = name + "_" + string.Join("_",
+					mds.ParameterList.Parameters
+						.Select(s => s.Type
+							?.ToString()
+							.Replace("<", "_")
+							.Replace(">", "_")
+							.Replace(",", "_")
+							.Replace(" ", "")));
+			}
+
+			return (name, isPublic: false);
 		}
 
 		private static MemberDeclarationSyntax BuildContainingClass(MemberDeclarationSyntax parent, INamedTypeSymbol cls)

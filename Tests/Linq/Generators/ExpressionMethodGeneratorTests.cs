@@ -77,6 +77,14 @@ namespace Tests.Generators
 				Name = firstName + lastName,
 			};
 
+		[GenerateExpressionMethod]
+		public static PersonDto ToDtoComplex(Tuple<int, string> tuple)
+			=> new PersonDto
+			{
+				Id = tuple.Item1,
+				Name = tuple.Item2,
+			};
+
 		[Test]
 		public void VerifyGeneratedExpressions()
 		{
@@ -86,16 +94,26 @@ namespace Tests.Generators
 			Assert.True(comparer.Equals(expr, ExprPerson.Test1()));
 			Assert.True(comparer.Equals(expr, ExprPerson.Test2()));
 			Assert.True(comparer.Equals(expr, ExprPerson.Test3()));
-			Assert.True(comparer.Equals(expr, __ToDtoArrowExpression()));
-			Assert.True(comparer.Equals(expr, __ToDtoReturnExpression()));
+			Assert.True(comparer.Equals(expr, __Expression_ToDtoArrow_ExprPerson()));
+			Assert.True(comparer.Equals(expr, __Expression_ToDtoReturn_ExprPerson()));
 
-			Expression<Func<int, string, string, TaskStatus, PersonDto>> expr2 = (int id, string firstName, string lastName, TaskStatus status)
+			Expression<Func<int, string, string, TaskStatus, PersonDto>> expr2 =
+				(int id, string firstName, string lastName, TaskStatus status)
 				=> new PersonDto
 				{
 					Id = id + (int)status,
 					Name = firstName + lastName,
 				};
-			Assert.True(comparer.Equals(expr2, __ToDtoComplexExpression()));
+			Assert.True(comparer.Equals(expr2, __Expression_ToDtoComplex_int_string_string_TaskStatus()));
+
+			Expression<Func<Tuple<int, string>, PersonDto>> expr3 =
+				(Tuple<int, string> tuple)
+				=> new PersonDto
+				{
+					Id = tuple.Item1,
+					Name = tuple.Item2,
+				};
+			Assert.True(comparer.Equals(expr3, __Expression_ToDtoComplex_Tuple_int_string_()));
 		}
 
 		[Test]

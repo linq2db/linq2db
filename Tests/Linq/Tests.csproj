@@ -15,7 +15,7 @@
 		<ProjectReference Include="..\FSharp\Tests.FSharp.fsproj" />
 		<ProjectReference Include="..\..\Source\LinqToDB.Analyzers\LinqToDB.Analyzers.csproj" 
 		                  ReferenceOutputAssembly="false" 
-		                  OutputItemType="Analyzer" />
+		                  OutputItemType="Analyzer"/>
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' != 'net472'">
