@@ -269,14 +269,92 @@ namespace Tests.DataProvider
 		{
 			using (var conn = new DataConnection(context))
 			{
-				var dateTime2 = new DateTime(2012, 12, 12, 12, 12, 12, 12);
+				var dateTime2 = new DateTime(2012, 12, 12, 12, 12, 12, 12).AddTicks(1);
 
-				Assert.That(conn.Execute<DateTime> ("SELECT Cast('2012-12-12 12:12:12.012' as datetime2)"), Is.EqualTo(dateTime2));
-				Assert.That(conn.Execute<DateTime?>("SELECT Cast('2012-12-12 12:12:12.012' as datetime2)"), Is.EqualTo(dateTime2));
+				Assert.That(conn.Execute<DateTime> ("SELECT Cast('2012-12-12 12:12:12.0120001' as datetime2)"), Is.EqualTo(dateTime2));
+				Assert.That(conn.Execute<DateTime?>("SELECT Cast('2012-12-12 12:12:12.0120001' as datetime2)"), Is.EqualTo(dateTime2));
 
 				Assert.That(conn.Execute<DateTime> ("SELECT @p", DataParameter.DateTime2("p", dateTime2)),               Is.EqualTo(dateTime2));
 				Assert.That(conn.Execute<DateTime> ("SELECT @p", DataParameter.Create   ("p", dateTime2)),               Is.EqualTo(dateTime2));
 				Assert.That(conn.Execute<DateTime?>("SELECT @p", new DataParameter("p", dateTime2, DataType.DateTime2)), Is.EqualTo(dateTime2));
+			}
+		}
+
+		[Table]
+		class DateTime2Table
+		{
+			[Column] public int Id { get; set; }
+			[Column(DataType = DataType.DateTime2)] public DateTime DTD { get; set; }
+			[Column(DataType = DataType.DateTime2, Precision = 0)] public DateTime DT0 { get; set; }
+			[Column(DataType = DataType.DateTime2, Precision = 1)] public DateTime DT1 { get; set; }
+			[Column(DataType = DataType.DateTime2, Precision = 2)] public DateTime DT2 { get; set; }
+			[Column(DataType = DataType.DateTime2, Precision = 3)] public DateTime DT3 { get; set; }
+			[Column(DataType = DataType.DateTime2, Precision = 4)] public DateTime DT4 { get; set; }
+			[Column(DataType = DataType.DateTime2, Precision = 5)] public DateTime DT5 { get; set; }
+			[Column(DataType = DataType.DateTime2, Precision = 6)] public DateTime DT6 { get; set; }
+			[Column(DataType = DataType.DateTime2, Precision = 7)] public DateTime DT7 { get; set; }
+
+			public static readonly DateTime2Table[] Data = new[]
+			{
+				new DateTime2Table()
+				{
+					Id  = 1,
+					DTD = new DateTime(2012, 12, 12, 12, 12, 12, 123).AddTicks(1234),
+					DT0 = new DateTime(2012, 12, 12, 12, 12, 12, 123).AddTicks(1234),
+					DT1 = new DateTime(2012, 12, 12, 12, 12, 12, 123).AddTicks(1234),
+					DT2 = new DateTime(2012, 12, 12, 12, 12, 12, 123).AddTicks(1234),
+					DT3 = new DateTime(2012, 12, 12, 12, 12, 12, 123).AddTicks(1234),
+					DT4 = new DateTime(2012, 12, 12, 12, 12, 12, 123).AddTicks(1234),
+					DT5 = new DateTime(2012, 12, 12, 12, 12, 12, 123).AddTicks(1234),
+					DT6 = new DateTime(2012, 12, 12, 12, 12, 12, 123).AddTicks(1234),
+					DT7 = new DateTime(2012, 12, 12, 12, 12, 12, 123).AddTicks(1234),
+				},
+				new DateTime2Table()
+				{
+					Id  = 2,
+					DTD = new DateTime(2012, 12, 12, 12, 12, 12, 0).AddTicks(1234),
+					DT0 = new DateTime(2012, 12, 12, 12, 12, 12, 0).AddTicks(1234),
+					DT1 = new DateTime(2012, 12, 12, 12, 12, 12, 0).AddTicks(1234),
+					DT2 = new DateTime(2012, 12, 12, 12, 12, 12, 0).AddTicks(1234),
+					DT3 = new DateTime(2012, 12, 12, 12, 12, 12, 0).AddTicks(1234),
+					DT4 = new DateTime(2012, 12, 12, 12, 12, 12, 0).AddTicks(1234),
+					DT5 = new DateTime(2012, 12, 12, 12, 12, 12, 0).AddTicks(1234),
+					DT6 = new DateTime(2012, 12, 12, 12, 12, 12, 0).AddTicks(1234),
+					DT7 = new DateTime(2012, 12, 12, 12, 12, 12, 0).AddTicks(1234),
+				}
+			};
+		}
+
+		[Test]
+		public void TestDateTime2Precision([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context, [Values] bool inline)
+		{
+			using (var db = new TestDataConnection(context))
+			using (var tb = db.CreateLocalTable(DateTime2Table.Data))
+			{
+				db.InlineParameters = inline;
+
+				var dt2     = DateTime2Table.Data[0].DTD;
+				var dt2NoMs = DateTime2Table.Data[1].DTD;
+
+				Assert.AreEqual(1, tb.Where(_ => _.DTD == dt2).Select(_ => _.Id).SingleOrDefault());
+				Assert.AreEqual(2, tb.Where(_ => _.DT0 == dt2).Select(_ => _.Id).Count());
+				Assert.AreEqual(1, tb.Where(_ => _.DT1 == dt2).Select(_ => _.Id).SingleOrDefault());
+				Assert.AreEqual(1, tb.Where(_ => _.DT2 == dt2).Select(_ => _.Id).SingleOrDefault());
+				Assert.AreEqual(1, tb.Where(_ => _.DT3 == dt2).Select(_ => _.Id).SingleOrDefault());
+				Assert.AreEqual(1, tb.Where(_ => _.DT4 == dt2).Select(_ => _.Id).SingleOrDefault());
+				Assert.AreEqual(1, tb.Where(_ => _.DT5 == dt2).Select(_ => _.Id).SingleOrDefault());
+				Assert.AreEqual(1, tb.Where(_ => _.DT6 == dt2).Select(_ => _.Id).SingleOrDefault());
+				Assert.AreEqual(1, tb.Where(_ => _.DT7 == dt2).Select(_ => _.Id).SingleOrDefault());
+
+				Assert.AreEqual(2, tb.Where(_ => _.DTD == dt2NoMs).Select(_ => _.Id).SingleOrDefault());
+				Assert.AreEqual(2, tb.Where(_ => _.DT0 == dt2NoMs).Select(_ => _.Id).Count());
+				Assert.AreEqual(2, tb.Where(_ => _.DT1 == dt2NoMs).Select(_ => _.Id).SingleOrDefault());
+				Assert.AreEqual(2, tb.Where(_ => _.DT2 == dt2NoMs).Select(_ => _.Id).SingleOrDefault());
+				Assert.AreEqual(2, tb.Where(_ => _.DT3 == dt2NoMs).Select(_ => _.Id).SingleOrDefault());
+				Assert.AreEqual(2, tb.Where(_ => _.DT4 == dt2NoMs).Select(_ => _.Id).SingleOrDefault());
+				Assert.AreEqual(2, tb.Where(_ => _.DT5 == dt2NoMs).Select(_ => _.Id).SingleOrDefault());
+				Assert.AreEqual(2, tb.Where(_ => _.DT6 == dt2NoMs).Select(_ => _.Id).SingleOrDefault());
+				Assert.AreEqual(2, tb.Where(_ => _.DT7 == dt2NoMs).Select(_ => _.Id).SingleOrDefault());
 			}
 		}
 
@@ -410,7 +488,7 @@ namespace Tests.DataProvider
 				}
 				else
 				{
-					isScCollation = conn.Execute<int>("SELECT COUNT(*) FROM sys.Databases WHERE database_id = DB_ID() AND collation_name LIKE '%_SC'") > 0;
+					isScCollation = conn.Execute<int>("SELECT COUNT(*) FROM sys.databases WHERE database_id = DB_ID() AND collation_name LIKE '%_SC'") > 0;
 				}
 				if (isScCollation)
 				{

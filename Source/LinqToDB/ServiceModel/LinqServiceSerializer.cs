@@ -18,9 +18,9 @@ namespace LinqToDB.ServiceModel
 	{
 		#region Public Members
 
-		public static string Serialize(MappingSchema serializationSchema, SqlStatement statement, SqlParameter[] parameters, IReadOnlyParameterValues? parameterValues, List<string>? queryHints)
+		public static string Serialize(MappingSchema serializationSchema, SqlStatement statement, IReadOnlyParameterValues? parameterValues, List<string>? queryHints)
 		{
-			return new QuerySerializer(serializationSchema).Serialize(statement, parameters, parameterValues, queryHints);
+			return new QuerySerializer(serializationSchema).Serialize(statement, parameterValues, queryHints);
 		}
 
 		public static LinqServiceQuery Deserialize(MappingSchema serializationSchema, string str)
@@ -52,7 +52,6 @@ namespace LinqToDB.ServiceModel
 
 		#region SerializerBase
 
-		const int ParamIndex     = -1;
 		const int TypeIndex      = -2;
 		const int TypeArrayIndex = -3;
 
@@ -611,7 +610,7 @@ namespace LinqToDB.ServiceModel
 			{
 			}
 
-			public string Serialize(SqlStatement statement, SqlParameter[] parameters, IReadOnlyParameterValues? parameterValues, List<string>? queryHints)
+			public string Serialize(SqlStatement statement, IReadOnlyParameterValues? parameterValues, List<string>? queryHints)
 			{
 				var queryHintCount = queryHints?.Count ?? 0;
 
@@ -627,20 +626,6 @@ namespace LinqToDB.ServiceModel
 
 				if (DelayedObjects.Count > 0)
 					throw new LinqToDBException($"QuerySerializer error. Unknown object '{DelayedObjects.First().Key.GetType()}'.");
-
-				foreach (var parameter in parameters)
-					if (!ObjectIndices.ContainsKey(parameter))
-						Visit(parameter, parameterValues);
-
-				Builder
-					.Append(++Index)
-					.Append(' ')
-					.Append(ParamIndex);
-
-				Append(parameters.Length);
-
-				foreach (var parameter in parameters)
-					Append(parameter);
 
 				Builder.AppendLine();
 
@@ -1424,7 +1409,6 @@ namespace LinqToDB.ServiceModel
 		public class QueryDeserializer : DeserializerBase
 		{
 			SqlStatement   _statement  = null!;
-			SqlParameter[] _parameters = null!;
 
 			readonly Dictionary<int,SelectQuery> _queries = new Dictionary<int,SelectQuery>();
 			readonly List<Action>                _actions = new List<Action>();
@@ -1466,7 +1450,7 @@ namespace LinqToDB.ServiceModel
 				foreach (var action in _actions)
 					action();
 
-				return new LinqServiceQuery { Statement = _statement, Parameters = _parameters, QueryHints = queryHints };
+				return new LinqServiceQuery { Statement = _statement, QueryHints = queryHints };
 			}
 
 			bool Parse()
@@ -1482,7 +1466,6 @@ namespace LinqToDB.ServiceModel
 
 				switch ((QueryElementType)type)
 				{
-					case (QueryElementType)ParamIndex     : obj = _parameters = ReadArray<SqlParameter>()!; break;
 					case (QueryElementType)TypeIndex      : obj = ResolveType(ReadString());                break;
 					case (QueryElementType)TypeArrayIndex : obj = GetArrayType(Read<Type>()!);              break;
 

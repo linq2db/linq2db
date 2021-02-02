@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Linq;
 using System.Data.SqlTypes;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -10,6 +11,7 @@ using System.Text.RegularExpressions;
 
 namespace LinqToDB.SqlProvider
 {
+	using LinqToDB.Linq;
 	using Common;
 	using Mapping;
 	using SqlQuery;
@@ -136,7 +138,6 @@ namespace LinqToDB.SqlProvider
 		protected virtual void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, int indent, bool skipAlias)
 		{
 			Statement           = statement;
-			_aliases            = new HashSet<string>(Statement.GetCurrentAliases(), StringComparer.OrdinalIgnoreCase);
 			StringBuilder       = sb;
 			OptimizationContext = optimizationContext;
 			Indent              = indent;
@@ -156,7 +157,8 @@ namespace LinqToDB.SqlProvider
 
 						var sqlBuilder = ((BasicSqlBuilder)CreateSqlBuilder());
 						sqlBuilder.BuildSql(commandNumber,
-							new SqlSelectStatement(union.SelectQuery) { ParentStatement = statement }, sb, optimizationContext, indent,
+							new SqlSelectStatement(union.SelectQuery) { ParentStatement = statement }, sb, 
+							optimizationContext, indent,
 							skipAlias);
 					}
 				}
@@ -569,23 +571,20 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual bool SupportsBooleanInColumn => false;
 
-		protected virtual void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
+		protected virtual ISqlExpression WrapBooleanExpression(ISqlExpression expr)
 		{
 			var wrap = false;
-			if (!SupportsBooleanInColumn)
-			{
 
-				if (expr.SystemType == typeof(bool))
-				{
-					if (expr is SqlSearchCondition)
-						wrap = true;
-					else
-						wrap =
-							expr is SqlExpression ex &&
-							ex.Expr == "{0}" &&
-							ex.Parameters.Length == 1 &&
-							ex.Parameters[0] is SqlSearchCondition;
-				}
+			if (expr.SystemType == typeof(bool))
+			{
+				if (expr is SqlSearchCondition)
+					wrap = true;
+				else
+					wrap =
+						expr is SqlExpression ex &&
+						ex.Expr == "{0}" &&
+						ex.Parameters.Length == 1 &&
+						ex.Parameters[0] is SqlSearchCondition;
 			}
 
 			if (wrap)
@@ -594,7 +593,16 @@ namespace LinqToDB.SqlProvider
 				{
 					DoNotOptimize = true
 				};
-				expr = ConvertElement(expr);
+			}
+
+			return expr;
+		}
+
+		protected virtual void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
+		{
+			if (!SupportsBooleanInColumn)
+			{
+				expr = WrapBooleanExpression(expr);
 			}
 
 			BuildExpression(expr, true, true, alias, ref addAlias, true);
@@ -1672,7 +1680,7 @@ namespace LinqToDB.SqlProvider
 
 				var item = selectQuery.OrderBy.Items[i];
 
-				BuildExpression(item.Expression);
+				BuildExpression(WrapBooleanExpression(item.Expression));
 
 				if (item.IsDescending)
 					StringBuilder.Append(" DESC");
@@ -3075,7 +3083,50 @@ namespace LinqToDB.SqlProvider
 					sb.Append("SET     ");
 					PrintParameterName(sb, p);
 					sb.Append(" = ");
-					if (!ValueToSqlConverter.TryConvert(sb, p.Value))
+					if (p.Value is byte[] bytes                           &&
+					    Configuration.MaxBinaryParameterLengthLogging >= 0 &&
+					    bytes.Length > Configuration.MaxBinaryParameterLengthLogging &&
+					    ValueToSqlConverter.CanConvert(typeof(byte[])))
+					{
+						var trimmed =
+							new byte[Configuration.MaxBinaryParameterLengthLogging];
+						Array.Copy(bytes, 0, trimmed, 0,
+							Configuration.MaxBinaryParameterLengthLogging);
+						ValueToSqlConverter.TryConvert(sb, trimmed);
+						sb.AppendLine();
+						sb.Append(
+							$"-- value above truncated for logging, actual length is {bytes.Length}");
+					}
+					else if (p.Value is Binary binaryData &&
+					         Configuration.MaxBinaryParameterLengthLogging >= 0 &&
+					         binaryData.Length > Configuration.MaxBinaryParameterLengthLogging &&
+					         ValueToSqlConverter.CanConvert(typeof(Binary)))
+					{
+						//We aren't going to create a new Binary here,
+						//since ValueToSql always just .ToArray() anyway
+						var trimmed =
+							new byte[Configuration.MaxBinaryParameterLengthLogging];
+						Array.Copy(binaryData.ToArray(), 0, trimmed, 0,
+							Configuration.MaxBinaryParameterLengthLogging);
+						ValueToSqlConverter.TryConvert(sb, trimmed);
+						sb.AppendLine();
+						sb.Append(
+							$"-- value above truncated for logging, actual length is {binaryData.Length}");
+					}
+					else if (p.Value is string s && 
+					         Configuration.MaxStringParameterLengthLogging >= 0 &&
+					         s.Length > Configuration.MaxStringParameterLengthLogging &&
+					         ValueToSqlConverter.CanConvert(typeof(string)))
+					{
+						var trimmed =
+							s.Substring(0,
+								Configuration.MaxStringParameterLengthLogging);
+						ValueToSqlConverter.TryConvert(sb, trimmed);
+						sb.AppendLine();
+						sb.Append(
+							$"-- value above truncated for logging, actual length is {s.Length}");
+					}
+					else if (!ValueToSqlConverter.TryConvert(sb, p.Value))
 						FormatParameterValue(sb, p.Value);
 					sb.AppendLine();
 				}
@@ -3170,7 +3221,7 @@ namespace LinqToDB.SqlProvider
 		string GetAlias(string desiredAlias, string defaultAlias)
 		{
 			if (_aliases == null)
-				_aliases = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+				_aliases = OptimizationContext.Aliases.GetUsedTableAliases();
 
 			var alias = desiredAlias;
 

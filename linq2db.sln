@@ -52,6 +52,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "LinqToDB.Templates", "LinqT
 		Source\LinqToDB.Templates\LinqToDB.SqlServer.SqlTypes.ttinclude = Source\LinqToDB.Templates\LinqToDB.SqlServer.SqlTypes.ttinclude
 		Source\LinqToDB.Templates\LinqToDB.SqlServer.ttinclude = Source\LinqToDB.Templates\LinqToDB.SqlServer.ttinclude
 		Source\LinqToDB.Templates\LinqToDB.Sybase.ttinclude = Source\LinqToDB.Templates\LinqToDB.Sybase.ttinclude
+		Source\LinqToDB.Templates\LinqToDB.Tools.ttinclude = Source\LinqToDB.Templates\LinqToDB.Tools.ttinclude
 		Source\LinqToDB.Templates\LinqToDB.ttinclude = Source\LinqToDB.Templates\LinqToDB.ttinclude
 		Source\LinqToDB.Templates\MultipleFiles.ttinclude = Source\LinqToDB.Templates\MultipleFiles.ttinclude
 		Source\LinqToDB.Templates\NotifyDataErrorInfo.ttinclude = Source\LinqToDB.Templates\NotifyDataErrorInfo.ttinclude
@@ -83,7 +84,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{3A081B6E
 		NuGet\Icon_details.png = NuGet\Icon_details.png
 		NuGet\Icon_dialog.png = NuGet\Icon_dialog.png
 		NuGet\Icon_list.png = NuGet\Icon_list.png
-		NuGet\Init.ps1 = NuGet\Init.ps1
 		NuGet\linq2db.Access.nuspec = NuGet\linq2db.Access.nuspec
 		NuGet\linq2db.AspNet.nuspec = NuGet\linq2db.AspNet.nuspec
 		NuGet\linq2db.DB2.Core.nuspec = NuGet\linq2db.DB2.Core.nuspec
@@ -116,15 +116,12 @@ Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Tests.FSharp", "Tests\FShar
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "t4models", "t4models", "{3294F9A3-2530-4ACE-BE44-0C1182DB34C9}"
 	ProjectSection(SolutionItems) = preProject
-		NuGet\linq2db.t4models.nuspec = NuGet\linq2db.t4models.nuspec
 		NuGet\t4models\linq2db.t4models.props = NuGet\t4models\linq2db.t4models.props
-		NuGet\t4models\LinqToDB.Tools.ttinclude = NuGet\t4models\LinqToDB.Tools.ttinclude
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Access", "Access", "{D4859EAA-F2E8-4A90-9E2C-0AE3DF8F3237}"
 	ProjectSection(SolutionItems) = preProject
 		NuGet\Access\CopyMe.Access.tt.txt = NuGet\Access\CopyMe.Access.tt.txt
-		NuGet\linq2db.Access.nuspec = NuGet\linq2db.Access.nuspec
 		NuGet\Access\linq2db.Access.props = NuGet\Access\linq2db.Access.props
 		NuGet\Access\LinqToDB.Access.Tools.ttinclude = NuGet\Access\LinqToDB.Access.Tools.ttinclude
 	EndProjectSection
@@ -132,7 +129,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Firebird", "Firebird", "{842937AD-BDDD-4583-A1A0-7A3AA1CF5B83}"
 	ProjectSection(SolutionItems) = preProject
 		NuGet\Firebird\CopyMe.Firebird.tt.txt = NuGet\Firebird\CopyMe.Firebird.tt.txt
-		NuGet\linq2db.Firebird.nuspec = NuGet\linq2db.Firebird.nuspec
 		NuGet\Firebird\linq2db.Firebird.props = NuGet\Firebird\linq2db.Firebird.props
 		NuGet\Firebird\LinqToDB.Firebird.Tools.ttinclude = NuGet\Firebird\LinqToDB.Firebird.Tools.ttinclude
 	EndProjectSection
@@ -140,7 +136,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DB2", "DB2", "{93B6C26B-DC1C-4A57-B10A-1A659AEAA9E8}"
 	ProjectSection(SolutionItems) = preProject
 		NuGet\DB2\CopyMe.DB2.tt.txt = NuGet\DB2\CopyMe.DB2.tt.txt
-		NuGet\linq2db.DB2.nuspec = NuGet\linq2db.DB2.nuspec
 		NuGet\DB2\linq2db.DB2.props = NuGet\DB2\linq2db.DB2.props
 		NuGet\DB2\LinqToDB.DB2.Tools.ttinclude = NuGet\DB2\LinqToDB.DB2.Tools.ttinclude
 	EndProjectSection
@@ -148,7 +143,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Informix", "Informix", "{3E0E254D-E267-4DEA-919D-F038840F9A87}"
 	ProjectSection(SolutionItems) = preProject
 		NuGet\Informix\CopyMe.Informix.tt.txt = NuGet\Informix\CopyMe.Informix.tt.txt
-		NuGet\linq2db.Informix.nuspec = NuGet\linq2db.Informix.nuspec
 		NuGet\Informix\linq2db.Informix.props = NuGet\Informix\linq2db.Informix.props
 		NuGet\Informix\LinqToDB.Informix.Tools.ttinclude = NuGet\Informix\LinqToDB.Informix.Tools.ttinclude
 	EndProjectSection
@@ -156,7 +150,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MySql", "MySql", "{FB9C38B7-CD88-4595-8B00-4C9FFEE04E05}"
 	ProjectSection(SolutionItems) = preProject
 		NuGet\MySql\CopyMe.MySql.tt.txt = NuGet\MySql\CopyMe.MySql.tt.txt
-		NuGet\linq2db.MySql.nuspec = NuGet\linq2db.MySql.nuspec
 		NuGet\MySql\linq2db.MySql.props = NuGet\MySql\linq2db.MySql.props
 		NuGet\MySql\LinqToDB.MySql.Tools.ttinclude = NuGet\MySql\LinqToDB.MySql.Tools.ttinclude
 	EndProjectSection
@@ -164,9 +157,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Oracle", "Oracle", "{470C3FEA-ABA7-49D5-B052-156AC86D6A39}"
 	ProjectSection(SolutionItems) = preProject
 		NuGet\Oracle\CopyMe.Oracle.tt.txt = NuGet\Oracle\CopyMe.Oracle.tt.txt
-		NuGet\linq2db.Oracle.Managed.nuspec = NuGet\linq2db.Oracle.Managed.nuspec
 		NuGet\Oracle\linq2db.Oracle.props = NuGet\Oracle\linq2db.Oracle.props
-		NuGet\linq2db.Oracle.Unmanaged.nuspec = NuGet\linq2db.Oracle.Unmanaged.nuspec
 		NuGet\Oracle\LinqToDB.Oracle.Managed.Tools.ttinclude = NuGet\Oracle\LinqToDB.Oracle.Managed.Tools.ttinclude
 		NuGet\Oracle\LinqToDB.Oracle.Tools.ttinclude = NuGet\Oracle\LinqToDB.Oracle.Tools.ttinclude
 		NuGet\Oracle\LinqToDB.Oracle.x64.Tools.ttinclude = NuGet\Oracle\LinqToDB.Oracle.x64.Tools.ttinclude
@@ -176,7 +167,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PostgreSQL", "PostgreSQL", "{3C616729-3105-4DD7-9DFE-6673A2FF549E}"
 	ProjectSection(SolutionItems) = preProject
 		NuGet\PostgreSQL\CopyMe.PostgreSQL.tt.txt = NuGet\PostgreSQL\CopyMe.PostgreSQL.tt.txt
-		NuGet\linq2db.PostgreSQL.nuspec = NuGet\linq2db.PostgreSQL.nuspec
 		NuGet\PostgreSQL\linq2db.PostgreSQL.props = NuGet\PostgreSQL\linq2db.PostgreSQL.props
 		NuGet\PostgreSQL\LinqToDB.PostgreSQL.Tools.ttinclude = NuGet\PostgreSQL\LinqToDB.PostgreSQL.Tools.ttinclude
 	EndProjectSection
@@ -184,7 +174,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SapHana", "SapHana", "{07E42E73-852A-47B3-9E53-0508B5709870}"
 	ProjectSection(SolutionItems) = preProject
 		NuGet\SapHana\CopyMe.SapHana.tt.txt = NuGet\SapHana\CopyMe.SapHana.tt.txt
-		NuGet\linq2db.SapHana.nuspec = NuGet\linq2db.SapHana.nuspec
 		NuGet\SapHana\linq2db.SapHana.props = NuGet\SapHana\linq2db.SapHana.props
 		NuGet\SapHana\LinqToDB.SapHana.Tools.ttinclude = NuGet\SapHana\LinqToDB.SapHana.Tools.ttinclude
 	EndProjectSection
@@ -192,7 +181,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SqlCe", "SqlCe", "{FD12E2D7-E764-4376-B232-46ED8559BC6B}"
 	ProjectSection(SolutionItems) = preProject
 		NuGet\SqlCe\CopyMe.SqlCe.tt.txt = NuGet\SqlCe\CopyMe.SqlCe.tt.txt
-		NuGet\linq2db.SqlCe.nuspec = NuGet\linq2db.SqlCe.nuspec
 		NuGet\SqlCe\linq2db.SqlCe.props = NuGet\SqlCe\linq2db.SqlCe.props
 		NuGet\SqlCe\LinqToDB.SqlCe.Tools.ttinclude = NuGet\SqlCe\LinqToDB.SqlCe.Tools.ttinclude
 	EndProjectSection
@@ -200,8 +188,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SqlServer", "SqlServer", "{949EA01F-64E8-4AB4-8120-699D79A51F6E}"
 	ProjectSection(SolutionItems) = preProject
 		NuGet\SqlServer\CopyMe.SqlServer.tt.txt = NuGet\SqlServer\CopyMe.SqlServer.tt.txt
-		NuGet\linq2db.SqlServer.MS.nuspec = NuGet\linq2db.SqlServer.MS.nuspec
-		NuGet\linq2db.SqlServer.nuspec = NuGet\linq2db.SqlServer.nuspec
 		NuGet\SqlServer\linq2db.SqlServer.props = NuGet\SqlServer\linq2db.SqlServer.props
 		NuGet\SqlServer\LinqToDB.SqlServer.SqlTypes.Tools.ttinclude = NuGet\SqlServer\LinqToDB.SqlServer.SqlTypes.Tools.ttinclude
 		NuGet\SqlServer\LinqToDB.SqlServer.Tools.ttinclude = NuGet\SqlServer\LinqToDB.SqlServer.Tools.ttinclude
@@ -210,7 +196,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Sybase", "Sybase", "{4E326A65-7691-4767-8A21-BA37EF707BEF}"
 	ProjectSection(SolutionItems) = preProject
 		NuGet\Sybase\CopyMe.Sybase.tt.txt = NuGet\Sybase\CopyMe.Sybase.tt.txt
-		NuGet\linq2db.Sybase.nuspec = NuGet\linq2db.Sybase.nuspec
 		NuGet\Sybase\linq2db.Sybase.props = NuGet\Sybase\linq2db.Sybase.props
 		NuGet\Sybase\LinqToDB.Sybase.Tools.ttinclude = NuGet\Sybase\LinqToDB.Sybase.Tools.ttinclude
 	EndProjectSection
@@ -218,7 +203,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SQLite", "SQLite", "{FCE717EF-5F7B-4F33-8A77-E02B0B92D586}"
 	ProjectSection(SolutionItems) = preProject
 		NuGet\SQLite\CopyMe.SQLite.tt.txt = NuGet\SQLite\CopyMe.SQLite.tt.txt
-		NuGet\linq2db.SQLite.nuspec = NuGet\linq2db.SQLite.nuspec
 		NuGet\SQLite\linq2db.SQLite.props = NuGet\SQLite\linq2db.SQLite.props
 		NuGet\SQLite\LinqToDB.SQLite.Tools.ttinclude = NuGet\SQLite\LinqToDB.SQLite.Tools.ttinclude
 	EndProjectSection
@@ -235,9 +219,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Sybase.DataAction", "Sybase.DataAction", "{1FC89283-09FB-444B-BF70-F76B3E3A83BB}"
 	ProjectSection(SolutionItems) = preProject
 		NuGet\Sybase.DataAction\CopyMe.Sybase.DataAction.tt.txt = NuGet\Sybase.DataAction\CopyMe.Sybase.DataAction.tt.txt
-		NuGet\linq2db.Sybase.DataAction.nuspec = NuGet\linq2db.Sybase.DataAction.nuspec
 		NuGet\Sybase.DataAction\linq2db.Sybase.DataAction.props = NuGet\Sybase.DataAction\linq2db.Sybase.DataAction.props
-		NuGet\Sybase.DataAction\LinqToDB.Sybase.DataAction.Tools.ttinclude = NuGet\Sybase.DataAction\LinqToDB.Sybase.DataAction.Tools.ttinclude
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests.Playground", "Tests\Tests.Playground\Tests.Playground.csproj", "{4E3D4705-F037-4536-A45D-7AF52BB017DC}"
@@ -245,9 +227,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MySqlConnector", "MySqlConnector", "{B4080869-A89C-4996-938C-D7F42E9AA3CB}"
 	ProjectSection(SolutionItems) = preProject
 		NuGet\MySqlConnector\CopyMe.MySqlConnector.tt.txt = NuGet\MySqlConnector\CopyMe.MySqlConnector.tt.txt
-		NuGet\linq2db.MySqlConnector.nuspec = NuGet\linq2db.MySqlConnector.nuspec
 		NuGet\MySqlConnector\linq2db.MySqlConnector.props = NuGet\MySqlConnector\linq2db.MySqlConnector.props
-		NuGet\MySqlConnector\LinqToDB.MySqlConnector.Tools.ttinclude = NuGet\MySqlConnector\LinqToDB.MySqlConnector.Tools.ttinclude
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LinqToDB.Tools", "Source\LinqToDB.Tools\LinqToDB.Tools.csproj", "{B6D0309F-61AA-4F2B-B918-5446609CBECD}"
@@ -424,14 +404,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DB2.Core", "DB2.Core", "{F9
 	ProjectSection(SolutionItems) = preProject
 		NuGet\DB2.Core\CopyMe.DB2.tt.txt = NuGet\DB2.Core\CopyMe.DB2.tt.txt
 		NuGet\DB2.Core\linq2db.DB2.Core.props = NuGet\DB2.Core\linq2db.DB2.Core.props
-		NuGet\DB2.Core\LinqToDB.DB2.Tools.ttinclude = NuGet\DB2.Core\LinqToDB.DB2.Tools.ttinclude
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Informix.Core", "Informix.Core", "{16894D8D-697E-49B7-BC72-02D2462FC80E}"
 	ProjectSection(SolutionItems) = preProject
 		NuGet\Informix.Core\CopyMe.Informix.tt.txt = NuGet\Informix.Core\CopyMe.Informix.tt.txt
 		NuGet\Informix.Core\linq2db.Informix.Core.props = NuGet\Informix.Core\linq2db.Informix.Core.props
-		NuGet\Informix.Core\LinqToDB.Informix.Tools.ttinclude = NuGet\Informix.Core\LinqToDB.Informix.Tools.ttinclude
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "netcoreapp31", "netcoreapp31", "{BD5FA19A-4092-45F0-A7AF-D46666718EB5}"
@@ -594,7 +572,8 @@ Global
 		{C1283235-3533-488C-9313-2DAF3A9AD9DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C1283235-3533-488C-9313-2DAF3A9AD9DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C1283235-3533-488C-9313-2DAF3A9AD9DF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7FEE7809-27BB-432A-8920-D0DC56F13A62}.Azure|Any CPU.ActiveCfg = Release|Any CPU
+		{7FEE7809-27BB-432A-8920-D0DC56F13A62}.Azure|Any CPU.ActiveCfg = Azure|Any CPU
+		{7FEE7809-27BB-432A-8920-D0DC56F13A62}.Azure|Any CPU.Build.0 = Azure|Any CPU
 		{7FEE7809-27BB-432A-8920-D0DC56F13A62}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{7FEE7809-27BB-432A-8920-D0DC56F13A62}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7FEE7809-27BB-432A-8920-D0DC56F13A62}.Release|Any CPU.ActiveCfg = Release|Any CPU

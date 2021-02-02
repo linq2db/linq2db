@@ -403,10 +403,10 @@ namespace Tests.Linq
 		public void Issue404Test([DataSources(TestProvName.AllSybase)] string context)
 		{
 			// executed twice to test issue #2174
-			execute(context);
-			execute(context);
+			Execute();
+			Execute();
 
-			void execute(string context)
+			void Execute()
 			{
 				using (var db = GetDataContext(context))
 				using (var t1 = db.CreateLocalTable(Table404One.Data))

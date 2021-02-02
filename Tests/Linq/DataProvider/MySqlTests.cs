@@ -1064,6 +1064,7 @@ namespace Tests.DataProvider
 			// TODO: add aggregate/udf functions test cases
 			using (var db = (DataConnection)GetDataContext(context))
 			{
+
 				var expectedProc = testCase.Schema;
 				expectedProc.CatalogName = TestUtils.GetDatabaseName(db);
 
@@ -1082,8 +1083,7 @@ namespace Tests.DataProvider
 				Assert.AreEqual(expectedProc.IsAggregateFunction,   procedure.IsAggregateFunction);
 				Assert.AreEqual(expectedProc.IsDefaultSchema,       procedure.IsDefaultSchema);
 
-				if (GetProviderName(context, out var _) == ProviderName.MySqlConnector
-					&& procedure.ResultException != null)
+				if (GetProviderName(context, out _) == ProviderName.MySqlConnector && procedure.ResultException != null)
 				{
 					Assert.False       (procedure.IsLoaded);
 					Assert.IsInstanceOf(typeof(InvalidOperationException), procedure.ResultException);

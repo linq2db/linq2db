@@ -515,20 +515,20 @@ namespace Tests.Linq
 			{
 				return new WhereCompareData[]
 				{
-					new WhereCompareData{Id = 1, NotNullable = 1, Nullable = null, OtherNullable = 10}, 
-					new WhereCompareData{Id = 2, NotNullable = 1, Nullable = 10,   OtherNullable = 10}, 
-					new WhereCompareData{Id = 3, NotNullable = 1, Nullable = 10,   OtherNullable = null}, 
-					new WhereCompareData{Id = 4, NotNullable = 1, Nullable = null, OtherNullable = null}, 
+					new WhereCompareData{Id = 1, NotNullable = 1, Nullable = null, OtherNullable = 10},
+					new WhereCompareData{Id = 2, NotNullable = 1, Nullable = 10,   OtherNullable = 10},
+					new WhereCompareData{Id = 3, NotNullable = 1, Nullable = 10,   OtherNullable = null},
+					new WhereCompareData{Id = 4, NotNullable = 1, Nullable = null, OtherNullable = null},
 
-					new WhereCompareData{Id = 5, NotNullable = 1, Nullable = null, OtherNullable = 20}, 
-					new WhereCompareData{Id = 6, NotNullable = 1, Nullable = 10,   OtherNullable = 20}, 
-					new WhereCompareData{Id = 7, NotNullable = 1, Nullable = 10,   OtherNullable = null}, 
-					new WhereCompareData{Id = 8, NotNullable = 1, Nullable = null, OtherNullable = null}, 
+					new WhereCompareData{Id = 5, NotNullable = 1, Nullable = null, OtherNullable = 20},
+					new WhereCompareData{Id = 6, NotNullable = 1, Nullable = 10,   OtherNullable = 20},
+					new WhereCompareData{Id = 7, NotNullable = 1, Nullable = 10,   OtherNullable = null},
+					new WhereCompareData{Id = 8, NotNullable = 1, Nullable = null, OtherNullable = null},
 
-					new WhereCompareData{Id = 9,  NotNullable = 1, Nullable = null, OtherNullable = 20}, 
-					new WhereCompareData{Id = 10, NotNullable = 1, Nullable = 30,   OtherNullable = 20}, 
-					new WhereCompareData{Id = 11, NotNullable = 1, Nullable = 30,   OtherNullable = null}, 
-					new WhereCompareData{Id = 12, NotNullable = 1, Nullable = null, OtherNullable = null}, 
+					new WhereCompareData{Id = 9,  NotNullable = 1, Nullable = null, OtherNullable = 20},
+					new WhereCompareData{Id = 10, NotNullable = 1, Nullable = 30,   OtherNullable = 20},
+					new WhereCompareData{Id = 11, NotNullable = 1, Nullable = 30,   OtherNullable = null},
+					new WhereCompareData{Id = 12, NotNullable = 1, Nullable = null, OtherNullable = null},
 
 				};
 			}
@@ -1684,20 +1684,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(1767)]
-		[Test]
-		public void Issue1767Test([DataSources(false)] string context)
-		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
-			{
-				db.Person.FirstOrDefault(p => p.MiddleName != null && p.MiddleName != "test");
-
-				Assert.True(db.LastQuery!.Contains("IS NOT NULL"));
-				Assert.False(db.LastQuery!.Contains("IS NULL"));
-			}
-		}
-
 		class Parameter
 		{
 			public int Id;
@@ -1883,5 +1869,41 @@ namespace Tests.Linq
 			}
 		}
 		#endregion
+
+		[ActiveIssue(1767)]
+		[Test]
+		public void Issue1767Test1([DataSources(false)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = db.Parent.Where(p => p.Value1 != null && p.Value1 != 1);
+
+				AreEqual(
+					db.Parent.AsEnumerable().Where(p => p.Value1 != null && p.Value1 != 1),
+					query);
+
+				var sql = query.ToString();
+				Assert.False(sql.Contains("IS NULL"), sql);
+				Assert.AreEqual(1, Regex.Matches(sql, "IS NOT NULL").Count, sql);
+			}
+		}
+
+		[ActiveIssue(1767)]
+		[Test]
+		public void Issue1767Test2([DataSources(false)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = db.Parent.Where(p => p.Value1 == null || p.Value1 != 1);
+
+				AreEqual(
+					db.Parent.AsEnumerable().Where(p => p.Value1 == null || p.Value1 != 1),
+					query);
+
+				var sql = query.ToString();
+				Assert.AreEqual(1, Regex.Matches(sql, "IS NULL").Count, sql);
+				Assert.False(sql.Contains("IS NOT NULL"), sql);
+			}
+		}
 	}
 }

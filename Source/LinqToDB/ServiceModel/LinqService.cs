@@ -1,21 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
-using System.Linq.Expressions;
 using System.ServiceModel;
 using System.Threading.Tasks;
 using System.Web.Services;
 
 namespace LinqToDB.ServiceModel
 {
-	using Data;
-	using Linq;
-	using SqlQuery;
-	using Expressions;
-	using Mapping;
 	using Common;
+	using Data;
+	using Expressions;
 	using Extensions;
+	using Linq;
+	using Mapping;
+	using SqlQuery;
 
 	[ServiceBehavior  (InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]
 	[WebService       (Namespace  = "http://tempuri.org/")]
@@ -86,6 +84,7 @@ namespace LinqToDB.ServiceModel
 			public SqlStatement    Statement   { get; set; } = null!;
 			public object?         Context     { get; set; }
 			public SqlParameter[]? Parameters  { get; set; }
+			public AliasesContext? Aliases     { get; set; }
 			public List<string>?   QueryHints  { get; set; }
 		}
 
@@ -104,7 +103,6 @@ namespace LinqToDB.ServiceModel
 				return DataConnection.QueryRunner.ExecuteNonQuery(db, new QueryContext
 				{
 					Statement  = query.Statement,
-					Parameters = query.Parameters,
 					QueryHints = query.QueryHints
 				}, new SqlParameterValues());
 			}
@@ -130,7 +128,6 @@ namespace LinqToDB.ServiceModel
 				return DataConnection.QueryRunner.ExecuteScalar(db, new QueryContext
 				{
 					Statement  = query.Statement,
-					Parameters = query.Parameters,
 					QueryHints = query.QueryHints
 				}, null);
 			}
@@ -155,8 +152,7 @@ namespace LinqToDB.ServiceModel
 				using var rd = DataConnection.QueryRunner.ExecuteReader(db, new QueryContext
 				{
 					Statement  = query.Statement,
-					Parameters = query.Parameters,
-					QueryHints = query.QueryHints
+					QueryHints = query.QueryHints,
 				}, SqlParameterValues.Empty);
 
 				var reader = DataReaderWrapCache.TryUnwrapDataReader(db.MappingSchema, rd);
@@ -278,7 +274,6 @@ namespace LinqToDB.ServiceModel
 					DataConnection.QueryRunner.ExecuteNonQuery(db, new QueryContext
 					{
 						Statement  = query.Statement,
-						Parameters = query.Parameters,
 						QueryHints = query.QueryHints
 					}, null);
 				}

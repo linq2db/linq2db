@@ -13,7 +13,7 @@ namespace Tests.Linq
 	[TestFixture]
 	public class DateTimeFunctionsTests : TestBase
 	{
-		//This custom comparers allows for an error of 1 millisecond.  
+		//This custom comparers allows for an error of 1 millisecond.
 		public class CustomIntComparer : IEqualityComparer<int>
 		{
 			private readonly int _precision;
@@ -123,7 +123,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void CurrentTzTimestamp(
-			[IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)]
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)]
 			string context)
 		{
 			using (new DisableBaseline("Server-side date generation test"))
@@ -443,7 +443,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void DatepartDynamic(
-			[DataSources(TestProvName.AllInformix)] string context, 
+			[DataSources(TestProvName.AllInformix)] string context,
 			[Values(
 				Sql.DateParts.Day,
 				Sql.DateParts.Hour,
@@ -843,11 +843,11 @@ namespace Tests.Linq
 
 		[Test]
 		public void AddDynamicFromColumn(
-			[DataSources(TestProvName.AllInformix)] string context, 
+			[DataSources(TestProvName.AllInformix)] string context,
 			[Values(
-				Sql.DateParts.Day, 
-				Sql.DateParts.Hour, 
-				Sql.DateParts.Minute, 
+				Sql.DateParts.Day,
+				Sql.DateParts.Hour,
+				Sql.DateParts.Minute,
 				Sql.DateParts.Month,
 				Sql.DateParts.Year,
 				Sql.DateParts.Second

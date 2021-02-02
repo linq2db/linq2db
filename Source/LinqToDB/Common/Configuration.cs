@@ -2,8 +2,10 @@
 
 using JetBrains.Annotations;
 
+
 namespace LinqToDB.Common
 {
+	using LinqToDB.Linq;
 	using Data;
 	using Data.RetryPolicy;
 	using System.Data;
@@ -40,6 +42,30 @@ namespace LinqToDB.Common
 		/// queries, so this optimization could be used for <see cref="CommandBehavior.Default"/> too.
 		/// </summary>
 		public static bool OptimizeForSequentialAccess = false;
+		
+		/// <summary>
+		/// Determines the length after which logging of binary data in SQL will be truncated.
+		/// This is to avoid Out-Of-Memory exceptions when getting SqlText from <see cref="TraceInfo"/>
+		/// or <see cref="IExpressionQuery"/> for logging or other purposes.
+		/// </summary>
+		/// <remarks>
+		/// This value defaults to 100.
+		/// Use a value of -1 to disable and always log full binary.
+		/// Set to 0 to truncate all binary data.
+		/// </remarks>
+		public static int MaxBinaryParameterLengthLogging { get; set; } = 100;
+
+		/// <summary>
+		/// Determines the length after which logging of string data in SQL will be truncated.
+		/// This is to avoid Out-Of-Memory exceptions when getting SqlText from <see cref="TraceInfo"/>
+		/// or <see cref="IExpressionQuery"/> for logging or other purposes.
+		/// </summary>
+		/// <remarks>
+		/// This value defaults to 200.
+		/// Use a value of -1 to disable and always log full string.
+		/// Set to 0 to truncate all string data.
+		/// </remarks>
+		public static int MaxStringParameterLengthLogging { get; set; } = 200;
 
 		public static class Data
 		{

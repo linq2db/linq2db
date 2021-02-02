@@ -1,0 +1,47 @@
+<#@ assembly name="System.Core"                         #>
+<#@ assembly name="$(LinqToDBT4SharedTools)linq2db.dll" #>
+<#@ import   namespace="System.Reflection"              #>
+<#@ import   namespace="System.IO"                      #>
+<#@ import   namespace="System.Linq"                    #>
+
+<#
+AppDomain.CurrentDomain.AssemblyResolve += (_, args) =>
+{
+	var requestedAssembly = new AssemblyName(args.Name);
+
+	// ignore version mismatch
+	return AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().Name == requestedAssembly.Name);
+};
+#>
+
+<#+
+public static string GetProviderToolsPath(string assemblyName, string fullName)
+{
+	var assembly = AppDomain.CurrentDomain.GetAssemblies().SingleOrDefault(a => a.GetName().Name == assemblyName);
+
+	// needed for Rider as it fails to load MySqlConnector using directive
+	if (assembly == null)
+		assembly = Assembly.Load(fullName);
+
+	// don't use Location as it could point to shadow copy
+	// resolve should be done against main provider assembly
+	return Path.GetDirectoryName(assembly.CodeBase.Replace("file:///", ""));
+}
+
+public static void LoadAssembly(string assemblyName, string toolsPath)
+{
+	// check if already loaded
+	if (AppDomain.CurrentDomain.GetAssemblies().SingleOrDefault(a => a.GetName().Name == assemblyName) != null)
+		return;
+	try
+	{
+		// try to load using VS (host) lookup paths
+		Assembly.Load(assemblyName);
+		return;
+	}
+	catch {}
+
+	// load from tools
+	Assembly.LoadFrom(Path.Combine(toolsPath, assemblyName + ".dll"));
+}
+#>

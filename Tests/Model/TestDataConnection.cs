@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
@@ -82,9 +83,11 @@ namespace Tests.Model
 			var provider  = ((IDataContext)this).CreateSqlProvider();
 			var optimizer = ((IDataContext)this).GetSqlOptimizer  ();
 
-			var optimizationContext = new OptimizationContext(new EvaluationContext(SqlParameterValues.Empty), null, false);
 			var statement = (SqlSelectStatement)optimizer.Finalize(new SqlSelectStatement(query));
-			statement = (SqlSelectStatement)optimizer.PrepareStatementForRemoting(statement, MappingSchema, optimizationContext.Context);
+			SqlStatement.PrepareQueryAndAliases(statement, null, out var aliasesContext);
+			var optimizationContext = new OptimizationContext(new EvaluationContext(SqlParameterValues.Empty), aliasesContext, false);
+
+			statement = (SqlSelectStatement)optimizer.PrepareStatementForRemoting(statement, MappingSchema, aliasesContext, optimizationContext.Context);
 
 			var cc = provider.CommandCount(statement);
 			var sb = new StringBuilder();
@@ -102,13 +105,13 @@ namespace Tests.Model
 			return string.Join("\n\n", commands);
 		}
 
-		[ExpressionMethod("Expression9")]
+		[ExpressionMethod(nameof(Expression9))]
 		public static IQueryable<Parent> GetParent9(ITestDataContext db, Child ch)
 		{
 			throw new InvalidOperationException();
 		}
 
-		[ExpressionMethod("Expression9")]
+		[ExpressionMethod(nameof(Expression9))]
 		public IQueryable<Parent> GetParent10(Child ch)
 		{
 			throw new InvalidOperationException();

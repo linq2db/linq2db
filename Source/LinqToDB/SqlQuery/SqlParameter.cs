@@ -21,12 +21,6 @@ namespace LinqToDB.SqlQuery
 #endif
 		}
 
-		private SqlParameter(DbDataType type, string? name, object? value, Func<object?, object?>? valueConverter)
-			: this(type, name, value)
-		{
-			_valueConverter = valueConverter;
-		}
-
 #if DEBUG
 		readonly int _paramNumber;
 		static   int _paramCounter;

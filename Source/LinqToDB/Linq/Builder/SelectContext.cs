@@ -465,19 +465,7 @@ namespace LinqToDB.Linq.Builder
 		SqlInfo[] ConvertExpressions(Expression expression, ConvertFlags flags, ColumnDescriptor? columnDescriptor)
 		{
 			return Builder.ConvertExpressions(this, expression, flags, columnDescriptor)
-				.Select (CheckExpression)
 				.ToArray();
-		}
-
-		SqlInfo CheckExpression(SqlInfo expression)
-		{
-			if (expression.Sql is SqlSearchCondition)
-			{
-				expression = expression.WithSql(
-					new SqlFunction(typeof(bool), "CASE", expression.Sql, new SqlValue(true), new SqlValue(false)) { CanBeNull = false });
-			}
-
-			return expression;
 		}
 
 		#endregion
@@ -1257,6 +1245,9 @@ namespace LinqToDB.Linq.Builder
 				if (typeof(IGrouping<,>).IsSameOrParentOf(me.Member.DeclaringType!) && memberExpression.Type == expression.Type)
 					return memberExpression;
 			}
+
+			if (!memberExpression.Type.IsAssignableFrom(levelExpression.Type))
+				return memberExpression;
 
 			return !ReferenceEquals(levelExpression, expression) ?
 				expression.Transform(ex => ReferenceEquals(ex, levelExpression) ? memberExpression : ex) :

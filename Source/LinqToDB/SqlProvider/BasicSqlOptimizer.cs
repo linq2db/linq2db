@@ -272,7 +272,7 @@ namespace LinqToDB.SqlProvider
 
 					// Check if subquery where clause does not have ORs.
 					//
-					subQuery.Where.SearchCondition = (SqlSearchCondition)OptimizeElement(null, subQuery.Where.SearchCondition, new OptimizationContext(context, null, false), false)!;
+					subQuery.Where.SearchCondition = (SqlSearchCondition)OptimizeElement(null, subQuery.Where.SearchCondition, new OptimizationContext(context, new AliasesContext(), false), false)!;
 
 					var allAnd = true;
 
@@ -333,23 +333,36 @@ namespace LinqToDB.SqlProvider
 							switch (e.ElementType)
 							{
 								case QueryElementType.SqlField:
-
-									if (levelTables.Contains(((SqlField)e).Table!))
+								{
+									var field = (SqlField)e;
+									if (levelTables.Contains(field.Table!))
 									{
-										subQuery.GroupBy.Expr((SqlField)e);
-										ne = subQuery.Select.AddColumn((SqlField)e);
+										subQuery.GroupBy.Expr(field);
+										ne = subQuery.Select.AddColumn(field);
+									}
+									else if (!allTables.Contains(field.Table!))
+									{
+										modified = true;
 									}
 
 									break;
-
+								}
+								
 								case QueryElementType.Column:
-									if (levelTables.Contains(((SqlColumn)e).Parent!))
+								{
+									var column = (SqlColumn)e;
+									if (levelTables.Contains(column.Parent!))
 									{
-										subQuery.GroupBy.Expr((SqlColumn)e);
-										ne = subQuery.Select.AddColumn((SqlColumn)e);
+										subQuery.GroupBy.Expr(column);
+										ne = subQuery.Select.AddColumn(column);
+									}
+									else if (!allTables.Contains(column.Parent!))
+									{
+										modified = true;
 									}
 
 									break;
+								}
 							}
 
 							modified = modified || !ReferenceEquals(e, ne);
@@ -438,7 +451,7 @@ namespace LinqToDB.SqlProvider
 
 						query.From.Tables[0].Joins.Add(join.JoinedTable);
 
-						subQuery.Where.SearchCondition = (SqlSearchCondition)OptimizeElement(null, subQuery.Where.SearchCondition, new OptimizationContext(context, null, false), false)!;
+						subQuery.Where.SearchCondition = (SqlSearchCondition)OptimizeElement(null, subQuery.Where.SearchCondition, new OptimizationContext(context, new AliasesContext(), false), false)!;
 
 						var isCount      = false;
 						var isAggregated = false;
@@ -1859,22 +1872,26 @@ namespace LinqToDB.SqlProvider
 						}
 					}
 
-					if (p.Expr1 is ObjectSqlExpression expr)
+					if (p.Expr1 is SqlObjectExpression expr)
 					{
-						if (expr.Parameters.Length == 1)
+						var parameters = expr.InfoParameters;
+						if (parameters.Length == 1)
 						{
 							var values = new List<ISqlExpression>();
 
 							foreach (var item in items)
 							{
 								var value = expr.GetValue(item!, 0);
-								values.Add(new SqlValue(value));
+								var systemType = parameters[0].Sql.SystemType ?? value?.GetType();
+								if (systemType == null)
+									throw new InvalidOperationException("Cannot calculate SystemType for constant.");
+								values.Add(new SqlValue(systemType, value));
 							}
 
 							if (values.Count == 0)
 								return new SqlPredicate.Expr(new SqlValue(p.IsNot));
 
-							return new SqlPredicate.InList(expr.Parameters[0], null, p.IsNot, values);
+							return new SqlPredicate.InList(parameters[0].Sql, null, p.IsNot, values);
 						}
 
 						var sc = new SqlSearchCondition();
@@ -1883,9 +1900,9 @@ namespace LinqToDB.SqlProvider
 						{
 							var itemCond = new SqlSearchCondition();
 
-							for (var i = 0; i < expr.Parameters.Length; i++)
+							for (var i = 0; i < parameters.Length; i++)
 							{
-								var sql   = expr.Parameters[i];
+								var sql   = parameters[i].Sql;
 								var value = expr.GetValue(item!, i);
 								var cond  = value == null ?
 									new SqlCondition(false, new SqlPredicate.IsNull  (sql, false)) :

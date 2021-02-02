@@ -11,5 +11,6 @@ namespace LinqToDB.Linq
 		List<string>?   QueryHints  { get; set; }
 
 		SqlParameter[]? Parameters  { get; set; }
+		AliasesContext? Aliases     { get; set; }
 	}
 }

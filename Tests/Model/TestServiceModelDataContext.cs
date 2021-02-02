@@ -24,29 +24,29 @@ namespace Tests.Model
 			((NetTcpBinding)Binding!).ReaderQuotas.MaxStringContentLength = 1000000;
 		}
 
-		public ITable<Person>                 Person                 { get { return this.GetTable<Person>();                 } }
-		public ITable<ComplexPerson>          ComplexPerson          { get { return this.GetTable<ComplexPerson>();          } }
-		public ITable<Patient>                Patient                { get { return this.GetTable<Patient>();                } }
-		public ITable<Doctor>                 Doctor                 { get { return this.GetTable<Doctor>();                 } }
-		public ITable<Parent>                 Parent                 { get { return this.GetTable<Parent>();                 } }
-		public ITable<Parent1>                Parent1                { get { return this.GetTable<Parent1>();                } }
-		public ITable<IParent>                Parent2                { get { return this.GetTable<IParent>();                } }
-		public ITable<Parent4>                Parent4                { get { return this.GetTable<Parent4>();                } }
-		public ITable<Parent5>                Parent5                { get { return this.GetTable<Parent5>();                } }
-		public ITable<ParentInheritanceBase>  ParentInheritance      { get { return this.GetTable<ParentInheritanceBase>();  } }
-		public ITable<ParentInheritanceBase2> ParentInheritance2     { get { return this.GetTable<ParentInheritanceBase2>(); } }
-		public ITable<ParentInheritanceBase3> ParentInheritance3     { get { return this.GetTable<ParentInheritanceBase3>(); } }
-		public ITable<ParentInheritanceBase4> ParentInheritance4     { get { return this.GetTable<ParentInheritanceBase4>(); } }
-		public ITable<ParentInheritance1>     ParentInheritance1     { get { return this.GetTable<ParentInheritance1>();     } }
-		public ITable<ParentInheritanceValue> ParentInheritanceValue { get { return this.GetTable<ParentInheritanceValue>(); } }
-		public ITable<Child>                  Child                  { get { return this.GetTable<Child>();                  } }
-		public ITable<GrandChild>             GrandChild             { get { return this.GetTable<GrandChild>();             } }
-		public ITable<GrandChild1>            GrandChild1            { get { return this.GetTable<GrandChild1>();            } }
-		public ITable<LinqDataTypes>          Types                  { get { return this.GetTable<LinqDataTypes>();          } }
-		public ITable<LinqDataTypes2>         Types2                 { get { return this.GetTable<LinqDataTypes2>();         } }
-		public ITable<TestIdentity>           TestIdentity           { get { return this.GetTable<TestIdentity>();           } }
-		public ITable<InheritanceParentBase>  InheritanceParent      { get { return this.GetTable<InheritanceParentBase>();  } }
-		public ITable<InheritanceChildBase>   InheritanceChild       { get { return this.GetTable<InheritanceChildBase>();   } }
+		public ITable<Person>                 Person                 => this.GetTable<Person>();
+		public ITable<ComplexPerson>          ComplexPerson          => this.GetTable<ComplexPerson>();
+		public ITable<Patient>                Patient                => this.GetTable<Patient>();
+		public ITable<Doctor>                 Doctor                 => this.GetTable<Doctor>();
+		public ITable<Parent>                 Parent                 => this.GetTable<Parent>();
+		public ITable<Parent1>                Parent1                => this.GetTable<Parent1>();
+		public ITable<IParent>                Parent2                => this.GetTable<IParent>();
+		public ITable<Parent4>                Parent4                => this.GetTable<Parent4>();
+		public ITable<Parent5>                Parent5                => this.GetTable<Parent5>();
+		public ITable<ParentInheritanceBase>  ParentInheritance      => this.GetTable<ParentInheritanceBase>();
+		public ITable<ParentInheritanceBase2> ParentInheritance2     => this.GetTable<ParentInheritanceBase2>();
+		public ITable<ParentInheritanceBase3> ParentInheritance3     => this.GetTable<ParentInheritanceBase3>();
+		public ITable<ParentInheritanceBase4> ParentInheritance4     => this.GetTable<ParentInheritanceBase4>();
+		public ITable<ParentInheritance1>     ParentInheritance1     => this.GetTable<ParentInheritance1>();
+		public ITable<ParentInheritanceValue> ParentInheritanceValue => this.GetTable<ParentInheritanceValue>();
+		public ITable<Child>                  Child                  => this.GetTable<Child>();
+		public ITable<GrandChild>             GrandChild             => this.GetTable<GrandChild>();
+		public ITable<GrandChild1>            GrandChild1            => this.GetTable<GrandChild1>();
+		public ITable<LinqDataTypes>          Types                  => this.GetTable<LinqDataTypes>();
+		public ITable<LinqDataTypes2>         Types2                 => this.GetTable<LinqDataTypes2>();
+		public ITable<TestIdentity>           TestIdentity           => this.GetTable<TestIdentity>();
+		public ITable<InheritanceParentBase>  InheritanceParent      => this.GetTable<InheritanceParentBase>();
+		public ITable<InheritanceChildBase>   InheritanceChild       => this.GetTable<InheritanceChildBase>();
 
 		public ITable<Parent> GetParentByID(int? id)
 		{

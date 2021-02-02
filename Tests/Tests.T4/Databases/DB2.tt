@@ -1,7 +1,7 @@
-﻿<#@ template language="C#" debug="True" hostSpecific="True"                  #>
-<#@ output extension=".generated.cs"                                         #>
-<#@ include file="..\Shared.ttinclude"                                       #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.DB2.ttinclude" #>
+﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6" #>
+<#@ output extension=".generated.cs"                                                         #>
+<#@ include file="..\Shared.ttinclude"                                       once="true"     #>
+<#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.DB2.ttinclude" once="true"     #>
 <#
 	NamespaceName = "DB2DataContext";
 	DataContextName = "TESTDATADB";

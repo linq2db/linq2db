@@ -9,24 +9,25 @@ namespace LinqToDB.SqlProvider
 {
 	public class OptimizationContext
 	{
-		readonly HashSet<SqlParameter>? _staticParameters;
+		private SqlParameter[]? _staticParameters;
 
 		readonly Dictionary<IQueryElement, IQueryElement> _optimized =
 			new(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
 
 		private List<SqlParameter>? _actualParameters;
 		private HashSet<string>? _usedParameterNames;
-
-		public OptimizationContext(EvaluationContext context, HashSet<SqlParameter>? staticParameters,
+		
+		public OptimizationContext(EvaluationContext context, AliasesContext aliases, 
 			bool isParameterOrderDepended)
 		{
-			_staticParameters = staticParameters;
+			Aliases = aliases ?? throw new ArgumentNullException(nameof(aliases));
 			Context = context;
 			IsParameterOrderDepended = isParameterOrderDepended;
 		}
 
-		public EvaluationContext Context { get; }
-		public bool IsParameterOrderDepended { get; }
+		public EvaluationContext Context                  { get; }
+		public bool              IsParameterOrderDepended { get; }
+		public AliasesContext    Aliases                  { get; }
 
 
 		public bool IsOptimized(IQueryElement element, [NotNullWhen(true)] out IQueryElement? newExpr)
@@ -94,6 +95,8 @@ namespace LinqToDB.SqlProvider
 		{
 			if (_usedParameterNames == null)
 			{
+				_staticParameters = Aliases.GetParameters();
+
 				if (_staticParameters == null)
 					_usedParameterNames = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 				else
