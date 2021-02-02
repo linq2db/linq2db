@@ -26,24 +26,9 @@ namespace Tests.Generators
 			public int Id { get; set; }
 			public string Name { get; set; } = null!;
 
-			[GenerateExpressionMethod(MethodName = "Test1")]
+			[GenerateExpressionMethod()]
 			public PersonDto PersonDto1 =>
 				new PersonDto { Id = Id, Name = Name, };
-
-			[GenerateExpressionMethod(MethodName = "Test2")]
-			public PersonDto PersonDto2
-			{
-				get => new PersonDto { Id = this.Id, Name = this.Name, };
-			}
-
-			[GenerateExpressionMethod(MethodName = "Test3")]
-			public PersonDto PersonDto3
-			{
-				get
-				{
-					return new PersonDto { Id = Id, Name = Name, };
-				}
-			}
 
 			public static ExprPerson[] GenerateTestData() =>
 				Enumerable.Range(0, 20)
@@ -91,9 +76,6 @@ namespace Tests.Generators
 			Expression<Func<ExprPerson, PersonDto>> expr = p => new PersonDto { Id = p.Id, Name = p.Name, };
 			var comparer = ExpressionEqualityComparer.Instance;
 
-			Assert.True(comparer.Equals(expr, ExprPerson.Test1()));
-			Assert.True(comparer.Equals(expr, ExprPerson.Test2()));
-			Assert.True(comparer.Equals(expr, ExprPerson.Test3()));
 			Assert.True(comparer.Equals(expr, __Expression_ToDtoArrow_ExprPerson()));
 			Assert.True(comparer.Equals(expr, __Expression_ToDtoReturn_ExprPerson()));
 

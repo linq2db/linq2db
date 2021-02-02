@@ -14,8 +14,7 @@ namespace LinqToDB.Mapping
 	/// </para>
 	/// 
 	/// <para>
-	/// The new method by default will be marked <c>private</c>, with the generated name <c>__&lt;name&gt;Expression</c>.
-	/// However, if <see cref="MethodName"/> is provided, the new methohd will use that name and be marked <c>public</c>.
+	/// The new method will be marked <c>private</c>, with the generated name <c>__Expression_&lt;name&gt;_&lt;ParamType1&gt;_...</c>.
 	/// </para>
 	/// 
 	/// <para>
@@ -47,11 +46,6 @@ namespace LinqToDB.Mapping
 	[AttributeUsage(AttributeTargets.Method | AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
 	public class GenerateExpressionMethodAttribute : Attribute
 	{
-		/// <summary>
-		/// Name of method in the same class that returns substitution expression.
-		/// </summary>
-		public string? MethodName { get; set; }
-
 		/// <summary>
 		/// Mapping schema configuration name, for which this attribute should be taken into account.
 		/// <see cref="ProviderName"/> for standard names.
