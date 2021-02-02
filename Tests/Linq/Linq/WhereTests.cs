@@ -1882,7 +1882,7 @@ namespace Tests.Linq
 					db.Parent.AsEnumerable().Where(p => p.Value1 != null && p.Value1 != 1),
 					query);
 
-				var sql = query.ToString();
+				var sql = query.ToString()!;
 				Assert.False(sql.Contains("IS NULL"), sql);
 				Assert.AreEqual(1, Regex.Matches(sql, "IS NOT NULL").Count, sql);
 			}
@@ -1900,7 +1900,7 @@ namespace Tests.Linq
 					db.Parent.AsEnumerable().Where(p => p.Value1 == null || p.Value1 != 1),
 					query);
 
-				var sql = query.ToString();
+				var sql = query.ToString()!;
 				Assert.AreEqual(1, Regex.Matches(sql, "IS NULL").Count, sql);
 				Assert.False(sql.Contains("IS NOT NULL"), sql);
 			}
