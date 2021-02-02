@@ -6,7 +6,9 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using LinqToDB;
+#if NET472
 using LinqToDB.Async;
+#endif
 using LinqToDB.Expressions;
 
 namespace Tests.Linq
