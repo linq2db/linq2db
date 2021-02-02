@@ -504,7 +504,7 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-			if (condition.IsNot && condition.Predicate is IInvertibleElement invertibleElement)
+			if (condition.IsNot && condition.Predicate is IInvertibleElement invertibleElement && invertibleElement.CanInvert())
 			{
 				return new SqlCondition(false, (ISqlPredicate)invertibleElement.Invert(), condition.IsOr);
 			}
