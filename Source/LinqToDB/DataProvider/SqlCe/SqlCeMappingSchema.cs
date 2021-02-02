@@ -64,8 +64,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		{
 			stringBuilder.Append("0x");
 
-			foreach (var b in value)
-				stringBuilder.Append(b.ToString("X2"));
+			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
 		}
 
 		static void AppendConversion(StringBuilder stringBuilder, int value)

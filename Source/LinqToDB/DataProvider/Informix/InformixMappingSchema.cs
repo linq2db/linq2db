@@ -4,7 +4,7 @@ using System.Text;
 namespace LinqToDB.DataProvider.Informix
 {
 	using System.Globalization;
-	using LinqToDB.Common;
+	using Common;
 	using Mapping;
 	using SqlQuery;
 

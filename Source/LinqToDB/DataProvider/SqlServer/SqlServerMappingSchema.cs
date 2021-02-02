@@ -209,10 +209,9 @@ namespace LinqToDB.DataProvider.SqlServer
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
 		{
 			stringBuilder.Append("0x");
-
-			foreach (var b in value)
-				stringBuilder.Append(b.ToString("X2"));
+			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
 		}
+		
 	}
 
 	public class SqlServer2000MappingSchema : MappingSchema
