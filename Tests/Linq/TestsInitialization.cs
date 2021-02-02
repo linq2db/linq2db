@@ -51,8 +51,8 @@ public class TestsInitialization
 		TestNoopProvider.Init();
 		SQLiteMiniprofilerProvider.Init();
 
-		// TODO: comment before merge
-		LinqToDB.Common.Compilation.SetExpressionCompiler(_ => ExpressionCompiler.CompileFast(_, true));
+		// uncomment to run FEC for all tests and comment reset line in TestBase.OnAfterTest
+		//LinqToDB.Common.Compilation.SetExpressionCompiler(_ => ExpressionCompiler.CompileFast(_, true));
 	}
 
 	private void RegisterSapHanaFactory()

@@ -1308,8 +1308,7 @@ namespace Tests
 			}
 			if (provider == TestProvName.SqlServer2019FastExpressionCompiler)
 			{
-				// TODO: uncomment before merge
-				//Compilation.SetExpressionCompiler(null);
+				Compilation.SetExpressionCompiler(null);
 			}
 
 			if (provider?.Contains("SapHana") == true)
