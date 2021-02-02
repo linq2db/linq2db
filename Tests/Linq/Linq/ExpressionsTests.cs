@@ -1065,6 +1065,28 @@ namespace Tests.Linq
 
 		#endregion
 
+		#region issue 2800
+		[ExpressionMethod(nameof(FilterBySpecialStringExpression))]
+		public static bool FilterBySpecialString(Person person, bool? isSpecial = false)
+		{
+			return !isSpecial.HasValue || isSpecial.Value && person.FirstName == "Special" || !isSpecial.Value && person.FirstName != "Special";
+		}
+
+		public static Expression<Func<Person, bool?, bool>> FilterBySpecialStringExpression()
+		{
+			return (x, isSpecial) => !isSpecial.HasValue || isSpecial.Value && x.FirstName == "Special" || !isSpecial.Value && x.FirstName != "Special";
+		}
+
+		[Test]
+		public void Issue2800Test([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var result = db.Person.Where(x => FilterBySpecialString(x, null)).ToList();
+			}
+		}
+		#endregion
+
 	}
 
 	static class ExpressionTestExtensions
