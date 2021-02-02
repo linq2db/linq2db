@@ -164,7 +164,7 @@ namespace Tests.xUpdate
 			return db.GetTable<MergeTypes>().TableName("TestMerge2");
 		}
 
-		private void PrepareTypesData(IDataContext db)
+		private void PrepareTypesData(IDataContext db, string context)
 		{
 			//using (new DisableLogging())
 			{
@@ -173,17 +173,40 @@ namespace Tests.xUpdate
 
 				foreach (var record in InitialTypes1Data)
 				{
+					FixTestData(record, context);
 					db.Insert(record, "TestMerge1");
 				}
 
 				foreach (var record in InitialTypes2Data)
 				{
+					FixTestData(record, context);
+
 					db.Insert(record, "TestMerge2");
 				}
 			}
 		}
 
-		private static readonly MergeTypes[] InitialTypes1Data = new[]
+		private static void FixTestData(MergeTypes record, string context)
+		{
+			if (context.Contains(ProviderName.Firebird25Dialect1)
+									|| context.Contains(ProviderName.Firebird3Dialect1))
+			{
+				// dialect 1 uses double as backend storage and values outside safe range fail to roundtrip without
+				// overflow
+				if (record.FieldInt64 > 9007199254740991)
+					record.FieldInt64 = 9007199254740991;
+				if (record.FieldInt64 < -9007199254740991)
+					record.FieldInt64 = -9007199254740991;
+				if (record.FieldDecimal == 12345678.9012345678M)
+					record.FieldDecimal = 12345678.9012345M;
+				if (record.FieldDecimal == 99999999.9999999999M)
+					record.FieldDecimal = 99999999.9999999M;
+				if (record.FieldDecimal == -99999999.9999999999M)
+					record.FieldDecimal = -99999999.9999999M;
+			}
+		}
+
+		private static MergeTypes[] InitialTypes1Data => new[]
 		{
 			new MergeTypes()
 			{
@@ -257,7 +280,7 @@ namespace Tests.xUpdate
 			}
 		};
 
-		private static readonly MergeTypes[] InitialTypes2Data = new[]
+		private static MergeTypes[] InitialTypes2Data => new[]
 		{
 			new MergeTypes()
 			{
@@ -364,7 +387,7 @@ namespace Tests.xUpdate
 
 			using (var db = GetDataContext(context))
 			{
-				PrepareTypesData(db);
+				PrepareTypesData(db, context);
 
 				var result1 = GetTypes1(db).OrderBy(_ => _.Id).ToList();
 				var result2 = GetTypes2(db).OrderBy(_ => _.Id).ToList();
@@ -390,8 +413,12 @@ namespace Tests.xUpdate
 			Assert.AreEqual(expected.Id, actual.Id);
 			Assert.AreEqual(expected.FieldInt32, actual.FieldInt32);
 
+			FixTestData(expected, provider);
+
 			if (!provider.StartsWith("Access"))
+			{
 				Assert.AreEqual(expected.FieldInt64, actual.FieldInt64);
+			}
 
 			if (provider != ProviderName.Sybase && provider != ProviderName.SybaseManaged)
 				if (!provider.StartsWith("Access"))

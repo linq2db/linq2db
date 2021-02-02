@@ -816,14 +816,7 @@ CREATE TABLE TestMerge2
 	Field4 INTEGER,
 	Field5 INTEGER,
 
--- SKIP Firebird.25.D1 BEGIN
--- SKIP Firebird.3.D1 BEGIN
-	FieldInt64      NUMERIC(18),--19
--- SKIP Firebird.3.D1 END
--- SKIP Firebird.25.D1 END
--- SKIP Firebird.4.D1 BEGIN
 	FieldInt64      NUMERIC(18),
--- SKIP Firebird.4.D1 END
 -- SKIP Firebird.4.D1 BEGIN
 -- SKIP Firebird.3.D1 BEGIN
 	FieldBoolean    CHAR(1),

@@ -125,12 +125,9 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 			SetConvertExpression<double, TimeSpan>(v => new TimeSpan((long)v));
 
-			//SetConvertExpression<uint  , DataParameter>(v => new DataParameter(null, (decimal )v, DataType.Decimal));
-			//SetConvertExpression<uint? , DataParameter>(v => new DataParameter(null, (decimal?)v, DataType.Decimal));
-			//SetConvertExpression<long  , DataParameter>(v => new DataParameter(null, (decimal )v, DataType.Decimal));
-			//SetConvertExpression<long? , DataParameter>(v => new DataParameter(null, (decimal?)v, DataType.Decimal));
-			//SetConvertExpression<ulong , DataParameter>(v => new DataParameter(null, (decimal )v, DataType.Decimal));
-			//SetConvertExpression<ulong?, DataParameter>(v => new DataParameter(null, (decimal?)v, DataType.Decimal));
+			SetConvertExpression<uint? , DataParameter>(v => new DataParameter(null, (decimal?)v, DataType.Decimal), false);
+			SetConvertExpression<long? , DataParameter>(v => new DataParameter(null, (decimal?)v, DataType.Decimal), false);
+			SetConvertExpression<ulong?, DataParameter>(v => new DataParameter(null, (decimal?)v, DataType.Decimal), false);
 		}
 
 		internal static MappingSchema Instance { get; } = new FirebirdDialect1MappingSchema();
