@@ -6,6 +6,8 @@ using System.Runtime.CompilerServices;
 
 namespace LinqToDB.SqlQuery
 {
+	using LinqToDB.Linq.Builder;
+
 	public class ConvertVisitor
 	{
 		// when true, only changed (and explicitly added) elements added to VisitedElements
@@ -178,6 +180,52 @@ namespace LinqToDB.SqlQuery
 
 							if (parameter != null && !ReferenceEquals(parameter, expr.Parameters))
 								newElement = new SqlExpression(expr.SystemType, expr.Expr, expr.Precedence, expr.IsAggregate, expr.IsPure, parameter);
+
+							break;
+						}
+
+					case QueryElementType.SqlObjectExpression:
+						{
+							var expr      = (SqlObjectExpression)element;
+
+							if (_allowMutation)
+							{
+								for (int i = 0; i < expr.InfoParameters.Length; i++)
+								{
+									var sqlInfo = expr.InfoParameters[i];
+
+									expr.InfoParameters[i] = sqlInfo.WithSql((ISqlExpression)ConvertInternal(sqlInfo.Sql));
+								}
+							}
+							else
+							{
+								List<SqlInfo>? currentParams = null;
+
+								for (int i = 0; i < expr.InfoParameters.Length; i++)
+								{
+									var sqlInfo = expr.InfoParameters[i];
+
+									var newExpr = (ISqlExpression)ConvertInternal(sqlInfo.Sql);
+
+									if (!ReferenceEquals(newExpr, sqlInfo.Sql))
+									{
+										if (currentParams == null)
+										{
+											currentParams = new List<SqlInfo>(expr.InfoParameters.Take(i));
+										}
+
+										var newInfo = sqlInfo.WithSql(newExpr);
+										currentParams.Add(newInfo);
+									}
+									else
+									{
+										currentParams?.Add(sqlInfo);
+									}
+								}
+
+								if (currentParams != null)
+									newElement = new SqlObjectExpression(expr.MappingSchema, currentParams.ToArray());
+						}
 
 							break;
 						}

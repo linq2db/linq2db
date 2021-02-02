@@ -15,7 +15,6 @@ namespace Tests.Linq
 	using LinqToDB.Common;
 	using Model;
 	using System.Text.RegularExpressions;
-	using Tests.VisualBasic;
 
 	[TestFixture]
 	public class WhereTests : TestBase
@@ -1686,20 +1685,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(1767)]
-		[Test]
-		public void Issue1767Test([DataSources(false)] string context)
-		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
-			{
-				db.Person.FirstOrDefault(p => p.MiddleName != null && p.MiddleName != "test");
-
-				Assert.True(db.LastQuery!.Contains("IS NOT NULL"));
-				Assert.False(db.LastQuery!.Contains("IS NULL"));
-			}
-		}
-
 		class Parameter
 		{
 			public int Id;
@@ -1886,5 +1871,40 @@ namespace Tests.Linq
 		}
 		#endregion
 
+		[ActiveIssue(1767)]
+		[Test]
+		public void Issue1767Test1([DataSources(false)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = db.Parent.Where(p => p.Value1 != null && p.Value1 != 1);
+
+				AreEqual(
+					db.Parent.AsEnumerable().Where(p => p.Value1 != null && p.Value1 != 1),
+					query);
+
+				var sql = query.ToString();
+				Assert.False(sql.Contains("IS NULL"), sql);
+				Assert.AreEqual(1, Regex.Matches(sql, "IS NOT NULL").Count, sql);
+			}
+		}
+
+		[ActiveIssue(1767)]
+		[Test]
+		public void Issue1767Test2([DataSources(false)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = db.Parent.Where(p => p.Value1 == null || p.Value1 != 1);
+
+				AreEqual(
+					db.Parent.AsEnumerable().Where(p => p.Value1 == null || p.Value1 != 1),
+					query);
+
+				var sql = query.ToString();
+				Assert.AreEqual(1, Regex.Matches(sql, "IS NULL").Count, sql);
+				Assert.False(sql.Contains("IS NOT NULL"), sql);
+			}
+		}
 	}
 }
