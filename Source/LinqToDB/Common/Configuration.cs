@@ -15,13 +15,13 @@ namespace LinqToDB.Common
 	/// </summary>
 	public static class Compilation
 	{
-		private static Func<LambdaExpression, Delegate>? _compiler;
+		private static Func<LambdaExpression, Delegate?>? _compiler;
 
 		/// <summary>
 		/// Sets LINQ expression compilation method.
 		/// </summary>
 		/// <param name="compiler">Method to use for expression compilation or <c>null</c> to reset compilation logic to defaults.</param>
-		public static void SetExpressionCompiler(Func<LambdaExpression, Delegate>? compiler)
+		public static void SetExpressionCompiler(Func<LambdaExpression, Delegate?>? compiler)
 		{
 			_compiler = compiler;
 		}
@@ -29,20 +29,12 @@ namespace LinqToDB.Common
 		internal static TDelegate CompileExpression<TDelegate>(this Expression<TDelegate> expression)
 			where TDelegate : Delegate
 		{
-			var compiler = _compiler;
-
-			return compiler != null
-				? (TDelegate)compiler(expression) ?? expression.Compile()
-				: expression.Compile();
+			return ((TDelegate?)_compiler?.Invoke(expression)) ?? expression.Compile();
 		}
 
 		internal static Delegate CompileExpression(this LambdaExpression expression)
 		{
-			var compiler = _compiler;
-
-			return compiler != null
-				? compiler(expression) ?? expression.Compile()
-				: expression.Compile();
+			return _compiler?.Invoke(expression) ?? expression.Compile();
 		}
 	}
 
