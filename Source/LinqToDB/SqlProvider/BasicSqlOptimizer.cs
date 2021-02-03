@@ -222,7 +222,7 @@ namespace LinqToDB.SqlProvider
 						changed = changed || newExpr != expr.Expr;
 
 						if (changed)
-							newExpression = new SqlExpression(expr.SystemType, newExpr, expr.Precedence, expr.IsAggregate, expr.IsPure, newExpressions.ToArray());
+							newExpression = new SqlExpression(expr.SystemType, newExpr, expr.Precedence, expr.Flags, newExpressions.ToArray());
 
 						return newExpression;
 					}
@@ -733,7 +733,7 @@ namespace LinqToDB.SqlProvider
 					if (func.Parameters.Length == 1 && func.Parameters[0] is SelectQuery query && query.Select.Columns.Count > 0)
 					{
 						var isAggregateQuery =
-									query.Select.Columns.All(c => QueryHelper.IsAggregationFunction(c.Expression));
+									query.Select.Columns.All(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression));
 
 						if (isAggregateQuery)
 							return new SqlValue(true);
@@ -2779,7 +2779,7 @@ namespace LinqToDB.SqlProvider
 					if (join.Table.Source is SelectQuery query && query.Select.Columns.Count > 0)
 					{
 						var isAggregateQuery =
-							query.Select.Columns.All(c => QueryHelper.IsAggregationFunction(c.Expression));
+							query.Select.Columns.All(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression));
 						if (isAggregateQuery)
 						{
 							// remove unwanted join
@@ -2946,8 +2946,8 @@ namespace LinqToDB.SqlProvider
 					var parameters = orderByItems.Select(oi => oi.Expression).ToArray();
 
 					var rowNumberExpression = parameters.Length == 0
-						? new SqlExpression(typeof(long), "ROW_NUMBER() OVER ()", Precedence.Primary, true, true)
-						: new SqlExpression(typeof(long), $"ROW_NUMBER() OVER (ORDER BY {orderBy})", Precedence.Primary, true, true, parameters);
+						? new SqlExpression(typeof(long), "ROW_NUMBER() OVER ()", Precedence.Primary, SqlFlags.IsWindowFunction)
+						: new SqlExpression(typeof(long), $"ROW_NUMBER() OVER (ORDER BY {orderBy})", Precedence.Primary, SqlFlags.IsWindowFunction, parameters);
 
 					var rowNumberColumn = query.Select.AddNewColumn(rowNumberExpression);
 					rowNumberColumn.Alias = "RN";
@@ -3015,7 +3015,7 @@ namespace LinqToDB.SqlProvider
 
 						var rnExpr = new SqlExpression(typeof(long),
 							$"ROW_NUMBER() OVER (PARTITION BY {partitionBy} ORDER BY {orderBy})", Precedence.Primary,
-							true, true, parameters);
+							SqlFlags.IsWindowFunction, parameters);
 
 						var additionalProjection = orderItems.Except(columnItems).ToArray();
 						foreach (var expr in additionalProjection)
