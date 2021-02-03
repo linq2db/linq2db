@@ -1292,7 +1292,7 @@ namespace Tests
 			}
 			else if (provider == TestProvName.SqlServer2019FastExpressionCompiler)
 			{
-				Compilation.SetExpressionCompiler(_ => ExpressionCompiler.CompileFast(_, true));
+				//Compilation.SetExpressionCompiler(_ => ExpressionCompiler.CompileFast(_, true));
 			}
 		}
 
@@ -1308,7 +1308,7 @@ namespace Tests
 			}
 			if (provider == TestProvName.SqlServer2019FastExpressionCompiler)
 			{
-				Compilation.SetExpressionCompiler(null);
+				//Compilation.SetExpressionCompiler(null);
 			}
 
 			if (provider?.Contains("SapHana") == true)
