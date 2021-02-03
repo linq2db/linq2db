@@ -643,6 +643,9 @@ COMMENT ON COLUMN             "Issue2023"."PersonID" IS 'This is the Issue2023.P
 -- SKIP PostgreSQL.9.2 END
 GO
 
+DROP FUNCTION IF EXISTS "SchemaName"."fnTest"(INT)
+GO
+
 DROP SCHEMA IF EXISTS "SchemaName"
 GO
 

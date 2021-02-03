@@ -1038,7 +1038,7 @@ namespace Tests.Linq
 		[Test]
 		public void Contains5([DataSources] string context)
 		{
-			IEnumerable<int> ids = new int[0];
+			IEnumerable<int> ids = Array<int>.Empty;
 
 			using (var db = GetDataContext(context))
 				AreEqual(

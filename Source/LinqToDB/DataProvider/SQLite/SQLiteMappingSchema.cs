@@ -36,7 +36,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
 
-			stringBuilder.Append("'");
+			stringBuilder.Append('\'');
 		}
 
 		static void ConvertGuidToSql(StringBuilder stringBuilder, Guid value)

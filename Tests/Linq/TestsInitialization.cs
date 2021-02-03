@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Data.Common;
-using System.IO;
 using System.Reflection;
-using FastExpressionCompiler;
-using LinqToDB.Data.DbCommandProcessor;
 using NUnit.Framework;
+
+#if !NET472
+using System.IO;
+#endif
 
 using Tests;
 

@@ -29,18 +29,18 @@ namespace LinqToDB.DataProvider.Oracle
 			return base.GetSchema(dataConnection, options);
 		}
 
-		protected override string GetDataSourceName(DataConnection dataConnection)
+		protected override string GetDataSourceName(DataConnection dbConnection)
 		{
-			var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
+			var connection = _provider.TryGetProviderConnection(dbConnection.Connection, dbConnection.MappingSchema);
 			if (connection == null)
 				return string.Empty;
 
 			return _provider.Adapter.GetHostName(connection);
 		}
 
-		protected override string GetDatabaseName(DataConnection dataConnection)
+		protected override string GetDatabaseName(DataConnection dbConnection)
 		{
-			var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
+			var connection = _provider.TryGetProviderConnection(dbConnection.Connection, dbConnection.MappingSchema);
 			if (connection == null)
 				return string.Empty;
 
@@ -381,16 +381,16 @@ namespace LinqToDB.DataProvider.Oracle
 			).ToList();
 		}
 
-		protected override string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, long? length, int? prec, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
+		protected override string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, long? length, int? precision, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
 		{
 			switch (columnType)
 			{
 				case "NUMBER" :
-					if (prec == 0) return columnType;
+					if (precision == 0) return columnType;
 					break;
 			}
 
-			return base.GetDbType(options, columnType, dataType, length, prec, scale, udtCatalog, udtSchema, udtName);
+			return base.GetDbType(options, columnType, dataType, length, precision, scale, udtCatalog, udtSchema, udtName);
 		}
 
 		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale, GetSchemaOptions options)

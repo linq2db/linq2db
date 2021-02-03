@@ -352,14 +352,14 @@ namespace LinqToDB.SqlQuery
 			{
 				sb.Append("SKIP ");
 				SkipValue.ToString(sb, dic);
-				sb.Append(" ");
+				sb.Append(' ');
 			}
 
 			if (TakeValue != null)
 			{
 				sb.Append("TAKE ");
 				TakeValue.ToString(sb, dic);
-				sb.Append(" ");
+				sb.Append(' ');
 			}
 
 			sb.AppendLine();
@@ -375,7 +375,7 @@ namespace LinqToDB.SqlQuery
 				{
 					csb.Length = 0;
 					var c = Columns[i];
-					csb.Append("\t");
+					csb.Append('\t');
 
 					csb
 						.Append('t')
@@ -383,7 +383,7 @@ namespace LinqToDB.SqlQuery
 #if DEBUG
 						.Append('[').Append(c.ColumnNumber).Append(']')
 #endif
-						.Append(".")
+						.Append('.')
 						.Append(c.Alias ?? "c" + (i + 1));
 
 					var columnName = csb.ToString();

@@ -61,12 +61,12 @@ namespace LinqToDB.Linq
 			return _query.Provider.Execute<TResult>(expression);
 		}
 
-		public Task<IAsyncEnumerable<TResult>> ExecuteAsyncEnumerable<TResult>(Expression expression, CancellationToken token)
+		public Task<IAsyncEnumerable<TResult>> ExecuteAsyncEnumerable<TResult>(Expression expression, CancellationToken cancellationToken)
 		{
 			throw new NotImplementedException();
 		}
 
-		public Task<TResult> ExecuteAsync<TResult>(Expression expression, CancellationToken token)
+		public Task<TResult> ExecuteAsync<TResult>(Expression expression, CancellationToken cancellationToken)
 		{
 			throw new NotImplementedException();
 		}

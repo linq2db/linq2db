@@ -111,7 +111,7 @@ namespace Tests.SchemaProvider
 						{
 							var indexTable = dbSchema.Tables.First(t => t.TableName == "testunique");
 							Assert.That(indexTable.Columns.Count(c => c.IsPrimaryKey), Is.EqualTo(2));
-							Assert.That(indexTable.ForeignKeys.Count(), Is.EqualTo(2));
+							Assert.That(indexTable.ForeignKeys.Count, Is.EqualTo(2));
 						}
 						break;
 				}

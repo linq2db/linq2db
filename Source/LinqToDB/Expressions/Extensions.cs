@@ -234,14 +234,14 @@ namespace LinqToDB.Expressions
 							{
 								case MemberBindingType.Assignment    : Visit(((MemberAssignment)b). Expression,   func);                             break;
 								case MemberBindingType.ListBinding   : Visit(((MemberListBinding)b).Initializers, p => Visit(p.Arguments, func));    break;
-								case MemberBindingType.MemberBinding : Visit(((MemberMemberBinding)b).Bindings, (Action<MemberBinding>)MemberVisit); break;
+								case MemberBindingType.MemberBinding : Visit(((MemberMemberBinding)b).Bindings,   MemberVisit); break;
 							}
 						}
 
 						var e = (MemberInitExpression)expr;
 
 						Visit(e.NewExpression, func);
-						Visit(e.Bindings,      (Action<MemberBinding>)MemberVisit);
+						Visit(e.Bindings,      MemberVisit);
 
 						break;
 					}

@@ -980,7 +980,7 @@ namespace Tests.Linq
 	{
 		public static MyContextParser.Context GetMyContext<T>(this IQueryable<T> source)
 		{
-			if (source == null) throw new ArgumentNullException("source");
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			var methodInfo = MemberHelper.MethodOf(() => GetMyContext<T>(null!));
 

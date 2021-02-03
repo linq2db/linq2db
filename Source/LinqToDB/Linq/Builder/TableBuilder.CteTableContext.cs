@@ -97,12 +97,12 @@ namespace LinqToDB.Linq.Builder
 				return _cteQueryContext ??= Builder.GetCteContext(_cteExpression);
 			}
 
-			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFor)
+			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
 				var queryContext = GetQueryContext();
 				if (queryContext == null)
-					return base.IsExpression(expression, level, requestFor);
-				return queryContext.IsExpression(expression, level, requestFor);
+					return base.IsExpression(expression, level, requestFlag);
+				return queryContext.IsExpression(expression, level, requestFlag);
 			}
 
 			static string? GenerateAlias(Expression? expression)

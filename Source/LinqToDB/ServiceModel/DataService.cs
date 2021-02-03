@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NETFRAMEWORK
+using System;
 using System.Collections.Generic;
 using System.Data.Services.Providers;
 using System.Linq;
@@ -16,7 +17,7 @@ namespace LinqToDB.ServiceModel
 	public class DataService<T> : System.Data.Services.DataService<T>, IServiceProvider
 		where T : IDataContext
 	{
-		#region Init
+#region Init
 
 		public DataService()
 		{
@@ -50,9 +51,9 @@ namespace LinqToDB.ServiceModel
 		readonly QueryProvider    _query;
 		readonly UpdateProvider   _update;
 
-		#endregion
+#endregion
 
-		#region Public Members
+#region Public Members
 
 		public object? GetService(Type serviceType)
 		{
@@ -63,9 +64,9 @@ namespace LinqToDB.ServiceModel
 			return null;
 		}
 
-		#endregion
+#endregion
 
-		#region MetadataInfo
+#region MetadataInfo
 
 		class TypeInfo
 		{
@@ -209,9 +210,9 @@ namespace LinqToDB.ServiceModel
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region MetadataProvider
+#region MetadataProvider
 
 		class MetadataProvider : IDataServiceMetadataProvider
 		{
@@ -260,9 +261,9 @@ namespace LinqToDB.ServiceModel
 			public IEnumerable<ServiceOperation> ServiceOperations  => Enumerable.Empty<ServiceOperation>();
 		}
 
-		#endregion
+#endregion
 
-		#region QueryProvider
+#region QueryProvider
 
 		class QueryProvider : IDataServiceQueryProvider
 		{
@@ -326,9 +327,9 @@ namespace LinqToDB.ServiceModel
 			public bool    IsNullPropagationRequired => true;
 		}
 
-		#endregion
+#endregion
 
-		#region UpdateProvider
+#region UpdateProvider
 
 		abstract class ResourceAction
 		{
@@ -347,7 +348,7 @@ namespace LinqToDB.ServiceModel
 
 		class UpdateProvider : IDataServiceUpdateProvider
 		{
-			#region Init
+#region Init
 
 			public UpdateProvider(MetadataInfo data, MetadataProvider metadata, QueryProvider query)
 			{
@@ -361,9 +362,9 @@ namespace LinqToDB.ServiceModel
 			readonly QueryProvider        _query;
 			readonly List<ResourceAction> _actions = new List<ResourceAction>();
 
-			#endregion
+#endregion
 
-			#region IDataServiceUpdateProvider
+#region IDataServiceUpdateProvider
 
 			public void SetConcurrencyValues(object resourceCookie, bool? checkForEquality, IEnumerable<KeyValuePair<string,object>> concurrencyValues)
 			{
@@ -389,7 +390,7 @@ namespace LinqToDB.ServiceModel
 					return resource;
 				}
 
-				throw new Exception($"Type '{fullTypeName}' not found");
+				throw new LinqException($"Type '{fullTypeName}' not found");
 			}
 
 			public void DeleteResource(object targetResource)
@@ -452,9 +453,10 @@ namespace LinqToDB.ServiceModel
 				_actions.Add(new ResourceAction.Update { Resource = targetResource, Property = propertyName, Value = propertyValue });
 			}
 
-			#endregion
+#endregion
 		}
 
-		#endregion
+#endregion
 	}
 }
+#endif

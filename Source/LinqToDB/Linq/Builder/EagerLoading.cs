@@ -73,7 +73,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var count = members.Length - startIndex;
 			if (count == 0)
-				throw new ArgumentException();
+				throw new ArgumentOutOfRangeException(nameof(startIndex));
 
 			if (count == 1)
 				return members[startIndex];
@@ -1731,7 +1731,7 @@ namespace LinqToDB.Linq.Builder
 
 								var newMemberInit = Expression.MemberInit(
 									Expression.New(newType.GetConstructor(Array<Type>.Empty) ??
-												   throw new ArgumentException()), newAssignments);
+												   throw new InvalidOperationException($"Default constructor not found for type {newType}")), newAssignments);
 								return newMemberInit;
 							}
 

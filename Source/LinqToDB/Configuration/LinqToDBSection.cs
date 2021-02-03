@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NETFRAMEWORK
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
@@ -113,3 +114,4 @@ namespace LinqToDB.Configuration
 		}
 	}
 }
+#endif

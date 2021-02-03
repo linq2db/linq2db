@@ -212,13 +212,13 @@ namespace LinqToDB.Common.Internal.Cache
 		}
 
 		/// <inheritdoc />
-		public bool TryGetValue(object key, [MaybeNullWhen(false)] out object? result)
+		public bool TryGetValue(object key, [MaybeNullWhen(false)] out object? value)
 		{
 			ValidateCacheKey(key);
 
 			CheckDisposed();
 
-			result = null;
+			value = null;
 			var utcNow = _options.Clock!.UtcNow;
 			var found = false;
 
@@ -235,7 +235,7 @@ namespace LinqToDB.Common.Internal.Cache
 				{
 					found = true;
 					entry.LastAccessed = utcNow;
-					result = entry.Value;
+					value = entry.Value;
 
 					// When this entry is retrieved in the scope of creating another entry,
 					// that entry needs a copy of these expiration tokens.

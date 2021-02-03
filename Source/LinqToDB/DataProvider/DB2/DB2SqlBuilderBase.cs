@@ -86,12 +86,12 @@ namespace LinqToDB.DataProvider.DB2
 				indent += 2;
 
 				AppendIndent().AppendLine("SELECT");
-				AppendIndent().Append("\t");
+				AppendIndent().Append('\t');
 				BuildExpression(_identityField, false, true);
 				sb.AppendLine();
 				AppendIndent().AppendLine("FROM");
 				AppendIndent().AppendLine("\tNEW TABLE");
-				AppendIndent().Append("\t").AppendLine(OpenParens);
+				AppendIndent().Append('\t').AppendLine(OpenParens);
 			}
 
 			base.BuildSql(commandNumber, statement, sb, optimizationContext, indent, skipAlias);

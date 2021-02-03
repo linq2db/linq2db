@@ -2,7 +2,6 @@
 using System.Linq;
 
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 using NUnit.Framework;
 
 namespace Tests.UserTests

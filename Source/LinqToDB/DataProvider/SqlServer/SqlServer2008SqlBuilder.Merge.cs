@@ -11,7 +11,7 @@
 
 			BuildTableName(merge.Target, true, false);
 
-			StringBuilder.Append(" ");
+			StringBuilder.Append(' ');
 
 			if (merge.Hint != null)
 			{

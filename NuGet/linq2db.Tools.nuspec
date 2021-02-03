@@ -12,6 +12,9 @@
 			<group targetFramework=".NETFramework4.5" >
 				<dependency id="linq2db" version="3.0.0" />
 			</group>
+			<group targetFramework=".NETFramework4.6" >
+				<dependency id="linq2db" version="3.0.0" />
+			</group>
 			<group targetFramework=".NETStandard2.0">
 				<dependency id="linq2db" version="3.0.0" />
 			</group>

@@ -37,7 +37,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						builder.AddExpression("modifier", "ALL");
 						break;
 					default :
-						throw new ArgumentOutOfRangeException();
+						throw new InvalidOperationException($"Unexpected modifier: {modifier}");
 				}
 			}
 		}

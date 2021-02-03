@@ -14,9 +14,7 @@ namespace LinqToDB.Reflection
 
 	public class MemberAccessor
 	{
-		static readonly ConstructorInfo ArgumentExceptionConstructorInfo =
-			typeof(ArgumentException).GetConstructor(new[] {typeof(string)}) ??
-				throw new Exception($"Can not retrieve information about constructor for {nameof(ArgumentException)}");
+		static readonly ConstructorInfo ArgumentExceptionConstructorInfo = typeof(ArgumentException).GetConstructor(new[] {typeof(string)})!;
 
 		internal MemberAccessor(TypeAccessor typeAccessor, string memberName, EntityDescriptor? ed)
 		{
@@ -73,7 +71,7 @@ namespace LinqToDB.Reflection
 
 								return Expression.Block(
 									new[] { local },
-									Expression.Assign(local, next) as Expression,
+									Expression.Assign(local, next),
 									Expression.IfThen(
 										Expression.NotEqual(local, Expression.Constant(null)),
 										MakeGetter(local, i + 1)));

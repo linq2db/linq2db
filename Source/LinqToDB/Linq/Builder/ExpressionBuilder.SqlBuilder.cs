@@ -3347,7 +3347,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					// Handling case when all columns are aggregates, it cause query to produce only single record and we have to include at least one aggregation in Select statement.
 					// 
-					var allAggregate = sql.All(s => QueryHelper.IsAggregationFunction(s.Sql));
+					var allAggregate = sql.All(s => QueryHelper.IsAggregationOrWindowFunction(s.Sql));
 					if (allAggregate)
 					{
 						query.Select.Add(sql[0].Sql);
@@ -3459,7 +3459,7 @@ namespace LinqToDB.Linq.Builder
 			_preambles.Add(
 				Tuple.Create< Func<IDataContext, Expression, object?[]?, object?>, Func<IDataContext, Expression, object?[]?, CancellationToken, Task<object?>>>(
 					(dc, e, ps) => func(dc, e, ps),
-					async (dc, e, ps, ct) => await funcAsync(dc, e, ps, ct)));
+					async (dc, e, ps, ct) => await funcAsync(dc, e, ps, ct).ConfigureAwait(Configuration.ContinueOnCapturedContext)));
 			return _preambles.Count - 1;
 		}
 

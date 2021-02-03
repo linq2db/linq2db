@@ -1,18 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
-
+using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.Informix;
 using LinqToDB.Mapping;
-
 using NUnit.Framework;
 
 namespace Tests.xUpdate
 {
-	using LinqToDB.DataProvider.Informix;
 	using Model;
-	using System.Collections.Generic;
-	using System.Threading.Tasks;
 
 	[TestFixture]
 	[Order(10000)]
@@ -246,7 +244,7 @@ namespace Tests.xUpdate
 					|| copyType == BulkCopyType.MultipleRows
 					|| copyType == BulkCopyType.ProviderSpecific))
 			{
-				var ex = Assert.CatchAsync(async () => await perform());
+				var ex = Assert.CatchAsync(async () => await perform())!;
 				Assert.IsInstanceOf<LinqToDBException>(ex);
 				Assert.AreEqual("BulkCopyOptions.KeepIdentity = true is not supported by Firebird provider. If you use generators with triggers, you should disable triggers during BulkCopy execution manually.", ex.Message);
 				return false;
@@ -269,7 +267,7 @@ namespace Tests.xUpdate
 					|| (context == ProviderName.SapHanaOdbc && copyType == BulkCopyType.ProviderSpecific))
 				&& keepIdentity == true)
 			{
-				var ex = Assert.CatchAsync(async () => await perform());
+				var ex = Assert.CatchAsync(async () => await perform())!;
 				Assert.IsInstanceOf<LinqToDBException>(ex);
 				Assert.AreEqual("BulkCopyOptions.KeepIdentity = true is not supported by BulkCopyType.RowByRow mode", ex.Message);
 				return false;

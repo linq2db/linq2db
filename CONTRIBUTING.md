@@ -19,6 +19,7 @@ Follow this [document](https://github.com/linq2db/linq2db/files/1056002/Developm
 |.\Redist                    | Binaries,unavailable officially at NuGet, used by tests and nugets                                                               |
 |.\Source\LinqToDB           | LINQ to DB source code                                                                                                           |
 |.\Source\LinqToDB.Tools     | LINQ to DB Tools source code                                                                                                     |
+|.\Source\LinqToDB.AspNet    | LINQ to DB ASP.NET Core integration library source code                                                                          |
 |.\Source\LinqToDB.Templates | LINQ to DB t4models source code                                                                                                  |
 |.\Tests                     | Unit test projects folder                                                                                                        |
 |.\Tests\Base                | LINQ to DB testing framework                                                                                                     |
@@ -41,7 +42,8 @@ Solutions:
 | Project \ Target                                 |.NET 4.5 |.NET 4.6 | .NET Standard 2.0 | .NET Core 2.1 | .NET Standard 2.1 | .NET Core 3.1 |
 |-------------------------------------------------:|:-------:|:-------:|:-----------------:|:-------------:|:-----------------:|:-------------:|
 | `.\Source\LinqToDB\LinqToDB.csproj`              |    √    |    √    |         √         |       √       |         √         |       √       |
-| `.\Source\LinqToDB\LinqToDB.Tools.csproj`        |    √    |         |         √         |               |                   |               |
+| `.\Source\LinqToDB\LinqToDB.Tools.csproj`        |    √    |    √    |         √         |               |                   |               |
+| `.\Source\LinqToDB\LinqToDB.AspNet.csproj`       |    √    |         |         √         |               |                   |               |
 
 Preferred target defines:
 - `NETFRAMEWORK` - `net45` and `net46` target ifdef

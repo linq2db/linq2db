@@ -1,6 +1,4 @@
-﻿using System;
-
-using LinqToDB;
+﻿using LinqToDB;
 
 namespace Tests
 {

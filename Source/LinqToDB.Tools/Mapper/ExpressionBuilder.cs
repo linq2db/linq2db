@@ -590,7 +590,7 @@ namespace LinqToDB.Tools.Mapper
 
 						_expressions.Add(
 							Call(
-								MemberHelper.MethodOf(() => AddRange(((ICollection<int>)null!), (IEnumerable<int>)null!))
+								MemberHelper.MethodOf(() => AddRange<int>(null!, null!))
 									.GetGenericMethodDefinition()
 									.MakeGenericMethod(toItemType),
 								_localObject,

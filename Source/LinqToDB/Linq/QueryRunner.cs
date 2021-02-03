@@ -13,13 +13,13 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
+	using Async;
 	using Builder;
 	using Common;
 	using Common.Internal.Cache;
 	using Common.Logging;
 	using Data;
 	using Extensions;
-	using Async;
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
@@ -202,18 +202,6 @@ namespace LinqToDB.Linq
 				foreach (var sqlParameter in q.ParameterAccessors)
 					sqlParameter.Expression = null!;
 #endif
-		}
-
-		static ParameterAccessor? GetParameterAccessor(List<ParameterAccessor> parameters, ISqlExpression parameter)
-		{
-			for (var i = 0; i < parameters.Count; i++)
-			{
-				var accessor = parameters[i];
-				if (accessor.SqlParameter == parameter)
-					return accessor;
-			}
-
-			return null;
 		}
 
 		static int EvaluateTakeSkipValue(Query query, Expression expr, IDataContext? db, object?[]? ps, int qn,

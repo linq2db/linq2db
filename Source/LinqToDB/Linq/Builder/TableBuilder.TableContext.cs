@@ -1009,9 +1009,9 @@ namespace LinqToDB.Linq.Builder
 
 			#region IsExpression
 
-			public virtual IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFor)
+			public virtual IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
-				switch (requestFor)
+				switch (requestFlag)
 				{
 					case RequestFor.Field      :
 						{
@@ -1030,7 +1030,7 @@ namespace LinqToDB.Linq.Builder
 								return IsExpressionResult.False;
 
 							return contextInfo.Context.IsExpression(contextInfo.CurrentExpression,
-								contextInfo.CurrentLevel + 1, requestFor);
+								contextInfo.CurrentLevel + 1, requestFlag);
 						}
 
 					case RequestFor.Table       :
@@ -1055,7 +1055,7 @@ namespace LinqToDB.Linq.Builder
 								return new IsExpressionResult(true, contextInfo.Context);
 
 							return contextInfo.Context.IsExpression(contextInfo.CurrentExpression,
-								contextInfo.CurrentLevel + 1, requestFor);
+								contextInfo.CurrentLevel + 1, requestFlag);
 
 						}
 

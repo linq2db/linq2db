@@ -25,7 +25,7 @@ namespace Tests.Linq
 
 			public bool Equals(int x, int y) => (x >= (y - _precision) && x <= (y + _precision));
 
-			public int GetHashCode(int x) => 0;
+			public int GetHashCode(int obj) => 0;
 		}
 
 		public class CustomNullableIntComparer : IEqualityComparer<int?>
@@ -44,7 +44,7 @@ namespace Tests.Linq
 				return (x.Value >= (y.Value - _precision) && x.Value <= (y.Value + _precision));
 			}
 
-			public int GetHashCode(int? x) => 0;
+			public int GetHashCode(int? obj) => 0;
 		}
 
 		public class CustomNullableDateTimeComparer : IEqualityComparer<DateTime?>
@@ -56,7 +56,7 @@ namespace Tests.Linq
 				return x.Value.Between(y.Value.AddMilliseconds(-1), y.Value.AddMilliseconds(1));
 			}
 
-			public int GetHashCode(DateTime? x) => 0;
+			public int GetHashCode(DateTime? obj) => 0;
 		}
 
 		public class CustomDateTimeComparer : IEqualityComparer<DateTime>
@@ -66,7 +66,7 @@ namespace Tests.Linq
 				return x.Between(y.AddMilliseconds(-1), y.AddMilliseconds(1));
 			}
 
-			public int GetHashCode(DateTime x) => 0;
+			public int GetHashCode(DateTime obj) => 0;
 		}
 
 		[Test]

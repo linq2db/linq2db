@@ -1,4 +1,4 @@
-﻿using System;
+﻿#if NET472
 using System.Data.Linq.Mapping;
 using System.IO;
 using System.Text;
@@ -89,3 +89,4 @@ namespace Tests.Metadata
 		}
 	}
 }
+#endif

@@ -25,9 +25,13 @@ namespace LinqToDB.SqlQuery
 			return _aliasesSet.Contains(element);
 		}
 
+#if NET45
+		public ICollection<IQueryElement> GetAliased()
+#else
 		public IReadOnlyCollection<IQueryElement> GetAliased()
+#endif
 		{
-			return (IReadOnlyCollection<IQueryElement>)_aliasesSet;
+			return _aliasesSet;
 		}
 
 		public HashSet<string> GetUsedTableAliases()

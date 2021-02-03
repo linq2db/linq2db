@@ -114,7 +114,7 @@ namespace LinqToDB.Common
 			var newGenericArguments = genericArguments.Select((t, i) =>
 			{
 				if (!typesMapping.TryGetValue(t, out var replaced))
-					throw new Exception($"Not found type mapping for generic argument '{t.Name}'.");
+					throw new LinqToDBException($"Not found type mapping for generic argument '{t.Name}'.");
 				return replaced;
 			}).ToArray();
 

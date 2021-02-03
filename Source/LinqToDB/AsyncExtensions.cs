@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -9,6 +9,7 @@ using JetBrains.Annotations;
 namespace LinqToDB
 {
 	using Linq;
+	using Async;
 
 	/// <summary>
 	/// Provides helper methods for asynchronous operations.
@@ -65,21 +66,22 @@ namespace LinqToDB
 
 		#endregion
 
+		[AttributeUsage(AttributeTargets.Method)]
 		internal class ElementAsyncAttribute : Attribute
 		{
 		}
 
 		#region AsAsyncEnumerable
-#if !NETFRAMEWORK
 		/// <summary>
 		/// Returns an <see cref="IAsyncEnumerable{T}"/> that can be enumerated asynchronously.
 		/// </summary>
 		/// <typeparam name="TSource">Source sequence element type.</typeparam>
 		/// <param name="source">Source sequence.</param>
 		/// <returns>A query that can be enumerated asynchronously.</returns>
-		public static IAsyncEnumerable<TSource> AsAsyncEnumerable<TSource>(
-			this IQueryable<TSource> source)
+		public static IAsyncEnumerable<TSource> AsAsyncEnumerable<TSource>(this IQueryable<TSource> source)
 		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
 			if (source is IAsyncEnumerable<TSource> asyncQuery)
 				return asyncQuery;
 
@@ -98,8 +100,15 @@ namespace LinqToDB
 				_query = query ?? throw new ArgumentNullException(nameof(query));
 			}
 
+#if NETFRAMEWORK
+			IAsyncEnumerator<T> IAsyncEnumerable<T>.GetAsyncEnumerator(CancellationToken cancellationToken)
+			{
+				return new AsyncEnumeratorImpl<T>(_query.GetEnumerator(), cancellationToken);
+			}
+		}
+#else
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-			public async IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+			async IAsyncEnumerator<T> IAsyncEnumerable<T>.GetAsyncEnumerator(CancellationToken cancellationToken)
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 			{
 				using var enumerator = _query.GetEnumerator();
@@ -111,7 +120,7 @@ namespace LinqToDB
 			}
 		}
 #endif
-		#endregion
+#endregion
 
 		#region ForEachAsync
 
@@ -171,9 +180,9 @@ namespace LinqToDB
 			token);
 		}
 
-		#endregion
+#endregion
 
-		#region ToListAsync
+#region ToListAsync
 
 		/// <summary>
 		/// Asynchronously loads data from query to a list.
@@ -199,9 +208,9 @@ namespace LinqToDB
 			return await GetTask(() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToList(), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
-		#endregion
+#endregion
 
-		#region ToArrayAsync
+#region ToArrayAsync
 
 		/// <summary>
 		/// Asynchronously loads data from query to an array.
@@ -235,9 +244,9 @@ namespace LinqToDB
 			return await GetTask(() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToArray(), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
-		#endregion
+#endregion
 
-		#region ToDictionaryAsync
+#region ToDictionaryAsync
 
 		/// <summary>
 		/// Asynchronously loads data from query to a dictionary.
@@ -361,7 +370,7 @@ namespace LinqToDB
 			return await GetTask(() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector, elementSelector, comparer), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
-		#endregion
+#endregion
 
 	}
 }

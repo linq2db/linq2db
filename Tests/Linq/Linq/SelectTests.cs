@@ -1001,8 +1001,8 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(new []
 			{
-				new MainEntityObject{Id = 1, MainValue = "MainValue 1"},
-				new MainEntityObject{Id = 2, MainValue = "MainValue 2"},
+				new MainEntityObject{Id = 1, MainValue = "MainValue 1"}, 
+				new MainEntityObject{Id = 2, MainValue = "MainValue 2"}, 
 			}))
 			using (db.CreateLocalTable(new []
 			{

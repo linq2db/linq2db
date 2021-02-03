@@ -13,6 +13,7 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using LinqToDB.Common;
 	using Model;
 
 	[TestFixture]
@@ -190,10 +191,10 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in Parent
-					where new int[0].Contains(p.ParentID) || p.ParentID == 2
+					where Array<int>.Empty.Contains(p.ParentID) || p.ParentID == 2
 					select p,
 					from p in db.Parent
-					where new int[0].Contains(p.ParentID) || p.ParentID == 2
+					where Array<int>.Empty.Contains(p.ParentID) || p.ParentID == 2
 					select p);
 		}
 

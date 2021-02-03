@@ -135,6 +135,11 @@ namespace LinqToDB
 			/// </summary>
 			public bool           IsAggregate      { get; set; }
 			/// <summary>
+			/// If <c>true</c>, this expression represents a Window Function
+			/// Examples would be SUM() OVER(), COUNT() OVER().
+			/// </summary>
+			public bool           IsWindowFunction { get; set; }
+			/// <summary>
 			/// If <c>true</c>, it notifies SQL Optimizer that expression returns same result if the same values/parameters are used. It gives optimizer additional information how to simplify query.
 			/// For example ORDER BY PureFunction("Str") can be removed because PureFunction function uses constant value.
 			/// <example>
@@ -229,7 +234,11 @@ namespace LinqToDB
 				var sqlExpressions = ConvertArgs(member, args);
 
 				return new SqlExpression(member.GetMemberType(), Expression ?? member.Name, Precedence,
-					IsAggregate, IsPure, sqlExpressions)
+					(IsAggregate      ? SqlFlags.IsAggregate      : SqlFlags.None) | 
+					(IsPure           ? SqlFlags.IsPure           : SqlFlags.None) |
+					(IsPredicate      ? SqlFlags.IsPredicate      : SqlFlags.None) | 
+					(IsWindowFunction ? SqlFlags.IsWindowFunction : SqlFlags.None), 
+					sqlExpressions)
 				{
 					CanBeNull = GetCanBeNull(sqlExpressions)
 				};

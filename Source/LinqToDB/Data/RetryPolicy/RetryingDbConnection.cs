@@ -69,7 +69,7 @@ namespace LinqToDB.Data.RetryPolicy
 
 		void IDisposable.Dispose()
 		{
-			((IDisposable)_connection).Dispose();
+			_connection.Dispose();
 		}
 
 		public DbConnection UnderlyingObject => _dbConnection;
@@ -146,7 +146,9 @@ namespace LinqToDB.Data.RetryPolicy
 		}
 
 #if NETSTANDARD2_1PLUS
+#pragma warning disable CA2215 // CA2215: Dispose methods should call base class dispose
 		public override ValueTask DisposeAsync()
+#pragma warning restore CA2215 // CA2215: Dispose methods should call base class dispose
 #elif !NETFRAMEWORK
 		public ValueTask DisposeAsync()
 #else

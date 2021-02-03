@@ -1,4 +1,4 @@
-﻿using System;
+﻿#if NET472
 using System.Data.Services.Providers;
 
 using LinqToDB.ServiceModel;
@@ -20,3 +20,4 @@ namespace Tests.Linq
 		}
 	}
 }
+#endif
