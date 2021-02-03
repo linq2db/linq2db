@@ -6,7 +6,9 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using LinqToDB;
+#if NET472
 using LinqToDB.Async;
+#endif
 using LinqToDB.Expressions;
 
 namespace Tests.Linq
@@ -45,12 +47,12 @@ namespace Tests.Linq
 			var isFirst = true;
 			foreach (var tuple in order)
 			{
-				var lambda = Expression.Lambda(MakePropPath(param, tuple.Item1));
+				var lambda = Expression.Lambda(MakePropPath(param, tuple.Item1), param);
 				var methodName =
 					isFirst ? tuple.Item2 ? nameof(Queryable.OrderByDescending) : nameof(Queryable.OrderBy)
 					: tuple.Item2 ? nameof(Queryable.ThenByDescending) : nameof(Queryable.ThenBy);
 
-				queryExpr = Expression.Call(typeof(Queryable), methodName, new[] { entityType, lambda.Body.Type });
+				queryExpr = Expression.Call(typeof(Queryable), methodName, new[] { entityType, lambda.Body.Type }, queryExpr, Expression.Quote(lambda));
 				isFirst = false;
 			}
 
