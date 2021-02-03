@@ -555,7 +555,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			public ulong Complete5() => ((Func<NpgsqlBinaryImporter, ulong>)CompiledWrappers[2])(this);
 			public void Dispose()  => ((Action<NpgsqlBinaryImporter>)CompiledWrappers[3])(this);
 			public void StartRow() => ((Action<NpgsqlBinaryImporter>)CompiledWrappers[4])(this);
-			public void Write<T>(T value, NpgsqlDbType npgsqlDbType) => ((Action<NpgsqlBinaryImporter, object?, NpgsqlDbType>)CompiledWrappers[9])(this, (object?)value, npgsqlDbType);
+			public void Write<T>(T value, NpgsqlDbType npgsqlDbType) => ((Action<NpgsqlBinaryImporter, object?, NpgsqlDbType>)CompiledWrappers[9])(this, value, npgsqlDbType);
 
 #if !NETFRAMEWORK
 #pragma warning disable CS3002 // Return type is not CLS-compliant
@@ -581,7 +581,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 #endif
 
 			public Task WriteAsync<T>(T value, NpgsqlDbType npgsqlDbType, CancellationToken cancellationToken)
-				=> ((Func<NpgsqlBinaryImporter, object?, NpgsqlDbType, CancellationToken, Task>)CompiledWrappers[8])(this, (object?)value, npgsqlDbType, cancellationToken);
+				=> ((Func<NpgsqlBinaryImporter, object?, NpgsqlDbType, CancellationToken, Task>)CompiledWrappers[8])(this, value, npgsqlDbType, cancellationToken);
 
 			public bool HasComplete => CompiledWrappers[1] != null;
 			public bool HasComplete5 => CompiledWrappers[2] != null;

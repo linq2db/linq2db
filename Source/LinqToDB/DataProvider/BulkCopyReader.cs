@@ -38,7 +38,13 @@ namespace LinqToDB.DataProvider
 		}
 
 		protected override bool MoveNext()
-			=> _enumerator != null ? _enumerator.MoveNext() : _asyncEnumerator!.MoveNextAsync().GetAwaiter().GetResult();
+		{
+			if (_enumerator != null)
+				return _enumerator.MoveNext();
+			
+			var result = _asyncEnumerator!.MoveNextAsync();
+			return result.IsCompleted ? result.Result : result.AsTask().GetAwaiter().GetResult();
+		}
 
 		protected override ValueTask<bool> MoveNextAsync()
 			=> _enumerator != null ? new ValueTask<bool>(_enumerator.MoveNext()) : _asyncEnumerator!.MoveNextAsync();
@@ -56,16 +62,23 @@ namespace LinqToDB.DataProvider
 		#region Implementation of IDisposable
 
 #if !NETFRAMEWORK
+#pragma warning disable CA2215 // CA2215: Dispose methods should call base class dispose
 		protected override void Dispose(bool disposing)
+#pragma warning restore CA2215 // CA2215: Dispose methods should call base class dispose
 		{
-			if (disposing)
+			if (disposing && _asyncEnumerator != null)
 			{
-				_asyncEnumerator?.DisposeAsync().GetAwaiter().GetResult();
+				var result = _asyncEnumerator.DisposeAsync();
+
+				if (!result.IsCompleted)
+					result.AsTask().GetAwaiter().GetResult();
 			}
 		}
 
 #if NETSTANDARD2_1PLUS
+#pragma warning disable CA2215 // CA2215: Dispose methods should call base class dispose
 		public override ValueTask DisposeAsync()
+#pragma warning restore CA2215 // CA2215: Dispose methods should call base class dispose
 #else
 		public ValueTask DisposeAsync()
 #endif
@@ -119,21 +132,21 @@ namespace LinqToDB.DataProvider
 
 		#region Implementation of IDataRecord
 
-		public override string GetName(int i)
+		public override string GetName(int ordinal)
 		{
-			return _columns[i].ColumnName;
+			return _columns[ordinal].ColumnName;
 		}
 
-		public override Type GetFieldType(int i)
+		public override Type GetFieldType(int ordinal)
 		{
-			return _dataConnection.DataProvider.ConvertParameterType(_columns[i].MemberType, _columnTypes[i]);
+			return _dataConnection.DataProvider.ConvertParameterType(_columns[ordinal].MemberType, _columnTypes[ordinal]);
 		}
 
-		public override object? GetValue(int i)
+		public override object? GetValue(int ordinal)
 		{
-			var value = _columns[i].GetValue(Current);
+			var value = _columns[ordinal].GetValue(Current);
 
-			_dataConnection.DataProvider.SetParameter(_dataConnection, _valueConverter, string.Empty, _columnTypes[i], value);
+			_dataConnection.DataProvider.SetParameter(_dataConnection, _valueConverter, string.Empty, _columnTypes[ordinal], value);
 
 			return _valueConverter.Value;
 		}
@@ -155,32 +168,31 @@ namespace LinqToDB.DataProvider
 
 		public override int FieldCount => _columns.Count;
 
-		public override long GetBytes(int i, long fieldOffset, byte[] buffer, int bufferoffset, int length)
+		public override long GetBytes(int ordinal, long dataOffset, byte[] buffer, int bufferOffset, int length)
 		{
 			throw new NotImplementedException();
 		}
 
-		public override long GetChars(int i, long fieldoffset, char[] buffer, int bufferoffset, int length)
+		public override long GetChars(int ordinal, long dataOffset, char[] buffer, int bufferOffset, int length)
 		{
 			throw new NotImplementedException();
 		}
 
-		public override string      GetDataTypeName(int i)       => throw new NotImplementedException();
+		public override string      GetDataTypeName(int ordinal) => throw new NotImplementedException();
 		public override int         GetOrdinal     (string name) => _ordinals[name];
-		public override bool        GetBoolean     (int i)       => throw new NotImplementedException();
-		public override byte        GetByte        (int i)       => throw new NotImplementedException();
-		public override char        GetChar        (int i)       => throw new NotImplementedException();
-		public override Guid        GetGuid        (int i)       => throw new NotImplementedException();
-		public override short       GetInt16       (int i)       => throw new NotImplementedException();
-		public override int         GetInt32       (int i)       => throw new NotImplementedException();
-		public override long        GetInt64       (int i)       => throw new NotImplementedException();
-		public override float       GetFloat       (int i)       => throw new NotImplementedException();
-		public override double      GetDouble      (int i)       => throw new NotImplementedException();
-		public override string      GetString      (int i)       => throw new NotImplementedException();
-		public override decimal     GetDecimal     (int i)       => throw new NotImplementedException();
-		public override DateTime    GetDateTime    (int i)       => throw new NotImplementedException();
-		//public override IDataReader GetData        (int i)       => throw new NotImplementedException();
-		public override bool        IsDBNull       (int i)       => GetValue(i) == null;
+		public override bool        GetBoolean     (int ordinal) => throw new NotImplementedException();
+		public override byte        GetByte        (int ordinal) => throw new NotImplementedException();
+		public override char        GetChar        (int ordinal) => throw new NotImplementedException();
+		public override Guid        GetGuid        (int ordinal) => throw new NotImplementedException();
+		public override short       GetInt16       (int ordinal) => throw new NotImplementedException();
+		public override int         GetInt32       (int ordinal) => throw new NotImplementedException();
+		public override long        GetInt64       (int ordinal) => throw new NotImplementedException();
+		public override float       GetFloat       (int ordinal) => throw new NotImplementedException();
+		public override double      GetDouble      (int ordinal) => throw new NotImplementedException();
+		public override string      GetString      (int ordinal) => throw new NotImplementedException();
+		public override decimal     GetDecimal     (int ordinal) => throw new NotImplementedException();
+		public override DateTime    GetDateTime    (int ordinal) => throw new NotImplementedException();
+		public override bool        IsDBNull       (int ordinal) => GetValue(ordinal) == null;
 
 		public override object this[int i]       => throw new NotImplementedException();
 		public override object this[string name] => throw new NotImplementedException();

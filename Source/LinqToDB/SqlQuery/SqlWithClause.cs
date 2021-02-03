@@ -83,7 +83,7 @@ namespace LinqToDB.SqlQuery
 					//Indent--;
 
 					//AppendIndent();
-					sb.Append(")");
+					sb.Append(')');
 				}
 
 				sb.AppendLine();

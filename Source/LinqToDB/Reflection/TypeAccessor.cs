@@ -12,7 +12,7 @@ namespace LinqToDB.Reflection
 
 		protected void AddMember(MemberAccessor member)
 		{
-			if (member == null) throw new ArgumentNullException("member");
+			if (member == null) throw new ArgumentNullException(nameof(member));
 
 			Members.Add(member);
 			_membersByName[member.MemberInfo.Name] = member;

@@ -288,7 +288,7 @@ namespace Tests
 				catch (Exception e)
 				{
 					TestExternals.Log(e.ToString());
-					Console.WriteLine(e);
+					TestContext.WriteLine(e);
 					throw;
 				}
 			}
@@ -302,7 +302,7 @@ namespace Tests
 				foreach (var file in Directory.GetFiles(databasePath, "*.*"))
 				{
 					var destination = Path.Combine(dataPath, Path.GetFileName(file));
-					Console.WriteLine("{0} => {1}", file, destination);
+					TestContext.WriteLine("{0} => {1}", file, destination);
 					File.Copy(file, destination, true);
 				}
 			}
@@ -699,7 +699,7 @@ namespace Tests
 					.Where(p => p.Value1.HasValue && (new[] { 1, 2 }.Contains(p.Value1.Value)))
 					.Select(p => p.Value1 == 1 ?
 						(ParentInheritanceBase4)new ParentInheritance14 { ParentID = p.ParentID } :
-						(ParentInheritanceBase4)new ParentInheritance24 { ParentID = p.ParentID }
+												new ParentInheritance24 { ParentID = p.ParentID }
 				).ToList();
 
 		protected List<Child>?      _child;
@@ -1086,7 +1086,7 @@ namespace Tests
 
 		protected void AreEqual<T>(Func<T, T> fixSelector, IEnumerable<T> expected, IEnumerable<T> result, IEqualityComparer<T> comparer, bool allowEmpty = false)
 		{
-			AreEqual<T>(fixSelector, expected, result, comparer, null, allowEmpty);
+			AreEqual(fixSelector, expected, result, comparer, null, allowEmpty);
 		}
 
 		protected void AreEqual<T>(
@@ -1223,7 +1223,7 @@ namespace Tests
 		{
 			Assert.AreEqual(normalize(expected), normalize(result));
 
-			string normalize(string sql)
+			static string normalize(string sql)
 			{
 				var lines = sql.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
 				return string.Join("\n", lines.Where(l => !l.StartsWith("-- ")).Select(l => l.TrimStart('\t', ' ')));

@@ -52,7 +52,7 @@ namespace Tests.xUpdate
 		{
 			using (var db = new TestDataConnection(context))
 			{
-				db.Merge(new Person[] {});
+				db.Merge(Array<Person>.Empty);
 			}
 		}
 

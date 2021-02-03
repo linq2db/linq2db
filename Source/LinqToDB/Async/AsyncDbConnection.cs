@@ -99,9 +99,9 @@ namespace LinqToDB.Async
 			return AsyncFactory.Create(Connection.BeginTransaction());
 		}
 
-		public virtual IDbTransaction BeginTransaction(IsolationLevel isolationLevel)
+		public virtual IDbTransaction BeginTransaction(IsolationLevel il)
 		{
-			return AsyncFactory.Create(Connection.BeginTransaction(isolationLevel));
+			return AsyncFactory.Create(Connection.BeginTransaction(il));
 		}
 
 		public virtual void Close()

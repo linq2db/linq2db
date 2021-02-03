@@ -1,32 +1,27 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Configuration;
 using System.Data;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-
-using NUnit.Framework;
-
 using LinqToDB;
 using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.DB2;
 using LinqToDB.DataProvider.SqlServer;
+using NUnit.Framework;
 
 namespace Tests.Data
 {
-	using Microsoft.Extensions.DependencyInjection;
-
 	using System.Collections.Generic;
-	using System.Runtime.InteropServices;
+	using System.Data.Common;
 	using System.Transactions;
 	using LinqToDB.AspNet;
 	using LinqToDB.Data.RetryPolicy;
 	using LinqToDB.Mapping;
+	using Microsoft.Extensions.DependencyInjection;
 	using Model;
-	using System.Data.Common;
 
 	[TestFixture]
 	public class DataConnectionTests : TestBase
@@ -356,7 +351,7 @@ namespace Tests.Data
 				foreach (var thread in threads) thread.Start();
 				foreach (var thread in threads) thread.Join();
 
-				if (exceptions.Count > 0)
+				if (!exceptions.IsEmpty)
 					throw new AggregateException(exceptions);
 			}
 		}
@@ -415,11 +410,11 @@ namespace Tests.Data
 					if (cn.State == ConnectionState.Closed)
 						open = true;
 				};
-				conn.OnBeforeConnectionOpenAsync += async (dc, cn, token) => await Task.Run(() =>
+				conn.OnBeforeConnectionOpenAsync += (dc, cn, token) => Task.Run(() =>
 				{
 					if (cn.State == ConnectionState.Closed)
 						openAsync = true;
-				});
+				}, default);
 				Assert.False(open);
 				Assert.False(openAsync);
 				Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
@@ -444,7 +439,7 @@ namespace Tests.Data
 						{
 							if (cn.State == ConnectionState.Closed)
 								openAsync = true;
-						});
+						}, default);
 				Assert.False(open);
 				Assert.False(openAsync);
 				await conn.SelectAsync(() => 1);

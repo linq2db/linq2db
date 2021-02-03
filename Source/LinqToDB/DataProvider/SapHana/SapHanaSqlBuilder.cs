@@ -189,7 +189,7 @@ namespace LinqToDB.DataProvider.SapHana
 			AppendIndent();
 			StringBuilder.Append("PRIMARY KEY (");
 			StringBuilder.Append(string.Join(InlineComma, fieldNames));
-			StringBuilder.Append(")");
+			StringBuilder.Append(')');
 		}
 
 		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions)
@@ -202,10 +202,10 @@ namespace LinqToDB.DataProvider.SapHana
 				throw new LinqToDBException("You must specify schema name for linked server queries.");
 
 			if (server != null)
-				sb.Append(server).Append(".");
+				sb.Append(server).Append('.');
 
 			if (schema != null)
-				sb.Append(schema).Append(".");
+				sb.Append(schema).Append('.');
 
 			return sb.Append(table);
 		}

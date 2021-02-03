@@ -31,8 +31,4 @@
 		<PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.1016.290" />
 
 	</ItemGroup>
-
-	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' ">
-		<Compile Remove="ServiceModel\**\*.cs;" />
-	</ItemGroup>
 </Project>

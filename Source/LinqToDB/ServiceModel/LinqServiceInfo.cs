@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NETFRAMEWORK
+using System;
 
 namespace LinqToDB.ServiceModel
 {
@@ -13,3 +14,4 @@ namespace LinqToDB.ServiceModel
 		public TableOptions     SupportedTableOptions { get; set; }
 	}
 }
+#endif

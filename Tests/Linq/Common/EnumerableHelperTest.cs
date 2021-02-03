@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using LinqToDB.Async;
 using LinqToDB.Common;
 
 using NUnit.Framework;
+
+#if !NET472
+using System.Threading.Tasks;
+using LinqToDB.Async;
+#endif
 
 namespace Tests.Common
 {

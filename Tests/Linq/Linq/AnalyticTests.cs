@@ -1,7 +1,4 @@
-﻿using System;
-using System.Diagnostics;
-using LinqToDB.Data;
-using Tests.Model;
+﻿using Tests.Model;
 
 namespace Tests.Linq
 {

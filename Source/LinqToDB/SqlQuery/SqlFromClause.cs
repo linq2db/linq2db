@@ -93,7 +93,7 @@ namespace LinqToDB.SqlQuery
 					if (alias == null || ts.Alias == alias)
 						return ts;
 					else
-						throw new ArgumentException("alias");
+						throw new ArgumentException($"Invalid alias: '{ts.Alias}' != '{alias}'");
 
 			return null;
 		}

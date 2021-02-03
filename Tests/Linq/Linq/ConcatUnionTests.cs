@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
 
 using LinqToDB;
@@ -10,7 +9,6 @@ using NUnit.Framework;
 namespace Tests.Linq
 {
 	using Model;
-	using Tools;
 
 
 	[TestFixture]

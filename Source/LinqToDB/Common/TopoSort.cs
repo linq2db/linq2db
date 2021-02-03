@@ -198,6 +198,6 @@ namespace LinqToDB.Common
 		}
 
 		private static ArgumentException CycleException(string argName) =>
-			new ArgumentException(argName, "Cycle detected.");
+			new ArgumentException("Cycle detected.", argName);
 		#endregion
 	}}

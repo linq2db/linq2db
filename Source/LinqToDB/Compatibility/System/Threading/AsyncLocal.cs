@@ -1,4 +1,5 @@
-﻿#region Copyright Simple Injector Contributors
+﻿#if NET45
+#region Copyright Simple Injector Contributors
 /* The Simple Injector is an easy-to-use Inversion of Control library for .NET
  * 
  * Copyright (c) 2016 Simple Injector Contributors
@@ -63,3 +64,4 @@ namespace System.Threading
 		}
 	}
 }
+#endif

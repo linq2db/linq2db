@@ -49,7 +49,7 @@ namespace LinqToDB.Common
 		/// <returns>Default value for specific type.</returns>
 		public static object? GetValue(Type type, MappingSchema? mappingSchema = null)
 		{
-			if (type == null) throw new ArgumentNullException("type");
+			if (type == null) throw new ArgumentNullException(nameof(type));
 
 			var ms = mappingSchema ?? MappingSchema.Default;
 

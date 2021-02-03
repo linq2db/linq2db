@@ -6,6 +6,7 @@ using System.Reflection;
 namespace LinqToDB
 {
 	using Extensions;
+	using LinqToDB.Common;
 	using SqlQuery;
 
 	partial class Sql
@@ -61,7 +62,7 @@ namespace LinqToDB
 			{
 				return new SqlExpression(member.GetMemberType(), Name ?? member.Name, SqlQuery.Precedence.Primary)
 				{
-					CanBeNull = GetCanBeNull(new ISqlExpression[0])
+					CanBeNull = GetCanBeNull(Array<ISqlExpression>.Empty)
 				};
 			}
 		}

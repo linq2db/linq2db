@@ -5,7 +5,6 @@ using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
-using NpgsqlTypes;
 using NUnit.Framework;
 
 namespace Tests.Linq

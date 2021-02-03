@@ -8,8 +8,6 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using Tools;
-
 	[TestFixture]
 	public class ExpandTests : TestBase
 	{

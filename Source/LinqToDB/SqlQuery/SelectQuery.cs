@@ -362,7 +362,7 @@ namespace LinqToDB.SqlQuery
 			dic.Add(this, this);
 
 			sb
-				.Append("(")
+				.Append('(')
 				.Append(SourceID)
 				.Append(") ");
 

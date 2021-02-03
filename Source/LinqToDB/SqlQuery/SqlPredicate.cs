@@ -84,7 +84,7 @@ namespace LinqToDB.SqlQuery
 			{
 				if (IsNot) sb.Append("NOT (");
 				base.ToString(sb, dic);
-				if (IsNot) sb.Append(")");
+				if (IsNot) sb.Append(')');
 			}
 		}
 
@@ -168,7 +168,7 @@ namespace LinqToDB.SqlQuery
 					Operator.NotLess        => "!<",
 					_                       => throw new InvalidOperationException(),
 				};
-				sb.Append(" ").Append(op).Append(" ");
+				sb.Append(' ').Append(op).Append(' ');
 
 				Expr2.ToString(sb, dic);
 			}
@@ -503,7 +503,7 @@ namespace LinqToDB.SqlQuery
 						sb.Append(" CONTAINS ");
 						break;
 					default:
-						throw new ArgumentOutOfRangeException();
+						throw new InvalidOperationException($"Unexpected search kind: {Kind}");
 				}
 
 				Expr2.ToString(sb, dic);
@@ -710,7 +710,7 @@ namespace LinqToDB.SqlQuery
 				sb.Append(" IN (");
 
 				((IQueryElement)SubQuery).ToString(sb, dic);
-				sb.Append(")");
+				sb.Append(')');
 			}
 		}
 
@@ -736,11 +736,11 @@ namespace LinqToDB.SqlQuery
 
 			public   List<ISqlExpression>  Values { get; } = new List<ISqlExpression>();
 
-			protected override void Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> action)
+			protected override void Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 			{
-				base.Walk(options, action);
+				base.Walk(options, func);
 				for (var i = 0; i < Values.Count; i++)
-					Values[i] = Values[i].Walk(options, action)!;
+					Values[i] = Values[i].Walk(options, func)!;
 			}
 
 			public override IQueryElement Invert()
@@ -783,7 +783,7 @@ namespace LinqToDB.SqlQuery
 				if (Values.Count > 0)
 					sb.Length--;
 
-				sb.Append(")");
+				sb.Append(')');
 			}
 		}
 
@@ -852,7 +852,7 @@ namespace LinqToDB.SqlQuery
 
 		public    abstract bool              CanBeNull  { get; }
 		protected abstract ICloneableElement Clone    (Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone);
-		protected abstract void              Walk     (WalkOptions options, Func<ISqlExpression,ISqlExpression> action);
+		protected abstract void              Walk     (WalkOptions options, Func<ISqlExpression,ISqlExpression> func);
 
 		ISqlExpression? ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{

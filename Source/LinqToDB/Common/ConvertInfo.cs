@@ -30,7 +30,7 @@ namespace LinqToDB.Common
 			public Delegate?        Delegate;
 			public bool             IsSchemaSpecific;
 
-			private Func<object?, DataParameter>? _convertValueToParameter = null;
+			private Func<object?, DataParameter>? _convertValueToParameter;
 			public  Func<object?, DataParameter>   ConvertValueToParameter
 			{
 				get

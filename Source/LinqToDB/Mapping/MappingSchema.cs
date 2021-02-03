@@ -1450,7 +1450,7 @@ namespace LinqToDB.Mapping
 		/// <returns>Mapping values for enum type and <c>null</c> for non-enum types.</returns>
 		public virtual MapValue[]? GetMapValues(Type type)
 		{
-			if (type == null) throw new ArgumentNullException("type");
+			if (type == null) throw new ArgumentNullException(nameof(type));
 
 			if (_mapValues == null)
 				_mapValues = new ConcurrentDictionary<Type,MapValue[]?>();

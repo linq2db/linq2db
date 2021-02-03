@@ -78,7 +78,7 @@ namespace LinqToDB.SqlQuery
 
 			foreach (var e in Items)
 			{
-				sb.Append("\t");
+				sb.Append('\t');
 				((IQueryElement)e).ToString(sb, dic);
 				sb.AppendLine();
 			}

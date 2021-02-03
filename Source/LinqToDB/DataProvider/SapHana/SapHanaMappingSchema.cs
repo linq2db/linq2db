@@ -31,7 +31,7 @@ namespace LinqToDB.DataProvider.SapHana
 			stringBuilder
 				.Append("char(")
 				.Append(value)
-				.Append(")")
+				.Append(')')
 				;
 		}
 
@@ -41,7 +41,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
 
-			stringBuilder.Append("'");
+			stringBuilder.Append('\'');
 		}
 
 		internal static void ConvertStringToSql(StringBuilder stringBuilder, string value)
