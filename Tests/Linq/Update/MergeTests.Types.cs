@@ -2,6 +2,7 @@
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -191,7 +192,7 @@ namespace Tests.xUpdate
 				FieldDouble     = double.MinValue,
 				FieldDateTime   = new DateTime(2000, 11, 12, 21, 14, 15, 167),
 				FieldDateTime2  = new DateTimeOffset(2000, 11, 22, 13, 14, 15, 1, TimeSpan.FromMinutes(15)).AddTicks(1234567),
-				FieldBinary     = new byte[0],
+				FieldBinary     = Array<byte>.Empty,
 				FieldGuid       = Guid.Empty,
 				FieldDecimal    = 12345678.9012345678M,
 				FieldDate       = new DateTime(2000, 11, 23),

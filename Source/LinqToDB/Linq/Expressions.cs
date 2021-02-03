@@ -460,7 +460,9 @@ namespace LinqToDB.Linq
 		class GetValueOrDefaultExpressionInfo<T1> : IExpressionInfo, ISetInfo
 			where T1 : struct
 		{
-			static T1? _member = null;
+#pragma warning disable CS0649 // Field is never assigned to...
+			static T1? _member;
+#pragma warning restore CS0649 // Field is never assigned to...
 
 			public LambdaExpression GetExpression(MappingSchema mappingSchema)
 			{

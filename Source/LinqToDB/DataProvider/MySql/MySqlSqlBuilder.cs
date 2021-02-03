@@ -6,10 +6,10 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.MySql
 {
-	using SqlQuery;
-	using SqlProvider;
-	using Mapping;
 	using Extensions;
+	using Mapping;
+	using SqlProvider;
+	using SqlQuery;
 	using Tools;
 
 	class MySqlSqlBuilder : BasicSqlBuilder
@@ -489,7 +489,7 @@ namespace LinqToDB.DataProvider.MySql
 			AppendIndent();
 			StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY CLUSTERED (");
 			StringBuilder.Append(string.Join(InlineComma, fieldNames));
-			StringBuilder.Append(")");
+			StringBuilder.Append(')');
 		}
 
 		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions)
@@ -497,7 +497,7 @@ namespace LinqToDB.DataProvider.MySql
 			if (database != null && database.Length == 0) database = null;
 
 			if (database != null)
-				sb.Append(database).Append(".");
+				sb.Append(database).Append('.');
 
 			return sb.Append(table);
 		}
@@ -571,7 +571,7 @@ namespace LinqToDB.DataProvider.MySql
 					StringBuilder.Append("WITH CUBE");
 					break;
 				default:
-					throw new ArgumentOutOfRangeException();
+					throw new InvalidOperationException($"Unexpected grouping type: {groupingType}");
 			}
 		}
 

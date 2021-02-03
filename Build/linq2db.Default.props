@@ -5,7 +5,7 @@
 		<Description>LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.</Description>
 		<Authors>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</Authors>
 		<Company>linq2db.net</Company>
-		<Copyright>2002-2020 linq2db.net</Copyright>
+		<Copyright>2002-2021 linq2db.net</Copyright>
 		<RepositoryUrl>https://github.com/linq2db/linq2db</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
 
@@ -16,7 +16,6 @@
 		<WarningLevel>4</WarningLevel>
 		<ErrorReport>prompt</ErrorReport>
 		<NoWarn>1591</NoWarn>
-		<AnalysisLevel>preview</AnalysisLevel>
 
 		<AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
@@ -31,6 +30,12 @@
 		<GenerateAssemblyVersionAttribute>true</GenerateAssemblyVersionAttribute>
 		<GenerateAssemblyFileVersionAttribute>true</GenerateAssemblyFileVersionAttribute>
 		<GenerateNeutralResourcesLanguageAttribute>false</GenerateNeutralResourcesLanguageAttribute>
+	</PropertyGroup>
+	
+	<PropertyGroup>
+		<AnalysisLevel>preview</AnalysisLevel>
+		<EnableNETAnalyzers>true</EnableNETAnalyzers>
+		<RunAnalyzers>true</RunAnalyzers>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.1' OR '$(TargetFramework)' == 'netcoreapp3.1' OR '$(TargetFramework)' == 'net5.0'">

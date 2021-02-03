@@ -8,9 +8,9 @@ using JetBrains.Annotations;
 
 namespace LinqToDB
 {
+	using System.Threading;
 	using Async;
 	using Linq;
-	using System.Threading;
 
 	public partial class LinqExtensions
 	{

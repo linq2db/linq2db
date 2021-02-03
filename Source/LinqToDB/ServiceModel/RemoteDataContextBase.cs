@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NETFRAMEWORK
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
@@ -344,3 +345,4 @@ namespace LinqToDB.ServiceModel
 		}
 	}
 }
+#endif

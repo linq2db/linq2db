@@ -8,6 +8,7 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using LinqToDB.Common;
 	using Model;
 
 	public static class EnumerableExtensions
@@ -2670,9 +2671,7 @@ namespace Tests.Linq
 			[Association(ThisKey = "InIdMain", OtherKey = "InId", CanBeNull = false, Relationship = Relationship.ManyToOne)]
 			public StMain Main { get; set; } = null!;
 
-			public static StVersion[] Data = new StVersion[]
-			{
-			};
+			public static StVersion[] Data = Array<StVersion>.Empty;
 		}
 
 		[Table("rlStatesTypesAndUserGroups")]
@@ -2681,9 +2680,7 @@ namespace Tests.Linq
 			[Column("inIdState"), PrimaryKey(1)] public int InIdState { get; set; }
 			[Column("inIdType"),  PrimaryKey(2)] public int InIdType { get; set; }
 
-			public static RlStatesTypesAndUserGroup[] Data = new RlStatesTypesAndUserGroup[]
-			{
-			};
+			public static RlStatesTypesAndUserGroup[] Data = Array<RlStatesTypesAndUserGroup>.Empty;
 		}
 
 		[Table("stMain")]
@@ -2692,9 +2689,7 @@ namespace Tests.Linq
 			[Column("inId"), PrimaryKey]  public int InId { get; set; }
 			[Column("inIdType")]          public int InIdType { get; set; }
 
-			public static StMain[] Data = new StMain[]
-			{
-			};
+			public static StMain[] Data = Array<StMain>.Empty;
 		}
 
 		[Test]

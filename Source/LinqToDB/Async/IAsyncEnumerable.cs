@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿#if NETFRAMEWORK
+using System.Threading;
 
 namespace LinqToDB.Async
 {
@@ -27,3 +28,4 @@ namespace LinqToDB.Async
 		IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default);
 	}
 }
+#endif

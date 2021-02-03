@@ -31,7 +31,7 @@ namespace Tests.Linq
 					Sql.DateParts.Minute        => "minute",
 					Sql.DateParts.Second        => "second",
 					Sql.DateParts.Millisecond   => "millisecond",
-					_ => throw new ArgumentOutOfRangeException(),
+					_ => throw new InvalidOperationException($"Unexpected datepart: {part}"),
 				};
 				builder.AddExpression("part", partStr);
 			}
@@ -62,7 +62,7 @@ namespace Tests.Linq
 					case Sql.DateParts.Second      : partStr = "second";      break;
 					case Sql.DateParts.Millisecond : partStr = "millisecond"; break;
 					default:
-						throw new ArgumentOutOfRangeException();
+						throw new InvalidOperationException($"Unexpected datepart: {part}");
 				}
 
 				if (partStr != null)
@@ -95,7 +95,7 @@ namespace Tests.Linq
 						builder.Expression = "Cast(To_Char({date}, 'MS') as int)";
 						break;
 					default:
-						throw new ArgumentOutOfRangeException(nameof(part), part, null);
+						throw new InvalidOperationException($"Unexpected datepart: {part}");
 				}
 
 				if (partStr != null)
@@ -132,7 +132,7 @@ namespace Tests.Linq
 						builder.Extension.Precedence = Precedence.Multiplicative;
 						break;
 					default:
-						throw new ArgumentOutOfRangeException(nameof(part), part, null);
+						throw new InvalidOperationException($"Unexpected datepart: {part}");
 				}
 
 				if (partStr != null)
@@ -157,7 +157,7 @@ namespace Tests.Linq
 					Sql.DateParts.Hour      => "h",
 					Sql.DateParts.Minute    => "n",
 					Sql.DateParts.Second    => "s",
-					_ => throw new ArgumentOutOfRangeException(),
+					_ => throw new InvalidOperationException($"Unexpected datepart: {part}"),
 				};
 				builder.AddExpression("part", partStr);
 			}
@@ -181,7 +181,7 @@ namespace Tests.Linq
 					Sql.DateParts.Hour      => "Hour({date})",
 					Sql.DateParts.Minute    => "Minute({date})",
 					Sql.DateParts.Second    => "Second({date})",
-					_ => throw new ArgumentOutOfRangeException(),
+					_ => throw new InvalidOperationException($"Unexpected datepart: {part}"),
 				};
 				builder.Expression = partStr;
 			}
@@ -205,7 +205,7 @@ namespace Tests.Linq
 					Sql.DateParts.Minute        => "({date}::datetime Minute to Minute)::char(3)::int",
 					Sql.DateParts.Second        => "({date}::datetime Second to Second)::char(3)::int",
 					Sql.DateParts.Millisecond   => "Millisecond({date})",
-					_ => throw new ArgumentOutOfRangeException(),
+					_ => throw new InvalidOperationException($"Unexpected datepart: {part}"),
 				};
 				builder.Expression = partStr;
 			}
@@ -229,7 +229,7 @@ namespace Tests.Linq
 					Sql.DateParts.Minute        => "To_Number(To_Char({date}, 'MI'))",
 					Sql.DateParts.Second        => "To_Number(To_Char({date}, 'SS'))",
 					Sql.DateParts.Millisecond   => "To_Number(To_Char({date}, 'FF'))",
-					_ => throw new ArgumentOutOfRangeException(),
+					_ => throw new InvalidOperationException($"Unexpected datepart: {part}"),
 				};
 				builder.Expression = partStr;
 			}
@@ -253,7 +253,7 @@ namespace Tests.Linq
 					Sql.DateParts.Minute        => "To_Number(To_Char({date}, 'MI'))",
 					Sql.DateParts.Second        => "To_Number(To_Char({date}, 'SS'))",
 					Sql.DateParts.Millisecond   => "To_Number(To_Char({date}, 'FF')) / 1000",
-					_ => throw new ArgumentOutOfRangeException(),
+					_ => throw new InvalidOperationException($"Unexpected datepart: {part}"),
 				};
 				builder.Expression = partStr;
 			}
@@ -282,7 +282,7 @@ namespace Tests.Linq
 					case Sql.DateParts.Second      : partStr = "second";      break;
 					case Sql.DateParts.Millisecond : partStr = "millisecond"; break;
 					default:
-						throw new ArgumentOutOfRangeException();
+						throw new InvalidOperationException($"Unexpected datepart: {part}");
 				}
 
 				builder.AddExpression("part", partStr);

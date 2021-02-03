@@ -142,6 +142,7 @@ namespace LinqToDB.SqlProvider
 				^ MaxInListValuesCount                         .GetHashCode()
 				^ IsUpdateSetTableAliasSupported               .GetHashCode()
 				^ (TakeHintsSupported?                         .GetHashCode() ?? 0)
+				^ IsGroupByColumnRequred                       .GetHashCode()
 				^ IsCrossJoinSupported                         .GetHashCode()
 				^ IsInnerJoinAsCrossSupported                  .GetHashCode()
 				^ IsCommonTableExpressionsSupported            .GetHashCode()
@@ -151,6 +152,7 @@ namespace LinqToDB.SqlProvider
 				^ IsDistinctSetOperationsSupported             .GetHashCode()
 				^ IsCountDistinctSupported                     .GetHashCode()
 				^ IsUpdateFromSupported                        .GetHashCode()
+				^ DefaultMultiQueryIsolationLevel              .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => flag.GetHashCode() ^ hash);
 	}
 
@@ -176,6 +178,7 @@ namespace LinqToDB.SqlProvider
 				&& MaxInListValuesCount                 == other.MaxInListValuesCount
 				&& IsUpdateSetTableAliasSupported       == other.IsUpdateSetTableAliasSupported
 				&& TakeHintsSupported                   == other.TakeHintsSupported
+				&& IsGroupByColumnRequred               == other.IsGroupByColumnRequred
 				&& IsCrossJoinSupported                 == other.IsCrossJoinSupported
 				&& IsInnerJoinAsCrossSupported          == other.IsInnerJoinAsCrossSupported
 				&& IsCommonTableExpressionsSupported    == other.IsCommonTableExpressionsSupported
@@ -185,6 +188,7 @@ namespace LinqToDB.SqlProvider
 				&& IsDistinctSetOperationsSupported     == other.IsDistinctSetOperationsSupported
 				&& IsCountDistinctSupported             == other.IsCountDistinctSupported
 				&& IsUpdateFromSupported                == other.IsUpdateFromSupported
+				&& DefaultMultiQueryIsolationLevel      == other.DefaultMultiQueryIsolationLevel
 				// CustomFlags as List wasn't best idea
 				&& CustomFlags.Count                    == other.CustomFlags.Count
 				&& (CustomFlags.Count                   == 0

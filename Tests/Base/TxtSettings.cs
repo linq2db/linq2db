@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-
+using LinqToDB.Common;
 using LinqToDB.Configuration;
 
 namespace Tests
@@ -11,7 +11,7 @@ namespace Tests
 			public string                  TypeName   { get; set; } = null!;
 			public string?                 Name       { get; set; }
 			public bool                    Default    { get; set; }
-			public IEnumerable<NamedValue> Attributes => new NamedValue[0];
+			public IEnumerable<NamedValue> Attributes => Array<NamedValue>.Empty;
 		}
 
 		class ConnectionStringSettings : IConnectionStringSettings

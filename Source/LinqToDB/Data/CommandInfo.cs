@@ -254,9 +254,16 @@ namespace LinqToDB.Data
 				SetParameters(DataConnection, Parameters!);
 
 			using (DataConnection.DataProvider.ExecuteScope(DataConnection))
+			{
+#if NETSTANDARD2_1PLUS
+				var rd = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await using (rd.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+#else
 			using (var rd = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+#endif
 				while (await rd.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 					action(objectReader(rd));
+		}
 		}
 
 		#endregion
@@ -425,7 +432,13 @@ namespace LinqToDB.Data
 				SetParameters(DataConnection, Parameters!);
 
 			using (DataConnection.DataProvider.ExecuteScope(DataConnection))
+			{
+#if NETSTANDARD2_1PLUS
+				var rd = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await using (rd.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+#else
 			using (var rd = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+#endif
 			{
 				if (await rd.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 				{
@@ -456,6 +469,7 @@ namespace LinqToDB.Data
 					} while (await rd.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext));
 				}
 			}
+		}
 		}
 
 		#endregion
@@ -584,9 +598,16 @@ namespace LinqToDB.Data
 			T result;
 
 			using (DataConnection.DataProvider.ExecuteScope(DataConnection))
+			{
+#if NETSTANDARD2_1PLUS
+				var rd = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await using (rd.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+#else
 			using (var rd = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+#endif
 			{
 				result = await ReadMultipleResultSetsAsync<T>(rd, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+			}
 			}
 
 			if (hasParameters)
@@ -1018,7 +1039,13 @@ namespace LinqToDB.Data
 			T result = default!;
 
 			using (DataConnection.DataProvider.ExecuteScope(DataConnection))
+			{
+#if NETSTANDARD2_1PLUS
+				var rd = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await using (rd.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+#else
 			using (var rd = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+#endif
 			{
 				if (await rd.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 				{
@@ -1032,6 +1059,7 @@ namespace LinqToDB.Data
 						result = GetObjectReader2<T>(DataConnection, rd, CommandText, additionalKey)(rd);
 					}
 				}
+			}
 			}
 
 			if (hasParameters)
@@ -1447,7 +1475,7 @@ namespace LinqToDB.Data
 				_configID      = configID;
 				_sql           = sql;
 				_additionalKey = additionalKey;
-				IsScalar = isScalar;
+				IsScalar       = isScalar;
 
 				unchecked
 				{
@@ -1475,7 +1503,7 @@ namespace LinqToDB.Data
 			readonly int     _configID;
 			readonly string  _sql;
 			readonly string? _additionalKey;
-			
+
 			public readonly bool IsScalar;
 
 
@@ -1538,16 +1566,16 @@ namespace LinqToDB.Data
 			var key = new QueryKey(typeof(T), dataReader.GetType(), dataConnection.ID, sql, additionalKey, dataReader.FieldCount <= 1);
 
 			var func = _objectReaders.GetOrCreate(key, e =>
-			{
+		{
 				e.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
 
 				if (!((QueryKey)e.Key).IsScalar && IsDynamicType(typeof(T)))
-				{
+			{
 					// dynamic case
 					//
 					return CreateDynamicObjectReader<T>(dataConnection, dataReader, (dc, dr, type, idx, dataReaderExpr) =>
-						new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr).Reduce(dc, dr));
-				}
+					new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr).Reduce(dc, dr));
+			}
 
 				return CreateObjectReader<T>(dataConnection, dataReader, (dc, dr, type, idx, dataReaderExpr) =>
 					new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr).Reduce(dc, dr));
@@ -1572,12 +1600,12 @@ namespace LinqToDB.Data
 			else
 			{
 				func = CreateObjectReader<T>(dataConnection, dataReader, (dc, dr, type, idx, dataReaderExpr) =>
-					new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr).Reduce(dc, slowMode: true));
+				new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr).Reduce(dc, slowMode: true));
 			}
 
 			_objectReaders.Set(key, func,
 				new MemoryCacheEntryOptions {SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration});
-			
+
 			return (Func<IDataReader, T>)func;
 		}
 

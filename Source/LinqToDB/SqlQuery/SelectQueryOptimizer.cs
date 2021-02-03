@@ -1035,7 +1035,7 @@ namespace LinqToDB.SqlQuery
 				.Select(k => k.Select(e => map.TryGetValue(e, out var nw) ? nw : e).ToArray())
 				.ToList();
 
-			var top = _rootElement ?? (IQueryElement)_selectQuery.RootQuery();
+			var top = _rootElement ?? _selectQuery.RootQuery();
 
 			((ISqlExpressionWalkable)top).Walk(
 				new WalkOptions(), expr => map.TryGetValue(expr, out var fld) ? fld : expr);

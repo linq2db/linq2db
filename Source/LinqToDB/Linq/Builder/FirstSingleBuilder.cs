@@ -196,7 +196,7 @@ namespace LinqToDB.Linq.Builder
 
 			static object SequenceException()
 			{
-				return new object[0].First();
+				return Array<object>.Empty.First();
 			}
 
 			bool _isJoinCreated;

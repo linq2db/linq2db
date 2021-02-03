@@ -457,7 +457,7 @@ namespace LinqToDB.Expressions
 				{
 					while (enum1.MoveNext())
 					{
-						if (!enum2.MoveNext() || !object.Equals(enum1.Current, enum2.Current))
+						if (!enum2.MoveNext() || !Equals(enum1.Current, enum2.Current))
 							return false;
 					}
 
@@ -535,8 +535,8 @@ namespace LinqToDB.Expressions
 					{
 						var enum1 = dependentAttribute.SplitExpression(expr1.Arguments[i]).GetEnumerator();
 						var enum2 = dependentAttribute.SplitExpression(expr2.Arguments[i]).GetEnumerator();
-						using (enum1 as IDisposable)
-						using (enum2 as IDisposable)
+						using (enum1)
+						using (enum2)
 						{
 							while (enum1.MoveNext())
 							{

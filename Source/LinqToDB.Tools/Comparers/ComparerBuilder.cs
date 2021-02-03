@@ -98,10 +98,10 @@ namespace LinqToDB.Tools.Comparers
 
 
 		/// <summary>
-		/// Returns implementations of the <see cref="T:System.Collections.Generic.IEqualityComparer`1" /> generic interface
+		/// Returns implementations of the <see cref="IEqualityComparer{T}" /> generic interface
 		/// based on object public members equality.
 		/// </summary>
-		/// <returns>Instance of <see cref="T:System.Collections.Generic.IEqualityComparer`1" />.</returns>
+		/// <returns>Instance of <see cref="IEqualityComparer{T}" />.</returns>
 		/// <typeparam name="T">The type of objects to compare.</typeparam>
 		[Pure]
 		public static IEqualityComparer<T> GetEqualityComparer<T>()
@@ -117,11 +117,11 @@ namespace LinqToDB.Tools.Comparers
 		}
 
 		/// <summary>
-		/// Returns implementations of the <see cref="T:System.Collections.Generic.IEqualityComparer`1" /> generic interface
+		/// Returns implementations of the <see cref="IEqualityComparer{T}" /> generic interface
 		/// based on provided object public members equality.
 		/// </summary>
 		/// <param name="membersToCompare">Members to compare.</param>
-		/// <returns>Instance of <see cref="T:System.Collections.Generic.IEqualityComparer`1" />.</returns>
+		/// <returns>Instance of <see cref="IEqualityComparer{T}" />.</returns>
 		/// <typeparam name="T">The type of objects to compare.</typeparam>
 		[Pure]
 		public static IEqualityComparer<T> GetEqualityComparer<T>(params Expression<Func<T,object?>>[] membersToCompare)
@@ -131,21 +131,21 @@ namespace LinqToDB.Tools.Comparers
 		}
 
 		/// <summary>
-		/// Returns implementations of the <see cref="T:System.Collections.Generic.IEqualityComparer`1" /> generic interface
+		/// Returns implementations of the <see cref="IEqualityComparer{T}" /> generic interface
 		/// based on object public members equality.
 		/// </summary>
-		/// <returns>Instance of <see cref="T:System.Collections.Generic.IEqualityComparer`1" />.</returns>
+		/// <returns>Instance of <see cref="IEqualityComparer{T}" />.</returns>
 		/// <typeparam name="T">The type of objects to compare.</typeparam>
 		[Pure]
 		public static IEqualityComparer<T> GetEqualityComparer<T>(IEnumerable<T> ignored) =>
 			GetEqualityComparer<T>();
 
 		/// <summary>
-		/// Returns implementations of the <see cref="T:System.Collections.Generic.IEqualityComparer`1" /> generic interface
+		/// Returns implementations of the <see cref="IEqualityComparer{T}" /> generic interface
 		/// based on provided object public members equality.
 		/// </summary>
 		/// <param name="membersToCompare">A function that returns members to compare.</param>
-		/// <returns>Instance of <see cref="T:System.Collections.Generic.IEqualityComparer`1" />.</returns>
+		/// <returns>Instance of <see cref="IEqualityComparer{T}" />.</returns>
 		/// <typeparam name="T">The type of objects to compare.</typeparam>
 		[Pure]
 		public static IEqualityComparer<T> GetEqualityComparer<T>(
@@ -158,11 +158,11 @@ namespace LinqToDB.Tools.Comparers
 		}
 
 		/// <summary>
-		/// Returns implementations of the <see cref="T:System.Collections.Generic.IEqualityComparer`1" /> generic interface
+		/// Returns implementations of the <see cref="IEqualityComparer{T}" /> generic interface
 		/// based on provided object public members equality.
 		/// </summary>
 		/// <param name="memberPredicate">A function to filter members to compare.</param>
-		/// <returns>Instance of <see cref="T:System.Collections.Generic.IEqualityComparer`1" />.</returns>
+		/// <returns>Instance of <see cref="IEqualityComparer{T}" />.</returns>
 		/// <typeparam name="T">The type of objects to compare.</typeparam>
 		[Pure]
 		public static IEqualityComparer<T> GetEqualityComparer<T>(

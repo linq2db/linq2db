@@ -43,35 +43,35 @@ namespace Tests.UserTests
 
 				Assert.AreEqual(2, table.Where(r => r.Value!.Contains("-")).Select(r => r.Id).Single());
 
-				Assert.AreEqual(1, table.Where(r => r.Value!.Contains("[]")).ToList().Count());
+				Assert.AreEqual(1, table.Where(r => r.Value!.Contains("[]")).ToList().Count);
 
-				Assert.AreEqual(2, table.Where(r => r.Value!.Contains("[0")).ToList().Count());
+				Assert.AreEqual(2, table.Where(r => r.Value!.Contains("[0")).ToList().Count);
 				
-				Assert.AreEqual(2, table.Where(r => r.Value!.Contains(asParamUnterm)).ToList().Count());
+				Assert.AreEqual(2, table.Where(r => r.Value!.Contains(asParamUnterm)).ToList().Count);
 
-				Assert.AreEqual(1, table.Where(r => r.Value!.Contains("[0-9]")).ToList().Count());
+				Assert.AreEqual(1, table.Where(r => r.Value!.Contains("[0-9]")).ToList().Count);
 
-				Assert.AreEqual(1, table.Where(r => r.Value!.Contains("6")).ToList().Count());
+				Assert.AreEqual(1, table.Where(r => r.Value!.Contains("6")).ToList().Count);
 
 				if (context == ProviderName.Access)
 				{
-					Assert.Throws<OleDbException>(() => table.Where(r => Sql.Like(r.Value, "[0")).ToList().Count());
-					Assert.Throws<OleDbException>(() => table.Where(r => Sql.Like(r.Value, asParamUnterm)).ToList().Count());
+					Assert.Throws<OleDbException>(() => table.Where(r => Sql.Like(r.Value, "[0")).ToList());
+					Assert.Throws<OleDbException>(() => table.Where(r => Sql.Like(r.Value, asParamUnterm)).ToList());
 				}
 				else if (context == ProviderName.AccessOdbc)
 				{
-					Assert.Throws<OdbcException>(() => table.Where(r => Sql.Like(r.Value, "[0")).ToList().Count());
-					Assert.Throws<OdbcException>(() => table.Where(r => Sql.Like(r.Value, asParamUnterm)).ToList().Count());
+					Assert.Throws<OdbcException>(() => table.Where(r => Sql.Like(r.Value, "[0")).ToList());
+					Assert.Throws<OdbcException>(() => table.Where(r => Sql.Like(r.Value, asParamUnterm)).ToList());
 				}
 				else
 				{
-					table.Where(r => Sql.Like(r.Value, "[0")).ToList().Count();
-					table.Where(r => Sql.Like(r.Value, asParamUnterm)).ToList().Count();
+					table.Where(r => Sql.Like(r.Value, "[0")).ToList();
+					table.Where(r => Sql.Like(r.Value, asParamUnterm)).ToList();
 				}
 
-				Assert.AreEqual(1, table.Where(r => Sql.Like(r.Value, "[0-9]")).ToList().Count());
+				Assert.AreEqual(1, table.Where(r => Sql.Like(r.Value, "[0-9]")).ToList().Count);
 
-				Assert.AreEqual(1, table.Where(r => Sql.Like(r.Value, asParam)).ToList().Count());
+				Assert.AreEqual(1, table.Where(r => Sql.Like(r.Value, asParam)).ToList().Count);
 
 			}
 		}

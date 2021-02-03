@@ -72,7 +72,7 @@
 			{
 				StringBuilder
 					.AppendLine("WHERE")
-					.Append("\t");
+					.Append('\t');
 
 				BuildSearchCondition(Precedence.Unknown, operation.Where, wrapCondition: true);
 			}
@@ -85,7 +85,7 @@
 			StringBuilder
 				.AppendLine()
 				.AppendLine("DELETE WHERE")
-				.Append("\t");
+				.Append('\t');
 
 			BuildSearchCondition(Precedence.Unknown, operation.WhereDelete!, wrapCondition: true);
 		}

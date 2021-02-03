@@ -8,6 +8,7 @@ using System.Xml;
 namespace LinqToDB.Common
 {
 	using System.Collections;
+	using System.IO;
 	using Expressions;
 	using JetBrains.Annotations;
 	using Mapping;
@@ -22,8 +23,10 @@ namespace LinqToDB.Common
 
 		static XmlDocument CreateXmlDocument(string str)
 		{
-			var xml = new XmlDocument();
-			xml.LoadXml(str);
+			var xml = new XmlDocument() { XmlResolver = null };
+
+			xml.Load(XmlReader.Create(new StringReader(str), new XmlReaderSettings() { XmlResolver = null }));
+
 			return xml;
 		}
 

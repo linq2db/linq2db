@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NETFRAMEWORK
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.ServiceModel;
@@ -62,7 +63,7 @@ namespace LinqToDB.ServiceModel
 		{
 		}
 
-		#region ILinqService Members
+#region ILinqService Members
 
 		[WebMethod]
 		public virtual LinqServiceInfo GetInfo(string? configuration)
@@ -289,6 +290,7 @@ namespace LinqToDB.ServiceModel
 			}
 		}
 
-		#endregion
+#endregion
 	}
 }
+#endif

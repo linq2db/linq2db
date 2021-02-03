@@ -95,7 +95,7 @@ namespace LinqToDB.SqlQuery
 
 			if (!objectTree.TryGetValue(this, out var clone))
 			{
-				var table = new SqlCteTable(this, Array<SqlField>.Empty, Cte == null ? throw new ArgumentException() : (CteClause)Cte.Clone(objectTree, doClone))
+				var table = new SqlCteTable(this, Array<SqlField>.Empty, Cte == null ? throw new InvalidOperationException("Cte is null") : (CteClause)Cte.Clone(objectTree, doClone))
 				{
 					Name               = base.Name,
 					Alias              = Alias,

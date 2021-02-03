@@ -3459,7 +3459,7 @@ namespace LinqToDB.Linq.Builder
 			_preambles.Add(
 				Tuple.Create< Func<IDataContext, Expression, object?[]?, object?>, Func<IDataContext, Expression, object?[]?, CancellationToken, Task<object?>>>(
 					(dc, e, ps) => func(dc, e, ps),
-					async (dc, e, ps, ct) => await funcAsync(dc, e, ps, ct)));
+					async (dc, e, ps, ct) => await funcAsync(dc, e, ps, ct).ConfigureAwait(Configuration.ContinueOnCapturedContext)));
 			return _preambles.Count - 1;
 		}
 
