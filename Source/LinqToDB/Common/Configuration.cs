@@ -9,6 +9,7 @@ namespace LinqToDB.Common
 	using System.Threading.Tasks;
 	using Data;
 	using Data.RetryPolicy;
+	using LinqToDB.Linq;
 
 	/// <summary>
 	/// Contains LINQ expression compilation options.

@@ -1263,10 +1263,10 @@ namespace Tests
 				case TestProvName.SqlServer2019SequentialAccess:
 				case TestProvName.SqlServer2019FastExpressionCompiler:
 				{
-						if (!tableName.StartsWith("#"))
-							finalTableName = "#" + tableName;
-						break;
-					}
+					if (!tableName.StartsWith("#"))
+						finalTableName = "#" + tableName;
+					break;
+				}
 				default:
 					throw new NotImplementedException();
 			}
