@@ -53,7 +53,7 @@ public class TestsInitialization
 		SQLiteMiniprofilerProvider.Init();
 
 		// uncomment to run FEC for all tests and comment reset line in TestBase.OnAfterTest
-		LinqToDB.Common.Compilation.SetExpressionCompiler(_ => ExpressionCompiler.CompileFast(_, true));
+		LinqToDB.Common.Compilation.SetExpressionCompiler(_ => FastExpressionCompiler.ExpressionCompiler.CompileFast(_, true));
 	}
 
 	private void RegisterSapHanaFactory()
