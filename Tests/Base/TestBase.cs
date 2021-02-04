@@ -472,13 +472,13 @@ namespace Tests
 			if (configuration == TestProvName.SqlServer2019SequentialAccess)
 				res.AddMappingSchema(_sequentialAccessSchema);
 			else if (configuration == TestProvName.SqlServer2019FastExpressionCompiler)
-				res.AddMappingSchema(_fecScehma);
+				res.AddMappingSchema(_fecSchema);
 
 			return res;
 		}
 
 		private static readonly MappingSchema _sequentialAccessSchema = new MappingSchema();
-		private static readonly MappingSchema _fecScehma = new MappingSchema();
+		private static readonly MappingSchema _fecSchema = new MappingSchema();
 
 		protected static char GetParameterToken(string context)
 		{

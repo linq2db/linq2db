@@ -1402,7 +1402,9 @@ namespace LinqToDB.Linq.Builder
 				.SelectMany(detailQueryLambda,
 					(main, detail) => new KeyDetailEnvelope<TKey, TD>
 					{
-						Key    = selectKeyExpression.CompileExpression()(main),
+						// don't replace with CompileExpression extension point
+						// Compile will be replaced with expression embedding
+						Key    = selectKeyExpression.Compile()(main),
 						Detail = detail
 					});
 
