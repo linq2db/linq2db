@@ -9,6 +9,7 @@ namespace LinqToDB.Mapping
 {
 	using Expressions;
 	using Extensions;
+	using LinqToDB.Common;
 	using Reflection;
 
 	/// <summary>
@@ -608,7 +609,7 @@ namespace LinqToDB.Mapping
 			var body         = Expression.Call(Methods.Queryable.Where.MakeGenericMethod(typeof(TEntity)), queryParam, filterLambda);
 			var lambda       = Expression.Lambda<Func<IQueryable<TEntity>, TDataContext, IQueryable<TEntity>>>(body, queryParam, dcParam);
 
-			return HasQueryFilter(lambda.Compile());
+			return HasQueryFilter(lambda.CompileExpression());
 		}
 
 		#region Dynamic Properties

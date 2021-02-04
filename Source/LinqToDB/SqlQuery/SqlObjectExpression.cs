@@ -49,7 +49,7 @@ namespace LinqToDB.SqlQuery
 						Expression.Convert(convExpr.GetBody(Expression.Convert(callGetter, valueType)), typeof(object)),
 						convParam);
 
-					getter = lex.Compile();
+					getter = lex.CompileExpression();
 				}
 
 				_getters.Add(index, getter);

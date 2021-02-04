@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-
+using LinqToDB.Common;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Mapper;
 
@@ -46,7 +46,7 @@ namespace Tests.Tools.Mapper
 			var mapper = new MapperBuilder<TestMap,TestMap>()
 				.SetProcessCrossReferences(false)
 				.GetMapperExpressionEx()
-				.Compile();
+				.CompileExpression();
 
 			mapper(new TestMap(), new TestMap(), null);
 		}
@@ -56,7 +56,7 @@ namespace Tests.Tools.Mapper
 		{
 			var mapper = new MapperBuilder<TestMap,TestMap>()
 				.GetMapperExpression()
-				.Compile();
+				.CompileExpression();
 
 			var value = mapper(new TestMap());
 

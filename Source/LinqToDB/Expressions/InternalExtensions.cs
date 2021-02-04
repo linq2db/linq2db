@@ -15,6 +15,7 @@ namespace LinqToDB.Expressions
 	using Linq;
 	using Linq.Builder;
 	using Mapping;
+	using LinqToDB.Common;
 
 	static class InternalExtensions
 	{
@@ -1380,7 +1381,7 @@ namespace LinqToDB.Expressions
 					}
 			}
 
-			var value = Expression.Lambda(expr).Compile().DynamicInvoke();
+			var value = Expression.Lambda(expr).CompileExpression().DynamicInvoke();
 			return value;
 		}
 

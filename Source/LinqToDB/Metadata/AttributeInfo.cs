@@ -45,7 +45,7 @@ namespace LinqToDB.Metadata
 								})),
 							typeof(Attribute)));
 
-					_func = expr.Compile();
+					_func = expr.CompileExpression();
 				}
 				else
 				{

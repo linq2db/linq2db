@@ -1446,7 +1446,7 @@ namespace LinqToDB.Data
 					),
 					p);
 
-				return expr.Compile();
+				return expr.CompileExpression();
 			});
 
 			return func(parameters);
@@ -1595,7 +1595,7 @@ namespace LinqToDB.Data
 				// dynamic case
 				//
 				func = CreateDynamicObjectReader<T>(dataConnection, dataReader, (dc, dr, type, idx, dataReaderExpr) =>
-					new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr).Reduce(dc, slowMode: true));
+				new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr).Reduce(dc, slowMode: true));
 			}
 			else
 			{
@@ -1725,7 +1725,7 @@ namespace LinqToDB.Data
 
 			var lex = Expression.Lambda<Func<IDataReader,T>>(expr, parameter);
 
-			return lex.Compile();
+			return lex.CompileExpression();
 		}
 
 
@@ -1781,7 +1781,7 @@ namespace LinqToDB.Data
 
 			var lex = Expression.Lambda<Func<IDataReader,T>>(expr, parameter);
 
-			return lex.Compile();
+			return lex.CompileExpression();
 		}
 
 

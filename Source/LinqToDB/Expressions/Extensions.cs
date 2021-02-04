@@ -7,6 +7,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Expressions
 {
+	using LinqToDB.Common;
 	using LinqToDB.Extensions;
 	using LinqToDB.Mapping;
 	using System.Diagnostics.CodeAnalysis;
@@ -35,7 +36,7 @@ namespace LinqToDB.Expressions
 						ExpressionHelper.PropertyOrField(p, "DebugView"),
 						p);
 
-					_getDebugView = l.Compile();
+					_getDebugView = l.CompileExpression();
 				}
 				catch (ArgumentException)
 				{
@@ -43,7 +44,7 @@ namespace LinqToDB.Expressions
 						Expression.Call(p, MemberHelper.MethodOf<Expression>(e => e.ToString())),
 						p);
 
-					_getDebugView = l.Compile();
+					_getDebugView = l.CompileExpression();
 				}
 			}
 

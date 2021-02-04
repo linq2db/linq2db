@@ -2,14 +2,42 @@
 
 using JetBrains.Annotations;
 
-
 namespace LinqToDB.Common
 {
-	using LinqToDB.Linq;
+	using System.Data;
+	using System.Linq.Expressions;
+	using System.Threading.Tasks;
 	using Data;
 	using Data.RetryPolicy;
-	using System.Data;
-	using System.Threading.Tasks;
+	using LinqToDB.Linq;
+
+	/// <summary>
+	/// Contains LINQ expression compilation options.
+	/// </summary>
+	public static class Compilation
+	{
+		private static Func<LambdaExpression, Delegate?>? _compiler;
+
+		/// <summary>
+		/// Sets LINQ expression compilation method.
+		/// </summary>
+		/// <param name="compiler">Method to use for expression compilation or <c>null</c> to reset compilation logic to defaults.</param>
+		public static void SetExpressionCompiler(Func<LambdaExpression, Delegate?>? compiler)
+		{
+			_compiler = compiler;
+		}
+
+		internal static TDelegate CompileExpression<TDelegate>(this Expression<TDelegate> expression)
+			where TDelegate : Delegate
+		{
+			return ((TDelegate?)_compiler?.Invoke(expression)) ?? expression.Compile();
+		}
+
+		internal static Delegate CompileExpression(this LambdaExpression expression)
+		{
+			return _compiler?.Invoke(expression) ?? expression.Compile();
+		}
+	}
 
 	/// <summary>
 	/// Contains global linq2db settings.
@@ -42,7 +70,7 @@ namespace LinqToDB.Common
 		/// queries, so this optimization could be used for <see cref="CommandBehavior.Default"/> too.
 		/// </summary>
 		public static bool OptimizeForSequentialAccess;
-
+		
 		/// <summary>
 		/// Determines the length after which logging of binary data in SQL will be truncated.
 		/// This is to avoid Out-Of-Memory exceptions when getting SqlText from <see cref="TraceInfo"/>

@@ -221,7 +221,7 @@ namespace LinqToDB.Expressions
 
 				var factory = Expression
 					.Lambda<Func<object, object>>(factoryBody, pInstance)
-					.Compile();
+					.CompileExpression();
 
 				_wrapperFactoryCache.Add(wrapperType, factory);
 			}
@@ -304,7 +304,7 @@ namespace LinqToDB.Expressions
 				}
 
 				var subscribeBody = subscribeGenerator.Build();
-				return Expression.Lambda(subscribeBody, pWrapper).Compile();
+				return Expression.Lambda(subscribeBody, pWrapper).CompileExpression();
 
 				Expression MapInvoke(Type delegateType, Expression delegateValue, Type? returnType, Expression[] parameters, Type[] parameterTypes)
 				{
@@ -847,44 +847,44 @@ namespace LinqToDB.Expressions
 		#region BuildFunc
 
 		public Func<TR> BuildFunc<TR>(LambdaExpression lambda) => 
-			(Func<TR>)CorrectLambdaParameters(lambda, typeof(TR)).Compile();
+			(Func<TR>)CorrectLambdaParameters(lambda, typeof(TR)).CompileExpression();
 
 		public Func<T, TR> BuildFunc<T, TR>(LambdaExpression lambda) =>
-			(Func<T, TR>)CorrectLambdaParameters(lambda, typeof(TR), typeof(T)).Compile();
+			(Func<T, TR>)CorrectLambdaParameters(lambda, typeof(TR), typeof(T)).CompileExpression();
 
 		public Func<T1, T2, TR> BuildFunc<T1, T2, TR>(LambdaExpression lambda) => 
-			(Func<T1, T2, TR>)CorrectLambdaParameters(lambda, typeof(TR), typeof(T1), typeof(T2)).Compile();
+			(Func<T1, T2, TR>)CorrectLambdaParameters(lambda, typeof(TR), typeof(T1), typeof(T2)).CompileExpression();
 
 		public Func<T1, T2, T3, TR> BuildFunc<T1, T2, T3, TR>(LambdaExpression lambda) => 
-			(Func<T1, T2, T3, TR>)CorrectLambdaParameters(lambda, typeof(TR), typeof(T1), typeof(T2), typeof(T3)).Compile();
+			(Func<T1, T2, T3, TR>)CorrectLambdaParameters(lambda, typeof(TR), typeof(T1), typeof(T2), typeof(T3)).CompileExpression();
 
 		public Func<T1, T2, T3, T4, TR> BuildFunc<T1, T2, T3, T4, TR>(LambdaExpression lambda) => 
-			(Func<T1, T2, T3, T4, TR>)CorrectLambdaParameters(lambda, typeof(TR), typeof(T1), typeof(T2), typeof(T3), typeof(T4)).Compile();
+			(Func<T1, T2, T3, T4, TR>)CorrectLambdaParameters(lambda, typeof(TR), typeof(T1), typeof(T2), typeof(T3), typeof(T4)).CompileExpression();
 
 		public Func<T1, T2, T3, T4, T5, TR> BuildFunc<T1, T2, T3, T4, T5, TR>(LambdaExpression lambda) => 
-			(Func<T1, T2, T3, T4, T5, TR>)CorrectLambdaParameters(lambda, typeof(TR), typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5)).Compile();
+			(Func<T1, T2, T3, T4, T5, TR>)CorrectLambdaParameters(lambda, typeof(TR), typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5)).CompileExpression();
 
 		#endregion
 
 		#region BuildAction
 
 		public Action BuildAction(LambdaExpression lambda) => 
-			(Action)CorrectLambdaParameters(lambda, null).Compile();
+			(Action)CorrectLambdaParameters(lambda, null).CompileExpression();
 
 		public Action<T> BuildAction<T>(LambdaExpression lambda) =>
-			(Action<T>)CorrectLambdaParameters(lambda, null, typeof(T)).Compile();
+			(Action<T>)CorrectLambdaParameters(lambda, null, typeof(T)).CompileExpression();
 
 		public Action<T1, T2> BuildAction<T1, T2>(LambdaExpression lambda) => 
-			(Action<T1, T2>)CorrectLambdaParameters(lambda, null, typeof(T1), typeof(T2)).Compile();
+			(Action<T1, T2>)CorrectLambdaParameters(lambda, null, typeof(T1), typeof(T2)).CompileExpression();
 
 		public Action<T1, T2, T3> BuildAction<T1, T2, T3>(LambdaExpression lambda) => 
-			(Action<T1, T2, T3>)CorrectLambdaParameters(lambda, null, typeof(T1), typeof(T2), typeof(T3)).Compile();
+			(Action<T1, T2, T3>)CorrectLambdaParameters(lambda, null, typeof(T1), typeof(T2), typeof(T3)).CompileExpression();
 
 		public Action<T1, T2, T3, T4> BuildAction<T1, T2, T3, T4>(LambdaExpression lambda) => 
-			(Action<T1, T2, T3, T4>)CorrectLambdaParameters(lambda, null, typeof(T1), typeof(T2), typeof(T3), typeof(T4)).Compile();
+			(Action<T1, T2, T3, T4>)CorrectLambdaParameters(lambda, null, typeof(T1), typeof(T2), typeof(T3), typeof(T4)).CompileExpression();
 
 		public Action<T1, T2, T3, T4, T5> BuildAction<T1, T2, T3, T4, T5>(LambdaExpression lambda) => 
-			(Action<T1, T2, T3, T4, T5>)CorrectLambdaParameters(lambda, null, typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5)).Compile();
+			(Action<T1, T2, T3, T4, T5>)CorrectLambdaParameters(lambda, null, typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5)).CompileExpression();
 
 		#endregion
 
@@ -958,14 +958,14 @@ namespace LinqToDB.Expressions
 			{
 				var resultLambda = BuildSetterExpression<TBase>();
 
-				return resultLambda.Compile();
+				return resultLambda.CompileExpression();
 			}
 
 			public Func<TBase, TV> BuildGetter<TBase>()
 			{
 				var resultLambda = BuildGetterExpression<TBase>();
 
-				return resultLambda.Compile();
+				return resultLambda.CompileExpression();
 			}
 		}
 
@@ -1122,7 +1122,7 @@ namespace LinqToDB.Expressions
 				}
 			}
 
-			return Expression.Lambda(expr, lambda.Parameters).Compile();
+			return Expression.Lambda(expr, lambda.Parameters).CompileExpression();
 		}
 
 		#endregion
