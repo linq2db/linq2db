@@ -601,20 +601,11 @@ namespace Tests.Linq
 				var query2 =
 					db.Child.Concat(db.Child.OrderByDescending(c => c.ChildID));
 
+				var query3 = query1.OrderBy(_ => _.ChildID);
+
 				Assert.DoesNotThrow(() => query1.ToArray());
 				Assert.DoesNotThrow(() => query2.ToArray());
-			}
-		}
-
-		[Test]
-		public void OrderByInUnion2([DataSources] string context)
-		{
-			using (var db = GetDataContext(context))
-			{
-				var query = (from item in db.Child select item).Union((from item in db.Child select item)
-						.OrderBy(i => i.ChildID));
-
-				Assert.DoesNotThrow(() => query.ToArray());
+				Assert.DoesNotThrow(() => query3.ToArray());
 			}
 		}
 

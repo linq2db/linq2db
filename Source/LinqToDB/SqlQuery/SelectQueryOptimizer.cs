@@ -953,7 +953,7 @@ namespace LinqToDB.SqlQuery
 		}
 
 		SqlTableSource RemoveSubQuery(
-			SelectQuery parentQuery, 
+			SelectQuery parentQuery,
 			SqlTableSource childSource,
 			bool concatWhere,
 			bool allColumns,
