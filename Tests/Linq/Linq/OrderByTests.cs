@@ -591,7 +591,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OrderByInUnion([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void OrderByInUnion([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -603,6 +603,18 @@ namespace Tests.Linq
 
 				Assert.DoesNotThrow(() => query1.ToArray());
 				Assert.DoesNotThrow(() => query2.ToArray());
+			}
+		}
+
+		[Test]
+		public void OrderByInUnion2([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = (from item in db.Child select item).Union((from item in db.Child select item)
+						.OrderBy(i => i.ChildID));
+
+				Assert.DoesNotThrow(() => query.ToArray());
 			}
 		}
 
