@@ -241,12 +241,41 @@ namespace LinqToDB.Extensions
 			return type.GetMember(name);
 		}
 
+#if NETSTANDARD2_0
+		private static Func<Type, Type, InterfaceMapping>? _getInterfaceMap;
+#endif
+		public static InterfaceMapping GetInterfaceMapEx(this Type type, Type interfaceType)
+		{
+			// native UWP builds (corert) had no GetInterfaceMap() implementation
+			// (added here https://github.com/dotnet/corert/pull/8144)
+#if NETSTANDARD2_0
+			if (_getInterfaceMap == null)
+			{
+				_getInterfaceMap = (t, i) => t.GetInterfaceMap(i);
+				try
+				{
+					return _getInterfaceMap(interfaceType):
+				}
+				catch (PlatformNotSupportedException)
+				{
+					// porting of https://github.com/dotnet/corert/pull/8144 requires a lot of fragile platform-specific reflection
+					// so we'll just "unsupport" interfaces in mappings for UWP without native implementation
+					_getInterfaceMap = (t, i) => default;
+				}
+			}
+
+			return _getInterfaceMap(interfaceType):
+#else
+			return type.GetInterfaceMap(interfaceType);
+#endif
+		}
+
 		static class CacheHelper<T>
 		{
 			public static readonly ConcurrentDictionary<Type,T[]> TypeAttributes = new ConcurrentDictionary<Type,T[]>();
 		}
 
-		#region Attributes cache
+#region Attributes cache
 
 		static readonly ConcurrentDictionary<Type, object[]> _typeAttributesTopInternal = new ConcurrentDictionary<Type, object[]>();
 
@@ -288,7 +317,7 @@ namespace LinqToDB.Extensions
 				{
 					var getAttr = false;
 
-					foreach (var mi in type.GetInterfaceMap(intf).TargetMethods)
+					foreach (var mi in type.GetInterfaceMapEx(intf).TargetMethods)
 					{
 						// Check if the interface is reimplemented.
 						//
@@ -310,7 +339,7 @@ namespace LinqToDB.Extensions
 				GetAttributesTreeInternal(list, type.BaseType);
 		}
 
-		#endregion
+#endregion
 
 		/// <summary>
 		/// Returns an array of custom attributes applied to a type.
@@ -415,7 +444,7 @@ namespace LinqToDB.Extensions
 
 			foreach (var inf in child.GetInterfaces())
 			{
-				var pm = child.GetInterfaceMap(inf);
+				var pm = child.GetInterfaceMapEx(inf);
 
 				for (var i = 0; i < pm.TargetMethods.Length; i++)
 				{
@@ -838,9 +867,9 @@ namespace LinqToDB.Extensions
 			return type.GetEvent(eventName);
 		}
 
-		#endregion
+#endregion
 
-		#region MethodInfo extensions
+#region MethodInfo extensions
 
 		[return: NotNullIfNotNull("method")]
 		public static PropertyInfo? GetPropertyInfo(this MethodInfo? method)
@@ -862,9 +891,9 @@ namespace LinqToDB.Extensions
 			return null;
 		}
 
-		#endregion
+#endregion
 
-		#region MemberInfo extensions
+#region MemberInfo extensions
 
 		public static Type GetMemberType(this MemberInfo memberInfo)
 		{
@@ -970,7 +999,7 @@ namespace LinqToDB.Extensions
 						var getter1 = info1.GetGetMethod()!;
 						var getter2 = ((PropertyInfo)member2).GetGetMethod()!;
 
-						var map = declaringType.GetInterfaceMap(member2.DeclaringType);
+						var map = declaringType.GetInterfaceMapEx(member2.DeclaringType);
 
 						for (var i = 0; i < map.InterfaceMethods.Length; i++)
 							if (getter2.Name == map.InterfaceMethods[i].Name && getter2.DeclaringType == map.InterfaceMethods[i].DeclaringType &&
@@ -991,7 +1020,7 @@ namespace LinqToDB.Extensions
 						var getter1 = info.GetGetMethod();
 						var getter2 = ((PropertyInfo)member2).GetGetMethod();
 
-						var map = member1.DeclaringType.GetInterfaceMap(member2.DeclaringType);
+						var map = member1.DeclaringType.GetInterfaceMapEx(member2.DeclaringType);
 
 						for (var i = 0; i < map.InterfaceMethods.Length; i++)
 						{
@@ -1011,7 +1040,7 @@ namespace LinqToDB.Extensions
 			return false;
 		}
 
-		#endregion
+#endregion
 
 		public static bool IsAnonymous(this Type type)
 		{
