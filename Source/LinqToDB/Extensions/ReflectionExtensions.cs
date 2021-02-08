@@ -254,17 +254,23 @@ namespace LinqToDB.Extensions
 				_getInterfaceMap = (t, i) => t.GetInterfaceMap(i);
 				try
 				{
-					return _getInterfaceMap(interfaceType):
+					return _getInterfaceMap(type, interfaceType);
 				}
 				catch (PlatformNotSupportedException)
 				{
-					// porting of https://github.com/dotnet/corert/pull/8144 requires a lot of fragile platform-specific reflection
-					// so we'll just "unsupport" interfaces in mappings for UWP without native implementation
-					_getInterfaceMap = (t, i) => default;
+					// porting of https://github.com/dotnet/corert/pull/8144 is not possible as it requires access
+					// to non-public runtime data and reflection doesn't work in corert
+					_getInterfaceMap = (t, i) => new InterfaceMapping()
+					{
+						TargetType       = t,
+						InterfaceType    = i,
+						TargetMethods    = Array.Empty<MethodInfo>(),
+						InterfaceMethods = Array.Empty<MethodInfo>()
+					};
 				}
 			}
 
-			return _getInterfaceMap(interfaceType):
+			return _getInterfaceMap(type, interfaceType);
 #else
 			return type.GetInterfaceMap(interfaceType);
 #endif
