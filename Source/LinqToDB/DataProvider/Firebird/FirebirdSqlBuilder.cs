@@ -122,6 +122,8 @@ namespace LinqToDB.DataProvider.Firebird
 
 					StringBuilder.Append(" CHARACTER SET UNICODE_FSS");
 					                                                                                      break;
+
+				case DataType.Guid: StringBuilder.Append("CHAR(16) CHARACTER SET OCTETS");                break;
 				case DataType.VarBinary     : StringBuilder.Append("BLOB");                               break;
 				// BOOLEAN type available since FB 3.0, but FirebirdDataProvider.SetParameter converts boolean to '1'/'0'
 				// so for now we will use type, compatible with SetParameter by default

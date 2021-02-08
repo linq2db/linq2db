@@ -691,6 +691,25 @@ namespace Tests.Linq
 			return isNull ? (short?)null : 1234;
 		}
 
+		[Test]
+		public void Issue2823Guid([DataSources(false, ProviderName.AccessOdbc)] string context)
+		{
+			using(var db = GetDataContext(context))
+			using(var table = db.CreateLocalTable<TableWithGuid>())
+			{
+				var guid = Guid.NewGuid();
+				table.Insert(() => new TableWithGuid { Guid = guid, Data = "My data" });
+				Assert.AreEqual("My data", table.Where(x => x.Guid == guid).Select(x => x.Data).First());
+			}
+		}
+
+		[Table]
+		class TableWithGuid
+		{
+			[Column] public Guid Guid { get; set; }
+			[Column] public string? Data { get; set; }
+		}
+
 	}
 
 }
