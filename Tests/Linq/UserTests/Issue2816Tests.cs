@@ -35,11 +35,7 @@ namespace Tests.UserTests
 								where string.IsNullOrWhiteSpace(p.Text)
 								select p;
 
-					var res = query.ToList();
-
-					var sql = ((DataConnection) db).LastQuery;
-
-					Assert.AreEqual(res.Count, 3);
+					AssertQuery(query);
 				}
 			}
 		}
