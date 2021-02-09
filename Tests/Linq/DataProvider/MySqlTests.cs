@@ -1902,6 +1902,43 @@ namespace Tests.DataProvider
 				}
 			}
 		}
+
+		[Test]
+		public void TestIssue2792([IncludeDataSources(false, TestProvName.AllMySql)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				try
+				{
+					db.Execute("DROP TABLE IF EXISTS `Issue2792`");
+					db.Execute(@"
+CREATE TABLE `Issue2792` (
+  `Id` binary(16) NOT NULL,
+  `MyFlag` bit(1) DEFAULT NULL,
+  PRIMARY KEY (`Id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
+
+					var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
+
+					var table = schema.Tables.Where(t => t.TableName == "issue2792").SingleOrDefault()!;
+
+					Assert.IsNotNull(table);
+					Assert.AreEqual(2, table.Columns.Count);
+
+					var bitColumn = table.Columns.Where(c => c.ColumnName == "MyFlag").SingleOrDefault()!;
+
+					Assert.IsNotNull(bitColumn);
+					Assert.AreEqual ("bit(1)"    , bitColumn.ColumnType);
+					Assert.True     (bitColumn.IsNullable);
+					Assert.AreEqual ("bool?"     , bitColumn.MemberType);
+					Assert.AreEqual (typeof(bool), bitColumn.SystemType);
+				}
+				finally
+				{
+					db.Execute("DROP TABLE IF EXISTS `Issue2792`");
+				}
+			}
+		}
 	}
 
 	internal static class MySqlTestFunctions
