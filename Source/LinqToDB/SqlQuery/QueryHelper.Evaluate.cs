@@ -22,6 +22,13 @@ namespace LinqToDB.SqlQuery
 			return info.IsEvaluated;
 		}
 
+		public static bool IsMutable(this IQueryElement expr)
+		{
+			if (expr.CanBeEvaluated(false))
+				return false;
+			return expr.CanBeEvaluated(true);
+		}
+
 		public static bool CanBeEvaluated(this IQueryElement expr, bool withParameters)
 		{
 			return expr.TryEvaluateExpression(new EvaluationContext(withParameters ? SqlParameterValues.Empty : null)).IsEvaluated;

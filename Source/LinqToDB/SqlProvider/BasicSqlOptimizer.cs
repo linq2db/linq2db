@@ -2662,13 +2662,13 @@ namespace LinqToDB.SqlProvider
 				}
 				case QueryElementType.SqlBinaryExpression:
 				{
-					return element.CanBeEvaluated(true) && !element.CanBeEvaluated(false);
+					return element.IsMutable();
 				}
 				case QueryElementType.ExprPredicate:
 				{
 					var exprExpr = (SqlPredicate.Expr)element;
 					
-					if (exprExpr.Expr1.CanBeEvaluated(true) && !exprExpr.Expr1.CanBeEvaluated(false))
+					if (exprExpr.Expr1.IsMutable())
 						return true;
 					return false;
 				}
@@ -2676,8 +2676,8 @@ namespace LinqToDB.SqlProvider
 				{
 					var exprExpr = (SqlPredicate.ExprExpr)element;
 
-					var isMutable1 = exprExpr.Expr1.CanBeEvaluated(true) && !exprExpr.Expr1.CanBeEvaluated(false);
-					var isMutable2 = exprExpr.Expr2.CanBeEvaluated(true) && !exprExpr.Expr2.CanBeEvaluated(false);
+					var isMutable1 = exprExpr.Expr1.IsMutable();
+					var isMutable2 = exprExpr.Expr2.IsMutable();
 
 					if (isMutable1 && isMutable2)
 						return true;
@@ -2700,7 +2700,7 @@ namespace LinqToDB.SqlProvider
 				{
 					var isTruePredicate = (SqlPredicate.IsTrue)element;
 
-					if (isTruePredicate.Expr1.CanBeEvaluated(true) && !isTruePredicate.Expr1.CanBeEvaluated(false))
+					if (isTruePredicate.Expr1.IsMutable())
 						return true;
 					return false;
 				}

@@ -5,7 +5,7 @@ using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
-namespace Tests.Playground
+namespace Tests.UserTests
 {
 	[TestFixture]
 	public class Issue2800Tests : TestBase
@@ -14,7 +14,6 @@ namespace Tests.Playground
 		{
 			public int Id { get; set; }
 			public string Name { get; set; } = null!;
-			public bool IsSet { get; set; }
 		}
 
 		public static class CarExtensions
@@ -32,7 +31,7 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void TestExpressionMethod([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(null, true, false)] bool? isSet)
+		public void TestExpressionMethod([DataSources()] string context)
 		{
 			var fluentMappingBuilder = new MappingSchema().GetFluentMappingBuilder();
 
@@ -40,17 +39,25 @@ namespace Tests.Playground
 			carBuilder.Property(x => x.Id).IsPrimaryKey();
 			carBuilder.Property(x => x.Name).HasLength(50);
 
-			using (var db = GetDataContext(context, fluentMappingBuilder.MappingSchema))
-			using (var table = db.CreateLocalTable<Car>())
+			var records = new Car[]
 			{
+				new Car { Id = 1, Name = "Special" },
+				new Car { Id = 2, Name = "NoSpecial" }
+			};
 
-				//db.Insert(new Car { Id = 1, Name = "MyCar", IsSet = true });
+			using (var db = GetDataContext(context, fluentMappingBuilder.MappingSchema))
+			using (var carTable = db.CreateLocalTable<Car>(records))
+			{
+				var isSpecial = (bool?)null;
+				AssertQuery(carTable.Where(x => CarExtensions.FilterBySpecialString(x, isSpecial)));
+				isSpecial = false;
+				AssertQuery(carTable.Where(x => CarExtensions.FilterBySpecialString(x, isSpecial)));
+				isSpecial = true;
+				AssertQuery(carTable.Where(x => CarExtensions.FilterBySpecialString(x, isSpecial)));
 
-				var carTable = db.GetTable<Car>();
-
-				var result = carTable.Where(x => CarExtensions.FilterBySpecialString(x, isSet)).ToList();
-
-				
+				AssertQuery(carTable.Where(x => CarExtensions.FilterBySpecialString(x, null)));
+				AssertQuery(carTable.Where(x => CarExtensions.FilterBySpecialString(x, false)));
+				AssertQuery(carTable.Where(x => CarExtensions.FilterBySpecialString(x, true)));
 			}
 		}
 	}
