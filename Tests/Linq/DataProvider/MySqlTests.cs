@@ -28,6 +28,7 @@ namespace Tests.DataProvider
 	using System.Collections.Generic;
 	using System.Data;
 	using System.Diagnostics;
+	using System.Runtime.InteropServices;
 	using System.Threading.Tasks;
 
 	[TestFixture]
@@ -1920,7 +1921,8 @@ CREATE TABLE `Issue2792` (
 
 					var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 
-					var table = schema.Tables.Where(t => t.TableName == "issue2792").SingleOrDefault()!;
+					var tableName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "issue2792" : "Issue2792";
+					var table     = schema.Tables.Where(t => t.TableName == tableName).SingleOrDefault()!;
 
 					Assert.IsNotNull(table);
 					Assert.AreEqual(2, table.Columns.Count);
