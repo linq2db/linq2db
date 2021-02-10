@@ -30,7 +30,7 @@ namespace LinqToDB.Common
 			public Delegate?        Delegate;
 			public bool             IsSchemaSpecific;
 
-			private Func<object?, DataParameter>? _convertValueToParameter = null;
+			private Func<object?, DataParameter>? _convertValueToParameter;
 			public  Func<object?, DataParameter>   ConvertValueToParameter
 			{
 				get
@@ -41,7 +41,7 @@ namespace LinqToDB.Common
 						var parameterExpression = Expression.Parameter(typeof(object));
 						var lambdaExpression = Expression.Lambda<Func<object?, DataParameter>>(
 							Expression.Invoke(Lambda, Expression.Convert(parameterExpression, type)), parameterExpression);
-						var convertFunc = lambdaExpression.Compile();
+						var convertFunc = lambdaExpression.CompileExpression();
 						_convertValueToParameter = convertFunc;
 					}
 
@@ -89,7 +89,7 @@ namespace LinqToDB.Common
 		public LambdaInfo Create(MappingSchema? mappingSchema, DbDataType from, DbDataType to)
 		{
 			var ex  = ConvertBuilder.GetConverter(mappingSchema, from.SystemType, to.SystemType);
-			var lm  = ex.Item1.Compile();
+			var lm  = ex.Item1.CompileExpression();
 			var ret = new LambdaInfo(ex.Item1, ex.Item2, lm, ex.Item3);
 
 			Set(_expressions, from, to , ret);

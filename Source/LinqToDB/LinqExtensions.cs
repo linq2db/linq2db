@@ -3082,12 +3082,12 @@ namespace LinqToDB
 
 		#region AsQueryable
 
-		/// <summary>Converts a generic <see cref="T:System.Collections.Generic.IEnumerable`1" /> to Linq To DB query.</summary>
+		/// <summary>Converts a generic <see cref="IEnumerable{T}" /> to Linq To DB query.</summary>
 		/// <param name="source">A sequence to convert.</param>
 		/// <param name="dataContext">Database connection context.</param>
 		/// <typeparam name="TElement">The type of the elements of <paramref name="source" />.</typeparam>
-		/// <returns>An <see cref="T:System.Linq.IQueryable`1" /> that represents the input sequence.</returns>
-		/// <exception cref="T:System.ArgumentNullException">
+		/// <returns>An <see cref="IQueryable{T}" /> that represents the input sequence.</returns>
+		/// <exception cref="ArgumentNullException">
 		/// <paramref name="source" /> is <see langword="null" />.</exception>
 		public static IQueryable<TElement> AsQueryable<TElement>(
 			[SqlQueryDependent]  this IEnumerable<TElement> source,
@@ -3139,8 +3139,8 @@ namespace LinqToDB
 		/// <summary>
 		/// Defines that sub-query is mandatory for <paramref name="grouping"/> query.
 		/// </summary>
-		/// <typeparam name="TKey">The type of the key of the <see cref="T:System.Linq.IGrouping`2" />.</typeparam>
-		/// <typeparam name="TElement">The type of the values in the <see cref="T:System.Linq.IGrouping`2" />.</typeparam>
+		/// <typeparam name="TKey">The type of the key of the <see cref="IGrouping{TKey, TElement}" />.</typeparam>
+		/// <typeparam name="TElement">The type of the values in the <see cref="IGrouping{TKey, TElement}" />.</typeparam>
 		/// <param name="grouping">Source data query.</param>
 		/// <returns>Query covered in sub-query.</returns>
 		[Pure]
@@ -3186,8 +3186,8 @@ namespace LinqToDB
 		/// <summary>
 		/// Disables grouping guard for particular <paramref name="grouping"/> query.
 		/// </summary>
-		/// <typeparam name="TKey">The type of the key of the <see cref="T:System.Linq.IGrouping`2" />.</typeparam>
-		/// <typeparam name="TElement">The type of the values in the <see cref="T:System.Linq.IGrouping`2" />.</typeparam>
+		/// <typeparam name="TKey">The type of the key of the <see cref="IGrouping{TKey, TElement}" />.</typeparam>
+		/// <typeparam name="TElement">The type of the values in the <see cref="IGrouping{TKey, TElement}" />.</typeparam>
 		/// <param name="grouping">Source data query.</param>
 		/// <returns>Query with suppressed grouping guard.</returns>
 		[Pure]
@@ -3248,8 +3248,8 @@ namespace LinqToDB
 		/// <param name="source1">The first sequence to concatenate.</param>
 		/// <param name="source2">The sequence to concatenate to the first sequence.</param>
 		/// <typeparam name="TSource">The type of the elements of the input sequences.</typeparam>
-		/// <returns>An <see cref="T:System.Linq.IQueryable`1" /> that contains the concatenated elements of the two input sequences.</returns>
-		/// <exception cref="T:System.ArgumentNullException">
+		/// <returns>An <see cref="IQueryable{T}" /> that contains the concatenated elements of the two input sequences.</returns>
+		/// <exception cref="ArgumentNullException">
 		/// <paramref name="source1" /> or <paramref name="source2" /> is <see langword="null" />.</exception>
 		public static IQueryable<TSource> UnionAll<TSource>(
 			 this IQueryable<TSource>  source1,
@@ -3262,11 +3262,11 @@ namespace LinqToDB
 		}
 
 		/// <summary>Produces the set difference of two sequences.</summary>
-		/// <param name="source1">An <see cref="T:System.Linq.IQueryable`1" /> whose elements that are not also in <paramref name="source2" /> will be returned.</param>
-		/// <param name="source2">An <see cref="T:System.Collections.Generic.IEnumerable`1" /> whose elements that also occur in the first sequence will not appear in the returned sequence.</param>
+		/// <param name="source1">An <see cref="IQueryable{T}" /> whose elements that are not also in <paramref name="source2" /> will be returned.</param>
+		/// <param name="source2">An <see cref="IEnumerable{T}" /> whose elements that also occur in the first sequence will not appear in the returned sequence.</param>
 		/// <typeparam name="TSource">The type of the elements of the input sequences.</typeparam>
-		/// <returns>An <see cref="T:System.Linq.IQueryable`1" /> that contains the set difference of the two sequences.</returns>
-		/// <exception cref="T:System.ArgumentNullException">
+		/// <returns>An <see cref="IQueryable{T}" /> that contains the set difference of the two sequences.</returns>
+		/// <exception cref="ArgumentNullException">
 		/// <paramref name="source1" /> or <paramref name="source2" /> is <see langword="null" />.</exception>
 		public static IQueryable<TSource> ExceptAll<TSource>(
 			 this IQueryable<TSource>  source1,
@@ -3287,7 +3287,7 @@ namespace LinqToDB
 		/// <param name="source2">A sequence whose elements that also appear in the first sequence are returned.</param>
 		/// <typeparam name="TSource">The type of the elements of the input sequences.</typeparam>
 		/// <returns>A sequence that contains the set intersection of the two sequences.</returns>
-		/// <exception cref="T:System.ArgumentNullException">
+		/// <exception cref="ArgumentNullException">
 		/// <paramref name="source1" /> or <paramref name="source2" /> is <see langword="null" />.</exception>
 		public static IQueryable<TSource> IntersectAll<TSource>(
 			 this IQueryable<TSource>  source1,

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
@@ -721,13 +722,13 @@ WHERE
 			[Association(QueryExpressionMethod = nameof(UsersWithLanguageExpression), Relationship = Relationship.OneToMany)]
 			public IQueryable<User> UsersWithLanguage(IDataContext db, int languageId)
 			{
-				return (_usersWithLanguageExpression ??= UsersWithLanguageExpression().Compile())(this, db, languageId);
+				return (_usersWithLanguageExpression ??= UsersWithLanguageExpression().CompileExpression())(this, db, languageId);
 			}
 			
 			[ExpressionMethod(nameof(UsersWithLanguageExpression))]
 			public IQueryable<User> UsersWithLanguageEM(IDataContext db, int languageId)
 			{
-				return (_usersWithLanguageExpression ??= UsersWithLanguageExpression().Compile())(this, db, languageId);
+				return (_usersWithLanguageExpression ??= UsersWithLanguageExpression().CompileExpression())(this, db, languageId);
 			}
 			
 			public static Expression<Func<UserGroup, IDataContext, int, IQueryable<User>>> UsersWithLanguageExpression()
@@ -740,9 +741,7 @@ WHERE
 			[Association(QueryExpressionMethod = nameof(UsersWithLanguageLikeExpression), Relationship = Relationship.OneToMany)]
 			public IQueryable<User> UsersWithLanguageLike(IDataContext db, string language)
 			{
-				return (_usersWithLanguageLikeExpression ??=
-UsersWithLanguageLikeExpression().Compile()
-					)(this, db, language);
+				return (_usersWithLanguageLikeExpression ??= UsersWithLanguageLikeExpression().CompileExpression())(this, db, language);
 			}
 						
 			public static Expression<Func<UserGroup, IDataContext, string, IQueryable<User>>> UsersWithLanguageLikeExpression()
@@ -759,7 +758,7 @@ UsersWithLanguageLikeExpression().Compile()
 			public User? FirstUserWithMultipleParameters(IDataContext db, int parameter1, string parameter2, decimal parameter3)
 			{
 				return (_firstUserWithMultipleParametersExpression ??=
-						FirstUserWithMultipleParametersExpression().Compile()
+						FirstUserWithMultipleParametersExpression().CompileExpression()
 					)(this, db, parameter1, parameter2, parameter3).FirstOrDefault();
 			}
 			
@@ -781,7 +780,7 @@ UsersWithLanguageLikeExpression().Compile()
 			[Association(QueryExpressionMethod = nameof(FirstUserWithLanguageExpression), Relationship = Relationship.OneToOne, CanBeNull = true)]
 			public User? FirstUsersWithLanguage(IDataContext db, int languageId)
 			{
-				return (_firstUserWithLanguageExpression ??= FirstUserWithLanguageExpression().Compile())(this, db, languageId).FirstOrDefault();
+				return (_firstUserWithLanguageExpression ??= FirstUserWithLanguageExpression().CompileExpression())(this, db, languageId).FirstOrDefault();
 			}
 			
 			public static Expression<Func<UserGroup, IDataContext, int, IQueryable<User>>> FirstUserWithLanguageExpression()

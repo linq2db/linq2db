@@ -5,6 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Expressions;
 using NUnit.Framework;
 
@@ -459,10 +460,10 @@ namespace Tests.TypeMapping
 				var l4 = typeMapper.MapLambda((SampleClass s, int i) => s.GetOther(i).OtherStrProp);
 
 
-				var cl1 = (Func<Dynamic.SampleClass, int>)l1.Compile();
-				var cl2 = (Func<Dynamic.SampleClass, int>)l2.Compile();
-				var cl3 = (Func<Dynamic.SampleClass, int, Dynamic.OtherClass>)l3.Compile();
-				var cl4 = (Func<Dynamic.SampleClass, int, string>)l4.Compile();
+				var cl1 = (Func<Dynamic.SampleClass, int>)l1.CompileExpression();
+				var cl2 = (Func<Dynamic.SampleClass, int>)l2.CompileExpression();
+				var cl3 = (Func<Dynamic.SampleClass, int, Dynamic.OtherClass>)l3.CompileExpression();
+				var cl4 = (Func<Dynamic.SampleClass, int, string>)l4.CompileExpression();
 
 				Assert.That(cl1(concrete), Is.EqualTo(33));
 				Assert.That(cl2(concrete), Is.EqualTo(1));
@@ -486,7 +487,7 @@ namespace Tests.TypeMapping
 
 				var newExpression = typeMapper.MapExpression(() => new SampleClass(55, 77));
 				var newLambda     = Expression.Lambda<Func<Dynamic.SampleClass>>(newExpression);
-				var instance      = newLambda.Compile()();
+				var instance      = newLambda.CompileExpression()();
 
 				Assert.That(instance.Id   , Is.EqualTo(55));
 				Assert.That(instance.Value, Is.EqualTo(77));
@@ -500,7 +501,7 @@ namespace Tests.TypeMapping
 				var newMemberInit    = typeMapper.MapExpression(() => new SampleClass(55, 77) {StrValue = "Str"});
 				var memberInitLambda = Expression.Lambda<Func<Dynamic.SampleClass>>(newMemberInit);
 
-				var instance = memberInitLambda.Compile()();
+				var instance = memberInitLambda.CompileExpression()();
 
 				Assert.That(instance.Id      , Is.EqualTo(55));
 				Assert.That(instance.Value   , Is.EqualTo(77));

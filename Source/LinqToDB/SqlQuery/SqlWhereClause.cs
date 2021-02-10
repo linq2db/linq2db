@@ -61,9 +61,9 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression? ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> action)
+		ISqlExpression? ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
-			SearchCondition = (SqlSearchCondition)((ISqlExpressionWalkable)SearchCondition).Walk(options, action)!;
+			SearchCondition = (SqlSearchCondition)((ISqlExpressionWalkable)SearchCondition).Walk(options, func)!;
 			return null;
 		}
 

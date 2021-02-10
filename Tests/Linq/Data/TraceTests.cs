@@ -141,6 +141,9 @@ namespace Tests.Data
 					counters[e.TraceInfoStep]++;
 				};
 
+#if !NET472
+			await
+#endif
 				using (var reader = await new CommandInfo(db, sql).ExecuteReaderAsync())
 				{
 					await reader.QueryToListAsync<Northwind.Category>();

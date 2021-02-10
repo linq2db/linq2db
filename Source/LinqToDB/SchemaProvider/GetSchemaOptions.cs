@@ -10,7 +10,7 @@ namespace LinqToDB.SchemaProvider
 		/// <summary>
 		/// When set to true, will prefer generation of provider-specific types instead of general types.
 		/// </summary>
-		public bool PreferProviderSpecificTypes = false;
+		public bool PreferProviderSpecificTypes;
 
 		/// <summary>
 		/// Enable or disable read of table schema. Default - enabled (<c>true</c>).
@@ -28,7 +28,7 @@ namespace LinqToDB.SchemaProvider
 		/// <summary>
 		/// Should linq2db use <see cref="string"/> for char(1) type or <see cref="char"/>. Default type: <see cref="char"/> (<c>false</c>).
 		/// </summary>
-		public bool     GenerateChar1AsString   = false;
+		public bool     GenerateChar1AsString;
 
 		/// <summary>
 		/// Default Schema name.

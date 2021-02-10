@@ -122,7 +122,7 @@ namespace LinqToDB.DataProvider.SQLite
 				AppendIndent();
 				StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY (");
 			StringBuilder.Append(string.Join(InlineComma, fieldNames));
-				StringBuilder.Append(")");
+				StringBuilder.Append(')');
 			}
 		}
 
@@ -131,7 +131,7 @@ namespace LinqToDB.DataProvider.SQLite
 			if (database != null && database.Length == 0) database = null;
 
 			if (database != null)
-				sb.Append(database).Append(".");
+				sb.Append(database).Append('.');
 
 			return sb.Append(table);
 		}

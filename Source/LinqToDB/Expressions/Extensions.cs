@@ -7,6 +7,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Expressions
 {
+	using LinqToDB.Common;
 	using LinqToDB.Extensions;
 	using LinqToDB.Mapping;
 	using System.Diagnostics.CodeAnalysis;
@@ -35,7 +36,7 @@ namespace LinqToDB.Expressions
 						ExpressionHelper.PropertyOrField(p, "DebugView"),
 						p);
 
-					_getDebugView = l.Compile();
+					_getDebugView = l.CompileExpression();
 				}
 				catch (ArgumentException)
 				{
@@ -43,7 +44,7 @@ namespace LinqToDB.Expressions
 						Expression.Call(p, MemberHelper.MethodOf<Expression>(e => e.ToString())),
 						p);
 
-					_getDebugView = l.Compile();
+					_getDebugView = l.CompileExpression();
 				}
 			}
 
@@ -233,14 +234,14 @@ namespace LinqToDB.Expressions
 							{
 								case MemberBindingType.Assignment    : Visit(((MemberAssignment)b). Expression,   func);                             break;
 								case MemberBindingType.ListBinding   : Visit(((MemberListBinding)b).Initializers, p => Visit(p.Arguments, func));    break;
-								case MemberBindingType.MemberBinding : Visit(((MemberMemberBinding)b).Bindings, (Action<MemberBinding>)MemberVisit); break;
+								case MemberBindingType.MemberBinding : Visit(((MemberMemberBinding)b).Bindings,   MemberVisit); break;
 							}
 						}
 
 						var e = (MemberInitExpression)expr;
 
 						Visit(e.NewExpression, func);
-						Visit(e.Bindings,      (Action<MemberBinding>)MemberVisit);
+						Visit(e.Bindings,      MemberVisit);
 
 						break;
 					}

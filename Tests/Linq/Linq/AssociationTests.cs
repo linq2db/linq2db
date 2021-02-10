@@ -710,7 +710,7 @@ namespace Tests.Linq
 
 				var list = q.ToList();
 
-				Assert.AreEqual(1, list.Count());
+				Assert.AreEqual(1, list.Count);
 			}
 		}
 

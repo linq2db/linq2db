@@ -75,10 +75,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			stringBuilder.Append("E'\\\\x");
 
-			foreach (var b in value)
-				stringBuilder.Append(b.ToString("X2"));
+			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
 
-			stringBuilder.Append("'");
+			stringBuilder.Append('\'');
 		}
 
 		static void AppendConversion(StringBuilder stringBuilder, int value)
@@ -86,7 +85,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			stringBuilder
 				.Append("chr(")
 				.Append(value)
-				.Append(")")
+				.Append(')')
 				;
 		}
 

@@ -9,6 +9,9 @@ using System.Threading.Tasks;
 namespace LinqToDB.Data
 {
 	public class DataReaderAsync : IDisposable
+#if !NETFRAMEWORK
+		, IAsyncDisposable
+#endif
 	{
 		public   CommandInfo?      CommandInfo       { get; set; }
 		public   DbDataReader?     Reader            { get; set; }
@@ -38,6 +41,36 @@ namespace LinqToDB.Data
 
 			OnDispose?.Invoke();
 		}
+
+#if NETSTANDARD2_1PLUS
+		public async ValueTask DisposeAsync()
+		{
+			if (Reader != null)
+			{
+				await Reader.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
+				if (CommandInfo?.DataConnection.TraceSwitchConnection.TraceInfo == true)
+				{
+					CommandInfo.DataConnection.OnTraceConnection(new TraceInfo(CommandInfo.DataConnection, TraceInfoStep.Completed)
+					{
+						TraceLevel      = TraceLevel.Info,
+						Command         = CommandInfo.DataConnection.GetCurrentCommand(),
+						StartTime       = StartedOn,
+						ExecutionTime   = Stopwatch.Elapsed,
+						RecordsAffected = ReadNumber,
+					});
+				}
+			}
+
+			OnDispose?.Invoke();
+		}
+#elif !NETFRAMEWORK
+		public ValueTask DisposeAsync()
+		{
+			Dispose();
+			return new ValueTask(Task.CompletedTask);
+		}
+#endif
 
 		#region Query with object reader
 

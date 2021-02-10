@@ -136,12 +136,12 @@ namespace LinqToDB.DataProvider.SqlCe
 			// already fixed by CorrectSkipAndColumns
 		}
 
-		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expr, ConvertVisitor visitor,
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor visitor,
 			EvaluationContext context)
 		{
-			expr = base.ConvertExpressionImpl(expr, visitor, context);
+			expression = base.ConvertExpressionImpl(expression, visitor, context);
 
-			switch (expr)
+			switch (expression)
 			{
 				case SqlBinaryExpression be:
 					switch (be.Operation)
@@ -209,7 +209,7 @@ namespace LinqToDB.DataProvider.SqlCe
 					break;
 			}
 
-			return expr;
+			return expression;
 		}
 
 		protected override ISqlExpression ConvertFunction(SqlFunction func)

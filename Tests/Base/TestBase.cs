@@ -31,6 +31,7 @@ using NUnit.Framework.Internal;
 
 namespace Tests
 {
+	using FastExpressionCompiler;
 	using Model;
 	using Tools;
 
@@ -288,7 +289,7 @@ namespace Tests
 				catch (Exception e)
 				{
 					TestExternals.Log(e.ToString());
-					Console.WriteLine(e);
+					TestContext.WriteLine(e);
 					throw;
 				}
 			}
@@ -302,7 +303,7 @@ namespace Tests
 				foreach (var file in Directory.GetFiles(databasePath, "*.*"))
 				{
 					var destination = Path.Combine(dataPath, Path.GetFileName(file));
-					Console.WriteLine("{0} => {1}", file, destination);
+					TestContext.WriteLine("{0} => {1}", file, destination);
 					File.Copy(file, destination, true);
 				}
 			}
@@ -415,6 +416,7 @@ namespace Tests
 			ProviderName.SqlServer2017,
 			TestProvName.SqlServer2019,
 			TestProvName.SqlServer2019SequentialAccess,
+			TestProvName.SqlServer2019FastExpressionCompiler,
 			ProviderName.SqlServer2000,
 			ProviderName.SqlServer2005,
 			TestProvName.SqlAzure,
@@ -468,12 +470,15 @@ namespace Tests
 			// add extra mapping schema to not share mappers with other sql2017/2019 providers
 			// use same schema to use cache within test provider scope
 			if (configuration == TestProvName.SqlServer2019SequentialAccess)
-				res.AddMappingSchema(_sequentialAccessMS);
+				res.AddMappingSchema(_sequentialAccessSchema);
+			else if (configuration == TestProvName.SqlServer2019FastExpressionCompiler)
+				res.AddMappingSchema(_fecSchema);
 
 			return res;
 		}
 
-		private static readonly MappingSchema _sequentialAccessMS = new MappingSchema();
+		private static readonly MappingSchema _sequentialAccessSchema = new MappingSchema();
+		private static readonly MappingSchema _fecSchema = new MappingSchema();
 
 		protected static char GetParameterToken(string context)
 		{
@@ -699,7 +704,7 @@ namespace Tests
 					.Where(p => p.Value1.HasValue && (new[] { 1, 2 }.Contains(p.Value1.Value)))
 					.Select(p => p.Value1 == 1 ?
 						(ParentInheritanceBase4)new ParentInheritance14 { ParentID = p.ParentID } :
-						(ParentInheritanceBase4)new ParentInheritance24 { ParentID = p.ParentID }
+												new ParentInheritance24 { ParentID = p.ParentID }
 				).ToList();
 
 		protected List<Child>?      _child;
@@ -1043,6 +1048,9 @@ namespace Tests
 		{
 			// we intentionally configure Sql Server 2019 test database to be case-sensitive to test
 			// linq2db support for this configuration
+			// on CI we test two configurations:
+			// linux/mac: db is case sensitive, catalog is case insensitive
+			// windows: both db and catalog are case sensitive
 			return GetProviderName(context, out var _) == TestProvName.SqlServer2019;
 		}
 
@@ -1083,7 +1091,7 @@ namespace Tests
 
 		protected void AreEqual<T>(Func<T, T> fixSelector, IEnumerable<T> expected, IEnumerable<T> result, IEqualityComparer<T> comparer, bool allowEmpty = false)
 		{
-			AreEqual<T>(fixSelector, expected, result, comparer, null, allowEmpty);
+			AreEqual(fixSelector, expected, result, comparer, null, allowEmpty);
 		}
 
 		protected void AreEqual<T>(
@@ -1220,7 +1228,7 @@ namespace Tests
 		{
 			Assert.AreEqual(normalize(expected), normalize(result));
 
-			string normalize(string sql)
+			static string normalize(string sql)
 			{
 				var lines = sql.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
 				return string.Join("\n", lines.Where(l => !l.StartsWith("-- ")).Select(l => l.TrimStart('\t', ' ')));
@@ -1253,11 +1261,12 @@ namespace Tests
 				case ProviderName.SqlServer2017:
 				case TestProvName.SqlServer2019:
 				case TestProvName.SqlServer2019SequentialAccess:
+				case TestProvName.SqlServer2019FastExpressionCompiler:
 				{
-						if (!tableName.StartsWith("#"))
-							finalTableName = "#" + tableName;
-						break;
-					}
+					if (!tableName.StartsWith("#"))
+						finalTableName = "#" + tableName;
+					break;
+				}
 				default:
 					throw new NotImplementedException();
 			}
@@ -1281,6 +1290,10 @@ namespace Tests
 				Configuration.OptimizeForSequentialAccess = true;
 				DbCommandProcessorExtensions.Instance = new SequentialAccessCommandProcessor();
 			}
+			else if (provider == TestProvName.SqlServer2019FastExpressionCompiler)
+			{
+				//Compilation.SetExpressionCompiler(_ => ExpressionCompiler.CompileFast(_, true));
+			}
 		}
 
 		[TearDown]
@@ -1292,6 +1305,10 @@ namespace Tests
 			{
 				Configuration.OptimizeForSequentialAccess = false;
 				DbCommandProcessorExtensions.Instance = null;
+			}
+			if (provider == TestProvName.SqlServer2019FastExpressionCompiler)
+			{
+				//Compilation.SetExpressionCompiler(null);
 			}
 
 			if (provider?.Contains("SapHana") == true)

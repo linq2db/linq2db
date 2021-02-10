@@ -1307,7 +1307,7 @@ namespace LinqToDB.Linq.Builder
 		static ISqlExpression ConvertToSqlConvertible(Expression expression)
 		{
 			var l = Expression.Lambda<Func<IToSqlConverter>>(expression);
-			var f = l.Compile();
+			var f = l.CompileExpression();
 			var c = f();
 
 			return c.ToSql(expression);
@@ -2602,6 +2602,15 @@ namespace LinqToDB.Linq.Builder
 			// see #820
 			accessorExpression = accessorExpression.Transform(e =>
 			{
+				if (e.NodeType.NotIn(ExpressionType.Parameter, ExpressionType.Convert, ExpressionType.ConvertChecked)
+				    && dataContextParam.Type.IsSameOrParentOf(e.Type))
+				{
+					var newExpr = (Expression) dataContextParam;
+					if (newExpr.Type != e.Type)
+						newExpr = Expression.Convert(newExpr, e.Type);
+					return newExpr;
+				}
+
 				switch (e.NodeType)
 				{
 					case ExpressionType.Parameter:
@@ -2614,6 +2623,7 @@ namespace LinqToDB.Linq.Builder
 						return e;
 					}
 					case ExpressionType.MemberAccess:
+					{
 						var ma = (MemberExpression) e;
 
 						if (ma.Member.IsNullableValueMember())
@@ -2625,7 +2635,9 @@ namespace LinqToDB.Linq.Builder
 						}
 
 						return e;
+					}
 					case ExpressionType.Convert:
+					{
 						var ce = (UnaryExpression) e;
 						if (ce.Operand.Type.IsNullable() && !ce.Type.IsNullable())
 						{
@@ -2634,7 +2646,9 @@ namespace LinqToDB.Linq.Builder
 								Expression.Default(e.Type),
 								e);
 						}
+
 						return e;
+					}
 					default:
 						return e;
 				}
@@ -2682,9 +2696,9 @@ namespace LinqToDB.Linq.Builder
 			return new ParameterAccessor
 			(
 				expression,
-				mapper.Compile(),
-				original.Compile(),
-				dbDataTypeAccessor.Compile(),
+				mapper.CompileExpression(),
+				original.CompileExpression(),
+				dbDataTypeAccessor.CompileExpression(),
 				new SqlParameter(new DbDataType(accessorExpression.Type), name, null)
 				{
 					IsQueryParameter = !dataContext.InlineParameters
@@ -2727,7 +2741,7 @@ namespace LinqToDB.Linq.Builder
 				if (sql.Length == 1 && sql[0].MemberChain.Length == 0)
 					expr = sql[0].Sql;
 				else
-					expr = new ObjectSqlExpression(MappingSchema, sql);
+					expr = new SqlObjectExpression(MappingSchema, sql);
 			}
 
 			var columnDescriptor = QueryHelper.GetColumnDescriptor(expr);
@@ -3333,7 +3347,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					// Handling case when all columns are aggregates, it cause query to produce only single record and we have to include at least one aggregation in Select statement.
 					// 
-					var allAggregate = sql.All(s => QueryHelper.IsAggregationFunction(s.Sql));
+					var allAggregate = sql.All(s => QueryHelper.IsAggregationOrWindowFunction(s.Sql));
 					if (allAggregate)
 					{
 						query.Select.Add(sql[0].Sql);
@@ -3445,7 +3459,7 @@ namespace LinqToDB.Linq.Builder
 			_preambles.Add(
 				Tuple.Create< Func<IDataContext, Expression, object?[]?, object?>, Func<IDataContext, Expression, object?[]?, CancellationToken, Task<object?>>>(
 					(dc, e, ps) => func(dc, e, ps),
-					async (dc, e, ps, ct) => await funcAsync(dc, e, ps, ct)));
+					async (dc, e, ps, ct) => await funcAsync(dc, e, ps, ct).ConfigureAwait(Configuration.ContinueOnCapturedContext)));
 			return _preambles.Count - 1;
 		}
 

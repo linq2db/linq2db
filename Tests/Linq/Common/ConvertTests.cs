@@ -2,9 +2,6 @@
 using System.Data.Linq;
 using System.Data.SqlTypes;
 using System.Globalization;
-using System.Linq;
-using System.Linq.Expressions;
-using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Mapping;
 
@@ -470,8 +467,8 @@ namespace Tests.Common
 			var (convertFromDecimalLambdaExpression1, convertFromDecimalLambdaExpression2, b1)
 				= ConvertBuilder.GetConverter(null, typeof(decimal), typeof(CustomMoneyType));
 
-			var convertFromDecimalFunc1 = (Func<decimal, CustomMoneyType>)convertFromDecimalLambdaExpression1.Compile();
-			var convertFromDecimalFunc2 = (Func<decimal, CustomMoneyType>)convertFromDecimalLambdaExpression2!.Compile();
+			var convertFromDecimalFunc1 = (Func<decimal, CustomMoneyType>)convertFromDecimalLambdaExpression1.CompileExpression();
+			var convertFromDecimalFunc2 = (Func<decimal, CustomMoneyType>)convertFromDecimalLambdaExpression2!.CompileExpression();
 
 			Assert.AreEqual(new CustomMoneyType { Amount = 1.11m }, convertFromDecimalFunc1(1.11m));
 			Assert.AreEqual(new CustomMoneyType { Amount = 1.11m }, convertFromDecimalFunc2(1.11m));
@@ -479,8 +476,8 @@ namespace Tests.Common
 			var (convertFromNullableDecimalLambdaExpression1, convertFromNullableDecimalLambdaExpression2, b2)
 				= ConvertBuilder.GetConverter(null, typeof(decimal?), typeof(CustomMoneyType));
 
-			var convertFromNullableDecimalFunc1 = (Func<decimal?, CustomMoneyType>)convertFromNullableDecimalLambdaExpression1.Compile();
-			var convertFromNullableDecimalFunc2 = (Func<decimal?, CustomMoneyType>)convertFromNullableDecimalLambdaExpression2!.Compile();
+			var convertFromNullableDecimalFunc1 = (Func<decimal?, CustomMoneyType>)convertFromNullableDecimalLambdaExpression1.CompileExpression();
+			var convertFromNullableDecimalFunc2 = (Func<decimal?, CustomMoneyType>)convertFromNullableDecimalLambdaExpression2!.CompileExpression();
 
 			Assert.AreEqual(new CustomMoneyType { Amount = 1.11m }, convertFromNullableDecimalFunc1(1.11m));
 			Assert.AreEqual(new CustomMoneyType { Amount = 1.11m }, convertFromNullableDecimalFunc2(1.11m));

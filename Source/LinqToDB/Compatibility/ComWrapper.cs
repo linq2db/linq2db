@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security;
 using System.Threading;
+using LinqToDB.Common;
 
 namespace LinqToDB
 {
@@ -46,7 +47,7 @@ namespace LinqToDB
 
 		public override bool TryGetMember(GetMemberBinder binder, out object? result)
 		{
-			result = _instance.GetType().InvokeMember(binder.Name, BindingFlags.GetProperty, Type.DefaultBinder, _instance, new object?[] { });
+			result = _instance.GetType().InvokeMember(binder.Name, BindingFlags.GetProperty, Type.DefaultBinder, _instance, Array<object?>.Empty);
 
 			return true;
 		}

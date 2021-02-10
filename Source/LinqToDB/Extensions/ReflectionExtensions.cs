@@ -323,7 +323,7 @@ namespace LinqToDB.Extensions
 		public static T[] GetAttributes<T>(this Type type)
 			where T : Attribute
 		{
-			if (type == null) throw new ArgumentNullException("type");
+			if (type == null) throw new ArgumentNullException(nameof(type));
 
 			if (!CacheHelper<T>.TypeAttributes.TryGetValue(type, out var attrs))
 			{
@@ -377,7 +377,7 @@ namespace LinqToDB.Extensions
 		/// </returns>
 		public static Type ToUnderlying(this Type type)
 		{
-			if (type == null) throw new ArgumentNullException("type");
+			if (type == null) throw new ArgumentNullException(nameof(type));
 
 			if (type.IsNullable()) type = type.GetGenericArguments()[0];
 			if (type.IsEnum      ) type = Enum.GetUnderlyingType(type);
@@ -387,7 +387,7 @@ namespace LinqToDB.Extensions
 
 		public static Type ToNullableUnderlying(this Type type)
 		{
-			if (type == null) throw new ArgumentNullException("type");
+			if (type == null) throw new ArgumentNullException(nameof(type));
 			//return type.IsNullable() ? type.GetGenericArguments()[0] : type;
 			return Nullable.GetUnderlyingType(type) ?? type;
 		}
@@ -399,7 +399,7 @@ namespace LinqToDB.Extensions
 		/// <returns>Type, wrapped by <see cref="Nullable{T}"/>.</returns>
 		public static Type AsNullable(this Type type)
 		{
-			if (type == null)          throw new ArgumentNullException("type");
+			if (type == null)          throw new ArgumentNullException(nameof(type));
 			if (!type.IsValueType) throw new ArgumentException($"{type} is not a value type");
 
 			return typeof(Nullable<>).MakeGenericType(type);
@@ -432,7 +432,7 @@ namespace LinqToDB.Extensions
 		/// <summary>
 		/// Determines whether the specified types are considered equal.
 		/// </summary>
-		/// <param name="parent">A <see cref="System.Type"/> instance. </param>
+		/// <param name="parent">A <see cref="Type"/> instance. </param>
 		/// <param name="child">A type possible derived from the <c>parent</c> type</param>
 		/// <returns>True, when an object instance of the type <c>child</c>
 		/// can be used as an object of the type <c>parent</c>; otherwise, false.</returns>
@@ -522,7 +522,7 @@ namespace LinqToDB.Extensions
 
 		public static Type? GetGenericType(this Type genericType, Type type)
 		{
-			if (genericType == null) throw new ArgumentNullException("genericType");
+			if (genericType == null) throw new ArgumentNullException(nameof(genericType));
 
 			while (type != typeof(object))
 			{

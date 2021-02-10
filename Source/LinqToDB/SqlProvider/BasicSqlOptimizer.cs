@@ -222,7 +222,7 @@ namespace LinqToDB.SqlProvider
 						changed = changed || newExpr != expr.Expr;
 
 						if (changed)
-							newExpression = new SqlExpression(expr.SystemType, newExpr, expr.Precedence, expr.IsAggregate, expr.IsPure, newExpressions.ToArray());
+							newExpression = new SqlExpression(expr.SystemType, newExpr, expr.Precedence, expr.Flags, newExpressions.ToArray());
 
 						return newExpression;
 					}
@@ -733,7 +733,7 @@ namespace LinqToDB.SqlProvider
 					if (func.Parameters.Length == 1 && func.Parameters[0] is SelectQuery query && query.Select.Columns.Count > 0)
 					{
 						var isAggregateQuery =
-									query.Select.Columns.All(c => QueryHelper.IsAggregationFunction(c.Expression));
+									query.Select.Columns.All(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression));
 
 						if (isAggregateQuery)
 							return new SqlValue(true);
@@ -1395,9 +1395,9 @@ namespace LinqToDB.SqlProvider
 		#region Conversion
 
 		[return: NotNullIfNotNull("element")]
-		public virtual IQueryElement? ConvertElement(MappingSchema mappingSchema, IQueryElement? element, OptimizationContext optimizationContext)
+		public virtual IQueryElement? ConvertElement(MappingSchema mappingSchema, IQueryElement? element, OptimizationContext context)
 		{
-			return OptimizeElement(mappingSchema, element, optimizationContext, true);
+			return OptimizeElement(mappingSchema, element, context, true);
 		}
 
 		public virtual ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor visitor, EvaluationContext context)
@@ -1748,7 +1748,7 @@ namespace LinqToDB.SqlProvider
 					SqlPredicate.SearchString.SearchKind.StartsWith => patternValue + LikeWildcardCharacter,
 					SqlPredicate.SearchString.SearchKind.EndsWith   => LikeWildcardCharacter + patternValue,
 					SqlPredicate.SearchString.SearchKind.Contains   => LikeWildcardCharacter + patternValue + LikeWildcardCharacter,
-					_ => throw new ArgumentOutOfRangeException()
+					_ => throw new InvalidOperationException($"Unexpected predicate kind: {predicate.Kind}")
 				};
 
 				var patternExpr = LikeParameterSupport
@@ -1771,7 +1771,7 @@ namespace LinqToDB.SqlProvider
 					SqlPredicate.SearchString.SearchKind.StartsWith => new SqlBinaryExpression(typeof(string), patternExpr, "+", anyCharacterExpr, Precedence.Additive),
 					SqlPredicate.SearchString.SearchKind.EndsWith   => new SqlBinaryExpression(typeof(string), anyCharacterExpr, "+", patternExpr, Precedence.Additive),
 					SqlPredicate.SearchString.SearchKind.Contains   => new SqlBinaryExpression(typeof(string), new SqlBinaryExpression(typeof(string), anyCharacterExpr, "+", patternExpr, Precedence.Additive), "+", anyCharacterExpr, Precedence.Additive),
-					_ => throw new ArgumentOutOfRangeException()
+					_ => throw new InvalidOperationException($"Unexpected predicate kind: {predicate.Kind}")
 				};
 
 
@@ -1872,22 +1872,26 @@ namespace LinqToDB.SqlProvider
 						}
 					}
 
-					if (p.Expr1 is ObjectSqlExpression expr)
+					if (p.Expr1 is SqlObjectExpression expr)
 					{
-						if (expr.Parameters.Length == 1)
+						var parameters = expr.InfoParameters;
+						if (parameters.Length == 1)
 						{
 							var values = new List<ISqlExpression>();
 
 							foreach (var item in items)
 							{
 								var value = expr.GetValue(item!, 0);
-								values.Add(new SqlValue(value));
+								var systemType = parameters[0].Sql.SystemType ?? value?.GetType();
+								if (systemType == null)
+									throw new InvalidOperationException("Cannot calculate SystemType for constant.");
+								values.Add(new SqlValue(systemType, value));
 							}
 
 							if (values.Count == 0)
 								return new SqlPredicate.Expr(new SqlValue(p.IsNot));
 
-							return new SqlPredicate.InList(expr.Parameters[0], null, p.IsNot, values);
+							return new SqlPredicate.InList(parameters[0].Sql, null, p.IsNot, values);
 						}
 
 						var sc = new SqlSearchCondition();
@@ -1896,9 +1900,9 @@ namespace LinqToDB.SqlProvider
 						{
 							var itemCond = new SqlSearchCondition();
 
-							for (var i = 0; i < expr.Parameters.Length; i++)
+							for (var i = 0; i < parameters.Length; i++)
 							{
-								var sql   = expr.Parameters[i];
+								var sql   = parameters[i].Sql;
 								var value = expr.GetValue(item!, i);
 								var cond  = value == null ?
 									new SqlCondition(false, new SqlPredicate.IsNull  (sql, false)) :
@@ -2775,7 +2779,7 @@ namespace LinqToDB.SqlProvider
 					if (join.Table.Source is SelectQuery query && query.Select.Columns.Count > 0)
 					{
 						var isAggregateQuery =
-							query.Select.Columns.All(c => QueryHelper.IsAggregationFunction(c.Expression));
+							query.Select.Columns.All(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression));
 						if (isAggregateQuery)
 						{
 							// remove unwanted join
@@ -2942,8 +2946,8 @@ namespace LinqToDB.SqlProvider
 					var parameters = orderByItems.Select(oi => oi.Expression).ToArray();
 
 					var rowNumberExpression = parameters.Length == 0
-						? new SqlExpression(typeof(long), "ROW_NUMBER() OVER ()", Precedence.Primary, true, true)
-						: new SqlExpression(typeof(long), $"ROW_NUMBER() OVER (ORDER BY {orderBy})", Precedence.Primary, true, true, parameters);
+						? new SqlExpression(typeof(long), "ROW_NUMBER() OVER ()", Precedence.Primary, SqlFlags.IsWindowFunction)
+						: new SqlExpression(typeof(long), $"ROW_NUMBER() OVER (ORDER BY {orderBy})", Precedence.Primary, SqlFlags.IsWindowFunction, parameters);
 
 					var rowNumberColumn = query.Select.AddNewColumn(rowNumberExpression);
 					rowNumberColumn.Alias = "RN";
@@ -3011,7 +3015,7 @@ namespace LinqToDB.SqlProvider
 
 						var rnExpr = new SqlExpression(typeof(long),
 							$"ROW_NUMBER() OVER (PARTITION BY {partitionBy} ORDER BY {orderBy})", Precedence.Primary,
-							true, true, parameters);
+							SqlFlags.IsWindowFunction, parameters);
 
 						var additionalProjection = orderItems.Except(columnItems).ToArray();
 						foreach (var expr in additionalProjection)

@@ -43,7 +43,6 @@ namespace LinqToDB.Linq.Builder
 					var optimizationContext = new ExpressionTreeOptimizationContext(dc);
 					var optimizedExpr       = optimizationContext.ExposeExpression(queryLambda);
 					    optimizedExpr       = optimizationContext.ExpandQueryableMethods(optimizedExpr);
-					    optimizedExpr       = optimizedExpr.OptimizeExpression()!;
 					return optimizedExpr;
 				});
 

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -33,7 +33,7 @@ namespace LinqToDB.AspNet
 		///     </para>
 		/// </param>
 		/// <param name="lifetime"> The lifetime with which to register the Context service in the container.
-		/// For one connection pre request use <see cref="ServiceLifetime.Scoped"/> (the default).
+		/// For one connection per request use <see cref="ServiceLifetime.Scoped"/> (the default).
 		/// </param>
 		/// <remarks>
 		/// 	<para>
@@ -90,7 +90,7 @@ namespace LinqToDB.AspNet
 		/// </param>
 		/// <param name="lifetime">
 		/// 	The lifetime with which to register the Context service in the container.
-		/// 	For one connection pre request use <see cref="ServiceLifetime.Scoped"/> (the default).
+		/// 	For one connection per request use <see cref="ServiceLifetime.Scoped"/> (the default).
 		/// </param>
 		/// <remarks>
 		/// 	This method should be used when a custom context is required or
@@ -145,7 +145,7 @@ namespace LinqToDB.AspNet
 		/// </param>
 		/// <param name="lifetime">
 		/// 	The lifetime with which to register the Context service in the container.
-		/// 	For one connection pre request use <see cref="ServiceLifetime.Scoped"/> (the default).
+		/// 	For one connection per request use <see cref="ServiceLifetime.Scoped"/> (the default).
 		/// </param>
 		/// <remarks>
 		/// 	This method should be used when a custom context is required or

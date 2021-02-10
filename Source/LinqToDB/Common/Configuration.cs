@@ -4,10 +4,40 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Common
 {
+	using System.Data;
+	using System.Linq.Expressions;
+	using System.Threading.Tasks;
 	using Data;
 	using Data.RetryPolicy;
-	using System.Data;
-	using System.Threading.Tasks;
+	using LinqToDB.Linq;
+
+	/// <summary>
+	/// Contains LINQ expression compilation options.
+	/// </summary>
+	public static class Compilation
+	{
+		private static Func<LambdaExpression, Delegate?>? _compiler;
+
+		/// <summary>
+		/// Sets LINQ expression compilation method.
+		/// </summary>
+		/// <param name="compiler">Method to use for expression compilation or <c>null</c> to reset compilation logic to defaults.</param>
+		public static void SetExpressionCompiler(Func<LambdaExpression, Delegate?>? compiler)
+		{
+			_compiler = compiler;
+		}
+
+		internal static TDelegate CompileExpression<TDelegate>(this Expression<TDelegate> expression)
+			where TDelegate : Delegate
+		{
+			return ((TDelegate?)_compiler?.Invoke(expression)) ?? expression.Compile();
+		}
+
+		internal static Delegate CompileExpression(this LambdaExpression expression)
+		{
+			return _compiler?.Invoke(expression) ?? expression.Compile();
+		}
+	}
 
 	/// <summary>
 	/// Contains global linq2db settings.
@@ -39,7 +69,31 @@ namespace LinqToDB.Common
 		/// Note that it doesn't switch linq2db to use <see cref="CommandBehavior.SequentialAccess"/> behavior for
 		/// queries, so this optimization could be used for <see cref="CommandBehavior.Default"/> too.
 		/// </summary>
-		public static bool OptimizeForSequentialAccess = false;
+		public static bool OptimizeForSequentialAccess;
+		
+		/// <summary>
+		/// Determines the length after which logging of binary data in SQL will be truncated.
+		/// This is to avoid Out-Of-Memory exceptions when getting SqlText from <see cref="TraceInfo"/>
+		/// or <see cref="IExpressionQuery"/> for logging or other purposes.
+		/// </summary>
+		/// <remarks>
+		/// This value defaults to 100.
+		/// Use a value of -1 to disable and always log full binary.
+		/// Set to 0 to truncate all binary data.
+		/// </remarks>
+		public static int MaxBinaryParameterLengthLogging { get; set; } = 100;
+
+		/// <summary>
+		/// Determines the length after which logging of string data in SQL will be truncated.
+		/// This is to avoid Out-Of-Memory exceptions when getting SqlText from <see cref="TraceInfo"/>
+		/// or <see cref="IExpressionQuery"/> for logging or other purposes.
+		/// </summary>
+		/// <remarks>
+		/// This value defaults to 200.
+		/// Use a value of -1 to disable and always log full string.
+		/// Set to 0 to truncate all string data.
+		/// </remarks>
+		public static int MaxStringParameterLengthLogging { get; set; } = 200;
 
 		public static class Data
 		{
@@ -51,7 +105,7 @@ namespace LinqToDB.Common
 			/// - if <c>false</c> - command timeout is infinite.
 			/// Default value: <c>false</c>.
 			/// </summary>
-			public static bool BulkCopyUseConnectionCommandTimeout = false;
+			public static bool BulkCopyUseConnectionCommandTimeout;
 		}
 
 		/// <summary>
@@ -215,10 +269,10 @@ namespace LinqToDB.Common
 		public static class SqlServer
 		{
 			/// <summary>
-			/// if set to true, SchemaProvider uses <see cref="System.Data.CommandBehavior.SchemaOnly"/> to get metadata.
+			/// if set to true, SchemaProvider uses <see cref="CommandBehavior.SchemaOnly"/> to get metadata.
 			/// Otherwise the sp_describe_first_result_set sproc is used.
 			/// </summary>
-			public static bool UseSchemaOnlyToGetSchema = false;
+			public static bool UseSchemaOnlyToGetSchema;
 		}
 
 		/// <summary>
@@ -367,7 +421,7 @@ namespace LinqToDB.Common
 			/// </code>
 			/// </example>
 			/// </summary>
-			public static bool GenerateFinalAliases { get; set; } = false;
+			public static bool GenerateFinalAliases { get; set; }
 		}
 	}
 }

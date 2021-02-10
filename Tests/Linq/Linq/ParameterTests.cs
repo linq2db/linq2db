@@ -8,7 +8,6 @@ using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
-using Tests.Model;
 
 namespace Tests.Linq
 {
@@ -416,14 +415,14 @@ namespace Tests.Linq
 					var allUsages = !usage.HasValue;
 					var res1 = Test()!;
 					Assert.AreEqual(1, res1.Id);
-					Assert.AreEqual(3, res1.Values!.Count());
+					Assert.AreEqual(3, res1.Values!.Count);
 					Assert.AreEqual(3, res1.Values.Where(v => v.FirstTableId == 1).Count());
 
 					usage = Issue404.Value1;
 					allUsages = false;
 					var res2 = Test()!;
 					Assert.AreEqual(1, res2.Id);
-					Assert.AreEqual(2, res2.Values!.Count());
+					Assert.AreEqual(2, res2.Values!.Count);
 					Assert.AreEqual(2, res2.Values.Where(v => v.Usage == usage).Count());
 					Assert.AreEqual(2, res2.Values.Where(v => v.FirstTableId == 1).Count());
 
@@ -431,7 +430,7 @@ namespace Tests.Linq
 					allUsages = false;
 					var res3 = Test()!;
 					Assert.AreEqual(1, res2.Id);
-					Assert.AreEqual(1, res3.Values!.Count());
+					Assert.AreEqual(1, res3.Values!.Count);
 					Assert.AreEqual(1, res3.Values.Where(v => v.Usage == usage).Count());
 					Assert.AreEqual(1, res3.Values.Where(v => v.FirstTableId == 1).Count());
 
