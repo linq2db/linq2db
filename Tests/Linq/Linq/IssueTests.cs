@@ -697,6 +697,7 @@ namespace Tests.Linq
 			using(var db = GetDataContext(context))
 			using(var table = db.CreateLocalTable<TableWithGuid>())
 			{
+				db.InlineParameters = !useParameters;
 				var guid = Guid.NewGuid();
 				table.Insert(() => new TableWithGuid { Guid = guid, Data = "My data" });
 				Assert.AreEqual("My data", table.Where(x => x.Guid == guid).Select(x => x.Data).First());
