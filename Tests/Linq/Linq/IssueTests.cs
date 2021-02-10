@@ -692,7 +692,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue2823Guid([IncludeDataSources(true, TestProvName.AllFirebird)] string context)
+		public void Issue2823Guid([IncludeDataSources(true, TestProvName.AllFirebird)] string context, [Values] bool useParameters)
 		{
 			using(var db = GetDataContext(context))
 			using(var table = db.CreateLocalTable<TableWithGuid>())
