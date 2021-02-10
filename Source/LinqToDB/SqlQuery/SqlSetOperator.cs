@@ -8,6 +8,7 @@ namespace LinqToDB.SqlQuery
 		public SqlSetOperator(SelectQuery selectQuery, SetOperation operation)
 		{
 			SelectQuery = selectQuery;
+			selectQuery.IsSetPart = true;
 			Operation   = operation;
 		}
 
