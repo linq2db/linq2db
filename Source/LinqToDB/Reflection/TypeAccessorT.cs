@@ -49,7 +49,7 @@ namespace LinqToDB.Reflection
 			//
 			if (!type.IsInterface && !type.IsArray)
 			{
-				var interfaceMethods = type.GetInterfaces().SelectMany(ti => type.GetInterfaceMap(ti).TargetMethods)
+				var interfaceMethods = type.GetInterfaces().SelectMany(ti => type.GetInterfaceMapEx(ti).TargetMethods)
 					.ToList();
 
 				if (interfaceMethods.Count > 0)
