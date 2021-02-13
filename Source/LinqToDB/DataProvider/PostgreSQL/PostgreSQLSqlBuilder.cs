@@ -416,5 +416,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			base.BuildEndCreateTableStatement(createTable);
 		}
+
+		public override string GetReserveSequenceValuesSql(int count, string sequenceName)
+		{
+			return $"SELECT nextval('{ConvertInline(sequenceName, ConvertType.SequenceName)}') FROM generate_series(1, {count.ToString(CultureInfo.InvariantCulture)})";
+		}
 	}
 }

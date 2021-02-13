@@ -31,6 +31,7 @@ using Newtonsoft.Json.Linq;
 namespace Tests.DataProvider
 {
 	using System.Threading.Tasks;
+	using LinqToDB.Tools;
 	using Model;
 
 	[TestFixture]
@@ -1057,7 +1058,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-				[Test]
+		[Test]
 		public async Task BulkCopyTestAsync([Values]BulkTestMode mode, [IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
 			var providerName      = GetProviderName(context, out var _);
@@ -1204,6 +1205,55 @@ namespace Tests.DataProvider
 
 				if (mode == BulkTestMode.WithRollback)
 					Assert.AreEqual(0, db.GetTable<AllTypes>().Where(_ => ids!.Contains(_.ID)).Count());
+			}
+		}
+
+		[Table("SequenceTest1")]
+		public class SequenceTest
+		{
+			[Column, SequenceName("sequencetestseq")]
+			public int    ID;
+			[Column]
+			public string Value = null!;
+		}
+
+		[Test]
+		public void BulkCopyRetrieveSequences(
+			[IncludeDataSources(TestProvName.AllPostgreSQL)] string context,
+			[Values] BulkCopyType bulkCopyType,
+			[Values] bool useSequence)
+		{
+				var data = Enumerable.Range(1, 40).Select(i => new SequenceTest { Value = $"SeqValue{i}" }).ToArray();
+
+			using (var db = new TestDataConnection(context))
+			{
+				try
+				{
+					db.GetTable<SequenceTest>().Where(_ => _.Value.StartsWith("SeqValue")).Delete();
+
+					if (useSequence)
+						db.Execute($"ALTER SEQUENCE sequencetestseq RESTART WITH 1");
+
+					var options = new BulkCopyOptions()
+					{
+						KeepIdentity = bulkCopyType == BulkCopyType.RowByRow ? false : true,
+						MaxBatchSize = 10,
+						BulkCopyType = bulkCopyType
+					};
+
+					db.BulkCopy(options, data.RetrieveIdentity(db, useSequence));
+
+					var cnt = 1;
+					foreach (var d in data)
+					{
+						Assert.AreEqual(cnt, d.ID);
+						cnt++;
+					}
+				}
+				finally
+				{
+					db.GetTable<SequenceTest>().Where(_ => _.Value.StartsWith("SeqValue")).Delete();
+				}
 			}
 		}
 
