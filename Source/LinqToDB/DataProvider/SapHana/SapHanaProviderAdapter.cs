@@ -109,7 +109,7 @@ namespace LinqToDB.DataProvider.SapHana
 							commandType,
 							transactionType,
 							typeSetter,
-							typeMapper.BuildWrappedFactory((IDbConnection connection, HanaBulkCopyOptions options, IDbTransaction? transaction) => new HanaBulkCopy((HanaConnection)connection, (HanaBulkCopyOptions)options, (HanaTransaction?)transaction)),
+							typeMapper.BuildWrappedFactory((IDbConnection connection, HanaBulkCopyOptions options, IDbTransaction? transaction) => new HanaBulkCopy((HanaConnection)connection, options, (HanaTransaction?)transaction)),
 							typeMapper.BuildWrappedFactory((int source, string destination) => new HanaBulkCopyColumnMapping(source, destination)));
 					}
 

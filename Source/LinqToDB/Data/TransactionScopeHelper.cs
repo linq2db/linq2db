@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Common;
 
 namespace LinqToDB.Data
 {
@@ -33,7 +34,7 @@ namespace LinqToDB.Data
 					var body   = Expression.NotEqual(Expression.MakeMemberAccess(null, currentDataProperty),
 						Expression.Constant(null));
 					var lambda = Expression.Lambda<Func<bool>>(body);
-					return lambda.Compile();
+					return lambda.CompileExpression();
 				}
 			}
 

@@ -9,7 +9,6 @@ using JetBrains.Annotations;
 namespace LinqToDB.Tools.EntityServices
 {
 	using System.Diagnostics.CodeAnalysis;
-	using Common;
 
 	[PublicAPI]
 	public class IdentityMap : IDisposable
@@ -43,13 +42,13 @@ namespace LinqToDB.Tools.EntityServices
 		public IEnumerable<T> GetEntities<T>()
 			where T : class
 		{
-			return GetEntityMap<T>().Entities?.Values.Select(e => e.Entity) ?? Array<T>.Empty;
+			return GetEntityMap<T>().Entities.Values.Select(e => e.Entity);
 		}
 
 		public IEnumerable<EntityMapEntry<T>> GetEntityEntries<T>()
 			where T : class
 		{
-			return GetEntityMap<T>().Entities?.Values ?? Array<EntityMapEntry<T>>.Empty;
+			return GetEntityMap<T>().Entities.Values;
 		}
 
 		public EntityMap<T> GetEntityMap<T>()

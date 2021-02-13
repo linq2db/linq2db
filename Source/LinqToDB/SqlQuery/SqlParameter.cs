@@ -155,8 +155,10 @@ namespace LinqToDB.SqlQuery
 
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{
+			if (Name?.StartsWith("@") == false)
+				sb.Append('@');
+
 			sb
-				.Append('@')
 				.Append(Name ?? "parameter");
 
 #if DEBUG

@@ -450,13 +450,13 @@ namespace Tests.Linq
 #if NET472
 				if (isLinqService)
 				{
-					var fe = Assert.Throws<FaultException<ExceptionDetail>>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList());
+					var fe = Assert.Throws<FaultException<ExceptionDetail>>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList())!;
 					Assert.True(fe.Message.ToLowerInvariant().Contains("firstname"));
 				}
 				else
 #endif
 				{
-					var ex = Assert.Throws<LinqToDBConvertException>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList());
+					var ex = Assert.Throws<LinqToDBConvertException>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList())!;
 					// field name casing depends on database
 					Assert.AreEqual("firstname", ex.ColumnName!.ToLowerInvariant());
 				}
@@ -471,7 +471,7 @@ namespace Tests.Linq
 			using (new CustomCommandProcessor(null))
 			using (var db = GetDataContext(context))
 			{
-				var ex = Assert.Throws<LinqToDBConvertException>(() => db.GetTable<BadMapping>().Select(_ => new { _.BadEnum }).ToList());
+				var ex = Assert.Throws<LinqToDBConvertException>(() => db.GetTable<BadMapping>().Select(_ => new { _.BadEnum }).ToList())!;
 				Assert.AreEqual("lastname", ex.ColumnName!.ToLower());
 			}
 		}

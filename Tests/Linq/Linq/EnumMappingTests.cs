@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
-#if NET472
-using System.ServiceModel;
-#endif
 
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -1769,7 +1766,7 @@ namespace Tests.Linq
 				ms.SetValueToSqlConverter(typeof(Issue1622Enum),
 					(sb, dt, v) =>
 					{
-						sb.Append("'").Append(((Issue1622Enum)v).ToString()).Append("_suffix'");
+						sb.Append('\'').Append(((Issue1622Enum)v).ToString()).Append("_suffix'");
 					});
 
 			using (var db = GetDataContext(context, ms))

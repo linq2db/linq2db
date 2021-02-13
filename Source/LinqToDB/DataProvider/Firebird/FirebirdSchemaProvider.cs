@@ -13,9 +13,9 @@ namespace LinqToDB.DataProvider.Firebird
 
 	class FirebirdSchemaProvider : SchemaProviderBase
 	{
-		protected override string GetDatabaseName(DataConnection connection)
+		protected override string GetDatabaseName(DataConnection dbConnection)
 		{
-			return Path.GetFileNameWithoutExtension(base.GetDatabaseName(connection));
+			return Path.GetFileNameWithoutExtension(base.GetDatabaseName(dbConnection));
 		}
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)

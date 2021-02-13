@@ -1,5 +1,8 @@
-﻿namespace LinqToDB.DataProvider.SapHana
+﻿
+
+namespace LinqToDB.DataProvider.SapHana
 {
+	using Common;
 	using Mapping;
 	using SqlQuery;
 	using System.Data.Linq;
@@ -28,7 +31,7 @@
 			stringBuilder
 				.Append("char(")
 				.Append(value)
-				.Append(")")
+				.Append(')')
 				;
 		}
 
@@ -36,10 +39,9 @@
 		{
 			stringBuilder.Append("x'");
 
-			foreach (var b in value)
-				stringBuilder.Append(b.ToString("X2"));
+			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
 
-			stringBuilder.Append("'");
+			stringBuilder.Append('\'');
 		}
 
 		internal static void ConvertStringToSql(StringBuilder stringBuilder, string value)

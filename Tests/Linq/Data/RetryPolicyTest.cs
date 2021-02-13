@@ -7,11 +7,9 @@ using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Data.RetryPolicy;
-using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Mapping;
 using NUnit.Framework;
-using Tests.Model;
 
 namespace Tests.Data
 {
@@ -149,7 +147,7 @@ namespace Tests.Data
 					Assert.Fail("Exception expected");
 				}
 			}
-			catch (Exception ex)
+			catch (NotImplementedException ex)
 			{
 				Assert.AreEqual("Execute", ex.Message);
 			}
@@ -173,7 +171,7 @@ namespace Tests.Data
 						Assert.Fail("Exception expected");
 					}
 				}
-				catch (Exception ex)
+				catch (NotImplementedException ex)
 				{
 					Assert.AreEqual("ExecuteT", ex.Message);
 				}
@@ -193,10 +191,10 @@ namespace Tests.Data
 
 		class DummyRetryPolicy : IRetryPolicy
 		{
-			public TResult       Execute<TResult>(Func<TResult> operation)                                                                                              => throw new Exception("ExecuteT");
-			public void          Execute(Action operation)                                                                                                              => throw new Exception("Execute");
-			public Task<TResult> ExecuteAsync<TResult>(Func<CancellationToken, Task<TResult>> operation, CancellationToken cancellationToken = new CancellationToken()) => throw new Exception("ExecuteAsyncT");
-			public Task          ExecuteAsync(Func<CancellationToken, Task> operation, CancellationToken cancellationToken = new CancellationToken())                   => throw new Exception("ExecuteAsync");
+			public TResult       Execute<TResult>(Func<TResult> operation)                                                                                              => throw new NotImplementedException("ExecuteT");
+			public void          Execute(Action operation)                                                                                                              => throw new NotImplementedException("Execute");
+			public Task<TResult> ExecuteAsync<TResult>(Func<CancellationToken, Task<TResult>> operation, CancellationToken cancellationToken = new CancellationToken()) => throw new NotImplementedException("ExecuteAsyncT");
+			public Task          ExecuteAsync(Func<CancellationToken, Task> operation, CancellationToken cancellationToken = new CancellationToken())                   => throw new NotImplementedException("ExecuteAsync");
 		}
 	}
 }

@@ -97,7 +97,7 @@ namespace LinqToDB.SqlQuery
 
 					foreach (var item in Items)
 					{
-						sb.Append("\t");
+						sb.Append('\t');
 						((IQueryElement)item).ToString(sb, dic);
 						sb.AppendLine();
 					}
@@ -117,7 +117,7 @@ namespace LinqToDB.SqlQuery
 
 					foreach (var item in Items)
 					{
-						sb.Append("\t");
+						sb.Append('\t');
 						((IQueryElement)item).ToString(sb, dic);
 						sb.AppendLine();
 					}
@@ -137,7 +137,7 @@ namespace LinqToDB.SqlQuery
 
 					foreach (var item in Items)
 					{
-						sb.Append("\t");
+						sb.Append('\t');
 						((IQueryElement)item).ToString(sb, dic);
 						sb.AppendLine();
 					}

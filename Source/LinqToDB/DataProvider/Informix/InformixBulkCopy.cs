@@ -103,7 +103,7 @@ namespace LinqToDB.DataProvider.Informix
 
 				if (connection != null)
 				{
-					var enumerator = source.GetAsyncEnumerator();
+					var enumerator = source.GetAsyncEnumerator(cancellationToken);
 					await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 					{
 						// call the synchronous provider-specific implementation

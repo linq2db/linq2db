@@ -27,13 +27,7 @@ namespace LinqToDB.Async
 		T IAsyncEnumerator<T>.Current => _enumerator!.Current;
 
 #if NETFRAMEWORK
-		void IDisposable.Dispose()
-		{
-			_enumerator!.Dispose();
-			_disposable?.Dispose();
-		}
-
-		async Task IAsyncEnumerator<T>.DisposeAsync()
+		async Task IAsyncDisposable.DisposeAsync()
 		{
 			await _enumerator!.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			_disposable?.Dispose();
@@ -54,7 +48,8 @@ namespace LinqToDB.Async
 		async ValueTask IAsyncDisposable.DisposeAsync()
 		{
 			await _enumerator!.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-			_disposable?.DisposeAsync();
+			if (_disposable != null)
+				await _disposable.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
 		async ValueTask<bool> IAsyncEnumerator<T>.MoveNextAsync()

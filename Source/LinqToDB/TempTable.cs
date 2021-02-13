@@ -292,7 +292,7 @@ namespace LinqToDB
 #if NETFRAMEWORK
 					table.Dispose();
 #else
-					await table.DisposeAsync();
+					await table.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 #endif
 				}
 				catch
@@ -350,7 +350,7 @@ namespace LinqToDB
 #if NETFRAMEWORK
 					table.Dispose();
 #else
-					await table.DisposeAsync();
+					await table.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 #endif
 				}
 				catch
@@ -520,11 +520,11 @@ namespace LinqToDB
 
 		#region ITableMutable<T> implementation
 
-		ITable<T> ITableMutable<T>.ChangeServerName  (string? serverName)        => ((ITableMutable<T>)_table).ChangeServerName  (serverName);
-		ITable<T> ITableMutable<T>.ChangeDatabaseName(string? databaseName)      => ((ITableMutable<T>)_table).ChangeDatabaseName(databaseName);
-		ITable<T> ITableMutable<T>.ChangeSchemaName  (string? schemaName)        => ((ITableMutable<T>)_table).ChangeSchemaName  (schemaName);
-		ITable<T> ITableMutable<T>.ChangeTableName   (string tableName)          => ((ITableMutable<T>)_table).ChangeTableName   (tableName);
-		ITable<T> ITableMutable<T>.ChangeTableOptions(TableOptions tableOptions) => ((ITableMutable<T>)_table).ChangeTableOptions(tableOptions);
+		ITable<T> ITableMutable<T>.ChangeServerName  (string? serverName)   => ((ITableMutable<T>)_table).ChangeServerName  (serverName);
+		ITable<T> ITableMutable<T>.ChangeDatabaseName(string? databaseName) => ((ITableMutable<T>)_table).ChangeDatabaseName(databaseName);
+		ITable<T> ITableMutable<T>.ChangeSchemaName  (string? schemaName)   => ((ITableMutable<T>)_table).ChangeSchemaName  (schemaName);
+		ITable<T> ITableMutable<T>.ChangeTableName   (string tableName)     => ((ITableMutable<T>)_table).ChangeTableName   (tableName);
+		ITable<T> ITableMutable<T>.ChangeTableOptions(TableOptions options) => ((ITableMutable<T>)_table).ChangeTableOptions(options);
 
 		#endregion
 
@@ -554,14 +554,14 @@ namespace LinqToDB
 
 		#region IQueryProviderAsync
 
-		Task<TResult> IQueryProviderAsync.ExecuteAsync<TResult>(Expression expression, CancellationToken token)
+		Task<TResult> IQueryProviderAsync.ExecuteAsync<TResult>(Expression expression, CancellationToken cancellationToken)
 		{
-			return _table.ExecuteAsync<TResult>(expression, token);
+			return _table.ExecuteAsync<TResult>(expression, cancellationToken);
 		}
 
-		Task<IAsyncEnumerable<TResult>> IQueryProviderAsync.ExecuteAsyncEnumerable<TResult>(Expression expression, CancellationToken token)
+		Task<IAsyncEnumerable<TResult>> IQueryProviderAsync.ExecuteAsyncEnumerable<TResult>(Expression expression, CancellationToken cancellationToken)
 		{
-			return _table.ExecuteAsyncEnumerable<TResult>(expression, token);
+			return _table.ExecuteAsyncEnumerable<TResult>(expression, cancellationToken);
 		}
 
 		#endregion

@@ -12,6 +12,7 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using LinqToDB.Common;
 	using Model;
 
 	[TestFixture]
@@ -134,7 +135,7 @@ namespace Tests.Linq
 		[ExpressionMethod(nameof(Count4Expression))]
 		static int Count4(Parent p, int id, int n)
 		{
-			return (_count4Expression ??= Count4Expression().Compile())(p, id, n);
+			return (_count4Expression ??= Count4Expression().CompileExpression())(p, id, n);
 		}
 
 		static Func<Parent,int,int,int>? _count4Expression;
@@ -158,7 +159,7 @@ namespace Tests.Linq
 		[ExpressionMethod(nameof(Count5Expression))]
 		static int Count5(ITestDataContext db, Parent p, int n)
 		{
-			return (_count5Expression ??= Count5Expression().Compile())(db, p, n);
+			return (_count5Expression ??= Count5Expression().CompileExpression())(db, p, n);
 		}
 
 		static Func<ITestDataContext,Parent,int,int>? _count5Expression;
@@ -182,7 +183,7 @@ namespace Tests.Linq
 		[ExpressionMethod(nameof(Count6Expression))]
 		static int Count6(ITable<Child> c, Parent p)
 		{
-			return (_count6Expression ??= Count6Expression().Compile())(c, p);
+			return (_count6Expression ??= Count6Expression().CompileExpression())(c, p);
 		}
 
 		static Func<ITable<Child>,Parent,int>? _count6Expression;
@@ -204,7 +205,7 @@ namespace Tests.Linq
 		[ExpressionMethod(nameof(Count7Expression))]
 		static int Count7(ITable<Child> ch, Parent p, int n)
 		{
-			return (_count7Expression ??= Count7Expression().Compile())(ch, p, n);
+			return (_count7Expression ??= Count7Expression().CompileExpression())(ch, p, n);
 		}
 
 		static Func<ITable<Child>,Parent,int,int>? _count7Expression;

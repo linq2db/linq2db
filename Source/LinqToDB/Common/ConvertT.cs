@@ -29,7 +29,7 @@ namespace LinqToDB.Common
 
 			var rexpr = (Expression<Func<TFrom,TTo>>)expr.Item1.Transform(e => e is DefaultValueExpression ? e.Reduce() : e);
 
-			_lambda = rexpr.Compile();
+			_lambda = rexpr.CompileExpression();
 		}
 
 		private static Expression<Func<TFrom,TTo>>? _expression;
@@ -54,7 +54,7 @@ namespace LinqToDB.Common
 				else
 				{
 					_expression = value;
-					_lambda = _expression.Compile();
+					_lambda = _expression.CompileExpression();
 				}
 
 				if (setDefault)

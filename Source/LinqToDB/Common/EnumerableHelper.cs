@@ -10,9 +10,11 @@ namespace LinqToDB.Common
 #if !NETFRAMEWORK
 		public static IEnumerable<T> AsyncToSyncEnumerable<T>(IAsyncEnumerator<T> enumerator)
 		{
-			while (enumerator.MoveNextAsync().GetAwaiter().GetResult())
+			var result = enumerator.MoveNextAsync();
+			while (result.IsCompleted ? result.Result : result.AsTask().GetAwaiter().GetResult())
 			{
 				yield return enumerator.Current;
+				result = enumerator.MoveNextAsync();
 			}
 		}
 

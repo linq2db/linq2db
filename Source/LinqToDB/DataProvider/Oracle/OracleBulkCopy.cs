@@ -6,12 +6,11 @@ using System.Linq;
 
 namespace LinqToDB.DataProvider.Oracle
 {
+	using System.Threading;
+	using System.Threading.Tasks;
 	using Data;
 	using LinqToDB.Common;
 	using SqlProvider;
-	using System.Text;
-	using System.Threading;
-	using System.Threading.Tasks;
 
 	class OracleBulkCopy : BasicBulkCopy
 	{
@@ -376,15 +375,15 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			helper.StringBuilder
 				.AppendFormat("INSERT INTO {0}", helper.TableName).AppendLine()
-				.Append("(");
+				.Append('(');
 
 			foreach (var column in helper.Columns)
 			{
 				helper.StringBuilder
 					.AppendLine()
-					.Append("\t");
+					.Append('\t');
 				helper.SqlBuilder.Convert(helper.StringBuilder, column.ColumnName, ConvertType.NameToQueryField);
-				helper.StringBuilder.Append(",");
+				helper.StringBuilder.Append(',');
 			}
 
 			helper.StringBuilder.Length--;

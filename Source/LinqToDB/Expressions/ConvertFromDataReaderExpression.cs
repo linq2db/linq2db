@@ -225,7 +225,7 @@ namespace LinqToDB.Expressions
 						isNullParameter,
 						rawValueParameter);
 
-					_slowColumnConverters[fromType] = func      = lex.Compile();
+					_slowColumnConverters[fromType] = func = lex.CompileExpression();
 				}
 
 				try
@@ -276,7 +276,7 @@ namespace LinqToDB.Expressions
 						rawExpr.Type == typeof(object) ? rawExpr : Convert(rawExpr, typeof(object)),
 						dataReaderParameter);
 
-					_slowRawReaders[fromType] = func = lex.Compile();
+					_slowRawReaders[fromType] = func = lex.CompileExpression();
 				}
 
 				return func(dataReader);
@@ -297,7 +297,7 @@ namespace LinqToDB.Expressions
 						expr.Type == typeof(object) ? expr : Convert(expr, typeof(object)),
 						parameter);
 
-					_columnConverters[fromType] = func = lex.Compile();
+					_columnConverters[fromType] = func = lex.CompileExpression();
 				}
 
 				try

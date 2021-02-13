@@ -144,14 +144,14 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		internal static StringBuilder QuoteIdentifier(StringBuilder sb, string identifier)
 		{
-			sb.Append("[");
+			sb.Append('[');
 
 			if (identifier.Contains("]"))
 				sb.Append(identifier.Replace("]", "]]"));
 			else
 				sb.Append(identifier);
 
-			sb.Append("]");
+			sb.Append(']');
 
 			return sb;
 		}

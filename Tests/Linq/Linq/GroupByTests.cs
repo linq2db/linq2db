@@ -7,7 +7,6 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using LinqToDB.Common;
 	using LinqToDB.Linq;
 	using LinqToDB.Mapping;
 	using Model;

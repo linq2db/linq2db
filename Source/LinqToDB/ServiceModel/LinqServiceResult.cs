@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NETFRAMEWORK
+using System;
 using System.Collections.Generic;
 
 namespace LinqToDB.ServiceModel
@@ -13,3 +14,4 @@ namespace LinqToDB.ServiceModel
 		public List<string[]> Data         { get; set; } = null!;
 	}
 }
+#endif

@@ -678,7 +678,7 @@ namespace LinqToDB
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Inserted record's identity value.</returns>
-		public static async Task<int> InsertWithInt32IdentityAsync<T>(
+		public static Task<int> InsertWithInt32IdentityAsync<T>(
 			this IDataContext dataContext,
 			T                 obj,
 			string?           tableName    = default,
@@ -688,7 +688,7 @@ namespace LinqToDB
 			TableOptions      tableOptions = default,
 			CancellationToken token        = default)
 		{
-			return await InsertWithInt32IdentityAsync(dataContext, obj, null, tableName: tableName, databaseName: databaseName, schemaName: schemaName, serverName: serverName, tableOptions: tableOptions, token);
+			return InsertWithInt32IdentityAsync(dataContext, obj, null, tableName: tableName, databaseName: databaseName, schemaName: schemaName, serverName: serverName, tableOptions: tableOptions, token);
 		}
 
 		/// <summary>
@@ -739,7 +739,7 @@ namespace LinqToDB
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Inserted record's identity value.</returns>
-		public static async Task<long> InsertWithInt64IdentityAsync<T>(
+		public static Task<long> InsertWithInt64IdentityAsync<T>(
 			this IDataContext dataContext,
 			T                 obj,
 			string?           tableName    = default,
@@ -749,7 +749,7 @@ namespace LinqToDB
 			TableOptions      tableOptions = default,
 			CancellationToken token        = default)
 		{
-			return await InsertWithInt64IdentityAsync(dataContext, obj, null, tableName: tableName, databaseName: databaseName, schemaName: schemaName, serverName: serverName, tableOptions: tableOptions, token);
+			return InsertWithInt64IdentityAsync(dataContext, obj, null, tableName: tableName, databaseName: databaseName, schemaName: schemaName, serverName: serverName, tableOptions: tableOptions, token);
 		}
 
 		/// <summary>
@@ -801,7 +801,7 @@ namespace LinqToDB
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Inserted record's identity value.</returns>
-		public static async Task<decimal> InsertWithDecimalIdentityAsync<T>(
+		public static Task<decimal> InsertWithDecimalIdentityAsync<T>(
 			this IDataContext dataContext,
 			T                 obj,
 			string?           tableName    = default,
@@ -811,7 +811,7 @@ namespace LinqToDB
 			TableOptions      tableOptions = default,
 			CancellationToken token        = default)
 		{
-			return await InsertWithDecimalIdentityAsync(dataContext, obj, null, tableName: tableName, databaseName: databaseName, schemaName: schemaName, serverName: serverName, tableOptions: tableOptions, token);
+			return InsertWithDecimalIdentityAsync(dataContext, obj, null, tableName: tableName, databaseName: databaseName, schemaName: schemaName, serverName: serverName, tableOptions: tableOptions, token);
 		}
 
 		/// <summary>

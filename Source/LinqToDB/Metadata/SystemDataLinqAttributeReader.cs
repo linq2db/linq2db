@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NETFRAMEWORK
+using System;
 using System.Linq;
 using System.Reflection;
 
@@ -106,3 +107,4 @@ namespace LinqToDB.Metadata
 			=> _reader.GetDynamicColumns(type);
 	}
 }
+#endif

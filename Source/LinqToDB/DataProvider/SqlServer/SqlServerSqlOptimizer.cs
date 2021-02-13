@@ -29,16 +29,16 @@ namespace LinqToDB.DataProvider.SqlServer
 			);
 		}
 
-		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expr, ConvertVisitor visitor,
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor visitor,
 			EvaluationContext context)
 		{
-			expr = base.ConvertExpressionImpl(expr, visitor, context);
+			expression = base.ConvertExpressionImpl(expression, visitor, context);
 
-			switch (expr.ElementType)
+			switch (expression.ElementType)
 			{
 				case QueryElementType.SqlBinaryExpression:
 					{
-						var be = (SqlBinaryExpression)expr;
+						var be = (SqlBinaryExpression)expression;
 
 						switch (be.Operation)
 						{
@@ -64,7 +64,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 				case QueryElementType.SqlFunction:
 					{
-						var func = (SqlFunction)expr;
+						var func = (SqlFunction)expression;
 
 						switch (func.Name)
 						{
@@ -121,7 +121,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					}
 			}
 
-			return expr;
+			return expression;
 		}
 
 	}

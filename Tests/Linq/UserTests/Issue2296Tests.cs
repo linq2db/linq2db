@@ -1,9 +1,6 @@
-﻿using NUnit.Framework;
-using System;
-using System.Linq;
+﻿using System.Linq;
 using LinqToDB;
-using System.Security.Cryptography;
-using System.Diagnostics;
+using NUnit.Framework;
 
 namespace Tests.UserTests
 {

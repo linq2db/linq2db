@@ -5,13 +5,15 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Data;
-
 using NUnit.Framework;
+
+#if !NET472
+using System.Threading;
+#endif
 
 namespace Tests.Linq
 {
 	using Model;
-	using System.Threading;
 	using UserTests;
 
 	[TestFixture]
@@ -117,6 +119,9 @@ namespace Tests.Linq
 				sql = string.Join(Environment.NewLine, sql.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
 					.Where(line => !line.StartsWith("--")));
 
+#if !NET472
+			await
+#endif
 				using (var rd = await conn.SetCommand(sql).ExecuteReaderAsync())
 				{
 					var list = await rd.QueryToArrayAsync<string>();

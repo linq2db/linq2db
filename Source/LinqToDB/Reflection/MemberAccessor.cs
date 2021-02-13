@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -14,9 +14,7 @@ namespace LinqToDB.Reflection
 
 	public class MemberAccessor
 	{
-		static readonly ConstructorInfo ArgumentExceptionConstructorInfo =
-			typeof(ArgumentException).GetConstructor(new[] {typeof(string)}) ??
-				throw new Exception($"Can not retrieve information about constructor for {nameof(ArgumentException)}");
+		static readonly ConstructorInfo ArgumentExceptionConstructorInfo = typeof(ArgumentException).GetConstructor(new[] {typeof(string)})!;
 
 		internal MemberAccessor(TypeAccessor typeAccessor, string memberName, EntityDescriptor? ed)
 		{
@@ -73,7 +71,7 @@ namespace LinqToDB.Reflection
 
 								return Expression.Block(
 									new[] { local },
-									Expression.Assign(local, next) as Expression,
+									Expression.Assign(local, next),
 									Expression.IfThen(
 										Expression.NotEqual(local, Expression.Constant(null)),
 										MakeGetter(local, i + 1)));
@@ -292,7 +290,7 @@ namespace LinqToDB.Reflection
 			var getterExpr = GetterExpression.GetBody(Expression.Convert(objParam, TypeAccessor.Type));
 			var getter     = Expression.Lambda<Func<object,object?>>(Expression.Convert(getterExpr, typeof(object)), objParam);
 
-			Getter = getter.Compile();
+			Getter = getter.CompileExpression();
 
 			var valueParam = Expression.Parameter(typeof(object), "value");
 
@@ -303,7 +301,7 @@ namespace LinqToDB.Reflection
 					Expression.Convert(valueParam, Type));
 				var setter = Expression.Lambda<Action<object, object?>>(setterExpr, objParam, valueParam);
 
-				Setter = setter.Compile();
+				Setter = setter.CompileExpression();
 			}
 		}
 

@@ -357,7 +357,7 @@ namespace Tests.Linq
 				var expected = db.Product.ToList().Select(x => x is Northwind.DiscontinuedProduct ? x : null).ToList();
 
 				Assert.That(result.Count,                    Is.GreaterThan(0));
-				Assert.That(expected.Count(),                Is.EqualTo(result.Count));
+				Assert.That(expected.Count,                  Is.EqualTo(result.Count));
 				Assert.That(result.Contains(null),           Is.True);
 				Assert.That(result.Select(x => x == null ? (int?)null : x.ProductID).Except(expected.Select(x => x == null ? (int?)null : x.ProductID)).Count(), Is.EqualTo(0));
 			}
