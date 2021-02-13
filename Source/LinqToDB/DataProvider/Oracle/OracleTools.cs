@@ -205,23 +205,25 @@ namespace LinqToDB.DataProvider.Oracle
 #endif
 		}
 
-		public static IDataProvider GetDataProvider(string? providerName = null, string? assemblyName = null)
+		public static IDataProvider GetDataProvider(string? providerName = null, string? assemblyName = null, OracleVersion? version = null)
 		{
+			version ??= DefaultVersion;
+
 #if NETFRAMEWORK
-			if (assemblyName == OracleProviderAdapter.NativeAssemblyName ) return GetVersionedDataProvider(DefaultVersion, false);
-			if (assemblyName == OracleProviderAdapter.ManagedAssemblyName) return GetVersionedDataProvider(DefaultVersion, true);
+			if (assemblyName == OracleProviderAdapter.NativeAssemblyName ) return GetVersionedDataProvider(version.Value, false);
+			if (assemblyName == OracleProviderAdapter.ManagedAssemblyName) return GetVersionedDataProvider(version.Value, true);
 
 			return providerName switch
 			{
-				ProviderName.OracleNative  => GetVersionedDataProvider(DefaultVersion, false),
-				ProviderName.OracleManaged => GetVersionedDataProvider(DefaultVersion, true),
+				ProviderName.OracleNative  => GetVersionedDataProvider(version.Value, false),
+				ProviderName.OracleManaged => GetVersionedDataProvider(version.Value, true),
 				_						   => 
 					DetectedProviderName == ProviderName.OracleNative
-					? GetVersionedDataProvider(DefaultVersion, false)
-					: GetVersionedDataProvider(DefaultVersion, true),
+					? GetVersionedDataProvider(version.Value, false)
+					: GetVersionedDataProvider(version.Value, true),
 			};
 #else
-			return GetVersionedDataProvider(DefaultVersion, true);
+			return GetVersionedDataProvider(version.Value, true);
 #endif
 		}
 
