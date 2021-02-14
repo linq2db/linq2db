@@ -243,7 +243,14 @@ namespace LinqToDB.Linq.Builder
 				var cliMutableAttr         = attrs.FirstOrDefault(attr => attr.GetType().FullName == "Microsoft.FSharp.Core.CLIMutableAttribute");
 
 				if (compilationMappingAttr != null)
+				{
+					// https://github.com/dotnet/fsharp/blob/1fcb351bb98fe361c7e70172ea51b5e6a4b52ee0/src/fsharp/FSharp.Core/prim-types.fsi
+					// ObjectType = 3
+					if (System.Convert.ToInt32(((dynamic)compilationMappingAttr).SourceConstructFlags) == 3)
+						return false;
+
 					sequence = ((dynamic)compilationMappingAttr).SequenceNumber;
+				}
 
 				return compilationMappingAttr != null && cliMutableAttr == null;
 			}
