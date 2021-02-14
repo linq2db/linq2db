@@ -30,8 +30,9 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue(2839, Configuration = TestProvName.AllFirebird)]
 		[Test]
-		public void TestExpressionMethod([DataSources()] string context)
+		public void TestExpressionMethod([DataSources] string context)
 		{
 			var fluentMappingBuilder = new MappingSchema().GetFluentMappingBuilder();
 
