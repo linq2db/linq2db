@@ -534,6 +534,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = GetDataContext(context))
 			{
+				ResetTestSequence(context);
 				db.GetTable<PostgreSQLSpecific.SequenceTest1>().Where(_ => _.Value == "SeqValue").Delete();
 				db.Insert(new PostgreSQLSpecific.SequenceTest1 { Value = "SeqValue" });
 
@@ -566,6 +567,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = GetDataContext(context))
 			{
+				ResetTestSequence(context);
 				db.GetTable<PostgreSQLSpecific.SequenceTest3>().Where(_ => _.Value == "SeqValue").Delete();
 				db.Insert(new PostgreSQLSpecific.SequenceTest3 { Value = "SeqValue" });
 
@@ -628,6 +630,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = GetDataContext(context))
 			{
+				ResetTestSequence(context);
 				db.GetTable<PostgreSQLSpecific.SequenceTest1>().Where(_ => _.Value == "SeqValue").Delete();
 
 				var id1 = Convert.ToInt32(db.InsertWithIdentity(new PostgreSQLSpecific.SequenceTest1 { Value = "SeqValue" }));
@@ -664,6 +667,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = GetDataContext(context))
 			{
+				ResetTestSequence(context);
 				db.GetTable<PostgreSQLSpecific.SequenceTest3>().Where(_ => _.Value == "SeqValue").Delete();
 
 				var id1 = Convert.ToInt32(db.InsertWithIdentity(new PostgreSQLSpecific.SequenceTest3 { Value = "SeqValue" }));
@@ -1232,7 +1236,7 @@ namespace Tests.DataProvider
 					db.GetTable<SequenceTest>().Where(_ => _.Value.StartsWith("SeqValue")).Delete();
 
 					if (useSequence)
-						db.Execute($"ALTER SEQUENCE sequencetestseq RESTART WITH 1");
+						ResetTestSequence(context);
 
 					var options = new BulkCopyOptions()
 					{
