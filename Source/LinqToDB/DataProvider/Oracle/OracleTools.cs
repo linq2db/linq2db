@@ -311,8 +311,7 @@ namespace LinqToDB.DataProvider.Oracle
 		/// <summary>
 		/// Gets or sets flag to tell LinqToDB to quote identifiers, if they contain lowercase letters.
 		/// Default value: <c>false</c>.
-		/// This flag is added for backward compatibility and will be removed later, so it is recommended to
-		/// leave it as <c>false</c> and fix mappings to use uppercase letters for non-quoted identifiers.
+		/// This flag is added for backward compatibility and not recommended for use with new applications.
 		/// </summary>
 		public static bool DontEscapeLowercaseIdentifiers { get; set; }
 	}
