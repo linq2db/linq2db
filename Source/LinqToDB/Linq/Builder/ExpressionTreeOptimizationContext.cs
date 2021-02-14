@@ -496,13 +496,13 @@ namespace LinqToDB.Linq.Builder
 			result = expression.Transform(expr =>
 			{
 				if (_exposedCache.TryGetValue(expr, out var aleradyExposed))
-					return new TransformInfo(aleradyExposed, true); 
+					return new TransformInfo(aleradyExposed, true);
 
 				switch (expr.NodeType)
 				{
 					case ExpressionType.ArrayLength:
 						var ue = (UnaryExpression)expr;
-						var ll  = Expressions.ConvertMember(MappingSchema, ue.Operand?.Type, ue.Operand.Type.GetProperty("Length"));
+						var ll = Expressions.ConvertMember(MappingSchema, ue.Operand?.Type, ue.Operand.Type.GetProperty(nameof(Array.Length)));
 						if (ll != null)
 						{
 							var body  = ll.Body.Unwrap();
@@ -511,7 +511,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								if (wpi.NodeType == ExpressionType.Parameter && parms.ContainsKey((ParameterExpression)wpi))
 								{
-									var o=ue;
+									var o = ue;
 									if (wpi.Type.IsSameOrParentOf(ue.Operand!.Type))
 									{
 										return ue.Operand;
@@ -532,9 +532,8 @@ namespace LinqToDB.Linq.Builder
 
 							if (ex.Type != expr.Type)
 								ex = new ChangeTypeExpression(ex, expr.Type);
-							ex = ExposeExpression(ex);
-							//RegisterAlias(ex, alias!);
-							return ex;
+
+							return new TransformInfo(ex, false, true);
 						}
 						break;
 					case ExpressionType.MemberAccess:
@@ -655,7 +654,6 @@ namespace LinqToDB.Linq.Builder
 							}
 							break;
 						}
-
 				}
 
 				_exposedCache.Add(expr, expr);

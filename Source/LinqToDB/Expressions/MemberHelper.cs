@@ -70,9 +70,7 @@ namespace LinqToDB.Expressions
 			}
 
 			if (expr.NodeType == ExpressionType.ArrayLength)
-			{
 				return ((UnaryExpression)expr).Operand.Type.GetProperty("Length");
-			}
 
 			return
 				expr is MemberExpression me
