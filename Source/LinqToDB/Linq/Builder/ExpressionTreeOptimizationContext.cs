@@ -616,7 +616,7 @@ namespace LinqToDB.Linq.Builder
 
 			return result;
 
-			static Expression convertMemberExpression(Expression expr, Expression root, LambdaExpression l)
+			static Expression СonvertMemberExpression(Expression expr, Expression root, LambdaExpression l)
 			{
 				var body  = l.Body.Unwrap();
 				var parms = l.Parameters.ToDictionary(p => p);
