@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 using System.Text;
 
 
@@ -27,6 +28,13 @@ namespace LinqToDB.DataProvider.Firebird
 			SetValueToSqlConverter(typeof(byte[])  , (sb, dt, v) => ConvertBinaryToSql(sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary)  , (sb, dt, v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
 			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => BuildDateTime(sb, dt, (DateTime)v));
+			SetValueToSqlConverter(typeof(Guid)    , (sb, dt, v) => ConvertGuidToSql(sb, dt, (Guid)v));
+		}
+
+		static FirebirdMappingSchema()
+		{
+			var fbConnectionType = FirebirdProviderAdapter.GetInstance().ConnectionType;
+			_useLegacyGuidEncoding = (fbConnectionType.Assembly is Assembly assembly) && (assembly.GetName().Version < new Version(6, 0, 0, 0));
 		}
 
 		static void BuildDateTime(StringBuilder stringBuilder, SqlDataType dt, DateTime value)
@@ -41,6 +49,31 @@ namespace LinqToDB.DataProvider.Firebird
 
 			stringBuilder.AppendFormat(format, value, dbType);
 		}
+
+		// workaround for http://tracker.firebirdsql.org/browse/DNET-509
+		static bool _useLegacyGuidEncoding;
+
+		static void ConvertGuidToSql(StringBuilder sb, SqlDataType dataType, Guid value)
+		{
+			if (dataType.Type.DataType == DataType.Guid)
+			{
+				var bytes = value.ToByteArray();
+				if (BitConverter.IsLittleEndian && !_useLegacyGuidEncoding)
+				{
+					Array.Reverse(bytes, 0, 4);
+					Array.Reverse(bytes, 4, 2);
+					Array.Reverse(bytes, 6, 2);
+				}
+				sb.Append("X'");
+				sb.AppendByteArrayAsHexViaLookup32(bytes);
+				sb.Append('\'');
+			} 
+			else
+			{
+				sb.Append('\'').Append(value.ToString()).Append('\'');
+			}
+		}
+
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
 		{

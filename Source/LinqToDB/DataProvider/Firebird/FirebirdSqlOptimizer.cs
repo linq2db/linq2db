@@ -142,6 +142,16 @@ namespace LinqToDB.DataProvider.Firebird
 								var ex = AlternativeConvertToBoolean(func, 2);
 								if (ex != null)
 									return ex;
+							} 
+							else 
+							if (func.SystemType.ToUnderlying() == typeof(string) && func.Parameters[2].SystemType?.ToUnderlying() == typeof(Guid))
+							{
+								return new SqlFunction(func.SystemType, "UUID_TO_CHAR", func.Parameters[2]);
+							}
+							else
+							if (func.SystemType.ToUnderlying() == typeof(Guid) && func.Parameters[2].SystemType?.ToUnderlying() == typeof(string))
+							{
+								return new SqlFunction(func.SystemType, "CHAR_TO_UUID", func.Parameters[2]);
 							}
 							break;
 						}

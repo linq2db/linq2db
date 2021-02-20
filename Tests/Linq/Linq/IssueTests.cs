@@ -692,15 +692,28 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue2823Guid([IncludeDataSources(true, TestProvName.AllFirebird)] string context, [Values] bool useParameters)
+		public void Issue2823Guid([IncludeDataSources(false, TestProvName.AllFirebird)] string context, [Values] bool useParametersForInsert, [Values]bool useParametersForSelect)
 		{
 			using(var db = GetDataContext(context))
-			using(var table = db.CreateLocalTable<TableWithGuid>())
+			using(var table = db.CreateLocalTable<TableWithGuid>())			
 			{
-				db.InlineParameters = !useParameters;
+				db.BeginTransaction();				
+				
 				var guid = Guid.NewGuid();
+				db.InlineParameters = !useParametersForInsert;
 				table.Insert(() => new TableWithGuid { Guid = guid, Data = "My data" });
+
+				db.InlineParameters = useParametersForSelect;
 				Assert.AreEqual("My data", table.Where(x => x.Guid == guid).Select(x => x.Data).First());
+
+				//AreEqual(from x in db.Types2 select x.GuidValue, from x in Types2 select x.GuidValue);
+				guid = Guid.NewGuid();
+				db.InlineParameters = !useParametersForInsert;
+				db.Types2.Insert(() => new LinqDataTypes2 { GuidValue = guid });
+
+				db.InlineParameters = !useParametersForSelect;
+
+				Assert.AreEqual(guid, db.Types2.Where(x => x.GuidValue == guid).Select(x => x.GuidValue).First());
 			}
 		}
 
