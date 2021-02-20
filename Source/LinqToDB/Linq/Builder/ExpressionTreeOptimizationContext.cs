@@ -506,7 +506,7 @@ namespace LinqToDB.Linq.Builder
 							var ll = Expressions.ConvertMember(MappingSchema, ue.Operand?.Type, ue.Operand!.Type.GetProperty(nameof(Array.Length))!);
 							if (ll != null)
 							{
-								var ex = convertMemberExpression(expr, ue.Operand!, ll);
+								var ex = СonvertMemberExpression(expr, ue.Operand!, ll);
 
 								return new TransformInfo(ex, false, true);
 							}
