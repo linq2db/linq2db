@@ -528,7 +528,7 @@ namespace LinqToDB.Linq.Builder
 
 							if (l != null)
 							{
-								var ex = convertMemberExpression(expr, me.Expression!, l);
+								var ex = СonvertMemberExpression(expr, me.Expression!, l);
 
 								return new TransformInfo(AliasCall(ex, alias!), false, true);
 							}
