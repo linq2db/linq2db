@@ -13,13 +13,17 @@ namespace LinqToDB
 		/// <param name="collation">Collation to apply.</param>
 		/// <returns>Expression with specified collation.</returns>
 		/// <remarks>Server-side only, does not perform validation on collation name beyond simple valid character checks.</remarks>
-		[Sql.Extension("{expr} COLLATE {collation}", ServerSideOnly = true, BuilderType = typeof(NamedCollationBuilder))]
+		[Extension("", ServerSideOnly = true, BuilderType = typeof(DB2LUWCollationBuilder)    , Configuration = ProviderName.DB2LUW)]
+		[Extension("", ServerSideOnly = true, BuilderType = typeof(PostgreSQLCollationBuilder), Configuration = ProviderName.PostgreSQL)]
+		[Extension("", ServerSideOnly = true, BuilderType = typeof(NamedCollationBuilder))]
 		public static string Collate(this string expr, string collation)
-			=> throw new InvalidOperationException("Collation is server-side only.");
+			=> throw new InvalidOperationException($"{nameof(Sql)}.{nameof(Sql.Collate)} is server-side only API.");
 
-		internal class NamedCollationBuilder : Sql.IExtensionCallBuilder
+		internal class NamedCollationBuilder : IExtensionCallBuilder
 		{
-			public void Build(Sql.ISqExtensionBuilder builder)
+			private static readonly Regex _collationValidator = new Regex(@"^[a-zA-Z0-9_\.-@]+$", RegexOptions.Compiled);
+
+			public void Build(ISqExtensionBuilder builder)
 			{
 				var expr = builder.GetExpression("expr");
 				var collation = builder.GetValue<string>("collation");
@@ -27,7 +31,7 @@ namespace LinqToDB
 				if (!ValidateCollation(collation))
 					throw new InvalidOperationException($"Invalid collation: {collation}");
 
-				builder.ResultExpression = new SqlExpression($"{{0}} COLLATE {collation}", Precedence.Primary, expr);
+				builder.ResultExpression = new SqlExpression(typeof(string), $"{{0}} COLLATE {collation}", Precedence.Primary, expr);
 			}
 
 			/// <summary>
@@ -35,10 +39,32 @@ namespace LinqToDB
 			/// </summary>
 			/// <param name="collation">Collation name to check.</param>
 			/// <returns>False if invalid characters found, else true.</returns>
-			protected virtual bool ValidateCollation(string collation)
+			private bool ValidateCollation(string collation)
 			{
-				return !string.IsNullOrWhiteSpace(collation) 
-					&& Regex.IsMatch(collation, @"^[a-zA-Z0-9_\.-@]+$");
+				return !string.IsNullOrWhiteSpace(collation) && _collationValidator.IsMatch(collation);
+			}
+		}
+
+		internal class PostgreSQLCollationBuilder : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var expr      = builder.GetExpression("expr");
+				var collation = builder.GetValue<string>("collation").Replace("\"", "\"\"");
+
+				builder.ResultExpression = new SqlExpression(typeof(string), $"{{0}} COLLATE \"{collation}\"", Precedence.Primary, expr);
+			}
+		}
+
+		internal class DB2LUWCollationBuilder : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var expr      = builder.GetExpression("expr");
+				var collation = builder.GetValue<string>("collation");
+
+				// collation cannot be parameter
+				builder.ResultExpression = new SqlExpression(typeof(string), $"COLLATION_KEY_BIT({{0}}, {{1}})", Precedence.Primary, expr, new SqlValue(typeof(string), collation));
 			}
 		}
 	}
