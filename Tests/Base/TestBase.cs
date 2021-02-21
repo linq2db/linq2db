@@ -1194,10 +1194,12 @@ namespace Tests
 							if (!loaded.TryGetValue(entityType, out var itemsExpression))
 							{
 								var newCall = LinqToDB.Common.TypeHelper.MakeMethodCall(Methods.Queryable.ToArray, mc);
-								var items = newCall.EvaluateExpression();
-								itemsExpression = Expression.Constant(items, entityType.MakeArrayType());
-								loaded.Add(entityType, itemsExpression);
-
+								using (new DisableLogging())
+								{
+									var items = newCall.EvaluateExpression();
+									itemsExpression = Expression.Constant(items, entityType.MakeArrayType());
+									loaded.Add(entityType, itemsExpression);
+								}
 							}
 							var queryCall =
 								LinqToDB.Common.TypeHelper.MakeMethodCall(Methods.Enumerable.AsQueryable,
@@ -1213,10 +1215,7 @@ namespace Tests
 			var empty = LinqToDB.Common.Tools.CreateEmptyQuery<T>();
 			T[]? expected;
 
-			using (new DisableLogging())
-			{
-				expected = empty.Provider.CreateQuery<T>(newExpr).ToArray();
-			}
+			expected = empty.Provider.CreateQuery<T>(newExpr).ToArray();
 
 			if (actual.Length > 0 || expected.Length > 0)
 				AreEqual(expected, actual, ComparerBuilder.GetEqualityComparer<T>());

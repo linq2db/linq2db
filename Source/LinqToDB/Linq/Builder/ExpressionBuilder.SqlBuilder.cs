@@ -1998,7 +1998,9 @@ namespace LinqToDB.Linq.Builder
 					expression = l;
 				}
 
-				if (value != null && expression != null)
+				if (value != null 
+				    && expression != null 
+				    && !(expression.ElementType == QueryElementType.SqlValue && ((SqlValue) expression).Value == null))
 				{
 					var isNot = !value.Value;
 					var withNull = false;
@@ -3007,9 +3009,12 @@ namespace LinqToDB.Linq.Builder
 
 		static bool NeedNullCheck(ISqlExpression expr)
 		{
+			if (!expr.CanBeNull)
+				return false;
+
 			if (null != new QueryVisitor().Find(expr, e => e.ElementType == QueryElementType.SelectClause))
 				return false;
-			return expr.CanBeNull;
+			return true;
 		}
 
 		#endregion
