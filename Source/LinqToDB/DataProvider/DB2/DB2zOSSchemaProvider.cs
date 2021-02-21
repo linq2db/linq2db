@@ -102,7 +102,7 @@ namespace LinqToDB.DataProvider.DB2
 			return dataConnection.Query(rd =>
 				{
 					// IMPORTANT: reader calls must be ordered to support SequentialAccess
-					var tableId = dataConnection.Connection.Database + "." + rd.GetString(0) + "." + rd.GetString(1);
+					var tableId = dataConnection.Connection.Database + "." + rd.ToString(0) + "." + rd.ToString(1);
 					var name    = rd.ToString(2)!;
 					var size    = rd[3];
 					var scale   = rd[4];
