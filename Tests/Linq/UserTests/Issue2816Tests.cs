@@ -405,7 +405,7 @@ namespace Tests.UserTests
 				case ProviderName.SqlServer2005:
 				case ProviderName.SqlServer2008:
 				case ProviderName.SqlServer2017:
-				case ProviderName.SqlServer2019:
+				case TestProvName.SqlServer2019:
 				case TestProvName.SqlAzure:
 				case TestProvName.SqlServer2019FastExpressionCompiler:
 				case TestProvName.SqlServer2019SequentialAccess:
