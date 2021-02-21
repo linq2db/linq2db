@@ -354,7 +354,7 @@ namespace Tests
 			{
 				case ProviderName.OracleNative                       :
 				case ProviderName.OracleManaged                      :
-					return "GENERAL_M";
+					return "latin_AI";
 				case ProviderName.DB2                                :
 					return "SYSTEM_923_DE";
 				case ProviderName.PostgreSQL                         :
