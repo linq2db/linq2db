@@ -1381,6 +1381,8 @@ namespace LinqToDB.Linq
 
 					{ M(() => Sql.Truncate(0m)),  N(() => L<decimal?,decimal?>((decimal? v) => v >= 0 ? Sql.Floor(v) : Sql.Ceiling(v))) },
 					{ M(() => Sql.Truncate(0.0)), N(() => L<double?,double?>  ((double?  v) => v >= 0 ? Sql.Floor(v) : Sql.Ceiling(v))) },
+
+					{ M(() => string.IsNullOrWhiteSpace("")), N(() => L<string,bool>((string p0) => p0 == null || Sql.Trim(p0) == null)) },
 				}},
 
 				#endregion
