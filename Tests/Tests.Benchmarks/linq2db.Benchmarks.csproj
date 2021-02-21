@@ -16,8 +16,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="BenchmarkDotNet" Version="0.12.1" />
-		<PackageReference Condition="$(DefineConstants.Contains('JETBRAINS'))" Include="JetBrains.Profiler.Api" Version="1.1.7" />
+		<PackageReference Include="BenchmarkDotNet" />
+		<PackageReference Condition="$(DefineConstants.Contains('JETBRAINS'))" Include="JetBrains.Profiler.Api" />
 
 		<Compile Update="TestClasses\ProviderMocks\MockDataReader.cs" />
 		<Compile Update="TestClasses\ProviderMocks\MockDbCommand.cs" />
