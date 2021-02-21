@@ -28,7 +28,7 @@
 			<HintPath>..\..\Redist\Oracle\Oracle.DataAccess.dll</HintPath>
 		</Reference>
 
-		<PackageReference Include="IBM.Data.DB.Provider" Version="11.5.4000.4" GeneratePathProperty="true" />
+		<PackageReference Include="IBM.Data.DB.Provider" Version="11.5.4000.4861" GeneratePathProperty="true" />
 		<Reference Include="IBM.Data.DB2">
 			<HintPath>$(PkgIBM_Data_DB_Provider)\build\net451\x86\IBM.Data.DB2.dll</HintPath>
 		</Reference>
@@ -37,7 +37,7 @@
 		<PackageReference Include="Oracle.ManagedDataAccess" Version="19.10.1" />
 		<PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.1016.290" />
 		<PackageReference Include="Npgsql" Version="4.1.8" />
-		<PackageReference Include="Microsoft.AspNet.OData" Version="7.5.5" />
+		<PackageReference Include="Microsoft.AspNet.OData" Version="7.5.6" />
 
 		<PackageReference Include="Microsoft.Data.SQLite" Version="1.1.1" />
 		<!--Copy sqlite3.dll manually, as package copy scripts doesn't work properly for our project -->
