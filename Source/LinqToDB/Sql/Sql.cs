@@ -730,7 +730,24 @@ namespace LinqToDB
 		[Sql.Function(PN.SqlServer, "DataLength",   PreferServerSide = true)]
 		[Sql.Function(PN.SqlCe,     "DataLength",   PreferServerSide = true)]
 		[Sql.Function(PN.Sybase,    "DataLength",   PreferServerSide = true)]
+		[Sql.Function(PN.SQLite,    "Length",       PreferServerSide = true)]
 		public static int? Length(Binary? value)
+		{
+			return value == null ? null : (int?)value.Length;
+		}
+
+		#endregion
+
+		#region Byte[] Functions
+
+		[Sql.Function(                              PreferServerSide = true)]
+		[Sql.Function(PN.Access,    "Len",          PreferServerSide = true)]
+		[Sql.Function(PN.Firebird,  "Octet_Length", PreferServerSide = true)]
+		[Sql.Function(PN.SqlServer, "DataLength",   PreferServerSide = true)]
+		[Sql.Function(PN.SqlCe,     "DataLength",   PreferServerSide = true)]
+		[Sql.Function(PN.Sybase,    "DataLength",   PreferServerSide = true)]
+		[Sql.Function(PN.SQLite,    "Length",       PreferServerSide = true)]
+		public static int? Length(byte[]? value)
 		{
 			return value == null ? null : (int?)value.Length;
 		}
