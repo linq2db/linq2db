@@ -140,6 +140,319 @@ namespace Tests.UserTests
 
 		private static bool IsSupported(char character, string providerName)
 		{
+			switch (providerName)
+			{
+				case ProviderName.Informix:
+				case ProviderName.InformixDB2:
+					// teh winner!
+					return character != 0x09
+						&& character != 0x0A
+						&& character != 0x0B
+						&& character != 0x0C
+						&& character != 0x0D
+						&& character != 0x85;
+
+				case ProviderName.Access:
+				case ProviderName.AccessOdbc:
+					return character != 0x09
+						&& character != 0x0A
+						&& character != 0x0B
+						&& character != 0x0C
+						&& character != 0xA0
+						&& character != 0x2000
+						&& character != 0x2001
+						&& character != 0x2002
+						&& character != 0x2003
+						&& character != 0x2004
+						&& character != 0x2005
+						&& character != 0x2006
+						&& character != 0x2007
+						&& character != 0x2008
+						&& character != 0x2009
+						&& character != 0x200A
+						&& character != 0x2028
+						&& character != 0x2029
+						&& character != 0x202A;
+
+				case ProviderName.DB2:
+					return character != 0x09
+						&& character != 0x0A
+						&& character != 0x0B
+						&& character != 0x0C
+						&& character != 0xA0
+						&& character != 0x1680
+						&& character != 0x2000
+						&& character != 0x2001
+						&& character != 0x2002
+						&& character != 0x2003
+						&& character != 0x2004
+						&& character != 0x2005
+						&& character != 0x2006
+						&& character != 0x2007
+						&& character != 0x2008
+						&& character != 0x2009
+						&& character != 0x200A
+						&& character != 0x2028
+						&& character != 0x2029
+						&& character != 0x205F
+						&& character != 0x3000;
+
+				case ProviderName.Firebird:
+				case TestProvName.Firebird3:
+					return character != 0x09
+						&& character != 0x0A
+						&& character != 0x0B
+						&& character != 0x0C
+						&& character != 0xA0
+						&& character != 0x1680
+						&& character != 0x2000
+						&& character != 0x2001
+						&& character != 0x2002
+						&& character != 0x2003
+						&& character != 0x2004
+						&& character != 0x2005
+						&& character != 0x2006
+						&& character != 0x2007
+						&& character != 0x2008
+						&& character != 0x2009
+						&& character != 0x200A
+						&& character != 0x2028
+						&& character != 0x2029
+						&& character != 0x205F
+						&& character != 0x3000;
+
+				case ProviderName.MySqlConnector:
+				case ProviderName.MySqlOfficial:
+				case TestProvName.MySql55:
+				case TestProvName.MariaDB:
+					return character != 0x09
+						&& character != 0x0A
+						&& character != 0x0B
+						&& character != 0x0C
+						&& character != 0xA0
+						&& character != 0x1680
+						&& character != 0x2000
+						&& character != 0x2001
+						&& character != 0x2002
+						&& character != 0x2003
+						&& character != 0x2004
+						&& character != 0x2005
+						&& character != 0x2006
+						&& character != 0x2007
+						&& character != 0x2008
+						&& character != 0x2009
+						&& character != 0x200A
+						&& character != 0x2028
+						&& character != 0x2029
+						&& character != 0x205F
+						&& character != 0x3000;
+
+				case ProviderName.OracleManaged:
+				case ProviderName.OracleNative:
+				case TestProvName.Oracle11Managed:
+				case TestProvName.Oracle11Native:
+					return character != 0x09
+						&& character != 0x0A
+						&& character != 0x0B
+						&& character != 0x0C
+						&& character != 0xA0
+						&& character != 0x1680
+						&& character != 0x2000
+						&& character != 0x2001
+						&& character != 0x2002
+						&& character != 0x2003
+						&& character != 0x2004
+						&& character != 0x2005
+						&& character != 0x2006
+						&& character != 0x2007
+						&& character != 0x2008
+						&& character != 0x2009
+						&& character != 0x200A
+						&& character != 0x2028
+						&& character != 0x2029
+						&& character != 0x205F
+						&& character != 0x3000;
+
+				case ProviderName.PostgreSQL:
+				case ProviderName.PostgreSQL92:
+				case ProviderName.PostgreSQL93:
+				case ProviderName.PostgreSQL95:
+				case TestProvName.PostgreSQL10:
+				case TestProvName.PostgreSQL11:
+				case TestProvName.PostgreSQL12:
+				case TestProvName.PostgreSQL13:
+					return character != 0x09
+						&& character != 0x0A
+						&& character != 0x0B
+						&& character != 0x0C
+						&& character != 0xA0
+						&& character != 0x1680
+						&& character != 0x2000
+						&& character != 0x2001
+						&& character != 0x2002
+						&& character != 0x2003
+						&& character != 0x2004
+						&& character != 0x2005
+						&& character != 0x2006
+						&& character != 0x2007
+						&& character != 0x2008
+						&& character != 0x2009
+						&& character != 0x200A
+						&& character != 0x2028
+						&& character != 0x2029
+						&& character != 0x205F
+						&& character != 0x3000;
+
+				case ProviderName.SapHanaNative:
+				case ProviderName.SapHanaOdbc:
+					return character != 0x09
+						&& character != 0x0A
+						&& character != 0x0B
+						&& character != 0x0C
+						&& character != 0xA0
+						&& character != 0x1680
+						&& character != 0x2000
+						&& character != 0x2001
+						&& character != 0x2002
+						&& character != 0x2003
+						&& character != 0x2004
+						&& character != 0x2005
+						&& character != 0x2006
+						&& character != 0x2007
+						&& character != 0x2008
+						&& character != 0x2009
+						&& character != 0x200A
+						&& character != 0x2028
+						&& character != 0x2029
+						&& character != 0x205F
+						&& character != 0x3000;
+
+				case ProviderName.SqlCe:
+					return character != 0x09
+						&& character != 0x0A
+						&& character != 0x0B
+						&& character != 0x0C
+						&& character != 0xA0
+						&& character != 0x1680
+						&& character != 0x2000
+						&& character != 0x2001
+						&& character != 0x2002
+						&& character != 0x2003
+						&& character != 0x2004
+						&& character != 0x2005
+						&& character != 0x2006
+						&& character != 0x2007
+						&& character != 0x2008
+						&& character != 0x2009
+						&& character != 0x200A
+						&& character != 0x2028
+						&& character != 0x2029
+						&& character != 0x202A
+						&& character != 0x205F
+						&& character != 0x3000;
+
+				case ProviderName.SQLiteClassic:
+				case ProviderName.SQLiteMS:
+				case TestProvName.SQLiteClassicMiniProfilerMapped:
+				case TestProvName.SQLiteClassicMiniProfilerUnmapped:
+					return character != 0x09
+						&& character != 0x0A
+						&& character != 0x0B
+						&& character != 0x0C
+						&& character != 0xA0
+						&& character != 0x1680
+						&& character != 0x2000
+						&& character != 0x2001
+						&& character != 0x2002
+						&& character != 0x2003
+						&& character != 0x2004
+						&& character != 0x2005
+						&& character != 0x2006
+						&& character != 0x2007
+						&& character != 0x2008
+						&& character != 0x2009
+						&& character != 0x200A
+						&& character != 0x2028
+						&& character != 0x2029
+						&& character != 0x205F
+						&& character != 0x3000;
+
+				case ProviderName.SqlServer2012:
+				case ProviderName.SqlServer2014:
+					// 0x1680 - ???
+					return character != 0x09
+						&& character != 0x0A
+						&& character != 0x0B
+						&& character != 0x0C
+						&& character != 0xA0
+						&& character != 0x1680
+						&& character != 0x2000
+						&& character != 0x2001
+						&& character != 0x2002
+						&& character != 0x2003
+						&& character != 0x2004
+						&& character != 0x2005
+						&& character != 0x2006
+						&& character != 0x2007
+						&& character != 0x2008
+						&& character != 0x2009
+						&& character != 0x200A
+						&& character != 0x2028
+						&& character != 0x2029
+						&& character != 0x202A;
+
+				case ProviderName.SqlServer2000:
+				case ProviderName.SqlServer2005:
+				case ProviderName.SqlServer2008:
+				case ProviderName.SqlServer2017:
+				case ProviderName.SqlServer2019:
+				case TestProvName.SqlAzure:
+				case TestProvName.SqlServer2019FastExpressionCompiler:
+				case TestProvName.SqlServer2019SequentialAccess:
+					return character != 0x09
+						&& character != 0x0A
+						&& character != 0x0B
+						&& character != 0x0C
+						&& character != 0xA0
+						&& character != 0x2000
+						&& character != 0x2001
+						&& character != 0x2002
+						&& character != 0x2003
+						&& character != 0x2004
+						&& character != 0x2005
+						&& character != 0x2006
+						&& character != 0x2007
+						&& character != 0x2008
+						&& character != 0x2009
+						&& character != 0x200A
+						&& character != 0x2028
+						&& character != 0x2029
+						&& character != 0x202A;
+
+				case ProviderName.Sybase:
+				case ProviderName.SybaseManaged:
+					return character != 0x09
+						&& character != 0x0A
+						&& character != 0x0B
+						&& character != 0x0C
+						&& character != 0xA0
+						&& character != 0x1680
+						&& character != 0x2000
+						&& character != 0x2001
+						&& character != 0x2002
+						&& character != 0x2003
+						&& character != 0x2004
+						&& character != 0x2005
+						&& character != 0x2006
+						&& character != 0x2007
+						&& character != 0x2008
+						&& character != 0x2009
+						&& character != 0x200A
+						&& character != 0x2028
+						&& character != 0x2029
+						&& character != 0x205F
+						&& character != 0x3000;
+			}
 			return true;
 		}
 	}
