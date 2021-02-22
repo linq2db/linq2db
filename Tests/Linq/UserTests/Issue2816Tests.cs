@@ -1,6 +1,5 @@
 ﻿using System.Linq;
 using LinqToDB;
-using LinqToDB.Common;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -38,7 +37,6 @@ namespace Tests.UserTests
 			0x200A,
 			0x2028,
 			0x2029,
-			0x202A,
 			0x205F,
 			0x3000,
 		};
@@ -80,43 +78,40 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void SupportedWhiteSpaceTest([DataSources] string context, [ValueSource(nameof(WhiteSpaceChars))] int character)
+		public void FullWhiteSpaceTest([DataSources] string context, [ValueSource(nameof(WhiteSpaceChars))] int character)
 		{
+			if (!string.IsNullOrWhiteSpace(((char)character).ToString()))
+				Assert.Inconclusive($"Character {(char)character} not supported by runtime");
+
+			var testData = GetTestCase((char)character, GetProviderName(context, out _), out var supported);
+
 			using (var db = GetDataContext(context))
 			{
-				using (var table = db.CreateLocalTable(GetTestCase((char)character, GetProviderName(context, out _), true)))
+				using (var table = db.CreateLocalTable(testData))
 				{
-					var query = from p in table
-								where string.IsNullOrWhiteSpace(p.Text)
-								select p;
+					var query1 = (from p in table.ToArray()
+								 where !string.IsNullOrWhiteSpace(p.Text)
+								 select p).ToArray();
+					var query = (from p in table
+								 where !string.IsNullOrWhiteSpace(p.Text)
+								 select p).ToArray();
 
-					AssertQuery(query);
+					if (supported)
+					{
+						Assert.AreEqual(1, query.Length);
+						Assert.AreEqual(3, query[0].Id);
+					}
+					else
+					{
+						Assert.AreEqual(3, query.Length);
+					}
 				}
 			}
 		}
 
-		[Test]
-		public void UnsupportedWhiteSpaceTest([DataSources] string context, [ValueSource(nameof(WhiteSpaceChars))] int character)
+		private static TestClass[] GetTestCase(char character, string providerName, out bool supported)
 		{
-			using (var db = GetDataContext(context))
-			{
-				using (var table = db.CreateLocalTable(GetTestCase((char)character, GetProviderName(context, out _), false)))
-				{
-					var query = from p in table
-								where string.IsNullOrWhiteSpace(p.Text)
-								select p;
-
-					Assert.Throws<AssertionException>(() => AssertQuery(query));
-				}
-			}
-		}
-
-		private static TestClass[] GetTestCase(char character, string providerName, bool supported)
-		{
-			if (IsSupported(character, providerName) != supported)
-			{
-				return Array<TestClass>.Empty;
-			}
+			supported = IsSupported(character, providerName);
 
 			return new[]
 			{
@@ -158,7 +153,9 @@ namespace Tests.UserTests
 						&& character != 0x0A
 						&& character != 0x0B
 						&& character != 0x0C
+						&& character != 0x0D
 						&& character != 0xA0
+						&& character != 0x85
 						&& character != 0x2000
 						&& character != 0x2001
 						&& character != 0x2002
@@ -171,15 +168,16 @@ namespace Tests.UserTests
 						&& character != 0x2009
 						&& character != 0x200A
 						&& character != 0x2028
-						&& character != 0x2029
-						&& character != 0x202A;
+						&& character != 0x2029;
 
 				case ProviderName.DB2:
 					return character != 0x09
 						&& character != 0x0A
 						&& character != 0x0B
 						&& character != 0x0C
+						&& character != 0x0D
 						&& character != 0xA0
+						&& character != 0x85
 						&& character != 0x1680
 						&& character != 0x2000
 						&& character != 0x2001
@@ -203,7 +201,9 @@ namespace Tests.UserTests
 						&& character != 0x0A
 						&& character != 0x0B
 						&& character != 0x0C
+						&& character != 0x0D
 						&& character != 0xA0
+						&& character != 0x85
 						&& character != 0x1680
 						&& character != 0x2000
 						&& character != 0x2001
@@ -221,6 +221,7 @@ namespace Tests.UserTests
 						&& character != 0x205F
 						&& character != 0x3000;
 
+				case ProviderName.MySql:
 				case ProviderName.MySqlConnector:
 				case ProviderName.MySqlOfficial:
 				case TestProvName.MySql55:
@@ -229,7 +230,9 @@ namespace Tests.UserTests
 						&& character != 0x0A
 						&& character != 0x0B
 						&& character != 0x0C
+						&& character != 0x0D
 						&& character != 0xA0
+						&& character != 0x85
 						&& character != 0x1680
 						&& character != 0x2000
 						&& character != 0x2001
@@ -255,7 +258,9 @@ namespace Tests.UserTests
 						&& character != 0x0A
 						&& character != 0x0B
 						&& character != 0x0C
+						&& character != 0x0D
 						&& character != 0xA0
+						&& character != 0x85
 						&& character != 0x1680
 						&& character != 0x2000
 						&& character != 0x2001
@@ -285,7 +290,9 @@ namespace Tests.UserTests
 						&& character != 0x0A
 						&& character != 0x0B
 						&& character != 0x0C
+						&& character != 0x0D
 						&& character != 0xA0
+						&& character != 0x85
 						&& character != 0x1680
 						&& character != 0x2000
 						&& character != 0x2001
@@ -309,7 +316,9 @@ namespace Tests.UserTests
 						&& character != 0x0A
 						&& character != 0x0B
 						&& character != 0x0C
+						&& character != 0x0D
 						&& character != 0xA0
+						&& character != 0x85
 						&& character != 0x1680
 						&& character != 0x2000
 						&& character != 0x2001
@@ -332,7 +341,9 @@ namespace Tests.UserTests
 						&& character != 0x0A
 						&& character != 0x0B
 						&& character != 0x0C
+						&& character != 0x0D
 						&& character != 0xA0
+						&& character != 0x85
 						&& character != 0x1680
 						&& character != 0x2000
 						&& character != 0x2001
@@ -347,7 +358,6 @@ namespace Tests.UserTests
 						&& character != 0x200A
 						&& character != 0x2028
 						&& character != 0x2029
-						&& character != 0x202A
 						&& character != 0x205F
 						&& character != 0x3000;
 
@@ -359,7 +369,9 @@ namespace Tests.UserTests
 						&& character != 0x0A
 						&& character != 0x0B
 						&& character != 0x0C
+						&& character != 0x0D
 						&& character != 0xA0
+						&& character != 0x85
 						&& character != 0x1680
 						&& character != 0x2000
 						&& character != 0x2001
@@ -384,7 +396,9 @@ namespace Tests.UserTests
 						&& character != 0x0A
 						&& character != 0x0B
 						&& character != 0x0C
+						&& character != 0x0D
 						&& character != 0xA0
+						&& character != 0x85
 						&& character != 0x1680
 						&& character != 0x2000
 						&& character != 0x2001
@@ -398,8 +412,7 @@ namespace Tests.UserTests
 						&& character != 0x2009
 						&& character != 0x200A
 						&& character != 0x2028
-						&& character != 0x2029
-						&& character != 0x202A;
+						&& character != 0x2029;
 
 				case ProviderName.SqlServer2000:
 				case ProviderName.SqlServer2005:
@@ -413,7 +426,9 @@ namespace Tests.UserTests
 						&& character != 0x0A
 						&& character != 0x0B
 						&& character != 0x0C
+						&& character != 0x0D
 						&& character != 0xA0
+						&& character != 0x85
 						&& character != 0x2000
 						&& character != 0x2001
 						&& character != 0x2002
@@ -426,8 +441,7 @@ namespace Tests.UserTests
 						&& character != 0x2009
 						&& character != 0x200A
 						&& character != 0x2028
-						&& character != 0x2029
-						&& character != 0x202A;
+						&& character != 0x2029;
 
 				case ProviderName.Sybase:
 				case ProviderName.SybaseManaged:
@@ -435,7 +449,9 @@ namespace Tests.UserTests
 						&& character != 0x0A
 						&& character != 0x0B
 						&& character != 0x0C
+						&& character != 0x0D
 						&& character != 0xA0
+						&& character != 0x85
 						&& character != 0x1680
 						&& character != 0x2000
 						&& character != 0x2001

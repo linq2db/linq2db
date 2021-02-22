@@ -49,7 +49,7 @@ namespace LinqToDB.DataProvider.Oracle
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
 			stringBuilder
-				.Append("chr(")
+				.Append("nchr(")
 				.Append(value)
 				.Append(')')
 				;
