@@ -159,6 +159,15 @@ namespace Tests.UserTests
 					// full support
 					return true;
 
+				case ProviderName.Access:
+				case ProviderName.AccessOdbc:
+					// only 4 characters including space supported
+					return character == 0x20
+						|| character == 0x1680
+						|| character == 0x205F
+						|| character == 0x3000;
+
+
 					//	case ProviderName.Informix:
 					//	case ProviderName.InformixDB2:
 					//		// teh winner!
@@ -169,28 +178,6 @@ namespace Tests.UserTests
 					//			&& character != 0x0D
 					//			&& character != 0x85;
 
-					//	case ProviderName.Access:
-					//	case ProviderName.AccessOdbc:
-					//		return character != 0x09
-					//			&& character != 0x0A
-					//			&& character != 0x0B
-					//			&& character != 0x0C
-					//			&& character != 0x0D
-					//			&& character != 0xA0
-					//			&& character != 0x85
-					//			&& character != 0x2000
-					//			&& character != 0x2001
-					//			&& character != 0x2002
-					//			&& character != 0x2003
-					//			&& character != 0x2004
-					//			&& character != 0x2005
-					//			&& character != 0x2006
-					//			&& character != 0x2007
-					//			&& character != 0x2008
-					//			&& character != 0x2009
-					//			&& character != 0x200A
-					//			&& character != 0x2028
-					//			&& character != 0x2029;
 
 					//	case ProviderName.Firebird:
 					//	case TestProvName.Firebird3:
@@ -271,60 +258,6 @@ namespace Tests.UserTests
 					//			&& character != 0x2029
 					//			&& character != 0x205F
 					//			&& character != 0x3000;
-
-					//	case ProviderName.SqlServer2012:
-					//	case ProviderName.SqlServer2014:
-					//		// 0x1680 - ???
-					//		return character != 0x09
-					//			&& character != 0x0A
-					//			&& character != 0x0B
-					//			&& character != 0x0C
-					//			&& character != 0x0D
-					//			&& character != 0xA0
-					//			&& character != 0x85
-					//			&& character != 0x1680
-					//			&& character != 0x2000
-					//			&& character != 0x2001
-					//			&& character != 0x2002
-					//			&& character != 0x2003
-					//			&& character != 0x2004
-					//			&& character != 0x2005
-					//			&& character != 0x2006
-					//			&& character != 0x2007
-					//			&& character != 0x2008
-					//			&& character != 0x2009
-					//			&& character != 0x200A
-					//			&& character != 0x2028
-					//			&& character != 0x2029;
-
-					//	case ProviderName.SqlServer2000:
-					//	case ProviderName.SqlServer2005:
-					//	case ProviderName.SqlServer2008:
-					//	case ProviderName.SqlServer2017:
-					//	case TestProvName.SqlServer2019:
-					//	case TestProvName.SqlAzure:
-					//	case TestProvName.SqlServer2019FastExpressionCompiler:
-					//	case TestProvName.SqlServer2019SequentialAccess:
-					//		return character != 0x09
-					//			&& character != 0x0A
-					//			&& character != 0x0B
-					//			&& character != 0x0C
-					//			&& character != 0x0D
-					//			&& character != 0xA0
-					//			&& character != 0x85
-					//			&& character != 0x2000
-					//			&& character != 0x2001
-					//			&& character != 0x2002
-					//			&& character != 0x2003
-					//			&& character != 0x2004
-					//			&& character != 0x2005
-					//			&& character != 0x2006
-					//			&& character != 0x2007
-					//			&& character != 0x2008
-					//			&& character != 0x2009
-					//			&& character != 0x200A
-					//			&& character != 0x2028
-					//			&& character != 0x2029;
 
 					//	case ProviderName.Sybase:
 					//	case ProviderName.SybaseManaged:

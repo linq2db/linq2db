@@ -619,6 +619,7 @@ namespace LinqToDB
 
 		// set of all White_Space characters per Unicode v13
 		const string WHITESPACES = "\x09\x0A\x0B\x0C\x0D\x20\x85\xA0\x1680\x2000\x2001\x2002\x2003\x2004\x2005\x2006\x2007\x2008\x2009\x200A\x2028\x2029\x205F\x3000";
+		const string WHITESPACES1 = "\x20";
 		const string WHITESPACES_UTF8 = "090A0B0C0D20C285C2A0E19A80E28080E28081E28082E28083E28084E28085E28086E28087E28088E28089E2808AE280A8E280A9E2819FE38080";
 
 		// internal implementation that tries to trim string whitespaces
@@ -631,6 +632,7 @@ namespace LinqToDB
 		[Sql.Expression(PN.Firebird, "TRIM(_utf8 x'" + WHITESPACES_UTF8 + "' FROM {0})")]
 		[Sql.Expression(PN.MySql, "TRIM(LEADING '" + WHITESPACES + "' FROM {0})")]
 		[Sql.Expression(PN.SqlServer, "CASE WHEN {0} LIKE N'%[^" + WHITESPACES + "]%' THEN {0} ELSE '' END")]
+		[Sql.Expression(PN.Access, "LTRIM({0})")]
 		internal static string? TryTrimWhitespaces(string? str)
 		{
 			return str?.Trim();
