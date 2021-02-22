@@ -623,12 +623,8 @@ namespace LinqToDB
 		// shouldn't be exposed as it doesn't do full trim for some databases:
 		// it could trim only one side of string, which is enough if it will trim all characters, but otherwise
 		// it could leave whitespaces from other side
-		[Sql.Expression(PN.Oracle   , "LTRIM({0})")]
-		[Sql.Expression(PN.SqlServer, "LTRIM({0})")]
-		[Sql.Expression(PN.SqlCe    , "LTRIM({0})")]
-		[Sql.Expression(PN.Sybase   , "LTRIM({0})")]
 		[Sql.Expression(PN.SapHana   , "LTRIM({0}, '" + WHITESPACES + "')")]
-		[Sql.Function("TRIM")]
+		[Sql.Expression("LTRIM({0}, '" + WHITESPACES + "')")]
 		internal static string? TryTrimWhitespaces(string? str)
 		{
 			return str?.Trim();
