@@ -312,29 +312,7 @@ namespace Tests.UserTests
 
 				case ProviderName.SapHanaNative:
 				case ProviderName.SapHanaOdbc:
-					return character != 0x09
-						&& character != 0x0A
-						&& character != 0x0B
-						&& character != 0x0C
-						&& character != 0x0D
-						&& character != 0xA0
-						&& character != 0x85
-						&& character != 0x1680
-						&& character != 0x2000
-						&& character != 0x2001
-						&& character != 0x2002
-						&& character != 0x2003
-						&& character != 0x2004
-						&& character != 0x2005
-						&& character != 0x2006
-						&& character != 0x2007
-						&& character != 0x2008
-						&& character != 0x2009
-						&& character != 0x200A
-						&& character != 0x2028
-						&& character != 0x2029
-						&& character != 0x205F
-						&& character != 0x3000;
+					return true;
 
 				case ProviderName.SqlCe:
 					return character != 0x09

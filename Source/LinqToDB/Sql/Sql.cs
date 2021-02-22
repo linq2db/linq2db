@@ -617,6 +617,8 @@ namespace LinqToDB
 			return str.Replace(oldValue.Value, newValue.Value);
 		}
 
+		// set of all White_Space characters per Unicode v13
+		const string WHITESPACES = "\x09\x0A\x0B\x0C\x0D\x20\x85\xA0\x1680\x2000\x2001\x2002\x2003\x2004\x2005\x2006\x2007\x2008\x2009\x200A\x2028\x2029\x205F\x3000";
 		// internal implementation that tries to trim string whitespaces
 		// shouldn't be exposed as it doesn't do full trim for some databases:
 		// it could trim only one side of string, which is enough if it will trim all characters, but otherwise
@@ -625,6 +627,7 @@ namespace LinqToDB
 		[Sql.Expression(PN.SqlServer, "LTRIM({0})")]
 		[Sql.Expression(PN.SqlCe    , "LTRIM({0})")]
 		[Sql.Expression(PN.Sybase   , "LTRIM({0})")]
+		[Sql.Expression(PN.SapHana   , "LTRIM({0}, '" + WHITESPACES + "')")]
 		[Sql.Function("TRIM")]
 		internal static string? TryTrimWhitespaces(string? str)
 		{
