@@ -8,7 +8,8 @@ docker ps -a
 
 retries=0
 status="1"
-until docker logs oracle | grep -q 'Database ready to use. Enjoy'; do
+#until docker logs oracle | grep -q 'Database ready to use. Enjoy'; do
+until docker logs oracle | grep -q 'Xferd'; do
     sleep 5
     retries=`expr $retries + 1`
     echo waiting for oracle to start

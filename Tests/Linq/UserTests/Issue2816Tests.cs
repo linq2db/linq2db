@@ -141,6 +141,13 @@ namespace Tests.UserTests
 						|| character == 0x1680
 						|| character == 0x205F
 						|| character == 0x3000;
+#if AZURE
+				case ProviderName.InformixDB2:
+					// TODO: fix azure instance locale
+					// currently fails on test data insert with
+					// ERROR [IX000] [IBM][IDS/UNIX64] Code-set conversion function failed due to illegal sequence or invalid value.
+					return character <= 0xA0;
+#endif
 			}
 
 			return true;

@@ -18,11 +18,12 @@ IF NOT EXISTS(SELECT * FROM dbo.sysdatabases WHERE name = 'TestDataCore')
 GO
 EOSQL
 
-cat sybase_init.sql
-docker cp sybase_init.sql sybase:/init.sql
+#cat sybase_init.sql
+#docker cp sybase_init.sql sybase:/init.sql
 
 retries=0
-until docker exec -e SYBASE=/opt/sybase sybase /opt/sybase/OCS-16_0/bin/isql -Usa -PmyPassword -SMYSYBASE -i"/init.sql" -e --retserverror ; do
+until docker logs sybase | grep -q 'SYBASE INITIALIZED'; do
+#until docker exec -e SYBASE=/opt/sybase sybase /opt/sybase/OCS-16_0/bin/isql -Usa -PmyPassword -SMYSYBASE -i"/init.sql" -e --retserverror ; do
     sleep 5
     retries=`expr $retries + 1`
     if [ $retries -gt 30 ]; then
