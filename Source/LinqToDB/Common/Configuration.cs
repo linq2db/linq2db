@@ -68,6 +68,7 @@ namespace LinqToDB.Common
 		/// Enables mapping expression to be compatible with <see cref="CommandBehavior.SequentialAccess"/> behavior.
 		/// Note that it doesn't switch linq2db to use <see cref="CommandBehavior.SequentialAccess"/> behavior for
 		/// queries, so this optimization could be used for <see cref="CommandBehavior.Default"/> too.
+		/// Default value: <c>false</c>.
 		/// </summary>
 		public static bool OptimizeForSequentialAccess;
 		
@@ -97,6 +98,10 @@ namespace LinqToDB.Common
 
 		public static class Data
 		{
+			/// <summary>
+			/// Enables throwing of <see cref="ObjectDisposedException"/> when access disposed <see cref="DataConnection"/> instance.
+			/// Default value: <c>true</c>.
+			/// </summary>
 			public static bool ThrowOnDisposed = true;
 
 			/// <summary>
@@ -125,7 +130,7 @@ namespace LinqToDB.Common
 			/// <summary>
 			/// Controls behavior of linq2db when there is no updateable fields in Update query:
 			/// - if <c>true</c> - query not executed and Update operation returns 0 as number of affected records;
-			/// - if <c>false</c> - <see cref="LinqToDB.Linq.LinqException"/> will be thrown.
+			/// - if <c>false</c> - <see cref="LinqException"/> will be thrown.
 			/// Default value: <c>false</c>.
 			/// </summary>
 			public static bool IgnoreEmptyUpdate;
@@ -133,7 +138,7 @@ namespace LinqToDB.Common
 			/// <summary>
 			/// Controls behavior of linq2db when multiple queries required to load requested data:
 			/// - if <c>true</c> - multiple queries allowed;
-			/// - if <c>false</c> - <see cref="LinqToDB.Linq.LinqException"/> will be thrown.
+			/// - if <c>false</c> - <see cref="LinqException"/> will be thrown.
 			/// This option required, if you want to select related collections, e.g. using <see cref="LinqExtensions.LoadWith{TEntity,TProperty}(System.Linq.IQueryable{TEntity},System.Linq.Expressions.Expression{System.Func{TEntity,TProperty}})"/> method.
 			/// Default value: <c>false</c>.
 			/// </summary>
@@ -214,7 +219,7 @@ namespace LinqToDB.Common
 			/// Controls behavior of LINQ query, which ends with GroupBy call.
 			/// - if <c>true</c> - <seealso cref="LinqToDBException"/> will be thrown for such queries;
 			/// - if <c>false</c> - behavior is controlled by <see cref="PreloadGroups"/> option.
-			/// Default value: <c>false</c>.
+			/// Default value: <c>true</c>.
 			/// </summary>
 			/// <remarks>
 			/// <a href="https://github.com/linq2db/linq2db/issues/365">More details</a>.
@@ -232,7 +237,7 @@ namespace LinqToDB.Common
 			/// Default value: <c>false</c>.
 			/// <para />
 			/// It is not recommended to enable this option as it could lead to severe slowdown. Better approach will be
-			/// to call <see cref="LinqToDB.Linq.Query{T}.ClearCache"/> method to cleanup cache after queries, that produce severe memory leaks you need to fix.
+			/// to call <see cref="Query{T}.ClearCache"/> method to cleanup cache after queries, that produce severe memory leaks you need to fix.
 			/// <para />
 			/// <a href="https://github.com/linq2db/linq2db/issues/256">More details</a>.
 			/// </summary>
@@ -246,6 +251,7 @@ namespace LinqToDB.Common
 
 			/// <summary>
 			/// Used to generate CROSS APPLY or OUTER APPLY if possible.
+			/// Default value: <c>true</c>.
 			/// </summary>
 			public static bool PreferApply = true;
 
@@ -253,11 +259,13 @@ namespace LinqToDB.Common
 			/// Allows SQL generation to automatically transform
 			/// <code>SELECT DISTINCT value FROM Table ORDER BY date</code>
 			/// Into GROUP BY equivalent if syntax is not supported
+			/// Default value: <c>true</c>.
 			/// </summary>
 			public static bool KeepDistinctOrdered = true;
 
 			/// <summary>
 			/// Enables Take/Skip parameterization.
+			/// Default value: <c>true</c>.
 			/// </summary>
 			public static bool ParameterizeTakeSkip = true;
 		}
@@ -269,8 +277,9 @@ namespace LinqToDB.Common
 		public static class SqlServer
 		{
 			/// <summary>
-			/// if set to true, SchemaProvider uses <see cref="CommandBehavior.SchemaOnly"/> to get metadata.
+			/// if set to <c>true</c>, SchemaProvider uses <see cref="CommandBehavior.SchemaOnly"/> to get metadata.
 			/// Otherwise the sp_describe_first_result_set sproc is used.
+			/// Default value: <c>false</c>.
 			/// </summary>
 			public static bool UseSchemaOnlyToGetSchema;
 		}
