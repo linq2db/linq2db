@@ -84,6 +84,8 @@ namespace Tests.UserTests
 				Assert.Inconclusive($"Character {(char)character} not supported by runtime");
 
 			var testData = GetTestCase((char)character, GetProviderName(context, out _), out var supported);
+			if (!supported)
+				Assert.Inconclusive($"Character {(char)character} not supported by database");
 
 			using (var db = GetDataContext(context))
 			{
