@@ -631,6 +631,7 @@ namespace LinqToDB
 		[Sql.Expression(PN.Firebird, "TRIM(_utf8 x'" + WHITESPACES_UTF8 + "' FROM {0})")]
 		[Sql.Expression(PN.MySql, "TRIM(LEADING '" + WHITESPACES + "' FROM {0})")]
 		[Sql.Expression(PN.SqlServer, "CASE WHEN {0} LIKE N'%[^" + WHITESPACES + "]%' THEN {0} ELSE '' END")]
+		[Sql.Expression(PN.Sybase, "CASE WHEN {0} LIKE N'%[^" + WHITESPACES + "]%' THEN {0} ELSE '' END")]
 		[Sql.Expression(PN.Access, "LTRIM({0})")]
 		[Sql.Expression(PN.SqlCe, "REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE({0}, '\x09', ''), '\x0a', ''), '\x0b', ''), '\x0c', ''), '\x0d', ''), '\x20', ''), '\x85', ''), '\xa0', ''), '\x1680', ''), '\x2000', ''), '\x2001', ''), '\x2002', ''), '\x2003', ''), '\x2004', ''), '\x2005', ''), '\x2006', ''), '\x2007', ''), '\x2008', ''), '\x2009', ''), '\x200a', ''), '\x2028', ''), '\x2029', ''), '\x205f', ''), '\x3000', '')")]
 		internal static string? TryTrimWhitespaces(string? str)
