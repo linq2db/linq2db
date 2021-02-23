@@ -555,7 +555,7 @@ namespace LinqToDB.Linq
 			{ M(() => string.Concat((string[])null!)                           ), N(() => L<string[],string>                   ((string[] ps)                             => Sql.Concat(ps)))          },
 
 			{ M(() => string.IsNullOrEmpty ("")    ),                                         N(() => L<string,bool>                                   ((string p0)                                                   => p0 == null || p0.Length == 0)) },
-			{ M(() => string.IsNullOrWhiteSpace("")),                                         N(() => L<string,bool>                                   ((string p0)                                                   => p0 == null || Sql.TryTrimWhitespaces(p0) == "")) },
+			{ M(() => string.IsNullOrWhiteSpace("")),                                         N(() => L<string,bool>                                   ((string p0)                                                   => p0 == null || Sql.IsWhiteSpace(p0))) },
 			{ M(() => string.CompareOrdinal("","")),                                          N(() => L<string,string,int>                             ((string s1,string s2)                                         => s1.CompareTo(s2))) },
 			{ M(() => string.CompareOrdinal("",0,"",0,0)),                                    N(() => L<string,int,string,int,int,int>                 ((string s1,int i1,string s2,int i2,int l)                     => s1.Substring(i1, l).CompareTo(s2.Substring(i2, l)))) },
 			{ M(() => string.Compare       ("","")),                                          N(() => L<string,string,int>                             ((string s1,string s2)                                         => s1.CompareTo(s2))) },
@@ -1258,8 +1258,6 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.Degrees((long?)   0)), N(() => L<long?,   long?>   ( v => (long?)   (v!.Value * (180 / Math.PI)))) },
 					{ M(() => Sql.Degrees((sbyte?)  0)), N(() => L<sbyte?,  sbyte?>  ( v => (sbyte?)  (v!.Value * (180 / Math.PI)))) },
 					{ M(() => Sql.Degrees((float?)  0)), N(() => L<float?,  float?>  ( v => (float?)  (v!.Value * (180 / Math.PI)))) },
-
-					{ M(() => string.IsNullOrWhiteSpace("")), N(() => L<string,bool>((string p0) => p0 == null || Sql.TryTrimWhitespaces(p0) == null)) },
 				}},
 
 				#endregion

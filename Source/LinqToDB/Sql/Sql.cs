@@ -620,25 +620,38 @@ namespace LinqToDB
 		// set of all White_Space characters per Unicode v13
 		const string WHITESPACES = "\x09\x0A\x0B\x0C\x0D\x20\x85\xA0\x1680\x2000\x2001\x2002\x2003\x2004\x2005\x2006\x2007\x2008\x2009\x200A\x2028\x2029\x205F\x3000";
 		const string ASCII_WHITESPACES = "\x09' || CHR(10) || '\x0B\x0C' || CHR(13) || '\x20\x85\xA0";
-		const string WHITESPACES_UTF8 = "090A0B0C0D20C285C2A0E19A80E28080E28081E28082E28083E28084E28085E28086E28087E28088E28089E2808AE280A8E280A9E2819FE38080";
 
-		// internal implementation that tries to trim string whitespaces
-		// shouldn't be exposed as it doesn't do full trim for some databases:
-		// it could trim only one side of string, which is enough if it will trim all characters, but otherwise
-		// it could leave whitespaces from other side
-		[Sql.Expression("LTRIM({0}, '" + WHITESPACES + "')")]
-		[Sql.Expression(PN.Informix, "LTRIM({0}, '" + ASCII_WHITESPACES + "')")]
-		[Sql.Expression(PN.SqlServer2017, "TRIM(N'" + WHITESPACES + "' FROM {0})")]
+		/*
+		 * marked internal as we don't have plans now to expose it directly (used by string.IsNullOrWhiteSpace mapping)
+		 * 
+		 * implementation tries to mimic .NET implementation of string.IsNullOrWhiteSpace (except null check part):
+		 * return true if string doesn't contain any symbols except White_Space codepoints from Unicode.
+		 * 
+		 * Known limitations:
+		 * 1. [Access] we handle only following WS:
+		 * - 0x20 (SPACE)
+		 * - 0x1680 (OGHAM SPACE MARK)
+		 * - 0x205F (MEDIUM MATHEMATICAL SPACE)
+		 * - 0x3000 (IDEOGRAPHIC SPACE)
+		 * Proper implementation will be same as we use for SqlCe, but Replace function is not exposed to SQL by default
+		 * and requires sandbox mode: https://support.microsoft.com/en-us/office/turn-sandbox-mode-on-or-off-to-disable-macros-8cc7bad8-38c2-4a7a-a604-43e9a7bbc4fb
+		 * 2. [Informix} implementation use only ASCII whitespaces which probably will not work in some cases for WS outside of
+		 * ASCII range (currently works in our tests, but it could be that it depends on used encodings)
+		 */
+		[Sql.Expression(                  "LTRIM({0}, '" + WHITESPACES + "') = ''",                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           IsPredicate = true)]
+		[Sql.Expression(PN.Oracle       , "LTRIM({0}, '" + WHITESPACES + "') IS NULL",                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        IsPredicate = true)]
+		[Sql.Expression(PN.Informix     , "LTRIM({0}, '" + ASCII_WHITESPACES + "') = ''",                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     IsPredicate = true)]
+		[Sql.Expression(PN.SqlServer2017, "TRIM(N'" + WHITESPACES + "' FROM {0}) = ''",                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       IsPredicate = true)]
 		// contains utf8 encoded LIKE literal: '%[^" + WHITESPACES + "]%'
-		[Sql.Expression(PN.Firebird, "CASE WHEN {0} SIMILAR TO _utf8 x'255B5E090A0B0C0D20C285C2A0E19A80E28080E28081E28082E28083E28084E28085E28086E28087E28088E28089E2808AE280A8E280A9E2819FE380805D25' THEN {0} ELSE '' END")]
-		[Sql.Expression(PN.SqlServer, "CASE WHEN {0} LIKE N'%[^" + WHITESPACES + "]%' THEN {0} ELSE '' END")]
-		[Sql.Expression(PN.MySql, "CASE WHEN {0} RLIKE '[^" + WHITESPACES + "]' THEN {0} ELSE '' END")]
-		[Sql.Expression(PN.Sybase, "CASE WHEN {0} LIKE '%[^" + WHITESPACES + "]%' THEN {0} ELSE '' END")]
-		[Sql.Expression(PN.Access, "LTRIM({0})")]
-		[Sql.Expression(PN.SqlCe, "REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE({0}, '\x09', ''), '\x0a', ''), '\x0b', ''), '\x0c', ''), '\x0d', ''), '\x20', ''), '\x85', ''), '\xa0', ''), '\x1680', ''), '\x2000', ''), '\x2001', ''), '\x2002', ''), '\x2003', ''), '\x2004', ''), '\x2005', ''), '\x2006', ''), '\x2007', ''), '\x2008', ''), '\x2009', ''), '\x200a', ''), '\x2028', ''), '\x2029', ''), '\x205f', ''), '\x3000', '')")]
-		internal static string? TryTrimWhitespaces(string? str)
+		[Sql.Expression(PN.Firebird     , "NOT({0} SIMILAR TO _utf8 x'255B5E090A0B0C0D20C285C2A0E19A80E28080E28081E28082E28083E28084E28085E28086E28087E28088E28089E2808AE280A8E280A9E2819FE380805D25')",                                                                                                                                                                                                                                                                                                                                                                                                      IsPredicate = true)]
+		[Sql.Expression(PN.SqlServer    , "NOT({0} LIKE N'%[^" + WHITESPACES + "]%')",                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        IsPredicate = true)]
+		[Sql.Expression(PN.MySql        , "NOT({0} RLIKE '[^" + WHITESPACES + "]')",                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          IsPredicate = true)]
+		[Sql.Expression(PN.Sybase       , "NOT({0} LIKE '%[^" + WHITESPACES + "]%')",                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         IsPredicate = true)]
+		[Sql.Expression(PN.Access       , "LTRIM({0}) = ''",                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  IsPredicate = true)]
+		[Sql.Expression(PN.SqlCe        , "REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE({0}, '\x09', ''), '\x0a', ''), '\x0b', ''), '\x0c', ''), '\x0d', ''), '\x20', ''), '\x85', ''), '\xa0', ''), '\x1680', ''), '\x2000', ''), '\x2001', ''), '\x2002', ''), '\x2003', ''), '\x2004', ''), '\x2005', ''), '\x2006', ''), '\x2007', ''), '\x2008', ''), '\x2009', ''), '\x200a', ''), '\x2028', ''), '\x2029', ''), '\x205f', ''), '\x3000', '') = ''", IsPredicate = true)]
+		internal static bool IsWhiteSpace(string str)
 		{
-			return str?.Trim();
+			return string.IsNullOrWhiteSpace(str);
 		}
 
 		[Sql.Function]

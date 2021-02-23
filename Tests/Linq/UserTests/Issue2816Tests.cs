@@ -89,9 +89,6 @@ namespace Tests.UserTests
 			{
 				using (var table = db.CreateLocalTable(testData))
 				{
-					var query1 = (from p in table.ToArray()
-								 where !string.IsNullOrWhiteSpace(p.Text)
-								 select p).ToArray();
 					var query = (from p in table
 								 where !string.IsNullOrWhiteSpace(p.Text)
 								 select p).ToArray();
@@ -137,28 +134,6 @@ namespace Tests.UserTests
 		{
 			switch (providerName)
 			{
-				case ProviderName.OracleManaged:
-				case ProviderName.OracleNative:
-				case TestProvName.Oracle11Managed:
-				case TestProvName.Oracle11Native:
-				case ProviderName.PostgreSQL:
-				case ProviderName.PostgreSQL92:
-				case ProviderName.PostgreSQL93:
-				case ProviderName.PostgreSQL95:
-				case TestProvName.PostgreSQL10:
-				case TestProvName.PostgreSQL11:
-				case TestProvName.PostgreSQL12:
-				case TestProvName.PostgreSQL13:
-				case ProviderName.SQLiteClassic:
-				case ProviderName.SQLiteMS:
-				case TestProvName.SQLiteClassicMiniProfilerMapped:
-				case TestProvName.SQLiteClassicMiniProfilerUnmapped:
-				case ProviderName.DB2:
-				case ProviderName.SapHanaNative:
-				case ProviderName.SapHanaOdbc:
-					// full support
-					return true;
-
 				case ProviderName.Access:
 				case ProviderName.AccessOdbc:
 					// only 4 characters including space supported
@@ -166,100 +141,8 @@ namespace Tests.UserTests
 						|| character == 0x1680
 						|| character == 0x205F
 						|| character == 0x3000;
-
-
-					//	case ProviderName.Informix:
-					//	case ProviderName.InformixDB2:
-					//		// teh winner!
-					//		return character != 0x09
-					//			&& character != 0x0A
-					//			&& character != 0x0B
-					//			&& character != 0x0C
-					//			&& character != 0x0D
-					//			&& character != 0x85;
-
-
-					//	case ProviderName.Firebird:
-					//	case TestProvName.Firebird3:
-					//		return character != 0x09
-					//			&& character != 0x0A
-					//			&& character != 0x0B
-					//			&& character != 0x0C
-					//			&& character != 0x0D
-					//			&& character != 0xA0
-					//			&& character != 0x85
-					//			&& character != 0x1680
-					//			&& character != 0x2000
-					//			&& character != 0x2001
-					//			&& character != 0x2002
-					//			&& character != 0x2003
-					//			&& character != 0x2004
-					//			&& character != 0x2005
-					//			&& character != 0x2006
-					//			&& character != 0x2007
-					//			&& character != 0x2008
-					//			&& character != 0x2009
-					//			&& character != 0x200A
-					//			&& character != 0x2028
-					//			&& character != 0x2029
-					//			&& character != 0x205F
-					//			&& character != 0x3000;
-
-					//	case ProviderName.MySql:
-					//	case ProviderName.MySqlConnector:
-					//	case ProviderName.MySqlOfficial:
-					//	case TestProvName.MySql55:
-					//	case TestProvName.MariaDB:
-					//		return character != 0x09
-					//			&& character != 0x0A
-					//			&& character != 0x0B
-					//			&& character != 0x0C
-					//			&& character != 0x0D
-					//			&& character != 0xA0
-					//			&& character != 0x85
-					//			&& character != 0x1680
-					//			&& character != 0x2000
-					//			&& character != 0x2001
-					//			&& character != 0x2002
-					//			&& character != 0x2003
-					//			&& character != 0x2004
-					//			&& character != 0x2005
-					//			&& character != 0x2006
-					//			&& character != 0x2007
-					//			&& character != 0x2008
-					//			&& character != 0x2009
-					//			&& character != 0x200A
-					//			&& character != 0x2028
-					//			&& character != 0x2029
-					//			&& character != 0x205F
-					//			&& character != 0x3000;
-
-					//	case ProviderName.Sybase:
-					//	case ProviderName.SybaseManaged:
-					//		return character != 0x09
-					//			&& character != 0x0A
-					//			&& character != 0x0B
-					//			&& character != 0x0C
-					//			&& character != 0x0D
-					//			&& character != 0xA0
-					//			&& character != 0x85
-					//			&& character != 0x1680
-					//			&& character != 0x2000
-					//			&& character != 0x2001
-					//			&& character != 0x2002
-					//			&& character != 0x2003
-					//			&& character != 0x2004
-					//			&& character != 0x2005
-					//			&& character != 0x2006
-					//			&& character != 0x2007
-					//			&& character != 0x2008
-					//			&& character != 0x2009
-					//			&& character != 0x200A
-					//			&& character != 0x2028
-					//			&& character != 0x2029
-					//			&& character != 0x205F
-					//			&& character != 0x3000;
 			}
+
 			return true;
 		}
 	}
