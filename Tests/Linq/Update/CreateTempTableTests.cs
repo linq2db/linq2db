@@ -251,5 +251,20 @@ namespace Tests.xUpdate
 				Assert.AreEqual(false, tableExists);
 			}
 		}
+
+		[Test]
+		public void CreateTableSQLite([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var data = new[] { new { ID = 1, Field = 2 } };
+
+			using (var tmp = db.CreateTempTable(data, tableName : "#TempTable"))
+			{
+				var list = tmp.ToList();
+
+				Assert.That(list, Is.EquivalentTo(data));
+			}
+		}
 	}
 }
