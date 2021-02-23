@@ -629,7 +629,8 @@ namespace LinqToDB
 		[Sql.Expression("LTRIM({0}, '" + WHITESPACES + "')")]
 		[Sql.Expression(PN.Informix, "LTRIM({0}, '" + ASCII_WHITESPACES + "')")]
 		[Sql.Expression(PN.SqlServer2017, "TRIM(N'" + WHITESPACES + "' FROM {0})")]
-		[Sql.Expression(PN.Firebird, "TRIM(_utf8 x'" + WHITESPACES_UTF8 + "' FROM {0})")]
+		// contains utf8 encoded LIKE literal: '%[^" + WHITESPACES + "]%'
+		[Sql.Expression(PN.Firebird, "CASE WHEN {0} SIMILAR TO _utf8 x'255B5E090A0B0C0D20C285C2A0E19A80E28080E28081E28082E28083E28084E28085E28086E28087E28088E28089E2808AE280A8E280A9E2819FE380805D25' THEN {0} ELSE '' END")]
 		[Sql.Expression(PN.MySql, "TRIM(LEADING '" + WHITESPACES + "' FROM {0})")]
 		[Sql.Expression(PN.SqlServer, "CASE WHEN {0} LIKE N'%[^" + WHITESPACES + "]%' THEN {0} ELSE '' END")]
 		[Sql.Expression(PN.Sybase, "CASE WHEN {0} LIKE N'%[^" + WHITESPACES + "]%' THEN {0} ELSE '' END")]
