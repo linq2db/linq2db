@@ -90,7 +90,7 @@ namespace LinqToDB.SqlQuery
 
 		public bool CanInvert()
 		{
-			return Conditions.Count == 1;
+			return Conditions.Count > 0 && Conditions.Count(c => c.IsNot) > Conditions.Count / 2;
 		}
 
 		public IQueryElement Invert()

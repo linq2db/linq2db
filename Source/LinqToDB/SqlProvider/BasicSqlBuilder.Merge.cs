@@ -179,7 +179,7 @@ namespace LinqToDB.SqlProvider
 		private void BuildMergeAsSourceClause(SqlMergeSourceTable mergeSource)
 		{
 			mergeSource = ConvertElement(mergeSource);
-			StringBuilder.Append(" ");
+			StringBuilder.Append(' ');
 
 			ConvertTableName(StringBuilder, null, null, null, mergeSource.Name, TableOptions.NotSet);
 
@@ -205,7 +205,7 @@ namespace LinqToDB.SqlProvider
 
 				StringBuilder.AppendLine();
 
-				StringBuilder.Append(")");
+				StringBuilder.Append(')');
 			}
 		}
 
@@ -215,14 +215,14 @@ namespace LinqToDB.SqlProvider
 			var rows = merge.Source.SourceEnumerable!.Rows!;
 			if (rows.Count > 0)
 			{
-				StringBuilder.Append("(");
+				StringBuilder.Append('(');
 
 				if (MergeSupportsSourceDirectValues)
 					BuildValues(merge.Source.SourceEnumerable, rows);
 				else
 					BuildValuesAsSelectsUnion(merge.Source.SourceFields, merge.Source.SourceEnumerable, rows);
 
-				StringBuilder.Append(")");
+				StringBuilder.Append(')');
 			}
 			else if (MergeEmptySourceSupported)
 				BuildMergeEmptySource(merge);
@@ -273,7 +273,7 @@ namespace LinqToDB.SqlProvider
 					// add aliases only for first row
 					if (!MergeSupportsColumnAliasesInSource && i == 0)
 					{
-						StringBuilder.Append(" ");
+						StringBuilder.Append(' ');
 						Convert(StringBuilder, sourceFields[j].PhysicalName, ConvertType.NameToQueryField);
 					}
 				}
@@ -307,7 +307,7 @@ namespace LinqToDB.SqlProvider
 
 				if (!MergeSupportsColumnAliasesInSource)
 				{
-					StringBuilder.Append(" ");
+					StringBuilder.Append(' ');
 					Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
 				}
 			}
@@ -362,7 +362,7 @@ namespace LinqToDB.SqlProvider
 						BuildExpression(value);
 				}
 
-				StringBuilder.Append(")");
+				StringBuilder.Append(')');
 			}
 		}
 

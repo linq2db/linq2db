@@ -460,7 +460,9 @@ namespace LinqToDB.Linq
 		class GetValueOrDefaultExpressionInfo<T1> : IExpressionInfo, ISetInfo
 			where T1 : struct
 		{
-			static T1? _member = null;
+#pragma warning disable CS0649 // Field is never assigned to...
+			static T1? _member;
+#pragma warning restore CS0649 // Field is never assigned to...
 
 			public LambdaExpression GetExpression(MappingSchema mappingSchema)
 			{
@@ -569,6 +571,12 @@ namespace LinqToDB.Linq
 			#region Binary
 
 			{ M(() => ((Binary)null!).Length ), N(() => L<Binary,int>((Binary obj) => Sql.Length(obj)!.Value)) },
+
+			#endregion
+
+			#region Byte[]
+
+			{ M(() => ((byte[])null!).Length ), N(() => L<byte[],int>((byte[] obj) => Sql.Length(obj)!.Value)) },
 
 			#endregion
 

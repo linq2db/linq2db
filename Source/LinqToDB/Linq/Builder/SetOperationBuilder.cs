@@ -413,12 +413,12 @@ namespace LinqToDB.Linq.Builder
 				return ret;
 			}
 
-			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor testFlag)
+			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
-				if (testFlag == RequestFor.Root && ReferenceEquals(expression, _unionParameter))
+				if (requestFlag == RequestFor.Root && ReferenceEquals(expression, _unionParameter))
 					return IsExpressionResult.True;
 
-				return base.IsExpression(expression, level, testFlag);
+				return base.IsExpression(expression, level, requestFlag);
 			}
 
 			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)

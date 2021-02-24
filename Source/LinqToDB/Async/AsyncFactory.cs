@@ -36,7 +36,9 @@ namespace LinqToDB.Async
 #if NETFRAMEWORK
 		private static readonly MethodInfo _transactionWrap      = MemberHelper.MethodOf(() => Wrap<IDbTransaction>(default!)).GetGenericMethodDefinition();
 #else
+#pragma warning disable CA2012 // ValueTask instances returned from method calls should be directly awaited...
 		private static readonly MethodInfo _transactionValueWrap = MemberHelper.MethodOf(() => WrapValue<IDbTransaction>(default!)).GetGenericMethodDefinition();
+#pragma warning restore CA2012 // ValueTask instances returned from method calls should be directly awaited...
 #endif
 
 		/// <summary>
@@ -294,7 +296,7 @@ namespace LinqToDB.Async
 				.Lambda<TDelegate>(
 					body,
 					new[] { pInstance }.Concat(parameters))
-				.Compile();
+				.CompileExpression();
 		}
 
 		/// <summary>
@@ -387,7 +389,7 @@ namespace LinqToDB.Async
 						taskConverter.MakeGenericMethod(mi.ReturnType.GetGenericArguments()[0]),
 						body),
 					new[] { pInstance }.Concat(parameters))
-				.Compile();
+				.CompileExpression();
 		}
 	}
 }

@@ -194,7 +194,7 @@ namespace LinqToDB.DataProvider.Sybase
 			AppendIndent();
 			StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY CLUSTERED (");
 			StringBuilder.Append(string.Join(InlineComma, fieldNames));
-			StringBuilder.Append(")");
+			StringBuilder.Append(')');
 		}
 
 		protected override string? GetProviderTypeName(IDbDataParameter parameter)

@@ -1,4 +1,5 @@
-﻿using System.ServiceModel;
+﻿#if NETFRAMEWORK
+using System.ServiceModel;
 using System.Threading.Tasks;
 
 namespace LinqToDB.ServiceModel
@@ -19,3 +20,4 @@ namespace LinqToDB.ServiceModel
 		[OperationContract(Action="http://tempuri.org/ILinqService/ExecuteBatch",    ReplyAction="http://tempuri.org/ILinqService/ExecuteBatchResponse")]    Task<int>             ExecuteBatchAsync   (string? configuration, string queryData);
 	}
 }
+#endif

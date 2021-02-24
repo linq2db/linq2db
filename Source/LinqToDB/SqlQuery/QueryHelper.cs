@@ -314,7 +314,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SqlExpression:
 				{
 					var sqlExpr = (SqlExpression) expr;
-					if (!sqlExpr.IsPure || sqlExpr.IsAggregate)
+					if (!sqlExpr.IsPure || (sqlExpr.Flags & (SqlFlags.IsAggregate | SqlFlags.IsWindowFunction)) != 0)
 						return false;
 					return sqlExpr.Parameters.All(p => IsConstant(p));
 				}
@@ -650,7 +650,7 @@ namespace LinqToDB.SqlQuery
 					case QueryInformation.HierarchyType.InnerQuery:
 						return true;
 					default:
-						throw new ArgumentOutOfRangeException();
+						throw new InvalidOperationException($"Unexpected hierarchy type: {info.HierarchyType}");
 				}
 
 			} while (current != null);
@@ -1210,13 +1210,13 @@ namespace LinqToDB.SqlQuery
 			return result;
 		}
 
-		public static bool IsAggregationFunction(IQueryElement expr)
+		public static bool IsAggregationOrWindowFunction(IQueryElement expr)
 		{
 			if (expr is SqlFunction func)
 				return func.IsAggregate;
 
 			if (expr is SqlExpression expression)
-				return expression.IsAggregate;
+				return (expression.Flags & (SqlFlags.IsAggregate | SqlFlags.IsWindowFunction)) != 0;
 
 			return false;
 		}

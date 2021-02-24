@@ -626,7 +626,7 @@ namespace LinqToDB.Mapping
 				var getterExpr    = InternalExtensions.ApplyLambdaToExpression(GetDbValueLambda(), objExpression);
 
 				var getterLambda = Expression.Lambda<Func<object,object>>(Expression.Convert(getterExpr, typeof(object)), objParam);
-				_getter = getterLambda.Compile();
+				_getter = getterLambda.CompileExpression();
 			}
 
 			return _getter(obj);

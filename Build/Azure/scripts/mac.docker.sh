@@ -2,7 +2,7 @@
 
 # osx agent doesn't have docker pre-installed, so we need to do it manually
 retries=0
-brew cask install docker
+brew install --cask docker
 
 # manually setup docker, as versions after 2.0.0.3-ce-mac81,31259 cannot be installed without mouse-fu :facepalm:
 # thanks to https://github.com/docker/for-mac/issues/2359#issuecomment-607154849

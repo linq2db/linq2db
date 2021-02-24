@@ -6,6 +6,6 @@
 		/// Enables force inlining of function parameters to support SQL CE 3.0.
 		/// Default value: <c>false</c>.
 		/// </summary>
-		public static bool InlineFunctionParameters = false;
+		public static bool InlineFunctionParameters;
 	}
 }

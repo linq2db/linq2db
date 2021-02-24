@@ -160,7 +160,7 @@ namespace LinqToDB.SqlQuery
 						var idx = q.Select.Add(field);
 
 						if (n != q.Select.Columns.Count)
-							if (!q.GroupBy.IsEmpty || q.Select.Columns.Any(c => QueryHelper.IsAggregationFunction(c.Expression)))
+							if (!q.GroupBy.IsEmpty || q.Select.Columns.Any(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression)))
 								q.GroupBy.Items.Add(field);
 
 						return q.Select.Columns[idx];
@@ -463,7 +463,7 @@ namespace LinqToDB.SqlQuery
 						{
 							// we cannot remove all group items if there is at least one aggregation function
 							//
-							var lastShouldStay = _selectQuery.Select.Columns.Any(c => QueryHelper.IsAggregationFunction(c.Expression));
+							var lastShouldStay = _selectQuery.Select.Columns.Any(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression));
 							if (lastShouldStay)
 								break;
 						}
@@ -504,7 +504,7 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-			if (condition.IsNot && condition.Predicate is IInvertibleElement invertibleElement)
+			if (condition.IsNot && condition.Predicate is IInvertibleElement invertibleElement && invertibleElement.CanInvert())
 			{
 				return new SqlCondition(false, (ISqlPredicate)invertibleElement.Invert(), condition.IsOr);
 			}
@@ -926,7 +926,7 @@ namespace LinqToDB.SqlQuery
 			}
 
 			if (optimizeColumns &&
-				new QueryVisitor().Find(expr, ex => ex is SelectQuery || QueryHelper.IsAggregationFunction(ex)) == null)
+				new QueryVisitor().Find(expr, ex => ex is SelectQuery || QueryHelper.IsAggregationOrWindowFunction(ex)) == null)
 			{
 				var elementsToIgnore = new HashSet<IQueryElement> { query };
 
@@ -979,7 +979,7 @@ namespace LinqToDB.SqlQuery
 				return childSource;
 
 			var isColumnsOK =
-				(allColumns && !query.Select.Columns.Any(c => QueryHelper.IsAggregationFunction(c.Expression))) ||
+				(allColumns && !query.Select.Columns.Any(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression))) ||
 				!query.Select.Columns.Any(c => CheckColumn(parentQuery, c, c.Expression, query, optimizeValues, optimizeColumns));
 
 			if (isColumnsOK && !parentQuery.GroupBy.IsEmpty)
@@ -1035,7 +1035,7 @@ namespace LinqToDB.SqlQuery
 				.Select(k => k.Select(e => map.TryGetValue(e, out var nw) ? nw : e).ToArray())
 				.ToList();
 
-			var top = _rootElement ?? (IQueryElement)_selectQuery.RootQuery();
+			var top = _rootElement ?? _selectQuery.RootQuery();
 
 			((ISqlExpressionWalkable)top).Walk(
 				new WalkOptions(), expr => map.TryGetValue(expr, out var fld) ? fld : expr);
@@ -1098,7 +1098,7 @@ namespace LinqToDB.SqlQuery
 			if (joinSource.Source.ElementType == QueryElementType.SqlQuery)
 			{
 				var sql   = (SelectQuery)joinSource.Source;
-				var isAgg = sql.Select.Columns.Any(c => QueryHelper.IsAggregationFunction(c.Expression));
+				var isAgg = sql.Select.Columns.Any(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression));
 
 				if (isApplySupported  && (isAgg || sql.Select.HasModifier))
 					return;
@@ -1252,7 +1252,7 @@ namespace LinqToDB.SqlQuery
 
 				if (table != _selectQuery.From.Tables[i])
 				{
-					if (!_selectQuery.Select.Columns.All(c => QueryHelper.IsAggregationFunction(c.Expression)))
+					if (!_selectQuery.Select.Columns.All(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression)))
 					{
 						if (_selectQuery.From.Tables[i].Source is SelectQuery sql)
 							ApplySubsequentOrder(_selectQuery, sql);

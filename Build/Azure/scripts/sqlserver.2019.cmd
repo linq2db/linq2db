@@ -16,6 +16,8 @@ REM both db and catalog are case-sensitive
 docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestData2019 COLLATE Latin1_General_CS_AS;"
 echo "create TestData2019SA"
 docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestData2019SA;"
+echo "create TestData2019FEC"
+docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestData2019FEC;"
 echo "copy Northwind"
 docker cp scripts/northwind.sql mssql:northwind.sql
 echo "create Northwind"

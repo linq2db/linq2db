@@ -14,6 +14,7 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using LinqToDB.Common;
 	using Model;
 
 	[TestFixture]
@@ -44,7 +45,7 @@ namespace Tests.Linq
 		[Test]
 		public void Bool3([DataSources] string context)
 		{
-			var values = new int[0];
+			var values = Array<int>.Empty;
 
 			using (var db = GetDataContext(context))
 				AreEqual(

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Threading;
-using LinqToDB.Data;
-using LinqToDB.DataProvider.SQLite;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 
 namespace Tests.UserTests
 {

@@ -10,6 +10,7 @@ namespace LinqToDB.Data
 	using Expressions;
 	using Linq;
 	using Linq.Builder;
+	using LinqToDB.Common;
 	using Mapping;
 	using Reflection;
 
@@ -297,7 +298,7 @@ namespace LinqToDB.Data
 			if (Common.Configuration.OptimizeForSequentialAccess)
 				lambda = (Expression<Func<IDataReader, T>>)SequentialAccessHelper.OptimizeMappingExpressionForSequentialAccess(lambda, Reader.FieldCount, reduce: true);
 
-			return lambda.Compile();
+			return lambda.CompileExpression();
 		}
 
 		private Expression BuildReaderExpression()

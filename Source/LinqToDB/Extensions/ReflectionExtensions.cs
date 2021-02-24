@@ -241,12 +241,47 @@ namespace LinqToDB.Extensions
 			return type.GetMember(name);
 		}
 
+#if NETSTANDARD2_0
+		private static Func<Type, Type, InterfaceMapping>? _getInterfaceMap;
+#endif
+		public static InterfaceMapping GetInterfaceMapEx(this Type type, Type interfaceType)
+		{
+			// native UWP builds (corert) had no GetInterfaceMap() implementation
+			// (added here https://github.com/dotnet/corert/pull/8144)
+#if NETSTANDARD2_0
+			if (_getInterfaceMap == null)
+			{
+				_getInterfaceMap = (t, i) => t.GetInterfaceMap(i);
+				try
+				{
+					return _getInterfaceMap(type, interfaceType);
+				}
+				catch (PlatformNotSupportedException)
+				{
+					// porting of https://github.com/dotnet/corert/pull/8144 is not possible as it requires access
+					// to non-public runtime data and reflection doesn't work in corert
+					_getInterfaceMap = (t, i) => new InterfaceMapping()
+					{
+						TargetType       = t,
+						InterfaceType    = i,
+						TargetMethods    = Array.Empty<MethodInfo>(),
+						InterfaceMethods = Array.Empty<MethodInfo>()
+					};
+				}
+			}
+
+			return _getInterfaceMap(type, interfaceType);
+#else
+			return type.GetInterfaceMap(interfaceType);
+#endif
+		}
+
 		static class CacheHelper<T>
 		{
 			public static readonly ConcurrentDictionary<Type,T[]> TypeAttributes = new ConcurrentDictionary<Type,T[]>();
 		}
 
-		#region Attributes cache
+#region Attributes cache
 
 		static readonly ConcurrentDictionary<Type, object[]> _typeAttributesTopInternal = new ConcurrentDictionary<Type, object[]>();
 
@@ -288,7 +323,7 @@ namespace LinqToDB.Extensions
 				{
 					var getAttr = false;
 
-					foreach (var mi in type.GetInterfaceMap(intf).TargetMethods)
+					foreach (var mi in type.GetInterfaceMapEx(intf).TargetMethods)
 					{
 						// Check if the interface is reimplemented.
 						//
@@ -310,7 +345,7 @@ namespace LinqToDB.Extensions
 				GetAttributesTreeInternal(list, type.BaseType);
 		}
 
-		#endregion
+#endregion
 
 		/// <summary>
 		/// Returns an array of custom attributes applied to a type.
@@ -323,7 +358,7 @@ namespace LinqToDB.Extensions
 		public static T[] GetAttributes<T>(this Type type)
 			where T : Attribute
 		{
-			if (type == null) throw new ArgumentNullException("type");
+			if (type == null) throw new ArgumentNullException(nameof(type));
 
 			if (!CacheHelper<T>.TypeAttributes.TryGetValue(type, out var attrs))
 			{
@@ -377,7 +412,7 @@ namespace LinqToDB.Extensions
 		/// </returns>
 		public static Type ToUnderlying(this Type type)
 		{
-			if (type == null) throw new ArgumentNullException("type");
+			if (type == null) throw new ArgumentNullException(nameof(type));
 
 			if (type.IsNullable()) type = type.GetGenericArguments()[0];
 			if (type.IsEnum      ) type = Enum.GetUnderlyingType(type);
@@ -387,7 +422,7 @@ namespace LinqToDB.Extensions
 
 		public static Type ToNullableUnderlying(this Type type)
 		{
-			if (type == null) throw new ArgumentNullException("type");
+			if (type == null) throw new ArgumentNullException(nameof(type));
 			//return type.IsNullable() ? type.GetGenericArguments()[0] : type;
 			return Nullable.GetUnderlyingType(type) ?? type;
 		}
@@ -399,7 +434,7 @@ namespace LinqToDB.Extensions
 		/// <returns>Type, wrapped by <see cref="Nullable{T}"/>.</returns>
 		public static Type AsNullable(this Type type)
 		{
-			if (type == null)          throw new ArgumentNullException("type");
+			if (type == null)          throw new ArgumentNullException(nameof(type));
 			if (!type.IsValueType) throw new ArgumentException($"{type} is not a value type");
 
 			return typeof(Nullable<>).MakeGenericType(type);
@@ -415,7 +450,7 @@ namespace LinqToDB.Extensions
 
 			foreach (var inf in child.GetInterfaces())
 			{
-				var pm = child.GetInterfaceMap(inf);
+				var pm = child.GetInterfaceMapEx(inf);
 
 				for (var i = 0; i < pm.TargetMethods.Length; i++)
 				{
@@ -432,7 +467,7 @@ namespace LinqToDB.Extensions
 		/// <summary>
 		/// Determines whether the specified types are considered equal.
 		/// </summary>
-		/// <param name="parent">A <see cref="System.Type"/> instance. </param>
+		/// <param name="parent">A <see cref="Type"/> instance. </param>
 		/// <param name="child">A type possible derived from the <c>parent</c> type</param>
 		/// <returns>True, when an object instance of the type <c>child</c>
 		/// can be used as an object of the type <c>parent</c>; otherwise, false.</returns>
@@ -522,7 +557,7 @@ namespace LinqToDB.Extensions
 
 		public static Type? GetGenericType(this Type genericType, Type type)
 		{
-			if (genericType == null) throw new ArgumentNullException("genericType");
+			if (genericType == null) throw new ArgumentNullException(nameof(genericType));
 
 			while (type != typeof(object))
 			{
@@ -838,9 +873,9 @@ namespace LinqToDB.Extensions
 			return type.GetEvent(eventName);
 		}
 
-		#endregion
+#endregion
 
-		#region MethodInfo extensions
+#region MethodInfo extensions
 
 		[return: NotNullIfNotNull("method")]
 		public static PropertyInfo? GetPropertyInfo(this MethodInfo? method)
@@ -862,9 +897,9 @@ namespace LinqToDB.Extensions
 			return null;
 		}
 
-		#endregion
+#endregion
 
-		#region MemberInfo extensions
+#region MemberInfo extensions
 
 		public static Type GetMemberType(this MemberInfo memberInfo)
 		{
@@ -970,7 +1005,7 @@ namespace LinqToDB.Extensions
 						var getter1 = info1.GetGetMethod()!;
 						var getter2 = ((PropertyInfo)member2).GetGetMethod()!;
 
-						var map = declaringType.GetInterfaceMap(member2.DeclaringType);
+						var map = declaringType.GetInterfaceMapEx(member2.DeclaringType);
 
 						for (var i = 0; i < map.InterfaceMethods.Length; i++)
 							if (getter2.Name == map.InterfaceMethods[i].Name && getter2.DeclaringType == map.InterfaceMethods[i].DeclaringType &&
@@ -991,7 +1026,7 @@ namespace LinqToDB.Extensions
 						var getter1 = info.GetGetMethod();
 						var getter2 = ((PropertyInfo)member2).GetGetMethod();
 
-						var map = member1.DeclaringType.GetInterfaceMap(member2.DeclaringType);
+						var map = member1.DeclaringType.GetInterfaceMapEx(member2.DeclaringType);
 
 						for (var i = 0; i < map.InterfaceMethods.Length; i++)
 						{
@@ -1011,7 +1046,7 @@ namespace LinqToDB.Extensions
 			return false;
 		}
 
-		#endregion
+#endregion
 
 		public static bool IsAnonymous(this Type type)
 		{

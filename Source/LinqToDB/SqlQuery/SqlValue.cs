@@ -23,7 +23,7 @@ namespace LinqToDB.SqlQuery
 
 		public SqlValue(object value)
 		{
-			_value     = value ?? throw new ArgumentNullException("Untyped null value");
+			_value     = value ?? throw new ArgumentNullException(nameof(value), "Untyped null value");
 			_valueType = new DbDataType(value.GetType());
 		}
 

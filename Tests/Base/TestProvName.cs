@@ -1,6 +1,4 @@
-﻿using System;
-
-using LinqToDB;
+﻿using LinqToDB;
 
 namespace Tests
 {
@@ -29,7 +27,9 @@ namespace Tests
 		public const string Oracle11Managed   = "Oracle.11.Managed";
 		public const string SqlServer2016     = "SqlServer.2016";
 		public const string SqlServer2019     = "SqlServer.2019";
-		public const string SqlServer2019SequentialAccess = "SqlServer.2019.SA";
+
+		public const string SqlServer2019SequentialAccess       = "SqlServer.2019.SA";
+		public const string SqlServer2019FastExpressionCompiler = "SqlServer.2019.FEC";
 
 		/// <summary>
 		/// SQLite classic provider wrapped into MiniProfiler without mappings to provider types configured.
@@ -74,14 +74,14 @@ namespace Tests
 		public const string AllSQLite              = "SQLite.Classic,SQLite.MS,SQLite.Classic.MPU,SQLite.Classic.MPM";
 		public const string AllSQLiteClassic       = "SQLite.Classic,SQLite.Classic.MPU,SQLite.Classic.MPM";
 		public const string AllSybase              = "Sybase,Sybase.Managed";
-		public const string AllSqlServer           = "SqlServer.2000,SqlServer.2005,SqlServer.2008,SqlServer.2012,SqlServer.2014,SqlServer.2016,SqlServer.2017,SqlServer.2019,SqlServer.2019.SA,SqlAzure";
+		public const string AllSqlServer           = "SqlServer.2000,SqlServer.2005,SqlServer.2008,SqlServer.2012,SqlServer.2014,SqlServer.2016,SqlServer.2017,SqlServer.2019,SqlServer.2019.SA,SqlServer.2019.FEC,SqlAzure";
 		public const string AllSqlServer2005Minus  = "SqlServer.2000,SqlServer.2005";
 		public const string AllSqlServer2008Minus  = "SqlServer.2000,SqlServer.2005,SqlServer.2008";
-		public const string AllSqlServer2005Plus   = "SqlServer.2005,SqlServer.2008,SqlServer.2012,SqlServer.2014,SqlServer.2016,SqlServer.2017,SqlServer.2019,SqlServer.2019.SA,SqlAzure";
-		public const string AllSqlServer2008Plus   = "SqlServer.2008,SqlServer.2012,SqlServer.2014,SqlServer.2016,SqlServer.2017,SqlServer.2019,SqlServer.2019.SA,SqlAzure";
+		public const string AllSqlServer2005Plus   = "SqlServer.2005,SqlServer.2008,SqlServer.2012,SqlServer.2014,SqlServer.2016,SqlServer.2017,SqlServer.2019,SqlServer.2019.SA,SqlServer.2019.FEC,SqlAzure";
+		public const string AllSqlServer2008Plus   = "SqlServer.2008,SqlServer.2012,SqlServer.2014,SqlServer.2016,SqlServer.2017,SqlServer.2019,SqlServer.2019.SA,SqlServer.2019.FEC,SqlAzure";
 		public const string AllSqlServer2012Plus   = "SqlServer.2012,SqlServer.2014,SqlServer.2017,SqlAzure";
-		public const string AllSqlServer2016Plus   = "SqlServer.2016,SqlServer.2017,SqlServer.2019,SqlServer.2019.SA,SqlAzure";
-		public const string AllSqlServer2017Plus   = "SqlServer.2017,SqlServer.2019,SqlServer.2019.SA,SqlAzure";
+		public const string AllSqlServer2016Plus   = "SqlServer.2016,SqlServer.2017,SqlServer.2019,SqlServer.2019.SA,SqlServer.2019.FEC,SqlAzure";
+		public const string AllSqlServer2017Plus   = "SqlServer.2017,SqlServer.2019,SqlServer.2019.SA,SqlServer.2019.FEC,SqlAzure";
 		public const string AllSQLiteNorthwind     = "Northwind.SQLite,Northwind.SQLite.MS";
 		public const string AllSapHana             = "SapHana.Native,SapHana.Odbc";
 		public const string AllInformix            = ProviderName.Informix + "," + ProviderName.InformixDB2;

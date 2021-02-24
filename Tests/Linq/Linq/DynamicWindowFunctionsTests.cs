@@ -49,7 +49,7 @@ namespace Tests.Linq
 				.FirstOrDefault(m => m != null);
 
 			if (method == null)
-				throw new Exception($"Method '{methodName}' not found in type '{type.Name}'.");
+				throw new InvalidOperationException($"Method '{methodName}' not found in type '{type.Name}'.");
 
 			return method;
 		}

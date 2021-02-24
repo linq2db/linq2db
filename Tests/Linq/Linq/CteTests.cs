@@ -13,7 +13,6 @@ namespace Tests.Linq
 {
 	using LinqToDB.Linq;
 	using Model;
-	using Tools;
 
 	public class CteTests : TestBase
 	{

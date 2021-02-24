@@ -21,7 +21,7 @@ namespace LinqToDB.Linq.Builder
 			var functions = mapping.GetAttributes<Sql.ExpressionAttribute>(methodCall.Method.ReflectedType!,
 				methodCall.Method,
 				f => f.Configuration);
-			return functions.FirstOrDefault(f => f.IsAggregate);
+			return functions.FirstOrDefault(f => f.IsAggregate || f.IsWindowFunction);
 		}
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)

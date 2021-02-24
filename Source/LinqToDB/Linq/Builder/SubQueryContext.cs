@@ -64,12 +64,12 @@ namespace LinqToDB.Linq.Builder
 				.ToArray();
 		}
 
-		public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor testFlag)
+		public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 		{
-			return testFlag switch
+			return requestFlag switch
 			{
 				RequestFor.SubQuery => IsExpressionResult.True,
-				_                   => base.IsExpression(expression, level, testFlag),
+				_                   => base.IsExpression(expression, level, requestFlag),
 			};
 		}
 

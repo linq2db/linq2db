@@ -269,7 +269,7 @@ namespace LinqToDB.Linq.Builder
 						QueryRunner.SetNonQueryQuery(query);
 						break;
 					default:
-						throw new ArgumentOutOfRangeException();
+						throw new InvalidOperationException($"Unexpected insert type: {_insertType}");
 				}
 			}
 

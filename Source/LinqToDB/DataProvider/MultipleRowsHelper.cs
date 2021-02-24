@@ -89,7 +89,7 @@ namespace LinqToDB.DataProvider
 					});
 				}
 
-				StringBuilder.Append(",");
+				StringBuilder.Append(',');
 			}
 
 			StringBuilder.Length--;
