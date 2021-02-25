@@ -793,7 +793,7 @@ namespace LinqToDB.SqlQuery
 			bool isApplySupported,
 			bool optimizeValues,
 			bool optimizeColumns,
-			JoinType parentJoin)
+			SqlJoinedTable? parentJoinedTable)
 		{
 			foreach (var jt in source.Joins)
 			{
@@ -805,7 +805,7 @@ namespace LinqToDB.SqlQuery
 					isApplySupported,
 					jt.JoinType == JoinType.Inner || jt.JoinType == JoinType.CrossApply,
 					optimizeColumns,
-					jt.JoinType);
+					jt);
 
 				if (table != jt.Table)
 				{
@@ -833,7 +833,7 @@ namespace LinqToDB.SqlQuery
 					}
 				}
 				if (canRemove)
-					return RemoveSubQuery(parentQuery, source, optimizeWhere, allColumns && !isApplySupported, optimizeValues, optimizeColumns, parentJoin);
+					return RemoveSubQuery(parentQuery, source, optimizeWhere, allColumns && !isApplySupported, optimizeValues, optimizeColumns, parentJoinedTable);
 			}
 
 			return source;
@@ -959,7 +959,7 @@ namespace LinqToDB.SqlQuery
 			bool allColumns,
 			bool optimizeValues,
 			bool optimizeColumns,
-			JoinType parentJoin)
+			SqlJoinedTable? parentJoinedTable)
 		{
 			var query = (SelectQuery)childSource.Source;
 
@@ -970,13 +970,20 @@ namespace LinqToDB.SqlQuery
 			//isQueryOK = isQueryOK && (_flags.IsDistinctOrderBySupported || query.Select.IsDistinct );
 			isQueryOK = isQueryOK && (!parentQuery.HasSetOperators || query.OrderBy.IsEmpty);
 
-			if (isQueryOK && parentJoin != JoinType.Inner)
+			if (isQueryOK && parentJoinedTable != null && parentJoinedTable.JoinType != JoinType.Inner)
 			{
 				var sqlTableSource = query.From.Tables[0];
 				if (sqlTableSource.Joins.Count > 0)
 				{
-					if (sqlTableSource.Joins.Any(j => j.JoinType != parentJoin))
+					if (sqlTableSource.Joins.Any(j => j.JoinType != parentJoinedTable.JoinType))
 						isQueryOK = false;
+					else
+					{
+						// check that this subquery do not infer with parent join via other joined tables
+						var joinSources = new HashSet<ISqlTableSource>(sqlTableSource.Joins.Select(j => j.Table.Source));
+						if (QueryHelper.IsDependsOn(parentJoinedTable.Condition, joinSources))
+							isQueryOK = false;
+					}
 				}
 			}
 
@@ -1033,7 +1040,7 @@ namespace LinqToDB.SqlQuery
 			}
 
 			List<ISqlExpression[]>? uniqueKeys = null;
-			if (parentJoin == JoinType.Inner && query.HasUniqueKeys)
+			if ((parentJoinedTable == null || parentJoinedTable.JoinType == JoinType.Inner) && query.HasUniqueKeys)
 				uniqueKeys = query.UniqueKeys;
 
 			uniqueKeys = uniqueKeys?
@@ -1135,7 +1142,7 @@ namespace LinqToDB.SqlQuery
 							}
 							else if (parentTableSources.Any(ts => ContainsTable(ts, condition)))
 							{
-								if (isApplySupported && Common.Configuration.Linq.PreferApply)
+								if (isApplySupported && Configuration.Linq.PreferApply)
 									return;
 
 								searchCondition.Insert(0, condition);
@@ -1196,7 +1203,7 @@ namespace LinqToDB.SqlQuery
 						isApplySupported,
 						joinTable.JoinType == JoinType.Inner || joinTable.JoinType == JoinType.CrossApply,
 						optimizeColumns,
-						joinTable.JoinType);
+						joinTable);
 
 					if (table != joinTable.Table)
 					{
@@ -1253,7 +1260,7 @@ namespace LinqToDB.SqlQuery
 
 			for (var i = 0; i < _selectQuery.From.Tables.Count; i++)
 			{
-				var table = OptimizeSubQuery(_selectQuery, _selectQuery.From.Tables[i], true, false, isApplySupported, true, optimizeColumns, JoinType.Inner);
+				var table = OptimizeSubQuery(_selectQuery, _selectQuery.From.Tables[i], true, false, isApplySupported, true, optimizeColumns, null);
 
 				if (table != _selectQuery.From.Tables[i])
 				{
@@ -1429,7 +1436,7 @@ namespace LinqToDB.SqlQuery
 					if (_flags.IsDistinctOrderBySupported)
 						continue;
 
-					if (Common.Configuration.Linq.KeepDistinctOrdered)
+					if (Configuration.Linq.KeepDistinctOrdered)
 					{
 						// trying to convert to GROUP BY quivalent
 						QueryHelper.TryConvertOrderedDistinctToGroupBy(query, _flags);
