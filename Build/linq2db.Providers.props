@@ -6,7 +6,7 @@
 		<PackageReference Include="System.Data.SQLite.Core" Version="1.0.113.7" />
 		<PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="7.5.0" />
 		<PackageReference Include="MySqlConnector" Version="1.2.1" />
-		<PackageReference Include="AdoNetCore.AseClient" Version="0.18.0" />
+		<PackageReference Include="AdoNetCore.AseClient" Version="0.19.2" />
 
 		<PackageReference Include="System.Data.SqlClient" Version="4.8.2" />
 		<PackageReference Include="Microsoft.Data.SqlClient" Version="2.1.1" />

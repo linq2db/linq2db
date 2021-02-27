@@ -57,6 +57,7 @@ namespace Tests.UserTests
 
 			var testData = new[]
 			{
+				new TestClass() { Id = cnt++, Text = "" },
 				new TestClass() { Id = cnt++, Text = "a" },
 				new TestClass() { Id = cnt++, Text = " m " },
 				new TestClass() { Id = cnt++, Text = " " },
