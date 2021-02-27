@@ -87,7 +87,7 @@ jobs:
                 Write-Host "Baselines branch already based on HEAD, no rebase required"
             } else {
                 Write-Host "Baselines head is ${baslinesHeadHash}, but HEAD is ${head}, trying to rebase on current HEAD"
-                git clone $baselinesRepoUrl baselines && cd baselines && git checkout origin/$baselinesBranch && git rebase origin/master && git push -f origin HEAD:$baselinesBranch
+                git clone $baselinesRepoUrl baselines | cd baselines | git checkout origin/$baselinesBranch | git rebase origin/master | git push -f origin HEAD:$baselinesBranch
                 if ($LASTEXITCODE -ne 0) {
                     # we do not re-create branch here, as current run could be db-specific and silent recreate will lead
                     # to baselines being lost
