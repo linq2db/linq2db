@@ -52,7 +52,6 @@
 		<PackageVersion Include="JetBrains.Profiler.Api" Version="1.1.7" />
 		<PackageVersion Include="Humanizer.Core" Version="2.8.26" />
 		<PackageVersion Include="FSharp.Core" Version="5.0.1" />
-		<PackageVersion Include="Microsoft.SqlServer.Types" Version="14.0.1016.290" />
 		<PackageVersion Include="Microsoft.AspNet.OData" Version="7.5.6" />
 
 		<!--nuget doesn't have strong name, so we use local self-signed copy-->
@@ -65,6 +64,8 @@
 		<PackageVersion Include="Npgsql" Version="5.0.3" />
 	</ItemGroup>
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net472' ">
+		<!--specify here or it will conflict with Reference-include in netcore targets-->
+		<PackageVersion Include="Microsoft.SqlServer.Types" Version="14.0.1016.290" />
 		<!--downgrade-->
 		<PackageVersion Include="Microsoft.Data.SQLite" Version="1.1.1" />
 		<PackageVersion Include="Npgsql" Version="4.1.8" />
