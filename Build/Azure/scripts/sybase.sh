@@ -38,4 +38,6 @@ docker exec sybase chmod +x /opt/sybase/ASE-16_0/install/start_fixed.sh
 
 docker exec -d sybase bash -c 'export SYBASE=/opt/sybase && source /opt/sybase/SYBASE.sh && sh /opt/sybase/SYBASE.sh && sh /opt/sybase/ASE-16_0/install/start_fixed.sh'
 
+sleep 45
+
 docker logs sybase
