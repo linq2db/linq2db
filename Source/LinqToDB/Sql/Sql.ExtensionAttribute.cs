@@ -448,7 +448,11 @@ namespace LinqToDB
 				ChainPrecedence  = -1;
 			}
 
-			public ExtensionAttribute(Type builderType): this(string.Empty, string.Empty)
+			public ExtensionAttribute(Type builderType): this(string.Empty, builderType)
+			{
+			}
+
+			public ExtensionAttribute(string configuration, Type builderType) : this(configuration, string.Empty)
 			{
 				BuilderType = builderType;
 			}
@@ -913,8 +917,10 @@ namespace LinqToDB
 				if (main == null)
 				{
 					var replaced = chain.Where(c => c.Expression != null).ToArray();
-					if (replaced.Length != 1)
+					if (replaced.Length == 0)
 						throw new InvalidOperationException($"Can not find root sequence for expression '{expression}'");
+					else if (replaced.Length > 1)
+						throw new InvalidOperationException($"Multiple root sequences found for expression '{expression}'");
 
 					return replaced[0].Expression!;
 				}

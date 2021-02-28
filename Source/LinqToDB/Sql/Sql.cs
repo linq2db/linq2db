@@ -19,6 +19,7 @@ namespace LinqToDB
 	using Expressions;
 	using Linq;
 	using SqlQuery;
+	using LinqToDB.Common;
 
 	[PublicAPI]
 	public static partial class Sql
@@ -616,6 +617,295 @@ namespace LinqToDB
 
 			return str.Replace(oldValue.Value, newValue.Value);
 		}
+
+		#region IsNullOrWhiteSpace
+		// set of all White_Space characters per Unicode v13
+		const string WHITESPACES = "\x09\x0A\x0B\x0C\x0D\x20\x85\xA0\x1680\x2000\x2001\x2002\x2003\x2004\x2005\x2006\x2007\x2008\x2009\x200A\x2028\x2029\x205F\x3000";
+		const string ASCII_WHITESPACES = "\x09\x0A\x0B\x0C\x0D\x20\x85\xA0";
+
+		/*
+		 * marked internal as we don't have plans now to expose it directly (used by string.IsNullOrWhiteSpace mapping)
+		 * 
+		 * implementation tries to mimic .NET implementation of string.IsNullOrWhiteSpace (except null check part):
+		 * return true if string doesn't contain any symbols except White_Space codepoints from Unicode.
+		 * 
+		 * Known limitations:
+		 * 1. [Access] we handle only following WS:
+		 * - 0x20 (SPACE)
+		 * - 0x1680 (OGHAM SPACE MARK)
+		 * - 0x205F (MEDIUM MATHEMATICAL SPACE)
+		 * - 0x3000 (IDEOGRAPHIC SPACE)
+		 * Proper implementation will be same as we use for SqlCe, but Replace function is not exposed to SQL by default
+		 * and requires sandbox mode: https://support.microsoft.com/en-us/office/turn-sandbox-mode-on-or-off-to-disable-macros-8cc7bad8-38c2-4a7a-a604-43e9a7bbc4fb
+		 * 2. [Informix} implementation use only ASCII whitespaces which probably will not work in some cases for WS outside of
+		 * ASCII range (currently works in our tests, but it could be that it depends on used encodings)
+		 */
+		[Extension(                  typeof(IsNullOrWhiteSpaceDefaultBuilder),       IsPredicate = true)]
+		[Extension(PN.Oracle,        typeof(IsNullOrWhiteSpaceOracleBuilder),        IsPredicate = true)]
+		[Extension(PN.Informix,      typeof(IsNullOrWhiteSpaceInformixBuilder),      IsPredicate = true)]
+		[Extension(PN.SqlServer,     typeof(IsNullOrWhiteSpaceSqlServerBuilder),     IsPredicate = true)]
+		[Extension(PN.SqlServer2017, typeof(IsNullOrWhiteSpaceSqlServer2017Builder), IsPredicate = true)]
+		[Extension(PN.Access,        typeof(IsNullOrWhiteSpaceAccessBuilder),        IsPredicate = true)]
+		[Extension(PN.Sybase,        typeof(IsNullOrWhiteSpaceSybaseBuilder),        IsPredicate = true)]
+		[Extension(PN.MySql,         typeof(IsNullOrWhiteSpaceMySqlBuilder),         IsPredicate = true)]
+		[Extension(PN.Firebird,      typeof(IsNullOrWhiteSpaceFirebirdBuilder),      IsPredicate = true)]
+		[Extension(PN.SqlCe,         typeof(IsNullOrWhiteSpaceSqlCeBuilder),         IsPredicate = true)]
+		internal static bool IsNullOrWhiteSpace(string? str) => string.IsNullOrWhiteSpace(str);
+
+		// str IS NULL OR REPLACE...(str, WHITEPACES, '') == ''
+		internal class IsNullOrWhiteSpaceSqlCeBuilder : IExtensionCallBuilder
+		{
+			void IExtensionCallBuilder.Build(ISqExtensionBuilder builder)
+			{
+				var str = builder.GetExpression("str");
+
+				var condition = new SqlCondition(
+					false,
+					new SqlPredicate.ExprExpr(
+						new SqlExpression(
+							typeof(string),
+							"REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE({0}, '\x09', ''), '\x0a', ''), '\x0b', ''), '\x0c', ''), '\x0d', ''), '\x20', ''), '\x85', ''), '\xa0', ''), '\x1680', ''), '\x2000', ''), '\x2001', ''), '\x2002', ''), '\x2003', ''), '\x2004', ''), '\x2005', ''), '\x2006', ''), '\x2007', ''), '\x2008', ''), '\x2009', ''), '\x200a', ''), '\x2028', ''), '\x2029', ''), '\x205f', ''), '\x3000', '')",
+							str),
+						SqlPredicate.Operator.Equal,
+						new SqlValue(typeof(string), string.Empty), false),
+					true);
+
+				if (str.CanBeNull)
+					builder.ResultExpression = new SqlSearchCondition(
+						new SqlCondition(false, new SqlPredicate.IsNull(str, false), true),
+						condition);
+				else
+					builder.ResultExpression = new SqlSearchCondition(condition);
+			}
+		}
+
+		// str IS NULL OR NOT(str SIMILAR TO _utf8 x'%[^WHITESPACES_UTF8]%')
+		internal class IsNullOrWhiteSpaceFirebirdBuilder : IExtensionCallBuilder
+		{
+			void IExtensionCallBuilder.Build(ISqExtensionBuilder builder)
+			{
+				var str = builder.GetExpression("str");
+
+				var condition = new SqlCondition(
+					false,
+					new SqlPredicate.NotExpr(
+						new SqlExpression(
+							typeof(bool),
+							"{0} SIMILAR TO {1}",
+							Precedence.Comparison,
+							SqlFlags.IsPredicate,
+							str,
+							new SqlValue(typeof(string), $"%[^{WHITESPACES}]%")),
+						true,
+						Precedence.LogicalNegation),
+					true);
+
+				if (str.CanBeNull)
+					builder.ResultExpression = new SqlSearchCondition(
+						new SqlCondition(false, new SqlPredicate.IsNull(str, false), true),
+						condition);
+				else
+					builder.ResultExpression = new SqlSearchCondition(condition);
+			}
+		}
+
+		// str IS NULL OR NOT(str RLIKE '%[^WHITESPACES]%')
+		internal class IsNullOrWhiteSpaceMySqlBuilder : IExtensionCallBuilder
+		{
+			void IExtensionCallBuilder.Build(ISqExtensionBuilder builder)
+			{
+				var str = builder.GetExpression("str");
+
+				var condition = new SqlCondition(
+					false,
+					new SqlPredicate.NotExpr(
+						new SqlExpression(
+							typeof(bool),
+							"{0} RLIKE {1}",
+							Precedence.Comparison,
+							SqlFlags.IsPredicate,
+							str,
+							new SqlValue(typeof(string), $"[^{WHITESPACES}]")),
+						true,
+						Precedence.LogicalNegation),
+					true);
+
+				if (str.CanBeNull)
+					builder.ResultExpression = new SqlSearchCondition(
+						new SqlCondition(false, new SqlPredicate.IsNull(str, false), true),
+						condition);
+				else
+					builder.ResultExpression = new SqlSearchCondition(condition);
+			}
+		}
+
+		// str IS NULL OR str NOT LIKE '%[^WHITESPACES]%'
+		internal class IsNullOrWhiteSpaceSybaseBuilder : IExtensionCallBuilder
+		{
+			void IExtensionCallBuilder.Build(ISqExtensionBuilder builder)
+			{
+				var str = builder.GetExpression("str");
+
+				var condition = new SqlCondition(
+					false,
+					new SqlPredicate.Like(
+						str,
+						true,
+						new SqlValue(typeof(string), $"%[^{WHITESPACES}]%"),
+						null),
+					true);
+
+				if (str.CanBeNull)
+					builder.ResultExpression = new SqlSearchCondition(
+						new SqlCondition(false, new SqlPredicate.IsNull(str, false), true),
+						condition);
+				else
+					builder.ResultExpression = new SqlSearchCondition(condition);
+			}
+		}
+
+		// str IS NULL OR str NOT LIKE N'%[^WHITESPACES]%'
+		internal class IsNullOrWhiteSpaceSqlServerBuilder : IExtensionCallBuilder
+		{
+			void IExtensionCallBuilder.Build(ISqExtensionBuilder builder)
+			{
+				var str = builder.GetExpression("str");
+
+				var condition = new SqlCondition(
+					false,
+					new SqlPredicate.Like(
+						str,
+						true,
+						new SqlValue(new DbDataType(typeof(string), DataType.NVarChar), $"%[^{WHITESPACES}]%"),
+						null),
+					true);
+
+				if (str.CanBeNull)
+					builder.ResultExpression = new SqlSearchCondition(
+						new SqlCondition(false, new SqlPredicate.IsNull(str, false), true),
+						condition);
+				else
+					builder.ResultExpression = new SqlSearchCondition(condition);
+			}
+		}
+
+		// str IS NULL OR LTRIM(str, '') = ''
+		internal class IsNullOrWhiteSpaceAccessBuilder : IExtensionCallBuilder
+		{
+			void IExtensionCallBuilder.Build(ISqExtensionBuilder builder)
+			{
+				var str = builder.GetExpression("str");
+
+				var condition = new SqlCondition(
+					false,
+					new SqlPredicate.ExprExpr(
+						new SqlFunction(typeof(string), "LTRIM", str),
+						SqlPredicate.Operator.Equal,
+						new SqlValue(typeof(string), string.Empty), false),
+					true);
+
+				if (str.CanBeNull)
+					builder.ResultExpression = new SqlSearchCondition(
+						new SqlCondition(false, new SqlPredicate.IsNull(str, false), true),
+						condition);
+				else
+					builder.ResultExpression = new SqlSearchCondition(condition);
+			}
+		}
+
+		// str IS NULL OR TRIM(N'WHITESPACES FROM str) = ''
+		internal class IsNullOrWhiteSpaceSqlServer2017Builder : IExtensionCallBuilder
+		{
+			void IExtensionCallBuilder.Build(ISqExtensionBuilder builder)
+			{
+				var str = builder.GetExpression("str");
+
+				var condition = new SqlCondition(
+					false,
+					new SqlPredicate.ExprExpr(
+						new SqlExpression(typeof(string), "TRIM({1} FROM {0})", str, new SqlValue(new DbDataType(typeof(string), DataType.NVarChar), WHITESPACES)),
+						SqlPredicate.Operator.Equal,
+						new SqlValue(typeof(string), string.Empty), false),
+					true);
+
+				if (str.CanBeNull)
+					builder.ResultExpression = new SqlSearchCondition(
+						new SqlCondition(false, new SqlPredicate.IsNull(str, false), true),
+						condition);
+				else
+					builder.ResultExpression = new SqlSearchCondition(condition);
+			}
+		}
+
+		// str IS NULL OR LTRIM(str, WHITESPACES) IS NULL
+		internal class IsNullOrWhiteSpaceOracleBuilder : IExtensionCallBuilder
+		{
+			void IExtensionCallBuilder.Build(ISqExtensionBuilder builder)
+			{
+				var str = builder.GetExpression("str");
+
+				var condition = new SqlCondition(
+					false,
+					new SqlPredicate.IsNull(new SqlFunction(typeof(string), "LTRIM", str, new SqlValue(typeof(string), WHITESPACES)), false),
+					true);
+
+				if (str.CanBeNull)
+					builder.ResultExpression = new SqlSearchCondition(
+						new SqlCondition(false, new SqlPredicate.IsNull(str, false), true),
+						condition);
+				else
+					builder.ResultExpression = new SqlSearchCondition(condition);
+			}
+		}
+
+		// str IS NULL OR LTRIM(str, ASCII_WHITESPACES) = ''
+		internal class IsNullOrWhiteSpaceInformixBuilder : IExtensionCallBuilder
+		{
+			void IExtensionCallBuilder.Build(ISqExtensionBuilder builder)
+			{
+				var str = builder.GetExpression("str");
+
+				var condition = new SqlCondition(
+					false,
+					new SqlPredicate.ExprExpr(
+						new SqlFunction(typeof(string), "LTRIM", str, new SqlValue(typeof(string), ASCII_WHITESPACES)),
+						SqlPredicate.Operator.Equal,
+						new SqlValue(typeof(string), string.Empty), false),
+					true);
+
+				if (str.CanBeNull)
+					builder.ResultExpression = new SqlSearchCondition(
+						new SqlCondition(false, new SqlPredicate.IsNull(str, false), true),
+						condition);
+				else
+					builder.ResultExpression = new SqlSearchCondition(condition);
+			}
+		}
+
+		// str IS NULL OR LTRIM(str, WHITESPACES) = ''
+		internal class IsNullOrWhiteSpaceDefaultBuilder : IExtensionCallBuilder
+		{
+			void IExtensionCallBuilder.Build(ISqExtensionBuilder builder)
+			{
+				var str = builder.GetExpression("str");
+
+				var condition = new SqlCondition(
+					false,
+					new SqlPredicate.ExprExpr(
+						new SqlFunction(typeof(string), "LTRIM", str, new SqlValue(typeof(string), WHITESPACES)),
+						SqlPredicate.Operator.Equal,
+						new SqlValue(typeof(string), string.Empty), false),
+					true);
+
+				if (str.CanBeNull)
+					builder.ResultExpression = new SqlSearchCondition(
+						new SqlCondition(false, new SqlPredicate.IsNull(str, false), true),
+						condition);
+				else
+					builder.ResultExpression = new SqlSearchCondition(condition);
+			}
+		}
+		#endregion
 
 		[Sql.Function]
 		public static string? Trim(string? str)
