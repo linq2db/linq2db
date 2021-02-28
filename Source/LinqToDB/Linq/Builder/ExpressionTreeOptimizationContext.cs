@@ -652,6 +652,14 @@ namespace LinqToDB.Linq.Builder
 		{
 			mi = type.GetMemberOverride(mi);
 
+			return 
+				CheckExpressionMethodAttribute(type, mi, out alias)
+				?? CheckGenerateMethodAttribute(type, mi, out alias)
+				?? null;
+		}
+
+		private LambdaExpression? CheckExpressionMethodAttribute(Type type, MemberInfo mi, out string? alias)
+		{
 			var attr = MappingSchema.GetAttribute<ExpressionMethodAttribute>(type, mi, a => a.Configuration);
 
 			if (attr != null)
@@ -660,7 +668,8 @@ namespace LinqToDB.Linq.Builder
 				if (attr.Expression != null)
 					return attr.Expression;
 
-				if (!string.IsNullOrEmpty(attr.MethodName))
+				var methodName = attr.MethodName;
+				if (!string.IsNullOrEmpty(methodName))
 				{
 					Expression expr;
 
@@ -668,16 +677,16 @@ namespace LinqToDB.Linq.Builder
 					{
 						var args  = method.GetGenericArguments();
 						var names = args.Select(t => (object)t.Name).ToArray();
-						var name  = string.Format(attr.MethodName, names);
+						var name  = string.Format(methodName, names);
 
 						expr = Expression.Call(
 							mi.DeclaringType,
 							name,
-							name != attr.MethodName ? Array<Type>.Empty : args);
+							name != methodName ? Array<Type>.Empty : args);
 					}
 					else
 					{
-						expr = Expression.Call(mi.DeclaringType, attr.MethodName, Array<Type>.Empty);
+						expr = Expression.Call(mi.DeclaringType, methodName, Array<Type>.Empty);
 					}
 
 					var evaluated = (LambdaExpression?)expr.EvaluateExpression();
@@ -689,5 +698,22 @@ namespace LinqToDB.Linq.Builder
 			return null;
 		}
 
+		private LambdaExpression? CheckGenerateMethodAttribute(Type type, MemberInfo mi, out string? alias)
+		{
+			var attr = MappingSchema.GetAttribute<GenerateExpressionMethodAttribute>(type, mi, a => a.Configuration);
+
+			if (attr != null)
+			{
+				alias = mi.Name;
+
+				var methodName = attr.MethodName ?? $"__{mi.Name}Expression";
+				var expr = Expression.Call(mi.DeclaringType, methodName, Array<Type>.Empty);
+				var evaluated = (LambdaExpression?)expr.EvaluateExpression();
+				return evaluated;
+			}
+
+			alias = null;
+			return null;
+		}
 	}
 }
