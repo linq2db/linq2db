@@ -799,8 +799,8 @@ jobs:
           install_docker_macos: true
           enable_os_win2016: false
           enable_os_win2019: false
-          enable_os_ubuntu16: false
-          enable_os_ubuntu20: true
+          enable_os_ubuntu16: true
+          enable_os_ubuntu20: false
           enable_os_macos: true
           enable_fw_net472: false
           enable_fw_netcore21: true
