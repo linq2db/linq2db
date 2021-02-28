@@ -2943,7 +2943,6 @@ namespace Tests.Linq
 		[Test]
 		public void Issue2421([DataSources] string context)
 		{
-			using (new AllowMultipleQuery(true))
 			using (var db                  = GetDataContext(context))
 			using (var users               = db.CreateLocalTable<UserDTO>())
 			using (var userPositions       = db.CreateLocalTable<UserPositionDTO>())
