@@ -87,11 +87,48 @@ namespace LinqToDB.SqlProvider
 				FinalizeCte(statement);
 			}
 
+			statement = CorrectUnionOrderBy(statement);
+
 			// provider specific query correction
 			statement = FinalizeStatement(statement, evaluationContext);
 //statement.EnsureFindTables();
 			return statement;
 		}
+
+		protected virtual SqlStatement CorrectUnionOrderBy(SqlStatement statement)
+		{
+			return QueryHelper.WrapQuery(statement,
+				(q, v) =>
+				{
+					if (q.OrderBy.IsEmpty)
+						return false;
+
+
+					if (q.HasSetOperators && q.SetOperators[0].Operation == SetOperation.UnionAll)
+						return true;
+
+					var isUnionAll = false;
+					var parentElement = v.ParentElement;
+					if (parentElement != null)
+					{
+						if (parentElement.ElementType == QueryElementType.SetOperator)
+						{
+							isUnionAll = ((SqlSetOperator)parentElement).Operation == SetOperation.UnionAll;
+						}
+						else if (parentElement.ElementType == QueryElementType.SqlQuery)
+						{
+							var parentQuery = (SelectQuery)parentElement;
+							isUnionAll = parentQuery.HasSetOperators &&
+							                  parentQuery.SetOperators[0].Operation == SetOperation.UnionAll;
+						}
+					}
+
+					return isUnionAll;
+				},
+				(p, q) => { }, 
+				allowMutation: true);
+		}
+
 
 		protected virtual void FixEmptySelect(SqlStatement statement)
 		{
@@ -2100,7 +2137,7 @@ namespace LinqToDB.SqlProvider
 		public SqlStatement GetAlternativeUpdateFrom(SqlUpdateStatement statement)
 		{
 			if (statement.SelectQuery.Select.HasModifier)
-				statement = QueryHelper.WrapQuery(statement, statement.SelectQuery);
+				statement = QueryHelper.WrapQuery(statement, statement.SelectQuery, allowMutation: true);
 
 			// removing joins
 			statement.SelectQuery.TransformInnerJoinsToWhere();
@@ -2110,7 +2147,7 @@ namespace LinqToDB.SqlProvider
 				throw new LinqToDBException("Invalid query for Update.");
 
 			if (statement.SelectQuery.Select.HasModifier)
-				statement = QueryHelper.WrapQuery(statement, statement.SelectQuery);
+				statement = QueryHelper.WrapQuery(statement, statement.SelectQuery, allowMutation: true);
 
 			SqlTable? tableToUpdate  = statement.Update.Table;
 			SqlTable? tableToCompare = null;
@@ -2277,7 +2314,7 @@ namespace LinqToDB.SqlProvider
 			if (sourcesCount > 1)
 			{
 				if (NeedsEnvelopingForUpdate(updateStatement.SelectQuery))
-					updateStatement = QueryHelper.WrapQuery(updateStatement, updateStatement.SelectQuery);
+					updateStatement = QueryHelper.WrapQuery(updateStatement, updateStatement.SelectQuery, allowMutation: true);
 
 				var sql = new SelectQuery { IsParameterDependent = updateStatement.IsParameterDependent  };
 
@@ -2871,7 +2908,7 @@ namespace LinqToDB.SqlProvider
 		protected SqlStatement SeparateDistinctFromPagination(SqlStatement statement, Func<SelectQuery, bool> queryFilter)
 		{
 			return QueryHelper.WrapQuery(statement,
-				q => q.Select.IsDistinct && queryFilter(q),
+				(q, _) => q.Select.IsDistinct && queryFilter(q),
 				(p, q) =>
 				{
 					p.Select.SkipValue = q.Select.SkipValue;
@@ -2881,7 +2918,8 @@ namespace LinqToDB.SqlProvider
 					q.Select.Take(null, null);
 
 					QueryHelper.MoveOrderByUp(p, q);
-				});
+				}, 
+				allowMutation: true);
 		}
 
 		/// <summary>
@@ -2911,7 +2949,7 @@ namespace LinqToDB.SqlProvider
 		protected SqlStatement ReplaceTakeSkipWithRowNumber(SqlStatement statement, Predicate<SelectQuery> predicate, bool supportsEmptyOrderBy)
 		{
 			return QueryHelper.WrapQuery(statement,
-				query => 
+				(query, _) => 
 				{
 					if ((query.Select.TakeValue == null || query.Select.TakeHints != null) && query.Select.SkipValue == null)
 						return 0;
@@ -2971,7 +3009,8 @@ namespace LinqToDB.SqlProvider
 					query.Select.SkipValue = null;
 					query.Select.Take(null, null);
 
-				});
+				}, 
+				allowMutation: true);
 		}
 
 		/// <summary>
@@ -2983,7 +3022,7 @@ namespace LinqToDB.SqlProvider
 		protected SqlStatement ReplaceDistinctOrderByWithRowNumber(SqlStatement statement, Func<SelectQuery, bool> queryFilter)
 		{
 			return QueryHelper.WrapQuery(statement,
-				q => (q.Select.IsDistinct && !q.Select.OrderBy.IsEmpty && queryFilter(q)) /*|| q.Select.TakeValue != null || q.Select.SkipValue != null*/,
+				(q, _) => (q.Select.IsDistinct && !q.Select.OrderBy.IsEmpty && queryFilter(q)) /*|| q.Select.TakeValue != null || q.Select.SkipValue != null*/,
 				(p, q) =>
 				{
 					var columnItems  = q.Select.Columns.Select(c => c.Expression).ToArray();
@@ -3044,7 +3083,8 @@ namespace LinqToDB.SqlProvider
 
 						QueryHelper.MoveOrderByUp(p, q);
 					}
-				});
+				},
+				allowMutation: true);
 		}
 
 		#region Helper functions

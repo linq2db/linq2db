@@ -112,8 +112,6 @@ namespace LinqToDB.SqlQuery
 			SetOperators.Add(new SqlSetOperator(union, isAll ? SetOperation.UnionAll : SetOperation.Union));
 		}
 
-		public bool IsSetPart { get; set; }
-
 		#endregion
 
 		#region Clone
