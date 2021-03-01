@@ -1,8 +1,6 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.Mapping;
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -17,15 +15,15 @@ namespace Tests.UserTests
 			{
 					var query  = (from pers in db.Person
 								  from patient in db.Patient.Where(x => x.PersonID == pers.ID)
-								  select new 
+								  select new
 								  {
-									  Pers = pers,
+									  Pers    = pers,
 									  Patient = patient
 								  });
 
 					var res = query.Select(x => new {a = x.Pers.ID == 3 ? x.Pers.Name : string.Empty}).ToList();
 
-					var lastQuery = ((DataConnection) db).LastQuery;
+					var lastQuery = ((DataConnection)db).LastQuery;
 
 					Assert.IsTrue(lastQuery?.ToLower().Contains("case"));
 			}
