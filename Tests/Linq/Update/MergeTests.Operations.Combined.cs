@@ -750,6 +750,7 @@ namespace Tests.xUpdate
 
 				var result = table.OrderBy(_ => _.ID).ToList();
 
+				Assert.AreEqual(2, rows);
 				Assert.AreEqual(3, result.Count);
 
 				Assert.AreEqual(1, result[0].ID);
