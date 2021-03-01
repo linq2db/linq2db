@@ -87,11 +87,25 @@ jobs:
                 Write-Host "Baselines branch already based on HEAD, no rebase required"
             } else {
                 Write-Host "Baselines head is ${baslinesHeadHash}, but HEAD is ${head}, trying to rebase on current HEAD"
-                git clone $baselinesRepoUrl baselines | cd baselines | git checkout origin/$baselinesBranch | git rebase origin/master | git push -f origin HEAD:$baselinesBranch
+                git clone $baselinesRepoUrl baselines
                 if ($LASTEXITCODE -ne 0) {
-                    # we do not re-create branch here, as current run could be db-specific and silent recreate will lead
-                    # to baselines being lost
-                    Write-Host "Baselines PR rebase failed. Delete branch and re-run tests. Error code ${LASTEXITCODE}"
+                    Write-Host "Failed to clone baselines repository. Error code ${LASTEXITCODE}"
+                    exit 1
+                }
+                cd baselines
+                git checkout origin/$baselinesBranch
+                if ($LASTEXITCODE -ne 0) {
+                    Write-Host "Failed to checkout baselines branch origin/${baselinesBranch}. Error code ${LASTEXITCODE}"
+                    exit 1
+                }
+                git rebase origin/master
+                if ($LASTEXITCODE -ne 0) {
+                    Write-Host "Failed to rebase baselines PR on origin/master. Delete branch and re-run tests. Error code ${LASTEXITCODE}"
+                    exit 1
+                }
+                git push -f origin HEAD:$baselinesBranch
+                if ($LASTEXITCODE -ne 0) {
+                    Write-Host "Failed to push rebased baselines. Error code ${LASTEXITCODE}"
                     exit 1
                 }
                 Write-Host "Baselines PR was rebased on HEAD"
