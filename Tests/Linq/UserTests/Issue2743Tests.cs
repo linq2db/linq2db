@@ -38,7 +38,7 @@ namespace Tests.UserTests
 
 					var queryDelete = q.Select(x => x.MessageEventDTO);
 
-					var destination = db.GetTable<MessageEventDTO>().TableName( "MessageEventDTOTb2");
+					var destination = db.GetTable<MessageEventDTO>().TableName("MessageEventDTOTb2");
 
 					queryDelete.Insert(destination, x => x);
 				}
