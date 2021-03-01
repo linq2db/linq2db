@@ -122,6 +122,9 @@ jobs:
     name: baselines_init
     env:
       GITHUB_TOKEN: $(BASELINES_GH_PAT)
+      EMAIL: azp@linq2db.com
+      GIT_AUTHOR_NAME: Azure Pipelines Bot
+      GIT_COMMITTER_NAME: Azure Pipelines Bot
 
 ##############################################################################################
 #  Tests: Windows (NETFX 4.7.2)                                                              #
