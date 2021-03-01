@@ -386,10 +386,16 @@ namespace LinqToDB
 		/// <inheritdoc />
 		public Action<EntityCreatedEventArgs>? OnEntityCreated { get; set; }
 
+		void IDisposable.Dispose()
+		{
+			Dispose(disposing: true);
+			GC.SuppressFinalize(this);
+		}
+		
 		/// <summary>
 		/// Closes underlying connection and fires <see cref="OnClosing"/> event (only if connection existed).
 		/// </summary>
-		public virtual void Dispose()
+		protected virtual void Dispose(bool disposing)
 		{
 			_disposed = true;
 			Close();
