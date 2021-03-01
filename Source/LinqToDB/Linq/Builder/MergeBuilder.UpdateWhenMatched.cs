@@ -22,7 +22,6 @@ namespace LinqToDB.Linq.Builder
 
 				var statement = mergeContext.Merge;
 				var operation = new SqlMergeOperationClause(MergeOperationType.Update);
-				statement.Operations.Add(operation);
 
 				var predicate = methodCall.Arguments[1];
 				var setter    = methodCall.Arguments[2];
@@ -51,7 +50,14 @@ namespace LinqToDB.Linq.Builder
 
 						operation.Items.Add(new SqlSetExpression(field, expr));
 					}
+
+					// skip empty Update operation with implicit setter
+					// per https://github.com/linq2db/linq2db/issues/2843
+					if (operation.Items.Count == 0)
+						return mergeContext;
 				}
+
+				statement.Operations.Add(operation);
 
 				if (!(predicate is ConstantExpression constPredicate) || constPredicate.Value != null)
 				{
