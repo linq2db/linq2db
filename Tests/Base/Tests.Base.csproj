@@ -9,10 +9,10 @@
 	<ItemGroup>
 		<ProjectReference Include="..\Model\Tests.Model.csproj" />
 
-		<PackageReference Include="NUnit3TestAdapter" Version="3.17.0" />
-		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.3" />
-		<PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="7.5.0" />
-		<PackageReference Include="FastExpressionCompiler" Version="3.0.0-preview-07" />
+		<PackageReference Include="NUnit3TestAdapter" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" />
+		<PackageReference Include="FirebirdSql.Data.FirebirdClient" />
+		<PackageReference Include="FastExpressionCompiler" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net472' ">
@@ -29,7 +29,7 @@
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 
-		<PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.1016.290" />
+		<PackageReference Include="Microsoft.SqlServer.Types" />
 
 	</ItemGroup>
 </Project>
