@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using LinqToDB.Common;
-using LinqToDB.Mapping;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -495,7 +493,7 @@ namespace LinqToDB.Linq.Builder
 						sequence,
 						insertStatement.Insert.Items);
 
-				Utils.RemoveDuplicatesFromTail(insertStatement.Insert.Items, (s1, s2) => s1.Column.Equals(s2.Column));
+				insertStatement.Insert.Items.RemoveDuplicatesFromTail((s1, s2) => s1.Column.Equals(s2.Column));
 
 				return sequence;
 			}

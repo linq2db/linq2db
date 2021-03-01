@@ -9,7 +9,7 @@ namespace LinqToDB.Linq.Builder
 	using Extensions;
 	using LinqToDB.Expressions;
 	using SqlQuery;
-	using Tools;
+	using Common;
 
 	class UpdateBuilder : MethodCallBuilder
 	{
@@ -313,59 +313,6 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		static void BuildSetter(
-			ExpressionBuilder      builder,
-			IBuildContext          into,
-			List<SqlSetExpression> items,
-			IBuildContext          ctx,
-			MemberInitExpression   expression,
-			Expression             path)
-		{
-			foreach (var binding in expression.Bindings)
-			{
-				var member = binding.Member;
-
-				if (member is MethodInfo mi)
-					member = mi.GetPropertyInfo();
-
-				if (binding is MemberAssignment ma)
-				{
-					var pe = Expression.MakeMemberAccess(path, member);
-
-					if (ma.Expression is MemberInitExpression initExpr && !into.IsExpression(pe, 1, RequestFor.Field).Result)
-					{
-						BuildSetter(
-							builder,
-							into,
-							items,
-							ctx,
-							initExpr, Expression.MakeMemberAccess(path, member));
-					}
-					else
-					{
-						var column     = into.ConvertToSql(pe, 1, ConvertFlags.Field);
-						var columnExpr = column[0].Sql;
-						var expr       = builder.ConvertToSqlExpression(ctx, ma.Expression, QueryHelper.GetColumnDescriptor(columnExpr), false);
-
-						if (expr.ElementType == QueryElementType.SqlParameter)
-						{
-							var parm  = (SqlParameter)expr;
-							var field = columnExpr is SqlField sqlField
-								? sqlField
-								: (SqlField)((SqlColumn)columnExpr).Expression;
-
-							if (parm.Type.DataType == DataType.Undefined)
-								parm.Type = parm.Type.WithDataType(field.Type!.Value.DataType);
-						}
-
-						items.Add(new SqlSetExpression(columnExpr, expr));
-					}
-				}
-				else
-					throw new InvalidOperationException();
-			}
-		}
-
 		internal static void ParseSet(
 			ExpressionBuilder               builder,
 			BuildInfo                       buildInfo,
@@ -546,6 +493,8 @@ namespace LinqToDB.Linq.Builder
 						2,
 						sequence,
 						updateStatement.Update.Items);
+
+				updateStatement.Update.Items.RemoveDuplicatesFromTail((s1, s2) => s1.Column.Equals(s2.Column));
 
 				return sequence;
 			}
