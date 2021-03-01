@@ -369,7 +369,7 @@ namespace LinqToDB.Linq.Builder
 				foreach (var info in sourceInfos)
 				{
 					if (info.MemberChain.Length == 0)
-						throw new InvalidOperationException();
+						continue;
 
 					var destInfo = destInfos.FirstOrDefault(di => info.CompareMembers(di));
 
