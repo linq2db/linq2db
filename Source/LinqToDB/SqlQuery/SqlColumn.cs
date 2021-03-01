@@ -153,7 +153,7 @@ namespace LinqToDB.SqlQuery
 			if (!Equals(Parent, other.Parent))
 				return false;
 
-			if (Expression.Equals(other.Expression))
+			if (Expression.CanBeNull == other.CanBeNull && QueryHelper.UnwrapExpression(Expression).Equals(QueryHelper.UnwrapExpression(other.Expression)))
 				return true;
 
 			return UnderlyingColumn != null && UnderlyingColumn.Equals(other.UnderlyingColumn);
