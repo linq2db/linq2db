@@ -728,7 +728,7 @@ namespace Tests.xUpdate
 
 
 		[Test]
-		public void InsertUpdatePKOnly([MergeDataContextSource(TestProvName.AllSapHana)] string context)
+		public void InsertUpdatePKOnly([MergeDataContextSource] string context)
 		{
 			var src = new []
 				{
@@ -750,7 +750,11 @@ namespace Tests.xUpdate
 
 				var result = table.OrderBy(_ => _.ID).ToList();
 
-				Assert.AreEqual(2, rows);
+				if (context.Contains("Sybase"))
+					Assert.AreEqual(3, rows);
+				else
+					Assert.AreEqual(2, rows);
+
 				Assert.AreEqual(3, result.Count);
 
 				Assert.AreEqual(1, result[0].ID);
