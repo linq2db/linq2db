@@ -13,7 +13,7 @@ namespace Tests.Playground
 		[Table("exercise")]
 		public class DBExercise
 		{
-			[Column("id"), PrimaryKey, Identity] public int Id { get; set; }
+			[Column("id"), PrimaryKey] public int Id { get; set; }
 			[Column("name"), Nullable] public string Name { get; set; } = null!;
 			[Column("number"), Nullable] public int? Number { get; set; }
 			[Column("startexpl"), Nullable] public string Startexpl { get; set; } = null!;
@@ -30,11 +30,50 @@ namespace Tests.Playground
 			[Column("weight"), NotNull] public int Weight { get; set; }
 			[Column("is_private"), NotNull] public bool IsPrivate { get; set; }
 			[Column("timestamp", SkipOnUpdate = true), NotNull] public DateTime Timestamp { get; set; } = DateTime.Now;
+
+			public static DBExercise[] Seed()
+			{
+				return new DBExercise[]
+				{
+					new DBExercise
+					{
+						Id          = 1,
+						Name        = "Exercise1",
+						Level       = 10,
+						Description = "Exercise1 Description",
+						Date        = TestData.Date,
+						Num         = 100,
+						Side        = 1000,
+						Reeks       = 10000,
+						Time        = 100000,
+						Rest        = 1000000,
+						Weight      = 10000000,
+						IsPrivate   = false,
+						Timestamp   = TestData.DateTime
+					},
+					new DBExercise
+					{
+						Id          = 2,
+						Name        = "Exercise1",
+						Level       = 20,
+						Description = "Exercise1 Description",
+						Date        = TestData.Date,
+						Num         = 200,
+						Side        = 2000,
+						Reeks       = 20000,
+						Time        = 200000,
+						Rest        = 2000000,
+						Weight      = 20000000,
+						IsPrivate   = false,
+						Timestamp   = TestData.DateTime
+					}
+				};
+			}
 		}
 		[Table("ext_translations")]
 		public class DBDescription
 		{
-			[Column("id"), PrimaryKey, Identity] public int Id { get; set; }
+			[Column("id"), PrimaryKey] public int Id { get; set; }
 			[Column("locale"), NotNull] public string? Locale { get; set; }
 			[Column("object_class"), NotNull] public string ObjectClass { get; set; } = null!;
 			[Column("field"), NotNull] public string Field { get; set; } = null!;
@@ -46,11 +85,21 @@ namespace Tests.Playground
 		{
 			[Column("exercise_id"), PrimaryKey(1), NotNull] public int ExerciseId { get; set; }
 			[Column("equipment_id"), PrimaryKey(2), NotNull] public int EquipmentId { get; set; }
+
+			public static DBExerciseEquipmentLinker[] Seed()
+			{
+				return new[]
+				{
+					new DBExerciseEquipmentLinker {EquipmentId = 11, ExerciseId = 1},
+					new DBExerciseEquipmentLinker {EquipmentId = 31, ExerciseId = 1},
+					new DBExerciseEquipmentLinker {EquipmentId = 21, ExerciseId = 2},
+				};
+			}
 		}
 		[Table("exercise_equipment")]
 		public class DBEquipment
 		{
-			[Column("id"), PrimaryKey, Identity] public int Id { get; set; }
+			[Column("id"), PrimaryKey] public int Id { get; set; }
 			[Column("parent_id"), Nullable] public int? ParentId { get; set; }
 			[Column("name"), NotNull] public string Name { get; set; } = null!;
 			[Column("icon"), Nullable] public string Icon { get; set; } = null!;
@@ -60,6 +109,25 @@ namespace Tests.Playground
 			[Column("is_private"), NotNull] public bool IsPrivate { get; set; }
 			[Column("organisation_id"), Nullable] public int? OrganisationId { get; set; }
 			[Column("original_organisation_id"), Nullable] public int? OriginalOrganisationId { get; set; }
+
+			public static DBEquipment[] Seed()
+			{
+				return new DBEquipment[]
+				{
+					new DBEquipment()
+					{
+						Id = 11, Name = "Equipment1", Online = true, IsPrivate = false,
+					},
+					new DBEquipment()
+					{
+						Id = 21, Name = "Equipment2", Online = true, IsPrivate = false,
+					},
+					new DBEquipment()
+					{
+						Id = 31, Name = "Equipment3", Online = true, IsPrivate = false,
+					}
+				};
+			}
 		}
 
 		public class DescriptionJoinModel<T>
@@ -95,10 +163,10 @@ namespace Tests.Playground
 		public void SampleSelectTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable<DBExercise>())
+			using (db.CreateLocalTable<DBExercise>(DBExercise.Seed()))
 			using (db.CreateLocalTable<DBDescription>())
-			using (db.CreateLocalTable<DBExerciseEquipmentLinker>())
-			using (db.CreateLocalTable<DBEquipment>())
+			using (db.CreateLocalTable<DBExerciseEquipmentLinker>(DBExerciseEquipmentLinker.Seed()))
+			using (db.CreateLocalTable<DBEquipment>(DBEquipment.Seed()))
 			{
 				var language = "en";
 				var currentLanguage = language;
