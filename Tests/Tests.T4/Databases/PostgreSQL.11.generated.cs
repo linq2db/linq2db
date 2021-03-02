@@ -50,6 +50,9 @@ namespace PostreSQL11DataContext
 		/// This is the Person table
 		/// </summary>
 		public ITable<Person>                         People                    { get { return this.GetTable<Person>(); } }
+		public ITable<SameName>                       SameNames                 { get { return this.GetTable<SameName>(); } }
+		public ITable<SameName1>                      SameName1                 { get { return this.GetTable<SameName1>(); } }
+		public ITable<SameName2>                      SameName2                 { get { return this.GetTable<SameName2>(); } }
 		public ITable<SequenceCustomNamingTest>       SequenceCustomNamingTests { get { return this.GetTable<SequenceCustomNamingTest>(); } }
 		public ITable<SequenceTest1>                  SequenceTest1             { get { return this.GetTable<SequenceTest1>(); } }
 		public ITable<SequenceTest2>                  SequenceTest2             { get { return this.GetTable<SequenceTest2>(); } }
@@ -138,62 +141,8 @@ namespace PostreSQL11DataContext
 
 		#region TestTableFunctionSchema
 
-		[Sql.TableFunction(Schema="public", Name="\"TestTableFunctionSchema\"")]
-		public ITable<TestTableFunctionSchemaResult> TestTableFunctionSchema()
-		{
-			return this.GetTable<TestTableFunctionSchemaResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
-		}
-
-		public partial class TestTableFunctionSchemaResult
-		{
-			public int?                        ID                  { get; set; }
-			public long?                       bigintDataType      { get; set; }
-			public decimal?                    numericDataType     { get; set; }
-			public short?                      smallintDataType    { get; set; }
-			public int?                        intDataType         { get; set; }
-			public decimal?                    moneyDataType       { get; set; }
-			public double?                     doubleDataType      { get; set; }
-			public float?                      realDataType        { get; set; }
-			public DateTime?                   timestampDataType   { get; set; }
-			public DateTimeOffset?             timestampTZDataType { get; set; }
-			public DateTime?                   dateDataType        { get; set; }
-			public TimeSpan?                   timeDataType        { get; set; }
-			public DateTimeOffset?             timeTZDataType      { get; set; }
-			public TimeSpan?                   intervalDataType    { get; set; }
-			public TimeSpan?                   intervalDataType2   { get; set; }
-			public char?                       charDataType        { get; set; }
-			public string?                     char20DataType      { get; set; }
-			public string?                     varcharDataType     { get; set; }
-			public string?                     textDataType        { get; set; }
-			public byte[]?                     binaryDataType      { get; set; }
-			public Guid?                       uuidDataType        { get; set; }
-			public BitArray?                   bitDataType         { get; set; }
-			public bool?                       booleanDataType     { get; set; }
-			public string?                     colorDataType       { get; set; }
-			public NpgsqlPoint?                pointDataType       { get; set; }
-			public NpgsqlLSeg?                 lsegDataType        { get; set; }
-			public NpgsqlBox?                  boxDataType         { get; set; }
-			public NpgsqlPath?                 pathDataType        { get; set; }
-			public NpgsqlPolygon?              polygonDataType     { get; set; }
-			public NpgsqlCircle?               circleDataType      { get; set; }
-			public NpgsqlLine?                 lineDataType        { get; set; }
-			public IPAddress?                  inetDataType        { get; set; }
-			public ValueTuple<IPAddress, int>? cidrDataType        { get; set; }
-			public PhysicalAddress?            macaddrDataType     { get; set; }
-			public PhysicalAddress?            macaddr8DataType    { get; set; }
-			public string?                     jsonDataType        { get; set; }
-			public string?                     jsonbDataType       { get; set; }
-			public string?                     xmlDataType         { get; set; }
-			public BitArray?                   varBitDataType      { get; set; }
-			public string[]?                   strarray            { get; set; }
-			public int[]?                      intarray            { get; set; }
-			public int[]?                      int2darray          { get; set; }
-			public long[]?                     longarray           { get; set; }
-			public TimeSpan[]?                 intervalarray       { get; set; }
-			public double[]?                   doublearray         { get; set; }
-			public decimal[]?                  numericarray        { get; set; }
-			public decimal[]?                  decimalarray        { get; set; }
-		}
+// Use 'GenerateProcedureErrors=false' to disable errors.
+#error Couldn't find PostgreSQL type with OID 1412796
 
 		#endregion
 
@@ -411,6 +360,62 @@ namespace PostreSQL11DataContext
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
 		public Patient? PatientPersonIDfkey { get; set; }
+
+		#endregion
+	}
+
+	[Table(Schema="public", Name="same_name")]
+	public partial class SameName
+	{
+		[Column("id", DataType=LinqToDB.DataType.Int32, Precision=32, Scale=0), PrimaryKey, NotNull] public int Id { get; set; } // integer
+
+		#region Associations
+
+		/// <summary>
+		/// same_name_BackReference
+		/// </summary>
+		[Association(ThisKey="Id", OtherKey="SameName", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		public IEnumerable<SameName2> SameNameBackReferences { get; set; } = null!;
+
+		/// <summary>
+		/// same_name_BackReference
+		/// </summary>
+		[Association(ThisKey="Id", OtherKey="SameName", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		public IEnumerable<SameName1> Samenames { get; set; } = null!;
+
+		#endregion
+	}
+
+	[Table(Schema="public", Name="same_name1")]
+	public partial class SameName1
+	{
+		[Column("id",        DataType=LinqToDB.DataType.Int32, Precision=32, Scale=0), PrimaryKey,  NotNull] public int  Id       { get; set; } // integer
+		[Column("same_name", DataType=LinqToDB.DataType.Int32, Precision=32, Scale=0),    Nullable         ] public int? SameName { get; set; } // integer
+
+		#region Associations
+
+		/// <summary>
+		/// same_name
+		/// </summary>
+		[Association(ThisKey="SameName", OtherKey="Id", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="same_name", BackReferenceName="Samenames")]
+		public SameName? Samename { get; set; }
+
+		#endregion
+	}
+
+	[Table(Schema="public", Name="same_name2")]
+	public partial class SameName2
+	{
+		[Column("id",        DataType=LinqToDB.DataType.Int32, Precision=32, Scale=0), PrimaryKey,  NotNull] public int  Id       { get; set; } // integer
+		[Column("same_name", DataType=LinqToDB.DataType.Int32, Precision=32, Scale=0),    Nullable         ] public int? SameName { get; set; } // integer
+
+		#region Associations
+
+		/// <summary>
+		/// same_name
+		/// </summary>
+		[Association(ThisKey="SameName", OtherKey="Id", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="same_name", BackReferenceName="SameNameBackReferences")]
+		public SameName? Samename { get; set; }
 
 		#endregion
 	}
@@ -694,6 +699,24 @@ namespace PostreSQL11DataContext
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
+		}
+
+		public static SameName? Find(this ITable<SameName> table, int Id)
+		{
+			return table.FirstOrDefault(t =>
+				t.Id == Id);
+		}
+
+		public static SameName1? Find(this ITable<SameName1> table, int Id)
+		{
+			return table.FirstOrDefault(t =>
+				t.Id == Id);
+		}
+
+		public static SameName2? Find(this ITable<SameName2> table, int Id)
+		{
+			return table.FirstOrDefault(t =>
+				t.Id == Id);
 		}
 
 		public static SequenceCustomNamingTest? Find(this ITable<SequenceCustomNamingTest> table, int ID)
