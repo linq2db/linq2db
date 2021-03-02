@@ -141,8 +141,62 @@ namespace PostreSQL11DataContext
 
 		#region TestTableFunctionSchema
 
-// Use 'GenerateProcedureErrors=false' to disable errors.
-#error Couldn't find PostgreSQL type with OID 1412796
+		[Sql.TableFunction(Schema="public", Name="\"TestTableFunctionSchema\"")]
+		public ITable<TestTableFunctionSchemaResult> TestTableFunctionSchema()
+		{
+			return this.GetTable<TestTableFunctionSchemaResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
+		}
+
+		public partial class TestTableFunctionSchemaResult
+		{
+			public int?                        ID                  { get; set; }
+			public long?                       bigintDataType      { get; set; }
+			public decimal?                    numericDataType     { get; set; }
+			public short?                      smallintDataType    { get; set; }
+			public int?                        intDataType         { get; set; }
+			public decimal?                    moneyDataType       { get; set; }
+			public double?                     doubleDataType      { get; set; }
+			public float?                      realDataType        { get; set; }
+			public DateTime?                   timestampDataType   { get; set; }
+			public DateTimeOffset?             timestampTZDataType { get; set; }
+			public DateTime?                   dateDataType        { get; set; }
+			public TimeSpan?                   timeDataType        { get; set; }
+			public DateTimeOffset?             timeTZDataType      { get; set; }
+			public TimeSpan?                   intervalDataType    { get; set; }
+			public TimeSpan?                   intervalDataType2   { get; set; }
+			public char?                       charDataType        { get; set; }
+			public string?                     char20DataType      { get; set; }
+			public string?                     varcharDataType     { get; set; }
+			public string?                     textDataType        { get; set; }
+			public byte[]?                     binaryDataType      { get; set; }
+			public Guid?                       uuidDataType        { get; set; }
+			public BitArray?                   bitDataType         { get; set; }
+			public bool?                       booleanDataType     { get; set; }
+			public string?                     colorDataType       { get; set; }
+			public NpgsqlPoint?                pointDataType       { get; set; }
+			public NpgsqlLSeg?                 lsegDataType        { get; set; }
+			public NpgsqlBox?                  boxDataType         { get; set; }
+			public NpgsqlPath?                 pathDataType        { get; set; }
+			public NpgsqlPolygon?              polygonDataType     { get; set; }
+			public NpgsqlCircle?               circleDataType      { get; set; }
+			public NpgsqlLine?                 lineDataType        { get; set; }
+			public IPAddress?                  inetDataType        { get; set; }
+			public ValueTuple<IPAddress, int>? cidrDataType        { get; set; }
+			public PhysicalAddress?            macaddrDataType     { get; set; }
+			public PhysicalAddress?            macaddr8DataType    { get; set; }
+			public string?                     jsonDataType        { get; set; }
+			public string?                     jsonbDataType       { get; set; }
+			public string?                     xmlDataType         { get; set; }
+			public BitArray?                   varBitDataType      { get; set; }
+			public string[]?                   strarray            { get; set; }
+			public int[]?                      intarray            { get; set; }
+			public int[]?                      int2darray          { get; set; }
+			public long[]?                     longarray           { get; set; }
+			public TimeSpan[]?                 intervalarray       { get; set; }
+			public double[]?                   doublearray         { get; set; }
+			public decimal[]?                  numericarray        { get; set; }
+			public decimal[]?                  decimalarray        { get; set; }
+		}
 
 		#endregion
 
