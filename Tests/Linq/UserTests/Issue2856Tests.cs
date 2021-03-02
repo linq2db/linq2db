@@ -25,7 +25,7 @@ namespace Tests.UserTests
 			using (var s = GetDataContext(context))
 			using (s.CreateLocalTable<GlobalTaskDTO>())
 			{
-				var allRpIds = new[] {Guid.NewGuid(), Guid.NewGuid()};
+				var allRpIds = new[] { TestData.Guid1, TestData.Guid2 };
 
 				Assert.DoesNotThrow(() =>
 					_ = (

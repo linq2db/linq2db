@@ -53,7 +53,7 @@ namespace Tests.UserTests
 			{
 				var item = new DataClass
 				{
-					Value = LocalDateTime.FromDateTime(DateTime.Now),
+					Value = LocalDateTime.FromDateTime(TestData.DateTime),
 				};
 
 				db.Insert(item);
