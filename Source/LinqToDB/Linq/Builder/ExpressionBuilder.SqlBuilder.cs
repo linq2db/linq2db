@@ -1036,26 +1036,11 @@ namespace LinqToDB.Linq.Builder
 						var ma   = (MemberExpression)expression;
 						var attr = GetExpressionAttribute(ma.Member);
 
-						if (attr != null)
-						{
-							var converted = attr.GetExpression(DataContext, context!.SelectQuery, ma,
-								(e, descriptor) => ConvertToExtensionSql(context, e, descriptor));
+						var converted = attr?.GetExpression(DataContext, context!.SelectQuery, ma,
+							(e, descriptor) => ConvertToExtensionSql(context, e, descriptor));
 
-							if (converted == null)
-							{
-								if (attr.ExpectExpression)
-								{
-									var exp = ConvertToSql(context, ma.Expression);
-									converted = attr.GetExpression(ma.Member, exp);
-								}
-								else
-								{
-									converted = attr.GetExpression(ma.Member);
-								}
-							}
-
+						if (converted != null)
 							return converted;
-						}
 
 						var ctx = GetContext(context, expression);
 
@@ -1263,45 +1248,12 @@ namespace LinqToDB.Linq.Builder
 
 			var sqlExpression =
 				attr.GetExpression(DataContext, context!.SelectQuery, mc, (e, descriptor) => ConvertToExtensionSql(context, e, descriptor));
-			if (sqlExpression != null)
-				return sqlExpression;
-
-			var parms = new List<ISqlExpression>();
-
-			if (mc.Object != null)
-				parms.Add(ConvertToSql(context, mc.Object));
-
-			ParameterInfo[]? pis = null;
-
-			for (var i = 0; i < mc.Arguments.Count; i++)
-			{
-				var arg = mc.Arguments[i];
-
-				if (arg is NewArrayExpression nae)
-				{
-					if (pis == null)
-						pis = mc.Method.GetParameters();
-
-					var p = pis[i];
-
-					if (p.GetCustomAttributes(true).OfType<ParamArrayAttribute>().Any())
-					{
-						parms.AddRange(nae.Expressions.Select(a => ConvertToSql(context, a)));
-					}
-					else
-					{
-						parms.Add(ConvertToSql(context, nae));
-					}
-				}
-				else
-				{
-					parms.Add(ConvertToSql(context, arg));
-				}
-			}
+			if (sqlExpression == null)
+				throw new LinqToDBException($"Cannot convert to SQL method '{mc}'.");
 
 			DataContext.InlineParameters = inlineParameters;
 
-			return attr.GetExpression(mc.Method, parms.ToArray());
+			return sqlExpression;
 		}
 
 		static ISqlExpression ConvertToSqlConvertible(Expression expression)

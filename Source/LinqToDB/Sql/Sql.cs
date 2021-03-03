@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Linq;
-using System.Globalization;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
 using JetBrains.Annotations;
-
 using PN = LinqToDB.ProviderName;
 
 // ReSharper disable CheckNamespace
@@ -15,7 +12,7 @@ using PN = LinqToDB.ProviderName;
 
 namespace LinqToDB
 {
-	using Extensions;
+	using Mapping;
 	using Expressions;
 	using Linq;
 	using SqlQuery;
@@ -964,13 +961,16 @@ namespace LinqToDB
 			{
 			}
 
-			public override ISqlExpression GetExpression(MemberInfo member, params ISqlExpression[] args)
+			public override ISqlExpression? GetExpression(IDataContext dataContext, SelectQuery query, Expression expression, Func<Expression, ColumnDescriptor?, ISqlExpression> converter)
 			{
-				var arr = new ISqlExpression[args.Length];
+				var expressionStr = Expression;
+				PrepareParameterValues(expression, ref expressionStr, true, out var knownExpressions, out _);
 
-				for (var i = 0; i < args.Length; i++)
+				var arr = new ISqlExpression[knownExpressions.Count];
+
+				for (var i = 0; i < knownExpressions.Count; i++)
 				{
-					var arg = args[i];
+					var arg = converter(knownExpressions[i], null);
 
 					if (arg.SystemType == typeof(string))
 					{
@@ -992,7 +992,7 @@ namespace LinqToDB
 				var expr = new SqlBinaryExpression(typeof(string), arr[0], "+", arr[1]);
 
 				for (var i = 2; i < arr.Length; i++)
-					expr = new SqlBinaryExpression(typeof (string), expr, "+", arr[i]);
+					expr = new SqlBinaryExpression(typeof(string), expr, "+", arr[i]);
 
 				return expr;
 			}

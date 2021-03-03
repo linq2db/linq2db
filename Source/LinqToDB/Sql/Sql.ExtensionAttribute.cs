@@ -613,62 +613,6 @@ namespace LinqToDB
 				return chains;
 			}
 
-
-			const  string MatchParamPattern = @"{([0-9a-z_A-Z?]*)(,\s'(.*)')?}";
-			static Regex  _matchParamRegEx  = new Regex(MatchParamPattern, RegexOptions.Compiled);
-
-			public static string ResolveExpressionValues(string expression, Func<string, string?, string?> valueProvider)
-			{
-				if (expression    == null) throw new ArgumentNullException(nameof(expression));
-				if (valueProvider == null) throw new ArgumentNullException(nameof(valueProvider));
-
-				int  prevMatch         = -1;
-				int  prevNotEmptyMatch = -1;
-				bool spaceNeeded       = false;
-
-				var str = _matchParamRegEx.Replace(expression, match =>
-				{
-					var paramName = match.Groups[1].Value;
-					var canBeOptional = paramName.EndsWith("?");
-					if (canBeOptional)
-						paramName = paramName.TrimEnd('?');
-
-					if (paramName == "_")
-					{
-						spaceNeeded = true;
-						prevMatch = match.Index + match.Length;
-						return string.Empty;
-					}
-
-					var delimiter  = match.Groups[3].Success ? match.Groups[3].Value : null;
-					var calculated = valueProvider(paramName, delimiter);
-
-					if (string.IsNullOrEmpty(calculated) && !canBeOptional)
-						throw new InvalidOperationException(string.Format("Non optional parameter '{0}' not found", paramName));
-
-					var res = calculated;
-					if (spaceNeeded)
-					{
-						if (!string.IsNullOrEmpty(calculated))
-						{
-							var e = expression;
-							if (prevMatch == match.Index && prevNotEmptyMatch == match.Index - 3 || (prevNotEmptyMatch >= 0 && e[prevNotEmptyMatch] != ' '))
-								res = " " + calculated;
-						}
-						spaceNeeded = false;
-					}
-
-					if (!string.IsNullOrEmpty(calculated))
-					{
-						prevNotEmptyMatch = match.Index + match.Length;
-					}
-
-					return res;
-				});
-
-				return str;
-			}
-
 			SqlExtensionParam BuildExtensionParam(IDataContext dataContext, SelectQuery query, MemberInfo member, Expression[] arguments, ConvertHelper convertHelper)
 			{
 				var method = member as MethodInfo;

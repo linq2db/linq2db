@@ -46,11 +46,18 @@ namespace LinqToDB
 				set => base.Name = value;
 			}
 
-			public override void SetTable(ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MemberInfo member, IEnumerable<Expression> arguments, IEnumerable<ISqlExpression> sqlArgs)
+			public override void SetTable(ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, Func<Expression, ColumnDescriptor?, ISqlExpression> converter)
 			{
 				table.SqlTableType   = SqlTableType.Expression;
-				table.Name           = Expression ?? member.Name;
-				table.TableArguments = ConvertArgs(member, sqlArgs.ToArray());
+				table.Name           = Expression ?? methodCall.Method.Name;
+
+				var expressionStr = table.Name;
+				ExpressionAttribute.PrepareParameterValues(methodCall, ref expressionStr, false, out var knownExpressions, out var genericTypes);
+
+				if (string.IsNullOrEmpty(expressionStr))
+					throw new LinqToDBException($"Cannot retrieve Table Expression body from expression '{methodCall}'.");
+
+				table.TableArguments = ExpressionAttribute.PrepareArguments(expressionStr!, ArgIndices, knownExpressions, genericTypes, converter);
 
 				if (Schema   != null) table.Schema   = Schema;
 				if (Database != null) table.Database = Database;
