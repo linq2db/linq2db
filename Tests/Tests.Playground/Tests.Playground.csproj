@@ -9,5 +9,7 @@
 
 	<ItemGroup>
 		<Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
+		<Compile Include="..\Linq\DataProvider\PostgreSQLExtensionsTests.cs" Link="PostgreSQLExtensionsTests.cs" />
+		<Compile Include="..\Linq\Linq\ConcatUnionTests.cs" Link="ConcatUnionTests.cs" />
 	</ItemGroup>
 </Project>
