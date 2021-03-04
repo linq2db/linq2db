@@ -320,8 +320,8 @@ namespace LinqToDB
 				{
 					var me = (MemberExpression) expression;
 					expressionStr ??= me.Member.Name;
-
-					knownExpressions.Add(me.Expression);
+					if (me.Expression != null)
+						knownExpressions.Add(me.Expression);
 				}
 			}
 

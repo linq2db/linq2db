@@ -771,19 +771,19 @@ namespace LinqToDB.Linq.Builder
 
 		public ISqlExpression ConvertToExtensionSql(IBuildContext context, Expression expression, ColumnDescriptor? columnDescriptor)
 		{
-			expression = expression.Unwrap();
+			var unwrapped = expression.Unwrap();
 
-			if (typeof(Sql.IQueryableContainer).IsSameOrParentOf(expression.Type))
+			if (typeof(Sql.IQueryableContainer).IsSameOrParentOf(unwrapped.Type))
 			{
 				Expression preparedExpression;
-				if (expression.NodeType == ExpressionType.Call)
-					preparedExpression = ((MethodCallExpression)expression).Arguments[0];
+				if (unwrapped.NodeType == ExpressionType.Call)
+					preparedExpression = ((MethodCallExpression)unwrapped).Arguments[0];
 				else 
-					preparedExpression = ((Sql.IQueryableContainer)expression.EvaluateExpression()!).Query.Expression;
+					preparedExpression = ((Sql.IQueryableContainer)unwrapped.EvaluateExpression()!).Query.Expression;
 				return ConvertToExtensionSql(context, preparedExpression, columnDescriptor);
 			}
 
-			if (expression is LambdaExpression lambda)
+			if (unwrapped is LambdaExpression lambda)
 			{
 				var saveParent = context.Parent;
 				ExpressionContext exprCtx;
@@ -808,7 +808,7 @@ namespace LinqToDB.Linq.Builder
 				return result;
 			}
 
-			if (!MappingSchema.IsScalarType(expression.Type) && typeof(IQueryable<>).IsSameOrParentOf(expression.Type))
+			if (!MappingSchema.IsScalarType(unwrapped.Type) && typeof(IQueryable<>).IsSameOrParentOf(unwrapped.Type))
 				return context.ConvertToSql(null, 0, ConvertFlags.Field).Select(_ => _.Sql).FirstOrDefault();
 
 			return ConvertToSql(context, expression, false, columnDescriptor);
