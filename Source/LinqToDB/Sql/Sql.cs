@@ -970,7 +970,7 @@ namespace LinqToDB
 
 				for (var i = 0; i < knownExpressions.Count; i++)
 				{
-					var arg = converter(knownExpressions[i], null);
+					var arg = converter(knownExpressions[i]!, null);
 
 					if (arg.SystemType == typeof(string))
 					{

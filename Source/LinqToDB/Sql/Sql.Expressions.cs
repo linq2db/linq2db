@@ -79,9 +79,9 @@ namespace LinqToDB
 				var qualified    = builder.Arguments.Length <= 1 || builder.GetValue<bool>(1);
 				var isExpression = builder.Member.Name == "FieldExpr";
 
-				var field = QueryHelper.GetUnderlyingField(fieldExpr);
+				var field = QueryHelper.ExtractField(fieldExpr);
 				if (field == null)
-					throw new LinqToDBException($"Can not convert expression {builder.Arguments[1]} to field.");
+					throw new LinqToDBException($"Can not convert expression {builder.Arguments[0]} to field.");
 
 				if (isExpression)
 				{
@@ -365,7 +365,7 @@ namespace LinqToDB
 				{
 					SqlTable  t      => t,
 					SqlField  field  => field.Table as SqlTable,
-					SqlColumn column => QueryHelper.GetUnderlyingField(column)?.Table as SqlTable,
+					SqlColumn column => QueryHelper.ExtractField(column)?.Table as SqlTable,
 					_                => null
 				};
 

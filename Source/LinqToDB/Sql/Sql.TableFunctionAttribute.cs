@@ -66,7 +66,11 @@ namespace LinqToDB
 				if (string.IsNullOrEmpty(expressionStr))
 					throw new LinqToDBException($"Cannot retrieve Table Function body from expression '{methodCall}'.");
 
-				table.TableArguments = ExpressionAttribute.PrepareArguments(expressionStr!, ArgIndices, knownExpressions, genericTypes, converter);
+				// Add two fake expressions, TableName and Alias
+				knownExpressions.Insert(0, null);
+				knownExpressions.Insert(0, null);
+
+				table.TableArguments = ExpressionAttribute.PrepareArguments(expressionStr!, ArgIndices, knownExpressions, genericTypes, converter).Skip(2).ToArray();
 
 				if (Schema   != null) table.Schema   = Schema;
 				if (Database != null) table.Database = Database;

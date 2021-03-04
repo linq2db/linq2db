@@ -261,9 +261,9 @@ namespace LinqToDB
 
 			public static readonly SqlExpression UnknownExpression = new SqlExpression("!!!");
 
-			public static void PrepareParameterValues(Expression expression, ref string? expressionStr, bool includeInstance, out List<Expression> knownExpressions, out List<ISqlExpression>? genericTypes)
+			public static void PrepareParameterValues(Expression expression, ref string? expressionStr, bool includeInstance, out List<Expression?> knownExpressions, out List<ISqlExpression>? genericTypes)
 			{
-				knownExpressions = new List<Expression>();
+				knownExpressions = new List<Expression?>();
 				genericTypes     = null;
 
 				if (expression.NodeType == ExpressionType.Call)
@@ -325,7 +325,7 @@ namespace LinqToDB
 				}
 			}
 
-			public static ISqlExpression[] PrepareArguments(string expressionStr, int[]? argIndices, List<Expression> knownExpressions, List<ISqlExpression>? genericTypes, Func<Expression, ColumnDescriptor?, ISqlExpression> converter)
+			public static ISqlExpression[] PrepareArguments(string expressionStr, int[]? argIndices, List<Expression?> knownExpressions, List<ISqlExpression>? genericTypes, Func<Expression, ColumnDescriptor?, ISqlExpression> converter)
 			{
 				var parms = new List<ISqlExpression?>();
 
@@ -356,7 +356,7 @@ namespace LinqToDB
 
 						if (parms[idx] == null)
 						{
-							ISqlExpression paramExpr;
+							ISqlExpression? paramExpr = null;
 							if (argIdx >= knownExpressions.Count)
 							{
 								var typeIndex = argIdx - knownExpressions.Count;
@@ -369,7 +369,9 @@ namespace LinqToDB
 							}
 							else
 							{
-								paramExpr = converter(knownExpressions[argIdx], null);
+								var expr = knownExpressions[argIdx];
+								if (expr != null)
+									paramExpr = converter(expr, null);
 							}
 
 							parms[idx] = paramExpr;
@@ -394,7 +396,7 @@ namespace LinqToDB
 
 							if (parms[idx] == null)
 							{
-								ISqlExpression paramExpr;
+								ISqlExpression? paramExpr = null;
 								if (argIdx >= knownExpressions.Count)
 								{
 									var typeIndex = argIdx - knownExpressions.Count;
@@ -407,7 +409,9 @@ namespace LinqToDB
 								}
 								else
 								{
-									paramExpr = converter(knownExpressions[argIdx], null);
+									var expr = knownExpressions[argIdx];
+									if (expr != null)
+										paramExpr = converter(expr, null);
 								}
 
 								parms[idx] = paramExpr;
@@ -416,7 +420,7 @@ namespace LinqToDB
 					}
 					else
 					{
-						parms.AddRange(knownExpressions.Select(e => converter(e, null)));
+						parms.AddRange(knownExpressions.Select(e => e == null ? null : converter(e, null)));
 						if (genericTypes != null)
 							parms.AddRange(genericTypes);
 					}

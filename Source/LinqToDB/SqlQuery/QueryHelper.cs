@@ -761,6 +761,45 @@ namespace LinqToDB.SqlQuery
 			return GetUnderlyingExpression(expression) as SqlField;
 		}
 
+		/// <summary>
+		/// Returns SqlField from specific expression. Usually from SqlColumn.
+		/// Conversion is ignored.
+		/// </summary>
+		/// <param name="expression"></param>
+		/// <returns>Field instance associated with expression</returns>
+		public static SqlField? ExtractField(ISqlExpression expression)
+		{
+			var                      current = expression;
+			HashSet<ISqlExpression>? visited = null;
+			while (true)
+			{
+				visited ??= new HashSet<ISqlExpression>();
+				if (!visited.Add(current))
+					return null;
+
+				if (current is SqlColumn column)
+					current = column.Expression;
+				else if (current is SqlFunction func)
+				{
+					if (func.Name == "$Convert$")
+						current = func.Parameters[2];
+					else
+						break;
+				}
+				else if (current is SqlExpression expr)
+				{
+					if (IsTransitiveExpression(expr))
+						current = expr.Parameters[0];
+					else
+						break;
+				}
+				else
+					break;
+			}
+
+			return current as SqlField;
+		}
+
 		public static SqlCondition GenerateEquality(ISqlExpression field1, ISqlExpression field2)
 		{
 			var compare = new SqlCondition(false,
