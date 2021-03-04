@@ -215,41 +215,69 @@ namespace Tests.DataProvider
 			{
 				var query = from t1 in table
 					from t2 in table.InnerJoin(t2 => t2.Id != t1.Id)
+					where
+						   Sql.Ext.PostgreSQL().GreaterThan(t1.StrArray, t2.StrArray)
+						|| Sql.Ext.PostgreSQL().GreaterThanOrEqual(t1.StrArray, t2.StrArray)
+						|| Sql.Ext.PostgreSQL().Contains(t1.StrArray, t2.StrArray)
+						|| Sql.Ext.PostgreSQL().ContainedBy(t1.StrArray, t2.StrArray)
+						|| Sql.Ext.PostgreSQL().Overlaps(t1.StrArray, t2.StrArray)
+
+						|| Sql.Ext.PostgreSQL().AnyEqual(t1.IntValue, t2.IntArray)
+						|| Sql.Ext.PostgreSQL().AnyLessThan(t1.IntValue, t2.IntArray)
+						|| Sql.Ext.PostgreSQL().AnyLessThanOrEqual(t1.IntValue, t2.IntArray)
+						|| Sql.Ext.PostgreSQL().AnyGreaterThan(t1.IntValue, t2.IntArray)
+						|| Sql.Ext.PostgreSQL().AnyGreaterThanOrEqual(t1.IntValue, t2.IntArray)
+						|| Sql.Ext.PostgreSQL().AnyNotEqual(t1.IntValue, t2.IntArray)
+
+						|| Sql.Ext.PostgreSQL().AnyEqual(t1.IntValue, t2.IntArray)
+						|| Sql.Ext.PostgreSQL().AnyLessThan(t1.IntValue, t2.IntArray)
+						|| Sql.Ext.PostgreSQL().AnyLessThanOrEqual(t1.IntValue, t2.IntArray)
+						|| Sql.Ext.PostgreSQL().AnyGreaterThan(t1.IntValue, t2.IntArray)
+						|| Sql.Ext.PostgreSQL().AnyGreaterThanOrEqual(t1.IntValue, t2.IntArray)
+						|| Sql.Ext.PostgreSQL().AnyNotEqual(t1.IntValue, t2.IntArray)
+
 					select new
 					{
-						TwoArrays = Sql.Ext.PostgreSQL().ConcatArrays(t1.StrArray, t2.StrArray),
-						ThreeArrays = Sql.Ext.PostgreSQL().ConcatArrays(t1.StrArray, t2.StrArray, t1.StrArray),
-						LessThen = Sql.Ext.PostgreSQL().LessThan(t1.StrArray, t2.StrArray),
-						LessThenOrEqual = Sql.Ext.PostgreSQL().LessThanOrEqual(t1.StrArray, t2.StrArray),
-						GreaterThen = Sql.Ext.PostgreSQL().GreaterThan(t1.StrArray, t2.StrArray),
+						TwoArrays          = Sql.Ext.PostgreSQL().ConcatArrays(t1.StrArray, t2.StrArray),
+						ThreeArrays        = Sql.Ext.PostgreSQL().ConcatArrays(t1.StrArray, t2.StrArray, t1.StrArray),
+						LessThen           = Sql.Ext.PostgreSQL().LessThan(t1.StrArray, t2.StrArray),
+						LessThenOrEqual    = Sql.Ext.PostgreSQL().LessThanOrEqual(t1.StrArray, t2.StrArray),
+						GreaterThen        = Sql.Ext.PostgreSQL().GreaterThan(t1.StrArray, t2.StrArray),
 						GreaterThanOrEqual = Sql.Ext.PostgreSQL().GreaterThanOrEqual(t1.StrArray, t2.StrArray),
-						Contains = Sql.Ext.PostgreSQL().Contains(t1.StrArray, t2.StrArray),
-						ContainedBy = Sql.Ext.PostgreSQL().ContainedBy(t1.StrArray, t2.StrArray),
-						Overlaps = Sql.Ext.PostgreSQL().Overlaps(t1.StrArray, t2.StrArray),
+						Contains           = Sql.Ext.PostgreSQL().Contains(t1.StrArray, t2.StrArray),
+						ContainedBy        = Sql.Ext.PostgreSQL().ContainedBy(t1.StrArray, t2.StrArray),
+						Overlaps           = Sql.Ext.PostgreSQL().Overlaps(t1.StrArray, t2.StrArray),
+
+						AnyEqual              = Sql.Ext.PostgreSQL().AnyEqual(t1.IntValue, t2.IntArray),
+						AnyLessThan           = Sql.Ext.PostgreSQL().AnyLessThan(t1.IntValue, t2.IntArray),
+						AnyLessThanOrEqual    = Sql.Ext.PostgreSQL().AnyLessThanOrEqual(t1.IntValue, t2.IntArray),
+						AnyGreaterThan        = Sql.Ext.PostgreSQL().AnyGreaterThan(t1.IntValue, t2.IntArray),
+						AnyGreaterThanOrEqual = Sql.Ext.PostgreSQL().AnyGreaterThanOrEqual(t1.IntValue, t2.IntArray),
+						AnyNotEqual           = Sql.Ext.PostgreSQL().AnyNotEqual(t1.IntValue, t2.IntArray),
 
 						//TODO: Other types
-						ArrayAppendStr = Sql.Ext.PostgreSQL().ArrayAppend(t1.StrArray, t2.StrValue),
-						ArrayAppendInt = Sql.Ext.PostgreSQL().ArrayAppend(t1.IntArray, t2.Id),
-						ArrayAppendLong = Sql.Ext.PostgreSQL().ArrayAppend(t1.LongArray, t2.LongValue),
-						ArrayAppendLong2 = Sql.Ext.PostgreSQL().ArrayAppend(t1.LongArray, Sql.ConvertTo<long>.From(t2.IntValue + 2)),
-						ArrayAppendDouble = Sql.Ext.PostgreSQL().ArrayAppend(t1.DoubleArray, t2.DoubleValue),
+						ArrayAppendStr     = Sql.Ext.PostgreSQL().ArrayAppend(t1.StrArray, t2.StrValue),
+						ArrayAppendInt     = Sql.Ext.PostgreSQL().ArrayAppend(t1.IntArray, t2.Id),
+						ArrayAppendLong    = Sql.Ext.PostgreSQL().ArrayAppend(t1.LongArray, t2.LongValue),
+						ArrayAppendLong2   = Sql.Ext.PostgreSQL().ArrayAppend(t1.LongArray, Sql.ConvertTo<long>.From(t2.IntValue + 2)),
+						ArrayAppendDouble  = Sql.Ext.PostgreSQL().ArrayAppend(t1.DoubleArray, t2.DoubleValue),
 						ArrayAppendDecimal = Sql.Ext.PostgreSQL().ArrayAppend(t1.DecimalArray, t2.DecimalValue),
 
-						ArrayCat = Sql.Ext.PostgreSQL().ArrayCat(t1.StrArray, t2.StrArray),
-						ArrayNDims = Sql.Ext.PostgreSQL().ArrayNDims(t1.StrArray),
-						ArrayDims = Sql.Ext.PostgreSQL().ArrayDims(t1.StrArray),
-						Length = Sql.Ext.PostgreSQL().ArrayLength(t1.StrArray, 1),
-						ArrayLower = Sql.Ext.PostgreSQL().ArrayLower(t1.StrArray, 1),
+						ArrayCat       = Sql.Ext.PostgreSQL().ArrayCat(t1.StrArray, t2.StrArray),
+						ArrayNDims     = Sql.Ext.PostgreSQL().ArrayNDims(t1.StrArray),
+						ArrayDims      = Sql.Ext.PostgreSQL().ArrayDims(t1.StrArray),
+						Length         = Sql.Ext.PostgreSQL().ArrayLength(t1.StrArray, 1),
+						ArrayLower     = Sql.Ext.PostgreSQL().ArrayLower(t1.StrArray, 1),
 						ArrayPosition1 = Sql.Ext.PostgreSQL().ArrayPosition(t1.StrArray, t2.StrValue),
 						ArrayPosition2 = Sql.Ext.PostgreSQL().ArrayPosition(t1.StrArray, t2.StrValue, 1),
 						ArrayPositions = Sql.Ext.PostgreSQL().ArrayPositions(t1.StrArray, t2.StrValue),
-						ArrayPrepend = Sql.Ext.PostgreSQL().ArrayPrepend(t2.StrValue, t1.StrArray),
-						ArrayRemove = Sql.Ext.PostgreSQL().ArrayRemove(t1.StrArray, t2.StrValue),
-						ArrayReplace = Sql.Ext.PostgreSQL().ArrayReplace(t1.StrArray, t2.StrValue, "NN"),
+						ArrayPrepend   = Sql.Ext.PostgreSQL().ArrayPrepend(t2.StrValue, t1.StrArray),
+						ArrayRemove    = Sql.Ext.PostgreSQL().ArrayRemove(t1.StrArray, t2.StrValue),
+						ArrayReplace   = Sql.Ext.PostgreSQL().ArrayReplace(t1.StrArray, t2.StrValue, "NN"),
 						ArrayToString1 = Sql.Ext.PostgreSQL().ArrayToString(t1.StrArray, ","),
 						ArrayToString2 = Sql.Ext.PostgreSQL().ArrayToString(t1.StrArray, ",", "*"),
-						ArrayUpper = Sql.Ext.PostgreSQL().ArrayUpper(t1.StrArray, 1),
-						Cardinality = Sql.Ext.PostgreSQL().Cardinality(t1.StrArray),
+						ArrayUpper     = Sql.Ext.PostgreSQL().ArrayUpper(t1.StrArray, 1),
+						Cardinality    = Sql.Ext.PostgreSQL().Cardinality(t1.StrArray),
 						StringToArray1 = Sql.Ext.PostgreSQL().StringToArray("T1,T2,T3", ","),
 						StringToArray2 = Sql.Ext.PostgreSQL().StringToArray("T1,T2,T3", ",", "T2"),
 					};
