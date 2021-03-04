@@ -296,6 +296,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildSelectQuery(SqlSelectStatement selectStatement)
 		{
+			BuildStep = Step.Tag;           BuildTag(selectStatement.SelectQuery);
 			BuildStep = Step.WithClause;    BuildWithClause(selectStatement.With);
 			BuildStep = Step.SelectClause;  BuildSelectClause(selectStatement.SelectQuery);
 			BuildStep = Step.FromClause;    BuildFromClause(selectStatement, selectStatement.SelectQuery);
@@ -2709,6 +2710,21 @@ namespace LinqToDB.SqlProvider
 
 		#endregion
 
+		#region Tag
+
+		protected virtual void BuildTag(SelectQuery selectQuery)
+		{
+			if (!string.IsNullOrEmpty(selectQuery.Tag.Value))
+			{
+				var escapedTag = selectQuery.Tag.Value!.Replace("\n", "\n-- ");
+				StringBuilder.Append("-- ")
+							 .Append(escapedTag)
+							 .AppendLine();
+			}
+		}
+
+		#endregion
+
 		#endregion
 
 		#region Internal Types
@@ -2725,7 +2741,8 @@ namespace LinqToDB.SqlProvider
 			GroupByClause,
 			HavingClause,
 			OrderByClause,
-			OffsetLimit
+			OffsetLimit,
+			Tag
 		}
 
 		#endregion

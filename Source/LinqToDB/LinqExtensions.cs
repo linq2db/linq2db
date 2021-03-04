@@ -3382,5 +3382,24 @@ namespace LinqToDB
 
 
 		#endregion;
+
+		#region Tag
+
+		[LinqTunnel]
+		[Pure]
+		public static IQueryable<TSource> TagWith<TSource>(this IQueryable<TSource> source, string tagValue)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (tagValue == null) throw new ArgumentNullException(nameof(tagValue));
+
+			return source.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TagWith, source, tagValue),
+					source.Expression,
+					Expression.Constant(tagValue)));
+		}
+
+		#endregion
 	}
 }
