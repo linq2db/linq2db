@@ -9,6 +9,15 @@
 		{
 		}
 
+		public override SqlStatement TransformStatement(SqlStatement statement)
+		{
+			return statement.QueryType switch
+			{
+				QueryType.Update => GetAlternativeUpdateFrom((SqlUpdateStatement)statement, true),
+				_ => statement,
+			};
+		}
+
 		protected static string[] SybaseCharactersToEscape = {"_", "%", "[", "]", "^"};
 
 		public override string[] LikeCharactersToEscape => SybaseCharactersToEscape;

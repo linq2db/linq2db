@@ -1796,5 +1796,23 @@ namespace Tests.xUpdate
 
 			}
 		}
+
+		[Test]
+		public void UpdateByAssociation2([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var id = -1;
+
+				db.Patient.Where(pat => pat.PersonID == id)
+					.Select(p => p.Person)
+					.Update(p => new Person()
+					{
+						LastName = "test"
+					});
+
+			}
+		}
+
 	}
 }
