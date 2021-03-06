@@ -311,39 +311,39 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 
 		[Sql.Extension("{value} = ANY({array})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Comparison, IsPredicate = true)]
-		public static bool AnyEqual<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T value, [ExprParameter] T[] array)
+		public static bool ValueEqualToAny<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T value, [ExprParameter] T[] array)
 		{
-			throw new LinqException($"'{nameof(AnyEqual)}' is server-side method.");
+			throw new LinqException($"'{nameof(ValueEqualToAny)}' is server-side method.");
 		}
 
 		[Sql.Extension("{value} < ANY({array})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Comparison, IsPredicate = true)]
-		public static bool AnyLessThan<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T value, [ExprParameter] T[] array)
+		public static bool ValueLessThanAny<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T value, [ExprParameter] T[] array)
 		{
-			throw new LinqException($"'{nameof(AnyLessThan)}' is server-side method.");
+			throw new LinqException($"'{nameof(ValueLessThanAny)}' is server-side method.");
 		}
 
 		[Sql.Extension("{value} <= ANY({array})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Comparison, IsPredicate = true)]
-		public static bool AnyLessThanOrEqual<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T value, [ExprParameter] T[] array)
+		public static bool ValueLessThanOrEqualToAny<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T value, [ExprParameter] T[] array)
 		{
-			throw new LinqException($"'{nameof(AnyLessThanOrEqual)}' is server-side method.");
+			throw new LinqException($"'{nameof(ValueLessThanOrEqualToAny)}' is server-side method.");
 		}
 
 		[Sql.Extension("{value} > ANY({array})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Comparison, IsPredicate = true)]
-		public static bool AnyGreaterThan<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T value, [ExprParameter] T[] array)
+		public static bool ValueGreaterThanAny<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T value, [ExprParameter] T[] array)
 		{
-			throw new LinqException($"'{nameof(AnyGreaterThan)}' is server-side method.");
+			throw new LinqException($"'{nameof(ValueGreaterThanAny)}' is server-side method.");
 		}
 
 		[Sql.Extension("{value} >= ANY({array})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Comparison, IsPredicate = true)]
-		public static bool AnyGreaterThanOrEqual<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T value, [ExprParameter] T[] array)
+		public static bool ValueGreaterThanOrEqualToAny<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T value, [ExprParameter] T[] array)
 		{
-			throw new LinqException($"'{nameof(AnyGreaterThanOrEqual)}' is server-side method.");
+			throw new LinqException($"'{nameof(ValueGreaterThanOrEqualToAny)}' is server-side method.");
 		}
 
 		[Sql.Extension("{value} <> ANY({array})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Comparison, IsPredicate = true)]
-		public static bool AnyNotEqual<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T value, [ExprParameter] T[] array)
+		public static bool ValueNotEqualToAny<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T value, [ExprParameter] T[] array)
 		{
-			throw new LinqException($"'{nameof(AnyNotEqual)}' is server-side method.");
+			throw new LinqException($"'{nameof(ValueNotEqualToAny)}' is server-side method.");
 		}
 
 		#endregion
