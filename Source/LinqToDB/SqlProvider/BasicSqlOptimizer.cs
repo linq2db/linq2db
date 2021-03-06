@@ -1072,10 +1072,10 @@ namespace LinqToDB.SqlProvider
 							if (cond.Predicate is SqlPredicate.ExprExpr ee)
 							{
 								if (ee.Operator == SqlPredicate.Operator.Equal)
-									return new SqlPredicate.ExprExpr(ee.Expr1, SqlPredicate.Operator.NotEqual, ee.Expr2, Configuration.Linq.CompareNullsAsValues ? true : (bool?)null);
+									return new SqlPredicate.ExprExpr(ee.Expr1, SqlPredicate.Operator.NotEqual, ee.Expr2, Configuration.Linq.CompareNullsAsValues ? true : null);
 
 								if (ee.Operator == SqlPredicate.Operator.NotEqual)
-									return new SqlPredicate.ExprExpr(ee.Expr1, SqlPredicate.Operator.Equal, ee.Expr2, Configuration.Linq.CompareNullsAsValues ? true : (bool?)null);
+									return new SqlPredicate.ExprExpr(ee.Expr1, SqlPredicate.Operator.Equal, ee.Expr2, Configuration.Linq.CompareNullsAsValues ? true : null);
 							}
 						}
 					}
@@ -1866,9 +1866,9 @@ namespace LinqToDB.SqlProvider
 								return new SqlPredicate.Expr(new SqlValue(p.IsNot));
 
 							if (p.IsNot)
-								return new SqlPredicate.NotExpr(sc, true, SqlQuery.Precedence.LogicalNegation);
+								return new SqlPredicate.NotExpr(sc, true, Precedence.LogicalNegation);
 
-							return new SqlPredicate.Expr(sc, SqlQuery.Precedence.LogicalDisjunction);
+							return new SqlPredicate.Expr(sc, Precedence.LogicalDisjunction);
 						}
 					}
 
@@ -1918,9 +1918,9 @@ namespace LinqToDB.SqlProvider
 							return new SqlPredicate.Expr(new SqlValue(p.IsNot));
 
 						if (p.IsNot)
-							return new SqlPredicate.NotExpr(sc, true, SqlQuery.Precedence.LogicalNegation);
+							return new SqlPredicate.NotExpr(sc, true, Precedence.LogicalNegation);
 
-						return new SqlPredicate.Expr(sc, SqlQuery.Precedence.LogicalDisjunction);
+						return new SqlPredicate.Expr(sc, Precedence.LogicalDisjunction);
 					}
 				}
 			}
@@ -1987,7 +1987,7 @@ namespace LinqToDB.SqlProvider
 				sc.Conditions.Add(
 					new SqlCondition(false,
 						new SqlPredicate.ExprExpr(par, SqlPredicate.Operator.NotEqual, new SqlValue(0),
-							Configuration.Linq.CompareNullsAsValues ? false : (bool?)null)));
+							Configuration.Linq.CompareNullsAsValues ? false : null)));
 
 				return new SqlFunction(func.SystemType, "CASE", sc, new SqlValue(true), new SqlValue(false))
 				{
@@ -2068,7 +2068,7 @@ namespace LinqToDB.SqlProvider
 					{
 						sc2.Conditions.Add(new SqlCondition(
 							false,
-							new SqlPredicate.ExprExpr(copyKeys[i], SqlPredicate.Operator.Equal, tableKeys[i], Configuration.Linq.CompareNullsAsValues ? true : (bool?)null)));
+							new SqlPredicate.ExprExpr(copyKeys[i], SqlPredicate.Operator.Equal, tableKeys[i], Configuration.Linq.CompareNullsAsValues ? true : null)));
 					}
 
 					deleteStatement.SelectQuery.Where.SearchCondition.Conditions.Clear();

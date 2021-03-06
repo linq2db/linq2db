@@ -9,7 +9,9 @@ using JetBrains.Annotations;
 namespace LinqToDB
 {
 	using Linq;
+#if NETFRAMEWORK
 	using Async;
+#endif
 
 	/// <summary>
 	/// Provides helper methods for asynchronous operations.

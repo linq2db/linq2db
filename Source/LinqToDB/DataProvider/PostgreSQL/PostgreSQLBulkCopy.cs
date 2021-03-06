@@ -1,5 +1,4 @@
-using System;
-using System.Collections.Concurrent;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -67,6 +66,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 #endif
 
 		private BulkCopyRowsCopied ProviderSpecificCopyImpl<T>(DataConnection dataConnection, ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+			where T : notnull
 		{
 			var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
 
@@ -193,6 +193,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 
 		private async Task<BulkCopyRowsCopied> ProviderSpecificCopyImplAsync<T>(DataConnection dataConnection, ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+			where T : notnull
 		{
 			var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
 
@@ -306,6 +307,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 #if !NETFRAMEWORK
 		private async Task<BulkCopyRowsCopied> ProviderSpecificCopyImplAsync<T>(DataConnection dataConnection, ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+		where T: notnull
 		{
 			var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
 

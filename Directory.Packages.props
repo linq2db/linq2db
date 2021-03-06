@@ -34,7 +34,7 @@
 		<PackageVersion Include="MySqlConnector" Version="1.2.1" />
 		<PackageVersion Include="AdoNetCore.AseClient" Version="0.19.2" />
 		<PackageVersion Include="System.Data.SqlClient" Version="4.8.2" />
-		<PackageVersion Include="Microsoft.Data.SqlClient" Version="2.1.1" />
+		<PackageVersion Include="Microsoft.Data.SqlClient" Version="2.1.2" />
 		<PackageVersion Include="System.Data.Odbc" Version="5.0.0" />
 		<PackageVersion Include="System.Data.OleDb" Version="5.0.0" />
 		<PackageVersion Include="Oracle.ManagedDataAccess" Version="19.10.1" />
