@@ -222,19 +222,19 @@ namespace Tests.DataProvider
 						|| Sql.Ext.PostgreSQL().ContainedBy(t1.StrArray, t2.StrArray)
 						|| Sql.Ext.PostgreSQL().Overlaps(t1.StrArray, t2.StrArray)
 
-						|| Sql.Ext.PostgreSQL().ValueEqualToAny(t1.IntValue, t2.IntArray)
-						|| Sql.Ext.PostgreSQL().ValueLessThanAny(t1.IntValue, t2.IntArray)
-						|| Sql.Ext.PostgreSQL().ValueLessThanOrEqualToAny(t1.IntValue, t2.IntArray)
-						|| Sql.Ext.PostgreSQL().ValueGreaterThanAny(t1.IntValue, t2.IntArray)
-						|| Sql.Ext.PostgreSQL().ValueGreaterThanOrEqualToAny(t1.IntValue, t2.IntArray)
-						|| Sql.Ext.PostgreSQL().ValueNotEqualToAny(t1.IntValue, t2.IntArray)
+						|| Sql.Ext.PostgreSQL().ValueIsEqualToAny(t1.IntValue, t2.IntArray)
+						|| Sql.Ext.PostgreSQL().ValueIsLessThanAny(t1.IntValue, t2.IntArray)
+						|| Sql.Ext.PostgreSQL().ValueIsLessThanOrEqualToAny(t1.IntValue, t2.IntArray)
+						|| Sql.Ext.PostgreSQL().ValueIsGreaterThanAny(t1.IntValue, t2.IntArray)
+						|| Sql.Ext.PostgreSQL().ValueIsGreaterThanOrEqualToAny(t1.IntValue, t2.IntArray)
+						|| Sql.Ext.PostgreSQL().ValueIsNotEqualToAny(t1.IntValue, t2.IntArray)
 
-						|| Sql.Ext.PostgreSQL().ValueEqualToAny(t1.IntValue, t2.IntArray)
-						|| Sql.Ext.PostgreSQL().ValueLessThanAny(t1.IntValue, t2.IntArray)
-						|| Sql.Ext.PostgreSQL().ValueLessThanOrEqualToAny(t1.IntValue, t2.IntArray)
-						|| Sql.Ext.PostgreSQL().ValueGreaterThanAny(t1.IntValue, t2.IntArray)
-						|| Sql.Ext.PostgreSQL().ValueGreaterThanOrEqualToAny(t1.IntValue, t2.IntArray)
-						|| Sql.Ext.PostgreSQL().ValueNotEqualToAny(t1.IntValue, t2.IntArray)
+						|| Sql.Ext.PostgreSQL().ValueIsEqualToAny(t1.IntValue, t2.IntArray)
+						|| Sql.Ext.PostgreSQL().ValueIsLessThanAny(t1.IntValue, t2.IntArray)
+						|| Sql.Ext.PostgreSQL().ValueIsLessThanOrEqualToAny(t1.IntValue, t2.IntArray)
+						|| Sql.Ext.PostgreSQL().ValueIsGreaterThanAny(t1.IntValue, t2.IntArray)
+						|| Sql.Ext.PostgreSQL().ValueIsGreaterThanOrEqualToAny(t1.IntValue, t2.IntArray)
+						|| Sql.Ext.PostgreSQL().ValueIsNotEqualToAny(t1.IntValue, t2.IntArray)
 
 					select new
 					{
@@ -248,12 +248,12 @@ namespace Tests.DataProvider
 						ContainedBy        = Sql.Ext.PostgreSQL().ContainedBy(t1.StrArray, t2.StrArray),
 						Overlaps           = Sql.Ext.PostgreSQL().Overlaps(t1.StrArray, t2.StrArray),
 
-						ValueEqualToAny              = Sql.Ext.PostgreSQL().ValueEqualToAny(t1.IntValue, t2.IntArray),
-						ValueLessThanAny             = Sql.Ext.PostgreSQL().ValueLessThanAny(t1.IntValue, t2.IntArray),
-						ValueLessThanOrEqualToAny    = Sql.Ext.PostgreSQL().ValueLessThanOrEqualToAny(t1.IntValue, t2.IntArray),
-						ValueGreaterThanAny          = Sql.Ext.PostgreSQL().ValueGreaterThanAny(t1.IntValue, t2.IntArray),
-						ValueGreaterThanOrEqualToAny = Sql.Ext.PostgreSQL().ValueGreaterThanOrEqualToAny(t1.IntValue, t2.IntArray),
-						ValueNotEqualToAny           = Sql.Ext.PostgreSQL().ValueNotEqualToAny(t1.IntValue, t2.IntArray),
+						ValueEqualToAny              = Sql.Ext.PostgreSQL().ValueIsEqualToAny(t1.IntValue, t2.IntArray),
+						ValueLessThanAny             = Sql.Ext.PostgreSQL().ValueIsLessThanAny(t1.IntValue, t2.IntArray),
+						ValueLessThanOrEqualToAny    = Sql.Ext.PostgreSQL().ValueIsLessThanOrEqualToAny(t1.IntValue, t2.IntArray),
+						ValueGreaterThanAny          = Sql.Ext.PostgreSQL().ValueIsGreaterThanAny(t1.IntValue, t2.IntArray),
+						ValueGreaterThanOrEqualToAny = Sql.Ext.PostgreSQL().ValueIsGreaterThanOrEqualToAny(t1.IntValue, t2.IntArray),
+						ValueNotEqualToAny           = Sql.Ext.PostgreSQL().ValueIsNotEqualToAny(t1.IntValue, t2.IntArray),
 
 						//TODO: Other types
 						ArrayAppendStr     = Sql.Ext.PostgreSQL().ArrayAppend(t1.StrArray, t2.StrValue),
