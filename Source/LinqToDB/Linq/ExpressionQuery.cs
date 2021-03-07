@@ -79,7 +79,11 @@ namespace LinqToDB.Linq
 		{
 			var query = GetQuery(ref expression, false);
 
-			using (await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+			var transaction = await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+#if !NETFRAMEWORK
+			await
+#endif
+			using (transaction)
 			{
 				Preambles = await query.InitPreamblesAsync(DataContext, expression, Parameters, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
@@ -90,7 +94,7 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		DataConnectionTransaction? StartLoadTransaction(Query query)
+		IDisposable? StartLoadTransaction(Query query)
 		{
 			// Do not start implicit transaction if there is no preambles
 			//
@@ -116,11 +120,20 @@ namespace LinqToDB.Linq
 
 			if (dc.TransactionAsync != null || dc.Command.Transaction != null)
 				return null;
-		
-			return dc!.BeginTransaction(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel);
+
+			if (dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel == null)
+				return dc.DataProvider.CreateRawTransaction(dc).BeginTransaction();
+			else
+				return dc!.BeginTransaction(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel.Value);
 		}
 
-		async Task<DataConnectionTransaction?> StartLoadTransactionAsync(Query query, CancellationToken cancellationToken)
+		async
+#if !NETFRAMEWORK
+			Task<IAsyncDisposable?>
+#else
+			Task<IDisposable?>
+#endif
+			StartLoadTransactionAsync(Query query, CancellationToken cancellationToken)
 		{
 			// Do not start implicit transaction if there is no preambles
 			//
@@ -146,16 +159,24 @@ namespace LinqToDB.Linq
 
 			if (dc.TransactionAsync != null || dc.Command.Transaction != null)
 				return null;
-		
-			return await dc!.BeginTransactionAsync(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel, cancellationToken)!
-				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
+			if (dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel == null)
+				return await dc.DataProvider.CreateRawTransaction(dc).BeginTransactionAsync(cancellationToken)
+					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			else
+				return await dc!.BeginTransactionAsync(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel.Value, cancellationToken)!
+					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
 		async Task<IAsyncEnumerable<TResult>> IQueryProviderAsync.ExecuteAsyncEnumerable<TResult>(Expression expression, CancellationToken cancellationToken)
 		{
 			var query = GetQuery(ref expression, false);
 
-			using (await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+			var transaction = await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+#if !NETFRAMEWORK
+			await
+#endif
+			using (transaction)
 			{
 				Preambles = await query.InitPreamblesAsync(DataContext, expression, Parameters, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
@@ -170,7 +191,11 @@ namespace LinqToDB.Linq
 			var query      = GetQuery(ref expression, true);
 			Expression     = expression;
 
-			using (await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+			var transaction = await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+#if !NETFRAMEWORK
+			await
+#endif
+			using (transaction)
 			{
 				Preambles = await query.InitPreamblesAsync(DataContext, expression, Parameters, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
@@ -219,7 +244,12 @@ namespace LinqToDB.Linq
 				}
 				catch
 				{
+#if NETFRAMEWORK
 					tr?.Dispose();
+#else
+					if (tr != null)
+						await tr.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+#endif
 					throw;
 				}
 			});

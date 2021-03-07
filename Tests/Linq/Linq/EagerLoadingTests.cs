@@ -1,14 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Async;
+using LinqToDB.Data;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
 using NUnit.Framework;
+using Tests.Model;
 
 namespace Tests.Linq
 {
@@ -1373,6 +1376,91 @@ FROM
 				query.ToList();
 			}
 		}
-#endregion
+		#endregion
+
+		#region Issue 2790
+		[Test]
+		public void TestIssue2790SqlClient([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = new DataConnection(context))
+			using (var blog = db.CreateLocalTable(Blog.Data))
+			using (var post = db.CreateLocalTable(Post.Data))
+			{
+				if (db.IsMarsEnabled)
+					Assert.Inconclusive("MARS not supported (see SqlServerRawTransaction for more details)");
+
+				var il = GetCurrentIL(db);
+				ExecuteMultiQuery(blog);
+				Assert.AreEqual(il, GetCurrentIL(db));
+
+				il = SetIL(db, IsolationLevel.ReadUncommitted);
+				ExecuteMultiQuery(blog);
+				Assert.AreEqual(il, GetCurrentIL(db));
+
+				il = SetIL(db, IsolationLevel.ReadCommitted);
+				ExecuteMultiQuery(blog);
+				Assert.AreEqual(il, GetCurrentIL(db));
+
+				il = SetIL(db, IsolationLevel.RepeatableRead);
+				ExecuteMultiQuery(blog);
+				Assert.AreEqual(il, GetCurrentIL(db));
+
+				il = SetIL(db, IsolationLevel.Serializable);
+				ExecuteMultiQuery(blog);
+				Assert.AreEqual(il, GetCurrentIL(db));
+			}
+
+			static IsolationLevel SetIL(DataConnection db, IsolationLevel il)
+			{
+				var sql = "SET TRANSACTION ISOLATION LEVEL ";
+				switch (il)
+				{
+					case IsolationLevel.ReadCommitted:
+						sql += "READ COMMITTED";
+						break;
+					case IsolationLevel.ReadUncommitted:
+						sql += "READ UNCOMMITTED";
+						break;
+					case IsolationLevel.RepeatableRead:
+						sql += "REPEATABLE READ";
+						break;
+					case IsolationLevel.Serializable:
+						sql += "SERIALIZABLE";
+						break;
+					default: throw new InvalidOperationException();
+				}
+
+				db.Execute(sql);
+
+				Assert.AreEqual(il, GetCurrentIL(db));
+				return il;
+			}
+
+			static IsolationLevel GetCurrentIL(DataConnection db)
+			{
+				switch (db.Execute<short>("SELECT transaction_isolation_level FROM sys.dm_exec_sessions WHERE session_id = @@SPID"))
+				{
+					case 0: return IsolationLevel.Unspecified;
+					case 1: return IsolationLevel.ReadUncommitted;
+					case 2: return IsolationLevel.ReadCommitted;
+					case 3: return IsolationLevel.RepeatableRead;
+					case 4: return IsolationLevel.Serializable;
+					case 5: return IsolationLevel.Snapshot;
+					default: throw new InvalidOperationException();
+				}
+			}
+
+			static void ExecuteMultiQuery(TempTable<Blog> blog)
+			{
+				var query = blog.Select(b => new
+				{
+					Blog  = b,
+					Posts = b.Posts.ToArray()
+				});
+
+				var result = query.ToArray();
+			}
+		}
+		#endregion
 	}
 }

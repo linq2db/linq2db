@@ -15,7 +15,6 @@ namespace LinqToDB.DataProvider.SqlServer
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
-	using SqlQuery;
 
 	public class SqlServerDataProvider : DynamicDataProviderBase<SqlServerProviderAdapter>
 	{
@@ -40,6 +39,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			SqlProviderFlags.IsDistinctSetOperationsSupported = true;
 			SqlProviderFlags.IsCountDistinctSupported         = true;
 			SqlProviderFlags.IsUpdateFromSupported            = true;
+			// https://github.com/linq2db/linq2db/issues/2790
+			SqlProviderFlags.DefaultMultiQueryIsolationLevel  = null;
 
 			if (version == SqlServerVersion.v2000)
 			{
@@ -443,5 +444,7 @@ namespace LinqToDB.DataProvider.SqlServer
 #endif
 
 		#endregion
+
+		public override RawTransaction CreateRawTransaction(DataConnection dataConnection) => new SqlServerRawTransaction(dataConnection);
 	}
 }
