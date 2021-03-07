@@ -5,6 +5,7 @@ using System.Linq;
 namespace LinqToDB.SqlProvider
 {
 	using System.Collections.Generic;
+	using LinqToDB.DataProvider;
 	using SqlQuery;
 
 	public class SqlProviderFlags
@@ -107,10 +108,12 @@ namespace LinqToDB.SqlProvider
 		}
 
 		/// <summary>
-		/// Used when there is query which needs several additional database request for completing query.
-		/// Default is <see cref="IsolationLevel.RepeatableRead"/>
+		/// Used when there is query which needs several additional database requests for completing query.
+		/// Default is <see cref="IsolationLevel.RepeatableRead"/>.
+		/// <c>null</c> value corresponds to custom transaction management instead of BeginTransaction APIs, e.g. using BEGIN TRAN sql.
+		/// In that case provider must implement <see cref="IDataProvider.CreateRawTransaction(Data.DataConnection)"/> API.
 		/// </summary>
-		public IsolationLevel DefaultMultiQueryIsolationLevel { get; set; } = IsolationLevel.RepeatableRead;
+		public IsolationLevel? DefaultMultiQueryIsolationLevel { get; set; } = IsolationLevel.RepeatableRead;
 
 		/// <summary>
 		/// Flags for use by external providers.
@@ -152,7 +155,7 @@ namespace LinqToDB.SqlProvider
 				^ IsDistinctSetOperationsSupported             .GetHashCode()
 				^ IsCountDistinctSupported                     .GetHashCode()
 				^ IsUpdateFromSupported                        .GetHashCode()
-				^ DefaultMultiQueryIsolationLevel              .GetHashCode()
+				^ (DefaultMultiQueryIsolationLevel?            .GetHashCode() ?? 0)
 				^ CustomFlags.Aggregate(0, (hash, flag) => flag.GetHashCode() ^ hash);
 	}
 

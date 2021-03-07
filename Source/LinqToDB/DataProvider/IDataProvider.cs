@@ -60,5 +60,7 @@ namespace LinqToDB.DataProvider
 #if !NETFRAMEWORK
 		Task<BulkCopyRowsCopied> BulkCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken);
 #endif
+
+		RawTransaction     CreateRawTransaction(DataConnection dataConnection);
 	}
 }

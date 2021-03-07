@@ -433,5 +433,8 @@ namespace LinqToDB.DataProvider
 #endif
 
 		#endregion
+
+		public virtual RawTransaction CreateRawTransaction(DataConnection dataConnection)
+			=> throw new InvalidOperationException($"{nameof(CreateRawTransaction)} API not suppored by {Name} provider");
 	}
 }
