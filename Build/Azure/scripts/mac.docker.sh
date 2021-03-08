@@ -28,7 +28,7 @@ while ! docker info 2>/dev/null ; do
         #open -g -a Docker.app || exit
         open -g /Applications/Docker.app || exit
     fi
-    if [ $retries -gt 100 ]; then
+    if [ $retries -gt 200 ]; then
         >&2 echo 'Failed to run docker'
         exit 1
     fi;

@@ -95,7 +95,7 @@ Legend:
 |Azure SQL<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) 2.1.2|:x:|:x:|:x:|:x:|
 |MySQL 5.6<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/) 8.0.21|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |MySQL 8<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/) 8.0.21|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
-|MySQL 8<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/) 1.2.1|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|MySQL 8<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/) 1.3.0|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |MariaDB 10<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/) 8.0.21|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
 |PostgreSQL 9.2<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.1.8 (netfx) / 5.0.3 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |PostgreSQL 9.3<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.1.8 (netfx) / 5.0.3 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
