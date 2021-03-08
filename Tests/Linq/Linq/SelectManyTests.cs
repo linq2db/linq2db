@@ -868,31 +868,22 @@ namespace Tests.Linq
 		#region Issue 2832
 		public class DataGroupPermission
 		{
-			public long DatagroupId { get; set; }
+			public int DatagroupId { get; set; }
 			public int  Permission  { get; set; }
 		}
 
 		[Table]
 		public class DctSetpointtype : PrimaryKeyEquality<DctSetpointtype>
 		{
-			[Column, PrimaryKey, Identity] public long Id { get; set; }
+			[Column, PrimaryKey, Identity] public int Id { get; set; }
 		}
 
 		[Table]
 		public class DctOu : PrimaryKeyEquality<DctOu>
 		{
-			[Column, PrimaryKey, Identity] public long Id { get; set; }
+			[Column, PrimaryKey, Identity] public int Id { get; set; }
 
-			[Column] public long? ParentId { get; set; }
-		}
-
-		public abstract class TestOracleDbFunctions
-		{
-			[Sql.FunctionAttribute("UTILS.GREATESTNOTNULL3", ServerSideOnly = true)]
-			public static decimal? UtilsGreatestnotnull3(decimal? value1, decimal? value2, decimal? value3)
-			{
-				throw new NotImplementedException();
-			}
+			[Column] public int? ParentId { get; set; }
 		}
 
 		public class PrimaryKeyEquality<T>
@@ -902,15 +893,15 @@ namespace Tests.Linq
 		[Table]
 		public class Deviation : PrimaryKeyEquality<Deviation>
 		{
-			[Column] public long SetpointtypeId { get; set; }
-			[Column] public long WellId         { get; set; }
+			[Column] public int SetpointtypeId { get; set; }
+			[Column] public int WellId         { get; set; }
 		}
 
 		[Table]
 		public class UacUsersDatagroup : PrimaryKeyEquality<UacUsersDatagroup>
 		{
-			[Column, PrimaryKey(1)] public long UserId      { get; set; }
-			[Column, PrimaryKey(2)] public long DatagroupId { get; set; }
+			[Column, PrimaryKey(1)] public int UserId      { get; set; }
+			[Column, PrimaryKey(2)] public int DatagroupId { get; set; }
 
 			[Column] public int Permission            { get; set; }
 			[Column] public int Inheritablepermission { get; set; }
@@ -920,7 +911,7 @@ namespace Tests.Linq
 		public class VWellTree
 		{
 			[Column] public decimal? ShopId { get; set; }
-			[Column] public long?    WellId { get; set; }
+			[Column] public int?     WellId { get; set; }
 		}
 
 		[Test]
