@@ -29,6 +29,7 @@ namespace LinqToDB
 #if !NETFRAMEWORK
 		, IAsyncDisposable
 #endif
+		where T : notnull
 	{
 		readonly ITable<T> _table;
 
@@ -424,7 +425,7 @@ namespace LinqToDB
 			return count.RowsCopied;
 		}
 
-		static readonly ConcurrentDictionary<Type,Expression<Func<T,T>>> _setterDic = new ConcurrentDictionary<Type,Expression<Func<T,T>>>();
+		static readonly ConcurrentDictionary<Type,Expression<Func<T,T>>> _setterDic = new ();
 
 		/// <summary>
 		/// Insert data into table using records, returned by provided query.

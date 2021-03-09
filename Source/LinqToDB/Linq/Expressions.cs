@@ -479,7 +479,7 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		class GenericInfoProvider<T> : IGenericInfoProvider
+		class GetValueOrDefaultInfoProvider<T> : IGenericInfoProvider
 		{
 			public void SetInfo(MappingSchema mappingSchema)
 			{
@@ -1109,7 +1109,7 @@ namespace LinqToDB.Linq
 
 		static Dictionary<string,Dictionary<MemberInfo,IExpressionInfo>> LoadMembers()
 		{
-			SetGenericInfoProvider(typeof(GenericInfoProvider<>));
+			SetGenericInfoProvider(typeof(GetValueOrDefaultInfoProvider<>));
 
 			var members = new Dictionary<string,Dictionary<MemberInfo,IExpressionInfo>>
 			{
@@ -1297,10 +1297,10 @@ namespace LinqToDB.Linq
 				#region PostgreSQL
 
 				{ ProviderName.PostgreSQL, new Dictionary<MemberInfo,IExpressionInfo> {
-					{ M(() => Sql.Left ("",0)     ), N(() => L<string?,int?,string?>             ((p0,p1)                                   => Sql.Substring(p0, 1, p1))) },
-					{ M(() => Sql.Right("",0)     ), N(() => L<string?,int?,string?>             ((string? p0,int? p1)                     => Sql.Substring(p0, p0!.Length - p1 + 1, p1))) },
+					{ M(() => Sql.Left ("",0)     ), N(() => L<string?,int?,string?>             ((p0,p1)                                 => Sql.Substring(p0, 1, p1))) },
+					{ M(() => Sql.Right("",0)     ), N(() => L<string?,int?,string?>             ((string? p0,int? p1)                    => Sql.Substring(p0, p0!.Length - p1 + 1, p1))) },
 					{ M(() => Sql.Stuff("",0,0,"")), N(() => L<string?,int?,int?,string?,string?>((string? p0,int? p1,int? p2,string? p3) => AltStuff(p0, p1, p2, p3))) },
-					{ M(() => Sql.Space(0)        ), N(() => L<int?,string?>                     ((int? p0)                              => Replicate(" ", p0))) },
+					{ M(() => Sql.Space(0)        ), N(() => L<int?,string?>                     ((int? p0)                               => Replicate(" ", p0))) },
 
 					{ M(() => Sql.Cosh(0)           ), N(() => L<double?,double?>     ((double? v)        => (Sql.Exp(v) + Sql.Exp(-v)) / 2 )) },
 					{ M(() => Sql.Round      (0.0,0)), N(() => L<double?,int?,double?>((double? v,int? p) => (double?)Sql.Round      ((decimal)v!, p))) },

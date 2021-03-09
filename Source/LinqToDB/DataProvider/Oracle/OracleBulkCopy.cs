@@ -137,7 +137,7 @@ namespace LinqToDB.DataProvider.Oracle
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			var enumerator = source.GetAsyncEnumerator(cancellationToken);
-			await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+			await using (enumerator.ConfigureAwait(Configuration.ContinueOnCapturedContext))
 			{
 				// call the synchronous provider-specific implementation
 				return ProviderSpecificCopy(table, options, EnumerableHelper.AsyncToSyncEnumerable(enumerator));
@@ -288,7 +288,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 				if (helper.CurrentCount >= helper.BatchSize)
 				{
-					if (!await ExecuteAsync(helper, list, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+					if (!await ExecuteAsync(helper, list, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 						return helper.RowsCopied;
 
 					list.Clear();
@@ -297,7 +297,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 			if (helper.CurrentCount > 0)
 			{
-				await ExecuteAsync(helper, list, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				await ExecuteAsync(helper, list, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			}
 
 			return helper.RowsCopied;
@@ -308,7 +308,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			var list = OracleMultipleRowsCopy2Prep(helper);
 
-			await foreach (var item in source.WithCancellation(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+			await foreach (var item in source.WithCancellation(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 			{
 				list.Add(item!);
 
@@ -317,7 +317,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 				if (helper.CurrentCount >= helper.BatchSize)
 				{
-					if (!await ExecuteAsync(helper, list, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+					if (!await ExecuteAsync(helper, list, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 						return helper.RowsCopied;
 
 					list.Clear();
@@ -326,7 +326,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 			if (helper.CurrentCount > 0)
 			{
-				await ExecuteAsync(helper, list, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				await ExecuteAsync(helper, list, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			}
 
 			return helper.RowsCopied;

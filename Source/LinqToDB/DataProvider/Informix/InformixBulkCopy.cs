@@ -104,7 +104,7 @@ namespace LinqToDB.DataProvider.Informix
 				if (connection != null)
 				{
 					var enumerator = source.GetAsyncEnumerator(cancellationToken);
-					await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+					await using (enumerator.ConfigureAwait(Configuration.ContinueOnCapturedContext))
 					{
 						// call the synchronous provider-specific implementation
 						var syncSource = EnumerableHelper.AsyncToSyncEnumerable(enumerator);
@@ -130,7 +130,7 @@ namespace LinqToDB.DataProvider.Informix
 			}
 
 			return await MultipleRowsCopyAsync(table, options, source, cancellationToken)
-				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 		}
 #endif
 
@@ -141,6 +141,7 @@ namespace LinqToDB.DataProvider.Informix
 			DataConnection                          dataConnection,
 			IDbConnection                           connection,
 			InformixProviderAdapter.BulkCopyAdapter bulkCopy)
+			where T: notnull
 		{
 			var ed      = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
 			var columns = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();

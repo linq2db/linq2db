@@ -21,6 +21,7 @@ namespace LinqToDB
 		: IMergeableUsing<TTarget>,
 			IMergeableOn<TTarget, TSource>,
 			IMergeable<TTarget, TSource>
+		where TTarget : notnull
 	{
 		public MergeDefinition(ITable<TTarget> target)
 		{
