@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using LinqToDB;
 
 using NUnit.Framework;
+using Tests.Model;
 
 namespace Tests.xUpdate
 {
@@ -266,5 +267,29 @@ namespace Tests.xUpdate
 				Assert.That(list, Is.EquivalentTo(data));
 			}
 		}
+
+		[Test]
+		public void CreateTable_NoDisposeError([DataSources] string context)
+		{
+			using var db = new TestDataConnection(context);
+			db.DropTable<int>("TempTable", throwExceptionIfNotExists: false);
+
+			var tempTable = db.CreateTempTable<IDTable>("TempTable");
+			tempTable.Drop();
+			tempTable.Dispose();
+		}
+
+#if !NETFRAMEWORK
+		[Test]
+		public async Task CreateTable_NoDisposeErrorAsync([DataSources] string context)
+		{
+			using var db = new TestDataConnection(context);
+			await db.DropTableAsync<int>("TempTable", throwExceptionIfNotExists: false);
+
+			var tempTable = await db.CreateTempTableAsync<IDTable>("TempTable");
+			await tempTable.DropAsync();
+			await tempTable.DisposeAsync();
+		}
+#endif
 	}
 }
