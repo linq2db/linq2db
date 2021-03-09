@@ -76,6 +76,7 @@ namespace DataModel
 		#region FreeTextTable
 
 		public IQueryable<SqlServerExtensions.FreeTextKey<TKey>> FreeTextTable<TTable, TKey>(ITable<TTable> table, Expression<Func<TTable,object?>> columns, string search)
+			where TTable : notnull
 		{
 			return Sql.Ext.SqlServer().FreeTextTable<TTable, TKey>(table, columns, search);
 		}
@@ -1200,6 +1201,7 @@ namespace DataModel
 		#region FreeTextTable
 
 		public IQueryable<SqlServerExtensions.FreeTextKey<TKey>> FreeTextTable<TTable, TKey>(ITable<TTable> table, Expression<Func<TTable,object?>> columns, string search)
+			where TTable : notnull
 		{
 			return Sql.Ext.SqlServer().FreeTextTable<TTable, TKey>(table, columns, search);
 		}
@@ -1892,8 +1894,8 @@ namespace DataModel
 
 		public partial class PersonSelectByKeyLowercaseResult
 		{
-			public int    personid  { get; set; }
-			public string firstname { get; set; } = null!;
+			public int    PersonID  { get; set; }
+			public string FirstName { get; set; } = null!;
 		}
 
 		#endregion

@@ -1240,6 +1240,7 @@ namespace Tests
 		}
 
 		public static TempTable<T> CreateTempTable<T>(IDataContext db, string tableName, string context)
+			where T : notnull
 		{
 			return TempTable.Create<T>(db, GetTempTableName(tableName, context));
 		}

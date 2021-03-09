@@ -47,6 +47,7 @@ namespace LinqToDB
 		public static ITable<T> LoadWithAsTable<T>(
 			                this ITable<T> table,
 			[InstantHandle] Expression<Func<T,object?>> selector)
+			where T : notnull
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
 

@@ -1154,7 +1154,7 @@ namespace LinqToDB.SqlQuery
 											cte.IsRecursive,
 											cte.Name);
 
-								var correctedBody = ConvertVisitor.Convert(body,
+								var correctedBody = Convert(body,
 									(v, e) =>
 									{
 										if (e.ElementType == QueryElementType.CteClause)

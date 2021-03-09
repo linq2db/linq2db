@@ -22,7 +22,6 @@ using Oracle.ManagedDataAccess.Types;
 
 namespace Tests.DataProvider
 {
-	using System.Diagnostics.CodeAnalysis;
 	using System.Threading;
 	using System.Threading.Tasks;
 	using LinqToDB.Data.RetryPolicy;
@@ -62,12 +61,13 @@ namespace Tests.DataProvider
 		}
 
 		static void TestType<T>(
-			DataConnection   connection,
-			string           dataTypeName,
-			[DisallowNull] T value,
-			string           tableName       = "\"AllTypes\"",
-			bool             convertToString = false,
-			bool             throwException  = false)
+			DataConnection connection,
+			string         dataTypeName,
+			T              value,
+			string         tableName       = "\"AllTypes\"",
+			bool           convertToString = false,
+			bool           throwException  = false)
+			where T : notnull
 		{
 			Assert.That(connection.Execute<T>($"SELECT {dataTypeName} FROM {tableName} WHERE ID = 1"),
 				Is.EqualTo(connection.MappingSchema.GetDefaultValue(typeof(T))));

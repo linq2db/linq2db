@@ -4,7 +4,6 @@ using System.Data;
 using System.Data.Linq;
 using System.Data.SqlTypes;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -1159,7 +1158,8 @@ namespace Tests.DataProvider
 			await BulkCopyAllTypesAsync(context, BulkCopyType.ProviderSpecific);
 		}
 
-		void CompareObject<T>(MappingSchema mappingSchema, [DisallowNull] T actual, [DisallowNull] T test)
+		void CompareObject<T>(MappingSchema mappingSchema, T actual, T test)
+			where T : notnull
 		{
 			var ed = mappingSchema.GetEntityDescriptor(typeof(T));
 

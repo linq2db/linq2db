@@ -269,6 +269,7 @@ namespace Tests
 		}
 
 		class FirebirdTempTable<T> : TempTable<T>
+			where T : notnull
 		{
 			public FirebirdTempTable(IDataContext db, string? tableName = null, string? databaseName = null, string? schemaName = null, TableOptions tableOptions = TableOptions.NotSet)
 				: base(db, tableName, databaseName, schemaName, tableOptions : tableOptions)
@@ -288,7 +289,8 @@ namespace Tests
 			}
 		}
 
-		static TempTable<T> CreateTable<T>(IDataContext db, string? tableName, TableOptions tableOptions = TableOptions.NotSet) =>
+		static TempTable<T> CreateTable<T>(IDataContext db, string? tableName, TableOptions tableOptions = TableOptions.NotSet)
+			where T : notnull =>
 			db.CreateSqlProvider() is FirebirdSqlBuilder ?
 				new FirebirdTempTable<T>(db, tableName, tableOptions : tableOptions) :
 				new         TempTable<T>(db, tableName, tableOptions : tableOptions);
@@ -303,6 +305,7 @@ namespace Tests
 		}
 
 		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string? tableName = null, TableOptions tableOptions = TableOptions.NotSet)
+			where T : notnull
 		{
 			try
 			{
@@ -319,6 +322,7 @@ namespace Tests
 		}
 
 		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string? tableName, IEnumerable<T> items, bool insertInTransaction = false)
+			where T : notnull
 		{
 			var table = CreateLocalTable<T>(db, tableName, TableOptions.CheckExistence);
 
@@ -344,6 +348,7 @@ namespace Tests
 		}
 
 		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, IEnumerable<T> items, bool insertInTransaction = false)
+			where T : notnull
 		{
 			return CreateLocalTable(db, null, items, insertInTransaction);
 		}

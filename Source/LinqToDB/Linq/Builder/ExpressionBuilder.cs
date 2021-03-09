@@ -21,9 +21,9 @@ namespace LinqToDB.Linq.Builder
 	{
 		#region Sequence
 
-		static readonly object _sync = new object();
+		static readonly object _sync = new ();
 
-		static List<ISequenceBuilder> _sequenceBuilders = new List<ISequenceBuilder>
+		static List<ISequenceBuilder> _sequenceBuilders = new List<ISequenceBuilder>()
 		{
 			new TableBuilder               (),
 			new IgnoreFiltersBuilder       (),
@@ -103,10 +103,10 @@ namespace LinqToDB.Linq.Builder
 		private  HashSet<Expression>?              _subQueryExpressions;
 		readonly ExpressionTreeOptimizationContext  _optimizationContext;
 
-		public readonly List<ParameterAccessor>    CurrentSqlParameters = new List<ParameterAccessor>();
+		public readonly List<ParameterAccessor>    CurrentSqlParameters = new ();
 
-		public readonly List<ParameterExpression>  BlockVariables       = new List<ParameterExpression>();
-		public readonly List<Expression>           BlockExpressions     = new List<Expression>();
+		public readonly List<ParameterExpression>  BlockVariables       = new ();
+		public readonly List<Expression>           BlockExpressions     = new ();
 		public          bool                       IsBlockDisable;
 		public          int                        VarIndex;
 
@@ -141,7 +141,7 @@ namespace LinqToDB.Linq.Builder
 		public readonly Expression             OriginalExpression;
 		public readonly Expression             Expression;
 		public readonly ParameterExpression[]? CompiledParameters;
-		public readonly List<IBuildContext>    Contexts = new List<IBuildContext>();
+		public readonly List<IBuildContext>    Contexts = new ();
 
 		public static readonly ParameterExpression QueryRunnerParam = Expression.Parameter(typeof(IQueryRunner), "qr");
 		public static readonly ParameterExpression DataContextParam = Expression.Parameter(typeof(IDataContext), "dctx");
@@ -357,7 +357,7 @@ namespace LinqToDB.Linq.Builder
 		private MethodInfo[]? _queryableMethods;
 		public  MethodInfo[]   QueryableMethods  => _queryableMethods  ??= typeof(Queryable). GetMethods();
 
-		readonly Dictionary<Expression, Expression> _optimizedExpressions = new Dictionary<Expression, Expression>();
+		readonly Dictionary<Expression, Expression> _optimizedExpressions = new ();
 
 		static void CollectLambdaParameters(Expression expression, HashSet<ParameterExpression> foundParameters)
 		{
@@ -1487,9 +1487,9 @@ namespace LinqToDB.Linq.Builder
 					var leftIsPrimitive  = left. Type.IsPrimitive;
 					var rightIsPrimitive = right.Type.IsPrimitive;
 
-					if (leftIsPrimitive == true && rightIsPrimitive == false && rightConvert.Item2 != null)
+					if (leftIsPrimitive && !rightIsPrimitive && rightConvert.Item2 != null)
 						right = rightConvert.Item2.GetBody(right);
-					else if (leftIsPrimitive == false && rightIsPrimitive == true && leftConvert.Item2 != null)
+					else if (!leftIsPrimitive && rightIsPrimitive && leftConvert.Item2 != null)
 						left = leftConvert.Item2.GetBody(left);
 					else if (rightConvert.Item2 != null)
 						right = rightConvert.Item2.GetBody(right);
@@ -1502,7 +1502,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 
-		Dictionary<Expression, Expression> _rootExpressions = new Dictionary<Expression, Expression>();
+		Dictionary<Expression, Expression> _rootExpressions = new ();
 
 		[return: NotNullIfNotNull("expr")]
 		internal Expression? GetRootObject(Expression? expr)

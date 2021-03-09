@@ -147,7 +147,7 @@ namespace LinqToDB.Common
 
 			#region IEqualityComparer<T> Members
 
-			public bool Equals([AllowNull] T x, [AllowNull] T y)
+			public bool Equals(T? x, T? y)
 			{
 				return ReferenceEquals(x, y);
 			}
