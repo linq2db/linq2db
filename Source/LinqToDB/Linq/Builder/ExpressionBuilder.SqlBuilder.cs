@@ -808,9 +808,6 @@ namespace LinqToDB.Linq.Builder
 				return result;
 			}
 
-			if (!MappingSchema.IsScalarType(unwrapped.Type) && typeof(IQueryable<>).IsSameOrParentOf(unwrapped.Type))
-				return context.ConvertToSql(null, 0, ConvertFlags.Field).Select(_ => _.Sql).FirstOrDefault();
-
 			return ConvertToSql(context, expression, false, columnDescriptor);
 		}
 

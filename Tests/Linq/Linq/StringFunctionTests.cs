@@ -164,8 +164,7 @@ namespace Tests.Linq
 			Assert.AreEqual("125678",   Sql.Stuff("1234",        3,    5,    "5678"));
 		}
 
-		[ActiveIssue(Details = "Probably remove this test")]
-//		[Test]
+		[Test]
 		public void Stuff2()
 		{
 			var expression = Enumerable.Empty<string>();
@@ -837,7 +836,7 @@ namespace Tests.Linq
 							select "," + c.Name, 1, 1, "")
 					};
 
-				q.ToString();
+				TestContext.WriteLine(q.ToString());
 			}
 		}
 
