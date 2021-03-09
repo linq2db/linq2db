@@ -221,7 +221,7 @@ namespace LinqToDB.DataProvider.Oracle
 		protected SqlStatement ReplaceTakeSkipWithRowNum(SqlStatement statement, bool onlySubqueries)
 		{
 			return QueryHelper.WrapQuery(statement,
-				query =>
+				(query, _) =>
 				{
 					if (query.Select.TakeValue == null && query.Select.SkipValue == null)
 						return 0;
@@ -267,7 +267,9 @@ namespace LinqToDB.DataProvider.Oracle
 					query.Select.SkipValue = null;
 					query.Select.Take(null, null);
 
-				});
+				},
+				allowMutation: true
+				);
 		}
 
 		protected override ISqlExpression ConvertFunction(SqlFunction func)

@@ -514,7 +514,7 @@ namespace Tests.Linq
 					.Select(s => new
 					{
 						s.ChildID,
-						s.a.c,
+						s.a!.c,
 						s.a.Parent
 					})
 					.Select(s => new

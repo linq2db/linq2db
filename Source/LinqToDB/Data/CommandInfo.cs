@@ -44,12 +44,12 @@ namespace LinqToDB.Data
 		public DataParameter[]? Parameters;
 		/// <summary>
 		/// Type of command. See <see cref="System.Data.CommandType"/> for all supported types.
-		/// Default value: <see cref="System.Data.CommandType.Text"/>.
+		/// Default value: <see cref="CommandType.Text"/>.
 		/// </summary>
 		public CommandType     CommandType = CommandType.Text;
 		/// <summary>
 		/// Command behavior flags. See <see cref="System.Data.CommandBehavior"/> for more details.
-		/// Default value: <see cref="System.Data.CommandBehavior.Default"/>.
+		/// Default value: <see cref="CommandBehavior.Default"/>.
 		/// </summary>
 		public CommandBehavior CommandBehavior;
 
@@ -488,7 +488,7 @@ namespace LinqToDB.Data
 		}
 
 		/// <summary>
-		/// Executes command using <see cref="System.Data.CommandType.StoredProcedure"/> command type and returns results as collection of values of specified type.
+		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type and returns results as collection of values of specified type.
 		/// </summary>
 		/// <typeparam name="T">Result record type.</typeparam>
 		/// <param name="template">This value used only for <typeparamref name="T"/> parameter type inference, which makes this method usable with anonymous types.</param>
@@ -499,7 +499,7 @@ namespace LinqToDB.Data
 		}
 
 		/// <summary>
-		/// Executes command asynchronously using <see cref="System.Data.CommandType.StoredProcedure"/> command type and returns results as collection of values of specified type.
+		/// Executes command asynchronously using <see cref="CommandType.StoredProcedure"/> command type and returns results as collection of values of specified type.
 		/// </summary>
 		/// <typeparam name="T">Result record type.</typeparam>
 		/// <param name="template">This value used only for <typeparamref name="T"/> parameter type inference, which makes this method usable with anonymous types.</param>
@@ -1007,7 +1007,7 @@ namespace LinqToDB.Data
 		#region Execute scalar async
 
 		/// <summary>
-		/// Executes command using <see cref="System.Data.CommandType.StoredProcedure"/> command type asynchronously and returns single value.
+		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type asynchronously and returns single value.
 		/// Saves result values for output and reference parameters to corresponding <see cref="DataParameter"/> object.
 		/// </summary>
 		/// <typeparam name="T">Resulting value type.</typeparam>
@@ -1106,7 +1106,7 @@ namespace LinqToDB.Data
 			if (hasParameters)
 				SetParameters(DataConnection, Parameters!);
 
-			return new DataReader { CommandInfo = this, Reader = DataConnection.ExecuteReader(GetCommandBehavior()), OnDispose = hasParameters ? () => RebindParameters(DataConnection, Parameters!) : (Action?)null };
+			return new DataReader { CommandInfo = this, Reader = DataConnection.ExecuteReader(GetCommandBehavior()), OnDispose = hasParameters ? () => RebindParameters(DataConnection, Parameters!) : null };
 		}
 
 		internal IEnumerable<T> ExecuteQuery<T>(IDataReader rd, string sql)
@@ -1180,7 +1180,7 @@ namespace LinqToDB.Data
 			if (hasParameters)
 				SetParameters(DataConnection, Parameters!);
 
-			return new DataReaderAsync { CommandInfo = this, Reader = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext), OnDispose = hasParameters ? () => RebindParameters(DataConnection, Parameters!) : (Action?)null };
+			return new DataReaderAsync { CommandInfo = this, Reader = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext), OnDispose = hasParameters ? () => RebindParameters(DataConnection, Parameters!) : null };
 		}
 
 		internal async Task ExecuteQueryAsync<T>(DbDataReader rd, string sql, Action<T> action, CancellationToken cancellationToken)
@@ -1293,7 +1293,7 @@ namespace LinqToDB.Data
 					var dbParameter      = (IDbDataParameter)dbParameters[i]!;
 					dataParameter.Output = dbParameter;
 
-					if (!object.Equals(dataParameter.Value, dbParameter.Value))
+					if (!Equals(dataParameter.Value, dbParameter.Value))
 					{
 						dataParameter.Value = ConvertParameterValue(dbParameter.Value, dataConnection.MappingSchema);
 					}
@@ -1340,7 +1340,7 @@ namespace LinqToDB.Data
 			}
 		}
 
-		static readonly MemoryCache  _parameterReaders        = new MemoryCache(new MemoryCacheOptions());
+		static readonly MemoryCache  _parameterReaders        = new (new MemoryCacheOptions());
 
 		static readonly PropertyInfo _dataParameterName       = MemberHelper.PropertyOf<DataParameter>(p => p.Name);
 		static readonly PropertyInfo _dataParameterDbDataType = MemberHelper.PropertyOf<DataParameter>(p => p.DbDataType);
@@ -1362,7 +1362,7 @@ namespace LinqToDB.Data
 
 			var func = _parameterReaders.GetOrCreate(key, o =>
 			{
-				o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+				o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
 
 				var td  = dataConnection.MappingSchema.GetEntityDescriptor(type);
 				var p   = Expression.Parameter(typeof(object), "p");
@@ -1525,8 +1525,8 @@ namespace LinqToDB.Data
 			}
 		}
 
-		static readonly MemoryCache  _objectReaders       = new MemoryCache(new MemoryCacheOptions());
-		static readonly MemoryCache  _dataReaderConverter = new MemoryCache(new MemoryCacheOptions());
+		static readonly MemoryCache  _objectReaders       = new (new MemoryCacheOptions());
+		static readonly MemoryCache  _dataReaderConverter = new (new MemoryCacheOptions());
 
 		/// <summary>
 		/// Clears global cache of object mapping functions from query results and mapping functions from value to <see cref="DataParameter"/>.
@@ -1567,7 +1567,7 @@ namespace LinqToDB.Data
 
 			var func = _objectReaders.GetOrCreate(key, e =>
 		{
-				e.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+				e.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
 
 				if (!((QueryKey)e.Key).IsScalar && IsDynamicType(typeof(T)))
 			{
@@ -1604,7 +1604,7 @@ namespace LinqToDB.Data
 			}
 
 			_objectReaders.Set(key, func,
-				new MemoryCacheEntryOptions {SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration});
+				new MemoryCacheEntryOptions {SlidingExpiration = Configuration.Linq.CacheSlidingExpiration});
 
 			return (Func<IDataReader, T>)func;
 		}
@@ -1626,7 +1626,7 @@ namespace LinqToDB.Data
 				var converterKey  = Tuple.Create(readerType, dataConnection.DataProvider.DataReaderType);
 				converterExpr = _dataReaderConverter.GetOrCreate(converterKey, o =>
 				{
-					o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+					o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
 
 					var expr = dataConnection.MappingSchema.GetConvertExpression(readerType, typeof(IDataReader), false, false);
 					if (expr != null)
