@@ -2097,7 +2097,7 @@ namespace LinqToDB.SqlProvider
 			return null;
 		}
 
-		public SqlStatement GetAlternativeUpdateFrom(SqlUpdateStatement statement, bool addTableToUpdateToFrom)
+		public SqlStatement GetAlternativeUpdateFrom(SqlUpdateStatement statement)
 		{
 			if (statement.SelectQuery.Select.HasModifier)
 				statement = QueryHelper.WrapQuery(statement, statement.SelectQuery);
@@ -2190,7 +2190,7 @@ namespace LinqToDB.SqlProvider
 					}
 			}
 
-			if (addTableToUpdateToFrom || ReferenceEquals(tableToUpdate, tableToCompare))
+			if (ReferenceEquals(tableToUpdate, tableToCompare))
 			{
 				// we have to create clone
 				tableToUpdate = tableToCompare!.Clone();
@@ -2237,16 +2237,7 @@ namespace LinqToDB.SqlProvider
 			}
 
 			if (tableToUpdate != null)
-			{
-				if (addTableToUpdateToFrom)
-				{
-					statement.SelectQuery.From.Tables.Insert(0, new SqlTableSource(tableToUpdate, "upd"));
-				}
-				else
-				{
-					tableToUpdate.Alias = "$F";
-				}
-			}
+				tableToUpdate.Alias = "$F";
 
 			statement.Update.Table = tableToUpdate;
 

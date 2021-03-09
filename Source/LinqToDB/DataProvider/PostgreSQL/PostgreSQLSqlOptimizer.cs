@@ -24,7 +24,7 @@
 			return statement.QueryType switch
 			{
 				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement),
-				QueryType.Update => GetAlternativeUpdateFrom((SqlUpdateStatement)statement, false),
+				QueryType.Update => GetAlternativeUpdateFrom((SqlUpdateStatement)statement),
 				_                => statement,
 			};
 		}

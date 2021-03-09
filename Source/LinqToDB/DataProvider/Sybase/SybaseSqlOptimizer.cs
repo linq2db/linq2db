@@ -13,7 +13,7 @@
 		{
 			return statement.QueryType switch
 			{
-				QueryType.Update => GetAlternativeUpdateFrom((SqlUpdateStatement)statement, true),
+				QueryType.Update => PrepareUpdateStatement((SqlUpdateStatement)statement),
 				_ => statement,
 			};
 		}
@@ -65,6 +65,39 @@
 			}
 
 			return base.ConvertFunction(func);
+		}
+
+		public SqlStatement PrepareUpdateStatement(SqlUpdateStatement statement)
+		{
+			var tableToUpdate = statement.Update.Table;
+
+			if (tableToUpdate == null)
+				return statement;
+
+			if (statement.SelectQuery.From.Tables.Count > 0)
+			{ 
+				if (tableToUpdate == statement.SelectQuery.From.Tables[0].Source)
+					return statement;
+
+				var sourceTable = statement.SelectQuery.From.Tables[0];
+
+				for (int i = 0; i < sourceTable.Joins.Count; i++)
+				{
+					var join = sourceTable.Joins[i];
+					if (join.Table.Source == tableToUpdate)
+					{
+						statement.SelectQuery.From.Tables.Insert(0, join.Table);
+						statement.SelectQuery.Where.SearchCondition.EnsureConjunction().Conditions
+							.Add(new SqlCondition(false, join.Condition));
+
+						sourceTable.Joins.RemoveAt(i);
+
+						break;
+					}
+				}
+			}
+
+			return statement;
 		}
 	}
 }

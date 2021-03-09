@@ -939,13 +939,22 @@ namespace Tests.xUpdate
 					.Set(y => y.BoolValue, y => y.Tables2.All(x => x.Value1 == 1))
 					.Update();
 
-				var idx = db.LastQuery!.IndexOf("INNER JOIN");
+				if (!context.StartsWith(ProviderName.Sybase))
+				{
+					var idx = db.LastQuery!.IndexOf("INNER JOIN");
 
-				Assert.That(idx, Is.Not.EqualTo(-1));
+					Assert.That(idx, Is.Not.EqualTo(-1));
 
-				idx = db.LastQuery.IndexOf("INNER JOIN", idx + 1);
+					idx = db.LastQuery.IndexOf("INNER JOIN", idx + 1);
 
-				Assert.That(idx, Is.EqualTo(-1));
+					Assert.That(idx, Is.EqualTo(-1));
+				}
+				else
+				{
+					var idx = db.LastQuery!.IndexOf("INNER JOIN");
+
+					Assert.That(idx, Is.EqualTo(-1));
+				}
 			}
 		}
 
@@ -1789,7 +1798,7 @@ namespace Tests.xUpdate
 
 				db.Person.Where(_ => _.ID == id)
 					.Select(_ => _.Patient!.Person)
-					.Update(auto6862 => new Person()
+					.Update(p => new Person()
 					{
 						LastName = "test"
 					});
