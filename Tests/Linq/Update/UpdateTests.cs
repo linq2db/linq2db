@@ -1789,37 +1789,87 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[Table]
+		class MainTable
+		{
+			[Column] public int Id;
+			[Column] public string? Field;
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(AssociatedTable.Id))]
+			public AssociatedTable Associated = null!;
+
+			public static readonly MainTable[] Data = new []
+			{
+				new MainTable() { Id = 1, Field = "value 1" },
+				new MainTable() { Id = 2, Field = "value 2" },
+				new MainTable() { Id = 3, Field = "value 3" },
+			};
+		}
+
+		[Table]
+		class AssociatedTable
+		{
+			[Column] public int Id;
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(MainTable.Id))]
+			public MainTable Main = null!;
+
+			public static readonly AssociatedTable[] Data = new []
+			{
+				new AssociatedTable() { Id = 1 },
+				new AssociatedTable() { Id = 3 },
+			};
+		}
+
 		[Test]
 		public void UpdateByAssociation([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db   = GetDataContext(context))
+			using (var main = db.CreateLocalTable(MainTable.Data))
+			using (db.CreateLocalTable(AssociatedTable.Data))
 			{
-				var id = -1;
+				var id = 3;
+					var cnt = main
+						.Where(_ => _.Id == id)
+						.Select(_ => _.Associated!.Main)
+						.Update(p => new MainTable()
+						{
+							Field = "test"
+						});
 
-				db.Person.Where(_ => _.ID == id)
-					.Select(_ => _.Patient!.Person)
-					.Update(p => new Person()
-					{
-						LastName = "test"
-					});
+				var data = main.OrderBy(_ => _.Id).ToArray();
 
+				Assert.AreEqual(1, cnt);
+				Assert.AreEqual("value 1", data[0].Field);
+				Assert.AreEqual("value 2", data[1].Field);
+				Assert.AreEqual("test", data[2].Field);
 			}
 		}
 
 		[Test]
 		public void UpdateByAssociation2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db         = GetDataContext(context))
+			using (var main       = db.CreateLocalTable(MainTable.Data))
+			using (var associated = db.CreateLocalTable(AssociatedTable.Data))
 			{
-				var id = -1;
-
-				db.Patient.Where(pat => pat.PersonID == id)
-					.Select(p => p.Person)
-					.Update(p => new Person()
+				var id = 3;
+				var cnt = associated
+					.Where(pat => pat.Id == id)
+					.Select(p => p.Main)
+					.Update(p => new MainTable()
 					{
-						LastName = "test"
+						Field = "test"
 					});
 
+				var data = main.Single(_ => _.Id == id);
+
+				var data = main.OrderBy(_ => _.Id).ToArray();
+
+				Assert.AreEqual(1, cnt);
+				Assert.AreEqual("value 1", data[0].Field);
+				Assert.AreEqual("value 2", data[1].Field);
+				Assert.AreEqual("test", data[2].Field);
 			}
 		}
 
