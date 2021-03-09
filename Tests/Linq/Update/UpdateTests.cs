@@ -1862,8 +1862,6 @@ namespace Tests.xUpdate
 						Field = "test"
 					});
 
-				var data = main.Single(_ => _.Id == id);
-
 				var data = main.OrderBy(_ => _.Id).ToArray();
 
 				Assert.AreEqual(1, cnt);
