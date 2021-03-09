@@ -925,8 +925,7 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-			if (optimizeColumns &&
-				new QueryVisitor().Find(expr, ex => ex is SelectQuery || QueryHelper.IsAggregationOrWindowFunction(ex)) == null)
+			if (new QueryVisitor().Find(expr, ex => ex is SelectQuery || QueryHelper.IsAggregationOrWindowFunction(ex)) == null)
 			{
 				var elementsToIgnore = new HashSet<IQueryElement> { query };
 
