@@ -1796,7 +1796,10 @@ namespace Tests.xUpdate
 			[Column] public string? Field;
 
 			[Association(ThisKey = nameof(Id), OtherKey = nameof(AssociatedTable.Id))]
-			public AssociatedTable Associated = null!;
+			public AssociatedTable AssociatedOptional = null!;
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(AssociatedTable.Id), CanBeNull = false)]
+			public AssociatedTable AssociatedRequired = null!;
 
 			public static readonly MainTable[] Data = new []
 			{
@@ -1812,7 +1815,10 @@ namespace Tests.xUpdate
 			[Column] public int Id;
 
 			[Association(ThisKey = nameof(Id), OtherKey = nameof(MainTable.Id))]
-			public MainTable Main = null!;
+			public MainTable MainOptional = null!;
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(MainTable.Id), CanBeNull = false)]
+			public MainTable MainRequired = null!;
 
 			public static readonly AssociatedTable[] Data = new []
 			{
@@ -1822,7 +1828,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateByAssociation([DataSources] string context)
+		public void UpdateByAssociationOptional([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db   = GetDataContext(context))
 			using (var main = db.CreateLocalTable(MainTable.Data))
@@ -1831,7 +1837,7 @@ namespace Tests.xUpdate
 				var id = 3;
 					var cnt = main
 						.Where(_ => _.Id == id)
-						.Select(_ => _.Associated!.Main)
+						.Select(_ => _.AssociatedOptional!.MainOptional)
 						.Update(p => new MainTable()
 						{
 							Field = "test"
@@ -1847,7 +1853,32 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateByAssociation2([DataSources] string context)
+		public void UpdateByAssociationRequired([DataSources(TestProvName.AllInformix)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var main = db.CreateLocalTable(MainTable.Data))
+			using (db.CreateLocalTable(AssociatedTable.Data))
+			{
+				var id = 3;
+				var cnt = main
+						.Where(_ => _.Id == id)
+						.Select(_ => _.AssociatedRequired!.MainRequired)
+						.Update(p => new MainTable()
+						{
+							Field = "test"
+						});
+
+				var data = main.OrderBy(_ => _.Id).ToArray();
+
+				Assert.AreEqual(1, cnt);
+				Assert.AreEqual("value 1", data[0].Field);
+				Assert.AreEqual("value 2", data[1].Field);
+				Assert.AreEqual("test", data[2].Field);
+			}
+		}
+
+		[Test]
+		public void UpdateByAssociation2Optional([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db         = GetDataContext(context))
 			using (var main       = db.CreateLocalTable(MainTable.Data))
@@ -1856,7 +1887,32 @@ namespace Tests.xUpdate
 				var id = 3;
 				var cnt = associated
 					.Where(pat => pat.Id == id)
-					.Select(p => p.Main)
+					.Select(p => p.MainOptional)
+					.Update(p => new MainTable()
+					{
+						Field = "test"
+					});
+
+				var data = main.OrderBy(_ => _.Id).ToArray();
+
+				Assert.AreEqual(1, cnt);
+				Assert.AreEqual("value 1", data[0].Field);
+				Assert.AreEqual("value 2", data[1].Field);
+				Assert.AreEqual("test", data[2].Field);
+			}
+		}
+
+		[Test]
+		public void UpdateByAssociation2Required([DataSources(TestProvName.AllInformix)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var main = db.CreateLocalTable(MainTable.Data))
+			using (var associated = db.CreateLocalTable(AssociatedTable.Data))
+			{
+				var id = 3;
+				var cnt = associated
+					.Where(pat => pat.Id == id)
+					.Select(p => p.MainRequired)
 					.Update(p => new MainTable()
 					{
 						Field = "test"
