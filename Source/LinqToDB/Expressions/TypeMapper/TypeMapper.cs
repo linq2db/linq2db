@@ -23,16 +23,16 @@ namespace LinqToDB.Expressions
 		private readonly IDictionary<string, Type>              _types                    = new Dictionary<string, Type>();
 
 		// [wrapperType] = originalType?
-		readonly Dictionary<Type, Type?>                        _typeMappingCache         = new Dictionary<Type, Type?>();
+		readonly Dictionary<Type, Type?>                        _typeMappingCache         = new ();
 		// [originalType] = wrapperType
-		readonly Dictionary<Type, Type>                         _typeMappingReverseCache  = new Dictionary<Type, Type>();
-		readonly Dictionary<LambdaExpression, LambdaExpression> _lambdaMappingCache       = new Dictionary<LambdaExpression, LambdaExpression>();
-		readonly Dictionary<Type, Func<object, object>>         _wrapperFactoryCache      = new Dictionary<Type, Func<object, object>>();
+		readonly Dictionary<Type, Type>                         _typeMappingReverseCache  = new ();
+		readonly Dictionary<LambdaExpression, LambdaExpression> _lambdaMappingCache       = new ();
+		readonly Dictionary<Type, Func<object, object>>         _wrapperFactoryCache      = new ();
 		// [originalType] = converter
-		readonly Dictionary<Type, LambdaExpression>             _enumToWrapperCache       = new Dictionary<Type, LambdaExpression>();
+		readonly Dictionary<Type, LambdaExpression>             _enumToWrapperCache       = new ();
 		// [wrapperType] = converter
-		readonly Dictionary<Type, LambdaExpression>             _enumFromWrapperCache     = new Dictionary<Type, LambdaExpression>();
-		readonly Dictionary<Type, ICustomMapper>                _typeMapperInstancesCache = new Dictionary<Type, ICustomMapper>();
+		readonly Dictionary<Type, LambdaExpression>             _enumFromWrapperCache     = new ();
+		readonly Dictionary<Type, ICustomMapper>                _typeMapperInstancesCache = new ();
 
 		private bool _finalized;
 

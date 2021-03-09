@@ -953,7 +953,7 @@ namespace LinqToDB.SqlQuery
 		}
 
 		SqlTableSource RemoveSubQuery(
-			SelectQuery parentQuery, 
+			SelectQuery parentQuery,
 			SqlTableSource childSource,
 			bool concatWhere,
 			bool allColumns,
@@ -968,7 +968,6 @@ namespace LinqToDB.SqlQuery
 			isQueryOK = isQueryOK && (concatWhere || query.Where.IsEmpty && query.Having.IsEmpty);
 			isQueryOK = isQueryOK && !query.HasSetOperators && query.GroupBy.IsEmpty && !query.Select.HasModifier;
 			//isQueryOK = isQueryOK && (_flags.IsDistinctOrderBySupported || query.Select.IsDistinct );
-			isQueryOK = isQueryOK && (!parentQuery.HasSetOperators || query.OrderBy.IsEmpty);
 
 			if (isQueryOK && parentJoinedTable != null && parentJoinedTable.JoinType != JoinType.Inner)
 			{

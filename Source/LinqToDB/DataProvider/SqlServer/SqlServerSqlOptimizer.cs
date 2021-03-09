@@ -22,10 +22,11 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			return QueryHelper.WrapQuery(
 				statement,
-				query => query.ParentSelect == null && (query.Select.SkipValue != null ||
+				(query, _) => query.ParentSelect == null && (query.Select.SkipValue != null ||
 				                                        query.Select.TakeValue != null ||
 				                                        query.Select.TakeHints != null || !query.OrderBy.IsEmpty),
-				(query, wrappedQuery) => { }
+				(query, wrappedQuery) => { },
+				allowMutation: true
 			);
 		}
 

@@ -748,7 +748,7 @@ namespace LinqToDB.Expressions
 
 				public void Add(TKey key, TValue value) => _map.Add(key, value);
 
-				public bool TryGetValue(TKey key, [MaybeNull] out TValue value)
+				public bool TryGetValue(TKey key, out TValue? value)
 				{
 					for (var scope = this; scope != null; scope = scope._previous!)
 					{
