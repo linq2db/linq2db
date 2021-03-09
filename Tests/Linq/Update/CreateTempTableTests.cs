@@ -269,7 +269,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void CreateTable_NoDisposeError([DataSources] string context)
+		public void CreateTable_NoDisposeError([DataSources(false)] string context)
 		{
 			using var db = new TestDataConnection(context);
 			db.DropTable<int>("TempTable", throwExceptionIfNotExists: false);
@@ -281,7 +281,7 @@ namespace Tests.xUpdate
 
 #if !NETFRAMEWORK
 		[Test]
-		public async Task CreateTable_NoDisposeErrorAsync([DataSources] string context)
+		public async Task CreateTable_NoDisposeErrorAsync([DataSources(false)] string context)
 		{
 			using var db = new TestDataConnection(context);
 			await db.DropTableAsync<int>("TempTable", throwExceptionIfNotExists: false);
