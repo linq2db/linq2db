@@ -24,12 +24,21 @@ namespace LinqToDB.SqlQuery
 			Visit1(element);
 		}
 
+		public void VisitParentFirstAll(IQueryElement element, Func<IQueryElement, bool> action)
+		{
+			_visitedElements.Clear();
+			_action1 = action;
+			_all     = true;
+			Visit1(element);
+		}
+
 		void Visit1(IQueryElement? element)
 		{
-			if (element == null || _visitedElements.ContainsKey(element))
+			if (element == null || !_all && _visitedElements.ContainsKey(element))
 				return;
-
-			_visitedElements.Add(element, element);
+			
+			if (!_all)
+				_visitedElements.Add(element, element);
 
 			if (!_action1!(element))
 				return;

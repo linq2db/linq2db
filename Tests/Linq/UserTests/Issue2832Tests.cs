@@ -101,7 +101,7 @@ namespace Tests.UserTests
 				var sql = query.ToString();
 				TestContext.WriteLine(sql);
 
-				var sourcesCount = QueryHelper.EnumerateAccessibleSources(query.GetSelectQuery()).Where(s => s.ElementType == QueryElementType.SqlQuery).Count();
+				var sourcesCount = QueryHelper.EnumerateAccessibleSources(query.GetSelectQuery()).Count(s => s.ElementType == QueryElementType.SqlQuery);
 
 				Assert.That(sourcesCount, Is.LessThanOrEqualTo(2));
 			}
