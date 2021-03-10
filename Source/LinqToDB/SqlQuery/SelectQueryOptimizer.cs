@@ -929,15 +929,14 @@ namespace LinqToDB.SqlQuery
 			{
 				var elementsToIgnore = new HashSet<IQueryElement> { query };
 
-				var depends = QueryHelper.IsDependsOn(parentQuery.GroupBy, column, elementsToIgnore);
+				var depends = !optimizeColumns && QueryHelper.IsDependsOn(parentQuery.GroupBy, column, elementsToIgnore);
 				if (depends)
 					return true;
 
 				if (expr.IsComplexExpression())
 				{
-					depends =
-						   QueryHelper.IsDependsOn(parentQuery.Where, column, elementsToIgnore)
-						|| QueryHelper.IsDependsOn(parentQuery.OrderBy, column, elementsToIgnore);
+
+					depends = QueryHelper.IsDependsOn(parentQuery.OrderBy, column, elementsToIgnore);
 
 					if (depends)
 						return true;
