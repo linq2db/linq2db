@@ -936,9 +936,14 @@ namespace LinqToDB.SqlQuery
 						return true;
 				}
 
-				var dependsCount = QueryHelper.DependencyCount(parentQuery, column, elementsToIgnore);
+				if (QueryHelper.IsComplexExpression(expr))
+				{
+					var dependsCount = QueryHelper.DependencyCount(parentQuery, column, elementsToIgnore);
 
-				return dependsCount > 1;
+					return dependsCount > 1;
+				}
+
+				return false;
 			}
 
 			return true;
