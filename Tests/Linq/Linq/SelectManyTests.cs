@@ -6,8 +6,6 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using System;
-	using LinqToDB.Mapping;
 	using Model;
 
 	[TestFixture]

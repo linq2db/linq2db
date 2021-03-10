@@ -65,7 +65,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestIssue2832([DataSources] string context)
+		public void TestIssue2832([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

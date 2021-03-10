@@ -33,6 +33,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			SqlProviderFlags.IsOrderByAggregateFunctionsSupported = false;
 			SqlProviderFlags.IsDistinctSetOperationsSupported     = false;
 			SqlProviderFlags.IsUpdateFromSupported                = false;
+			SqlProviderFlags.IsGroupByExpressionSupported         = false;
 
 			SetCharFieldToType<char>("NChar", DataTools.GetCharExpression);
 
