@@ -272,6 +272,21 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 	}
 
+	public class SqlServer2016MappingSchema : MappingSchema
+	{
+		public SqlServer2016MappingSchema()
+			: base(ProviderName.SqlServer2016, SqlServerMappingSchema.Instance)
+		{
+			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
+			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => SqlServerMappingSchema.ConvertDateTimeToSql(sb, dt, (DateTime)v));
+		}
+
+		public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
+		{
+			return SqlServerMappingSchema.Instance.TryGetConvertExpression(@from, to);
+		}
+	}
+
 	public class SqlServer2017MappingSchema : MappingSchema
 	{
 		public SqlServer2017MappingSchema()
