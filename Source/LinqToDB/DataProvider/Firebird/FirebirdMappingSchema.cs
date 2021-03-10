@@ -27,14 +27,29 @@ namespace LinqToDB.DataProvider.Firebird
 			SetValueToSqlConverter(typeof(char)    , (sb, dt, v) => ConvertCharToSql  (sb, (char)v));
 			SetValueToSqlConverter(typeof(byte[])  , (sb, dt, v) => ConvertBinaryToSql(sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary)  , (sb, dt, v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
-			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => BuildDateTime(sb, dt, (DateTime)v));
-			SetValueToSqlConverter(typeof(Guid)    , (sb, dt, v) => ConvertGuidToSql(sb, dt, (Guid)v));
+			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => BuildDateTime(sb, dt, (DateTime)v));			
 		}
 
-		static FirebirdMappingSchema()
+		internal static FirebirdMappingSchema Instance = new FirebirdMappingSchema();
+
+		internal static MappingSchema GetMappingSchema(bool useLegacyGuidEncoding)
 		{
-			var fbConnectionType = FirebirdProviderAdapter.GetInstance().ConnectionType;
-			_useLegacyGuidEncoding = (fbConnectionType.Assembly is Assembly assembly) && (assembly.GetName().Version < new Version(6, 0, 0, 0));
+			return useLegacyGuidEncoding ? new LegacyGuidEncodingMappingSchema() : new DefaultGuidEncodingMappingSchema();
+		}
+
+		public class DefaultGuidEncodingMappingSchema: MappingSchema
+		{
+			public DefaultGuidEncodingMappingSchema(): base(ProviderName.Firebird, Instance)
+			{
+				SetValueToSqlConverter(typeof(Guid), (sb, dt, v) => ConvertGuidToSql(false, sb, dt, (Guid)v));
+			}			
+		}
+		public class LegacyGuidEncodingMappingSchema : MappingSchema
+		{
+			public LegacyGuidEncodingMappingSchema() : base(ProviderName.Firebird, Instance)
+			{
+				SetValueToSqlConverter(typeof(Guid), (sb, dt, v) => ConvertGuidToSql(true, sb, dt, (Guid)v));
+			}
 		}
 
 		static void BuildDateTime(StringBuilder stringBuilder, SqlDataType dt, DateTime value)
@@ -50,15 +65,13 @@ namespace LinqToDB.DataProvider.Firebird
 			stringBuilder.AppendFormat(format, value, dbType);
 		}
 
-		// workaround for http://tracker.firebirdsql.org/browse/DNET-509
-		static bool _useLegacyGuidEncoding;
-
-		static void ConvertGuidToSql(StringBuilder sb, SqlDataType dataType, Guid value)
+		static void ConvertGuidToSql(bool useLegacyGuidEncoding, StringBuilder sb, SqlDataType dataType, Guid value)
 		{
 			if (dataType.Type.DataType == DataType.Guid)
 			{
 				var bytes = value.ToByteArray();
-				if (BitConverter.IsLittleEndian && !_useLegacyGuidEncoding)
+				// workaround for http://tracker.firebirdsql.org/browse/DNET-509
+				if (BitConverter.IsLittleEndian && !useLegacyGuidEncoding)
 				{
 					Array.Reverse(bytes, 0, 4);
 					Array.Reverse(bytes, 4, 2);
