@@ -84,7 +84,7 @@ namespace LinqToDB.SqlQuery
 		{
 			var dependencyCount = 0;
 
-			new QueryVisitor().VisitParentFirst(testedRoot, e =>
+			new QueryVisitor().VisitParentFirstAll(testedRoot, e =>
 			{
 				if (elementsToIgnore != null && elementsToIgnore.Contains(e))
 					return false;
