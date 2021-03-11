@@ -67,7 +67,7 @@
 			return base.ConvertFunction(func);
 		}
 
-		public SqlStatement PrepareUpdateStatement(SqlUpdateStatement statement)
+		SqlStatement PrepareUpdateStatement(SqlUpdateStatement statement)
 		{
 			var tableToUpdate = statement.Update.Table;
 
