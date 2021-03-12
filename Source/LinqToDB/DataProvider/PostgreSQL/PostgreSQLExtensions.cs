@@ -5,11 +5,13 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	using SqlQuery;
-	using Mapping;
 	using Expressions;
 	using Linq;
+	using SqlQuery;
+#if !NET45
 	using LinqToDB.Common;
+	using Mapping;
+#endif
 
 	public interface IPostgreSQLExtensions
 	{

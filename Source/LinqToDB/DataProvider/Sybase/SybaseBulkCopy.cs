@@ -82,6 +82,7 @@ namespace LinqToDB.DataProvider.Sybase
 #endif
 
 		private ProviderConnections? GetProviderConnection<T>(ITable<T> table)
+			where T : notnull
 		{
 			if (table.DataContext is DataConnection dataConnection && _provider.Adapter.BulkCopy != null)
 			{
@@ -112,6 +113,7 @@ namespace LinqToDB.DataProvider.Sybase
 			ITable<T>                                               table,
 			BulkCopyOptions                                         options,
 			Func<List<Mapping.ColumnDescriptor>, BulkCopyReader<T>> createDataReader)
+			where T : notnull
 		{
 			var dataConnection = providerConnections.DataConnection;
 			var connection     = providerConnections.ProviderConnection;

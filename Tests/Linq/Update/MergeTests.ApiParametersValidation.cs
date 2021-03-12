@@ -188,6 +188,7 @@ namespace Tests.xUpdate
 		}
 
 		class FakeTable<TEntity> : ITable<TEntity>
+			where TEntity : notnull
 		{
 			IDataContext   IExpressionQuery.DataContext => throw new NotImplementedException();
 			Expression     IExpressionQuery.Expression  => throw new NotImplementedException();

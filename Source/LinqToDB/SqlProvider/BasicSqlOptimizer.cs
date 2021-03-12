@@ -1109,10 +1109,10 @@ namespace LinqToDB.SqlProvider
 							if (cond.Predicate is SqlPredicate.ExprExpr ee)
 							{
 								if (ee.Operator == SqlPredicate.Operator.Equal)
-									return new SqlPredicate.ExprExpr(ee.Expr1, SqlPredicate.Operator.NotEqual, ee.Expr2, Configuration.Linq.CompareNullsAsValues ? true : (bool?)null);
+									return new SqlPredicate.ExprExpr(ee.Expr1, SqlPredicate.Operator.NotEqual, ee.Expr2, Configuration.Linq.CompareNullsAsValues ? true : null);
 
 								if (ee.Operator == SqlPredicate.Operator.NotEqual)
-									return new SqlPredicate.ExprExpr(ee.Expr1, SqlPredicate.Operator.Equal, ee.Expr2, Configuration.Linq.CompareNullsAsValues ? true : (bool?)null);
+									return new SqlPredicate.ExprExpr(ee.Expr1, SqlPredicate.Operator.Equal, ee.Expr2, Configuration.Linq.CompareNullsAsValues ? true : null);
 							}
 						}
 					}
@@ -1903,9 +1903,9 @@ namespace LinqToDB.SqlProvider
 								return new SqlPredicate.Expr(new SqlValue(p.IsNot));
 
 							if (p.IsNot)
-								return new SqlPredicate.NotExpr(sc, true, SqlQuery.Precedence.LogicalNegation);
+								return new SqlPredicate.NotExpr(sc, true, Precedence.LogicalNegation);
 
-							return new SqlPredicate.Expr(sc, SqlQuery.Precedence.LogicalDisjunction);
+							return new SqlPredicate.Expr(sc, Precedence.LogicalDisjunction);
 						}
 					}
 
@@ -1955,9 +1955,9 @@ namespace LinqToDB.SqlProvider
 							return new SqlPredicate.Expr(new SqlValue(p.IsNot));
 
 						if (p.IsNot)
-							return new SqlPredicate.NotExpr(sc, true, SqlQuery.Precedence.LogicalNegation);
+							return new SqlPredicate.NotExpr(sc, true, Precedence.LogicalNegation);
 
-						return new SqlPredicate.Expr(sc, SqlQuery.Precedence.LogicalDisjunction);
+						return new SqlPredicate.Expr(sc, Precedence.LogicalDisjunction);
 					}
 				}
 			}
@@ -2024,7 +2024,7 @@ namespace LinqToDB.SqlProvider
 				sc.Conditions.Add(
 					new SqlCondition(false,
 						new SqlPredicate.ExprExpr(par, SqlPredicate.Operator.NotEqual, new SqlValue(0),
-							Configuration.Linq.CompareNullsAsValues ? false : (bool?)null)));
+							Configuration.Linq.CompareNullsAsValues ? false : null)));
 
 				return new SqlFunction(func.SystemType, "CASE", sc, new SqlValue(true), new SqlValue(false))
 				{
@@ -2105,7 +2105,7 @@ namespace LinqToDB.SqlProvider
 					{
 						sc2.Conditions.Add(new SqlCondition(
 							false,
-							new SqlPredicate.ExprExpr(copyKeys[i], SqlPredicate.Operator.Equal, tableKeys[i], Configuration.Linq.CompareNullsAsValues ? true : (bool?)null)));
+							new SqlPredicate.ExprExpr(copyKeys[i], SqlPredicate.Operator.Equal, tableKeys[i], Configuration.Linq.CompareNullsAsValues ? true : null)));
 					}
 
 					deleteStatement.SelectQuery.Where.SearchCondition.Conditions.Clear();
@@ -2127,158 +2127,11 @@ namespace LinqToDB.SqlProvider
 			return deleteStatement;
 		}
 
-		SqlTableSource? GetMainTableSource(SelectQuery selectQuery)
+		protected SqlTableSource? GetMainTableSource(SelectQuery selectQuery)
 		{
 			if (selectQuery.From.Tables.Count > 0 && selectQuery.From.Tables[0] is SqlTableSource tableSource)
 				return tableSource;
 			return null;
-		}
-
-		public SqlStatement GetAlternativeUpdateFrom(SqlUpdateStatement statement)
-		{
-			if (statement.SelectQuery.Select.HasModifier)
-				statement = QueryHelper.WrapQuery(statement, statement.SelectQuery, allowMutation: true);
-
-			// removing joins
-			statement.SelectQuery.TransformInnerJoinsToWhere();
-
-			var tableSource = GetMainTableSource(statement.SelectQuery);
-			if (tableSource == null)
-				throw new LinqToDBException("Invalid query for Update.");
-
-			if (statement.SelectQuery.Select.HasModifier)
-				statement = QueryHelper.WrapQuery(statement, statement.SelectQuery, allowMutation: true);
-
-			SqlTable? tableToUpdate  = statement.Update.Table;
-			SqlTable? tableToCompare = null;
-
-			switch (tableSource.Source)
-			{
-				case SqlTable table:
-					{
-						if (tableSource.Joins.Count == 0 && (tableToUpdate == null || QueryHelper.IsEqualTables(table, tableToUpdate)))
-						{
-							// remove table from FROM clause
-							statement.SelectQuery.From.Tables.RemoveAt(0);
-							if (tableToUpdate != null && tableToUpdate != table)
-							{
-								statement.Walk(new WalkOptions(), e =>
-								{
-									if (e is SqlField field && field.Table == tableToUpdate)
-										return table[field.Name] ?? throw new LinqException($"Field {field.Name} not found in table {table}");
-
-									return e;
-								});
-							}
-							tableToUpdate = table;
-						}
-						else
-						{
-							if (tableToUpdate == null)
-							{
-								tableToUpdate = QueryHelper.EnumerateAccessibleSources(statement.SelectQuery)
-									.OfType<SqlTable>()
-									.FirstOrDefault();
-							}
-
-							if (tableToUpdate == null)
-								throw new LinqToDBException("Can not decide which table to update");
-
-							tableToCompare = QueryHelper.EnumerateAccessibleSources(statement.SelectQuery)
-								.OfType<SqlTable>()
-								.FirstOrDefault(t => QueryHelper.IsEqualTables(t, tableToUpdate));
-						}
-
-						break;
-					}
-				case SelectQuery query:
-					{
-						if (tableToUpdate == null)
-						{
-							tableToUpdate = QueryHelper.EnumerateAccessibleSources(query)
-								.OfType<SqlTable>()
-								.FirstOrDefault();
-
-							if (tableToUpdate == null)
-								throw new LinqToDBException("Can not decide which table to update");
-
-							tableToUpdate = tableToUpdate.Clone();
-
-							foreach (var item in statement.Update.Items)
-							{
-								var setField = QueryHelper.GetUnderlyingField(item.Column);
-								if (setField == null)
-									throw new LinqToDBException($"Unexpected element in setter expression: {item.Column}");
-
-								item.Column = tableToUpdate[setField.Name] ?? throw new LinqException($"Field {setField.Name} not found in table {tableToUpdate}");
-							}
-
-						}
-
-						// return first matched table
-						tableToCompare = QueryHelper.EnumerateAccessibleSources(query)
-							.OfType<SqlTable>()
-							.FirstOrDefault(t => QueryHelper.IsEqualTables(t, tableToUpdate));
-
-						if (tableToCompare == null)
-							throw new LinqToDBException("Query can't be translated to UPDATE Statement.");
-
-						break;
-					}
-			}
-
-			if (ReferenceEquals(tableToUpdate, tableToCompare))
-			{
-				// we have to create clone
-				tableToUpdate = tableToCompare!.Clone();
-
-				var ts = statement.SelectQuery.GetTableSource(tableToCompare!);
-
-				for (var i = 0; i < statement.Update.Items.Count; i++)
-				{
-					var item = statement.Update.Items[i];
-					var newItem = ConvertVisitor.Convert(item, (v, e) =>
-					{
-						if (e is SqlField field && field.Table == tableToCompare)
-							return tableToUpdate[field.Name] ?? throw new LinqException($"Field {field.Name} not found in table {tableToUpdate}");
-
-						return e;
-					});
-
-					var updateField = QueryHelper.GetUnderlyingField(newItem.Column);
-					if (updateField != null)
-						newItem.Column = tableToUpdate[updateField.Name] ?? throw new LinqException($"Field {updateField.Name} not found in table {tableToUpdate}");
-
-					statement.Update.Items[i] = newItem;
-				}
-			}
-
-			if (statement.SelectQuery.From.Tables.Count > 0 && tableToCompare != null)
-			{
-
-				var keys1 = tableToUpdate!.GetKeys(true);
-				var keys2 = tableToCompare.GetKeys(true);
-
-				if (keys1.Count == 0)
-					throw new LinqToDBException($"Table {tableToUpdate.Name} do not have primary key. Update transformation is not available.");
-
-				for (int i = 0; i < keys1.Count; i++)
-				{
-					var column = QueryHelper.NeedColumnForExpression(statement.SelectQuery, keys2[i], false);
-					if (column == null)
-						throw new LinqToDBException($"Can not create query column for expression '{keys2[i]}'.");
-
-					var compare = QueryHelper.GenerateEquality(keys1[i], column);
-					statement.SelectQuery.Where.SearchCondition.Conditions.Add(compare);
-				}
-			}
-
-			if (tableToUpdate != null)
-				tableToUpdate.Alias = "$F";
-
-			statement.Update.Table = tableToUpdate;
-
-			return statement;
 		}
 
 		public static bool IsAggregationFunction(IQueryElement expr)

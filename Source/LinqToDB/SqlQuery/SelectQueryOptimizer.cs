@@ -925,8 +925,7 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-			if (optimizeColumns &&
-				new QueryVisitor().Find(expr, ex => ex is SelectQuery || QueryHelper.IsAggregationOrWindowFunction(ex)) == null)
+			if (new QueryVisitor().Find(expr, ex => ex is SelectQuery || QueryHelper.IsAggregationOrWindowFunction(ex)) == null)
 			{
 				var elementsToIgnore = new HashSet<IQueryElement> { query };
 
@@ -934,19 +933,14 @@ namespace LinqToDB.SqlQuery
 				if (depends)
 					return true;
 
-				if (expr.IsComplexExpression())
+				if (QueryHelper.IsComplexExpression(expr))
 				{
-					depends =
-						   QueryHelper.IsDependsOn(parentQuery.Where, column, elementsToIgnore)
-						|| QueryHelper.IsDependsOn(parentQuery.OrderBy, column, elementsToIgnore);
+					var dependsCount = QueryHelper.DependencyCount(parentQuery, column, elementsToIgnore);
 
-					if (depends)
-						return true;
+					return dependsCount > 1;
 				}
 
-				var dependsCount = QueryHelper.DependencyCount(parentQuery, column, elementsToIgnore);
-
-				return dependsCount > 1;
+				return false;
 			}
 
 			return true;

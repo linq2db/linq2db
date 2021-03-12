@@ -2,20 +2,18 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 
 namespace LinqToDB.Common.Internal.Cache
 {
 	internal class CacheEntryHelper
 	{
-		private static readonly AsyncLocal<CacheEntryStack> _scopes = new AsyncLocal<CacheEntryStack>();
+		private static readonly AsyncLocal<CacheEntryStack> _scopes = new ();
 
-		[MaybeNull]
-		internal static CacheEntryStack Scopes
+		internal static CacheEntryStack? Scopes
 		{
 			get => _scopes.Value;
-			set => _scopes.Value = value;
+			set => _scopes.Value = value!;
 		}
 
 		internal static CacheEntry? Current
