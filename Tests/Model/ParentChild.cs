@@ -610,6 +610,7 @@ namespace Tests.Model
 
 		[Sql.TableExpression("{0} {1} WITH (TABLOCK)")]
 		static ITable<T> WithTabLock1<T>()
+			where T : notnull
 		{
 			throw new InvalidOperationException();
 		}
@@ -628,6 +629,7 @@ namespace Tests.Model
 	{
 		[Sql.TableExpression("{0} {1} WITH (TABLOCK)")]
 		static ITable<T> WithTabLock<T>()
+			where T : notnull
 		{
 			throw new InvalidOperationException();
 		}

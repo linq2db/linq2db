@@ -250,8 +250,7 @@ namespace LinqToDB.Async
 			return connection => new AsyncDbConnection(connection);
 		}
 
-		[return: MaybeNull]
-		private static TDelegate CreateDelegate<TDelegate, TInstance>(
+		private static TDelegate? CreateDelegate<TDelegate, TInstance>(
 			Type    instanceType,
 			string  methodName,
 			Type[]  delegateParameterTypes,
@@ -266,7 +265,7 @@ namespace LinqToDB.Async
 			if (mi == null
 				|| (!returnsValueTask && mi.ReturnType          != typeof(Task))
 				|| (returnsValueTask  && mi.ReturnType.FullName != "System.Threading.Tasks.ValueTask"))
-				return default!;
+				return default;
 
 			var pInstance      = Expression.Parameter(typeof(TInstance));
 			var parameters     = delegateParameterTypes.Select(t => Expression.Parameter(t)).ToArray();
@@ -347,8 +346,7 @@ namespace LinqToDB.Async
 		}
 #endif
 
-		[return: MaybeNull]
-		private static TDelegate CreateTaskTDelegate<TDelegate, TInstance, TTask>(
+		private static TDelegate? CreateTaskTDelegate<TDelegate, TInstance, TTask>(
 			Type       instanceType,
 			string     methodName,
 			Type[]     parametersTypes,
@@ -364,7 +362,7 @@ namespace LinqToDB.Async
 				|| !typeof(TTask).IsAssignableFrom(mi.ReturnType.GetGenericArguments()[0])
 				|| (!returnsValueTask && mi.ReturnType.GetGenericTypeDefinition()          != typeof(Task<>))
 				|| ( returnsValueTask && mi.ReturnType.GetGenericTypeDefinition().FullName != "System.Threading.Tasks.ValueTask`1"))
-				return default!;
+				return default;
 
 			var pInstance  = Expression.Parameter(typeof(TInstance));
 			var parameters = parametersTypes.Select(t => Expression.Parameter(t)).ToArray();

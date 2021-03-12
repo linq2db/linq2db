@@ -8,11 +8,11 @@ using System.Linq;
 
 namespace LinqToDB.DataProvider
 {
+	using System.Threading;
+	using System.Threading.Tasks;
 	using Common;
 	using LinqToDB.Data;
 	using Mapping;
-	using System.Threading;
-	using System.Threading.Tasks;
 
 	public class BulkCopyReader<T> : BulkCopyReader
 #if !NETFRAMEWORK
@@ -99,7 +99,7 @@ namespace LinqToDB.DataProvider
 		readonly DataConnection                   _dataConnection;
 		readonly DbDataType[]                     _columnTypes;
 		readonly List<ColumnDescriptor>           _columns;
-		readonly Parameter                        _valueConverter = new Parameter();
+		readonly Parameter                        _valueConverter = new ();
 		readonly IReadOnlyDictionary<string, int> _ordinals;
 
 		protected abstract bool MoveNext();

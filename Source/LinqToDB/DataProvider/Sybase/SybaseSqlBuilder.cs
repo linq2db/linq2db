@@ -121,7 +121,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 		protected override void BuildUpdateTableName(SelectQuery selectQuery, SqlUpdateClause updateClause)
 		{
-			if (updateClause.Table != null && updateClause.Table != selectQuery.From.Tables[0].Source)
+			if (updateClause.Table != null && (selectQuery.From.Tables.Count == 0 || updateClause.Table != selectQuery.From.Tables[0].Source))
 				BuildPhysicalTable(updateClause.Table, null);
 			else
 				BuildTableName(selectQuery.From.Tables[0], true, false);

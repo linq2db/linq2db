@@ -15,7 +15,6 @@ using PN = LinqToDB.ProviderName;
 
 namespace LinqToDB
 {
-	using Extensions;
 	using Expressions;
 	using Linq;
 	using SqlQuery;
@@ -218,12 +217,12 @@ namespace LinqToDB
 
 		#region Guid Functions
 
-		[Sql.Function  (PN.Oracle,   "Sys_Guid", ServerSideOnly=true, CanBeNull = false)]
-		[Sql.Function  (PN.Firebird, "Gen_Uuid", ServerSideOnly=true, CanBeNull = false)]
-		[Sql.Function  (PN.MySql,    "Uuid",     ServerSideOnly=true, CanBeNull = false)]
-		[Sql.Expression(PN.Sybase,   "NewID(1)", ServerSideOnly=true, CanBeNull = false)]
-		[Sql.Expression(PN.SapHana,  "SYSUUID",  ServerSideOnly=true, CanBeNull = false)]
-		[Sql.Function  (             "NewID",    ServerSideOnly=true, CanBeNull = false)]
+		[Sql.Function  (PN.Oracle,   "Sys_Guid", ServerSideOnly = true, CanBeNull = false, IsPure = false)]
+		[Sql.Function  (PN.Firebird, "Gen_Uuid", ServerSideOnly = true, CanBeNull = false, IsPure = false)]
+		[Sql.Function  (PN.MySql,    "Uuid",     ServerSideOnly = true, CanBeNull = false, IsPure = false)]
+		[Sql.Expression(PN.Sybase,   "NewID(1)", ServerSideOnly = true, CanBeNull = false, IsPure = false)]
+		[Sql.Expression(PN.SapHana,  "SYSUUID",  ServerSideOnly = true, CanBeNull = false, IsPure = false)]
+		[Sql.Function  (             "NewID",    ServerSideOnly = true, CanBeNull = false, IsPure = false)]
 		public static Guid NewGuid()
 		{
 			return Guid.NewGuid();

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text.RegularExpressions;
+using LinqToDB.Expressions;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB
@@ -16,7 +17,7 @@ namespace LinqToDB
 		[Extension("", ServerSideOnly = true, BuilderType = typeof(DB2LUWCollationBuilder)    , Configuration = ProviderName.DB2LUW)]
 		[Extension("", ServerSideOnly = true, BuilderType = typeof(PostgreSQLCollationBuilder), Configuration = ProviderName.PostgreSQL)]
 		[Extension("", ServerSideOnly = true, BuilderType = typeof(NamedCollationBuilder))]
-		public static string Collate(this string expr, string collation)
+		public static string Collate(this string expr, [SqlQueryDependent] string collation)
 			=> throw new InvalidOperationException($"{nameof(Sql)}.{nameof(Sql.Collate)} is server-side only API.");
 
 		internal class NamedCollationBuilder : IExtensionCallBuilder
