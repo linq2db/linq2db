@@ -9,7 +9,7 @@ using JetBrains.Annotations;
 namespace LinqToDB
 {
 	using Linq;
-#if NETFRAMEWORK
+#if !NATIVE_ASYNC
 	using Async;
 #endif
 
@@ -102,7 +102,7 @@ namespace LinqToDB
 				_query = query ?? throw new ArgumentNullException(nameof(query));
 			}
 
-#if NETFRAMEWORK
+#if !NATIVE_ASYNC
 			IAsyncEnumerator<T> IAsyncEnumerable<T>.GetAsyncEnumerator(CancellationToken cancellationToken)
 			{
 				return new AsyncEnumeratorImpl<T>(_query.GetEnumerator(), cancellationToken);

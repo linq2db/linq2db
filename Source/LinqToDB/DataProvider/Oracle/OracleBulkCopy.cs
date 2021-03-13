@@ -132,7 +132,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return Task.FromResult(ProviderSpecificCopy(table, options, source));
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		protected override async Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
@@ -167,7 +167,7 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
@@ -217,7 +217,7 @@ namespace LinqToDB.DataProvider.Oracle
 		static Task<BulkCopyRowsCopied> OracleMultipleRowsCopy1Async(MultipleRowsHelper helper, IEnumerable source, CancellationToken cancellationToken)
 			=> MultipleRowsCopyHelperAsync(helper, source, null, OracleMultipleRowsCopy1Prep, OracleMultipleRowsCopy1Add, OracleMultipleRowsCopy1Finish, cancellationToken);
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		static Task<BulkCopyRowsCopied> OracleMultipleRowsCopy1Async<T>(MultipleRowsHelper helper, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 			=> MultipleRowsCopyHelperAsync(helper, source, null, OracleMultipleRowsCopy1Prep, OracleMultipleRowsCopy1Add, OracleMultipleRowsCopy1Finish, cancellationToken);
 #endif
@@ -303,7 +303,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return helper.RowsCopied;
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		static async Task<BulkCopyRowsCopied> OracleMultipleRowsCopy2Async<T>(MultipleRowsHelper helper, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			var list = OracleMultipleRowsCopy2Prep(helper);
@@ -420,7 +420,7 @@ namespace LinqToDB.DataProvider.Oracle
 		static Task<BulkCopyRowsCopied> OracleMultipleRowsCopy3Async(MultipleRowsHelper helper, IEnumerable source, CancellationToken cancellationToken)
 			=> MultipleRowsCopyHelperAsync(helper, source, null, OracleMultipleRowsCopy3Prep, OracleMultipleRowsCopy3Add, OracleMultipleRowsCopy3Finish, cancellationToken);
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		static Task<BulkCopyRowsCopied> OracleMultipleRowsCopy3Async<T>(MultipleRowsHelper helper, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 			=> MultipleRowsCopyHelperAsync(helper, source, null, OracleMultipleRowsCopy3Prep, OracleMultipleRowsCopy3Add, OracleMultipleRowsCopy3Finish, cancellationToken);
 #endif

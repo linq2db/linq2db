@@ -7,7 +7,7 @@ namespace LinqToDB.Common
 {
 	internal class EnumerableHelper
 	{
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		public static IEnumerable<T> AsyncToSyncEnumerable<T>(IAsyncEnumerator<T> enumerator)
 		{
 			var result = enumerator.MoveNextAsync();
@@ -116,7 +116,7 @@ namespace LinqToDB.Common
 			}
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		/// <summary>
 		/// Split enumerable source into batches of specified size.
 		/// Limitation: each batch should be enumerated only once or exception will be generated.

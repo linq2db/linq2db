@@ -756,15 +756,15 @@ namespace LinqToDB.Data
 			{
 			}
 
-#if NETFRAMEWORK
+#if !NATIVE_ASYNC
 			public Task DisposeAsync() => TaskEx.CompletedTask;
 #else
-			public ValueTask DisposeAsync() => new ValueTask(Task.CompletedTask);
+			public ValueTask DisposeAsync() => default;
 #endif
 
 			public T Current { get; private set; } = default!;
 
-#if NETFRAMEWORK
+#if !NATIVE_ASYNC
 			public async Task<bool> MoveNextAsync()
 #else
 			public async ValueTask<bool> MoveNextAsync()

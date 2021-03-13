@@ -122,7 +122,7 @@ namespace LinqToDB.Data.RetryPolicy
 
 		protected override ValueTask<DbTransaction> BeginDbTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken)
 			=> _dbConnection.BeginTransactionAsync(isolationLevel, cancellationToken);
-#elif !NETFRAMEWORK
+#elif NATIVE_ASYNC
 		public ValueTask<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
 			=> _connection.BeginTransactionAsync(cancellationToken);
 
@@ -149,7 +149,7 @@ namespace LinqToDB.Data.RetryPolicy
 #pragma warning disable CA2215 // CA2215: Dispose methods should call base class dispose
 		public override ValueTask DisposeAsync()
 #pragma warning restore CA2215 // CA2215: Dispose methods should call base class dispose
-#elif !NETFRAMEWORK
+#elif NATIVE_ASYNC
 		public ValueTask DisposeAsync()
 #else
 		public Task DisposeAsync()

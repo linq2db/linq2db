@@ -2418,7 +2418,7 @@ namespace LinqToDB.Data
 		#endregion
 
 		#region BulkCopy IAsyncEnumerable async
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 
 		/// <summary>
 		/// Asynchronously performs bulk insert operation.
