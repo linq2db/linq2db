@@ -265,7 +265,7 @@ public class a_CreateData : TestBase
 			case ProviderName.SqlServer2008                       :
 			case ProviderName.SqlServer2012                       :
 			case ProviderName.SqlServer2014                       :
-			case TestProvName.SqlServer2016                       :
+			case ProviderName.SqlServer2016                       :
 			case ProviderName.SqlServer2017                       :
 			case TestProvName.SqlServer2019                       :
 			case TestProvName.SqlServer2019SequentialAccess       :
