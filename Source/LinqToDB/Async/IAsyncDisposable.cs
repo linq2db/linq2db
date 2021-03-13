@@ -1,4 +1,4 @@
-﻿#if NETFRAMEWORK
+﻿#if !NATIVE_ASYNC
 using System;
 using System.Threading;
 using System.Threading.Tasks;

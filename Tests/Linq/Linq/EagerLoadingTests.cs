@@ -205,11 +205,7 @@ namespace Tests.Linq
 
 				var result = new List<MasterClass>();
 
-#if NET472
-				await foreach (var item in (LinqToDB.Async.IAsyncEnumerable<MasterClass>)query)
-#else
 				await foreach (var item in (IAsyncEnumerable<MasterClass>)query)
-#endif
 					result.Add(item);
 
 				var expected = expectedQuery.ToList();

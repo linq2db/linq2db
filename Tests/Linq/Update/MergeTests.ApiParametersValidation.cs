@@ -228,11 +228,7 @@ namespace Tests.xUpdate
 				throw new NotImplementedException();
 			}
 
-#if NET472
-			Task<LinqToDB.Async.IAsyncEnumerable<TResult>> IQueryProviderAsync.ExecuteAsyncEnumerable<TResult>(Expression expression, CancellationToken cancellationToken)
-#else
 			Task<IAsyncEnumerable<TResult>> IQueryProviderAsync.ExecuteAsyncEnumerable<TResult>(Expression expression, CancellationToken cancellationToken)
-#endif
 			{
 				throw new NotImplementedException();
 			}
