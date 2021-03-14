@@ -949,6 +949,46 @@ namespace LinqToDB.SqlQuery
 							break;
 						}
 
+					case QueryElementType.MultiInsertStatement:
+						{
+							var s            = (SqlMultiInsertStatement)element;
+							var source       = (SqlMergeSourceTable?   )ConvertInternal(s.Source);
+							
+							var whensChanged = false;
+							var whens        = s
+								.Whens
+								.Select(old => {
+									var converted = (SqlSearchCondition?)ConvertInternal(old);
+									whensChanged |= converted != null && !ReferenceEquals(old, converted);
+									return converted ?? old;
+								})
+								.ToList();
+
+							var insertsChanged = false;
+							var inserts        = s
+								.Inserts
+							    .Select(old => {
+							    	var converted = (SqlInsertClause?)ConvertInternal(old);
+									insertsChanged |= converted != null && !ReferenceEquals(old, converted);
+									return converted ?? old;
+								})
+								.ToList();
+
+							if (source      != null && !ReferenceEquals(s.Source,      source)		 ||
+								whensChanged                                                         ||
+								insertsChanged)
+							{
+								source ??= s.Source;
+								newElement = new SqlMultiInsertStatement(s.InsertType, source)
+								{
+									Whens   = whens,
+									Inserts = inserts,
+								};
+							}
+
+							break;
+						}
+
 					case QueryElementType.MergeSourceTable:
 						{
 							var source = (SqlMergeSourceTable)element;

@@ -57,6 +57,7 @@
 		UpdateStatement,
 		DeleteStatement,
 		MergeStatement,
+		MultiInsertStatement,
 
 		CreateTableStatement,
 		DropTableStatement,

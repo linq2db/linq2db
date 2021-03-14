@@ -1341,6 +1341,24 @@ namespace LinqToDB.ServiceModel
 							break;
 						}
 
+					case QueryElementType.MultiInsertStatement:
+						{
+							var elem = (SqlMultiInsertStatement)e;
+
+							Append((int)elem.InsertType);
+							Append(elem.Source);							
+							Append(elem.Inserts.Count);
+							if (elem.InsertType != MultiInsertType.Unconditional)
+							{
+								foreach (var when in elem.Whens)
+									Append(when);
+							}
+							foreach (var insert in elem.Inserts)
+								Append(insert);
+
+							break;
+						}
+
 					case QueryElementType.SqlValuesTable:
 						{
 							var elem = (SqlValuesTable)e;
@@ -2128,6 +2146,30 @@ namespace LinqToDB.ServiceModel
 							var operations = ReadArray<SqlMergeOperationClause>()!;
 
 							obj = _statement = new SqlMergeStatement(hint, target, source, on, operations);
+
+							break;
+						}
+
+					case QueryElementType.MultiInsertStatement :
+						{
+							var insertType   = (MultiInsertType)ReadInt();
+							var source       = Read<SqlMergeSourceTable>()!;
+							var insertsCount = ReadInt();
+							
+							var whensCount   = insertType == MultiInsertType.Unconditional ? 0 : insertsCount;
+							var whens        = new List<SqlSearchCondition?>(whensCount);
+							for (int i = 0; i < whensCount; i++)
+								whens.Add(Read<SqlSearchCondition>());
+
+							var inserts      = new List<SqlInsertClause>(insertsCount);
+							for (int i = 0; i < insertsCount; i++)
+								inserts.Add(Read<SqlInsertClause>()!);
+
+							obj = _statement = new SqlMultiInsertStatement(insertType, source) 
+							{
+								Whens = whens,
+								Inserts = inserts,
+							};
 
 							break;
 						}

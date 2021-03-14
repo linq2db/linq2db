@@ -2268,6 +2268,197 @@ namespace LinqToDB
 
 		#endregion
 
+		#region MultiInsert
+
+		/// <summary>
+		/// Inserts records from source query into multiple target tables.
+		/// </summary>
+		/// <typeparam name="TSource">Source query record type.</typeparam>
+		/// <param name="source">Source query, that returns data for insert operation.</param>		
+		public static MultiInsertableSource<TSource> MultiInsert<TSource>(this IQueryable<TSource> source)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			return new (source);
+		}
+
+		private static int InsertAllUnconditional(IQueryable source, List<(LambdaExpression? condition, Expression target, Expression setter)> targets)
+			=> throw new NotImplementedException();
+
+		private static int InsertAll(IQueryable source, List<(LambdaExpression? condition, Expression target, Expression setter)> targets)
+			=> throw new NotImplementedException();
+
+		private static int InsertFirst(IQueryable source, List<(LambdaExpression? condition, Expression target, Expression setter)> targets)
+			=> throw new NotImplementedException();
+
+		public struct MultiInsertableSource<TSource>
+		{ 
+			private IQueryable<TSource> source;
+
+			internal MultiInsertableSource(IQueryable<TSource> source)
+			{
+				this.source = source;
+			}
+
+			public MultiInsertable<TSource> Into<TTarget>(
+			                	ITable<TTarget>                    target,
+				[InstantHandle] Expression<Func<TSource, TTarget>> setter)
+				where TTarget : notnull
+			{
+				// Arguments null checks performed by `Into(target, setter)`
+				return new MultiInsertable<TSource>(source).Into(target, setter);
+			}
+
+			public MultiConditionalInsertable<TSource> When<TTarget>(
+				[InstantHandle] Expression<Func<TSource, bool>>    condition,
+								ITable<TTarget>                    target,
+				[InstantHandle] Expression<Func<TSource, TTarget>> setter)
+				where TTarget : notnull
+			{
+				// Arguments null checks performed by `When(target, setter)`
+				return new MultiConditionalInsertable<TSource>(source)
+					.When(condition, target, setter);
+			}
+		}
+
+		public struct MultiInsertable<TSource>
+		{
+			internal IQueryable<TSource> source;
+			internal List<(LambdaExpression? condition, Expression table, Expression setter)> targets;
+
+			internal MultiInsertable(IQueryable<TSource> source)
+			{
+				this.source = source;
+				this.targets = new();
+			}
+
+			public MultiInsertable<TSource> Into<TTarget>(
+								ITable<TTarget>                    target,
+				[InstantHandle] Expression<Func<TSource, TTarget>> setter)
+				where TTarget : notnull
+			{
+				if (target == null) throw new ArgumentNullException(nameof(target));
+				if (setter == null) throw new ArgumentNullException(nameof(setter));
+
+				targets.Add((null, target.Expression, setter));
+
+				return this;
+			}
+
+			public int InsertAll()
+			{
+				var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+				return currentSource.Provider.Execute<int>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(LinqExtensions.InsertAllUnconditional, currentSource, targets),
+						source.Expression,
+						Expression.Constant(targets)));
+			}
+		}
+
+		public struct MultiConditionalInsertable<TSource>
+		{
+			private IQueryable<TSource> source;
+			private List<(LambdaExpression? condition, Expression table, Expression setter)> targets;
+
+			internal MultiConditionalInsertable(IQueryable<TSource> source)
+			{
+				this.source = source;
+				this.targets = new();
+			}
+
+			public MultiConditionalInsertable<TSource> When<TTarget>(
+				[InstantHandle] Expression<Func<TSource, bool>>     condition,
+								ITable<TTarget>                     target,
+				[InstantHandle] Expression<Func<TSource, TTarget>>  setter)
+				where TTarget : notnull
+			{
+				if (condition == null) throw new ArgumentNullException(nameof(condition));
+				if (target == null) throw new ArgumentNullException(nameof(target));
+				if (setter == null) throw new ArgumentNullException(nameof(setter));
+
+				targets.Add((condition, target.Expression, setter));
+
+				return this;
+			}
+
+			public MultiElseInsertable<TSource> Else<TTarget>(
+								ITable<TTarget>                     target,
+				[InstantHandle] Expression<Func<TSource, TTarget>>  setter)
+				where TTarget : notnull
+			{
+				if (target == null) throw new ArgumentNullException(nameof(target));
+				if (setter == null) throw new ArgumentNullException(nameof(setter));
+
+				targets.Add((null, target.Expression, setter));
+
+				return new MultiElseInsertable<TSource>(source, targets);
+			}
+
+			public int InsertAll()
+			{
+				var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+				return currentSource.Provider.Execute<int>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(LinqExtensions.InsertAll, currentSource, targets),
+						source.Expression,
+						Expression.Constant(targets)));
+			}
+
+			public int InsertFirst()
+			{
+				var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+				return currentSource.Provider.Execute<int>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(LinqExtensions.InsertFirst, currentSource, targets),
+						source.Expression,
+						Expression.Constant(targets)));
+			}
+		}
+
+		public struct MultiElseInsertable<TSource>
+		{
+			private IQueryable<TSource> source;
+			private List<(LambdaExpression? condition, Expression target, Expression setter)> targets;
+
+			public MultiElseInsertable(IQueryable<TSource> source, List<(LambdaExpression? condition, Expression target, Expression setter)> targets)
+			{
+				this.source = source;
+				this.targets = targets;
+			}
+
+			public int InsertAll()
+			{
+				var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+				return currentSource.Provider.Execute<int>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(LinqExtensions.InsertAll, currentSource, targets),
+						source.Expression,
+						Expression.Constant(targets)));
+			}
+
+			public int InsertFirst()
+			{
+				var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+				return currentSource.Provider.Execute<int>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(LinqExtensions.InsertFirst, currentSource, targets),
+						source.Expression,
+						Expression.Constant(targets)));
+			}
+		}
+
+		#endregion
+
 		#region Drop
 
 		static readonly MethodInfo _dropMethodInfo2 = MemberHelper.MethodOf(() => Drop<int>(null!, true)).GetGenericMethodDefinition();

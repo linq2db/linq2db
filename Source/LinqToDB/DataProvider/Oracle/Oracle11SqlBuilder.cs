@@ -235,6 +235,23 @@ namespace LinqToDB.DataProvider.Oracle
 			return sb.Append(value);
 		}
 
+		protected override StringBuilder BuildExpression(
+			ISqlExpression expr,
+			bool buildTableName,
+			bool checkParentheses,
+			string? alias,
+			ref bool addAlias,
+			bool throwExceptionIfTableNotFound = true)
+		{
+			return base.BuildExpression(
+				expr,
+				buildTableName && Statement.QueryType != QueryType.MultiInsert,
+				checkParentheses,
+				alias,
+				ref addAlias,
+				throwExceptionIfTableNotFound);
+		}
+
 		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
 			BuildInsertOrUpdateQueryAsMerge(insertOrUpdate, "FROM SYS.DUAL");

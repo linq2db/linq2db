@@ -18,7 +18,8 @@ namespace LinqToDB.SqlQuery
 		{
 			return
 				statement.QueryType == QueryType.Insert ||
-				statement.QueryType == QueryType.InsertOrUpdate;
+				statement.QueryType == QueryType.InsertOrUpdate ||
+				statement.QueryType == QueryType.MultiInsert;
 		}
 
 		/// <summary>

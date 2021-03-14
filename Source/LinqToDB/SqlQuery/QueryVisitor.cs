@@ -360,6 +360,17 @@ namespace LinqToDB.SqlQuery
 					Visit1X((SqlMergeStatement)element);
 					break;
 
+				case QueryElementType.MultiInsertStatement:
+					{
+						var multi = (SqlMultiInsertStatement)element;
+						Visit1(multi.Source);
+						foreach (var when in multi.Whens) 
+							Visit1(when);
+						foreach (var insert in multi.Inserts)
+							Visit1(insert);
+						break;
+					}
+
 				case QueryElementType.MergeSourceTable:
 					Visit1X((SqlMergeSourceTable)element);
 					break;
@@ -932,6 +943,15 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.MergeStatement:
 					Visit2X((SqlMergeStatement)element);
 					break;
+
+				case QueryElementType.MultiInsertStatement:
+					{
+						var multi = (SqlMultiInsertStatement)element;
+						Visit2(multi.Source);
+						foreach (var insert in multi.Inserts)
+							Visit2(insert);
+						break;
+					}
 
 				case QueryElementType.MergeSourceTable:
 					Visit2X((SqlMergeSourceTable)element);
@@ -1514,6 +1534,13 @@ namespace LinqToDB.SqlQuery
 							Find(((SqlMergeOperationClause)element).Where      ) ??
 							Find(((SqlMergeOperationClause)element).WhereDelete) ??
 							Find(((SqlMergeOperationClause)element).Items      );
+					}
+
+				case QueryElementType.MultiInsertStatement:
+					{
+						return 
+							Find(((SqlMultiInsertStatement)element).Source                         )  ??
+							((SqlMultiInsertStatement)element).Inserts.Select(Find).FirstOrDefault();
 					}
 
 				case QueryElementType.SqlValuesTable:
