@@ -7,7 +7,7 @@ namespace LinqToDB.Async
 	internal class AsyncEnumeratorAsyncWrapper<T> : IAsyncEnumerator<T>
 	{
 		private IAsyncEnumerator<T>? _enumerator;
-#if NETFRAMEWORK
+#if !NATIVE_ASYNC
 		private readonly Func<Task<Tuple<IAsyncEnumerator<T>, IDisposable?>>> _init;
 		private IDisposable? _disposable;
 #else
@@ -15,7 +15,7 @@ namespace LinqToDB.Async
 		private IAsyncDisposable? _disposable;
 #endif
 
-#if NETFRAMEWORK
+#if !NATIVE_ASYNC
 		public AsyncEnumeratorAsyncWrapper(Func<Task<Tuple<IAsyncEnumerator<T>, IDisposable?>>> init)
 #else
 		public AsyncEnumeratorAsyncWrapper(Func<Task<Tuple<IAsyncEnumerator<T>, IAsyncDisposable?>>> init)
@@ -26,7 +26,7 @@ namespace LinqToDB.Async
 
 		T IAsyncEnumerator<T>.Current => _enumerator!.Current;
 
-#if NETFRAMEWORK
+#if !NATIVE_ASYNC
 		async Task IAsyncDisposable.DisposeAsync()
 		{
 			await _enumerator!.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);

@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
-#if NETFRAMEWORK
+#if !NATIVE_ASYNC
 	using Async;
 #endif
 	using Builder;
@@ -388,7 +388,7 @@ namespace LinqToDB.Linq
 			using (var runner = dataContext.GetQueryRunner(query, queryNumber, expression, ps, preambles))
 			{
 				var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 				await using (dr.ConfigureAwait(Configuration.ContinueOnCapturedContext))
 #else
 				using (dr)
@@ -454,7 +454,7 @@ namespace LinqToDB.Linq
 
 			public T Current { get; set; } = default!;
 
-#if NETFRAMEWORK
+#if !NATIVE_ASYNC
 			public async Task<bool> MoveNextAsync()
 #else
 			public async ValueTask<bool> MoveNextAsync()
@@ -497,7 +497,7 @@ namespace LinqToDB.Linq
 				_queryRunner = null;
 			}
 
-#if NETFRAMEWORK
+#if !NATIVE_ASYNC
 			public Task DisposeAsync()
 			{
 				Dispose();
@@ -749,7 +749,7 @@ namespace LinqToDB.Linq
 			using (var runner = dataContext.GetQueryRunner(query, 0, expression, ps, preambles))
 			{
 				var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 				await using (dr.ConfigureAwait(Configuration.ContinueOnCapturedContext))
 #else
 				using (dr)

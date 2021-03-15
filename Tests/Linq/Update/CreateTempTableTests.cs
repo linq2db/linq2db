@@ -119,10 +119,7 @@ namespace Tests.xUpdate
 			{
 				await db.DropTableAsync<int>("TempTable", throwExceptionIfNotExists: false);
 
-#if !NET472
-				await
-#endif
-				using (var tmp = await db.CreateTempTableAsync(
+				await using (var tmp = await db.CreateTempTableAsync(
 					"TempTable",
 					db.Parent.Select(p => new IDTable { ID = p.ParentID }),
 					tableOptions:TableOptions.CheckExistence))
@@ -144,10 +141,7 @@ namespace Tests.xUpdate
 			{
 				db.DropTable<int>("TempTable", throwExceptionIfNotExists: false);
 
-#if !NET472
-				await
-#endif
-				using (var tmp = await db.CreateTempTableAsync(
+				await using (var tmp = await db.CreateTempTableAsync(
 					"TempTable",
 					db.Parent.Select(p => new IDTable { ID = p.ParentID }).ToList(),
 					tableOptions:TableOptions.CheckExistence))
@@ -173,10 +167,7 @@ namespace Tests.xUpdate
 
 				try
 				{
-#if !NET472
-					await
-#endif
-					using (var tmp = await db.CreateTempTableAsync(
+					await using (var tmp = await db.CreateTempTableAsync(
 						"TempTable",
 						db.Parent.Select(p => new IDTable { ID = p.ParentID }).ToList(),
 						cancellationToken: cts.Token))
@@ -216,10 +207,7 @@ namespace Tests.xUpdate
 
 				try
 				{
-#if !NET472
-					await
-#endif
-					using (var tmp = await db.CreateTempTableAsync(
+					await using (var tmp = await db.CreateTempTableAsync(
 						"TempTable",
 						db.Parent.Select(p => new IDTable { ID = p.ParentID }),
 						action: (table) =>
