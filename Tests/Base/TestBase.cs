@@ -412,7 +412,7 @@ namespace Tests
 			ProviderName.SqlServer2008,
 			ProviderName.SqlServer2012,
 			ProviderName.SqlServer2014,
-			TestProvName.SqlServer2016,
+			ProviderName.SqlServer2016,
 			ProviderName.SqlServer2017,
 			TestProvName.SqlServer2019,
 			TestProvName.SqlServer2019SequentialAccess,
@@ -1261,7 +1261,7 @@ namespace Tests
 				case ProviderName.SqlServer2008:
 				case ProviderName.SqlServer2012:
 				case ProviderName.SqlServer2014:
-				case TestProvName.SqlServer2016:
+				case ProviderName.SqlServer2016:
 				case ProviderName.SqlServer2017:
 				case TestProvName.SqlServer2019:
 				case TestProvName.SqlServer2019SequentialAccess:

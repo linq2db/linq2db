@@ -502,11 +502,17 @@ namespace LinqToDB.Data
 				{
 					 return _dataReader.DisposeAsync();
 				}
-#elif !NETFRAMEWORK
+#elif NATIVE_ASYNC
 				public ValueTask DisposeAsync()
 				{
 					Dispose();
-					return new ValueTask(Task.CompletedTask);
+					return default;
+				}
+#else
+				public Task DisposeAsync()
+				{
+					Dispose();
+					return TaskEx.CompletedTask;
 				}
 #endif
 			}

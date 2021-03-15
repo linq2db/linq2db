@@ -58,7 +58,7 @@ namespace LinqToDB.DataProvider.MySql
 			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T>           table,
 			BulkCopyOptions     options,
@@ -190,7 +190,7 @@ namespace LinqToDB.DataProvider.MySql
 			return rc;
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		private async Task<BulkCopyRowsCopied> ProviderSpecificCopyInternal<T>(
 			ProviderConnections providerConnections,
 			ITable<T>           table,
@@ -273,7 +273,7 @@ namespace LinqToDB.DataProvider.MySql
 			return MultipleRowsCopy1Async(table, options, source, cancellationToken);
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			return MultipleRowsCopy1Async(table, options, source, cancellationToken);

@@ -1,15 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
-
 using LinqToDB;
 using LinqToDB.Data;
 using NUnit.Framework;
-
-#if !NET472
-using System.Threading;
-#endif
 
 namespace Tests.Linq
 {
@@ -119,10 +115,7 @@ namespace Tests.Linq
 				sql = string.Join(Environment.NewLine, sql.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
 					.Where(line => !line.StartsWith("--")));
 
-#if !NET472
-			await
-#endif
-				using (var rd = await conn.SetCommand(sql).ExecuteReaderAsync())
+				await using (var rd = await conn.SetCommand(sql).ExecuteReaderAsync())
 				{
 					var list = await rd.QueryToArrayAsync<string>();
 
@@ -183,7 +176,6 @@ namespace Tests.Linq
 			}
 		}
 
-#if !NET472
 		[Test]
 		public async Task AsAsyncEnumerable1Test([DataSources] string context)
 		{
@@ -257,6 +249,5 @@ namespace Tests.Linq
 				}
 			});
 		}
-#endif
 	}
 }

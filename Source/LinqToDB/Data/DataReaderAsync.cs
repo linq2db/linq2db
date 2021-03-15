@@ -8,9 +8,11 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Data
 {
-	public class DataReaderAsync : IDisposable
-#if !NETFRAMEWORK
-		, IAsyncDisposable
+	public class DataReaderAsync : IDisposable,
+#if NATIVE_ASYNC
+		IAsyncDisposable
+#else
+		Async.IAsyncDisposable
 #endif
 	{
 		public   CommandInfo?      CommandInfo       { get; set; }
@@ -64,11 +66,17 @@ namespace LinqToDB.Data
 
 			OnDispose?.Invoke();
 		}
-#elif !NETFRAMEWORK
+#elif NATIVE_ASYNC
 		public ValueTask DisposeAsync()
 		{
 			Dispose();
-			return new ValueTask(Task.CompletedTask);
+			return default;
+		}
+#else
+		public Task DisposeAsync()
+		{
+			Dispose();
+			return TaskEx.CompletedTask;
 		}
 #endif
 
