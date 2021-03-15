@@ -1656,5 +1656,57 @@ namespace Tests.Linq
 					.ToList();
 			}
 		}
+
+		[Test]
+		public void Issue2842Test1([DataSources(
+			TestProvName.AllAccess,
+			ProviderName.Firebird,
+			TestProvName.MySql55,
+			ProviderName.SqlCe,
+#if NETFRAMEWORK
+			ProviderName.SQLiteMS,
+#endif
+			TestProvName.AllSybase)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query =
+					from x in db.Person
+					select new
+					{
+						x.FirstName,
+						rank = Sql.Ext.Rank().Over().OrderBy(x.ID == 2).ToValue()
+					};
+
+				query
+					.ToList();
+			}
+		}
+
+		[Test]
+		public void Issue2842Test2([DataSources(
+			TestProvName.AllAccess,
+			ProviderName.Firebird,
+			TestProvName.MySql55,
+			ProviderName.SqlCe,
+#if NETFRAMEWORK
+			ProviderName.SQLiteMS,
+#endif
+			TestProvName.AllSybase)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query =
+					from x in db.Person
+					select new
+					{
+						x.FirstName,
+						rank = Sql.Ext.Rank().Over().OrderBy(x.ID == 2 ? 1 : 0).ToValue()
+					};
+
+				query
+					.ToList();
+			}
+		}
 	}
 }
