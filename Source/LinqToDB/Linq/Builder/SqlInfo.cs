@@ -102,5 +102,11 @@ namespace LinqToDB.Linq.Builder
 			return new SqlInfo(MemberChain, Sql, query, Index);
 		}
 
+		public override string ToString()
+		{
+			var str = $"[{Index,2}] Member: {(MemberChain.Length == 0 ? "[no member]" : string.Join(".", MemberChain.Select(m => m.Name)))}";
+			str = $"{str}, SQL: {Sql}";
+			return str;
+		}
 	}
 }

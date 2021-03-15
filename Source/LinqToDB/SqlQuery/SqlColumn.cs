@@ -38,8 +38,9 @@ namespace LinqToDB.SqlQuery
 			{
 				if (_expression == value)
 					return;
-				_expression = value;
-				_hashCode   = null;
+				_expression            = value;
+				_underlyingExpression  = value;
+				_hashCode              = null;
 			}
 		}
 
@@ -58,6 +59,23 @@ namespace LinqToDB.SqlQuery
 		}
 
 		internal string?        RawAlias   { get; set; }
+
+		ISqlExpression? _underlyingExpression;
+
+		public ISqlExpression UnderlyingExpression()
+		{
+			if (_underlyingExpression == null)
+			{
+				var current = Expression;
+				if (current is SqlColumn c)
+				{
+					current = c.UnderlyingExpression();
+				}
+
+				_underlyingExpression = current;
+			}
+			return _underlyingExpression;
+		}
 
 		public string? Alias
 		{
@@ -83,49 +101,6 @@ namespace LinqToDB.SqlQuery
 			set => RawAlias = value;
 		}
 
-		private bool   _underlyingColumnSet;
-
-		private SqlColumn? _underlyingColumn;
-
-		public  SqlColumn?  UnderlyingColumn
-		{
-			get
-			{
-				if (_underlyingColumnSet)
-					return _underlyingColumn;
-
-				var columns = new List<SqlColumn>(10);
-				var column  = Expression as SqlColumn;
-
-				while (column != null)
-				{
-					if (column._underlyingColumn != null)
-					{
-						columns.Add(column._underlyingColumn);
-						break;
-					}
-
-					columns.Add(column);
-					column = column.Expression as SqlColumn;
-				}
-
-				_underlyingColumnSet = true;
-				if (columns.Count == 0)
-					return null;
-
-				_underlyingColumn = columns[columns.Count - 1];
-
-				for (var i = 0; i < columns.Count - 1; i++)
-				{
-					var c = columns[i];
-					c._underlyingColumn    = _underlyingColumn;
-					c._underlyingColumnSet = true;
-				}
-
-				return _underlyingColumn;
-			}
-		}
-
 		int? _hashCode;
 
 		[SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
@@ -136,9 +111,8 @@ namespace LinqToDB.SqlQuery
 
 			var hashCode = Parent?.GetHashCode() ?? 0;
 
-			hashCode = unchecked(hashCode + (hashCode * 397) ^ Expression.GetHashCode());
-			if (UnderlyingColumn != null)
-				hashCode = unchecked(hashCode + (hashCode * 397) ^ UnderlyingColumn.GetHashCode());
+			hashCode = unchecked(hashCode + (hashCode * 397) ^ Expression.CanBeNull.GetHashCode());
+			hashCode = unchecked(hashCode + (hashCode * 397) ^ QueryHelper.UnwrapExpression(Expression).GetHashCode());
 
 			_hashCode = hashCode;
 
@@ -150,13 +124,28 @@ namespace LinqToDB.SqlQuery
 			if (other == null)
 				return false;
 
+			if (ReferenceEquals(this, other))
+				return true;
+
 			if (!Equals(Parent, other.Parent))
 				return false;
+
+			if (Parent != null && Parent.HasSetOperators)
+			{
+				return false;
+			}
 
 			if (Expression.CanBeNull == other.CanBeNull && QueryHelper.UnwrapExpression(Expression).Equals(QueryHelper.UnwrapExpression(other.Expression)))
 				return true;
 
-			return UnderlyingColumn != null && UnderlyingColumn.Equals(other.UnderlyingColumn);
+			var underlying = UnderlyingExpression();
+			if (!ReferenceEquals(underlying, Expression))
+			{
+				if (underlying.Equals(other.UnderlyingExpression()))
+					return true;
+			}
+				
+			return false;
 		}
 
 		public override string ToString()
@@ -176,6 +165,13 @@ namespace LinqToDB.SqlQuery
 				.Append(" => ");
 
 			Expression.ToString(sb, dic);
+
+			var underlying = UnderlyingExpression();
+			if (!ReferenceEquals(underlying, Expression))
+			{
+				sb.Append(" == ");
+				underlying.ToString(sb, dic);
+			}
 
 			return sb.ToString();
 

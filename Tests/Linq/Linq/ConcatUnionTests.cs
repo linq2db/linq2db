@@ -319,6 +319,20 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void Concat892([DataSources(TestProvName.AllInformix)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Child.Select(c => new Parent {Value1 = c.ParentID, ParentID = c.ParentID})
+				.Union(db.Parent.Select(c => new Parent {                     ParentID = c.ParentID}))
+				.Concat(db.Child.Select(c => new Parent {Value1 = c.ParentID, ParentID = c.ParentID}));
+
+			var result = query.ToList();
+
+			AssertQuery(query);
+		}
+
+		[Test]
 		public void Union1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

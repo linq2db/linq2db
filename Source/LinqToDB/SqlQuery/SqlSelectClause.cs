@@ -159,12 +159,12 @@ namespace LinqToDB.SqlQuery
 			return SelectQuery.Select.Columns[Add(expr)];
 		}
 
-		public int AddNew(ISqlExpression expr)
+		public int AddNew(ISqlExpression expr, string? alias = default)
 		{
 			if (expr is SqlColumn column && column.Parent == SelectQuery)
 				throw new InvalidOperationException();
 
-			Columns.Add(new SqlColumn(SelectQuery, expr));
+			Columns.Add(new SqlColumn(SelectQuery, expr, alias));
 			return Columns.Count - 1;
 		}
 
@@ -186,7 +186,7 @@ namespace LinqToDB.SqlQuery
 		{
 			for (var i = 0; i < Columns.Count; i++)
 			{
-				if (Columns[i].Equals(col))
+				if (Columns[i].Expression.Equals(col.Expression))
 				{
 					return i;
 				}

@@ -1186,6 +1186,9 @@ namespace Tests
 				{
 					var mc = (MethodCallExpression)e;
 
+					if (mc.IsSameGenericMethod(Methods.LinqToDB.AsSubQuery))
+						return mc.Arguments[0];
+
 					if (typeof(ITable<>).IsSameOrParentOf(mc.Type))
 					{
 						var entityType = mc.Method.ReturnType.GetGenericArguments()[0];

@@ -1020,7 +1020,7 @@ namespace LinqToDB.SqlQuery
 			if (!isColumnsOK)
 				return childSource;
 
-			var map = new Dictionary<ISqlExpression,ISqlExpression>(query.Select.Columns.Count);
+			var map = new Dictionary<ISqlExpression,ISqlExpression>(query.Select.Columns.Count, Utils.ObjectReferenceEqualityComparer<ISqlExpression>.Default);
 
 			foreach (var c in query.Select.Columns)
 			{

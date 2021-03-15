@@ -136,6 +136,7 @@ namespace LinqToDB.Linq.Builder
 			readonly SubQueryContext               _sequence1;
 			readonly SubQueryContext               _sequence2;
 
+			[DebuggerDisplay("{Member.MemberExpression}, SequenceInfo: ({SequenceInfo}), SqlQueryInfo: ({SqlQueryInfo})")]
 			class Member
 			{
 				public SqlInfo?          SequenceInfo;
@@ -143,7 +144,7 @@ namespace LinqToDB.Linq.Builder
 				public MemberExpression  MemberExpression = null!;
 			}
 
-			[DebuggerDisplay("{Member, Sql1: {Info1}, Sql2: {Info2}")]
+			[DebuggerDisplay("{Member.MemberExpression}, Info1: ({Info1}), Info2: ({Info2})")]
 			class UnionMember
 			{
 				public Member   Member = null!;
@@ -210,11 +211,7 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				var aliases1 = _sequence1.SelectQuery.Select.Columns.ToLookup(c => c.Expression, c => c.Alias);
-				var aliases2 = _sequence2.SelectQuery.Select.Columns.ToLookup(c => c.Expression, c => c.Alias);
-
-				_sequence1.SelectQuery.Select.Columns.Clear();
-				_sequence2.SelectQuery.Select.Columns.Clear();
+				var indexes = new List<Tuple<Tuple<ISqlExpression, string>, Tuple<ISqlExpression, string>>>();
 
 				for (var i = 0; i < unionMembers.Count; i++)
 				{
@@ -248,15 +245,19 @@ namespace LinqToDB.Linq.Builder
 						);
 					}
 
-					static string? GetAlias(ILookup<ISqlExpression, string?> aliases, ISqlExpression expression)
+					static string GetAlias(UnionMember member, SqlInfo sqlInfo)
 					{
-						if (aliases.Contains(expression))
-							return aliases[expression].FirstOrDefault();
-						return null;
+						if (sqlInfo.MemberChain.Length > 0)
+						{
+							return string.Join(".", sqlInfo.MemberChain.Select(m => m.Name));
+						}
+						return member.Member.MemberExpression.Member.Name;
 					}
 
-					_sequence1.SelectQuery.Select.Columns.Add(new SqlColumn(_sequence1.SelectQuery, member.Info1.Sql, GetAlias(aliases1, member.Info1.Sql)));
-					_sequence2.SelectQuery.Select.Columns.Add(new SqlColumn(_sequence2.SelectQuery, member.Info2.Sql, GetAlias(aliases2, member.Info2.Sql)));
+					indexes.Add(Tuple.Create(
+						Tuple.Create(member.Info1.Sql, GetAlias(member, member.Info1)),
+						Tuple.Create(member.Info2.Sql, GetAlias(member, member.Info2))
+						));
 
 					if (member.Member.SequenceInfo != null)
 						member.Member.SequenceInfo = member.Member.SequenceInfo.WithIndex(i);
@@ -264,11 +265,21 @@ namespace LinqToDB.Linq.Builder
 					_members[member.Member.MemberExpression.Member] = member.Member;
 				}
 
-				foreach (var key in _sequence1.ColumnIndexes.Keys.ToList())
-					_sequence1.ColumnIndexes[key] = _sequence1.SelectQuery.Select.Add(key);
+				_sequence1.SelectQuery.Select.Columns.Clear();
+				_sequence2.SelectQuery.Select.Columns.Clear();
 
-				foreach (var key in _sequence2.ColumnIndexes.Keys.ToList())
-					_sequence2.ColumnIndexes[key] = _sequence2.SelectQuery.Select.Add(key);
+				_sequence1.ColumnIndexes.Clear();
+				_sequence2.ColumnIndexes.Clear();
+
+				foreach (var index in indexes)
+				{
+					var idx1 = _sequence1.SelectQuery.Select.AddNew(index.Item1.Item1, index.Item1.Item2);
+					_sequence1.ColumnIndexes[idx1]                    = idx1;
+
+					var idx2 = _sequence2.SelectQuery.Select.AddNew(index.Item2.Item1, index.Item2.Item2);
+					_sequence2.ColumnIndexes[idx2]                    = idx2;
+				}
+
 			}
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
@@ -420,6 +431,10 @@ namespace LinqToDB.Linq.Builder
 
 				return base.IsExpression(expression, level, requestFlag);
 			}
+
+
+			// For Set we have to ensure hat columns are not optimized
+			protected override bool OptimizeColumns => false;
 
 			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
