@@ -186,7 +186,14 @@ namespace LinqToDB.SqlQuery
 		{
 			for (var i = 0; i < Columns.Count; i++)
 			{
-				if (Columns[i].Expression.Equals(col.Expression))
+				var expr1 = Columns[i].Expression;
+				var expr2 = col.Expression;
+				if (expr1.CanBeNull == expr2.CanBeNull && QueryHelper.UnwrapExpression(expr1).Equals(QueryHelper.UnwrapExpression(expr2)))
+				{
+					return i;
+				}
+
+				if (Columns[i].UnderlyingExpression().Equals(col.UnderlyingExpression()))
 				{
 					return i;
 				}

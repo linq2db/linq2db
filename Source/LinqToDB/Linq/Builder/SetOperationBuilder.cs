@@ -214,11 +214,11 @@ namespace LinqToDB.Linq.Builder
 
 				static string GetFullAlias(UnionMember member)
 				{
-					if (member.Info1.MemberChain.Length > 0)
+					if (member.Info1!.MemberChain.Length > 0)
 					{
 						return string.Join("_", member.Info1.MemberChain.Select(m => m.Name));
 					}
-					if (member.Info2.MemberChain.Length > 0)
+					if (member.Info2!.MemberChain.Length > 0)
 					{
 						return string.Join("_", member.Info2.MemberChain.Select(m => m.Name));
 					}
@@ -227,12 +227,12 @@ namespace LinqToDB.Linq.Builder
 
 				static string GetShortAlias(UnionMember member)
 				{
-					if (member.Info1.MemberChain.Length > 0)
+					if (member.Info1!.MemberChain.Length > 0)
 					{
 						return member.Info1.MemberChain[member.Info1.MemberChain.Length - 1].Name;
 					}
 
-					if (member.Info2.MemberChain.Length > 0)
+					if (member.Info2!.MemberChain.Length > 0)
 					{
 						return member.Info2.MemberChain[member.Info2.MemberChain.Length - 1].Name;
 					}

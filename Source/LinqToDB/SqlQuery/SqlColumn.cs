@@ -39,7 +39,6 @@ namespace LinqToDB.SqlQuery
 				if (_expression == value)
 					return;
 				_expression            = value;
-				_underlyingExpression  = value;
 				_hashCode              = null;
 			}
 		}
@@ -58,23 +57,17 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		internal string?        RawAlias   { get; set; }
-
-		ISqlExpression? _underlyingExpression;
+		internal string? RawAlias   { get; set; }
 
 		public ISqlExpression UnderlyingExpression()
 		{
-			if (_underlyingExpression == null)
+			var current = Expression;
+			while (current.ElementType == QueryElementType.Column)
 			{
-				var current = Expression;
-				if (current is SqlColumn c)
-				{
-					current = c.UnderlyingExpression();
-				}
-
-				_underlyingExpression = current;
+				current = ((SqlColumn)current).Expression;
 			}
-			return _underlyingExpression;
+
+			return current;
 		}
 
 		public string? Alias
@@ -111,8 +104,7 @@ namespace LinqToDB.SqlQuery
 
 			var hashCode = Parent?.GetHashCode() ?? 0;
 
-			hashCode = unchecked(hashCode + (hashCode * 397) ^ Expression.CanBeNull.GetHashCode());
-			hashCode = unchecked(hashCode + (hashCode * 397) ^ QueryHelper.UnwrapExpression(Expression).GetHashCode());
+			hashCode = unchecked(hashCode + (hashCode * 397) ^ Expression.GetHashCode());
 
 			_hashCode = hashCode;
 
@@ -130,21 +122,9 @@ namespace LinqToDB.SqlQuery
 			if (!Equals(Parent, other.Parent))
 				return false;
 
-			if (Parent != null && Parent.HasSetOperators)
-			{
+			if (Expression.Equals(other.Expression))
 				return false;
-			}
 
-			if (Expression.CanBeNull == other.CanBeNull && QueryHelper.UnwrapExpression(Expression).Equals(QueryHelper.UnwrapExpression(other.Expression)))
-				return true;
-
-			var underlying = UnderlyingExpression();
-			if (!ReferenceEquals(underlying, Expression))
-			{
-				if (underlying.Equals(other.UnderlyingExpression()))
-					return true;
-			}
-				
 			return false;
 		}
 
