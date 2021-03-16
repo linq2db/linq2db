@@ -38,8 +38,8 @@ namespace LinqToDB.SqlQuery
 			{
 				if (_expression == value)
 					return;
-				_expression            = value;
-				_hashCode              = null;
+				_expression = value;
+				_hashCode   = null;
 			}
 		}
 

@@ -327,8 +327,6 @@ namespace Tests.Linq
 				.Union(db.Parent.Select(c => new Parent {                     ParentID = c.ParentID}))
 				.Concat(db.Child.Select(c => new Parent {Value1 = c.ParentID, ParentID = c.ParentID}));
 
-			var result = query.ToList();
-
 			AssertQuery(query);
 		}
 
