@@ -80,7 +80,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (!ColumnIndexes.TryGetValue(index, out var idx))
 			{
-				idx          = OptimizeColumns ? SelectQuery.Select.Add(column) : SelectQuery.Select.AddNew(column);
+				idx = OptimizeColumns ? SelectQuery.Select.Add(column) : SelectQuery.Select.AddNew(column);
 				ColumnIndexes.Add(index, idx);
 			}
 

@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Tools;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -12,6 +11,7 @@ namespace LinqToDB.Linq.Builder
 	using Extensions;
 	using Reflection;
 	using SqlQuery;
+	using Tools;
 
 	class SetOperationBuilder : MethodCallBuilder
 	{
@@ -132,7 +132,7 @@ namespace LinqToDB.Linq.Builder
 			readonly bool                          _isObject;
 			readonly MethodCallExpression          _methodCall;
 			readonly ParameterExpression?          _unionParameter;
-			readonly Dictionary<MemberInfo,Member> _members = new Dictionary<MemberInfo,Member>(new MemberInfoComparer());
+			readonly Dictionary<MemberInfo,Member> _members = new(new MemberInfoComparer());
 			readonly SubQueryContext               _sequence1;
 			readonly SubQueryContext               _sequence2;
 
@@ -150,6 +150,7 @@ namespace LinqToDB.Linq.Builder
 				public Member   Member = null!;
 				public SqlInfo? Info1;
 				public SqlInfo? Info2;
+				public string   Alias = null!;
 			}
 
 			void Init()
@@ -211,7 +212,33 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				var indexes = new List<Tuple<Tuple<ISqlExpression, string>, Tuple<ISqlExpression, string>>>();
+				static string GetFullAlias(UnionMember member)
+				{
+					if (member.Info1.MemberChain.Length > 0)
+					{
+						return string.Join("_", member.Info1.MemberChain.Select(m => m.Name));
+					}
+					if (member.Info2.MemberChain.Length > 0)
+					{
+						return string.Join("_", member.Info2.MemberChain.Select(m => m.Name));
+					}
+					return member.Member.MemberExpression.Member.Name;
+				}
+
+				static string GetShortAlias(UnionMember member)
+				{
+					if (member.Info1.MemberChain.Length > 0)
+					{
+						return member.Info1.MemberChain[member.Info1.MemberChain.Length - 1].Name;
+					}
+
+					if (member.Info2.MemberChain.Length > 0)
+					{
+						return member.Info2.MemberChain[member.Info2.MemberChain.Length - 1].Name;
+					}
+					return member.Member.MemberExpression.Member.Name;
+				}
+
 
 				for (var i = 0; i < unionMembers.Count; i++)
 				{
@@ -226,7 +253,8 @@ namespace LinqToDB.Linq.Builder
 						(
 							member.Info2!.MemberChain,
 							new SqlValue(type, null),
-							_sequence1.SelectQuery
+							_sequence1.SelectQuery,
+							i
 						);
 
 						member.Member.SequenceInfo = member.Info1;
@@ -241,28 +269,43 @@ namespace LinqToDB.Linq.Builder
 						(
 							member.Info1.MemberChain,
 							new SqlValue(type, null),
-							_sequence2.SelectQuery
+							_sequence2.SelectQuery,
+							i
 						);
 					}
 
-					static string GetAlias(UnionMember member, SqlInfo sqlInfo)
-					{
-						if (sqlInfo.MemberChain.Length > 0)
-						{
-							return string.Join(".", sqlInfo.MemberChain.Select(m => m.Name));
-						}
-						return member.Member.MemberExpression.Member.Name;
-					}
-
-					indexes.Add(Tuple.Create(
-						Tuple.Create(member.Info1.Sql, GetAlias(member, member.Info1)),
-						Tuple.Create(member.Info2.Sql, GetAlias(member, member.Info2))
-						));
+					member.Alias = GetShortAlias(member);
 
 					if (member.Member.SequenceInfo != null)
 						member.Member.SequenceInfo = member.Member.SequenceInfo.WithIndex(i);
 
 					_members[member.Member.MemberExpression.Member] = member.Member;
+				}
+
+				static void SetAliasForColumns(SqlColumn column, string alias)
+				{
+					var current = column;
+					column.RawAlias = null;
+
+					while (current.Expression is SqlColumn c)
+					{
+						c.RawAlias = null;
+						current    = c;
+					}
+
+					current.RawAlias = alias;
+				}
+
+
+				var nonUnique = unionMembers.GroupBy(m => m.Alias, StringComparer.InvariantCultureIgnoreCase)
+					.Where(g => g.Count() > 1);
+
+				foreach (var g in nonUnique)
+				{
+					foreach (var member in g)
+					{
+						member.Alias = GetFullAlias(member);
+					}
 				}
 
 				_sequence1.SelectQuery.Select.Columns.Clear();
@@ -271,15 +314,18 @@ namespace LinqToDB.Linq.Builder
 				_sequence1.ColumnIndexes.Clear();
 				_sequence2.ColumnIndexes.Clear();
 
-				foreach (var index in indexes)
+				for (var i = 0; i < unionMembers.Count; i++)
 				{
-					var idx1 = _sequence1.SelectQuery.Select.AddNew(index.Item1.Item1, index.Item1.Item2);
-					_sequence1.ColumnIndexes[idx1]                    = idx1;
+					var member = unionMembers[i];
 
-					var idx2 = _sequence2.SelectQuery.Select.AddNew(index.Item2.Item1, index.Item2.Item2);
-					_sequence2.ColumnIndexes[idx2]                    = idx2;
+					_sequence1.SelectQuery.Select.AddNew(member.Info1!.Sql);
+					SetAliasForColumns(_sequence1.SelectQuery.Select.Columns[i], member.Alias);
+					_sequence1.ColumnIndexes[i] = i;
+
+					_sequence2.SelectQuery.Select.AddNew(member.Info2!.Sql);
+					SetAliasForColumns(_sequence2.SelectQuery.Select.Columns[i], member.Alias);
+					_sequence2.ColumnIndexes[i] = i;
 				}
-
 			}
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
@@ -442,31 +488,9 @@ namespace LinqToDB.Linq.Builder
 				{
 					return ConvertToSql(expression, level, flags)
 						.Select(idx =>
-						{
-							if (idx.Index >= 0) return idx;
-
-							var newIdx = idx;
-							if (idx.Index == -2)
-							{
-								SelectQuery.Select.Columns.Add(new SqlColumn(SelectQuery, idx.Sql));
-								newIdx = idx.WithIndex(SelectQuery.Select.Columns.Count - 1);
-							}
-							else
-							{
-								newIdx = idx.WithIndex(SelectQuery.Select.Add(idx.Sql));
-							}
-
-							if (!ReferenceEquals(newIdx, idx))
-							{
-								foreach (var member in _members)
-								{
-									if (ReferenceEquals(idx, member.Value.SqlQueryInfo))
-										member.Value.SqlQueryInfo = newIdx;
-								}
-							}
-
-							return newIdx;
-						})
+							idx
+								.WithIndex(GetIndex(idx.Index, (SqlColumn)idx.Sql))
+						)
 						.ToArray();
 				}
 
@@ -529,7 +553,7 @@ namespace LinqToDB.Linq.Builder
 											member.MemberExpression.Member,
 											SubQuery.SelectQuery.Select.Columns[member.SequenceInfo!.Index],
 											SelectQuery,
-											-2
+											member.SequenceInfo!.Index
 										);
 									}
 

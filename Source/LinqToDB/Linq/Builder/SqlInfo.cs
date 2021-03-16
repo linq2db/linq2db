@@ -83,7 +83,7 @@ namespace LinqToDB.Linq.Builder
 
 		public SqlInfo WithSql(ISqlExpression sql)
 		{
-			if (Sql == sql)
+			if (ReferenceEquals(Sql, sql))
 				return this;
 			return new SqlInfo(MemberChain, sql, Query, Index);
 		}
@@ -97,7 +97,7 @@ namespace LinqToDB.Linq.Builder
 
 		public SqlInfo WithQuery(SelectQuery? query)
 		{
-			if (Query == query)
+			if (ReferenceEquals(Query, query))
 				return this;
 			return new SqlInfo(MemberChain, Sql, query, Index);
 		}
