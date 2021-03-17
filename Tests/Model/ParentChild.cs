@@ -61,6 +61,11 @@ namespace Tests.Model
 			unchecked { return (ParentID * 397) ^ (Value1 ?? 0); }
 		}
 
+		public override string ToString()
+		{
+			return $"Parent {{ ParentID={ParentID}, Value1={Value1} }}";
+		}
+
 		public int CompareTo(object? obj)
 		{
 			if (obj == null)
@@ -605,6 +610,7 @@ namespace Tests.Model
 
 		[Sql.TableExpression("{0} {1} WITH (TABLOCK)")]
 		static ITable<T> WithTabLock1<T>()
+			where T : notnull
 		{
 			throw new InvalidOperationException();
 		}
@@ -623,6 +629,7 @@ namespace Tests.Model
 	{
 		[Sql.TableExpression("{0} {1} WITH (TABLOCK)")]
 		static ITable<T> WithTabLock<T>()
+			where T : notnull
 		{
 			throw new InvalidOperationException();
 		}

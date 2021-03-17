@@ -49,7 +49,7 @@ namespace LinqToDB.Async
 			Transaction.Dispose();
 		}
 
-#if NETFRAMEWORK
+#if !NATIVE_ASYNC
 		public virtual Task DisposeAsync()
 		{
 			Dispose();
@@ -63,7 +63,7 @@ namespace LinqToDB.Async
 				return asyncDisposable.DisposeAsync();
 
 			Dispose();
-			return new ValueTask(Task.CompletedTask);
+			return default;
 		}
 #endif
 

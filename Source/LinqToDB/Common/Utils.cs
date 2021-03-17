@@ -140,6 +140,26 @@ namespace LinqToDB.Common
 			}
 		}
 
+		public static void RemoveDuplicatesFromTail<T>(this IList<T> list, Func<T, T, bool> compareFunc)
+		{
+			if (list.Count <= 1)
+				return;
+
+			for (var i = list.Count - 1; i >= 0; i--)
+			{
+				var current = list[i];
+				for (int j = 0; j < i; j++)
+				{
+					if (compareFunc(current, list[j]))
+					{
+						list.RemoveAt(j);
+						--j;
+						--i;
+					}
+				}
+			}
+		}
+
 		public class ObjectReferenceEqualityComparer<T> : IEqualityComparer<T>
 			where T: notnull
 		{
@@ -147,7 +167,7 @@ namespace LinqToDB.Common
 
 			#region IEqualityComparer<T> Members
 
-			public bool Equals([AllowNull] T x, [AllowNull] T y)
+			public bool Equals(T? x, T? y)
 			{
 				return ReferenceEquals(x, y);
 			}

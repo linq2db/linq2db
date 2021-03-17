@@ -25,14 +25,12 @@ namespace System.Threading
 {
 	using System.Security;
 	using System.Runtime.Remoting.Messaging;
-	using System.Diagnostics.CodeAnalysis;
 
 	internal sealed class AsyncLocal<T>
 	{
 		private readonly string _key = Guid.NewGuid().ToString("N").Substring(0, 12);
 
-		[MaybeNull]
-		public T Value
+		public T? Value
 		{
 			[SecuritySafeCritical]
 			get

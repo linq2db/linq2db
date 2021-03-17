@@ -1,18 +1,16 @@
-﻿using JetBrains.Annotations;
-using LinqToDB.Common;
-using LinqToDB.Expressions;
-using LinqToDB.Extensions;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
+using LinqToDB.Common;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Async
 {
@@ -33,7 +31,7 @@ namespace LinqToDB.Async
 		private static readonly ConcurrentDictionary<Type, Func<IDbTransaction, IAsyncDbTransaction>> _transactionFactories
 			= new ConcurrentDictionary<Type, Func<IDbTransaction, IAsyncDbTransaction>>();
 
-#if NETFRAMEWORK
+#if !NATIVE_ASYNC
 		private static readonly MethodInfo _transactionWrap      = MemberHelper.MethodOf(() => Wrap<IDbTransaction>(default!)).GetGenericMethodDefinition();
 #else
 #pragma warning disable CA2012 // ValueTask instances returned from method calls should be directly awaited...
@@ -103,7 +101,7 @@ namespace LinqToDB.Async
 			return Create(await transaction.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext));
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		private static async ValueTask<IAsyncDbTransaction> WrapValue<TTransaction>(ValueTask<TTransaction> transaction)
 			where TTransaction : IDbTransaction
 		{
@@ -131,7 +129,7 @@ namespace LinqToDB.Async
 			// Availability:
 			// - DbTransaction (netstandard2.1, netcoreapp3.0)
 			// - Npgsql 4.1.2+
-#if NETFRAMEWORK
+#if !NATIVE_ASYNC
 			var disposeAsync  = CreateDelegate<Func<IDbConnection               ,      Task>, IDbConnection >(type, "DisposeAsync" , Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, true , false)
 #else
 			var disposeAsync  = CreateDelegate<Func<IDbConnection               , ValueTask>, IDbConnection >(type, "DisposeAsync" , Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, true , true )
@@ -139,7 +137,7 @@ namespace LinqToDB.Async
 			// Task DisposeAsync()
 			// Availability:
 			// - MySqlConnector 0.57+
-#if NETFRAMEWORK
+#if !NATIVE_ASYNC
 							 ?? CreateDelegate<Func<IDbConnection               ,      Task>, IDbConnection >(type, "DisposeAsync" , Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, false, false);
 #else
 							 ?? CreateDelegate<Func<IDbConnection               , ValueTask>, IDbConnection >(type, "DisposeAsync" , Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, false, true );
@@ -162,7 +160,7 @@ namespace LinqToDB.Async
 			// - (stub) DbConnection (netstandard2.1, netcoreapp3.0)
 			// - MySqlConnector 0.57+
 			// - Npgsql 4.1.2+
-#if NETFRAMEWORK
+#if !NATIVE_ASYNC
 			var beginTransactionAsync   = CreateTaskTDelegate<Func<IDbConnection, CancellationToken           ,      Task<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _tokenParams           , _transactionWrap,      true, false)
 #else
 			var beginTransactionAsync   = CreateTaskTDelegate<Func<IDbConnection, CancellationToken           , ValueTask<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _tokenParams           , _transactionValueWrap, true, true)
@@ -171,7 +169,7 @@ namespace LinqToDB.Async
 			// Availability:
 			// - MySql.Data
 			// - MySqlConnector < 0.57
-#if NETFRAMEWORK
+#if !NATIVE_ASYNC
 									   ?? CreateTaskTDelegate<Func<IDbConnection, CancellationToken           ,      Task<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _tokenParams           , _transactionWrap,      false, false);
 #else
 									   ?? CreateTaskTDelegate<Func<IDbConnection, CancellationToken           , ValueTask<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _tokenParams           , _transactionValueWrap, false, true);
@@ -182,7 +180,7 @@ namespace LinqToDB.Async
 			// - (stub) DbConnection (netstandard2.1, netcoreapp3.0)
 			// - MySqlConnector 0.57+
 			// - Npgsql 4.1.2+
-#if NETFRAMEWORK
+#if !NATIVE_ASYNC
 			var beginTransactionIlAsync = CreateTaskTDelegate<Func<IDbConnection, IsolationLevel, CancellationToken,      Task<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _beginTransactionParams, _transactionWrap,      true, false)
 #else
 			var beginTransactionIlAsync = CreateTaskTDelegate<Func<IDbConnection, IsolationLevel, CancellationToken, ValueTask<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _beginTransactionParams, _transactionValueWrap, true, true)
@@ -191,7 +189,7 @@ namespace LinqToDB.Async
 			// Availability:
 			// - MySql.Data
 			// - MySqlConnector < 0.57
-#if NETFRAMEWORK
+#if !NATIVE_ASYNC
 									   ?? CreateTaskTDelegate<Func<IDbConnection, IsolationLevel, CancellationToken,      Task<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _beginTransactionParams, _transactionWrap,      false, false);
 #else
 									   ?? CreateTaskTDelegate<Func<IDbConnection, IsolationLevel, CancellationToken, ValueTask<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _beginTransactionParams, _transactionValueWrap, false, true);
@@ -217,7 +215,7 @@ namespace LinqToDB.Async
 			// Availability:
 			// - (stub) DbConnection (netstandard2.1, netcoreapp3.0)
 			// - Npgsql 4.1.2+
-#if NETFRAMEWORK
+#if !NATIVE_ASYNC
 			var disposeAsync            = CreateDelegate<Func<IDbConnection, Task     >, IDbConnection>(type, "DisposeAsync", Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, true , false)
 #else
 			var disposeAsync            = CreateDelegate<Func<IDbConnection, ValueTask>, IDbConnection>(type, "DisposeAsync", Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, true , true)
@@ -225,7 +223,7 @@ namespace LinqToDB.Async
 			// Task DisposeAsync()
 			// Availability:
 			// - MySqlConnector 0.57+
-#if NETFRAMEWORK
+#if !NATIVE_ASYNC
 									   ?? CreateDelegate<Func<IDbConnection,      Task>, IDbConnection>(type, "DisposeAsync", Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, false, false);
 #else
 									   ?? CreateDelegate<Func<IDbConnection, ValueTask>, IDbConnection>(type, "DisposeAsync", Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, false, true);
@@ -250,8 +248,7 @@ namespace LinqToDB.Async
 			return connection => new AsyncDbConnection(connection);
 		}
 
-		[return: MaybeNull]
-		private static TDelegate CreateDelegate<TDelegate, TInstance>(
+		private static TDelegate? CreateDelegate<TDelegate, TInstance>(
 			Type    instanceType,
 			string  methodName,
 			Type[]  delegateParameterTypes,
@@ -266,7 +263,7 @@ namespace LinqToDB.Async
 			if (mi == null
 				|| (!returnsValueTask && mi.ReturnType          != typeof(Task))
 				|| (returnsValueTask  && mi.ReturnType.FullName != "System.Threading.Tasks.ValueTask"))
-				return default!;
+				return default;
 
 			var pInstance      = Expression.Parameter(typeof(TInstance));
 			var parameters     = delegateParameterTypes.Select(t => Expression.Parameter(t)).ToArray();
@@ -284,7 +281,7 @@ namespace LinqToDB.Async
 				//convert a ValueTask result to a Task
 				body = ToTask(body);
 			}
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 			else if (!returnsValueTask && returnValueTask)
 			{
 				//convert a Task result to a ValueTask
@@ -307,7 +304,7 @@ namespace LinqToDB.Async
 			return Expression.Call(body, "AsTask", Array<Type>.Empty);
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		/// <summary>
 		/// Returns an expression which returns a <see cref="ValueTask"/> from a <see cref="Task"/>.
 		/// </summary>
@@ -347,8 +344,7 @@ namespace LinqToDB.Async
 		}
 #endif
 
-		[return: MaybeNull]
-		private static TDelegate CreateTaskTDelegate<TDelegate, TInstance, TTask>(
+		private static TDelegate? CreateTaskTDelegate<TDelegate, TInstance, TTask>(
 			Type       instanceType,
 			string     methodName,
 			Type[]     parametersTypes,
@@ -364,7 +360,7 @@ namespace LinqToDB.Async
 				|| !typeof(TTask).IsAssignableFrom(mi.ReturnType.GetGenericArguments()[0])
 				|| (!returnsValueTask && mi.ReturnType.GetGenericTypeDefinition()          != typeof(Task<>))
 				|| ( returnsValueTask && mi.ReturnType.GetGenericTypeDefinition().FullName != "System.Threading.Tasks.ValueTask`1"))
-				return default!;
+				return default;
 
 			var pInstance  = Expression.Parameter(typeof(TInstance));
 			var parameters = parametersTypes.Select(t => Expression.Parameter(t)).ToArray();
@@ -375,7 +371,7 @@ namespace LinqToDB.Async
 				//convert a ValueTask result to a Task
 				body = ToTask(body);
 			}
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 			else if (!returnsValueTask && returnValueTask)
 			{
 				//convert a Task result to a ValueTask

@@ -412,7 +412,7 @@ namespace Tests
 			ProviderName.SqlServer2008,
 			ProviderName.SqlServer2012,
 			ProviderName.SqlServer2014,
-			TestProvName.SqlServer2016,
+			ProviderName.SqlServer2016,
 			ProviderName.SqlServer2017,
 			TestProvName.SqlServer2019,
 			TestProvName.SqlServer2019SequentialAccess,
@@ -1102,12 +1102,12 @@ namespace Tests
 			Func<IEnumerable<T>, IEnumerable<T>>? sort,
 			bool allowEmpty = false)
 		{
-			var resultList   = result.Select(fixSelector).ToList();
+			var resultList   = result.  Select(fixSelector).ToList();
 			var expectedList = expected.Select(fixSelector).ToList();
 
 			if (sort != null)
 			{
-				resultList   = sort(resultList).ToList();
+				resultList   = sort(resultList).  ToList();
 				expectedList = sort(expectedList).ToList();
 			}
 
@@ -1115,22 +1115,23 @@ namespace Tests
 				Assert.AreNotEqual(0, expectedList.Count, "Expected list cannot be empty.");
 			Assert.AreEqual(expectedList.Count, resultList.Count, "Expected and result lists are different. Length: ");
 
-			var exceptExpectedList = resultList.Except(expectedList, comparer).ToList();
-			var exceptResultList   = expectedList.Except(resultList, comparer).ToList();
+			var exceptExpectedList = resultList.  Except(expectedList, comparer).ToList();
+			var exceptResultList   = expectedList.Except(resultList,   comparer).ToList();
 
 			var exceptExpected = exceptExpectedList.Count;
-			var exceptResult   = exceptResultList.Count;
+			var exceptResult   = exceptResultList.  Count;
 			var message        = new StringBuilder();
 
 			if (exceptResult != 0 || exceptExpected != 0)
 			{
-				Debug.WriteLine(resultList.ToDiagnosticString());
+				Debug.WriteLine(resultList.  ToDiagnosticString());
 				Debug.WriteLine(expectedList.ToDiagnosticString());
 
 				for (var i = 0; i < resultList.Count; i++)
 				{
-					Debug.WriteLine("{0} {1} --- {2}", comparer.Equals(expectedList[i], resultList[i]) ? " " : "-", expectedList[i], resultList[i]);
-					message.AppendFormat("{0} {1} --- {2}", comparer.Equals(expectedList[i], resultList[i]) ? " " : "-", expectedList[i], resultList[i]);
+					var equals = comparer.Equals(expectedList[i], resultList[i]);
+					Debug.  WriteLine   ("{0} {1} {3} {2}", equals ? " " : "!", expectedList[i], resultList[i], equals ? "==" : "<>");
+					message.AppendFormat("{0} {1} {3} {2}", equals ? " " : "!", expectedList[i], resultList[i], equals ? "==" : "<>");
 					message.AppendLine();
 				}
 			}
@@ -1184,6 +1185,9 @@ namespace Tests
 				if (e.NodeType == ExpressionType.Call)
 				{
 					var mc = (MethodCallExpression)e;
+
+					if (mc.IsSameGenericMethod(Methods.LinqToDB.AsSubQuery))
+						return mc.Arguments[0];
 
 					if (typeof(ITable<>).IsSameOrParentOf(mc.Type))
 					{
@@ -1240,6 +1244,7 @@ namespace Tests
 		}
 
 		public static TempTable<T> CreateTempTable<T>(IDataContext db, string tableName, string context)
+			where T : notnull
 		{
 			return TempTable.Create<T>(db, GetTempTableName(tableName, context));
 		}
@@ -1256,7 +1261,7 @@ namespace Tests
 				case ProviderName.SqlServer2008:
 				case ProviderName.SqlServer2012:
 				case ProviderName.SqlServer2014:
-				case TestProvName.SqlServer2016:
+				case ProviderName.SqlServer2016:
 				case ProviderName.SqlServer2017:
 				case TestProvName.SqlServer2019:
 				case TestProvName.SqlServer2019SequentialAccess:

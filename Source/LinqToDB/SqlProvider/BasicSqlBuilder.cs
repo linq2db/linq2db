@@ -11,7 +11,6 @@ using System.Text.RegularExpressions;
 
 namespace LinqToDB.SqlProvider
 {
-	using LinqToDB.Linq;
 	using Common;
 	using Mapping;
 	using SqlQuery;
@@ -1371,7 +1370,7 @@ namespace LinqToDB.SqlProvider
 			StringBuilder.AppendLine();
 		}
 
-		private static readonly Regex _selectDetector = new Regex(@"^[\W\r\n]*select\W+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+		private static readonly Regex _selectDetector = new (@"^[\W\r\n]*select\W+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
 		protected bool? BuildPhysicalTable(ISqlTableSource table, string? alias, string? defaultDatabaseName = null)
 		{
@@ -1621,7 +1620,8 @@ namespace LinqToDB.SqlProvider
 			{
 				AppendIndent();
 
-				BuildExpression(items[i]);
+				var expr = WrapBooleanExpression(items[i]);
+				BuildExpression(expr);
 
 				if (i + 1 < items.Count)
 					StringBuilder.AppendLine(Comma);

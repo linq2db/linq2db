@@ -83,7 +83,7 @@ namespace LinqToDB.Linq.Builder
 
 		public SqlInfo WithSql(ISqlExpression sql)
 		{
-			if (Sql == sql)
+			if (ReferenceEquals(Sql, sql))
 				return this;
 			return new SqlInfo(MemberChain, sql, Query, Index);
 		}
@@ -97,10 +97,16 @@ namespace LinqToDB.Linq.Builder
 
 		public SqlInfo WithQuery(SelectQuery? query)
 		{
-			if (Query == query)
+			if (ReferenceEquals(Query, query))
 				return this;
 			return new SqlInfo(MemberChain, Sql, query, Index);
 		}
 
+		public override string ToString()
+		{
+			var str = $"[{Index,2}] Member: {(MemberChain.Length == 0 ? "[no member]" : string.Join(".", MemberChain.Select(m => m.Name)))}";
+			str = $"{str}, SQL: {Sql}";
+			return str;
+		}
 	}
 }

@@ -1,14 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 
 namespace LinqToDB.Async
 {
-	using Linq;
-
 	/// <summary>
 	/// This API supports the LinqToDB infrastructure and is not intended to be used  directly from your code.
 	/// This API may change or be removed in future releases.
@@ -39,7 +35,7 @@ namespace LinqToDB.Async
 
 			var result = new List<T>();
 			var enumerator = source.GetAsyncEnumerator(cancellationToken);
-#if NETFRAMEWORK
+#if !NATIVE_ASYNC
 			await using (enumerator)
 #else
 			await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
@@ -99,7 +95,7 @@ namespace LinqToDB.Async
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			var enumerator = source.GetAsyncEnumerator(cancellationToken);
-#if NETFRAMEWORK
+#if !NATIVE_ASYNC
 			await using (enumerator)
 #else
 			await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
@@ -124,7 +120,7 @@ namespace LinqToDB.Async
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			var enumerator = source.GetAsyncEnumerator(token);
-#if NETFRAMEWORK
+#if !NATIVE_ASYNC
 			await using (enumerator)
 #else
 			await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))

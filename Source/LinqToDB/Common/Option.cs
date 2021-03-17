@@ -49,6 +49,6 @@ namespace LinqToDB.Common
 		/// <summary>
 		/// Gets <see cref="None"/> value for option.
 		/// </summary>
-		public static readonly Option<T> None = new Option<T>(default);
+		public static readonly Option<T> None = new (default);
 	}
 }

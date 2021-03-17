@@ -3,7 +3,7 @@
 	using LinqToDB.Mapping;
 	using SqlProvider;
 
-	class SqlServer2017SqlBuilder : SqlServer2012SqlBuilder
+	class SqlServer2017SqlBuilder : SqlServer2016SqlBuilder
 	{
 		public SqlServer2017SqlBuilder(SqlServerDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)

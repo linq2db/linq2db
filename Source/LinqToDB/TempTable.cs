@@ -25,10 +25,8 @@ namespace LinqToDB
 	/// </summary>
 	/// <typeparam name="T">Table record mapping class.</typeparam>
 	[PublicAPI]
-	public class TempTable<T> : ITable<T>, ITableMutable<T>, IDisposable
-#if !NETFRAMEWORK
-		, IAsyncDisposable
-#endif
+	public class TempTable<T> : ITable<T>, ITableMutable<T>, IDisposable, IAsyncDisposable
+		where T : notnull
 	{
 		readonly ITable<T> _table;
 
@@ -289,7 +287,7 @@ namespace LinqToDB
 			{
 				try
 				{
-#if NETFRAMEWORK
+#if !NATIVE_ASYNC
 					table.Dispose();
 #else
 					await table.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -347,7 +345,7 @@ namespace LinqToDB
 			{
 				try
 				{
-#if NETFRAMEWORK
+#if !NATIVE_ASYNC
 					table.Dispose();
 #else
 					await table.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -424,7 +422,7 @@ namespace LinqToDB
 			return count.RowsCopied;
 		}
 
-		static readonly ConcurrentDictionary<Type,Expression<Func<T,T>>> _setterDic = new ConcurrentDictionary<Type,Expression<Func<T,T>>>();
+		static readonly ConcurrentDictionary<Type,Expression<Func<T,T>>> _setterDic = new ();
 
 		/// <summary>
 		/// Insert data into table using records, returned by provided query.
@@ -620,10 +618,15 @@ namespace LinqToDB
 			_table.DropTable();
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		public ValueTask DisposeAsync()
 		{
 			return new ValueTask(_table.DropTableAsync());
+		}
+#else
+		public Task DisposeAsync()
+		{
+			return _table.DropTableAsync();
 		}
 #endif
 	}

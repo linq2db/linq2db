@@ -12,7 +12,6 @@ namespace Tests.DataProvider
 {
 	using System.Data.Linq;
 	using System.Diagnostics;
-	using System.Diagnostics.CodeAnalysis;
 	using System.Threading.Tasks;
 	using LinqToDB.DataProvider.Informix;
 	using LinqToDB.Mapping;
@@ -444,7 +443,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		void CompareObject<T>(MappingSchema mappingSchema, [DisallowNull] T actual, [DisallowNull] T test)
+		void CompareObject<T>(MappingSchema mappingSchema, T actual, T test)
+			where T: notnull
 		{
 			var ed = mappingSchema.GetEntityDescriptor(typeof(T));
 

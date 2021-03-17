@@ -552,7 +552,8 @@ namespace LinqToDB.DataProvider.MySql
 			{
 				AppendIndent();
 
-				BuildExpression(items[i]);
+				var expr = WrapBooleanExpression(items[i]);
+				BuildExpression(expr);
 
 				if (i + 1 < items.Count)
 					StringBuilder.AppendLine(Comma);

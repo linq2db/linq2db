@@ -297,7 +297,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region ConvertToSql
 
-		readonly Dictionary<MemberInfo,SqlInfo[]> _sql = new Dictionary<MemberInfo,SqlInfo[]>(new MemberInfoComparer());
+		readonly Dictionary<MemberInfo,SqlInfo[]> _sql = new(new MemberInfoComparer());
 
 		public virtual SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 		{
@@ -657,8 +657,9 @@ namespace LinqToDB.Linq.Builder
 			else
 			{
 				info = info.WithIndex(SelectQuery.Select.Add(info.Sql));
-				if (member != null)
-					SelectQuery.Select.Columns[info.Index].Alias = member.Name;
+				var column = SelectQuery.Select.Columns[info.Index];
+				if (member != null && column.RawAlias == null)
+					column.Alias = member.Name;
 			}
 
 			return info;

@@ -576,6 +576,7 @@ namespace Tests.DataProvider
 					test<TestDropTable>();
 
 				void test<TTable>()
+					where TTable : notnull
 				{
 					// first drop deletes table if it remains from previous test run
 					// second drop deletes non-existing table

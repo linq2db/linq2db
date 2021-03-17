@@ -278,12 +278,12 @@ namespace LinqToDB.Extensions
 
 		static class CacheHelper<T>
 		{
-			public static readonly ConcurrentDictionary<Type,T[]> TypeAttributes = new ConcurrentDictionary<Type,T[]>();
+			public static readonly ConcurrentDictionary<Type,T[]> TypeAttributes = new ();
 		}
 
 #region Attributes cache
 
-		static readonly ConcurrentDictionary<Type, object[]> _typeAttributesTopInternal = new ConcurrentDictionary<Type, object[]>();
+		static readonly ConcurrentDictionary<Type, object[]> _typeAttributesTopInternal = new ();
 
 		static void GetAttributesInternal(List<object> list, Type type)
 		{
@@ -298,7 +298,7 @@ namespace LinqToDB.Extensions
 			}
 		}
 
-		static readonly ConcurrentDictionary<Type, object[]> _typeAttributesInternal = new ConcurrentDictionary<Type, object[]>();
+		static readonly ConcurrentDictionary<Type, object[]> _typeAttributesInternal = new ();
 
 		static void GetAttributesTreeInternal(List<object> list, Type type)
 		{
@@ -391,7 +391,7 @@ namespace LinqToDB.Extensions
 		/// Gets a value indicating whether a type (or type's element type)
 		/// instance can be null in the underlying data store.
 		/// </summary>
-		/// <param name="type">A <see cref="System.Type"/> instance. </param>
+		/// <param name="type">A <see cref="Type"/> instance. </param>
 		/// <returns> True, if the type parameter is a closed generic nullable type; otherwise, False.</returns>
 		/// <remarks>Arrays of Nullable types are treated as Nullable types.</remarks>
 		public static bool IsNullable(this Type type)
@@ -402,7 +402,7 @@ namespace LinqToDB.Extensions
 		/// <summary>
 		/// Returns the underlying type argument of the specified type.
 		/// </summary>
-		/// <param name="type">A <see cref="System.Type"/> instance. </param>
+		/// <param name="type">A <see cref="Type"/> instance. </param>
 		/// <returns><list>
 		/// <item>The type argument of the type parameter,
 		/// if the type parameter is a closed generic nullable type.</item>
@@ -639,7 +639,7 @@ namespace LinqToDB.Extensions
 		///<summary>
 		/// Gets the Type of a list item.
 		///</summary>
-		/// <param name="listType">A <see cref="System.Type"/> instance. </param>
+		/// <param name="listType">A <see cref="Type"/> instance. </param>
 		///<returns>The Type instance that represents the exact runtime type of a list item.</returns>
 		public static Type GetListItemType(this Type listType)
 		{
@@ -701,7 +701,7 @@ namespace LinqToDB.Extensions
 			return false;
 		}
 
-		static readonly ConcurrentDictionary<Type,Type?> _getItemTypeCache = new ConcurrentDictionary<Type, Type?>();
+		static readonly ConcurrentDictionary<Type,Type?> _getItemTypeCache = new ();
 
 		public static Type? GetItemType(this Type? type)
 		{
@@ -742,7 +742,7 @@ namespace LinqToDB.Extensions
 		/// <summary>
 		/// Gets a value indicating whether a type can be used as a db primitive.
 		/// </summary>
-		/// <param name="type">A <see cref="System.Type"/> instance. </param>
+		/// <param name="type">A <see cref="Type"/> instance. </param>
 		/// <param name="checkArrayElementType">True if needed to check element type for arrays</param>
 		/// <returns> True, if the type parameter is a primitive type; otherwise, False.</returns>
 		/// <remarks><see cref="System.String"/>. <see cref="Stream"/>.
@@ -769,7 +769,7 @@ namespace LinqToDB.Extensions
 		/// Returns an array of Type objects that represent the type arguments
 		/// of a generic type or the type parameters of a generic type definition.
 		///</summary>
-		/// <param name="type">A <see cref="System.Type"/> instance.</param>
+		/// <param name="type">A <see cref="Type"/> instance.</param>
 		///<param name="baseType">Non generic base type.</param>
 		///<returns>An array of Type objects that represent the type arguments
 		/// of a generic type. Returns an empty array if the current type is not a generic type.</returns>
@@ -937,7 +937,7 @@ namespace LinqToDB.Extensions
 				member.DeclaringType.GetGenericTypeDefinition() == typeof(Nullable<>);
 		}
 
-		static readonly Dictionary<Type,HashSet<Type>> _castDic = new Dictionary<Type,HashSet<Type>>
+		static readonly Dictionary<Type,HashSet<Type>> _castDic = new Dictionary<Type,HashSet<Type>>()
 		{
 			{ typeof(decimal), new HashSet<Type> { typeof(sbyte), typeof(byte),   typeof(short), typeof(ushort), typeof(int), typeof(uint), typeof(long), typeof(ulong), typeof(char)                } },
 			{ typeof(double),  new HashSet<Type> { typeof(sbyte), typeof(byte),   typeof(short), typeof(ushort), typeof(int), typeof(uint), typeof(long), typeof(ulong), typeof(char), typeof(float) } },
@@ -1096,7 +1096,7 @@ namespace LinqToDB.Extensions
 			return mi;
 		}
 
-		static ConcurrentDictionary<MethodInfo, MethodInfo> _methodDefinitionCache = new ConcurrentDictionary<MethodInfo, MethodInfo>();
+		static ConcurrentDictionary<MethodInfo, MethodInfo> _methodDefinitionCache = new ();
 
 		internal static MethodInfo GetGenericMethodDefinitionCached(this MethodInfo method)
 		{

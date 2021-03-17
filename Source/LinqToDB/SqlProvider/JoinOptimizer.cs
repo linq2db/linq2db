@@ -38,6 +38,18 @@ namespace LinqToDB.SqlProvider
 							--si;
 						}
 					}
+				else if (j.JoinType == JoinType.Left)
+					for (var si = 0; si < j.Table.Joins.Count; si++)
+					{
+						var sj = j.Table.Joins[si];
+						if ((sj.JoinType == JoinType.Left)
+						    && table != j.Table && !HasDependencyWithParent(j, sj))
+						{
+							table.Joins.Insert(i + 1, sj);
+							j.Table.Joins.RemoveAt(si);
+							--si;
+						}
+					}
 			}
 		}
 

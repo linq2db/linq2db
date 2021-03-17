@@ -33,6 +33,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			SqlProviderFlags.IsOrderByAggregateFunctionsSupported = false;
 			SqlProviderFlags.IsDistinctSetOperationsSupported     = false;
 			SqlProviderFlags.IsUpdateFromSupported                = false;
+			SqlProviderFlags.IsGroupByExpressionSupported         = false;
 
 			SetCharFieldToType<char>("NChar", DataTools.GetCharExpression);
 
@@ -158,7 +159,7 @@ namespace LinqToDB.DataProvider.SqlCe
 				cancellationToken);
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{

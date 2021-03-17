@@ -8,6 +8,7 @@ namespace LinqToDB.Linq
 	using Common.Internal.Cache;
 
 	class CompiledTable<T>
+		where T : notnull
 	{
 		public CompiledTable(LambdaExpression lambda, Expression expression)
 		{
