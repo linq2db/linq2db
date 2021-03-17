@@ -3385,6 +3385,17 @@ namespace LinqToDB
 
 		#region Tag
 
+		/// <summary>
+		/// Adds a tag comment before generated query.
+		/// <code>
+		/// The example below will produce following code before generated query: -- my tag\r\n
+		/// db.Table.TagWith("my tag");
+		/// </code>
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <param name="source">Source data query.</param>
+		/// <param name="tagValue">Tag text to be added as comment before generated query.</param>
+		/// <returns>Query with tag.</returns>
 		[LinqTunnel]
 		[Pure]
 		public static IQueryable<TSource> TagWith<TSource>(this IQueryable<TSource> source, string tagValue)

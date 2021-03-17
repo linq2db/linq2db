@@ -1,7 +1,8 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using LinqToDB;
+using LinqToDB.Data;
 using NUnit.Framework;
-using Tests.Model;
 
 namespace Tests.Linq
 {
@@ -9,7 +10,7 @@ namespace Tests.Linq
 	public class TagTests : TestBase
 	{
 		[Test]
-		public void Test_IfExists([DataSources] string context)
+		public void Test_IfExists([DataSources(false)] string context)
 		{
 			var tag = "My Test";
 			var expected = "-- " + tag + "\r\n";
@@ -18,17 +19,19 @@ namespace Tests.Linq
 			{
 				var query =
 					from x in db.Person.TagWith(tag)
-					select x;				
+					select x;
 
-				var commandSql = query.ToString();
+				query.ToList();
 
-				var selectIndex = commandSql.IndexOf("SELECT");
-				Assert.That(commandSql.IndexOf(expected), Is.EqualTo(selectIndex - expected.Length));				
+				var commandSql = ((DataConnection)db).LastQuery!;
+
+				var selectIndex = commandSql!.IndexOf("SELECT");
+				Assert.That(commandSql!.IndexOf(expected), Is.EqualTo(selectIndex - expected.Length));
 			}
 		}
 
 		[Test]
-		public void Test_Multiline([DataSources] string context)
+		public void Test_Multiline([DataSources(false)] string context)
 		{
 			var tag = "My custom\r\nwonderful multiline\nquery tag";
 			var expected = "-- My custom\r\n-- wonderful multiline\n-- query tag\r\n";
@@ -39,10 +42,26 @@ namespace Tests.Linq
 					from x in db.Person.TagWith(tag)
 					select x;
 
-				var commandSql = query.ToString();
+				query.ToList();
 
-				var selectIndex = commandSql.IndexOf("SELECT");
-				Assert.That(commandSql.IndexOf(expected), Is.EqualTo(selectIndex - expected.Length));
+				var commandSql = ((DataConnection)db).LastQuery!;
+
+				var selectIndex = commandSql!.IndexOf("SELECT");
+				Assert.That(commandSql!.IndexOf(expected), Is.EqualTo(selectIndex - expected.Length));
+			}
+		}
+
+		[Test]
+		public void Test_Null([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				Assert.Throws<ArgumentNullException>(() =>
+				{
+					var query =
+					from x in db.Person.TagWith(null!)
+					select x;
+				});
 			}
 		}
 	}
