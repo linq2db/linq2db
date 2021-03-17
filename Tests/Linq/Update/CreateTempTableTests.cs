@@ -276,7 +276,8 @@ namespace Tests.xUpdate
 			await db.DropTableAsync<int>("TempTable", throwExceptionIfNotExists: false);
 
 			var tempTable = await db.CreateTempTableAsync<IDTable>("TempTable");
-			await tempTable.DropAsync();
+			var table2 = db.GetTable<IDTable>().TableName("TempTable");
+			await table2.DropAsync();
 			await tempTable.DisposeAsync();
 		}
 #endif
