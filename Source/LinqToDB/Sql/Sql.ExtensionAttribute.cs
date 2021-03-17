@@ -690,7 +690,6 @@ namespace LinqToDB
 					var templateParameters       = genericDefinition.GetParameters();
 					var templateGenericArguments = genericDefinition.GetGenericArguments();
 					var descriptorMapping        = new Dictionary<Type, ColumnDescriptor?>();
-					var genericMapping           = new Dictionary<Type, Type?>();
 
 					for (var i = 0; i < parameters.Length; i++)
 					{

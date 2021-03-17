@@ -61,6 +61,11 @@ namespace Tests.Model
 			unchecked { return (ParentID * 397) ^ (Value1 ?? 0); }
 		}
 
+		public override string ToString()
+		{
+			return $"Parent {{ ParentID={ParentID}, Value1={Value1} }}";
+		}
+
 		public int CompareTo(object? obj)
 		{
 			if (obj == null)
