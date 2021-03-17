@@ -263,7 +263,8 @@ namespace Tests.xUpdate
 			db.DropTable<int>("TempTable", throwExceptionIfNotExists: false);
 
 			var tempTable = db.CreateTempTable<IDTable>("TempTable");
-			tempTable.Drop();
+			var table2 = db.GetTable<IDTable>().TableName("TempTable");
+			table2.Drop();
 			tempTable.Dispose();
 		}
 
