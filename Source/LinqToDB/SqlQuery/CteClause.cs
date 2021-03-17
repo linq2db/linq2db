@@ -11,7 +11,7 @@ namespace LinqToDB.SqlQuery
 	[DebuggerDisplay("CTE({CteID}, {Name})")]
 	public class CteClause : IQueryElement, ICloneableElement, ISqlExpressionWalkable
 	{
-		SqlField[]? _fields = new SqlField[0];
+		SqlField[]? _fields = Array<SqlField>.Empty;
 
 		public static int CteIDCounter;
 

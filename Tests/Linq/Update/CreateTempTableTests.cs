@@ -4,7 +4,6 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB;
-using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -119,10 +118,7 @@ namespace Tests.xUpdate
 			{
 				await db.DropTableAsync<int>("TempTable", throwExceptionIfNotExists: false);
 
-#if !NET472
-				await
-#endif
-				using (var tmp = await db.CreateTempTableAsync(
+				await using (var tmp = await db.CreateTempTableAsync(
 					"TempTable",
 					db.Parent.Select(p => new IDTable { ID = p.ParentID }),
 					tableOptions:TableOptions.CheckExistence))
@@ -144,10 +140,7 @@ namespace Tests.xUpdate
 			{
 				db.DropTable<int>("TempTable", throwExceptionIfNotExists: false);
 
-#if !NET472
-				await
-#endif
-				using (var tmp = await db.CreateTempTableAsync(
+				await using (var tmp = await db.CreateTempTableAsync(
 					"TempTable",
 					db.Parent.Select(p => new IDTable { ID = p.ParentID }).ToList(),
 					tableOptions:TableOptions.CheckExistence))
@@ -173,10 +166,7 @@ namespace Tests.xUpdate
 
 				try
 				{
-#if !NET472
-					await
-#endif
-					using (var tmp = await db.CreateTempTableAsync(
+					await using (var tmp = await db.CreateTempTableAsync(
 						"TempTable",
 						db.Parent.Select(p => new IDTable { ID = p.ParentID }).ToList(),
 						cancellationToken: cts.Token))
@@ -216,10 +206,7 @@ namespace Tests.xUpdate
 
 				try
 				{
-#if !NET472
-					await
-#endif
-					using (var tmp = await db.CreateTempTableAsync(
+					await using (var tmp = await db.CreateTempTableAsync(
 						"TempTable",
 						db.Parent.Select(p => new IDTable { ID = p.ParentID }),
 						action: (table) =>
@@ -250,6 +237,21 @@ namespace Tests.xUpdate
 					tableExists = false;
 				}
 				Assert.AreEqual(false, tableExists);
+			}
+		}
+
+		[Test]
+		public void CreateTableSQLite([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var data = new[] { new { ID = 1, Field = 2 } };
+
+			using (var tmp = db.CreateTempTable(data, tableName : "#TempTable"))
+			{
+				var list = tmp.ToList();
+
+				Assert.That(list, Is.EquivalentTo(data));
 			}
 		}
 	}

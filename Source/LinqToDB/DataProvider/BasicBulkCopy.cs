@@ -16,6 +16,7 @@ namespace LinqToDB.DataProvider
 	public class BasicBulkCopy
 	{
 		public virtual BulkCopyRowsCopied BulkCopy<T>(BulkCopyType bulkCopyType, ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+			where T : notnull
 		{
 			return bulkCopyType switch
 			{
@@ -27,6 +28,7 @@ namespace LinqToDB.DataProvider
 
 		public virtual Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
 			BulkCopyType bulkCopyType, ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+			where T : notnull
 		{
 			return bulkCopyType switch
 			{
@@ -36,9 +38,10 @@ namespace LinqToDB.DataProvider
 			};
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		public virtual Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
 			BulkCopyType bulkCopyType, ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+			where T: notnull
 		{
 			return bulkCopyType switch
 			{
@@ -51,19 +54,22 @@ namespace LinqToDB.DataProvider
 
 		protected virtual BulkCopyRowsCopied ProviderSpecificCopy<T>(
 			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+			where T : notnull
 		{
 			return MultipleRowsCopy(table, options, source);
 		}
 
 		protected virtual Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+			where T : notnull
 		{
 			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		protected virtual Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+			where T: notnull
 		{
 			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
 		}
@@ -71,25 +77,29 @@ namespace LinqToDB.DataProvider
 
 		protected virtual BulkCopyRowsCopied MultipleRowsCopy<T>(
 			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+			where T : notnull
 		{
 			return RowByRowCopy(table, options, source);
 		}
 
 		protected virtual Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+			where T : notnull
 		{
 			return RowByRowCopyAsync(table, options, source, cancellationToken);
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		protected virtual Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+			where T: notnull
 		{
 			return RowByRowCopyAsync(table, options, source, cancellationToken);
 		}
 #endif
 
 		protected virtual BulkCopyRowsCopied RowByRowCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+			where T : notnull
 		{
 			// This limitation could be lifted later for some providers that supports identity insert if we will get such request
 			// It will require support from DataConnection.Insert
@@ -124,6 +134,7 @@ namespace LinqToDB.DataProvider
 
 		protected virtual async Task<BulkCopyRowsCopied> RowByRowCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+			where T : notnull
 		{
 			// This limitation could be lifted later for some providers that supports identity insert if we will get such request
 			// It will require support from DataConnection.Insert
@@ -159,9 +170,10 @@ namespace LinqToDB.DataProvider
 			return rowsCopied;
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		protected virtual async Task<BulkCopyRowsCopied> RowByRowCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+			where T: notnull
 		{
 			// This limitation could be lifted later for some providers that supports identity insert if we will get such request
 			// It will require support from DataConnection.Insert
@@ -191,6 +203,7 @@ namespace LinqToDB.DataProvider
 #endif
 
 		protected internal static string GetTableName<T>(ISqlBuilder sqlBuilder, BulkCopyOptions options, ITable<T> table, bool escaped = true)
+			where T : notnull
 		{
 			var sqlTable = new SqlTable
 			{
@@ -349,7 +362,7 @@ namespace LinqToDB.DataProvider
 			return helper.RowsCopied;
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		protected static async Task<BulkCopyRowsCopied> MultipleRowsCopyHelperAsync<T>(
 			MultipleRowsHelper                          helper,
 			IAsyncEnumerable<T>                         source,
@@ -386,22 +399,26 @@ namespace LinqToDB.DataProvider
 #endif
 
 		protected BulkCopyRowsCopied MultipleRowsCopy1<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+			where T : notnull
 			=> MultipleRowsCopy1(new MultipleRowsHelper<T>(table, options), source);
 
 		protected BulkCopyRowsCopied MultipleRowsCopy1(MultipleRowsHelper helper, IEnumerable source)
 			=> MultipleRowsCopyHelper(helper, source, null, MultipleRowsCopy1Prep, MultipleRowsCopy1Add, MultipleRowsCopy1Finish);
 
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy1Async<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+			where T : notnull
 			=> MultipleRowsCopy1Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken);
 
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy1Async(MultipleRowsHelper helper, IEnumerable source, CancellationToken cancellationToken)
 			=> MultipleRowsCopyHelperAsync(helper, source, null, MultipleRowsCopy1Prep, MultipleRowsCopy1Add, MultipleRowsCopy1Finish, cancellationToken);
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy1Async<T>(ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+		where T: notnull
 			=> MultipleRowsCopy1Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken);
 
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy1Async<T>(MultipleRowsHelper helper, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+		where T: notnull
 			=> MultipleRowsCopyHelperAsync(helper, source, null, MultipleRowsCopy1Prep, MultipleRowsCopy1Add, MultipleRowsCopy1Finish, cancellationToken);
 #endif
 
@@ -409,21 +426,21 @@ namespace LinqToDB.DataProvider
 		{
 			helper.StringBuilder
 				.AppendFormat("INSERT INTO {0}", helper.TableName).AppendLine()
-				.Append("(");
+				.Append('(');
 
 			foreach (var column in helper.Columns)
 			{
 				helper.StringBuilder
 					.AppendLine()
-					.Append("\t");
+					.Append('\t');
 				helper.SqlBuilder.Convert(helper.StringBuilder, column.ColumnName, ConvertType.NameToQueryField);
-				helper.StringBuilder.Append(",");
+				helper.StringBuilder.Append(',');
 			}
 
 			helper.StringBuilder.Length--;
 			helper.StringBuilder
 				.AppendLine()
-				.Append(")");
+				.Append(')');
 
 			helper.StringBuilder
 				.AppendLine()
@@ -436,7 +453,7 @@ namespace LinqToDB.DataProvider
 		{
 			helper.StringBuilder
 				.AppendLine()
-				.Append("(");
+				.Append('(');
 			helper.BuildColumns(item!);
 			helper.StringBuilder.Append("),");
 
@@ -450,22 +467,26 @@ namespace LinqToDB.DataProvider
 		}
 
 		protected BulkCopyRowsCopied MultipleRowsCopy2<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, string from)
+			where T : notnull
 			=> MultipleRowsCopy2(new MultipleRowsHelper<T>(table, options), source, from);
 
 		protected BulkCopyRowsCopied MultipleRowsCopy2(MultipleRowsHelper helper, IEnumerable source, string from)
 			=> MultipleRowsCopyHelper(helper, source, from, MultipleRowsCopy2Prep, MultipleRowsCopy2Add, MultipleRowsCopy2Finish);
 
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy2Async<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, string from, CancellationToken cancellationToken)
+			where T : notnull
 			=> MultipleRowsCopy2Async(new MultipleRowsHelper<T>(table, options), source, from, cancellationToken);
 
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy2Async(MultipleRowsHelper helper, IEnumerable source, string from, CancellationToken cancellationToken)
 			=> MultipleRowsCopyHelperAsync(helper, source, from, MultipleRowsCopy2Prep, MultipleRowsCopy2Add, MultipleRowsCopy2Finish, cancellationToken);
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy2Async<T>(ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, string from, CancellationToken cancellationToken)
+		where T: notnull
 			=> MultipleRowsCopy2Async(new MultipleRowsHelper<T>(table, options), source, from, cancellationToken);
 
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy2Async<T>(MultipleRowsHelper helper, IAsyncEnumerable<T> source, string from, CancellationToken cancellationToken)
+		where T: notnull
 			=> MultipleRowsCopyHelperAsync(helper, source, from, MultipleRowsCopy2Prep, MultipleRowsCopy2Add, MultipleRowsCopy2Finish, cancellationToken);
 #endif
 
@@ -473,21 +494,21 @@ namespace LinqToDB.DataProvider
 		{
 			helper.StringBuilder
 				.AppendFormat("INSERT INTO {0}", helper.TableName).AppendLine()
-				.Append("(");
+				.Append('(');
 
 			foreach (var column in helper.Columns)
 			{
 				helper.StringBuilder
 					.AppendLine()
-					.Append("\t");
+					.Append('\t');
 				helper.SqlBuilder.Convert(helper.StringBuilder, column.ColumnName, ConvertType.NameToQueryField);
-				helper.StringBuilder.Append(",");
+				helper.StringBuilder.Append(',');
 			}
 
 			helper.StringBuilder.Length--;
 			helper.StringBuilder
 				.AppendLine()
-				.Append(")");
+				.Append(')');
 
 			helper.SetHeader();
 		}
@@ -516,8 +537,9 @@ namespace LinqToDB.DataProvider
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy3Async(MultipleRowsHelper helper, BulkCopyOptions options, IEnumerable source, string from, CancellationToken cancellationToken)
 			=> MultipleRowsCopyHelperAsync(helper, source, from, MultipleRowsCopy3Prep, MultipleRowsCopy3Add, MultipleRowsCopy3Finish, cancellationToken);
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy3Async<T>(MultipleRowsHelper helper, BulkCopyOptions options, IAsyncEnumerable<T> source, string from, CancellationToken cancellationToken)
+		where T: notnull
 			=> MultipleRowsCopyHelperAsync(helper, source, from, MultipleRowsCopy3Prep, MultipleRowsCopy3Add, MultipleRowsCopy3Finish, cancellationToken);
 #endif
 
@@ -525,15 +547,15 @@ namespace LinqToDB.DataProvider
 		{
 			helper.StringBuilder
 				.AppendFormat("INSERT INTO {0}", helper.TableName).AppendLine()
-				.Append("(");
+				.Append('(');
 
 			foreach (var column in helper.Columns)
 			{
 				helper.StringBuilder
 					.AppendLine()
-					.Append("\t");
+					.Append('\t');
 				helper.SqlBuilder.Convert(helper.StringBuilder, column.ColumnName, ConvertType.NameToQueryField);
-				helper.StringBuilder.Append(",");
+				helper.StringBuilder.Append(',');
 			}
 
 			helper.StringBuilder.Length--;
@@ -541,7 +563,7 @@ namespace LinqToDB.DataProvider
 				.AppendLine()
 				.AppendLine(")")
 				.AppendLine("SELECT * FROM")
-				.Append("(");
+				.Append('(');
 
 			helper.SetHeader();
 		}
@@ -564,7 +586,7 @@ namespace LinqToDB.DataProvider
 			helper.StringBuilder.Length -= " UNION ALL".Length;
 			helper.StringBuilder
 				.AppendLine()
-				.Append(")");
+				.Append(')');
 		}
 
 		#endregion

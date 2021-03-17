@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 
 using LinqToDB;
 
@@ -7,10 +6,10 @@ using NUnit.Framework;
 
 namespace Tests.Data
 {
-	using LinqToDB.Data;
-	using Model;
 	using System.Threading;
 	using System.Threading.Tasks;
+	using LinqToDB.Data;
+	using Model;
 
 	[TestFixture]
 	public class TransactionTests : TestBase

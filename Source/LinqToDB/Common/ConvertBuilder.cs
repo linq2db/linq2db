@@ -142,7 +142,7 @@ namespace LinqToDB.Common
 		{
 			if (to == typeof(string) && !from.IsNullable())
 			{
-				var mi = from.GetMethodEx("ToString", new Type[0]);
+				var mi = from.GetMethodEx("ToString", Array<Type>.Empty);
 				return mi != null ? Expression.Call(p, mi) : null;
 			}
 
@@ -273,7 +273,7 @@ namespace LinqToDB.Common
 					return expr;
 				}
 
-				if (fromTypeFields.Any(f => f.attrs.Count(a => a.Value != null) != 0))
+				if (fromTypeFields.Any(f => f.attrs.Any(a => a.Value != null)))
 				{
 					var field = fromTypeFields.First(f => f.attrs.Count == 0);
 

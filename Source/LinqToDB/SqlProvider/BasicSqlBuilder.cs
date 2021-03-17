@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Linq;
 using System.Data.SqlTypes;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -402,9 +403,9 @@ namespace LinqToDB.SqlProvider
 			if (database != null)
 			{
 				if (schema == null) sb.Append(database).Append("..");
-				else                sb.Append(database).Append(".").Append(schema).Append(".");
+				else                sb.Append(database).Append('.').Append(schema).Append('.');
 			}
-			else if (schema != null) sb.Append(schema).Append(".");
+			else if (schema != null) sb.Append(schema).Append('.');
 
 			return sb.Append(table);
 		}
@@ -504,7 +505,7 @@ namespace LinqToDB.SqlProvider
 				Indent--;
 
 				AppendIndent();
-				StringBuilder.Append(")");
+				StringBuilder.Append(')');
 			}
 
 			StringBuilder.AppendLine();
@@ -560,7 +561,7 @@ namespace LinqToDB.SqlProvider
 			}
 
 			if (first)
-				AppendIndent().Append("*");
+				AppendIndent().Append('*');
 
 			Indent--;
 
@@ -615,7 +616,7 @@ namespace LinqToDB.SqlProvider
 			AppendIndent();
 			StringBuilder.Append("DELETE");
 			BuildSkipFirst(deleteStatement.SelectQuery);
-			StringBuilder.Append(" ");
+			StringBuilder.Append(' ');
 		}
 
 		#endregion
@@ -849,7 +850,7 @@ namespace LinqToDB.SqlProvider
 
 				if (key.Column.CanBeNull)
 				{
-					StringBuilder.Append("(");
+					StringBuilder.Append('(');
 
 					StringBuilder.Append(targetAlias).Append('.');
 					BuildExpression(key.Column, false, false);
@@ -867,7 +868,7 @@ namespace LinqToDB.SqlProvider
 				BuildExpression(key.Column, false, false);
 
 				if (key.Column.CanBeNull)
-					StringBuilder.Append(")");
+					StringBuilder.Append(')');
 
 				if (i + 1 < keys.Count)
 					StringBuilder.Append(" AND");
@@ -933,7 +934,7 @@ namespace LinqToDB.SqlProvider
 
 				if (expr.Column.CanBeNull)
 				{
-					StringBuilder.Append("(");
+					StringBuilder.Append('(');
 
 					StringBuilder.Append(alias).Append('.');
 					BuildExpression(expr.Column, false, false);
@@ -947,7 +948,7 @@ namespace LinqToDB.SqlProvider
 				BuildExpression(Precedence.Comparison, expr.Expression!);
 
 				if (expr.Column.CanBeNull)
-					StringBuilder.Append(")");
+					StringBuilder.Append(')');
 
 				if (i + 1 < exprs.Count)
 					StringBuilder.Append(" AND");
@@ -1317,7 +1318,7 @@ namespace LinqToDB.SqlProvider
 			AppendIndent();
 			StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY (");
 			StringBuilder.Append(string.Join(InlineComma, fieldNames));
-			StringBuilder.Append(")");
+			StringBuilder.Append(')');
 		}
 
 		#endregion
@@ -1354,7 +1355,7 @@ namespace LinqToDB.SqlProvider
 				{
 					jn--;
 					for (var i = 0; i < jn; i++)
-						StringBuilder.Append("(");
+						StringBuilder.Append('(');
 				}
 
 				BuildTableName(ts, true, true);
@@ -1368,7 +1369,7 @@ namespace LinqToDB.SqlProvider
 			StringBuilder.AppendLine();
 		}
 
-		private static readonly Regex _selectDetector = new Regex(@"^[\W\r\n]*select\W+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+		private static readonly Regex _selectDetector = new (@"^[\W\r\n]*select\W+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
 		protected bool? BuildPhysicalTable(ISqlTableSource table, string? alias, string? defaultDatabaseName = null)
 		{
@@ -1384,7 +1385,7 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.SqlQuery        :
 					StringBuilder.AppendLine(OpenParens);
 					BuildSqlBuilder((SelectQuery)table, Indent + 1, false);
-					AppendIndent().Append(")");
+					AppendIndent().Append(')');
 					break;
 
 				case QueryElementType.SqlCteTable     :
@@ -1419,7 +1420,7 @@ namespace LinqToDB.SqlProvider
 					if (multiLine)
 						StringBuilder.AppendLine();
 					if (appendParentheses)
-						AppendIndent().Append(")");
+						AppendIndent().Append(')');
 
 					break;
 
@@ -1449,7 +1450,7 @@ namespace LinqToDB.SqlProvider
 					if (!string.IsNullOrEmpty(alias))
 					{
 						if (buildName)
-							StringBuilder.Append(" ");
+							StringBuilder.Append(' ');
 						Convert(StringBuilder, alias!, ConvertType.NameToQueryTableAlias);
 					}
 				}
@@ -1489,7 +1490,7 @@ namespace LinqToDB.SqlProvider
 				StringBuilder.Append(" ON ");
 
 			if (WrapJoinCondition && condition.Conditions.Count > 0)
-				StringBuilder.Append("(");
+				StringBuilder.Append('(');
 
 			if (buildOn)
 			{
@@ -1500,12 +1501,12 @@ namespace LinqToDB.SqlProvider
 			}
 
 			if (WrapJoinCondition && condition.Conditions.Count > 0)
-				StringBuilder.Append(")");
+				StringBuilder.Append(')');
 
 			if (joinCounter > 0)
 			{
 				joinCounter--;
-				StringBuilder.Append(")");
+				StringBuilder.Append(')');
 			}
 
 			if (!IsNestedJoinSupported)
@@ -1604,11 +1605,11 @@ namespace LinqToDB.SqlProvider
 					StringBuilder.Append(" CUBE");
 					break;
 				default:
-					throw new ArgumentOutOfRangeException();
+					throw new InvalidOperationException($"Unexpected grouping type: {groupingType}");
 			}
 
 			if (groupingType != GroupingType.Default)
-				StringBuilder.Append(" ").AppendLine(OpenParens);
+				StringBuilder.Append(' ').AppendLine(OpenParens);
 			else
 				StringBuilder.AppendLine();
 
@@ -1618,7 +1619,8 @@ namespace LinqToDB.SqlProvider
 			{
 				AppendIndent();
 
-				BuildExpression(items[i]);
+				var expr = WrapBooleanExpression(items[i]);
+				BuildExpression(expr);
 
 				if (i + 1 < items.Count)
 					StringBuilder.AppendLine(Comma);
@@ -1631,7 +1633,7 @@ namespace LinqToDB.SqlProvider
 			if (groupingType != GroupingType.Default)
 			{
 				AppendIndent();
-				StringBuilder.Append(")").AppendLine();
+				StringBuilder.Append(')').AppendLine();
 			}
 		}
 
@@ -2182,21 +2184,21 @@ namespace LinqToDB.SqlProvider
 					StringBuilder.Insert(len, "(");
 					StringBuilder.Append(" OR ");
 					BuildPredicate(new SqlPredicate.IsNull(predicate.Expr1, predicate.IsNot));
-					StringBuilder.Append(")");
+					StringBuilder.Append(')');
 				}
 				else if (predicate.WithNull == true && predicate.Expr1.ShouldCheckForNull())
 				{
 					StringBuilder.Insert(len, "(");
 					StringBuilder.Append(" OR ");
 					BuildPredicate(new SqlPredicate.IsNull(predicate.Expr1, false));
-					StringBuilder.Append(")");
+					StringBuilder.Append(')');
 				}
 			}
 
 			if (longList && !hasNull)
 			{
 				StringBuilder.Insert(len, "(");
-				StringBuilder.Append(")");
+				StringBuilder.Append(')');
 			}
 		}
 
@@ -2297,7 +2299,7 @@ namespace LinqToDB.SqlProvider
 						}
 
 						if (field == field.Table?.All)
-							StringBuilder.Append("*");
+							StringBuilder.Append('*');
 						else
 							Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
 					}
@@ -2361,7 +2363,7 @@ namespace LinqToDB.SqlProvider
 						AppendIndent();
 
 						if (!hasParentheses)
-							StringBuilder.Append(")");
+							StringBuilder.Append(')');
 					}
 
 					break;
@@ -2433,7 +2435,7 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.GroupingSet:
 					{
 						var groupingSet = (SqlGroupingSet) expr;
-						StringBuilder.Append("(");
+						StringBuilder.Append('(');
 						for (var index = 0; index < groupingSet.Items.Count; index++)
 						{
 							var setItem = groupingSet.Items[index];
@@ -2442,7 +2444,7 @@ namespace LinqToDB.SqlProvider
 								StringBuilder.Append(InlineComma);
 						}
 
-						StringBuilder.Append(")");
+						StringBuilder.Append(')');
 					}
 
 					break;
@@ -2530,7 +2532,7 @@ namespace LinqToDB.SqlProvider
 			BuildExpression(value);
 			StringBuilder.Append(" AS ");
 			BuildDataType(dataType, false);
-			StringBuilder.Append(")");
+			StringBuilder.Append(')');
 		}
 
 		#endregion
@@ -3081,7 +3083,50 @@ namespace LinqToDB.SqlProvider
 					sb.Append("SET     ");
 					PrintParameterName(sb, p);
 					sb.Append(" = ");
-					if (!ValueToSqlConverter.TryConvert(sb, p.Value))
+					if (p.Value is byte[] bytes                           &&
+					    Configuration.MaxBinaryParameterLengthLogging >= 0 &&
+					    bytes.Length > Configuration.MaxBinaryParameterLengthLogging &&
+					    ValueToSqlConverter.CanConvert(typeof(byte[])))
+					{
+						var trimmed =
+							new byte[Configuration.MaxBinaryParameterLengthLogging];
+						Array.Copy(bytes, 0, trimmed, 0,
+							Configuration.MaxBinaryParameterLengthLogging);
+						ValueToSqlConverter.TryConvert(sb, trimmed);
+						sb.AppendLine();
+						sb.Append(
+							$"-- value above truncated for logging, actual length is {bytes.Length}");
+					}
+					else if (p.Value is Binary binaryData &&
+					         Configuration.MaxBinaryParameterLengthLogging >= 0 &&
+					         binaryData.Length > Configuration.MaxBinaryParameterLengthLogging &&
+					         ValueToSqlConverter.CanConvert(typeof(Binary)))
+					{
+						//We aren't going to create a new Binary here,
+						//since ValueToSql always just .ToArray() anyway
+						var trimmed =
+							new byte[Configuration.MaxBinaryParameterLengthLogging];
+						Array.Copy(binaryData.ToArray(), 0, trimmed, 0,
+							Configuration.MaxBinaryParameterLengthLogging);
+						ValueToSqlConverter.TryConvert(sb, trimmed);
+						sb.AppendLine();
+						sb.Append(
+							$"-- value above truncated for logging, actual length is {binaryData.Length}");
+					}
+					else if (p.Value is string s && 
+					         Configuration.MaxStringParameterLengthLogging >= 0 &&
+					         s.Length > Configuration.MaxStringParameterLengthLogging &&
+					         ValueToSqlConverter.CanConvert(typeof(string)))
+					{
+						var trimmed =
+							s.Substring(0,
+								Configuration.MaxStringParameterLengthLogging);
+						ValueToSqlConverter.TryConvert(sb, trimmed);
+						sb.AppendLine();
+						sb.Append(
+							$"-- value above truncated for logging, actual length is {s.Length}");
+					}
+					else if (!ValueToSqlConverter.TryConvert(sb, p.Value))
 						FormatParameterValue(sb, p.Value);
 					sb.AppendLine();
 				}
@@ -3116,7 +3161,7 @@ namespace LinqToDB.SqlProvider
 				sb.Append(value);
 		}
 
-		public string ApplyQueryHints(string sql, List<string> queryHints)
+		public string ApplyQueryHints(string sqlText, List<string> queryHints)
 		{
 			var sb = new StringBuilder();
 
@@ -3124,7 +3169,7 @@ namespace LinqToDB.SqlProvider
 				if (hint?.Length >= 2 && hint.StartsWith("**"))
 					sb.AppendLine(hint.Substring(2));
 
-			sb.Append(sql);
+			sb.Append(sqlText);
 
 			foreach (var hint in queryHints)
 				if (!(hint?.Length >= 2 && hint.StartsWith("**")))

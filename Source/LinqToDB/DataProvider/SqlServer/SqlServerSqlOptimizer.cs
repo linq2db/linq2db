@@ -22,23 +22,24 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			return QueryHelper.WrapQuery(
 				statement,
-				query => query.ParentSelect == null && (query.Select.SkipValue != null ||
+				(query, _) => query.ParentSelect == null && (query.Select.SkipValue != null ||
 				                                        query.Select.TakeValue != null ||
 				                                        query.Select.TakeHints != null || !query.OrderBy.IsEmpty),
-				(query, wrappedQuery) => { }
+				(query, wrappedQuery) => { },
+				allowMutation: true
 			);
 		}
 
-		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expr, ConvertVisitor visitor,
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor visitor,
 			EvaluationContext context)
 		{
-			expr = base.ConvertExpressionImpl(expr, visitor, context);
+			expression = base.ConvertExpressionImpl(expression, visitor, context);
 
-			switch (expr.ElementType)
+			switch (expression.ElementType)
 			{
 				case QueryElementType.SqlBinaryExpression:
 					{
-						var be = (SqlBinaryExpression)expr;
+						var be = (SqlBinaryExpression)expression;
 
 						switch (be.Operation)
 						{
@@ -64,7 +65,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 				case QueryElementType.SqlFunction:
 					{
-						var func = (SqlFunction)expr;
+						var func = (SqlFunction)expression;
 
 						switch (func.Name)
 						{
@@ -121,7 +122,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					}
 			}
 
-			return expr;
+			return expression;
 		}
 
 	}

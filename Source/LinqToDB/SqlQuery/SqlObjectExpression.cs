@@ -49,7 +49,7 @@ namespace LinqToDB.SqlQuery
 						Expression.Convert(convExpr.GetBody(Expression.Convert(callGetter, valueType)), typeof(object)),
 						convParam);
 
-					getter = lex.Compile();
+					getter = lex.CompileExpression();
 				}
 
 				_getters.Add(index, getter);
@@ -157,7 +157,7 @@ namespace LinqToDB.SqlQuery
 
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
-			sb.Append("(");
+			sb.Append('(');
 			foreach (var parameter in _infoParameters)
 			{
 				parameter.Sql.ToString(sb, dic)
@@ -167,7 +167,7 @@ namespace LinqToDB.SqlQuery
 			if (_infoParameters.Length > 0)
 				sb.Length -= 2;
 
-			sb.Append(")");
+			sb.Append(')');
 
 			return sb;
 		}

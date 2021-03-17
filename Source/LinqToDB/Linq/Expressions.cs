@@ -267,6 +267,8 @@ namespace LinqToDB.Linq
 			var targetFramework = "net45";
 #elif NET46
 			var targetFramework = "net46";
+#elif NET472
+			var targetFramework = "net472";
 #elif NETCOREAPP2_1
 			var targetFramework = "netcoreapp2.1";
 #elif NETSTANDARD2_0
@@ -460,7 +462,9 @@ namespace LinqToDB.Linq
 		class GetValueOrDefaultExpressionInfo<T1> : IExpressionInfo, ISetInfo
 			where T1 : struct
 		{
-			static T1? _member = null;
+#pragma warning disable CS0649 // Field is never assigned to...
+			static T1? _member;
+#pragma warning restore CS0649 // Field is never assigned to...
 
 			public LambdaExpression GetExpression(MappingSchema mappingSchema)
 			{
@@ -477,7 +481,7 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		class GenericInfoProvider<T> : IGenericInfoProvider
+		class GetValueOrDefaultInfoProvider<T> : IGenericInfoProvider
 		{
 			public void SetInfo(MappingSchema mappingSchema)
 			{
@@ -553,6 +557,7 @@ namespace LinqToDB.Linq
 			{ M(() => string.Concat((string[])null!)                           ), N(() => L<string[],string>                   ((string[] ps)                             => Sql.Concat(ps)))          },
 
 			{ M(() => string.IsNullOrEmpty ("")    ),                                         N(() => L<string,bool>                                   ((string p0)                                                   => p0 == null || p0.Length == 0)) },
+			{ M(() => string.IsNullOrWhiteSpace("")),                                         N(() => L<string,bool>                                   ((string p0)                                                   => Sql.IsNullOrWhiteSpace(p0))) },
 			{ M(() => string.CompareOrdinal("","")),                                          N(() => L<string,string,int>                             ((string s1,string s2)                                         => s1.CompareTo(s2))) },
 			{ M(() => string.CompareOrdinal("",0,"",0,0)),                                    N(() => L<string,int,string,int,int,int>                 ((string s1,int i1,string s2,int i2,int l)                     => s1.Substring(i1, l).CompareTo(s2.Substring(i2, l)))) },
 			{ M(() => string.Compare       ("","")),                                          N(() => L<string,string,int>                             ((string s1,string s2)                                         => s1.CompareTo(s2))) },
@@ -569,6 +574,12 @@ namespace LinqToDB.Linq
 			#region Binary
 
 			{ M(() => ((Binary)null!).Length ), N(() => L<Binary,int>((Binary obj) => Sql.Length(obj)!.Value)) },
+
+			#endregion
+
+			#region Byte[]
+
+			{ M(() => ((byte[])null!).Length ), N(() => L<byte[],int>((byte[] obj) => Sql.Length(obj)!.Value)) },
 
 			#endregion
 
@@ -1100,7 +1111,7 @@ namespace LinqToDB.Linq
 
 		static Dictionary<string,Dictionary<MemberInfo,IExpressionInfo>> LoadMembers()
 		{
-			SetGenericInfoProvider(typeof(GenericInfoProvider<>));
+			SetGenericInfoProvider(typeof(GetValueOrDefaultInfoProvider<>));
 
 			var members = new Dictionary<string,Dictionary<MemberInfo,IExpressionInfo>>
 			{
@@ -1288,10 +1299,10 @@ namespace LinqToDB.Linq
 				#region PostgreSQL
 
 				{ ProviderName.PostgreSQL, new Dictionary<MemberInfo,IExpressionInfo> {
-					{ M(() => Sql.Left ("",0)     ), N(() => L<string?,int?,string?>             ((p0,p1)                                   => Sql.Substring(p0, 1, p1))) },
-					{ M(() => Sql.Right("",0)     ), N(() => L<string?,int?,string?>             ((string? p0,int? p1)                     => Sql.Substring(p0, p0!.Length - p1 + 1, p1))) },
+					{ M(() => Sql.Left ("",0)     ), N(() => L<string?,int?,string?>             ((p0,p1)                                 => Sql.Substring(p0, 1, p1))) },
+					{ M(() => Sql.Right("",0)     ), N(() => L<string?,int?,string?>             ((string? p0,int? p1)                    => Sql.Substring(p0, p0!.Length - p1 + 1, p1))) },
 					{ M(() => Sql.Stuff("",0,0,"")), N(() => L<string?,int?,int?,string?,string?>((string? p0,int? p1,int? p2,string? p3) => AltStuff(p0, p1, p2, p3))) },
-					{ M(() => Sql.Space(0)        ), N(() => L<int?,string?>                     ((int? p0)                              => Replicate(" ", p0))) },
+					{ M(() => Sql.Space(0)        ), N(() => L<int?,string?>                     ((int? p0)                               => Replicate(" ", p0))) },
 
 					{ M(() => Sql.Cosh(0)           ), N(() => L<double?,double?>     ((double? v)        => (Sql.Exp(v) + Sql.Exp(-v)) / 2 )) },
 					{ M(() => Sql.Round      (0.0,0)), N(() => L<double?,int?,double?>((double? v,int? p) => (double?)Sql.Round      ((decimal)v!, p))) },

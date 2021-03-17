@@ -199,7 +199,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						var beginBinaryImport = Expression.Lambda<Func<IDbConnection, string, NpgsqlBinaryImporter>>(
 								typeMapper.MapExpression((IDbConnection conn, string command) => typeMapper.Wrap<NpgsqlBinaryImporter>(((NpgsqlConnection)conn).BeginBinaryImport(command)), pConnection, pCommand),
 								pConnection, pCommand)
-							.Compile();
+							.CompileExpression();
 
 						// create mapping schema
 						var mappingSchema = new MappingSchema();
@@ -514,7 +514,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				(Expression<Action<NpgsqlBinaryImporter>>                                  )((NpgsqlBinaryImporter this_) => this_.Dispose()),
 				// [4]: StartRow
 				(Expression<Action<NpgsqlBinaryImporter>>                                  )((NpgsqlBinaryImporter this_) => this_.StartRow()),
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 				// [5]: CompleteAsync
 				new Tuple<LambdaExpression, bool>
 				((Expression<Func<NpgsqlBinaryImporter, CancellationToken, ValueTask<ulong>>>)((NpgsqlBinaryImporter this_, CancellationToken token) => this_.CompleteAsync(token)),         true),
@@ -555,9 +555,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			public ulong Complete5() => ((Func<NpgsqlBinaryImporter, ulong>)CompiledWrappers[2])(this);
 			public void Dispose()  => ((Action<NpgsqlBinaryImporter>)CompiledWrappers[3])(this);
 			public void StartRow() => ((Action<NpgsqlBinaryImporter>)CompiledWrappers[4])(this);
-			public void Write<T>(T value, NpgsqlDbType npgsqlDbType) => ((Action<NpgsqlBinaryImporter, object?, NpgsqlDbType>)CompiledWrappers[9])(this, (object?)value, npgsqlDbType);
+			public void Write<T>(T value, NpgsqlDbType npgsqlDbType) => ((Action<NpgsqlBinaryImporter, object?, NpgsqlDbType>)CompiledWrappers[9])(this, value, npgsqlDbType);
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 #pragma warning disable CS3002 // Return type is not CLS-compliant
 			public ValueTask<ulong> CompleteAsync(CancellationToken cancellationToken) 
 				=> ((Func<NpgsqlBinaryImporter, CancellationToken, ValueTask<ulong>>)CompiledWrappers[5])(this, cancellationToken);
@@ -581,7 +581,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 #endif
 
 			public Task WriteAsync<T>(T value, NpgsqlDbType npgsqlDbType, CancellationToken cancellationToken)
-				=> ((Func<NpgsqlBinaryImporter, object?, NpgsqlDbType, CancellationToken, Task>)CompiledWrappers[8])(this, (object?)value, npgsqlDbType, cancellationToken);
+				=> ((Func<NpgsqlBinaryImporter, object?, NpgsqlDbType, CancellationToken, Task>)CompiledWrappers[8])(this, value, npgsqlDbType, cancellationToken);
 
 			public bool HasComplete => CompiledWrappers[1] != null;
 			public bool HasComplete5 => CompiledWrappers[2] != null;

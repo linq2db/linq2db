@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NETFRAMEWORK
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -16,7 +17,7 @@ namespace LinqToDB.ServiceModel
 
 	static class LinqServiceSerializer
 	{
-		#region Public Members
+#region Public Members
 
 		public static string Serialize(MappingSchema serializationSchema, SqlStatement statement, IReadOnlyParameterValues? parameterValues, List<string>? queryHints)
 		{
@@ -48,9 +49,9 @@ namespace LinqToDB.ServiceModel
 			return new StringArrayDeserializer(serializationSchema).Deserialize(str);
 		}
 
-		#endregion
+#endregion
 
-		#region SerializerBase
+#region SerializerBase
 
 		const int TypeIndex      = -2;
 		const int TypeArrayIndex = -3;
@@ -244,9 +245,9 @@ namespace LinqToDB.ServiceModel
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region DeserializerBase
+#region DeserializerBase
 
 		public class DeserializerBase
 		{
@@ -310,7 +311,7 @@ namespace LinqToDB.ServiceModel
 				var value = 0;
 
 				for (var c = Peek(); char.IsDigit(c); c = Next())
-					value = value * 10 + ((int)c - '0');
+					value = value * 10 + (c - '0');
 
 				return minus ? -value : value;
 			}
@@ -328,7 +329,7 @@ namespace LinqToDB.ServiceModel
 				var value = 0;
 
 				for (var c = Peek(); char.IsDigit(c); c = Next())
-					value = value * 10 + ((int)c - '0');
+					value = value * 10 + (c - '0');
 
 				return minus ? -value : value;
 			}
@@ -343,7 +344,7 @@ namespace LinqToDB.ServiceModel
 				var value = 0;
 
 				for (var c = Peek(); char.IsDigit(c); c = Next())
-					value = value * 10 + ((int)c - '0');
+					value = value * 10 + (c - '0');
 
 				return value;
 			}
@@ -599,9 +600,9 @@ namespace LinqToDB.ServiceModel
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region QuerySerializer
+#region QuerySerializer
 
 		class QuerySerializer : SerializerBase
 		{
@@ -780,8 +781,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.SystemType);
 							Append(elem.Expr);
 							Append(elem.Precedence);
-							Append(elem.IsAggregate);
-							Append(elem.IsPure);
+							Append((int)elem.Flags);
 							Append(elem.Parameters);
 
 							break;
@@ -1402,9 +1402,9 @@ namespace LinqToDB.ServiceModel
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region QueryDeserializer
+#region QueryDeserializer
 
 		public class QueryDeserializer : DeserializerBase
 		{
@@ -1548,11 +1548,10 @@ namespace LinqToDB.ServiceModel
 							var systemType  = Read<Type>();
 							var expr        = ReadString()!;
 							var precedence  = ReadInt();
-							var isAggregate = ReadBool();
-							var isPure      = ReadBool();
+							var flags       = (SqlFlags)ReadInt();
 							var parameters  = ReadArray<ISqlExpression>()!;
 
-							obj = new SqlExpression(systemType, expr, precedence, isAggregate, isPure, parameters);
+							obj = new SqlExpression(systemType, expr, precedence, flags, parameters);
 
 							break;
 						}
@@ -2200,9 +2199,9 @@ namespace LinqToDB.ServiceModel
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region ResultSerializer
+#region ResultSerializer
 
 		class ResultSerializer : SerializerBase
 		{
@@ -2243,9 +2242,9 @@ namespace LinqToDB.ServiceModel
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region ResultDeserializer
+#region ResultDeserializer
 
 		class ResultDeserializer : DeserializerBase
 		{
@@ -2291,9 +2290,9 @@ namespace LinqToDB.ServiceModel
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region StringArraySerializer
+#region StringArraySerializer
 
 		class StringArraySerializer : SerializerBase
 		{
@@ -2315,9 +2314,9 @@ namespace LinqToDB.ServiceModel
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region StringArrayDeserializer
+#region StringArrayDeserializer
 
 		class StringArrayDeserializer : DeserializerBase
 		{
@@ -2339,9 +2338,9 @@ namespace LinqToDB.ServiceModel
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region Helpers
+#region Helpers
 
 		interface IArrayHelper
 		{
@@ -2397,6 +2396,7 @@ namespace LinqToDB.ServiceModel
 			return converter(list);
 		}
 
-		#endregion
+#endregion
 	}
 }
+#endif

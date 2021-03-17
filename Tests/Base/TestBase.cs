@@ -31,6 +31,7 @@ using NUnit.Framework.Internal;
 
 namespace Tests
 {
+	using FastExpressionCompiler;
 	using Model;
 	using Tools;
 
@@ -288,7 +289,7 @@ namespace Tests
 				catch (Exception e)
 				{
 					TestExternals.Log(e.ToString());
-					Console.WriteLine(e);
+					TestContext.WriteLine(e);
 					throw;
 				}
 			}
@@ -302,7 +303,7 @@ namespace Tests
 				foreach (var file in Directory.GetFiles(databasePath, "*.*"))
 				{
 					var destination = Path.Combine(dataPath, Path.GetFileName(file));
-					Console.WriteLine("{0} => {1}", file, destination);
+					TestContext.WriteLine("{0} => {1}", file, destination);
 					File.Copy(file, destination, true);
 				}
 			}
@@ -411,10 +412,11 @@ namespace Tests
 			ProviderName.SqlServer2008,
 			ProviderName.SqlServer2012,
 			ProviderName.SqlServer2014,
-			TestProvName.SqlServer2016,
+			ProviderName.SqlServer2016,
 			ProviderName.SqlServer2017,
 			TestProvName.SqlServer2019,
 			TestProvName.SqlServer2019SequentialAccess,
+			TestProvName.SqlServer2019FastExpressionCompiler,
 			ProviderName.SqlServer2000,
 			ProviderName.SqlServer2005,
 			TestProvName.SqlAzure,
@@ -468,12 +470,15 @@ namespace Tests
 			// add extra mapping schema to not share mappers with other sql2017/2019 providers
 			// use same schema to use cache within test provider scope
 			if (configuration == TestProvName.SqlServer2019SequentialAccess)
-				res.AddMappingSchema(_sequentialAccessMS);
+				res.AddMappingSchema(_sequentialAccessSchema);
+			else if (configuration == TestProvName.SqlServer2019FastExpressionCompiler)
+				res.AddMappingSchema(_fecSchema);
 
 			return res;
 		}
 
-		private static readonly MappingSchema _sequentialAccessMS = new MappingSchema();
+		private static readonly MappingSchema _sequentialAccessSchema = new MappingSchema();
+		private static readonly MappingSchema _fecSchema = new MappingSchema();
 
 		protected static char GetParameterToken(string context)
 		{
@@ -699,7 +704,7 @@ namespace Tests
 					.Where(p => p.Value1.HasValue && (new[] { 1, 2 }.Contains(p.Value1.Value)))
 					.Select(p => p.Value1 == 1 ?
 						(ParentInheritanceBase4)new ParentInheritance14 { ParentID = p.ParentID } :
-						(ParentInheritanceBase4)new ParentInheritance24 { ParentID = p.ParentID }
+												new ParentInheritance24 { ParentID = p.ParentID }
 				).ToList();
 
 		protected List<Child>?      _child;
@@ -1086,7 +1091,7 @@ namespace Tests
 
 		protected void AreEqual<T>(Func<T, T> fixSelector, IEnumerable<T> expected, IEnumerable<T> result, IEqualityComparer<T> comparer, bool allowEmpty = false)
 		{
-			AreEqual<T>(fixSelector, expected, result, comparer, null, allowEmpty);
+			AreEqual(fixSelector, expected, result, comparer, null, allowEmpty);
 		}
 
 		protected void AreEqual<T>(
@@ -1097,12 +1102,12 @@ namespace Tests
 			Func<IEnumerable<T>, IEnumerable<T>>? sort,
 			bool allowEmpty = false)
 		{
-			var resultList   = result.Select(fixSelector).ToList();
+			var resultList   = result.  Select(fixSelector).ToList();
 			var expectedList = expected.Select(fixSelector).ToList();
 
 			if (sort != null)
 			{
-				resultList   = sort(resultList).ToList();
+				resultList   = sort(resultList).  ToList();
 				expectedList = sort(expectedList).ToList();
 			}
 
@@ -1110,22 +1115,23 @@ namespace Tests
 				Assert.AreNotEqual(0, expectedList.Count, "Expected list cannot be empty.");
 			Assert.AreEqual(expectedList.Count, resultList.Count, "Expected and result lists are different. Length: ");
 
-			var exceptExpectedList = resultList.Except(expectedList, comparer).ToList();
-			var exceptResultList   = expectedList.Except(resultList, comparer).ToList();
+			var exceptExpectedList = resultList.  Except(expectedList, comparer).ToList();
+			var exceptResultList   = expectedList.Except(resultList,   comparer).ToList();
 
 			var exceptExpected = exceptExpectedList.Count;
-			var exceptResult   = exceptResultList.Count;
+			var exceptResult   = exceptResultList.  Count;
 			var message        = new StringBuilder();
 
 			if (exceptResult != 0 || exceptExpected != 0)
 			{
-				Debug.WriteLine(resultList.ToDiagnosticString());
+				Debug.WriteLine(resultList.  ToDiagnosticString());
 				Debug.WriteLine(expectedList.ToDiagnosticString());
 
 				for (var i = 0; i < resultList.Count; i++)
 				{
-					Debug.WriteLine("{0} {1} --- {2}", comparer.Equals(expectedList[i], resultList[i]) ? " " : "-", expectedList[i], resultList[i]);
-					message.AppendFormat("{0} {1} --- {2}", comparer.Equals(expectedList[i], resultList[i]) ? " " : "-", expectedList[i], resultList[i]);
+					var equals = comparer.Equals(expectedList[i], resultList[i]);
+					Debug.  WriteLine   ("{0} {1} {3} {2}", equals ? " " : "!", expectedList[i], resultList[i], equals ? "==" : "<>");
+					message.AppendFormat("{0} {1} {3} {2}", equals ? " " : "!", expectedList[i], resultList[i], equals ? "==" : "<>");
 					message.AppendLine();
 				}
 			}
@@ -1180,6 +1186,9 @@ namespace Tests
 				{
 					var mc = (MethodCallExpression)e;
 
+					if (mc.IsSameGenericMethod(Methods.LinqToDB.AsSubQuery))
+						return mc.Arguments[0];
+
 					if (typeof(ITable<>).IsSameOrParentOf(mc.Type))
 					{
 						var entityType = mc.Method.ReturnType.GetGenericArguments()[0];
@@ -1189,10 +1198,12 @@ namespace Tests
 							if (!loaded.TryGetValue(entityType, out var itemsExpression))
 							{
 								var newCall = LinqToDB.Common.TypeHelper.MakeMethodCall(Methods.Queryable.ToArray, mc);
-								var items = newCall.EvaluateExpression();
-								itemsExpression = Expression.Constant(items, entityType.MakeArrayType());
-								loaded.Add(entityType, itemsExpression);
-
+								using (new DisableLogging())
+								{
+									var items = newCall.EvaluateExpression();
+									itemsExpression = Expression.Constant(items, entityType.MakeArrayType());
+									loaded.Add(entityType, itemsExpression);
+								}
 							}
 							var queryCall =
 								LinqToDB.Common.TypeHelper.MakeMethodCall(Methods.Enumerable.AsQueryable,
@@ -1208,10 +1219,7 @@ namespace Tests
 			var empty = LinqToDB.Common.Tools.CreateEmptyQuery<T>();
 			T[]? expected;
 
-			using (new DisableLogging())
-			{
-				expected = empty.Provider.CreateQuery<T>(newExpr).ToArray();
-			}
+			expected = empty.Provider.CreateQuery<T>(newExpr).ToArray();
 
 			if (actual.Length > 0 || expected.Length > 0)
 				AreEqual(expected, actual, ComparerBuilder.GetEqualityComparer<T>());
@@ -1223,7 +1231,7 @@ namespace Tests
 		{
 			Assert.AreEqual(normalize(expected), normalize(result));
 
-			string normalize(string sql)
+			static string normalize(string sql)
 			{
 				var lines = sql.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
 				return string.Join("\n", lines.Where(l => !l.StartsWith("-- ")).Select(l => l.TrimStart('\t', ' ')));
@@ -1236,6 +1244,7 @@ namespace Tests
 		}
 
 		public static TempTable<T> CreateTempTable<T>(IDataContext db, string tableName, string context)
+			where T : notnull
 		{
 			return TempTable.Create<T>(db, GetTempTableName(tableName, context));
 		}
@@ -1252,15 +1261,16 @@ namespace Tests
 				case ProviderName.SqlServer2008:
 				case ProviderName.SqlServer2012:
 				case ProviderName.SqlServer2014:
-				case TestProvName.SqlServer2016:
+				case ProviderName.SqlServer2016:
 				case ProviderName.SqlServer2017:
 				case TestProvName.SqlServer2019:
 				case TestProvName.SqlServer2019SequentialAccess:
+				case TestProvName.SqlServer2019FastExpressionCompiler:
 				{
-						if (!tableName.StartsWith("#"))
-							finalTableName = "#" + tableName;
-						break;
-					}
+					if (!tableName.StartsWith("#"))
+						finalTableName = "#" + tableName;
+					break;
+				}
 				default:
 					throw new NotImplementedException();
 			}
@@ -1284,6 +1294,10 @@ namespace Tests
 				Configuration.OptimizeForSequentialAccess = true;
 				DbCommandProcessorExtensions.Instance = new SequentialAccessCommandProcessor();
 			}
+			else if (provider == TestProvName.SqlServer2019FastExpressionCompiler)
+			{
+				//Compilation.SetExpressionCompiler(_ => ExpressionCompiler.CompileFast(_, true));
+			}
 		}
 
 		[TearDown]
@@ -1295,6 +1309,10 @@ namespace Tests
 			{
 				Configuration.OptimizeForSequentialAccess = false;
 				DbCommandProcessorExtensions.Instance = null;
+			}
+			if (provider == TestProvName.SqlServer2019FastExpressionCompiler)
+			{
+				//Compilation.SetExpressionCompiler(null);
 			}
 
 			if (provider?.Contains("SapHana") == true)

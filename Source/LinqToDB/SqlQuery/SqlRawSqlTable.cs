@@ -62,7 +62,7 @@ namespace LinqToDB.SqlQuery
 			return sb
 				.AppendLine("(")
 				.Append(SQL)
-				.Append(")")
+				.Append(')')
 				.AppendLine();
 		}
 

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Linq;
-
-using LinqToDB.Data;
+﻿using System.Linq;
 
 using NUnit.Framework;
 
@@ -9,7 +6,6 @@ namespace Tests.xUpdate
 {
 	using LinqToDB;
 	using LinqToDB.Mapping;
-	using Model;
 
 	// tests for target/source/match condition configuration methods, not covered by other tests
 	public partial class MergeTests
@@ -33,7 +29,7 @@ namespace Tests.xUpdate
 					.MergeInto(table)
 					.OnTargetKey()
 					.InsertWhenNotMatched()
-					.Merge());
+					.Merge())!;
 
 				Assert.IsInstanceOf<LinqToDBException>(exception);
 				Assert.AreEqual("Method OnTargetKey() needs at least one primary key column", exception.Message);
@@ -405,7 +401,7 @@ namespace Tests.xUpdate
 						{
 							Field3 = 321
 						})
-						.Merge());
+						.Merge())!;
 
 				Assert.IsInstanceOf<LinqToDBException>(exception);
 				Assert.AreEqual("'s.Field2' cannot be converted to SQL.", exception.Message);

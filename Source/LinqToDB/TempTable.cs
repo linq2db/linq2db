@@ -25,10 +25,8 @@ namespace LinqToDB
 	/// </summary>
 	/// <typeparam name="T">Table record mapping class.</typeparam>
 	[PublicAPI]
-	public class TempTable<T> : ITable<T>, ITableMutable<T>, IDisposable
-#if !NETFRAMEWORK
-		, IAsyncDisposable
-#endif
+	public class TempTable<T> : ITable<T>, ITableMutable<T>, IDisposable, IAsyncDisposable
+		where T : notnull
 	{
 		readonly ITable<T> _table;
 
@@ -289,10 +287,10 @@ namespace LinqToDB
 			{
 				try
 				{
-#if NETFRAMEWORK
+#if !NATIVE_ASYNC
 					table.Dispose();
 #else
-					await table.DisposeAsync();
+					await table.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 #endif
 				}
 				catch
@@ -347,10 +345,10 @@ namespace LinqToDB
 			{
 				try
 				{
-#if NETFRAMEWORK
+#if !NATIVE_ASYNC
 					table.Dispose();
 #else
-					await table.DisposeAsync();
+					await table.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 #endif
 				}
 				catch
@@ -424,7 +422,7 @@ namespace LinqToDB
 			return count.RowsCopied;
 		}
 
-		static readonly ConcurrentDictionary<Type,Expression<Func<T,T>>> _setterDic = new ConcurrentDictionary<Type,Expression<Func<T,T>>>();
+		static readonly ConcurrentDictionary<Type,Expression<Func<T,T>>> _setterDic = new ();
 
 		/// <summary>
 		/// Insert data into table using records, returned by provided query.
@@ -520,11 +518,11 @@ namespace LinqToDB
 
 		#region ITableMutable<T> implementation
 
-		ITable<T> ITableMutable<T>.ChangeServerName  (string? serverName)        => ((ITableMutable<T>)_table).ChangeServerName  (serverName);
-		ITable<T> ITableMutable<T>.ChangeDatabaseName(string? databaseName)      => ((ITableMutable<T>)_table).ChangeDatabaseName(databaseName);
-		ITable<T> ITableMutable<T>.ChangeSchemaName  (string? schemaName)        => ((ITableMutable<T>)_table).ChangeSchemaName  (schemaName);
-		ITable<T> ITableMutable<T>.ChangeTableName   (string tableName)          => ((ITableMutable<T>)_table).ChangeTableName   (tableName);
-		ITable<T> ITableMutable<T>.ChangeTableOptions(TableOptions tableOptions) => ((ITableMutable<T>)_table).ChangeTableOptions(tableOptions);
+		ITable<T> ITableMutable<T>.ChangeServerName  (string? serverName)   => ((ITableMutable<T>)_table).ChangeServerName  (serverName);
+		ITable<T> ITableMutable<T>.ChangeDatabaseName(string? databaseName) => ((ITableMutable<T>)_table).ChangeDatabaseName(databaseName);
+		ITable<T> ITableMutable<T>.ChangeSchemaName  (string? schemaName)   => ((ITableMutable<T>)_table).ChangeSchemaName  (schemaName);
+		ITable<T> ITableMutable<T>.ChangeTableName   (string tableName)     => ((ITableMutable<T>)_table).ChangeTableName   (tableName);
+		ITable<T> ITableMutable<T>.ChangeTableOptions(TableOptions options) => ((ITableMutable<T>)_table).ChangeTableOptions(options);
 
 		#endregion
 
@@ -554,14 +552,14 @@ namespace LinqToDB
 
 		#region IQueryProviderAsync
 
-		Task<TResult> IQueryProviderAsync.ExecuteAsync<TResult>(Expression expression, CancellationToken token)
+		Task<TResult> IQueryProviderAsync.ExecuteAsync<TResult>(Expression expression, CancellationToken cancellationToken)
 		{
-			return _table.ExecuteAsync<TResult>(expression, token);
+			return _table.ExecuteAsync<TResult>(expression, cancellationToken);
 		}
 
-		Task<IAsyncEnumerable<TResult>> IQueryProviderAsync.ExecuteAsyncEnumerable<TResult>(Expression expression, CancellationToken token)
+		Task<IAsyncEnumerable<TResult>> IQueryProviderAsync.ExecuteAsyncEnumerable<TResult>(Expression expression, CancellationToken cancellationToken)
 		{
-			return _table.ExecuteAsyncEnumerable<TResult>(expression, token);
+			return _table.ExecuteAsyncEnumerable<TResult>(expression, cancellationToken);
 		}
 
 		#endregion
@@ -620,10 +618,15 @@ namespace LinqToDB
 			_table.DropTable();
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		public ValueTask DisposeAsync()
 		{
 			return new ValueTask(_table.DropTableAsync());
+		}
+#else
+		public Task DisposeAsync()
+		{
+			return _table.DropTableAsync();
 		}
 #endif
 	}

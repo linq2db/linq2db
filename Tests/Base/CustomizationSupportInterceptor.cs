@@ -73,6 +73,9 @@ namespace Tests
 		public virtual string[]? InterceptResetAllTypesIdentity(string context, int lastValue, int keepIdentityLastValue)
 			=> null;
 
+		public virtual string[]? InterceptResetTestSequence(string context, int lastValue)
+			=> null;
+
 		/// <summary>
 		/// Helper method to extract the class name and method name of a test method.
 		/// </summary>

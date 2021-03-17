@@ -48,10 +48,10 @@ namespace LinqToDB.Data
 		}
 
 		/// <summary>
-		/// Gets or sets the <see cref="T:LinqToDB.DataType"/> of the parameter.
+		/// Gets or sets the <see cref="LinqToDB.DataType"/> of the parameter.
 		/// </summary>
 		/// <returns>
-		/// One of the <see cref="T:LinqToDB.DataType"/> values. The default is <see cref="F:LinqToDB.DataType.Undefined"/>.
+		/// One of the <see cref="LinqToDB.DataType"/> values. The default is <see cref="DataType.Undefined"/>.
 		/// </returns>
 		public DataType DataType { get; set; }
 
@@ -67,7 +67,7 @@ namespace LinqToDB.Data
 		/// Gets or sets a value indicating whether the parameter is input-only, output-only, bidirectional, or a stored procedure return value parameter.
 		/// </summary>
 		/// <returns>
-		/// One of the <see cref="T:System.Data.ParameterDirection"/> values. The default is Input.
+		/// One of the <see cref="ParameterDirection"/> values. The default is Input.
 		/// </returns>
 		public ParameterDirection? Direction { get; set; }
 
@@ -82,10 +82,10 @@ namespace LinqToDB.Data
 		*/
 
 		/// <summary>
-		/// Gets or sets the name of the <see cref="T:LinqToDB.Data.DataParameter"/>.
+		/// Gets or sets the name of the <see cref="DataParameter"/>.
 		/// </summary>
 		/// <returns>
-		/// The name of the <see cref="T:LinqToDB.Data.DataParameter"/>. The default is an empty string.
+		/// The name of the <see cref="DataParameter"/>. The default is an empty string.
 		/// </returns>
 		public string? Name { get; set; }
 
@@ -114,7 +114,7 @@ namespace LinqToDB.Data
 		/// Gets or sets the value of the parameter.
 		/// </summary>
 		/// <returns>
-		/// An <see cref="T:System.Object"/> that is the value of the parameter. The default value is null.
+		/// An <see cref="object"/> that is the value of the parameter. The default value is null.
 		/// </returns>
 		public object? Value { get; set; }
 

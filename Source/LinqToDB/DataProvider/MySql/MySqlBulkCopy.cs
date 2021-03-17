@@ -58,7 +58,7 @@ namespace LinqToDB.DataProvider.MySql
 			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T>           table,
 			BulkCopyOptions     options,
@@ -81,6 +81,7 @@ namespace LinqToDB.DataProvider.MySql
 #endif
 
 		private ProviderConnections? TryGetProviderConnections<T>(ITable<T> table)
+			where T : notnull
 		{
 			if (table.DataContext is DataConnection dataConnection && _provider.Adapter.BulkCopy != null)
 			{
@@ -110,6 +111,7 @@ namespace LinqToDB.DataProvider.MySql
 			IEnumerable<T>      source,
 			bool                runAsync,
 			CancellationToken   cancellationToken)
+			where T : notnull
 		{
 			var dataConnection = providerConnections.DataConnection;
 			var connection     = providerConnections.ProviderConnection;
@@ -166,18 +168,18 @@ namespace LinqToDB.DataProvider.MySql
 						{
 #if !NETFRAMEWORK
 							if (bc.CanWriteToServerAsync2)
-								await bc.WriteToServerAsync2(rd, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+								await bc.WriteToServerAsync2(rd, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 							else
 #endif
 								if (bc.CanWriteToServerAsync)
-									await bc.WriteToServerAsync(rd, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+									await bc.WriteToServerAsync(rd, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 								else
 									bc.WriteToServer(rd);
 						}
 						else
 							bc.WriteToServer(rd);
 						return rd.Count;
-					}).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					}).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 				rc.RowsCopied += rd.Count;
 			}
@@ -188,13 +190,14 @@ namespace LinqToDB.DataProvider.MySql
 			return rc;
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		private async Task<BulkCopyRowsCopied> ProviderSpecificCopyInternal<T>(
 			ProviderConnections providerConnections,
 			ITable<T>           table,
 			BulkCopyOptions     options,
 			IAsyncEnumerable<T> source,
 			CancellationToken   cancellationToken)
+			where T: notnull
 		{
 			var dataConnection = providerConnections.DataConnection;
 			var connection = providerConnections.ProviderConnection;
@@ -230,7 +233,7 @@ namespace LinqToDB.DataProvider.MySql
 			// emulate missing BatchSize property
 			// this is needed, because MySql fails on big batches, so users should be able to limit batch size
 			var batches = EnumerableHelper.Batch(source, options.MaxBatchSize ?? int.MaxValue);
-			await foreach (var batch in batches.WithCancellation(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+			await foreach (var batch in batches.WithCancellation(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 			{
 				var rd = new BulkCopyReader<T>(dataConnection, columns, batch, cancellationToken);
 
@@ -239,14 +242,14 @@ namespace LinqToDB.DataProvider.MySql
 					() => "INSERT BULK " + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + Environment.NewLine,
 					async () => {
 						if (bc.CanWriteToServerAsync2)
-							await bc.WriteToServerAsync2(rd, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+							await bc.WriteToServerAsync2(rd, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 						else
 							if (bc.CanWriteToServerAsync)
-								await bc.WriteToServerAsync(rd, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+								await bc.WriteToServerAsync(rd, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 							else
 								bc.WriteToServer(rd);
 						return rd.Count;
-					}).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					}).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 				rc.RowsCopied += rd.Count;
 			}
@@ -270,7 +273,7 @@ namespace LinqToDB.DataProvider.MySql
 			return MultipleRowsCopy1Async(table, options, source, cancellationToken);
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			return MultipleRowsCopy1Async(table, options, source, cancellationToken);

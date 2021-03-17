@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NETFRAMEWORK || NETCOREAPP
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -59,7 +60,7 @@ namespace LinqToDB.DataProvider.SapHana
 			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T> table,
 			BulkCopyOptions options,
@@ -83,6 +84,7 @@ namespace LinqToDB.DataProvider.SapHana
 #endif
 
 		private ProviderConnections? TryGetProviderConnections<T>(ITable<T> table)
+			where T : notnull
 		{
 			if (table.DataContext is DataConnection dataConnection)
 			{
@@ -113,6 +115,7 @@ namespace LinqToDB.DataProvider.SapHana
 			Func<List<Mapping.ColumnDescriptor>, BulkCopyReader<T>> createDataReader,
 			bool                                                    runAsync,
 			CancellationToken                                       cancellationToken)
+			where T : notnull
 		{
 			var dataConnection = providerConnections.DataConnection;
 			var connection     = providerConnections.ProviderConnection;
@@ -183,3 +186,4 @@ namespace LinqToDB.DataProvider.SapHana
 		}
 	}
 }
+#endif

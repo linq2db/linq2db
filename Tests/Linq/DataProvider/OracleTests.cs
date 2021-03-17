@@ -1,14 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.Linq;
 using System.Diagnostics;
-using System.Linq;
-using System.Xml;
-using System.Xml.Linq;
 using System.Globalization;
-using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
+using System.Xml;
+using System.Xml.Linq;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
@@ -16,15 +16,12 @@ using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
-
 using NUnit.Framework;
-
 using Oracle.ManagedDataAccess.Client;
 using Oracle.ManagedDataAccess.Types;
 
 namespace Tests.DataProvider
 {
-	using System.Diagnostics.CodeAnalysis;
 	using System.Threading;
 	using System.Threading.Tasks;
 	using LinqToDB.Data.RetryPolicy;
@@ -64,12 +61,13 @@ namespace Tests.DataProvider
 		}
 
 		static void TestType<T>(
-			DataConnection   connection,
-			string           dataTypeName,
-			[DisallowNull] T value,
-			string           tableName       = "\"AllTypes\"",
-			bool             convertToString = false,
-			bool             throwException  = false)
+			DataConnection connection,
+			string         dataTypeName,
+			T              value,
+			string         tableName       = "\"AllTypes\"",
+			bool           convertToString = false,
+			bool           throwException  = false)
+			where T : notnull
 		{
 			Assert.That(connection.Execute<T>($"SELECT {dataTypeName} FROM {tableName} WHERE ID = 1"),
 				Is.EqualTo(connection.MappingSchema.GetDefaultValue(typeof(T))));
@@ -86,7 +84,7 @@ namespace Tests.DataProvider
 			if (throwException)
 			{
 				if (!EqualityComparer<T>.Default.Equals((T)actualValue, (T)expectedValue))
-					throw new Exception($"Expected: {expectedValue} But was: {actualValue}");
+					throw new AssertionException($"Expected: {expectedValue} But was: {actualValue}");
 			}
 			else
 			{
@@ -420,8 +418,8 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<byte[]>(PathThroughSql, DataParameter.Binary   ("p", arr1)), Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>(PathThroughSql, DataParameter.VarBinary("p", arr1)), Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>(PathThroughSql, DataParameter.Create   ("p", arr1)), Is.EqualTo(arr1));
-				Assert.That(conn.Execute<byte[]>(PathThroughSql, DataParameter.VarBinary("p", new byte[0])), Is.EqualTo(new byte[0]));
-				Assert.That(conn.Execute<byte[]>(PathThroughSql, DataParameter.Image    ("p", new byte[0])), Is.EqualTo(new byte[0]));
+				Assert.That(conn.Execute<byte[]>(PathThroughSql, DataParameter.VarBinary("p", Array<byte>.Empty)), Is.EqualTo(Array<byte>.Empty));
+				Assert.That(conn.Execute<byte[]>(PathThroughSql, DataParameter.Image    ("p", Array<byte>.Empty)), Is.EqualTo(Array<byte>.Empty));
 				Assert.That(conn.Execute<byte[]>(PathThroughSql, new DataParameter { Name = "p", Value = arr1 }), Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>(PathThroughSql, DataParameter.Create   ("p", new Binary(arr1))), Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>(PathThroughSql, new DataParameter("p", new Binary(arr1))), Is.EqualTo(arr1));
@@ -2193,7 +2191,7 @@ namespace Tests.DataProvider
 			if (rd is Oracle.ManagedDataAccess.Client.OracleDataReader reader)
 			{
 				var value  = reader.GetOracleDecimal(idx);
-				var newval = Oracle.ManagedDataAccess.Types.OracleDecimal.SetPrecision(value, value > 0 ? ClrPrecision : (ClrPrecision - 1));
+				var newval = OracleDecimal.SetPrecision(value, value > 0 ? ClrPrecision : (ClrPrecision - 1));
 
 				return newval.Value;
 			}
@@ -3765,8 +3763,8 @@ CREATE TABLE ""TABLE_A""(
 				}
 				finally
 				{
-					db.Execute("DROP SEQUENCE SEQ_A");
-					db.Execute("DROP TABLE \"TABLE_A\"");
+					try { db.Execute("DROP SEQUENCE SEQ_A"); } catch { }
+					try { db.Execute("DROP TABLE \"TABLE_A\""); } catch { }
 				}
 			}
 		}

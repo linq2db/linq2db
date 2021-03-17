@@ -5,6 +5,7 @@ using System.Data;
 using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.Mapping;
@@ -256,7 +257,7 @@ namespace Tests
 			_parameters.Clear();
 		}
 
-		public    override IEnumerator GetEnumerator(                                       ) => new IDbDataParameter[0].GetEnumerator();
+		public    override IEnumerator GetEnumerator(                                       ) => Array<IEnumerator>.Empty.GetEnumerator();
 		public    override void        AddRange     (Array values                           ) => throw new NotImplementedException();
 		public    override bool        Contains     (string value                           ) => throw new NotImplementedException();
 		public    override bool        Contains     (object value                           ) => throw new NotImplementedException();

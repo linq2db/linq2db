@@ -1,5 +1,4 @@
-﻿using System;
-
+﻿
 using JetBrains.Annotations;
 
 namespace LinqToDB
@@ -26,6 +25,7 @@ namespace LinqToDB
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> IsTemporary<T>(this ITable<T> table, [SqlQueryDependent] bool isTemporary)
+			where T : notnull
 		{
 			return ((ITableMutable<T>)table).ChangeTableOptions(isTemporary
 				? table.TableOptions |  LinqToDB.TableOptions.IsTemporary
@@ -43,6 +43,7 @@ namespace LinqToDB
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> IsTemporary<T>(this ITable<T> table)
+			where T : notnull
 		{
 			return ((ITableMutable<T>)table).ChangeTableOptions(table.TableOptions | LinqToDB.TableOptions.IsTemporary);
 		}
@@ -58,6 +59,7 @@ namespace LinqToDB
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> TableOptions<T>(this ITable<T> table, [SqlQueryDependent] TableOptions options)
+			where T : notnull
 		{
 			return ((ITableMutable<T>)table).ChangeTableOptions(options);
 		}

@@ -87,11 +87,48 @@ namespace LinqToDB.SqlProvider
 				FinalizeCte(statement);
 			}
 
+			statement = CorrectUnionOrderBy(statement);
+
 			// provider specific query correction
 			statement = FinalizeStatement(statement, evaluationContext);
 //statement.EnsureFindTables();
 			return statement;
 		}
+
+		protected virtual SqlStatement CorrectUnionOrderBy(SqlStatement statement)
+		{
+			return QueryHelper.WrapQuery(statement,
+				(q, v) =>
+				{
+					if (q.OrderBy.IsEmpty)
+						return false;
+
+
+					if (q.HasSetOperators && q.SetOperators[0].Operation == SetOperation.UnionAll)
+						return true;
+
+					var isUnionAll = false;
+					var parentElement = v.ParentElement;
+					if (parentElement != null)
+					{
+						if (parentElement.ElementType == QueryElementType.SetOperator)
+						{
+							isUnionAll = ((SqlSetOperator)parentElement).Operation == SetOperation.UnionAll;
+						}
+						else if (parentElement.ElementType == QueryElementType.SqlQuery)
+						{
+							var parentQuery = (SelectQuery)parentElement;
+							isUnionAll = parentQuery.HasSetOperators &&
+							                  parentQuery.SetOperators[0].Operation == SetOperation.UnionAll;
+						}
+					}
+
+					return isUnionAll;
+				},
+				(p, q) => { }, 
+				allowMutation: true);
+		}
+
 
 		protected virtual void FixEmptySelect(SqlStatement statement)
 		{
@@ -222,7 +259,7 @@ namespace LinqToDB.SqlProvider
 						changed = changed || newExpr != expr.Expr;
 
 						if (changed)
-							newExpression = new SqlExpression(expr.SystemType, newExpr, expr.Precedence, expr.IsAggregate, expr.IsPure, newExpressions.ToArray());
+							newExpression = new SqlExpression(expr.SystemType, newExpr, expr.Precedence, expr.Flags, newExpressions.ToArray());
 
 						return newExpression;
 					}
@@ -733,7 +770,7 @@ namespace LinqToDB.SqlProvider
 					if (func.Parameters.Length == 1 && func.Parameters[0] is SelectQuery query && query.Select.Columns.Count > 0)
 					{
 						var isAggregateQuery =
-									query.Select.Columns.All(c => QueryHelper.IsAggregationFunction(c.Expression));
+									query.Select.Columns.All(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression));
 
 						if (isAggregateQuery)
 							return new SqlValue(true);
@@ -1072,10 +1109,10 @@ namespace LinqToDB.SqlProvider
 							if (cond.Predicate is SqlPredicate.ExprExpr ee)
 							{
 								if (ee.Operator == SqlPredicate.Operator.Equal)
-									return new SqlPredicate.ExprExpr(ee.Expr1, SqlPredicate.Operator.NotEqual, ee.Expr2, Configuration.Linq.CompareNullsAsValues ? true : (bool?)null);
+									return new SqlPredicate.ExprExpr(ee.Expr1, SqlPredicate.Operator.NotEqual, ee.Expr2, Configuration.Linq.CompareNullsAsValues ? true : null);
 
 								if (ee.Operator == SqlPredicate.Operator.NotEqual)
-									return new SqlPredicate.ExprExpr(ee.Expr1, SqlPredicate.Operator.Equal, ee.Expr2, Configuration.Linq.CompareNullsAsValues ? true : (bool?)null);
+									return new SqlPredicate.ExprExpr(ee.Expr1, SqlPredicate.Operator.Equal, ee.Expr2, Configuration.Linq.CompareNullsAsValues ? true : null);
 							}
 						}
 					}
@@ -1395,9 +1432,9 @@ namespace LinqToDB.SqlProvider
 		#region Conversion
 
 		[return: NotNullIfNotNull("element")]
-		public virtual IQueryElement? ConvertElement(MappingSchema mappingSchema, IQueryElement? element, OptimizationContext optimizationContext)
+		public virtual IQueryElement? ConvertElement(MappingSchema mappingSchema, IQueryElement? element, OptimizationContext context)
 		{
-			return OptimizeElement(mappingSchema, element, optimizationContext, true);
+			return OptimizeElement(mappingSchema, element, context, true);
 		}
 
 		public virtual ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor visitor, EvaluationContext context)
@@ -1748,7 +1785,7 @@ namespace LinqToDB.SqlProvider
 					SqlPredicate.SearchString.SearchKind.StartsWith => patternValue + LikeWildcardCharacter,
 					SqlPredicate.SearchString.SearchKind.EndsWith   => LikeWildcardCharacter + patternValue,
 					SqlPredicate.SearchString.SearchKind.Contains   => LikeWildcardCharacter + patternValue + LikeWildcardCharacter,
-					_ => throw new ArgumentOutOfRangeException()
+					_ => throw new InvalidOperationException($"Unexpected predicate kind: {predicate.Kind}")
 				};
 
 				var patternExpr = LikeParameterSupport
@@ -1771,7 +1808,7 @@ namespace LinqToDB.SqlProvider
 					SqlPredicate.SearchString.SearchKind.StartsWith => new SqlBinaryExpression(typeof(string), patternExpr, "+", anyCharacterExpr, Precedence.Additive),
 					SqlPredicate.SearchString.SearchKind.EndsWith   => new SqlBinaryExpression(typeof(string), anyCharacterExpr, "+", patternExpr, Precedence.Additive),
 					SqlPredicate.SearchString.SearchKind.Contains   => new SqlBinaryExpression(typeof(string), new SqlBinaryExpression(typeof(string), anyCharacterExpr, "+", patternExpr, Precedence.Additive), "+", anyCharacterExpr, Precedence.Additive),
-					_ => throw new ArgumentOutOfRangeException()
+					_ => throw new InvalidOperationException($"Unexpected predicate kind: {predicate.Kind}")
 				};
 
 
@@ -1866,9 +1903,9 @@ namespace LinqToDB.SqlProvider
 								return new SqlPredicate.Expr(new SqlValue(p.IsNot));
 
 							if (p.IsNot)
-								return new SqlPredicate.NotExpr(sc, true, SqlQuery.Precedence.LogicalNegation);
+								return new SqlPredicate.NotExpr(sc, true, Precedence.LogicalNegation);
 
-							return new SqlPredicate.Expr(sc, SqlQuery.Precedence.LogicalDisjunction);
+							return new SqlPredicate.Expr(sc, Precedence.LogicalDisjunction);
 						}
 					}
 
@@ -1918,9 +1955,9 @@ namespace LinqToDB.SqlProvider
 							return new SqlPredicate.Expr(new SqlValue(p.IsNot));
 
 						if (p.IsNot)
-							return new SqlPredicate.NotExpr(sc, true, SqlQuery.Precedence.LogicalNegation);
+							return new SqlPredicate.NotExpr(sc, true, Precedence.LogicalNegation);
 
-						return new SqlPredicate.Expr(sc, SqlQuery.Precedence.LogicalDisjunction);
+						return new SqlPredicate.Expr(sc, Precedence.LogicalDisjunction);
 					}
 				}
 			}
@@ -1987,7 +2024,7 @@ namespace LinqToDB.SqlProvider
 				sc.Conditions.Add(
 					new SqlCondition(false,
 						new SqlPredicate.ExprExpr(par, SqlPredicate.Operator.NotEqual, new SqlValue(0),
-							Configuration.Linq.CompareNullsAsValues ? false : (bool?)null)));
+							Configuration.Linq.CompareNullsAsValues ? false : null)));
 
 				return new SqlFunction(func.SystemType, "CASE", sc, new SqlValue(true), new SqlValue(false))
 				{
@@ -2068,7 +2105,7 @@ namespace LinqToDB.SqlProvider
 					{
 						sc2.Conditions.Add(new SqlCondition(
 							false,
-							new SqlPredicate.ExprExpr(copyKeys[i], SqlPredicate.Operator.Equal, tableKeys[i], Configuration.Linq.CompareNullsAsValues ? true : (bool?)null)));
+							new SqlPredicate.ExprExpr(copyKeys[i], SqlPredicate.Operator.Equal, tableKeys[i], Configuration.Linq.CompareNullsAsValues ? true : null)));
 					}
 
 					deleteStatement.SelectQuery.Where.SearchCondition.Conditions.Clear();
@@ -2090,158 +2127,11 @@ namespace LinqToDB.SqlProvider
 			return deleteStatement;
 		}
 
-		SqlTableSource? GetMainTableSource(SelectQuery selectQuery)
+		protected SqlTableSource? GetMainTableSource(SelectQuery selectQuery)
 		{
 			if (selectQuery.From.Tables.Count > 0 && selectQuery.From.Tables[0] is SqlTableSource tableSource)
 				return tableSource;
 			return null;
-		}
-
-		public SqlStatement GetAlternativeUpdateFrom(SqlUpdateStatement statement)
-		{
-			if (statement.SelectQuery.Select.HasModifier)
-				statement = QueryHelper.WrapQuery(statement, statement.SelectQuery);
-
-			// removing joins
-			statement.SelectQuery.TransformInnerJoinsToWhere();
-
-			var tableSource = GetMainTableSource(statement.SelectQuery);
-			if (tableSource == null)
-				throw new LinqToDBException("Invalid query for Update.");
-
-			if (statement.SelectQuery.Select.HasModifier)
-				statement = QueryHelper.WrapQuery(statement, statement.SelectQuery);
-
-			SqlTable? tableToUpdate  = statement.Update.Table;
-			SqlTable? tableToCompare = null;
-
-			switch (tableSource.Source)
-			{
-				case SqlTable table:
-					{
-						if (tableSource.Joins.Count == 0 && (tableToUpdate == null || QueryHelper.IsEqualTables(table, tableToUpdate)))
-						{
-							// remove table from FROM clause
-							statement.SelectQuery.From.Tables.RemoveAt(0);
-							if (tableToUpdate != null && tableToUpdate != table)
-							{
-								statement.Walk(new WalkOptions(), e =>
-								{
-									if (e is SqlField field && field.Table == tableToUpdate)
-										return table[field.Name] ?? throw new LinqException($"Field {field.Name} not found in table {table}");
-
-									return e;
-								});
-							}
-							tableToUpdate = table;
-						}
-						else
-						{
-							if (tableToUpdate == null)
-							{
-								tableToUpdate = QueryHelper.EnumerateAccessibleSources(statement.SelectQuery)
-									.OfType<SqlTable>()
-									.FirstOrDefault();
-							}
-
-							if (tableToUpdate == null)
-								throw new LinqToDBException("Can not decide which table to update");
-
-							tableToCompare = QueryHelper.EnumerateAccessibleSources(statement.SelectQuery)
-								.OfType<SqlTable>()
-								.FirstOrDefault(t => QueryHelper.IsEqualTables(t, tableToUpdate));
-						}
-
-						break;
-					}
-				case SelectQuery query:
-					{
-						if (tableToUpdate == null)
-						{
-							tableToUpdate = QueryHelper.EnumerateAccessibleSources(query)
-								.OfType<SqlTable>()
-								.FirstOrDefault();
-
-							if (tableToUpdate == null)
-								throw new LinqToDBException("Can not decide which table to update");
-
-							tableToUpdate = tableToUpdate.Clone();
-
-							foreach (var item in statement.Update.Items)
-							{
-								var setField = QueryHelper.GetUnderlyingField(item.Column);
-								if (setField == null)
-									throw new LinqToDBException($"Unexpected element in setter expression: {item.Column}");
-
-								item.Column = tableToUpdate[setField.Name] ?? throw new LinqException($"Field {setField.Name} not found in table {tableToUpdate}");
-							}
-
-						}
-
-						// return first matched table
-						tableToCompare = QueryHelper.EnumerateAccessibleSources(query)
-							.OfType<SqlTable>()
-							.FirstOrDefault(t => QueryHelper.IsEqualTables(t, tableToUpdate));
-
-						if (tableToCompare == null)
-							throw new LinqToDBException("Query can't be translated to UPDATE Statement.");
-
-						break;
-					}
-			}
-
-			if (ReferenceEquals(tableToUpdate, tableToCompare))
-			{
-				// we have to create clone
-				tableToUpdate = tableToCompare!.Clone();
-
-				var ts = statement.SelectQuery.GetTableSource(tableToCompare!);
-
-				for (var i = 0; i < statement.Update.Items.Count; i++)
-				{
-					var item = statement.Update.Items[i];
-					var newItem = ConvertVisitor.Convert(item, (v, e) =>
-					{
-						if (e is SqlField field && field.Table == tableToCompare)
-							return tableToUpdate[field.Name] ?? throw new LinqException($"Field {field.Name} not found in table {tableToUpdate}");
-
-						return e;
-					});
-
-					var updateField = QueryHelper.GetUnderlyingField(newItem.Column);
-					if (updateField != null)
-						newItem.Column = tableToUpdate[updateField.Name] ?? throw new LinqException($"Field {updateField.Name} not found in table {tableToUpdate}");
-
-					statement.Update.Items[i] = newItem;
-				}
-			}
-
-			if (statement.SelectQuery.From.Tables.Count > 0 && tableToCompare != null)
-			{
-
-				var keys1 = tableToUpdate!.GetKeys(true);
-				var keys2 = tableToCompare.GetKeys(true);
-
-				if (keys1.Count == 0)
-					throw new LinqToDBException($"Table {tableToUpdate.Name} do not have primary key. Update transformation is not available.");
-
-				for (int i = 0; i < keys1.Count; i++)
-				{
-					var column = QueryHelper.NeedColumnForExpression(statement.SelectQuery, keys2[i], false);
-					if (column == null)
-						throw new LinqToDBException($"Can not create query column for expression '{keys2[i]}'.");
-
-					var compare = QueryHelper.GenerateEquality(keys1[i], column);
-					statement.SelectQuery.Where.SearchCondition.Conditions.Add(compare);
-				}
-			}
-
-			if (tableToUpdate != null)
-				tableToUpdate.Alias = "$F";
-
-			statement.Update.Table = tableToUpdate;
-
-			return statement;
 		}
 
 		public static bool IsAggregationFunction(IQueryElement expr)
@@ -2277,7 +2167,7 @@ namespace LinqToDB.SqlProvider
 			if (sourcesCount > 1)
 			{
 				if (NeedsEnvelopingForUpdate(updateStatement.SelectQuery))
-					updateStatement = QueryHelper.WrapQuery(updateStatement, updateStatement.SelectQuery);
+					updateStatement = QueryHelper.WrapQuery(updateStatement, updateStatement.SelectQuery, allowMutation: true);
 
 				var sql = new SelectQuery { IsParameterDependent = updateStatement.IsParameterDependent  };
 
@@ -2662,13 +2552,13 @@ namespace LinqToDB.SqlProvider
 				}
 				case QueryElementType.SqlBinaryExpression:
 				{
-					return element.CanBeEvaluated(true) && !element.CanBeEvaluated(false);
+					return element.IsMutable();
 				}
 				case QueryElementType.ExprPredicate:
 				{
 					var exprExpr = (SqlPredicate.Expr)element;
 					
-					if (exprExpr.Expr1.CanBeEvaluated(true) && !exprExpr.Expr1.CanBeEvaluated(false))
+					if (exprExpr.Expr1.IsMutable())
 						return true;
 					return false;
 				}
@@ -2676,8 +2566,8 @@ namespace LinqToDB.SqlProvider
 				{
 					var exprExpr = (SqlPredicate.ExprExpr)element;
 
-					var isMutable1 = exprExpr.Expr1.CanBeEvaluated(true) && !exprExpr.Expr1.CanBeEvaluated(false);
-					var isMutable2 = exprExpr.Expr2.CanBeEvaluated(true) && !exprExpr.Expr2.CanBeEvaluated(false);
+					var isMutable1 = exprExpr.Expr1.IsMutable();
+					var isMutable2 = exprExpr.Expr2.IsMutable();
 
 					if (isMutable1 && isMutable2)
 						return true;
@@ -2700,7 +2590,7 @@ namespace LinqToDB.SqlProvider
 				{
 					var isTruePredicate = (SqlPredicate.IsTrue)element;
 
-					if (isTruePredicate.Expr1.CanBeEvaluated(true) && !isTruePredicate.Expr1.CanBeEvaluated(false))
+					if (isTruePredicate.Expr1.IsMutable())
 						return true;
 					return false;
 				}
@@ -2779,7 +2669,7 @@ namespace LinqToDB.SqlProvider
 					if (join.Table.Source is SelectQuery query && query.Select.Columns.Count > 0)
 					{
 						var isAggregateQuery =
-							query.Select.Columns.All(c => QueryHelper.IsAggregationFunction(c.Expression));
+							query.Select.Columns.All(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression));
 						if (isAggregateQuery)
 						{
 							// remove unwanted join
@@ -2871,7 +2761,7 @@ namespace LinqToDB.SqlProvider
 		protected SqlStatement SeparateDistinctFromPagination(SqlStatement statement, Func<SelectQuery, bool> queryFilter)
 		{
 			return QueryHelper.WrapQuery(statement,
-				q => q.Select.IsDistinct && queryFilter(q),
+				(q, _) => q.Select.IsDistinct && queryFilter(q),
 				(p, q) =>
 				{
 					p.Select.SkipValue = q.Select.SkipValue;
@@ -2881,7 +2771,8 @@ namespace LinqToDB.SqlProvider
 					q.Select.Take(null, null);
 
 					QueryHelper.MoveOrderByUp(p, q);
-				});
+				}, 
+				allowMutation: true);
 		}
 
 		/// <summary>
@@ -2911,7 +2802,7 @@ namespace LinqToDB.SqlProvider
 		protected SqlStatement ReplaceTakeSkipWithRowNumber(SqlStatement statement, Predicate<SelectQuery> predicate, bool supportsEmptyOrderBy)
 		{
 			return QueryHelper.WrapQuery(statement,
-				query => 
+				(query, _) => 
 				{
 					if ((query.Select.TakeValue == null || query.Select.TakeHints != null) && query.Select.SkipValue == null)
 						return 0;
@@ -2946,8 +2837,8 @@ namespace LinqToDB.SqlProvider
 					var parameters = orderByItems.Select(oi => oi.Expression).ToArray();
 
 					var rowNumberExpression = parameters.Length == 0
-						? new SqlExpression(typeof(long), "ROW_NUMBER() OVER ()", Precedence.Primary, true, true)
-						: new SqlExpression(typeof(long), $"ROW_NUMBER() OVER (ORDER BY {orderBy})", Precedence.Primary, true, true, parameters);
+						? new SqlExpression(typeof(long), "ROW_NUMBER() OVER ()", Precedence.Primary, SqlFlags.IsWindowFunction)
+						: new SqlExpression(typeof(long), $"ROW_NUMBER() OVER (ORDER BY {orderBy})", Precedence.Primary, SqlFlags.IsWindowFunction, parameters);
 
 					var rowNumberColumn = query.Select.AddNewColumn(rowNumberExpression);
 					rowNumberColumn.Alias = "RN";
@@ -2971,7 +2862,8 @@ namespace LinqToDB.SqlProvider
 					query.Select.SkipValue = null;
 					query.Select.Take(null, null);
 
-				});
+				}, 
+				allowMutation: true);
 		}
 
 		/// <summary>
@@ -2983,7 +2875,7 @@ namespace LinqToDB.SqlProvider
 		protected SqlStatement ReplaceDistinctOrderByWithRowNumber(SqlStatement statement, Func<SelectQuery, bool> queryFilter)
 		{
 			return QueryHelper.WrapQuery(statement,
-				q => (q.Select.IsDistinct && !q.Select.OrderBy.IsEmpty && queryFilter(q)) /*|| q.Select.TakeValue != null || q.Select.SkipValue != null*/,
+				(q, _) => (q.Select.IsDistinct && !q.Select.OrderBy.IsEmpty && queryFilter(q)) /*|| q.Select.TakeValue != null || q.Select.SkipValue != null*/,
 				(p, q) =>
 				{
 					var columnItems  = q.Select.Columns.Select(c => c.Expression).ToArray();
@@ -3015,7 +2907,7 @@ namespace LinqToDB.SqlProvider
 
 						var rnExpr = new SqlExpression(typeof(long),
 							$"ROW_NUMBER() OVER (PARTITION BY {partitionBy} ORDER BY {orderBy})", Precedence.Primary,
-							true, true, parameters);
+							SqlFlags.IsWindowFunction, parameters);
 
 						var additionalProjection = orderItems.Except(columnItems).ToArray();
 						foreach (var expr in additionalProjection)
@@ -3044,7 +2936,8 @@ namespace LinqToDB.SqlProvider
 
 						QueryHelper.MoveOrderByUp(p, q);
 					}
-				});
+				},
+				allowMutation: true);
 		}
 
 		#region Helper functions

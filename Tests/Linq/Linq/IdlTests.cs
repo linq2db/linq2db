@@ -627,7 +627,7 @@ namespace Tests.Linq
 				var rqr = resultquery.LastIndexOf("ORDER BY", System.StringComparison.OrdinalIgnoreCase);
 				var rqp = (resultquery.Substring(rqr + "ORDER BY".Length).Split(',')).Select(p => p.Trim()).ToArray();
 
-				Assert.That(rqp.Count(),  Is.EqualTo(3));
+				Assert.That(rqp.Length, Is.EqualTo(3));
 			}
 		}
 

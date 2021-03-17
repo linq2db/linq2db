@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection;
+using LinqToDB.Common;
 
 namespace LinqToDB.Metadata
 {
@@ -31,6 +32,6 @@ namespace LinqToDB.Metadata
 
 		/// <inheritdoc cref="IMetadataReader.GetDynamicColumns"/>
 		public MemberInfo[] GetDynamicColumns(Type type)
-			=> new MemberInfo[0];
+			=> Array<MemberInfo>.Empty;
 	}
 }

@@ -5,11 +5,10 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Data;
-	using LinqToDB.Linq;
-	using SqlProvider;
 	using System.Data;
 	using System.Threading;
+	using Data;
+	using SqlProvider;
 
 	class SqlServerBulkCopy : BasicBulkCopy
 	{
@@ -61,7 +60,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T>           table,
 			BulkCopyOptions     options,
@@ -85,6 +84,7 @@ namespace LinqToDB.DataProvider.SqlServer
 #endif
 
 		private ProviderConnections? TryGetProviderConnections<T>(ITable<T> table)
+			where T : notnull
 		{
 			if (table.DataContext is DataConnection dataConnection)
 			{
@@ -114,6 +114,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			Func<List<Mapping.ColumnDescriptor>, BulkCopyReader<T>> createDataReader,
 			bool                                                    runAsync,
 			CancellationToken                                       cancellationToken)
+			where T : notnull
 		{
 			var dataConnection = providerConnections.DataConnection;
 			var connection     = providerConnections.ProviderConnection;
@@ -216,7 +217,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			var helper = new MultipleRowsHelper<T>(table, options);
 
 			if (options.KeepIdentity == true)
-				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " ON")
+				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " ON", cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			switch (((SqlServerDataProvider)helper.DataConnection.DataProvider).Version)
@@ -233,13 +234,13 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 
 			if (options.KeepIdentity == true)
-				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " OFF")
+				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " OFF", cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			return ret;
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		protected override async Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
@@ -248,7 +249,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			var helper = new MultipleRowsHelper<T>(table, options);
 
 			if (options.KeepIdentity == true)
-				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " ON")
+				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " ON", cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			switch (((SqlServerDataProvider)helper.DataConnection.DataProvider).Version)
@@ -265,7 +266,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 
 			if (options.KeepIdentity == true)
-				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " OFF")
+				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " OFF", cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			return ret;

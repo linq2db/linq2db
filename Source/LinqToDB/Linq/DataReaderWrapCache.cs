@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Data;
 using System.Linq.Expressions;
+using LinqToDB.Common;
 using LinqToDB.Common.Internal.Cache;
 using LinqToDB.Expressions;
 using LinqToDB.Mapping;
@@ -30,7 +31,7 @@ namespace LinqToDB.Linq
 						var param = Expression.Parameter(typeof(IDataReader));
 						expr      = Expression.Lambda(expr.GetBody(Expression.Convert(param, key.Item1)), param);
 
-						return (Func<IDataReader, IDataReader>)expr.Compile();
+						return (Func<IDataReader, IDataReader>)expr.CompileExpression();
 					}
 
 					return null;

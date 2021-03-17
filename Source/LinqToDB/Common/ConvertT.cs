@@ -21,6 +21,9 @@ namespace LinqToDB.Common
 			Init();
 		}
 
+#pragma warning disable CS3016 // Arrays as attribute arguments is not CLS-compliant
+		[MemberNotNull(nameof(_expression), nameof(_lambda))]
+#pragma warning restore CS3016 // Arrays as attribute arguments is not CLS-compliant
 		static void Init()
 		{
 			var expr = ConvertBuilder.GetConverter(null, typeof(TFrom), typeof(TTo));
@@ -29,10 +32,10 @@ namespace LinqToDB.Common
 
 			var rexpr = (Expression<Func<TFrom,TTo>>)expr.Item1.Transform(e => e is DefaultValueExpression ? e.Reduce() : e);
 
-			_lambda = rexpr.Compile();
+			_lambda = rexpr.CompileExpression();
 		}
 
-		private static Expression<Func<TFrom,TTo>>? _expression;
+		private static Expression<Func<TFrom,TTo>> _expression;
 		/// <summary>
 		/// Gets or sets an expression that converts a value of <i>TFrom</i> type to <i>TTo</i> type.
 		/// Setter updates both expression and delegate forms of converter.
@@ -42,7 +45,7 @@ namespace LinqToDB.Common
 		[AllowNull]
 		public  static Expression<Func<TFrom,TTo>>  Expression
 		{
-			get => _expression!;
+			get => _expression;
 			set
 			{
 				var setDefault = _expression != null;
@@ -54,18 +57,18 @@ namespace LinqToDB.Common
 				else
 				{
 					_expression = value;
-					_lambda = _expression.Compile();
+					_lambda = _expression.CompileExpression();
 				}
 
 				if (setDefault)
 					ConvertInfo.Default.Set(
 						typeof(TFrom),
 						typeof(TTo),
-						new ConvertInfo.LambdaInfo(_expression!, null, _lambda!, false));
+						new ConvertInfo.LambdaInfo(_expression, null, _lambda, false));
 			}
 		}
 
-		private static Func<TFrom,TTo>? _lambda;
+		private static Func<TFrom,TTo> _lambda;
 		/// <summary>
 		/// Gets or sets a function that converts a value of <i>TFrom</i> type to <i>TTo</i> type.
 		/// Setter updates both expression and delegate forms of converter.
@@ -75,7 +78,7 @@ namespace LinqToDB.Common
 		[AllowNull]
 		public static  Func<TFrom,TTo>  Lambda
 		{
-			get => _lambda!;
+			get => _lambda;
 			set
 			{
 				var setDefault = _expression != null;
@@ -101,13 +104,13 @@ namespace LinqToDB.Common
 					ConvertInfo.Default.Set(
 						typeof(TFrom),
 						typeof(TTo),
-						new ConvertInfo.LambdaInfo(_expression!, null, _lambda!, false));
+						new ConvertInfo.LambdaInfo(_expression, null, _lambda, false));
 			}
 		}
 
 		/// <summary>
 		/// Gets conversion function delegate.
 		/// </summary>
-		public static Func<TFrom,TTo> From => _lambda!;
+		public static Func<TFrom,TTo> From => _lambda;
 	}
 }

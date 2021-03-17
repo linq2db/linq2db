@@ -388,6 +388,15 @@ namespace LinqToDB
 
 		void IDisposable.Dispose()
 		{
+			Dispose(disposing: true);
+			GC.SuppressFinalize(this);
+		}
+		
+		/// <summary>
+		/// Closes underlying connection and fires <see cref="OnClosing"/> event (only if connection existed).
+		/// </summary>
+		protected virtual void Dispose(bool disposing)
+		{
 			_disposed = true;
 			Close();
 		}

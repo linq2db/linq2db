@@ -1,14 +1,15 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Dynamic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Diagnostics.CodeAnalysis;
 
 using JetBrains.Annotations;
 
@@ -20,8 +21,8 @@ namespace LinqToDB.Data
 	using Mapping;
 	using Async;
 	using Reflection;
-	using System.Diagnostics.CodeAnalysis;
-	using LinqToDB.Linq;
+	using Linq;
+	using Common.Internal.Cache;
 
 	/// <summary>
 	/// Provides database connection command abstraction.
@@ -43,12 +44,12 @@ namespace LinqToDB.Data
 		public DataParameter[]? Parameters;
 		/// <summary>
 		/// Type of command. See <see cref="System.Data.CommandType"/> for all supported types.
-		/// Default value: <see cref="System.Data.CommandType.Text"/>.
+		/// Default value: <see cref="CommandType.Text"/>.
 		/// </summary>
 		public CommandType     CommandType = CommandType.Text;
 		/// <summary>
 		/// Command behavior flags. See <see cref="System.Data.CommandBehavior"/> for more details.
-		/// Default value: <see cref="System.Data.CommandBehavior.Default"/>.
+		/// Default value: <see cref="CommandBehavior.Default"/>.
 		/// </summary>
 		public CommandBehavior CommandBehavior;
 
@@ -253,9 +254,16 @@ namespace LinqToDB.Data
 				SetParameters(DataConnection, Parameters!);
 
 			using (DataConnection.DataProvider.ExecuteScope(DataConnection))
+			{
+#if NETSTANDARD2_1PLUS
+				var rd = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await using (rd.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+#else
 			using (var rd = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+#endif
 				while (await rd.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 					action(objectReader(rd));
+		}
 		}
 
 		#endregion
@@ -324,6 +332,11 @@ namespace LinqToDB.Data
 				DataConnection.DataProvider.ExecuteScope(DataConnection));
 		}
 
+		static bool IsDynamicType(Type type)
+		{
+			return typeof(object) == type || typeof(ExpandoObject) == type;
+		}
+		
 		IEnumerable<T> ReadEnumerator<T>(IDataReader rd, IDisposable? scope, bool disposeReader = true)
 		{
 			using (scope)
@@ -331,7 +344,7 @@ namespace LinqToDB.Data
 				{
 					if (rd.Read())
 					{
-						var additionalKey = GetCommandAdditionalKey(rd);
+						var additionalKey = GetCommandAdditionalKey(rd, typeof(T));
 						var objectReader  = GetObjectReader<T>(DataConnection, rd, DataConnection.Command.CommandText,
 							additionalKey);
 						var isFaulted = false;
@@ -419,11 +432,17 @@ namespace LinqToDB.Data
 				SetParameters(DataConnection, Parameters!);
 
 			using (DataConnection.DataProvider.ExecuteScope(DataConnection))
+			{
+#if NETSTANDARD2_1PLUS
+				var rd = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await using (rd.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+#else
 			using (var rd = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+#endif
 			{
 				if (await rd.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 				{
-					var additionalKey = GetCommandAdditionalKey(rd);
+					var additionalKey = GetCommandAdditionalKey(rd, typeof(T));
 					var objectReader  = GetObjectReader<T>(DataConnection, rd, DataConnection.Command.CommandText, additionalKey);
 					var isFaulted     = false;
 
@@ -451,6 +470,7 @@ namespace LinqToDB.Data
 				}
 			}
 		}
+		}
 
 		#endregion
 
@@ -468,7 +488,7 @@ namespace LinqToDB.Data
 		}
 
 		/// <summary>
-		/// Executes command using <see cref="System.Data.CommandType.StoredProcedure"/> command type and returns results as collection of values of specified type.
+		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type and returns results as collection of values of specified type.
 		/// </summary>
 		/// <typeparam name="T">Result record type.</typeparam>
 		/// <param name="template">This value used only for <typeparamref name="T"/> parameter type inference, which makes this method usable with anonymous types.</param>
@@ -479,7 +499,7 @@ namespace LinqToDB.Data
 		}
 
 		/// <summary>
-		/// Executes command asynchronously using <see cref="System.Data.CommandType.StoredProcedure"/> command type and returns results as collection of values of specified type.
+		/// Executes command asynchronously using <see cref="CommandType.StoredProcedure"/> command type and returns results as collection of values of specified type.
 		/// </summary>
 		/// <typeparam name="T">Result record type.</typeparam>
 		/// <param name="template">This value used only for <typeparamref name="T"/> parameter type inference, which makes this method usable with anonymous types.</param>
@@ -578,9 +598,16 @@ namespace LinqToDB.Data
 			T result;
 
 			using (DataConnection.DataProvider.ExecuteScope(DataConnection))
+			{
+#if NETSTANDARD2_1PLUS
+				var rd = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await using (rd.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+#else
 			using (var rd = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+#endif
 			{
 				result = await ReadMultipleResultSetsAsync<T>(rd, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+			}
 			}
 
 			if (hasParameters)
@@ -719,7 +746,7 @@ namespace LinqToDB.Data
 			{
 				_commandInfo       = commandInfo;
 				_rd                = rd;
-				_additionalKey     = commandInfo.GetCommandAdditionalKey(rd);
+				_additionalKey     = commandInfo.GetCommandAdditionalKey(rd, typeof(T));
 				_objectReader      = GetObjectReader<T>(commandInfo.DataConnection, rd, commandInfo.DataConnection.Command.CommandText, _additionalKey);
 				_isFaulted         = false;
 				_cancellationToken = cancellationToken;
@@ -729,15 +756,15 @@ namespace LinqToDB.Data
 			{
 			}
 
-#if NETFRAMEWORK
+#if !NATIVE_ASYNC
 			public Task DisposeAsync() => TaskEx.CompletedTask;
 #else
-			public ValueTask DisposeAsync() => new ValueTask(Task.CompletedTask);
+			public ValueTask DisposeAsync() => default;
 #endif
 
 			public T Current { get; private set; } = default!;
 
-#if NETFRAMEWORK
+#if !NATIVE_ASYNC
 			public async Task<bool> MoveNextAsync()
 #else
 			public async ValueTask<bool> MoveNextAsync()
@@ -946,7 +973,7 @@ namespace LinqToDB.Data
 			{
 				if (rd.Read())
 				{
-					var additionalKey = GetCommandAdditionalKey(rd);
+					var additionalKey = GetCommandAdditionalKey(rd, typeof(T));
 					var objectReader  = GetObjectReader<T>(DataConnection, rd, CommandText, additionalKey);
 
 #if DEBUG
@@ -980,7 +1007,7 @@ namespace LinqToDB.Data
 		#region Execute scalar async
 
 		/// <summary>
-		/// Executes command using <see cref="System.Data.CommandType.StoredProcedure"/> command type asynchronously and returns single value.
+		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type asynchronously and returns single value.
 		/// Saves result values for output and reference parameters to corresponding <see cref="DataParameter"/> object.
 		/// </summary>
 		/// <typeparam name="T">Resulting value type.</typeparam>
@@ -1012,11 +1039,17 @@ namespace LinqToDB.Data
 			T result = default!;
 
 			using (DataConnection.DataProvider.ExecuteScope(DataConnection))
+			{
+#if NETSTANDARD2_1PLUS
+				var rd = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await using (rd.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+#else
 			using (var rd = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+#endif
 			{
 				if (await rd.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 				{
-					var additionalKey = GetCommandAdditionalKey(rd);
+					var additionalKey = GetCommandAdditionalKey(rd, typeof(T));
 					try
 					{
 						result = GetObjectReader<T>(DataConnection, rd, CommandText, additionalKey)(rd);
@@ -1026,6 +1059,7 @@ namespace LinqToDB.Data
 						result = GetObjectReader2<T>(DataConnection, rd, CommandText, additionalKey)(rd);
 					}
 				}
+			}
 			}
 
 			if (hasParameters)
@@ -1072,14 +1106,14 @@ namespace LinqToDB.Data
 			if (hasParameters)
 				SetParameters(DataConnection, Parameters!);
 
-			return new DataReader { CommandInfo = this, Reader = DataConnection.ExecuteReader(GetCommandBehavior()), OnDispose = hasParameters ? () => RebindParameters(DataConnection, Parameters!) : (Action?)null };
+			return new DataReader { CommandInfo = this, Reader = DataConnection.ExecuteReader(GetCommandBehavior()), OnDispose = hasParameters ? () => RebindParameters(DataConnection, Parameters!) : null };
 		}
 
 		internal IEnumerable<T> ExecuteQuery<T>(IDataReader rd, string sql)
 		{
 			if (rd.Read())
 			{
-				var additionalKey = GetCommandAdditionalKey(rd);
+				var additionalKey = GetCommandAdditionalKey(rd, typeof(T));
 				var objectReader  = GetObjectReader<T>(DataConnection, rd, sql, additionalKey);
 				var isFaulted     = false;
 
@@ -1112,7 +1146,7 @@ namespace LinqToDB.Data
 		{
 			if (rd.Read())
 			{
-				var additionalKey = GetCommandAdditionalKey(rd);
+				var additionalKey = GetCommandAdditionalKey(rd, typeof(T));
 				try
 				{
 					return GetObjectReader<T>(DataConnection, rd, sql, additionalKey)(rd);
@@ -1146,14 +1180,14 @@ namespace LinqToDB.Data
 			if (hasParameters)
 				SetParameters(DataConnection, Parameters!);
 
-			return new DataReaderAsync { CommandInfo = this, Reader = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext), OnDispose = hasParameters ? () => RebindParameters(DataConnection, Parameters!) : (Action?)null };
+			return new DataReaderAsync { CommandInfo = this, Reader = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext), OnDispose = hasParameters ? () => RebindParameters(DataConnection, Parameters!) : null };
 		}
 
 		internal async Task ExecuteQueryAsync<T>(DbDataReader rd, string sql, Action<T> action, CancellationToken cancellationToken)
 		{
 			if (await rd.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 			{
-				var additionalKey = GetCommandAdditionalKey(rd);
+				var additionalKey = GetCommandAdditionalKey(rd, typeof(T));
 				var objectReader  = GetObjectReader<T>(DataConnection, rd, sql, additionalKey);
 				var isFaulted     = false;
 
@@ -1185,7 +1219,7 @@ namespace LinqToDB.Data
 		{
 			if (await rd.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 			{
-				var additionalKey = GetCommandAdditionalKey(rd);
+				var additionalKey = GetCommandAdditionalKey(rd, typeof(T));
 				try
 				{
 					return GetObjectReader<T>(DataConnection, rd, sql, additionalKey)(rd);
@@ -1259,7 +1293,7 @@ namespace LinqToDB.Data
 					var dbParameter      = (IDbDataParameter)dbParameters[i]!;
 					dataParameter.Output = dbParameter;
 
-					if (!object.Equals(dataParameter.Value, dbParameter.Value))
+					if (!Equals(dataParameter.Value, dbParameter.Value))
 					{
 						dataParameter.Value = ConvertParameterValue(dbParameter.Value, dataConnection.MappingSchema);
 					}
@@ -1306,8 +1340,7 @@ namespace LinqToDB.Data
 			}
 		}
 
-		static readonly ConcurrentDictionary<ParamKey,Func<object,DataParameter[]>> _parameterReaders =
-			new ConcurrentDictionary<ParamKey,Func<object,DataParameter[]>>();
+		static readonly MemoryCache  _parameterReaders        = new (new MemoryCacheOptions());
 
 		static readonly PropertyInfo _dataParameterName       = MemberHelper.PropertyOf<DataParameter>(p => p.Name);
 		static readonly PropertyInfo _dataParameterDbDataType = MemberHelper.PropertyOf<DataParameter>(p => p.DbDataType);
@@ -1327,8 +1360,10 @@ namespace LinqToDB.Data
 			var type = parameters.GetType();
 			var key  = new ParamKey(type, dataConnection.ID);
 
-			if (!_parameterReaders.TryGetValue(key, out var func))
+			var func = _parameterReaders.GetOrCreate(key, o =>
 			{
+				o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
+
 				var td  = dataConnection.MappingSchema.GetEntityDescriptor(type);
 				var p   = Expression.Parameter(typeof(object), "p");
 				var obj = Expression.Parameter(type, "obj");
@@ -1411,8 +1446,8 @@ namespace LinqToDB.Data
 					),
 					p);
 
-				_parameterReaders[key] = func = expr.Compile();
-			}
+				return expr.CompileExpression();
+			});
 
 			return func(parameters);
 		}
@@ -1433,13 +1468,14 @@ namespace LinqToDB.Data
 
 		struct QueryKey : IEquatable<QueryKey>
 		{
-			public QueryKey(Type type, Type readerType, int configID, string sql, string? additionalKey)
+			public QueryKey(Type type, Type readerType, int configID, string sql, string? additionalKey, bool isScalar)
 			{
 				_type          = type;
 				_readerType    = readerType;
 				_configID      = configID;
 				_sql           = sql;
 				_additionalKey = additionalKey;
+				IsScalar       = isScalar;
 
 				unchecked
 				{
@@ -1448,6 +1484,7 @@ namespace LinqToDB.Data
 					hashCode = (hashCode * 397) ^ _configID;
 					hashCode = (hashCode * 397) ^ _sql.GetHashCode();
 					hashCode = (hashCode * 397) ^ (_additionalKey?.GetHashCode() ?? 0);
+					hashCode = (hashCode * 397) ^ IsScalar.GetHashCode();
 					_hashCode = hashCode;
 				}
 			}
@@ -1467,6 +1504,9 @@ namespace LinqToDB.Data
 			readonly string  _sql;
 			readonly string? _additionalKey;
 
+			public readonly bool IsScalar;
+
+
 			public override int GetHashCode()
 			{
 				return _hashCode;
@@ -1478,14 +1518,15 @@ namespace LinqToDB.Data
 					_type          == other._type          &&
 					_readerType    == other._readerType    &&
 					_sql           == other._sql           &&
+					IsScalar       == other.IsScalar &&
 					_additionalKey == other._additionalKey &&
 					_configID      == other._configID
 					;
 			}
 		}
 
-		static readonly ConcurrentDictionary<QueryKey,Delegate>                    _objectReaders       = new ConcurrentDictionary<QueryKey,Delegate>();
-		static readonly ConcurrentDictionary<Tuple<Type, Type>, LambdaExpression?> _dataReaderConverter = new ConcurrentDictionary<Tuple<Type, Type>, LambdaExpression?>();
+		static readonly MemoryCache  _objectReaders       = new (new MemoryCacheOptions());
+		static readonly MemoryCache  _dataReaderConverter = new (new MemoryCacheOptions());
 
 		/// <summary>
 		/// Clears global cache of object mapping functions from query results and mapping functions from value to <see cref="DataParameter"/>.
@@ -1497,9 +1538,9 @@ namespace LinqToDB.Data
 			_parameterReaders.   Clear();
 		}
 
-		string? GetCommandAdditionalKey(IDataReader rd)
+		string? GetCommandAdditionalKey(IDataReader rd, Type resultType)
 		{
-			return DataConnection.Command.CommandType == CommandType.StoredProcedure
+			return IsDynamicType(resultType) || DataConnection.Command.CommandType == CommandType.StoredProcedure
 				? GetFieldsKey(rd)
 				: null;
 		}
@@ -1519,29 +1560,53 @@ namespace LinqToDB.Data
 			return sb.ToString();
 		}
 
-		static Func<IDataReader,T> GetObjectReader<T>(DataConnection dataConnection, IDataReader dataReader, string sql, string? additionalKey)
+		static Func<IDataReader, T> GetObjectReader<T>(DataConnection dataConnection, IDataReader dataReader,
+			string sql, string? additionalKey)
 		{
-			var key = new QueryKey(typeof(T), dataReader.GetType(), dataConnection.ID, sql, additionalKey);
+			var key = new QueryKey(typeof(T), dataReader.GetType(), dataConnection.ID, sql, additionalKey, dataReader.FieldCount <= 1);
 
-			if (!_objectReaders.TryGetValue(key, out var func))
+			var func = _objectReaders.GetOrCreate(key, e =>
+		{
+				e.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
+
+				if (!((QueryKey)e.Key).IsScalar && IsDynamicType(typeof(T)))
 			{
-				_objectReaders[key] = func = CreateObjectReader<T>(dataConnection, dataReader, (dc, dr, type, idx,dataReaderExpr) =>
+					// dynamic case
+					//
+					return CreateDynamicObjectReader<T>(dataConnection, dataReader, (dc, dr, type, idx, dataReaderExpr) =>
 					new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr).Reduce(dc, dr));
 			}
 
-			return (Func<IDataReader,T>)func;
-		}
-
-		static Func<IDataReader,T> GetObjectReader2<T>(DataConnection dataConnection, IDataReader dataReader, string sql, string? additionalKey)
-		{
-			var key = new QueryKey(typeof(T), dataReader.GetType(), dataConnection.ID, sql, additionalKey);
-
-			var func = CreateObjectReader<T>(dataConnection, dataReader, (dc, dr, type, idx,dataReaderExpr) =>
-				new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr).Reduce(dc, slowMode: true));
-
-			_objectReaders[key] = func;
+				return CreateObjectReader<T>(dataConnection, dataReader, (dc, dr, type, idx, dataReaderExpr) =>
+					new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr).Reduce(dc, dr));
+			});
 
 			return func;
+		}
+
+		static Func<IDataReader, T> GetObjectReader2<T>(DataConnection dataConnection, IDataReader dataReader,
+			string sql, string? additionalKey)
+		{
+			var key = new QueryKey(typeof(T), dataReader.GetType(), dataConnection.ID, sql, additionalKey, dataReader.FieldCount <= 1);
+
+			Delegate func;
+			if (!key.IsScalar && IsDynamicType(typeof(T)))
+			{
+				// dynamic case
+				//
+				func = CreateDynamicObjectReader<T>(dataConnection, dataReader, (dc, dr, type, idx, dataReaderExpr) =>
+				new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr).Reduce(dc, slowMode: true));
+			}
+			else
+			{
+				func = CreateObjectReader<T>(dataConnection, dataReader, (dc, dr, type, idx, dataReaderExpr) =>
+				new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr).Reduce(dc, slowMode: true));
+			}
+
+			_objectReaders.Set(key, func,
+				new MemoryCacheEntryOptions {SlidingExpiration = Configuration.Linq.CacheSlidingExpiration});
+
+			return (Func<IDataReader, T>)func;
 		}
 
 		static Func<IDataReader,T> CreateObjectReader<T>(
@@ -1559,12 +1624,13 @@ namespace LinqToDB.Data
 			if (dataConnection.DataProvider.DataReaderType != readerType)
 			{
 				var converterKey  = Tuple.Create(readerType, dataConnection.DataProvider.DataReaderType);
-				converterExpr = _dataReaderConverter.GetOrAdd(converterKey, _ =>
+				converterExpr = _dataReaderConverter.GetOrCreate(converterKey, o =>
 				{
+					o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
+
 					var expr = dataConnection.MappingSchema.GetConvertExpression(readerType, typeof(IDataReader), false, false);
 					if (expr != null)
 					{
-						var param = Expression.Parameter(typeof(IDataReader));
 						expr      = Expression.Lambda(Expression.Convert(expr.Body, dataConnection.DataProvider.DataReaderType), expr.Parameters);
 					}
 
@@ -1588,10 +1654,10 @@ namespace LinqToDB.Data
 					return readerBuilder.BuildReaderFunction<T>();
 				}
 
-				var names = new List<string>(dataReader.FieldCount);
+				var names = new string[dataReader.FieldCount];
 
 				for (var i = 0; i < dataReader.FieldCount; i++)
-					names.Add(dataReader.GetName(i));
+					names[i] = dataReader.GetName(i);
 
 				expr = null;
 
@@ -1659,8 +1725,65 @@ namespace LinqToDB.Data
 
 			var lex = Expression.Lambda<Func<IDataReader,T>>(expr, parameter);
 
-			return lex.Compile();
+			return lex.CompileExpression();
 		}
+
+
+		static readonly ConstructorInfo _expandoObjectConstructor = MemberHelper.ConstructorOf(() => new ExpandoObject());
+		static readonly MethodInfo      _expandoAddMethodInfo     = MemberHelper.MethodOf(() => ((IDictionary<string, object>)null!).Add("", ""));
+		
+		static Func<IDataReader, T> CreateDynamicObjectReader<T>(
+			DataConnection dataConnection,
+			IDataReader dataReader,
+			Func<DataConnection, IDataReader, Type, int, Expression, Expression> getMemberExpression)
+		{
+			var parameter      = Expression.Parameter(typeof(IDataReader));
+			var dataReaderExpr = (Expression)Expression.Convert(parameter, dataReader.GetType());
+
+			var readerType = dataReader.GetType();
+			LambdaExpression? converterExpr = null;
+			if (dataConnection.DataProvider.DataReaderType != readerType)
+			{
+				var converterKey  = Tuple.Create(readerType, dataConnection.DataProvider.DataReaderType);
+				converterExpr = _dataReaderConverter.GetOrCreate(converterKey, o =>
+				{
+					o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+
+					var expr = dataConnection.MappingSchema.GetConvertExpression(readerType, typeof(IDataReader), false, false);
+					if (expr != null)
+					{
+						expr = Expression.Lambda(Expression.Convert(expr.Body, dataConnection.DataProvider.DataReaderType), expr.Parameters);
+					}
+
+					return expr;
+				});
+			}
+
+			dataReaderExpr = converterExpr != null ? converterExpr.GetBody(dataReaderExpr) : dataReaderExpr;
+
+			var expr = (Expression)Expression.ListInit(
+				Expression.New(_expandoObjectConstructor),
+				Enumerable.Range(0, dataReader.FieldCount).Select(idx =>
+				{
+					var readerExpr = getMemberExpression(dataConnection, dataReader, typeof(object), idx,
+						dataReaderExpr);
+					return Expression.ElementInit(_expandoAddMethodInfo, Expression.Constant(dataReader.GetName(idx)), readerExpr);
+				}));
+
+			if (expr.GetCount(e => e == dataReaderExpr) > 1)
+			{
+				var dataReaderVar = Expression.Variable(dataReaderExpr.Type, "ldr");
+				var assignment    = Expression.Assign(dataReaderVar, dataReaderExpr);
+
+				expr = expr.Transform(e => e == dataReaderExpr ? dataReaderVar : e);
+				expr = Expression.Block(new[] { dataReaderVar }, assignment, expr);
+			}
+
+			var lex = Expression.Lambda<Func<IDataReader,T>>(expr, parameter);
+
+			return lex.CompileExpression();
+		}
+
 
 		#endregion
 	}

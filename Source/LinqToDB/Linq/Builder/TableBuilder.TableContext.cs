@@ -243,7 +243,14 @@ namespace LinqToDB.Linq.Builder
 				var cliMutableAttr         = attrs.FirstOrDefault(attr => attr.GetType().FullName == "Microsoft.FSharp.Core.CLIMutableAttribute");
 
 				if (compilationMappingAttr != null)
+				{
+					// https://github.com/dotnet/fsharp/blob/1fcb351bb98fe361c7e70172ea51b5e6a4b52ee0/src/fsharp/FSharp.Core/prim-types.fsi
+					// ObjectType = 3
+					if (System.Convert.ToInt32(((dynamic)compilationMappingAttr).SourceConstructFlags) == 3)
+						return false;
+
 					sequence = ((dynamic)compilationMappingAttr).SequenceNumber;
+				}
 
 				return compilationMappingAttr != null && cliMutableAttr == null;
 			}
@@ -1009,9 +1016,9 @@ namespace LinqToDB.Linq.Builder
 
 			#region IsExpression
 
-			public virtual IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFor)
+			public virtual IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
-				switch (requestFor)
+				switch (requestFlag)
 				{
 					case RequestFor.Field      :
 						{
@@ -1030,7 +1037,7 @@ namespace LinqToDB.Linq.Builder
 								return IsExpressionResult.False;
 
 							return contextInfo.Context.IsExpression(contextInfo.CurrentExpression,
-								contextInfo.CurrentLevel + 1, requestFor);
+								contextInfo.CurrentLevel + 1, requestFlag);
 						}
 
 					case RequestFor.Table       :
@@ -1055,7 +1062,7 @@ namespace LinqToDB.Linq.Builder
 								return new IsExpressionResult(true, contextInfo.Context);
 
 							return contextInfo.Context.IsExpression(contextInfo.CurrentExpression,
-								contextInfo.CurrentLevel + 1, requestFor);
+								contextInfo.CurrentLevel + 1, requestFlag);
 
 						}
 

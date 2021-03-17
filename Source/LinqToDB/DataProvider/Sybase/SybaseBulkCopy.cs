@@ -9,6 +9,9 @@ namespace LinqToDB.DataProvider.Sybase
 {
 	using Data;
 
+	// !table.TableOptions.HasIsTemporary() check:
+	// native bulk copy produce following error for insert into temp table:
+	// AseException : Incorrect syntax near ','.
 	class SybaseBulkCopy : BasicBulkCopy
 	{
 		private readonly SybaseDataProvider _provider;
@@ -24,7 +27,7 @@ namespace LinqToDB.DataProvider.Sybase
 			IEnumerable<T> source)
 		{
 			var connections = GetProviderConnection(table);
-			if (connections.HasValue)
+			if (connections.HasValue && !table.TableOptions.HasIsTemporary())
 			{
 				return ProviderSpecificCopyInternal(
 					connections.Value,
@@ -43,7 +46,7 @@ namespace LinqToDB.DataProvider.Sybase
 			CancellationToken cancellationToken)
 		{
 			var connections = GetProviderConnection(table);
-			if (connections.HasValue)
+			if (connections.HasValue && !table.TableOptions.HasIsTemporary())
 			{
 				// call the synchronous provider-specific implementation
 				return Task.FromResult(ProviderSpecificCopyInternal(
@@ -56,7 +59,7 @@ namespace LinqToDB.DataProvider.Sybase
 			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T>           table,
 			BulkCopyOptions     options,
@@ -64,7 +67,7 @@ namespace LinqToDB.DataProvider.Sybase
 			CancellationToken   cancellationToken)
 		{
 			var connections = GetProviderConnection(table);
-			if (connections.HasValue)
+			if (connections.HasValue && !table.TableOptions.HasIsTemporary())
 			{
 				// call the synchronous provider-specific implementation
 				return Task.FromResult(ProviderSpecificCopyInternal(
@@ -79,6 +82,7 @@ namespace LinqToDB.DataProvider.Sybase
 #endif
 
 		private ProviderConnections? GetProviderConnection<T>(ITable<T> table)
+			where T : notnull
 		{
 			if (table.DataContext is DataConnection dataConnection && _provider.Adapter.BulkCopy != null)
 			{
@@ -109,6 +113,7 @@ namespace LinqToDB.DataProvider.Sybase
 			ITable<T>                                               table,
 			BulkCopyOptions                                         options,
 			Func<List<Mapping.ColumnDescriptor>, BulkCopyReader<T>> createDataReader)
+			where T : notnull
 		{
 			var dataConnection = providerConnections.DataConnection;
 			var connection     = providerConnections.ProviderConnection;
@@ -189,7 +194,7 @@ namespace LinqToDB.DataProvider.Sybase
 			return MultipleRowsCopy2Async(table, options, source, "", cancellationToken);
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{

@@ -76,12 +76,12 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> action)
+		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
 			for (var i = 0; i < Parameters.Length; i++)
-				Parameters[i] = Parameters[i].Walk(options, action)!;
+				Parameters[i] = Parameters[i].Walk(options, func)!;
 
-			return action(this);
+			return func(this);
 		}
 
 		#endregion
@@ -176,7 +176,7 @@ namespace LinqToDB.SqlQuery
 		{
 			sb
 				.Append(Name)
-				.Append("(");
+				.Append('(');
 
 			foreach (var p in Parameters)
 			{
@@ -187,7 +187,7 @@ namespace LinqToDB.SqlQuery
 			if (Parameters.Length > 0)
 				sb.Length -= 2;
 
-			return sb.Append(")");
+			return sb.Append(')');
 		}
 
 		#endregion

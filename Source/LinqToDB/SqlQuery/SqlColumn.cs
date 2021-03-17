@@ -57,7 +57,18 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		internal string?        RawAlias   { get; set; }
+		internal string? RawAlias   { get; set; }
+
+		public ISqlExpression UnderlyingExpression()
+		{
+			var current = Expression;
+			while (current.ElementType == QueryElementType.Column)
+			{
+				current = ((SqlColumn)current).Expression;
+			}
+
+			return current;
+		}
 
 		public string? Alias
 		{
@@ -83,49 +94,6 @@ namespace LinqToDB.SqlQuery
 			set => RawAlias = value;
 		}
 
-		private bool   _underlyingColumnSet;
-
-		private SqlColumn? _underlyingColumn;
-
-		public  SqlColumn?  UnderlyingColumn
-		{
-			get
-			{
-				if (_underlyingColumnSet)
-					return _underlyingColumn;
-
-				var columns = new List<SqlColumn>(10);
-				var column  = Expression as SqlColumn;
-
-				while (column != null)
-				{
-					if (column._underlyingColumn != null)
-					{
-						columns.Add(column._underlyingColumn);
-						break;
-					}
-
-					columns.Add(column);
-					column = column.Expression as SqlColumn;
-				}
-
-				_underlyingColumnSet = true;
-				if (columns.Count == 0)
-					return null;
-
-				_underlyingColumn = columns[columns.Count - 1];
-
-				for (var i = 0; i < columns.Count - 1; i++)
-				{
-					var c = columns[i];
-					c._underlyingColumn    = _underlyingColumn;
-					c._underlyingColumnSet = true;
-				}
-
-				return _underlyingColumn;
-			}
-		}
-
 		int? _hashCode;
 
 		[SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
@@ -137,8 +105,6 @@ namespace LinqToDB.SqlQuery
 			var hashCode = Parent?.GetHashCode() ?? 0;
 
 			hashCode = unchecked(hashCode + (hashCode * 397) ^ Expression.GetHashCode());
-			if (UnderlyingColumn != null)
-				hashCode = unchecked(hashCode + (hashCode * 397) ^ UnderlyingColumn.GetHashCode());
 
 			_hashCode = hashCode;
 
@@ -150,13 +116,16 @@ namespace LinqToDB.SqlQuery
 			if (other == null)
 				return false;
 
+			if (ReferenceEquals(this, other))
+				return true;
+
 			if (!Equals(Parent, other.Parent))
 				return false;
 
 			if (Expression.Equals(other.Expression))
-				return true;
+				return false;
 
-			return UnderlyingColumn != null && UnderlyingColumn.Equals(other.UnderlyingColumn);
+			return false;
 		}
 
 		public override string ToString()
@@ -171,11 +140,18 @@ namespace LinqToDB.SqlQuery
 #if DEBUG
 				.Append('[').Append(_columnNumber).Append(']')
 #endif
-				.Append(".")
+				.Append('.')
 				.Append(Alias ?? "c")
 				.Append(" => ");
 
 			Expression.ToString(sb, dic);
+
+			var underlying = UnderlyingExpression();
+			if (!ReferenceEquals(underlying, Expression))
+			{
+				sb.Append(" == ");
+				underlying.ToString(sb, dic);
+			}
 
 			return sb.ToString();
 
@@ -288,7 +264,7 @@ namespace LinqToDB.SqlQuery
 #if DEBUG
 				.Append('[').Append(_columnNumber).Append(']')
 #endif
-				.Append(".")
+				.Append('.')
 				.Append(Alias ?? "c" + (parentIndex >= 0 ? parentIndex + 1 : parentIndex));
 
 			return sb;

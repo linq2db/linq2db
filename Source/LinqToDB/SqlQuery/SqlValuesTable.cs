@@ -172,7 +172,7 @@ namespace LinqToDB.SqlQuery
 				if (i > 0)
 					sb.Append(",\n\t)");
 
-				sb.Append("(");
+				sb.Append('(');
 				for (var j = 0; j < Fields.Count; j++)
 				{
 					if (j > 0)
@@ -181,10 +181,10 @@ namespace LinqToDB.SqlQuery
 					sb = rows[i][j].ToString(sb, dic);
 				}
 
-				sb.Append(")");
+				sb.Append(')');
 			}
 
-			sb.Append("\n");
+			sb.Append('\n');
 
 			return sb;
 		}

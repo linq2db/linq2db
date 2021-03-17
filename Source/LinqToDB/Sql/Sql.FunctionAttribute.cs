@@ -91,7 +91,7 @@ namespace LinqToDB
 			{
 				var sqlExpressions = ConvertArgs(member, args);
 
-				return new SqlFunction(member.GetMemberType(), Name ?? member.Name, IsAggregate, sqlExpressions)
+				return new SqlFunction(member.GetMemberType(), Name ?? member.Name, IsAggregate, IsPure, sqlExpressions)
 				{
 					CanBeNull = GetCanBeNull(sqlExpressions)
 				};

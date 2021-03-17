@@ -7,15 +7,15 @@ using System.Threading.Tasks;
 
 namespace LinqToDB
 {
+	using Async;
+
 	/// <summary>
 	/// Interface to override default implementation of LINQ To DB async operations.
 	/// </summary>
 	public interface IExtensionsAdapter
 	{
-#if !NETFRAMEWORK
 		IAsyncEnumerable<TSource> AsAsyncEnumerable<TSource>(
 			IQueryable<TSource> source);
-#endif
 
 		Task ForEachAsync<TSource>(
 			IQueryable<TSource> source,
@@ -67,11 +67,11 @@ namespace LinqToDB
 			Expression<Func<TSource,bool>> predicate,
 			CancellationToken              token);
 
-		Task<TSource> FirstOrDefaultAsync<TSource>(
+		Task<TSource?> FirstOrDefaultAsync<TSource>(
 			IQueryable<TSource> source,
 			CancellationToken   token);
 
-		Task<TSource> FirstOrDefaultAsync<TSource>(
+		Task<TSource?> FirstOrDefaultAsync<TSource>(
 			IQueryable<TSource>            source,
 			Expression<Func<TSource,bool>> predicate,
 			CancellationToken              token);
@@ -85,11 +85,11 @@ namespace LinqToDB
 			Expression<Func<TSource,bool>> predicate,
 			CancellationToken              token);
 
-		Task<TSource> SingleOrDefaultAsync<TSource>(
+		Task<TSource?> SingleOrDefaultAsync<TSource>(
 			IQueryable<TSource> source,
 			CancellationToken   token);
 
-		Task<TSource> SingleOrDefaultAsync<TSource>(
+		Task<TSource?> SingleOrDefaultAsync<TSource>(
 			IQueryable<TSource>            source,
 			Expression<Func<TSource,bool>> predicate,
 			CancellationToken              token);

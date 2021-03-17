@@ -84,7 +84,7 @@ namespace LinqToDB.SqlQuery
 		{
 			var dependencyCount = 0;
 
-			new QueryVisitor().VisitParentFirst(testedRoot, e =>
+			new QueryVisitor().VisitParentFirstAll(testedRoot, e =>
 			{
 				if (elementsToIgnore != null && elementsToIgnore.Contains(e))
 					return false;
@@ -314,7 +314,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SqlExpression:
 				{
 					var sqlExpr = (SqlExpression) expr;
-					if (!sqlExpr.IsPure || sqlExpr.IsAggregate)
+					if (!sqlExpr.IsPure || (sqlExpr.Flags & (SqlFlags.IsAggregate | SqlFlags.IsWindowFunction)) != 0)
 						return false;
 					return sqlExpr.Parameters.All(p => IsConstant(p));
 				}
@@ -650,7 +650,7 @@ namespace LinqToDB.SqlQuery
 					case QueryInformation.HierarchyType.InnerQuery:
 						return true;
 					default:
-						throw new ArgumentOutOfRangeException();
+						throw new InvalidOperationException($"Unexpected hierarchy type: {info.HierarchyType}");
 				}
 
 			} while (current != null);
@@ -911,11 +911,13 @@ namespace LinqToDB.SqlQuery
 		/// <param name="onWrap">
 		/// After wrapping query this function called for prcess needed optimizations. Array of queries contains [QC, QB, QA]
 		/// </param>
+		/// <param name="allowMutation">Wrapped query can be not recreated for performance considerations.</param>
 		/// <returns>The same <paramref name="statement"/> or modified statement when wrapping has been performed.</returns>
 		public static TStatement WrapQuery<TStatement>(
-			TStatement             statement,
-			Func<SelectQuery, int> wrapTest,
-			Action<IReadOnlyList<SelectQuery>> onWrap)
+			TStatement                             statement,
+			Func<SelectQuery, ConvertVisitor, int> wrapTest,
+			Action<IReadOnlyList<SelectQuery>>     onWrap,
+			bool                                   allowMutation)
 			where TStatement : SqlStatement
 		{
 			if (statement == null) throw new ArgumentNullException(nameof(statement));
@@ -923,11 +925,11 @@ namespace LinqToDB.SqlQuery
 			if (onWrap    == null) throw new ArgumentNullException(nameof(onWrap));
 
 			var correctedTables = new Dictionary<ISqlTableSource, SelectQuery>();
-			var newStatement = ConvertVisitor.Convert(statement, (visitor, element) =>
+			var newStatement = ConvertVisitor.Convert(statement, allowMutation, (visitor, element) =>
 			{
 				if (element is SelectQuery query)
 				{
-					var ec = wrapTest(query);
+					var ec = wrapTest(query, visitor);
 					if (ec <= 0)
 						return element;
 
@@ -943,9 +945,17 @@ namespace LinqToDB.SqlQuery
 					}
 
 					var objectTree = new Dictionary<ICloneableElement, ICloneableElement>();
-					var clonedQuery = (SelectQuery)query.Clone(objectTree, e => e == query || e is SqlColumn c && c.Parent == query);
+					var clonedQuery = (SelectQuery)query.Clone(objectTree, e => e == query 
+						|| e is SqlColumn c && c.Parent == query 
+						|| e is SqlSetOperator setOperator && (!query.HasSetOperators || query.SetOperators.All(so => so != setOperator)));
 
 					queries.Add(clonedQuery);
+
+					if (clonedQuery.HasSetOperators)
+					{
+						queries[0].SetOperators.AddRange(clonedQuery.SetOperators);
+						clonedQuery.SetOperators.Clear();
+					}
 
 					for (int i = queries.Count - 2; i >= 0; i--)
 					{
@@ -1012,13 +1022,14 @@ namespace LinqToDB.SqlQuery
 		/// <typeparam name="TStatement"></typeparam>
 		/// <param name="statement">Statement which may contain tested query</param>
 		/// <param name="queryToWrap">Tells which select query needs enveloping</param>
+		/// <param name="allowMutation">Wrapped query can be not recreated for performance considerations.</param>
 		/// <returns>The same <paramref name="statement"/> or modified statement when wrapping has been performed.</returns>
-		public static TStatement WrapQuery<TStatement>(TStatement statement, SelectQuery queryToWrap)
+		public static TStatement WrapQuery<TStatement>(TStatement statement, SelectQuery queryToWrap, bool allowMutation)
 			where TStatement : SqlStatement
 		{
 			if (statement == null) throw new ArgumentNullException(nameof(statement));
 
-			return WrapQuery(statement, q => q == queryToWrap, (q1, q2) => { });
+			return WrapQuery(statement, (q, v) => q == queryToWrap, (q1, q2) => { }, allowMutation);
 		}
 
 		/// <summary>
@@ -1029,18 +1040,20 @@ namespace LinqToDB.SqlQuery
 		/// <param name="statement"></param>
 		/// <param name="wrapTest">Delegate for testing when query needs to be wrapped.</param>
 		/// <param name="onWrap">After enveloping query this function called for prcess needed optimizations.</param>
+		/// <param name="allowMutation">Wrapped query can be not recreated for performance considerations.</param>
 		/// <returns>The same <paramref name="statement"/> or modified statement when wrapping has been performed.</returns>
 		public static TStatement WrapQuery<TStatement>(
-			TStatement                       statement,
-			Func<SelectQuery, bool>          wrapTest,
-			Action<SelectQuery, SelectQuery> onWrap)
+			TStatement                              statement,
+			Func<SelectQuery, ConvertVisitor, bool> wrapTest,
+			Action<SelectQuery, SelectQuery>        onWrap,
+			bool                                    allowMutation)
 			where TStatement : SqlStatement
 		{
 			if (statement == null) throw new ArgumentNullException(nameof(statement));
 			if (wrapTest == null)  throw new ArgumentNullException(nameof(wrapTest));
 			if (onWrap == null)    throw new ArgumentNullException(nameof(onWrap));
 
-			return WrapQuery(statement, q => wrapTest(q) ? 1 : 0, queries => onWrap(queries[0], queries[1]));
+			return WrapQuery(statement, (q, v) => wrapTest(q, v) ? 1 : 0, queries => onWrap(queries[0], queries[1]), allowMutation);
 		}
 
 
@@ -1210,13 +1223,13 @@ namespace LinqToDB.SqlQuery
 			return result;
 		}
 
-		public static bool IsAggregationFunction(IQueryElement expr)
+		public static bool IsAggregationOrWindowFunction(IQueryElement expr)
 		{
 			if (expr is SqlFunction func)
 				return func.IsAggregate;
 
 			if (expr is SqlExpression expression)
-				return expression.IsAggregate;
+				return (expression.Flags & (SqlFlags.IsAggregate | SqlFlags.IsWindowFunction)) != 0;
 
 			return false;
 		}

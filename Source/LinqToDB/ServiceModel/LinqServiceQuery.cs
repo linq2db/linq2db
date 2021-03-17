@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿#if NETFRAMEWORK
+using System.Collections.Generic;
 
 namespace LinqToDB.ServiceModel
 {
@@ -10,3 +11,4 @@ namespace LinqToDB.ServiceModel
 		public List<string>?  QueryHints { get; set; }
 	}
 }
+#endif
