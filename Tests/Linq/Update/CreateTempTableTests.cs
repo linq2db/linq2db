@@ -260,10 +260,10 @@ namespace Tests.xUpdate
 		public void CreateTable_NoDisposeError([DataSources(false)] string context)
 		{
 			using var db = new TestDataConnection(context);
-			db.DropTable<int>("TempTable", throwExceptionIfNotExists: false);
+			db.DropTable<int>("#TempTable", throwExceptionIfNotExists: false);
 
-			var tempTable = db.CreateTempTable<IDTable>("TempTable");
-			var table2 = db.GetTable<IDTable>().TableName("TempTable");
+			var tempTable = db.CreateTempTable<IDTable>("#TempTable");
+			var table2 = db.GetTable<IDTable>().TableName("#TempTable");
 			table2.Drop();
 			tempTable.Dispose();
 		}
@@ -275,8 +275,8 @@ namespace Tests.xUpdate
 			using var db = new TestDataConnection(context);
 			await db.DropTableAsync<int>("TempTable", throwExceptionIfNotExists: false);
 
-			var tempTable = await db.CreateTempTableAsync<IDTable>("TempTable");
-			var table2 = db.GetTable<IDTable>().TableName("TempTable");
+			var tempTable = await db.CreateTempTableAsync<IDTable>("#TempTable");
+			var table2 = db.GetTable<IDTable>().TableName("#TempTable");
 			await table2.DropAsync();
 			await tempTable.DisposeAsync();
 		}
