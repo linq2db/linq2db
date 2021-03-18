@@ -24,9 +24,14 @@ namespace LinqToDB.SqlQuery
 
 		public StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
-			if (!string.IsNullOrEmpty(Value))
+			return BuildSql(sb, Value);
+		}
+
+		internal static StringBuilder BuildSql(StringBuilder sb, string? tagValue)
+		{
+			if (!string.IsNullOrEmpty(tagValue))
 			{
-				var escapedTag = Value!.Replace("\n", "\n-- ");
+				var escapedTag = tagValue!.Replace("\n", "\n-- ");
 				sb.Append("-- ");
 				sb.Append(escapedTag);
 				sb.AppendLine();

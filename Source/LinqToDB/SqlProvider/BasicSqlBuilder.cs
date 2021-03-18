@@ -2714,13 +2714,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildTag(SelectQuery selectQuery)
 		{
-			if (!string.IsNullOrEmpty(selectQuery.Tag.Value))
-			{
-				var escapedTag = selectQuery.Tag.Value!.Replace("\n", "\n-- ");
-				StringBuilder.Append("-- ")
-							 .Append(escapedTag)
-							 .AppendLine();
-			}
+			Tag.BuildSql(StringBuilder, selectQuery.Tag.Value);
 		}
 
 		#endregion
