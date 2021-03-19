@@ -372,7 +372,7 @@ namespace LinqToDB.SqlQuery
 					}
 
 				case QueryElementType.MergeSourceTable:
-					Visit1X((SqlMergeSourceTable)element);
+					Visit1X((SqlTableLikeSource)element);
 					break;
 
 				case QueryElementType.SqlValuesTable:
@@ -570,7 +570,7 @@ namespace LinqToDB.SqlQuery
 				Visit1(operation);
 		}
 
-		void Visit1X(SqlMergeSourceTable element)
+		void Visit1X(SqlTableLikeSource element)
 		{
 			Visit1(element.Source);
 
@@ -959,7 +959,7 @@ namespace LinqToDB.SqlQuery
 					}
 
 				case QueryElementType.MergeSourceTable:
-					Visit2X((SqlMergeSourceTable)element);
+					Visit2X((SqlTableLikeSource)element);
 					break;
 
 				case QueryElementType.SqlValuesTable:
@@ -1189,7 +1189,7 @@ namespace LinqToDB.SqlQuery
 				Visit2(operation);
 		}
 
-		void Visit2X(SqlMergeSourceTable element)
+		void Visit2X(SqlTableLikeSource element)
 		{
 			Visit2(element.Source);
 
@@ -1528,9 +1528,9 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.MergeSourceTable:
 					{
 						return
-							Find(((SqlMergeSourceTable)element).SourceEnumerable) ??
-							Find(((SqlMergeSourceTable)element).SourceQuery     ) ??
-							Find(((SqlMergeSourceTable)element).SourceFields    );
+							Find(((SqlTableLikeSource)element).SourceEnumerable) ??
+							Find(((SqlTableLikeSource)element).SourceQuery     ) ??
+							Find(((SqlTableLikeSource)element).SourceFields    );
 					}
 
 				case QueryElementType.MergeOperationClause:

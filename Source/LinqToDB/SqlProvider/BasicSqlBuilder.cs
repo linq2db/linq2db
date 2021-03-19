@@ -2989,7 +2989,7 @@ namespace LinqToDB.SqlProvider
 					return GetTablePhysicalName((SqlTable)table)!;
 
 				case QueryElementType.MergeSourceTable:
-					return ConvertInline(((SqlMergeSourceTable)table).Name, ConvertType.NameToQueryTable);
+					return ConvertInline(((SqlTableLikeSource)table).Name, ConvertType.NameToQueryTable);
 
 				default:
 					throw new InvalidOperationException($"Unexpected table type {table.ElementType}");

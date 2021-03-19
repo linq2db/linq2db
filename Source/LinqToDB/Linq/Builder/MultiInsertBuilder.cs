@@ -30,7 +30,7 @@ namespace LinqToDB.Linq.Builder
 			};
 
 			var sourceContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-			var source = new MergeSourceQueryContext(sourceContext);
+			var source = new TableLikeQueryContext(sourceContext);
 
 			var statement = new SqlMultiInsertStatement(insertType, source.Source);
 			sourceContext.Statement = statement;

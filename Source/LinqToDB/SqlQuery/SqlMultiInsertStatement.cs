@@ -7,9 +7,9 @@ namespace LinqToDB.SqlQuery
 	public class SqlMultiInsertStatement : SqlStatement
 	{
 		public MultiInsertType InsertType { get; }
-		public SqlMergeSourceTable Source { get; }
+		public SqlTableLikeSource Source { get; }
 
-		public SqlMultiInsertStatement(MultiInsertType type, SqlMergeSourceTable source)
+		public SqlMultiInsertStatement(MultiInsertType type, SqlTableLikeSource source)
 		{ 
 			InsertType = type;
 			Source = source;

@@ -6,16 +6,16 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
-	class MergeSourceQueryContext : SubQueryContext
+	class TableLikeQueryContext : SubQueryContext
 	{
-		public SqlMergeSourceTable Source { get; }
+		public SqlTableLikeSource Source { get; }
 
-		public MergeSourceQueryContext(IBuildContext sourceContext)
+		public TableLikeQueryContext(IBuildContext sourceContext)
 			: base(sourceContext, new SelectQuery { ParentSelect = sourceContext.SelectQuery }, true)
 		{
 			Source = sourceContext is EnumerableContext enumerableSource
-				? new SqlMergeSourceTable { SourceEnumerable = enumerableSource.Table }
-				: new SqlMergeSourceTable { SourceQuery = sourceContext.SelectQuery };
+				? new SqlTableLikeSource { SourceEnumerable = enumerableSource.Table }
+				: new SqlTableLikeSource { SourceQuery = sourceContext.SelectQuery };
 
 			if (SubQuery is SelectContext select)
 				select.AllowAddDefault = false;

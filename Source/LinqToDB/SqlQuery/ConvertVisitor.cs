@@ -929,7 +929,7 @@ namespace LinqToDB.SqlQuery
 							var merge = (SqlMergeStatement)element;
 
 							var target     = (SqlTableSource?)     ConvertInternal(merge.Target);
-							var source     = (SqlMergeSourceTable?)ConvertInternal(merge.Source);
+							var source     = (SqlTableLikeSource?)ConvertInternal(merge.Source);
 							var on         = (SqlSearchCondition?) ConvertInternal(merge.On);
 							var operations = ConvertSafe(merge.Operations);
 
@@ -952,7 +952,7 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.MultiInsertStatement:
 						{
 							var s            = (SqlMultiInsertStatement)element;
-							var source       = (SqlMergeSourceTable?   )ConvertInternal(s.Source);
+							var source       = (SqlTableLikeSource?   )ConvertInternal(s.Source);
 							
 							var whensChanged = false;
 							var whens        = s
@@ -991,7 +991,7 @@ namespace LinqToDB.SqlQuery
 
 					case QueryElementType.MergeSourceTable:
 						{
-							var source = (SqlMergeSourceTable)element;
+							var source = (SqlTableLikeSource)element;
 
 							var enumerableSource          = (SqlValuesTable?)ConvertInternal(source.SourceEnumerable);
 							var querySource               = (SelectQuery?)   ConvertInternal(source.SourceQuery);
@@ -1007,7 +1007,7 @@ namespace LinqToDB.SqlQuery
 									ReplaceVisited(oldField, newField);
 								}
 
-								newElement = new SqlMergeSourceTable(
+								newElement = new SqlTableLikeSource(
 									source.SourceID,
 									enumerableSource ?? source.SourceEnumerable!,
 									querySource ?? source.SourceQuery!,

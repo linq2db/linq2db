@@ -17,7 +17,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var mergeContext = (MergeContext)builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-				var source = new MergeSourceQueryContext(
+				var source = new TableLikeQueryContext(
 					// is it ok to reuse context like that?
 					mergeContext.TargetContext);
 				mergeContext.Sequences = new IBuildContext[] { mergeContext.Sequence, source };

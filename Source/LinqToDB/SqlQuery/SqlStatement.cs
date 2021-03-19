@@ -135,7 +135,7 @@ namespace LinqToDB.SqlQuery
 				{
 					case QueryElementType.MergeSourceTable:
 						{
-							var source = (SqlMergeSourceTable)expr;
+							var source = (SqlTableLikeSource)expr;
 
 							Utils.MakeUniqueNames(
 								source.SourceFields,

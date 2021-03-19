@@ -1306,7 +1306,7 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.MergeSourceTable:
 						{
-							var elem = (SqlMergeSourceTable)e;
+							var elem = (SqlTableLikeSource)e;
 
 							Append(elem.SourceID);
 							Append(elem.SourceEnumerable);
@@ -2120,7 +2120,7 @@ namespace LinqToDB.ServiceModel
 							var querySource      = Read<SelectQuery>()!;
 							var fields           = ReadArray<SqlField>()!;
 
-							obj = new SqlMergeSourceTable(sourceID, enumerableSource, querySource, fields);
+							obj = new SqlTableLikeSource(sourceID, enumerableSource, querySource, fields);
 
 							break;
 						}
@@ -2141,7 +2141,7 @@ namespace LinqToDB.ServiceModel
 						{
 							var hint       = ReadString();
 							var target     = Read<SqlTableSource>()!;
-							var source     = Read<SqlMergeSourceTable>()!;
+							var source     = Read<SqlTableLikeSource>()!;
 							var on         = Read<SqlSearchCondition>()!;
 							var operations = ReadArray<SqlMergeOperationClause>()!;
 
@@ -2153,7 +2153,7 @@ namespace LinqToDB.ServiceModel
 					case QueryElementType.MultiInsertStatement :
 						{
 							var insertType   = (MultiInsertType)ReadInt();
-							var source       = Read<SqlMergeSourceTable>()!;
+							var source       = Read<SqlTableLikeSource>()!;
 							var insertsCount = ReadInt();
 							
 							var whensCount   = insertType == MultiInsertType.Unconditional ? 0 : insertsCount;
