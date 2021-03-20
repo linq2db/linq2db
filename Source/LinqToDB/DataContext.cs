@@ -556,11 +556,8 @@ namespace LinqToDB
 			public async Task DisposeAsync()
 #endif
 			{
-				if (_queryRunner != null)
-					await _queryRunner.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-
-				if (_dataContext != null) 
-					await ((IDataContext)_dataContext).DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				await _queryRunner!.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				_dataContext!.ReleaseQuery();
 
 				_queryRunner = null;
 				_dataContext = null;
