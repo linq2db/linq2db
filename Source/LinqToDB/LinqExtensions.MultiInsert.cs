@@ -2,7 +2,10 @@ using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 using JetBrains.Annotations;
+using LinqToDB.Async;
 
 namespace LinqToDB
 {
@@ -145,7 +148,7 @@ namespace LinqToDB
 		/// <summary>
 		/// Inserts source data into every configured table.
 		/// </summary>
-		/// <typeparam name="TSource">Source query record type.</typeparam>		
+		/// <typeparam name="TSource">Source query record type.</typeparam>
 		/// <param name="insert">Multi-table insert to perform.</param>
 		/// <returns>Number of inserted rows.</returns>
 		public static int Insert<TSource>(this IMultiInsertInto<TSource> insert)
@@ -163,9 +166,34 @@ namespace LinqToDB
 		}
 
 		/// <summary>
+		/// Asynchronously inserts source data into every configured table.
+		/// </summary>
+		/// <typeparam name="TSource">Source query record type.</typeparam>
+		/// <param name="insert">Multi-table insert to perform.</param>
+		/// <param name="token">Cancellation token for async operation.</param>
+		/// <returns>Number of inserted rows.</returns>
+		public static Task<int> InsertAsync<TSource>(this IMultiInsertInto<TSource> insert, CancellationToken token = default)
+		{
+			if (insert == null) throw new ArgumentNullException(nameof(insert));
+			
+			IQueryable query = ((MultiInsertQuery<TSource>)insert).Query;
+			query = LinqExtensions.ProcessSourceQueryable?.Invoke(query) ?? query;
+
+			var expr = Expression.Call(
+				null,
+				InsertMethodInfo.MakeGenericMethod(typeof(TSource)),
+				query.Expression);
+
+			if (query is IQueryProviderAsync queryAsync)
+				return queryAsync.ExecuteAsync<int>(expr, token);
+
+			return TaskEx.Run(() => query.Provider.Execute<int>(expr), token);
+		}
+
+		/// <summary>
 		/// Inserts source data into every matching condition.
 		/// </summary>
-		/// <typeparam name="TSource">Source query record type.</typeparam>		
+		/// <typeparam name="TSource">Source query record type.</typeparam>
 		/// <param name="insert">Multi-table insert to perform.</param>
 		/// <returns>Number of inserted rows.</returns>
 		public static int InsertAll<TSource>(this IMultiInsertElse<TSource> insert)
@@ -183,9 +211,34 @@ namespace LinqToDB
 		}
 
 		/// <summary>
+		/// Asynchronously inserts source data into every matching condition.
+		/// </summary>
+		/// <typeparam name="TSource">Source query record type.</typeparam>
+		/// <param name="insert">Multi-table insert to perform.</param>
+		/// <param name="token">Cancellation token for async operation.</param>
+		/// <returns>Number of inserted rows.</returns>
+		public static Task<int> InsertAllAsync<TSource>(this IMultiInsertElse<TSource> insert, CancellationToken token = default)
+		{
+			if (insert == null) throw new ArgumentNullException(nameof(insert));
+
+			IQueryable query = ((MultiInsertQuery<TSource>)insert).Query;
+			query = LinqExtensions.ProcessSourceQueryable?.Invoke(query) ?? query;
+
+			var expr = Expression.Call(
+				null,
+				InsertAllMethodInfo.MakeGenericMethod(typeof(TSource)),
+				query.Expression);
+			
+			if (query is IQueryProviderAsync queryAsync)
+				return queryAsync.ExecuteAsync<int>(expr, token);
+
+			return TaskEx.Run(() => query.Provider.Execute<int>(expr), token);
+		}
+
+		/// <summary>
 		/// Inserts source data into the first matching condition.
 		/// </summary>
-		/// <typeparam name="TSource">Source query record type.</typeparam>		
+		/// <typeparam name="TSource">Source query record type.</typeparam>
 		/// <param name="insert">Multi-table insert to perform.</param>
 		/// <returns>Number of inserted rows.</returns>
 		public static int InsertFirst<TSource>(this IMultiInsertElse<TSource> insert)
@@ -201,6 +254,31 @@ namespace LinqToDB
 					InsertFirstMethodInfo.MakeGenericMethod(typeof(TSource)),
 					query.Expression));
 		}
+
+		/// <summary>
+		/// Asynchronously inserts source data into the first matching condition.
+		/// </summary>
+		/// <typeparam name="TSource">Source query record type.</typeparam>
+		/// <param name="insert">Multi-table insert to perform.</param>
+		/// <param name="token">Cancellation token for async operation.</param>
+		/// <returns>Number of inserted rows.</returns>
+		public static Task<int> InsertFirstAsync<TSource>(this IMultiInsertElse<TSource> insert, CancellationToken token = default)
+		{
+			if (insert == null) throw new ArgumentNullException(nameof(insert));
+
+			IQueryable query = ((MultiInsertQuery<TSource>)insert).Query;
+			query = LinqExtensions.ProcessSourceQueryable?.Invoke(query) ?? query;
+
+			var expr = Expression.Call(
+				null,
+				InsertFirstMethodInfo.MakeGenericMethod(typeof(TSource)),
+				query.Expression);
+			
+			if (query is IQueryProviderAsync queryAsync)
+				return queryAsync.ExecuteAsync<int>(expr, token);
+
+			return TaskEx.Run(() => query.Provider.Execute<int>(expr), token);
+		}		
 
 		#endregion
 
