@@ -19,11 +19,13 @@ namespace LinqToDB.Data
 		/// <param name="dataConnection"><see cref="DataConnection"/> instance, generated this trace.</param>
 		/// <param name="traceInfoStep">Trace execution step.</param>
 		/// <param name="operation">Operation associated with trace event.</param>
-		public TraceInfo(DataConnection dataConnection, TraceInfoStep traceInfoStep, TraceOperation operation)
+		/// <param name="isAsync">Flag indicating whether operation was executed asynchronously.</param>
+		public TraceInfo(DataConnection dataConnection, TraceInfoStep traceInfoStep, TraceOperation operation, bool isAsync)
 		{
 			DataConnection = dataConnection;
 			TraceInfoStep  = traceInfoStep;
 			Operation      = operation;
+			IsAsync        = isAsync;
 		}
 
 		/// <summary>
@@ -84,9 +86,9 @@ namespace LinqToDB.Data
 		public Expression? MapperExpression { get; set; }
 
 		/// <summary>
-		/// Gets or sets a flag indicating whether the command was executed asynchronously.
+		/// Gets a flag indicating whether operation was executed asynchronously.
 		/// </summary>
-		public bool IsAsync { get; set; }
+		public bool IsAsync { get; }
 
 		private string? _sqlText;
 

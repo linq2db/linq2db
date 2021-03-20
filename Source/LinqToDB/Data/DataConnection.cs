@@ -30,7 +30,7 @@ namespace LinqToDB.Data
 	/// or attached to existing connection or transaction.
 	/// </summary>
 	[PublicAPI]
-	public partial class DataConnection : ICloneable
+	public partial class DataConnection : IDataContext, ICloneable
 	{
 		#region .ctor
 
@@ -1281,7 +1281,7 @@ namespace LinqToDB.Data
 
 			if (TraceSwitchConnection.TraceInfo)
 			{
-				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteNonQuery)
+				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteNonQuery, false)
 				{
 					TraceLevel     = TraceLevel.Info,
 					Command        = GetCurrentCommand(),
@@ -1297,7 +1297,7 @@ namespace LinqToDB.Data
 
 				if (TraceSwitchConnection.TraceInfo)
 				{
-					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, TraceOperation.ExecuteNonQuery)
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, TraceOperation.ExecuteNonQuery, false)
 					{
 						TraceLevel      = TraceLevel.Info,
 						Command         = GetCurrentCommand(),
@@ -1313,7 +1313,7 @@ namespace LinqToDB.Data
 			{
 				if (TraceSwitchConnection.TraceError)
 				{
-					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteNonQuery)
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteNonQuery, false)
 					{
 						TraceLevel     = TraceLevel.Error,
 						Command        = GetCurrentCommand(),
@@ -1347,7 +1347,7 @@ namespace LinqToDB.Data
 
 			if (TraceSwitchConnection.TraceInfo)
 			{
-				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteScalar)
+				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteScalar, false)
 				{
 					TraceLevel     = TraceLevel.Info,
 					Command        = GetCurrentCommand(),
@@ -1363,7 +1363,7 @@ namespace LinqToDB.Data
 
 				if (TraceSwitchConnection.TraceInfo)
 				{
-					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, TraceOperation.ExecuteScalar)
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, TraceOperation.ExecuteScalar, false)
 					{
 						TraceLevel     = TraceLevel.Info,
 						Command        = GetCurrentCommand(),
@@ -1378,7 +1378,7 @@ namespace LinqToDB.Data
 			{
 				if (TraceSwitchConnection.TraceError)
 				{
-					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteScalar)
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteScalar, false)
 					{
 						TraceLevel     = TraceLevel.Error,
 						Command        = GetCurrentCommand(),
@@ -1417,7 +1417,7 @@ namespace LinqToDB.Data
 
 			if (TraceSwitchConnection.TraceInfo)
 			{
-				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteReader)
+				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteReader, false)
 				{
 					TraceLevel     = TraceLevel.Info,
 					Command        = GetCurrentCommand(),
@@ -1434,7 +1434,7 @@ namespace LinqToDB.Data
 
 				if (TraceSwitchConnection.TraceInfo)
 				{
-					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, TraceOperation.ExecuteReader)
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, TraceOperation.ExecuteReader, false)
 					{
 						TraceLevel     = TraceLevel.Info,
 						Command        = GetCurrentCommand(),
@@ -1449,7 +1449,7 @@ namespace LinqToDB.Data
 			{
 				if (TraceSwitchConnection.TraceError)
 				{
-					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteReader)
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteReader, false)
 					{
 						TraceLevel     = TraceLevel.Error,
 						Command        = GetCurrentCommand(),

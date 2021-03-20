@@ -6,8 +6,7 @@ using System.Data.Common;
 using System.Globalization;
 using System.Linq;
 #if NATIVE_ASYNC
-	using System.Threading;
-	using System.Threading.Tasks;
+using System.Threading;
 #endif
 
 namespace LinqToDB.DataProvider
@@ -294,7 +293,7 @@ namespace LinqToDB.DataProvider
 #if NATIVE_ASYNC
 		public override async Task<bool> ReadAsync(CancellationToken cancellationToken)
 		{
-			var b = await MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			var b = await MoveNextAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			if (b)
 				Count++;

@@ -9,53 +9,45 @@ namespace LinqToDB.Data
 	public enum TraceOperation
 	{
 		/// <summary>
-		/// Synchronous <see cref="DbCommand.ExecuteNonQuery"/> operation.
+		/// <see cref="DbCommand.ExecuteNonQuery"/> or <see cref="DbCommand.ExecuteNonQueryAsync(System.Threading.CancellationToken)"/> operation.
+		/// See also <seealso cref="TraceInfo.IsAsync"/>.
 		/// </summary>
 		ExecuteNonQuery,
 
 		/// <summary>
-		/// Asynchronous <see cref="DbCommand.ExecuteNonQueryAsync(System.Threading.CancellationToken)"/> operation.
-		/// </summary>
-		ExecuteNonQueryAsync,
-
-		/// <summary>
-		/// Synchronous <see cref="DbCommand.ExecuteReader(System.Data.CommandBehavior)"/> operation.
+		/// <see cref="DbCommand.ExecuteReader(System.Data.CommandBehavior)"/> or <see cref="DbCommand.ExecuteReaderAsync(System.Data.CommandBehavior, System.Threading.CancellationToken)"/> operation.
+		/// See also <seealso cref="TraceInfo.IsAsync"/>.
 		/// </summary>
 		ExecuteReader,
 
 		/// <summary>
-		/// Asynchronous <see cref="DbCommand.ExecuteReaderAsync(System.Data.CommandBehavior, System.Threading.CancellationToken)"/> operation.
-		/// </summary>
-		ExecuteReaderAsync,
-
-		/// <summary>
-		/// Synchronous <see cref="DbCommand.ExecuteScalar"/> operation.
+		/// <see cref="DbCommand.ExecuteScalar"/> or <see cref="DbCommand.ExecuteScalarAsync(System.Threading.CancellationToken)"/> operation.
+		/// See also <seealso cref="TraceInfo.IsAsync"/>.
 		/// </summary>
 		ExecuteScalar,
 
 		/// <summary>
-		/// Asynchronous <see cref="DbCommand.ExecuteScalarAsync(System.Threading.CancellationToken)"/> operation.
-		/// </summary>
-		ExecuteScalarAsync,
-
-		/// <summary>
-		/// Synchronous <see cref="DataConnectionExtensions.BulkCopy{T}(ITable{T}, System.Collections.Generic.IEnumerable{T})"/> operation.
+		/// <see cref="DataConnectionExtensions.BulkCopy{T}(ITable{T}, System.Collections.Generic.IEnumerable{T})"/> or <see cref="DataConnectionExtensions.BulkCopyAsync{T}(DataConnection, int, System.Collections.Generic.IEnumerable{T}, System.Threading.CancellationToken)"/> operation.
+		/// See also <seealso cref="TraceInfo.IsAsync"/>.
 		/// </summary>
 		BulkCopy,
 
 		/// <summary>
-		/// Asynchronous <see cref="DataConnectionExtensions.BulkCopyAsync{T}(DataConnection, int, System.Collections.Generic.IEnumerable{T}, System.Threading.CancellationToken)"/> operation.
-		/// </summary>
-		BulkCopyAsync,
-
-		/// <summary>
-		/// Synchronous <see cref="DbConnection.Open"/> operation.
+		/// <see cref="DbConnection.Open"/> or <see cref="DbConnection.OpenAsync(System.Threading.CancellationToken)"/> operation.
+		/// See also <seealso cref="TraceInfo.IsAsync"/>.
 		/// </summary>
 		Open,
 
 		/// <summary>
-		/// Asynchronous <see cref="DbConnection.OpenAsync(System.Threading.CancellationToken)"/> operation.
+		/// Mapper build operation.
+		/// See also <seealso cref="TraceInfo.IsAsync"/>.
 		/// </summary>
-		OpenAsync,
+		BuildMapping,
+
+		/// <summary>
+		/// Query runner disposal operation.
+		/// See also <seealso cref="TraceInfo.IsAsync"/>.
+		/// </summary>
+		DisposeQuery,
 	}
 }

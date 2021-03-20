@@ -249,7 +249,7 @@ namespace LinqToDB.DataProvider
 
 			if (dataConnection.TraceSwitchConnection.TraceInfo)
 			{
-				dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.BeforeExecute, async ? TraceOperation.BulkCopyAsync : TraceOperation.BulkCopy)
+				dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.BeforeExecute, TraceOperation.BulkCopy, async)
 				{
 					TraceLevel     = TraceLevel.Info,
 					CommandText    = commandText(),
@@ -263,7 +263,7 @@ namespace LinqToDB.DataProvider
 
 				if (dataConnection.TraceSwitchConnection.TraceInfo)
 				{
-					dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.AfterExecute, async ? TraceOperation.BulkCopyAsync : TraceOperation.BulkCopy)
+					dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.AfterExecute, TraceOperation.BulkCopy, async)
 					{
 						TraceLevel      = TraceLevel.Info,
 						CommandText     = commandText(),
@@ -277,7 +277,7 @@ namespace LinqToDB.DataProvider
 			{
 				if (dataConnection.TraceSwitchConnection.TraceError)
 				{
-					dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.Error, async ? TraceOperation.BulkCopyAsync : TraceOperation.BulkCopy)
+					dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.Error, TraceOperation.BulkCopy, async)
 					{
 						TraceLevel     = TraceLevel.Error,
 						CommandText    = commandText(),
