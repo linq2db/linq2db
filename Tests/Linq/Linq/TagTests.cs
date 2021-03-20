@@ -18,7 +18,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var query =
-					from x in db.Person.TagWith(tag)
+					from x in db.Person.TagQuery(tag)
 					select x;
 
 				query.ToList();
@@ -39,7 +39,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var query =
-					from x in db.Person.TagWith(tag)
+					from x in db.Person.TagQuery(tag)
 					select x;
 
 				query.ToList();
@@ -59,7 +59,7 @@ namespace Tests.Linq
 				Assert.Throws<ArgumentNullException>(() =>
 				{
 					var query =
-					from x in db.Person.TagWith(null!)
+					from x in db.Person.TagQuery(null!)
 					select x;
 				});
 			}

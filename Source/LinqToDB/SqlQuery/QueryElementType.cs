@@ -67,6 +67,6 @@
 
 		GroupingSet,
 
-		Tag
+		Comment
 	}
 }

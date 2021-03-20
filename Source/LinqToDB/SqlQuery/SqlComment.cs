@@ -4,9 +4,9 @@ using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	public class Tag : IQueryElement, ICloneableElement
+	public class SqlComment : IQueryElement, ICloneableElement
 	{
-		public QueryElementType ElementType => QueryElementType.Tag;
+		public QueryElementType ElementType => QueryElementType.Comment;
 
 		public string? Value { get; set; }
 
@@ -15,7 +15,7 @@ namespace LinqToDB.SqlQuery
 			if (!doClone(this))
 				return this;
 
-			var clone = new Tag() { Value = Value };
+			var clone = new SqlComment() { Value = Value };
 
 			objectTree.Add(this, clone);
 

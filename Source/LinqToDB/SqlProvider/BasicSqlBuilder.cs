@@ -2714,7 +2714,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildTag(SelectQuery selectQuery)
 		{
-			Tag.BuildSql(StringBuilder, selectQuery.Tag.Value);
+			SqlComment.BuildSql(StringBuilder, selectQuery.Tag.Value);
 		}
 
 		#endregion
