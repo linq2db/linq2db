@@ -171,7 +171,7 @@ namespace LinqToDB.DataProvider.SapHana
 						else
 							bc.WriteToServer(rd);
 						return rd.Count;
-					}).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					}, true).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				if (rc.RowsCopied != rd.Count)
 				{

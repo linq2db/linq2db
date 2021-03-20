@@ -471,7 +471,7 @@ namespace LinqToDB.Data
 
 		/// <summary>
 		/// Gets or sets trace handler, used for current connection instance.
-		/// Configured on the connection builder using <see cref="LinqToDbConnectionOptionsBuilder.WithTracing(System.Action{LinqToDB.Data.TraceInfo})"/>.
+		/// Configured on the connection builder using <see cref="LinqToDbConnectionOptionsBuilder.WithTracing(Action{TraceInfo})"/>.
 		/// defaults to <see cref="OnTrace"/>.
 		/// </summary>
 		public Action<TraceInfo> OnTraceConnection { get; set; } = _onTrace;
@@ -566,7 +566,7 @@ namespace LinqToDB.Data
 			}
 		}
 
-		private static TraceSwitch _traceSwitch = new TraceSwitch("DataConnection",
+		private static TraceSwitch _traceSwitch = new ("DataConnection",
 			"DataConnection trace switch",
 #if DEBUG
 			"Warning"
@@ -708,8 +708,7 @@ namespace LinqToDB.Data
 			}
 		}
 
-		static readonly List<Func<IConnectionStringSettings,string,IDataProvider?>> _providerDetectors =
-			new List<Func<IConnectionStringSettings,string,IDataProvider?>>();
+		static readonly List<Func<IConnectionStringSettings,string,IDataProvider?>> _providerDetectors = new();
 
 		/// <summary>
 		/// Registers database provider factory method.
@@ -738,7 +737,7 @@ namespace LinqToDB.Data
 			}
 		}
 
-		static readonly object _initSyncRoot = new object();
+		static readonly object _initSyncRoot = new ();
 		static          bool   _initialized;
 
 		static void InitConfig()
@@ -753,8 +752,7 @@ namespace LinqToDB.Data
 			}
 		}
 
-		static readonly ConcurrentDictionary<string,IDataProvider> _dataProviders =
-			new ConcurrentDictionary<string,IDataProvider>();
+		static readonly ConcurrentDictionary<string,IDataProvider> _dataProviders = new ();
 
 		/// <summary>
 		/// Registers database provider implementation by provided unique name.
@@ -960,8 +958,7 @@ namespace LinqToDB.Data
 			}
 		}
 
-		static readonly ConcurrentDictionary<string,ConfigurationInfo> _configurations =
-			new ConcurrentDictionary<string, ConfigurationInfo>();
+		static readonly ConcurrentDictionary<string,ConfigurationInfo> _configurations = new ();
 
 		/// <summary>
 		/// Register connection configuration with specified connection string and database provider implementation.
@@ -1284,7 +1281,7 @@ namespace LinqToDB.Data
 
 			if (TraceSwitchConnection.TraceInfo)
 			{
-				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute)
+				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteNonQuery)
 				{
 					TraceLevel     = TraceLevel.Info,
 					Command        = GetCurrentCommand(),
@@ -1300,7 +1297,7 @@ namespace LinqToDB.Data
 
 				if (TraceSwitchConnection.TraceInfo)
 				{
-					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute)
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, TraceOperation.ExecuteNonQuery)
 					{
 						TraceLevel      = TraceLevel.Info,
 						Command         = GetCurrentCommand(),
@@ -1316,7 +1313,7 @@ namespace LinqToDB.Data
 			{
 				if (TraceSwitchConnection.TraceError)
 				{
-					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error)
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteNonQuery)
 					{
 						TraceLevel     = TraceLevel.Error,
 						Command        = GetCurrentCommand(),
@@ -1350,7 +1347,7 @@ namespace LinqToDB.Data
 
 			if (TraceSwitchConnection.TraceInfo)
 			{
-				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute)
+				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteScalar)
 				{
 					TraceLevel     = TraceLevel.Info,
 					Command        = GetCurrentCommand(),
@@ -1366,7 +1363,7 @@ namespace LinqToDB.Data
 
 				if (TraceSwitchConnection.TraceInfo)
 				{
-					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute)
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, TraceOperation.ExecuteScalar)
 					{
 						TraceLevel     = TraceLevel.Info,
 						Command        = GetCurrentCommand(),
@@ -1381,7 +1378,7 @@ namespace LinqToDB.Data
 			{
 				if (TraceSwitchConnection.TraceError)
 				{
-					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error)
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteScalar)
 					{
 						TraceLevel     = TraceLevel.Error,
 						Command        = GetCurrentCommand(),
@@ -1420,7 +1417,7 @@ namespace LinqToDB.Data
 
 			if (TraceSwitchConnection.TraceInfo)
 			{
-				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute)
+				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteReader)
 				{
 					TraceLevel     = TraceLevel.Info,
 					Command        = GetCurrentCommand(),
@@ -1437,7 +1434,7 @@ namespace LinqToDB.Data
 
 				if (TraceSwitchConnection.TraceInfo)
 				{
-					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute)
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, TraceOperation.ExecuteReader)
 					{
 						TraceLevel     = TraceLevel.Info,
 						Command        = GetCurrentCommand(),
@@ -1452,7 +1449,7 @@ namespace LinqToDB.Data
 			{
 				if (TraceSwitchConnection.TraceError)
 				{
-					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error)
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteReader)
 					{
 						TraceLevel     = TraceLevel.Error,
 						Command        = GetCurrentCommand(),
@@ -1605,12 +1602,12 @@ namespace LinqToDB.Data
 		/// </summary>
 		public  List<string>  NextQueryHints => _nextQueryHints ??= new List<string>();
 		
-		private static readonly MemoryCache _combinedSchemas = new MemoryCache(new MemoryCacheOptions());
+		private static readonly MemoryCache _combinedSchemas = new (new MemoryCacheOptions());
 
 		/// <summary>
 		/// Adds additional mapping schema to current connection.
 		/// </summary>
-		/// <remarks><see cref="DataConnection"/> will share <see cref="LinqToDB.Mapping.MappingSchema"/> instances that were created by combining same mapping schemas.</remarks>
+		/// <remarks><see cref="DataConnection"/> will share <see cref="Mapping.MappingSchema"/> instances that were created by combining same mapping schemas.</remarks>
 		/// <param name="mappingSchema">Mapping schema.</param>
 		/// <returns>Current connection object.</returns>
 		public DataConnection AddMappingSchema(MappingSchema mappingSchema)
@@ -1621,7 +1618,7 @@ namespace LinqToDB.Data
 				new { BaseSchema = MappingSchema, AddedSchema = mappingSchema },
 				static (entry, key, context) => 
 				{
-					entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+					entry.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
 					return new MappingSchema(context.AddedSchema, context.BaseSchema);
 				});
 			_id            = null;

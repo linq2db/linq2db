@@ -52,7 +52,7 @@ namespace LinqToDB.Data
 					if (value != null && Configuration.Linq.TraceMapperExpression &&
 					    _dataConnection.TraceSwitchConnection.TraceInfo)
 					{
-						_dataConnection.OnTraceConnection(new TraceInfo(_dataConnection, TraceInfoStep.MapperCreated)
+						_dataConnection.OnTraceConnection(new TraceInfo(_dataConnection, TraceInfoStep.MapperCreated, TraceOperation.ExecuteReader)
 						{
 							TraceLevel       = TraceLevel.Info,
 							MapperExpression = MapperExpression,
@@ -124,7 +124,7 @@ namespace LinqToDB.Data
 
 				if (_dataConnection.TraceSwitchConnection.TraceInfo)
 				{
-					_dataConnection.OnTraceConnection(new TraceInfo(_dataConnection, TraceInfoStep.Completed)
+					_dataConnection.OnTraceConnection(new TraceInfo(_dataConnection, TraceInfoStep.Completed, TraceOperation.ExecuteReader)
 					{
 						TraceLevel       = TraceLevel.Info,
 						Command          = _dataConnection.GetCurrentCommand(),

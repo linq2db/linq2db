@@ -111,7 +111,7 @@ namespace LinqToDB.Data
 				{
 					if (TraceSwitchConnection.TraceError)
 					{
-						OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error)
+						OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.OpenAsync)
 						{
 							TraceLevel     = TraceLevel.Error,
 							StartTime      = DateTime.UtcNow,
@@ -230,7 +230,7 @@ namespace LinqToDB.Data
 
 			if (TraceSwitchConnection.TraceInfo)
 			{
-				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute)
+				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteNonQueryAsync)
 				{
 					TraceLevel     = TraceLevel.Info,
 					StartTime      = now,
@@ -247,7 +247,7 @@ namespace LinqToDB.Data
 
 				if (TraceSwitchConnection.TraceInfo)
 				{
-					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute)
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, TraceOperation.ExecuteNonQueryAsync)
 					{
 						TraceLevel      = TraceLevel.Info,
 						Command         = GetCurrentCommand(),
@@ -264,7 +264,7 @@ namespace LinqToDB.Data
 			{
 				if (TraceSwitchConnection.TraceError)
 				{
-					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error)
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteNonQueryAsync)
 					{
 						TraceLevel     = TraceLevel.Error,
 						Command        = GetCurrentCommand(),
@@ -299,7 +299,7 @@ namespace LinqToDB.Data
 
 			if (TraceSwitchConnection.TraceInfo)
 			{
-				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute)
+				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteScalarAsync)
 				{
 					TraceLevel     = TraceLevel.Info,
 					Command        = GetCurrentCommand(),
@@ -316,7 +316,7 @@ namespace LinqToDB.Data
 
 				if (TraceSwitchConnection.TraceInfo)
 				{
-					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute)
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, TraceOperation.ExecuteScalarAsync)
 					{
 						TraceLevel      = TraceLevel.Info,
 						Command         = GetCurrentCommand(),
@@ -332,7 +332,7 @@ namespace LinqToDB.Data
 			{
 				if (TraceSwitchConnection.TraceError)
 				{
-					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error)
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteScalarAsync)
 					{
 						TraceLevel     = TraceLevel.Error,
 						Command        = GetCurrentCommand(),
@@ -373,7 +373,7 @@ namespace LinqToDB.Data
 
 			if (TraceSwitchConnection.TraceInfo)
 			{
-				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute)
+				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteReaderAsync)
 				{
 					TraceLevel     = TraceLevel.Info,
 					Command        = GetCurrentCommand(),
@@ -392,7 +392,7 @@ namespace LinqToDB.Data
 
 				if (TraceSwitchConnection.TraceInfo)
 				{
-					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute)
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, TraceOperation.ExecuteReaderAsync)
 					{
 						TraceLevel     = TraceLevel.Info,
 						Command        = GetCurrentCommand(),
@@ -408,7 +408,7 @@ namespace LinqToDB.Data
 			{
 				if (TraceSwitchConnection.TraceError)
 				{
-					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error)
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteReaderAsync)
 					{
 						TraceLevel     = TraceLevel.Error,
 						Command        = GetCurrentCommand(),

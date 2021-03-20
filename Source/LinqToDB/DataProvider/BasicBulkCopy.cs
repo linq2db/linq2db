@@ -237,19 +237,19 @@ namespace LinqToDB.DataProvider
 
 		protected void TraceAction(DataConnection dataConnection, Func<string> commandText, Func<int> action)
 		{
-			var task = TraceActionAsync(dataConnection, commandText, () => Task.FromResult(action()));
+			var task = TraceActionAsync(dataConnection, commandText, () => Task.FromResult(action()), false);
 			// the following line of code should be completely redundant, as exceptions should bubble up, since there are no awaited tasks
 			if (task.Status != TaskStatus.RanToCompletion) task.GetAwaiter().GetResult();
 		}
 
-		protected async Task TraceActionAsync(DataConnection dataConnection, Func<string> commandText, Func<Task<int>> action)
+		protected async Task TraceActionAsync(DataConnection dataConnection, Func<string> commandText, Func<Task<int>> action, bool async)
 		{
 			var now = DateTime.UtcNow;
 			var sw  = Stopwatch.StartNew();
 
 			if (dataConnection.TraceSwitchConnection.TraceInfo)
 			{
-				dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.BeforeExecute)
+				dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.BeforeExecute, async ? TraceOperation.BulkCopyAsync : TraceOperation.BulkCopy)
 				{
 					TraceLevel     = TraceLevel.Info,
 					CommandText    = commandText(),
@@ -263,7 +263,7 @@ namespace LinqToDB.DataProvider
 
 				if (dataConnection.TraceSwitchConnection.TraceInfo)
 				{
-					dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.AfterExecute)
+					dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.AfterExecute, async ? TraceOperation.BulkCopyAsync : TraceOperation.BulkCopy)
 					{
 						TraceLevel      = TraceLevel.Info,
 						CommandText     = commandText(),
@@ -277,7 +277,7 @@ namespace LinqToDB.DataProvider
 			{
 				if (dataConnection.TraceSwitchConnection.TraceError)
 				{
-					dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.Error)
+					dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.Error, async ? TraceOperation.BulkCopyAsync : TraceOperation.BulkCopy)
 					{
 						TraceLevel     = TraceLevel.Error,
 						CommandText    = commandText(),

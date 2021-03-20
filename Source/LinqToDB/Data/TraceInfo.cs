@@ -18,16 +18,23 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <param name="dataConnection"><see cref="DataConnection"/> instance, generated this trace.</param>
 		/// <param name="traceInfoStep">Trace execution step.</param>
-		public TraceInfo(DataConnection dataConnection, TraceInfoStep traceInfoStep)
+		/// <param name="operation">Operation associated with trace event.</param>
+		public TraceInfo(DataConnection dataConnection, TraceInfoStep traceInfoStep, TraceOperation operation)
 		{
 			DataConnection = dataConnection;
 			TraceInfoStep  = traceInfoStep;
+			Operation      = operation;
 		}
 
 		/// <summary>
 		/// Gets the tracing execution step, <see cref="TraceInfoStep"/>.
 		/// </summary>
 		public TraceInfoStep TraceInfoStep { get; }
+
+		/// <summary>
+		/// Gets the operation, for which tracing event generated, <see cref="TraceOperation"/>.
+		/// </summary>
+		public TraceOperation Operation { get; }
 
 		/// <summary>
 		/// Gets or sets the tracing detail level, <see cref="TraceLevel"/>.
