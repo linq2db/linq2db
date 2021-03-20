@@ -30,7 +30,7 @@ namespace LinqToDB.Data
 
 				if (CommandInfo?.DataConnection.TraceSwitchConnection.TraceInfo == true)
 				{
-					CommandInfo.DataConnection.OnTraceConnection(new TraceInfo(CommandInfo.DataConnection, TraceInfoStep.Completed, TraceOperation.ExecuteReader)
+					CommandInfo.DataConnection.OnTraceConnection(new TraceInfo(CommandInfo.DataConnection, TraceInfoStep.Completed, TraceOperation.ExecuteReaderAsync)
 					{
 						TraceLevel      = TraceLevel.Info,
 						Command         = CommandInfo.DataConnection.GetCurrentCommand(),
