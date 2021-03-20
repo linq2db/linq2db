@@ -53,27 +53,24 @@ namespace LinqToDB.Linq.Builder
 			Expression        table,
 			LambdaExpression  setter)
 		{
-			var source          = (TableLikeQueryContext)builder.BuildSequence(new BuildInfo(buildInfo, query));
-			var statement       = (SqlMultiInsertStatement)source.Context.Statement!;
-			var into            = builder.BuildSequence(new BuildInfo(buildInfo, table, new SelectQuery()));
-			var targetContext   = new MultiInsertContext(statement, source, into);
-			var insert          = statement.AddInsert();
-			insert.Into         = ((TableBuilder.TableContext)into).SqlTable;
-
-			if (isConditional)
+			var source        = (TableLikeQueryContext)builder.BuildSequence(new BuildInfo(buildInfo, query));
+			var statement     = (SqlMultiInsertStatement)source.Context.Statement!;
+			var into          = builder.BuildSequence(new BuildInfo(buildInfo, table, new SelectQuery()));
+			var targetContext = new MultiInsertContext(statement, source, into);
+			var when          = condition != null ? new SqlSearchCondition() : null;
+			var insert        = new SqlInsertClause
 			{
-				if (condition != null)
-				{
-					var when = statement.AddWhen();
-					builder.BuildSearchCondition(
-						new ExpressionContext(null, new[] { source }, condition),
-						builder.ConvertExpression(condition.Body.Unwrap()),
-						when.Conditions);
-				}
-				else
-				{
-					statement.AddElse();
-				}
+				Into          = ((TableBuilder.TableContext)into).SqlTable
+			};
+
+			statement.Add(when, insert);
+			
+			if (condition != null)
+			{
+				builder.BuildSearchCondition(
+					new ExpressionContext(null, new[] { source }, condition),
+					builder.ConvertExpression(condition.Body.Unwrap()),
+					when!.Conditions);
 			}
 
 			targetContext.AddSourceParameter(setter.Parameters[0]);
@@ -184,7 +181,7 @@ namespace LinqToDB.Linq.Builder
 
 			public void AddSourceParameter(Expression param) => _sourceParameters.Add(param);
 
-			private IBuildContext _source;
+			private IBuildContext  _source;
 			private IBuildContext? _target;
 
 			public MultiInsertContext(IBuildContext source)
@@ -196,8 +193,8 @@ namespace LinqToDB.Linq.Builder
 			public MultiInsertContext(SqlMultiInsertStatement insert, IBuildContext source, IBuildContext target)
 				: base(null, new[] { target, source }, null)
 			{ 
-				_source = source;
-				_target = target;
+				_source   = source;
+				_target   = target;
 				Statement = insert;
 			}
 

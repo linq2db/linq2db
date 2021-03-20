@@ -951,39 +951,35 @@ namespace LinqToDB.SqlQuery
 
 					case QueryElementType.MultiInsertStatement:
 						{
-							var s            = (SqlMultiInsertStatement)element;
-							var source       = (SqlTableLikeSource?   )ConvertInternal(s.Source);
+							var s              = (SqlMultiInsertStatement)element;
+							var source         = (SqlTableLikeSource?    )ConvertInternal(s.Source);
 							
-							var whensChanged = false;
-							var whens        = s
-								.Whens
-								.Select(old => {
-									var converted = (SqlSearchCondition?)ConvertInternal(old);
-									whensChanged |= converted != null && !ReferenceEquals(old, converted);
-									return converted ?? old;
-								})
-								.ToList();
-
 							var insertsChanged = false;
 							var inserts        = s
 								.Inserts
-							    .Select(old => {
-							    	var converted = (SqlInsertClause?)ConvertInternal(old);
-									insertsChanged |= converted != null && !ReferenceEquals(old, converted);
-									return converted ?? old;
+								.Select(old => {
+									var newWhen   = (SqlSearchCondition?)ConvertInternal(old.When  );
+									var newInsert = (SqlInsertClause   ?)ConvertInternal(old.Insert);
+									
+									insertsChanged |= newWhen   != null && !ReferenceEquals(old.When,   newWhen);
+									insertsChanged |= newInsert != null && !ReferenceEquals(old.Insert, newInsert);
+									
+									return new SqlConditionalInsert
+									{
+										When   = newWhen   ?? old.When,
+										Insert = newInsert ?? old.Insert,
+									};
 								})
 								.ToList();
 
-							if (source      != null && !ReferenceEquals(s.Source,      source)		 ||
-								whensChanged                                                         ||
-								insertsChanged)
+							if (source != null && !ReferenceEquals(s.Source, source) || 
+							    insertsChanged)
 							{
-								source ??= s.Source;
+								source   ??= s.Source;
 								newElement = new SqlMultiInsertStatement(source)
 								{
 									InsertType = s.InsertType,
-									Whens   = whens,
-									Inserts = inserts,
+									Inserts    = inserts,
 								};
 							}
 

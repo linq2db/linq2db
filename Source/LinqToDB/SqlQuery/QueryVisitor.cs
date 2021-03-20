@@ -364,10 +364,11 @@ namespace LinqToDB.SqlQuery
 					{
 						var multi = (SqlMultiInsertStatement)element;
 						Visit1(multi.Source);
-						foreach (var when in multi.Whens) 
+						foreach (var (when, insert) in multi.Inserts)
+						{
 							Visit1(when);
-						foreach (var insert in multi.Inserts)
 							Visit1(insert);
+						}
 						break;
 					}
 
@@ -948,13 +949,12 @@ namespace LinqToDB.SqlQuery
 					{
 						var multi = (SqlMultiInsertStatement)element;
 						Visit2(multi.Source);
-						foreach (var when in multi.Whens)
+						foreach (var (when, insert) in multi.Inserts)
 						{
 							if (when != null)
 								Visit2X(when);
-						}
-						foreach (var insert in multi.Inserts)
 							Visit2(insert);
+						}
 						break;
 					}
 
@@ -1546,17 +1546,14 @@ namespace LinqToDB.SqlQuery
 						var multi = (SqlMultiInsertStatement)element;
 						
 						IQueryElement? found;
+
 						if ((found = Find(multi.Source)) != null) 
 							return found;
 
-						foreach (var when in multi.Whens)
+						foreach (var (when, insert) in multi.Inserts)
 						{
 							if (when != null && (found = FindX(when)) != null)
 								return found;
-						}
-
-						foreach (var insert in multi.Inserts)
-						{
 							if ((found = Find(insert)) != null)
 								return found;
 						}

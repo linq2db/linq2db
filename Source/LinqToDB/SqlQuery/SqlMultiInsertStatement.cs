@@ -6,46 +6,26 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlMultiInsertStatement : SqlStatement
 	{
-		public MultiInsertType InsertType { get; set; }
-		public SqlTableLikeSource Source { get; }
+		public SqlTableLikeSource         Source { get; }
+		public List<SqlConditionalInsert> Inserts { get; set; } = new ();
+		public MultiInsertType            InsertType { get; set; }
 
 		public SqlMultiInsertStatement(SqlTableLikeSource source)
 		{ 
 			Source = source;
 		}
 
+		public void Add(SqlSearchCondition? when, SqlInsertClause insert)
+			=> Inserts.Add(new SqlConditionalInsert { When = when, Insert = insert });
+
 		public override QueryType          QueryType   => QueryType.MultiInsert;
 		public override QueryElementType   ElementType => QueryElementType.MultiInsertStatement;
-
-		#region WhenInsertClauses
-
-		public List<SqlSearchCondition?> Whens { get; set; } = new ();
-
-		public SqlSearchCondition AddWhen()
-		{
-			var when = new SqlSearchCondition();
-			Whens.Add(when);
-			return when;
-		}
-
-		public void AddElse() => Whens.Add(null);
-
-		public List<SqlInsertClause> Inserts { get; set; } = new ();
-
-		public SqlInsertClause AddInsert()
-		{
-			var insert = new SqlInsertClause();
-			Inserts.Add(insert);
-			return insert;
-		}
-
-		#endregion
 
 		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{			
 			sb.AppendLine(InsertType == MultiInsertType.First ? "INSERT FIRST " : "INSERT ALL ");
-			foreach (IQueryElement insert in Inserts)
-				insert.ToString(sb, dic);
+			foreach (var insert in Inserts)
+				((IQueryElement)insert.Insert).ToString(sb, dic);
 			Source.ToString(sb, dic);
 			return sb;
 		}
@@ -53,10 +33,11 @@ namespace LinqToDB.SqlQuery
 		public override ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
 		{
 			Source.Walk(options, func);
-			foreach (ISqlExpressionWalkable? when in Whens)
-				when?.Walk(options, func);
-			foreach (ISqlExpressionWalkable insert in Inserts)
-				insert.Walk(options, func);
+			foreach (var (when, insert) in Inserts)
+			{
+				((ISqlExpressionWalkable?)when) ?.Walk(options, func);
+				((ISqlExpressionWalkable )insert).Walk(options, func);
+			}
 			return null;
 		}
 
@@ -78,7 +59,7 @@ namespace LinqToDB.SqlQuery
 		public override IEnumerable<IQueryElement> EnumClauses() 
 		{
 			foreach (var insert in Inserts)
-				yield return insert;
+				yield return insert.Insert;
 			
 			yield return Source;
 		}
@@ -90,7 +71,7 @@ namespace LinqToDB.SqlQuery
 
 			foreach (var insert in Inserts)
 			{
-				if (insert.Into == table)
+				if (insert.Insert.Into == table)
 					return table;
 			}
 

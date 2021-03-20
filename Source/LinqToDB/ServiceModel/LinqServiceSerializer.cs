@@ -1348,13 +1348,11 @@ namespace LinqToDB.ServiceModel
 							Append((int)elem.InsertType);
 							Append(elem.Source);							
 							Append(elem.Inserts.Count);
-							if (elem.InsertType != MultiInsertType.Unconditional)
+							foreach (var (when, insert) in elem.Inserts)
 							{
-								foreach (var when in elem.Whens)
-									Append(when);
-							}
-							foreach (var insert in elem.Inserts)
+								Append(when);
 								Append(insert);
+							}
 
 							break;
 						}
@@ -2154,22 +2152,21 @@ namespace LinqToDB.ServiceModel
 						{
 							var insertType   = (MultiInsertType)ReadInt();
 							var source       = Read<SqlTableLikeSource>()!;
-							var insertsCount = ReadInt();
+							var count        = ReadInt();							
+							var inserts      = new List<SqlConditionalInsert>(count);
 							
-							var whensCount   = insertType == MultiInsertType.Unconditional ? 0 : insertsCount;
-							var whens        = new List<SqlSearchCondition?>(whensCount);
-							for (int i = 0; i < whensCount; i++)
-								whens.Add(Read<SqlSearchCondition>());
-
-							var inserts      = new List<SqlInsertClause>(insertsCount);
-							for (int i = 0; i < insertsCount; i++)
-								inserts.Add(Read<SqlInsertClause>()!);
+							for (int i = 0; i < count; i++)
+							{								
+								inserts.Add(new SqlConditionalInsert
+								{ 
+									When   = Read<SqlSearchCondition>(),
+									Insert = Read<SqlInsertClause>()!,
+								});
+							}
 
 							obj = _statement = new SqlMultiInsertStatement(source) 
 							{
 								InsertType = insertType,
-								Whens = whens,
-								Inserts = inserts,
 							};
 
 							break;

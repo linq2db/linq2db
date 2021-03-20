@@ -621,14 +621,13 @@ END;",
 
 			if (statement.InsertType == MultiInsertType.Unconditional)
 			{
-				foreach (var insertClause in statement.Inserts)
-					BuildInsertClause(statement, insertClause, "INTO ", appendTableName: true, addAlias: false);
+				foreach (var insert in statement.Inserts)
+					BuildInsertClause(statement, insert.Insert, "INTO ", appendTableName: true, addAlias: false);
 			}
 			else
 			{
-				for (int i = 0; i < statement.Inserts.Count; ++i)
+				foreach (var (when, insert) in statement.Inserts)
 				{
-					var when = statement.Whens[i];
 					if (when != null)
 					{						
 						int length = StringBuilder.Append("WHEN ").Length;
@@ -644,7 +643,7 @@ END;",
 						StringBuilder.AppendLine("ELSE");
 					}
 		
-					BuildInsertClause(statement, statement.Inserts[i], "INTO ", appendTableName: true, addAlias: false);
+					BuildInsertClause(statement, insert, "INTO ", appendTableName: true, addAlias: false);
 				}
 			}
 
