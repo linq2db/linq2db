@@ -2959,7 +2959,23 @@ namespace LinqToDB.Linq.Builder
 					{
 						var e = (BinaryExpression)expression;
 
-						BuildSearchCondition(context, e.Left,  conditions);
+						BuildSearchCondition(context, e.Left, conditions);
+
+						if (conditions.Count > 1 && conditions[conditions.Count - 2].IsOr)
+						{
+							var orStart = conditions.Count - 1;
+							while (orStart > 0 && conditions[orStart - 1].IsOr)
+								orStart--;
+
+							conditions[orStart] = new SqlCondition(
+								false,
+								new SqlSearchCondition(conditions.Skip(orStart)),
+								false);
+
+							while (conditions.Count > orStart + 1)
+								conditions.RemoveAt(conditions.Count - 1);
+						}
+
 						BuildSearchCondition(context, e.Right, conditions);
 
 						break;
@@ -2974,17 +2990,34 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.OrElse :
 					{
 						var e           = (BinaryExpression)expression;
-						var orCondition = new SqlSearchCondition();
 
-						BuildSearchCondition(context, e.Left,  orCondition.Conditions);
-						orCondition.Conditions[orCondition.Conditions.Count - 1].IsOr = true;
-						BuildSearchCondition(context, e.Right, orCondition.Conditions);
+						BuildSearchCondition(context, e.Left, conditions);
+						BuildSearchCondition(context, e.Right, conditions);
 
-						conditions.Add(new SqlCondition(false, orCondition));
+						if (conditions.Count > 2 && !conditions[conditions.Count - 3].IsOr)
+						{
+							conditions[conditions.Count - 1].IsOr = true;
 
+							var left = conditions[conditions.Count - 2];
+
+							if (!left.IsNot && left.Predicate is SqlSearchCondition leftCondition)
+								leftCondition.Conditions.Add(conditions[conditions.Count - 1]);
+							else
+							{
+								left.IsOr = true;
+								conditions[conditions.Count - 2] = new SqlCondition(
+									false,
+									new SqlSearchCondition(
+										left,
+										conditions[conditions.Count - 1]),
+									false);
+							}
+							conditions.RemoveAt(conditions.Count - 1);
+						}
+						else
+							conditions[conditions.Count - 2].IsOr = true;
 						break;
 					}
-
 				case ExpressionType.Not    :
 					{
 						var e            = (UnaryExpression)expression;
