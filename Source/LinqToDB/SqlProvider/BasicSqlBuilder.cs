@@ -2714,7 +2714,48 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildTag(SelectQuery selectQuery)
 		{
-			SqlComment.BuildSql(StringBuilder, selectQuery.Tag.Value);
+			BuildSqlComment(StringBuilder, selectQuery.Tag.Parts, false);
+		}
+
+		protected StringBuilder BuildSqlComment(StringBuilder sb, List<string> commentParts, bool supportsMultilineComments)
+		{
+			if (commentParts != null)
+			{
+				foreach (var commentPart in commentParts)
+				{
+					if (commentPart.Contains("\n"))
+					{
+						if (supportsMultilineComments)
+						{
+							sb.Append("/* ")
+							  .Append(commentPart)
+							  .Append(" */")
+							  .AppendLine();
+						}
+						else
+						{
+							var singleLines = commentPart.Split('\n')
+								.Select(x => x.Replace("\r", string.Empty))
+								.ToList();
+
+							foreach (var singleLine in singleLines)
+							{
+								sb.Append("-- ");
+								sb.Append(singleLine);
+								sb.AppendLine();
+							}
+						}
+					}
+					else
+					{
+						sb.Append("-- ");
+						sb.Append(commentPart);
+						sb.AppendLine();
+					}
+				}
+			}
+
+			return sb;
 		}
 
 		#endregion

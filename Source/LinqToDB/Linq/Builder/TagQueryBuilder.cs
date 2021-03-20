@@ -3,22 +3,25 @@ using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	class TagWithBuilder : MethodCallBuilder
+	class TagQueryBuilder : MethodCallBuilder
 	{
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-			var tagValue = (string?)methodCall.Arguments[1].EvaluateExpression();
+			var tag = (string?)methodCall.Arguments[1].EvaluateExpression();
 
-			sequence.SelectQuery.Tag.Value = tagValue;
+			if (!string.IsNullOrWhiteSpace(tag))
+			{
+				sequence.SelectQuery.Tag.Parts.Add(tag!);
+			}
 
 			return sequence;
 		}
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsQueryable(nameof(LinqExtensions.TagWith));
+			return methodCall.IsQueryable(nameof(LinqExtensions.TagQuery));
 		}
 
 		protected override SequenceConvertInfo? Convert(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)

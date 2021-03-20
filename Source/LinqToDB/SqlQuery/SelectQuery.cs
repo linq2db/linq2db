@@ -78,7 +78,7 @@ namespace LinqToDB.SqlQuery
 		public SqlWhereClause   Having  { get; private set; } = null!;
 		public SqlOrderByClause OrderBy { get; private set; } = null!;
 
-		public SqlComment              Tag     { get; private set; } = null!;
+		public SqlComment       Tag     { get; private set; } = null!;
 
 		private List<object>? _properties;
 		public  List<object>   Properties => _properties ??= new List<object>();
