@@ -1712,10 +1712,10 @@ namespace Tests.Linq
 			{
 				var cnt = db.Person
 					.Count(p => p.LastName + ", " + p.FirstName == $"{p.LastName}, {p.FirstName}"
-					            && "<" + p.LastName + ", " + p.FirstName + ">" == $"<{p.LastName}, {p.FirstName}>"
-					            && "<" + p.LastName + p.FirstName + ">" == $"<{p.LastName}{p.FirstName}>"
-					            && "<{p.LastName}, " + p.FirstName + " {" + p.LastName + "}" + ">" == $"<{{p.LastName}}, {p.FirstName} {{{p.LastName}}}>"
-					            && "{}" + p.LastName == $"{{}}{p.LastName}"
+								&& "<" + p.LastName + ", " + p.FirstName + ">" == $"<{p.LastName}, {p.FirstName}>"
+								&& "<" + p.LastName + p.FirstName + ">" == $"<{p.LastName}{p.FirstName}>"
+								&& "<{p.LastName}, " + p.FirstName + " {" + p.LastName + "}" + ">" == $"<{{p.LastName}}, {p.FirstName} {{{p.LastName}}}>"
+								&& "{}" + p.LastName == $"{{}}{p.LastName}"
 					);
 
 				Assert.That(cnt, Is.EqualTo(db.Person.Count()));
@@ -1930,6 +1930,58 @@ namespace Tests.Linq
 				var sql = db.LastQuery!;
 				Assert.False(sql.Contains("("), sql);
 				Assert.False(sql.Contains(")"), sql);
+			}
+		}
+
+		[Test]
+		public void Issue2897_ParensGeneration_MixedFromAnd([DataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				db.Parent
+					.Where(p => p.ParentID > 1 && p.ParentID > 2 && (p.ParentID > 3 || p.ParentID > 4) && (p.ParentID > 5 || p.ParentID > 6 || p.ParentID > 7) && p.ParentID > 8 && p.ParentID > 9 && p.ParentID > 10 && (p.ParentID > 11 || p.ParentID > 12))
+					.ToList();
+
+				CompareSql(@"SELECT
+		p.""ParentID"",
+		p.""Value1""
+	FROM
+		""Parent"" p
+	WHERE
+		p.""ParentID"" > 1 AND
+		p.""ParentID"" > 2 AND
+		(p.""ParentID"" > 3 OR p.""ParentID"" > 4) AND
+		(p.""ParentID"" > 5 OR p.""ParentID"" > 6 OR p.""ParentID"" > 7) AND
+		p.""ParentID"" > 8 AND
+		p.""ParentID"" > 9 AND
+		p.""ParentID"" > 10 AND
+		(p.""ParentID"" > 11 OR p.""ParentID"" > 12)", db.LastQuery!);
+			}
+		}
+
+		[Test]
+		public void Issue2897_ParensGeneration_MixedFromOr([DataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				db.Parent
+					.Where(p => (p.ParentID > 1 || p.ParentID > 2) && (p.ParentID > 3 || p.ParentID > 4) && (p.ParentID > 5 || p.ParentID > 6 || p.ParentID > 7) && p.ParentID > 8 && p.ParentID > 9 && p.ParentID > 10 && (p.ParentID > 11 || p.ParentID > 12) && p.ParentID > 13)
+					.ToList();
+
+				CompareSql(@"SELECT
+		p.""ParentID"",
+		p.""Value1""
+	FROM
+		""Parent"" p
+	WHERE
+		(p.""ParentID"" > 1 OR p.""ParentID"" > 2) AND
+		(p.""ParentID"" > 3 OR p.""ParentID"" > 4) AND
+		(p.""ParentID"" > 5 OR p.""ParentID"" > 6 OR p.""ParentID"" > 7) AND
+		p.""ParentID"" > 8 AND
+		p.""ParentID"" > 9 AND
+		p.""ParentID"" > 10 AND
+		(p.""ParentID"" > 11 OR p.""ParentID"" > 12) AND
+		p.""ParentID"" > 13", db.LastQuery!);
 			}
 		}
 	}
