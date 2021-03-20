@@ -1906,5 +1906,31 @@ namespace Tests.Linq
 				Assert.False(sql.Contains("IS NOT NULL"), sql);
 			}
 		}
+
+		[Test]
+		public void Issue2897_ParensGeneration_Or([DataSources(false)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				db.Parent.Where(p => p.ParentID > 1 || p.ParentID > 2 || p.ParentID > 3).ToList();
+
+				var sql = db.LastQuery!;
+				Assert.False(sql.Contains("("), sql);
+				Assert.False(sql.Contains(")"), sql);
+			}
+		}
+
+		[Test]
+		public void Issue2897_ParensGeneration_And([DataSources(false)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				db.Parent.Where(p => p.ParentID > 1 && p.ParentID > 2 && p.ParentID > 3).ToList();
+
+				var sql = db.LastQuery!;
+				Assert.False(sql.Contains("("), sql);
+				Assert.False(sql.Contains(")"), sql);
+			}
+		}
 	}
 }
