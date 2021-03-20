@@ -6,12 +6,11 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlMultiInsertStatement : SqlStatement
 	{
-		public MultiInsertType InsertType { get; }
+		public MultiInsertType InsertType { get; set; }
 		public SqlTableLikeSource Source { get; }
 
-		public SqlMultiInsertStatement(MultiInsertType type, SqlTableLikeSource source)
+		public SqlMultiInsertStatement(SqlTableLikeSource source)
 		{ 
-			InsertType = type;
 			Source = source;
 		}
 
@@ -29,10 +28,7 @@ namespace LinqToDB.SqlQuery
 			return when;
 		}
 
-		public void AddElse() 
-		{
-			Whens.Add(null);
-		}
+		public void AddElse() => Whens.Add(null);
 
 		public List<SqlInsertClause> Inserts { get; set; } = new ();
 

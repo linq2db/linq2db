@@ -2165,8 +2165,9 @@ namespace LinqToDB.ServiceModel
 							for (int i = 0; i < insertsCount; i++)
 								inserts.Add(Read<SqlInsertClause>()!);
 
-							obj = _statement = new SqlMultiInsertStatement(insertType, source) 
+							obj = _statement = new SqlMultiInsertStatement(source) 
 							{
+								InsertType = insertType,
 								Whens = whens,
 								Inserts = inserts,
 							};

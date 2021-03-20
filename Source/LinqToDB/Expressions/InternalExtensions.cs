@@ -887,6 +887,9 @@ namespace LinqToDB.Expressions
 
 		#region Helpers
 
+		public static LambdaExpression UnwrapLambda(this Expression ex)
+			=> (LambdaExpression)((UnaryExpression)ex).Operand.Unwrap();
+
 		[return: NotNullIfNotNull("ex")]
 		public static Expression? Unwrap(this Expression? ex)
 		{

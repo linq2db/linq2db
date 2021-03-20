@@ -979,8 +979,9 @@ namespace LinqToDB.SqlQuery
 								insertsChanged)
 							{
 								source ??= s.Source;
-								newElement = new SqlMultiInsertStatement(s.InsertType, source)
+								newElement = new SqlMultiInsertStatement(source)
 								{
+									InsertType = s.InsertType,
 									Whens   = whens,
 									Inserts = inserts,
 								};
