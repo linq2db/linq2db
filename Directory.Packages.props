@@ -45,7 +45,7 @@
 		<PackageVersion Include="MiniProfiler.Shared" Version="4.2.22" />
 		<PackageVersion Include="NUnit" Version="3.13.1" />
 		<PackageVersion Include="NUnit3TestAdapter" Version="4.0.0-beta.1" />
-		<PackageVersion Include="Microsoft.NET.Test.Sdk" Version="16.9.1" />
+		<PackageVersion Include="Microsoft.NET.Test.Sdk" Version="16.8.3" />
 		<PackageVersion Include="FastExpressionCompiler" Version="3.0.0" />
 		<PackageVersion Include="BenchmarkDotNet" Version="0.12.1" />
 		<PackageVersion Include="JetBrains.Profiler.Api" Version="1.1.7" />
