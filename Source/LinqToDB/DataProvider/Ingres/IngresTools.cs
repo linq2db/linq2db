@@ -15,7 +15,7 @@ namespace LinqToDB.DataProvider.Ingres
 	{
 		private static readonly Lazy<IDataProvider> _ingresDataProvider = new Lazy<IDataProvider>(() =>
 		{
-			var provider = new IngresDataProvider();
+			var provider = new IngresDataProvider(ProviderName.Ingres);
 
 			DataConnection.AddDataProvider(provider);
 

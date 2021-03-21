@@ -1,8 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
+using System.Net;
+using System.Net.NetworkInformation;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using LinqToDB.Extensions;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.Ingres
 {
@@ -14,8 +20,8 @@ namespace LinqToDB.DataProvider.Ingres
 
 	public class IngresDataProvider : DynamicDataProviderBase<IngresProviderAdapter>
     {
-        public IngresDataProvider()
-            : this("Ingres", MappingSchemaInstance)
+        public IngresDataProvider(string name)
+            : this(name, MappingSchemaInstance)
         {
         }
 
@@ -45,7 +51,7 @@ namespace LinqToDB.DataProvider.Ingres
             return new IngresSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
         }
 
-        readonly ISqlOptimizer _sqlOptimizer;
+		readonly ISqlOptimizer _sqlOptimizer;
 
         public override ISqlOptimizer GetSqlOptimizer()
         {

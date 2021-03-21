@@ -200,6 +200,25 @@ namespace LinqToDB
 			}
 		}
 
+		class DatePartBuilderIngres : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqExtensionBuilder builder)
+			{
+				var part = builder.GetValue<Sql.DateParts>("part");
+				var partStr = part switch
+				{
+					Sql.DateParts.Year      => "year",
+					Sql.DateParts.Month     => "month",
+					Sql.DateParts.Day       => "day",
+					Sql.DateParts.Hour      => "hour",
+					Sql.DateParts.Minute    => "minute",
+					Sql.DateParts.Second    => "seconds",
+					_ => throw new InvalidOperationException($"Unexpected datepart: {part}"),
+				};
+				builder.Expression = "DATE_PART('" + partStr + "', {date})";
+			}
+		}
+
 
 		class DatePartBuilderSapHana: Sql.IExtensionCallBuilder
 		{
@@ -398,6 +417,7 @@ namespace LinqToDB
 		[Sql.Extension(PN.Access,     "DatePart('{part}', {date})",                      ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderAccess))]
 		[Sql.Extension(PN.SapHana,    "",                                                ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderSapHana))]
 		[Sql.Extension(PN.Oracle,     "",                                                ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderOracle))]
+		[Sql.Extension(PN.Ingres,     "",                                                ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderIngres))]
 		public static int? DatePart([SqlQueryDependent] Sql.DateParts part, [ExprParameter] DateTime? date)
 		{
 			if (date == null)
@@ -628,6 +648,30 @@ namespace LinqToDB
 			}
 		}
 
+		class DateAddBuilderIngres : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqExtensionBuilder builder)
+			{
+				var part    = builder.GetValue<Sql.DateParts>("part");
+				var date    = builder.GetExpression("date");
+				var number  = builder.GetExpression("number");
+				var partStr = part switch
+				{
+					Sql.DateParts.Year      => "{0} years",
+					Sql.DateParts.Month     => "{0} months",
+					Sql.DateParts.Day       => "{0} days",
+					Sql.DateParts.Hour      => "{0} hours",
+					Sql.DateParts.Minute    => "{0} minutes",
+					Sql.DateParts.Second    => "{0} seconds",
+					_                       => throw new InvalidOperationException($"Unexpected datepart: {part}"),
+				};
+				builder.ResultExpression = builder.Add(
+					date,
+					new SqlExpression(typeof(TimeSpan?), partStr, Precedence.Primary, number),
+					typeof(DateTime?));
+			}
+		}
+
 		class DateAddBuilderAccess : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
@@ -741,6 +785,7 @@ namespace LinqToDB
 		[Sql.Extension(PN.Access,     "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilderAccess))]
 		[Sql.Extension(PN.SapHana,    "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilderSapHana))]
 		[Sql.Extension(PN.Firebird,   "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilderFirebird))]
+		[Sql.Extension(PN.Ingres,     "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilderIngres))]
 		public static DateTime? DateAdd([SqlQueryDependent] Sql.DateParts part, double? number, DateTime? date)
 		{
 			if (number == null || date == null)
@@ -928,6 +973,34 @@ namespace LinqToDB
 			}
 		}
 
+		class DateDiffBuilderIngres : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var part = builder.GetValue<Sql.DateParts>(0);
+				var startDate = builder.GetExpression(1);
+				var endDate = builder.GetExpression(2);
+
+				var expStr = "INTERVAL('";
+
+				expStr += part switch
+				{
+					DateParts.Year        => "year",
+					DateParts.Month       => "month",
+					DateParts.Day         => "day",
+					DateParts.Hour        => "hour",
+					DateParts.Minute      => "minute",
+					DateParts.Second      => "seconds",
+					DateParts.Millisecond => throw new ArgumentOutOfRangeException(nameof(part), part, "Ingres doesn't support milliseconds interval."),
+					_                     => throw new InvalidOperationException($"Unexpected datepart: {part}"),
+				};
+
+				expStr += "', {0}-{1})";
+
+				builder.ResultExpression = new SqlExpression(typeof(int), expStr, startDate, endDate);
+			}
+		}
+
 		class DateDiffBuilderOracle : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
@@ -968,6 +1041,7 @@ namespace LinqToDB
 		[Sql.Extension(PN.Oracle,     "",              BuilderType = typeof(DateDiffBuilderOracle))]
 		[Sql.Extension(PN.PostgreSQL, "",              BuilderType = typeof(DateDiffBuilderPostgreSql))]
 		[Sql.Extension(PN.Access,     "",              BuilderType = typeof(DateDiffBuilderAccess))]
+		[Sql.Extension(PN.Ingres,     "",              BuilderType = typeof(DateDiffBuilderIngres))]
 		public static int? DateDiff(DateParts part, DateTime? startDate, DateTime? endDate)
 		{
 			if (startDate == null || endDate == null)

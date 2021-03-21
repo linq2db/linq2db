@@ -52,7 +52,20 @@ namespace LinqToDB.DataProvider.Ingres
             return base.Convert(sb, value, convertType);
         }
 
-        protected override string? LimitFormat(SelectQuery selectQuery)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
+		{
+			switch (type.Type.DataType)
+			{
+				case DataType.DateTime2:
+				case DataType.DateTime:
+				case DataType.DateTimeOffset: StringBuilder.Append("date"); break;
+				case DataType.Boolean: StringBuilder.Append("byte(1)"); break;
+				case DataType.Guid: StringBuilder.Append("byte(16)"); break;
+				default: base.BuildDataTypeFromDataType(type, forCreateTable); break;
+			}
+		}
+
+		protected override string? LimitFormat(SelectQuery selectQuery)
         {
             return "FETCH FIRST {0} ROWS ONLY";
         }
