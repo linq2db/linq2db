@@ -41,6 +41,11 @@ namespace LinqToDB
 		/// </summary>
 		public const string Firebird      = "Firebird";
 		/// <summary>
+		/// Actian Ingres provider.
+		/// Used as configuration name for Ingres mapping schema <see cref="DataProvider.Ingres.IngresMappingSchema"/>.
+		/// </summary>
+		public const string Ingres        = "Ingres";
+		/// <summary>
 		/// Informix IBM.Data.Informix provider (including IDS provider).
 		/// Used as configuration name for Informix mapping schema <see cref="DataProvider.Informix.InformixMappingSchema"/>.
 		/// </summary>
