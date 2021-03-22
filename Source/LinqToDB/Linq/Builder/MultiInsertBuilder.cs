@@ -28,7 +28,7 @@ namespace LinqToDB.Linq.Builder
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{	
 			var genericMethod = methodCall.Method.GetGenericMethodDefinition();
-			return methodBuilders.TryGetValue(genericMethod, out var build)
+			return _methodBuilders.TryGetValue(genericMethod, out var build)
 				? build(builder, methodCall, buildInfo)
 				: throw new InvalidOperationException("Unknown method " + methodCall.Method.Name);
 		}
