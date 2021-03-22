@@ -9,11 +9,13 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.ServiceModel
 {
-	using Linq;
 	using Common.Internal;
-	using SqlQuery;
+	using Linq;
 	using SqlProvider;
+	using SqlQuery;
+#if !NATIVE_ASYNC
 	using Tools;
+#endif
 
 	public abstract partial class RemoteDataContextBase
 	{
