@@ -44,33 +44,10 @@ namespace Tests.Linq
 				query.ToList();
 
 				var commandSql = ((DataConnection)db).LastQuery!;
-				
+
 				Assert.That(commandSql!.IndexOf(expected), Is.EqualTo(0));
 			}
 		}
-
-		// cannot find database that does not support multiline commments
-		//[Test]
-		//public void Test_MultilineCommentsNoSupport([IncludeDataSources] string context)
-		//{
-		//	var tag = "My custom\r\nwonderful multiline\nquery tag";
-		//	var expected = "-- My custom" + Environment.NewLine +
-		//		           "-- wonderful multiline" + Environment.NewLine + 
-		//				   "-- query tag" + Environment.NewLine;
-
-		//	using (var db = GetDataContext(context))
-		//	{
-		//		var query =
-		//			from x in db.Person.TagQuery(tag)
-		//			select x;
-
-		//		query.ToList();
-
-		//		var commandSql = ((DataConnection)db).LastQuery!;
-
-		//		Assert.That(commandSql!.IndexOf(expected), Is.EqualTo(0));
-		//	}
-		//}
 
 		[Test]
 		public void Test_Null([DataSources] string context)
@@ -91,8 +68,8 @@ namespace Tests.Linq
 		{
 			var tag1 = "query 1";
 			var tag2 = "query 2";
-			var expected = "-- " + tag1 + Environment.NewLine + 
-				           "-- " + tag2 + Environment.NewLine;
+			var expected = "-- " + tag1 + Environment.NewLine +
+						   "-- " + tag2 + Environment.NewLine;
 
 			using (var db = GetDataContext(context))
 			{
@@ -113,8 +90,8 @@ namespace Tests.Linq
 		{
 			var tag1 = "query 1";
 			var tag2 = "query 2";
-			var expected = "-- " + tag1 + Environment.NewLine + 
-				           "-- " + tag2 + Environment.NewLine;
+			var expected = "-- " + tag1 + Environment.NewLine +
+						   "-- " + tag2 + Environment.NewLine;
 
 			using (var db = GetDataContext(context))
 			{
@@ -146,7 +123,7 @@ namespace Tests.Linq
 				query.ToList();
 
 				var commandSql = ((DataConnection)db).LastQuery!;
-				
+
 				Assert.That(commandSql!.IndexOf(tag), Is.EqualTo(-1));
 			}
 		}
