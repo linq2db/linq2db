@@ -401,6 +401,7 @@ namespace Tests
 			ProviderName.AccessOdbc,
 			ProviderName.DB2,
 			ProviderName.InformixDB2,
+			ProviderName.Ingres,
 			ProviderName.SQLiteClassic,
 			TestProvName.SQLiteClassicMiniProfilerMapped,
 			TestProvName.SQLiteClassicMiniProfilerUnmapped,

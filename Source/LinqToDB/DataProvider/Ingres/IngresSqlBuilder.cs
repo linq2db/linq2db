@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 
@@ -14,7 +15,8 @@ namespace LinqToDB.DataProvider.Ingres
 
 	class IngresSqlBuilder : BasicSqlBuilder
     {
-        private readonly IngresDataProvider? _provider;
+	    private static IdnMapping  _idn = new IdnMapping();
+		private readonly IngresDataProvider? _provider;
 
         public IngresSqlBuilder(
             IngresDataProvider? provider,
@@ -38,12 +40,15 @@ namespace LinqToDB.DataProvider.Ingres
         {
             return new IngresSqlBuilder(_provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
         }
-
-        public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
+		
+		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
         {
             switch (convertType)
             {
-                case ConvertType.NameToQueryParameter:
+	            case ConvertType.NameToQueryFieldAlias:
+	            case ConvertType.NameToQueryTableAlias:
+		            return sb.Append(_idn.GetAscii(value).Replace("--", ""));
+				case ConvertType.NameToQueryParameter:
                 case ConvertType.NameToCommandParameter:
                 case ConvertType.NameToSprocParameter:
                     return sb.Append('?');

@@ -1,7 +1,4 @@
-﻿/*
--- Helper table
-*/
-DROP TABLE IF EXISTS Dual;
+﻿DROP TABLE IF EXISTS Dual;
 CREATE TABLE Dual (Dummy  VARCHAR(10));
 INSERT INTO  Dual (Dummy) VALUES ('X');
 
@@ -22,9 +19,6 @@ CREATE TABLE InheritanceChild
 	Name                nvarchar(50)     NULL
 );
 
-/*
--- Person Table
-*/
 DROP TABLE IF EXISTS Doctor;
 DROP TABLE IF EXISTS Patient;
 DROP TABLE IF EXISTS Person;
@@ -45,9 +39,6 @@ INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Tester', 'Testerson', 
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jane',   'Doe',       'F');
 INSERT INTO Person (FirstName, LastName, MiddleName, Gender) VALUES ('Jürgen', 'König', 'Ko', 'M');
 
-/*
--- Doctor Table Extension
-*/
 CREATE TABLE Doctor
 (
 	PersonID integer      NOT NULL CONSTRAINT PK_Doctor PRIMARY KEY,
@@ -57,9 +48,7 @@ CREATE TABLE Doctor
 
 INSERT INTO Doctor (PersonID, Taxonomy) VALUES (1, 'Psychiatry');
 
-/*
--- Patient Table Extension
-*/
+
 CREATE TABLE Patient
 (
 	PersonID  integer       NOT NULL CONSTRAINT PK_Patient PRIMARY KEY,
@@ -69,9 +58,6 @@ CREATE TABLE Patient
 );
 INSERT INTO Patient (PersonID, Diagnosis) VALUES (2, 'Hallucination with Paranoid Bugs'' Delirium of Persecution');
 
-/*-
--- Babylon test
--*/
 DROP TABLE IF EXISTS Parent;
 DROP TABLE IF EXISTS Child;
 DROP TABLE IF EXISTS GrandChild;
@@ -105,7 +91,6 @@ CREATE TABLE TestIdentity (
 	ID integer NOT NULL CONSTRAINT PK_TestIdentity PRIMARY KEY WITH DEFAULT NEXT VALUE FOR TestIdentitySequence
 );
 
-/*
 DROP TABLE IF EXISTS AllTypes;
 DROP SEQUENCE IF EXISTS AllTypesSequence;
 
@@ -115,10 +100,10 @@ CREATE TABLE AllTypes
 	ID                       integer          NOT NULL CONSTRAINT PK_AllTypes PRIMARY KEY WITH DEFAULT NEXT VALUE FOR AllTypesSequence,
 
 	bigintDataType           bigint           NULL,
-	numericDataType          numeric          NULL,
+	numericDataType          decimal(10,0)          NULL,
 	bitDataType              byte(1)          NULL,
 	smallintDataType         smallint         NULL,
-	decimalDataType          decimal          NULL,
+	decimalDataType          decimal(10,0)          NULL,
 	intDataType              int              NULL,
 	tinyintDataType          tinyint          NULL,
 	moneyDataType            money            NULL,
@@ -161,9 +146,8 @@ SELECT
 	 1000000,    9999999,     1,   25555, 2222222, 7777777,  100, 100000, 20.31, 16.2,
 	'2012-12-12 12:12:12',
 		  '1',     '234', '567', '23233',  '3323',  '111',
-		   10;*/
+		   10;
 
-/* merge test tables */
 DROP TABLE IF EXISTS TestMerge1;
 DROP TABLE IF EXISTS TestMerge2;
 CREATE TABLE TestMerge1

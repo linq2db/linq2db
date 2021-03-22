@@ -282,6 +282,7 @@ public class a_CreateData : TestBase
 			case ProviderName.SybaseManaged                       : RunScript(context,          "\nGO\n",  "Sybase");                      break;
 			case ProviderName.Informix                            : RunScript(context,          "\nGO\n",  "Informix", InformixAction);    break;
 			case ProviderName.InformixDB2                         : RunScript(context,          "\nGO\n",  "Informix", InformixDB2Action); break;
+			case ProviderName.Ingres                              : RunScript(context,          ";",  "Ingres");                      break;
 			case ProviderName.DB2                                 : RunScript(context,          "\nGO\n",  "DB2");                         break;
 			case ProviderName.SapHanaNative                       :
 			case ProviderName.SapHanaOdbc                         : RunScript(context,          ";;\n"  ,  "SapHana");                     break;

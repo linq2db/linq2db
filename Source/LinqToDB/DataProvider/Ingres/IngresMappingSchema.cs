@@ -12,7 +12,7 @@ namespace LinqToDB.DataProvider.Ingres
 
 	public class IngresMappingSchema : MappingSchema
 	{
-		public IngresMappingSchema() : this(ProviderName.Access)
+		public IngresMappingSchema() : this(ProviderName.Ingres)
 		{
 		}
 
@@ -69,14 +69,5 @@ namespace LinqToDB.DataProvider.Ingres
 		}
 
 		internal static readonly IngresMappingSchema Instance = new IngresMappingSchema();
-
-
-		public class ODBCMappingSchema : MappingSchema
-		{
-			public ODBCMappingSchema()
-				: base(ProviderName.AccessOdbc, Instance)
-			{
-			}
-		}
 	}
 }

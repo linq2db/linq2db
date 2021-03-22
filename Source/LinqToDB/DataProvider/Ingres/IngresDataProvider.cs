@@ -63,6 +63,47 @@ namespace LinqToDB.DataProvider.Ingres
             return new IngresSchemaProvider(this);
         }
 
-        private static readonly MappingSchema MappingSchemaInstance = new IngresMappingSchema.ODBCMappingSchema();
+		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
+		{
+			switch (dataType.DataType)
+			{
+				case DataType.Boolean:
+					dataType = dataType.WithDataType(DataType.Byte);
+					if (value is bool boolValue)
+						value = boolValue ? (byte)1 : (byte)0;
+					break;
+				case DataType.Guid:
+					if (value is Guid guid) value = guid.ToByteArray();
+					break;
+			}
+
+			base.SetParameter(dataConnection, parameter, name, dataType, value);
+		}
+
+		public override Type ConvertParameterType(Type type, DbDataType dataType)
+		{
+			if (type.IsNullable())
+				type = type.ToUnderlying();
+
+			switch (dataType.DataType)
+			{
+				case DataType.Boolean        : if (type == typeof(bool))           return typeof(byte);                  break;
+				case DataType.Guid           : if (type == typeof(Guid))           return typeof(byte[]);                break;
+			}
+
+			return base.ConvertParameterType(type, dataType);
+		}
+
+		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
+		{
+			switch (dataType.DataType)
+			{
+				case DataType.Guid      : parameter.DbType = DbType.Binary;  return;
+			}
+
+			base.SetParameterType(dataConnection, parameter, dataType);
+		}
+
+		private static readonly MappingSchema MappingSchemaInstance = new IngresMappingSchema();
     }
 }
