@@ -2714,7 +2714,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildTag(SelectQuery selectQuery)
 		{
-			BuildSqlComment(StringBuilder, selectQuery.Tag.Parts, false);
+			BuildSqlComment(StringBuilder, selectQuery.Tag.Parts, true);
 		}
 
 		protected StringBuilder BuildSqlComment(StringBuilder sb, List<string> commentParts, bool supportsMultilineComments)

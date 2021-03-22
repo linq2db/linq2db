@@ -10,7 +10,7 @@ namespace Tests.Linq
 	public class TagTests : TestBase
 	{
 		[Test]
-		public void Test_IfExists([DataSources(false)] string context)
+		public void Test_OneLineComment([DataSources(false)] string context)
 		{
 			var tag = "My Test";
 			var expected = "-- " + tag + Environment.NewLine;
@@ -25,18 +25,15 @@ namespace Tests.Linq
 
 				var commandSql = ((DataConnection)db).LastQuery!;
 
-				var selectIndex = commandSql!.IndexOf("SELECT");
-				Assert.That(commandSql!.IndexOf(expected), Is.EqualTo(selectIndex - expected.Length));
+				Assert.That(commandSql!.IndexOf(expected), Is.EqualTo(0));
 			}
 		}
 
 		[Test]
-		public void Test_Multiline([DataSources(false)] string context)
+		public void Test_MultilineCommentsSupport([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var tag = "My custom\r\nwonderful multiline\nquery tag";
-			var expected = "-- My custom" + Environment.NewLine +
-				           "-- wonderful multiline" + Environment.NewLine + 
-						   "-- query tag" + Environment.NewLine;
+			var expected = "/* My custom\r\nwonderful multiline\nquery tag */";
 
 			using (var db = GetDataContext(context))
 			{
@@ -47,11 +44,33 @@ namespace Tests.Linq
 				query.ToList();
 
 				var commandSql = ((DataConnection)db).LastQuery!;
-
-				var selectIndex = commandSql!.IndexOf("SELECT");
-				Assert.That(commandSql!.IndexOf(expected), Is.EqualTo(selectIndex - expected.Length));
+				
+				Assert.That(commandSql!.IndexOf(expected), Is.EqualTo(0));
 			}
 		}
+
+		// cannot find database that does not support multiline commments
+		//[Test]
+		//public void Test_MultilineCommentsNoSupport([IncludeDataSources] string context)
+		//{
+		//	var tag = "My custom\r\nwonderful multiline\nquery tag";
+		//	var expected = "-- My custom" + Environment.NewLine +
+		//		           "-- wonderful multiline" + Environment.NewLine + 
+		//				   "-- query tag" + Environment.NewLine;
+
+		//	using (var db = GetDataContext(context))
+		//	{
+		//		var query =
+		//			from x in db.Person.TagQuery(tag)
+		//			select x;
+
+		//		query.ToList();
+
+		//		var commandSql = ((DataConnection)db).LastQuery!;
+
+		//		Assert.That(commandSql!.IndexOf(expected), Is.EqualTo(0));
+		//	}
+		//}
 
 		[Test]
 		public void Test_Null([DataSources] string context)
@@ -85,8 +104,7 @@ namespace Tests.Linq
 
 				var commandSql = ((DataConnection)db).LastQuery!;
 
-				var selectIndex = commandSql!.IndexOf("SELECT");
-				Assert.That(commandSql!.IndexOf(expected), Is.EqualTo(selectIndex - expected.Length));
+				Assert.That(commandSql!.IndexOf(expected), Is.EqualTo(0));
 			}
 		}
 
@@ -110,8 +128,26 @@ namespace Tests.Linq
 
 				var commandSql = ((DataConnection)db).LastQuery!;
 
-				var selectIndex = commandSql!.IndexOf("SELECT");
-				Assert.That(commandSql!.IndexOf(expected), Is.EqualTo(selectIndex - expected.Length));
+				Assert.That(commandSql!.IndexOf(expected), Is.EqualTo(0));
+			}
+		}
+
+		[Test]
+		public void Test_NoCommentsSupport([IncludeDataSources(TestProvName.AllAccess)] string context)
+		{
+			var tag = "My Test";
+
+			using (var db = GetDataContext(context))
+			{
+				var query =
+					from x in db.Person.TagQuery(tag)
+					select x;
+
+				query.ToList();
+
+				var commandSql = ((DataConnection)db).LastQuery!;
+				
+				Assert.That(commandSql!.IndexOf(tag), Is.EqualTo(-1));
 			}
 		}
 	}
