@@ -14,7 +14,7 @@ namespace LinqToDB.Linq.Builder
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			=> methodCall.Method.DeclaringType == typeof(MultiInsertExtensions);
 
-		private static readonly Dictionary<MethodInfo, Func<ExpressionBuilder, MethodCallExpression, BuildInfo, IBuildContext>> methodBuilders = new() 
+		private static readonly Dictionary<MethodInfo, Func<ExpressionBuilder, MethodCallExpression, BuildInfo, IBuildContext>> _methodBuilders = new() 
 		{
 			{ MultiInsertExtensions.MultiInsertMethodInfo,   BuildMultiInsert },
 			{ MultiInsertExtensions.IntoMethodInfo,          BuildInto        },
