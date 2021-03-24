@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using LinqToDB.Async;
 
 namespace LinqToDB.Common
 {
@@ -10,11 +11,11 @@ namespace LinqToDB.Common
 #if NATIVE_ASYNC
 		public static IEnumerable<T> AsyncToSyncEnumerable<T>(IAsyncEnumerator<T> enumerator)
 		{
-			var result = enumerator.MoveNextAsync();
-			while (result.IsCompleted ? result.Result : result.AsTask().GetAwaiter().GetResult())
+			var result = SafeAwaiter.Run(() => enumerator.MoveNextAsync());
+			while (result)
 			{
 				yield return enumerator.Current;
-				result = enumerator.MoveNextAsync();
+				result = SafeAwaiter.Run(() => enumerator.MoveNextAsync());
 			}
 		}
 
