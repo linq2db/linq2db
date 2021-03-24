@@ -47,8 +47,7 @@ namespace LinqToDB.DataProvider
 			if (_enumerator != null)
 				return _enumerator.MoveNext();
 			
-			var result = _asyncEnumerator!.MoveNextAsync();
-			return SafeAwaiter.GetResult(result);
+			return SafeAwaiter.Run(() => _asyncEnumerator!.MoveNextAsync());
 		}
 
 		protected override object Current
@@ -75,9 +74,7 @@ namespace LinqToDB.DataProvider
 		{
 			if (disposing && _asyncEnumerator != null)
 			{
-				var result = _asyncEnumerator.DisposeAsync();
-
-				SafeAwaiter.Await(result);
+				SafeAwaiter.Run(() => _asyncEnumerator.DisposeAsync());
 			}
 		}
 #endif

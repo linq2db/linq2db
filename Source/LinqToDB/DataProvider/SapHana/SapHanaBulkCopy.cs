@@ -7,7 +7,6 @@ using System.Linq;
 namespace LinqToDB.DataProvider.SapHana
 {
 	using Data;
-	using LinqToDB.Async;
 	using System.Threading;
 	using System.Threading.Tasks;
 
@@ -28,13 +27,11 @@ namespace LinqToDB.DataProvider.SapHana
 			var connections = TryGetProviderConnections(table);
 			if (connections.HasValue)
 			{
-				return SafeAwaiter.GetResult(ProviderSpecificCopyInternal(
+				return ProviderSpecificCopyInternal(
 					connections.Value,
 					table,
 					options,
-					(columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source),
-					false,
-					default));
+					(columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source));
 			}
 
 			return MultipleRowsCopy(table, options, source);
@@ -49,12 +46,11 @@ namespace LinqToDB.DataProvider.SapHana
 			var connections = TryGetProviderConnections(table);
 			if (connections.HasValue)
 			{
-				return ProviderSpecificCopyInternal(
+				return ProviderSpecificCopyInternalAsync(
 					connections.Value,
 					table,
 					options,
 					(columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source),
-					true,
 					cancellationToken);
 			}
 
@@ -71,12 +67,11 @@ namespace LinqToDB.DataProvider.SapHana
 			var connections = TryGetProviderConnections(table);
 			if (connections.HasValue)
 			{
-				return ProviderSpecificCopyInternal(
+				return ProviderSpecificCopyInternalAsync(
 					connections.Value,
 					table,
 					options,
 					(columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source, cancellationToken),
-					true,
 					cancellationToken);
 			}
 
@@ -109,12 +104,11 @@ namespace LinqToDB.DataProvider.SapHana
 			return default;
 		}
 
-		private async Task<BulkCopyRowsCopied> ProviderSpecificCopyInternal<T>(
+		private async Task<BulkCopyRowsCopied> ProviderSpecificCopyInternalAsync<T>(
 			ProviderConnections                                     providerConnections,
 			ITable<T>                                               table,
 			BulkCopyOptions                                         options,
 			Func<List<Mapping.ColumnDescriptor>, BulkCopyReader<T>> createDataReader,
-			bool                                                    runAsync,
 			CancellationToken                                       cancellationToken)
 			where T : notnull
 		{
@@ -165,14 +159,86 @@ namespace LinqToDB.DataProvider.SapHana
 
 				await TraceActionAsync(
 					dataConnection,
-					() => (runAsync && bc.CanWriteToServerAsync ? "INSERT ASYNC BULK " : "INSERT BULK ") + tableName + Environment.NewLine,
+					() => (bc.CanWriteToServerAsync ? "INSERT ASYNC BULK " : "INSERT BULK ") + tableName + Environment.NewLine,
 					async () => {
-						if (runAsync && bc.CanWriteToServerAsync)
+						if (bc.CanWriteToServerAsync)
 							await bc.WriteToServerAsync(rd, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 						else
 							bc.WriteToServer(rd);
 						return rd.Count;
-					}, true).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					}).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
+				if (rc.RowsCopied != rd.Count)
+				{
+					rc.RowsCopied = rd.Count;
+
+					if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
+						options.RowsCopiedCallback(rc);
+				}
+
+				return rc;
+			}
+		}
+
+		private BulkCopyRowsCopied ProviderSpecificCopyInternal<T>(
+			ProviderConnections                                     providerConnections,
+			ITable<T>                                               table,
+			BulkCopyOptions                                         options,
+			Func<List<Mapping.ColumnDescriptor>, BulkCopyReader<T>> createDataReader)
+			where T : notnull
+		{
+			var dataConnection = providerConnections.DataConnection;
+			var connection     = providerConnections.ProviderConnection;
+			var transaction    = providerConnections.ProviderTransaction;
+			var ed             = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
+			var columns        = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
+			var rc             = new BulkCopyRowsCopied();
+
+
+			var hanaOptions = SapHanaProviderAdapter.HanaBulkCopyOptions.Default;
+
+			if (options.KeepIdentity == true) hanaOptions |= SapHanaProviderAdapter.HanaBulkCopyOptions.KeepIdentity;
+
+			using (var bc = _provider.Adapter.CreateBulkCopy(connection, hanaOptions, transaction))
+			{
+				if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
+				{
+					bc.NotifyAfter = options.NotifyAfter;
+
+					bc.HanaRowsCopied += (sender, args) =>
+					{
+						rc.RowsCopied = args.RowsCopied;
+						options.RowsCopiedCallback(rc);
+						if (rc.Abort)
+							args.Abort = true;
+					};
+				}
+
+				if (options.MaxBatchSize.HasValue)
+					bc.BatchSize = options.MaxBatchSize.Value;
+
+				if (options.BulkCopyTimeout.HasValue) 
+					bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
+				else if (Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout)
+					bc.BulkCopyTimeout = connection.ConnectionTimeout;
+
+				var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
+				var tableName  = GetTableName(sqlBuilder, options, table);
+
+				bc.DestinationTableName = tableName;
+
+				for (var i = 0; i < columns.Count; i++)
+					bc.ColumnMappings.Add(_provider.Adapter.CreateBulkCopyColumnMapping(i, columns[i].ColumnName));
+
+				var rd = createDataReader(columns);
+
+				TraceAction(
+					dataConnection,
+					() => "INSERT BULK " + tableName + Environment.NewLine,
+					() => {
+						bc.WriteToServer(rd);
+						return rd.Count;
+					});
 
 				if (rc.RowsCopied != rd.Count)
 				{

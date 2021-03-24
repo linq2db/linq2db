@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 
 namespace LinqToDB.Async
 {
@@ -8,51 +9,19 @@ namespace LinqToDB.Async
 	internal static class SafeAwaiter
 	{
 #if NATIVE_ASYNC
-		public static T GetResult<T>(ValueTask<T> task)
+		public static T Run<T>(Func<ValueTask<T>> task)
 		{
-			if (task.IsCompleted)
-				return task.Result;
+			// awaited ValueTask retrieved in Task.Run context as doing it in main thread could cause deadlock too
+			var awaitable = Task.Run(async () => await task().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext));
+			awaitable.Wait();
 
-			Task.Run(async () => await task.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext)).Wait();
-
-			return task.Result;
+			return awaitable.Result;
 		}
 
-		public static void Await(ValueTask task)
+		public static void Run(Func<ValueTask> task)
 		{
-			if (task.IsCompleted)
-			{
-				if (!task.IsCompletedSuccessfully)
-					task.AsTask().Wait();
-
-				return;
-			}
-
-			Task.Run(async () => await task.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext)).Wait();
+			Task.Run(async () => await task().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext)).Wait();
 		}
 #endif
-
-		public static T GetResult<T>(Task<T> task)
-		{
-			if (task.IsCompleted)
-				return task.Result;
-
-			Task.Run(async () => await task.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext)).Wait();
-
-			return task.Result;
-		}
-
-		public static void Await(Task task)
-		{
-			if (task.IsCompleted)
-			{
-				if (task.Status != TaskStatus.RanToCompletion)
-					task.Wait();
-
-				return;
-			}
-
-			Task.Run(async () => await task.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext)).Wait();
-		}
 	}
 }

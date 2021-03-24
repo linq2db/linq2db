@@ -11,11 +11,11 @@ namespace LinqToDB.Common
 #if NATIVE_ASYNC
 		public static IEnumerable<T> AsyncToSyncEnumerable<T>(IAsyncEnumerator<T> enumerator)
 		{
-			var result = enumerator.MoveNextAsync();
-			while (SafeAwaiter.GetResult(result))
+			var result = SafeAwaiter.Run(() => enumerator.MoveNextAsync());
+			while (result)
 			{
 				yield return enumerator.Current;
-				result = enumerator.MoveNextAsync();
+				result = SafeAwaiter.Run(() => enumerator.MoveNextAsync());
 			}
 		}
 
