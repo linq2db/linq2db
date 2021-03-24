@@ -14,7 +14,7 @@ namespace LinqToDB.Linq.Builder
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			=> methodCall.Method.DeclaringType == typeof(MultiInsertExtensions);
 
-		private static readonly Dictionary<MethodInfo, Func<ExpressionBuilder, MethodCallExpression, BuildInfo, IBuildContext>> methodBuilders = new() 
+		private static readonly Dictionary<MethodInfo, Func<ExpressionBuilder, MethodCallExpression, BuildInfo, IBuildContext>> _methodBuilders = new() 
 		{
 			{ MultiInsertExtensions.MultiInsertMethodInfo,   BuildMultiInsert },
 			{ MultiInsertExtensions.IntoMethodInfo,          BuildInto        },
@@ -28,7 +28,7 @@ namespace LinqToDB.Linq.Builder
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{	
 			var genericMethod = methodCall.Method.GetGenericMethodDefinition();
-			return methodBuilders.TryGetValue(genericMethod, out var build)
+			return _methodBuilders.TryGetValue(genericMethod, out var build)
 				? build(builder, methodCall, buildInfo)
 				: throw new InvalidOperationException("Unknown method " + methodCall.Method.Name);
 		}
