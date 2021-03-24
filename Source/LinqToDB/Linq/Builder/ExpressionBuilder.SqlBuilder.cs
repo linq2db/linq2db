@@ -810,7 +810,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (context is SelectContext selectContext)
 			{
-				if (selectContext.MethodCall == expression)
+				if (null != expression.Find(e => selectContext.Body == e))
 					return context.ConvertToSql(null, 0, ConvertFlags.Field).Select(_ => _.Sql).First();
 			}
 

@@ -27,7 +27,7 @@ namespace LinqToDB.Linq.Builder
 #if DEBUG
 		public string _sqlQueryText => SelectQuery == null ? "" : SelectQuery.SqlText;
 		public string Path => this.GetPath();
-		public MethodCallExpression? MethodCall;
+		public MethodCallExpression? Debug_MethodCall;
 #endif
 
 		public IBuildContext[]   Sequence    { [DebuggerStepThrough] get; }
