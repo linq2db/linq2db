@@ -267,6 +267,8 @@ namespace LinqToDB.Linq
 			var targetFramework = "net45";
 #elif NET46
 			var targetFramework = "net46";
+#elif NET472
+			var targetFramework = "net472";
 #elif NETCOREAPP2_1
 			var targetFramework = "netcoreapp2.1";
 #elif NETSTANDARD2_0

@@ -58,7 +58,7 @@ namespace LinqToDB.DataProvider.MySql
 			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T>           table,
 			BulkCopyOptions     options,
@@ -179,7 +179,7 @@ namespace LinqToDB.DataProvider.MySql
 						else
 							bc.WriteToServer(rd);
 						return rd.Count;
-					}).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					}, runAsync).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 				rc.RowsCopied += rd.Count;
 			}
@@ -190,7 +190,7 @@ namespace LinqToDB.DataProvider.MySql
 			return rc;
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		private async Task<BulkCopyRowsCopied> ProviderSpecificCopyInternal<T>(
 			ProviderConnections providerConnections,
 			ITable<T>           table,
@@ -239,7 +239,7 @@ namespace LinqToDB.DataProvider.MySql
 
 				await TraceActionAsync(
 					dataConnection,
-					() => "INSERT BULK " + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + Environment.NewLine,
+					() => (bc.CanWriteToServerAsync2 || bc.CanWriteToServerAsync ? "INSERT ASYNC BULK " : "INSERT BULK ") + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + Environment.NewLine,
 					async () => {
 						if (bc.CanWriteToServerAsync2)
 							await bc.WriteToServerAsync2(rd, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
@@ -249,7 +249,7 @@ namespace LinqToDB.DataProvider.MySql
 							else
 								bc.WriteToServer(rd);
 						return rd.Count;
-					}).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					}, true).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 				rc.RowsCopied += rd.Count;
 			}
@@ -273,7 +273,7 @@ namespace LinqToDB.DataProvider.MySql
 			return MultipleRowsCopy1Async(table, options, source, cancellationToken);
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			return MultipleRowsCopy1Async(table, options, source, cancellationToken);

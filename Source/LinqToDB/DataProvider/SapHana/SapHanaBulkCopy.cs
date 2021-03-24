@@ -60,7 +60,7 @@ namespace LinqToDB.DataProvider.SapHana
 			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T> table,
 			BulkCopyOptions options,
@@ -171,7 +171,7 @@ namespace LinqToDB.DataProvider.SapHana
 						else
 							bc.WriteToServer(rd);
 						return rd.Count;
-					}).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					}, true).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				if (rc.RowsCopied != rd.Count)
 				{

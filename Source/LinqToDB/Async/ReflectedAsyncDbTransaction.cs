@@ -14,20 +14,20 @@ namespace LinqToDB.Async
 	{
 		private readonly Func<IDbTransaction, CancellationToken, Task>? _commitAsync;
 		private readonly Func<IDbTransaction, CancellationToken, Task>? _rollbackAsync;
-#if !NETFRAMEWORK
-		private readonly Func<IDbConnection, ValueTask>?                _disposeAsync;
+#if NATIVE_ASYNC
+		private readonly Func<IDbTransaction, ValueTask>?               _disposeAsync;
 #else
-		private readonly Func<IDbConnection, Task>?                     _disposeAsync;
+		private readonly Func<IDbTransaction, Task>?                    _disposeAsync;
 #endif
 
 		public ReflectedAsyncDbTransaction(
 			IDbTransaction                                 transaction,
 			Func<IDbTransaction, CancellationToken, Task>? commitAsync,
 			Func<IDbTransaction, CancellationToken, Task>? rollbackAsync,
-#if !NETFRAMEWORK
-			Func<IDbConnection, ValueTask>?                disposeAsync)
+#if NATIVE_ASYNC
+			Func<IDbTransaction, ValueTask>?               disposeAsync)
 #else
-			Func<IDbConnection, Task>?                     disposeAsync)
+			Func<IDbTransaction, Task>?                    disposeAsync)
 #endif
 			: base(transaction)
 		{
@@ -46,16 +46,13 @@ namespace LinqToDB.Async
 			return _rollbackAsync?.Invoke(Transaction, cancellationToken) ?? base.RollbackAsync(cancellationToken);
 		}
 
-#if NETFRAMEWORK
+#if !NATIVE_ASYNC
 		public override Task DisposeAsync()
-		{
-			return _disposeAsync?.Invoke(Connection) ?? base.DisposeAsync();
-		}
 #else
 		public override ValueTask DisposeAsync()
-		{
-			return _disposeAsync != null ? _disposeAsync.Invoke(Connection) : base.DisposeAsync();
-		}
 #endif
+		{
+			return _disposeAsync?.Invoke(Transaction) ?? base.DisposeAsync();
+		}
 	}
 }
