@@ -1,6 +1,4 @@
-﻿using System;
-using System.Reflection;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 namespace LinqToDB.Async
 {
@@ -23,7 +21,12 @@ namespace LinqToDB.Async
 		public static void Await(ValueTask task)
 		{
 			if (task.IsCompleted)
+			{
+				if (!task.IsCompletedSuccessfully)
+					task.AsTask().Wait();
+
 				return;
+			}
 
 			Task.Run(async () => await task.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext)).Wait();
 		}
@@ -42,7 +45,12 @@ namespace LinqToDB.Async
 		public static void Await(Task task)
 		{
 			if (task.IsCompleted)
+			{
+				if (task.Status != TaskStatus.RanToCompletion)
+					task.Wait();
+
 				return;
+			}
 
 			Task.Run(async () => await task.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext)).Wait();
 		}
