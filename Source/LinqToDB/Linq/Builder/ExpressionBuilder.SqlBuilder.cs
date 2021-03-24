@@ -771,6 +771,7 @@ namespace LinqToDB.Linq.Builder
 
 		public ISqlExpression ConvertToExtensionSql(IBuildContext context, Expression expression, ColumnDescriptor? columnDescriptor)
 		{
+			expression = expression.UnwrapConvertToObject();
 			var unwrapped = expression.Unwrap();
 
 			if (typeof(Sql.IQueryableContainer).IsSameOrParentOf(unwrapped.Type))
