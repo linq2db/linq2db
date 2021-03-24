@@ -804,8 +804,14 @@ namespace LinqToDB.Linq.Builder
 				ReplaceParent(context.Parent!, saveParent);
 				if (!(result is SqlField field) || field.Table!.All != field)
 					return result;
-				result = context.ConvertToSql(null, 0, ConvertFlags.Field).Select(_ => _.Sql).FirstOrDefault();
+				result = context.ConvertToSql(null, 0, ConvertFlags.Field).Select(_ => _.Sql).First();
 				return result;
+			}
+
+			if (context is SelectContext selectContext)
+			{
+				if (selectContext.MethodCall == expression)
+					return context.ConvertToSql(null, 0, ConvertFlags.Field).Select(_ => _.Sql).First();
 			}
 
 			return ConvertToSql(context, expression, false, columnDescriptor);
