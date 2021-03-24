@@ -14,6 +14,7 @@ namespace LinqToDB.DataProvider
 {
 	using System.Threading.Tasks;
 	using Common;
+	using LinqToDB.Async;
 	using LinqToDB.Data;
 	using Mapping;
 
@@ -48,7 +49,7 @@ namespace LinqToDB.DataProvider
 				return _enumerator.MoveNext();
 			
 			var result = _asyncEnumerator!.MoveNextAsync();
-			return result.IsCompleted ? result.Result : result.AsTask().GetAwaiter().GetResult();
+			return SafeAwaiter.GetResult(result);
 		}
 
 		protected override object Current
@@ -77,8 +78,7 @@ namespace LinqToDB.DataProvider
 			{
 				var result = _asyncEnumerator.DisposeAsync();
 
-				if (!result.IsCompleted)
-					result.AsTask().GetAwaiter().GetResult();
+				SafeAwaiter.Await(result);
 			}
 		}
 #endif

@@ -8,6 +8,7 @@ namespace LinqToDB.DataProvider.MySql
 {
 	using Common;
 	using Data;
+	using LinqToDB.Async;
 
 	class MySqlBulkCopy : BasicBulkCopy
 	{
@@ -25,13 +26,13 @@ namespace LinqToDB.DataProvider.MySql
 			var connections = TryGetProviderConnections(table);
 			if (connections.HasValue)
 			{
-				return ProviderSpecificCopyInternal(
+				return SafeAwaiter.GetResult(ProviderSpecificCopyInternal(
 					connections.Value,
 					table,
 					options,
 					source,
 					false,
-					default).GetAwaiter().GetResult();
+					default));
 			}
 
 			return MultipleRowsCopy(table, options, source);

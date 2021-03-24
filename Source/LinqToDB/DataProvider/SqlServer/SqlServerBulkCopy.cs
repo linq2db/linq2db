@@ -8,6 +8,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	using System.Data;
 	using System.Threading;
 	using Data;
+	using LinqToDB.Async;
 	using SqlProvider;
 
 	class SqlServerBulkCopy : BasicBulkCopy
@@ -27,13 +28,13 @@ namespace LinqToDB.DataProvider.SqlServer
 			var connections = TryGetProviderConnections(table);
 			if (connections.HasValue)
 			{
-				return ProviderSpecificCopyInternal(
+				return SafeAwaiter.GetResult(ProviderSpecificCopyInternal(
 					connections.Value,
 					table,
 					options,
 					(columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source),
 					false,
-					default).GetAwaiter().GetResult();
+					default));
 			}
 
 			return MultipleRowsCopy(table, options, source);

@@ -8,6 +8,7 @@ using LinqToDB.SqlQuery;
 namespace LinqToDB.DataProvider
 {
 	using Data;
+	using LinqToDB.Async;
 	using SqlProvider;
 	using System.Data;
 	using System.Threading;
@@ -238,8 +239,8 @@ namespace LinqToDB.DataProvider
 		protected void TraceAction(DataConnection dataConnection, Func<string> commandText, Func<int> action)
 		{
 			var task = TraceActionAsync(dataConnection, commandText, () => Task.FromResult(action()));
-			// the following line of code should be completely redundant, as exceptions should bubble up, since there are no awaited tasks
-			if (task.Status != TaskStatus.RanToCompletion) task.GetAwaiter().GetResult();
+
+			SafeAwaiter.Await(task);
 		}
 
 		protected async Task TraceActionAsync(DataConnection dataConnection, Func<string> commandText, Func<Task<int>> action)
