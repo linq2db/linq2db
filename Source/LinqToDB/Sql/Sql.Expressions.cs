@@ -617,7 +617,7 @@ namespace LinqToDB
 
 				var memberType = builder.Member.GetMemberType();
 
-				var sqlArguments = arguments.Select(builder.ConvertExpressionToSql).ToArray();
+				var sqlArguments = arguments.Select(e => builder.ConvertExpressionToSql(e)).ToArray();
 
 				builder.ResultExpression = new SqlExpression(memberType, format, Precedence.Primary, sqlArguments);
 			}

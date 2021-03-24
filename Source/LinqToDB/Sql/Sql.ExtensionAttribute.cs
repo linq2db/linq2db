@@ -153,11 +153,11 @@ namespace LinqToDB
 			T GetValue<T>(int index);
 			T GetValue<T>(string argName);
 
-			ISqlExpression GetExpression(int index);
-			ISqlExpression GetExpression(string argName);
+			ISqlExpression GetExpression(int index, bool unwrap = false);
+			ISqlExpression GetExpression(string argName, bool unwrap = false);
 			ISqlExpression ConvertToSqlExpression();
 			ISqlExpression ConvertToSqlExpression(int precedence);
-			ISqlExpression ConvertExpressionToSql(Expression expression);
+			ISqlExpression ConvertExpressionToSql(Expression expression, bool unwrap = false);
 
 			SqlExtensionParam AddParameter(string name, ISqlExpression expr);
 		}
@@ -331,8 +331,11 @@ namespace LinqToDB
 
 				public MethodInfo?  Method { get; }
 
-				public ISqlExpression ConvertExpression(Expression expr, ColumnDescriptor? columnDescriptor)
+				public ISqlExpression ConvertExpression(Expression expr, bool unwrap, ColumnDescriptor? columnDescriptor)
 				{
+					if (unwrap)
+						expr = expr.UnwrapConvert();
+
 					return _convert.Convert(expr, columnDescriptor);
 				}
 
@@ -377,12 +380,12 @@ namespace LinqToDB
 					throw new InvalidOperationException(string.Format("Argument '{0}' not found", argName));
 				}
 
-				public ISqlExpression GetExpression(int index)
+				public ISqlExpression GetExpression(int index, bool unwrap)
 				{
-					return ConvertExpression(Arguments[index], null);
+					return ConvertExpression(Arguments[index], unwrap, null);
 				}
 
-				public ISqlExpression GetExpression(string argName)
+				public ISqlExpression GetExpression(string argName, bool unwrap)
 				{
 					if (Method != null)
 					{
@@ -391,7 +394,7 @@ namespace LinqToDB
 						{
 							if (parameters[i].Name == argName)
 							{
-								return GetExpression(i);
+								return GetExpression(i, unwrap);
 							}
 						}
 					}
@@ -414,9 +417,9 @@ namespace LinqToDB
 						Extension.CanBeNull, IsNullableType.Undefined);
 				}
 
-				public ISqlExpression ConvertExpressionToSql(Expression expression)
+				public ISqlExpression ConvertExpressionToSql(Expression expression, bool unwrap)
 				{
-					return ConvertExpression(expression, null);
+					return ConvertExpression(expression, unwrap, null);
 				}
 
 				public SqlExtensionParam AddParameter(string name, ISqlExpression expr)
