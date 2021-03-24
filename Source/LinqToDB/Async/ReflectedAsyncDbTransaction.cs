@@ -48,14 +48,11 @@ namespace LinqToDB.Async
 
 #if !NATIVE_ASYNC
 		public override Task DisposeAsync()
+#else
+		public override ValueTask DisposeAsync()
+#endif
 		{
 			return _disposeAsync?.Invoke(Transaction) ?? base.DisposeAsync();
 		}
-#else
-		public override ValueTask DisposeAsync()
-		{
-			return _disposeAsync != null ? _disposeAsync.Invoke(Transaction) : base.DisposeAsync();
-		}
-#endif
 	}
 }

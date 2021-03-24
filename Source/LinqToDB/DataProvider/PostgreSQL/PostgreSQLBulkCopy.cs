@@ -290,7 +290,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 							var ret = await writer.CompleteAsync(cancellationToken)
 								.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 							return (int)rowsCopied.RowsCopied;
-						}).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+						}, true).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 				}
 
 				if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
@@ -408,7 +408,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 							var ret = await writer.CompleteAsync(cancellationToken)
 								.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 							return (int)rowsCopied.RowsCopied;
-						}).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+						}, true).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 				}
 
 				if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
