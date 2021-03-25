@@ -1747,7 +1747,7 @@ namespace LinqToDB.Data
 				var converterKey  = Tuple.Create(readerType, dataConnection.DataProvider.DataReaderType);
 				converterExpr = _dataReaderConverter.GetOrCreate(converterKey, o =>
 				{
-					o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+					o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
 
 					var expr = dataConnection.MappingSchema.GetConvertExpression(readerType, typeof(IDataReader), false, false);
 					if (expr != null)

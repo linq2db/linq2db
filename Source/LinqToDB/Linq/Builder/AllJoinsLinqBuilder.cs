@@ -67,7 +67,7 @@ namespace LinqToDB.Linq.Builder
 			var joinContext = new JoinContext(buildInfo.Parent, selector, outerContext, innerContext)
 #if DEBUG
 			{
-				MethodCall = methodCall
+				Debug_MethodCall = methodCall
 			}
 #endif
 			;
