@@ -255,6 +255,7 @@ namespace LinqToDB.DataProvider.Oracle
 				case DataType.NVarChar : type = OracleProviderAdapter.OracleDbType.NVarchar2   ; break;
 				case DataType.Long     : type = OracleProviderAdapter.OracleDbType.Long        ; break;
 				case DataType.LongRaw  : type = OracleProviderAdapter.OracleDbType.LongRaw     ; break;
+				case DataType.Json     : type = OracleProviderAdapter.OracleDbType.Json        ; break;
 			}
 
 			if (type != null)
@@ -326,7 +327,7 @@ namespace LinqToDB.DataProvider.Oracle
 				cancellationToken);
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{

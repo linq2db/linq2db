@@ -388,8 +388,44 @@ namespace LinqToDB
 
 		void IDisposable.Dispose()
 		{
+			Dispose(disposing: true);
+			GC.SuppressFinalize(this);
+		}
+
+		/// <summary>
+		/// Closes underlying connection and fires <see cref="OnClosing"/> event (only if connection existed).
+		/// </summary>
+		protected virtual void Dispose(bool disposing)
+		{
 			_disposed = true;
 			Close();
+		}
+
+#if NATIVE_ASYNC
+		async ValueTask IAsyncDisposable.DisposeAsync()
+#else
+		async Task IAsyncDisposable.DisposeAsync()
+#endif
+		{
+			await DisposeAsync(disposing: true).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			GC.SuppressFinalize(this);
+		}
+
+		/// <summary>
+		/// Closes underlying connection and fires <see cref="OnClosing"/> event (only if connection existed).
+		/// </summary>
+#if NATIVE_ASYNC
+		protected virtual ValueTask DisposeAsync(bool disposing)
+#else
+		protected virtual Task DisposeAsync(bool disposing)
+#endif
+		{
+			_disposed = true;
+#if NATIVE_ASYNC
+			return new ValueTask(((IDataContext)this).CloseAsync());
+#else
+			return ((IDataContext)this).CloseAsync();
+#endif
 		}
 
 		/// <summary>
@@ -412,6 +448,20 @@ namespace LinqToDB
 		void IDataContext.Close()
 		{
 			Close();
+		}
+
+		async Task IDataContext.CloseAsync()
+		{
+			if (_dataConnection != null)
+			{
+				OnClosing?.Invoke(this, EventArgs.Empty);
+
+				if (_dataConnection.QueryHints.    Count > 0) QueryHints.AddRange(_queryHints!);
+				if (_dataConnection.NextQueryHints.Count > 0) NextQueryHints.AddRange(_nextQueryHints!);
+
+				await _dataConnection.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				_dataConnection = null;
+			}
 		}
 
 		/// <summary>
@@ -496,6 +546,19 @@ namespace LinqToDB
 			{
 				_queryRunner!.Dispose();
 				_dataContext!.ReleaseQuery();
+				_queryRunner = null;
+				_dataContext = null;
+			}
+
+#if NATIVE_ASYNC
+			public async ValueTask DisposeAsync()
+#else
+			public async Task DisposeAsync()
+#endif
+			{
+				await _queryRunner!.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				_dataContext!.ReleaseQuery();
+
 				_queryRunner = null;
 				_dataContext = null;
 			}

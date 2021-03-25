@@ -771,19 +771,20 @@ namespace LinqToDB.Linq.Builder
 
 		public ISqlExpression ConvertToExtensionSql(IBuildContext context, Expression expression, ColumnDescriptor? columnDescriptor)
 		{
-			expression = expression.Unwrap();
+			expression = expression.UnwrapConvertToObject();
+			var unwrapped = expression.Unwrap();
 
-			if (typeof(Sql.IQueryableContainer).IsSameOrParentOf(expression.Type))
+			if (typeof(Sql.IQueryableContainer).IsSameOrParentOf(unwrapped.Type))
 			{
 				Expression preparedExpression;
-				if (expression.NodeType == ExpressionType.Call)
-					preparedExpression = ((MethodCallExpression)expression).Arguments[0];
+				if (unwrapped.NodeType == ExpressionType.Call)
+					preparedExpression = ((MethodCallExpression)unwrapped).Arguments[0];
 				else 
-					preparedExpression = ((Sql.IQueryableContainer)expression.EvaluateExpression()!).Query.Expression;
+					preparedExpression = ((Sql.IQueryableContainer)unwrapped.EvaluateExpression()!).Query.Expression;
 				return ConvertToExtensionSql(context, preparedExpression, columnDescriptor);
 			}
 
-			if (expression is LambdaExpression lambda)
+			if (unwrapped is LambdaExpression lambda)
 			{
 				var saveParent = context.Parent;
 				ExpressionContext exprCtx;
@@ -804,12 +805,15 @@ namespace LinqToDB.Linq.Builder
 				ReplaceParent(context.Parent!, saveParent);
 				if (!(result is SqlField field) || field.Table!.All != field)
 					return result;
-				result = context.ConvertToSql(null, 0, ConvertFlags.Field).Select(_ => _.Sql).FirstOrDefault();
+				result = context.ConvertToSql(null, 0, ConvertFlags.Field).Select(_ => _.Sql).First();
 				return result;
 			}
 
-			if (!MappingSchema.IsScalarType(expression.Type) && typeof(IQueryable<>).IsSameOrParentOf(expression.Type))
-				return context.ConvertToSql(null, 0, ConvertFlags.Field).Select(_ => _.Sql).FirstOrDefault();
+			if (context is SelectContext selectContext)
+			{
+				if (null != expression.Find(e => selectContext.Body == e))
+					return context.ConvertToSql(null, 0, ConvertFlags.Field).Select(_ => _.Sql).First();
+			}
 
 			return ConvertToSql(context, expression, false, columnDescriptor);
 		}
@@ -1036,26 +1040,11 @@ namespace LinqToDB.Linq.Builder
 						var ma   = (MemberExpression)expression;
 						var attr = GetExpressionAttribute(ma.Member);
 
-						if (attr != null)
-						{
-							var converted = attr.GetExpression(DataContext, context!.SelectQuery, ma,
-								(e, descriptor) => ConvertToExtensionSql(context, e, descriptor));
+						var converted = attr?.GetExpression(DataContext, context!.SelectQuery, ma,
+							(e, descriptor) => ConvertToExtensionSql(context, e, descriptor));
 
-							if (converted == null)
-							{
-								if (attr.ExpectExpression)
-								{
-									var exp = ConvertToSql(context, ma.Expression);
-									converted = attr.GetExpression(ma.Member, exp);
-								}
-								else
-								{
-									converted = attr.GetExpression(ma.Member);
-								}
-							}
-
+						if (converted != null)
 							return converted;
-						}
 
 						var ctx = GetContext(context, expression);
 
@@ -1263,51 +1252,18 @@ namespace LinqToDB.Linq.Builder
 
 			var sqlExpression =
 				attr.GetExpression(DataContext, context!.SelectQuery, mc, (e, descriptor) => ConvertToExtensionSql(context, e, descriptor));
-			if (sqlExpression != null)
-				return sqlExpression;
-
-			var parms = new List<ISqlExpression>();
-
-			if (mc.Object != null)
-				parms.Add(ConvertToSql(context, mc.Object));
-
-			ParameterInfo[]? pis = null;
-
-			for (var i = 0; i < mc.Arguments.Count; i++)
-			{
-				var arg = mc.Arguments[i];
-
-				if (arg is NewArrayExpression nae)
-				{
-					if (pis == null)
-						pis = mc.Method.GetParameters();
-
-					var p = pis[i];
-
-					if (p.GetCustomAttributes(true).OfType<ParamArrayAttribute>().Any())
-					{
-						parms.AddRange(nae.Expressions.Select(a => ConvertToSql(context, a)));
-					}
-					else
-					{
-						parms.Add(ConvertToSql(context, nae));
-					}
-				}
-				else
-				{
-					parms.Add(ConvertToSql(context, arg));
-				}
-			}
+			if (sqlExpression == null)
+				throw new LinqToDBException($"Cannot convert to SQL method '{mc}'.");
 
 			DataContext.InlineParameters = inlineParameters;
 
-			return attr.GetExpression(mc.Method, parms.ToArray());
+			return sqlExpression;
 		}
 
 		static ISqlExpression ConvertToSqlConvertible(Expression expression)
 		{
 			var l = Expression.Lambda<Func<IToSqlConverter>>(expression);
-			var f = l.Compile();
+			var f = l.CompileExpression();
 			var c = f();
 
 			return c.ToSql(expression);
@@ -1998,7 +1954,9 @@ namespace LinqToDB.Linq.Builder
 					expression = l;
 				}
 
-				if (value != null && expression != null)
+				if (value != null 
+				    && expression != null 
+				    && !(expression.ElementType == QueryElementType.SqlValue && ((SqlValue) expression).Value == null))
 				{
 					var isNot = !value.Value;
 					var withNull = false;
@@ -2602,6 +2560,15 @@ namespace LinqToDB.Linq.Builder
 			// see #820
 			accessorExpression = accessorExpression.Transform(e =>
 			{
+				if (e.NodeType.NotIn(ExpressionType.Parameter, ExpressionType.Convert, ExpressionType.ConvertChecked)
+				    && dataContextParam.Type.IsSameOrParentOf(e.Type))
+				{
+					var newExpr = (Expression) dataContextParam;
+					if (newExpr.Type != e.Type)
+						newExpr = Expression.Convert(newExpr, e.Type);
+					return newExpr;
+				}
+
 				switch (e.NodeType)
 				{
 					case ExpressionType.Parameter:
@@ -2614,6 +2581,7 @@ namespace LinqToDB.Linq.Builder
 						return e;
 					}
 					case ExpressionType.MemberAccess:
+					{
 						var ma = (MemberExpression) e;
 
 						if (ma.Member.IsNullableValueMember())
@@ -2625,7 +2593,9 @@ namespace LinqToDB.Linq.Builder
 						}
 
 						return e;
+					}
 					case ExpressionType.Convert:
+					{
 						var ce = (UnaryExpression) e;
 						if (ce.Operand.Type.IsNullable() && !ce.Type.IsNullable())
 						{
@@ -2634,7 +2604,9 @@ namespace LinqToDB.Linq.Builder
 								Expression.Default(e.Type),
 								e);
 						}
+
 						return e;
+					}
 					default:
 						return e;
 				}
@@ -2682,9 +2654,9 @@ namespace LinqToDB.Linq.Builder
 			return new ParameterAccessor
 			(
 				expression,
-				mapper.Compile(),
-				original.Compile(),
-				dbDataTypeAccessor.Compile(),
+				mapper.CompileExpression(),
+				original.CompileExpression(),
+				dbDataTypeAccessor.CompileExpression(),
 				new SqlParameter(new DbDataType(accessorExpression.Type), name, null)
 				{
 					IsQueryParameter = !dataContext.InlineParameters
@@ -2727,7 +2699,7 @@ namespace LinqToDB.Linq.Builder
 				if (sql.Length == 1 && sql[0].MemberChain.Length == 0)
 					expr = sql[0].Sql;
 				else
-					expr = new ObjectSqlExpression(MappingSchema, sql);
+					expr = new SqlObjectExpression(MappingSchema, sql);
 			}
 
 			var columnDescriptor = QueryHelper.GetColumnDescriptor(expr);
@@ -2993,9 +2965,12 @@ namespace LinqToDB.Linq.Builder
 
 		static bool NeedNullCheck(ISqlExpression expr)
 		{
+			if (!expr.CanBeNull)
+				return false;
+
 			if (null != new QueryVisitor().Find(expr, e => e.ElementType == QueryElementType.SelectClause))
 				return false;
-			return expr.CanBeNull;
+			return true;
 		}
 
 		#endregion
@@ -3333,7 +3308,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					// Handling case when all columns are aggregates, it cause query to produce only single record and we have to include at least one aggregation in Select statement.
 					// 
-					var allAggregate = sql.All(s => QueryHelper.IsAggregationFunction(s.Sql));
+					var allAggregate = sql.All(s => QueryHelper.IsAggregationOrWindowFunction(s.Sql));
 					if (allAggregate)
 					{
 						query.Select.Add(sql[0].Sql);
@@ -3445,7 +3420,7 @@ namespace LinqToDB.Linq.Builder
 			_preambles.Add(
 				Tuple.Create< Func<IDataContext, Expression, object?[]?, object?>, Func<IDataContext, Expression, object?[]?, CancellationToken, Task<object?>>>(
 					(dc, e, ps) => func(dc, e, ps),
-					async (dc, e, ps, ct) => await funcAsync(dc, e, ps, ct)));
+					async (dc, e, ps, ct) => await funcAsync(dc, e, ps, ct).ConfigureAwait(Configuration.ContinueOnCapturedContext)));
 			return _preambles.Count - 1;
 		}
 

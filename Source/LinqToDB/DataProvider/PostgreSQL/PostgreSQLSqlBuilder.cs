@@ -47,7 +47,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				throw new SqlException("Identity field must be defined for '{0}'.", insertClause.Into.Name);
 
 			AppendIndent().AppendLine("RETURNING ");
-			AppendIndent().Append("\t");
+			AppendIndent().Append('\t');
 			BuildExpression(identityField, false, true);
 			StringBuilder.AppendLine();
 		}
@@ -236,7 +236,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					var sb = new StringBuilder();
 					sb.Append("nextval(");
 					ValueToSqlConverter.Convert(sb, BuildTableName(new StringBuilder(), server, database, schema, name, table.TableOptions).ToString());
-					sb.Append(")");
+					sb.Append(')');
 					return new SqlExpression(sb.ToString(), Precedence.Primary);
 				}
 			}
@@ -415,6 +415,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			}
 
 			base.BuildEndCreateTableStatement(createTable);
+		}
+
+		public override string GetReserveSequenceValuesSql(int count, string sequenceName)
+		{
+			return $"SELECT nextval('{ConvertInline(sequenceName, ConvertType.SequenceName)}') FROM generate_series(1, {count.ToString(CultureInfo.InvariantCulture)})";
 		}
 	}
 }

@@ -13,12 +13,14 @@
 		<ProjectReference Include="..\..\Source\LinqToDB.AspNet\LinqToDB.AspNet.csproj" />
 		<ProjectReference Include="..\VisualBasic\Tests.VisualBasic.vbproj" />
 		<ProjectReference Include="..\FSharp\Tests.FSharp.fsproj" />
+
+		<PackageReference Include="NodaTime" />
+
 	</ItemGroup>
 
-	<ItemGroup Condition="'$(TargetFramework)' != 'net472'">
-		<Compile Remove="Metadata\AttributeReaderTests.cs" />
-		<Compile Remove="Linq\DataServiceTests.cs" />
-		<Compile Remove="Metadata\XmlReaderTests.cs" />
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
+		<!-- transient -->
+		<PackageReference Include="System.Security.Cryptography.Cng" />
 	</ItemGroup>
 
 </Project>

@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NETFRAMEWORK
+using System;
 using System.Collections.Generic;
 using System.Data;
 
@@ -19,12 +20,12 @@ namespace LinqToDB.ServiceModel
 
 		readonly MappingSchema          _mappingSchema;
 		readonly LinqServiceResult      _result;
-		readonly Dictionary<string,int> _ordinal = new Dictionary<string,int>();
+		readonly Dictionary<string,int> _ordinal = new ();
 
 		string?[]? _data;
 		int        _current = -1;
 
-		#region IDataRecord
+#region IDataRecord
 
 		object? IDataRecord.this[int i]       => GetValue(i);
 
@@ -78,9 +79,9 @@ namespace LinqToDB.ServiceModel
 
 		bool IDataRecord.IsDBNull(int i) => _data![i] == null;
 
-		#endregion
+#endregion
 
-		#region IDataReader
+#region IDataReader
 		bool IDataReader.Read()
 		{
 			if (++_current < _result.RowCount)
@@ -106,14 +107,15 @@ namespace LinqToDB.ServiceModel
 		DataTable IDataReader.GetSchemaTable() => throw new NotImplementedException();
 		bool      IDataReader.NextResult()     => throw new NotImplementedException();
 
-		#endregion
+#endregion
 
-		#region IDisposable
+#region IDisposable
 
 		void IDisposable.Dispose()
 		{
 		}
 
-		#endregion
+#endregion
 	}
 }
+#endif

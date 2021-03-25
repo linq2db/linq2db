@@ -21,6 +21,7 @@ namespace Tests.Linq
 	using System.Data.Common;
 	using System.Threading;
 	using System.Threading.Tasks;
+	using LinqToDB.Common;
 	using LinqToDB.Data.DbCommandProcessor;
 	using Model;
 
@@ -983,7 +984,7 @@ namespace Tests.Linq
 			public static implicit operator DtoChildEntityObject?(ChildEntityObject a)
 			{
 				if (a == null) return null;
-				return OwnerImpl().Compile()(a);
+				return OwnerImpl().CompileExpression()(a);
 			}
 
 		}

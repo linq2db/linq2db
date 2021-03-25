@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Data;
 
 namespace LinqToDB.DataProvider.Firebird
 {
@@ -10,7 +10,6 @@ namespace LinqToDB.DataProvider.Firebird
 	using Data;
 	using Mapping;
 	using SqlProvider;
-	using SqlQuery;
 
 	public class FirebirdDataProvider : DynamicDataProviderBase<FirebirdProviderAdapter>
 	{
@@ -129,7 +128,7 @@ namespace LinqToDB.DataProvider.Firebird
 				cancellationToken);
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{

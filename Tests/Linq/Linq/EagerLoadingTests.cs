@@ -205,11 +205,7 @@ namespace Tests.Linq
 
 				var result = new List<MasterClass>();
 
-#if NET472
-				await foreach (var item in (LinqToDB.Async.IAsyncEnumerable<MasterClass>)query)
-#else
 				await foreach (var item in (IAsyncEnumerable<MasterClass>)query)
-#endif
 					result.Add(item);
 
 				var expected = expectedQuery.ToList();
@@ -1009,7 +1005,35 @@ FROM
 			}
 		}
 
-#region issue 1862
+
+		[Test]
+		public void ProjectionWithoutClass([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var (masterRecords, detailRecords) = GenerateData();
+
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			{
+				var query = master.Select(x => new
+					{
+						Details = x.Details.Select(d => d.DetailValue)
+					});
+
+				var result = query.Select(m => m.Details).ToList();
+
+				var expectedQuery = masterRecords.Select(x => new
+				{
+					Details = detailRecords.Where(d => d.MasterId == x.Id1).Select(d => d.DetailValue)
+				});
+
+				var expected = expectedQuery.Select(m => m.Details).ToList();
+
+				AreEqual(expected, result);
+			}
+		}
+
+		#region issue 1862
 		[Table]
 		public partial class Blog
 		{

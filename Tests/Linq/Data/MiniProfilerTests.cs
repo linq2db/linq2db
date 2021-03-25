@@ -638,7 +638,7 @@ namespace Tests.Data
 				}
 
 				// test SqlException handing
-				Assert.IsFalse(SqlServerTransientExceptionDetector.IsHandled(new Exception(), out var errors));
+				Assert.IsFalse(SqlServerTransientExceptionDetector.IsHandled(new InvalidOperationException(), out var errors));
 				Exception? sex = null;
 				try
 				{
@@ -802,7 +802,7 @@ namespace Tests.Data
 				}
 
 				// test SqlException handing
-				Assert.IsFalse(SqlServerTransientExceptionDetector.IsHandled(new Exception(), out var errors));
+				Assert.IsFalse(SqlServerTransientExceptionDetector.IsHandled(new InvalidOperationException(), out var errors));
 				Exception? sex = null;
 				try
 				{

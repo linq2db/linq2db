@@ -11,6 +11,7 @@ using LinqToDB.Async;
 namespace LinqToDB.Linq
 {
 	class PersistentTable<T> : ITable<T>
+		where T : notnull
 	{
 		private readonly IQueryable<T> _query;
 
@@ -61,12 +62,12 @@ namespace LinqToDB.Linq
 			return _query.Provider.Execute<TResult>(expression);
 		}
 
-		public Task<IAsyncEnumerable<TResult>> ExecuteAsyncEnumerable<TResult>(Expression expression, CancellationToken token)
+		public Task<IAsyncEnumerable<TResult>> ExecuteAsyncEnumerable<TResult>(Expression expression, CancellationToken cancellationToken)
 		{
 			throw new NotImplementedException();
 		}
 
-		public Task<TResult> ExecuteAsync<TResult>(Expression expression, CancellationToken token)
+		public Task<TResult> ExecuteAsync<TResult>(Expression expression, CancellationToken cancellationToken)
 		{
 			throw new NotImplementedException();
 		}

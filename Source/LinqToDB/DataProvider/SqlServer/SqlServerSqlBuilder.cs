@@ -31,7 +31,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		StringBuilder AppendOutputTableVariable(SqlTable table)
 		{
-			StringBuilder.Append("@").Append(table.PhysicalName).Append("Output");
+			StringBuilder.Append('@').Append(table.PhysicalName).Append("Output");
 			return StringBuilder;
 		}
 
@@ -48,7 +48,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					AppendOutputTableVariable(insertClause.Into)
 						.Append(" TABLE (");
 					Convert(StringBuilder, identityField.PhysicalName, ConvertType.NameToQueryField);
-					StringBuilder.Append(" ");
+					StringBuilder.Append(' ');
 					BuildCreateTableFieldType(identityField);
 					StringBuilder
 							.AppendLine(")")
@@ -193,7 +193,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			BuildSkipFirst(deleteStatement.SelectQuery);
 
-			StringBuilder.Append(" ");
+			StringBuilder.Append(' ');
 			Convert(StringBuilder, GetTableAlias(table)!, ConvertType.NameToQueryTableAlias);
 			StringBuilder.AppendLine();
 
@@ -282,14 +282,14 @@ namespace LinqToDB.DataProvider.SqlServer
 				if (database == null || schema == null)
 					throw new LinqToDBException("You must specify both schema and database names explicitly for linked server query");
 
-				sb.Append(server).Append(".").Append(database).Append(".").Append(schema).Append(".");
+				sb.Append(server).Append('.').Append(database).Append('.').Append(schema).Append('.');
 			}
 			else if (database != null)
 			{
 				if (schema == null) sb.Append(database).Append("..");
-				else sb.Append(database).Append(".").Append(schema).Append(".");
+				else sb.Append(database).Append('.').Append(schema).Append('.');
 			}
-			else if (schema != null) sb.Append(schema).Append(".");
+			else if (schema != null) sb.Append(schema).Append('.');
 
 			return sb.Append(table);
 		}
@@ -348,7 +348,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			StringBuilder.Append("PRIMARY KEY CLUSTERED (");
 			StringBuilder.Append(string.Join(InlineComma, fieldNames));
-			StringBuilder.Append(")");
+			StringBuilder.Append(')');
 		}
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)

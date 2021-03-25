@@ -133,7 +133,7 @@ CREATE Procedure Person_SelectByKeyLowercase
 	@id int
 AS
 
-SELECT personid, firstname FROM Person WHERE PersonID = @id
+SELECT PersonID, FirstName FROM Person WHERE PersonID = @id
 
 GO
 
@@ -480,6 +480,7 @@ CREATE TABLE AllTypes
 -- SKIP SqlServer.2017 BEGIN
 -- SKIP SqlServer.2019 BEGIN
 -- SKIP SqlServer.2019.SA BEGIN
+-- SKIP SqlServer.2019.FEC BEGIN
 -- SKIP SqlAzure BEGIN
 	datetime2DataType        varchar(50)       NULL,
 	datetimeoffsetDataType   varchar(50)       NULL,
@@ -500,6 +501,7 @@ CREATE TABLE AllTypes
 -- SKIP SqlServer.2017 END
 -- SKIP SqlServer.2019 END
 -- SKIP SqlServer.2019.SA END
+-- SKIP SqlServer.2019.FEC END
 -- SKIP SqlAzure END
 
 ) ON [PRIMARY]
@@ -685,6 +687,7 @@ GO
 -- SKIP SqlServer.2017 BEGIN
 -- SKIP SqlServer.2019 BEGIN
 -- SKIP SqlServer.2019.SA BEGIN
+-- SKIP SqlServer.2019.FEC BEGIN
 -- SKIP SqlAzure BEGIN
 CREATE TABLE LinqDataTypes
 (
@@ -708,6 +711,7 @@ GO
 -- SKIP SqlServer.2017 END
 -- SKIP SqlServer.2019 END
 -- SKIP SqlServer.2019.SA END
+-- SKIP SqlServer.2019.FEC END
 -- SKIP SqlServer.2008 END
 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('TestIdentity') AND type in (N'U'))
@@ -966,7 +970,7 @@ BEGIN
 END
 GO
 
-IF EXISTS (SELECT  schema_name FROM    information_schema.schemata WHERE   schema_name = 'TestSchema')
+IF EXISTS (SELECT  SCHEMA_NAME FROM    INFORMATION_SCHEMA.SCHEMATA WHERE   SCHEMA_NAME = 'TestSchema')
 BEGIN
 	DROP SCHEMA [TestSchema]
 END

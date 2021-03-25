@@ -7,7 +7,7 @@ using System.Threading;
 
 namespace LinqToDB.SqlQuery
 {
-	[DebuggerDisplay("{this}")]
+	[DebuggerDisplay("SQL = {" + nameof(SqlText) + "}")]
 	public class SelectQuery : ISqlTableSource
 	{
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -362,7 +362,7 @@ namespace LinqToDB.SqlQuery
 			dic.Add(this, this);
 
 			sb
-				.Append("(")
+				.Append('(')
 				.Append(SourceID)
 				.Append(") ");
 

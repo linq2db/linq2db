@@ -2241,6 +2241,7 @@ namespace LinqToDB.Data
 		/// <param name="source">Records to insert.</param>
 		/// <returns>Bulk insert operation status.</returns>
 		public static BulkCopyRowsCopied BulkCopy<T>(this ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+			where T : notnull
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
 
@@ -2259,6 +2260,7 @@ namespace LinqToDB.Data
 		/// <param name="source">Records to insert.</param>
 		/// <returns>Bulk insert operation status.</returns>
 		public static BulkCopyRowsCopied BulkCopy<T>(this ITable<T> table, int maxBatchSize, IEnumerable<T> source)
+			where T : notnull
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
 
@@ -2276,6 +2278,7 @@ namespace LinqToDB.Data
 		/// <param name="source">Records to insert.</param>
 		/// <returns>Bulk insert operation status.</returns>
 		public static BulkCopyRowsCopied BulkCopy<T>(this ITable<T> table, IEnumerable<T> source)
+			where T : notnull
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
 
@@ -2360,6 +2363,7 @@ namespace LinqToDB.Data
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Task with bulk insert operation status.</returns>
 		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken = default)
+			where T : notnull
 		{
 			if (table  == null) throw new ArgumentNullException(nameof(table));
 			if (source == null) throw new ArgumentNullException(nameof(source));
@@ -2380,6 +2384,7 @@ namespace LinqToDB.Data
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Task with bulk insert operation status.</returns>
 		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this ITable<T> table, int maxBatchSize, IEnumerable<T> source, CancellationToken cancellationToken = default)
+			where T : notnull
 		{
 			if (table  == null) throw new ArgumentNullException(nameof(table));
 			if (source == null) throw new ArgumentNullException(nameof(source));
@@ -2399,6 +2404,7 @@ namespace LinqToDB.Data
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Task with bulk insert operation status.</returns>
 		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this ITable<T> table, IEnumerable<T> source, CancellationToken cancellationToken = default)
+			where T : notnull
 		{
 			if (table  == null) throw new ArgumentNullException(nameof(table));
 			if (source == null) throw new ArgumentNullException(nameof(source));
@@ -2412,7 +2418,7 @@ namespace LinqToDB.Data
 		#endregion
 
 		#region BulkCopy IAsyncEnumerable async
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 
 		/// <summary>
 		/// Asynchronously performs bulk insert operation.
@@ -2485,6 +2491,7 @@ namespace LinqToDB.Data
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Task with bulk insert operation status.</returns>
 		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken = default)
+		where T: notnull
 		{
 			if (table  == null) throw new ArgumentNullException(nameof(table));
 			if (source == null) throw new ArgumentNullException(nameof(source));
@@ -2505,6 +2512,7 @@ namespace LinqToDB.Data
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Task with bulk insert operation status.</returns>
 		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this ITable<T> table, int maxBatchSize, IAsyncEnumerable<T> source, CancellationToken cancellationToken = default)
+		where T: notnull
 		{
 			if (table  == null) throw new ArgumentNullException(nameof(table));
 			if (source == null) throw new ArgumentNullException(nameof(source));
@@ -2524,6 +2532,7 @@ namespace LinqToDB.Data
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Task with bulk insert operation status.</returns>
 		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this ITable<T> table, IAsyncEnumerable<T> source, CancellationToken cancellationToken = default)
+		where T: notnull
 		{
 			if (table  == null) throw new ArgumentNullException(nameof(table));
 			if (source == null) throw new ArgumentNullException(nameof(source));

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 
 using LinqToDB;
 
@@ -7,10 +6,10 @@ using NUnit.Framework;
 
 namespace Tests.Data
 {
-	using LinqToDB.Data;
-	using Model;
 	using System.Threading;
 	using System.Threading.Tasks;
+	using LinqToDB.Data;
+	using Model;
 
 	[TestFixture]
 	public class TransactionTests : TestBase
@@ -109,6 +108,24 @@ namespace Tests.Data
 
 				if (tid == Thread.CurrentThread.ManagedThreadId)
 					Assert.Inconclusive("Executed synchronously due to lack of async support or there were no underlying async operations");
+			}
+		}
+
+		[Test]
+		public async Task DataConnectionDisposeAsyncTransaction([DataSources(false)] string context)
+		{
+			var tid = Thread.CurrentThread.ManagedThreadId;
+
+			using (var db = new DataConnection(context))
+			{
+				await using (db.BeginTransaction())
+				{
+					// perform synchonously to not mess with DisposeAsync testing
+					db.Insert(new Parent { ParentID = 1010, Value1 = 1010 });
+
+					if (tid == Thread.CurrentThread.ManagedThreadId)
+						Assert.Inconclusive("Executed synchronously due to lack of async support or there were no underlying async operations");
+				}
 			}
 		}
 

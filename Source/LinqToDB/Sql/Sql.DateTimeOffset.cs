@@ -53,7 +53,9 @@ namespace LinqToDB
 				var part    = builder.GetValue<Sql.DateParts>("part");
 				var partStr = DatePartBuilder.DatePartToStr(part);
 				var date    = builder.GetExpression("date");
-				var number  = builder.GetExpression("number");
+				var number  = builder.GetExpression("number", true);
+
+
 				builder.ResultExpression = new SqlFunction(typeof(DateTimeOffset?), builder.Expression,
 					new SqlExpression(partStr, Precedence.Primary), number, date);
 			}
@@ -63,9 +65,9 @@ namespace LinqToDB
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
-				var part    = builder.GetValue<Sql.DateParts>("part");
-				var date    = builder.GetExpression("date");
-				var number  = builder.GetExpression("number");
+				var part   = builder.GetValue<Sql.DateParts>("part");
+				var date   = builder.GetExpression("date");
+				var number = builder.GetExpression("number", true);
 
 				string expStr;
 				switch (part)
@@ -82,7 +84,7 @@ namespace LinqToDB
 					case Sql.DateParts.Second      : expStr = "{0} * Interval '1 Second'";       break;
 					case Sql.DateParts.Millisecond : expStr = "{0} * Interval '1 Millisecond'";  break;
 					default:
-						throw new ArgumentOutOfRangeException();
+						throw new InvalidOperationException($"Unexpected datepart: {part}");
 				}
 
 				builder.ResultExpression = builder.Add(

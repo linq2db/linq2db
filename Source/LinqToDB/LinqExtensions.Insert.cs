@@ -25,6 +25,7 @@ namespace LinqToDB
 		public static TTarget InsertWithOutput<TTarget>(
 			                this ITable<TTarget>      target,
 			[InstantHandle] Expression<Func<TTarget>> setter)
+			where TTarget : notnull
 		{
 			if (target == null) throw new ArgumentNullException(nameof(target));
 			if (setter == null) throw new ArgumentNullException(nameof(setter));
@@ -52,6 +53,7 @@ namespace LinqToDB
 			                this ITable<TTarget>      target,
 			[InstantHandle] Expression<Func<TTarget>> setter,
 							CancellationToken         token = default)
+			where TTarget : notnull
 		{
 			if (target == null) throw new ArgumentNullException(nameof(target));
 			if (setter == null) throw new ArgumentNullException(nameof(setter));
@@ -78,6 +80,7 @@ namespace LinqToDB
 		public static TTarget InsertWithOutput<TTarget>(
 			                this ITable<TTarget> target,
 			[InstantHandle] TTarget              obj)
+			where TTarget : notnull
 		{
 			if (target == null) throw new ArgumentNullException(nameof(target));
 			if (obj    == null) throw new ArgumentNullException(nameof(obj));
@@ -102,9 +105,10 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Inserted record.</returns>
 		public static Task<TTarget> InsertWithOutputAsync<TTarget>(
-			                this ITable<TTarget> target,
-			[InstantHandle] TTarget              obj,
-			CancellationToken                             token = default)
+			           this ITable<TTarget>   target,
+			[InstantHandle] TTarget           obj,
+			                CancellationToken token = default)
+			where TTarget : notnull
 		{
 			if (target == null) throw new ArgumentNullException(nameof(target));
 			if (obj    == null) throw new ArgumentNullException(nameof(obj));
@@ -134,6 +138,7 @@ namespace LinqToDB
 			                this ITable<TTarget>              target,
 			[InstantHandle] Expression<Func<TTarget>>         setter,
 			                Expression<Func<TTarget,TOutput>> outputExpression)
+			where TTarget : notnull
 		{
 			if (target           == null) throw new ArgumentNullException(nameof(target));
 			if (setter           == null) throw new ArgumentNullException(nameof(setter));
@@ -166,6 +171,7 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<TTarget>>         setter,
 			                Expression<Func<TTarget,TOutput>> outputExpression,
 							CancellationToken                 token = default)
+			where TTarget : notnull
 
 		{
 			if (target           == null) throw new ArgumentNullException(nameof(target));
@@ -195,6 +201,7 @@ namespace LinqToDB
 			                this ITable<TTarget>      target,
 			[InstantHandle] Expression<Func<TTarget>> setter,
 			                ITable<TTarget>           outputTable)
+			where TTarget : notnull
 		{
 			if (target      == null) throw new ArgumentNullException(nameof(target));
 			if (setter      == null) throw new ArgumentNullException(nameof(setter));
@@ -223,6 +230,7 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<TTarget>> setter,
 			                ITable<TTarget>           outputTable,
 							CancellationToken         token = default)
+			where TTarget : notnull
 		{
 			if (target      == null) throw new ArgumentNullException(nameof(target));
 			if (setter      == null) throw new ArgumentNullException(nameof(setter));
@@ -258,6 +266,8 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<TTarget>>         setter,
 			                ITable<TOutput>                   outputTable,
 			                Expression<Func<TTarget,TOutput>> outputExpression)
+			where TOutput : notnull
+			where TTarget : notnull
 		{
 			if (target           == null) throw new ArgumentNullException(nameof(target));
 			if (setter           == null) throw new ArgumentNullException(nameof(setter));
@@ -292,6 +302,8 @@ namespace LinqToDB
 			                ITable<TOutput>                   outputTable,
 			                Expression<Func<TTarget,TOutput>> outputExpression,
 							CancellationToken                 token = default)
+			where TOutput : notnull
+			where TTarget : notnull
 		{
 			if (target           == null) throw new ArgumentNullException(nameof(target));
 			if (setter           == null) throw new ArgumentNullException(nameof(setter));
@@ -330,6 +342,7 @@ namespace LinqToDB
 			                this IQueryable<TSource>          source,
 			                ITable<TTarget>                   target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter)
+			where TTarget : notnull
 		{
 			if (source           == null) throw new ArgumentNullException(nameof(source));
 			if (target           == null) throw new ArgumentNullException(nameof(target));
@@ -361,6 +374,7 @@ namespace LinqToDB
 			                ITable<TTarget>                    target,
 			[InstantHandle] Expression<Func<TSource, TTarget>> setter,
 							CancellationToken                  token = default)
+			where TTarget : notnull
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (target == null) throw new ArgumentNullException(nameof(target));
@@ -395,6 +409,7 @@ namespace LinqToDB
 			                ITable<TTarget>                   target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter,
 			                Expression<Func<TTarget,TOutput>> outputExpression)
+			where TTarget : notnull
 		{
 			if (source           == null) throw new ArgumentNullException(nameof(source));
 			if (target           == null) throw new ArgumentNullException(nameof(target));
@@ -432,6 +447,7 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter,
 			                Expression<Func<TTarget,TOutput>> outputExpression,
 							CancellationToken                 token = default)
+			where TTarget : notnull
 		{
 			if (source           == null) throw new ArgumentNullException(nameof(source));
 			if (target           == null) throw new ArgumentNullException(nameof(target));
@@ -464,8 +480,8 @@ namespace LinqToDB
 			                this IQueryable<TSource>          source,
 			                ITable<TTarget>                   target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter,
-			                ITable<TTarget>                   outputTable
-			)
+			                ITable<TTarget>                   outputTable)
+			where TTarget : notnull
 		{
 			if (source      == null) throw new ArgumentNullException(nameof(source));
 			if (target      == null) throw new ArgumentNullException(nameof(target));
@@ -499,6 +515,7 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter,
 			                ITable<TTarget>                   outputTable,
 							CancellationToken                 token = default)
+			where TTarget : notnull
 		{
 			if (source      == null) throw new ArgumentNullException(nameof(source));
 			if (target      == null) throw new ArgumentNullException(nameof(target));
@@ -539,6 +556,8 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter,
 			                ITable<TOutput>                   outputTable,
 			                Expression<Func<TTarget,TOutput>> outputExpression)
+			where TOutput : notnull
+			where TTarget : notnull
 		{
 			if (source           == null) throw new ArgumentNullException(nameof(source));
 			if (target           == null) throw new ArgumentNullException(nameof(target));
@@ -578,6 +597,8 @@ namespace LinqToDB
 			                ITable<TOutput>                   outputTable,
 			                Expression<Func<TTarget,TOutput>> outputExpression,
 							CancellationToken                 token = default)
+			where TOutput : notnull
+			where TTarget : notnull
 		{
 			if (source           == null) throw new ArgumentNullException(nameof(source));
 			if (target           == null) throw new ArgumentNullException(nameof(target));
@@ -658,6 +679,7 @@ namespace LinqToDB
 		public static int InsertWithOutputInto<TSource,TTarget>(
 			this ISelectInsertable<TSource,TTarget> source,
 			     ITable<TTarget>                    outputTable)
+			where TTarget : notnull
 		{
 			if (source      == null) throw new ArgumentNullException(nameof(source));
 			if (outputTable == null) throw new ArgumentNullException(nameof(outputTable));
@@ -684,6 +706,7 @@ namespace LinqToDB
 			this ISelectInsertable<TSource,TTarget> source,
 			     ITable<TTarget>                    outputTable,
 			     CancellationToken                  token = default)
+			where TTarget : notnull
 
 		{
 			if (source      == null) throw new ArgumentNullException(nameof(source));

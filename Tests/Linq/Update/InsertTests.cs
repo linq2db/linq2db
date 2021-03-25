@@ -10,7 +10,6 @@ using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
-using Tests.Tools;
 
 #region ReSharper disable
 // ReSharper disable ConvertToConstant.Local
@@ -18,8 +17,8 @@ using Tests.Tools;
 
 namespace Tests.xUpdate
 {
-	using Model;
 	using System.Collections.Generic;
+	using Model;
 
 	[TestFixture]
 	[Order(10000)]

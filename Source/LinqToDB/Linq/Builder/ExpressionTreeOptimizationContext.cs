@@ -496,10 +496,22 @@ namespace LinqToDB.Linq.Builder
 			result = expression.Transform(expr =>
 			{
 				if (_exposedCache.TryGetValue(expr, out var aleradyExposed))
-					return new TransformInfo(aleradyExposed, true); 
+					return new TransformInfo(aleradyExposed, true);
 
 				switch (expr.NodeType)
 				{
+					case ExpressionType.ArrayLength:
+						{
+							var ue = (UnaryExpression)expr;
+							var ll = Expressions.ConvertMember(MappingSchema, ue.Operand?.Type, ue.Operand!.Type.GetProperty(nameof(Array.Length))!);
+							if (ll != null)
+							{
+								var ex = СonvertMemberExpression(expr, ue.Operand!, ll);
+
+								return new TransformInfo(ex, false, true);
+							}
+							break;
+						}
 					case ExpressionType.MemberAccess:
 						{
 							var me = (MemberExpression)expr;
@@ -516,32 +528,7 @@ namespace LinqToDB.Linq.Builder
 
 							if (l != null)
 							{
-								var body  = l.Body.Unwrap();
-								var parms = l.Parameters.ToDictionary(p => p);
-								var ex    = body.Transform(wpi =>
-								{
-									if (wpi.NodeType == ExpressionType.Parameter && parms.ContainsKey((ParameterExpression)wpi))
-									{
-										if (wpi.Type.IsSameOrParentOf(me.Expression!.Type))
-										{
-											return me.Expression;
-										}
-
-										if (ExpressionBuilder.DataContextParam.Type.IsSameOrParentOf(wpi.Type))
-										{
-											if (ExpressionBuilder.DataContextParam.Type != wpi.Type)
-												return Expression.Convert(ExpressionBuilder.DataContextParam, wpi.Type);
-											return ExpressionBuilder.DataContextParam;
-										}
-
-										throw new LinqToDBException($"Can't convert {wpi} to expression.");
-									}
-
-									return wpi;
-								});
-
-								if (ex.Type != expr.Type)
-									ex = new ChangeTypeExpression(ex, expr.Type);
+								var ex = СonvertMemberExpression(expr, me.Expression!, l);
 
 								return new TransformInfo(AliasCall(ex, alias!), false, true);
 							}
@@ -618,7 +605,6 @@ namespace LinqToDB.Linq.Builder
 							}
 							break;
 						}
-
 				}
 
 				_exposedCache.Add(expr, expr);
@@ -629,6 +615,37 @@ namespace LinqToDB.Linq.Builder
 			_exposedCache[expression] = result;
 
 			return result;
+
+			static Expression СonvertMemberExpression(Expression expr, Expression root, LambdaExpression l)
+			{
+				var body  = l.Body.Unwrap();
+				var parms = l.Parameters.ToDictionary(p => p);
+				var ex    = body.Transform(wpi =>
+				{
+					if (wpi.NodeType == ExpressionType.Parameter && parms.ContainsKey((ParameterExpression)wpi))
+					{
+						if (wpi.Type.IsSameOrParentOf(root.Type))
+						{
+							return root;
+						}
+
+						if (ExpressionBuilder.DataContextParam.Type.IsSameOrParentOf(wpi.Type))
+						{
+							if (ExpressionBuilder.DataContextParam.Type != wpi.Type)
+								return Expression.Convert(ExpressionBuilder.DataContextParam, wpi.Type);
+							return ExpressionBuilder.DataContextParam;
+						}
+
+						throw new LinqToDBException($"Can't convert {wpi} to expression.");
+					}
+
+					return wpi;
+				});
+
+				if (ex.Type != expr.Type)
+					ex = new ChangeTypeExpression(ex, expr.Type);
+				return ex;
+			}
 		}
 
 		public LambdaExpression? ConvertMethodExpression(Type type, MemberInfo mi, out string? alias)

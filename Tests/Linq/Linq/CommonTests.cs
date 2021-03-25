@@ -186,7 +186,7 @@ namespace Tests.Linq
 		{
 			class Entity
 			{
-				public Test? TestField = null;
+				public Test? TestField;
 			}
 
 			public Test? TestClosure(ITestDataContext db)

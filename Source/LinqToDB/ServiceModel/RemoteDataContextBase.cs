@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NETFRAMEWORK
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
@@ -12,6 +13,7 @@ namespace LinqToDB.ServiceModel
 {
 	using Expressions;
 	using Extensions;
+	using LinqToDB.Common;
 	using Mapping;
 	using SqlProvider;
 
@@ -26,7 +28,7 @@ namespace LinqToDB.ServiceModel
 			public MappingSchema   MappingSchema   = null!;
 		}
 
-		static readonly ConcurrentDictionary<string,ConfigurationInfo> _configurations = new ConcurrentDictionary<string,ConfigurationInfo>();
+		static readonly ConcurrentDictionary<string,ConfigurationInfo> _configurations = new ();
 
 		class RemoteMappingSchema : MappingSchema
 		{
@@ -177,7 +179,7 @@ namespace LinqToDB.ServiceModel
 			return null;
 		}
 
-		static readonly Dictionary<Tuple<Type, SqlProviderFlags>, Func<ISqlBuilder>> _sqlBuilders = new Dictionary<Tuple<Type, SqlProviderFlags>, Func<ISqlBuilder>>();
+		static readonly Dictionary<Tuple<Type, SqlProviderFlags>, Func<ISqlBuilder>> _sqlBuilders = new ();
 
 		Func<ISqlBuilder>? _createSqlProvider;
 
@@ -207,14 +209,14 @@ namespace LinqToDB.ServiceModel
 												Expression.Constant(((IDataContext)this).MappingSchema),
 												Expression.Constant(GetSqlOptimizer()),
 												Expression.Constant(((IDataContext)this).SqlProviderFlags)
-											})).Compile());
+											})).CompileExpression());
 				}
 
 				return _createSqlProvider;
 			}
 		}
 
-		static readonly Dictionary<Tuple<Type, SqlProviderFlags>, Func<ISqlOptimizer>> _sqlOptimizers = new Dictionary<Tuple<Type, SqlProviderFlags>, Func<ISqlOptimizer>>();
+		static readonly Dictionary<Tuple<Type, SqlProviderFlags>, Func<ISqlOptimizer>> _sqlOptimizers = new ();
 
 		Func<ISqlOptimizer>? _getSqlOptimizer;
 
@@ -240,7 +242,7 @@ namespace LinqToDB.ServiceModel
 											new Expression[]
 											{
 												Expression.Constant(((IDataContext)this).SqlProviderFlags)
-											})).Compile());
+											})).CompileExpression());
 				}
 
 				return _getSqlOptimizer;
@@ -331,6 +333,12 @@ namespace LinqToDB.ServiceModel
 			Close();
 		}
 
+		Task IDataContext.CloseAsync()
+		{
+			Close();
+			return TaskEx.CompletedTask;
+		}
+
 		void Close()
 		{
 			OnClosing?.Invoke(this, EventArgs.Empty);
@@ -342,5 +350,23 @@ namespace LinqToDB.ServiceModel
 
 			Close();
 		}
+
+#if !NATIVE_ASYNC
+		public Task DisposeAsync()
+		{
+			Disposed = true;
+
+			return ((IDataContext)this).CloseAsync();
+		}
+#else
+		public ValueTask DisposeAsync()
+		{
+			Disposed = true;
+
+			return new ValueTask(((IDataContext)this).CloseAsync());
+		}
+#endif
+
 	}
 }
+#endif

@@ -5,11 +5,11 @@ variables:
   - name: build_configuration
     value: Azure
   - name: assemblyVersion
-    value: 3.2.3
+    value: 3.3.0
   - name: nugetVersion
-    value: 3.2.3
+    value: 3.3.0
   - name: nugetDevVersion
-    value: 3.2.3
+    value: 3.3.1
   - name: artifact_nugets
     value: nugets
   - name: artifact_linq2db_binaries
@@ -127,7 +127,6 @@ stages:
       displayName: Publish to Azure Artifacts feed
       condition: and(succeeded(), eq(variables['Build.SourceBranchName'], 'master'))
 
-# apikey exires around 31/07/2020
     - task: NuGetCommand@2
       inputs:
         command: 'push'

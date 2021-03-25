@@ -6,6 +6,7 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{885042E3-18EA-4927-B1CF-5E0E3DBD1C00}"
 	ProjectSection(SolutionItems) = preProject
 		Build\BuildNuspecs.ps1 = Build\BuildNuspecs.ps1
+		Directory.Packages.props = Directory.Packages.props
 		Build\linq2db.Default.props = Build\linq2db.Default.props
 		Build\linq2db.Providers.props = Build\linq2db.Providers.props
 		Build\linq2db.snk = Build\linq2db.snk
@@ -17,11 +18,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{885042E3
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Source", "Source", "{AF93451E-198C-4A94-8EB4-C330D886E102}"
+	ProjectSection(SolutionItems) = preProject
+		Source\.editorconfig = Source\.editorconfig
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LinqToDB", "Source\LinqToDB\LinqToDB.csproj", "{0E4E9A56-F285-4067-ADAA-392ACB9CAAA7}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{DF8DE665-05A2-4ACF-9799-8FC35E7F1525}"
 	ProjectSection(SolutionItems) = preProject
+		Tests\.editorconfig = Tests\.editorconfig
 		Tests\DataProviders.json = Tests\DataProviders.json
 		Tests\UserDataProviders.json = Tests\UserDataProviders.json
 	EndProjectSection
@@ -566,6 +571,7 @@ Global
 		{8581F094-7096-4041-8072-029EF3E4EE17}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8581F094-7096-4041-8072-029EF3E4EE17}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C1283235-3533-488C-9313-2DAF3A9AD9DF}.Azure|Any CPU.ActiveCfg = Azure|Any CPU
+		{C1283235-3533-488C-9313-2DAF3A9AD9DF}.Azure|Any CPU.Build.0 = Azure|Any CPU
 		{C1283235-3533-488C-9313-2DAF3A9AD9DF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C1283235-3533-488C-9313-2DAF3A9AD9DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C1283235-3533-488C-9313-2DAF3A9AD9DF}.Release|Any CPU.ActiveCfg = Release|Any CPU

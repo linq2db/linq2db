@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
 
 using LinqToDB;
@@ -10,7 +9,6 @@ using NUnit.Framework;
 namespace Tests.Linq
 {
 	using Model;
-	using Tools;
 
 
 	[TestFixture]
@@ -298,10 +296,38 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					   Child. Select(c => new Parent { Value1   = c.ParentID, ParentID = c.ParentID }).Concat(
-					   Parent.Select(c => new Parent { ParentID = c.ParentID                        })),
-					db.Child. Select(c => new Parent { Value1   = c.ParentID, ParentID = c.ParentID }).Concat(
-					db.Parent.Select(c => new Parent { ParentID = c.ParentID                        })));
+					   Child. Select(c => new Parent { Value1 = c.ParentID, ParentID = c.ParentID }).Concat(
+					   Parent.Select(c => new Parent {                      ParentID = c.ParentID })),
+					db.Child. Select(c => new Parent { Value1 = c.ParentID, ParentID = c.ParentID }).Concat(
+					db.Parent.Select(c => new Parent {                      ParentID = c.ParentID })));
+		}
+
+		[Test]
+		public void Concat891([DataSources(TestProvName.AllInformix)] string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					   Child. Select(c => new Parent { Value1 = c.ParentID, ParentID = c.ParentID }).Union(
+					   Parent.Select(c => new Parent {                      ParentID = c.ParentID })).Concat(
+					   Child. Select(c => new Parent { Value1 = c.ParentID, ParentID = c.ParentID })/*.Union(
+					   Parent.Select(c => new Parent {                      ParentID = c.ParentID }))*/),
+					db.Child. Select(c => new Parent { Value1 = c.ParentID, ParentID = c.ParentID }).Union(
+					db.Parent.Select(c => new Parent {                      ParentID = c.ParentID })).Concat(
+					db.Child. Select(c => new Parent { Value1 = c.ParentID, ParentID = c.ParentID })/*.Union(
+					db.Parent.Select(c => new Parent {                      ParentID = c.ParentID }))*/),
+					sort: x => x.OrderBy(_ => _.ParentID).ThenBy(_ => _.Value1));
+		}
+
+		[Test]
+		public void Concat892([DataSources(TestProvName.AllInformix)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Child.Select(c => new Parent {Value1 = c.ParentID, ParentID = c.ParentID})
+				.Union(db.Parent.Select(c => new Parent {                     ParentID = c.ParentID}))
+				.Concat(db.Child.Select(c => new Parent {Value1 = c.ParentID, ParentID = c.ParentID}));
+
+			AssertQuery(query);
 		}
 
 		[Test]

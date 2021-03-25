@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NETFRAMEWORK
+using System;
 using System.ServiceModel;
 
 namespace LinqToDB.ServiceModel.Async
@@ -34,3 +35,4 @@ namespace LinqToDB.ServiceModel.Async
 		int EndExecuteBatch(IAsyncResult result);
 	}
 }
+#endif

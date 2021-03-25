@@ -96,22 +96,21 @@ namespace LinqToDB.DataProvider.DB2
 
 		static void ConvertDateTimeToSql(StringBuilder stringBuilder, SqlDataType type, DateTime value)
 		{
-			stringBuilder.Append("'");
+			stringBuilder.Append('\'');
 			if (type.Type.DataType == DataType.Date || "date".Equals(type.Type.DbType, StringComparison.OrdinalIgnoreCase))
 				stringBuilder.Append(value.ToString("yyyy-MM-dd-HH.mm.ss"));
 			else
 				stringBuilder.Append(value.ToString(GetTimestampFormat(type)));
-			stringBuilder.Append("'");
+			stringBuilder.Append('\'');
 		}
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
 		{
 			stringBuilder.Append("BX'");
 
-			foreach (var b in value)
-				stringBuilder.Append(b.ToString("X2"));
+			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
 
-			stringBuilder.Append("'");
+			stringBuilder.Append('\'');
 		}
 
 		static void AppendConversion(StringBuilder stringBuilder, int value)
@@ -119,7 +118,7 @@ namespace LinqToDB.DataProvider.DB2
 			stringBuilder
 				.Append("chr(")
 				.Append(value)
-				.Append(")")
+				.Append(')')
 				;
 		}
 

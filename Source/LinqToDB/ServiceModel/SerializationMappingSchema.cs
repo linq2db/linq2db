@@ -1,4 +1,5 @@
-﻿namespace LinqToDB.ServiceModel
+﻿#if NETFRAMEWORK
+namespace LinqToDB.ServiceModel
 {
 	using LinqToDB.Common;
 	using Mapping;
@@ -69,3 +70,4 @@
 		}
 	}
 }
+#endif

@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 using Newtonsoft.Json;
@@ -34,7 +33,7 @@ namespace Tests.UserTests
 			ms.SetConverter<ITest1, string>(favs => JsonConvert.SerializeObject(favs));
 			ms.SetConverter<ITest1, DataParameter>(obj =>
 				new DataParameter { Value = JsonConvert.SerializeObject(obj), DataType = DataType.NVarChar });
-			ms.SetConverter<string, ITest1>(favs => { return JsonConvert.DeserializeObject<ITest1>(favs); });
+			ms.SetConverter<string, ITest1>(favs => { return JsonConvert.DeserializeObject<ITest1>(favs)!; });
 
 
 			using (var db = GetDataContext(context, ms))

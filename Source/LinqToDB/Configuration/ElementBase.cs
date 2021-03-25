@@ -1,3 +1,4 @@
+﻿#if NETFRAMEWORK
 using System;
 using System.Collections.Specialized;
 using System.Configuration;
@@ -39,3 +40,4 @@ namespace LinqToDB.Configuration
 		public   NameValueCollection  Attributes { get; } = new NameValueCollection(StringComparer.OrdinalIgnoreCase);
 	}
 }
+#endif

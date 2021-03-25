@@ -7,6 +7,7 @@ using System.Reflection;
 namespace LinqToDB.Reflection
 {
 	using Extensions;
+	using LinqToDB.Common;
 
 	public class TypeAccessor<T> : TypeAccessor
 	{
@@ -33,11 +34,11 @@ namespace LinqToDB.Reflection
 
 					var body = Expression.Call(null, ((MethodCallExpression)mi.Body).Method);
 
-					_createInstance = Expression.Lambda<Func<T>>(body).Compile();
+					_createInstance = Expression.Lambda<Func<T>>(body).CompileExpression();
 				}
 				else
 				{
-					_createInstance = Expression.Lambda<Func<T>>(Expression.New(ctor)).Compile();
+					_createInstance = Expression.Lambda<Func<T>>(Expression.New(ctor)).CompileExpression();
 				}
 			}
 
@@ -48,7 +49,7 @@ namespace LinqToDB.Reflection
 			//
 			if (!type.IsInterface && !type.IsArray)
 			{
-				var interfaceMethods = type.GetInterfaces().SelectMany(ti => type.GetInterfaceMap(ti).TargetMethods)
+				var interfaceMethods = type.GetInterfaces().SelectMany(ti => type.GetInterfaceMapEx(ti).TargetMethods)
 					.ToList();
 
 				if (interfaceMethods.Count > 0)

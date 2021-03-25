@@ -8,7 +8,12 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Data
 {
-	public class DataReaderAsync : IDisposable
+	public class DataReaderAsync : IDisposable,
+#if NATIVE_ASYNC
+		IAsyncDisposable
+#else
+		Async.IAsyncDisposable
+#endif
 	{
 		public   CommandInfo?      CommandInfo       { get; set; }
 		public   DbDataReader?     Reader            { get; set; }
@@ -25,7 +30,7 @@ namespace LinqToDB.Data
 
 				if (CommandInfo?.DataConnection.TraceSwitchConnection.TraceInfo == true)
 				{
-					CommandInfo.DataConnection.OnTraceConnection(new TraceInfo(CommandInfo.DataConnection, TraceInfoStep.Completed)
+					CommandInfo.DataConnection.OnTraceConnection(new TraceInfo(CommandInfo.DataConnection, TraceInfoStep.Completed, TraceOperation.ExecuteReader, false)
 					{
 						TraceLevel      = TraceLevel.Info,
 						Command         = CommandInfo.DataConnection.GetCurrentCommand(),
@@ -38,6 +43,42 @@ namespace LinqToDB.Data
 
 			OnDispose?.Invoke();
 		}
+
+#if NETSTANDARD2_1PLUS
+		public async ValueTask DisposeAsync()
+		{
+			if (Reader != null)
+			{
+				await Reader.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
+				if (CommandInfo?.DataConnection.TraceSwitchConnection.TraceInfo == true)
+				{
+					CommandInfo.DataConnection.OnTraceConnection(new TraceInfo(CommandInfo.DataConnection, TraceInfoStep.Completed, TraceOperation.ExecuteReader, true)
+					{
+						TraceLevel      = TraceLevel.Info,
+						Command         = CommandInfo.DataConnection.GetCurrentCommand(),
+						StartTime       = StartedOn,
+						ExecutionTime   = Stopwatch.Elapsed,
+						RecordsAffected = ReadNumber,
+					});
+				}
+			}
+
+			OnDispose?.Invoke();
+		}
+#elif NATIVE_ASYNC
+		public ValueTask DisposeAsync()
+		{
+			Dispose();
+			return default;
+		}
+#else
+		public Task DisposeAsync()
+		{
+			Dispose();
+			return TaskEx.CompletedTask;
+		}
+#endif
 
 		#region Query with object reader
 

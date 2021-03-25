@@ -90,7 +90,7 @@ namespace LinqToDB.DataProvider.Informix
 			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		protected override async Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T>           table,
 			BulkCopyOptions     options,
@@ -103,8 +103,8 @@ namespace LinqToDB.DataProvider.Informix
 
 				if (connection != null)
 				{
-					var enumerator = source.GetAsyncEnumerator();
-					await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+					var enumerator = source.GetAsyncEnumerator(cancellationToken);
+					await using (enumerator.ConfigureAwait(Configuration.ContinueOnCapturedContext))
 					{
 						// call the synchronous provider-specific implementation
 						var syncSource = EnumerableHelper.AsyncToSyncEnumerable(enumerator);
@@ -130,7 +130,7 @@ namespace LinqToDB.DataProvider.Informix
 			}
 
 			return await MultipleRowsCopyAsync(table, options, source, cancellationToken)
-				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 		}
 #endif
 
@@ -141,6 +141,7 @@ namespace LinqToDB.DataProvider.Informix
 			DataConnection                          dataConnection,
 			IDbConnection                           connection,
 			InformixProviderAdapter.BulkCopyAdapter bulkCopy)
+			where T: notnull
 		{
 			var ed      = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
 			var columns = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
@@ -210,7 +211,7 @@ namespace LinqToDB.DataProvider.Informix
 				return base.MultipleRowsCopyAsync(table, options, source, cancellationToken);
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{

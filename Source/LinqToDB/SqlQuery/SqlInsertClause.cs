@@ -8,10 +8,12 @@ namespace LinqToDB.SqlQuery
 	{
 		public SqlInsertClause()
 		{
-			Items = new List<SqlSetExpression>();
+			Items        = new List<SqlSetExpression>();
+			DefaultItems = new List<SqlSetExpression>();
 		}
 
 		public List<SqlSetExpression> Items        { get; }
+		public List<SqlSetExpression> DefaultItems { get; }
 		public SqlTable?              Into         { get; set; }
 		public bool                   WithIdentity { get; set; }
 
@@ -76,9 +78,13 @@ namespace LinqToDB.SqlQuery
 
 			sb.AppendLine();
 
-			foreach (var e in Items)
+			var items = Items;
+			if (items.Count == 0)
+				items = DefaultItems;
+
+			foreach (var e in items)
 			{
-				sb.Append("\t");
+				sb.Append('\t');
 				((IQueryElement)e).ToString(sb, dic);
 				sb.AppendLine();
 			}

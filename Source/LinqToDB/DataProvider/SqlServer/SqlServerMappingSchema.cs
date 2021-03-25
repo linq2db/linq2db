@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Data.Linq;
 using System.Data.SqlTypes;
 using System.IO;
@@ -85,13 +85,13 @@ namespace LinqToDB.DataProvider.SqlServer
 				var p = Expression.Parameter(@from);
 
 				return Expression.Lambda(
-					Expression.Call(to, "Parse", new Type[0],
+					Expression.Call(to, "Parse", Array<Type>.Empty,
 						Expression.New(
 							MemberHelper.ConstructorOf(() => new SqlString("")),
 							Expression.Call(
 								Expression.Convert(p, typeof(object)),
 								"ToString",
-								new Type[0]))),
+								Array<Type>.Empty))),
 					p);
 			}
 
@@ -209,10 +209,9 @@ namespace LinqToDB.DataProvider.SqlServer
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
 		{
 			stringBuilder.Append("0x");
-
-			foreach (var b in value)
-				stringBuilder.Append(b.ToString("X2"));
+			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
 		}
+		
 	}
 
 	public class SqlServer2000MappingSchema : MappingSchema
@@ -262,6 +261,21 @@ namespace LinqToDB.DataProvider.SqlServer
 	{
 		public SqlServer2012MappingSchema()
 			: base(ProviderName.SqlServer2012, SqlServerMappingSchema.Instance)
+		{
+			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
+			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => SqlServerMappingSchema.ConvertDateTimeToSql(sb, dt, (DateTime)v));
+		}
+
+		public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
+		{
+			return SqlServerMappingSchema.Instance.TryGetConvertExpression(@from, to);
+		}
+	}
+
+	public class SqlServer2016MappingSchema : MappingSchema
+	{
+		public SqlServer2016MappingSchema()
+			: base(ProviderName.SqlServer2016, SqlServerMappingSchema.Instance)
 		{
 			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => SqlServerMappingSchema.ConvertDateTimeToSql(sb, dt, (DateTime)v));

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -11,7 +12,6 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
-	using System.Diagnostics;
 	using Async;
 	using Builder;
 	using Common;
@@ -82,7 +82,7 @@ namespace LinqToDB.Linq
 			if (_queryableAccessorDic.TryGetValue(expr, out var e))
 				return _queryableAccessorList.IndexOf(e);
 
-			e = new QueryableAccessor { Accessor = qe.Compile() };
+			e = new QueryableAccessor { Accessor = qe.CompileExpression() };
 			e.Queryable = e.Accessor(expr);
 
 			_queryableAccessorDic. Add(expr, e);
@@ -148,7 +148,7 @@ namespace LinqToDB.Linq
 					Expression.Convert(convExpr.GetBody(Expression.Convert(convParam, valueType)), typeof(object)),
 					convParam);
 
-				converter = lex.Compile();
+				converter = lex.CompileExpression();
 
 				_enumConverters.GetOrAdd(valueType, converter);
 			}

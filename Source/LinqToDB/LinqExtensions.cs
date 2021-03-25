@@ -33,6 +33,7 @@ namespace LinqToDB
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> TableName<T>(this ITable<T> table, [SqlQueryDependent] string name)
+			where T : notnull
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
 			if (name  == null) throw new ArgumentNullException(nameof(name));
@@ -55,6 +56,7 @@ namespace LinqToDB
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> DatabaseName<T>(this ITable<T> table, [SqlQueryDependent] string name)
+			where T : notnull
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
 			if (name  == null) throw new ArgumentNullException(nameof(name));
@@ -75,6 +77,7 @@ namespace LinqToDB
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> ServerName<T>(this ITable<T> table, [SqlQueryDependent] string name)
+			where T : notnull
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
 			if (name  == null) throw new ArgumentNullException(nameof(name));
@@ -95,6 +98,7 @@ namespace LinqToDB
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> SchemaName<T>(this ITable<T> table, [SqlQueryDependent] string name)
+			where T : notnull
 		{
 			var result = ((ITableMutable<T>)table).ChangeSchemaName(name);
 			return result;
@@ -117,6 +121,7 @@ namespace LinqToDB
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> WithTableExpression<T>(this ITable<T> table, [SqlQueryDependent] string expression)
+			where T : notnull
 		{
 			if (expression == null) throw new ArgumentNullException(nameof(expression));
 
@@ -143,6 +148,7 @@ namespace LinqToDB
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> With<T>(this ITable<T> table, [SqlQueryDependent] string args)
+			where T : notnull
 		{
 			if (args == null) throw new ArgumentNullException(nameof(args));
 
@@ -174,7 +180,7 @@ namespace LinqToDB
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			if (selector    == null) throw new ArgumentNullException(nameof(selector));
 
-			var q = new Table<T>(dataContext, selector);
+			var q = new ExpressionQueryImpl<T>(dataContext, selector);
 
 			foreach (var item in q)
 				return item;
@@ -198,7 +204,7 @@ namespace LinqToDB
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			if (selector    == null) throw new ArgumentNullException(nameof(selector));
 
-			var q = new Table<T>(dataContext, selector);
+			var q = new ExpressionQueryImpl<T>(dataContext, selector);
 
 			var read = false;
 			var item = default(T)!; // this is fine, as we never return it
@@ -332,6 +338,7 @@ namespace LinqToDB
 			                this IQueryable<TSource>          source,
 			                ITable<TTarget>                   target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter)
+			where TTarget : notnull
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (target == null) throw new ArgumentNullException(nameof(target));
@@ -361,6 +368,7 @@ namespace LinqToDB
 			                ITable<TTarget>                   target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter,
 			CancellationToken                                 token = default)
+			where TTarget : notnull
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (target == null) throw new ArgumentNullException(nameof(target));
@@ -901,6 +909,7 @@ namespace LinqToDB
 		public static int Insert<T>(
 			                this ITable<T>      target,
 			[InstantHandle] Expression<Func<T>> setter)
+			where T : notnull
 		{
 			if (target == null) throw new ArgumentNullException(nameof(target));
 			if (setter == null) throw new ArgumentNullException(nameof(setter));
@@ -928,6 +937,7 @@ namespace LinqToDB
 			                this ITable<T>      target,
 			[InstantHandle] Expression<Func<T>> setter,
 			CancellationToken                   token = default)
+			where T : notnull
 		{
 			if (target == null) throw new ArgumentNullException(nameof(target));
 			if (setter == null) throw new ArgumentNullException(nameof(setter));
@@ -957,6 +967,7 @@ namespace LinqToDB
 		public static object InsertWithIdentity<T>(
 			                this ITable<T>      target,
 			[InstantHandle] Expression<Func<T>> setter)
+			where T : notnull
 		{
 			if (target == null) throw new ArgumentNullException(nameof(target));
 			if (setter == null) throw new ArgumentNullException(nameof(setter));
@@ -982,6 +993,7 @@ namespace LinqToDB
 		public static int InsertWithInt32Identity<T>(
 			                this ITable<T>      target,
 			[InstantHandle] Expression<Func<T>> setter)
+			where T : notnull
 		{
 			return target.DataContext.MappingSchema.ChangeTypeTo<int>(InsertWithIdentity(target, setter));
 		}
@@ -996,6 +1008,7 @@ namespace LinqToDB
 		public static long InsertWithInt64Identity<T>(
 			                this ITable<T>      target,
 			[InstantHandle] Expression<Func<T>> setter)
+			where T : notnull
 		{
 			return target.DataContext.MappingSchema.ChangeTypeTo<long>(InsertWithIdentity(target, setter));
 		}
@@ -1010,6 +1023,7 @@ namespace LinqToDB
 		public static decimal InsertWithDecimalIdentity<T>(
 			                this ITable<T>      target,
 			[InstantHandle] Expression<Func<T>> setter)
+			where T : notnull
 		{
 			return target.DataContext.MappingSchema.ChangeTypeTo<decimal>(InsertWithIdentity(target, setter));
 		}
@@ -1026,6 +1040,7 @@ namespace LinqToDB
 			                this ITable<T>      target,
 			[InstantHandle] Expression<Func<T>> setter,
 			CancellationToken                   token = default)
+			where T : notnull
 		{
 			if (target == null) throw new ArgumentNullException(nameof(target));
 			if (setter == null) throw new ArgumentNullException(nameof(setter));
@@ -1056,7 +1071,8 @@ namespace LinqToDB
 		public static async Task<int> InsertWithInt32IdentityAsync<T>(
 			                this ITable<T>      target,
 			[InstantHandle] Expression<Func<T>> setter,
-			CancellationToken                            token = default)
+			CancellationToken                   token = default)
+			where T : notnull
 		{
 			return target.DataContext.MappingSchema.ChangeTypeTo<int>(await InsertWithIdentityAsync(target, setter, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext));
 		}
@@ -1072,7 +1088,8 @@ namespace LinqToDB
 		public static async Task<long> InsertWithInt64IdentityAsync<T>(
 			                this ITable<T>      target,
 			[InstantHandle] Expression<Func<T>> setter,
-			CancellationToken                            token = default)
+			CancellationToken                   token = default)
+			where T : notnull
 		{
 			return target.DataContext.MappingSchema.ChangeTypeTo<long>(await InsertWithIdentityAsync(target, setter, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext));
 		}
@@ -1088,7 +1105,8 @@ namespace LinqToDB
 		public static async Task<decimal> InsertWithDecimalIdentityAsync<T>(
 			                this ITable<T>      target,
 			[InstantHandle] Expression<Func<T>> setter,
-			CancellationToken                            token = default)
+			CancellationToken                   token = default)
+			where T : notnull
 		{
 			return target.DataContext.MappingSchema.ChangeTypeTo<decimal>(await InsertWithIdentityAsync(target, setter, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext));
 		}
@@ -1120,6 +1138,7 @@ namespace LinqToDB
 		[LinqTunnel]
 		[Pure]
 		public static IValueInsertable<T> Into<T>(this IDataContext dataContext, ITable<T> target)
+			where T : notnull
 		{
 			if (target == null) throw new ArgumentNullException(nameof(target));
 
@@ -1149,6 +1168,7 @@ namespace LinqToDB
 			                this ITable<T>         source,
 			[InstantHandle] Expression<Func<T,TV>> field,
 			[InstantHandle] Expression<Func<TV>>   value)
+			where T : notnull
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (field  == null) throw new ArgumentNullException(nameof(field));
@@ -1180,6 +1200,7 @@ namespace LinqToDB
 			                this ITable<T>         source,
 			[InstantHandle] Expression<Func<T,TV>> field,
 			TV                                     value)
+			where T : notnull
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (field  == null) throw new ArgumentNullException(nameof(field));
@@ -1456,6 +1477,7 @@ namespace LinqToDB
 			                this IQueryable<TSource>          source,
 			                ITable<TTarget>                   target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter)
+			where TTarget : notnull
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (target == null) throw new ArgumentNullException(nameof(target));
@@ -1486,6 +1508,7 @@ namespace LinqToDB
 			                ITable<TTarget>                   target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter,
 			CancellationToken                                 token = default)
+			where TTarget : notnull
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (target == null) throw new ArgumentNullException(nameof(target));
@@ -1518,6 +1541,7 @@ namespace LinqToDB
 			                this IQueryable<TSource>          source,
 			                ITable<TTarget>                   target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter)
+			where TTarget : notnull
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (target == null) throw new ArgumentNullException(nameof(target));
@@ -1546,6 +1570,7 @@ namespace LinqToDB
 			                this IQueryable<TSource>          source,
 			                ITable<TTarget>                   target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter)
+			where TTarget : notnull
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (target == null) throw new ArgumentNullException(nameof(target));
@@ -1571,6 +1596,7 @@ namespace LinqToDB
 			                this IQueryable<TSource>          source,
 			                ITable<TTarget>                   target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter)
+			where TTarget : notnull
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (target == null) throw new ArgumentNullException(nameof(target));
@@ -1596,6 +1622,7 @@ namespace LinqToDB
 			                this IQueryable<TSource>          source,
 			                ITable<TTarget>                   target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter)
+			where TTarget : notnull
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (target == null) throw new ArgumentNullException(nameof(target));
@@ -1623,6 +1650,7 @@ namespace LinqToDB
 			                ITable<TTarget>                   target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter,
 			CancellationToken                                 token = default)
+			where TTarget : notnull
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (target == null) throw new ArgumentNullException(nameof(target));
@@ -1658,6 +1686,7 @@ namespace LinqToDB
 			                ITable<TTarget>                   target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter,
 			CancellationToken                                 token = default)
+			where TTarget : notnull
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (target == null) throw new ArgumentNullException(nameof(target));
@@ -1685,6 +1714,7 @@ namespace LinqToDB
 			                ITable<TTarget>                   target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter,
 			CancellationToken                                 token = default)
+			where TTarget : notnull
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (target == null) throw new ArgumentNullException(nameof(target));
@@ -1712,6 +1742,7 @@ namespace LinqToDB
 			                ITable<TTarget>                   target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter,
 			CancellationToken                                 token = default)
+			where TTarget : notnull
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (target == null) throw new ArgumentNullException(nameof(target));
@@ -1763,6 +1794,7 @@ namespace LinqToDB
 		public static ISelectInsertable<TSource,TTarget> Into<TSource,TTarget>(
 			 this IQueryable<TSource> source,
 			 ITable<TTarget>          target)
+			where TTarget : notnull
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (target == null) throw new ArgumentNullException(nameof(target));
@@ -2092,6 +2124,7 @@ namespace LinqToDB
 			                this ITable<T>        target,
 			[InstantHandle] Expression<Func<T>>   insertSetter,
 			[InstantHandle] Expression<Func<T,T>> onDuplicateKeyUpdateSetter)
+			where T : notnull
 		{
 			if (target                     == null) throw new ArgumentNullException(nameof(target));
 			if (insertSetter               == null) throw new ArgumentNullException(nameof(insertSetter));
@@ -2125,6 +2158,7 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<T>>   insertSetter,
 			[InstantHandle] Expression<Func<T,T>> onDuplicateKeyUpdateSetter,
 			CancellationToken                     token = default)
+			where T : notnull
 		{
 			if (target                     == null) throw new ArgumentNullException(nameof(target));
 			if (insertSetter               == null) throw new ArgumentNullException(nameof(insertSetter));
@@ -2166,6 +2200,7 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<T>>   insertSetter,
 			[InstantHandle] Expression<Func<T,T>> onDuplicateKeyUpdateSetter,
 			[InstantHandle] Expression<Func<T>>   keySelector)
+			where T : notnull
 		{
 			if (target                     == null) throw new ArgumentNullException(nameof(target));
 			if (insertSetter               == null) throw new ArgumentNullException(nameof(insertSetter));
@@ -2206,6 +2241,7 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<T,T>> onDuplicateKeyUpdateSetter,
 			[InstantHandle] Expression<Func<T>>   keySelector,
 			CancellationToken                     token = default)
+			where T : notnull
 		{
 			if (target                     == null) throw new ArgumentNullException(nameof(target));
 			if (insertSetter               == null) throw new ArgumentNullException(nameof(insertSetter));
@@ -2247,6 +2283,7 @@ namespace LinqToDB
 		/// Default value: <c>true</c>.</param>
 		/// <returns>Number of affected records. Usually <c>-1</c> as it is not data modification operation.</returns>
 		public static int Drop<T>( this ITable<T> target, bool throwExceptionIfNotExists = true)
+			where T : notnull
 		{
 			if (target == null) throw new ArgumentNullException(nameof(target));
 
@@ -2287,9 +2324,10 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records. Usually <c>-1</c> as it is not data modification operation.</returns>
 		public static async Task<int> DropAsync<T>(
-			 this ITable<T> target,
-			bool                     throwExceptionIfNotExists = true,
-			CancellationToken        token = default)
+			this ITable<T>    target,
+			bool              throwExceptionIfNotExists = true,
+			CancellationToken token = default)
+			where T : notnull
 		{
 			if (target == null) throw new ArgumentNullException(nameof(target));
 
@@ -2340,6 +2378,7 @@ namespace LinqToDB
 		/// <param name="resetIdentity">Performs reset identity column.</param>
 		/// <returns>Number of affected records. Usually <c>-1</c> as it is not data modification operation.</returns>
 		public static int Truncate<T>( this ITable<T> target, bool resetIdentity = true)
+			where T : notnull
 		{
 			if (target == null) throw new ArgumentNullException(nameof(target));
 
@@ -2364,9 +2403,10 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records. Usually <c>-1</c> as it is not data modification operation.</returns>
 		public static async Task<int> TruncateAsync<T>(
-			 this ITable<T> target,
-			bool                     resetIdentity = true,
-			CancellationToken        token         = default)
+			this ITable<T>    target,
+			bool              resetIdentity = true,
+			CancellationToken token         = default)
+			where T : notnull
 		{
 			if (target == null) throw new ArgumentNullException(nameof(target));
 
@@ -3082,12 +3122,12 @@ namespace LinqToDB
 
 		#region AsQueryable
 
-		/// <summary>Converts a generic <see cref="T:System.Collections.Generic.IEnumerable`1" /> to Linq To DB query.</summary>
+		/// <summary>Converts a generic <see cref="IEnumerable{T}" /> to Linq To DB query.</summary>
 		/// <param name="source">A sequence to convert.</param>
 		/// <param name="dataContext">Database connection context.</param>
 		/// <typeparam name="TElement">The type of the elements of <paramref name="source" />.</typeparam>
-		/// <returns>An <see cref="T:System.Linq.IQueryable`1" /> that represents the input sequence.</returns>
-		/// <exception cref="T:System.ArgumentNullException">
+		/// <returns>An <see cref="IQueryable{T}" /> that represents the input sequence.</returns>
+		/// <exception cref="ArgumentNullException">
 		/// <paramref name="source" /> is <see langword="null" />.</exception>
 		public static IQueryable<TElement> AsQueryable<TElement>(
 			[SqlQueryDependent]  this IEnumerable<TElement> source,
@@ -3139,8 +3179,8 @@ namespace LinqToDB
 		/// <summary>
 		/// Defines that sub-query is mandatory for <paramref name="grouping"/> query.
 		/// </summary>
-		/// <typeparam name="TKey">The type of the key of the <see cref="T:System.Linq.IGrouping`2" />.</typeparam>
-		/// <typeparam name="TElement">The type of the values in the <see cref="T:System.Linq.IGrouping`2" />.</typeparam>
+		/// <typeparam name="TKey">The type of the key of the <see cref="IGrouping{TKey, TElement}" />.</typeparam>
+		/// <typeparam name="TElement">The type of the values in the <see cref="IGrouping{TKey, TElement}" />.</typeparam>
 		/// <param name="grouping">Source data query.</param>
 		/// <returns>Query covered in sub-query.</returns>
 		[Pure]
@@ -3186,8 +3226,8 @@ namespace LinqToDB
 		/// <summary>
 		/// Disables grouping guard for particular <paramref name="grouping"/> query.
 		/// </summary>
-		/// <typeparam name="TKey">The type of the key of the <see cref="T:System.Linq.IGrouping`2" />.</typeparam>
-		/// <typeparam name="TElement">The type of the values in the <see cref="T:System.Linq.IGrouping`2" />.</typeparam>
+		/// <typeparam name="TKey">The type of the key of the <see cref="IGrouping{TKey, TElement}" />.</typeparam>
+		/// <typeparam name="TElement">The type of the values in the <see cref="IGrouping{TKey, TElement}" />.</typeparam>
 		/// <param name="grouping">Source data query.</param>
 		/// <returns>Query with suppressed grouping guard.</returns>
 		[Pure]
@@ -3248,8 +3288,8 @@ namespace LinqToDB
 		/// <param name="source1">The first sequence to concatenate.</param>
 		/// <param name="source2">The sequence to concatenate to the first sequence.</param>
 		/// <typeparam name="TSource">The type of the elements of the input sequences.</typeparam>
-		/// <returns>An <see cref="T:System.Linq.IQueryable`1" /> that contains the concatenated elements of the two input sequences.</returns>
-		/// <exception cref="T:System.ArgumentNullException">
+		/// <returns>An <see cref="IQueryable{T}" /> that contains the concatenated elements of the two input sequences.</returns>
+		/// <exception cref="ArgumentNullException">
 		/// <paramref name="source1" /> or <paramref name="source2" /> is <see langword="null" />.</exception>
 		public static IQueryable<TSource> UnionAll<TSource>(
 			 this IQueryable<TSource>  source1,
@@ -3262,11 +3302,11 @@ namespace LinqToDB
 		}
 
 		/// <summary>Produces the set difference of two sequences.</summary>
-		/// <param name="source1">An <see cref="T:System.Linq.IQueryable`1" /> whose elements that are not also in <paramref name="source2" /> will be returned.</param>
-		/// <param name="source2">An <see cref="T:System.Collections.Generic.IEnumerable`1" /> whose elements that also occur in the first sequence will not appear in the returned sequence.</param>
+		/// <param name="source1">An <see cref="IQueryable{T}" /> whose elements that are not also in <paramref name="source2" /> will be returned.</param>
+		/// <param name="source2">An <see cref="IEnumerable{T}" /> whose elements that also occur in the first sequence will not appear in the returned sequence.</param>
 		/// <typeparam name="TSource">The type of the elements of the input sequences.</typeparam>
-		/// <returns>An <see cref="T:System.Linq.IQueryable`1" /> that contains the set difference of the two sequences.</returns>
-		/// <exception cref="T:System.ArgumentNullException">
+		/// <returns>An <see cref="IQueryable{T}" /> that contains the set difference of the two sequences.</returns>
+		/// <exception cref="ArgumentNullException">
 		/// <paramref name="source1" /> or <paramref name="source2" /> is <see langword="null" />.</exception>
 		public static IQueryable<TSource> ExceptAll<TSource>(
 			 this IQueryable<TSource>  source1,
@@ -3287,7 +3327,7 @@ namespace LinqToDB
 		/// <param name="source2">A sequence whose elements that also appear in the first sequence are returned.</param>
 		/// <typeparam name="TSource">The type of the elements of the input sequences.</typeparam>
 		/// <returns>A sequence that contains the set intersection of the two sequences.</returns>
-		/// <exception cref="T:System.ArgumentNullException">
+		/// <exception cref="ArgumentNullException">
 		/// <paramref name="source1" /> or <paramref name="source2" /> is <see langword="null" />.</exception>
 		public static IQueryable<TSource> IntersectAll<TSource>(
 			 this IQueryable<TSource>  source1,
