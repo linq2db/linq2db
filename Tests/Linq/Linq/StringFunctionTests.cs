@@ -836,7 +836,7 @@ namespace Tests.Linq
 							select "," + c.Name, 1, 1, "")
 					};
 
-				q.ToString();
+				TestContext.WriteLine(q.ToString());
 			}
 		}
 

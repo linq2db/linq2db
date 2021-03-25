@@ -536,7 +536,7 @@ namespace Tests.Linq
 			return person.LastName + ", " + person.FirstName;
 		}
 
-		[Sql.Function("SUM", ServerSideOnly = true, IsAggregate = true, ArgIndices = new[]{0})]
+		[Sql.Function("SUM", ServerSideOnly = true, IsAggregate = true, ArgIndices = new[]{1})]
 		public static TItem MySum<TSource,TItem>(this IEnumerable<TSource> src, Expression<Func<TSource,TItem>> value)
 		{
 			throw new InvalidOperationException();

@@ -54,36 +54,23 @@ namespace LinqToDB
 			public string? Server        { get; set; }
 			public int[]?  ArgIndices    { get; set; }
 
-			protected ISqlExpression[] ConvertArgs(MemberInfo member, ISqlExpression[] args)
-			{
-				if (member is MethodInfo method)
-				{
-					if (method.DeclaringType!.IsGenericType)
-						args = args.Concat(method.DeclaringType.GetGenericArguments().Select(t => (ISqlExpression)SqlDataType.GetDataType(t))).ToArray();
-
-					if (method.IsGenericMethod)
-						args = args.Concat(method.GetGenericArguments().Select(t => (ISqlExpression)SqlDataType.GetDataType(t))).ToArray();
-				}
-
-				if (ArgIndices != null)
-				{
-					var idxs = new ISqlExpression[ArgIndices.Length];
-
-					for (var i = 0; i < ArgIndices.Length; i++)
-						idxs[i] = args[ArgIndices[i]];
-
-					return idxs;
-				}
-
-				return args;
-			}
-
-			public virtual void SetTable(ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MemberInfo member, IEnumerable<Expression> arguments, IEnumerable<ISqlExpression> sqlArgs)
+			public virtual void SetTable(ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, Func<Expression, ColumnDescriptor?, ISqlExpression> converter)
 			{
 				table.SqlTableType   = SqlTableType.Function;
-				table.Name           = Name ?? member.Name;
-				table.PhysicalName   = Name ?? member.Name;
-				table.TableArguments = ConvertArgs(member, sqlArgs.ToArray());
+				table.Name           = Name ?? methodCall.Method.Name;
+				table.PhysicalName   = Name ?? methodCall.Method.Name;
+
+				var expressionStr = table.Name;
+				ExpressionAttribute.PrepareParameterValues(methodCall, ref expressionStr, false, out var knownExpressions, out var genericTypes);
+
+				if (string.IsNullOrEmpty(expressionStr))
+					throw new LinqToDBException($"Cannot retrieve Table Function body from expression '{methodCall}'.");
+
+				// Add two fake expressions, TableName and Alias
+				knownExpressions.Insert(0, null);
+				knownExpressions.Insert(0, null);
+
+				table.TableArguments = ExpressionAttribute.PrepareArguments(expressionStr!, ArgIndices, knownExpressions, genericTypes, converter).Skip(2).ToArray();
 
 				if (Schema   != null) table.Schema   = Schema;
 				if (Database != null) table.Database = Database;
