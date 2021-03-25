@@ -25,11 +25,9 @@ namespace LinqToDB.Async
 		private static readonly Type[] _tokenParams            = new Type[] { typeof(CancellationToken) };
 		private static readonly Type[] _beginTransactionParams = new Type[] { typeof(IsolationLevel)   , typeof(CancellationToken) };
 
-		private static readonly ConcurrentDictionary<Type, Func<IDbConnection, IAsyncDbConnection>> _connectionFactories
-			= new ConcurrentDictionary<Type, Func<IDbConnection, IAsyncDbConnection>>();
+		private static readonly ConcurrentDictionary<Type, Func<IDbConnection, IAsyncDbConnection>> _connectionFactories = new ();
 
-		private static readonly ConcurrentDictionary<Type, Func<IDbTransaction, IAsyncDbTransaction>> _transactionFactories
-			= new ConcurrentDictionary<Type, Func<IDbTransaction, IAsyncDbTransaction>>();
+		private static readonly ConcurrentDictionary<Type, Func<IDbTransaction, IAsyncDbTransaction>> _transactionFactories = new ();
 
 #if !NATIVE_ASYNC
 		private static readonly MethodInfo _transactionWrap      = MemberHelper.MethodOf(() => Wrap<IDbTransaction>(default!)).GetGenericMethodDefinition();
@@ -130,17 +128,17 @@ namespace LinqToDB.Async
 			// - DbTransaction (netstandard2.1, netcoreapp3.0)
 			// - Npgsql 4.1.2+
 #if !NATIVE_ASYNC
-			var disposeAsync  = CreateDelegate<Func<IDbConnection               ,      Task>, IDbConnection >(type, "DisposeAsync" , Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, true , false)
+			var disposeAsync  = CreateDelegate<Func<IDbTransaction               ,      Task>, IDbTransaction>(type, "DisposeAsync" , Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, true , false)
 #else
-			var disposeAsync  = CreateDelegate<Func<IDbConnection               , ValueTask>, IDbConnection >(type, "DisposeAsync" , Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, true , true )
+			var disposeAsync  = CreateDelegate<Func<IDbTransaction               , ValueTask>, IDbTransaction>(type, "DisposeAsync" , Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, true , true )
 #endif
 			// Task DisposeAsync()
 			// Availability:
 			// - MySqlConnector 0.57+
 #if !NATIVE_ASYNC
-							 ?? CreateDelegate<Func<IDbConnection               ,      Task>, IDbConnection >(type, "DisposeAsync" , Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, false, false);
+							 ?? CreateDelegate<Func<IDbTransaction               ,      Task>, IDbTransaction>(type, "DisposeAsync" , Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, false, false);
 #else
-							 ?? CreateDelegate<Func<IDbConnection               , ValueTask>, IDbConnection >(type, "DisposeAsync" , Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, false, true );
+							 ?? CreateDelegate<Func<IDbTransaction               , ValueTask>, IDbTransaction>(type, "DisposeAsync" , Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, false, true );
 #endif
 
 			if (commitAsync      != null

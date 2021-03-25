@@ -52,13 +52,12 @@ namespace LinqToDB.Data
 					if (value != null && Configuration.Linq.TraceMapperExpression &&
 					    _dataConnection.TraceSwitchConnection.TraceInfo)
 					{
-						_dataConnection.OnTraceConnection(new TraceInfo(_dataConnection, TraceInfoStep.MapperCreated)
+						_dataConnection.OnTraceConnection(new TraceInfo(_dataConnection, TraceInfoStep.MapperCreated, TraceOperation.BuildMapping, _isAsync)
 						{
 							TraceLevel       = TraceLevel.Info,
 							MapperExpression = MapperExpression,
 							StartTime        = _startedOn,
-							ExecutionTime    = _stopwatch.Elapsed,
-							IsAsync          = _isAsync,
+							ExecutionTime    = _stopwatch.Elapsed
 						});
 					}
 				}
@@ -124,19 +123,43 @@ namespace LinqToDB.Data
 
 				if (_dataConnection.TraceSwitchConnection.TraceInfo)
 				{
-					_dataConnection.OnTraceConnection(new TraceInfo(_dataConnection, TraceInfoStep.Completed)
+					_dataConnection.OnTraceConnection(new TraceInfo(_dataConnection, TraceInfoStep.Completed, TraceOperation.DisposeQuery, _isAsync)
 					{
 						TraceLevel       = TraceLevel.Info,
 						Command          = _dataConnection.GetCurrentCommand(),
 						MapperExpression = MapperExpression,
 						StartTime        = _startedOn,
 						ExecutionTime    = _stopwatch.Elapsed,
-						RecordsAffected  = RowsCount,
-						IsAsync          = _isAsync,
+						RecordsAffected  = RowsCount
 					});
 				}
 
 				base.Dispose();
+			}
+
+#if !NATIVE_ASYNC
+			public override Task DisposeAsync()
+#else
+			public override ValueTask DisposeAsync()
+#endif
+			{
+				if (_executionScope != null)
+					_executionScope.Dispose();
+
+				if (_dataConnection.TraceSwitchConnection.TraceInfo)
+				{
+					_dataConnection.OnTraceConnection(new TraceInfo(_dataConnection, TraceInfoStep.Completed, TraceOperation.DisposeQuery, _isAsync)
+					{
+						TraceLevel       = TraceLevel.Info,
+						Command          = _dataConnection.GetCurrentCommand(),
+						MapperExpression = MapperExpression,
+						StartTime        = _startedOn,
+						ExecutionTime    = _stopwatch.Elapsed,
+						RecordsAffected  = RowsCount
+					});
+				}
+
+				return base.DisposeAsync();
 			}
 
 			public class CommandWithParameters

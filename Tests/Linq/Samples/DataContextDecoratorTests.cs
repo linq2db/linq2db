@@ -13,6 +13,7 @@ using NUnit.Framework;
 
 namespace Tests.Samples
 {
+	using System.Threading.Tasks;
 	using Model;
 	/// <summary>
 	/// This sample demonstrates how can we use <see cref="IDataContext"/> decoration
@@ -65,9 +66,19 @@ namespace Tests.Samples
 				_context.Close();
 			}
 
+			public Task CloseAsync()
+			{
+				return _context.CloseAsync();
+			}
+
 			public void Dispose()
 			{
 				_context.Dispose();
+			}
+
+			public ValueTask DisposeAsync()
+			{
+				return _context.DisposeAsync();
 			}
 
 			public IQueryRunner GetQueryRunner(Query query, int queryNumber, Expression expression, object?[]? parameters, object?[]? preambles)
