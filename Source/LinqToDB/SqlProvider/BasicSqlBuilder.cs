@@ -242,6 +242,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildDeleteQuery(SqlDeleteStatement deleteStatement)
 		{
+			BuildStep = Step.Tag;           BuildTag(deleteStatement);
 			BuildStep = Step.WithClause;    BuildWithClause(deleteStatement.With);
 			BuildStep = Step.DeleteClause;  BuildDeleteClause(deleteStatement);
 			BuildStep = Step.FromClause;    BuildFromClause(Statement, deleteStatement.SelectQuery);
@@ -254,6 +255,7 @@ namespace LinqToDB.SqlProvider
 
 		protected void BuildDeleteQuery2(SqlDeleteStatement deleteStatement)
 		{
+			BuildStep = Step.Tag;          BuildTag(deleteStatement);
 			BuildStep = Step.DeleteClause; BuildDeleteClause(deleteStatement);
 
 			while (StringBuilder[StringBuilder.Length - 1] == ' ')
@@ -278,6 +280,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildUpdateQuery(SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)
 		{
+			BuildStep = Step.Tag;           BuildTag(statement);
 			BuildStep = Step.WithClause;    BuildWithClause(statement.GetWithClause());
 			BuildStep = Step.UpdateClause;  BuildUpdateClause(Statement, selectQuery, updateClause);
 
@@ -295,7 +298,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildSelectQuery(SqlSelectStatement selectStatement)
 		{
-			BuildStep = Step.Tag;           BuildTag(selectStatement.SelectQuery);
+			BuildStep = Step.Tag;           BuildTag(selectStatement);
 			BuildStep = Step.WithClause;    BuildWithClause(selectStatement.With);
 			BuildStep = Step.SelectClause;  BuildSelectClause(selectStatement.SelectQuery);
 			BuildStep = Step.FromClause;    BuildFromClause(selectStatement, selectStatement.SelectQuery);
@@ -314,6 +317,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildInsertQuery(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
 		{
+			BuildStep = Step.Tag;          BuildTag(statement);
 			BuildStep = Step.WithClause;   BuildWithClause(statement.GetWithClause());
 			BuildStep = Step.InsertClause; BuildInsertClause(statement, insertClause, addAlias);
 
@@ -338,8 +342,8 @@ namespace LinqToDB.SqlProvider
 
 		protected void BuildInsertQuery2(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
 		{
-			BuildStep = Step.InsertClause;
-			BuildInsertClause(statement, insertClause, addAlias);
+			BuildStep = Step.Tag;          BuildTag(statement);
+			BuildStep = Step.InsertClause; BuildInsertClause(statement, insertClause, addAlias);
 
 			AppendIndent().AppendLine("SELECT * FROM");
 			AppendIndent().AppendLine(OpenParens);
@@ -990,6 +994,8 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildTruncateTableStatement(SqlTruncateTableStatement truncateTable)
 		{
+			BuildTag(truncateTable);
+
 			var table = truncateTable.Table;
 
 			AppendIndent();
@@ -2712,9 +2718,9 @@ namespace LinqToDB.SqlProvider
 
 		#region Tag
 
-		protected virtual void BuildTag(SelectQuery selectQuery)
+		protected virtual void BuildTag(SqlStatement statement)
 		{
-			BuildSqlComment(StringBuilder, selectQuery.Tag.Parts, true);
+			BuildSqlComment(StringBuilder, statement.Tag.Parts, true);
 		}
 
 		protected StringBuilder BuildSqlComment(StringBuilder sb, List<string> commentParts, bool supportsMultilineComments)

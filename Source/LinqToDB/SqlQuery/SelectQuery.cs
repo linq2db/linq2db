@@ -25,14 +25,11 @@ namespace LinqToDB.SqlQuery
 			GroupBy = new SqlGroupByClause(this);
 			Having  = new SqlWhereClause  (this);
 			OrderBy = new SqlOrderByClause(this);
-			Tag     = new SqlComment();
 		}
 
 		internal SelectQuery(int id)
 		{
 			SourceID = id;
-
-			Tag = new SqlComment();
 		}
 
 		internal void Init(
@@ -76,9 +73,7 @@ namespace LinqToDB.SqlQuery
 		public SqlWhereClause   Where   { get; private set; } = null!;
 		public SqlGroupByClause GroupBy { get; private set; } = null!;
 		public SqlWhereClause   Having  { get; private set; } = null!;
-		public SqlOrderByClause OrderBy { get; private set; } = null!;
-
-		public SqlComment       Tag     { get; private set; } = null!;
+		public SqlOrderByClause OrderBy { get; private set; } = null!;		
 
 		private List<object>? _properties;
 		public  List<object>   Properties => _properties ??= new List<object>();
@@ -137,7 +132,6 @@ namespace LinqToDB.SqlQuery
 			GroupBy = new SqlGroupByClause(this, clone.GroupBy, objectTree, doClone);
 			Having  = new SqlWhereClause  (this, clone.Having,  objectTree, doClone);
 			OrderBy = new SqlOrderByClause(this, clone.OrderBy, objectTree, doClone);
-			Tag     = (SqlComment)clone.Tag.Clone(objectTree, doClone);
 
 			if (clone.HasSetOperators)
 			{
@@ -371,8 +365,6 @@ namespace LinqToDB.SqlQuery
 				.Append('(')
 				.Append(SourceID)
 				.Append(") ");
-
-			((IQueryElement)Tag).    ToString(sb, dic);
 
 			((IQueryElement)Select). ToString(sb, dic);
 			((IQueryElement)From).   ToString(sb, dic);

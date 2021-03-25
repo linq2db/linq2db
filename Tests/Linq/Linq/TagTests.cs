@@ -3,12 +3,18 @@ using System.Linq;
 using LinqToDB;
 using LinqToDB.Data;
 using NUnit.Framework;
+using Tests.Model;
 
 namespace Tests.Linq
 {
 	[TestFixture]
 	public class TagTests : TestBase
 	{
+		class TestTable
+		{
+			public int ID { get; set; }
+		}
+
 		[Test]
 		public void Test_OneLineComment([DataSources(false)] string context)
 		{
@@ -125,6 +131,89 @@ namespace Tests.Linq
 				var commandSql = ((DataConnection)db).LastQuery!;
 
 				Assert.That(commandSql!.IndexOf(tag), Is.EqualTo(-1));
+			}
+		}
+
+		[Test]
+		public void Test_TagDelete([DataSources] string context)
+		{
+			var tag = "My Test";
+			var expected = "-- " + tag + Environment.NewLine;
+
+			using (var db = GetDataContext(context))
+			{
+				var query = db.Patient.Where(p => p.PersonID == -100).TagQuery(tag);
+				query.Delete();
+
+				var commandSql = ((DataConnection)db).LastQuery!;
+
+				Assert.That(commandSql!.IndexOf(expected), Is.EqualTo(0));
+			}
+		}
+
+		[Test]
+		public void Test_TagUpdate([DataSources] string context)
+		{
+			var tag = "My Test";
+			var expected = "-- " + tag + Environment.NewLine;
+
+			using (var db = GetDataContext(context))
+			{
+				var query = db.Person.TagQuery(tag)
+								.Where(p => p.LastName == "tag update test")
+								.Set(p => p.LastName, "other name");
+
+				query.Update();
+
+				var commandSql = ((DataConnection)db).LastQuery!;
+
+				Assert.That(commandSql!.IndexOf(expected), Is.EqualTo(0));
+			}
+		}
+
+		[Test]
+		public void Test_TagInsert([DataSources] string context)
+		{
+			var tag = "My Test";
+			var expected = "-- " + tag + Environment.NewLine;
+
+			using (var db = GetDataContext(context))
+			{
+				var query = db.Person.TagQuery(tag)
+								.Value(p => p.LastName, "tag insert test")
+								.Value(p => p.FirstName, "first name")
+								.Value(p => p.Gender, Gender.Male);
+
+				query.Insert();
+
+				var commandSql = ((DataConnection)db).LastQuery!;
+
+				// clean
+				db.Person.Where(p => p.LastName == "tag insert test").Delete();
+
+				Assert.That(commandSql!.IndexOf(expected), Is.EqualTo(0));
+			}
+		}
+
+		[Test]
+		public void Test_TagTruncate([DataSources] string context)
+		{
+			var tag = "My Test";
+			var expected = "-- " + tag + Environment.NewLine;
+
+			using (var db = GetDataContext(context))
+			{
+				db.DropTable<TestTable>(throwExceptionIfNotExists: false);
+
+				var table = db.CreateTable<TestTable>();
+
+				var query = db.GetTable<TestTable>().TagQuery(tag);
+
+				query.Truncate();
+
+				var commandSql = ((DataConnection)db).LastQuery!;
+
+				Assert.That(commandSql!.IndexOf(expected), Is.EqualTo(0));
 			}
 		}
 	}

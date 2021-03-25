@@ -240,9 +240,12 @@ namespace LinqToDB.Linq
 
 		internal override void Init(IBuildContext parseContext, List<ParameterAccessor> sqlParameters)
 		{
+			var statement = parseContext.GetResultStatement();
+			statement.Tag.Parts.AddRange(parseContext.Builder.Tag.Parts);
+
 			Queries.Add(new QueryInfo
 			{
-				Statement          = parseContext.GetResultStatement(),
+				Statement          = statement,
 				ParameterAccessors = sqlParameters,
 			});
 		}

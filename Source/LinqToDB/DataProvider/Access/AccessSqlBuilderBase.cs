@@ -302,7 +302,7 @@ namespace LinqToDB.DataProvider.Access
 			throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
 		}
 
-		protected override void BuildTag(SelectQuery selectQuery)
+		protected override void BuildTag(SqlStatement statement)
 		{
 		}
 	}

@@ -3451,6 +3451,32 @@ namespace LinqToDB
 					Expression.Constant(tagValue)));
 		}
 
+		/// <summary>
+		/// Adds a tag comment before generated query for table.
+		/// <code>
+		/// The example below will produce following code before generated query: -- my tag\r\n
+		/// db.Table.TagWith("my tag");
+		/// </code>
+		/// </summary>
+		/// <typeparam name="T">Table record mapping class.</typeparam>
+		/// <param name="table">Table-like query source.</param>
+		/// <param name="tagValue">Tag text to be added as comment before generated query.</param>
+		/// <returns>Table-like query source with tag.</returns>
+		[LinqTunnel]
+		[Pure]
+		public static ITable<T> TagQuery<T>(this ITable<T> table, string tagValue) where T : notnull
+		{
+			if (table == null) throw new ArgumentNullException(nameof(table));
+			if (tagValue == null) throw new ArgumentNullException(nameof(tagValue));
+
+			table.Expression = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(TagQuery, table, tagValue),
+				table.Expression, Expression.Constant(tagValue));
+
+			return table;
+		}
+
 		#endregion
 	}
 }

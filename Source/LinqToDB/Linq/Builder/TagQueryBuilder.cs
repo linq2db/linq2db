@@ -13,7 +13,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (!string.IsNullOrWhiteSpace(tag))
 			{
-				sequence.SelectQuery.Tag.Parts.Add(tag!);
+				builder.Tag.Parts.Add(tag!);
 			}
 
 			return sequence;
