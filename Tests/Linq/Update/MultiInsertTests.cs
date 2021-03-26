@@ -1,4 +1,4 @@
-using LinqToDB;
+﻿using LinqToDB;
 using NUnit.Framework;
 using System;
 using System.Linq;
@@ -17,12 +17,12 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Insert([DataSources(TestProvName.AllOracle)] string context)
+		public void Insert([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);
 			Cleanup(db);
 			try
-			{				
+			{
 				int count = db
 					.SelectQuery(() => new { ID = 1000, N = 42 })
 					.MultiInsert()
@@ -51,12 +51,12 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertAll([DataSources(TestProvName.AllOracle)] string context)
+		public void InsertAll([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);
 			Cleanup(db);
 			try
-			{				
+			{
 				int count = db
 					.SelectQuery(() => new { ID = 1000, N = 42 })
 					.MultiInsert()
@@ -88,12 +88,12 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertFirst([DataSources(TestProvName.AllOracle)] string context)
+		public void InsertFirst([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);
 			Cleanup(db);
 			try
-			{				
+			{
 				int count = db
 					.SelectQuery(() => new { ID = 1000, N = 42 })
 					.MultiInsert()
@@ -123,7 +123,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Parameters([DataSources(TestProvName.AllOracle)] string context)
+		public void Parameters([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);
 			Cleanup(db);
@@ -169,7 +169,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Expressions([DataSources(TestProvName.AllOracle)] string context)
+		public void Expressions([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);
 			Cleanup(db);
@@ -177,7 +177,7 @@ namespace Tests.xUpdate
 			{
 				// Perform a simple INSERT ALL with some expressions
 				int count = InsertAll(
-					() => new TestSource { ID = 3000, N = 42 }, 
+					() => new TestSource { ID = 3000, N = 42 },
 					x  => x.N < 0, 
 					x  => new LinqDataTypes { ID = 3002, GuidValue = Sql.NewGuid() });
 
@@ -202,8 +202,8 @@ namespace Tests.xUpdate
 			}
 
 			int InsertAll(
-				Expression<Func<TestSource>>                source, 
-				Expression<Func<TestSource, bool>>          condition1, 
+				Expression<Func<TestSource>>                source,
+				Expression<Func<TestSource, bool>>          condition1,
 				Expression<Func<TestSource, LinqDataTypes>> setter2)
 			{
 				return db
@@ -226,7 +226,7 @@ namespace Tests.xUpdate
 		class TestSource
 		{
 			public int ID { get; set; }
-			public int N { get; set; }
+			public int N  { get; set; }
 		}
 	}
 }
