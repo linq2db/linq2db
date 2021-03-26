@@ -10,9 +10,10 @@ namespace Tests.Linq
 	[TestFixture]
 	public class TagTests : TestBase
 	{
-		class TestTable
+		class TagTestTable
 		{
 			public int ID { get; set; }
+			public string? Name { get; set; }
 		}
 
 		[Test]
@@ -70,7 +71,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test_MultipleTags([DataSources] string context)
+		public void Test_MultipleTags([DataSources(false)] string context)
 		{
 			var tag1 = "query 1";
 			var tag2 = "query 2";
@@ -92,7 +93,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test_CombinedQuery([DataSources] string context)
+		public void Test_CombinedQuery([DataSources(false)] string context)
 		{
 			var tag1 = "query 1";
 			var tag2 = "query 2";
@@ -135,85 +136,42 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test_TagDelete([DataSources] string context)
+		public void Test_TagInsertUpdateDeleteFlow([DataSources(false)] string context)
 		{
-			var tag = "My Test";
+			var tag = "Wonderful tag";
 			var expected = "-- " + tag + Environment.NewLine;
 
 			using (var db = GetDataContext(context))
 			{
-				var query = db.Patient.Where(p => p.PersonID == -100).TagQuery(tag);
-				query.Delete();
+				db.DropTable<TagTestTable>(throwExceptionIfNotExists: false);
+				var table = db.CreateTable<TagTestTable>();
 
-				var commandSql = ((DataConnection)db).LastQuery!;
+				var insertQuery = db.GetTable<TagTestTable>().TagQuery(tag)
+								.Value(p => p.ID, 100)
+								.Value(p => p.Name, "name");
+				insertQuery.Insert();
+				var insertCommnadSql = ((DataConnection)db).LastQuery!;
 
-				Assert.That(commandSql!.IndexOf(expected), Is.EqualTo(0));
-			}
-		}
+				var updateQuery = db.GetTable<TagTestTable>().TagQuery(tag)
+								.Where(p => p.ID == 100)
+								.Set(p => p.Name, "updated");
+				updateQuery.Update();
+				var updateCommnadSql = ((DataConnection)db).LastQuery!;
 
-		[Test]
-		public void Test_TagUpdate([DataSources] string context)
-		{
-			var tag = "My Test";
-			var expected = "-- " + tag + Environment.NewLine;
+				var deleteQuery = db.GetTable<TagTestTable>().Where(p => p.ID == 100).TagQuery(tag);
+				deleteQuery.Delete();
+				var deleteCommnadSql = ((DataConnection)db).LastQuery!;
 
-			using (var db = GetDataContext(context))
-			{
-				var query = db.Person.TagQuery(tag)
-								.Where(p => p.LastName == "tag update test")
-								.Set(p => p.LastName, "other name");
+				var truncateQuery = db.GetTable<TagTestTable>().TagQuery(tag);
+				truncateQuery.Truncate();
+				var truncateCommnadSql = ((DataConnection)db).LastQuery!;
 
-				query.Update();
+				Assert.That(insertCommnadSql!.IndexOf(expected), Is.EqualTo(0));
+				Assert.That(updateCommnadSql!.IndexOf(expected), Is.EqualTo(0));
+				Assert.That(deleteCommnadSql!.IndexOf(expected), Is.EqualTo(0));
+				Assert.That(truncateCommnadSql!.IndexOf(expected), Is.EqualTo(0));
 
-				var commandSql = ((DataConnection)db).LastQuery!;
-
-				Assert.That(commandSql!.IndexOf(expected), Is.EqualTo(0));
-			}
-		}
-
-		[Test]
-		public void Test_TagInsert([DataSources] string context)
-		{
-			var tag = "My Test";
-			var expected = "-- " + tag + Environment.NewLine;
-
-			using (var db = GetDataContext(context))
-			{
-				var query = db.Person.TagQuery(tag)
-								.Value(p => p.LastName, "tag insert test")
-								.Value(p => p.FirstName, "first name")
-								.Value(p => p.Gender, Gender.Male);
-
-				query.Insert();
-
-				var commandSql = ((DataConnection)db).LastQuery!;
-
-				// clean
-				db.Person.Where(p => p.LastName == "tag insert test").Delete();
-
-				Assert.That(commandSql!.IndexOf(expected), Is.EqualTo(0));
-			}
-		}
-
-		[Test]
-		public void Test_TagTruncate([DataSources] string context)
-		{
-			var tag = "My Test";
-			var expected = "-- " + tag + Environment.NewLine;
-
-			using (var db = GetDataContext(context))
-			{
-				db.DropTable<TestTable>(throwExceptionIfNotExists: false);
-
-				var table = db.CreateTable<TestTable>();
-
-				var query = db.GetTable<TestTable>().TagQuery(tag);
-
-				query.Truncate();
-
-				var commandSql = ((DataConnection)db).LastQuery!;
-
-				Assert.That(commandSql!.IndexOf(expected), Is.EqualTo(0));
+				db.DropTable<TagTestTable>();
 			}
 		}
 	}
