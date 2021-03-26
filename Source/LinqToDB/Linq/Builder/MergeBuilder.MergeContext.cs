@@ -29,10 +29,11 @@ namespace LinqToDB.Linq.Builder
 				Statement = merge;
 			}
 
-			public MergeContext(SqlMergeStatement merge, IBuildContext target, IBuildContext source)
+			public MergeContext(SqlMergeStatement merge, IBuildContext target, TableLikeQueryContext source)
 				: base(null, new[] { target, source }, null)
 			{
-				Statement = merge;
+				Statement    = merge;
+				merge.Source = source.Source;
 			}
 
 			public SqlMergeStatement Merge => (SqlMergeStatement)Statement!;

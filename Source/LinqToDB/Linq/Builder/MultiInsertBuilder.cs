@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -8,13 +8,13 @@ using LinqToDB.SqlQuery;
 namespace LinqToDB.Linq.Builder
 {
 	class MultiInsertBuilder : MethodCallBuilder
-	{		
+	{
 		#region MultiInsertBuilder
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			=> methodCall.Method.DeclaringType == typeof(MultiInsertExtensions);
 
-		private static readonly Dictionary<MethodInfo, Func<ExpressionBuilder, MethodCallExpression, BuildInfo, IBuildContext>> _methodBuilders = new() 
+		private static readonly Dictionary<MethodInfo, Func<ExpressionBuilder, MethodCallExpression, BuildInfo, IBuildContext>> _methodBuilders = new()
 		{
 			{ MultiInsertExtensions.MultiInsertMethodInfo,   BuildMultiInsert },
 			{ MultiInsertExtensions.IntoMethodInfo,          BuildInto        },
@@ -35,10 +35,10 @@ namespace LinqToDB.Linq.Builder
 
 		private static IBuildContext BuildMultiInsert(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{ 
-			// MultiInsert(IQueryable)			
+			// MultiInsert(IQueryable)
 			var sourceContext       = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			var source              = new TableLikeQueryContext(sourceContext);
-			var statement           = new SqlMultiInsertStatement(source.Source);			
+			var statement           = new SqlMultiInsertStatement(source.Source);
 			sourceContext.Statement = statement;
 			
 			return source;
@@ -80,7 +80,7 @@ namespace LinqToDB.Linq.Builder
 				buildInfo,
 				setter,
 				into,
-				(List<SqlSetExpression>)insert.Items,
+				insert.Items,
 				targetContext);
 
 			if (insert.Items.Count == 0)
@@ -93,8 +93,8 @@ namespace LinqToDB.Linq.Builder
 		{ 
 			// Into(IQueryable, ITable, Expression setter)
 			return BuildTargetTable(
-				builder, 
-				buildInfo, 
+				builder,
+				buildInfo,
 				false,
 				methodCall.Arguments[0],
 				null,
@@ -199,7 +199,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
-				=> QueryRunner.SetNonQueryQuery(query);				
+				=> QueryRunner.SetNonQueryQuery(query);
 
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide) 
 				=> throw new NotImplementedException();
