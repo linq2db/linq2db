@@ -636,7 +636,7 @@ END;",
 						// then BuildSearchCondition doesn't write anything.
 						if (StringBuilder.Length == length)
 							StringBuilder.Append("1 = 1");
-						StringBuilder.AppendLine();
+						StringBuilder.AppendLine(" THEN");
 					}
 					else
 					{
