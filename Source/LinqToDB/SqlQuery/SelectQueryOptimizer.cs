@@ -396,7 +396,7 @@ namespace LinqToDB.SqlQuery
 					scol.RawAlias   = ucol.RawAlias;
 
 					if (!exprs.ContainsKey(ucol))
-					exprs.Add(ucol, scol);
+						exprs.Add(ucol, scol);
 				}
 
 				for (var i = sql.Select.Columns.Count; i < union.Select.Columns.Count; i++)
@@ -1020,15 +1020,16 @@ namespace LinqToDB.SqlQuery
 			if (!isColumnsOK)
 				return childSource;
 
-			var map = new Dictionary<ISqlExpression,ISqlExpression>(query.Select.Columns.Count);
+			var map = new Dictionary<ISqlExpression,ISqlExpression>(query.Select.Columns.Count, Utils.ObjectReferenceEqualityComparer<ISqlExpression>.Default);
+			var aliasesMap = new Dictionary<ISqlExpression,string>(query.Select.Columns.Count, Utils.ObjectReferenceEqualityComparer<ISqlExpression>.Default);
 
 			foreach (var c in query.Select.Columns)
 			{
 				if (!map.ContainsKey(c))
 				{
 					map.Add(c, c.Expression);
-					if (c.RawAlias != null && c.Expression is SqlColumn clmn && clmn.RawAlias == null)
-						clmn.RawAlias = c.RawAlias;
+					if (c.RawAlias != null)
+						aliasesMap.Add(c.Expression, c.RawAlias);
 				}			
 			}
 
@@ -1040,10 +1041,25 @@ namespace LinqToDB.SqlQuery
 				.Select(k => k.Select(e => map.TryGetValue(e, out var nw) ? nw : e).ToArray())
 				.ToList();
 
-			var top = _rootElement ?? _selectQuery.RootQuery();
+			var top = _rootElement;
 
 			((ISqlExpressionWalkable)top).Walk(
-				new WalkOptions(), expr => map.TryGetValue(expr, out var fld) ? fld : expr);
+				new WalkOptions(), expr =>
+				{
+					if (map.TryGetValue(expr, out var fld))
+						return fld;
+
+					if (expr.ElementType == QueryElementType.Column)
+					{
+						var c = (SqlColumn)expr;
+						if (c.RawAlias == null && aliasesMap.TryGetValue(c.Expression, out var alias))
+						{
+							c.RawAlias = alias;
+						}
+					}
+
+					return expr;
+				});
 
 			new QueryVisitor().Visit(top, expr =>
 			{

@@ -42,7 +42,7 @@ namespace LinqToDB.Async
 			=> Task.FromResult(AsyncFactory.Create(BeginTransaction()));
 #elif !NETSTANDARD2_1PLUS
 		public virtual ValueTask<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
-			=> new ValueTask<IAsyncDbTransaction>(AsyncFactory.Create(BeginTransaction()));
+			=> new (AsyncFactory.Create(BeginTransaction()));
 #else
 		public virtual async ValueTask<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
 		{
@@ -69,7 +69,7 @@ namespace LinqToDB.Async
 		}
 #elif NATIVE_ASYNC
 		public virtual ValueTask<IAsyncDbTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken = default)
-			=> new ValueTask<IAsyncDbTransaction>(AsyncFactory.Create(BeginTransaction(isolationLevel)));
+			=> new (AsyncFactory.Create(BeginTransaction(isolationLevel)));
 #else
 		public virtual Task<IAsyncDbTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken = default)
 			=> Task.FromResult(AsyncFactory.Create(BeginTransaction(isolationLevel)));

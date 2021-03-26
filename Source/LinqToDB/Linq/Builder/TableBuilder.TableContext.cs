@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
@@ -10,7 +11,6 @@ using JetBrains.Annotations;
 namespace LinqToDB.Linq.Builder
 {
 	using Extensions;
-	using Common;
 	using LinqToDB.Expressions;
 	using Mapping;
 	using Reflection;
@@ -103,7 +103,7 @@ namespace LinqToDB.Linq.Builder
 				EntityDescriptor = Builder.MappingSchema.GetEntityDescriptor(ObjectType);
 
 				if (SqlTable.SqlTableType != SqlTableType.SystemTable)
-				SelectQuery.From.Table(SqlTable);
+					SelectQuery.From.Table(SqlTable);
 
 				Init(true);
 			}
@@ -135,9 +135,7 @@ namespace LinqToDB.Linq.Builder
 
 				SelectQuery.From.Table(SqlTable);
 
-				var args = mc.Arguments.Select(a => builder.ConvertToSql(this, a));
-
-				attr.SetTable(builder.DataContext.CreateSqlProvider(), Builder.MappingSchema, SqlTable, mc.Method, mc.Arguments, args);
+				attr.SetTable(builder.DataContext.CreateSqlProvider(), Builder.MappingSchema, SqlTable, mc, (a, _) => builder.ConvertToSql(this, a));
 
 				Init(true);
 			}

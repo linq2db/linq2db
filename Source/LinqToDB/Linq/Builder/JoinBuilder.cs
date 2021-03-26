@@ -124,7 +124,7 @@ namespace LinqToDB.Linq.Builder
 			return new JoinContext(buildInfo.Parent, selector, context, innerContext)
 #if DEBUG
 			{
-				MethodCall = methodCall
+				Debug_MethodCall = methodCall
 			}
 #endif
 				;

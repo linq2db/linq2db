@@ -29,9 +29,7 @@ namespace LinqToDB.DataProvider.MySql
 					connections.Value,
 					table,
 					options,
-					source,
-					false,
-					default).GetAwaiter().GetResult();
+					source);
 			}
 
 			return MultipleRowsCopy(table, options, source);
@@ -46,12 +44,11 @@ namespace LinqToDB.DataProvider.MySql
 			var connections = TryGetProviderConnections(table);
 			if (connections.HasValue)
 			{
-				return ProviderSpecificCopyInternal(
+				return ProviderSpecificCopyInternalAsync(
 					connections.Value,
 					table,
 					options,
 					source,
-					true,
 					cancellationToken);
 			}
 
@@ -68,7 +65,7 @@ namespace LinqToDB.DataProvider.MySql
 			var connections = TryGetProviderConnections(table);
 			if (connections.HasValue)
 			{
-				return ProviderSpecificCopyInternal(
+				return ProviderSpecificCopyInternalAsync(
 					connections.Value,
 					table,
 					options,
@@ -104,12 +101,11 @@ namespace LinqToDB.DataProvider.MySql
 			return null;
 		}
 
-		private async Task<BulkCopyRowsCopied> ProviderSpecificCopyInternal<T>(
+		private async Task<BulkCopyRowsCopied> ProviderSpecificCopyInternalAsync<T>(
 			ProviderConnections providerConnections,
 			ITable<T>           table,
 			BulkCopyOptions     options,
 			IEnumerable<T>      source,
-			bool                runAsync,
 			CancellationToken   cancellationToken)
 			where T : notnull
 		{
@@ -156,7 +152,7 @@ namespace LinqToDB.DataProvider.MySql
 				await TraceActionAsync(
 					dataConnection,
 					() =>
-					(runAsync && (
+					((
 #if !NETFRAMEWORK
 							bc.CanWriteToServerAsync2 ||
 #endif
@@ -164,20 +160,15 @@ namespace LinqToDB.DataProvider.MySql
 					? "INSERT ASYNC BULK " : "INSERT BULK ")
 					+ tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + Environment.NewLine,
 					async () => {
-						if (runAsync)
-						{
 #if !NETFRAMEWORK
-							if (bc.CanWriteToServerAsync2)
-								await bc.WriteToServerAsync2(rd, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-							else
-#endif
-								if (bc.CanWriteToServerAsync)
-									await bc.WriteToServerAsync(rd, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-								else
-									bc.WriteToServer(rd);
-						}
+						if (bc.CanWriteToServerAsync2)
+							await bc.WriteToServerAsync2(rd, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 						else
-							bc.WriteToServer(rd);
+#endif
+							if (bc.CanWriteToServerAsync)
+								await bc.WriteToServerAsync(rd, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+							else
+								bc.WriteToServer(rd);
 						return rd.Count;
 					}).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
@@ -190,8 +181,73 @@ namespace LinqToDB.DataProvider.MySql
 			return rc;
 		}
 
+		private BulkCopyRowsCopied ProviderSpecificCopyInternal<T>(
+			ProviderConnections providerConnections,
+			ITable<T>           table,
+			BulkCopyOptions     options,
+			IEnumerable<T>      source)
+			where T : notnull
+		{
+			var dataConnection = providerConnections.DataConnection;
+			var connection     = providerConnections.ProviderConnection;
+			var transaction    = providerConnections.ProviderTransaction;
+			var ed             = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
+			var columns        = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
+			var sb             = _provider.CreateSqlBuilder(dataConnection.MappingSchema);
+			var rc             = new BulkCopyRowsCopied();
+
+			var bc = _provider.Adapter.BulkCopy!.Create(connection, transaction);
+			if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
+			{
+				bc.NotifyAfter = options.NotifyAfter;
+
+				bc.MySqlRowsCopied += (sender, args) =>
+				{
+					rc.RowsCopied += args.RowsCopied;
+					options.RowsCopiedCallback(rc);
+					if (rc.Abort)
+						args.Abort = true;
+				};
+			}
+
+			if (options.BulkCopyTimeout.HasValue)
+				bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
+			else if (Configuration.Data.BulkCopyUseConnectionCommandTimeout)
+				bc.BulkCopyTimeout = connection.ConnectionTimeout;
+
+			var tableName = GetTableName(sb, options, table);
+
+			bc.DestinationTableName = GetTableName(sb, options, table);
+
+			for (var i = 0; i < columns.Count; i++)
+				bc.AddColumnMapping(_provider.Adapter.BulkCopy.CreateColumnMapping(i, columns[i].ColumnName));
+
+			// emulate missing BatchSize property
+			// this is needed, because MySql fails on big batches, so users should be able to limit batch size
+			foreach (var batch in EnumerableHelper.Batch(source, options.MaxBatchSize ?? int.MaxValue))
+			{
+				var rd = new BulkCopyReader<T>(dataConnection, columns, batch);
+
+				TraceAction(
+					dataConnection,
+					() =>
+					"INSERT BULK " + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + Environment.NewLine,
+					() => {
+						bc.WriteToServer(rd);
+						return rd.Count;
+					});
+
+				rc.RowsCopied += rd.Count;
+			}
+
+			if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
+				options.RowsCopiedCallback(rc);
+
+			return rc;
+		}
+
 #if NATIVE_ASYNC
-		private async Task<BulkCopyRowsCopied> ProviderSpecificCopyInternal<T>(
+		private async Task<BulkCopyRowsCopied> ProviderSpecificCopyInternalAsync<T>(
 			ProviderConnections providerConnections,
 			ITable<T>           table,
 			BulkCopyOptions     options,
@@ -239,7 +295,7 @@ namespace LinqToDB.DataProvider.MySql
 
 				await TraceActionAsync(
 					dataConnection,
-					() => "INSERT BULK " + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + Environment.NewLine,
+					() => (bc.CanWriteToServerAsync2 || bc.CanWriteToServerAsync ? "INSERT ASYNC BULK " : "INSERT BULK ") + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + Environment.NewLine,
 					async () => {
 						if (bc.CanWriteToServerAsync2)
 							await bc.WriteToServerAsync2(rd, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);

@@ -615,13 +615,13 @@ namespace LinqToDB
 
 		public virtual void Dispose()
 		{
-			_table.DropTable();
+			_table.DropTable(throwExceptionIfNotExists: false);
 		}
 
 #if NATIVE_ASYNC
 		public ValueTask DisposeAsync()
 		{
-			return new ValueTask(_table.DropTableAsync());
+			return new ValueTask(_table.DropTableAsync(throwExceptionIfNotExists: false));
 		}
 #else
 		public Task DisposeAsync()

@@ -16,7 +16,6 @@ using LinqToDB;
 [assembly: Guid                    ("080146c6-967e-4bbf-afdf-a9e0fa01d9c2")]
 [assembly: CLSCompliant            (true)]
 [assembly: NeutralResourcesLanguage("en-US")]
-[assembly: AllowPartiallyTrustedCallers]
 
 [assembly: InternalsVisibleTo("linq2db.Tools, PublicKey=" +
 	"002400000480000094000000060200000024000052534131000400000100010021259e121b7fbc" +

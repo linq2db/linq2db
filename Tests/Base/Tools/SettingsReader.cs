@@ -25,7 +25,7 @@ namespace Tests.Tools
 		public string?   TraceLevel;
 		public string?   DefaultConfiguration;
 		public string?   NoLinqService;
-		public Dictionary<string,TestConnection> Connections = new Dictionary<string,TestConnection>();
+		public Dictionary<string,TestConnection> Connections = new ();
 	}
 
 	public static class SettingsReader
@@ -57,11 +57,11 @@ namespace Tests.Tools
 					settings1.BaselinesPath = settings2.BaselinesPath;
 			}
 
-			var defaultSettings = JsonConvert.DeserializeObject<Dictionary<string,TestSettings>>(defaultJson);
+			var defaultSettings = JsonConvert.DeserializeObject<Dictionary<string,TestSettings>>(defaultJson)!;
 
 			if (userJson != null)
 			{
-				var userSettings = JsonConvert.DeserializeObject<Dictionary<string,TestSettings>>(userJson);
+				var userSettings = JsonConvert.DeserializeObject<Dictionary<string,TestSettings>>(userJson)!;
 
 				foreach (var uSetting in userSettings)
 				{
