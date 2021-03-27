@@ -1,10 +1,13 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq.Expressions;
 using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
 	class TagQueryBuilder : MethodCallBuilder
 	{
+		private static readonly char[] NewLine = new[] { '\r', '\n' };
+
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
@@ -13,7 +16,8 @@ namespace LinqToDB.Linq.Builder
 
 			if (!string.IsNullOrWhiteSpace(tag))
 			{
-				builder.Tag.Parts.Add(tag!);
+				// here we loose empty lines, but I think they are not so precious
+				(builder.Tag ??= new ()).Lines.AddRange(tag!.Split(NewLine, StringSplitOptions.RemoveEmptyEntries));
 			}
 
 			return sequence;

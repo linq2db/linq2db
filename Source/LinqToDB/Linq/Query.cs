@@ -12,7 +12,9 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
+#if !NATIVE_ASYNC
 	using Async;
+#endif
 	using Builder;
 	using Common;
 	using Common.Logging;
@@ -26,9 +28,9 @@ namespace LinqToDB.Linq
 		public Func<IDataContext,Expression,object?[]?,object?[]?,object?>                         GetElement      = null!;
 		public Func<IDataContext,Expression,object?[]?,object?[]?,CancellationToken,Task<object?>> GetElementAsync = null!;
 
-		#region Init
+#region Init
 
-		internal readonly List<QueryInfo> Queries = new List<QueryInfo>(1);
+		internal readonly List<QueryInfo> Queries = new (1);
 
 		internal abstract void Init(IBuildContext parseContext, List<ParameterAccessor> sqlParameters);
 
@@ -44,9 +46,9 @@ namespace LinqToDB.Linq
 			InlineParameters = dataContext.InlineParameters;
 		}
 
-		#endregion
+#endregion
 
-		#region Compare
+#region Compare
 
 		internal readonly string           ContextID;
 		internal readonly Type             ContextType;
@@ -69,10 +71,10 @@ namespace LinqToDB.Linq
 				Expression!.EqualsTo(expr, dataContext, _queryableAccessorDic, _queryableMemberAccessorDic, _queryDependedObjects);
 		}
 
-		readonly Dictionary<Expression,QueryableAccessor> _queryableAccessorDic  = new Dictionary<Expression,QueryableAccessor>();
+		readonly Dictionary<Expression,QueryableAccessor> _queryableAccessorDic  = new ();
 		private  Dictionary<MemberInfo, QueryableMemberAccessor>? _queryableMemberAccessorDic;
-		readonly List<QueryableAccessor>                  _queryableAccessorList = new List<QueryableAccessor>();
-		readonly Dictionary<Expression,Expression>        _queryDependedObjects  = new Dictionary<Expression,Expression>();
+		readonly List<QueryableAccessor>                  _queryableAccessorList = new ();
+		readonly Dictionary<Expression,Expression>        _queryDependedObjects  = new ();
 
 
 		public bool IsFastCacheable => _queryableMemberAccessorDic == null;
@@ -127,9 +129,9 @@ namespace LinqToDB.Linq
 			_queryableMemberAccessorDic = null;
 		}
 
-		#endregion
+#endregion
 
-		#region Helpers
+#region Helpers
 
 		ConcurrentDictionary<Type,Func<object,object>>? _enumConverters;
 
@@ -156,11 +158,11 @@ namespace LinqToDB.Linq
 			return converter(value);
 		}
 
-		#endregion
+#endregion
 
-		#region Cache Support
+#region Cache Support
 
-		internal static readonly ConcurrentQueue<Action> CacheCleaners = new ConcurrentQueue<Action>();
+		internal static readonly ConcurrentQueue<Action> CacheCleaners = new ();
 
 		/// <summary>
 		/// Clears query caches for all typed queries.
@@ -175,9 +177,9 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region Eager Loading
+#region Eager Loading
 
 		Tuple<Func<IDataContext, Expression, object?[]?, object?>, Func<IDataContext, Expression, object?[]?, CancellationToken, Task<object?>>>[]? _preambles;
 
@@ -225,12 +227,12 @@ namespace LinqToDB.Linq
 			return preambles;
 		}
 
-		#endregion
+#endregion
 	}
 
 	class Query<T> : Query
 	{
-		#region Init
+#region Init
 
 		public Query(IDataContext dataContext, Expression? expression)
 			: base(dataContext, expression)
@@ -241,7 +243,9 @@ namespace LinqToDB.Linq
 		internal override void Init(IBuildContext parseContext, List<ParameterAccessor> sqlParameters)
 		{
 			var statement = parseContext.GetResultStatement();
-			statement.Tag.Parts.AddRange(parseContext.Builder.Tag.Parts);
+
+			if (parseContext.Builder.Tag != null)
+				(statement.Tag ??= new SqlComment()).Lines.AddRange(parseContext.Builder.Tag.Lines);
 
 			Queries.Add(new QueryInfo
 			{
@@ -250,9 +254,9 @@ namespace LinqToDB.Linq
 			});
 		}
 
-		#endregion
+#endregion
 
-		#region Properties & Fields
+#region Properties & Fields
 
 		public bool DoNotCache;
 
@@ -260,9 +264,9 @@ namespace LinqToDB.Linq
 		public Func<IDataContext,Expression,object?[]?,object?[]?,IAsyncEnumerable<T>> GetIAsyncEnumerable = null!;
 		public Func<IDataContext,Expression,object?[]?,object?[]?,Func<T,bool>,CancellationToken,Task> GetForEachAsync = null!;
 
-		#endregion
+#endregion
 
-		#region Query cache
+#region Query cache
 		[Flags]
 		enum QueryFlags
 		{
@@ -303,9 +307,9 @@ namespace LinqToDB.Linq
 			}
 
 			// lock for cache instance modification
-			readonly object _syncCache    = new object();
+			readonly object _syncCache    = new ();
 			// lock for query priority modification
-			readonly object _syncPriority = new object();
+			readonly object _syncPriority = new ();
 
 			// stores all cached queries
 			// when query added or removed from cache, query and priority arrays recreated
@@ -449,11 +453,11 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region Query
+#region Query
 
-		private static readonly QueryCache _queryCache = new QueryCache();
+		private static readonly QueryCache _queryCache = new ();
 
 		static Query()
 		{
@@ -539,7 +543,7 @@ namespace LinqToDB.Linq
 			return query;
 		}
 
-		#endregion
+#endregion
 	}
 
 	class QueryInfo : IQueryContext
@@ -550,7 +554,7 @@ namespace LinqToDB.Linq
 		public SqlParameter[]? Parameters  { get; set; }
 		public AliasesContext? Aliases     { get; set; }
 
-		public List<ParameterAccessor> ParameterAccessors = new List<ParameterAccessor>();
+		public List<ParameterAccessor> ParameterAccessors = new ();
 
 		public void AddParameterAccessor(ParameterAccessor accessor)
 		{

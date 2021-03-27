@@ -73,7 +73,7 @@ namespace LinqToDB.SqlQuery
 		public SqlWhereClause   Where   { get; private set; } = null!;
 		public SqlGroupByClause GroupBy { get; private set; } = null!;
 		public SqlWhereClause   Having  { get; private set; } = null!;
-		public SqlOrderByClause OrderBy { get; private set; } = null!;		
+		public SqlOrderByClause OrderBy { get; private set; } = null!;
 
 		private List<object>? _properties;
 		public  List<object>   Properties => _properties ??= new List<object>();

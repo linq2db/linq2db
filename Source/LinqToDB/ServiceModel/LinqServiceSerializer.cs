@@ -117,6 +117,14 @@ namespace LinqToDB.ServiceModel
 				Builder.Append(' ').Append(value);
 			}
 
+			protected void AppendStringList(ICollection<string> strings)
+			{
+				Append(strings.Count);
+
+				foreach (var str in strings)
+					Append(str);
+			}
+
 			protected void Append(int? value)
 			{
 				Builder.Append(' ').Append(value.HasValue ? '1' : '0');
@@ -373,6 +381,17 @@ namespace LinqToDB.ServiceModel
 				Pos += len;
 
 				return value;
+			}
+
+			protected List<string> ReadStringList()
+			{
+				var size = ReadInt();
+				var list = new List<string>(size);
+
+				for (var i = 0; i < size; i++)
+					list.Add(ReadString()!);
+
+				return list;
 			}
 
 			protected bool ReadBool()
@@ -1180,6 +1199,7 @@ namespace LinqToDB.ServiceModel
 					case QueryElementType.SelectStatement :
 						{
 							var elem = (SqlSelectStatement)e;
+							Append(elem.Tag);
 							Append(elem.With);
 							Append(elem.SelectQuery);
 
@@ -1189,6 +1209,7 @@ namespace LinqToDB.ServiceModel
 					case QueryElementType.InsertStatement :
 						{
 							var elem = (SqlInsertStatement)e;
+							Append(elem.Tag);
 							Append(elem.With);
 							Append(elem.Insert);
 							Append(elem.SelectQuery);
@@ -1200,6 +1221,7 @@ namespace LinqToDB.ServiceModel
 					case QueryElementType.InsertOrUpdateStatement :
 						{
 							var elem = (SqlInsertOrUpdateStatement)e;
+							Append(elem.Tag);
 							Append(elem.With);
 							Append(elem.Insert);
 							Append(elem.Update);
@@ -1211,6 +1233,7 @@ namespace LinqToDB.ServiceModel
 					case QueryElementType.UpdateStatement :
 						{
 							var elem = (SqlUpdateStatement)e;
+							Append(elem.Tag);
 							Append(elem.With);
 							Append(elem.Update);
 							Append(elem.SelectQuery);
@@ -1222,6 +1245,7 @@ namespace LinqToDB.ServiceModel
 						{
 							var elem = (SqlDeleteStatement)e;
 
+							Append(elem.Tag);
 							Append(elem.With);
 							Append(elem.Table);
 							Append(elem.Output);
@@ -1245,6 +1269,7 @@ namespace LinqToDB.ServiceModel
 						{
 							var elem = (SqlCreateTableStatement)e;
 
+							Append(elem.Tag);
 							Append(elem.Table);
 							Append(elem.StatementHeader);
 							Append(elem.StatementFooter);
@@ -1257,6 +1282,7 @@ namespace LinqToDB.ServiceModel
 					{
 						var elem = (SqlDropTableStatement)e;
 
+						Append(elem.Tag);
 						Append(elem.Table);
 
 						break;
@@ -1266,6 +1292,7 @@ namespace LinqToDB.ServiceModel
 					{
 						var elem = (SqlTruncateTableStatement)e;
 
+						Append(elem.Tag);
 						Append(elem.Table);
 						Append(elem.ResetIdentity);
 
@@ -1332,6 +1359,7 @@ namespace LinqToDB.ServiceModel
 						{
 							var elem = (SqlMergeStatement)e;
 
+							Append(elem.Tag);
 							Append(elem.Hint);
 							Append(elem.Target);
 							Append(elem.Source);
@@ -1379,6 +1407,13 @@ namespace LinqToDB.ServiceModel
 
 							break;
 						}
+
+					case QueryElementType.Comment:
+					{
+						var elem = (SqlComment)e;
+						AppendStringList(elem.Lines);
+						break;
+					};
 
 					default:
 						throw new InvalidOperationException($"Serialize not implemented for element {e.ElementType}");
@@ -1967,69 +2002,99 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.SelectStatement :
 						{
+							var tag         = Read<SqlComment>();
 							var with        = Read<SqlWithClause>();
 							var selectQuery = Read<SelectQuery>()!;
 
-							obj = _statement = new SqlSelectStatement(selectQuery);
-							((SqlSelectStatement)_statement).With = with;
+							obj = _statement = new SqlSelectStatement(selectQuery)
+							{
+								With = with,
+								Tag  = tag
+							};
 
 							break;
 						}
 
 					case QueryElementType.InsertStatement :
 						{
+							var tag         = Read<SqlComment>();
 							var with        = Read<SqlWithClause>();
 							var insert      = Read<SqlInsertClause>()!;
 							var selectQuery = Read<SelectQuery>()!;
 							var output      = Read<SqlOutputClause>();
 
-							obj = _statement = new SqlInsertStatement(selectQuery) {Insert = insert, Output = output };
-							((SqlInsertStatement)_statement).With = with;
+							obj = _statement = new SqlInsertStatement(selectQuery)
+							{
+								Insert = insert,
+								Output = output,
+								With   = with,
+								Tag    = tag
+							};
 
 							break;
 						}
 
 					case QueryElementType.UpdateStatement :
 						{
+							var tag         = Read<SqlComment>();
 							var with        = Read<SqlWithClause>();
 							var update      = Read<SqlUpdateClause>()!;
 							var selectQuery = Read<SelectQuery>()!;
 
-							obj = _statement = new SqlUpdateStatement(selectQuery) {Update = update};
-							((SqlUpdateStatement)_statement).With = with;
+							obj = _statement = new SqlUpdateStatement(selectQuery)
+							{
+								Update = update,
+								With   = with,
+								Tag    = tag
+							};
 
 							break;
 						}
 
 					case QueryElementType.InsertOrUpdateStatement :
 						{
+							var tag         = Read<SqlComment>();
 							var with        = Read<SqlWithClause>();
 							var insert      = Read<SqlInsertClause>()!;
 							var update      = Read<SqlUpdateClause>()!;
 							var selectQuery = Read<SelectQuery>();
 
-							obj = _statement = new SqlInsertOrUpdateStatement(selectQuery) {Insert = insert, Update = update};
-							((SqlInsertOrUpdateStatement)_statement).With = with;
+							obj = _statement = new SqlInsertOrUpdateStatement(selectQuery)
+							{
+								Insert = insert,
+								Update = update,
+								With   = with,
+								Tag    = tag
+							};
 
 							break;
 						}
 
 					case QueryElementType.DeleteStatement :
 						{
+							var tag         = Read<SqlComment>();
 							var with        = Read<SqlWithClause>();
 							var table       = Read<SqlTable>();
 							var output      = Read<SqlOutputClause>();
 							var top         = Read<ISqlExpression>()!;
 							var selectQuery = Read<SelectQuery>();
 
-							obj = _statement = new SqlDeleteStatement { Table = table, Output = output, Top = top, SelectQuery = selectQuery };
-							((SqlDeleteStatement)_statement).With = with;
+							obj = _statement = new SqlDeleteStatement
+							{
+								Table       = table,
+								Output      = output,
+								Top         = top,
+								SelectQuery = selectQuery,
+								With        = with,
+								Tag         = tag
+							};
 
 							break;
 						}
 
 					case QueryElementType.CreateTableStatement :
 						{
+							var tag             = Read<SqlComment>();
 							var table           = Read<SqlTable>()!;
 							var statementHeader = ReadString();
 							var statementFooter = ReadString();
@@ -2040,6 +2105,7 @@ namespace LinqToDB.ServiceModel
 								StatementHeader = statementHeader,
 								StatementFooter = statementFooter,
 								DefaultNullable = defaultNullable,
+								Tag             = tag
 							};
 
 							break;
@@ -2047,22 +2113,28 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.DropTableStatement :
 					{
+						var tag         = Read<SqlComment>();
 						var table      = Read<SqlTable>()!;
 
-						obj = _statement = new SqlDropTableStatement(table);
+						obj = _statement = new SqlDropTableStatement(table)
+						{
+							Tag = tag
+						};
 
 						break;
 					}
 
 					case QueryElementType.TruncateTableStatement :
 					{
+						var tag         = Read<SqlComment>();
 						var table      = Read<SqlTable>();
 						var reset      = ReadBool();
 
 						obj = _statement = new SqlTruncateTableStatement
 						{
 							Table         = table,
-							ResetIdentity = reset
+							ResetIdentity = reset,
+							Tag           = tag
 						};
 
 						break;
@@ -2121,13 +2193,17 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.MergeStatement:
 						{
+							var tag        = Read<SqlComment>();
 							var hint       = ReadString();
 							var target     = Read<SqlTableSource>()!;
 							var source     = Read<SqlMergeSourceTable>()!;
 							var on         = Read<SqlSearchCondition>()!;
 							var operations = ReadArray<SqlMergeOperationClause>()!;
 
-							obj = _statement = new SqlMergeStatement(hint, target, source, on, operations);
+							obj = _statement = new SqlMergeStatement(hint, target, source, on, operations)
+							{
+								Tag = tag
+							};
 
 							break;
 						}
@@ -2179,6 +2255,12 @@ namespace LinqToDB.ServiceModel
 
 							break;
 						}
+
+					case QueryElementType.Comment:
+						{
+							obj = new SqlComment(ReadStringList());
+							break;
+						};
 
 					default:
 						throw new InvalidOperationException($"Parse not implemented for element {(QueryElementType)type}");

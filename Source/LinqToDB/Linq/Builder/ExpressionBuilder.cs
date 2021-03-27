@@ -111,7 +111,7 @@ namespace LinqToDB.Linq.Builder
 		public          bool                       IsBlockDisable;
 		public          int                        VarIndex;
 
-		public          SqlComment                 Tag                  = new ();
+		public          SqlComment?                Tag;
 
 		public ExpressionBuilder(
 			Query                  query,

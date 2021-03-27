@@ -2716,50 +2716,26 @@ namespace LinqToDB.SqlProvider
 
 		#endregion
 
-		#region Tag
+		#region Comments
 
 		protected virtual void BuildTag(SqlStatement statement)
 		{
-			BuildSqlComment(StringBuilder, statement.Tag.Parts, true);
+			if (statement.Tag != null)
+				BuildSqlComment(StringBuilder, statement.Tag);
 		}
 
-		protected StringBuilder BuildSqlComment(StringBuilder sb, List<string> commentParts, bool supportsMultilineComments)
+		protected virtual StringBuilder BuildSqlComment(StringBuilder sb, SqlComment comment)
 		{
-			if (commentParts != null)
-			{
-				foreach (var commentPart in commentParts)
-				{
-					if (commentPart.Contains("\n"))
-					{
-						if (supportsMultilineComments)
-						{
-							sb.Append("/* ")
-							  .Append(commentPart)
-							  .Append(" */")
-							  .AppendLine();
-						}
-						else
-						{
-							var singleLines = commentPart.Split('\n')
-								.Select(x => x.Replace("\r", string.Empty))
-								.ToList();
+			sb.Append("/* ");
 
-							foreach (var singleLine in singleLines)
-							{
-								sb.Append("-- ");
-								sb.Append(singleLine);
-								sb.AppendLine();
-							}
-						}
-					}
-					else
-					{
-						sb.Append("-- ");
-						sb.Append(commentPart);
-						sb.AppendLine();
-					}
-				}
+			for (var i = 0; i < comment.Lines.Count; i++)
+			{
+				sb.Append(comment.Lines[i].Replace("/*", "").Replace("*/", ""));
+				if (i < comment.Lines.Count - 1)
+					sb.AppendLine();
 			}
+
+			sb.AppendLine(" */");
 
 			return sb;
 		}

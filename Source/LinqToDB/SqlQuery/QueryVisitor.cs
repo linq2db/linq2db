@@ -233,6 +233,7 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.SelectStatement:
 					{
+						Visit1(((SqlSelectStatement)element).Tag);
 						Visit1(((SqlSelectStatement)element).With);
 						Visit1(((SqlSelectStatement)element).SelectQuery);
 						break;
@@ -240,6 +241,7 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.InsertStatement:
 					{
+						Visit1(((SqlInsertStatement)element).Tag);
 						Visit1(((SqlInsertStatement)element).With);
 						Visit1(((SqlInsertStatement)element).Insert);
 						Visit1(((SqlInsertStatement)element).Output);
@@ -249,6 +251,7 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.UpdateStatement:
 					{
+						Visit1(((SqlUpdateStatement)element).Tag);
 						Visit1(((SqlUpdateStatement)element).With);
 						Visit1(((SqlUpdateStatement)element).Update);
 						Visit1(((SqlUpdateStatement)element).SelectQuery);
@@ -257,6 +260,7 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.InsertOrUpdateStatement:
 					{
+						Visit1(((SqlInsertOrUpdateStatement)element).Tag);
 						Visit1(((SqlInsertOrUpdateStatement)element).With);
 						Visit1(((SqlInsertOrUpdateStatement)element).Insert);
 						Visit1(((SqlInsertOrUpdateStatement)element).Update);
@@ -266,6 +270,7 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.DeleteStatement:
 					{
+						Visit1(((SqlDeleteStatement)element).Tag);
 						Visit1(((SqlDeleteStatement)element).With);
 						Visit1(((SqlDeleteStatement)element).Table);
 						Visit1(((SqlDeleteStatement)element).Output);
@@ -276,6 +281,7 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.CreateTableStatement:
 					{
+						Visit1(((SqlCreateTableStatement)element).Tag);
 						if (((SqlCreateTableStatement)element).Table != null)
 							Visit1(((SqlCreateTableStatement)element).Table);
 						break;
@@ -283,6 +289,7 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.DropTableStatement:
 					{
+						Visit1(((SqlDropTableStatement)element).Tag);
 						if (((SqlDropTableStatement)element).Table != null)
 							Visit1(((SqlDropTableStatement)element).Table);
 						break;
@@ -290,6 +297,7 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.TruncateTableStatement:
 					{
+						Visit1(((SqlTruncateTableStatement)element).Tag);
 						if (((SqlTruncateTableStatement)element).Table != null)
 							Visit1(((SqlTruncateTableStatement)element).Table);
 						break;
@@ -377,6 +385,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SqlValue:
 				case QueryElementType.SqlDataType:
 				case QueryElementType.SqlAliasPlaceholder:
+				case QueryElementType.Comment:
 					break;
 
 				default:
@@ -551,6 +560,7 @@ namespace LinqToDB.SqlQuery
 
 		void Visit1X(SqlMergeStatement element)
 		{
+			Visit1(element.Tag);
 			Visit1(element.Target);
 			Visit1(element.Source);
 			Visit1(element.On);
@@ -802,6 +812,7 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.SelectStatement:
 					{
+						Visit2(((SqlSelectStatement)element).Tag);
 						Visit2(((SqlSelectStatement)element).With);
 						Visit2(((SqlSelectStatement)element).SelectQuery);
 						break;
@@ -809,6 +820,7 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.InsertStatement:
 					{
+						Visit2(((SqlInsertStatement)element).Tag);
 						Visit2(((SqlInsertStatement)element).With);
 						Visit2(((SqlInsertStatement)element).Insert);
 						Visit2(((SqlInsertStatement)element).Output);
@@ -818,6 +830,7 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.UpdateStatement:
 					{
+						Visit2(((SqlUpdateStatement)element).Tag);
 						Visit2(((SqlUpdateStatement)element).With);
 						Visit2(((SqlUpdateStatement)element).Update);
 						Visit2(((SqlUpdateStatement)element).SelectQuery);
@@ -826,6 +839,7 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.InsertOrUpdateStatement:
 					{
+						Visit2(((SqlInsertOrUpdateStatement)element).Tag);
 						Visit2(((SqlInsertOrUpdateStatement)element).With);
 						Visit2(((SqlInsertOrUpdateStatement)element).Insert);
 						Visit2(((SqlInsertOrUpdateStatement)element).Update);
@@ -835,6 +849,7 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.DeleteStatement:
 					{
+						Visit2(((SqlDeleteStatement)element).Tag);
 						Visit2(((SqlDeleteStatement)element).With);
 						Visit2(((SqlDeleteStatement)element).Table);
 						Visit2(((SqlDeleteStatement)element).Output);
@@ -845,6 +860,7 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.CreateTableStatement:
 					{
+						Visit2(((SqlCreateTableStatement)element).Tag);
 						if (((SqlCreateTableStatement)element).Table != null)
 							Visit2(((SqlCreateTableStatement)element).Table);
 						break;
@@ -852,6 +868,7 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.DropTableStatement:
 					{
+						Visit2(((SqlDropTableStatement)element).Tag);
 						if (((SqlDropTableStatement)element).Table != null)
 							Visit2(((SqlDropTableStatement)element).Table);
 						break;
@@ -859,6 +876,7 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.TruncateTableStatement:
 					{
+						Visit2(((SqlTruncateTableStatement)element).Tag);
 						if (((SqlTruncateTableStatement)element).Table != null)
 							Visit2(((SqlTruncateTableStatement)element).Table);
 						break;
@@ -950,6 +968,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SqlValue:
 				case QueryElementType.SqlDataType:
 				case QueryElementType.SqlAliasPlaceholder:
+				case QueryElementType.Comment:
 					break;
 
 				default:
@@ -1156,6 +1175,7 @@ namespace LinqToDB.SqlQuery
 
 		void Visit2X(SqlMergeStatement element)
 		{
+			Visit2(element.Tag);
 			Visit2(element.Target);
 			Visit2(element.Source);
 			Visit2(element.On);
@@ -1407,21 +1427,24 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SelectStatement:
 					{
 						return Find(((SqlSelectStatement)element).SelectQuery) ??
-						       Find(((SqlSelectStatement)element).With       );
+						       Find(((SqlSelectStatement)element).With       ) ??
+						       Find(((SqlSelectStatement)element).Tag        );
 					}
 
 				case QueryElementType.InsertStatement:
 					{
 						return Find(((SqlInsertStatement)element).SelectQuery) ??
 						       Find(((SqlInsertStatement)element).Insert     ) ??
-						       Find(((SqlInsertStatement)element).With       );
+						       Find(((SqlInsertStatement)element).With       ) ??
+						       Find(((SqlInsertStatement)element).Tag        );
 					}
 
 				case QueryElementType.UpdateStatement:
 					{
 						return Find(((SqlUpdateStatement)element).SelectQuery) ??
 						       Find(((SqlUpdateStatement)element).Update     ) ??
-						       Find(((SqlUpdateStatement)element).With       );
+						       Find(((SqlUpdateStatement)element).With       ) ??
+						       Find(((SqlUpdateStatement)element).Tag        );
 					}
 
 				case QueryElementType.InsertOrUpdateStatement:
@@ -1429,7 +1452,8 @@ namespace LinqToDB.SqlQuery
 						return Find(((SqlInsertOrUpdateStatement)element).SelectQuery) ??
 						       Find(((SqlInsertOrUpdateStatement)element).Insert     ) ??
 						       Find(((SqlInsertOrUpdateStatement)element).Update     ) ??
-						       Find(((SqlInsertOrUpdateStatement)element).With       );
+						       Find(((SqlInsertOrUpdateStatement)element).With       ) ??
+						       Find(((SqlInsertOrUpdateStatement)element).Tag        );
 					}
 
 				case QueryElementType.DeleteStatement:
@@ -1437,19 +1461,22 @@ namespace LinqToDB.SqlQuery
 						return
 							Find(((SqlDeleteStatement)element).Table      ) ??
 							Find(((SqlDeleteStatement)element).Top        ) ??
-							Find(((SqlDeleteStatement)element).SelectQuery);
+							Find(((SqlDeleteStatement)element).SelectQuery) ??
+							Find(((SqlDeleteStatement)element).Tag        );
 					}
 
 				case QueryElementType.CreateTableStatement:
 					{
 						return
-							Find(((SqlCreateTableStatement)element).Table);
+							Find(((SqlCreateTableStatement)element).Table) ??
+							Find(((SqlCreateTableStatement)element).Tag  );
 					}
 
 				case QueryElementType.DropTableStatement:
 					{
 						return
-							Find(((SqlDropTableStatement)element).Table);
+							Find(((SqlDropTableStatement)element).Table) ??
+							Find(((SqlDropTableStatement)element).Tag  );
 					}
 
 				case QueryElementType.SelectClause:
@@ -1475,7 +1502,8 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.TruncateTableStatement:
 					{
 						return
-							Find(((SqlTruncateTableStatement)element).Table);
+							Find(((SqlTruncateTableStatement)element).Table) ??
+							Find(((SqlTruncateTableStatement)element).Tag  );
 					}
 
 				case QueryElementType.CteClause:
@@ -1497,7 +1525,8 @@ namespace LinqToDB.SqlQuery
 							Find(((SqlMergeStatement)element).Source    ) ??
 							Find(((SqlMergeStatement)element).On        ) ??
 							Find(((SqlMergeStatement)element).Target    ) ??
-							Find(((SqlMergeStatement)element).Operations);
+							Find(((SqlMergeStatement)element).Operations) ??
+							Find(((SqlMergeStatement)element).Tag       );
 					}
 
 				case QueryElementType.MergeSourceTable:
@@ -1528,6 +1557,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SqlValue:
 				case QueryElementType.SqlDataType:
 				case QueryElementType.SqlAliasPlaceholder:
+				case QueryElementType.Comment:
 					break;
 
 				default:

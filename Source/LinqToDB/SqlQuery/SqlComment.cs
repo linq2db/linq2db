@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
@@ -9,11 +8,16 @@ namespace LinqToDB.SqlQuery
 	{
 		public QueryElementType ElementType => QueryElementType.Comment;
 
-		public List<string> Parts { get; private set; }
+		public List<string> Lines { get; }
 
-		public SqlComment() 
-		{ 
-			Parts = new List<string>(); 
+		public SqlComment()
+		{
+			Lines = new List<string>();
+		}
+
+		internal SqlComment(List<string> lines)
+		{
+			Lines = lines;
 		}
 
 		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
@@ -22,7 +26,9 @@ namespace LinqToDB.SqlQuery
 				return this;
 
 			var clone = new SqlComment();
-			Parts.ForEach(p => clone.Parts.Add(p));
+
+			foreach (var part in Lines)
+				clone.Lines.Add(part);
 
 			objectTree.Add(this, clone);
 
@@ -31,6 +37,10 @@ namespace LinqToDB.SqlQuery
 
 		public StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
+			foreach (var part in Lines)
+				sb
+					.Append("-- ")
+					.AppendLine(part);
 			return sb;
 		}
 	}
