@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
@@ -9,20 +8,10 @@ using LinqToDB.Async;
 
 namespace LinqToDB
 {
+	using Methods = LinqToDB.Reflection.Methods.LinqToDB.MultiInsert;
+
 	public static class MultiInsertExtensions
 	{
-		#region MethodInfo
-
-		internal static readonly MethodInfo MultiInsertMethodInfo   = typeof(MultiInsertExtensions).GetMethod(nameof(MultiInsert))!;
-		internal static readonly MethodInfo IntoMethodInfo          = typeof(MultiInsertExtensions).GetMethod(nameof(Into))!;
-		internal static readonly MethodInfo WhenMethodInfo          = typeof(MultiInsertExtensions).GetMethod(nameof(When))!;
-		internal static readonly MethodInfo ElseMethodInfo          = typeof(MultiInsertExtensions).GetMethod(nameof(Else))!;
-		internal static readonly MethodInfo InsertMethodInfo        = typeof(MultiInsertExtensions).GetMethod(nameof(Insert))!;
-		internal static readonly MethodInfo InsertAllMethodInfo     = typeof(MultiInsertExtensions).GetMethod(nameof(InsertAll))!;
-		internal static readonly MethodInfo InsertFirstMethodInfo   = typeof(MultiInsertExtensions).GetMethod(nameof(InsertFirst))!;
-
-		#endregion
-
 		#region Public fluent API
 
 		/// <summary>
@@ -39,7 +28,7 @@ namespace LinqToDB
 			var query = source.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
-					MultiInsertMethodInfo.MakeGenericMethod(typeof(TSource)),
+					Methods.Begin.MakeGenericMethod(typeof(TSource)),
 					source.Expression));
 
 			return new MultiInsertQuery<TSource>(query);
@@ -69,7 +58,7 @@ namespace LinqToDB
 			query = query.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
-					IntoMethodInfo.MakeGenericMethod(typeof(TSource), typeof(TTarget)),
+					Methods.Into.MakeGenericMethod(typeof(TSource), typeof(TTarget)),
 					query.Expression,
 					target.Expression,
 					Expression.Quote(setter)));
@@ -104,7 +93,7 @@ namespace LinqToDB
 			query = query.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
-					WhenMethodInfo.MakeGenericMethod(typeof(TSource), typeof(TTarget)),
+					Methods.When.MakeGenericMethod(typeof(TSource), typeof(TTarget)),
 					query.Expression,
 					Expression.Quote(condition),
 					target.Expression,
@@ -137,7 +126,7 @@ namespace LinqToDB
 			query = query.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
-					ElseMethodInfo.MakeGenericMethod(typeof(TSource), typeof(TTarget)),
+					Methods.Else.MakeGenericMethod(typeof(TSource), typeof(TTarget)),
 					query.Expression,
 					target.Expression,
 					Expression.Quote(setter)));
@@ -161,7 +150,7 @@ namespace LinqToDB
 			return query.Provider.Execute<int>(
 				Expression.Call(
 					null,
-					InsertMethodInfo.MakeGenericMethod(typeof(TSource)),
+					Methods.Insert.MakeGenericMethod(typeof(TSource)),
 					query.Expression));
 		}
 
@@ -181,7 +170,7 @@ namespace LinqToDB
 
 			var expr = Expression.Call(
 				null,
-				InsertMethodInfo.MakeGenericMethod(typeof(TSource)),
+				Methods.Insert.MakeGenericMethod(typeof(TSource)),
 				query.Expression);
 
 			if (query is IQueryProviderAsync queryAsync)
@@ -206,7 +195,7 @@ namespace LinqToDB
 			return query.Provider.Execute<int>(
 				Expression.Call(
 					null,
-					InsertAllMethodInfo.MakeGenericMethod(typeof(TSource)),
+					Methods.InsertAll.MakeGenericMethod(typeof(TSource)),
 					query.Expression));
 		}
 
@@ -226,7 +215,7 @@ namespace LinqToDB
 
 			var expr = Expression.Call(
 				null,
-				InsertAllMethodInfo.MakeGenericMethod(typeof(TSource)),
+				Methods.InsertAll.MakeGenericMethod(typeof(TSource)),
 				query.Expression);
 			
 			if (query is IQueryProviderAsync queryAsync)
@@ -251,7 +240,7 @@ namespace LinqToDB
 			return query.Provider.Execute<int>(
 				Expression.Call(
 					null,
-					InsertFirstMethodInfo.MakeGenericMethod(typeof(TSource)),
+					Methods.InsertFirst.MakeGenericMethod(typeof(TSource)),
 					query.Expression));
 		}
 
@@ -271,7 +260,7 @@ namespace LinqToDB
 
 			var expr = Expression.Call(
 				null,
-				InsertFirstMethodInfo.MakeGenericMethod(typeof(TSource)),
+				Methods.InsertFirst.MakeGenericMethod(typeof(TSource)),
 				query.Expression);
 			
 			if (query is IQueryProviderAsync queryAsync)

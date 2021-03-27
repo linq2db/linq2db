@@ -7,6 +7,8 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Methods = LinqToDB.Reflection.Methods.LinqToDB.MultiInsert;
+
 	class MultiInsertBuilder : MethodCallBuilder
 	{
 		#region MultiInsertBuilder
@@ -16,13 +18,13 @@ namespace LinqToDB.Linq.Builder
 
 		private static readonly Dictionary<MethodInfo, Func<ExpressionBuilder, MethodCallExpression, BuildInfo, IBuildContext>> _methodBuilders = new()
 		{
-			{ MultiInsertExtensions.MultiInsertMethodInfo,   BuildMultiInsert },
-			{ MultiInsertExtensions.IntoMethodInfo,          BuildInto        },
-			{ MultiInsertExtensions.WhenMethodInfo,          BuildWhen        },
-			{ MultiInsertExtensions.ElseMethodInfo,          BuildElse        },
-			{ MultiInsertExtensions.InsertMethodInfo,        BuildInsert      },
-			{ MultiInsertExtensions.InsertAllMethodInfo,     BuildInsertAll   },
-			{ MultiInsertExtensions.InsertFirstMethodInfo,   BuildInsertFirst },
+			{ Methods.Begin,       BuildMultiInsert },
+			{ Methods.Into,        BuildInto        },
+			{ Methods.When,        BuildWhen        },
+			{ Methods.Else,        BuildElse        },
+			{ Methods.Insert,      BuildInsert      },
+			{ Methods.InsertAll,   BuildInsertAll   },
+			{ Methods.InsertFirst, BuildInsertFirst },
 		};
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
