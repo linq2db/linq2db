@@ -4,231 +4,197 @@ using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-using Tests.Model;
 
 namespace Tests.xUpdate
 {
 	[TestFixture]
 	public class MultiInsertTests : TestBase
 	{
-		private void Cleanup(ITestDataContext db)
-		{
-			db.Types.Delete(x => x.ID > 1000);
-			db.Child.Delete(x => x.ChildID > 1000);
-		}
-
 		[Test]
 		public void Insert([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using var db = GetDataContext(context);
-			Cleanup(db);
-			try
-			{
-				int count = db
-					.SelectQuery(() => new { ID = 1000, N = (short)42 })
-					.MultiInsert()
-					.Into(
-						db.Types,
-						x => new LinqDataTypes { ID = x.ID + 1, SmallIntValue = x.N }
-					)
-					.Into(
-						db.Types,
-						x => new LinqDataTypes { ID = x.ID + 2, SmallIntValue = x.N }
-					)
-					.Into(
-						db.Child,
-						x => new Child { ParentID = x.ID + 1, ChildID = x.ID + 3 }
-					)
-					.Insert();
+			using var db    = GetDataContext(context);
+			using var dest1 = db.CreateLocalTable<Dest1>();
+			using var dest2 = db.CreateLocalTable<Dest2>();
 
-				Assert.AreEqual(3, count);
-				Assert.AreEqual(2, db.Types.Count(x => x.ID > 1000));
-				Assert.AreEqual(1, db.Child.Count(x => x.ChildID == 1003));
-			}
-			finally
-			{
-				Cleanup(db);
-			}
+			int count = db
+				.SelectQuery(() => new { ID = 1000, N = (short)42 })
+				.MultiInsert()
+				.Into(
+					dest1,
+					x => new Dest1 { ID = x.ID + 1, Value = x.N }
+				)
+				.Into(
+					dest1,
+					x => new Dest1 { ID = x.ID + 2, Value = x.N }
+				)
+				.Into(
+					dest2,
+					x => new Dest2 { ID = x.ID + 3, Int = x.ID + 1 }
+				)
+				.Insert();
+
+			Assert.AreEqual(3, count);
+			Assert.AreEqual(2, dest1.Count());
+			Assert.AreEqual(1, dest2.Count(x => x.ID == 1003));
 		}
 
 		[Test]
 		public async Task InsertAsync([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			await using var db = GetDataContext(context);
-			Cleanup(db);
-			try
-			{
-				int count = await db
-					.SelectQuery(() => new { ID = 1000, N = (short)42 })
-					.MultiInsert()
-					.Into(
-						db.Types,
-						x => new LinqDataTypes { ID = x.ID + 1, SmallIntValue = x.N }
-					)
-					.Into(
-						db.Types,
-						x => new LinqDataTypes { ID = x.ID + 2, SmallIntValue = x.N }
-					)
-					.Into(
-						db.Child,
-						x => new Child { ParentID = x.ID + 1, ChildID = x.ID + 3 }
-					)
-					.InsertAsync();
+			
+			using var dest1 = db.CreateLocalTable<Dest1>();
+			using var dest2 = db.CreateLocalTable<Dest2>();
+			
+			int count = await db
+				.SelectQuery(() => new { ID = 1000, N = (short)42 })
+				.MultiInsert()
+				.Into(
+					dest1,
+					x => new Dest1 { ID = x.ID + 1, Value = x.N }
+				)
+				.Into(
+					dest1,
+					x => new Dest1 { ID = x.ID + 2, Value = x.N }
+				)
+				.Into(
+					dest2,
+					x => new Dest2 { ID = x.ID + 3, Int = x.ID + 1 }
+				)
+				.InsertAsync();
 
-				Assert.AreEqual(3, count);
-				Assert.AreEqual(2, await db.Types.CountAsync(x => x.ID > 1000));
-				Assert.AreEqual(1, await db.Child.CountAsync(x => x.ChildID == 1003));
-			}
-			finally
-			{
-				Cleanup(db);
-			}
+			Assert.AreEqual(3, count);
+			Assert.AreEqual(2, await dest1.CountAsync());
+			Assert.AreEqual(1, await dest2.CountAsync(x => x.ID == 1003));
 		}
 
 		[Test]
 		public void InsertAll([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using var db = GetDataContext(context);
-			Cleanup(db);
-			try
-			{
-				int count = db
-					.SelectQuery(() => new { ID = 1000, N = (short)42 })
-					.MultiInsert()
-					.When(
-						x => x.N > 40,
-						db.Types,
-						x => new LinqDataTypes { ID = x.ID + 1, SmallIntValue = x.N }
-					)
-					.When(
-						x => x.N < 40,
-						db.Types,
-						x => new LinqDataTypes { ID = x.ID + 2, SmallIntValue = x.N }
-					)
-					.When(
-						x => true,
-						db.Child,
-						x => new Child { ParentID = x.ID + 1, ChildID = x.ID + 3 }
-					)
-					.InsertAll();
+			using var db    = GetDataContext(context);
+			using var dest1 = db.CreateLocalTable<Dest1>();
+			using var dest2 = db.CreateLocalTable<Dest2>();
 
-				Assert.AreEqual(2, count);
-				Assert.AreEqual(1, db.Types.Count(x => x.ID > 1000));
-				Assert.AreEqual(1, db.Child.Count(x => x.ChildID == 1003));
-				Assert.AreEqual(1, db.Types.Count(x => x.ID == 1001));
-			}
-			finally
-			{
-				Cleanup(db);
-			}
+			int count = db
+				.SelectQuery(() => new { ID = 1000, N = (short)42 })
+				.MultiInsert()
+				.When(
+					x => x.N > 40,
+					dest1,
+					x => new Dest1 { ID = x.ID + 1, Value = x.N }
+				)
+				.When(
+					x => x.N < 40,
+					dest1,
+					x => new Dest1 { ID = x.ID + 2, Value = x.N }
+				)
+				.When(
+					x => true,
+					dest2,
+					x => new Dest2 { ID = x.ID + 3, Int = x.ID + 1 }
+				)
+				.InsertAll();
+
+			Assert.AreEqual(2, count);
+			Assert.AreEqual(1, dest1.Count());
+			Assert.AreEqual(1, dest1.Count(x => x.ID == 1001));
+			Assert.AreEqual(1, dest2.Count(x => x.ID == 1003));
 		}
 
 		[Test]
 		public async Task InsertAllAsync([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			await using var db = GetDataContext(context);
-			Cleanup(db);
-			try
-			{
-				int count = await db
-					.SelectQuery(() => new { ID = 1000, N = (short)42 })
-					.MultiInsert()
-					.When(
-						x => x.N > 40,
-						db.Types,
-						x => new LinqDataTypes { ID = x.ID + 1, SmallIntValue = x.N }
-					)
-					.When(
-						x => x.N < 40,
-						db.Types,
-						x => new LinqDataTypes { ID = x.ID + 2, SmallIntValue = x.N }
-					)
-					.When(
-						x => true,
-						db.Child,
-						x => new Child { ParentID = x.ID + 1, ChildID = x.ID + 3 }
-					)
-					.InsertAllAsync();
+			
+			using var dest1 = db.CreateLocalTable<Dest1>();
+			using var dest2 = db.CreateLocalTable<Dest2>();
+			
+			int count = await db
+				.SelectQuery(() => new { ID = 1000, N = (short)42 })
+				.MultiInsert()
+				.When(
+					x => x.N > 40,
+					dest1,
+					x => new Dest1 { ID = x.ID + 1, Value = x.N }
+				)
+				.When(
+					x => x.N < 40,
+					dest1,
+					x => new Dest1 { ID = x.ID + 2, Value = x.N }
+				)
+				.When(
+					x => true,
+					dest2,
+					x => new Dest2 { ID = x.ID + 3, Int = x.ID + 1 }
+				)
+				.InsertAllAsync();
 
-				Assert.AreEqual(2, count);
-				Assert.AreEqual(1, await db.Types.CountAsync(x => x.ID > 1000));
-				Assert.AreEqual(1, await db.Child.CountAsync(x => x.ChildID == 1003));
-				Assert.AreEqual(1, await db.Types.CountAsync(x => x.ID == 1001));
-			}
-			finally
-			{
-				Cleanup(db);
-			}
+			Assert.AreEqual(2, count);
+			Assert.AreEqual(1, await dest1.CountAsync());
+			Assert.AreEqual(1, await dest1.CountAsync(x => x.ID == 1001));
+			Assert.AreEqual(1, await dest2.CountAsync(x => x.ID == 1003));
 		}
 
 		[Test]
 		public void InsertFirst([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using var db = GetDataContext(context);
-			Cleanup(db);
-			try
-			{
-				int count = db
-					.SelectQuery(() => new { ID = 1000, N = (short)42 })
-					.MultiInsert()
-					.When(
-						x => x.N < 40,
-						db.Types,
-						x => new LinqDataTypes { ID = x.ID + 1, SmallIntValue = x.N }
-					)
-					.When(
-						x => false,
-						db.Types,
-						x => new LinqDataTypes { ID = x.ID + 2, SmallIntValue = x.N }
-					)
-					.Else(
-						db.Types,
-						x => new LinqDataTypes { ID = x.ID + 3, SmallIntValue = x.N }
-					)
-					.InsertFirst();
+			using var db   = GetDataContext(context);
+			using var dest = db.CreateLocalTable<Dest1>();
+			
+			int count = db
+				.SelectQuery(() => new { ID = 1000, N = (short)42 })
+				.MultiInsert()
+				.When(
+					x => x.N < 40,
+					dest,
+					x => new Dest1 { ID = x.ID + 1, Value = x.N }
+				)
+				.When(
+					x => false,
+					dest,
+					x => new Dest1 { ID = x.ID + 2, Value = x.N }
+				)
+				.Else(
+					dest,
+					x => new Dest1 { ID = x.ID + 3, Value = x.N }
+				)
+				.InsertFirst();
 
-				Assert.AreEqual(1, count);
-				Assert.AreEqual(1, db.Types.Count(x => x.ID == 1003));
-			}
-			finally
-			{
-				Cleanup(db);
-			}
+			Assert.AreEqual(1, count);
+			Assert.AreEqual(1, dest.Count());
+			Assert.AreEqual(1, dest.Count(x => x.ID == 1003));
 		}
 
 		[Test]
 		public async Task InsertFirstAsync([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			await using var db = GetDataContext(context);
-			Cleanup(db);
-			try
-			{
-				int count = await db
-					.SelectQuery(() => new { ID = 1000, N = (short)42 })
-					.MultiInsert()
-					.When(
-						x => x.N < 40,
-						db.Types,
-						x => new LinqDataTypes { ID = x.ID + 1, SmallIntValue = x.N }
-					)
-					.When(
-						x => false,
-						db.Types,
-						x => new LinqDataTypes { ID = x.ID + 2, SmallIntValue = x.N }
-					)
-					.Else(
-						db.Types,
-						x => new LinqDataTypes { ID = x.ID + 3, SmallIntValue = x.N }
-					)
-					.InsertFirstAsync();
 
-				Assert.AreEqual(1, count);
-				Assert.AreEqual(1, await db.Types.CountAsync(x => x.ID == 1003));
-			}
-			finally
-			{
-				Cleanup(db);
-			}
+			using var dest = db.CreateLocalTable<Dest1>();
+
+			int count = await db
+				.SelectQuery(() => new { ID = 1000, N = (short)42 })
+				.MultiInsert()
+				.When(
+					x => x.N < 40,
+					dest,
+					x => new Dest1 { ID = x.ID + 1, Value = x.N }
+				)
+				.When(
+					x => false,
+					dest,
+					x => new Dest1 { ID = x.ID + 2, Value = x.N }
+				)
+				.Else(
+					dest,
+					x => new Dest1 { ID = x.ID + 3, Value = x.N }
+				)
+				.InsertFirstAsync();
+
+			Assert.AreEqual(1, count);
+			Assert.AreEqual(1, await dest.CountAsync());
+			Assert.AreEqual(1, await dest.CountAsync(x => x.ID == 1003));
 		}
 
 		[Test]
@@ -236,38 +202,32 @@ namespace Tests.xUpdate
 			[IncludeDataSources(true, TestProvName.AllOracle)] string context,
 			[Values("one", null, "two")] string? value)
 		{
-			using var db = GetDataContext(context);
-			Cleanup(db);
-			try
-			{
-				int id1 = 3000, id2 = 4000;
+			using var db   = GetDataContext(context);			
+			using var dest = db.CreateLocalTable<Dest1>();
+			
+			int id1 = 3000, id2 = 4000;
 
-				var command = db
-					.SelectQuery(() => new { Value = value })
-					.MultiInsert()
-					.When(
-						x => x.Value == null,
-						db.Types,
-						x => new LinqDataTypes { ID = id1, StringValue = x.Value }
-					)
-					.When(
-						x => x.Value != null,
-						db.Types,
-						x => new LinqDataTypes { ID = id2, StringValue = x.Value }
-					);
+			var command = db
+				.SelectQuery(() => new { Value = value })
+				.MultiInsert()
+				.When(
+					x => x.Value == null,
+					dest,
+					x => new Dest1 { ID = id1, StringValue = x.Value }
+				)
+				.When(
+					x => x.Value != null,
+					dest,
+					x => new Dest1 { ID = id2, StringValue = x.Value }
+				);
 
-				// Perform a simple INSERT ALL with parameters
-				int count  = command.InsertAll();
-				var record = db.Types.Where(_ => _.ID > 1000).Single();
+			// Perform a simple INSERT ALL with parameters
+			int count  = command.InsertAll();
+			var record = dest.Where(_ => _.ID > 1000).Single();
 
-				Assert.AreEqual(1, count);
-				Assert.AreEqual(value == null ? id1 : id2, record.ID);
-				Assert.AreEqual(value, record.StringValue);
-			}
-			finally
-			{
-				Cleanup(db);
-			}
+			Assert.AreEqual(1, count);
+			Assert.AreEqual(value == null ? id1 : id2, record.ID);
+			Assert.AreEqual(value, record.StringValue);
 		}
 
 		[Test]
@@ -276,37 +236,32 @@ namespace Tests.xUpdate
 			[Values("one", null, "two")] string? value)
 		{
 			await using var db = GetDataContext(context);
-			Cleanup(db);
-			try
-			{
-				int id1 = 3000, id2 = 4000;
 
-				var command = db
-					.SelectQuery(() => new { Value = value })
-					.MultiInsert()
-					.When(
-						x => x.Value == null,
-						db.Types,
-						x => new LinqDataTypes { ID = id1, StringValue = x.Value }
-					)
-					.When(
-						x => x.Value != null,
-						db.Types,
-						x => new LinqDataTypes { ID = id2, StringValue = x.Value }
-					);
+			using var dest = db.CreateLocalTable<Dest1>();
+		
+			int id1 = 3000, id2 = 4000;
 
-				// Perform a simple INSERT ALL with parameters
-				int count  = await command.InsertAllAsync();
-				var record = await db.Types.Where(_ => _.ID > 1000).SingleAsync();
+			var command = db
+				.SelectQuery(() => new { Value = value })
+				.MultiInsert()
+				.When(
+					x => x.Value == null,
+					dest,
+					x => new Dest1 { ID = id1, StringValue = x.Value }
+				)
+				.When(
+					x => x.Value != null,
+					dest,
+					x => new Dest1 { ID = id2, StringValue = x.Value }
+				);
 
-				Assert.AreEqual(1, count);
-				Assert.AreEqual(value == null ? id1 : id2, record.ID);
-				Assert.AreEqual(value, record.StringValue);
-			}
-			finally
-			{
-				Cleanup(db);
-			}
+			// Perform a simple INSERT ALL with parameters
+			int count  = await command.InsertAllAsync();
+			var record = await dest.Where(_ => _.ID > 1000).SingleAsync();
+
+			Assert.AreEqual(1, count);
+			Assert.AreEqual(value == null ? id1 : id2, record.ID);
+			Assert.AreEqual(value, record.StringValue);
 		}
 
 		[Test]
@@ -314,38 +269,32 @@ namespace Tests.xUpdate
 			[IncludeDataSources(true, TestProvName.AllOracle)] string context,
 			[Values("one", null, "two")] string? value)
 		{
-			using var db = GetDataContext(context);
-			Cleanup(db);
-			try
-			{
-				int id1 = 3000, id2 = 4000;
+			using var db   = GetDataContext(context);
+			using var dest = db.CreateLocalTable<Dest1>();
+		
+			int id1 = 3000, id2 = 4000;
 
-				var command = db
-					.SelectQuery(() => new { Value = value })
-					.MultiInsert()
-					.When(
-						x => value == null,
-						db.Types,
-						x => new LinqDataTypes { ID = id1, StringValue = x.Value }
-					)
-					.When(
-						x => value != null,
-						db.Types,
-						x => new LinqDataTypes { ID = id2, StringValue = x.Value }
-					);
+			var command = db
+				.SelectQuery(() => new { Value = value })
+				.MultiInsert()
+				.When(
+					x => value == null,
+					dest,
+					x => new Dest1 { ID = id1, StringValue = x.Value }
+				)
+				.When(
+					x => value != null,
+					dest,
+					x => new Dest1 { ID = id2, StringValue = x.Value }
+				);
 
-				// Perform a simple INSERT ALL with parameters
-				int count  = command.InsertAll();
-				var record = db.Types.Where(_ => _.ID > 1000).Single();
+			// Perform a simple INSERT ALL with parameters
+			int count  = command.InsertAll();
+			var record = dest.Where(_ => _.ID > 1000).Single();
 
-				Assert.AreEqual(1, count);
-				Assert.AreEqual(value == null ? id1 : id2, record.ID);
-				Assert.AreEqual(value, record.StringValue);
-			}
-			finally
-			{
-				Cleanup(db);
-			}
+			Assert.AreEqual(1, count);
+			Assert.AreEqual(value == null ? id1 : id2, record.ID);
+			Assert.AreEqual(value, record.StringValue);
 		}
 
 		[Test]
@@ -354,37 +303,32 @@ namespace Tests.xUpdate
 			[Values("one", null, "two")] string? value)
 		{
 			await using var db = GetDataContext(context);
-			Cleanup(db);
-			try
-			{
-				int id1 = 3000, id2 = 4000;
 
-				var command = db
-					.SelectQuery(() => new { Value = value })
-					.MultiInsert()
-					.When(
-						x => value == null,
-						db.Types,
-						x => new LinqDataTypes { ID = id1, StringValue = x.Value }
-					)
-					.When(
-						x => value != null,
-						db.Types,
-						x => new LinqDataTypes { ID = id2, StringValue = x.Value }
-					);
+			using var dest = db.CreateLocalTable<Dest1>();
+		
+			int id1 = 3000, id2 = 4000;
 
-				// Perform a simple INSERT ALL with parameters
-				int count  = await command.InsertAllAsync();
-				var record = await db.Types.Where(_ => _.ID > 1000).SingleAsync();
+			var command = db
+				.SelectQuery(() => new { Value = value })
+				.MultiInsert()
+				.When(
+					x => value == null,
+					dest,
+					x => new Dest1 { ID = id1, StringValue = x.Value }
+				)
+				.When(
+					x => value != null,
+					dest,
+					x => new Dest1 { ID = id2, StringValue = x.Value }
+				);
 
-				Assert.AreEqual(1, count);
-				Assert.AreEqual(value == null ? id1 : id2, record.ID);
-				Assert.AreEqual(value, record.StringValue);
-			}
-			finally
-			{
-				Cleanup(db);
-			}
+			// Perform a simple INSERT ALL with parameters
+			int count  = await command.InsertAllAsync();
+			var record = await dest.Where(_ => _.ID > 1000).SingleAsync();
+
+			Assert.AreEqual(1, count);
+			Assert.AreEqual(value == null ? id1 : id2, record.ID);
+			Assert.AreEqual(value, record.StringValue);
 		}
 
 		[Test]
@@ -392,38 +336,32 @@ namespace Tests.xUpdate
 			[IncludeDataSources(true, TestProvName.AllOracle)] string context,
 			[Values("one", null, "two")] string? value)
 		{
-			using var db = GetDataContext(context);
-			Cleanup(db);
-			try
-			{
-				int id1 = 3000, id2 = 4000;
+			using var db   = GetDataContext(context);
+			using var dest = db.CreateLocalTable<Dest1>();
 
-				var command = db
-					.SelectQuery(() => new { Value = value })
-					.MultiInsert()
-					.When(
-						x => x.Value == null,
-						db.Types,
-						x => new LinqDataTypes { ID = id1, StringValue = value }
-					)
-					.When(
-						x => x.Value != null,
-						db.Types,
-						x => new LinqDataTypes { ID = id2, StringValue = value }
-					);
+			int id1 = 3000, id2 = 4000;
 
-				// Perform a simple INSERT ALL with parameters
-				int count  = command.InsertAll();
-				var record = db.Types.Where(_ => _.ID > 1000).Single();
+			var command = db
+				.SelectQuery(() => new { Value = value })
+				.MultiInsert()
+				.When(
+					x => x.Value == null,
+					dest,
+					x => new Dest1 { ID = id1, StringValue = value }
+				)
+				.When(
+					x => x.Value != null,
+					dest,
+					x => new Dest1 { ID = id2, StringValue = value }
+				);
 
-				Assert.AreEqual(1, count);
-				Assert.AreEqual(value == null ? id1 : id2, record.ID);
-				Assert.AreEqual(value, record.StringValue);
-			}
-			finally
-			{
-				Cleanup(db);
-			}
+			// Perform a simple INSERT ALL with parameters
+			int count  = command.InsertAll();
+			var record = dest.Where(_ => _.ID > 1000).Single();
+
+			Assert.AreEqual(1, count);
+			Assert.AreEqual(value == null ? id1 : id2, record.ID);
+			Assert.AreEqual(value, record.StringValue);
 		}
 
 		[Test]
@@ -432,88 +370,75 @@ namespace Tests.xUpdate
 			[Values("one", null, "two")] string? value)
 		{
 			await using var db = GetDataContext(context);
-			Cleanup(db);
-			try
-			{
-				int id1 = 3000, id2 = 4000;
 
-				var command = db
-					.SelectQuery(() => new { Value = value })
-					.MultiInsert()
-					.When(
-						x => x.Value == null,
-						db.Types,
-						x => new LinqDataTypes { ID = id1, StringValue = value }
-					)
-					.When(
-						x => x.Value != null,
-						db.Types,
-						x => new LinqDataTypes { ID = id2, StringValue = value }
-					);
+			using var dest = db.CreateLocalTable<Dest1>();
 
-				// Perform a simple INSERT ALL with parameters
-				int count  = await command.InsertAllAsync();
-				var record = await db.Types.Where(_ => _.ID > 1000).SingleAsync();
+			int id1 = 3000, id2 = 4000;
 
-				Assert.AreEqual(1, count);
-				Assert.AreEqual(value == null ? id1 : id2, record.ID);
-				Assert.AreEqual(value, record.StringValue);
-			}
-			finally
-			{
-				Cleanup(db);
-			}
+			var command = db
+				.SelectQuery(() => new { Value = value })
+				.MultiInsert()
+				.When(
+					x => x.Value == null,
+					dest,
+					x => new Dest1 { ID = id1, StringValue = value }
+				)
+				.When(
+					x => x.Value != null,
+					dest,
+					x => new Dest1 { ID = id2, StringValue = value }
+				);
+
+			// Perform a simple INSERT ALL with parameters
+			int count  = await command.InsertAllAsync();
+			var record = await dest.Where(_ => _.ID > 1000).SingleAsync();
+
+			Assert.AreEqual(1, count);
+			Assert.AreEqual(value == null ? id1 : id2, record.ID);
+			Assert.AreEqual(value, record.StringValue);
 		}
 
 		[Test]
 		public void Expressions([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using var db = GetDataContext(context);
-			Cleanup(db);
-			try
-			{
-				// Perform a simple INSERT ALL with some expressions
-				int count = InsertAll(
-					() => new TestSource { ID = 3000, N = (short)42 },
-					x  => x.N < 0,
-					x  => new LinqDataTypes { ID = 3002, SmallIntValue = x.N });
+			using var db   = GetDataContext(context);
+			using var dest = db.CreateLocalTable<Dest1>();
+			
+			// Perform a simple INSERT ALL with some expressions
+			int count = InsertAll(
+				() => new TestSource { ID = 3000, N = (short)42 },
+				x  => x.N < 0,
+				x  => new Dest1 { ID = 3002, Value = x.N });
 
-				Assert.AreEqual(1, count);
-				Assert.AreEqual(1, db.Types.Count(x => x.ID > 3000));
-				Assert.AreEqual(0, db.Types.Count(x => x.ID > 4000));
+			Assert.AreEqual(1, count);
+			Assert.AreEqual(1, dest.Count());
+			Assert.AreEqual(1, dest.Count(x => x.ID == 3002));
 
-				Cleanup(db);
+			// Perform the same INSERT ALL with different expressions
+			count = InsertAll(
+				() => new TestSource { ID = 4000, N = (short)42 },
+				x  => true, 
+				x  => new Dest1 { ID = 4002, Value = x.N });
 
-				// Perform the same INSERT ALL with different expressions
-				count = InsertAll(
-					() => new TestSource { ID = 4000, N = (short)42 },
-					x  => true, 
-					x  => new LinqDataTypes { ID = 4002, SmallIntValue = x.N });
-
-				Assert.AreEqual(2, count);
-				Assert.AreEqual(2, db.Types.Count(x => x.ID > 4000));
-			}
-			finally
-			{
-				Cleanup(db);
-			}
+			Assert.AreEqual(2, count);
+			Assert.AreEqual(2, dest.Count(x => x.ID == 4001 || x.ID == 4002));
 
 			int InsertAll(
 				Expression<Func<TestSource>>                source,
 				Expression<Func<TestSource, bool>>          condition1,
-				Expression<Func<TestSource, LinqDataTypes>> setter2)
+				Expression<Func<TestSource, Dest1>> setter2)
 			{
 				return db
 					.SelectQuery(source)
 					.MultiInsert()
 					.When(
 						condition1,
-						db.Types,
-						x => new LinqDataTypes { ID = x.ID + 1, SmallIntValue = x.N }
+						dest,
+						x => new Dest1 { ID = x.ID + 1, Value = x.N }
 					)
 					.When(
 						x => x.N > 40,
-						db.Types,
+						dest,
 						setter2
 					)
 					.InsertAll();
@@ -524,51 +449,45 @@ namespace Tests.xUpdate
 		public async Task ExpressionsAsync([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			await using var db = GetDataContext(context);
-			Cleanup(db);
-			try
-			{
-				// Perform a simple INSERT ALL with some expressions
-				int count = await InsertAll(
-					() => new TestSource { ID = 3000, N = (short)42 },
-					x  => x.N < 0,
-					x  => new LinqDataTypes { ID = 3002, SmallIntValue = x.N });
+			
+			using var dest = db.CreateLocalTable<Dest1>();
 
-				Assert.AreEqual(1, count);
-				Assert.AreEqual(1, await db.Types.CountAsync(x => x.ID > 3000));
-				Assert.AreEqual(0, await db.Types.CountAsync(x => x.ID > 4000));
+			// Perform a simple INSERT ALL with some expressions
+			int count = await InsertAll(
+				() => new TestSource { ID = 3000, N = (short)42 },
+				x  => x.N < 0,
+				x  => new Dest1 { ID = 3002, Value = x.N });
 
-				Cleanup(db);
+			Assert.AreEqual(1, count);
+			Assert.AreEqual(1, await dest.CountAsync());
+			Assert.AreEqual(1, await dest.CountAsync(x => x.ID == 3002));
 
-				// Perform the same INSERT ALL with different expressions
-				count = await InsertAll(
-					() => new TestSource { ID = 4000, N = (short)42 },
-					x  => true, 
-					x  => new LinqDataTypes { ID = 4002, SmallIntValue = x.N });
+			// Perform the same INSERT ALL with different expressions
+			count = await InsertAll(
+				() => new TestSource { ID = 4000, N = (short)42 },
+				x  => true, 
+				x  => new Dest1 { ID = 4002, Value = x.N });
 
-				Assert.AreEqual(2, count);
-				Assert.AreEqual(2, await db.Types.CountAsync(x => x.ID > 4000));
-			}
-			finally
-			{
-				Cleanup(db);
-			}
+			Assert.AreEqual(2, count);
+			Assert.AreEqual(3, await dest.CountAsync());
+			Assert.AreEqual(2, await dest.CountAsync(x => x.ID == 4001 || x.ID == 4002));
 
 			Task<int> InsertAll(
-				Expression<Func<TestSource>>                source,
-				Expression<Func<TestSource, bool>>          condition1,
-				Expression<Func<TestSource, LinqDataTypes>> setter2)
+				Expression<Func<TestSource>>        source,
+				Expression<Func<TestSource, bool>>  condition1,
+				Expression<Func<TestSource, Dest1>> setter2)
 			{
 				return db
 					.SelectQuery(source)
 					.MultiInsert()
 					.When(
 						condition1,
-						db.Types,
-						x => new LinqDataTypes { ID = x.ID + 1, SmallIntValue = x.N }
+						dest,
+						x => new Dest1 { ID = x.ID + 1, Value = x.N }
 					)
 					.When(
 						x => x.N > 40,
-						db.Types,
+						dest,
 						setter2
 					)
 					.InsertAllAsync();
@@ -579,6 +498,19 @@ namespace Tests.xUpdate
 		{
 			public int   ID { get; set; }
 			public short N  { get; set; }
+		}
+
+		class Dest1
+		{
+			public int     ID          { get; set; }
+			public short   Value       { get; set; }
+			public string? StringValue { get; set; }
+		}
+
+		class Dest2
+		{
+			public int ID    { get; set; }
+			public int Int   { get; set; }
 		}
 	}
 }
