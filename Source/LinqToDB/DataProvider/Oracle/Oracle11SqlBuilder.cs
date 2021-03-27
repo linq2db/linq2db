@@ -626,12 +626,12 @@ END;",
 			}
 			else
 			{
-				foreach (var (when, insert) in statement.Inserts)
+				foreach (var insert in statement.Inserts)
 				{
-					if (when != null)
-					{						
+					if (insert.When != null)
+					{
 						int length = StringBuilder.Append("WHEN ").Length;
-						BuildSearchCondition(when, wrapCondition: true);
+						BuildSearchCondition(insert.When, wrapCondition: true);
 						// If `when` condition is optimized to always `true`, 
 						// then BuildSearchCondition doesn't write anything.
 						if (StringBuilder.Length == length)
@@ -643,7 +643,7 @@ END;",
 						StringBuilder.AppendLine("ELSE");
 					}
 		
-					BuildInsertClause(statement, insert, "INTO ", appendTableName: true, addAlias: false);
+					BuildInsertClause(statement, insert.Insert, "INTO ", appendTableName: true, addAlias: false);
 				}
 			}
 

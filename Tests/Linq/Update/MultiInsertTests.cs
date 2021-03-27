@@ -24,15 +24,15 @@ namespace Tests.xUpdate
 			try
 			{
 				int count = db
-					.SelectQuery(() => new { ID = 1000, N = 42 })
+					.SelectQuery(() => new { ID = 1000, N = (short)42 })
 					.MultiInsert()
 					.Into(
 						db.Types,
-						x => new LinqDataTypes { ID = x.ID + 1, GuidValue = Sql.NewGuid() }
+						x => new LinqDataTypes { ID = x.ID + 1, SmallIntValue = x.N }
 					)
 					.Into(
 						db.Types,
-						x => new LinqDataTypes { ID = x.ID + 2, GuidValue = Sql.NewGuid() }
+						x => new LinqDataTypes { ID = x.ID + 2, SmallIntValue = x.N }
 					)
 					.Into(
 						db.Child,
@@ -58,17 +58,17 @@ namespace Tests.xUpdate
 			try
 			{
 				int count = db
-					.SelectQuery(() => new { ID = 1000, N = 42 })
+					.SelectQuery(() => new { ID = 1000, N = (short)42 })
 					.MultiInsert()
 					.When(
 						x => x.N > 40,
 						db.Types,
-						x => new LinqDataTypes { ID = x.ID + 1, GuidValue = Sql.NewGuid() }
+						x => new LinqDataTypes { ID = x.ID + 1, SmallIntValue = x.N }
 					)
 					.When(
 						x => x.N < 40,
 						db.Types,
-						x => new LinqDataTypes { ID = x.ID + 2, GuidValue = Sql.NewGuid() }
+						x => new LinqDataTypes { ID = x.ID + 2, SmallIntValue = x.N }
 					)
 					.When(
 						x => true,
@@ -80,6 +80,7 @@ namespace Tests.xUpdate
 				Assert.AreEqual(2, count);
 				Assert.AreEqual(1, db.Types.Count(x => x.ID > 1000));
 				Assert.AreEqual(1, db.Child.Count(x => x.ChildID == 1003));
+				Assert.AreEqual(1, db.Types.Count(x => x.ID == 1001));
 			}
 			finally
 			{
@@ -95,26 +96,26 @@ namespace Tests.xUpdate
 			try
 			{
 				int count = db
-					.SelectQuery(() => new { ID = 1000, N = 42 })
+					.SelectQuery(() => new { ID = 1000, N = (short)42 })
 					.MultiInsert()
 					.When(
 						x => x.N < 40,
 						db.Types,
-						x => new LinqDataTypes { ID = x.ID + 1, GuidValue = Sql.NewGuid() }
+						x => new LinqDataTypes { ID = x.ID + 1, SmallIntValue = x.N }
 					)
 					.When(
 						x => false,
 						db.Types,
-						x => new LinqDataTypes { ID = x.ID + 2, GuidValue = Sql.NewGuid() }
+						x => new LinqDataTypes { ID = x.ID + 2, SmallIntValue = x.N }
 					)
 					.Else(
 						db.Types,
-						x => new LinqDataTypes { ID = x.ID + 3, GuidValue = Sql.NewGuid() }
+						x => new LinqDataTypes { ID = x.ID + 3, SmallIntValue = x.N }
 					)
 					.InsertFirst();
 
 				Assert.AreEqual(1, count);
-				Assert.AreEqual(1, db.Types.Count(x => x.ID > 1000));
+				Assert.AreEqual(1, db.Types.Count(x => x.ID == 1003));
 			}
 			finally
 			{
@@ -123,44 +124,115 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Parameters([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		public void ParametersInSource(
+			[IncludeDataSources(true, TestProvName.AllOracle)] string context,
+			[Values("one", null, "two")] string? value)
 		{
 			using var db = GetDataContext(context);
 			Cleanup(db);
 			try
 			{
-				int id = 3000, newId2 = 3002;
-				int? checkNull = 0;
+				int id1 = 3000, id2 = 4000;
 
 				var command = db
-					.SelectQuery(() => new { ID = id, N = 42 })
+					.SelectQuery(() => new { Value = value })
 					.MultiInsert()
 					.When(
-						x => checkNull == null,
+						x => x.Value == null,
 						db.Types,
-						x => new LinqDataTypes { ID = x.ID + 1, GuidValue = Sql.NewGuid() }
+						x => new LinqDataTypes { ID = id1, StringValue = x.Value }
 					)
 					.When(
-						x => x.N > 40,
+						x => x.Value != null,
 						db.Types,
-						x => new LinqDataTypes { ID = newId2, GuidValue = Sql.NewGuid() }
+						x => new LinqDataTypes { ID = id2, StringValue = x.Value }
 					);
 
 				// Perform a simple INSERT ALL with parameters
-				int count = command.InsertAll();
-				Assert.AreEqual(1, count);
-				Assert.AreEqual(1, db.Types.Count(x => x.ID > 3000));
-				Assert.AreEqual(0, db.Types.Count(x => x.ID > 4000));
-				
-				Cleanup(db);
+				int count  = command.InsertAll();
+				var record = db.Types.Where(_ => _.ID > 1000).Single();
 
-				// Perform the same INSERT ALL with different parameter values
-				id        = 4000; 
-				checkNull = null; 
-				newId2    = 4002;
-				count     = command.InsertAll();
-				Assert.AreEqual(2, count);
-				Assert.AreEqual(2, db.Types.Count(x => x.ID > 4000));
+				Assert.AreEqual(1, count);
+				Assert.AreEqual(value == null ? id1 : id2, record.ID);
+				Assert.AreEqual(value, record.StringValue);
+			}
+			finally
+			{
+				Cleanup(db);
+			}
+		}
+
+		[Test]
+		public void ParametersInCondition(
+			[IncludeDataSources(true, TestProvName.AllOracle)] string context,
+			[Values("one", null, "two")] string? value)
+		{
+			using var db = GetDataContext(context);
+			Cleanup(db);
+			try
+			{
+				int id1 = 3000, id2 = 4000;
+
+				var command = db
+					.SelectQuery(() => new { Value = value })
+					.MultiInsert()
+					.When(
+						x => value == null,
+						db.Types,
+						x => new LinqDataTypes { ID = id1, StringValue = x.Value }
+					)
+					.When(
+						x => value != null,
+						db.Types,
+						x => new LinqDataTypes { ID = id2, StringValue = x.Value }
+					);
+
+				// Perform a simple INSERT ALL with parameters
+				int count  = command.InsertAll();
+				var record = db.Types.Where(_ => _.ID > 1000).Single();
+
+				Assert.AreEqual(1, count);
+				Assert.AreEqual(value == null ? id1 : id2, record.ID);
+				Assert.AreEqual(value, record.StringValue);
+			}
+			finally
+			{
+				Cleanup(db);
+			}
+		}
+
+		[Test]
+		public void ParametersInInsert(
+			[IncludeDataSources(true, TestProvName.AllOracle)] string context,
+			[Values("one", null, "two")] string? value)
+		{
+			using var db = GetDataContext(context);
+			Cleanup(db);
+			try
+			{
+				int id1 = 3000, id2 = 4000;
+
+				var command = db
+					.SelectQuery(() => new { Value = value })
+					.MultiInsert()
+					.When(
+						x => x.Value == null,
+						db.Types,
+						x => new LinqDataTypes { ID = id1, StringValue = value }
+					)
+					.When(
+						x => x.Value != null,
+						db.Types,
+						x => new LinqDataTypes { ID = id2, StringValue = value }
+					);
+
+				// Perform a simple INSERT ALL with parameters
+				int count  = command.InsertAll();
+				var record = db.Types.Where(_ => _.ID > 1000).Single();
+
+				Assert.AreEqual(1, count);
+				Assert.AreEqual(value == null ? id1 : id2, record.ID);
+				Assert.AreEqual(value, record.StringValue);
 			}
 			finally
 			{
@@ -177,9 +249,9 @@ namespace Tests.xUpdate
 			{
 				// Perform a simple INSERT ALL with some expressions
 				int count = InsertAll(
-					() => new TestSource { ID = 3000, N = 42 },
-					x  => x.N < 0, 
-					x  => new LinqDataTypes { ID = 3002, GuidValue = Sql.NewGuid() });
+					() => new TestSource { ID = 3000, N = (short)42 },
+					x  => x.N < 0,
+					x  => new LinqDataTypes { ID = 3002, SmallIntValue = x.N });
 
 				Assert.AreEqual(1, count);
 				Assert.AreEqual(1, db.Types.Count(x => x.ID > 3000));
@@ -189,9 +261,9 @@ namespace Tests.xUpdate
 
 				// Perform the same INSERT ALL with different expressions
 				count = InsertAll(
-					() => new TestSource { ID = 4000, N = 42 }, 
+					() => new TestSource { ID = 4000, N = (short)42 },
 					x  => true, 
-					x  => new LinqDataTypes { ID = 4002, GuidValue = Sql.NewGuid() });
+					x  => new LinqDataTypes { ID = 4002, SmallIntValue = x.N });
 
 				Assert.AreEqual(2, count);
 				Assert.AreEqual(2, db.Types.Count(x => x.ID > 4000));
@@ -212,7 +284,7 @@ namespace Tests.xUpdate
 					.When(
 						condition1,
 						db.Types,
-						x => new LinqDataTypes { ID = x.ID + 1, GuidValue = Sql.NewGuid() }
+						x => new LinqDataTypes { ID = x.ID + 1, SmallIntValue = x.N }
 					)
 					.When(
 						x => x.N > 40,
@@ -225,8 +297,8 @@ namespace Tests.xUpdate
 
 		class TestSource
 		{
-			public int ID { get; set; }
-			public int N  { get; set; }
+			public int   ID { get; set; }
+			public short N  { get; set; }
 		}
 	}
 }

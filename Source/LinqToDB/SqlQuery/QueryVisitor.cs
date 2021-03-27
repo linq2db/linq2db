@@ -9,7 +9,7 @@ namespace LinqToDB.SqlQuery
 		#region Visit
 
 		readonly ISet<IQueryElement>                      _visitedFind     = new HashSet<IQueryElement>();
-		readonly Dictionary<IQueryElement,IQueryElement?> _visitedElements = new Dictionary<IQueryElement, IQueryElement?>();
+		readonly Dictionary<IQueryElement,IQueryElement?> _visitedElements = new ();
 		public   Dictionary<IQueryElement,IQueryElement?>  VisitedElements => _visitedElements;
 
 		bool                                 _all;
@@ -361,16 +361,12 @@ namespace LinqToDB.SqlQuery
 					break;
 
 				case QueryElementType.MultiInsertStatement:
-					{
-						var multi = (SqlMultiInsertStatement)element;
-						Visit1(multi.Source);
-						foreach (var (when, insert) in multi.Inserts)
-						{
-							Visit1(when);
-							Visit1(insert);
-						}
-						break;
-					}
+					Visit1X((SqlMultiInsertStatement)element);
+					break;
+
+				case QueryElementType.ConditionalInsertClause:
+					Visit1X((SqlConditionalInsertClause)element);
+					break;
 
 				case QueryElementType.MergeSourceTable:
 					Visit1X((SqlTableLikeSource)element);
@@ -569,6 +565,20 @@ namespace LinqToDB.SqlQuery
 
 			foreach (var operation in element.Operations)
 				Visit1(operation);
+		}
+
+		void Visit1X(SqlMultiInsertStatement element)
+		{
+			Visit1(element.Source);
+
+			foreach (var insert in element.Inserts)
+				Visit1(insert);
+		}
+
+		void Visit1X(SqlConditionalInsertClause element)
+		{
+			Visit1(element.When);
+			Visit1(element.Insert);
 		}
 
 		void Visit1X(SqlTableLikeSource element)
@@ -946,17 +956,12 @@ namespace LinqToDB.SqlQuery
 					break;
 
 				case QueryElementType.MultiInsertStatement:
-					{
-						var multi = (SqlMultiInsertStatement)element;
-						Visit2(multi.Source);
-						foreach (var (when, insert) in multi.Inserts)
-						{
-							if (when != null)
-								Visit2X(when);
-							Visit2(insert);
-						}
-						break;
-					}
+					Visit2X((SqlMultiInsertStatement)element);
+					break;
+
+				case QueryElementType.ConditionalInsertClause:
+					Visit2X((SqlConditionalInsertClause)element);
+					break;
 
 				case QueryElementType.MergeSourceTable:
 					Visit2X((SqlTableLikeSource)element);
@@ -1187,6 +1192,20 @@ namespace LinqToDB.SqlQuery
 
 			foreach (var operation in element.Operations)
 				Visit2(operation);
+		}
+
+		void Visit2X(SqlMultiInsertStatement element)
+		{
+			Visit2(element.Source);
+
+			foreach (var insert in element.Inserts)
+				Visit2(insert);
+		}
+
+		void Visit2X(SqlConditionalInsertClause element)
+		{
+			Visit2(element.When);
+			Visit2(element.Insert);
 		}
 
 		void Visit2X(SqlTableLikeSource element)
@@ -1543,22 +1562,16 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.MultiInsertStatement:
 					{
-						var multi = (SqlMultiInsertStatement)element;
-						
-						IQueryElement? found;
+						return
+							Find(((SqlMultiInsertStatement)element).Source) ??
+							Find(((SqlMultiInsertStatement)element).Inserts);
+					}
 
-						if ((found = Find(multi.Source)) != null) 
-							return found;
-
-						foreach (var (when, insert) in multi.Inserts)
-						{
-							if (when != null && (found = FindX(when)) != null)
-								return found;
-							if ((found = Find(insert)) != null)
-								return found;
-						}
-
-						return null;
+				case QueryElementType.ConditionalInsertClause:
+					{
+						return
+							Find(((SqlConditionalInsertClause)element).When) ??
+							Find(((SqlConditionalInsertClause)element).Insert);
 					}
 
 				case QueryElementType.SqlValuesTable:

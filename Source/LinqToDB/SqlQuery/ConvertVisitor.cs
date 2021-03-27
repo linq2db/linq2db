@@ -951,36 +951,34 @@ namespace LinqToDB.SqlQuery
 
 					case QueryElementType.MultiInsertStatement:
 						{
-							var s              = (SqlMultiInsertStatement)element;
-							var source         = (SqlTableLikeSource?    )ConvertInternal(s.Source);
-							
-							var insertsChanged = false;
-							var inserts        = s
-								.Inserts
-								.Select(old => {
-									var newWhen   = (SqlSearchCondition?)ConvertInternal(old.When  );
-									var newInsert = (SqlInsertClause   ?)ConvertInternal(old.Insert);
-									
-									insertsChanged |= newWhen   != null && !ReferenceEquals(old.When,   newWhen);
-									insertsChanged |= newInsert != null && !ReferenceEquals(old.Insert, newInsert);
-									
-									return new SqlConditionalInsert
-									{
-										When   = newWhen   ?? old.When,
-										Insert = newInsert ?? old.Insert,
-									};
-								})
-								.ToList();
+							var insert  = (SqlMultiInsertStatement)element;
+							var source  = (SqlTableLikeSource?    )ConvertInternal(insert.Source);
+							var inserts = ConvertSafe(insert.Inserts);
 
-							if (source != null && !ReferenceEquals(s.Source, source) || 
-							    insertsChanged)
+							if (source != null && !ReferenceEquals(insert.Source, source) ||
+								inserts != null && !ReferenceEquals(insert.Inserts, inserts))
 							{
-								source   ??= s.Source;
-								newElement = new SqlMultiInsertStatement(source)
-								{
-									InsertType = s.InsertType,
-									Inserts    = inserts,
-								};
+								newElement = new SqlMultiInsertStatement(
+									insert.InsertType,
+									source  ?? insert.Source,
+									inserts ?? insert.Inserts);
+							}
+
+							break;
+						}
+
+					case QueryElementType.ConditionalInsertClause:
+						{
+							var clause = (SqlConditionalInsertClause)element;
+							var when   = (SqlSearchCondition?)ConvertInternal(clause.When);
+							var insert = (SqlInsertClause?   )ConvertInternal(clause.Insert);
+
+							if (when   != null && !ReferenceEquals(clause.When  , when) ||
+								insert != null && !ReferenceEquals(clause.Insert, insert))
+							{
+								newElement = new SqlConditionalInsertClause(
+									insert ?? clause.Insert,
+									when   ?? clause.When);
 							}
 
 							break;
