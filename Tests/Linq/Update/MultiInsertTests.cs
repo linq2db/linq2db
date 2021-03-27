@@ -503,7 +503,7 @@ namespace Tests.xUpdate
 		class Dest1
 		{
 			public int     ID          { get; set; }
-			public short   Value       { get; set; }
+			public short?  Value       { get; set; }
 			public string? StringValue { get; set; }
 		}
 
