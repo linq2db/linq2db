@@ -265,7 +265,7 @@ namespace LinqToDB.Data
 
 				if (TraceSwitchConnection.TraceInfo)
 				{
-					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute)
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, TraceOperation.ExecuteNonQuery, true)
 					{
 						TraceLevel      = TraceLevel.Info,
 						Command         = CurrentCommand,
@@ -281,7 +281,7 @@ namespace LinqToDB.Data
 			{
 				if (TraceSwitchConnection.TraceError)
 				{
-					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error)
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteNonQuery, true)
 					{
 						TraceLevel     = TraceLevel.Error,
 						Command        = CurrentCommand,

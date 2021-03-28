@@ -13,13 +13,13 @@ namespace LinqToDB.Data
 		, IAsyncDisposable
 #endif
 	{
-		internal DataReaderWrapper?       ReaderWrapper     { get; private set; }
-		public   DbDataReader?            Reader            => ReaderWrapper?.DataReader;
-		public   CommandInfo?             CommandInfo       { get; }
-		internal int               ReadNumber        { get; set; }
-		internal CancellationToken CancellationToken { get; set; }
-		private  DateTime          StartedOn         { get; }      = DateTime.UtcNow;
-		private  Stopwatch         Stopwatch         { get; }      = Stopwatch.StartNew();
+		internal DataReaderWrapper? ReaderWrapper     { get; private set; }
+		public   DbDataReader?      Reader            => ReaderWrapper?.DataReader;
+		public   CommandInfo?       CommandInfo       { get; }
+		internal int                ReadNumber        { get; set; }
+		internal CancellationToken  CancellationToken { get; set; }
+		private  DateTime           StartedOn         { get; }      = DateTime.UtcNow;
+		private  Stopwatch          Stopwatch         { get; }      = Stopwatch.StartNew();
 
 		public DataReaderAsync(CommandInfo commandInfo, DataReaderWrapper dataReader)
 		{
@@ -48,7 +48,6 @@ namespace LinqToDB.Data
 				ReaderWrapper.Dispose();
 				ReaderWrapper = null;
 			}
-			OnDispose?.Invoke();
 		}
 
 #if NETSTANDARD2_1PLUS
@@ -73,7 +72,6 @@ namespace LinqToDB.Data
 				await ReaderWrapper.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 				ReaderWrapper = null;
 			}
-			OnDispose?.Invoke();
 		}
 #elif NATIVE_ASYNC
 		public ValueTask DisposeAsync()

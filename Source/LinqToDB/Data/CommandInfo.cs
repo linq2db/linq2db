@@ -9,7 +9,6 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Diagnostics.CodeAnalysis;
 
 using JetBrains.Annotations;
 
@@ -21,6 +20,7 @@ namespace LinqToDB.Data
 	using Common;
 	using Expressions;
 	using Extensions;
+	using LinqToDB.Common.Internal.Cache;
 	using LinqToDB.Linq;
 	using Mapping;
 	using Reflection;
@@ -413,7 +413,7 @@ namespace LinqToDB.Data
 				{
 					if (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 					{
-						var additionalKey = GetCommandAdditionalKey(rd.DataReader!);
+						var additionalKey = GetCommandAdditionalKey(rd.DataReader!, typeof(T));
 						var objectReader  = GetObjectReader<T>(DataConnection, rd.DataReader!, CommandText, additionalKey);
 						var isFaulted     = false;
 
@@ -990,7 +990,7 @@ namespace LinqToDB.Data
 				{
 					if (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 					{
-						var additionalKey = GetCommandAdditionalKey(rd.DataReader!);
+						var additionalKey = GetCommandAdditionalKey(rd.DataReader!, typeof(T));
 						try
 						{
 							result = GetObjectReader<T>(DataConnection, rd.DataReader!, CommandText, additionalKey)(rd.DataReader!);
