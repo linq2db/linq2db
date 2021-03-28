@@ -26,7 +26,7 @@ namespace LinqToDB.DataProvider
 		ISqlBuilder        CreateSqlBuilder      (MappingSchema mappingSchema);
 		ISqlOptimizer      GetSqlOptimizer       ();
 		/// <summary>
-		/// Initializes <see cref="DataConnection.Command"/> object.
+		/// Initializes <see cref="DataConnection"/> command object.
 		/// </summary>
 		/// <param name="dataConnection">Data connection instance to initialize with new command.</param>
 		/// <param name="command">Command instance to initialize.</param>
