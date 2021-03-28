@@ -1,5 +1,5 @@
 variables:
-  ${{ if eq(variables['Build.SourceBranchName'], variables['release_branch']) }}:
+  ${{ if eq(variables['Build.SourceBranchName'], $[variables['release_branch']]) }}:
     packageVersion: $(nugetVersion)
-  ${{ if eq(variables['Build.SourceBranchName'], variables['master_branch']) }}:
+  ${{ if eq(variables['Build.SourceBranchName'], $[variables['master_branch']]) }}:
     packageVersion: $(nugetDevVersion)

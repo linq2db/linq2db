@@ -5,6 +5,6 @@ variables:
   solution: linq2db.sln
   build_configuration: Azure
   assemblyVersion: 4.0.0
-  nugetVersion: 4.0.0
+  nugetVersion: 4.0.0-preview.1
   nugetDevVersion: 4.0.0
 
