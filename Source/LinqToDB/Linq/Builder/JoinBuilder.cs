@@ -124,7 +124,7 @@ namespace LinqToDB.Linq.Builder
 			return new JoinContext(buildInfo.Parent, selector, context, innerContext)
 #if DEBUG
 			{
-				MethodCall = methodCall
+				Debug_MethodCall = methodCall
 			}
 #endif
 				;
@@ -489,12 +489,12 @@ namespace LinqToDB.Linq.Builder
 				return base.GetContext(expression, level, buildInfo);
 			}
 
-			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor testFlag)
+			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
-				if (testFlag == RequestFor.GroupJoin && expression == null)
+				if (requestFlag == RequestFor.GroupJoin && expression == null)
 					return IsExpressionResult.True;
 
-				return base.IsExpression(expression, level, testFlag);
+				return base.IsExpression(expression, level, requestFlag);
 			}
 		}
 	}

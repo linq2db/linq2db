@@ -209,7 +209,7 @@ namespace LinqToDB.Linq
 				try
 				{
 					Preambles = await query.InitPreamblesAsync(DataContext, expression, Parameters, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-#if NETFRAMEWORK
+#if !NATIVE_ASYNC
 					return Tuple.Create<IAsyncEnumerator<T>, IDisposable?>(
 #else
 					return Tuple.Create<IAsyncEnumerator<T>, IAsyncDisposable?>(

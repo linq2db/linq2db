@@ -9,8 +9,6 @@ using NUnit.Framework;
 
 namespace Tests.xUpdate
 {
-	using Model;
-
 	[TestFixture]
 //	[Order(10101)]
 	public partial class MergeTests : TestBase
@@ -49,10 +47,11 @@ namespace Tests.xUpdate
 				ProviderName.SqlServer2008,
 				ProviderName.SqlServer2012,
 				ProviderName.SqlServer2014,
-				TestProvName.SqlServer2016,
+				ProviderName.SqlServer2016,
 				ProviderName.SqlServer2017,
 				TestProvName.SqlServer2019,
 				TestProvName.SqlServer2019SequentialAccess,
+				TestProvName.SqlServer2019FastExpressionCompiler,
 				TestProvName.SqlAzure
 			};
 

@@ -19,15 +19,15 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="NUnit" Version="3.12.0" />
-		<PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+		<PackageReference Include="NUnit" />
+		<PackageReference Include="Newtonsoft.Json" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net472' ">
 		<Reference Include="System.Data.Linq" />
 		<Reference Include="System.ServiceModel" />
 
-		<PackageReference Include="System.Collections.Immutable" Version="5.0.0" />
+		<PackageReference Include="System.Collections.Immutable" />
 	</ItemGroup>
 
 </Project>

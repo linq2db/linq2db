@@ -8,13 +8,13 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.ServiceModel
 {
-	using Linq;
 	using Common.Internal;
-	using SqlQuery;
+	using Linq;
 	using SqlProvider;
+	using SqlQuery;
+#if !NATIVE_ASYNC
 	using Tools;
-	using LinqToDB.Data;
-	using System.Data.Common;
+#endif
 
 	public abstract partial class RemoteDataContextBase
 	{
@@ -255,16 +255,18 @@ namespace LinqToDB.ServiceModel
 				{
 					DataReader.Dispose();
 				}
-#if NETSTANDARD2_1PLUS
-				public ValueTask DisposeAsync()
+
+#if !NATIVE_ASYNC
+				public Task DisposeAsync()
 				{
-					return DataReader.DisposeAsync();
+					DataReader.Dispose();
+					return TaskEx.CompletedTask;
 				}
-#elif !NETFRAMEWORK
+#else
 				public ValueTask DisposeAsync()
 				{
-					Dispose();
-					return new ValueTask(Task.CompletedTask);
+					DataReader.Dispose();
+					return default;
 				}
 #endif
 			}
@@ -351,3 +353,4 @@ namespace LinqToDB.ServiceModel
 		}
 	}
 }
+#endif

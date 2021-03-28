@@ -13,6 +13,7 @@ using NUnit.Framework;
 
 namespace Tests.UserTests
 {
+	using LinqToDB.Common;
 	using Model;
 
 	[TestFixture]
@@ -118,7 +119,7 @@ namespace Tests.UserTests
 
 				body = Expression.Call(toListMethod, body);
 
-				actions[i] = Expression.Lambda<Action<ITestDataContext>>(body, dbParam).Compile();
+				actions[i] = Expression.Lambda<Action<ITestDataContext>>(body, dbParam).CompileExpression();
 			}
 
 			using (new DisableQueryCache(false))
@@ -147,7 +148,7 @@ namespace Tests.UserTests
 
 				body = Expression.Call(toListMethod, body);
 
-				actions[i] = Expression.Lambda<Action<ITestDataContext>>(body, dbParam).Compile();
+				actions[i] = Expression.Lambda<Action<ITestDataContext>>(body, dbParam).CompileExpression();
 			}
 
 			using (new DisableQueryCache(false))

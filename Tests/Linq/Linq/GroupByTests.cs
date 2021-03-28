@@ -7,7 +7,6 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using LinqToDB.Common;
 	using LinqToDB.Linq;
 	using LinqToDB.Mapping;
 	using Model;
@@ -2107,14 +2106,6 @@ namespace Tests.Linq
 			[MapValue("D")] Delisted,
 		}
 
-		[ActiveIssue(913, Configurations = new[]
-		{
-			TestProvName.AllAccess,
-			TestProvName.AllInformix,
-			TestProvName.AllMySql,
-			TestProvName.AllPostgreSQL,
-			TestProvName.AllSQLite
-		})]
 		[Test]
 		public void Issue913Test([DataSources] string context)
 		{

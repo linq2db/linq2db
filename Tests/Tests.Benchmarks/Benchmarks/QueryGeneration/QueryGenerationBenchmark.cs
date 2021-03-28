@@ -1,19 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Engines;
 using LinqToDB.Benchmarks.Models;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.Access;
-using LinqToDB.DataProvider.DB2;
 using LinqToDB.DataProvider.Firebird;
-using LinqToDB.DataProvider.Informix;
-using LinqToDB.DataProvider.MySql;
-using LinqToDB.DataProvider.Oracle;
-using LinqToDB.DataProvider.PostgreSQL;
-using LinqToDB.DataProvider.SQLite;
-using LinqToDB.DataProvider.SqlServer;
 
 namespace LinqToDB.Benchmarks.Benchmarks.QueryGeneration
 {

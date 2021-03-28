@@ -12,6 +12,7 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using LinqToDB.Common;
 	using Model;
 	using System.Text.RegularExpressions;
 
@@ -1037,7 +1038,7 @@ namespace Tests.Linq
 		[Test]
 		public void Contains5([DataSources] string context)
 		{
-			IEnumerable<int> ids = new int[0];
+			IEnumerable<int> ids = Array<int>.Empty;
 
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1432,7 +1433,7 @@ namespace Tests.Linq
 		{
 			void AreEqualLocal(IEnumerable<WhereCases> expected, IQueryable<WhereCases> actual, Expression<Func<WhereCases, bool>> predicate)
 			{
-				var exp = expected.Where(predicate.Compile());
+				var exp = expected.Where(predicate.CompileExpression());
 				var act = actual.  Where(predicate);
 				AreEqual(exp, act, WhereCases.Comparer);
 				Assert.That(act.ToString(), Does.Not.Contain("<>"));
@@ -1440,7 +1441,7 @@ namespace Tests.Linq
 				var notPredicate = Expression.Lambda<Func<WhereCases, bool>>(
 					Expression.Not(predicate.Body), predicate.Parameters);
 
-				var expNot      = expected.Where(notPredicate.Compile()).ToArray();
+				var expNot      = expected.Where(notPredicate.CompileExpression()).ToArray();
 				var actNotQuery = actual.Where(notPredicate);
 				var actNot      = actNotQuery.ToArray();
 				AreEqual(expNot, actNot, WhereCases.Comparer);
@@ -1451,7 +1452,7 @@ namespace Tests.Linq
 			void AreEqualLocalPredicate(IEnumerable<WhereCases> expected, IQueryable<WhereCases> actual, Expression<Func<WhereCases, bool>> predicate, Expression<Func<WhereCases, bool>> localPredicate)
 			{
 				var actualQuery = actual.Where(predicate);
-				AreEqual(expected.Where(localPredicate.Compile()), actualQuery, WhereCases.Comparer);
+				AreEqual(expected.Where(localPredicate.CompileExpression()), actualQuery, WhereCases.Comparer);
 				Assert.That(actualQuery.ToString(), Does.Not.Contain("<>"));
 
 				var notLocalPredicate = Expression.Lambda<Func<WhereCases, bool>>(
@@ -1460,7 +1461,7 @@ namespace Tests.Linq
 				var notPredicate = Expression.Lambda<Func<WhereCases, bool>>(
 					Expression.Not(predicate.Body), predicate.Parameters);
 
-				var expNot = expected.Where(notLocalPredicate.Compile()).ToArray();
+				var expNot = expected.Where(notLocalPredicate.CompileExpression()).ToArray();
 				var actualNotQuery = actual.Where(notPredicate);
 
 				var actNot = actualNotQuery.ToArray();

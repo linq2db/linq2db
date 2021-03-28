@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 
@@ -9,6 +8,7 @@ namespace LinqToDB.Linq
 	using Reflection;
 
 	class Table<T> : ExpressionQuery<T>, ITable<T>, ITableMutable<T>, ITable
+		where T : notnull
 	{
 		public Table(IDataContext dataContext)
 		{
@@ -193,7 +193,7 @@ namespace LinqToDB.Linq
 			};
 		}
 
-		public ITable<T> ChangeTableOptions(TableOptions tableOptions)
+		public ITable<T> ChangeTableOptions(TableOptions options)
 		{
 			return new Table<T>(DataContext)
 			{
@@ -202,7 +202,7 @@ namespace LinqToDB.Linq
 				DatabaseName = DatabaseName,
 				Expression   = Expression,
 				TableName    = TableName,
-				TableOptions = tableOptions
+				TableOptions = options
 			};
 		}
 

@@ -36,12 +36,12 @@ namespace LinqToDB.DataProvider.MySql
 			return statement;
 		}
 
-		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expr, ConvertVisitor visitor,
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor visitor,
 			EvaluationContext context)
 		{
-			expr = base.ConvertExpressionImpl(expr, visitor, context);
+			expression = base.ConvertExpressionImpl(expression, visitor, context);
 
-			if (expr is SqlBinaryExpression be)
+			if (expression is SqlBinaryExpression be)
 			{
 				switch (be.Operation)
 				{
@@ -80,7 +80,7 @@ namespace LinqToDB.DataProvider.MySql
 						break;
 				}
 			}
-			else if (expr is SqlFunction func)
+			else if (expression is SqlFunction func)
 			{
 				switch (func.Name)
 				{
@@ -101,7 +101,7 @@ namespace LinqToDB.DataProvider.MySql
 				}
 			}
 
-			return expr;
+			return expression;
 		}
 	}
 }

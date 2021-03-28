@@ -47,7 +47,7 @@ namespace LinqToDB.Linq.Builder
 				.ToArray();
 
 			var result = indexes
-				.Select(idx => new SqlInfo(idx.MemberChain, idx.Index < 0 ? idx.Sql : SubQuery.SelectQuery.Select.Columns[idx.Index]))
+				.Select(idx => new SqlInfo(idx.MemberChain, idx.Index < 0 ? idx.Sql : SubQuery.SelectQuery.Select.Columns[idx.Index], idx.Index))
 				.ToArray();
 
 			return result;
@@ -60,27 +60,28 @@ namespace LinqToDB.Linq.Builder
 			return ConvertToSql(expression, level, flags)
 				.Select(idx => idx
 					.WithQuery(SelectQuery)
-					.WithIndex(GetIndex((SqlColumn)idx.Sql)))
+					.WithIndex(GetIndex(idx.Index, (SqlColumn)idx.Sql)))
 				.ToArray();
 		}
 
-		public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor testFlag)
+		public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 		{
-			return testFlag switch
+			return requestFlag switch
 			{
 				RequestFor.SubQuery => IsExpressionResult.True,
-				_                   => base.IsExpression(expression, level, testFlag),
+				_                   => base.IsExpression(expression, level, requestFlag),
 			};
 		}
 
-		protected internal readonly Dictionary<ISqlExpression,int> ColumnIndexes = new Dictionary<ISqlExpression,int>();
+		protected virtual bool OptimizeColumns => true;
+		protected internal readonly Dictionary<int,int> ColumnIndexes = new ();
 
-		protected virtual int GetIndex(SqlColumn column)
+		protected virtual int GetIndex(int index,  SqlColumn column)
 		{
-			if (!ColumnIndexes.TryGetValue(column, out var idx))
+			if (!ColumnIndexes.TryGetValue(index, out var idx))
 			{
-				idx = SelectQuery.Select.Add(column);
-				ColumnIndexes.Add(column, idx);
+				idx = OptimizeColumns ? SelectQuery.Select.Add(column) : SelectQuery.Select.AddNew(column);
+				ColumnIndexes.Add(index, idx);
 			}
 
 			return idx;
@@ -88,7 +89,7 @@ namespace LinqToDB.Linq.Builder
 
 		public override int ConvertToParentIndex(int index, IBuildContext context)
 		{
-			var idx = context == this ? index : GetIndex(context.SelectQuery.Select.Columns[index]);
+			var idx = context == this ? index : GetIndex(index, context.SelectQuery.Select.Columns[index]);
 			return Parent?.ConvertToParentIndex(idx, this) ?? idx;
 		}
 

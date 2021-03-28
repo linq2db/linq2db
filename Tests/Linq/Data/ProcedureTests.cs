@@ -386,7 +386,7 @@ namespace Tests.Data
 				var reader = await new CommandInfo(db, "QueryProcParameters", input, output1, output2).ExecuteReaderProcAsync();
 				Assert.IsNull(output1.Value);
 				Assert.IsNull(output2.Value);
-				using (reader)
+				await using (reader)
 					while (await reader.Reader!.ReadAsync())
 					{
 					}

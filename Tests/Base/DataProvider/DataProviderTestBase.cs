@@ -38,7 +38,7 @@ namespace Tests.DataProvider
 
 			// Get NULL value.
 			//
-			Debug.WriteLine("{0} {1}:{2} -> NULL", fieldName, (object)type.Name, dataType);
+			Debug.WriteLine("{0} {1}:{2} -> NULL", fieldName, type.Name, dataType);
 
 			tableName = conn.DataProvider.CreateSqlBuilder(conn.DataProvider.MappingSchema).ConvertInline(tableName, ConvertType.NameToQueryTable);
 			var sql   = string.Format(GetNullSql(conn),  fieldName, tableName);
@@ -57,7 +57,7 @@ namespace Tests.DataProvider
 				{
 					// Get NULL ID with dataType.
 					//
-					Debug.WriteLine("{0} {1}:{2} -> NULL ID with dataType", fieldName, (object)type.Name, dataType);
+					Debug.WriteLine("{0} {1}:{2} -> NULL ID with dataType", fieldName, type.Name, dataType);
 					var parameters = Enumerable.Range(0, paramCount).Select((_, i) => new DataParameter(paramCount == 1 ? "p" : $"p{i}", value, dataType)).ToArray();
 					id = conn.Execute<int?>(sql, parameters);
 					Assert.That(id, Is.EqualTo(1));
@@ -67,7 +67,7 @@ namespace Tests.DataProvider
 				{
 					// Get NULL ID with default dataType.
 					//
-					Debug.WriteLine("{0} {1}:{2} -> NULL ID with default dataType", fieldName, (object)type.Name, dataType);
+					Debug.WriteLine("{0} {1}:{2} -> NULL ID with default dataType", fieldName, type.Name, dataType);
 					id = conn.Execute<int?>(sql, new { p = value });
 					Assert.That(id, Is.EqualTo(1));
 				}
@@ -76,7 +76,7 @@ namespace Tests.DataProvider
 				{
 					// Get NULL ID without dataType.
 					//
-					Debug.WriteLine("{0} {1}:{2} -> NULL ID without dataType", fieldName, (object)type.Name, dataType);
+					Debug.WriteLine("{0} {1}:{2} -> NULL ID without dataType", fieldName, type.Name, dataType);
 					var parameters = Enumerable.Range(0, paramCount).Select((_, i) => new DataParameter(paramCount == 1 ? "p" : $"p{i}", value)).ToArray();
 					id = conn.Execute<int?>(sql, parameters);
 					Assert.That(id, Is.EqualTo(1));
@@ -85,7 +85,7 @@ namespace Tests.DataProvider
 
 			// Get value.
 			//
-			Debug.WriteLine("{0} {1}:{2} -> value", fieldName, (object)type.Name, dataType);
+			Debug.WriteLine("{0} {1}:{2} -> value", fieldName, type.Name, dataType);
 			sql   = string.Format(GetValueSql(conn),  fieldName, tableName);
 			value = conn.Execute<T>(sql);
 
@@ -97,7 +97,7 @@ namespace Tests.DataProvider
 				{
 					// Get value ID with dataType.
 					//
-					Debug.WriteLine("{0} {1}:{2} -> value ID with dataType", fieldName, (object)type.Name, dataType);
+					Debug.WriteLine("{0} {1}:{2} -> value ID with dataType", fieldName, type.Name, dataType);
 					id = conn.Execute<int?>(sql, new DataParameter("p", value, dataType));
 					Assert.That(id, Is.EqualTo(2));
 				}
@@ -106,7 +106,7 @@ namespace Tests.DataProvider
 				{
 					// Get value ID with default dataType.
 					//
-					Debug.WriteLine("{0} {1}:{2} -> value ID with default dataType", fieldName, (object)type.Name, dataType);
+					Debug.WriteLine("{0} {1}:{2} -> value ID with default dataType", fieldName, type.Name, dataType);
 					id = conn.Execute<int?>(sql, new { p = value });
 					Assert.That(id, Is.EqualTo(2));
 				}
@@ -115,7 +115,7 @@ namespace Tests.DataProvider
 				{
 					// Get value ID without dataType.
 					//
-					Debug.WriteLine("{0} {1}:{2} -> value ID without dataType", fieldName, (object)type.Name, dataType);
+					Debug.WriteLine("{0} {1}:{2} -> value ID without dataType", fieldName, type.Name, dataType);
 					id = conn.Execute<int?>(sql, new DataParameter("p", value));
 					Assert.That(id, Is.EqualTo(2));
 				}

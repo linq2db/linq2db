@@ -230,7 +230,7 @@ namespace LinqToDB.DataProvider.Informix
 			AppendIndent();
 			StringBuilder.Append("PRIMARY KEY (");
 			StringBuilder.Append(string.Join(InlineComma, fieldNames));
-			StringBuilder.Append(")");
+			StringBuilder.Append(')');
 		}
 
 		// https://www.ibm.com/support/knowledgecenter/en/SSGU8G_12.1.0/com.ibm.sqls.doc/ids_sqs_1652.htm
@@ -247,13 +247,13 @@ namespace LinqToDB.DataProvider.Informix
 				sb.Append(database);
 
 			if (server != null)
-				sb.Append("@").Append(server);
+				sb.Append('@').Append(server);
 
 			if (database != null)
-				sb.Append(":");
+				sb.Append(':');
 
 			if (schema != null)
-				sb.Append(schema).Append(".");
+				sb.Append(schema).Append('.');
 
 			return sb.Append(table);
 		}

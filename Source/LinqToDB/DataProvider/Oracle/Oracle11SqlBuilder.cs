@@ -53,7 +53,7 @@ namespace LinqToDB.DataProvider.Oracle
 				throw new SqlException("Identity field must be defined for '{0}'.", insertClause.Into.Name);
 
 			AppendIndent().AppendLine("RETURNING ");
-			AppendIndent().Append("\t");
+			AppendIndent().Append('\t');
 			BuildExpression(identityField, false, true);
 			StringBuilder.AppendLine(" INTO :IDENTITY_PARAMETER");
 		}
@@ -146,7 +146,7 @@ namespace LinqToDB.DataProvider.Oracle
 					if (type.Type.Length == null || type.Type.Length == 0)
 						StringBuilder.Append("BLOB");
 					else
-						StringBuilder.Append("Raw(").Append(type.Type.Length).Append(")");
+						StringBuilder.Append("Raw(").Append(type.Type.Length).Append(')');
 					break;
 				default: base.BuildDataTypeFromDataType(type, forCreateTable);                    break;
 			}
@@ -265,7 +265,7 @@ namespace LinqToDB.DataProvider.Oracle
 					return truncateTable.ResetIdentity && truncateTable.Table!.IdentityFields.Count > 0 ? 2 : 1;
 
 				case SqlCreateTableStatement createTable:
-					_identityField = createTable.Table!.IdentityFields.FirstOrDefault();
+					_identityField = createTable.Table!.IdentityFields.Count > 0 ? createTable.Table!.IdentityFields[0] : null;
 					if (_identityField != null)
 						return 3;
 					break;
@@ -276,7 +276,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
-			var identityField = dropTable.Table!.IdentityFields.FirstOrDefault();
+			var identityField = dropTable.Table!.IdentityFields.Count > 0 ? dropTable.Table!.IdentityFields[0] : null;
 
 			if (identityField == null && dropTable.Table.TableOptions.HasDropIfExists() == false && dropTable.Table.TableOptions.HasIsTemporary() == false)
 			{
@@ -474,12 +474,12 @@ END;",
 			if (schema != null && schema.Length == 0) schema = null;
 
 			if (schema != null)
-				sb.Append(schema).Append(".");
+				sb.Append(schema).Append('.');
 
 			sb.Append(table);
 
 			if (server != null)
-				sb.Append("@").Append(server);
+				sb.Append('@').Append(server);
 
 			return sb;
 		}
@@ -489,7 +489,7 @@ END;",
 			if (schema != null)
 			{
 				Convert(sb, schema, ConvertType.NameToSchema);
-				sb.Append(".");
+				sb.Append('.');
 			}
 		}
 

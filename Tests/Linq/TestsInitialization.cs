@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Data.Common;
-using System.IO;
 using System.Reflection;
-using LinqToDB.Common;
-using LinqToDB.Data.DbCommandProcessor;
 using NUnit.Framework;
+
+#if !NET472
+using System.IO;
+#endif
 
 using Tests;
 
@@ -50,6 +51,9 @@ public class TestsInitialization
 		// register test providers
 		TestNoopProvider.Init();
 		SQLiteMiniprofilerProvider.Init();
+
+		// uncomment to run FEC for all tests and comment reset line in TestBase.OnAfterTest
+		//LinqToDB.Common.Compilation.SetExpressionCompiler(_ => FastExpressionCompiler.ExpressionCompiler.CompileFast(_, true));
 	}
 
 	private void RegisterSapHanaFactory()

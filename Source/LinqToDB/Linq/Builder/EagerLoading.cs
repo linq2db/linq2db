@@ -73,7 +73,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var count = members.Length - startIndex;
 			if (count == 0)
-				throw new ArgumentException();
+				throw new ArgumentOutOfRangeException(nameof(startIndex));
 
 			if (count == 1)
 				return members[startIndex];
@@ -1402,6 +1402,8 @@ namespace LinqToDB.Linq.Builder
 				.SelectMany(detailQueryLambda,
 					(main, detail) => new KeyDetailEnvelope<TKey, TD>
 					{
+						// don't replace with CompileExpression extension point
+						// Compile will be replaced with expression embedding
 						Key    = selectKeyExpression.Compile()(main),
 						Detail = detail
 					});
@@ -1731,7 +1733,7 @@ namespace LinqToDB.Linq.Builder
 
 								var newMemberInit = Expression.MemberInit(
 									Expression.New(newType.GetConstructor(Array<Type>.Empty) ??
-												   throw new ArgumentException()), newAssignments);
+												   throw new InvalidOperationException($"Default constructor not found for type {newType}")), newAssignments);
 								return newMemberInit;
 							}
 

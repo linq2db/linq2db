@@ -8,6 +8,11 @@ using LinqToDB.Data;
 namespace LinqToDB.Linq
 {
 	public interface IQueryRunner: IDisposable
+#if NATIVE_ASYNC
+		, IAsyncDisposable
+#else
+		, Async.IAsyncDisposable
+#endif
 	{
 		/// <summary>
 		/// Executes query and returns number of affected records.

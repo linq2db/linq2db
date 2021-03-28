@@ -47,6 +47,25 @@ namespace LinqToDB.Linq
 				DataContext.Close();
 		}
 
+#if !NATIVE_ASYNC
+		public virtual Task DisposeAsync()
+		{
+			if (DataContext.CloseAfterUse)
+				return DataContext.CloseAsync();
+
+			return TaskEx.CompletedTask;
+		}
+#else
+		public virtual ValueTask DisposeAsync()
+		{
+			if (DataContext.CloseAfterUse)
+				return new ValueTask(DataContext.CloseAsync());
+
+			return default;
+		}
+#endif
+
+
 		protected virtual void SetCommand(bool clearQueryHints)
 		{
 			if (QueryNumber == 0 && (DataContext.QueryHints.Count > 0 || DataContext.NextQueryHints.Count > 0))

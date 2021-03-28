@@ -62,7 +62,7 @@ namespace LinqToDB.DataProvider.DB2
 			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		protected override async Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			if (table.DataContext is DataConnection dataConnection)
@@ -71,7 +71,7 @@ namespace LinqToDB.DataProvider.DB2
 				if (connection != null)
 				{
 					var enumerator = source.GetAsyncEnumerator(cancellationToken);
-					await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+					await using (enumerator.ConfigureAwait(Configuration.ContinueOnCapturedContext))
 					{
 						// call the synchronous provider-specific implementation
 						return ProviderSpecificCopyImpl(
@@ -86,7 +86,7 @@ namespace LinqToDB.DataProvider.DB2
 				}
 			}
 
-			return await MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			return await MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 		}
 #endif
 
@@ -98,6 +98,7 @@ namespace LinqToDB.DataProvider.DB2
 			IDbConnection                                   connection,
 			DB2ProviderAdapter.BulkCopyAdapter              bulkCopy,
 			Action<DataConnection, Func<string>, Func<int>> traceAction)
+			where T : notnull
 		{
 			var descriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
 			var columns    = descriptor.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
@@ -176,7 +177,7 @@ namespace LinqToDB.DataProvider.DB2
 			return MultipleRowsCopy1Async(table, options, source, cancellationToken);
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			var dataConnection = (DataConnection)table.DataContext;

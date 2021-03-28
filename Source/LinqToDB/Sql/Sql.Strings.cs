@@ -171,7 +171,7 @@ namespace LinqToDB
 				}
 				else
 				{
-					var items = arguments.Expressions.Select(builder.ConvertExpressionToSql);
+					var items = arguments.Expressions.Select(e => builder.ConvertExpressionToSql(e));
 					foreach (var item in items)
 					{
 						builder.AddParameter("argument", item);

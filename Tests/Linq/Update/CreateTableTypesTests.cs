@@ -50,7 +50,7 @@ namespace Tests.xUpdate
 
 			public static IEqualityComparer<CreateTableTypes> Comparer = ComparerBuilder.GetEqualityComparer<CreateTableTypes>();
 
-			public static List<(uint, string)> StringConvertedTestValue = new List<(uint, string)>()
+			public static List<(uint, string)> StringConvertedTestValue = new ()
 			{
 				(1, "one"),
 				(2, "two")
@@ -183,7 +183,7 @@ namespace Tests.xUpdate
 					Value = JsonConvert.SerializeObject(x),
 					DataType = DataType.NVarChar
 				});
-			ms.SetConverter<string, List<(uint, string)>>(JsonConvert.DeserializeObject<List<(uint, string)>>);
+			ms.SetConverter<string, List<(uint, string)>?>(JsonConvert.DeserializeObject<List<(uint, string)>>);
 
 			using (var db    = GetDataContext(context, ms))
 			using (var table = db.CreateLocalTable<CreateTableTypes>())

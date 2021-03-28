@@ -6,9 +6,11 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
-	public interface IDataReaderAsync : IDisposable
-#if !NETFRAMEWORK
-		, IAsyncDisposable
+	public interface IDataReaderAsync : IDisposable,
+#if NATIVE_ASYNC
+		IAsyncDisposable
+#else
+		Async.IAsyncDisposable
 #endif
 	{
 		DbDataReader DataReader { get; }

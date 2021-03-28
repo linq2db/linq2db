@@ -70,9 +70,9 @@ namespace LinqToDB.Linq.Builder
 			return sourceField;
 		}
 
-		public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor testFlag)
+		public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 		{
-			return base.IsExpression(expression, level, testFlag);
+			return base.IsExpression(expression, level, requestFlag);
 		}
 	}
 }

@@ -134,7 +134,7 @@ namespace LinqToDB.DataProvider
 
 		#region Helpers
 
-		public readonly ConcurrentDictionary<ReaderInfo,Expression> ReaderExpressions = new ConcurrentDictionary<ReaderInfo,Expression>();
+		public readonly ConcurrentDictionary<ReaderInfo,Expression> ReaderExpressions = new ();
 
 		protected void SetCharField(string dataTypeName, Expression<Func<IDataReader,int,string>> expr)
 		{
@@ -419,19 +419,22 @@ namespace LinqToDB.DataProvider
 		#region BulkCopy
 
 		public virtual BulkCopyRowsCopied BulkCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+			where T : notnull
 		{
 			return new BasicBulkCopy().BulkCopy(options.BulkCopyType, table, options, source);
 		}
 
 		public virtual Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+			where T : notnull
 		{
 			return new BasicBulkCopy().BulkCopyAsync(options.BulkCopyType, table, options, source, cancellationToken);
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		public virtual Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+			where T: notnull
 		{
 			return new BasicBulkCopy().BulkCopyAsync(options.BulkCopyType, table, options, source, cancellationToken);
 		}

@@ -15,7 +15,6 @@ using NUnit.Framework;
 namespace Tests.DataProvider
 {
 	using System.Collections.Generic;
-	using System.Diagnostics.CodeAnalysis;
 	using System.Globalization;
 	using System.Threading.Tasks;
 	using LinqToDB.Tools.Comparers;
@@ -38,7 +37,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		static void TestType<T>(DataConnection connection, string dataTypeName, [DisallowNull] T value, string tableName = "AllTypes", bool convertToString = false)
+		static void TestType<T>(DataConnection connection, string dataTypeName, T value, string tableName = "AllTypes", bool convertToString = false)
+			where T : notnull
 		{
 			Assert.That(connection.Execute<T>(string.Format("SELECT {0} FROM {1} WHERE ID = 1", dataTypeName, tableName)),
 				Is.EqualTo(connection.MappingSchema.GetDefaultValue(typeof(T))));
@@ -369,8 +369,8 @@ namespace Tests.DataProvider
 			public StringTestCase(string value, string literal, string caseName)
 			{
 				_caseName = caseName;
-				Value = value;
-				Literal = literal;
+				Value     = value;
+				Literal   = literal;
 			}
 
 			public string Value   { get; }
@@ -390,7 +390,7 @@ namespace Tests.DataProvider
 		{
 			using (var conn = new DataConnection(context))
 			{
-				var value = testCase.Value;
+				var value   = testCase.Value;
 				var literal = testCase.Literal;
 
 				// test raw literals queries
@@ -437,10 +437,10 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", arr1)), Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Create   ("p", arr1)), Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", null)), Is.EqualTo(null));
-				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as binary(1))", DataParameter.Binary("p", new byte[0])), Is.EqualTo(new byte[] {0}));
-				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Binary   ("p", new byte[0])),      Is.EqualTo(new byte[1]));
-				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", new byte[0])),      Is.EqualTo(new byte[1]));
-				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Image    ("p", new byte[0])),      Is.EqualTo(null));
+				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as binary(1))", DataParameter.Binary("p", Array<byte>.Empty)), Is.EqualTo(new byte[] {0}));
+				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Binary   ("p", Array<byte>.Empty)),      Is.EqualTo(new byte[1]));
+				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", Array<byte>.Empty)),      Is.EqualTo(new byte[1]));
+				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Image    ("p", Array<byte>.Empty)),      Is.EqualTo(null));
 				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Image    ("p", arr2)),             Is.EqualTo(arr2));
 				Assert.That(conn.Execute<byte[]>("SELECT @p", new DataParameter { Name = "p", Value = arr1 }), Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Create   ("p", new Binary(arr1))), Is.EqualTo(arr1));
@@ -1009,7 +1009,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		void CompareObject<T>(MappingSchema mappingSchema, [DisallowNull] T actual, [DisallowNull] T test, bool hasBitBug)
+		void CompareObject<T>(MappingSchema mappingSchema, T actual, T test, bool hasBitBug)
+			where T: notnull
 		{
 			var ed = mappingSchema.GetEntityDescriptor(typeof(T));
 

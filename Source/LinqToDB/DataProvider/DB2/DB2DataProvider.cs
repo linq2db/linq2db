@@ -85,7 +85,7 @@ namespace LinqToDB.DataProvider.DB2
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
 			return Version == DB2Version.zOS ?
-				new DB2zOSSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags) as ISqlBuilder:
+				new DB2zOSSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags) :
 				new DB2LUWSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
@@ -212,7 +212,7 @@ namespace LinqToDB.DataProvider.DB2
 				cancellationToken);
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{

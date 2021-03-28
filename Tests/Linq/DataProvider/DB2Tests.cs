@@ -23,8 +23,10 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
+	using System.Collections.Generic;
 	using System.Globalization;
 	using System.Threading.Tasks;
+	using LinqToDB.SchemaProvider;
 	using LinqToDB.Tools.Comparers;
 	using Model;
 
@@ -609,7 +611,7 @@ namespace Tests.DataProvider
 					var sb = new StringBuilder();
 
 					for (var i = 0; i < 100000; i++)
-						sb.Append(((char)((i % byte.MaxValue) + 32)).ToString());
+						sb.Append((char)((i % byte.MaxValue) + 32));
 
 					var data = sb.ToString();
 
@@ -894,6 +896,32 @@ namespace Tests.DataProvider
 				var result = query.ToArray();
 
 				Assert.True(db.LastQuery!.Contains("@"));
+			}
+		}
+
+		[Test]
+		public void Issue2763Test([IncludeDataSources(CurrentProvider)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				// DB2 SYSCAT.COLUMNS.TABSCHEMA column is padded with spaces to max(schema.length) length despite it being of varchar type
+				var schemas = db.Query<string>("SELECT SCHEMANAME FROM SYSCAT.SCHEMATA").AsEnumerable().Select(_ => _.TrimEnd(' ')).ToArray();
+
+				if (schemas.Select(_ => _.Length).Distinct().Count() < 2)
+					Assert.Inconclusive("Test requires at least two schemas with different name length");
+
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, new GetSchemaOptions() { IncludedSchemas = schemas });
+
+				var usedSchemas = new HashSet<string>();
+				foreach (var table in schema.Tables)
+				{
+					Assert.False(table.ID!.Contains(' '));
+					Assert.False(table.SchemaName!.EndsWith(" "));
+					Assert.False(table.Columns.Count == 0);
+					usedSchemas.Add(table.SchemaName!);
+				}
+
+				Assert.True(usedSchemas.Select(_ => _.Length).Distinct().Count() > 1);
 			}
 		}
 	}

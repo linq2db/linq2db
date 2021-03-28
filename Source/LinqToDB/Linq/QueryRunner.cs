@@ -4,7 +4,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -13,13 +12,15 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
+#if !NATIVE_ASYNC
+	using Async;
+#endif
 	using Builder;
 	using Common;
 	using Common.Internal.Cache;
 	using Common.Logging;
 	using Data;
 	using Extensions;
-	using Async;
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
@@ -50,7 +51,7 @@ namespace LinqToDB.Linq
 			}
 
 			readonly Expression<Func<IQueryRunner,IDataReader,T>> _expression;
-			readonly ConcurrentDictionary<Type, ReaderMapperInfo> _mappers = new ConcurrentDictionary<Type, ReaderMapperInfo>();
+			readonly ConcurrentDictionary<Type, ReaderMapperInfo> _mappers = new ();
 
 
 			class ReaderMapperInfo
@@ -74,7 +75,7 @@ namespace LinqToDB.Linq
 
 					queryRunner.MapperExpression = mapperExpression;
 
-					var mapper = mapperExpression.Compile();
+					var mapper = mapperExpression.CompileExpression();
 					mapperInfo = new ReaderMapperInfo() { MapperExpression = mapperExpression, Mapper = mapper };
 					_mappers.TryAdd(dataReaderType, mapperInfo);
 				}
@@ -106,7 +107,7 @@ namespace LinqToDB.Linq
 					mapperInfo = new ReaderMapperInfo()
 					{
 						MapperExpression = expr,
-						Mapper           = expression.Compile(),
+						Mapper           = expression.CompileExpression(),
 						IsFaulted        = true
 					};
 
@@ -298,7 +299,7 @@ namespace LinqToDB.Linq
 			return param;
 		}
 
-		private static Type GetType<T>([DisallowNull] T obj, IDataContext db)
+		private static Type GetType<T>(T obj, IDataContext db)
 			//=> typeof(T);
 			//=> obj.GetType();
 			=> db.MappingSchema.GetEntityDescriptor(typeof(T)).InheritanceMapping?.Count > 0 ? obj!.GetType() : typeof(T);
@@ -360,7 +361,7 @@ namespace LinqToDB.Linq
 			int          queryNumber)
 		{
 			using (var runner = dataContext.GetQueryRunner(query, queryNumber, expression, ps, preambles))
-			using (var dr     = runner.ExecuteReader())
+			using (var dr = runner.ExecuteReader())
 			{
 				while (dr.DataReader!.Read())
 				{
@@ -384,13 +385,18 @@ namespace LinqToDB.Linq
 			TakeSkipDelegate?        takeAction,
 			CancellationToken             cancellationToken)
 		{
-			using (var runner = dataContext.GetQueryRunner(query, queryNumber, expression, ps, preambles))
+			var runner = dataContext.GetQueryRunner(query, queryNumber, expression, ps, preambles);
+#if NATIVE_ASYNC
+			await using (runner.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+#else
+			await using (runner)
+#endif
 			{
 				var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 				await using (dr.ConfigureAwait(Configuration.ContinueOnCapturedContext))
 #else
-				using (dr)
+				await using (dr)
 #endif
 				{
 					var skip = skipAction?.Invoke(query, expression, dataContext, ps) ?? 0;
@@ -453,7 +459,7 @@ namespace LinqToDB.Linq
 
 			public T Current { get; set; } = default!;
 
-#if NETFRAMEWORK
+#if !NATIVE_ASYNC
 			public async Task<bool> MoveNextAsync()
 #else
 			public async ValueTask<bool> MoveNextAsync()
@@ -497,25 +503,21 @@ namespace LinqToDB.Linq
 				_dataReader  = null;
 			}
 
-#if NETFRAMEWORK
-			public Task DisposeAsync()
-			{
-				Dispose();
-				return TaskEx.CompletedTask;
-			}
+#if !NATIVE_ASYNC
+			public async Task DisposeAsync()
 #else
 			public async ValueTask DisposeAsync()
+#endif
 			{
-				_queryRunner?.Dispose();
-				if (_dataReader != null)
-				{
-					await _dataReader.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-					_dataReader = null;
-				}
+				if (_queryRunner != null)
+					await _queryRunner.DisposeAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+				if (_dataReader != null) 
+					await _dataReader.DisposeAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
 				
 				_queryRunner = null;
+				_dataReader  = null;
 			}
-#endif
 		}
 
 		class AsyncEnumerableImpl<T> : IAsyncEnumerable<T>
@@ -749,13 +751,18 @@ namespace LinqToDB.Linq
 			object?[]?        preambles,
 			CancellationToken cancellationToken)
 		{
-			using (var runner = dataContext.GetQueryRunner(query, 0, expression, ps, preambles))
+			var runner = dataContext.GetQueryRunner(query, 0, expression, ps, preambles);
+#if NATIVE_ASYNC
+			await using (runner.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+#else
+			await using (runner)
+#endif
 			{
 				var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 				await using (dr.ConfigureAwait(Configuration.ContinueOnCapturedContext))
 #else
-				using (dr)
+				await using (dr)
 #endif
 				{
 					if (await dr.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
@@ -803,7 +810,12 @@ namespace LinqToDB.Linq
 			object?[]?        preambles,
 			CancellationToken cancellationToken)
 		{
-			using (var runner = dataContext.GetQueryRunner(query, 0, expression, ps, preambles))
+			var runner = dataContext.GetQueryRunner(query, 0, expression, ps, preambles);
+#if NATIVE_ASYNC
+			await using (runner.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+#else
+			await using (runner)
+#endif
 				return await runner.ExecuteScalarAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 		}
 
@@ -838,7 +850,12 @@ namespace LinqToDB.Linq
 			object?[]?        preambles,
 			CancellationToken cancellationToken)
 		{
-			using (var runner = dataContext.GetQueryRunner(query, 0, expression, ps, preambles))
+			var runner = dataContext.GetQueryRunner(query, 0, expression, ps, preambles);
+#if NATIVE_ASYNC
+			await using (runner.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+#else
+			await using (runner)
+#endif
 				return await runner.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 		}
 
@@ -882,7 +899,12 @@ namespace LinqToDB.Linq
 			object?[]?        preambles,
 			CancellationToken cancellationToken)
 		{
-			using (var runner = dataContext.GetQueryRunner(query, 0, expr, parameters, preambles))
+			var runner = dataContext.GetQueryRunner(query, 0, expr, parameters, preambles);
+#if NATIVE_ASYNC
+			await using (runner.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+#else
+			await using (runner)
+#endif
 			{
 				var n = await runner.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
@@ -935,7 +957,12 @@ namespace LinqToDB.Linq
 			object?[]?        preambles,
 			CancellationToken cancellationToken)
 		{
-			using (var runner = dataContext.GetQueryRunner(query, 0, expr, parameters, preambles))
+			var runner = dataContext.GetQueryRunner(query, 0, expr, parameters, preambles);
+#if NATIVE_ASYNC
+			await using (runner.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+#else
+			await using (runner)
+#endif
 			{
 				var n = await runner.ExecuteScalarAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
@@ -954,7 +981,7 @@ namespace LinqToDB.Linq
 
 		public static string GetSqlText(Query query, IDataContext dataContext, Expression expr, object?[]? parameters, object?[]? preambles)
 		{
-			var runner = dataContext.GetQueryRunner(query, 0, expr, parameters, preambles);
+			using (var runner = dataContext.GetQueryRunner(query, 0, expr, parameters, preambles))
 			return runner.GetSqlText();
 		}
 

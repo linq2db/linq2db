@@ -1,5 +1,4 @@
-﻿using System;
-
+﻿#if NET472
 using LinqToDB;
 using LinqToDB.ServiceModel;
 
@@ -31,3 +30,4 @@ namespace Tests.ServiceModel
 		protected override string ContextIDPrefix => "TestLinqService";
 	}
 }
+#endif

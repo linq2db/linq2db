@@ -57,7 +57,7 @@ namespace Tests.UserTests
 			{
 				if (disposed)
 				{
-					throw new Exception("Use after dispose"); // Crashed here on 2nd call to GetEmail
+					throw new ObjectDisposedException("Use after dispose"); // Crashed here on 2nd call to GetEmail
 				}
 
 				return id;

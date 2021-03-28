@@ -4,8 +4,10 @@
 			// SQL Server 2019 + generic sqlserver tests + northwind db tests
 			"SqlServer.2019",
 			"SqlServer.2019.SA"
-			//"Northwind", FTS not awailable in default images, need to use custom one
-			//"SqlServer"
+			// uncomment when FEC issues fixed
+			//"SqlServer.2019.FEC",
+			// FTS not awailable in default images, need to use custom one
+			//"Northwind", 
 		],
 		"Connections": {
 			"SqlServer": {

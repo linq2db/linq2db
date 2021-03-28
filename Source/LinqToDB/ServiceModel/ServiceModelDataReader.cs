@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NETFRAMEWORK
+using System;
 using System.Collections.Generic;
 using System.Data;
 
@@ -21,7 +22,7 @@ namespace LinqToDB.ServiceModel
 
 		readonly MappingSchema          _mappingSchema;
 		readonly LinqServiceResult      _result;
-		readonly Dictionary<string,int> _ordinal = new Dictionary<string,int>();
+		readonly Dictionary<string,int> _ordinal = new ();
 
 		string?[]? _data;
 		int        _current = -1;
@@ -93,3 +94,4 @@ namespace LinqToDB.ServiceModel
 		#endregion
 	}
 }
+#endif

@@ -2,7 +2,6 @@
 using LinqToDB;
 using LinqToDB.Metadata;
 using NUnit.Framework;
-using System;
 using System.ComponentModel;
 using System.Linq;
 
@@ -51,7 +50,7 @@ namespace Tests.Metadata
 						OnShipperIDChanging(value);
 						SendPropertyChanging();
 						_ShipperID = value;
-						SendPropertyChanged("ShipperID");
+						SendPropertyChanged(nameof(ShipperID));
 						OnShipperIDChanged();
 					}
 				}
@@ -67,7 +66,7 @@ namespace Tests.Metadata
 						OnCompanyNameChanging(value);
 						SendPropertyChanging();
 						_CompanyName = value;
-						SendPropertyChanged("CompanyName");
+						SendPropertyChanged(nameof(CompanyName));
 						OnCompanyNameChanged();
 					}
 				}
@@ -83,7 +82,7 @@ namespace Tests.Metadata
 						OnPhoneChanging(value);
 						SendPropertyChanging();
 						_Phone = value;
-						SendPropertyChanged("Phone");
+						SendPropertyChanged(nameof(Phone));
 						OnPhoneChanged();
 					}
 				}

@@ -2,7 +2,6 @@
 using System.Linq;
 
 using LinqToDB;
-using LinqToDB.Data;
 using LinqToDB.SqlQuery;
 using NUnit.Framework;
 
@@ -592,7 +591,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OrderByInUnion([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void OrderByInUnion([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracleManaged)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -602,8 +601,11 @@ namespace Tests.Linq
 				var query2 =
 					db.Child.Concat(db.Child.OrderByDescending(c => c.ChildID));
 
+				var query3 = query1.OrderBy(_ => _.ChildID);
+
 				Assert.DoesNotThrow(() => query1.ToArray());
 				Assert.DoesNotThrow(() => query2.ToArray());
+				Assert.DoesNotThrow(() => query3.ToArray());
 			}
 		}
 

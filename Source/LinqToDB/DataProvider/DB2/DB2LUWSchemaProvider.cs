@@ -138,7 +138,7 @@ WHERE
 			return _columns = dataConnection.Query(rd =>
 				{
 					// IMPORTANT: reader calls must be ordered to support SequentialAccess
-					var tableId     = dataConnection.Connection.Database + "." + rd.GetString(0) + "." + rd.GetString(1);
+					var tableId     = dataConnection.Connection.Database + "." + rd.ToString(0) + "." + rd.ToString(1);
 					var name        = rd.ToString(2)!;
 					var size        = Converter.ChangeTypeTo<long?>(rd[3]);
 					var scale       = Converter.ChangeTypeTo<int?>(rd[4]);
@@ -261,18 +261,18 @@ WHERE
 				.ToList();
 		}
 
-		protected override string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, long? length, int? prec, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
+		protected override string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, long? length, int? precision, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
 		{
 			var type = GetDataType(columnType, options);
 
 			if (type != null)
 			{
 				if (type.CreateParameters == null)
-					length = prec = scale = 0;
+					length = precision = scale = 0;
 				else
 				{
 					if (type.CreateParameters == "LENGTH")
-						prec = scale = 0;
+						precision = scale = 0;
 					else
 						length = 0;
 
@@ -296,7 +296,7 @@ WHERE
 				}
 			}
 
-			return base.GetDbType(options, columnType, dataType, length, prec, scale, udtCatalog, udtSchema, udtName);
+			return base.GetDbType(options, columnType, dataType, length, precision, scale, udtCatalog, udtSchema, udtName);
 		}
 
 		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
@@ -377,9 +377,9 @@ WHERE
 			return base.GetProviderSpecificType(dataType);
 		}
 
-		protected override string GetDataSourceName(DataConnection connection)
+		protected override string GetDataSourceName(DataConnection dbConnection)
 		{
-			var str = ((DbConnection)connection.Connection).ConnectionString;
+			var str = ((DbConnection)dbConnection.Connection).ConnectionString;
 
 			var host = str?.Split(';')
 				.Select(s =>
@@ -394,7 +394,7 @@ WHERE
 			if (host != null)
 				return host;
 
-			return base.GetDataSourceName(connection);
+			return base.GetDataSourceName(dbConnection);
 		}
 
 		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)

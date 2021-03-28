@@ -110,12 +110,12 @@ namespace LinqToDB.DataProvider.Oracle
 			return predicate;
 		}
 
-		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expr, ConvertVisitor visitor,
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor visitor,
 			EvaluationContext context)
 		{
-			expr = base.ConvertExpressionImpl(expr, visitor, context);
+			expression = base.ConvertExpressionImpl(expression, visitor, context);
 
-			if (expr is SqlBinaryExpression be)
+			if (expression is SqlBinaryExpression be)
 			{
 				switch (be.Operation)
 				{
@@ -132,10 +132,10 @@ namespace LinqToDB.DataProvider.Oracle
 							Add(be.Expr1, be.Expr2, be.SystemType),
 							Mul(new SqlFunction(be.SystemType, "BITAND", be.Expr1, be.Expr2), 2),
 							be.SystemType);
-					case "+": return be.SystemType == typeof(string) ? new SqlBinaryExpression(be.SystemType, be.Expr1, "||", be.Expr2, be.Precedence) : expr;
+					case "+": return be.SystemType == typeof(string) ? new SqlBinaryExpression(be.SystemType, be.Expr1, "||", be.Expr2, be.Precedence) : expression;
 				}
 			}
-			else if (expr is SqlFunction func)
+			else if (expression is SqlFunction func)
 			{
 				switch (func.Name)
 				{
@@ -200,16 +200,16 @@ namespace LinqToDB.DataProvider.Oracle
 							new SqlValue(27));
 				}
 			}
-			else if (expr is SqlExpression e)
+			else if (expression is SqlExpression e)
 			{
 				if (e.Expr.StartsWith("To_Number(To_Char(") && e.Expr.EndsWith(", 'FF'))"))
 					return Div(new SqlExpression(e.SystemType, e.Expr.Replace("To_Number(To_Char(", "to_Number(To_Char("), e.Parameters), 1000);
 			}
 
-			return expr;
+			return expression;
 		}
 
-		static readonly ISqlExpression RowNumExpr = new SqlExpression(typeof(long), "ROWNUM", Precedence.Primary, true, true);
+		static readonly ISqlExpression RowNumExpr = new SqlExpression(typeof(long), "ROWNUM", Precedence.Primary, SqlFlags.IsAggregate | SqlFlags.IsWindowFunction);
 
 		/// <summary>
 		/// Replaces Take/Skip by ROWNUM usage.
@@ -221,7 +221,7 @@ namespace LinqToDB.DataProvider.Oracle
 		protected SqlStatement ReplaceTakeSkipWithRowNum(SqlStatement statement, bool onlySubqueries)
 		{
 			return QueryHelper.WrapQuery(statement,
-				query =>
+				(query, _) =>
 				{
 					if (query.Select.TakeValue == null && query.Select.SkipValue == null)
 						return 0;
@@ -267,7 +267,9 @@ namespace LinqToDB.DataProvider.Oracle
 					query.Select.SkipValue = null;
 					query.Select.Take(null, null);
 
-				});
+				},
+				allowMutation: true
+				);
 		}
 
 		protected override ISqlExpression ConvertFunction(SqlFunction func)

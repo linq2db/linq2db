@@ -141,7 +141,7 @@ namespace Tests.Data
 					counters[e.TraceInfoStep]++;
 				};
 
-				using (var reader = await new CommandInfo(db, sql).ExecuteReaderAsync())
+				await using (var reader = await new CommandInfo(db, sql).ExecuteReaderAsync())
 				{
 					await reader.QueryToListAsync<Northwind.Category>();
 				}
@@ -171,7 +171,7 @@ namespace Tests.Data
 
 			using (var db = new DataConnection())
 			{
-				db.OnTraceConnection(new TraceInfo(db, TraceInfoStep.BeforeExecute));
+				db.OnTraceConnection(new TraceInfo(db, TraceInfoStep.BeforeExecute, TraceOperation.BuildMapping, false));
 			}
 			Assert.True(traceCalled);
 		}
@@ -187,7 +187,7 @@ namespace Tests.Data
 
 			using (var db = new DataConnection(builder.Build()))
 			{
-				db.OnTraceConnection(new TraceInfo(db, TraceInfoStep.BeforeExecute));
+				db.OnTraceConnection(new TraceInfo(db, TraceInfoStep.BeforeExecute, TraceOperation.BuildMapping, false));
 			}
 
 			Assert.True(builderTraceCalled, "because the builder trace should have been called");

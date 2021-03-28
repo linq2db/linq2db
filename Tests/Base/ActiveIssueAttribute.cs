@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-
+using LinqToDB.Common;
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
 using NUnit.Framework.Internal;
@@ -91,12 +91,12 @@ namespace Tests
 
 		HashSet<string> GetIssueConfigurations()
 		{
-			return _issueConfigurations ??= new HashSet<string>(Configurations ?? new string[0]);
+			return _issueConfigurations ??= new HashSet<string>(Configurations ?? Array<string>.Empty);
 		}
 
-		IEnumerable<TestMethod> ITestBuilder.BuildFrom(IMethodInfo method, Test suite)
+		IEnumerable<TestMethod> ITestBuilder.BuildFrom(IMethodInfo method, Test? suite)
 		{
-			foreach (var testMethod in base.BuildFrom(method, suite))
+			foreach (var testMethod in BuildFrom(method, suite))
 			{
 				((IApplyToTest)this).ApplyToTest(testMethod);
 				yield return testMethod;
@@ -119,8 +119,8 @@ namespace Tests
 				if (provider != null)
 				{
 					explicitTest = issueConfigurations.Contains(provider)
-						&& ((!SkipForLinqService && isLinqService == true)
-							|| (!SkipForNonLinqService && isLinqService == false));
+						&& ((!SkipForLinqService && isLinqService)
+							|| (!SkipForNonLinqService && !isLinqService));
 				}
 			}
 

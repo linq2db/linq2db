@@ -125,8 +125,8 @@ namespace LinqToDB
 		/// <returns>Number of affected records.</returns>
 		public static int DeleteWithOutputInto<TSource,TOutput>(
 			                this IQueryable<TSource>          source,
-			                ITable<TOutput>                   outputTable
-			)
+			                ITable<TOutput>                   outputTable)
+			where TOutput : notnull
 		{
 			if (source      == null) throw new ArgumentNullException(nameof(source));
 			if (outputTable == null) throw new ArgumentNullException(nameof(outputTable));
@@ -154,6 +154,7 @@ namespace LinqToDB
 			                this IQueryable<TSource>          source,
 			                ITable<TOutput>                   outputTable,
 							CancellationToken                 token = default)
+			where TOutput : notnull
 		{
 			if (source      == null) throw new ArgumentNullException(nameof(source));
 			if (outputTable == null) throw new ArgumentNullException(nameof(outputTable));
@@ -187,6 +188,7 @@ namespace LinqToDB
 			                this IQueryable<TSource>          source,
 			                ITable<TOutput>                   outputTable,
 			                Expression<Func<TSource,TOutput>> outputExpression)
+			where TOutput : notnull
 		{
 			if (source           == null) throw new ArgumentNullException(nameof(source));
 			if (outputTable      == null) throw new ArgumentNullException(nameof(outputTable));
@@ -219,6 +221,7 @@ namespace LinqToDB
 			                ITable<TOutput>                   outputTable,
 			                Expression<Func<TSource,TOutput>> outputExpression,
 							CancellationToken                 token = default)
+			where TOutput : notnull
 		{
 			if (source           == null) throw new ArgumentNullException(nameof(source));
 			if (outputTable      == null) throw new ArgumentNullException(nameof(outputTable));

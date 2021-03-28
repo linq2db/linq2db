@@ -16,10 +16,10 @@ namespace LinqToDB.Data
 		internal DataReaderWrapper?       ReaderWrapper     { get; private set; }
 		public   DbDataReader?            Reader            => ReaderWrapper?.DataReader;
 		public   CommandInfo?             CommandInfo       { get; }
-		internal int                      ReadNumber        { get; set; }
-		internal CancellationToken        CancellationToken { get; set; }
-		private  DateTime                 StartedOn         { get; }      = DateTime.UtcNow;
-		private  Stopwatch                Stopwatch         { get; }      = Stopwatch.StartNew();
+		internal int               ReadNumber        { get; set; }
+		internal CancellationToken CancellationToken { get; set; }
+		private  DateTime          StartedOn         { get; }      = DateTime.UtcNow;
+		private  Stopwatch         Stopwatch         { get; }      = Stopwatch.StartNew();
 
 		public DataReaderAsync(CommandInfo commandInfo, DataReaderWrapper dataReader)
 		{
@@ -31,9 +31,11 @@ namespace LinqToDB.Data
 		{
 			if (ReaderWrapper != null)
 			{
+				ReaderWrapper.Dispose();
+
 				if (CommandInfo?.DataConnection.TraceSwitchConnection.TraceInfo == true)
 				{
-					CommandInfo.DataConnection.OnTraceConnection(new TraceInfo(CommandInfo.DataConnection, TraceInfoStep.Completed)
+					CommandInfo.DataConnection.OnTraceConnection(new TraceInfo(CommandInfo.DataConnection, TraceInfoStep.Completed, TraceOperation.ExecuteReader, false)
 					{
 						TraceLevel      = TraceLevel.Info,
 						Command         = ReaderWrapper.Command,
@@ -46,7 +48,7 @@ namespace LinqToDB.Data
 				ReaderWrapper.Dispose();
 				ReaderWrapper = null;
 			}
-
+			OnDispose?.Invoke();
 		}
 
 #if NETSTANDARD2_1PLUS
@@ -54,9 +56,11 @@ namespace LinqToDB.Data
 		{
 			if (ReaderWrapper != null)
 			{
+				await ReaderWrapper.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
 				if (CommandInfo?.DataConnection.TraceSwitchConnection.TraceInfo == true)
 				{
-					CommandInfo.DataConnection.OnTraceConnection(new TraceInfo(CommandInfo.DataConnection, TraceInfoStep.Completed)
+					CommandInfo.DataConnection.OnTraceConnection(new TraceInfo(CommandInfo.DataConnection, TraceInfoStep.Completed, TraceOperation.ExecuteReader, true)
 					{
 						TraceLevel      = TraceLevel.Info,
 						Command         = ReaderWrapper.Command,
@@ -69,15 +73,21 @@ namespace LinqToDB.Data
 				await ReaderWrapper.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 				ReaderWrapper = null;
 			}
+			OnDispose?.Invoke();
 		}
-#elif !NETFRAMEWORK
+#elif NATIVE_ASYNC
 		public ValueTask DisposeAsync()
 		{
 			Dispose();
-			return new ValueTask(Task.CompletedTask);
+			return default;
+		}
+#else
+		public Task DisposeAsync()
+		{
+			Dispose();
+			return TaskEx.CompletedTask;
 		}
 #endif
-
 
 		#region Query with object reader
 

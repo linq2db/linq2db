@@ -1,3 +1,4 @@
+﻿#if NETFRAMEWORK
 using System;
 using System.Configuration;
 
@@ -18,3 +19,4 @@ namespace LinqToDB.Configuration
 		}
 	}
 }
+#endif

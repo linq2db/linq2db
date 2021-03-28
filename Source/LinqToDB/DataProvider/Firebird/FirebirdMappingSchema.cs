@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Text;
 
+
 namespace LinqToDB.DataProvider.Firebird
 {
+	using Common;
 	using Mapping;
 	using SqlQuery;
 	using System.Data.Linq;
@@ -44,10 +46,9 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 			stringBuilder.Append("X'");
 
-			foreach (var b in value)
-				stringBuilder.Append(b.ToString("X2"));
+			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
 
-			stringBuilder.Append("'");
+			stringBuilder.Append('\'');
 		}
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
@@ -60,9 +61,9 @@ namespace LinqToDB.DataProvider.Firebird
 				else
 				{
 					stringBuilder
-						.Append("'")
+						.Append('\'')
 						.Append(value.Replace("'", "''"))
-						.Append("'");
+						.Append('\'');
 				}
 		}
 
@@ -87,9 +88,9 @@ namespace LinqToDB.DataProvider.Firebird
 			else
 			{
 				stringBuilder
-					.Append("'")
+					.Append('\'')
 					.Append(value == '\'' ? '\'' : value)
-					.Append("'");
+					.Append('\'');
 			}
 		}
 
@@ -102,7 +103,7 @@ namespace LinqToDB.DataProvider.Firebird
 				stringBuilder.AppendFormat("{0:X2}", bt);
 			}
 
-			stringBuilder.Append("'");
+			stringBuilder.Append('\'');
 		}
 	}
 }

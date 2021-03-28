@@ -1,0 +1,5 @@
+[*.{cs,vb}]
+# generate messages mostly for Test*<T> methods, which we don't want to change
+dotnet_diagnostic.IDE0001.severity = none # IDE0001: Simplify name
+# casts used a lot in test linq expressions
+dotnet_diagnostic.IDE0004.severity = none # IDE0004: Remove unnecessary cast
