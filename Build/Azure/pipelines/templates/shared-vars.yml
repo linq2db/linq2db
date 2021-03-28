@@ -1,4 +1,5 @@
 variables:
+# also check hardcoded branch names in pipeline triggers and nuget-vars.yml
   master_branch: dev.v4
   release_branch: release4
   baselines_master: master.4
@@ -7,4 +8,3 @@ variables:
   assemblyVersion: 4.0.0
   nugetVersion: 4.0.0-preview.1
   nugetDevVersion: 4.0.0
-
