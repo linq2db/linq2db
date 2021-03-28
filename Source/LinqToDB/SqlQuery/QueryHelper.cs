@@ -84,7 +84,7 @@ namespace LinqToDB.SqlQuery
 		{
 			var dependencyCount = 0;
 
-			new QueryVisitor().VisitParentFirst(testedRoot, e =>
+			new QueryVisitor().VisitParentFirstAll(testedRoot, e =>
 			{
 				if (elementsToIgnore != null && elementsToIgnore.Contains(e))
 					return false;
@@ -761,6 +761,45 @@ namespace LinqToDB.SqlQuery
 			return GetUnderlyingExpression(expression) as SqlField;
 		}
 
+		/// <summary>
+		/// Returns SqlField from specific expression. Usually from SqlColumn.
+		/// Conversion is ignored.
+		/// </summary>
+		/// <param name="expression"></param>
+		/// <returns>Field instance associated with expression</returns>
+		public static SqlField? ExtractField(ISqlExpression expression)
+		{
+			var                      current = expression;
+			HashSet<ISqlExpression>? visited = null;
+			while (true)
+			{
+				visited ??= new HashSet<ISqlExpression>();
+				if (!visited.Add(current))
+					return null;
+
+				if (current is SqlColumn column)
+					current = column.Expression;
+				else if (current is SqlFunction func)
+				{
+					if (func.Name == "$Convert$")
+						current = func.Parameters[2];
+					else
+						break;
+				}
+				else if (current is SqlExpression expr)
+				{
+					if (IsTransitiveExpression(expr))
+						current = expr.Parameters[0];
+					else
+						break;
+				}
+				else
+					break;
+			}
+
+			return current as SqlField;
+		}
+
 		public static SqlCondition GenerateEquality(ISqlExpression field1, ISqlExpression field2)
 		{
 			var compare = new SqlCondition(false,
@@ -911,11 +950,13 @@ namespace LinqToDB.SqlQuery
 		/// <param name="onWrap">
 		/// After wrapping query this function called for prcess needed optimizations. Array of queries contains [QC, QB, QA]
 		/// </param>
+		/// <param name="allowMutation">Wrapped query can be not recreated for performance considerations.</param>
 		/// <returns>The same <paramref name="statement"/> or modified statement when wrapping has been performed.</returns>
 		public static TStatement WrapQuery<TStatement>(
-			TStatement             statement,
-			Func<SelectQuery, int> wrapTest,
-			Action<IReadOnlyList<SelectQuery>> onWrap)
+			TStatement                             statement,
+			Func<SelectQuery, ConvertVisitor, int> wrapTest,
+			Action<IReadOnlyList<SelectQuery>>     onWrap,
+			bool                                   allowMutation)
 			where TStatement : SqlStatement
 		{
 			if (statement == null) throw new ArgumentNullException(nameof(statement));
@@ -923,11 +964,11 @@ namespace LinqToDB.SqlQuery
 			if (onWrap    == null) throw new ArgumentNullException(nameof(onWrap));
 
 			var correctedTables = new Dictionary<ISqlTableSource, SelectQuery>();
-			var newStatement = ConvertVisitor.Convert(statement, (visitor, element) =>
+			var newStatement = ConvertVisitor.Convert(statement, allowMutation, (visitor, element) =>
 			{
 				if (element is SelectQuery query)
 				{
-					var ec = wrapTest(query);
+					var ec = wrapTest(query, visitor);
 					if (ec <= 0)
 						return element;
 
@@ -943,9 +984,17 @@ namespace LinqToDB.SqlQuery
 					}
 
 					var objectTree = new Dictionary<ICloneableElement, ICloneableElement>();
-					var clonedQuery = (SelectQuery)query.Clone(objectTree, e => e == query || e is SqlColumn c && c.Parent == query);
+					var clonedQuery = (SelectQuery)query.Clone(objectTree, e => e == query 
+						|| e is SqlColumn c && c.Parent == query 
+						|| e is SqlSetOperator setOperator && (!query.HasSetOperators || query.SetOperators.All(so => so != setOperator)));
 
 					queries.Add(clonedQuery);
+
+					if (clonedQuery.HasSetOperators)
+					{
+						queries[0].SetOperators.AddRange(clonedQuery.SetOperators);
+						clonedQuery.SetOperators.Clear();
+					}
 
 					for (int i = queries.Count - 2; i >= 0; i--)
 					{
@@ -1012,13 +1061,14 @@ namespace LinqToDB.SqlQuery
 		/// <typeparam name="TStatement"></typeparam>
 		/// <param name="statement">Statement which may contain tested query</param>
 		/// <param name="queryToWrap">Tells which select query needs enveloping</param>
+		/// <param name="allowMutation">Wrapped query can be not recreated for performance considerations.</param>
 		/// <returns>The same <paramref name="statement"/> or modified statement when wrapping has been performed.</returns>
-		public static TStatement WrapQuery<TStatement>(TStatement statement, SelectQuery queryToWrap)
+		public static TStatement WrapQuery<TStatement>(TStatement statement, SelectQuery queryToWrap, bool allowMutation)
 			where TStatement : SqlStatement
 		{
 			if (statement == null) throw new ArgumentNullException(nameof(statement));
 
-			return WrapQuery(statement, q => q == queryToWrap, (q1, q2) => { });
+			return WrapQuery(statement, (q, v) => q == queryToWrap, (q1, q2) => { }, allowMutation);
 		}
 
 		/// <summary>
@@ -1029,18 +1079,20 @@ namespace LinqToDB.SqlQuery
 		/// <param name="statement"></param>
 		/// <param name="wrapTest">Delegate for testing when query needs to be wrapped.</param>
 		/// <param name="onWrap">After enveloping query this function called for prcess needed optimizations.</param>
+		/// <param name="allowMutation">Wrapped query can be not recreated for performance considerations.</param>
 		/// <returns>The same <paramref name="statement"/> or modified statement when wrapping has been performed.</returns>
 		public static TStatement WrapQuery<TStatement>(
-			TStatement                       statement,
-			Func<SelectQuery, bool>          wrapTest,
-			Action<SelectQuery, SelectQuery> onWrap)
+			TStatement                              statement,
+			Func<SelectQuery, ConvertVisitor, bool> wrapTest,
+			Action<SelectQuery, SelectQuery>        onWrap,
+			bool                                    allowMutation)
 			where TStatement : SqlStatement
 		{
 			if (statement == null) throw new ArgumentNullException(nameof(statement));
 			if (wrapTest == null)  throw new ArgumentNullException(nameof(wrapTest));
 			if (onWrap == null)    throw new ArgumentNullException(nameof(onWrap));
 
-			return WrapQuery(statement, q => wrapTest(q) ? 1 : 0, queries => onWrap(queries[0], queries[1]));
+			return WrapQuery(statement, (q, v) => wrapTest(q, v) ? 1 : 0, queries => onWrap(queries[0], queries[1]), allowMutation);
 		}
 
 

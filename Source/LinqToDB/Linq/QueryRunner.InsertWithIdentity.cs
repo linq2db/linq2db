@@ -8,7 +8,6 @@ namespace LinqToDB.Linq
 	using SqlQuery;
 	using Mapping;
 	using Common.Internal.Cache;
-	using System.Diagnostics.CodeAnalysis;
 	using System.Linq;
 
 	static partial class QueryRunner
@@ -18,7 +17,7 @@ namespace LinqToDB.Linq
 			static Query<object> CreateQuery(
 				IDataContext           dataContext,
 				EntityDescriptor       descriptor,
-				[DisallowNull] T       obj,
+				T                      obj,
 				InsertColumnFilter<T>? columnFilter,
 				string?                tableName,
 				string?                serverName,

@@ -9,11 +9,13 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.ServiceModel
 {
-	using Linq;
 	using Common.Internal;
-	using SqlQuery;
+	using Linq;
 	using SqlProvider;
+	using SqlQuery;
+#if !NATIVE_ASYNC
 	using Tools;
+#endif
 
 	public abstract partial class RemoteDataContextBase
 	{
@@ -254,6 +256,20 @@ namespace LinqToDB.ServiceModel
 				{
 					DataReader.Dispose();
 				}
+
+#if !NATIVE_ASYNC
+				public Task DisposeAsync()
+				{
+					DataReader.Dispose();
+					return TaskEx.CompletedTask;
+				}
+#else
+				public ValueTask DisposeAsync()
+				{
+					DataReader.Dispose();
+					return default;
+				}
+#endif
 			}
 
 			public override async Task<IDataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken)

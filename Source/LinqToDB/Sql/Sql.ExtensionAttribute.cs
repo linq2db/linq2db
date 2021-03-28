@@ -153,11 +153,11 @@ namespace LinqToDB
 			T GetValue<T>(int index);
 			T GetValue<T>(string argName);
 
-			ISqlExpression GetExpression(int index);
-			ISqlExpression GetExpression(string argName);
+			ISqlExpression GetExpression(int index, bool unwrap = false);
+			ISqlExpression GetExpression(string argName, bool unwrap = false);
 			ISqlExpression ConvertToSqlExpression();
 			ISqlExpression ConvertToSqlExpression(int precedence);
-			ISqlExpression ConvertExpressionToSql(Expression expression);
+			ISqlExpression ConvertExpressionToSql(Expression expression, bool unwrap = false);
 
 			SqlExtensionParam AddParameter(string name, ISqlExpression expr);
 		}
@@ -331,8 +331,11 @@ namespace LinqToDB
 
 				public MethodInfo?  Method { get; }
 
-				public ISqlExpression ConvertExpression(Expression expr, ColumnDescriptor? columnDescriptor)
+				public ISqlExpression ConvertExpression(Expression expr, bool unwrap, ColumnDescriptor? columnDescriptor)
 				{
+					if (unwrap)
+						expr = expr.UnwrapConvert();
+
 					return _convert.Convert(expr, columnDescriptor);
 				}
 
@@ -377,12 +380,12 @@ namespace LinqToDB
 					throw new InvalidOperationException(string.Format("Argument '{0}' not found", argName));
 				}
 
-				public ISqlExpression GetExpression(int index)
+				public ISqlExpression GetExpression(int index, bool unwrap)
 				{
-					return ConvertExpression(Arguments[index], null);
+					return ConvertExpression(Arguments[index], unwrap, null);
 				}
 
-				public ISqlExpression GetExpression(string argName)
+				public ISqlExpression GetExpression(string argName, bool unwrap)
 				{
 					if (Method != null)
 					{
@@ -391,7 +394,7 @@ namespace LinqToDB
 						{
 							if (parameters[i].Name == argName)
 							{
-								return GetExpression(i);
+								return GetExpression(i, unwrap);
 							}
 						}
 					}
@@ -414,9 +417,9 @@ namespace LinqToDB
 						Extension.CanBeNull, IsNullableType.Undefined);
 				}
 
-				public ISqlExpression ConvertExpressionToSql(Expression expression)
+				public ISqlExpression ConvertExpressionToSql(Expression expression, bool unwrap)
 				{
-					return ConvertExpression(expression, null);
+					return ConvertExpression(expression, unwrap, null);
 				}
 
 				public SqlExtensionParam AddParameter(string name, ISqlExpression expr)
@@ -448,7 +451,11 @@ namespace LinqToDB
 				ChainPrecedence  = -1;
 			}
 
-			public ExtensionAttribute(Type builderType): this(string.Empty, string.Empty)
+			public ExtensionAttribute(Type builderType): this(string.Empty, builderType)
+			{
+			}
+
+			public ExtensionAttribute(string configuration, Type builderType) : this(configuration, string.Empty)
 			{
 				BuilderType = builderType;
 			}
@@ -609,62 +616,6 @@ namespace LinqToDB
 				return chains;
 			}
 
-
-			const  string MatchParamPattern = @"{([0-9a-z_A-Z?]*)(,\s'(.*)')?}";
-			static Regex  _matchParamRegEx  = new Regex(MatchParamPattern, RegexOptions.Compiled);
-
-			public static string ResolveExpressionValues(string expression, Func<string, string?, string?> valueProvider)
-			{
-				if (expression    == null) throw new ArgumentNullException(nameof(expression));
-				if (valueProvider == null) throw new ArgumentNullException(nameof(valueProvider));
-
-				int  prevMatch         = -1;
-				int  prevNotEmptyMatch = -1;
-				bool spaceNeeded       = false;
-
-				var str = _matchParamRegEx.Replace(expression, match =>
-				{
-					var paramName = match.Groups[1].Value;
-					var canBeOptional = paramName.EndsWith("?");
-					if (canBeOptional)
-						paramName = paramName.TrimEnd('?');
-
-					if (paramName == "_")
-					{
-						spaceNeeded = true;
-						prevMatch = match.Index + match.Length;
-						return string.Empty;
-					}
-
-					var delimiter  = match.Groups[3].Success ? match.Groups[3].Value : null;
-					var calculated = valueProvider(paramName, delimiter);
-
-					if (string.IsNullOrEmpty(calculated) && !canBeOptional)
-						throw new InvalidOperationException(string.Format("Non optional parameter '{0}' not found", paramName));
-
-					var res = calculated;
-					if (spaceNeeded)
-					{
-						if (!string.IsNullOrEmpty(calculated))
-						{
-							var e = expression;
-							if (prevMatch == match.Index && prevNotEmptyMatch == match.Index - 3 || (prevNotEmptyMatch >= 0 && e[prevNotEmptyMatch] != ' '))
-								res = " " + calculated;
-						}
-						spaceNeeded = false;
-					}
-
-					if (!string.IsNullOrEmpty(calculated))
-					{
-						prevNotEmptyMatch = match.Index + match.Length;
-					}
-
-					return res;
-				});
-
-				return str;
-			}
-
 			SqlExtensionParam BuildExtensionParam(IDataContext dataContext, SelectQuery query, MemberInfo member, Expression[] arguments, ConvertHelper convertHelper)
 			{
 				var method = member as MethodInfo;
@@ -686,7 +637,6 @@ namespace LinqToDB
 					var templateParameters       = genericDefinition.GetParameters();
 					var templateGenericArguments = genericDefinition.GetGenericArguments();
 					var descriptorMapping        = new Dictionary<Type, ColumnDescriptor?>();
-					var genericMapping           = new Dictionary<Type, Type?>();
 
 					for (var i = 0; i < parameters.Length; i++)
 					{
@@ -913,8 +863,10 @@ namespace LinqToDB
 				if (main == null)
 				{
 					var replaced = chain.Where(c => c.Expression != null).ToArray();
-					if (replaced.Length != 1)
+					if (replaced.Length == 0)
 						throw new InvalidOperationException($"Can not find root sequence for expression '{expression}'");
+					else if (replaced.Length > 1)
+						throw new InvalidOperationException($"Multiple root sequences found for expression '{expression}'");
 
 					return replaced[0].Expression!;
 				}

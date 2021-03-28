@@ -7,6 +7,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB
 {
+	using System.Threading.Tasks;
 	using Linq;
 	using Mapping;
 	using SqlProvider;
@@ -16,6 +17,11 @@ namespace LinqToDB
 	/// </summary>
 	[PublicAPI]
 	public interface IDataContext : IEntityServices, IDisposable
+#if NATIVE_ASYNC
+		, IAsyncDisposable
+#else
+		, Async.IAsyncDisposable
+#endif
 	{
 		/// <summary>
 		/// Provider identifier.
@@ -90,6 +96,11 @@ namespace LinqToDB
 		/// Closes context connection and disposes underlying resources.
 		/// </summary>
 		void                Close              ();
+
+		/// <summary>
+		/// Closes context connection and disposes underlying resources.
+		/// </summary>
+		Task                CloseAsync         ();
 
 		/// <summary>
 		/// Event, triggered before context connection closed using <see cref="Close"/> method.

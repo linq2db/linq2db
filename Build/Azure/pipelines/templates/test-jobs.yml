@@ -71,8 +71,46 @@ jobs:
                 exit 1
             }
         } else {
-            Write-Host "Baselines branch already exists"
+            Write-Host "Baselines branch already exists, checking if rebase required"
+            $head = git ls-remote $baselinesRepoUrl HEAD
+            if ($LASTEXITCODE -ne 0) {
+                Write-Host "Failed to read HEAD hash. Error code ${LASTEXITCODE}"
+                exit 1
+            }
+            if ($head.Length -lt 40) {
+                Write-Host "Baselines repo HEAD not found. Last output: ${head}"
+                exit 1
+            }
             $baslinesHeadHash = ($output -split '\s+')[0]
+            $headHash = ($head -split '\s+')[0]
+            if ($baslinesHeadHash -eq $headHash) {
+                Write-Host "Baselines branch already based on HEAD, no rebase required"
+            } else {
+                Write-Host "Baselines head is ${baslinesHeadHash}, but HEAD is ${head}, trying to rebase on current HEAD"
+                git clone $baselinesRepoUrl baselines
+                if ($LASTEXITCODE -ne 0) {
+                    Write-Host "Failed to clone baselines repository. Error code ${LASTEXITCODE}"
+                    exit 1
+                }
+                cd baselines
+                git checkout origin/$baselinesBranch
+                if ($LASTEXITCODE -ne 0) {
+                    Write-Host "Failed to checkout baselines branch origin/${baselinesBranch}. Error code ${LASTEXITCODE}"
+                    exit 1
+                }
+                git rebase origin/master
+                if ($LASTEXITCODE -ne 0) {
+                    Write-Host "Failed to rebase baselines PR on origin/master. Delete branch and re-run tests. Error code ${LASTEXITCODE}"
+                    exit 1
+                }
+                git push -f origin HEAD:$baselinesBranch
+                if ($LASTEXITCODE -ne 0) {
+                    Write-Host "Failed to push rebased baselines. Error code ${LASTEXITCODE}"
+                    exit 1
+                }
+                Write-Host "Baselines PR was rebased on HEAD"
+                $baslinesHeadHash = $headHash
+            }
         }
         Write-Host "Baselines branch head hash: ${baslinesHeadHash}"
         # export branch name and hash to pipelines variables
@@ -84,6 +122,9 @@ jobs:
     name: baselines_init
     env:
       GITHUB_TOKEN: $(BASELINES_GH_PAT)
+      EMAIL: azp@linq2db.com
+      GIT_AUTHOR_NAME: Azure Pipelines Bot
+      GIT_COMMITTER_NAME: Azure Pipelines Bot
 
 ##############################################################################################
 #  Tests: Windows (NETFX 4.7.2)                                                              #

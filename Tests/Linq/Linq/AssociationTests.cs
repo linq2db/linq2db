@@ -514,7 +514,7 @@ namespace Tests.Linq
 					.Select(s => new
 					{
 						s.ChildID,
-						s.a.c,
+						s.a!.c,
 						s.a.Parent
 					})
 					.Select(s => new
@@ -1035,7 +1035,6 @@ namespace Tests.Linq
 			[Column] public bool    Deleted      { get; set; }
 		}
 
-		[ActiveIssue(845)]
 		[Test]
 		public void Issue845Test([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllSQLite)] string context)
 		{
@@ -1044,12 +1043,11 @@ namespace Tests.Linq
 			using (db.CreateLocalTable<Department>())
 			{
 				var result = db.GetTable<Employee>()
-					.Select(e => new { e.Id, e.Department!.Name})
+					.Select(e => new { e.Id, e.Department!.Name })
 					.ToList();
 
 				Assert.False(db.LastQuery!.Contains(" NOT"));
-				//Assert.True(db.LastQuery!.Contains("AND 1 <> [a_Department].[Deleted]"));
-				Assert.True(db.LastQuery!.Contains("AND 0 = [a_Department].[Deleted]"));
+				Assert.True(db.LastQuery!.Contains("AND [a_Department].[Deleted] = 0"));
 			}
 		}
 

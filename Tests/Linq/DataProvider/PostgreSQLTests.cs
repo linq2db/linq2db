@@ -31,6 +31,7 @@ using Newtonsoft.Json.Linq;
 namespace Tests.DataProvider
 {
 	using System.Threading.Tasks;
+	using LinqToDB.Tools;
 	using Model;
 
 	[TestFixture]
@@ -533,6 +534,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = GetDataContext(context))
 			{
+				ResetTestSequence(context);
 				db.GetTable<PostgreSQLSpecific.SequenceTest1>().Where(_ => _.Value == "SeqValue").Delete();
 				db.Insert(new PostgreSQLSpecific.SequenceTest1 { Value = "SeqValue" });
 
@@ -565,6 +567,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = GetDataContext(context))
 			{
+				ResetTestSequence(context);
 				db.GetTable<PostgreSQLSpecific.SequenceTest3>().Where(_ => _.Value == "SeqValue").Delete();
 				db.Insert(new PostgreSQLSpecific.SequenceTest3 { Value = "SeqValue" });
 
@@ -627,6 +630,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = GetDataContext(context))
 			{
+				ResetTestSequence(context);
 				db.GetTable<PostgreSQLSpecific.SequenceTest1>().Where(_ => _.Value == "SeqValue").Delete();
 
 				var id1 = Convert.ToInt32(db.InsertWithIdentity(new PostgreSQLSpecific.SequenceTest1 { Value = "SeqValue" }));
@@ -663,6 +667,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = GetDataContext(context))
 			{
+				ResetTestSequence(context);
 				db.GetTable<PostgreSQLSpecific.SequenceTest3>().Where(_ => _.Value == "SeqValue").Delete();
 
 				var id1 = Convert.ToInt32(db.InsertWithIdentity(new PostgreSQLSpecific.SequenceTest3 { Value = "SeqValue" }));
@@ -1057,7 +1062,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-				[Test]
+		[Test]
 		public async Task BulkCopyTestAsync([Values]BulkTestMode mode, [IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
 			var providerName      = GetProviderName(context, out var _);
@@ -1204,6 +1209,55 @@ namespace Tests.DataProvider
 
 				if (mode == BulkTestMode.WithRollback)
 					Assert.AreEqual(0, db.GetTable<AllTypes>().Where(_ => ids!.Contains(_.ID)).Count());
+			}
+		}
+
+		[Table("SequenceTest1")]
+		public class SequenceTest
+		{
+			[Column, SequenceName("sequencetestseq")]
+			public int    ID;
+			[Column]
+			public string Value = null!;
+		}
+
+		[Test]
+		public void BulkCopyRetrieveSequences(
+			[IncludeDataSources(TestProvName.AllPostgreSQL)] string context,
+			[Values] BulkCopyType bulkCopyType,
+			[Values] bool useSequence)
+		{
+				var data = Enumerable.Range(1, 40).Select(i => new SequenceTest { Value = $"SeqValue{i}" }).ToArray();
+
+			using (var db = new TestDataConnection(context))
+			{
+				try
+				{
+					db.GetTable<SequenceTest>().Where(_ => _.Value.StartsWith("SeqValue")).Delete();
+
+					if (useSequence)
+						ResetTestSequence(context);
+
+					var options = new BulkCopyOptions()
+					{
+						KeepIdentity = bulkCopyType == BulkCopyType.RowByRow ? false : true,
+						MaxBatchSize = 10,
+						BulkCopyType = bulkCopyType
+					};
+
+					db.BulkCopy(options, data.RetrieveIdentity(db, useSequence));
+
+					var cnt = 1;
+					foreach (var d in data)
+					{
+						Assert.AreEqual(cnt, d.ID);
+						cnt++;
+					}
+				}
+				finally
+				{
+					db.GetTable<SequenceTest>().Where(_ => _.Value.StartsWith("SeqValue")).Delete();
+				}
 			}
 		}
 
@@ -2039,13 +2093,13 @@ namespace Tests.DataProvider
 
 	public static class TestPgAggregates
 	{
-		[Sql.Function("test_avg", ServerSideOnly = true, IsAggregate = true, ArgIndices = new[] { 0 })]
+		[Sql.Function("test_avg", ServerSideOnly = true, IsAggregate = true, ArgIndices = new[] { 1 })]
 		public static double CustomAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double>> value)
 		{
 			throw new InvalidOperationException();
 		}
 
-		[Sql.Function("test_avg", ServerSideOnly = true, IsAggregate = true, ArgIndices = new[] { 0 })]
+		[Sql.Function("test_avg", ServerSideOnly = true, IsAggregate = true, ArgIndices = new[] { 1 })]
 		public static double? CustomAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> value)
 		{
 			throw new InvalidOperationException();

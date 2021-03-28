@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 
 namespace LinqToDB.Common.Internal.Cache
@@ -15,10 +14,9 @@ namespace LinqToDB.Common.Internal.Cache
 			return value;
 		}
 
-		[return: MaybeNull]
-		public static TItem Get<TItem>(this IMemoryCache cache, object key)
+		public static TItem? Get<TItem>(this IMemoryCache cache, object key)
 		{
-			return (TItem)(cache.Get(key) ?? default(TItem));
+			return (TItem?)(cache.Get(key) ?? default(TItem));
 		}
 
 		public static bool TryGetValue<TItem>(this IMemoryCache cache, object key, out TItem? value)

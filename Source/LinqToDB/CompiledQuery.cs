@@ -22,7 +22,7 @@ namespace LinqToDB
 			_query = query;
 		}
 
-		readonly object                   _sync = new object();
+		readonly object                   _sync = new ();
 		readonly LambdaExpression         _query;
 		volatile Func<object?[],object?[]?,object?>? _compiledQuery;
 
@@ -50,6 +50,7 @@ namespace LinqToDB
 		}
 
 		class TableHelper<T> : ITableHelper
+			where T : notnull
 		{
 			public Expression CallTable(LambdaExpression query, Expression expr, ParameterExpression ps, ParameterExpression preambles, MethodType type)
 			{

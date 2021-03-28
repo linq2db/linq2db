@@ -52,7 +52,7 @@ namespace LinqToDB.Linq.Builder
 				new SelectContext2(buildInfo.Parent, selector, sequence);
 
 #if DEBUG
-			context.MethodCall = methodCall;
+			context.Debug_MethodCall = methodCall;
 			Debug.WriteLine("BuildMethodCall Select:\n" + context.SelectQuery);
 #endif
 			return context;

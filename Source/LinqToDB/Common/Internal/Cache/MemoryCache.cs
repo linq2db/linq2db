@@ -212,7 +212,7 @@ namespace LinqToDB.Common.Internal.Cache
 		}
 
 		/// <inheritdoc />
-		public bool TryGetValue(object key, [MaybeNullWhen(false)] out object? value)
+		public bool TryGetValue(object key, out object? value)
 		{
 			ValidateCacheKey(key);
 

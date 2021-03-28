@@ -11,6 +11,7 @@ using LinqToDB.Async;
 namespace LinqToDB.Linq
 {
 	class PersistentTable<T> : ITable<T>
+		where T : notnull
 	{
 		private readonly IQueryable<T> _query;
 
