@@ -16,7 +16,6 @@ namespace LinqToDB.Data
 	using Common;
 	using SqlQuery;
 	using SqlProvider;
-	using LinqToDB.DataProvider;
 
 	public partial class DataConnection
 	{

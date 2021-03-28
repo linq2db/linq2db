@@ -1047,8 +1047,8 @@ namespace Tests.DataProvider
 							SchemaType    = "TINYINT",
 							IsOut         = true,
 							ParameterName = "aOutParam",
-							ParameterType = "sbyte?",
-							SystemType    = typeof(sbyte),
+							ParameterType = "bool?",
+							SystemType    = typeof(bool),
 							DataType      = DataType.SByte
 						}
 					}
@@ -1689,7 +1689,7 @@ namespace Tests.DataProvider
 					assertColumn("Float10"           , "float"   , DataType.Single);
 					assertColumn("Double"            , "double"  , DataType.Double);
 					assertColumn("Float30"           , "double"  , DataType.Double);
-					assertColumn("Bool"              , "sbyte"   , DataType.SByte);
+					assertColumn("Bool"              , "bool"    , DataType.SByte);
 					assertColumn("Bit1"              , "bool"    , DataType.BitArray);
 					assertColumn("Bit8"              , "byte"    , DataType.BitArray);
 					assertColumn("Bit16"             , "ushort"  , DataType.BitArray);
@@ -1776,7 +1776,7 @@ namespace Tests.DataProvider
 				assertParameter("Decimal"           , "decimal?" , DataType.Decimal);
 				assertParameter("Float"             , "float?"   , DataType.Single);
 				assertParameter("Double"            , "double?"  , DataType.Double);
-				assertParameter("Boolean"           , "sbyte?"   , DataType.SByte);
+				assertParameter("Boolean"           , "bool?"    , DataType.SByte);
 				assertParameter("Bit1"              , "bool?"    , DataType.BitArray);
 				assertParameter("Bit8"              , "byte?"    , DataType.BitArray);
 				assertParameter("Bit10"             , "ushort?"  , DataType.BitArray);
@@ -1858,7 +1858,7 @@ namespace Tests.DataProvider
 				assertColumn("Decimal"           , "decimal?" , DataType.Decimal);
 				assertColumn("Float"             , "float?"   , DataType.Single);
 				assertColumn("Double"            , "double?"  , DataType.Double);
-				assertColumn("Boolean"           , "sbyte?"   , DataType.SByte);
+				assertColumn("Boolean"           , "bool?"    , DataType.SByte);
 				assertColumn("Bit1"              , "bool?"    , DataType.BitArray);
 				assertColumn("Bit8"              , "byte?"    , DataType.BitArray);
 				assertColumn("Bit10"             , "ushort?"  , DataType.BitArray);
