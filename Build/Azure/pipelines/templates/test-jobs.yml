@@ -46,7 +46,7 @@ jobs:
         if ($output.Length -lt 40) {
             Write-Host "Baselines branch not found"
             Write-Host "Reading baselines repository HEAD hash..."
-            $output = git ls-remote $baselinesRepoUrl HEAD
+            $output = git ls-remote $baselinesRepoUrl $(baselines_master)
             if ($LASTEXITCODE -ne 0) {
                 Write-Host "Failed to read HEAD hash. Error code ${LASTEXITCODE}"
                 exit 1
@@ -72,7 +72,7 @@ jobs:
             }
         } else {
             Write-Host "Baselines branch already exists, checking if rebase required"
-            $head = git ls-remote $baselinesRepoUrl HEAD
+            $head = git ls-remote $baselinesRepoUrl $(baselines_master)
             if ($LASTEXITCODE -ne 0) {
                 Write-Host "Failed to read HEAD hash. Error code ${LASTEXITCODE}"
                 exit 1
@@ -98,9 +98,9 @@ jobs:
                     Write-Host "Failed to checkout baselines branch origin/${baselinesBranch}. Error code ${LASTEXITCODE}"
                     exit 1
                 }
-                git rebase origin/master
+                git rebase origin/$(baselines_master)
                 if ($LASTEXITCODE -ne 0) {
-                    Write-Host "Failed to rebase baselines PR on origin/master. Delete branch and re-run tests. Error code ${LASTEXITCODE}"
+                    Write-Host "Failed to rebase baselines PR on origin/$(baselines_master). Delete branch and re-run tests. Error code ${LASTEXITCODE}"
                     exit 1
                 }
                 git push -f origin HEAD:$baselinesBranch
@@ -709,7 +709,7 @@ jobs:
             $prName = "Baselines"
             $prMessage = "Not associated with any pull request (tests pipeline triggered from admin console?)"
         }
-        $output = gh api /repos/$orgName/$baselinesRepo/pulls -F title="${prName}" -F head=$baselinesBranch -F base=master -F draft=true -F body="${prMessage}"
+        $output = gh api /repos/$orgName/$baselinesRepo/pulls -F title="${prName}" -F head=$baselinesBranch -F base=$(baselines_master) -F draft=true -F body="${prMessage}"
         if ($LASTEXITCODE -ne 0) {
             Write-Host "PR creation failed. Error code ${LASTEXITCODE}, output: ${output}"
             exit 1

@@ -1,15 +1,6 @@
 variables:
+  - template: templates/shared-vars.yml
   - template: templates/test-vars.yml
-  - name: solution
-    value: linq2db.sln
-  - name: build_configuration
-    value: Azure
-  - name: assemblyVersion
-    value: 4.0.0
-  - name: nugetVersion
-    value: 4.0.0
-  - name: nugetDevVersion
-    value: 4.0.0
   - name: artifact_nugets
     value: nugets
   - name: artifact_linq2db_binaries
@@ -18,20 +9,16 @@ variables:
     value: linq2db_tools_binaries
   - name: artifact_linq2db_aspnet_binaries
     value: linq2db_aspnet_binaries
-  - name: master_branch
-    value: dev.v4
-  - name: release_branch
-    value: release
 
 # build on commits to important branches: 'release', 'master'
 trigger:
   - dev.v4
-  - release
+  - release4
 # don't trigger pr builds by default, users should trigger them manually using /azp bot commands to avoid situations
 # when we have multiple test runs waiting for free job, when nobody needs them
 # we only want to trigger it for pr to release branch
 pr:
-  - release
+  - release4
 
 stages:
 
