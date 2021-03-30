@@ -66,6 +66,7 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			var table = truncateTable.Table!;
 
+			BuildTag(truncateTable);
 			AppendIndent();
 			StringBuilder.Append("TRUNCATE TABLE ");
 			BuildPhysicalTable(table, null);

@@ -822,6 +822,7 @@ namespace LinqToDB.SqlProvider
 			var sourceAlias = ConvertInline(GetTempAliases(1, "s")[0],        ConvertType.NameToQueryTableAlias);
 			var keys        = insertOrUpdate.Update.Keys;
 
+			BuildTag(insertOrUpdate);
 			AppendIndent().Append("MERGE INTO ");
 			BuildPhysicalTable(table!, null);
 			StringBuilder.Append(' ').AppendLine(targetAlias);
@@ -909,6 +910,7 @@ namespace LinqToDB.SqlProvider
 
 		protected void BuildInsertOrUpdateQueryAsUpdateInsert(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
+			BuildTag(insertOrUpdate);
 			AppendIndent().AppendLine("BEGIN TRAN").AppendLine();
 
 			var buildUpdate = insertOrUpdate.Update.Items.Count > 0;
@@ -1014,6 +1016,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
+			BuildTag(dropTable);
 			AppendIndent().Append("DROP TABLE ");
 			BuildPhysicalTable(dropTable.Table!, null);
 			StringBuilder.AppendLine();
@@ -1021,6 +1024,7 @@ namespace LinqToDB.SqlProvider
 
 		protected void BuildDropTableStatementIfExists(SqlDropTableStatement dropTable)
 		{
+			BuildTag(dropTable);
 			AppendIndent().Append("DROP TABLE ");
 
 			if (dropTable.Table.TableOptions.HasDropIfExists())
