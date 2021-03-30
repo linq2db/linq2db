@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-
+using FluentAssertions;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -23,7 +23,7 @@ namespace Tests.Playground
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<SampleClass>())
 			{
-				var result = table.ToArray();
+				table.ToArray().Should().BeEmpty();
 			}
 		}
 	}
