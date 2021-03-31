@@ -216,6 +216,8 @@ namespace LinqToDB.DataProvider.Firebird
 				return;
 			}
 
+			BuildTag(dropTable);
+
 			// implementation use following approach: http://www.firebirdfaq.org/faq69/
 			StringBuilder
 				.AppendLine("EXECUTE BLOCK AS BEGIN");

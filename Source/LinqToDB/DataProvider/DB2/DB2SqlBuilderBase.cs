@@ -248,6 +248,7 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			var table = dropTable.Table!;
 
+			BuildTag(dropTable);
 			if (dropTable.Table.TableOptions.HasDropIfExists())
 			{
 				AppendIndent().Append(@"BEGIN

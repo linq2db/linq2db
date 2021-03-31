@@ -3,7 +3,6 @@ using System.Linq;
 using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
-using Tests.Model;
 using Tests.xUpdate;
 
 namespace Tests.Linq
@@ -11,12 +10,6 @@ namespace Tests.Linq
 	[TestFixture]
 	public class TagTests : TestBase
 	{
-		class TagTestTable
-		{
-			public int ID { get; set; }
-			public string? Name { get; set; }
-		}
-
 		public const string NOT_SUPPORTED = TestProvName.AllAccess;
 
 		[Test]
@@ -85,9 +78,7 @@ namespace Tests.Linq
 		public void Test_MultilineCommentsSupport([DataSources(NOT_SUPPORTED)] string context)
 		{
 			var tag = "My custom\r\nwonderful multiline\nquery tag";
-			var expected = @$"/* My custom
-wonderful multiline
-query tag */{Environment.NewLine}";
+			var expected = @$"/* My custom{Environment.NewLine}wonderful multiline{Environment.NewLine}query tag */{Environment.NewLine}";
 
 			using (var db = GetDataContext(context))
 			{
@@ -181,46 +172,6 @@ query tag */{Environment.NewLine}";
 		}
 
 		[Test]
-		public void Test_TagInsertUpdateDeleteFlow([DataSources(false, NOT_SUPPORTED)] string context)
-		{
-			var tag = "Wonderful tag";
-			var expected = $"/* {tag} */{Environment.NewLine}";
-
-			using (var db = new TestDataConnection(context))
-			{
-				db.DropTable<TagTestTable>(throwExceptionIfNotExists: false);
-				var table = db.CreateTable<TagTestTable>();
-
-				var insertQuery = db.GetTable<TagTestTable>().TagQuery(tag)
-								.Value(p => p.ID, 100)
-								.Value(p => p.Name, "name");
-				insertQuery.Insert();
-				var insertCommandSql = db.LastQuery!;
-
-				var updateQuery = db.GetTable<TagTestTable>().TagQuery(tag)
-								.Where(p => p.ID == 100)
-								.Set(p => p.Name, "updated");
-				updateQuery.Update();
-				var updateCommandSql = db.LastQuery!;
-
-				var deleteQuery = db.GetTable<TagTestTable>().Where(p => p.ID == 100).TagQuery(tag);
-				deleteQuery.Delete();
-				var deleteCommandSql = db.LastQuery!;
-
-				var truncateQuery = db.GetTable<TagTestTable>().TagQuery(tag);
-				truncateQuery.Truncate();
-				var truncateCommandSql = db.LastQuery!;
-
-				Assert.That(insertCommandSql.IndexOf(expected), Is.EqualTo(0));
-				Assert.That(updateCommandSql.IndexOf(expected), Is.EqualTo(0));
-				Assert.That(deleteCommandSql.IndexOf(expected), Is.EqualTo(0));
-				Assert.That(truncateCommandSql.IndexOf(expected), Is.EqualTo(0));
-
-				db.DropTable<TagTestTable>();
-			}
-		}
-
-		[Test]
 		public void Test_SqlDropTableStatement([DataSources(NOT_SUPPORTED)] string context)
 		{
 			var tag = "My Test";
@@ -265,7 +216,7 @@ query tag */{Environment.NewLine}";
 			var tag = "My Test";
 			var expected = $"/* {tag} */{Environment.NewLine}";
 
-			using (var db    = GetDataContext(context))
+			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<TestTable>())
 			{
 				table.TagQuery(tag).Truncate();
@@ -353,7 +304,7 @@ query tag */{Environment.NewLine}";
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<TestTable>())
 			{
-				table.TagQuery(tag).InsertOrUpdate(() => new TestTable() { Id = 1 }, _ => new TestTable() { Id = 1, Fd = 2 });
+				table.TagQuery(tag).InsertOrUpdate(() => new TestTable() { Id = 1, Fd = 2 }, _ => new TestTable() { Id = 1 });
 
 				var commandSql = GetCurrentBaselines();
 

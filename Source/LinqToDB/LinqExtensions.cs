@@ -3438,7 +3438,7 @@ namespace LinqToDB
 		/// <returns>Query with tag.</returns>
 		[LinqTunnel]
 		[Pure]
-		public static IQueryable<TSource> TagQuery<TSource>(this IQueryable<TSource> source, string tagValue)
+		public static IQueryable<TSource> TagQuery<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string tagValue)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (tagValue == null) throw new ArgumentNullException(nameof(tagValue));
@@ -3464,7 +3464,7 @@ namespace LinqToDB
 		/// <returns>Table-like query source with tag.</returns>
 		[LinqTunnel]
 		[Pure]
-		public static ITable<T> TagQuery<T>(this ITable<T> table, string tagValue) where T : notnull
+		public static ITable<T> TagQuery<T>(this ITable<T> table, [SqlQueryDependent] string tagValue) where T : notnull
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
 			if (tagValue == null) throw new ArgumentNullException(nameof(tagValue));

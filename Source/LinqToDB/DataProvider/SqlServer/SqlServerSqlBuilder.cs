@@ -355,6 +355,8 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			var table = dropTable.Table!;
 
+			BuildTag(dropTable);
+
 			if (dropTable.Table.TableOptions.HasDropIfExists())
 			{
 				var defaultDatabaseName =
