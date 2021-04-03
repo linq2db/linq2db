@@ -250,6 +250,8 @@ namespace LinqToDB
 
 				if (_commandInterceptors != null)
 					_dataConnection.AddInterceptor(_commandInterceptors);
+				if (_connectionInterceptors != null)
+					_dataConnection.AddInterceptor(_connectionInterceptors);
 
 				if (_commandTimeout != null)
 					_dataConnection.CommandTimeout = CommandTimeout;
@@ -359,14 +361,15 @@ namespace LinqToDB
 
 			var dc = new DataContext(0)
 			{
-				ConfigurationString  = ConfigurationString,
-				ConnectionString     = ConnectionString,
-				KeepConnectionAlive  = KeepConnectionAlive,
-				DataProvider         = DataProvider,
-				ContextID            = ContextID,
-				MappingSchema        = MappingSchema,
-				InlineParameters     = InlineParameters,
-				_commandInterceptors = _commandInterceptors?.Clone()
+				ConfigurationString     = ConfigurationString,
+				ConnectionString        = ConnectionString,
+				KeepConnectionAlive     = KeepConnectionAlive,
+				DataProvider            = DataProvider,
+				ContextID               = ContextID,
+				MappingSchema           = MappingSchema,
+				InlineParameters        = InlineParameters,
+				_commandInterceptors    = _commandInterceptors?.Clone(),
+				_connectionInterceptors = _connectionInterceptors?.Clone(),
 			};
 
 			if (forNestedQuery && _dataConnection != null && _dataConnection.IsMarsEnabled)
@@ -378,6 +381,8 @@ namespace LinqToDB
 
 				if (dc._commandInterceptors != null)
 					_dataConnection.AddInterceptor(dc._commandInterceptors);
+				if (dc._connectionInterceptors != null)
+					_dataConnection.AddInterceptor(dc._connectionInterceptors);
 			}
 
 
@@ -555,7 +560,8 @@ namespace LinqToDB
 			public void Dispose()
 			{
 				_queryRunner!.Dispose();
-				_dataContext!.ReleaseQuery();
+				if (_dataContext!.CloseAfterUse)
+					_dataContext!.ReleaseQuery();
 				_queryRunner = null;
 				_dataContext = null;
 			}
@@ -567,7 +573,8 @@ namespace LinqToDB
 #endif
 			{
 				await _queryRunner!.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-				_dataContext!.ReleaseQuery();
+				if (_dataContext!.CloseAfterUse)
+					_dataContext!.ReleaseQuery();
 
 				_queryRunner = null;
 				_dataContext = null;
@@ -618,7 +625,9 @@ namespace LinqToDB
 		}
 
 		#region Interceptors
-		private  AggregatedInterceptor<ICommandInterceptor>? _commandInterceptors;
+		private  AggregatedInterceptor<ICommandInterceptor>?    _commandInterceptors;
+		private  AggregatedInterceptor<IConnectionInterceptor>? _connectionInterceptors;
+
 		public void AddInterceptor(IInterceptor interceptor)
 		{
 			if (interceptor is ICommandInterceptor commandInterceptor)
@@ -631,6 +640,18 @@ namespace LinqToDB
 				}
 
 				_commandInterceptors.Add(commandInterceptor);
+			}
+
+			if (interceptor is IConnectionInterceptor connectionInterceptor)
+			{
+				if (_connectionInterceptors == null)
+				{
+					_connectionInterceptors = new AggregatedInterceptor<IConnectionInterceptor>();
+					if (_dataConnection != null)
+						_dataConnection.AddInterceptor(_connectionInterceptors);
+				}
+
+				_connectionInterceptors.Add(connectionInterceptor);
 			}
 		}
 		#endregion

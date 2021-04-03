@@ -19,6 +19,7 @@ namespace Tests.Data
 	using System.Transactions;
 	using LinqToDB.AspNet;
 	using LinqToDB.Data.RetryPolicy;
+	using LinqToDB.Interceptors;
 	using LinqToDB.Mapping;
 	using Microsoft.Extensions.DependencyInjection;
 	using Model;
@@ -216,6 +217,54 @@ namespace Tests.Data
 			}
 		}
 
+		private class TestConnectionInterceptor : ConnectionInterceptor
+		{
+			private readonly Action<ConnectionOpeningEventData, DbConnection>? _onConnectionOpening;
+			private readonly Action<ConnectionOpenedEventData, DbConnection>? _onConnectionOpened;
+
+			private readonly Func<ConnectionOpeningEventData, DbConnection, CancellationToken, Task>? _onConnectionOpeningAsync;
+			private readonly Func<ConnectionOpenedEventData, DbConnection, CancellationToken, Task>?  _onConnectionOpenedAsync;
+
+			public TestConnectionInterceptor(
+				Action<ConnectionOpeningEventData, DbConnection>? onConnectionOpening,
+				Action<ConnectionOpenedEventData, DbConnection>? onConnectionOpened,
+				Func<ConnectionOpeningEventData, DbConnection, CancellationToken, Task>? onConnectionOpeningAsync,
+				Func<ConnectionOpenedEventData, DbConnection, CancellationToken, Task>? onConnectionOpenedAsync)
+			{
+				_onConnectionOpening = onConnectionOpening;
+				_onConnectionOpened  = onConnectionOpened;
+				_onConnectionOpeningAsync = onConnectionOpeningAsync;
+				_onConnectionOpenedAsync = onConnectionOpenedAsync;
+			}
+			public override void ConnectionOpened(ConnectionOpenedEventData eventData, DbConnection connection)
+			{
+				_onConnectionOpened?.Invoke(eventData, connection);
+				base.ConnectionOpened(eventData, connection);
+			}
+
+			public override async Task ConnectionOpenedAsync(ConnectionOpenedEventData eventData, DbConnection connection, CancellationToken cancellationToken)
+			{
+				if (_onConnectionOpenedAsync != null)
+					await _onConnectionOpenedAsync(eventData, connection, cancellationToken);
+
+				await base.ConnectionOpenedAsync(eventData, connection, cancellationToken);
+			}
+
+			public override void ConnectionOpening(ConnectionOpeningEventData eventData, DbConnection connection)
+			{
+				_onConnectionOpening?.Invoke(eventData, connection);
+				base.ConnectionOpening(eventData, connection);
+			}
+
+			public override async Task ConnectionOpeningAsync(ConnectionOpeningEventData eventData, DbConnection connection, CancellationToken cancellationToken)
+			{
+				if (_onConnectionOpeningAsync != null)
+					await _onConnectionOpeningAsync(eventData, connection, cancellationToken);
+
+				await base.ConnectionOpeningAsync(eventData, connection, cancellationToken);
+			}
+		}
+
 		[Test]
 		public void TestOpenEvent()
 		{
@@ -223,8 +272,12 @@ namespace Tests.Data
 			var openedAsync = false;
 			using (var conn = new DataConnection())
 			{
-				conn.OnConnectionOpened += (dc, cn) => opened = true;
-				conn.OnConnectionOpenedAsync += async (dc, cn, token) => await Task.Run(() => openedAsync = true);
+				conn.AddInterceptor(new TestConnectionInterceptor(
+					null,
+					(args, cn) => opened = true,
+					null,
+					async (args, cn, се) => await Task.Run(() => openedAsync = true)));
+
 				Assert.False(opened);
 				Assert.False(openedAsync);
 				Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
@@ -240,8 +293,12 @@ namespace Tests.Data
 			var openedAsync = false;
 			using (var conn = new DataConnection())
 			{
-				conn.OnConnectionOpened += (dc, cn) => opened = true;
-				conn.OnConnectionOpenedAsync += async (dc, cn, token) => await Task.Run(() => openedAsync = true);
+				conn.AddInterceptor(new TestConnectionInterceptor(
+					null,
+					(args, cn) => opened = true,
+					null,
+					async (args, cn, ct) => await Task.Run(() => openedAsync = true, ct)));
+
 				Assert.False(opened);
 				Assert.False(openedAsync);
 				await conn.SelectAsync(() => 1);
@@ -405,16 +462,20 @@ namespace Tests.Data
 			var openAsync = false;
 			using (var conn = new DataConnection())
 			{
-				conn.OnBeforeConnectionOpen += (dc, cn) =>
-				{
-					if (cn.State == ConnectionState.Closed)
-						open = true;
-				};
-				conn.OnBeforeConnectionOpenAsync += (dc, cn, token) => Task.Run(() =>
-				{
-					if (cn.State == ConnectionState.Closed)
-						openAsync = true;
-				}, default);
+				conn.AddInterceptor(new TestConnectionInterceptor(
+					(args, cn) =>
+					{
+						if (cn.State == ConnectionState.Closed)
+							open = true;
+					},
+					null,
+					async (args, cn, ct) => await Task.Run(() =>
+					{
+						if (cn.State == ConnectionState.Closed)
+							openAsync = true;
+					}, ct),
+					null));
+
 				Assert.False(open);
 				Assert.False(openAsync);
 				Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
@@ -430,16 +491,20 @@ namespace Tests.Data
 			var openAsync = false;
 			using (var conn = new DataConnection())
 			{
-				conn.OnBeforeConnectionOpen += (dc, cn) =>
+				conn.AddInterceptor(new TestConnectionInterceptor(
+					(args, cn) =>
 					{
 						if (cn.State == ConnectionState.Closed)
 							open = true;
-					};
-				conn.OnBeforeConnectionOpenAsync += async (dc, cn, token) => await Task.Run(() => 
-						{
-							if (cn.State == ConnectionState.Closed)
-								openAsync = true;
-						}, default);
+					},
+					null,
+					async (args, cn, ct) => await Task.Run(() =>
+					{
+						if (cn.State == ConnectionState.Closed)
+							openAsync = true;
+					}, ct),
+					null));
+
 				Assert.False(open);
 				Assert.False(openAsync);
 				await conn.SelectAsync(() => 1);
@@ -855,8 +920,12 @@ namespace Tests.Data
 				}
 
 				db.Close();
-				db.OnBeforeConnectionOpen += OnBeforeConnectionOpen;
-				db.OnConnectionOpened     += OnConnectionOpened;
+				db.AddInterceptor(new TestConnectionInterceptor(
+					(args, cn) => OnBeforeConnectionOpen(args.DataConnection, cn),
+					(args, cn) => OnConnectionOpened(args.DataConnection, cn),
+					null,
+					null));
+
 				Assert.AreEqual(0, open);
 				Assert.AreEqual(0, opened);
 				_ = db.Connection;
@@ -879,8 +948,6 @@ namespace Tests.Data
 					open   = 0;
 					opened = 0;
 					cdb.Close();
-					db.OnBeforeConnectionOpen -= OnBeforeConnectionOpen;
-					db.OnConnectionOpened     -= OnConnectionOpened;
 					_ = cdb.Connection;
 					Assert.AreEqual(1, open);
 					Assert.AreEqual(1, opened);
@@ -892,16 +959,19 @@ namespace Tests.Data
 				Assert.AreEqual(0, open);
 				Assert.AreEqual(0, opened);
 				_ = db.Connection;
-				Assert.AreEqual(0, open);
-				Assert.AreEqual(0, opened);
+				Assert.AreEqual(1, open);
+				Assert.AreEqual(1, opened);
+				open   = 0;
+				opened = 0;
 
 				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
 				{
 					Assert.AreEqual(0, open);
 					Assert.AreEqual(0, opened);
+					cdb.Close();
 					_ = cdb.Connection;
-					Assert.AreEqual(0, open);
-					Assert.AreEqual(0, opened);
+					Assert.AreEqual(1, open);
+					Assert.AreEqual(1, opened);
 				}
 			}
 
@@ -933,8 +1003,11 @@ namespace Tests.Data
 				}
 
 				db.Close();
-				db.OnBeforeConnectionOpenAsync += OnBeforeConnectionOpenAsync;
-				db.OnConnectionOpenedAsync     += OnConnectionOpenedAsync;
+				db.AddInterceptor(new TestConnectionInterceptor(
+					null,
+					null,
+					(args, cn, ct) => OnBeforeConnectionOpenAsync(args.DataConnection, cn, ct),
+					(args, cn, ct) => OnConnectionOpenedAsync(args.DataConnection, cn, ct)));
 				Assert.AreEqual(0, open);
 				Assert.AreEqual(0, opened);
 				await db.EnsureConnectionAsync();
@@ -957,8 +1030,6 @@ namespace Tests.Data
 					open   = 0;
 					opened = 0;
 					cdb.Close();
-					db.OnBeforeConnectionOpenAsync -= OnBeforeConnectionOpenAsync;
-					db.OnConnectionOpenedAsync     -= OnConnectionOpenedAsync;
 					await cdb.EnsureConnectionAsync();
 					Assert.AreEqual(1, open);
 					Assert.AreEqual(1, opened);
@@ -970,16 +1041,19 @@ namespace Tests.Data
 				Assert.AreEqual(0, open);
 				Assert.AreEqual(0, opened);
 				await db.EnsureConnectionAsync();
-				Assert.AreEqual(0, open);
-				Assert.AreEqual(0, opened);
+				Assert.AreEqual(1, open);
+				Assert.AreEqual(1, opened);
+				open   = 0;
+				opened = 0;
 
 				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
 				{
 					Assert.AreEqual(0, open);
 					Assert.AreEqual(0, opened);
+					cdb.Close();
 					await cdb.EnsureConnectionAsync();
-					Assert.AreEqual(0, open);
-					Assert.AreEqual(0, opened);
+					Assert.AreEqual(1, open);
+					Assert.AreEqual(1, opened);
 				}
 			}
 

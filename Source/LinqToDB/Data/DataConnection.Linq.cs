@@ -82,10 +82,8 @@ namespace LinqToDB.Data
 					OnTraceConnection           = OnTraceConnection,
 					OnClosed                    = OnClosed,
 					OnClosing                   = OnClosing,
-					OnBeforeConnectionOpen      = OnBeforeConnectionOpen,
-					OnConnectionOpened          = OnConnectionOpened,
-					OnBeforeConnectionOpenAsync = OnBeforeConnectionOpenAsync,
-					OnConnectionOpenedAsync     = OnConnectionOpenedAsync,
+					_commandInterceptors        = _commandInterceptors?.Clone(),
+					_connectionInterceptors     = _connectionInterceptors?.Clone()
 				};
 
 			return (DataConnection)Clone();

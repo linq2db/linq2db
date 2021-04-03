@@ -5,7 +5,8 @@
 
 	public partial class DataConnection
 	{
-		private AggregatedInterceptor<ICommandInterceptor>? _commandInterceptors;
+		private AggregatedInterceptor<ICommandInterceptor>?    _commandInterceptors;
+		private AggregatedInterceptor<IConnectionInterceptor>? _connectionInterceptors;
 
 		public void AddInterceptor(IInterceptor interceptor)
 		{
@@ -21,12 +22,27 @@
 				else
 					_commandInterceptors = aggregateCommandInterceptor;
 			}
+
+			// connection interceptors
+			if (interceptor is IConnectionInterceptor connectionInterceptor)
+				(_connectionInterceptors ??= new AggregatedInterceptor<IConnectionInterceptor>()).Add(connectionInterceptor);
+
+			if (interceptor is AggregatedInterceptor<IConnectionInterceptor> aggregateConnectionInterceptor)
+			{
+				if (_connectionInterceptors != null)
+					throw new InvalidOperationException($"{nameof(AggregatedInterceptor<IConnectionInterceptor>)}<{nameof(IConnectionInterceptor)}> already exists");
+				else
+					_connectionInterceptors = aggregateConnectionInterceptor;
+			}
 		}
 
 		internal void RemoveInterceptor(IInterceptor interceptor)
 		{
 			if (_commandInterceptors != null && interceptor is ICommandInterceptor commandInterceptor)
 				_commandInterceptors.Remove(commandInterceptor);
+
+			if (_connectionInterceptors != null && interceptor is IConnectionInterceptor connectionInterceptor)
+				_connectionInterceptors.Remove(connectionInterceptor);
 		}
 	}
 }

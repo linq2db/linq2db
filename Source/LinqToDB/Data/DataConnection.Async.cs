@@ -10,6 +10,7 @@ namespace LinqToDB.Data
 	using Async;
 	using DbCommandProcessor;
 	using LinqToDB.DataProvider;
+	using LinqToDB.Interceptors;
 	using RetryPolicy;
 
 	public partial class DataConnection
@@ -96,17 +97,17 @@ namespace LinqToDB.Data
 			{
 				try
 				{
-					var task = OnBeforeConnectionOpenAsync?.Invoke(this, _connection.Connection, cancellationToken);
-					if (task != null)
-						await task.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					if (_connectionInterceptors != null)
+						await _connectionInterceptors.Apply((interceptor, arg1, arg2, ct) => interceptor.ConnectionOpeningAsync(arg1, arg2, ct), new ConnectionOpeningEventData(this), (DbConnection)_connection.Connection, cancellationToken)
+							.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 					await _connection.OpenAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 					_closeConnection = true;
 
-					task = OnConnectionOpenedAsync?.Invoke(this, _connection.Connection, cancellationToken);
-					if (task != null)
-						await task.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					if (_connectionInterceptors != null)
+						await _connectionInterceptors.Apply((interceptor, arg1, arg2, ct) => interceptor.ConnectionOpenedAsync(arg1, arg2, ct), new ConnectionOpenedEventData(this), (DbConnection)_connection.Connection, cancellationToken)
+							.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 				}
 				catch (Exception ex)
 				{

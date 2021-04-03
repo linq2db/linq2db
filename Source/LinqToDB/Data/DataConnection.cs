@@ -1096,10 +1096,14 @@ namespace LinqToDB.Data
 
 			if (_connection.State == ConnectionState.Closed)
 			{
-				OnBeforeConnectionOpen?.Invoke(this, _connection.Connection);
+				if (_connectionInterceptors != null)
+					_connectionInterceptors.Apply((interceptor, arg1, arg2) => interceptor.ConnectionOpening(arg1, arg2), new ConnectionOpeningEventData(this), (DbConnection)_connection.Connection);
+
 				_connection.Open();
 				_closeConnection = true;
-				OnConnectionOpened?.Invoke(this, _connection.Connection);
+
+				if (_connectionInterceptors != null)
+					_connectionInterceptors.Apply((interceptor, arg1, arg2) => interceptor.ConnectionOpened(arg1, arg2), new ConnectionOpenedEventData(this), (DbConnection)_connection.Connection);
 			}
 
 			return _connection;
@@ -1116,26 +1120,6 @@ namespace LinqToDB.Data
 
 		/// <inheritdoc />
 		public Action<EntityCreatedEventArgs>? OnEntityCreated    { get; set; }
-
-		/// <summary>
-		/// Event, triggered before connection opened using <see cref="IDbConnection.Open"/> method.
-		/// </summary>
-		public event Action<DataConnection, IDbConnection>? OnBeforeConnectionOpen;
-
-		/// <summary>
-		/// Event, triggered before connection opened using <see cref="DbConnection.OpenAsync()"/> methods.
-		/// </summary>
-		public event Func<DataConnection, IDbConnection, CancellationToken, Task>? OnBeforeConnectionOpenAsync;
-
-		/// <summary>
-		/// Event, triggered right after connection opened using <see cref="IDbConnection.Open"/> method.
-		/// </summary>
-		public event Action<DataConnection, IDbConnection>? OnConnectionOpened;
-
-		/// <summary>
-		/// Event, triggered right after connection opened using <see cref="DbConnection.OpenAsync()"/> methods.
-		/// </summary>
-		public event Func<DataConnection, IDbConnection, CancellationToken, Task>? OnConnectionOpenedAsync;
 
 		/// <summary>
 		/// Closes and dispose associated underlying database transaction/connection.
@@ -1667,11 +1651,8 @@ namespace LinqToDB.Data
 				OnTraceConnection           = OnTraceConnection,
 				OnClosed                    = OnClosed,
 				OnClosing                   = OnClosing,
-				OnBeforeConnectionOpen      = OnBeforeConnectionOpen,
-				OnConnectionOpened          = OnConnectionOpened,
-				OnBeforeConnectionOpenAsync = OnBeforeConnectionOpenAsync,
-				OnConnectionOpenedAsync     = OnConnectionOpenedAsync,
-				_commandInterceptors        = _commandInterceptors?.Clone()
+				_commandInterceptors        = _commandInterceptors?.Clone(),
+				_connectionInterceptors     = _connectionInterceptors?.Clone()
 			};
 		}
 

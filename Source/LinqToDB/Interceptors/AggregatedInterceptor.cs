@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.Interceptors
 {
@@ -43,6 +45,36 @@ namespace LinqToDB.Interceptors
 					arg2 = apply(interceptor, arg1, arg2);
 
 				return arg2;
+			}
+			finally
+			{
+				_enumerating = false;
+				RemoveDelayed();
+			}
+		}
+
+		public void Apply<TArg, TResult>(Action<TInterceptor, TArg, TResult> apply, TArg arg1, TResult arg2)
+		{
+			_enumerating = true;
+			try
+			{
+				foreach (var interceptor in _interceptors)
+					apply(interceptor, arg1, arg2);
+			}
+			finally
+			{
+				_enumerating = false;
+				RemoveDelayed();
+			}
+		}
+
+		public async Task Apply<TArg1, TArg2>(Func<TInterceptor, TArg1, TArg2, CancellationToken, Task> apply, TArg1 arg1, TArg2 arg2, CancellationToken cancellationToken)
+		{
+			_enumerating = true;
+			try
+			{
+				foreach (var interceptor in _interceptors)
+					await apply(interceptor, arg1, arg2, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext); ;
 			}
 			finally
 			{

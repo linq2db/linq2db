@@ -13,7 +13,7 @@ namespace LinqToDB.Interceptors
 		}
 
 		/// <summary>
-		/// Gets data connection associated with event command.
+		/// Gets data connection associated with event.
 		/// </summary>
 		public DataConnection DataConnection { get; }
 	}
