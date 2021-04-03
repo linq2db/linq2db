@@ -63,7 +63,7 @@ namespace Tests.Data
 
 			private static IDataProvider GetDataProvider()
 			{
-				return new SqlServerDataProvider("MiniProfiler." + ProviderName.SqlServer2000, SqlServerVersion.v2012, SqlServerProvider.SystemDataSqlClient);
+				return new SqlServerDataProvider("MiniProfiler." + ProviderName.SqlServer2012, SqlServerVersion.v2012, SqlServerProvider.SystemDataSqlClient);
 			}
 
 			private static IDbConnection GetConnection(string configurationString)

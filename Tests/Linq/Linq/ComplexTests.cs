@@ -202,7 +202,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Contains5([DataSources(TestProvName.AllAccess, ProviderName.SqlServer2000, TestProvName.AllSybase)] string context)
+		public void Contains5([DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

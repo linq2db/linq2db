@@ -88,7 +88,6 @@ namespace Tests.SchemaProvider
 
 				switch (context)
 				{
-					case ProviderName.SqlServer2000                       :
 					case ProviderName.SqlServer2005                       :
 					case ProviderName.SqlServer2008                       :
 					case ProviderName.SqlServer2012                       :

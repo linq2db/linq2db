@@ -39,19 +39,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			SqlProviderFlags.IsDistinctSetOperationsSupported = true;
 			SqlProviderFlags.IsCountDistinctSupported         = true;
 			SqlProviderFlags.IsUpdateFromSupported            = true;
-
-			if (version == SqlServerVersion.v2000)
-			{
-				SqlProviderFlags.AcceptsTakeAsParameter   = false;
-				SqlProviderFlags.IsSkipSupported          = false;
-				SqlProviderFlags.IsCountSubQuerySupported = false;
-			}
-			else
-			{
-				SqlProviderFlags.IsApplyJoinSupported              = true;
-				SqlProviderFlags.TakeHintsSupported                = TakeHints.Percent | TakeHints.WithTies;
-				SqlProviderFlags.IsCommonTableExpressionsSupported = version >= SqlServerVersion.v2008;
-			}
+			SqlProviderFlags.IsApplyJoinSupported              = true;
+			SqlProviderFlags.TakeHintsSupported                = TakeHints.Percent | TakeHints.WithTies;
+			SqlProviderFlags.IsCommonTableExpressionsSupported = version >= SqlServerVersion.v2008;
 
 			SetCharField("char" , (r, i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r, i) => r.GetString(i).TrimEnd(' '));
@@ -60,7 +50,6 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			_sqlOptimizer = version switch
 			{
-				SqlServerVersion.v2000 => new SqlServer2000SqlOptimizer(SqlProviderFlags),
 				SqlServerVersion.v2005 => new SqlServer2005SqlOptimizer(SqlProviderFlags),
 				SqlServerVersion.v2012 => new SqlServer2012SqlOptimizer(SqlProviderFlags),
 				SqlServerVersion.v2016 => new SqlServer2016SqlOptimizer(SqlProviderFlags),
@@ -109,7 +98,6 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		static class MappingSchemaInstance
 		{
-			public static readonly MappingSchema SqlServer2000MappingSchema = new SqlServer2000MappingSchema();
 			public static readonly MappingSchema SqlServer2005MappingSchema = new SqlServer2005MappingSchema();
 			public static readonly MappingSchema SqlServer2008MappingSchema = new SqlServer2008MappingSchema();
 			public static readonly MappingSchema SqlServer2012MappingSchema = new SqlServer2012MappingSchema();
@@ -120,7 +108,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				return version switch
 				{
-					SqlServerVersion.v2000 => SqlServer2000MappingSchema,
 					SqlServerVersion.v2005 => SqlServer2005MappingSchema,
 					SqlServerVersion.v2012 => SqlServer2012MappingSchema,
 					SqlServerVersion.v2016 => SqlServer2016MappingSchema,
@@ -143,7 +130,6 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			return Version switch
 			{
-				SqlServerVersion.v2000 => new SqlServer2000SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
 				SqlServerVersion.v2005 => new SqlServer2005SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
 				SqlServerVersion.v2008 => new SqlServer2008SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
 				SqlServerVersion.v2012 => new SqlServer2012SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
@@ -159,7 +145,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public override ISchemaProvider GetSchemaProvider()
 		{
-			return Version == SqlServerVersion.v2000 ? new SqlServer2000SchemaProvider(this) : new SqlServerSchemaProvider(this);
+			return new SqlServerSchemaProvider(this);
 		}
 
 		static readonly ConcurrentDictionary<string,bool> _marsFlags = new ConcurrentDictionary<string,bool>();
@@ -355,7 +341,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				case DataType.DateTime      :
 				case DataType.DateTime2     :
 					parameter.DbType =
-						Version == SqlServerVersion.v2000 || Version == SqlServerVersion.v2005 ?
+						Version == SqlServerVersion.v2005 ?
 							DbType.DateTime :
 							DbType.DateTime2;
 					break;

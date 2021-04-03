@@ -21,16 +21,6 @@ namespace LinqToDB.DataProvider.SqlServer
 		// System.Data
 		// and/or
 		// System.Data.SqlClient
-		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2000sdc = new Lazy<IDataProvider>(() =>
-		{
-			var provider = new SqlServerDataProvider(ProviderName.SqlServer2000, SqlServerVersion.v2000, SqlServerProvider.SystemDataSqlClient);
-
-			if (Provider == SqlServerProvider.SystemDataSqlClient)
-				DataConnection.AddDataProvider(provider);
-
-			_providers.Enqueue(provider);
-			return provider;
-		}, true);
 		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2005sdc = new Lazy<IDataProvider>(() =>
 		{
 			var provider = new SqlServerDataProvider(ProviderName.SqlServer2005, SqlServerVersion.v2005, SqlServerProvider.SystemDataSqlClient);
@@ -88,16 +78,6 @@ namespace LinqToDB.DataProvider.SqlServer
 		}, true);
 
 		// Microsoft.Data.SqlClient
-		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2000mdc = new Lazy<IDataProvider>(() =>
-		{
-			var provider = new SqlServerDataProvider(ProviderName.SqlServer2000, SqlServerVersion.v2000, SqlServerProvider.MicrosoftDataSqlClient);
-
-			if (Provider == SqlServerProvider.MicrosoftDataSqlClient)
-				DataConnection.AddDataProvider(provider);
-
-			_providers.Enqueue(provider);
-			return provider;
-		}, true);
 		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2005mdc = new Lazy<IDataProvider>(() =>
 		{
 			var provider = new SqlServerDataProvider(ProviderName.SqlServer2005, SqlServerVersion.v2005, SqlServerProvider.MicrosoftDataSqlClient);
@@ -194,7 +174,6 @@ namespace LinqToDB.DataProvider.SqlServer
 					// SqlClient use dot prefix, as SqlClient itself used by some other providers
 				case var providerName when providerName.Contains("SqlServer") || providerName.Contains(".SqlClient"):
 				case ProviderName.SqlServer:
-					if (css.Name.Contains("2000") || css.ProviderName?.Contains("2000") == true) return GetDataProvider(SqlServerVersion.v2000, provider);
 					if (css.Name.Contains("2005") || css.ProviderName?.Contains("2005") == true) return GetDataProvider(SqlServerVersion.v2005, provider);
 					if (css.Name.Contains("2008") || css.ProviderName?.Contains("2008") == true) return GetDataProvider(SqlServerVersion.v2008, provider);
 					if (css.Name.Contains("2012") || css.ProviderName?.Contains("2012") == true) return GetDataProvider(SqlServerVersion.v2012, provider);
@@ -216,7 +195,8 @@ namespace LinqToDB.DataProvider.SqlServer
 								if (int.TryParse(conn.ServerVersion.Split('.')[0], out var version))
 								{
 									if (version <= 8)
-										return GetDataProvider(SqlServerVersion.v2000, provider);
+										// sql server <= 2000
+										return null;
 
 									using (var cmd = conn.CreateCommand())
 									{
@@ -233,12 +213,12 @@ namespace LinqToDB.DataProvider.SqlServer
 											return GetDataProvider(SqlServerVersion.v2008, provider);
 										if (level >= 90)
 											return GetDataProvider(SqlServerVersion.v2005, provider);
-										if (level >= 80)
-											return GetDataProvider(SqlServerVersion.v2000, provider);
+										if (level < 90)
+											// sql server <= 2000
+											return null;
 
 										switch (version)
 										{
-											case  8 : return GetDataProvider(SqlServerVersion.v2000, provider);
 											case  9 : return GetDataProvider(SqlServerVersion.v2005, provider);
 											case 10 : return GetDataProvider(SqlServerVersion.v2008, provider);
 											case 11 :
@@ -278,7 +258,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				SqlServerProvider.SystemDataSqlClient => version switch
 				{
-					SqlServerVersion.v2000 => _sqlServerDataProvider2000sdc.Value,
 					SqlServerVersion.v2005 => _sqlServerDataProvider2005sdc.Value,
 					SqlServerVersion.v2012 => _sqlServerDataProvider2012sdc.Value,
 					SqlServerVersion.v2016 => _sqlServerDataProvider2016sdc.Value,
@@ -287,7 +266,6 @@ namespace LinqToDB.DataProvider.SqlServer
 				},
 				SqlServerProvider.MicrosoftDataSqlClient => version switch
 				{
-					SqlServerVersion.v2000 => _sqlServerDataProvider2000mdc.Value,
 					SqlServerVersion.v2005 => _sqlServerDataProvider2005mdc.Value,
 					SqlServerVersion.v2012 => _sqlServerDataProvider2012mdc.Value,
 					SqlServerVersion.v2016 => _sqlServerDataProvider2016mdc.Value,

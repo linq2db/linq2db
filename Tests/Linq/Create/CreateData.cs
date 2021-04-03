@@ -260,7 +260,6 @@ public class a_CreateData : TestBase
 			case ProviderName.MySqlConnector                      :
 			case TestProvName.MySql55                             :
 			case TestProvName.MariaDB                             : RunScript(context,          "\nGO\n",  "MySql");                       break;
-			case ProviderName.SqlServer2000                       : RunScript(context,          "\nGO\n",  "SqlServer2000");               break;
 			case ProviderName.SqlServer2005                       :
 			case ProviderName.SqlServer2008                       :
 			case ProviderName.SqlServer2012                       :

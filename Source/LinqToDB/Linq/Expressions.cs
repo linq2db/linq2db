@@ -1133,19 +1133,6 @@ namespace LinqToDB.Linq
 
 				#endregion
 
-				#region SqlServer2000
-
-				{ ProviderName.SqlServer2000, new Dictionary<MemberInfo,IExpressionInfo> {
-					{ M(() => Sql.MakeDateTime(0, 0, 0, 0, 0, 0) ), N(() => L<int?,int?,int?,int?,int?,int?,DateTime?>((y,m,d,h,mm,s) => Sql.Convert(Sql.DateTime2,
-						y.ToString() + "-" + m.ToString() + "-" + d.ToString() + " " +
-						h.ToString() + ":" + mm.ToString() + ":" + s.ToString(), 120))) },
-					{ M(() => DateTime.Parse("")),   N(() => L<string,DateTime>(p0 => Sql.ConvertTo<DateTime>.From(p0) )) },
-					{ M(() => Sql.RoundToEven(0m) ), N(() => L<decimal?,decimal?>((decimal? d) => d - Sql.Floor(d) == 0.5m && (long)Sql.Floor(d)! % 2 == 0? Sql.Floor(d) : Sql.Round(d))) },
-					{ M(() => Sql.RoundToEven(0.0)), N(() => L<double?, double?> ((double?  d) => d - Sql.Floor(d) == 0.5  && (long)Sql.Floor(d)! % 2 == 0? Sql.Floor(d) : Sql.Round(d))) },
-				}},
-
-				#endregion
-
 				#region SqlServer2005
 
 				{ ProviderName.SqlServer2005, new Dictionary<MemberInfo,IExpressionInfo> {

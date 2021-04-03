@@ -243,7 +243,6 @@ namespace Tests.Linq
 
 		[Test]
 		public void SkipCount([DataSources(
-			ProviderName.SqlServer2000,
 			TestProvName.AllSybase,
 			TestProvName.AllSQLite,
 			TestProvName.AllAccess)]
@@ -462,7 +461,6 @@ namespace Tests.Linq
 		[Test]
 		public void SkipTake4([DataSources(
 			TestProvName.AllSQLite,
-			ProviderName.SqlServer2000,
 			TestProvName.AllSybase,
 			TestProvName.AllAccess)]
 			string context, 
@@ -522,7 +520,6 @@ namespace Tests.Linq
 		[Test]
 		public void SkipTake6([DataSources(
 			ProviderName.SqlCe,
-			ProviderName.SqlServer2000,
 			TestProvName.AllSybase,
 			TestProvName.AllSQLite,
 			TestProvName.AllAccess)]
@@ -543,7 +540,6 @@ namespace Tests.Linq
 		[Test]
 		public void SkipTakeCount([DataSources(
 			ProviderName.SqlCe,
-			ProviderName.SqlServer2000,
 			TestProvName.AllSybase,
 			TestProvName.AllSQLite,
 			TestProvName.AllAccess)]
