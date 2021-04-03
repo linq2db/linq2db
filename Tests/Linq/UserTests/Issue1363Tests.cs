@@ -34,7 +34,7 @@ namespace Tests.UserTests
 			TestProvName.AllSybase,
 		})]
 		[Test]
-		public void TestInsert([DataSources(ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
+		public void TestInsert([DataSources(ProviderName.SqlServer2005)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

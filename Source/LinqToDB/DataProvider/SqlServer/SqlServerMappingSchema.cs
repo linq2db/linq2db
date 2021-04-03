@@ -214,20 +214,6 @@ namespace LinqToDB.DataProvider.SqlServer
 		
 	}
 
-	public class SqlServer2000MappingSchema : MappingSchema
-	{
-		public SqlServer2000MappingSchema()
-			: base(ProviderName.SqlServer2000, SqlServerMappingSchema.Instance)
-		{
-			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
-		}
-
-		public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
-		{
-			return SqlServerMappingSchema.Instance.TryGetConvertExpression(@from, to);
-		}
-	}
-
 	public class SqlServer2005MappingSchema : MappingSchema
 	{
 		public SqlServer2005MappingSchema()

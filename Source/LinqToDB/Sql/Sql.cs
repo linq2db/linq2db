@@ -334,7 +334,6 @@ namespace LinqToDB
 		[Sql.Property(PN.SapHana,       "TimeStamp",      ServerSideOnly=true)]
 		[Sql.Property(                  "DateTime",       ServerSideOnly=true)] public static DateTime       DateTime                          { get { return DateTime.Now; } }
 
-		[Sql.Property(PN.SqlServer2000, "DateTime",       ServerSideOnly=true)]
 		[Sql.Property(PN.SqlServer2005, "DateTime",       ServerSideOnly=true)]
 		[Sql.Property(PN.PostgreSQL,    "TimeStamp",      ServerSideOnly=true)]
 		[Sql.Property(PN.Firebird,      "TimeStamp",      ServerSideOnly=true)]
@@ -351,7 +350,6 @@ namespace LinqToDB
 		[Sql.Property(PN.SapHana,       "SecondDate",     ServerSideOnly=true)]
 		[Sql.Property(                  "SmallDateTime",  ServerSideOnly=true)] public static DateTime       SmallDateTime                     { get { return DateTime.Now; } }
 
-		[Sql.Property(PN.SqlServer2000, "Datetime",       ServerSideOnly=true)]
 		[Sql.Property(PN.SqlServer2005, "Datetime",       ServerSideOnly=true)]
 		[Sql.Property(PN.SqlCe,         "Datetime",       ServerSideOnly=true)]
 		[Sql.Property(                  "Date",           ServerSideOnly=true)] public static DateTime       Date                              { get { return DateTime.Now; } }

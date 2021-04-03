@@ -417,7 +417,6 @@ namespace Tests
 			TestProvName.SqlServer2019,
 			TestProvName.SqlServer2019SequentialAccess,
 			TestProvName.SqlServer2019FastExpressionCompiler,
-			ProviderName.SqlServer2000,
 			ProviderName.SqlServer2005,
 			TestProvName.SqlAzure,
 			ProviderName.PostgreSQL,
@@ -1256,7 +1255,6 @@ namespace Tests
 			{
 				case TestProvName.SqlAzure:
 				case ProviderName.SqlServer:
-				case ProviderName.SqlServer2000:
 				case ProviderName.SqlServer2005:
 				case ProviderName.SqlServer2008:
 				case ProviderName.SqlServer2012:

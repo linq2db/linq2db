@@ -33,7 +33,6 @@ namespace LinqToDB.Benchmarks.Benchmarks.QueryGeneration
 			//_dataProviders.Add(ProviderName.DB2LUW,                new DB2DataProvider(ProviderName.DB2, DB2Version.LUW));
 			//_dataProviders.Add(ProviderName.DB2zOS,                new DB2DataProvider(ProviderName.DB2, DB2Version.zOS));
 			_dataProviders.Add(ProviderName.PostgreSQL,            new PostgreSQLDataProvider(ProviderName.PostgreSQL, PostgreSQLVersion.v95));
-			_dataProviders.Add(ProviderName.SqlServer2000,         new SqlServerDataProvider(ProviderName.SqlServer2000, SqlServerVersion.v2000));
 			_dataProviders.Add(ProviderName.SqlServer2005,         new SqlServerDataProvider(ProviderName.SqlServer2005, SqlServerVersion.v2005));
 			_dataProviders.Add(ProviderName.SqlServer2008,         new SqlServerDataProvider(ProviderName.SqlServer2008, SqlServerVersion.v2008));
 			_dataProviders.Add(ProviderName.SqlServer2012,         new SqlServerDataProvider(ProviderName.SqlServer2012, SqlServerVersion.v2012));

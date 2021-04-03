@@ -75,8 +75,6 @@ Legend:
 |Access<br>MDB ODBC|:heavy_check_mark:|:x:|:heavy_minus_sign:|:heavy_minus_sign:|
 |Access<br>MDB+ACCDB ODBC|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
 |MS SQL CE<sup>[4](#notes)</sup>|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
-|MS SQL Server 2000<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.8.2|:x:|:x:|:heavy_minus_sign:|:heavy_minus_sign:|
-|MS SQL Server 2000<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) 2.1.2|:x:|:x:|:heavy_minus_sign:|:heavy_minus_sign:|
 |MS SQL Server 2005<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.8.2|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
 |MS SQL Server 2005<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) 2.1.2|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
 |MS SQL Server 2008<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.8.2|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
@@ -148,7 +146,6 @@ Legend:
 |`ProviderName.InformixDB2`|Informix 12 (IDS using IBM.Data.DB2)| TODO: move to v14|
 |`TestProvName.SqlAzure`|Azure Sql||
 |`ProviderName.SqlServer`|SQL Server (2008)|TODO: use it for latest|
-|`ProviderName.SqlServer2000`|SQL Server 2000||
 |`ProviderName.SqlServer2005`|SQL Server 2005||
 |`ProviderName.SqlServer2008`|SQL Server 2008||
 |`ProviderName.SqlServer2012`|SQL Server 2012||
