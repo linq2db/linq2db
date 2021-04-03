@@ -1,11 +1,13 @@
-using System;
+﻿using System;
 using System.Data;
 using System.Diagnostics;
 
 namespace LinqToDB.Configuration
 {
+	using System.Collections.Generic;
 	using Data;
 	using DataProvider;
+	using LinqToDB.Interceptors;
 	using Mapping;
 
 	public class LinqToDbConnectionOptions<T> : LinqToDbConnectionOptions
@@ -52,6 +54,7 @@ namespace LinqToDB.Configuration
 			OnTrace       = builder.OnTrace;
 			TraceLevel    = builder.TraceLevel;
 			WriteTrace    = builder.WriteTrace;
+			Interceptors  = builder.Interceptors;
 		}
 
 		/// <summary>
@@ -111,6 +114,10 @@ namespace LinqToDB.Configuration
 		/// Gets custom trace writer to use with <see cref="DataConnection"/> instance.
 		/// </summary>
 		public Action<string?, string?, TraceLevel>? WriteTrace          { get; }
+		/// <summary>
+		/// Gets list of interceptors to use with <see cref="DataConnection"/> instance.
+		/// </summary>
+		public List<IInterceptor>?                   Interceptors        { get; }
 
 		internal ConnectionSetupType SetupType { get; }
 

@@ -21,6 +21,7 @@ namespace LinqToDB.Data
 	using DataProvider;
 	using DbCommandProcessor;
 	using Expressions;
+	using LinqToDB.Interceptors;
 	using Mapping;
 	using RetryPolicy;
 
@@ -348,6 +349,12 @@ namespace LinqToDB.Data
 			if (options.WriteTrace != null)
 			{
 				WriteTraceLineConnection = options.WriteTrace;
+			}
+
+			if (options.Interceptors != null)
+			{
+				foreach (var interceptor in options.Interceptors)
+					AddInterceptor(interceptor);
 			}
 
 			if (localConnection != null)
@@ -1193,14 +1200,8 @@ namespace LinqToDB.Data
 
 		internal void CommitCommandInit()
 		{
-			var initEvent = OnCommandInitialized;
-			if (initEvent != null)
-			{
-				var args = new OnCommandInitializedEventArgs(this, _command!);
-				initEvent(args);
-				if (args.CommandChanged)
-					_command = args.Command;
-			}
+			if (_commandInterceptors != null)
+				_command = _commandInterceptors.Apply((interceptor, arg1, arg2) => interceptor.CommandInitialized(arg1, arg2), new CommandInitializedEventData(this), _command!);
 
 			LastQuery = _command!.CommandText;
 		}
@@ -1231,12 +1232,6 @@ namespace LinqToDB.Data
 				}
 			}
 		}
-
-		/// <summary>
-		/// Event, triggered after command initialized, but not yet executed.
-		/// Event could be used for command inspection, modification or replacement.
-		/// </summary>
-		public event OnCommandInitializedEventHandler? OnCommandInitialized;
 
 		/// <summary>
 		/// This is internal API and is not intended for use by Linq To DB applications.
@@ -1401,7 +1396,7 @@ namespace LinqToDB.Data
 
 		protected virtual DataReaderWrapper ExecuteReader(CommandBehavior commandBehavior)
 		{
-			var wrapper = new DataReaderWrapper(this, _command!.ExecuteReaderExt(commandBehavior), (DbCommand?)_command!);
+			var wrapper = new DataReaderWrapper(this, _command!.ExecuteReaderExt(commandBehavior), _command!);
 			_command    = null;
 
 			return wrapper;
@@ -1676,6 +1671,7 @@ namespace LinqToDB.Data
 				OnConnectionOpened          = OnConnectionOpened,
 				OnBeforeConnectionOpenAsync = OnBeforeConnectionOpenAsync,
 				OnConnectionOpenedAsync     = OnConnectionOpenedAsync,
+				_commandInterceptors        = _commandInterceptors?.Clone()
 			};
 		}
 

@@ -55,7 +55,7 @@ namespace Tests.Linq
 			var semaphore = new Semaphore(0, poolCount);
 			
 			var threads = new Thread[threadCount];
-			var results = new Tuple<TParam, TResult, string, DbParameter[]?, Exception?>[threadCount];
+			var results = new Tuple<TParam, TResult, string, DbParameter[], Exception?>[threadCount];
 
 			for (var i = 0; i < threadCount; i++)
 			{
@@ -70,14 +70,11 @@ namespace Tests.Linq
 						{
 							using (var threadDb = (DataConnection)GetDataContext(context))
 							{
-								DbParameter[]? parameters = null;
-								threadDb.OnCommandInitialized += args =>
-								{
-									parameters = args.Command.Parameters.Cast<DbParameter>().ToArray();
-								};
+								var commandInterceptor = new SaveCommandInterceptor();
+								threadDb.AddInterceptor(commandInterceptor);
 
 								var result = queryFunc(threadDb, param);
-								results[n] = Tuple.Create(param, result, threadDb.LastQuery!, parameters, (Exception?)null);
+								results[n] = Tuple.Create(param, result, threadDb.LastQuery!, commandInterceptor.Parameters, (Exception?)null);
 							}
 						}
 						catch (Exception e)

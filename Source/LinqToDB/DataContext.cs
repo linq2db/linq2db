@@ -15,6 +15,7 @@ namespace LinqToDB
 	using Async;
 	using Mapping;
 	using SqlProvider;
+	using LinqToDB.Interceptors;
 
 	/// <summary>
 	/// Implements abstraction over non-persistent database connection that could be released after query or transaction execution.
@@ -247,6 +248,9 @@ namespace LinqToDB
 			{
 				_dataConnection = CreateDataConnection();
 
+				if (_commandInterceptors != null)
+					_dataConnection.AddInterceptor(_commandInterceptors);
+
 				if (_commandTimeout != null)
 					_dataConnection.CommandTimeout = CommandTimeout;
 
@@ -355,20 +359,26 @@ namespace LinqToDB
 
 			var dc = new DataContext(0)
 			{
-				ConfigurationString = ConfigurationString,
-				ConnectionString    = ConnectionString,
-				KeepConnectionAlive = KeepConnectionAlive,
-				DataProvider        = DataProvider,
-				ContextID           = ContextID,
-				MappingSchema       = MappingSchema,
-				InlineParameters    = InlineParameters,
+				ConfigurationString  = ConfigurationString,
+				ConnectionString     = ConnectionString,
+				KeepConnectionAlive  = KeepConnectionAlive,
+				DataProvider         = DataProvider,
+				ContextID            = ContextID,
+				MappingSchema        = MappingSchema,
+				InlineParameters     = InlineParameters,
+				_commandInterceptors = _commandInterceptors?.Clone()
 			};
 
 			if (forNestedQuery && _dataConnection != null && _dataConnection.IsMarsEnabled)
+			{
 				dc._dataConnection = CloneDataConnection(
 					_dataConnection,
 					_dataConnection.TransactionAsync,
 					_dataConnection.TransactionAsync == null ? _dataConnection.EnsureConnection() : null);
+
+				if (dc._commandInterceptors != null)
+					_dataConnection.AddInterceptor(dc._commandInterceptors);
+			}
 
 
 			dc.QueryHints.    AddRange(QueryHints);
@@ -606,5 +616,23 @@ namespace LinqToDB
 			public int          RowsCount        { get => _queryRunner!.RowsCount;        set => _queryRunner!.RowsCount        = value; }
 			public int          QueryNumber      { get => _queryRunner!.QueryNumber;      set => _queryRunner!.QueryNumber      = value; }
 		}
+
+		#region Interceptors
+		private  AggregatedInterceptor<ICommandInterceptor>? _commandInterceptors;
+		public void AddInterceptor(IInterceptor interceptor)
+		{
+			if (interceptor is ICommandInterceptor commandInterceptor)
+			{
+				if (_commandInterceptors == null)
+				{
+					_commandInterceptors = new AggregatedInterceptor<ICommandInterceptor>();
+					if (_dataConnection != null)
+						_dataConnection.AddInterceptor(_commandInterceptors);
+				}
+
+				_commandInterceptors.Add(commandInterceptor);
+			}
+		}
+		#endregion
 	}
 }

@@ -869,10 +869,11 @@ namespace Tests.DataProvider
 			using (var db = new DataConnection(context))
 			{
 				DbParameter[] parameters = null!;
-				db.OnCommandInitialized += args =>
+				db.OnNextCommandInitialized((args, cmd) =>
 				{
-					parameters = args.Command.Parameters.Cast<DbParameter>().ToArray();
-				};
+					parameters = cmd.Parameters.Cast<DbParameter>().ToArray();
+					return cmd;
+				});
 
 				var query = from a in db.GetTable<AllTypes>()
 							where a.datetimeDataType == date
@@ -893,10 +894,11 @@ namespace Tests.DataProvider
 			using (var db = new DataConnection(context))
 			{
 				DbParameter[] parameters = null!;
-				db.OnCommandInitialized += args =>
+				db.OnNextCommandInitialized((args, cmd) =>
 				{
-					parameters = args.Command.Parameters.Cast<DbParameter>().ToArray();
-				};
+					parameters = cmd.Parameters.Cast<DbParameter>().ToArray();
+					return cmd;
+				});
 
 				var query = from a in db.GetTable<AllTypes>()
 							join b in db.GetTable<AllTypes>() on a.ID equals b.ID

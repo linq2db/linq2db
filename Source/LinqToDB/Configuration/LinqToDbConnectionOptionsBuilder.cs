@@ -4,8 +4,10 @@ using System.Diagnostics;
 
 namespace LinqToDB.Configuration
 {
+	using System.Collections.Generic;
 	using Data;
 	using DataProvider;
+	using LinqToDB.Interceptors;
 	using Mapping;
 
 	/// <summary>
@@ -27,6 +29,7 @@ namespace LinqToDB.Configuration
 		public Action<TraceInfo>?                    OnTrace             { get; private set; }
 		public TraceLevel?                           TraceLevel          { get; private set; }
 		public Action<string?, string?, TraceLevel>? WriteTrace          { get; private set; }
+		public List<IInterceptor>?                   Interceptors        { get; private set; }
 
 		private void CheckAssignSetupType(ConnectionSetupType type)
 		{
@@ -216,6 +219,11 @@ namespace LinqToDB.Configuration
 			return this;
 		}
 
+		public LinqToDbConnectionOptionsBuilder WithInterceptor(IInterceptor interceptor)
+		{
+			(Interceptors ??= new List<IInterceptor>()).Add(interceptor);
+			return this;
+		}
 
 		/// <summary>
 		/// Configure the database to use the specified a string trace callback.
@@ -245,6 +253,7 @@ namespace LinqToDB.Configuration
 			TraceLevel          = null;
 			OnTrace             = null;
 			WriteTrace          = null;
+			Interceptors?.Clear();
 			SetupType           = ConnectionSetupType.DefaultConfiguration;
 
 			return this;

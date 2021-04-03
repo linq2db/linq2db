@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Data;
-using System.Data.Common;
 using System.Data.Linq;
 using System.Linq;
 
@@ -9,6 +8,7 @@ using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+using Tests.Model;
 
 namespace Tests.UserTests
 {
@@ -29,13 +29,10 @@ namespace Tests.UserTests
 		[Test]
 		public void Test1([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = new TestDataConnection(context))
 			{
-				DbParameter[]? parameters = null!;
-				((DataConnection)db).OnCommandInitialized += args =>
-				{
-					parameters = args.Command.Parameters.Cast<DbParameter>().ToArray();
-				};
+				var commandInterceptor = new SaveCommandInterceptor();
+				db.AddInterceptor(commandInterceptor);
 
 				var date = TestData.Date;
 				var q = (from t1 in db.GetTable<LinqDataTypes>()
@@ -46,21 +43,18 @@ namespace Tests.UserTests
 				var _ = q.FirstOrDefault();
 
 				var dc = (DataConnection)db;
-				Assert.AreEqual(2, parameters.Length);
-				Assert.AreEqual(1, parameters.Count(p => p.DbType == DbType.Date));
+				Assert.AreEqual(2, commandInterceptor.Parameters.Length);
+				Assert.AreEqual(1, commandInterceptor.Parameters.Count(p => p.DbType == DbType.Date));
 			}
 		}
 
 		[Test]
 		public void Test2([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = new TestDataConnection(context))
 			{
-				DbParameter[]? parameters = null!;
-				((DataConnection)db).OnCommandInitialized += args =>
-				{
-					parameters = args.Command.Parameters.Cast<DbParameter>().ToArray();
-				};
+				var commandInterceptor = new SaveCommandInterceptor();
+				db.AddInterceptor(commandInterceptor);
 
 				var date = TestData.Date;
 				var q = (from t1 in db.GetTable<LinqDataTypes>()
@@ -70,8 +64,8 @@ namespace Tests.UserTests
 				var _ = q.FirstOrDefault();
 
 				var dc = (DataConnection)db;
-				Assert.AreEqual(2, parameters.Length);
-				Assert.AreEqual(1, parameters.Count(p => p.DbType == DbType.Date));
+				Assert.AreEqual(2, commandInterceptor.Parameters.Length);
+				Assert.AreEqual(1, commandInterceptor.Parameters.Count(p => p.DbType == DbType.Date));
 			}
 		}
 	}

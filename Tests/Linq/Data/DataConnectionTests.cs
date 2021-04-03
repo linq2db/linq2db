@@ -1756,17 +1756,14 @@ namespace Tests.Data
 		{
 			using (var db = new TestDataConnection(context))
 			{
-				DbParameter[]? parameters = null!;
-				db.OnCommandInitialized += args =>
-				{
-					parameters = args.Command.Parameters.Cast<DbParameter>().ToArray();
-				};
+				var commandInterceptor = new SaveCommandInterceptor();
+				db.AddInterceptor(commandInterceptor);
 
 				var param = "test";
 
 				db.Person.Where(_ => _.LastName == param).ToList();
 
-				Assert.AreEqual(1, parameters.Length);
+				Assert.AreEqual(1, commandInterceptor.Parameters.Length);
 			}
 		}
 
@@ -1775,17 +1772,14 @@ namespace Tests.Data
 		{
 			using (var db = new TestDataConnection(context))
 			{
-				DbParameter[]? parameters = null!;
-				db.OnCommandInitialized += args =>
-				{
-					parameters = args.Command.Parameters.Cast<DbParameter>().ToArray();
-				};
+				var commandInterceptor = new SaveCommandInterceptor();
+				db.AddInterceptor(commandInterceptor);
 
 				var param = "test";
 
 				await db.Person.Where(_ => _.LastName == param).ToListAsync();
 
-				Assert.AreEqual(1, parameters.Length);
+				Assert.AreEqual(1, commandInterceptor.Parameters.Length);
 			}
 		}
 

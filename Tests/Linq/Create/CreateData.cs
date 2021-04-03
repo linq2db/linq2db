@@ -52,10 +52,7 @@ public class a_CreateData : TestBase
 			{
 				// we need this to avoid errors in trigger creation when native provider
 				// recognize ":NEW" as parameter
-				db.OnCommandInitialized += args =>
-				{
-					((dynamic)args.Command).BindByName = false;
-				};
+				db.AddInterceptor(new BindByNameOracleCommandInterceptor());
 			}
 			//db.CommandTimeout = 20;
 
