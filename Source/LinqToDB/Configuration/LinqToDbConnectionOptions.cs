@@ -117,7 +117,7 @@ namespace LinqToDB.Configuration
 		/// <summary>
 		/// Gets list of interceptors to use with <see cref="DataConnection"/> instance.
 		/// </summary>
-		public List<IInterceptor>?                   Interceptors        { get; }
+		public IReadOnlyList<IInterceptor>?          Interceptors        { get; }
 
 		internal ConnectionSetupType SetupType { get; }
 

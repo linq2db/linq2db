@@ -17,6 +17,8 @@ namespace LinqToDB.Configuration
 	/// </summary>
 	public class LinqToDbConnectionOptionsBuilder
 	{
+		private List<IInterceptor>? _interceptors;
+
 		public MappingSchema?                        MappingSchema       { get; private set; }
 		public IDataProvider?                        DataProvider        { get; private set; }
 		public IDbConnection?                        DbConnection        { get; private set; }
@@ -29,7 +31,7 @@ namespace LinqToDB.Configuration
 		public Action<TraceInfo>?                    OnTrace             { get; private set; }
 		public TraceLevel?                           TraceLevel          { get; private set; }
 		public Action<string?, string?, TraceLevel>? WriteTrace          { get; private set; }
-		public List<IInterceptor>?                   Interceptors        { get; private set; }
+		public IReadOnlyList<IInterceptor>?          Interceptors        => _interceptors;
 
 		private void CheckAssignSetupType(ConnectionSetupType type)
 		{
@@ -221,7 +223,7 @@ namespace LinqToDB.Configuration
 
 		public LinqToDbConnectionOptionsBuilder WithInterceptor(IInterceptor interceptor)
 		{
-			(Interceptors ??= new List<IInterceptor>()).Add(interceptor);
+			(_interceptors ??= new List<IInterceptor>()).Add(interceptor);
 			return this;
 		}
 
@@ -253,7 +255,7 @@ namespace LinqToDB.Configuration
 			TraceLevel          = null;
 			OnTrace             = null;
 			WriteTrace          = null;
-			Interceptors?.Clear();
+			_interceptors?.Clear();
 			SetupType           = ConnectionSetupType.DefaultConfiguration;
 
 			return this;

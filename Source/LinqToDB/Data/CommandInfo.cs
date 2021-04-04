@@ -189,8 +189,7 @@ namespace LinqToDB.Data
 				while (rd.DataReader!.Read())
 					yield return objectReader(rd.DataReader!);
 
-				if (rd.Command?.Parameters.Count > 0 && Parameters?.Length > 0)
-					rd.OnBeforeCommandDispose = RebindParameters;
+				SetRebindParameters(rd);
 			}
 		}
 
@@ -349,8 +348,7 @@ namespace LinqToDB.Data
 						} while (rd.DataReader!.Read());
 					}
 
-					if (rd.Command?.Parameters.Count > 0 && Parameters?.Length > 0)
-						rd.OnBeforeCommandDispose = RebindParameters;
+					SetRebindParameters(rd);
 				}
 				finally
 				{
@@ -533,8 +531,7 @@ namespace LinqToDB.Data
 			{
 				result = ReadMultipleResultSets<T>(rd.DataReader!);
 
-				if (rd.Command?.Parameters.Count > 0 && Parameters?.Length > 0)
-					rd.OnBeforeCommandDispose = RebindParameters;
+				SetRebindParameters(rd);
 			}
 
 			return result;
@@ -569,8 +566,7 @@ namespace LinqToDB.Data
 				{
 					result = await ReadMultipleResultSetsAsync<T>(rd.DataReader!, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
-					if (rd.Command?.Parameters.Count > 0 && Parameters?.Length > 0)
-						rd.OnBeforeCommandDispose = RebindParameters;
+					SetRebindParameters(rd);
 				}
 			}
 
@@ -941,8 +937,7 @@ namespace LinqToDB.Data
 					}
 				}
 
-				if (rd.Command?.Parameters.Count > 0 && Parameters?.Length > 0)
-					rd.OnBeforeCommandDispose = RebindParameters;
+				SetRebindParameters(rd);
 			}
 
 			return result;
@@ -1001,8 +996,7 @@ namespace LinqToDB.Data
 						}
 					}
 
-					if (rd.Command?.Parameters.Count > 0 && Parameters?.Length > 0)
-						rd.OnBeforeCommandDispose = RebindParameters;
+					SetRebindParameters(rd);
 				}
 			}
 
@@ -1243,6 +1237,13 @@ namespace LinqToDB.Data
 			return result;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		void SetRebindParameters(DataReaderWrapper rd)
+		{
+			if (rd.Command?.Parameters.Count > 0 && Parameters?.Length > 0)
+				rd.OnBeforeCommandDispose = RebindParameters;
+		}
+
 		void RebindParameters(DbCommand command)
 		{
 			foreach (var dataParameter in Parameters!)
@@ -1253,7 +1254,7 @@ namespace LinqToDB.Data
 					var dbParameter      = command.Parameters[dataParameter.Name!];
 					dataParameter.Output = dbParameter;
 
-					if (!object.Equals(dataParameter.Value, dbParameter.Value))
+					if (!Equals(dataParameter.Value, dbParameter.Value))
 					{
 						dataParameter.Value = ConvertParameterValue(dbParameter.Value, DataConnection.MappingSchema);
 					}
