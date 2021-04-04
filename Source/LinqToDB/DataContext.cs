@@ -545,7 +545,8 @@ namespace LinqToDB
 			public void Dispose()
 			{
 				_queryRunner!.Dispose();
-				_dataContext!.ReleaseQuery();
+				if (_dataContext!.CloseAfterUse)
+					_dataContext!.ReleaseQuery();
 				_queryRunner = null;
 				_dataContext = null;
 			}
@@ -557,7 +558,8 @@ namespace LinqToDB
 #endif
 			{
 				await _queryRunner!.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-				_dataContext!.ReleaseQuery();
+				if (_dataContext!.CloseAfterUse)
+					_dataContext!.ReleaseQuery();
 
 				_queryRunner = null;
 				_dataContext = null;
