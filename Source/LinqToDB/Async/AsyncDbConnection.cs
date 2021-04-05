@@ -114,9 +114,9 @@ namespace LinqToDB.Async
 			Connection.ChangeDatabase(databaseName);
 		}
 
-		public virtual DbCommand CreateCommand()
+		public virtual IDbCommand CreateCommand()
 		{
-			return (DbCommand)Connection.CreateCommand();
+			return Connection.CreateCommand();
 		}
 
 		public virtual void Open()
