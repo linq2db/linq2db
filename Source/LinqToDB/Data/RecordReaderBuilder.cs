@@ -7,6 +7,7 @@ using System.Reflection;
 
 namespace LinqToDB.Data
 {
+	using System.Data.Common;
 	using Expressions;
 	using Linq;
 	using Linq.Builder;
@@ -16,7 +17,7 @@ namespace LinqToDB.Data
 
 	class RecordReaderBuilder
 	{
-		public static readonly ParameterExpression DataReaderParam  = Expression.Parameter(typeof(IDataReader),  "rd");
+		public static readonly ParameterExpression DataReaderParam  = Expression.Parameter(typeof(DbDataReader),  "rd");
 		public        readonly ParameterExpression DataReaderLocal;
 
 		public readonly List<ParameterExpression>  BlockVariables   = new List<ParameterExpression>();
@@ -26,13 +27,13 @@ namespace LinqToDB.Data
 		public MappingSchema          MappingSchema { get; }
 		public Type                   ObjectType    { get; }
 		public Type                   OriginalType  { get; }
-		public IDataReader            Reader        { get; }
+		public DbDataReader            Reader        { get; }
 		public Dictionary<string,int> ReaderIndexes { get; }
 
 		int                  _varIndex;
 		ParameterExpression? _variable;
 
-		public RecordReaderBuilder(IDataContext dataContext, Type objectType, IDataReader reader, LambdaExpression? converterExpr)
+		public RecordReaderBuilder(IDataContext dataContext, Type objectType, DbDataReader reader, LambdaExpression? converterExpr)
 		{
 			DataContext   = dataContext;
 			MappingSchema = dataContext.MappingSchema;
@@ -289,14 +290,14 @@ namespace LinqToDB.Data
 		}
 
 
-		public Func<IDataReader, T> BuildReaderFunction<T>()
+		public Func<DbDataReader, T> BuildReaderFunction<T>()
 		{
 			var expr   = BuildReaderExpression();
 
-			var lambda = Expression.Lambda<Func<IDataReader,T>>(BuildBlock(expr), DataReaderParam);
+			var lambda = Expression.Lambda<Func<DbDataReader,T>>(BuildBlock(expr), DataReaderParam);
 
-			if (Common.Configuration.OptimizeForSequentialAccess)
-				lambda = (Expression<Func<IDataReader, T>>)SequentialAccessHelper.OptimizeMappingExpressionForSequentialAccess(lambda, Reader.FieldCount, reduce: true);
+			if (Configuration.OptimizeForSequentialAccess)
+				lambda = (Expression<Func<DbDataReader, T>>)SequentialAccessHelper.OptimizeMappingExpressionForSequentialAccess(lambda, Reader.FieldCount, reduce: true);
 
 			return lambda.CompileExpression();
 		}

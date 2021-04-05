@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Data.Linq;
 using System.Data.SqlTypes;
 using System.Diagnostics;
@@ -1419,7 +1420,7 @@ namespace Tests.DataProvider
 				provider = new SqlServerDataProvider(db.DataProvider.Name, ((SqlServerDataProvider)db.DataProvider).Version, ((SqlServerDataProvider)db.DataProvider).Provider);
 			}
 
-			provider.ReaderExpressions[new ReaderInfo { FieldType = typeof(decimal) }] = (Expression<Func<IDataReader, int, decimal>>)((r, i) => GetDecimal(r, i));
+			provider.ReaderExpressions[new ReaderInfo { FieldType = typeof(decimal) }] = (Expression<Func<DbDataReader, int, decimal>>)((r, i) => GetDecimal(r, i));
 
 			using (var db = new DataConnection(provider, DataConnection.GetConnectionString(context)))
 			{
@@ -1430,7 +1431,7 @@ namespace Tests.DataProvider
 		const int ClrPrecision = 29;
 
 		[ColumnReader(1)]
-		static decimal GetDecimal(IDataReader rd, int idx)
+		static decimal GetDecimal(DbDataReader rd, int idx)
 		{
 			SqlDecimal value = ((dynamic)rd).GetSqlDecimal(idx);
 

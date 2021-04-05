@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Data.SqlTypes;
 using System.Threading;
 using System.Threading.Tasks;
@@ -131,7 +132,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 #endregion
 
-		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
+		public override bool? IsDBNullAllowed(DbDataReader reader, int idx)
 		{
 			return true;
 		}

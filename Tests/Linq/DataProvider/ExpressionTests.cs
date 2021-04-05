@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Data.Common;
 using System.Linq.Expressions;
 using LinqToDB.Common;
 using LinqToDB.Data;
@@ -23,9 +24,9 @@ namespace Tests.DataProvider
 				if (rd.Reader!.Read())
 				{
 					var dp   = conn.DataProvider;
-					var p    = Expression.Parameter(typeof(IDataReader));
+					var p    = Expression.Parameter(typeof(DbDataReader));
 					var dr   = Expression.Convert(p, dp.DataReaderType);
-					var ex   = (Expression<Func<IDataReader,int,int>>)dp.GetReaderExpression(rd.Reader, 0, dr, typeof(int));
+					var ex   = (Expression<Func<DbDataReader,int,int>>)dp.GetReaderExpression(rd.Reader, 0, dr, typeof(int));
 					var func = ex.CompileExpression();
 
 					do

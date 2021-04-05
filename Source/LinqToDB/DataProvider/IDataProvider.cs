@@ -38,8 +38,8 @@ namespace LinqToDB.DataProvider
 		DbCommand          InitCommand           (DataConnection dataConnection, DbCommand command, CommandType commandType, string commandText, DataParameter[]? parameters, bool withParameters);
 		void               DisposeCommand        (IDbCommand command);
 		object?            GetConnectionInfo     (DataConnection dataConnection, string parameterName);
-		Expression         GetReaderExpression   (IDataReader reader, int idx, Expression readerExpression, Type toType);
-		bool?              IsDBNullAllowed       (IDataReader reader, int idx);
+		Expression         GetReaderExpression   (DbDataReader reader, int idx, Expression readerExpression, Type toType);
+		bool?              IsDBNullAllowed       (DbDataReader reader, int idx);
 		void               SetParameter          (DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value);
 		Type               ConvertParameterType  (Type type, DbDataType dataType);
 		CommandBehavior    GetCommandBehavior    (CommandBehavior commandBehavior);

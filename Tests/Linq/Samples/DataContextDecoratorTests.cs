@@ -13,6 +13,7 @@ using NUnit.Framework;
 
 namespace Tests.Samples
 {
+	using System.Data.Common;
 	using System.Threading.Tasks;
 	using Model;
 	/// <summary>
@@ -86,12 +87,12 @@ namespace Tests.Samples
 				return _context.GetQueryRunner(query, queryNumber, expression, parameters, preambles);
 			}
 
-			public Expression GetReaderExpression(IDataReader reader, int idx, Expression readerExpression, Type toType)
+			public Expression GetReaderExpression(DbDataReader reader, int idx, Expression readerExpression, Type toType)
 			{
 				return _context.GetReaderExpression(reader, idx, readerExpression, toType);
 			}
 
-			public bool? IsDBNullAllowed(IDataReader reader, int idx)
+			public bool? IsDBNullAllowed(DbDataReader reader, int idx)
 			{
 				return _context.IsDBNullAllowed(reader, idx);
 			}

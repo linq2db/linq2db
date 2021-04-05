@@ -35,7 +35,7 @@ namespace Tests
 				: base(TestProvName.SQLiteClassicMiniProfilerMapped, new SQLiteMappingSchema.ClassicMappingSchema())
 			{
 				SetConvertExpression<ProfiledDbConnection , IDbConnection >(db => db.WrappedConnection );
-				SetConvertExpression<ProfiledDbDataReader , IDataReader   >(db => db.WrappedReader     );
+				SetConvertExpression<ProfiledDbDataReader , DbDataReader  >(db => db.WrappedReader     );
 				SetConvertExpression<ProfiledDbTransaction, IDbTransaction>(db => db.WrappedTransaction);
 				SetConvertExpression<ProfiledDbCommand    , IDbCommand    >(db => db.InternalCommand   );
 			}

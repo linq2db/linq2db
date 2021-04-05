@@ -53,19 +53,19 @@ namespace LinqToDB.DataProvider
 				IsUpdateFromSupported                = true,
 			};
 
-			SetField<IDataReader,bool>    ((r,i) => r.GetBoolean (i));
-			SetField<IDataReader,byte>    ((r,i) => r.GetByte    (i));
-			SetField<IDataReader,char>    ((r,i) => r.GetChar    (i));
-			SetField<IDataReader,short>   ((r,i) => r.GetInt16   (i));
-			SetField<IDataReader,int>     ((r,i) => r.GetInt32   (i));
-			SetField<IDataReader,long>    ((r,i) => r.GetInt64   (i));
-			SetField<IDataReader,float>   ((r,i) => r.GetFloat   (i));
-			SetField<IDataReader,double>  ((r,i) => r.GetDouble  (i));
-			SetField<IDataReader,string>  ((r,i) => r.GetString  (i));
-			SetField<IDataReader,decimal> ((r,i) => r.GetDecimal (i));
-			SetField<IDataReader,DateTime>((r,i) => r.GetDateTime(i));
-			SetField<IDataReader,Guid>    ((r,i) => r.GetGuid    (i));
-			SetField<IDataReader,byte[]>  ((r,i) => (byte[])r.GetValue(i));
+			SetField<DbDataReader, bool>    ((r,i) => r.GetBoolean (i));
+			SetField<DbDataReader, byte>    ((r,i) => r.GetByte    (i));
+			SetField<DbDataReader, char>    ((r,i) => r.GetChar    (i));
+			SetField<DbDataReader, short>   ((r,i) => r.GetInt16   (i));
+			SetField<DbDataReader, int>     ((r,i) => r.GetInt32   (i));
+			SetField<DbDataReader, long>    ((r,i) => r.GetInt64   (i));
+			SetField<DbDataReader, float>   ((r,i) => r.GetFloat   (i));
+			SetField<DbDataReader, double>  ((r,i) => r.GetDouble  (i));
+			SetField<DbDataReader, string>  ((r,i) => r.GetString  (i));
+			SetField<DbDataReader, decimal> ((r,i) => r.GetDecimal (i));
+			SetField<DbDataReader, DateTime>((r,i) => r.GetDateTime(i));
+			SetField<DbDataReader, Guid>    ((r,i) => r.GetGuid    (i));
+			SetField<DbDataReader, byte[]>  ((r,i) => (byte[])r.GetValue(i));
 		}
 
 		#endregion
@@ -136,12 +136,12 @@ namespace LinqToDB.DataProvider
 
 		public readonly ConcurrentDictionary<ReaderInfo,Expression> ReaderExpressions = new ();
 
-		protected void SetCharField(string dataTypeName, Expression<Func<IDataReader,int,string>> expr)
+		protected void SetCharField(string dataTypeName, Expression<Func<DbDataReader, int,string>> expr)
 		{
 			ReaderExpressions[new ReaderInfo { FieldType = typeof(string), DataTypeName = dataTypeName }] = expr;
 		}
 
-		protected void SetCharFieldToType<T>(string dataTypeName, Expression<Func<IDataReader, int, string>> expr)
+		protected void SetCharFieldToType<T>(string dataTypeName, Expression<Func<DbDataReader, int, string>> expr)
 		{
 			ReaderExpressions[new ReaderInfo { ToType = typeof(T), FieldType = typeof(string), DataTypeName = dataTypeName }] = expr;
 		}
@@ -190,15 +190,15 @@ namespace LinqToDB.DataProvider
 
 		#region GetReaderExpression
 
-		public virtual Expression GetReaderExpression(IDataReader reader, int idx, Expression readerExpression, Type toType)
+		public virtual Expression GetReaderExpression(DbDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
-			var fieldType    = ((DbDataReader)reader).GetFieldType(idx);
-			var providerType = ((DbDataReader)reader).GetProviderSpecificFieldType(idx);
-			string? typeName = ((DbDataReader)reader).GetDataTypeName(idx);
+			var fieldType    = reader.GetFieldType(idx);
+			var providerType = reader.GetProviderSpecificFieldType(idx);
+			string? typeName = reader.GetDataTypeName(idx);
 
 			if (fieldType == null)
 			{
-				var name = ((DbDataReader)reader).GetName(idx);
+				var name = reader.GetName(idx);
 				throw new LinqToDBException($"Can't create '{typeName}' type or '{providerType}' specific type for {name}.");
 			}
 
@@ -254,7 +254,7 @@ namespace LinqToDB.DataProvider
 			    FindExpression(new ReaderInfo {                                                    FieldType = fieldType                          }, out expr))
 				return expr;
 
-			var getValueMethodInfo = MemberHelper.MethodOf<IDataReader>(r => r.GetValue(0));
+			var getValueMethodInfo = MemberHelper.MethodOf<DbDataReader>(r => r.GetValue(0));
 			return Expression.Convert(
 				Expression.Call(readerExpression, getValueMethodInfo, Expression.Constant(idx)),
 				fieldType);
@@ -282,9 +282,9 @@ namespace LinqToDB.DataProvider
 			return false;
 		}
 
-		public virtual bool? IsDBNullAllowed(IDataReader reader, int idx)
+		public virtual bool? IsDBNullAllowed(DbDataReader reader, int idx)
 		{
-			var st = ((DbDataReader)reader).GetSchemaTable();
+			var st = reader.GetSchemaTable();
 			return st == null || st.Rows[idx].IsNull("AllowDBNull") || (bool)st.Rows[idx]["AllowDBNull"];
 		}
 

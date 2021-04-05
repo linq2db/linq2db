@@ -6,6 +6,7 @@ using System.Reflection;
 
 namespace LinqToDB.Data
 {
+	using System.Data.Common;
 	using DataProvider;
 	using Linq;
 	using SqlProvider;
@@ -52,12 +53,12 @@ namespace LinqToDB.Data
 
 		bool             IDataContext.CloseAfterUse    { get; set; }
 
-		Expression IDataContext.GetReaderExpression(IDataReader reader, int idx, Expression readerExpression, Type toType)
+		Expression IDataContext.GetReaderExpression(DbDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
 			return DataProvider.GetReaderExpression(reader, idx, readerExpression, toType);
 		}
 
-		bool? IDataContext.IsDBNullAllowed(IDataReader reader, int idx)
+		bool? IDataContext.IsDBNullAllowed(DbDataReader reader, int idx)
 		{
 			return DataProvider.IsDBNullAllowed(reader, idx);
 		}

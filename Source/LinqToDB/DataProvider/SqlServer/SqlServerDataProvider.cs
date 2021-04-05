@@ -90,7 +90,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			SetProviderField<TimeSpan>      (Adapter.GetTimeSpanReaderMethod              , dataReaderType: Adapter.DataReaderType);
 
 			// non-specific fallback
-			SetProviderField<IDataReader, SqlString, SqlString>((r, i) => r.GetString(i));
+			SetProviderField<DbDataReader, SqlString, SqlString>((r, i) => r.GetString(i));
 
 			SqlServerTypes.Configure(this);
 		}

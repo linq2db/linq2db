@@ -129,7 +129,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 		private static readonly MappingSchema MappingSchemaInstance = new SapHanaMappingSchema.OdbcMappingSchema();
 
-		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
+		public override bool? IsDBNullAllowed(DbDataReader reader, int idx)
 		{
 			try
 			{

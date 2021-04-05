@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Data.Common;
 
 namespace LinqToDB.DataProvider
 {
@@ -15,7 +16,7 @@ namespace LinqToDB.DataProvider
 		Type ConnectionType { get; }
 
 		/// <summary>
-		/// Gets type, that implements <see cref="IDataReader"/> for current ADO.NET provider.
+		/// Gets type, that implements <see cref="DbDataReader"/> for current ADO.NET provider.
 		/// </summary>
 		Type DataReaderType { get; }
 

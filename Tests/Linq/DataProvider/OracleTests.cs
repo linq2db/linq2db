@@ -2189,7 +2189,7 @@ namespace Tests.DataProvider
 				provider = new OracleDataProvider(db.DataProvider.Name, ((OracleDataProvider)db.DataProvider).Version);
 			}
 
-			provider.ReaderExpressions[new ReaderInfo { FieldType = typeof(decimal) }] = (Expression<Func<IDataReader, int, decimal>>)((r,i) => GetDecimal(r, i));
+			provider.ReaderExpressions[new ReaderInfo { FieldType = typeof(decimal) }] = (Expression<Func<DbDataReader, int, decimal>>)((r,i) => GetDecimal(r, i));
 
 			using (var db = new DataConnection(provider, DataConnection.GetConnectionString(context)))
 			{
@@ -2200,7 +2200,7 @@ namespace Tests.DataProvider
 		const int ClrPrecision = 29;
 
 		[ColumnReader(1)]
-		static decimal GetDecimal(IDataReader rd, int idx)
+		static decimal GetDecimal(DbDataReader rd, int idx)
 		{
 			if (rd is Oracle.ManagedDataAccess.Client.OracleDataReader reader)
 			{

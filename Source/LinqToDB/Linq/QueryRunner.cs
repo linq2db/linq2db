@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
+	using System.Data.Common;
 #if !NATIVE_ASYNC
 	using Async;
 #endif
@@ -45,23 +46,23 @@ namespace LinqToDB.Linq
 
 		class Mapper<T>
 		{
-			public Mapper(Expression<Func<IQueryRunner,IDataReader,T>> mapperExpression)
+			public Mapper(Expression<Func<IQueryRunner, DbDataReader, T>> mapperExpression)
 			{
 				_expression = mapperExpression;
 			}
 
-			readonly Expression<Func<IQueryRunner,IDataReader,T>> _expression;
-			readonly ConcurrentDictionary<Type, ReaderMapperInfo> _mappers = new ();
+			readonly Expression<Func<IQueryRunner,DbDataReader,T>> _expression;
+			readonly ConcurrentDictionary<Type, ReaderMapperInfo>  _mappers = new ();
 
 
 			class ReaderMapperInfo
 			{
-				public Expression<Func<IQueryRunner, IDataReader, T>> MapperExpression = null!;
-				public Func<IQueryRunner, IDataReader, T>             Mapper = null!;
-				public bool                                           IsFaulted;
+				public Expression<Func<IQueryRunner, DbDataReader, T>> MapperExpression = null!;
+				public Func<IQueryRunner, DbDataReader, T>             Mapper = null!;
+				public bool                                            IsFaulted;
 			}
 
-			public T Map(IDataContext context, IQueryRunner queryRunner, IDataReader dataReader)
+			public T Map(IDataContext context, IQueryRunner queryRunner, DbDataReader dataReader)
 			{
 				// unwrap early
 				// https://github.com/linq2db/linq2db/issues/2499
@@ -118,9 +119,9 @@ namespace LinqToDB.Linq
 			}
 
 			// transform extracted to separate method to avoid closures allocation on mapper cache hit
-			private Expression<Func<IQueryRunner, IDataReader, T>> TransformMapperExpression(
+			private Expression<Func<IQueryRunner, DbDataReader, T>> TransformMapperExpression(
 				IDataContext context,
-				IDataReader  dataReader,
+				DbDataReader dataReader,
 				Type         dataReaderType,
 				bool         slowMode)
 			{
@@ -155,7 +156,7 @@ namespace LinqToDB.Linq
 				if (Configuration.OptimizeForSequentialAccess)
 					expression = SequentialAccessHelper.OptimizeMappingExpressionForSequentialAccess(expression, dataReader.FieldCount, reduce: false);
 
-				return (Expression<Func<IQueryRunner, IDataReader, T>>)expression;
+				return (Expression<Func<IQueryRunner, DbDataReader, T>>)expression;
 
 				Expression replaceVariable(Expression e)
 				{
@@ -578,7 +579,7 @@ namespace LinqToDB.Linq
 
 		static void SetRunQuery<T>(
 			Query<T> query,
-			Expression<Func<IQueryRunner,IDataReader,T>> expression)
+			Expression<Func<IQueryRunner, DbDataReader, T>> expression)
 		{
 			var executeQuery = GetExecuteQuery<T>(query, ExecuteQuery);
 
@@ -605,8 +606,8 @@ namespace LinqToDB.Linq
 		static readonly PropertyInfo _preamblesInfo   = MemberHelper.PropertyOf<IQueryRunner>( p => p.Preambles);
 		static readonly PropertyInfo _rowsCountInfo   = MemberHelper.PropertyOf<IQueryRunner>( p => p.RowsCount);
 
-		static Expression<Func<IQueryRunner,IDataReader,T>> WrapMapper<T>(
-			Expression<Func<IQueryRunner,IDataContext,IDataReader,Expression,object?[]?,object?[]?,T>> expression)
+		static Expression<Func<IQueryRunner, DbDataReader, T>> WrapMapper<T>(
+			Expression<Func<IQueryRunner,IDataContext, DbDataReader, Expression,object?[]?,object?[]?,T>> expression)
 		{
 			var queryRunnerParam = expression.Parameters[0];
 			var dataReaderParam  = expression.Parameters[2];
@@ -620,7 +621,7 @@ namespace LinqToDB.Linq
 			if (expression.Body is not BlockExpression block)
 				throw new LinqException("BlockExpression missing for mapper");
 			return
-				Expression.Lambda<Func<IQueryRunner,IDataReader,T>>(
+				Expression.Lambda<Func<IQueryRunner, DbDataReader, T>>(
 					block.Update(
 						new[]
 						{
@@ -646,7 +647,7 @@ namespace LinqToDB.Linq
 
 		public static void SetRunQuery<T>(
 			Query<T> query,
-			Expression<Func<IQueryRunner,IDataContext,IDataReader,Expression,object?[]?,object?[]?,T>> expression)
+			Expression<Func<IQueryRunner,IDataContext, DbDataReader, Expression,object?[]?,object?[]?,T>> expression)
 		{
 			var l = WrapMapper(expression);
 
@@ -659,10 +660,10 @@ namespace LinqToDB.Linq
 
 		public static void SetRunQuery<T>(
 			Query<T> query,
-			Expression<Func<IQueryRunner,IDataContext,IDataReader,Expression,object?[]?,object?[]?,int,T>> expression)
+			Expression<Func<IQueryRunner,IDataContext, DbDataReader, Expression,object?[]?,object?[]?,int,T>> expression)
 		{
 			var queryRunnerParam = Expression.Parameter(typeof(IQueryRunner), "qr");
-			var dataReaderParam  = Expression.Parameter(typeof(IDataReader),  "dr");
+			var dataReaderParam  = Expression.Parameter(typeof(DbDataReader), "dr");
 
 			var dataContextVar = expression.Parameters[1];
 			var expressionVar  = expression.Parameters[3];
@@ -672,7 +673,7 @@ namespace LinqToDB.Linq
 
 			// we can safely assume it is block expression
 			var block = (BlockExpression)expression.Body;
-			var l     = Expression.Lambda<Func<IQueryRunner, IDataReader, T>>(
+			var l     = Expression.Lambda<Func<IQueryRunner, DbDataReader, T>>(
 					block.Update(
 						new[]
 						{
@@ -702,7 +703,7 @@ namespace LinqToDB.Linq
 
 		public static void SetRunQuery<T>(
 			Query<T> query,
-			Expression<Func<IQueryRunner,IDataContext,IDataReader,Expression,object?[]?,object?[]?,object>> expression)
+			Expression<Func<IQueryRunner,IDataContext, DbDataReader, Expression,object?[]?,object?[]?,object>> expression)
 		{
 			FinalizeQuery(query);
 

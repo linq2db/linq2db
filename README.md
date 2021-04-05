@@ -580,7 +580,7 @@ public class DbDataContext : DataConnection
     // if you don't configure those mappings, linq2db will be unable to use provider-specific functionality
     // which could lead to loss or unavailability of some functionality when profiled connection enabled
     MappingSchema.SetConvertExpression<ProfiledDbConnection,  IDbConnection> (db => db.WrappedConnection);
-    MappingSchema.SetConvertExpression<ProfiledDbDataReader,  IDataReader>   (db => db.WrappedReader);
+    MappingSchema.SetConvertExpression<ProfiledDbDataReader,  DbDataReader>  (db => db.WrappedReader);
     MappingSchema.SetConvertExpression<ProfiledDbTransaction, IDbTransaction>(db => db.WrappedTransaction);
     MappingSchema.SetConvertExpression<ProfiledDbCommand,     IDbCommand>    (db => db.InternalCommand);
   }

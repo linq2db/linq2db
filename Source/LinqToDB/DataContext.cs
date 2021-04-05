@@ -16,6 +16,7 @@ namespace LinqToDB
 	using Mapping;
 	using SqlProvider;
 	using LinqToDB.Interceptors;
+	using System.Data.Common;
 
 	/// <summary>
 	/// Implements abstraction over non-persistent database connection that could be released after query or transaction execution.
@@ -312,12 +313,12 @@ namespace LinqToDB
 		SqlProviderFlags    IDataContext.SqlProviderFlags      => DataProvider.SqlProviderFlags;
 		TableOptions        IDataContext.SupportedTableOptions => DataProvider.SupportedTableOptions;
 
-		Expression IDataContext.GetReaderExpression(IDataReader reader, int idx, Expression readerExpression, Type toType)
+		Expression IDataContext.GetReaderExpression(DbDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
 			return DataProvider.GetReaderExpression(reader, idx, readerExpression, toType);
 		}
 
-		bool? IDataContext.IsDBNullAllowed(IDataReader reader, int idx)
+		bool? IDataContext.IsDBNullAllowed(DbDataReader reader, int idx)
 		{
 			return DataProvider.IsDBNullAllowed(reader, idx);
 		}

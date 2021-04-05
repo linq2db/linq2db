@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -751,14 +752,14 @@ namespace LinqToDB.Linq.Builder
 			return variable;
 		}
 
-		public Expression<Func<IQueryRunner,IDataContext,IDataReader,Expression,object?[]?,object?[]?,T>> BuildMapper<T>(Expression expr)
+		public Expression<Func<IQueryRunner,IDataContext, DbDataReader, Expression,object?[]?,object?[]?,T>> BuildMapper<T>(Expression expr)
 		{
 			var type = typeof(T);
 
 			if (expr.Type != type)
 				expr = Expression.Convert(expr, type);
 
-			var mapper = Expression.Lambda<Func<IQueryRunner,IDataContext,IDataReader,Expression,object?[]?,object?[]?,T>>(
+			var mapper = Expression.Lambda<Func<IQueryRunner,IDataContext,DbDataReader,Expression,object?[]?,object?[]?,T>>(
 				BuildBlock(expr), new[]
 				{
 					QueryRunnerParam,

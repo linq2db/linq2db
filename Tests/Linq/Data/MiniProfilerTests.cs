@@ -311,7 +311,7 @@ namespace Tests.Data
 			{
 				case ConnectionType.MiniProfiler:
 					ms.SetConvertExpression<ProfiledDbConnection, IDbConnection>(db => db.WrappedConnection);
-					ms.SetConvertExpression<ProfiledDbDataReader, IDataReader>(db => db.WrappedReader);
+					ms.SetConvertExpression<ProfiledDbDataReader, DbDataReader>(db => db.WrappedReader);
 					break;
 			}
 
@@ -1574,7 +1574,7 @@ namespace Tests.Data
 			{
 				case ConnectionType.MiniProfiler:
 					ms.SetConvertExpression<ProfiledDbConnection,  IDbConnection> (db => db.WrappedConnection);
-					ms.SetConvertExpression<ProfiledDbDataReader,  IDataReader>   (db => db.WrappedReader);
+					ms.SetConvertExpression<ProfiledDbDataReader,  DbDataReader>  (db => db.WrappedReader);
 					ms.SetConvertExpression<ProfiledDbTransaction, IDbTransaction>(db => db.WrappedTransaction);
 					ms.SetConvertExpression<ProfiledDbCommand,     IDbCommand>    (db => db.InternalCommand);
 					break;

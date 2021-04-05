@@ -516,7 +516,7 @@ WHERE
 
 	static class DB2Extensions
 	{
-		public static string? ToString(this IDataReader reader, int i)
+		public static string? ToString(this DbDataReader reader, int i)
 		{
 			var value = Converter.ChangeTypeTo<string?>(reader[i]);
 			return value?.TrimEnd();

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.Firebird
 {
+	using System.Data.Common;
 	using Common;
 	using Data;
 	using Mapping;
@@ -35,8 +36,8 @@ namespace LinqToDB.DataProvider.Firebird
 			SetCharField("CHAR", (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharFieldToType<char>("CHAR", DataTools.GetCharExpression);
 
-			SetProviderField<IDataReader,TimeSpan,DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1970, 1, 1));
-			SetProviderField<IDataReader,DateTime,DateTime>((r,i) => GetDateTime(r.GetDateTime(i)));
+			SetProviderField<DbDataReader, TimeSpan,DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1970, 1, 1));
+			SetProviderField<DbDataReader, DateTime,DateTime>((r,i) => GetDateTime(r.GetDateTime(i)));
 
 			_sqlOptimizer = sqlOptimizer ?? new FirebirdSqlOptimizer(SqlProviderFlags);
 		}
@@ -74,7 +75,7 @@ namespace LinqToDB.DataProvider.Firebird
 			return new FirebirdSchemaProvider();
 		}
 
-		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
+		public override bool? IsDBNullAllowed(DbDataReader reader, int idx)
 		{
 			return true;
 		}

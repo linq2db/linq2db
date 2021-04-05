@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -181,7 +182,7 @@ namespace LinqToDB.DataProvider.SapHana
 		}
 #endif
 
-		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
+		public override bool? IsDBNullAllowed(DbDataReader reader, int idx)
 		{
 			// provider fails to set AllowDBNull for some results
 			return true;

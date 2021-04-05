@@ -89,36 +89,36 @@ namespace LinqToDB.Data
 
 		#region Query with object reader
 
-		public Task<List<T>> QueryToListAsync<T>(Func<IDataReader,T> objectReader)
+		public Task<List<T>> QueryToListAsync<T>(Func<DbDataReader, T> objectReader)
 		{
 			return QueryToListAsync(objectReader, CancellationToken.None);
 		}
 
-		public async Task<List<T>> QueryToListAsync<T>(Func<IDataReader,T> objectReader, CancellationToken cancellationToken)
+		public async Task<List<T>> QueryToListAsync<T>(Func<DbDataReader, T> objectReader, CancellationToken cancellationToken)
 		{
 			var list = new List<T>();
 			await QueryForEachAsync(objectReader, list.Add, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			return list;
 		}
 
-		public Task<T[]> QueryToArrayAsync<T>(Func<IDataReader,T> objectReader)
+		public Task<T[]> QueryToArrayAsync<T>(Func<DbDataReader, T> objectReader)
 		{
 			return QueryToArrayAsync(objectReader, CancellationToken.None);
 		}
 
-		public async Task<T[]> QueryToArrayAsync<T>(Func<IDataReader,T> objectReader, CancellationToken cancellationToken)
+		public async Task<T[]> QueryToArrayAsync<T>(Func<DbDataReader, T> objectReader, CancellationToken cancellationToken)
 		{
 			var list = new List<T>();
 			await QueryForEachAsync(objectReader, list.Add, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			return list.ToArray();
 		}
 
-		public Task QueryForEachAsync<T>(Func<IDataReader,T> objectReader, Action<T> action)
+		public Task QueryForEachAsync<T>(Func<DbDataReader, T> objectReader, Action<T> action)
 		{
 			return QueryForEachAsync(objectReader, action, CancellationToken.None);
 		}
 
-		public async Task QueryForEachAsync<T>(Func<IDataReader,T> objectReader, Action<T> action, CancellationToken cancellationToken)
+		public async Task QueryForEachAsync<T>(Func<DbDataReader, T> objectReader, Action<T> action, CancellationToken cancellationToken)
 		{
 			while (await Reader!.ReadAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 				action(objectReader(Reader));

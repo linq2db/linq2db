@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Data;
+using System.Data.Common;
 using System.Linq.Expressions;
 using LinqToDB.Common;
 using LinqToDB.Common.Internal.Cache;
@@ -18,20 +19,20 @@ namespace LinqToDB.Linq
 			Query.CacheCleaners.Enqueue(() => _readerMappings.Clear());
 		}
 
-		internal static IDataReader TryUnwrapDataReader(MappingSchema mappingSchema, IDataReader dataReader)
+		internal static DbDataReader TryUnwrapDataReader(MappingSchema mappingSchema, DbDataReader dataReader)
 		{
 			var converter = _readerMappings.GetOrCreate(
 				Tuple.Create(dataReader.GetType(), mappingSchema.ConfigurationID),
 				mappingSchema,
 				static (entry, key, ms) =>
 				{
-					var expr = ms.GetConvertExpression(key.Item1, typeof(IDataReader), false, false);
+					var expr = ms.GetConvertExpression(key.Item1, typeof(DbDataReader), false, false);
 					if (expr != null)
 					{
-						var param = Expression.Parameter(typeof(IDataReader));
+						var param = Expression.Parameter(typeof(DbDataReader));
 						expr      = Expression.Lambda(expr.GetBody(Expression.Convert(param, key.Item1)), param);
 
-						return (Func<IDataReader, IDataReader>)expr.CompileExpression();
+						return (Func<DbDataReader, DbDataReader>)expr.CompileExpression();
 					}
 
 					return null;

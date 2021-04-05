@@ -11,6 +11,7 @@ namespace LinqToDB.DataProvider.Access
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
+	using System.Data.Common;
 	using System.Threading;
 	using System.Threading.Tasks;
 
@@ -40,11 +41,11 @@ namespace LinqToDB.DataProvider.Access
 			SetCharField            ("CHAR", (r, i) => r.GetString(i).TrimEnd(' '));
 			SetCharFieldToType<char>("CHAR", DataTools.GetCharExpression);
 
-			SetToType<IDataReader, sbyte , int>  ("INTEGER" , (r, i) => unchecked((sbyte )r.GetInt32(i)));
-			SetToType<IDataReader, uint  , int>  ("INTEGER" , (r, i) => unchecked((uint  )r.GetInt32(i)));
-			SetToType<IDataReader, ulong , int>  ("INTEGER" , (r, i) => unchecked((ulong)(uint)r.GetInt32(i)));
-			SetToType<IDataReader, ushort, short>("SMALLINT", (r, i) => unchecked((ushort)r.GetInt16(i)));
-			SetProviderField<IDataReader, TimeSpan, DateTime>((r, i) => r.GetDateTime(i) - new DateTime(1899, 12, 30));
+			SetToType<DbDataReader, sbyte , int>  ("INTEGER" , (r, i) => unchecked((sbyte )r.GetInt32(i)));
+			SetToType<DbDataReader, uint  , int>  ("INTEGER" , (r, i) => unchecked((uint  )r.GetInt32(i)));
+			SetToType<DbDataReader, ulong , int>  ("INTEGER" , (r, i) => unchecked((ulong)(uint)r.GetInt32(i)));
+			SetToType<DbDataReader, ushort, short>("SMALLINT", (r, i) => unchecked((ushort)r.GetInt16(i)));
+			SetProviderField<DbDataReader, TimeSpan, DateTime>((r, i) => r.GetDateTime(i) - new DateTime(1899, 12, 30));
 
 			_sqlOptimizer = new AccessODBCSqlOptimizer(SqlProviderFlags);
 		}

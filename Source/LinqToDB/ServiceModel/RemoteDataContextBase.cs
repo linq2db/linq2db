@@ -11,6 +11,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.ServiceModel
 {
+	using System.Data.Common;
 	using Expressions;
 	using Extensions;
 	using LinqToDB.Common;
@@ -138,7 +139,7 @@ namespace LinqToDB.ServiceModel
 
 		Type IDataContext.DataReaderType => typeof(ServiceModelDataReader);
 
-		Expression IDataContext.GetReaderExpression(IDataReader reader, int idx, Expression readerExpression, Type toType)
+		Expression IDataContext.GetReaderExpression(DbDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
 			var dataType   = reader.GetFieldType(idx);
 			var methodInfo = GetReaderMethodInfo(dataType);
@@ -155,26 +156,26 @@ namespace LinqToDB.ServiceModel
 		{
 			switch (type.ToNullableUnderlying().GetTypeCodeEx())
 			{
-				case TypeCode.Boolean  : return MemberHelper.MethodOf<IDataReader>(r => r.GetBoolean (0));
-				case TypeCode.Byte     : return MemberHelper.MethodOf<IDataReader>(r => r.GetByte    (0));
-				case TypeCode.Char     : return MemberHelper.MethodOf<IDataReader>(r => r.GetChar    (0));
-				case TypeCode.Int16    : return MemberHelper.MethodOf<IDataReader>(r => r.GetInt16   (0));
-				case TypeCode.Int32    : return MemberHelper.MethodOf<IDataReader>(r => r.GetInt32   (0));
-				case TypeCode.Int64    : return MemberHelper.MethodOf<IDataReader>(r => r.GetInt64   (0));
-				case TypeCode.Single   : return MemberHelper.MethodOf<IDataReader>(r => r.GetFloat   (0));
-				case TypeCode.Double   : return MemberHelper.MethodOf<IDataReader>(r => r.GetDouble  (0));
-				case TypeCode.String   : return MemberHelper.MethodOf<IDataReader>(r => r.GetString  (0));
-				case TypeCode.Decimal  : return MemberHelper.MethodOf<IDataReader>(r => r.GetDecimal (0));
-				case TypeCode.DateTime : return MemberHelper.MethodOf<IDataReader>(r => r.GetDateTime(0));
+				case TypeCode.Boolean  : return MemberHelper.MethodOf<DbDataReader>(r => r.GetBoolean (0));
+				case TypeCode.Byte     : return MemberHelper.MethodOf<DbDataReader>(r => r.GetByte    (0));
+				case TypeCode.Char     : return MemberHelper.MethodOf<DbDataReader>(r => r.GetChar    (0));
+				case TypeCode.Int16    : return MemberHelper.MethodOf<DbDataReader>(r => r.GetInt16   (0));
+				case TypeCode.Int32    : return MemberHelper.MethodOf<DbDataReader>(r => r.GetInt32   (0));
+				case TypeCode.Int64    : return MemberHelper.MethodOf<DbDataReader>(r => r.GetInt64   (0));
+				case TypeCode.Single   : return MemberHelper.MethodOf<DbDataReader>(r => r.GetFloat   (0));
+				case TypeCode.Double   : return MemberHelper.MethodOf<DbDataReader>(r => r.GetDouble  (0));
+				case TypeCode.String   : return MemberHelper.MethodOf<DbDataReader>(r => r.GetString  (0));
+				case TypeCode.Decimal  : return MemberHelper.MethodOf<DbDataReader>(r => r.GetDecimal (0));
+				case TypeCode.DateTime : return MemberHelper.MethodOf<DbDataReader>(r => r.GetDateTime(0));
 			}
 
 			if (type == typeof(Guid))
-				return MemberHelper.MethodOf<IDataReader>(r => r.GetGuid(0));
+				return MemberHelper.MethodOf<DbDataReader>(r => r.GetGuid(0));
 
-			return MemberHelper.MethodOf<IDataReader>(dr => dr.GetValue(0));
+			return MemberHelper.MethodOf<DbDataReader>(dr => dr.GetValue(0));
 		}
 
-		bool? IDataContext.IsDBNullAllowed(IDataReader reader, int idx)
+		bool? IDataContext.IsDBNullAllowed(DbDataReader reader, int idx)
 		{
 			return null;
 		}

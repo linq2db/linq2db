@@ -6,6 +6,7 @@ using System.Reflection;
 namespace LinqToDB.DataProvider.SqlServer
 {
 	using System.Collections.Concurrent;
+	using System.Data.Common;
 	using System.Text;
 	using Common;
 	using Configuration;
@@ -393,8 +394,8 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		[Obsolete("This field is not used by linq2db. Configure reader expressions on DataProvider directly")]
-		public static Func<IDataReader,int,decimal> DataReaderGetMoney   = (dr, i) => dr.GetDecimal(i);
+		public static Func<DbDataReader,int,decimal> DataReaderGetMoney   = (dr, i) => dr.GetDecimal(i);
 		[Obsolete("This field is not used by linq2db. Configure reader expressions on DataProvider directly")]
-		public static Func<IDataReader,int,decimal> DataReaderGetDecimal = (dr, i) => dr.GetDecimal(i);
+		public static Func<DbDataReader,int,decimal> DataReaderGetDecimal = (dr, i) => dr.GetDecimal(i);
 	}
 }

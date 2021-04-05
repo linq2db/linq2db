@@ -102,7 +102,7 @@ namespace LinqToDB.DataProvider
 
 	}
 
-	public abstract class BulkCopyReader : DbDataReader, IDataReader, IDataRecord
+	public abstract class BulkCopyReader : DbDataReader
 	{
 		public int Count;
 

@@ -129,7 +129,7 @@ namespace LinqToDB.Data
 		/// <typeparam name="T">Result record type.</typeparam>
 		/// <param name="objectReader">Record mapping function from data reader.</param>
 		/// <returns>Returns collection of query result records.</returns>
-		public IEnumerable<T> QueryProc<T>(Func<IDataReader,T> objectReader)
+		public IEnumerable<T> QueryProc<T>(Func<DbDataReader,T> objectReader)
 		{
 			CommandType = CommandType.StoredProcedure;
 			return Query(objectReader);
@@ -142,7 +142,7 @@ namespace LinqToDB.Data
 		/// <param name="objectReader">Record mapping function from data reader.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns collection of query result records.</returns>
-		public Task<IEnumerable<T>> QueryProcAsync<T>(Func<IDataReader, T> objectReader, CancellationToken cancellationToken = default)
+		public Task<IEnumerable<T>> QueryProcAsync<T>(Func<DbDataReader, T> objectReader, CancellationToken cancellationToken = default)
 		{
 			CommandType = CommandType.StoredProcedure;
 			return QueryAsync(objectReader, cancellationToken);
@@ -154,7 +154,7 @@ namespace LinqToDB.Data
 		/// <typeparam name="T">Result record type.</typeparam>
 		/// <param name="objectReader">Record mapping function from data reader.</param>
 		/// <returns>Returns collection of query result records.</returns>
-		public IEnumerable<T> Query<T>(Func<IDataReader,T> objectReader)
+		public IEnumerable<T> Query<T>(Func<DbDataReader, T> objectReader)
 		{
 			InitCommand();
 
@@ -171,7 +171,7 @@ namespace LinqToDB.Data
 		/// <param name="objectReader">Record mapping function from data reader.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns collection of query result records.</returns>
-		public async Task<IEnumerable<T>> QueryAsync<T>(Func<IDataReader, T> objectReader, CancellationToken cancellationToken = default)
+		public async Task<IEnumerable<T>> QueryAsync<T>(Func<DbDataReader, T> objectReader, CancellationToken cancellationToken = default)
 		{
 			InitCommand();
 
@@ -181,7 +181,7 @@ namespace LinqToDB.Data
 				DataConnection.DataProvider.ExecuteScope(DataConnection));
 		}
 
-		IEnumerable<T> ReadEnumerator<T>(DataReaderWrapper rd, Func<IDataReader, T> objectReader, IDisposable? scope)
+		IEnumerable<T> ReadEnumerator<T>(DataReaderWrapper rd, Func<DbDataReader, T> objectReader, IDisposable? scope)
 		{
 			using (scope)
 			using (rd)
@@ -203,7 +203,7 @@ namespace LinqToDB.Data
 		/// <param name="objectReader">Record mapping function from data reader.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task with list of query result records.</returns>
-		public async Task<List<T>> QueryToListAsync<T>(Func<IDataReader,T> objectReader, CancellationToken cancellationToken = default)
+		public async Task<List<T>> QueryToListAsync<T>(Func<DbDataReader, T> objectReader, CancellationToken cancellationToken = default)
 		{
 			var list = new List<T>();
 			await QueryForEachAsync(objectReader, list.Add, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
@@ -217,7 +217,7 @@ namespace LinqToDB.Data
 		/// <param name="objectReader">Record mapping function from data reader.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task with array of query result records.</returns>
-		public async Task<T[]> QueryToArrayAsync<T>(Func<IDataReader,T> objectReader, CancellationToken cancellationToken = default)
+		public async Task<T[]> QueryToArrayAsync<T>(Func<DbDataReader, T> objectReader, CancellationToken cancellationToken = default)
 		{
 			var list = new List<T>();
 			await QueryForEachAsync(objectReader, list.Add, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
@@ -232,7 +232,7 @@ namespace LinqToDB.Data
 		/// <param name="action">Action, applied to each result record.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task.</returns>
-		public async Task QueryForEachAsync<T>(Func<IDataReader,T> objectReader, Action<T> action, CancellationToken cancellationToken = default)
+		public async Task QueryForEachAsync<T>(Func<DbDataReader, T> objectReader, Action<T> action, CancellationToken cancellationToken = default)
 		{
 			await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
@@ -694,7 +694,7 @@ namespace LinqToDB.Data
 			readonly CommandInfo      _commandInfo;
 			readonly DbDataReader     _rd;
 			readonly string?          _additionalKey;
-			Func<IDataReader, T>      _objectReader;
+			Func<DbDataReader, T>     _objectReader;
 			bool                      _isFaulted;
 			bool                      _isFinished;
 			CancellationToken         _cancellationToken;
@@ -1044,7 +1044,7 @@ namespace LinqToDB.Data
 			return dataReader;
 		}
 
-		internal IEnumerable<T> ExecuteQuery<T>(IDataReader rd, string sql)
+		internal IEnumerable<T> ExecuteQuery<T>(DbDataReader rd, string sql)
 		{
 			if (rd.Read())
 			{
@@ -1077,7 +1077,7 @@ namespace LinqToDB.Data
 		}
 
 		[return: MaybeNull]
-		internal T ExecuteScalar<T>(IDataReader rd, string sql)
+		internal T ExecuteScalar<T>(DbDataReader rd, string sql)
 		{
 			if (rd.Read())
 			{
@@ -1499,14 +1499,14 @@ namespace LinqToDB.Data
 			_parameterReaders.   Clear();
 		}
 
-		string? GetCommandAdditionalKey(IDataReader rd, Type resultType)
+		string? GetCommandAdditionalKey(DbDataReader rd, Type resultType)
 		{
 			return IsDynamicType(resultType) || CommandType == CommandType.StoredProcedure
 				? GetFieldsKey(rd)
 				: null;
 		}
 
-		static string GetFieldsKey(IDataReader dataReader)
+		static string GetFieldsKey(DbDataReader dataReader)
 		{
 			var sb = new StringBuilder();
 
@@ -1521,7 +1521,7 @@ namespace LinqToDB.Data
 			return sb.ToString();
 		}
 
-		static Func<IDataReader, T> GetObjectReader<T>(DataConnection dataConnection, IDataReader dataReader,
+		static Func<DbDataReader, T> GetObjectReader<T>(DataConnection dataConnection, DbDataReader dataReader,
 			string sql, string? additionalKey)
 		{
 			var key = new QueryKey(typeof(T), dataReader.GetType(), dataConnection.ID, sql, additionalKey, dataReader.FieldCount <= 1);
@@ -1545,7 +1545,7 @@ namespace LinqToDB.Data
 			return func;
 		}
 
-		static Func<IDataReader, T> GetObjectReader2<T>(DataConnection dataConnection, IDataReader dataReader,
+		static Func<DbDataReader, T> GetObjectReader2<T>(DataConnection dataConnection, DbDataReader dataReader,
 			string sql, string? additionalKey)
 		{
 			var key = new QueryKey(typeof(T), dataReader.GetType(), dataConnection.ID, sql, additionalKey, dataReader.FieldCount <= 1);
@@ -1567,15 +1567,15 @@ namespace LinqToDB.Data
 			_objectReaders.Set(key, func,
 				new MemoryCacheEntryOptions {SlidingExpiration = Configuration.Linq.CacheSlidingExpiration});
 
-			return (Func<IDataReader, T>)func;
+			return (Func<DbDataReader, T>)func;
 		}
 
-		static Func<IDataReader,T> CreateObjectReader<T>(
+		static Func<DbDataReader, T> CreateObjectReader<T>(
 			DataConnection dataConnection,
-			IDataReader    dataReader,
-			Func<DataConnection, IDataReader, Type, int,Expression,Expression> getMemberExpression)
+			DbDataReader   dataReader,
+			Func<DataConnection, DbDataReader, Type, int,Expression,Expression> getMemberExpression)
 		{
-			var parameter      = Expression.Parameter(typeof(IDataReader));
+			var parameter      = Expression.Parameter(typeof(DbDataReader));
 			var dataReaderExpr = (Expression)Expression.Convert(parameter, dataReader.GetType());
 
 			Expression? expr;
@@ -1589,7 +1589,7 @@ namespace LinqToDB.Data
 				{
 					o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
 
-					var expr = dataConnection.MappingSchema.GetConvertExpression(readerType, typeof(IDataReader), false, false);
+					var expr = dataConnection.MappingSchema.GetConvertExpression(readerType, typeof(DbDataReader), false, false);
 					if (expr != null)
 					{
 						expr      = Expression.Lambda(Expression.Convert(expr.Body, dataConnection.DataProvider.DataReaderType), expr.Parameters);
@@ -1684,7 +1684,7 @@ namespace LinqToDB.Data
 					expr = SequentialAccessHelper.OptimizeMappingExpressionForSequentialAccess(expr, dataReader.FieldCount, reduce: false);
 			}
 
-			var lex = Expression.Lambda<Func<IDataReader,T>>(expr, parameter);
+			var lex = Expression.Lambda<Func<DbDataReader,T>>(expr, parameter);
 
 			return lex.CompileExpression();
 		}
@@ -1693,12 +1693,12 @@ namespace LinqToDB.Data
 		static readonly ConstructorInfo _expandoObjectConstructor = MemberHelper.ConstructorOf(() => new ExpandoObject());
 		static readonly MethodInfo      _expandoAddMethodInfo     = MemberHelper.MethodOf(() => ((IDictionary<string, object>)null!).Add("", ""));
 		
-		static Func<IDataReader, T> CreateDynamicObjectReader<T>(
+		static Func<DbDataReader, T> CreateDynamicObjectReader<T>(
 			DataConnection dataConnection,
-			IDataReader dataReader,
-			Func<DataConnection, IDataReader, Type, int, Expression, Expression> getMemberExpression)
+			DbDataReader dataReader,
+			Func<DataConnection, DbDataReader, Type, int, Expression, Expression> getMemberExpression)
 		{
-			var parameter      = Expression.Parameter(typeof(IDataReader));
+			var parameter      = Expression.Parameter(typeof(DbDataReader));
 			var dataReaderExpr = (Expression)Expression.Convert(parameter, dataReader.GetType());
 
 			var readerType = dataReader.GetType();
@@ -1710,7 +1710,7 @@ namespace LinqToDB.Data
 				{
 					o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
 
-					var expr = dataConnection.MappingSchema.GetConvertExpression(readerType, typeof(IDataReader), false, false);
+					var expr = dataConnection.MappingSchema.GetConvertExpression(readerType, typeof(DbDataReader), false, false);
 					if (expr != null)
 					{
 						expr = Expression.Lambda(Expression.Convert(expr.Body, dataConnection.DataProvider.DataReaderType), expr.Parameters);
@@ -1740,7 +1740,7 @@ namespace LinqToDB.Data
 				expr = Expression.Block(new[] { dataReaderVar }, assignment, expr);
 			}
 
-			var lex = Expression.Lambda<Func<IDataReader,T>>(expr, parameter);
+			var lex = Expression.Lambda<Func<DbDataReader,T>>(expr, parameter);
 
 			return lex.CompileExpression();
 		}

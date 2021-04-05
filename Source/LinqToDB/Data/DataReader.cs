@@ -46,7 +46,7 @@ namespace LinqToDB.Data
 
 		#region Query with object reader
 
-		public IEnumerable<T> Query<T>(Func<IDataReader,T> objectReader)
+		public IEnumerable<T> Query<T>(Func<DbDataReader, T> objectReader)
 		{
 			while (Reader!.Read())
 				yield return objectReader(Reader);
