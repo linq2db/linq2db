@@ -1132,6 +1132,17 @@ namespace LinqToDB.Linq.Builder
 						var mmExpresion = GetMemberExpression(memberExpression, expression, level + 1);
 						return action(3, this, mmExpresion, 0, memberExpression);
 					}
+				case ExpressionType.Conditional:
+				{
+					var cond = (ConditionalExpression)memberExpression;
+
+					var trueExpression  = GetMemberExpression(cond.IfTrue,  expression, level + 1);
+					var falseExpression = GetMemberExpression(cond.IfFalse, expression, level + 1);
+
+					var newCod = Expression.Condition(cond.Test, trueExpression, falseExpression);
+
+					return action(3, this, newCod, 0, memberExpression);
+				}
 			}
 
 			return action(0, this, null, 0, memberExpression);
@@ -1245,6 +1256,11 @@ namespace LinqToDB.Linq.Builder
 				//TODO: Why do we need such quirks with grouping?
 				if (typeof(IGrouping<,>).IsSameOrParentOf(me.Member.DeclaringType!) && memberExpression.Type == expression.Type)
 					return memberExpression;
+			}
+
+			if (memberExpression is ConstantExpression cnt && cnt.Value == null)
+			{
+				return Expression.Constant(null, expression.Type);
 			}
 
 			if (!memberExpression.Type.IsAssignableFrom(levelExpression.Type))
