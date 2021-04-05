@@ -361,41 +361,11 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.ProviderSpecific;
 
-		[Obsolete("Please use the BulkCopy extension methods within DataConnectionExtensions")]
-		public static BulkCopyRowsCopied ProviderSpecificBulkCopy<T>(
-			DataConnection              dataConnection,
-			IEnumerable<T>              source,
-			int?                        maxBatchSize       = null,
-			int?                        bulkCopyTimeout    = null,
-			bool                        keepIdentity       = false,
-			bool                        checkConstraints   = false,
-			int                         notifyAfter        = 0,
-			Action<BulkCopyRowsCopied>? rowsCopiedCallback = null)
-			where T : class
-		{
-			return dataConnection.BulkCopy(
-				new BulkCopyOptions
-				{
-					BulkCopyType       = BulkCopyType.ProviderSpecific,
-					MaxBatchSize       = maxBatchSize,
-					BulkCopyTimeout    = bulkCopyTimeout,
-					KeepIdentity       = keepIdentity,
-					CheckConstraints   = checkConstraints,
-					NotifyAfter        = notifyAfter,
-					RowsCopiedCallback = rowsCopiedCallback,
-				}, source);
-		}
-
 #endregion
 
 		public static class Sql
 		{
 			public const string OptionRecompile = "OPTION(RECOMPILE)";
 		}
-
-		[Obsolete("This field is not used by linq2db. Configure reader expressions on DataProvider directly")]
-		public static Func<DbDataReader,int,decimal> DataReaderGetMoney   = (dr, i) => dr.GetDecimal(i);
-		[Obsolete("This field is not used by linq2db. Configure reader expressions on DataProvider directly")]
-		public static Func<DbDataReader,int,decimal> DataReaderGetDecimal = (dr, i) => dr.GetDecimal(i);
 	}
 }

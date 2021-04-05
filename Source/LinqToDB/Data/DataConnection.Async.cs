@@ -172,12 +172,6 @@ namespace LinqToDB.Data
 			}
 		}
 
-		[Obsolete("Use parameter-less CloseAsync() call")]
-		public Task CloseAsync(CancellationToken cancellationToken)
-		{
-			return CloseAsync();
-		}
-
 		/// <summary>
 		/// Closes and dispose associated underlying database transaction/connection asynchronously.
 		/// </summary>
@@ -206,16 +200,6 @@ namespace LinqToDB.Data
 			}
 
 			OnClosed?.Invoke(this, EventArgs.Empty);
-		}
-
-		[Obsolete("Use parameter-less DisposeAsync() call")]
-		public Task DisposeAsync(CancellationToken cancellationToken)
-		{
-#if NATIVE_ASYNC
-			return DisposeAsync().AsTask();
-#else
-			return DisposeAsync();
-#endif
 		}
 
 		/// <summary>
