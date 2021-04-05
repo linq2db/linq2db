@@ -7,6 +7,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.DB2
 {
+	using System.Data.Common;
 	using Configuration;
 	using Data;
 
@@ -123,7 +124,7 @@ namespace LinqToDB.DataProvider.DB2
 		/// <param name="connection">Connection instance.</param>
 		/// <param name="version">DB2 version.</param>
 		/// <returns><see cref="DataConnection"/> instance.</returns>
-		public static DataConnection CreateDataConnection(IDbConnection connection, DB2Version version = DB2Version.LUW)
+		public static DataConnection CreateDataConnection(DbConnection connection, DB2Version version = DB2Version.LUW)
 		{
 			return new DataConnection(GetDataProvider(version), connection);
 		}
@@ -134,7 +135,7 @@ namespace LinqToDB.DataProvider.DB2
 		/// <param name="transaction">Transaction instance.</param>
 		/// <param name="version">DB2 version.</param>
 		/// <returns><see cref="DataConnection"/> instance.</returns>
-		public static DataConnection CreateDataConnection(IDbTransaction transaction, DB2Version version = DB2Version.LUW)
+		public static DataConnection CreateDataConnection(DbTransaction transaction, DB2Version version = DB2Version.LUW)
 		{
 			return new DataConnection(GetDataProvider(version), transaction);
 		}

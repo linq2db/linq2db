@@ -65,8 +65,8 @@ namespace LinqToDB.DataProvider.Oracle
 			Action<DbParameter, OracleDbType> dbTypeSetter,
 			Func  <DbParameter, OracleDbType> dbTypeGetter,
 
-			Func<IDbConnection, string> hostNameGetter,
-			Func<IDbConnection, string> databaseNameGetter,
+			Func<DbConnection, string> hostNameGetter,
+			Func<DbConnection, string> databaseNameGetter,
 
 			Action<DbCommand, bool> bindByNameSetter,
 			Action<DbCommand, int>  arrayBindCountSetter,
@@ -179,8 +179,8 @@ namespace LinqToDB.DataProvider.Oracle
 		public Action<DbParameter, OracleDbType> SetDbType { get; }
 		public Func  <DbParameter, OracleDbType> GetDbType { get; }
 
-		public Func<IDbConnection, string> GetHostName     { get; }
-		public Func<IDbConnection, string> GetDatabaseName { get; }
+		public Func<DbConnection, string> GetHostName     { get; }
+		public Func<DbConnection, string> GetDatabaseName { get; }
 
 		public Action<DbCommand, bool> SetBindByName           { get; }
 		public Action<DbCommand, int>  SetArrayBindCount       { get; }
@@ -204,14 +204,14 @@ namespace LinqToDB.DataProvider.Oracle
 		public class BulkCopyAdapter
 		{
 			internal BulkCopyAdapter(
-				Func<IDbConnection, OracleBulkCopyOptions, OracleBulkCopy> bulkCopyCreator,
+				Func<DbConnection, OracleBulkCopyOptions, OracleBulkCopy> bulkCopyCreator,
 				Func<int, string, OracleBulkCopyColumnMapping> bulkCopyColumnMappingCreator)
 			{
 				Create = bulkCopyCreator;
 				CreateColumnMapping = bulkCopyColumnMappingCreator;
 			}
 
-			public Func<IDbConnection, OracleBulkCopyOptions, OracleBulkCopy> Create { get; }
+			public Func<DbConnection, OracleBulkCopyOptions, OracleBulkCopy> Create { get; }
 			public Func<int, string, OracleBulkCopyColumnMapping> CreateColumnMapping { get; }
 		}
 
@@ -303,7 +303,7 @@ namespace LinqToDB.DataProvider.Oracle
 				typeMapper.FinalizeMappings();
 
 				bulkCopy = new BulkCopyAdapter(
-					typeMapper.BuildWrappedFactory((IDbConnection connection, OracleBulkCopyOptions options) => new OracleBulkCopy((OracleConnection)connection, options)),
+					typeMapper.BuildWrappedFactory((DbConnection connection, OracleBulkCopyOptions options) => new OracleBulkCopy((OracleConnection)(object)connection, options)),
 					typeMapper.BuildWrappedFactory((int source, string destination) => new OracleBulkCopyColumnMapping(source, destination)));
 			}
 			else
@@ -413,8 +413,8 @@ namespace LinqToDB.DataProvider.Oracle
 				dbTypeBuilder.BuildSetter<DbParameter>(),
 				dbTypeBuilder.BuildGetter<DbParameter>(),
 
-				connectionMapper.Member(c => c.HostName).BuildGetter<IDbConnection>(),
-				connectionMapper.Member(c => c.DatabaseName).BuildGetter<IDbConnection>(),
+				connectionMapper.Member(c => c.HostName).BuildGetter<DbConnection>(),
+				connectionMapper.Member(c => c.DatabaseName).BuildGetter<DbConnection>(),
 
 
 				commandMapper.Member(p => p.BindByName).BuildSetter<DbCommand>(),

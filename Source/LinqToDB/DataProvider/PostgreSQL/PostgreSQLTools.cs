@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Reflection;
 
 using JetBrains.Annotations;
@@ -127,12 +128,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return new DataConnection(GetDataProvider(version), connectionString);
 		}
 
-		public static DataConnection CreateDataConnection(IDbConnection connection, PostgreSQLVersion version = PostgreSQLVersion.v92)
+		public static DataConnection CreateDataConnection(DbConnection connection, PostgreSQLVersion version = PostgreSQLVersion.v92)
 		{
 			return new DataConnection(GetDataProvider(version), connection);
 		}
 
-		public static DataConnection CreateDataConnection(IDbTransaction transaction, PostgreSQLVersion version = PostgreSQLVersion.v92)
+		public static DataConnection CreateDataConnection(DbTransaction transaction, PostgreSQLVersion version = PostgreSQLVersion.v92)
 		{
 			return new DataConnection(GetDataProvider(version), transaction);
 		}

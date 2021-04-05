@@ -165,15 +165,15 @@ namespace LinqToDB.DataProvider.DB2
 		public class BulkCopyAdapter
 		{
 			internal BulkCopyAdapter(
-				Func<IDbConnection, DB2BulkCopyOptions, DB2BulkCopy> bulkCopyCreator,
-				Func<int, string, DB2BulkCopyColumnMapping> bulkCopyColumnMappingCreator)
+				Func<DbConnection, DB2BulkCopyOptions, DB2BulkCopy> bulkCopyCreator,
+				Func<int, string, DB2BulkCopyColumnMapping>         bulkCopyColumnMappingCreator)
 			{
 				Create = bulkCopyCreator;
 				CreateColumnMapping = bulkCopyColumnMappingCreator;
 			}
 
-			public Func<IDbConnection, DB2BulkCopyOptions, DB2BulkCopy> Create              { get; }
-			public Func<int, string, DB2BulkCopyColumnMapping>          CreateColumnMapping { get; }
+			public Func<DbConnection, DB2BulkCopyOptions, DB2BulkCopy> Create              { get; }
+			public Func<int, string, DB2BulkCopyColumnMapping>         CreateColumnMapping { get; }
 		}
 
 		public static DB2ProviderAdapter GetInstance()
@@ -182,7 +182,7 @@ namespace LinqToDB.DataProvider.DB2
 				lock (_syncRoot)
 					if (_instance == null)
 					{
-						var assembly = Common.Tools.TryLoadAssembly(AssemblyName, ProviderFactoryName);
+						var assembly = Tools.TryLoadAssembly(AssemblyName, ProviderFactoryName);
 						if (assembly == null)
 							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
 
@@ -252,7 +252,7 @@ namespace LinqToDB.DataProvider.DB2
 
 
 						var bulkCopy = new BulkCopyAdapter(
-							typeMapper.BuildWrappedFactory((IDbConnection connection, DB2BulkCopyOptions options) => new DB2BulkCopy((DB2Connection)connection, options)),
+							typeMapper.BuildWrappedFactory((DbConnection connection, DB2BulkCopyOptions options) => new DB2BulkCopy((DB2Connection)(object)connection, options)),
 							typeMapper.BuildWrappedFactory((int source, string destination) => new DB2BulkCopyColumnMapping(source, destination)));
 
 

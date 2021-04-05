@@ -66,7 +66,7 @@ namespace Tests.Data
 				return new SqlServerDataProvider("MiniProfiler." + ProviderName.SqlServer2000, SqlServerVersion.v2012, SqlServerProvider.SystemDataSqlClient);
 			}
 
-			private static IDbConnection GetConnection(string configurationString)
+			private static DbConnection GetConnection(string configurationString)
 			{
 				var dbConnection = new SqlConnection(GetConnectionString(configurationString));
 				return new ProfiledDbConnection(dbConnection, MiniProfiler.Current);
@@ -263,14 +263,14 @@ namespace Tests.Data
 
 		public class LinqMySqlDataProvider : MySqlDataProvider
 		{
-			private readonly Func<string, IDbConnection> _connectionFactory;
-			public LinqMySqlDataProvider(Func<string, IDbConnection> connectionFactory)
+			private readonly Func<string, DbConnection> _connectionFactory;
+			public LinqMySqlDataProvider(Func<string, DbConnection> connectionFactory)
 				: base(ProviderName.MySqlOfficial)
 			{
 				_connectionFactory = connectionFactory;
 			}
 
-			protected override IDbConnection CreateConnectionInternal(string connectionString)
+			protected override DbConnection CreateConnectionInternal(string connectionString)
 			{
 				return _connectionFactory(connectionString);
 			}
@@ -310,7 +310,7 @@ namespace Tests.Data
 			switch (type)
 			{
 				case ConnectionType.MiniProfiler:
-					ms.SetConvertExpression<ProfiledDbConnection, IDbConnection>(db => db.WrappedConnection);
+					ms.SetConvertExpression<ProfiledDbConnection, DbConnection>(db => db.WrappedConnection);
 					ms.SetConvertExpression<ProfiledDbDataReader, DbDataReader>(db => db.WrappedReader);
 					break;
 			}
@@ -1542,15 +1542,15 @@ namespace Tests.Data
 
 		private DataConnection CreateDataConnection(IDataProvider provider, string context, ConnectionType type, Type connectionType, string? csExtra = null)
 		{
-			return CreateDataConnection(provider, context, type, cs => (IDbConnection)Activator.CreateInstance(connectionType, cs)!, csExtra);
+			return CreateDataConnection(provider, context, type, cs => (DbConnection)Activator.CreateInstance(connectionType, cs)!, csExtra);
 		}
 
 		private DataConnection CreateDataConnection(IDataProvider provider, string context, ConnectionType type, string connectionTypeName, string? csExtra = null)
 		{
-			return CreateDataConnection(provider, context, type, cs => (IDbConnection)Activator.CreateInstance(Type.GetType(connectionTypeName, true)!, cs)!, csExtra);
+			return CreateDataConnection(provider, context, type, cs => (DbConnection)Activator.CreateInstance(Type.GetType(connectionTypeName, true)!, cs)!, csExtra);
 		}
 
-		private DataConnection CreateDataConnection(IDataProvider provider, string context, ConnectionType type, Func<string, IDbConnection> connectionFactory, string? csExtra = null)
+		private DataConnection CreateDataConnection(IDataProvider provider, string context, ConnectionType type, Func<string, DbConnection> connectionFactory, string? csExtra = null)
 		{
 			var ms = new MappingSchema();
 			DataConnection? db = null;
@@ -1564,7 +1564,7 @@ namespace Tests.Data
 					case ConnectionType.MiniProfilerNoMappings      :
 					case ConnectionType.MiniProfiler                :
 						Assert.IsNotNull(MiniProfiler.Current);
-						return new ProfiledDbConnection((DbConnection)cn, MiniProfiler.Current);
+						return new ProfiledDbConnection(cn, MiniProfiler.Current);
 				}
 
 				return cn;
@@ -1573,10 +1573,10 @@ namespace Tests.Data
 			switch (type)
 			{
 				case ConnectionType.MiniProfiler:
-					ms.SetConvertExpression<ProfiledDbConnection,  IDbConnection> (db => db.WrappedConnection);
-					ms.SetConvertExpression<ProfiledDbDataReader,  DbDataReader>  (db => db.WrappedReader);
-					ms.SetConvertExpression<ProfiledDbTransaction, IDbTransaction>(db => db.WrappedTransaction);
-					ms.SetConvertExpression<ProfiledDbCommand,     DbCommand>     (db => db.InternalCommand);
+					ms.SetConvertExpression<ProfiledDbConnection, DbConnection>  (db => db.WrappedConnection);
+					ms.SetConvertExpression<ProfiledDbDataReader,  DbDataReader> (db => db.WrappedReader);
+					ms.SetConvertExpression<ProfiledDbTransaction, DbTransaction>(db => db.WrappedTransaction);
+					ms.SetConvertExpression<ProfiledDbCommand,     DbCommand>    (db => db.InternalCommand);
 					break;
 			}
 

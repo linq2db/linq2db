@@ -18,7 +18,7 @@ namespace Tests.Samples
 	using Model;
 	/// <summary>
 	/// This sample demonstrates how can we use <see cref="IDataContext"/> decoration
-	/// to deal with different <see cref="MappingSchema"/> objects in one <see cref="IDbConnection"/>
+	/// to deal with different <see cref="MappingSchema"/> objects in one <see cref="DbConnection"/>.
 	/// </summary>
 	[TestFixture]
 	public class DataContextDecoratorTests

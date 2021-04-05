@@ -340,7 +340,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		public static DataConnection CreateDataConnection(
-			IDbConnection     connection,
+			DbConnection      connection,
 			SqlServerVersion  version  = SqlServerVersion.v2008,
 			SqlServerProvider provider = SqlServerProvider.SystemDataSqlClient)
 		{
@@ -348,7 +348,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		public static DataConnection CreateDataConnection(
-			IDbTransaction    transaction,
+			DbTransaction     transaction,
 			SqlServerVersion  version  = SqlServerVersion.v2008,
 			SqlServerProvider provider = SqlServerProvider.SystemDataSqlClient)
 		{

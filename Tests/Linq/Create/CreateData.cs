@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Data.Common;
 using System.IO;
 using System.Linq;
 
@@ -22,7 +23,7 @@ using Tests.Model;
 // ReSharper disable once TestClassNameSuffixWarning
 public class a_CreateData : TestBase
 {
-	static void RunScript(string configString, string divider, string name, Action<IDbConnection>? action = null, string? databaseName = null)
+	static void RunScript(string configString, string divider, string name, Action<DbConnection>? action = null, string? databaseName = null)
 	{
 		TestContext.WriteLine("=== " + name + " === \n");
 
@@ -303,7 +304,7 @@ public class a_CreateData : TestBase
 		}
 	}
 
-	static void AccessODBCAction(IDbConnection connection)
+	static void AccessODBCAction(DbConnection connection)
 	{
 
 		using (var conn = AccessTools.CreateDataConnection(connection, ProviderName.AccessOdbc))
@@ -339,7 +340,7 @@ public class a_CreateData : TestBase
 		}
 	}
 
-	static void AccessAction(IDbConnection connection)
+	static void AccessAction(DbConnection connection)
 	{
 		using (var conn = AccessTools.CreateDataConnection(connection, ProviderName.Access))
 		{
@@ -374,7 +375,7 @@ public class a_CreateData : TestBase
 		}
 	}
 
-	void FirebirdAction(IDbConnection connection)
+	void FirebirdAction(DbConnection connection)
 	{
 		using (var conn = LinqToDB.DataProvider.Firebird.FirebirdTools.CreateDataConnection(connection))
 		{
@@ -406,7 +407,7 @@ public class a_CreateData : TestBase
 		}
 	}
 
-	static void SQLiteAction(IDbConnection connection)
+	static void SQLiteAction(DbConnection connection)
 	{
 		using (var conn = LinqToDB.DataProvider.SQLite.SQLiteTools.CreateDataConnection(connection))
 		{
@@ -428,7 +429,7 @@ public class a_CreateData : TestBase
 		}
 	}
 
-	static void InformixAction(IDbConnection connection)
+	static void InformixAction(DbConnection connection)
 	{
 		using (var conn = LinqToDB.DataProvider.Informix.InformixTools.CreateDataConnection(connection, ProviderName.Informix))
 		{
@@ -446,7 +447,7 @@ public class a_CreateData : TestBase
 		}
 	}
 
-	static void InformixDB2Action(IDbConnection connection)
+	static void InformixDB2Action(DbConnection connection)
 	{
 		using (var conn = LinqToDB.DataProvider.Informix.InformixTools.CreateDataConnection(connection, ProviderName.InformixDB2))
 		{

@@ -5,6 +5,7 @@ using System.Linq;
 
 namespace LinqToDB.DataProvider.DB2
 {
+	using System.Data.Common;
 	using System.Threading;
 	using System.Threading.Tasks;
 	using Data;
@@ -95,7 +96,7 @@ namespace LinqToDB.DataProvider.DB2
 			BulkCopyOptions                                 options,
 			IEnumerable<T>                                  source,
 			DataConnection                                  dataConnection,
-			IDbConnection                                   connection,
+			DbConnection                                    connection,
 			DB2ProviderAdapter.BulkCopyAdapter              bulkCopy,
 			Action<DataConnection, Func<string>, Func<int>> traceAction)
 			where T : notnull

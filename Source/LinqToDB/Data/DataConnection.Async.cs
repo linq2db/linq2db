@@ -37,7 +37,7 @@ namespace LinqToDB.Data
 			// If the active command exists.
 			//
 			if (_command != null)
-				_command.Transaction = (DbTransaction?)Transaction;
+				_command.Transaction = Transaction;
 
 			return new DataConnectionTransaction(this);
 		}
@@ -65,7 +65,7 @@ namespace LinqToDB.Data
 			// If the active command exists.
 			//
 			if (_command != null)
-				_command.Transaction = (DbTransaction?)Transaction;
+				_command.Transaction = Transaction;
 
 			return new DataConnectionTransaction(this);
 		}
@@ -81,7 +81,7 @@ namespace LinqToDB.Data
 
 			if (_connection == null)
 			{
-				IDbConnection connection;
+				DbConnection connection;
 				if (_connectionFactory != null)
 					connection = _connectionFactory();
 				else
@@ -98,7 +98,7 @@ namespace LinqToDB.Data
 				try
 				{
 					if (_connectionInterceptors != null)
-						await _connectionInterceptors.Apply((interceptor, arg1, arg2, ct) => interceptor.ConnectionOpeningAsync(arg1, arg2, ct), new ConnectionOpeningEventData(this), (DbConnection)_connection.Connection, cancellationToken)
+						await _connectionInterceptors.Apply((interceptor, arg1, arg2, ct) => interceptor.ConnectionOpeningAsync(arg1, arg2, ct), new ConnectionOpeningEventData(this), _connection.Connection, cancellationToken)
 							.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 					await _connection.OpenAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -106,7 +106,7 @@ namespace LinqToDB.Data
 					_closeConnection = true;
 
 					if (_connectionInterceptors != null)
-						await _connectionInterceptors.Apply((interceptor, arg1, arg2, ct) => interceptor.ConnectionOpenedAsync(arg1, arg2, ct), new ConnectionOpenedEventData(this), (DbConnection)_connection.Connection, cancellationToken)
+						await _connectionInterceptors.Apply((interceptor, arg1, arg2, ct) => interceptor.ConnectionOpenedAsync(arg1, arg2, ct), new ConnectionOpenedEventData(this), _connection.Connection, cancellationToken)
 							.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 				}
 				catch (Exception ex)

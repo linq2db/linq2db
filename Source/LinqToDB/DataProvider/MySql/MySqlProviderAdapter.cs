@@ -133,15 +133,15 @@ namespace LinqToDB.DataProvider.MySql
 		internal class BulkCopyAdapter
 		{
 			internal BulkCopyAdapter(
-				Func<IDbConnection, IDbTransaction?, MySqlConnector.MySqlBulkCopy> bulkCopyCreator,
-				Func<int, string, MySqlBulkCopyColumnMapping>                      bulkCopyColumnMappingCreator)
+				Func<DbConnection, DbTransaction?, MySqlConnector.MySqlBulkCopy> bulkCopyCreator,
+				Func<int, string, MySqlBulkCopyColumnMapping>                    bulkCopyColumnMappingCreator)
 			{
 				Create              = bulkCopyCreator;
 				CreateColumnMapping = bulkCopyColumnMappingCreator;
 			}
 
-			public Func<IDbConnection, IDbTransaction?, MySqlConnector.MySqlBulkCopy> Create              { get; }
-			public Func<int, string, MySqlBulkCopyColumnMapping>                      CreateColumnMapping { get; }
+			public Func<DbConnection, DbTransaction?, MySqlConnector.MySqlBulkCopy> Create              { get; }
+			public Func<int, string, MySqlBulkCopyColumnMapping>                    CreateColumnMapping { get; }
 		}
 
 		public static MySqlProviderAdapter GetInstance(string name)
@@ -332,7 +332,7 @@ namespace LinqToDB.DataProvider.MySql
 					typeMapper.FinalizeMappings();
 
 					bulkCopy = new BulkCopyAdapter(
-						typeMapper.BuildWrappedFactory((IDbConnection connection, IDbTransaction? transaction) => new MySqlBulkCopy((MySqlConnection)connection, (MySqlTransaction?)transaction)),
+						typeMapper.BuildWrappedFactory((DbConnection connection, DbTransaction? transaction) => new MySqlBulkCopy((MySqlConnection)(object)connection, (MySqlTransaction?)(object?)transaction)),
 						typeMapper.BuildWrappedFactory((int source, string destination) => new MySqlBulkCopyColumnMapping(source, destination, null)));
 				}
 				else

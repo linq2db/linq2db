@@ -33,8 +33,8 @@ namespace LinqToDB.DataProvider.SapHana
 
 			Action<DbParameter, HanaDbType> dbTypeSetter,
 
-			Func<IDbConnection, HanaBulkCopyOptions, IDbTransaction?, HanaBulkCopy> bulkCopyCreator,
-			Func<int, string, HanaBulkCopyColumnMapping> bulkCopyColumnMappingCreator)
+			Func<DbConnection, HanaBulkCopyOptions, DbTransaction?, HanaBulkCopy> bulkCopyCreator,
+			Func<int, string, HanaBulkCopyColumnMapping>                          bulkCopyColumnMappingCreator)
 		{
 			ConnectionType  = connectionType;
 			DataReaderType  = dataReaderType;
@@ -56,8 +56,8 @@ namespace LinqToDB.DataProvider.SapHana
 
 		public Action<DbParameter, HanaDbType> SetDbType { get; }
 
-		public Func<IDbConnection, HanaBulkCopyOptions, IDbTransaction?, HanaBulkCopy> CreateBulkCopy              { get; }
-		public Func<int, string, HanaBulkCopyColumnMapping>                            CreateBulkCopyColumnMapping { get; }
+		public Func<DbConnection, HanaBulkCopyOptions, DbTransaction?, HanaBulkCopy> CreateBulkCopy              { get; }
+		public Func<int, string, HanaBulkCopyColumnMapping>                          CreateBulkCopyColumnMapping { get; }
 
 		internal static SapHanaProviderAdapter GetInstance()
 		{
@@ -109,7 +109,7 @@ namespace LinqToDB.DataProvider.SapHana
 							commandType,
 							transactionType,
 							typeSetter,
-							typeMapper.BuildWrappedFactory((IDbConnection connection, HanaBulkCopyOptions options, IDbTransaction? transaction) => new HanaBulkCopy((HanaConnection)connection, options, (HanaTransaction?)transaction)),
+							typeMapper.BuildWrappedFactory((DbConnection connection, HanaBulkCopyOptions options, DbTransaction? transaction) => new HanaBulkCopy((HanaConnection)(object)connection, options, (HanaTransaction?)(object?)transaction)),
 							typeMapper.BuildWrappedFactory((int source, string destination) => new HanaBulkCopyColumnMapping(source, destination)));
 					}
 

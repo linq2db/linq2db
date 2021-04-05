@@ -152,15 +152,15 @@ namespace LinqToDB.DataProvider.Informix
 		public class BulkCopyAdapter
 		{
 			internal BulkCopyAdapter(
-				Func<IDbConnection, IfxBulkCopyOptions, IfxBulkCopy> bulkCopyCreator,
-				Func<int, string, IfxBulkCopyColumnMapping> bulkCopyColumnMappingCreator)
+				Func<DbConnection, IfxBulkCopyOptions, IfxBulkCopy> bulkCopyCreator,
+				Func<int, string, IfxBulkCopyColumnMapping>         bulkCopyColumnMappingCreator)
 			{
 				Create              = bulkCopyCreator;
 				CreateColumnMapping = bulkCopyColumnMappingCreator;
 			}
 
-			public Func<IDbConnection, IfxBulkCopyOptions, IfxBulkCopy> Create              { get; }
-			public Func<int, string, IfxBulkCopyColumnMapping>          CreateColumnMapping { get; }
+			public Func<DbConnection, IfxBulkCopyOptions, IfxBulkCopy> Create              { get; }
+			public Func<int, string, IfxBulkCopyColumnMapping>         CreateColumnMapping { get; }
 		}
 
 		public static InformixProviderAdapter GetInstance(string name)
@@ -235,7 +235,7 @@ namespace LinqToDB.DataProvider.Informix
 				typeMapper.FinalizeMappings();
 
 				bulkCopy = new BulkCopyAdapter(
-					typeMapper.BuildWrappedFactory((IDbConnection connection, IfxBulkCopyOptions options) => new IfxBulkCopy((IfxConnection)connection, options)),
+					typeMapper.BuildWrappedFactory((DbConnection connection, IfxBulkCopyOptions options) => new IfxBulkCopy((IfxConnection)(object)connection, options)),
 					typeMapper.BuildWrappedFactory((int source, string destination) => new IfxBulkCopyColumnMapping(source, destination)));
 			}
 			else

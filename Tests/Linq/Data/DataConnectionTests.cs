@@ -977,8 +977,8 @@ namespace Tests.Data
 				}
 			}
 
-			void OnBeforeConnectionOpen(DataConnection dc, IDbConnection cn) => open++;
-			void OnConnectionOpened    (DataConnection dc, IDbConnection cn) => opened++;
+			void OnBeforeConnectionOpen(DataConnection dc, DbConnection cn) => open++;
+			void OnConnectionOpened    (DataConnection dc, DbConnection cn) => opened++;
 		}
 
 		[Test]
@@ -1061,13 +1061,13 @@ namespace Tests.Data
 				}
 			}
 
-			Task OnBeforeConnectionOpenAsync(DataConnection dc, IDbConnection cn, CancellationToken ct)
+			Task OnBeforeConnectionOpenAsync(DataConnection dc, DbConnection cn, CancellationToken ct)
 			{
 				open++;
 				return Task.CompletedTask;
 			}
 
-			Task OnConnectionOpenedAsync(DataConnection dc, IDbConnection cn, CancellationToken ct)
+			Task OnConnectionOpenedAsync(DataConnection dc, DbConnection cn, CancellationToken ct)
 			{
 				opened++;
 				return Task.CompletedTask;
@@ -1095,7 +1095,7 @@ namespace Tests.Data
 				{
 					Assert.AreEqual(ConnectionState.Open, cn.State);
 
-					IDbConnection? clonedConnection = null;
+					DbConnection? clonedConnection = null;
 					using (var clonedDb = (DataConnection)((IDataContext)testDb).Clone(true))
 					{
 						clonedConnection = clonedDb.Connection;
@@ -1387,7 +1387,7 @@ namespace Tests.Data
 					db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 1 });
 					using (var transaction = new TransactionScope(TransactionScopeOption.Required, TransactionScopeAsyncFlowOption.Enabled))
 					{
-						((DbConnection)db.Connection).EnlistTransaction(Transaction.Current);
+						db.Connection.EnlistTransaction(Transaction.Current);
 						db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 2 });
 
 						Transaction.Current!.Rollback();

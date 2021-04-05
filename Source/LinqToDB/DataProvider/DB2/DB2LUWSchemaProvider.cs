@@ -25,7 +25,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
-			DataTypesSchema = ((DbConnection)dataConnection.Connection).GetSchema("DataTypes");
+			DataTypesSchema = dataConnection.Connection.GetSchema("DataTypes");
 
 			return DataTypesSchema.AsEnumerable()
 				.Select(t => new DataTypeInfo
@@ -48,7 +48,7 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			LoadCurrentSchema(dataConnection);
 
-			var tables = ((DbConnection)dataConnection.Connection).GetSchema("Tables");
+			var tables = dataConnection.Connection.GetSchema("Tables");
 
 			return
 			(
@@ -379,7 +379,7 @@ WHERE
 
 		protected override string GetDataSourceName(DataConnection dbConnection)
 		{
-			var str = ((DbConnection)dbConnection.Connection).ConnectionString;
+			var str = dbConnection.Connection.ConnectionString;
 
 			var host = str?.Split(';')
 				.Select(s =>

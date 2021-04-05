@@ -68,7 +68,7 @@ namespace LinqToDB.Data
 			CheckAndThrowOnDisposed();
 
 			if (forNestedQuery && _connection != null && IsMarsEnabled)
-				return new DataConnection(DataProvider, _connection)
+				return new DataConnection(DataProvider, _connection.Connection)
 				{
 					MappingSchema               = MappingSchema,
 					TransactionAsync            = TransactionAsync,

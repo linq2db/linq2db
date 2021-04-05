@@ -31,9 +31,9 @@ namespace LinqToDB.DataProvider
 		public override string? ConnectionNamespace => Adapter.ConnectionType.Namespace;
 		public override Type    DataReaderType      => Adapter.DataReaderType;
 
-		Func<string, IDbConnection>? _createConnection;
+		Func<string, DbConnection>? _createConnection;
 
-		protected override IDbConnection CreateConnectionInternal(string connectionString)
+		protected override DbConnection CreateConnectionInternal(string connectionString)
 		{
 			if (_createConnection == null)
 			{
@@ -44,11 +44,11 @@ namespace LinqToDB.DataProvider
 			return _createConnection(connectionString);
 		}
 
-		private static Expression<Func<string, IDbConnection>> CreateConnectionExpression(Type connectionType)
+		private static Expression<Func<string, DbConnection>> CreateConnectionExpression(Type connectionType)
 		{
 			var p = Expression.Parameter(typeof(string));
-			var l = Expression.Lambda<Func<string, IDbConnection>>(
-				Expression.Convert(Expression.New(connectionType.GetConstructor(new[] { typeof(string) }), p), typeof(IDbConnection)),
+			var l = Expression.Lambda<Func<string, DbConnection>>(
+				Expression.Convert(Expression.New(connectionType.GetConstructor(new[] { typeof(string) }), p), typeof(DbConnection)),
 				p);
 			return l;
 		}
@@ -159,10 +159,10 @@ namespace LinqToDB.DataProvider
 		//
 		// Actually it should be fine to remove support for DbParameter wrappers, as it's probably something
 		// nobody will do
-		private readonly IDictionary<Type, Func<DbParameter   , DbParameter   >?> _parameterConverters   = new ConcurrentDictionary<Type, Func<DbParameter   , DbParameter   >?>();
-		private readonly IDictionary<Type, Func<DbCommand     , DbCommand     >?> _commandConverters     = new ConcurrentDictionary<Type, Func<DbCommand     , DbCommand     >?>();
-		private readonly IDictionary<Type, Func<IDbConnection , IDbConnection >?> _connectionConverters  = new ConcurrentDictionary<Type, Func<IDbConnection , IDbConnection >?>();
-		private readonly IDictionary<Type, Func<IDbTransaction, IDbTransaction>?> _transactionConverters = new ConcurrentDictionary<Type, Func<IDbTransaction, IDbTransaction>?>();
+		private readonly IDictionary<Type, Func<DbParameter  , DbParameter  >?> _parameterConverters   = new ConcurrentDictionary<Type, Func<DbParameter  , DbParameter  >?>();
+		private readonly IDictionary<Type, Func<DbCommand    , DbCommand    >?> _commandConverters     = new ConcurrentDictionary<Type, Func<DbCommand    , DbCommand    >?>();
+		private readonly IDictionary<Type, Func<DbConnection , DbConnection >?> _connectionConverters  = new ConcurrentDictionary<Type, Func<DbConnection , DbConnection >?>();
+		private readonly IDictionary<Type, Func<DbTransaction, DbTransaction>?> _transactionConverters = new ConcurrentDictionary<Type, Func<DbTransaction, DbTransaction>?>();
 
 		public virtual DbParameter? TryGetProviderParameter(DbParameter parameter, MappingSchema ms)
 		{
@@ -178,16 +178,12 @@ namespace LinqToDB.DataProvider
 			return TryConvertProviderType(_commandConverters, Adapter.CommandType, command, ms);
 		}
 
-		public virtual IDbConnection? TryGetProviderConnection(IDbConnection connection, MappingSchema ms)
+		public virtual DbConnection? TryGetProviderConnection(DbConnection connection, MappingSchema ms)
 		{
-			// remove retry policy wrapper
-			if (connection is RetryingDbConnection rcn)
-				connection = rcn.UnderlyingObject;
-
 			return TryConvertProviderType(_connectionConverters, Adapter.ConnectionType, connection, ms);
 		}
 
-		public virtual IDbTransaction? TryGetProviderTransaction(IDbTransaction transaction, MappingSchema ms)
+		public virtual DbTransaction? TryGetProviderTransaction(DbTransaction transaction, MappingSchema ms)
 		{
 			return TryConvertProviderType(_transactionConverters, Adapter.TransactionType, transaction, ms);
 		}

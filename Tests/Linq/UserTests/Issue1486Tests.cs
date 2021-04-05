@@ -4,6 +4,7 @@ using LinqToDB.DataProvider;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 using System.Data;
+using System.Data.Common;
 using System.Linq;
 using Tests.Model;
 
@@ -26,7 +27,7 @@ namespace Tests.UserTests
 				return DataConnection.GetDataProvider(configuration);
 			}
 
-			private static IDbConnection GetConnection(string configuration)
+			private static DbConnection GetConnection(string configuration)
 			{
 				string connStr = GetConnectionString(configuration);
 
@@ -48,7 +49,7 @@ namespace Tests.UserTests
 				return DataConnection.GetDataProvider(configuration);
 			}
 
-			private static IDbConnection GetConnection(string configuration)
+			private static DbConnection GetConnection(string configuration)
 			{
 				string connStr = GetConnectionString(configuration);
 

@@ -4,6 +4,7 @@ using System.Data;
 
 namespace LinqToDB.DataProvider.Access
 {
+	using System.Data.Common;
 	using System.IO;
 	using System.Security;
 	using Data;
@@ -88,7 +89,7 @@ namespace LinqToDB.DataProvider.Access
 		/// <param name="connection">Connection instance.</param>
 		/// <param name="providerName">Provider name.</param>
 		/// <returns><see cref="DataConnection"/> instance.</returns>
-		public static DataConnection CreateDataConnection(IDbConnection connection, string? providerName = null)
+		public static DataConnection CreateDataConnection(DbConnection connection, string? providerName = null)
 		{
 			return new DataConnection(GetDataProvider(providerName), connection);
 		}
@@ -99,7 +100,7 @@ namespace LinqToDB.DataProvider.Access
 		/// <param name="transaction">Transaction instance.</param>
 		/// <param name="providerName">Provider name.</param>
 		/// <returns><see cref="DataConnection"/> instance.</returns>
-		public static DataConnection CreateDataConnection(IDbTransaction transaction, string? providerName = null)
+		public static DataConnection CreateDataConnection(DbTransaction transaction, string? providerName = null)
 		{
 			return new DataConnection(GetDataProvider(providerName), transaction);
 		}

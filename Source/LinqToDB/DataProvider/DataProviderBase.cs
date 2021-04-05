@@ -79,9 +79,9 @@ namespace LinqToDB.DataProvider
 		public          SqlProviderFlags SqlProviderFlags      { get; }
 		public abstract TableOptions     SupportedTableOptions { get; }
 
-		public static Func<IDataProvider,IDbConnection,IDbConnection>? OnConnectionCreated { get; set; }
+		public static Func<IDataProvider, DbConnection, DbConnection>? OnConnectionCreated { get; set; }
 
-		public IDbConnection CreateConnection(string connectionString)
+		public DbConnection CreateConnection(string connectionString)
 		{
 			var connection = CreateConnectionInternal(connectionString);
 
@@ -91,7 +91,7 @@ namespace LinqToDB.DataProvider
 			return connection;
 		}
 
-		protected abstract IDbConnection CreateConnectionInternal (string connectionString);
+		protected abstract DbConnection  CreateConnectionInternal (string connectionString);
 		public    abstract ISqlBuilder   CreateSqlBuilder(MappingSchema mappingSchema);
 		public    abstract ISqlOptimizer GetSqlOptimizer ();
 

@@ -34,10 +34,10 @@ namespace Tests
 			public MappedMappingSchema()
 				: base(TestProvName.SQLiteClassicMiniProfilerMapped, new SQLiteMappingSchema.ClassicMappingSchema())
 			{
-				SetConvertExpression<ProfiledDbConnection , IDbConnection >(db => db.WrappedConnection );
-				SetConvertExpression<ProfiledDbDataReader , DbDataReader  >(db => db.WrappedReader     );
-				SetConvertExpression<ProfiledDbTransaction, IDbTransaction>(db => db.WrappedTransaction);
-				SetConvertExpression<ProfiledDbCommand    , DbCommand     >(db => db.InternalCommand   );
+				SetConvertExpression<ProfiledDbConnection , DbConnection >(db => db.WrappedConnection );
+				SetConvertExpression<ProfiledDbDataReader , DbDataReader >(db => db.WrappedReader     );
+				SetConvertExpression<ProfiledDbTransaction, DbTransaction>(db => db.WrappedTransaction);
+				SetConvertExpression<ProfiledDbCommand    , DbCommand    >(db => db.InternalCommand   );
 			}
 		}
 
@@ -49,9 +49,9 @@ namespace Tests
 			}
 		}
 
-		protected override IDbConnection CreateConnectionInternal(string connectionString)
+		protected override DbConnection CreateConnectionInternal(string connectionString)
 		{
-			return new ProfiledDbConnection((DbConnection)base.CreateConnectionInternal(connectionString), MiniProfiler.Current);
+			return new ProfiledDbConnection(base.CreateConnectionInternal(connectionString), MiniProfiler.Current);
 		}
 
 		public static void Init()

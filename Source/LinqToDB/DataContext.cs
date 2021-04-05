@@ -352,8 +352,8 @@ namespace LinqToDB
 			// are internal and it is not possible to access them in derived class. And we definitely don't want them
 			// to be public.
 			return dbTransaction != null
-				? new DataConnection(DataProvider, dbTransaction)
-				: new DataConnection(DataProvider, dbConnection!);
+				? new DataConnection(DataProvider, dbTransaction.Transaction)
+				: new DataConnection(DataProvider, dbConnection!.Connection);
 		}
 
 		IDataContext IDataContext.Clone(bool forNestedQuery)

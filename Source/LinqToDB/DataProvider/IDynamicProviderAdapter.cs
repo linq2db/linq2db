@@ -11,7 +11,7 @@ namespace LinqToDB.DataProvider
 	public interface IDynamicProviderAdapter
 	{
 		/// <summary>
-		/// Gets type, that implements <see cref="IDbConnection"/> for current ADO.NET provider.
+		/// Gets type, that implements <see cref="DbConnection"/> for current ADO.NET provider.
 		/// </summary>
 		Type ConnectionType { get; }
 
@@ -31,7 +31,7 @@ namespace LinqToDB.DataProvider
 		Type CommandType { get; }
 
 		/// <summary>
-		/// Gets type, that implements <see cref="IDbTransaction"/> for current ADO.NET provider.
+		/// Gets type, that implements <see cref="DbTransaction"/> for current ADO.NET provider.
 		/// </summary>
 		Type TransactionType { get; }
 	}

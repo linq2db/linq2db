@@ -50,8 +50,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			Func<string, SqlConnectionStringBuilder> createConnectionStringBuilder,
 			Func<string, SqlConnection>              createConnection,
 
-			Func<IDbConnection, SqlBulkCopyOptions, IDbTransaction?, SqlBulkCopy> createBulkCopy,
-			Func<int, string, SqlBulkCopyColumnMapping>                           createBulkCopyColumnMapping)
+			Func<DbConnection, SqlBulkCopyOptions, DbTransaction?, SqlBulkCopy> createBulkCopy,
+			Func<int, string, SqlBulkCopyColumnMapping>                         createBulkCopyColumnMapping)
 		{
 			ConnectionType  = connectionType;
 			DataReaderType  = dataReaderType;
@@ -92,8 +92,8 @@ namespace LinqToDB.DataProvider.SqlServer
 		private readonly Func<string, SqlConnectionStringBuilder> _createConnectionStringBuilder;
 		public SqlConnectionStringBuilder CreateConnectionStringBuilder(string connectionString) => _createConnectionStringBuilder(connectionString);
 
-		private readonly Func<IDbConnection, SqlBulkCopyOptions, IDbTransaction?, SqlBulkCopy> _createBulkCopy;
-		public SqlBulkCopy CreateBulkCopy(IDbConnection connection, SqlBulkCopyOptions options, IDbTransaction? transaction)
+		private readonly Func<DbConnection, SqlBulkCopyOptions, DbTransaction?, SqlBulkCopy> _createBulkCopy;
+		public SqlBulkCopy CreateBulkCopy(DbConnection connection, SqlBulkCopyOptions options, DbTransaction? transaction)
 			=> _createBulkCopy(connection, options, transaction);
 
 		private readonly Func<int, string, SqlBulkCopyColumnMapping> _createBulkCopyColumnMapping;
@@ -222,7 +222,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				typeMapper.BuildWrappedFactory((string connectionString) => new SqlConnectionStringBuilder(connectionString)),
 				typeMapper.BuildWrappedFactory((string connectionString) => new SqlConnection(connectionString)),
 
-				typeMapper.BuildWrappedFactory((IDbConnection connection, SqlBulkCopyOptions options, IDbTransaction? transaction) => new SqlBulkCopy((SqlConnection)connection, options, (SqlTransaction?)transaction)),
+				typeMapper.BuildWrappedFactory((DbConnection connection, SqlBulkCopyOptions options, DbTransaction? transaction) => new SqlBulkCopy((SqlConnection)(object)connection, options, (SqlTransaction?)(object?)transaction)),
 				typeMapper.BuildWrappedFactory((int source, string destination) => new SqlBulkCopyColumnMapping(source, destination)));
 
 			IEnumerable<int> exceptionErrorsGettter(Exception ex) => typeMapper.Wrap<SqlException>(ex).Errors.Errors.Select(err => err.Number);

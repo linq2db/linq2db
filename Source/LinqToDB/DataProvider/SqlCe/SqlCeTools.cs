@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Reflection;
 
 namespace LinqToDB.DataProvider.SqlCe
@@ -49,12 +50,12 @@ namespace LinqToDB.DataProvider.SqlCe
 			return new DataConnection(_sqlCeDataProvider.Value, connectionString);
 		}
 
-		public static DataConnection CreateDataConnection(IDbConnection connection)
+		public static DataConnection CreateDataConnection(DbConnection connection)
 		{
 			return new DataConnection(_sqlCeDataProvider.Value, connection);
 		}
 
-		public static DataConnection CreateDataConnection(IDbTransaction transaction)
+		public static DataConnection CreateDataConnection(DbTransaction transaction)
 		{
 			return new DataConnection(_sqlCeDataProvider.Value, transaction);
 		}

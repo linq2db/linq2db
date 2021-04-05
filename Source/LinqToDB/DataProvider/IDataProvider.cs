@@ -22,7 +22,7 @@ namespace LinqToDB.DataProvider
 		MappingSchema      MappingSchema         { get; }
 		SqlProviderFlags   SqlProviderFlags      { get; }
 		TableOptions       SupportedTableOptions { get; }
-		IDbConnection      CreateConnection      (string connectionString);
+		DbConnection       CreateConnection      (string connectionString);
 		ISqlBuilder        CreateSqlBuilder      (MappingSchema mappingSchema);
 		ISqlOptimizer      GetSqlOptimizer       ();
 		/// <summary>

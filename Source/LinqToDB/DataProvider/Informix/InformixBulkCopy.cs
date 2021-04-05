@@ -4,6 +4,7 @@ namespace LinqToDB.DataProvider.Informix
 {
 	using System;
 	using System.Data;
+	using System.Data.Common;
 	using System.Linq;
 	using System.Threading;
 	using System.Threading.Tasks;
@@ -139,7 +140,7 @@ namespace LinqToDB.DataProvider.Informix
 			BulkCopyOptions                         options,
 			IEnumerable<T>                          source,
 			DataConnection                          dataConnection,
-			IDbConnection                           connection,
+			DbConnection                            connection,
 			InformixProviderAdapter.BulkCopyAdapter bulkCopy)
 			where T: notnull
 		{

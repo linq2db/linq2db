@@ -20,7 +20,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var tables = ((DbConnection)dataConnection.Connection).GetSchema("Tables");
+			var tables = dataConnection.Connection.GetSchema("Tables");
 
 			return
 			(
@@ -45,7 +45,7 @@ namespace LinqToDB.DataProvider.Firebird
 		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			var pks = ((DbConnection)dataConnection.Connection).GetSchema("PrimaryKeys");
+			var pks = dataConnection.Connection.GetSchema("PrimaryKeys");
 
 			return
 			(
@@ -62,7 +62,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var tcs  = ((DbConnection)dataConnection.Connection).GetSchema("Columns");
+			var tcs  = dataConnection.Connection.GetSchema("Columns");
 
 			return
 			(
@@ -89,7 +89,7 @@ namespace LinqToDB.DataProvider.Firebird
 		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			var cols = ((DbConnection)dataConnection.Connection).GetSchema("ForeignKeyColumns");
+			var cols = dataConnection.Connection.GetSchema("ForeignKeyColumns");
 
 			return
 			(
@@ -108,7 +108,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var ps = ((DbConnection)dataConnection.Connection).GetSchema("Procedures");
+			var ps = dataConnection.Connection.GetSchema("Procedures");
 
 			return
 			(
@@ -130,7 +130,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)
 		{
-			var pps = ((DbConnection)dataConnection.Connection).GetSchema("ProcedureParameters");
+			var pps = dataConnection.Connection.GetSchema("ProcedureParameters");
 
 			return
 			(

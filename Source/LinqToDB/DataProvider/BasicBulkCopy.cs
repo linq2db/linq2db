@@ -10,6 +10,7 @@ namespace LinqToDB.DataProvider
 	using Data;
 	using SqlProvider;
 	using System.Data;
+	using System.Data.Common;
 	using System.Threading;
 	using System.Threading.Tasks;
 
@@ -228,9 +229,9 @@ namespace LinqToDB.DataProvider
 
 		protected struct ProviderConnections
 		{
-			public DataConnection  DataConnection;
-			public IDbConnection   ProviderConnection;
-			public IDbTransaction? ProviderTransaction;
+			public DataConnection DataConnection;
+			public DbConnection   ProviderConnection;
+			public DbTransaction? ProviderTransaction;
 		}
 
 		#region ProviderSpecific Support

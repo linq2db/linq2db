@@ -129,9 +129,9 @@ namespace LinqToDB.Data
 		/// <param name="connectionFactory">Database connection factory method.</param>
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
 		public DataConnection(
-			IDataProvider       dataProvider,
-			Func<IDbConnection> connectionFactory,
-			MappingSchema       mappingSchema)
+			IDataProvider      dataProvider,
+			Func<DbConnection> connectionFactory,
+			MappingSchema      mappingSchema)
 			: this(new LinqToDbConnectionOptionsBuilder().UseConnectionFactory(dataProvider, connectionFactory).UseMappingSchema(mappingSchema))
 		{
 		}
@@ -142,8 +142,8 @@ namespace LinqToDB.Data
 		/// <param name="dataProvider">Database provider implementation to use with this connection.</param>
 		/// <param name="connectionFactory">Database connection factory method.</param>
 		public DataConnection(
-			IDataProvider       dataProvider,
-			Func<IDbConnection> connectionFactory)
+			IDataProvider      dataProvider,
+			Func<DbConnection> connectionFactory)
 			: this(new LinqToDbConnectionOptionsBuilder().UseConnectionFactory(dataProvider, connectionFactory))
 		{
 		}
@@ -156,7 +156,7 @@ namespace LinqToDB.Data
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
 		public DataConnection(
 			IDataProvider dataProvider,
-			IDbConnection connection,
+			DbConnection  connection,
 			MappingSchema mappingSchema)
 			: this(new LinqToDbConnectionOptionsBuilder().UseConnection(dataProvider, connection).UseMappingSchema(mappingSchema))
 		{
@@ -172,7 +172,7 @@ namespace LinqToDB.Data
 		/// </remarks>
 		public DataConnection(
 			IDataProvider dataProvider,
-			IDbConnection connection)
+			DbConnection  connection)
 			: this(dataProvider, connection, false)
 		{
 
@@ -186,7 +186,7 @@ namespace LinqToDB.Data
 		/// <param name="disposeConnection">If true <paramref name="connection"/> would be disposed on DataConnection disposing.</param>
 		public DataConnection(
 			IDataProvider dataProvider,
-			IDbConnection connection,
+			DbConnection  connection,
 			bool          disposeConnection)
 			: this(new LinqToDbConnectionOptionsBuilder().UseConnection(dataProvider, connection, disposeConnection))
 		{
@@ -199,9 +199,9 @@ namespace LinqToDB.Data
 		/// <param name="transaction">Existing database transaction to use.</param>
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
 		public DataConnection(
-			IDataProvider  dataProvider,
-			IDbTransaction transaction,
-			MappingSchema  mappingSchema)
+			IDataProvider dataProvider,
+			DbTransaction transaction,
+			MappingSchema mappingSchema)
 			: this(new LinqToDbConnectionOptionsBuilder().UseTransaction(dataProvider, transaction).UseMappingSchema(mappingSchema))
 		{
 		}
@@ -212,8 +212,8 @@ namespace LinqToDB.Data
 		/// <param name="dataProvider">Database provider implementation to use with this connection.</param>
 		/// <param name="transaction">Existing database transaction to use.</param>
 		public DataConnection(
-			IDataProvider  dataProvider,
-			IDbTransaction transaction)
+			IDataProvider dataProvider,
+			DbTransaction transaction)
 			: this(new LinqToDbConnectionOptionsBuilder().UseTransaction(dataProvider, transaction))
 		{
 		}
@@ -237,8 +237,8 @@ namespace LinqToDB.Data
 			
 			InitConfig();
 
-			IDbConnection?  localConnection  = null;
-			IDbTransaction? localTransaction = null;
+			DbConnection?  localConnection  = null;
+			DbTransaction? localTransaction = null;
 			
 			switch (options.SetupType)
 			{
@@ -1067,12 +1067,12 @@ namespace LinqToDB.Data
 		bool                 _closeTransaction;
 		IAsyncDbConnection?  _connection;
 
-		readonly Func<IDbConnection>? _connectionFactory;
+		readonly Func<DbConnection>? _connectionFactory;
 
 		/// <summary>
 		/// Gets underlying database connection, used by current connection object.
 		/// </summary>
-		public IDbConnection Connection => EnsureConnection().Connection;
+		public DbConnection Connection => EnsureConnection().Connection;
 
 		internal IAsyncDbConnection EnsureConnection()
 		{
@@ -1080,7 +1080,7 @@ namespace LinqToDB.Data
 
 			if (_connection == null)
 			{
-				IDbConnection connection;
+				DbConnection connection;
 				if (_connectionFactory != null)
 					connection = _connectionFactory();
 				else
@@ -1097,13 +1097,13 @@ namespace LinqToDB.Data
 			if (_connection.State == ConnectionState.Closed)
 			{
 				if (_connectionInterceptors != null)
-					_connectionInterceptors.Apply((interceptor, arg1, arg2) => interceptor.ConnectionOpening(arg1, arg2), new ConnectionOpeningEventData(this), (DbConnection)_connection.Connection);
+					_connectionInterceptors.Apply((interceptor, arg1, arg2) => interceptor.ConnectionOpening(arg1, arg2), new ConnectionOpeningEventData(this), _connection.Connection);
 
 				_connection.Open();
 				_closeConnection = true;
 
 				if (_connectionInterceptors != null)
-					_connectionInterceptors.Apply((interceptor, arg1, arg2) => interceptor.ConnectionOpened(arg1, arg2), new ConnectionOpenedEventData(this), (DbConnection)_connection.Connection);
+					_connectionInterceptors.Apply((interceptor, arg1, arg2) => interceptor.ConnectionOpened(arg1, arg2), new ConnectionOpenedEventData(this), _connection.Connection);
 			}
 
 			return _connection;
@@ -1222,13 +1222,13 @@ namespace LinqToDB.Data
 		/// </summary>
 		public DbCommand CreateCommand()
 		{
-			var command = ((DbConnection)Connection).CreateCommand();
+			var command = EnsureConnection().CreateCommand();
 
 			if (_commandTimeout.HasValue)
 				command.CommandTimeout = _commandTimeout.Value;
 
 			if (TransactionAsync != null)
-				command.Transaction = (DbTransaction?)Transaction;
+				command.Transaction = Transaction;
 
 			return command;
 		}
@@ -1464,7 +1464,7 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Gets current transaction, associated with connection.
 		/// </summary>
-		public IDbTransaction? Transaction => TransactionAsync?.Transaction;
+		public DbTransaction? Transaction => TransactionAsync?.Transaction;
 
 		/// <summary>
 		/// Async transaction wrapper over <see cref="Transaction"/>.
@@ -1483,14 +1483,14 @@ namespace LinqToDB.Data
 
 			// Create new transaction object.
 			//
-			TransactionAsync = AsyncFactory.Create(EnsureConnection().BeginTransaction());
+			TransactionAsync = EnsureConnection().BeginTransaction();
 
 			_closeTransaction = true;
 
 			// If the active command exists.
 			//
 			if (_command != null)
-				_command.Transaction = (DbTransaction?)Transaction;
+				_command.Transaction = Transaction;
 
 			return new DataConnectionTransaction(this);
 		}
@@ -1508,14 +1508,14 @@ namespace LinqToDB.Data
 
 			// Create new transaction object.
 			//
-			TransactionAsync = AsyncFactory.Create(EnsureConnection().BeginTransaction(isolationLevel));
+			TransactionAsync = EnsureConnection().BeginTransaction(isolationLevel);
 
 			_closeTransaction = true;
 
 			// If the active command exists.
 			//
 			if (_command != null)
-				_command.Transaction = (DbTransaction?)Transaction;
+				_command.Transaction = Transaction;
 
 			return new DataConnectionTransaction(this);
 		}
@@ -1615,7 +1615,7 @@ namespace LinqToDB.Data
 
 		#region ICloneable Members
 
-		DataConnection(string? configurationString, IDataProvider dataProvider, string? connectionString, IDbConnection? connection, MappingSchema mappingSchema)
+		DataConnection(string? configurationString, IDataProvider dataProvider, string? connectionString, DbConnection? connection, MappingSchema mappingSchema)
 		{
 			ConfigurationString = configurationString;
 			DataProvider        = dataProvider;

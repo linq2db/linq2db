@@ -21,7 +21,7 @@ namespace LinqToDB.DataProvider
 			Type transactionType,
 			Action<DbParameter, OleDbType> dbTypeSetter,
 			Func  <DbParameter, OleDbType> dbTypeGetter,
-			Func  <IDbConnection, Guid, object[]?, DataTable> schemaTableGetter)
+			Func  <DbConnection, Guid, object[]?, DataTable> schemaTableGetter)
 		{
 			ConnectionType  = connectionType;
 			DataReaderType  = dataReaderType;
@@ -44,7 +44,7 @@ namespace LinqToDB.DataProvider
 		public Action<DbParameter, OleDbType> SetDbType { get; }
 		public Func  <DbParameter, OleDbType> GetDbType { get; }
 
-		public Func<IDbConnection, Guid, object[]?, DataTable> GetOleDbSchemaTable { get; }
+		public Func<DbConnection, Guid, object[]?, DataTable> GetOleDbSchemaTable { get; }
 
 		public static OleDbProviderAdapter GetInstance()
 		{
@@ -77,7 +77,7 @@ namespace LinqToDB.DataProvider
 						var typeSetter    = dbTypeBuilder.BuildSetter<DbParameter>();
 						var typeGetter    = dbTypeBuilder.BuildGetter<DbParameter>();
 
-						var oleDbSchemaTableGetter = typeMapper.BuildFunc<IDbConnection, Guid, object[]?, DataTable>(typeMapper.MapLambda((OleDbConnection conn, Guid schema, object[]? restrictions) => conn.GetOleDbSchemaTable(schema, restrictions)));
+						var oleDbSchemaTableGetter = typeMapper.BuildFunc<DbConnection, Guid, object[]?, DataTable>(typeMapper.MapLambda((OleDbConnection conn, Guid schema, object[]? restrictions) => conn.GetOleDbSchemaTable(schema, restrictions)));
 
 						_instance = new OleDbProviderAdapter(
 							connectionType,

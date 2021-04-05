@@ -58,15 +58,15 @@ namespace LinqToDB.DataProvider.Sybase
 		public class BulkCopyAdapter
 		{
 			internal BulkCopyAdapter(
-				Func<IDbConnection, AseBulkCopyOptions, IDbTransaction?, AseBulkCopy> bulkCopyCreator,
-				Func<string, string, AseBulkCopyColumnMapping>                        bulkCopyColumnMappingCreator)
+				Func<DbConnection, AseBulkCopyOptions, DbTransaction?, AseBulkCopy> bulkCopyCreator,
+				Func<string, string, AseBulkCopyColumnMapping>                      bulkCopyColumnMappingCreator)
 			{
 				Create              = bulkCopyCreator;
 				CreateColumnMapping = bulkCopyColumnMappingCreator;
 			}
 
-			public Func<IDbConnection, AseBulkCopyOptions, IDbTransaction?, AseBulkCopy> Create              { get; }
-			public Func<string, string, AseBulkCopyColumnMapping>                        CreateColumnMapping { get; }
+			public Func<DbConnection, AseBulkCopyOptions, DbTransaction?, AseBulkCopy> Create              { get; }
+			public Func<string, string, AseBulkCopyColumnMapping>                      CreateColumnMapping { get; }
 		}
 
 		public static SybaseProviderAdapter GetInstance(string name)
@@ -130,7 +130,7 @@ namespace LinqToDB.DataProvider.Sybase
 				typeMapper.FinalizeMappings();
 
 				bulkCopy = new BulkCopyAdapter(
-					typeMapper.BuildWrappedFactory((IDbConnection connection, AseBulkCopyOptions options, IDbTransaction? transaction) => new AseBulkCopy((AseConnection)connection, options, (AseTransaction?)transaction)),
+					typeMapper.BuildWrappedFactory((DbConnection connection, AseBulkCopyOptions options, DbTransaction? transaction) => new AseBulkCopy((AseConnection)(object)connection, options, (AseTransaction?)(object?)transaction)),
 					typeMapper.BuildWrappedFactory((string source, string destination) => new AseBulkCopyColumnMapping(source, destination)));
 			}
 			else

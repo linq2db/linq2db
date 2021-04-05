@@ -7,6 +7,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.Firebird
 {
+	using System.Data.Common;
 	using Data;
 	using LinqToDB.Configuration;
 
@@ -58,12 +59,12 @@ namespace LinqToDB.DataProvider.Firebird
 			return new DataConnection(_firebirdDataProvider.Value, connectionString);
 		}
 
-		public static DataConnection CreateDataConnection(IDbConnection connection)
+		public static DataConnection CreateDataConnection(DbConnection connection)
 		{
 			return new DataConnection(_firebirdDataProvider.Value, connection);
 		}
 
-		public static DataConnection CreateDataConnection(IDbTransaction transaction)
+		public static DataConnection CreateDataConnection(DbTransaction transaction)
 		{
 			return new DataConnection(_firebirdDataProvider.Value, transaction);
 		}
