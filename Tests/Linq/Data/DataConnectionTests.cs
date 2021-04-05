@@ -970,8 +970,10 @@ namespace Tests.Data
 					Assert.AreEqual(0, opened);
 					cdb.Close();
 					_ = cdb.Connection;
-					Assert.AreEqual(1, open);
-					Assert.AreEqual(1, opened);
+					// with MARS cloned data connection inherit connection from parent and close do nothing
+					var expected = db.IsMarsEnabled ? 0 : 1;
+					Assert.AreEqual(expected, open);
+					Assert.AreEqual(expected, opened);
 				}
 			}
 
@@ -1052,8 +1054,10 @@ namespace Tests.Data
 					Assert.AreEqual(0, opened);
 					cdb.Close();
 					await cdb.EnsureConnectionAsync();
-					Assert.AreEqual(1, open);
-					Assert.AreEqual(1, opened);
+					// with MARS cloned data connection inherit connection from parent and close do nothing
+					var expected = db.IsMarsEnabled ? 0 : 1;
+					Assert.AreEqual(expected, open);
+					Assert.AreEqual(expected, opened);
 				}
 			}
 
