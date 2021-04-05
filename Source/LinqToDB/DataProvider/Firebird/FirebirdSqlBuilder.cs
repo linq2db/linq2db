@@ -14,6 +14,7 @@ namespace LinqToDB.DataProvider.Firebird
 	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
+	using System.Data.Common;
 
 	public partial class FirebirdSqlBuilder : BasicSqlBuilder
 	{
@@ -294,7 +295,7 @@ namespace LinqToDB.DataProvider.Firebird
 			return sb.Append(table);
 		}
 
-		protected override string? GetProviderTypeName(IDbDataParameter parameter)
+		protected override string? GetProviderTypeName(DbParameter parameter)
 		{
 			if (_provider != null)
 			{

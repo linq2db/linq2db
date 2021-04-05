@@ -21,7 +21,7 @@ namespace LinqToDB.DataProvider
 		Type DataReaderType { get; }
 
 		/// <summary>
-		/// Gets type, that implements <see cref="IDbDataParameter"/> for current ADO.NET provider.
+		/// Gets type, that implements <see cref="DbParameter"/> for current ADO.NET provider.
 		/// </summary>
 		Type ParameterType { get; }
 

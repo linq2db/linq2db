@@ -292,7 +292,7 @@ namespace LinqToDB.DataProvider
 
 		#region SetParameter
 
-		public virtual void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
+		public virtual void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			switch (dataType.DataType)
 			{
@@ -376,7 +376,7 @@ namespace LinqToDB.DataProvider
 
 		public abstract ISchemaProvider GetSchemaProvider     ();
 
-		protected virtual void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
+		protected virtual void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
 		{
 			DbType dbType;
 

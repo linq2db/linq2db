@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
+	using System.Data.Common;
 	using Common;
 	using Data;
 	using Expressions;
@@ -54,8 +55,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			Func<string, NpgsqlConnection> connectionCreator,
 
-			Action<IDbDataParameter, NpgsqlDbType> dbTypeSetter,
-			Func  <IDbDataParameter, NpgsqlDbType> dbTypeGetter,
+			Action<DbParameter, NpgsqlDbType> dbTypeSetter,
+			Func  <DbParameter, NpgsqlDbType> dbTypeGetter,
 
 			Func<IDbConnection, string, NpgsqlBinaryImporter> beginBinaryImport)
 		{
@@ -124,8 +125,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		public string ProviderTypesNamespace => TypesNamespace;
 
-		public Action<IDbDataParameter, NpgsqlDbType> SetDbType { get; }
-		public Func  <IDbDataParameter, NpgsqlDbType> GetDbType { get; }
+		public Action<DbParameter, NpgsqlDbType> SetDbType { get; }
+		public Func  <DbParameter, NpgsqlDbType> GetDbType { get; }
 
 		public bool IsDbTypeSupported(NpgsqlDbType type) => _knownDbTypes.ContainsKey(type);
 
@@ -330,8 +331,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 							typeMapper.BuildWrappedFactory((string connectionString) => new NpgsqlConnection(connectionString)),
 
-							dbTypeBuilder.BuildSetter<IDbDataParameter>(),
-							dbTypeBuilder.BuildGetter<IDbDataParameter>(),
+							dbTypeBuilder.BuildSetter<DbParameter>(),
+							dbTypeBuilder.BuildGetter<DbParameter>(),
 
 							beginBinaryImport);
 

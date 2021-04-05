@@ -31,7 +31,7 @@ namespace LinqToDB.DataProvider.SapHana
 			Type commandType,
 			Type transactionType,
 
-			Action<IDbDataParameter, HanaDbType> dbTypeSetter,
+			Action<DbParameter, HanaDbType> dbTypeSetter,
 
 			Func<IDbConnection, HanaBulkCopyOptions, IDbTransaction?, HanaBulkCopy> bulkCopyCreator,
 			Func<int, string, HanaBulkCopyColumnMapping> bulkCopyColumnMappingCreator)
@@ -54,7 +54,7 @@ namespace LinqToDB.DataProvider.SapHana
 		public Type CommandType     { get; }
 		public Type TransactionType { get; }
 
-		public Action<IDbDataParameter, HanaDbType> SetDbType { get; }
+		public Action<DbParameter, HanaDbType> SetDbType { get; }
 
 		public Func<IDbConnection, HanaBulkCopyOptions, IDbTransaction?, HanaBulkCopy> CreateBulkCopy              { get; }
 		public Func<int, string, HanaBulkCopyColumnMapping>                            CreateBulkCopyColumnMapping { get; }
@@ -100,7 +100,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 						typeMapper.FinalizeMappings();
 
-						var typeSetter = typeMapper.Type<HanaParameter>().Member(p => p.HanaDbType).BuildSetter<IDbDataParameter>();
+						var typeSetter = typeMapper.Type<HanaParameter>().Member(p => p.HanaDbType).BuildSetter<DbParameter>();
 
 						_instance = new SapHanaProviderAdapter(
 							connectionType,

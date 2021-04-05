@@ -186,14 +186,14 @@ namespace LinqToDB.Data
 
 			public class ExecutionPreparedQuery
 			{
-				public ExecutionPreparedQuery(PreparedQuery preparedQuery, IDbDataParameter[]?[] commandsParameters)
+				public ExecutionPreparedQuery(PreparedQuery preparedQuery, DbParameter[]?[] commandsParameters)
 				{
 					PreparedQuery = preparedQuery;
 					CommandsParameters = commandsParameters;
 				}
 
-				public readonly PreparedQuery         PreparedQuery;
-				public readonly IDbDataParameter[]?[] CommandsParameters;
+				public readonly PreparedQuery    PreparedQuery;
+				public readonly DbParameter[]?[] CommandsParameters;
 			}
 
 			ExecutionPreparedQuery? _executionQuery;
@@ -279,16 +279,16 @@ namespace LinqToDB.Data
 				};
 			}
 
-			static IDbDataParameter[]?[] GetParameters(DataConnection dataConnection, PreparedQuery pq, IReadOnlyParameterValues? parameterValues)
+			static DbParameter[]?[] GetParameters(DataConnection dataConnection, PreparedQuery pq, IReadOnlyParameterValues? parameterValues)
 			{
-				var result = new IDbDataParameter[pq.Commands.Length][];
+				var result = new DbParameter[pq.Commands.Length][];
 				for (var index = 0; index < pq.Commands.Length; index++)
 				{
 					var command = pq.Commands[index];
 					if (command.SqlParameters.Length == 0)
 						continue;
 
-					var parms = new IDbDataParameter[command.SqlParameters.Length];
+					var parms = new DbParameter[command.SqlParameters.Length];
 
 					for (var i = 0; i < command.SqlParameters.Length; i++)
 					{
@@ -303,7 +303,7 @@ namespace LinqToDB.Data
 				return result;
 			}
 
-			static IDbDataParameter CreateParameter(DataConnection dataConnection, SqlParameter parameter, SqlParameterValue parmValue)
+			static DbParameter CreateParameter(DataConnection dataConnection, SqlParameter parameter, SqlParameterValue parmValue)
 			{
 				// this is not very nice: here we access command object before it initialized
 				// and it could result in parameter being created from one command object, but assigned to another command
@@ -401,7 +401,7 @@ namespace LinqToDB.Data
 
 			static object? ExecuteScalarImpl(DataConnection dataConnection, ExecutionPreparedQuery executionQuery)
 			{
-				IDbDataParameter? idParam = null;
+				DbParameter? idParam = null;
 
 				if (dataConnection.DataProvider.SqlProviderFlags.IsIdentityParameterRequired)
 				{
@@ -473,7 +473,7 @@ namespace LinqToDB.Data
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			static void InitCommand(DataConnection dataConnection, CommandWithParameters queryCommand, IDbDataParameter[]? dbParameters, List<string>? queryHints)
+			static void InitCommand(DataConnection dataConnection, CommandWithParameters queryCommand, DbParameter[]? dbParameters, List<string>? queryHints)
 			{
 				var hasParameters = dbParameters?.Length > 0;
 
@@ -612,7 +612,7 @@ namespace LinqToDB.Data
 
 				SetCommand();
 
-				IDbDataParameter? idparam = null;
+				DbParameter? idparam = null;
 
 				if (_dataConnection.DataProvider.SqlProviderFlags.IsIdentityParameterRequired)
 				{

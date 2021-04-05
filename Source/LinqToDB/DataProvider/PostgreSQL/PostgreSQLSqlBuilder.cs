@@ -13,6 +13,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using SqlProvider;
 	using Extensions;
 	using Mapping;
+	using System.Data.Common;
 
 	public class PostgreSQLSqlBuilder : BasicSqlBuilder
 	{
@@ -294,7 +295,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return base.BuildTableName(sb, null, database, schema, table, tableOptions);
 		}
 
-		protected override string? GetProviderTypeName(IDbDataParameter parameter)
+		protected override string? GetProviderTypeName(DbParameter parameter)
 		{
 			if (_provider != null)
 			{

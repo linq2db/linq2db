@@ -3,6 +3,7 @@ using System.Data;
 
 namespace LinqToDB.DataProvider.Sybase
 {
+	using System.Data.Common;
 	using System.Linq.Expressions;
 	using LinqToDB.Expressions;
 
@@ -27,8 +28,8 @@ namespace LinqToDB.DataProvider.Sybase
 			Type parameterType,
 			Type commandType,
 			Type transactionType,
-			Action<IDbDataParameter, AseDbType> dbTypeSetter,
-			Func  <IDbDataParameter, AseDbType> dbTypeGetter,
+			Action<DbParameter, AseDbType> dbTypeSetter,
+			Func  <DbParameter, AseDbType> dbTypeGetter,
 			BulkCopyAdapter? bulkCopy)
 		{
 			ConnectionType  = connectionType;
@@ -49,8 +50,8 @@ namespace LinqToDB.DataProvider.Sybase
 		public Type CommandType     { get; }
 		public Type TransactionType { get; }
 
-		public Action<IDbDataParameter, AseDbType> SetDbType { get; }
-		public Func  <IDbDataParameter, AseDbType> GetDbType { get; }
+		public Action<DbParameter, AseDbType> SetDbType { get; }
+		public Func  <DbParameter, AseDbType> GetDbType { get; }
 
 		public BulkCopyAdapter? BulkCopy { get; }
 
@@ -144,8 +145,8 @@ namespace LinqToDB.DataProvider.Sybase
 				parameterType,
 				commandType,
 				transactionType,
-				dbTypeBuilder.BuildSetter<IDbDataParameter>(),
-				dbTypeBuilder.BuildGetter<IDbDataParameter>(),
+				dbTypeBuilder.BuildSetter<DbParameter>(),
+				dbTypeBuilder.BuildGetter<DbParameter>(),
 				bulkCopy);
 		}
 

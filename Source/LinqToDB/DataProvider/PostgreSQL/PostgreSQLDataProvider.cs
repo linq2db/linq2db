@@ -194,7 +194,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 #endif
 
-		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
+		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			if (value is IDictionary && dataType.DataType == DataType.Undefined)
 			{
@@ -204,7 +204,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 
-		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
 		{
 			// didn't tried to detect and cleanup unnecessary type mappings, as npgsql develops rapidly and
 			// it doesn't pay efforts to track changes for each version in this area

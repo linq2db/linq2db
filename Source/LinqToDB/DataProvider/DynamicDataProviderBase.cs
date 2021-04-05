@@ -157,14 +157,14 @@ namespace LinqToDB.DataProvider
 		// In general I don't expect more than one wrapper used (e.g. miniprofiler), still it's not a big deal
 		// to support multiple wrappers
 		//
-		// Actually it should be fine to remove support for IDbDataParameter wrappers, as it's probably something
+		// Actually it should be fine to remove support for DbParameter wrappers, as it's probably something
 		// nobody will do
-		private readonly IDictionary<Type, Func<IDbDataParameter, IDbDataParameter>?> _parameterConverters   = new ConcurrentDictionary<Type, Func<IDbDataParameter, IDbDataParameter>?>();
-		private readonly IDictionary<Type, Func<DbCommand       , DbCommand       >?> _commandConverters     = new ConcurrentDictionary<Type, Func<DbCommand       , DbCommand       >?>();
-		private readonly IDictionary<Type, Func<IDbConnection   , IDbConnection   >?> _connectionConverters  = new ConcurrentDictionary<Type, Func<IDbConnection   , IDbConnection   >?>();
-		private readonly IDictionary<Type, Func<IDbTransaction  , IDbTransaction  >?> _transactionConverters = new ConcurrentDictionary<Type, Func<IDbTransaction  , IDbTransaction  >?>();
+		private readonly IDictionary<Type, Func<DbParameter   , DbParameter   >?> _parameterConverters   = new ConcurrentDictionary<Type, Func<DbParameter   , DbParameter   >?>();
+		private readonly IDictionary<Type, Func<DbCommand     , DbCommand     >?> _commandConverters     = new ConcurrentDictionary<Type, Func<DbCommand     , DbCommand     >?>();
+		private readonly IDictionary<Type, Func<IDbConnection , IDbConnection >?> _connectionConverters  = new ConcurrentDictionary<Type, Func<IDbConnection , IDbConnection >?>();
+		private readonly IDictionary<Type, Func<IDbTransaction, IDbTransaction>?> _transactionConverters = new ConcurrentDictionary<Type, Func<IDbTransaction, IDbTransaction>?>();
 
-		public virtual IDbDataParameter? TryGetProviderParameter(IDbDataParameter parameter, MappingSchema ms)
+		public virtual DbParameter? TryGetProviderParameter(DbParameter parameter, MappingSchema ms)
 		{
 			return TryConvertProviderType(_parameterConverters, Adapter.ParameterType, parameter, ms);
 		}

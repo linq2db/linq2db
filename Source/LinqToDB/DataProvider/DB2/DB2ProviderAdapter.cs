@@ -3,6 +3,7 @@ using System.Data;
 
 namespace LinqToDB.DataProvider.DB2
 {
+	using System.Data.Common;
 	using System.Linq.Expressions;
 	using LinqToDB.Common;
 	using LinqToDB.Expressions;
@@ -56,8 +57,8 @@ namespace LinqToDB.DataProvider.DB2
 
 			MappingSchema mappingSchema,
 
-			Action<IDbDataParameter, DB2Type> dbTypeSetter,
-			Func  <IDbDataParameter, DB2Type> dbTypeGetter,
+			Action<DbParameter, DB2Type> dbTypeSetter,
+			Func  <DbParameter, DB2Type> dbTypeGetter,
 
 			Func<string, DB2Connection> connectionCreator,
 			Func<object, bool>          isDB2BinaryNull,
@@ -152,8 +153,8 @@ namespace LinqToDB.DataProvider.DB2
 
 		public string ProviderTypesNamespace => TypesNamespace;
 
-		public Action<IDbDataParameter, DB2Type> SetDbType { get; }
-		public Func  <IDbDataParameter, DB2Type> GetDbType { get; }
+		public Action<DbParameter, DB2Type> SetDbType { get; }
+		public Func  <DbParameter, DB2Type> GetDbType { get; }
 
 		public Func<string, DB2Connection> CreateConnection { get; }
 
@@ -246,8 +247,8 @@ namespace LinqToDB.DataProvider.DB2
 						var isDB2BinaryNull  = db2BinaryBuilder.BuildGetter<object>();
 
 						var dbTypeBuilder = typeMapper.Type<DB2Parameter>().Member(p => p.DB2Type);
-						var typeSetter    = dbTypeBuilder.BuildSetter<IDbDataParameter>();
-						var typeGetter    = dbTypeBuilder.BuildGetter<IDbDataParameter>();
+						var typeSetter    = dbTypeBuilder.BuildSetter<DbParameter>();
+						var typeGetter    = dbTypeBuilder.BuildGetter<DbParameter>();
 
 
 						var bulkCopy = new BulkCopyAdapter(

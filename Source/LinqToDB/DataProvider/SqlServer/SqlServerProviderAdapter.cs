@@ -40,12 +40,12 @@ namespace LinqToDB.DataProvider.SqlServer
 			Type sqlDataRecordType,
 			Type sqlExceptionType,
 
-			Action<IDbDataParameter, SqlDbType> dbTypeSetter,
-			Func  <IDbDataParameter, SqlDbType> dbTypeGetter,
-			Action<IDbDataParameter, string> udtTypeNameSetter,
-			Func  <IDbDataParameter, string> udtTypeNameGetter,
-			Action<IDbDataParameter, string> typeNameSetter,
-			Func  <IDbDataParameter, string> typeNameGetter,
+			Action<DbParameter, SqlDbType> dbTypeSetter,
+			Func  <DbParameter, SqlDbType> dbTypeGetter,
+			Action<DbParameter, string> udtTypeNameSetter,
+			Func  <DbParameter, string> udtTypeNameGetter,
+			Action<DbParameter, string> typeNameSetter,
+			Func  <DbParameter, string> typeNameGetter,
 
 			Func<string, SqlConnectionStringBuilder> createConnectionStringBuilder,
 			Func<string, SqlConnection>              createConnection,
@@ -100,14 +100,14 @@ namespace LinqToDB.DataProvider.SqlServer
 		public SqlBulkCopyColumnMapping CreateBulkCopyColumnMapping(int source, string destination)
 			=> _createBulkCopyColumnMapping(source, destination);
 
-		public Action<IDbDataParameter, SqlDbType> SetDbType { get; }
-		public Func  <IDbDataParameter, SqlDbType> GetDbType { get; }
+		public Action<DbParameter, SqlDbType> SetDbType { get; }
+		public Func  <DbParameter, SqlDbType> GetDbType { get; }
 
-		public Action<IDbDataParameter, string> SetUdtTypeName { get; }
-		public Func  <IDbDataParameter, string> GetUdtTypeName { get; }
+		public Action<DbParameter, string> SetUdtTypeName { get; }
+		public Func  <DbParameter, string> GetUdtTypeName { get; }
 
-		public Action<IDbDataParameter, string> SetTypeName { get; }
-		public Func  <IDbDataParameter, string> GetTypeName { get; }
+		public Action<DbParameter, string> SetTypeName { get; }
+		public Func  <DbParameter, string> GetTypeName { get; }
 
 		private readonly Func<string, SqlConnection> _createConnection;
 		public SqlConnection CreateConnection(string connectionString) => _createConnection(connectionString);
@@ -212,12 +212,12 @@ namespace LinqToDB.DataProvider.SqlServer
 				sqlDataRecordType,
 				sqlExceptionType,
 
-				dbTypeBuilder.BuildSetter<IDbDataParameter>(),
-				dbTypeBuilder.BuildGetter<IDbDataParameter>(),
-				udtTypeNameBuilder.BuildSetter<IDbDataParameter>(),
-				udtTypeNameBuilder.BuildGetter<IDbDataParameter>(),
-				typeNameBuilder.BuildSetter<IDbDataParameter>(),
-				typeNameBuilder.BuildGetter<IDbDataParameter>(),
+				dbTypeBuilder.BuildSetter<DbParameter>(),
+				dbTypeBuilder.BuildGetter<DbParameter>(),
+				udtTypeNameBuilder.BuildSetter<DbParameter>(),
+				udtTypeNameBuilder.BuildGetter<DbParameter>(),
+				typeNameBuilder.BuildSetter<DbParameter>(),
+				typeNameBuilder.BuildGetter<DbParameter>(),
 
 				typeMapper.BuildWrappedFactory((string connectionString) => new SqlConnectionStringBuilder(connectionString)),
 				typeMapper.BuildWrappedFactory((string connectionString) => new SqlConnection(connectionString)),

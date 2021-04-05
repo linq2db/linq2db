@@ -122,7 +122,7 @@ namespace Tests.Linq
 					if (result.Item4 != null)
 					{
 						var sb = new StringBuilder();
-						dc.DataProvider.CreateSqlBuilder(dc.MappingSchema).PrintParameters(sb, result.Item4.OfType<IDbDataParameter>());
+						dc.DataProvider.CreateSqlBuilder(dc.MappingSchema).PrintParameters(sb, result.Item4.OfType<DbParameter>());
 						TestContext.WriteLine(sb);
 					}
 					TestContext.WriteLine();

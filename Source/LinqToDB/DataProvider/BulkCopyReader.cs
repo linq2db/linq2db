@@ -11,6 +11,7 @@ using System.Threading;
 
 namespace LinqToDB.DataProvider
 {
+	using System.Diagnostics.CodeAnalysis;
 	using System.Threading.Tasks;
 	using Common;
 	using LinqToDB.Async;
@@ -126,21 +127,24 @@ namespace LinqToDB.DataProvider
 			_ordinals       = _columns.Select((c, i) => new { c, i }).ToDictionary(_ => _.c.ColumnName, _ => _.i);
 		}
 
-		public class Parameter : IDbDataParameter
+		public class Parameter : DbParameter
 		{
-			public DbType             DbType        { get; set; }
-			public ParameterDirection Direction     { get; set; }
-			public bool               IsNullable    { get { return Value == null || Value is DBNull; } }
-			public string?            ParameterName { get; set; }
-			public string?            SourceColumn  { get; set; }
-			public DataRowVersion     SourceVersion { get; set; }
-			public object?            Value         { get; set; }
-			public byte               Precision     { get; set; }
-			public byte               Scale         { get; set; }
-			public int                Size          { get; set; }
+			public override DbType             DbType                  { get; set; }
+			public override ParameterDirection Direction               { get; set; }
+			public override bool               IsNullable              { get => Value == null || Value is DBNull; set { } }
+			[AllowNull]
+			public override string             ParameterName           { get; set; }
+			public override int                Size                    { get; set; }
+			[AllowNull]
+			public override string             SourceColumn            { get; set; }
+			public override DataRowVersion     SourceVersion           { get; set; }
+			public override bool               SourceColumnNullMapping { get; set; }
+			public override object?            Value                   { get; set; }
+
+			public override void ResetDbType() { }
 		}
 
-#region Implementation of IDataRecord
+		#region Implementation of IDataRecord
 
 		public override string GetName(int ordinal)
 		{

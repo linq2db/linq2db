@@ -62,8 +62,8 @@ namespace LinqToDB.DataProvider.Oracle
 
 			string typesNamespace,
 
-			Action<IDbDataParameter, OracleDbType> dbTypeSetter,
-			Func  <IDbDataParameter, OracleDbType> dbTypeGetter,
+			Action<DbParameter, OracleDbType> dbTypeSetter,
+			Func  <DbParameter, OracleDbType> dbTypeGetter,
 
 			Func<IDbConnection, string> hostNameGetter,
 			Func<IDbConnection, string> databaseNameGetter,
@@ -176,8 +176,8 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public string ProviderTypesNamespace { get; }
 
-		public Action<IDbDataParameter, OracleDbType> SetDbType { get; }
-		public Func  <IDbDataParameter, OracleDbType> GetDbType { get; }
+		public Action<DbParameter, OracleDbType> SetDbType { get; }
+		public Func  <DbParameter, OracleDbType> GetDbType { get; }
 
 		public Func<IDbConnection, string> GetHostName     { get; }
 		public Func<IDbConnection, string> GetDatabaseName { get; }
@@ -410,8 +410,8 @@ namespace LinqToDB.DataProvider.Oracle
 
 				typesNamespace,
 
-				dbTypeBuilder.BuildSetter<IDbDataParameter>(),
-				dbTypeBuilder.BuildGetter<IDbDataParameter>(),
+				dbTypeBuilder.BuildSetter<DbParameter>(),
+				dbTypeBuilder.BuildGetter<DbParameter>(),
 
 				connectionMapper.Member(c => c.HostName).BuildGetter<IDbConnection>(),
 				connectionMapper.Member(c => c.DatabaseName).BuildGetter<IDbConnection>(),

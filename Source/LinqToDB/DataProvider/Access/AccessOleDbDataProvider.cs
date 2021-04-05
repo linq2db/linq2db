@@ -64,7 +64,7 @@ namespace LinqToDB.DataProvider.Access
 			return new AccessOleDbSchemaProvider(this);
 		}
 
-		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
 		{
 			OleDbType? type = null;
 			switch (dataType.DataType)

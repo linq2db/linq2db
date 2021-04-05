@@ -4,6 +4,7 @@ using System.Data;
 namespace LinqToDB.DataProvider.MySql
 {
 	using System.Collections.Generic;
+	using System.Data.Common;
 	using System.Linq.Expressions;
 	using System.Threading;
 	using System.Threading.Tasks;
@@ -51,7 +52,7 @@ namespace LinqToDB.DataProvider.MySql
 
 			Func<object, decimal>? mySqlDecimalGetter,
 
-			Func<IDbDataParameter, object> dbTypeGetter,
+			Func<DbParameter, object> dbTypeGetter,
 
 			string? getMySqlDecimalMethodName,
 			string? getDateTimeOffsetMethodName,
@@ -125,7 +126,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Returns object, because both providers use different enums and we anyway don't need typed value.
 		/// </summary>
-		public Func<IDbDataParameter, object> GetDbType { get; }
+		public Func<DbParameter, object> GetDbType { get; }
 
 		internal BulkCopyAdapter? BulkCopy { get; }
 
@@ -189,7 +190,7 @@ namespace LinqToDB.DataProvider.MySql
 				typeMapper.RegisterTypeWrapper<MySqlDateTime>(mySqlDateTimeType);
 				typeMapper.RegisterTypeWrapper<MySqlDecimal>(mySqlDecimalType);
 
-				var dbTypeGetter      = typeMapper.Type<MySqlParameter>().Member(p => p.MySqlDbType).BuildGetter<IDbDataParameter>();
+				var dbTypeGetter      = typeMapper.Type<MySqlParameter>().Member(p => p.MySqlDbType).BuildGetter<DbParameter>();
 				var decimalGetter     = typeMapper.Type<MySqlDecimal>().Member(p => p.Value).BuildGetter<object>();
 				var dateTimeConverter = typeMapper.MapLambda((MySqlDateTime dt) => dt.GetDateTime());
 
@@ -337,7 +338,7 @@ namespace LinqToDB.DataProvider.MySql
 				else
 					typeMapper.FinalizeMappings();
 
-				var typeGetter        = typeMapper.Type<MySqlParameter>().Member(p => p.MySqlDbType).BuildGetter<IDbDataParameter>();
+				var typeGetter        = typeMapper.Type<MySqlParameter>().Member(p => p.MySqlDbType).BuildGetter<DbParameter>();
 				var dateTimeConverter = typeMapper.MapLambda((MySqlDateTime dt) => dt.GetDateTime());
 
 				var mappingSchema = new MappingSchema();

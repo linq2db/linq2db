@@ -7,6 +7,7 @@ namespace LinqToDB.DataProvider.SqlCe
 	using SqlQuery;
 	using SqlProvider;
 	using Mapping;
+	using System.Data.Common;
 
 	class SqlCeSqlBuilder : BasicSqlBuilder
 	{
@@ -150,7 +151,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			return sb.Append(table);
 		}
 
-		protected override string? GetProviderTypeName(IDbDataParameter parameter)
+		protected override string? GetProviderTypeName(DbParameter parameter)
 		{
 			if (_provider != null)
 			{

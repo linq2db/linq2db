@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Data.Common;
 using LinqToDB.Expressions;
 
 namespace LinqToDB.DataProvider
@@ -18,8 +19,8 @@ namespace LinqToDB.DataProvider
 			Type parameterType,
 			Type commandType,
 			Type transactionType,
-			Action<IDbDataParameter, OleDbType> dbTypeSetter,
-			Func  <IDbDataParameter, OleDbType> dbTypeGetter,
+			Action<DbParameter, OleDbType> dbTypeSetter,
+			Func  <DbParameter, OleDbType> dbTypeGetter,
 			Func  <IDbConnection, Guid, object[]?, DataTable> schemaTableGetter)
 		{
 			ConnectionType  = connectionType;
@@ -40,8 +41,8 @@ namespace LinqToDB.DataProvider
 		public Type CommandType     { get; }
 		public Type TransactionType { get; }
 
-		public Action<IDbDataParameter, OleDbType> SetDbType { get; }
-		public Func  <IDbDataParameter, OleDbType> GetDbType { get; }
+		public Action<DbParameter, OleDbType> SetDbType { get; }
+		public Func  <DbParameter, OleDbType> GetDbType { get; }
 
 		public Func<IDbConnection, Guid, object[]?, DataTable> GetOleDbSchemaTable { get; }
 
@@ -73,8 +74,8 @@ namespace LinqToDB.DataProvider
 						typeMapper.FinalizeMappings();
 
 						var dbTypeBuilder = typeMapper.Type<OleDbParameter>().Member(p => p.OleDbType);
-						var typeSetter    = dbTypeBuilder.BuildSetter<IDbDataParameter>();
-						var typeGetter    = dbTypeBuilder.BuildGetter<IDbDataParameter>();
+						var typeSetter    = dbTypeBuilder.BuildSetter<DbParameter>();
+						var typeGetter    = dbTypeBuilder.BuildGetter<DbParameter>();
 
 						var oleDbSchemaTableGetter = typeMapper.BuildFunc<IDbConnection, Guid, object[]?, DataTable>(typeMapper.MapLambda((OleDbConnection conn, Guid schema, object[]? restrictions) => conn.GetOleDbSchemaTable(schema, restrictions)));
 

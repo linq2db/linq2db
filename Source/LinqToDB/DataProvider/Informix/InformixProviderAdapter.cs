@@ -3,6 +3,7 @@ using System.Data;
 
 namespace LinqToDB.DataProvider.Informix
 {
+	using System.Data.Common;
 	using System.Linq.Expressions;
 	using LinqToDB.Common;
 	using LinqToDB.DataProvider.DB2;
@@ -43,8 +44,8 @@ namespace LinqToDB.DataProvider.Informix
 			Type  ifxDateTimeType,
 			Type? ifxTimeSpanType,
 
-			Action<IDbDataParameter, IfxType> ifxTypeSetter,
-			Func  <IDbDataParameter, IfxType> ifxTypeGetter,
+			Action<DbParameter, IfxType> ifxTypeSetter,
+			Func  <DbParameter, IfxType> ifxTypeGetter,
 
 			Func<TimeSpan, object>? timeSpanFactory,
 			BulkCopyAdapter? bulkCopy)
@@ -123,11 +124,11 @@ namespace LinqToDB.DataProvider.Informix
 		/// </summary>
 		public bool IsIDSProvider { get; }
 
-		public Action<IDbDataParameter, IfxType>? SetIfxType { get; }
-		public Func  <IDbDataParameter, IfxType>? GetIfxType { get; }
+		public Action<DbParameter, IfxType>? SetIfxType { get; }
+		public Func  <DbParameter, IfxType>? GetIfxType { get; }
 
-		public Action<IDbDataParameter, DB2ProviderAdapter.DB2Type>? SetDB2Type { get; }
-		public Func  <IDbDataParameter, DB2ProviderAdapter.DB2Type>? GetDB2Type { get; }
+		public Action<DbParameter, DB2ProviderAdapter.DB2Type>? SetDB2Type { get; }
+		public Func  <DbParameter, DB2ProviderAdapter.DB2Type>? GetDB2Type { get; }
 
 		public Type  BlobType     { get; }
 		public Type  ClobType     { get; }
@@ -259,8 +260,8 @@ namespace LinqToDB.DataProvider.Informix
 				decimalType,
 				dateTimeType,
 				timeSpanType,
-				dbTypeBuilder.BuildSetter<IDbDataParameter>(),
-				dbTypeBuilder.BuildGetter<IDbDataParameter>(),
+				dbTypeBuilder.BuildSetter<DbParameter>(),
+				dbTypeBuilder.BuildGetter<DbParameter>(),
 				timespanFactory,
 				bulkCopy);
 

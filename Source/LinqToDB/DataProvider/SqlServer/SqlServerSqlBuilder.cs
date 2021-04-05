@@ -9,6 +9,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	using SqlQuery;
 	using SqlProvider;
 	using Mapping;
+	using System.Data.Common;
 
 	abstract class SqlServerSqlBuilder : BasicSqlBuilder
 	{
@@ -419,7 +420,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			base.BuildDataTypeFromDataType(type, forCreateTable);
 		}
 
-		protected override string? GetTypeName(IDbDataParameter parameter)
+		protected override string? GetTypeName(DbParameter parameter)
 		{
 			if (Provider != null)
 			{
@@ -431,7 +432,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return base.GetTypeName(parameter);
 		}
 
-		protected override string? GetUdtTypeName(IDbDataParameter parameter)
+		protected override string? GetUdtTypeName(DbParameter parameter)
 		{
 			if (Provider != null)
 			{
@@ -443,7 +444,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return base.GetUdtTypeName(parameter);
 		}
 
-		protected override string? GetProviderTypeName(IDbDataParameter parameter)
+		protected override string? GetProviderTypeName(DbParameter parameter)
 		{
 			if (Provider != null)
 			{

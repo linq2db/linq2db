@@ -3,6 +3,7 @@ using System.Data;
 
 namespace LinqToDB.DataProvider.Firebird
 {
+	using System.Data.Common;
 	using LinqToDB.Expressions;
 
 	public class FirebirdProviderAdapter : IDynamicProviderAdapter
@@ -19,7 +20,7 @@ namespace LinqToDB.DataProvider.Firebird
 			Type parameterType,
 			Type commandType,
 			Type transactionType,
-			Func<IDbDataParameter, FbDbType> dbTypeGetter,
+			Func<DbParameter, FbDbType> dbTypeGetter,
 			Action clearAllPulls)
 		{
 			ConnectionType  = connectionType;
@@ -38,7 +39,7 @@ namespace LinqToDB.DataProvider.Firebird
 		public Type CommandType     { get; }
 		public Type TransactionType { get; }
 
-		public Func<IDbDataParameter, FbDbType> GetDbType { get; }
+		public Func<DbParameter, FbDbType> GetDbType { get; }
 		public Action ClearAllPools { get; }
 
 		public static FirebirdProviderAdapter GetInstance()
@@ -66,7 +67,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 						typeMapper.FinalizeMappings();
 
-						var typeGetter    = typeMapper.Type<FbParameter>().Member(p => p.FbDbType).BuildGetter<IDbDataParameter>();
+						var typeGetter    = typeMapper.Type<FbParameter>().Member(p => p.FbDbType).BuildGetter<DbParameter>();
 						var clearAllPools = typeMapper.BuildAction(typeMapper.MapActionLambda(() => FbConnection.ClearAllPools()));
 
 						_instance = new FirebirdProviderAdapter(
