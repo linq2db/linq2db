@@ -106,13 +106,13 @@ namespace LinqToDB.DataProvider
 			return command;
 		}
 
-		public virtual void ClearCommandParameters(IDbCommand command)
+		public virtual void ClearCommandParameters(DbCommand command)
 		{
 			if (command.Parameters.Count != 0)
 				command.Parameters.Clear();
 		}
 
-		public virtual void DisposeCommand(IDbCommand command)
+		public virtual void DisposeCommand(DbCommand command)
 		{
 			ClearCommandParameters(command);
 			command.Dispose();

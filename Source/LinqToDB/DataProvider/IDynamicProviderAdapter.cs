@@ -26,7 +26,7 @@ namespace LinqToDB.DataProvider
 		Type ParameterType { get; }
 
 		/// <summary>
-		/// Gets type, that implements <see cref="IDbCommand"/> for current ADO.NET provider.
+		/// Gets type, that implements <see cref="DbCommand"/> for current ADO.NET provider.
 		/// </summary>
 		Type CommandType { get; }
 

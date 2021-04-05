@@ -1247,7 +1247,7 @@ namespace LinqToDB.Data
 
 		#region ExecuteNonQuery
 
-		protected virtual int ExecuteNonQuery(IDbCommand command)
+		protected virtual int ExecuteNonQuery(DbCommand command)
 		{
 			return command.ExecuteNonQueryExt();
 		}
@@ -1313,7 +1313,7 @@ namespace LinqToDB.Data
 
 		#region ExecuteScalar
 
-		protected virtual object? ExecuteScalar(IDbCommand command)
+		protected virtual object? ExecuteScalar(DbCommand command)
 		{
 			return CurrentCommand!.ExecuteScalarExt();
 		}

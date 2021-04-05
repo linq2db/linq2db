@@ -36,7 +36,7 @@ namespace LinqToDB.DataProvider
 		/// <param name="withParameters">Flag to indicate that command has parameters. Used to configure parameters support when method called without parameters and parameters added later to command.</param>
 		/// <returns>Initialized command instance.</returns>
 		DbCommand          InitCommand           (DataConnection dataConnection, DbCommand command, CommandType commandType, string commandText, DataParameter[]? parameters, bool withParameters);
-		void               DisposeCommand        (IDbCommand command);
+		void               DisposeCommand        (DbCommand command);
 		object?            GetConnectionInfo     (DataConnection dataConnection, string parameterName);
 		Expression         GetReaderExpression   (DbDataReader reader, int idx, Expression readerExpression, Type toType);
 		bool?              IsDBNullAllowed       (DbDataReader reader, int idx);

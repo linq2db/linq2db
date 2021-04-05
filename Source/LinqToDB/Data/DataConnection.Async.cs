@@ -234,9 +234,9 @@ namespace LinqToDB.Data
 
 		#region ExecuteNonQueryAsync
 
-		protected virtual Task<int> ExecuteNonQueryAsync(IDbCommand command, CancellationToken cancellationToken)
+		protected virtual Task<int> ExecuteNonQueryAsync(DbCommand command, CancellationToken cancellationToken)
 		{
-			return ((DbCommand)CurrentCommand!).ExecuteNonQueryExtAsync(cancellationToken);
+			return CurrentCommand!.ExecuteNonQueryExtAsync(cancellationToken);
 		}
 
 		internal async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
@@ -300,9 +300,9 @@ namespace LinqToDB.Data
 
 		#region ExecuteScalarAsync
 
-		protected virtual Task<object?> ExecuteScalarAsync(IDbCommand command, CancellationToken cancellationToken)
+		protected virtual Task<object?> ExecuteScalarAsync(DbCommand command, CancellationToken cancellationToken)
 		{
-			return ((DbCommand)CurrentCommand!).ExecuteScalarExtAsync(cancellationToken);
+			return CurrentCommand!.ExecuteScalarExtAsync(cancellationToken);
 		}
 
 		internal async Task<object?> ExecuteScalarAsync(CancellationToken cancellationToken)
@@ -366,12 +366,12 @@ namespace LinqToDB.Data
 		#region ExecuteReaderAsync
 
 		protected virtual async Task<DataReaderWrapper> ExecuteReaderAsync(
-			IDbCommand        command,
+			DbCommand         command,
 			CommandBehavior   commandBehavior,
 			CancellationToken cancellationToken)
 		{
-			var dr      = await ((DbCommand)CurrentCommand!).ExecuteReaderExtAsync(commandBehavior, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-			var wrapper = new DataReaderWrapper(this, dr, (DbCommand?)CurrentCommand!);
+			var dr      = await CurrentCommand!.ExecuteReaderExtAsync(commandBehavior, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			var wrapper = new DataReaderWrapper(this, dr, CurrentCommand);
 			_command    = null;
 
 			return wrapper;

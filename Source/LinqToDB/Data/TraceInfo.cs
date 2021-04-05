@@ -7,6 +7,7 @@ using System.Text;
 namespace LinqToDB.Data
 {
 	using System.Data;
+	using System.Data.Common;
 
 	/// <summary>
 	/// Tracing information for the <see cref="DataConnection"/> events.
@@ -49,9 +50,9 @@ namespace LinqToDB.Data
 		public DataConnection DataConnection { get; }
 
 		/// <summary>
-		/// Gets or sets the <see cref="IDbCommand"/> associated with the tracing event.
+		/// Gets or sets the <see cref="DbCommand"/> associated with the tracing event.
 		/// </summary>
-		public IDbCommand? Command { get; set; }
+		public DbCommand? Command { get; set; }
 
 		/// <summary>
 		/// Gets or sets the starting <see cref="DateTime"/> of the operation (UTC).

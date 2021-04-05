@@ -582,7 +582,7 @@ public class DbDataContext : DataConnection
     MappingSchema.SetConvertExpression<ProfiledDbConnection,  IDbConnection> (db => db.WrappedConnection);
     MappingSchema.SetConvertExpression<ProfiledDbDataReader,  DbDataReader>  (db => db.WrappedReader);
     MappingSchema.SetConvertExpression<ProfiledDbTransaction, IDbTransaction>(db => db.WrappedTransaction);
-    MappingSchema.SetConvertExpression<ProfiledDbCommand,     IDbCommand>    (db => db.InternalCommand);
+    MappingSchema.SetConvertExpression<ProfiledDbCommand,     DbCommand>     (db => db.InternalCommand);
   }
 #else
   public DbDataContext() : base(GetDataProvider(), GetConnection()) { }

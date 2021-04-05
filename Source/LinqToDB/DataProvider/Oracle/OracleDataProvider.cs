@@ -149,7 +149,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return command;
 		}
 
-		public override void ClearCommandParameters(IDbCommand command)
+		public override void ClearCommandParameters(DbCommand command)
 		{
 			// both native and managed providers implement IDisposable for parameters
 			if (command.Parameters.Count > 0)

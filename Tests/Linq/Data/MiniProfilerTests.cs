@@ -1576,7 +1576,7 @@ namespace Tests.Data
 					ms.SetConvertExpression<ProfiledDbConnection,  IDbConnection> (db => db.WrappedConnection);
 					ms.SetConvertExpression<ProfiledDbDataReader,  DbDataReader>  (db => db.WrappedReader);
 					ms.SetConvertExpression<ProfiledDbTransaction, IDbTransaction>(db => db.WrappedTransaction);
-					ms.SetConvertExpression<ProfiledDbCommand,     IDbCommand>    (db => db.InternalCommand);
+					ms.SetConvertExpression<ProfiledDbCommand,     DbCommand>     (db => db.InternalCommand);
 					break;
 			}
 

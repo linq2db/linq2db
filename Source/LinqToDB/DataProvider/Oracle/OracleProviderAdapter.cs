@@ -68,9 +68,9 @@ namespace LinqToDB.DataProvider.Oracle
 			Func<IDbConnection, string> hostNameGetter,
 			Func<IDbConnection, string> databaseNameGetter,
 
-			Action<IDbCommand, bool> bindByNameSetter,
-			Action<IDbCommand, int> arrayBindCountSetter,
-			Action<IDbCommand, int> initialLONGFetchSizeSetter,
+			Action<DbCommand, bool> bindByNameSetter,
+			Action<DbCommand, int>  arrayBindCountSetter,
+			Action<DbCommand, int>  initialLONGFetchSizeSetter,
 
 			Func<DateTimeOffset, string, object> createOracleTimeStampTZ,
 
@@ -182,9 +182,9 @@ namespace LinqToDB.DataProvider.Oracle
 		public Func<IDbConnection, string> GetHostName     { get; }
 		public Func<IDbConnection, string> GetDatabaseName { get; }
 
-		public Action<IDbCommand, bool> SetBindByName           { get; }
-		public Action<IDbCommand, int>  SetArrayBindCount       { get; }
-		public Action<IDbCommand, int>  SetInitialLONGFetchSize { get; }
+		public Action<DbCommand, bool> SetBindByName           { get; }
+		public Action<DbCommand, int>  SetArrayBindCount       { get; }
+		public Action<DbCommand, int>  SetInitialLONGFetchSize { get; }
 
 		public Expression<Func<DbDataReader, int, DateTimeOffset>> ReadDateTimeOffsetFromOracleTimeStampTZ  { get; }
 		public Expression<Func<DbDataReader, int, DateTimeOffset>> ReadDateTimeOffsetFromOracleTimeStampLTZ { get; }
@@ -417,9 +417,9 @@ namespace LinqToDB.DataProvider.Oracle
 				connectionMapper.Member(c => c.DatabaseName).BuildGetter<IDbConnection>(),
 
 
-				commandMapper.Member(p => p.BindByName).BuildSetter<IDbCommand>(),
-				commandMapper.Member(p => p.ArrayBindCount).BuildSetter<IDbCommand>(),
-				commandMapper.Member(p => p.InitialLONGFetchSize).BuildSetter<IDbCommand>(),
+				commandMapper.Member(p => p.BindByName).BuildSetter<DbCommand>(),
+				commandMapper.Member(p => p.ArrayBindCount).BuildSetter<DbCommand>(),
+				commandMapper.Member(p => p.InitialLONGFetchSize).BuildSetter<DbCommand>(),
 
 				typeMapper.BuildFactory((DateTimeOffset dto, string offset) => new OracleTimeStampTZ(dto.Year, dto.Month, dto.Day, dto.Hour, dto.Minute, dto.Second, GetDateTimeOffsetNanoseconds(dto), offset)),
 
@@ -564,11 +564,11 @@ namespace LinqToDB.DataProvider.Oracle
 				= new LambdaExpression[]
 			{
 				// [0]: Open
-				(Expression<Action<OracleConnection>>          )((OracleConnection this_) => this_.Open()),
+				(Expression<Action<OracleConnection>>         )((OracleConnection this_) => this_.Open()),
 				// [1]: CreateCommand
-				(Expression<Func<OracleConnection, IDbCommand>>)((OracleConnection this_) => this_.CreateCommand()),
+				(Expression<Func<OracleConnection, DbCommand>>)((OracleConnection this_) => this_.CreateCommand()),
 				// [2]: Dispose
-				(Expression<Action<OracleConnection>>          )((OracleConnection this_) => this_.Dispose()),
+				(Expression<Action<OracleConnection>>         )((OracleConnection this_) => this_.Dispose()),
 			};
 
 			public OracleConnection(object instance, Delegate[] wrappers) : base(instance, wrappers)
@@ -581,9 +581,9 @@ namespace LinqToDB.DataProvider.Oracle
 			public string HostName     => throw new NotImplementedException();
 			public string DatabaseName => throw new NotImplementedException();
 
-			public void       Open         () => ((Action<OracleConnection>          )CompiledWrappers[0])(this);
-			public IDbCommand CreateCommand() => ((Func<OracleConnection, IDbCommand>)CompiledWrappers[1])(this);
-			public void       Dispose      () => ((Action<OracleConnection>          )CompiledWrappers[2])(this);
+			public void      Open         () => ((Action<OracleConnection>         )CompiledWrappers[0])(this);
+			public DbCommand CreateCommand() => ((Func<OracleConnection, DbCommand>)CompiledWrappers[1])(this);
+			public void      Dispose      () => ((Action<OracleConnection>         )CompiledWrappers[2])(this);
 		}
 
 		[Wrapper]

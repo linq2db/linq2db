@@ -7,6 +7,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider
 {
+	using System.Data.Common;
 	using Expressions;
 	using Extensions;
 	using LinqToDB.Common;
@@ -159,7 +160,7 @@ namespace LinqToDB.DataProvider
 		// Actually it should be fine to remove support for IDbDataParameter wrappers, as it's probably something
 		// nobody will do
 		private readonly IDictionary<Type, Func<IDbDataParameter, IDbDataParameter>?> _parameterConverters   = new ConcurrentDictionary<Type, Func<IDbDataParameter, IDbDataParameter>?>();
-		private readonly IDictionary<Type, Func<IDbCommand      , IDbCommand      >?> _commandConverters     = new ConcurrentDictionary<Type, Func<IDbCommand      , IDbCommand      >?>();
+		private readonly IDictionary<Type, Func<DbCommand       , DbCommand       >?> _commandConverters     = new ConcurrentDictionary<Type, Func<DbCommand       , DbCommand       >?>();
 		private readonly IDictionary<Type, Func<IDbConnection   , IDbConnection   >?> _connectionConverters  = new ConcurrentDictionary<Type, Func<IDbConnection   , IDbConnection   >?>();
 		private readonly IDictionary<Type, Func<IDbTransaction  , IDbTransaction  >?> _transactionConverters = new ConcurrentDictionary<Type, Func<IDbTransaction  , IDbTransaction  >?>();
 
@@ -168,7 +169,7 @@ namespace LinqToDB.DataProvider
 			return TryConvertProviderType(_parameterConverters, Adapter.ParameterType, parameter, ms);
 		}
 
-		public virtual IDbCommand? TryGetProviderCommand(IDbCommand command, MappingSchema ms)
+		public virtual DbCommand? TryGetProviderCommand(DbCommand command, MappingSchema ms)
 		{
 			// remove retry policy wrapper
 			if (command is RetryingDbCommand rcmd)

@@ -22,24 +22,24 @@ namespace LinqToDB.Data.DbCommandProcessor
 		public static IDbCommandProcessor? Instance { get; set; }
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static object? ExecuteScalarExt(this IDbCommand cmd) =>
-			Instance == null ? cmd.ExecuteScalar() : Instance.ExecuteScalar((DbCommand)cmd);
+		public static object? ExecuteScalarExt(this DbCommand cmd) =>
+			Instance == null ? cmd.ExecuteScalar() : Instance.ExecuteScalar(cmd);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Task<object?> ExecuteScalarExtAsync(this DbCommand cmd, CancellationToken token) =>
 			Instance == null ? cmd.ExecuteScalarAsync(token) : Instance.ExecuteScalarAsync(cmd, token);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static int ExecuteNonQueryExt(this IDbCommand cmd) =>
-			Instance == null ? cmd.ExecuteNonQuery() : Instance.ExecuteNonQuery((DbCommand)cmd);
+		public static int ExecuteNonQueryExt(this DbCommand cmd) =>
+			Instance == null ? cmd.ExecuteNonQuery() : Instance.ExecuteNonQuery(cmd);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Task<int> ExecuteNonQueryExtAsync(this DbCommand cmd, CancellationToken token) =>
 			Instance == null ? cmd.ExecuteNonQueryAsync(token) : Instance.ExecuteNonQueryAsync(cmd, token);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static DbDataReader ExecuteReaderExt(this IDbCommand cmd, CommandBehavior commandBehavior) =>
-			Instance == null ? ((DbCommand)cmd).ExecuteReader(commandBehavior) : Instance.ExecuteReader((DbCommand)cmd, commandBehavior);
+		public static DbDataReader ExecuteReaderExt(this DbCommand cmd, CommandBehavior commandBehavior) =>
+			Instance == null ? cmd.ExecuteReader(commandBehavior) : Instance.ExecuteReader(cmd, commandBehavior);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Task<DbDataReader> ExecuteReaderExtAsync(this DbCommand cmd, CommandBehavior commandBehavior, CancellationToken token) =>

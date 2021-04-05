@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -337,13 +338,13 @@ namespace LinqToDB.DataProvider.SqlServer
 				= new LambdaExpression[]
 			{
 				// [0]: get ServerVersion
-				(Expression<Func<SqlConnection, string>>    )((SqlConnection this_) => this_.ServerVersion),
+				(Expression<Func<SqlConnection, string>>   )((SqlConnection this_) => this_.ServerVersion),
 				// [1]: CreateCommand
-				(Expression<Func<SqlConnection, IDbCommand>>)((SqlConnection this_) => this_.CreateCommand()),
+				(Expression<Func<SqlConnection, DbCommand>>)((SqlConnection this_) => this_.CreateCommand()),
 				// [2]: Open
-				(Expression<Action<SqlConnection>>          )((SqlConnection this_) => this_.Open()),
+				(Expression<Action<SqlConnection>>         )((SqlConnection this_) => this_.Open()),
 				// [3]: Dispose
-				(Expression<Action<SqlConnection>>          )((SqlConnection this_) => this_.Dispose()),
+				(Expression<Action<SqlConnection>>         )((SqlConnection this_) => this_.Dispose()),
 			};
 
 			public SqlConnection(object instance, Delegate[] wrappers) : base(instance, wrappers)
@@ -352,10 +353,10 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			public SqlConnection(string connectionString) => throw new NotImplementedException();
 
-			public string     ServerVersion   => ((Func<SqlConnection, string>)CompiledWrappers[0])(this);
-			public IDbCommand CreateCommand() => ((Func<SqlConnection, IDbCommand>)CompiledWrappers[1])(this);
-			public void       Open()          => ((Action<SqlConnection>)CompiledWrappers[2])(this);
-			public void       Dispose()       => ((Action<SqlConnection>)CompiledWrappers[3])(this);
+			public string    ServerVersion   => ((Func<SqlConnection, string>)CompiledWrappers[0])(this);
+			public DbCommand CreateCommand() => ((Func<SqlConnection, DbCommand>)CompiledWrappers[1])(this);
+			public void      Open()          => ((Action<SqlConnection>)CompiledWrappers[2])(this);
+			public void      Dispose()       => ((Action<SqlConnection>)CompiledWrappers[3])(this);
 		}
 
 		[Wrapper]
