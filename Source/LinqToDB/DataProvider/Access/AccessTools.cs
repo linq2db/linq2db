@@ -166,25 +166,6 @@ namespace LinqToDB.DataProvider.Access
 		/// Default value: <see cref="BulkCopyType.MultipleRows"/>.
 		/// </summary>
 		public static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
-
-		// If user has DataConnection - he can call BulkCopy directly and Tools methods only provide some
-		// defaults for parameters
-		[Obsolete("Please use the BulkCopy extension methods within DataConnectionExtensions")]
-		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
-			DataConnection              dataConnection,
-			IEnumerable<T>              source,
-			int                         maxBatchSize       = 1000,
-			Action<BulkCopyRowsCopied>? rowsCopiedCallback = null)
-			where T : class
-		{
-			return dataConnection.BulkCopy(
-				new BulkCopyOptions
-				{
-					BulkCopyType       = BulkCopyType.MultipleRows,
-					MaxBatchSize       = maxBatchSize,
-					RowsCopiedCallback = rowsCopiedCallback,
-				}, source);
-		}
 		#endregion
 	}
 }

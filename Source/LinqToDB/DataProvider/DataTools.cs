@@ -193,17 +193,6 @@ namespace LinqToDB.DataProvider
 			}
 		}
 
-		[Obsolete("Use expression-based " + nameof(GetCharExpression) + " for mapping")]
-		public static Func<DbDataReader, int, string> GetChar = (dr, i) =>
-		{
-			var str = dr.GetString(i);
-
-			if (str.Length > 0)
-				return str[0].ToString();
-
-			return string.Empty;
-		};
-
 		public static Expression<Func<DbDataReader, int, string>> GetCharExpression = (dr, i) => GetCharFromString(dr.GetString(i));
 
 		private static string GetCharFromString(string str)
