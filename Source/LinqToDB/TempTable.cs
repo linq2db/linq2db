@@ -626,7 +626,7 @@ namespace LinqToDB
 #else
 		public virtual Task DisposeAsync()
 		{
-			return _table.DropTableAsync(throwExceptionIfNotExists: true);
+			return _table.DropTableAsync();
 		}
 #endif
 	}
