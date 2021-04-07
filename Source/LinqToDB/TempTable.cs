@@ -619,7 +619,7 @@ namespace LinqToDB
 		}
 
 #if NATIVE_ASYNC
-		public ValueTask DisposeAsync()
+		public virtual ValueTask DisposeAsync()
 		{
 			return new ValueTask(_table.DropTableAsync(throwExceptionIfNotExists: false));
 		}
