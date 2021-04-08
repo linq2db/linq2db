@@ -7,14 +7,14 @@ using System.Threading;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlMergeSourceTable : ISqlTableSource
+	public class SqlTableLikeSource : ISqlTableSource
 	{
-		public SqlMergeSourceTable()
+		public SqlTableLikeSource()
 		{
 			SourceID = Interlocked.Increment(ref SelectQuery.SourceIDCounter);
 		}
 
-		internal SqlMergeSourceTable(
+		internal SqlTableLikeSource(
 			int id,
 			SqlValuesTable sourceEnumerable,
 			SelectQuery sourceQuery,

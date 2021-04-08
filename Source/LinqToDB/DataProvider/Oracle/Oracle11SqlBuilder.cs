@@ -235,6 +235,23 @@ namespace LinqToDB.DataProvider.Oracle
 			return sb.Append(value);
 		}
 
+		protected override StringBuilder BuildExpression(
+			ISqlExpression expr,
+			bool buildTableName,
+			bool checkParentheses,
+			string? alias,
+			ref bool addAlias,
+			bool throwExceptionIfTableNotFound = true)
+		{
+			return base.BuildExpression(
+				expr,
+				buildTableName && Statement.QueryType != QueryType.MultiInsert,
+				checkParentheses,
+				alias,
+				ref addAlias,
+				throwExceptionIfTableNotFound);
+		}
+
 		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
 			BuildInsertOrUpdateQueryAsMerge(insertOrUpdate, "FROM SYS.DUAL");
@@ -587,5 +604,52 @@ END;",
 				}
 			}
 		}
+
+		#region Build MultiInsert
+
+		protected override void BuildMultiInsertQuery(SqlMultiInsertStatement statement)
+		{
+			BuildMultiInsertClause(statement);
+			BuildSqlBuilder((SelectQuery)statement.Source.Source, Indent, skipAlias: false);
+		}
+
+		protected void BuildMultiInsertClause(SqlMultiInsertStatement statement)
+		{
+			StringBuilder.AppendLine(statement.InsertType == MultiInsertType.First ? "INSERT FIRST" : "INSERT ALL");
+			
+			Indent++;
+
+			if (statement.InsertType == MultiInsertType.Unconditional)
+			{
+				foreach (var insert in statement.Inserts)
+					BuildInsertClause(statement, insert.Insert, "INTO ", appendTableName: true, addAlias: false);
+			}
+			else
+			{
+				foreach (var insert in statement.Inserts)
+				{
+					if (insert.When != null)
+					{
+						int length = StringBuilder.Append("WHEN ").Length;
+						BuildSearchCondition(insert.When, wrapCondition: true);
+						// If `when` condition is optimized to always `true`, 
+						// then BuildSearchCondition doesn't write anything.
+						if (StringBuilder.Length == length)
+							StringBuilder.Append("1 = 1");
+						StringBuilder.AppendLine(" THEN");
+					}
+					else
+					{
+						StringBuilder.AppendLine("ELSE");
+					}
+		
+					BuildInsertClause(statement, insert.Insert, "INTO ", appendTableName: true, addAlias: false);
+				}
+			}
+
+			Indent--;
+		}
+
+		#endregion 
 	}
 }

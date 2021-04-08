@@ -22,6 +22,7 @@
 		<PackageVersion Include="System.Data.DataSetExtensions" Version="4.5.0" />
 		<PackageVersion Include="Microsoft.CSharp" Version="4.7.0" />
 		<PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="5.0.0" />
+		<PackageVersion Include="FluentAssertions" Version="5.10.3" />
 
 		<!--infrastructure-->
 		<PackageVersion Include="Microsoft.SourceLink.GitHub" Version="1.0.0" />

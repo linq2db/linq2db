@@ -17,11 +17,10 @@ namespace LinqToDB.Linq.Builder
 			{
 				var mergeContext = (MergeContext)builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-				var source = new MergeSourceQueryContext(
-					mergeContext.Merge,
-					// is it ok to reuse context like that?
-					mergeContext.TargetContext);
-				mergeContext.Sequences = new IBuildContext[] { mergeContext.Sequence, source };
+				// is it ok to reuse context like that?
+				var source                = new TableLikeQueryContext(mergeContext.TargetContext);
+				mergeContext.Sequences    = new IBuildContext[] { mergeContext.Sequence, source };
+				mergeContext.Merge.Source = source.Source;
 
 				return mergeContext;
 			}

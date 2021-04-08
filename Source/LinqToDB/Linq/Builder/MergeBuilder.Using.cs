@@ -30,9 +30,10 @@ namespace LinqToDB.Linq.Builder
 
 				if (LinqExtensions.UsingMethodInfo1 == methodCall.Method.GetGenericMethodDefinition())
 				{
-					var sourceContext      = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
-					var source             = new MergeSourceQueryContext(mergeContext.Merge, sourceContext);
-					mergeContext.Sequences = new IBuildContext[] { mergeContext.Sequence, source };
+					var sourceContext         = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
+					var source                = new TableLikeQueryContext(sourceContext);
+					mergeContext.Sequences    = new IBuildContext[] { mergeContext.Sequence, source };
+					mergeContext.Merge.Source = source.Source;
 				}
 				else
 				{
@@ -43,8 +44,9 @@ namespace LinqToDB.Linq.Builder
 						enumerableBuildInfo.SelectQuery, type,
 						builder.ConvertToSql(buildInfo.Parent, enumerableBuildInfo.Expression));
 
-					var source = new MergeSourceQueryContext(mergeContext.Merge, sourceContext);
-					mergeContext.Sequences = new IBuildContext[] { mergeContext.Sequence, source };
+					var source                = new TableLikeQueryContext(sourceContext);
+					mergeContext.Sequences    = new IBuildContext[] { mergeContext.Sequence, source };
+					mergeContext.Merge.Source = source.Source;
 				}
 
 				return mergeContext;

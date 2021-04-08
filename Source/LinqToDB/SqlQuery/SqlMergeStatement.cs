@@ -17,7 +17,7 @@ namespace LinqToDB.SqlQuery
 		internal SqlMergeStatement(
 			string?                              hint,
 			SqlTableSource                       target,
-			SqlMergeSourceTable                  source,
+			SqlTableLikeSource                  source,
 			SqlSearchCondition                   on,
 			IEnumerable<SqlMergeOperationClause> operations)
 		{
@@ -34,7 +34,7 @@ namespace LinqToDB.SqlQuery
 
 		public SqlTableSource                 Target     { get; }
 
-		public SqlMergeSourceTable            Source     { get; internal set; } = null!;
+		public SqlTableLikeSource            Source     { get; internal set; } = null!;
 
 		public SqlSearchCondition             On         { get; }               = new SqlSearchCondition();
 
