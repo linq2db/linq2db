@@ -167,7 +167,7 @@ namespace LinqToDB.SqlProvider
 			StringBuilder.AppendLine(")");
 		}
 
-		protected virtual void BuildMergeSourceQuery(SqlMergeSourceTable mergeSource)
+		protected virtual void BuildMergeSourceQuery(SqlTableLikeSource mergeSource)
 		{
 			mergeSource = ConvertElement(mergeSource);
 			
@@ -176,7 +176,7 @@ namespace LinqToDB.SqlProvider
 			BuildMergeAsSourceClause(mergeSource);
 		}
 
-		private void BuildMergeAsSourceClause(SqlMergeSourceTable mergeSource)
+		private void BuildMergeAsSourceClause(SqlTableLikeSource mergeSource)
 		{
 			mergeSource = ConvertElement(mergeSource);
 			StringBuilder.Append(' ');

@@ -59,12 +59,12 @@ namespace LinqToDB.ServiceModel
 		class SerializerBase
 		{
 			private   readonly MappingSchema _ms;
-			protected readonly StringBuilder             Builder        = new StringBuilder();
-			protected readonly Dictionary<object,int>    ObjectIndices  = new Dictionary<object,int>();
-			protected readonly Dictionary<object,string> DelayedObjects = new Dictionary<object,string>();
+			protected readonly StringBuilder             Builder        = new ();
+			protected readonly Dictionary<object,int>    ObjectIndices  = new ();
+			protected readonly Dictionary<object,string> DelayedObjects = new ();
 			protected int                                Index;
 
-			protected readonly Dictionary<SqlValuesTable, IReadOnlyList<ISqlExpression[]>> EnumerableData = new Dictionary<SqlValuesTable, IReadOnlyList<ISqlExpression[]>>();
+			protected readonly Dictionary<SqlValuesTable, IReadOnlyList<ISqlExpression[]>> EnumerableData = new ();
 
 			protected SerializerBase(MappingSchema serializationMappingSchema)
 			{
@@ -252,8 +252,8 @@ namespace LinqToDB.ServiceModel
 		public class DeserializerBase
 		{
 			private   readonly MappingSchema _ms;
-			protected readonly Dictionary<int,object>         ObjectIndices  = new Dictionary<int,object>();
-			protected readonly Dictionary<int,Action<object>> DelayedObjects = new Dictionary<int,Action<object>>();
+			protected readonly Dictionary<int,object>         ObjectIndices  = new ();
+			protected readonly Dictionary<int,Action<object>> DelayedObjects = new ();
 
 			protected string Str = null!;
 			protected int    Pos;
@@ -520,8 +520,7 @@ namespace LinqToDB.ServiceModel
 				}
 			}
 
-			static readonly Dictionary<Type,Func<DeserializerBase,object?>> _arrayDeserializers =
-				new Dictionary<Type,Func<DeserializerBase,object?>>();
+			static readonly Dictionary<Type,Func<DeserializerBase,object?>> _arrayDeserializers = new ();
 
 			protected object? ReadValue(Type? type)
 			{
@@ -550,7 +549,7 @@ namespace LinqToDB.ServiceModel
 
 			}
 
-			protected readonly List<string> UnresolvedTypes = new List<string>();
+			protected readonly List<string> UnresolvedTypes = new ();
 
 			protected Type? ResolveType(string? str)
 			{
@@ -1306,7 +1305,7 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.MergeSourceTable:
 						{
-							var elem = (SqlMergeSourceTable)e;
+							var elem = (SqlTableLikeSource)e;
 
 							Append(elem.SourceID);
 							Append(elem.SourceEnumerable);
@@ -1337,6 +1336,27 @@ namespace LinqToDB.ServiceModel
 							Append(elem.Source);
 							Append(elem.On);
 							Append(elem.Operations);
+
+							break;
+						}
+
+					case QueryElementType.MultiInsertStatement:
+						{
+							var elem = (SqlMultiInsertStatement)e;
+
+							Append((int)elem.InsertType);
+							Append(elem.Source);
+							Append(elem.Inserts);
+
+							break;
+						}
+
+					case QueryElementType.ConditionalInsertClause:
+						{
+							var elem = (SqlConditionalInsertClause)e;
+
+							Append(elem.When);
+							Append(elem.Insert);
 
 							break;
 						}
@@ -1410,8 +1430,8 @@ namespace LinqToDB.ServiceModel
 		{
 			SqlStatement   _statement  = null!;
 
-			readonly Dictionary<int,SelectQuery> _queries = new Dictionary<int,SelectQuery>();
-			readonly List<Action>                _actions = new List<Action>();
+			readonly Dictionary<int,SelectQuery> _queries = new ();
+			readonly List<Action>                _actions = new ();
 
 			public QueryDeserializer(MappingSchema serializationMappingSchema)
 				: base(serializationMappingSchema)
@@ -1713,7 +1733,7 @@ namespace LinqToDB.ServiceModel
 							var expr2     = Read<ISqlExpression>()!;
 							var withNull  = ReadInt();
 
-							obj = new SqlPredicate.ExprExpr(expr1, @operator, expr2, withNull == 3 ? (bool?)null : withNull == 1);
+							obj = new SqlPredicate.ExprExpr(expr1, @operator, expr2, withNull == 3 ? null : withNull == 1);
 
 							break;
 						}
@@ -1761,7 +1781,7 @@ namespace LinqToDB.ServiceModel
 							var falseValue = Read<ISqlExpression>()!;
 							var withNull   = ReadInt();
 
-							obj = new SqlPredicate.IsTrue(expr1, trueValue, falseValue, withNull == 3 ? (bool?)null : withNull == 1, isNot);
+							obj = new SqlPredicate.IsTrue(expr1, trueValue, falseValue, withNull == 3 ? null : withNull == 1, isNot);
 
 							break;
 						}
@@ -1794,7 +1814,7 @@ namespace LinqToDB.ServiceModel
 							var values = ReadList<ISqlExpression>()!;
 							var withNull = ReadInt();
 
-							obj = new SqlPredicate.InList(expr1, withNull == 3 ? (bool?)null : withNull == 1, isNot, values);
+							obj = new SqlPredicate.InList(expr1, withNull == 3 ? null : withNull == 1, isNot, values);
 
 							break;
 						}
@@ -2102,7 +2122,7 @@ namespace LinqToDB.ServiceModel
 							var querySource      = Read<SelectQuery>()!;
 							var fields           = ReadArray<SqlField>()!;
 
-							obj = new SqlMergeSourceTable(sourceID, enumerableSource, querySource, fields);
+							obj = new SqlTableLikeSource(sourceID, enumerableSource, querySource, fields);
 
 							break;
 						}
@@ -2123,11 +2143,32 @@ namespace LinqToDB.ServiceModel
 						{
 							var hint       = ReadString();
 							var target     = Read<SqlTableSource>()!;
-							var source     = Read<SqlMergeSourceTable>()!;
+							var source     = Read<SqlTableLikeSource>()!;
 							var on         = Read<SqlSearchCondition>()!;
 							var operations = ReadArray<SqlMergeOperationClause>()!;
 
 							obj = _statement = new SqlMergeStatement(hint, target, source, on, operations);
+
+							break;
+						}
+
+					case QueryElementType.MultiInsertStatement :
+						{
+							var insertType   = (MultiInsertType)ReadInt();
+							var source       = Read<SqlTableLikeSource>()!;
+							var inserts      = ReadList<SqlConditionalInsertClause>()!;
+
+							obj = _statement = new SqlMultiInsertStatement(insertType, source, inserts);
+
+							break;
+						}
+
+						case QueryElementType.ConditionalInsertClause:
+						{
+							var where  = Read<SqlSearchCondition>();
+							var insert = Read<SqlInsertClause>()!;
+
+							obj = new SqlConditionalInsertClause(insert, where);
 
 							break;
 						}
@@ -2361,8 +2402,8 @@ namespace LinqToDB.ServiceModel
 			}
 		}
 
-		static readonly Dictionary<Type,Type>                _arrayTypes      = new Dictionary<Type,Type>();
-		static readonly Dictionary<Type,Func<object,object>> _arrayConverters = new Dictionary<Type,Func<object,object>>();
+		static readonly Dictionary<Type,Type>                _arrayTypes      = new ();
+		static readonly Dictionary<Type,Func<object,object>> _arrayConverters = new ();
 
 		static Type GetArrayType(Type elementType)
 		{

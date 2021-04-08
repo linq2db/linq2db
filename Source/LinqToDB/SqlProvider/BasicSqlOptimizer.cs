@@ -2532,6 +2532,7 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.CreateTableStatement:
 				case QueryElementType.DropTableStatement:
 				case QueryElementType.MergeStatement:
+				case QueryElementType.MultiInsertStatement:
 				{
 					var statement = (SqlStatement)element;
 					return statement.IsParameterDependent;

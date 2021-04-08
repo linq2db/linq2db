@@ -6,18 +6,16 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
-	class MergeSourceQueryContext : SubQueryContext
+	class TableLikeQueryContext : SubQueryContext
 	{
-		private readonly SqlMergeStatement _merge;
+		public SqlTableLikeSource Source { get; }
 
-		public MergeSourceQueryContext(SqlMergeStatement merge, IBuildContext sourceContext)
+		public TableLikeQueryContext(IBuildContext sourceContext)
 			: base(sourceContext, new SelectQuery { ParentSelect = sourceContext.SelectQuery }, true)
 		{
-			_merge = merge;
-
-			_merge.Source = sourceContext is EnumerableContext enumerableSource
-				? new SqlMergeSourceTable() { SourceEnumerable = enumerableSource.Table }
-				: new SqlMergeSourceTable() { SourceQuery = sourceContext.SelectQuery };
+			Source = sourceContext is EnumerableContext enumerableSource
+				? new SqlTableLikeSource { SourceEnumerable = enumerableSource.Table }
+				: new SqlTableLikeSource { SourceQuery = sourceContext.SelectQuery };
 
 			if (SubQuery is SelectContext select)
 				select.AllowAddDefault = false;
@@ -54,7 +52,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (expression == null) throw new ArgumentNullException(nameof(expression));
 
-			var sourceField = _merge.Source.RegisterSourceField(baseExpression, expression, index, () =>
+			var sourceField = Source.RegisterSourceField(baseExpression, expression, index, () =>
 			{
 				var f = QueryHelper.GetUnderlyingField(baseExpression ?? expression);
 
@@ -63,7 +61,7 @@ namespace LinqToDB.Linq.Builder
 					: new SqlField(f) { Name = member?.Name ?? f.Name};
 
 				newField.PhysicalName = newField.Name;
-				newField.Table        = _merge.Source;
+				newField.Table        = Source;
 				return newField;
 			});
 
