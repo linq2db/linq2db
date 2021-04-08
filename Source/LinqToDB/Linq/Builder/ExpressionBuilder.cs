@@ -85,6 +85,7 @@ namespace LinqToDB.Linq.Builder
 			new DisableGroupingGuardBuilder(),
 			new InlineParametersBuilder    (),
 			new HasUniqueKeyBuilder        (),
+			new MultiInsertBuilder		   (),
 			new TagQueryBuilder            (),
 		};
 

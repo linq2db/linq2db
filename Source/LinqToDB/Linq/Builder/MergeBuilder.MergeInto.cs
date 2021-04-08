@@ -29,7 +29,7 @@ namespace LinqToDB.Linq.Builder
 				target.SetAlias(merge.Target.Alias!);
 				target.Statement = merge;
 
-				var source = new MergeSourceQueryContext(merge, sourceContext);
+				var source = new TableLikeQueryContext(sourceContext);
 
 				return new MergeContext(merge, target, source);
 			}

@@ -963,7 +963,7 @@ namespace LinqToDB.SqlQuery
 
 							var tag        = merge.Tag != null ? (SqlComment?)ConvertInternal(merge.Tag) : null;
 							var target     = (SqlTableSource?)     ConvertInternal(merge.Target);
-							var source     = (SqlMergeSourceTable?)ConvertInternal(merge.Source);
+							var source     = (SqlTableLikeSource?)ConvertInternal(merge.Source);
 							var on         = (SqlSearchCondition?) ConvertInternal(merge.On);
 							var operations = ConvertSafe(merge.Operations);
 
@@ -987,9 +987,44 @@ namespace LinqToDB.SqlQuery
 							break;
 						}
 
+					case QueryElementType.MultiInsertStatement:
+						{
+							var insert  = (SqlMultiInsertStatement)element;
+							var source  = (SqlTableLikeSource?    )ConvertInternal(insert.Source);
+							var inserts = ConvertSafe(insert.Inserts);
+
+							if (source != null && !ReferenceEquals(insert.Source, source) ||
+								inserts != null && !ReferenceEquals(insert.Inserts, inserts))
+							{
+								newElement = new SqlMultiInsertStatement(
+									insert.InsertType,
+									source  ?? insert.Source,
+									inserts ?? insert.Inserts);
+							}
+
+							break;
+						}
+
+					case QueryElementType.ConditionalInsertClause:
+						{
+							var clause = (SqlConditionalInsertClause)element;
+							var when   = (SqlSearchCondition?)ConvertInternal(clause.When);
+							var insert = (SqlInsertClause?   )ConvertInternal(clause.Insert);
+
+							if (when   != null && !ReferenceEquals(clause.When  , when) ||
+								insert != null && !ReferenceEquals(clause.Insert, insert))
+							{
+								newElement = new SqlConditionalInsertClause(
+									insert ?? clause.Insert,
+									when   ?? clause.When);
+							}
+
+							break;
+						}
+
 					case QueryElementType.MergeSourceTable:
 						{
-							var source = (SqlMergeSourceTable)element;
+							var source = (SqlTableLikeSource)element;
 
 							var enumerableSource          = (SqlValuesTable?)ConvertInternal(source.SourceEnumerable);
 							var querySource               = (SelectQuery?)   ConvertInternal(source.SourceQuery);
@@ -1005,7 +1040,7 @@ namespace LinqToDB.SqlQuery
 									ReplaceVisited(oldField, newField);
 								}
 
-								newElement = new SqlMergeSourceTable(
+								newElement = new SqlTableLikeSource(
 									source.SourceID,
 									enumerableSource ?? source.SourceEnumerable!,
 									querySource ?? source.SourceQuery!,

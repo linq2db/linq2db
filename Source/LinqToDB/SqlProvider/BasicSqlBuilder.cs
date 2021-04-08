@@ -236,6 +236,7 @@ namespace LinqToDB.SqlProvider
 				case QueryType.DropTable     : BuildDropTableStatement    ((SqlDropTableStatement)Statement);                                         break;
 				case QueryType.TruncateTable : BuildTruncateTableStatement((SqlTruncateTableStatement)Statement);                                     break;
 				case QueryType.Merge         : BuildMergeStatement        ((SqlMergeStatement)Statement);                                             break;
+				case QueryType.MultiInsert   : BuildMultiInsertQuery      ((SqlMultiInsertStatement)Statement);                                       break;
 				default                      : BuildUnknownQuery();                                                                                   break;
 			}
 		}
@@ -372,6 +373,9 @@ namespace LinqToDB.SqlProvider
 
 			AppendIndent().AppendLine(")");
 		}
+
+		protected virtual void BuildMultiInsertQuery(SqlMultiInsertStatement statement)
+			=> throw new SqlException("This data provider does not support multi-table insert.");
 
 		protected virtual void BuildUnknownQuery()
 		{
@@ -772,7 +776,9 @@ namespace LinqToDB.SqlProvider
 
 				BuildOutputSubclause(statement, insertClause);
 
-				if (statement.QueryType == QueryType.InsertOrUpdate || statement.EnsureQuery().From.Tables.Count == 0)
+				if (statement.QueryType == QueryType.InsertOrUpdate || 
+					statement.QueryType == QueryType.MultiInsert ||
+					statement.EnsureQuery().From.Tables.Count == 0)
 				{
 					AppendIndent().AppendLine("VALUES");
 					AppendIndent().AppendLine(OpenParens);
@@ -2976,7 +2982,7 @@ namespace LinqToDB.SqlProvider
 					return GetTablePhysicalName((SqlTable)table)!;
 
 				case QueryElementType.MergeSourceTable:
-					return ConvertInline(((SqlMergeSourceTable)table).Name, ConvertType.NameToQueryTable);
+					return ConvertInline(((SqlTableLikeSource)table).Name, ConvertType.NameToQueryTable);
 
 				default:
 					throw new InvalidOperationException($"Unexpected table type {table.ElementType}");
