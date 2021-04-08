@@ -49,6 +49,9 @@ namespace LinqToDB.SqlQuery
 		{
 			var clone = new SqlUpdateStatement((SelectQuery)SelectQuery.Clone(objectTree, doClone));
 
+			if (Tag != null)
+				clone.Tag = (SqlComment)Tag.Clone(objectTree, doClone);
+
 			if (_update != null)
 				clone._update = (SqlUpdateClause)_update.Clone(objectTree, doClone);
 

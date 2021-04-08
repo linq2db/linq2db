@@ -43,6 +43,9 @@ namespace LinqToDB.SqlQuery
 
 			var clone = new SqlDropTableStatement((SqlTable)Table.Clone(objectTree, doClone));
 
+			if (Tag != null)
+				clone.Tag = (SqlComment)Tag.Clone(objectTree, doClone);
+
 			objectTree.Add(this, clone);
 
 			return clone;

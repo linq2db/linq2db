@@ -596,7 +596,7 @@ namespace LinqToDB.SqlQuery
 
 							if (insert      != null && !ReferenceEquals(s.Insert,      insert)       ||
 								selectQuery != null && !ReferenceEquals(s.SelectQuery, selectQuery)  ||
-								tag         != null && !ReferenceEquals(s.Tag,         tag)         ||
+								tag         != null && !ReferenceEquals(s.Tag,         tag)          ||
 								with        != null && !ReferenceEquals(s.With,        with)         ||
 								output      != null && !ReferenceEquals(s.Output,      output))
 							{
@@ -670,12 +670,12 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.DeleteStatement:
 						{
 							var s = (SqlDeleteStatement)element;
-							var tag         = s.Tag         != null ? (SqlComment?   )  ConvertInternal(s.Tag       ) : null;
-							var with        = s.With        != null ? (SqlWithClause?)  ConvertInternal(s.With      ) : null;
-							var selectQuery = s.SelectQuery != null ? (SelectQuery?)   ConvertInternal(s.SelectQuery) : null;
-							var table       = s.Table       != null ? (SqlTable?)      ConvertInternal(s.Table      ) : null;
-							var top         = s.Top         != null ? (ISqlExpression?) ConvertInternal(s.Top       ) : null;
-							var output      = s.Output      != null ? (SqlOutputClause?)ConvertInternal(s.Output    ) : null;
+							var tag         = s.Tag         != null ? (SqlComment?   )  ConvertInternal(s.Tag        ) : null;
+							var with        = s.With        != null ? (SqlWithClause?)  ConvertInternal(s.With       ) : null;
+							var selectQuery = s.SelectQuery != null ? (SelectQuery?)    ConvertInternal(s.SelectQuery) : null;
+							var table       = s.Table       != null ? (SqlTable?)       ConvertInternal(s.Table      ) : null;
+							var top         = s.Top         != null ? (ISqlExpression?) ConvertInternal(s.Top        ) : null;
+							var output      = s.Output      != null ? (SqlOutputClause?)ConvertInternal(s.Output     ) : null;
 
 							if (table       != null && !ReferenceEquals(s.Table,       table)       ||
 								top         != null && !ReferenceEquals(s.Top,         top)         ||

@@ -304,7 +304,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<TestTable>())
 			{
-				table.TagQuery(tag).InsertOrUpdate(() => new TestTable() { Id = 1, Fd = 2 }, _ => new TestTable() { Id = 1 });
+				table.TagQuery(tag).InsertOrUpdate(() => new TestTable() { Id = 1, Fd = 2 }, _ => new TestTable() {  Fd = 2 });
 
 				var commandSql = GetCurrentBaselines();
 
