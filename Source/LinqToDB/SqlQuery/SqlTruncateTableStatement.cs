@@ -45,6 +45,9 @@ namespace LinqToDB.SqlQuery
 
 			var clone = new SqlTruncateTableStatement();
 
+			if (Tag != null)
+				clone.Tag = (SqlComment)Tag.Clone(objectTree, doClone);
+
 			if (Table != null)
 				clone.Table = (SqlTable)Table.Clone(objectTree, doClone);
 

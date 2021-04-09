@@ -67,6 +67,8 @@
 		MergeSourceTable,
 		MergeOperationClause,
 
-		GroupingSet
+		GroupingSet,
+
+		Comment
 	}
 }

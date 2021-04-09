@@ -50,6 +50,9 @@ namespace LinqToDB.SqlQuery
 		{
 			var clone = new SqlInsertOrUpdateStatement((SelectQuery)SelectQuery.Clone(objectTree, doClone));
 
+			if (Tag != null)
+				clone.Tag = (SqlComment)Tag.Clone(objectTree, doClone);
+
 			if (_insert != null)
 				clone._insert = (SqlInsertClause)_insert.Clone(objectTree, doClone);
 

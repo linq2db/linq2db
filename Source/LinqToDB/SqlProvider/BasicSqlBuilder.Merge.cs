@@ -39,6 +39,8 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildMergeStatement(SqlMergeStatement merge)
 		{
+			BuildTag(merge);
+
 			BuildMergeInto(merge);
 			BuildMergeSource(merge);
 			BuildMergeOn(merge);

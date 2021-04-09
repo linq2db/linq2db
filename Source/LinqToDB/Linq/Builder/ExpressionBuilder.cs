@@ -86,6 +86,7 @@ namespace LinqToDB.Linq.Builder
 			new InlineParametersBuilder    (),
 			new HasUniqueKeyBuilder        (),
 			new MultiInsertBuilder		   (),
+			new TagQueryBuilder            (),
 		};
 
 		public static void AddBuilder(ISequenceBuilder builder)
@@ -110,6 +111,8 @@ namespace LinqToDB.Linq.Builder
 		public readonly List<Expression>           BlockExpressions     = new ();
 		public          bool                       IsBlockDisable;
 		public          int                        VarIndex;
+
+		public          SqlComment?                Tag;
 
 		public ExpressionBuilder(
 			Query                  query,

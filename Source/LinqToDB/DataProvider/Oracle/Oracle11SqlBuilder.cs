@@ -301,6 +301,8 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 			else
 			{
+				BuildTag(dropTable);
+
 				StringBuilder
 					.AppendLine(@"BEGIN");
 
