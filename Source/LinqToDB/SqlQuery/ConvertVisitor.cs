@@ -1475,7 +1475,7 @@ namespace LinqToDB.SqlQuery
 						list2 = new List<T[]>(list1.Count);
 
 						for (var j = 0; j < i; j++)
-							list2.Add(clone == null ? list1[j] : list1[j].Select(e => clone(e)).ToArray() );
+							list2.Add(clone == null ? list1[j] : list1[j].Select(e => clone(e)).ToArray());
 					}
 
 					list2.Add(elem2);

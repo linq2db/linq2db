@@ -750,7 +750,7 @@ namespace LinqToDB.Linq.Builder
 				var prevKeys       = ExtractKeys(context, keyExpression).ToArray();
 				var subMasterKeys  = ExtractKeys(context, detailExpression).ToArray();
 
-				var prevKeysByParameter = ExtractTupleValues(keyExpression, ExpressionHelper.Property(masterParam, nameof(KeyDetailEnvelope<object, object>.Key))).ToArray();
+				var prevKeysByParameter = ExtractTupleValues(keyExpression, ExpressionHelper.Property(masterParam, nameof(KeyDetailEnvelope<object, object>.Key)));
 
 				var correctLookup = prevKeysByParameter.ToLookup(tv => tv.Item1, tv => tv.Item2, ExpressionEqualityComparer.Instance);
 				foreach (var key in prevKeys)
@@ -1015,8 +1015,8 @@ namespace LinqToDB.Linq.Builder
 						var mi1 = (MemberInitExpression)expr1;
 						var mi2 = (MemberInitExpression)expr2;
 
-						var b1 = mi1.Bindings.OfType<MemberAssignment>().ToArray();
-						var b2 = mi2.Bindings.OfType<MemberAssignment>().ToArray();
+						var b1 = mi1.Bindings.OfType<MemberAssignment>();
+						var b2 = mi2.Bindings.OfType<MemberAssignment>();
 
 						var found = b1.Join(b2, _ => _.Member, _ => _.Member, Tuple.Create);
 
@@ -1602,7 +1602,8 @@ namespace LinqToDB.Linq.Builder
 				{
 					var lambda = (LambdaExpression)e;
 					var newParameters = lambda.Parameters
-						.Select(p => Expression.Parameter(p.Type, "_" + p.Name)).ToArray();
+						.Select(p => Expression.Parameter(p.Type, "_" + p.Name))
+						.ToArray();
 					var newBody = lambda.Body.Transform(b =>
 					{
 						if (b.NodeType == ExpressionType.Parameter)
