@@ -6,6 +6,7 @@ namespace LinqToDB.Configuration
 {
 	using System.Collections.Generic;
 	using System.Data.Common;
+	using System.Linq;
 	using Data;
 	using DataProvider;
 	using LinqToDB.Interceptors;
@@ -260,6 +261,29 @@ namespace LinqToDB.Configuration
 			SetupType           = ConnectionSetupType.DefaultConfiguration;
 
 			return this;
+		}
+
+		/// <summary>
+		/// Clone builder without interceptors.
+		/// </summary>
+		internal LinqToDbConnectionOptionsBuilder Clone()
+		{
+			return new LinqToDbConnectionOptionsBuilder()
+			{
+				MappingSchema       = MappingSchema,
+				DataProvider        = DataProvider,
+				ConfigurationString = ConfigurationString,
+				ConnectionString    = ConnectionString,
+				DbConnection        = DbConnection,
+				ProviderName        = ProviderName,
+				DbTransaction       = DbTransaction,
+				ConnectionFactory   = ConnectionFactory,
+				TraceLevel          = TraceLevel,
+				OnTrace             = OnTrace,
+				WriteTrace          = WriteTrace,
+				SetupType           = SetupType,
+				_interceptors       = _interceptors == null ? null : _interceptors.ToList()
+			};
 		}
 	}
 }

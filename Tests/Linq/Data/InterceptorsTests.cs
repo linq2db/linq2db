@@ -315,8 +315,60 @@ namespace Tests.Data
 			}
 		}
 
-		// DataContext: test that interceptors triggered and one-time interceptors removed safely after single command
 		[Test]
+		public void CommandInitializedOnDataContextTest_OptionsBuilder([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool closeAfterUse)
+		{
+			var triggered1 = false;
+			var triggered2 = false;
+			var interceptor1 = new TestCommandInterceptor();
+			var interceptor2 = new TestCommandInterceptor();
+
+			var options = new LinqToDbConnectionOptionsBuilder()
+				.UseConfigurationString(context)
+				.WithInterceptor(interceptor1)
+				.WithInterceptor(interceptor2);
+
+			using (var db = new DataContext(options.Build()))
+			{
+				db.CloseAfterUse = closeAfterUse;
+
+				db.OnNextCommandInitialized((args, command) =>
+				{
+					triggered1 = true;
+					return command;
+				});
+				db.OnNextCommandInitialized((args, command) =>
+				{
+					triggered2 = true;
+					return command;
+				});
+
+				Assert.False(interceptor1.CommandInitializedTriggered);
+				Assert.False(interceptor2.CommandInitializedTriggered);
+				Assert.False(triggered1);
+				Assert.False(triggered2);
+
+				db.GetTable<Child>().ToList();
+
+				Assert.True(interceptor1.CommandInitializedTriggered);
+				Assert.True(interceptor2.CommandInitializedTriggered);
+				Assert.True(triggered1);
+				Assert.True(triggered2);
+
+				triggered1 = false;
+				triggered2 = false;
+				interceptor1.CommandInitializedTriggered = false;
+				interceptor2.CommandInitializedTriggered = false;
+
+				db.GetTable<Person>().ToList();
+
+				Assert.True(interceptor1.CommandInitializedTriggered);
+				Assert.True(interceptor2.CommandInitializedTriggered);
+				Assert.False(triggered1);
+				Assert.False(triggered2);
+			}
+		}
+
 		public void CommandInitializedOnDataContextTest([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool closeAfterUse)
 		{
 			using (var db = new DataContext(context))

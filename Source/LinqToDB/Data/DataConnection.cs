@@ -223,7 +223,7 @@ namespace LinqToDB.Data
 		}
 
 		/// <summary>
-		/// Creates database connection object that uses a LinqToDbConnectionOptions to configure the connection.
+		/// Creates database connection object that uses a <see cref="LinqToDbConnectionOptions"/> to configure the connection.
 		/// </summary>
 		/// <param name="options">Options, setup ahead of time.</param>
 		public DataConnection(LinqToDbConnectionOptions options)
