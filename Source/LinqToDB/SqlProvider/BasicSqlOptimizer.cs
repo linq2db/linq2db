@@ -200,7 +200,7 @@ namespace LinqToDB.SqlProvider
 					var ordered = TopoSorting.TopoSort(foundCte.Keys, i => foundCte[i]).ToList();
 
 					Utils.MakeUniqueNames(ordered, null, (n, a) => !ReservedWords.IsReserved(n), c => c.Name, (c, n, a) => c.Name = n,
-						c => c.Name.IsNullOrEmpty() ? "CTE_1" : c.Name, StringComparer.OrdinalIgnoreCase);
+						c => string.IsNullOrEmpty(c.Name) ? "CTE_1" : c.Name, StringComparer.OrdinalIgnoreCase);
 
 					select.With = new SqlWithClause();
 					select.With.Clauses.AddRange(ordered);
@@ -230,7 +230,7 @@ namespace LinqToDB.SqlProvider
 					// we interested in modifying only expressions which have parameters
 					if (HasParameters(expr))
 					{
-						if (expr.Expr.IsNullOrEmpty() || expr.Parameters.Length == 0)
+						if (string.IsNullOrEmpty(expr.Expr) || expr.Parameters.Length == 0)
 							return expr;
 
 						var newExpressions = new List<ISqlExpression>();

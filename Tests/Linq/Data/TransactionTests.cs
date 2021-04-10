@@ -8,7 +8,6 @@ namespace Tests.Data
 {
 	using System.Threading;
 	using System.Threading.Tasks;
-	using LinqToDB.Data;
 	using Model;
 
 	[TestFixture]
@@ -100,7 +99,7 @@ namespace Tests.Data
 		{
 			var tid = Thread.CurrentThread.ManagedThreadId;
 
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (await db.BeginTransactionAsync())
 			{
 				// perform synchonously to not mess with BeginTransactionAsync testing
@@ -116,7 +115,7 @@ namespace Tests.Data
 		{
 			var tid = Thread.CurrentThread.ManagedThreadId;
 
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				await using (db.BeginTransaction())
 				{
@@ -132,7 +131,7 @@ namespace Tests.Data
 		[Test]
 		public async Task DataConnectionCommitTransactionAsync([DataSources(false)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (await db.BeginTransactionAsync())
 			{
 				int tid;
@@ -158,7 +157,7 @@ namespace Tests.Data
 		[Test]
 		public async Task DataConnectionRollbackTransactionAsync([DataSources(false)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (await db.BeginTransactionAsync())
 			{
 				// perform synchonously to not mess with BeginTransactionAsync testing
@@ -176,7 +175,7 @@ namespace Tests.Data
 		[Test]
 		public void AutoRollbackTransaction([DataSources(false)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.Insert(new Parent { ParentID = 1010, Value1 = 1010 });
 
@@ -201,7 +200,7 @@ namespace Tests.Data
 		[Test]
 		public void CommitTransaction([DataSources(false)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.Insert(new Parent { ParentID = 1010, Value1 = 1010 });
 
@@ -227,7 +226,7 @@ namespace Tests.Data
 		[Test]
 		public void RollbackTransaction([DataSources(false)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.Insert(new Parent { ParentID = 1010, Value1 = 1010 });
 

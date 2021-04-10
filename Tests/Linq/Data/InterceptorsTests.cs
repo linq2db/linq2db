@@ -1,11 +1,14 @@
-﻿using System.Data.Common;
+﻿using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.Interceptors;
+using LinqToDB.Mapping;
 using NUnit.Framework;
 using Tests.Model;
 
@@ -21,7 +24,7 @@ namespace Tests.Data
 		[Test]
 		public void CommandInitializedOnDataConnectionTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var triggered1 = false;
 				var triggered2 = false;
@@ -69,7 +72,7 @@ namespace Tests.Data
 		[Test]
 		public void CommandInitializedOnDataConnectionCloningTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var triggered1 = false;
 				var triggered2 = false;
@@ -421,6 +424,335 @@ namespace Tests.Data
 
 		#endregion
 
+		#region ICommandInterceptor.Execute*
+		[Test]
+		public void DataConnection_ExecuteNonQuery([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataConnection(context))
+			{
+				var interceptor = new TestCommandInterceptor();
+				db.AddInterceptor(interceptor);
+
+				Assert.False(interceptor.ExecuteScalarTriggered);
+				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
+				Assert.False(interceptor.ExecuteReaderTriggered);
+				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
+				Assert.False(interceptor.ExecuteNonQueryTriggered);
+				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
+
+				using (db.CreateTempTable<InterceptorsTestsTable>())
+				{
+					Assert.False(interceptor.ExecuteScalarTriggered);
+					Assert.False(interceptor.ExecuteScalarAsyncTriggered);
+					Assert.False(interceptor.ExecuteReaderTriggered);
+					Assert.False(interceptor.ExecuteReaderAsyncTriggered);
+					Assert.True(interceptor.ExecuteNonQueryTriggered);
+					Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
+				}
+			}
+		}
+
+		[Test]
+		public async Task DataConnection_ExecuteNonQueryAsync([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			await using (var db = GetDataConnection(context))
+			{
+				var interceptor = new TestCommandInterceptor();
+				db.AddInterceptor(interceptor);
+
+				Assert.False(interceptor.ExecuteScalarTriggered);
+				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
+				Assert.False(interceptor.ExecuteReaderTriggered);
+				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
+				Assert.False(interceptor.ExecuteNonQueryTriggered);
+				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
+
+				await using(await db.CreateTempTableAsync<InterceptorsTestsTable>())
+				{
+					Assert.False(interceptor.ExecuteScalarTriggered);
+					Assert.False(interceptor.ExecuteScalarAsyncTriggered);
+					Assert.False(interceptor.ExecuteReaderTriggered);
+					Assert.False(interceptor.ExecuteReaderAsyncTriggered);
+					Assert.False(interceptor.ExecuteNonQueryTriggered);
+					Assert.True(interceptor.ExecuteNonQueryAsyncTriggered);
+				}
+			}
+		}
+
+		[Test]
+		public void DataConnection_ExecuteScalar([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataConnection(context))
+			using (var table = db.CreateTempTable<InterceptorsTestsTable>())
+			{
+				var interceptor = new TestCommandInterceptor();
+				db.AddInterceptor(interceptor);
+
+				Assert.False(interceptor.ExecuteScalarTriggered);
+				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
+				Assert.False(interceptor.ExecuteReaderTriggered);
+				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
+				Assert.False(interceptor.ExecuteNonQueryTriggered);
+				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
+
+				table.InsertWithIdentity(() => new InterceptorsTestsTable() { ID = 1 });
+
+				Assert.True(interceptor.ExecuteScalarTriggered);
+				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
+				Assert.False(interceptor.ExecuteReaderTriggered);
+				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
+				// also true, as for sqlite we generate two queries
+				Assert.True(interceptor.ExecuteNonQueryTriggered);
+				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
+			}
+		}
+
+		[Test]
+		public async Task DataConnection_ExecuteScalarAsync([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			await using (var db = GetDataConnection(context))
+			await using (var table = await db.CreateTempTableAsync<InterceptorsTestsTable>())
+			{
+				var interceptor = new TestCommandInterceptor();
+				db.AddInterceptor(interceptor);
+
+				Assert.False(interceptor.ExecuteScalarTriggered);
+				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
+				Assert.False(interceptor.ExecuteReaderTriggered);
+				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
+				Assert.False(interceptor.ExecuteNonQueryTriggered);
+				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
+
+				await table.InsertWithIdentityAsync(() => new InterceptorsTestsTable() { ID = 1 });
+
+				Assert.False(interceptor.ExecuteScalarTriggered);
+				Assert.True(interceptor.ExecuteScalarAsyncTriggered);
+				Assert.False(interceptor.ExecuteReaderTriggered);
+				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
+				Assert.False(interceptor.ExecuteNonQueryTriggered);
+				// also true, as for sqlite we generate two queries
+				Assert.True(interceptor.ExecuteNonQueryAsyncTriggered);
+			}
+		}
+
+		[Test]
+		public void DataConnection_ExecuteReader([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataConnection(context))
+			{
+				var interceptor = new TestCommandInterceptor();
+				db.AddInterceptor(interceptor);
+
+				Assert.False(interceptor.ExecuteScalarTriggered);
+				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
+				Assert.False(interceptor.ExecuteReaderTriggered);
+				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
+				Assert.False(interceptor.ExecuteNonQueryTriggered);
+				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
+
+				db.Child.ToList();
+
+				Assert.False(interceptor.ExecuteScalarTriggered);
+				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
+				Assert.True(interceptor.ExecuteReaderTriggered);
+				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
+				Assert.False(interceptor.ExecuteNonQueryTriggered);
+				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
+			}
+		}
+
+		[Test]
+		public async Task DataConnection_ExecuteReaderAsync([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			await using (var db = GetDataConnection(context))
+			{
+				var interceptor = new TestCommandInterceptor();
+				db.AddInterceptor(interceptor);
+
+				Assert.False(interceptor.ExecuteScalarTriggered);
+				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
+				Assert.False(interceptor.ExecuteReaderTriggered);
+				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
+				Assert.False(interceptor.ExecuteNonQueryTriggered);
+				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
+
+				await db.Child.ToListAsync();
+
+				Assert.False(interceptor.ExecuteScalarTriggered);
+				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
+				Assert.False(interceptor.ExecuteReaderTriggered);
+				Assert.True(interceptor.ExecuteReaderAsyncTriggered);
+				Assert.False(interceptor.ExecuteNonQueryTriggered);
+				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
+			}
+		}
+
+		[Test]
+		public void DataContext_ExecuteNonQuery([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = new DataContext(context))
+			{
+				var interceptor = new TestCommandInterceptor();
+				db.AddInterceptor(interceptor);
+
+				Assert.False(interceptor.ExecuteScalarTriggered);
+				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
+				Assert.False(interceptor.ExecuteReaderTriggered);
+				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
+				Assert.False(interceptor.ExecuteNonQueryTriggered);
+				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
+
+				using (db.CreateTempTable<InterceptorsTestsTable>())
+				{
+					Assert.False(interceptor.ExecuteScalarTriggered);
+					Assert.False(interceptor.ExecuteScalarAsyncTriggered);
+					Assert.False(interceptor.ExecuteReaderTriggered);
+					Assert.False(interceptor.ExecuteReaderAsyncTriggered);
+					Assert.True(interceptor.ExecuteNonQueryTriggered);
+					Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
+				}
+			}
+		}
+
+		[Test]
+		public async Task DataContext_ExecuteNonQueryAsync([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			await using (var db = new DataContext(context))
+			{
+				var interceptor = new TestCommandInterceptor();
+				db.AddInterceptor(interceptor);
+
+				Assert.False(interceptor.ExecuteScalarTriggered);
+				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
+				Assert.False(interceptor.ExecuteReaderTriggered);
+				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
+				Assert.False(interceptor.ExecuteNonQueryTriggered);
+				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
+
+				await using (await db.CreateTempTableAsync<InterceptorsTestsTable>())
+				{
+					Assert.False(interceptor.ExecuteScalarTriggered);
+					Assert.False(interceptor.ExecuteScalarAsyncTriggered);
+					Assert.False(interceptor.ExecuteReaderTriggered);
+					Assert.False(interceptor.ExecuteReaderAsyncTriggered);
+					Assert.False(interceptor.ExecuteNonQueryTriggered);
+					Assert.True(interceptor.ExecuteNonQueryAsyncTriggered);
+				}
+			}
+		}
+
+		[Test]
+		public void DataContext_ExecuteScalar([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			// use non-temp table as sqlite temp tables are session-bound and context recreates session
+			using (var db = new DataContext(context))
+			using (var table = db.CreateTempTable<InterceptorsTestsTable>(tableOptions: TableOptions.None))
+			{
+				var interceptor = new TestCommandInterceptor();
+				db.AddInterceptor(interceptor);
+
+				Assert.False(interceptor.ExecuteScalarTriggered);
+				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
+				Assert.False(interceptor.ExecuteReaderTriggered);
+				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
+				Assert.False(interceptor.ExecuteNonQueryTriggered);
+				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
+
+				table.InsertWithIdentity(() => new InterceptorsTestsTable() { ID = 1 });
+
+				Assert.True(interceptor.ExecuteScalarTriggered);
+				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
+				Assert.False(interceptor.ExecuteReaderTriggered);
+				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
+				// also true, as for sqlite we generate two queries
+				Assert.True(interceptor.ExecuteNonQueryTriggered);
+				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
+			}
+		}
+
+		[Test]
+		public async Task DataContext_ExecuteScalarAsync([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			// use non-temp table as sqlite temp tables are session-bound and context recreates session
+			await using (var db = new DataContext(context))
+			await using (var table = await db.CreateTempTableAsync<InterceptorsTestsTable>(tableOptions: TableOptions.None))
+			{
+				var interceptor = new TestCommandInterceptor();
+				db.AddInterceptor(interceptor);
+
+				Assert.False(interceptor.ExecuteScalarTriggered);
+				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
+				Assert.False(interceptor.ExecuteReaderTriggered);
+				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
+				Assert.False(interceptor.ExecuteNonQueryTriggered);
+				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
+
+				await table.InsertWithIdentityAsync(() => new InterceptorsTestsTable() { ID = 1 });
+
+				Assert.False(interceptor.ExecuteScalarTriggered);
+				Assert.True(interceptor.ExecuteScalarAsyncTriggered);
+				Assert.False(interceptor.ExecuteReaderTriggered);
+				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
+				Assert.False(interceptor.ExecuteNonQueryTriggered);
+				// also true, as for sqlite we generate two queries
+				Assert.True(interceptor.ExecuteNonQueryAsyncTriggered);
+			}
+		}
+
+		[Test]
+		public void DataContext_ExecuteReader([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = new DataContext(context))
+			{
+				var interceptor = new TestCommandInterceptor();
+				db.AddInterceptor(interceptor);
+
+				Assert.False(interceptor.ExecuteScalarTriggered);
+				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
+				Assert.False(interceptor.ExecuteReaderTriggered);
+				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
+				Assert.False(interceptor.ExecuteNonQueryTriggered);
+				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
+
+				db.GetTable<Child>().ToList();
+
+				Assert.False(interceptor.ExecuteScalarTriggered);
+				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
+				Assert.True(interceptor.ExecuteReaderTriggered);
+				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
+				Assert.False(interceptor.ExecuteNonQueryTriggered);
+				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
+			}
+		}
+
+		[Test]
+		public async Task DataContext_ExecuteReaderAsync([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			await using (var db = new DataContext(context))
+			{
+				var interceptor = new TestCommandInterceptor();
+				db.AddInterceptor(interceptor);
+
+				Assert.False(interceptor.ExecuteScalarTriggered);
+				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
+				Assert.False(interceptor.ExecuteReaderTriggered);
+				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
+				Assert.False(interceptor.ExecuteNonQueryTriggered);
+				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
+
+				await db.GetTable<Child>().ToListAsync();
+
+				Assert.False(interceptor.ExecuteScalarTriggered);
+				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
+				Assert.False(interceptor.ExecuteReaderTriggered);
+				Assert.True(interceptor.ExecuteReaderAsyncTriggered);
+				Assert.False(interceptor.ExecuteNonQueryTriggered);
+				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
+			}
+		}
+
+		#endregion
+
 		#endregion
 
 		#region IConnectionInterceptor
@@ -429,7 +761,7 @@ namespace Tests.Data
 		[Test]
 		public void ConnectionOpenOnDataConnectionTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var interceptor = new TestConnectionInterceptor();
 				db.AddInterceptor(interceptor);
@@ -470,7 +802,7 @@ namespace Tests.Data
 		[Test]
 		public async Task ConnectionOpenAsyncOnDataConnectionTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var interceptor = new TestConnectionInterceptor();
 				db.AddInterceptor(interceptor);
@@ -511,7 +843,7 @@ namespace Tests.Data
 		[Test]
 		public void ConnectionOpenOnDataConnectionCloningTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var interceptor1 = new TestConnectionInterceptor();
 				var interceptor2 = new TestConnectionInterceptor();
@@ -724,11 +1056,54 @@ namespace Tests.Data
 		{
 			public bool CommandInitializedTriggered { get; set; }
 
-			public override DbCommand CommandInitialized(CommandInitializedEventData eventData, DbCommand command)
+			public override DbCommand CommandInitialized(CommandEventData eventData, DbCommand command)
 			{
 				CommandInitializedTriggered = true;
 
 				return base.CommandInitialized(eventData, command);
+			}
+
+			public bool ExecuteNonQueryTriggered      { get; set; }
+			public bool ExecuteNonQueryAsyncTriggered { get; set; }
+			public bool ExecuteReaderTriggered        { get; set; }
+			public bool ExecuteReaderAsyncTriggered   { get; set; }
+			public bool ExecuteScalarTriggered        { get; set; }
+			public bool ExecuteScalarAsyncTriggered   { get; set; }
+
+			public override Option<int> ExecuteNonQuery(CommandEventData eventData, DbCommand command, Option<int> result)
+			{
+				ExecuteNonQueryTriggered = true;
+				return base.ExecuteNonQuery(eventData, command, result);
+			}
+
+			public override Task<Option<int>> ExecuteNonQueryAsync(CommandEventData eventData, DbCommand command, Option<int> result, CancellationToken cancellationToken)
+			{
+				ExecuteNonQueryAsyncTriggered = true;
+				return base.ExecuteNonQueryAsync(eventData, command, result, cancellationToken);
+			}
+
+			public override Option<DbDataReader> ExecuteReader(CommandEventData eventData, DbCommand command, CommandBehavior commandBehavior, Option<DbDataReader> result)
+			{
+				ExecuteReaderTriggered = true;
+				return base.ExecuteReader(eventData, command, commandBehavior, result);
+			}
+
+			public override Task<Option<DbDataReader>> ExecuteReaderAsync(CommandEventData eventData, DbCommand command, CommandBehavior commandBehavior, Option<DbDataReader> result, CancellationToken cancellationToken)
+			{
+				ExecuteReaderAsyncTriggered = true;
+				return base.ExecuteReaderAsync(eventData, command, commandBehavior, result, cancellationToken);
+			}
+
+			public override Option<object?> ExecuteScalar(CommandEventData eventData, DbCommand command, Option<object?> result)
+			{
+				ExecuteScalarTriggered = true;
+				return base.ExecuteScalar(eventData, command, result);
+			}
+
+			public override Task<Option<object?>> ExecuteScalarAsync(CommandEventData eventData, DbCommand command, Option<object?> result, CancellationToken cancellationToken)
+			{
+				ExecuteScalarAsyncTriggered = true;
+				return base.ExecuteScalarAsync(eventData, command, result, cancellationToken);
 			}
 		}
 
@@ -762,6 +1137,12 @@ namespace Tests.Data
 				ConnectionOpeningAsyncTriggered = true;
 				return base.ConnectionOpeningAsync(eventData, connection, cancellationToken);
 			}
+		}
+
+		[Table]
+		public class InterceptorsTestsTable
+		{
+			[Column, Identity] public int ID;
 		}
 	}
 }

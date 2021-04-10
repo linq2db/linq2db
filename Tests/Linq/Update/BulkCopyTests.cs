@@ -60,7 +60,7 @@ namespace Tests.xUpdate
 				Assert.Inconclusive("Oracle BulkCopy doesn't support identity triggers");
 
 			// don't use transactions as some providers will fallback to non-provider-specific implementation then
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var lastId = db.InsertWithInt32Identity(new TestTable2());
 				try
@@ -141,7 +141,7 @@ namespace Tests.xUpdate
 			ResetAllTypesIdentity(context);
 
 			// don't use transactions as some providers will fallback to non-provider-specific implementation then
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var lastId = db.InsertWithInt32Identity(new TestTable1());
 				try
@@ -267,7 +267,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void ReuseOptionTest([DataSources(false, ProviderName.DB2)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				var options = new BulkCopyOptions();

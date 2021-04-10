@@ -738,7 +738,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestNoConvert_Byte([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
@@ -755,7 +755,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestNoConvertWithExtension_Byte([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
@@ -772,7 +772,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestNoConvert_SByte([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
@@ -789,7 +789,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestNoConvertWithExtension_SByte([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
@@ -806,7 +806,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestNoConvert_Int16([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
@@ -823,7 +823,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestNoConvertWithExtension_Int16([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
@@ -840,7 +840,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestNoConvert_UInt16([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
@@ -857,7 +857,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestNoConvertWithExtension_UInt16([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
@@ -874,7 +874,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestNoConvert_Int32([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
@@ -891,7 +891,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestNoConvertWithExtension_Int32([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
@@ -908,7 +908,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestNoConvert_UInt32([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
@@ -925,7 +925,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestNoConvertWithExtension_UInt32([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
@@ -942,7 +942,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestNoConvert_Int64([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
@@ -959,7 +959,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestNoConvertWithExtension_Int64([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
@@ -976,7 +976,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestNoConvert_UInt64([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
@@ -993,7 +993,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestNoConvertWithExtension_UInt64([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
@@ -1010,7 +1010,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestNoConvert_ByteN([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
@@ -1027,7 +1027,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestNoConvertWithExtension_ByteN([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
@@ -1044,7 +1044,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestNoConvert_SByteN([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
@@ -1061,7 +1061,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestNoConvertWithExtension_SByteN([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
@@ -1078,7 +1078,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestNoConvert_Int16N([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
@@ -1095,7 +1095,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestNoConvertWithExtension_Int16N([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
@@ -1112,7 +1112,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestNoConvert_UInt16N([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
@@ -1129,7 +1129,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestNoConvertWithExtension_UInt16N([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
@@ -1146,7 +1146,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestNoConvert_Int32N([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
@@ -1163,7 +1163,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestNoConvertWithExtension_Int32N([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
@@ -1180,7 +1180,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestNoConvert_UInt32N([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
@@ -1197,7 +1197,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestNoConvertWithExtension_UInt32N([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
@@ -1214,7 +1214,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestNoConvert_Int64N([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
@@ -1231,7 +1231,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestNoConvertWithExtension_Int64N([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
@@ -1248,7 +1248,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestNoConvert_UInt64N([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
@@ -1265,7 +1265,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestNoConvertWithExtension_UInt64N([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()

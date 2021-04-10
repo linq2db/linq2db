@@ -8,7 +8,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 using LinqToDB.Common.Internal.Cache;
@@ -19,7 +18,6 @@ namespace LinqToDB.Data
 	using Common;
 	using Configuration;
 	using DataProvider;
-	using DbCommandProcessor;
 	using Expressions;
 	using LinqToDB.Interceptors;
 	using Mapping;
@@ -705,8 +703,8 @@ namespace LinqToDB.Data
 					var dataProviderType = Type.GetType(provider.TypeName, true)!;
 					var providerInstance = (IDataProviderFactory)Activator.CreateInstance(dataProviderType)!;
 
-					if (!provider.Name.IsNullOrEmpty())
-						AddDataProvider(provider.Name, providerInstance.GetDataProvider(provider.Attributes));
+					if (!string.IsNullOrEmpty(provider.Name))
+						AddDataProvider(provider.Name!, providerInstance.GetDataProvider(provider.Attributes));
 				}
 			}
 		}
@@ -904,9 +902,9 @@ namespace LinqToDB.Data
 					if (DefaultDataProvider != null)
 						_dataProviders.TryGetValue(DefaultDataProvider, out defaultDataProvider);
 
-					if (providerName.IsNullOrEmpty())
+					if (string.IsNullOrEmpty(providerName))
 						dataProvider = FindProvider(configuration, _dataProviders, defaultDataProvider);
-					else if (_dataProviders.TryGetValue(providerName, out dataProvider)
+					else if (_dataProviders.TryGetValue(providerName!, out dataProvider)
 							|| _dataProviders.TryGetValue(configuration, out dataProvider))
 					{ }
 					else
@@ -1185,7 +1183,7 @@ namespace LinqToDB.Data
 		internal void CommitCommandInit()
 		{
 			if (_commandInterceptors != null)
-				_command = _commandInterceptors.Apply((interceptor, arg1, arg2) => interceptor.CommandInitialized(arg1, arg2), new CommandInitializedEventData(this), _command!);
+				_command = _commandInterceptors.Apply((interceptor, arg1, arg2) => interceptor.CommandInitialized(arg1, arg2), new CommandEventData(this), _command!);
 
 			LastQuery = _command!.CommandText;
 		}
@@ -1249,7 +1247,14 @@ namespace LinqToDB.Data
 
 		protected virtual int ExecuteNonQuery(DbCommand command)
 		{
-			return command.ExecuteNonQueryExt();
+			var result = Option<int>.None;
+
+			if (_commandInterceptors != null)
+				result = _commandInterceptors.Apply((interceptor, arg1, arg2, arg3) => interceptor.ExecuteNonQuery(arg1, arg2, arg3), new CommandEventData(this), command, result);
+
+			return result.HasValue
+				? result.Value
+				: command.ExecuteNonQuery();
 		}
 
 		internal int ExecuteNonQuery()
@@ -1315,7 +1320,14 @@ namespace LinqToDB.Data
 
 		protected virtual object? ExecuteScalar(DbCommand command)
 		{
-			return CurrentCommand!.ExecuteScalarExt();
+			var result = Option<object?>.None;
+
+			if (_commandInterceptors != null)
+				result = _commandInterceptors.Apply((interceptor, arg1, arg2, arg3) => interceptor.ExecuteScalar(arg1, arg2, arg3), new CommandEventData(this), command, result);
+
+			return result.HasValue
+				? result.Value
+				: command.ExecuteScalar();
 		}
 
 		object? ExecuteScalar()
@@ -1380,7 +1392,16 @@ namespace LinqToDB.Data
 
 		protected virtual DataReaderWrapper ExecuteReader(CommandBehavior commandBehavior)
 		{
-			var wrapper = new DataReaderWrapper(this, _command!.ExecuteReaderExt(commandBehavior), _command!);
+			var result = Option<DbDataReader>.None;
+
+			if (_commandInterceptors != null)
+				result = _commandInterceptors.Apply((interceptor, arg1, arg2, arg3, arg4) => interceptor.ExecuteReader(arg1, arg2, arg3, arg4), new CommandEventData(this), _command!, commandBehavior, result);
+
+			var rd = result.HasValue
+				? result.Value
+				: _command!.ExecuteReader(commandBehavior);
+
+			var wrapper = new DataReaderWrapper(this, rd, _command!);
 			_command    = null;
 
 			return wrapper;

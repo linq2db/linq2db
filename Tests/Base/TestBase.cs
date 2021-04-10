@@ -10,7 +10,6 @@ using System.Text;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Data.DbCommandProcessor;
 using LinqToDB.DataProvider.Informix;
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
@@ -32,6 +31,8 @@ using NUnit.Framework.Internal;
 namespace Tests
 {
 	using FastExpressionCompiler;
+	using LinqToDB.Data.RetryPolicy;
+	using LinqToDB.Interceptors;
 	using Model;
 	using Tools;
 
@@ -44,11 +45,11 @@ namespace Tests
 			public static readonly DateTimeOffset DateTimeOffsetUtc       = new DateTimeOffset(2020, 2, 29, 17, 9, 55, 123, TimeSpan.Zero).AddTicks(1234);
 			public static readonly DateTime DateTime                      = new DateTime(2020, 2, 29, 17, 54, 55, 123).AddTicks(1234);
 			public static readonly DateTime DateTimeUtc                   = new DateTime(2020, 2, 29, 17, 54, 55, 123, DateTimeKind.Utc).AddTicks(1234);
-			public static readonly DateTime Date                          = new DateTime(2020, 2, 29);
+			public static readonly DateTime Date                          = new (2020, 2, 29);
 			public static readonly TimeSpan TimeOfDay                     = new TimeSpan(0, 17, 54, 55, 123).Add(TimeSpan.FromTicks(1234));
-			public static readonly Guid     Guid1                         = new Guid("bc7b663d-0fde-4327-8f92-5d8cc3a11d11");
-			public static readonly Guid     Guid2                         = new Guid("a948600d-de21-4f74-8ac2-9516b287076e");
-			public static readonly Guid     Guid3                         = new Guid("bd3973a5-4323-4dd8-9f4f-df9f93e2a627");
+			public static readonly Guid     Guid1                         = new ("bc7b663d-0fde-4327-8f92-5d8cc3a11d11");
+			public static readonly Guid     Guid2                         = new ("a948600d-de21-4f74-8ac2-9516b287076e");
+			public static readonly Guid     Guid3                         = new ("bd3973a5-4323-4dd8-9f4f-df9f93e2a627");
 
 			public static byte[] Binary(int size)
 			{
@@ -59,7 +60,7 @@ namespace Tests
 				return value;
 			}
 
-			public static Guid SequentialGuid(int n)  => new Guid($"233bf399-9710-4e79-873d-2ec7bf1e{n:x4}");
+			public static Guid SequentialGuid(int n)  => new ($"233bf399-9710-4e79-873d-2ec7bf1e{n:x4}");
 		}
 
 		private const int TRACES_LIMIT = 50000;
@@ -225,7 +226,7 @@ namespace Tests
 
 			DefaultProvider = testSettings.DefaultConfiguration;
 
-			if (!DefaultProvider.IsNullOrEmpty())
+			if (!string.IsNullOrEmpty(DefaultProvider))
 			{
 				DataConnection.DefaultConfiguration = DefaultProvider;
 #if !NET472
@@ -332,10 +333,10 @@ namespace Tests
 		}
 
 #if NET472
-		const           int          IP = 22654;
-		static          bool         _isHostOpen;
-		static          LinqService? _service;
-		static readonly object       _syncRoot = new object();
+		const           int              IP = 22654;
+		static          bool             _isHostOpen;
+		static          TestLinqService? _service;
+		static readonly object           _syncRoot = new ();
 #endif
 
 		static void OpenHost(MappingSchema? ms)
@@ -357,7 +358,7 @@ namespace Tests
 					return;
 				}
 
-				host        = new ServiceHost(_service = new LinqService(ms) { AllowUpdates = true }, new Uri("net.tcp://localhost:" + (IP + TestExternals.RunID)));
+				host        = new ServiceHost(_service = new TestLinqService(ms, null, false) { AllowUpdates = true }, new Uri("net.tcp://localhost:" + (IP + TestExternals.RunID)));
 				_isHostOpen = true;
 			}
 
@@ -436,7 +437,12 @@ namespace Tests
 			ProviderName.SapHanaOdbc
 		}).ToList();
 
-		protected ITestDataContext GetDataContext(string configuration, MappingSchema? ms = null, bool testLinqService = true)
+		protected ITestDataContext GetDataContext(
+			string         configuration,
+			MappingSchema? ms                       = null,
+			bool           testLinqService          = true,
+			IInterceptor?  interceptor              = null,
+			bool           suppressSequentialAccess = false)
 		{
 			if (configuration.EndsWith(".LinqService"))
 			{
@@ -445,9 +451,25 @@ namespace Tests
 
 				var str = configuration.Substring(0, configuration.Length - ".LinqService".Length);
 
-				var dx  = testLinqService
-					? new ServiceModel.TestLinqServiceDataContext(new LinqService(ms) { AllowUpdates = true }) { Configuration = str }
-					: new TestServiceModelDataContext(IP + TestExternals.RunID) { Configuration = str } as RemoteDataContextBase;
+				RemoteDataContextBase dx;
+
+				if (testLinqService)
+					dx = new ServiceModel.TestLinqServiceDataContext(new TestLinqService(ms, interceptor, suppressSequentialAccess) { AllowUpdates = true }) { Configuration = str };
+				else
+				{
+					_service!.SuppressSequentialAccess = suppressSequentialAccess;
+					if (interceptor != null)
+						_service!.AddInterceptor(interceptor);
+
+					dx = new TestServiceModelDataContext(
+						IP + TestExternals.RunID,
+						() =>
+						{
+							_service!.SuppressSequentialAccess = false;
+							if (interceptor != null)
+								_service!.RemoveInterceptor();
+						}) { Configuration = str };
+				}
 
 				Debug.WriteLine(((IDataContext)dx).ContextID, "Provider ");
 
@@ -460,6 +482,21 @@ namespace Tests
 #endif
 			}
 
+			return GetDataConnection(configuration, ms, interceptor, suppressSequentialAccess: suppressSequentialAccess);
+		}
+
+		protected TestDataConnection GetDataConnection(
+			string         configuration,
+			MappingSchema? ms                       = null,
+			IInterceptor?  interceptor              = null,
+			IRetryPolicy?  retryPolicy              = null,
+			bool           suppressSequentialAccess = false)
+		{
+			if (configuration.EndsWith(".LinqService"))
+			{
+				throw new InvalidOperationException($"Call {nameof(GetDataContext)} for remote context creation");
+			}
+
 			Debug.WriteLine(configuration, "Provider ");
 
 			var res = new TestDataConnection(configuration);
@@ -469,15 +506,25 @@ namespace Tests
 			// add extra mapping schema to not share mappers with other sql2017/2019 providers
 			// use same schema to use cache within test provider scope
 			if (configuration == TestProvName.SqlServer2019SequentialAccess)
+			{
+				if (!suppressSequentialAccess)
+					res.AddInterceptor(SequentialAccessCommandInterceptor.Instance);
+
 				res.AddMappingSchema(_sequentialAccessSchema);
+			}
 			else if (configuration == TestProvName.SqlServer2019FastExpressionCompiler)
 				res.AddMappingSchema(_fecSchema);
+
+			if (interceptor != null)
+				res.AddInterceptor(interceptor);
+
+			res.RetryPolicy = retryPolicy;
 
 			return res;
 		}
 
-		private static readonly MappingSchema _sequentialAccessSchema = new MappingSchema();
-		private static readonly MappingSchema _fecSchema = new MappingSchema();
+		private static readonly MappingSchema _sequentialAccessSchema = new ();
+		private static readonly MappingSchema _fecSchema = new ();
 
 		protected static char GetParameterToken(string context)
 		{
@@ -1290,7 +1337,6 @@ namespace Tests
 			if (provider == TestProvName.SqlServer2019SequentialAccess)
 			{
 				Configuration.OptimizeForSequentialAccess = true;
-				DbCommandProcessorExtensions.Instance = new SequentialAccessCommandProcessor();
 			}
 			else if (provider == TestProvName.SqlServer2019FastExpressionCompiler)
 			{
@@ -1306,7 +1352,6 @@ namespace Tests
 			if (provider == TestProvName.SqlServer2019SequentialAccess)
 			{
 				Configuration.OptimizeForSequentialAccess = false;
-				DbCommandProcessorExtensions.Instance = null;
 			}
 			if (provider == TestProvName.SqlServer2019FastExpressionCompiler)
 			{
@@ -1364,7 +1409,7 @@ namespace Tests
 	static class DataCache<T>
 		where T : class
 	{
-		static readonly Dictionary<string,List<T>> _dic = new Dictionary<string, List<T>>();
+		static readonly Dictionary<string,List<T>> _dic = new ();
 		public static List<T> Get(string context)
 		{
 			lock (_dic)
@@ -1623,20 +1668,6 @@ namespace Tests
 				_logWriter.WriteLine(text);
 				_logWriter.Flush();
 			}
-		}
-	}
-
-	public class CustomCommandProcessor : IDisposable
-	{
-		private readonly IDbCommandProcessor? _original = DbCommandProcessorExtensions.Instance;
-		public CustomCommandProcessor(IDbCommandProcessor? processor)
-		{
-			DbCommandProcessorExtensions.Instance = processor;
-		}
-
-		public void Dispose()
-		{
-			DbCommandProcessorExtensions.Instance = _original;
 		}
 	}
 

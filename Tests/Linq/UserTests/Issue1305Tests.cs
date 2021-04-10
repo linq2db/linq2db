@@ -64,7 +64,7 @@ namespace Tests.UserTests
 		[Test]
 		public void TestAttributeMapping([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (var __ = db.CreateLocalTable<ColumnOrderTest>())
 			{
 				// Get table schema
@@ -95,7 +95,7 @@ namespace Tests.UserTests
 		[Test]
 		public void TestFluentMapping([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.MappingSchema.GetFluentMappingBuilder()
 					.Entity<FluentMapping>()

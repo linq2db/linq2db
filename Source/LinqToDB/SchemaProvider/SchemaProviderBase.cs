@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
 using System.Linq;
 using System.Text;
 
@@ -511,7 +510,7 @@ namespace LinqToDB.SchemaProvider
 				return null;
 
 			return
-				options.PreferProviderSpecificTypes == true
+				options.PreferProviderSpecificTypes
 				? (ProviderSpecificDataTypesDic.TryGetValue(typeName, out var dt) ? dt : DataTypesDic                .TryGetValue(typeName, out dt) ? dt : null)
 				: (DataTypesDic                .TryGetValue(typeName, out dt)     ? dt : ProviderSpecificDataTypesDic.TryGetValue(typeName, out dt) ? dt : null);
 		}
@@ -519,7 +518,7 @@ namespace LinqToDB.SchemaProvider
 		protected DataTypeInfo? GetDataTypeByProviderDbType(int typeId, GetSchemaOptions options)
 		{
 			return
-				options.PreferProviderSpecificTypes == true
+				options.PreferProviderSpecificTypes
 				? (ProviderSpecificDataTypesByProviderDbTypeDic.TryGetValue(typeId, out var dt) ? dt : DataTypesByProviderDbTypeDic                .TryGetValue(typeId, out dt) ? dt : null)
 				: (DataTypesByProviderDbTypeDic                .TryGetValue(typeId, out dt)     ? dt : ProviderSpecificDataTypesByProviderDbTypeDic.TryGetValue(typeId, out dt) ? dt : null);
 		}
@@ -607,9 +606,9 @@ namespace LinqToDB.SchemaProvider
 				var format = dataType.CreateFormat;
 				var parms  = dataType.CreateParameters;
 
-				if (!string.IsNullOrWhiteSpace(format) && !parms.IsNullOrWhiteSpace())
+				if (!string.IsNullOrWhiteSpace(format) && !string.IsNullOrWhiteSpace(parms))
 				{
-					var paramNames  = parms.Split(',');
+					var paramNames  = parms!.Split(',');
 					var paramValues = new object?[paramNames.Length];
 
 					for (var i = 0; i < paramNames.Length; i++)

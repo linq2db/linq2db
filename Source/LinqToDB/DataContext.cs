@@ -337,7 +337,8 @@ namespace LinqToDB
 		private void AssertDisposed()
 		{
 			if (_disposed)
-				throw new ObjectDisposedException(nameof(DataContext));
+				// GetType().FullName to support inherited types
+				throw new ObjectDisposedException(GetType().FullName);
 		}
 
 		/// <summary>

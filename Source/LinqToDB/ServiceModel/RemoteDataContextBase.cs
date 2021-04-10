@@ -345,7 +345,7 @@ namespace LinqToDB.ServiceModel
 			OnClosing?.Invoke(this, EventArgs.Empty);
 		}
 
-		public void Dispose()
+		public virtual void Dispose()
 		{
 			Disposed = true;
 
@@ -353,14 +353,14 @@ namespace LinqToDB.ServiceModel
 		}
 
 #if !NATIVE_ASYNC
-		public Task DisposeAsync()
+		public virtual Task DisposeAsync()
 		{
 			Disposed = true;
 
 			return ((IDataContext)this).CloseAsync();
 		}
 #else
-		public ValueTask DisposeAsync()
+		public virtual ValueTask DisposeAsync()
 		{
 			Disposed = true;
 

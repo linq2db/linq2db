@@ -36,15 +36,18 @@ namespace LinqToDB.Interceptors
 		}
 
 		// add overloads for other signatures when we have them
-		public TResult Apply<TArg, TResult>(Func<TInterceptor, TArg, TResult, TResult> apply, TArg arg1, TResult arg2)
+
+		// result = event(arg, result)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public TResult Apply<TArg, TResult>(Func<TInterceptor, TArg, TResult, TResult> apply, TArg arg, TResult result)
 		{
 			_enumerating = true;
 			try
 			{
 				foreach (var interceptor in _interceptors)
-					arg2 = apply(interceptor, arg1, arg2);
+					result = apply(interceptor, arg, result);
 
-				return arg2;
+				return result;
 			}
 			finally
 			{
@@ -53,7 +56,9 @@ namespace LinqToDB.Interceptors
 			}
 		}
 
-		public void Apply<TArg, TResult>(Action<TInterceptor, TArg, TResult> apply, TArg arg1, TResult arg2)
+		// void event(arg1, arg2)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Apply<TArg1, TArg2>(Action<TInterceptor, TArg1, TArg2> apply, TArg1 arg1, TArg2 arg2)
 		{
 			_enumerating = true;
 			try
@@ -68,13 +73,91 @@ namespace LinqToDB.Interceptors
 			}
 		}
 
+		// Task event(arg1, arg2)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public async Task Apply<TArg1, TArg2>(Func<TInterceptor, TArg1, TArg2, CancellationToken, Task> apply, TArg1 arg1, TArg2 arg2, CancellationToken cancellationToken)
 		{
 			_enumerating = true;
 			try
 			{
 				foreach (var interceptor in _interceptors)
-					await apply(interceptor, arg1, arg2, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext); ;
+					await apply(interceptor, arg1, arg2, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			}
+			finally
+			{
+				_enumerating = false;
+				RemoveDelayed();
+			}
+		}
+
+		// result = event(arg1, arg2, result)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public TResult Apply<TArg1, TArg2, TResult>(Func<TInterceptor, TArg1, TArg2, TResult, TResult> apply, TArg1 arg1, TArg2 arg2, TResult result)
+		{
+			_enumerating = true;
+			try
+			{
+				foreach (var interceptor in _interceptors)
+					result = apply(interceptor, arg1, arg2, result);
+
+				return result;
+			}
+			finally
+			{
+				_enumerating = false;
+				RemoveDelayed();
+			}
+		}
+
+		// result = await event(arg1, arg2, result, token)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public async Task<TResult> Apply<TArg1, TArg2, TResult>(Func<TInterceptor, TArg1, TArg2, TResult, CancellationToken, Task<TResult>> apply, TArg1 arg1, TArg2 arg2, TResult result, CancellationToken cancellationToken)
+		{
+			_enumerating = true;
+			try
+			{
+				foreach (var interceptor in _interceptors)
+					result = await apply(interceptor, arg1, arg2, result, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
+				return result;
+			}
+			finally
+			{
+				_enumerating = false;
+				RemoveDelayed();
+			}
+		}
+
+		// result = event(arg1, arg2, arg3, result)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public TResult Apply<TArg1, TArg2, TArg3, TResult>(Func<TInterceptor, TArg1, TArg2, TArg3, TResult, TResult> apply, TArg1 arg1, TArg2 arg2, TArg3 arg3, TResult result)
+		{
+			_enumerating = true;
+			try
+			{
+				foreach (var interceptor in _interceptors)
+					result = apply(interceptor, arg1, arg2, arg3, result);
+
+				return result;
+			}
+			finally
+			{
+				_enumerating = false;
+				RemoveDelayed();
+			}
+		}
+
+		// result = await event(arg1, arg2, arg3, result, token)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public async Task<TResult> Apply<TArg1, TArg2, TArg3, TResult>(Func<TInterceptor, TArg1, TArg2, TArg3, TResult, CancellationToken, Task<TResult>> apply, TArg1 arg1, TArg2 arg2, TArg3 arg3, TResult result, CancellationToken cancellationToken)
+		{
+			_enumerating = true;
+			try
+			{
+				foreach (var interceptor in _interceptors)
+					result = await apply(interceptor, arg1, arg2, arg3, result, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext); ;
+
+				return result;
 			}
 			finally
 			{

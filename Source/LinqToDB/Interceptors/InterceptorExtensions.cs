@@ -14,21 +14,21 @@ namespace LinqToDB
 		// CommandInitialized
 
 		/// <summary>
-		/// Adds <see cref="ICommandInterceptor.CommandInitialized(CommandInitializedEventData, DbCommand)"/> interceptor, fired on next command only.
+		/// Adds <see cref="ICommandInterceptor.CommandInitialized(CommandEventData, DbCommand)"/> interceptor, fired on next command only.
 		/// </summary>
 		/// <param name="dataConnection">Data connection to apply interceptor to.</param>
 		/// <param name="onCommandInitialized">Interceptor delegate.</param>
-		public static void OnNextCommandInitialized(this DataConnection dataConnection, Func<CommandInitializedEventData, DbCommand, DbCommand> onCommandInitialized)
+		public static void OnNextCommandInitialized(this DataConnection dataConnection, Func<CommandEventData, DbCommand, DbCommand> onCommandInitialized)
 		{
 			dataConnection.AddInterceptor(new OneTimeCommandInterceptor(onCommandInitialized));
 		}
 
 		/// <summary>
-		/// Adds <see cref="ICommandInterceptor.CommandInitialized(CommandInitializedEventData, DbCommand)"/> interceptor, fired on next command only.
+		/// Adds <see cref="ICommandInterceptor.CommandInitialized(CommandEventData, DbCommand)"/> interceptor, fired on next command only.
 		/// </summary>
 		/// <param name="dataContext">Data context to apply interceptor to.</param>
 		/// <param name="onCommandInitialized">Interceptor delegate.</param>
-		public static void OnNextCommandInitialized(this DataContext dataContext, Func<CommandInitializedEventData, DbCommand, DbCommand> onCommandInitialized)
+		public static void OnNextCommandInitialized(this DataContext dataContext, Func<CommandEventData, DbCommand, DbCommand> onCommandInitialized)
 		{
 			dataContext.AddInterceptor(new OneTimeCommandInterceptor(onCommandInitialized));
 		}

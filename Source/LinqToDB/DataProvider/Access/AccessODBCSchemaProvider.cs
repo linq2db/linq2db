@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
 using System.Linq;
 
 
@@ -56,7 +55,7 @@ namespace LinqToDB.DataProvider.Access
 					CatalogName        = null,
 					SchemaName         = schema,
 					TableName          = name,
-					IsDefaultSchema    = schema.IsNullOrEmpty(),
+					IsDefaultSchema    = string.IsNullOrEmpty(schema),
 					IsView             = t.Field<string>("TABLE_TYPE") == "VIEW",
 					IsProviderSpecific = system,
 					Description        = t.Field<string>("REMARKS")
@@ -114,7 +113,7 @@ namespace LinqToDB.DataProvider.Access
 					CatalogName         = null,
 					SchemaName          = schema,
 					ProcedureName       = name,
-					IsDefaultSchema     = schema.IsNullOrEmpty()
+					IsDefaultSchema     = string.IsNullOrEmpty(schema)
 				}
 			).ToList();
 		}
@@ -161,9 +160,9 @@ namespace LinqToDB.DataProvider.Access
 			{
 				var parms = dataType.CreateParameters;
 
-				if (!parms.IsNullOrWhiteSpace())
+				if (!string.IsNullOrWhiteSpace(parms))
 				{
-					var paramNames = parms.Split(',');
+					var paramNames = parms!.Split(',');
 					var paramValues = new object?[paramNames.Length];
 
 					for (var i = 0; i < paramNames.Length; i++)

@@ -6,7 +6,7 @@ using NUnit.Framework;
 
 namespace Tests.UserTests
 {
-	using Model;
+	using LinqToDB.Data;
 
 	[TestFixture]
 	public class GroupBySubqueryTests : TestBase
@@ -69,7 +69,7 @@ namespace Tests.UserTests
 		[Test]
 		public void Test()
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 			{
 				var q1 = (
 					from t1 in db.GetTable<Table1>()

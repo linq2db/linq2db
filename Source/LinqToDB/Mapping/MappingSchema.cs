@@ -3,14 +3,12 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data.Linq;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using System.Threading;
-using System.Timers;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -78,7 +76,7 @@ namespace LinqToDB.Mapping
 		/// mappings for same type.</remarks>
 		public MappingSchema(string? configuration, params MappingSchema[]? schemas)
 		{
-			if (configuration.IsNullOrEmpty() && (schemas == null || schemas.Length == 0))
+			if (string.IsNullOrEmpty(configuration) && (schemas == null || schemas.Length == 0))
 				configuration = "auto_" + Interlocked.Increment(ref _configurationCounter);
 
 			var schemaInfo = new MappingSchemaInfo(configuration);
@@ -169,7 +167,7 @@ namespace LinqToDB.Mapping
 			foreach (var info in Schemas)
 			{
 				var o = info.GetDefaultValue(type);
-				if (o.IsSome)
+				if (o.HasValue)
 					return o.Value;
 			}
 
@@ -222,7 +220,7 @@ namespace LinqToDB.Mapping
 			foreach (var info in Schemas)
 			{
 				var o = info.GetCanBeNull(type);
-				if (o.IsSome)
+				if (o.HasValue)
 					return o.Value;
 			}
 
@@ -842,7 +840,7 @@ namespace LinqToDB.Mapping
 
 		#region MetadataReader
 
-		readonly object _metadataReadersSyncRoot = new object();
+		readonly object _metadataReadersSyncRoot = new ();
 
 		void InitMetadataReaders()
 		{
@@ -863,7 +861,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets or sets metadata attributes provider for current schema.
 		/// Metadata providers, shipped with LINQ to DB:
-		/// - <see cref="LinqToDB.Metadata.MetadataReader"/> - aggregation metadata provider over collection of other providers;
+		/// - <see cref="Metadata.MetadataReader"/> - aggregation metadata provider over collection of other providers;
 		/// - <see cref="AttributeReader"/> - .NET attributes provider;
 		/// - <see cref="FluentMetadataReader"/> - fluent mappings metadata provider;
 		/// - <see cref="SystemDataLinqAttributeReader"/> - metadata provider that converts <see cref="System.Data.Linq.Mapping"/> attributes to LINQ to DB mapping attributes;
@@ -1129,8 +1127,8 @@ namespace LinqToDB.Mapping
 					var list = new List<string>();
 
 					foreach (var s in Schemas)
-						if (!s.Configuration.IsNullOrEmpty() && hash.Add(s.Configuration))
-							list.Add(s.Configuration);
+						if (!string.IsNullOrEmpty(s.Configuration) && hash.Add(s.Configuration!))
+							list.Add(s.Configuration!);
 
 					_configurationList = list.ToArray();
 				}
@@ -1223,7 +1221,7 @@ namespace LinqToDB.Mapping
 			foreach (var info in Schemas)
 			{
 				var o = info.GetScalarType(type);
-				if (o.IsSome)
+				if (o.HasValue)
 					return o.Value;
 			}
 
@@ -1326,7 +1324,7 @@ namespace LinqToDB.Mapping
 			foreach (var info in Schemas)
 			{
 				var o = info.GetDataType(type);
-				if (o.IsSome)
+				if (o.HasValue)
 					return o.Value;
 			}
 

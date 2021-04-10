@@ -19,7 +19,7 @@ namespace LinqToDB.Common.Internal
 			var pms = string.Join(multiline ? ",\n\t" : ", ",
 				methodInfo.GetParameters().Select(p => $"{p.ParameterType.DisplayName(fullName)} {p.Name}"));
 
-			if (!pms.IsNullOrEmpty() && multiline)
+			if (!string.IsNullOrEmpty(pms) && multiline)
 				pms += "\n\t";
 
 			var genericArgs = string.Empty;

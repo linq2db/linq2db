@@ -8,6 +8,7 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using LinqToDB.Data;
 	using Model;
 
 
@@ -637,7 +638,7 @@ namespace Tests.Linq
 		[Test]
 		public void Concat90()
 		{
-			using(var context = new TestDataConnection())
+			using(var context = new DataConnection())
 			{
 				var join1 =
 					from t1 in context.GetTable<TestEntity1>()

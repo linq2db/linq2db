@@ -23,7 +23,7 @@ using Tests.Model;
 // ReSharper disable once TestClassNameSuffixWarning
 public class a_CreateData : TestBase
 {
-	static void RunScript(string configString, string divider, string name, Action<DbConnection>? action = null, string? databaseName = null)
+	void RunScript(string configString, string divider, string name, Action<DbConnection>? action = null, string? databaseName = null)
 	{
 		TestContext.WriteLine("=== " + name + " === \n");
 
@@ -47,7 +47,7 @@ public class a_CreateData : TestBase
 
 		Exception? exception = null;
 
-		using (var db = new TestDataConnection(configString))
+		using (var db = GetDataConnection(configString))
 		{
 			if (configString == ProviderName.OracleNative || configString == TestProvName.Oracle11Native)
 			{
@@ -233,7 +233,7 @@ public class a_CreateData : TestBase
 		}
 	}
 
-	static void RunScript(CreateDataScript script)
+	void RunScript(CreateDataScript script)
 	{
 		RunScript(script.ConfigString, script.Divider, script.Name, script.Action, script.Database);
 	}

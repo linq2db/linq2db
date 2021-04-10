@@ -13,7 +13,7 @@ namespace Tests.UserTests
 		[Test]
 		public void Test([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var one = new QueryOne(db).Query().ToArray();
 				var two = new QueryTwo(db).Query().ToArray();

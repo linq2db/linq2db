@@ -5,6 +5,7 @@ using NUnit.Framework;
 namespace Tests.Tools.EntityServices
 {
 	using LinqToDB.Common;
+	using LinqToDB.Data;
 	using LinqToDB.Tools.EntityServices;
 	using Model;
 
@@ -86,7 +87,7 @@ namespace Tests.Tools.EntityServices
 		[Test]
 		public void NegativeTest()
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 			using (var map = new IdentityMap(db))
 			{
 				Assert.Throws<LinqToDBConvertException>(() => map.GetEntity<Person>(new { ID1 = 1 }));

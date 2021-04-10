@@ -72,22 +72,22 @@ namespace LinqToDB.Common
 			return new DbDataType(
 				from.SystemType != typeof(object)   ? from.SystemType : SystemType,
 				from.DataType != DataType.Undefined ? from.DataType   : DataType,
-				!from.DbType.IsNullOrEmpty()        ? from.DbType     : DbType,
+				!string.IsNullOrEmpty(from.DbType)  ? from.DbType     : DbType,
 				from.Length    ?? Length,
 				from.Precision ?? Precision,
 				from.Scale     ?? Scale);
 		}
 
 
-		public DbDataType WithoutSystemType(DbDataType       from) => new DbDataType(SystemType, from.DataType, from.DbType, from.Length, from.Precision, from.Scale);
-		public DbDataType WithoutSystemType(ColumnDescriptor from) => new DbDataType(SystemType, from.DataType, from.DbType, from.Length, from.Precision, from.Scale);
+		public DbDataType WithoutSystemType(DbDataType       from) => new (SystemType, from.DataType, from.DbType, from.Length, from.Precision, from.Scale);
+		public DbDataType WithoutSystemType(ColumnDescriptor from) => new (SystemType, from.DataType, from.DbType, from.Length, from.Precision, from.Scale);
 
-		public DbDataType WithSystemType(Type     systemType) => new DbDataType(systemType, DataType, DbType, Length, Precision, Scale);
-		public DbDataType WithDataType  (DataType dataType  ) => new DbDataType(SystemType, dataType, DbType, Length, Precision, Scale);
-		public DbDataType WithDbType    (string?  dbName    ) => new DbDataType(SystemType, DataType, dbName, Length, Precision, Scale);
-		public DbDataType WithLength    (int?     length    ) => new DbDataType(SystemType, DataType, DbType, length, Precision, Scale);
-		public DbDataType WithPrecision (int?     precision ) => new DbDataType(SystemType, DataType, DbType, Length, precision, Scale);
-		public DbDataType WithScale     (int?     scale     ) => new DbDataType(SystemType, DataType, DbType, Length, Precision, scale);
+		public DbDataType WithSystemType(Type     systemType) => new (systemType, DataType, DbType, Length, Precision, Scale);
+		public DbDataType WithDataType  (DataType dataType  ) => new (SystemType, dataType, DbType, Length, Precision, Scale);
+		public DbDataType WithDbType    (string?  dbName    ) => new (SystemType, DataType, dbName, Length, Precision, Scale);
+		public DbDataType WithLength    (int?     length    ) => new (SystemType, DataType, DbType, length, Precision, Scale);
+		public DbDataType WithPrecision (int?     precision ) => new (SystemType, DataType, DbType, Length, precision, Scale);
+		public DbDataType WithScale     (int?     scale     ) => new (SystemType, DataType, DbType, Length, Precision, scale);
 
 		public override string ToString()
 		{

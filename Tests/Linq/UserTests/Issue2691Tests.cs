@@ -24,7 +24,7 @@ namespace Tests.UserTests
 		[Test]
 		public void TestBinaryLengthTranslation([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<IssueClass>())
 			{
 				db.Insert(new IssueClass()

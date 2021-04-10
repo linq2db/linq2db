@@ -146,7 +146,7 @@ namespace LinqToDB.SqlQuery
 								f =>
 								{
 									var a = f.PhysicalName;
-									return a.IsNullOrEmpty()
+									return string.IsNullOrEmpty(a)
 										? "c1"
 										: a + (a!.EndsWith("_") ? string.Empty : "_") + "1";
 								},
@@ -180,7 +180,7 @@ namespace LinqToDB.SqlQuery
 									c =>
 									{
 										var a = c.Alias;
-										return a.IsNullOrEmpty()
+										return string.IsNullOrEmpty(a)
 											? "c1"
 											: a + (a!.EndsWith("_") ? string.Empty : "_") + "1";
 									},
@@ -246,7 +246,7 @@ namespace LinqToDB.SqlQuery
 					ts =>
 					{
 						var a = ts.Alias;
-						return a.IsNullOrEmpty() ? "t1" : a + (a!.EndsWith("_") ? string.Empty : "_") + "1";
+						return string.IsNullOrEmpty(a) ? "t1" : a + (a!.EndsWith("_") ? string.Empty : "_") + "1";
 					},
 					StringComparer.OrdinalIgnoreCase);
 			}
@@ -260,8 +260,8 @@ namespace LinqToDB.SqlQuery
 					{
 						p.Name = n;
 					},
-					p => p.Name.IsNullOrEmpty() ? "p_1" :
-						char.IsDigit(p.Name[p.Name.Length - 1]) ? p.Name : p.Name + "_1",
+					p => string.IsNullOrEmpty(p.Name) ? "p_1" :
+						char.IsDigit(p.Name![p.Name.Length - 1]) ? p.Name : p.Name + "_1",
 					StringComparer.OrdinalIgnoreCase);
 			}
 

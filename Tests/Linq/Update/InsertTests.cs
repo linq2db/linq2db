@@ -965,7 +965,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertWithGuidIdentity([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var id = (Guid)db.InsertWithIdentity(new GuidID { Field1 = 1 });
 				Assert.AreNotEqual(Guid.Empty, id);
@@ -978,7 +978,7 @@ namespace Tests.xUpdate
 			try
 			{
 				SqlServerConfiguration.GenerateScopeIdentity = false;
-				using (var db = new DataConnection(context))
+				using (var db = GetDataConnection(context))
 				{
 					var id = (Guid) db.InsertWithIdentity(new GuidID {Field1 = 1});
 					Assert.AreNotEqual(Guid.Empty, id);
@@ -1033,7 +1033,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertWithGuidIdentity2([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var id = (Guid)db.InsertWithIdentity(new GuidID2 {});
 			}
@@ -1236,7 +1236,7 @@ namespace Tests.xUpdate
 		{
 			Assert.Throws<LinqException>(() =>
 			{
-				using (var db = new TestDataConnection())
+				using (var db = new DataConnection())
 				{
 					var p = new Person()
 					{

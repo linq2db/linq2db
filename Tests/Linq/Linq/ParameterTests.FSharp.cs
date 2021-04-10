@@ -18,7 +18,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlStringParameter([DataSources(false)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var p = "John";
 				var person1 = db.GetTable<Person>().Where(t => t.FirstName == p).Single();
@@ -36,7 +36,7 @@ namespace Tests.Linq
 		public void ExposeSqlStringParameter([DataSources(false, ProviderName.DB2, TestProvName.AllInformix)]
 			string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var p   = "abc";
 				var sql = db.GetTable<Person>().Where(t => t.FirstName == p).ToString();

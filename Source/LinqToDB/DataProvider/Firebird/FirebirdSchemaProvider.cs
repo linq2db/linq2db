@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
 using System.IO;
 using System.Linq;
 
@@ -122,7 +121,7 @@ namespace LinqToDB.DataProvider.Firebird
 					CatalogName         = catalog,
 					SchemaName          = schema,
 					ProcedureName       = name,
-					IsDefaultSchema     = schema.IsNullOrEmpty(),
+					IsDefaultSchema     = string.IsNullOrEmpty(schema),
 					ProcedureDefinition = p.Field<string>("SOURCE")
 				}
 			).ToList();
@@ -205,11 +204,11 @@ namespace LinqToDB.DataProvider.Firebird
 
 			foreach (var dataType in dataTypes)
 			{
-				if (dataType.CreateFormat.IsNullOrEmpty() && !dataType.CreateParameters.IsNullOrEmpty())
+				if (string.IsNullOrEmpty(dataType.CreateFormat) && !string.IsNullOrEmpty(dataType.CreateParameters))
 				{
 					dataType.CreateFormat =
 						dataType.TypeName + "(" +
-						string.Join(",", dataType.CreateParameters.Split(',').Select((_,i) => "{" + i + "}")) +
+						string.Join(",", dataType.CreateParameters!.Split(',').Select((_,i) => "{" + i + "}")) +
 						")";
 				}
 			}

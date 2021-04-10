@@ -1664,7 +1664,7 @@ namespace Tests.Linq
 		[Test]
 		public void ExistsSqlTest1([DataSources(false)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				db.Parent.Where(p => db.Child.Select(c => c.ParentID).Contains(p.ParentID)).Delete();
@@ -1676,7 +1676,7 @@ namespace Tests.Linq
 		[Test]
 		public void ExistsSqlTest2([DataSources(false)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				db.Parent.Where(p => p.Children.Any()).Delete();
@@ -1693,7 +1693,7 @@ namespace Tests.Linq
 		[Test]
 		public void OptionalObjectInCondition([DataSources(false)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				var p  = new Parameter() { Id = 1};

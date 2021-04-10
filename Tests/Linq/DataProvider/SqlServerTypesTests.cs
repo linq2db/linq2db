@@ -170,7 +170,7 @@ namespace Tests.DataProvider
 
 				AreEqual(
 					SqlTypes.Data(context)
-						.Where(t => (bool)hid.IsDescendantOf(t.HID) == true),
+						.Where(t => (bool)hid.IsDescendantOf(t.HID)),
 					db.GetTable<SqlTypes>()
 						.Where(t => (bool)hid.IsDescendantOf(t.HID) == true));
 			}

@@ -16,7 +16,7 @@ namespace Tests
 		[MaybeNull]
 		public DbCommand     Command    { get; private set; }
 
-		public override DbCommand CommandInitialized(CommandInitializedEventData eventData, DbCommand command)
+		public override DbCommand CommandInitialized(CommandEventData eventData, DbCommand command)
 		{
 			Parameters = command.Parameters.Cast<DbParameter>().ToArray();
 			Command    = command;

@@ -21,8 +21,8 @@ namespace LinqToDB.Linq.Builder
 	{
 		#region BuildExpression
 
-		readonly HashSet<Expression>                    _skippedExpressions   = new HashSet<Expression>();
-		readonly Dictionary<Expression,UnaryExpression> _convertedExpressions = new Dictionary<Expression,UnaryExpression>();
+		readonly HashSet<Expression>                    _skippedExpressions   = new ();
+		readonly Dictionary<Expression,UnaryExpression> _convertedExpressions = new ();
 
 		public void UpdateConvertedExpression(Expression oldExpression, Expression newExpression)
 		{
@@ -195,7 +195,7 @@ namespace LinqToDB.Linq.Builder
 									Expression.MakeMemberAccess(varTempVar, ma.Member));
 								expression = condition;
 							}
-							else if (!alias.IsNullOrEmpty() && (ctx.SelectQuery.Select.Columns.Count - prevCount) == 1)
+							else if (!string.IsNullOrEmpty(alias) && (ctx.SelectQuery.Select.Columns.Count - prevCount) == 1)
 							{
 								ctx.SelectQuery.Select.Columns[ctx.SelectQuery.Select.Columns.Count - 1].Alias = alias;
 							}
@@ -514,7 +514,7 @@ namespace LinqToDB.Linq.Builder
 			public Expression?          Expression;
 		}
 
-		readonly Dictionary<IBuildContext,List<SubQueryContextInfo>> _buildContextCache = new Dictionary<IBuildContext,List<SubQueryContextInfo>>();
+		readonly Dictionary<IBuildContext,List<SubQueryContextInfo>> _buildContextCache = new ();
 
 		SubQueryContextInfo GetSubQueryContext(IBuildContext context, MethodCallExpression expr)
 		{
@@ -542,8 +542,8 @@ namespace LinqToDB.Linq.Builder
 			if (info.Expression == null)
 				info.Expression = info.Context.BuildExpression(null, 0, enforceServerSide);
 
-			if (!alias.IsNullOrEmpty())
-				info.Context.SetAlias(alias);
+			if (!string.IsNullOrEmpty(alias))
+				info.Context.SetAlias(alias!);
 			return info.Expression;
 		}
 

@@ -12,7 +12,7 @@ namespace Tests.UserTests
 		[Test]
 		public void Test([DataSources(false)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var cnt = db.DataProvider.SqlProviderFlags.MaxInListValuesCount;
 

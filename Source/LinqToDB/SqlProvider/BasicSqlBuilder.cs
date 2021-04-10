@@ -554,10 +554,10 @@ namespace LinqToDB.SqlProvider
 				AppendIndent();
 				BuildColumnExpression(selectQuery, expr, col.Alias, ref addAlias);
 
-				if (!SkipAlias && addAlias && !col.Alias.IsNullOrEmpty())
+				if (!SkipAlias && addAlias && !string.IsNullOrEmpty(col.Alias))
 				{
 					StringBuilder.Append(" as ");
-					Convert(StringBuilder, col.Alias, ConvertType.NameToQueryFieldAlias);
+					Convert(StringBuilder, col.Alias!, ConvertType.NameToQueryFieldAlias);
 				}
 			}
 
@@ -2481,7 +2481,7 @@ namespace LinqToDB.SqlProvider
 
 		string IdentText(string text, int ident)
 		{
-			if (text.IsNullOrEmpty())
+			if (string.IsNullOrEmpty(text))
 				return text;
 
 			text = text.Replace("\r", "");

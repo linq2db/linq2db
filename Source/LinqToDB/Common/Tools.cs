@@ -27,27 +27,6 @@ namespace LinqToDB.Common
 		}
 
 		/// <summary>
-		/// Shortcut extension method for <see cref="string.IsNullOrEmpty(string)"/> method.
-		/// </summary>
-		/// <param name="str">String value to check.</param>
-		/// <returns><c>true</c> if string is null or empty, <c>false</c> otherwise.</returns>
-		public static bool IsNullOrEmpty([NotNullWhen(false)] this string? str)
-		{
-			return string.IsNullOrEmpty(str);
-		}
-
-		// another reason to use those shortcuts - nullability annotations not available for string methods
-		/// <summary>
-		/// Shortcut extension method for <see cref="string.IsNullOrWhiteSpace(string)"/> method.
-		/// </summary>
-		/// <param name="str">String value to check.</param>
-		/// <returns><c>true</c> if string is null or contains only whitespace characters, <c>false</c> otherwise.</returns>
-		public static bool IsNullOrWhiteSpace([NotNullWhen(false)] this string? str)
-		{
-			return string.IsNullOrWhiteSpace(str);
-		}
-
-		/// <summary>
 		/// Returns path to original directory with provided assembly.
 		/// </summary>
 		/// <param name="assembly">Assembly.</param>

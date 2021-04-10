@@ -8,8 +8,7 @@ using System.Threading.Tasks;
 namespace LinqToDB.Data
 {
 	using Async;
-	using DbCommandProcessor;
-	using LinqToDB.DataProvider;
+	using LinqToDB.Common;
 	using LinqToDB.Interceptors;
 	using RetryPolicy;
 
@@ -22,15 +21,15 @@ namespace LinqToDB.Data
 		/// <returns>Database transaction object.</returns>
 		public virtual async Task<DataConnectionTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
 		{
-			await EnsureConnectionAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			await EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			// If transaction is open, we dispose it, it will rollback all changes.
 			//
-			if (TransactionAsync != null) await TransactionAsync.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			if (TransactionAsync != null) await TransactionAsync.DisposeAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			// Create new transaction object.
 			//
-			TransactionAsync = await _connection!.BeginTransactionAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			TransactionAsync = await _connection!.BeginTransactionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			_closeTransaction = true;
 
@@ -50,15 +49,15 @@ namespace LinqToDB.Data
 		/// <returns>Database transaction object.</returns>
 		public virtual async Task<DataConnectionTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken = default)
 		{
-			await EnsureConnectionAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			await EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			// If transaction is open, we dispose it, it will rollback all changes.
 			//
-			if (TransactionAsync != null) await TransactionAsync.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			if (TransactionAsync != null) await TransactionAsync.DisposeAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			// Create new transaction object.
 			//
-			TransactionAsync = await _connection!.BeginTransactionAsync(isolationLevel, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			TransactionAsync = await _connection!.BeginTransactionAsync(isolationLevel, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			_closeTransaction = true;
 
@@ -99,15 +98,15 @@ namespace LinqToDB.Data
 				{
 					if (_connectionInterceptors != null)
 						await _connectionInterceptors.Apply((interceptor, arg1, arg2, ct) => interceptor.ConnectionOpeningAsync(arg1, arg2, ct), new ConnectionOpeningEventData(this), _connection.Connection, cancellationToken)
-							.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+							.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
-					await _connection.OpenAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					await _connection.OpenAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 					_closeConnection = true;
 
 					if (_connectionInterceptors != null)
 						await _connectionInterceptors.Apply((interceptor, arg1, arg2, ct) => interceptor.ConnectionOpenedAsync(arg1, arg2, ct), new ConnectionOpenedEventData(this), _connection.Connection, cancellationToken)
-							.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+							.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 				}
 				catch (Exception ex)
 				{
@@ -136,11 +135,11 @@ namespace LinqToDB.Data
 		{
 			if (TransactionAsync != null)
 			{
-				await TransactionAsync.CommitAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				await TransactionAsync.CommitAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 				if (_closeTransaction)
 				{
-					await TransactionAsync.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					await TransactionAsync.DisposeAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
 					TransactionAsync = null;
 
 					if (_command != null)
@@ -159,11 +158,11 @@ namespace LinqToDB.Data
 		{
 			if (TransactionAsync != null)
 			{
-				await TransactionAsync.RollbackAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				await TransactionAsync.RollbackAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 				if (_closeTransaction)
 				{
-					await TransactionAsync.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					await TransactionAsync.DisposeAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
 					TransactionAsync = null;
 
 					if (_command != null)
@@ -184,7 +183,7 @@ namespace LinqToDB.Data
 
 			if (TransactionAsync != null && _closeTransaction)
 			{
-				await TransactionAsync.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				await TransactionAsync.DisposeAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
 				TransactionAsync = null;
 			}
 
@@ -192,11 +191,11 @@ namespace LinqToDB.Data
 			{
 				if (_disposeConnection)
 				{
-					await _connection.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					await _connection.DisposeAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
 					_connection = null;
 				}
 				else if (_closeConnection)
-					await _connection.CloseAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					await _connection.CloseAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			}
 
 			OnClosed?.Invoke(this, EventArgs.Empty);
@@ -213,21 +212,29 @@ namespace LinqToDB.Data
 #endif
 		{
 			Disposed = true;
-			await CloseAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			await CloseAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
 		}
 
 		#region ExecuteNonQueryAsync
 
-		protected virtual Task<int> ExecuteNonQueryAsync(DbCommand command, CancellationToken cancellationToken)
+		protected virtual async Task<int> ExecuteNonQueryAsync(DbCommand command, CancellationToken cancellationToken)
 		{
-			return CurrentCommand!.ExecuteNonQueryExtAsync(cancellationToken);
+			var result = Option<int>.None;
+
+			if (_commandInterceptors != null)
+				result = await _commandInterceptors.Apply((interceptor, arg1, arg2, arg3, ct) => interceptor.ExecuteNonQueryAsync(arg1, arg2, arg3, ct), new CommandEventData(this), CurrentCommand!, result, cancellationToken)
+					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+			return result.HasValue
+				? result.Value
+				: await CurrentCommand!.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 		}
 
 		internal async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
 		{
 			if (TraceSwitchConnection.Level == TraceLevel.Off)
 				using (DataProvider.ExecuteScope(this))
-					return await ExecuteNonQueryAsync(CurrentCommand!, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					return await ExecuteNonQueryAsync(CurrentCommand!, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			var now = DateTime.UtcNow;
 			var sw  = Stopwatch.StartNew();
@@ -246,7 +253,7 @@ namespace LinqToDB.Data
 			{
 				int ret;
 				using (DataProvider.ExecuteScope(this))
-					ret = await ExecuteNonQueryAsync(CurrentCommand!, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					ret = await ExecuteNonQueryAsync(CurrentCommand!, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 				if (TraceSwitchConnection.TraceInfo)
 				{
@@ -284,16 +291,24 @@ namespace LinqToDB.Data
 
 		#region ExecuteScalarAsync
 
-		protected virtual Task<object?> ExecuteScalarAsync(DbCommand command, CancellationToken cancellationToken)
+		protected virtual async Task<object?> ExecuteScalarAsync(DbCommand command, CancellationToken cancellationToken)
 		{
-			return CurrentCommand!.ExecuteScalarExtAsync(cancellationToken);
+			var result = Option<object?>.None;
+
+			if (_commandInterceptors != null)
+				result = await _commandInterceptors.Apply((interceptor, arg1, arg2, arg3, ct) => interceptor.ExecuteScalarAsync(arg1, arg2, arg3, ct), new CommandEventData(this), CurrentCommand!, result, cancellationToken)
+					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+			return result.HasValue
+				? result.Value
+				: await CurrentCommand!.ExecuteScalarAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 		}
 
 		internal async Task<object?> ExecuteScalarAsync(CancellationToken cancellationToken)
 		{
 			if (TraceSwitchConnection.Level == TraceLevel.Off)
 				using (DataProvider.ExecuteScope(this))
-					return await ExecuteScalarAsync(CurrentCommand!, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					return await ExecuteScalarAsync(CurrentCommand!, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			var now = DateTime.UtcNow;
 			var sw  = Stopwatch.StartNew();
@@ -312,7 +327,7 @@ namespace LinqToDB.Data
 			{
 				object? ret;
 				using (DataProvider.ExecuteScope(this))
-					ret = await ExecuteScalarAsync(CurrentCommand!, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					ret = await ExecuteScalarAsync(CurrentCommand!, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 				if (TraceSwitchConnection.TraceInfo)
 				{
@@ -354,7 +369,16 @@ namespace LinqToDB.Data
 			CommandBehavior   commandBehavior,
 			CancellationToken cancellationToken)
 		{
-			var dr      = await CurrentCommand!.ExecuteReaderExtAsync(commandBehavior, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			var result = Option<DbDataReader>.None;
+
+			if (_commandInterceptors != null)
+				result = await _commandInterceptors.Apply((interceptor, arg1, arg2, arg3, arg4, ct) => interceptor.ExecuteReaderAsync(arg1, arg2, arg3, arg4, ct), new CommandEventData(this), CurrentCommand!, commandBehavior, result, cancellationToken)
+					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+			var dr = result.HasValue
+				? result.Value
+				: await CurrentCommand!.ExecuteReaderAsync(commandBehavior, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
 			var wrapper = new DataReaderWrapper(this, dr, CurrentCommand);
 			_command    = null;
 
@@ -368,7 +392,7 @@ namespace LinqToDB.Data
 			if (TraceSwitchConnection.Level == TraceLevel.Off)
 				using (DataProvider.ExecuteScope(this))
 					return await ExecuteReaderAsync(CurrentCommand!, commandBehavior, cancellationToken)
-						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+						.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			var now = DateTime.UtcNow;
 			var sw  = Stopwatch.StartNew();
@@ -389,7 +413,7 @@ namespace LinqToDB.Data
 
 				using (DataProvider.ExecuteScope(this))
 					ret = await ExecuteReaderAsync(CurrentCommand!, commandBehavior, cancellationToken)
-						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+						.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 				if (TraceSwitchConnection.TraceInfo)
 				{

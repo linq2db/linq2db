@@ -474,7 +474,7 @@ namespace Tests.Linq
 		[Test]
 		public void StartsWithSQL([DataSources(false)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				(from p in db.Person where p.FirstName.StartsWith("Jo") && !p.LastName.StartsWith("Je") select p).ToList();
 

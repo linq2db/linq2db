@@ -58,7 +58,7 @@ namespace Tests.UserTests
 		[Test]
 		public void Issue1298Test([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				db.CreateTable<mega_composites>();
@@ -116,7 +116,7 @@ namespace Tests.UserTests
 		[Test, ActiveIssue(1298)]
 		public void Issue1298Test1([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				db.CreateTable<mega_composites>();

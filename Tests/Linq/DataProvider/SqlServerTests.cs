@@ -39,9 +39,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestParameters([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			// mapping fails and fallbacks to slow-mapper
-			using (new CustomCommandProcessor(null))
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context, suppressSequentialAccess: true))
 			{
 				Assert.That(conn.Execute<string>("SELECT @p",        new { p =  1  }), Is.EqualTo("1"));
 				Assert.That(conn.Execute<string>("SELECT @p",        new { p = "1" }), Is.EqualTo("1"));
@@ -55,7 +53,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDataTypes([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(TestType<long?>    (conn, "bigintDataType",           DataType.Int64),         Is.EqualTo(1000000L));
 				Assert.That(TestType<decimal?> (conn, "numericDataType",          DataType.Decimal),       Is.EqualTo(9999999m));
@@ -101,7 +99,7 @@ namespace Tests.DataProvider
 		public void TestDataTypes2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (new DisableBaseline("Provider-specific output", IsMsProvider(context)))
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(TestType<DateTime?>      (conn, "dateDataType",           DataType.Date,           "AllTypes2"), Is.EqualTo(new DateTime(2012, 12, 12)));
 				Assert.That(TestType<DateTimeOffset?>(conn, "datetimeoffsetDataType", DataType.DateTimeOffset, "AllTypes2"), Is.EqualTo(new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, new TimeSpan(5, 0, 0))));
@@ -167,7 +165,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestNumerics([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				TestSimple<bool>   (conn, true, DataType.Boolean);
 				TestSimple<sbyte>  (conn, 1,    DataType.SByte);
@@ -217,7 +215,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDate([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var dateTime = new DateTime(2012, 12, 12);
 
@@ -231,7 +229,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestSmallDateTime([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var dateTime = new DateTime(2012, 12, 12, 12, 12, 00);
 
@@ -246,7 +244,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDateTime([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var dateTime = new DateTime(2012, 12, 12, 12, 12, 12);
 
@@ -262,7 +260,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDateTime2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var dateTime2 = new DateTime(2012, 12, 12, 12, 12, 12, 12).AddTicks(1);
 
@@ -323,7 +321,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDateTime2Precision([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context, [Values] bool inline)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (var tb = db.CreateLocalTable(DateTime2Table.Data))
 			{
 				db.InlineParameters = inline;
@@ -356,7 +354,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDateTimeOffset([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var dto = new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, new TimeSpan( 5, 0, 0));
 				var lto = new DateTimeOffset(2012, 12, 12, 13, 12, 12, 12, new TimeSpan(-4, 0, 0));
@@ -403,7 +401,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestTimeSpan([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var time = new TimeSpan(12, 12, 12);
 
@@ -420,7 +418,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestChar([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<char> ("SELECT Cast('1' as char)"),         Is.EqualTo('1'));
 				Assert.That(conn.Execute<char?>("SELECT Cast('1' as char)"),         Is.EqualTo('1'));
@@ -466,7 +464,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestString([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<string>("SELECT Cast('12345' as char)"),          Is.EqualTo("12345"));
 				Assert.That(conn.Execute<string>("SELECT Cast('12345' as char(20))"),      Is.EqualTo("12345"));
@@ -534,7 +532,7 @@ namespace Tests.DataProvider
 			var arr1 = new byte[] {       48, 57 };
 			var arr2 = new byte[] { 0, 0, 48, 57 };
 
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<byte[]>("SELECT Cast(12345 as binary(2))"),      Is.EqualTo(           arr1));
 				Assert.That(conn.Execute<Binary>("SELECT Cast(12345 as binary(4))"),      Is.EqualTo(new Binary(arr2)));
@@ -563,7 +561,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestSqlTypes([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var arr = new byte[] { 48, 57 };
 
@@ -605,7 +603,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestGuid([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(
 					conn.Execute<Guid>("SELECT Cast('6F9619FF-8B86-D011-B42D-00C04FC964FF' as uniqueidentifier)"),
@@ -625,7 +623,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestTimestamp([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var arr = new byte[] { 0, 0, 0, 0, 0, 0, 0, 1 };
 
@@ -640,7 +638,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestSqlVariant([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<object>("SELECT Cast(1 as sql_variant)"), Is.EqualTo(1));
 				Assert.That(conn.Execute<int>   ("SELECT Cast(1 as sql_variant)"), Is.EqualTo(1));
@@ -657,7 +655,7 @@ namespace Tests.DataProvider
 			if (IsMsProvider(context))
 				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
 
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var id = SqlHierarchyId.Parse("/1/3/");
 
@@ -676,7 +674,7 @@ namespace Tests.DataProvider
 			if (IsMsProvider(context))
 				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
 
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var id = SqlGeometry.Parse("LINESTRING (100 100, 20 180, 180 180)");
 
@@ -698,7 +696,7 @@ namespace Tests.DataProvider
 			if (IsMsProvider(context))
 				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
 
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var id = SqlGeography.Parse("LINESTRING (-122.36 47.656, -122.343 47.656)");
 
@@ -717,7 +715,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestXml([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<string>     ("SELECT Cast('<xml/>' as xml)"),            Is.EqualTo("<xml/>").Or.EqualTo("<xml />"));
 				Assert.That(conn.Execute<XDocument>  ("SELECT Cast('<xml/>' as xml)").ToString(), Is.EqualTo("<xml/>").Or.EqualTo("<xml />"));
@@ -744,7 +742,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestEnum1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<TestEnum> ("SELECT 'A'"), Is.EqualTo(TestEnum.AA));
 				Assert.That(conn.Execute<TestEnum?>("SELECT 'A'"), Is.EqualTo(TestEnum.AA));
@@ -759,7 +757,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestEnum2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<string>("SELECT @p", new { p = TestEnum.AA }), Is.EqualTo("A"));
 				Assert.That(conn.Execute<string>("SELECT @p", new { p = (TestEnum?)TestEnum.BB }),
@@ -786,7 +784,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void BulkCopyLinqTypesMultipleRows([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				try
 				{
@@ -818,7 +816,7 @@ namespace Tests.DataProvider
 		[Test]
 		public async Task BulkCopyLinqTypesMultipleRowsAsync([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				try
 				{
@@ -850,7 +848,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void BulkCopyLinqTypesProviderSpecific([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				try
 				{
@@ -882,7 +880,7 @@ namespace Tests.DataProvider
 		[Test]
 		public async Task BulkCopyLinqTypesProviderSpecificAsync([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				try
 				{
@@ -1028,7 +1026,7 @@ namespace Tests.DataProvider
 
 		void BulkCopyAllTypes(string context, BulkCopyType bulkCopyType)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.CommandTimeout = 60;
 
@@ -1063,7 +1061,7 @@ namespace Tests.DataProvider
 
 		async Task BulkCopyAllTypesAsync(string context, BulkCopyType bulkCopyType)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.CommandTimeout = 60;
 
@@ -1193,7 +1191,7 @@ namespace Tests.DataProvider
 			if (IsMsProvider(context))
 				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
 
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.CommandTimeout = 60;
 
@@ -1223,7 +1221,7 @@ namespace Tests.DataProvider
 			if (IsMsProvider(context))
 				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
 
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.CommandTimeout = 60;
 
@@ -1281,7 +1279,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void CreateAllTypes([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var ms = new MappingSchema();
 
@@ -1310,7 +1308,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void CreateAllTypes2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var ms = new MappingSchema();
 
@@ -1344,7 +1342,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void CreateTempTable([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.CreateTable<TempTable>();
 				db.DropTable<TempTable>();
@@ -1355,8 +1353,8 @@ namespace Tests.DataProvider
 		[Test]
 		public void CreateTempTable2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db1 = new DataConnection(context))
-			using (var db2 = new DataConnection(context))
+			using (var db1 = GetDataConnection(context))
+			using (var db2 = GetDataConnection(context))
 			{
 				db1.CreateTable<TempTable>();
 				db2.CreateTable<TempTable>();
@@ -1376,7 +1374,7 @@ namespace Tests.DataProvider
 		{
 			SqlServerDataProvider provider;
 
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				provider = new SqlServerDataProvider(db.DataProvider.Name, ((SqlServerDataProvider)db.DataProvider).Version, ((SqlServerDataProvider)db.DataProvider).Provider);
 			}
@@ -1418,7 +1416,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void OverflowTest2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var list = db.GetTable<DecimalOverflow2>().ToList();
 			}
@@ -1746,7 +1744,7 @@ namespace Tests.DataProvider
 		[ActiveIssue(449)]
 		public void Issue449Test([IncludeDataSources(false, TestProvName.Northwind)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.Execute(@"
 IF EXISTS (SELECT * FROM sys.objects WHERE type = 'IF' AND name = 'Issue449')
@@ -1792,7 +1790,7 @@ AS
 		{
 			var methodInfo = GetType().GetMethod(nameof(GetPermissions), new[] { typeof(int), typeof(int) })!;
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable<Issue1294Table>())
 			{
 				db.Execute(@"
@@ -1831,7 +1829,7 @@ AS
 		[ActiveIssue(1468)]
 		public void Issue1468Test([IncludeDataSources(false, TestProvName.AllSqlServer)] string context, [Values] bool useFmtOnly)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var options = new GetSchemaOptions();
 				options.GetTables     = false;
@@ -1851,7 +1849,7 @@ AS
 		[Test]
 		public void TestDescriptions([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var options = new GetSchemaOptions();
 				options.GetTables = false;

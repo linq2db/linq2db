@@ -29,7 +29,7 @@ namespace LinqToDB.Data.RetryPolicy
 		///     or that already completed successfully.
 		/// </param>
 		/// <typeparam name="TResult">
-		///   The result type of the <see cref="System.Threading.Tasks.Task{T}" /> returned by <paramref name="operation" />.
+		///   The result type of the <see cref="Task{T}" /> returned by <paramref name="operation" />.
 		/// </typeparam>
 		/// <returns>
 		///     A task that will run to completion if the original task completes successfully (either the

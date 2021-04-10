@@ -15,7 +15,8 @@ namespace Tests.Samples
 {
 	using System.Data.Common;
 	using System.Threading.Tasks;
-	using Model;
+	using LinqToDB.Data;
+
 	/// <summary>
 	/// This sample demonstrates how can we use <see cref="IDataContext"/> decoration
 	/// to deal with different <see cref="MappingSchema"/> objects in one <see cref="DbConnection"/>.
@@ -109,7 +110,7 @@ namespace Tests.Samples
 //		[Test]
 		public void Sample()
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 			{
 				var ms = new MappingSchema();
 				var b  = ms.GetFluentMappingBuilder();

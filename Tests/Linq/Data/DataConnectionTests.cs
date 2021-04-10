@@ -60,7 +60,7 @@ namespace Tests.Data
 			TestProvName.AllAccess)]
 			string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Connection.State,    Is.EqualTo(ConnectionState.Open));
 				Assert.That(conn.ConfigurationString, Is.EqualTo(context));
@@ -93,7 +93,7 @@ namespace Tests.Data
 		[Test]
 		public void CloneTest([DataSources(false)] string context)
 		{
-			using (var con = new DataConnection(context))
+			using (var con = GetDataConnection(context))
 			{
 				var dbName = con.Connection.Database;
 
@@ -416,7 +416,7 @@ namespace Tests.Data
 		[Test]
 		public async Task DataConnectionCloseAsync([DataSources(false)] string context)
 		{
-			var db = new DataConnection(context);
+			var db = GetDataConnection(context);
 
 			try
 			{
@@ -438,7 +438,7 @@ namespace Tests.Data
 		[Test]
 		public async Task DataConnectionDisposeAsync([DataSources(false)] string context)
 		{
-			var db = new DataConnection(context);
+			var db = GetDataConnection(context);
 
 			try
 			{
@@ -517,7 +517,7 @@ namespace Tests.Data
 		[SkipCI]
 		public void CommandTimeoutTest([IncludeDataSources(ProviderName.SqlServer2014)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var forUpdate = db.Person.First();
 				db.QueryHints.Add("WAITFOR DELAY '00:01';");
@@ -560,7 +560,7 @@ namespace Tests.Data
 		[Test]
 		public void TestCloneOnEntityCreated([DataSources(false)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var size = db.GetTable<Person>().ToList().Count;
 
@@ -617,7 +617,7 @@ namespace Tests.Data
 		[Test]
 		public void TestCloneCommandTimeout([DataSources(false)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				// to enable MARS-enabled cloning branch
 				var _ = db.Connection;
@@ -660,7 +660,7 @@ namespace Tests.Data
 		[Test]
 		public void TestCloneInlineParameters([DataSources(false)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				// to enable MARS-enabled cloning branch
 				var _ = db.Connection;
@@ -694,7 +694,7 @@ namespace Tests.Data
 		[Test]
 		public void TestCloneQueryHints([DataSources(false)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				// to enable MARS-enabled cloning branch
 				var _ = db.Connection;
@@ -734,7 +734,7 @@ namespace Tests.Data
 		[Test]
 		public void TestCloneThrowOnDisposed([DataSources(false)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				// to enable MARS-enabled cloning branch
 				var _ = db.Connection;
@@ -777,7 +777,7 @@ namespace Tests.Data
 		[Test]
 		public void TestCloneOnTraceConnection([DataSources(false)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				// to enable MARS-enabled cloning branch
 				var _ = db.Connection;
@@ -818,7 +818,7 @@ namespace Tests.Data
 			var closing = 0;
 			var closed  = 0;
 
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				// to enable MARS-enabled cloning branch
 				var _ = db.Connection;
@@ -902,7 +902,7 @@ namespace Tests.Data
 			var open   = 0;
 			var opened = 0;
 
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				Assert.AreEqual(0, open);
 				Assert.AreEqual(0, opened);
@@ -987,7 +987,7 @@ namespace Tests.Data
 			var open   = 0;
 			var opened = 0;
 
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				Assert.AreEqual(0, open);
 				Assert.AreEqual(0, opened);
@@ -1088,7 +1088,7 @@ namespace Tests.Data
 		[Test]
 		public void TestDisposeFlagCloning([DataSources(false)] string context, [Values] bool dispose)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var cn = db.Connection;
 				using (var testDb = new DataConnection(db.DataProvider, cn, dispose))
@@ -1270,7 +1270,7 @@ namespace Tests.Data
 			TransactionScope? scope = withScope ? new TransactionScope() : null;
 			try
 			{
-				using (var db = new DataConnection(context))
+				using (var db = GetDataConnection(context))
 				{
 					// test cloned data connection without LoadWith, as it doesn't use cloning in v3
 					db.Select(() => "test1");
@@ -1298,7 +1298,7 @@ namespace Tests.Data
 		[Test]
 		public void Issue2676TransactionScopeTest1([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.DropTable<TransactionScopeTable>(throwExceptionIfNotExists: false);
 				db.CreateTable<TransactionScopeTable>();
@@ -1306,7 +1306,7 @@ namespace Tests.Data
 
 			try
 			{
-				using (var db = new TestDataConnection(context))
+				using (var db = GetDataConnection(context))
 				{
 					db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 1 });
 					using (var transaction = new TransactionScope(TransactionScopeOption.Required, TransactionScopeAsyncFlowOption.Enabled))
@@ -1327,7 +1327,7 @@ namespace Tests.Data
 			}
 			finally
 			{
-				using (var db = new TestDataConnection(context))
+				using (var db = GetDataConnection(context))
 				{
 					db.DropTable<TransactionScopeTable>(throwExceptionIfNotExists: false);
 				}
@@ -1337,7 +1337,7 @@ namespace Tests.Data
 		[Test]
 		public void Issue2676TransactionScopeTest2([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.DropTable<TransactionScopeTable>(throwExceptionIfNotExists: false);
 				db.CreateTable<TransactionScopeTable>();
@@ -1345,7 +1345,7 @@ namespace Tests.Data
 
 			try
 			{
-				using (var db = new TestDataConnection(context))
+				using (var db = GetDataConnection(context))
 				{
 					using (var transaction = new TransactionScope(TransactionScopeOption.Required, TransactionScopeAsyncFlowOption.Enabled))
 					{
@@ -1364,7 +1364,7 @@ namespace Tests.Data
 			}
 			finally
 			{
-				using (var db = new TestDataConnection(context))
+				using (var db = GetDataConnection(context))
 				{
 					db.DropTable<TransactionScopeTable>(throwExceptionIfNotExists: false);
 				}
@@ -1374,7 +1374,7 @@ namespace Tests.Data
 		[Test]
 		public void Issue2676TransactionScopeTest3([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.DropTable<TransactionScopeTable>(throwExceptionIfNotExists: false);
 				db.CreateTable<TransactionScopeTable>();
@@ -1382,7 +1382,7 @@ namespace Tests.Data
 
 			try
 			{
-				using (var db = new TestDataConnection(context))
+				using (var db = GetDataConnection(context))
 				{
 					db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 1 });
 					using (var transaction = new TransactionScope(TransactionScopeOption.Required, TransactionScopeAsyncFlowOption.Enabled))
@@ -1404,7 +1404,7 @@ namespace Tests.Data
 			}
 			finally
 			{
-				using (var db = new TestDataConnection(context))
+				using (var db = GetDataConnection(context))
 				{
 					db.DropTable<TransactionScopeTable>(throwExceptionIfNotExists: false);
 				}
@@ -1429,7 +1429,7 @@ namespace Tests.Data
 #endif
 				ProviderName.SybaseManaged)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
 					Assert.Ignore("MARS not enabled");
@@ -1477,7 +1477,7 @@ namespace Tests.Data
 				ProviderName.SQLiteMS,
 				ProviderName.SybaseManaged)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
 					Assert.Ignore("MARS not enabled");
@@ -1547,7 +1547,7 @@ namespace Tests.Data
 				TestProvName.AllSqlServer,
 				TestProvName.AllSybase)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
 					Assert.Ignore("MARS not enabled");
@@ -1606,7 +1606,7 @@ namespace Tests.Data
 				TestProvName.AllSqlServer,
 				TestProvName.AllSybase)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
 					Assert.Ignore("MARS not enabled");
@@ -1682,7 +1682,7 @@ namespace Tests.Data
 				TestProvName.AllSqlServer,
 				TestProvName.AllSybase)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
 					Assert.Ignore("MARS not enabled");
@@ -1739,7 +1739,7 @@ namespace Tests.Data
 				TestProvName.AllSqlServer,
 				TestProvName.AllSybase)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
 					Assert.Ignore("MARS not enabled");
@@ -1787,7 +1787,7 @@ namespace Tests.Data
 				TestProvName.AllMySql,
 				TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
 					Assert.Ignore("MARS not enabled");
@@ -1811,7 +1811,7 @@ namespace Tests.Data
 				TestProvName.AllMySql,
 				TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				if (db.DataProvider is SqlServerDataProvider && db.IsMarsEnabled)
 					Assert.Ignore("MARS enabled");
@@ -1832,7 +1832,7 @@ namespace Tests.Data
 		[Test]
 		public void MARS_ParametersPreservedAfterDispose([DataSources(false)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var commandInterceptor = new SaveCommandInterceptor();
 				db.AddInterceptor(commandInterceptor);
@@ -1848,7 +1848,7 @@ namespace Tests.Data
 		[Test]
 		public async Task MARS_ParametersPreservedAfterDisposeAsync([DataSources(false)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var commandInterceptor = new SaveCommandInterceptor();
 				db.AddInterceptor(commandInterceptor);
@@ -1868,7 +1868,7 @@ namespace Tests.Data
 				TestProvName.AllMySql,
 				TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
 					Assert.Ignore("MARS not enabled");
@@ -1892,7 +1892,7 @@ namespace Tests.Data
 				TestProvName.AllMySql,
 				TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				if (db.DataProvider is SqlServerDataProvider && db.IsMarsEnabled)
 					Assert.Ignore("MARS enabled");

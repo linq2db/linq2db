@@ -43,7 +43,7 @@ namespace LinqToDB.Linq.Builder
 
 		Expression IBuildContext.Expression => Lambda;
 
-		public readonly Dictionary<MemberInfo,Expression> Members = new Dictionary<MemberInfo,Expression>(new MemberInfoComparer());
+		public readonly Dictionary<MemberInfo,Expression> Members = new (new MemberInfoComparer());
 
 		public SelectContext(IBuildContext? parent, ExpressionBuilder builder, LambdaExpression lambda, SelectQuery selectQuery)
 		{
@@ -472,7 +472,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region ConvertToIndex
 
-		readonly Dictionary<Tuple<Expression?,int,ConvertFlags>,SqlInfo[]> _expressionIndex = new Dictionary<Tuple<Expression?,int,ConvertFlags>,SqlInfo[]>();
+		readonly Dictionary<Tuple<Expression?,int,ConvertFlags>,SqlInfo[]> _expressionIndex = new ();
 
 		public virtual SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 		{
@@ -502,7 +502,7 @@ namespace LinqToDB.Linq.Builder
 			return info;
 		}
 
-		readonly Dictionary<Tuple<MemberInfo?,ConvertFlags>,SqlInfo[]> _memberIndex = new Dictionary<Tuple<MemberInfo?,ConvertFlags>,SqlInfo[]>();
+		readonly Dictionary<Tuple<MemberInfo?,ConvertFlags>,SqlInfo[]> _memberIndex = new ();
 
 		class SqlData
 		{
@@ -981,7 +981,7 @@ namespace LinqToDB.Linq.Builder
 
 		public virtual void SetAlias(string alias)
 		{
-			if (!alias.IsNullOrEmpty() && !alias.Contains('<') && SelectQuery.Select.From.Tables.Count == 1)
+			if (!string.IsNullOrEmpty(alias) && !alias.Contains('<') && SelectQuery.Select.From.Tables.Count == 1)
 			{
 				SelectQuery.Select.From.Tables[0].Alias = alias;
 			}

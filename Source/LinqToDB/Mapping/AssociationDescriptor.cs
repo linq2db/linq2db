@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -47,7 +46,7 @@ namespace LinqToDB.Mapping
 			if (thisKey    == null) throw new ArgumentNullException(nameof(thisKey));
 			if (otherKey   == null) throw new ArgumentNullException(nameof(otherKey));
 
-			if (thisKey.Length == 0 && expressionPredicate.IsNullOrEmpty() && predicate == null && expressionQueryMethod.IsNullOrEmpty() && expressionQuery == null)
+			if (thisKey.Length == 0 && string.IsNullOrEmpty(expressionPredicate) && predicate == null && string.IsNullOrEmpty(expressionQueryMethod) && expressionQuery == null)
 				throw new ArgumentOutOfRangeException(
 					nameof(thisKey),
 					$"Association '{type.Name}.{memberInfo.Name}' does not define keys.");
@@ -126,10 +125,10 @@ namespace LinqToDB.Mapping
 		/// <returns>Generated alias.</returns>
 		public string GenerateAlias()
 		{
-			if (!AliasName.IsNullOrEmpty())
-				return AliasName;
+			if (!string.IsNullOrEmpty(AliasName))
+				return AliasName!;
 
-			if (!Configuration.Sql.AssociationAlias.IsNullOrEmpty())
+			if (!string.IsNullOrEmpty(Configuration.Sql.AssociationAlias))
 				return string.Format(Configuration.Sql.AssociationAlias, MemberInfo.Name);
 
 			return string.Empty;
@@ -263,7 +262,7 @@ namespace LinqToDB.Mapping
 
 		public bool HasQueryMethod()
 		{
-			return ExpressionQuery != null || !ExpressionQueryMethod.IsNullOrEmpty();
+			return ExpressionQuery != null || !string.IsNullOrEmpty(ExpressionQueryMethod);
 		}
 
 		/// <summary>
@@ -285,8 +284,8 @@ namespace LinqToDB.Mapping
 			if (type == null)
 				throw new ArgumentException($"Member '{MemberInfo.Name}' has no declaring type");
 
-			if (!ExpressionQueryMethod.IsNullOrEmpty())
-				queryExpression = type.GetExpressionFromExpressionMember<Expression>(ExpressionQueryMethod);
+			if (!string.IsNullOrEmpty(ExpressionQueryMethod))
+				queryExpression = type.GetExpressionFromExpressionMember<Expression>(ExpressionQueryMethod!);
 			else
 				queryExpression = ExpressionQuery!;
 

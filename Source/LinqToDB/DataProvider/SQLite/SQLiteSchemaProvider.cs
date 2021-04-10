@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Common;
 using System.Linq;
 using System.Data;
 
@@ -49,7 +48,7 @@ namespace LinqToDB.DataProvider.SQLite
 						CatalogName     = catalog,
 						SchemaName      = schema,
 						TableName       = name,
-						IsDefaultSchema = schema.IsNullOrEmpty(),
+						IsDefaultSchema = string.IsNullOrEmpty(schema),
 					}
 				)
 				.Concat(
@@ -63,7 +62,7 @@ namespace LinqToDB.DataProvider.SQLite
 						CatalogName     = catalog,
 						SchemaName      = schema,
 						TableName       = name,
-						IsDefaultSchema = schema.IsNullOrEmpty(),
+						IsDefaultSchema = string.IsNullOrEmpty(schema),
 						IsView          = true,
 					}
 				).ToList();
