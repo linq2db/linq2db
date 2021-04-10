@@ -581,11 +581,11 @@ namespace LinqToDB.Data
 		/// defaults to off unless library was built in debug mode.
 		/// <remarks>Should only be used when <see cref="TraceSwitchConnection"/> can not be used!</remarks>
 		/// </summary>
-		public  static TraceSwitch  TraceSwitch
+		public static TraceSwitch TraceSwitch
 		{
 			// used by LoggingExtensions
 			get => _traceSwitch;
-			set => _traceSwitch = value;
+			set => Volatile.Write(ref _traceSwitch, value);
 		}
 
 		/// <summary>
