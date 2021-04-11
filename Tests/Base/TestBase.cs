@@ -518,7 +518,8 @@ namespace Tests
 			if (interceptor != null)
 				res.AddInterceptor(interceptor);
 
-			res.RetryPolicy = retryPolicy;
+			if (retryPolicy != null)
+				res.RetryPolicy = retryPolicy;
 
 			return res;
 		}
