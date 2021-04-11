@@ -52,12 +52,12 @@ namespace LinqToDB.Linq
 		/// Returns SQL text for query.
 		/// </summary>
 		/// <returns>Query SQL text.</returns>
-		string                GetSqlText           ();
+		string                GetSqlText     ();
 
-		Expression     Expression       { get; set; }
+		Expression     Expression       { get; }
 		IDataContext   DataContext      { get; }
-		object?[]?     Parameters       { get; set; }
-		object?[]?     Preambles        { get; set; }
+		object?[]?     Parameters       { get; }
+		object?[]?     Preambles        { get; }
 		Expression?    MapperExpression { get; set; }
 		int            RowsCount        { get; set; }
 		int            QueryNumber      { get; set; }

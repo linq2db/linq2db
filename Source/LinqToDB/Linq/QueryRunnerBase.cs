@@ -25,9 +25,9 @@ namespace LinqToDB.Linq
 		protected List<string>?     QueryHints;
 
 		public IDataContext         DataContext      { get; }
-		public Expression           Expression       { get; set; }
-		public object?[]?           Parameters       { get; set; }
-		public object?[]?           Preambles        { get; set; }
+		public Expression           Expression       { get; }
+		public object?[]?           Parameters       { get; }
+		public object?[]?           Preambles        { get; }
 		public abstract Expression? MapperExpression { get; set; }
 
 		public abstract int                    ExecuteNonQuery();
