@@ -74,7 +74,6 @@ namespace LinqToDB.Data
 					TransactionAsync            = TransactionAsync,
 					IsMarsEnabled               = IsMarsEnabled,
 					ConnectionString            = ConnectionString,
-					OnEntityCreated             = OnEntityCreated,
 					RetryPolicy                 = RetryPolicy,
 					CommandTimeout              = CommandTimeout,
 					InlineParameters            = InlineParameters,
@@ -84,7 +83,8 @@ namespace LinqToDB.Data
 					OnClosed                    = OnClosed,
 					OnClosing                   = OnClosing,
 					_commandInterceptors        = _commandInterceptors?.Clone(),
-					_connectionInterceptors     = _connectionInterceptors?.Clone()
+					_connectionInterceptors     = _connectionInterceptors?.Clone(),
+					_contextInterceptors        = _contextInterceptors?.Clone(),
 				};
 
 			return (DataConnection)Clone();

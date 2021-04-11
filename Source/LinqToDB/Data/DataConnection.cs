@@ -1116,9 +1116,6 @@ namespace LinqToDB.Data
 		/// </summary>
 		public event EventHandler? OnClosed;
 
-		/// <inheritdoc />
-		public Action<EntityCreatedEventArgs>? OnEntityCreated    { get; set; }
-
 		/// <summary>
 		/// Closes and dispose associated underlying database transaction/connection.
 		/// </summary>
@@ -1663,7 +1660,6 @@ namespace LinqToDB.Data
 
 			return new DataConnection(ConfigurationString, DataProvider, connectionString, connection, MappingSchema)
 			{
-				OnEntityCreated             = OnEntityCreated,
 				RetryPolicy                 = RetryPolicy,
 				CommandTimeout              = CommandTimeout,
 				InlineParameters            = InlineParameters,
@@ -1673,7 +1669,8 @@ namespace LinqToDB.Data
 				OnClosed                    = OnClosed,
 				OnClosing                   = OnClosing,
 				_commandInterceptors        = _commandInterceptors?.Clone(),
-				_connectionInterceptors     = _connectionInterceptors?.Clone()
+				_connectionInterceptors     = _connectionInterceptors?.Clone(),
+				_contextInterceptors        = _contextInterceptors?.Clone(),
 			};
 		}
 

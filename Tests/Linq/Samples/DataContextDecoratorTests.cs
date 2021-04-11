@@ -16,6 +16,7 @@ namespace Tests.Samples
 	using System.Data.Common;
 	using System.Threading.Tasks;
 	using LinqToDB.Data;
+	using LinqToDB.Interceptors;
 
 	/// <summary>
 	/// This sample demonstrates how can we use <see cref="IDataContext"/> decoration
@@ -98,7 +99,11 @@ namespace Tests.Samples
 				return _context.IsDBNullAllowed(reader, idx);
 			}
 
-			public Action<EntityCreatedEventArgs>? OnEntityCreated { get; set; }
+			public void AddInterceptor(IInterceptor interceptor) => _context.AddInterceptor(interceptor);
+
+			public IEnumerable<TInterceptor> GetInterceptors<TInterceptor>()
+				where TInterceptor : IInterceptor
+				=> _context.GetInterceptors<TInterceptor>();
 		}
 
 		public class Entity

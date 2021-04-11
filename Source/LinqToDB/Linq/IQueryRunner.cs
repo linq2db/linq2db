@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Data;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -56,7 +55,7 @@ namespace LinqToDB.Linq
 		string                GetSqlText           ();
 
 		Expression     Expression       { get; set; }
-		IDataContext   DataContext      { get; set; }
+		IDataContext   DataContext      { get; }
 		object?[]?     Parameters       { get; set; }
 		object?[]?     Preambles        { get; set; }
 		Expression?    MapperExpression { get; set; }

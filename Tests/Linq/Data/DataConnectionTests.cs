@@ -562,47 +562,48 @@ namespace Tests.Data
 		{
 			using (var db = GetDataConnection(context))
 			{
-				var size = db.GetTable<Person>().ToList().Count;
-
-				var counter = 0;
+				var personsCount = db.GetTable<Person>().Count();
 
 				db.GetTable<Person>().ToList();
-				Assert.AreEqual(0, counter);
 
-				db.OnEntityCreated = OnCreated;
+				var interceptor = new TestDataContextInterceptor();
+
+				db.AddInterceptor(interceptor);
 
 				db.GetTable<Person>().ToList();
-				Assert.AreEqual(size, counter);
+				Assert.AreEqual(personsCount, interceptor.EntityCreatedCallCounter);
 
 				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
 				{
-					// tests different clone execution branches for MARS-enabled and disabled connections
-					counter = 0;
+					interceptor.EntityCreatedCallCounter = 0;
 					cdb.GetTable<Person>().ToList();
-					Assert.AreEqual(size, counter);
+					Assert.AreEqual(personsCount, interceptor.EntityCreatedCallCounter);
 
-					db.OnEntityCreated = null;
-
-					counter = 0;
+					interceptor.EntityCreatedCallCounter = 0;
 					db.GetTable<Person>().ToList();
-					Assert.AreEqual(0, counter);
+					Assert.AreEqual(personsCount, interceptor.EntityCreatedCallCounter);
 
-					// because we:
-					// - don't track cloned connections
-					// - clonned connections are used internally, so this scenario is not possible for linq2db itself
 					cdb.GetTable<Person>().ToList();
-					Assert.AreEqual(size, counter);
+					Assert.AreEqual(personsCount * 2, interceptor.EntityCreatedCallCounter);
 				}
 
 				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
 				{
-					counter = 0;
+					interceptor.EntityCreatedCallCounter = 0;
 					cdb.GetTable<Person>().ToList();
 
-					Assert.AreEqual(0, counter);
+					Assert.AreEqual(personsCount, interceptor.EntityCreatedCallCounter);
 				}
+			}
+		}
 
-				void OnCreated(EntityCreatedEventArgs args) => counter++;
+		private class TestDataContextInterceptor : DataContextInterceptor
+		{
+			public int EntityCreatedCallCounter { get; set; }
+			public override object EntityCreated(EntityCreatedEventData eventData, object entity)
+			{
+				EntityCreatedCallCounter++;
+				return base.EntityCreated(eventData, entity);
 			}
 		}
 

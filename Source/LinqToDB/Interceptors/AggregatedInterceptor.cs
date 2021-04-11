@@ -15,6 +15,8 @@ namespace LinqToDB.Interceptors
 		private bool _enumerating;
 		private readonly IList<TInterceptor> _removeList = new List<TInterceptor>();
 
+		public IEnumerable<TInterceptor> GetInterceptors() => _interceptors;
+
 		public void Add(TInterceptor interceptor)
 		{
 			_interceptors.Add(interceptor);

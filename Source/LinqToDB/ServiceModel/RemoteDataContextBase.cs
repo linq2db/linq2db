@@ -313,13 +313,15 @@ namespace LinqToDB.ServiceModel
 		{
 			ThrowOnDisposed();
 
-			return Clone();
+			var ctx = Clone();
+
+			if (_contextInterceptors != null)
+				ctx.AddInterceptor(_contextInterceptors.Clone());
+
+			return ctx;
 		}
 
 		public event EventHandler? OnClosing;
-
-		/// <inheritdoc/>
-		public Action<EntityCreatedEventArgs>? OnEntityCreated { get; set; }
 
 		protected bool Disposed { get; private set; }
 

@@ -10,6 +10,7 @@ namespace LinqToDB
 	using System.Data.Common;
 	using System.Threading.Tasks;
 	using Linq;
+	using LinqToDB.Interceptors;
 	using Mapping;
 	using SqlProvider;
 
@@ -17,7 +18,7 @@ namespace LinqToDB
 	/// Database connection abstraction interface.
 	/// </summary>
 	[PublicAPI]
-	public interface IDataContext : IEntityServices, IDisposable
+	public interface IDataContext : IDisposable
 #if NATIVE_ASYNC
 		, IAsyncDisposable
 #else
@@ -118,5 +119,19 @@ namespace LinqToDB
 		/// <param name="preambles">Query preambles</param>
 		/// <returns>Query runner service.</returns>
 		IQueryRunner GetQueryRunner(Query query, int queryNumber, Expression expression, object?[]? parameters, object?[]? preambles);
+
+		/// <summary>
+		/// Adds interceptor instance to context.
+		/// </summary>
+		/// <param name="interceptor">Interceptor.</param>
+		void AddInterceptor(IInterceptor interceptor);
+
+		/// <summary>
+		/// Returns interceptors of specific type, registered in current context.
+		/// </summary>
+		/// <typeparam name="TInterceptor">Type of interceptor.</typeparam>
+		/// <returns></returns>
+		IEnumerable<TInterceptor> GetInterceptors<TInterceptor>()
+			where TInterceptor : IInterceptor;
 	}
 }

@@ -24,7 +24,7 @@ namespace LinqToDB
 	/// Implements abstraction over non-persistent database connection that could be released after query or transaction execution.
 	/// </summary>
 	[PublicAPI]
-	public class DataContext : IDataContext, IEntityServices
+	public class DataContext : IDataContext
 	{
 		private          LinqToDbConnectionOptions        _prebuiltOptions;
 		private readonly LinqToDbConnectionOptionsBuilder _optionsBuilder = new ();
@@ -422,9 +422,6 @@ namespace LinqToDB
 		/// </summary>
 		public event EventHandler? OnClosing;
 
-		/// <inheritdoc />
-		public Action<EntityCreatedEventArgs>? OnEntityCreated { get; set; }
-
 		void IDisposable.Dispose()
 		{
 			Dispose(disposing: true);
@@ -633,7 +630,7 @@ namespace LinqToDB
 				return _queryRunner!.GetSqlText();
 			}
 
-			public IDataContext DataContext      { get => _queryRunner!.DataContext;      set => _queryRunner!.DataContext      = value; }
+			public IDataContext DataContext      => _dataContext!;
 			public Expression   Expression       { get => _queryRunner!.Expression;       set => _queryRunner!.Expression       = value; }
 			public object?[]?   Parameters       { get => _queryRunner!.Parameters;       set => _queryRunner!.Parameters       = value; }
 			public object?[]?   Preambles        { get => _queryRunner!.Preambles;        set => _queryRunner!.Preambles        = value; }
@@ -643,9 +640,11 @@ namespace LinqToDB
 		}
 
 #region Interceptors
-		private  AggregatedInterceptor<ICommandInterceptor>?    _commandInterceptors;
-		private  AggregatedInterceptor<IConnectionInterceptor>? _connectionInterceptors;
+		private  AggregatedInterceptor<ICommandInterceptor>?     _commandInterceptors;
+		private  AggregatedInterceptor<IConnectionInterceptor>?  _connectionInterceptors;
+		private  AggregatedInterceptor<IDataContextInterceptor>? _contextInterceptors;
 
+		/// <inheritdoc cref="IDataContext.AddInterceptor(IInterceptor)"/>
 		public void AddInterceptor(IInterceptor interceptor)
 		{
 			if (interceptor is AggregatedInterceptor<ICommandInterceptor> aggregatedCommandInterceptor)
@@ -667,6 +666,17 @@ namespace LinqToDB
 				_connectionInterceptors = aggregatedConnectionInterceptor.Clone();
 
 				_optionsBuilder.WithInterceptor(_connectionInterceptors);
+				_prebuiltOptions = _optionsBuilder.Build();
+			}
+
+			if (interceptor is AggregatedInterceptor<IDataContextInterceptor> aggregatedContextInterceptor)
+			{
+				if (_contextInterceptors != null)
+					// this actually shouldn't be possible
+					throw new InvalidOperationException($"{nameof(AggregatedInterceptor<IDataContextInterceptor>)}<{nameof(IDataContextInterceptor)}> already exists");
+				_contextInterceptors = aggregatedContextInterceptor.Clone();
+
+				_optionsBuilder.WithInterceptor(_contextInterceptors);
 				_prebuiltOptions = _optionsBuilder.Build();
 			}
 
@@ -699,7 +709,91 @@ namespace LinqToDB
 
 				_connectionInterceptors.Add(connectionInterceptor);
 			}
+
+			if (interceptor is IDataContextInterceptor contextInterceptor)
+			{
+				if (_contextInterceptors == null)
+				{
+					_contextInterceptors = new AggregatedInterceptor<IDataContextInterceptor>();
+					if (_dataConnection != null)
+						_dataConnection.AddInterceptor(_contextInterceptors);
+
+					_optionsBuilder.WithInterceptor(_contextInterceptors);
+					_prebuiltOptions = _optionsBuilder.Build();
+				}
+
+				_contextInterceptors.Add(contextInterceptor);
+			}
 		}
-#endregion
+
+		IEnumerable<TInterceptor> IDataContext.GetInterceptors<TInterceptor>()
+		{
+			if (_commandInterceptors == null && _connectionInterceptors == null && _contextInterceptors == null)
+				yield break;
+
+			var type = typeof(TInterceptor);
+
+			if (type == typeof(ICommandInterceptor))
+			{
+				if (_commandInterceptors != null)
+				{
+					foreach (var interceptor in _commandInterceptors.GetInterceptors())
+						yield return (TInterceptor)interceptor;
+
+				}
+
+				yield break;
+			}
+
+			if (type == typeof(IConnectionInterceptor))
+			{
+				if (_connectionInterceptors != null)
+				{
+					foreach (var interceptor in _connectionInterceptors.GetInterceptors())
+						yield return (TInterceptor)interceptor;
+
+				}
+
+				yield break;
+			}
+
+			if (type == typeof(IDataContextInterceptor))
+			{
+				if (_contextInterceptors != null)
+				{
+					foreach (var interceptor in _contextInterceptors.GetInterceptors())
+						yield return (TInterceptor)interceptor;
+
+				}
+
+				yield break;
+			}
+
+			if (type == typeof(IInterceptor))
+			{
+				if (_commandInterceptors != null)
+				{
+					foreach (var interceptor in _commandInterceptors.GetInterceptors())
+						yield return (TInterceptor)interceptor;
+				}
+
+				if (_connectionInterceptors != null)
+				{
+					foreach (var interceptor in _connectionInterceptors.GetInterceptors())
+						yield return (TInterceptor)interceptor;
+
+				}
+
+				if (_contextInterceptors != null)
+				{
+					foreach (var interceptor in _contextInterceptors.GetInterceptors())
+						yield return (TInterceptor)interceptor;
+
+				}
+
+				yield break;
+			}
+		}
+		#endregion
 	}
 }

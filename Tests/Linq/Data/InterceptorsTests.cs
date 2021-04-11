@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using System.Collections.Generic;
+using System.Data;
 using System.Data.Common;
 using System.Linq;
 using System.Threading;
@@ -1052,6 +1053,72 @@ namespace Tests.Data
 
 		#endregion
 
+		#region IDataContextInterceptor
+
+		#region EntityCreated
+		[Test]
+		public void EntityCreated_DataConnection_Or_RemoteContext([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var count = db.Person.Count();
+				var interceptor1 = new TestDataContextInterceptor();
+				var interceptor2 = new TestDataContextInterceptor();
+				db.AddInterceptor(interceptor1);
+
+				db.Person.ToList();
+
+				Assert.AreEqual(count, interceptor1.Contexts.Count);
+				Assert.True(interceptor1.Contexts.All(ctx => ctx == db));
+				interceptor1.Contexts.Clear();
+
+				using (var clonedDb = (IDataContext)((IDataContext)db).Clone(true))
+				{
+					clonedDb.AddInterceptor(interceptor2);
+					clonedDb.GetTable<Person>().ToList();
+
+					Assert.AreEqual(count, interceptor1.Contexts.Count);
+					Assert.AreEqual(count, interceptor2.Contexts.Count);
+					Assert.True(interceptor1.Contexts.All(ctx => ctx == clonedDb));
+					Assert.True(interceptor1.Contexts.All(ctx => ctx == clonedDb));
+				}
+			}
+		}
+
+		[Test]
+		public void EntityCreated_DataContext([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = new DataContext(context))
+			{
+				var count = db.GetTable<Person>().Count();
+				var interceptor1 = new TestDataContextInterceptor();
+				var interceptor2 = new TestDataContextInterceptor();
+				db.AddInterceptor(interceptor1);
+
+				db.GetTable<Person>().ToList();
+
+				Assert.AreEqual(count, interceptor1.Contexts.Count);
+				Assert.True(interceptor1.Contexts.All(ctx => ctx == db));
+
+				interceptor1.Contexts.Clear();
+
+				using (var clonedDb = (IDataContext)((IDataContext)db).Clone(true))
+				{
+					clonedDb.AddInterceptor(interceptor2);
+					clonedDb.GetTable<Person>().ToList();
+
+					Assert.AreEqual(count, interceptor1.Contexts.Count);
+					Assert.AreEqual(count, interceptor2.Contexts.Count);
+					Assert.True(interceptor1.Contexts.All(ctx => ctx == clonedDb));
+					Assert.True(interceptor1.Contexts.All(ctx => ctx == clonedDb));
+				}
+			}
+		}
+
+		#endregion
+
+		#endregion
+
 		private class TestCommandInterceptor : CommandInterceptor
 		{
 			public bool CommandInitializedTriggered { get; set; }
@@ -1136,6 +1203,16 @@ namespace Tests.Data
 			{
 				ConnectionOpeningAsyncTriggered = true;
 				return base.ConnectionOpeningAsync(eventData, connection, cancellationToken);
+			}
+		}
+
+		private class TestDataContextInterceptor : DataContextInterceptor
+		{
+			public List<IDataContext> Contexts { get; } = new ();
+			public override object EntityCreated(EntityCreatedEventData eventData, object entity)
+			{
+				Contexts.Add(eventData.Context);
+				return base.EntityCreated(eventData, entity);
 			}
 		}
 

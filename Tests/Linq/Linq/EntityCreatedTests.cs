@@ -7,43 +7,44 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using LinqToDB.Interceptors;
 	using Model;
 
 	[TestFixture]
 	public class EntityCreatedTests : TestBase
 	{
-		int  _entitiesCreated;
-		bool _checkEntityIdentity;
-
-		readonly Dictionary<int,Parent> _parents = new Dictionary<int,Parent>();
-
-		ITestDataContext GetEntityCreatedContext(string configString)
+		ITestDataContext GetEntityCreatedContext(string configString, TestDataContextInterceptor interceptor)
 		{
-			_entitiesCreated     = 0;
-			_checkEntityIdentity = false;
-			_parents.Clear();
+			interceptor.EntityCreatedCallCounter = 0;
+			interceptor.CheckEntityIdentity      = false;
+			interceptor.Parents.Clear();
 
 			var ctx = GetDataContext(configString);
-
-			((IEntityServices)ctx).OnEntityCreated += EntityCreated;
+			ctx.AddInterceptor(interceptor);
 
 			return ctx;
 		}
 
-		void EntityCreated(EntityCreatedEventArgs args)
+		private class TestDataContextInterceptor : DataContextInterceptor
 		{
-			if (_checkEntityIdentity && args.Entity is Parent p)
+			public int EntityCreatedCallCounter { get; set; }
+			public bool CheckEntityIdentity     { get; set; }
+
+			public Dictionary<int, Parent> Parents { get; } = new();
+
+			public override object EntityCreated(EntityCreatedEventData eventData, object entity)
 			{
-				if (_parents.TryGetValue(p.ParentID, out var pr))
+				if (CheckEntityIdentity && entity is Parent p)
 				{
-					args.Entity = pr;
-					return;
+					if (Parents.TryGetValue(p.ParentID, out var pr))
+						return entity;
+
+					Parents[p.ParentID] = p;
 				}
 
-				_parents[p.ParentID] = p;
+				EntityCreatedCallCounter++;
+				return base.EntityCreated(eventData, entity);
 			}
-
-			_entitiesCreated++;
 		}
 
 		[Test]
@@ -58,35 +59,38 @@ namespace Tests.Linq
 		[Test]
 		public void EntityCreatedTest1([DataSources] string configString)
 		{
-			using (var db = GetEntityCreatedContext(configString))
+			var interceptor = new TestDataContextInterceptor();
+			using (var db = GetEntityCreatedContext(configString, interceptor))
 			{
 				var list = db.Parent.Take(5).ToList();
 
-				Assert.That(_entitiesCreated, Is.EqualTo(5));
+				Assert.That(interceptor.EntityCreatedCallCounter, Is.EqualTo(5));
 			}
 		}
 
 		[Test]
 		public void EntityCreatedTest2([DataSources] string configString)
 		{
-			using (var db = GetEntityCreatedContext(configString))
+			var interceptor = new TestDataContextInterceptor();
+			using (var db = GetEntityCreatedContext(configString, interceptor))
 			{
 				var list = db.Child.Select(c => new { c, c.Parent, a = new { c } }).Take(1).ToList();
 
-				Assert.That(_entitiesCreated, Is.EqualTo(2));
+				Assert.That(interceptor.EntityCreatedCallCounter, Is.EqualTo(2));
 			}
 		}
 
 		[Test]
 		public void EntityCreatedTest3([DataSources] string configString, [Values(false,true)] bool checkEntityIdentity)
 		{
-			using (var db = GetEntityCreatedContext(configString))
+			var interceptor = new TestDataContextInterceptor();
+			using (var db = GetEntityCreatedContext(configString, interceptor))
 			{
-				_checkEntityIdentity = checkEntityIdentity;
+				interceptor.CheckEntityIdentity = checkEntityIdentity;
 
 				var list = db.Child.Where(c => c.Parent!.ParentID == 3).Select(c => c.Parent).ToList();
 
-				Assert.That(_entitiesCreated, Is.EqualTo(checkEntityIdentity ? 1 : 3));
+				Assert.That(interceptor.EntityCreatedCallCounter, Is.EqualTo(checkEntityIdentity ? 1 : 3));
 			}
 		}
 	}
