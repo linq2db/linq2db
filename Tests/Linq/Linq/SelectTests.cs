@@ -1675,7 +1675,7 @@ namespace Tests.Linq
 			// Microsoft.Data.SqlClient
 			// SqlCe
 			using (new OptimizeForSequentialAccess(true))
-			using (var db = GetDataContext(context, interceptor: SequentialAccessCommandInterceptor.Instance))
+			using (var db = GetDataContext(context, interceptor: SequentialAccessCommandInterceptor.Instance, suppressSequentialAccess: true))
 			{
 				var q = db.Person
 					.Select(p => new
@@ -1697,7 +1697,8 @@ namespace Tests.Linq
 		{
 			// fields read out-of-order, multiple times and with different types
 			using (new OptimizeForSequentialAccess(true))
-			using (var db = GetDataContext(context, interceptor: SequentialAccessCommandInterceptor.Instance))
+			// suppressSequentialAccess: true to avoid interceptor added twice
+			using (var db = GetDataContext(context, interceptor: SequentialAccessCommandInterceptor.Instance, suppressSequentialAccess: true))
 			{
 				Assert.AreEqual(typeof(InheritanceParentBase), InheritanceParent[0].GetType());
 				Assert.AreEqual(typeof(InheritanceParent1)   , InheritanceParent[1].GetType());
