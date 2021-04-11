@@ -138,6 +138,42 @@ namespace LinqToDB
 			return value != null && (value.Value.CompareTo(low) < 0 || value.Value.CompareTo(high) > 0);
 		}
 
+		[Sql.Expression(               "CASE WHEN {0} = {1} OR {0} IS NULL AND {1} IS NULL THEN 1 ELSE 0 END = 0", IsPredicate = true)]
+		[Sql.Expression(PN.DB2,        "{0} IS DISTINCT FROM {1}",                                                 IsPredicate = true)]
+		[Sql.Expression(PN.Firebird,   "{0} IS DISTINCT FROM {1}",                                                 IsPredicate = true)]		
+		[Sql.Expression(PN.MySql,      "NOT {0} <=> {1}",                                                          IsPredicate = true)]
+		[Sql.Expression(PN.Oracle,     "DECODE({0}, {1}, 1, 0) = 0",                                               IsPredicate = true)]
+		[Sql.Expression(PN.PostgreSQL, "{0} IS DISTINCT FROM {1}",                                                 IsPredicate = true)]
+		[Sql.Expression(PN.SQLite,     "{0} IS NOT {1}",                                                           IsPredicate = true)]
+		public static bool IsDistinctFrom<T>(this T value, T other) => EqualityComparer<T>.Default.Equals(value, other);
+
+		[Sql.Expression(               "CASE WHEN {0} = {1} OR {0} IS NULL AND {1} IS NULL THEN 1 ELSE 0 END = 0", IsPredicate = true)]
+		[Sql.Expression(PN.DB2,        "{0} IS DISTINCT FROM {1}",                                                 IsPredicate = true)]
+		[Sql.Expression(PN.Firebird,   "{0} IS DISTINCT FROM {1}",                                                 IsPredicate = true)]		
+		[Sql.Expression(PN.MySql,      "NOT {0} <=> {1}",                                                          IsPredicate = true)]
+		[Sql.Expression(PN.Oracle,     "DECODE({0}, {1}, 1, 0) = 0",                                               IsPredicate = true)]
+		[Sql.Expression(PN.PostgreSQL, "{0} IS DISTINCT FROM {1}",                                                 IsPredicate = true)]
+		[Sql.Expression(PN.SQLite,     "{0} IS NOT {1}",                                                           IsPredicate = true)]
+		public static bool IsDistinctFrom<T>(this T value, T? other) where T: struct => EqualityComparer<T?>.Default.Equals(value, other);
+
+		[Sql.Expression(               "CASE WHEN {0} = {1} OR {0} IS NULL AND {1} IS NULL THEN 1 ELSE 0 END = 1", IsPredicate = true)]
+		[Sql.Expression(PN.DB2,        "{0} IS NOT DISTINCT FROM {1}",                                             IsPredicate = true)]
+		[Sql.Expression(PN.Firebird,   "{0} IS NOT DISTINCT FROM {1}",                                             IsPredicate = true)]		
+		[Sql.Expression(PN.MySql,      "{0} <=> {1}",                                                              IsPredicate = true)]
+		[Sql.Expression(PN.Oracle,     "DECODE({0}, {1}, 1, 0) = 1",                                               IsPredicate = true)]
+		[Sql.Expression(PN.PostgreSQL, "{0} IS NOT DISTINCT FROM {1}",                                             IsPredicate = true)]
+		[Sql.Expression(PN.SQLite,     "{0} IS {1}",                                                               IsPredicate = true)]
+		public static bool IsNotDistinctFrom<T>(this T value, T other) => !EqualityComparer<T>.Default.Equals(value, other);
+
+		[Sql.Expression(               "CASE WHEN {0} = {1} OR {0} IS NULL AND {1} IS NULL THEN 1 ELSE 0 END = 1", IsPredicate = true)]
+		[Sql.Expression(PN.DB2,        "{0} IS NOT DISTINCT FROM {1}",                                             IsPredicate = true)]
+		[Sql.Expression(PN.Firebird,   "{0} IS NOT DISTINCT FROM {1}",                                             IsPredicate = true)]		
+		[Sql.Expression(PN.MySql,      "{0} <=> {1}",                                                              IsPredicate = true)]
+		[Sql.Expression(PN.Oracle,     "DECODE({0}, {1}, 1, 0) = 1",                                               IsPredicate = true)]
+		[Sql.Expression(PN.PostgreSQL, "{0} IS NOT DISTINCT FROM {1}",                                             IsPredicate = true)]
+		[Sql.Expression(PN.SQLite,     "{0} IS {1}",                                                               IsPredicate = true)]
+		public static bool IsNotDistinctFrom<T>(this T value, T? other) where T: struct => !EqualityComparer<T?>.Default.Equals(value, other);
+
 		/// <summary>
 		/// Allows access to entity property via name. Property can be dynamic or non-dynamic.
 		/// </summary>
