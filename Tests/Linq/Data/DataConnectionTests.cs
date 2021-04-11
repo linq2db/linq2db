@@ -600,10 +600,40 @@ namespace Tests.Data
 		private class TestDataContextInterceptor : DataContextInterceptor
 		{
 			public int EntityCreatedCallCounter { get; set; }
-			public override object EntityCreated(EntityCreatedEventData eventData, object entity)
+			public override object EntityCreated(DataContextEventData eventData, object entity)
 			{
 				EntityCreatedCallCounter++;
 				return base.EntityCreated(eventData, entity);
+			}
+
+			public int OnClosingCallCounter { get; set; }
+			public int OnClosedCallCounter { get; set; }
+			public int OnClosedAsyncCallCounter { get; set; }
+			public int OnClosingAsyncCallCounter { get; set; }
+
+
+			public override void OnClosing(DataContextEventData eventData)
+			{
+				OnClosingCallCounter++;
+				base.OnClosing(eventData);
+			}
+
+			public override void OnClosed(DataContextEventData eventData)
+			{
+				OnClosedCallCounter++;
+				base.OnClosed(eventData);
+			}
+
+			public override Task OnClosedAsync(DataContextEventData eventData)
+			{
+				OnClosedAsyncCallCounter++;
+				return base.OnClosedAsync(eventData);
+			}
+
+			public override Task OnClosingAsync(DataContextEventData eventData)
+			{
+				OnClosingAsyncCallCounter++;
+				return base.OnClosingAsync(eventData);
 			}
 		}
 
@@ -816,85 +846,78 @@ namespace Tests.Data
 		[Test]
 		public void TestCloneOnClosingOnClosed([DataSources(false)] string context)
 		{
-			var closing = 0;
-			var closed  = 0;
+			var interceptor = new TestDataContextInterceptor();
 
 			using (var db = GetDataConnection(context))
 			{
 				// to enable MARS-enabled cloning branch
 				var _ = db.Connection;
 
-				Assert.AreEqual(0, closing);
-				Assert.AreEqual(0, closed);
+				Assert.AreEqual(0, interceptor.OnClosingCallCounter);
+				Assert.AreEqual(0, interceptor.OnClosedCallCounter);
 				db.Close();
-				Assert.AreEqual(0, closing);
-				Assert.AreEqual(0, closed);
+				Assert.AreEqual(0, interceptor.OnClosingCallCounter);
+				Assert.AreEqual(0, interceptor.OnClosedCallCounter);
 				_ = db.Connection;
 
 				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
 				{
 					_ = cdb.Connection;
-					Assert.AreEqual(0, closing);
-					Assert.AreEqual(0, closed);
+					Assert.AreEqual(0, interceptor.OnClosingCallCounter);
+					Assert.AreEqual(0, interceptor.OnClosedCallCounter);
 					cdb.Close();
-					Assert.AreEqual(0, closing);
-					Assert.AreEqual(0, closed);
+					Assert.AreEqual(0, interceptor.OnClosingCallCounter);
+					Assert.AreEqual(0, interceptor.OnClosedCallCounter);
 				}
 
 				_ = db.Connection;
-				db.OnClosing += OnClosing;
-				db.OnClosed += OnClosed;
-				Assert.AreEqual(0, closing);
-				Assert.AreEqual(0, closed);
+				db.AddInterceptor(interceptor);
+				Assert.AreEqual(0, interceptor.OnClosingCallCounter);
+				Assert.AreEqual(0, interceptor.OnClosedCallCounter);
 				db.Close();
-				Assert.AreEqual(1, closing);
-				Assert.AreEqual(1, closed);
+				Assert.AreEqual(1, interceptor.OnClosingCallCounter);
+				Assert.AreEqual(1, interceptor.OnClosedCallCounter);
 				_ = db.Connection;
 
 				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
 				{
-					closing = 0;
-					closed  = 0;
+					interceptor.OnClosingCallCounter = 0;
+					interceptor.OnClosedCallCounter = 0;
 					_ = cdb.Connection;
-					Assert.AreEqual(0, closing);
-					Assert.AreEqual(0, closed);
+					Assert.AreEqual(0, interceptor.OnClosingCallCounter);
+					Assert.AreEqual(0, interceptor.OnClosedCallCounter);
 					cdb.Close();
-					Assert.AreEqual(1, closing);
-					Assert.AreEqual(1, closed);
+					Assert.AreEqual(1, interceptor.OnClosingCallCounter);
+					Assert.AreEqual(1, interceptor.OnClosedCallCounter);
 
-					closing = 0;
-					closed  = 0;
-					db.OnClosing -= OnClosing;
-					db.OnClosed  -= OnClosed;
+					interceptor.OnClosingCallCounter = 0;
+					interceptor.OnClosedCallCounter = 0;
 					_ = cdb.Connection;
 					cdb.Close();
-					Assert.AreEqual(1, closing);
-					Assert.AreEqual(1, closed);
+					Assert.AreEqual(1, interceptor.OnClosingCallCounter);
+					Assert.AreEqual(1, interceptor.OnClosedCallCounter);
 				}
 
-				closing = 0;
-				closed  = 0;
+				interceptor.OnClosingCallCounter = 0;
+				interceptor.OnClosedCallCounter = 0;
 				_ = db.Connection;
-				Assert.AreEqual(0, closing);
-				Assert.AreEqual(0, closed);
+				Assert.AreEqual(0, interceptor.OnClosingCallCounter);
+				Assert.AreEqual(0, interceptor.OnClosedCallCounter);
 				db.Close();
-				Assert.AreEqual(0, closing);
-				Assert.AreEqual(0, closed);
+				Assert.AreEqual(1, interceptor.OnClosingCallCounter);
+				Assert.AreEqual(1, interceptor.OnClosedCallCounter);
 				_ = db.Connection;
 
 				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
 				{
 					_ = cdb.Connection;
-					Assert.AreEqual(0, closing);
-					Assert.AreEqual(0, closed);
+					Assert.AreEqual(1, interceptor.OnClosingCallCounter);
+					Assert.AreEqual(1, interceptor.OnClosedCallCounter);
 					cdb.Close();
-					Assert.AreEqual(0, closing);
-					Assert.AreEqual(0, closed);
+					Assert.AreEqual(2, interceptor.OnClosingCallCounter);
+					Assert.AreEqual(2, interceptor.OnClosedCallCounter);
 				}
 			}
-
-			void OnClosing(object? sender, EventArgs e) => closing++;
-			void OnClosed(object? sender, EventArgs e) => closed++;
 		}
 
 		[Test]

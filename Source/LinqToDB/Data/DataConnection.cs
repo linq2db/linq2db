@@ -1108,20 +1108,12 @@ namespace LinqToDB.Data
 		}
 
 		/// <summary>
-		/// Event, triggered before connection closed using <see cref="Close"/> method.
-		/// </summary>
-		public event EventHandler? OnClosing;
-		/// <summary>
-		/// Event, triggered after connection closed using <see cref="Close"/> method.
-		/// </summary>
-		public event EventHandler? OnClosed;
-
-		/// <summary>
 		/// Closes and dispose associated underlying database transaction/connection.
 		/// </summary>
 		public virtual void Close()
 		{
-			OnClosing?.Invoke(this, EventArgs.Empty);
+			if (_contextInterceptors != null)
+				_contextInterceptors.Apply((interceptor, arg) => interceptor.OnClosing(arg), new DataContextEventData(this));
 
 			DisposeCommand();
 
@@ -1142,7 +1134,8 @@ namespace LinqToDB.Data
 					_connection.Close();
 			}
 
-			OnClosed?.Invoke(this, EventArgs.Empty);
+			if (_contextInterceptors != null)
+				_contextInterceptors.Apply((interceptor, arg) => interceptor.OnClosed(arg), new DataContextEventData(this));
 		}
 
 		#endregion
@@ -1666,8 +1659,6 @@ namespace LinqToDB.Data
 				ThrowOnDisposed             = ThrowOnDisposed,
 				_queryHints                 = _queryHints?.Count > 0 ? _queryHints.ToList() : null,
 				OnTraceConnection           = OnTraceConnection,
-				OnClosed                    = OnClosed,
-				OnClosing                   = OnClosing,
 				_commandInterceptors        = _commandInterceptors?.Clone(),
 				_connectionInterceptors     = _connectionInterceptors?.Clone(),
 				_contextInterceptors        = _contextInterceptors?.Clone(),

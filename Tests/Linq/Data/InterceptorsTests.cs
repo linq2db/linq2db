@@ -1068,19 +1068,19 @@ namespace Tests.Data
 
 				db.Person.ToList();
 
-				Assert.AreEqual(count, interceptor1.Contexts.Count);
-				Assert.True(interceptor1.Contexts.All(ctx => ctx == db));
-				interceptor1.Contexts.Clear();
+				Assert.AreEqual(count, interceptor1.EntityCreatedContexts.Count);
+				Assert.True(interceptor1.EntityCreatedContexts.All(ctx => ctx == db));
+				interceptor1.EntityCreatedContexts.Clear();
 
 				using (var clonedDb = (IDataContext)((IDataContext)db).Clone(true))
 				{
 					clonedDb.AddInterceptor(interceptor2);
 					clonedDb.GetTable<Person>().ToList();
 
-					Assert.AreEqual(count, interceptor1.Contexts.Count);
-					Assert.AreEqual(count, interceptor2.Contexts.Count);
-					Assert.True(interceptor1.Contexts.All(ctx => ctx == clonedDb));
-					Assert.True(interceptor1.Contexts.All(ctx => ctx == clonedDb));
+					Assert.AreEqual(count, interceptor1.EntityCreatedContexts.Count);
+					Assert.AreEqual(count, interceptor2.EntityCreatedContexts.Count);
+					Assert.True(interceptor1.EntityCreatedContexts.All(ctx => ctx == clonedDb));
+					Assert.True(interceptor1.EntityCreatedContexts.All(ctx => ctx == clonedDb));
 				}
 			}
 		}
@@ -1097,22 +1097,530 @@ namespace Tests.Data
 
 				db.GetTable<Person>().ToList();
 
-				Assert.AreEqual(count, interceptor1.Contexts.Count);
-				Assert.True(interceptor1.Contexts.All(ctx => ctx == db));
+				Assert.AreEqual(count, interceptor1.EntityCreatedContexts.Count);
+				Assert.True(interceptor1.EntityCreatedContexts.All(ctx => ctx == db));
 
-				interceptor1.Contexts.Clear();
+				interceptor1.EntityCreatedContexts.Clear();
 
 				using (var clonedDb = (IDataContext)((IDataContext)db).Clone(true))
 				{
 					clonedDb.AddInterceptor(interceptor2);
 					clonedDb.GetTable<Person>().ToList();
 
-					Assert.AreEqual(count, interceptor1.Contexts.Count);
-					Assert.AreEqual(count, interceptor2.Contexts.Count);
-					Assert.True(interceptor1.Contexts.All(ctx => ctx == clonedDb));
-					Assert.True(interceptor1.Contexts.All(ctx => ctx == clonedDb));
+					Assert.AreEqual(count, interceptor1.EntityCreatedContexts.Count);
+					Assert.AreEqual(count, interceptor2.EntityCreatedContexts.Count);
+					Assert.True(interceptor1.EntityCreatedContexts.All(ctx => ctx == clonedDb));
+					Assert.True(interceptor1.EntityCreatedContexts.All(ctx => ctx == clonedDb));
 				}
 			}
+		}
+
+		#endregion
+		#region OnClosing/OnClosed
+
+		[Test]
+		public void CloseEvents_DataConnection_Or_RemoteContext([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			var interceptor1 = new TestDataContextInterceptor();
+			var interceptor2 = new TestDataContextInterceptor();
+
+			IDataContext main;
+			IDataContext cloned;
+
+			using (var db = main = GetDataContext(context))
+			{
+				db.AddInterceptor(interceptor1);
+
+				db.GetTable<Person>().ToList();
+
+				Assert.AreEqual(0, interceptor1.OnClosedContexts.Count);
+				Assert.AreEqual(0, interceptor1.OnClosingContexts.Count);
+				Assert.AreEqual(0, interceptor1.OnClosedAsyncContexts.Count);
+				Assert.AreEqual(0, interceptor1.OnClosingAsyncContexts.Count);
+
+				using (var clonedDb = cloned = (IDataContext)((IDataContext)db).Clone(true))
+				{
+					clonedDb.AddInterceptor(interceptor2);
+					clonedDb.GetTable<Person>().ToList();
+
+					Assert.AreEqual(0, interceptor1.OnClosedContexts.Count);
+					Assert.AreEqual(0, interceptor1.OnClosingContexts.Count);
+					Assert.AreEqual(0, interceptor1.OnClosedAsyncContexts.Count);
+					Assert.AreEqual(0, interceptor1.OnClosingAsyncContexts.Count);
+
+					Assert.AreEqual(0, interceptor2.OnClosedContexts.Count);
+					Assert.AreEqual(0, interceptor2.OnClosingContexts.Count);
+					Assert.AreEqual(0, interceptor2.OnClosedAsyncContexts.Count);
+					Assert.AreEqual(0, interceptor2.OnClosingAsyncContexts.Count);
+				}
+
+				Assert.AreEqual(1, interceptor1.OnClosedContexts.Count);
+				Assert.True(interceptor1.OnClosedContexts.ContainsKey(cloned));
+				Assert.AreEqual(1, interceptor1.OnClosedContexts[cloned]);
+				Assert.AreEqual(1, interceptor1.OnClosingContexts.Count);
+				Assert.True(interceptor1.OnClosingContexts.ContainsKey(cloned));
+				Assert.AreEqual(1, interceptor1.OnClosingContexts[cloned]);
+				Assert.AreEqual(0, interceptor1.OnClosedAsyncContexts.Count);
+				Assert.AreEqual(0, interceptor1.OnClosingAsyncContexts.Count);
+
+				Assert.AreEqual(1, interceptor2.OnClosedContexts.Count);
+				Assert.True(interceptor2.OnClosedContexts.ContainsKey(cloned));
+				Assert.AreEqual(1, interceptor2.OnClosedContexts[cloned]);
+				Assert.AreEqual(1, interceptor2.OnClosingContexts.Count);
+				Assert.True(interceptor2.OnClosingContexts.ContainsKey(cloned));
+				Assert.AreEqual(1, interceptor2.OnClosingContexts[cloned]);
+				Assert.AreEqual(0, interceptor2.OnClosedAsyncContexts.Count);
+				Assert.AreEqual(0, interceptor2.OnClosingAsyncContexts.Count);
+			}
+
+			Assert.AreEqual(2, interceptor1.OnClosedContexts.Count);
+			Assert.True(interceptor1.OnClosedContexts.ContainsKey(main));
+			Assert.True(interceptor1.OnClosedContexts.ContainsKey(cloned));
+			Assert.AreEqual(1, interceptor1.OnClosedContexts[main]);
+			Assert.AreEqual(1, interceptor1.OnClosedContexts[cloned]);
+
+			Assert.AreEqual(2, interceptor1.OnClosingContexts.Count);
+			Assert.True(interceptor1.OnClosingContexts.ContainsKey(main));
+			Assert.True(interceptor1.OnClosingContexts.ContainsKey(cloned));
+			Assert.AreEqual(1, interceptor1.OnClosingContexts[main]);
+			Assert.AreEqual(1, interceptor1.OnClosingContexts[cloned]);
+
+			Assert.AreEqual(0, interceptor1.OnClosedAsyncContexts.Count);
+			Assert.AreEqual(0, interceptor1.OnClosingAsyncContexts.Count);
+
+			Assert.AreEqual(1, interceptor2.OnClosedContexts.Count);
+			Assert.True(interceptor2.OnClosedContexts.ContainsKey(cloned));
+			Assert.AreEqual(1, interceptor2.OnClosedContexts[cloned]);
+			Assert.AreEqual(1, interceptor2.OnClosingContexts.Count);
+			Assert.True(interceptor2.OnClosingContexts.ContainsKey(cloned));
+			Assert.AreEqual(1, interceptor2.OnClosingContexts[cloned]);
+			Assert.AreEqual(0, interceptor2.OnClosedAsyncContexts.Count);
+			Assert.AreEqual(0, interceptor2.OnClosingAsyncContexts.Count);
+		}
+
+		[Test]
+		public void CloseEvents_DataContext([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var interceptor1 = new TestDataContextInterceptor();
+			var interceptor2 = new TestDataContextInterceptor();
+
+			IDataContext main;
+			IDataContext cloned;
+
+			using (var db = main = new DataContext(context))
+			{
+				db.AddInterceptor(interceptor1);
+
+				db.GetTable<Person>().ToList();
+
+				Assert.AreEqual(1, interceptor1.OnClosedContexts.Count);
+				Assert.True(interceptor1.OnClosedContexts.Keys.Single() is DataConnection);
+				Assert.True(interceptor1.OnClosedContexts.Values.All(_ => _ == 1));
+				Assert.AreEqual(1, interceptor1.OnClosingContexts.Count);
+				Assert.True(interceptor1.OnClosingContexts.Keys.Single() is DataConnection);
+				Assert.True(interceptor1.OnClosingContexts.Values.All(_ => _ == 1));
+				Assert.AreEqual(0, interceptor1.OnClosedAsyncContexts.Count);
+				Assert.AreEqual(0, interceptor1.OnClosingAsyncContexts.Count);
+
+				using (var clonedDb = cloned = (IDataContext)((IDataContext)db).Clone(true))
+				{
+					clonedDb.AddInterceptor(interceptor2);
+					clonedDb.GetTable<Person>().ToList();
+
+					Assert.AreEqual(2, interceptor1.OnClosedContexts.Count);
+					Assert.True(interceptor1.OnClosedContexts.Keys.All(_ => _ is DataConnection));
+					Assert.True(interceptor1.OnClosedContexts.Values.All(_ => _ == 1));
+					Assert.AreEqual(2, interceptor1.OnClosingContexts.Count);
+					Assert.True(interceptor1.OnClosingContexts.Keys.All(_ => _ is DataConnection));
+					Assert.True(interceptor1.OnClosingContexts.Values.All(_ => _ == 1));
+					Assert.AreEqual(0, interceptor1.OnClosedAsyncContexts.Count);
+					Assert.AreEqual(0, interceptor1.OnClosingAsyncContexts.Count);
+
+					Assert.AreEqual(1, interceptor2.OnClosedContexts.Count);
+					Assert.True(interceptor2.OnClosedContexts.Keys.Single() is DataConnection);
+					Assert.True(interceptor2.OnClosedContexts.Values.All(_ => _ == 1));
+					Assert.AreEqual(1, interceptor2.OnClosingContexts.Count);
+					Assert.True(interceptor2.OnClosingContexts.Keys.Single() is DataConnection);
+					Assert.True(interceptor2.OnClosingContexts.Values.All(_ => _ == 1));
+					Assert.AreEqual(0, interceptor2.OnClosedAsyncContexts.Count);
+					Assert.AreEqual(0, interceptor2.OnClosingAsyncContexts.Count);
+				}
+
+				Assert.AreEqual(3, interceptor1.OnClosedContexts.Count);
+				Assert.AreEqual(2, interceptor1.OnClosedContexts.Keys.Count(_ => _ is DataConnection));
+				Assert.True(interceptor1.OnClosedContexts.ContainsKey(cloned));
+				Assert.True(interceptor1.OnClosedContexts.Values.All(_ => _ == 1));
+				Assert.AreEqual(3, interceptor1.OnClosingContexts.Count);
+				Assert.AreEqual(2, interceptor1.OnClosingContexts.Keys.Count(_ => _ is DataConnection));
+				Assert.True(interceptor1.OnClosingContexts.ContainsKey(cloned));
+				Assert.True(interceptor1.OnClosingContexts.Values.All(_ => _ == 1));
+				Assert.AreEqual(0, interceptor1.OnClosedAsyncContexts.Count);
+				Assert.AreEqual(0, interceptor1.OnClosingAsyncContexts.Count);
+
+				Assert.AreEqual(2, interceptor2.OnClosedContexts.Count);
+				Assert.AreEqual(1, interceptor2.OnClosedContexts.Keys.Count(_ => _ is DataConnection));
+				Assert.True(interceptor2.OnClosedContexts.ContainsKey(cloned));
+				Assert.True(interceptor2.OnClosedContexts.Values.All(_ => _ == 1));
+				Assert.AreEqual(2, interceptor2.OnClosingContexts.Count);
+				Assert.AreEqual(1, interceptor2.OnClosingContexts.Keys.Count(_ => _ is DataConnection));
+				Assert.True(interceptor2.OnClosingContexts.ContainsKey(cloned));
+				Assert.True(interceptor2.OnClosingContexts.Values.All(_ => _ == 1));
+				Assert.AreEqual(0, interceptor2.OnClosedAsyncContexts.Count);
+				Assert.AreEqual(0, interceptor2.OnClosingAsyncContexts.Count);
+			}
+
+			Assert.AreEqual(4, interceptor1.OnClosedContexts.Count);
+			Assert.AreEqual(2, interceptor1.OnClosedContexts.Keys.Count(_ => _ is DataConnection));
+			Assert.True(interceptor1.OnClosedContexts.ContainsKey(cloned));
+			Assert.True(interceptor1.OnClosedContexts.ContainsKey(main));
+			Assert.True(interceptor1.OnClosedContexts.Values.All(_ => _ == 1));
+			Assert.AreEqual(4, interceptor1.OnClosingContexts.Count);
+			Assert.AreEqual(2, interceptor1.OnClosingContexts.Keys.Count(_ => _ is DataConnection));
+			Assert.True(interceptor1.OnClosingContexts.ContainsKey(cloned));
+			Assert.True(interceptor1.OnClosingContexts.ContainsKey(main));
+			Assert.True(interceptor1.OnClosingContexts.Values.All(_ => _ == 1));
+			Assert.AreEqual(0, interceptor1.OnClosedAsyncContexts.Count);
+			Assert.AreEqual(0, interceptor1.OnClosingAsyncContexts.Count);
+
+			Assert.AreEqual(2, interceptor2.OnClosedContexts.Count);
+			Assert.AreEqual(1, interceptor2.OnClosedContexts.Keys.Count(_ => _ is DataConnection));
+			Assert.True(interceptor2.OnClosedContexts.ContainsKey(cloned));
+			Assert.True(interceptor2.OnClosedContexts.Values.All(_ => _ == 1));
+			Assert.AreEqual(2, interceptor2.OnClosingContexts.Count);
+			Assert.AreEqual(1, interceptor2.OnClosingContexts.Keys.Count(_ => _ is DataConnection));
+			Assert.True(interceptor2.OnClosingContexts.ContainsKey(cloned));
+			Assert.True(interceptor2.OnClosingContexts.Values.All(_ => _ == 1));
+			Assert.AreEqual(0, interceptor2.OnClosedAsyncContexts.Count);
+			Assert.AreEqual(0, interceptor2.OnClosingAsyncContexts.Count);
+		}
+
+		[Test]
+		public async Task CloseEvents_DataConnection_Or_RemoteContext_Async([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			var interceptor1 = new TestDataContextInterceptor();
+			var interceptor2 = new TestDataContextInterceptor();
+
+			IDataContext main;
+			IDataContext cloned;
+
+			await using (var db = main = GetDataContext(context))
+			{
+				db.AddInterceptor(interceptor1);
+
+				await db.GetTable<Person>().ToListAsync();
+
+				Assert.AreEqual(0, interceptor1.OnClosedContexts.Count);
+				Assert.AreEqual(0, interceptor1.OnClosingContexts.Count);
+				Assert.AreEqual(0, interceptor1.OnClosedAsyncContexts.Count);
+				Assert.AreEqual(0, interceptor1.OnClosingAsyncContexts.Count);
+
+				await using (var clonedDb = cloned = (IDataContext)((IDataContext)db).Clone(true))
+				{
+					clonedDb.AddInterceptor(interceptor2);
+					await clonedDb.GetTable<Person>().ToListAsync();
+
+					Assert.AreEqual(0, interceptor1.OnClosedContexts.Count);
+					Assert.AreEqual(0, interceptor1.OnClosingContexts.Count);
+					Assert.AreEqual(0, interceptor1.OnClosedAsyncContexts.Count);
+					Assert.AreEqual(0, interceptor1.OnClosingAsyncContexts.Count);
+
+					Assert.AreEqual(0, interceptor2.OnClosedContexts.Count);
+					Assert.AreEqual(0, interceptor2.OnClosingContexts.Count);
+					Assert.AreEqual(0, interceptor2.OnClosedAsyncContexts.Count);
+					Assert.AreEqual(0, interceptor2.OnClosingAsyncContexts.Count);
+				}
+
+				Assert.AreEqual(0, interceptor1.OnClosedContexts.Count);
+				Assert.AreEqual(0, interceptor1.OnClosingContexts.Count);
+				Assert.AreEqual(1, interceptor1.OnClosedAsyncContexts.Count);
+				Assert.True(interceptor1.OnClosedAsyncContexts.ContainsKey(cloned));
+				Assert.AreEqual(1, interceptor1.OnClosedAsyncContexts[cloned]);
+				Assert.AreEqual(1, interceptor1.OnClosingAsyncContexts.Count);
+				Assert.True(interceptor1.OnClosingAsyncContexts.ContainsKey(cloned));
+				Assert.AreEqual(1, interceptor1.OnClosingAsyncContexts[cloned]);
+
+				Assert.AreEqual(0, interceptor2.OnClosedContexts.Count);
+				Assert.AreEqual(0, interceptor2.OnClosingContexts.Count);
+				Assert.AreEqual(1, interceptor2.OnClosedAsyncContexts.Count);
+				Assert.True(interceptor2.OnClosedAsyncContexts.ContainsKey(cloned));
+				Assert.AreEqual(1, interceptor2.OnClosedAsyncContexts[cloned]);
+				Assert.AreEqual(1, interceptor2.OnClosingAsyncContexts.Count);
+				Assert.True(interceptor2.OnClosingAsyncContexts.ContainsKey(cloned));
+				Assert.AreEqual(1, interceptor2.OnClosingAsyncContexts[cloned]);
+			}
+
+			Assert.AreEqual(0, interceptor1.OnClosedContexts.Count);
+			Assert.AreEqual(0, interceptor1.OnClosingContexts.Count);
+
+			Assert.AreEqual(2, interceptor1.OnClosedAsyncContexts.Count);
+			Assert.True(interceptor1.OnClosedAsyncContexts.ContainsKey(main));
+			Assert.True(interceptor1.OnClosedAsyncContexts.ContainsKey(cloned));
+			Assert.AreEqual(1, interceptor1.OnClosedAsyncContexts[main]);
+			Assert.AreEqual(1, interceptor1.OnClosedAsyncContexts[cloned]);
+
+			Assert.AreEqual(2, interceptor1.OnClosingAsyncContexts.Count);
+			Assert.True(interceptor1.OnClosingAsyncContexts.ContainsKey(main));
+			Assert.True(interceptor1.OnClosingAsyncContexts.ContainsKey(cloned));
+			Assert.AreEqual(1, interceptor1.OnClosingAsyncContexts[main]);
+			Assert.AreEqual(1, interceptor1.OnClosingAsyncContexts[cloned]);
+
+			Assert.AreEqual(0, interceptor2.OnClosedContexts.Count);
+			Assert.AreEqual(0, interceptor2.OnClosingContexts.Count);
+			Assert.AreEqual(1, interceptor2.OnClosedAsyncContexts.Count);
+			Assert.True(interceptor2.OnClosedAsyncContexts.ContainsKey(cloned));
+			Assert.AreEqual(1, interceptor2.OnClosedAsyncContexts[cloned]);
+			Assert.AreEqual(1, interceptor2.OnClosingAsyncContexts.Count);
+			Assert.True(interceptor2.OnClosingAsyncContexts.ContainsKey(cloned));
+			Assert.AreEqual(1, interceptor2.OnClosingAsyncContexts[cloned]);
+		}
+
+		[Test]
+		public async Task CloseEvents_DataContext_Async([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var interceptor1 = new TestDataContextInterceptor();
+			var interceptor2 = new TestDataContextInterceptor();
+
+			IDataContext main;
+			IDataContext cloned;
+
+			await using (var db = main = new DataContext(context))
+			{
+				db.AddInterceptor(interceptor1);
+
+				await db.GetTable<Person>().ToListAsync();
+
+				Assert.AreEqual(0, interceptor1.OnClosedContexts.Count);
+				Assert.AreEqual(0, interceptor1.OnClosingContexts.Count);
+				Assert.AreEqual(1, interceptor1.OnClosedAsyncContexts.Count);
+				Assert.True(interceptor1.OnClosedAsyncContexts.Keys.Single() is DataConnection);
+				Assert.True(interceptor1.OnClosedAsyncContexts.Values.All(_ => _ == 1));
+				Assert.AreEqual(1, interceptor1.OnClosingAsyncContexts.Count);
+				Assert.True(interceptor1.OnClosingAsyncContexts.Keys.Single() is DataConnection);
+				Assert.True(interceptor1.OnClosingAsyncContexts.Values.All(_ => _ == 1));
+
+
+				await using (var clonedDb = cloned = (IDataContext)((IDataContext)db).Clone(true))
+				{
+					clonedDb.AddInterceptor(interceptor2);
+					await clonedDb.GetTable<Person>().ToListAsync();
+
+					Assert.AreEqual(0, interceptor1.OnClosedContexts.Count);
+					Assert.AreEqual(0, interceptor1.OnClosingContexts.Count);
+					Assert.AreEqual(2, interceptor1.OnClosedAsyncContexts.Count);
+					Assert.True(interceptor1.OnClosedAsyncContexts.Keys.All(_ => _ is DataConnection));
+					Assert.True(interceptor1.OnClosedAsyncContexts.Values.All(_ => _ == 1));
+					Assert.AreEqual(2, interceptor1.OnClosingAsyncContexts.Count);
+					Assert.True(interceptor1.OnClosingAsyncContexts.Keys.All(_ => _ is DataConnection));
+					Assert.True(interceptor1.OnClosingAsyncContexts.Values.All(_ => _ == 1));
+
+					Assert.AreEqual(0, interceptor2.OnClosedContexts.Count);
+					Assert.AreEqual(0, interceptor2.OnClosingContexts.Count);
+					Assert.AreEqual(1, interceptor2.OnClosedAsyncContexts.Count);
+					Assert.True(interceptor2.OnClosedAsyncContexts.Keys.Single() is DataConnection);
+					Assert.True(interceptor2.OnClosedAsyncContexts.Values.All(_ => _ == 1));
+					Assert.AreEqual(1, interceptor2.OnClosingAsyncContexts.Count);
+					Assert.True(interceptor2.OnClosingAsyncContexts.Keys.Single() is DataConnection);
+					Assert.True(interceptor2.OnClosingAsyncContexts.Values.All(_ => _ == 1));
+				}
+
+				Assert.AreEqual(0, interceptor1.OnClosedContexts.Count);
+				Assert.AreEqual(0, interceptor1.OnClosingContexts.Count);
+				Assert.AreEqual(3, interceptor1.OnClosedAsyncContexts.Count);
+				Assert.AreEqual(2, interceptor1.OnClosedAsyncContexts.Keys.Count(_ => _ is DataConnection));
+				Assert.True(interceptor1.OnClosedAsyncContexts.ContainsKey(cloned));
+				Assert.True(interceptor1.OnClosedAsyncContexts.Values.All(_ => _ == 1));
+				Assert.AreEqual(3, interceptor1.OnClosingAsyncContexts.Count);
+				Assert.AreEqual(2, interceptor1.OnClosingAsyncContexts.Keys.Count(_ => _ is DataConnection));
+				Assert.True(interceptor1.OnClosingAsyncContexts.ContainsKey(cloned));
+				Assert.True(interceptor1.OnClosingAsyncContexts.Values.All(_ => _ == 1));
+
+				Assert.AreEqual(0, interceptor2.OnClosedContexts.Count);
+				Assert.AreEqual(0, interceptor2.OnClosingContexts.Count);
+				Assert.AreEqual(2, interceptor2.OnClosedAsyncContexts.Count);
+				Assert.AreEqual(1, interceptor2.OnClosedAsyncContexts.Keys.Count(_ => _ is DataConnection));
+				Assert.True(interceptor2.OnClosedAsyncContexts.ContainsKey(cloned));
+				Assert.True(interceptor2.OnClosedAsyncContexts.Values.All(_ => _ == 1));
+				Assert.AreEqual(2, interceptor2.OnClosingAsyncContexts.Count);
+				Assert.AreEqual(1, interceptor2.OnClosingAsyncContexts.Keys.Count(_ => _ is DataConnection));
+				Assert.True(interceptor2.OnClosingAsyncContexts.ContainsKey(cloned));
+				Assert.True(interceptor2.OnClosingAsyncContexts.Values.All(_ => _ == 1));
+			}
+
+			Assert.AreEqual(0, interceptor1.OnClosedContexts.Count);
+			Assert.AreEqual(0, interceptor1.OnClosingContexts.Count);
+			Assert.AreEqual(4, interceptor1.OnClosedAsyncContexts.Count);
+			Assert.AreEqual(2, interceptor1.OnClosedAsyncContexts.Keys.Count(_ => _ is DataConnection));
+			Assert.True(interceptor1.OnClosedAsyncContexts.ContainsKey(cloned));
+			Assert.True(interceptor1.OnClosedAsyncContexts.ContainsKey(main));
+			Assert.True(interceptor1.OnClosedAsyncContexts.Values.All(_ => _ == 1));
+			Assert.AreEqual(4, interceptor1.OnClosingAsyncContexts.Count);
+			Assert.AreEqual(2, interceptor1.OnClosingAsyncContexts.Keys.Count(_ => _ is DataConnection));
+			Assert.True(interceptor1.OnClosingAsyncContexts.ContainsKey(cloned));
+			Assert.True(interceptor1.OnClosingAsyncContexts.ContainsKey(main));
+			Assert.True(interceptor1.OnClosingAsyncContexts.Values.All(_ => _ == 1));
+
+			Assert.AreEqual(0, interceptor2.OnClosedContexts.Count);
+			Assert.AreEqual(0, interceptor2.OnClosingContexts.Count);
+			Assert.AreEqual(2, interceptor2.OnClosedAsyncContexts.Count);
+			Assert.AreEqual(1, interceptor2.OnClosedAsyncContexts.Keys.Count(_ => _ is DataConnection));
+			Assert.True(interceptor2.OnClosedAsyncContexts.ContainsKey(cloned));
+			Assert.True(interceptor2.OnClosedAsyncContexts.Values.All(_ => _ == 1));
+			Assert.AreEqual(2, interceptor2.OnClosingAsyncContexts.Count);
+			Assert.AreEqual(1, interceptor2.OnClosingAsyncContexts.Keys.Count(_ => _ is DataConnection));
+			Assert.True(interceptor2.OnClosingAsyncContexts.ContainsKey(cloned));
+			Assert.True(interceptor2.OnClosingAsyncContexts.Values.All(_ => _ == 1));
+		}
+
+		[Test]
+		public async Task CloseEvents_DataConnection_Or_RemoteContext_ExplicitCall([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			var interceptor = new TestDataContextInterceptor();
+
+			IDataContext main;
+			using (var db = main = GetDataContext(context))
+			{
+				db.AddInterceptor(interceptor);
+
+				db.GetTable<Person>().ToList();
+
+				Assert.AreEqual(0, interceptor.OnClosedContexts.Count);
+				Assert.AreEqual(0, interceptor.OnClosingContexts.Count);
+				Assert.AreEqual(0, interceptor.OnClosedAsyncContexts.Count);
+				Assert.AreEqual(0, interceptor.OnClosingAsyncContexts.Count);
+
+				db.Close();
+
+				Assert.AreEqual(1, interceptor.OnClosedContexts.Count);
+				Assert.True(interceptor.OnClosedContexts.ContainsKey(main));
+				Assert.AreEqual(1, interceptor.OnClosedContexts[main]);
+				Assert.AreEqual(1, interceptor.OnClosingContexts.Count);
+				Assert.True(interceptor.OnClosingContexts.ContainsKey(main));
+				Assert.AreEqual(1, interceptor.OnClosingContexts[main]);
+				Assert.AreEqual(0, interceptor.OnClosedAsyncContexts.Count);
+				Assert.AreEqual(0, interceptor.OnClosingAsyncContexts.Count);
+
+				db.GetTable<Person>().ToList();
+
+				Assert.AreEqual(1, interceptor.OnClosedContexts.Count);
+				Assert.True(interceptor.OnClosedContexts.ContainsKey(main));
+				Assert.AreEqual(1, interceptor.OnClosedContexts[main]);
+				Assert.AreEqual(1, interceptor.OnClosingContexts.Count);
+				Assert.True(interceptor.OnClosingContexts.ContainsKey(main));
+				Assert.AreEqual(1, interceptor.OnClosingContexts[main]);
+				Assert.AreEqual(0, interceptor.OnClosedAsyncContexts.Count);
+				Assert.AreEqual(0, interceptor.OnClosingAsyncContexts.Count);
+
+				await db.CloseAsync();
+
+				Assert.AreEqual(1, interceptor.OnClosedContexts.Count);
+				Assert.True(interceptor.OnClosedContexts.ContainsKey(main));
+				Assert.AreEqual(1, interceptor.OnClosedContexts[main]);
+				Assert.AreEqual(1, interceptor.OnClosingContexts.Count);
+				Assert.True(interceptor.OnClosingContexts.ContainsKey(main));
+				Assert.AreEqual(1, interceptor.OnClosingContexts[main]);
+				Assert.AreEqual(1, interceptor.OnClosedAsyncContexts.Count);
+				Assert.True(interceptor.OnClosedAsyncContexts.ContainsKey(main));
+				Assert.AreEqual(1, interceptor.OnClosedAsyncContexts[main]);
+				Assert.AreEqual(1, interceptor.OnClosingAsyncContexts.Count);
+				Assert.True(interceptor.OnClosingAsyncContexts.ContainsKey(main));
+				Assert.AreEqual(1, interceptor.OnClosingAsyncContexts[main]);
+			}
+
+			Assert.AreEqual(1, interceptor.OnClosedContexts.Count);
+			Assert.True(interceptor.OnClosedContexts.ContainsKey(main));
+			Assert.AreEqual(2, interceptor.OnClosedContexts[main]);
+			Assert.AreEqual(1, interceptor.OnClosingContexts.Count);
+			Assert.True(interceptor.OnClosingContexts.ContainsKey(main));
+			Assert.AreEqual(2, interceptor.OnClosingContexts[main]);
+			Assert.AreEqual(1, interceptor.OnClosedAsyncContexts.Count);
+			Assert.True(interceptor.OnClosedAsyncContexts.ContainsKey(main));
+			Assert.AreEqual(1, interceptor.OnClosedAsyncContexts[main]);
+			Assert.AreEqual(1, interceptor.OnClosingAsyncContexts.Count);
+			Assert.True(interceptor.OnClosingAsyncContexts.ContainsKey(main));
+			Assert.AreEqual(1, interceptor.OnClosingAsyncContexts[main]);
+		}
+
+		[Test]
+		public async Task CloseEvents_DataContext_ExplicitCall([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var interceptor = new TestDataContextInterceptor();
+
+			IDataContext main;
+			using (var db = main = new DataContext(context))
+			{
+				db.AddInterceptor(interceptor);
+
+				db.GetTable<Person>().ToList();
+
+				Assert.AreEqual(1, interceptor.OnClosedContexts.Count);
+				Assert.True(interceptor.OnClosedContexts.Keys.All(_ => _ is DataConnection));
+				Assert.True(interceptor.OnClosedContexts.Values.All(_ => _  == 1));
+				Assert.AreEqual(1, interceptor.OnClosingContexts.Count);
+				Assert.True(interceptor.OnClosingContexts.Keys.All(_ => _ is DataConnection));
+				Assert.True(interceptor.OnClosingContexts.Values.All(_ => _ == 1));
+				Assert.AreEqual(0, interceptor.OnClosedAsyncContexts.Count);
+				Assert.AreEqual(0, interceptor.OnClosingAsyncContexts.Count);
+
+				db.Close();
+
+				Assert.AreEqual(2, interceptor.OnClosedContexts.Count);
+				Assert.AreEqual(1, interceptor.OnClosedContexts.Keys.Count(_ => _ is DataConnection));
+				Assert.True(interceptor.OnClosedContexts.ContainsKey(main));
+				Assert.True(interceptor.OnClosedContexts.Values.All(_ => _ == 1));
+				Assert.AreEqual(2, interceptor.OnClosingContexts.Count);
+				Assert.AreEqual(1, interceptor.OnClosingContexts.Keys.Count(_ => _ is DataConnection));
+				Assert.True(interceptor.OnClosingContexts.ContainsKey(main));
+				Assert.True(interceptor.OnClosingContexts.Values.All(_ => _ == 1));
+				Assert.AreEqual(0, interceptor.OnClosedAsyncContexts.Count);
+				Assert.AreEqual(0, interceptor.OnClosingAsyncContexts.Count);
+
+				db.GetTable<Person>().ToList();
+
+				Assert.AreEqual(3, interceptor.OnClosedContexts.Count);
+				Assert.AreEqual(2, interceptor.OnClosedContexts.Keys.Count(_ => _ is DataConnection));
+				Assert.True(interceptor.OnClosedContexts.ContainsKey(main));
+				Assert.True(interceptor.OnClosedContexts.Values.All(_ => _ == 1));
+				Assert.AreEqual(3, interceptor.OnClosingContexts.Count);
+				Assert.AreEqual(2, interceptor.OnClosingContexts.Keys.Count(_ => _ is DataConnection));
+				Assert.True(interceptor.OnClosingContexts.ContainsKey(main));
+				Assert.True(interceptor.OnClosingContexts.Values.All(_ => _ == 1));
+				Assert.AreEqual(0, interceptor.OnClosedAsyncContexts.Count);
+				Assert.AreEqual(0, interceptor.OnClosingAsyncContexts.Count);
+
+				await db.CloseAsync();
+
+				Assert.AreEqual(3, interceptor.OnClosedContexts.Count);
+				Assert.AreEqual(2, interceptor.OnClosedContexts.Keys.Count(_ => _ is DataConnection));
+				Assert.True(interceptor.OnClosedContexts.ContainsKey(main));
+				Assert.True(interceptor.OnClosedContexts.Values.All(_ => _ == 1));
+				Assert.AreEqual(3, interceptor.OnClosingContexts.Count);
+				Assert.AreEqual(2, interceptor.OnClosingContexts.Keys.Count(_ => _ is DataConnection));
+				Assert.True(interceptor.OnClosingContexts.ContainsKey(main));
+				Assert.True(interceptor.OnClosingContexts.Values.All(_ => _ == 1));
+				Assert.AreEqual(1, interceptor.OnClosedAsyncContexts.Count);
+				Assert.True(interceptor.OnClosedAsyncContexts.ContainsKey(main));
+				Assert.True(interceptor.OnClosedAsyncContexts.Values.All(_ => _ == 1));
+				Assert.AreEqual(1, interceptor.OnClosingAsyncContexts.Count);
+				Assert.True(interceptor.OnClosingAsyncContexts.ContainsKey(main));
+				Assert.True(interceptor.OnClosingAsyncContexts.Values.All(_ => _ == 1));
+			}
+
+			Assert.AreEqual(3, interceptor.OnClosedContexts.Count);
+			Assert.AreEqual(2, interceptor.OnClosedContexts.Keys.Count(_ => _ is DataConnection));
+			Assert.True(interceptor.OnClosedContexts.ContainsKey(main));
+			Assert.AreEqual(2, interceptor.OnClosedContexts[main]);
+			Assert.True(interceptor.OnClosedContexts.Where(_ => _.Key is DataConnection).All(_ => _.Value == 1));
+			Assert.AreEqual(3, interceptor.OnClosingContexts.Count);
+			Assert.AreEqual(2, interceptor.OnClosingContexts.Keys.Count(_ => _ is DataConnection));
+			Assert.True(interceptor.OnClosingContexts.ContainsKey(main));
+			Assert.AreEqual(2, interceptor.OnClosingContexts[main]);
+			Assert.True(interceptor.OnClosingContexts.Where(_ => _.Key is DataConnection).All(_ => _.Value == 1));
+			Assert.AreEqual(1, interceptor.OnClosedAsyncContexts.Count);
+			Assert.True(interceptor.OnClosedAsyncContexts.ContainsKey(main));
+			Assert.True(interceptor.OnClosedAsyncContexts.Values.All(_ => _ == 1));
+			Assert.AreEqual(1, interceptor.OnClosingAsyncContexts.Count);
+			Assert.True(interceptor.OnClosingAsyncContexts.ContainsKey(main));
+			Assert.True(interceptor.OnClosingAsyncContexts.Values.All(_ => _ == 1));
 		}
 
 		#endregion
@@ -1208,11 +1716,57 @@ namespace Tests.Data
 
 		private class TestDataContextInterceptor : DataContextInterceptor
 		{
-			public List<IDataContext> Contexts { get; } = new ();
-			public override object EntityCreated(EntityCreatedEventData eventData, object entity)
+			public List<IDataContext> EntityCreatedContexts { get; } = new ();
+
+			public override object EntityCreated(DataContextEventData eventData, object entity)
 			{
-				Contexts.Add(eventData.Context);
+				EntityCreatedContexts.Add(eventData.Context);
 				return base.EntityCreated(eventData, entity);
+			}
+
+			public Dictionary<IDataContext, int> OnClosedContexts       { get; } = new();
+			public Dictionary<IDataContext, int> OnClosingContexts      { get; } = new();
+			public Dictionary<IDataContext, int> OnClosedAsyncContexts  { get; } = new();
+			public Dictionary<IDataContext, int> OnClosingAsyncContexts { get; } = new();
+
+			public override void OnClosed(DataContextEventData eventData)
+			{
+				if (OnClosedContexts.ContainsKey(eventData.Context))
+					OnClosedContexts[eventData.Context]++;
+				else
+					OnClosedContexts[eventData.Context] = 1;
+
+				base.OnClosed(eventData);
+			}
+
+			public override void OnClosing(DataContextEventData eventData)
+			{
+				if (OnClosingContexts.ContainsKey(eventData.Context))
+					OnClosingContexts[eventData.Context]++;
+				else
+					OnClosingContexts[eventData.Context] = 1;
+
+				base.OnClosing(eventData);
+			}
+
+			public override Task OnClosedAsync(DataContextEventData eventData)
+			{
+				if (OnClosedAsyncContexts.ContainsKey(eventData.Context))
+					OnClosedAsyncContexts[eventData.Context]++;
+				else
+					OnClosedAsyncContexts[eventData.Context] = 1;
+
+				return base.OnClosedAsync(eventData);
+			}
+
+			public override Task OnClosingAsync(DataContextEventData eventData)
+			{
+				if (OnClosingAsyncContexts.ContainsKey(eventData.Context))
+					OnClosingAsyncContexts[eventData.Context]++;
+				else
+					OnClosingAsyncContexts[eventData.Context] = 1;
+
+				return base.OnClosingAsync(eventData);
 			}
 		}
 

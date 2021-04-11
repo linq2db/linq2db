@@ -32,7 +32,7 @@ namespace Tests.Linq
 
 			public Dictionary<int, Parent> Parents { get; } = new();
 
-			public override object EntityCreated(EntityCreatedEventData eventData, object entity)
+			public override object EntityCreated(DataContextEventData eventData, object entity)
 			{
 				if (CheckEntityIdentity && entity is Parent p)
 				{

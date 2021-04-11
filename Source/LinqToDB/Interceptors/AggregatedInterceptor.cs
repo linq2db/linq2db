@@ -58,6 +58,23 @@ namespace LinqToDB.Interceptors
 			}
 		}
 
+		// void event(arg)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Apply<TArg>(Action<TInterceptor, TArg> apply, TArg arg)
+		{
+			_enumerating = true;
+			try
+			{
+				foreach (var interceptor in _interceptors)
+					apply(interceptor, arg);
+			}
+			finally
+			{
+				_enumerating = false;
+				RemoveDelayed();
+			}
+		}
+
 		// void event(arg1, arg2)
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Apply<TArg1, TArg2>(Action<TInterceptor, TArg1, TArg2> apply, TArg1 arg1, TArg2 arg2)
@@ -67,6 +84,23 @@ namespace LinqToDB.Interceptors
 			{
 				foreach (var interceptor in _interceptors)
 					apply(interceptor, arg1, arg2);
+			}
+			finally
+			{
+				_enumerating = false;
+				RemoveDelayed();
+			}
+		}
+
+		// Task event(arg)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public async Task Apply<TArg>(Func<TInterceptor, TArg, Task> apply, TArg arg)
+		{
+			_enumerating = true;
+			try
+			{
+				foreach (var interceptor in _interceptors)
+					await apply(interceptor, arg).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 			finally
 			{

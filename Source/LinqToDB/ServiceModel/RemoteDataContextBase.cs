@@ -15,6 +15,7 @@ namespace LinqToDB.ServiceModel
 	using Expressions;
 	using Extensions;
 	using LinqToDB.Common;
+	using LinqToDB.Interceptors;
 	using Mapping;
 	using SqlProvider;
 
@@ -321,8 +322,6 @@ namespace LinqToDB.ServiceModel
 			return ctx;
 		}
 
-		public event EventHandler? OnClosing;
-
 		protected bool Disposed { get; private set; }
 
 		protected void ThrowOnDisposed()
@@ -333,25 +332,29 @@ namespace LinqToDB.ServiceModel
 
 		void IDataContext.Close()
 		{
-			Close();
+			if (_contextInterceptors != null)
+				_contextInterceptors.Apply((interceptor, arg) => interceptor.OnClosing(arg), new DataContextEventData(this));
+
+			if (_contextInterceptors != null)
+				_contextInterceptors.Apply((interceptor, arg) => interceptor.OnClosed(arg), new DataContextEventData(this));
 		}
 
-		Task IDataContext.CloseAsync()
+		async Task IDataContext.CloseAsync()
 		{
-			Close();
-			return TaskEx.CompletedTask;
-		}
+			if (_contextInterceptors != null)
+				await _contextInterceptors.Apply((interceptor, arg) => interceptor.OnClosingAsync(arg), new DataContextEventData(this))
+					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-		void Close()
-		{
-			OnClosing?.Invoke(this, EventArgs.Empty);
+			if (_contextInterceptors != null)
+				await _contextInterceptors.Apply((interceptor, arg) => interceptor.OnClosedAsync(arg), new DataContextEventData(this))
+					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
 		public virtual void Dispose()
 		{
 			Disposed = true;
 
-			Close();
+			((IDataContext)this).Close();
 		}
 
 #if !NATIVE_ASYNC

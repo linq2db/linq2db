@@ -363,6 +363,23 @@ namespace LinqToDB
 			}
 		}
 
+		internal async Task ReleaseQueryAsync()
+		{
+			if (_dataConnection != null)
+			{
+				LastQuery = _dataConnection.LastQuery;
+
+				if (LockDbManagerCounter == 0 && KeepConnectionAlive == false)
+				{
+					if (_dataConnection.QueryHints.    Count > 0) QueryHints.    AddRange(_queryHints!);
+					if (_dataConnection.NextQueryHints.Count > 0) NextQueryHints.AddRange(_nextQueryHints!);
+
+					await _dataConnection.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					_dataConnection = null;
+				}
+			}
+		}
+
 		Func<ISqlBuilder>   IDataContext.CreateSqlProvider     => () => DataProvider.CreateSqlBuilder(MappingSchema);
 		Func<ISqlOptimizer> IDataContext.GetSqlOptimizer       => DataProvider.GetSqlOptimizer;
 		Type                IDataContext.DataReaderType        => DataProvider.DataReaderType;
@@ -416,24 +433,18 @@ namespace LinqToDB
 			return dc;
 		}
 
-		/// <summary>
-		/// Event, triggered before underlying connection closed on context disposal or closing.
-		/// Not fired, if context doesn't have active connection (bug?).
-		/// </summary>
-		public event EventHandler? OnClosing;
-
 		void IDisposable.Dispose()
 		{
 			Dispose(disposing: true);
 		}
 
 		/// <summary>
-		/// Closes underlying connection and fires <see cref="OnClosing"/> event (only if connection existed).
+		/// Closes underlying connection.
 		/// </summary>
 		protected virtual void Dispose(bool disposing)
 		{
 			_disposed = true;
-			Close();
+			((IDataContext)this).Close();
 		}
 
 #if NATIVE_ASYNC
@@ -446,7 +457,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Closes underlying connection and fires <see cref="OnClosing"/> event (only if connection existed).
+		/// Closes underlying connection.
 		/// </summary>
 #if NATIVE_ASYNC
 		protected virtual ValueTask DisposeAsync(bool disposing)
@@ -462,40 +473,43 @@ namespace LinqToDB
 #endif
 		}
 
-		/// <summary>
-		/// Closes underlying connection and fires <see cref="OnClosing"/> event (only if connection existed).
-		/// </summary>
-		void Close()
+		void IDataContext.Close()
 		{
+			if (_contextInterceptors != null)
+				_contextInterceptors.Apply((interceptor, arg) => interceptor.OnClosing(arg), new DataContextEventData(this));
+
+
 			if (_dataConnection != null)
 			{
-				OnClosing?.Invoke(this, EventArgs.Empty);
-
-				if (_dataConnection.QueryHints.    Count > 0) QueryHints.    AddRange(_queryHints!);
+				if (_dataConnection.QueryHints.Count > 0) QueryHints.AddRange(_queryHints!);
 				if (_dataConnection.NextQueryHints.Count > 0) NextQueryHints.AddRange(_nextQueryHints!);
 
 				_dataConnection.Dispose();
 				_dataConnection = null;
 			}
-		}
 
-		void IDataContext.Close()
-		{
-			Close();
+			if (_contextInterceptors != null)
+				_contextInterceptors.Apply((interceptor, arg) => interceptor.OnClosed(arg), new DataContextEventData(this));
 		}
 
 		async Task IDataContext.CloseAsync()
 		{
+			if (_contextInterceptors != null)
+				await _contextInterceptors.Apply((interceptor, arg) => interceptor.OnClosingAsync(arg), new DataContextEventData(this))
+					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
 			if (_dataConnection != null)
 			{
-				OnClosing?.Invoke(this, EventArgs.Empty);
-
 				if (_dataConnection.QueryHints.    Count > 0) QueryHints.AddRange(_queryHints!);
 				if (_dataConnection.NextQueryHints.Count > 0) NextQueryHints.AddRange(_nextQueryHints!);
 
 				await _dataConnection.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 				_dataConnection = null;
 			}
+
+			if (_contextInterceptors != null)
+				await _contextInterceptors.Apply((interceptor, arg) => interceptor.OnClosedAsync(arg), new DataContextEventData(this))
+					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
 		/// <summary>
@@ -589,7 +603,7 @@ namespace LinqToDB
 #endif
 			{
 				await _queryRunner!.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-				_dataContext!.ReleaseQuery();
+				await _dataContext!.ReleaseQueryAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				_queryRunner = null;
 				_dataContext = null;

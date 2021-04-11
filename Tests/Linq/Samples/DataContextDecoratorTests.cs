@@ -53,12 +53,6 @@ namespace Tests.Samples
 				set => _context.InlineParameters = value;
 			}
 
-			event EventHandler? IDataContext.OnClosing
-			{
-				add { }
-				remove { }
-			}
-
 			public IDataContext Clone(bool forNestedQuery)
 			{
 				return _context.Clone(forNestedQuery);

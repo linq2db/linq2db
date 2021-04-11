@@ -11,7 +11,7 @@ namespace LinqToDB.Tools.EntityServices
 	using LinqToDB.Interceptors;
 
 	[PublicAPI]
-	public class IdentityMap : IDisposable, IDataContextInterceptor
+	public class IdentityMap : DataContextInterceptor, IDisposable
 	{
 		public IdentityMap(IDataContext dataContext)
 		{
@@ -66,7 +66,7 @@ namespace LinqToDB.Tools.EntityServices
 			_dataContext = null;
 		}
 
-		object IDataContextInterceptor.EntityCreated(EntityCreatedEventData eventData, object entity)
+		public override object EntityCreated(DataContextEventData eventData, object entity)
 		{
 			if (_dataContext != null)
 			{

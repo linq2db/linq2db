@@ -1,11 +1,11 @@
 ﻿namespace LinqToDB.Interceptors
 {
 	/// <summary>
-	/// Event arguments for <see cref="IDataContextInterceptor.EntityCreated(EntityCreatedEventData, object)"/> event.
+	/// Event arguments for <see cref="IDataContextInterceptor"/> events.
 	/// </summary>
-	public readonly struct EntityCreatedEventData
+	public readonly struct DataContextEventData
 	{
-		internal EntityCreatedEventData(IDataContext context)
+		internal DataContextEventData(IDataContext context)
 		{
 			Context = context;
 		}

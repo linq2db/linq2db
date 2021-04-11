@@ -301,10 +301,10 @@ namespace LinqToDB.Linq.Builder
 			[UsedImplicitly]
 			static object OnEntityCreated(IDataContext context, object entity)
 			{
-				EntityCreatedEventData? args = null;
+				DataContextEventData? args = null;
 				foreach (var interceptor in context.GetInterceptors<IDataContextInterceptor>())
 				{
-					args   = args ?? new EntityCreatedEventData(context);
+					args   = args ?? new DataContextEventData(context);
 					entity = interceptor.EntityCreated(args.Value, entity);
 				}
 

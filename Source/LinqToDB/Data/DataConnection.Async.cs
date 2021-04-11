@@ -177,7 +177,9 @@ namespace LinqToDB.Data
 		/// <returns>Asynchronous operation completion task.</returns>
 		public virtual async Task CloseAsync()
 		{
-			OnClosing?.Invoke(this, EventArgs.Empty);
+			if (_contextInterceptors != null)
+				await _contextInterceptors.Apply((interceptor, arg) => interceptor.OnClosingAsync(arg), new DataContextEventData(this))
+					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			DisposeCommand();
 
@@ -198,7 +200,9 @@ namespace LinqToDB.Data
 					await _connection.CloseAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			}
 
-			OnClosed?.Invoke(this, EventArgs.Empty);
+			if (_contextInterceptors != null)
+				await _contextInterceptors.Apply((interceptor, arg) => interceptor.OnClosedAsync(arg), new DataContextEventData(this))
+					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 		}
 
 		/// <summary>
