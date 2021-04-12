@@ -85,30 +85,21 @@ namespace Tests.Linq
 			(false, false, (int?)null, (int?)null, false, false),
 		};
 
-		[Test, Sequential]
-		public void ClientSide(
-			[DataSources]                           string                               context,
-			[ValueSource(nameof(ClientSideValues))] (bool, bool, int?, int?, bool, bool) values)
+		[Test]
+		public void ClientSide([ValueSource(nameof(ClientSideValues))] (bool, bool, int?, int?, bool, bool) values)
 		{
 			var (withNullCompares, withNullContains, x, y, @in, notIn) = values;
 
 			using var null1 = withNullContains ? null : new WithoutContainsNullCheck();
 			using var nulls = withNullCompares ? null : new WithoutComparisonNullCheck();
-			using var db    = GetDataContext(context);
 
-			var src = db.SelectQuery(() => new { ID = 1 });
-			
 			bool result;
 
-			result = src.Any(s => x.In(-1, y));
+			result = x.In(-1, y);
 			result.Should().Be(@in);
-			if (db is DataConnection c1)
-				c1.LastQuery.Should().NotContain(" IN ");
 
-			result = src.Any(s => x.NotIn(-1, y));
+			result = x.NotIn(-1, y);
 			result.Should().Be(notIn);
-			if (db is DataConnection c2)
-				c2.LastQuery.Should().NotContain(" IN ");
 		}
 
 		class Src
