@@ -38,18 +38,18 @@ namespace Tests.Linq
 			int? result;
 
 			result = FetchId(s => s.Int.In(-1, null));
-			result.Should().Be(withNullContains ? 1 : null);
+			result.Should().Be(withNullContains ? 1 : 0);
 
 			result = FetchId(s => s.Int.In(-1, 2));
 			result.Should().Be(2);
 
 			result = FetchId(s => s.Int.NotIn(2, null));
-			result.Should().Be(withNullContains ? null : 1);
+			result.Should().Be(withNullContains ? 0 : 1);
 
 			result = FetchId(s => s.Int.NotIn(-1, 2));
-			result.Should().Be(withNullCompares ? 1 : null);
+			result.Should().Be(withNullCompares ? 1 : 0);
 
-			int? FetchId(Expression<Func<Src, bool>> predicate)
+			int FetchId(Expression<Func<Src, bool>> predicate)
 				=> src.Where(predicate).Select(x => x.Id).FirstOrDefault();
 		}
 
@@ -68,7 +68,7 @@ namespace Tests.Linq
 			count.Should().Be(0);
 
 			count = src.Count(s => s.Int.NotIn(Array.Empty<int?>()));
-			count.Should().Be(withNullCompares ? 2 : 1);
+			count.Should().Be(2);
 		}
 
 		private static (bool withNullCompares, bool withNullContains, int? x, int? y, bool @in, bool notIn)[] ClientSideValues = new[]
