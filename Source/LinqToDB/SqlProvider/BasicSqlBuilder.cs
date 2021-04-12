@@ -243,6 +243,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildDeleteQuery(SqlDeleteStatement deleteStatement)
 		{
+			BuildStep = Step.Tag;           BuildTag(deleteStatement);
 			BuildStep = Step.WithClause;    BuildWithClause(deleteStatement.With);
 			BuildStep = Step.DeleteClause;  BuildDeleteClause(deleteStatement);
 			BuildStep = Step.FromClause;    BuildFromClause(Statement, deleteStatement.SelectQuery);
@@ -255,6 +256,7 @@ namespace LinqToDB.SqlProvider
 
 		protected void BuildDeleteQuery2(SqlDeleteStatement deleteStatement)
 		{
+			BuildStep = Step.Tag;          BuildTag(deleteStatement);
 			BuildStep = Step.DeleteClause; BuildDeleteClause(deleteStatement);
 
 			while (StringBuilder[StringBuilder.Length - 1] == ' ')
@@ -279,6 +281,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildUpdateQuery(SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)
 		{
+			BuildStep = Step.Tag;           BuildTag(statement);
 			BuildStep = Step.WithClause;    BuildWithClause(statement.GetWithClause());
 			BuildStep = Step.UpdateClause;  BuildUpdateClause(Statement, selectQuery, updateClause);
 
@@ -296,6 +299,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildSelectQuery(SqlSelectStatement selectStatement)
 		{
+			BuildStep = Step.Tag;           BuildTag(selectStatement);
 			BuildStep = Step.WithClause;    BuildWithClause(selectStatement.With);
 			BuildStep = Step.SelectClause;  BuildSelectClause(selectStatement.SelectQuery);
 			BuildStep = Step.FromClause;    BuildFromClause(selectStatement, selectStatement.SelectQuery);
@@ -314,6 +318,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildInsertQuery(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
 		{
+			BuildStep = Step.Tag;          BuildTag(statement);
 			BuildStep = Step.WithClause;   BuildWithClause(statement.GetWithClause());
 			BuildStep = Step.InsertClause; BuildInsertClause(statement, insertClause, addAlias);
 
@@ -338,8 +343,8 @@ namespace LinqToDB.SqlProvider
 
 		protected void BuildInsertQuery2(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
 		{
-			BuildStep = Step.InsertClause;
-			BuildInsertClause(statement, insertClause, addAlias);
+			BuildStep = Step.Tag;          BuildTag(statement);
+			BuildStep = Step.InsertClause; BuildInsertClause(statement, insertClause, addAlias);
 
 			AppendIndent().AppendLine("SELECT * FROM");
 			AppendIndent().AppendLine(OpenParens);
@@ -823,6 +828,7 @@ namespace LinqToDB.SqlProvider
 			var sourceAlias = ConvertInline(GetTempAliases(1, "s")[0],        ConvertType.NameToQueryTableAlias);
 			var keys        = insertOrUpdate.Update.Keys;
 
+			BuildTag(insertOrUpdate);
 			AppendIndent().Append("MERGE INTO ");
 			BuildPhysicalTable(table!, null);
 			StringBuilder.Append(' ').AppendLine(targetAlias);
@@ -910,6 +916,7 @@ namespace LinqToDB.SqlProvider
 
 		protected void BuildInsertOrUpdateQueryAsUpdateInsert(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
+			BuildTag(insertOrUpdate);
 			AppendIndent().AppendLine("BEGIN TRAN").AppendLine();
 
 			var buildUpdate = insertOrUpdate.Update.Items.Count > 0;
@@ -995,6 +1002,8 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildTruncateTableStatement(SqlTruncateTableStatement truncateTable)
 		{
+			BuildTag(truncateTable);
+
 			var table = truncateTable.Table;
 
 			AppendIndent();
@@ -1013,6 +1022,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
+			BuildTag(dropTable);
 			AppendIndent().Append("DROP TABLE ");
 			BuildPhysicalTable(dropTable.Table!, null);
 			StringBuilder.AppendLine();
@@ -1020,6 +1030,7 @@ namespace LinqToDB.SqlProvider
 
 		protected void BuildDropTableStatementIfExists(SqlDropTableStatement dropTable)
 		{
+			BuildTag(dropTable);
 			AppendIndent().Append("DROP TABLE ");
 
 			if (dropTable.Table.TableOptions.HasDropIfExists())
@@ -2715,6 +2726,32 @@ namespace LinqToDB.SqlProvider
 
 		#endregion
 
+		#region Comments
+
+		protected virtual void BuildTag(SqlStatement statement)
+		{
+			if (statement.Tag != null)
+				BuildSqlComment(StringBuilder, statement.Tag);
+		}
+
+		protected virtual StringBuilder BuildSqlComment(StringBuilder sb, SqlComment comment)
+		{
+			sb.Append("/* ");
+
+			for (var i = 0; i < comment.Lines.Count; i++)
+			{
+				sb.Append(comment.Lines[i].Replace("/*", "").Replace("*/", ""));
+				if (i < comment.Lines.Count - 1)
+					sb.AppendLine();
+			}
+
+			sb.AppendLine(" */");
+
+			return sb;
+		}
+
+		#endregion
+
 		#endregion
 
 		#region Internal Types
@@ -2731,7 +2768,8 @@ namespace LinqToDB.SqlProvider
 			GroupByClause,
 			HavingClause,
 			OrderByClause,
-			OffsetLimit
+			OffsetLimit,
+			Tag
 		}
 
 		#endregion

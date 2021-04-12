@@ -31,7 +31,6 @@ using NUnit.Framework.Internal;
 
 namespace Tests
 {
-	using FastExpressionCompiler;
 	using Model;
 	using Tools;
 
@@ -44,11 +43,11 @@ namespace Tests
 			public static readonly DateTimeOffset DateTimeOffsetUtc       = new DateTimeOffset(2020, 2, 29, 17, 9, 55, 123, TimeSpan.Zero).AddTicks(1234);
 			public static readonly DateTime DateTime                      = new DateTime(2020, 2, 29, 17, 54, 55, 123).AddTicks(1234);
 			public static readonly DateTime DateTimeUtc                   = new DateTime(2020, 2, 29, 17, 54, 55, 123, DateTimeKind.Utc).AddTicks(1234);
-			public static readonly DateTime Date                          = new DateTime(2020, 2, 29);
+			public static readonly DateTime Date                          = new (2020, 2, 29);
 			public static readonly TimeSpan TimeOfDay                     = new TimeSpan(0, 17, 54, 55, 123).Add(TimeSpan.FromTicks(1234));
-			public static readonly Guid     Guid1                         = new Guid("bc7b663d-0fde-4327-8f92-5d8cc3a11d11");
-			public static readonly Guid     Guid2                         = new Guid("a948600d-de21-4f74-8ac2-9516b287076e");
-			public static readonly Guid     Guid3                         = new Guid("bd3973a5-4323-4dd8-9f4f-df9f93e2a627");
+			public static readonly Guid     Guid1                         = new ("bc7b663d-0fde-4327-8f92-5d8cc3a11d11");
+			public static readonly Guid     Guid2                         = new ("a948600d-de21-4f74-8ac2-9516b287076e");
+			public static readonly Guid     Guid3                         = new ("bd3973a5-4323-4dd8-9f4f-df9f93e2a627");
 
 			public static byte[] Binary(int size)
 			{
@@ -59,7 +58,7 @@ namespace Tests
 				return value;
 			}
 
-			public static Guid SequentialGuid(int n)  => new Guid($"233bf399-9710-4e79-873d-2ec7bf1e{n:x4}");
+			public static Guid SequentialGuid(int n)  => new ($"233bf399-9710-4e79-873d-2ec7bf1e{n:x4}");
 		}
 
 		private const int TRACES_LIMIT = 50000;
@@ -335,7 +334,7 @@ namespace Tests
 		const           int          IP = 22654;
 		static          bool         _isHostOpen;
 		static          LinqService? _service;
-		static readonly object       _syncRoot = new object();
+		static readonly object       _syncRoot = new ();
 #endif
 
 		static void OpenHost(MappingSchema? ms)
@@ -477,8 +476,8 @@ namespace Tests
 			return res;
 		}
 
-		private static readonly MappingSchema _sequentialAccessSchema = new MappingSchema();
-		private static readonly MappingSchema _fecSchema = new MappingSchema();
+		private static readonly MappingSchema _sequentialAccessSchema = new ();
+		private static readonly MappingSchema _fecSchema = new ();
 
 		protected static char GetParameterToken(string context)
 		{
@@ -1350,6 +1349,11 @@ namespace Tests
 			CustomTestContext.Release();
 		}
 
+		protected string GetCurrentBaselines()
+		{
+			return CustomTestContext.Get().Get<StringBuilder>(CustomTestContext.BASELINE)?.ToString() ?? string.Empty;
+		}
+
 		protected static bool IsIDSProvider(string context)
 		{
 			if (!context.Contains("Informix"))
@@ -1366,7 +1370,7 @@ namespace Tests
 	static class DataCache<T>
 		where T : class
 	{
-		static readonly Dictionary<string,List<T>> _dic = new Dictionary<string, List<T>>();
+		static readonly Dictionary<string,List<T>> _dic = new ();
 		public static List<T> Get(string context)
 		{
 			lock (_dic)

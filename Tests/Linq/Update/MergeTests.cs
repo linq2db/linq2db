@@ -67,7 +67,7 @@ namespace Tests.xUpdate
 		}
 
 		[Table("merge1")]
-		class TestMapping1
+		internal class TestMapping1
 		{
 			[Column("Id")]
 			[PrimaryKey]
@@ -104,7 +104,7 @@ namespace Tests.xUpdate
 		}
 
 		[Table("merge2")]
-		class TestMapping2
+		internal class TestMapping2
 		{
 			[Column("Id")]
 			[PrimaryKey]

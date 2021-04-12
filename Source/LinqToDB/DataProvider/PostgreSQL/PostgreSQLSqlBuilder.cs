@@ -310,6 +310,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			var table = truncateTable.Table;
 
+			BuildTag(truncateTable);
 			AppendIndent();
 			StringBuilder.Append("TRUNCATE TABLE ");
 			BuildPhysicalTable(table!, null);

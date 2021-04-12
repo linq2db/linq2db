@@ -22,7 +22,7 @@ namespace LinqToDB.Metadata
 		{
 			if (readers == null)
 				throw new ArgumentNullException(nameof(readers));
-			_readers = readers.ToArray();
+			_readers = readers.ToList();
 		}
 
 		IList<IMetadataReader> _readers;
@@ -30,7 +30,9 @@ namespace LinqToDB.Metadata
 		internal void AddReader(IMetadataReader reader)
 		{
 			// creation of new list is cheaper than lock on each method call
-			_readers = new[] { reader }.Concat(_readers).ToArray();
+			var newReaders = new List<IMetadataReader>(_readers.Count + 1) { reader };
+			newReaders.AddRange(_readers);
+			_readers = newReaders;
 		}
 
 		public T[] GetAttributes<T>(Type type, bool inherit)

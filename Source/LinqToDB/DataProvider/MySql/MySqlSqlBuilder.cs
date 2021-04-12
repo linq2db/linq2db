@@ -318,6 +318,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override void BuildInsertQuery(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
 		{
+			BuildStep = Step.Tag;          BuildTag(statement);
 			BuildStep = Step.InsertClause; BuildInsertClause(statement, insertClause, addAlias);
 
 			if (statement.QueryType == QueryType.Insert && statement.SelectQuery!.From.Tables.Count != 0)

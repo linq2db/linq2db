@@ -52,6 +52,7 @@ namespace LinqToDB.SqlQuery
 
 		public abstract SelectQuery? SelectQuery { get; set; }
 
+		public SqlComment? Tag { get; internal set; }
 
 		#region IQueryElement
 

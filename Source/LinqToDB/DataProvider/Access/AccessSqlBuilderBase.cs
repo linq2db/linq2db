@@ -301,5 +301,11 @@ namespace LinqToDB.DataProvider.Access
 		{
 			throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
 		}
+
+		protected override StringBuilder BuildSqlComment(StringBuilder sb, SqlComment comment)
+		{
+			// comments not supported by Access
+			return sb;
+		}
 	}
 }

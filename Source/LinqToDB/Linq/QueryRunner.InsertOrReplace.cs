@@ -220,7 +220,7 @@ namespace LinqToDB.Linq
 			// Do not clone parameters
 			var cloned         = (SqlInsertOrUpdateStatement)firstStatement.Clone(dic, e => !(e is SqlParameter));
 
-			var insertStatement = new SqlInsertStatement(cloned.SelectQuery) {Insert = cloned.Insert};
+			var insertStatement = new SqlInsertStatement(cloned.SelectQuery) {Insert = cloned.Insert, Tag = cloned.Tag};
 			insertStatement.SelectQuery.From.Tables.Clear();
 
 			query.Queries.Add(new QueryInfo
@@ -237,7 +237,7 @@ namespace LinqToDB.Linq
 			//TODO! looks not working solution
 			if (firstStatement.Update.Items.Count > 0)
 			{
-				query.Queries[0].Statement = new SqlUpdateStatement(firstStatement.SelectQuery) {Update = firstStatement.Update};
+				query.Queries[0].Statement = new SqlUpdateStatement(firstStatement.SelectQuery) {Update = firstStatement.Update, Tag = firstStatement.Tag};
 				SetNonQueryQuery2(query);
 			}
 			else

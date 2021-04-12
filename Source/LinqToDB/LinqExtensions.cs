@@ -3422,5 +3422,61 @@ namespace LinqToDB
 
 
 		#endregion;
+
+		#region Tag
+
+		/// <summary>
+		/// Adds a tag comment before generated query.
+		/// <code>
+		/// The example below will produce following code before generated query: -- my tag\r\n
+		/// db.Table.TagWith("my tag");
+		/// </code>
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <param name="source">Source data query.</param>
+		/// <param name="tagValue">Tag text to be added as comment before generated query.</param>
+		/// <returns>Query with tag.</returns>
+		[LinqTunnel]
+		[Pure]
+		public static IQueryable<TSource> TagQuery<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string tagValue)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (tagValue == null) throw new ArgumentNullException(nameof(tagValue));
+
+			return source.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TagQuery, source, tagValue),
+					source.Expression,
+					Expression.Constant(tagValue)));
+		}
+
+		/// <summary>
+		/// Adds a tag comment before generated query for table.
+		/// <code>
+		/// The example below will produce following code before generated query: -- my tag\r\n
+		/// db.Table.TagWith("my tag");
+		/// </code>
+		/// </summary>
+		/// <typeparam name="T">Table record mapping class.</typeparam>
+		/// <param name="table">Table-like query source.</param>
+		/// <param name="tagValue">Tag text to be added as comment before generated query.</param>
+		/// <returns>Table-like query source with tag.</returns>
+		[LinqTunnel]
+		[Pure]
+		public static ITable<T> TagQuery<T>(this ITable<T> table, [SqlQueryDependent] string tagValue) where T : notnull
+		{
+			if (table == null) throw new ArgumentNullException(nameof(table));
+			if (tagValue == null) throw new ArgumentNullException(nameof(tagValue));
+
+			table.Expression = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(TagQuery, table, tagValue),
+				table.Expression, Expression.Constant(tagValue));
+
+			return table;
+		}
+
+		#endregion
 	}
 }

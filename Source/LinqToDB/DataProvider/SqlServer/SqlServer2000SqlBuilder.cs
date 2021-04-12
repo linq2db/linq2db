@@ -87,6 +87,7 @@
 		{
 			var table = dropTable.Table!;
 
+			BuildTag(dropTable);
 			AppendIndent().Append("DROP TABLE ");
 			BuildPhysicalTable(table, null);
 			StringBuilder.AppendLine();

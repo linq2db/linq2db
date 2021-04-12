@@ -566,14 +566,19 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.SelectStatement:
 						{
 							var s = (SqlSelectStatement)element;
-							var with        = s.With        != null ? (SqlWithClause?)ConvertInternal(s.With       ) : null;
+							var tag         = s.Tag         != null ? (SqlComment?   )ConvertInternal(s.Tag ) : null;
+							var with        = s.With        != null ? (SqlWithClause?)ConvertInternal(s.With) : null;
 							var selectQuery = (SelectQuery?)ConvertInternal(s.SelectQuery);
 
-							if (selectQuery != null && !ReferenceEquals(s.SelectQuery, selectQuery)  ||
-								with        != null && !ReferenceEquals(s.With,        with))
+							if (selectQuery != null && !ReferenceEquals(s.SelectQuery, selectQuery) ||
+								tag         != null && !ReferenceEquals(s.Tag        , tag        ) ||
+								with        != null && !ReferenceEquals(s.With       , with       ))
 							{
-								newElement = new SqlSelectStatement(selectQuery ?? s.SelectQuery);
-								((SqlSelectStatement)newElement).With = with ?? s.With;
+								newElement = new SqlSelectStatement(selectQuery ?? s.SelectQuery)
+								{
+									Tag  = tag  ?? s.Tag,
+									With = with ?? s.With
+								};
 								CorrectQueryHierarchy(((SqlSelectStatement) newElement).SelectQuery);
 							}
 
@@ -583,13 +588,15 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.InsertStatement:
 						{
 							var s = (SqlInsertStatement)element;
-							var with        = s.With        != null ? (SqlWithClause?)  ConvertInternal(s.With       ) : null;
+							var tag         = s.Tag         != null ? (SqlComment?   )  ConvertInternal(s.Tag   ) : null;
+							var with        = s.With        != null ? (SqlWithClause?)  ConvertInternal(s.With  ) : null;
 							var selectQuery = (SelectQuery?    )ConvertInternal(s.SelectQuery);
 							var insert      = (SqlInsertClause?)ConvertInternal(s.Insert);
-							var output      = s.Output      != null ? (SqlOutputClause?)ConvertInternal(s.Output     ) : null;
+							var output      = s.Output      != null ? (SqlOutputClause?)ConvertInternal(s.Output) : null;
 
 							if (insert      != null && !ReferenceEquals(s.Insert,      insert)       ||
 								selectQuery != null && !ReferenceEquals(s.SelectQuery, selectQuery)  ||
+								tag         != null && !ReferenceEquals(s.Tag,         tag)          ||
 								with        != null && !ReferenceEquals(s.With,        with)         ||
 								output      != null && !ReferenceEquals(s.Output,      output))
 							{
@@ -597,6 +604,7 @@ namespace LinqToDB.SqlQuery
 							{
 									Insert = insert ?? s.Insert,
 									Output = output ?? s.Output,
+									Tag    = tag    ?? s.Tag,
 									With   = with   ?? s.With
 								};
 								CorrectQueryHierarchy(((SqlInsertStatement) newElement).SelectQuery);
@@ -608,16 +616,22 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.UpdateStatement:
 						{
 							var s = (SqlUpdateStatement)element;
-							var with        = s.With        != null ? (SqlWithClause?)  ConvertInternal(s.With       ) : null;
+							var tag         = s.Tag         != null ? (SqlComment?   )  ConvertInternal(s.Tag ) : null;
+							var with        = s.With        != null ? (SqlWithClause?)  ConvertInternal(s.With) : null;
 							var selectQuery = (SelectQuery?    )ConvertInternal(s.SelectQuery);
 							var update      = (SqlUpdateClause?)ConvertInternal(s.Update);
 
-							if (update      != null && !ReferenceEquals(s.Update,      update)       ||
-								selectQuery != null && !ReferenceEquals(s.SelectQuery, selectQuery)  ||
+							if (update      != null && !ReferenceEquals(s.Update,      update)      ||
+								selectQuery != null && !ReferenceEquals(s.SelectQuery, selectQuery) ||
+								tag         != null && !ReferenceEquals(s.Tag,         tag)         ||
 								with        != null && !ReferenceEquals(s.With,        with))
 							{
-								newElement = new SqlUpdateStatement(selectQuery ?? s.SelectQuery) { Update = update ?? s.Update };
-								((SqlUpdateStatement)newElement).With = with ?? s.With;
+								newElement = new SqlUpdateStatement(selectQuery ?? s.SelectQuery)
+								{
+									Update = update ?? s.Update,
+									Tag    = tag    ?? s.Tag,
+									With   = with   ?? s.With
+								};
 								CorrectQueryHierarchy(((SqlUpdateStatement) newElement).SelectQuery);
 							}
 
@@ -628,18 +642,25 @@ namespace LinqToDB.SqlQuery
 						{
 							var s = (SqlInsertOrUpdateStatement)element;
 
-							var with        = s.With        != null ? (SqlWithClause?)  ConvertInternal(s.With       ) : null;
+							var tag         = s.Tag         != null ? (SqlComment?   )  ConvertInternal(s.Tag ) : null;
+							var with        = s.With        != null ? (SqlWithClause?)  ConvertInternal(s.With) : null;
 							var selectQuery = (SelectQuery?    )ConvertInternal(s.SelectQuery);
 							var insert      = (SqlInsertClause?)ConvertInternal(s.Insert);
 							var update      = (SqlUpdateClause?)ConvertInternal(s.Update);
 
-							if (insert      != null && !ReferenceEquals(s.Insert,      insert)       ||
-								update      != null && !ReferenceEquals(s.Update,      update)       ||
-								selectQuery != null && !ReferenceEquals(s.SelectQuery, selectQuery)  ||
+							if (insert      != null && !ReferenceEquals(s.Insert,      insert)      ||
+								update      != null && !ReferenceEquals(s.Update,      update)      ||
+								selectQuery != null && !ReferenceEquals(s.SelectQuery, selectQuery) ||
+								tag         != null && !ReferenceEquals(s.Tag,         tag)         ||
 								with        != null && !ReferenceEquals(s.With,        with))
 							{
-								newElement = new SqlInsertOrUpdateStatement(selectQuery ?? s.SelectQuery) { Insert = insert ?? s.Insert, Update = update ?? s.Update };
-								((SqlInsertOrUpdateStatement)newElement).With = with ?? s.With;
+								newElement = new SqlInsertOrUpdateStatement(selectQuery ?? s.SelectQuery)
+								{
+									Insert = insert ?? s.Insert,
+									Update = update ?? s.Update,
+									Tag    = tag    ?? s.Tag,
+									With   = with   ?? s.With
+								};
 								CorrectQueryHierarchy(((SqlInsertOrUpdateStatement) newElement).SelectQuery);
 							}
 
@@ -649,15 +670,17 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.DeleteStatement:
 						{
 							var s = (SqlDeleteStatement)element;
+							var tag         = s.Tag         != null ? (SqlComment?   )  ConvertInternal(s.Tag        ) : null;
 							var with        = s.With        != null ? (SqlWithClause?)  ConvertInternal(s.With       ) : null;
-							var selectQuery = s.SelectQuery != null ? (SelectQuery?)   ConvertInternal(s.SelectQuery) : null;
-							var table       = s.Table       != null ? (SqlTable?)      ConvertInternal(s.Table      ) : null;
+							var selectQuery = s.SelectQuery != null ? (SelectQuery?)    ConvertInternal(s.SelectQuery) : null;
+							var table       = s.Table       != null ? (SqlTable?)       ConvertInternal(s.Table      ) : null;
 							var top         = s.Top         != null ? (ISqlExpression?) ConvertInternal(s.Top        ) : null;
 							var output      = s.Output      != null ? (SqlOutputClause?)ConvertInternal(s.Output     ) : null;
 
 							if (table       != null && !ReferenceEquals(s.Table,       table)       ||
 								top         != null && !ReferenceEquals(s.Top,         top)         ||
 								selectQuery != null && !ReferenceEquals(s.SelectQuery, selectQuery) ||
+								tag         != null && !ReferenceEquals(s.Tag,         tag)         ||
 								with        != null && !ReferenceEquals(s.With,        with)        ||
 								output      != null && !ReferenceEquals(s.Output,      output))
 							{
@@ -667,9 +690,10 @@ namespace LinqToDB.SqlQuery
 									SelectQuery          = selectQuery ?? s.SelectQuery,
 									Top                  = top         ?? s.Top!,
 									Output               = output      ?? s.Output,
-									IsParameterDependent = s.IsParameterDependent
+									Tag                  = tag         ?? s.Tag,
+									With                 = with        ?? s.With,
+									IsParameterDependent = s.IsParameterDependent,
 								};
-								((SqlDeleteStatement)newElement).With = with ?? s.With;
 								CorrectQueryHierarchy(((SqlDeleteStatement)newElement).SelectQuery);
 							}
 
@@ -678,12 +702,17 @@ namespace LinqToDB.SqlQuery
 
 					case QueryElementType.CreateTableStatement:
 						{
-							var s  = (SqlCreateTableStatement)element;
-							var t  = (SqlTable)ConvertInternal(s.Table);
+							var s   = (SqlCreateTableStatement)element;
+							var tag = s.Tag != null ? (SqlComment?)ConvertInternal(s.Tag) : null;
+							var t   = (SqlTable)ConvertInternal(s.Table);
 
-							if (t != null && !ReferenceEquals(s.Table, t))
+							if (t   != null && !ReferenceEquals(s.Table, t) ||
+								tag != null && !ReferenceEquals(s.Tag, tag))
 							{
-								newElement = new SqlCreateTableStatement(t ?? s.Table);
+								newElement = new SqlCreateTableStatement(t ?? s.Table)
+								{
+									Tag = tag ?? s.Tag
+								};
 							}
 
 							break;
@@ -691,13 +720,17 @@ namespace LinqToDB.SqlQuery
 
 					case QueryElementType.DropTableStatement:
 						{
-							var s  = (SqlDropTableStatement)element;
-							var t  = (SqlTable)ConvertInternal(s.Table);
+							var s   = (SqlDropTableStatement)element;
+							var tag = s.Tag != null ? (SqlComment?)ConvertInternal(s.Tag) : null;
+							var t   = (SqlTable)ConvertInternal(s.Table);
 
 							if (!ReferenceEquals(s.Table, t))
 							{
-								newElement = new SqlDropTableStatement(t);
-							}
+								newElement = new SqlDropTableStatement(t)
+								{
+									Tag = tag ?? s.Tag
+								};
+						}
 
 							break;
 						}
@@ -928,6 +961,7 @@ namespace LinqToDB.SqlQuery
 						{
 							var merge = (SqlMergeStatement)element;
 
+							var tag        = merge.Tag != null ? (SqlComment?)ConvertInternal(merge.Tag) : null;
 							var target     = (SqlTableSource?)     ConvertInternal(merge.Target);
 							var source     = (SqlTableLikeSource?)ConvertInternal(merge.Source);
 							var on         = (SqlSearchCondition?) ConvertInternal(merge.On);
@@ -935,15 +969,19 @@ namespace LinqToDB.SqlQuery
 
 							if (target     != null && !ReferenceEquals(merge.Target, target) ||
 								source     != null && !ReferenceEquals(merge.Source, source) ||
-								on         != null && !ReferenceEquals(merge.On, on) ||
+								on         != null && !ReferenceEquals(merge.On, on)         ||
+								tag        != null && !ReferenceEquals(merge.Tag, tag)       ||
 								operations != null && !ReferenceEquals(merge.Operations, operations))
 							{
 								newElement = new SqlMergeStatement(
 									merge.Hint,
-									target ?? merge.Target,
-									source ?? merge.Source,
-									on ?? merge.On,
-									operations ?? merge.Operations);
+									target     ?? merge.Target,
+									source     ?? merge.Source,
+									on         ?? merge.On,
+									operations ?? merge.Operations)
+								{
+									Tag = tag  ?? merge.Tag
+								};
 							}
 
 							break;
@@ -1116,18 +1154,18 @@ namespace LinqToDB.SqlQuery
 						{
 							var truncate = (SqlTruncateTableStatement)element;
 
-							if (truncate.Table != null)
-							{
-								var table = (SqlTable?)ConvertInternal(truncate.Table);
+							var table = (SqlTable?)ConvertInternal(truncate.Table);
+							var tag   = truncate.Tag != null ? (SqlComment?)ConvertInternal(truncate.Tag) : null;
 
-								if (table != null && !ReferenceEquals(truncate.Table, table))
-								{
-									newElement = new SqlTruncateTableStatement()
-										{
-											Table = table,
-											ResetIdentity = truncate.ResetIdentity
-										};
-								}
+							if ((table != null && !ReferenceEquals(truncate.Table, table)) ||
+								(tag   != null && !ReferenceEquals(truncate.Tag, tag)))
+							{
+								newElement = new SqlTruncateTableStatement()
+									{
+										Table         = table ?? truncate.Table,
+										Tag           = tag   ?? truncate.Tag,
+										ResetIdentity = truncate.ResetIdentity,
+									};
 							}
 
 							break;
@@ -1244,6 +1282,7 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.SqlValue           :
 					case QueryElementType.SqlDataType        :
 					case QueryElementType.SqlAliasPlaceholder:
+					case QueryElementType.Comment            :
 						break;
 
 					default:
@@ -1436,7 +1475,7 @@ namespace LinqToDB.SqlQuery
 						list2 = new List<T[]>(list1.Count);
 
 						for (var j = 0; j < i; j++)
-							list2.Add(clone == null ? list1[j] : list1[j].Select(e => clone(e)).ToArray() );
+							list2.Add(clone == null ? list1[j] : list1[j].Select(e => clone(e)).ToArray());
 					}
 
 					list2.Add(elem2);

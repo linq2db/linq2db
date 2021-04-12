@@ -246,7 +246,7 @@ namespace LinqToDB.Common
 
 					if (ambiguityMapping != null)
 					{
-						var enums = ambiguityMapping.ToArray();
+						var enums = ambiguityMapping.ToList();
 
 						return Expression.Convert(
 							Expression.Call(
