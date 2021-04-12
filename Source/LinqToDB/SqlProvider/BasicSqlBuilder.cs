@@ -98,6 +98,12 @@ namespace LinqToDB.SqlProvider
 			return SqlOptimizer.ConvertElement(MappingSchema, element, OptimizationContext) as T;
 		}
 
+		private StringBuilder RemoveInlineComma()
+		{
+			StringBuilder.Length -= InlineComma.Length;
+			return StringBuilder;
+		}
+
 		#endregion
 
 		#region BuildSql
@@ -2127,11 +2133,12 @@ namespace LinqToDB.SqlProvider
 
 		void BuildInListValues(SqlPredicate.InList predicate, IEnumerable values)
 		{
-			var firstValue = true;
-			var len        = StringBuilder.Length;
-			var hasNull    = false;
-			var count      = 0;
-			var longList   = false;
+			var firstValue      = true;
+			var len             = StringBuilder.Length;
+			var checkNull       = Configuration.Linq.CheckNullInContains;
+			var hasNull         = false;
+			var count           = 0;
+			var multipleClauses = false;
 
 			SqlDataType? sqlDataType = null;
 
@@ -2139,29 +2146,30 @@ namespace LinqToDB.SqlProvider
 			{
 				if (count++ >= SqlProviderFlags.MaxInListValuesCount)
 				{
-					count    = 1;
-					longList = true;
+					count           = 1;
+					multipleClauses = true;
 
 					// start building next bucked
 					firstValue = true;
-					StringBuilder.Remove(StringBuilder.Length - 2, 2).Append(')');
-					if (predicate.IsNot)
-						StringBuilder.Append(" AND ");
-					else
-						StringBuilder.Append(" OR ");
+					RemoveInlineComma()
+						.Append(')')
+						.Append(predicate.IsNot ? " AND " : " OR ");
 				}
 
-				object? val = value;
-
-				if (val is ISqlExpression sqlExpr && sqlExpr.TryEvaluateExpression(OptimizationContext.Context, out var evaluated))
+				if (checkNull)
 				{
-					val = evaluated;
-				}
+					object? val = value;
 
-				if (val == null)
-				{
-					hasNull = true;
-					continue;
+					if (val is ISqlExpression sqlExpr && sqlExpr.TryEvaluateExpression(OptimizationContext.Context, out var evaluated))
+					{
+						val = evaluated;
+					}
+
+					if (val == null)
+					{
+						hasNull = true;
+						continue;
+					}
 				}
 
 				if (firstValue)
@@ -2207,25 +2215,23 @@ namespace LinqToDB.SqlProvider
 			}
 			else
 			{
-				StringBuilder.Remove(StringBuilder.Length - 2, 2).Append(')');
+				RemoveInlineComma().Append(')');
 
 				if (hasNull)
 				{
-					StringBuilder.Insert(len, "(");
-					StringBuilder.Append(" OR ");
+					StringBuilder.Append(predicate.IsNot ? " AND ": " OR ");
 					BuildPredicate(new SqlPredicate.IsNull(predicate.Expr1, predicate.IsNot));
-					StringBuilder.Append(')');
+					multipleClauses = true;
 				}
 				else if (predicate.WithNull == true && predicate.Expr1.ShouldCheckForNull())
 				{
-					StringBuilder.Insert(len, "(");
 					StringBuilder.Append(" OR ");
 					BuildPredicate(new SqlPredicate.IsNull(predicate.Expr1, false));
-					StringBuilder.Append(')');
+					multipleClauses = true;
 				}
 			}
 
-			if (longList && !hasNull)
+			if (multipleClauses)
 			{
 				StringBuilder.Insert(len, "(");
 				StringBuilder.Append(')');

@@ -216,6 +216,32 @@ namespace LinqToDB.Common
 			public static bool CompareNullsAsValues = true;
 
 			/// <summary>
+			/// If set to true, expressions are checked for IS [NOT] NULL in conditions [NOT] IN (..)
+			/// when the list of values includes a null constant.
+			/// Default value: <c>true</c>.
+			/// </summary>
+			/// <example>
+			/// <code>
+			/// public class MyEntity
+			/// {
+			///		public int? Value;
+			///	}
+			///	
+			/// db.MyEntity.Where(e => e.Value.In(1, 2, null));
+			/// 
+			/// db.MyEntity.Where(e => e.Value.NotIn(1, 2, null));
+			/// </code>
+			/// 
+			/// Would be converted to next queries: 
+			/// <code>
+			/// SELECT * FROM MyEntity WHERE Value IN (1, 2) OR Value IS NULL
+			/// 
+			/// SELECT * FROM MyEntity WHERE Value NOT IN (1, 2) AND Value IS NOT NULL
+			/// </code>
+			/// </example>
+			public static bool CheckNullInContains = true;
+
+			/// <summary>
 			/// Controls behavior of LINQ query, which ends with GroupBy call.
 			/// - if <c>true</c> - <seealso cref="LinqToDBException"/> will be thrown for such queries;
 			/// - if <c>false</c> - behavior is controlled by <see cref="PreloadGroups"/> option.

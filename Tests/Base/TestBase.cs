@@ -60,7 +60,7 @@ namespace Tests
 				return value;
 			}
 
-			public static Guid SequentialGuid(int n)  => new ($"233bf399-9710-4e79-873d-2ec7bf1e{n:x4}");
+			public static Guid SequentialGuid(int n) => new($"233bf399-9710-4e79-873d-2ec7bf1e{n:x4}");
 		}
 
 		private const int TRACES_LIMIT = 50000;
@@ -1071,7 +1071,7 @@ namespace Tests
 			AreEqual(t => t, expected, result, ComparerBuilder.GetEqualityComparer<T>());
 		}
 
-		protected void AreEqualWithComparer<T>(IEnumerable<T> expected, IEnumerable<T> result, Func<MemberAccessor,bool> memberPredicate)
+		protected void AreEqualWithComparer<T>(IEnumerable<T> expected, IEnumerable<T> result, Func<MemberAccessor, bool> memberPredicate)
 		{
 			AreEqual(t => t, expected, result, ComparerBuilder.GetEqualityComparer<T>(memberPredicate));
 		}
@@ -1126,7 +1126,7 @@ namespace Tests
 
 			if (exceptResult != 0 || exceptExpected != 0)
 			{
-				Debug.WriteLine(resultList.  ToDiagnosticString());
+				Debug.WriteLine(resultList  .ToDiagnosticString());
 				Debug.WriteLine(expectedList.ToDiagnosticString());
 
 				for (var i = 0; i < resultList.Count; i++)
@@ -1521,7 +1521,7 @@ namespace Tests
 
 		public DisableLogging()
 		{
-			_ctx   = CustomTestContext.Get();
+			_ctx      = CustomTestContext.Get();
 			_oldState = _ctx.Get<bool>(CustomTestContext.TRACE_DISABLED);
 			_ctx.Set(CustomTestContext.TRACE_DISABLED, true);
 		}
@@ -1609,6 +1609,20 @@ namespace Tests
 		public void Dispose()
 		{
 			Configuration.Linq.CompareNullsAsValues = true;
+			Query.ClearCaches();
+		}
+	}
+
+	public class WithoutContainsNullCheck : IDisposable
+	{
+		public WithoutContainsNullCheck()
+		{
+			Configuration.Linq.CheckNullInContains = false;
+		}
+
+		public void Dispose()
+		{
+			Configuration.Linq.CheckNullInContains = true;
 			Query.ClearCaches();
 		}
 	}
