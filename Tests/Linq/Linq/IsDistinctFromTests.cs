@@ -27,16 +27,16 @@ namespace Tests.Linq
 			using var src = SetupSrcTable(db);
 
 			int count = src.Count(s => s.Int.IsDistinctFrom(value));
-			count.Should().Be(value == 2 ? 1 : 0);
+			count.Should().Be(value == 2 ? 1 : 2);
 
 			count = src.Count(s => s.NullableInt.IsDistinctFrom(value));
-			count.Should().Be(value != 4 ? 1 : 0);
+			count.Should().Be(value != 4 ? 1 : 2);
 
 			count = src.Count(s => s.Int.IsNotDistinctFrom(value));
-			count.Should().Be(value == 2 ? 0 : 1);
+			count.Should().Be(value == 2 ? 1 : 0);
 
 			count = src.Count(s => s.NullableInt.IsNotDistinctFrom(value));
-			count.Should().Be(value != 4 ? 0 : 1);
+			count.Should().Be(value != 4 ? 1 : 0);
 		}
 
 		[Test]
@@ -48,16 +48,16 @@ namespace Tests.Linq
 			using var src = SetupSrcTable(db);
 
 			int count = src.Count(s => s.String.IsDistinctFrom(value));
-			count.Should().Be(value == "abc" ? 1 : 0);
+			count.Should().Be(value == "abc" ? 1 : 2);
 
 			count = src.Count(s => s.NullableString.IsDistinctFrom(value));
-			count.Should().Be(value != "xyz" ? 1 : 0);
+			count.Should().Be(value != "xyz" ? 1 : 2);
 
 			count = src.Count(s => s.String.IsNotDistinctFrom(value));
-			count.Should().Be(value == "abc" ? 0 : 1);
+			count.Should().Be(value == "abc" ? 1 : 0);
 
 			count = src.Count(s => s.NullableString.IsNotDistinctFrom(value));
-			count.Should().Be(value != "xyz" ? 0 : 1);
+			count.Should().Be(value != "xyz" ? 1 : 0);
 		}
 
 		[Test]
