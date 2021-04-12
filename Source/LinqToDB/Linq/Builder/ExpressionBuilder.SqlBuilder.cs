@@ -1820,7 +1820,7 @@ namespace LinqToDB.Linq.Builder
 
 			var ex = ConvertToSql(context, expression);
 
-			if (!isPredicate && SqlExpression.NeedsEqual(ex))
+			if (SqlExpression.NeedsEqual(ex) || !isPredicate && SqlExpression.NeedsEqual(ex))
 			{
 				var descriptor = QueryHelper.GetColumnDescriptor(ex);
 				var trueValue  = ConvertToSql(context, ExpressionHelper.TrueConstant,  false, descriptor);

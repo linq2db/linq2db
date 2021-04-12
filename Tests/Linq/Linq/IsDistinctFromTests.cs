@@ -1,7 +1,6 @@
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Data;
 using NUnit.Framework;
-using System;
 using System.Linq;
 using FluentAssertions;
 
@@ -12,9 +11,13 @@ namespace Tests.Linq
 	{
 		private TempTable<Src> SetupSrcTable(IDataContext db)
 		{
-			var src = db.CreateLocalTable<Src>();
-			db.Insert(new Src { Int = 2, NullableInt = 2, String = "abc", NullableString = "abc" });
-			db.Insert(new Src { Int = 3, NullableInt = null, String = "def", NullableString = null });
+			var data = new[]
+			{
+				new Src {Int = 2, NullableInt = 2, String    = "abc", NullableString = "abc"},
+				new Src {Int = 3, NullableInt = null, String = "def", NullableString = null}
+			};
+
+			var src  = db.CreateLocalTable(data);
 			return src;
 		}
 
@@ -41,7 +44,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Strings(
-			[DataSources]                string  context, 
+			[DataSources(TestProvName.AllAccess)] string context, 
 			[Values("abc", "xyz", null)] string? value)
 		{
 			using var db  = GetDataContext(context);
@@ -62,8 +65,8 @@ namespace Tests.Linq
 
 		[Test]
 		public void OptimizeConstants(
-			[DataSources]                string  context, 
-			[Values(5, 6, null)]         int?    value)
+			[DataSources(TestProvName.AllAccess, ProviderName.SqlCe)] string context, 
+			[Values(5, 6, null)] int? value)
 		{
 			using var db = GetDataContext(context);
 			
