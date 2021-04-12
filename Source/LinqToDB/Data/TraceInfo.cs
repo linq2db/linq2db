@@ -123,7 +123,7 @@ namespace LinqToDB.Data
 
 					sb.AppendLine();
 
-					sqlProvider.PrintParameters(sb, Command.Parameters.Cast<IDbDataParameter>().ToArray());
+					sqlProvider.PrintParameters(sb, Command.Parameters.Cast<IDbDataParameter>());
 
 					sb.AppendLine(Command.CommandText);
 

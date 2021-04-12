@@ -552,8 +552,8 @@ namespace LinqToDB.Linq.Builder
 			var ctors = type.GetConstructors().Select(c =>
 			{
 				var attrs = c.GetCustomAttributesData();
-				var attr  = string.Join(string.Empty, attrs.Select(a => "\r\n\t\t" + a.ToString()));
-				var ps    = c.GetParameters().Select(p => GetTypeName(p.ParameterType) + " " + MangleName(p.Name, "p")).ToArray();
+				var attr  = string.Concat(attrs.Select(a => "\r\n\t\t" + a.ToString()));
+				var ps    = c.GetParameters().Select(p => GetTypeName(p.ParameterType) + " " + MangleName(p.Name, "p"));
 
 				return string.Format(@"{0}
 		public {1}({2})
@@ -626,13 +626,13 @@ namespace LinqToDB.Linq.Builder
 				type.GetMethods().Intersect(_usedMembers.OfType<MethodInfo>()).Select(m =>
 				{
 					var attrs = m.GetCustomAttributesData();
-					var ps    = m.GetParameters().Select(p => GetTypeName(p.ParameterType) + " " + MangleName(p.Name, "p")).ToArray();
+					var ps    = m.GetParameters().Select(p => GetTypeName(p.ParameterType) + " " + MangleName(p.Name, "p"));
 					return string.Format(@"{0}
 		{5}{4}{1} {2}({3})
 		{{
 			throw new NotImplementedException();
 		}}",
-						string.Join(string.Empty, attrs.Select(a => "\r\n\t\t" + a.ToString())),
+						string.Concat(attrs.Select(a => "\r\n\t\t" + a.ToString())),
 						GetTypeName(m.ReturnType),
 						MangleName(isUserName, m.Name, "M"),
 						string.Join(", ", ps),
