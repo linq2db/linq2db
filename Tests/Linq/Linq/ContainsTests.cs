@@ -44,7 +44,7 @@ namespace Tests.Linq
 			result.Should().Be(2);
 
 			result = FetchId(s => s.Int.NotIn(2, null));
-			result.Should().Be(withNullContains ? 0 : 1);
+			result.Should().Be(0);
 
 			result = FetchId(s => s.Int.NotIn(-1, 2));
 			result.Should().Be(withNullCompares ? 1 : 0);
