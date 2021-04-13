@@ -23,9 +23,9 @@ namespace LinqToDB.DataProvider.Firebird
 			return statement;
 		}
 
-		protected static string[] LikeFirebirdEscapeSymbosl = { "_", "%" };
+		protected static string[] LikeFirebirdEscapeSymbols = { "_", "%" };
 
-		public override string[] LikeCharactersToEscape => LikeFirebirdEscapeSymbosl;
+		public override string[] LikeCharactersToEscape => LikeFirebirdEscapeSymbols;
 
 
 		public override bool IsParameterDependedElement(IQueryElement element)
@@ -64,36 +64,54 @@ namespace LinqToDB.DataProvider.Firebird
 			ConvertVisitor<RunOptimizationContext<TContext>> visitor,
 			OptimizationContext optimizationContext)
 		{
-			if (!predicate.IgnoreCase)
-				return ConvertSearchStringPredicateViaLike(mappingSchema, predicate, visitor, optimizationContext);
-
 			ISqlExpression expr;
 			switch (predicate.Kind)
 			{
 				case SqlPredicate.SearchString.SearchKind.EndsWith:
 				{
-					predicate = new SqlPredicate.SearchString(
-						new SqlFunction(typeof(string), "$ToLower$", predicate.Expr1),
-						predicate.IsNot,
-						new SqlFunction(typeof(string), "$ToLower$", predicate.Expr2), predicate.Kind,
-						predicate.IgnoreCase);
+					if (predicate.IgnoreCase)
+					{
+						predicate = new SqlPredicate.SearchString(
+							new SqlFunction(typeof(string), "$ToLower$", predicate.Expr1),
+							predicate.IsNot,
+							new SqlFunction(typeof(string), "$ToLower$", predicate.Expr2), predicate.Kind,
+							predicate.IgnoreCase);
+					}
 
 					return ConvertSearchStringPredicateViaLike(mappingSchema, predicate, visitor, optimizationContext);
 				}	
 				case SqlPredicate.SearchString.SearchKind.StartsWith:
 				{
 					expr = new SqlExpression(typeof(bool),
-						predicate.IsNot ? "{0} NOT STARTING WITH {1}" : "{0} STARTING WITH {1}", 
+						predicate.IsNot ? "{0} NOT STARTING WITH {1}" : "{0} STARTING WITH {1}",
 						Precedence.Comparison,
-						TryConvertToValue(predicate.Expr1, optimizationContext.Context), TryConvertToValue(predicate.Expr2, optimizationContext.Context)) { CanBeNull = false };
+						TryConvertToValue(
+							predicate.IgnoreCase
+								? new SqlFunction(typeof(string), "$ToLower$", predicate.Expr1)
+								: predicate.Expr1,
+							optimizationContext.Context),
+						TryConvertToValue(
+							predicate.IgnoreCase
+								? new SqlFunction(typeof(string), "$ToLower$", predicate.Expr2)
+								: predicate.Expr2, optimizationContext.Context)) {CanBeNull = false};
 					break;
 				}	
 				case SqlPredicate.SearchString.SearchKind.Contains:
-					expr = new SqlExpression(typeof(bool),
-						predicate.IsNot ? "{0} NOT CONTAINING {1}" : "{0} CONTAINING {1}", 
-						Precedence.Comparison,
-						TryConvertToValue(predicate.Expr1, optimizationContext.Context), TryConvertToValue(predicate.Expr2, optimizationContext.Context)) { CanBeNull = false };
+				{
+					if (predicate.IgnoreCase)
+					{
+						expr = new SqlExpression(typeof(bool),
+							predicate.IsNot ? "{0} NOT CONTAINING {1}" : "{0} CONTAINING {1}",
+							Precedence.Comparison,
+							TryConvertToValue(predicate.Expr1, optimizationContext.Context),
+							TryConvertToValue(predicate.Expr2, optimizationContext.Context)) {CanBeNull = false};
+					}
+					else
+					{
+						return ConvertSearchStringPredicateViaLike(mappingSchema, predicate, visitor, optimizationContext);
+					}
 					break;
+				}	
 				default:
 					throw new InvalidOperationException($"Unexpected predicate: {predicate.Kind}");
 			}

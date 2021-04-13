@@ -2246,7 +2246,10 @@ namespace LinqToDB.SqlProvider
 			var precedence = GetPrecedence(predicate);
 
 			BuildExpression(precedence, predicate.Expr1);
-			StringBuilder.Append(predicate.IsNot ? " NOT LIKE " : " LIKE ");
+			StringBuilder
+				.Append(predicate.IsNot ? " NOT " : " ")
+				.Append(predicate.FunctionName ?? "LIKE")
+				.Append(' ');
 			BuildExpression(precedence, predicate.Expr2);
 
 			if (predicate.Escape != null)

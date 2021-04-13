@@ -1579,6 +1579,20 @@ namespace Tests
 		}
 	}
 
+	public class CaseSensitiveStringSearch : IDisposable
+	{
+		public CaseSensitiveStringSearch(bool caseSensitive = true)
+		{
+			Configuration.Linq.IsStringSearchCaseSensitive = caseSensitive;
+			Query.ClearCaches();
+		}
+
+		public void Dispose()
+		{
+			Configuration.Linq.IsStringSearchCaseSensitive = false;
+		}
+	}
+
 	public class DeletePerson : IDisposable
 	{
 		readonly IDataContext _db;

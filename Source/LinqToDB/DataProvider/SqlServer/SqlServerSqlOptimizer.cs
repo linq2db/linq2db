@@ -5,6 +5,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
+	using Mapping;
 
 	abstract class SqlServerSqlOptimizer : BasicSqlOptimizer
 	{
@@ -28,6 +29,83 @@ namespace LinqToDB.DataProvider.SqlServer
 				(query, wrappedQuery) => { },
 				allowMutation: true
 			);
+		}
+
+
+		public override ISqlPredicate ConvertSearchStringPredicate(MappingSchema mappingSchema, SqlPredicate.SearchString predicate, ConvertVisitor visitor,
+			OptimizationContext optimizationContext)
+		{
+			var like = ConvertSearchStringPredicateViaLike(mappingSchema, predicate, visitor,
+				optimizationContext);
+
+			if (!predicate.IgnoreCase)
+			{
+				SqlPredicate.ExprExpr? subStrPredicate = null;
+
+				switch (predicate.Kind)
+				{
+					case SqlPredicate.SearchString.SearchKind.StartsWith:
+					{
+						subStrPredicate =
+							new SqlPredicate.ExprExpr(
+								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, new SqlFunction(
+									typeof(string), "LEFT", predicate.Expr1,
+									new SqlFunction(typeof(int), "Length", predicate.Expr2))),
+								SqlPredicate.Operator.Equal,
+								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, predicate.Expr2),
+								null
+							);
+
+						break;
+					}
+
+					case SqlPredicate.SearchString.SearchKind.EndsWith:
+					{
+						subStrPredicate =
+							new SqlPredicate.ExprExpr(
+								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, new SqlFunction(
+									typeof(string), "RIGHT", predicate.Expr1,
+									new SqlFunction(typeof(int), "Length", predicate.Expr2))),
+								SqlPredicate.Operator.Equal,
+								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, predicate.Expr2),
+								null
+							);
+
+						break;
+					}
+					case SqlPredicate.SearchString.SearchKind.Contains:
+					{
+						subStrPredicate =
+							new SqlPredicate.ExprExpr(
+								new SqlFunction(typeof(int), "CHARINDEX",
+									new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary,
+										predicate.Expr2),
+									new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary,
+										predicate.Expr1)),
+								SqlPredicate.Operator.Greater,
+								new SqlValue(0), null);
+
+						break;
+					}
+
+				}
+
+				if (subStrPredicate != null)
+				{
+					if (predicate.IsNot && like is IInvertibleElement invertible && invertible.CanInvert())
+					{
+						like = (ISqlPredicate)invertible.Invert();
+					}
+
+					var result = new SqlSearchCondition(
+						new SqlCondition(predicate.IsNot, like, predicate.IsNot),
+						new SqlCondition(predicate.IsNot, subStrPredicate));
+
+					return result;
+				}
+			}
+
+			return like;
 		}
 
 		public override ISqlExpression ConvertExpressionImpl<TContext>(ISqlExpression expression, ConvertVisitor<TContext> visitor,
