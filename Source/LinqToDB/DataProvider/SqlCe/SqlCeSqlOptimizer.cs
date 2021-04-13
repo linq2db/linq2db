@@ -5,6 +5,7 @@ namespace LinqToDB.DataProvider.SqlCe
 	using Extensions;
 	using SqlQuery;
 	using SqlProvider;
+	using Mapping;
 
 	class SqlCeSqlOptimizer : BasicSqlOptimizer
 	{
@@ -44,6 +45,93 @@ namespace LinqToDB.DataProvider.SqlCe
 		protected static string[] LikeSqlCeCharactersToEscape = { "_", "%" };
 
 		public override string[] LikeCharactersToEscape => LikeSqlCeCharactersToEscape;
+
+		public override ISqlPredicate ConvertSearchStringPredicate(MappingSchema mappingSchema, SqlPredicate.SearchString predicate, ConvertVisitor visitor,
+			OptimizationContext optimizationContext)
+		{
+			var like = ConvertSearchStringPredicateViaLike(mappingSchema, predicate, visitor,
+				optimizationContext);
+
+			if (!predicate.IgnoreCase)
+			{
+				SqlPredicate.ExprExpr? subStrPredicate = null;
+
+				switch (predicate.Kind)
+				{
+					case SqlPredicate.SearchString.SearchKind.StartsWith:
+					{
+						subStrPredicate =
+							new SqlPredicate.ExprExpr(
+								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, 
+									new SqlFunction(typeof(string), "SUBSTRING", 
+										predicate.Expr1,
+										new SqlValue(1),
+									new SqlFunction(typeof(int), "Length", predicate.Expr2))),
+								SqlPredicate.Operator.Equal,
+								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, predicate.Expr2),
+								null
+							);
+						break;
+					}
+
+					case SqlPredicate.SearchString.SearchKind.EndsWith:
+					{
+						var indexExpression = new SqlBinaryExpression(typeof(int),
+							new SqlBinaryExpression(typeof(int),
+								new SqlFunction(typeof(int), "Length", predicate.Expr1),
+								"-",
+								new SqlFunction(typeof(int), "Length", predicate.Expr2)),
+							"+",
+							new SqlValue(1));
+
+						subStrPredicate =
+							new SqlPredicate.ExprExpr(
+								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, 
+									new SqlFunction(typeof(string), "SUBSTRING", 
+										predicate.Expr1,
+										indexExpression,
+										new SqlFunction(typeof(int), "Length", predicate.Expr2))),
+								SqlPredicate.Operator.Equal,
+								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, predicate.Expr2),
+								null
+							);
+
+						break;
+					}
+					case SqlPredicate.SearchString.SearchKind.Contains:
+					{
+						subStrPredicate =
+							new SqlPredicate.ExprExpr(
+								new SqlFunction(typeof(int), "CHARINDEX",
+									new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary,
+										predicate.Expr2),
+									new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary,
+										predicate.Expr1)),
+								SqlPredicate.Operator.Greater,
+								new SqlValue(0), null);
+
+						break;
+					}
+
+				}
+
+				if (subStrPredicate != null)
+				{
+					if (predicate.IsNot && like is IInvertibleElement invertible && invertible.CanInvert())
+					{
+						like = (ISqlPredicate)invertible.Invert();
+					}
+
+					var result = new SqlSearchCondition(
+						new SqlCondition(predicate.IsNot, like, predicate.IsNot),
+						new SqlCondition(predicate.IsNot, subStrPredicate));
+
+					return result;
+				}
+			}
+
+			return like;
+		}
 
 		void CorrectInsertParameters(SqlStatement statement)
 		{
@@ -162,6 +250,11 @@ namespace LinqToDB.DataProvider.SqlCe
 				case SqlFunction func:
 					switch (func.Name)
 					{
+						case "Length":
+						{
+							return new SqlFunction(func.SystemType, "LEN", func.IsAggregate, func.IsPure,
+								func.Precedence, func.Parameters);
+						}
 						case "Convert" :
 							switch (Type.GetTypeCode(func.SystemType.ToUnderlying()))
 							{

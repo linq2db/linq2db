@@ -34,6 +34,75 @@ namespace LinqToDB.DataProvider.SQLite
 			return statement;
 		}
 
+		public override ISqlPredicate ConvertSearchStringPredicate(MappingSchema mappingSchema, SqlPredicate.SearchString predicate, ConvertVisitor visitor,
+			OptimizationContext optimizationContext)
+		{
+			var like = ConvertSearchStringPredicateViaLike(mappingSchema, predicate, visitor,
+				optimizationContext);
+
+			if (!predicate.IgnoreCase)
+			{
+				SqlPredicate.ExprExpr? subStrPredicate = null;
+
+				switch (predicate.Kind)
+				{
+					case SqlPredicate.SearchString.SearchKind.StartsWith:
+					{
+						subStrPredicate =
+							new SqlPredicate.ExprExpr(
+								new SqlFunction(typeof(string), "Substr", predicate.Expr1, new SqlValue(1),
+									new SqlFunction(typeof(int), "Length", predicate.Expr2)),
+								SqlPredicate.Operator.Equal,
+								predicate.Expr2, null);
+
+						break;
+					}
+
+					case SqlPredicate.SearchString.SearchKind.EndsWith:
+					{
+						subStrPredicate =
+							new SqlPredicate.ExprExpr(
+								new SqlFunction(typeof(string), "Substr", predicate.Expr1,
+									new SqlBinaryExpression(typeof(int),
+										new SqlFunction(typeof(int), "Length", predicate.Expr2), "*", new SqlValue(-1),
+										Precedence.Multiplicative)
+								),
+								SqlPredicate.Operator.Equal,
+								predicate.Expr2, null);
+
+						break;
+					}
+					case SqlPredicate.SearchString.SearchKind.Contains:
+					{
+						subStrPredicate =
+							new SqlPredicate.ExprExpr(
+								new SqlFunction(typeof(int), "InStr", predicate.Expr1, predicate.Expr2),
+								SqlPredicate.Operator.Greater,
+								new SqlValue(0), null);
+
+						break;
+					}
+
+				}
+
+				if (subStrPredicate != null)
+				{
+					if (predicate.IsNot && like is IInvertibleElement invertible && invertible.CanInvert())
+					{
+						like = (ISqlPredicate)invertible.Invert();
+					}
+
+					var result = new SqlSearchCondition(
+						new SqlCondition(predicate.IsNot, like, predicate.IsNot),
+						new SqlCondition(predicate.IsNot, subStrPredicate));
+
+					return result;
+				}
+			}
+
+			return like;
+		}
+
 		public override ISqlExpression ConvertExpressionImpl<TContext>(ISqlExpression expression, ConvertVisitor<TContext> visitor,
 			EvaluationContext context)
 		{

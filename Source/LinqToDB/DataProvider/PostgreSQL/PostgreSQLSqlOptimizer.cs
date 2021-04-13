@@ -1,12 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using LinqToDB.Linq;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
+	using Linq;
+	using Mapping;
 
 	class PostgreSQLSqlOptimizer : BasicSqlOptimizer
 	{
@@ -272,6 +273,19 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return statement;
 		}
 
+		public override ISqlPredicate ConvertSearchStringPredicate(MappingSchema mappingSchema, SqlPredicate.SearchString predicate, ConvertVisitor visitor,
+			OptimizationContext optimizationContext)
+		{
+			var searchPredicate = ConvertSearchStringPredicateViaLike(mappingSchema, predicate, visitor, optimizationContext);
+
+			if (predicate.IgnoreCase && searchPredicate is SqlPredicate.Like likePredicate)
+			{
+				searchPredicate = new SqlPredicate.Like(likePredicate.Expr1, likePredicate.IsNot, likePredicate.Expr2, likePredicate.Escape, "ILIKE");
+			}
+
+			return searchPredicate;
+		}
+
 		public override ISqlExpression ConvertExpressionImpl<TContext>(ISqlExpression expression, ConvertVisitor<TContext> visitor,
 			EvaluationContext context)
 		{
@@ -311,10 +325,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 									func.Parameters[0],
 									ConvertExpressionImpl(
 										new SqlFunction(typeof(string), "Substring",
-											func.Parameters[1],
-											func.Parameters[2],
-											Sub<int>(
-												ConvertExpressionImpl(
+										func.Parameters[1],
+										func.Parameters[2],
+										Sub<int>(
+											ConvertExpressionImpl(
 													new SqlFunction(typeof(int), "Length", func.Parameters[1]), visitor, context), func.Parameters[2])),
 										visitor,
 										context)),

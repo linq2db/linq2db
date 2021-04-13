@@ -1886,7 +1886,7 @@ namespace LinqToDB.SqlProvider
 			OptimizationContext optimizationContext)
 		{
 			if (!predicate.IgnoreCase)
-				throw new NotImplementedException("!predicate.IgnoreCase");
+				throw new NotImplementedException($"String search function '{predicate.Kind}' without case sensitivity is not supported.");
 
 			return ConvertSearchStringPredicateViaLike(mappingSchema, predicate, visitor, optimizationContext);
 		}

@@ -6,7 +6,7 @@ using System.Data;
 #endif
 
 using System.Linq;
-
+using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Mapping;
 
@@ -250,18 +250,47 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = from p in db.Person where p.FirstName.Contains("oh") && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				db.Person.Count(p => p.FirstName.Contains("jOh") && p.ID == 1).Should().Be(1);
+				db.Person.Count(p => !p.FirstName.Contains("jOh") && p.ID == 1).Should().Be(0);
 			}
 		}
+
+#if NETSTANDARD2_1PLUS
+		[Test]
+		public void ContainsConstantWithCase1([DataSources(ProviderName.SqlCe)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				//db.Person.Count(p =>  p.FirstName.Contains("Joh", StringComparison.Ordinal) && p.ID == 1).Should().Be(1);
+				db.Person.Count(p => !p.FirstName.Contains("Joh", StringComparison.Ordinal) && p.ID == 1).Should().Be(0);
+
+				// db.Person.Count(p =>  p.FirstName.Contains("joh", StringComparison.Ordinal) && p.ID == 1).Should().Be(0);
+				// db.Person.Count(p => !p.FirstName.Contains("joh", StringComparison.Ordinal) && p.ID == 1).Should().Be(1);
+			}
+		}
+#endif
+		[Test]
+		public void ContainsConstantWithCase2([DataSources(ProviderName.SqlCe)] string context)
+		{
+			using (new CaseSensitiveStringSearch())
+			using (var db = GetDataContext(context))
+			{
+				//db.Person.Count(p =>  p.FirstName.Contains("Joh") && p.ID == 1).Should().Be(1);
+				db.Person.Count(p => !p.FirstName.Contains("Joh") && p.ID == 1).Should().Be(0);
+
+				// db.Person.Count(p =>  p.FirstName.Contains("joh") && p.ID == 1).Should().Be(0);
+				// db.Person.Count(p => !p.FirstName.Contains("joh") && p.ID == 1).Should().Be(1);
+			}
+		}
+
 
 		[Test]
 		public void ContainsConstant2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = from p in db.Person where !p.FirstName.Contains("o%h") && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				db.Person.Count(p => p.FirstName.Contains("o%h") && p.ID == 1).Should().Be(0);
+				db.Person.Count(p => !p.FirstName.Contains("o%h") && p.ID == 1).Should().Be(1);
 			}
 		}
 
@@ -284,8 +313,8 @@ namespace Tests.Linq
 			{
 				var s = "123[456";
 
-				var q = from p in db.Person where p.ID == 1 && s.Contains("[") select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				db.Person.Count(p => p.ID == 1 && s.Contains("[")).Should().Be(1);
+				db.Person.Count(p => p.ID == 1 && !s.Contains("[")).Should().Be(0);
 			}
 		}
 
@@ -294,8 +323,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = from p in db.Person where p.ID == 1 && "123[456".Contains("[") select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				db.Person.Count(p => p.ID == 1 && "123[456".Contains("[")).Should().Be(1);
 			}
 		}
 
@@ -307,8 +335,7 @@ namespace Tests.Linq
 				var s  = "123[456";
 				var ps = "[";
 
-				var q = from p in db.Person where p.ID == 1 && s.Contains(ps) select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				db.Person.Count(p => p.ID == 1 && s.Contains(ps)).Should().Be(1);
 			}
 		}
 
@@ -320,18 +347,8 @@ namespace Tests.Linq
 			{
 				var s  = "123" + toTest + "456";
 
-				var q = from p in db.Person where p.ID == 1 && s.Contains(Sql.ToSql(toTest)) select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
-
-				//TODO: check case sensitivity for each provider
-				/*
-				var s2 = s.ToUpper(CultureInfo.InvariantCulture);
-				if (s != s2)
-				{
-					var q2 = from p in db.Person where p.ID == 1 && s2.Contains(Sql.ToSql(toTest)) select p;
-					Assert.AreEqual(1, q2.ToList().First().ID);
-				}
-				*/
+				db.Person.Count(p => p.ID == 1 && s.Contains(Sql.ToSql(toTest))).Should().Be(1);
+				db.Person.Count(p => p.ID == 1 && !s.Contains(Sql.ToSql(toTest))).Should().Be(0);
 			}
 		}
 
@@ -344,19 +361,7 @@ namespace Tests.Linq
 			{
 				var s  = "123" + toTest + "456";
 
-				var q = from p in db.Person where p.ID == 1 && s.Contains(toTest) select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
-
-				//TODO: check case sensitivity for each provider
-				/*
-				var s2 = s.ToUpper(CultureInfo.InvariantCulture);
-				if (s != s2)
-				{
-					var q2 = from p in db.Person where p.ID == 1 && s2.Contains(toTest) select p;
-					Assert.AreEqual(1, q2.ToList().First().ID);
-				}
-				*/
-
+				db.Person.Count(p => p.ID == 1 && s.Contains(toTest)).Should().Be(1);
 			}
 		}
 
@@ -367,8 +372,7 @@ namespace Tests.Linq
 			{
 				var ps = "[";
 
-				var q = from p in db.Person where p.ID == 1 && "123[456".Contains(ps) select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				db.Person.Count(p => p.ID == 1 && "123[456".Contains(ps)).Should().Be(1);
 			}
 		}
 
@@ -472,33 +476,24 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void StartsWithSQL([DataSources(false)] string context)
+		public void StartsWith1IgnoreCase([DataSources] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
-				(from p in db.Person where p.FirstName.StartsWith("Jo") && !p.LastName.StartsWith("Je") select p).ToList();
+				db.Person.Count(p => p.FirstName.StartsWith("joH", StringComparison.OrdinalIgnoreCase) && p.ID == 1).Should().Be(1);
+				db.Person.Count(p => !p.FirstName.StartsWith("joH", StringComparison.OrdinalIgnoreCase) && p.ID == 1).Should().Be(0);
+			}
+		}
 
-				// https://github.com/linq2db/linq2db/issues/2005
-				if (context.Contains("Firebird"))
-				{
-					Assert.True(db.LastQuery!.Contains(" STARTING WITH 'Jo'"));
-					Assert.True(db.LastQuery.Contains(" NOT STARTING WITH 'Je'"));
-				}
-				else if (context.Contains("SqlServer") || context.Contains("SqlAzure"))
-				{
-					Assert.True(db.LastQuery!.Contains(" LIKE N'Jo%'"));
-					Assert.True(db.LastQuery.Contains("NOT LIKE N'Je%'"));
-				}
-				else if (context.Contains("Informix"))
-				{
-					Assert.True(db.LastQuery!.Contains(" LIKE 'Jo%'"));
-					Assert.True(db.LastQuery.Contains("NOT p.LastName LIKE 'Je%'"));
-				}
-				else
-				{
-					Assert.True(db.LastQuery!.Contains(" LIKE 'Jo%'"));
-					Assert.True(db.LastQuery.Contains("NOT LIKE 'Je%'"));
-				}
+		[Test]
+		public void StartsWith1Case([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Person.Count(p => p.FirstName.StartsWith("Jo", StringComparison.Ordinal) && p.ID == 1).Should().Be(1);
+				db.Person.Count(p => p.FirstName.StartsWith("jo", StringComparison.Ordinal) && p.ID == 1).Should().Be(0);
+
+				db.Person.Count(p => !p.FirstName.StartsWith("Jo", StringComparison.Ordinal) && p.ID == 1).Should().Be(0);
 			}
 		}
 
@@ -554,12 +549,25 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void EndsWith([DataSources] string context)
+		public void EndsWithIgnoreCase([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = from p in db.Person where p.FirstName.EndsWith("hn") && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				db.Person.Count(p => p.FirstName.EndsWith("JOHN") && p.ID == 1).Should().Be(1);
+				db.Person.Count(p => !p.FirstName.EndsWith("JOHN") && p.ID == 1).Should().Be(0);
+			}
+		}
+
+		[Test]
+		public void EndsWithWithCase([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Patient.Count(p =>  p.Diagnosis.EndsWith("Persecution", StringComparison.Ordinal) && p.PersonID == 2).Should().Be(1);
+				db.Patient.Count(p => !p.Diagnosis.EndsWith("Persecution", StringComparison.Ordinal) && p.PersonID == 2).Should().Be(0);
+
+				db.Patient.Count(p =>  p.Diagnosis.EndsWith("persecution", StringComparison.Ordinal) && p.PersonID == 2).Should().Be(0);
+				db.Patient.Count(p => !p.Diagnosis.EndsWith("persecution", StringComparison.Ordinal) && p.PersonID == 2).Should().Be(1);
 			}
 		}
 

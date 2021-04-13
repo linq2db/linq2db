@@ -2,6 +2,7 @@
 {
 	using SqlProvider;
 	using SqlQuery;
+	using Mapping;
 
 	class SybaseSqlOptimizer : BasicSqlOptimizer
 	{
@@ -21,6 +22,22 @@
 		protected static string[] SybaseCharactersToEscape = {"_", "%", "[", "]", "^"};
 
 		public override string[] LikeCharactersToEscape => SybaseCharactersToEscape;
+
+		public override ISqlPredicate ConvertSearchStringPredicate(MappingSchema mappingSchema, SqlPredicate.SearchString predicate, ConvertVisitor visitor,
+			OptimizationContext optimizationContext)
+		{
+			if (predicate.IgnoreCase)
+			{
+				predicate = new SqlPredicate.SearchString(
+					new SqlFunction(typeof(string), "$ToLower$", predicate.Expr1),
+					predicate.IsNot,
+					new SqlFunction(typeof(string), "$ToLower$", predicate.Expr2), 
+					predicate.Kind,
+					false);
+			}
+
+			return ConvertSearchStringPredicateViaLike(mappingSchema, predicate, visitor, optimizationContext);
+		}
 
 		protected override ISqlExpression ConvertFunction(SqlFunction func)
 		{
