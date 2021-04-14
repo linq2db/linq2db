@@ -2135,7 +2135,7 @@ namespace LinqToDB.SqlProvider
 		{
 			var firstValue      = true;
 			var len             = StringBuilder.Length;
-			var checkNull       = Configuration.Linq.CheckNullInContains || Configuration.Linq.CompareNullsAsValues;
+			var checkNull       = Configuration.Linq.CheckNullsInContains || Configuration.Linq.CompareNullsAsValues;
 			var hasNull         = false;
 			var count           = 0;
 			var multipleClauses = false;

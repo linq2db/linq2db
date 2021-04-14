@@ -18,7 +18,7 @@ namespace LinqToDB.Tools
 			// evaluating `Sql.In(null, ...)` and `Sql.NotIn(null, ...)` should always return false.
 			// Otherwise a regular C# comparison can be used.
 			// Note that we can't control the behavior of `Array.Contains` so when it is used client-side, C# behavior always applies.
-			return Common.Configuration.Linq.CheckNullInContains
+			return Common.Configuration.Linq.CheckNullsInContains
 				|| Common.Configuration.Linq.CompareNullsAsValues
 				|| value != null;
 		}

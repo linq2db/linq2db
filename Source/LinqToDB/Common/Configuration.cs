@@ -242,7 +242,7 @@ namespace LinqToDB.Common
 			/// SELECT * FROM MyEntity WHERE Value NOT IN (1, 2) AND Value IS NOT NULL
 			/// </code>
 			/// </example>
-			public static bool CheckNullInContains = true;
+			public static bool CheckNullsInContains = true;
 
 			/// <summary>
 			/// Controls behavior of LINQ query, which ends with GroupBy call.
