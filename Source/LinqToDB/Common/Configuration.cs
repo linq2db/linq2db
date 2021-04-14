@@ -220,6 +220,9 @@ namespace LinqToDB.Common
 			/// when the list of values includes a null constant.
 			/// Default value: <c>true</c>.
 			/// </summary>
+			/// <remarks>
+			/// This behavior is implicitly <c>true</c> when <see cref="CompareNullsAsValues" /> is <c>true</c>.
+			/// </remarks>
 			/// <example>
 			/// <code>
 			/// public class MyEntity

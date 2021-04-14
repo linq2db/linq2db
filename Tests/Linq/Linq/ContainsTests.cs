@@ -1,5 +1,4 @@
 ﻿using LinqToDB;
-using LinqToDB.Data;
 using LinqToDB.Tools;
 using NUnit.Framework;
 using System.Linq;
@@ -34,6 +33,9 @@ namespace Tests.Linq
 			using var null2 = withNullCompares ? null : new WithoutComparisonNullCheck();
 			using var db    = GetDataContext(context);
 			using var src   = SetupSrcTable(db);
+
+			// withNullContains is implicitely true when withNullCompares is true
+			withNullContains |= withNullCompares;
 
 			int? result;
 
@@ -80,7 +82,7 @@ namespace Tests.Linq
 			(true,  true,  1,          (int?)null, false, true ),
 			(true,  false, 1,          (int?)null, false, true ),
 			(true,  true,  (int?)null, (int?)null, true,  false),
-			(true,  false, (int?)null, (int?)null, false, true ),
+			(true,  false, (int?)null, (int?)null, true,  false),
 			(false, true,  (int?)null, (int?)null, true,  false),
 			(false, false, (int?)null, (int?)null, false, false),
 		};
