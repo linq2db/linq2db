@@ -14,12 +14,20 @@ namespace LinqToDB.Tools
 
 		private static bool InNullCheck<T>(T value)
 		{
-			// When CheckNullInContains (or CompareNullsAsValues) option is not set,
-			// evaluating `Sql.In(null, ...)` and `Sql.NotIn(null, ...)` should always return false.
-			// Otherwise a regular C# comparison can be used.
+			// When CompareNullsAsValues and CheckNullsInContains are false, `null in (...)` is always false.
+			// Otherwise `null in (null)` should be checked like in C#.
 			// Note that we can't control the behavior of `Array.Contains` so when it is used client-side, C# behavior always applies.
-			return Common.Configuration.Linq.CheckNullsInContains
-				|| Common.Configuration.Linq.CompareNullsAsValues
+			return Common.Configuration.Linq.CompareNullsAsValues
+				|| Common.Configuration.Linq.CheckNullsInContains
+				|| value != null;
+		}
+
+		private static bool NotInNullCheck<T>(T value)
+		{
+			// When CompareNullsAsValues is false, `null not in (...)` is always false.
+			// Otherwise `null not in (1,2)` should be checked like in C# (true).
+			// CheckNullsInContains doesn't matter here because `null not in (null)` is also false.
+			return Common.Configuration.Linq.CompareNullsAsValues
 				|| value != null;
 		}
 
@@ -85,7 +93,7 @@ namespace LinqToDB.Tools
 		[ExpressionMethod(nameof(NotInImpl1))]
 		public static bool NotIn<T>(this T value, IEnumerable<T> sequence)
 		{
-			return InNullCheck(value) && !sequence.Contains(value);
+			return NotInNullCheck(value) && !sequence.Contains(value);
 		}
 
 		static Expression<Func<T,IEnumerable<T>,bool>> NotInImpl1<T>()
@@ -96,7 +104,7 @@ namespace LinqToDB.Tools
 		[ExpressionMethod(nameof(NotInImpl2))]
 		public static bool NotIn<T>(this T value, IQueryable<T> sequence)
 		{
-			return InNullCheck(value) && !sequence.Contains(value);
+			return NotInNullCheck(value) && !sequence.Contains(value);
 		}
 
 		static Expression<Func<T,IQueryable<T>,bool>> NotInImpl2<T>()
@@ -107,7 +115,7 @@ namespace LinqToDB.Tools
 		[ExpressionMethod(nameof(NotInImpl3))]
 		public static bool NotIn<T>(this T value, params T[] sequence)
 		{
-			return InNullCheck(value) && !sequence.Contains(value);
+			return NotInNullCheck(value) && !sequence.Contains(value);
 		}
 
 		static Expression<Func<T,T[],bool>> NotInImpl3<T>()
@@ -119,7 +127,7 @@ namespace LinqToDB.Tools
 		public static bool NotIn<T>(this T value, T cmp1, T cmp2)
 		{
 			var comparer = EqualityComparer<T>.Default;
-			return InNullCheck(value) &&
+			return NotInNullCheck(value) &&
 				(!comparer.Equals(value, cmp1) && !comparer.Equals(value, cmp2));
 		}
 
@@ -132,7 +140,7 @@ namespace LinqToDB.Tools
 		public static bool NotIn<T>(this T value, T cmp1, T cmp2, T cmp3)
 		{
 			var comparer = EqualityComparer<T>.Default;
-			return InNullCheck(value) &&
+			return NotInNullCheck(value) &&
 				(!comparer.Equals(value, cmp1) && !comparer.Equals(value, cmp2) && !comparer.Equals(value, cmp3));
 		}
 
