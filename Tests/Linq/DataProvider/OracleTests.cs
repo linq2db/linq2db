@@ -9,6 +9,7 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
+using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
@@ -3814,6 +3815,42 @@ CREATE TABLE ""TABLE_A""(
 						 Sql.CurrentTimestamp > _.datetime2DataType + TimeSpan.FromHours(1)
 					).Select(x => x.ID).ToArray();
 			}
+		}
+	
+		[Table("LINQDATATYPES", IsColumnAttributeRequired = false)]
+		class LinqDataTypesBlobs
+		{
+			public int ID { get; set; }
+			// Implicit OracleBlob support, no attribute
+			public OracleBlob? BinaryValue { get; set; }
+			// Explicit attribute with DataType = Blob
+			[Column("BINARYVALUE", DataType = DataType.Blob)]
+			public OracleBlob? Blob { get; set; }
+		}
+		
+		[Test]
+		public void TestBlob([IncludeDataSources(TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+			if (db is not DataConnection dc) return;
+
+			using var tx = dc.BeginTransaction();
+
+			using var blob = new OracleBlob((OracleConnection)dc.Connection);
+			blob.WriteByte(1);
+
+			db.GetTable<LinqDataTypesBlobs>().Insert(() => new LinqDataTypesBlobs { ID = -10, BinaryValue = blob });
+			db.GetTable<LinqDataTypesBlobs>().Insert(() => new LinqDataTypesBlobs { ID = -20, Blob = blob });
+
+			var inserted = db
+				.GetTable<LinqDataTypesBlobs>()
+				.Where(x => x.ID.In(-10, -20))
+				.Select(x => Sql.Expr<int>("LENGTH(BINARYVALUE)"))
+				.ToList();
+
+			tx.Rollback();
+
+			inserted.Should().BeSameAs(new[] { 1, 1 });
 		}
 	}
 }
