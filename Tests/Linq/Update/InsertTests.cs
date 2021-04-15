@@ -1606,6 +1606,26 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		public void InsertDefault([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			try
+			{
+				db.Person.Insert(() => new Person
+				{
+					FirstName = "InsertDefault",
+					MiddleName = Sql.Default<string>(),
+					LastName = "InsertDefault",
+					Gender = Gender.Male,
+				});
+			}
+			finally
+			{
+				db.Person.Delete(p => p.FirstName == "InsertDefault");
+			}
+		}
+
+		[Test]
 		public void InsertSingleIdentity([DataSources(
 			TestProvName.AllInformix, ProviderName.SqlCe, TestProvName.AllSapHana)]
 			string context)
