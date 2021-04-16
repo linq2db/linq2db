@@ -27,17 +27,18 @@ namespace LinqToDB.Linq.Builder
 			CreateSubQuery = buildInfo.CreateSubQuery;
 		}
 
-		public BuildInfo?           SequenceInfo             { get; set; }
-		public IBuildContext?       Parent                   { get; set; }
-		public Expression           Expression               { get; set; }
-		public SelectQuery          SelectQuery              { get; set; }
-		public bool                 CopyTable                { get; set; }
-		public bool                 CreateSubQuery           { get; set; }
-		public bool                 AssociationsAsSubQueries { get; set; }
-		public JoinType             JoinType                 { get; set; }
-		public bool                 IsSubQuery => Parent != null;
+		public BuildInfo?     SequenceInfo             { get; set; }
+		public IBuildContext? Parent                   { get; set; }
+		public Expression     Expression               { get; set; }
+		public SelectQuery    SelectQuery              { get; set; }
+		public bool           CopyTable                { get; set; }
+		public bool           CreateSubQuery           { get; set; }
+		public bool           AssociationsAsSubQueries { get; set; }
+		public JoinType       JoinType                 { get; set; }
+		public bool           IsSubQuery               => Parent != null;
 
 		private bool _isAssociationBuilt;
+
 		public  bool  IsAssociationBuilt
 		{
 			get => _isAssociationBuilt;
@@ -49,5 +50,20 @@ namespace LinqToDB.Linq.Builder
 					SequenceInfo.IsAssociationBuilt = value;
 			}
 		}
+
+		private bool _isAggregation;
+
+		public bool InAggregation
+		{
+			get
+			{
+				if (_isAggregation || SequenceInfo == null)
+					return _isAggregation;
+				return SequenceInfo.InAggregation;
+			}
+
+			set => _isAggregation = value;
+		}
+
 	}
 }

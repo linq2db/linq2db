@@ -60,14 +60,10 @@ namespace LinqToDB.Linq.Builder
 			var outerKeyLambda = ((LambdaExpression)methodCall.Arguments[2].Unwrap());
 			var innerKeyLambda = ((LambdaExpression)methodCall.Arguments[3].Unwrap());
 
-			var outerKeySelector = outerKeyLambda.Body.Unwrap();
-			var innerKeySelector = innerKeyLambda.Body.Unwrap();
+			var innerKeyContext  = new InnerKeyContext(innerContext);
 
-			var outerParent = context.     Parent;
-			var innerParent = innerContext.Parent;
-
-			var outerKeyContext = new ExpressionContext(buildInfo.Parent, context,      outerKeyLambda);
-			var innerKeyContext = new InnerKeyContext  (buildInfo.Parent, innerContext, innerKeyLambda);
+			var outerKeySelector = SequenceHelper.PrepareBody(outerKeyLambda, context).Unwrap();
+			var innerKeySelector = SequenceHelper.PrepareBody(innerKeyLambda, innerKeyContext).Unwrap();
 
 			// Make join and where for the counter.
 			//
@@ -81,7 +77,7 @@ namespace LinqToDB.Linq.Builder
 					var arg1 = new1.Arguments[i];
 					var arg2 = new2.Arguments[i];
 
-					BuildJoin(builder, join.JoinedTable.Condition, outerKeyContext, arg1, innerKeyContext, arg2);
+					BuildJoin(builder, join.JoinedTable.Condition, context, arg1, innerKeyContext, arg2);
 				}
 			}
 			else if (outerKeySelector.NodeType == ExpressionType.MemberInit)
@@ -97,16 +93,13 @@ namespace LinqToDB.Linq.Builder
 					var arg1 = ((MemberAssignment)mi1.Bindings[i]).Expression;
 					var arg2 = ((MemberAssignment)mi2.Bindings[i]).Expression;
 
-					BuildJoin(builder, join.JoinedTable.Condition, outerKeyContext, arg1, innerKeyContext, arg2);
+					BuildJoin(builder, join.JoinedTable.Condition, context, arg1, innerKeyContext, arg2);
 				}
 			}
 			else
 			{
-				BuildJoin(builder, join.JoinedTable.Condition, outerKeyContext, outerKeySelector, innerKeyContext, innerKeySelector);
+				BuildJoin(builder, join.JoinedTable.Condition, context, outerKeySelector, innerKeyContext, innerKeySelector);
 			}
-
-			builder.ReplaceParent(outerKeyContext, outerParent);
-			builder.ReplaceParent(innerKeyContext, innerParent);
 
 			if (isGroup)
 			{
@@ -115,7 +108,7 @@ namespace LinqToDB.Linq.Builder
 				inner.Join               = join.JoinedTable;
 				inner.GetSubQueryContext = () =>
 					GetSubQueryContext(builder, methodCall, buildInfo, sql,
-						innerKeyLambda, outerKeySelector, innerKeySelector, outerKeyContext);
+						innerKeyLambda, outerKeySelector, innerKeySelector, context);
 
 				return new GroupJoinContext(
 					buildInfo.Parent, selector, context, inner, methodCall.Arguments[1], outerKeyLambda, innerKeyLambda);
@@ -244,10 +237,10 @@ namespace LinqToDB.Linq.Builder
 			subQuerySelect.Where.SearchCondition.Conditions.Add(new SqlCondition(false, predicate));
 		}
 
-		internal class InnerKeyContext : ExpressionContext
+		internal class InnerKeyContext : PassThroughContext
 		{
-			public InnerKeyContext(IBuildContext? parent, IBuildContext sequence, LambdaExpression lambda)
-				: base(parent, sequence, lambda)
+			public InnerKeyContext(IBuildContext context)
+				: base(context)
 			{
 			}
 
@@ -402,11 +395,11 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
-				if (ReferenceEquals(expression, Lambda.Parameters[1]))
+				if (expression != null && (ReferenceEquals(expression, Lambda.Parameters[1]) || SequenceHelper.IsSameContext(expression, this)))
 				{
 					if (_groupExpression == null)
 					{
-						var loadingExpression = Builder.BuildMultipleQuery(this, expression, true);
+						var loadingExpression = Builder.BuildMultipleQuery(this, Lambda.Parameters[1], true);
 
 						 _groupExpression = loadingExpression;
 						return _groupExpression;
@@ -473,7 +466,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
-				if (expression == null)
+				if (SequenceHelper.IsSameContext(expression, this))
 				{
 					if (buildInfo.CreateSubQuery)
 					{
@@ -489,9 +482,20 @@ namespace LinqToDB.Linq.Builder
 				return base.GetContext(expression, level, buildInfo);
 			}
 
+			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
+			{
+				if (GroupJoin != null && SequenceHelper.IsSameContext(expression, this))
+				{
+					expression = SequenceHelper.CorrectExpression(expression, this, GroupJoin);
+					return GroupJoin.BuildExpression(expression, level, enforceServerSide);
+				}
+
+				return base.BuildExpression(expression, level, enforceServerSide);
+			}
+
 			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
-				if (requestFlag == RequestFor.GroupJoin && expression == null)
+				if (requestFlag == RequestFor.GroupJoin && SequenceHelper.IsSameContext(expression, this))
 					return IsExpressionResult.True;
 
 				return base.IsExpression(expression, level, requestFlag);

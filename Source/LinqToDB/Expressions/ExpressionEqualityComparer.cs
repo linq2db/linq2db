@@ -5,7 +5,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -261,25 +260,16 @@ namespace LinqToDB.Expressions
 						hashCode += (hashCode * 397) ^ obj.Type.GetHashCode();
 						break;
 					}
-//                    case ExpressionType.Extension:
-//                    {
-//                        if (obj is NullConditionalExpression nullConditionalExpression)
-//                        {
-//                            hashCode += (hashCode * 397) ^ GetHashCode(nullConditionalExpression.AccessOperation);
-//                        }
-//                        else if (obj is NullConditionalEqualExpression nullConditionalEqualExpression)
-//                        {
-//                            hashCode += (hashCode * 397) ^ GetHashCode(nullConditionalEqualExpression.OuterNullProtection);
-//                            hashCode += (hashCode * 397) ^ GetHashCode(nullConditionalEqualExpression.OuterKey);
-//                            hashCode += (hashCode * 397) ^ GetHashCode(nullConditionalEqualExpression.InnerKey);
-//                        }
-//                        else
-//                        {
-//                            hashCode += (hashCode * 397) ^ obj.GetHashCode();
-//                        }
-//
-//                        break;
-//                    }
+					case ExpressionType.Extension:
+					{
+						hashCode += (hashCode * 397) ^ obj.GetHashCode();
+						break;
+					}
+					case ChangeTypeExpression.ChangeTypeType:
+					{
+						hashCode += (hashCode * 397) ^ obj.GetHashCode();
+						break;
+					}
 					default:
 						throw new NotImplementedException();
 				}
@@ -301,10 +291,6 @@ namespace LinqToDB.Expressions
 			return hashCode;
 		}
 
-		/// <summary>
-		///     This API supports the Entity Framework Core infrastructure and is not intended to be used
-		///     directly from your code. This API may change or be removed in future releases.
-		/// </summary>
 		public virtual bool Equals(Expression? x, Expression? y) => new ExpressionComparer().Compare(x, y);
 
 		private sealed class ExpressionComparer
@@ -396,8 +382,10 @@ namespace LinqToDB.Expressions
 						return CompareMemberInit((MemberInitExpression)a, (MemberInitExpression)b);
 					case ExpressionType.ListInit:
 						return CompareListInit((ListInitExpression)a, (ListInitExpression)b);
-//                    case ExpressionType.Extension:
-//                        return CompareExtension(a, b);
+					case ExpressionType.Extension:
+						return CompareExtension(a, b);
+					case ChangeTypeExpression.ChangeTypeType:
+						return a.Equals(b);
 					default:
 						throw new NotImplementedException();
 				}
@@ -589,32 +577,10 @@ namespace LinqToDB.Expressions
 			private bool CompareNewArray(NewArrayExpression a, NewArrayExpression b)
 				=> CompareExpressionList(a.Expressions, b.Expressions);
 
-//            private bool CompareExtension(Expression a, Expression b)
-//            {
-//                if (a is NullConditionalExpression nullConditionalExpressionA
-//                    && b is NullConditionalExpression nullConditionalExpressionB)
-//                {
-//                    return Compare(
-//                        nullConditionalExpressionA.AccessOperation,
-//                        nullConditionalExpressionB.AccessOperation);
-//                }
-//
-//                if (a is NullConditionalEqualExpression nullConditionalEqualExpressionA
-//                    && b is NullConditionalEqualExpression nullConditionalEqualExpressionB)
-//                {
-//                    return Compare(
-//                               nullConditionalEqualExpressionA.OuterNullProtection,
-//                               nullConditionalEqualExpressionB.OuterNullProtection)
-//                           && Compare(
-//                               nullConditionalEqualExpressionA.OuterKey,
-//                               nullConditionalEqualExpressionB.OuterKey)
-//                           && Compare(
-//                               nullConditionalEqualExpressionA.InnerKey,
-//                               nullConditionalEqualExpressionB.InnerKey);
-//                }
-//
-//                return a.Equals(b);
-//            }
+			private bool CompareExtension(Expression a, Expression b)
+			{
+				return a.Equals(b);
+			}
 
 			private bool CompareInvocation(InvocationExpression a, InvocationExpression b)
 				=> Compare(a.Expression, b.Expression)

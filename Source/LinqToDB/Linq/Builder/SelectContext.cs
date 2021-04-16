@@ -47,12 +47,12 @@ namespace LinqToDB.Linq.Builder
 
 		public SelectContext(IBuildContext? parent, ExpressionBuilder builder, LambdaExpression lambda, SelectQuery selectQuery)
 		{
-			Parent      = parent;
-			Sequence    = Array<IBuildContext>.Empty;
-			Builder     = builder;
-			Lambda      = lambda;
-			Body        = lambda.Body;
-			SelectQuery = selectQuery;
+			Parent        = parent;
+			Sequence      = Array<IBuildContext>.Empty;
+			Builder       = builder;
+			Lambda        = lambda;
+			Body          = lambda.Body;
+			SelectQuery   = selectQuery;
 
 			IsScalar = !Builder.ProcessProjection(Members, Body);
 
@@ -61,12 +61,13 @@ namespace LinqToDB.Linq.Builder
 
 		public SelectContext(IBuildContext? parent, LambdaExpression lambda, params IBuildContext[] sequences)
 		{
-			Parent      = parent;
-			Sequence    = sequences;
-			Builder     = sequences[0].Builder;
-			Lambda      = lambda;
-			Body        = lambda.Body;
-			SelectQuery = sequences[0].SelectQuery;
+			Parent   = parent;
+			Sequence = sequences;
+			Builder  = sequences[0].Builder;
+			Lambda   = lambda;
+			Body     = SequenceHelper.PrepareBody(lambda, sequences);
+
+			SelectQuery   = sequences[0].SelectQuery;
 
 			foreach (var context in Sequence)
 				context.Parent = this;
@@ -112,7 +113,7 @@ namespace LinqToDB.Linq.Builder
 #endif
 		{
 			{
-				var key = Tuple.Create(expression, level, ConvertFlags.Field);
+				var key = new ConvertKey(expression, level, ConvertFlags.Field);
 
 				if (_expressionIndex.TryGetValue(key, out var info))
 				{
@@ -131,7 +132,17 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (_rootExpression == null)
 				{
-					var expr = Builder.BuildExpression(this, Body, enforceServerSide);
+					var projection = MakeProjection(Body, out _);
+
+					var expr = Builder.BuildExpression(this, projection!, enforceServerSide);
+
+					/*
+					var expr = sequence != null
+						? sequence.BuildExpression(projection, 0, enforceServerSide)
+						: Builder.BuildExpression(this, projection!, enforceServerSide);
+						*/
+
+					// var expr       = Builder.BuildExpression(this, , enforceServerSide);
 
 					if (Builder.IsBlockDisable)
 						return expr;
@@ -142,10 +153,24 @@ namespace LinqToDB.Linq.Builder
 				return _rootExpression;
 			}
 
-			var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
+			var levelExpression = expression;
 
 			if (IsScalar)
 			{
+				var projection = MakeProjection(expression, out _);
+
+				//var expr = sequence.BuildExpression(projection, 0, enforceServerSide);
+				var expr       = Builder.BuildExpression(this, projection, enforceServerSide);
+
+				if (Builder.IsBlockDisable)
+					return expr;
+
+				_rootExpression = Builder.BuildVariable(expr);
+
+				return _rootExpression;
+
+
+				/*
 				if (Body.NodeType != ExpressionType.Parameter && level == 0)
 					if (ReferenceEquals(levelExpression, expression))
 						if (IsSubQuery() && IsExpression(null, 0, RequestFor.Expression).Result)
@@ -161,9 +186,20 @@ namespace LinqToDB.Linq.Builder
 					level,
 					(ctx, ex, l) => ctx!.BuildExpression(ex, l, enforceServerSide),
 					() => GetSequence(expression, level)!.BuildExpression(null, 0, enforceServerSide), true);
+			*/
 			}
 			else
 			{
+				var projection = MakeProjection(expression, out _);
+
+				Builder.AssociationRoot = expression;
+
+				//var expr = sequence.BuildExpression(projection, 0, enforceServerSide);
+				var resultExpr = Builder.BuildExpression(this, projection, enforceServerSide);
+
+				return resultExpr;
+
+				throw new NotImplementedException();
 				if (level == 0)
 				{
 					var sequence = GetSequence(expression, level)!;
@@ -311,6 +347,35 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
+			/*if (IsScalar)
+			{
+				if (expression == null)
+					return Builder.ConvertExpressions(this, Body, flags, null);
+
+				switch (flags)
+				{
+					case ConvertFlags.Field :
+					case ConvertFlags.Key   :
+					case ConvertFlags.All   :
+						{
+							if (Body.NodeType != ExpressionType.Parameter && level == 0)
+							{
+								var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
+
+								if (levelExpression != expression)
+									if (flags != ConvertFlags.Field && IsExpression(expression, level, RequestFor.Field).Result)
+										flags = ConvertFlags.Field;
+							}
+
+							return ProcessScalar(
+								expression,
+								level,
+								(ctx, ex, l) => ctx!.ConvertToSql(ex, l, flags),
+								() => new[] { new SqlInfo(Builder.ConvertToSql(this, expression)) }, true);
+						}
+				}
+			}
+			else*/
 			if (IsScalar)
 			{
 				if (expression == null)
@@ -322,6 +387,24 @@ namespace LinqToDB.Linq.Builder
 					case ConvertFlags.Key   :
 					case ConvertFlags.All   :
 						{
+							var projection = MakeProjection(expression, out var member);
+
+							if (projection != expression)
+							{
+								var ctx = Builder.GetContext(this, projection);
+								if (ctx != null)
+									return ctx.ConvertToSql(projection, 0, flags);
+							}
+
+							var result = new[] {new SqlInfo(member, Builder.ConvertToSql(this, projection ?? Body))};
+							/*
+							var result = projection == null
+								? Builder.ConvertExpressions(this, Body, flags, null)
+								: ConvertExpressions(projection, flags, null);
+								*/
+
+							return result;
+
 							if (Body.NodeType != ExpressionType.Parameter && level == 0)
 							{
 								var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
@@ -354,6 +437,10 @@ namespace LinqToDB.Linq.Builder
 
 						return q.ToArray();
 					}
+					else
+					{
+						return Builder.ConvertExpressions(this, Body, flags, null);
+					}
 
 					throw new NotImplementedException();
 				}
@@ -364,6 +451,14 @@ namespace LinqToDB.Linq.Builder
 					case ConvertFlags.Key   :
 					case ConvertFlags.Field :
 						{
+							var projection = MakeProjection(expression, out _);
+
+							var result = projection == null
+								? Builder.ConvertExpressions(this, Body, flags, null)
+								: ConvertExpressions(projection, flags, null);
+
+							return result;
+
 							var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
 							levelExpression = levelExpression.Unwrap();
 
@@ -472,15 +567,56 @@ namespace LinqToDB.Linq.Builder
 
 		#region ConvertToIndex
 
-		readonly Dictionary<Tuple<Expression?,int,ConvertFlags>,SqlInfo[]> _expressionIndex = new Dictionary<Tuple<Expression?,int,ConvertFlags>,SqlInfo[]>();
+		readonly Dictionary<ConvertKey,SqlInfo[]> _expressionIndex = new(ConvertKey.ExpressionFlagsComparer);
+
+		struct ConvertKey
+		{
+			public ConvertKey(Expression? expression, int level, ConvertFlags flags)
+			{
+				Expression = expression;
+				Level      = level;
+				Flags      = flags;
+			}
+
+			public Expression?  Expression { get; }
+			public int          Level      { get; }
+			public ConvertFlags Flags      { get; }
+
+			private sealed class ExpressionFlagsEqualityComparer : IEqualityComparer<ConvertKey>
+			{
+				private readonly IEqualityComparer<Expression> _expressionEqualityComparer;
+
+				public ExpressionFlagsEqualityComparer(IEqualityComparer<Expression> expressionEqualityComparer)
+				{
+					_expressionEqualityComparer = expressionEqualityComparer;
+				}
+
+				public bool Equals(ConvertKey x, ConvertKey y)
+				{
+					return x.Flags == y.Flags && x.Level == y.Level && _expressionEqualityComparer.Equals(x.Expression, y.Expression);
+				}
+
+				public int GetHashCode(ConvertKey obj)
+				{
+					unchecked
+					{
+						var hashCode = _expressionEqualityComparer.GetHashCode(obj.Expression);
+						hashCode = (hashCode * 397) ^ obj.Level;
+						hashCode = (hashCode * 397) ^ (int)obj.Flags;
+						return hashCode;
+					}
+				}
+			}
+
+			public static IEqualityComparer<ConvertKey> ExpressionFlagsComparer { get; } = new ExpressionFlagsEqualityComparer(ExpressionEqualityComparer.Instance);
+		}
 
 		public virtual SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 		{
-			var key = Tuple.Create(expression, level, flags);
+			var key = new ConvertKey(expression, level, flags);
 
-			if (!_expressionIndex.TryGetValue(key, out var info))
-			{
-				info = ConvertToIndexInternal(expression, level, flags);
+			//if (!_expressionIndex.TryGetValue(key, out var info))
+				var info = ConvertToIndexInternal(expression, level, flags);
 
 				var newInfo = info
 					.Select(i =>
@@ -494,15 +630,14 @@ namespace LinqToDB.Linq.Builder
 					})
 					.ToArray();
 
-				_expressionIndex.Add(key, newInfo);
+				//_expressionIndex.Add(key, newInfo);
 
 				return newInfo;
-			}
 
 			return info;
 		}
 
-		readonly Dictionary<Tuple<MemberInfo?,ConvertFlags>,SqlInfo[]> _memberIndex = new Dictionary<Tuple<MemberInfo?,ConvertFlags>,SqlInfo[]>();
+		readonly Dictionary<Tuple<MemberInfo?,ConvertFlags>,SqlInfo[]> _memberIndex = new();
 
 		class SqlData
 		{
@@ -514,6 +649,8 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (IsScalar)
 			{
+				/*
+				throw new NotImplementedException();
 				if (Body.NodeType == ExpressionType.Parameter)
 					for (var i = 0; i < Sequence.Length; i++)
 						if (Body == Lambda.Parameters[i])
@@ -537,17 +674,50 @@ namespace LinqToDB.Linq.Builder
 
 					return idx;
 				}
+				*/
+
+				if (expression == null || expression is ContextRefExpression refExpression && refExpression.BuildContext == this)
+				{
+
+					var projection = MakeProjection(Body, out var member);
+					var idx        = Builder.ConvertExpressions(this, projection, flags, null);
+
+					for (var i = 0; i < idx.Length; i++)
+					{
+						idx[i] = SetInfo(idx[i], member);
+					}
+
+					return idx;
+				}
 
 				switch (flags)
 				{
-					case ConvertFlags.Field :
-					case ConvertFlags.Key   :
-					case ConvertFlags.All   :
-						return ProcessScalar(
+					case ConvertFlags.Field:
+					case ConvertFlags.Key:
+					case ConvertFlags.All:
+						{
+							var projection = MakeProjection(expression!, out var member);
+
+							var key = new ConvertKey(projection, level, flags);
+							if (_expressionIndex.TryGetValue(key, out var info))
+								return info;
+
+							var idx        = Builder.ConvertExpressions(this, projection, flags, null);
+
+							for (var i = 0; i < idx.Length; i++)
+							{
+								idx[i] = SetInfo(idx[i], member);
+							}
+
+							_expressionIndex.Add(key, idx);
+
+							return idx;
+						}
+						/*return ProcessScalar(
 							expression,
 							level,
 							(ctx, ex, l) => ctx!.ConvertToIndex(ex, l, flags),
-							() => GetSequence(expression, level)!.ConvertToIndex(expression, level + 1, flags), true);
+							() => GetSequence(expression, level)!.ConvertToIndex(expression, level + 1, flags), true);*/
 				}
 			}
 			else
@@ -583,7 +753,24 @@ namespace LinqToDB.Linq.Builder
 					case ConvertFlags.Key   :
 					case ConvertFlags.Field :
 						{
-							if (level == 0)
+							var projection = MakeProjection(expression, out var member);
+
+							var key = new ConvertKey(projection, level, flags);
+							if (_expressionIndex.TryGetValue(key, out var info))
+								return info;
+
+							var idx        = Builder.ConvertExpressions(this, projection, flags, null);
+
+							for (var i = 0; i < idx.Length; i++)
+							{
+								idx[i] = SetInfo(idx[i], member);
+							}
+
+							_expressionIndex.Add(key, idx);
+
+							return idx;
+
+							/*if (level == 0)
 							{
 								var idx = Builder.ConvertExpressions(this, expression!, flags, null);
 
@@ -640,7 +827,7 @@ namespace LinqToDB.Linq.Builder
 									break;
 							}
 
-							break;
+							break;*/
 						}
 				}
 			}
@@ -723,11 +910,29 @@ namespace LinqToDB.Linq.Builder
 					case RequestFor.Expression  :
 					case RequestFor.Object      :
 					case RequestFor.GroupJoin   :
+					{
+						var projection = MakeProjection(expression, out _);
+
+						var sequence = Builder.GetContext(this, projection);
+						if (sequence == null)
+							return IsExpressionResult.False;
+
+						if (sequence == this)
+						{
+							return new IsExpressionResult(requestFlag == RequestFor.Expression);
+						}
+
+						return sequence.IsExpression(projection, 0, requestFlag);
+
+						/*
 						return ProcessScalar(
 							expression,
 							level,
-							(ctx, ex, l) => ctx == null ? IsExpressionResult.False : ctx.IsExpression(ex, l, requestFlag),
+							(ctx, ex, l) =>
+								ctx == null ? IsExpressionResult.False : ctx.IsExpression(ex, l, requestFlag),
 							() => new IsExpressionResult(requestFlag == RequestFor.Expression), false);
+					*/
+					}	
 					default                     : return IsExpressionResult.False;
 				}
 			}
@@ -750,13 +955,79 @@ namespace LinqToDB.Linq.Builder
 								return new IsExpressionResult(requestFlag == RequestFor.Object);
 							}
 
-							var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
+							var projection = MakeProjection(expression, out _);
+
+							if (projection == null)
+								break;
+
+							switch (projection.NodeType)
+							{
+								case ExpressionType.MemberAccess :
+									{
+										var ctx = Builder.GetContext(this, projection);
+										if (ctx == null)
+											return IsExpressionResult.False;
+
+										return ctx.IsExpression(projection, projection.GetLevel(Builder.MappingSchema), requestFlag);
+									}
+
+								case ExpressionType.Parameter    :
+									{
+										var sequence  = GetSequence(projection, 0);
+
+										if (sequence == null)
+										{
+											var buildInfo = new BuildInfo(Parent, expression, new SelectQuery());
+											if (!Builder.IsSequence(buildInfo))
+												break;
+
+											sequence = Builder.BuildSequence(buildInfo);
+											return sequence.IsExpression(projection, level, requestFlag);
+										}
+
+										var idx = Sequence.Length == 0 ? 0 : Array.IndexOf(Sequence, sequence);
+										if (idx < 0)
+										{
+											return IsExpressionResult.False;
+										}
+
+										return sequence.IsExpression(expression, 0, requestFlag);
+									}
+
+								case ExpressionType.New          :
+								case ExpressionType.MemberInit   : return new IsExpressionResult(requestFlag == RequestFor.Object);
+								case ExpressionType.Conditional:
+								{
+									var cond = (ConditionalExpression)projection;
+
+									var trueResult  = IsExpression(cond.IfTrue, 0, requestFlag);
+									var falseResult = IsExpression(cond.IfFalse, 0, requestFlag);
+
+									if (requestFlag == RequestFor.Expression)
+										return new IsExpressionResult(trueResult.Result && falseResult.Result);
+
+									return new IsExpressionResult(trueResult.Result || falseResult.Result);
+								}
+
+								default:
+									{
+										if (projection is ContextRefExpression refExpression)
+										{
+											return refExpression.BuildContext.IsExpression(null, 0, requestFlag);
+										}
+										return new IsExpressionResult(requestFlag == RequestFor.Expression);
+									}
+							}
+
+							break;
+
+							/*var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
 
 							switch (levelExpression.NodeType)
 							{
 								case ExpressionType.MemberAccess :
 									{
-										var member = ((MemberExpression)levelExpression).Member;
+										var member     = ((MemberExpression)levelExpression).Member;
 
 										var memberExpression = GetProjectedExpression(member, false);
 										if (memberExpression == null)
@@ -837,6 +1108,19 @@ namespace LinqToDB.Linq.Builder
 
 								case ExpressionType.New          :
 								case ExpressionType.MemberInit   : return new IsExpressionResult(requestFlag == RequestFor.Object);
+								case ExpressionType.Conditional:
+								{
+									var cond = (ConditionalExpression)levelExpression;
+
+									var trueResult  = IsExpression(cond.IfTrue, 0, requestFlag);
+									var falseResult = IsExpression(cond.IfFalse, 0, requestFlag);
+
+									if (requestFlag == RequestFor.Expression)
+										return new IsExpressionResult(trueResult.Result && falseResult.Result);
+
+									return new IsExpressionResult(trueResult.Result || falseResult.Result);
+								}
+
 								default:
 									{
 										if (levelExpression is ContextRefExpression refExpression)
@@ -849,7 +1133,7 @@ namespace LinqToDB.Linq.Builder
 									}
 							}
 
-							break;
+							break;*/
 						}
 					default: return IsExpressionResult.False;
 				}
@@ -865,8 +1149,19 @@ namespace LinqToDB.Linq.Builder
 
 		public virtual IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
 		{
-			if (expression == null)
+			if (SequenceHelper.IsSameContext(expression, this))
 				return this;
+
+			var projection = MakeProjection(expression, out _);
+
+			if (projection != expression)
+			{
+				var ctx = Builder.GetContext(this, projection);
+				if (ctx != null)
+					return ctx.GetContext(projection, 0, buildInfo);
+			}
+
+			return null;
 
 			if (IsScalar)
 			{
@@ -927,7 +1222,7 @@ namespace LinqToDB.Linq.Builder
 						}
 					default:
 						{
-							if (levelExpression is ContextRefExpression refExpression)
+							if (levelExpression is ContextRefExpression)
 							{
 								var sequence = GetSequence(expression, level);
 
@@ -1017,6 +1312,7 @@ namespace LinqToDB.Linq.Builder
 
 		T ProcessScalar<T>(Expression expression, int level, Func<IBuildContext?,Expression?,int,T> action, Func<T> defaultAction, bool throwOnError)
 		{
+			throw new NotImplementedException();
 			if (level == 0)
 			{
 				if (Body.NodeType == ExpressionType.Parameter && Lambda.Parameters.Count == 1)
@@ -1091,9 +1387,327 @@ namespace LinqToDB.Linq.Builder
 			return default!;
 		}
 
+		public static List<MemberInfo> GetMemberPath(MemberExpression? memberExpression, out Expression? root)
+		{
+			var result = new List<MemberInfo>();
+			root = null;
+			while (memberExpression != null)
+			{
+				root = memberExpression.Expression;
+				result.Add(memberExpression.Member);
+				memberExpression = memberExpression.Expression as MemberExpression;
+			}
+
+			result.Reverse();
+			return result;
+		}
+
+		public static List<Expression> GetMemberPath2(Expression? expression, out Expression? root)
+		{
+			var result = new List<Expression>();
+			root = null;
+
+			var current = expression;
+			while (current != null)
+			{
+				var prev = current;
+				switch (current.NodeType)
+				{
+					case ExpressionType.MemberAccess:
+					{
+						result.Add(current);
+						current = ((MemberExpression)current).Expression;
+						break;
+					}
+					case ExpressionType.Call:
+					{
+						var mc = (MethodCallExpression)current;
+						if (mc.IsQueryable())
+						{
+							result.Add(mc);
+							current = mc.Arguments[0];
+						}
+						break;
+					}
+				}
+
+				if (prev == current)
+				{
+					result.Add(current);
+					break;
+				}
+			}
+
+			result.Reverse();
+			return result;
+		}
+
+		public static Expression ProcessMember(Expression currentBody, int currentIndex, List<MemberInfo> members)
+		{
+			if (currentIndex >= members.Count)
+			{
+				return currentBody;
+			}
+
+			var currentMember = members[currentIndex];
+
+			{
+				switch (currentBody.NodeType)
+				{
+					case ExpressionType.New:
+					{
+						var newExpression = (NewExpression)currentBody;
+
+						if (newExpression.Members != null)
+						{
+							for (var index = 0; index < newExpression.Members.Count; index++)
+							{
+								var member = newExpression.Members[index];
+								if (currentMember == member)
+								{
+									return ProcessMember(newExpression.Arguments[index], currentIndex + 1, members);
+								}
+							}
+						}
+
+						break;
+					}
+
+					case ExpressionType.Call:
+					{
+						var mc = (MethodCallExpression)currentBody;
+
+						/*
+						if (mc.Object != null)
+						{
+							return ProcessMember(mc.Object, currentIndex + 1, members);
+						}
+
+						if (currentMember.DeclaringType?.IsAssignableFrom(mc.Type) == true)
+							return ProcessMember(mc.Arguments[0], currentIndex + 1, members);
+						*/
+
+						if (currentMember.DeclaringType?.IsAssignableFrom(mc.Type) == true)
+						{
+							var newMa = Expression.MakeMemberAccess(currentBody, currentMember);
+
+							return ProcessMember(newMa, currentIndex + 1, members);
+						}
+
+						return currentBody;
+					}
+
+					case ExpressionType.MemberInit:
+					{
+						var memberInitExpression = (MemberInitExpression)currentBody;
+						var newExpression        = memberInitExpression.NewExpression;
+
+						if (newExpression.Members != null)
+						{
+							for (var index = 0; index < newExpression.Members.Count; index++)
+							{
+								var member = newExpression.Members[index];
+								if (currentMember == member)
+								{
+									return ProcessMember(newExpression.Arguments[index], currentIndex + 1, members);
+								}
+							}
+						}
+
+						for (int index = 0; index < memberInitExpression.Bindings.Count; index++)
+						{
+							var binding = memberInitExpression.Bindings[index];
+							switch (binding.BindingType)
+							{
+								case MemberBindingType.Assignment:
+								{
+									var assignment = (MemberAssignment)binding;
+									if (assignment.Member == currentMember)
+									{
+										return ProcessMember(assignment.Expression, currentIndex + 1, members);
+									}
+									break;
+								}	
+								case MemberBindingType.MemberBinding:
+									break;
+								case MemberBindingType.ListBinding:
+									break;
+								default:
+									throw new NotImplementedException();
+							}
+						}
+
+						break;
+					}
+
+					case ExpressionType.Conditional:
+					{
+						var cond = (ConditionalExpression)currentBody;
+
+						var trueExpr  = ProcessMember(cond.IfTrue, currentIndex, members);
+						var falseExpr = ProcessMember(cond.IfFalse, currentIndex, members);
+
+						return Expression.Condition(cond.Test, trueExpr, falseExpr);
+					}
+
+					case ExpressionType.MemberAccess:
+					{
+						if (currentMember.DeclaringType?.IsAssignableFrom(currentBody.Type) != true)
+							return currentBody;
+
+						var newMa = Expression.MakeMemberAccess(currentBody, currentMember);
+
+						return ProcessMember(newMa, currentIndex + 1, members);
+					}
+
+					case ExpressionType.Extension:
+					{
+						if (currentBody is ContextRefExpression)
+						{
+							var newBody = Expression.MakeMemberAccess(currentBody, currentMember);
+							return ProcessMember(newBody, currentIndex + 1, members);
+						}
+
+						throw new NotImplementedException();
+					}
+
+				}
+			}
+			/*
+			else if (currentPath is MethodCallExpression mc && mc.IsQueryable())
+			{
+				/*var args = mc.Arguments.ToArray();
+				if (typeof(IGrouping<,>).IsSameOrParentOf(args[0].Type))
+					args[0] = S;
+				return mc.Update(mc.Object, args);#1#
+				return mc;
+			}
+			else
+			{
+				if (currentIndex == 0 && (currentPath.NodeType == ExpressionType.Call 
+				                          || currentPath.NodeType == ExpressionType.Parameter 
+				                          || currentPath is ContextRefExpression))
+					return ProcessMember(currentBody, 1, path);
+				throw new NotImplementedException();
+			}
+
+			*/
+			return Expression.Constant(DefaultValue.GetValue(currentMember.GetMemberType()), currentMember.GetMemberType());
+		}
+
+		Expression? MakeProjection(Expression? baseExpression, out MemberInfo? member)
+		{
+			member = null;
+
+			if (baseExpression == null)
+				return Body;
+
+			var result = baseExpression;
+
+			if (baseExpression is ContextRefExpression cr && cr.BuildContext == this)
+			{
+				return Body;
+			}
+
+			if (baseExpression.NodeType == ExpressionType.MemberAccess)
+			{
+				var memberPath = GetMemberPath((MemberExpression)baseExpression, out var root);
+
+				member = memberPath[memberPath.Count - 1];
+
+				/*if (memberPath.Count        > 0 && memberPath[0] is ContextRefExpression contextRef &&
+				    contextRef.BuildContext == this)
+				{
+					result   = result.Replace(memberPath[0], new ContextRefExpression(memberPath[0].Type, Sequence[0]));
+					sequence = Sequence[0];
+					return result;
+				}*/
+
+				result = ProcessMember(Body, 0, memberPath);
+			}
+
+			result = result.Transform(e =>
+			{
+				if (e.NodeType == ExpressionType.Parameter)
+				{
+					var idx = Lambda.Parameters.IndexOf((ParameterExpression)e);
+					if (idx >= 0 && idx < Sequence.Length)
+					{
+						return new ContextRefExpression(e.Type, Sequence[idx]);
+					}
+				}
+
+				return e;
+			});
+
+			return result;
+		}
+
+		/*
+		Expression MakeProjectionOld(MemberExpression memberExpression)
+		{
+			Expression ProcessMember(Expression currentBody, int currentIndex, List<MemberInfo> memberPath)
+			{
+				if (currentIndex >= memberPath.Count)
+				{
+					return currentBody;
+				}
+
+				var currentMember = memberPath[currentIndex];
+
+				switch (currentBody.NodeType)
+				{
+					case ExpressionType.New:
+					{
+						var newExpression = (NewExpression)currentBody;
+
+						for (var index = 0; index < newExpression.Members.Count; index++)
+						{
+							var member = newExpression.Members[index];
+							if (currentMember == member)
+							{
+								return ProcessMember(newExpression.Arguments[index], currentIndex + 1, memberPath);
+							}
+						}
+
+
+						break;
+					}
+
+					case ExpressionType.Conditional:
+					{
+						var cond = (ConditionalExpression)currentBody;
+
+						var trueExpr  = ProcessMember(cond.IfTrue, currentIndex, memberPath);
+						var falseExpr = ProcessMember(cond.IfFalse, currentIndex, memberPath);
+
+						return Expression.Condition(cond.Test, trueExpr, falseExpr);
+					}
+
+					case ExpressionType.MemberAccess:
+					{
+						var ma = (MemberExpression)currentBody;
+						return ma;
+					}
+
+				}
+
+				return Expression.Constant(DefaultValue.GetValue(currentMember.GetMemberType()), currentMember.GetMemberType());
+			}
+
+
+			var memberPath = GetMemberPath(memberExpression, out var root);
+
+			var result = ProcessMember(CorrectedBody, 0, memberPath);
+
+			return result;
+		}
+		*/
+
 		T ProcessMemberAccess<T>(Expression expression, MemberExpression levelExpression, int level,
 			Func<int,IBuildContext,Expression?,int,Expression,T> action)
 		{
+			throw new NotImplementedException();
 			var memberExpression = GetProjectedExpression(levelExpression.Member, true)!;
 			memberExpression = memberExpression.Unwrap();
 
@@ -1134,14 +1748,31 @@ namespace LinqToDB.Linq.Builder
 					}
 				case ExpressionType.Conditional:
 				{
-					var cond = (ConditionalExpression)memberExpression;
+					if (levelExpression != expression)
+					{
+						var cond = (ConditionalExpression)memberExpression;
 
-					var trueExpression  = GetMemberExpression(cond.IfTrue,  expression, level + 1);
-					var falseExpression = GetMemberExpression(cond.IfFalse, expression, level + 1);
+						var trueExpression  = GetMemberExpression(cond.IfTrue, expression, level  + 1);
+						var falseExpression = GetMemberExpression(cond.IfFalse, expression, level + 1);
 
-					var newCod = Expression.Condition(cond.Test, trueExpression, falseExpression);
 
-					return action(3, this, newCod, 0, memberExpression);
+						if (trueExpression.NodeType == ExpressionType.MemberAccess)
+						{
+							return ProcessMemberAccess(trueExpression, (MemberExpression)trueExpression, 1, action);
+						}
+
+						if (falseExpression.NodeType == ExpressionType.MemberAccess)
+						{
+							return ProcessMemberAccess(falseExpression, (MemberExpression)falseExpression, 1, action);
+						}
+
+						var newCod = Expression.Condition(cond.Test, trueExpression, falseExpression);
+
+						//ProcessMemberAccess<T>(newCod, trueExpression, 0, action);
+
+						return action(3, this, newCod, 0, memberExpression);
+					}
+					break;
 				}
 			}
 
@@ -1158,6 +1789,7 @@ namespace LinqToDB.Linq.Builder
 
 		Expression? GetProjectedExpression(MemberInfo memberInfo, bool throwOnError)
 		{
+			throw new NotImplementedException();
 			if (!Members.TryGetValue(memberInfo, out var memberExpression))
 			{
 				var member = Body?.Type.GetMemberEx(memberInfo);
@@ -1260,7 +1892,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (memberExpression is ConstantExpression cnt && cnt.Value == null)
 			{
-				return Expression.Constant(null, expression.Type);
+				return Expression.Constant(DefaultValue.GetValue(expression.Type), expression.Type);
 			}
 
 			if (!memberExpression.Type.IsAssignableFrom(levelExpression.Type))

@@ -8,6 +8,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using Reflection;
 	using Extensions;
+	using SqlQuery;
 
 	partial class TableBuilder : ISequenceBuilder
 	{
@@ -104,7 +105,12 @@ namespace LinqToDB.Linq.Builder
 					//
 					if (buildInfo.IsSubQuery/* && buildInfo.SelectQuery.From.Tables.Count == 0*/)
 					{
-						parentContext = builder.GetContext(buildInfo.Parent, expression);
+						parentContext = buildInfo.Parent;
+						if (expression.GetLevel(builder.MappingSchema) == 1)
+							parentContext = builder.GetContext(parentContext, expression);
+						//builder.GetContext(buildInfo.Parent, expression);
+						if (parentContext != null)
+							parentContext = parentContext.GetContext(expression, 0, new BuildInfo(buildInfo, expression, new SelectQuery()));
 						if (parentContext != null)
 							return BuildContextType.Association;
 					}
@@ -205,7 +211,16 @@ namespace LinqToDB.Linq.Builder
 							new TableContext(builder, buildInfo,
 								buildInfo.Expression.Type.GetGenericArguments()[0]));
 					}
-				case BuildContextType.Association            : return parentContext!.GetContext(buildInfo.Expression, 0, buildInfo);
+				case BuildContextType.Association            :
+				{
+					//TODO: Temporary workaround
+					if (parentContext is GroupByBuilder.GroupByContext)
+						return parentContext!.GetContext(null, 0, buildInfo);
+
+					var ctx = builder.GetContext(parentContext, buildInfo.Expression);
+
+					return ctx!.GetContext(buildInfo.Expression, 0, buildInfo);
+				}
 				case BuildContextType.TableFunctionAttribute : return new TableContext    (builder, buildInfo);
 				case BuildContextType.AsCteMethod            : return BuildCteContext     (builder, buildInfo);
 				case BuildContextType.CteConstant            : return BuildCteContextTable(builder, buildInfo);
@@ -223,6 +238,8 @@ namespace LinqToDB.Linq.Builder
 
 		public bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
+			if (buildInfo.InAggregation)
+				return false;
 			return true;
 		}
 	}

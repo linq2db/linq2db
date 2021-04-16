@@ -314,6 +314,12 @@ namespace LinqToDB.Linq.Builder
 
 						break;
 					}
+				case ExpressionType.Extension:
+					{
+						if (expr is ContextRefExpression)
+							result = true;
+						break;
+					}
 			}
 
 			_isServerSideOnlyCache.Add(expr, result);
@@ -339,6 +345,7 @@ namespace LinqToDB.Linq.Builder
 
 						return IsQueryMember(call.Object);
 					}
+				case ExpressionType.Extension    : return expr is ContextRefExpression;
 			}
 
 			return false;

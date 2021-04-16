@@ -30,6 +30,12 @@ namespace LinqToDB.Linq.Builder
 			return false;
 		}
 
+		public override bool IsAggregationContext(ExpressionBuilder builder, BuildInfo buildInfo)
+		{
+			// Select is transparent and we can treat it as an aggregation.
+			return true;
+		}
+
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var selector = (LambdaExpression)methodCall.Arguments[1].Unwrap();

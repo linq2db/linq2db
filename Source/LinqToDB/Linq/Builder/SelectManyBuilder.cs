@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Diagnostics;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
-	using Tools;
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
@@ -26,7 +24,8 @@ namespace LinqToDB.Linq.Builder
 			var collectionSelector = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 			var resultSelector     = (LambdaExpression)methodCall.Arguments[2].Unwrap();
 
-			var expr           = collectionSelector.Body.Unwrap();
+			var expr = collectionSelector.Body.Unwrap();
+
 			DefaultIfEmptyBuilder.DefaultIfEmptyContext? defaultIfEmpty = null;
 			if (expr is MethodCallExpression mc && AllJoinsBuilder.IsMatchingMethod(mc, true))
 			{
@@ -42,6 +41,8 @@ namespace LinqToDB.Linq.Builder
 
 			var context        = new SelectManyContext(buildInfo.Parent, collectionSelector, sequence);
 			context.SetAlias(collectionSelector.Parameters[0].Name);
+
+			expr = SequenceHelper.PrepareBody(collectionSelector, sequence).Unwrap();
 
 			var collectionInfo = new BuildInfo(context, expr, new SelectQuery());
 			var collection     = builder.BuildSequence(collectionInfo);
@@ -95,7 +96,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				context.Collection = new SubQueryContext(collection, sequence.SelectQuery, false);
-				return new SelectContext(buildInfo.Parent, resultSelector, sequence, context);
+				return new SelectContext(buildInfo.Parent, resultSelector, sequence, context.Collection);
 			}
 
 			if (!crossApply)
@@ -103,7 +104,7 @@ namespace LinqToDB.Linq.Builder
 				if (!leftJoin)
 				{
 					context.Collection = new SubQueryContext(collection, sequence.SelectQuery, true);
-					return new SelectContext(buildInfo.Parent, resultSelector, sequence, context);
+					return new SelectContext(buildInfo.Parent, resultSelector, sequence, context.Collection);
 				}
 				else
 				{
@@ -111,7 +112,7 @@ namespace LinqToDB.Linq.Builder
 					sequence.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
 					context.Collection = new SubQueryContext(collection, sequence.SelectQuery, false);
 
-					return new SelectContext(buildInfo.Parent, resultSelector, sequence, context);
+					return new SelectContext(buildInfo.Parent, resultSelector, sequence, context.Collection);
 				}
 			}
 
@@ -122,7 +123,7 @@ namespace LinqToDB.Linq.Builder
 //				if (collectionInfo.IsAssociationBuilt)
 //				{
 //					context.Collection = new SubQueryContext(collection, sequence.SelectQuery, false);
-//					return new SelectContext(buildInfo.Parent, resultSelector, sequence, context);
+//					return new SelectContext(buildInfo.Parent, resultSelector, sequence, context.Collection);
 //				}
 
 				if (joinType == JoinType.Auto)
@@ -170,7 +171,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				context.Collection = new SubQueryContext(table, sequence.SelectQuery, false);
-				return new SelectContext(buildInfo.Parent, resultSelector, sequence, context);
+				return new SelectContext(buildInfo.Parent, resultSelector, sequence, context.Collection);
 			}
 			else
 			{
@@ -187,7 +188,7 @@ namespace LinqToDB.Linq.Builder
 				sequence.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
 				
 				context.Collection = new SubQueryContext(collection, sequence.SelectQuery, false);
-				return new SelectContext(buildInfo.Parent, resultSelector, sequence, context);
+				return new SelectContext(buildInfo.Parent, resultSelector, sequence, context.Collection);
 			}
 		}
 
@@ -227,7 +228,8 @@ namespace LinqToDB.Linq.Builder
 
 				var root = Builder.GetRootObject(expression);
 
-				if (root == Lambda.Parameters[0])
+				//if (root == Lambda.Parameters[0])
+				if (SequenceHelper.IsSameContext(root, this))
 					return base.BuildExpression(expression, level, enforceServerSide);
 
 				return Collection!.BuildExpression(expression, level, enforceServerSide);
@@ -261,6 +263,11 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (Collection != null)
 				{
+					expression = SequenceHelper.CorrectExpression(expression, this, Collection);
+
+					return Collection.ConvertToSql(expression, level, flags);
+
+					/*
 					if (expression == null)
 						return Collection.ConvertToSql(expression, level, flags);
 
@@ -268,6 +275,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (root != Lambda.Parameters[0])
 						return Collection.ConvertToSql(expression, level, flags);
+				*/
 				}
 
 				return base.ConvertToSql(expression, level, flags);

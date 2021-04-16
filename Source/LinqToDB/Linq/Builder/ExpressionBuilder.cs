@@ -23,7 +23,7 @@ namespace LinqToDB.Linq.Builder
 
 		static readonly object _sync = new ();
 
-		static List<ISequenceBuilder> _sequenceBuilders = new List<ISequenceBuilder>()
+		static List<ISequenceBuilder> _sequenceBuilders = new()
 		{
 			new TableBuilder               (),
 			new IgnoreFiltersBuilder       (),
@@ -34,7 +34,6 @@ namespace LinqToDB.Linq.Builder
 			new OrderByBuilder             (),
 			new RemoveOrderByBuilder       (),
 			new GroupByBuilder             (),
-			new GroupByElementBuilder      (),
 			new JoinBuilder                (),
 			new AllJoinsBuilder            (),
 			new AllJoinsLinqBuilder        (),

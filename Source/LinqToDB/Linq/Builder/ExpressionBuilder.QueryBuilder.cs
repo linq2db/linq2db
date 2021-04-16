@@ -400,6 +400,24 @@ namespace LinqToDB.Linq.Builder
 
 						return new TransformInfo(mi, true);
 					}
+
+				case ExpressionType.Extension:
+				{
+					if (expr is ContextRefExpression contextRef)
+					{
+						var buildExpr = contextRef.BuildContext.BuildExpression(expr, 0, enforceServerSide);
+						if (buildExpr.Type != expr.Type)
+						{
+							buildExpr = Expression.Convert(buildExpr, expr.Type);
+						}
+
+						return new TransformInfo(buildExpr);
+					}
+
+					break;
+				}
+
+
 			}
 
 			if (enforceServerSide || EnforceServerSide(context))
@@ -859,7 +877,8 @@ namespace LinqToDB.Linq.Builder
 
 							if (root != null &&
 								root.NodeType == ExpressionType.Parameter &&
-								!parameters.Contains((ParameterExpression)root))
+								!parameters.Contains((ParameterExpression)root)
+								|| root is ContextRefExpression)
 							{
 								var res = context.IsExpression(e, 0, RequestFor.Association);
 
@@ -934,8 +953,9 @@ namespace LinqToDB.Linq.Builder
 				var root = context.Builder.GetRootObject(e);
 
 				if (root != null &&
-					root.NodeType == ExpressionType.Parameter &&
-					!parameters.Contains((ParameterExpression)root))
+				    (root.NodeType == ExpressionType.Parameter &&
+				     !parameters.Contains((ParameterExpression)root) 
+				     || root is ContextRefExpression))
 				{
 					if (_buildMultipleQueryExpressions == null)
 						_buildMultipleQueryExpressions = new HashSet<Expression>();

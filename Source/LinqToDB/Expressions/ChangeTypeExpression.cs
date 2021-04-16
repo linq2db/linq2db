@@ -24,5 +24,38 @@ namespace LinqToDB.Expressions
 		{
 			return "(" + Type + ")" + Expression;
 		}
+
+		protected bool Equals(ChangeTypeExpression other)
+		{
+			return _type.Equals(other._type) && Expression.Equals(other.Expression);
+		}
+
+		public override bool Equals(object? obj)
+		{
+			if (ReferenceEquals(null, obj))
+			{
+				return false;
+			}
+
+			if (ReferenceEquals(this, obj))
+			{
+				return true;
+			}
+
+			if (obj.GetType() != GetType())
+			{
+				return false;
+			}
+
+			return Equals((ChangeTypeExpression)obj);
+		}
+
+		public override int GetHashCode()
+		{
+			unchecked
+			{
+				return (_type.GetHashCode() * 397) ^ Expression.GetHashCode();
+			}
+		}
 	}
 }

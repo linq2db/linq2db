@@ -5,6 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 
 using LinqToDB;
@@ -28,10 +29,10 @@ using LinqToDB.ServiceModel;
 
 using NUnit.Framework;
 using NUnit.Framework.Internal;
+using TypeHelper = LinqToDB.Common.TypeHelper;
 
 namespace Tests
 {
-	using FastExpressionCompiler;
 	using Model;
 	using Tools;
 
@@ -1190,11 +1191,136 @@ namespace Tests
 			return expression;
 		}
 
+		public static Expression CheckForNull(Expression? expression, Expression trueExpression, Expression falseExpression)
+		{
+			if (expression is MemberExpression me)
+				expression = CheckForNull(me);
+
+			if (expression != null && expression.NodeType.NotIn(ExpressionType.Lambda, ExpressionType.Quote) &&
+			    (expression.Type.IsClass || expression.Type.IsInterface) &&
+			    !typeof(IQueryable<>).IsSameOrParentOf(expression.Type))
+			{
+				var test = Expression.ReferenceEqual(expression,
+					Expression.Constant(null, expression.Type));
+				return Expression.Condition(test, trueExpression, falseExpression);
+			}
+
+			return expression;
+		}
+
+		public static List<Expression> GetMemberPath(Expression? expression)
+		{
+			var result = new List<Expression>();
+
+			var current = expression;
+			while (current != null)
+			{
+				var prev = current;
+				switch (current.NodeType)
+				{
+					case ExpressionType.MemberAccess:
+					{
+						result.Add(current);
+						current = ((MemberExpression)current).Expression;
+						break;
+					}
+				}
+
+				if (prev == current)
+				{
+					result.Add(current);
+					break;
+				}
+			}
+
+			result.Reverse();
+			return result;
+		}
+
+
+		public static Expression CheckForNull(MemberExpression expr)
+		{
+			Expression? test = null;
+
+			var path = GetMemberPath(expr);
+
+			for (int i = 0; i < path.Count - 1; i++)
+			{
+				var objExpr = path[i];
+				if (objExpr != null && (objExpr.Type.IsClass || objExpr.Type.IsInterface))
+				{
+					var currentTest = Expression.ReferenceEqual(objExpr,
+						Expression.Constant(null, objExpr.Type));
+					if (test == null)
+						test = currentTest;
+					else
+					{
+						test = Expression.OrElse(test, currentTest);
+					}
+				}
+			}
+
+			if (test == null)
+				return expr;
+
+			return Expression.Condition(test,
+				Expression.Constant(DefaultValue.GetValue(expr.Type), expr.Type), expr);
+		}
+
+		static Expression ApplyNullCheck(Expression expr)
+		{
+			var newExpr = expr.Transform(e =>
+			{
+				if (e.NodeType == ExpressionType.Call)
+				{
+					var mc = (MethodCallExpression)e;
+
+					if (!mc.Method.IsStatic)
+					{
+						var checkedMethod = CheckForNull(mc.Object, Expression.Constant(DefaultValue.GetValue(mc.Method.ReturnType), mc.Method.ReturnType), mc);
+						return new TransformInfo(checkedMethod);
+					}
+				}
+				else if (e.NodeType == ExpressionType.MemberAccess)
+				{
+					var ma = (MemberExpression)e;
+
+					return new TransformInfo(CheckForNull(ma));
+				}
+
+				return new TransformInfo(e);
+			})!;
+
+			return newExpr;
+		}
+
 		public T[] AssertQuery<T>(IQueryable<T> query)
 		{
-			var expr    = query.Expression;
-			var loaded  = new Dictionary<Type, Expression>();
-			var actual  = query.ToArray();
+			var expr   = query.Expression;
+			var actual = query.ToArray();
+
+			var loaded = new Dictionary<Type, Expression>();
+
+			Expression RegisterLoaded(Type eType, Expression tableExpression)
+			{
+				if (!loaded.TryGetValue(eType, out var itemsExpression))
+				{
+					var newCall = LinqToDB.Common.TypeHelper.MakeMethodCall(Methods.Queryable.ToArray, tableExpression);
+					using (new DisableLogging())
+					{
+						var items = newCall.EvaluateExpression();
+						itemsExpression = Expression.Constant(items, eType.MakeArrayType());
+						loaded.Add(eType, itemsExpression);
+					}
+				}
+
+				var queryCall =
+					LinqToDB.Common.TypeHelper.MakeMethodCall(Methods.Enumerable.AsQueryable,
+						itemsExpression);
+
+				return queryCall;
+			}
+
 			var newExpr = expr.Transform(e =>
 			{
 				if (e.NodeType == ExpressionType.Call)
@@ -1202,7 +1328,7 @@ namespace Tests
 					var mc = (MethodCallExpression)e;
 
 					if (mc.IsSameGenericMethod(Methods.LinqToDB.AsSubQuery))
-						return mc.Arguments[0];
+						return new TransformInfo(mc.Arguments[0], false, true);
 
 					if (typeof(ITable<>).IsSameOrParentOf(mc.Type))
 					{
@@ -1210,33 +1336,34 @@ namespace Tests
 
 						if (entityType != null)
 						{
-							if (!loaded.TryGetValue(entityType, out var itemsExpression))
-							{
-								var newCall = LinqToDB.Common.TypeHelper.MakeMethodCall(Methods.Queryable.ToArray, mc);
-								using (new DisableLogging())
-								{
-									var items = newCall.EvaluateExpression();
-									itemsExpression = Expression.Constant(items, entityType.MakeArrayType());
-									loaded.Add(entityType, itemsExpression);
-								}
-							}
-							var queryCall =
-								LinqToDB.Common.TypeHelper.MakeMethodCall(Methods.Enumerable.AsQueryable,
-									itemsExpression);
-							return queryCall;
+							var itemsExpression = RegisterLoaded(entityType, mc);
+							return new TransformInfo(itemsExpression);
 						}
 					}
 
-					return mc.Update(CheckForNull(mc.Object), mc.Arguments.Select(CheckForNull));
+					if (mc.IsQueryable("InnerJoin"))
+					{
+						mc = TypeHelper.MakeMethodCall(Methods.Queryable.Where, mc.Arguments.ToArray());
+					}
+
+					return new TransformInfo(mc, false, true);
+					//return mc.Update(CheckForNull(mc.Object), mc.Arguments.Select(CheckForNull));
 				}
 				else if (e.NodeType == ExpressionType.MemberAccess)
 				{
-					var ma = (MemberExpression)e;
-					return ma.Update(CheckForNull(ma.Expression));
+					if (typeof(ITable<>).IsSameOrParentOf(e.Type))
+					{
+						var entityType = e.Type.GetGenericArguments()[0];
+						var items = RegisterLoaded(entityType, e);
+						return new TransformInfo(items);
+					}
 				}
 
-				return e;
+				return new TransformInfo(e);
 			})!;
+
+
+			newExpr = ApplyNullCheck(newExpr);
 
 			var empty = LinqToDB.Common.Tools.CreateEmptyQuery<T>();
 			T[]? expected;

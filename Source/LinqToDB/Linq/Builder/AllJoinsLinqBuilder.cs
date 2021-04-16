@@ -120,7 +120,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var root = Builder.GetRootObject(expression);
 
-					if (root.NodeType == ExpressionType.Parameter && root == Lambda.Parameters[1])
+					if (root.NodeType == ExpressionType.Parameter && root == Lambda.Parameters[1] || root is ContextRefExpression contextRef && contextRef.BuildContext == this)
 					{
 						result = base.ConvertToSql(expression, level, flags);
 

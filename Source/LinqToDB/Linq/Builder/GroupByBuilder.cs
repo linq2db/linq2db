@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
@@ -15,7 +14,6 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using SqlQuery;
 	using Reflection;
-	using Tools;
 
 	class GroupByBuilder : MethodCallBuilder
 	{
@@ -129,7 +127,8 @@ namespace LinqToDB.Linq.Builder
 			var key      = new KeyContext(buildInfo.Parent, keySelector, sequence);
 			if (groupingKind != GroupingType.GroupBySets)
 			{
-				var groupSql = builder.ConvertExpressions(key, keySelector.Body.Unwrap(), ConvertFlags.Key, null);
+				var body     = keySelector.GetBody(new ContextRefExpression(keySelector.Parameters[0].Type, sequence));
+				var groupSql = builder.ConvertExpressions(key, body.Unwrap(), ConvertFlags.Key, null);
 
 				var allowed = groupSql.Where(s => !QueryHelper.IsConstantFast(s.Sql));
 
@@ -312,8 +311,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (Configuration.Linq.GuardGrouping && !context._isGroupingGuardDisabled)
 					{
-						if (context.Element.Lambda.Parameters.Count == 1 &&
-							context.Element.Body == context.Element.Lambda.Parameters[0])
+						if (context.Element.Body is ContextRefExpression)
 						{
 							var ex = new LinqToDBException(
 								"You should explicitly specify selected fields for server-side GroupBy() call or add AsEnumerable() call before GroupBy() to perform client-side grouping.\n" +
@@ -419,12 +417,14 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
-				if (expression == null)
-					return BuildGrouping();
-
-				if (level != 0)
+				if (SequenceHelper.IsSameContext(expression, this))
 				{
-					var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
+					return BuildGrouping();
+				}
+
+				if (expression!.NodeType == ExpressionType.MemberAccess)
+				{
+					var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, 1);
 
 					if (levelExpression.NodeType == ExpressionType.MemberAccess)
 					{
@@ -432,13 +432,15 @@ namespace LinqToDB.Linq.Builder
 
 						if (ma.Member.Name == "Key" && ma.Member.DeclaringType == _groupingType)
 						{
+							var keyRef = new ContextRefExpression(levelExpression.Type, _key);
+
+							var keyExpression = expression.Replace(levelExpression, keyRef);
+
 							var isBlockDisable = Builder.IsBlockDisable;
 
 							Builder.IsBlockDisable = true;
 
-							var r = ReferenceEquals(levelExpression, expression) ?
-								_key.BuildExpression(null,       0, enforceServerSide) :
-								_key.BuildExpression(expression, level + 1, enforceServerSide);
+							var r = _key.BuildExpression(keyExpression, 0, enforceServerSide);
 
 							Builder.IsBlockDisable = isBlockDisable;
 
@@ -469,11 +471,9 @@ namespace LinqToDB.Linq.Builder
 
 								if (largs.Length == 2)
 								{
-									var p   = Element.Parent;
-									var ctx = new ExpressionContext(Parent, Element, l);
-									var sql = Builder.ConvertToSql(ctx, l.Body, true);
+									var body = SequenceHelper.PrepareBody(l, Element);
+									var sql  = Builder.ConvertToSql(this, body, true);
 
-									Builder.ReplaceParent(ctx, p);
 
 									return new SqlFunction(call.Type, call.Method.Name, true, sql);
 								}
@@ -583,7 +583,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
-				if (expression == null)
+				if (SequenceHelper.IsSameContext(expression, this))
 				{
 					if (flags == ConvertFlags.Field && !_key.IsScalar)
 						return Element.ConvertToSql(null, 0, flags);
@@ -597,59 +597,58 @@ namespace LinqToDB.Linq.Builder
 					return keys;
 				}
 
-				if (level == 0 && expression.NodeType == ExpressionType.MemberAccess)
-					level += 1;
-				if (level > 0)
+				switch (expression.NodeType)
 				{
-					switch (expression.NodeType)
+					case ExpressionType.Call:
 					{
-						case ExpressionType.Call         :
+						var e = (MethodCallExpression)expression;
+
+						if (e.IsQueryable() || e.IsAggregate(Builder.MappingSchema))
+						{
+							return new[] {new SqlInfo(ConvertEnumerable(e))};
+						}
+
+						break;
+					}
+
+					case ExpressionType.MemberAccess:
+					{
+						var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, 1);
+
+						if (levelExpression.NodeType == ExpressionType.MemberAccess)
+						{
+							var e = (MemberExpression)levelExpression;
+
+							if (e.Member.Name == "Key")
 							{
-								var e = (MethodCallExpression)expression;
+								if (_keyProperty == null)
+									_keyProperty = _groupingType.GetProperty("Key");
 
-								if (e.IsQueryable() || e.IsAggregate(Builder.MappingSchema))
+								if (e.Member == _keyProperty)
 								{
-									return new[] { new SqlInfo(ConvertEnumerable(e)) };
-								}
+									if (ReferenceEquals(levelExpression, expression))
+										return _key.ConvertToSql(null, 0, flags);
 
-								break;
+									var keyRef   = new ContextRefExpression(levelExpression.Type, _key);
+									var replaced = expression.Replace(levelExpression, keyRef);
+
+									return _key.ConvertToSql(replaced, 0, flags);
+								}
 							}
 
-						case ExpressionType.MemberAccess :
-							{
-								var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
+							expression = SequenceHelper.CorrectExpression(expression, this, _key);
 
-								if (levelExpression.NodeType == ExpressionType.MemberAccess)
-								{
-									var e = (MemberExpression)levelExpression;
+							return _key.ConvertToSql(expression, level, flags);
+						}
 
-									if (e.Member.Name == "Key")
-									{
-										if (_keyProperty == null)
-											_keyProperty = _groupingType.GetProperty("Key");
-
-										if (e.Member == _keyProperty)
-										{
-											if (ReferenceEquals(levelExpression, expression))
-												return _key.ConvertToSql(null, 0, flags);
-
-											return _key.ConvertToSql(expression, level + 1, flags);
-										}
-									}
-
-									return Sequence.ConvertToSql(expression, level, flags);
-								}
-
-								break;
-							}
+						break;
 					}
 				}
 
 				throw new LinqException("Expression '{0}' cannot be converted to SQL.", expression);
 			}
 
-			readonly Dictionary<Tuple<Expression?,int,ConvertFlags>,SqlInfo[]> _expressionIndex =
-				new Dictionary<Tuple<Expression?,int,ConvertFlags>,SqlInfo[]>();
+			readonly Dictionary<Tuple<Expression?,int,ConvertFlags>,SqlInfo[]> _expressionIndex = new();
 
 			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
@@ -673,9 +672,10 @@ namespace LinqToDB.Linq.Builder
 
 			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
-				if (level != 0)
+				/*if (expression != null)
 				{
-					var levelExpression = expression!.GetLevelExpression(Builder.MappingSchema, level);
+					//var levelExpression = expression!.GetLevelExpression(Builder.MappingSchema, level);
+					var levelExpression = expression;
 
 					if (levelExpression.NodeType == ExpressionType.MemberAccess)
 					{
@@ -688,9 +688,37 @@ namespace LinqToDB.Linq.Builder
 								_key.IsExpression(expression, level + 1, requestFlag);
 						}
 					}
+					else if (levelExpression is ContextRefExpression contextRef && contextRef.BuildContext == this)
+					{
+						return _key.IsExpression(null, 0, requestFlag);
+					}
 					else if (levelExpression.NodeType == ExpressionType.Call)
 						if (requestFlag == RequestFor.Expression)
 							return IsExpressionResult.True;
+				}*/
+
+				if (expression != null)
+				{
+					if (expression!.NodeType == ExpressionType.MemberAccess)
+					{
+						var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, 1);
+
+						if (levelExpression.NodeType == ExpressionType.MemberAccess)
+						{
+							var ma = (MemberExpression)levelExpression;
+
+							if (ma.Member.Name == "Key" && ma.Member.DeclaringType == _groupingType)
+							{
+								var keyRef = new ContextRefExpression(levelExpression.Type, _key);
+
+								var keyExpression = expression.Replace(levelExpression, keyRef);
+
+								var r = _key.IsExpression(keyExpression, 0, requestFlag);
+
+								return r;
+							}
+						}
+					}
 				}
 
 				return IsExpressionResult.False;
@@ -707,7 +735,9 @@ namespace LinqToDB.Linq.Builder
 					if (SelectQuery.GroupBy.GroupingType == GroupingType.GroupBySets)
 						SelectQuery.GroupBy.Items.Add(new SqlGroupingSet(new[] { expr }));
 					else
+					{
 						SelectQuery.GroupBy.Items.Add(expr);
+					}
 				}
 
 				return base.ConvertToParentIndex(index, this);
@@ -722,7 +752,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
-				if (expression == null && buildInfo != null)
+				if (SequenceHelper.IsSameContext(expression, this))
 				{
 					if (buildInfo.Parent is SelectManyBuilder.SelectManyContext sm)
 					{
@@ -730,7 +760,7 @@ namespace LinqToDB.Linq.Builder
 							Builder.MappingSchema,
 							Sequence.Expression!,
 							_key.Lambda.Parameters[0],
-							ExpressionHelper.PropertyOrField(sm.Lambda.Parameters[0], "Key"),
+							ExpressionHelper.PropertyOrField(sm.Body, "Key"),
 							_key.Lambda.Body);
 
 						return Builder.BuildSequence(new BuildInfo(buildInfo, expr));
@@ -772,7 +802,7 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				if (buildInfo != null && level == 0 && expression?.NodeType == ExpressionType.Parameter)
+				if (buildInfo != null && level == 0 && (expression?.NodeType == ExpressionType.Parameter || expression is ContextRefExpression contextRef && contextRef.BuildContext == this))
 				{
 					var expr = MakeSubQueryExpression(
 						Builder.MappingSchema,

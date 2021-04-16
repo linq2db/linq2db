@@ -53,12 +53,8 @@ namespace LinqToDB.Linq.Builder
 
 			while (true)
 			{
-				var sparent = sequence.Parent;
-				var order   = new ExpressionContext(buildInfo.Parent, sequence, lambda);
-				var body    = lambda.Body.Unwrap();
-				    sql     = builder.ConvertExpressions(order, body, ConvertFlags.Key, null);
-
-				builder.ReplaceParent(order, sparent);
+				var body = SequenceHelper.PrepareBody(lambda, sequence).Unwrap();
+					sql  = builder.ConvertExpressions(sequence, body, ConvertFlags.Key, null);
 
 				// Do not create subquery for ThenByExtensions
 				if (wrapped || isContinuousOrder)

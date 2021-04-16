@@ -1,4 +1,6 @@
-﻿using System.Linq.Expressions;
+﻿using System.Linq;
+using System.Linq.Expressions;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -17,6 +19,13 @@ namespace LinqToDB.Linq.Builder
 		{
 			var context = ((ContextRefExpression)buildInfo.Expression).BuildContext;
 
+			if (buildInfo.IsSubQuery)
+			{
+				var elementContext = context.GetContext(buildInfo.Expression, 0, buildInfo);
+				if (elementContext != null)
+					return elementContext;
+			}
+
 			return context;
 		}
 
@@ -27,7 +36,13 @@ namespace LinqToDB.Linq.Builder
 
 		public bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
-			return buildInfo.Expression is ContextRefExpression;
+			if (buildInfo.Expression is not ContextRefExpression contextRef)
+				return false;
+
+			if (buildInfo.InAggregation)
+				return contextRef.BuildContext is GroupByBuilder.GroupByContext;
+
+			return true;
 		}
 	}
 }

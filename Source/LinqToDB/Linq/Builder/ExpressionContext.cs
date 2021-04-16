@@ -99,6 +99,9 @@ namespace LinqToDB.Linq.Builder
 						if (expression == null)
 							return IsExpressionResult.False;
 
+						var result = Sequence.IsExpression(expression, level, requestFlag);
+						return result;
+
 						var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
 
 						if (levelExpression is ContextRefExpression contextRef)

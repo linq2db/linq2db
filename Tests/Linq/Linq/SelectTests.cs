@@ -755,7 +755,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var query1 = from p in db.Parent
-					from c in db.Child.InnerJoin(c => c.ParentID == p.ParentID)
+					from c in db.Child.Where(c => c.ParentID == p.ParentID)
 					select new
 					{
 						Info1 = p != null ? new { p.ParentID, p.Value1 } : null,
@@ -775,9 +775,20 @@ namespace Tests.Linq
 							}
 					};
 
-				var query3 = query2.Where(p => p.InfoAll.ParentID!.Value > 0 || p.InfoAll.Value1 > 0  || p.InfoAll.Value2 > 0 );
+				var query3 = query2.Where(p => p.InfoAll.ParentID!.Value > 0 || p.InfoAll.Value1 > 0  || p.InfoAll.Value2 > 0);
 
-				var _ = query3.ToArray();
+				/*
+				query3 = query3
+					.OrderBy(q => q.InfoAll.ParentID)
+					.ThenBy(q => q.InfoAll.Value1)
+					.ThenBy(q => q.InfoAll.Value2);
+
+				*/
+				var zz = query3.ToArray();
+
+				//AssertQuery(query3);
+
+				//var _ = query3.ToArray();
 			}
 		}
 

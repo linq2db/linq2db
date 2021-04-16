@@ -22,6 +22,10 @@ namespace LinqToDB.Linq.Builder
 			{
 				result += $"(T: {tc.SqlTable.SourceID})";
 			}
+			else if (context is SubQueryContext sc)
+			{
+				result += $"(SC)";
+			}
 
 			return result;
 		}

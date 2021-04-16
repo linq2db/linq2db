@@ -109,7 +109,7 @@ namespace Tests.Linq
 			{
 				var query =
 					from p in table
-					from p2 in table.Where(p2 => p2.StringProp != null).LeftJoin(p2 => p2.Id == p.Id)
+					from p2 in table.Where(p2 => p2.StringProp != null && p2.Id == p.Id).DefaultIfEmpty()
 					select new
 					{
 						Id = p.Id,
@@ -123,5 +123,36 @@ namespace Tests.Linq
 				AssertQuery(query);
 			}
 		}
+
+		[Test]
+		public void NestedProperties([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			var data = ConditionalData.Seed();
+
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(data))
+			{
+				var query =
+					from p in table
+					select new
+					{
+						Id = p.Id,
+						Sub = p == null
+							? new { Prop = new { V = "-1"} }
+							: new { Prop = p.StringProp.Contains("1") ? new
+							{
+								V = "1"
+							} : new
+							{
+								V = "2"
+							}}
+					};
+
+				query = query.Where(x => x.Sub.Prop.V == "-1");
+
+				AssertQuery(query);
+			}
+		}
+
 	}
 }

@@ -927,6 +927,8 @@ namespace LinqToDB.Expressions
 
 		public static Expression Replace(this Expression expression, Expression toReplace, Expression replacedBy)
 		{
+			if (expression.Equals(toReplace))
+				return replacedBy;
 			return Transform(expression, e => e == toReplace ? replacedBy : e);
 		}
 
@@ -960,6 +962,25 @@ namespace LinqToDB.Expressions
 				e == lambda.Parameters[0] ? exprToReplaceParameter1 :
 				e == lambda.Parameters[1] ? exprToReplaceParameter2 :
 				e == lambda.Parameters[2] ? exprToReplaceParameter3 : e);
+		}
+
+		/// <summary>
+		/// Returns the body of <paramref name="lambda"/> but replaces all parameters
+		/// with the given replace expressions.
+		/// </summary>
+		public static Expression GetBody(this LambdaExpression lambda, params Expression[] replacement)
+		{
+			return Transform(lambda.Body, e =>
+			{
+				if (e.NodeType == ExpressionType.Parameter)
+				{
+					var idx = lambda.Parameters.IndexOf((ParameterExpression)e);
+					if (idx >= 0 && idx < replacement.Length)
+						return replacement[idx];
+				}
+
+				return e;
+			});
 		}
 
 		static IEnumerable<T> Transform<T>(ICollection<T> source, Func<T,T> func)

@@ -10,12 +10,12 @@ namespace LinqToDB.Linq.Builder
 	{
 		protected SequenceContextBase(IBuildContext? parent, IBuildContext[] sequences, LambdaExpression? lambda)
 		{
-			Parent      = parent;
-			Sequences   = sequences;
-			Builder     = sequences[0].Builder;
-			Lambda      = lambda;
-			SelectQuery = sequences[0].SelectQuery;
-
+			Parent          = parent;
+			Sequences       = sequences;
+			Builder         = sequences[0].Builder;
+			Lambda          = lambda;
+			Body            = lambda == null ? null : SequenceHelper.PrepareBody(lambda, sequences);
+			SelectQuery     = sequences[0].SelectQuery;
 			Sequence.Parent = this;
 
 			Builder.Contexts.Add(this);
@@ -35,9 +35,10 @@ namespace LinqToDB.Linq.Builder
 		public IBuildContext[]   Sequences   { get; set; }
 		public ExpressionBuilder Builder     { get; set; }
 		public LambdaExpression? Lambda      { get; set; }
+		public Expression?       Body        { get; set; }
 		public SelectQuery       SelectQuery { get; set; }
 		public SqlStatement?     Statement   { get; set; }
-		public IBuildContext     Sequence => Sequences[0];
+		public IBuildContext     Sequence    => Sequences[0];
 
 		Expression? IBuildContext.Expression => Lambda;
 

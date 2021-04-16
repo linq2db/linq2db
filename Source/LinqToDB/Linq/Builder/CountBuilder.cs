@@ -15,6 +15,11 @@ namespace LinqToDB.Linq.Builder
 			return methodCall.IsQueryable(MethodNames) || methodCall.IsAsyncExtension(MethodNames);
 		}
 
+		public override bool IsAggregationContext(ExpressionBuilder builder, BuildInfo buildInfo)
+		{
+			return true;
+		}
+
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence   = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]) { CreateSubQuery = true });

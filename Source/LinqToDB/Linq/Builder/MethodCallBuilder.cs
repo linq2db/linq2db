@@ -28,8 +28,13 @@ namespace LinqToDB.Linq.Builder
 
 		public virtual bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
+			if (buildInfo.InAggregation)
+				if (!IsAggregationContext(builder, buildInfo))
+					return false;
 			return builder.IsSequence(new BuildInfo(buildInfo, ((MethodCallExpression)buildInfo.Expression).Arguments[0]));
 		}
+
+		public virtual bool IsAggregationContext(ExpressionBuilder builder, BuildInfo buildInfo) => false;
 
 		protected abstract bool                 CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo);
 		protected abstract IBuildContext        BuildMethodCall   (ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo);

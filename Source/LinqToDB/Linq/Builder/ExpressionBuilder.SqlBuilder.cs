@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data.SqlTypes;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -29,27 +30,23 @@ namespace LinqToDB.Linq.Builder
 		public IBuildContext BuildWhere(IBuildContext? parent, IBuildContext sequence, LambdaExpression condition, bool checkForSubQuery, bool enforceHaving = false)
 		{
 			var prevParent = sequence.Parent;
-			var ctx        = new ExpressionContext(parent, sequence, condition);
-			var expr       = ConvertExpression(condition.Body.Unwrap());
+			var body       = condition.GetBody(new ContextRefExpression(condition.Parameters[0].Type, sequence)).Unwrap();
+			var expr       = ConvertExpression(body.Unwrap());
 			var makeHaving = false;
 
-			if (checkForSubQuery && CheckSubQueryForWhere(ctx, expr, out makeHaving))
+			if (checkForSubQuery && CheckSubQueryForWhere(sequence, expr, out makeHaving))
 			{
-				ReplaceParent(ctx, prevParent);
-
 				sequence = new SubQueryContext(sequence);
-				prevParent = sequence.Parent;
 
-				ctx = new ExpressionContext(parent, sequence, condition);
+				body = condition.GetBody(new ContextRefExpression(condition.Parameters[0].Type, sequence)).Unwrap();
+				expr = ConvertExpression(body.Unwrap());
 			}
 
-			var conditions = enforceHaving || makeHaving && !ctx.SelectQuery.GroupBy.IsEmpty?
-				ctx.SelectQuery.Having.SearchCondition.Conditions :
-				ctx.SelectQuery.Where. SearchCondition.Conditions;
+			var conditions = enforceHaving || makeHaving && !sequence.SelectQuery.GroupBy.IsEmpty?
+				sequence.SelectQuery.Having.SearchCondition.Conditions :
+				sequence.SelectQuery.Where. SearchCondition.Conditions;
 
-			BuildSearchCondition(ctx, expr, conditions);
-
-			ReplaceParent(ctx, prevParent);
+			BuildSearchCondition(sequence, expr, conditions);
 
 			return sequence;
 		}
@@ -145,6 +142,19 @@ namespace LinqToDB.Linq.Builder
 
 							break;
 						}
+
+					case ExpressionType.Extension:
+					{
+						var ctx = GetContext(context, expr);
+
+						if (ctx != null)
+						{
+							if (ctx.IsExpression(expr, 0, RequestFor.Expression).Result)
+								makeSubQuery = true;
+						}
+
+						break;
+					}
 				}
 
 				return true;
@@ -204,7 +214,11 @@ namespace LinqToDB.Linq.Builder
 
 		public IBuildContext GetSubQuery(IBuildContext context, MethodCallExpression expr)
 		{
-			var info = new BuildInfo(context, expr, new SelectQuery { ParentSelect = context.SelectQuery });
+			var info = new BuildInfo(context, expr, new SelectQuery {ParentSelect = context.SelectQuery})
+			{
+				CreateSubQuery = true
+			};
+
 			var ctx  = BuildSequence(info);
 
 			if (ctx.SelectQuery.Select.Columns.Count == 0) 
@@ -274,6 +288,10 @@ namespace LinqToDB.Linq.Builder
 
 			if (isAggregate || call.IsQueryable())
 			{
+				var infoOnAggregation = new BuildInfo(context, call, new SelectQuery { ParentSelect = context.SelectQuery }) { InAggregation = true };
+				if (IsSequence(infoOnAggregation))
+					return false;
+
 				var info = new BuildInfo(context, call, new SelectQuery { ParentSelect = context.SelectQuery });
 
 				if (!IsSequence(info))
@@ -753,6 +771,20 @@ namespace LinqToDB.Linq.Builder
 
 						return sql;
 					}
+
+				/*case ExpressionType.Conditional:
+				{
+					var cond = (ConditionalExpression)expression;
+
+					var sql1 = ConvertExpressions(context, cond.IfTrue, queryConvertFlag, columnDescriptor);
+					var sql2 = ConvertExpressions(context, cond.IfFalse, queryConvertFlag, columnDescriptor);
+
+					var sql  = sql1.Concat(sql2)
+						.Where(s => s.Sql.ElementType != QueryElementType.SqlValue)
+						.ToArray();
+
+					return sql;
+				}*/
 			}
 
 			var ctx = GetContext(context, expression);
@@ -842,13 +874,55 @@ namespace LinqToDB.Linq.Builder
 			return null;
 		}
 
+		[DebuggerDisplay("E: {Expression}, C: {Context}")]
+		struct SqlCacheKey
+		{
+			public SqlCacheKey(Expression? expression, IBuildContext? context)
+			{
+				Expression = expression;
+				Context    = context;
+			}
+
+			public Expression?    Expression { get; }
+			public IBuildContext? Context    { get; }
+
+			private sealed class ExpressionContextEqualityComparer : IEqualityComparer<SqlCacheKey>
+			{
+				private readonly IEqualityComparer<Expression> _expressionEqualityComparer;
+
+				public ExpressionContextEqualityComparer(IEqualityComparer<Expression> expressionEqualityComparer)
+				{
+					_expressionEqualityComparer = expressionEqualityComparer;
+				}
+
+				public bool Equals(SqlCacheKey x, SqlCacheKey y)
+				{
+					return x.Context == y.Context && _expressionEqualityComparer.Equals(x.Expression, y.Expression);
+				}
+
+				public int GetHashCode(SqlCacheKey obj)
+				{
+					unchecked
+					{
+						var hashCode = _expressionEqualityComparer.GetHashCode(obj.Expression);
+						hashCode = (hashCode * 397) ^ obj.Context?.GetHashCode() ?? 0;
+						return hashCode;
+					}
+				}
+			}
+
+			public static IEqualityComparer<SqlCacheKey> ExpressionContextComparer { get; } = new ExpressionContextEqualityComparer(ExpressionEqualityComparer.Instance);
+		}
+
+		Dictionary<SqlCacheKey, ISqlExpression> _cachedSql = new(SqlCacheKey.ExpressionContextComparer);
+
 		public ISqlExpression ConvertToSql(IBuildContext? context, Expression expression, bool unwrap = false, ColumnDescriptor? columnDescriptor = null, bool isPureExpression = false)
 		{
 			if (typeof(IToSqlConverter).IsSameOrParentOf(expression.Type))
 			{
-				var sql = ConvertToSqlConvertible(expression);
-				if (sql != null)
-					return sql;
+				var sqlConvertable = ConvertToSqlConvertible(expression);
+				if (sqlConvertable != null)
+					return sqlConvertable;
 			}
 
 			if (!PreferServerSide(expression, false))
@@ -863,6 +937,21 @@ namespace LinqToDB.Linq.Builder
 			if (unwrap)
 				expression = expression.Unwrap();
 
+			var cacheKey = new SqlCacheKey(expression, null);
+			if (!_cachedSql.TryGetValue(cacheKey, out var sql))
+			{
+				sql = ConvertToSqlInternal(context, expression);
+				_cachedSql.Add(cacheKey, sql);
+			}
+			else
+			{
+
+			}
+			return sql;
+		}
+
+		ISqlExpression ConvertToSqlInternal(IBuildContext? context, Expression expression, bool unwrap = false, ColumnDescriptor? columnDescriptor = null, bool isPureExpression = false)
+		{
 			switch (expression.NodeType)
 			{
 				case ExpressionType.AndAlso            :
@@ -1050,7 +1139,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (ctx != null)
 						{
-							var sql = ctx.ConvertToSql(expression, 0, ConvertFlags.Field);
+							var sql = ctx.ConvertToSql(expression, 1, ConvertFlags.Field);
 
 							switch (sql.Length)
 							{
@@ -2186,7 +2275,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (right.NodeType == ExpressionType.Constant && ((ConstantExpression)right).Value == null)
 			{
-				if (left.NodeType == ExpressionType.MemberAccess || left.NodeType == ExpressionType.Parameter)
+				if (left.NodeType == ExpressionType.MemberAccess || left.NodeType == ExpressionType.Parameter || left is ContextRefExpression)
 				{
 					var ctx = GetContext(context, left);
 
@@ -2906,7 +2995,7 @@ namespace LinqToDB.Linq.Builder
 
 		internal void BuildSearchCondition(IBuildContext? context, Expression expression, List<SqlCondition> conditions)
 		{
-			expression = expression.Transform(RemoveNullPropagation);
+			//expression = expression.Transform(RemoveNullPropagation);
 
 			switch (expression.NodeType)
 			{
@@ -3033,6 +3122,17 @@ namespace LinqToDB.Linq.Builder
 							break;
 						}
 
+					case ExpressionType.Extension    :
+						{
+							var ctx = GetContext(context, pi);
+
+							if (ctx == null)
+								if (canBeCompiled)
+									return !CanBeCompiled(pi);
+
+							break;
+						}
+
 					case ExpressionType.Call         :
 						{
 							var e = (MethodCallExpression)pi;
@@ -3104,7 +3204,9 @@ namespace LinqToDB.Linq.Builder
 			root = root.Unwrap();
 
 			if (root is ContextRefExpression refExpression)
+			{
 				return refExpression.BuildContext;
+			}
 
 			for (; current != null; current = current.Parent)
 				if (current.IsExpression(root, 0, RequestFor.Root).Result)
