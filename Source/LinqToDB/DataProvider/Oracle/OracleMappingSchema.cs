@@ -110,22 +110,22 @@ namespace LinqToDB.DataProvider.Oracle
 			switch (dataType.Type.DataType)
 			{
 				case DataType.Date:
-					format = "TO_DATE('{0:yyyy-MM-dd}', 'YYYY-MM-DD')";
+					format = "DATE '{0:yyyy-MM-dd}'";
 					break;
 				case DataType.DateTime2:
 					switch (dataType.Type.Precision)
 					{
-						case 0: format = "TO_TIMESTAMP('{0:yyyy-MM-dd HH:mm:ss}', 'YYYY-MM-DD HH24:MI:SS')"              ; break;
-						case 1: format = "TO_TIMESTAMP('{0:yyyy-MM-dd HH:mm:ss.f}', 'YYYY-MM-DD HH24:MI:SS.FF1')"        ; break;
-						case 2: format = "TO_TIMESTAMP('{0:yyyy-MM-dd HH:mm:ss.ff}', 'YYYY-MM-DD HH24:MI:SS.FF2')"       ; break;
-						case 3: format = "TO_TIMESTAMP('{0:yyyy-MM-dd HH:mm:ss.fff}', 'YYYY-MM-DD HH24:MI:SS.FF3')"      ; break;
-						case 4: format = "TO_TIMESTAMP('{0:yyyy-MM-dd HH:mm:ss.ffff}', 'YYYY-MM-DD HH24:MI:SS.FF4')"     ; break;
-						case 5: format = "TO_TIMESTAMP('{0:yyyy-MM-dd HH:mm:ss.fffff}', 'YYYY-MM-DD HH24:MI:SS.FF5')"    ; break;
+						case 0: format = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss}'"          ; break;
+						case 1: format = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.f}'"        ; break;
+						case 2: format = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ff}'"       ; break;
+						case 3: format = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.fff}'"      ; break;
+						case 4: format = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ffff}'"     ; break;
+						case 5: format = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.fffff}'"    ; break;
 						default:
-						case 6: format = "TO_TIMESTAMP('{0:yyyy-MM-dd HH:mm:ss.ffffff}', 'YYYY-MM-DD HH24:MI:SS.FF6')"   ; break;
+						case 6: format = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ffffff}'"   ; break;
 						case 7: // .net types doesn't support more than 7 digits, so it doesn't make sense to generate 8/9
 						case 8:
-						case 9: format = "TO_TIMESTAMP('{0:yyyy-MM-dd HH:mm:ss.fffffff}', 'YYYY-MM-DD HH24:MI:SS.FF7')"  ; break;
+						case 9: format = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.fffffff}'"  ; break;
 					}
 					break;
 				case DataType.DateTimeOffset:
@@ -133,17 +133,17 @@ namespace LinqToDB.DataProvider.Oracle
 					value = value.ToUniversalTime();
 					switch (dataType.Type.Precision)
 					{
-						case 0: format = "TO_TIMESTAMP_TZ('{0:yyyy-MM-dd HH:mm:ss} 00:00', 'YYYY-MM-DD HH24:MI:SS TZH:TZM')"            ; break;
-						case 1: format = "TO_TIMESTAMP_TZ('{0:yyyy-MM-dd HH:mm:ss.f} 00:00', 'YYYY-MM-DD HH24:MI:SS.FF1 TZH:TZM')"      ; break;
-						case 2: format = "TO_TIMESTAMP_TZ('{0:yyyy-MM-dd HH:mm:ss.ff} 00:00', 'YYYY-MM-DD HH24:MI:SS.FF2 TZH:TZM')"     ; break;
-						case 3: format = "TO_TIMESTAMP_TZ('{0:yyyy-MM-dd HH:mm:ss.fff} 00:00', 'YYYY-MM-DD HH24:MI:SS.FF3 TZH:TZM')"    ; break;
-						case 4: format = "TO_TIMESTAMP_TZ('{0:yyyy-MM-dd HH:mm:ss.ffff} 00:00', 'YYYY-MM-DD HH24:MI:SS.FF4 TZH:TZM')"   ; break;
-						case 5: format = "TO_TIMESTAMP_TZ('{0:yyyy-MM-dd HH:mm:ss.fffff} 00:00', 'YYYY-MM-DD HH24:MI:SS.FF5 TZH:TZM')"  ; break;
+						case 0: format = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss} +00:00'"        ; break;
+						case 1: format = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.f} +00:00'"      ; break;
+						case 2: format = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ff} +00:00'"     ; break;
+						case 3: format = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.fff} +00:00'"    ; break;
+						case 4: format = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ffff} +00:00'"   ; break;
+						case 5: format = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.fffff} +00:00'"  ; break;
 						default:
-						case 6: format = "TO_TIMESTAMP_TZ('{0:yyyy-MM-dd HH:mm:ss.ffffff} 00:00', 'YYYY-MM-DD HH24:MI:SS.FF6 TZH:TZM')" ; break;
+						case 6: format = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ffffff} +00:00'" ; break;
 						case 7:
 						case 8:
-						case 9: format = "TO_TIMESTAMP_TZ('{0:yyyy-MM-dd HH:mm:ss.fffffff} 00:00', 'YYYY-MM-DD HH24:MI:SS.FF7 TZH:TZM')"; break;
+						case 9: format = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.fffffff} +00:00'"; break;
 					}
 					break;
 				case DataType.DateTime:
