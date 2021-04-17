@@ -3817,7 +3817,7 @@ CREATE TABLE ""TABLE_A""(
 			}
 		}
 	
-		[Table("LINQDATATYPES", IsColumnAttributeRequired = false)]
+		[Table("LinqDataTypes", IsColumnAttributeRequired = false)]
 		class LinqDataTypesBlobs
 		{
 			public int ID { get; set; }
