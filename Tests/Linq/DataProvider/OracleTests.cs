@@ -3850,7 +3850,7 @@ CREATE TABLE ""TABLE_A""(
 
 			tx.Rollback();
 
-			inserted.Should().BeSameAs(new[] { 1, 1 });
+			inserted.Should().Equal(1, 1);
 		}
 	}
 }
