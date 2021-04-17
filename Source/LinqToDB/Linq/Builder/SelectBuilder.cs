@@ -267,7 +267,7 @@ namespace LinqToDB.Linq.Builder
 							.Select((m,i) => new { m, i })
 							.ToDictionary(_ => _.m.MemberInfo.Name, _ => _.i);
 
-						foreach (var binding in expr.Bindings.Cast<MemberAssignment>().OrderBy(b => dic[b.Member.Name]))
+						foreach (var binding in expr.Bindings.Cast<MemberAssignment>().OrderBy(b => dic.TryGetValue(b.Member.Name, out var idx) ? idx : int.MaxValue))
 						{
 							var q = GetExpressions(param, Expression.MakeMemberAccess(path, binding.Member), level + 1, binding.Expression);
 							foreach (var e in q)

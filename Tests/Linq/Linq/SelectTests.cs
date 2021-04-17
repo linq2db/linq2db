@@ -903,6 +903,29 @@ namespace Tests.Linq
 			}
 		}
 
+		public class ClassWithInternal
+		{
+			public int? Int { get; set; }
+			internal string? InternalStr { get; set; }
+		}
+
+
+		[Test]
+		public void InternalFieldProjection([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = db.Types.Select(t => new ClassWithInternal
+				{
+					Int = t.ID,
+					InternalStr = t.StringValue
+				});
+
+				var result = query.Where(x => x.InternalStr != "").ToArray();
+				Assert.That(result[0].InternalStr, Is.EqualTo(Types.First().StringValue));
+			}
+		}
+
 		class LocalClass
 		{
 		}
