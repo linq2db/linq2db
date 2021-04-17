@@ -1906,5 +1906,127 @@ namespace Tests.Linq
 				Assert.False(sql.Contains("IS NOT NULL"), sql);
 			}
 		}
+
+		#region Issue 2667
+		[Table("LinkedContracts", IsColumnAttributeRequired = false)]
+		public class LinkedContractsRaw
+		{
+			public int Id { get; set; }
+			public int FK { get; set; }
+
+			public bool? Bit01 { get; set; }
+			public bool? Bit02 { get; set; }
+			public bool? Bit03 { get; set; }
+			public bool? Bit04 { get; set; }
+			public bool? Bit05 { get; set; }
+			public bool? Bit06 { get; set; }
+			public bool? Bit07 { get; set; }
+			public bool? Bit08 { get; set; }
+			public bool? Bit09 { get; set; }
+			public bool? Bit10 { get; set; }
+			public bool? Bit11 { get; set; }
+			public bool? Bit12 { get; set; }
+			public bool? Bit13 { get; set; }
+			public bool? Bit14 { get; set; }
+			public bool? Bit15 { get; set; }
+			public bool? Bit16 { get; set; }
+			public bool? Bit17 { get; set; }
+			public bool? Bit18 { get; set; }
+			public bool? Bit19 { get; set; }
+			public bool? Bit20 { get; set; }
+			public bool? Bit21 { get; set; }
+			public bool? Bit22 { get; set; }
+			public bool? Bit23 { get; set; }
+			public bool? Bit24 { get; set; }
+			public bool? Bit25 { get; set; }
+
+			public static readonly LinkedContractsRaw[] Data = new []
+			{
+				new LinkedContractsRaw() { Id = 11, FK = 1 },
+				new LinkedContractsRaw() { Id = 22, FK = 2 }
+			};
+		}
+
+		[Table("LinkedContracts", IsColumnAttributeRequired = false)]
+		public class LinkedContracts
+		{
+			public int Id { get; set; }
+			public int FK { get; set; }
+
+			public bool Bit01 { get; set; }
+			public bool Bit02 { get; set; }
+			public bool Bit03 { get; set; }
+			public bool Bit04 { get; set; }
+			public bool Bit05 { get; set; }
+			public bool Bit06 { get; set; }
+			public bool Bit07 { get; set; }
+			public bool Bit08 { get; set; }
+			public bool Bit09 { get; set; }
+			public bool Bit10 { get; set; }
+			public bool Bit11 { get; set; }
+			public bool Bit12 { get; set; }
+			public bool Bit13 { get; set; }
+			public bool Bit14 { get; set; }
+			public bool Bit15 { get; set; }
+			public bool Bit16 { get; set; }
+			public bool Bit17 { get; set; }
+			public bool Bit18 { get; set; }
+			public bool Bit19 { get; set; }
+			public bool Bit20 { get; set; }
+			public bool Bit21 { get; set; }
+			public bool Bit22 { get; set; }
+			public bool Bit23 { get; set; }
+			public bool Bit24 { get; set; }
+			public bool Bit25 { get; set; }
+
+			[Association(ThisKey = nameof(FK), OtherKey = nameof(Reference.Id))]
+			public Reference? Ref { get; set; }
+		}
+
+		[Table("Reference", IsColumnAttributeRequired = false)]
+		public class Reference
+		{
+			public int Id { get; set; }
+
+			public static readonly Reference[] Data = new []
+			{
+				new Reference() { Id = 1 },
+				new Reference() { Id = 2 }
+			};
+		}
+
+		[Test]
+		public void Issue2667Test1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var linkedContracts = db.CreateLocalTable(LinkedContractsRaw.Data))
+			using (db.CreateLocalTable(Reference.Data))
+			{
+				var linkedContract = db.GetTable<LinkedContracts>()
+					.LoadWith(linked => linked.Ref)
+					.Where(linked => linked.FK == 1)
+					.ToList();
+
+				Assert.IsNotNull(linkedContract[0].Ref);
+			}
+		}
+
+		[Test]
+		public void Issue2667Test2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var linkedContracts = db.CreateLocalTable(LinkedContractsRaw.Data))
+			using (db.CreateLocalTable(Reference.Data))
+			{
+				var result = db.GetTable<LinkedContracts>()
+					.Where(linked => linked.FK == 1)
+					.Select(verträge => verträge.Ref)
+					.ToList();
+
+				Assert.IsNotEmpty(result);
+			}
+		}
+		#endregion
+
 	}
 }
