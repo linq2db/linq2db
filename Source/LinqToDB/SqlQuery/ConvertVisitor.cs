@@ -437,6 +437,18 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
+					case QueryElementType.IsDistinctPredicate:
+						{
+							var p  = (SqlPredicate.IsDistinct)element;
+							var e1 = (ISqlExpression?)ConvertInternal(p.Expr1) ?? p.Expr1;
+							var e2 = (ISqlExpression?)ConvertInternal(p.Expr2) ?? p.Expr2;
+
+							if (!ReferenceEquals(p.Expr1, e1) || !ReferenceEquals(p.Expr2, e2))
+								newElement = new SqlPredicate.IsDistinct(e1, p.IsNot, e2);
+
+							break;
+						}
+
 					case QueryElementType.InSubQueryPredicate:
 					{
 						var p = (SqlPredicate.InSubQuery)element;

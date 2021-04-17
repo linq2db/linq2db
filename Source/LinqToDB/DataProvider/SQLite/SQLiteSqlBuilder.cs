@@ -177,5 +177,12 @@ namespace LinqToDB.DataProvider.SQLite
 			if (table.TableOptions.HasCreateIfNotExists())
 				StringBuilder.Append("IF NOT EXISTS ");
 		}
+
+		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr)
+		{
+			BuildExpression(GetPrecedence(expr), expr.Expr1);
+			StringBuilder.Append(expr.IsNot ? " IS NOT " : " IS ");
+			BuildExpression(GetPrecedence(expr), expr.Expr2);
+		}
 	}
 }

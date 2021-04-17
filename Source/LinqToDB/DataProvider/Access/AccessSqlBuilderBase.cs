@@ -148,6 +148,8 @@ namespace LinqToDB.DataProvider.Access
 			base.BuildBinaryExpression(expr);
 		}
 
+		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(expr);
+
 		protected override void BuildFunction(SqlFunction func)
 		{
 			switch (func.Name)

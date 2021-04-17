@@ -242,5 +242,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 			StringBuilder.Append(command);
 		}
+
+		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(expr);
 	}
 }
