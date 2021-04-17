@@ -3824,7 +3824,7 @@ CREATE TABLE ""TABLE_A""(
 			// Implicit OracleBlob support, no attribute
 			public OracleBlob? BinaryValue { get; set; }
 			// Explicit attribute with DataType = Blob
-			[Column("BINARYVALUE", DataType = DataType.Blob)]
+			[Column("BinaryValue", DataType = DataType.Blob)]
 			public OracleBlob? Blob { get; set; }
 		}
 		
