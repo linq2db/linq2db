@@ -1613,10 +1613,10 @@ namespace Tests.xUpdate
 			{
 				db.Person.Insert(() => new Person
 				{
-					FirstName = "InsertDefault",
+					FirstName  = "InsertDefault",
 					MiddleName = Sql.Default<string>(),
-					LastName = "InsertDefault",
-					Gender = Gender.Male,
+					LastName   = "InsertDefault",
+					Gender     = Gender.Male,
 				});
 			}
 			finally
