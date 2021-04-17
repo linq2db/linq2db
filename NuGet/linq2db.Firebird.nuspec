@@ -12,8 +12,22 @@
 		</summary>
 		<tags>linq linq2db Firebird LinqToDB ORM database DB SQL</tags>
 		<dependencies>
-			<dependency id="linq2db"                         version="3.0.0" />
-			<dependency id="FirebirdSql.Data.FirebirdClient" version="8.0.1" />
+			<group targetFramework=".NETFramework4.5">
+				<dependency id="linq2db" version="3.0.0"                          />
+				<dependency id="FirebirdSql.Data.FirebirdClient" version="5.12.1" />
+			</group>
+			<group targetFramework=".NETFramework4.5.2">
+				<dependency id="linq2db" version="3.0.0"                          />
+				<dependency id="FirebirdSql.Data.FirebirdClient" version="7.10.1" />
+			</group>
+			<group targetFramework=".NETFramework4.8">
+				<dependency id="linq2db" version="3.0.0"                          />
+				<dependency id="FirebirdSql.Data.FirebirdClient" version="8.0.1"  />
+			</group>
+			<group targetFramework=".NETStandard2.0">
+				<dependency id="linq2db" version="3.0.0"                          />
+				<dependency id="FirebirdSql.Data.FirebirdClient" version="8.0.1"  />
+			</group>
 		</dependencies>
 		<contentFiles>
 			<files include="**\*" buildAction="None" />
