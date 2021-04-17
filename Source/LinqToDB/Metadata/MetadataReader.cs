@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 
 namespace LinqToDB.Metadata
 {
@@ -32,7 +33,7 @@ namespace LinqToDB.Metadata
 			// creation of new list is cheaper than lock on each method call
 			var newReaders = new List<IMetadataReader>(_readers.Count + 1) { reader };
 			newReaders.AddRange(_readers);
-			_readers = newReaders;
+			Volatile.Write(ref _readers, newReaders);
 		}
 
 		public T[] GetAttributes<T>(Type type, bool inherit)
