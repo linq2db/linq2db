@@ -3845,7 +3845,7 @@ CREATE TABLE ""TABLE_A""(
 			var inserted = db
 				.GetTable<LinqDataTypesBlobs>()
 				.Where(x => x.ID.In(-10, -20))
-				.Select(x => Sql.Expr<int>("LENGTH(BINARYVALUE)"))
+				.Select(x => Sql.Expr<int>("LENGTH(\"BinaryValue\")"))
 				.ToList();
 
 			tx.Rollback();
