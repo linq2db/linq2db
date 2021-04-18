@@ -181,7 +181,7 @@ namespace LinqToDB.DataProvider.SQLite
 		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr)
 		{
 			BuildExpression(GetPrecedence(expr), expr.Expr1);
-			StringBuilder.Append(expr.IsNot ? " IS NOT " : " IS ");
+			StringBuilder.Append(expr.IsNot ? " IS " : " IS NOT ");
 			BuildExpression(GetPrecedence(expr), expr.Expr2);
 		}
 	}

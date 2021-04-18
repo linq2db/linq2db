@@ -435,7 +435,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr)
 		{
-			if (expr.IsNot)
+			if (!expr.IsNot)
 				StringBuilder.Append("NOT ");
 			BuildExpression(GetPrecedence(expr), expr.Expr1);
 			StringBuilder.Append(" <=> ");
