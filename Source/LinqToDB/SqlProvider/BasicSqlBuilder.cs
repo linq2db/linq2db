@@ -2676,6 +2676,12 @@ namespace LinqToDB.SqlProvider
 				if (type.Type.DataType == DataType.Undefined)
 					type = MappingSchema.GetDataType(type.Type.SystemType);
 
+				if (!string.IsNullOrEmpty(type.Type.DbType))
+				{
+					StringBuilder.Append(type.Type.DbType);
+					return;
+				}
+
 				if (type.Type.DataType == DataType.Undefined)
 					// give some hint to user that it is expected situation and he need to fix something on his side
 					throw new LinqToDBException("Database type cannot be determined automatically and must be specified explicitly");

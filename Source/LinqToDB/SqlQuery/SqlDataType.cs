@@ -7,6 +7,7 @@ using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
+	using System.Numerics;
 	using Common;
 	using LinqToDB.Extensions;
 	using LinqToDB.Mapping;
@@ -44,6 +45,16 @@ namespace LinqToDB.SqlQuery
 			Type = GetDataType(dataType).Type
 				.WithDataType(dataType)
 				.WithSystemType(type);
+		}
+
+		public SqlDataType(DataType dataType, Type type, string dbType)
+		{
+			if (type == null) throw new ArgumentNullException(nameof(type));
+
+			Type = GetDataType(dataType).Type
+				.WithDataType(dataType)
+				.WithSystemType(type)
+				.WithDbType(dbType);
 		}
 
 		public SqlDataType(DataType dataType, Type type, int length)
@@ -293,6 +304,9 @@ namespace LinqToDB.SqlQuery
 				DataType.Json           => DbJson,
 				DataType.BinaryJson     => DbBinaryJson,
 				DataType.SByte          => DbSByte,
+				DataType.Int128         => DbInt128,
+				DataType.DecFloat       => DbDecFloat,
+				DataType.TimeTZ         => DbTimeTZ,
 				_                       => throw new InvalidOperationException($"Unexpected type: {type}"),
 			};
 		}
@@ -326,6 +340,7 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
+		public static readonly SqlDataType DbInt128         = new SqlDataType(DataType.Int128,         typeof(BigInteger),    (int?)null,     (int?)null, null, null);
 		public static readonly SqlDataType DbInt64          = new SqlDataType(DataType.Int64,          typeof(long),          (int?)null,     (int?)null, null, null);
 		public static readonly SqlDataType DbInt32          = new SqlDataType(DataType.Int32,          typeof(int),           (int?)null,     (int?)null, null, null);
 		public static readonly SqlDataType DbInt16          = new SqlDataType(DataType.Int16,          typeof(short),         (int?)null,     (int?)null, null, null);
@@ -409,6 +424,9 @@ namespace LinqToDB.SqlQuery
 		public static readonly SqlDataType SqlChars         = new SqlDataType(DataType.Text,           typeof(SqlChars),    GetMaxLength,           null, null, null);
 		public static readonly SqlDataType SqlXml           = new SqlDataType(DataType.Xml,            typeof(SqlXml),        (int?)null,     (int?)null, null, null);
 
+		// types without default .net type mapping
+		public static readonly SqlDataType DbDecFloat       = new SqlDataType(DataType.DecFloat,       typeof(object),        (int?)null,     (int?)null, null, null);
+		public static readonly SqlDataType DbTimeTZ         = new SqlDataType(DataType.TimeTZ,         typeof(object),        (int?)null,     (int?)null, null, null);
 		#endregion
 
 		#region Overrides

@@ -37,6 +37,7 @@
 		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"                   target="tools"                                                                                              />
 		<file src="..\Tests\Tests.T4\bin\Azure\net472\Humanizer.dll"                   target="tools"                                                                                              />
 		<file src="..\Tests\Linq\bin\Azure\net472\FirebirdSql.Data.FirebirdClient.dll" target="tools"                                                                                              />
+		<file src="..\Tests\Linq\bin\Azure\net472\Microsoft.Bcl.AsyncInterfaces.dll"   target="tools"                                                                                              />
 
 		<file src="..\NuGet\Firebird\linq2db.Firebird.props"                           target="build"                                                                                              />
 

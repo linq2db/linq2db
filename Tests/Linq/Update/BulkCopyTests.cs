@@ -224,7 +224,7 @@ namespace Tests.xUpdate
 
 		private async Task<bool> ExecuteAsync(DataConnection db, string context, Func<Task> perform, bool? keepIdentity, BulkCopyType copyType)
 		{
-			if ((context == ProviderName.Firebird || context == TestProvName.Firebird3)
+			if (context.Contains("Firebird")
 				&& keepIdentity == true
 				&& (copyType    == BulkCopyType.Default
 					|| copyType == BulkCopyType.MultipleRows

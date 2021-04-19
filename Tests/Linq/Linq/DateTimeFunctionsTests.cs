@@ -101,7 +101,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void CurrentTimestampUtc(
-			[DataSources(ProviderName.Access, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SqlCe,
+			[DataSources(ProviderName.Access, TestProvName.AllFirebird, ProviderName.SqlCe,
 				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
 			string context)
 		{
@@ -141,7 +141,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void CurrentTimestampUtcClientSideParameter(
-			[IncludeDataSources(true, TestProvName.AllAccess, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SqlCe)]
+			[IncludeDataSources(true, TestProvName.AllAccess, TestProvName.AllFirebird, ProviderName.SqlCe)]
 			string context)
 		{
 			using (new DisableBaseline("Server-side date generation test"))

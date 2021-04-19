@@ -1056,6 +1056,7 @@ namespace LinqToDB
 		}
 
 		[Sql.Property(             "CURRENT_TIMESTAMP", ServerSideOnly = true, CanBeNull = false)]
+		[Sql.Property(PN.Firebird, "LOCALTIMESTAMP",    ServerSideOnly = true, CanBeNull = false)]
 		[Sql.Property(PN.Informix, "CURRENT",           ServerSideOnly = true, CanBeNull = false)]
 		[Sql.Property(PN.Access,   "Now",               ServerSideOnly = true, CanBeNull = false)]
 		[Sql.Function(PN.SqlCe,    "GetDate",           ServerSideOnly = true, CanBeNull = false)]

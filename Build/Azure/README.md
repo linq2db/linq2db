@@ -124,7 +124,7 @@ Legend:
 |Firebird 2.1<br>[FirebirdSql.Data.FirebirdClient](https://www.nuget.org/packages/FirebirdSql.Data.FirebirdClient/) 7.10.1 (netfx) / 8.0.1 (core)|:x:|:x:|:x:|:x:|
 |Firebird 2.5<br>[FirebirdSql.Data.FirebirdClient](https://www.nuget.org/packages/FirebirdSql.Data.FirebirdClient/) 7.10.1 (netfx) / 8.0.1 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |Firebird 3.0<br>[FirebirdSql.Data.FirebirdClient](https://www.nuget.org/packages/FirebirdSql.Data.FirebirdClient/) 7.10.1 (netfx) / 8.0.1 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
-|Firebird 4.0<br>[FirebirdSql.Data.FirebirdClient](https://www.nuget.org/packages/FirebirdSql.Data.FirebirdClient/) 7.10.1 (netfx) / 8.0.1 (core)|:x:|:x:|:x:|:x:|
+|Firebird 4.0 (RC1)<br>[FirebirdSql.Data.FirebirdClient](https://www.nuget.org/packages/FirebirdSql.Data.FirebirdClient/) 7.10.1 (netfx) / 8.0.1 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 
 ###### Notes:
 1. `TestNoopProvider` is a fake test provider to perform tests without database dependencies
@@ -144,6 +144,7 @@ Legend:
 |`ProviderName.DB2zOS`|not used||
 |`ProviderName.Firebird`|Firebird 2.5|Should be used for latest version of FB and this one replaced with `Firebird25`|
 |`TestProvName.Firebird3`|Firebird 3.0||
+|`TestProvName.Firebird4`|Firebird 4.0 (RC1)||
 |`ProviderName.Informix`|Informix 12 (IDS or SQLI using IBM.Data.Informix)| TODO: move to v14|
 |`ProviderName.InformixDB2`|Informix 12 (IDS using IBM.Data.DB2)| TODO: move to v14|
 |`TestProvName.SqlAzure`|Azure Sql||
