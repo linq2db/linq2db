@@ -1604,7 +1604,9 @@ namespace LinqToDB.Linq
 
 		#region Sql specific
 
+		// TODO: why chars ignored for SQL?
 		[CLSCompliant(false)]
+		[Sql.Expression(ProviderName.Firebird, "TRIM(TRAILING FROM {0})")]
 		[Sql.Function("RTrim", 0)]
 		public static string? TrimRight(string? str, params char[] trimChars)
 		{

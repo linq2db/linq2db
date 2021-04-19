@@ -20,7 +20,7 @@
 				<dependency id="linq2db" version="3.0.0"                          />
 				<dependency id="FirebirdSql.Data.FirebirdClient" version="7.10.1" />
 			</group>
-			<group targetFramework=".NETFramework4.8">
+			<group targetFramework=".NETFramework4.7.2">
 				<dependency id="linq2db" version="3.0.0"                          />
 				<dependency id="FirebirdSql.Data.FirebirdClient" version="8.0.1"  />
 			</group>

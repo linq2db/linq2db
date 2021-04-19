@@ -37,7 +37,8 @@
 		<PackageVersion Include="System.Data.Odbc" Version="5.0.0" />
 		<PackageVersion Include="System.Data.OleDb" Version="5.0.0" />
 		<PackageVersion Include="Oracle.ManagedDataAccess" Version="19.11.0" />
-		
+		<PackageVersion Include="FirebirdSql.Data.FirebirdClient" Version="8.0.1" />
+
 		<PackageVersion Include="IBM.Data.DB.Provider" Version="11.5.4000.4861" />
 
 		<!--test infrastructure-->
@@ -62,7 +63,6 @@
 		<!--main version-->
 		<PackageVersion Include="Microsoft.Data.SQLite" Version="5.0.5" />
 		<PackageVersion Include="Npgsql" Version="5.0.4" />
-		<PackageVersion Include="FirebirdSql.Data.FirebirdClient" Version="8.0.1" />
 	</ItemGroup>
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net472' ">
 		<!--specify here or it will conflict with Reference-include in netcore targets-->
@@ -70,7 +70,6 @@
 		<!--downgrade-->
 		<PackageVersion Include="Microsoft.Data.SQLite" Version="1.1.1" />
 		<PackageVersion Include="Npgsql" Version="4.1.9" />
-	<PackageVersion Include="FirebirdSql.Data.FirebirdClient" Version="7.10.1" />
 	</ItemGroup>
 	
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net45' ">

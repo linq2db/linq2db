@@ -917,6 +917,7 @@ namespace LinqToDB
 			return str?.TrimStart();
 		}
 
+		[Sql.Expression(PN.Firebird, "TRIM(TRAILING FROM {0})")]
 		[Sql.Function("RTrim")]
 		public static string? TrimRight(string? str)
 		{
