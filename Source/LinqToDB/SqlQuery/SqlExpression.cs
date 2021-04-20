@@ -186,7 +186,15 @@ namespace LinqToDB.SqlQuery
 			if (Parameters.Length == 0)
 				return sb.Append(Expr);
 
-			return sb.AppendFormat(Expr, ss.ToArray());
+			if (Expr.Contains("{"))
+				sb.AppendFormat(Expr, ss.ToArray());
+			else
+				sb.Append(Expr)
+					.Append('{')
+					.Append(string.Join(", ", ss))
+					.Append('}');
+
+			return sb;
 		}
 
 		#endregion

@@ -2641,11 +2641,6 @@ namespace LinqToDB.SqlProvider
 
 				AppendIndent().Append("END");
 			}
-			else if (func.IsAggregate && func.Name.Equals("Count", StringComparison.InvariantCultureIgnoreCase) 
-			                          && func.Parameters.Length == 1 && func.Parameters[0] is SqlField field && field.Table?.All == field)
-			{
-				StringBuilder.Append(func.Name).Append("(*)");
-			}
 			else
 			{
 				BuildFunction(func.Name, func.Parameters);
