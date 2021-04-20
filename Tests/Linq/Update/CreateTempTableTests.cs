@@ -156,8 +156,10 @@ namespace Tests.xUpdate
 			}
 		}
 
+
+		// TODO: Firebird disabled temporary due to bug in provider
 		[Test]
-		public async Task CreateTableAsyncCanceled([DataSources(false)] string context)
+		public async Task CreateTableAsyncCanceled([DataSources(false, TestProvName.AllFirebird)] string context)
 		{
 			var cts = new CancellationTokenSource();
 			cts.Cancel();
@@ -197,8 +199,9 @@ namespace Tests.xUpdate
 			}
 		}
 
+		// TODO: Firebird disabled temporary due to bug in provider
 		[Test]
-		public async Task CreateTableAsyncCanceled2([DataSources(false)] string context)
+		public async Task CreateTableAsyncCanceled2([DataSources(false, TestProvName.AllFirebird)] string context)
 		{
 			var cts = new CancellationTokenSource();
 			using (var db = GetDataContext(context))

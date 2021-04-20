@@ -226,7 +226,7 @@ namespace Tests.Linq
 
 		// TODO: Firebird disabled temporary due to bug in provider
 		[Test]
-		public void CancelableAsyncEnumerableTest([DataSources(TestProvName.Firebird4)] string context)
+		public void CancelableAsyncEnumerableTest([DataSources(TestProvName.AllFirebird)] string context)
 		{
 			using var cts = new CancellationTokenSource();
 			var cancellationToken = cts.Token;
