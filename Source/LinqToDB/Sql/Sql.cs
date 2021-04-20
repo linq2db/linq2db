@@ -911,6 +911,7 @@ namespace LinqToDB
 			return str?.Trim();
 		}
 
+		[Sql.Expression(ProviderName.Firebird, "TRIM(LEADING FROM {0})")]
 		[Sql.Function("LTrim")]
 		public static string? TrimLeft(string? str)
 		{
@@ -931,6 +932,7 @@ namespace LinqToDB
 			return str == null || ch == null ? null : str.Trim(ch.Value);
 		}
 
+		[Sql.Expression(ProviderName.Firebird, "TRIM(LEADING {1} FROM {0})")]
 		[Sql.Expression(PN.DB2, "Strip({0}, L, {1})")]
 		[Sql.Function  (        "LTrim")]
 		public static string? TrimLeft(string? str, char? ch)
@@ -938,6 +940,7 @@ namespace LinqToDB
 			return str == null || ch == null ? null : str.TrimStart(ch.Value);
 		}
 
+		[Sql.Expression(ProviderName.Firebird, "TRIM(TRAILING {1} FROM {0})")]
 		[Sql.Expression(PN.DB2, "Strip({0}, T, {1})")]
 		[Sql.Function  (        "RTrim")]
 		public static string? TrimRight(string? str, char? ch)

@@ -1613,7 +1613,9 @@ namespace LinqToDB.Linq
 			return str?.TrimEnd(trimChars);
 		}
 
+		// TODO: why chars ignored for SQL?
 		[CLSCompliant(false)]
+		[Sql.Expression(ProviderName.Firebird, "TRIM(LEADING FROM {0})")]
 		[Sql.Function("LTrim", 0)]
 		public static string? TrimLeft(string? str, params char[] trimChars)
 		{
