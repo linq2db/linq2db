@@ -325,7 +325,7 @@ namespace LinqToDB
 				}
 			}
 
-			public static ISqlExpression[] PrepareArguments(string expressionStr, int[]? argIndices, List<Expression?> knownExpressions, List<ISqlExpression>? genericTypes, Func<Expression, ColumnDescriptor?, ISqlExpression> converter)
+			public static ISqlExpression[] PrepareArguments(string expressionStr, int[]? argIndices, bool addDefault, List<Expression?> knownExpressions, List<ISqlExpression>? genericTypes, Func<Expression, ColumnDescriptor?, ISqlExpression> converter)
 			{
 				var parms = new List<ISqlExpression?>();
 
@@ -420,9 +420,12 @@ namespace LinqToDB
 					}
 					else
 					{
-						parms.AddRange(knownExpressions.Select(e => e == null ? null : converter(e, null)));
-						if (genericTypes != null)
-							parms.AddRange(genericTypes);
+						if (addDefault)
+						{
+							parms.AddRange(knownExpressions.Select(e => e == null ? null : converter(e, null)));
+							if (genericTypes != null)
+								parms.AddRange(genericTypes);
+						}
 					}
 				}
 
@@ -438,7 +441,7 @@ namespace LinqToDB
 				if (string.IsNullOrEmpty(expressionStr))
 					throw new LinqToDBException($"Cannot retrieve SQL Expression body from expression '{expression}'.");
 
-				var parameters = PrepareArguments(expressionStr!, ArgIndices, knownExpressions, genericTypes, converter);
+				var parameters = PrepareArguments(expressionStr!, ArgIndices, false, knownExpressions, genericTypes, converter);
 
 				return new SqlExpression(expression.Type, expressionStr!, Precedence,
 					(IsAggregate      ? SqlFlags.IsAggregate      : SqlFlags.None) | 
