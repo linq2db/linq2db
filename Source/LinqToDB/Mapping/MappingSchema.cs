@@ -618,7 +618,7 @@ namespace LinqToDB.Mapping
 			return expr;
 		}
 
-		static bool IsSimple (ref DbDataType type) 
+		static bool IsSimple (ref DbDataType type)
 			=> type.DataType == DataType.Undefined && string.IsNullOrEmpty(type.DbType) && type.Length == null;
 
 		static void Simplify(ref DbDataType type)

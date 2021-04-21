@@ -36,6 +36,8 @@ using LinqToDB.DataProvider.Oracle;
 using LinqToDB.DataProvider.PostgreSQL;
 using System.Threading.Tasks;
 using LinqToDB.Common;
+using FirebirdSql.Data.Types;
+using System.Numerics;
 #if NET472
 using IBM.Data.Informix;
 #endif
@@ -184,6 +186,22 @@ namespace Tests.Data
 
 				// assert api resolved and callable
 				FirebirdTools.ClearAllPools();
+
+				// test provider-specific types
+				if (context == TestProvName.Firebird4)
+				{
+					var fbDecFloat = new FbDecFloat(BigInteger.Parse("12345"), 5);
+					var fbDecFloat1 = db.Execute<FbDecFloat>("SELECT CAST(@p as decfloat) from rdb$database", new DataParameter("@p", fbDecFloat, DataType.DecFloat));
+					Assert.AreEqual(fbDecFloat, fbDecFloat1);
+
+					var fbZonedDateTime = new FbZonedDateTime(TestData.DateTime4Utc, "UTC");
+					var fbZonedDateTime1 = db.Execute<FbZonedDateTime>("SELECT CAST(@p as timestamp with time zone) from rdb$database", new DataParameter("@p", fbZonedDateTime, DataType.DateTimeOffset));
+					Assert.AreEqual(fbZonedDateTime, fbZonedDateTime1);
+
+					var fbZonedTime = new FbZonedTime(TestData.TimeOfDay4, "UTC");
+					var fbZonedTime1 = db.Execute<FbZonedTime>("SELECT CAST(@p as time with time zone) from rdb$database", new DataParameter("@p", fbZonedTime, DataType.TimeTZ));
+					Assert.AreEqual(fbZonedTime, fbZonedTime1);
+				}
 			}
 		}
 

@@ -9,6 +9,7 @@
 		<PackageReference Include="Humanizer.Core" />
 		<PackageReference Include="System.ComponentModel.Annotations" />
 		<PackageReference Include="Npgsql" />
+		<PackageReference Include="FirebirdSql.Data.FirebirdClient" />
 
 		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
 	</ItemGroup>
@@ -58,6 +59,10 @@
 		<None Update="Databases\DB2.tt">
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>DB2.generated.cs</LastGenOutput>
+		</None>
+		<None Update="Databases\Firebird4.tt">
+		  <LastGenOutput>Firebird4.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
 		</None>
 		<None Update="Databases\Firebird3.tt">
 			<Generator>TextTemplatingFileGenerator</Generator>
@@ -183,9 +188,14 @@
 			<DependentUpon>Firebird.tt</DependentUpon>
 		</Compile>
 		<Compile Update="Databases\Firebird3.generated.cs">
-			<DesignTime>True</DesignTime>
-			<AutoGen>True</AutoGen>
-			<DependentUpon>Firebird3.tt</DependentUpon>
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>Firebird3.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Databases\Firebird4.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>Firebird4.tt</DependentUpon>
 		</Compile>
 		<Compile Update="Databases\Informix.generated.cs">
 			<DesignTime>True</DesignTime>

@@ -12,8 +12,22 @@
 		</summary>
 		<tags>linq linq2db Firebird LinqToDB ORM database DB SQL</tags>
 		<dependencies>
-			<dependency id="linq2db"                         version="3.0.0" />
-			<dependency id="FirebirdSql.Data.FirebirdClient" version="7.5.0" />
+			<group targetFramework=".NETFramework4.5">
+				<dependency id="linq2db" version="3.0.0"                          />
+				<dependency id="FirebirdSql.Data.FirebirdClient" version="5.12.1" />
+			</group>
+			<group targetFramework=".NETFramework4.5.2">
+				<dependency id="linq2db" version="3.0.0"                          />
+				<dependency id="FirebirdSql.Data.FirebirdClient" version="7.10.1" />
+			</group>
+			<group targetFramework=".NETFramework4.7.2">
+				<dependency id="linq2db" version="3.0.0"                          />
+				<dependency id="FirebirdSql.Data.FirebirdClient" version="8.0.1"  />
+			</group>
+			<group targetFramework=".NETStandard2.0">
+				<dependency id="linq2db" version="3.0.0"                          />
+				<dependency id="FirebirdSql.Data.FirebirdClient" version="8.0.1"  />
+			</group>
 		</dependencies>
 		<contentFiles>
 			<files include="**\*" buildAction="None" />
@@ -23,6 +37,7 @@
 		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"                   target="tools"                                                                                              />
 		<file src="..\Tests\Tests.T4\bin\Azure\net472\Humanizer.dll"                   target="tools"                                                                                              />
 		<file src="..\Tests\Linq\bin\Azure\net472\FirebirdSql.Data.FirebirdClient.dll" target="tools"                                                                                              />
+		<file src="..\Tests\Linq\bin\Azure\net472\Microsoft.Bcl.AsyncInterfaces.dll"   target="tools"                                                                                              />
 
 		<file src="..\NuGet\Firebird\linq2db.Firebird.props"                           target="build"                                                                                              />
 

@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Text;
 
-
 namespace LinqToDB.DataProvider.Firebird
 {
 	using Common;
 	using Mapping;
 	using SqlQuery;
 	using System.Data.Linq;
+	using System.Globalization;
+	using System.Numerics;
 
 	public class FirebirdMappingSchema : MappingSchema
 	{
@@ -27,6 +28,9 @@ namespace LinqToDB.DataProvider.Firebird
 			SetValueToSqlConverter(typeof(byte[])  , (sb, dt, v) => ConvertBinaryToSql(sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary)  , (sb, dt, v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
 			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => BuildDateTime(sb, dt, (DateTime)v));
+
+			SetDataType(typeof(BigInteger), new SqlDataType(DataType.Int128, typeof(BigInteger), "INT128"));
+			SetValueToSqlConverter(typeof(BigInteger), (sb, dt, v) => sb.Append(((BigInteger)v).ToString(CultureInfo.InvariantCulture)));
 		}
 
 		static void BuildDateTime(StringBuilder stringBuilder, SqlDataType dt, DateTime value)
@@ -104,6 +108,22 @@ namespace LinqToDB.DataProvider.Firebird
 			}
 
 			stringBuilder.Append('\'');
+		}
+
+		internal static MappingSchema Instance { get; } = new FirebirdMappingSchema();
+	}
+
+	// internal as it will be replaced with versioned schemas in v4
+	internal class FirebirdProviderMappingSchema : MappingSchema
+	{
+		public FirebirdProviderMappingSchema()
+			: base(ProviderName.Firebird, FirebirdMappingSchema.Instance)
+		{
+		}
+
+		public FirebirdProviderMappingSchema(params MappingSchema[] schemas)
+				: base(ProviderName.Firebird, Array<MappingSchema>.Append(schemas, FirebirdMappingSchema.Instance))
+		{
 		}
 	}
 }

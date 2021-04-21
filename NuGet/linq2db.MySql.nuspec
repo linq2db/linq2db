@@ -26,6 +26,7 @@
 		<file src="..\Tests\Linq\bin\Azure\net472\System.Memory.dll"                     target="tools"                                                                                              />
 		<file src="..\Tests\Linq\bin\Azure\net472\System.Buffers.dll"                    target="tools"                                                                                              />
 		<file src="..\Tests\Linq\bin\Azure\net472\System.Threading.Tasks.Extensions.dll" target="tools"                                                                                              />
+		<file src="..\Tests\Linq\bin\Azure\net472\Microsoft.Bcl.AsyncInterfaces.dll"     target="tools"                                                                                              />
 
 		<file src="..\NuGet\MySql\linq2db.MySql.props"                                   target="build"                                                                                              />
 
