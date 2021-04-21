@@ -25,4 +25,24 @@
 		</None>
 	</ItemGroup>
 
+	<!--https://github.com/microsoft/vstest/issues/2814-->
+	<Target Name="TestFxIssue790Workaround" AfterTargets="ResolvePackageAssets">
+		<ItemGroup>
+			<_AssetListForConflictResolution
+					Include="@(RuntimeCopyLocalItems);
+					   @(Reference);
+					   @(NativeCopyLocalItems);
+					   @(ResourceCopyLocalItems);
+					   @(RuntimeTargetsCopyLocalItems);
+					   @(ReferenceCopyLocalPaths)" />
+
+			<AssetsToRemove Include="@(_AssetListForConflictResolution->WithMetadataValue('NuGetPackageId', 'Microsoft.TestPlatform.ObjectModel'))"
+							Condition="'%(FileName)' == 'Microsoft.TestPlatform.PlatformAbstractions'" />
+
+			<Reference Remove="@(AssetsToRemove)" />
+			<RuntimeCopyLocalItems Remove="@(AssetsToRemove)" />
+			<ResolvedCompileFileDefinitions Remove="@(AssetsToRemove)" />
+		</ItemGroup>
+	</Target>
+
 </Project>

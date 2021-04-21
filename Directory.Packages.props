@@ -28,7 +28,7 @@
 		<PackageVersion Include="Microsoft.SourceLink.GitHub" Version="1.0.0" />
 
 		<!--data providers-->
-		<PackageVersion Include="MySql.Data" Version="8.0.21" />
+		<PackageVersion Include="MySql.Data" Version="8.0.24" />
 		<PackageVersion Include="System.Data.SQLite.Core" Version="1.0.113.7" />
 		<PackageVersion Include="MySqlConnector" Version="1.3.3" />
 		<PackageVersion Include="AdoNetCore.AseClient" Version="0.19.2" />
@@ -46,8 +46,8 @@
 		<PackageVersion Include="MiniProfiler.Shared" Version="4.2.22" />
 		<PackageVersion Include="NUnit" Version="3.13.1" />
 		<PackageVersion Include="NUnit3TestAdapter" Version="4.0.0-beta.2" />
-		<PackageVersion Include="Microsoft.NET.Test.Sdk" Version="16.8.3" />
-		<PackageVersion Include="FastExpressionCompiler" Version="3.0.4" />
+		<PackageVersion Include="Microsoft.NET.Test.Sdk" Version="16.9.4" />
+		<PackageVersion Include="FastExpressionCompiler" Version="3.0.5" />
 		<PackageVersion Include="BenchmarkDotNet" Version="0.12.1" />
 		<PackageVersion Include="JetBrains.Profiler.Api" Version="1.1.7" />
 		<PackageVersion Include="Humanizer.Core" Version="2.8.26" />
