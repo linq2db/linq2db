@@ -1033,6 +1033,8 @@ namespace LinqToDB.SqlQuery
 				}			
 			}
 
+			map.Add(query.All, query.From.Tables[0].All);
+
 			List<ISqlExpression[]>? uniqueKeys = null;
 			if ((parentJoinedTable == null || parentJoinedTable.JoinType == JoinType.Inner) && query.HasUniqueKeys)
 				uniqueKeys = query.UniqueKeys;

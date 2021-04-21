@@ -2642,7 +2642,9 @@ namespace LinqToDB.SqlProvider
 				AppendIndent().Append("END");
 			}
 			else
+			{
 				BuildFunction(func.Name, func.Parameters);
+			}
 		}
 
 		void BuildFunction(string name, ISqlExpression[] exprs)
