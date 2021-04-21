@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq;
+using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
@@ -83,6 +85,26 @@ namespace Tests.Linq
 			{
 				Assert.Throws<InvalidOperationException>(() => _ = db.Select(() => Functions.DateFuncFail(db, new ExpressionTestsFakeType())));
 				Assert.Throws<InvalidOperationException>(() => _ = db.Select(() => Functions.DateExprKindFail(db, "now", new ExpressionTestsFakeType())));
+			}
+		}
+
+		class MyContext : DataConnection
+		{
+			public MyContext(string configurationString) : base(configurationString)
+			{
+			}
+
+			[Sql.Expression("10", ServerSideOnly = true)]
+			public int SomeValue 
+				=> this.SelectQuery(() => SomeValue).AsEnumerable().First();
+		}
+
+		[Test]
+		public void TestAsProperty([DataSources(false)] string context)
+		{
+			using (var db = new MyContext(context))
+			{
+				db.SomeValue.Should().Be(10);
 			}
 		}
 
