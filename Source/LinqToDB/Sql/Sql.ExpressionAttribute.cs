@@ -441,7 +441,7 @@ namespace LinqToDB
 				if (string.IsNullOrEmpty(expressionStr))
 					throw new LinqToDBException($"Cannot retrieve SQL Expression body from expression '{expression}'.");
 
-				var parameters = PrepareArguments(expressionStr!, ArgIndices, false, knownExpressions, genericTypes, converter);
+				var parameters = PrepareArguments(expressionStr!, ArgIndices, addDefault: false, knownExpressions, genericTypes, converter);
 
 				return new SqlExpression(expression.Type, expressionStr!, Precedence,
 					(IsAggregate      ? SqlFlags.IsAggregate      : SqlFlags.None) | 
