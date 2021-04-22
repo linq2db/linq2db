@@ -13,7 +13,7 @@
 		<tags>linq linq2db MySql LinqToDB ORM database DB SQL</tags>
 		<dependencies>
 			<dependency id="linq2db"        version="3.0.0" />
-			<dependency id="MySqlConnector" version="1.3.3" />
+			<dependency id="MySqlConnector" version="1.3.4" />
 		</dependencies>
 		<contentFiles>
 			<files include="**\*" buildAction="None" />
