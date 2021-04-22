@@ -42,6 +42,27 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		public void DeleteWithOutputTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			{
+				var expected = source
+					.Where(s => s.Id > 3)
+					.ToArray();
+
+				var output = source
+					.Where(s => s.Id > 3)
+					.DeleteWithOutput()
+					.ToArray();
+
+				AreEqual(expected, output);
+			}
+		}
+
+
+		[Test]
 		public void DeleteWithOutputProjectionFromQueryTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
 		{
 			var sourceData    = GetSourceData();
@@ -63,10 +84,10 @@ namespace Tests.xUpdate
 					.ToArray();
 
 				AreEqual(expected.Select(t => new
-					{
-						Id       = t.Id + 1,
-						ValueStr = t.ValueStr + 1,
-					}),
+				{
+					Id = t.Id + 1,
+					ValueStr = t.ValueStr + 1,
+				}),
 					output);
 			}
 		}
