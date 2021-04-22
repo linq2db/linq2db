@@ -1609,11 +1609,11 @@ namespace Tests.xUpdate
 		// see https://github.com/linq2db/linq2db/pull/2954#issuecomment-821798021
 		[Test]
 		public void InsertDefault([DataSources(
-			TestProvName.AllMySql, 
-			TestProvName.AllPostgreSQL, 
-			TestProvName.AllOracle, 
-			TestProvName.Sybase, 
-			TestProvName.AllSqlServer)] string context)
+			TestProvName.AllAccess, 
+			TestProvName.AllFirebird, 
+			TestProvName.AllInformix, 
+			TestProvName.AllSapHana, 
+			TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 			try
