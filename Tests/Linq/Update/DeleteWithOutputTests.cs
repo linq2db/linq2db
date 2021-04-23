@@ -57,7 +57,10 @@ namespace Tests.xUpdate
 					.DeleteWithOutput()
 					.ToArray();
 
-				AreEqual(expected, output);
+				AreEqual(
+					expected,
+					output,
+					ComparerBuilder.GetEqualityComparer<TableWithData>());
 			}
 		}
 
@@ -76,7 +79,10 @@ namespace Tests.xUpdate
 					.Where(s => s.Id > 3)
 					.DeleteWithOutputAsync();
 
-				AreEqual(expected, output);
+				AreEqual(
+					expected,
+					output,
+					ComparerBuilder.GetEqualityComparer<TableWithData>());
 			}
 		}
 
@@ -173,7 +179,8 @@ namespace Tests.xUpdate
 							Value    = s.Value    + param,
 							ValueStr = s.ValueStr + param,
 						}),
-					output, ComparerBuilder.GetEqualityComparer<DestinationTable>());
+					output,
+					ComparerBuilder.GetEqualityComparer<DestinationTable>());
 			}
 		}
 
@@ -206,7 +213,8 @@ namespace Tests.xUpdate
 							Value    = s.Value    + param,
 							ValueStr = s.ValueStr + param,
 						}),
-					output, ComparerBuilder.GetEqualityComparer<DestinationTable>());
+					output,
+					ComparerBuilder.GetEqualityComparer<DestinationTable>());
 			}
 		}
 
@@ -241,7 +249,8 @@ namespace Tests.xUpdate
 							Value    = s.Value    + param,
 							ValueStr = s.ValueStr + param,
 						}),
-					target.ToArray(), ComparerBuilder.GetEqualityComparer<DestinationTable>());
+					target.ToArray(), 
+					ComparerBuilder.GetEqualityComparer<DestinationTable>());
 			}
 		}
 
@@ -276,7 +285,8 @@ namespace Tests.xUpdate
 							Value    = s.Value    + param,
 							ValueStr = s.ValueStr + param,
 						}),
-					target.ToArray(), ComparerBuilder.GetEqualityComparer<DestinationTable>());
+					target.ToArray(), 
+					ComparerBuilder.GetEqualityComparer<DestinationTable>());
 			}
 		}
 	}
