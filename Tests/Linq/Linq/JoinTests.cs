@@ -2891,6 +2891,7 @@ namespace Tests.Linq
 		{
 			TestProvName.AllSQLite,
 			TestProvName.AllAccess,
+			TestProvName.AllMySql,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe
 		}, Details = "FULL OUTER JOIN support. Also check and enable other tests that do full join on fix")]
