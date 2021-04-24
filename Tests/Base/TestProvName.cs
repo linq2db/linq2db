@@ -71,6 +71,7 @@ namespace Tests
 		public const string AllOracle11            = "Oracle.11.Native,Oracle.11.Managed";
 		public const string AllOracle12            = "Oracle.Native,Oracle.Managed";
 		public const string AllFirebird            = ProviderName.Firebird + "," + Firebird3 +"," + Firebird4;
+		public const string AllFirebirdLess4       = ProviderName.Firebird + "," + Firebird3;
 		public const string AllSQLite              = "SQLite.Classic,SQLite.MS,SQLite.Classic.MPU,SQLite.Classic.MPM";
 		public const string AllSQLiteClassic       = "SQLite.Classic,SQLite.Classic.MPU,SQLite.Classic.MPM";
 		public const string AllSybase              = "Sybase,Sybase.Managed";

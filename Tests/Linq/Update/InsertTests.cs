@@ -1609,10 +1609,10 @@ namespace Tests.xUpdate
 		// see https://github.com/linq2db/linq2db/pull/2954#issuecomment-821798021
 		[Test]
 		public void InsertDefault([DataSources(
-			TestProvName.AllAccess, 
-			TestProvName.AllFirebird, 
-			TestProvName.AllInformix, 
-			TestProvName.AllSapHana, 
+			TestProvName.AllAccess,
+			TestProvName.AllFirebirdLess4,
+			TestProvName.AllInformix,
+			TestProvName.AllSapHana,
 			TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
