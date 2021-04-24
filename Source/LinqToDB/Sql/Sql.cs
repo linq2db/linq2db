@@ -34,6 +34,12 @@ namespace LinqToDB
 		}
 
 		/// <summary>
+		/// Generates 'DEFAULT' keyword, usable in inserts.
+		/// </summary>
+		[Expression("DEFAULT", ServerSideOnly = true)]
+		public static T Default<T>() => throw new LinqException($"Default is only server-side method.");
+
+		/// <summary>
 		/// Enforces generating SQL even if an expression can be calculated locally.
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
