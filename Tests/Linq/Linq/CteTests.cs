@@ -122,7 +122,7 @@ namespace Tests.Linq
 
 		static IQueryable<TSource> RemoveCte<TSource>(IQueryable<TSource> source)
 		{
-			var newExpr = source.Expression.Transform(e =>
+			var newExpr = source.Expression.Transform(static (_, e) =>
 			{
 				if (e is MethodCallExpression methodCall && methodCall.Method.Name == "AsCte")
 					return methodCall.Arguments[0];

@@ -33,7 +33,7 @@ namespace LinqToDB.SqlQuery
 
 			var dic = new Dictionary<SelectQuery,SelectQuery>();
 
-			new QueryVisitor().VisitAll(_selectQuery, e =>
+			_selectQuery.VisitAll(dic, static (dic, e) =>
 			{
 				if (e is SelectQuery sql)
 				{
@@ -58,8 +58,8 @@ namespace LinqToDB.SqlQuery
 		class QueryData
 		{
 			public          SelectQuery          Query   = null!;
-			public readonly List<ISqlExpression> Fields  = new List<ISqlExpression>();
-			public readonly List<QueryData>      Queries = new List<QueryData>();
+			public readonly List<ISqlExpression> Fields  = new ();
+			public readonly List<QueryData>      Queries = new ();
 		}
 
 		void ResolveFields()
@@ -73,7 +73,7 @@ namespace LinqToDB.SqlQuery
 		{
 			var data = new QueryData { Query = selectQuery };
 
-			new QueryVisitor().VisitParentFirst(root ?? selectQuery, e =>
+			(root ?? selectQuery).VisitParentFirst(new { selectQuery, visitedHash, data }, static (context, e) =>
 			{
 				switch (e.ElementType)
 				{
@@ -82,16 +82,16 @@ namespace LinqToDB.SqlQuery
 							var field = (SqlField)e;
 
 							if (field.Name.Length != 1 || field.Name[0] != '*')
-								data.Fields.Add(field);
+								context.data.Fields.Add(field);
 
 							break;
 						}
 
 					case QueryElementType.SqlQuery :
 						{
-							if (e != selectQuery)
+							if (e != context.selectQuery)
 							{
-								data.Queries.Add(GetQueryData(null, (SelectQuery)e, visitedHash));
+								context.data.Queries.Add(GetQueryData(null, (SelectQuery)e, context.visitedHash));
 								return false;
 							}
 
@@ -99,7 +99,7 @@ namespace LinqToDB.SqlQuery
 						}
 
 					case QueryElementType.Column :
-						return ((SqlColumn)e).Parent == selectQuery;
+						return ((SqlColumn)e).Parent == context.selectQuery;
 
 					case QueryElementType.SqlTable :
 						return false;
@@ -110,9 +110,9 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.CteClause :
 					{
 						var query = ((CteClause)e).Body;
-						if (query != selectQuery && query != null && visitedHash.Add(e))
+						if (query != context.selectQuery && query != null && context.visitedHash.Add(e))
 						{
-							data.Queries.Add(GetQueryData(null, query, visitedHash));
+							context.data.Queries.Add(GetQueryData(null, query, context.visitedHash));
 							return false;
 						}
 
@@ -205,21 +205,21 @@ namespace LinqToDB.SqlQuery
 			}
 
 			if (dic.Count > 0)
-				new QueryVisitor().VisitParentFirst(data.Query, e =>
+				data.Query.VisitParentFirst(new { dic, data }, static (context, e) =>
 				{
 					ISqlExpression? ex;
 
 					switch (e.ElementType)
 					{
 						case QueryElementType.SqlQuery :
-							return e == data.Query;
+							return e == context.data.Query;
 
 						case QueryElementType.SqlFunction :
 							{
 								var parms = ((SqlFunction)e).Parameters;
 
 								for (var i = 0; i < parms.Length; i++)
-									if (dic.TryGetValue(parms[i], out ex))
+									if (context.dic.TryGetValue(parms[i], out ex))
 										parms[i] = ex;
 
 								break;
@@ -230,7 +230,7 @@ namespace LinqToDB.SqlQuery
 								var parms = ((SqlExpression)e).Parameters;
 
 								for (var i = 0; i < parms.Length; i++)
-									if (dic.TryGetValue(parms[i], out ex))
+									if (context.dic.TryGetValue(parms[i], out ex))
 										parms[i] = ex;
 
 								break;
@@ -239,8 +239,8 @@ namespace LinqToDB.SqlQuery
 						case QueryElementType.SqlBinaryExpression :
 							{
 								var expr = (SqlBinaryExpression)e;
-								if (dic.TryGetValue(expr.Expr1, out ex)) expr.Expr1 = ex;
-								if (dic.TryGetValue(expr.Expr2, out ex)) expr.Expr2 = ex;
+								if (context.dic.TryGetValue(expr.Expr1, out ex)) expr.Expr1 = ex;
+								if (context.dic.TryGetValue(expr.Expr2, out ex)) expr.Expr2 = ex;
 								break;
 							}
 
@@ -250,42 +250,42 @@ namespace LinqToDB.SqlQuery
 						case QueryElementType.InSubQueryPredicate :
 							{
 								var expr = (SqlPredicate.Expr)e;
-								if (dic.TryGetValue(expr.Expr1, out ex)) expr.Expr1 = ex;
+								if (context.dic.TryGetValue(expr.Expr1, out ex)) expr.Expr1 = ex;
 								break;
 							}
 
 						case QueryElementType.ExprExprPredicate :
 							{
 								var expr = (SqlPredicate.ExprExpr)e;
-								if (dic.TryGetValue(expr.Expr1, out ex)) expr.Expr1 = ex;
-								if (dic.TryGetValue(expr.Expr2, out ex)) expr.Expr2 = ex;
+								if (context.dic.TryGetValue(expr.Expr1, out ex)) expr.Expr1 = ex;
+								if (context.dic.TryGetValue(expr.Expr2, out ex)) expr.Expr2 = ex;
 								break;
 							}
 
 						case QueryElementType.IsTruePredicate :
 							{
 								var expr = (SqlPredicate.IsTrue)e;
-								if (dic.TryGetValue(expr.Expr1,      out ex)) expr.Expr1      = ex;
-								if (dic.TryGetValue(expr.TrueValue,  out ex)) expr.TrueValue  = ex;
-								if (dic.TryGetValue(expr.FalseValue, out ex)) expr.FalseValue = ex;
+								if (context.dic.TryGetValue(expr.Expr1,      out ex)) expr.Expr1      = ex;
+								if (context.dic.TryGetValue(expr.TrueValue,  out ex)) expr.TrueValue  = ex;
+								if (context.dic.TryGetValue(expr.FalseValue, out ex)) expr.FalseValue = ex;
 								break;
 							}
 						
 						case QueryElementType.LikePredicate :
 							{
 								var expr = (SqlPredicate.Like)e;
-								if (                       dic.TryGetValue(expr.Expr1,  out ex)) expr.Expr1  = ex;
-								if (                       dic.TryGetValue(expr.Expr2,  out ex)) expr.Expr2  = ex;
-								if (expr.Escape != null && dic.TryGetValue(expr.Escape, out ex)) expr.Escape = ex;
+								if (                       context.dic.TryGetValue(expr.Expr1,  out ex)) expr.Expr1  = ex;
+								if (                       context.dic.TryGetValue(expr.Expr2,  out ex)) expr.Expr2  = ex;
+								if (expr.Escape != null && context.dic.TryGetValue(expr.Escape, out ex)) expr.Escape = ex;
 								break;
 							}
 
 						case QueryElementType.BetweenPredicate :
 							{
 								var expr = (SqlPredicate.Between)e;
-								if (dic.TryGetValue(expr.Expr1, out ex)) expr.Expr1 = ex;
-								if (dic.TryGetValue(expr.Expr2, out ex)) expr.Expr2 = ex;
-								if (dic.TryGetValue(expr.Expr3, out ex)) expr.Expr3 = ex;
+								if (context.dic.TryGetValue(expr.Expr1, out ex)) expr.Expr1 = ex;
+								if (context.dic.TryGetValue(expr.Expr2, out ex)) expr.Expr2 = ex;
+								if (context.dic.TryGetValue(expr.Expr3, out ex)) expr.Expr3 = ex;
 								break;
 							}
 
@@ -293,10 +293,10 @@ namespace LinqToDB.SqlQuery
 							{
 								var expr = (SqlPredicate.InList)e;
 
-								if (dic.TryGetValue(expr.Expr1, out ex)) expr.Expr1 = ex;
+								if (context.dic.TryGetValue(expr.Expr1, out ex)) expr.Expr1 = ex;
 
 								for (var i = 0; i < expr.Values.Count; i++)
-									if (dic.TryGetValue(expr.Values[i], out ex))
+									if (context.dic.TryGetValue(expr.Values[i], out ex))
 										expr.Values[i] = ex;
 
 								break;
@@ -306,10 +306,10 @@ namespace LinqToDB.SqlQuery
 							{
 								var expr = (SqlColumn)e;
 
-								if (expr.Parent != data.Query)
+								if (expr.Parent != context.data.Query)
 									return false;
 
-								if (dic.TryGetValue(expr.Expression, out ex)) expr.Expression = ex;
+								if (context.dic.TryGetValue(expr.Expression, out ex)) expr.Expression = ex;
 
 								break;
 							}
@@ -317,7 +317,7 @@ namespace LinqToDB.SqlQuery
 						case QueryElementType.SetExpression :
 							{
 								var expr = (SqlSetExpression)e;
-								if (dic.TryGetValue(expr.Expression!, out ex)) expr.Expression = ex;
+								if (context.dic.TryGetValue(expr.Expression!, out ex)) expr.Expression = ex;
 								break;
 							}
 
@@ -326,7 +326,7 @@ namespace LinqToDB.SqlQuery
 								var expr = (SqlGroupByClause)e;
 
 								for (var i = 0; i < expr.Items.Count; i++)
-									if (dic.TryGetValue(expr.Items[i], out ex))
+									if (context.dic.TryGetValue(expr.Items[i], out ex))
 										expr.Items[i] = ex;
 
 								break;
@@ -335,7 +335,7 @@ namespace LinqToDB.SqlQuery
 						case QueryElementType.OrderByItem :
 							{
 								var expr = (SqlOrderByItem)e;
-								if (dic.TryGetValue(expr.Expression, out ex)) expr.Expression = ex;
+								if (context.dic.TryGetValue(expr.Expression, out ex)) expr.Expression = ex;
 								break;
 							}
 					}
@@ -350,18 +350,18 @@ namespace LinqToDB.SqlQuery
 
 		void OptimizeUnions()
 		{
-			var isAllUnion = new QueryVisitor().Find(_selectQuery,
-				ne => ne is SqlSetOperator nu && nu.Operation == SetOperation.UnionAll);
+			var isAllUnion = _selectQuery.Find<object?>(null,
+				static (_, ne) => ne is SqlSetOperator nu && nu.Operation == SetOperation.UnionAll);
 
-			var isNotAllUnion = new QueryVisitor().Find(_selectQuery,
-				ne => ne is SqlSetOperator nu && nu.Operation != SetOperation.UnionAll);
+			var isNotAllUnion = _selectQuery.Find<object?>(null,
+				static (_, ne) => ne is SqlSetOperator nu && nu.Operation != SetOperation.UnionAll);
 
 			if (isNotAllUnion != null && isAllUnion != null)
 				return;
 
 			var exprs = new Dictionary<ISqlExpression,ISqlExpression>();
 
-			new QueryVisitor().Visit(_selectQuery, e =>
+			_selectQuery.Visit(exprs, static (exprs, e) =>
 			{
 				if (!(e is SelectQuery sql) || sql.From.Tables.Count != 1 || !sql.IsSimple)
 					return;
@@ -422,16 +422,16 @@ namespace LinqToDB.SqlQuery
 
 		void FinalizeAndValidateInternal(bool isApplySupported, bool optimizeColumns)
 		{
-			new QueryVisitor().Visit(_selectQuery, e =>
+			_selectQuery.Visit(new { optimizer = this, isApplySupported, optimizeColumns }, static (context, e) =>
 			{
-				if (e is SelectQuery sql && sql != _selectQuery)
+				if (e is SelectQuery sql && sql != context.optimizer._selectQuery)
 				{
-					sql.ParentSelect = _selectQuery;
-					new SelectQueryOptimizer(_flags, _rootElement, sql, _level + 1, _dependencies)
-						.FinalizeAndValidateInternal(isApplySupported, optimizeColumns);
+					sql.ParentSelect = context.optimizer._selectQuery;
+					new SelectQueryOptimizer(context.optimizer._flags, context.optimizer._rootElement, sql, context.optimizer._level + 1, context.optimizer._dependencies)
+						.FinalizeAndValidateInternal(context.isApplySupported, context.optimizeColumns);
 
 					if (sql.IsParameterDependent)
-						_selectQuery.IsParameterDependent = true;
+						context.optimizer._selectQuery.IsParameterDependent = true;
 				}
 			});
 
@@ -596,8 +596,8 @@ namespace LinqToDB.SqlQuery
 					if (boolValue != null)
 					{
 						var isTrue = cond.IsNot ? !boolValue.Value : boolValue.Value;
-						bool? leftIsOr  = i > 0 ? searchCondition.Conditions[i - 1].IsOr : (bool?)null;
-						bool? rightIsOr = i + 1 < searchCondition.Conditions.Count ? cond.IsOr : (bool?)null;
+						bool? leftIsOr  = i > 0 ? searchCondition.Conditions[i - 1].IsOr : null;
+						bool? rightIsOr = i + 1 < searchCondition.Conditions.Count ? cond.IsOr : null;
 
 						if (isTrue)
 						{
@@ -910,7 +910,10 @@ namespace LinqToDB.SqlQuery
 		{
 			expr = QueryHelper.UnwrapExpression(expr);
 
-			if (expr.ElementType.In(QueryElementType.SqlField, QueryElementType.Column, QueryElementType.SqlParameter, QueryElementType.SqlRawSqlTable)) 
+			if (expr.ElementType == QueryElementType.SqlField     ||
+				expr.ElementType == QueryElementType.Column       ||
+				expr.ElementType == QueryElementType.SqlParameter ||
+				expr.ElementType == QueryElementType.SqlRawSqlTable)
 				return false;
 
 			if (expr is SqlValue sqlValue)
@@ -925,7 +928,7 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-			if (new QueryVisitor().Find(expr, ex => ex is SelectQuery || QueryHelper.IsAggregationOrWindowFunction(ex)) == null)
+			if (expr.Find<object?>(null, static (_, ex) => ex is SelectQuery || QueryHelper.IsAggregationOrWindowFunction(ex)) == null)
 			{
 				var elementsToIgnore = new HashSet<IQueryElement> { query };
 
@@ -1063,7 +1066,7 @@ namespace LinqToDB.SqlQuery
 					return expr;
 				});
 
-			new QueryVisitor().Visit(top, expr =>
+			top.Visit(query, static (query, expr) =>
 			{
 				if (expr.ElementType == QueryElementType.InListPredicate)
 				{
@@ -1112,7 +1115,7 @@ namespace LinqToDB.SqlQuery
 
 			bool ContainsTable(ISqlTableSource table, IQueryElement qe)
 			{
-				return null != new QueryVisitor().Find(qe, e =>
+				return null != qe.Find(table, static (table, e) =>
 					e == table ||
 					e.ElementType == QueryElementType.SqlField && table == ((SqlField) e).Table ||
 					e.ElementType == QueryElementType.Column   && table == ((SqlColumn)e).Parent);
@@ -1395,7 +1398,7 @@ namespace LinqToDB.SqlQuery
 					query.From.Tables.Count == 0 &&
 					query.Select.Columns.Count == 1)
 				{
-					new QueryVisitor().Visit(query.Select.Columns[0].Expression, e =>
+					query.Select.Columns[0].Expression.Visit(query, static (query, e) =>
 					{
 						if (e.ElementType == QueryElementType.SqlQuery)
 						{

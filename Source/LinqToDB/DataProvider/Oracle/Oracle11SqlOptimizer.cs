@@ -51,7 +51,10 @@ namespace LinqToDB.DataProvider.Oracle
 
 					// Oracle saves empty string as null to database, so we need predicate modification before sending query
 					//
-					if (expr.Operator.In(SqlPredicate.Operator.Equal, SqlPredicate.Operator.NotEqual, SqlPredicate.Operator.GreaterOrEqual, SqlPredicate.Operator.LessOrEqual) && expr.WithNull == true)
+					if ((expr.Operator == SqlPredicate.Operator.Equal          ||
+						 expr.Operator == SqlPredicate.Operator.NotEqual       ||
+						 expr.Operator == SqlPredicate.Operator.GreaterOrEqual ||
+						 expr.Operator == SqlPredicate.Operator.LessOrEqual) && expr.WithNull == true)
 					{
 						if (expr.Expr1.SystemType == typeof(string) && expr.Expr1.CanBeEvaluated(true))
 							return true;
@@ -75,7 +78,10 @@ namespace LinqToDB.DataProvider.Oracle
 
 					// Oracle saves empty string as null to database, so we need predicate modification before sending query
 					//
-					if (expr.Operator.In(SqlPredicate.Operator.Equal, SqlPredicate.Operator.NotEqual, SqlPredicate.Operator.GreaterOrEqual, SqlPredicate.Operator.LessOrEqual) && expr.WithNull == true)
+					if ((expr.Operator == SqlPredicate.Operator.Equal          ||
+						 expr.Operator == SqlPredicate.Operator.NotEqual       ||
+						 expr.Operator == SqlPredicate.Operator.GreaterOrEqual ||
+						 expr.Operator == SqlPredicate.Operator.LessOrEqual) && expr.WithNull == true)
 					{
 						if (expr.Expr1.SystemType == typeof(string) &&
 						    expr.Expr1.TryEvaluateExpression(optimizationContext.Context, out var value1) && value1 is string string1)

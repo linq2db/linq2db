@@ -18,7 +18,7 @@ namespace LinqToDB.Linq
 		public static Expression OptimizeMappingExpressionForSequentialAccess(Expression expression, int fieldCount, bool reduce)
 		{
 			if (reduce)
-				expression = expression.Transform(e =>
+				expression = expression.Transform(static (_, e) =>
 					e is ConvertFromDataReaderExpression conv
 						? conv.Reduce()
 						: e);
@@ -35,8 +35,8 @@ namespace LinqToDB.Linq
 			Dictionary<int, Tuple<ConvertFromDataReaderExpression.ColumnReader, ISet<Type>>>? slowColumnTypes = null;
 			Expression? dataReaderExpr = null;
 
-			Func<Expression, Expression> tranformFunc = null!;
-			tranformFunc = e =>
+			Func<object?, Expression, Expression> tranformFunc = null!;
+			tranformFunc = (_, e) =>
 			{
 				if (failMessage != null)
 					return e;
@@ -204,12 +204,12 @@ namespace LinqToDB.Linq
 			}
 
 			// insert variables and variable init code to mapping expression
-			var updated = false;
-			expression = expression.Transform(e =>
+			var ctx = new TransformBlockContext(newVariables, insertedExpressions);
+			expression = expression.Transform(ctx, static (context, e) =>
 			{
-				if (!updated && e is BlockExpression block)
+				if (!context.Updated && e is BlockExpression block)
 				{
-					updated = true;
+					context.Updated = true;
 
 					var found = false;
 					int skip;
@@ -230,14 +230,28 @@ namespace LinqToDB.Linq
 
 					// first N expressions init context variables
 					return block.Update(
-						block.Variables.Concat(newVariables.Where(v => v != null)),
-						block.Expressions.Take(skip + 1).Concat(insertedExpressions.Where(e => e != null)).Concat(block.Expressions.Skip(skip + 1)));
+						block.Variables.Concat(context.NewVariables.Where(v => v != null)),
+						block.Expressions.Take(skip + 1).Concat(context.InsertedExpressions.Where(e => e != null)).Concat(block.Expressions.Skip(skip + 1)));
 				}
 
 				return e;
 			});
 
 			return expression;
+		}
+
+		class TransformBlockContext
+		{
+			public TransformBlockContext(ParameterExpression?[] newVariables, Expression?[] insertedExpressions)
+			{
+				NewVariables        = newVariables;
+				InsertedExpressions = insertedExpressions;
+			}
+
+			public bool Updated;
+
+			public readonly ParameterExpression?[] NewVariables;
+			public readonly Expression?[]          InsertedExpressions;
 		}
 
 		private static int? TryGetColumnIndex(MethodCallExpression call)
@@ -257,13 +271,28 @@ namespace LinqToDB.Linq
 			return null;
 		}
 
+		class OptimizeColumnReaderForSequentialAccessContext
+		{
+			public OptimizeColumnReaderForSequentialAccessContext(Expression isNullParameter, Expression rawValueParameter, int columnIndex)
+			{
+				IsNullParameter   = isNullParameter;
+				RawValueParameter = rawValueParameter;
+				ColumnIndex       = columnIndex;
+			}
+
+			public readonly Expression IsNullParameter;
+			public readonly Expression RawValueParameter;
+			public readonly int        ColumnIndex;
+
+			public string? FailMessage;
+		}
+
 		public static Expression OptimizeColumnReaderForSequentialAccess(Expression expression, Expression isNullParameter, Expression rawValueParameter, int columnIndex)
 		{
-			string? failMessage = null;
-
-			expression = expression.Transform(e =>
+			var ctx = new OptimizeColumnReaderForSequentialAccessContext(isNullParameter, rawValueParameter, columnIndex);
+			expression = expression.Transform(ctx, static (context, e) =>
 			{
-				if (failMessage != null)
+				if (context.FailMessage != null)
 					return e;
 
 				if (e is MethodCallExpression call)
@@ -275,18 +304,18 @@ namespace LinqToDB.Linq
 					{
 						// check that method accept single integer constant as parameter
 						// this is currently how we detect method that we must process
-						if (idx != columnIndex)
+						if (idx != context.ColumnIndex)
 						{
-							failMessage = $"Expected column index: {columnIndex}, but found {idx}";
+							context.FailMessage = $"Expected column index: {context.ColumnIndex}, but found {idx}";
 							return e;
 						}
 
 
 						// test IsDBNull method by-name to support overrides
 						if (call.Method.Name == nameof(IDataReader.IsDBNull))
-							return isNullParameter;
+							return context.IsNullParameter;
 						else // otherwise we treat it as Get*Value method (as we already extracted index without errors for it)
-							return call.Type != rawValueParameter.Type ? Expression.Convert(rawValueParameter, call.Type) : rawValueParameter;
+							return call.Type != context.RawValueParameter.Type ? Expression.Convert(context.RawValueParameter, call.Type) : context.RawValueParameter;
 					}
 
 					foreach (var arg in call.Arguments)
@@ -294,7 +323,7 @@ namespace LinqToDB.Linq
 						// unknown method or constructor call with data reader parameter
 						if (typeof(IDataReader).IsAssignableFrom(arg.Unwrap().Type))
 						{
-							failMessage = $"Method {call.Method.DeclaringType?.Name}.{call.Method.Name} with {nameof(IDataReader)} not supported";
+							context.FailMessage = $"Method {call.Method.DeclaringType?.Name}.{call.Method.Name} with {nameof(IDataReader)} not supported";
 						}
 					}
 				}
@@ -303,20 +332,32 @@ namespace LinqToDB.Linq
 			});
 
 			// expression cannot be optimized
-			if (failMessage != null)
-				throw new LinqToDBException($"{nameof(OptimizeColumnReaderForSequentialAccess)} optimization failed (slow mode): {failMessage}");
+			if (ctx.FailMessage != null)
+				throw new LinqToDBException($"{nameof(OptimizeColumnReaderForSequentialAccess)} optimization failed (slow mode): {ctx.FailMessage}");
 
 			return expression;
 		}
 
-		public static MethodCallExpression ExtractRawValueReader(Expression expression, Expression isNullParameter, int columnIndex)
+		class ExtractRawValueReaderContext
 		{
-			string? failMessage = null;
-			MethodCallExpression? rawCall = null;
-
-			expression.Visit(e =>
+			public ExtractRawValueReaderContext(int columnIndex)
 			{
-				if (failMessage != null)
+				ColumnIndex = columnIndex;
+			}
+
+			public readonly int ColumnIndex;
+
+			public string?               FailMessage;
+			public MethodCallExpression? RawCall;
+		}
+
+		public static MethodCallExpression ExtractRawValueReader(Expression expression, int columnIndex)
+		{
+			var ctx = new ExtractRawValueReaderContext(columnIndex);
+
+			expression.Visit(ctx, static(context, e) =>
+			{
+				if (context.FailMessage != null)
 					return;
 
 				if (e is MethodCallExpression call)
@@ -325,31 +366,31 @@ namespace LinqToDB.Linq
 
 					if (idx != null)
 					{
-						if (idx != columnIndex)
+						if (idx != context.ColumnIndex)
 						{
-							failMessage = $"Expected column index: {columnIndex}, but found {idx}";
+							context.FailMessage = $"Expected column index: {context.ColumnIndex}, but found {idx}";
 							return;
 						}
 
 						if (call.Method.Name != nameof(IDataReader.IsDBNull))
 						{
-							if (rawCall == null)
-								rawCall = call;
-							else if (rawCall.Method != call.Method)
+							if (context.RawCall == null)
+								context.RawCall = call;
+							else if (context.RawCall.Method != call.Method)
 								throw new LinqToDBConvertException(
-									$"Different data reader methods used for same column: '{rawCall.Method.DeclaringType?.Name}.{rawCall.Method.Name}' vs '{call.Method.DeclaringType?.Name}.{call.Method.Name}'");
+									$"Different data reader methods used for same column: '{context.RawCall.Method.DeclaringType?.Name}.{context.RawCall.Method.Name}' vs '{call.Method.DeclaringType?.Name}.{call.Method.Name}'");
 						}
 					}
 				}
 			});
 
-			if (failMessage != null)
-				throw new LinqToDBException($"{nameof(OptimizeColumnReaderForSequentialAccess)} optimization failed (slow mode): {failMessage}");
+			if (ctx.FailMessage != null)
+				throw new LinqToDBException($"{nameof(OptimizeColumnReaderForSequentialAccess)} optimization failed (slow mode): {ctx.FailMessage}");
 
-			if (rawCall == null)
+			if (ctx.RawCall == null)
 				throw new LinqToDBException($"Cannot find column value reader in expression");
 
-			return rawCall;
+			return ctx.RawCall;
 		}
 	}
 }

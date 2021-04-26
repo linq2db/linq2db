@@ -17,8 +17,8 @@ namespace LinqToDB.ServiceModel
 	internal class SerializationConverter
 	{
 		static readonly Type _stringType = typeof(string);
-		static readonly MemoryCache _serializeConverters   = new MemoryCache(new MemoryCacheOptions());
-		static readonly MemoryCache _deserializeConverters = new MemoryCache(new MemoryCacheOptions());
+		static readonly MemoryCache _serializeConverters   = new (new MemoryCacheOptions());
+		static readonly MemoryCache _deserializeConverters = new (new MemoryCacheOptions());
 
 		public static void ClearCaches()
 		{
@@ -56,12 +56,14 @@ namespace LinqToDB.ServiceModel
 
 				var p = Expression.Parameter(typeof(object), "p");
 				var ex = Expression.Lambda<Func<object, string>>(
-					b.Transform(e =>
-						e == ps[0]
-							? Expression.Convert(
-								enumType != null ? Expression.Convert(p, enumType) : (Expression)p,
-								e.Type)
-							: e),
+					b.Transform(
+						new { ps, enumType, p },
+						static (context, e) =>
+							e == context.ps[0]
+								? Expression.Convert(
+									context.enumType != null ? Expression.Convert(context.p, context.enumType) : context.p,
+									e.Type)
+								: e),
 					p);
 
 				return ex.CompileExpression();
@@ -116,7 +118,9 @@ namespace LinqToDB.ServiceModel
 
 				var p  = Expression.Parameter(_stringType, "p");
 				var ex = Expression.Lambda<Func<string, object>>(
-					Expression.Convert(b, typeof(object)).Transform(e => e == ps[0] ? p : e),
+					Expression.Convert(b, typeof(object)).Transform(
+						new { ps, p },
+						static (context, e) => e == context.ps[0] ? context.p : e),
 					p);
 
 				return ex.CompileExpression();

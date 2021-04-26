@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -16,24 +15,38 @@ namespace LinqToDB.SqlQuery
 	{
 		public static bool ContainsElement(IQueryElement testedRoot, IQueryElement element)
 		{
-			return null != new QueryVisitor().Find(testedRoot, e => e == element);
+			return null != testedRoot.Find(element, static (element, e) => e == element);
+		}
+
+		private class IsDependsOnSourcesContext
+		{
+			public IsDependsOnSourcesContext(HashSet<ISqlTableSource> onSources, HashSet<IQueryElement>? elementsToIgnore)
+			{
+				OnSources        = onSources;
+				ElementsToIgnore = elementsToIgnore;
+			}
+
+			public readonly HashSet<ISqlTableSource> OnSources;
+			public readonly HashSet<IQueryElement>?  ElementsToIgnore;
+
+			public          bool                     DependencyFound;
 		}
 
 		public static bool IsDependsOn(IQueryElement testedRoot, HashSet<ISqlTableSource> onSources, HashSet<IQueryElement>? elementsToIgnore = null)
 		{
-			var dependencyFound = false;
+			var ctx = new IsDependsOnSourcesContext(onSources, elementsToIgnore);
 
-			new QueryVisitor().VisitParentFirst(testedRoot, e =>
+			testedRoot.VisitParentFirst(ctx, static (context, e) =>
 			{
-				if (dependencyFound)
+				if (context.DependencyFound)
 					return false;
 
-				if (elementsToIgnore != null && elementsToIgnore.Contains(e))
+				if (context.ElementsToIgnore != null && context.ElementsToIgnore.Contains(e))
 					return false;
 
-				if (e is ISqlTableSource source && onSources.Contains(source))
+				if (e is ISqlTableSource source && context.OnSources.Contains(source))
 				{
-					dependencyFound = true;
+					context.DependencyFound = true;
 					return false;
 				}
 
@@ -42,60 +55,87 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.Column :
 						{
 							var c = (SqlColumn) e;
-							if (onSources.Contains(c.Parent!))
-								dependencyFound = true;
+							if (context.OnSources.Contains(c.Parent!))
+								context.DependencyFound = true;
 							break;
 						}
 					case QueryElementType.SqlField :
 						{
 							var f = (SqlField) e;
-							if (onSources.Contains(f.Table!))
-								dependencyFound = true;
+							if (context.OnSources.Contains(f.Table!))
+								context.DependencyFound = true;
 							break;
 						}
 				}
 
-				return !dependencyFound;
+				return !context.DependencyFound;
 			});
 
-			return dependencyFound;
+			return ctx.DependencyFound;
+		}
+
+		private class IsDependsOnElementContext
+		{
+			public IsDependsOnElementContext(IQueryElement onElement, HashSet<IQueryElement>? elementsToIgnore)
+			{
+				OnElement        = onElement;
+				ElementsToIgnore = elementsToIgnore;
+			}
+
+			public readonly IQueryElement           OnElement;
+			public readonly HashSet<IQueryElement>? ElementsToIgnore;
+
+			public          bool                    DependencyFound;
 		}
 
 		public static bool IsDependsOn(IQueryElement testedRoot, IQueryElement onElement, HashSet<IQueryElement>? elementsToIgnore = null)
 		{
-			var dependencyFound = false;
+			var ctx = new IsDependsOnElementContext(onElement, elementsToIgnore);
 
-			new QueryVisitor().VisitParentFirst(testedRoot, e =>
+			testedRoot.VisitParentFirst(ctx, static (context, e) =>
 			{
-				if (elementsToIgnore != null && elementsToIgnore.Contains(e))
+				if (context.ElementsToIgnore != null && context.ElementsToIgnore.Contains(e))
 					return false;
 
-				if (e == onElement)
-					dependencyFound = true;
+				if (e == context.OnElement)
+					context.DependencyFound = true;
 
-				return !dependencyFound;
+				return !context.DependencyFound;
 			});
 
-			return dependencyFound;
+			return ctx.DependencyFound;
 		}
 
+		private class DependencyCountContext
+		{
+			public DependencyCountContext(IQueryElement onElement, HashSet<IQueryElement>? elementsToIgnore)
+			{
+				OnElement        = onElement;
+				ElementsToIgnore = elementsToIgnore;
+			}
+
+			public readonly IQueryElement           OnElement;
+			public readonly HashSet<IQueryElement>? ElementsToIgnore;
+
+			public          int                     DependencyCount;
+		}
 
 		public static int DependencyCount(IQueryElement testedRoot, IQueryElement onElement, HashSet<IQueryElement>? elementsToIgnore = null)
 		{
-			var dependencyCount = 0;
+			var ctx = new DependencyCountContext(onElement, elementsToIgnore);
 
-			new QueryVisitor().VisitParentFirstAll(testedRoot, e =>
+			testedRoot.VisitParentFirstAll(ctx, static (context, e) =>
 			{
-				if (elementsToIgnore != null && elementsToIgnore.Contains(e))
+				if (context.ElementsToIgnore != null && context.ElementsToIgnore.Contains(e))
 					return false;
 
-				if (e == onElement)
-					++dependencyCount;
+				if (e == context.OnElement)
+					++context.DependencyCount;
 
 				return true;
 			});
 
-			return dependencyCount;
+			return ctx.DependencyCount;
 		}
 
 
@@ -171,9 +211,9 @@ namespace LinqToDB.SqlQuery
 			var hash       = new HashSet<ISqlTableSource>(sources);
 			var hashIgnore = new HashSet<IQueryElement>(ignore ?? Enumerable.Empty<IQueryElement>());
 
-			new QueryVisitor().VisitParentFirst(root, e =>
+			root.VisitParentFirst(new { hash, hashIgnore, found }, static (context, e) =>
 			{
-				if (e is ISqlTableSource source && hash.Contains(source) || hashIgnore.Contains(e))
+				if (e is ISqlTableSource source && context.hash.Contains(source) || context.hashIgnore.Contains(e))
 					return false;
 
 				switch (e.ElementType)
@@ -181,15 +221,15 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.Column :
 						{
 							var c = (SqlColumn) e;
-							if (hash.Contains(c.Parent!))
-								found.Add(c);
+							if (context.hash.Contains(c.Parent!))
+								context.found.Add(c);
 							break;
 						}
 					case QueryElementType.SqlField :
 						{
 							var f = (SqlField) e;
-							if (hash.Contains(f.Table!))
-								found.Add(f);
+							if (context.hash.Contains(f.Table!))
+								context.found.Add(f);
 							break;
 						}
 				}
@@ -201,13 +241,13 @@ namespace LinqToDB.SqlQuery
 		{
 			var hashIgnore = new HashSet<IQueryElement>(ignore ?? Enumerable.Empty<IQueryElement>());
 
-			new QueryVisitor().VisitParentFirst(root, e =>
+			root.VisitParentFirst(new { hashIgnore, found }, static (context, e) =>
 			{
 				if (e is SqlTableSource source)
 				{
-					if (hashIgnore.Contains(e))
+					if (context.hashIgnore.Contains(e))
 						return false;
-					found.Add(source.Source);
+					context.found.Add(source.Source);
 				}
 
 				switch (e.ElementType)
@@ -215,13 +255,13 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.Column :
 					{
 						var c = (SqlColumn) e;
-						found.Add(c.Parent!);
+						context.found.Add(c.Parent!);
 						return false;
 					}
 					case QueryElementType.SqlField :
 					{
 						var f = (SqlField) e;
-						found.Add(f.Table!);
+						context.found.Add(f.Table!);
 						return false;
 					}
 				}
@@ -276,7 +316,7 @@ namespace LinqToDB.SqlQuery
 				var sqlExpression = (SqlExpression) expr;
 				expr = GetUnderlyingExpressionValue(sqlExpression);
 			}
-			return expr.ElementType.NotIn(QueryElementType.Column, QueryElementType.SqlField);
+			return expr.ElementType != QueryElementType.Column && expr.ElementType != QueryElementType.SqlField;
 		}
 
 		public static bool IsConstantFast(ISqlExpression expr)
@@ -343,7 +383,7 @@ namespace LinqToDB.SqlQuery
 		public static SqlJoinedTable? FindJoin(this SelectQuery query,
 			Func<SqlJoinedTable, bool> match)
 		{
-			return new QueryVisitor().Find(query, e =>
+			return query.Find(match, static (match, e) =>
 			{
 				if (e.ElementType == QueryElementType.JoinedTable)
 				{
@@ -804,7 +844,7 @@ namespace LinqToDB.SqlQuery
 		{
 			var compare = new SqlCondition(false,
 				new SqlPredicate.ExprExpr(field1, SqlPredicate.Operator.Equal, field2,
-					Configuration.Linq.CompareNullsAsValues ? true : (bool?)null));
+					Configuration.Linq.CompareNullsAsValues ? true : null));
 
 			return compare;
 		}
@@ -818,7 +858,7 @@ namespace LinqToDB.SqlQuery
 		{
 			if (foundSources == null) throw new ArgumentNullException(nameof(foundSources));
 
-			new QueryVisitor().Visit(root, e =>
+			root.Visit(foundSources, static (foundSources, e) =>
 			{
 				if (e is ISqlTableSource source)
 					foundSources.Add(source);
@@ -1172,7 +1212,7 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		static Regex _paramsRegex = new Regex(@"(?<open>{+)(?<key>\w+)(?<format>:[^}]+)?(?<close>}+)", RegexOptions.Compiled);
+		static Regex _paramsRegex = new (@"(?<open>{+)(?<key>\w+)(?<format>:[^}]+)?(?<close>}+)", RegexOptions.Compiled);
 
 		public static string TransformExpressionIndexes(string expression, Func<int, int> transformFunc)
 		{
@@ -1407,7 +1447,7 @@ namespace LinqToDB.SqlQuery
 
 			bool ContainsTable(ISqlTableSource tbl, IQueryElement qe)
 			{
-				return null != new QueryVisitor().Find(qe, e =>
+				return null != qe.Find(tbl, static (tbl, e) =>
 					e == tbl ||
 					e.ElementType == QueryElementType.SqlField && tbl == ((SqlField) e).Table ||
 					e.ElementType == QueryElementType.Column   && tbl == ((SqlColumn)e).Parent);
@@ -1434,32 +1474,38 @@ namespace LinqToDB.SqlQuery
 
 		public static bool HasQueryParameters(ISqlExpression expression)
 		{
-			return null != new QueryVisitor().Find(expression, e => (e.ElementType == QueryElementType.SqlParameter) && ((SqlParameter)e).IsQueryParameter);
+			return null != expression.Find<object?>(null, static (_, e) => (e.ElementType == QueryElementType.SqlParameter) && ((SqlParameter)e).IsQueryParameter);
+		}
+
+		private class NeedParameterInliningContext
+		{
+			public bool HasParameter;
+			public bool IsQueryParameter;
 		}
 
 		public static bool NeedParameterInlining(ISqlExpression expression)
 		{
-			bool hasParameter     = false;
-			bool isQueryParameter = false;
-			new QueryVisitor().Visit(expression, e =>
+			var ctx = new NeedParameterInliningContext();
+
+			expression.Visit(ctx, static (context, e) =>
 			{
 				if (e.ElementType == QueryElementType.SqlParameter)
 				{
-					hasParameter = true;
-					isQueryParameter = isQueryParameter || ((SqlParameter)e).IsQueryParameter;
+					context.HasParameter = true;
+					context.IsQueryParameter = context.IsQueryParameter || ((SqlParameter)e).IsQueryParameter;
 				}
 			});
 
-			if (hasParameter && isQueryParameter)
+			if (ctx.HasParameter && ctx.IsQueryParameter)
 				return false;
 
-			return hasParameter;
+			return ctx.HasParameter;
 		}
 
 		static IDictionary<QueryElementType, int> CountElements(this ISqlExpression expr)
 		{
 			var result = new Dictionary<QueryElementType, int>();
-			new QueryVisitor().VisitAll(expr, e =>
+			expr.VisitAll(result, static (result, e) =>
 			{
 				if (!result.TryGetValue(e.ElementType, out var cnt))
 				{
@@ -1509,13 +1555,16 @@ namespace LinqToDB.SqlQuery
 			if (expr.ElementType == QueryElementType.SqlBinaryExpression)
 				return false;
 
-			if (expr.ElementType.In(QueryElementType.SqlField, QueryElementType.Column, QueryElementType.SqlValue, QueryElementType.SqlParameter))
+			if (expr.ElementType == QueryElementType.SqlField ||
+				expr.ElementType == QueryElementType.Column   ||
+				expr.ElementType == QueryElementType.SqlValue ||
+				expr.ElementType == QueryElementType.SqlParameter)
 				return true;
 
 			if ((expr.ElementType == QueryElementType.SqlFunction) && ((SqlFunction)expr).Parameters.Length == 1)
 				return true;
 
-			if (null != new QueryVisitor().Find(expr, e => e.ElementType.In(QueryElementType.SqlQuery)))
+			if (null != expr.Find<object?>(null, static (_, e) => e.ElementType == QueryElementType.SqlQuery))
 				return false;
 
 			return true;

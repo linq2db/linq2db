@@ -64,7 +64,7 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				var body = definedQueryMethod.Body.Transform(e =>
+				var body = definedQueryMethod.Body.Transform(parameterMatch, static (parameterMatch, e) =>
 				{
 					if (e.NodeType == ExpressionType.Parameter &&
 					    parameterMatch.TryGetValue((ParameterExpression)e, out var newExpression))
@@ -321,19 +321,19 @@ namespace LinqToDB.Linq.Builder
 		public static Expression EnrichTablesWithLoadWith(IDataContext dataContext, Expression expression, Type entityType, List<LoadWithInfo[]> loadWith, MappingSchema mappingSchema)
 		{
 			var tableType     = typeof(ITable<>).MakeGenericType(entityType);
-			var newExpression = expression.Transform(e =>
-			{
-				if (e.NodeType == ExpressionType.Call)
+			var newExpression = expression.Transform(
+				new { tableType, dataContext, entityType, loadWith, mappingSchema },
+				static (context, e) =>
 				{
-					var mc = (MethodCallExpression)e;
-					if (mc.IsQueryable("GetTable") && tableType.IsSameOrParentOf(mc.Type))
+					if (e.NodeType == ExpressionType.Call)
 					{
-						e = EnrichLoadWith(dataContext, mc, entityType, loadWith, mappingSchema);
+						var mc = (MethodCallExpression)e;
+						if (mc.IsQueryable("GetTable") && context.tableType.IsSameOrParentOf(mc.Type))
+							e = EnrichLoadWith(context.dataContext, mc, context.entityType, context.loadWith, context.mappingSchema);
 					}
-				}
 
-				return e;
-			});
+					return e;
+				});
 
 			return newExpression;
 		}

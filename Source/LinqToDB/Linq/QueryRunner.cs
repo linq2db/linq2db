@@ -124,31 +124,30 @@ namespace LinqToDB.Linq
 				Type         dataReaderType,
 				bool         slowMode)
 			{
-				var variableType  = dataReader.GetType();
-
-				ParameterExpression? oldVariable = null;
-				ParameterExpression? newVariable = null;
-
 				Expression expression;
+				var ctx = new TransformMapperExpressionContext(_expression, context, dataReader, dataReaderType);
 				if (slowMode)
 				{
-					expression = _expression.Transform(e =>
-					{
-						if (e is ConvertFromDataReaderExpression ex)
-							return new ConvertFromDataReaderExpression(ex.Type, ex.Index, ex.Converter, newVariable!, context).Reduce();
+					expression = _expression.Transform(
+						ctx,
+						static (context, e) =>
+						{
+							if (e is ConvertFromDataReaderExpression ex)
+								return new ConvertFromDataReaderExpression(ex.Type, ex.Index, ex.Converter, context.NewVariable!, context.Context).Reduce();
 
-						return replaceVariable(e);
-					});
+							return ReplaceVariable(context, e);
+						});
 				}
 				else
 				{
 					expression = _expression.Transform(
-						e =>
+						ctx,
+						static (context, e) =>
 						{
 							if (e is ConvertFromDataReaderExpression ex)
-								return ex.Reduce(context, dataReader, newVariable!).Transform(replaceVariable);
+								return ex.Reduce(context.Context, context.DataReader, context.NewVariable!).Transform(context, ReplaceVariable);
 
-							return replaceVariable(e);
+							return ReplaceVariable(context, e);
 						});
 				}
 
@@ -156,26 +155,45 @@ namespace LinqToDB.Linq
 					expression = SequentialAccessHelper.OptimizeMappingExpressionForSequentialAccess(expression, dataReader.FieldCount, reduce: false);
 
 				return (Expression<Func<IQueryRunner, IDataReader, T>>)expression;
+			}
 
-				Expression replaceVariable(Expression e)
+			static Expression ReplaceVariable(TransformMapperExpressionContext context, Expression e)
+			{
+				if (e is ParameterExpression vex && vex.Name == "ldr")
 				{
-					if (e is ParameterExpression vex && vex.Name == "ldr")
-					{
-						oldVariable = vex;
-						return newVariable ??= Expression.Variable(variableType, "ldr");
-					}
-
-					if (e is BinaryExpression bex
-						&& bex.NodeType == ExpressionType.Assign
-						&& bex.Left == oldVariable)
-					{
-						Expression dataReaderExpression = Expression.Convert(_expression.Parameters[1], dataReaderType);
-
-						return Expression.Assign(newVariable, dataReaderExpression);
-					}
-
-					return e;
+					context.OldVariable = vex;
+					return context.NewVariable ??= Expression.Variable(context.DataReader.GetType(), "ldr");
 				}
+
+				if (e is BinaryExpression bex
+					&& bex.NodeType == ExpressionType.Assign
+					&& bex.Left     == context.OldVariable)
+				{
+					Expression dataReaderExpression = Expression.Convert(context.Expression.Parameters[1], context.DataReaderType);
+
+					return Expression.Assign(context.NewVariable, dataReaderExpression);
+				}
+
+				return e;
+			}
+
+			class TransformMapperExpressionContext
+			{
+				public TransformMapperExpressionContext(Expression<Func<IQueryRunner, IDataReader, T>> expression, IDataContext context, IDataReader dataReader, Type dataReaderType)
+				{
+					Expression     = expression;
+					Context        = context;
+					DataReader     = dataReader;
+					DataReaderType = dataReaderType;
+				}
+
+				public Expression<Func<IQueryRunner,IDataReader,T>> Expression;
+				public readonly IDataContext                        Context;
+				public readonly IDataReader                         DataReader;
+				public readonly Type                                DataReaderType;
+
+				public ParameterExpression? OldVariable;
+				public ParameterExpression? NewVariable;
 			}
 		}
 

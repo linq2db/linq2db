@@ -69,6 +69,20 @@ namespace LinqToDB.SqlProvider
 			return IsDependedExcludeJoins(testedSources);
 		}
 
+		private class IsDependedContext
+		{
+			public IsDependedContext(JoinOptimizer optimizer, HashSet<int> testedSources)
+			{
+				Optimizer     = optimizer;
+				TestedSources = testedSources;
+			}
+
+			public bool Dependent;
+
+			public readonly JoinOptimizer Optimizer;
+			public readonly HashSet<int>  TestedSources;
+		}
+
 		bool IsDepended(SqlJoinedTable join, SqlJoinedTable toIgnore)
 		{
 			var testedSources = new HashSet<int>(join.Table.GetTables().Select(t => t.SourceID));
@@ -76,11 +90,11 @@ namespace LinqToDB.SqlProvider
 				foreach (var sourceId in toIgnore.Table.GetTables().Select(t => t.SourceID))
 					testedSources.Add(sourceId);
 
-			var dependent = false;
+			var ctx = new IsDependedContext(this, testedSources);
 
-			new QueryVisitor().VisitParentFirst(_statement, e =>
+			_statement.VisitParentFirst(ctx, static (context, e) =>
 			{
-				if (dependent)
+				if (context.Dependent)
 					return false;
 
 				// ignore non searchable parts
@@ -90,7 +104,7 @@ namespace LinqToDB.SqlProvider
 					return false;
 
 				if (e.ElementType == QueryElementType.JoinedTable)
-					if (testedSources.Contains(((SqlJoinedTable) e).Table.SourceID))
+					if (context.TestedSources.Contains(((SqlJoinedTable) e).Table.SourceID))
 						return false;
 
 				if (e is ISqlExpression expression)
@@ -98,17 +112,17 @@ namespace LinqToDB.SqlProvider
 					var field = GetUnderlayingField(expression);
 					if (field != null)
 					{
-						var newField = GetNewField(field);
-						var local = testedSources.Contains(newField.SourceID);
+						var newField = context.Optimizer.GetNewField(field);
+						var local = context.TestedSources.Contains(newField.SourceID);
 						if (local)
-							dependent = !CanWeReplaceField(null, newField, testedSources, -1);
+							context.Dependent = !context.Optimizer.CanWeReplaceField(null, newField, context.TestedSources, -1);
 					}
 				}
 
-				return !dependent;
+				return !context.Dependent;
 			});
 
-			return dependent;
+			return ctx.Dependent;
 		}
 
 		bool IsDependedExcludeJoins(SqlJoinedTable join)
@@ -117,13 +131,25 @@ namespace LinqToDB.SqlProvider
 			return IsDependedExcludeJoins(testedSources);
 		}
 
+		private class IsDependedExcludeJoinsContext
+		{
+			public IsDependedExcludeJoinsContext(JoinOptimizer optimizer, HashSet<int> testedSources)
+			{
+				Optimizer     = optimizer;
+				TestedSources = testedSources;
+			}
+
+			public bool Dependent;
+
+			public readonly JoinOptimizer Optimizer;
+			public readonly HashSet<int>  TestedSources;
+		}
+
 		bool IsDependedExcludeJoins(HashSet<int> testedSources)
 		{
-			var dependent = false;
-
-			bool CheckDependency(IQueryElement e)
+			static bool CheckDependency(IsDependedExcludeJoinsContext context, IQueryElement e)
 			{
-				if (dependent)
+				if (context.Dependent)
 					return false;
 
 				if (e.ElementType == QueryElementType.JoinedTable)
@@ -135,61 +161,94 @@ namespace LinqToDB.SqlProvider
 
 					if (field != null)
 					{
-						var newField = GetNewField(field);
-						var local = testedSources.Contains(newField.SourceID);
+						var newField = context.Optimizer.GetNewField(field);
+						var local = context.TestedSources.Contains(newField.SourceID);
 						if (local)
-							dependent = !CanWeReplaceField(null, newField, testedSources, -1);
+							context.Dependent = !context.Optimizer.CanWeReplaceField(null, newField, context.TestedSources, -1);
 					}
 				}
 
-				return !dependent;
+				return !context.Dependent;
 			}
 
-			//TODO: review dependency checking
-			new QueryVisitor().VisitParentFirst(_selectQuery, CheckDependency);
-			if (!dependent && _selectQuery.ParentSelect == null)
-				new QueryVisitor().VisitParentFirst(_statement, CheckDependency);
+			var ctx = new IsDependedExcludeJoinsContext(this, testedSources);
 
-			return dependent;
+			//TODO: review dependency checking
+			_selectQuery.VisitParentFirst(ctx, CheckDependency);
+			if (!ctx.Dependent && _selectQuery.ParentSelect == null)
+				_statement.VisitParentFirst(ctx, CheckDependency);
+
+			return ctx.Dependent;
 		}
 
-		bool HasDependencyWithParent(SqlJoinedTable parent,
-			SqlJoinedTable child)
+		private class HasDependencyWithParentContext
 		{
-			var sources   = new HashSet<int>(child.Table.GetTables().Select(t => t.SourceID));
-			var dependent = false;
+			public HasDependencyWithParentContext(SqlJoinedTable child, HashSet<int> sources)
+			{
+				Child   = child;
+				Sources = sources;
+			}
+
+			public readonly SqlJoinedTable Child;
+			public readonly HashSet<int>   Sources;
+
+			public bool Dependent;
+		}
+
+		bool HasDependencyWithParent(SqlJoinedTable parent, SqlJoinedTable child)
+		{
+			var sources = new HashSet<int>(child.Table.GetTables().Select(t => t.SourceID));
+			var ctx     = new HasDependencyWithParentContext(child, sources);
 
 			// check that parent has dependency on child
-			new QueryVisitor().VisitParentFirst(parent, e =>
+			parent.VisitParentFirst(ctx, static (context, e) =>
 			{
-				if (dependent)
+				if (context.Dependent)
 					return false;
 
-				if (e == child)
+				if (e == context.Child)
 					return false;
 
 				if (e is ISqlExpression expression)
 				{
 					var field = GetUnderlayingField(expression);
 					if (field != null)
-						dependent = sources.Contains(field.SourceID);
+						context.Dependent = context.Sources.Contains(field.SourceID);
 				}
 
-				return !dependent;
+				return !context.Dependent;
 			});
 
-			return dependent;
+			return ctx.Dependent;
 		}
+
+		private class IsDependedOnJoinContext
+		{
+			public IsDependedOnJoinContext(JoinOptimizer optimizer, SqlTableSource table, HashSet<int> testedSources, int currentSourceId)
+			{
+				Optimizer       = optimizer;
+				Table           = table;
+				TestedSources   = testedSources;
+				CurrentSourceId = currentSourceId;
+			}
+
+			public bool Dependent;
+
+			public readonly JoinOptimizer  Optimizer;
+			public readonly SqlTableSource Table;
+			public readonly HashSet<int>   TestedSources;
+			public readonly int            CurrentSourceId;
+		}
+
 
 		bool IsDependedOnJoin(SqlTableSource table, SqlJoinedTable testedJoin, HashSet<int> testedSources)
 		{
-			var dependent       = false;
-			var currentSourceId = testedJoin.Table.SourceID;
+			var ctx = new IsDependedOnJoinContext(this, table, testedSources, testedJoin.Table.SourceID);
 
 			// check everything that can be dependent on specific table
-			new QueryVisitor().VisitParentFirst(testedJoin, e =>
+			testedJoin.VisitParentFirst(ctx, static (context, e) =>
 			{
-				if (dependent)
+				if (context.Dependent)
 					return false;
 
 				if (e is ISqlExpression expression)
@@ -198,18 +257,18 @@ namespace LinqToDB.SqlProvider
 
 					if (field != null)
 					{
-						var newField = GetNewField(field);
-						var local    = testedSources.Contains(newField.SourceID);
+						var newField = context.Optimizer.GetNewField(field);
+						var local    = context.TestedSources.Contains(newField.SourceID);
 
 						if (local)
-							dependent = !CanWeReplaceField(table, newField, testedSources, currentSourceId);
+							context.Dependent = !context.Optimizer.CanWeReplaceField(context.Table, newField, context.TestedSources, context.CurrentSourceId);
 					}
 				}
 
-				return !dependent;
+				return !context.Dependent;
 			});
 
-			return dependent;
+			return ctx.Dependent;
 		}
 
 		bool CanWeReplaceFieldInternal(

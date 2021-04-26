@@ -85,7 +85,7 @@ namespace LinqToDB.SqlQuery
 			if (parentQuery == null)
 				return;
 
-			new QueryVisitor().Visit(parentQuery, element =>
+			parentQuery.Visit(parentQuery, static(parentQuery, element) =>
 			{
 				if (element is SelectQuery q)
 					q.ParentSelect = parentQuery;

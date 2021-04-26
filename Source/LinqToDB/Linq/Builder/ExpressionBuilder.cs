@@ -23,7 +23,7 @@ namespace LinqToDB.Linq.Builder
 
 		static readonly object _sync = new ();
 
-		static List<ISequenceBuilder> _sequenceBuilders = new List<ISequenceBuilder>()
+		static List<ISequenceBuilder> _sequenceBuilders = new ()
 		{
 			new TableBuilder               (),
 			new IgnoreFiltersBuilder       (),
@@ -316,21 +316,21 @@ namespace LinqToDB.Linq.Builder
 
 		Expression ConvertParameters(Expression expression)
 		{
-			return expression.Transform(expr =>
+			return expression.Transform(CompiledParameters, static(compiledParameters, expr) =>
 			{
 				switch (expr.NodeType)
 				{
 					case ExpressionType.Parameter:
-						if (CompiledParameters != null)
+						if (compiledParameters != null)
 						{
-							var idx = Array.IndexOf(CompiledParameters, (ParameterExpression)expr);
+							var idx = Array.IndexOf(compiledParameters, (ParameterExpression)expr);
 
 							if (idx > 0)
 								return
 									Expression.Convert(
 										Expression.ArrayIndex(
 											ParametersParam,
-											Expression.Constant(Array.IndexOf(CompiledParameters, (ParameterExpression)expr))),
+											Expression.Constant(Array.IndexOf(compiledParameters, (ParameterExpression)expr))),
 										expr.Type);
 						}
 
@@ -365,7 +365,7 @@ namespace LinqToDB.Linq.Builder
 
 		static void CollectLambdaParameters(Expression expression, HashSet<ParameterExpression> foundParameters)
 		{
-			expression.Visit(e =>
+			expression.Visit(foundParameters, static (foundParameters, e) =>
 			{
 				if (e.NodeType == ExpressionType.Lambda)
 				{
@@ -382,7 +382,7 @@ namespace LinqToDB.Linq.Builder
 			expr = ExposeExpression(expression);
 			var currentParameters = new HashSet<ParameterExpression>();
 			CollectLambdaParameters(expression, currentParameters);
-			expr = expr.Transform(e => OptimizeExpressionImpl(e, currentParameters));
+			expr = expr.Transform(new { currentParameters, builder = this }, static(context, e) => context.builder.OptimizeExpressionImpl(e, context.currentParameters));
 
 			_optimizedExpressions[expression] = expr;
 
@@ -562,7 +562,7 @@ namespace LinqToDB.Linq.Builder
 		Expression ConvertSingleOrFirst(Expression expr, MethodCallExpression call)
 		{
 			var param    = Expression.Parameter(call.Type, "p");
-			var selector = expr.Transform(e => e == call ? param : e);
+			var selector = expr.Transform(new { call, param }, static (context, e) => e == context.call ? context.param : e);
 			var method   = GetQueryableMethodInfo(call, (m, _) => m.Name == call.Method.Name && m.GetParameters().Length == 1);
 			var select   = call.Method.DeclaringType == typeof(Enumerable) ?
 				EnumerableMethods
@@ -599,7 +599,7 @@ namespace LinqToDB.Linq.Builder
 
 			var exprs     = new List<Expression>();
 
-			lbody.Visit(ex =>
+			lbody.Visit(new { exprs, MappingSchema }, static (context, ex) =>
 			{
 				if (ex.NodeType == ExpressionType.Call)
 				{
@@ -609,13 +609,13 @@ namespace LinqToDB.Linq.Builder
 					{
 						var arg = call.Arguments[0];
 
-						if (call.IsAggregate(MappingSchema))
+						if (call.IsAggregate(context.MappingSchema))
 						{
 							while (arg.NodeType == ExpressionType.Call && ((MethodCallExpression)arg).Method.Name == "Select")
 								arg = ((MethodCallExpression)arg).Arguments[0];
 
 							if (arg.NodeType == ExpressionType.Call)
-								exprs.Add(ex);
+								context.exprs.Add(ex);
 						}
 						else if (call.IsQueryable(CountBuilder.MethodNames))
 						{
@@ -623,7 +623,7 @@ namespace LinqToDB.Linq.Builder
 							//	arg = ((MethodCallExpression) arg).Arguments[0];
 
 							if (arg.NodeType == ExpressionType.Call)
-								exprs.Add(ex);
+								context.exprs.Add(ex);
 						}
 					}
 				}
@@ -665,11 +665,11 @@ namespace LinqToDB.Linq.Builder
 					_subQueryExpressions.Add(ex);
 				}
 
-				var newBody = lbody.Transform(ex => dic.TryGetValue(ex, out var e) ? e : ex);
+				var newBody = lbody.Transform(dic, static (dic, ex) => dic.TryGetValue(ex, out var e) ? e : ex);
 
 				var nparm = exprs.Aggregate<Expression,Expression>(parm, (c,t) => ExpressionHelper.PropertyOrField(c, "p"));
 
-				newBody   = newBody.Transform(ex => ReferenceEquals(ex, lparam) ? nparm : ex);
+				newBody   = newBody.Transform(new { lparam, nparm }, static (context, ex) => ReferenceEquals(ex, context.lparam) ? context.nparm : ex);
 				predicate = Expression.Lambda(newBody, parm);
 
 				var methodInfo = GetMethodInfo(method, "Select");
@@ -887,38 +887,44 @@ namespace LinqToDB.Linq.Builder
 				ParameterExpression? resArg)
 			{
 				var body = func.Body.Unwrap();
-				var expr = body.Transform(ex =>
+				var expr = body.Transform(new { builder = this, func, keyArg, elemArg, resArg }, static (context, ex) =>
 				{
-					if (ReferenceEquals(ex, func.Parameters[0]))
-						return _sourceExpression;
+					if (ReferenceEquals(ex, context.func.Parameters[0]))
+						return context.builder._sourceExpression;
 
-					if (ReferenceEquals(ex, func.Parameters[1]))
-						return _keySelector.Body.Transform(e => ReferenceEquals(e, _keySelector.Parameters[0]) ? keyArg : e);
+					if (ReferenceEquals(ex, context.func.Parameters[1]))
+						return context.builder._keySelector.Body.Transform(
+							context,
+							static (context, e) => ReferenceEquals(e, context.builder._keySelector.Parameters[0]) ? context.keyArg : e);
 
-					if (ReferenceEquals(ex, func.Parameters[2]))
+					if (ReferenceEquals(ex, context.func.Parameters[2]))
 					{
-						Expression obj = elemArg!;
+						Expression obj = context.elemArg!;
 
-						if (_wrapInSubQuery)
-							obj = ExpressionHelper.PropertyOrField(elemArg!, "Element");
+						if (context.builder._wrapInSubQuery)
+							obj = ExpressionHelper.PropertyOrField(context.elemArg!, "Element");
 
-						if (_elementSelector == null)
+						if (context.builder._elementSelector == null)
 							return obj;
 
-						return _elementSelector.Body.Transform(e => ReferenceEquals(e, _elementSelector!.Parameters[0]) ? obj : e);
+						return context.builder._elementSelector.Body.Transform(
+							new { parent = context, obj},
+							static (context, e) => ReferenceEquals(e, context.parent.builder._elementSelector!.Parameters[0]) ? context.obj : e);
 					}
 
-					if (ReferenceEquals(ex, func.Parameters[3]))
-						return _resultSelector!.Body.Transform(e =>
-						{
-							if (ReferenceEquals(e, _resultSelector.Parameters[0]))
-								return ExpressionHelper.PropertyOrField(resArg!, "Key");
+					if (ReferenceEquals(ex, context.func.Parameters[3]))
+						return context.builder._resultSelector!.Body.Transform(
+							context,
+							static (context, e) =>
+							{
+								if (ReferenceEquals(e, context.builder._resultSelector!.Parameters[0]))
+									return ExpressionHelper.PropertyOrField(context.resArg!, "Key");
 
-							if (ReferenceEquals(e, _resultSelector.Parameters[1]))
-								return resArg!;
+								if (ReferenceEquals(e, context.builder._resultSelector.Parameters[1]))
+									return context.resArg!;
 
-							return e;
-						});
+								return e;
+							});
 
 					return ex;
 				});
@@ -984,7 +990,7 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		bool IsExpression(Expression ex)
+		bool IsExpression(object? _, Expression ex)
 		{
 			switch (ex.NodeType)
 			{
@@ -1060,13 +1066,15 @@ namespace LinqToDB.Linq.Builder
 			Expression Convert(LambdaExpression func, ParameterExpression colArg)
 			{
 				var body = func.Body.Unwrap();
-				var expr = body.Transform(ex =>
+				var expr = body.Transform(new { builder = this, func, colArg }, static (context, ex) =>
 				{
-					if (ex == func.Parameters[0])
-						return _sourceExpression;
+					if (ex == context.func.Parameters[0])
+						return context.builder._sourceExpression;
 
-					if (ex == func.Parameters[1])
-						return _colSelector.Body.Transform(e => e == _colSelector.Parameters[0] ? colArg : e);
+					if (ex == context.func.Parameters[1])
+						return context.builder._colSelector.Body.Transform(
+							context,
+							static (context, e) => e == context.builder._colSelector.Parameters[0] ? context.colArg : e);
 
 					return ex;
 				});
@@ -1285,7 +1293,7 @@ namespace LinqToDB.Linq.Builder
 			bool HasParamatersDefined(Expression testedExpression, IEnumerable<ParameterExpression> allowed)
 			{
 				var current = new HashSet<ParameterExpression>(allowed);
-				var result  = null == testedExpression.Find(e =>
+				var result  = null == testedExpression.Find(current, static (current, e) =>
 				{
 					if (e is LambdaExpression lambda)
 					{
@@ -1306,7 +1314,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var p    = Expression.Parameter(typeof(Expression), "exp");
 				var exas = expression.GetExpressionAccessors(p);
-				var expr = ReplaceParameter(exas, expression, forceConstant: false, _ => {}).ValueExpression;
+				var expr = ReplaceParameter(exas, expression, forceConstant: false, null).ValueExpression;
 
 				var allowedParameters = new HashSet<ParameterExpression>(currentParameters) { p };
 
@@ -1331,8 +1339,9 @@ namespace LinqToDB.Linq.Builder
 							{
 								if (!(callExpression.EvaluateExpression() is IQueryable appliedQuery))
 									throw new LinqToDBException($"Method call '{expression}' returned null value.");
-								var newExpression = appliedQuery.Expression.Transform(e =>
-									e == fakeQuery.Expression ? firstArgument : e);
+								var newExpression = appliedQuery.Expression.Transform(
+									new { expr = fakeQuery.Expression, firstArgument },
+									static (context, e) => e == context.expr ? context.firstArgument : e);
 								return newExpression;
 							}
 						}
@@ -1414,7 +1423,7 @@ namespace LinqToDB.Linq.Builder
 
 		void CollectQueryDepended(Expression expr)
 		{
-			expr.Visit(e =>
+			expr.Visit(_query, static (query, e) =>
 			{
 				if (e.NodeType == ExpressionType.Call)
 				{
@@ -1425,7 +1434,7 @@ namespace LinqToDB.Linq.Builder
 						var attr = parameters[i].GetCustomAttributes(typeof(SqlQueryDependentAttribute), false).Cast<SqlQueryDependentAttribute>()
 							.FirstOrDefault();
 						if (attr != null)
-							_query.AddQueryDependedObject(call.Arguments[i], attr);
+							query.AddQueryDependedObject(call.Arguments[i], attr);
 					}
 				}
 			});

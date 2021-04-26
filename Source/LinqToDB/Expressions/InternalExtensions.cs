@@ -57,8 +57,7 @@ namespace LinqToDB.Expressions
 
 		#region Caches
 
-		static readonly ConcurrentDictionary<MethodInfo,SqlQueryDependentAttribute[]?> _queryDependentMethods =
-			new ConcurrentDictionary<MethodInfo,SqlQueryDependentAttribute[]?>();
+		static readonly ConcurrentDictionary<MethodInfo,SqlQueryDependentAttribute?[]?> _queryDependentMethods = new ();
 
 		public static void ClearCaches()
 		{
@@ -492,17 +491,17 @@ namespace LinqToDB.Expressions
 			}
 
 			var dependentParameters = _queryDependentMethods.GetOrAdd(
-				expr1.Method, mi =>
+				expr1.Method, static mi =>
 				{
 					var arr = mi
 						.GetParameters()
-						.Select(p => p.GetCustomAttributes(typeof(SqlQueryDependentAttribute), false).OfType<SqlQueryDependentAttribute>().FirstOrDefault())
+						.Select(static p => p.GetCustomAttributes(typeof(SqlQueryDependentAttribute), false).OfType<SqlQueryDependentAttribute>().FirstOrDefault())
 						.ToArray();
 
-					return arr.Any(a => a != null) ? arr : null;
+					return arr.Any(static a => a != null) ? arr : null;
 				});
 
-			bool DefaultCompareArguments(Expression arg1, Expression arg2)
+			static bool DefaultCompareArguments(Expression arg1, Expression arg2, EqualsToInfo info)
 			{
 				if (typeof(Sql.IQueryableContainer).IsSameOrParentOf(arg1.Type))
 				{
@@ -522,7 +521,7 @@ namespace LinqToDB.Expressions
 			{
 				for (var i = 0; i < expr1.Arguments.Count; i++)
 				{
-					if (!DefaultCompareArguments(expr1.Arguments[i], expr2.Arguments[i]))
+					if (!DefaultCompareArguments(expr1.Arguments[i], expr2.Arguments[i], info))
 						return false;
 				}
 			}
@@ -548,7 +547,7 @@ namespace LinqToDB.Expressions
 								var arg2 = enum2.Current;
 								if (info.QueryDependedObjects != null && info.QueryDependedObjects.TryGetValue(arg1, out var nevValue))
 									arg1 = nevValue;
-								if (!dependentAttribute.ExpressionsEqual(arg1, arg2, (e1, e2) => e1.EqualsTo(e2, info)))
+								if (!dependentAttribute.ExpressionsEqual(info, arg1, arg2, static (info, e1, e2) => e1.EqualsTo(e2, info)))
 									return false;
 							}
 
@@ -558,7 +557,7 @@ namespace LinqToDB.Expressions
 					}
 					else
 					{
-						if (!DefaultCompareArguments(expr1.Arguments[i], expr2.Arguments[i]))
+						if (!DefaultCompareArguments(expr1.Arguments[i], expr2.Arguments[i], info))
 							return false;
 					}
 				}
@@ -577,312 +576,15 @@ namespace LinqToDB.Expressions
 		#endregion
 
 		#region Path
-
-		class PathInfo
+		public static void Path<TContext>(this Expression expr, Expression path, TContext context, Action<TContext, Expression, Expression> func)
 		{
-			public PathInfo(
-				HashSet<Expression>           visited,
-				Action<Expression,Expression> func)
-			{
-				Visited = visited;
-				Func    = func;
-			}
-
-			public HashSet<Expression>           Visited;
-			public Action<Expression,Expression> Func;
+			new PathVisitor<TContext>(context, path, func).Path(expr);
 		}
 
-		static Expression ConvertTo(Expression expr, Type type)
+		public static void Path<TContext>(this Expression expr, Expression path, Action<object?, Expression, Expression> func)
 		{
-			return Expression.Convert(expr, type);
+			new PathVisitor<object?>(null, path, func).Path(expr);
 		}
-
-		static void Path<T>(IEnumerable<T> source, Expression path, MethodInfo property, Action<T,Expression> func)
-			where T : class
-		{
-#if DEBUG
-			_callCounter4++;
-#endif
-			var prop = Expression.Property(path, property);
-			var i    = 0;
-			foreach (var item in source)
-				func(item, Expression.Call(prop, ReflectionHelper.IndexExpressor<T>.Item, Expression.Constant(i++)));
-		}
-
-		static void Path<T>(PathInfo info, IEnumerable<T> source, Expression path, MethodInfo property)
-			where T : Expression
-		{
-#if DEBUG
-			_callCounter3++;
-#endif
-			var prop = Expression.Property(path, property);
-			var i    = 0;
-			foreach (var item in source)
-				Path(info, item, Expression.Call(prop, ReflectionHelper.IndexExpressor<T>.Item, Expression.Constant(i++)));
-		}
-
-		static void Path(PathInfo info, Expression expr, Expression path, MethodInfo property)
-		{
-#if DEBUG
-			_callCounter2++;
-#endif
-			Path(info, expr, Expression.Property(path, property));
-		}
-
-		public static void Path(this Expression expr, Expression path, Action<Expression, Expression> func)
-		{
-#if DEBUG
-			_callCounter1 = 0;
-			_callCounter2 = 0;
-			_callCounter3 = 0;
-			_callCounter4 = 0;
-#endif
-			Path(new PathInfo(new HashSet<Expression>(), func), expr, path);
-		}
-
-#if DEBUG
-		static int _callCounter1;
-		static int _callCounter2;
-		static int _callCounter3;
-		static int _callCounter4;
-#endif
-
-		static void Path(PathInfo info, Expression? expr, Expression path)
-		{
-#if DEBUG
-			_callCounter1++;
-#endif
-
-			if (expr == null)
-				return;
-
-			switch (expr.NodeType)
-			{
-				case ExpressionType.Add:
-				case ExpressionType.AddChecked:
-				case ExpressionType.And:
-				case ExpressionType.AndAlso:
-				case ExpressionType.ArrayIndex:
-				case ExpressionType.Assign:
-				case ExpressionType.Coalesce:
-				case ExpressionType.Divide:
-				case ExpressionType.Equal:
-				case ExpressionType.ExclusiveOr:
-				case ExpressionType.GreaterThan:
-				case ExpressionType.GreaterThanOrEqual:
-				case ExpressionType.LeftShift:
-				case ExpressionType.LessThan:
-				case ExpressionType.LessThanOrEqual:
-				case ExpressionType.Modulo:
-				case ExpressionType.Multiply:
-				case ExpressionType.MultiplyChecked:
-				case ExpressionType.NotEqual:
-				case ExpressionType.Or:
-				case ExpressionType.OrElse:
-				case ExpressionType.Power:
-				case ExpressionType.RightShift:
-				case ExpressionType.Subtract:
-				case ExpressionType.SubtractChecked:
-					{
-						path = ConvertTo(path, typeof(BinaryExpression));
-
-						Path(info, ((BinaryExpression)expr).Conversion, Expression.Property(path, ReflectionHelper.Binary.Conversion));
-						Path(info, ((BinaryExpression)expr).Left,       Expression.Property(path, ReflectionHelper.Binary.Left));
-						Path(info, ((BinaryExpression)expr).Right,      Expression.Property(path, ReflectionHelper.Binary.Right));
-
-						break;
-					}
-
-				case ExpressionType.ArrayLength:
-				case ExpressionType.Convert:
-				case ExpressionType.ConvertChecked:
-				case ExpressionType.Negate:
-				case ExpressionType.NegateChecked:
-				case ExpressionType.Not:
-				case ExpressionType.Quote:
-				case ExpressionType.TypeAs:
-				case ExpressionType.UnaryPlus:
-					Path(
-						info,
-						((UnaryExpression)expr).Operand,
-						path = ConvertTo(path, typeof(UnaryExpression)),
-						ReflectionHelper.Unary.Operand);
-					break;
-
-				case ExpressionType.Call:
-					{
-						path = ConvertTo(path, typeof(MethodCallExpression));
-
-						Path(info, ((MethodCallExpression)expr).Object,    path, ReflectionHelper.MethodCall.Object);
-						Path(info, ((MethodCallExpression)expr).Arguments, path, ReflectionHelper.MethodCall.Arguments);
-
-						break;
-					}
-
-				case ExpressionType.Conditional:
-					{
-						path = ConvertTo(path, typeof(ConditionalExpression));
-
-						Path(info, ((ConditionalExpression)expr).Test,    path, ReflectionHelper.Conditional.Test);
-						Path(info, ((ConditionalExpression)expr).IfTrue,  path, ReflectionHelper.Conditional.IfTrue);
-						Path(info, ((ConditionalExpression)expr).IfFalse, path, ReflectionHelper.Conditional.IfFalse);
-
-						break;
-					}
-
-				case ExpressionType.Invoke:
-					{
-						path = ConvertTo(path, typeof(InvocationExpression));
-
-						Path(info, ((InvocationExpression)expr).Expression, path, ReflectionHelper.Invocation.Expression);
-						Path(info, ((InvocationExpression)expr).Arguments,  path, ReflectionHelper.Invocation.Arguments);
-
-						break;
-					}
-
-				case ExpressionType.Lambda:
-					{
-						path = ConvertTo(path, typeof(LambdaExpression));
-
-						Path(info, ((LambdaExpression)expr).Body,       path, ReflectionHelper.LambdaExpr.Body);
-						Path(info, ((LambdaExpression)expr).Parameters, path, ReflectionHelper.LambdaExpr.Parameters);
-
-						break;
-					}
-
-				case ExpressionType.ListInit:
-					{
-						path = ConvertTo(path, typeof(ListInitExpression));
-
-						Path(info, ((ListInitExpression)expr).NewExpression, path, ReflectionHelper.ListInit.NewExpression);
-						Path(      ((ListInitExpression)expr).Initializers,  path, ReflectionHelper.ListInit.Initializers,
-							(ex, p) => Path(info, ex.Arguments, p, ReflectionHelper.ElementInit.Arguments));
-
-						break;
-					}
-
-				case ExpressionType.MemberAccess:
-					Path(
-						info,
-						((MemberExpression)expr).Expression,
-						path = ConvertTo(path, typeof(MemberExpression)),
-						ReflectionHelper.Member.Expression);
-					break;
-
-				case ExpressionType.MemberInit:
-					{
-						void Modify(MemberBinding b, Expression pinf)
-						{
-							switch (b.BindingType)
-							{
-								case MemberBindingType.Assignment:
-									Path(
-										info,
-										((MemberAssignment)b).Expression,
-										ConvertTo(pinf, typeof(MemberAssignment)),
-										ReflectionHelper.MemberAssignmentBind.Expression);
-									break;
-
-								case MemberBindingType.ListBinding:
-									Path(
-										((MemberListBinding)b).Initializers,
-										ConvertTo(pinf, typeof(MemberListBinding)),
-										ReflectionHelper.MemberListBind.Initializers,
-										(p, psi) => Path(info, p.Arguments, psi, ReflectionHelper.ElementInit.Arguments));
-									break;
-
-								case MemberBindingType.MemberBinding:
-									Path(
-										((MemberMemberBinding)b).Bindings,
-										ConvertTo(pinf, typeof(MemberMemberBinding)),
-										ReflectionHelper.MemberMemberBind.Bindings,
-										Modify);
-									break;
-							}
-						}
-
-						path = ConvertTo(path, typeof(MemberInitExpression));
-
-						Path(info, ((MemberInitExpression)expr).NewExpression, path, ReflectionHelper.MemberInit.NewExpression);
-						Path(      ((MemberInitExpression)expr).Bindings,      path, ReflectionHelper.MemberInit.Bindings,      Modify);
-
-						break;
-					}
-
-				case ExpressionType.New:
-					Path(
-						info,
-						((NewExpression)expr).Arguments,
-						path = ConvertTo(path, typeof(NewExpression)),
-						ReflectionHelper.New.Arguments);
-					break;
-
-				case ExpressionType.NewArrayBounds:
-					Path(
-						info,
-						((NewArrayExpression)expr).Expressions,
-						path = ConvertTo(path, typeof(NewArrayExpression)),
-						ReflectionHelper.NewArray.Expressions);
-					break;
-
-				case ExpressionType.NewArrayInit:
-					Path(
-						info,
-						((NewArrayExpression)expr).Expressions,
-						path = ConvertTo(path, typeof(NewArrayExpression)),
-						ReflectionHelper.NewArray.Expressions);
-					break;
-
-				case ExpressionType.TypeIs:
-					Path(
-						info,
-						((TypeBinaryExpression)expr).Expression,
-						path = ConvertTo(path, typeof(TypeBinaryExpression)),
-						ReflectionHelper.TypeBinary.Expression);
-					break;
-
-				case ExpressionType.Block:
-					{
-						path = ConvertTo(path, typeof(BlockExpression));
-
-						Path(info,((BlockExpression)expr).Expressions, path, ReflectionHelper.Block.Expressions);
-						Path(info,((BlockExpression)expr).Variables,   path, ReflectionHelper.Block.Variables); // ?
-
-						break;
-					}
-
-				case ExpressionType.Constant:
-					{
-						path = ConvertTo(path, typeof(ConstantExpression));
-
-						if (((ConstantExpression)expr).Value is IQueryable iq && !info.Visited.Contains(iq.Expression))
-						{
-							info.Visited.Add(iq.Expression);
-
-							Expression p = Expression.Property(path, ReflectionHelper.Constant.Value);
-							p = ConvertTo(p, typeof(IQueryable));
-							Path(info, iq.Expression, p, ReflectionHelper.QueryableInt.Expression);
-						}
-
-						break;
-					}
-
-				case ExpressionType.Parameter: path = ConvertTo(path, typeof(ParameterExpression)); break;
-
-				case ExpressionType.Extension:
-					{
-						if (expr.CanReduce)
-						{
-							expr = expr.Reduce();
-							Path(info, expr, path);
-						}
-						break;
-					}
-			}
-
-			info.Func(expr, path);
-		}
-
 		#endregion
 
 		#region Helpers
@@ -975,7 +677,7 @@ namespace LinqToDB.Expressions
 		{
 			var accessors = new Dictionary<Expression,Expression>();
 
-			expression.Path(path, (e,p) =>
+			expression.Path(path, accessors, static (accessors, e, p) =>
 			{
 				switch (e.NodeType)
 				{
@@ -1138,7 +840,7 @@ namespace LinqToDB.Expressions
 		{
 			var functions = mapping.GetAttributes<Sql.ExtensionAttribute>(methodCall.Method.ReflectedType!,
 				methodCall.Method,
-				f => f.Configuration);
+				static f => f.Configuration);
 			return functions.Any();
 		}
 
@@ -1410,7 +1112,7 @@ namespace LinqToDB.Expressions
 		/// <returns>Optimized expression.</returns>
 		public static Expression? OptimizeExpression(this Expression? expression)
 		{
-			var optimized = expression?.Transform(e =>
+			var optimized = expression?.Transform(static (_, e) =>
 				{
 					var newExpr = e;
 					if (e is BinaryExpression binary)
@@ -1447,7 +1149,7 @@ namespace LinqToDB.Expressions
 					{
 						switch (newExpr)
 						{
-							case NewArrayExpression _:
+							case NewArrayExpression:
 							{
 								return new TransformInfo(newExpr, true);
 							}
@@ -1524,7 +1226,7 @@ namespace LinqToDB.Expressions
 		{
 			// Replace multiple parameters with single variable or single parameter with the reader expression.
 			//
-			if (expression.NodeType != ExpressionType.Parameter && convertLambda.Body.GetCount(e => e == convertLambda.Parameters[0]) > 1)
+			if (expression.NodeType != ExpressionType.Parameter && convertLambda.Body.GetCount(convertLambda, static (convertLambda, e) => e == convertLambda.Parameters[0]) > 1)
 			{
 				var variable = Expression.Variable(expression.Type);
 				var assign   = Expression.Assign(variable, expression);

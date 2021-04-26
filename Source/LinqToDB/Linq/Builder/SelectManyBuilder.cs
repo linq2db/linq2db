@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
-	using Tools;
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
@@ -151,7 +148,7 @@ namespace LinqToDB.Linq.Builder
 				if (collection.Parent is TableBuilder.TableContext collectionParent &&
 					collectionInfo.IsAssociationBuilt)
 				{
-					var ts = (SqlTableSource)new QueryVisitor().Find(sequence.SelectQuery.From, e =>
+					var ts = (SqlTableSource)sequence.SelectQuery.From.Find(collectionParent, static (collectionParent, e) =>
 					{
 						if (e.ElementType == QueryElementType.TableSource)
 						{

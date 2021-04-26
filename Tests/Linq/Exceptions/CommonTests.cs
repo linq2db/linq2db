@@ -25,7 +25,7 @@ namespace Tests.Exceptions
 				if (statement.IsInsert() && statement.RequireInsertClause().Into!.Name == "Parent")
 				{
 					var expr =
-						new QueryVisitor().Find(statement.RequireInsertClause(), e =>
+						statement.RequireInsertClause().Find<object?>(null, static (_, e) =>
 						{
 							if (e.ElementType == QueryElementType.SetExpression)
 							{

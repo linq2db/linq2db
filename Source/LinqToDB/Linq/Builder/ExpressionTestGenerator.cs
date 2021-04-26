@@ -16,7 +16,7 @@ namespace LinqToDB.Linq.Builder
 	class ExpressionTestGenerator
 	{
 		readonly bool          _mangleNames;
-		readonly StringBuilder _exprBuilder = new StringBuilder();
+		readonly StringBuilder _exprBuilder = new ();
 		IDataContext?          _dataContext;
 
 		string _indent = "\t\t\t\t";
@@ -33,9 +33,9 @@ namespace LinqToDB.Linq.Builder
 		void PushIndent() { _indent += '\t'; }
 		void PopIndent () { _indent = _indent.Substring(1); }
 
-		readonly HashSet<Expression> _visitedExprs = new HashSet<Expression>();
+		readonly HashSet<Expression> _visitedExprs = new ();
 
-		bool BuildExpression(Expression expr)
+		bool BuildExpression(object? _, Expression expr)
 		{
 			switch (expr.NodeType)
 			{
@@ -500,7 +500,7 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		readonly Dictionary<Type,string?> _typeNames = new Dictionary<Type,string?>
+		readonly Dictionary<Type,string?> _typeNames = new ()
 		{
 			{ typeof(object), "object" },
 			{ typeof(bool),   "bool"   },
@@ -508,7 +508,7 @@ namespace LinqToDB.Linq.Builder
 			{ typeof(string), "string" },
 		};
 
-		readonly StringBuilder _typeBuilder = new StringBuilder();
+		readonly StringBuilder _typeBuilder = new ();
 
 		void BuildType(Type type, MappingSchema mappingSchema)
 		{
@@ -716,7 +716,7 @@ namespace LinqToDB.Linq.Builder
 			return type.Name.StartsWith("<>");
 		}
 
-		readonly Dictionary<string,string> _nameDic = new Dictionary<string,string>();
+		readonly Dictionary<string,string> _nameDic = new ();
 
 		string MangleName(Type type, string? name, string prefix)
 		{
@@ -748,7 +748,7 @@ namespace LinqToDB.Linq.Builder
 			return string.Join(".", newNames);
 		}
 
-		public static List<string> SystemNamespaces = new List<string>()
+		public static List<string> SystemNamespaces = new ()
 		{
 			"System", "LinqToDB", "Microsoft"
 		};
@@ -818,9 +818,9 @@ namespace LinqToDB.Linq.Builder
 			return MangleName(type, type.ToString(), "T");
 		}
 
-		readonly HashSet<object> _usedMembers = new HashSet<object>();
+		readonly HashSet<object> _usedMembers = new ();
 
-		void VisitMembers(Expression expr)
+		void VisitMembers(object? _, Expression expr)
 		{
 			switch (expr.NodeType)
 			{
@@ -877,7 +877,7 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		void VisitForDataContext(Expression expr)
+		void VisitForDataContext(object? _, Expression expr)
 		{
 			switch (expr)
 			{
@@ -895,7 +895,7 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		readonly HashSet<Type> _usedTypes = new HashSet<Type>();
+		readonly HashSet<Type> _usedTypes = new ();
 
 		void AddType(Type? type)
 		{
@@ -917,7 +917,7 @@ namespace LinqToDB.Linq.Builder
 				AddType(i);
 		}
 
-		void VisitTypes(Expression expr)
+		void VisitTypes(object? _, Expression expr)
 		{
 			AddType(expr.Type);
 

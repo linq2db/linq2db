@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
@@ -102,7 +101,7 @@ namespace LinqToDB.SqlQuery
 			if (Update == null)
 				return false;
 
-			return null != new QueryVisitor().Find(Update, e =>
+			return null != Update.Find(table, static (table, e) =>
 			{
 				return e switch
 				{

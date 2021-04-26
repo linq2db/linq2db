@@ -145,10 +145,10 @@ namespace LinqToDB.SqlQuery
 			if (clone.HasUniqueKeys)
 				UniqueKeys.AddRange(clone.UniqueKeys.Select(uk => uk.Select(e => (ISqlExpression)e.Clone(objectTree, doClone)).ToArray()));
 
-			new QueryVisitor().Visit(this, expr =>
+			this.Visit(new { query = this, clone }, static (context, expr) =>
 			{
-				if (expr is SelectQuery sb && sb.ParentSelect == clone)
-					sb.ParentSelect = this;
+				if (expr is SelectQuery sb && sb.ParentSelect == context.clone)
+					sb.ParentSelect = context.query;
 			});
 		}
 
@@ -174,10 +174,10 @@ namespace LinqToDB.SqlQuery
 			foreach (var table in From.Tables)
 				table.ForEach(action, visitedQueries);
 
-			new QueryVisitor().Visit(this, e =>
+			this.Visit(new { query = this, action, visitedQueries}, static (context, e) =>
 			{
-				if (e is SelectQuery query && e != this)
-					query.ForEachTable(action, visitedQueries);
+				if (e is SelectQuery query && e != context.query)
+					query.ForEachTable(context.action, context.visitedQueries);
 			});
 		}
 
@@ -388,11 +388,11 @@ namespace LinqToDB.SqlQuery
 
 		internal void EnsureFindTables()
 		{
-			new QueryVisitor().Visit(this, e =>
+			this.Visit(this, static (query, e) =>
 			{
 				if (e is SqlField f)
 				{
-					var ts = GetTableSource(f.Table!);
+					var ts = query.GetTableSource(f.Table!);
 
 					if (ts == null && f != f.Table!.All)
 						throw new SqlException("Table '{0}' not found.", f.Table);

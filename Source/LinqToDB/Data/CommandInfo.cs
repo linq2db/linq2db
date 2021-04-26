@@ -1711,12 +1711,12 @@ namespace LinqToDB.Data
 				}
 			}
 
-			if (expr.GetCount(e => e == dataReaderExpr) > 1)
+			if (expr.GetCount(dataReaderExpr, static (dataReaderExpr, e) => e == dataReaderExpr) > 1)
 			{
 				var dataReaderVar = Expression.Variable(dataReaderExpr.Type, "ldr");
 				var assignment    = Expression.Assign(dataReaderVar, dataReaderExpr);
 
-				expr = expr.Transform(e => e == dataReaderExpr ? dataReaderVar : e);
+				expr = expr.Transform(new { dataReaderExpr, dataReaderVar }, static (context, e) => e == context.dataReaderExpr ? context.dataReaderVar : e);
 				expr = Expression.Block(new[] { dataReaderVar }, assignment, expr);
 
 				if (Configuration.OptimizeForSequentialAccess)
@@ -1770,12 +1770,12 @@ namespace LinqToDB.Data
 					return Expression.ElementInit(_expandoAddMethodInfo, Expression.Constant(dataReader.GetName(idx)), readerExpr);
 				}));
 
-			if (expr.GetCount(e => e == dataReaderExpr) > 1)
+			if (expr.GetCount(dataReaderExpr, static (dataReaderExpr, e) => e == dataReaderExpr) > 1)
 			{
 				var dataReaderVar = Expression.Variable(dataReaderExpr.Type, "ldr");
 				var assignment    = Expression.Assign(dataReaderVar, dataReaderExpr);
 
-				expr = expr.Transform(e => e == dataReaderExpr ? dataReaderVar : e);
+				expr = expr.Transform(new { dataReaderExpr, dataReaderVar }, static (context, e) => e == context.dataReaderExpr ? context.dataReaderVar : e);
 				expr = Expression.Block(new[] { dataReaderVar }, assignment, expr);
 			}
 

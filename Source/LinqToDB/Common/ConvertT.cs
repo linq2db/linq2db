@@ -30,7 +30,7 @@ namespace LinqToDB.Common
 
 			_expression = (Expression<Func<TFrom,TTo>>)expr.Item1;
 
-			var rexpr = (Expression<Func<TFrom,TTo>>)expr.Item1.Transform(e => e is DefaultValueExpression ? e.Reduce() : e);
+			var rexpr = (Expression<Func<TFrom,TTo>>)expr.Item1.Transform(static (_, e) => e is DefaultValueExpression ? e.Reduce() : e);
 
 			_lambda = rexpr.CompileExpression();
 		}

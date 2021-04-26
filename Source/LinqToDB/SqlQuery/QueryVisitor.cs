@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
-	public class QueryVisitor
+	public class QueryVisitor<TContext>
 	{
 		#region Visit
 
@@ -12,23 +12,29 @@ namespace LinqToDB.SqlQuery
 		readonly Dictionary<IQueryElement,IQueryElement?> _visitedElements = new ();
 		public   Dictionary<IQueryElement,IQueryElement?>  VisitedElements => _visitedElements;
 
+		readonly TContext                    _context;
 		bool                                 _all;
-		Func<IQueryElement,bool>?            _action1;
-		Action<IQueryElement>?               _action2;
-		Func<IQueryElement, bool>?           _find;
+		Action<TContext, IQueryElement>?     _visit;
+		Func<TContext, IQueryElement,bool>?  _visitParent;
+		Func<TContext, IQueryElement, bool>? _find;
 
-		public void VisitParentFirst(IQueryElement element, Func<IQueryElement,bool> action)
+		public QueryVisitor(TContext context)
+		{
+			_context = context;
+		}
+
+		public void VisitParentFirst(IQueryElement element, Func<TContext, IQueryElement, bool> action)
 		{
 			_visitedElements.Clear();
-			_action1 = action;
+			_visitParent = action;
 			Visit1(element);
 		}
 
-		public void VisitParentFirstAll(IQueryElement element, Func<IQueryElement, bool> action)
+		public void VisitParentFirstAll(IQueryElement element, Func<TContext, IQueryElement, bool> action)
 		{
 			_visitedElements.Clear();
-			_action1 = action;
-			_all     = true;
+			_visitParent = action;
+			_all         = true;
 			Visit1(element);
 		}
 
@@ -40,7 +46,7 @@ namespace LinqToDB.SqlQuery
 			if (!_all)
 				_visitedElements.Add(element, element);
 
-			if (!_action1!(element))
+			if (!_visitParent!(_context, element))
 				return;
 
 			switch (element.ElementType)
@@ -454,7 +460,7 @@ namespace LinqToDB.SqlQuery
 			Visit1(sc.TakeValue);
 			Visit1(sc.SkipValue);
 
-			foreach (var c in sc.Columns.ToArray()) Visit1(c);
+			foreach (var c in sc.Columns) Visit1(c);
 		}
 
 		void Visit1X(SqlUpdateClause sc)
@@ -462,8 +468,8 @@ namespace LinqToDB.SqlQuery
 			if (sc.Table != null)
 				Visit1(sc.Table);
 
-			foreach (var c in sc.Items.ToArray()) Visit1(c);
-			foreach (var c in sc.Keys. ToArray()) Visit1(c);
+			foreach (var c in sc.Items) Visit1(c);
+			foreach (var c in sc.Keys ) Visit1(c);
 		}
 
 		void Visit1X(CteClause sc)
@@ -477,7 +483,7 @@ namespace LinqToDB.SqlQuery
 			if (sc.Into != null)
 				Visit1(sc.Into);
 
-			foreach (var c in sc.Items.ToArray()) Visit1(c);
+			foreach (var c in sc.Items) Visit1(c);
 		}
 
 		void Visit1X(SqlPredicate.InList p)
@@ -619,19 +625,19 @@ namespace LinqToDB.SqlQuery
 				Visit1(item);
 		}
 
-		public void Visit(IQueryElement element, Action<IQueryElement> action)
+		public void Visit(IQueryElement element, Action<TContext, IQueryElement> action)
 		{
 			_visitedElements.Clear();
 			_all     = false;
-			_action2 = action;
+			_visit   = action;
 			Visit2(element);
 		}
 
-		public void VisitAll(IQueryElement element, Action<IQueryElement> action)
+		public void VisitAll(IQueryElement element, Action<TContext, IQueryElement> action)
 		{
 			_visitedElements.Clear();
 			_all     = true;
-			_action2 = action;
+			_visit   = action;
 			Visit2(element);
 		}
 
@@ -1005,7 +1011,7 @@ namespace LinqToDB.SqlQuery
 					throw new InvalidOperationException($"Visit2 visitor not implemented for element {element.ElementType}");
 			}
 
-			_action2!(element);
+			_visit!(_context, element);
 
 			if (!_all && !_visitedElements.ContainsKey(element))
 				_visitedElements.Add(element, element);
@@ -1030,13 +1036,13 @@ namespace LinqToDB.SqlQuery
 						foreach (var j in t.Joins)
 							Visit2(j);
 
-						_action2!(t);
+						_visit!(_context, t);
 						if (!_all && !_visitedElements.ContainsKey(t))
 							_visitedElements.Add(t, t);
 					}
 				}
 
-				_action2!(q.From);
+				_visit!(_context, q.From);
 				if (!_all && !_visitedElements.ContainsKey(q.From))
 					_visitedElements.Add(q.From, q.From);
 			}
@@ -1090,7 +1096,7 @@ namespace LinqToDB.SqlQuery
 			Visit2(sc.TakeValue);
 			Visit2(sc.SkipValue);
 
-			foreach (var c in sc.Columns.ToArray()) Visit2(c);
+			foreach (var c in sc.Columns) Visit2(c);
 		}
 
 		void Visit2X(SqlUpdateClause sc)
@@ -1098,8 +1104,8 @@ namespace LinqToDB.SqlQuery
 			if (sc.Table != null)
 				Visit2(sc.Table);
 
-			foreach (var c in sc.Items.ToArray()) Visit2(c);
-			foreach (var c in sc.Keys. ToArray()) Visit2(c);
+			foreach (var c in sc.Items) Visit2(c);
+			foreach (var c in sc.Keys ) Visit2(c);
 		}
 
 		void Visit2X(CteClause sc)
@@ -1113,7 +1119,7 @@ namespace LinqToDB.SqlQuery
 			if (sc.Into != null)
 				Visit2(sc.Into);
 
-			foreach (var c in sc.Items.ToArray()) Visit2(c);
+			foreach (var c in sc.Items) Visit2(c);
 		}
 
 		void Visit2X(SqlPredicate.InList p)
@@ -1303,10 +1309,10 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
-		public IQueryElement? Find(IQueryElement? element, Func<IQueryElement, bool> find)
+		public IQueryElement? Find(IQueryElement? element, Func<TContext, IQueryElement, bool> find)
 		{
 			_visitedFind.Clear();
-			_find = find;
+			_find    = find;
 			return Find(element);
 		}
 
@@ -1315,7 +1321,7 @@ namespace LinqToDB.SqlQuery
 			if (element == null || !_visitedFind.Add(element))
 				return null;
 
-			if (_find!(element))
+			if (_find!(_context, element))
 				return element;
 
 			switch (element.ElementType)
@@ -1607,7 +1613,7 @@ namespace LinqToDB.SqlQuery
 					{
 						return 
 							Find(((SqlValuesTable)element).Fields                  ) ??
-							Find(((SqlValuesTable)element).Rows?.SelectMany(r => r));
+							Find(((SqlValuesTable)element).Rows?.SelectMany(static r => r));
 					}
 
 				case QueryElementType.SqlField:

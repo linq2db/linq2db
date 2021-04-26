@@ -42,10 +42,10 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			var needsEmulation = !builder.DataContext.SqlProviderFlags.IsAllSetOperationsSupported &&
-			                     setOperation.In(SetOperation.ExceptAll, SetOperation.IntersectAll)
+			                     (setOperation == SetOperation.ExceptAll || setOperation == SetOperation.IntersectAll)
 			                     ||
 			                     !builder.DataContext.SqlProviderFlags.IsDistinctSetOperationsSupported &&
-			                     setOperation.In(SetOperation.Except, SetOperation.Intersect);
+			                     (setOperation == SetOperation.Except || setOperation == SetOperation.Intersect);
 
 			if (needsEmulation)
 			{
@@ -57,12 +57,12 @@ namespace LinqToDB.Linq.Builder
 
 				var sql = sequence.SelectQuery;
 
-				if (setOperation.In(SetOperation.Except, SetOperation.Intersect))
+				if (setOperation == SetOperation.Except || setOperation == SetOperation.Intersect)
 					sql.Select.IsDistinct = true;
 
 				except.ParentSelect = sql;
 
-				if (setOperation.In(SetOperation.Except, SetOperation.ExceptAll))
+				if (setOperation == SetOperation.Except || setOperation == SetOperation.ExceptAll)
 					sql.Where.Not.Exists(except);
 				else
 					sql.Where.Exists(except);
@@ -343,7 +343,7 @@ namespace LinqToDB.Linq.Builder
 					if (expression == null)
 					{
 						var type  = _methodCall.Method.GetGenericArguments()[0];
-						var nctor = (NewExpression?)Expression.Find(e => e is NewExpression ne && e.Type == type && ne.Arguments?.Count > 0);
+						var nctor = (NewExpression?)Expression.Find(type, static (type, e) => e is NewExpression ne && e.Type == type && ne.Arguments?.Count > 0);
 
 						Expression expr;
 
@@ -362,11 +362,11 @@ namespace LinqToDB.Linq.Builder
 							return ex;
 						}
 
-						var new1 = Expression.Find(e => e.NodeType == ExpressionType.MemberInit && e.Type == type);
+						var new1 = Expression.Find(type, static (type, e) => e.NodeType == ExpressionType.MemberInit && e.Type == type);
 						var needsRewrite = false;
 						if (new1 != null)
 						{
-							var new2 = _sequence2.Expression.Find(e => e.NodeType == ExpressionType.MemberInit && e.Type == type);
+							var new2 = _sequence2.Expression.Find(type, static (type, e) => e.NodeType == ExpressionType.MemberInit && e.Type == type);
 							if (new2 == null)
 								needsRewrite = true;
 							else

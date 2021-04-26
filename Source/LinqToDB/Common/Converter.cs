@@ -19,7 +19,7 @@ namespace LinqToDB.Common
 	[PublicAPI]
 	public static class Converter
 	{
-		static readonly ConcurrentDictionary<object,LambdaExpression> _expressions = new ConcurrentDictionary<object,LambdaExpression>();
+		static readonly ConcurrentDictionary<object,LambdaExpression> _expressions = new ();
 
 		static XmlDocument CreateXmlDocument(string str)
 		{
@@ -102,7 +102,7 @@ namespace LinqToDB.Common
 			return l;
 		}
 
-		static readonly ConcurrentDictionary<object,Func<object,object>> _converters = new ConcurrentDictionary<object,Func<object,object>>();
+		static readonly ConcurrentDictionary<object,Func<object,object>> _converters = new ();
 
 		/// <summary>
 		/// Converts value to <paramref name="conversionType"/> type.
@@ -140,12 +140,14 @@ namespace LinqToDB.Common
 				var p  = Expression.Parameter(typeof(object), "p");
 				var ex = Expression.Lambda<Func<object,object>>(
 					Expression.Convert(
-						b.Transform(e =>
-							e == ps[0] ?
-								Expression.Convert(p, e.Type) :
-							IsDefaultValuePlaceHolder(e) ?
-								new DefaultValueExpression(mappingSchema, e.Type) :
-								e),
+						b.Transform(
+							new { mappingSchema, ps, p },
+							static (context, e) =>
+								e == context.ps[0] ?
+									Expression.Convert(context.p, e.Type) :
+								IsDefaultValuePlaceHolder(null, e) ?
+									new DefaultValueExpression(context.mappingSchema, e.Type) :
+									e),
 						typeof(object)),
 					p);
 
@@ -159,7 +161,7 @@ namespace LinqToDB.Common
 
 		static class ExprHolder<T>
 		{
-			public static readonly ConcurrentDictionary<Type,Func<object,T>> Converters = new ConcurrentDictionary<Type,Func<object,T>>();
+			public static readonly ConcurrentDictionary<Type,Func<object,T>> Converters = new ();
 		}
 
 		/// <summary>
@@ -190,12 +192,14 @@ namespace LinqToDB.Common
 
 				var p  = Expression.Parameter(typeof(object), "p");
 				var ex = Expression.Lambda<Func<object,T>>(
-					b.Transform(e =>
-						e == ps[0] ?
-							Expression.Convert (p, e.Type) :
-							IsDefaultValuePlaceHolder(e) ?
-								new DefaultValueExpression(mappingSchema, e.Type) :
-								e),
+					b.Transform(
+						new { ps, p, mappingSchema},
+						static (context, e) =>
+							e == context.ps[0] ?
+								Expression.Convert (context.p, e.Type) :
+								IsDefaultValuePlaceHolder(null, e) ?
+									new DefaultValueExpression(context.mappingSchema, e.Type) :
+									e),
 					p);
 
 				l = ex.CompileExpression();
@@ -212,9 +216,10 @@ namespace LinqToDB.Common
 		/// DefaultValue&lt;T&gt;.Value
 		/// </code>
 		/// </summary>
+		/// <param name="_">Unused.</param>
 		/// <param name="expr">Expression to inspect.</param>
 		/// <returns><c>true</c>, if expression represents default value.</returns>
-		internal static bool IsDefaultValuePlaceHolder(Expression expr)
+		internal static bool IsDefaultValuePlaceHolder(object? _, Expression expr)
 		{
 			if (expr is MemberExpression me)
 			{
