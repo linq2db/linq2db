@@ -955,7 +955,7 @@ namespace LinqToDB.Linq.Builder
 			var resultSelector   = types.ContainsKey("TResult")  ?
 				(LambdaExpression)OptimizeExpression(method.Arguments[types.ContainsKey("TElement") ? 3 : 2].Unwrap()) : null;
 
-			var needSubQuery = null != ConvertExpression(keySelector.Body.Unwrap()).Find(IsExpression);
+			var needSubQuery = null != (_isExpressionVisitor ??= FindVisitor<object?>.Create(IsExpression)).Find(ConvertExpression(keySelector.Body.Unwrap()));
 
 			if (!needSubQuery && resultSelector == null && elementSelector != null)
 				return method;
@@ -990,7 +990,8 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		bool IsExpression(object? _, Expression ex)
+		private FindVisitor<object?>? _isExpressionVisitor;
+		bool IsExpression(Expression ex)
 		{
 			switch (ex.NodeType)
 			{
@@ -1290,7 +1291,7 @@ namespace LinqToDB.Linq.Builder
 
 		Expression ConvertIQueryable(Expression expression, HashSet<ParameterExpression> currentParameters)
 		{
-			bool HasParamatersDefined(Expression testedExpression, IEnumerable<ParameterExpression> allowed)
+			static bool HasParametersDefined(Expression testedExpression, IEnumerable<ParameterExpression> allowed)
 			{
 				var current = new HashSet<ParameterExpression>(allowed);
 				var result  = null == testedExpression.Find(current, static (current, e) =>
@@ -1319,10 +1320,10 @@ namespace LinqToDB.Linq.Builder
 				var allowedParameters = new HashSet<ParameterExpression>(currentParameters) { p };
 
 				var parameters = new[] { p };
-				if (!HasParamatersDefined(expr, parameters))
+				if (!HasParametersDefined(expr, parameters))
 				{
 					// trying to evaluate Querybale method.
-					if (expression.NodeType == ExpressionType.Call && HasParamatersDefined(expr, parameters.Concat(allowedParameters)))
+					if (expression.NodeType == ExpressionType.Call && HasParametersDefined(expr, parameters.Concat(allowedParameters)))
 					{
 						var callExpression = (MethodCallExpression)expression;
 						var firstArgument  = callExpression.Arguments[0];

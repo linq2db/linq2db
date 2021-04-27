@@ -450,7 +450,7 @@ namespace LinqToDB.Mapping
 			if (toType   == null) throw new ArgumentNullException(nameof(toType));
 			if (expr     == null) throw new ArgumentNullException(nameof(expr));
 
-			var ex = addNullCheck && expr.Find(Converter.IsDefaultValuePlaceHolder) == null?
+			var ex = addNullCheck && Converter.IsDefaultValuePlaceHolderVisitor.Find(expr) == null?
 				AddNullCheck(expr) :
 				expr;
 
@@ -476,7 +476,7 @@ namespace LinqToDB.Mapping
 		{
 			if (expr == null) throw new ArgumentNullException(nameof(expr));
 
-			var ex = addNullCheck && expr.Find(Converter.IsDefaultValuePlaceHolder) == null?
+			var ex = addNullCheck && Converter.IsDefaultValuePlaceHolderVisitor.Find(expr) == null?
 				AddNullCheck(expr) :
 				expr;
 
@@ -500,7 +500,7 @@ namespace LinqToDB.Mapping
 		{
 			if (expr == null) throw new ArgumentNullException(nameof(expr));
 
-			var ex = addNullCheck && expr.Find(Converter.IsDefaultValuePlaceHolder) == null?
+			var ex = addNullCheck && Converter.IsDefaultValuePlaceHolderVisitor.Find(expr) == null?
 				AddNullCheck(expr) :
 				expr;
 
@@ -758,7 +758,7 @@ namespace LinqToDB.Mapping
 		Expression ReduceDefaultValue(Expression expr)
 		{
 			return expr.Transform(this, static (context, e) =>
-				Converter.IsDefaultValuePlaceHolder(null, e) ?
+				Converter.IsDefaultValuePlaceHolder(e) ?
 					Expression.Constant(context.GetDefaultValue(e.Type), e.Type) :
 					e);
 		}

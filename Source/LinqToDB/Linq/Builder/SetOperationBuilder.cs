@@ -11,7 +11,6 @@ namespace LinqToDB.Linq.Builder
 	using Extensions;
 	using Reflection;
 	using SqlQuery;
-	using Tools;
 
 	class SetOperationBuilder : MethodCallBuilder
 	{
@@ -362,11 +361,13 @@ namespace LinqToDB.Linq.Builder
 							return ex;
 						}
 
-						var new1 = Expression.Find(type, static (type, e) => e.NodeType == ExpressionType.MemberInit && e.Type == type);
+						var findVisitor  = FindVisitor<Type>.Create(type, static (type, e) => e.NodeType == ExpressionType.MemberInit && e.Type == type);
+						var new1         = findVisitor.Find(Expression);
 						var needsRewrite = false;
+
 						if (new1 != null)
 						{
-							var new2 = _sequence2.Expression.Find(type, static (type, e) => e.NodeType == ExpressionType.MemberInit && e.Type == type);
+							var new2 = findVisitor.Find(_sequence2.Expression);
 							if (new2 == null)
 								needsRewrite = true;
 							else

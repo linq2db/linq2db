@@ -855,42 +855,31 @@ namespace LinqToDB.Linq.Builder
 
 		public static LambdaExpression? FindContainingLambda(Expression expr, Expression toFind)
 		{
-			var ctx = new FindContainingLambdaContext(toFind);
+			var ctx = new WritableContext<LambdaExpression?, Expression>(toFind);
 
 			expr.Visit(ctx, static (context, e) =>
 			{
-				if (context.Result == null && e.NodeType == ExpressionType.Lambda)
+				if (context.WriteableValue == null && e.NodeType == ExpressionType.Lambda)
 				{
 					var lambda = (LambdaExpression)e;
-					var found = lambda.Body.Find(context, static (context, ee) => ee == context.ToFind);
+					var found = lambda.Body.Find(context.StaticValue);
 					if (found != null)
 					{
-						context.Result = lambda;
+						context.WriteableValue = lambda;
 					}
 				}
 			});
 
-			return ctx.Result;
-		}
-
-		class FindContainingLambdaContext
-		{
-			public FindContainingLambdaContext(Expression toFind)
-			{
-				ToFind = toFind;
-			}
-
-			public readonly Expression        ToFind;
-			public          LambdaExpression? Result;
+			return ctx.WriteableValue;
 		}
 
 		public static MethodCallExpression? FindContainingMethod(Expression expr, Expression toFind)
 		{
-			var ctx = new FindContainingMethodContext(toFind);
+			var ctx = new WritableContext<MethodCallExpression?, Expression>(toFind);
 
-			expr.Find(ctx, static(context, e) =>
+			expr.Find(ctx, static (context, e) =>
 			{
-				if (context.Result != null)
+				if (context.WriteableValue != null)
 					return true;
 
 				if (e.NodeType == ExpressionType.Call)
@@ -898,44 +887,32 @@ namespace LinqToDB.Linq.Builder
 					var mc = (MethodCallExpression)e;
 					foreach (var argument in mc.Arguments)
 					{
-						var method = FindContainingMethod(argument, context.ToFind);
+						var method = FindContainingMethod(argument, context.StaticValue);
 						if (method != null)
 						{
-							context.Result = method;
+							context.WriteableValue = method;
 							break;
 						}
 					}
 
-					if (context.Result == null)
+					if (context.WriteableValue == null)
 					{
 						foreach (var argument in mc.Arguments)
 						{
-							var lambda = FindContainingLambda(argument, context.ToFind);
+							var lambda = FindContainingLambda(argument, context.StaticValue);
 							if (lambda != null)
 							{
-								context.Result = mc;
+								context.WriteableValue = mc;
 								break;
 							}
 						}
 					}
 				}
 
-				return context.Result != null;
+				return context.WriteableValue != null;
 			});
 
-			return ctx.Result;
-		}
-
-		private class FindContainingMethodContext
-		{
-			public FindContainingMethodContext(Expression toFind)
-			{
-				ToFind = toFind;
-			}
-
-			public readonly Expression ToFind;
-
-			public MethodCallExpression? Result;
+			return ctx.WriteableValue;
 		}
 
 		private static void CollectDependenciesByParameter(MappingSchema mappingSchema, Expression forExpr, Expression byParameter, List<Expression> dependencies)

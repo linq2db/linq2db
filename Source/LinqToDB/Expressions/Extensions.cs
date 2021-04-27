@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq.Expressions;
 
 using JetBrains.Annotations;
@@ -147,7 +146,7 @@ namespace LinqToDB.Expressions
 		/// </summary>
 		public static Expression? Find(this Expression? expr, Expression exprToFind)
 		{
-			return expr.Find(exprToFind, (exprToFind, e) => e == exprToFind);
+			return expr.Find(exprToFind, static (exprToFind, e) => e == exprToFind);
 		}
 
 		/// <summary>
@@ -166,12 +165,12 @@ namespace LinqToDB.Expressions
 		/// Enumerates the given <paramref name="expr"/> and returns the first sub-expression
 		/// which matches the given <paramref name="func"/>. If no expression was found, null is returned.
 		/// </summary>
-		public static Expression? Find(this Expression? expr, Func<object?, Expression, bool> func)
+		public static Expression? Find(this Expression? expr, Func<Expression, bool> func)
 		{
 			if (expr == null)
 				return expr;
 
-			return new FindVisitor<object?>(null, func).Find(expr);
+			return new FindVisitor<object?>(func).Find(expr);
 		}
 
 		#endregion

@@ -225,7 +225,7 @@ namespace LinqToDB.Expressions
 							(_visited ??= new ()).Add(iq.Expression);
 
 							_path = Expression.Property(_path, ReflectionHelper.Constant.Value);
-							path = ConvertPathTo(typeof(IQueryable));
+							ConvertPathTo(typeof(IQueryable));
 							Path(iq.Expression, ReflectionHelper.QueryableInt.Expression);
 						}
 

@@ -467,7 +467,7 @@ namespace LinqToDB
 			{
 				if (t.IsAnonymous())
 				{
-					var nctor = (NewExpression?)items.Expression.Find(t, static (t, e) => e.NodeType == ExpressionType.New && e.Type == t)!;
+					var nctor = (NewExpression?)items.Expression.Find(t, static (t, e) => e.NodeType == ExpressionType.New && e.Type == t);
 
 					MemberInfo[]    members;
 					ConstructorInfo ctor;

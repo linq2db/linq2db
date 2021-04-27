@@ -145,7 +145,7 @@ namespace LinqToDB.Common
 							static (context, e) =>
 								e == context.ps[0] ?
 									Expression.Convert(context.p, e.Type) :
-								IsDefaultValuePlaceHolder(null, e) ?
+								IsDefaultValuePlaceHolder(e) ?
 									new DefaultValueExpression(context.mappingSchema, e.Type) :
 									e),
 						typeof(object)),
@@ -197,7 +197,7 @@ namespace LinqToDB.Common
 						static (context, e) =>
 							e == context.ps[0] ?
 								Expression.Convert (context.p, e.Type) :
-								IsDefaultValuePlaceHolder(null, e) ?
+								IsDefaultValuePlaceHolder(e) ?
 									new DefaultValueExpression(context.mappingSchema, e.Type) :
 									e),
 					p);
@@ -216,10 +216,9 @@ namespace LinqToDB.Common
 		/// DefaultValue&lt;T&gt;.Value
 		/// </code>
 		/// </summary>
-		/// <param name="_">Unused.</param>
 		/// <param name="expr">Expression to inspect.</param>
 		/// <returns><c>true</c>, if expression represents default value.</returns>
-		internal static bool IsDefaultValuePlaceHolder(object? _, Expression expr)
+		internal static bool IsDefaultValuePlaceHolder(Expression expr)
 		{
 			if (expr is MemberExpression me)
 			{
@@ -229,6 +228,8 @@ namespace LinqToDB.Common
 
 			return expr is DefaultValueExpression;
 		}
+
+		internal static readonly FindVisitor<object?> IsDefaultValuePlaceHolderVisitor = FindVisitor<object?>.Create(IsDefaultValuePlaceHolder);
 
 		/// <summary>
 		/// Returns type, to which provided enumeration values should be mapped.

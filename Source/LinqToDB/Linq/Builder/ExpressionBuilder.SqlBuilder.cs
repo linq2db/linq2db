@@ -17,7 +17,6 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using Reflection;
 	using SqlQuery;
-	using Tools;
 	using System.Threading;
 
 	partial class ExpressionBuilder
@@ -823,7 +822,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (context is SelectContext selectContext)
 			{
-				if (null != expression.Find(selectContext, static (selectContext, e) => selectContext.Body == e))
+				if (null != expression.Find(selectContext.Body))
 					return context.ConvertToSql(null, 0, ConvertFlags.Field).Select(_ => _.Sql).First();
 			}
 
@@ -840,7 +839,7 @@ namespace LinqToDB.Linq.Builder
 					return null;
 			}
 
-			if (!PreferServerSide(expression, false))
+			if (!PreferServerSide(expression, GetVisitor(false)))
 			{
 				if (CanBeConstant(expression))
 					return null;
@@ -863,7 +862,7 @@ namespace LinqToDB.Linq.Builder
 					return sql;
 			}
 
-			if (!PreferServerSide(expression, false))
+			if (!PreferServerSide(expression, GetVisitor(false)))
 			{
 				if (columnDescriptor?.ValueConverter == null && CanBeConstant(expression))
 					return BuildConstant(expression, columnDescriptor);
@@ -1289,7 +1288,7 @@ namespace LinqToDB.Linq.Builder
 
 		public bool IsServerSideOnly(Expression expr)
 		{
-			return _optimizationContext.IsServerSideOnly(null, expr);
+			return _optimizationContext.IsServerSideOnly(expr);
 		}
 
 		#endregion
@@ -1298,7 +1297,7 @@ namespace LinqToDB.Linq.Builder
 
 		bool CanBeConstant(Expression expr)
 		{
-			return _optimizationContext.CanBeConstant(null, expr);
+			return _optimizationContext.CanBeConstant(expr);
 		}
 
 		#endregion
@@ -1506,7 +1505,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				// compiled query case
 				//
-				if (null == arg.Find(ParametersParam, static (ParametersParam, e) => e == ParametersParam))
+				if (null == arg.Find(ParametersParam))
 					throw new InvalidOperationException($"Method '{methodCall}' does not have accessor.");
 				return arg;
 			}
@@ -2417,31 +2416,35 @@ namespace LinqToDB.Linq.Builder
 
 		static Expression FindExpression(Expression expr)
 		{
-			var ret = expr.Find(expr, static (expr, pi) =>
-			{
-				switch (pi.NodeType)
-				{
-					case ExpressionType.Convert      :
-					{
-						var e = (UnaryExpression)expr;
-
-						return
-							e.Operand.NodeType == ExpressionType.ArrayIndex &&
-							ReferenceEquals(((BinaryExpression)e.Operand).Left, ParametersParam);
-					}
-
-					case ExpressionType.MemberAccess :
-					case ExpressionType.New          :
-						return true;
-				}
-
-				return false;
-			});
+			var ret = _findExpressionVisitor.Find(expr);
 
 			if (ret == null)
 				throw new NotImplementedException();
 
 			return ret;
+		}
+
+		private static readonly FindVisitor<object?> _findExpressionVisitor = FindVisitor<object?>.Create(FindExpressionFind);
+
+		static bool FindExpressionFind(Expression pi)
+		{
+			switch (pi.NodeType)
+			{
+				case ExpressionType.Convert:
+				{
+					var e = (UnaryExpression)pi;
+
+					return
+						e.Operand.NodeType == ExpressionType.ArrayIndex &&
+						ReferenceEquals(((BinaryExpression)e.Operand).Left, ParametersParam);
+				}
+
+				case ExpressionType.MemberAccess:
+				case ExpressionType.New         :
+					return true;
+			}
+
+			return false;
 		}
 
 		#endregion
@@ -3020,7 +3023,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var ctx = new CanBeTranslatedToSqlContext(this, context, canBeCompiled);
 
-			return null == expr.Find(ctx, static(context, pi) =>
+			return null == expr.Find(ctx, static (context, pi) =>
 			{
 				if (context.IgnoredMembers != null)
 				{

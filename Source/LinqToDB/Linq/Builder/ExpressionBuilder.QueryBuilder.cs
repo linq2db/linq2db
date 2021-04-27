@@ -15,6 +15,7 @@ namespace LinqToDB.Linq.Builder
 	using Common;
 	using Reflection;
 	using SqlQuery;
+	using System.Runtime.CompilerServices;
 
 	partial class ExpressionBuilder
 	{
@@ -111,8 +112,6 @@ namespace LinqToDB.Linq.Builder
 			return resultExpr;
 		}
 
-		//TransformInfo TransformExpression(IBuildContext context, Expression expr, bool enforceServerSide, string? alias)
-
 		public Expression BuildExpression(IBuildContext context, Expression expression, bool enforceServerSide, string? alias = null)
 		{
 			return expression.Transform(
@@ -156,7 +155,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								var ma = (MemberExpression)expr;
 
-								if (context.builder.IsServerSideOnly(ma) || context.builder.PreferServerSide(ma, context.enforceServerSide) && !context.builder.HasNoneSqlMember(ma))
+								if (context.builder.IsServerSideOnly(ma) || context.builder.PreferServerSide(ma, context.builder.GetVisitor(context.enforceServerSide)) && !context.builder.HasNoneSqlMember(ma))
 								{
 									return new TransformInfo(context.builder.BuildSql(context.context, expr, context.alias));
 								}
@@ -334,7 +333,7 @@ namespace LinqToDB.Linq.Builder
 								}
 
 
-								if (context.builder.IsServerSideOnly(expr) || context.builder.PreferServerSide(expr, context.enforceServerSide) || ce.Method.IsSqlPropertyMethodEx())
+								if (context.builder.IsServerSideOnly(expr) || context.builder.PreferServerSide(expr, context.builder.GetVisitor(context.enforceServerSide)) || ce.Method.IsSqlPropertyMethodEx())
 										return new TransformInfo(context.builder.BuildSql(context.context, expr, context.alias));
 
 								break;
@@ -617,57 +616,65 @@ namespace LinqToDB.Linq.Builder
 
 		bool HasNoneSqlMember(Expression expr)
 		{
-			var ctx = new HasNoneSqlMemberContext(this);
+			var ctx = new WritableContext<bool>();
 
-			var found = expr.Find(ctx, static (context, e) =>
+			var found = expr.Find(ctx, HasNoneSqlMemberFind);
+
+			return found != null && !ctx.WriteableValue;
+		}
+
+		private bool HasNoneSqlMemberFind(WritableContext<bool> context, Expression e)
+		{
+			switch (e.NodeType)
 			{
-				switch (e.NodeType)
+				case ExpressionType.MemberAccess:
 				{
-					case ExpressionType.MemberAccess:
-						{
-							var me = (MemberExpression)e;
+					var me = (MemberExpression)e;
 
-							var om = (
-								from c in context.Builder.Contexts.OfType<TableBuilder.TableContext>()
+					var om = (
+								from c in Contexts.OfType<TableBuilder.TableContext>()
 								where c.ObjectType == me.Member.DeclaringType
 								select c.EntityDescriptor
 							).FirstOrDefault();
 
-							return om != null && om.Associations.All(a => !a.MemberInfo.EqualsTo(me.Member)) &&
-							       om[me.Member.Name] == null;
-						}
-					case ExpressionType.Call:
-						{
-							var mc = (MethodCallExpression)e;
-							if (mc.IsCte(context.Builder.MappingSchema))
-								context.InCTE = true;
-							break;
-						}
+					return om != null && om.Associations.All(a => !a.MemberInfo.EqualsTo(me.Member)) &&
+						   om[me.Member.Name] == null;
 				}
-
-				return context.InCTE;
-			});
-
-			return found != null && !ctx.InCTE;
-		}
-
-		private class HasNoneSqlMemberContext
-		{
-			public HasNoneSqlMemberContext(ExpressionBuilder builder)
-			{
-				Builder = builder;
+				case ExpressionType.Call:
+				{
+					var mc = (MethodCallExpression)e;
+					if (mc.IsCte(MappingSchema))
+						context.WriteableValue = true;
+					break;
+				}
 			}
 
-			public bool InCTE;
-
-			public readonly ExpressionBuilder Builder;
+			return context.WriteableValue;
 		}
 
 		#endregion
 
 		#region PreferServerSide
 
-		bool PreferServerSide(Expression expr, bool enforceServerSide)
+		private FindVisitor<bool>? _enforceServerSideVisitorTrue;
+		private FindVisitor<bool>? _enforceServerSideVisitorFalse;
+
+		private bool PreferServerSideFindTrue (bool enforceServerSide, Expression e) => PreferServerSide(e, _enforceServerSideVisitorTrue!);
+		private bool PreferServerSideFindFalse(bool enforceServerSide, Expression e) => PreferServerSide(e, _enforceServerSideVisitorFalse!);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private FindVisitor<bool> GetVisitor(bool enforceServerSide)
+		{
+			if (enforceServerSide)
+			{
+				return _enforceServerSideVisitorTrue ??= FindVisitor<bool>.Create(true, PreferServerSideFindTrue);
+			}
+			else
+			{
+				return _enforceServerSideVisitorFalse ??= FindVisitor<bool>.Create(false, PreferServerSideFindFalse);
+			}
+		}
+		bool PreferServerSide(Expression expr, FindVisitor<bool> enforceServerSideVisitor)
 		{
 			switch (expr.NodeType)
 			{
@@ -683,11 +690,11 @@ namespace LinqToDB.Linq.Builder
 							if (l.Parameters.Count == 1 && pi.Expression != null)
 								info = info.Transform(new { pi, l }, static (context, wpi) => wpi == context.l.Parameters[0] ? context.pi.Expression : wpi);
 
-							return info.Find(new { builder = this, enforceServerSide }, static (context, e) => context.builder.PreferServerSide(e, context.enforceServerSide)) != null;
+							return enforceServerSideVisitor.Find(info) != null;
 						}
 
 						var attr = GetExpressionAttribute(pi.Member);
-						return attr != null && (attr.PreferServerSide || enforceServerSide) && !CanBeCompiled(expr);
+						return attr != null && (attr.PreferServerSide || enforceServerSideVisitor.Context) && !CanBeCompiled(expr);
 					}
 
 				case ExpressionType.Call:
@@ -696,10 +703,10 @@ namespace LinqToDB.Linq.Builder
 						var l  = Expressions.ConvertMember(MappingSchema, pi.Object?.Type, pi.Method);
 
 						if (l != null)
-							return l.Body.Unwrap().Find(new { builder = this, enforceServerSide }, static (context, e) => context.builder.PreferServerSide(e, context.enforceServerSide)) != null;
+							return enforceServerSideVisitor.Find(l.Body.Unwrap()) != null;
 
 						var attr = GetExpressionAttribute(pi.Method);
-						return attr != null && (attr.PreferServerSide || enforceServerSide) && !CanBeCompiled(expr);
+						return attr != null && (attr.PreferServerSide || enforceServerSideVisitor.Context) && !CanBeCompiled(expr);
 					}
 				default:
 					{
@@ -722,7 +729,7 @@ namespace LinqToDB.Linq.Builder
 									return wpi;
 								});
 
-								return PreferServerSide(newExpr, enforceServerSide);
+								return PreferServerSide(newExpr, enforceServerSideVisitor);
 							}
 						}
 						break;

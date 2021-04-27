@@ -252,7 +252,8 @@ namespace LinqToDB.Linq.Builder
 
 		Dictionary<Expression, bool> _isServerSideOnlyCache = new ();
 
-		public bool IsServerSideOnly(object? _, Expression expr)
+		private FindVisitor<object?>? _isServerSideOnlyVisitor;
+		public bool IsServerSideOnly(Expression expr)
 		{
 			if (_isServerSideOnlyCache.TryGetValue(expr, out var result))
 				return result;
@@ -266,7 +267,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (l != null)
 						{
-							result = IsServerSideOnly(null, l.Body.Unwrap());
+							result = IsServerSideOnly(l.Body.Unwrap());
 						}
 						else
 						{
@@ -305,7 +306,7 @@ namespace LinqToDB.Linq.Builder
 
 							if (l != null)
 							{
-								result = l.Body.Unwrap().Find(IsServerSideOnly) != null;
+								result = (_isServerSideOnlyVisitor ??= FindVisitor<object?>.Create(IsServerSideOnly)).Find(l.Body.Unwrap()) != null;
 							}
 							else
 							{
@@ -360,50 +361,52 @@ namespace LinqToDB.Linq.Builder
 
 			var allowedParams = new HashSet<Expression> { ExpressionBuilder.ParametersParam, ExpressionBuilder.DataContextParam };
 
-			var result = null == expr.Find(new { allowedParams, context = this }, static (context, ex) =>
-			{
-				if (context.context.IsServerSideOnly(null, ex))
-					return true;
-
-				switch (ex.NodeType)
-				{
-					case ExpressionType.Parameter:
-						return !context.allowedParams.Contains(ex);
-
-					case ExpressionType.Call     :
-						{
-							var mc = (MethodCallExpression)ex;
-							foreach (var arg in mc.Arguments)
-							{
-								if (arg.NodeType == ExpressionType.Lambda)
-								{
-									var lambda = (LambdaExpression)arg;
-									foreach (var prm in lambda.Parameters)
-										context.allowedParams.Add(prm);
-								}
-							}
-							break;
-						}
-					case ExpressionType.Constant :
-						{
-							var cnt = (ConstantExpression)ex;
-							if (cnt.Value is ISqlExpression)
-								return true;
-							break;
-						}
-					case ExpressionType.Extension:
-						{
-							if (ex is ContextRefExpression)
-								return true;
-							return !ex.CanReduce;
-						}
-				}
-
-				return false;
-			});
+			var result = null == expr.Find(allowedParams, CanBeCompiledFind);
 
 			_lastExpr2 = expr;
 			return _lastResult2 = result;
+		}
+
+		private bool CanBeCompiledFind(HashSet<Expression> allowedParams, Expression ex)
+		{
+			if (IsServerSideOnly(ex))
+					return true;
+
+			switch (ex.NodeType)
+			{
+				case ExpressionType.Parameter:
+					return !allowedParams.Contains(ex);
+
+				case ExpressionType.Call:
+				{
+					var mc = (MethodCallExpression)ex;
+					foreach (var arg in mc.Arguments)
+					{
+						if (arg.NodeType == ExpressionType.Lambda)
+						{
+							var lambda = (LambdaExpression)arg;
+							foreach (var prm in lambda.Parameters)
+								allowedParams.Add(prm);
+						}
+					}
+					break;
+				}
+				case ExpressionType.Constant:
+				{
+					var cnt = (ConstantExpression)ex;
+					if (cnt.Value is ISqlExpression)
+						return true;
+					break;
+				}
+				case ExpressionType.Extension:
+				{
+					if (ex is ContextRefExpression)
+						return true;
+					return !ex.CanReduce;
+				}
+			}
+
+			return false;
 		}
 
 		#endregion
@@ -413,68 +416,71 @@ namespace LinqToDB.Linq.Builder
 		Expression? _lastExpr1;
 		bool        _lastResult1;
 
-		public bool CanBeConstant(object? _, Expression expr)
+		private FindVisitor<object?>? _canBeConstantVisitor;
+		public bool CanBeConstant(Expression expr)
 		{
 			if (_lastExpr1 == expr)
 				return _lastResult1;
 
-			var result = null == expr.Find(this, static (context, ex) =>
-			{
-				if (ex is BinaryExpression || ex is UnaryExpression /*|| ex.NodeType == ExpressionType.Convert*/)
-					return false;
-
-				if (context.MappingSchema.GetConvertExpression(ex.Type, typeof(DataParameter), false, false) != null)
-					return true;
-
-				switch (ex.NodeType)
-				{
-					case ExpressionType.Constant     :
-						{
-							var c = (ConstantExpression)ex;
-
-							if (c.Value == null || ex.Type.IsConstantable(false))
-								return false;
-
-							break;
-						}
-
-					case ExpressionType.MemberAccess :
-						{
-							var ma = (MemberExpression)ex;
-
-							var l = Expressions.ConvertMember(context.MappingSchema, ma.Expression?.Type, ma.Member);
-
-							if (l != null)
-								return l.Body.Unwrap().Find(context.CanBeConstant) == null;
-
-							if (ma.Member.DeclaringType!.IsConstantable(false) || ma.Member.IsNullableValueMember())
-								return false;
-
-							break;
-						}
-
-					case ExpressionType.Call         :
-						{
-							var mc = (MethodCallExpression)ex;
-
-							if (mc.Method.DeclaringType!.IsConstantable(false) || mc.Method.DeclaringType == typeof(object))
-								return false;
-
-							var attr = context.GetExpressionAttribute(mc.Method);
-
-							if (attr != null && !attr.ServerSideOnly)
-								return false;
-
-							break;
-						}
-				}
-
-				return true;
-			});
-
+			var result = null == (_canBeConstantFindVisitor ??= FindVisitor<object?>.Create(CanBeConstantFind)).Find(expr);
 
 			_lastExpr1 = expr;
 			return _lastResult1 = result;
+		}
+
+		private FindVisitor<object?>? _canBeConstantFindVisitor;
+		private bool CanBeConstantFind(Expression ex)
+		{
+			if (ex is BinaryExpression || ex is UnaryExpression /*|| ex.NodeType == ExpressionType.Convert*/)
+				return false;
+
+			if (MappingSchema.GetConvertExpression(ex.Type, typeof(DataParameter), false, false) != null)
+				return true;
+
+			switch (ex.NodeType)
+			{
+				case ExpressionType.Constant:
+				{
+					var c = (ConstantExpression)ex;
+
+					if (c.Value == null || ex.Type.IsConstantable(false))
+						return false;
+
+					break;
+				}
+
+				case ExpressionType.MemberAccess:
+				{
+					var ma = (MemberExpression)ex;
+
+					var l = Expressions.ConvertMember(MappingSchema, ma.Expression?.Type, ma.Member);
+
+					if (l != null)
+						return (_canBeConstantVisitor ??= FindVisitor<object?>.Create(CanBeConstant)).Find(l.Body.Unwrap()) == null;
+
+					if (ma.Member.DeclaringType!.IsConstantable(false) || ma.Member.IsNullableValueMember())
+						return false;
+
+					break;
+				}
+
+				case ExpressionType.Call:
+				{
+					var mc = (MethodCallExpression)ex;
+
+					if (mc.Method.DeclaringType!.IsConstantable(false) || mc.Method.DeclaringType == typeof(object))
+						return false;
+
+					var attr = GetExpressionAttribute(mc.Method);
+
+					if (attr != null && !attr.ServerSideOnly)
+						return false;
+
+					break;
+				}
+			}
+
+			return true;
 		}
 
 		#endregion
