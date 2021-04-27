@@ -35,7 +35,15 @@ namespace LinqToDB.Linq.Builder
 
 		readonly HashSet<Expression> _visitedExprs = new ();
 
-		bool BuildExpression(object? _, Expression expr)
+		private VisitFuncVisitor<object?>? _buildExpressionVisitor;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private void Build(Expression expr)
+		{
+			(_buildExpressionVisitor ??= VisitFuncVisitor<object?>.Create(BuildExpression)).Visit(expr);
+		}
+
+		bool BuildExpression(Expression expr)
 		{
 			switch (expr.NodeType)
 			{
@@ -68,7 +76,7 @@ namespace LinqToDB.Linq.Builder
 
 						_exprBuilder.Append('(');
 
-						e.Left.Visit(BuildExpression);
+						Build(e.Left);
 
 						switch (expr.NodeType)
 						{
@@ -98,7 +106,7 @@ namespace LinqToDB.Linq.Builder
 							case ExpressionType.SubtractChecked    : _exprBuilder.Append(" - ");  break;
 						}
 
-						e.Right.Visit(BuildExpression);
+						Build(e.Right);
 
 						_exprBuilder.Append(')');
 
@@ -109,7 +117,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var e = (UnaryExpression)expr;
 
-						e.Operand.Visit(BuildExpression);
+						Build(e.Operand);
 						_exprBuilder.Append(".Length");
 
 						return false;
@@ -121,7 +129,7 @@ namespace LinqToDB.Linq.Builder
 						var e = (UnaryExpression)expr;
 
 						_exprBuilder.AppendFormat("({0})", GetTypeName(e.Type));
-						e.Operand.Visit(BuildExpression);
+						Build(e.Operand);
 
 						return false;
 					}
@@ -147,7 +155,7 @@ namespace LinqToDB.Linq.Builder
 						var e = (UnaryExpression)expr;
 
 						_exprBuilder.Append('(');
-						e.Operand.Visit(BuildExpression);
+						Build(e.Operand);
 						_exprBuilder.AppendFormat(" as {0})", GetTypeName(e.Type));
 
 						return false;
@@ -163,9 +171,9 @@ namespace LinqToDB.Linq.Builder
 					{
 						var e = (BinaryExpression)expr;
 
-						e.Left.Visit(BuildExpression);
+						Build(e.Left);
 						_exprBuilder.Append('[');
-						e.Right.Visit(BuildExpression);
+						Build(e.Right);
 						_exprBuilder.Append(']');
 
 						return false;
@@ -175,7 +183,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var e = (MemberExpression)expr;
 
-						e.Expression.Visit(BuildExpression);
+						Build(e.Expression);
 						_exprBuilder.AppendFormat(".{0}", MangleName(e.Member.DeclaringType!, e.Member.Name, "P"));
 
 						return false;
@@ -197,12 +205,12 @@ namespace LinqToDB.Linq.Builder
 
 						if (attrs.Length != 0)
 						{
-							ex.Arguments[0].Visit(BuildExpression);
+							Build(ex.Arguments[0]);
 							PushIndent();
 							_exprBuilder.AppendLine().Append(_indent);
 						}
 						else if (ex.Object != null)
-							ex.Object.Visit(BuildExpression);
+							Build(ex.Object);
 						else
 							_exprBuilder.Append(GetTypeName(mi.DeclaringType!));
 
@@ -230,7 +238,7 @@ namespace LinqToDB.Linq.Builder
 
 							_exprBuilder.AppendLine().Append(_indent);
 
-							ex.Arguments[i].Visit(BuildExpression);
+							Build(ex.Arguments[i]);
 						}
 
 						PopIndent();
@@ -255,7 +263,7 @@ namespace LinqToDB.Linq.Builder
 
 							if (_visitedExprs.Add(e))
 							{
-								e.Visit(BuildExpression);
+								Build(e);
 								return false;
 							}
 						}
@@ -283,7 +291,7 @@ namespace LinqToDB.Linq.Builder
 							_exprBuilder.Append('(').Append(ps).Append(')');
 						_exprBuilder.Append(" => ");
 
-						le.Body.Visit(BuildExpression);
+						Build(le.Body);
 						return false;
 					}
 
@@ -292,11 +300,11 @@ namespace LinqToDB.Linq.Builder
 						var e = (ConditionalExpression)expr;
 
 						_exprBuilder.Append('(');
-						e.Test.Visit(BuildExpression);
+						Build(e.Test);
 						_exprBuilder.Append(" ? ");
-						e.IfTrue.Visit(BuildExpression);
+						Build(e.IfTrue);
 						_exprBuilder.Append(" : ");
-						e.IfFalse.Visit(BuildExpression);
+						Build(e.IfFalse);
 						_exprBuilder.Append(')');
 
 						return false;
@@ -311,7 +319,7 @@ namespace LinqToDB.Linq.Builder
 							if (ne.Members.Count == 1)
 							{
 								_exprBuilder.AppendFormat("new {{ {0} = ", MangleName(ne.Members[0].DeclaringType!, ne.Members[0].Name, "P"));
-								ne.Arguments[0].Visit(BuildExpression);
+								Build(ne.Arguments[0]);
 								_exprBuilder.Append(" }}");
 							}
 							else
@@ -323,7 +331,7 @@ namespace LinqToDB.Linq.Builder
 								for (var i = 0; i < ne.Members.Count; i++)
 								{
 									_exprBuilder.AppendLine().Append(_indent).AppendFormat("{0} = ", MangleName(ne.Members[i].DeclaringType!, ne.Members[i].Name, "P"));
-									ne.Arguments[i].Visit(BuildExpression);
+									Build(ne.Arguments[i]);
 
 									if (i + 1 < ne.Members.Count)
 										_exprBuilder.Append(',');
@@ -339,7 +347,7 @@ namespace LinqToDB.Linq.Builder
 
 							for (var i = 0; i < ne.Arguments.Count; i++)
 							{
-								ne.Arguments[i].Visit(BuildExpression);
+								Build(ne.Arguments[i]);
 								if (i + 1 < ne.Arguments.Count)
 									_exprBuilder.Append(", ");
 							}
@@ -359,7 +367,7 @@ namespace LinqToDB.Linq.Builder
 								case MemberBindingType.Assignment:
 									var ma = (MemberAssignment) b;
 									_exprBuilder.AppendFormat("{0} = ", MangleName(ma.Member.DeclaringType!, ma.Member.Name, "P"));
-									ma.Expression.Visit(BuildExpression);
+									Build(ma.Expression);
 									break;
 								default:
 									_exprBuilder.Append(b);
@@ -369,7 +377,7 @@ namespace LinqToDB.Linq.Builder
 
 						var e = (MemberInitExpression)expr;
 
-						e.NewExpression.Visit(BuildExpression);
+						Build(e.NewExpression);
 
 						if (e.Bindings.Count == 1)
 						{
@@ -407,7 +415,7 @@ namespace LinqToDB.Linq.Builder
 						if (e.Expressions.Count == 1)
 						{
 							_exprBuilder.Append(" { ");
-							e.Expressions[0].Visit(BuildExpression);
+							Build(e.Expressions[0]);
 							_exprBuilder.Append(" }");
 						}
 						else
@@ -419,7 +427,7 @@ namespace LinqToDB.Linq.Builder
 							for (var i = 0; i < e.Expressions.Count; i++)
 							{
 								_exprBuilder.AppendLine().Append(_indent);
-								e.Expressions[i].Visit(BuildExpression);
+								Build(e.Expressions[i]);
 								if (i + 1 < e.Expressions.Count)
 									_exprBuilder.Append(',');
 							}
@@ -436,7 +444,7 @@ namespace LinqToDB.Linq.Builder
 						var e = (TypeBinaryExpression)expr;
 
 						_exprBuilder.Append('(');
-						e.Expression.Visit(BuildExpression);
+						Build(e.Expression);
 						_exprBuilder.AppendFormat(" is {0})", e.TypeOperand);
 
 						return false;
@@ -446,12 +454,12 @@ namespace LinqToDB.Linq.Builder
 					{
 						var e = (ListInitExpression)expr;
 
-						e.NewExpression.Visit(BuildExpression);
+						Build(e.NewExpression);
 
 						if (e.Initializers.Count == 1)
 						{
 							_exprBuilder.Append(" { ");
-							e.Initializers[0].Arguments[0].Visit(BuildExpression);
+							Build(e.Initializers[0].Arguments[0]);
 							_exprBuilder.Append(" }");
 						}
 						else
@@ -463,7 +471,7 @@ namespace LinqToDB.Linq.Builder
 							for (var i = 0; i < e.Initializers.Count; i++)
 							{
 								_exprBuilder.AppendLine().Append(_indent);
-								e.Initializers[i].Arguments[0].Visit(BuildExpression);
+								Build(e.Initializers[i].Arguments[0]);
 								if (i + 1 < e.Initializers.Count)
 									_exprBuilder.Append(',');
 							}
@@ -480,12 +488,12 @@ namespace LinqToDB.Linq.Builder
 						var e = (InvocationExpression)expr;
 
 						_exprBuilder.Append("Expression.Invoke(");
-						e.Expression.Visit(BuildExpression);
+						Build(e.Expression);
 						_exprBuilder.Append(", (");
 
 						for (var i = 0; i < e.Arguments.Count; i++)
 						{
-							e.Arguments[i].Visit(BuildExpression);
+							Build(e.Arguments[i]);
 							if (i + 1 < e.Arguments.Count)
 								_exprBuilder.Append(", ");
 						}
@@ -820,7 +828,7 @@ namespace LinqToDB.Linq.Builder
 
 		readonly HashSet<object> _usedMembers = new ();
 
-		void VisitMembers(object? _, Expression expr)
+		void VisitMembers(Expression expr)
 		{
 			switch (expr.NodeType)
 			{
@@ -877,7 +885,7 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		void VisitForDataContext(object? _, Expression expr)
+		void VisitForDataContext(Expression expr)
 		{
 			switch (expr)
 			{
@@ -917,7 +925,11 @@ namespace LinqToDB.Linq.Builder
 				AddType(i);
 		}
 
-		void VisitTypes(object? _, Expression expr)
+		private VisitActionVisitor<object?>? _typesVisitor;
+		private VisitActionVisitor<object?>? _membersVisitor;
+		private VisitActionVisitor<object?>? _dataContextVisitor;
+
+		void VisitTypes(Expression expr)
 		{
 			AddType(expr.Type);
 
@@ -980,9 +992,9 @@ namespace LinqToDB.Linq.Builder
 
 		public string GenerateSourceString(Expression expr)
 		{
-			expr.Visit(VisitForDataContext);
-			expr.Visit(VisitMembers);
-			expr.Visit(VisitTypes);
+			(_dataContextVisitor ??= VisitActionVisitor<object?>.Create(VisitForDataContext)).Visit(expr);
+			(_membersVisitor     ??= VisitActionVisitor<object?>.Create(VisitMembers       )).Visit(expr);
+			(_typesVisitor       ??= VisitActionVisitor<object?>.Create(VisitTypes         )).Visit(expr);
 
 			foreach (var typeNamespaceList in _usedTypes.OrderBy(t => t.Namespace).GroupBy(x => x.Namespace))
 			{
@@ -1003,7 +1015,7 @@ namespace LinqToDB.Linq.Builder
 				_typeBuilder.AppendLine("}");
 			}
 
-			expr.Visit(BuildExpression);
+			Build(expr);
 
 			_exprBuilder.Replace("<>h__TransparentIdentifier", "tp");
 			_exprBuilder.Insert(0, "var query = ");

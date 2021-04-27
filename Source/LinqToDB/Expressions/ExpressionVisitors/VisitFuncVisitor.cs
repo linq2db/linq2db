@@ -6,13 +6,27 @@ namespace LinqToDB.Expressions
 {
 	internal class VisitFuncVisitor<TContext>
 	{
-		private readonly TContext                         _context;
-		private readonly Func<TContext, Expression, bool> _func;
+		private readonly TContext                          _context = default!;
+		private readonly Func<TContext, Expression, bool>? _func;
+		private readonly Func<Expression,bool>?            _staticFunc;
 
 		public VisitFuncVisitor(TContext context, Func<TContext, Expression, bool> func)
 		{
 			_context = context;
 			_func    = func;
+		}
+
+		public VisitFuncVisitor(Func<Expression, bool> func)
+		{
+			_staticFunc = func;
+		}
+
+		/// <summary>
+		/// Creates reusable static visitor.
+		/// </summary>
+		public static VisitFuncVisitor<object?> Create(Func<Expression, bool> func)
+		{
+			return new VisitFuncVisitor<object?>(func);
 		}
 
 		void Visit<T>(IEnumerable<T> source, Action<T> func)
@@ -30,48 +44,48 @@ namespace LinqToDB.Expressions
 
 		public void Visit(Expression expr)
 		{
-			if (expr == null || !_func(_context, expr))
+			if (expr == null || (_staticFunc != null ? !_staticFunc(expr) : !_func!(_context, expr)))
 				return;
 
 			switch (expr.NodeType)
 			{
-				case ExpressionType.Add:
-				case ExpressionType.AddChecked:
-				case ExpressionType.And:
-				case ExpressionType.AndAlso:
-				case ExpressionType.ArrayIndex:
-				case ExpressionType.Assign:
-				case ExpressionType.Coalesce:
-				case ExpressionType.Divide:
-				case ExpressionType.Equal:
-				case ExpressionType.ExclusiveOr:
-				case ExpressionType.GreaterThan:
-				case ExpressionType.GreaterThanOrEqual:
-				case ExpressionType.LeftShift:
-				case ExpressionType.LessThan:
-				case ExpressionType.LessThanOrEqual:
-				case ExpressionType.Modulo:
-				case ExpressionType.Multiply:
-				case ExpressionType.MultiplyChecked:
-				case ExpressionType.NotEqual:
-				case ExpressionType.Or:
-				case ExpressionType.OrElse:
-				case ExpressionType.Power:
-				case ExpressionType.RightShift:
-				case ExpressionType.Subtract:
-				case ExpressionType.SubtractChecked:
-				case ExpressionType.AddAssign:
-				case ExpressionType.AndAssign:
-				case ExpressionType.DivideAssign:
-				case ExpressionType.ExclusiveOrAssign:
-				case ExpressionType.LeftShiftAssign:
-				case ExpressionType.ModuloAssign:
-				case ExpressionType.MultiplyAssign:
-				case ExpressionType.OrAssign:
-				case ExpressionType.PowerAssign:
-				case ExpressionType.RightShiftAssign:
-				case ExpressionType.SubtractAssign:
-				case ExpressionType.AddAssignChecked:
+				case ExpressionType.Add                  :
+				case ExpressionType.AddChecked           :
+				case ExpressionType.And                  :
+				case ExpressionType.AndAlso              :
+				case ExpressionType.ArrayIndex           :
+				case ExpressionType.Assign               :
+				case ExpressionType.Coalesce             :
+				case ExpressionType.Divide               :
+				case ExpressionType.Equal                :
+				case ExpressionType.ExclusiveOr          :
+				case ExpressionType.GreaterThan          :
+				case ExpressionType.GreaterThanOrEqual   :
+				case ExpressionType.LeftShift            :
+				case ExpressionType.LessThan             :
+				case ExpressionType.LessThanOrEqual      :
+				case ExpressionType.Modulo               :
+				case ExpressionType.Multiply             :
+				case ExpressionType.MultiplyChecked      :
+				case ExpressionType.NotEqual             :
+				case ExpressionType.Or                   :
+				case ExpressionType.OrElse               :
+				case ExpressionType.Power                :
+				case ExpressionType.RightShift           :
+				case ExpressionType.Subtract             :
+				case ExpressionType.SubtractChecked      :
+				case ExpressionType.AddAssign            :
+				case ExpressionType.AndAssign            :
+				case ExpressionType.DivideAssign         :
+				case ExpressionType.ExclusiveOrAssign    :
+				case ExpressionType.LeftShiftAssign      :
+				case ExpressionType.ModuloAssign         :
+				case ExpressionType.MultiplyAssign       :
+				case ExpressionType.OrAssign             :
+				case ExpressionType.PowerAssign          :
+				case ExpressionType.RightShiftAssign     :
+				case ExpressionType.SubtractAssign       :
+				case ExpressionType.AddAssignChecked     :
 				case ExpressionType.MultiplyAssignChecked:
 				case ExpressionType.SubtractAssignChecked:
 				{
@@ -229,6 +243,13 @@ namespace LinqToDB.Expressions
 
 					break;
 				}
+
+				// final expressions
+				case ExpressionType.Parameter:
+				case ExpressionType.Constant : break;
+
+				default:
+					throw new NotImplementedException($"Unhandled expression type: {expr.NodeType}");
 			}
 		}
 

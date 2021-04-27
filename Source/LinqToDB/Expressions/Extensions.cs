@@ -102,17 +102,6 @@ namespace LinqToDB.Expressions
 		}
 
 		/// <summary>
-		/// Calls the given <paramref name="func"/> for each child node of the <paramref name="expr"/>.
-		/// </summary>
-		public static void Visit(this Expression expr, Action<object?, Expression> func)
-		{
-			if (expr == null)
-				return;
-
-			new VisitActionVisitor<object?>(null, func).Visit(expr);
-		}
-
-		/// <summary>
 		/// Calls the given <paramref name="func"/> for each node of the <paramref name="expr"/>.
 		/// If the <paramref name="func"/> returns false, no childs of the tested expression will be enumerated.
 		/// </summary>
@@ -122,18 +111,6 @@ namespace LinqToDB.Expressions
 				return;
 
 			new VisitFuncVisitor<TContext>(context, func).Visit(expr);
-		}
-
-		/// <summary>
-		/// Calls the given <paramref name="func"/> for each node of the <paramref name="expr"/>.
-		/// If the <paramref name="func"/> returns false, no childs of the tested expression will be enumerated.
-		/// </summary>
-		public static void Visit(this Expression expr, Func<object?, Expression, bool> func)
-		{
-			if (expr == null || !func(null, expr))
-				return;
-
-			new VisitFuncVisitor<object?>(null, func).Visit(expr);
 		}
 
 		#endregion

@@ -368,9 +368,7 @@ namespace LinqToDB.Linq.Builder
 			expression.Visit(foundParameters, static (foundParameters, e) =>
 			{
 				if (e.NodeType == ExpressionType.Lambda)
-				{
 					foundParameters.AddRange(((LambdaExpression)e).Parameters);
-				}
 			});
 		}
 

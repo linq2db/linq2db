@@ -80,7 +80,7 @@ namespace LinqToDB.Linq.Builder
 				if (context.Builder._subQueryExpressions?.Contains(expr) == true)
 				{
 					context.MakeSubQuery = true;
-					context.IsWhere = true;
+					context.IsWhere      = true;
 					return false;
 				}
 
