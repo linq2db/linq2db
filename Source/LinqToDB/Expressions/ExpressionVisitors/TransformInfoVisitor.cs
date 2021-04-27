@@ -24,7 +24,7 @@ namespace LinqToDB.Expressions
 		}
 
 		/// <summary>
-		/// Creates reusable static find visitor.
+		/// Creates reusable static visitor.
 		/// </summary>
 		public static TransformInfoVisitor<object?> Create(Func<Expression, TransformInfo> func)
 		{

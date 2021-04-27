@@ -44,13 +44,15 @@ namespace LinqToDB.Linq.Builder
 					if (param.Type != info.Parameter!.Type)
 						param = Expression.Parameter(info.Parameter.Type, param.Name);
 
-					if (info.ExpressionsToReplace != null)
+					if (info.ExpressionsToReplace != null && info.ExpressionsToReplace.Count > 0)
+					{
+						var ctx = new { p = info.Parameter, param };
 						foreach (var path in info.ExpressionsToReplace)
 						{
-							var ctx = new { info, param };
-							path.Path = path.Path.Transform(ctx, static (context, e) => e == context.info.Parameter ? context.param : e);
-							path.Expr = path.Expr.Transform(ctx, static (context, e) => e == context.info.Parameter ? context.param : e);
+							path.Path = path.Path.Transform(ctx, static (context, e) => e == context.p ? context.param : e);
+							path.Expr = path.Expr.Transform(ctx, static (context, e) => e == context.p ? context.param : e);
 						}
+					}
 				}
 
 				info.Parameter = param;

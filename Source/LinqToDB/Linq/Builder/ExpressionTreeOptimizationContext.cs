@@ -34,67 +34,70 @@ namespace LinqToDB.Linq.Builder
 
 		public static Expression AggregateExpression(Expression expression)
 		{
-			return expression.Transform(static (_, expr) =>
-			{
-				switch (expr.NodeType)
-				{
-					case ExpressionType.Or      :
-					case ExpressionType.And     :
-					case ExpressionType.OrElse  :
-					case ExpressionType.AndAlso :
-						{
-							var stack  = new Stack<Expression>();
-							var items  = new List<Expression>();
-							var binary = (BinaryExpression) expr;
+			return _aggregateExpressionTransformer.Transform(expression);
+		}
 
+		private static readonly TransformVisitor<object?> _aggregateExpressionTransformer = TransformVisitor<object?>.Create(AggregateExpressionTransformer);
+		private static Expression AggregateExpressionTransformer(Expression expr)
+		{
+			switch (expr.NodeType)
+			{
+				case ExpressionType.Or     :
+				case ExpressionType.And    :
+				case ExpressionType.OrElse :
+				case ExpressionType.AndAlso:
+				{
+					var stack  = new Stack<Expression>();
+					var items  = new List<Expression>();
+					var binary = (BinaryExpression) expr;
+
+					stack.Push(binary.Right);
+					stack.Push(binary.Left);
+					while (stack.Count > 0)
+					{
+						var item = stack.Pop();
+						if (item.NodeType == expr.NodeType)
+						{
+							binary = (BinaryExpression)item;
 							stack.Push(binary.Right);
 							stack.Push(binary.Left);
-							while (stack.Count > 0)
-							{
-								var item = stack.Pop();
-								if (item.NodeType == expr.NodeType)
-								{
-									binary  = (BinaryExpression) item;
-									stack.Push(binary.Right);
-									stack.Push(binary.Left);
-								}
-								else
-									items.Add(item);
-							}
-
-							if (items.Count > 3)
-							{
-								// having N items will lead to NxM recursive calls in expression visitors and
-								// will result in stack overflow on relatively small numbers (~1000 items).
-								// To fix it we will rebalance condition tree here which will result in
-								// LOG2(N)*M recursive calls, or 10*M calls for 1000 items.
-								//
-								// E.g. we have condition A OR B OR C OR D OR E
-								// as an expression tree it represented as tree with depth 5
-								//   OR
-								// A    OR
-								//    B    OR
-								//       C    OR
-								//          D    E
-								// for rebalanced tree it will have depth 4
-								//                  OR
-								//        OR
-								//   OR        OR        OR
-								// A    B    C    D    E    F
-								// Not much on small numbers, but huge improvement on bigger numbers
-								while (items.Count != 1)
-								{
-									items = CompactTree(items, expr.NodeType);
-								}
-
-								return items[0];
-							}
-							break;
 						}
-				}
+						else
+							items.Add(item);
+					}
 
-				return expr;
-			});
+					if (items.Count > 3)
+					{
+						// having N items will lead to NxM recursive calls in expression visitors and
+						// will result in stack overflow on relatively small numbers (~1000 items).
+						// To fix it we will rebalance condition tree here which will result in
+						// LOG2(N)*M recursive calls, or 10*M calls for 1000 items.
+						//
+						// E.g. we have condition A OR B OR C OR D OR E
+						// as an expression tree it represented as tree with depth 5
+						//   OR
+						// A    OR
+						//    B    OR
+						//       C    OR
+						//          D    E
+						// for rebalanced tree it will have depth 4
+						//                  OR
+						//        OR
+						//   OR        OR        OR
+						// A    B    C    D    E    F
+						// Not much on small numbers, but huge improvement on bigger numbers
+						while (items.Count != 1)
+						{
+							items = CompactTree(items, expr.NodeType);
+						}
+
+						return items[0];
+					}
+					break;
+				}
+			}
+
+			return expr;
 		}
 
 		static List<Expression> CompactTree(List<Expression> items, ExpressionType nodeType)
@@ -161,94 +164,97 @@ namespace LinqToDB.Linq.Builder
 		{
 			expression = AggregateExpression(expression);
 
-			var result = expression.Transform(static (_, expr) =>
-			{
-				switch (expr.NodeType)
-				{
-					case ExpressionType.Call:
-						{
-							var mc = (MethodCallExpression)expr;
-
-							List<Expression>? newArgs = null;
-							for (var index = 0; index < mc.Arguments.Count; index++)
-							{
-								var arg = mc.Arguments[index];
-								Expression? newArg = null;
-								if (typeof(LambdaExpression).IsSameOrParentOf(arg.Type))
-								{
-									var argUnwrapped = arg.Unwrap();
-									if (argUnwrapped.NodeType == ExpressionType.MemberAccess ||
-									    argUnwrapped.NodeType == ExpressionType.Call)
-									{
-										if (argUnwrapped.EvaluateExpression() is LambdaExpression lambda)
-											newArg = ExpandExpression(lambda);
-									}
-								}
-
-								if (newArg == null)
-									newArgs?.Add(arg);
-								else
-								{
-									if (newArgs == null)
-										newArgs = new List<Expression>(mc.Arguments.Take(index));
-									newArgs.Add(newArg);
-								}
-							}
-
-							if (newArgs != null)
-							{
-								mc = mc.Update(mc.Object, newArgs);
-							}
-
-							
-							if (mc.Method.Name == "Compile" && typeof(LambdaExpression).IsSameOrParentOf(mc.Method.DeclaringType!))
-							{
-								if (mc.Object.EvaluateExpression() is LambdaExpression lambda)
-								{
-									return ExpandExpression(lambda);
-								}
-							}
-
-							return mc;
-						}
-
-					case ExpressionType.Invoke:
-						{
-							var invocation = (InvocationExpression)expr;
-							if (invocation.Expression.NodeType == ExpressionType.Call)
-							{
-								var mc = (MethodCallExpression)invocation.Expression;
-								if (mc.Method.Name == "Compile" &&
-								    typeof(LambdaExpression).IsSameOrParentOf(mc.Method.DeclaringType!))
-								{
-									if (mc.Object.EvaluateExpression() is LambdaExpression lambda)
-									{
-										var map = new Dictionary<Expression, Expression>();
-										for (int i = 0; i < invocation.Arguments.Count; i++)
-										{
-											map.Add(lambda.Parameters[i], invocation.Arguments[i]);
-										}
-
-										var newBody = lambda.Body.Transform(map, static (map, se) =>
-										{
-											if (se.NodeType == ExpressionType.Parameter &&
-											    map.TryGetValue(se, out var newExpr))
-												return newExpr;
-											return se;
-										});
-
-										return ExpandExpression(newBody);
-									}
-								}
-							}
-							break;
-						}
-				}
-
-				return expr;
-			});
+			var result = _expandExpressionTransformer.Transform(expression);
 
 			return result;
+		}
+
+		private static readonly TransformVisitor<object?> _expandExpressionTransformer = TransformVisitor<object?>.Create(ExpandExpressionTransformer);
+		public static Expression ExpandExpressionTransformer(Expression expr)
+		{
+			switch (expr.NodeType)
+			{
+				case ExpressionType.Call:
+				{
+					var mc = (MethodCallExpression)expr;
+
+					List<Expression>? newArgs = null;
+					for (var index = 0; index < mc.Arguments.Count; index++)
+					{
+						var arg = mc.Arguments[index];
+						Expression? newArg = null;
+						if (typeof(LambdaExpression).IsSameOrParentOf(arg.Type))
+						{
+							var argUnwrapped = arg.Unwrap();
+							if (argUnwrapped.NodeType == ExpressionType.MemberAccess ||
+									argUnwrapped.NodeType == ExpressionType.Call)
+							{
+								if (argUnwrapped.EvaluateExpression() is LambdaExpression lambda)
+									newArg = ExpandExpression(lambda);
+							}
+						}
+
+						if (newArg == null)
+							newArgs?.Add(arg);
+						else
+						{
+							if (newArgs == null)
+								newArgs = new List<Expression>(mc.Arguments.Take(index));
+							newArgs.Add(newArg);
+						}
+					}
+
+					if (newArgs != null)
+					{
+						mc = mc.Update(mc.Object, newArgs);
+					}
+
+
+					if (mc.Method.Name == "Compile" && typeof(LambdaExpression).IsSameOrParentOf(mc.Method.DeclaringType!))
+					{
+						if (mc.Object.EvaluateExpression() is LambdaExpression lambda)
+						{
+							return ExpandExpression(lambda);
+						}
+					}
+
+					return mc;
+				}
+
+				case ExpressionType.Invoke:
+				{
+					var invocation = (InvocationExpression)expr;
+					if (invocation.Expression.NodeType == ExpressionType.Call)
+					{
+						var mc = (MethodCallExpression)invocation.Expression;
+						if (mc.Method.Name == "Compile" &&
+								typeof(LambdaExpression).IsSameOrParentOf(mc.Method.DeclaringType!))
+						{
+							if (mc.Object.EvaluateExpression() is LambdaExpression lambda)
+							{
+								var map = new Dictionary<Expression, Expression>();
+								for (int i = 0; i < invocation.Arguments.Count; i++)
+								{
+									map.Add(lambda.Parameters[i], invocation.Arguments[i]);
+								}
+
+								var newBody = lambda.Body.Transform(map, static (map, se) =>
+									{
+										if (se.NodeType == ExpressionType.Parameter &&
+												map.TryGetValue(se, out var newExpr))
+											return newExpr;
+										return se;
+									});
+
+								return ExpandExpression(newBody);
+							}
+						}
+					}
+					break;
+				}
+			}
+
+			return expr;
 		}
 
 		#region IsServerSideOnly
@@ -357,20 +363,36 @@ namespace LinqToDB.Linq.Builder
 		Expression? _lastExpr2;
 		bool        _lastResult2;
 
+		private static HashSet<Expression> DefaultAllowedParams = new ()
+		{
+			ExpressionBuilder.ParametersParam,
+			ExpressionBuilder.DataContextParam
+		};
+
 		public bool CanBeCompiled(Expression expr)
 		{
 			if (_lastExpr2 == expr)
 				return _lastResult2;
 
-			var allowedParams = new HashSet<Expression> { ExpressionBuilder.ParametersParam, ExpressionBuilder.DataContextParam };
-
-			var result = null == expr.Find(allowedParams, CanBeCompiledFind);
+			// context allocation is cheaper than HashSet allocation
+			// and HashSet allocation is rare
+			var result  = null == expr.Find(new CanBeCompiledContext(DefaultAllowedParams), CanBeCompiledFind);
 
 			_lastExpr2 = expr;
 			return _lastResult2 = result;
 		}
 
-		private bool CanBeCompiledFind(HashSet<Expression> allowedParams, Expression ex)
+		internal class CanBeCompiledContext
+		{
+			public CanBeCompiledContext(HashSet<Expression> allowedParams)
+			{
+				AllowedParams = allowedParams;
+			}
+
+			public HashSet<Expression> AllowedParams;
+		}
+
+		private bool CanBeCompiledFind(CanBeCompiledContext context, Expression ex)
 		{
 			if (IsServerSideOnly(ex))
 					return true;
@@ -378,7 +400,7 @@ namespace LinqToDB.Linq.Builder
 			switch (ex.NodeType)
 			{
 				case ExpressionType.Parameter:
-					return !allowedParams.Contains(ex);
+					return !context.AllowedParams.Contains(ex);
 
 				case ExpressionType.Call:
 				{
@@ -389,7 +411,13 @@ namespace LinqToDB.Linq.Builder
 						{
 							var lambda = (LambdaExpression)arg;
 							foreach (var prm in lambda.Parameters)
-								allowedParams.Add(prm);
+							{
+								// clone static instance
+								if (context.AllowedParams == DefaultAllowedParams)
+									context.AllowedParams = new HashSet<Expression>(DefaultAllowedParams);
+
+								context.AllowedParams.Add(prm);
+							}
 						}
 					}
 					break;

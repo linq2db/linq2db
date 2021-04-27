@@ -55,7 +55,7 @@ namespace LinqToDB.Linq.Builder
 			resultExpr = CorrectConditional(context, resultExpr, enforceServerSide, alias);
 
 			// Update nullability
-			resultExpr = resultExpr.Transform(UpdateNullabilityFromExtension);
+			resultExpr = (_updateNullabilityFromExtensionTransformer ??= TransformVisitor<object?>.Create(UpdateNullabilityFromExtension)).Transform(resultExpr);
 
 			if (resultExpr.NodeType == ExpressionType.Convert || resultExpr.NodeType == ExpressionType.ConvertChecked)
 			{
@@ -85,7 +85,8 @@ namespace LinqToDB.Linq.Builder
 			return resultExpr;
 		}
 
-		private Expression UpdateNullabilityFromExtension(object? _, Expression resultExpr)
+		private TransformVisitor<object?>? _updateNullabilityFromExtensionTransformer;
+		private Expression UpdateNullabilityFromExtension(Expression resultExpr)
 		{
 			if (resultExpr.NodeType == ExpressionType.Call)
 			{
@@ -215,9 +216,7 @@ namespace LinqToDB.Linq.Builder
 											if (context.alias != null)
 												info.Context.SetAlias(context.alias);
 											var par  = Expression.Parameter(ex.Type);
-											var bex  = info.Context.BuildExpression(ma.Transform(
-												new { ex, par },
-												static (context, e) => e == context.ex ? context.par : e), 0, context.enforceServerSide);
+											var bex  = info.Context.BuildExpression(ma.Replace(ex, par), 0, context.enforceServerSide);
 
 											if (bex != null)
 												return new TransformInfo(bex);
@@ -688,7 +687,7 @@ namespace LinqToDB.Linq.Builder
 							var info = l.Body.Unwrap();
 
 							if (l.Parameters.Count == 1 && pi.Expression != null)
-								info = info.Transform(new { pi, l }, static (context, wpi) => wpi == context.l.Parameters[0] ? context.pi.Expression : wpi);
+								info = info.Replace(l.Parameters[0], pi.Expression);
 
 							return enforceServerSideVisitor.Find(info) != null;
 						}

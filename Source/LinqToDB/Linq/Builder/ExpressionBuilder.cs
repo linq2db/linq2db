@@ -562,7 +562,7 @@ namespace LinqToDB.Linq.Builder
 		Expression ConvertSingleOrFirst(Expression expr, MethodCallExpression call)
 		{
 			var param    = Expression.Parameter(call.Type, "p");
-			var selector = expr.Transform(new { call, param }, static (context, e) => e == context.call ? context.param : e);
+			var selector = expr.Replace(call, param);
 			var method   = GetQueryableMethodInfo(call, (m, _) => m.Name == call.Method.Name && m.GetParameters().Length == 1);
 			var select   = call.Method.DeclaringType == typeof(Enumerable) ?
 				EnumerableMethods
@@ -669,7 +669,7 @@ namespace LinqToDB.Linq.Builder
 
 				var nparm = exprs.Aggregate<Expression,Expression>(parm, (c,t) => ExpressionHelper.PropertyOrField(c, "p"));
 
-				newBody   = newBody.Transform(new { lparam, nparm }, static (context, ex) => ReferenceEquals(ex, context.lparam) ? context.nparm : ex);
+				newBody   = newBody.Replace(lparam, nparm);
 				predicate = Expression.Lambda(newBody, parm);
 
 				var methodInfo = GetMethodInfo(method, "Select");
@@ -893,9 +893,7 @@ namespace LinqToDB.Linq.Builder
 						return context.builder._sourceExpression;
 
 					if (ReferenceEquals(ex, context.func.Parameters[1]))
-						return context.builder._keySelector.Body.Transform(
-							context,
-							static (context, e) => ReferenceEquals(e, context.builder._keySelector.Parameters[0]) ? context.keyArg : e);
+						return context.builder._keySelector.Body.Replace(context.builder._keySelector.Parameters[0], context.keyArg);
 
 					if (ReferenceEquals(ex, context.func.Parameters[2]))
 					{
@@ -907,9 +905,7 @@ namespace LinqToDB.Linq.Builder
 						if (context.builder._elementSelector == null)
 							return obj;
 
-						return context.builder._elementSelector.Body.Transform(
-							new { parent = context, obj},
-							static (context, e) => ReferenceEquals(e, context.parent.builder._elementSelector!.Parameters[0]) ? context.obj : e);
+						return context.builder._elementSelector.Body.Replace(context.builder._elementSelector!.Parameters[0], obj);
 					}
 
 					if (ReferenceEquals(ex, context.func.Parameters[3]))
@@ -1073,9 +1069,7 @@ namespace LinqToDB.Linq.Builder
 						return context.builder._sourceExpression;
 
 					if (ex == context.func.Parameters[1])
-						return context.builder._colSelector.Body.Transform(
-							context,
-							static (context, e) => e == context.builder._colSelector.Parameters[0] ? context.colArg : e);
+						return context.builder._colSelector.Body.Replace(context.builder._colSelector.Parameters[0], context.colArg);
 
 					return ex;
 				});
@@ -1340,9 +1334,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								if (!(callExpression.EvaluateExpression() is IQueryable appliedQuery))
 									throw new LinqToDBException($"Method call '{expression}' returned null value.");
-								var newExpression = appliedQuery.Expression.Transform(
-									new { expr = fakeQuery.Expression, firstArgument },
-									static (context, e) => e == context.expr ? context.firstArgument : e);
+								var newExpression = appliedQuery.Expression.Replace(fakeQuery.Expression, firstArgument);
 								return newExpression;
 							}
 						}

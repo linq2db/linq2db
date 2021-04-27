@@ -774,7 +774,7 @@ namespace LinqToDB.Linq.Builder
 				var subMasterObj = detailExpression;
 				foreach (var key in subMasterKeys)
 				{
-					key.ForSelect = key.ForSelect.Transform(new { detailProp, subMasterObj }, static (context, e) => e == context.subMasterObj ? context.detailProp : e);
+					key.ForSelect = key.ForSelect.Replace(subMasterObj, detailProp);
 				}
 
 				var associationMember = associationPath[associationPath.Count - 1];
@@ -1323,7 +1323,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (replaceParam != null)
 			{
-				resultExpression = finalExpression.Transform(new { replaceParam, resultExpression }, static (context, e) => e == context.replaceParam ? context.resultExpression : e);
+				resultExpression = finalExpression.Replace(replaceParam, resultExpression);
 			}
 
 			return resultExpression;
@@ -1610,16 +1610,22 @@ namespace LinqToDB.Linq.Builder
 
 		internal static Expression MakeExpressionCopy(Expression expression)
 		{
-			var result = expression.Transform(static (_, e) =>
+			var result = _makeExpressionCopyTransformer.Transform(expression);
+
+			return result;
+		}
+
+		private static readonly TransformVisitor<object?> _makeExpressionCopyTransformer = TransformVisitor<object?>.Create(MakeExpressionCopyTransformer);
+		private static Expression MakeExpressionCopyTransformer(Expression e)
+		{
+			if (e.NodeType == ExpressionType.Lambda)
 			{
-				if (e.NodeType == ExpressionType.Lambda)
-				{
-					var lambda        = (LambdaExpression)e;
-					var newParameters = lambda.Parameters
+				var lambda        = (LambdaExpression)e;
+				var newParameters = lambda.Parameters
 						.Select(p => Expression.Parameter(p.Type, "_" + p.Name))
 						.ToList();
 
-					var newBody = lambda.Body.Transform(new { lambda, newParameters}, static (context, b) =>
+				var newBody = lambda.Body.Transform(new { lambda, newParameters}, static (context, b) =>
 					{
 						if (b.NodeType == ExpressionType.Parameter)
 						{
@@ -1632,15 +1638,12 @@ namespace LinqToDB.Linq.Builder
 						return b;
 					});
 
-					newBody = MakeExpressionCopy(newBody);
+				newBody = MakeExpressionCopy(newBody);
 
-					return Expression.Lambda(newBody, newParameters);
-				}
+				return Expression.Lambda(newBody, newParameters);
+			}
 
-				return e;
-			});
-
-			return result;
+			return e;
 		}
 
 		internal static Type FinalizeType(Type type)
@@ -2016,7 +2019,7 @@ namespace LinqToDB.Linq.Builder
 
 														var accessExpr =
 															ExpressionHelper.PropertyOrField(newParam, "Data");
-														newBody = newBody.Transform(new { prm, accessExpr }, static (context, e) => e == context.prm ? context.accessExpr : e);
+														newBody = newBody.Replace(prm, accessExpr);
 													}
 													else if (typeof(IGrouping<,>).IsSameOrParentOf(replacedType))
 													{

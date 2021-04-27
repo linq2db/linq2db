@@ -278,9 +278,7 @@ namespace LinqToDB.Linq.Builder
 										}
 								}
 
-								var expr = expression.Transform(
-									new { memberExpression, levelExpression},
-									static (context, ex) => ReferenceEquals(ex, context.levelExpression) ? context.memberExpression : ex);
+								var expr = expression.Replace(levelExpression, memberExpression);
 
 								if (sequence == null)
 									return Builder.BuildExpression(this, expr, enforceServerSide);
@@ -1254,7 +1252,7 @@ namespace LinqToDB.Linq.Builder
 				return memberExpression;
 
 			return !ReferenceEquals(levelExpression, expression) ?
-				expression.Transform(new { levelExpression, memberExpression }, static (context, ex) => ReferenceEquals(ex, context.levelExpression) ? context.memberExpression : ex) :
+				expression.Replace(levelExpression, memberExpression) :
 				memberExpression;
 		}
 

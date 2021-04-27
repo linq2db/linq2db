@@ -18,6 +18,7 @@ namespace LinqToDB.Linq.Builder
 	using Reflection;
 	using SqlQuery;
 	using System.Threading;
+	using System.Runtime.CompilerServices;
 
 	partial class ExpressionBuilder
 	{
@@ -2937,7 +2938,7 @@ namespace LinqToDB.Linq.Builder
 
 		internal void BuildSearchCondition(IBuildContext? context, Expression expression, List<SqlCondition> conditions)
 		{
-			expression = expression.Transform(RemoveNullPropagation);
+			expression = GetRemoveNullPropagationTransformer().Transform(expression);
 
 			switch (expression.NodeType)
 			{
@@ -3176,7 +3177,15 @@ namespace LinqToDB.Linq.Builder
 				|| expr.NodeType == ExpressionType.Extension && expr is DefaultValueExpression;
 		}
 
-		Expression RemoveNullPropagation(object? _, Expression expr)
+		private TransformVisitor<object?>? _removeNullPropagationTransformer;
+		
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private TransformVisitor<object?> GetRemoveNullPropagationTransformer()
+		{
+			return _removeNullPropagationTransformer ??= TransformVisitor<object?>.Create(RemoveNullPropagation);
+		}
+
+		Expression RemoveNullPropagation(Expression expr)
 		{
 			// Do not modify parameters
 			//
@@ -3196,13 +3205,13 @@ namespace LinqToDB.Linq.Builder
 						{
 							if (nullRight && nullLeft)
 							{
-								return conditional.IfFalse.Transform(RemoveNullPropagation);
+								return GetRemoveNullPropagationTransformer().Transform(conditional.IfFalse);
 							}
 							else if (IsNullConstant(conditional.IfFalse)
 								&& ((nullRight && !MappingSchema.IsScalarType(binary.Left.Type)) ||
 									(nullLeft  && !MappingSchema.IsScalarType(binary.Right.Type))))
 							{
-								return conditional.IfTrue.Transform(RemoveNullPropagation);
+								return GetRemoveNullPropagationTransformer().Transform(conditional.IfTrue);
 							}
 						}
 					}
@@ -3215,13 +3224,13 @@ namespace LinqToDB.Linq.Builder
 						{
 							if (nullRight && nullLeft)
 							{
-								return conditional.IfTrue.Transform(RemoveNullPropagation);
+								return GetRemoveNullPropagationTransformer().Transform(conditional.IfTrue);
 							}
 							else if (IsNullConstant(conditional.IfTrue)
 								&& ((nullRight && !MappingSchema.IsScalarType(binary.Left.Type)) ||
 									(nullLeft  && !MappingSchema.IsScalarType(binary.Right.Type))))
 							{
-								return conditional.IfFalse.Transform(RemoveNullPropagation);
+								return GetRemoveNullPropagationTransformer().Transform(conditional.IfFalse);
 							}
 						}
 					}
@@ -3252,7 +3261,7 @@ namespace LinqToDB.Linq.Builder
 					if (members.ContainsKey(foundMember.MemberInfo))
 						continue;
 
-					var converted = arguments[i].Transform(RemoveNullPropagation);
+					var converted = GetRemoveNullPropagationTransformer().Transform(arguments[i]);
 
 					if (!foundMember.MemberInfo.GetMemberType().IsAssignableFrom(converted.Type))
 						continue;
@@ -3275,7 +3284,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								var member = expr.Members[i];
 
-								var converted = expr.Arguments[i].Transform(RemoveNullPropagation);
+								var converted = GetRemoveNullPropagationTransformer().Transform(expr.Arguments[i]);
 								members.Add(member, converted);
 
 								if (member is MethodInfo info)
@@ -3294,7 +3303,7 @@ namespace LinqToDB.Linq.Builder
 				//
 				case ExpressionType.MemberInit :
 					{
-						var expr = (MemberInitExpression)expression;
+						var expr        = (MemberInitExpression)expression;
 						var typeMembers = TypeAccessor.GetAccessor(expr.Type).Members;
 
 						var dic  = typeMembers
@@ -3303,7 +3312,7 @@ namespace LinqToDB.Linq.Builder
 
 						foreach (var binding in expr.Bindings.Cast<MemberAssignment>().OrderBy(b => dic.ContainsKey(b.Member.Name) ? dic[b.Member.Name] : 1000000))
 						{
-							var converted = binding.Expression.Transform(RemoveNullPropagation);
+							var converted = GetRemoveNullPropagationTransformer().Transform(binding.Expression);
 							members.Add(binding.Member, converted);
 
 							if (binding.Member is MethodInfo info)

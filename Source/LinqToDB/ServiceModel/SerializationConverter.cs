@@ -118,9 +118,7 @@ namespace LinqToDB.ServiceModel
 
 				var p  = Expression.Parameter(_stringType, "p");
 				var ex = Expression.Lambda<Func<string, object>>(
-					Expression.Convert(b, typeof(object)).Transform(
-						new { ps, p },
-						static (context, e) => e == context.ps[0] ? context.p : e),
+					Expression.Convert(b, typeof(object)).Replace(ps[0], p),
 					p);
 
 				return ex.CompileExpression();

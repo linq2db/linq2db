@@ -8,12 +8,24 @@ namespace LinqToDB.Common
 {
 	using Expressions;
 
-	/// <summary>
-	/// Converters provider for value conversion from <typeparamref name="TFrom"/> to <typeparamref name="TTo"/> type.
-	/// </summary>
-	/// <typeparam name="TFrom">Source conversion type.</typeparam>
-	/// <typeparam name="TTo">Target conversion type.</typeparam>
-	[PublicAPI]
+	// moved to non-generic class to avoid instance-per-generic
+	internal class ConvertReducer
+	{
+		internal static readonly TransformVisitor<object?> ReducerVisitor = TransformVisitor<object?>.Create(Reducer);
+		private static Expression Reducer(Expression e)
+		{
+			return e is DefaultValueExpression
+				? e.Reduce()
+				: e;
+		}
+	}
+
+/// <summary>
+/// Converters provider for value conversion from <typeparamref name="TFrom"/> to <typeparamref name="TTo"/> type.
+/// </summary>
+/// <typeparam name="TFrom">Source conversion type.</typeparam>
+/// <typeparam name="TTo">Target conversion type.</typeparam>
+[PublicAPI]
 	public static class Convert<TFrom,TTo>
 	{
 		static Convert()
@@ -30,10 +42,11 @@ namespace LinqToDB.Common
 
 			_expression = (Expression<Func<TFrom,TTo>>)expr.Item1;
 
-			var rexpr = (Expression<Func<TFrom,TTo>>)expr.Item1.Transform(static (_, e) => e is DefaultValueExpression ? e.Reduce() : e);
+			var rexpr = (Expression<Func<TFrom,TTo>>)ConvertReducer.ReducerVisitor.Transform(expr.Item1);
 
 			_lambda = rexpr.CompileExpression();
 		}
+
 
 		private static Expression<Func<TFrom,TTo>> _expression;
 		/// <summary>

@@ -175,7 +175,7 @@ namespace LinqToDB.Linq.Builder
 								Expression.MemberInit(
 									Expression.New(btype),
 									Expression.Bind(fields[0], psel),
-									Expression.Bind(fields[1], selector.Body.Transform(new { pold, psel }, static (context, e) => e == context.pold ? context.psel : e))),
+									Expression.Bind(fields[1], selector.Body.Replace(pold, psel))),
 								psel));
 
 						selector = (LambdaExpression)methodCall.Arguments[1].Unwrap();

@@ -450,7 +450,7 @@ namespace LinqToDB.Linq.Builder
 						var helper = (IGroupJoinCallHelper)Activator.CreateInstance(gtype)!;
 						var expr   = helper.GetGroupJoinCall(this);
 
-						expr = call.Transform(new { replaceExpression, expr }, static (context, e) => e == context.replaceExpression ? context.expr : e);
+						expr = call.Replace(replaceExpression, expr);
 
 						return Builder.BuildExpression(this, expr, enforceServerSide);
 					}

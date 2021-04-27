@@ -1716,7 +1716,7 @@ namespace LinqToDB.Data
 				var dataReaderVar = Expression.Variable(dataReaderExpr.Type, "ldr");
 				var assignment    = Expression.Assign(dataReaderVar, dataReaderExpr);
 
-				expr = expr.Transform(new { dataReaderExpr, dataReaderVar }, static (context, e) => e == context.dataReaderExpr ? context.dataReaderVar : e);
+				expr = expr.Replace(dataReaderExpr, dataReaderVar);
 				expr = Expression.Block(new[] { dataReaderVar }, assignment, expr);
 
 				if (Configuration.OptimizeForSequentialAccess)
@@ -1775,7 +1775,7 @@ namespace LinqToDB.Data
 				var dataReaderVar = Expression.Variable(dataReaderExpr.Type, "ldr");
 				var assignment    = Expression.Assign(dataReaderVar, dataReaderExpr);
 
-				expr = expr.Transform(new { dataReaderExpr, dataReaderVar }, static (context, e) => e == context.dataReaderExpr ? context.dataReaderVar : e);
+				expr = expr.Replace(dataReaderExpr, dataReaderVar);
 				expr = Expression.Block(new[] { dataReaderVar }, assignment, expr);
 			}
 

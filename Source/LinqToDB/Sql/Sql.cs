@@ -177,19 +177,24 @@ namespace LinqToDB
 		{
 			private static readonly MethodInfo _method = MethodHelper.GetMethodInfo(ConvertRemover<int, int>, 0).GetGenericMethodDefinition();
 
+			private static readonly TransformVisitor<object?> _transformer = TransformVisitor<object?>.Create(Transform);
+
+			private static Expression Transform(Expression e)
+			{
+				if (e.NodeType == ExpressionType.Convert || e.NodeType == ExpressionType.ConvertChecked)
+				{
+					var unary  = (UnaryExpression)e;
+					var method = _method.MakeGenericMethod(unary.Operand.Type, unary.Type);
+					return Expression.Call(null, method, unary.Operand);
+				}
+
+				return e;
+			}
+
 			public void Build(ISqExtensionBuilder builder)
 			{
 				var expr    = builder.Arguments[0];
-				var newExpr = expr.Transform(static (_, e) =>
-				{
-					if (e.NodeType == ExpressionType.Convert || e.NodeType == ExpressionType.ConvertChecked)
-					{
-						var unary  = (UnaryExpression)e;
-						var method = _method.MakeGenericMethod(unary.Operand.Type, unary.Type);
-						return Expression.Call(null, method, unary.Operand);
-					}
-					return e;
-				});
+				var newExpr = _transformer.Transform(expr);
 
 				if (newExpr == expr)
 				{

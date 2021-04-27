@@ -757,10 +757,16 @@ namespace LinqToDB.Mapping
 
 		Expression ReduceDefaultValue(Expression expr)
 		{
-			return expr.Transform(this, static (context, e) =>
-				Converter.IsDefaultValuePlaceHolder(e) ?
-					Expression.Constant(context.GetDefaultValue(e.Type), e.Type) :
-					e);
+			return (_reduceDefaultValueTransformer ??= TransformVisitor<object?>.Create(ReduceDefaultValueTransformer))
+				.Transform(expr);
+		}
+
+		private TransformVisitor<object?>? _reduceDefaultValueTransformer;
+		private Expression ReduceDefaultValueTransformer(Expression e)
+		{
+			return Converter.IsDefaultValuePlaceHolder(e) ?
+				Expression.Constant(GetDefaultValue(e.Type), e.Type) :
+				e;
 		}
 
 		/// <summary>

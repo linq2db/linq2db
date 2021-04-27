@@ -604,7 +604,7 @@ namespace LinqToDB.Mapping
 			var queryParam   = Expression.Parameter(typeof(IQueryable<TEntity>), "q");
 			var dcParam      = Expression.Parameter(typeof(TDataContext), "dc");
 			var replaceParam = filter.Parameters[1];
-			var filterBody   = filter.Body.Transform(new { replaceParam, dcParam }, static (context, e) => e == context.replaceParam ? context.dcParam : e);
+			var filterBody   = filter.Body.Replace(replaceParam, dcParam);
 			var filterLambda = Expression.Lambda(filterBody, filter.Parameters[0]);
 			var body         = Expression.Call(Methods.Queryable.Where.MakeGenericMethod(typeof(TEntity)), queryParam, filterLambda);
 			var lambda       = Expression.Lambda<Func<IQueryable<TEntity>, TDataContext, IQueryable<TEntity>>>(body, queryParam, dcParam);

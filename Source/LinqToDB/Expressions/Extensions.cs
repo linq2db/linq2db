@@ -228,20 +228,6 @@ namespace LinqToDB.Expressions
 			return new TransformVisitor<TContext>(context, func).Transform(expr);
 		}
 
-		/// <summary>
-		/// Enumerates the expression tree of <paramref name="expr"/> and might
-		/// replace expression with the returned value of the given <paramref name="func"/>.
-		/// </summary>
-		/// <returns>The modified expression.</returns>
-		[return: NotNullIfNotNull("expr")]
-		public static Expression? Transform(this Expression? expr, [InstantHandle] Func<object?, Expression, Expression> func)
-		{
-			if (expr == null)
-				return null;
-
-			return new TransformVisitor<object?>(null, func).Transform(expr);
-		}
-
 		#endregion
 
 		#region Transform2
