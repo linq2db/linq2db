@@ -8,6 +8,7 @@ using LinqToDB.Linq;
 
 namespace LinqToDB.Expressions
 {
+	// PathVisitor cannot be shared/reused due to _visited state field
 	internal class PathVisitor<TContext>
 	{
 		private readonly TContext                                 _context;

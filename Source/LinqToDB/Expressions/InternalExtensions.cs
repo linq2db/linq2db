@@ -580,11 +580,6 @@ namespace LinqToDB.Expressions
 		{
 			new PathVisitor<TContext>(context, path, func).Path(expr);
 		}
-
-		public static void Path<TContext>(this Expression expr, Expression path, Action<object?, Expression, Expression> func)
-		{
-			new PathVisitor<object?>(null, path, func).Path(expr);
-		}
 		#endregion
 
 		#region Helpers
@@ -1112,114 +1107,116 @@ namespace LinqToDB.Expressions
 		/// <returns>Optimized expression.</returns>
 		public static Expression? OptimizeExpression(this Expression? expression)
 		{
-			var optimized = expression?.Transform(static (_, e) =>
+			return _optimizeExpressionVisitor.Transform(expression);
+		}
+
+		private static readonly TransformInfoVisitor<object?> _optimizeExpressionVisitor = TransformInfoVisitor<object?>.Create(OptimizeExpressionTransformer);
+
+		private static TransformInfo OptimizeExpressionTransformer(Expression e)
+		{
+			var newExpr = e;
+			if (e is BinaryExpression binary)
+			{
+				var left  = OptimizeExpression(binary.Left)!;
+				var right = OptimizeExpression(binary.Right)!;
+
+				if (left.Type != binary.Left.Type)
+					left = Expression.Convert(left, binary.Left.Type);
+
+				if (right.Type != binary.Right.Type)
+					right = Expression.Convert(right, binary.Right.Type);
+
+				newExpr = binary.Update(left, OptimizeExpression(binary.Conversion) as LambdaExpression, right);
+			}
+			else if (e is UnaryExpression unaryExpression)
+			{
+				newExpr = unaryExpression.Update(OptimizeExpression(unaryExpression.Operand));
+				if (newExpr.NodeType == ExpressionType.Convert && ((UnaryExpression)newExpr).Operand.NodeType == ExpressionType.Convert)
 				{
-					var newExpr = e;
-					if (e is BinaryExpression binary)
-					{
-						var left  = OptimizeExpression(binary.Left)!;
-						var right = OptimizeExpression(binary.Right)!;
-
-						if (left.Type != binary.Left.Type)
-							left = Expression.Convert(left, binary.Left.Type);
-
-						if (right.Type != binary.Right.Type)
-							right = Expression.Convert(right, binary.Right.Type);
-
-						newExpr = binary.Update(left, OptimizeExpression(binary.Conversion) as LambdaExpression, right);
-					}
-					else if (e is UnaryExpression unaryExpression)
-					{
-						newExpr = unaryExpression.Update(OptimizeExpression(unaryExpression.Operand));
-						if (newExpr.NodeType == ExpressionType.Convert && ((UnaryExpression)newExpr).Operand.NodeType == ExpressionType.Convert)
-						{
-							// remove double convert
-							newExpr = Expression.Convert(
-								((UnaryExpression) ((UnaryExpression) newExpr).Operand).Operand, newExpr.Type);
-						}
-					}
-
-					if (IsEvaluable(newExpr))
-					{
-						newExpr = newExpr.NodeType == ExpressionType.Constant
-							? newExpr
-							: Expression.Constant(EvaluateExpression(newExpr));
-					}
-					else
-					{
-						switch (newExpr)
-						{
-							case NewArrayExpression:
-							{
-								return new TransformInfo(newExpr, true);
-							}
-							case UnaryExpression unary when IsEvaluable(unary.Operand):
-							{
-								newExpr = Expression.Constant(EvaluateExpression(unary));
-								break;
-							}
-							case MemberExpression me when me.Expression?.NodeType == ExpressionType.Constant:
-							{
-								newExpr = Expression.Constant(EvaluateExpression(me));
-								break;
-							}
-							case BinaryExpression be when IsEvaluable(be.Left) && IsEvaluable(be.Right):
-							{
-								newExpr = Expression.Constant(EvaluateExpression(be));
-								break;
-							}
-							case BinaryExpression be when be.NodeType == ExpressionType.AndAlso:
-							{
-								if (IsEvaluable(be.Left))
-								{
-									var leftBool = EvaluateExpression(be.Left) as bool?;
-									if (leftBool == true)
-										e = be.Right;
-									else if (leftBool == false)
-										newExpr = ExpressionHelper.FalseConstant;
-								}
-								else if (IsEvaluable(be.Right))
-								{
-									var rightBool = EvaluateExpression(be.Right) as bool?;
-									if (rightBool == true)
-										newExpr = be.Left;
-									else if (rightBool == false)
-										newExpr = ExpressionHelper.FalseConstant;
-								}
-
-								break;
-							}
-							case BinaryExpression be when be.NodeType == ExpressionType.OrElse:
-							{
-								if (IsEvaluable(be.Left))
-								{
-									var leftBool = EvaluateExpression(be.Left) as bool?;
-									if (leftBool == false)
-										newExpr = be.Right;
-									else if (leftBool == true)
-										newExpr = ExpressionHelper.TrueConstant;
-								}
-								else if (IsEvaluable(be.Right))
-								{
-									var rightBool = EvaluateExpression(be.Right) as bool?;
-									if (rightBool == false)
-										newExpr = be.Left;
-									else if (rightBool == true)
-										newExpr = ExpressionHelper.TrueConstant;
-								}
-
-								break;
-							}
-						}
-					}
-
-					if (newExpr.Type != e.Type)
-						newExpr = Expression.Convert(newExpr, e.Type);
-
-					return new TransformInfo(newExpr);
+					// remove double convert
+					newExpr = Expression.Convert(
+						((UnaryExpression)((UnaryExpression)newExpr).Operand).Operand, newExpr.Type);
 				}
-			);
-			return optimized;
+			}
+
+			if (IsEvaluable(newExpr))
+			{
+				newExpr = newExpr.NodeType == ExpressionType.Constant
+					? newExpr
+					: Expression.Constant(EvaluateExpression(newExpr));
+			}
+			else
+			{
+				switch (newExpr)
+				{
+					case NewArrayExpression:
+					{
+						return new TransformInfo(newExpr, true);
+					}
+					case UnaryExpression unary when IsEvaluable(unary.Operand):
+					{
+						newExpr = Expression.Constant(EvaluateExpression(unary));
+						break;
+					}
+					case MemberExpression me when me.Expression?.NodeType == ExpressionType.Constant:
+					{
+						newExpr = Expression.Constant(EvaluateExpression(me));
+						break;
+					}
+					case BinaryExpression be when IsEvaluable(be.Left) && IsEvaluable(be.Right):
+					{
+						newExpr = Expression.Constant(EvaluateExpression(be));
+						break;
+					}
+					case BinaryExpression be when be.NodeType == ExpressionType.AndAlso:
+					{
+						if (IsEvaluable(be.Left))
+						{
+							var leftBool = EvaluateExpression(be.Left) as bool?;
+							if (leftBool == true)
+								e = be.Right;
+							else if (leftBool == false)
+								newExpr = ExpressionHelper.FalseConstant;
+						}
+						else if (IsEvaluable(be.Right))
+						{
+							var rightBool = EvaluateExpression(be.Right) as bool?;
+							if (rightBool == true)
+								newExpr = be.Left;
+							else if (rightBool == false)
+								newExpr = ExpressionHelper.FalseConstant;
+						}
+
+						break;
+					}
+					case BinaryExpression be when be.NodeType == ExpressionType.OrElse:
+					{
+						if (IsEvaluable(be.Left))
+						{
+							var leftBool = EvaluateExpression(be.Left) as bool?;
+							if (leftBool == false)
+								newExpr = be.Right;
+							else if (leftBool == true)
+								newExpr = ExpressionHelper.TrueConstant;
+						}
+						else if (IsEvaluable(be.Right))
+						{
+							var rightBool = EvaluateExpression(be.Right) as bool?;
+							if (rightBool == false)
+								newExpr = be.Left;
+							else if (rightBool == true)
+								newExpr = ExpressionHelper.TrueConstant;
+						}
+
+						break;
+					}
+				}
+			}
+
+			if (newExpr.Type != e.Type)
+				newExpr = Expression.Convert(newExpr, e.Type);
+
+			return new TransformInfo(newExpr);
 		}
 
 		public static Expression ApplyLambdaToExpression(LambdaExpression convertLambda, Expression expression)

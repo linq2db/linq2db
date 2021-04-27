@@ -161,18 +161,6 @@ namespace LinqToDB.Expressions
 			return new FindVisitor<TContext>(context, func).Find(expr);
 		}
 
-		/// <summary>
-		/// Enumerates the given <paramref name="expr"/> and returns the first sub-expression
-		/// which matches the given <paramref name="func"/>. If no expression was found, null is returned.
-		/// </summary>
-		public static Expression? Find(this Expression? expr, Func<Expression, bool> func)
-		{
-			if (expr == null)
-				return expr;
-
-			return new FindVisitor<object?>(func).Find(expr);
-		}
-
 		#endregion
 
 		#region Transform
@@ -264,15 +252,6 @@ namespace LinqToDB.Expressions
 				return null;
 
 			return new TransformInfoVisitor<TContext>(context, func).Transform(expr);
-		}
-
-		[return: NotNullIfNotNull("expr")]
-		public static Expression? Transform(this Expression? expr, Func<object?, Expression, TransformInfo> func)
-		{
-			if (expr == null)
-				return null;
-
-			return new TransformInfoVisitor<object?>(null, func).Transform(expr);
 		}
 		#endregion
 

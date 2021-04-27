@@ -8,13 +8,27 @@ namespace LinqToDB.Expressions
 {
 	internal class TransformInfoVisitor<TContext>
 	{
-		private readonly TContext                                  _context;
-		private readonly Func<TContext, Expression, TransformInfo> _func;
+		private readonly TContext                                   _context = default!;
+		private readonly Func<TContext, Expression, TransformInfo>? _func;
+		private readonly Func<Expression, TransformInfo>?           _staticFunc;
 
 		public TransformInfoVisitor(TContext context, Func<TContext, Expression, TransformInfo> func)
 		{
 			_context = context;
 			_func    = func;
+		}
+
+		public TransformInfoVisitor(Func<Expression, TransformInfo> func)
+		{
+			_staticFunc = func;
+		}
+
+		/// <summary>
+		/// Creates reusable static find visitor.
+		/// </summary>
+		public static TransformInfoVisitor<object?> Create(Func<Expression, TransformInfo> func)
+		{
+			return new TransformInfoVisitor<object?>(func);
 		}
 
 		[return: NotNullIfNotNull("expr")]
@@ -27,7 +41,7 @@ namespace LinqToDB.Expressions
 
 			do
 			{
-				ti = _func(_context, expr);
+				ti = _staticFunc != null ? _staticFunc(expr) : _func!(_context, expr);
 				if (ti.Stop || !ti.Continue && ti.Expression != expr)
 					return ti.Expression;
 				if (expr == ti.Expression)
@@ -306,12 +320,11 @@ namespace LinqToDB.Expressions
 				}
 
 				case ExpressionType.Extension:
-				{
 					return expr;
-				}
-			}
 
-			throw new InvalidOperationException();
+				default:
+					throw new NotImplementedException($"Unhandled expression type: {expr.NodeType}");
+			}
 		}
 
 		private CatchBlock TransformCatchBlock(CatchBlock h)
@@ -329,36 +342,46 @@ namespace LinqToDB.Expressions
 				Transform(cs.Body));
 		}
 
-		IEnumerable<T> Transform<T>(ICollection<T> source, Func<T, T> func)
+		IEnumerable<T> Transform<T>(IList<T> source, Func<T, T> func)
 			where T : class
 		{
-			var modified = false;
-			var list     = new List<T>();
+			List<T>? list = null;
 
-			foreach (var item in source)
+			for (var i = 0; i < source.Count; i++)
 			{
-				var e = func(item);
-				list.Add(e);
-				modified = modified || e != item;
+				var item = source[i];
+				var e    = func(item);
+
+				if (e != item)
+				{
+					if (list == null)
+						list = new List<T>(source);
+					list[i] = e;
+				}
 			}
 
-			return modified ? list : source;
+			return list ?? source;
 		}
 
-		IEnumerable<T> Transform<T>(IEnumerable<T> source)
+		IEnumerable<T> Transform<T>(IList<T> source)
 			where T : Expression
 		{
-			var modified = false;
-			var list     = new List<T>();
+			List<T>? list = null;
 
-			foreach (var item in source)
+			for (var i = 0; i < source.Count; i++)
 			{
-				var e = Transform(item)!;
-				list.Add((T)e);
-				modified = modified || e != item;
+				var item = source[i];
+				var e    = (T)Transform(item)!;
+
+				if (e != item)
+				{
+					if (list == null)
+						list = new List<T>(source);
+					list[i] = e;
+				}
 			}
 
-			return modified ? list : source;
+			return list ?? source;
 		}
 
 		ElementInit TransformElementInit(ElementInit p)

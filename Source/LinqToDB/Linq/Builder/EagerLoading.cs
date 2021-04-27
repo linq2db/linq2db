@@ -356,7 +356,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								context.NewQueryable = mc;
 								var subElementType   = GetEnumerableElementType(context.NewQueryable.Type, context.MappingSchema);
-								context.NewParam = Expression.Parameter(typeof(List<>).MakeGenericType(subElementType), "replacement");
+								context.NewParam     = Expression.Parameter(typeof(List<>).MakeGenericType(subElementType), "replacement");
 								var replaceExpr      = (Expression)context.NewParam;
 								if (mc.IsQueryable(false))
 								{
@@ -370,7 +370,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								context.NewQueryable = mc.Arguments[0];
 								var subElementType   = GetEnumerableElementType(context.NewQueryable.Type, context.MappingSchema);
-								context.NewParam = Expression.Parameter(typeof(List<>).MakeGenericType(subElementType), "replacement");
+								context.NewParam     = Expression.Parameter(typeof(List<>).MakeGenericType(subElementType), "replacement");
 								var replaceExpr      = (Expression)context.NewParam;
 								if (typeof(IQueryable<>).IsSameOrParentOf(mc.Method.GetParameters()[0].ParameterType))
 								{
@@ -392,7 +392,7 @@ namespace LinqToDB.Linq.Builder
 			if (ctx.NewQueryable != null)
 			{
 				queryableExpression = ctx.NewQueryable;
-				replaceParam = ctx.NewParam;
+				replaceParam        = ctx.NewParam;
 
 				// remove not needed AsQueryable() call
 				//
@@ -417,7 +417,7 @@ namespace LinqToDB.Linq.Builder
 			var elementType = GetEnumerableElementType(desiredType, mappingSchema);
 			if (replaceParam == null)
 			{
-				replaceParam = Expression.Parameter(typeof(List<>).MakeGenericType(elementType), "replacement");
+				replaceParam    = Expression.Parameter(typeof(List<>).MakeGenericType(elementType), "replacement");
 				finalExpression = replaceParam;
 			}
 

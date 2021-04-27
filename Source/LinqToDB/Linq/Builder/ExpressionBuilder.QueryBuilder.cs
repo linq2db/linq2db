@@ -116,7 +116,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			return expression.Transform(
 				new { builder = this, context, enforceServerSide, alias },
-				static (context, expr) => 
+				static (context, expr) =>
 				{
 					if (context.builder._skippedExpressions.Contains(expr))
 						return new TransformInfo(expr, true);

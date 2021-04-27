@@ -382,14 +382,14 @@ namespace LinqToDB.Linq.Builder
 			expr = ExposeExpression(expression);
 			var currentParameters = new HashSet<ParameterExpression>();
 			CollectLambdaParameters(expression, currentParameters);
-			expr = expr.Transform(new { currentParameters, builder = this }, static(context, e) => context.builder.OptimizeExpressionImpl(e, context.currentParameters));
+			expr = expr.Transform(currentParameters, OptimizeExpressionImpl);
 
 			_optimizedExpressions[expression] = expr;
 
 			return expr;
 		}
 
-		TransformInfo OptimizeExpressionImpl(Expression expr, HashSet<ParameterExpression> currentParameters)
+		TransformInfo OptimizeExpressionImpl(HashSet<ParameterExpression> currentParameters, Expression expr)
 		{
 			switch (expr.NodeType)
 			{

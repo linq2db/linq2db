@@ -16,16 +16,4 @@
 
 		public TWriteable WriteableValue = default!;
 	}
-
-	//internal class StaticContext<TStatic1, TStatic2>
-	//{
-	//	public StaticContext(TStatic1 staticValue1, TStatic2 staticValue2)
-	//	{
-	//		StaticValue1 = staticValue1;
-	//		StaticValue2 = staticValue2;
-	//	}
-
-	//	public readonly TStatic1 StaticValue1;
-	//	public readonly TStatic2 StaticValue2;
-	//}
 }
