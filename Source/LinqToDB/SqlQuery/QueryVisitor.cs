@@ -1096,7 +1096,8 @@ namespace LinqToDB.SqlQuery
 			Visit2(sc.TakeValue);
 			Visit2(sc.SkipValue);
 
-			foreach (var c in sc.Columns.ToArray()) Visit2(c);
+			// TODO: review visitors to make instantiation unnecessary
+			foreach (var c in sc.Columns.ToList()) Visit2(c);
 		}
 
 		void Visit2X(SqlUpdateClause sc)

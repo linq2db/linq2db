@@ -87,9 +87,7 @@ namespace LinqToDB.Expressions
 				case ExpressionType.Subtract          :
 				case ExpressionType.SubtractChecked   :
 					{
-						ConvertPathTo(typeof(BinaryExpression));
-
-						path = _path;
+						path = ConvertPathTo(typeof(BinaryExpression));
 
 						Path(((BinaryExpression)expr).Conversion, ReflectionHelper.Binary.Conversion);
 						_path = path;
@@ -100,25 +98,24 @@ namespace LinqToDB.Expressions
 						break;
 					}
 
-				case ExpressionType.ArrayLength:
-				case ExpressionType.Convert:
+				case ExpressionType.ArrayLength   :
+				case ExpressionType.Convert       :
 				case ExpressionType.ConvertChecked:
-				case ExpressionType.Negate:
-				case ExpressionType.NegateChecked:
-				case ExpressionType.Not:
-				case ExpressionType.Quote:
-				case ExpressionType.TypeAs:
-				case ExpressionType.UnaryPlus:
-					ConvertPathTo(typeof(UnaryExpression));
+				case ExpressionType.Negate        :
+				case ExpressionType.NegateChecked :
+				case ExpressionType.Not           :
+				case ExpressionType.Quote         :
+				case ExpressionType.TypeAs        :
+				case ExpressionType.UnaryPlus     :
+					path = ConvertPathTo(typeof(UnaryExpression));
 
 					Path(((UnaryExpression)expr).Operand, ReflectionHelper.Unary.Operand);
 					break;
 
 				case ExpressionType.Call:
 					{
-						ConvertPathTo(typeof(MethodCallExpression));
+						path = ConvertPathTo(typeof(MethodCallExpression));
 
-						path = _path;
 						Path(((MethodCallExpression)expr).Object,    ReflectionHelper.MethodCall.Object);
 						_path = path;
 						Path(((MethodCallExpression)expr).Arguments, ReflectionHelper.MethodCall.Arguments);
@@ -128,9 +125,8 @@ namespace LinqToDB.Expressions
 
 				case ExpressionType.Conditional:
 					{
-						ConvertPathTo(typeof(ConditionalExpression));
+						path = ConvertPathTo(typeof(ConditionalExpression));
 
-						path = _path;
 						Path(((ConditionalExpression)expr).Test,    ReflectionHelper.Conditional.Test);
 						_path = path;
 						Path(((ConditionalExpression)expr).IfTrue,  ReflectionHelper.Conditional.IfTrue);
@@ -142,9 +138,8 @@ namespace LinqToDB.Expressions
 
 				case ExpressionType.Invoke:
 					{
-						ConvertPathTo(typeof(InvocationExpression));
+						path = ConvertPathTo(typeof(InvocationExpression));
 
-						path = _path;
 						Path(((InvocationExpression)expr).Expression, ReflectionHelper.Invocation.Expression);
 						_path = path;
 						Path(((InvocationExpression)expr).Arguments, ReflectionHelper.Invocation.Arguments);
@@ -154,9 +149,8 @@ namespace LinqToDB.Expressions
 
 				case ExpressionType.Lambda:
 					{
-						ConvertPathTo(typeof(LambdaExpression));
+						path = ConvertPathTo(typeof(LambdaExpression));
 
-						path = _path;
 						Path(((LambdaExpression)expr).Body,       ReflectionHelper.LambdaExpr.Body);
 						_path = path;
 						Path(((LambdaExpression)expr).Parameters, ReflectionHelper.LambdaExpr.Parameters);
@@ -166,9 +160,8 @@ namespace LinqToDB.Expressions
 
 				case ExpressionType.ListInit:
 					{
-						ConvertPathTo(typeof(ListInitExpression));
+						path = ConvertPathTo(typeof(ListInitExpression));
 
-						path = _path;
 						Path(((ListInitExpression)expr).NewExpression, ReflectionHelper.ListInit.NewExpression);
 						_path = path;
 						Path(((ListInitExpression)expr).Initializers,  ReflectionHelper.ListInit.Initializers, ElementInitPath);
@@ -177,15 +170,14 @@ namespace LinqToDB.Expressions
 					}
 
 				case ExpressionType.MemberAccess:
-					ConvertPathTo(typeof(MemberExpression));
+					path = ConvertPathTo(typeof(MemberExpression));
 					Path(((MemberExpression)expr).Expression, ReflectionHelper.Member.Expression);
 					break;
 
 				case ExpressionType.MemberInit:
 					{
-						ConvertPathTo(typeof(MemberInitExpression));
+						path = ConvertPathTo(typeof(MemberInitExpression));
 
-						path = _path;
 						Path(((MemberInitExpression)expr).NewExpression, ReflectionHelper.MemberInit.NewExpression);
 						_path = path;
 						Path(((MemberInitExpression)expr).Bindings,      ReflectionHelper.MemberInit.Bindings,      MemberBindingPath);
@@ -194,30 +186,29 @@ namespace LinqToDB.Expressions
 					}
 
 				case ExpressionType.New:
-					ConvertPathTo(typeof(NewExpression));
+					path = ConvertPathTo(typeof(NewExpression));
 					Path(((NewExpression)expr).Arguments, ReflectionHelper.New.Arguments);
 					break;
 
 				case ExpressionType.NewArrayBounds:
-					ConvertPathTo(typeof(NewArrayExpression));
+					path = ConvertPathTo(typeof(NewArrayExpression));
 					Path(((NewArrayExpression)expr).Expressions, ReflectionHelper.NewArray.Expressions);
 					break;
 
 				case ExpressionType.NewArrayInit:
-					ConvertPathTo(typeof(NewArrayExpression));
+					path = ConvertPathTo(typeof(NewArrayExpression));
 					Path(((NewArrayExpression)expr).Expressions, ReflectionHelper.NewArray.Expressions);
 					break;
 
 				case ExpressionType.TypeIs:
-					ConvertPathTo(typeof(TypeBinaryExpression));
+					path = ConvertPathTo(typeof(TypeBinaryExpression));
 					Path(((TypeBinaryExpression)expr).Expression, ReflectionHelper.TypeBinary.Expression);
 					break;
 
 				case ExpressionType.Block:
 					{
-						ConvertPathTo(typeof(BlockExpression));
+						path = ConvertPathTo(typeof(BlockExpression));
 
-						path = _path;
 						Path(((BlockExpression)expr).Expressions, ReflectionHelper.Block.Expressions);
 						_path = path;
 						Path(((BlockExpression)expr).Variables,   ReflectionHelper.Block.Variables); // ?
@@ -227,32 +218,36 @@ namespace LinqToDB.Expressions
 
 				case ExpressionType.Constant:
 					{
-						ConvertPathTo(typeof(ConstantExpression));
+						path = ConvertPathTo(typeof(ConstantExpression));
 
 						if (((ConstantExpression)expr).Value is IQueryable iq && _visited?.Contains(iq.Expression) != true)
 						{
 							(_visited ??= new ()).Add(iq.Expression);
 
 							_path = Expression.Property(_path, ReflectionHelper.Constant.Value);
-							ConvertPathTo(typeof(IQueryable));
+							path = ConvertPathTo(typeof(IQueryable));
 							Path(iq.Expression, ReflectionHelper.QueryableInt.Expression);
 						}
 
 						break;
 					}
 
-				case ExpressionType.Parameter: ConvertPathTo(typeof(ParameterExpression)); break;
+				case ExpressionType.Parameter: path = ConvertPathTo(typeof(ParameterExpression)); break;
 
 				case ExpressionType.Extension:
 					{
+						path = _path;
 						if (expr.CanReduce)
 							Path(expr.Reduce());
 
 						break;
 					}
+
+				default:
+					throw new NotImplementedException($"Unhandled expression type: {expr.NodeType}");
 			}
 
-			_func(_context, expr, _path);
+			_func(_context, expr, path);
 		}
 
 		private void ElementInitPath(ElementInit ei)
@@ -289,15 +284,10 @@ namespace LinqToDB.Expressions
 			}
 		}
 
-		private static Expression ConvertTo(Expression expr, Type type)
-		{
-			return Expression.Convert(expr, type);
-		}
-
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void ConvertPathTo(Type type)
+		private Expression ConvertPathTo(Type type)
 		{
-			_path = Expression.Convert(_path, type);
+			return _path = Expression.Convert(_path, type);
 		}
 	}
 }

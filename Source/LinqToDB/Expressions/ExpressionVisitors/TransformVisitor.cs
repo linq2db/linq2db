@@ -316,36 +316,46 @@ namespace LinqToDB.Expressions
 				: e;
 		}
 
-		IEnumerable<T> Transform<T>(ICollection<T> source, Func<T, T> func)
+		IEnumerable<T> Transform<T>(IList<T> source, Func<T, T> func)
 			where T : class
 		{
-			var modified = false;
-			var list     = new List<T>();
+			List<T>? list = null;
 
-			foreach (var item in source)
+			for (var i = 0; i < source.Count; i++)
 			{
-				var e = func(item);
-				list.Add(e);
-				modified = modified || e != item;
+				var item = source[i];
+				var e    = func(item);
+
+				if (e != item)
+				{
+					if (list == null)
+						list = new List<T>(source);
+					list[i] = e;
+				}
 			}
 
-			return modified ? list : source;
+			return list ?? source;
 		}
 
-		IEnumerable<T> Transform<T>(ICollection<T> source)
+		IEnumerable<T> Transform<T>(IList<T> source)
 			where T : Expression
 		{
-			var modified = false;
-			var list     = new List<T>();
+			List<T>? list = null;
 
-			foreach (var item in source)
+			for (var i = 0; i < source.Count; i++)
 			{
-				var e = Transform(item)!;
-				list.Add((T)e);
-				modified = modified || e != item;
+				var item = source[i];
+				var e    = (T)Transform(item)!;
+
+				if (e != item)
+				{
+					if (list == null)
+						list    = new List<T>(source);
+					list[i] = e;
+				}
 			}
 
-			return modified ? list : source;
+			return list ?? source;
 		}
 
 		MemberBinding Modify(MemberBinding b)
