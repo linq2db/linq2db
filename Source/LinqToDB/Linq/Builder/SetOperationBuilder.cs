@@ -246,13 +246,14 @@ namespace LinqToDB.Linq.Builder
 
 					if (member.Info1 == null)
 					{
-						var type = member.Info2!.Sql.SystemType;
-						if (type == null)
-							type = member.Info2!.MemberChain.Last().GetMemberType();
+						var dbType = QueryHelper.GetDbDataType(member.Info2!.Sql);
+						if (dbType.SystemType == typeof(object))
+							dbType = dbType.WithSystemType(member.Info2!.MemberChain.Last().GetMemberType());
+
 						member.Info1 = new SqlInfo
 						(
 							member.Info2!.MemberChain,
-							new SqlValue(type, null),
+							new SqlValue(dbType, null),
 							_sequence1.SelectQuery,
 							i
 						);
@@ -262,13 +263,14 @@ namespace LinqToDB.Linq.Builder
 
 					if (member.Info2 == null)
 					{
-						var spam = unionMembers.First(m => m.Info2 != null).Info2!.MemberChain.First();
-						var type = spam.GetMemberType();
+						var dbType = QueryHelper.GetDbDataType(member.Info1!.Sql);
+						if (dbType.SystemType == typeof(object))
+							dbType = dbType.WithSystemType(member.Info1!.MemberChain.Last().GetMemberType());
 
 						member.Info2 = new SqlInfo
 						(
 							member.Info1.MemberChain,
-							new SqlValue(type, null),
+							new SqlValue(dbType, null),
 							_sequence2.SelectQuery,
 							i
 						);

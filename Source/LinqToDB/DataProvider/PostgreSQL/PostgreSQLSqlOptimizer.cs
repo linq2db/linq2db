@@ -45,6 +45,23 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			});
 		}
 
+		public override ISqlExpression OptimizeExpression(ISqlExpression expression, ConvertVisitor convertVisitor, EvaluationContext context)
+		{
+			expression = base.OptimizeExpression(expression, convertVisitor, context);
+
+			if (expression is SqlValue valueExpr && valueExpr.Value == null)
+			{
+				if (convertVisitor.ParentElement == null || convertVisitor.ParentElement?.ElementType == QueryElementType.Column)
+				{
+					// adding convert for resolve issues with UNION. PostgreSQL may treat NULL as 'text' data type
+					return new SqlFunction(valueExpr.ValueType.SystemType, "Convert", false,
+						new SqlDataType(valueExpr.ValueType), valueExpr);
+				}
+			}
+
+			return expression;
+		}
+
 		SqlStatement PrepareUpdateStatement(SqlUpdateStatement statement)
 		{
 			if (statement.SelectQuery.Select.HasModifier)
