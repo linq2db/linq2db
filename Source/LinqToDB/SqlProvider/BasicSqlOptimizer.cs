@@ -695,7 +695,10 @@ namespace LinqToDB.SqlProvider
 						// case when provider do not support not typed NULL values.
 
 						var sqlValue = (SqlValue)expression;
-						if (sqlValue.Value == null && convertVisitor.ParentElement == null || convertVisitor.ParentElement?.ElementType == QueryElementType.Column)
+						if (sqlValue.Value == null && sqlValue.ValueType.DataType != DataType.Undefined &&
+						    (convertVisitor.ParentElement == null ||
+						     convertVisitor.ParentElement?.ElementType == QueryElementType.Column)
+						    )
 						{
 							expression = new SqlFunction(sqlValue.ValueType.SystemType, "Convert", false, new SqlDataType(sqlValue.ValueType), sqlValue);
 						}
