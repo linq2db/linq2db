@@ -13,6 +13,8 @@ namespace LinqToDB.DataProvider.Informix
 		{
 		}
 
+		public override bool IsNullColumnsSupported => false;
+
 		public override bool IsParameterDependedElement(IQueryElement element)
 		{
 			if (base.IsParameterDependedElement(element))

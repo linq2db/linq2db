@@ -27,6 +27,7 @@
 		}
 
 		public override bool CanCompareSearchConditions => true;
+		public override bool IsNullColumnsSupported     => false;
 		
 		protected static string[] DB2LikeCharactersToEscape = {"%", "_"};
 

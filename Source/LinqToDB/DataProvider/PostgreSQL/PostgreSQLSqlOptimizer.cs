@@ -17,6 +17,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		public override bool CanCompareSearchConditions => true;
 
+		// PostgreSQL may treat NULL as 'text' data type in UNION, so better to cover with CAST
+		public override bool IsNullColumnsSupported     => false;
+
 		public override SqlStatement Finalize(SqlStatement statement)
 		{
 			CheckAliases(statement, int.MaxValue);
@@ -43,23 +46,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 				return e;
 			});
-		}
-
-		public override ISqlExpression OptimizeExpression(ISqlExpression expression, ConvertVisitor convertVisitor, EvaluationContext context)
-		{
-			expression = base.OptimizeExpression(expression, convertVisitor, context);
-
-			if (expression is SqlValue valueExpr && valueExpr.Value == null)
-			{
-				if (convertVisitor.ParentElement == null || convertVisitor.ParentElement?.ElementType == QueryElementType.Column)
-				{
-					// adding convert for resolve issues with UNION. PostgreSQL may treat NULL as 'text' data type
-					return new SqlFunction(valueExpr.ValueType.SystemType, "Convert", false,
-						new SqlDataType(valueExpr.ValueType), valueExpr);
-				}
-			}
-
-			return expression;
 		}
 
 		SqlStatement PrepareUpdateStatement(SqlUpdateStatement statement)
