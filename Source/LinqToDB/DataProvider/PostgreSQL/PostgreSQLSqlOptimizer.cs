@@ -17,9 +17,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		public override bool CanCompareSearchConditions => true;
 
-		// PostgreSQL may treat NULL as 'text' data type in UNION, so better to cover with CAST
-		public override bool IsNullColumnsSupported     => false;
-
 		public override SqlStatement Finalize(SqlStatement statement)
 		{
 			CheckAliases(statement, int.MaxValue);

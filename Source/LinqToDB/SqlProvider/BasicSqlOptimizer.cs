@@ -652,8 +652,6 @@ namespace LinqToDB.SqlProvider
 			return new SqlValue(dbDataType, value);
 		}
 
-		public virtual bool IsNullColumnsSupported => true;
-
 		public virtual ISqlExpression OptimizeExpression(ISqlExpression expression, ConvertVisitor convertVisitor,
 			EvaluationContext context)
 		{
@@ -686,24 +684,6 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.SqlValuesTable:
 				{
 					return ReduceSqlValueTable((SqlValuesTable)expression, context);
-				}
-
-				case QueryElementType.SqlValue:
-				{
-					if (!IsNullColumnsSupported)
-					{
-						// case when provider do not support not typed NULL values.
-
-						var sqlValue = (SqlValue)expression;
-						if (sqlValue.Value == null && sqlValue.ValueType.DataType != DataType.Undefined &&
-						    (convertVisitor.ParentElement == null ||
-						     convertVisitor.ParentElement?.ElementType == QueryElementType.Column)
-						    )
-						{
-							expression = new SqlFunction(sqlValue.ValueType.SystemType, "Convert", false, new SqlDataType(sqlValue.ValueType), sqlValue);
-						}
-					}
-					break;
 				}
 			}
 
