@@ -12,7 +12,9 @@ namespace LinqToDB.DataProvider.SqlServer
 
 	class SqlServerBulkCopy : BasicBulkCopy
 	{
-		private readonly SqlServerDataProvider _provider;
+		protected override int                   MaxParameters => 2099;
+		protected override int                   MaxSqlLength => 327670;
+		private readonly   SqlServerDataProvider _provider;
 
 		public SqlServerBulkCopy(SqlServerDataProvider provider)
 		{

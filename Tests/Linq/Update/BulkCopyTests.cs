@@ -284,12 +284,12 @@ namespace Tests.xUpdate
 			using (db.BeginTransaction())
 			{
 				var options = new BulkCopyOptions(){ UseParameters = true, MaxBatchSize = 50};
-				var rowsToIns = Enumerable.Range(111001, 200)
+				var rowsToIns = Enumerable.Range(111001, 149)
 					.Select(r => new Parent() {ParentID = r}).ToList();
 				db.Parent.BulkCopy(options, rowsToIns);
 				Assert.AreEqual(rowsToIns.Count,
 					db.Parent.Where(r =>
-						r.ParentID >= 111001 && r.ParentID <= 111201).Count());
+						r.ParentID >= rowsToIns.First().ParentID && r.ParentID <= rowsToIns.Last().ParentID).Count());
 
 			}
 		}

@@ -8,6 +8,9 @@ namespace LinqToDB.DataProvider.SQLite
 
 	class SQLiteBulkCopy : BasicBulkCopy
 	{
+		protected override int MaxParameters => 999;
+		protected override int MaxSqlLength => 1000000;
+
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
 			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{

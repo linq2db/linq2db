@@ -13,7 +13,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 {
 	class PostgreSQLBulkCopy : BasicBulkCopy
 	{
-		readonly PostgreSQLDataProvider _provider;
+		protected override int                    MaxParameters => 32767;
+		protected override int                    MaxSqlLength  => 327670;
+		readonly           PostgreSQLDataProvider _provider;
 
 		public PostgreSQLBulkCopy(PostgreSQLDataProvider dataProvider)
 		{
