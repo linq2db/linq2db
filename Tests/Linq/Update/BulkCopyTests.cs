@@ -276,5 +276,22 @@ namespace Tests.xUpdate
 				db.Child. BulkCopy(options, new[] { new Child  { ParentID = 111001 } });
 			}
 		}
+		
+		[Test]
+		public void UseParametersTest([DataSources(false, ProviderName.DB2)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				var options = new BulkCopyOptions(){ UseParameters = true, MaxBatchSize = 50};
+				var rowsToIns = Enumerable.Range(111001, 200)
+					.Select(r => new Parent() {ParentID = r}).ToList();
+				db.Parent.BulkCopy(options, rowsToIns);
+				Assert.AreEqual(rowsToIns.Count,
+					db.Parent.Where(r =>
+						r.ParentID >= 111001 && r.ParentID <= 111201).Count());
+
+			}
+		}
 	}
 }

@@ -344,20 +344,32 @@ namespace LinqToDB.DataProvider
 			Action<MultipleRowsHelper>                prepFunction,
 			Action<MultipleRowsHelper,object,string?> addFunction,
 			Action<MultipleRowsHelper>                finishFunction,
-			int                                       maxParameters = 10000,
+			int                                       maxParameters = 999,
 			int                                       maxSqlLength  = 100000)
 		{
 			prepFunction(helper);
 
 			foreach (var item in source)
 			{
+				helper.LastRowParameterIndex = helper.ParameterIndex;
+				helper.LastRowStringIndex    = helper.StringBuilder.Length;
 				addFunction(helper, item!, from);
-
-				if (helper.CurrentCount >= helper.BatchSize || helper.Parameters.Count > maxParameters || helper.StringBuilder.Length > maxSqlLength)
+				var needRemove = helper.Parameters.Count > maxParameters ||
+				                 helper.StringBuilder.Length > maxSqlLength;
+				if (helper.CurrentCount >= helper.BatchSize || needRemove)
 				{
+					if (needRemove)
+					{
+						helper.Parameters.RemoveRange(helper.LastRowParameterIndex, helper.ParameterIndex-helper.LastRowParameterIndex);
+						helper.StringBuilder.Length = helper.LastRowStringIndex;	
+					}
 					finishFunction(helper);
 					if (!helper.Execute())
 						return helper.RowsCopied;
+					if (needRemove)
+					{
+						addFunction(helper, item!, from);	
+					}
 				}
 			}
 
@@ -378,20 +390,33 @@ namespace LinqToDB.DataProvider
 			Action<MultipleRowsHelper, object, string?> addFunction,
 			Action<MultipleRowsHelper>                  finishFunction,
 			CancellationToken                           cancellationToken,
-			int                                         maxParameters = 10000,
+			int                                         maxParameters = 999,
 			int                                         maxSqlLength  = 100000)
 		{
 			prepFunction(helper);
 
 			foreach (var item in source)
 			{
+				helper.LastRowParameterIndex = helper.ParameterIndex;
+				helper.LastRowStringIndex    = helper.LastRowStringIndex;
 				addFunction(helper, item!, from);
 
-				if (helper.CurrentCount >= helper.BatchSize || helper.Parameters.Count > maxParameters || helper.StringBuilder.Length > maxSqlLength)
+				var needRemove = helper.Parameters.Count     > maxParameters ||
+				                 helper.StringBuilder.Length > maxSqlLength;
+				if (helper.CurrentCount >= helper.BatchSize || needRemove)
 				{
+					if (needRemove)
+					{
+						helper.Parameters.RemoveRange(helper.LastRowParameterIndex, helper.ParameterIndex-helper.LastRowParameterIndex);
+						helper.StringBuilder.Length = helper.LastRowStringIndex;	
+					}
 					finishFunction(helper);
 					if (!await helper.ExecuteAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 						return helper.RowsCopied;
+					if (needRemove)
+					{
+						addFunction(helper, item!, from);	
+					}
 				}
 			}
 
@@ -413,20 +438,33 @@ namespace LinqToDB.DataProvider
 			Action<MultipleRowsHelper, object, string?> addFunction,
 			Action<MultipleRowsHelper>                  finishFunction,
 			CancellationToken                           cancellationToken,
-			int                                         maxParameters = 10000,
+			int                                         maxParameters = 999,
 			int                                         maxSqlLength  = 100000)
 		{
 			prepFunction(helper);
 
 			await foreach (var item in source.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext).WithCancellation(cancellationToken))
 			{
+				helper.LastRowParameterIndex = helper.ParameterIndex;
+				helper.LastRowStringIndex    = helper.LastRowStringIndex;
 				addFunction(helper, item!, from);
 
-				if (helper.CurrentCount >= helper.BatchSize || helper.Parameters.Count > maxParameters || helper.StringBuilder.Length > maxSqlLength)
+				var needRemove = helper.Parameters.Count     > maxParameters ||
+				                 helper.StringBuilder.Length > maxSqlLength;
+				if (helper.CurrentCount >= helper.BatchSize || needRemove)
 				{
+					if (needRemove)
+					{
+						helper.Parameters.RemoveRange(helper.LastRowParameterIndex, helper.ParameterIndex-helper.LastRowParameterIndex);
+						helper.StringBuilder.Length = helper.LastRowStringIndex;	
+					}
 					finishFunction(helper);
 					if (!await helper.ExecuteAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 						return helper.RowsCopied;
+					if (needRemove)
+					{
+						addFunction(helper, item!, from);	
+					}
 				}
 			}
 

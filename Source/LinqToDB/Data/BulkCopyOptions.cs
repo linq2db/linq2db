@@ -88,5 +88,10 @@ namespace LinqToDB.Data
 		/// This callback will not be used if <see cref="NotifyAfter"/> set to 0.
 		/// </summary>
 		public Action<BulkCopyRowsCopied>? RowsCopiedCallback { get; set; }
+
+		/// <summary>
+		/// Gets or sets whether to Always use Parameters for MultipleRowsCopy.
+		/// </summary>
+		public bool UseParameters { get; set; }
 	}
 }

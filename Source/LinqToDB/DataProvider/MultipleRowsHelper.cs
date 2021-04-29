@@ -38,7 +38,6 @@ namespace LinqToDB.DataProvider
 			ParameterName  = SqlBuilder.ConvertInline("p", ConvertType.NameToQueryParameter);
 			BatchSize      = Math.Max(10, Options.MaxBatchSize ?? 1000);
 		}
-
 		public readonly ISqlBuilder         SqlBuilder;
 		public readonly DataConnection      DataConnection;
 		public readonly BulkCopyOptions     Options;
@@ -57,6 +56,8 @@ namespace LinqToDB.DataProvider
 		public int ParameterIndex;
 		public int HeaderSize;
 		public int BatchSize;
+		public int LastRowStringIndex;
+		public int LastRowParameterIndex;
 
 		public void SetHeader()
 		{
@@ -72,7 +73,7 @@ namespace LinqToDB.DataProvider
 				var column = Columns[i];
 				var value  = column.GetValue(item);
 
-				if (skipConvert(column) || !ValueConverter.TryConvert(StringBuilder, ColumnTypes[i], value))
+				if (Options.UseParameters || skipConvert(column) || !ValueConverter.TryConvert(StringBuilder, ColumnTypes[i], value))
 				{
 					var name = ParameterName == "?" ? ParameterName : ParameterName + ++ParameterIndex;
 
@@ -109,9 +110,11 @@ namespace LinqToDB.DataProvider
 			}
 
 			Parameters.Clear();
-			ParameterIndex       = 0;
-			CurrentCount         = 0;
-			StringBuilder.Length = HeaderSize;
+			ParameterIndex        = 0;
+			CurrentCount          = 0;
+			LastRowParameterIndex = 0;
+			LastRowStringIndex    = HeaderSize;
+			StringBuilder.Length  = HeaderSize;
 
 			return true;
 		}
@@ -130,9 +133,11 @@ namespace LinqToDB.DataProvider
 			}
 
 			Parameters.Clear();
-			ParameterIndex       = 0;
-			CurrentCount         = 0;
-			StringBuilder.Length = HeaderSize;
+			ParameterIndex        = 0;
+			CurrentCount          = 0;
+			LastRowParameterIndex = 0;
+			LastRowStringIndex    = HeaderSize;
+			StringBuilder.Length  = HeaderSize;
 
 			return true;
 		}
