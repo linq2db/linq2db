@@ -598,7 +598,7 @@ namespace LinqToDB.SqlProvider
 
 			if (wrap)
 			{
-				expr = new SqlFunction(typeof(int), "CASE", expr, new SqlValue(true), new SqlValue(false))
+				expr = new SqlFunction(typeof(bool), "CASE", expr, new SqlValue(true), new SqlValue(false))
 				{
 					DoNotOptimize = true
 				};
