@@ -578,6 +578,7 @@ namespace LinqToDB.SqlProvider
 		}
 
 		protected virtual bool SupportsBooleanInColumn => false;
+		protected virtual bool SupportsNullInColumn    => true;
 
 		protected virtual ISqlExpression WrapBooleanExpression(ISqlExpression expr)
 		{
@@ -597,7 +598,7 @@ namespace LinqToDB.SqlProvider
 
 			if (wrap)
 			{
-				expr = new SqlFunction(typeof(int), "CASE", expr, new SqlValue(true), new SqlValue(false))
+				expr = new SqlFunction(typeof(bool), "CASE", expr, new SqlValue(true), new SqlValue(false))
 				{
 					DoNotOptimize = true
 				};
@@ -613,7 +614,19 @@ namespace LinqToDB.SqlProvider
 				expr = WrapBooleanExpression(expr);
 			}
 
+			expr = WrapColumnExpression(expr);
+
 			BuildExpression(expr, true, true, alias, ref addAlias, true);
+		}
+
+		protected virtual ISqlExpression WrapColumnExpression(ISqlExpression expr)
+		{
+			if (!SupportsNullInColumn && expr is SqlValue sqlValue && sqlValue.Value == null)
+			{
+				return new SqlFunction(sqlValue.ValueType.SystemType, "Convert", false, new SqlDataType(sqlValue.ValueType), sqlValue);
+			}
+
+			return expr;
 		}
 
 		#endregion
