@@ -142,27 +142,6 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region ICloneableElement Members
-
-		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			if (!objectTree.TryGetValue(this, out var clone))
-			{
-				var sc = new SqlSearchCondition();
-
-				objectTree.Add(this, clone = sc);
-
-				sc.Conditions.AddRange(Conditions.Select(c => (SqlCondition)c.Clone(objectTree, doClone)));
-			}
-
-			return clone;
-		}
-
-		#endregion
-
 		#region IQueryElement Members
 
 		public QueryElementType ElementType => QueryElementType.SearchCondition;

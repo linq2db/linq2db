@@ -1182,17 +1182,17 @@ namespace LinqToDB.SqlQuery
 						var map = sql.Select.Columns.ToLookup(c => c.Expression);
 						foreach (var condition in searchCondition)
 						{
-							var newPredicate = ConvertVisitor.Convert(condition.Predicate, (visitor, e) =>
+							var newPredicate = condition.Predicate.Convert(map, static (visitor, e) =>
 							{
-								if (e is ISqlExpression ex && map.Contains(ex))
+								if (e is ISqlExpression ex && visitor.Context.Contains(ex))
 								{
-									var newExpr = map[ex].First();
+									var newExpr = visitor.Context[ex].First();
 									if (visitor.ParentElement is SqlColumn column)
 									{
 										if (newExpr != column)
 											e = newExpr;
 									}
-									else 
+									else
 										e = newExpr;
 								}
 

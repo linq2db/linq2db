@@ -24,16 +24,6 @@ namespace LinqToDB.SqlQuery
 			SearchCondition = new SqlSearchCondition();
 		}
 
-		internal SqlWhereClause(
-			SelectQuery selectQuery,
-			SqlWhereClause clone,
-			Dictionary<ICloneableElement,ICloneableElement> objectTree,
-			Predicate<ICloneableElement> doClone)
-			: base(selectQuery)
-		{
-			SearchCondition = (SqlSearchCondition)clone.SearchCondition.Clone(objectTree, doClone);
-		}
-
 		internal SqlWhereClause(SqlSearchCondition searchCondition) : base(null)
 		{
 			SearchCondition = searchCondition;

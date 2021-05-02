@@ -17,6 +17,8 @@ namespace LinqToDB.SqlQuery
 			set => _update = value;
 		}
 
+		internal bool HasUpdate => _update != null;
+
 		public SqlUpdateStatement(SelectQuery selectQuery) : base(selectQuery)
 		{
 		}
@@ -42,24 +44,6 @@ namespace LinqToDB.SqlQuery
 			SelectQuery = (SelectQuery)SelectQuery.Walk(options, func);
 
 			return null;
-		}
-
-		public override ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			var clone = new SqlUpdateStatement((SelectQuery)SelectQuery.Clone(objectTree, doClone));
-
-			if (Tag != null)
-				clone.Tag = (SqlComment)Tag.Clone(objectTree, doClone);
-
-			if (_update != null)
-				clone._update = (SqlUpdateClause)_update.Clone(objectTree, doClone);
-
-			if (With != null)
-				clone.With = (SqlWithClause)With.Clone(objectTree, doClone);
-
-			objectTree.Add(this, clone);
-
-			return clone;
 		}
 
 		public override IEnumerable<IQueryElement> EnumClauses()

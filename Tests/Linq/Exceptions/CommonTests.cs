@@ -45,7 +45,7 @@ namespace Tests.Exceptions
 							var tableName = "Parent1";
 							var dic       = new Dictionary<IQueryElement,IQueryElement>();
 
-							statement = ConvertVisitor.Convert(statement, (v, e) =>
+							statement = statement.Convert(new { dic, tableName }, static (v, e) =>
 							{
 								if (e.ElementType == QueryElementType.SqlTable)
 								{
@@ -53,17 +53,17 @@ namespace Tests.Exceptions
 
 									if (oldTable.Name == "Parent")
 									{
-										var newTable = new SqlTable(oldTable) { Name = tableName, PhysicalName = tableName };
+										var newTable = new SqlTable(oldTable) { Name = v.Context.tableName, PhysicalName = v.Context.tableName };
 
 										foreach (var field in oldTable.Fields)
-											dic.Add(field, newTable[field.Name] ?? throw new InvalidOperationException());
+											v.Context.dic.Add(field, newTable[field.Name] ?? throw new InvalidOperationException());
 
 										return newTable;
 									}
 								}
 
 								IQueryElement? ex;
-								return dic.TryGetValue(e, out ex) ? ex : e;
+								return v.Context.dic.TryGetValue(e, out ex) ? ex : e;
 							});
 						}
 					}

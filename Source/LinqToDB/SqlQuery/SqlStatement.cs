@@ -9,7 +9,7 @@ namespace LinqToDB.SqlQuery
 	using Common;
 
 	[DebuggerDisplay("SQL = {" + nameof(DebugSqlText) + "}")]
-	public abstract class SqlStatement : IQueryElement, ISqlExpressionWalkable, ICloneableElement
+	public abstract class SqlStatement : IQueryElement, ISqlExpressionWalkable
 	{
 		public string SqlText =>
 			((IQueryElement)this)
@@ -64,13 +64,6 @@ namespace LinqToDB.SqlQuery
 		#region IEquatable<ISqlExpression>
 
 		public abstract ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func);
-
-		#endregion
-
-		#region ICloneableElement
-
-		public abstract ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree,
-			Predicate<ICloneableElement> doClone);
 
 		#endregion
 

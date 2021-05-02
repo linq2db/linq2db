@@ -60,8 +60,8 @@ namespace LinqToDB.DataProvider.Firebird
 		}
 
 
-		public override ISqlPredicate ConvertSearchStringPredicate(MappingSchema mappingSchema, SqlPredicate.SearchString predicate,
-			ConvertVisitor visitor,
+		public override ISqlPredicate ConvertSearchStringPredicate<TContext>(MappingSchema mappingSchema, SqlPredicate.SearchString predicate,
+			ConvertVisitor<RunOptimizationContext<TContext>> visitor,
 			OptimizationContext optimizationContext)
 		{
 			if (!predicate.IgnoreCase)
@@ -112,7 +112,7 @@ namespace LinqToDB.DataProvider.Firebird
 			};
 		}
 
-		public override ISqlExpression OptimizeExpression(ISqlExpression expression, ConvertVisitor convertVisitor,
+		public override ISqlExpression OptimizeExpression<TContext>(ISqlExpression expression, ConvertVisitor<TContext> convertVisitor,
 			EvaluationContext context)
 		{
 			var newExpr = base.OptimizeExpression(expression, convertVisitor, context);
@@ -155,7 +155,7 @@ namespace LinqToDB.DataProvider.Firebird
 			return newExpr;
 		}
 
-		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor visitor,
+		public override ISqlExpression ConvertExpressionImpl<TContext>(ISqlExpression expression, ConvertVisitor<TContext> visitor,
 			EvaluationContext context)
 		{
 			expression = base.ConvertExpressionImpl(expression, visitor, context);
@@ -212,11 +212,11 @@ namespace LinqToDB.DataProvider.Firebird
 			// - in select column expression at any position (except nested subquery): select, subquery, merge source
 			// - in composite expression in insert or update setter: insert, update, merge (not always, in some cases it works)
 
-			statement = ConvertVisitor.Convert(statement, (visitor, e) =>
+			statement = statement.Convert(context, static (visitor, e) =>
 			{
 				if (e is SqlParameter p && p.IsQueryParameter)
 				{
-					var paramValue = p.GetParameterValue(context.ParameterValues);
+					var paramValue = p.GetParameterValue(visitor.Context.ParameterValues);
 
 					// Don't cast in cast
 					if (visitor.ParentElement is SqlFunction convertFunc && convertFunc.Name == "$Convert$")

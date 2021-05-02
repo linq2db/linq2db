@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	using Tools;
-
 	public abstract class SqlPredicate : ISqlPredicate
 	{
 		public enum Operator
@@ -46,17 +43,6 @@ namespace LinqToDB.SqlQuery
 			}
 
 			public override bool CanBeNull => Expr1.CanBeNull;
-
-			protected override ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-			{
-				if (!doClone(this))
-					return this;
-
-				if (!objectTree.TryGetValue(this, out var clone))
-					objectTree.Add(this, clone = new Expr((ISqlExpression)Expr1.Clone(objectTree, doClone), Precedence));
-
-				return clone;
-			}
 
 			public override QueryElementType ElementType => QueryElementType.ExprPredicate;
 
@@ -100,17 +86,6 @@ namespace LinqToDB.SqlQuery
 				return new NotExpr(Expr1, !IsNot, Precedence);
 			}
 
-			protected override ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-			{
-				if (!doClone(this))
-					return this;
-
-				if (!objectTree.TryGetValue(this, out var clone))
-					objectTree.Add(this, clone = new NotExpr((ISqlExpression)Expr1.Clone(objectTree, doClone), IsNot, Precedence));
-
-				return clone;
-			}
-
 			public override QueryElementType ElementType => QueryElementType.NotExprPredicate;
 		}
 
@@ -138,18 +113,6 @@ namespace LinqToDB.SqlQuery
 			}
 
 			public override bool CanBeNull => base.CanBeNull || Expr2.CanBeNull;
-
-			protected override ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-			{
-				if (!doClone(this))
-					return this;
-
-				if (!objectTree.TryGetValue(this, out var clone))
-					objectTree.Add(this, clone = new ExprExpr(
-						(ISqlExpression)Expr1.Clone(objectTree, doClone), Operator, (ISqlExpression)Expr2.Clone(objectTree, doClone), WithNull));
-
-				return clone;
-			}
 
 			public override QueryElementType ElementType => QueryElementType.ExprExprPredicate;
 
@@ -406,18 +369,6 @@ namespace LinqToDB.SqlQuery
 				return new Like(Expr1, !IsNot, Expr2, Escape);
 			}
 
-			protected override ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-			{
-				if (!doClone(this))
-					return this;
-
-				if (!objectTree.TryGetValue(this, out var clone))
-					objectTree.Add(this, clone = new Like(
-						(ISqlExpression)Expr1.Clone(objectTree, doClone), IsNot, (ISqlExpression)Expr2.Clone(objectTree, doClone), Escape));
-
-				return clone;
-			}
-
 			public override QueryElementType ElementType => QueryElementType.LikePredicate;
 
 			protected override void ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
@@ -472,18 +423,6 @@ namespace LinqToDB.SqlQuery
 				return new SearchString(Expr1, !IsNot, Expr2, Kind, IgnoreCase);
 			}
 
-			protected override ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-			{
-				if (!doClone(this))
-					return this;
-
-				if (!objectTree.TryGetValue(this, out var clone))
-					objectTree.Add(this, clone = new SearchString(
-						(ISqlExpression)Expr1.Clone(objectTree, doClone), IsNot, (ISqlExpression)Expr2.Clone(objectTree, doClone), Kind, IgnoreCase));
-
-				return clone;
-			}
-
 			public override QueryElementType ElementType => QueryElementType.SearchStringPredicate;
 
 			protected override void ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
@@ -536,21 +475,6 @@ namespace LinqToDB.SqlQuery
 				return new Between(Expr1, !IsNot, Expr2, Expr3);
 			}
 
-			protected override ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-			{
-				if (!doClone(this))
-					return this;
-
-				if (!objectTree.TryGetValue(this, out var clone))
-					objectTree.Add(this, clone = new Between(
-						(ISqlExpression)Expr1.Clone(objectTree, doClone),
-						IsNot,
-						(ISqlExpression)Expr2.Clone(objectTree, doClone),
-						(ISqlExpression)Expr3.Clone(objectTree, doClone)));
-
-				return clone;
-			}
-
 			public override QueryElementType ElementType => QueryElementType.BetweenPredicate;
 
 			protected override void ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
@@ -580,17 +504,6 @@ namespace LinqToDB.SqlQuery
 				TrueValue    = trueValue;
 				FalseValue   = falseValue;
 				WithNull = withNull;
-			}
-
-			protected override ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-			{
-				if (!doClone(this))
-					return this;
-
-				if (!objectTree.TryGetValue(this, out var clone))
-					objectTree.Add(this, clone = new IsTrue((ISqlExpression)Expr1.Clone(objectTree, doClone), TrueValue, FalseValue, WithNull, IsNot));
-
-				return clone;
 			}
 
 			protected override void ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
@@ -640,17 +553,6 @@ namespace LinqToDB.SqlQuery
 				return new IsNull(Expr1, !IsNot);
 			}
 
-			protected override ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-			{
-				if (!doClone(this))
-					return this;
-
-				if (!objectTree.TryGetValue(this, out var clone))
-					objectTree.Add(this, clone = new IsNull((ISqlExpression)Expr1.Clone(objectTree, doClone), IsNot));
-
-				return clone;
-			}
-
 			protected override void ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 			{
 				Expr1.ToString(sb, dic);
@@ -684,20 +586,6 @@ namespace LinqToDB.SqlQuery
 			public override IQueryElement Invert()
 			{
 				return new InSubQuery(Expr1, !IsNot, SubQuery);
-			}
-
-			protected override ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-			{
-				if (!doClone(this))
-					return this;
-
-				if (!objectTree.TryGetValue(this, out var clone))
-					objectTree.Add(this, clone = new InSubQuery(
-						(ISqlExpression)Expr1.Clone(objectTree, doClone),
-						IsNot,
-						(SelectQuery)SubQuery.Clone(objectTree, doClone)));
-
-				return clone;
 			}
 
 			public override QueryElementType ElementType => QueryElementType.InSubQueryPredicate;
@@ -748,23 +636,6 @@ namespace LinqToDB.SqlQuery
 				return new InList(Expr1, !WithNull, !IsNot, Values);
 			}
 
-			protected override ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-			{
-				if (!doClone(this))
-					return this;
-
-				if (!objectTree.TryGetValue(this, out var clone))
-				{
-					objectTree.Add(this, clone = new InList(
-						(ISqlExpression)Expr1.Clone(objectTree, doClone),
-						WithNull,
-						IsNot,
-						Values.Select(e => (ISqlExpression)e.Clone(objectTree, doClone)).ToArray()));
-				}
-
-				return clone;
-			}
-
 			public override QueryElementType ElementType => QueryElementType.InListPredicate;
 
 			protected override void ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
@@ -809,17 +680,6 @@ namespace LinqToDB.SqlQuery
 
 			public override bool CanBeNull => Function.CanBeNull;
 
-			protected override ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-			{
-				if (!doClone(this))
-					return this;
-
-				if (!objectTree.TryGetValue(this, out var clone))
-					objectTree.Add(this, clone = new FuncLike((SqlFunction)Function.Clone(objectTree, doClone)));
-
-				return clone;
-			}
-
 			public override QueryElementType ElementType => QueryElementType.FuncLikePredicate;
 
 			protected override void ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
@@ -851,21 +711,12 @@ namespace LinqToDB.SqlQuery
 		public             int               Precedence { get; }
 
 		public    abstract bool              CanBeNull  { get; }
-		protected abstract ICloneableElement Clone    (Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone);
 		protected abstract void              Walk     (WalkOptions options, Func<ISqlExpression,ISqlExpression> func);
 
 		ISqlExpression? ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
 			Walk(options, func);
 			return null;
-		}
-
-		ICloneableElement ICloneableElement.Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			return Clone(objectTree, doClone);
 		}
 
 		#endregion

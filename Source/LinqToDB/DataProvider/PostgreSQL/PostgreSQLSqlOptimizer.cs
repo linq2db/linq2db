@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using LinqToDB.Linq;
 
@@ -229,10 +228,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				for (var i = 0; i < statement.Update.Items.Count; i++)
 				{
 					var item = statement.Update.Items[i];
-					var newItem = ConvertVisitor.Convert(item, (v, e) =>
+					var newItem = item.Convert(new { tableToCompare, tableToUpdate }, static (v, e) =>
 					{
-						if (e is SqlField field && field.Table == tableToCompare)
-							return tableToUpdate[field.Name] ?? throw new LinqException($"Field {field.Name} not found in table {tableToUpdate}");
+						if (e is SqlField field && field.Table == v.Context.tableToCompare)
+							return v.Context.tableToUpdate[field.Name] ?? throw new LinqException($"Field {field.Name} not found in table {v.Context.tableToUpdate}");
 
 						return e;
 					});
@@ -273,7 +272,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return statement;
 		}
 
-		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor visitor,
+		public override ISqlExpression ConvertExpressionImpl<TContext>(ISqlExpression expression, ConvertVisitor<TContext> visitor,
 			EvaluationContext context)
 		{
 			expression = base.ConvertExpressionImpl(expression, visitor, context);
@@ -310,12 +309,15 @@ namespace LinqToDB.DataProvider.PostgreSQL
 							: Add<int>(
 								new SqlExpression(func.SystemType, "Position({0} in {1})", Precedence.Primary,
 									func.Parameters[0],
-									ConvertExpressionImpl(new SqlFunction(typeof(string), "Substring",
-										func.Parameters[1],
-										func.Parameters[2],
-										Sub<int>(
-											ConvertExpressionImpl(
-												new SqlFunction(typeof(int), "Length", func.Parameters[1]), visitor, context), func.Parameters[2])), visitor, context)),
+									ConvertExpressionImpl(
+										new SqlFunction(typeof(string), "Substring",
+											func.Parameters[1],
+											func.Parameters[2],
+											Sub<int>(
+												ConvertExpressionImpl(
+													new SqlFunction(typeof(int), "Length", func.Parameters[1]), visitor, context), func.Parameters[2])),
+										visitor,
+										context)),
 								Sub(func.Parameters[2], 1));
 				}
 			}

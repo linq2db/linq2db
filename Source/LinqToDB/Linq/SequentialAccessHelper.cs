@@ -363,7 +363,7 @@ namespace LinqToDB.Linq
 			expression.Visit(ctx, static(context, e) =>
 			{
 				if (context.FailMessage != null)
-					return false;
+					return;
 
 				if (e is MethodCallExpression call)
 				{
@@ -374,7 +374,7 @@ namespace LinqToDB.Linq
 						if (idx != context.ColumnIndex)
 						{
 							context.FailMessage = $"Expected column index: {context.ColumnIndex}, but found {idx}";
-							return false;
+							return;
 						}
 
 						if (call.Method.Name != nameof(IDataReader.IsDBNull))
@@ -387,8 +387,6 @@ namespace LinqToDB.Linq
 						}
 					}
 				}
-
-				return true;
 			});
 
 			if (ctx.FailMessage != null)

@@ -32,7 +32,7 @@
 
 		public override string[] LikeCharactersToEscape => DB2LikeCharactersToEscape;
 
-		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor visitor,
+		public override ISqlExpression ConvertExpressionImpl<TContext>(ISqlExpression expression, ConvertVisitor<TContext> visitor,
 			EvaluationContext context)
 		{
 			expression = base.ConvertExpressionImpl(expression, visitor, context);

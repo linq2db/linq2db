@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace LinqToDB.DataProvider.SQLite
 {
@@ -8,7 +7,6 @@ namespace LinqToDB.DataProvider.SQLite
 	using SqlQuery;
 	using Common;
 	using Mapping;
-	using Tools;
 
 	class SQLiteSqlOptimizer : BasicSqlOptimizer
 	{
@@ -36,7 +34,7 @@ namespace LinqToDB.DataProvider.SQLite
 			return statement;
 		}
 
-		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor visitor,
+		public override ISqlExpression ConvertExpressionImpl<TContext>(ISqlExpression expression, ConvertVisitor<TContext> visitor,
 			EvaluationContext context)
 		{
 			expression = base.ConvertExpressionImpl(expression, visitor, context);
@@ -83,7 +81,7 @@ namespace LinqToDB.DataProvider.SQLite
 			return expression;
 		}
 
-		public override ISqlPredicate ConvertPredicateImpl(MappingSchema mappingSchema, ISqlPredicate predicate, ConvertVisitor visitor, OptimizationContext optimizationContext)
+		public override ISqlPredicate ConvertPredicateImpl<TContext>(MappingSchema mappingSchema, ISqlPredicate predicate, ConvertVisitor<RunOptimizationContext<TContext>> visitor, OptimizationContext optimizationContext)
 		{
 			if (predicate is SqlPredicate.ExprExpr exprExpr)
 			{

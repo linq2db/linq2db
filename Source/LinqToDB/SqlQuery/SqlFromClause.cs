@@ -54,16 +54,6 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
-		internal SqlFromClause(
-			SelectQuery selectQuery,
-			SqlFromClause  clone,
-			Dictionary<ICloneableElement,ICloneableElement> objectTree,
-			Predicate<ICloneableElement> doClone)
-			: base(selectQuery)
-		{
-			Tables.AddRange(clone.Tables.Select(ts => (SqlTableSource)ts.Clone(objectTree, doClone)));
-		}
-
 		internal SqlFromClause(IEnumerable<SqlTableSource> tables)
 			: base(null)
 		{

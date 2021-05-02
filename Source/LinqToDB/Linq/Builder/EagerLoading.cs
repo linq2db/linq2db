@@ -859,9 +859,6 @@ namespace LinqToDB.Linq.Builder
 
 			expr.Visit(ctx, static (context, e) =>
 			{
-				if (context.WriteableValue != null)
-					return false;
-
 				if (context.WriteableValue == null && e.NodeType == ExpressionType.Lambda)
 				{
 					var lambda = (LambdaExpression)e;
@@ -871,8 +868,6 @@ namespace LinqToDB.Linq.Builder
 						context.WriteableValue = lambda;
 					}
 				}
-
-				return context.WriteableValue == null;
 			});
 
 			return ctx.WriteableValue;
@@ -929,14 +924,14 @@ namespace LinqToDB.Linq.Builder
 			forExpr.Visit(new { ignore, mappingSchema, byParameter, dependencies }, static (context, e) =>
 			{
 				if (context.ignore.Contains(e))
-					return;
+					return true;
 
 				if (e.NodeType == ExpressionType.MemberAccess)
 				{
 					var ma = (MemberExpression)e;
 
 					if (IsEnumerableType(ma.Type, context.mappingSchema))
-						return;
+						return true;
 
 					var root = InternalExtensions.GetRootObject(ma, context.mappingSchema);
 					if (root == context.byParameter || ma.Expression == context.byParameter)
@@ -949,6 +944,8 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 				}
+
+				return true;
 			});
 		}
 
@@ -968,14 +965,14 @@ namespace LinqToDB.Linq.Builder
 			forExpr.Visit(new { ignore, mappingSchema, dependencies, dependencyParameters }, static (context, e) =>
 			{
 				if (context.ignore.Contains(e))
-					return;
+					return true;
 
 				if (e.NodeType == ExpressionType.MemberAccess)
 				{
 					var ma = (MemberExpression)e;
 
 					if (IsEnumerableType(ma.Type, context.mappingSchema))
-						return;
+						return true;
 
 					var root = InternalExtensions.GetRootObject(ma, context.mappingSchema);
 					if (root.NodeType == ExpressionType.Parameter && !context.ignore.Contains(root))
@@ -1000,6 +997,8 @@ namespace LinqToDB.Linq.Builder
 					context.dependencyParameters.Add((ParameterExpression)e);
 					context.ignore.Add(e);
 				}
+
+				return true;
 			});
 		}
 
