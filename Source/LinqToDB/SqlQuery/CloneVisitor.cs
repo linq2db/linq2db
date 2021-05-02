@@ -215,10 +215,12 @@ namespace LinqToDB.SqlQuery
 					var column = (SqlColumn)(IQueryElement)element;
 
 					// TODO: children Clone called before _objectTree update (original cloning logic)
-					_objectTree.Add(element, clone = new SqlColumn(
-						Clone(column.Parent),
-						Clone(column.Expression),
-						column.RawAlias));
+					var parent = Clone(column.Parent);
+					if (!_objectTree.TryGetValue(element, out clone))
+						_objectTree.Add(element, clone = new SqlColumn(
+							parent,
+							Clone(column.Expression),
+							column.RawAlias));
 					break;
 				}
 

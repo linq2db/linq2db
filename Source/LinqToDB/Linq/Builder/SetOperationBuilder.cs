@@ -14,11 +14,13 @@ namespace LinqToDB.Linq.Builder
 
 	class SetOperationBuilder : MethodCallBuilder
 	{
+		private static readonly string[] MethodNames = { "Concat", "UnionAll", "Union", "Except", "Intersect", "ExceptAll", "IntersectAll" };
+
 		#region Builder
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.Arguments.Count == 2 && methodCall.IsQueryable("Concat", "UnionAll", "Union", "Except", "Intersect", "ExceptAll", "IntersectAll");
+			return methodCall.Arguments.Count == 2 && methodCall.IsQueryable(MethodNames);
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -379,8 +381,6 @@ namespace LinqToDB.Linq.Builder
 								needsRewrite = init1.Bindings.Count != init2.Bindings.Count;
 								if (!needsRewrite)
 								{
-									var accessorDic = new Dictionary<Expression, QueryableAccessor>();
-
 									foreach (var binding in init1.Bindings)
 									{
 										if (binding.BindingType != MemberBindingType.Assignment)
@@ -399,7 +399,7 @@ namespace LinqToDB.Linq.Builder
 										var assignment1 = (MemberAssignment)binding;
 										var assignment2 = (MemberAssignment)foundBinding;
 
-										if (!assignment1.Expression.EqualsTo(assignment2.Expression, Builder.DataContext, accessorDic, null, null) || 
+										if (!assignment1.Expression.EqualsTo(assignment2.Expression, Builder.GetSimpleEqualsToContext(false)) ||
 										    !(assignment1.Expression.NodeType == ExpressionType.MemberAccess || assignment1.Expression.NodeType == ExpressionType.Parameter))
 										{
 											needsRewrite = true;
@@ -413,7 +413,6 @@ namespace LinqToDB.Linq.Builder
 											needsRewrite = true;
 											break;
 										}
-
 									}
 								}
 							}

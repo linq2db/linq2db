@@ -11,13 +11,14 @@ namespace LinqToDB.Linq.Builder
 
 	class FirstSingleBuilder : MethodCallBuilder
 	{
-		public static string[] MethodNames = { "First", "FirstOrDefault", "Single", "SingleOrDefault" };
+		public  static readonly string[] MethodNames      = { "First"     , "FirstOrDefault"     , "Single"     , "SingleOrDefault"      };
+		private static readonly string[] MethodNamesAsync = { "FirstAsync", "FirstOrDefaultAsync", "SingleAsync", "SingleOrDefaultAsync" };
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			return
-				methodCall.IsQueryable     (MethodNames) && methodCall.Arguments.Count == 1 ||
-				methodCall.IsAsyncExtension(MethodNames) && methodCall.Arguments.Count == 2;
+				methodCall.IsQueryable     (MethodNames     ) && methodCall.Arguments.Count == 1 ||
+				methodCall.IsAsyncExtension(MethodNamesAsync) && methodCall.Arguments.Count == 2;
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)

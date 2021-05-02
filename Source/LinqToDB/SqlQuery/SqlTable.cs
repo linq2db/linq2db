@@ -203,7 +203,7 @@ namespace LinqToDB.SqlQuery
 
 		// list user to preserve order of fields in queries
 		private readonly List<SqlField>                  _orderedFields  = new ();
-		public           List<SqlField>                  Fields => _orderedFields;
+		public           IReadOnlyList<SqlField>         Fields => _orderedFields;
 
 		// identity fields cached, as it is most used fields filter
 		private readonly List<SqlField>                  _identityFields = new ();

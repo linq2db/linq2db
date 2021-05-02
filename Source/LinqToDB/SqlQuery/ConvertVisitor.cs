@@ -248,8 +248,8 @@ namespace LinqToDB.SqlQuery
 
 					case QueryElementType.SqlCteTable:
 					{
-						var table    = (SqlCteTable)element;
-						var cte = (CteClause?)ConvertInternal(table.Cte);
+						var table = (SqlCteTable)element;
+						var cte   = (CteClause?)ConvertInternal(table.Cte);
 
 						if (cte != null && !ReferenceEquals(table.Cte, cte))
 						{
@@ -268,7 +268,6 @@ namespace LinqToDB.SqlQuery
 
 							newElement = newTable;
 						}
-
 
 						break;
 					}
@@ -1171,33 +1170,21 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.SqlRawSqlTable:
 					{
 						var table   = (SqlRawSqlTable)element;
-						var fields1 = table.Fields;
-						var fields2 = Convert(fields1, static f => new SqlField(f));
 						var targs   = table.Parameters == null || table.Parameters.Length == 0 ?
 								null : Convert(table.Parameters);
 
-						var fe = fields2 != null && !ReferenceEquals(fields1, fields2);
-						var ta = targs   != null && !ReferenceEquals(table.Parameters, targs);
-
-						if (fe || ta)
+						if (targs != null && !ReferenceEquals(table.Parameters, targs))
 						{
-							if (!fe)
+							var newTable = new SqlRawSqlTable(table, targs ?? table.Parameters!);
+							newElement   = newTable;
+
+							AddVisited(table.All, newTable.All);
+							foreach (var prevField in table.Fields)
 							{
-								fields2 = fields1;
-
-								for (var i = 0; i < fields2.Count; i++)
-								{
-									var field = fields2[i];
-
-									fields2[i] = new SqlField(field);
-
-									VisitedElements[field] = fields2[i];
-								}
+								var newField = new SqlField(prevField);
+								newTable.Add(newField);
+								AddVisited(prevField, newField);
 							}
-
-							newElement = new SqlRawSqlTable(table, fields2!, targs ?? table.Parameters!);
-
-							VisitedElements[table.All] = ((SqlRawSqlTable)newElement).All;
 						}
 
 						break;

@@ -8,11 +8,14 @@ namespace LinqToDB.Linq.Builder
 
 	class ContainsBuilder : MethodCallBuilder
 	{
+		private static readonly string[] MethodNames      = { "Contains"      };
+		private static readonly string[] MethodNamesAsync = { "ContainsAsync" };
+
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			return
-				methodCall.IsQueryable     ("Contains") && methodCall.Arguments.Count == 2 ||
-				methodCall.IsAsyncExtension("Contains") && methodCall.Arguments.Count == 3;
+				methodCall.IsQueryable     (MethodNames     ) && methodCall.Arguments.Count == 2 ||
+				methodCall.IsAsyncExtension(MethodNamesAsync) && methodCall.Arguments.Count == 3;
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)

@@ -27,6 +27,16 @@ namespace LinqToDB.Linq.Builder
 			MappingSchema = dataContext.MappingSchema;
 		}
 
+		private EqualsToVisitor.EqualsToInfo? _equalsToContext;
+		private EqualsToVisitor.EqualsToInfo GetSimpleEqualsToContext()
+		{
+			if (_equalsToContext == null)
+				_equalsToContext = EqualsToVisitor.PrepareEqualsInfo(DataContext, compareConstantValues: true);
+			else
+				_equalsToContext.Reset();
+			return _equalsToContext;
+		}
+
 		public void ClearVisitedCache()
 		{
 			_visitedExpressions.Clear();
@@ -147,13 +157,8 @@ namespace LinqToDB.Linq.Builder
 				{
 					var queryable = (IQueryable)mc.EvaluateExpression()!;
 
-					if (!queryable.Expression.EqualsTo(mc,
-						DataContext,
-						new Dictionary<Expression, QueryableAccessor>(), null, null,
-						compareConstantValues: true))
-					{
+					if (!queryable.Expression.EqualsTo(mc, GetSimpleEqualsToContext()))
 						return new TransformInfo(queryable.Expression, false, true);
-					}
 				}
 			}
 

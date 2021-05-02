@@ -156,6 +156,29 @@ namespace LinqToDB.Linq.Builder
 
 		public MappingSchema MappingSchema => DataContext.MappingSchema;
 
+		private EqualsToVisitor.EqualsToInfo?  _equalsToContextFalse;
+		private EqualsToVisitor.EqualsToInfo?  _equalsToContextTrue;
+		internal EqualsToVisitor.EqualsToInfo GetSimpleEqualsToContext(bool compareConstantValues)
+		{
+			if (compareConstantValues)
+			{
+				if (_equalsToContextTrue == null)
+					_equalsToContextTrue = EqualsToVisitor.PrepareEqualsInfo(DataContext, compareConstantValues: compareConstantValues);
+				else
+					_equalsToContextTrue.Reset();
+				return _equalsToContextTrue;
+			}
+			else
+			{
+				if (_equalsToContextFalse == null)
+					_equalsToContextFalse = EqualsToVisitor.PrepareEqualsInfo(DataContext, compareConstantValues: compareConstantValues);
+				else
+					_equalsToContextFalse.Reset();
+				return _equalsToContextFalse;
+			}
+		}
+
+
 		#endregion
 
 		#region Builder SQL

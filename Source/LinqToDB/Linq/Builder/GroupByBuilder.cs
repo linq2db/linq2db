@@ -18,6 +18,8 @@ namespace LinqToDB.Linq.Builder
 
 	class GroupByBuilder : MethodCallBuilder
 	{
+		private static readonly MethodInfo[] GroupingSetMethods = new [] { Methods.LinqToDB.GroupBy.Rollup, Methods.LinqToDB.GroupBy.Cube, Methods.LinqToDB.GroupBy.GroupingSets };
+
 		#region Builder Methods
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -88,7 +90,7 @@ namespace LinqToDB.Linq.Builder
 							if (assignment?.Expression.NodeType == ExpressionType.Call)
 							{
 								var mc = (MethodCallExpression)assignment.Expression;
-								if (mc.IsSameGenericMethod(Methods.LinqToDB.GroupBy.Rollup, Methods.LinqToDB.GroupBy.Cube, Methods.LinqToDB.GroupBy.GroupingSets))
+								if (mc.IsSameGenericMethod(GroupingSetMethods))
 								{
 									groupingMethod = mc;
 									groupingKey    = (LambdaExpression)mc.Arguments[0].Unwrap();

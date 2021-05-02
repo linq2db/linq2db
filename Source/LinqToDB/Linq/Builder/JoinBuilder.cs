@@ -10,9 +10,11 @@ namespace LinqToDB.Linq.Builder
 
 	class JoinBuilder : MethodCallBuilder
 	{
+		private static readonly string[] MethodNames = { "Join", "GroupJoin" };
+
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			if (methodCall.Method.DeclaringType == typeof(LinqExtensions) || !methodCall.IsQueryable("Join", "GroupJoin"))
+			if (methodCall.Method.DeclaringType == typeof(LinqExtensions) || !methodCall.IsQueryable(MethodNames))
 				return false;
 
 			// other overload for Join

@@ -8,11 +8,14 @@ namespace LinqToDB.Linq.Builder
 
 	class AllAnyBuilder : MethodCallBuilder
 	{
+		private static readonly string[] MethodNames      = { "All"     , "Any"      };
+		private static readonly string[] MethodNamesAsync = { "AllAsync", "AnyAsync" };
+
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			return
-				methodCall.IsQueryable     ("All", "Any") ||
-				methodCall.IsAsyncExtension("All", "Any");
+				methodCall.IsQueryable     (MethodNames     ) ||
+				methodCall.IsAsyncExtension(MethodNamesAsync);
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)

@@ -345,7 +345,7 @@ namespace LinqToDB.Linq.Builder
 							return new TransformInfo(e, true); ;
 
 						var mc = (MethodCallExpression)e;
-						if (mc.IsQueryable("LoadWith", "ThenLoad"))
+						if (mc.IsQueryable(LoadWithBuilder.MethodNames))
 							return new TransformInfo(mc, true);
 
 						if (mc.IsQueryable(true))
@@ -1212,13 +1212,11 @@ namespace LinqToDB.Linq.Builder
 
 				if (!allCollected)
 				{
-					var queryableAccessorDic = new Dictionary<Expression, QueryableAccessor>();
 					var keysInfoByParams = ExtractKeysFromContext(contextForKeys, dependencyParameters).ToList();
 					foreach (var info in keysInfoByParams)
 					{
 						if (!keysInfo.Any(_ =>
-							_.ForSelect.EqualsTo(info.ForSelect, builder.DataContext, queryableAccessorDic, null,
-								null)))
+							_.ForSelect.EqualsTo(info.ForSelect, builder.GetSimpleEqualsToContext(false))))
 							keysInfo.Add(info);
 					}
 				}
@@ -1854,14 +1852,16 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
+		private static readonly MethodInfo[] JoinMethods = new []
+		{
+			Methods.Enumerable.GroupJoin, Methods.Queryable.GroupJoin,
+			Methods.Enumerable.Join,      Methods.Queryable.Join
+		};
+
 		internal static bool IsTransientParam(MethodCallExpression mc, int paramIndex)
 		{
-			if (mc.IsSameGenericMethod(
-				Methods.Enumerable.GroupJoin, Methods.Queryable.GroupJoin,
-				Methods.Enumerable.Join, Methods.Queryable.Join))
-			{
+			if (mc.IsSameGenericMethod(JoinMethods))
 				return paramIndex == 2 || paramIndex == 3;
-			}
 
 			return false;
 		}

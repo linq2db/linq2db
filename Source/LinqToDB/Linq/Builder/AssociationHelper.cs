@@ -14,6 +14,8 @@ namespace LinqToDB.Linq.Builder
 
 	static class AssociationHelper
 	{
+		private static readonly MethodInfo[] DefaultIfEmptyMethods = new [] { Methods.Queryable.DefaultIfEmpty, Methods.Queryable.DefaultIfEmptyValue };
+
 		// Returns
 		// (ParentType p) => dc.GetTable<ObjectType>().Where(...)
 		// (ParentType p) => dc.GetTable<ObjectType>().Where(...).DefaultIfEmpty
@@ -152,7 +154,7 @@ namespace LinqToDB.Linq.Builder
 				if (bodyExpression.NodeType == ExpressionType.Call)
 				{
 					var mc = (MethodCallExpression)bodyExpression;
-					if (mc.IsSameGenericMethod(Methods.Queryable.DefaultIfEmpty, Methods.Queryable.DefaultIfEmptyValue))
+					if (mc.IsSameGenericMethod(DefaultIfEmptyMethods))
 						shouldAddDefaultIfEmpty = false;
 				}
 			}

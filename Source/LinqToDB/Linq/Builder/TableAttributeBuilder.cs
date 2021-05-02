@@ -7,15 +7,19 @@ namespace LinqToDB.Linq.Builder
 
 	class TableAttributeBuilder : MethodCallBuilder
 	{
+		private static readonly string[] MethodNames = new []
+		{
+			nameof(LinqExtensions.TableName),
+			nameof(LinqExtensions.ServerName),
+			nameof(LinqExtensions.DatabaseName),
+			nameof(LinqExtensions.SchemaName),
+			nameof(TableExtensions.IsTemporary),
+			nameof(TableExtensions.TableOptions)
+		};
+
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsQueryable(
-				nameof(LinqExtensions.TableName),
-				nameof(LinqExtensions.ServerName),
-				nameof(LinqExtensions.DatabaseName),
-				nameof(LinqExtensions.SchemaName),
-				nameof(TableExtensions.IsTemporary),
-				nameof(TableExtensions.TableOptions));
+			return methodCall.IsQueryable(MethodNames);
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)

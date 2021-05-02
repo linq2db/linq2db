@@ -1409,8 +1409,7 @@ namespace LinqToDB.Linq.Builder
 				if (accessor.Value.SqlParameter.Type.Equals(p.SqlParameter.Type))
 					continue;
 
-				if (accessor.Key.EqualsTo(expr, DataContext, new Dictionary<Expression, QueryableAccessor>(), null,
-					null, compareConstantValues: true))
+				if (accessor.Key.EqualsTo(expr, GetSimpleEqualsToContext(true)))
 				{
 					found = accessor.Value;
 					break;
@@ -3415,12 +3414,10 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (_ctes != null)
 			{
-				var queryableAccessorDic = new Dictionary<Expression, QueryableAccessor>();
 				for (var index = 0; index < _ctes.Count; index++)
 				{
 					var tuple = _ctes[index];
-					if (tuple.Item1.EqualsTo(cteExpression, DataContext, queryableAccessorDic, null, null,
-						compareConstantValues: false))
+					if (tuple.Item1.EqualsTo(cteExpression, GetSimpleEqualsToContext(false)))
 					{
 						idx = index;
 						return tuple.Item2;

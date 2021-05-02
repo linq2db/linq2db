@@ -500,8 +500,8 @@ namespace LinqToDB.Linq.Builder
 		static bool IsMultipleQuery(MethodCallExpression ce, MappingSchema mappingSchema)
 		{
 			//TODO: Multiply query check should be smarter, possibly not needed if we create fallback mechanism
-			return !ce.IsQueryable(FirstSingleBuilder.MethodNames) 
-			       && typeof(IEnumerable).IsSameOrParentOf(ce.Type) 
+			return !ce.IsQueryable(FirstSingleBuilder.MethodNames)
+			       && typeof(IEnumerable).IsSameOrParentOf(ce.Type)
 			       && ce.Type != typeof(string) 
 			       && !ce.Type.IsArray 
 			       && !ce.IsAggregate(mappingSchema);
@@ -523,7 +523,7 @@ namespace LinqToDB.Linq.Builder
 
 			foreach (var item in sbi)
 			{
-				if (expr.EqualsTo(item.Method, DataContext, new Dictionary<Expression,QueryableAccessor>(), null, null))
+				if (expr.EqualsTo(item.Method, GetSimpleEqualsToContext(false)))
 					return item;
 			}
 

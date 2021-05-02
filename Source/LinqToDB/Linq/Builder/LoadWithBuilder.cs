@@ -14,9 +14,11 @@ namespace LinqToDB.Linq.Builder
 
 	class LoadWithBuilder : MethodCallBuilder
 	{
+		public static readonly string[] MethodNames = { "LoadWith", "ThenLoad", "LoadWithAsTable" };
+
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsQueryable("LoadWith", "ThenLoad", "LoadWithAsTable");
+			return methodCall.IsQueryable(MethodNames);
 		}
 
 		static void CheckFilterFunc(Type expectedType, Type filterType, MappingSchema mappingSchema)

@@ -12,11 +12,13 @@ namespace LinqToDB.Linq.Builder
 
 	class InsertBuilder : MethodCallBuilder
 	{
+		private static readonly string[] MethodNames = { "Insert", "InsertWithIdentity", "InsertWithOutput", "InsertWithOutputAsync", "InsertWithOutputInto" };
+
 		#region InsertBuilder
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsQueryable("Insert", "InsertWithIdentity", "InsertWithOutput", "InsertWithOutputAsync", "InsertWithOutputInto");
+			return methodCall.IsQueryable(MethodNames);
 		}
 
 		static void AddInsertColumns(SelectQuery selectQuery, List<SqlSetExpression> items)

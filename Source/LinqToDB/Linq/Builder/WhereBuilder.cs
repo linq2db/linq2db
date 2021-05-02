@@ -6,9 +6,11 @@ namespace LinqToDB.Linq.Builder
 
 	class WhereBuilder : MethodCallBuilder
 	{
+		private static readonly string[] MethodNames = { "Where", "Having" };
+
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsQueryable("Where", "Having");
+			return methodCall.IsQueryable(MethodNames);
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
