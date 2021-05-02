@@ -1487,7 +1487,7 @@ namespace LinqToDB.SqlQuery
 
 		public static bool HasQueryParameters(ISqlExpression expression)
 		{
-			return null != expression.Find<object?>(null, static (_, e) => (e.ElementType == QueryElementType.SqlParameter) && ((SqlParameter)e).IsQueryParameter);
+			return null != expression.Find(static e => (e.ElementType == QueryElementType.SqlParameter) && ((SqlParameter)e).IsQueryParameter);
 		}
 
 		private class NeedParameterInliningContext
@@ -1504,7 +1504,7 @@ namespace LinqToDB.SqlQuery
 			{
 				if (e.ElementType == QueryElementType.SqlParameter)
 				{
-					context.HasParameter = true;
+					context.HasParameter     = true;
 					context.IsQueryParameter = context.IsQueryParameter || ((SqlParameter)e).IsQueryParameter;
 				}
 			});
@@ -1577,7 +1577,7 @@ namespace LinqToDB.SqlQuery
 			if ((expr.ElementType == QueryElementType.SqlFunction) && ((SqlFunction)expr).Parameters.Length == 1)
 				return true;
 
-			if (null != expr.Find<object?>(null, static (_, e) => e.ElementType == QueryElementType.SqlQuery))
+			if (null != expr.Find(QueryElementType.SqlQuery))
 				return false;
 
 			return true;

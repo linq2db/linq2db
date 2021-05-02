@@ -78,7 +78,7 @@ namespace LinqToDB.Linq.Builder
 					
 					// possible we have to extend this list
 					//
-					isComplex = null != sqlInfo.Sql.Find<object?>(null, static (_, e) => e.ElementType == QueryElementType.SqlQuery);
+					isComplex = null != sqlInfo.Sql.Find(QueryElementType.SqlQuery);
 					if (isComplex)
 						break;
 				}

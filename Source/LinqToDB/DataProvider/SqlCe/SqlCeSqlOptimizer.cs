@@ -67,7 +67,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		void CorrectSkipAndColumns(SqlStatement statement)
 		{
-			new QueryVisitor<object?>(null).Visit(statement, static (_, e) =>
+			statement.Visit(static e =>
 			{
 				switch (e.ElementType)
 				{
@@ -114,7 +114,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			if (!SqlCeConfiguration.InlineFunctionParameters)
 				return;
 
-			new QueryVisitor<object?>(null).Visit(statement, static (_, e) =>
+			statement.Visit(static e =>
 			{
 				if (e.ElementType == QueryElementType.SqlFunction)
 				{

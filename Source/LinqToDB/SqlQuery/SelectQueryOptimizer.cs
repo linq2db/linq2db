@@ -350,11 +350,9 @@ namespace LinqToDB.SqlQuery
 
 		void OptimizeUnions()
 		{
-			var isAllUnion = _selectQuery.Find<object?>(null,
-				static (_, ne) => ne is SqlSetOperator nu && nu.Operation == SetOperation.UnionAll);
+			var isAllUnion = _selectQuery.Find(static ne => ne is SqlSetOperator nu && nu.Operation == SetOperation.UnionAll);
 
-			var isNotAllUnion = _selectQuery.Find<object?>(null,
-				static (_, ne) => ne is SqlSetOperator nu && nu.Operation != SetOperation.UnionAll);
+			var isNotAllUnion = _selectQuery.Find(static ne => ne is SqlSetOperator nu && nu.Operation != SetOperation.UnionAll);
 
 			if (isNotAllUnion != null && isAllUnion != null)
 				return;
@@ -928,7 +926,7 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-			if (expr.Find<object?>(null, static (_, ex) => ex is SelectQuery || QueryHelper.IsAggregationOrWindowFunction(ex)) == null)
+			if (expr.Find(static ex => ex is SelectQuery || QueryHelper.IsAggregationOrWindowFunction(ex)) == null)
 			{
 				var elementsToIgnore = new HashSet<IQueryElement> { query };
 

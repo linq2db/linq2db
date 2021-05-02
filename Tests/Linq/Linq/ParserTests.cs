@@ -907,21 +907,21 @@ namespace Tests.Linq
 			{
 				var q   = db.GetTable<Issue95Entity>().Where(_ => _.EnumValue == TinyIntEnum.Value1);
 				var ctx = q.GetMyContext();
-				Assert.IsNull(ctx.SelectQuery.Where.Find(static (ctx, _) => _.ElementType == QueryElementType.SqlExpression), db.GetSqlText(ctx.SelectQuery));
+				Assert.IsNull(ctx.SelectQuery.Where.Find(QueryElementType.SqlExpression), db.GetSqlText(ctx.SelectQuery));
 
 				q   = db.GetTable<Issue95Entity>().Where(_ => TinyIntEnum.Value1 == _.EnumValue);
 				ctx = q.GetMyContext();
-				Assert.IsNull(ctx.SelectQuery.Where.Find(static (ctx, _) => _.ElementType == QueryElementType.SqlExpression), db.GetSqlText(ctx.SelectQuery));
+				Assert.IsNull(ctx.SelectQuery.Where.Find(QueryElementType.SqlExpression), db.GetSqlText(ctx.SelectQuery));
 
 				var p = TinyIntEnum.Value2;
 
 				q   = db.GetTable<Issue95Entity>().Where(_ => _.EnumValue == p);
 				ctx = q.GetMyContext();
-				Assert.IsNull(ctx.SelectQuery.Where.Find(static (ctx, _)  => _.ElementType == QueryElementType.SqlExpression), db.GetSqlText(ctx.SelectQuery));
+				Assert.IsNull(ctx.SelectQuery.Where.Find(QueryElementType.SqlExpression), db.GetSqlText(ctx.SelectQuery));
 
 				q   = db.GetTable<Issue95Entity>().Where(_ => p == _.EnumValue);
 				ctx = q.GetMyContext();
-				Assert.IsNull(ctx.SelectQuery.Where.Find(static (ctx, _)  => _.ElementType == QueryElementType.SqlExpression), db.GetSqlText(ctx.SelectQuery));
+				Assert.IsNull(ctx.SelectQuery.Where.Find(QueryElementType.SqlExpression), db.GetSqlText(ctx.SelectQuery));
 			}
 		}
 	}

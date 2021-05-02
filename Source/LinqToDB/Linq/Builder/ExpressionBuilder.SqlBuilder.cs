@@ -2534,7 +2534,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var ctx = new GetDataTypeContext(baseType);
 
-			new QueryVisitor<GetDataTypeContext>(ctx).Find(expr, static (context, e) =>
+			expr.Find(ctx, static (context, e) =>
 			{
 				switch (e.ElementType)
 				{
@@ -3000,7 +3000,7 @@ namespace LinqToDB.Linq.Builder
 			if (!expr.CanBeNull)
 				return false;
 
-			if (null != new QueryVisitor<object?>(null).Find(expr, static (_, e) => e.ElementType == QueryElementType.SelectClause))
+			if (null != expr.Find(QueryElementType.SelectClause))
 				return false;
 			return true;
 		}

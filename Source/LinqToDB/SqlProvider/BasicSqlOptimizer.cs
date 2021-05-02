@@ -154,7 +154,7 @@ namespace LinqToDB.SqlProvider
 				return;
 
 			var dependsOn = new HashSet<CteClause>();
-			new QueryVisitor<HashSet<CteClause>>(dependsOn).Visit(cteClause.Body!, static (dependsOn, ce) =>
+			cteClause.Body!.Visit(dependsOn, static (dependsOn, ce) =>
 			{
 				if (ce.ElementType == QueryElementType.SqlCteTable)
 				{
@@ -211,7 +211,7 @@ namespace LinqToDB.SqlProvider
 
 		protected static bool HasParameters(ISqlExpression expr)
 		{
-			var hasParameters  = null !=expr.Find<object?>(null, static (_, el) => el.ElementType == QueryElementType.SqlParameter);
+			var hasParameters  = null != expr.Find(QueryElementType.SqlParameter);
 
 			return hasParameters;
 		}
@@ -532,7 +532,7 @@ namespace LinqToDB.SqlProvider
 						if (!allAnd)
 							continue;
 
-						var modified = false;
+						ctx.Modified = false;
 
 						for (var j = 0; j < subQuery.Where.SearchCondition.Conditions.Count; j++)
 						{
@@ -583,7 +583,7 @@ namespace LinqToDB.SqlProvider
 								return ne;
 							});
 
-							if (modified)
+							if (ctx.Modified)
 							{
 								join.JoinedTable.Condition.Conditions.Add(nc);
 								subQuery.Where.SearchCondition.Conditions.RemoveAt(j);
@@ -2198,7 +2198,7 @@ namespace LinqToDB.SqlProvider
 			return null;
 		}
 
-		public static bool IsAggregationFunction(object? _, IQueryElement expr)
+		public static bool IsAggregationFunction(IQueryElement expr)
 		{
 			if (expr is SqlFunction func)
 				return func.IsAggregate;
@@ -2216,7 +2216,7 @@ namespace LinqToDB.SqlProvider
 
 			if (!query.Where.IsEmpty)
 			{
-				if (query.Where.Find<object?>(null, IsAggregationFunction) != null)
+				if (query.Where.Find(IsAggregationFunction) != null)
 					return true;
 			}
 
@@ -2694,7 +2694,7 @@ namespace LinqToDB.SqlProvider
 
 		public bool IsParameterDependent(SqlStatement statement)
 		{
-			return null != statement.Find(this, static (optimizer, e) => optimizer.IsParameterDependedElement(e));
+			return null != statement.Find(IsParameterDependedElement);
 		}
 
 		public virtual SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context)

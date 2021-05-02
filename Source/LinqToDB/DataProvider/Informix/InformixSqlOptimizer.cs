@@ -60,7 +60,7 @@ namespace LinqToDB.DataProvider.Informix
 			return predicate;
 		}
 
-		static void SetQueryParameter(object? _, IQueryElement element)
+		static void SetQueryParameter(IQueryElement element)
 		{
 			if (element is SqlParameter p)
 			{
@@ -72,7 +72,7 @@ namespace LinqToDB.DataProvider.Informix
 			}
 		}
 
-		static void ClearQueryParameter(object? _, IQueryElement element)
+		static void ClearQueryParameter(IQueryElement element)
 		{
 			if (element is SqlParameter p && p.IsQueryParameter)
 				p.IsQueryParameter = false;
@@ -82,16 +82,16 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			CheckAliases(statement, int.MaxValue);
 
-			new QueryVisitor<object?>(null).VisitAll(statement, SetQueryParameter);
+			statement.VisitAll(SetQueryParameter);
 
 			// TODO: test if it works and enable support with type-cast like it is done for Firebird
 			// Informix doesn't support parameters in select list
 			var ignore = statement.QueryType == QueryType.Insert && statement.SelectQuery!.From.Tables.Count == 0;
 			if (!ignore)
-				new QueryVisitor<object?>(null).VisitAll(statement, static (_, e) =>
+				statement.VisitAll(static e =>
 				{
 					if (e is SqlSelectClause select)
-						new QueryVisitor<object?>(null).VisitAll(select, ClearQueryParameter);
+						select.VisitAll(ClearQueryParameter);
 				});
 
 			return base.Finalize(statement);

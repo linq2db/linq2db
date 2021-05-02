@@ -6,61 +6,74 @@ namespace LinqToDB.SqlQuery
 {
 	public static class QueryVisitorExtensions
 	{
-		#region QueryVisitor
+		#region Visit
 		public static void Visit<TContext>(this IQueryElement element, TContext context, Action<TContext, IQueryElement> action)
 		{
-			new QueryVisitor<TContext>(context).Visit(element, action);
+			new QueryVisitor<TContext>(context, false, action).Visit(element);
 		}
 
-		public static void Visit(this IQueryElement element, Action<object?, IQueryElement> action)
+		public static void Visit(this IQueryElement element, Action<IQueryElement> action)
 		{
-			new QueryVisitor<object?>(null).Visit(element, action);
+			new QueryVisitor<object?>(false, action).Visit(element);
 		}
 
 		public static void VisitAll<TContext>(this IQueryElement element, TContext context, Action<TContext, IQueryElement> action)
 		{
-			new QueryVisitor<TContext>(context).VisitAll(element, action);
+			new QueryVisitor<TContext>(context, true, action).Visit(element);
 		}
 
-		public static void VisitAll(this IQueryElement element, Action<object?, IQueryElement> action)
+		public static void VisitAll(this IQueryElement element, Action<IQueryElement> action)
 		{
-			new QueryVisitor<object?>(null).VisitAll(element, action);
+			new QueryVisitor<object?>(true, action).Visit(element);
 		}
 
+		#endregion
+
+		#region VisitParent
 		public static void VisitParentFirst<TContext>(this IQueryElement element, TContext context, Func<TContext, IQueryElement, bool> action)
 		{
-			new QueryVisitor<TContext>(context).VisitParentFirst(element, action);
+			new QueryParentVisitor<TContext>(context, false, action).Visit(element);
 		}
 
-		public static void VisitParentFirst(this IQueryElement element, Func<object?, IQueryElement, bool> action)
+		public static void VisitParentFirst(this IQueryElement element, Func<IQueryElement, bool> action)
 		{
-			new QueryVisitor<object?>(null).VisitParentFirst(element, action);
+			new QueryParentVisitor<object?>(false, action).Visit(element);
 		}
 
 		public static void VisitParentFirstAll<TContext>(this IQueryElement element, TContext context, Func<TContext, IQueryElement, bool> action)
 		{
-			new QueryVisitor<TContext>(context).VisitParentFirstAll(element, action);
+			new QueryParentVisitor<TContext>(context, true, action).Visit(element);
 		}
 
-		public static void VisitParentFirstAll(this IQueryElement element, Func<object?, IQueryElement, bool> action)
+		public static void VisitParentFirstAll(this IQueryElement element, Func<IQueryElement, bool> action)
 		{
-			new QueryVisitor<object?>(null).VisitParentFirstAll(element, action);
+			new QueryParentVisitor<object?>(true, action).Visit(element);
 		}
+		#endregion
 
+		#region Find
 		public static IQueryElement? Find<TContext>(this IQueryElement? element, TContext context, Func<TContext, IQueryElement, bool> find)
 		{
 			if (element == null)
 				return null;
 
-			return new QueryVisitor<TContext>(context).Find(element, find);
+			return new QueryFindVisitor<TContext>(context, find).Find(element);
 		}
 
-		public static IQueryElement? Find(this IQueryElement? element, Func<object?, IQueryElement, bool> find)
+		public static IQueryElement? Find(this IQueryElement? element, Func<IQueryElement, bool> find)
 		{
 			if (element == null)
 				return null;
 
-			return new QueryVisitor<object?>(null).Find(element, find);
+			return new QueryFindVisitor<object?>(find).Find(element);
+		}
+
+		public static IQueryElement? Find(this IQueryElement? element, QueryElementType type)
+		{
+			if (element == null)
+				return null;
+
+			return new QueryFindVisitor<QueryElementType>(type, static (type, e) => e.ElementType == type).Find(element);
 		}
 		#endregion
 

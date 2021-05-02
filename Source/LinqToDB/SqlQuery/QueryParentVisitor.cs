@@ -1,26 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
-	public class QueryVisitor<TContext>
+	public class QueryParentVisitor<TContext>
 	{
-		public readonly Dictionary<IQueryElement,IQueryElement?> VisitedElements = new ();
+		public   readonly Dictionary<IQueryElement,IQueryElement?>  VisitedElements = new ();
 
-		readonly TContext                         _context = default!;
-		readonly bool                             _all;
-		readonly Action<TContext, IQueryElement>? _visit;
-		readonly Action<IQueryElement>?           _visitStatic;
+		readonly TContext                            _context = default!;
+		readonly bool                                _all;
+		readonly Func<TContext, IQueryElement,bool>? _visit;
+		readonly Func<IQueryElement,bool>?           _visitStatic;
 
-		public QueryVisitor(TContext context, bool all, Action<TContext, IQueryElement> visit)
+		public QueryParentVisitor(TContext context, bool all, Func<TContext, IQueryElement, bool> visit)
 		{
 			_context = context;
 			_all     = all;
 			_visit   = visit;
 		}
 
-		public QueryVisitor(bool all, Action<IQueryElement> visit)
+		public QueryParentVisitor(bool all, Func<IQueryElement, bool> visit)
 		{
 			_all         = all;
 			_visitStatic = visit;
@@ -29,6 +28,12 @@ namespace LinqToDB.SqlQuery
 		public void Visit(IQueryElement? element)
 		{
 			if (element == null || !_all && VisitedElements.ContainsKey(element))
+				return;
+			
+			if (!_all)
+				VisitedElements.Add(element, element);
+
+			if (_visitStatic != null ? !_visitStatic(element) : !_visit!(_context, element))
 				return;
 
 			switch (element.ElementType)
@@ -40,10 +45,10 @@ namespace LinqToDB.SqlQuery
 					}
 
 				case QueryElementType.SqlExpression:
-					{
-						VisitX((SqlExpression)element);
-						break;
-					}
+				{
+					VisitX((SqlExpression)element);
+					break;
+				}
 
 				case QueryElementType.SqlObjectExpression:
 				{
@@ -66,10 +71,6 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.SqlCteTable:
 					{
-						if (VisitedElements.ContainsKey(element))
-							return;
-						VisitedElements.Add(element, element);
-
 						VisitX((SqlCteTable)element);
 						break;
 					}
@@ -219,7 +220,7 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.WithClause:
 					{
-						VisitX((SqlWithClause)element);
+						VisitX(((SqlWithClause)element));
 						break;
 					}
 
@@ -297,10 +298,6 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.SelectClause:
 					{
-						if (VisitedElements.ContainsKey(element))
-							return;
-						VisitedElements.Add(element, element);
-
 						VisitX((SqlSelectClause)element);
 						break;
 					}
@@ -325,7 +322,6 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.GroupingSet:
 					{
-						
 						VisitX((SqlGroupingSet)element);
 						break;
 					}
@@ -343,8 +339,10 @@ namespace LinqToDB.SqlQuery
 					}
 
 				case QueryElementType.SetOperator:
-					Visit(((SqlSetOperator)element).SelectQuery);
-					break;
+					{
+						Visit(((SqlSetOperator)element).SelectQuery);
+						break;
+					}
 
 				case QueryElementType.SqlQuery:
 					{
@@ -356,7 +354,6 @@ namespace LinqToDB.SqlQuery
 						}
 
 						VisitX((SelectQuery)element);
-
 						break;
 					}
 
@@ -395,54 +392,12 @@ namespace LinqToDB.SqlQuery
 				default:
 					throw new InvalidOperationException($"Visit visitor not implemented for element {element.ElementType}");
 			}
-
-			if (_visitStatic != null)
-				_visitStatic(element);
-			else
-				_visit!(_context, element);
-
-			if (!_all && !VisitedElements.ContainsKey(element))
-				VisitedElements.Add(element, element);
 		}
 
 		void VisitX(SelectQuery q)
 		{
 			Visit(q.Select);
-
-			// Visit(q.From);
-			//
-			if (q.From != null && (_all || !VisitedElements.ContainsKey(q.From)))
-			{
-				foreach (var t in q.From.Tables)
-				{
-					//Visit(t);
-					//
-					if (t != null && (_all || !VisitedElements.ContainsKey(t)))
-					{
-						Visit(t.Source);
-
-						foreach (var j in t.Joins)
-							Visit(j);
-
-						if (_visitStatic != null)
-							_visitStatic(t);
-						else
-							_visit!(_context, t);
-
-						if (!_all && !VisitedElements.ContainsKey(t))
-							VisitedElements.Add(t, t);
-					}
-				}
-
-				if (_visitStatic != null)
-					_visitStatic(q.From);
-				else
-					_visit!(_context, q.From);
-
-				if (!_all && !VisitedElements.ContainsKey(q.From))
-					VisitedElements.Add(q.From, q.From);
-			}
-
+			Visit(q.From);
 			Visit(q.Where);
 			Visit(q.GroupBy);
 			Visit(q.Having);
@@ -492,8 +447,7 @@ namespace LinqToDB.SqlQuery
 			Visit(sc.TakeValue);
 			Visit(sc.SkipValue);
 
-			// TODO: review visitors to make instantiation unnecessary
-			foreach (var c in sc.Columns.ToList()) Visit(c);
+			foreach (var c in sc.Columns) Visit(c);
 		}
 
 		void VisitX(SqlUpdateClause sc)
@@ -548,18 +502,26 @@ namespace LinqToDB.SqlQuery
 				foreach (var a in table.TableArguments) Visit(a);
 		}
 
-		void VisitX(SqlRawSqlTable table)
+		void VisitX(SqlOutputClause outputClause)
 		{
-			Visit(table.All);
-			foreach (var field in table.Fields) Visit(field);
+			if (outputClause == null)
+				return;
 
-			if (table.Parameters != null)
-				foreach (var a in table.Parameters) Visit(a);
+			VisitX(outputClause.SourceTable);
+			VisitX(outputClause.DeletedTable);
+			VisitX(outputClause.InsertedTable);
+			VisitX(outputClause.OutputTable);
+			if (outputClause.OutputQuery != null)
+				VisitX(outputClause.OutputQuery);
+
+			if (outputClause.HasOutputItems)
+				foreach (var item in outputClause.OutputItems)
+					Visit(item);
 		}
 
 		void VisitX(SqlWithClause element)
 		{
-			foreach (var t in element.Clauses) Visit(t);
+			foreach (var clause in element.Clauses) Visit(clause);
 		}
 
 		void VisitX(SqlCteTable table)
@@ -570,25 +532,16 @@ namespace LinqToDB.SqlQuery
 			if (table.TableArguments != null)
 				foreach (var a in table.TableArguments) Visit(a);
 
-			// do not visit it may fail by stack overflow
-			//Visit(table.CTE);
+//			Visit(table.CTE);
 		}
 
-		void VisitX(SqlOutputClause outputClause)
+		void VisitX(SqlRawSqlTable table)
 		{
-			if (outputClause == null)
-				return;
+			Visit(table.All);
+			foreach (var field in table.Fields) Visit(field);
 
-			VisitX(outputClause.SourceTable);
-			Visit(outputClause.DeletedTable);
-			Visit(outputClause.InsertedTable);
-			VisitX(outputClause.OutputTable);
-			if (outputClause.OutputQuery != null)
-				Visit(outputClause.OutputQuery);
-
-			if (outputClause.HasOutputItems)
-				foreach (var item in outputClause.OutputItems)
-					Visit(item);
+			if (table.Parameters != null)
+				foreach (var a in table.Parameters) Visit(a);
 		}
 
 		void VisitX(SqlExpression element)
