@@ -10,7 +10,7 @@ namespace LinqToDB
 	using Linq;
 	using Expressions;
 
-	using PN = LinqToDB.ProviderName;
+	using PN = ProviderName;
 
 	public static partial class Sql
 	{
@@ -441,7 +441,7 @@ namespace LinqToDB
 			return currentSource.Provider.Execute<double>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(AnalyticFunctions.Average, source, expr, modifier),
+					MethodHelper.GetMethodInfo(Average, source, expr, modifier),
 					currentSource.Expression, Expression.Quote(expr), Expression.Constant(modifier)
 				));
 		}
@@ -483,7 +483,7 @@ namespace LinqToDB
 			return currentSource.Provider.Execute<decimal>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(AnalyticFunctions.Corr, source, expr1, expr2),
+					MethodHelper.GetMethodInfo(Corr, source, expr1, expr2),
 					currentSource.Expression, Expression.Quote(expr1), Expression.Quote(expr2)
 				));
 		}
@@ -521,7 +521,7 @@ namespace LinqToDB
 			return currentSource.Provider.Execute<int>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(AnalyticFunctions.CountExt, source, expr),
+					MethodHelper.GetMethodInfo(CountExt, source, expr),
 					currentSource.Expression, Expression.Quote(expr))
 				);
 		}
@@ -537,7 +537,7 @@ namespace LinqToDB
 			return currentSource.Provider.Execute<int>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(AnalyticFunctions.CountExt, source, expr, modifier),
+					MethodHelper.GetMethodInfo(CountExt, source, expr, modifier),
 					currentSource.Expression, Expression.Quote(expr), Expression.Constant(modifier)
 				));
 		}
@@ -587,7 +587,7 @@ namespace LinqToDB
 			return currentSource.Provider.Execute<long>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(AnalyticFunctions.LongCountExt, source, expr, modifier),
+					MethodHelper.GetMethodInfo(LongCountExt, source, expr, modifier),
 					currentSource.Expression, Expression.Quote(expr), Expression.Constant(modifier)
 				));
 		}
@@ -635,7 +635,7 @@ namespace LinqToDB
 			return currentSource.Provider.Execute<decimal>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(AnalyticFunctions.CovarPop, source, expr1, expr2),
+					MethodHelper.GetMethodInfo(CovarPop, source, expr1, expr2),
 					currentSource.Expression, Expression.Quote(expr1), Expression.Quote(expr2)
 				));
 		}
@@ -671,7 +671,7 @@ namespace LinqToDB
 			return currentSource.Provider.Execute<decimal>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(AnalyticFunctions.CovarSamp, source, expr1, expr2),
+					MethodHelper.GetMethodInfo(CovarSamp, source, expr1, expr2),
 					currentSource.Expression, Expression.Quote(expr1), Expression.Quote(expr2)
 				));
 		}
@@ -775,7 +775,7 @@ namespace LinqToDB
 			return currentSource.Provider.Execute<TV>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(AnalyticFunctions.Max, source, expr, modifier),
+					MethodHelper.GetMethodInfo(Max, source, expr, modifier),
 					currentSource.Expression, Expression.Quote(expr), Expression.Constant(modifier)
 				));
 		}
@@ -813,7 +813,7 @@ namespace LinqToDB
 			return currentSource.Provider.Execute<long>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(AnalyticFunctions.Median, source, expr),
+					MethodHelper.GetMethodInfo(Median, source, expr),
 					currentSource.Expression, Expression.Quote(expr)
 				));
 		}
@@ -845,7 +845,7 @@ namespace LinqToDB
 			return currentSource.Provider.Execute<TV>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(AnalyticFunctions.Min, source, expr, modifier),
+					MethodHelper.GetMethodInfo(Min, source, expr, modifier),
 					currentSource.Expression, Expression.Quote(expr), Expression.Constant(modifier)));
 		}
 
@@ -1019,7 +1019,7 @@ namespace LinqToDB
 			return currentSource.Provider.Execute<double>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(AnalyticFunctions.StdDev, source, expr, modifier),
+					MethodHelper.GetMethodInfo(StdDev, source, expr, modifier),
 					currentSource.Expression, Expression.Quote(expr), Expression.Constant(modifier)));
 		}
 
@@ -1058,7 +1058,7 @@ namespace LinqToDB
 			return currentSource.Provider.Execute<decimal>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(AnalyticFunctions.StdDevPop, source, expr),
+					MethodHelper.GetMethodInfo(StdDevPop, source, expr),
 					currentSource.Expression, Expression.Quote(expr)));
 		}
 
@@ -1089,7 +1089,7 @@ namespace LinqToDB
 			return currentSource.Provider.Execute<decimal>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(AnalyticFunctions.StdDevSamp, source, expr),
+					MethodHelper.GetMethodInfo(StdDevSamp, source, expr),
 					currentSource.Expression, Expression.Quote(expr)));
 		}
 
@@ -1132,7 +1132,7 @@ namespace LinqToDB
 			return currentSource.Provider.Execute<decimal>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(AnalyticFunctions.VarPop, source, expr),
+					MethodHelper.GetMethodInfo(VarPop, source, expr),
 					currentSource.Expression, Expression.Quote(expr)));
 		}
 
@@ -1163,7 +1163,7 @@ namespace LinqToDB
 			return currentSource.Provider.Execute<decimal>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(AnalyticFunctions.VarSamp, source, expr),
+					MethodHelper.GetMethodInfo(VarSamp, source, expr),
 					currentSource.Expression, Expression.Quote(expr)));
 		}
 
@@ -1200,7 +1200,7 @@ namespace LinqToDB
 			return currentSource.Provider.Execute<TV>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(AnalyticFunctions.Variance, source, expr, modifier),
+					MethodHelper.GetMethodInfo(Variance, source, expr, modifier),
 					currentSource.Expression, Expression.Quote(expr), Expression.Constant(modifier)));
 		}
 

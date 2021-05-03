@@ -93,7 +93,7 @@ namespace LinqToDB.DataProvider.Informix
 			stringBuilder.AppendFormat(format, value);
 		}
 
-		internal static readonly InformixMappingSchema Instance = new InformixMappingSchema();
+		internal static readonly InformixMappingSchema Instance = new ();
 
 		public class IfxMappingSchema : MappingSchema
 		{

@@ -4,7 +4,6 @@ using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
-	using Tools;
 	using Common;
 	using SqlProvider;
 

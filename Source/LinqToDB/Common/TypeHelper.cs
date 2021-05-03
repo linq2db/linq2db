@@ -94,7 +94,7 @@ namespace LinqToDB.Common
 		/// <param name="methodInfo"></param>
 		/// <param name="arguments"></param>
 		/// <returns>New MethodCallExpression.</returns>
-		public static MethodInfo MakeGenericMethod(MethodInfo methodInfo, params Expression[] arguments)
+		public static MethodInfo MakeGenericMethod(MethodInfo methodInfo, Expression[] arguments)
 		{
 			if (!methodInfo.IsGenericMethod)
 				return methodInfo;

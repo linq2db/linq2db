@@ -18,7 +18,7 @@ namespace LinqToDB.SqlQuery
 		readonly Dictionary<int, Func<object, object>> _getters = new ();
 		readonly SqlInfo[]                             _infoParameters;
 
-		public SqlObjectExpression(MappingSchema mappingSchema, params SqlInfo[] infoParameters)
+		public SqlObjectExpression(MappingSchema mappingSchema, SqlInfo[] infoParameters)
 		{
 			MappingSchema   = mappingSchema;
 			_infoParameters = infoParameters;

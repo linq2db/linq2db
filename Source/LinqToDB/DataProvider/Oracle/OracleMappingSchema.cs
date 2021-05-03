@@ -155,7 +155,7 @@ namespace LinqToDB.DataProvider.Oracle
 			stringBuilder.AppendFormat(format, value);
 		}
 
-		internal static readonly OracleMappingSchema Instance = new OracleMappingSchema();
+		internal static readonly OracleMappingSchema Instance = new ();
 
 		public class NativeMappingSchema : MappingSchema
 		{

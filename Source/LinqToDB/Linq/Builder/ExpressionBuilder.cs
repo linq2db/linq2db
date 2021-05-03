@@ -154,6 +154,8 @@ namespace LinqToDB.Linq.Builder
 		public static readonly ParameterExpression ParametersParam  = Expression.Parameter(typeof(object[]),     "ps");
 		public static readonly ParameterExpression ExpressionParam  = Expression.Parameter(typeof(Expression),   "expr");
 
+		private static ParameterExpression[] AccessorParameters = { ExpressionParam, DataContextParam, ParametersParam };
+
 		public MappingSchema MappingSchema => DataContext.MappingSchema;
 
 		private EqualsToVisitor.EqualsToInfo?  _equalsToContextFalse;
@@ -778,7 +780,7 @@ namespace LinqToDB.Linq.Builder
 					;
 
 				var body   = func.Body.Unwrap();
-				var keyArg = GetLambda(body, 1).Parameters[0]; // .GroupBy(keyParam
+				var keyArg = GetLambda(body, Arg1).Parameters[0]; // .GroupBy(keyParam
 
 				return Convert(func, keyArg, null, null);
 			}
@@ -790,7 +792,7 @@ namespace LinqToDB.Linq.Builder
 					;
 
 				var body   = func.Body.Unwrap();
-				var keyArg = GetLambda(body, 1).Parameters[0]; // .GroupBy(keyParam
+				var keyArg = GetLambda(body, Arg1).Parameters[0]; // .GroupBy(keyParam
 
 				return Convert(func, keyArg, null, null);
 			}
@@ -803,9 +805,9 @@ namespace LinqToDB.Linq.Builder
 					;
 
 				var body    = func.Body.Unwrap();
-				var keyArg  = GetLambda(body, 0, 1).Parameters[0]; // .GroupBy(keyParam
-				var elemArg = GetLambda(body, 0, 2).Parameters[0]; // .GroupBy(..., elemParam
-				var resArg  = GetLambda(body, 1).   Parameters[0]; // .Select (resParam
+				var keyArg  = GetLambda(body, Arg01).Parameters[0]; // .GroupBy(keyParam
+				var elemArg = GetLambda(body, Arg02).Parameters[0]; // .GroupBy(..., elemParam
+				var resArg  = GetLambda(body, Arg1 ).Parameters[0]; // .Select (resParam
 
 				return Convert(func, keyArg, elemArg, resArg);
 			}
@@ -818,9 +820,9 @@ namespace LinqToDB.Linq.Builder
 					;
 
 				var body    = func.Body.Unwrap();
-				var keyArg  = GetLambda(body, 0, 1).Parameters[0]; // .GroupBy(keyParam
-				var elemArg = GetLambda(body, 0, 2).Parameters[0]; // .GroupBy(..., elemParam
-				var resArg  = GetLambda(body, 1).   Parameters[0]; // .Select (resParam
+				var keyArg  = GetLambda(body, Arg01).Parameters[0]; // .GroupBy(keyParam
+				var elemArg = GetLambda(body, Arg02).Parameters[0]; // .GroupBy(..., elemParam
+				var resArg  = GetLambda(body, Arg1 ).Parameters[0]; // .Select (resParam
 
 				return Convert(func, keyArg, elemArg, resArg);
 			}
@@ -837,8 +839,8 @@ namespace LinqToDB.Linq.Builder
 					;
 
 				var body    = func.Body.Unwrap();
-				var keyArg  = GetLambda(body, 0, 1).Parameters[0]; // .Select (selectParam
-				var elemArg = GetLambda(body, 2).   Parameters[0]; // .GroupBy(..., elemParam
+				var keyArg  = GetLambda(body, Arg01).Parameters[0]; // .Select (selectParam
+				var elemArg = GetLambda(body, Arg2 ).Parameters[0]; // .GroupBy(..., elemParam
 
 				return Convert(func, keyArg, elemArg, null);
 			}
@@ -855,8 +857,8 @@ namespace LinqToDB.Linq.Builder
 					;
 
 				var body    = func.Body.Unwrap();
-				var keyArg  = GetLambda(body, 0, 1).Parameters[0]; // .Select (selectParam
-				var elemArg = GetLambda(body, 2).   Parameters[0]; // .GroupBy(..., elemParam
+				var keyArg  = GetLambda(body, Arg01).Parameters[0]; // .Select (selectParam
+				var elemArg = GetLambda(body, Arg2 ).Parameters[0]; // .GroupBy(..., elemParam
 
 				return Convert(func, keyArg, elemArg, null);
 			}
@@ -874,9 +876,9 @@ namespace LinqToDB.Linq.Builder
 					;
 
 				var body    = func.Body.Unwrap();
-				var keyArg  = GetLambda(body, 0, 0, 1).Parameters[0]; // .Select (selectParam
-				var elemArg = GetLambda(body, 0, 2).   Parameters[0]; // .GroupBy(..., elemParam
-				var resArg  = GetLambda(body, 1).      Parameters[0]; // .Select (resParam
+				var keyArg  = GetLambda(body, Arg001).Parameters[0]; // .Select (selectParam
+				var elemArg = GetLambda(body, Arg02 ).Parameters[0]; // .GroupBy(..., elemParam
+				var resArg  = GetLambda(body, Arg1  ).Parameters[0]; // .Select (resParam
 
 				return Convert(func, keyArg, elemArg, resArg);
 			}
@@ -894,9 +896,9 @@ namespace LinqToDB.Linq.Builder
 					;
 
 				var body    = func.Body.Unwrap();
-				var keyArg  = GetLambda(body, 0, 0, 1).Parameters[0]; // .Select (selectParam
-				var elemArg = GetLambda(body, 0, 2).   Parameters[0]; // .GroupBy(..., elemParam
-				var resArg  = GetLambda(body, 1).      Parameters[0]; // .Select (resParam
+				var keyArg  = GetLambda(body, Arg001).Parameters[0]; // .Select (selectParam
+				var elemArg = GetLambda(body, Arg02 ).Parameters[0]; // .GroupBy(..., elemParam
+				var resArg  = GetLambda(body, Arg1  ).Parameters[0]; // .Select (resParam
 
 				return Convert(func, keyArg, elemArg, resArg);
 			}
@@ -950,7 +952,13 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		static LambdaExpression GetLambda(Expression expression, params int[] n)
+		private static readonly int[] Arg1   = new [] { 1 };
+		private static readonly int[] Arg2   = new [] { 2 };
+		private static readonly int[] Arg01  = new [] { 0, 1 };
+		private static readonly int[] Arg02  = new [] { 0, 2 };
+		private static readonly int[] Arg001 = new [] { 0, 0, 1 };
+
+		static LambdaExpression GetLambda(Expression expression, int[] n)
 		{
 			foreach (var i in n)
 				expression = ((MethodCallExpression)expression).Arguments[i].Unwrap();
@@ -1064,7 +1072,7 @@ namespace LinqToDB.Linq.Builder
 					;
 
 				var body   = func.Body.Unwrap();
-				var colArg = GetLambda(body, 1).Parameters[0]; // .SelectMany(colParam
+				var colArg = GetLambda(body, Arg1).Parameters[0]; // .SelectMany(colParam
 
 				return Convert(func, colArg);
 			}
@@ -1076,7 +1084,7 @@ namespace LinqToDB.Linq.Builder
 					;
 
 				var body   = func.Body.Unwrap();
-				var colArg = GetLambda(body, 1).Parameters[0]; // .SelectMany(colParam
+				var colArg = GetLambda(body, Arg1).Parameters[0]; // .SelectMany(colParam
 
 				return Convert(func, colArg);
 			}

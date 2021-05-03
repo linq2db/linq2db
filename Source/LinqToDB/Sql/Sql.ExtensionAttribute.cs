@@ -7,7 +7,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using LinqToDB.Mapping;
 
@@ -300,7 +299,7 @@ namespace LinqToDB
 		[AttributeUsage(AttributeTargets.Method | AttributeTargets.Property, AllowMultiple = true)]
 		public class ExtensionAttribute : ExpressionAttribute
 		{
-			private static readonly ConcurrentDictionary<Type, IExtensionCallBuilder> _builders = new ConcurrentDictionary<Type, IExtensionCallBuilder>();
+			private static readonly ConcurrentDictionary<Type, IExtensionCallBuilder> _builders = new ();
 
 			public string? TokenName { get; set; }
 

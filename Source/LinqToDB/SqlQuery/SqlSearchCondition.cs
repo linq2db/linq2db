@@ -11,12 +11,18 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
-		public SqlSearchCondition(IEnumerable<SqlCondition> list)
+		public SqlSearchCondition(SqlCondition condition)
 		{
-			Conditions.AddRange(list);
+			Conditions.Add(condition);
 		}
 
-		public SqlSearchCondition(params SqlCondition[] list)
+		public SqlSearchCondition(SqlCondition condition1, SqlCondition condition2)
+		{
+			Conditions.Add(condition1);
+			Conditions.Add(condition2);
+		}
+
+		public SqlSearchCondition(IEnumerable<SqlCondition> list)
 		{
 			Conditions.AddRange(list);
 		}

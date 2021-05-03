@@ -606,12 +606,17 @@ namespace LinqToDB.SqlQuery
 		{
 			public bool?          WithNull    { get; }
 
-			public InList(ISqlExpression exp1, bool? withNull, bool isNot, params ISqlExpression[]? values)
+			public InList(ISqlExpression exp1, bool? withNull, bool isNot)
 				: base(exp1, isNot, SqlQuery.Precedence.Comparison)
 			{
 				WithNull = withNull;
-				if (values != null && values.Length > 0)
-					Values.AddRange(values);
+			}
+
+			public InList(ISqlExpression exp1, bool? withNull, bool isNot, ISqlExpression value)
+				: base(exp1, isNot, SqlQuery.Precedence.Comparison)
+			{
+				WithNull = withNull;
+				Values.Add(value);
 			}
 
 			public InList(ISqlExpression exp1, bool? withNull, bool isNot, IEnumerable<ISqlExpression>? values)

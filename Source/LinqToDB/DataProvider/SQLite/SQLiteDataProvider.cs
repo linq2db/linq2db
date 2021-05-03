@@ -141,16 +141,16 @@ namespace LinqToDB.DataProvider.SQLite
 			foreach (var fieldType in fieldTypes)
 			{
 				foreach (var typeName in typeNames)
-					SetField<IDataReader, T>(typeName, fieldType, expr);
+					SetField(typeName, fieldType, expr);
 
 				// defaults: v2
 				if (fieldType != typeof(byte[]))
 					foreach (var typeName in typeNames)
-						SetField<IDataReader, T>(typeName, typeof(byte[]), expr);
+						SetField(typeName, typeof(byte[]), expr);
 
 				// defaults: v1
 				foreach (var typeName in typeNames)
-					SetField<IDataReader, T>(typeName, typeof(int), expr);
+					SetField(typeName, typeof(int), expr);
 			}
 		}
 

@@ -1595,8 +1595,7 @@ namespace LinqToDB.Linq.Builder
 			name ??= columnDescriptor?.MemberName;
 
 			var p = CreateParameterAccessor(
-				DataContext, newExpr.ValueExpression, originalAccessor, newExpr.DbDataTypeExpression, valueExpression, ExpressionParam,
-				ParametersParam, DataContextParam, name);
+				DataContext, newExpr.ValueExpression, originalAccessor, newExpr.DbDataTypeExpression, valueExpression, name);
 
 			return p;
 		}
@@ -2646,15 +2645,13 @@ namespace LinqToDB.Linq.Builder
 			return accessorExpression;
 		}
 
+		//ExpressionBuilder.ExpressionParam, ExpressionBuilder.ParametersParam, ExpressionBuilder.DataContextParam
 		internal static ParameterAccessor CreateParameterAccessor(
 			IDataContext        dataContext,
 			Expression          accessorExpression,
 			Expression          originalAccessorExpression,
 			Expression          dbDataTypeAccessorExpression,
 			Expression          expression,
-			ParameterExpression expressionParam,
-			ParameterExpression parametersParam,
-			ParameterExpression dataContextParam,
 			string?             name)
 		{
 			// Extracting name for parameter
@@ -2667,20 +2664,20 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			// see #820
-			accessorExpression         = CorrectAccessorExpression(accessorExpression, dataContext, dataContextParam);
-			originalAccessorExpression = CorrectAccessorExpression(originalAccessorExpression, dataContext, dataContextParam);
+			accessorExpression         = CorrectAccessorExpression(accessorExpression, dataContext, DataContextParam);
+			originalAccessorExpression = CorrectAccessorExpression(originalAccessorExpression, dataContext, DataContextParam);
 
 			var mapper = Expression.Lambda<Func<Expression,IDataContext?,object?[]?,object?>>(
 				Expression.Convert(accessorExpression, typeof(object)),
-				expressionParam, dataContextParam, parametersParam);
+				AccessorParameters);
 
 			var original = Expression.Lambda<Func<Expression,IDataContext?,object?[]?,object?>>(
 				Expression.Convert(originalAccessorExpression, typeof(object)),
-				expressionParam, dataContextParam, parametersParam);
+				AccessorParameters);
 
 			var dbDataTypeAccessor = Expression.Lambda<Func<Expression,IDataContext?,object?[]?,DbDataType>>(
 				Expression.Convert(dbDataTypeAccessorExpression, typeof(DbDataType)),
-				expressionParam, dataContextParam, parametersParam);
+				AccessorParameters);
 
 			return new ParameterAccessor
 			(

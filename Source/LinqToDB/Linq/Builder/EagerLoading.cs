@@ -14,7 +14,6 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using Reflection;
 	using SqlQuery;
-	using Tools;
 	using System.Diagnostics.CodeAnalysis;
 
 	internal class EagerLoading
@@ -268,29 +267,37 @@ namespace LinqToDB.Linq.Builder
 			if (mainQuery.NodeType != ExpressionType.Call)
 				throw new LinqException($"Expected Method call but found '{mainQuery.NodeType}'");
 			var mc = (MethodCallExpression) mainQuery;
-			if (!mc.IsQueryable() || !mc.Method.Name.In("First", "FirstOrDefault", "Single", "SingleOrDefault"))
+			if (!mc.IsQueryable() || !FirstSingleMethods.Contains(mc.Method.Name))
 				throw new LinqException($"Unsupported Method call '{mc.Method.Name}'");
 
 			var newExpr = TypeHelper.MakeMethodCall(Methods.Queryable.Take, mc.Arguments[0], Expression.Constant(1));
 			return newExpr;
 		}
 
-		static bool IsNotSupportedForDetailQuery(MethodCallExpression methodCall)
+		private static readonly HashSet<string> FirstSingleMethods        = new () { "First", "FirstOrDefault", "Single", "SingleOrDefault" };
+		private static readonly HashSet<string> NotSupportedDetailMethods = new ()
 		{
-			if (methodCall.Method.Name.In(
-				"Any", "Sum", "Min", "Max", "Count", "Average",
-				"Distinct", "Skip", "Take",
-				"First", "FirstOrDefault", "Last", "LastOrDefault",
-				"Single", "SingleOrDefault",
-				"ToArray", "ToList", "ToDictionary",
-				"AsEnumerable", "GroupBy"
-			))
-			{
-				return true;
-			}
-
-			return false;
-		}
+			"Any",
+			"Sum",
+			"Min",
+			"Max",
+			"Count",
+			"Average",
+			"Distinct",
+			"Skip",
+			"Take",
+			"First",
+			"FirstOrDefault",
+			"Last",
+			"LastOrDefault",
+			"Single",
+			"SingleOrDefault",
+			"ToArray",
+			"ToList",
+			"ToDictionary",
+			"AsEnumerable",
+			"GroupBy"
+		};
 
 		static bool IsChainContainsNotSupported(Expression expression)
 		{
@@ -300,7 +307,7 @@ namespace LinqToDB.Linq.Builder
 				var mc = (MethodCallExpression)current;
 				if (!mc.IsQueryable())
 					return false;
-				if (IsNotSupportedForDetailQuery(mc))
+				if (NotSupportedDetailMethods.Contains(mc.Method.Name))
 					return true;
 				current = mc.Arguments[0];
 			}
@@ -350,7 +357,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (mc.IsQueryable(true))
 						{
-							var isSupported = !IsNotSupportedForDetailQuery(mc);
+							var isSupported = !NotSupportedDetailMethods.Contains(mc.Method.Name);
 							var isChainContainsNotSupported = IsChainContainsNotSupported(mc.Arguments[0]);
 							if (isSupported && !isChainContainsNotSupported)
 							{
