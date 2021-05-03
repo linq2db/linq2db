@@ -119,87 +119,58 @@ namespace LinqToDB.Expressions
 				case ExpressionType.Extension            : return TransformXE   (                            expr);
 
 				case ExpressionType.Dynamic:
-				{
-					var e = (DynamicExpression)expr;
-					return e.Update(Transform(e.Arguments));
-				}
+					return ((DynamicExpression)expr)
+						.Update(Transform(((DynamicExpression)expr).Arguments));
 
 				case ExpressionType.New:
-				{
-					var e = (NewExpression)expr;
-					return e.Update(Transform(e.Arguments));
-				}
+					return ((NewExpression)expr)
+						.Update(Transform(((NewExpression)expr).Arguments));
 
 				case ExpressionType.TypeEqual:
-				case ExpressionType.TypeIs:
-				{
-					var e = (TypeBinaryExpression)expr;
-					return e.Update(Transform(e.Expression));
-				}
+				case ExpressionType.TypeIs   :
+					return ((TypeBinaryExpression)expr)
+						.Update(Transform(((TypeBinaryExpression)expr).Expression));
 
 				case ExpressionType.RuntimeVariables     :
-				{
-					var e = (RuntimeVariablesExpression)expr;
-					return e.Update(Transform(e.Variables));
-				}
+					return ((RuntimeVariablesExpression)expr)
+						.Update(Transform(((RuntimeVariablesExpression)expr).Variables));
 
 				case ExpressionType.Conditional:
-				{
-					var e = (ConditionalExpression)expr;
-					return e.Update(
-						Transform(e.Test),
-						Transform(e.IfTrue),
-						Transform(e.IfFalse));
-				}
+					return ((ConditionalExpression)expr).Update(
+						Transform(((ConditionalExpression)expr).Test),
+						Transform(((ConditionalExpression)expr).IfTrue),
+						Transform(((ConditionalExpression)expr).IfFalse));
 
 				case ExpressionType.Invoke:
-				{
-					var e = (InvocationExpression)expr;
-					return e.Update(
-						Transform(e.Expression),
-						Transform(e.Arguments));
-				}
+					return ((InvocationExpression)expr).Update(
+						Transform(((InvocationExpression)expr).Expression),
+						Transform(((InvocationExpression)expr).Arguments));
 
 				case ExpressionType.Block:
-				{
-					var e = (BlockExpression)expr;
-					return e.Update(
-						Transform(e.Variables),
-						Transform(e.Expressions));
-				}
+					return ((BlockExpression)expr).Update(
+						Transform(((BlockExpression)expr).Variables),
+						Transform(((BlockExpression)expr).Expressions));
 
 				case ExpressionType.Goto:
-				{
-					var e = (GotoExpression)expr;
-					return e.Update(
-						e.Target,
-						Transform(e.Value));
-				}
+					return ((GotoExpression)expr).Update(
+						((GotoExpression)expr).Target,
+						Transform(((GotoExpression)expr).Value));
 
 				case ExpressionType.Index:
-				{
-					var e = (IndexExpression)expr;
-					return e.Update(
-						Transform(e.Object),
-						Transform(e.Arguments));
-				}
+					return ((IndexExpression)expr).Update(
+						Transform(((IndexExpression)expr).Object),
+						Transform(((IndexExpression)expr).Arguments));
 
 				case ExpressionType.Label:
-				{
-					var e = (LabelExpression)expr;
-					return e.Update(
-						e.Target,
-						Transform(e.DefaultValue));
-				}
+					return ((LabelExpression)expr).Update(
+						((LabelExpression)expr).Target,
+						Transform(((LabelExpression)expr).DefaultValue));
 
 				case ExpressionType.Loop:
-				{
-					var e = (LoopExpression)expr;
-					return e.Update(
-						e.BreakLabel,
-						e.ContinueLabel,
-						Transform(e.Body));
-				}
+					return ((LoopExpression)expr).Update(
+						((LoopExpression)expr).BreakLabel,
+						((LoopExpression)expr).ContinueLabel,
+						Transform(((LoopExpression)expr).Body));
 
 				default:
 					throw new NotImplementedException($"Unhandled expression type: {expr.NodeType}");
