@@ -13,7 +13,19 @@ namespace LinqToDB.Benchmarks
 	{
 		static void Main(string[] args)
 		{
+			//if (args.Length == 0)
+			//{
+			//	var bench = new UpdateBenchmark();
+			//	bench.Setup();
+			//	bench.LinqSet();
+			//	bench.LinqObject();
+			//	bench.Object();
+			//	bench.CompiledLinqSet();
+			//	bench.CompiledLinqObject();
+			//	bench.RawAdoNet();
 
+			//	return;
+			//}
 			//TestConcurrent();
 			/*
 			VwSalesByCategoryContainsPerf();
@@ -89,9 +101,9 @@ namespace LinqToDB.Benchmarks
 			}
 		}
 
-#endregion
+		#endregion
 
-#region InsertSet
+		#region InsertSet
 		static async Task Main_FetchGraph(string[] args)
 		//static async Task Main(string[] args)
 		{

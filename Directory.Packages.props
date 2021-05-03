@@ -49,6 +49,7 @@
 		<PackageVersion Include="Microsoft.NET.Test.Sdk" Version="16.9.4" />
 		<PackageVersion Include="FastExpressionCompiler" Version="3.0.5" />
 		<PackageVersion Include="BenchmarkDotNet" Version="0.12.1" />
+		<!--<PackageVersion Include="BenchmarkDotNet" Version="0.12.1.1533" />-->
 		<PackageVersion Include="JetBrains.Profiler.Api" Version="1.1.7" />
 		<PackageVersion Include="Humanizer.Core" Version="2.8.26" />
 		<PackageVersion Include="FSharp.Core" Version="5.0.1" />
