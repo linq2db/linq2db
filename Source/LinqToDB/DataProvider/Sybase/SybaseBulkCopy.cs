@@ -14,7 +14,9 @@ namespace LinqToDB.DataProvider.Sybase
 	// AseException : Incorrect syntax near ','.
 	class SybaseBulkCopy : BasicBulkCopy
 	{
-		private readonly SybaseDataProvider _provider;
+		protected override int                MaxSqlLength  => 327670;
+		protected override int                MaxParameters => 1999;
+		private readonly   SybaseDataProvider _provider;
 
 		public SybaseBulkCopy(SybaseDataProvider provider)
 		{

@@ -8,6 +8,9 @@ namespace LinqToDB.DataProvider.Firebird
 
 	class FirebirdBulkCopy : BasicBulkCopy
 	{
+		// TODO: Firebird 2.5 has 64k limit, Firebird 3.0+ 10MB. Add Compat Switch
+		protected override int MaxSqlLength => 65535;
+
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
 			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{

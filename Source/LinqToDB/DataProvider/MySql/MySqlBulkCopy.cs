@@ -11,7 +11,12 @@ namespace LinqToDB.DataProvider.MySql
 
 	class MySqlBulkCopy : BasicBulkCopy
 	{
-		private readonly MySqlDataProvider _provider;
+		/// <summary>
+		/// MySQL supports more but realistically this might be too much already. 
+		/// </summary>
+		protected override int               MaxParameters => 32767;
+		protected override int               MaxSqlLength  => 327670;
+		private readonly   MySqlDataProvider _provider;
 
 		public MySqlBulkCopy(MySqlDataProvider provider)
 		{

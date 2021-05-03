@@ -13,7 +13,9 @@ namespace LinqToDB.DataProvider.DB2
 
 	class DB2BulkCopy : BasicBulkCopy
 	{
-		private readonly DB2DataProvider _provider;
+		protected override int             MaxParameters => 1999;
+		protected override int             MaxSqlLength  => 327670;
+		private readonly   DB2DataProvider _provider;
 
 		public DB2BulkCopy(DB2DataProvider provider)
 		{

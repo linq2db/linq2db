@@ -13,7 +13,8 @@ namespace LinqToDB.DataProvider.Informix
 
 	class InformixBulkCopy : BasicBulkCopy
 	{
-		private readonly InformixDataProvider _provider;
+		protected override int                  MaxSqlLength  => 32767;
+		private readonly   InformixDataProvider _provider;
 
 		public InformixBulkCopy(InformixDataProvider provider)
 		{
