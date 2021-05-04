@@ -943,12 +943,32 @@ namespace LinqToDB.Mapping
 		public T[] GetAttributes<T>(Type type, bool inherit = true)
 			where T : Attribute
 		{
-			var attrs = new List<T>();
+			if (MetadataReaders.Length == 0)
+				return Array<T>.Empty;
+			if (MetadataReaders.Length == 1)
+				return MetadataReaders[0].GetAttributes<T>(type, inherit);
 
-			foreach (var mr in MetadataReaders)
-				attrs.AddRange(mr.GetAttributes<T>(type, inherit));
+			var length = 0;
+			var attrs = new T[MetadataReaders.Length][];
 
-			return attrs.ToArray();
+			for (var i = 0; i < MetadataReaders.Length; i++)
+			{
+				attrs[i] = MetadataReaders[i].GetAttributes<T>(type, inherit);
+				length += attrs[i].Length;
+			}
+
+			var attributes = new T[length];
+			length = 0;
+			for (var i = 0; i < attrs.Length; i++)
+			{
+				if (attrs[i].Length > 0)
+				{
+					Array.Copy(attrs[i], 0, attributes, length, attrs[i].Length);
+					length += attrs[i].Length;
+				}
+			}
+
+			return attributes;
 		}
 
 		/// <summary>
@@ -962,12 +982,32 @@ namespace LinqToDB.Mapping
 		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool inherit = true)
 			where T : Attribute
 		{
-			var attrs = new List<T>();
+			if (MetadataReaders.Length == 0)
+				return Array<T>.Empty;
+			if (MetadataReaders.Length == 1)
+				return MetadataReaders[0].GetAttributes<T>(type, memberInfo, inherit);
 
-			foreach (var mr in MetadataReaders)
-				attrs.AddRange(mr.GetAttributes<T>(type, memberInfo, inherit));
+			var attrs = new T[MetadataReaders.Length][];
+			var length = 0;
 
-			return attrs.ToArray();
+			for (var i = 0; i < MetadataReaders.Length; i++)
+			{
+				attrs[i] = MetadataReaders[i].GetAttributes<T>(type, memberInfo, inherit);
+				length += attrs[i].Length;
+			}
+
+			var attributes = new T[length];
+			length = 0;
+			for (var i = 0; i < attrs.Length; i++)
+			{
+				if (attrs[i].Length > 0)
+				{
+					Array.Copy(attrs[i], 0, attributes, length, attrs[i].Length);
+					length += attrs[i].Length;
+				}
+			}
+
+			return attributes;
 		}
 
 		/// <summary>
@@ -1535,7 +1575,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public Action<MappingSchema, IEntityChangeDescriptor>? EntityDescriptorCreatedCallback { get; set; }
 
-		internal static MemoryCache EntityDescriptorsCache { get; } = new MemoryCache(new MemoryCacheOptions());
+		internal static MemoryCache<(Type entityType, string schemaId)> EntityDescriptorsCache { get; } = new (new ());
 
 		/// <summary>
 		/// Returns mapped entity descriptor.
@@ -1544,14 +1584,13 @@ namespace LinqToDB.Mapping
 		/// <returns>Mapping descriptor.</returns>
 		public EntityDescriptor GetEntityDescriptor(Type type)
 		{
-			var key = new { Type = type, ConfigurationID };
 			var ed = EntityDescriptorsCache.GetOrCreate(
-				key,
+				(entityType: type, ConfigurationID),
 				this,
-				static (o, key, context) =>
+				static (o, context) =>
 				{
 					o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
-					var edNew = new EntityDescriptor(context, key.Type);
+					var edNew = new EntityDescriptor(context, o.Key.entityType);
 					context.EntityDescriptorCreatedCallback?.Invoke(context, edNew);
 					return edNew;
 				});
@@ -1580,8 +1619,7 @@ namespace LinqToDB.Mapping
 
 		internal void ResetEntityDescriptor(Type type)
 		{
-			var key = new { Type = type, ConfigurationID };
-			EntityDescriptorsCache.Remove(key);
+			EntityDescriptorsCache.Remove((type, ConfigurationID));
 		}
 
 		#endregion

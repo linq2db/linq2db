@@ -13,12 +13,12 @@ Jit=RyuJit  Platform=X64
 ```
 |    Method |              Runtime |     Mean |   Median | Ratio | Allocated |
 |---------- |--------------------- |---------:|---------:|------:|----------:|
-|      Linq |             .NET 5.0 | 27.28 ms | 27.22 ms |  1.67 |      9 MB |
-|  Compiled |             .NET 5.0 | 17.55 ms | 17.39 ms |  1.08 |      9 MB |
-| RawAdoNet |             .NET 5.0 | 15.44 ms | 15.40 ms |  0.92 |      8 MB |
-|      Linq |        .NET Core 3.1 | 21.52 ms | 21.25 ms |  1.33 |      9 MB |
-|  Compiled |        .NET Core 3.1 | 18.97 ms | 18.60 ms |  1.17 |      9 MB |
-| RawAdoNet |        .NET Core 3.1 | 17.89 ms | 17.89 ms |  1.09 |      8 MB |
-|      Linq | .NET Framework 4.7.2 | 39.09 ms | 38.75 ms |  2.47 |      9 MB |
-|  Compiled | .NET Framework 4.7.2 | 28.37 ms | 28.69 ms |  1.72 |      9 MB |
-| RawAdoNet | .NET Framework 4.7.2 | 16.32 ms | 16.28 ms |  1.00 |      8 MB |
+|      Linq |             .NET 5.0 | 15.93 ms | 15.57 ms |  0.88 |      8 MB |
+|  Compiled |             .NET 5.0 | 16.19 ms | 16.15 ms |  0.95 |      8 MB |
+| RawAdoNet |             .NET 5.0 | 14.03 ms | 13.83 ms |  0.80 |      8 MB |
+|      Linq |        .NET Core 3.1 | 20.08 ms | 20.04 ms |  1.17 |      8 MB |
+|  Compiled |        .NET Core 3.1 | 27.29 ms | 27.33 ms |  1.65 |      8 MB |
+| RawAdoNet |        .NET Core 3.1 | 15.95 ms | 16.01 ms |  0.94 |      8 MB |
+|      Linq | .NET Framework 4.7.2 | 27.21 ms | 27.23 ms |  1.65 |      8 MB |
+|  Compiled | .NET Framework 4.7.2 | 25.97 ms | 25.42 ms |  1.43 |      8 MB |
+| RawAdoNet | .NET Framework 4.7.2 | 18.27 ms | 18.09 ms |  1.00 |      8 MB |

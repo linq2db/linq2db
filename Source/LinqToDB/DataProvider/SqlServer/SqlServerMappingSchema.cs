@@ -73,7 +73,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			AddMetadataReader(new SystemDataSqlServerAttributeReader());
 		}
 
-		internal static SqlServerMappingSchema Instance = new SqlServerMappingSchema();
+		internal static SqlServerMappingSchema Instance = new ();
 
 		// TODO: move to SqlServerTypes.Configure?
 		public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
@@ -98,6 +98,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return base.TryGetConvertExpression(@from, to);
 		}
 
+		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
 			stringBuilder
@@ -123,7 +124,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					break;
 			}
 
-			DataTools.ConvertStringToSql(stringBuilder, "+", startPrefix, AppendConversion, value, null);
+			DataTools.ConvertStringToSql(stringBuilder, "+", startPrefix, AppendConversionAction, value, null);
 		}
 
 		static void ConvertCharToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, char value)
@@ -142,16 +143,22 @@ namespace LinqToDB.DataProvider.SqlServer
 					break;
 			}
 
-			DataTools.ConvertCharToSql(stringBuilder, start, AppendConversion, value);
+			DataTools.ConvertCharToSql(stringBuilder, start, AppendConversionAction, value);
 		}
 
 		internal static void ConvertDateTimeToSql(StringBuilder stringBuilder, SqlDataType? dt, DateTime value)
 		{
 			var format =
 				dt?.Type.DataType == DataType.DateTime2
-					? dt.Type.Precision == 0
+					? (dt.Type.Precision == 0
 						  ? "yyyy-MM-ddTHH:mm:ss"
-						  : "yyyy-MM-ddTHH:mm:ss." + new string('f', dt.Type.Precision ?? 7)
+						  : dt.Type.Precision == 1 ? "yyyy-MM-ddTHH:mm:ss.f"
+						  : dt.Type.Precision == 2 ? "yyyy-MM-ddTHH:mm:ss.ff"
+						  : dt.Type.Precision == 3 ? "yyyy-MM-ddTHH:mm:ss.fff"
+						  : dt.Type.Precision == 4 ? "yyyy-MM-ddTHH:mm:ss.ffff"
+						  : dt.Type.Precision == 5 ? "yyyy-MM-ddTHH:mm:ss.fffff"
+						  : dt.Type.Precision == 6 ? "yyyy-MM-ddTHH:mm:ss.ffffff"
+						  :                          "yyyy-MM-ddTHH:mm:ss.fffffff")
 					: value.Millisecond == 0
 						? "yyyy-MM-ddTHH:mm:ss"
 						: "yyyy-MM-ddTHH:mm:ss.fff";

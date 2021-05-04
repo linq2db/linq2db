@@ -113,6 +113,7 @@ namespace LinqToDB.DataProvider.DB2
 			stringBuilder.Append('\'');
 		}
 
+		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
 			stringBuilder
@@ -124,15 +125,15 @@ namespace LinqToDB.DataProvider.DB2
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
 		{
-			DataTools.ConvertStringToSql(stringBuilder, "||", null, AppendConversion, value, null);
+			DataTools.ConvertStringToSql(stringBuilder, "||", null, AppendConversionAction, value, null);
 		}
 
 		static void ConvertCharToSql(StringBuilder stringBuilder, char value)
 		{
-			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversion, value);
+			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversionAction, value);
 		}
 
-		internal static readonly DB2MappingSchema Instance = new DB2MappingSchema();
+		internal static readonly DB2MappingSchema Instance = new ();
 
 		static void ConvertGuidToSql(StringBuilder stringBuilder, Guid value)
 		{

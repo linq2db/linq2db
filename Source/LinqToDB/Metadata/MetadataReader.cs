@@ -45,12 +45,28 @@ namespace LinqToDB.Metadata
 			if (_readers.Count == 1)
 				return _readers[0].GetAttributes<T>(type, inherit);
 
-			var attributes = new List<T>();
+			var length = 0;
+			var attrs = new T[_readers.Count][];
 
-			foreach (var reader in _readers)
-				attributes.AddRange(reader.GetAttributes<T>(type,  inherit));
+			for (var i = 0; i < _readers.Count; i++)
+			{
+				attrs[i] = _readers[i].GetAttributes<T>(type, inherit);
+				length += attrs[i].Length;
+			}
 
-			return attributes.ToArray();
+			var attributes = new T[length];
+			length = 0;
+
+			for (var i = 0; i < attrs.Length; i++)
+			{
+				if (attrs[i].Length > 0)
+				{
+					Array.Copy(attrs[i], 0, attributes, length, attrs[i].Length);
+					length += attrs[i].Length;
+				}
+			}
+
+			return attributes;
 		}
 
 		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool inherit)
@@ -61,12 +77,28 @@ namespace LinqToDB.Metadata
 			if (_readers.Count == 1)
 				return _readers[0].GetAttributes<T>(type, memberInfo, inherit);
 
-			var attributes = new List<T>();
+			var attrs = new T[_readers.Count][];
+			var length = 0;
 
-			foreach (var reader in _readers)
-				attributes.AddRange(reader.GetAttributes<T>(type, memberInfo, inherit));
+			for (var i = 0; i < _readers.Count; i++)
+			{
+				attrs[i] = _readers[i].GetAttributes<T>(type, memberInfo, inherit);
+				length += attrs[i].Length;
+			}
 
-			return attributes.ToArray();
+			var attributes = new T[length];
+			length = 0;
+
+			for (var i = 0; i < attrs.Length; i++)
+			{
+				if (attrs[i].Length > 0)
+				{
+					Array.Copy(attrs[i], 0, attributes, length, attrs[i].Length);
+					length += attrs[i].Length;
+				}
+			}
+
+			return attributes;
 		}
 
 		/// <inheritdoc cref="IMetadataReader.GetDynamicColumns"/>
@@ -77,12 +109,27 @@ namespace LinqToDB.Metadata
 			if (_readers.Count == 1)
 				return _readers[0].GetDynamicColumns(type);
 
-			var columns = new List<MemberInfo>();
+			var cols = new MemberInfo[_readers.Count][];
+			var length = 0;
 
-			foreach (var reader in _readers)
-				columns.AddRange(reader.GetDynamicColumns(type));
+			for (var i = 0; i < _readers.Count; i++)
+			{
+				cols[i] = _readers[i].GetDynamicColumns(type);
+				length  += cols[i].Length;
+			}
 
-			return columns.ToArray();
+			length = 0;
+			var columns = new MemberInfo[length];
+			for (var i = 0; i < cols.Length; i++)
+			{
+				if (cols[i].Length > 0)
+				{
+					Array.Copy(cols[i], 0, columns, length, cols[i].Length);
+					length += cols[i].Length;
+				}
+			}
+
+			return columns;
 		}
 	}
 }

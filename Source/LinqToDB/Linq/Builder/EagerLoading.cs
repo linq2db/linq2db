@@ -53,7 +53,7 @@ namespace LinqToDB.Linq.Builder
 						_items.Add(key, list);
 					}
 
-					_prevKey = key;
+					_prevKey  = key;
 					_prevList = list;
 				}
 
@@ -1401,10 +1401,15 @@ namespace LinqToDB.Linq.Builder
 		}
 
 
-		internal class KeyDetailEnvelope<TKey, TDetail>
+		internal readonly struct KeyDetailEnvelope<TKey, TDetail>
 		{
-			public TKey    Key    { get; set; } = default!;
-			public TDetail Detail { get; set; } = default!;
+			public KeyDetailEnvelope(TKey key, TDetail detail)
+			{
+				Key    = key;
+				Detail = detail;
+			}
+			public readonly TKey    Key;
+			public readonly TDetail Detail;
 		}
 
 		static Expression EnlistEagerLoadingFunctionality<T, TD, TKey>(
@@ -1419,13 +1424,9 @@ namespace LinqToDB.Linq.Builder
 			var detailQuery = mainQuery
 				.RemoveOrderBy()
 				.SelectMany(detailQueryLambda,
-					(main, detail) => new KeyDetailEnvelope<TKey, TD>
-					{
 						// don't replace with CompileExpression extension point
 						// Compile will be replaced with expression embedding
-						Key    = selectKeyExpression.Compile()(main),
-						Detail = detail
-					});
+					(main, detail) => new KeyDetailEnvelope<TKey, TD>(selectKeyExpression.Compile()(main), detail));
 
 			//TODO: currently we run in separate query
 

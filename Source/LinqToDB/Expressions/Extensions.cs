@@ -184,11 +184,12 @@ namespace LinqToDB.Expressions
 		{
 			return Transform(
 				lambda.Body,
-				new { lambda, exprToReplaceParameter1, exprToReplaceParameter2, exprToReplaceParameter3 },
+				new { parameters = lambda.Parameters, exprToReplaceParameter1, exprToReplaceParameter2, exprToReplaceParameter3 },
 				static (context, e) =>
-					e == context.lambda.Parameters[0] ? context.exprToReplaceParameter1 :
-					e == context.lambda.Parameters[1] ? context.exprToReplaceParameter2 :
-					e == context.lambda.Parameters[2] ? context.exprToReplaceParameter3 : e);
+					e.NodeType != ExpressionType.Parameter ? e                               :
+					e == context.parameters[0]             ? context.exprToReplaceParameter1 :
+					e == context.parameters[1]             ? context.exprToReplaceParameter2 :
+					e == context.parameters[2]             ? context.exprToReplaceParameter3 : e);
 		}
 
 		/// <summary>

@@ -19,19 +19,7 @@ namespace LinqToDB.Common
 	[PublicAPI]
 	public static class Converter
 	{
-		private readonly struct Key
-		{
-			public Key(Type from, Type to)
-			{
-				From = from;
-				To   = to;
-			}
-
-			public readonly Type From;
-			public readonly Type To;
-		}
-
-		static readonly ConcurrentDictionary<Key,LambdaExpression> _expressions = new ();
+		static readonly ConcurrentDictionary<(Type from, Type to), LambdaExpression> _expressions = new ();
 
 		static XmlDocument CreateXmlDocument(string str)
 		{
@@ -99,7 +87,7 @@ namespace LinqToDB.Common
 		/// <param name="expr">Converter expression.</param>
 		public static void SetConverter<TFrom,TTo>(Expression<Func<TFrom,TTo>> expr)
 		{
-			_expressions[new Key(typeof(TFrom), typeof(TTo))] = expr;
+			_expressions[(typeof(TFrom), typeof(TTo))] = expr;
 		}
 
 		/// <summary>
@@ -110,7 +98,7 @@ namespace LinqToDB.Common
 		/// <returns>Conversion expression or null, of converter not found.</returns>
 		internal static LambdaExpression? GetConverter(Type from, Type to)
 		{
-			_expressions.TryGetValue(new Key(from, to), out var l);
+			_expressions.TryGetValue((from, to), out var l);
 			return l;
 		}
 

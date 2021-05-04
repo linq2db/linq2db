@@ -39,9 +39,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			AddScalarType(typeof(TimeSpan?),       DataType.Interval);
 
 			// npgsql doesn't support unsigned types except byte (and sbyte)
-			SetConvertExpression<ushort?, DataParameter>(value => new DataParameter(null, value == null ? null : value, DataType.Int32)  , false);
-			SetConvertExpression<uint?  , DataParameter>(value => new DataParameter(null, value == null ? null : value, DataType.Int64)  , false);
-			SetConvertExpression<ulong? , DataParameter>(value => new DataParameter(null, value == null ? null : value, DataType.Decimal), false);
+			SetConvertExpression<ushort?, DataParameter>(value => new DataParameter(null, value == null ? (int?    )null : value, DataType.Int32)  , false);
+			SetConvertExpression<uint?  , DataParameter>(value => new DataParameter(null, value == null ? (long?   )null : value, DataType.Int64)  , false);
+			SetConvertExpression<ulong? , DataParameter>(value => new DataParameter(null, value == null ? (decimal?)null : value, DataType.Decimal), false);
 		}
 
 		static void BuildDateTime(StringBuilder stringBuilder, SqlDataType dt, DateTime value)
@@ -80,6 +80,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			stringBuilder.Append('\'');
 		}
 
+		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
 			stringBuilder
@@ -91,12 +92,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
 		{
-			DataTools.ConvertStringToSql(stringBuilder, "||", null, AppendConversion, value, null);
+			DataTools.ConvertStringToSql(stringBuilder, "||", null, AppendConversionAction, value, null);
 		}
 
 		static void ConvertCharToSql(StringBuilder stringBuilder, char value)
 		{
-			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversion, value);
+			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversionAction, value);
 		}
 
 		internal static MappingSchema Instance { get; } = new PostgreSQLMappingSchema();

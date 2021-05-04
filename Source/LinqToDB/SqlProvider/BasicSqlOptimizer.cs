@@ -1571,7 +1571,7 @@ namespace LinqToDB.SqlProvider
 			return func;
 		}
 
-		public class RunOptimizationContext<TContext>
+		public readonly struct RunOptimizationContext<TContext>
 		{
 			public RunOptimizationContext(
 				OptimizationContext optimizationContext,
@@ -1627,9 +1627,9 @@ namespace LinqToDB.SqlProvider
 
 						return e;
 					},
-					args =>
+					static args =>
 					{
-						if (optimizationContext.IsOptimized(args.Element, out var expr))
+						if (args.Visitor.Context.OptimizationContext.IsOptimized(args.Element, out var expr))
 						{
 							args.Element = expr;
 							return false;

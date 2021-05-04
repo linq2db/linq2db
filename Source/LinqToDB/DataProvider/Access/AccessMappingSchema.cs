@@ -39,6 +39,8 @@ namespace LinqToDB.DataProvider.Access
 			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
 		}
 
+		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
+
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
 			stringBuilder
@@ -50,12 +52,12 @@ namespace LinqToDB.DataProvider.Access
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
 		{
-			DataTools.ConvertStringToSql(stringBuilder, "+", null, AppendConversion, value, null);
+			DataTools.ConvertStringToSql(stringBuilder, "+", null, AppendConversionAction, value, null);
 		}
 
 		static void ConvertCharToSql(StringBuilder stringBuilder, char value)
 		{
-			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversion, value);
+			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversionAction, value);
 		}
 
 		static void ConvertDateTimeToSql(StringBuilder stringBuilder, DateTime value)
@@ -67,7 +69,7 @@ namespace LinqToDB.DataProvider.Access
 			stringBuilder.AppendFormat(format, value);
 		}
 
-		internal static readonly AccessMappingSchema Instance = new AccessMappingSchema();
+		internal static readonly AccessMappingSchema Instance = new ();
 
 		public class OleDbMappingSchema : MappingSchema
 		{

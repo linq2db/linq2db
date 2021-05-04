@@ -13,15 +13,15 @@ Jit=RyuJit  Platform=X64
 ```
 |        Method |              Runtime |     Mean |   Median | Ratio | Allocated |
 |-------------- |--------------------- |---------:|---------:|------:|----------:|
-|          Linq |             .NET 5.0 | 3.438 ms | 3.433 ms |  0.83 |      2 MB |
-|     LinqAsync |             .NET 5.0 | 3.695 ms | 3.680 ms |  0.89 |      2 MB |
-|      Compiled |             .NET 5.0 | 3.399 ms | 3.402 ms |  0.82 |      2 MB |
-| CompiledAsync |             .NET 5.0 | 3.468 ms | 3.462 ms |  0.83 |      2 MB |
-|          Linq |        .NET Core 3.1 | 3.882 ms | 3.877 ms |  0.93 |      2 MB |
-|     LinqAsync |        .NET Core 3.1 | 3.777 ms | 3.770 ms |  0.91 |      2 MB |
-|      Compiled |        .NET Core 3.1 | 3.791 ms | 3.803 ms |  0.90 |      2 MB |
-| CompiledAsync |        .NET Core 3.1 | 3.834 ms | 3.845 ms |  0.92 |      2 MB |
-|          Linq | .NET Framework 4.7.2 | 4.509 ms | 4.459 ms |  1.08 |      2 MB |
-|     LinqAsync | .NET Framework 4.7.2 | 4.492 ms | 4.393 ms |  1.06 |      2 MB |
-|      Compiled | .NET Framework 4.7.2 | 4.223 ms | 4.168 ms |  1.00 |      2 MB |
-| CompiledAsync | .NET Framework 4.7.2 | 4.313 ms | 4.285 ms |  1.02 |      2 MB |
+|          Linq |             .NET 5.0 | 3.984 ms | 3.950 ms |  0.88 |      1 MB |
+|     LinqAsync |             .NET 5.0 | 3.974 ms | 4.009 ms |  0.87 |      1 MB |
+|      Compiled |             .NET 5.0 | 4.104 ms | 4.090 ms |  0.90 |      1 MB |
+| CompiledAsync |             .NET 5.0 | 3.894 ms | 3.917 ms |  0.85 |      1 MB |
+|          Linq |        .NET Core 3.1 | 4.306 ms | 4.351 ms |  0.95 |      1 MB |
+|     LinqAsync |        .NET Core 3.1 | 4.559 ms | 4.541 ms |  1.01 |      1 MB |
+|      Compiled |        .NET Core 3.1 | 4.343 ms | 4.331 ms |  0.95 |      1 MB |
+| CompiledAsync |        .NET Core 3.1 | 4.450 ms | 4.413 ms |  0.99 |      1 MB |
+|          Linq | .NET Framework 4.7.2 | 4.326 ms | 4.290 ms |  0.96 |      2 MB |
+|     LinqAsync | .NET Framework 4.7.2 | 4.668 ms | 4.558 ms |  1.04 |      2 MB |
+|      Compiled | .NET Framework 4.7.2 | 4.511 ms | 4.470 ms |  1.00 |      2 MB |
+| CompiledAsync | .NET Framework 4.7.2 | 4.549 ms | 4.493 ms |  1.01 |      2 MB |

@@ -77,10 +77,11 @@ namespace LinqToDB.DataProvider.Oracle
 
 					// Oracle saves empty string as null to database, so we need predicate modification before sending query
 					//
-					if ((expr.Operator == SqlPredicate.Operator.Equal          ||
+					if (expr.WithNull == true &&
+						(expr.Operator == SqlPredicate.Operator.Equal          ||
 						 expr.Operator == SqlPredicate.Operator.NotEqual       ||
 						 expr.Operator == SqlPredicate.Operator.GreaterOrEqual ||
-						 expr.Operator == SqlPredicate.Operator.LessOrEqual) && expr.WithNull == true)
+						 expr.Operator == SqlPredicate.Operator.LessOrEqual))
 					{
 						if (expr.Expr1.SystemType == typeof(string) &&
 						    expr.Expr1.TryEvaluateExpression(optimizationContext.Context, out var value1) && value1 is string string1)

@@ -41,12 +41,12 @@ namespace LinqToDB.Benchmarks.Benchmarks.QueryGeneration
 		*/
 		}
 
-		Dictionary<string, IDataProvider> _dataProviders = new Dictionary<string, IDataProvider>();
+		Dictionary<string, IDataProvider> _dataProviders = new ();
 
 		public IEnumerable<string> ValuesForDataProvider => _dataProviders.Keys;
 
 		[ParamsSource(nameof(ValuesForDataProvider))]
-		public string DataProvider { get; set; } = ProviderName.SQLiteMS;
+		public string DataProvider { get; set; } = ProviderName.Access;
 
 		private NorthwindDB GetDataConnection(string providerName)
 		{

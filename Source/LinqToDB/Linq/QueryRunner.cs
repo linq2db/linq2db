@@ -9,6 +9,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Linq
 {
@@ -38,7 +39,7 @@ namespace LinqToDB.Linq
 				QueryCache.Clear();
 			}
 
-			internal static MemoryCache QueryCache { get; } = new MemoryCache(new MemoryCacheOptions());
+			internal static MemoryCache<IStructuralEquatable> QueryCache { get; } = new (new ());
 		}
 
 #region Mapper

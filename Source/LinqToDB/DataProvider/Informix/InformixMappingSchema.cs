@@ -45,6 +45,7 @@ namespace LinqToDB.DataProvider.Informix
 				(absoluteTs.Ticks / 100) % 100000);
 		}
 
+		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
 			// chr works with values in 0..255 range, bigger/smaller values will be converted to byte
@@ -58,7 +59,7 @@ namespace LinqToDB.DataProvider.Informix
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
 		{
-			DataTools.ConvertStringToSql(stringBuilder, "||", null, AppendConversion, value, _extraEscapes);
+			DataTools.ConvertStringToSql(stringBuilder, "||", null, AppendConversionAction, value, _extraEscapes);
 		}
 
 		static void ConvertCharToSql(StringBuilder stringBuilder, char value)
@@ -70,7 +71,7 @@ namespace LinqToDB.DataProvider.Informix
 					AppendConversion(stringBuilder, value);
 					break;
 				default:
-					DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversion, value);
+					DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversionAction, value);
 					break;
 			}
 		}

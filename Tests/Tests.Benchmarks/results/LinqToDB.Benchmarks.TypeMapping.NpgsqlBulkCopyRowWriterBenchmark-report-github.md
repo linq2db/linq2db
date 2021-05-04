@@ -11,19 +11,11 @@ Frequency=3417995 Hz, Resolution=292.5692 ns, Timer=TSC
 Jit=RyuJit  Platform=X64  
 
 ```
-|       Method |              Runtime | Mean | Ratio |
-|------------- |--------------------- |-----:|------:|
-|   TypeMapper |             .NET 5.0 |   NA |     ? |
-| DirectAccess |             .NET 5.0 |   NA |     ? |
-|   TypeMapper |        .NET Core 3.1 |   NA |     ? |
-| DirectAccess |        .NET Core 3.1 |   NA |     ? |
-|   TypeMapper | .NET Framework 4.7.2 |   NA |     ? |
-| DirectAccess | .NET Framework 4.7.2 |   NA |     ? |
-
-Benchmarks with issues:
-  NpgsqlBulkCopyRowWriterBenchmark.TypeMapper: Job-GUCTZK(Jit=RyuJit, Platform=X64, Runtime=.NET 5.0)
-  NpgsqlBulkCopyRowWriterBenchmark.DirectAccess: Job-GUCTZK(Jit=RyuJit, Platform=X64, Runtime=.NET 5.0)
-  NpgsqlBulkCopyRowWriterBenchmark.TypeMapper: Job-IOHEYN(Jit=RyuJit, Platform=X64, Runtime=.NET Core 3.1)
-  NpgsqlBulkCopyRowWriterBenchmark.DirectAccess: Job-IOHEYN(Jit=RyuJit, Platform=X64, Runtime=.NET Core 3.1)
-  NpgsqlBulkCopyRowWriterBenchmark.TypeMapper: Job-FWTWYQ(Jit=RyuJit, Platform=X64, Runtime=.NET Framework 4.7.2)
-  NpgsqlBulkCopyRowWriterBenchmark.DirectAccess: Job-FWTWYQ(Jit=RyuJit, Platform=X64, Runtime=.NET Framework 4.7.2)
+|       Method |              Runtime |      Mean |    Median | Ratio | Allocated |
+|------------- |--------------------- |----------:|----------:|------:|----------:|
+|   TypeMapper |             .NET 5.0 |  59.66 ns |  58.55 ns |  0.52 |      24 B |
+| DirectAccess |             .NET 5.0 |  83.84 ns |  78.57 ns |  0.74 |      24 B |
+|   TypeMapper |        .NET Core 3.1 |  53.47 ns |  53.50 ns |  0.47 |      24 B |
+| DirectAccess |        .NET Core 3.1 |  51.83 ns |  51.50 ns |  0.45 |      24 B |
+|   TypeMapper | .NET Framework 4.7.2 | 196.34 ns | 189.37 ns |  1.72 |      24 B |
+| DirectAccess | .NET Framework 4.7.2 | 115.93 ns | 117.42 ns |  1.00 |      24 B |

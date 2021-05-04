@@ -2,7 +2,8 @@
 
 namespace LinqToDB.DataProvider
 {
-	public class ReaderInfo : IEquatable<ReaderInfo>
+	// TODO: V4: refactor to readonly struct
+	public struct ReaderInfo : IEquatable<ReaderInfo>
 	{
 		int _hashCode;
 
@@ -57,7 +58,7 @@ namespace LinqToDB.DataProvider
 
 		public override bool Equals(object? obj)
 		{
-			return Equals(obj as ReaderInfo);
+			return obj is ReaderInfo ri && Equals(ri);
 		}
 
 		public override int GetHashCode()
@@ -65,10 +66,9 @@ namespace LinqToDB.DataProvider
 			return _hashCode;
 		}
 
-		public bool Equals(ReaderInfo? other)
+		public bool Equals(ReaderInfo other)
 		{
 			return
-				other             != null &&
 				ToType            == other.ToType &&
 				FieldType         == other.FieldType &&
 				ProviderFieldType == other.ProviderFieldType &&

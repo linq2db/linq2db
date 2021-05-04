@@ -7,9 +7,10 @@ using System.Collections.Generic;
 namespace LinqToDB.Common.Internal.Cache
 {
 	/// <summary>
-	/// Represents the cache options applied to an entry of the <see cref="IMemoryCache"/> instance.
+	/// Represents the cache options applied to an entry of the <see cref="IMemoryCache{TKey}"/> instance.
 	/// </summary>
-	public class MemoryCacheEntryOptions
+	public class MemoryCacheEntryOptions<TKey>
+		where TKey: notnull
 	{
 		private DateTimeOffset? _absoluteExpiration;
 		private TimeSpan? _absoluteExpirationRelativeToNow;
@@ -73,8 +74,8 @@ namespace LinqToDB.Common.Internal.Cache
 		/// <summary>
 		/// Gets or sets the callbacks will be fired after the cache entry is evicted from the cache.
 		/// </summary>
-		public IList<PostEvictionCallbackRegistration> PostEvictionCallbacks { get; }
-			= new List<PostEvictionCallbackRegistration>();
+		public IList<PostEvictionCallbackRegistration<TKey>> PostEvictionCallbacks { get; }
+			= new List<PostEvictionCallbackRegistration<TKey>>();
 
 		/// <summary>
 		/// Gets or sets the priority for keeping the cache entry in the cache during a
