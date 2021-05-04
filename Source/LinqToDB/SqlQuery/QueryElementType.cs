@@ -57,6 +57,8 @@
 		UpdateStatement,
 		DeleteStatement,
 		MergeStatement,
+		MultiInsertStatement,
+			ConditionalInsertClause,
 
 		CreateTableStatement,
 		DropTableStatement,
@@ -65,6 +67,8 @@
 		MergeSourceTable,
 		MergeOperationClause,
 
-		GroupingSet
+		GroupingSet,
+
+		Comment
 	}
 }

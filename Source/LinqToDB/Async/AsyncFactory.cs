@@ -25,11 +25,9 @@ namespace LinqToDB.Async
 		private static readonly Type[] _tokenParams            = new Type[] { typeof(CancellationToken) };
 		private static readonly Type[] _beginTransactionParams = new Type[] { typeof(IsolationLevel)   , typeof(CancellationToken) };
 
-		private static readonly ConcurrentDictionary<Type, Func<IDbConnection, IAsyncDbConnection>> _connectionFactories
-			= new ConcurrentDictionary<Type, Func<IDbConnection, IAsyncDbConnection>>();
+		private static readonly ConcurrentDictionary<Type, Func<IDbConnection, IAsyncDbConnection>> _connectionFactories = new ();
 
-		private static readonly ConcurrentDictionary<Type, Func<IDbTransaction, IAsyncDbTransaction>> _transactionFactories
-			= new ConcurrentDictionary<Type, Func<IDbTransaction, IAsyncDbTransaction>>();
+		private static readonly ConcurrentDictionary<Type, Func<IDbTransaction, IAsyncDbTransaction>> _transactionFactories = new ();
 
 #if !NATIVE_ASYNC
 		private static readonly MethodInfo _transactionWrap      = MemberHelper.MethodOf(() => Wrap<IDbTransaction>(default!)).GetGenericMethodDefinition();
@@ -116,6 +114,7 @@ namespace LinqToDB.Async
 			// - DbTransaction (netstandard2.1, netcoreapp3.0)
 			// - MySqlConnector
 			// - npgsql
+			// - FirebirdSql.Data.FirebirdClient 8+
 			var commitAsync   = CreateDelegate<Func<IDbTransaction, CancellationToken, Task>, IDbTransaction>(type, "CommitAsync"  , _tokenParams     , _tokenParams     , _tokenParams     , false, false);
 
 			// Task RollbackAsync(CancellationToken)
@@ -123,6 +122,7 @@ namespace LinqToDB.Async
 			// - DbTransaction (netstandard2.1, netcoreapp3.0)
 			// - MySqlConnector
 			// - npgsql
+			// - FirebirdSql.Data.FirebirdClient 8+
 			var rollbackAsync = CreateDelegate<Func<IDbTransaction, CancellationToken, Task>, IDbTransaction>(type, "RollbackAsync", _tokenParams     , _tokenParams     , _tokenParams     , false, false);
 
 			// ValueTask DisposeAsync()
@@ -130,17 +130,17 @@ namespace LinqToDB.Async
 			// - DbTransaction (netstandard2.1, netcoreapp3.0)
 			// - Npgsql 4.1.2+
 #if !NATIVE_ASYNC
-			var disposeAsync  = CreateDelegate<Func<IDbConnection               ,      Task>, IDbConnection >(type, "DisposeAsync" , Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, true , false)
+			var disposeAsync  = CreateDelegate<Func<IDbTransaction               ,      Task>, IDbTransaction>(type, "DisposeAsync" , Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, true , false)
 #else
-			var disposeAsync  = CreateDelegate<Func<IDbConnection               , ValueTask>, IDbConnection >(type, "DisposeAsync" , Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, true , true )
+			var disposeAsync  = CreateDelegate<Func<IDbTransaction               , ValueTask>, IDbTransaction>(type, "DisposeAsync" , Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, true , true )
 #endif
 			// Task DisposeAsync()
 			// Availability:
 			// - MySqlConnector 0.57+
 #if !NATIVE_ASYNC
-							 ?? CreateDelegate<Func<IDbConnection               ,      Task>, IDbConnection >(type, "DisposeAsync" , Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, false, false);
+							 ?? CreateDelegate<Func<IDbTransaction               ,      Task>, IDbTransaction>(type, "DisposeAsync" , Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, false, false);
 #else
-							 ?? CreateDelegate<Func<IDbConnection               , ValueTask>, IDbConnection >(type, "DisposeAsync" , Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, false, true );
+							 ?? CreateDelegate<Func<IDbTransaction               , ValueTask>, IDbTransaction>(type, "DisposeAsync" , Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, false, true );
 #endif
 
 			if (commitAsync      != null
@@ -169,6 +169,7 @@ namespace LinqToDB.Async
 			// Availability:
 			// - MySql.Data
 			// - MySqlConnector < 0.57
+			// - FirebirdSql.Data.FirebirdClient 8+
 #if !NATIVE_ASYNC
 									   ?? CreateTaskTDelegate<Func<IDbConnection, CancellationToken           ,      Task<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _tokenParams           , _transactionWrap,      false, false);
 #else
@@ -189,6 +190,7 @@ namespace LinqToDB.Async
 			// Availability:
 			// - MySql.Data
 			// - MySqlConnector < 0.57
+			// - FirebirdSql.Data.FirebirdClient 8+
 #if !NATIVE_ASYNC
 									   ?? CreateTaskTDelegate<Func<IDbConnection, IsolationLevel, CancellationToken,      Task<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _beginTransactionParams, _transactionWrap,      false, false);
 #else
@@ -209,6 +211,7 @@ namespace LinqToDB.Async
 			// - MySql.Data
 			// - MySqlConnector 0.57+
 			// - npgsql 4.1.0+
+			// - FirebirdSql.Data.FirebirdClient 8+
 									   ?? CreateDelegate<Func<IDbConnection, Task>, IDbConnection>(type, "CloseAsync", Array<Type>.Empty,   Array<Type>.Empty, Array<Type>.Empty, false, false);
 
 			// ValueTask DisposeAsync()

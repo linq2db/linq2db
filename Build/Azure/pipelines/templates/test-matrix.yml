@@ -803,9 +803,9 @@ jobs:
           enable_os_ubuntu20: true
           enable_os_macos: true
           enable_fw_net472: false
-          enable_fw_netcore21: true
+          enable_fw_netcore21: false
           enable_fw_netcore31: false
-          enable_fw_net50: false
+          enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sybase.ase.all]')) }}:
             enabled: true
@@ -886,6 +886,28 @@ jobs:
           config_macos: firebird3
           script_linux: firebird3.sh
           script_macos: firebird3.sh
+          install_docker_macos: true
+          enable_os_win2016: false
+          enable_os_win2019: false
+          enable_os_ubuntu16: false
+          enable_os_ubuntu20: true
+          enable_os_macos: true
+          enable_fw_net472: false
+          enable_fw_netcore21: true
+          enable_fw_netcore31: false
+          enable_fw_net50: false
+          is_experimental: false
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[firebird.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[firebird.all]'))) }}:
+            enabled: false
+
+        - name: Firebird4
+          title: Firebird 4.0 (RC1)
+          config_linux: firebird4
+          config_macos: firebird4
+          script_linux: firebird4.sh
+          script_macos: firebird4.sh
           install_docker_macos: true
           enable_os_win2016: false
           enable_os_win2019: false

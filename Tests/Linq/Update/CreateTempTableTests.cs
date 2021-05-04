@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using LinqToDB;
 
 using NUnit.Framework;
+using Tests.Model;
 
 namespace Tests.xUpdate
 {
@@ -155,8 +156,10 @@ namespace Tests.xUpdate
 			}
 		}
 
+
+		// TODO: Firebird disabled temporary due to bug in provider
 		[Test]
-		public async Task CreateTableAsyncCanceled([DataSources(false)] string context)
+		public async Task CreateTableAsyncCanceled([DataSources(false, TestProvName.AllFirebird)] string context)
 		{
 			var cts = new CancellationTokenSource();
 			cts.Cancel();
@@ -196,8 +199,9 @@ namespace Tests.xUpdate
 			}
 		}
 
+		// TODO: Firebird disabled temporary due to bug in provider
 		[Test]
-		public async Task CreateTableAsyncCanceled2([DataSources(false)] string context)
+		public async Task CreateTableAsyncCanceled2([DataSources(false, TestProvName.AllFirebird)] string context)
 		{
 			var cts = new CancellationTokenSource();
 			using (var db = GetDataContext(context))
@@ -254,5 +258,31 @@ namespace Tests.xUpdate
 				Assert.That(list, Is.EquivalentTo(data));
 			}
 		}
+
+		[Test]
+		public void CreateTable_NoDisposeError([DataSources(false)] string context)
+		{
+			using var db = new TestDataConnection(context);
+			db.DropTable<int>("TempTable", throwExceptionIfNotExists: false);
+
+			var tempTable = db.CreateTempTable<IDTable>("TempTable");
+			var table2 = db.GetTable<IDTable>().TableOptions(TableOptions.IsTemporary).TableName("TempTable");
+			table2.Drop();
+			tempTable.Dispose();
+		}
+
+#if !NETFRAMEWORK
+		[Test]
+		public async Task CreateTable_NoDisposeErrorAsync([DataSources(false)] string context)
+		{
+			using var db = new TestDataConnection(context);
+			await db.DropTableAsync<int>("TempTable", throwExceptionIfNotExists: false);
+
+			var tempTable = await db.CreateTempTableAsync<IDTable>("TempTable");
+			var table2 = db.GetTable<IDTable>().TableOptions(TableOptions.IsTemporary).TableName("TempTable");
+			await table2.DropAsync();
+			await tempTable.DisposeAsync();
+		}
+#endif
 	}
 }

@@ -86,7 +86,7 @@ namespace Tests.UserTests
 				DataType = DataType.NVarChar,
 				Value    = JsonConvert.SerializeObject(v.Value)
 			});
-			schema.SetConverter<string, DbObject<TestJson>>(json => new DbObject<TestJson>(JsonConvert.DeserializeObject<TestJson>(json)));
+			schema.SetConverter<string, DbObject<TestJson>>(json => new DbObject<TestJson>(JsonConvert.DeserializeObject<TestJson>(json)!));
 			
 			using (var db    = (DataConnection)GetDataContext(context, schema))
 			using (var table = db.CreateLocalTable<TestTable>())

@@ -1,5 +1,7 @@
 ﻿using System;
-using System.Reflection;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
 
 using JetBrains.Annotations;
 
@@ -7,7 +9,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB
 {
-	using Extensions;
+	using Mapping;
 	using SqlQuery;
 
 	partial class Sql
@@ -87,13 +89,19 @@ namespace LinqToDB
 				set => Expression = value;
 			}
 
-			public override ISqlExpression GetExpression(MemberInfo member, params ISqlExpression[] args)
+			public override ISqlExpression? GetExpression(IDataContext dataContext, SelectQuery query, Expression expression, Func<Expression, ColumnDescriptor?, ISqlExpression> converter)
 			{
-				var sqlExpressions = ConvertArgs(member, args);
+				var expressionStr = Expression;
+				PrepareParameterValues(expression, ref expressionStr, true, out var knownExpressions, out var genericTypes);
 
-				return new SqlFunction(member.GetMemberType(), Name ?? member.Name, IsAggregate, IsPure, sqlExpressions)
+				if (string.IsNullOrEmpty(expressionStr))
+					throw new LinqToDBException($"Cannot retrieve function name for expression '{expression}'.");
+
+				var parameters = PrepareArguments(expressionStr!, ArgIndices, addDefault: true, knownExpressions, genericTypes, converter);
+
+				return new SqlFunction(expression.Type, expressionStr!, IsAggregate, IsPure, parameters)
 				{
-					CanBeNull = GetCanBeNull(sqlExpressions)
+					CanBeNull = GetCanBeNull(parameters)
 				};
 			}
 		}

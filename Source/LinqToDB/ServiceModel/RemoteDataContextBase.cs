@@ -28,7 +28,7 @@ namespace LinqToDB.ServiceModel
 			public MappingSchema   MappingSchema   = null!;
 		}
 
-		static readonly ConcurrentDictionary<string,ConfigurationInfo> _configurations = new ConcurrentDictionary<string,ConfigurationInfo>();
+		static readonly ConcurrentDictionary<string,ConfigurationInfo> _configurations = new ();
 
 		class RemoteMappingSchema : MappingSchema
 		{
@@ -179,7 +179,7 @@ namespace LinqToDB.ServiceModel
 			return null;
 		}
 
-		static readonly Dictionary<Tuple<Type, SqlProviderFlags>, Func<ISqlBuilder>> _sqlBuilders = new Dictionary<Tuple<Type, SqlProviderFlags>, Func<ISqlBuilder>>();
+		static readonly Dictionary<Tuple<Type, SqlProviderFlags>, Func<ISqlBuilder>> _sqlBuilders = new ();
 
 		Func<ISqlBuilder>? _createSqlProvider;
 
@@ -216,7 +216,7 @@ namespace LinqToDB.ServiceModel
 			}
 		}
 
-		static readonly Dictionary<Tuple<Type, SqlProviderFlags>, Func<ISqlOptimizer>> _sqlOptimizers = new Dictionary<Tuple<Type, SqlProviderFlags>, Func<ISqlOptimizer>>();
+		static readonly Dictionary<Tuple<Type, SqlProviderFlags>, Func<ISqlOptimizer>> _sqlOptimizers = new ();
 
 		Func<ISqlOptimizer>? _getSqlOptimizer;
 
@@ -333,6 +333,12 @@ namespace LinqToDB.ServiceModel
 			Close();
 		}
 
+		Task IDataContext.CloseAsync()
+		{
+			Close();
+			return TaskEx.CompletedTask;
+		}
+
 		void Close()
 		{
 			OnClosing?.Invoke(this, EventArgs.Empty);
@@ -344,6 +350,23 @@ namespace LinqToDB.ServiceModel
 
 			Close();
 		}
+
+#if !NATIVE_ASYNC
+		public Task DisposeAsync()
+		{
+			Disposed = true;
+
+			return ((IDataContext)this).CloseAsync();
+		}
+#else
+		public ValueTask DisposeAsync()
+		{
+			Disposed = true;
+
+			return new ValueTask(((IDataContext)this).CloseAsync());
+		}
+#endif
+
 	}
 }
 #endif

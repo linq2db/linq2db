@@ -52,7 +52,7 @@ namespace LinqToDB.Linq.Builder
 				new SelectContext2(buildInfo.Parent, selector, sequence);
 
 #if DEBUG
-			context.MethodCall = methodCall;
+			context.Debug_MethodCall = methodCall;
 			Debug.WriteLine("BuildMethodCall Select:\n" + context.SelectQuery);
 #endif
 			return context;
@@ -267,7 +267,7 @@ namespace LinqToDB.Linq.Builder
 							.Select((m,i) => new { m, i })
 							.ToDictionary(_ => _.m.MemberInfo.Name, _ => _.i);
 
-						foreach (var binding in expr.Bindings.Cast<MemberAssignment>().OrderBy(b => dic[b.Member.Name]))
+						foreach (var binding in expr.Bindings.Cast<MemberAssignment>().OrderBy(b => dic.TryGetValue(b.Member.Name, out var idx) ? idx : int.MaxValue))
 						{
 							var q = GetExpressions(param, Expression.MakeMemberAccess(path, binding.Member), level + 1, binding.Expression);
 							foreach (var e in q)

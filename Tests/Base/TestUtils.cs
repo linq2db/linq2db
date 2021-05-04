@@ -378,6 +378,7 @@ namespace Tests
 					return "NOCASE";
 				case ProviderName.Firebird                           :
 				case TestProvName.Firebird3                          :
+				case TestProvName.Firebird4                          :
 					return "UNICODE_FSS";
 				case ProviderName.MySql                              :
 				case ProviderName.MySqlConnector                     :

@@ -99,6 +99,16 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 			switch (type.Type.DataType)
 			{
+				// FB4+ types:
+				case DataType.Int128        : StringBuilder.Append("INT128");                             break;
+				case DataType.TimeTZ        : StringBuilder.Append("TIME WITH TIME ZONE");                break;
+				case DataType.DateTimeOffset: StringBuilder.Append("TIMESTAMP WITH TIME ZONE");           break;
+				case DataType.DecFloat      :
+					StringBuilder.Append("DECFLOAT");
+					if (type.Type.Precision != null && type.Type.Precision <= 16)
+						StringBuilder.Append("(16)");
+					                                                                                      break;
+
 				case DataType.Decimal       :
 					base.BuildDataTypeFromDataType(type.Type.Precision > 18 ? new SqlDataType(type.Type.DataType, type.Type.SystemType, null, 18, type.Type.Scale, type.Type.DbType) : type, forCreateTable);
 					                                                                                      break;
@@ -215,6 +225,8 @@ namespace LinqToDB.DataProvider.Firebird
 				base.BuildDropTableStatement(dropTable);
 				return;
 			}
+
+			BuildTag(dropTable);
 
 			// implementation use following approach: http://www.firebirdfaq.org/faq69/
 			StringBuilder

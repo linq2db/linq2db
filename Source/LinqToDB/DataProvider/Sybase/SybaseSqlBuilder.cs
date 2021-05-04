@@ -288,6 +288,8 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 			var table = dropTable.Table!;
 
+			BuildTag(dropTable);
+
 			if (dropTable.Table.TableOptions.HasDropIfExists())
 			{
 				var defaultDatabaseName = IsTemporary(table) ? "tempdb" : null;

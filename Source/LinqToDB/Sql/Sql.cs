@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Linq;
-using System.Globalization;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
 using JetBrains.Annotations;
-
 using PN = LinqToDB.ProviderName;
 
 // ReSharper disable CheckNamespace
@@ -15,6 +12,7 @@ using PN = LinqToDB.ProviderName;
 
 namespace LinqToDB
 {
+	using Mapping;
 	using Expressions;
 	using Linq;
 	using SqlQuery;
@@ -34,6 +32,12 @@ namespace LinqToDB
 		{
 			throw new LinqException("'AllColumns' is only server-side method.");
 		}
+
+		/// <summary>
+		/// Generates 'DEFAULT' keyword, usable in inserts.
+		/// </summary>
+		[Expression("DEFAULT", ServerSideOnly = true)]
+		public static T Default<T>() => throw new LinqException($"Default is only server-side method.");
 
 		/// <summary>
 		/// Enforces generating SQL even if an expression can be calculated locally.
@@ -913,12 +917,14 @@ namespace LinqToDB
 			return str?.Trim();
 		}
 
+		[Sql.Expression(ProviderName.Firebird, "TRIM(LEADING FROM {0})")]
 		[Sql.Function("LTrim")]
 		public static string? TrimLeft(string? str)
 		{
 			return str?.TrimStart();
 		}
 
+		[Sql.Expression(PN.Firebird, "TRIM(TRAILING FROM {0})")]
 		[Sql.Function("RTrim")]
 		public static string? TrimRight(string? str)
 		{
@@ -932,6 +938,7 @@ namespace LinqToDB
 			return str == null || ch == null ? null : str.Trim(ch.Value);
 		}
 
+		[Sql.Expression(ProviderName.Firebird, "TRIM(LEADING {1} FROM {0})")]
 		[Sql.Expression(PN.DB2, "Strip({0}, L, {1})")]
 		[Sql.Function  (        "LTrim")]
 		public static string? TrimLeft(string? str, char? ch)
@@ -939,6 +946,7 @@ namespace LinqToDB
 			return str == null || ch == null ? null : str.TrimStart(ch.Value);
 		}
 
+		[Sql.Expression(ProviderName.Firebird, "TRIM(TRAILING {1} FROM {0})")]
 		[Sql.Expression(PN.DB2, "Strip({0}, T, {1})")]
 		[Sql.Function  (        "RTrim")]
 		public static string? TrimRight(string? str, char? ch)
@@ -964,13 +972,16 @@ namespace LinqToDB
 			{
 			}
 
-			public override ISqlExpression GetExpression(MemberInfo member, params ISqlExpression[] args)
+			public override ISqlExpression? GetExpression(IDataContext dataContext, SelectQuery query, Expression expression, Func<Expression, ColumnDescriptor?, ISqlExpression> converter)
 			{
-				var arr = new ISqlExpression[args.Length];
+				var expressionStr = Expression;
+				PrepareParameterValues(expression, ref expressionStr, true, out var knownExpressions, out _);
 
-				for (var i = 0; i < args.Length; i++)
+				var arr = new ISqlExpression[knownExpressions.Count];
+
+				for (var i = 0; i < knownExpressions.Count; i++)
 				{
-					var arg = args[i];
+					var arg = converter(knownExpressions[i]!, null);
 
 					if (arg.SystemType == typeof(string))
 					{
@@ -1055,6 +1066,7 @@ namespace LinqToDB
 		}
 
 		[Sql.Property(             "CURRENT_TIMESTAMP", ServerSideOnly = true, CanBeNull = false)]
+		[Sql.Property(PN.Firebird, "LOCALTIMESTAMP",    ServerSideOnly = true, CanBeNull = false)]
 		[Sql.Property(PN.Informix, "CURRENT",           ServerSideOnly = true, CanBeNull = false)]
 		[Sql.Property(PN.Access,   "Now",               ServerSideOnly = true, CanBeNull = false)]
 		[Sql.Function(PN.SqlCe,    "GetDate",           ServerSideOnly = true, CanBeNull = false)]

@@ -28,6 +28,8 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected abstract DB2Version Version { get; }
 
+		protected override bool SupportsNullInColumn => false;
+
 		public override int CommandCount(SqlStatement statement)
 		{
 			if (statement is SqlTruncateTableStatement trun)
@@ -66,6 +68,7 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			var table = truncateTable.Table!;
 
+			BuildTag(truncateTable);
 			AppendIndent();
 			StringBuilder.Append("TRUNCATE TABLE ");
 			BuildPhysicalTable(table, null);
@@ -247,6 +250,7 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			var table = dropTable.Table!;
 
+			BuildTag(dropTable);
 			if (dropTable.Table.TableOptions.HasDropIfExists())
 			{
 				AppendIndent().Append(@"BEGIN

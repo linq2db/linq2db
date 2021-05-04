@@ -84,7 +84,7 @@ namespace LinqToDB.Linq.Builder
 								if (e is SqlColumn column)
 								{
 									if (column.Parent == collection.SelectQuery)
-										return column.UnderlyingColumn!;
+										return column.Expression!;
 								}
 								return e;
 							});

@@ -38,6 +38,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 
 		protected override bool IsRecursiveCteKeywordRequired => true;
+		protected override bool SupportsNullInColumn          => false;
 
 		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
@@ -310,6 +311,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			var table = truncateTable.Table;
 
+			BuildTag(truncateTable);
 			AppendIndent();
 			StringBuilder.Append("TRUNCATE TABLE ");
 			BuildPhysicalTable(table!, null);

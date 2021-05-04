@@ -1,6 +1,5 @@
-﻿using System;
-using System.Linq;
-
+﻿using System.Linq;
+using FluentAssertions;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -13,17 +12,17 @@ namespace Tests.Playground
 		[Table]
 		class SampleClass
 		{
-			[Column] public int Id    { get; set; }
-			[Column] public int Value { get; set; }
+			[Column]              public int     Id    { get; set; }
+			[Column(Length = 50)] public string? Value { get; set; }
 		}
 
 		[Test]
-		public void SampleSelectTest([DataSources] string context)
+		public void SampleSelectTest([IncludeDataSources(TestProvName. AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<SampleClass>())
 			{
-				var result = table.ToArray();
+				table.ToArray().Should().BeEmpty();
 			}
 		}
 	}

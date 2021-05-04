@@ -13,7 +13,7 @@
 		<tags>linq linq2db MySql LinqToDB ORM database DB SQL</tags>
 		<dependencies>
 			<dependency id="linq2db"        version="3.0.0" />
-			<dependency id="MySqlConnector" version="1.3.0" />
+			<dependency id="MySqlConnector" version="1.3.5" />
 		</dependencies>
 		<contentFiles>
 			<files include="**\*" buildAction="None" />
@@ -26,6 +26,7 @@
 		<file src="..\Tests\Linq\bin\Azure\net472\System.Memory.dll"                     target="tools"                                                                                                    />
 		<file src="..\Tests\Linq\bin\Azure\net472\System.Buffers.dll"                    target="tools"                                                                                                    />
 		<file src="..\Tests\Linq\bin\Azure\net472\System.Threading.Tasks.Extensions.dll" target="tools"                                                                                                    />
+		<file src="..\Tests\Linq\bin\Azure\net472\Microsoft.Bcl.AsyncInterfaces.dll"     target="tools"                                                                                                    />
 
 		<file src="..\NuGet\MySqlConnector\linq2db.MySqlConnector.props"                 target="build"                                                                                                    />
 

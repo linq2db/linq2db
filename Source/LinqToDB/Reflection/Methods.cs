@@ -117,6 +117,7 @@ namespace LinqToDB.Reflection
 			internal static readonly MethodInfo SelectDistinct    = MemberHelper.MethodOfGeneric<IQueryable<IGrouping<int, object>>>(q => q.SelectDistinct());
 
 			public static readonly MethodInfo AsQueryable         = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.AsQueryable(null!));
+			public static readonly MethodInfo AsSubQuery          = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.AsSubQuery());
 
 			public static class Table
 			{
@@ -259,6 +260,18 @@ namespace LinqToDB.Reflection
 				public static readonly MethodInfo DeleteQueryableAsync          = MemberHelper.MethodOfGeneric<IQueryable<LW1>>(dc => dc.DeleteAsync(default));
 				public static readonly MethodInfo DeleteQueryablePredicate      = MemberHelper.MethodOfGeneric((IQueryable<LW1> q, Expression<Func<LW1, bool>> p) => q.Delete(p));
 				public static readonly MethodInfo DeleteQueryablePredicateAsync = MemberHelper.MethodOfGeneric((IQueryable<LW1> q, Expression<Func<LW1, bool>> p) => q.DeleteAsync(p, default));
+			}
+
+			public static class MultiInsert
+			{
+				// Sadly member names must be different from their englobing type, this actually is `.MultiInsert()`
+				public static readonly MethodInfo Begin         = typeof(MultiInsertExtensions).GetMethod(nameof(MultiInsertExtensions.MultiInsert))!;
+				public static readonly MethodInfo Into          = typeof(MultiInsertExtensions).GetMethod(nameof(MultiInsertExtensions.Into))!;
+				public static readonly MethodInfo When          = typeof(MultiInsertExtensions).GetMethod(nameof(MultiInsertExtensions.When))!;
+				public static readonly MethodInfo Else          = typeof(MultiInsertExtensions).GetMethod(nameof(MultiInsertExtensions.Else))!;
+				public static readonly MethodInfo Insert        = typeof(MultiInsertExtensions).GetMethod(nameof(MultiInsertExtensions.Insert))!;
+				public static readonly MethodInfo InsertAll     = typeof(MultiInsertExtensions).GetMethod(nameof(MultiInsertExtensions.InsertAll))!;
+				public static readonly MethodInfo InsertFirst   = typeof(MultiInsertExtensions).GetMethod(nameof(MultiInsertExtensions.InsertFirst))!;
 			}
 
 			public static class Tools

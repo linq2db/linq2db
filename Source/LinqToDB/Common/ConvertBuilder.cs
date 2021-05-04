@@ -77,6 +77,21 @@ namespace LinqToDB.Common
 				return Expression.Convert(p, to, op);
 			}
 
+			op =
+				from.GetMethodEx(to, "op_Implicit", from) ??
+				from.GetMethodEx(to, "op_Explicit", from);
+
+			if (op != null)
+			{
+				Type oppt = op.GetParameters()[0].ParameterType;
+				Type pt   = p.Type;
+
+				if (oppt.IsNullable() && !pt.IsNullable())
+					p = GetCtor(pt, oppt, p)!;
+
+				return Expression.Convert(p, to, op);
+			}
+
 			return null;
 		}
 
@@ -246,7 +261,7 @@ namespace LinqToDB.Common
 
 					if (ambiguityMapping != null)
 					{
-						var enums = ambiguityMapping.ToArray();
+						var enums = ambiguityMapping.ToList();
 
 						return Expression.Convert(
 							Expression.Call(

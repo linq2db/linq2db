@@ -576,9 +576,6 @@ namespace LinqToDB.Linq.Builder
 					args = Element.ConvertToSql(null, 0, ConvertFlags.Field).Select(_ => _.Sql).ToArray();
 				}
 
-				if (attribute != null)
-					return attribute.GetExpression(call.Method, args);
-
 				return new SqlFunction(call.Type, call.Method.Name, true, args);
 			}
 

@@ -14,7 +14,7 @@
 	-->
 	<ItemGroup>
 		<!--generic packages-->
-		<PackageVersion Include="Newtonsoft.Json" Version="12.0.3" />
+		<PackageVersion Include="Newtonsoft.Json" Version="13.0.1" />
 		<PackageVersion Include="System.Memory" Version="4.5.4" />
 		<PackageVersion Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
 		<PackageVersion Include="System.ValueTuple" Version="4.5.0" />
@@ -22,36 +22,37 @@
 		<PackageVersion Include="System.Data.DataSetExtensions" Version="4.5.0" />
 		<PackageVersion Include="Microsoft.CSharp" Version="4.7.0" />
 		<PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="5.0.0" />
+		<PackageVersion Include="FluentAssertions" Version="5.10.3" />
 
 		<!--infrastructure-->
 		<PackageVersion Include="Microsoft.SourceLink.GitHub" Version="1.0.0" />
 
 		<!--data providers-->
-		<PackageVersion Include="MySql.Data" Version="8.0.21" />
+		<PackageVersion Include="MySql.Data" Version="8.0.24" />
 		<PackageVersion Include="System.Data.SQLite.Core" Version="1.0.113.7" />
-		<PackageVersion Include="FirebirdSql.Data.FirebirdClient" Version="7.5.0" />
-		<PackageVersion Include="MySqlConnector" Version="1.3.0" />
+		<PackageVersion Include="MySqlConnector" Version="1.3.5" />
 		<PackageVersion Include="AdoNetCore.AseClient" Version="0.19.2" />
 		<PackageVersion Include="System.Data.SqlClient" Version="4.8.2" />
 		<PackageVersion Include="Microsoft.Data.SqlClient" Version="2.1.2" />
 		<PackageVersion Include="System.Data.Odbc" Version="5.0.0" />
 		<PackageVersion Include="System.Data.OleDb" Version="5.0.0" />
-		<PackageVersion Include="Oracle.ManagedDataAccess" Version="19.10.1" />
-		
+		<PackageVersion Include="Oracle.ManagedDataAccess" Version="19.11.0" />
+		<PackageVersion Include="FirebirdSql.Data.FirebirdClient" Version="8.0.1" />
+
 		<PackageVersion Include="IBM.Data.DB.Provider" Version="11.5.4000.4861" />
 
 		<!--test infrastructure-->
 		<PackageVersion Include="MiniProfiler" Version="3.2.0.157" />
 		<PackageVersion Include="MiniProfiler.Shared" Version="4.2.22" />
 		<PackageVersion Include="NUnit" Version="3.13.1" />
-		<PackageVersion Include="NUnit3TestAdapter" Version="3.17.0" />
-		<PackageVersion Include="Microsoft.NET.Test.Sdk" Version="16.8.3" />
-		<PackageVersion Include="FastExpressionCompiler" Version="3.0.0-preview-07" />
+		<PackageVersion Include="NUnit3TestAdapter" Version="4.0.0-beta.2" />
+		<PackageVersion Include="Microsoft.NET.Test.Sdk" Version="16.9.4" />
+		<PackageVersion Include="FastExpressionCompiler" Version="3.0.5" />
 		<PackageVersion Include="BenchmarkDotNet" Version="0.12.1" />
 		<PackageVersion Include="JetBrains.Profiler.Api" Version="1.1.7" />
 		<PackageVersion Include="Humanizer.Core" Version="2.8.26" />
 		<PackageVersion Include="FSharp.Core" Version="5.0.1" />
-		<PackageVersion Include="Microsoft.AspNet.OData" Version="7.5.6" />
+		<PackageVersion Include="Microsoft.AspNet.OData" Version="7.5.7" />
 		<PackageVersion Include="NodaTime" Version="3.0.5" />
 
 		<!--nuget doesn't have strong name, so we use local self-signed copy-->
@@ -60,20 +61,20 @@
 
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' ">
 		<!--main version-->
-		<PackageVersion Include="Microsoft.Data.SQLite" Version="5.0.3" />
-		<PackageVersion Include="Npgsql" Version="5.0.3" />
+		<PackageVersion Include="Microsoft.Data.SQLite" Version="5.0.5" />
+		<PackageVersion Include="Npgsql" Version="5.0.4" />
 	</ItemGroup>
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net472' ">
 		<!--specify here or it will conflict with Reference-include in netcore targets-->
 		<PackageVersion Include="Microsoft.SqlServer.Types" Version="14.0.1016.290" />
 		<!--downgrade-->
 		<PackageVersion Include="Microsoft.Data.SQLite" Version="1.1.1" />
-		<PackageVersion Include="Npgsql" Version="4.1.8" />
+		<PackageVersion Include="Npgsql" Version="4.1.9" />
 	</ItemGroup>
 	
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net45' ">
 		<!--main version-->
-		<PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="3.1.12" />
+		<PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="3.1.14" />
 		<PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
 	</ItemGroup>
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
@@ -91,7 +92,7 @@
 	</ItemGroup>
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.1' ">
 		<!--downgrade-->
-		<PackageVersion Include="Oracle.ManagedDataAccess.Core" Version="2.19.101" />
+		<PackageVersion Include="Oracle.ManagedDataAccess.Core" Version="2.19.110" />
 		<PackageVersion Include="IBM.Data.DB2.Core" Version="2.2.0.100" />
 		<PackageVersion Include="IBM.Data.DB2.Core-lnx" Version="2.2.0.100" />
 		<PackageVersion Include="IBM.Data.DB2.Core-osx" Version="2.0.0.100" />

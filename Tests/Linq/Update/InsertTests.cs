@@ -1605,6 +1605,33 @@ namespace Tests.xUpdate
 			}
 		}
 
+		// Access, SQLite, Firebird before v4, Informix and SAP Hana do not support DEFAULT in inserted values, 
+		// see https://github.com/linq2db/linq2db/pull/2954#issuecomment-821798021
+		[Test]
+		public void InsertDefault([DataSources(
+			TestProvName.AllAccess,
+			TestProvName.AllFirebirdLess4,
+			TestProvName.AllInformix,
+			TestProvName.AllSapHana,
+			TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			try
+			{
+				db.Person.Insert(() => new Person
+				{
+					FirstName  = "InsertDefault",
+					MiddleName = Sql.Default<string>(),
+					LastName   = "InsertDefault",
+					Gender     = Gender.Male,
+				});
+			}
+			finally
+			{
+				db.Person.Delete(p => p.FirstName == "InsertDefault");
+			}
+		}
+
 		[Test]
 		public void InsertSingleIdentity([DataSources(
 			TestProvName.AllInformix, ProviderName.SqlCe, TestProvName.AllSapHana)]
@@ -1715,7 +1742,11 @@ namespace Tests.xUpdate
 
 			if (context.StartsWith("Firebird"))
 			{
-				tableName += context.StartsWith(TestProvName.Firebird3) ? "_f3" : "_f";
+				tableName += context.StartsWith(TestProvName.Firebird4)
+					? "_f4"
+					: (context.StartsWith(TestProvName.Firebird3)
+						? "_f3"
+						: "_f");
 
 				if (context.EndsWith("LinqService"))
 					tableName += "l";

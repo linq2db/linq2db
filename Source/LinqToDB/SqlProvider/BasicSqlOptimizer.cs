@@ -2532,6 +2532,7 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.CreateTableStatement:
 				case QueryElementType.DropTableStatement:
 				case QueryElementType.MergeStatement:
+				case QueryElementType.MultiInsertStatement:
 				{
 					var statement = (SqlStatement)element;
 					return statement.IsParameterDependent;
@@ -2878,11 +2879,11 @@ namespace LinqToDB.SqlProvider
 				(q, _) => (q.Select.IsDistinct && !q.Select.OrderBy.IsEmpty && queryFilter(q)) /*|| q.Select.TakeValue != null || q.Select.SkipValue != null*/,
 				(p, q) =>
 				{
-					var columnItems  = q.Select.Columns.Select(c => c.Expression).ToArray();
-					var orderItems   = q.Select.OrderBy.Items.Select(o => o.Expression).ToArray();
+					var columnItems  = q.Select.Columns.Select(c => c.Expression).ToList();
+					var orderItems   = q.Select.OrderBy.Items.Select(o => o.Expression).ToList();
 
-					var projectionItems = columnItems.Union(orderItems).ToArray();
-					if (projectionItems.Length < columnItems.Length)
+					var projectionItemsCount = columnItems.Union(orderItems).Count();
+					if (projectionItemsCount < columnItems.Count)
 					{
 						// Sort columns not in projection, transforming to 
 						/*
@@ -2900,8 +2901,8 @@ namespace LinqToDB.SqlProvider
 						var orderBy = string.Join(", ",
 							orderByItems.Select((oi, i) =>
 								oi.IsDescending
-									? $"{{{i + columnItems.Length}}} DESC"
-									: $"{{{i + columnItems.Length}}}"));
+									? $"{{{i + columnItems.Count}}} DESC"
+									: $"{{{i + columnItems.Count}}}"));
 
 						var parameters = columnItems.Concat(orderByItems.Select(oi => oi.Expression)).ToArray();
 
@@ -2909,7 +2910,7 @@ namespace LinqToDB.SqlProvider
 							$"ROW_NUMBER() OVER (PARTITION BY {partitionBy} ORDER BY {orderBy})", Precedence.Primary,
 							SqlFlags.IsWindowFunction, parameters);
 
-						var additionalProjection = orderItems.Except(columnItems).ToArray();
+						var additionalProjection = orderItems.Except(columnItems);
 						foreach (var expr in additionalProjection)
 						{
 							q.Select.AddNew(expr);

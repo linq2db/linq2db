@@ -34,6 +34,8 @@ namespace LinqToDB.DataProvider.Informix
 		{
 		}
 
+		protected override bool SupportsNullInColumn => false;
+
 		public override int CommandCount(SqlStatement statement)
 		{
 			if (statement is SqlTruncateTableStatement trun)
@@ -316,5 +318,18 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			BuildDropTableStatementIfExists(dropTable);
 		}
+
+		protected override ISqlExpression WrapBooleanExpression(ISqlExpression expr)
+		{
+			var newExpr = base.WrapBooleanExpression(expr);
+			if (!ReferenceEquals(newExpr, expr))
+			{
+				return new SqlFunction(typeof(bool), "Convert", false, new SqlDataType(DataType.Boolean),
+					newExpr);
+			}
+
+			return newExpr;
+		}
+
 	}
 }

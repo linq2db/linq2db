@@ -42,7 +42,7 @@ namespace LinqToDB
 		/// <param name="source">Source query, that returns data for delete operation.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Array of records.</returns>
-		public static Task<TSource[]> DeleteWithOutput<TSource>(
+		public static Task<TSource[]> DeleteWithOutputAsync<TSource>(
 			                this IQueryable<TSource>          source,
 							CancellationToken                  token = default)
 		{

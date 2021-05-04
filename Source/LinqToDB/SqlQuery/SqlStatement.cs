@@ -52,6 +52,7 @@ namespace LinqToDB.SqlQuery
 
 		public abstract SelectQuery? SelectQuery { get; set; }
 
+		public SqlComment? Tag { get; internal set; }
 
 		#region IQueryElement
 
@@ -135,7 +136,7 @@ namespace LinqToDB.SqlQuery
 				{
 					case QueryElementType.MergeSourceTable:
 						{
-							var source = (SqlMergeSourceTable)expr;
+							var source = (SqlTableLikeSource)expr;
 
 							Utils.MakeUniqueNames(
 								source.SourceFields,

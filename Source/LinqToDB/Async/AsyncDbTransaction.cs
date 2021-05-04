@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Data;
-using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
+#if NETSTANDARD2_1PLUS
+using System.Data.Common;
+#endif
 
 using JetBrains.Annotations;
 

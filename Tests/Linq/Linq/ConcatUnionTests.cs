@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
-
+using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Mapping;
 
@@ -296,10 +296,38 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					   Child. Select(c => new Parent { Value1   = c.ParentID, ParentID = c.ParentID }).Concat(
-					   Parent.Select(c => new Parent { ParentID = c.ParentID                        })),
-					db.Child. Select(c => new Parent { Value1   = c.ParentID, ParentID = c.ParentID }).Concat(
-					db.Parent.Select(c => new Parent { ParentID = c.ParentID                        })));
+					   Child. Select(c => new Parent { Value1 = c.ParentID, ParentID = c.ParentID }).Concat(
+					   Parent.Select(c => new Parent {                      ParentID = c.ParentID })),
+					db.Child. Select(c => new Parent { Value1 = c.ParentID, ParentID = c.ParentID }).Concat(
+					db.Parent.Select(c => new Parent {                      ParentID = c.ParentID })));
+		}
+
+		[Test]
+		public void Concat891([DataSources(TestProvName.AllInformix)] string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					   Child. Select(c => new Parent { Value1 = c.ParentID, ParentID = c.ParentID }).Union(
+					   Parent.Select(c => new Parent {                      ParentID = c.ParentID })).Concat(
+					   Child. Select(c => new Parent { Value1 = c.ParentID, ParentID = c.ParentID })/*.Union(
+					   Parent.Select(c => new Parent {                      ParentID = c.ParentID }))*/),
+					db.Child. Select(c => new Parent { Value1 = c.ParentID, ParentID = c.ParentID }).Union(
+					db.Parent.Select(c => new Parent {                      ParentID = c.ParentID })).Concat(
+					db.Child. Select(c => new Parent { Value1 = c.ParentID, ParentID = c.ParentID })/*.Union(
+					db.Parent.Select(c => new Parent {                      ParentID = c.ParentID }))*/),
+					sort: x => x.OrderBy(_ => _.ParentID).ThenBy(_ => _.Value1));
+		}
+
+		[Test]
+		public void Concat892([DataSources(TestProvName.AllInformix)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Child.Select(c => new Parent {Value1 = c.ParentID, ParentID = c.ParentID})
+				.Union(db.Parent.Select(c => new Parent {                     ParentID = c.ParentID}))
+				.Concat(db.Child.Select(c => new Parent {Value1 = c.ParentID, ParentID = c.ParentID}));
+
+			AssertQuery(query);
 		}
 
 		[Test]
@@ -970,5 +998,49 @@ namespace Tests.Linq
 				var f = q.Select(t => new { rn = Sql.Ext.DenseRank().Over().OrderBy(t.ID).ToValue(), t.ID }).ToList();
 			}
 		}
+
+		[Test]
+		public void SelectWithNulls([DataSources(TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query1 = db.GetTable<LinqDataTypes>();
+			var query2 = db.GetTable<LinqDataTypes>().Select(d => new LinqDataTypes { });
+
+			var query = query1.UnionAll(query2);
+
+			query.Invoking(q => q.ToArray()).Should().NotThrow();
+		}
+
+		[Test]
+		public void SelectWithNulls2([DataSources(TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query1 = db.GetTable<LinqDataTypes2>();
+			var query2 = db.GetTable<LinqDataTypes2>().Select(d => new LinqDataTypes2 { });
+
+			var query = query1.UnionAll(query2);
+
+			query.Invoking(q => q.ToArray()).Should().NotThrow();
+		}
+
+		[Test]
+		public void SelectWithBooleanNulls([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query1 = from x in db.Parent
+				select new {a = db.Child.Any(), b = (bool?)(x.ParentID != 0)};
+
+			var query2 = from x in db.Parent
+				select new {a = db.Child.Any(), b = (bool?)null};
+
+			var query = query1.UnionAll(query2);
+
+			query.Invoking(q => q.ToList()).Should().NotThrow();
+		}		
+
+
 	}
 }

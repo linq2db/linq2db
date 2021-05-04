@@ -27,7 +27,7 @@ namespace LinqToDB.Linq.Builder
 #if DEBUG
 		public string _sqlQueryText => SelectQuery == null ? "" : SelectQuery.SqlText;
 		public string Path => this.GetPath();
-		public MethodCallExpression? MethodCall;
+		public MethodCallExpression? Debug_MethodCall;
 #endif
 
 		public IBuildContext[]   Sequence    { [DebuggerStepThrough] get; }
@@ -297,7 +297,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region ConvertToSql
 
-		readonly Dictionary<MemberInfo,SqlInfo[]> _sql = new Dictionary<MemberInfo,SqlInfo[]>(new MemberInfoComparer());
+		readonly Dictionary<MemberInfo,SqlInfo[]> _sql = new(new MemberInfoComparer());
 
 		public virtual SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 		{
@@ -464,8 +464,7 @@ namespace LinqToDB.Linq.Builder
 
 		SqlInfo[] ConvertExpressions(Expression expression, ConvertFlags flags, ColumnDescriptor? columnDescriptor)
 		{
-			return Builder.ConvertExpressions(this, expression, flags, columnDescriptor)
-				.ToArray();
+			return Builder.ConvertExpressions(this, expression, flags, columnDescriptor);
 		}
 
 		#endregion
@@ -657,8 +656,9 @@ namespace LinqToDB.Linq.Builder
 			else
 			{
 				info = info.WithIndex(SelectQuery.Select.Add(info.Sql));
-				if (member != null)
-					SelectQuery.Select.Columns[info.Index].Alias = member.Name;
+				var column = SelectQuery.Select.Columns[info.Index];
+				if (member != null && column.RawAlias == null)
+					column.Alias = member.Name;
 			}
 
 			return info;

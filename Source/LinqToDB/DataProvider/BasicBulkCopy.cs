@@ -237,19 +237,12 @@ namespace LinqToDB.DataProvider
 
 		protected void TraceAction(DataConnection dataConnection, Func<string> commandText, Func<int> action)
 		{
-			var task = TraceActionAsync(dataConnection, commandText, () => Task.FromResult(action()));
-			// the following line of code should be completely redundant, as exceptions should bubble up, since there are no awaited tasks
-			if (task.Status != TaskStatus.RanToCompletion) task.GetAwaiter().GetResult();
-		}
-
-		protected async Task TraceActionAsync(DataConnection dataConnection, Func<string> commandText, Func<Task<int>> action)
-		{
 			var now = DateTime.UtcNow;
 			var sw  = Stopwatch.StartNew();
 
 			if (dataConnection.TraceSwitchConnection.TraceInfo)
 			{
-				dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.BeforeExecute)
+				dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.BeforeExecute, TraceOperation.BulkCopy, false)
 				{
 					TraceLevel     = TraceLevel.Info,
 					CommandText    = commandText(),
@@ -259,11 +252,11 @@ namespace LinqToDB.DataProvider
 
 			try
 			{
-				var count = await action().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				var count = action();
 
 				if (dataConnection.TraceSwitchConnection.TraceInfo)
 				{
-					dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.AfterExecute)
+					dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.AfterExecute, TraceOperation.BulkCopy, false)
 					{
 						TraceLevel      = TraceLevel.Info,
 						CommandText     = commandText(),
@@ -277,7 +270,56 @@ namespace LinqToDB.DataProvider
 			{
 				if (dataConnection.TraceSwitchConnection.TraceError)
 				{
-					dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.Error)
+					dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.Error, TraceOperation.BulkCopy, false)
+					{
+						TraceLevel     = TraceLevel.Error,
+						CommandText    = commandText(),
+						StartTime      = now,
+						ExecutionTime  = sw.Elapsed,
+						Exception      = ex,
+					});
+				}
+
+				throw;
+			}
+		}
+
+		protected async Task TraceActionAsync(DataConnection dataConnection, Func<string> commandText, Func<Task<int>> action)
+		{
+			var now = DateTime.UtcNow;
+			var sw  = Stopwatch.StartNew();
+
+			if (dataConnection.TraceSwitchConnection.TraceInfo)
+			{
+				dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.BeforeExecute, TraceOperation.BulkCopy, true)
+				{
+					TraceLevel     = TraceLevel.Info,
+					CommandText    = commandText(),
+					StartTime      = now,
+				});
+			}
+
+			try
+			{
+				var count = await action().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
+				if (dataConnection.TraceSwitchConnection.TraceInfo)
+				{
+					dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.AfterExecute, TraceOperation.BulkCopy, true)
+					{
+						TraceLevel      = TraceLevel.Info,
+						CommandText     = commandText(),
+						StartTime       = now,
+						ExecutionTime   = sw.Elapsed,
+						RecordsAffected = count,
+					});
+				}
+			}
+			catch (Exception ex)
+			{
+				if (dataConnection.TraceSwitchConnection.TraceError)
+				{
+					dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.Error, TraceOperation.BulkCopy, true)
 					{
 						TraceLevel     = TraceLevel.Error,
 						CommandText    = commandText(),

@@ -94,7 +94,8 @@ public class a_CreateData : TestBase
 							TestContext.WriteLine(command);
 
 						var isDrop =
-							command.TrimStart().StartsWith("DROP") ||
+							command.TrimStart().StartsWith("DROP")          ||
+							command.TrimStart().Contains("DROP PROCEDURE ") ||
 							command.TrimStart().StartsWith("CALL DROP");
 
 						TestContext.WriteLine(ex.Message);
@@ -247,7 +248,8 @@ public class a_CreateData : TestBase
 		switch (context)
 		{
 			case ProviderName.Firebird                            :
-			case TestProvName.Firebird3                           : RunScript(context,          "COMMIT;", "Firebird", FirebirdAction);    break;
+			case TestProvName.Firebird3                           :
+			case TestProvName.Firebird4                           : RunScript(context,          "COMMIT;", "Firebird", FirebirdAction);    break;
 			case ProviderName.PostgreSQL                          :
 			case ProviderName.PostgreSQL92                        :
 			case ProviderName.PostgreSQL93                        :
