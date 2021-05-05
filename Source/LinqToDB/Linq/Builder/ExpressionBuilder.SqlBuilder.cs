@@ -2645,7 +2645,6 @@ namespace LinqToDB.Linq.Builder
 			return accessorExpression;
 		}
 
-		//ExpressionBuilder.ExpressionParam, ExpressionBuilder.ParametersParam, ExpressionBuilder.DataContextParam
 		internal static ParameterAccessor CreateParameterAccessor(
 			IDataContext        dataContext,
 			Expression          accessorExpression,
