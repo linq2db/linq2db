@@ -14,6 +14,8 @@ namespace LinqToDB.DataProvider.SQLite
 	{
 		private const string DATE_FORMAT      = "'{0:yyyy-MM-dd}'";
 		private const string DATETIME0_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss}'";
+		private const string DATETIME1_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.f}'";
+		private const string DATETIME2_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.ff}'";
 		private const string DATETIME3_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.fff}'";
 
 		public SQLiteMappingSchema() : this(ProviderName.SQLite)
@@ -64,16 +66,25 @@ namespace LinqToDB.DataProvider.SQLite
 
 		static void ConvertDateTimeToSql(StringBuilder stringBuilder, DateTime value)
 		{
+			string format;
 			if (value.Millisecond == 0)
 			{
-				var format = value.Hour == 0 && value.Minute == 0 && value.Second == 0 ?
+				format = value.Hour == 0 && value.Minute == 0 && value.Second == 0 ?
 					DATE_FORMAT :
 					DATETIME0_FORMAT;
-
-				stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value);
 			}
+			// TODO: code below should be gone after we implement proper date/time support for sqlite
+			// This actually doesn't make sense and exists only for our tests to work in cases where literals
+			// compared as strings
+			// E.g. see DateTimeArray2/DateTimeArray3 tests
+			else if (value.Millisecond % 100 == 0)
+				format = DATETIME1_FORMAT;
+			else if (value.Millisecond % 10 == 0)
+				format = DATETIME2_FORMAT;
 			else
-				stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATETIME3_FORMAT, value);
+				format = DATETIME3_FORMAT;
+
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value);
 		}
 
 		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;

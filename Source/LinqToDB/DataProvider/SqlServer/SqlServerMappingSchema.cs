@@ -32,7 +32,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		private const string TIMESPAN0_FORMAT = "'{0:d\\.hh\\:mm\\:ss}'";
 		private const string TIMESPAN7_FORMAT = "'{0:d\\.hh\\:mm\\:ss\\.fffffff}'";
 
-		private const string DATETIMEOFFSET0_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss. zzz}'";
+		private const string DATETIMEOFFSET0_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss zzz}'";
 		private const string DATETIMEOFFSET1_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.f zzz}'";
 		private const string DATETIMEOFFSET2_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.ff zzz}'";
 		private const string DATETIMEOFFSET3_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.fff zzz}'";
