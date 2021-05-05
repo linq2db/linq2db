@@ -40,17 +40,18 @@ namespace LinqToDB.Metadata
 		public T[] GetAttributes<T>(Type type, bool inherit)
 			where T : Attribute
 		{
-			if (_readers.Count == 0)
+			var readers = _readers;
+			if (readers.Count == 0)
 				return Array<T>.Empty;
-			if (_readers.Count == 1)
-				return _readers[0].GetAttributes<T>(type, inherit);
+			if (readers.Count == 1)
+				return readers[0].GetAttributes<T>(type, inherit);
 
 			var length = 0;
-			var attrs = new T[_readers.Count][];
+			var attrs = new T[readers.Count][];
 
-			for (var i = 0; i < _readers.Count; i++)
+			for (var i = 0; i < readers.Count; i++)
 			{
-				attrs[i] = _readers[i].GetAttributes<T>(type, inherit);
+				attrs[i] = readers[i].GetAttributes<T>(type, inherit);
 				length += attrs[i].Length;
 			}
 
@@ -72,17 +73,18 @@ namespace LinqToDB.Metadata
 		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool inherit)
 			where T : Attribute
 		{
-			if (_readers.Count == 0)
+			var readers = _readers;
+			if (readers.Count == 0)
 				return Array<T>.Empty;
-			if (_readers.Count == 1)
-				return _readers[0].GetAttributes<T>(type, memberInfo, inherit);
+			if (readers.Count == 1)
+				return readers[0].GetAttributes<T>(type, memberInfo, inherit);
 
-			var attrs = new T[_readers.Count][];
+			var attrs = new T[readers.Count][];
 			var length = 0;
 
-			for (var i = 0; i < _readers.Count; i++)
+			for (var i = 0; i < readers.Count; i++)
 			{
-				attrs[i] = _readers[i].GetAttributes<T>(type, memberInfo, inherit);
+				attrs[i] = readers[i].GetAttributes<T>(type, memberInfo, inherit);
 				length += attrs[i].Length;
 			}
 
@@ -104,17 +106,18 @@ namespace LinqToDB.Metadata
 		/// <inheritdoc cref="IMetadataReader.GetDynamicColumns"/>
 		public MemberInfo[] GetDynamicColumns(Type type)
 		{
-			if (_readers.Count == 0)
+			var readers = _readers;
+			if (readers.Count == 0)
 				return Array<MemberInfo>.Empty;
-			if (_readers.Count == 1)
-				return _readers[0].GetDynamicColumns(type);
+			if (readers.Count == 1)
+				return readers[0].GetDynamicColumns(type);
 
-			var cols = new MemberInfo[_readers.Count][];
+			var cols = new MemberInfo[readers.Count][];
 			var length = 0;
 
-			for (var i = 0; i < _readers.Count; i++)
+			for (var i = 0; i < readers.Count; i++)
 			{
-				cols[i] = _readers[i].GetDynamicColumns(type);
+				cols[i] = readers[i].GetDynamicColumns(type);
 				length  += cols[i].Length;
 			}
 
