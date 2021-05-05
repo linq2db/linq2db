@@ -13,6 +13,28 @@ namespace LinqToDB.DataProvider.Oracle
 
 	public class OracleMappingSchema : MappingSchema
 	{
+		private const string DATE_FORMAT = "DATE '{0:yyyy-MM-dd}'";
+
+		private const string DATETIME_FORMAT = "TO_DATE('{0:yyyy-MM-dd HH:mm:ss}', 'YYYY-MM-DD HH24:MI:SS')";
+
+		private const string TIMESTAMP0_FORMAT = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss}'";
+		private const string TIMESTAMP1_FORMAT = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.f}'";
+		private const string TIMESTAMP2_FORMAT = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ff}'";
+		private const string TIMESTAMP3_FORMAT = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.fff}'";
+		private const string TIMESTAMP4_FORMAT = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ffff}'";
+		private const string TIMESTAMP5_FORMAT = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.fffff}'";
+		private const string TIMESTAMP6_FORMAT = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ffffff}'";
+		private const string TIMESTAMP7_FORMAT = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.fffffff}'";
+
+		private const string TIMESTAMPTZ0_FORMAT = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss} +00:00'";
+		private const string TIMESTAMPTZ1_FORMAT = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.f} +00:00'";
+		private const string TIMESTAMPTZ2_FORMAT = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ff} +00:00'";
+		private const string TIMESTAMPTZ3_FORMAT = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.fff} +00:00'";
+		private const string TIMESTAMPTZ4_FORMAT = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ffff} +00:00'";
+		private const string TIMESTAMPTZ5_FORMAT = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.fffff} +00:00'";
+		private const string TIMESTAMPTZ6_FORMAT = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ffffff} +00:00'";
+		private const string TIMESTAMPTZ7_FORMAT = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.fffffff} +00:00'";
+
 		public OracleMappingSchema() : this(ProviderName.Oracle)
 		{
 		}
@@ -27,14 +49,14 @@ namespace LinqToDB.DataProvider.Oracle
 
 			SetConvertExpression<decimal,TimeSpan>(v => new TimeSpan((long)v));
 
-			SetValueToSqlConverter(typeof(Guid),     (sb,dt,v) => ConvertGuidToSql    (sb,     (Guid)    v));
-			SetValueToSqlConverter(typeof(DateTime), (sb,dt,v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
+			SetValueToSqlConverter(typeof(Guid),     (sb,dt,v)         => ConvertGuidToSql    (sb,     (Guid)    v));
+			SetValueToSqlConverter(typeof(DateTime), (sb,dt,v)         => ConvertDateTimeToSql(sb, dt, (DateTime)v));
 			SetValueToSqlConverter(typeof(DateTimeOffset), (sb, dt, v) => ConvertDateTimeToSql(sb, dt, ((DateTimeOffset)v).UtcDateTime));
 			SetValueToSqlConverter(typeof(string)        , (sb, dt, v) => ConvertStringToSql  (sb, v.ToString()!));
 			SetValueToSqlConverter(typeof(char)          , (sb, dt, v) => ConvertCharToSql    (sb, (char)v));
-			SetValueToSqlConverter(typeof(double), (sb, dt, v) => sb.Append(((double)v).ToString("G17", NumberFormatInfo.InvariantInfo)).Append('D'));
-			SetValueToSqlConverter(typeof(byte[]), (sb, dt, v) => ConvertBinaryToSql(sb, (byte[])v));
-			SetValueToSqlConverter(typeof(Binary), (sb, dt, v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(double), (sb, dt, v)         => sb.Append(((double)v).ToString("G17", NumberFormatInfo.InvariantInfo)).Append('D'));
+			SetValueToSqlConverter(typeof(byte[]), (sb, dt, v)         => ConvertBinaryToSql(sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary), (sb, dt, v)         => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
 		}
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
@@ -111,22 +133,20 @@ namespace LinqToDB.DataProvider.Oracle
 			switch (dataType.Type.DataType)
 			{
 				case DataType.Date:
-					format = "DATE '{0:yyyy-MM-dd}'";
+					format = DATE_FORMAT;
 					break;
 				case DataType.DateTime2:
 					switch (dataType.Type.Precision)
 					{
-						case 0: format = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss}'"          ; break;
-						case 1: format = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.f}'"        ; break;
-						case 2: format = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ff}'"       ; break;
-						case 3: format = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.fff}'"      ; break;
-						case 4: format = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ffff}'"     ; break;
-						case 5: format = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.fffff}'"    ; break;
-						default:
-						case 6: format = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ffffff}'"   ; break;
-						case 7: // .net types doesn't support more than 7 digits, so it doesn't make sense to generate 8/9
-						case 8:
-						case 9: format = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.fffffff}'"  ; break;
+						case 0   : format = TIMESTAMP0_FORMAT; break;
+						case 1   : format = TIMESTAMP1_FORMAT; break;
+						case 2   : format = TIMESTAMP2_FORMAT; break;
+						case 3   : format = TIMESTAMP3_FORMAT; break;
+						case 4   : format = TIMESTAMP4_FORMAT; break;
+						case 5   : format = TIMESTAMP5_FORMAT; break;
+						// .net types doesn't support more than 7 digits, so it doesn't make sense to generate 8/9
+						case >= 7: format = TIMESTAMP7_FORMAT; break;
+						default  : format = TIMESTAMP6_FORMAT; break;
 					}
 					break;
 				case DataType.DateTimeOffset:
@@ -134,26 +154,24 @@ namespace LinqToDB.DataProvider.Oracle
 					value = value.ToUniversalTime();
 					switch (dataType.Type.Precision)
 					{
-						case 0: format = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss} +00:00'"        ; break;
-						case 1: format = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.f} +00:00'"      ; break;
-						case 2: format = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ff} +00:00'"     ; break;
-						case 3: format = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.fff} +00:00'"    ; break;
-						case 4: format = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ffff} +00:00'"   ; break;
-						case 5: format = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.fffff} +00:00'"  ; break;
-						default:
-						case 6: format = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ffffff} +00:00'" ; break;
-						case 7:
-						case 8:
-						case 9: format = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.fffffff} +00:00'"; break;
+						case 0   : format = TIMESTAMPTZ0_FORMAT; break;
+						case 1   : format = TIMESTAMPTZ1_FORMAT; break;
+						case 2   : format = TIMESTAMPTZ2_FORMAT; break;
+						case 3   : format = TIMESTAMPTZ3_FORMAT; break;
+						case 4   : format = TIMESTAMPTZ4_FORMAT; break;
+						case 5   : format = TIMESTAMPTZ5_FORMAT; break;
+						// .net types doesn't support more than 7 digits, so it doesn't make sense to generate 8/9
+						case >= 7: format = TIMESTAMPTZ7_FORMAT; break;
+						default  : format = TIMESTAMPTZ6_FORMAT; break;
 					}
 					break;
 				case DataType.DateTime:
 				default:
-					format = "TO_DATE('{0:yyyy-MM-dd HH:mm:ss}', 'YYYY-MM-DD HH24:MI:SS')";
+					format = DATETIME_FORMAT;
 					break;
 			}
 
-			stringBuilder.AppendFormat(format, value);
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value);
 		}
 
 		internal static readonly OracleMappingSchema Instance = new ();

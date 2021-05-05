@@ -9,9 +9,14 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using LinqToDB.SqlQuery;
 	using Mapping;
 	using System.Data.Linq;
+	using System.Globalization;
 
 	public class PostgreSQLMappingSchema : MappingSchema
 	{
+		private const string DATE_FORMAT       = "'{0:yyyy-MM-dd}'::{1}";
+		private const string TIMESTAMP0_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss}'::{1}";
+		private const string TIMESTAMP3_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.fff}'::{1}";
+
 		public PostgreSQLMappingSchema() : this(ProviderName.PostgreSQL)
 		{
 		}
@@ -53,22 +58,22 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			{
 				if (value.Hour == 0 && value.Minute == 0 && value.Second == 0)
 				{
-					format = "'{0:yyyy-MM-dd}'::{1}";
+					format = DATE_FORMAT;
 					dbType = dt.Type.DbType ?? "date";
 				}
 				else
 				{
-					format = "'{0:yyyy-MM-dd HH:mm:ss}'::{1}";
+					format = TIMESTAMP0_FORMAT;
 					dbType = dt.Type.DbType ?? "timestamp";
 				}
 			}
 			else
 			{
-				format = "'{0:yyyy-MM-dd HH:mm:ss.fff}'::{1}";
+				format = TIMESTAMP3_FORMAT;
 				dbType = dt.Type.DbType ?? "timestamp";
 			}
 
-			stringBuilder.AppendFormat(format, value, dbType);
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value, dbType);
 		}
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)

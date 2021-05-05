@@ -12,6 +12,10 @@ namespace LinqToDB.DataProvider.SQLite
 
 	public class SQLiteMappingSchema : MappingSchema
 	{
+		private const string DATE_FORMAT      = "'{0:yyyy-MM-dd}'";
+		private const string DATETIME0_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss}'";
+		private const string DATETIME3_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.fff}'";
+
 		public SQLiteMappingSchema() : this(ProviderName.SQLite)
 		{
 		}
@@ -63,17 +67,13 @@ namespace LinqToDB.DataProvider.SQLite
 			if (value.Millisecond == 0)
 			{
 				var format = value.Hour == 0 && value.Minute == 0 && value.Second == 0 ?
-					"'{0:yyyy-MM-dd}'" :
-					"'{0:yyyy-MM-dd HH:mm:ss}'";
+					DATE_FORMAT :
+					DATETIME0_FORMAT;
 
-				stringBuilder.AppendFormat(format, value);
+				stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value);
 			}
 			else
-			{
-				stringBuilder
-					.Append(string.Format("'{0:yyyy-MM-dd HH:mm:ss.fff}", value).TrimEnd('0'))
-					.Append('\'');
-			}
+				stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATETIME3_FORMAT, value);
 		}
 
 		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
