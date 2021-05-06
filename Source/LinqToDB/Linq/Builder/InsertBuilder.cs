@@ -12,7 +12,7 @@ namespace LinqToDB.Linq.Builder
 
 	class InsertBuilder : MethodCallBuilder
 	{
-		private static readonly string[] MethodNames = { "Insert", "InsertWithIdentity", "InsertWithOutput", "InsertWithOutputAsync", "InsertWithOutputInto" };
+		private static readonly string[] MethodNames = { "Insert", "InsertWithIdentity", "InsertWithOutput", "InsertWithOutputInto" };
 
 		#region InsertBuilder
 

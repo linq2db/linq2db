@@ -10,7 +10,6 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using Mapping;
 	using Common;
-	using SqlQuery;
 
 	class LoadWithBuilder : MethodCallBuilder
 	{
