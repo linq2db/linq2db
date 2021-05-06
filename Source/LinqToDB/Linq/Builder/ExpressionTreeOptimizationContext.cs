@@ -410,9 +410,9 @@ namespace LinqToDB.Linq.Builder
 			if (_canBeCompiledFindVisitor == null)
 				_canBeCompiledFindVisitor = FindVisitor<CanBeCompiledContext>.Create(new CanBeCompiledContext(), CanBeCompiledFind);
 			else
-				_canBeCompiledFindVisitor.Context.Reset();
+				_canBeCompiledFindVisitor.Value.Context!.Reset();
 
-			return _canBeCompiledFindVisitor;
+			return _canBeCompiledFindVisitor.Value;
 		}
 
 		private FindVisitor<CanBeCompiledContext>? _canBeCompiledFindVisitor;
@@ -687,7 +687,7 @@ namespace LinqToDB.Linq.Builder
 			var body  = l.Body.Unwrap();
 			var parms = l.Parameters.ToDictionary(p => p);
 			var ex    = body.Transform(
-					new { parms, root },
+					(parms, root),
 					static (context, wpi) =>
 					{
 						if (wpi.NodeType == ExpressionType.Parameter && context.parms.ContainsKey((ParameterExpression)wpi))

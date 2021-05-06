@@ -116,7 +116,7 @@ namespace LinqToDB.Linq.Builder
 		public Expression BuildExpression(IBuildContext context, Expression expression, bool enforceServerSide, string? alias = null)
 		{
 			return expression.Transform(
-				new { builder = this, context, enforceServerSide, alias },
+				(builder: this, context, enforceServerSide, alias),
 				static (context, expr) =>
 				{
 					if (context.builder._skippedExpressions.Contains(expr))
@@ -615,14 +615,14 @@ namespace LinqToDB.Linq.Builder
 
 		bool HasNoneSqlMember(Expression expr)
 		{
-			var ctx = new WritableContext<bool>();
+			var ctx = new WritableContext<bool, ExpressionBuilder>(this);
 
-			var found = expr.Find(ctx, HasNoneSqlMemberFind);
+			var found = expr.Find(ctx, static (ctx, e) => ctx.StaticValue.HasNoneSqlMemberFind(ctx, e));
 
 			return found != null && !ctx.WriteableValue;
 		}
 
-		private bool HasNoneSqlMemberFind(WritableContext<bool> context, Expression e)
+		private bool HasNoneSqlMemberFind(WritableContext<bool, ExpressionBuilder> context, Expression e)
 		{
 			switch (e.NodeType)
 			{
@@ -658,8 +658,8 @@ namespace LinqToDB.Linq.Builder
 		private FindVisitor<bool>? _enforceServerSideVisitorTrue;
 		private FindVisitor<bool>? _enforceServerSideVisitorFalse;
 
-		private bool PreferServerSideFindTrue (bool enforceServerSide, Expression e) => PreferServerSide(e, _enforceServerSideVisitorTrue!);
-		private bool PreferServerSideFindFalse(bool enforceServerSide, Expression e) => PreferServerSide(e, _enforceServerSideVisitorFalse!);
+		private bool PreferServerSideFindTrue (bool enforceServerSide, Expression e) => PreferServerSide(e, _enforceServerSideVisitorTrue!.Value);
+		private bool PreferServerSideFindFalse(bool enforceServerSide, Expression e) => PreferServerSide(e, _enforceServerSideVisitorFalse!.Value);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private FindVisitor<bool> GetVisitor(bool enforceServerSide)
@@ -673,6 +673,7 @@ namespace LinqToDB.Linq.Builder
 				return _enforceServerSideVisitorFalse ??= FindVisitor<bool>.Create(false, PreferServerSideFindFalse);
 			}
 		}
+
 		bool PreferServerSide(Expression expr, FindVisitor<bool> enforceServerSideVisitor)
 		{
 			switch (expr.NodeType)
@@ -715,7 +716,7 @@ namespace LinqToDB.Linq.Builder
 							if (l != null)
 							{
 								var body = l.Body.Unwrap();
-								var newExpr = body.Transform(new { l, binary }, static (context, wpi) =>
+								var newExpr = body.Transform((l, binary), static (context, wpi) =>
 								{
 									if (wpi.NodeType == ExpressionType.Parameter)
 									{
@@ -870,7 +871,7 @@ namespace LinqToDB.Linq.Builder
 
 			// Convert associations.
 			//
-			return expression.Transform(new { context, expression, parameters }, static (context, e) =>
+			return expression.Transform((context, expression, parameters), static (context, e) =>
 			{
 				switch (e.NodeType)
 				{
@@ -942,7 +943,7 @@ namespace LinqToDB.Linq.Builder
 
 			// Convert parameters.
 			//
-			expression = expression.Transform(new { parameters, buildContext = context, builder = this, parms, paramex, enforceServerSide }, static (context, e) =>
+			expression = expression.Transform((parameters, buildContext: context, builder: this, parms, paramex, enforceServerSide), static (context, e) =>
 			{
 				if (e.NodeType == ExpressionType.Lambda)
 				{

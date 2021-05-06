@@ -141,7 +141,7 @@ namespace LinqToDB.Common
 				var ex = Expression.Lambda<Func<object,object>>(
 					Expression.Convert(
 						b.Transform(
-							new { mappingSchema, ps, p },
+							(mappingSchema, ps, p),
 							static (context, e) =>
 								e == context.ps[0] ?
 									Expression.Convert(context.p, e.Type) :
@@ -193,7 +193,7 @@ namespace LinqToDB.Common
 				var p  = Expression.Parameter(typeof(object), "p");
 				var ex = Expression.Lambda<Func<object,T>>(
 					b.Transform(
-						new { ps, p, mappingSchema },
+						(ps, p, mappingSchema),
 						static (context, e) =>
 							e == context.ps[0] ?
 								Expression.Convert (context.p, e.Type) :

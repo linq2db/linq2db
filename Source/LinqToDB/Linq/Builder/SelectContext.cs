@@ -197,7 +197,7 @@ namespace LinqToDB.Linq.Builder
 										case ExpressionType.MemberInit :
 											{
 												var resultExpression = memberExpression.Transform(
-													new { context = this, memberExpression, enforceServerSide },
+													(context: this, memberExpression, enforceServerSide),
 													static (context, e) =>
 													{
 														if (!ReferenceEquals(e, context.memberExpression))

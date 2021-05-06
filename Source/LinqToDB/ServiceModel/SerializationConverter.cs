@@ -59,7 +59,7 @@ namespace LinqToDB.ServiceModel
 					var p = Expression.Parameter(typeof(object), "p");
 					var ex = Expression.Lambda<Func<object, string>>(
 						b.Transform(
-							new { ps, enumType, p },
+							(ps, enumType, p),
 							static (context, e) =>
 								e == context.ps[0]
 									? Expression.Convert(

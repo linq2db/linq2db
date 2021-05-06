@@ -146,7 +146,7 @@ namespace LinqToDB.Expressions
 		{
 			return Transform(
 				expression,
-				new { toReplace, replacedBy },
+				(toReplace, replacedBy),
 				static (context, e) => e == context.toReplace ? context.replacedBy : e);
 		}
 
@@ -158,8 +158,8 @@ namespace LinqToDB.Expressions
 		{
 			return Transform(
 				lambda.Body,
-				new { lambda, exprToReplaceParameter },
-				static (context, e) => e == context.lambda.Parameters[0] ? context.exprToReplaceParameter : e);
+				(parameter: lambda.Parameters[0], exprToReplaceParameter),
+				static (context, e) => e == context.parameter ? context.exprToReplaceParameter : e);
 		}
 
 		/// <summary>
@@ -170,10 +170,10 @@ namespace LinqToDB.Expressions
 		{
 			return Transform(
 				lambda.Body,
-				new { lambda, exprToReplaceParameter1, exprToReplaceParameter2 },
+				(parameters: lambda.Parameters, exprToReplaceParameter1, exprToReplaceParameter2),
 				static (context, e) =>
-					e == context.lambda.Parameters[0] ? context.exprToReplaceParameter1 :
-					e == context.lambda.Parameters[1] ? context.exprToReplaceParameter2 : e);
+					e == context.parameters[0] ? context.exprToReplaceParameter1 :
+					e == context.parameters[1] ? context.exprToReplaceParameter2 : e);
 		}
 
 		/// <summary>
@@ -184,7 +184,7 @@ namespace LinqToDB.Expressions
 		{
 			return Transform(
 				lambda.Body,
-				new { parameters = lambda.Parameters, exprToReplaceParameter1, exprToReplaceParameter2, exprToReplaceParameter3 },
+				(parameters: lambda.Parameters, exprToReplaceParameter1, exprToReplaceParameter2, exprToReplaceParameter3),
 				static (context, e) =>
 					e.NodeType != ExpressionType.Parameter ? e                               :
 					e == context.parameters[0]             ? context.exprToReplaceParameter1 :

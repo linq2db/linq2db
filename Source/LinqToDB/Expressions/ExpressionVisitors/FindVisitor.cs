@@ -4,10 +4,9 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Expressions
 {
-	internal class FindVisitor<TContext>
+	internal struct FindVisitor<TContext>
 	{
-		internal readonly TContext                          Context = default!;
-
+		internal readonly TContext?                         Context;
 		private  readonly Func<TContext, Expression, bool>? _func;
 		private  readonly Func<Expression, bool>?           _staticFunc;
 
@@ -34,8 +33,9 @@ namespace LinqToDB.Expressions
 		/// <param name="func">Visit action.</param>
 		public FindVisitor(TContext context, Func<TContext, Expression, bool> func)
 		{
-			Context = context;
-			_func   = func;
+			Context     = context;
+			_func       = func;
+			_staticFunc = null;
 		}
 
 		/// <summary>
@@ -45,6 +45,8 @@ namespace LinqToDB.Expressions
 		/// <param name="func">Visit action.</param>
 		public FindVisitor(Func<Expression, bool> func)
 		{
+			Context     = default;
+			_func       = null;
 			_staticFunc = func;
 		}
 
@@ -75,7 +77,7 @@ namespace LinqToDB.Expressions
 
 		public Expression? Find(Expression? expr)
 		{
-			if (expr == null || (_staticFunc != null ? _staticFunc(expr) :_func!(Context, expr)))
+			if (expr == null || (_staticFunc != null ? _staticFunc(expr) :_func!(Context!, expr)))
 				return expr;
 
 			switch (expr.NodeType)

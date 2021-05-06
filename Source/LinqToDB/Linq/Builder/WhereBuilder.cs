@@ -39,7 +39,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (info != null)
 			{
-				info.Expression = methodCall.Transform(new { methodCall, info, predicate }, static (context, ex) => ConvertMethod(context.methodCall, 0, context.info, context.predicate.Parameters[0], ex));
+				info.Expression = methodCall.Transform((methodCall, info, predicate), static (context, ex) => ConvertMethod(context.methodCall, 0, context.info, context.predicate.Parameters[0], ex));
 
 				if (param != null)
 				{
@@ -48,11 +48,10 @@ namespace LinqToDB.Linq.Builder
 
 					if (info.ExpressionsToReplace != null && info.ExpressionsToReplace.Count > 0)
 					{
-						var ctx = new { p = info.Parameter, param };
 						foreach (var path in info.ExpressionsToReplace)
 						{
-							path.Path = path.Path.Transform(ctx, static (context, e) => e == context.p ? context.param : e);
-							path.Expr = path.Expr.Transform(ctx, static (context, e) => e == context.p ? context.param : e);
+							path.Path = path.Path.Transform((p: info.Parameter, param), static (context, e) => e == context.p ? context.param : e);
+							path.Expr = path.Expr.Transform((p: info.Parameter, param), static (context, e) => e == context.p ? context.param : e);
 						}
 					}
 				}

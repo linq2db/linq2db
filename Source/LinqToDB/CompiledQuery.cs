@@ -72,7 +72,7 @@ namespace LinqToDB
 			var ps        = Expression.Parameter(typeof(object[]), "ps");
 			var preambles = Expression.Parameter(typeof(object[]), "preambles");
 
-			var info = query.Body.Transform(new { query, ps, preambles }, static (context, pi) =>
+			var info = query.Body.Transform((query, ps, preambles), static (context, pi) =>
 			{
 				switch (pi.NodeType)
 				{

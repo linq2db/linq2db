@@ -6,20 +6,23 @@ using LinqToDB.Extensions;
 
 namespace LinqToDB.Expressions
 {
-	internal class TransformInfoVisitor<TContext>
+	internal struct TransformInfoVisitor<TContext>
 	{
-		private readonly TContext                                   _context = default!;
+		private readonly TContext?                                  _context;
 		private readonly Func<TContext, Expression, TransformInfo>? _func;
 		private readonly Func<Expression, TransformInfo>?           _staticFunc;
 
 		public TransformInfoVisitor(TContext context, Func<TContext, Expression, TransformInfo> func)
 		{
-			_context = context;
-			_func    = func;
+			_context    = context;
+			_func       = func;
+			_staticFunc = null;
 		}
 
 		public TransformInfoVisitor(Func<Expression, TransformInfo> func)
 		{
+			_context    = default;
+			_func       = null;
 			_staticFunc = func;
 		}
 
@@ -30,7 +33,6 @@ namespace LinqToDB.Expressions
 		{
 			return new TransformInfoVisitor<object?>(func);
 		}
-
 		[return: NotNullIfNotNull("expr")]
 		public Expression? Transform(Expression? expr)
 		{
@@ -41,7 +43,7 @@ namespace LinqToDB.Expressions
 
 			do
 			{
-				ti = _staticFunc != null ? _staticFunc(expr) : _func!(_context, expr);
+				ti = _staticFunc != null ? _staticFunc(expr) : _func!(_context!, expr);
 				if (ti.Stop || !ti.Continue && ti.Expression != expr)
 					return ti.Expression;
 				if (expr == ti.Expression)

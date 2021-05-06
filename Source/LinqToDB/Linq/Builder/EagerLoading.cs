@@ -1061,7 +1061,7 @@ namespace LinqToDB.Linq.Builder
 		private static Expression InjectQuery(Expression destination, Expression query, MappingSchema mappingSchema)
 		{
 			var allowed = new HashSet<ParameterExpression>();
-			var result = destination.Transform(new { allowed, mappingSchema, query }, static (context, e) =>
+			var result = destination.Transform((allowed, mappingSchema, query), static (context, e) =>
 			{
 				switch (e.NodeType)
 				{
@@ -1277,7 +1277,7 @@ namespace LinqToDB.Linq.Builder
 				var pairs    = ExtractTupleValues(keyParametersExpression, keyField)
 					.ToArray();
 
-				var keySelectExpressionCorrected = keySelectExpression.Transform(new { dependencyParameters, pairs }, static (context, e) =>
+				var keySelectExpressionCorrected = keySelectExpression.Transform((dependencyParameters, pairs), static (context, e) =>
 				{
 					if (e.NodeType == ExpressionType.Parameter)
 					{
@@ -1291,7 +1291,7 @@ namespace LinqToDB.Linq.Builder
 					return e;
 				});
 
-				var queryableDetailCorrected = queryableDetail.Transform(new { dependencyParameters, pairs }, static (context, e) =>
+				var queryableDetailCorrected = queryableDetail.Transform((dependencyParameters, pairs), static (context, e) =>
 				{
 					if (e.NodeType == ExpressionType.Parameter)
 					{
@@ -1450,7 +1450,7 @@ namespace LinqToDB.Linq.Builder
 			var knownParameters = builder._parameters;
 			var containerLocal  = container;
 
-			correctedExpression = expr.Transform(new { knownParameters, builder, indexes, containerLocal }, static (context, e) =>
+			correctedExpression = expr.Transform((knownParameters, builder, indexes, containerLocal), static (context, e) =>
 			{
 				if (!context.knownParameters.TryGetValue(e, out var registered))
 				{
@@ -1631,7 +1631,7 @@ namespace LinqToDB.Linq.Builder
 						.Select(p => Expression.Parameter(p.Type, "_" + p.Name))
 						.ToList();
 
-				var newBody = lambda.Body.Transform(new { lambda, newParameters}, static (context, b) =>
+				var newBody = lambda.Body.Transform((lambda, newParameters), static (context, b) =>
 					{
 						if (b.NodeType == ExpressionType.Parameter)
 						{
@@ -1683,7 +1683,7 @@ namespace LinqToDB.Linq.Builder
 			if (body == null)
 				return null;
 
-			var newBody = body.Transform(new { before, after }, static (context, b) =>
+			var newBody = body.Transform((before, after), static (context, b) =>
 			{
 				if (b.NodeType == ExpressionType.MemberAccess)
 				{
@@ -1710,7 +1710,7 @@ namespace LinqToDB.Linq.Builder
 				return b;
 			});
 
-			newBody = newBody.Transform(new { before, after }, static (context, b) =>
+			newBody = newBody.Transform((before, after), static (context, b) =>
 			{
 				if (b.NodeType == ExpressionType.Parameter)
 				{

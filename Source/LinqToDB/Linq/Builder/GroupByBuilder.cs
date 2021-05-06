@@ -331,12 +331,12 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					var parameters = context.Builder.CurrentSqlParameters
-						.Select((p,i) => new { p, i })
+						.Select((p, i) => (p, i))
 						.ToDictionary(_ => _.p.Expression, _ => _.i);
 					var paramArray = Expression.Parameter(typeof(object[]), "ps");
 
 					var groupExpression = context._sequenceExpr.Transform(
-						new { parameters, paramArray },
+						(parameters, paramArray),
 						static (context, e) =>
 						{
 							if (context.parameters.TryGetValue(e, out var idx))

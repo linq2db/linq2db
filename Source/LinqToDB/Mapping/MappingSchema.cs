@@ -692,7 +692,7 @@ namespace LinqToDB.Mapping
 
 						ss = li.IsSchemaSpecific;
 						ex = Expression.Lambda(
-							b.Transform(new { ufrom, p, ps }, static (context, e) => e == context.ps[0] ? Expression.Convert(context.p, context.ufrom) : e),
+							b.Transform((ufrom, p, ps), static (context, e) => e == context.ps[0] ? Expression.Convert(context.p, context.ufrom) : e),
 							p);
 					}
 					else if (to.SystemType != uto)
@@ -711,7 +711,7 @@ namespace LinqToDB.Mapping
 							ss = li.IsSchemaSpecific;
 							ex = Expression.Lambda(
 								Expression.Convert(
-									b.Transform(new { ufrom, p, ps }, static (context, e) => e == context.ps[0] ? Expression.Convert(context.p, context.ufrom) : e),
+									b.Transform((ufrom, p, ps), static (context, e) => e == context.ps[0] ? Expression.Convert(context.p, context.ufrom) : e),
 									to.SystemType),
 								p);
 						}

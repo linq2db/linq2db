@@ -135,7 +135,7 @@ namespace LinqToDB.Linq.Builder
 			if (info != null)
 			{
 				methodCall = (MethodCallExpression)methodCall.Transform(
-					new { methodCall, info, selector },
+					(methodCall, info, selector),
 					static (context, ex) => ConvertMethod(context.methodCall, 0, context.info, context.selector.Parameters[0], ex));
 				selector   = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 			}
@@ -185,9 +185,8 @@ namespace LinqToDB.Linq.Builder
 
 						var expr = Expression.MakeMemberAccess(param, fields[0]);
 
-						var listCtx = new { pold, expr };
 						foreach (var t in list)
-							t.Expr = t.Expr.Transform(listCtx, static(context, ex) => ReferenceEquals(ex, context.pold) ? context.expr : ex);
+							t.Expr = t.Expr.Transform((pold, expr), static(context, ex) => ReferenceEquals(ex, context.pold) ? context.expr : ex);
 
 						return new SequenceConvertInfo
 						{
@@ -199,11 +198,10 @@ namespace LinqToDB.Linq.Builder
 
 					if (info?.ExpressionsToReplace != null)
 					{
-						var ctx = new { p, info };
 						foreach (var path in info.ExpressionsToReplace)
 						{
-							path.Path = path.Path.Transform(ctx, static (context, e) => ReferenceEquals(e, context.info.Parameter) ? context.p.Path : e);
-							path.Expr = path.Expr.Transform(ctx, static (context, e) => ReferenceEquals(e, context.info.Parameter) ? context.p.Path : e);
+							path.Path = path.Path.Transform((p, info), static (context, e) => ReferenceEquals(e, context.info.Parameter) ? context.p.Path : e);
+							path.Expr = path.Expr.Transform((p, info), static (context, e) => ReferenceEquals(e, context.info.Parameter) ? context.p.Path : e);
 							path.Level += p.Level;
 
 							list.Add(path);

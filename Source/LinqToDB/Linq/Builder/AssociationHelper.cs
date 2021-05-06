@@ -324,7 +324,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var tableType     = typeof(ITable<>).MakeGenericType(entityType);
 			var newExpression = expression.Transform(
-				new { tableType, dataContext, entityType, loadWith, mappingSchema },
+				(tableType, dataContext, entityType, loadWith, mappingSchema),
 				static (context, e) =>
 				{
 					if (e.NodeType == ExpressionType.Call)

@@ -57,7 +57,7 @@ namespace LinqToDB.Linq.Builder
 				if (info != null)
 				{
 					info.Expression = methodCall.Transform(
-						new { methodCall, info, predicate },
+						(methodCall, info, predicate),
 						static (context, ex) => ConvertMethod(context.methodCall, 0, context.info, context.predicate.Parameters[0], ex));
 					info.Parameter  = param;
 
@@ -71,7 +71,7 @@ namespace LinqToDB.Linq.Builder
 				if (info != null)
 				{
 					info.Expression = methodCall.Transform(
-						new { methodCall, info },
+						(methodCall, info),
 						static (context, ex) => ConvertMethod(context.methodCall, 0, context.info, null, ex));
 					info.Parameter  = param;
 

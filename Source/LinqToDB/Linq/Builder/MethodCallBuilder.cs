@@ -65,7 +65,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							args[i] = Expression.Lambda(
 								l.Body.Transform(
-									new { methodCall, sourceTypeNumber, info, param },
+									(methodCall, sourceTypeNumber, info, param),
 									static (context, ex) => ConvertMethod(context.methodCall, context.sourceTypeNumber, context.info, context.param, ex)),
 								info.Parameter);
 

@@ -747,11 +747,11 @@ namespace LinqToDB.Expressions
 				throw new LinqToDBException($"Parameters count is different: {lambdaExpression.Parameters.Count} != {parameters.Length}.");
 
 			var lambda = MapLambdaInternal(lambdaExpression, true)!;
-			var expr   = lambda.Body.Transform(new { lambda, parameters }, static (context, e) =>
+			var expr   = lambda.Body.Transform((lambdaParams: lambda.Parameters, parameters), static (context, e) =>
 			{
 				if (e.NodeType == ExpressionType.Parameter)
 				{
-					var idx = context.lambda.Parameters.IndexOf((ParameterExpression)e);
+					var idx = context.lambdaParams.IndexOf((ParameterExpression)e);
 					if (idx >= 0)
 						return context.parameters[idx];
 				}
@@ -1115,7 +1115,7 @@ namespace LinqToDB.Expressions
 			{
 				if (wrapResult)
 				{
-					expr = expr.Transform(new { mapper = this, lambda, returnType }, static (context, e) =>
+					expr = expr.Transform((mapper: this, lambda, returnType), static (context, e) =>
 					{
 						if (e.Type == context.returnType)
 							return Expression.Convert(Expression.Call(
@@ -1129,7 +1129,7 @@ namespace LinqToDB.Expressions
 				}
 				else
 				{
-					expr = expr.Transform(returnType, static(returnType, e) =>
+					expr = expr.Transform(returnType, static (returnType, e) =>
 					{
 						if (e.Type == returnType)
 							return Expression.Convert(e, typeof(object));

@@ -327,7 +327,7 @@ namespace LinqToDB.Linq.Builder
 					var paramArray = Expression.Parameter(typeof(object[]), "ps");
 
 					var innerKey = context.InnerKeyLambda.Body.Transform(
-						new { parameters, paramArray },
+						(parameters, paramArray),
 						static (context, e) =>
 						{
 							if (context.parameters.TryGetValue(e, out var idx))

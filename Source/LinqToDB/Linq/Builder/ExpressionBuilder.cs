@@ -405,7 +405,7 @@ namespace LinqToDB.Linq.Builder
 			expr = ExposeExpression(expression);
 			var currentParameters = new HashSet<ParameterExpression>();
 			CollectLambdaParameters(expression, currentParameters);
-			expr = expr.Transform(currentParameters, OptimizeExpressionImpl);
+			expr = expr.Transform((builder: this, currentParameters), static (ctx, e) => ctx.builder.OptimizeExpressionImpl(ctx.currentParameters, e));
 
 			_optimizedExpressions[expression] = expr;
 
@@ -910,7 +910,7 @@ namespace LinqToDB.Linq.Builder
 				ParameterExpression? resArg)
 			{
 				var body = func.Body.Unwrap();
-				var expr = body.Transform(new { builder = this, func, keyArg, elemArg, resArg }, static (context, ex) =>
+				var expr = body.Transform((builder: this, func, keyArg, elemArg, resArg), static (context, ex) =>
 				{
 					if (ReferenceEquals(ex, context.func.Parameters[0]))
 						return context.builder._sourceExpression;
@@ -933,14 +933,14 @@ namespace LinqToDB.Linq.Builder
 
 					if (ReferenceEquals(ex, context.func.Parameters[3]))
 						return context.builder._resultSelector!.Body.Transform(
-							context,
+							(parameters: context.builder._resultSelector!.Parameters, resArg: context.resArg!),
 							static (context, e) =>
 							{
-								if (ReferenceEquals(e, context.builder._resultSelector!.Parameters[0]))
-									return ExpressionHelper.PropertyOrField(context.resArg!, "Key");
+								if (ReferenceEquals(e, context.parameters[0]))
+									return ExpressionHelper.PropertyOrField(context.resArg, "Key");
 
-								if (ReferenceEquals(e, context.builder._resultSelector.Parameters[1]))
-									return context.resArg!;
+								if (ReferenceEquals(e, context.parameters[1]))
+									return context.resArg;
 
 								return e;
 							});
@@ -1092,7 +1092,7 @@ namespace LinqToDB.Linq.Builder
 			Expression Convert(LambdaExpression func, ParameterExpression colArg)
 			{
 				var body = func.Body.Unwrap();
-				var expr = body.Transform(new { builder = this, func, colArg }, static (context, ex) =>
+				var expr = body.Transform((builder: this, func, colArg), static (context, ex) =>
 				{
 					if (ex == context.func.Parameters[0])
 						return context.builder._sourceExpression;

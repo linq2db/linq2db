@@ -547,7 +547,7 @@ namespace LinqToDB.Linq.Builder
 						if (l != null)
 						{
 							var body = l.Body.Unwrap();
-							var expr = body.Transform(new { l, binary }, static (context, wpi) =>
+							var expr = body.Transform((l, binary), static (context, wpi) =>
 								{
 									if (wpi.NodeType == ExpressionType.Parameter)
 									{
@@ -599,7 +599,7 @@ namespace LinqToDB.Linq.Builder
 			foreach (var p in lambda.Parameters)
 				parms.Add(p, pn++);
 
-			var pie = ef.Transform(new { pi, parms }, static (context, wpi) =>
+			var pie = ef.Transform((pi, parms), static (context, wpi) =>
 			{
 				if (wpi.NodeType == ExpressionType.Parameter)
 				{
@@ -651,7 +651,7 @@ namespace LinqToDB.Linq.Builder
 				foreach (var p in lambda.Parameters)
 					parms.Add(p.Name, pn++);
 
-				return ef.Transform(new { pi, parms }, static (context, wpi) =>
+				return ef.Transform((pi, parms), static (context, wpi) =>
 				{
 					if (wpi.NodeType == ExpressionType.Parameter)
 					{
@@ -1624,7 +1624,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			result.ValueExpression = expression.Transform(
-				new { forceConstant, expression, expressionAccessors, result, setName, builder = this },
+				(forceConstant, expression, expressionAccessors, result, setName, builder: this),
 				static (context, expr) =>
 				{
 					if (expr.NodeType == ExpressionType.Constant)
@@ -2588,7 +2588,7 @@ namespace LinqToDB.Linq.Builder
 		static Expression CorrectAccessorExpression(Expression accessorExpression, IDataContext dataContext, ParameterExpression dataContextParam)
 		{
 			// see #820
-			accessorExpression = accessorExpression.Transform(new { dataContext, dataContextParam }, static (context, e) =>
+			accessorExpression = accessorExpression.Transform((dataContext, dataContextParam), static (context, e) =>
 			{
 				if (e.NodeType != ExpressionType.Parameter && e.NodeType != ExpressionType.Convert && e.NodeType != ExpressionType.ConvertChecked
 				    && context.dataContextParam.Type.IsSameOrParentOf(e.Type))

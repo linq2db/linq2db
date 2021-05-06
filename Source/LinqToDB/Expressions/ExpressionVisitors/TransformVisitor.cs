@@ -6,20 +6,23 @@ using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Expressions
 {
-	internal class TransformVisitor<TContext>
+	internal struct TransformVisitor<TContext>
 	{
-		private readonly TContext                                _context = default!;
+		private readonly TContext?                               _context;
 		private readonly Func<TContext, Expression, Expression>? _func;
 		private readonly Func<Expression, Expression>?           _staticFunc;
 
 		public TransformVisitor(TContext context, Func<TContext, Expression, Expression> func)
 		{
-			_context = context;
-			_func    = func;
+			_context    = context;
+			_func       = func;
+			_staticFunc = null;
 		}
 
 		public TransformVisitor(Func<Expression, Expression> func)
 		{
+			_context    = default;
+			_func       = null;
 			_staticFunc = func;
 		}
 
@@ -37,7 +40,7 @@ namespace LinqToDB.Expressions
 			if (expr == null)
 				return null;
 
-			var ex = _staticFunc != null ? _staticFunc(expr) : _func!(_context, expr);
+			var ex = _staticFunc != null ? _staticFunc(expr) : _func!(_context!, expr);
 			if (ex != expr)
 				return ex;
 
