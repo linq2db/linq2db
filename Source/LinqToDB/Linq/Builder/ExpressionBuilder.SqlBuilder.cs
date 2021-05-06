@@ -387,11 +387,11 @@ namespace LinqToDB.Linq.Builder
 
 		internal Expression ConvertExpression(Expression expression)
 		{
-			return (_convertExpressionTransformer ??= TransformInfoVisitor<object?>.Create(ConvertExpressionTransformer))
+			return (_convertExpressionTransformer ??= TransformInfoVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.ConvertExpressionTransformer(e)))
 				.Transform(expression);
 		}
 
-		private TransformInfoVisitor<object?>? _convertExpressionTransformer;
+		private TransformInfoVisitor<ExpressionBuilder>? _convertExpressionTransformer;
 
 		private TransformInfo ConvertExpressionTransformer(Expression e)
 		{
@@ -845,7 +845,7 @@ namespace LinqToDB.Linq.Builder
 					return null;
 			}
 
-			if (!PreferServerSide(expression, GetVisitor(false)))
+			if (!PreferServerSide(expression, false))
 			{
 				if (CanBeConstant(expression))
 					return null;
@@ -868,7 +868,7 @@ namespace LinqToDB.Linq.Builder
 					return sql;
 			}
 
-			if (!PreferServerSide(expression, GetVisitor(false)))
+			if (!PreferServerSide(expression, false))
 			{
 				if (columnDescriptor?.ValueConverter == null && CanBeConstant(expression))
 					return BuildConstant(expression, columnDescriptor);
@@ -3172,12 +3172,12 @@ namespace LinqToDB.Linq.Builder
 				|| expr.NodeType == ExpressionType.Extension && expr is DefaultValueExpression;
 		}
 
-		private TransformVisitor<object?>? _removeNullPropagationTransformer;
+		private TransformVisitor<ExpressionBuilder>? _removeNullPropagationTransformer;
 		
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private TransformVisitor<object?> GetRemoveNullPropagationTransformer()
+		private TransformVisitor<ExpressionBuilder> GetRemoveNullPropagationTransformer()
 		{
-			return _removeNullPropagationTransformer ??= TransformVisitor<object?>.Create(RemoveNullPropagation);
+			return _removeNullPropagationTransformer ??= TransformVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.RemoveNullPropagation(e));
 		}
 
 		Expression RemoveNullPropagation(Expression expr)

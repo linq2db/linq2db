@@ -4,22 +4,27 @@ using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
-	public class QueryFindVisitor<TContext>
+	public readonly struct QueryFindVisitor<TContext>
 	{
-		private readonly HashSet<IQueryElement>               _visitedFind = new ();
-		private readonly TContext                             _context = default!;
+		private readonly HashSet<IQueryElement>               _visitedFind;
+		private readonly TContext?                             _context;
 		private readonly Func<TContext, IQueryElement, bool>? _find;
 		private readonly Func<IQueryElement, bool>?           _findStatic;
 
 		public QueryFindVisitor(TContext context, Func<TContext, IQueryElement, bool> find)
 		{
-			_context = context;
-			_find    = find;
+			_context     = context;
+			_find        = find;
+			_findStatic  = null;
+			_visitedFind = new();
 		}
 
 		public QueryFindVisitor(Func<IQueryElement, bool> find)
 		{
-			_findStatic = find;
+			_context     = default;
+			_find        = null;
+			_findStatic  = find;
+			_visitedFind = new();
 		}
 
 		IQueryElement? Find<T>(IEnumerable<T>? arr)
@@ -70,7 +75,7 @@ namespace LinqToDB.SqlQuery
 			if (element == null || !_visitedFind.Add(element))
 				return null;
 
-			if (_findStatic != null ? _findStatic(element) : _find!(_context, element))
+			if (_findStatic != null ? _findStatic(element) : _find!(_context!, element))
 				return element;
 
 			switch (element.ElementType)

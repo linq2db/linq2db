@@ -7,23 +7,26 @@ using LinqToDB.Linq.Builder;
 
 namespace LinqToDB.SqlQuery
 {
-	public class CloneVisitor<TContext>
+	public readonly struct CloneVisitor<TContext>
 	{
 		private readonly Dictionary<IQueryElement, IQueryElement> _objectTree;
-		private readonly TContext                                 _context = default!;
+		private readonly TContext?                                _context;
 		private readonly Func<TContext, IQueryElement, bool>?     _doClone;
 		private readonly Func<IQueryElement, bool>?               _doCloneStatic;
 
 		internal CloneVisitor(Dictionary<IQueryElement, IQueryElement>? objectTree, TContext context, Func<TContext, IQueryElement, bool>? doClone)
 		{
-			_objectTree = objectTree ?? new ();
-			_context    = context;
-			_doClone    = doClone;
+			_objectTree    = objectTree ?? new ();
+			_context       = context;
+			_doClone       = doClone;
+			_doCloneStatic = null;
 		}
 
 		internal CloneVisitor(Dictionary<IQueryElement, IQueryElement>? objectTree, Func<IQueryElement, bool>? doClone)
 		{
 			_objectTree    = objectTree ?? new ();
+			_context       = default;
+			_doClone       = null;
 			_doCloneStatic = doClone;
 		}
 
@@ -122,7 +125,7 @@ namespace LinqToDB.SqlQuery
 			if (element == null)
 				return null;
 
-			if (_doCloneStatic != null ? !_doCloneStatic(element) : _doClone?.Invoke(_context, element) == false)
+			if (_doCloneStatic != null ? !_doCloneStatic(element) : _doClone?.Invoke(_context!, element) == false)
 				return element;
 
 			if (_objectTree.TryGetValue(element, out var clone))
@@ -174,7 +177,7 @@ namespace LinqToDB.SqlQuery
 					if (selectQuery.HasUniqueKeys)
 						CloneInto(newSelectQuery.UniqueKeys, selectQuery.UniqueKeys);
 
-					newSelectQuery.Visit(new { newSelectQuery, selectQuery }, static (context, expr) =>
+					newSelectQuery.Visit((newSelectQuery, selectQuery), static (context, expr) =>
 					{
 						if (expr is SelectQuery sb && sb.ParentSelect == context.selectQuery)
 							sb.ParentSelect = context.newSelectQuery;

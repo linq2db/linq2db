@@ -124,7 +124,7 @@ namespace LinqToDB.SqlQuery
 			foreach (var table in From.Tables)
 				table.ForEach(action, visitedQueries);
 
-			this.Visit(new { query = this, action, visitedQueries}, static (context, e) =>
+			this.Visit((query: this, action, visitedQueries), static (context, e) =>
 			{
 				if (e is SelectQuery query && e != context.query)
 					query.ForEachTable(context.action, context.visitedQueries);

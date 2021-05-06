@@ -35,12 +35,12 @@ namespace LinqToDB.Linq.Builder
 
 		readonly HashSet<Expression> _visitedExprs = new ();
 
-		private VisitFuncVisitor<object?>? _buildExpressionVisitor;
+		private VisitFuncVisitor<ExpressionTestGenerator>? _buildExpressionVisitor;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void Build(Expression expr)
 		{
-			(_buildExpressionVisitor ??= VisitFuncVisitor<object?>.Create(BuildExpression)).Visit(expr);
+			(_buildExpressionVisitor ??= VisitFuncVisitor<ExpressionTestGenerator>.Create(this, static (ctx, e) => ctx.BuildExpression(e))).Visit(expr);
 		}
 
 		bool BuildExpression(Expression expr)
@@ -925,9 +925,9 @@ namespace LinqToDB.Linq.Builder
 				AddType(i);
 		}
 
-		private VisitActionVisitor<object?>? _typesVisitor;
-		private VisitActionVisitor<object?>? _membersVisitor;
-		private VisitActionVisitor<object?>? _dataContextVisitor;
+		private VisitActionVisitor<ExpressionTestGenerator>? _typesVisitor;
+		private VisitActionVisitor<ExpressionTestGenerator>? _membersVisitor;
+		private VisitActionVisitor<ExpressionTestGenerator>? _dataContextVisitor;
 
 		void VisitTypes(Expression expr)
 		{
@@ -992,9 +992,9 @@ namespace LinqToDB.Linq.Builder
 
 		public string GenerateSourceString(Expression expr)
 		{
-			(_dataContextVisitor ??= VisitActionVisitor<object?>.Create(VisitForDataContext)).Visit(expr);
-			(_membersVisitor     ??= VisitActionVisitor<object?>.Create(VisitMembers       )).Visit(expr);
-			(_typesVisitor       ??= VisitActionVisitor<object?>.Create(VisitTypes         )).Visit(expr);
+			(_dataContextVisitor ??= VisitActionVisitor<ExpressionTestGenerator>.Create(this, static (ctx, e) => ctx.VisitForDataContext(e))).Visit(expr);
+			(_membersVisitor     ??= VisitActionVisitor<ExpressionTestGenerator>.Create(this, static (ctx, e) => ctx.VisitMembers(e))).Visit(expr);
+			(_typesVisitor       ??= VisitActionVisitor<ExpressionTestGenerator>.Create(this, static (ctx, e) => ctx.VisitTypes(e))).Visit(expr);
 
 			foreach (var typeNamespaceList in _usedTypes.OrderBy(t => t.Namespace).GroupBy(x => x.Namespace))
 			{

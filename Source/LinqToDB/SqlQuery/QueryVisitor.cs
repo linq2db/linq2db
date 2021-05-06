@@ -4,26 +4,31 @@ using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
-	public class QueryVisitor<TContext>
+	public readonly struct QueryVisitor<TContext>
 	{
-		public readonly Dictionary<IQueryElement,IQueryElement?> VisitedElements = new ();
+		public readonly Dictionary<IQueryElement,IQueryElement?> VisitedElements;
 
-		readonly TContext                         _context = default!;
+		readonly TContext?                        _context;
 		readonly bool                             _all;
 		readonly Action<TContext, IQueryElement>? _visit;
 		readonly Action<IQueryElement>?           _visitStatic;
 
 		public QueryVisitor(TContext context, bool all, Action<TContext, IQueryElement> visit)
 		{
-			_context = context;
-			_all     = all;
-			_visit   = visit;
+			_context        = context;
+			_all            = all;
+			_visit          = visit;
+			_visitStatic    = null;
+			VisitedElements = new();
 		}
 
 		public QueryVisitor(bool all, Action<IQueryElement> visit)
 		{
-			_all         = all;
-			_visitStatic = visit;
+			_context        = default;
+			_all            = all;
+			_visit          = null;
+			_visitStatic    = visit;
+			VisitedElements = new();
 		}
 
 		public void Visit(IQueryElement? element)
@@ -399,7 +404,7 @@ namespace LinqToDB.SqlQuery
 			if (_visitStatic != null)
 				_visitStatic(element);
 			else
-				_visit!(_context, element);
+				_visit!(_context!, element);
 
 			if (!_all && !VisitedElements.ContainsKey(element))
 				VisitedElements.Add(element, element);
@@ -427,7 +432,7 @@ namespace LinqToDB.SqlQuery
 						if (_visitStatic != null)
 							_visitStatic(t);
 						else
-							_visit!(_context, t);
+							_visit!(_context!, t);
 
 						if (!_all && !VisitedElements.ContainsKey(t))
 							VisitedElements.Add(t, t);
@@ -437,7 +442,7 @@ namespace LinqToDB.SqlQuery
 				if (_visitStatic != null)
 					_visitStatic(q.From);
 				else
-					_visit!(_context, q.From);
+					_visit!(_context!, q.From);
 
 				if (!_all && !VisitedElements.ContainsKey(q.From))
 					VisitedElements.Add(q.From, q.From);

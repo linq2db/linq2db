@@ -139,13 +139,13 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression ExpandQueryableMethods(Expression expression)
 		{
-			var result = (_expandQueryableMethodsTransformer ??= TransformInfoVisitor<object?>.Create(ExpandQueryableMethodsTransformer))
+			var result = (_expandQueryableMethodsTransformer ??= TransformInfoVisitor<ExpressionTreeOptimizationContext>.Create(this, static (ctx, e) => ctx.ExpandQueryableMethodsTransformer(e)))
 				.Transform(expression);
 
 			return result;
 		}
 
-		private TransformInfoVisitor<object?>? _expandQueryableMethodsTransformer;
+		private TransformInfoVisitor<ExpressionTreeOptimizationContext>? _expandQueryableMethodsTransformer;
 
 		private TransformInfo ExpandQueryableMethodsTransformer(Expression expr)
 		{
@@ -267,7 +267,7 @@ namespace LinqToDB.Linq.Builder
 
 		Dictionary<Expression, bool> _isServerSideOnlyCache = new ();
 
-		private FindVisitor<object?>? _isServerSideOnlyVisitor;
+		private FindVisitor<ExpressionTreeOptimizationContext>? _isServerSideOnlyVisitor;
 		public bool IsServerSideOnly(Expression expr)
 		{
 			if (_isServerSideOnlyCache.TryGetValue(expr, out var result))
@@ -321,7 +321,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (l != null)
 						{
-							result = (_isServerSideOnlyVisitor ??= FindVisitor<object?>.Create(IsServerSideOnly)).Find(l.Body.Unwrap()) != null;
+							result = (_isServerSideOnlyVisitor ??= FindVisitor<ExpressionTreeOptimizationContext>.Create(this, static (ctx, e) => ctx.IsServerSideOnly(e))).Find(l.Body.Unwrap()) != null;
 						}
 						else
 						{
@@ -391,10 +391,13 @@ namespace LinqToDB.Linq.Builder
 
 		internal class CanBeCompiledContext
 		{
-			public CanBeCompiledContext()
+			public CanBeCompiledContext(ExpressionTreeOptimizationContext optimizationContext)
 			{
-				AllowedParams = DefaultAllowedParams;
+				OptimizationContext = optimizationContext;
+				AllowedParams       = DefaultAllowedParams;
 			}
+
+			public readonly ExpressionTreeOptimizationContext OptimizationContext;
 
 			public HashSet<Expression> AllowedParams;
 
@@ -408,7 +411,7 @@ namespace LinqToDB.Linq.Builder
 		private FindVisitor<CanBeCompiledContext> GetCanBeCompiledVisitor()
 		{
 			if (_canBeCompiledFindVisitor == null)
-				_canBeCompiledFindVisitor = FindVisitor<CanBeCompiledContext>.Create(new CanBeCompiledContext(), CanBeCompiledFind);
+				_canBeCompiledFindVisitor = FindVisitor<CanBeCompiledContext>.Create(new CanBeCompiledContext(this), static (ctx, e) => ctx.OptimizationContext.CanBeCompiledFind(ctx, e));
 			else
 				_canBeCompiledFindVisitor.Value.Context!.Reset();
 
@@ -471,19 +474,19 @@ namespace LinqToDB.Linq.Builder
 		Expression? _lastExpr1;
 		bool        _lastResult1;
 
-		private FindVisitor<object?>? _canBeConstantVisitor;
+		private FindVisitor<ExpressionTreeOptimizationContext>? _canBeConstantVisitor;
 		public bool CanBeConstant(Expression expr)
 		{
 			if (_lastExpr1 == expr)
 				return _lastResult1;
 
-			var result = null == (_canBeConstantFindVisitor ??= FindVisitor<object?>.Create(CanBeConstantFind)).Find(expr);
+			var result = null == (_canBeConstantFindVisitor ??= FindVisitor<ExpressionTreeOptimizationContext>.Create(this, static (ctx, e) => ctx.CanBeConstantFind(e))).Find(expr);
 
 			_lastExpr1 = expr;
 			return _lastResult1 = result;
 		}
 
-		private FindVisitor<object?>? _canBeConstantFindVisitor;
+		private FindVisitor<ExpressionTreeOptimizationContext>? _canBeConstantFindVisitor;
 		private bool CanBeConstantFind(Expression ex)
 		{
 			if (ex is BinaryExpression || ex is UnaryExpression /*|| ex.NodeType == ExpressionType.Convert*/)
@@ -511,7 +514,7 @@ namespace LinqToDB.Linq.Builder
 					var l = Expressions.ConvertMember(MappingSchema, ma.Expression?.Type, ma.Member);
 
 					if (l != null)
-						return (_canBeConstantVisitor ??= FindVisitor<object?>.Create(CanBeConstant)).Find(l.Body.Unwrap()) == null;
+						return (_canBeConstantVisitor ??= FindVisitor<ExpressionTreeOptimizationContext>.Create(this, static (ctx, e) => ctx.CanBeConstant(e))).Find(l.Body.Unwrap()) == null;
 
 					if (ma.Member.DeclaringType!.IsConstantable(false) || ma.Member.IsNullableValueMember())
 						return false;
@@ -549,7 +552,7 @@ namespace LinqToDB.Linq.Builder
 
 		Dictionary<Expression, Expression> _exposedCache = new ();
 
-		private TransformInfoVisitor<object?>? _exposeExpressionTransformer;
+		private TransformInfoVisitor<ExpressionTreeOptimizationContext>? _exposeExpressionTransformer;
 
 		private TransformInfo ExposeExpressionTransformer(Expression expr)
 		{
@@ -675,7 +678,7 @@ namespace LinqToDB.Linq.Builder
 			if (_exposedCache.TryGetValue(expression, out var result))
 				return result;
 
-			result = (_exposeExpressionTransformer ??= TransformInfoVisitor<object?>.Create(ExposeExpressionTransformer)).Transform(expression);
+			result = (_exposeExpressionTransformer ??= TransformInfoVisitor<ExpressionTreeOptimizationContext>.Create(this, static (ctx, e) => ctx.ExposeExpressionTransformer(e))).Transform(expression);
 
 			_exposedCache[expression] = result;
 

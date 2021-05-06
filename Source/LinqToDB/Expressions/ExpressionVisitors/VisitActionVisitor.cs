@@ -4,20 +4,23 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Expressions
 {
-	internal class VisitActionVisitor<TContext>
+	internal readonly struct VisitActionVisitor<TContext>
 	{
-		private readonly TContext                      _context = default!;
+		private readonly TContext?                     _context;
 		private readonly Action<TContext, Expression>? _func;
 		private readonly Action<Expression>?           _staticFunc;
 
 		public VisitActionVisitor(TContext context, Action<TContext, Expression> func)
 		{
-			_context = context;
-			_func    = func;
+			_context    = context;
+			_func       = func;
+			_staticFunc = null;
 		}
 
 		public VisitActionVisitor(Action<Expression> func)
 		{
+			_context    = default;
+			_func       = null;
 			_staticFunc = func;
 		}
 
@@ -27,6 +30,14 @@ namespace LinqToDB.Expressions
 		public static VisitActionVisitor<object?> Create(Action<Expression> func)
 		{
 			return new VisitActionVisitor<object?>(func);
+		}
+
+		/// <summary>
+		/// Creates reusable visitor with static context.
+		/// </summary>
+		public static VisitActionVisitor<TContext> Create(TContext context, Action<TContext, Expression> func)
+		{
+			return new VisitActionVisitor<TContext>(context, func);
 		}
 
 		void Visit<T>(IEnumerable<T> source, Action<T> func)
@@ -255,7 +266,7 @@ namespace LinqToDB.Expressions
 			if (_staticFunc != null)
 				_staticFunc(expr);
 			else
-				_func!(_context, expr);
+				_func!(_context!, expr);
 		}
 
 		private void MemberVisit(MemberBinding b)

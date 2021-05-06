@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Expressions
 {
-	internal struct TransformVisitor<TContext>
+	internal readonly struct TransformVisitor<TContext>
 	{
 		private readonly TContext?                               _context;
 		private readonly Func<TContext, Expression, Expression>? _func;
@@ -32,6 +32,14 @@ namespace LinqToDB.Expressions
 		public static TransformVisitor<object?> Create(Func<Expression, Expression> func)
 		{
 			return new TransformVisitor<object?>(func);
+		}
+
+		/// <summary>
+		/// Creates reusable visitor with static context.
+		/// </summary>
+		public static TransformVisitor<TContext> Create(TContext context, Func<TContext, Expression, Expression> func)
+		{
+			return new TransformVisitor<TContext>(context, func);
 		}
 
 		[return: NotNullIfNotNull("expr")]

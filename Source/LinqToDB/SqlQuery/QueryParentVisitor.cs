@@ -3,26 +3,31 @@ using System.Collections.Generic;
 
 namespace LinqToDB.SqlQuery
 {
-	public class QueryParentVisitor<TContext>
+	public readonly struct QueryParentVisitor<TContext>
 	{
-		public   readonly Dictionary<IQueryElement,IQueryElement?>  VisitedElements = new ();
+		public   readonly Dictionary<IQueryElement,IQueryElement?>  VisitedElements;
 
-		readonly TContext                            _context = default!;
+		readonly TContext?                           _context;
 		readonly bool                                _all;
 		readonly Func<TContext, IQueryElement,bool>? _visit;
 		readonly Func<IQueryElement,bool>?           _visitStatic;
 
 		public QueryParentVisitor(TContext context, bool all, Func<TContext, IQueryElement, bool> visit)
 		{
-			_context = context;
-			_all     = all;
-			_visit   = visit;
+			_context        = context;
+			_all            = all;
+			_visit          = visit;
+			_visitStatic    = null;
+			VisitedElements = new();
 		}
 
 		public QueryParentVisitor(bool all, Func<IQueryElement, bool> visit)
 		{
-			_all         = all;
-			_visitStatic = visit;
+			_context        = default;
+			_all            = all;
+			_visit          = null;
+			_visitStatic    = visit;
+			VisitedElements = new();
 		}
 
 		public void Visit(IQueryElement? element)
@@ -33,7 +38,7 @@ namespace LinqToDB.SqlQuery
 			if (!_all)
 				VisitedElements.Add(element, element);
 
-			if (_visitStatic != null ? !_visitStatic(element) : !_visit!(_context, element))
+			if (_visitStatic != null ? !_visitStatic(element) : !_visit!(_context!, element))
 				return;
 
 			switch (element.ElementType)

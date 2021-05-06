@@ -21,6 +21,7 @@ namespace LinqToDB.Expressions
 			_context = context;
 			_path    = path;
 			_func    = func;
+			_visited = null;
 		}
 
 		private void Path<T>(IEnumerable<T> source, MethodInfo property, Action<T> func)

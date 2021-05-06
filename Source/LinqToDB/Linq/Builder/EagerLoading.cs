@@ -928,7 +928,7 @@ namespace LinqToDB.Linq.Builder
 			ignore.Add(forExpr);
 
 			// child first
-			forExpr.Visit(new { ignore, mappingSchema, byParameter, dependencies }, static (context, e) =>
+			forExpr.Visit((ignore, mappingSchema, byParameter, dependencies), static (context, e) =>
 			{
 				if (context.ignore.Contains(e))
 					return true;
@@ -969,7 +969,7 @@ namespace LinqToDB.Linq.Builder
 			});
 
 			// child first
-			forExpr.Visit(new { ignore, mappingSchema, dependencies, dependencyParameters }, static (context, e) =>
+			forExpr.Visit((ignore, mappingSchema, dependencies, dependencyParameters), static (context, e) =>
 			{
 				if (context.ignore.Contains(e))
 					return true;

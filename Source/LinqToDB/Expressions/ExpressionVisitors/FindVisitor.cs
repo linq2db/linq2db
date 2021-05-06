@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Expressions
 {
-	internal struct FindVisitor<TContext>
+	internal readonly struct FindVisitor<TContext>
 	{
 		internal readonly TContext?                         Context;
 		private  readonly Func<TContext, Expression, bool>? _func;

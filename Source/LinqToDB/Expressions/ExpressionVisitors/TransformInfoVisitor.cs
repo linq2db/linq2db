@@ -6,7 +6,7 @@ using LinqToDB.Extensions;
 
 namespace LinqToDB.Expressions
 {
-	internal struct TransformInfoVisitor<TContext>
+	internal readonly struct TransformInfoVisitor<TContext>
 	{
 		private readonly TContext?                                  _context;
 		private readonly Func<TContext, Expression, TransformInfo>? _func;
@@ -33,6 +33,15 @@ namespace LinqToDB.Expressions
 		{
 			return new TransformInfoVisitor<object?>(func);
 		}
+
+		/// <summary>
+		/// Creates reusable visitor with static context.
+		/// </summary>
+		public static TransformInfoVisitor<TContext> Create(TContext context, Func<TContext, Expression, TransformInfo> func)
+		{
+			return new TransformInfoVisitor<TContext>(context, func);
+		}
+
 		[return: NotNullIfNotNull("expr")]
 		public Expression? Transform(Expression? expr)
 		{

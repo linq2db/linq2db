@@ -210,7 +210,7 @@ namespace LinqToDB.SqlQuery
 			var hash       = new HashSet<ISqlTableSource>(sources);
 			var hashIgnore = new HashSet<IQueryElement>(ignore ?? Enumerable.Empty<IQueryElement>());
 
-			root.VisitParentFirst(new { hash, hashIgnore, found }, static (context, e) =>
+			root.VisitParentFirst((hash, hashIgnore, found), static (context, e) =>
 			{
 				if (e is ISqlTableSource source && context.hash.Contains(source) || context.hashIgnore.Contains(e))
 					return false;
@@ -240,7 +240,7 @@ namespace LinqToDB.SqlQuery
 		{
 			var hashIgnore = new HashSet<IQueryElement>(ignore ?? Enumerable.Empty<IQueryElement>());
 
-			root.VisitParentFirst(new { hashIgnore, found }, static (context, e) =>
+			root.VisitParentFirst((hashIgnore, found), static (context, e) =>
 			{
 				if (e is SqlTableSource source)
 				{
@@ -1157,7 +1157,7 @@ namespace LinqToDB.SqlQuery
 		/// <returns>Same or new statement with removed joins.</returns>
 		public static SqlStatement JoinRemoval(SqlStatement statement, Func<SqlStatement, SqlJoinedTable, bool> joinFunc)
 		{
-			var newStatement = statement.ConvertAll(new { joinFunc, statement }, static (visitor, e) =>
+			var newStatement = statement.ConvertAll((joinFunc, statement), static (visitor, e) =>
 			{
 				if (e.ElementType == QueryElementType.TableSource)
 				{
@@ -1431,7 +1431,7 @@ namespace LinqToDB.SqlQuery
 
 		public static SqlCondition CorrectSearchConditionNesting(SelectQuery sql, SqlCondition condition, HashSet<ISqlTableSource> forTableSources)
 		{
-			var newCondition = condition.Convert(new { sql, forTableSources }, static (v, e) =>
+			var newCondition = condition.Convert((sql, forTableSources), static (v, e) =>
 			{
 				if (   e is SqlColumn column && column.Parent != null && v.Context.forTableSources.Contains(column.Parent) 
 				    || e is SqlField field   && field.Table   != null && v.Context.forTableSources.Contains(field.Table))

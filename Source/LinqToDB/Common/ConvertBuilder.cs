@@ -378,7 +378,7 @@ namespace LinqToDB.Common
 						.ToList();
 
 					var dic = new Dictionary<EnumValues,EnumValues>();
-					var cl  = mappingSchema.ConfigurationList.Concat(new[] { "", null }).Select((c,i) => new { c, i }).ToArray();
+					var cl  = mappingSchema.ConfigurationList.Concat(new[] { "", null }).Select((c,i) => (c, i)).ToArray();
 
 					foreach (var toField in toFields)
 					{

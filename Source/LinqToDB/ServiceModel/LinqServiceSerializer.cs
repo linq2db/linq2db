@@ -639,7 +639,7 @@ namespace LinqToDB.ServiceModel
 					foreach (var hint in queryHints!)
 						Builder.AppendLine(hint);
 
-				statement.Visit(new { serializer = this, parameterValues }, static (context, e) => context.serializer.Visit(e, context.parameterValues));
+				statement.Visit((serializer: this, parameterValues), static (context, e) => context.serializer.Visit(e, context.parameterValues));
 
 				if (DelayedObjects.Count > 0)
 					throw new LinqToDBException($"QuerySerializer error. Unknown object '{DelayedObjects.First().Key.GetType()}'.");

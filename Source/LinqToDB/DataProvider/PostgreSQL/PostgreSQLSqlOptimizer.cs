@@ -228,7 +228,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				for (var i = 0; i < statement.Update.Items.Count; i++)
 				{
 					var item = statement.Update.Items[i];
-					var newItem = item.Convert(new { tableToCompare, tableToUpdate }, static (v, e) =>
+					var newItem = item.Convert((tableToCompare, tableToUpdate), static (v, e) =>
 					{
 						if (e is SqlField field && field.Table == v.Context.tableToCompare)
 							return v.Context.tableToUpdate[field.Name] ?? throw new LinqException($"Field {field.Name} not found in table {v.Context.tableToUpdate}");

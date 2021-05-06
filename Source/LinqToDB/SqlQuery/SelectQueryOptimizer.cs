@@ -72,7 +72,7 @@ namespace LinqToDB.SqlQuery
 		{
 			var data = new QueryData { Query = selectQuery };
 
-			(root ?? selectQuery).VisitParentFirst(new { selectQuery, visitedHash, data }, static (context, e) =>
+			(root ?? selectQuery).VisitParentFirst((selectQuery, visitedHash, data), static (context, e) =>
 			{
 				switch (e.ElementType)
 				{
@@ -204,7 +204,7 @@ namespace LinqToDB.SqlQuery
 			}
 
 			if (dic.Count > 0)
-				data.Query.VisitParentFirst(new { dic, data }, static (context, e) =>
+				data.Query.VisitParentFirst((dic, data), static (context, e) =>
 				{
 					ISqlExpression? ex;
 
@@ -419,7 +419,7 @@ namespace LinqToDB.SqlQuery
 
 		void FinalizeAndValidateInternal(bool isApplySupported, bool optimizeColumns)
 		{
-			_selectQuery.Visit(new { optimizer = this, isApplySupported, optimizeColumns }, static (context, e) =>
+			_selectQuery.Visit((optimizer: this, isApplySupported, optimizeColumns), static (context, e) =>
 			{
 				if (e is SelectQuery sql && sql != context.optimizer._selectQuery)
 				{

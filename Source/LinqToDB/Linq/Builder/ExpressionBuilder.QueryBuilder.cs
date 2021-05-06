@@ -55,7 +55,7 @@ namespace LinqToDB.Linq.Builder
 			resultExpr = CorrectConditional(context, resultExpr, enforceServerSide, alias);
 
 			// Update nullability
-			resultExpr = (_updateNullabilityFromExtensionTransformer ??= TransformVisitor<object?>.Create(UpdateNullabilityFromExtension)).Transform(resultExpr);
+			resultExpr = (_updateNullabilityFromExtensionTransformer ??= TransformVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.UpdateNullabilityFromExtension(e))).Transform(resultExpr);
 
 			if (resultExpr.NodeType == ExpressionType.Convert || resultExpr.NodeType == ExpressionType.ConvertChecked)
 			{
@@ -85,7 +85,7 @@ namespace LinqToDB.Linq.Builder
 			return resultExpr;
 		}
 
-		private TransformVisitor<object?>? _updateNullabilityFromExtensionTransformer;
+		private TransformVisitor<ExpressionBuilder>? _updateNullabilityFromExtensionTransformer;
 		private Expression UpdateNullabilityFromExtension(Expression resultExpr)
 		{
 			if (resultExpr.NodeType == ExpressionType.Call)
@@ -156,7 +156,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								var ma = (MemberExpression)expr;
 
-								if (context.builder.IsServerSideOnly(ma) || context.builder.PreferServerSide(ma, context.builder.GetVisitor(context.enforceServerSide)) && !context.builder.HasNoneSqlMember(ma))
+								if (context.builder.IsServerSideOnly(ma) || context.builder.PreferServerSide(ma, context.enforceServerSide) && !context.builder.HasNoneSqlMember(ma))
 								{
 									return new TransformInfo(context.builder.BuildSql(context.context, expr, context.alias));
 								}
@@ -332,7 +332,7 @@ namespace LinqToDB.Linq.Builder
 								}
 
 
-								if (context.builder.IsServerSideOnly(expr) || context.builder.PreferServerSide(expr, context.builder.GetVisitor(context.enforceServerSide)) || ce.Method.IsSqlPropertyMethodEx())
+								if (context.builder.IsServerSideOnly(expr) || context.builder.PreferServerSide(expr, context.enforceServerSide) || ce.Method.IsSqlPropertyMethodEx())
 										return new TransformInfo(context.builder.BuildSql(context.context, expr, context.alias));
 
 								break;
@@ -655,26 +655,19 @@ namespace LinqToDB.Linq.Builder
 
 		#region PreferServerSide
 
-		private FindVisitor<bool>? _enforceServerSideVisitorTrue;
-		private FindVisitor<bool>? _enforceServerSideVisitorFalse;
-
-		private bool PreferServerSideFindTrue (bool enforceServerSide, Expression e) => PreferServerSide(e, _enforceServerSideVisitorTrue!.Value);
-		private bool PreferServerSideFindFalse(bool enforceServerSide, Expression e) => PreferServerSide(e, _enforceServerSideVisitorFalse!.Value);
+		private FindVisitor<ExpressionBuilder>? _enforceServerSideVisitorTrue;
+		private FindVisitor<ExpressionBuilder>? _enforceServerSideVisitorFalse;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private FindVisitor<bool> GetVisitor(bool enforceServerSide)
+		private FindVisitor<ExpressionBuilder> GetVisitor(bool enforceServerSide)
 		{
 			if (enforceServerSide)
-			{
-				return _enforceServerSideVisitorTrue ??= FindVisitor<bool>.Create(true, PreferServerSideFindTrue);
-			}
+				return _enforceServerSideVisitorTrue ??= FindVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.PreferServerSide(e, true));
 			else
-			{
-				return _enforceServerSideVisitorFalse ??= FindVisitor<bool>.Create(false, PreferServerSideFindFalse);
-			}
+				return _enforceServerSideVisitorFalse ??= FindVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.PreferServerSide(e, false));
 		}
 
-		bool PreferServerSide(Expression expr, FindVisitor<bool> enforceServerSideVisitor)
+		bool PreferServerSide(Expression expr, bool enforceServerSide)
 		{
 			switch (expr.NodeType)
 			{
@@ -690,11 +683,11 @@ namespace LinqToDB.Linq.Builder
 							if (l.Parameters.Count == 1 && pi.Expression != null)
 								info = info.Replace(l.Parameters[0], pi.Expression);
 
-							return enforceServerSideVisitor.Find(info) != null;
+							return GetVisitor(enforceServerSide).Find(info) != null;
 						}
 
 						var attr = GetExpressionAttribute(pi.Member);
-						return attr != null && (attr.PreferServerSide || enforceServerSideVisitor.Context) && !CanBeCompiled(expr);
+						return attr != null && (attr.PreferServerSide || enforceServerSide) && !CanBeCompiled(expr);
 					}
 
 				case ExpressionType.Call:
@@ -703,10 +696,10 @@ namespace LinqToDB.Linq.Builder
 						var l  = Expressions.ConvertMember(MappingSchema, pi.Object?.Type, pi.Method);
 
 						if (l != null)
-							return enforceServerSideVisitor.Find(l.Body.Unwrap()) != null;
+							return GetVisitor(enforceServerSide).Find(l.Body.Unwrap()) != null;
 
 						var attr = GetExpressionAttribute(pi.Method);
-						return attr != null && (attr.PreferServerSide || enforceServerSideVisitor.Context) && !CanBeCompiled(expr);
+						return attr != null && (attr.PreferServerSide || enforceServerSide) && !CanBeCompiled(expr);
 					}
 				default:
 					{
@@ -729,7 +722,7 @@ namespace LinqToDB.Linq.Builder
 									return wpi;
 								});
 
-								return PreferServerSide(newExpr, enforceServerSideVisitor);
+								return PreferServerSide(newExpr, enforceServerSide);
 							}
 						}
 						break;

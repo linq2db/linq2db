@@ -622,7 +622,7 @@ namespace LinqToDB.Linq.Builder
 
 			var exprs     = new List<Expression>();
 
-			lbody.Visit(new { exprs, MappingSchema }, static (context, ex) =>
+			lbody.Visit((exprs, MappingSchema), static (context, ex) =>
 			{
 				if (ex.NodeType == ExpressionType.Call)
 				{
@@ -980,7 +980,7 @@ namespace LinqToDB.Linq.Builder
 			var resultSelector   = types.ContainsKey("TResult")  ?
 				(LambdaExpression)OptimizeExpression(method.Arguments[types.ContainsKey("TElement") ? 3 : 2].Unwrap()) : null;
 
-			var needSubQuery = null != (_isExpressionVisitor ??= FindVisitor<object?>.Create(IsExpression)).Find(ConvertExpression(keySelector.Body.Unwrap()));
+			var needSubQuery = null != (_isExpressionVisitor ??= FindVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.IsExpression(e))).Find(ConvertExpression(keySelector.Body.Unwrap()));
 
 			if (!needSubQuery && resultSelector == null && elementSelector != null)
 				return method;
@@ -1015,7 +1015,7 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		private FindVisitor<object?>? _isExpressionVisitor;
+		private FindVisitor<ExpressionBuilder>? _isExpressionVisitor;
 		bool IsExpression(Expression ex)
 		{
 			switch (ex.NodeType)

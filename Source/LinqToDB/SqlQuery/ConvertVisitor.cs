@@ -888,7 +888,7 @@ namespace LinqToDB.SqlQuery
 
 							// try to correct if there q.* in columns expressions
 							// TODO: not performant, it is bad that Columns has reference on this select query
-							sc = sc.ConvertAll(new { q, nq }, static (v, e) => ReferenceEquals(e, v.Context.q.All) ? v.Context.nq.All : e);
+							sc = sc.ConvertAll((q, nq), static (v, e) => ReferenceEquals(e, v.Context.q.All) ? v.Context.nq.All : e);
 
 							// TODO: refactor
 							if (ReferenceEquals(sc, q.Select))
@@ -1214,7 +1214,7 @@ namespace LinqToDB.SqlQuery
 								cte.Name);
 
 							var correctedBody = body.Convert(
-									new { cte, newElement, objTree },
+									(cte, newElement, objTree),
 									static (v, e) =>
 									{
 										if (e.ElementType == QueryElementType.CteClause)

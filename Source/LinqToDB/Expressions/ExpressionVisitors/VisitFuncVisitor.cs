@@ -4,20 +4,23 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Expressions
 {
-	internal class VisitFuncVisitor<TContext>
+	internal readonly struct VisitFuncVisitor<TContext>
 	{
-		private readonly TContext                          _context = default!;
+		private readonly TContext?                          _context;
 		private readonly Func<TContext, Expression, bool>? _func;
 		private readonly Func<Expression,bool>?            _staticFunc;
 
 		public VisitFuncVisitor(TContext context, Func<TContext, Expression, bool> func)
 		{
-			_context = context;
-			_func    = func;
+			_context    = context;
+			_func       = func;
+			_staticFunc = null;
 		}
 
 		public VisitFuncVisitor(Func<Expression, bool> func)
 		{
+			_context    = default;
+			_func       = null;
 			_staticFunc = func;
 		}
 
@@ -27,6 +30,14 @@ namespace LinqToDB.Expressions
 		public static VisitFuncVisitor<object?> Create(Func<Expression, bool> func)
 		{
 			return new VisitFuncVisitor<object?>(func);
+		}
+
+		/// <summary>
+		/// Creates reusable visitor with static context.
+		/// </summary>
+		public static VisitFuncVisitor<TContext> Create(TContext context, Func<TContext, Expression, bool> func)
+		{
+			return new VisitFuncVisitor<TContext>(context, func);
 		}
 
 		void Visit<T>(IEnumerable<T> source, Action<T> func)
@@ -44,7 +55,7 @@ namespace LinqToDB.Expressions
 
 		public void Visit(Expression expr)
 		{
-			if (expr == null || (_staticFunc != null ? !_staticFunc(expr) : !_func!(_context, expr)))
+			if (expr == null || (_staticFunc != null ? !_staticFunc(expr) : !_func!(_context!, expr)))
 				return;
 
 			switch (expr.NodeType)

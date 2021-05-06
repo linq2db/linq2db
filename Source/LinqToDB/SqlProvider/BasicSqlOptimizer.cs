@@ -271,7 +271,7 @@ namespace LinqToDB.SqlProvider
 
 		SelectQuery MoveCountSubQuery(SelectQuery selectQuery, EvaluationContext context)
 		{
-			selectQuery.Visit(new { context, optimizer = this }, static (context, e) => context.optimizer.MoveCountSubQuery(e, context.context));
+			selectQuery.Visit((context, optimizer: this), static (context, e) => context.optimizer.MoveCountSubQuery(e, context.context));
 			return selectQuery;
 		}
 
@@ -348,12 +348,12 @@ namespace LinqToDB.SqlProvider
 					{
 						var cond = subQuery.Where.SearchCondition.Conditions[j];
 
-						if (null == cond.Find(ctx, static (context, e) =>
+						if (null == cond.Find(ctx.AllTables, static (allTables, e) =>
 						{
 							return e.ElementType switch
 							{
-								QueryElementType.SqlField => !context.AllTables.Contains(((SqlField)e).Table!),
-								QueryElementType.Column   => !context.AllTables.Contains(((SqlColumn)e).Parent!),
+								QueryElementType.SqlField => !allTables.Contains(((SqlField)e).Table!),
+								QueryElementType.Column   => !allTables.Contains(((SqlColumn)e).Parent!),
 								_ => false,
 							};
 						}))
@@ -450,7 +450,7 @@ namespace LinqToDB.SqlProvider
 
 		SelectQuery MoveSubQueryColumn(SelectQuery selectQuery, EvaluationContext context)
 		{
-			selectQuery.Visit(new { context, optimizer = this }, static (context, element) =>
+			selectQuery.Visit((context, optimizer: this), static (context, element) =>
 			{
 				if (element.ElementType != QueryElementType.SqlQuery)
 					return;
@@ -479,12 +479,12 @@ namespace LinqToDB.SqlProvider
 								context.LevelTables.Add(source);
 						});
 
-						if (context.optimizer.SqlProviderFlags.IsSubQueryColumnSupported && null == subQuery.Find(ctx, static (context, e) =>
+						if (context.optimizer.SqlProviderFlags.IsSubQueryColumnSupported && null == subQuery.Find(ctx.AllTables, static (allTables, e) =>
 						{
 							return e.ElementType switch
 							{
-								QueryElementType.SqlField => !context.AllTables.Contains(((SqlField)e).Table!),
-								QueryElementType.Column   => !context.AllTables.Contains(((SqlColumn)e).Parent!),
+								QueryElementType.SqlField => !allTables.Contains(((SqlField)e).Table!),
+								QueryElementType.Column   => !allTables.Contains(((SqlColumn)e).Parent!),
 								_                         => false,
 							};
 						}))
@@ -538,12 +538,12 @@ namespace LinqToDB.SqlProvider
 						{
 							var cond = subQuery.Where.SearchCondition.Conditions[j];
 
-							if (cond.Find(ctx, static (context, e) =>
+							if (cond.Find(ctx.AllTables, static (allTables, e) =>
 							{
 								return e.ElementType switch
 								{
-									QueryElementType.SqlField => !context.AllTables.Contains(((SqlField)e).Table!),
-									QueryElementType.Column   => !context.AllTables.Contains(((SqlColumn)e).Parent!),
+									QueryElementType.SqlField => !allTables.Contains(((SqlField)e).Table!),
+									QueryElementType.Column   => !allTables.Contains(((SqlColumn)e).Parent!),
 									_                         => false,
 								};
 							}) == null)
@@ -1652,9 +1652,7 @@ namespace LinqToDB.SqlProvider
 			if (optimizationContext.IsOptimized(element, out var newElement))
 				return newElement!;
 
-			var paramContext = new {mappingSchema, root = element};
-			
-			newElement = RunOptimization(element, optimizationContext, this, paramContext, !withConversion,
+			newElement = RunOptimization(element, optimizationContext, this, (mappingSchema, root: element), !withConversion,
 				static (ctx, opt, visitor, pc, e) =>
 				{
 					var ne = e;
@@ -1677,7 +1675,7 @@ namespace LinqToDB.SqlProvider
 				if (mappingSchema == null)
 					throw new InvalidOperationException("MappingSchema is required for conversion");
 				
-				newElement = RunOptimization(newElement, optimizationContext, this, paramContext, true,
+				newElement = RunOptimization(newElement, optimizationContext, this, (mappingSchema, root: element), true,
 					static(ctx, opt, visitor, pc, e) =>
 					{
 						var ne = e;
@@ -2305,7 +2303,7 @@ namespace LinqToDB.SqlProvider
 
 						innerQuery.Select.Columns.Clear();
 
-						var remapped = ex.Convert(new { tableToUpdateMapping, innerQuery },
+						var remapped = ex.Convert((tableToUpdateMapping, innerQuery),
 							static (v, e) =>
 							{
 								if (v.Context.tableToUpdateMapping.TryGetValue(e, out var n))
@@ -2395,7 +2393,7 @@ namespace LinqToDB.SqlProvider
 				else if (firstTable.Source is SqlTable newUpdateTable && newUpdateTable != updateTable && QueryHelper.IsEqualTables(newUpdateTable, updateTable))
 				{
 					statement.Update.Table = newUpdateTable;
-					statement.Update = statement.Update.Convert(new { updateTable, newUpdateTable }, static (v, e) =>
+					statement.Update = statement.Update.Convert((updateTable, newUpdateTable), static (v, e) =>
 					{
 						if (e is SqlField field && field.Table == v.Context.updateTable)
 							return v.Context.newUpdateTable[field.Name] ?? throw new LinqException($"Field {field.Name} not found in table {v.Context.newUpdateTable}");
@@ -2694,7 +2692,7 @@ namespace LinqToDB.SqlProvider
 
 		public bool IsParameterDependent(SqlStatement statement)
 		{
-			return null != statement.Find(IsParameterDependedElement);
+			return null != statement.Find(this, static (ctx, e) => ctx.IsParameterDependedElement(e));
 		}
 
 		public virtual SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context)
