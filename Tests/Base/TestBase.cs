@@ -1182,7 +1182,7 @@ namespace Tests
 			var expr    = query.Expression;
 			var loaded  = new Dictionary<Type, Expression>();
 			var actual  = query.ToArray();
-			var newExpr = expr.Transform(e =>
+			var newExpr = expr.Transform(loaded, static (loaded, e) =>
 			{
 				if (e.NodeType == ExpressionType.Call)
 				{

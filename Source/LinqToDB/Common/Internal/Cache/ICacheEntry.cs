@@ -7,14 +7,15 @@ using System.Collections.Generic;
 namespace LinqToDB.Common.Internal.Cache
 {
 	/// <summary>
-	/// Represents an entry in the <see cref="IMemoryCache"/> implementation.
+	/// Represents an entry in the <see cref="IMemoryCache{TKey}"/> implementation.
 	/// </summary>
-	public interface ICacheEntry : IDisposable
+	public interface ICacheEntry<TKey> : IDisposable
+		where TKey : notnull
 	{
 		/// <summary>
 		/// Gets the key of the cache entry.
 		/// </summary>
-		object Key { get; }
+		TKey Key { get; }
 
 		/// <summary>
 		/// Gets or set the value of the cache entry.
@@ -45,7 +46,7 @@ namespace LinqToDB.Common.Internal.Cache
 		/// <summary>
 		/// Gets or sets the callbacks will be fired after the cache entry is evicted from the cache.
 		/// </summary>
-		IList<PostEvictionCallbackRegistration> PostEvictionCallbacks { get; }
+		IList<PostEvictionCallbackRegistration<TKey>> PostEvictionCallbacks { get; }
 
 		/// <summary>
 		/// Gets or sets the priority for keeping the cache entry in the cache during a

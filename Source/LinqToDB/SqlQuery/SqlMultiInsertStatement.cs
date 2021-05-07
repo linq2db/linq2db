@@ -62,9 +62,6 @@ namespace LinqToDB.SqlQuery
 			set => throw new InvalidOperationException();
 		}
 		
-		public override ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-			=> throw new NotImplementedException();
-
 		public override IEnumerable<IQueryElement> EnumClauses()
 		{
 			foreach (var insert in Inserts)

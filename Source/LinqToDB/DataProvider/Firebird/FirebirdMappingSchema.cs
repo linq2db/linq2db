@@ -12,6 +12,10 @@ namespace LinqToDB.DataProvider.Firebird
 
 	public class FirebirdMappingSchema : MappingSchema
 	{
+		private const string DATE_FORMAT      = "CAST('{0:yyyy-MM-dd}' AS {1})";
+		private const string DATETIME_FORMAT  = "CAST('{0:yyyy-MM-dd HH:mm:ss}' AS {1})";
+		private const string TIMESTAMP_FORMAT = "CAST('{0:yyyy-MM-dd HH:mm:ss.fff}' AS {1})";
+
 		public FirebirdMappingSchema() : this(ProviderName.Firebird)
 		{
 		}
@@ -36,14 +40,14 @@ namespace LinqToDB.DataProvider.Firebird
 		static void BuildDateTime(StringBuilder stringBuilder, SqlDataType dt, DateTime value)
 		{
 			var dbType = dt.Type.DbType ?? "timestamp";
-			var format = "CAST('{0:yyyy-MM-dd HH:mm:ss.fff}' AS {1})";
+			var format = TIMESTAMP_FORMAT;
 
 			if (value.Millisecond == 0)
 				format = value.Hour == 0 && value.Minute == 0 && value.Second == 0
-					? "CAST('{0:yyyy-MM-dd}' AS {1})"
-					: "CAST('{0:yyyy-MM-dd HH:mm:ss}' AS {1})";
+					? DATE_FORMAT
+					: DATETIME_FORMAT;
 
-			stringBuilder.AppendFormat(format, value, dbType);
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value, dbType);
 		}
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
@@ -103,9 +107,7 @@ namespace LinqToDB.DataProvider.Firebird
 			stringBuilder.Append("_utf8 x'");
 
 			foreach (var bt in bytes)
-			{
 				stringBuilder.AppendFormat("{0:X2}", bt);
-			}
 
 			stringBuilder.Append('\'');
 		}

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlOrderByItem : IQueryElement, ICloneableElement
+	public class SqlOrderByItem : IQueryElement
 	{
 		public SqlOrderByItem(ISqlExpression expression, bool isDescending)
 		{
@@ -18,17 +18,6 @@ namespace LinqToDB.SqlQuery
 		internal void Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
 			Expression = Expression.Walk(options, func)!;
-		}
-
-		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			if (!objectTree.TryGetValue(this, out var clone))
-				objectTree.Add(this, clone = new SqlOrderByItem((ISqlExpression)Expression.Clone(objectTree, doClone), IsDescending));
-
-			return clone;
 		}
 
 		#region Overrides

@@ -201,22 +201,6 @@ namespace LinqToDB.SqlQuery
 		public int   Precedence => SqlQuery.Precedence.Primary;
 		public Type? SystemType => Expression.SystemType;
 
-		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			var parent = (SelectQuery?)Parent?.Clone(objectTree, doClone);
-
-			if (!objectTree.TryGetValue(this, out var clone))
-				objectTree.Add(this, clone = new SqlColumn(
-					parent,
-					(ISqlExpression)Expression.Clone(objectTree, doClone),
-					RawAlias));
-
-			return clone;
-		}
-
 		#endregion
 
 		#region IEquatable<ISqlExpression> Members

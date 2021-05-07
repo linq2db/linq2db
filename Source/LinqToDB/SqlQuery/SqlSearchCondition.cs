@@ -11,12 +11,18 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
-		public SqlSearchCondition(IEnumerable<SqlCondition> list)
+		public SqlSearchCondition(SqlCondition condition)
 		{
-			Conditions.AddRange(list);
+			Conditions.Add(condition);
 		}
 
-		public SqlSearchCondition(params SqlCondition[] list)
+		public SqlSearchCondition(SqlCondition condition1, SqlCondition condition2)
+		{
+			Conditions.Add(condition1);
+			Conditions.Add(condition2);
+		}
+
+		public SqlSearchCondition(IEnumerable<SqlCondition> list)
 		{
 			Conditions.AddRange(list);
 		}
@@ -138,27 +144,6 @@ namespace LinqToDB.SqlQuery
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{
 			return this == other;
-		}
-
-		#endregion
-
-		#region ICloneableElement Members
-
-		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			if (!objectTree.TryGetValue(this, out var clone))
-			{
-				var sc = new SqlSearchCondition();
-
-				objectTree.Add(this, clone = sc);
-
-				sc.Conditions.AddRange(Conditions.Select(c => (SqlCondition)c.Clone(objectTree, doClone)));
-			}
-
-			return clone;
 		}
 
 		#endregion

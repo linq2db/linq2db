@@ -308,7 +308,6 @@ namespace LinqToDB.Reflection
 		static T ThrowOnDynamicStoreMissing<T>()
 		{
 			throw new ArgumentException("Tried getting dynamic column value, without setting dynamic column store on type.");
-
 		}
 
 		#region Public Properties

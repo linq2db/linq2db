@@ -67,7 +67,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		void CorrectSkipAndColumns(SqlStatement statement)
 		{
-			new QueryVisitor().Visit(statement, e =>
+			statement.Visit(static e =>
 			{
 				switch (e.ElementType)
 				{
@@ -114,7 +114,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			if (!SqlCeConfiguration.InlineFunctionParameters)
 				return;
 
-			new QueryVisitor().Visit(statement, e =>
+			statement.Visit(static e =>
 			{
 				if (e.ElementType == QueryElementType.SqlFunction)
 				{
@@ -136,7 +136,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			// already fixed by CorrectSkipAndColumns
 		}
 
-		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor visitor,
+		public override ISqlExpression ConvertExpressionImpl<TContext>(ISqlExpression expression, ConvertVisitor<TContext> visitor,
 			EvaluationContext context)
 		{
 			expression = base.ConvertExpressionImpl(expression, visitor, context);

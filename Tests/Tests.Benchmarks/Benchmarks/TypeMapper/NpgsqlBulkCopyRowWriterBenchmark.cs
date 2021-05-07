@@ -108,7 +108,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 						pWriter,
 						"Write",
 						new[] { typeof(object) },
-						Expression.Call(Expression.ArrayIndex(pColumns, Expression.Constant(i)), "GetValue", Array<Type>.Empty, pMapping, pEntity),
+						Expression.Call(Expression.ArrayIndex(pColumns, Expression.Constant(i)), "GetValue", Array<Type>.Empty, pEntity),
 						Expression.Convert(Expression.Constant(Wrapped.NpgsqlDbType.Test), typeof(Original.NpgsqlDbType))));
 			}
 

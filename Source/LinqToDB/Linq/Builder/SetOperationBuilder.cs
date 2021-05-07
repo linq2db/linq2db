@@ -11,15 +11,16 @@ namespace LinqToDB.Linq.Builder
 	using Extensions;
 	using Reflection;
 	using SqlQuery;
-	using Tools;
 
 	class SetOperationBuilder : MethodCallBuilder
 	{
+		private static readonly string[] MethodNames = { "Concat", "UnionAll", "Union", "Except", "Intersect", "ExceptAll", "IntersectAll" };
+
 		#region Builder
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.Arguments.Count == 2 && methodCall.IsQueryable("Concat", "UnionAll", "Union", "Except", "Intersect", "ExceptAll", "IntersectAll");
+			return methodCall.Arguments.Count == 2 && methodCall.IsQueryable(MethodNames);
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -42,10 +43,10 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			var needsEmulation = !builder.DataContext.SqlProviderFlags.IsAllSetOperationsSupported &&
-			                     setOperation.In(SetOperation.ExceptAll, SetOperation.IntersectAll)
+			                     (setOperation == SetOperation.ExceptAll || setOperation == SetOperation.IntersectAll)
 			                     ||
 			                     !builder.DataContext.SqlProviderFlags.IsDistinctSetOperationsSupported &&
-			                     setOperation.In(SetOperation.Except, SetOperation.Intersect);
+			                     (setOperation == SetOperation.Except || setOperation == SetOperation.Intersect);
 
 			if (needsEmulation)
 			{
@@ -57,12 +58,12 @@ namespace LinqToDB.Linq.Builder
 
 				var sql = sequence.SelectQuery;
 
-				if (setOperation.In(SetOperation.Except, SetOperation.Intersect))
+				if (setOperation == SetOperation.Except || setOperation == SetOperation.Intersect)
 					sql.Select.IsDistinct = true;
 
 				except.ParentSelect = sql;
 
-				if (setOperation.In(SetOperation.Except, SetOperation.ExceptAll))
+				if (setOperation == SetOperation.Except || setOperation == SetOperation.ExceptAll)
 					sql.Where.Not.Exists(except);
 				else
 					sql.Where.Exists(except);
@@ -345,7 +346,7 @@ namespace LinqToDB.Linq.Builder
 					if (expression == null)
 					{
 						var type  = _methodCall.Method.GetGenericArguments()[0];
-						var nctor = (NewExpression?)Expression.Find(e => e is NewExpression ne && e.Type == type && ne.Arguments?.Count > 0);
+						var nctor = (NewExpression?)Expression.Find(type, static (type, e) => e is NewExpression ne && e.Type == type && ne.Arguments?.Count > 0);
 
 						Expression expr;
 
@@ -364,11 +365,13 @@ namespace LinqToDB.Linq.Builder
 							return ex;
 						}
 
-						var new1 = Expression.Find(e => e.NodeType == ExpressionType.MemberInit && e.Type == type);
+						var findVisitor  = FindVisitor<Type>.Create(type, static (type, e) => e.NodeType == ExpressionType.MemberInit && e.Type == type);
+						var new1         = findVisitor.Find(Expression);
 						var needsRewrite = false;
+
 						if (new1 != null)
 						{
-							var new2 = _sequence2.Expression.Find(e => e.NodeType == ExpressionType.MemberInit && e.Type == type);
+							var new2 = findVisitor.Find(_sequence2.Expression);
 							if (new2 == null)
 								needsRewrite = true;
 							else
@@ -380,8 +383,6 @@ namespace LinqToDB.Linq.Builder
 								needsRewrite = init1.Bindings.Count != init2.Bindings.Count;
 								if (!needsRewrite)
 								{
-									var accessorDic = new Dictionary<Expression, QueryableAccessor>();
-
 									foreach (var binding in init1.Bindings)
 									{
 										if (binding.BindingType != MemberBindingType.Assignment)
@@ -400,7 +401,7 @@ namespace LinqToDB.Linq.Builder
 										var assignment1 = (MemberAssignment)binding;
 										var assignment2 = (MemberAssignment)foundBinding;
 
-										if (!assignment1.Expression.EqualsTo(assignment2.Expression, Builder.DataContext, accessorDic, null, null) || 
+										if (!assignment1.Expression.EqualsTo(assignment2.Expression, Builder.GetSimpleEqualsToContext(false)) ||
 										    !(assignment1.Expression.NodeType == ExpressionType.MemberAccess || assignment1.Expression.NodeType == ExpressionType.Parameter))
 										{
 											needsRewrite = true;
@@ -414,7 +415,6 @@ namespace LinqToDB.Linq.Builder
 											needsRewrite = true;
 											break;
 										}
-
 									}
 								}
 							}

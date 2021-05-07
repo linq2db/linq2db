@@ -13,6 +13,9 @@ using System.Diagnostics.CodeAnalysis;
 
 using JetBrains.Annotations;
 
+// type, readertype, configID, sql, additionalKey, isScalar
+using QueryKey = System.ValueTuple<System.Type, System.Type, int, string, string?, bool>;
+
 namespace LinqToDB.Data
 {
 	using Common;
@@ -1301,46 +1304,7 @@ namespace LinqToDB.Data
 			}
 		}
 
-		struct ParamKey : IEquatable<ParamKey>
-		{
-			public ParamKey(Type type, int configID)
-			{
-				_type     = type;
-				_configID = configID;
-
-				unchecked
-				{
-					_hashCode = -1521134295 * (-1521134295 * 639348056 + _type.GetHashCode()) + _configID.GetHashCode();
-				}
-			}
-
-			public override bool Equals(object? obj)
-			{
-				if (obj is ParamKey pk)
-					return Equals(pk);
-
-				return false;
-			}
-
-			readonly int    _hashCode;
-			readonly Type   _type;
-			readonly int    _configID;
-
-			public override int GetHashCode()
-			{
-				return _hashCode;
-			}
-
-			public bool Equals(ParamKey other)
-			{
-				return
-					_type     == other._type &&
-					_configID == other._configID
-					;
-			}
-		}
-
-		static readonly MemoryCache  _parameterReaders        = new (new MemoryCacheOptions());
+		static readonly MemoryCache<(Type type, int contextId)>  _parameterReaders = new (new ());
 
 		static readonly PropertyInfo _dataParameterName       = MemberHelper.PropertyOf<DataParameter>(p => p.Name);
 		static readonly PropertyInfo _dataParameterDbDataType = MemberHelper.PropertyOf<DataParameter>(p => p.DbDataType);
@@ -1357,97 +1321,98 @@ namespace LinqToDB.Data
 				case DataParameter   dataParameter  : return new[] { dataParameter };
 			}
 
-			var type = parameters.GetType();
-			var key  = new ParamKey(type, dataConnection.ID);
+			var func = _parameterReaders.GetOrCreate(
+				(type: parameters.GetType(), dataConnection.ID),
+				dataConnection,
+				static (o, dataConnection) =>
+				{
+					var type = o.Key.type;
+					o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
 
-			var func = _parameterReaders.GetOrCreate(key, o =>
-			{
-				o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
+					var td  = dataConnection.MappingSchema.GetEntityDescriptor(type);
+					var p   = Expression.Parameter(typeof(object), "p");
+					var obj = Expression.Parameter(type, "obj");
 
-				var td  = dataConnection.MappingSchema.GetEntityDescriptor(type);
-				var p   = Expression.Parameter(typeof(object), "p");
-				var obj = Expression.Parameter(type, "obj");
-
-				var expr = Expression.Lambda<Func<object,DataParameter[]>>(
-					Expression.Block(
-						new[] { obj },
-						new Expression[]
-						{
-							Expression.Assign(obj, Expression.Convert(p, type)),
-							Expression.NewArrayInit(
-								typeof(DataParameter),
-								td.Columns.Select(column =>
-								{
-									if (column.MemberType == typeof(DataParameter))
+					var expr = Expression.Lambda<Func<object,DataParameter[]>>(
+						Expression.Block(
+							new[] { obj },
+							new Expression[]
+							{
+								Expression.Assign(obj, Expression.Convert(p, type)),
+								Expression.NewArrayInit(
+									typeof(DataParameter),
+									td.Columns.Select(column =>
 									{
-										var pobj = Expression.Parameter(typeof(DataParameter));
+										if (column.MemberType == typeof(DataParameter))
+										{
+											var pobj = Expression.Parameter(typeof(DataParameter));
 
-										return Expression.Block(
-											new[] { pobj },
-											new Expression[]
-											{
-												Expression.Assign(pobj, ExpressionHelper.PropertyOrField(obj, column.MemberName)),
-												Expression.MemberInit(
-													Expression.New(typeof(DataParameter)),
-													Expression.Bind(
-														_dataParameterName,
-														Expression.Coalesce(
-															Expression.MakeMemberAccess(pobj, _dataParameterName),
-															Expression.Constant(column.ColumnName))),
-													Expression.Bind(
-														_dataParameterDbDataType,
-														Expression.MakeMemberAccess(pobj, _dataParameterDbDataType)),
-													Expression.Bind(
-														_dataParameterValue,
-														Expression.Convert(
-															Expression.MakeMemberAccess(pobj, _dataParameterValue),
-															typeof(object))))
-											});
-									}
+											return Expression.Block(
+												new[] { pobj },
+												new Expression[]
+												{
+													Expression.Assign(pobj, ExpressionHelper.PropertyOrField(obj, column.MemberName)),
+													Expression.MemberInit(
+														Expression.New(typeof(DataParameter)),
+														Expression.Bind(
+															_dataParameterName,
+															Expression.Coalesce(
+																Expression.MakeMemberAccess(pobj, _dataParameterName),
+																Expression.Constant(column.ColumnName))),
+														Expression.Bind(
+															_dataParameterDbDataType,
+															Expression.MakeMemberAccess(pobj, _dataParameterDbDataType)),
+														Expression.Bind(
+															_dataParameterValue,
+															Expression.Convert(
+																Expression.MakeMemberAccess(pobj, _dataParameterValue),
+																typeof(object))))
+												});
+										}
 
-									var memberType  = column.MemberType.ToNullableUnderlying();
-									var valueGetter = ExpressionHelper.PropertyOrField(obj, column.MemberName) as Expression;
-									var mapper      = dataConnection.MappingSchema.GetConvertExpression(memberType, typeof(DataParameter), createDefault : false);
+										var memberType  = column.MemberType.ToNullableUnderlying();
+										var valueGetter = ExpressionHelper.PropertyOrField(obj, column.MemberName) as Expression;
+										var mapper      = dataConnection.MappingSchema.GetConvertExpression(memberType, typeof(DataParameter), createDefault : false);
 
-									if (mapper != null)
-									{
-										return Expression.Call(
-											MemberHelper.MethodOf(() => PrepareDataParameter(null!, null!)),
-											mapper.GetBody(valueGetter),
-											Expression.Constant(column.ColumnName));
-									}
+										if (mapper != null)
+										{
+											return Expression.Call(
+												MemberHelper.MethodOf(() => PrepareDataParameter(null!, null!)),
+												mapper.GetBody(valueGetter),
+												Expression.Constant(column.ColumnName));
+										}
 
-									if (memberType.IsEnum)
-									{
-										var mapType  = ConvertBuilder.GetDefaultMappingFromEnumType(dataConnection.MappingSchema, memberType)!;
-										var convExpr = dataConnection.MappingSchema.GetConvertExpression(column.MemberType, mapType)!;
+										if (memberType.IsEnum)
+										{
+											var mapType  = ConvertBuilder.GetDefaultMappingFromEnumType(dataConnection.MappingSchema, memberType)!;
+											var convExpr = dataConnection.MappingSchema.GetConvertExpression(column.MemberType, mapType)!;
 
-										memberType  = mapType;
-										valueGetter = convExpr.GetBody(valueGetter);
-									}
+											memberType  = mapType;
+											valueGetter = convExpr.GetBody(valueGetter);
+										}
 
-									var columnDbDataType = new DbDataType(memberType, column.DataType, column.DbType, column.Length, column.Precision, column.Scale);
-									if (columnDbDataType.DataType == DataType.Undefined)
-										columnDbDataType = columnDbDataType.WithDataType(dataConnection.MappingSchema.GetDataType(memberType).Type.DataType);
+										var columnDbDataType = new DbDataType(memberType, column.DataType, column.DbType, column.Length, column.Precision, column.Scale);
+										if (columnDbDataType.DataType == DataType.Undefined)
+											columnDbDataType = columnDbDataType.WithDataType(dataConnection.MappingSchema.GetDataType(memberType).Type.DataType);
 
-									return (Expression)Expression.MemberInit(
-										Expression.New(typeof(DataParameter)),
-										Expression.Bind(
-											_dataParameterName,
-											Expression.Constant(column.ColumnName)),
-										Expression.Bind(
-											_dataParameterDbDataType,
-											Expression.Constant(columnDbDataType, typeof(DbDataType))),
-										Expression.Bind(
-											_dataParameterValue,
-											Expression.Convert(valueGetter, typeof(object))));
-								}))
-						}
-					),
-					p);
+										return (Expression)Expression.MemberInit(
+											Expression.New(typeof(DataParameter)),
+											Expression.Bind(
+												_dataParameterName,
+												Expression.Constant(column.ColumnName)),
+											Expression.Bind(
+												_dataParameterDbDataType,
+												Expression.Constant(columnDbDataType, typeof(DbDataType))),
+											Expression.Bind(
+												_dataParameterValue,
+												Expression.Convert(valueGetter, typeof(object))));
+									}))
+							}
+						),
+						p);
 
-				return expr.CompileExpression();
-			});
+					return expr.CompileExpression();
+				});
 
 			return func(parameters);
 		}
@@ -1466,67 +1431,8 @@ namespace LinqToDB.Data
 
 		#region GetObjectReader
 
-		struct QueryKey : IEquatable<QueryKey>
-		{
-			public QueryKey(Type type, Type readerType, int configID, string sql, string? additionalKey, bool isScalar)
-			{
-				_type          = type;
-				_readerType    = readerType;
-				_configID      = configID;
-				_sql           = sql;
-				_additionalKey = additionalKey;
-				IsScalar       = isScalar;
-
-				unchecked
-				{
-					var hashCode = _type.GetHashCode();
-					hashCode = (hashCode * 397) ^ _readerType.GetHashCode();
-					hashCode = (hashCode * 397) ^ _configID;
-					hashCode = (hashCode * 397) ^ _sql.GetHashCode();
-					hashCode = (hashCode * 397) ^ (_additionalKey?.GetHashCode() ?? 0);
-					hashCode = (hashCode * 397) ^ IsScalar.GetHashCode();
-					_hashCode = hashCode;
-				}
-			}
-
-			public override bool Equals(object? obj)
-			{
-				if (obj is QueryKey qk)
-					return Equals(qk);
-
-				return false;
-			}
-
-			readonly int     _hashCode;
-			readonly Type    _type;
-			readonly Type    _readerType;
-			readonly int     _configID;
-			readonly string  _sql;
-			readonly string? _additionalKey;
-
-			public readonly bool IsScalar;
-
-
-			public override int GetHashCode()
-			{
-				return _hashCode;
-			}
-
-			public bool Equals(QueryKey other)
-			{
-				return
-					_type          == other._type          &&
-					_readerType    == other._readerType    &&
-					_sql           == other._sql           &&
-					IsScalar       == other.IsScalar &&
-					_additionalKey == other._additionalKey &&
-					_configID      == other._configID
-					;
-			}
-		}
-
-		static readonly MemoryCache  _objectReaders       = new (new MemoryCacheOptions());
-		static readonly MemoryCache  _dataReaderConverter = new (new MemoryCacheOptions());
+		static readonly MemoryCache<QueryKey>                                   _objectReaders       = new (new ());
+		static readonly MemoryCache<(Type readerType, Type providerReaderType)> _dataReaderConverter = new (new ());
 
 		/// <summary>
 		/// Clears global cache of object mapping functions from query results and mapping functions from value to <see cref="DataParameter"/>.
@@ -1563,23 +1469,24 @@ namespace LinqToDB.Data
 		static Func<IDataReader, T> GetObjectReader<T>(DataConnection dataConnection, IDataReader dataReader,
 			string sql, string? additionalKey)
 		{
-			var key = new QueryKey(typeof(T), dataReader.GetType(), dataConnection.ID, sql, additionalKey, dataReader.FieldCount <= 1);
+			var func = _objectReaders.GetOrCreate(
+				new QueryKey(typeof(T), dataReader.GetType(), dataConnection.ID, sql, additionalKey, dataReader.FieldCount <= 1),
+				(dataConnection, dataReader),
+				static (e, context) =>
+				{
+					e.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
 
-			var func = _objectReaders.GetOrCreate(key, e =>
-		{
-				e.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
+					if (!e.Key.Item6 && IsDynamicType(typeof(T)))
+					{
+						// dynamic case
+						//
+						return CreateDynamicObjectReader<T>(context.dataConnection, context.dataReader, (dc, dr, type, idx, dataReaderExpr) =>
+						new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr).Reduce(dc, dr));
+					}
 
-				if (!((QueryKey)e.Key).IsScalar && IsDynamicType(typeof(T)))
-			{
-					// dynamic case
-					//
-					return CreateDynamicObjectReader<T>(dataConnection, dataReader, (dc, dr, type, idx, dataReaderExpr) =>
-					new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr).Reduce(dc, dr));
-			}
-
-				return CreateObjectReader<T>(dataConnection, dataReader, (dc, dr, type, idx, dataReaderExpr) =>
-					new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr).Reduce(dc, dr));
-			});
+					return CreateObjectReader<T>(context.dataConnection, context.dataReader, (dc, dr, type, idx, dataReaderExpr) =>
+						new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr).Reduce(dc, dr));
+				});
 
 			return func;
 		}
@@ -1587,10 +1494,10 @@ namespace LinqToDB.Data
 		static Func<IDataReader, T> GetObjectReader2<T>(DataConnection dataConnection, IDataReader dataReader,
 			string sql, string? additionalKey)
 		{
-			var key = new QueryKey(typeof(T), dataReader.GetType(), dataConnection.ID, sql, additionalKey, dataReader.FieldCount <= 1);
+			var key = (typeof(T), dataReader.GetType(), dataConnection.ID, sql, additionalKey, dataReader.FieldCount <= 1);
 
 			Delegate func;
-			if (!key.IsScalar && IsDynamicType(typeof(T)))
+			if (!key.Item6 && IsDynamicType(typeof(T)))
 			{
 				// dynamic case
 				//
@@ -1604,7 +1511,7 @@ namespace LinqToDB.Data
 			}
 
 			_objectReaders.Set(key, func,
-				new MemoryCacheEntryOptions {SlidingExpiration = Configuration.Linq.CacheSlidingExpiration});
+				new MemoryCacheEntryOptions<QueryKey>() {SlidingExpiration = Configuration.Linq.CacheSlidingExpiration});
 
 			return (Func<IDataReader, T>)func;
 		}
@@ -1623,19 +1530,21 @@ namespace LinqToDB.Data
 			LambdaExpression? converterExpr = null;
 			if (dataConnection.DataProvider.DataReaderType != readerType)
 			{
-				var converterKey  = Tuple.Create(readerType, dataConnection.DataProvider.DataReaderType);
-				converterExpr = _dataReaderConverter.GetOrCreate(converterKey, o =>
-				{
-					o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
-
-					var expr = dataConnection.MappingSchema.GetConvertExpression(readerType, typeof(IDataReader), false, false);
-					if (expr != null)
+				converterExpr    = _dataReaderConverter.GetOrCreate(
+					(readerType, dataConnection.DataProvider.DataReaderType),
+					dataConnection,
+					static (o, dataConnection) =>
 					{
-						expr      = Expression.Lambda(Expression.Convert(expr.Body, dataConnection.DataProvider.DataReaderType), expr.Parameters);
-					}
+						o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
 
-					return expr;
-				});
+						var expr = dataConnection.MappingSchema.GetConvertExpression(o.Key.readerType, typeof(IDataReader), false, false);
+						if (expr != null)
+						{
+							expr      = Expression.Lambda(Expression.Convert(expr.Body, dataConnection.DataProvider.DataReaderType), expr.Parameters);
+						}
+
+						return expr;
+					});
 			}
 
 			dataReaderExpr = converterExpr != null ? converterExpr.GetBody(dataReaderExpr) : dataReaderExpr;
@@ -1711,12 +1620,12 @@ namespace LinqToDB.Data
 				}
 			}
 
-			if (expr.GetCount(e => e == dataReaderExpr) > 1)
+			if (expr.GetCount(dataReaderExpr, static (dataReaderExpr, e) => e == dataReaderExpr) > 1)
 			{
 				var dataReaderVar = Expression.Variable(dataReaderExpr.Type, "ldr");
 				var assignment    = Expression.Assign(dataReaderVar, dataReaderExpr);
 
-				expr = expr.Transform(e => e == dataReaderExpr ? dataReaderVar : e);
+				expr = expr.Replace(dataReaderExpr, dataReaderVar);
 				expr = Expression.Block(new[] { dataReaderVar }, assignment, expr);
 
 				if (Configuration.OptimizeForSequentialAccess)
@@ -1744,19 +1653,21 @@ namespace LinqToDB.Data
 			LambdaExpression? converterExpr = null;
 			if (dataConnection.DataProvider.DataReaderType != readerType)
 			{
-				var converterKey  = Tuple.Create(readerType, dataConnection.DataProvider.DataReaderType);
-				converterExpr = _dataReaderConverter.GetOrCreate(converterKey, o =>
-				{
-					o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
-
-					var expr = dataConnection.MappingSchema.GetConvertExpression(readerType, typeof(IDataReader), false, false);
-					if (expr != null)
+				converterExpr    = _dataReaderConverter.GetOrCreate(
+					(readerType, dataConnection.DataProvider.DataReaderType),
+					dataConnection,
+					static (o, dataConnection) =>
 					{
-						expr = Expression.Lambda(Expression.Convert(expr.Body, dataConnection.DataProvider.DataReaderType), expr.Parameters);
-					}
+						o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
 
-					return expr;
-				});
+						var expr = dataConnection.MappingSchema.GetConvertExpression(o.Key.readerType, typeof(IDataReader), false, false);
+						if (expr != null)
+						{
+							expr = Expression.Lambda(Expression.Convert(expr.Body, dataConnection.DataProvider.DataReaderType), expr.Parameters);
+						}
+
+						return expr;
+					});
 			}
 
 			dataReaderExpr = converterExpr != null ? converterExpr.GetBody(dataReaderExpr) : dataReaderExpr;
@@ -1770,12 +1681,12 @@ namespace LinqToDB.Data
 					return Expression.ElementInit(_expandoAddMethodInfo, Expression.Constant(dataReader.GetName(idx)), readerExpr);
 				}));
 
-			if (expr.GetCount(e => e == dataReaderExpr) > 1)
+			if (expr.GetCount(dataReaderExpr, static (dataReaderExpr, e) => e == dataReaderExpr) > 1)
 			{
 				var dataReaderVar = Expression.Variable(dataReaderExpr.Type, "ldr");
 				var assignment    = Expression.Assign(dataReaderVar, dataReaderExpr);
 
-				expr = expr.Transform(e => e == dataReaderExpr ? dataReaderVar : e);
+				expr = expr.Replace(dataReaderExpr, dataReaderVar);
 				expr = Expression.Block(new[] { dataReaderVar }, assignment, expr);
 			}
 

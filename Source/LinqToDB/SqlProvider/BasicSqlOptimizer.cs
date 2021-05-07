@@ -148,43 +148,43 @@ namespace LinqToDB.SqlProvider
 			return statement;
 		}
 
+		static void RegisterDependency(CteClause cteClause, Dictionary<CteClause, HashSet<CteClause>> foundCte)
+		{
+			if (foundCte.ContainsKey(cteClause))
+				return;
+
+			var dependsOn = new HashSet<CteClause>();
+			cteClause.Body!.Visit(dependsOn, static (dependsOn, ce) =>
+			{
+				if (ce.ElementType == QueryElementType.SqlCteTable)
+				{
+					var subCte = ((SqlCteTable)ce).Cte!;
+					dependsOn.Add(subCte);
+				}
+
+			});
+			// self-reference is allowed, so we do not need to add dependency
+			dependsOn.Remove(cteClause);
+			foundCte.Add(cteClause, dependsOn);
+
+			foreach (var clause in dependsOn)
+			{
+				RegisterDependency(clause, foundCte);
+			}
+		}
+
 		void FinalizeCte(SqlStatement statement)
 		{
 			if (statement is SqlStatementWithQueryBase select)
 			{
 				var foundCte  = new Dictionary<CteClause, HashSet<CteClause>>();
 
-				void RegisterDependency(CteClause cteClause)
-				{
-					if (foundCte.ContainsKey(cteClause))
-						return;
-
-					var dependsOn = new HashSet<CteClause>();
-					new QueryVisitor().Visit(cteClause.Body!, ce =>
-					{
-						if (ce.ElementType == QueryElementType.SqlCteTable)
-						{
-							var subCte = ((SqlCteTable)ce).Cte!;
-							dependsOn.Add(subCte);
-						}
-
-					});
-					// self-reference is allowed, so we do not need to add dependency
-					dependsOn.Remove(cteClause);
-					foundCte.Add(cteClause, dependsOn);
-
-					foreach (var clause in dependsOn)
-					{
-						RegisterDependency(clause);
-					}
-				}
-
-				new QueryVisitor().Visit(select.SelectQuery, e =>
+				select.SelectQuery.Visit(foundCte, static (foundCte, e) =>
 					{
 						if (e.ElementType == QueryElementType.SqlCteTable)
 						{
 							var cte = ((SqlCteTable)e).Cte!;
-							RegisterDependency(cte);
+							RegisterDependency(cte, foundCte);
 						}
 					}
 				);
@@ -211,16 +211,15 @@ namespace LinqToDB.SqlProvider
 
 		protected static bool HasParameters(ISqlExpression expr)
 		{
-			var hasParameters  = null != new QueryVisitor().Find(expr,
-				el => el.ElementType == QueryElementType.SqlParameter);
+			var hasParameters  = null != expr.Find(QueryElementType.SqlParameter);
 
 			return hasParameters;
 		}
 
-		static T NormalizeExpressions<T>(T expression, bool allowMutation) 
+		static T NormalizeExpressions<T>(T expression, bool allowMutation)
 			where T : class, IQueryElement
 		{
-			var result = ConvertVisitor.ConvertAll(expression, allowMutation, (visitor, e) =>
+			var result = expression.ConvertAll(allowMutation: allowMutation, static (visitor, e) =>
 			{
 				if (e.ElementType == QueryElementType.SqlExpression)
 				{
@@ -243,7 +242,7 @@ namespace LinqToDB.SqlProvider
 								if (idx >= 0 && idx < expr.Parameters.Length)
 								{
 									var paramExpr  = expr.Parameters[idx];
-									var normalized = NormalizeExpressions(paramExpr, allowMutation);
+									var normalized = NormalizeExpressions(paramExpr, visitor.AllowMutation);
 
 									if (!changed && !ReferenceEquals(normalized, paramExpr))
 										changed = true;
@@ -272,7 +271,7 @@ namespace LinqToDB.SqlProvider
 
 		SelectQuery MoveCountSubQuery(SelectQuery selectQuery, EvaluationContext context)
 		{
-			new QueryVisitor().Visit(selectQuery, e => MoveCountSubQuery(e, context));
+			selectQuery.Visit((context, optimizer: this), static (context, e) => context.optimizer.MoveCountSubQuery(e, context.context));
 			return selectQuery;
 		}
 
@@ -326,31 +325,20 @@ namespace LinqToDB.SqlProvider
 
 					// Collect tables.
 					//
-					var allTables   = new HashSet<ISqlTableSource>();
-					var levelTables = new HashSet<ISqlTableSource>();
+					var ctx = new MoveCountSubqueryContext(subQuery);
 
-					new QueryVisitor().Visit(subQuery, e =>
+					subQuery.Visit(ctx, static (context, e) =>
 					{
 						if (e is ISqlTableSource source)
-							allTables.Add(source);
+							context.AllTables.Add(source);
 					});
 
-					new QueryVisitor().Visit(subQuery, e =>
+					subQuery.Visit(ctx, static (context, e) =>
 					{
 						if (e is ISqlTableSource source)
-							if (subQuery.From.IsChild(source))
-								levelTables.Add(source);
+							if (context.SubQuery.From.IsChild(source))
+								context.LevelTables.Add(source);
 					});
-
-					bool CheckTable(IQueryElement e)
-					{
-						return e.ElementType switch
-						{
-							QueryElementType.SqlField => !allTables.Contains(((SqlField)e).Table!),
-							QueryElementType.Column   => !allTables.Contains(((SqlColumn)e).Parent!),
-							_                         => false,
-						};
-					}
 
 					var join = subQuery.LeftJoin();
 
@@ -360,11 +348,20 @@ namespace LinqToDB.SqlProvider
 					{
 						var cond = subQuery.Where.SearchCondition.Conditions[j];
 
-						if (new QueryVisitor().Find(cond, CheckTable) == null)
+						if (null == cond.Find(ctx.AllTables, static (allTables, e) =>
+						{
+							return e.ElementType switch
+							{
+								QueryElementType.SqlField => !allTables.Contains(((SqlField)e).Table!),
+								QueryElementType.Column   => !allTables.Contains(((SqlColumn)e).Parent!),
+								_ => false,
+							};
+						}))
 							continue;
 						
-						var modified = false;
-						var nc = ConvertVisitor.ConvertAll(cond, true, (v, e) =>
+						ctx.Modified = false;
+
+						var nc = cond.ConvertAll(ctx, true, static (v, e) =>
 						{
 							var ne = e;
 							switch (e.ElementType)
@@ -372,14 +369,14 @@ namespace LinqToDB.SqlProvider
 								case QueryElementType.SqlField:
 								{
 									var field = (SqlField)e;
-									if (levelTables.Contains(field.Table!))
+									if (v.Context.LevelTables.Contains(field.Table!))
 									{
-										subQuery.GroupBy.Expr(field);
-										ne = subQuery.Select.AddColumn(field);
+										v.Context.SubQuery.GroupBy.Expr(field);
+										ne = v.Context.SubQuery.Select.AddColumn(field);
 									}
-									else if (!allTables.Contains(field.Table!))
+									else if (!v.Context.AllTables.Contains(field.Table!))
 									{
-										modified = true;
+										v.Context.Modified = true;
 									}
 
 									break;
@@ -388,25 +385,25 @@ namespace LinqToDB.SqlProvider
 								case QueryElementType.Column:
 								{
 									var column = (SqlColumn)e;
-									if (levelTables.Contains(column.Parent!))
+									if (v.Context.LevelTables.Contains(column.Parent!))
 									{
-										subQuery.GroupBy.Expr(column);
-										ne = subQuery.Select.AddColumn(column);
+										v.Context.SubQuery.GroupBy.Expr(column);
+										ne = v.Context.SubQuery.Select.AddColumn(column);
 									}
-									else if (!allTables.Contains(column.Parent!))
+									else if (!v.Context.AllTables.Contains(column.Parent!))
 									{
-										modified = true;
+										v.Context.Modified = true;
 									}
 
 									break;
 								}
 							}
 
-							modified = modified || !ReferenceEquals(e, ne);
+							v.Context.Modified = v.Context.Modified || !ReferenceEquals(e, ne);
 							return e;
 						});
 
-						if (modified)
+						if (ctx.Modified)
 						{
 							join.JoinedTable.Condition.Conditions.Add(nc);
 							subQuery.Where.SearchCondition.Conditions.RemoveAt(j);
@@ -432,6 +429,20 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
+		private class MoveCountSubqueryContext
+		{
+			public MoveCountSubqueryContext(SelectQuery subQuery)
+			{
+				SubQuery    = subQuery;
+			}
+
+			public readonly SelectQuery              SubQuery;
+			public readonly HashSet<ISqlTableSource> AllTables   = new ();
+			public readonly HashSet<ISqlTableSource> LevelTables = new ();
+
+			public bool Modified;
+		}
+
 		public virtual bool ConvertCountSubQuery(SelectQuery subQuery)
 		{
 			return true;
@@ -439,7 +450,7 @@ namespace LinqToDB.SqlProvider
 
 		SelectQuery MoveSubQueryColumn(SelectQuery selectQuery, EvaluationContext context)
 		{
-			new QueryVisitor().Visit(selectQuery, element =>
+			selectQuery.Visit((context, optimizer: this), static (context, element) =>
 			{
 				if (element.ElementType != QueryElementType.SqlQuery)
 					return;
@@ -452,33 +463,31 @@ namespace LinqToDB.SqlProvider
 
 					if (col.Expression.ElementType == QueryElementType.SqlQuery)
 					{
-						var subQuery    = (SelectQuery)col.Expression;
-						var allTables   = new HashSet<ISqlTableSource>();
-						var levelTables = new HashSet<ISqlTableSource>();
+						var subQuery = (SelectQuery)col.Expression;
 
-						bool CheckTable(IQueryElement e)
+						var ctx = new MoveSubqueryCountContext(subQuery);
+
+						subQuery.Visit(ctx, static (context, e) =>
+						{
+							if (e is ISqlTableSource source)
+								context.AllTables.Add(source);
+						});
+
+						subQuery.Visit(ctx, static (context, e) =>
+						{
+							if (e is ISqlTableSource source && context.SubQuery.From.IsChild(source))
+								context.LevelTables.Add(source);
+						});
+
+						if (context.optimizer.SqlProviderFlags.IsSubQueryColumnSupported && null == subQuery.Find(ctx.AllTables, static (allTables, e) =>
 						{
 							return e.ElementType switch
 							{
 								QueryElementType.SqlField => !allTables.Contains(((SqlField)e).Table!),
-								QueryElementType.Column	  => !allTables.Contains(((SqlColumn)e).Parent!),
+								QueryElementType.Column   => !allTables.Contains(((SqlColumn)e).Parent!),
 								_                         => false,
 							};
-						}
-
-						new QueryVisitor().Visit(subQuery, e =>
-						{
-							if (e is ISqlTableSource source)
-								allTables.Add(source);
-						});
-
-						new QueryVisitor().Visit(subQuery, e =>
-						{
-							if (e is ISqlTableSource source && subQuery.From.IsChild(source))
-								levelTables.Add(source);
-						});
-
-						if (SqlProviderFlags.IsSubQueryColumnSupported && new QueryVisitor().Find(subQuery, CheckTable) == null)
+						}))
 							continue;
 
 						// Join should not have ParentSelect, while SubQuery has
@@ -488,10 +497,9 @@ namespace LinqToDB.SqlProvider
 
 						query.From.Tables[0].Joins.Add(join.JoinedTable);
 
-						subQuery.Where.SearchCondition = (SqlSearchCondition)OptimizeElement(null, subQuery.Where.SearchCondition, new OptimizationContext(context, new AliasesContext(), false), false)!;
+						subQuery.Where.SearchCondition = (SqlSearchCondition)context.optimizer.OptimizeElement(null, subQuery.Where.SearchCondition, new OptimizationContext(context.context, new AliasesContext(), false), false)!;
 
 						var isCount      = false;
-						var isAggregated = false;
 
 						if (subQuery.Select.Columns.Count == 1)
 						{
@@ -504,11 +512,11 @@ namespace LinqToDB.SqlProvider
 									case "Count" : isCount = true; break;
 								}
 
-								isAggregated = ((SqlFunction) subCol.Expression).IsAggregate;
+								ctx.IsAggregated = ((SqlFunction) subCol.Expression).IsAggregate;
 							}
 						}
 
-						if (SqlProviderFlags.IsSubQueryColumnSupported && !isCount)
+						if (context.optimizer.SqlProviderFlags.IsSubQueryColumnSupported && !isCount)
 							continue;
 
 						var allAnd = true;
@@ -524,16 +532,24 @@ namespace LinqToDB.SqlProvider
 						if (!allAnd)
 							continue;
 
-						var modified = false;
+						ctx.Modified = false;
 
 						for (var j = 0; j < subQuery.Where.SearchCondition.Conditions.Count; j++)
 						{
 							var cond = subQuery.Where.SearchCondition.Conditions[j];
 
-							if (new QueryVisitor().Find(cond, CheckTable) == null)
+							if (cond.Find(ctx.AllTables, static (allTables, e) =>
+							{
+								return e.ElementType switch
+								{
+									QueryElementType.SqlField => !allTables.Contains(((SqlField)e).Table!),
+									QueryElementType.Column   => !allTables.Contains(((SqlColumn)e).Parent!),
+									_                         => false,
+								};
+							}) == null)
 								continue;
 
-							var nc = ConvertVisitor.ConvertAll(cond, true, (v, e) =>
+							var nc = cond.ConvertAll(ctx, true, static (v, e) =>
 							{
 								var ne = e;
 								
@@ -541,33 +557,33 @@ namespace LinqToDB.SqlProvider
 								{
 									case QueryElementType.SqlField:
 
-										if (levelTables.Contains(((SqlField)e).Table!))
+										if (v.Context.LevelTables.Contains(((SqlField)e).Table!))
 										{
 
-											if (isAggregated)
-												subQuery.GroupBy.Expr((SqlField)e);
-											ne = subQuery.Select.AddColumn((SqlField)e);
+											if (v.Context.IsAggregated)
+												v.Context.SubQuery.GroupBy.Expr((SqlField)e);
+											ne = v.Context.SubQuery.Select.AddColumn((SqlField)e);
 										}
 
 										break;
 
 									case QueryElementType.Column:
-										if (levelTables.Contains(((SqlColumn)e).Parent!))
+										if (v.Context.LevelTables.Contains(((SqlColumn)e).Parent!))
 										{
 
-											if (isAggregated)
-												subQuery.GroupBy.Expr((SqlColumn)e);
-											ne = subQuery.Select.AddColumn((SqlColumn)e);
+											if (v.Context.IsAggregated)
+												v.Context.SubQuery.GroupBy.Expr((SqlColumn)e);
+											ne = v.Context.SubQuery.Select.AddColumn((SqlColumn)e);
 										}
 
 										break;
 								}
 
-								modified = modified || !ReferenceEquals(e, ne);
+								v.Context.Modified = v.Context.Modified || !ReferenceEquals(e, ne);
 								return ne;
 							});
 
-							if (modified)
+							if (ctx.Modified)
 							{
 								join.JoinedTable.Condition.Conditions.Add(nc);
 								subQuery.Where.SearchCondition.Conditions.RemoveAt(j);
@@ -575,7 +591,7 @@ namespace LinqToDB.SqlProvider
 							}
 						}
 
-						if (modified || isAggregated)
+						if (ctx.Modified || ctx.IsAggregated)
 						{
 							SqlColumn newColumn;
 							if (isCount && !query.GroupBy.IsEmpty)
@@ -588,7 +604,7 @@ namespace LinqToDB.SqlProvider
 									query,
 									new SqlFunction(oldFunc.SystemType, oldFunc.Name, subQuery.Select.Columns[0]));
 							}
-							else if (isAggregated && !query.GroupBy.IsEmpty)
+							else if (ctx.IsAggregated && !query.GroupBy.IsEmpty)
 							{
 								var oldFunc = (SqlFunction)subQuery.Select.Columns[0].Expression;
 
@@ -612,6 +628,21 @@ namespace LinqToDB.SqlProvider
 			});
 
 			return selectQuery;
+		}
+
+		private class MoveSubqueryCountContext
+		{
+			public MoveSubqueryCountContext(SelectQuery subQuery)
+			{
+				SubQuery     = subQuery;
+			}
+
+			public readonly SelectQuery              SubQuery;
+			public readonly HashSet<ISqlTableSource> AllTables   = new ();
+			public readonly HashSet<ISqlTableSource> LevelTables = new ();
+
+			public bool Modified;
+			public bool IsAggregated;
 		}
 
 		#region Optimization
@@ -652,7 +683,7 @@ namespace LinqToDB.SqlProvider
 			return new SqlValue(dbDataType, value);
 		}
 
-		public virtual ISqlExpression OptimizeExpression(ISqlExpression expression, ConvertVisitor convertVisitor,
+		public virtual ISqlExpression OptimizeExpression<TContext>(ISqlExpression expression, ConvertVisitor<TContext> convertVisitor,
 			EvaluationContext context)
 		{
 			switch (expression.ElementType)
@@ -690,7 +721,7 @@ namespace LinqToDB.SqlProvider
 			return expression;
 		}
 
-		public virtual ISqlExpression OptimizeFunction(SqlFunction func, ConvertVisitor convertVisitor,
+		public virtual ISqlExpression OptimizeFunction<TContext>(SqlFunction func, ConvertVisitor<TContext> convertVisitor,
 			EvaluationContext context)
 		{
 			if (func.TryEvaluateExpression(context, out var value))
@@ -745,7 +776,7 @@ namespace LinqToDB.SqlProvider
 
 					if (!func.DoNotOptimize && parms.Length == 3
 						&& !parms[0].ShouldCheckForNull()
-						&& parms[0].ElementType.In(QueryElementType.SqlFunction, QueryElementType.SearchCondition))
+						&& (parms[0].ElementType == QueryElementType.SqlFunction || parms[0].ElementType == QueryElementType.SearchCondition))
 					{
 						var boolValue1 = QueryHelper.GetBoolValue(parms[1], context);
 						var boolValue2 = QueryHelper.GetBoolValue(parms[2], context);
@@ -1040,7 +1071,7 @@ namespace LinqToDB.SqlProvider
 				{
 					var expr = (SqlPredicate.ExprExpr)predicate;
 
-					if (expr.WithNull == null && expr.Operator.In(SqlPredicate.Operator.Equal, SqlPredicate.Operator.NotEqual))
+					if (expr.WithNull == null && (expr.Operator == SqlPredicate.Operator.Equal || expr.Operator == SqlPredicate.Operator.NotEqual))
 					{
 						if (expr.Expr2 is ISqlPredicate)
 						{
@@ -1124,7 +1155,7 @@ namespace LinqToDB.SqlProvider
 			return predicate;
 		}
 
-		public virtual IQueryElement OptimizeQueryElement(ConvertVisitor visitor, IQueryElement root,
+		public virtual IQueryElement OptimizeQueryElement<TContext>(ConvertVisitor<TContext> visitor, IQueryElement root,
 			IQueryElement element, EvaluationContext context)
 		{
 			switch (element.ElementType)
@@ -1437,7 +1468,7 @@ namespace LinqToDB.SqlProvider
 			return OptimizeElement(mappingSchema, element, context, true);
 		}
 
-		public virtual ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor visitor, EvaluationContext context)
+		public virtual ISqlExpression ConvertExpressionImpl<TContext>(ISqlExpression expression, ConvertVisitor<TContext> visitor, EvaluationContext context)
 		{
 			switch (expression.ElementType)
 			{
@@ -1540,38 +1571,71 @@ namespace LinqToDB.SqlProvider
 			return func;
 		}
 
-		static IQueryElement RunOptimization<TContext>(IQueryElement element, OptimizationContext optimizationContext, BasicSqlOptimizer optimizer,
-			TContext context, bool register, Func<OptimizationContext, BasicSqlOptimizer, ConvertVisitor, TContext, IQueryElement, IQueryElement> func)
+		public readonly struct RunOptimizationContext<TContext>
 		{
+			public RunOptimizationContext(
+				OptimizationContext optimizationContext,
+				BasicSqlOptimizer   optimizer,
+				TContext            context,
+				bool                register,
+				Func<OptimizationContext, BasicSqlOptimizer, ConvertVisitor<RunOptimizationContext<TContext>>, TContext, IQueryElement, IQueryElement> func)
+			{
+				OptimizationContext = optimizationContext;
+				Optimizer           = optimizer;
+				Context             = context;
+				Register            = register;
+				Func                = func;
+			}
+
+			public readonly OptimizationContext OptimizationContext;
+			public readonly BasicSqlOptimizer   Optimizer;
+			public readonly TContext            Context;
+			public readonly bool                Register;
+
+			public readonly Func<OptimizationContext, BasicSqlOptimizer, ConvertVisitor<RunOptimizationContext<TContext>>, TContext, IQueryElement, IQueryElement> Func;
+		}
+
+		static IQueryElement RunOptimization<TContext>(
+			IQueryElement       element,
+			OptimizationContext optimizationContext,
+			BasicSqlOptimizer   optimizer,
+			TContext            context,
+			bool                register,
+			Func<OptimizationContext, BasicSqlOptimizer, ConvertVisitor<RunOptimizationContext<TContext>>, TContext, IQueryElement, IQueryElement> func)
+		{
+			var ctx = new RunOptimizationContext<TContext>(optimizationContext, optimizer, context, register, func);
 			for (; ; )
 			{
-				var newElement = ConvertVisitor.ConvertAll(element, (visitor, e) =>
-				{
-					var prev = e;
-					var ne   = e;
-					for (;;)
+				var newElement = element.ConvertAll(
+					ctx,
+					static (visitor, e) =>
 					{
-						ne = func(optimizationContext, optimizer, visitor, context, e);
+						var prev = e;
+						var ne   = e;
+						for (;;)
+						{
+							ne = visitor.Context.Func(visitor.Context.OptimizationContext, visitor.Context.Optimizer, visitor, visitor.Context.Context, e);
 
-						if (ReferenceEquals(ne, e))
-							break;
+							if (ReferenceEquals(ne, e))
+								break;
 
-						e = ne;
-					}
+							e = ne;
+						}
 
-					if (register)
-						optimizationContext.RegisterOptimized(prev, e);
+						if (visitor.Context.Register)
+							visitor.Context.OptimizationContext.RegisterOptimized(prev, e);
 
-					return e;
-				}, args =>
-				{
-					if (optimizationContext.IsOptimized(args.Element, out var expr))
+						return e;
+					},
+					static args =>
 					{
-						args.Element = expr;
-						return false;
-					}	
-					return true;
-				});
+						if (args.Visitor.Context.OptimizationContext.IsOptimized(args.Element, out var expr))
+						{
+							args.Element = expr;
+							return false;
+						}	
+						return true;
+					});
 
 				if (ReferenceEquals(newElement, element))
 					return element;
@@ -1588,9 +1652,7 @@ namespace LinqToDB.SqlProvider
 			if (optimizationContext.IsOptimized(element, out var newElement))
 				return newElement!;
 
-			var paramContext = new {mappingSchema, root = element};
-			
-			newElement = RunOptimization(element, optimizationContext, this, paramContext, !withConversion,
+			newElement = RunOptimization(element, optimizationContext, this, (mappingSchema, root: element), !withConversion,
 				static (ctx, opt, visitor, pc, e) =>
 				{
 					var ne = e;
@@ -1613,7 +1675,7 @@ namespace LinqToDB.SqlProvider
 				if (mappingSchema == null)
 					throw new InvalidOperationException("MappingSchema is required for conversion");
 				
-				newElement = RunOptimization(newElement, optimizationContext, this, paramContext, true,
+				newElement = RunOptimization(newElement, optimizationContext, this, (mappingSchema, root: element), true,
 					static(ctx, opt, visitor, pc, e) =>
 					{
 						var ne = e;
@@ -1636,7 +1698,7 @@ namespace LinqToDB.SqlProvider
 
 		public virtual bool CanCompareSearchConditions => false;
 
-		public virtual ISqlPredicate ConvertPredicateImpl(MappingSchema mappingSchema, ISqlPredicate predicate, ConvertVisitor visitor, OptimizationContext optimizationContext)
+		public virtual ISqlPredicate ConvertPredicateImpl<TContext>(MappingSchema mappingSchema, ISqlPredicate predicate, ConvertVisitor<RunOptimizationContext<TContext>> visitor, OptimizationContext optimizationContext)
 		{
 			switch (predicate.ElementType)
 			{
@@ -1762,9 +1824,9 @@ namespace LinqToDB.SqlProvider
 			return predicate;
 		}
 
-		protected ISqlPredicate ConvertSearchStringPredicateViaLike(MappingSchema mappingSchema,
+		protected ISqlPredicate ConvertSearchStringPredicateViaLike<TContext>(MappingSchema mappingSchema,
 			SqlPredicate.SearchString predicate,
-			ConvertVisitor visitor, 
+			ConvertVisitor<RunOptimizationContext<TContext>> visitor,
 			OptimizationContext optimizationContext)
 		{
 			if (predicate.Expr2.TryEvaluateExpression(optimizationContext.Context, out var patternRaw))
@@ -1819,8 +1881,8 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		public virtual ISqlPredicate ConvertSearchStringPredicate(MappingSchema mappingSchema, SqlPredicate.SearchString predicate,
-			ConvertVisitor visitor, 
+		public virtual ISqlPredicate ConvertSearchStringPredicate<TContext>(MappingSchema mappingSchema, SqlPredicate.SearchString predicate,
+			ConvertVisitor<RunOptimizationContext<TContext>> visitor, 
 			OptimizationContext optimizationContext)
 		{
 			if (!predicate.IgnoreCase)
@@ -2152,7 +2214,7 @@ namespace LinqToDB.SqlProvider
 
 			if (!query.Where.IsEmpty)
 			{
-				if (new QueryVisitor().Find(query.Where, e => IsAggregationFunction(e)) != null)
+				if (query.Where.Find(IsAggregationFunction) != null)
 					return true;
 			}
 
@@ -2186,13 +2248,10 @@ namespace LinqToDB.SqlProvider
 					throw new LinqToDBException("Query can't be translated to UPDATE Statement.");
 
 				// we have to ensure that clone do not contain tableToUpdate
-				var objectTree = new Dictionary<ICloneableElement, ICloneableElement>();
-				var clonedQuery = (SelectQuery)updateStatement.SelectQuery.Clone(
-					objectTree,
-					e => !(e is SqlParameter)
-				);
+				var objectTree  = new Dictionary<IQueryElement, IQueryElement>();
+				var clonedQuery = updateStatement.SelectQuery.Clone(objectTree);
 
-				var tableToUpdateMapping = new Dictionary<ICloneableElement,ICloneableElement>(objectTree);
+				var tableToUpdateMapping = new Dictionary<IQueryElement,IQueryElement>(objectTree);
 				// remove mapping from updatable table
 				objectTree.Remove(tableToUpdate);
 				foreach (var field in tableToUpdate.Fields)
@@ -2223,9 +2282,9 @@ namespace LinqToDB.SqlProvider
 
 				foreach (var item in updateStatement.Update.Items)
 				{
-					var ex = ConvertVisitor.Convert(item.Expression!, (v, expr) =>
-						expr is ICloneableElement cloneable && objectTree.TryGetValue(cloneable, out var newValue)
-							? (ISqlExpression) newValue
+					var ex = item.Expression!.Convert(objectTree, static (v, expr) =>
+						v.Context.TryGetValue(expr, out var newValue)
+							? newValue
 							: expr);
 
 					var usedSources = new HashSet<ISqlTableSource>();
@@ -2238,26 +2297,21 @@ namespace LinqToDB.SqlProvider
 					{
 						// it means that update value column depends on other tables and we have to generate more complicated query
 
-						var innerQuery = (SelectQuery) clonedQuery.Clone(
-							new Dictionary<ICloneableElement, ICloneableElement>(),
-							e => !(e is SqlParameter) && !(e is SqlTable));
+						var innerQuery = clonedQuery.Clone(static e => e is not SqlTable);
 
 						innerQuery.ParentSelect = sql;
 
 						innerQuery.Select.Columns.Clear();
 
-						var remapped = ConvertVisitor.Convert(ex,
-							(v, e) =>
+						var remapped = ex.Convert((tableToUpdateMapping, innerQuery),
+							static (v, e) =>
 							{
-								if (!(e is ICloneableElement c))
-									return e;
+								if (v.Context.tableToUpdateMapping.TryGetValue(e, out var n))
+									e = n;
 
-								if (tableToUpdateMapping.TryGetValue(c, out var n))
-									e = (IQueryElement) n;
-
-								if (e is SqlColumn clmn && clmn.Parent != innerQuery || e is SqlField)
+								if (e is SqlColumn clmn && clmn.Parent != v.Context.innerQuery || e is SqlField)
 								{
-									var column = QueryHelper.NeedColumnForExpression(innerQuery, (ISqlExpression)e, false);
+									var column = QueryHelper.NeedColumnForExpression(v.Context.innerQuery, (ISqlExpression)e, false);
 									if (column != null)
 										return column;
 								}
@@ -2339,10 +2393,10 @@ namespace LinqToDB.SqlProvider
 				else if (firstTable.Source is SqlTable newUpdateTable && newUpdateTable != updateTable && QueryHelper.IsEqualTables(newUpdateTable, updateTable))
 				{
 					statement.Update.Table = newUpdateTable;
-					statement.Update = ConvertVisitor.Convert(statement.Update, (v, e) =>
+					statement.Update = statement.Update.Convert((updateTable, newUpdateTable), static (v, e) =>
 					{
-						if (e is SqlField field && field.Table == updateTable)
-							return newUpdateTable[field.Name] ?? throw new LinqException($"Field {field.Name} not found in table {newUpdateTable}");
+						if (e is SqlField field && field.Table == v.Context.updateTable)
+							return v.Context.newUpdateTable[field.Name] ?? throw new LinqException($"Field {field.Name} not found in table {v.Context.newUpdateTable}");
 
 						return e;
 					});
@@ -2385,7 +2439,7 @@ namespace LinqToDB.SqlProvider
 
 		protected void CheckAliases(SqlStatement statement, int maxLen)
 		{
-			new QueryVisitor().Visit(statement, e =>
+			statement.Visit(maxLen, static (maxLen, e) =>
 			{
 				switch (e.ElementType)
 				{
@@ -2638,7 +2692,7 @@ namespace LinqToDB.SqlProvider
 
 		public bool IsParameterDependent(SqlStatement statement)
 		{
-			return null != new QueryVisitor().Find(statement, e => IsParameterDependedElement(e));
+			return null != statement.Find(this, static (ctx, e) => ctx.IsParameterDependedElement(e));
 		}
 
 		public virtual SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context)
@@ -2700,7 +2754,7 @@ namespace LinqToDB.SqlProvider
 
 				if (supportsParameter)
 				{
-					if (takeExpr.ElementType.NotIn(QueryElementType.SqlParameter, QueryElementType.SqlValue))
+					if (takeExpr.ElementType != QueryElementType.SqlParameter && takeExpr.ElementType != QueryElementType.SqlValue)
 					{
 						var takeValue = takeExpr.EvaluateExpression(optimizationContext.Context)!;
 						var takeParameter = new SqlParameter(new DbDataType(takeValue.GetType()), "take", takeValue)
@@ -2722,7 +2776,7 @@ namespace LinqToDB.SqlProvider
 
 				if (supportsParameter)
 				{
-					if (skipExpr.ElementType.NotIn(QueryElementType.SqlParameter, QueryElementType.SqlValue))
+					if (skipExpr.ElementType != QueryElementType.SqlParameter && skipExpr.ElementType != QueryElementType.SqlValue)
 					{
 						var skipValue = skipExpr.EvaluateExpression(optimizationContext.Context)!;
 						var skipParameter = new SqlParameter(new DbDataType(skipValue.GetType()), "skip", skipValue)

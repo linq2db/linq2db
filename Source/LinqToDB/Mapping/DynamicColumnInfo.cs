@@ -8,7 +8,7 @@ namespace LinqToDB.Mapping
 	/// <summary>
 	/// Represents a dynamic column, which doesn't have a backing field in it's declaring type.
 	/// </summary>
-	/// <seealso cref="System.Reflection.MemberInfo" />
+	/// <seealso cref="MemberInfo" />
 	public class DynamicColumnInfo : PropertyInfo, IEquatable<DynamicColumnInfo>
 	{
 		private static readonly MethodInfo _dummyGetter = typeof(DynamicColumnInfo).GetMethod(nameof(DummyGetter), BindingFlags.Instance | BindingFlags.NonPublic)!;

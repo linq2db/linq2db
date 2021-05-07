@@ -9,9 +9,14 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using LinqToDB.SqlQuery;
 	using Mapping;
 	using System.Data.Linq;
+	using System.Globalization;
 
 	public class PostgreSQLMappingSchema : MappingSchema
 	{
+		private const string DATE_FORMAT       = "'{0:yyyy-MM-dd}'::{1}";
+		private const string TIMESTAMP0_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss}'::{1}";
+		private const string TIMESTAMP3_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.fff}'::{1}";
+
 		public PostgreSQLMappingSchema() : this(ProviderName.PostgreSQL)
 		{
 		}
@@ -39,9 +44,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			AddScalarType(typeof(TimeSpan?),       DataType.Interval);
 
 			// npgsql doesn't support unsigned types except byte (and sbyte)
-			SetConvertExpression<ushort?, DataParameter>(value => new DataParameter(null, value == null ? (int?)null     : (int)value    , DataType.Int32)  , false);
-			SetConvertExpression<uint?  , DataParameter>(value => new DataParameter(null, value == null ? (long?)null    : (long)value   , DataType.Int64)  , false);
-			SetConvertExpression<ulong? , DataParameter>(value => new DataParameter(null, value == null ? (decimal?)null : (decimal)value, DataType.Decimal), false);
+			SetConvertExpression<ushort?, DataParameter>(value => new DataParameter(null, value == null ? (int?    )null : value, DataType.Int32)  , false);
+			SetConvertExpression<uint?  , DataParameter>(value => new DataParameter(null, value == null ? (long?   )null : value, DataType.Int64)  , false);
+			SetConvertExpression<ulong? , DataParameter>(value => new DataParameter(null, value == null ? (decimal?)null : value, DataType.Decimal), false);
 		}
 
 		static void BuildDateTime(StringBuilder stringBuilder, SqlDataType dt, DateTime value)
@@ -53,22 +58,22 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			{
 				if (value.Hour == 0 && value.Minute == 0 && value.Second == 0)
 				{
-					format = "'{0:yyyy-MM-dd}'::{1}";
+					format = DATE_FORMAT;
 					dbType = dt.Type.DbType ?? "date";
 				}
 				else
 				{
-					format = "'{0:yyyy-MM-dd HH:mm:ss}'::{1}";
+					format = TIMESTAMP0_FORMAT;
 					dbType = dt.Type.DbType ?? "timestamp";
 				}
 			}
 			else
 			{
-				format = "'{0:yyyy-MM-dd HH:mm:ss.fff}'::{1}";
+				format = TIMESTAMP3_FORMAT;
 				dbType = dt.Type.DbType ?? "timestamp";
 			}
 
-			stringBuilder.AppendFormat(format, value, dbType);
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value, dbType);
 		}
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
@@ -80,6 +85,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			stringBuilder.Append('\'');
 		}
 
+		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
 			stringBuilder
@@ -91,12 +97,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
 		{
-			DataTools.ConvertStringToSql(stringBuilder, "||", null, AppendConversion, value, null);
+			DataTools.ConvertStringToSql(stringBuilder, "||", null, AppendConversionAction, value, null);
 		}
 
 		static void ConvertCharToSql(StringBuilder stringBuilder, char value)
 		{
-			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversion, value);
+			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversionAction, value);
 		}
 
 		internal static MappingSchema Instance { get; } = new PostgreSQLMappingSchema();
