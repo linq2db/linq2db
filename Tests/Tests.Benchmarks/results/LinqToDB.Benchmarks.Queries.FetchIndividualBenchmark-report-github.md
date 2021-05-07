@@ -11,14 +11,14 @@ Frequency=3417995 Hz, Resolution=292.5692 ns, Timer=TSC
 Jit=RyuJit  Platform=X64  
 
 ```
-|    Method |              Runtime |       Mean |     Median |  Ratio | Allocated |
-|---------- |--------------------- |-----------:|-----------:|-------:|----------:|
-|      Linq |             .NET 5.0 | 185.435 μs | 171.153 μs | 114.20 |   8,584 B |
-|  Compiled |             .NET 5.0 |  60.484 μs |  57.490 μs |  37.27 |         - |
-| RawAdoNet |             .NET 5.0 |   1.302 μs |   1.251 μs |   0.80 |   1,520 B |
-|      Linq |        .NET Core 3.1 | 205.641 μs | 188.268 μs | 125.74 |   8,464 B |
-|  Compiled |        .NET Core 3.1 |  48.570 μs |  30.427 μs |  29.59 |         - |
-| RawAdoNet |        .NET Core 3.1 |   1.482 μs |   1.473 μs |   0.92 |   1,520 B |
-|      Linq | .NET Framework 4.7.2 | 138.297 μs | 120.685 μs |  85.81 |  16,384 B |
-|  Compiled | .NET Framework 4.7.2 |  31.338 μs |  26.185 μs |  19.40 |         - |
-| RawAdoNet | .NET Framework 4.7.2 |   1.634 μs |   1.622 μs |   1.00 |   1,581 B |
+|    Method |              Runtime |       Mean |  Ratio | Allocated |
+|---------- |--------------------- |-----------:|-------:|----------:|
+|      Linq |             .NET 5.0 |  31.304 μs |  20.74 |   7,418 B |
+|  Compiled |             .NET 5.0 |  76.882 μs |  50.78 |         - |
+| RawAdoNet |             .NET 5.0 |   1.179 μs |   0.78 |   1,520 B |
+|      Linq |        .NET Core 3.1 |  36.927 μs |  24.31 |   7,570 B |
+|  Compiled |        .NET Core 3.1 |   6.058 μs |   4.05 |   2,472 B |
+| RawAdoNet |        .NET Core 3.1 |   1.397 μs |   0.92 |   1,520 B |
+|      Linq | .NET Framework 4.7.2 | 154.736 μs | 101.59 |  16,384 B |
+|  Compiled | .NET Framework 4.7.2 |  40.109 μs |  26.45 |         - |
+| RawAdoNet | .NET Framework 4.7.2 |   1.525 μs |   1.00 |   1,581 B |

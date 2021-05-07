@@ -11,23 +11,23 @@ Frequency=3417995 Hz, Resolution=292.5692 ns, Timer=TSC
 Jit=RyuJit  Platform=X64  
 
 ```
-|                          Method |              Runtime |       Mean |     Median | Ratio | Allocated |
-|-------------------------------- |--------------------- |-----------:|-----------:|------:|----------:|
-|                TypeMapperAction |             .NET 5.0 |  5.6727 ns |  5.6421 ns |  5.26 |         - |
-|              DirectAccessAction |             .NET 5.0 |  1.0896 ns |  1.0767 ns |  1.01 |         - |
-|        TypeMapperActionWithCast |             .NET 5.0 |  4.8383 ns |  4.7625 ns |  4.60 |         - |
-|      DirectAccessActionWithCast |             .NET 5.0 |  0.5716 ns |  0.5364 ns |  0.57 |         - |
-|   TypeMapperActionWithParameter |             .NET 5.0 |  6.3273 ns |  6.2333 ns |  5.86 |         - |
-| DirectAccessActionWithParameter |             .NET 5.0 |  1.3345 ns |  1.3315 ns |  1.24 |         - |
-|                TypeMapperAction |        .NET Core 3.1 |  5.2531 ns |  5.3039 ns |  4.87 |         - |
-|              DirectAccessAction |        .NET Core 3.1 |  1.3239 ns |  1.3279 ns |  1.23 |         - |
-|        TypeMapperActionWithCast |        .NET Core 3.1 |  4.2435 ns |  4.2206 ns |  4.00 |         - |
-|      DirectAccessActionWithCast |        .NET Core 3.1 |  0.5284 ns |  0.5245 ns |  0.49 |         - |
-|   TypeMapperActionWithParameter |        .NET Core 3.1 |  6.3404 ns |  6.2169 ns |  6.07 |         - |
-| DirectAccessActionWithParameter |        .NET Core 3.1 |  1.3266 ns |  1.3278 ns |  1.23 |         - |
-|                TypeMapperAction | .NET Framework 4.7.2 | 19.5822 ns | 19.3910 ns | 18.27 |         - |
-|              DirectAccessAction | .NET Framework 4.7.2 |  1.0780 ns |  1.0733 ns |  1.00 |         - |
-|        TypeMapperActionWithCast | .NET Framework 4.7.2 | 13.6120 ns | 13.4798 ns | 12.76 |         - |
-|      DirectAccessActionWithCast | .NET Framework 4.7.2 |  1.0849 ns |  1.0840 ns |  1.01 |         - |
-|   TypeMapperActionWithParameter | .NET Framework 4.7.2 | 20.2726 ns | 20.2621 ns | 18.79 |         - |
-| DirectAccessActionWithParameter | .NET Framework 4.7.2 |  1.0889 ns |  1.0927 ns |  1.01 |         - |
+|                          Method |              Runtime |       Mean | Ratio | Allocated |
+|-------------------------------- |--------------------- |-----------:|------:|----------:|
+|                TypeMapperAction |             .NET 5.0 |  5.5203 ns |  4.20 |         - |
+|              DirectAccessAction |             .NET 5.0 |  1.0461 ns |  0.80 |         - |
+|        TypeMapperActionWithCast |             .NET 5.0 |  4.5804 ns |  3.49 |         - |
+|      DirectAccessActionWithCast |             .NET 5.0 |  0.5207 ns |  0.40 |         - |
+|   TypeMapperActionWithParameter |             .NET 5.0 |  6.1771 ns |  4.70 |         - |
+| DirectAccessActionWithParameter |             .NET 5.0 |  1.3937 ns |  1.06 |         - |
+|                TypeMapperAction |        .NET Core 3.1 |  5.0313 ns |  3.83 |         - |
+|              DirectAccessAction |        .NET Core 3.1 |  1.1062 ns |  0.84 |         - |
+|        TypeMapperActionWithCast |        .NET Core 3.1 |  3.7461 ns |  2.85 |         - |
+|      DirectAccessActionWithCast |        .NET Core 3.1 |  0.5416 ns |  0.41 |         - |
+|   TypeMapperActionWithParameter |        .NET Core 3.1 |  6.0427 ns |  4.68 |         - |
+| DirectAccessActionWithParameter |        .NET Core 3.1 |  1.0936 ns |  0.83 |         - |
+|                TypeMapperAction | .NET Framework 4.7.2 | 19.6164 ns | 14.93 |         - |
+|              DirectAccessAction | .NET Framework 4.7.2 |  1.3136 ns |  1.00 |         - |
+|        TypeMapperActionWithCast | .NET Framework 4.7.2 | 13.5760 ns | 10.34 |         - |
+|      DirectAccessActionWithCast | .NET Framework 4.7.2 |  1.3167 ns |  1.00 |         - |
+|   TypeMapperActionWithParameter | .NET Framework 4.7.2 | 19.4356 ns | 14.80 |         - |
+| DirectAccessActionWithParameter | .NET Framework 4.7.2 |  1.3507 ns |  1.03 |         - |

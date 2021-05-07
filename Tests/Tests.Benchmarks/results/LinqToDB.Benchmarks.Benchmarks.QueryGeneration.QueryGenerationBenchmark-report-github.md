@@ -13,26 +13,26 @@ Jit=RyuJit  Platform=X64
 ```
 |                    Method |              Runtime | DataProvider |       Mean |     Median | Ratio | Allocated |
 |-------------------------- |--------------------- |------------- |-----------:|-----------:|------:|----------:|
-|             **VwSalesByYear** |             **.NET 5.0** |       **Access** |   **267.1 μs** |   **263.5 μs** |  **0.36** |     **66 KB** |
-|             VwSalesByYear |        .NET Core 3.1 |       Access |   373.7 μs |   373.9 μs |  0.49 |     80 KB |
-|             VwSalesByYear | .NET Framework 4.7.2 |       Access |   771.8 μs |   720.3 μs |  1.00 |    104 KB |
+|             **VwSalesByYear** |             **.NET 5.0** |       **Access** |   **283.3 μs** |   **278.2 μs** |  **0.37** |     **67 KB** |
+|             VwSalesByYear |        .NET Core 3.1 |       Access |   399.1 μs |   399.0 μs |  0.50 |     80 KB |
+|             VwSalesByYear | .NET Framework 4.7.2 |       Access |   770.3 μs |   769.3 μs |  1.00 |    104 KB |
 |                           |                      |              |            |            |       |           |
-|     VwSalesByYearMutation |             .NET 5.0 |       Access |   529.9 μs |   529.7 μs |  0.43 |    154 KB |
-|     VwSalesByYearMutation |        .NET Core 3.1 |       Access |   659.0 μs |   653.7 μs |  0.54 |    171 KB |
-|     VwSalesByYearMutation | .NET Framework 4.7.2 |       Access | 1,239.5 μs | 1,191.0 μs |  1.00 |    200 KB |
+|     VwSalesByYearMutation |             .NET 5.0 |       Access |   556.5 μs |   556.7 μs |  0.46 |    148 KB |
+|     VwSalesByYearMutation |        .NET Core 3.1 |       Access |   687.4 μs |   686.4 μs |  0.57 |    160 KB |
+|     VwSalesByYearMutation | .NET Framework 4.7.2 |       Access | 1,237.7 μs | 1,168.2 μs |  1.00 |    192 KB |
 |                           |                      |              |            |            |       |           |
-| VwSalesByCategoryContains |             .NET 5.0 |       Access | 1,155.8 μs | 1,155.8 μs |  0.56 |    283 KB |
-| VwSalesByCategoryContains |        .NET Core 3.1 |       Access | 1,305.3 μs | 1,304.6 μs |  0.64 |    301 KB |
-| VwSalesByCategoryContains | .NET Framework 4.7.2 |       Access | 2,118.2 μs | 2,107.8 μs |  1.00 |    348 KB |
+| VwSalesByCategoryContains |             .NET 5.0 |       Access | 1,246.3 μs | 1,225.6 μs |  0.54 |    272 KB |
+| VwSalesByCategoryContains |        .NET Core 3.1 |       Access | 1,305.8 μs | 1,304.6 μs |  0.56 |    293 KB |
+| VwSalesByCategoryContains | .NET Framework 4.7.2 |       Access | 2,298.7 μs | 2,291.7 μs |  1.00 |    340 KB |
 |                           |                      |              |            |            |       |           |
-|             **VwSalesByYear** |             **.NET 5.0** |     **Firebird** |   **260.0 μs** |   **260.5 μs** |  **0.31** |     **67 KB** |
-|             VwSalesByYear |        .NET Core 3.1 |     Firebird |   387.0 μs |   387.3 μs |  0.47 |     81 KB |
-|             VwSalesByYear | .NET Framework 4.7.2 |     Firebird |   767.8 μs |   720.6 μs |  1.00 |    104 KB |
+|             **VwSalesByYear** |             **.NET 5.0** |     **Firebird** |   **280.1 μs** |   **279.9 μs** |  **0.42** |     **68 KB** |
+|             VwSalesByYear |        .NET Core 3.1 |     Firebird |   382.9 μs |   383.3 μs |  0.57 |     80 KB |
+|             VwSalesByYear | .NET Framework 4.7.2 |     Firebird |   723.3 μs |   724.3 μs |  1.00 |    104 KB |
 |                           |                      |              |            |            |       |           |
-|     VwSalesByYearMutation |             .NET 5.0 |     Firebird |   530.7 μs |   530.5 μs |  0.44 |    157 KB |
-|     VwSalesByYearMutation |        .NET Core 3.1 |     Firebird |   681.6 μs |   682.9 μs |  0.55 |    174 KB |
-|     VwSalesByYearMutation | .NET Framework 4.7.2 |     Firebird | 1,216.5 μs | 1,165.0 μs |  1.00 |    208 KB |
+|     VwSalesByYearMutation |             .NET 5.0 |     Firebird |   593.6 μs |   594.7 μs |  0.55 |    152 KB |
+|     VwSalesByYearMutation |        .NET Core 3.1 |     Firebird |   736.8 μs |   726.0 μs |  0.68 |    163 KB |
+|     VwSalesByYearMutation | .NET Framework 4.7.2 |     Firebird | 1,102.3 μs | 1,072.0 μs |  1.00 |    192 KB |
 |                           |                      |              |            |            |       |           |
-| VwSalesByCategoryContains |             .NET 5.0 |     Firebird |   761.2 μs |   762.0 μs |  0.48 |    204 KB |
-| VwSalesByCategoryContains |        .NET Core 3.1 |     Firebird |   880.4 μs |   882.3 μs |  0.55 |    222 KB |
-| VwSalesByCategoryContains | .NET Framework 4.7.2 |     Firebird | 1,701.3 μs | 1,694.1 μs |  1.00 |    272 KB |
+| VwSalesByCategoryContains |             .NET 5.0 |     Firebird |   793.6 μs |   793.6 μs |  0.46 |    194 KB |
+| VwSalesByCategoryContains |        .NET Core 3.1 |     Firebird |   922.5 μs |   933.5 μs |  0.53 |    212 KB |
+| VwSalesByCategoryContains | .NET Framework 4.7.2 |     Firebird | 1,775.6 μs | 1,747.4 μs |  1.00 |    264 KB |

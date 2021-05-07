@@ -13,23 +13,23 @@ Jit=RyuJit  Platform=X64
 ```
 |   Method |              Runtime | ThreadCount |      Mean |    Median | Ratio | Allocated |
 |--------- |--------------------- |------------ |----------:|----------:|------:|----------:|
-|     **Linq** |             **.NET 5.0** |          **16** |  **2.246 ms** |  **1.921 ms** |  **1.21** |    **682 KB** |
-| Compiled |             .NET 5.0 |          16 |  1.994 ms |  1.979 ms |  0.71 |    536 KB |
-|     Linq |        .NET Core 3.1 |          16 |  2.055 ms |  2.061 ms |  0.25 |    656 KB |
-| Compiled |        .NET Core 3.1 |          16 |  1.979 ms |  1.976 ms |  0.26 |    531 KB |
-|     Linq | .NET Framework 4.7.2 |          16 |  9.400 ms |  9.764 ms |  5.38 |    768 KB |
-| Compiled | .NET Framework 4.7.2 |          16 |  3.565 ms |  1.720 ms |  1.00 |    640 KB |
+|     **Linq** |             **.NET 5.0** |          **16** |  **2.060 ms** |  **2.051 ms** |  **1.29** |    **603 KB** |
+| Compiled |             .NET 5.0 |          16 |  2.097 ms |  2.094 ms |  1.32 |    487 KB |
+|     Linq |        .NET Core 3.1 |          16 |  2.163 ms |  2.180 ms |  1.43 |    607 KB |
+| Compiled |        .NET Core 3.1 |          16 | 16.329 ms | 16.387 ms | 10.18 |    482 KB |
+|     Linq | .NET Framework 4.7.2 |          16 |  2.258 ms |  1.983 ms |  1.55 |    696 KB |
+| Compiled | .NET Framework 4.7.2 |          16 |  1.524 ms |  1.528 ms |  1.00 |    512 KB |
 |          |                      |             |           |           |       |           |
-|     **Linq** |             **.NET 5.0** |          **32** |  **6.320 ms** |  **3.971 ms** |  **0.72** |  **1,336 KB** |
-| Compiled |             .NET 5.0 |          32 | 16.207 ms | 16.248 ms |  2.50 |  1,073 KB |
-|     Linq |        .NET Core 3.1 |          32 | 15.914 ms | 16.328 ms |  2.09 |  1,310 KB |
-| Compiled |        .NET Core 3.1 |          32 | 16.188 ms | 16.220 ms |  2.49 |  1,063 KB |
-|     Linq | .NET Framework 4.7.2 |          32 |  9.465 ms |  9.896 ms |  1.27 |  1,536 KB |
-| Compiled | .NET Framework 4.7.2 |          32 |  7.801 ms |  8.387 ms |  1.00 |  1,280 KB |
+|     **Linq** |             **.NET 5.0** |          **32** |  **2.655 ms** |  **2.642 ms** |  **0.40** |  **1,208 KB** |
+| Compiled |             .NET 5.0 |          32 | 16.590 ms | 16.620 ms |  2.44 |    974 KB |
+|     Linq |        .NET Core 3.1 |          32 | 16.257 ms | 16.402 ms |  2.43 |  1,215 KB |
+| Compiled |        .NET Core 3.1 |          32 | 16.302 ms | 16.260 ms |  2.40 |    964 KB |
+|     Linq | .NET Framework 4.7.2 |          32 |  6.628 ms |  6.847 ms |  0.99 |  1,344 KB |
+| Compiled | .NET Framework 4.7.2 |          32 |  6.857 ms |  7.057 ms |  1.00 |  1,024 KB |
 |          |                      |             |           |           |       |           |
-|     **Linq** |             **.NET 5.0** |          **64** |  **4.609 ms** |  **4.592 ms** |  **0.59** |  **2,660 KB** |
-| Compiled |             .NET 5.0 |          64 |  3.201 ms |  3.206 ms |  0.42 |  2,145 KB |
-|     Linq |        .NET Core 3.1 |          64 | 12.482 ms | 16.548 ms |  1.50 |  2,616 KB |
-| Compiled |        .NET Core 3.1 |          64 | 16.439 ms | 16.565 ms |  2.16 |  2,125 KB |
-|     Linq | .NET Framework 4.7.2 |          64 |  8.681 ms |  6.609 ms |  1.20 |  3,072 KB |
-| Compiled | .NET Framework 4.7.2 |          64 |  7.758 ms |  7.970 ms |  1.00 |  2,560 KB |
+|     **Linq** |             **.NET 5.0** |          **64** | **16.468 ms** | **16.428 ms** |  **3.39** |  **2,410 KB** |
+| Compiled |             .NET 5.0 |          64 | 16.640 ms | 16.649 ms |  3.43 |  1,948 KB |
+|     Linq |        .NET Core 3.1 |          64 | 16.510 ms | 16.527 ms |  3.40 |  2,430 KB |
+| Compiled |        .NET Core 3.1 |          64 | 16.527 ms | 16.484 ms |  3.40 |  1,928 KB |
+|     Linq | .NET Framework 4.7.2 |          64 |  7.745 ms |  6.162 ms |  1.66 |  2,624 KB |
+| Compiled | .NET Framework 4.7.2 |          64 |  4.833 ms |  5.159 ms |  1.00 |  2,048 KB |

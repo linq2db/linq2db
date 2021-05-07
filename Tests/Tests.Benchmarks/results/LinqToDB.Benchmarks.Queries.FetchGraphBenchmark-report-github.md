@@ -11,17 +11,17 @@ Frequency=3417995 Hz, Resolution=292.5692 ns, Timer=TSC
 Jit=RyuJit  Platform=X64  
 
 ```
-|        Method |              Runtime |     Mean |   Median | Ratio | Allocated |
-|-------------- |--------------------- |---------:|---------:|------:|----------:|
-|          Linq |             .NET 5.0 | 3.984 ms | 3.950 ms |  0.88 |      1 MB |
-|     LinqAsync |             .NET 5.0 | 3.974 ms | 4.009 ms |  0.87 |      1 MB |
-|      Compiled |             .NET 5.0 | 4.104 ms | 4.090 ms |  0.90 |      1 MB |
-| CompiledAsync |             .NET 5.0 | 3.894 ms | 3.917 ms |  0.85 |      1 MB |
-|          Linq |        .NET Core 3.1 | 4.306 ms | 4.351 ms |  0.95 |      1 MB |
-|     LinqAsync |        .NET Core 3.1 | 4.559 ms | 4.541 ms |  1.01 |      1 MB |
-|      Compiled |        .NET Core 3.1 | 4.343 ms | 4.331 ms |  0.95 |      1 MB |
-| CompiledAsync |        .NET Core 3.1 | 4.450 ms | 4.413 ms |  0.99 |      1 MB |
-|          Linq | .NET Framework 4.7.2 | 4.326 ms | 4.290 ms |  0.96 |      2 MB |
-|     LinqAsync | .NET Framework 4.7.2 | 4.668 ms | 4.558 ms |  1.04 |      2 MB |
-|      Compiled | .NET Framework 4.7.2 | 4.511 ms | 4.470 ms |  1.00 |      2 MB |
-| CompiledAsync | .NET Framework 4.7.2 | 4.549 ms | 4.493 ms |  1.01 |      2 MB |
+|        Method |              Runtime |     Mean | Ratio | Allocated |
+|-------------- |--------------------- |---------:|------:|----------:|
+|          Linq |             .NET 5.0 | 3.770 ms |  0.78 |      1 MB |
+|     LinqAsync |             .NET 5.0 | 5.114 ms |  1.05 |      1 MB |
+|      Compiled |             .NET 5.0 | 3.703 ms |  0.76 |      1 MB |
+| CompiledAsync |             .NET 5.0 | 3.910 ms |  0.80 |      1 MB |
+|          Linq |        .NET Core 3.1 | 4.226 ms |  0.88 |      1 MB |
+|     LinqAsync |        .NET Core 3.1 | 4.450 ms |  0.92 |      1 MB |
+|      Compiled |        .NET Core 3.1 | 4.160 ms |  0.86 |      1 MB |
+| CompiledAsync |        .NET Core 3.1 | 5.019 ms |  1.04 |      1 MB |
+|          Linq | .NET Framework 4.7.2 | 4.600 ms |  0.95 |      2 MB |
+|     LinqAsync | .NET Framework 4.7.2 | 4.751 ms |  0.98 |      2 MB |
+|      Compiled | .NET Framework 4.7.2 | 4.883 ms |  1.00 |      2 MB |
+| CompiledAsync | .NET Framework 4.7.2 | 6.035 ms |  1.24 |      2 MB |

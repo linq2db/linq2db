@@ -13,6 +13,6 @@ Jit=RyuJit  Platform=X64
 ```
 | Method |              Runtime |     Mean |   Median | Ratio | Allocated |
 |------- |--------------------- |---------:|---------:|------:|----------:|
-|   Test |             .NET 5.0 | 1.386 ms | 1.386 ms |  0.64 |    433 KB |
-|   Test |        .NET Core 3.1 | 1.448 ms | 1.449 ms |  0.67 |    433 KB |
-|   Test | .NET Framework 4.7.2 | 2.195 ms | 2.150 ms |  1.00 |    659 KB |
+|   Test |             .NET 5.0 | 1.624 ms | 1.599 ms |  0.54 |    262 KB |
+|   Test |        .NET Core 3.1 | 1.920 ms | 1.929 ms |  0.69 |    261 KB |
+|   Test | .NET Framework 4.7.2 | 2.794 ms | 2.812 ms |  1.00 |    827 KB |

@@ -13,9 +13,9 @@ Jit=RyuJit  Platform=X64
 ```
 |       Method |              Runtime |       Mean |     Median | Ratio | Allocated |
 |------------- |--------------------- |-----------:|-----------:|------:|----------:|
-|   TypeMapper |             .NET 5.0 | 39.5846 ns | 39.0235 ns |     ? |      32 B |
-| DirectAccess |             .NET 5.0 |  0.0000 ns |  0.0000 ns |     ? |         - |
-|   TypeMapper |        .NET Core 3.1 | 42.2185 ns | 42.2929 ns |     ? |      32 B |
-| DirectAccess |        .NET Core 3.1 |  0.0052 ns |  0.0000 ns |     ? |         - |
-|   TypeMapper | .NET Framework 4.7.2 | 50.0293 ns | 50.5452 ns |     ? |      32 B |
-| DirectAccess | .NET Framework 4.7.2 |  0.0000 ns |  0.0000 ns |     ? |         - |
+|   TypeMapper |             .NET 5.0 | 36.6364 ns | 36.3235 ns |     ? |      32 B |
+| DirectAccess |             .NET 5.0 |  0.0006 ns |  0.0000 ns |     ? |         - |
+|   TypeMapper |        .NET Core 3.1 | 41.4521 ns | 40.9334 ns |     ? |      32 B |
+| DirectAccess |        .NET Core 3.1 |  0.0172 ns |  0.0160 ns |     ? |         - |
+|   TypeMapper | .NET Framework 4.7.2 | 47.4220 ns | 47.3455 ns |     ? |      32 B |
+| DirectAccess | .NET Framework 4.7.2 |  0.0064 ns |  0.0019 ns |     ? |         - |

@@ -11,11 +11,11 @@ Frequency=3417995 Hz, Resolution=292.5692 ns, Timer=TSC
 Jit=RyuJit  Platform=X64  
 
 ```
-|       Method |              Runtime |      Mean |    Median | Ratio | Allocated |
-|------------- |--------------------- |----------:|----------:|------:|----------:|
-|   TypeMapper |             .NET 5.0 |  59.66 ns |  58.55 ns |  0.52 |      24 B |
-| DirectAccess |             .NET 5.0 |  83.84 ns |  78.57 ns |  0.74 |      24 B |
-|   TypeMapper |        .NET Core 3.1 |  53.47 ns |  53.50 ns |  0.47 |      24 B |
-| DirectAccess |        .NET Core 3.1 |  51.83 ns |  51.50 ns |  0.45 |      24 B |
-|   TypeMapper | .NET Framework 4.7.2 | 196.34 ns | 189.37 ns |  1.72 |      24 B |
-| DirectAccess | .NET Framework 4.7.2 | 115.93 ns | 117.42 ns |  1.00 |      24 B |
+|       Method |              Runtime |      Mean | Ratio | Allocated |
+|------------- |--------------------- |----------:|------:|----------:|
+|   TypeMapper |             .NET 5.0 |  42.69 ns |  0.64 |      24 B |
+| DirectAccess |             .NET 5.0 |  62.37 ns |  0.93 |      24 B |
+|   TypeMapper |        .NET Core 3.1 |  40.75 ns |  0.61 |      24 B |
+| DirectAccess |        .NET Core 3.1 |  42.80 ns |  0.64 |      24 B |
+|   TypeMapper | .NET Framework 4.7.2 | 120.06 ns |  1.79 |      24 B |
+| DirectAccess | .NET Framework 4.7.2 |  67.13 ns |  1.00 |      24 B |

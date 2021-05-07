@@ -13,9 +13,9 @@ Jit=RyuJit  Platform=X64
 ```
 |       Method |              Runtime |      Mean | Ratio | Allocated |
 |------------- |--------------------- |----------:|------:|----------:|
-|    BuildFunc |             .NET 5.0 |  3.808 ns |  1.78 |         - |
-| DirectAccess |             .NET 5.0 |  2.126 ns |  0.99 |         - |
-|    BuildFunc |        .NET Core 3.1 |  3.500 ns |  1.63 |         - |
-| DirectAccess |        .NET Core 3.1 |  1.928 ns |  0.90 |         - |
-|    BuildFunc | .NET Framework 4.7.2 | 10.419 ns |  4.87 |         - |
-| DirectAccess | .NET Framework 4.7.2 |  2.142 ns |  1.00 |         - |
+|    BuildFunc |             .NET 5.0 |  3.703 ns |  1.77 |         - |
+| DirectAccess |             .NET 5.0 |  2.335 ns |  1.08 |         - |
+|    BuildFunc |        .NET Core 3.1 |  4.439 ns |  2.17 |         - |
+| DirectAccess |        .NET Core 3.1 |  2.146 ns |  1.01 |         - |
+|    BuildFunc | .NET Framework 4.7.2 | 11.065 ns |  5.09 |         - |
+| DirectAccess | .NET Framework 4.7.2 |  2.115 ns |  1.00 |         - |
