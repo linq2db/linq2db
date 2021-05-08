@@ -598,15 +598,6 @@ namespace LinqToDB
 			return new SqlAliasPlaceholder();
 		}
 
-		class CustomExtensionAttribute : ExtensionAttribute
-		{
-			public CustomExtensionAttribute(string expression) : base(expression)
-			{
-			}
-
-			public override bool GetIsPredicate(Expression expression) => expression.Type == typeof(bool);
-		}
-
 		class ExprBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
@@ -629,7 +620,7 @@ namespace LinqToDB
 		}
 
 #if !NET45
-		[CustomExtension("", BuilderType = typeof(ExprBuilder), ServerSideOnly = true)]
+		[Extension("", BuilderType = typeof(ExprBuilder), ServerSideOnly = true)]
 		[StringFormatMethod("sql")]
 		public static T Expr<T>(
 			[DataExtensions.SqlFormattableComparer] FormattableString sql
@@ -638,7 +629,7 @@ namespace LinqToDB
 			throw new LinqToDBException("'Sql.Expr' is server side only method and used only for generating custom SQL parts");
 		}
 #endif
-		[CustomExtension("", BuilderType = typeof(ExprBuilder), ServerSideOnly = true)]
+		[Extension("", BuilderType = typeof(ExprBuilder), ServerSideOnly = true)]
 		[StringFormatMethod("sql")]
 		public static T Expr<T>(
 			[SqlQueryDependent]              RawSqlString sql,
