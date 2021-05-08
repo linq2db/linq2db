@@ -575,6 +575,7 @@ namespace LinqToDB.SqlQuery
 		void VisitX(SqlMergeStatement element)
 		{
 			Visit(element.Tag);
+			Visit(element.With);
 			Visit(element.Target);
 			Visit(element.Source);
 			Visit(element.On);

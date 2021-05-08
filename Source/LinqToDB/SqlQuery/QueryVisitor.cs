@@ -35,7 +35,7 @@ namespace LinqToDB.SqlQuery
 		{
 			if (element == null || !_all && VisitedElements.ContainsKey(element))
 				return;
-
+			
 			switch (element.ElementType)
 			{
 				case QueryElementType.SqlFunction:
@@ -45,10 +45,10 @@ namespace LinqToDB.SqlQuery
 					}
 
 				case QueryElementType.SqlExpression:
-					{
+				{
 						VisitX((SqlExpression)element);
-						break;
-					}
+					break;
+				}
 
 				case QueryElementType.SqlObjectExpression:
 				{
@@ -72,7 +72,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SqlCteTable:
 					{
 						if (VisitedElements.ContainsKey(element))
-							return;
+								return;
 						VisitedElements.Add(element, element);
 
 						VisitX((SqlCteTable)element);
@@ -622,6 +622,7 @@ namespace LinqToDB.SqlQuery
 		void VisitX(SqlMergeStatement element)
 		{
 			Visit(element.Tag);
+			Visit(element.With);
 			Visit(element.Target);
 			Visit(element.Source);
 			Visit(element.On);
@@ -671,5 +672,5 @@ namespace LinqToDB.SqlQuery
 			foreach (var item in element.Items)
 				Visit(item);
 		}
-	}
-}
+			}
+		}

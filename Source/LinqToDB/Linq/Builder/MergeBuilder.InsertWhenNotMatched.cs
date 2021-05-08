@@ -49,9 +49,10 @@ namespace LinqToDB.Linq.Builder
 						if (field.IsInsertable)
 						{
 							var expression = LinqToDB.Expressions.Extensions.GetMemberGetter(field.ColumnDescriptor.MemberInfo, param);
-							var expr       = mergeContext.SourceContext.ConvertToSql(builder.ConvertExpression(expression), 1, ConvertFlags.Field)[0].Sql;
+							var tgtExpr    = mergeContext.TargetContext.ConvertToSql(builder.ConvertExpression(expression), 1, ConvertFlags.Field)[0].Sql;
+							var srcExpr    = mergeContext.SourceContext.ConvertToSql(builder.ConvertExpression(expression), 1, ConvertFlags.Field)[0].Sql;
 
-							operation.Items.Add(new SqlSetExpression(field, expr));
+							operation.Items.Add(new SqlSetExpression(tgtExpr, srcExpr));
 						}
 						else if (field.IsIdentity)
 						{

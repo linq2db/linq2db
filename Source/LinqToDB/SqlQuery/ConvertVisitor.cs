@@ -441,16 +441,16 @@ namespace LinqToDB.SqlQuery
 					}
 
 					case QueryElementType.IsDistinctPredicate:
-						{
-							var p  = (SqlPredicate.IsDistinct)element;
-							var e1 = (ISqlExpression?)ConvertInternal(p.Expr1) ?? p.Expr1;
-							var e2 = (ISqlExpression?)ConvertInternal(p.Expr2) ?? p.Expr2;
+					{
+						var p  = (SqlPredicate.IsDistinct)element;
+						var e1 = (ISqlExpression?)ConvertInternal(p.Expr1) ?? p.Expr1;
+						var e2 = (ISqlExpression?)ConvertInternal(p.Expr2) ?? p.Expr2;
 
-							if (!ReferenceEquals(p.Expr1, e1) || !ReferenceEquals(p.Expr2, e2))
-								newElement = new SqlPredicate.IsDistinct(e1, p.IsNot, e2);
+						if (!ReferenceEquals(p.Expr1, e1) || !ReferenceEquals(p.Expr2, e2))
+							newElement = new SqlPredicate.IsDistinct(e1, p.IsNot, e2);
 
-							break;
-						}
+						break;
+					}
 
 					case QueryElementType.InSubQueryPredicate:
 					{
@@ -973,6 +973,7 @@ namespace LinqToDB.SqlQuery
 						var merge = (SqlMergeStatement)element;
 
 						var tag        = merge.Tag != null ? (SqlComment?)ConvertInternal(merge.Tag) : null;
+						var with       = (SqlWithClause?)      ConvertInternal(merge.With);
 						var target     = (SqlTableSource?)    ConvertInternal(merge.Target);
 						var source     = (SqlTableLikeSource?)ConvertInternal(merge.Source);
 						var on         = (SqlSearchCondition?)ConvertInternal(merge.On);
@@ -985,6 +986,7 @@ namespace LinqToDB.SqlQuery
 							operations != null && !ReferenceEquals(merge.Operations, operations))
 						{
 							newElement = new SqlMergeStatement(
+								with,
 								merge.Hint,
 								target     ?? merge.Target,
 								source     ?? merge.Source,

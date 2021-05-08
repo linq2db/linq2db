@@ -333,6 +333,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.MergeStatement:
 					{
 						return
+							Find(((SqlMergeStatement)element).With      ) ??
 							Find(((SqlMergeStatement)element).Target    ) ??
 							Find(((SqlMergeStatement)element).Source    ) ??
 							Find(((SqlMergeStatement)element).On        ) ??

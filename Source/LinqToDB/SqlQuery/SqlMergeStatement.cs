@@ -1,53 +1,60 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlMergeStatement : SqlStatement
+	public class SqlMergeStatement : SqlStatementWithQueryBase
 	{
 		private const string TargetAlias = "Target";
 
-		public SqlMergeStatement(SqlTable target)
+		public SqlMergeStatement(SqlTable target) : base(null)
 		{
 			Target = new SqlTableSource(target, TargetAlias);
 		}
 
 		internal SqlMergeStatement(
+			SqlWithClause?                       with,
 			string?                              hint,
 			SqlTableSource                       target,
-			SqlTableLikeSource                  source,
+			SqlTableLikeSource                   source,
 			SqlSearchCondition                   on,
 			IEnumerable<SqlMergeOperationClause> operations)
+			: base(null)
 		{
-			Hint   = hint;
+			With = with;
+			Hint = hint;
 			Target = target;
 			Source = source;
-			On     = on;
+			On = on;
 
 			foreach (var operation in operations)
 				Operations.Add(operation);
 		}
 
-		public string?                        Hint      { get; internal set; }
+		public string?                        Hint       { get; internal set; }
+														 
+		public SqlTableSource                 Target     { get; }
+														 
+		public SqlTableLikeSource             Source     { get; internal set; } = null!;
+														 
+		public SqlSearchCondition             On         { get; }               = new SqlSearchCondition();
 
-		public SqlTableSource                 Target    { get; }
+		public List<SqlMergeOperationClause>  Operations { get; }               = new List<SqlMergeOperationClause>();
 
-		public SqlTableLikeSource            Source     { get; internal set; } = null!;
+		public bool                           HasIdentityInsert             => Operations.Any(o => o.OperationType == MergeOperationType.Insert && o.Items.Any(item => item.Column is SqlField field && field.IsIdentity));
 
-		public SqlSearchCondition             On        { get; }               = new SqlSearchCondition();
+		public override QueryType             QueryType                     => QueryType.Merge;
 
-		public List<SqlMergeOperationClause> Operations { get; }               = new List<SqlMergeOperationClause>();
-
-		public bool                           HasIdentityInsert                 => Operations.Any(o => o.OperationType == MergeOperationType.Insert && o.Items.Any(item => item.Column is SqlField field && field.IsIdentity));
-
-		public override QueryType        QueryType   => QueryType.Merge;
-
-		public override QueryElementType ElementType => QueryElementType.MergeStatement;
+		public override QueryElementType      ElementType                   => QueryElementType.MergeStatement;
 
 		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
+			if (With != null)
+				With.ToString(sb, dic);
+
 			sb.Append("MERGE INTO ");
 
 			((IQueryElement)Target).ToString(sb, dic);
@@ -95,9 +102,10 @@ namespace LinqToDB.SqlQuery
 			set => Source.IsParameterDependent = value;
 		}
 
+		[NotNull]
 		public override SelectQuery? SelectQuery
 		{
-			get => null;
+			get => base.SelectQuery;
 			set => throw new InvalidOperationException();
 		}
 
@@ -114,6 +122,9 @@ namespace LinqToDB.SqlQuery
 
 		public override IEnumerable<IQueryElement> EnumClauses()
 		{
+			if (With != null)
+				yield return With;
+
 			yield return Target;
 			yield return Source;
 			yield return On;
@@ -125,6 +136,7 @@ namespace LinqToDB.SqlQuery
 		public override void WalkQueries(Func<SelectQuery, SelectQuery> func)
 		{
 			Source.WalkQueries(func);
+			With?.WalkQueries(func);
 		}
 	}
 }

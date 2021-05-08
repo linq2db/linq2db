@@ -179,15 +179,39 @@ namespace LinqToDB.SqlProvider
 			{
 				var foundCte  = new Dictionary<CteClause, HashSet<CteClause>>();
 
-				select.SelectQuery.Visit(foundCte, static (foundCte, e) =>
-					{
-						if (e.ElementType == QueryElementType.SqlCteTable)
+				if (select is SqlMergeStatement merge)
+				{
+					merge.Target.Visit(foundCte, static (foundCte, e) =>
 						{
-							var cte = ((SqlCteTable)e).Cte!;
-							RegisterDependency(cte, foundCte);
+							if (e.ElementType == QueryElementType.SqlCteTable)
+							{
+								var cte = ((SqlCteTable)e).Cte!;
+								RegisterDependency(cte, foundCte);
+							}
 						}
-					}
-				);
+					);
+					merge.Source.Visit(foundCte, static (foundCte, e) =>
+						{
+							if (e.ElementType == QueryElementType.SqlCteTable)
+							{
+								var cte = ((SqlCteTable)e).Cte!;
+								RegisterDependency(cte, foundCte);
+							}
+						}
+					);
+				}
+				else
+				{
+					select.SelectQuery.Visit(foundCte, static (foundCte, e) =>
+						{
+							if (e.ElementType == QueryElementType.SqlCteTable)
+							{
+								var cte = ((SqlCteTable)e).Cte!;
+								RegisterDependency(cte, foundCte);
+							}
+						}
+					);
+				}
 
 				if (foundCte.Count == 0)
 					select.With = null;
@@ -216,7 +240,7 @@ namespace LinqToDB.SqlProvider
 			return hasParameters;
 		}
 
-		static T NormalizeExpressions<T>(T expression, bool allowMutation)
+		static T NormalizeExpressions<T>(T expression, bool allowMutation) 
 			where T : class, IQueryElement
 		{
 			var result = expression.ConvertAll(allowMutation: allowMutation, static (visitor, e) =>
@@ -1634,33 +1658,33 @@ namespace LinqToDB.SqlProvider
 				var newElement = element.ConvertAll(
 					ctx,
 					static (visitor, e) =>
+				{
+					var prev = e;
+					var ne   = e;
+					for (;;)
 					{
-						var prev = e;
-						var ne   = e;
-						for (;;)
-						{
 							ne = visitor.Context.Func(visitor.Context.OptimizationContext, visitor.Context.Optimizer, visitor, visitor.Context.Context, e);
 
-							if (ReferenceEquals(ne, e))
-								break;
+						if (ReferenceEquals(ne, e))
+							break;
 
-							e = ne;
-						}
+						e = ne;
+					}
 
 						if (visitor.Context.Register)
 							visitor.Context.OptimizationContext.RegisterOptimized(prev, e);
 
-						return e;
+					return e;
 					},
 					static args =>
-					{
+				{
 						if (args.Visitor.Context.OptimizationContext.IsOptimized(args.Element, out var expr))
-						{
-							args.Element = expr;
-							return false;
-						}	
-						return true;
-					});
+					{
+						args.Element = expr;
+						return false;
+					}	
+					return true;
+				});
 
 				if (ReferenceEquals(newElement, element))
 					return element;
