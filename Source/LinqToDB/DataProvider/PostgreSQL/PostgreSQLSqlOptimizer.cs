@@ -273,7 +273,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return statement;
 		}
 
-		public override ISqlPredicate ConvertSearchStringPredicate(MappingSchema mappingSchema, SqlPredicate.SearchString predicate, ConvertVisitor visitor,
+		public override ISqlPredicate ConvertSearchStringPredicate<TContext>(MappingSchema mappingSchema, SqlPredicate.SearchString predicate, ConvertVisitor<RunOptimizationContext<TContext>> visitor,
 			OptimizationContext optimizationContext)
 		{
 			var searchPredicate = ConvertSearchStringPredicateViaLike(mappingSchema, predicate, visitor, optimizationContext);

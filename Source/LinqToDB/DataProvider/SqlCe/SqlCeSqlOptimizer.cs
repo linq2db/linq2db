@@ -46,7 +46,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		public override string[] LikeCharactersToEscape => LikeSqlCeCharactersToEscape;
 
-		public override ISqlPredicate ConvertSearchStringPredicate(MappingSchema mappingSchema, SqlPredicate.SearchString predicate, ConvertVisitor visitor,
+		public override ISqlPredicate ConvertSearchStringPredicate<TContext>(MappingSchema mappingSchema, SqlPredicate.SearchString predicate, ConvertVisitor<RunOptimizationContext<TContext>> visitor,
 			OptimizationContext optimizationContext)
 		{
 			var like = ConvertSearchStringPredicateViaLike(mappingSchema, predicate, visitor,
