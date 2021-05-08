@@ -534,7 +534,7 @@ namespace LinqToDB.SqlQuery
 				{
 					var expr = (SqlPredicate.Like)(IQueryElement)element;
 					// TODO: children Clone called before _objectTree update (original cloning logic)
-					_objectTree.Add(element, clone = new SqlPredicate.Like(Clone(expr.Expr1), expr.IsNot, Clone(expr.Expr2), expr.Escape));
+					_objectTree.Add(element, clone = new SqlPredicate.Like(Clone(expr.Expr1), expr.IsNot, Clone(expr.Expr2), expr.Escape, expr.FunctionName));
 					break;
 				}
 

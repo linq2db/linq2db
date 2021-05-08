@@ -64,7 +64,7 @@ namespace LinqToDB.DataProvider.Access
 			return !subQuery.Where.IsEmpty;
 		}
 
-		public override ISqlPredicate ConvertSearchStringPredicate(MappingSchema mappingSchema, SqlPredicate.SearchString predicate, ConvertVisitor visitor,
+		public override ISqlPredicate ConvertSearchStringPredicate<TContext>(MappingSchema mappingSchema, SqlPredicate.SearchString predicate, ConvertVisitor<RunOptimizationContext<TContext>> visitor,
 			OptimizationContext optimizationContext)
 		{
 			var like = ConvertSearchStringPredicateViaLike(mappingSchema, predicate, visitor, optimizationContext);

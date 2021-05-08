@@ -67,7 +67,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return false;
 		}
 
-		public override ISqlPredicate ConvertSearchStringPredicate(MappingSchema mappingSchema, SqlPredicate.SearchString predicate, ConvertVisitor visitor,
+		public override ISqlPredicate ConvertSearchStringPredicate<TContext>(MappingSchema mappingSchema, SqlPredicate.SearchString predicate, ConvertVisitor<RunOptimizationContext<TContext>> visitor,
 			OptimizationContext optimizationContext)
 		{
 			if (predicate.IgnoreCase)
