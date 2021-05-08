@@ -464,25 +464,10 @@ namespace LinqToDB.SqlQuery
 			protected override void Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
 			{
 				base.Walk(options, func);
-				Expr2 = Expr2.Walk(options, func)!;				
+				Expr2 = Expr2.Walk(options, func)!;
 			}
 
 			public override IQueryElement Invert() => new IsDistinct(Expr1, !IsNot, Expr2);
-
-			protected override ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-			{
-				if (!doClone(this))
-					return this;
-
-				if (!objectTree.TryGetValue(this, out var clone))
-					objectTree.Add(this, clone = new IsDistinct(
-						(ISqlExpression)Expr1.Clone(objectTree, doClone),
-						IsNot,
-						(ISqlExpression)Expr2.Clone(objectTree, doClone))
-					);
-
-				return clone;
-			}
 
 			public override QueryElementType ElementType => QueryElementType.IsDistinctPredicate;
 

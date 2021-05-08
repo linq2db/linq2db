@@ -562,6 +562,14 @@ namespace LinqToDB.SqlQuery
 					break;
 				}
 
+				case QueryElementType.IsDistinctPredicate:
+				{
+					var expr = (SqlPredicate.IsDistinct)(IQueryElement)element;
+					// TODO: children Clone called before _objectTree update (original cloning logic)
+					_objectTree.Add(element, clone = new SqlPredicate.IsDistinct(Clone(expr.Expr1), expr.IsNot, Clone(expr.Expr2)));
+					break;
+				}
+
 				case QueryElementType.IsNullPredicate:
 				{
 					var expr = (SqlPredicate.IsNull)(IQueryElement)element;

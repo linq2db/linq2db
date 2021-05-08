@@ -256,8 +256,8 @@ namespace LinqToDB.SqlQuery
 						case QueryElementType.IsDistinctPredicate :
 							{
 								var expr = (SqlPredicate.IsDistinct)e;
-								if (dic.TryGetValue(expr.Expr1, out ex)) expr.Expr1 = ex;
-								if (dic.TryGetValue(expr.Expr2, out ex)) expr.Expr2 = ex;
+								if (context.dic.TryGetValue(expr.Expr1, out ex)) expr.Expr1 = ex;
+								if (context.dic.TryGetValue(expr.Expr2, out ex)) expr.Expr2 = ex;
 								break;
 							}
 
