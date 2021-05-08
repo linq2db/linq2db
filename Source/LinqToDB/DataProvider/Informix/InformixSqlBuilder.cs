@@ -84,9 +84,9 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			if (selectQuery.From.Tables.Count == 0)
 			{
-				AppendIndent().Append("SELECT FIRST 1").AppendLine();
+				AppendIndent().Append("SELECT").AppendLine();
 				BuildColumns(selectQuery);
-				AppendIndent().Append("FROM SYSTABLES").AppendLine();
+				AppendIndent().Append("FROM ").Append(FakeTable).AppendLine();
 			}
 			else if (selectQuery.Select.IsDistinct)
 			{
