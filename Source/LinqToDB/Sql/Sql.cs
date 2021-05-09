@@ -1326,8 +1326,8 @@ namespace LinqToDB
 		#endregion
 
 		#region Identity Functions
-		// identity APIs are nternal as:
-		// - there is plans to make them public for now
+		// identity APIs are internal as:
+		// - there is no plans to make them public for now
 		// - support for more providers required
 
 		/// <summary>
