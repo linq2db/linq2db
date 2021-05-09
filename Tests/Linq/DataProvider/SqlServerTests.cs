@@ -1916,7 +1916,7 @@ AS
 		}
 
 		[Test]
-		public void TestRetrieveIdentity([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestRetrieveIdentity([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context, [Values] bool useIdentity)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -1928,12 +1928,21 @@ AS
 					db.Insert(new Person() { FirstName = "", LastName = "" });
 				}
 
-				var lastIdentity = db.Execute<int>("SELECT IDENT_CURRENT('Person')");
-				var step         = db.Execute<int>("SELECT IDENT_INCR('Person')");
+				var lastIdentity = db.Person.Select(_ => _.ID).Max();
+				var step         = 1;
+				var max = lastIdentity;
+
+				if (useIdentity)
+				{
+					lastIdentity = db.Execute<int>("SELECT IDENT_CURRENT('Person')");
+					step         = db.Execute<int>("SELECT IDENT_INCR('Person')");
+					Assert.True(max < lastIdentity);
+					Assert.AreEqual(1, step);
+				}
 
 				var persons  = Enumerable.Range(1, 10).Select(_ => new Person()).ToArray();
 
-				persons.RetrieveIdentity(db);
+				persons.RetrieveIdentity(db, useIdentity: useIdentity);
 
 				for (var i = 0; i < 10; i++)
 					Assert.AreEqual(lastIdentity + (i + 1) * step, persons[i].ID);
