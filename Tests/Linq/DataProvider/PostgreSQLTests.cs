@@ -2089,6 +2089,69 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Test]
+		public void TestSpecialValues([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context, [Values] bool inline)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.InlineParameters = inline;
+
+				try
+				{
+					var real  = float.NaN;
+					var dbl   = double.NaN;
+					db.GetTable<AllTypes>().Insert(() => new AllTypes()
+					{
+						ID             = 1000,
+						realDataType   = real,
+						doubleDataType = dbl,
+					});
+					real = float.NegativeInfinity;
+					dbl  = double.NegativeInfinity;
+					db.GetTable<AllTypes>().Insert(() => new AllTypes()
+					{
+						ID             = 1001,
+						realDataType   = real,
+						doubleDataType = dbl,
+					});
+					real = float.PositiveInfinity;
+					dbl  = double.PositiveInfinity;
+					db.GetTable<AllTypes>().Insert(() => new AllTypes()
+					{
+						ID             = 1002,
+						realDataType   = real,
+						doubleDataType = dbl,
+					});
+
+					var res = db.GetTable<AllTypes>()
+						.Where(_ => _.ID >= 1000)
+						.Select(_ => new { _.ID, _.realDataType, _.doubleDataType})
+						.OrderBy(_ => _.ID)
+						.ToArray();
+
+					Assert.AreEqual (3   , res.Length);
+					Assert.AreEqual (1000, res[0].ID);
+					Assert.IsNaN    (res[0].realDataType);
+					Assert.IsNaN    (res[0].doubleDataType);
+
+					Assert.AreEqual (1001, res[1].ID);
+					Assert.IsNotNull(res[1].realDataType);
+					Assert.IsNotNull(res[1].doubleDataType);
+					Assert.True     (float.IsNegativeInfinity(res[1].realDataType!.Value));
+					Assert.True     (double.IsNegativeInfinity(res[1].doubleDataType!.Value));
+
+					Assert.AreEqual (1002, res[2].ID);
+					Assert.IsNotNull(res[2].realDataType);
+					Assert.IsNotNull(res[2].doubleDataType);
+					Assert.True     (float.IsPositiveInfinity(res[2].realDataType!.Value));
+					Assert.True     (double.IsPositiveInfinity(res[2].doubleDataType!.Value));
+				}
+				finally
+				{
+					db.GetTable<AllTypes>().Where(_ => _.ID >= 1000).Delete();
+				}
+			}
+		}
 	}
 
 	public static class TestPgAggregates
