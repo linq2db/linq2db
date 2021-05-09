@@ -628,86 +628,37 @@ namespace LinqToDB
 
 				SqlExtensionParam? result = null;
 
-				if (method != null)
+				var parameters = method?.GetParameters();
+				if (parameters?.Length > 0)
 				{
-					var parameters = method.GetParameters();
-
-					var genericDefinition        = method.IsGenericMethod ? method.GetGenericMethodDefinition() : method;
-					var templateParameters       = genericDefinition.GetParameters();
-					var templateGenericArguments = genericDefinition.GetGenericArguments();
-					var descriptorMapping        = new Dictionary<Type, ColumnDescriptor?>();
-
+					var names = new HashSet<string>();
 					for (var i = 0; i < parameters.Length; i++)
 					{
 						var arg   = arguments[i];
 						var param = parameters[i];
-						var names = param.GetCustomAttributes(true).OfType<ExprParameterAttribute>()
-							.Select(a => a.Name ?? param.Name)
-							.Distinct()
-							.ToArray()!;
 
-						ColumnDescriptor? descriptor;
-						if (names.Length > 0)
+						names.Clear();
+						ISqlExpression[]? sqlExpressions = null;
+
+						foreach (var a in param.GetCustomAttributes(true).OfType<ExprParameterAttribute>())
 						{
-							if (method.IsGenericMethod)
+							var name = a.Name ?? param.Name;
+							if (names.Add(name))
 							{
-								var templateParam  = templateParameters[i];
-								var elementType    = templateParam.ParameterType!;
-								var argElementType = param.ParameterType;
-								if (elementType.IsArray && argElementType.IsArray)
+								if (sqlExpressions == null)
 								{
-									elementType    = elementType.GetElementType()!;
-									argElementType = argElementType.GetElementType()!;
-								}
-								descriptorMapping.TryGetValue(elementType, out descriptor);
-
-								ISqlExpression[] sqlExpressions;
-								if (arg is NewArrayExpression arrayInit)
-								{
-									sqlExpressions = arrayInit.Expressions.Select(e => convertHelper.Convert(e, descriptor)).ToArray();
-								}	
-								else
-								{
-									var sqlExpression = convertHelper.Convert(arg, descriptor);
-									sqlExpressions = new[] { sqlExpression };
-								}
-
-
-								if (descriptor == null)
-								{
-									descriptor = sqlExpressions.Select(e => QueryHelper.GetColumnDescriptor(e)).FirstOrDefault(d => d != null);
-									if (descriptor != null)
+									if (arg is NewArrayExpression arrayInit)
 									{
-										foreach (var pair
-											in TypeHelper.EnumTypeRemapping(elementType, argElementType, templateGenericArguments))
-										{
-											if (!descriptorMapping.ContainsKey(pair.Item1))
-												descriptorMapping.Add(pair.Item1, descriptor);
-										}
+										sqlExpressions = new ISqlExpression[arrayInit.Expressions.Count];
+										for (var j = 0; j < arrayInit.Expressions.Count; j++)
+											sqlExpressions[j] = convertHelper.Convert(arrayInit.Expressions[j], null);
 									}
+									else
+										sqlExpressions = new[] { convertHelper.Convert(arg, null) };
 								}
 
-								foreach (var name in names)
-								{
-									foreach (var sqlExpr in sqlExpressions)
-									{
-										extension.AddParameter(name!, sqlExpr);
-									}
-								}
-							}
-							else
-							{
-								var sqlExpressions = arg is NewArrayExpression arrayInit
-									? arrayInit.Expressions.Select(e => convertHelper.Convert(e, null)).ToArray()
-									: new[] { convertHelper.Convert(arg, null) };
-
-								foreach (var name in names)
-								{
-									foreach (var sqlExpr in sqlExpressions)
-									{
-										extension.AddParameter(name!, sqlExpr);
-									}
-								}
+								foreach (var sqlExpr in sqlExpressions)
+									extension.AddParameter(name, sqlExpr);
 							}
 						}
 					}
@@ -715,13 +666,13 @@ namespace LinqToDB
 
 				if (BuilderType != null)
 				{
-					var callBuilder = _builders.GetOrAdd(BuilderType, t =>
+					var callBuilder = _builders.GetOrAdd(BuilderType, static t =>
 						{
-							if (Activator.CreateInstance(BuilderType)! is IExtensionCallBuilder res)
+							if (Activator.CreateInstance(t)! is IExtensionCallBuilder res)
 								return res;
 
 							throw new ArgumentException(
-								$"Type '{BuilderType}' does not implement {nameof(IExtensionCallBuilder)} interface.");
+								$"Type '{t}' does not implement {nameof(IExtensionCallBuilder)} interface.");
 						}
 					);
 
@@ -735,7 +686,7 @@ namespace LinqToDB
 
 				if (!extension.CanBeNull.HasValue)
 					extension.CanBeNull = CalcCanBeNull(IsNullable,
-						extension.GetParameters().Select(p => p.Expression?.CanBeNull ?? p.Extension?.CanBeNull ?? true));
+						extension.GetParameters().Select(static p => p.Expression?.CanBeNull ?? p.Extension?.CanBeNull ?? true));
 
 				result ??= new SqlExtensionParam(TokenName, extension);
 

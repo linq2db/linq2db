@@ -230,6 +230,13 @@ namespace Tests.DataProvider
 						|| Sql.Ext.PostgreSQL().ValueIsGreaterThanOrEqualToAny(t1.IntValue, t2.IntArray)
 						|| Sql.Ext.PostgreSQL().ValueIsNotEqualToAny(t1.IntValue, t2.IntArray)
 
+						|| Sql.Ext.PostgreSQL().ValueIsEqualToAny(t1.IntValue, t2.IntArray)
+						|| Sql.Ext.PostgreSQL().ValueIsLessThanAny(t1.IntValue, t2.IntArray)
+						|| Sql.Ext.PostgreSQL().ValueIsLessThanOrEqualToAny(t1.IntValue, t2.IntArray)
+						|| Sql.Ext.PostgreSQL().ValueIsGreaterThanAny(t1.IntValue, t2.IntArray)
+						|| Sql.Ext.PostgreSQL().ValueIsGreaterThanOrEqualToAny(t1.IntValue, t2.IntArray)
+						|| Sql.Ext.PostgreSQL().ValueIsNotEqualToAny(t1.IntValue, t2.IntArray)
+
 						|| Sql.Ext.PostgreSQL().ValueIsEqualToAny(t1.IntValue, arr)
 						|| Sql.Ext.PostgreSQL().ValueIsLessThanAny(t1.IntValue, arr)
 						|| Sql.Ext.PostgreSQL().ValueIsLessThanOrEqualToAny(t1.IntValue, arr)
