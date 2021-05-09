@@ -1324,5 +1324,27 @@ namespace LinqToDB
 		}
 
 		#endregion
+
+		#region Identity Functions
+		// identity APIs are nternal as:
+		// - there is plans to make them public for now
+		// - support for more providers required
+
+		/// <summary>
+		/// Returns last identity value (current value) for specific table.
+		/// </summary>
+		[Function  (PN.SqlServer    , "IDENT_CURRENT", ServerSideOnly = true)]
+		[Expression(PN.SqlServer2000, "NULL"         , ServerSideOnly = true)]
+		[Expression(                  "NULL"         , ServerSideOnly = true)]
+		internal static object? CurrentIdentity(string tableName) => throw new LinqException($"'{nameof(CurrentIdentity)}' is server side only property.");
+
+		/// <summary>
+		/// Returns identity step for specific table.
+		/// </summary>
+		[Function  (PN.SqlServer    , "IDENT_INCR", ServerSideOnly = true)]
+		[Expression(PN.SqlServer2000, "NULL"      , ServerSideOnly = true)]
+		[Expression(                  "NULL"      , ServerSideOnly = true)]
+		internal static object? IdentityStep(string tableName) => throw new LinqException($"'{nameof(IdentityStep)}' is server side only property.");
+		#endregion
 	}
 }
