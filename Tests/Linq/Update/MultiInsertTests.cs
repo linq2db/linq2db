@@ -1,4 +1,5 @@
 ﻿using LinqToDB;
+using LinqToDB.Mapping;
 using NUnit.Framework;
 using System;
 using System.Linq;
@@ -558,6 +559,41 @@ namespace Tests.xUpdate
 		{
 			public int ID    { get; set; }
 			public int Int   { get; set; }
+		}
+
+		[Test]
+		public void InheritanceMapping([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db   = GetDataContext(context);
+			using var dest = db.CreateLocalTable<Base>();
+
+			db
+				.SelectQuery(() => new TestSource { ID = 1 })
+				.MultiInsert()
+				.Into(
+					db.GetTable<Base>(),
+					src => new Derived { ID = src.ID }
+					)
+				.Insert();
+
+			var entity = db.GetTable<Base>().First();
+
+			entity.Should().BeOfType<Derived>();
+		}
+
+		[Table("MULTI_INSERT_INHERIT", IsColumnAttributeRequired = false)]
+		[InheritanceMapping(Code = 42, Type = typeof(Derived))]
+		abstract class Base
+		{
+			public int ID { get; set; }
+
+			[Column(IsDiscriminator = true)]
+			public abstract int Type { get; }
+		}
+
+		class Derived : Base
+		{
+			public override int Type => 42;
 		}
 	}
 }
