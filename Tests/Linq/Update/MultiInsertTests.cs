@@ -541,6 +541,31 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[Test]
+		public void Issue2990([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var src   = db.CreateLocalTable<TestSource>();
+			using var dest2 = db.CreateLocalTable<Dest2>();
+
+			var q =
+				from s in src
+				let d = dest2.Where(x => x.ID > 5).First()
+				select new
+				{
+					A = s.ID,
+					B = d.ID,
+				};
+
+			var count = q.MultiInsert()
+				.When(x => true, dest2, x => new Dest2 { ID = x.A, Int = x.B })
+				.InsertFirst();
+
+			// INSERT ALL should be generated with OUTER APPLY, as if SELECT was executed alone, and not crash.
+			// #2990 crashes with 'value(TestDataContext).GetTable().Where(x => (x.ID > 5)).First().ID' cannot be converted to SQL.
+			count.Should().Be(0);
+		}
+
 		class TestSource
 		{
 			public int   ID { get; set; }
