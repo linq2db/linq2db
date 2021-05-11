@@ -754,7 +754,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (SequenceHelper.IsSameContext(expression, this))
 				{
-					if (buildInfo.Parent is SelectManyBuilder.SelectManyContext sm)
+					/*if (buildInfo.Parent is SelectManyBuilder.SelectManyContext sm)
 					{
 						var expr = MakeSubQueryExpression(
 							Builder.MappingSchema,
@@ -764,15 +764,17 @@ namespace LinqToDB.Linq.Builder
 							_key.Lambda.Body);
 
 						return Builder.BuildSequence(new BuildInfo(buildInfo, expr));
-					}
+					}*/
 
 					//if (buildInfo.Parent == this)
 					{
+						var buildExpression = Builder.GetSubqueryContextReplacement(buildInfo.Expression);
+
 						var expr = MakeSubQueryExpression(
 							Builder.MappingSchema,
 							_sequenceExpr,
 							_key.Lambda.Parameters[0],
-							ExpressionHelper.PropertyOrField(buildInfo.Expression, "Key"),
+							ExpressionHelper.PropertyOrField(buildExpression, "Key"),
 							_key.Lambda.Body);
 
 						var ctx = Builder.BuildSequence(new BuildInfo(buildInfo, expr));
@@ -785,6 +787,9 @@ namespace LinqToDB.Linq.Builder
 					//return this;
 				}
 
+				if (level == 0 && expression!.GetLevel(Builder.MappingSchema) > 0)
+					level = 1;
+
 				if (level != 0)
 				{
 					var levelExpression = expression!.GetLevelExpression(Builder.MappingSchema, level);
@@ -795,6 +800,12 @@ namespace LinqToDB.Linq.Builder
 
 						if (ma.Member.Name == "Key" && ma.Member.DeclaringType == _groupingType)
 						{
+							var keyRef = new ContextRefExpression(levelExpression.Type, _key);
+							var keyExpression = expression!.Replace(levelExpression, keyRef);
+
+							return _key.GetContext(keyExpression, 0, buildInfo);
+
+
 							return ReferenceEquals(levelExpression, expression) ?
 								_key.GetContext(null,       0,         buildInfo!) :
 								_key.GetContext(expression, level + 1, buildInfo!);

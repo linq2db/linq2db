@@ -134,7 +134,10 @@ namespace LinqToDB.Linq.Builder
 
 						_convertedExpressions.Add(cex.Operand, cex);
 
+						var saveBlockDisable = IsBlockDisable;
+						IsBlockDisable = true;
 						var newOperand = BuildExpression(context, cex.Operand, enforceServerSide);
+						IsBlockDisable = saveBlockDisable;
 
 						if (newOperand.Type != cex.Type)
 						{
@@ -288,7 +291,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var ce = (MethodCallExpression)expr;
 
-						if (IsGroupJoinSource(context, ce))
+						/*if (IsGroupJoinSource(context, ce))
 						{
 							foreach (var arg in ce.Arguments.Skip(1))
 								if (!_skippedExpressions.Contains(arg))
@@ -307,7 +310,7 @@ namespace LinqToDB.Linq.Builder
 							}
 
 							break;
-						}
+						}*/
 
 						if (ce.IsAssociation(MappingSchema))
 						{

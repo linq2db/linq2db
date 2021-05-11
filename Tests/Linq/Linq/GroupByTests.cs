@@ -1319,7 +1319,16 @@ namespace Tests.Linq
 		[Test]
 		public void Scalar4([DataSources(ProviderName.SqlCe, TestProvName.AllAccess)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+
+			var query = from ch in db.Child
+				group ch by ch.ParentID into g
+				where g.Where(ch => ch.ParentID > 2).Select(ch => (int?)ch.ChildID).Min() != null
+				select g.Where(ch => ch.ParentID > 2).Select(ch => ch.ChildID).Min();
+
+			query.ToList();
+
+				/*
 				AreEqual(
 					from ch in Child
 					group ch by ch.ParentID into g
@@ -1330,6 +1339,7 @@ namespace Tests.Linq
 					group ch by ch.ParentID into g
 					where g.Where(ch => ch.ParentID > 2).Select(ch => (int?)ch.ChildID).Min() != null
 					select g.Where(ch => ch.ParentID > 2).Select(ch => ch.ChildID).Min());
+		*/
 		}
 
 		[Test]

@@ -206,7 +206,7 @@ namespace LinqToDB.Linq.Builder
 
 							Builder.AssociationPath.Push(Tuple.Create(new AccessorMember(ma), (IBuildContext)this, (List<LoadWithInfo[]>?)loadWith));
 
-							ex = BuildExpression(ma, 1, parentObject);
+							ex = BuildExpression(ma, 1, parentObject, false);
 							if (_loadWithCache == null)
 								_loadWithCache = new Dictionary<MemberInfo, Expression>();
 							_loadWithCache.Add(member.Info.MemberInfo, ex);
@@ -716,19 +716,43 @@ namespace LinqToDB.Linq.Builder
 
 			public virtual Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
-				return BuildExpression(expression, level, null);
+				return BuildExpression(expression, level, null, enforceServerSide);
 			}
 
-			Expression BuildExpression(Expression? expression, int level, ParameterExpression? parentObject)
+			Expression BuildExpression(Expression? expression, int level, ParameterExpression? parentObject,
+				bool enforceServerSide)
 			{
 
-				if (expression == null)
+				if (expression == null || SequenceHelper.IsSameContext(expression, this))
 				{
 					return BuildQuery(OriginalType, this, parentObject);
 				}
 
+
 				// Build table.
 				//
+
+				var projection = MakeProjection(expression, false);
+				if (projection != expression)
+				{
+					var ctx = Builder.GetContext(this, projection);
+					if (ctx == null)
+						throw new InvalidOperationException();
+					return ctx.BuildExpression(projection, 0, enforceServerSide);
+				}
+
+				var field = GetField(expression, 1, false);
+				if (field != null)
+				{
+					// Build field.
+					//
+					var fieldInfo  = ConvertToIndex(expression, level, ConvertFlags.Field).Single();
+					var fieldIndex = ConvertToParentIndex(fieldInfo.Index, null);
+
+					return Builder.BuildSql(expression!, fieldIndex, fieldInfo.Sql);
+				}
+
+				throw new NotImplementedException();
 
 				var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
 				var descriptor      = GetAssociationDescriptor(levelExpression, out _);
@@ -1108,9 +1132,11 @@ namespace LinqToDB.Linq.Builder
 								return IsExpressionResult.False;
 							}
 
+							/*
 							var field = GetField(expression!, 1, false);
 							if (field == null)
 								return IsExpressionResult.True;
+								*/
 
 
 							return IsExpressionResult.False;

@@ -57,6 +57,15 @@ namespace LinqToDB.Linq.Builder
 				new SelectContext (buildInfo.Parent, selector, sequence) :
 				new SelectContext2(buildInfo.Parent, selector, sequence);
 
+			if (sequence is GroupByBuilder.GroupByContext)
+			{
+				var prevSequence = sequence;
+				sequence = new SubQueryContext(sequence);
+				builder.RegisterSubqueryContextReplacement(new ContextRefExpression(selector.Parameters[0].Type, prevSequence),
+					new ContextRefExpression(selector.Parameters[0].Type, sequence));
+			}
+
+
 #if DEBUG
 			context.Debug_MethodCall = methodCall;
 			Debug.WriteLine("BuildMethodCall Select:\n" + context.SelectQuery);

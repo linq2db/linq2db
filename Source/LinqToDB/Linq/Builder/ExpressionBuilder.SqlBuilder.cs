@@ -7,7 +7,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace LinqToDB.Linq.Builder
@@ -19,27 +18,51 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using Reflection;
 	using SqlQuery;
-	using SqlProvider;
 	using Tools;
 	using System.Threading;
 
 	partial class ExpressionBuilder
 	{
+		#region Suqueries support
+
+		Dictionary<Expression, Expression>? _subqueryContextReplacement;
+
+		public void RegisterSubqueryContextReplacement(Expression previous, Expression newExpression)
+		{
+			_subqueryContextReplacement ??= new(ExpressionEqualityComparer.Instance);
+			_subqueryContextReplacement.Remove(previous);
+			_subqueryContextReplacement.Add(previous, newExpression);
+		}
+
+		public Expression GetSubqueryContextReplacement(Expression context)
+		{
+			if (_subqueryContextReplacement == null)
+				return context;
+			if (_subqueryContextReplacement.TryGetValue(context, out var newExpression))
+				return newExpression;
+			return context;
+		}
+
+		#endregion
+
 		#region Build Where
 
 		public IBuildContext BuildWhere(IBuildContext? parent, IBuildContext sequence, LambdaExpression condition, bool checkForSubQuery, bool enforceHaving = false)
 		{
-			var prevParent = sequence.Parent;
-			var body       = condition.GetBody(new ContextRefExpression(condition.Parameters[0].Type, sequence)).Unwrap();
-			var expr       = ConvertExpression(body.Unwrap());
-			var makeHaving = false;
+			var originalContextRef = new ContextRefExpression(condition.Parameters[0].Type, sequence);
+			var body               = condition.GetBody(originalContextRef);
+			var expr               = ConvertExpression(body.Unwrap());
+			var makeHaving         = false;
 
 			if (checkForSubQuery && CheckSubQueryForWhere(sequence, expr, out makeHaving))
 			{
 				sequence = new SubQueryContext(sequence);
 
-				body = condition.GetBody(new ContextRefExpression(condition.Parameters[0].Type, sequence)).Unwrap();
+				var subqueryContextRef = new ContextRefExpression(condition.Parameters[0].Type, sequence);
+				body = condition.GetBody(subqueryContextRef).Unwrap();
 				expr = ConvertExpression(body.Unwrap());
+
+				RegisterSubqueryContextReplacement(originalContextRef, subqueryContextRef);
 			}
 
 			var conditions = enforceHaving || makeHaving && !sequence.SelectQuery.GroupBy.IsEmpty?
@@ -288,9 +311,11 @@ namespace LinqToDB.Linq.Builder
 
 			if (isAggregate || call.IsQueryable())
 			{
+				/*
 				var infoOnAggregation = new BuildInfo(context, call, new SelectQuery { ParentSelect = context.SelectQuery }) { InAggregation = true };
 				if (IsSequence(infoOnAggregation))
 					return false;
+					*/
 
 				var info = new BuildInfo(context, call, new SelectQuery { ParentSelect = context.SelectQuery });
 

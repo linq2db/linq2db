@@ -1147,7 +1147,8 @@ namespace LinqToDB.Linq.Builder
 				var filteredQueryableDetail = Expression.Call(methodInfo, detailQuery,
 					Expression.Quote(Expression.Lambda(equalityBody, param_d)));
 
-				queryableDetail = InjectQuery(queryableDetail, filteredQueryableDetail, mappingSchema);
+				//queryableDetail = InjectQuery(queryableDetail, filteredQueryableDetail, mappingSchema);
+				queryableDetail = filteredQueryableDetail;
 			}
 			else
 			{

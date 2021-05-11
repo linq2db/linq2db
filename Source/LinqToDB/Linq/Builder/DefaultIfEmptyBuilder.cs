@@ -54,7 +54,7 @@ namespace LinqToDB.Linq.Builder
 
 				var expr = Sequence.BuildExpression(expression, level, enforceServerSide);
 
-				if (!Disabled && expression == null)
+				if (!Disabled && SequenceHelper.IsSameContext(expression, Sequence))
 				{
 					var q =
 						from col in SelectQuery.Select.Columns
