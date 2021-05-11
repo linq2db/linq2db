@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-
+using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Mapping;
 
@@ -1190,24 +1190,26 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue2981Test([DataSources] string context)
+		public void Issue2981Test([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var t1 = db.CreateLocalTable<Issue2981Entity>())
-			using (db.CreateLocalTable<Issue2981OwnerEntity>())
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<Issue2981Entity>(new[]
 			{
-				db.Insert(new Issue2981Entity { OwnerId = 1 });
-				db.Insert(new Issue2981Entity { OwnerId = 2 });
-				db.Insert(new Issue2981OwnerEntity { Id = 1 });
+				new Issue2981Entity {OwnerId = 1}, 
+				new Issue2981Entity {OwnerId = 2}
+			});
+			using var t2 = db.CreateLocalTable<Issue2981OwnerEntity>(new[] {new Issue2981OwnerEntity {Id = 1}});
 
-				var res = t1.Select(r => new { r.OwnerId, Id = (int?)r.Owner!.Id }).OrderBy(_ => _.OwnerId).ToArray();
 
-				Assert.AreEqual(2, res.Length);
-				Assert.AreEqual(1, res[0].Id);
-				Assert.AreEqual(1, res[0].OwnerId);
-				Assert.AreEqual(2, res[1].OwnerId);
-				Assert.IsNull(res[1].Id);
-			}
+			var res = t1.Select(r => new {r.OwnerId, Id = (int?)r.Owner!.Id})
+				.OrderBy(_ => _.OwnerId)
+				.ToArray();
+
+			res.Length.Should().Be(2);
+			res[0].Id.Should().Be(1);
+			res[0].OwnerId.Should().Be(1);
+			res[1].OwnerId.Should().Be(2);
+			res[1].Id.Should().BeNull();
 		}
 
 		#endregion
