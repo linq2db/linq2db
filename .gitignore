@@ -21,3 +21,4 @@ linq2db.sln.ide/
 /.vs/*
 *.lock.json
 /.idea/
+/.temp
