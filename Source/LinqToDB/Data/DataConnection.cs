@@ -689,6 +689,7 @@ namespace LinqToDB.Data
 			AddProviderDetector(LinqToDB.DataProvider.SQLite    .SQLiteTools    .ProviderDetector);
 			AddProviderDetector(LinqToDB.DataProvider.SqlServer .SqlServerTools .ProviderDetector);
 			AddProviderDetector(LinqToDB.DataProvider.Sybase    .SybaseTools    .ProviderDetector);
+			AddProviderDetector(LinqToDB.DataProvider.Ingres    .IngresTools    .ProviderDetector);
 
 			var section = DefaultSettings;
 
