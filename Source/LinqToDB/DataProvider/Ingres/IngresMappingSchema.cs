@@ -21,7 +21,7 @@ namespace LinqToDB.DataProvider.Ingres
 			SetDataType(typeof(DateTime),  DataType.DateTime);
 			SetDataType(typeof(DateTime?), DataType.DateTime);
 
-			SetValueToSqlConverter(typeof(bool),     (sb,dt,v) => sb.Append(v));
+			SetValueToSqlConverter(typeof(bool),     (sb,dt,v) => sb.Append((bool)v ? 1 : 0));
 			SetValueToSqlConverter(typeof(Guid),     (sb,dt,v) => sb.Append('\'').Append(((Guid)v).ToString("B")).Append('\''));
 			SetValueToSqlConverter(typeof(DateTime), (sb,dt,v) => ConvertDateTimeToSql(sb, (DateTime)v));
 

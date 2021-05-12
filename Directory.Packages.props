@@ -40,6 +40,8 @@
 		<PackageVersion Include="FirebirdSql.Data.FirebirdClient" Version="8.0.1" />
 
 		<PackageVersion Include="IBM.Data.DB.Provider" Version="11.5.4000.4861" />
+		
+		<PackageVersion Include="Actian.Client" Version="3.0.0" />
 
 		<!--test infrastructure-->
 		<PackageVersion Include="MiniProfiler" Version="3.2.0.157" />
