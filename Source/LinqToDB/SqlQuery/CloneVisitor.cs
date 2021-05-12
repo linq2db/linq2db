@@ -542,7 +542,7 @@ namespace LinqToDB.SqlQuery
 				{
 					var expr = (SqlPredicate.SearchString)(IQueryElement)element;
 					// TODO: children Clone called before _objectTree update (original cloning logic)
-					_objectTree.Add(element, clone = new SqlPredicate.SearchString(Clone(expr.Expr1), expr.IsNot, Clone(expr.Expr2), expr.Kind, expr.IgnoreCase));
+					_objectTree.Add(element, clone = new SqlPredicate.SearchString(Clone(expr.Expr1), expr.IsNot, Clone(expr.Expr2), expr.Kind, Clone(expr.CaseSensitive)));
 					break;
 				}
 

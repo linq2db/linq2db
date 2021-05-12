@@ -218,6 +218,7 @@ namespace LinqToDB.Common
 			/// <summary>
 			/// Defines default behaviour for <see cref="string.StartsWith(string)"/>, <see cref="string.EndsWith(string)"/> and <see cref="string.Contains(string)"/>.
 			/// If <c>false</c>, these functions performs case insensitive search.
+			/// Default value: <c>false</c>.
 			/// </summary>
 			public static bool IsStringSearchCaseSensitive;
 

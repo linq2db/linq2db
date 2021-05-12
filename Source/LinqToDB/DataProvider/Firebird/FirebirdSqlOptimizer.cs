@@ -65,17 +65,20 @@ namespace LinqToDB.DataProvider.Firebird
 			OptimizationContext optimizationContext)
 		{
 			ISqlExpression expr;
+
+			var caseSensitive = predicate.CaseSensitive.EvaluateBoolExpression(optimizationContext.Context);
+
 			switch (predicate.Kind)
 			{
 				case SqlPredicate.SearchString.SearchKind.EndsWith:
 				{
-					if (predicate.IgnoreCase)
+					if (!caseSensitive)
 					{
 						predicate = new SqlPredicate.SearchString(
 							new SqlFunction(typeof(string), "$ToLower$", predicate.Expr1),
 							predicate.IsNot,
 							new SqlFunction(typeof(string), "$ToLower$", predicate.Expr2), predicate.Kind,
-							predicate.IgnoreCase);
+							predicate.CaseSensitive);
 					}
 
 					return ConvertSearchStringPredicateViaLike(mappingSchema, predicate, visitor, optimizationContext);
@@ -86,19 +89,19 @@ namespace LinqToDB.DataProvider.Firebird
 						predicate.IsNot ? "{0} NOT STARTING WITH {1}" : "{0} STARTING WITH {1}",
 						Precedence.Comparison,
 						TryConvertToValue(
-							predicate.IgnoreCase
+							!caseSensitive
 								? new SqlFunction(typeof(string), "$ToLower$", predicate.Expr1)
 								: predicate.Expr1,
 							optimizationContext.Context),
 						TryConvertToValue(
-							predicate.IgnoreCase
+							!caseSensitive
 								? new SqlFunction(typeof(string), "$ToLower$", predicate.Expr2)
 								: predicate.Expr2, optimizationContext.Context)) {CanBeNull = false};
 					break;
 				}	
 				case SqlPredicate.SearchString.SearchKind.Contains:
 				{
-					if (predicate.IgnoreCase)
+					if (!caseSensitive)
 					{
 						expr = new SqlExpression(typeof(bool),
 							predicate.IsNot ? "{0} NOT CONTAINING {1}" : "{0} CONTAINING {1}",

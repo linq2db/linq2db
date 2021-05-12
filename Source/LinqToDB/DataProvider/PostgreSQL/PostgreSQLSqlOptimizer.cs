@@ -278,7 +278,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			var searchPredicate = ConvertSearchStringPredicateViaLike(mappingSchema, predicate, visitor, optimizationContext);
 
-			if (predicate.IgnoreCase && searchPredicate is SqlPredicate.Like likePredicate)
+			if (!predicate.CaseSensitive.EvaluateBoolExpression(optimizationContext.Context) && searchPredicate is SqlPredicate.Like likePredicate)
 			{
 				searchPredicate = new SqlPredicate.Like(likePredicate.Expr1, likePredicate.IsNot, likePredicate.Expr2, likePredicate.Escape, "ILIKE");
 			}

@@ -466,6 +466,44 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void StartsWithCacheCheck([DataSources] string context, [Values(StringComparison.OrdinalIgnoreCase, StringComparison.Ordinal, StringComparison.InvariantCultureIgnoreCase, StringComparison.InvariantCulture)] StringComparison comparison)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var firstName = db.Person.Where(p => p.ID == 1).Select(p => p.FirstName).Single();
+				var nameToCheck = firstName.Substring(0, 3);
+				switch (comparison)
+				{
+					case StringComparison.OrdinalIgnoreCase : 
+					case StringComparison.InvariantCultureIgnoreCase : 
+					case StringComparison.CurrentCultureIgnoreCase : 
+						nameToCheck = nameToCheck.ToUpper();
+						break;
+				}
+
+				db.Person.Count(p => p.FirstName.StartsWith(nameToCheck, comparison)  && p.ID == 1).Should().Be(1);
+				db.Person.Count(p => !p.FirstName.StartsWith(nameToCheck, comparison) && p.ID == 1).Should().Be(0);
+
+				switch (comparison)
+				{
+					case StringComparison.Ordinal : 
+					case StringComparison.CurrentCulture : 
+					case StringComparison.InvariantCulture : 
+					{
+						nameToCheck = firstName.Substring(0, 3);
+						nameToCheck = nameToCheck.ToUpper();
+
+						db.Person.Count(p => p.FirstName.StartsWith(nameToCheck, comparison)  && p.ID == 1).Should().Be(0);
+						db.Person.Count(p => !p.FirstName.StartsWith(nameToCheck, comparison) && p.ID == 1).Should().Be(1);
+
+						break;
+					}
+				}
+
+			}
+		}
+
+		[Test]
 		public void StartsWith1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

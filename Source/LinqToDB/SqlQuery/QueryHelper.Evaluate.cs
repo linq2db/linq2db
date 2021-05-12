@@ -331,6 +331,16 @@ namespace LinqToDB.SqlQuery
 			return info.Value;
 		}
 
+		public static bool EvaluateBoolExpression(this IQueryElement expr, EvaluationContext context, bool defaultValue = false)
+		{
+			var evaluated = expr.EvaluateExpression(context);
+
+			if (evaluated is bool boolValue)
+				return boolValue;
+
+			return defaultValue;
+		}
+
 		private static string GetEvaluationError(IQueryElement expr)
 		{
 			return $"Not implemented evaluation of '{expr.ElementType}': '{expr.ToDebugString()}'.";

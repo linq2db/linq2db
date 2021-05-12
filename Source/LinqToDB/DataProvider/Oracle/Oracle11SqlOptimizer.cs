@@ -70,14 +70,14 @@ namespace LinqToDB.DataProvider.Oracle
 		public override ISqlPredicate ConvertSearchStringPredicate<TContext>(MappingSchema mappingSchema, SqlPredicate.SearchString predicate, ConvertVisitor<RunOptimizationContext<TContext>> visitor,
 			OptimizationContext optimizationContext)
 		{
-			if (predicate.IgnoreCase)
+			if (!predicate.CaseSensitive.EvaluateBoolExpression(optimizationContext.Context))
 			{
 				predicate = new SqlPredicate.SearchString(
 					new SqlFunction(typeof(string), "$ToLower$", predicate.Expr1),
 					predicate.IsNot,
 					new SqlFunction(typeof(string), "$ToLower$", predicate.Expr2), 
 					predicate.Kind,
-					false);
+					new SqlValue(true));
 			}
 
 			return ConvertSearchStringPredicateViaLike(mappingSchema, predicate, visitor, optimizationContext);

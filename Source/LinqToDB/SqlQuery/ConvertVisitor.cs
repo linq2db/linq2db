@@ -387,10 +387,13 @@ namespace LinqToDB.SqlQuery
 						var p  = (SqlPredicate.SearchString)element;
 						var e1 = (ISqlExpression?)ConvertInternal(p.Expr1 );
 						var e2 = (ISqlExpression?)ConvertInternal(p.Expr2 );
+						var cs = (ISqlExpression?)ConvertInternal(p.CaseSensitive);
 
 						if (e1 != null && !ReferenceEquals(p.Expr1, e1) ||
-							e2 != null && !ReferenceEquals(p.Expr2, e2))
-							newElement = new SqlPredicate.SearchString(e1 ?? p.Expr1, p.IsNot, e2 ?? p.Expr2, p.Kind, p.IgnoreCase);
+							e2 != null && !ReferenceEquals(p.Expr2, e2) ||
+							cs != null && !ReferenceEquals(p.CaseSensitive, cs)
+							)
+							newElement = new SqlPredicate.SearchString(e1 ?? p.Expr1, p.IsNot, e2 ?? p.Expr2, p.Kind, cs ?? p.CaseSensitive);
 
 						break;
 					}

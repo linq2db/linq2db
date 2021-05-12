@@ -403,17 +403,17 @@ namespace LinqToDB.SqlQuery
 				Contains
 			}
 
-			public SearchString(ISqlExpression exp1, bool isNot, ISqlExpression exp2, SearchKind searchKind, bool ignoreCase)
+			public SearchString(ISqlExpression exp1, bool isNot, ISqlExpression exp2, SearchKind searchKind, ISqlExpression caseSensitive)
 				: base(exp1, isNot, SqlQuery.Precedence.Comparison)
 			{
-				Expr2      = exp2;
-				Kind       = searchKind;
-				IgnoreCase = ignoreCase;
+				Expr2         = exp2;
+				Kind          = searchKind;
+				CaseSensitive = caseSensitive;
 			}
 
-			public ISqlExpression Expr2      { get; internal set; }
-			public SearchKind     Kind       { get; }
-			public bool           IgnoreCase { get; }
+			public ISqlExpression Expr2         { get; internal set; }
+			public SearchKind     Kind          { get; }
+			public ISqlExpression CaseSensitive { get; }
 
 			protected override void Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 			{
@@ -423,7 +423,7 @@ namespace LinqToDB.SqlQuery
 
 			public override IQueryElement Invert()
 			{
-				return new SearchString(Expr1, !IsNot, Expr2, Kind, IgnoreCase);
+				return new SearchString(Expr1, !IsNot, Expr2, Kind, CaseSensitive);
 			}
 
 			public override QueryElementType ElementType => QueryElementType.SearchStringPredicate;

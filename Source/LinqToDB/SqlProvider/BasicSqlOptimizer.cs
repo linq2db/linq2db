@@ -1885,7 +1885,7 @@ namespace LinqToDB.SqlProvider
 			ConvertVisitor<RunOptimizationContext<TContext>> visitor, 
 			OptimizationContext optimizationContext)
 		{
-			if (!predicate.IgnoreCase)
+			if (!predicate.CaseSensitive.EvaluateBoolExpression(optimizationContext.Context))
 				throw new NotImplementedException($"String search function '{predicate.Kind}' without case sensitivity is not supported.");
 
 			return ConvertSearchStringPredicateViaLike(mappingSchema, predicate, visitor, optimizationContext);
@@ -2655,11 +2655,11 @@ namespace LinqToDB.SqlProvider
 				}
 				case QueryElementType.SearchStringPredicate:
 				{
-					var containsPredicate = (SqlPredicate.SearchString)element;
-					if (containsPredicate.Expr2.ElementType != QueryElementType.SqlValue)
+					var searchString = (SqlPredicate.SearchString)element;
+					if (searchString.Expr2.ElementType != QueryElementType.SqlValue)
 						return true;
 
-					return false;
+					return IsParameterDependedElement(searchString.CaseSensitive);
 				}
 				case QueryElementType.SqlFunction:
 				{

@@ -52,7 +52,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			var like = ConvertSearchStringPredicateViaLike(mappingSchema, predicate, visitor,
 				optimizationContext);
 
-			if (!predicate.IgnoreCase)
+			if (predicate.CaseSensitive.EvaluateBoolExpression(optimizationContext.Context))
 			{
 				SqlPredicate.ExprExpr? subStrPredicate = null;
 
@@ -117,13 +117,8 @@ namespace LinqToDB.DataProvider.SqlCe
 
 				if (subStrPredicate != null)
 				{
-					if (predicate.IsNot && like is IInvertibleElement invertible && invertible.CanInvert())
-					{
-						like = (ISqlPredicate)invertible.Invert();
-					}
-
 					var result = new SqlSearchCondition(
-						new SqlCondition(predicate.IsNot, like, predicate.IsNot),
+						new SqlCondition(false, like, predicate.IsNot),
 						new SqlCondition(predicate.IsNot, subStrPredicate));
 
 					return result;

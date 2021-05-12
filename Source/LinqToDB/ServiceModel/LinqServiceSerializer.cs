@@ -987,7 +987,7 @@ namespace LinqToDB.ServiceModel
 						Append(elem.IsNot);
 						Append(elem.Expr2);
 						Append((int)elem.Kind);
-						Append(elem.IgnoreCase);
+						Append(elem.CaseSensitive);
 						break;
 					}
 
@@ -1786,12 +1786,12 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.SearchStringPredicate:
 					{
-						var expr1      = Read<ISqlExpression>()!;
-						var isNot      = ReadBool();
-						var expr2      = Read<ISqlExpression>()!;
-						var kind       = (SqlPredicate.SearchString.SearchKind)ReadInt();
-						var ignoreCase = ReadBool();
-						obj = new SqlPredicate.SearchString(expr1, isNot, expr2, kind, ignoreCase);
+						var expr1         = Read<ISqlExpression>()!;
+						var isNot         = ReadBool();
+						var expr2         = Read<ISqlExpression>()!;
+						var kind          = (SqlPredicate.SearchString.SearchKind)ReadInt();
+						var caseSensitive = Read<ISqlExpression>()!;
+						obj = new SqlPredicate.SearchString(expr1, isNot, expr2, kind, caseSensitive);
 
 						break;
 					}
