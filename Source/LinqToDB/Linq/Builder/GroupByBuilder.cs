@@ -258,10 +258,11 @@ namespace LinqToDB.Linq.Builder
 				{
 					Key = key;
 
-					_queryRunner = queryRunner;
-					_dataContext = queryRunner.DataContext;
-					_parameters   = parameters;
-					_itemReader   = itemReader;
+					_queryExpression = queryRunner.Expression;
+					_queryParameters = queryRunner.Parameters;
+					_dataContext     = queryRunner.DataContext;
+					_parameters      = parameters;
+					_itemReader      = itemReader;
 
 					if (Configuration.Linq.PreloadGroups)
 					{
@@ -270,8 +271,9 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				private  IList<TElement>?                                        _items;
-				readonly IQueryRunner                                            _queryRunner;
 				readonly IDataContext                                            _dataContext;
+				readonly Expression                                              _queryExpression;
+				readonly object?[]?                                              _queryParameters;
 				readonly List<ParameterAccessor>                                 _parameters;
 				readonly Func<IDataContext,TKey,object?[]?,IQueryable<TElement>> _itemReader;
 
@@ -284,7 +286,7 @@ namespace LinqToDB.Linq.Builder
 						var ps = new object?[_parameters.Count];
 
 						for (var i = 0; i < ps.Length; i++)
-							ps[i] = _parameters[i].OriginalAccessor(_queryRunner.Expression, db, _queryRunner.Parameters);
+							ps[i] = _parameters[i].OriginalAccessor(_queryExpression, db, _queryParameters);
 
 						return _itemReader(db, Key, ps).ToList();
 					}
