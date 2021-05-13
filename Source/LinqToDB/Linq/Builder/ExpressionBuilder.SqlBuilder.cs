@@ -1690,6 +1690,14 @@ namespace LinqToDB.Linq.Builder
 
 				var arg = mc.Arguments[1];
 
+				if (arg.NodeType == ExpressionType.Constant)
+				{
+					var comparison = (StringComparison)(arg.EvaluateExpression() ?? throw new InvalidOperationException());
+					return new SqlValue(comparison == StringComparison.CurrentCulture   ||
+					                    comparison == StringComparison.InvariantCulture ||
+					                    comparison == StringComparison.Ordinal);
+				}
+
 				var variable = Expression.Variable(typeof(StringComparison), "c");
 				var assignment = Expression.Assign(variable, arg);
 				var expr     = (Expression)Expression.Equal(variable, Expression.Constant(StringComparison.CurrentCulture));
