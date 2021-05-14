@@ -2,6 +2,7 @@
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
@@ -171,6 +172,51 @@ namespace Tests.Data
 			}
 		}
 
+		[Test]
+		public void TestGrouping1([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (new GuardGrouping(false))
+			using (new PreloadGroups(false))
+			{
+				using (var dc = new DataContext(context))
+				{
+					var dictionary = dc.GetTable<Person>()
+						.GroupBy(p => p.FirstName)
+						.ToDictionary(p => p.Key);
+
+					var tables = dictionary.ToDictionary(p => p.Key, p => p.Value.ToList());
+				}
+			}
+		}
+
+		[Test]
+		public void TestGrouping2([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (new GuardGrouping(false))
+			using (new PreloadGroups(false))
+			{
+				using (var dc = new DataContext(context))
+				{
+					var query =
+						from p in dc.GetTable<Person>()
+						group p by new { p.FirstName } into g
+						select new
+						{
+							g.Key.FirstName,
+							List = g.Select(k => k.ID),
+						};
+
+					var array = query.ToArray();
+					Assert.IsTrue(array.Length > 0);
+
+					foreach (var row in array)
+					{
+						var ids = row.List.ToArray();
+						Assert.IsTrue(ids.Length > 0);
+					}
+				}
+			}
+		}
 
 		[Test]
 		public void TestObject6()
