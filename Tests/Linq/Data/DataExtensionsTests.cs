@@ -175,11 +175,8 @@ namespace Tests.Data
 		[Test]
 		public void TestGrouping1([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			var old = (Configuration.Linq.GuardGrouping, Configuration.Linq.PreloadGroups);
-			Configuration.Linq.GuardGrouping = false;
-			Configuration.Linq.PreloadGroups = false;
-
-			try
+			using (new GuardGrouping(false))
+			using (new PreloadGroups(false))
 			{
 				using (var dc = new DataContext(context))
 				{
@@ -190,21 +187,13 @@ namespace Tests.Data
 					var tables = dictionary.ToDictionary(p => p.Key, p => p.Value.ToList());
 				}
 			}
-			finally
-			{
-				Configuration.Linq.GuardGrouping = old.GuardGrouping;
-				Configuration.Linq.PreloadGroups = old.PreloadGroups;
-			}
 		}
 
 		[Test]
 		public void TestGrouping2([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			var old = (Configuration.Linq.GuardGrouping, Configuration.Linq.PreloadGroups);
-			Configuration.Linq.GuardGrouping = false;
-			Configuration.Linq.PreloadGroups = false;
-
-			try
+			using (new GuardGrouping(false))
+			using (new PreloadGroups(false))
 			{
 				using (var dc = new DataContext(context))
 				{
@@ -226,11 +215,6 @@ namespace Tests.Data
 						Assert.IsTrue(ids.Length > 0);
 					}
 				}
-			}
-			finally
-			{
-				Configuration.Linq.GuardGrouping = old.GuardGrouping;
-				Configuration.Linq.PreloadGroups = old.PreloadGroups;
 			}
 		}
 
