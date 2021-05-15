@@ -292,3 +292,10 @@ INSERT INTO FTS4_TABLE(text1, text2) VALUES('record not found', 'empty');
 INSERT INTO FTS4_TABLE(text1, text2) VALUES('for snippet testing', 'During 30 Nov-1 Dec, 2-3oC drops. Cool in the upper portion, minimum temperature 14-16oC and cool elsewhere, minimum temperature 17-20oC. Cold to very cold on mountaintops, minimum temperature 6-12oC. Northeasterly winds 15-30 km/hr. After that, temperature increases. Northeasterly winds 15-30 km/hr.');
 
 
+DROP TABLE IF EXISTS CollatedTable;
+CREATE TABLE CollatedTable
+(
+	Id				INT NOT NULL,
+	CaseSensitive	NVARCHAR(20) NOT NULL,
+	CaseInsensitive	NVARCHAR(20) NOT NULL COLLATE NOCASE
+);

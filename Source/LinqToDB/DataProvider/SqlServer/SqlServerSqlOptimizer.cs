@@ -35,8 +35,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public override ISqlPredicate ConvertSearchStringPredicate<TContext>(MappingSchema mappingSchema, SqlPredicate.SearchString predicate, ConvertVisitor<RunOptimizationContext<TContext>> visitor,
 			OptimizationContext optimizationContext)
 		{
-			var like = ConvertSearchStringPredicateViaLike(mappingSchema, predicate, visitor,
-				optimizationContext);
+			var like = base.ConvertSearchStringPredicate(mappingSchema, predicate, visitor, optimizationContext);
 
 			if (predicate.CaseSensitive.EvaluateBoolExpression(optimizationContext.Context))
 			{

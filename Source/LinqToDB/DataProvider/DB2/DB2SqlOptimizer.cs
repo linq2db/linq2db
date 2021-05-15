@@ -1,6 +1,7 @@
 ﻿namespace LinqToDB.DataProvider.DB2
 {
 	using Extensions;
+	using LinqToDB.Mapping;
 	using SqlProvider;
 	using SqlQuery;
 

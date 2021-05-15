@@ -23,22 +23,6 @@
 
 		public override string[] LikeCharactersToEscape => SybaseCharactersToEscape;
 
-		public override ISqlPredicate ConvertSearchStringPredicate<TContext>(MappingSchema mappingSchema, SqlPredicate.SearchString predicate, ConvertVisitor<RunOptimizationContext<TContext>> visitor,
-			OptimizationContext optimizationContext)
-		{
-			if (!predicate.CaseSensitive.EvaluateBoolExpression(optimizationContext.Context))
-			{
-				predicate = new SqlPredicate.SearchString(
-					new SqlFunction(typeof(string), "$ToLower$", predicate.Expr1),
-					predicate.IsNot,
-					new SqlFunction(typeof(string), "$ToLower$", predicate.Expr2), 
-					predicate.Kind,
-					new SqlValue(false));
-			}
-
-			return ConvertSearchStringPredicateViaLike(mappingSchema, predicate, visitor, optimizationContext);
-		}
-
 		protected override ISqlExpression ConvertFunction(SqlFunction func)
 		{
 			func = ConvertFunctionParameters(func, false);

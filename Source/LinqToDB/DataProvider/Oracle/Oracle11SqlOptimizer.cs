@@ -67,22 +67,6 @@ namespace LinqToDB.DataProvider.Oracle
 			return false;
 		}
 
-		public override ISqlPredicate ConvertSearchStringPredicate<TContext>(MappingSchema mappingSchema, SqlPredicate.SearchString predicate, ConvertVisitor<RunOptimizationContext<TContext>> visitor,
-			OptimizationContext optimizationContext)
-		{
-			if (!predicate.CaseSensitive.EvaluateBoolExpression(optimizationContext.Context))
-			{
-				predicate = new SqlPredicate.SearchString(
-					new SqlFunction(typeof(string), "$ToLower$", predicate.Expr1),
-					predicate.IsNot,
-					new SqlFunction(typeof(string), "$ToLower$", predicate.Expr2), 
-					predicate.Kind,
-					new SqlValue(true));
-			}
-
-			return ConvertSearchStringPredicateViaLike(mappingSchema, predicate, visitor, optimizationContext);
-		}
-
 		public override ISqlPredicate ConvertPredicateImpl<TContext>(MappingSchema mappingSchema, ISqlPredicate predicate, ConvertVisitor<RunOptimizationContext<TContext>> visitor, OptimizationContext optimizationContext)
 		{
 			switch (predicate.ElementType)

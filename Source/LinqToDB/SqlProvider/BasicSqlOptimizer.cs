@@ -1886,7 +1886,14 @@ namespace LinqToDB.SqlProvider
 			OptimizationContext optimizationContext)
 		{
 			if (!predicate.CaseSensitive.EvaluateBoolExpression(optimizationContext.Context))
-				throw new NotImplementedException($"String search function '{predicate.Kind}' without case sensitivity is not supported.");
+			{
+				predicate = new SqlPredicate.SearchString(
+					new SqlFunction(typeof(string), "$ToLower$", predicate.Expr1),
+					predicate.IsNot,
+					new SqlFunction(typeof(string), "$ToLower$", predicate.Expr2),
+					predicate.Kind,
+					new SqlValue(false));
+			}
 
 			return ConvertSearchStringPredicateViaLike(mappingSchema, predicate, visitor, optimizationContext);
 		}

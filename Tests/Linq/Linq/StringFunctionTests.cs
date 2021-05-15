@@ -1253,5 +1253,74 @@ namespace Tests.Linq
 				Assert.AreEqual(false, q.ToList().First());
 			}
 		}
+
+		[Table]
+		class CollatedTable
+		{
+			[Column, PrimaryKey] public int    Id              { get; set; }
+			[Column            ] public string CaseSensitive   { get; set; } = null!;
+			[Column            ] public string CaseInsensitive { get; set; } = null!;
+
+			public static readonly CollatedTable TestData = new () { Id = 1, CaseSensitive = "TestString", CaseInsensitive = "TestString" };
+		}
+
+#if NETSTANDARD2_1PLUS
+		[Test]
+		public void ExplicitOrdinalIgnoreCase_Contains([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.GetTable<CollatedTable>().Delete();
+				db.Insert(CollatedTable.TestData);
+
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseSensitive.Contains("stSt", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseInsensitive.Contains("stSt", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseSensitive.Contains("stst", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseInsensitive.Contains("stst", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
+			}
+		}
+#endif
+
+		[Test]
+		public void ExplicitOrdinalIgnoreCase_StartsWith([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.GetTable<CollatedTable>().Delete();
+				db.Insert(CollatedTable.TestData);
+
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseSensitive.StartsWith("TestSt", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseInsensitive.StartsWith("TestSt", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseSensitive.StartsWith("testst", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseInsensitive.StartsWith("testst", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
+			}
+		}
+
+		[Test]
+		public void ExplicitOrdinalIgnoreCase_EdnsWith([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.GetTable<CollatedTable>().Delete();
+				db.Insert(CollatedTable.TestData);
+
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseSensitive.EndsWith("stString", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseInsensitive.EndsWith("stString", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseSensitive.EndsWith("ststring", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseInsensitive.EndsWith("ststring", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
+			}
+		}
 	}
 }
