@@ -216,13 +216,6 @@ namespace LinqToDB.Common
 			public static bool CompareNullsAsValues = true;
 
 			/// <summary>
-			/// Defines default behaviour for <see cref="string.StartsWith(string)"/>, <see cref="string.EndsWith(string)"/> and <see cref="string.Contains(string)"/>.
-			/// If <c>false</c>, these functions performs case insensitive search.
-			/// Default value: <c>false</c>.
-			/// </summary>
-			public static bool IsStringSearchCaseSensitive;
-
-			/// <summary>
 			/// Controls behavior of LINQ query, which ends with GroupBy call.
 			/// - if <c>true</c> - <seealso cref="LinqToDBException"/> will be thrown for such queries;
 			/// - if <c>false</c> - behavior is controlled by <see cref="PreloadGroups"/> option.

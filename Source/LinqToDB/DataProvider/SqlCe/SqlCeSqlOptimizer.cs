@@ -52,7 +52,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			var like = ConvertSearchStringPredicateViaLike(mappingSchema, predicate, visitor,
 				optimizationContext);
 
-			if (predicate.CaseSensitive.EvaluateBoolExpression(optimizationContext.Context))
+			if (predicate.CaseSensitive.EvaluateBoolExpression(optimizationContext.Context) == true)
 			{
 				SqlPredicate.ExprExpr? subStrPredicate = null;
 
@@ -62,8 +62,8 @@ namespace LinqToDB.DataProvider.SqlCe
 					{
 						subStrPredicate =
 							new SqlPredicate.ExprExpr(
-								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, 
-									new SqlFunction(typeof(string), "SUBSTRING", 
+								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary,
+									new SqlFunction(typeof(string), "SUBSTRING",
 										predicate.Expr1,
 										new SqlValue(1),
 									new SqlFunction(typeof(int), "Length", predicate.Expr2))),

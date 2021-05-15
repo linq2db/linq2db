@@ -37,7 +37,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			var like = base.ConvertSearchStringPredicate(mappingSchema, predicate, visitor, optimizationContext);
 
-			if (predicate.CaseSensitive.EvaluateBoolExpression(optimizationContext.Context))
+			if (predicate.CaseSensitive.EvaluateBoolExpression(optimizationContext.Context) == true)
 			{
 				SqlPredicate.ExprExpr? subStrPredicate = null;
 

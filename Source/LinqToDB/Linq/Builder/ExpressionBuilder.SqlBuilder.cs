@@ -17,7 +17,6 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using Reflection;
 	using SqlQuery;
-	using Tools;
 	using System.Threading;
 	using System.Runtime.CompilerServices;
 
@@ -1683,10 +1682,10 @@ namespace LinqToDB.Linq.Builder
 			ISqlExpression IsCaseSensitive(MethodCallExpression mc)
 			{
 				if (mc.Arguments.Count <= 1)
-					return new SqlValue(Configuration.Linq.IsStringSearchCaseSensitive);
+					return new SqlValue(typeof(bool?), null);
 
 				if (!typeof(StringComparison).IsSameOrParentOf(mc.Arguments[1].Type))
-					return new SqlValue(Configuration.Linq.IsStringSearchCaseSensitive);
+					return new SqlValue(typeof(bool?), null);
 
 				var arg = mc.Arguments[1];
 

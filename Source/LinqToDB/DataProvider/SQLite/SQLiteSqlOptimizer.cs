@@ -40,7 +40,7 @@ namespace LinqToDB.DataProvider.SQLite
 			var like = ConvertSearchStringPredicateViaLike(mappingSchema, predicate, visitor,
 				optimizationContext);
 
-			if (predicate.CaseSensitive.EvaluateBoolExpression(optimizationContext.Context))
+			if (predicate.CaseSensitive.EvaluateBoolExpression(optimizationContext.Context) == true)
 			{
 				SqlPredicate.ExprExpr? subStrPredicate = null;
 

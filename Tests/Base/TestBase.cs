@@ -1056,6 +1056,61 @@ namespace Tests
 			return GetProviderName(context, out var _) == TestProvName.SqlServer2019;
 		}
 
+		/// <summary>
+		/// Returns case-sensitivity of string comparison (e.g. using LIKE) without explicit collation specified.
+		/// Depends on database implementation or database collation.
+		/// </summary>
+		protected bool IsCaseSensitiveComparison(string context)
+		{
+			var provider = GetProviderName(context, out var _);
+
+			// we intentionally configure Sql Server 2019 test database to be case-sensitive to test
+			// linq2db support for this configuration
+			// on CI we test two configurations:
+			// linux/mac: db is case sensitive, catalog is case insensitive
+			// windows: both db and catalog are case sensitive
+			return provider == TestProvName.SqlServer2019
+				|| provider == ProviderName.DB2
+				|| provider.StartsWith(ProviderName.Firebird)
+				|| provider.StartsWith(ProviderName.Informix)
+				|| provider.StartsWith(ProviderName.Oracle)
+				|| provider.StartsWith(ProviderName.PostgreSQL)
+				|| provider.StartsWith(ProviderName.SapHana)
+				|| provider.StartsWith(ProviderName.Sybase)
+				;
+		}
+
+		/// <summary>
+		/// Returns status of test CollatedTable - wether it is configured to have proper column collations or
+		/// use database defaults (<see cref="IsCaseSensitiveComparison"/>).
+		/// </summary>
+		protected bool IsCollatedTableConfigured(string context)
+		{
+			var provider = GetProviderName(context, out var _);
+
+			// unconfigured providers (some could be configured in theory):
+			// Access : no such concept as collation on column level (db-only)
+			// DB2
+			// Informix
+			// Oracle 11 (at least v12 required)
+			// PostgreSQL (v12 + custom collation required (no default CI collations))
+			// SAP HANA
+			// SQL CE
+			// Sybase ASE
+			return provider == TestProvName.SqlAzure
+				|| provider == TestProvName.MariaDB
+				// Oracle 12 only (v11 doesn't support COLLATE on columns)
+				|| provider == ProviderName.OracleManaged
+				|| provider == ProviderName.OracleNative
+				|| provider == TestProvName.AllOracleNative
+				|| provider.StartsWith(ProviderName.SqlServer)
+				|| provider.StartsWith(ProviderName.Firebird)
+				|| provider.StartsWith(ProviderName.MySql)
+				// while it is configured, LIKE in SQLite is case-insensitive (for ASCII only though)
+				//|| provider.StartsWith(ProviderName.SQLite)
+				;
+		}
+
 		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result, bool allowEmpty = false)
 		{
 			AreEqual(t => t, expected, result, EqualityComparer<T>.Default, allowEmpty);
@@ -1576,20 +1631,6 @@ namespace Tests
 		public void Dispose()
 		{
 			Configuration.Linq.OptimizeJoins = true;
-		}
-	}
-
-	public class CaseSensitiveStringSearch : IDisposable
-	{
-		public CaseSensitiveStringSearch(bool caseSensitive = true)
-		{
-			Configuration.Linq.IsStringSearchCaseSensitive = caseSensitive;
-			Query.ClearCaches();
-		}
-
-		public void Dispose()
-		{
-			Configuration.Linq.IsStringSearchCaseSensitive = false;
 		}
 	}
 

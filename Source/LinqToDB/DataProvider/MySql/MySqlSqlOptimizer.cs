@@ -104,5 +104,33 @@ namespace LinqToDB.DataProvider.MySql
 
 			return expression;
 		}
+
+		public override ISqlPredicate ConvertSearchStringPredicate<TContext>(MappingSchema mappingSchema, SqlPredicate.SearchString predicate,
+			ConvertVisitor<RunOptimizationContext<TContext>> visitor,
+			OptimizationContext optimizationContext)
+		{
+			var caseSensitive = predicate.CaseSensitive.EvaluateBoolExpression(optimizationContext.Context);
+
+			if (caseSensitive == false)
+			{
+				predicate = new SqlPredicate.SearchString(
+					new SqlFunction(typeof(string), "$ToLower$", predicate.Expr1),
+					predicate.IsNot,
+					new SqlFunction(typeof(string), "$ToLower$", predicate.Expr2),
+					predicate.Kind,
+					new SqlValue(false));
+			}
+			else if (caseSensitive == true)
+			{
+				predicate = new SqlPredicate.SearchString(
+					new SqlExpression(typeof(string), $"{{0}} COLLATE utf8_bin", Precedence.Primary, predicate.Expr1),
+					predicate.IsNot,
+					predicate.Expr2,
+					predicate.Kind,
+					new SqlValue(false));
+			}
+
+			return ConvertSearchStringPredicateViaLike(mappingSchema, predicate, visitor, optimizationContext);
+		}
 	}
 }

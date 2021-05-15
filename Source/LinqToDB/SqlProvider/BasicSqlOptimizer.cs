@@ -1742,12 +1742,12 @@ namespace LinqToDB.SqlProvider
 		}
 
 
-		public virtual string LikeEscapeCharacter => "~";
-		public virtual string LikeWildcardCharacter => "%";
-
-		public virtual bool LikeHasCharacterSetSupport => true;
-		public virtual bool LikeParameterSupport => true;
-		public virtual bool LikeIsEscapeSupported => true;
+		public virtual string LikeEscapeCharacter         => "~";
+		public virtual string LikeWildcardCharacter       => "%";
+		public virtual bool   LikeHasCharacterSetSupport  => true;
+		public virtual bool   LikePatternParameterSupport => true;
+		public virtual bool   LikeValueParameterSupport   => true;
+		public virtual bool   LikeIsEscapeSupported       => true;
 
 		protected static string[] StandardLikeCharactersToEscape = {"%", "_", "?", "*", "#", "[", "]"};
 		public virtual string[]   LikeCharactersToEscape => StandardLikeCharactersToEscape;
@@ -1850,11 +1850,21 @@ namespace LinqToDB.SqlProvider
 					_ => throw new InvalidOperationException($"Unexpected predicate kind: {predicate.Kind}")
 				};
 
-				var patternExpr = LikeParameterSupport
+				var patternExpr = LikePatternParameterSupport
 					? CreateSqlValue(patternValue, predicate.Expr2.GetExpressionType(), predicate.Expr2)
 					: new SqlValue(patternValue);
 
-				return new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, patternExpr,
+				var valueExpr = predicate.Expr1;
+				if (!LikeValueParameterSupport)
+				{
+					predicate.Expr1.VisitAll(static e =>
+					{
+						if (e is SqlParameter p)
+							p.IsQueryParameter = false;
+					});
+				}
+
+				return new SqlPredicate.Like(valueExpr, predicate.IsNot, patternExpr,
 					LikeIsEscapeSupported && (patternValue != patternRawValue) ? new SqlValue(LikeEscapeCharacter) : null);
 			}
 			else
@@ -1885,7 +1895,7 @@ namespace LinqToDB.SqlProvider
 			ConvertVisitor<RunOptimizationContext<TContext>> visitor, 
 			OptimizationContext optimizationContext)
 		{
-			if (!predicate.CaseSensitive.EvaluateBoolExpression(optimizationContext.Context))
+			if (predicate.CaseSensitive.EvaluateBoolExpression(optimizationContext.Context) == false)
 			{
 				predicate = new SqlPredicate.SearchString(
 					new SqlFunction(typeof(string), "$ToLower$", predicate.Expr1),

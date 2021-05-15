@@ -331,7 +331,7 @@ namespace LinqToDB.SqlQuery
 			return info.Value;
 		}
 
-		public static bool EvaluateBoolExpression(this IQueryElement expr, EvaluationContext context, bool defaultValue = false)
+		public static bool? EvaluateBoolExpression(this IQueryElement expr, EvaluationContext context, bool? defaultValue = null)
 		{
 			var evaluated = expr.EvaluateExpression(context);
 

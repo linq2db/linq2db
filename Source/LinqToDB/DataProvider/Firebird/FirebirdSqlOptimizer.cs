@@ -25,7 +25,8 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected static string[] LikeFirebirdEscapeSymbols = { "_", "%" };
 
-		public override string[] LikeCharactersToEscape => LikeFirebirdEscapeSymbols;
+		public override string[] LikeCharactersToEscape    => LikeFirebirdEscapeSymbols;
+		public override bool     LikeValueParameterSupport => false;
 
 
 		public override bool IsParameterDependedElement(IQueryElement element)
@@ -68,16 +69,26 @@ namespace LinqToDB.DataProvider.Firebird
 
 			var caseSensitive = predicate.CaseSensitive.EvaluateBoolExpression(optimizationContext.Context);
 
+			// for explicit case-sensitive search we apply "CAST({0} AS BLOB)" to searched string as COLLATE's collation is character set-dependent
 			switch (predicate.Kind)
 			{
 				case SqlPredicate.SearchString.SearchKind.EndsWith:
 				{
-					if (!caseSensitive)
+					if (caseSensitive == false)
 					{
 						predicate = new SqlPredicate.SearchString(
 							new SqlFunction(typeof(string), "$ToLower$", predicate.Expr1),
 							predicate.IsNot,
 							new SqlFunction(typeof(string), "$ToLower$", predicate.Expr2), predicate.Kind,
+							predicate.CaseSensitive);
+					}
+					else if (caseSensitive == true)
+					{
+						predicate = new SqlPredicate.SearchString(
+							new SqlExpression(typeof(string), "CAST({0} AS BLOB)", Precedence.Primary, predicate.Expr1),
+							predicate.IsNot,
+							predicate.Expr2,
+							predicate.Kind,
 							predicate.CaseSensitive);
 					}
 
@@ -89,19 +100,21 @@ namespace LinqToDB.DataProvider.Firebird
 						predicate.IsNot ? "{0} NOT STARTING WITH {1}" : "{0} STARTING WITH {1}",
 						Precedence.Comparison,
 						TryConvertToValue(
-							!caseSensitive
+							caseSensitive == false
 								? new SqlFunction(typeof(string), "$ToLower$", predicate.Expr1)
-								: predicate.Expr1,
+								: caseSensitive == true
+									? new SqlExpression(typeof(string), "CAST({0} AS BLOB)", Precedence.Primary, predicate.Expr1)
+									: predicate.Expr1,
 							optimizationContext.Context),
 						TryConvertToValue(
-							!caseSensitive
+							caseSensitive == false
 								? new SqlFunction(typeof(string), "$ToLower$", predicate.Expr2)
 								: predicate.Expr2, optimizationContext.Context)) {CanBeNull = false};
 					break;
 				}	
 				case SqlPredicate.SearchString.SearchKind.Contains:
 				{
-					if (!caseSensitive)
+					if (caseSensitive == false)
 					{
 						expr = new SqlExpression(typeof(bool),
 							predicate.IsNot ? "{0} NOT CONTAINING {1}" : "{0} CONTAINING {1}",
@@ -111,6 +124,16 @@ namespace LinqToDB.DataProvider.Firebird
 					}
 					else
 					{
+						if (caseSensitive == true)
+						{
+							predicate = new SqlPredicate.SearchString(
+								new SqlExpression(typeof(string), "CAST({0} AS BLOB)", Precedence.Primary, predicate.Expr1),
+								predicate.IsNot,
+								predicate.Expr2,
+								predicate.Kind,
+								new SqlValue(false));
+						}
+
 						return ConvertSearchStringPredicateViaLike(mappingSchema, predicate, visitor, optimizationContext);
 					}
 					break;
@@ -121,7 +144,6 @@ namespace LinqToDB.DataProvider.Firebird
 
 			return new SqlSearchCondition(new SqlCondition(false, new SqlPredicate.Expr(expr)));
 		}
-
 
 		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
