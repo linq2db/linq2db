@@ -109,7 +109,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							sequenceExpr = sequenceExpr.Replace(groupingMethod, groupingKey.Body.Unwrap());
 						}
-						
+
 					}
 				}
 			}
@@ -122,7 +122,7 @@ namespace LinqToDB.Linq.Builder
 			var elementSelector = (LambdaExpression)methodCall.Arguments[2].Unwrap()!;
 
 			if (wrapSequence)
-			{ 
+			{
 				sequence = new SubQueryContext(sequence);
 			}
 
@@ -258,9 +258,11 @@ namespace LinqToDB.Linq.Builder
 				{
 					Key = key;
 
-					_queryRunner = queryRunner;
-					_parameters   = parameters;
-					_itemReader   = itemReader;
+					_queryExpression = queryRunner.Expression;
+					_queryParameters = queryRunner.Parameters;
+					_dataContext     = queryRunner.DataContext;
+					_parameters      = parameters;
+					_itemReader      = itemReader;
 
 					if (Configuration.Linq.PreloadGroups)
 					{
@@ -269,7 +271,9 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				private  IList<TElement>?                                        _items;
-				readonly IQueryRunner                                            _queryRunner;
+				readonly IDataContext                                            _dataContext;
+				readonly Expression                                              _queryExpression;
+				readonly object?[]?                                              _queryParameters;
 				readonly List<ParameterAccessor>                                 _parameters;
 				readonly Func<IDataContext,TKey,object?[]?,IQueryable<TElement>> _itemReader;
 
@@ -277,12 +281,12 @@ namespace LinqToDB.Linq.Builder
 
 				List<TElement> GetItems()
 				{
-					using (var db = _queryRunner.DataContext.Clone(true))
+					using (var db = _dataContext.Clone(true))
 					{
 						var ps = new object?[_parameters.Count];
 
 						for (var i = 0; i < ps.Length; i++)
-							ps[i] = _parameters[i].OriginalAccessor(_queryRunner.Expression, _queryRunner.DataContext, _queryRunner.Parameters);
+							ps[i] = _parameters[i].OriginalAccessor(_queryExpression, db, _queryParameters);
 
 						return _itemReader(db, Key, ps).ToList();
 					}

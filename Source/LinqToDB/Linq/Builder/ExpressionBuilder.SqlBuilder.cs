@@ -2253,24 +2253,19 @@ namespace LinqToDB.Linq.Builder
 
 		#region ConvertObjectComparison
 
-		static Expression? ConstructMemberPath(IEnumerable<MemberInfo> memberPath, Expression ob, bool throwOnError)
+		static Expression? ConstructMemberPath(MemberInfo[] memberPath, Expression ob, bool throwOnError)
 		{
 			Expression result = ob;
-			var skipCount     = 0;
 			foreach (var memberInfo in memberPath)
 			{
-				if (!memberInfo.DeclaringType!.IsAssignableFrom(result.Type))
+				if (memberInfo.DeclaringType!.IsAssignableFrom(result.Type))
 				{
-					// first element may have inappropriate nesting
-					if (skipCount-- == 0)
-						continue;
-
-					if (throwOnError)
-						throw new LinqToDBException($"Type {result.Type.Name} does not have member {memberInfo.Name}.");
-					return null;
+					result = Expression.MakeMemberAccess(result, memberInfo);
 				}
-				result = Expression.MakeMemberAccess(result, memberInfo);
 			}
+
+			if (ReferenceEquals(result, ob) && throwOnError)
+				throw new LinqToDBException($"Type {result.Type.Name} does not have member {memberPath.Last().Name}.");
 
 			return result;
 		}

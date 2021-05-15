@@ -54,9 +54,34 @@ namespace LinqToDB.DataProvider.Oracle
 			SetValueToSqlConverter(typeof(DateTimeOffset), (sb, dt, v) => ConvertDateTimeToSql(sb, dt, ((DateTimeOffset)v).UtcDateTime));
 			SetValueToSqlConverter(typeof(string)        , (sb, dt, v) => ConvertStringToSql  (sb, v.ToString()!));
 			SetValueToSqlConverter(typeof(char)          , (sb, dt, v) => ConvertCharToSql    (sb, (char)v));
-			SetValueToSqlConverter(typeof(double), (sb, dt, v)         => sb.Append(((double)v).ToString("G17", NumberFormatInfo.InvariantInfo)).Append('D'));
 			SetValueToSqlConverter(typeof(byte[]), (sb, dt, v)         => ConvertBinaryToSql(sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary), (sb, dt, v)         => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
+
+			// adds floating point special values support
+			SetValueToSqlConverter(typeof(float), (sb, dt, v) =>
+			{
+				var f = (float)v;
+				if (float.IsNaN(f))
+					sb.Append("BINARY_FLOAT_NAN");
+				else if (float.IsNegativeInfinity(f))
+					sb.Append("-BINARY_FLOAT_INFINITY");
+				else if (float.IsPositiveInfinity(f))
+					sb.Append("BINARY_FLOAT_INFINITY");
+				else
+					sb.AppendFormat(CultureInfo.InvariantCulture, "{0:G9}", f);
+			});
+			SetValueToSqlConverter(typeof(double), (sb, dt, v) =>
+			{
+				var d = (double)v;
+				if (double.IsNaN(d))
+					sb.Append("BINARY_DOUBLE_NAN");
+				else if (double.IsNegativeInfinity(d))
+					sb.Append("-BINARY_DOUBLE_INFINITY");
+				else if (double.IsPositiveInfinity(d))
+					sb.Append("BINARY_DOUBLE_INFINITY");
+				else
+					sb.AppendFormat(CultureInfo.InvariantCulture, "{0:G17}D", d);
+			});
 		}
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)

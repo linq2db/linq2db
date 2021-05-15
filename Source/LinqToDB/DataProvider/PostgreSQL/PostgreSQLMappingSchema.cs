@@ -46,7 +46,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				var quote = float.IsNaN(f) || float.IsInfinity(f);
 				if (quote) sb.Append('\'');
 				sb.AppendFormat(CultureInfo.InvariantCulture, "{0:G9}", f);
-				if (quote) sb.Append('\'');
+				if (quote) sb.Append("'::float4");
 			});
 			SetValueToSqlConverter(typeof(double), (sb, dt, v) =>
 			{
@@ -54,7 +54,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				var quote = double.IsNaN(d) || double.IsInfinity(d);
 				if (quote) sb.Append('\'');
 				sb.AppendFormat(CultureInfo.InvariantCulture, "{0:G17}", d);
-				if (quote) sb.Append('\'');
+				if (quote) sb.Append("'::float8");
 			});
 
 			AddScalarType(typeof(string),          DataType.Text);
