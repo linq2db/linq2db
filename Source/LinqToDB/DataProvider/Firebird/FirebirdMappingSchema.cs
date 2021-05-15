@@ -35,6 +35,36 @@ namespace LinqToDB.DataProvider.Firebird
 
 			SetDataType(typeof(BigInteger), new SqlDataType(DataType.Int128, typeof(BigInteger), "INT128"));
 			SetValueToSqlConverter(typeof(BigInteger), (sb, dt, v) => sb.Append(((BigInteger)v).ToString(CultureInfo.InvariantCulture)));
+
+			// adds floating point special values support
+			// Firebird support special values but lacks literals support, so we use LOG function instead of literal
+			// https://firebirdsql.org/refdocs/langrefupd25-intfunc-log.html
+			SetValueToSqlConverter(typeof(float), (sb, dt, v) =>
+			{
+				// infinity cast could fail due to bug (fix not yet released when this code added):
+				// https://github.com/FirebirdSQL/firebird/issues/6750
+				var f = (float)v;
+				if (float.IsNaN(f))
+					sb.Append("CAST(LOG(1, 1) AS FLOAT)");
+				else if (float.IsNegativeInfinity(f))
+					sb.Append("CAST(LOG(1, 0.5) AS FLOAT)");
+				else if (float.IsPositiveInfinity(f))
+					sb.Append("CAST(LOG(1, 2) AS FLOAT)");
+				else
+					sb.AppendFormat(CultureInfo.InvariantCulture, "{0:G9}", f);
+			});
+			SetValueToSqlConverter(typeof(double), (sb, dt, v) =>
+			{
+				var d = (double)v;
+				if (double.IsNaN(d))
+					sb.Append("LOG(1, 1)");
+				else if (double.IsNegativeInfinity(d))
+					sb.Append("LOG(1, 0.5)");
+				else if (double.IsPositiveInfinity(d))
+					sb.Append("LOG(1, 2)");
+				else
+					sb.AppendFormat(CultureInfo.InvariantCulture, "{0:G17}", d);
+			});
 		}
 
 		static void BuildDateTime(StringBuilder stringBuilder, SqlDataType dt, DateTime value)
