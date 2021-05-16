@@ -683,3 +683,12 @@ CONSTRAINT same_name
 	REFERENCES same_name (id)
 )
 GO
+DROP TABLE "CollatedTable"
+GO
+CREATE TABLE "CollatedTable"
+(
+	"Id"				INT NOT NULL,
+	"CaseSensitive"		VARCHAR(20) NOT NULL,
+	"CaseInsensitive"	VARCHAR(20) NOT NULL
+)
+GO
