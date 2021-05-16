@@ -138,6 +138,36 @@ namespace LinqToDB
 			return value != null && (value.Value.CompareTo(low) < 0 || value.Value.CompareTo(high) > 0);
 		}
 
+		[Extension(typeof(IsDistinctBuilder), ServerSideOnly = false, PreferServerSide = false)]
+		public static bool IsDistinctFrom<T>(this T value, T other) => !EqualityComparer<T>.Default.Equals(value, other);
+
+		[Extension(typeof(IsDistinctBuilder), ServerSideOnly = false, PreferServerSide = false)]
+		public static bool IsDistinctFrom<T>(this T value, T? other) where T: struct => !EqualityComparer<T?>.Default.Equals(value, other);
+
+		[Extension(typeof(IsDistinctBuilder), Expression = "NOT", ServerSideOnly = false, PreferServerSide = false)]
+		public static bool IsNotDistinctFrom<T>(this T value, T other) => EqualityComparer<T>.Default.Equals(value, other);
+
+		[Extension(typeof(IsDistinctBuilder), Expression= "NOT", ServerSideOnly = false, PreferServerSide = false)]
+		public static bool IsNotDistinctFrom<T>(this T value, T? other) where T: struct => EqualityComparer<T?>.Default.Equals(value, other);
+
+		class IsDistinctBuilder : IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqExtensionBuilder builder)
+			{
+				var left  = builder.GetExpression(0);
+				var right = builder.GetExpression(1);
+				var isNot = builder.Expression == "NOT";
+
+				SqlPredicate predicate = left.CanBeNull || right.CanBeNull
+					? new SqlPredicate.IsDistinct(left, isNot, right)
+					: new SqlPredicate.ExprExpr(left, isNot ? SqlPredicate.Operator.Equal : SqlPredicate.Operator.NotEqual, right, withNull: null);
+				
+				builder.ResultExpression = new SqlSearchCondition(
+					new SqlCondition(isNot: false, predicate)
+				);
+			}
+		}
+
 		/// <summary>
 		/// Allows access to entity property via name. Property can be dynamic or non-dynamic.
 		/// </summary>

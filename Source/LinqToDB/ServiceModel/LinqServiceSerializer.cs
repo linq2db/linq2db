@@ -1026,6 +1026,17 @@ namespace LinqToDB.ServiceModel
 							break;
 						}
 
+					case QueryElementType.IsDistinctPredicate :
+						{
+							var elem = (SqlPredicate.IsDistinct)e;
+
+							Append(elem.Expr1);
+							Append(elem.IsNot);
+							Append(elem.Expr2);
+
+							break;
+						}
+
 					case QueryElementType.InSubQueryPredicate :
 						{
 							var elem = (SqlPredicate.InSubQuery)e;
@@ -1827,6 +1838,17 @@ namespace LinqToDB.ServiceModel
 							var isNot = ReadBool();
 
 							obj = new SqlPredicate.IsNull(expr1, isNot);
+
+							break;
+						}
+
+					case QueryElementType.IsDistinctPredicate :
+						{
+							var expr1 = Read<ISqlExpression>()!;
+							var isNot = ReadBool();
+							var expr2 = Read<ISqlExpression>()!;
+
+							obj = new SqlPredicate.IsDistinct(expr1, isNot, expr2);
 
 							break;
 						}

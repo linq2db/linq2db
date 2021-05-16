@@ -106,6 +106,14 @@ namespace LinqToDB.SqlQuery
 							Find(((SqlPredicate.IsTrue)element).FalseValue);
 					}
 
+				case QueryElementType.IsDistinctPredicate:
+					{
+						var p = (SqlPredicate.IsDistinct)element;
+						return
+							Find(p.Expr1) ??
+							Find(p.Expr2);
+					}
+
 				case QueryElementType.SqlBinaryExpression:
 					{
 						return

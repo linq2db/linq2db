@@ -357,5 +357,7 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 			return table.TableOptions.IsTemporaryOptionSet() || table.PhysicalName!.StartsWith("#");
 		}
+
+		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(expr);
 	}
 }

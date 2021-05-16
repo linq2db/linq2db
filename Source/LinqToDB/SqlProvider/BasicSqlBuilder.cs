@@ -1908,6 +1908,10 @@ namespace LinqToDB.SqlProvider
 
 					break;
 
+				case QueryElementType.IsDistinctPredicate:
+					BuildIsDistinctPredicate((SqlPredicate.IsDistinct)predicate);
+					break;
+
 				case QueryElementType.InSubQueryPredicate:
 					{
 						BuildExpression(GetPrecedence((SqlPredicate.InSubQuery)predicate), ((SqlPredicate.InSubQuery)predicate).Expr1);
@@ -1987,6 +1991,32 @@ namespace LinqToDB.SqlProvider
 			}
 
 			BuildExpression(GetPrecedence(expr), expr.Expr2);
+		}
+
+		protected virtual void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr)
+		{
+			BuildExpression(GetPrecedence(expr), expr.Expr1);
+			StringBuilder.Append(expr.IsNot ? " IS NOT DISTINCT FROM " : " IS DISTINCT FROM ");
+			BuildExpression(GetPrecedence(expr), expr.Expr2);
+		}
+
+		protected void BuildIsDistinctPredicateFallback(SqlPredicate.IsDistinct expr)
+		{
+			// This is the fallback implementation of IS DISTINCT FROM 
+			// for all providers that don't support the standard syntax
+			// nor have a proprietary alternative
+			expr.Expr1.ShouldCheckForNull();
+			StringBuilder.Append("CASE WHEN ");
+			BuildExpression(Precedence.Comparison, expr.Expr1);
+			StringBuilder.Append(" = ");
+			BuildExpression(Precedence.Comparison, expr.Expr2);
+			StringBuilder.Append(" OR ");
+			BuildExpression(Precedence.Comparison, expr.Expr1);
+			StringBuilder.Append(" IS NULL AND ");
+			BuildExpression(Precedence.Comparison, expr.Expr2);
+			StringBuilder
+				.Append(" IS NULL THEN 0 ELSE 1 END = ")
+				.Append(expr.IsNot ? '0' : '1');
 		}
 
 		static SqlField GetUnderlayingField(ISqlExpression expr)

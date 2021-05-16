@@ -500,5 +500,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				Indent--;
 			}
 		}
+
+		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(expr);
 	}
 }

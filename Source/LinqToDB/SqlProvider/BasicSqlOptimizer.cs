@@ -1150,6 +1150,31 @@ namespace LinqToDB.SqlProvider
 
 					break;
 				}
+
+				case QueryElementType.IsDistinctPredicate:
+				{
+					var expr = (SqlPredicate.IsDistinct)predicate;
+
+					// Here, several optimisations would already have occured:
+					// - If both expressions could be evaluated, Sql.IsDistinct would have been evaluated client-side.
+					// - If both expressions could not be null, an Equals expression would have been used instead.
+
+					// The only remaining case that we'd like to simplify is when one expression is the constant null.
+					if (expr.Expr1.TryEvaluateExpression(context, out var value1) && value1 == null)
+					{
+						return expr.Expr2.CanBeNull
+							? new SqlPredicate.IsNull(expr.Expr2, !expr.IsNot)
+							: new SqlPredicate.Expr(new SqlValue(!expr.IsNot));
+					}
+					if (expr.Expr2.TryEvaluateExpression(context, out var value2) && value2 == null)
+					{
+						return expr.Expr1.CanBeNull
+							? new SqlPredicate.IsNull(expr.Expr1, !expr.IsNot)
+							: new SqlPredicate.Expr(new SqlValue(!expr.IsNot));
+					}
+
+					break;
+				}
 			}
 
 			return predicate;
@@ -2657,6 +2682,11 @@ namespace LinqToDB.SqlProvider
 						return true;
 
 					return false;
+				}
+				case QueryElementType.IsDistinctPredicate:
+				{
+					var expr = (SqlPredicate.IsDistinct)element;
+					return expr.Expr1.IsMutable() || expr.Expr2.IsMutable();
 				}
 				case QueryElementType.IsTruePredicate:
 				{

@@ -84,9 +84,9 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			if (selectQuery.From.Tables.Count == 0)
 			{
-				AppendIndent().Append("SELECT FIRST 1").AppendLine();
+				AppendIndent().Append("SELECT").AppendLine();
 				BuildColumns(selectQuery);
-				AppendIndent().Append("FROM SYSTABLES").AppendLine();
+				AppendIndent().Append("FROM ").Append(FakeTable).AppendLine();
 			}
 			else if (selectQuery.Select.IsDistinct)
 			{
@@ -103,6 +103,8 @@ namespace LinqToDB.DataProvider.Informix
 
 		protected override string FirstFormat(SelectQuery selectQuery) => "FIRST {0}";
 		protected override string SkipFormat  => "SKIP {0}";
+
+		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(expr);
 
 		protected override void BuildLikePredicate(SqlPredicate.Like predicate)
 		{

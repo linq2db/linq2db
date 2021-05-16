@@ -452,6 +452,37 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
+		// expression IS [ NOT ] DISTINCT FROM expression
+		//
+		public class IsDistinct : BaseNotExpr
+		{
+			public IsDistinct(ISqlExpression exp1, bool isNot, ISqlExpression exp2)
+				: base(exp1, isNot, SqlQuery.Precedence.Comparison)
+			{
+				Expr2 = exp2;
+			}
+
+			public ISqlExpression Expr2 { get; internal set; }
+
+			protected override void Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
+			{
+				base.Walk(options, func);
+				Expr2 = Expr2.Walk(options, func)!;
+			}
+
+			public override IQueryElement Invert() => new IsDistinct(Expr1, !IsNot, Expr2);
+
+			public override QueryElementType ElementType => QueryElementType.IsDistinctPredicate;
+
+			protected override void ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+			{
+				Expr1.ToString(sb, dic);
+				sb.Append(IsNot ? " IS NOT DISTINCT FROM " : " IS DISTINCT FROM ");
+				Expr2.ToString(sb, dic);
+			}
+		
+		}
+
 		// expression [ NOT ] BETWEEN expression AND expression
 		//
 		public class Between : BaseNotExpr

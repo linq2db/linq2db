@@ -178,6 +178,14 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
+				case QueryElementType.IsDistinctPredicate:
+					{
+						var p = (SqlPredicate.IsDistinct)element;
+						Visit(p.Expr1);
+						Visit(p.Expr2);
+						break;
+					}
+
 				case QueryElementType.InSubQueryPredicate:
 					{
 						Visit(((SqlPredicate.InSubQuery)element).Expr1);
