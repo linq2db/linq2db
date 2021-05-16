@@ -39,6 +39,24 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			SetValueToSqlConverter(typeof(Binary),   (sb,dt,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
 			SetValueToSqlConverter(typeof(DateTime), (sb,dt,v) => BuildDateTime(sb, dt, (DateTime)v));
 
+			// adds floating point special values support
+			SetValueToSqlConverter(typeof(float) , (sb, dt, v) =>
+			{
+				var f = (float)v;
+				var quote = float.IsNaN(f) || float.IsInfinity(f);
+				if (quote) sb.Append('\'');
+				sb.AppendFormat(CultureInfo.InvariantCulture, "{0:G9}", f);
+				if (quote) sb.Append("'::float4");
+			});
+			SetValueToSqlConverter(typeof(double), (sb, dt, v) =>
+			{
+				var d = (double)v;
+				var quote = double.IsNaN(d) || double.IsInfinity(d);
+				if (quote) sb.Append('\'');
+				sb.AppendFormat(CultureInfo.InvariantCulture, "{0:G17}", d);
+				if (quote) sb.Append("'::float8");
+			});
+
 			AddScalarType(typeof(string),          DataType.Text);
 			AddScalarType(typeof(TimeSpan),        DataType.Interval);
 			AddScalarType(typeof(TimeSpan?),       DataType.Interval);

@@ -314,3 +314,13 @@ CREATE PROCEDURE AddIssue792Record()
 	INSERT INTO AllTypes(char20DataType) VALUES('issue792');
 END PROCEDURE
 GO
+
+DROP TABLE CollatedTable
+GO
+CREATE TABLE CollatedTable
+(
+	Id				INT NOT NULL,
+	CaseSensitive	VARCHAR(20) NOT NULL,
+	CaseInsensitive	NVARCHAR(20) NOT NULL
+)
+GO

@@ -22,11 +22,11 @@
 			</group>
 			<group targetFramework=".NETStandard2.0">
 				<dependency id="linq2db" version="3.0.0"  />
-				<dependency id="Npgsql"  version="5.0.4"  />
+				<dependency id="Npgsql"  version="5.0.5"  />
 			</group>
 			<group targetFramework=".NETCoreApp2.1">
 				<dependency id="linq2db" version="3.0.0"  />
-				<dependency id="Npgsql"  version="5.0.4"  />
+				<dependency id="Npgsql"  version="5.0.5"  />
 			</group>
 		</dependencies>
 		<contentFiles>

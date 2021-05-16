@@ -2088,7 +2088,6 @@ namespace Tests.DataProvider
 				TestContext.WriteLine(str);
 			}
 		}
-
 	}
 
 	public static class TestPgAggregates

@@ -50,7 +50,7 @@ namespace LinqToDB.SqlProvider
 			SetConverter(typeof(uint),       (sb,dt,v) => sb.Append((uint)      v));
 			SetConverter(typeof(long),       (sb,dt,v) => sb.Append((long)      v));
 			SetConverter(typeof(ulong),      (sb,dt,v) => sb.Append((ulong)     v));
-			SetConverter(typeof(float),      (sb,dt,v) => sb.Append(((float)    v). ToString(_numberFormatInfo)));
+			SetConverter(typeof(float),      (sb,dt,v) => sb.Append(((float)    v). ToString("G9", _numberFormatInfo)));
 			SetConverter(typeof(double),     (sb,dt,v) => sb.Append(((double)   v). ToString("G17", _numberFormatInfo)));
 			SetConverter(typeof(decimal),    (sb,dt,v) => sb.Append(((decimal)v).   ToString(_numberFormatInfo)));
 			SetConverter(typeof(DateTime),   (sb,dt,v) => BuildDateTime(sb, (DateTime)v));

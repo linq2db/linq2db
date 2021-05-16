@@ -19,6 +19,7 @@ using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Linq.Internal;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
+using LinqToDB.Tools;
 using Microsoft.SqlServer.Types;
 using NUnit.Framework;
 using Tests.Model;
@@ -1911,6 +1912,40 @@ AS
 				param = func.Parameters.FirstOrDefault(p => p.ParameterName == "@value")!;
 				Assert.NotNull(param);
 				Assert.AreEqual("This is <test> scalar function parameter!", param.Description);
+			}
+		}
+
+		[Test]
+		public void TestRetrieveIdentity([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context, [Values] bool useIdentity)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				using (db.BeginTransaction())
+				{
+					// advance identity forward
+					db.Insert(new Person() { FirstName = "", LastName = "" });
+					db.Insert(new Person() { FirstName = "", LastName = "" });
+					db.Insert(new Person() { FirstName = "", LastName = "" });
+				}
+
+				var lastIdentity = db.Person.Select(_ => _.ID).Max();
+				var step         = 1;
+				var max = lastIdentity;
+
+				if (useIdentity)
+				{
+					lastIdentity = db.Execute<int>("SELECT IDENT_CURRENT('Person')");
+					step         = db.Execute<int>("SELECT IDENT_INCR('Person')");
+					Assert.True(max < lastIdentity);
+					Assert.AreEqual(1, step);
+				}
+
+				var persons  = Enumerable.Range(1, 10).Select(_ => new Person()).ToArray();
+
+				persons.RetrieveIdentity(db, useIdentity: useIdentity);
+
+				for (var i = 0; i < 10; i++)
+					Assert.AreEqual(lastIdentity + (i + 1) * step, persons[i].ID);
 			}
 		}
 	}
