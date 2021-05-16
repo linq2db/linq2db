@@ -1092,16 +1092,13 @@ namespace Tests
 			// Access : no such concept as collation on column level (db-only)
 			// DB2
 			// Informix
-			// Oracle 11 (at least v12 required)
+			// Oracle (in theory v12 has collations, but to enable them you need to complete quite a quest...)
 			// PostgreSQL (v12 + custom collation required (no default CI collations))
 			// SAP HANA
 			// SQL CE
 			// Sybase ASE
 			return provider == TestProvName.SqlAzure
 				|| provider == TestProvName.MariaDB
-				// Oracle 12 only (v11 doesn't support COLLATE on columns)
-				|| provider == ProviderName.OracleManaged
-				|| provider == ProviderName.OracleNative
 				|| provider == TestProvName.AllOracleNative
 				|| provider.StartsWith(ProviderName.SqlServer)
 				|| provider.StartsWith(ProviderName.Firebird)
