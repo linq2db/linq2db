@@ -1340,7 +1340,7 @@ namespace LinqToDB.ServiceModel
 							break;
 						}
 
-					case QueryElementType.MergeSourceTable:
+					case QueryElementType.SqlTableLikeSource:
 						{
 							var elem = (SqlTableLikeSource)e;
 
@@ -2210,7 +2210,7 @@ namespace LinqToDB.ServiceModel
 							break;
 						}
 
-					case QueryElementType.MergeSourceTable:
+					case QueryElementType.SqlTableLikeSource:
 						{
 							var sourceID         = ReadInt();
 							var enumerableSource = Read<SqlValuesTable>()!;

@@ -16,7 +16,7 @@ namespace LinqToDB.Linq.Builder
 					if (refExpression.BuildContext == current)
 					{
 						expression = expression.Replace(root, new ContextRefExpression(root.Type, underlying));
-					};
+					}
 				}
 			}
 

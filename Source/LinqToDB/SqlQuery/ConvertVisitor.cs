@@ -1035,7 +1035,7 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
-					case QueryElementType.MergeSourceTable:
+					case QueryElementType.SqlTableLikeSource:
 					{
 						var source = (SqlTableLikeSource)element;
 

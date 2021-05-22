@@ -133,6 +133,8 @@ namespace LinqToDB.Linq.Builder
 					ConvertToSql(null, 0, ConvertFlags.All);
 				}
 
+				expression = SequenceHelper.CorrectExpression(expression, this, queryContext);
+
 				var infos  = queryContext.ConvertToIndex(expression, level, flags);
 
 				var result = infos

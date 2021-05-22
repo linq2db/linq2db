@@ -342,7 +342,7 @@ namespace LinqToDB.SqlQuery
 							Find(((SqlMergeStatement)element).Tag       );
 					}
 
-				case QueryElementType.MergeSourceTable:
+				case QueryElementType.SqlTableLikeSource:
 					{
 						return
 							Find(((SqlTableLikeSource)element).SourceEnumerable) ??

@@ -65,7 +65,7 @@
 		DropTableStatement,
 		TruncateTableStatement,
 
-		MergeSourceTable,
+		SqlTableLikeSource,
 		MergeOperationClause,
 
 		GroupingSet,

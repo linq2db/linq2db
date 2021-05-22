@@ -137,7 +137,7 @@ namespace LinqToDB.SqlQuery
 
 				switch (expr.ElementType)
 				{
-					case QueryElementType.MergeSourceTable:
+					case QueryElementType.SqlTableLikeSource:
 						{
 							var source = (SqlTableLikeSource)expr;
 

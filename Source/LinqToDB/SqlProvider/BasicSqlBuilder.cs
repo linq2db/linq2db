@@ -1419,7 +1419,7 @@ namespace LinqToDB.SqlProvider
 					break;
 
 				case QueryElementType.SqlCteTable     :
-				case QueryElementType.MergeSourceTable:
+				case QueryElementType.SqlTableLikeSource:
 					StringBuilder.Append(GetPhysicalTableName(table, alias));
 					break;
 
@@ -2934,7 +2934,7 @@ namespace LinqToDB.SqlProvider
 						var alias = ((SqlTable)table).Alias;
 						return alias != "$" && alias != "$F" ? alias : null;
 					}
-				case QueryElementType.MergeSourceTable:
+				case QueryElementType.SqlTableLikeSource:
 					return null;
 
 				default:
@@ -3035,7 +3035,7 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.SqlRawSqlTable:
 					return GetTablePhysicalName((SqlTable)table)!;
 
-				case QueryElementType.MergeSourceTable:
+				case QueryElementType.SqlTableLikeSource:
 					return ConvertInline(((SqlTableLikeSource)table).Name, ConvertType.NameToQueryTable);
 
 				default:
