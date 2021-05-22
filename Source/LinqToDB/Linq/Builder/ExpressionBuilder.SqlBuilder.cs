@@ -1710,8 +1710,6 @@ namespace LinqToDB.Linq.Builder
 				return parameter.SqlParameter;
 			}
 
-			var isPredicate = true;
-
 			switch (expression.NodeType)
 			{
 				case ExpressionType.Equal:

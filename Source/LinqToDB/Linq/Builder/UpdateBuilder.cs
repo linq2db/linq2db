@@ -13,14 +13,18 @@ namespace LinqToDB.Linq.Builder
 
 	class UpdateBuilder : MethodCallBuilder
 	{
+		private static readonly string[] Methods = new []
+		{
+			nameof(LinqExtensions.Update),
+			nameof(LinqExtensions.UpdateWithOutput),
+			nameof(LinqExtensions.UpdateWithOutputInto)
+		};
+
 		#region Update
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsQueryable(
-				nameof(LinqExtensions.Update),
-				nameof(LinqExtensions.UpdateWithOutput),
-				nameof(LinqExtensions.UpdateWithOutputInto));
+			return methodCall.IsQueryable(Methods);
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)

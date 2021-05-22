@@ -259,6 +259,7 @@ namespace LinqToDB.SqlQuery
 						Visit(((SqlUpdateStatement)element).Tag);
 						Visit(((SqlUpdateStatement)element).With);
 						Visit(((SqlUpdateStatement)element).Update);
+						Visit(((SqlUpdateStatement)element).Output);
 						Visit(((SqlUpdateStatement)element).SelectQuery);
 						break;
 					}

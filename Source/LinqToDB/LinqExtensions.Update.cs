@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -11,7 +10,6 @@ using JetBrains.Annotations;
 namespace LinqToDB
 {
 	using Async;
-	using Expressions;
 	using Linq;
 
 	public class UpdateOutput<T>
@@ -37,6 +35,7 @@ namespace LinqToDB
 			                this IQueryable<TSource>          source,
 			                ITable<TTarget>                   target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter)
+			where TTarget: class
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (target == null) throw new ArgumentNullException(nameof(target));
@@ -66,6 +65,7 @@ namespace LinqToDB
 			                ITable<TTarget>                   target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter,
 							CancellationToken                 token = default)
+			where TTarget : class
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (target == null) throw new ArgumentNullException(nameof(target));
@@ -99,6 +99,7 @@ namespace LinqToDB
 			                ITable<TTarget>                                   target,
 			[InstantHandle] Expression<Func<TSource,TTarget>>                 setter,
 							Expression<Func<TSource,TTarget,TTarget,TOutput>> outputExpression)
+			where TTarget : class
 		{
 			if (source ==           null) throw new ArgumentNullException(nameof(source));
 			if (target ==           null) throw new ArgumentNullException(nameof(target));
@@ -137,6 +138,7 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<TSource,TTarget>>                 setter,
 							Expression<Func<TSource,TTarget,TTarget,TOutput>> outputExpression,
 							CancellationToken                                 token = default)
+			where TTarget : class
 		{
 			if (source ==           null) throw new ArgumentNullException(nameof(source));
 			if (target ==           null) throw new ArgumentNullException(nameof(target));
@@ -171,6 +173,7 @@ namespace LinqToDB
 			                ITable<TTarget>                   target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter,
 							ITable<TTarget>					  outputTable)
+			where TTarget : class
 		{
 			if (source ==      null) throw new ArgumentNullException(nameof(source));
 			if (target ==      null) throw new ArgumentNullException(nameof(target));
@@ -206,6 +209,7 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter,
 							ITable<TTarget>					  outputTable,
 							CancellationToken                 token = default)
+			where TTarget : class
 		{
 			if (source ==      null) throw new ArgumentNullException(nameof(source));
 			if (target ==      null) throw new ArgumentNullException(nameof(target));
@@ -249,6 +253,8 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<TSource,TTarget>>                 setter,
 							ITable<TOutput>					                  outputTable,
 							Expression<Func<TSource,TTarget,TTarget,TOutput>> outputExpression)
+			where TTarget : class
+			where TOutput : class
 		{
 			if (source ==           null) throw new ArgumentNullException(nameof(source));
 			if (target ==           null) throw new ArgumentNullException(nameof(target));
@@ -291,6 +297,8 @@ namespace LinqToDB
 							ITable<TOutput>					                  outputTable,
 							Expression<Func<TSource,TTarget,TTarget,TOutput>> outputExpression,
 							CancellationToken                                 token = default)
+			where TTarget : class
+			where TOutput : class
 		{
 			if (source ==           null) throw new ArgumentNullException(nameof(source));
 			if (target ==           null) throw new ArgumentNullException(nameof(target));
@@ -471,6 +479,7 @@ namespace LinqToDB
 			                Expression<Func<TSource,TTarget>> target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter,
 							ITable<TTarget>					  outputTable)
+			where TTarget : class
 		{
 			if (source ==      null) throw new ArgumentNullException(nameof(source));
 			if (target ==      null) throw new ArgumentNullException(nameof(target));
@@ -506,6 +515,7 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter,
 							ITable<TTarget>					  outputTable,
 							CancellationToken                 token = default)
+			where TTarget : class
 		{
 			if (source ==      null) throw new ArgumentNullException(nameof(source));
 			if (target ==      null) throw new ArgumentNullException(nameof(target));
@@ -549,6 +559,7 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<TSource,TTarget>>                 setter,
 							ITable<TOutput>					                  outputTable,
 							Expression<Func<TSource,TTarget,TTarget,TOutput>> outputExpression)
+			where TOutput : class
 		{
 			if (source ==           null) throw new ArgumentNullException(nameof(source));
 			if (target ==           null) throw new ArgumentNullException(nameof(target));
@@ -591,6 +602,7 @@ namespace LinqToDB
 							ITable<TOutput>					                  outputTable,
 							Expression<Func<TSource,TTarget,TTarget,TOutput>> outputExpression,
 							CancellationToken                                 token = default)
+			where TOutput : class
 		{
 			if (source ==           null) throw new ArgumentNullException(nameof(source));
 			if (target ==           null) throw new ArgumentNullException(nameof(target));
@@ -628,7 +640,7 @@ namespace LinqToDB
 		/// <param name="setter">Update expression. Uses updated record as parameter. Expression supports only target table record new expression with field initializers.</param>
 		/// <returns>Deleted and inserted values for every record updated.</returns>
 		public static IEnumerable<UpdateOutput<T>> UpdateWithOutput<T>(
-			           this IQueryable<T>         source, 
+			           this IQueryable<T>         source,
 			[InstantHandle] Expression<Func<T,T>> setter)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
@@ -741,9 +753,10 @@ namespace LinqToDB
 		/// <param name="outputTable">Output table.</param>
 		/// <returns>Number of updated records.</returns>
 		public static int UpdateWithOutputInto<T>(
-			           this IQueryable<T>         source, 
+			           this IQueryable<T>         source,
 			[InstantHandle] Expression<Func<T,T>> setter,
 						    ITable<T>             outputTable)
+			where T : class
 		{
 			if (source      == null) throw new ArgumentNullException(nameof(source));
 			if (setter      == null) throw new ArgumentNullException(nameof(setter));
@@ -769,10 +782,11 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of updated records.</returns>
 		public static Task<int> UpdateWithOutputIntoAsync<T>(
-			           this IQueryable<T>         source, 
+			           this IQueryable<T>         source,
 			[InstantHandle] Expression<Func<T,T>> setter,
 						    ITable<T>             outputTable,
 							CancellationToken     token = default)
+			where T : class
 		{
 			if (source      == null) throw new ArgumentNullException(nameof(source));
 			if (setter      == null) throw new ArgumentNullException(nameof(setter));
@@ -810,6 +824,7 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<T,T>>         setter,
 							ITable<TOutput>               outputTable,
 							Expression<Func<T,T,TOutput>> outputExpression)
+			where TOutput : class
 		{
 			if (source           == null) throw new ArgumentNullException(nameof(source));
 			if (setter           == null) throw new ArgumentNullException(nameof(setter));
@@ -846,6 +861,7 @@ namespace LinqToDB
 							ITable<TOutput>               outputTable,
 							Expression<Func<T,T,TOutput>> outputExpression,
 							CancellationToken             token = default)
+			where TOutput : class
 		{
 			if (source           == null) throw new ArgumentNullException(nameof(source));
 			if (setter           == null) throw new ArgumentNullException(nameof(setter));
@@ -984,8 +1000,9 @@ namespace LinqToDB
 		/// <param name="outputTable">Output table.</param>
 		/// <returns>Number of updated records.</returns>
 		public static int UpdateWithOutputInto<T>(
-			           this IUpdatable<T>         source, 
+			           this IUpdatable<T>         source,
 						    ITable<T>             outputTable)
+			where T : class
 		{
 			if (source      == null) throw new ArgumentNullException(nameof(source));
 			if (outputTable == null) throw new ArgumentNullException(nameof(outputTable));
@@ -1010,9 +1027,10 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of updated records.</returns>
 		public static Task<int> UpdateWithOutputIntoAsync<T>(
-			           this IUpdatable<T>         source, 
+			           this IUpdatable<T>         source,
 						    ITable<T>             outputTable,
 							CancellationToken     token = default)
+			where T : class
 		{
 			if (source      == null) throw new ArgumentNullException(nameof(source));
 			if (outputTable == null) throw new ArgumentNullException(nameof(outputTable));
@@ -1048,6 +1066,7 @@ namespace LinqToDB
 					   this IUpdatable<T>                 source,
 							ITable<TOutput>               outputTable,
 							Expression<Func<T,T,TOutput>> outputExpression)
+			where TOutput : class
 		{
 			if (source           == null) throw new ArgumentNullException(nameof(source));
 			if (outputTable      == null) throw new ArgumentNullException(nameof(outputTable));
@@ -1082,6 +1101,7 @@ namespace LinqToDB
 							ITable<TOutput>               outputTable,
 							Expression<Func<T,T,TOutput>> outputExpression,
 							CancellationToken             token = default)
+			where TOutput : class
 		{
 			if (source           == null) throw new ArgumentNullException(nameof(source));
 			if (outputTable      == null) throw new ArgumentNullException(nameof(outputTable));
