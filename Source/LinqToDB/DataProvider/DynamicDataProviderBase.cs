@@ -9,6 +9,7 @@ namespace LinqToDB.DataProvider
 {
 	using Expressions;
 	using Extensions;
+	using LinqToDB.Common;
 	using LinqToDB.Data.RetryPolicy;
 	using Mapping;
 
@@ -36,7 +37,7 @@ namespace LinqToDB.DataProvider
 			if (_createConnection == null)
 			{
 				var l = CreateConnectionExpression(Adapter.ConnectionType);
-				_createConnection = l.Compile();
+				_createConnection = l.CompileExpression();
 			}
 
 			return _createConnection(connectionString);
@@ -56,7 +57,7 @@ namespace LinqToDB.DataProvider
 		protected bool SetField(Type fieldType, string dataTypeName, string methodName, bool throwException = true, Type? dataReaderType = null)
 		{
 			var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
-			var indexParameter = Expression.Parameter(typeof(int), "i");
+			var indexParameter      = Expression.Parameter(typeof(int), "i");
 
 			MethodCallExpression call;
 
@@ -103,7 +104,7 @@ namespace LinqToDB.DataProvider
 		protected void SetToTypeField(Type toType, string methodName, Type? dataReaderType = null)
 		{
 			var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
-			var indexParameter = Expression.Parameter(typeof(int), "i");
+			var indexParameter      = Expression.Parameter(typeof(int), "i");
 
 			ReaderExpressions[new ReaderInfo { ToType = toType, DataReaderType = dataReaderType }] =
 				Expression.Lambda(
@@ -214,7 +215,7 @@ namespace LinqToDB.DataProvider
 						.Lambda(
 							converterExpr.GetBody(Expression.Convert(param, valueType)),
 							param)
-						.Compile();
+						.CompileExpression();
 
 					converters[valueType] = converter;
 				}

@@ -1,24 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.DB2
 {
-	using Data;
 	using Common;
+	using Data;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
-	using System.Threading.Tasks;
-	using System.Threading;
 
 	public class DB2DataProvider : DynamicDataProviderBase<DB2ProviderAdapter>
 	{
 		public DB2DataProvider(string name, DB2Version version)
-						: base(
-				  name,
-				  GetMappingSchema(version, DB2ProviderAdapter.GetInstance().MappingSchema),
-				  DB2ProviderAdapter.GetInstance())
+			: base(
+				name,
+				GetMappingSchema(version, DB2ProviderAdapter.GetInstance().MappingSchema),
+				DB2ProviderAdapter.GetInstance())
 
 		{
 			Version = version;
@@ -29,7 +29,7 @@ namespace LinqToDB.DataProvider.DB2
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
 
-			SetCharFieldToType<char>("CHAR", (r, i) => DataTools.GetChar(r, i));
+			SetCharFieldToType<char>("CHAR", DataTools.GetCharExpression);
 			SetCharField            ("CHAR", (r, i) => r.GetString(i).TrimEnd(' '));
 
 			_sqlOptimizer = new DB2SqlOptimizer(SqlProviderFlags);
@@ -74,10 +74,18 @@ namespace LinqToDB.DataProvider.DB2
 				new DB2LUWSchemaProvider(this);
 		}
 
+		public override TableOptions SupportedTableOptions =>
+			TableOptions.IsTemporary                |
+			TableOptions.IsLocalTemporaryStructure  |
+			TableOptions.IsGlobalTemporaryStructure |
+			TableOptions.IsLocalTemporaryData       |
+			TableOptions.CreateIfNotExists          |
+			TableOptions.DropIfExists;
+
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
 			return Version == DB2Version.zOS ?
-				new DB2zOSSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags) as ISqlBuilder:
+				new DB2zOSSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags) :
 				new DB2LUWSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
@@ -130,8 +138,8 @@ namespace LinqToDB.DataProvider.DB2
 						{
 							value    = b ? 1 : 0;
 							dataType = dataType.WithDataType(DataType.Int16);
-					}
-					break;
+						}
+						break;
 					}
 				case DataType.Guid       :
 					{
@@ -148,11 +156,10 @@ namespace LinqToDB.DataProvider.DB2
 				case DataType.VarBinary  :
 					{
 						if (value is Guid g) value = g.ToByteArray();
-
 						else if (parameter.Size == 0 && value != null
 							&& value.GetType() == Adapter.DB2BinaryType
 							&& Adapter.IsDB2BinaryNull(value))
-								value = DBNull.Value;
+							value = DBNull.Value;
 						break;
 					}
 			}
@@ -212,7 +219,7 @@ namespace LinqToDB.DataProvider.DB2
 				cancellationToken);
 		}
 
-#if !NET45 && !NET46
+#if NATIVE_ASYNC
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{

@@ -8,7 +8,7 @@ namespace LinqToDB.DataProvider.SqlServer
 {
 	using SqlQuery;
 	using SqlProvider;
-	using LinqToDB.Mapping;
+	using Mapping;
 
 	abstract class SqlServerSqlBuilder : BasicSqlBuilder
 	{
@@ -31,7 +31,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		StringBuilder AppendOutputTableVariable(SqlTable table)
 		{
-			StringBuilder.Append("@").Append(table.PhysicalName).Append("Output");
+			StringBuilder.Append('@').Append(table.PhysicalName).Append("Output");
 			return StringBuilder;
 		}
 
@@ -48,7 +48,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					AppendOutputTableVariable(insertClause.Into)
 						.Append(" TABLE (");
 					Convert(StringBuilder, identityField.PhysicalName, ConvertType.NameToQueryField);
-					StringBuilder.Append(" ");
+					StringBuilder.Append(' ');
 					BuildCreateTableFieldType(identityField);
 					StringBuilder
 							.AppendLine(")")
@@ -103,7 +103,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				foreach (var oi in output.OutputItems)
 				{
 					if (!first)
-						StringBuilder.Append(',').AppendLine();
+						StringBuilder.AppendLine(Comma);
 					first = false;
 
 					AppendIndent();
@@ -132,7 +132,7 @@ namespace LinqToDB.DataProvider.SqlServer
 						.AppendLine();
 
 					AppendIndent()
-						.AppendLine("(");
+						.AppendLine(OpenParens);
 
 					++Indent;
 
@@ -140,7 +140,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					foreach (var oi in output.OutputItems)
 					{
 						if (!firstColumn)
-							StringBuilder.Append(',').AppendLine();
+							StringBuilder.AppendLine(Comma);
 						firstColumn = false;
 
 						AppendIndent();
@@ -201,7 +201,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			BuildSkipFirst(deleteStatement.SelectQuery);
 
-			StringBuilder.Append(" ");
+			StringBuilder.Append(' ');
 			Convert(StringBuilder, GetTableAlias(table)!, ConvertType.NameToQueryTableAlias);
 			StringBuilder.AppendLine();
 
@@ -226,54 +226,57 @@ namespace LinqToDB.DataProvider.SqlServer
 				Convert(StringBuilder, GetTableAlias(table)!, ConvertType.NameToQueryTableAlias);
 		}
 
-		protected override void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
+		public override string? GetTableDatabaseName(SqlTable table)
 		{
-			var wrap = false;
+			if (table.PhysicalName!.StartsWith("#") || table.TableOptions.IsTemporaryOptionSet())
+				return null;
 
-			if (expr.SystemType == typeof(bool))
-			{
-				if (expr is SqlSearchCondition)
-					wrap = true;
-				else
-				{
-					wrap = expr is SqlExpression ex 
-						&& ex.Expr == "{0}" 
-						&& ex.Parameters.Length == 1 
-						&& ex.Parameters[0] is SqlSearchCondition;
-				}
-			}
-
-			if (wrap) StringBuilder.Append("CASE WHEN ");
-			base.BuildColumnExpression(selectQuery, expr, alias, ref addAlias);
-			if (wrap) StringBuilder.Append(" THEN 1 ELSE 0 END");
+			return base.GetTableDatabaseName(table);
 		}
 
-		protected override void BuildLikePredicate(SqlPredicate.Like predicate)
+		public override string? GetTablePhysicalName(SqlTable table)
 		{
-			if (predicate.Expr2 is SqlValue sqlValue)
+			if (table.PhysicalName == null)
+				return null;
+
+			var physicalName = table.PhysicalName.StartsWith("#") ? table.PhysicalName : GetName();
+
+			string GetName()
 			{
-				var value = sqlValue.Value;
-
-				if (value != null)
+				if (table.TableOptions.IsTemporaryOptionSet())
 				{
-					var text  = value.ToString()!;
-					var ntext = predicate.IsSqlLike ? text :  DataTools.EscapeUnterminatedBracket(text);
-
-					if (text != ntext)
-						predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, new SqlValue(ntext), predicate.Escape, predicate.IsSqlLike);
+					switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
+					{
+						case TableOptions.IsTemporary                                                                              :
+						case TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData :
+						case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     :
+						case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
+						case                                                                     TableOptions.IsLocalTemporaryData :
+						case                            TableOptions.IsLocalTemporaryStructure                                     :
+						case                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
+							return $"#{table.PhysicalName}";
+						case TableOptions.IsGlobalTemporaryStructure                                                               :
+						case TableOptions.IsGlobalTemporaryStructure | TableOptions.IsGlobalTemporaryData                          :
+							return $"##{table.PhysicalName}";
+						case var value :
+							throw new InvalidOperationException($"Incompatible table options '{value}'");
+					}
+				}
+				else
+				{
+					return table.PhysicalName;
 				}
 			}
-			else if (predicate.Expr2 is SqlParameter p)
-				p.ReplaceLike = predicate.IsSqlLike != true;
 
-			base.BuildLikePredicate(predicate);
+			return Convert(new StringBuilder(), physicalName, ConvertType.NameToQueryTable).ToString();
 		}
 
 		public override StringBuilder BuildTableName(StringBuilder sb,
-			string? server,
-			string? database,
-			string? schema,
-			string table)
+			string?      server,
+			string?      database,
+			string?      schema,
+			string       table,
+			TableOptions tableOptions)
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
 
@@ -281,20 +284,20 @@ namespace LinqToDB.DataProvider.SqlServer
 			if (database != null && database.Length == 0) database = null;
 			if (schema   != null && schema.  Length == 0) schema   = null;
 
-			if(server != null)
+			if (server != null)
 			{
 				// all components required for linked-server syntax by SQL server
 				if (database == null || schema == null)
 					throw new LinqToDBException("You must specify both schema and database names explicitly for linked server query");
 
-				sb.Append(server).Append(".").Append(database).Append(".").Append(schema).Append(".");
+				sb.Append(server).Append('.').Append(database).Append('.').Append(schema).Append('.');
 			}
-			else if(database != null)
+			else if (database != null)
 			{
 				if (schema == null) sb.Append(database).Append("..");
-				else sb.Append(database).Append(".").Append(schema).Append(".");
+				else sb.Append(database).Append('.').Append(schema).Append('.');
 			}
-			else if (schema != null) sb.Append(schema).Append(".");
+			else if (schema != null) sb.Append(schema).Append('.');
 
 			return sb.Append(table);
 		}
@@ -352,36 +355,33 @@ namespace LinqToDB.DataProvider.SqlServer
 				StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(' ');
 
 			StringBuilder.Append("PRIMARY KEY CLUSTERED (");
-			StringBuilder.Append(fieldNames.Aggregate((f1,f2) => f1 + ", " + f2));
-			StringBuilder.Append(")");
+			StringBuilder.Append(string.Join(InlineComma, fieldNames));
+			StringBuilder.Append(')');
 		}
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
 			var table = dropTable.Table!;
 
-			if (table.PhysicalName!.StartsWith("#"))
-			{
-				AppendIndent().Append("DROP TABLE ");
-				BuildPhysicalTable(table, null);
-				StringBuilder.AppendLine();
-			}
-			else
-			{
-				if (dropTable.IfExists)
-				{
-					StringBuilder.Append("IF (OBJECT_ID(N'");
-					BuildPhysicalTable(table, null);
-					StringBuilder.AppendLine("', N'U') IS NOT NULL)");
-					Indent++;
-				}
+			BuildTag(dropTable);
 
-				AppendIndent().Append("DROP TABLE ");
-				BuildPhysicalTable(table, null);
+			if (dropTable.Table.TableOptions.HasDropIfExists())
+			{
+				var defaultDatabaseName =
+					table.PhysicalName!.StartsWith("#") || table.TableOptions.IsTemporaryOptionSet() ?
+						"[tempdb]" : null;
 
-				if (dropTable.IfExists)
-					Indent--;
+				StringBuilder.Append("IF (OBJECT_ID(N'");
+				BuildPhysicalTable(table, alias: null, defaultDatabaseName: defaultDatabaseName);
+				StringBuilder.AppendLine("', N'U') IS NOT NULL)");
+				Indent++;
 			}
+
+			AppendIndent().Append("DROP TABLE ");
+			BuildPhysicalTable(table, alias: null);
+
+			if (dropTable.Table.TableOptions.HasDropIfExists())
+				Indent--;
 		}
 
 		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
@@ -467,7 +467,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override void BuildTruncateTable(SqlTruncateTableStatement truncateTable)
 		{
-			if (truncateTable.ResetIdentity || truncateTable.Table!.Fields.Values.All(f => !f.IsIdentity))
+			if (truncateTable.ResetIdentity || truncateTable.Table!.IdentityFields.Count == 0)
 				StringBuilder.Append("TRUNCATE TABLE ");
 			else
 				StringBuilder.Append("DELETE FROM ");
@@ -475,9 +475,40 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected void BuildIdentityInsert(SqlTableSource table, bool enable)
 		{
-			StringBuilder.Append($"SET IDENTITY_INSERT ");
+			StringBuilder.Append("SET IDENTITY_INSERT ");
 			BuildTableName(table, true, false);
 			StringBuilder.AppendLine(enable ? " ON" : " OFF");
 		}
+
+		protected override void BuildStartCreateTableStatement(SqlCreateTableStatement createTable)
+		{
+			if (createTable.StatementHeader == null && createTable.Table!.TableOptions.HasCreateIfNotExists())
+			{
+				var table = createTable.Table;
+
+				var defaultDatabaseName =
+					table.PhysicalName!.StartsWith("#") || table.TableOptions.IsTemporaryOptionSet() ?
+						"[tempdb]" : null;
+
+				StringBuilder.Append("IF (OBJECT_ID(N'");
+				BuildPhysicalTable(table, null, defaultDatabaseName : defaultDatabaseName);
+				StringBuilder.AppendLine("', N'U') IS NULL)");
+				Indent++;
+			}
+
+			base.BuildStartCreateTableStatement(createTable);
+		}
+
+		protected override void BuildEndCreateTableStatement(SqlCreateTableStatement createTable)
+		{
+			base.BuildEndCreateTableStatement(createTable);
+
+			if (createTable.StatementHeader == null && createTable.Table!.TableOptions.HasCreateIfNotExists())
+			{
+				Indent--;
+			}
+		}
+
+		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(expr);
 	}
 }

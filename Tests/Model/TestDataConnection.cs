@@ -5,6 +5,7 @@ using System.Text;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
 
 namespace Tests.Model
@@ -81,10 +82,11 @@ namespace Tests.Model
 			var provider  = ((IDataContext)this).CreateSqlProvider();
 			var optimizer = ((IDataContext)this).GetSqlOptimizer  ();
 
-			//provider.SqlQuery = sql;
+			var statement = (SqlSelectStatement)optimizer.Finalize(new SqlSelectStatement(query));
+			SqlStatement.PrepareQueryAndAliases(statement, null, out var aliasesContext);
+			var optimizationContext = new OptimizationContext(new EvaluationContext(SqlParameterValues.Empty), aliasesContext, false);
 
-			var statement = (SqlSelectStatement)optimizer.Finalize(new SqlSelectStatement(query), false);
-			statement.SetAliases();
+			statement = (SqlSelectStatement)optimizer.PrepareStatementForRemoting(statement, MappingSchema, aliasesContext, optimizationContext.Context);
 
 			var cc = provider.CommandCount(statement);
 			var sb = new StringBuilder();
@@ -95,20 +97,20 @@ namespace Tests.Model
 			{
 				sb.Length = 0;
 
-				provider.BuildSql(i, statement, sb);
+				provider.BuildSql(i, statement, sb, optimizationContext);
 				commands[i] = sb.ToString();
 			}
 
 			return string.Join("\n\n", commands);
 		}
 
-		[ExpressionMethod("Expression9")]
+		[ExpressionMethod(nameof(Expression9))]
 		public static IQueryable<Parent> GetParent9(ITestDataContext db, Child ch)
 		{
 			throw new InvalidOperationException();
 		}
 
-		[ExpressionMethod("Expression9")]
+		[ExpressionMethod(nameof(Expression9))]
 		public IQueryable<Parent> GetParent10(Child ch)
 		{
 			throw new InvalidOperationException();

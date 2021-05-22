@@ -59,6 +59,12 @@ namespace LinqToDB.DataProvider.SapHana
 			base.InitCommand(dataConnection, commandType, commandText, parameters, withParameters);
 		}
 
+		public override TableOptions SupportedTableOptions =>
+			TableOptions.IsTemporary                |
+			TableOptions.IsGlobalTemporaryStructure |
+			TableOptions.IsLocalTemporaryStructure  |
+			TableOptions.IsLocalTemporaryData;
+
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
 			return new SapHanaOdbcSqlBuilder(mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
@@ -91,13 +97,12 @@ namespace LinqToDB.DataProvider.SapHana
 			{
 				case DataType.Boolean:
 					dataType = dataType.WithDataType(DataType.Byte);
-					if (value is bool)
-						value = (bool)value ? (byte)1 : (byte)0;
+					if (value is bool b)
+						value = b ? (byte)1 : (byte)0;
 					break;
 				case DataType.Guid:
-					if (value != null)
-						value = value.ToString();
-					dataType = dataType.WithDataType(DataType.Char);
+					value          = value?.ToString();
+					dataType       = dataType.WithDataType(DataType.Char);
 					parameter.Size = 36;
 					break;
 			}
@@ -126,5 +131,18 @@ namespace LinqToDB.DataProvider.SapHana
 		}
 
 		private static readonly MappingSchema MappingSchemaInstance = new SapHanaMappingSchema.OdbcMappingSchema();
+
+		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
+		{
+			try
+			{
+				return base.IsDBNullAllowed(reader, idx);
+			}
+			catch (OverflowException)
+			{
+				// https://github.com/dotnet/runtime/issues/40654
+				return true;
+			}
+		}
 	}
 }

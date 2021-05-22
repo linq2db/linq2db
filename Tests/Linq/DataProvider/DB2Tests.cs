@@ -11,7 +11,7 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
-#if NET46
+#if NET472
 using IBM.Data.DB2;
 #else
 using IBM.Data.DB2.Core;
@@ -23,8 +23,10 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
+	using System.Collections.Generic;
 	using System.Globalization;
 	using System.Threading.Tasks;
+	using LinqToDB.SchemaProvider;
 	using LinqToDB.Tools.Comparers;
 	using Model;
 
@@ -52,52 +54,52 @@ namespace Tests.DataProvider
 		{
 			using (var conn = new DataConnection(context))
 			{
-				Assert.That(TestType<long?>        (conn, "bigintDataType",    DataType.Int64),     Is.EqualTo(1000000L));
-				Assert.That(TestType<DB2Int64?>    (conn, "bigintDataType",    DataType.Int64),     Is.EqualTo(new DB2Int64(1000000L)));
-				Assert.That(TestType<int?>         (conn, "intDataType",       DataType.Int32),     Is.EqualTo(7777777));
-				Assert.That(TestType<DB2Int32?>    (conn, "intDataType",       DataType.Int32),     Is.EqualTo(new DB2Int32(7777777)));
-				Assert.That(TestType<short?>       (conn, "smallintDataType",  DataType.Int16),     Is.EqualTo(100));
-				Assert.That(TestType<DB2Int16?>    (conn, "smallintDataType",  DataType.Int16),     Is.EqualTo(new DB2Int16(100)));
-				Assert.That(TestType<decimal?>     (conn, "decimalDataType",   DataType.Decimal),   Is.EqualTo(9999999m));
-				Assert.That(TestType<decimal?>     (conn, "decfloatDataType",  DataType.Decimal),   Is.EqualTo(8888888m));
-				Assert.That(TestType<float?>       (conn, "realDataType",      DataType.Single),    Is.EqualTo(20.31f));
-				Assert.That(TestType<DB2Real?>     (conn, "realDataType",      DataType.Single),    Is.EqualTo(new DB2Real(20.31f)));
-				Assert.That(TestType<double?>      (conn, "doubleDataType",    DataType.Double),    Is.EqualTo(16.2d));
-				Assert.That(TestType<DB2Double?>   (conn, "doubleDataType",    DataType.Double),    Is.EqualTo(new DB2Double(16.2d)));
+				Assert.That(TestType<long?>        (conn, "bigintDataType",    DataType.Int64  , "ALLTYPES"),   Is.EqualTo(1000000L));
+				Assert.That(TestType<DB2Int64?>    (conn, "bigintDataType",    DataType.Int64  , "ALLTYPES"),   Is.EqualTo(new DB2Int64(1000000L)));
+				Assert.That(TestType<int?>         (conn, "intDataType",       DataType.Int32  , "ALLTYPES"),   Is.EqualTo(7777777));
+				Assert.That(TestType<DB2Int32?>    (conn, "intDataType",       DataType.Int32  , "ALLTYPES"),   Is.EqualTo(new DB2Int32(7777777)));
+				Assert.That(TestType<short?>       (conn, "smallintDataType",  DataType.Int16  , "ALLTYPES"),   Is.EqualTo(100));
+				Assert.That(TestType<DB2Int16?>    (conn, "smallintDataType",  DataType.Int16  , "ALLTYPES"),   Is.EqualTo(new DB2Int16(100)));
+				Assert.That(TestType<decimal?>     (conn, "decimalDataType",   DataType.Decimal, "ALLTYPES"),   Is.EqualTo(9999999m));
+				Assert.That(TestType<decimal?>     (conn, "decfloatDataType",  DataType.Decimal, "ALLTYPES"),   Is.EqualTo(8888888m));
+				Assert.That(TestType<float?>       (conn, "realDataType",      DataType.Single , "ALLTYPES"),   Is.EqualTo(20.31f));
+				Assert.That(TestType<DB2Real?>     (conn, "realDataType",      DataType.Single , "ALLTYPES"),   Is.EqualTo(new DB2Real(20.31f)));
+				Assert.That(TestType<double?>      (conn, "doubleDataType",    DataType.Double , "ALLTYPES"),   Is.EqualTo(16.2d));
+				Assert.That(TestType<DB2Double?>   (conn, "doubleDataType",    DataType.Double , "ALLTYPES"),   Is.EqualTo(new DB2Double(16.2d)));
 
-				Assert.That(TestType<string>       (conn, "charDataType",      DataType.Char),      Is.EqualTo("1"));
-				Assert.That(TestType<string>       (conn, "charDataType",      DataType.NChar),     Is.EqualTo("1"));
-				Assert.That(TestType<DB2String?>   (conn, "charDataType",      DataType.Char),      Is.EqualTo(new DB2String("1")));
-				Assert.That(TestType<string>       (conn, "varcharDataType",   DataType.VarChar),   Is.EqualTo("234"));
-				Assert.That(TestType<string>       (conn, "varcharDataType",   DataType.NVarChar),  Is.EqualTo("234"));
-				Assert.That(TestType<string>       (conn, "clobDataType",      DataType.Text),      Is.EqualTo("55645"));
-				Assert.That(TestType<string>       (conn, "dbclobDataType",    DataType.NText),     Is.EqualTo("6687"));
+				Assert.That(TestType<string>       (conn, "charDataType",      DataType.Char    , "ALLTYPES"),  Is.EqualTo("1"));
+				Assert.That(TestType<string>       (conn, "charDataType",      DataType.NChar   , "ALLTYPES"),  Is.EqualTo("1"));
+				Assert.That(TestType<DB2String?>   (conn, "charDataType",      DataType.Char    , "ALLTYPES"),  Is.EqualTo(new DB2String("1")));
+				Assert.That(TestType<string>       (conn, "varcharDataType",   DataType.VarChar , "ALLTYPES"),  Is.EqualTo("234"));
+				Assert.That(TestType<string>       (conn, "varcharDataType",   DataType.NVarChar, "ALLTYPES"),  Is.EqualTo("234"));
+				Assert.That(TestType<string>       (conn, "clobDataType",      DataType.Text    , "ALLTYPES"),  Is.EqualTo("55645"));
+				Assert.That(TestType<string>       (conn, "dbclobDataType",    DataType.NText   , "ALLTYPES"),  Is.EqualTo("6687"));
 
-				Assert.That(TestType<byte[]>       (conn, "binaryDataType",    DataType.Binary),    Is.EqualTo(new byte[] { 49, 50, 51, 32, 32 }));
-				Assert.That(TestType<byte[]>       (conn, "varbinaryDataType", DataType.VarBinary), Is.EqualTo(new byte[] { 49, 50, 51, 52 }));
-				Assert.That(TestType<byte[]>       (conn, "blobDataType",      DataType.Blob,      skipDefaultNull:true, skipUndefinedNull:true, skipDefault:true, skipUndefined:true), Is.EqualTo(new byte[] { 50, 51, 52 }));
-				Assert.That(TestType<byte[]>       (conn, "blobDataType",      DataType.VarBinary, skipDefaultNull:true, skipUndefinedNull:true, skipDefault:true, skipUndefined:true), Is.EqualTo(new byte[] { 50, 51, 52 }));
-				Assert.That(TestType<string>       (conn, "graphicDataType",   DataType.VarChar),   Is.EqualTo("23        "));
+				Assert.That(TestType<byte[]>       (conn, "binaryDataType",    DataType.Binary   , "ALLTYPES"), Is.EqualTo(new byte[] { 49, 50, 51, 32, 32 }));
+				Assert.That(TestType<byte[]>       (conn, "varbinaryDataType", DataType.VarBinary, "ALLTYPES"), Is.EqualTo(new byte[] { 49, 50, 51, 52 }));
+				Assert.That(TestType<byte[]>       (conn, "blobDataType",      DataType.Blob     , "ALLTYPES",  skipDefaultNull:true, skipUndefinedNull:true, skipDefault:true, skipUndefined:true), Is.EqualTo(new byte[] { 50, 51, 52 }));
+				Assert.That(TestType<byte[]>       (conn, "blobDataType",      DataType.VarBinary, "ALLTYPES",  skipDefaultNull:true, skipUndefinedNull:true, skipDefault:true, skipUndefined:true), Is.EqualTo(new byte[] { 50, 51, 52 }));
+				Assert.That(TestType<string>       (conn, "graphicDataType",   DataType.VarChar  , "ALLTYPES"), Is.EqualTo("23        "));
 
-				Assert.That(TestType<DateTime?>    (conn, "dateDataType",      DataType.Date),      Is.EqualTo(new DateTime(2012, 12, 12)));
-				Assert.That(TestType<DB2Date?>     (conn, "dateDataType",      DataType.Date),      Is.EqualTo(new DB2Date(new DateTime(2012, 12, 12))));
-				Assert.That(TestType<TimeSpan?>    (conn, "timeDataType",      DataType.Time),      Is.EqualTo(new TimeSpan(12, 12, 12)));
-				Assert.That(TestType<DB2Time?>     (conn, "timeDataType",      DataType.Time),      Is.EqualTo(new DB2Time(new TimeSpan(12, 12, 12))));
-				Assert.That(TestType<DateTime?>    (conn, "timestampDataType", DataType.DateTime2), Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 12)));
-				Assert.That(TestType<DB2TimeStamp?>(conn, "timestampDataType", DataType.DateTime2), Is.EqualTo(new DB2TimeStamp(new DateTime(2012, 12, 12, 12, 12, 12, 12))));
+				Assert.That(TestType<DateTime?>    (conn, "dateDataType",      DataType.Date     , "ALLTYPES"), Is.EqualTo(new DateTime(2012, 12, 12)));
+				Assert.That(TestType<DB2Date?>     (conn, "dateDataType",      DataType.Date     , "ALLTYPES"), Is.EqualTo(new DB2Date(new DateTime(2012, 12, 12))));
+				Assert.That(TestType<TimeSpan?>    (conn, "timeDataType",      DataType.Time     , "ALLTYPES"), Is.EqualTo(new TimeSpan(12, 12, 12)));
+				Assert.That(TestType<DB2Time?>     (conn, "timeDataType",      DataType.Time     , "ALLTYPES"), Is.EqualTo(new DB2Time(new TimeSpan(12, 12, 12))));
+				Assert.That(TestType<DateTime?>    (conn, "timestampDataType", DataType.DateTime2, "ALLTYPES"), Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 12)));
+				Assert.That(TestType<DB2TimeStamp?>(conn, "timestampDataType", DataType.DateTime2, "ALLTYPES"), Is.EqualTo(new DB2TimeStamp(new DateTime(2012, 12, 12, 12, 12, 12, 12))));
 
-				Assert.That(TestType<string>       (conn, "xmlDataType",       DataType.Xml, skipPass:true), Is.EqualTo("<root><element strattr=\"strvalue\" intattr=\"12345\"/></root>"));
+				Assert.That(TestType<string>       (conn, "xmlDataType",       DataType.Xml, "ALLTYPES", skipPass:true), Is.EqualTo("<root><element strattr=\"strvalue\" intattr=\"12345\"/></root>"));
 
 				Assert.That(conn.Execute<byte[]>("SELECT rowid FROM AllTypes WHERE ID = 2").Length, Is.Not.EqualTo(0));
 				//Assert.That(conn.Execute<DB2RowId>("SELECT rowid FROM AllTypes WHERE ID = 2").Value.Length, Is.Not.EqualTo(0));
 
-				            TestType<DB2Clob>      (conn, "clobDataType",      DataType.Text,      skipNotNull:true);
-				            TestType<DB2Blob>      (conn, "blobDataType",      DataType.VarBinary, skipNotNull:true);
-				            TestType<DB2Xml>       (conn, "xmlDataType",       DataType.Xml, skipPass:true);
+				            TestType<DB2Clob>      (conn, "clobDataType",      DataType.Text     , "ALLTYPES", skipNotNull:true);
+				            TestType<DB2Blob>      (conn, "blobDataType",      DataType.VarBinary, "ALLTYPES", skipNotNull:true);
+				            TestType<DB2Xml>       (conn, "xmlDataType",       DataType.Xml      , "ALLTYPES", skipPass:true);
 
-				Assert.That(TestType<DB2Decimal?>     (conn, "decimalDataType",   DataType.Decimal).  ToString(), Is.EqualTo(new DB2Decimal(9999999m).ToString()));
-				Assert.That(TestType<DB2Binary>       (conn, "varbinaryDataType", DataType.VarBinary).ToString(), Is.EqualTo(new DB2Binary(new byte[] { 49, 50, 51, 52 }).ToString()));
-				Assert.That(TestType<DB2DecimalFloat?>(conn, "decfloatDataType",  DataType.Decimal).  ToString(), Is.EqualTo(new DB2DecimalFloat(8888888m).ToString()));
+				Assert.That(TestType<DB2Decimal?>     (conn, "decimalDataType",   DataType.Decimal  , "ALLTYPES").ToString(), Is.EqualTo(new DB2Decimal(9999999m).ToString()));
+				Assert.That(TestType<DB2Binary>       (conn, "varbinaryDataType", DataType.VarBinary, "ALLTYPES").ToString(), Is.EqualTo(new DB2Binary(new byte[] { 49, 50, 51, 52 }).ToString()));
+				Assert.That(TestType<DB2DecimalFloat?>(conn, "decfloatDataType",  DataType.Decimal  , "ALLTYPES").ToString(), Is.EqualTo(new DB2DecimalFloat(8888888m).ToString()));
 			}
 		}
 
@@ -333,7 +335,7 @@ namespace Tests.DataProvider
 					conn.Execute<Guid?>("SELECT Cast('6F9619FF-8B86-D011-B42D-00C04FC964FF' as varchar(38)) FROM SYSIBM.SYSDUMMY1"),
 					Is.EqualTo(new Guid("6F9619FF-8B86-D011-B42D-00C04FC964FF")));
 
-				var guid = Guid.NewGuid();
+				var guid = TestData.Guid1;
 
 				Assert.That(conn.Execute<Guid>("SELECT Cast(@p as char(16) for bit data) FROM SYSIBM.SYSDUMMY1", DataParameter.Create("p", guid)),                Is.EqualTo(guid));
 				Assert.That(conn.Execute<Guid>("SELECT Cast(@p as char(16) for bit data) FROM SYSIBM.SYSDUMMY1", new DataParameter { Name = "p", Value = guid }), Is.EqualTo(guid));
@@ -424,7 +426,7 @@ namespace Tests.DataProvider
 								VARBINARYDATATYPE = null,
 								BLOBDATATYPE      = new byte[] { 1, 2, 3 },
 								GRAPHICDATATYPE   = null,
-								DATEDATATYPE      = DateTime.Now,
+								DATEDATATYPE      = TestData.DateTime,
 								TIMEDATATYPE      = null,
 								TIMESTAMPDATATYPE = null,
 								XMLDATATYPE       = null,
@@ -471,7 +473,7 @@ namespace Tests.DataProvider
 								VARBINARYDATATYPE = null,
 								BLOBDATATYPE      = new byte[] { 1, 2, 3 },
 								GRAPHICDATATYPE   = null,
-								DATEDATATYPE      = DateTime.Now,
+								DATEDATATYPE      = TestData.DateTime,
 								TIMEDATATYPE      = null,
 								TIMESTAMPDATATYPE = null,
 								XMLDATATYPE       = null,
@@ -526,7 +528,7 @@ namespace Tests.DataProvider
 									MoneyValue    = 1000m + n,
 									DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
 									BoolValue     = true,
-									GuidValue     = Guid.NewGuid(),
+									GuidValue     = TestData.SequentialGuid(n),
 									SmallIntValue = (short)n
 								}
 							));
@@ -557,7 +559,7 @@ namespace Tests.DataProvider
 									MoneyValue    = 1000m + n,
 									DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
 									BoolValue     = true,
-									GuidValue     = Guid.NewGuid(),
+									GuidValue     = TestData.SequentialGuid(n),
 									SmallIntValue = (short)n
 								}
 							));
@@ -609,7 +611,7 @@ namespace Tests.DataProvider
 					var sb = new StringBuilder();
 
 					for (var i = 0; i < 100000; i++)
-						sb.Append(((char)((i % byte.MaxValue) + 32)).ToString());
+						sb.Append((char)((i % byte.MaxValue) + 32));
 
 					var data = sb.ToString();
 
@@ -894,6 +896,32 @@ namespace Tests.DataProvider
 				var result = query.ToArray();
 
 				Assert.True(db.LastQuery!.Contains("@"));
+			}
+		}
+
+		[Test]
+		public void Issue2763Test([IncludeDataSources(CurrentProvider)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				// DB2 SYSCAT.COLUMNS.TABSCHEMA column is padded with spaces to max(schema.length) length despite it being of varchar type
+				var schemas = db.Query<string>("SELECT SCHEMANAME FROM SYSCAT.SCHEMATA").AsEnumerable().Select(_ => _.TrimEnd(' ')).ToArray();
+
+				if (schemas.Select(_ => _.Length).Distinct().Count() < 2)
+					Assert.Inconclusive("Test requires at least two schemas with different name length");
+
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, new GetSchemaOptions() { IncludedSchemas = schemas });
+
+				var usedSchemas = new HashSet<string>();
+				foreach (var table in schema.Tables)
+				{
+					Assert.False(table.ID!.Contains(' '));
+					Assert.False(table.SchemaName!.EndsWith(" "));
+					Assert.False(table.Columns.Count == 0);
+					usedSchemas.Add(table.SchemaName!);
+				}
+
+				Assert.True(usedSchemas.Select(_ => _.Length).Distinct().Count() > 1);
 			}
 		}
 	}

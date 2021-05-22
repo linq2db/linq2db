@@ -2,6 +2,7 @@
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
@@ -127,7 +128,7 @@ namespace Tests.Data
 				conn.InlineParameters = true;
 				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.Name).Take(1).ToString()!;
 				sql = string.Join(Environment.NewLine, sql.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
-					.Where(line => !line.StartsWith("-- Access")));
+					.Where(line => !line.StartsWith("--")));
 				var res = conn.Execute<string>(sql);
 
 				Assert.That(res, Is.EqualTo("John"));
@@ -137,7 +138,7 @@ namespace Tests.Data
 		[Test]
 		public void TestObjectProjection([DataSources(false)] string context)
 		{
-			using (var conn = new TestDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				var result = conn.Person.Where(p => p.ID == 1).Select(p => new { p.ID, p.Name })
 					.Take(1)
@@ -156,7 +157,7 @@ namespace Tests.Data
 		{
 			using (var conn = GetDataContext(context))
 			{
-				var result = 
+				var result =
 					from p in conn.Person
 					from pp in conn.Person.LeftJoin(pp => pp.ID + 1 == p.ID)
 					select new { p.ID, pp.Name };
@@ -171,6 +172,51 @@ namespace Tests.Data
 			}
 		}
 
+		[Test]
+		public void TestGrouping1([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (new GuardGrouping(false))
+			using (new PreloadGroups(false))
+			{
+				using (var dc = new DataContext(context))
+				{
+					var dictionary = dc.GetTable<Person>()
+						.GroupBy(p => p.FirstName)
+						.ToDictionary(p => p.Key);
+
+					var tables = dictionary.ToDictionary(p => p.Key, p => p.Value.ToList());
+				}
+			}
+		}
+
+		[Test]
+		public void TestGrouping2([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (new GuardGrouping(false))
+			using (new PreloadGroups(false))
+			{
+				using (var dc = new DataContext(context))
+				{
+					var query =
+						from p in dc.GetTable<Person>()
+						group p by new { p.FirstName } into g
+						select new
+						{
+							g.Key.FirstName,
+							List = g.Select(k => k.ID),
+						};
+
+					var array = query.ToArray();
+					Assert.IsTrue(array.Length > 0);
+
+					foreach (var row in array)
+					{
+						var ids = row.List.ToArray();
+						Assert.IsTrue(ids.Length > 0);
+					}
+				}
+			}
+		}
 
 		[Test]
 		public void TestObject6()

@@ -7,8 +7,9 @@ using LinqToDB.Mapping;
 using NUnit.Framework;
 using Tests.Model;
 using LinqToDB.Tools.Comparers;
+using LinqToDB.Common;
 
-namespace Tests.Playground
+namespace Tests.xUpdate
 {
 	[TestFixture]
 	public class InsertWithOutputTests : TestBase
@@ -268,7 +269,7 @@ namespace Tests.Playground
 				};
 
 				var output = source.InsertWithOutput(dataFunc);
-				var data   = dataFunc.Compile()();
+				var data   = dataFunc.CompileExpression()();
 
 				Assert.AreEqual(data.Id,       output.Id);
 				Assert.AreEqual(data.Value,    output.Value);
@@ -290,7 +291,7 @@ namespace Tests.Playground
 				};
 
 				var output = await source.InsertWithOutputAsync(dataFunc);
-				var data = dataFunc.Compile()();
+				var data = dataFunc.CompileExpression()();
 
 				Assert.AreEqual(data.Id,       output.Id);
 				Assert.AreEqual(data.Value,    output.Value);
@@ -313,7 +314,7 @@ namespace Tests.Playground
 
 				var output = source.InsertWithOutput(dataFunc,
 					inserted => new { inserted.Id, inserted.Value, inserted.ValueStr });
-				var data = dataFunc.Compile()();
+				var data = dataFunc.CompileExpression()();
 
 				Assert.AreEqual(data.Id,       output.Id);
 				Assert.AreEqual(data.Value,    output.Value);

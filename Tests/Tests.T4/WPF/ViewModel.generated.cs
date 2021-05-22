@@ -18,6 +18,7 @@ using System.Windows.Media;
 
 namespace Tests.T4.Wpf
 {
+	[CustomValidation(typeof(ViewModel.CustomValidator), "ValidateConditionalProp")]
 	[CustomValidation(typeof(ViewModel.CustomValidator), "ValidateNotifiedProp3")]
 	public partial class ViewModel : INotifyPropertyChanged, INotifyDataErrorInfo
 	{
@@ -119,6 +120,47 @@ namespace Tests.T4.Wpf
 
 		#endregion
 
+		#region ConditionalProp : string
+
+#if DEBUG
+
+		private string _conditionalProp = string.Empty;
+		public  string  ConditionalProp
+		{
+			get { return _conditionalProp; }
+			set
+			{
+				if (_conditionalProp != value)
+				{
+					BeforeConditionalPropChanged(value);
+					_conditionalProp = value;
+					AfterConditionalPropChanged();
+
+					OnConditionalPropChanged();
+				}
+			}
+		}
+
+		#region INotifyPropertyChanged support
+
+		partial void BeforeConditionalPropChanged(string newValue);
+		partial void AfterConditionalPropChanged ();
+
+		public const string NameOfConditionalProp = "ConditionalProp";
+
+		private static readonly PropertyChangedEventArgs _conditionalPropChangedEventArgs = new PropertyChangedEventArgs(NameOfConditionalProp);
+
+		private void OnConditionalPropChanged()
+		{
+			OnPropertyChanged(_conditionalPropChangedEventArgs);
+		}
+
+		#endregion
+#endif
+
+
+		#endregion
+
 		#region NotifiedProp3 : string
 
 		private string _notifiedProp3 = string.Empty;
@@ -158,9 +200,7 @@ namespace Tests.T4.Wpf
 
 		#region INotifyPropertyChanged support
 
-#if !SILVERLIGHT
 		[field : NonSerialized]
-#endif
 		public virtual event PropertyChangedEventHandler? PropertyChanged;
 
 		protected void OnPropertyChanged(string propertyName)
@@ -187,9 +227,7 @@ namespace Tests.T4.Wpf
 
 		#region Validation
 
-#if !SILVERLIGHT
 		[field : NonSerialized]
-#endif
 		public int _isValidCounter;
 
 		public static partial class CustomValidator
@@ -200,9 +238,14 @@ namespace Tests.T4.Wpf
 				{
 					obj._isValidCounter++;
 
-					var flag0 = ValidationResult.Success == ValidateNotifiedProp3(obj, obj.NotifiedProp3);
+					#if DEBUG
+					var flag0 = ValidationResult.Success == ValidateConditionalProp(obj, obj.ConditionalProp);
+					#else
+					var flag0 = true;
+					#endif
+					var flag1 = ValidationResult.Success == ValidateNotifiedProp3(obj, obj.NotifiedProp3);
 
-					return flag0;
+					return flag0 && flag1;
 				}
 				finally
 				{
@@ -210,7 +253,35 @@ namespace Tests.T4.Wpf
 				}
 			}
 
-			public static ValidationResult ValidateNotifiedProp3(ViewModel obj, string value)
+#if DEBUG
+
+			public static ValidationResult? ValidateConditionalProp(ViewModel obj, string value)
+			{
+				var list = new List<ValidationResult>();
+
+				Validator.TryValidateProperty(
+					value,
+					new ValidationContext(obj, null, null) { MemberName = NameOfConditionalProp }, list);
+
+				obj.ValidateConditionalProp(value, list);
+
+				if (list.Count > 0)
+				{
+					foreach (var result in list)
+						foreach (var name in result.MemberNames)
+							obj.AddError(name, result.ErrorMessage);
+
+					return list[0];
+				}
+
+				obj.RemoveError(NameOfConditionalProp);
+
+				return ValidationResult.Success;
+			}
+
+#endif
+
+			public static ValidationResult? ValidateNotifiedProp3(ViewModel obj, string value)
 			{
 				var list = new List<ValidationResult>();
 
@@ -235,20 +306,19 @@ namespace Tests.T4.Wpf
 			}
 		}
 
-		partial void ValidateNotifiedProp3(string value, List<ValidationResult> validationResults);
+#if DEBUG
+		partial void ValidateConditionalProp(string value, List<ValidationResult> validationResults);
+#endif
+		partial void ValidateNotifiedProp3  (string value, List<ValidationResult> validationResults);
 
 		#endregion
 
 		#region INotifyDataErrorInfo support
 
-#if !SILVERLIGHT
 		[field : NonSerialized]
-#endif
 		public virtual event EventHandler<DataErrorsChangedEventArgs>? ErrorsChanged;
 
-#if !SILVERLIGHT
 		[field : NonSerialized]
-#endif
 		private readonly Dictionary<string,List<string>> _validationErrors = new Dictionary<string,List<string>>();
 
 		public void AddError(string propertyName, string error)

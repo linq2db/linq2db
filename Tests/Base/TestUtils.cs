@@ -4,14 +4,14 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 
+using FirebirdSql.Data.FirebirdClient;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Firebird;
-using LinqToDB.SchemaProvider;
 
 namespace Tests
 {
-	using System.Diagnostics.CodeAnalysis;
 	using Model;
 
 	public static class TestUtils
@@ -100,6 +100,8 @@ namespace Tests
 				case ProviderName.PostgreSQL95:
 				case TestProvName.PostgreSQL10:
 				case TestProvName.PostgreSQL11:
+				case TestProvName.PostgreSQL12:
+				case TestProvName.PostgreSQL13:
 				case ProviderName.DB2:
 				case ProviderName.Sybase:
 				case ProviderName.SybaseManaged:
@@ -107,7 +109,11 @@ namespace Tests
 				case ProviderName.SqlServer2008:
 				case ProviderName.SqlServer2012:
 				case ProviderName.SqlServer2014:
+				case ProviderName.SqlServer2016:
 				case ProviderName.SqlServer2017:
+				case TestProvName.SqlServer2019:
+				case TestProvName.SqlServer2019SequentialAccess:
+				case TestProvName.SqlServer2019FastExpressionCompiler:
 				case TestProvName.SqlAzure:
 				case ProviderName.SapHanaNative:
 				case ProviderName.SapHanaOdbc:
@@ -117,38 +123,6 @@ namespace Tests
 			}
 
 			return NO_SCHEMA_NAME;
-		}
-
-		[return: NotNullIfNotNull("baseOptions")]
-		public static GetSchemaOptions? GetDefaultSchemaOptions(string context, GetSchemaOptions? baseOptions = null)
-		{
-			if (context.Contains("SapHana"))
-			{
-				// SAP HANA provider throws C++ assertions when we try to load schema for some functions
-				var options = baseOptions ?? new GetSchemaOptions();
-
-				var oldLoad = options.LoadProcedure;
-				if (oldLoad != null)
-					options.LoadProcedure = p => oldLoad(p) && loadCheck(p);
-				else
-					options.LoadProcedure = loadCheck;
-
-				bool loadCheck(ProcedureSchema p)
-				{
-					// TODO: actualize list for SPS04
-					return false;
-					//return p.ProcedureName != "SERIES_GENERATE_TIME"
-					//	&& p.ProcedureName != "SERIES_DISAGGREGATE_TIME"
-					//	// just too slow
-					//	&& p.ProcedureName != "GET_FULL_SYSTEM_INFO_DUMP"
-					//	&& p.ProcedureName != "GET_FULL_SYSTEM_INFO_DUMP_WITH_PARAMETERS"
-					//	&& p.ProcedureName != "FULL_SYSTEM_INFO_DUMP_CREATE";
-				}
-
-				return options;
-			}
-
-			return baseOptions;
 		}
 
 		/// <summary>
@@ -165,7 +139,11 @@ namespace Tests
 				case ProviderName.SqlServer2008:
 				case ProviderName.SqlServer2012:
 				case ProviderName.SqlServer2014:
+				case ProviderName.SqlServer2016:
 				case ProviderName.SqlServer2017:
+				case TestProvName.SqlServer2019:
+				case TestProvName.SqlServer2019SequentialAccess:
+				case TestProvName.SqlServer2019FastExpressionCompiler:
 				case TestProvName.SqlAzure:
 				case ProviderName.OracleManaged:
 				case ProviderName.OracleNative:
@@ -198,7 +176,7 @@ namespace Tests
 
 		private static string GetContextName(IDataContext db)
 		{
-#if NET46
+#if NET472
 			if (db is TestServiceModelDataContext linqDb)
 				return linqDb.Configuration!;
 #endif
@@ -235,6 +213,8 @@ namespace Tests
 				case ProviderName.PostgreSQL95:
 				case TestProvName.PostgreSQL10:
 				case TestProvName.PostgreSQL11:
+				case TestProvName.PostgreSQL12:
+				case TestProvName.PostgreSQL13:
 				case ProviderName.DB2:
 				case ProviderName.Sybase:
 				case ProviderName.SybaseManaged:
@@ -243,7 +223,11 @@ namespace Tests
 				case ProviderName.SqlServer2008:
 				case ProviderName.SqlServer2012:
 				case ProviderName.SqlServer2014:
+				case ProviderName.SqlServer2016:
 				case ProviderName.SqlServer2017:
+				case TestProvName.SqlServer2019:
+				case TestProvName.SqlServer2019SequentialAccess:
+				case TestProvName.SqlServer2019FastExpressionCompiler:
 				case TestProvName.SqlAzure:
 					return db.GetTable<LinqDataTypes>().Select(_ => DbName()).First();
 				case ProviderName.Informix:
@@ -285,24 +269,31 @@ namespace Tests
 		}
 
 		class FirebirdTempTable<T> : TempTable<T>
+			where T : notnull
 		{
-			public FirebirdTempTable(IDataContext db, string? tableName = null, string? databaseName = null, string? schemaName = null) 
-				: base(db, tableName, databaseName, schemaName)
+			public FirebirdTempTable(IDataContext db, string? tableName = null, string? databaseName = null, string? schemaName = null, TableOptions tableOptions = TableOptions.NotSet)
+				: base(db, tableName, databaseName, schemaName, tableOptions : tableOptions)
 			{
 			}
 
 			public override void Dispose()
 			{
+				if (DataContext is DataConnection dc && dc.Connection is FbConnection fbc )
+				{
+					FbConnection.ClearPool(fbc);
+				}
+
 				DataContext.Close();
 				FirebirdTools.ClearAllPools();
 				base.Dispose();
 			}
 		}
 
-		static TempTable<T> CreateTable<T>(IDataContext db, string? tableName) =>
+		static TempTable<T> CreateTable<T>(IDataContext db, string? tableName, TableOptions tableOptions = TableOptions.NotSet)
+			where T : notnull =>
 			db.CreateSqlProvider() is FirebirdSqlBuilder ?
-				new FirebirdTempTable<T>(db, tableName) : 
-				new         TempTable<T>(db, tableName);
+				new FirebirdTempTable<T>(db, tableName, tableOptions : tableOptions) :
+				new         TempTable<T>(db, tableName, tableOptions : tableOptions);
 
 		static void ClearDataContext(IDataContext db)
 		{
@@ -313,41 +304,102 @@ namespace Tests
 			}
 		}
 
-		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string? tableName = null)
+		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string? tableName = null, TableOptions tableOptions = TableOptions.NotSet)
+			where T : notnull
 		{
 			try
 			{
-				return CreateTable<T>(db, tableName);
+				if ((tableOptions & TableOptions.CheckExistence) == TableOptions.CheckExistence)
+					db.DropTable<T>(tableName, tableOptions:tableOptions);
+				return CreateTable<T>(db, tableName, tableOptions);
 			}
 			catch
 			{
 				ClearDataContext(db);
 				db.DropTable<T>(tableName, throwExceptionIfNotExists:false);
-				return CreateTable<T>(db, tableName);
+				return CreateTable<T>(db, tableName, tableOptions);
 			}
 		}
 
-		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string? tableName, IEnumerable<T> items)
+		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string? tableName, IEnumerable<T> items, bool insertInTransaction = false)
+			where T : notnull
 		{
-			var table = CreateLocalTable<T>(db, tableName);
+			var table = CreateLocalTable<T>(db, tableName, TableOptions.CheckExistence);
 
-			if (db is DataConnection)
-				using (new DisableLogging())
-					table.Copy(items
-						, new BulkCopyOptions { BulkCopyType = BulkCopyType.MultipleRows }
-						);
-			else
-				using (new DisableLogging())
+			using (new DisableLogging())
+			{
+				if (db is DataConnection dc)
+				{
+					// apply transaction only on insert, as not all dbs support DDL within transaction
+					if (insertInTransaction)
+						dc.BeginTransaction();
+
+					table.Copy(items, new BulkCopyOptions { BulkCopyType = BulkCopyType.MultipleRows });
+
+					if (insertInTransaction)
+						dc.CommitTransaction();
+				}
+				else
 					foreach (var item in items)
 						db.Insert(item, table.TableName);
-
+			}
 
 			return table;
 		}
 
-		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, IEnumerable<T> items)
+		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, IEnumerable<T> items, bool insertInTransaction = false)
+			where T : notnull
 		{
-			return CreateLocalTable(db, null, items);
+			return CreateLocalTable(db, null, items, insertInTransaction);
+		}
+
+		public static string GetValidCollationName(string providerName)
+		{
+			switch (providerName)
+			{
+				case ProviderName.OracleNative                       :
+				case ProviderName.OracleManaged                      :
+					return "latin_AI";
+				case ProviderName.DB2                                :
+					return "SYSTEM_923_DE";
+				case ProviderName.PostgreSQL                         :
+				case ProviderName.PostgreSQL92                       :
+				case ProviderName.PostgreSQL93                       :
+				case ProviderName.PostgreSQL95                       :
+				case TestProvName.PostgreSQL10                       :
+				case TestProvName.PostgreSQL11                       :
+				case TestProvName.PostgreSQL12                       :
+				case TestProvName.PostgreSQL13                       :
+					return "POSIX";
+				case ProviderName.SQLiteClassic                      :
+				case ProviderName.SQLiteMS                           :
+				case TestProvName.SQLiteClassicMiniProfilerMapped    :
+				case TestProvName.SQLiteClassicMiniProfilerUnmapped  :
+					return "NOCASE";
+				case ProviderName.Firebird                           :
+				case TestProvName.Firebird3                          :
+				case TestProvName.Firebird4                          :
+					return "UNICODE_FSS";
+				case ProviderName.MySql                              :
+				case ProviderName.MySqlConnector                     :
+				case TestProvName.MySql55                            :
+				case TestProvName.MariaDB                            :
+					return "utf8_bin";
+				case TestProvName.SqlAzure                           :
+				case ProviderName.SqlServer2000                      :
+				case ProviderName.SqlServer2005                      :
+				case ProviderName.SqlServer2008                      :
+				case ProviderName.SqlServer2012                      :
+				case ProviderName.SqlServer2014                      :
+				case ProviderName.SqlServer2016                      :
+				case ProviderName.SqlServer2017                      :
+				case TestProvName.SqlServer2019                      :
+				case TestProvName.SqlServer2019SequentialAccess      :
+				case TestProvName.SqlServer2019FastExpressionCompiler:
+					return "Albanian_CI_AS";
+				default                                              :
+					return "whatever";
+			}
 		}
 	}
 }

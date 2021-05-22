@@ -2,7 +2,7 @@
 using System.Linq;
 
 using LinqToDB;
-using LinqToDB.Data;
+using LinqToDB.SqlQuery;
 using NUnit.Framework;
 
 // ReSharper disable ReturnValueOfPureMethodIsNotUsed
@@ -376,6 +376,57 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void OrderByContinuous([DataSources(ProviderName.Access)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var firstOrder =
+					from p in db.Parent
+					orderby (p.Children.Count)
+					select p;
+
+				var secondOrder =
+					from p in firstOrder
+					join pp in db.Parent on p.Value1 equals pp.Value1 
+					orderby pp.ParentID
+					select p;
+
+				var selectQuery = secondOrder.GetSelectQuery();
+				Assert.That(selectQuery.OrderBy.Items.Count, Is.EqualTo(2));
+				var field = QueryHelper.GetUnderlyingField(selectQuery.OrderBy.Items[0].Expression);
+				Assert.That(field, Is.Not.Null);
+				Assert.That(field!.Name, Is.EqualTo("ParentID"));
+			}
+		}
+
+		[Test]
+		public void OrderByContinuousDuplicates([DataSources(ProviderName.Access)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var firstOrder =
+					from p in db.Parent
+					orderby p.ParentID
+					select p;
+
+				var secondOrder =
+					from p in firstOrder
+					join pp in db.Parent on p.ParentID equals pp.ParentID
+					orderby p.ParentID descending 
+					select p;
+
+				var selectQuery = secondOrder.GetSelectQuery();
+				Assert.That(selectQuery.OrderBy.Items.Count, Is.EqualTo(1));
+				Assert.That(selectQuery.OrderBy.Items[0].IsDescending, Is.True);
+				var field = QueryHelper.GetUnderlyingField(selectQuery.OrderBy.Items[0].Expression);
+				Assert.That(field, Is.Not.Null);
+				Assert.That(field!.Name, Is.EqualTo("ParentID"));
+
+				TestContext.WriteLine(secondOrder.ToString());
+			}
+		}
+
+		[Test]
 		public void OrderAscDesc([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -536,6 +587,45 @@ namespace Tests.Linq
 					.ToArray();
 
 				Assert.That(db.LastQuery, Does.Contain("ORDER BY"));
+			}
+		}
+
+		[Test]
+		public void OrderByInUnion([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracleManaged)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+
+				var query1 =
+					db.Child.OrderBy(c => c.ChildID).Concat(db.Child.OrderByDescending(c => c.ChildID));
+				var query2 =
+					db.Child.Concat(db.Child.OrderByDescending(c => c.ChildID));
+
+				var query3 = query1.OrderBy(_ => _.ChildID);
+
+				Assert.DoesNotThrow(() => query1.ToArray());
+				Assert.DoesNotThrow(() => query2.ToArray());
+				Assert.DoesNotThrow(() => query3.ToArray());
+			}
+		}
+
+		[Test]
+		public void OrderByContains([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var ids = new int[]{ 1, 3 };
+				db.Person.OrderBy(_ => ids.Contains(_.ID)).ToList();
+			}
+		}
+
+		[Test]
+		public void OrderByContainsSubquery([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var ids = new int[]{ 1, 3 };
+				db.Person.Select(_ => new { _.ID, _.LastName, flag = ids.Contains(_.ID) }).OrderBy(_ => _.flag).ToList();
 			}
 		}
 

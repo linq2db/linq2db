@@ -1,6 +1,7 @@
 ﻿namespace LinqToDB.DataProvider.DB2
 {
 	using Extensions;
+	using LinqToDB.Mapping;
 	using SqlProvider;
 	using SqlQuery;
 
@@ -15,8 +16,9 @@
 			// DB2 LUW 9/10 supports only FETCH, v11 adds OFFSET, but for that we need to introduce versions into DB2 provider first
 			statement = SeparateDistinctFromPagination(statement, q => q.Select.SkipValue != null);
 			statement = ReplaceDistinctOrderByWithRowNumber(statement, q => q.Select.SkipValue != null);
-			statement = ReplaceTakeSkipWithRowNumber(statement, query => query.Select.SkipValue != null && SqlProviderFlags.GetIsSkipSupportedFlag(query), true);
+			statement = ReplaceTakeSkipWithRowNumber(statement, query => query.Select.SkipValue != null && SqlProviderFlags.GetIsSkipSupportedFlag(query.Select.TakeValue, query.Select.SkipValue), true);
 
+			// This is mutable part
 			return statement.QueryType switch
 			{
 				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement),
@@ -25,11 +27,18 @@
 			};
 		}
 
-		public override ISqlExpression ConvertExpression(ISqlExpression expr)
-		{
-			expr = base.ConvertExpression(expr);
+		public override bool CanCompareSearchConditions => true;
+		
+		protected static string[] DB2LikeCharactersToEscape = {"%", "_"};
 
-			if (expr is SqlBinaryExpression be)
+		public override string[] LikeCharactersToEscape => DB2LikeCharactersToEscape;
+
+		public override ISqlExpression ConvertExpressionImpl<TContext>(ISqlExpression expression, ConvertVisitor<TContext> visitor,
+			EvaluationContext context)
+		{
+			expression = base.ConvertExpressionImpl(expression, visitor, context);
+
+			if (expression is SqlBinaryExpression be)
 			{
 				switch (be.Operation)
 				{
@@ -41,14 +50,25 @@
 					case "&": return new SqlFunction(be.SystemType, "BitAnd", be.Expr1, be.Expr2);
 					case "|": return new SqlFunction(be.SystemType, "BitOr", be.Expr1, be.Expr2);
 					case "^": return new SqlFunction(be.SystemType, "BitXor", be.Expr1, be.Expr2);
-					case "+": return be.SystemType == typeof(string) ? new SqlBinaryExpression(be.SystemType, be.Expr1, "||", be.Expr2, be.Precedence) : expr;
+					case "+": return be.SystemType == typeof(string) ? new SqlBinaryExpression(be.SystemType, be.Expr1, "||", be.Expr2, be.Precedence) : expression;
 				}
 			}
-			else if (expr is SqlFunction func)
+			else if (expression is SqlFunction func)
 			{
 				switch (func.Name)
 				{
 					case "Convert"    :
+					{
+						var par0 = func.Parameters[0];
+						var par1 = func.Parameters[1];
+
+						var isNull = par1 is SqlValue sqlValue && sqlValue.Value == null;
+
+						if (isNull)
+						{
+							return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary, par1, par0);
+						}
+
 						if (func.SystemType.ToUnderlying() == typeof(bool))
 						{
 							var ex = AlternativeConvertToBoolean(func, 1);
@@ -56,34 +76,33 @@
 								return ex;
 						}
 
-						if (func.Parameters[0] is SqlDataType type)
+						if (par0 is SqlDataType type)
 						{
-							if (type.Type.SystemType == typeof(string) && func.Parameters[1].SystemType != typeof(string))
-								return new SqlFunction(func.SystemType, "RTrim", new SqlFunction(typeof(string), "Char", func.Parameters[1]));
+							if (type.Type.SystemType == typeof(string) && par1.SystemType != typeof(string))
+								return new SqlFunction(func.SystemType, "RTrim", new SqlFunction(typeof(string), "Char", par1));
 
 							if (type.Type.Length > 0)
-								return new SqlFunction(func.SystemType, type.Type.DataType.ToString(), func.Parameters[1], new SqlValue(type.Type.Length));
+								return new SqlFunction(func.SystemType, type.Type.DataType.ToString(), par1, new SqlValue(type.Type.Length));
 
 							if (type.Type.Precision > 0)
-								return new SqlFunction(func.SystemType, type.Type.DataType.ToString(), func.Parameters[1], new SqlValue(type.Type.Precision), new SqlValue(type.Type.Scale ?? 0));
+								return new SqlFunction(func.SystemType, type.Type.DataType.ToString(), par1, new SqlValue(type.Type.Precision), new SqlValue(type.Type.Scale ?? 0));
 
-							return new SqlFunction(func.SystemType, type.Type.DataType.ToString(), func.Parameters[1]);
+							return new SqlFunction(func.SystemType, type.Type.DataType.ToString(), par1);
 						}
 
-						if (func.Parameters[0] is SqlFunction f)
+						if (par0 is SqlFunction f)
 						{
 							return
 								f.Name == "Char" ?
-									new SqlFunction(func.SystemType, f.Name, func.Parameters[1]) :
+									new SqlFunction(func.SystemType, f.Name, par1) :
 								f.Parameters.Length == 1 ?
-									new SqlFunction(func.SystemType, f.Name, func.Parameters[1], f.Parameters[0]) :
-									new SqlFunction(func.SystemType, f.Name, func.Parameters[1], f.Parameters[0], f.Parameters[1]);
+									new SqlFunction(func.SystemType, f.Name, par1, f.Parameters[0]) :
+									new SqlFunction(func.SystemType, f.Name, par1, f.Parameters[0], f.Parameters[1]);
 						}
 
-						{
-							var e = (SqlExpression)func.Parameters[0];
-							return new SqlFunction(func.SystemType, e.Expr, func.Parameters[1]);
-						}
+						var e = (SqlExpression)par0;
+						return new SqlFunction(func.SystemType, e.Expr, par1);
+					}
 
 					case "Millisecond"   : return Div(new SqlFunction(func.SystemType, "Microsecond", func.Parameters), 1000);
 					case "SmallDateTime" :
@@ -111,7 +130,14 @@
 				}
 			}
 
-			return expr;
+			return expression;
 		}
+
+		protected override ISqlExpression ConvertFunction(SqlFunction func)
+		{
+			func = ConvertFunctionParameters(func, false);
+			return base.ConvertFunction(func);
+		}
+
 	}
 }

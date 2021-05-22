@@ -621,11 +621,13 @@ namespace Tests.Linq
 						select new { Rank = p.ID, p.FirstName, p.LastName });
 
 				var resultquery = (from x in q2 orderby x.Rank, x.FirstName, x.LastName select x).ToString()!;
+				
+				TestContext.WriteLine(resultquery);
 
 				var rqr = resultquery.LastIndexOf("ORDER BY", System.StringComparison.OrdinalIgnoreCase);
 				var rqp = (resultquery.Substring(rqr + "ORDER BY".Length).Split(',')).Select(p => p.Trim()).ToArray();
 
-				Assert.That(rqp.Count(),  Is.EqualTo(3));
+				Assert.That(rqp.Length, Is.EqualTo(3));
 			}
 		}
 

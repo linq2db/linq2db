@@ -11,7 +11,7 @@ using NUnit.Framework;
 namespace Tests.Linq
 {
 	using Model;
-#if NET46
+#if NET472
 	using System.ServiceModel;
 #endif
 
@@ -444,23 +444,22 @@ namespace Tests.Linq
 		{
 			GetProviderName(context, out var isLinqService);
 
-			using (var db = GetDataContext(context))
+			using (new CustomCommandProcessor(null))
+			using (var db = GetDataContext(context, testLinqService : false))
 			{
-#if NET46
+#if NET472
 				if (isLinqService)
 				{
-					var fe = Assert.Throws<FaultException<ExceptionDetail>>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList());
+					var fe = Assert.Throws<FaultException<ExceptionDetail>>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList())!;
 					Assert.True(fe.Message.ToLowerInvariant().Contains("firstname"));
 				}
 				else
 #endif
 				{
-					var ex = Assert.Throws<LinqToDBConvertException>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList());
+					var ex = Assert.Throws<LinqToDBConvertException>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList())!;
 					// field name casing depends on database
 					Assert.AreEqual("firstname", ex.ColumnName!.ToLowerInvariant());
-
 				}
-
 			}
 		}
 
@@ -469,20 +468,11 @@ namespace Tests.Linq
 		{
 			GetProviderName(context, out var isLinqService);
 
+			using (new CustomCommandProcessor(null))
 			using (var db = GetDataContext(context))
 			{
-#if NET46
-				if (isLinqService)
-				{
-					var fe = Assert.Throws<FaultException<ExceptionDetail>>(() => db.GetTable<BadMapping>().Select(_ => new { _.BadEnum }).ToList());
-					Assert.True(fe.Message.Contains("Cannot convert value 'Pupkin' to type 'Tests.Linq.MappingTests+BadEnum'"));
-				}
-				else
-#endif
-				{
-					var ex = Assert.Throws<LinqToDBConvertException>(() => db.GetTable<BadMapping>().Select(_ => new { _.BadEnum }).ToList());
-					Assert.AreEqual("lastname", ex.ColumnName!.ToLower());
-				}
+				var ex = Assert.Throws<LinqToDBConvertException>(() => db.GetTable<BadMapping>().Select(_ => new { _.BadEnum }).ToList())!;
+				Assert.AreEqual("lastname", ex.ColumnName!.ToLower());
 			}
 		}
 

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-
+using LinqToDB.Common;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Mapper;
 
@@ -46,7 +46,7 @@ namespace Tests.Tools.Mapper
 			var mapper = new MapperBuilder<TestMap,TestMap>()
 				.SetProcessCrossReferences(false)
 				.GetMapperExpressionEx()
-				.Compile();
+				.CompileExpression();
 
 			mapper(new TestMap(), new TestMap(), null);
 		}
@@ -56,7 +56,7 @@ namespace Tests.Tools.Mapper
 		{
 			var mapper = new MapperBuilder<TestMap,TestMap>()
 				.GetMapperExpression()
-				.Compile();
+				.CompileExpression();
 
 			var value = mapper(new TestMap());
 
@@ -215,7 +215,7 @@ namespace Tests.Tools.Mapper
 				sw.Start(); map.Map(src); sw.Stop();
 			}
 
-			Console.WriteLine(sw.Elapsed);
+			TestContext.WriteLine(sw.Elapsed);
 
 			sw.Reset();
 
@@ -224,7 +224,7 @@ namespace Tests.Tools.Mapper
 				sw.Start(); map.Map(src, null); sw.Stop();
 			}
 
-			Console.WriteLine(sw.Elapsed);
+			TestContext.WriteLine(sw.Elapsed);
 
 			sw.Reset();
 
@@ -233,7 +233,7 @@ namespace Tests.Tools.Mapper
 				sw.Start(); map.Map(src, null, null); sw.Stop();
 			}
 
-			Console.WriteLine(sw.Elapsed);
+			TestContext.WriteLine(sw.Elapsed);
 
 			sw.Reset();
 
@@ -244,7 +244,7 @@ namespace Tests.Tools.Mapper
 				sw.Start(); map3(src); sw.Stop();
 			}
 
-			Console.WriteLine(sw.Elapsed);
+			TestContext.WriteLine(sw.Elapsed);
 
 			sw.Reset();
 
@@ -255,7 +255,7 @@ namespace Tests.Tools.Mapper
 				sw.Start(); map4(src, null, null); sw.Stop();
 			}
 
-			Console.WriteLine(sw.Elapsed);
+			TestContext.WriteLine(sw.Elapsed);
 		}
 
 		[Test]
@@ -326,7 +326,7 @@ namespace Tests.Tools.Mapper
 		}
 
 		class Class5 { public Class1 Class1 = new Class1(); public Class1? Class2; }
-		class Class6 { public Class2 Class1 = new Class2(); public Class2? Class2 = null; }
+		class Class6 { public Class2 Class1 = new Class2(); public Class2? Class2; }
 
 		[Test]
 		public void MapInnerObject2([Values] bool useAction)
@@ -357,7 +357,7 @@ namespace Tests.Tools.Mapper
 		}
 
 		class Class7  { public Class9?  Class; }
-		class Class8  { public Class10? Class = null; }
+		class Class8  { public Class10? Class; }
 		class Class9  { public Class7   Class = new Class7(); }
 		class Class10 { public Class8   Class = new Class8(); }
 
@@ -443,7 +443,7 @@ namespace Tests.Tools.Mapper
 		}
 
 		class Class15 { public List<Class1>  List = new List<Class1> { new Class1(), new Class1() }; }
-		class Class16 { public List<Class2>? List = null; }
+		class Class16 { public List<Class2>? List; }
 
 		[Test]
 		public void ObjectList([Values] bool useAction)
@@ -511,7 +511,7 @@ namespace Tests.Tools.Mapper
 			}
 		}
 
-		class Class18 { public Class9[]? Arr = null; }
+		class Class18 { public Class9[]? Arr; }
 
 		[Test]
 		public void ObjectArray1([Values] bool useAction)
@@ -547,7 +547,7 @@ namespace Tests.Tools.Mapper
 		}
 
 		class Class20 { public Source Class1 = new Source(); public Source? Class2; }
-		class Class21 { public Dest?  Class1 = null;         public Dest?   Class2 = null; }
+		class Class21 { public Dest?  Class1;                public Dest?   Class2; }
 
 		[Test]
 		public void NoCrossRef([Values] bool useAction)

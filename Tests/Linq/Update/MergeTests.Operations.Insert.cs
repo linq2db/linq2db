@@ -1,13 +1,10 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
-
-using Tests.Model;
-
 using LinqToDB;
-
-using NUnit.Framework;
+using LinqToDB.Common;
 using LinqToDB.Mapping;
+using NUnit.Framework;
+using Tests.Model;
 
 namespace Tests.xUpdate
 {
@@ -310,7 +307,7 @@ namespace Tests.xUpdate
 
 				var rows = table
 					.Merge()
-					.Using(new TestMapping1[0])
+					.Using(Array<TestMapping1>.Empty)
 					.OnTargetKey()
 					.InsertWhenNotMatched()
 					.Merge();
@@ -402,7 +399,7 @@ namespace Tests.xUpdate
 
 				var rows = table
 					.Merge()
-					.Using(new TestMapping1[0])
+					.Using(Array<TestMapping1>.Empty)
 					.On((t, s) => t.Id == s.Id && s.Field3 != null)
 					.InsertWhenNotMatched()
 					.Merge();
@@ -446,7 +443,7 @@ namespace Tests.xUpdate
 				var results = source.ToList();
 
 				// 5 commas after selected columns and 1 comma in join
-				Assert.AreEqual(6, db.LastQuery.Count(c => c == ','));
+				Assert.AreEqual(6, db.LastQuery!.Count(c => c == ','));
 
 				Assert.AreEqual(16, results.Count);
 			}
@@ -478,7 +475,7 @@ namespace Tests.xUpdate
 				var results = source.ToList();
 
 				// 5 commas after selected columns and 1 comma in join
-				Assert.AreEqual(6, db.LastQuery.Count(c => c == ','));
+				Assert.AreEqual(6, db.LastQuery!.Count(c => c == ','));
 
 				Assert.AreEqual(16, results.Count);
 			}
@@ -687,7 +684,7 @@ namespace Tests.xUpdate
 						.Using(table.Select(_ => new TestMapping1() { Id = _.Id, Field1 = _.Field1 }))
 						.OnTargetKey()
 						.InsertWhenNotMatched()
-						.Merge());
+						.Merge())!;
 
 				Assert.IsInstanceOf<LinqToDBException>(exception);
 				Assert.AreEqual("'s.Field2' cannot be converted to SQL.", exception.Message);
@@ -713,7 +710,7 @@ namespace Tests.xUpdate
 							Id     = s.Id,
 							Field1 = s.Field3
 						})
-						.Merge());
+						.Merge())!;
 
 				Assert.IsInstanceOf<LinqToDBException>(exception);
 				Assert.AreEqual("'s.Field3' cannot be converted to SQL.", exception.Message);
@@ -1109,7 +1106,7 @@ namespace Tests.xUpdate
 							Field4 = 999,
 							Field5 = 888
 						})
-					.Merge());
+					.Merge())!;
 
 				Assert.IsInstanceOf<LinqToDBException>(exception);
 				Assert.AreEqual("'_.Field2' cannot be converted to SQL.", exception.Message);
@@ -1322,7 +1319,7 @@ namespace Tests.xUpdate
 
 				var rows = table
 					.Merge()
-					.Using(new TestMapping2[0])
+					.Using(Array<TestMapping2>.Empty)
 					.On((t, s) => t.Id == s.OtherId)
 					.InsertWhenNotMatched(s => new TestMapping1()
 					{
@@ -1455,7 +1452,7 @@ namespace Tests.xUpdate
 
 				var rows = table
 					.Merge()
-					.Using(GetSource2(db).ToList().Select(_ => new
+					.Using(GetSource2(db).OrderBy(_ => _.OtherId).ToList().Select(_ => new
 					{
 						Key     = _.OtherId,
 						Field01 = _.OtherField1,

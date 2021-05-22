@@ -27,7 +27,7 @@ namespace LinqToDB.Linq.Builder
 #if DEBUG
 		public string _sqlQueryText => SelectQuery == null ? "" : SelectQuery.SqlText;
 		public string Path => this.GetPath();
-		public MethodCallExpression? MethodCall;
+		public MethodCallExpression? Debug_MethodCall;
 #endif
 
 		public IBuildContext[]   Sequence    { [DebuggerStepThrough] get; }
@@ -43,7 +43,7 @@ namespace LinqToDB.Linq.Builder
 
 		Expression IBuildContext.Expression => Lambda;
 
-		public readonly Dictionary<MemberInfo,Expression> Members = new Dictionary<MemberInfo,Expression>(new MemberInfoComparer());
+		public readonly Dictionary<MemberInfo,Expression> Members = new (new MemberInfoComparer());
 
 		public SelectContext(IBuildContext? parent, ExpressionBuilder builder, LambdaExpression lambda, SelectQuery selectQuery)
 		{
@@ -196,35 +196,37 @@ namespace LinqToDB.Linq.Builder
 										case ExpressionType.New        :
 										case ExpressionType.MemberInit :
 											{
-												var resultExpression = memberExpression.Transform(e =>
-												{
-													if (!ReferenceEquals(e, memberExpression))
+												var resultExpression = memberExpression.Transform(
+													(context: this, memberExpression, enforceServerSide),
+													static (context, e) =>
 													{
-														switch (e.NodeType)
+														if (!ReferenceEquals(e, context.memberExpression))
 														{
-															case ExpressionType.MemberAccess :
-															case ExpressionType.Parameter :
-																{
-																	var sequence = GetSequence(e, 0)!;
-																	return Builder.BuildExpression(sequence, e, enforceServerSide);
-																}
-															default:
-																{
-																	if (e is ContextRefExpression refExpression)
+															switch (e.NodeType)
+															{
+																case ExpressionType.MemberAccess :
+																case ExpressionType.Parameter :
 																	{
-																		return Builder.BuildExpression(refExpression.BuildContext, e, enforceServerSide);
+																		var sequence = context.context.GetSequence(e, 0)!;
+																		return context.context.Builder.BuildExpression(sequence, e, context.enforceServerSide);
 																	}
+																default:
+																	{
+																		if (e is ContextRefExpression refExpression)
+																		{
+																			return context.context.Builder.BuildExpression(refExpression.BuildContext, e, context.enforceServerSide);
+																		}
 
-																	break;
-																}
+																		break;
+																	}
+															}
+
+															if (context.enforceServerSide)
+																return context.context.Builder.BuildExpression(context.context, e, true);
 														}
 
-														if (enforceServerSide)
-															return Builder.BuildExpression(this, e, true);
-													}
-
-													return e;
-												});
+														return e;
+													});
 
 												return resultExpression;
 											}
@@ -276,7 +278,7 @@ namespace LinqToDB.Linq.Builder
 										}
 								}
 
-								var expr = expression.Transform(ex => ReferenceEquals(ex, levelExpression) ? memberExpression : ex);
+								var expr = expression.Replace(levelExpression, memberExpression);
 
 								if (sequence == null)
 									return Builder.BuildExpression(this, expr, enforceServerSide);
@@ -297,7 +299,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region ConvertToSql
 
-		readonly Dictionary<MemberInfo,SqlInfo[]> _sql = new Dictionary<MemberInfo,SqlInfo[]>(new MemberInfoComparer());
+		readonly Dictionary<MemberInfo,SqlInfo[]> _sql = new(new MemberInfoComparer());
 
 		public virtual SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 		{
@@ -464,27 +466,14 @@ namespace LinqToDB.Linq.Builder
 
 		SqlInfo[] ConvertExpressions(Expression expression, ConvertFlags flags, ColumnDescriptor? columnDescriptor)
 		{
-			return Builder.ConvertExpressions(this, expression, flags, columnDescriptor)
-				.Select (CheckExpression)
-				.ToArray();
-		}
-
-		SqlInfo CheckExpression(SqlInfo expression)
-		{
-			if (expression.Sql is SqlSearchCondition)
-			{
-				expression = expression.WithSql(Builder.Convert(
-					new SqlFunction(typeof(bool), "CASE", expression.Sql, new SqlValue(true), new SqlValue(false))));
-			}
-
-			return expression;
+			return Builder.ConvertExpressions(this, expression, flags, columnDescriptor);
 		}
 
 		#endregion
 
 		#region ConvertToIndex
 
-		readonly Dictionary<Tuple<Expression?,int,ConvertFlags>,SqlInfo[]> _expressionIndex = new Dictionary<Tuple<Expression?,int,ConvertFlags>,SqlInfo[]>();
+		readonly Dictionary<Tuple<Expression?,int,ConvertFlags>,SqlInfo[]> _expressionIndex = new ();
 
 		public virtual SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 		{
@@ -514,7 +503,7 @@ namespace LinqToDB.Linq.Builder
 			return info;
 		}
 
-		readonly Dictionary<Tuple<MemberInfo?,ConvertFlags>,SqlInfo[]> _memberIndex = new Dictionary<Tuple<MemberInfo?,ConvertFlags>,SqlInfo[]>();
+		readonly Dictionary<Tuple<MemberInfo?,ConvertFlags>,SqlInfo[]> _memberIndex = new ();
 
 		class SqlData
 		{
@@ -669,8 +658,9 @@ namespace LinqToDB.Linq.Builder
 			else
 			{
 				info = info.WithIndex(SelectQuery.Select.Add(info.Sql));
-				if (member != null)
-					SelectQuery.Select.Columns[info.Index].Alias = member.Name;
+				var column = SelectQuery.Select.Columns[info.Index];
+				if (member != null && column.RawAlias == null)
+					column.Alias = member.Name;
 			}
 
 			return info;
@@ -790,8 +780,8 @@ namespace LinqToDB.Linq.Builder
 
 											if (memberExpression == null)
 												return new IsExpressionResult(requestFlag == RequestFor.Expression);
-												//throw new InvalidOperationException(
-												//	string.Format("Invalid member '{0}.{1}'", member.DeclaringType, member.Name));
+											//throw new InvalidOperationException(
+											//	string.Format("Invalid member '{0}.{1}'", member.DeclaringType, member.Name));
 										}
 
 										if (ReferenceEquals(levelExpression, expression))
@@ -866,7 +856,8 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			throw new NotImplementedException();
+
+			return IsExpressionResult.False;
 		}
 
 		#endregion
@@ -1011,6 +1002,16 @@ namespace LinqToDB.Linq.Builder
 		public virtual SqlStatement GetResultStatement()
 		{
 			return Statement ??= new SqlSelectStatement(SelectQuery);
+		}
+
+		public virtual void CompleteColumns()
+		{
+			ExpressionBuilder.EnsureAggregateColumns(this, SelectQuery);
+
+			foreach (var sequence in Sequence)
+			{
+				sequence.CompleteColumns();
+			}
 		}
 
 		#region Helpers
@@ -1247,8 +1248,11 @@ namespace LinqToDB.Linq.Builder
 					return memberExpression;
 			}
 
+			if (!memberExpression.Type.IsAssignableFrom(levelExpression.Type))
+				return memberExpression;
+
 			return !ReferenceEquals(levelExpression, expression) ?
-				expression.Transform(ex => ReferenceEquals(ex, levelExpression) ? memberExpression : ex) :
+				expression.Replace(levelExpression, memberExpression) :
 				memberExpression;
 		}
 

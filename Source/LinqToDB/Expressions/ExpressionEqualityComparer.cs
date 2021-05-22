@@ -23,6 +23,12 @@ namespace LinqToDB.Expressions
 	/// </summary>
 	class ExpressionEqualityComparer : IEqualityComparer<Expression>
 	{
+		public static IEqualityComparer<Expression> Instance { get; } = new ExpressionEqualityComparer();
+
+		private ExpressionEqualityComparer()
+		{
+		}
+
 		/// <summary>
 		///     This API supports the Entity Framework Core infrastructure and is not intended to be used
 		///     directly from your code. This API may change or be removed in future releases.
@@ -742,7 +748,7 @@ namespace LinqToDB.Expressions
 
 				public void Add(TKey key, TValue value) => _map.Add(key, value);
 
-				public bool TryGetValue(TKey key, [MaybeNull] out TValue value)
+				public bool TryGetValue(TKey key, out TValue? value)
 				{
 					for (var scope = this; scope != null; scope = scope._previous!)
 					{

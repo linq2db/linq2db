@@ -1,5 +1,6 @@
-<#@ include file="LinqToDB.ttinclude" #>
-<#@ import namespace="LinqToDB.DataProvider.SapHana"   #>
+<#@ include file="T4Model.ttinclude"  once="true"    #>
+<#@ include file="LinqToDB.ttinclude" once="true"    #>
+<#@ import namespace="LinqToDB.DataProvider.SapHana" #>
 <#
 	Model.Usings.Add("LinqToDB.DataProvider.SapHana");
 	Model.Usings.Add("System.Reflection");
@@ -87,18 +88,18 @@
 		return GetSapHanaConnection(string.Format("Server={0};Current Schema={1};UserID={2};Password={3};", server, schema, uid, password));
 	}
 
-	void LoadSapHanaMetadata(DataConnection dataConnection)
+	public void LoadSapHanaMetadata(DataConnection dataConnection)
 	{
 		LoadMetadata(dataConnection);
 	}
 
-	void LoadSapHanaMetadata(string connectionString)
+	public void LoadSapHanaMetadata(string connectionString)
 	{
 		using (var dataConnection = GetSapHanaConnection(connectionString))
 			LoadMetadata(dataConnection);
 	}
 
-	void LoadSapHanaMetadata(string server, string schema, string uid, string password)
+	public void LoadSapHanaMetadata(string server, string schema, string uid, string password)
 	{
 		using (var dataConnection = GetSapHanaConnection(server, schema, uid, password))
 			LoadMetadata(dataConnection);

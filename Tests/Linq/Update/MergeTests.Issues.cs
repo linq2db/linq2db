@@ -1,10 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
-
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
-
 using NUnit.Framework;
 
 namespace Tests.xUpdate
@@ -36,22 +35,19 @@ namespace Tests.xUpdate
 			{
 				db.GetTable<AllTypes2>().Delete();
 
-				var dt = DateTime.Now;
-				var dto = DateTimeOffset.Now;
-
 				var testData = new[]
 				{
 					new AllTypes2()
 					{
 						ID = 1,
-						datetimeoffsetDataType = dto,
-						datetime2DataType = dt
+						datetimeoffsetDataType = TestData.DateTimeOffset,
+						datetime2DataType = TestData.DateTime
 					},
 					new AllTypes2()
 					{
 						ID = 2,
-						datetimeoffsetDataType = dto.AddTicks(1),
-						datetime2DataType = dt.AddTicks(1)
+						datetimeoffsetDataType = TestData.DateTimeOffset.AddTicks(1),
+						datetime2DataType = TestData.DateTime.AddTicks(1)
 					}
 				};
 
@@ -83,20 +79,17 @@ namespace Tests.xUpdate
 			{
 				db.GetTable<AllTypes2>().Delete();
 
-				var dt = DateTime.Now;
-				var dto = DateTimeOffset.Now;
-
 				var testData = new[]
 				{
 					new AllTypes2()
 					{
-						datetimeoffsetDataType = dto,
-						datetime2DataType = dt
+						datetimeoffsetDataType = TestData.DateTimeOffset,
+						datetime2DataType = TestData.DateTime
 					},
 					new AllTypes2()
 					{
-						datetimeoffsetDataType = dto.AddTicks(1),
-						datetime2DataType = dt.AddTicks(1)
+						datetimeoffsetDataType = TestData.DateTimeOffset.AddTicks(1),
+						datetime2DataType = TestData.DateTime.AddTicks(1)
 					}
 				};
 
@@ -128,8 +121,8 @@ namespace Tests.xUpdate
 			{
 				db.GetTable<AllTypes2>().Delete();
 
-				var dt = DateTime.Now.AddTicks(-2);
-				var dto = DateTimeOffset.Now.AddTicks(-2);
+				var dt = TestData.DateTime.AddTicks(-2);
+				var dto = TestData.DateTimeOffset.AddTicks(-2);
 
 				var testData = new[]
 				{
@@ -150,7 +143,7 @@ namespace Tests.xUpdate
 				var cnt = db.GetTable<AllTypes2>()
 					.Merge()
 					.Using(testData)
-					.On((t, s) => s.datetime2DataType != DateTime.Now && s.datetimeoffsetDataType != DateTimeOffset.Now)
+					.On((t, s) => s.datetime2DataType != TestData.DateTime && s.datetimeoffsetDataType != TestData.DateTimeOffset)
 					.InsertWhenNotMatched()
 					.Merge();
 
@@ -175,8 +168,7 @@ namespace Tests.xUpdate
 			{
 				db.GetTable<AllTypes2>().Delete();
 
-				var dt = DateTime.Now;
-				var dto = DateTimeOffset.Now;
+				var dto = TestData.DateTimeOffset;
 
 				var testData = new[]
 				{
@@ -184,17 +176,17 @@ namespace Tests.xUpdate
 					{
 						ID = 1,
 						datetimeoffsetDataType = dto,
-						datetime2DataType = dt
+						datetime2DataType = TestData.DateTime
 					},
 					new AllTypes2()
 					{
 						ID = 2,
 						datetimeoffsetDataType = dto.AddTicks(1),
-						datetime2DataType = dt.AddTicks(1)
+						datetime2DataType = TestData.DateTime.AddTicks(1)
 					}
 				};
 
-				var dt2 = dt.AddTicks(3);
+				var dt2 = TestData.DateTime.AddTicks(3);
 				var dto2 = dto.AddTicks(3);
 
 				var cnt = db.GetTable<AllTypes2>()
@@ -232,20 +224,19 @@ namespace Tests.xUpdate
 			{
 				db.GetTable<AllTypes2>().Delete();
 
-				var dt = DateTime.Now;
-				var dto = DateTimeOffset.Now;
+				var dto = TestData.DateTimeOffset;
 
 				var testData = new[]
 				{
 					new AllTypes2()
 					{
 						datetimeoffsetDataType = dto,
-						datetime2DataType = dt
+						datetime2DataType = TestData.DateTime
 					},
 					new AllTypes2()
 					{
 						datetimeoffsetDataType = dto.AddTicks(1),
-						datetime2DataType = dt.AddTicks(1)
+						datetime2DataType = TestData.DateTime.AddTicks(1)
 					}
 				};
 
@@ -256,7 +247,7 @@ namespace Tests.xUpdate
 					.InsertWhenNotMatched()
 					.Merge();
 
-				var dt2 = dt.AddTicks(3);
+				var dt2 = TestData.DateTime.AddTicks(3);
 				var dto2 = dto.AddTicks(3);
 				var cnt = db.GetTable<AllTypes2>()
 					.Merge()
@@ -363,5 +354,472 @@ namespace Tests.xUpdate
 					.Merge();
 			}
 		}
+
+		#region issue 2388
+		public interface IReviewIndex
+		{
+			int       Id   { get; set; }
+			string?   Value   { get; set; }
+		}
+
+		[Table("ReviewIndexes")]
+		public class ReviewIndex : IReviewIndex
+		{
+			[PrimaryKey] public int     Id    { get; set; }
+			[Column    ] public string? Value { get; set; }
+
+			public static readonly IReviewIndex[] Data = new IReviewIndex[]
+			{
+				new ReviewIndex()
+				{
+					Id = 1,
+					Value = "2"
+				}
+			};
+		}
+
+		[Test]
+		public void TestMergeWithInterfaces1([MergeDataContextSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<ReviewIndex>())
+			{
+				((ITable<IReviewIndex>)db.GetTable<ReviewIndex>())
+					.Merge()
+					.Using(ReviewIndex.Data)
+					.On(x => new { x.Id }, x => new { x.Id })
+					.UpdateWhenMatched()
+					.InsertWhenNotMatched()
+					.Merge();
+			}
+		}
+
+		[Test]
+		public void TestMergeWithInterfaces2([MergeDataContextSource(TestProvName.AllSybase)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<ReviewIndex>())
+			{
+				((ITable<IReviewIndex>)db.GetTable<ReviewIndex>())
+					.Merge()
+					.Using((ITable<IReviewIndex>)db.GetTable<ReviewIndex>())
+					.On(x => new { x.Id }, x => new { x.Id })
+					.UpdateWhenMatched()
+					.InsertWhenNotMatched()
+					.Merge();
+			}
+		}
+
+		[Test]
+		public void TestMergeWithInterfaces3([MergeDataContextSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<ReviewIndex>())
+			{
+				((ITable<IReviewIndex>)db.GetTable<ReviewIndex>())
+					.Merge()
+					.Using(ReviewIndex.Data)
+					.On((t, s) => t.Id == s.Id)
+					.UpdateWhenMatched()
+					.InsertWhenNotMatched()
+					.Merge();
+			}
+		}
+
+		[Test]
+		public void TestMergeWithInterfaces4([MergeDataContextSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<ReviewIndex>())
+			{
+				((ITable<IReviewIndex>)db.GetTable<ReviewIndex>())
+					.Merge()
+					.Using(ReviewIndex.Data)
+					.OnTargetKey()
+					.UpdateWhenMatched()
+					.InsertWhenNotMatched()
+					.Merge();
+			}
+		}
+
+		[Test]
+		public void TestMergeWithInterfaces5([MergeDataContextSource(TestProvName.AllSybase)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<ReviewIndex>())
+			{
+				((ITable<IReviewIndex>)db.GetTable<ReviewIndex>())
+					.Merge()
+					.Using((ITable<IReviewIndex>)db.GetTable<ReviewIndex>())
+					.OnTargetKey()
+					.UpdateWhenMatched()
+					.InsertWhenNotMatched()
+					.Merge();
+			}
+		}
+
+		[Test]
+		public void TestMergeWithInterfaces6([MergeDataContextSource(TestProvName.AllInformix, ProviderName.Firebird)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<ReviewIndex>())
+			{
+				((ITable<IReviewIndex>)db.GetTable<ReviewIndex>())
+					.Merge()
+					.Using(ReviewIndex.Data)
+					.On(x => new { x.Id }, x => new { x.Id })
+					.InsertWhenNotMatchedAnd(s => s.Id > 1)
+					.Merge();
+			}
+		}
+
+		[Test]
+		public void TestMergeWithInterfaces7([MergeDataContextSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<ReviewIndex>())
+			{
+				((ITable<IReviewIndex>)db.GetTable<ReviewIndex>())
+					.Merge()
+					.Using(ReviewIndex.Data)
+					.OnTargetKey()
+					.InsertWhenNotMatched(s => new ReviewIndex()
+					{
+						Id    = 2,
+						Value = "3"
+					})
+					.Merge();
+			}
+		}
+
+		[Test]
+		public void TestMergeWithInterfaces8([MergeDataContextSource(TestProvName.AllInformix, ProviderName.Firebird)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<ReviewIndex>())
+			{
+				((ITable<IReviewIndex>)db.GetTable<ReviewIndex>())
+					.Merge()
+					.Using(ReviewIndex.Data)
+					.On(x => new { x.Id }, x => new { x.Id })
+					.InsertWhenNotMatchedAnd(
+						s => s.Id > 1,
+						s => new ReviewIndex()
+						{
+							Id = 2,
+							Value = "3"
+						})
+					.Merge();
+			}
+		}
+
+		[Test]
+		public void TestMergeWithInterfaces9([MergeDataContextSource(TestProvName.AllInformix, ProviderName.Firebird)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<ReviewIndex>())
+			{
+				((ITable<IReviewIndex>)db.GetTable<ReviewIndex>())
+					.Merge()
+					.Using(ReviewIndex.Data)
+					.On(x => new { x.Id }, x => new { x.Id })
+					.UpdateWhenMatchedAnd((t, s) => t.Id != s.Id)
+					.Merge();
+			}
+		}
+
+		[Test]
+		public void TestMergeWithInterfaces10([MergeDataContextSource(TestProvName.AllOracle)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<ReviewIndex>())
+			{
+				((ITable<IReviewIndex>)db.GetTable<ReviewIndex>())
+					.Merge()
+					.Using(ReviewIndex.Data)
+					.OnTargetKey()
+					.UpdateWhenMatched((t, s) => new ReviewIndex()
+					{
+						Id    = 2,
+						Value = "3"
+					})
+					.Merge();
+			}
+		}
+
+		[Test]
+		public void TestMergeWithInterfaces11([MergeDataContextSource(TestProvName.AllInformix, ProviderName.Firebird, TestProvName.AllOracle)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<ReviewIndex>())
+			{
+				((ITable<IReviewIndex>)db.GetTable<ReviewIndex>())
+					.Merge()
+					.Using(ReviewIndex.Data)
+					.OnTargetKey()
+					.UpdateWhenMatchedAnd(
+						(t, s) => t.Id != s.Id,
+						(t, s) => new ReviewIndex()
+						{
+							Id = 2,
+							Value = "3"
+						})
+					.Merge();
+			}
+		}
+
+		[Test]
+		public void TestMergeWithInterfaces12([IncludeDataSources(TestProvName.AllOracle)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<ReviewIndex>())
+			{
+				((ITable<IReviewIndex>)db.GetTable<ReviewIndex>())
+					.Merge()
+					.Using(ReviewIndex.Data)
+					.OnTargetKey()
+					.UpdateWhenMatchedThenDelete((s, t) => s.Id != t.Id)
+					.Merge();
+			}
+		}
+
+		[Test]
+		public void TestMergeWithInterfaces13([IncludeDataSources(TestProvName.AllOracle)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<ReviewIndex>())
+			{
+				((ITable<IReviewIndex>)db.GetTable<ReviewIndex>())
+					.Merge()
+					.Using(ReviewIndex.Data)
+					.OnTargetKey()
+					.UpdateWhenMatchedAndThenDelete((s, t) => s.Id != t.Id, (s, t) => s.Id != t.Id)
+					.Merge();
+			}
+		}
+
+		[Test]
+		public void TestMergeWithInterfaces14([IncludeDataSources(TestProvName.AllOracle)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<ReviewIndex>())
+			{
+				((ITable<IReviewIndex>)db.GetTable<ReviewIndex>())
+					.Merge()
+					.Using(ReviewIndex.Data)
+					.OnTargetKey()
+					.UpdateWhenMatchedThenDelete((s, t) => new ReviewIndex() { Value = "3" }, (s, t) => s.Value != t.Value)
+					.Merge();
+			}
+		}
+
+		[Test]
+		public void TestMergeWithInterfaces15([IncludeDataSources(TestProvName.AllOracle)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<ReviewIndex>())
+			{
+				((ITable<IReviewIndex>)db.GetTable<ReviewIndex>())
+					.Merge()
+					.Using(ReviewIndex.Data)
+					.OnTargetKey()
+					.UpdateWhenMatchedAndThenDelete((s, t) => s.Value != t.Value, (s, t) => new ReviewIndex() { Value = "3" }, (s, t) => s.Value != t.Value)
+					.Merge();
+			}
+		}
+
+		[Test]
+		public void TestMergeWithInterfaces16([MergeDataContextSource(ProviderName.Firebird, TestProvName.AllOracle, TestProvName.AllSybase)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<ReviewIndex>())
+			{
+				((ITable<IReviewIndex>)db.GetTable<ReviewIndex>())
+					.Merge()
+					.Using(ReviewIndex.Data)
+					.OnTargetKey()
+					.DeleteWhenMatched()
+					.Merge();
+			}
+		}
+
+		[Test]
+		public void TestMergeWithInterfaces17([MergeDataContextSource(ProviderName.Firebird, TestProvName.AllInformix, TestProvName.AllOracle, TestProvName.AllSybase)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<ReviewIndex>())
+			{
+				((ITable<IReviewIndex>)db.GetTable<ReviewIndex>())
+					.Merge()
+					.Using(ReviewIndex.Data)
+					.OnTargetKey()
+					.DeleteWhenMatchedAnd((t, s) => t.Id == s.Id)
+					.Merge();
+			}
+		}
+
+		[Test]
+		public void TestMergeWithInterfaces18([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<ReviewIndex>())
+			{
+				((ITable<IReviewIndex>)db.GetTable<ReviewIndex>())
+					.Merge()
+					.Using(ReviewIndex.Data)
+					.OnTargetKey()
+					.UpdateWhenNotMatchedBySource(t =>  new ReviewIndex() { Id = 2, Value = "3"})
+					.Merge();
+			}
+		}
+
+		[Test]
+		public void TestMergeWithInterfaces19([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<ReviewIndex>())
+			{
+				((ITable<IReviewIndex>)db.GetTable<ReviewIndex>())
+					.Merge()
+					.Using(ReviewIndex.Data)
+					.OnTargetKey()
+					.UpdateWhenNotMatchedBySourceAnd(t => t.Id == 3, t => new ReviewIndex() { Id = 2, Value = "3" })
+					.Merge();
+			}
+		}
+
+		[Test]
+		public void TestMergeWithInterfaces20([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<ReviewIndex>())
+			{
+				((ITable<IReviewIndex>)db.GetTable<ReviewIndex>())
+					.Merge()
+					.Using(ReviewIndex.Data)
+					.OnTargetKey()
+					.DeleteWhenNotMatchedBySource()
+					.Merge();
+			}
+		}
+
+		[Test]
+		public void TestMergeWithInterfaces21([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<ReviewIndex>())
+			{
+				((ITable<IReviewIndex>)db.GetTable<ReviewIndex>())
+					.Merge()
+					.Using(ReviewIndex.Data)
+					.OnTargetKey()
+					.DeleteWhenNotMatchedBySourceAnd(t => t.Id == 3)
+					.Merge();
+			}
+		}
+		#endregion
+
+		#region https://github.com/linq2db/linq2db/issues/2377
+		class CacheTestTable
+		{
+			[PrimaryKey] public int Id;
+			[Column    ] public int Value;
+		}
+
+		[Test(Description = "")]
+		public void TestEnumerableSourceCaching([MergeDataContextSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable<CacheTestTable>())
+			{
+				var source = new List<CacheTestTable>()
+				{
+					new CacheTestTable() { Id = 1, Value = 1 },
+					new CacheTestTable() { Id = 2, Value = 2 },
+				};
+
+				table
+					.Merge()
+					.Using(source)
+					.OnTargetKey()
+					.UpdateWhenMatched()
+					.InsertWhenNotMatched()
+					.Merge();
+
+				var res = table.OrderBy(_ => _.Id).ToArray();
+
+				Assert.AreEqual(2, res.Length);
+				Assert.AreEqual(1, res[0].Id);
+				Assert.AreEqual(1, res[0].Value);
+				Assert.AreEqual(2, res[1].Id);
+				Assert.AreEqual(2, res[1].Value);
+
+				source[1].Value = 4;
+				source.Add(new CacheTestTable() { Id = 3, Value = 3 });
+
+				table
+					.Merge()
+					.Using(source)
+					.OnTargetKey()
+					.UpdateWhenMatched()
+					.InsertWhenNotMatched()
+					.Merge();
+
+				res = table.OrderBy(_ => _.Id).ToArray();
+
+				Assert.AreEqual(3, res.Length);
+				Assert.AreEqual(1, res[0].Id);
+				Assert.AreEqual(1, res[0].Value);
+				Assert.AreEqual(2, res[1].Id);
+				Assert.AreEqual(4, res[1].Value);
+				Assert.AreEqual(3, res[2].Id);
+				Assert.AreEqual(3, res[2].Value);
+			}
+		}
+
+		#endregion
+
+		#region TestNullableParameterInSourceQuery
+		[Table]
+		public class TestNullableParameterTarget
+		{
+			[PrimaryKey] public int Id1 { get; set; }
+			[PrimaryKey] public int Id2 { get; set; }
+		}
+
+		[Table]
+		public class TestNullableParameterSource
+		{
+			[PrimaryKey] public int Id { get; set; }
+		}
+
+		[Test]
+		public void TestNullableParameterInSourceQuery([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var target = db.CreateLocalTable<TestNullableParameterTarget>())
+			using (var source = db.CreateLocalTable<TestNullableParameterSource>())
+			{
+				run(null);
+				run(1);
+
+				void run(int? id)
+				{
+					target
+						.Merge()
+						.Using(source
+							.Where(_ => _.Id == id)
+							.Select(_ => new TestNullableParameterTarget()
+							{
+								Id1 = 2,
+								Id2 = _.Id
+							}))
+						.OnTargetKey()
+						.InsertWhenNotMatched()
+						.Merge();
+				}
+			}
+		}
+		#endregion
 	}
 }

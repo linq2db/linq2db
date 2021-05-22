@@ -3,7 +3,7 @@
 	<Import Project="linq2db.Default.props" />
 
 	<PropertyGroup>
-		<TargetFrameworks>net46;netcoreapp2.1;netcoreapp3.1</TargetFrameworks>
+		<TargetFrameworks>net472;netcoreapp2.1;netcoreapp3.1;net5.0</TargetFrameworks>
 		<Configurations>Debug;Release;Azure</Configurations>
 	</PropertyGroup>
 
@@ -19,15 +19,16 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="NUnit" Version="3.12.0" />
-		<PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+		<PackageReference Include="NUnit" />
+		<PackageReference Include="Newtonsoft.Json" />
+		<PackageReference Include="FluentAssertions"/>
 	</ItemGroup>
 
-	<ItemGroup Condition="'$(TargetFramework)' == 'net46' ">
+	<ItemGroup Condition="'$(TargetFramework)' == 'net472' ">
 		<Reference Include="System.Data.Linq" />
 		<Reference Include="System.ServiceModel" />
 
-		<PackageReference Include="System.Collections.Immutable" Version="1.7.1" />
+		<PackageReference Include="System.Collections.Immutable" />
 	</ItemGroup>
 
 </Project>

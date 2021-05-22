@@ -28,7 +28,7 @@ namespace LinqToDB.DataProvider.Firebird
 			return MultipleRowsCopy2Async(table, options, source, " FROM rdb$database", cancellationToken);
 		}
 
-#if !NET45 && !NET46
+#if NATIVE_ASYNC
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{

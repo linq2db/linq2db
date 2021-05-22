@@ -8,6 +8,7 @@ using System.Xml;
 namespace LinqToDB.Common
 {
 	using System.Collections;
+	using System.IO;
 	using Expressions;
 	using JetBrains.Annotations;
 	using Mapping;
@@ -18,12 +19,14 @@ namespace LinqToDB.Common
 	[PublicAPI]
 	public static class Converter
 	{
-		static readonly ConcurrentDictionary<object,LambdaExpression> _expressions = new ConcurrentDictionary<object,LambdaExpression>();
+		static readonly ConcurrentDictionary<(Type from, Type to), LambdaExpression> _expressions = new ();
 
 		static XmlDocument CreateXmlDocument(string str)
 		{
-			var xml = new XmlDocument();
-			xml.LoadXml(str);
+			var xml = new XmlDocument() { XmlResolver = null };
+
+			xml.Load(XmlReader.Create(new StringReader(str), new XmlReaderSettings() { XmlResolver = null }));
+
 			return xml;
 		}
 
@@ -84,7 +87,7 @@ namespace LinqToDB.Common
 		/// <param name="expr">Converter expression.</param>
 		public static void SetConverter<TFrom,TTo>(Expression<Func<TFrom,TTo>> expr)
 		{
-			_expressions[new { from = typeof(TFrom), to = typeof(TTo) }] = expr;
+			_expressions[(typeof(TFrom), typeof(TTo))] = expr;
 		}
 
 		/// <summary>
@@ -95,11 +98,11 @@ namespace LinqToDB.Common
 		/// <returns>Conversion expression or null, of converter not found.</returns>
 		internal static LambdaExpression? GetConverter(Type from, Type to)
 		{
-			_expressions.TryGetValue(new { from, to }, out var l);
+			_expressions.TryGetValue((from, to), out var l);
 			return l;
 		}
 
-		static readonly ConcurrentDictionary<object,Func<object,object>> _converters = new ConcurrentDictionary<object,Func<object,object>>();
+		static readonly ConcurrentDictionary<object,Func<object,object>> _converters = new ();
 
 		/// <summary>
 		/// Converts value to <paramref name="conversionType"/> type.
@@ -137,16 +140,18 @@ namespace LinqToDB.Common
 				var p  = Expression.Parameter(typeof(object), "p");
 				var ex = Expression.Lambda<Func<object,object>>(
 					Expression.Convert(
-						b.Transform(e =>
-							e == ps[0] ?
-								Expression.Convert(p, e.Type) :
-							IsDefaultValuePlaceHolder(e) ?
-								new DefaultValueExpression(mappingSchema, e.Type) :
-								e),
+						b.Transform(
+							(mappingSchema, ps, p),
+							static (context, e) =>
+								e == context.ps[0] ?
+									Expression.Convert(context.p, e.Type) :
+								IsDefaultValuePlaceHolder(e) ?
+									new DefaultValueExpression(context.mappingSchema, e.Type) :
+									e),
 						typeof(object)),
 					p);
 
-				l = ex.Compile();
+				l = ex.CompileExpression();
 
 				converters[key] = l;
 			}
@@ -156,7 +161,7 @@ namespace LinqToDB.Common
 
 		static class ExprHolder<T>
 		{
-			public static readonly ConcurrentDictionary<Type,Func<object,T>> Converters = new ConcurrentDictionary<Type,Func<object,T>>();
+			public static readonly ConcurrentDictionary<Type,Func<object,T>> Converters = new ();
 		}
 
 		/// <summary>
@@ -187,15 +192,17 @@ namespace LinqToDB.Common
 
 				var p  = Expression.Parameter(typeof(object), "p");
 				var ex = Expression.Lambda<Func<object,T>>(
-					b.Transform(e =>
-						e == ps[0] ?
-							Expression.Convert (p, e.Type) :
-							IsDefaultValuePlaceHolder(e) ?
-								new DefaultValueExpression(mappingSchema, e.Type) :
-								e),
+					b.Transform(
+						(ps, p, mappingSchema),
+						static (context, e) =>
+							e == context.ps[0] ?
+								Expression.Convert (context.p, e.Type) :
+								IsDefaultValuePlaceHolder(e) ?
+									new DefaultValueExpression(context.mappingSchema, e.Type) :
+									e),
 					p);
 
-				l = ex.Compile();
+				l = ex.CompileExpression();
 
 				ExprHolder<T>.Converters[from] = l;
 			}
@@ -213,9 +220,7 @@ namespace LinqToDB.Common
 		/// <returns><c>true</c>, if expression represents default value.</returns>
 		internal static bool IsDefaultValuePlaceHolder(Expression expr)
 		{
-			var me = expr as MemberExpression;
-
-			if (me != null)
+			if (expr is MemberExpression me)
 			{
 				if (me.Member.Name == "Value" && me.Member.DeclaringType!.IsGenericType)
 					return me.Member.DeclaringType.GetGenericTypeDefinition() == typeof(DefaultValue<>);
@@ -223,6 +228,8 @@ namespace LinqToDB.Common
 
 			return expr is DefaultValueExpression;
 		}
+
+		internal static readonly FindVisitor<object?> IsDefaultValuePlaceHolderVisitor = FindVisitor<object?>.Create(IsDefaultValuePlaceHolder);
 
 		/// <summary>
 		/// Returns type, to which provided enumeration values should be mapped.

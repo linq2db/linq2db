@@ -6,6 +6,7 @@
 		<RootNamespace>LinqToDB</RootNamespace>
 
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.xml</DocumentationFile>
+		<TargetFrameworks>net472;net45;net46;netstandard2.0;netcoreapp2.1;netstandard2.1;netcoreapp3.1</TargetFrameworks>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -15,6 +16,10 @@
 
 	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
 		<DefineConstants>OVERRIDETOSTRING;$(DefineConstants)</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition=" '$(TargetFramework)' != 'net45' AND '$(TargetFramework)' != 'net46' ">
+		<DefineConstants>NATIVE_ASYNC;$(DefineConstants)</DefineConstants>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -33,22 +38,19 @@
 			<DependentUpon>AsyncExtensions.tt</DependentUpon>
 		</Compile>
 		<Compile Update="Common\Internal\MutableTuple.generated.cs">
-		  <DesignTime>True</DesignTime>
-		  <AutoGen>True</AutoGen>
-		  <DependentUpon>MutableTuple.tt</DependentUpon>
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>MutableTuple.tt</DependentUpon>
 		</Compile>
 
 		<None Update="Common\Internal\MutableTuple.tt">
-		  <Generator>TextTemplatingFileGenerator</Generator>
-		  <LastGenOutput>MutableTuple.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>MutableTuple.generated.cs</LastGenOutput>
 		</None>
-
-		<Compile Remove="Compatibility\**\*.cs" />
-		<Compile Include="Compatibility\System\Threading\Tasks\TaskEx.cs" />
 	</ItemGroup>
 
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' ">
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' OR '$(TargetFramework)' == 'net472' ">
 		<Reference Include="Microsoft.CSharp" />
 		<Reference Include="System.Configuration" />
 		<Reference Include="System.Data.DataSetExtensions" />
@@ -57,43 +59,20 @@
 		<Reference Include="System.ServiceModel" />
 		<Reference Include="System.Web.Services" />
 		<Reference Include="System.ComponentModel.DataAnnotations" />
-
-		<Compile Include="Compatibility\System\Diagnostics\CodeAnalysis\NullableAttributes.cs" />
-	</ItemGroup>
-
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
-		<Compile Include="Compatibility\System\Threading\AsyncLocal.cs" />
-	</ItemGroup>
-
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netcoreapp2.1' OR '$(TargetFramework)' == 'netstandard2.1' OR '$(TargetFramework)' == 'netcoreapp3.1' ">
-		<Compile Remove="Metadata\SystemDataLinqAttributeReader.cs" />
-		<Compile Remove="Configuration\DataProviderElement.cs" />
-		<Compile Remove="Configuration\DataProviderElementCollection.cs" />
-		<Compile Remove="Configuration\ElementBase.cs" />
-		<Compile Remove="Configuration\ElementCollectionBase.cs" />
-		<Compile Remove="Configuration\LinqToDBSection.cs" />
-		<Compile Remove="ServiceModel\**\*.cs;" />
-
-		<Compile Include="Compatibility\System\Data\Linq\Binary.cs" />
-
-		<PackageReference Include="System.ComponentModel.Annotations" Version="4.7.0" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netcoreapp2.1' ">
-		<PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
-		<Compile Include="Compatibility\System\Diagnostics\CodeAnalysis\NullableAttributes.cs" />
+		<PackageReference Include="System.Data.DataSetExtensions" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netstandard2.1' ">
-		<Compile Remove="DataProvider\SapHana\SapHanaDataProvider.cs" />
-		<Compile Remove="DataProvider\SapHana\SapHanaBulkCopy.cs" />
-
-		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+		<PackageReference Include="Microsoft.CSharp" />
 	</ItemGroup>
-	
+
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.1' OR '$(TargetFramework)' == 'netcoreapp3.1' OR '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netcoreapp2.1' ">
-		<Compile Remove="Async\IAsyncEnumerable.cs" />
-		<Compile Remove="Async\IAsyncEnumerator.cs" />
-	  <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="1.1.1" />
+		<PackageReference Include="System.ComponentModel.Annotations" />
+	</ItemGroup>
+	<ItemGroup Condition=" '$(TargetFramework)' != 'net45' AND '$(TargetFramework)' != 'net46' ">
+		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" />
 	</ItemGroup>
 </Project>

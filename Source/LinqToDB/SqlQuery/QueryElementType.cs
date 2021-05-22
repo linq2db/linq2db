@@ -6,6 +6,7 @@
 		SqlFunction,
 		SqlParameter,
 		SqlExpression,
+		SqlObjectExpression,
 		SqlBinaryExpression,
 		SqlValue,
 		SqlDataType,
@@ -16,8 +17,10 @@
 		NotExprPredicate,
 		ExprExprPredicate,
 		LikePredicate,
+		SearchStringPredicate,
 		BetweenPredicate,
 		IsNullPredicate,
+		IsDistinctPredicate,
 		IsTruePredicate,
 		InSubQueryPredicate,
 		InListPredicate,
@@ -55,6 +58,8 @@
 		UpdateStatement,
 		DeleteStatement,
 		MergeStatement,
+		MultiInsertStatement,
+			ConditionalInsertClause,
 
 		CreateTableStatement,
 		DropTableStatement,
@@ -63,6 +68,8 @@
 		MergeSourceTable,
 		MergeOperationClause,
 
-		GroupingSet
+		GroupingSet,
+
+		Comment
 	}
 }

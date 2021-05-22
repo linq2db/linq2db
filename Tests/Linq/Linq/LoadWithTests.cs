@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
+using System.Transactions;
 using LinqToDB;
 using LinqToDB.Expressions;
 using LinqToDB.Mapping;
@@ -79,9 +81,23 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void LoadWithAsTable4([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q =
+					from t in db.Parent.LoadWithAsTable(p => p.Children.First().Parent)
+					select t;
+
+				var ch = q.FirstOrDefault()!;
+
+				Assert.IsNotNull(ch.Children[0].Parent);
+			}
+		}
+
+		[Test]
 		public void LoadWith3([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				db.MappingSchema.SetConvertExpression<IEnumerable<Child>,ImmutableList<Child>>(
@@ -104,7 +120,6 @@ namespace Tests.Linq
 		[Test]
 		public void LoadWithAsTable3([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				db.MappingSchema.SetConvertExpression<IEnumerable<Child>,ImmutableList<Child>>(
@@ -139,7 +154,6 @@ namespace Tests.Linq
 			var ms = new MappingSchema();
 			ms.SetGenericConvertProvider(typeof(EnumerableToImmutableListConvertProvider<>));
 
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context, ms))
 			{
 				var q =
@@ -159,7 +173,6 @@ namespace Tests.Linq
 		[Test]
 		public void LoadWith5([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q =
@@ -170,7 +183,7 @@ namespace Tests.Linq
 						p
 					};
 
-				var ch = q.ToList().Select(t => t.p).SelectMany(p => p.Children).SelectMany(p => p.GrandChildren).FirstOrDefault();
+				var ch = q.ToList().Select(t => t.p).SelectMany(p => p.Children).SelectMany(p => p.GrandChildren).FirstOrDefault()!;
 
 				Assert.IsNotNull(ch);
 				Assert.IsNotNull(ch.Child);
@@ -181,7 +194,6 @@ namespace Tests.Linq
 		[Test]
 		public void LoadWith6([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q =
@@ -192,7 +204,7 @@ namespace Tests.Linq
 						p
 					};
 
-				var ch = q.ToList().Select(t => t.p).SelectMany(p => p.GrandChildren2).FirstOrDefault();
+				var ch = q.ToList().Select(t => t.p).SelectMany(p => p.GrandChildren2).FirstOrDefault()!;
 
 				Assert.IsNotNull(ch);
 				Assert.IsNotNull(ch.Child);
@@ -203,7 +215,6 @@ namespace Tests.Linq
 		[Test]
 		public void LoadWith7([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q =
@@ -214,7 +225,7 @@ namespace Tests.Linq
 						p
 					};
 
-				var ch = q.Select(t => t.p).SelectMany(p => p.GrandChildren2).FirstOrDefault();
+				var ch = q.Select(t => t.p).SelectMany(p => p.GrandChildren2).FirstOrDefault()!;
 
 				Assert.IsNotNull(ch);
 				Assert.IsNotNull(ch.Child);
@@ -225,14 +236,13 @@ namespace Tests.Linq
 		[Test]
 		public void LoadWith8([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q =
 					from p in db.GrandChild.LoadWith(p => p.Child!.GrandChildren[0].Child!.Parent)
 					select p;
 
-				var ch = q.SelectMany(p => p.Child!.GrandChildren).FirstOrDefault();
+				var ch = q.SelectMany(p => p.Child!.GrandChildren).FirstOrDefault()!;
 
 				Assert.IsNotNull(ch);
 				Assert.IsNotNull(ch.Child);
@@ -243,14 +253,13 @@ namespace Tests.Linq
 		[Test]
 		public void LoadWith9([DataSources(TestProvName.AllAccess)] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q =
 					from p in db.GrandChild.LoadWith(p => p.Child!.GrandChildren)
 					select p;
 
-				var ch = q.SelectMany(p => p.Child!.GrandChildren).FirstOrDefault();
+				var ch = q.SelectMany(p => p.Child!.GrandChildren).FirstOrDefault()!;
 
 				Assert.IsNotNull(ch);
 				Assert.IsNull   (ch.Child);
@@ -261,7 +270,6 @@ namespace Tests.Linq
 //		[Timeout(15000)]
 		public void LoadWith10([DataSources(ProviderName.Access)] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q =
@@ -279,7 +287,6 @@ namespace Tests.Linq
 		[Test]
 		public void LoadWith11([DataSources(ProviderName.Access)] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q =
@@ -301,7 +308,6 @@ namespace Tests.Linq
 		[Test]
 		public void LoadWith12([DataSources(TestProvName.AllAccess)] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q1 =
@@ -312,12 +318,71 @@ namespace Tests.Linq
 						p,
 					});
 
-				var result = q1.FirstOrDefault();
+				var result = q1.FirstOrDefault()!;
 
 				Assert.DoesNotThrow(() => result.p.Children.Single().Parent!.Children.Single());
 			}
 		}
 
+		[Test]
+		public void LoadWithFirstOrDefaultParameter([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(2, 3)] int id)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q1 = db.Parent
+					.LoadWith(p => p.Children)
+					.ThenLoad(x => x.Parent)
+					.ThenLoad(x => x!.Children);
+					
+				var result = q1.FirstOrDefault(p=> p.ParentID == id);
+				Assert.That(result, Is.Not.Null);
+				Assert.That(result!.Children[0].Parent!.Children[0].ParentID, Is.EqualTo(id));
+			}
+		}
+
+		[Test]
+		public void TransactionScope([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var transaction = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.Serializable }, TransactionScopeAsyncFlowOption.Enabled))
+			{
+				var result = db.Parent
+					.Where(x => x.ParentID == 1)
+					.Select(p => new 
+					{
+						Id = p.ParentID,
+						Children = p.Children.Select(c => new 
+						{
+							Id = c.ChildID,
+						}).ToArray() 
+					})
+					.FirstOrDefault();
+
+				transaction.Complete();
+			}
+		}
+
+		[Test]
+		public async Task TransactionScopeAsync([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var transaction = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.Serializable }, TransactionScopeAsyncFlowOption.Enabled))
+			{
+				var result = await db.Parent
+					.Where(x => x.ParentID == 1)
+					.Select(p => new 
+					{
+						Id = p.ParentID,
+						Children = p.Children.Select(c => new 
+						{
+							Id = c.ChildID,
+						}).ToArray() 
+					})
+					.FirstOrDefaultAsync();
+
+				transaction.Complete();
+			}
+		}
 
 		class MainItem
 		{
@@ -436,7 +501,6 @@ namespace Tests.Linq
 		{
 			var testData = GenerateTestData();
 
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(testData.Item1))
 			using (db.CreateLocalTable(testData.Item2))
@@ -491,7 +555,6 @@ namespace Tests.Linq
 		{
 			var testData = GenerateTestData();
 
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(testData.Item1))
 			using (db.CreateLocalTable(testData.Item2))
@@ -552,7 +615,6 @@ namespace Tests.Linq
 		{
 			var testData = GenerateTestData();
 
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(testData.Item1))
 			using (db.CreateLocalTable(testData.Item2))
@@ -596,7 +658,6 @@ namespace Tests.Linq
 		{
 			var testData = GenerateTestData();
 
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(testData.Item1))
 			using (db.CreateLocalTable(testData.Item2))
@@ -630,7 +691,6 @@ namespace Tests.Linq
 		{
 			var testData = GenerateTestData();
 
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(testData.Item1))
 			using (db.CreateLocalTable(testData.Item2))
@@ -688,7 +748,6 @@ namespace Tests.Linq
 		[Test]
 		public void LoadWithAssociationPredicateExpression([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db      = GetDataContext(context))
 			using (var parents = db.CreateLocalTable(ParentRecord.Items))
 			using (              db.CreateLocalTable(ChildRecord.Items))

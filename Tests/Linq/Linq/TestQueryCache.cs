@@ -2,12 +2,14 @@
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Expressions;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -74,11 +76,11 @@ namespace Tests.Linq
 				db.Delete(new SampleClass() { Id = 1, StrKey = "K1" });
 				db.Update(new SampleClass() { Id = 2, StrKey = "K2", Value = "VU" });
 
-				var found = null != new QueryVisitor().Find(table.GetSelectQuery(),
-					            e => e is SqlField f && f.PhysicalName == columnName);
+				var found = null != table.GetSelectQuery().Find(columnName,
+								static (columnName, e) => e is SqlField f && f.PhysicalName == columnName);
 
-				var foundKey = null != new QueryVisitor().Find(table.GetSelectQuery(),
-					               e => e is SqlField f && f.PhysicalName == columnName);
+				var foundKey = null != table.GetSelectQuery().Find(columnName,
+					               static (columnName, e) => e is SqlField f && f.PhysicalName == columnName);
 
 				Assert.IsTrue(found);
 				Assert.IsTrue(foundKey);
@@ -104,11 +106,11 @@ namespace Tests.Linq
 				await db.DeleteAsync(new SampleClass() { Id = 1, StrKey = "K1" });
 				await db.UpdateAsync(new SampleClass() { Id = 2, StrKey = "K2", Value = "VU" });
 
-				var found = null != new QueryVisitor().Find(table.GetSelectQuery(),
-					            e => e is SqlField f && f.PhysicalName == columnName);
+				var found = null != table.GetSelectQuery().Find(columnName,
+					            static (columnName, e) => e is SqlField f && f.PhysicalName == columnName);
 
-				var foundKey = null != new QueryVisitor().Find(table.GetSelectQuery(),
-					            e => e is SqlField f && f.PhysicalName == columnName);
+				var foundKey = null != table.GetSelectQuery().Find(columnName,
+								static (columnName, e) => e is SqlField f && f.PhysicalName == columnName);
 
 				Assert.IsTrue(found);
 				Assert.IsTrue(foundKey);
@@ -128,13 +130,13 @@ namespace Tests.Linq
 				{
 					db.Insert(new SampleClass() { Id = 1, StrKey = "K1", Value = "V1" });
 					if (!db.LastQuery!.Contains(columnName))
-						throw new Exception("Invalid schema");
+						throw new AssertionException("Invalid schema");
 				}
 			}
 
 			TestMethod("Value1");
 			TestMethod("Value2");
-			
+
 			TestMethod("ValueF1", "FAIL");
 			Assert.Throws(Is.AssignableTo(typeof(Exception)), () => TestMethod("ValueF2", "FAIL"));
 		}
@@ -174,9 +176,9 @@ namespace Tests.Linq
 						.Where(x => Helper.GetField(x, i) == i);
 
 					var sqlStr = test.ToString();
-					Console.WriteLine(sqlStr);
-				}	
-				
+					TestContext.WriteLine(sqlStr);
+				}
+
 				Assert.That(Query<ManyFields>.CacheMissCount - currentMiss, Is.EqualTo(5));
 
 				currentMiss = Query<ManyFields>.CacheMissCount;
@@ -188,7 +190,7 @@ namespace Tests.Linq
 						.Where(x => Helper.GetField(x, i) == i);
 
 					var sqlStr = test.ToString();
-				}	
+				}
 
 				Assert.That(Query<ManyFields>.CacheMissCount, Is.EqualTo(currentMiss));
 			}

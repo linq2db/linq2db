@@ -2,7 +2,6 @@
 using System.Linq;
 
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -93,7 +92,7 @@ namespace Tests.UserTests
 					where g.Count() > 1
 					select new { g.Key.Field6, EngineeringCircuitNumber = g.Key.Field4, Count = g.Count() };
 
-				var distinct = q2.EnumQueries().FirstOrDefault(q => q.Select.IsDistinct);
+				var distinct = q2.EnumQueries().FirstOrDefault(q => q.Select.IsDistinct)!;
 
 				Assert.That(distinct, Is.Not.Null);
 				Assert.That(distinct.Select.Columns.Count, Is.EqualTo(3));

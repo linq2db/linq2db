@@ -12,7 +12,7 @@ using LinqToDB.SqlQuery;
 using Newtonsoft.Json;
 using NUnit.Framework;
 
-namespace Tests.Playground
+namespace Tests.Samples
 {
 
 	[AttributeUsage(AttributeTargets.Property)]
@@ -126,7 +126,7 @@ namespace Tests.Playground
 					pathList.Add(current);
 					if (current.NodeType == ExpressionType.MemberAccess)
 					{
-						current = ((MemberExpression) current).Expression;
+						current = ((MemberExpression) current).Expression!;
 					}
 					else
 						break;

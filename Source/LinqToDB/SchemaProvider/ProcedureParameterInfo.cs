@@ -66,5 +66,9 @@
 		/// Gets flag indicating that it is nullable parameter.
 		/// </summary>
 		public bool IsNullable;
+		/// <summary>
+		/// Parameter's description.
+		/// </summary>
+		public string? Description;
 	}
 }

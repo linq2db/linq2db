@@ -13,9 +13,11 @@ namespace LinqToDB.Linq.Builder
 
 	class LoadWithBuilder : MethodCallBuilder
 	{
+		public static readonly string[] MethodNames = { "LoadWith", "ThenLoad", "LoadWithAsTable" };
+
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsQueryable("LoadWith", "ThenLoad", "LoadWithAsTable");
+			return methodCall.IsQueryable(MethodNames);
 		}
 
 		static void CheckFilterFunc(Type expectedType, Type filterType, MappingSchema mappingSchema)
@@ -36,23 +38,32 @@ namespace LinqToDB.Linq.Builder
 
 			var selector = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 
-			var associations = ExtractAssociations(builder, selector.Body)
+			// reset LoadWith sequence
+			if (methodCall.IsQueryable("LoadWith"))
+			{
+				for(;;)
+				{
+					if (sequence is LoadWithContext lw)
+						sequence = lw.Context;
+					else
+						break;
+				}
+			}
+
+			var path  = selector.Body.Unwrap();
+			var table = GetTableContext(sequence, path, out var level);
+
+			var associations = ExtractAssociations(builder, path, level)
 				.Reverse()
 				.ToArray();
 
 			if (associations.Length == 0)
-				throw new LinqToDBException($"Unable to retrieve properties path for LoadWith/ThenLoad. Path: '{selector.Body}'");
-
-			var memberInfo = associations[0].MemberInfo;
-			var table = GetTableContext(sequence);
-			if (table == null)
-				throw new LinqToDBException(
-					$"Unable to find table information for LoadWith. Consider moving LoadWith closer to GetTable<{memberInfo.DeclaringType!.Name}>() method.");
+				throw new LinqToDBException($"Unable to retrieve properties path for LoadWith/ThenLoad. Path: '{path}'");
 
 			if (methodCall.Method.Name == "ThenLoad")
 			{
 				if (!(table.LoadWith?.Count > 0))
-					throw new LinqToDBException($"ThenLoad function should be followed after LoadWith. Can not find previous property for '{selector.Body}'.");
+					throw new LinqToDBException($"ThenLoad function should be followed after LoadWith. Can not find previous property for '{path}'.");
 
 				var lastPath = table.LoadWith[table.LoadWith.Count - 1];
 				associations = Array<LoadWithInfo>.Append(lastPath, associations);
@@ -81,25 +92,70 @@ namespace LinqToDB.Linq.Builder
 
 				table.LoadWith.Add(associations);
 			}
-			return sequence;
+
+			var loadWithSequence = sequence as LoadWithContext ?? new LoadWithContext(sequence, table);
+
+			return loadWithSequence;
 		}
 
-		TableBuilder.TableContext? GetTableContext(IBuildContext ctx)
+		TableBuilder.TableContext GetTableContext(IBuildContext ctx, Expression path, out Expression? stopExpression)
 		{
+			stopExpression = null;
+
 			var table = ctx as TableBuilder.TableContext;
+
+			if (table != null)
+				return table;
+
+			if (ctx is LoadWithContext lwCtx)
+				return lwCtx.TableContext;
+
 			if (table == null)
 			{
 				var isTableResult = ctx.IsExpression(null, 0, RequestFor.Table);
 				if (isTableResult.Result)
+				{
 					table = isTableResult.Context as TableBuilder.TableContext;
+					if (table != null)
+						return table;
+				}
+
 			}
 
-			return table;
+			var maxLevel = path.GetLevel(ctx.Builder.MappingSchema);
+			var level    = 1;
+			while (level <= maxLevel)
+			{
+				var levelExpression = path.GetLevelExpression(ctx.Builder.MappingSchema, level);
+				var isTableResult = ctx.IsExpression(levelExpression, 1, RequestFor.Table);
+				if (isTableResult.Result)
+				{
+					table = isTableResult.Context switch
+					{
+						TableBuilder.TableContext t => t,
+						AssociationContext a => a.TableContext as TableBuilder.TableContext,
+						_ => null
+					};
+
+					if (table != null)
+					{
+						stopExpression = levelExpression;
+						return table;
+					}
+				}
+
+				++level;
+			}
+
+			var expr = path.GetLevelExpression(ctx.Builder.MappingSchema, 0);
+
+			throw new LinqToDBException(
+				$"Unable to find table information for LoadWith. Consider moving LoadWith closer to GetTable<{expr.Type.Name}>() method.");
+	
 		}
 
-		static IEnumerable<LoadWithInfo> ExtractAssociations(ExpressionBuilder builder, Expression expression)
+		static IEnumerable<LoadWithInfo> ExtractAssociations(ExpressionBuilder builder, Expression expression, Expression? stopExpression)
 		{
-			expression = expression.Unwrap();
 			var currentExpression = expression;
 
 			while (currentExpression.NodeType == ExpressionType.Call)
@@ -122,19 +178,24 @@ namespace LinqToDB.Linq.Builder
 				filterExpression = lambda;
 			}
 
-			foreach (var member in GetAssociations(builder, currentExpression))
+			foreach (var member in GetAssociations(builder, currentExpression, stopExpression))
 			{
 				yield return new LoadWithInfo(member) { MemberFilter = filterExpression };
 				filterExpression = null;
 			}
 		}
 
-		static IEnumerable<MemberInfo> GetAssociations(ExpressionBuilder builder, Expression expression)
+		static IEnumerable<MemberInfo> GetAssociations(ExpressionBuilder builder, Expression expression, Expression? stopExpression)
 		{
 			MemberInfo? lastMember = null;
 
 			for (;;)
 			{
+				if (stopExpression == expression)
+				{
+					yield break;
+				}
+
 				switch (expression.NodeType)
 				{
 					case ExpressionType.Parameter :
@@ -148,12 +209,11 @@ namespace LinqToDB.Linq.Builder
 
 							if (cexpr.Method.IsSqlPropertyMethodEx())
 							{
-								foreach (var assoc in GetAssociations(builder, builder.ConvertExpression(expression)))
+								foreach (var assoc in GetAssociations(builder, builder.ConvertExpression(expression), stopExpression))
 									yield return assoc;
 
 								yield break;
 							}
-
 
 							if (lastMember == null)
 								goto default;
@@ -237,6 +297,18 @@ namespace LinqToDB.Linq.Builder
 			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
 		{
 			return null;
+		}
+
+		class LoadWithContext : PassThroughContext
+		{
+			private readonly TableBuilder.TableContext _tableContext;
+
+			public TableBuilder.TableContext TableContext => _tableContext;
+
+			public LoadWithContext(IBuildContext context, TableBuilder.TableContext tableContext) : base(context)
+			{
+				_tableContext = tableContext;
+			}
 		}
 	}
 }

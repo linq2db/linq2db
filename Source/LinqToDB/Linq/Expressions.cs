@@ -267,6 +267,8 @@ namespace LinqToDB.Linq
 			var targetFramework = "net45";
 #elif NET46
 			var targetFramework = "net46";
+#elif NET472
+			var targetFramework = "net472";
 #elif NETCOREAPP2_1
 			var targetFramework = "netcoreapp2.1";
 #elif NETSTANDARD2_0
@@ -460,7 +462,9 @@ namespace LinqToDB.Linq
 		class GetValueOrDefaultExpressionInfo<T1> : IExpressionInfo, ISetInfo
 			where T1 : struct
 		{
-			static T1? _member = null;
+#pragma warning disable CS0649 // Field is never assigned to...
+			static T1? _member;
+#pragma warning restore CS0649 // Field is never assigned to...
 
 			public LambdaExpression GetExpression(MappingSchema mappingSchema)
 			{
@@ -477,7 +481,7 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		class GenericInfoProvider<T> : IGenericInfoProvider
+		class GetValueOrDefaultInfoProvider<T> : IGenericInfoProvider
 		{
 			public void SetInfo(MappingSchema mappingSchema)
 			{
@@ -531,7 +535,7 @@ namespace LinqToDB.Linq
 			{ M(() => "".Replace    (' ',' ') ), N(() => L<string?,char,char,string?>      ((string? obj,char   p0,char   p1)         => Sql.Replace  (obj, p0, p1))) },
 			{ M(() => "".Trim       ()        ), N(() => L<string?,string?>                ((string? obj)                             => Sql.Trim     (obj))) },
 
-#if NETCOREAPP2_1 || NETCOREAPP3_1
+#if NETCOREAPP
 			{ M(() => "".TrimEnd    ()        ), N(() => L<string,string?>                 ((string obj)                              =>     TrimRight(obj))) },
 			{ M(() => "".TrimStart  ()        ), N(() => L<string,string?>                 ((string obj)                              =>     TrimLeft (obj))) },
 #else
@@ -553,6 +557,7 @@ namespace LinqToDB.Linq
 			{ M(() => string.Concat((string[])null!)                           ), N(() => L<string[],string>                   ((string[] ps)                             => Sql.Concat(ps)))          },
 
 			{ M(() => string.IsNullOrEmpty ("")    ),                                         N(() => L<string,bool>                                   ((string p0)                                                   => p0 == null || p0.Length == 0)) },
+			{ M(() => string.IsNullOrWhiteSpace("")),                                         N(() => L<string,bool>                                   ((string p0)                                                   => Sql.IsNullOrWhiteSpace(p0))) },
 			{ M(() => string.CompareOrdinal("","")),                                          N(() => L<string,string,int>                             ((string s1,string s2)                                         => s1.CompareTo(s2))) },
 			{ M(() => string.CompareOrdinal("",0,"",0,0)),                                    N(() => L<string,int,string,int,int,int>                 ((string s1,int i1,string s2,int i2,int l)                     => s1.Substring(i1, l).CompareTo(s2.Substring(i2, l)))) },
 			{ M(() => string.Compare       ("","")),                                          N(() => L<string,string,int>                             ((string s1,string s2)                                         => s1.CompareTo(s2))) },
@@ -569,6 +574,12 @@ namespace LinqToDB.Linq
 			#region Binary
 
 			{ M(() => ((Binary)null!).Length ), N(() => L<Binary,int>((Binary obj) => Sql.Length(obj)!.Value)) },
+
+			#endregion
+
+			#region Byte[]
+
+			{ M(() => ((byte[])null!).Length ), N(() => L<byte[],int>((byte[] obj) => Sql.Length(obj)!.Value)) },
 
 			#endregion
 
@@ -607,6 +618,9 @@ namespace LinqToDB.Linq
 
 			#region DateTimeOffset
 
+			// Disabled for now. See #2512 (https://github.com/linq2db/linq2db/issues/2512)
+			// { M(() => DateTimeOffset.Now                   ), N(() => L<DateTimeOffset>                      (()                              => Sql.CurrentTzTimestamp                                 )) },
+			
 			{ M(() => DateTimeOffset.Now.Year              ), N(() => L<DateTimeOffset,int>                  ((DateTimeOffset obj)            => Sql.DatePart(Sql.DateParts.Year,        obj)!.Value    )) },
 			{ M(() => DateTimeOffset.Now.Month             ), N(() => L<DateTimeOffset,int>                  ((DateTimeOffset obj)            => Sql.DatePart(Sql.DateParts.Month,       obj)!.Value    )) },
 			{ M(() => DateTimeOffset.Now.DayOfYear         ), N(() => L<DateTimeOffset,int>                  ((DateTimeOffset obj)            => Sql.DatePart(Sql.DateParts.DayOfYear,   obj)!.Value    )) },
@@ -616,7 +630,7 @@ namespace LinqToDB.Linq
 			{ M(() => DateTimeOffset.Now.Minute            ), N(() => L<DateTimeOffset,int>                  ((DateTimeOffset obj)            => Sql.DatePart(Sql.DateParts.Minute,      obj)!.Value    )) },
 			{ M(() => DateTimeOffset.Now.Second            ), N(() => L<DateTimeOffset,int>                  ((DateTimeOffset obj)            => Sql.DatePart(Sql.DateParts.Second,      obj)!.Value    )) },
 			{ M(() => DateTimeOffset.Now.Millisecond       ), N(() => L<DateTimeOffset,int>                  ((DateTimeOffset obj)            => Sql.DatePart(Sql.DateParts.Millisecond, obj)!.Value    )) },
-			{ M(() => DateTimeOffset.Now.Date              ), N(() => L<DateTimeOffset,DateTime>             ((DateTimeOffset obj)            => Sql.Convert2(Sql.Date,                  obj)          )) },
+			{ M(() => DateTimeOffset.Now.Date              ), N(() => L<DateTimeOffset,DateTime>             ((DateTimeOffset obj)            => Sql.Convert2(Sql.Date,                  obj)           )) },
 			{ M(() => DateTimeOffset.Now.TimeOfDay         ), N(() => L<DateTimeOffset,TimeSpan>             ((DateTimeOffset obj)            => Sql.DateToTime(Sql.Convert2(Sql.Time,   obj))!.Value   )) },
 			{ M(() => DateTimeOffset.Now.AddYears       (0)), N(() => L<DateTimeOffset,int,DateTimeOffset>   ((DateTimeOffset obj,int p0)     => Sql.DateAdd(Sql.DateParts.Year,        p0, obj)!.Value )) },
 			{ M(() => DateTimeOffset.Now.AddMonths      (0)), N(() => L<DateTimeOffset,int,DateTimeOffset>   ((DateTimeOffset obj,int p0)     => Sql.DateAdd(Sql.DateParts.Month,       p0, obj)!.Value )) },
@@ -1097,7 +1111,7 @@ namespace LinqToDB.Linq
 
 		static Dictionary<string,Dictionary<MemberInfo,IExpressionInfo>> LoadMembers()
 		{
-			SetGenericInfoProvider(typeof(GenericInfoProvider<>));
+			SetGenericInfoProvider(typeof(GetValueOrDefaultInfoProvider<>));
 
 			var members = new Dictionary<string,Dictionary<MemberInfo,IExpressionInfo>>
 			{
@@ -1285,10 +1299,10 @@ namespace LinqToDB.Linq
 				#region PostgreSQL
 
 				{ ProviderName.PostgreSQL, new Dictionary<MemberInfo,IExpressionInfo> {
-					{ M(() => Sql.Left ("",0)     ), N(() => L<string?,int?,string?>             ((p0,p1)                                   => Sql.Substring(p0, 1, p1))) },
-					{ M(() => Sql.Right("",0)     ), N(() => L<string?,int?,string?>             ((string? p0,int? p1)                     => Sql.Substring(p0, p0!.Length - p1 + 1, p1))) },
+					{ M(() => Sql.Left ("",0)     ), N(() => L<string?,int?,string?>             ((p0,p1)                                 => Sql.Substring(p0, 1, p1))) },
+					{ M(() => Sql.Right("",0)     ), N(() => L<string?,int?,string?>             ((string? p0,int? p1)                    => Sql.Substring(p0, p0!.Length - p1 + 1, p1))) },
 					{ M(() => Sql.Stuff("",0,0,"")), N(() => L<string?,int?,int?,string?,string?>((string? p0,int? p1,int? p2,string? p3) => AltStuff(p0, p1, p2, p3))) },
-					{ M(() => Sql.Space(0)        ), N(() => L<int?,string?>                     ((int? p0)                              => Replicate(" ", p0))) },
+					{ M(() => Sql.Space(0)        ), N(() => L<int?,string?>                     ((int? p0)                               => Replicate(" ", p0))) },
 
 					{ M(() => Sql.Cosh(0)           ), N(() => L<double?,double?>     ((double? v)        => (Sql.Exp(v) + Sql.Exp(-v)) / 2 )) },
 					{ M(() => Sql.Round      (0.0,0)), N(() => L<double?,int?,double?>((double? v,int? p) => (double?)Sql.Round      ((decimal)v!, p))) },
@@ -1574,14 +1588,14 @@ namespace LinqToDB.Linq
 				{ MT<decimal>(() => ((decimal) 0)  .ToString()), N(() => L<decimal, string>((decimal p0) => Sql.ConvertTo<string>.From(p0) )) },
 				{ MT<double >(() => ((double)  0)  .ToString()), N(() => L<double,  string>((double  p0) => Sql.ConvertTo<string>.From(p0) )) },
 				{ MT<short  >(() => ((short)   0)  .ToString()), N(() => L<short,   string>((short   p0) => Sql.ConvertTo<string>.From(p0) )) },
-				{ MT<int  >(() => ((int)   0)  .ToString()), N(() => L<int,   string>((int   p0) => Sql.ConvertTo<string>.From(p0) )) },
-				{ MT<long  >(() => ((long)   0)  .ToString()), N(() => L<long,   string>((long   p0) => Sql.ConvertTo<string>.From(p0) )) },
+				{ MT<int    >(() => ((int)     0)  .ToString()), N(() => L<int,     string>((int     p0) => Sql.ConvertTo<string>.From(p0) )) },
+				{ MT<long   >(() => ((long)    0)  .ToString()), N(() => L<long,    string>((long    p0) => Sql.ConvertTo<string>.From(p0) )) },
 				{ MT<sbyte  >(() => ((sbyte)   0)  .ToString()), N(() => L<sbyte,   string>((sbyte   p0) => Sql.ConvertTo<string>.From(p0) )) },
 				{ MT<float  >(() => ((float)   0)  .ToString()), N(() => L<float,   string>((float   p0) => Sql.ConvertTo<string>.From(p0) )) },
 //				{ MT<string >(() => ((string) "0") .ToString()), N(() => L<string,  string>((string  p0) => p0                             )) },
 				{ MT<ushort >(() => ((ushort)  0)  .ToString()), N(() => L<ushort,  string>((ushort  p0) => Sql.ConvertTo<string>.From(p0) )) },
-				{ MT<uint >(() => ((uint)  0)  .ToString()), N(() => L<uint,  string>((uint  p0) => Sql.ConvertTo<string>.From(p0) )) },
-				{ MT<ulong >(() => ((ulong)  0)  .ToString()), N(() => L<ulong,  string>((ulong  p0) => Sql.ConvertTo<string>.From(p0) )) },
+				{ MT<uint   >(() => ((uint)    0)  .ToString()), N(() => L<uint,    string>((uint    p0) => Sql.ConvertTo<string>.From(p0) )) },
+				{ MT<ulong  >(() => ((ulong)   0)  .ToString()), N(() => L<ulong,   string>((ulong   p0) => Sql.ConvertTo<string>.From(p0) )) },
 
 				#endregion
 
@@ -1590,14 +1604,18 @@ namespace LinqToDB.Linq
 
 		#region Sql specific
 
+		// TODO: why chars ignored for SQL?
 		[CLSCompliant(false)]
+		[Sql.Expression(ProviderName.Firebird, "TRIM(TRAILING FROM {0})")]
 		[Sql.Function("RTrim", 0)]
 		public static string? TrimRight(string? str, params char[] trimChars)
 		{
 			return str?.TrimEnd(trimChars);
 		}
 
+		// TODO: why chars ignored for SQL?
 		[CLSCompliant(false)]
+		[Sql.Expression(ProviderName.Firebird, "TRIM(LEADING FROM {0})")]
 		[Sql.Function("LTrim", 0)]
 		public static string? TrimLeft(string? str, params char[] trimChars)
 		{

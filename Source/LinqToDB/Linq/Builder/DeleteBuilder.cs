@@ -9,12 +9,16 @@ namespace LinqToDB.Linq.Builder
 
 	class DeleteBuilder : MethodCallBuilder
 	{
+		private static readonly string[] MethodNames =
+			{
+				nameof(LinqExtensions.Delete),
+				nameof(LinqExtensions.DeleteWithOutput),
+				nameof(LinqExtensions.DeleteWithOutputInto)
+			};
+
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsQueryable(
-				nameof(LinqExtensions.Delete), 
-				nameof(LinqExtensions.DeleteWithOutput), 
-				nameof(LinqExtensions.DeleteWithOutputInto));
+			return methodCall.IsQueryable(MethodNames);
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)

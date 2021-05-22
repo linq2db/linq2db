@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+
 using LinqToDB.Mapping;
 
 namespace LinqToDB.SqlQuery
@@ -13,10 +14,11 @@ namespace LinqToDB.SqlQuery
 		public ISqlExpression[] Parameters { get; }
 
 		public SqlRawSqlTable(
-			MappingSchema mappingSchema,
-			Type objectType,
-			string sql,
-			params ISqlExpression[] parameters) : base(mappingSchema, objectType)
+			MappingSchema    mappingSchema,
+			Type             objectType,
+			string           sql,
+			ISqlExpression[] parameters)
+			: base(mappingSchema, objectType)
 		{
 			SQL        = sql        ?? throw new ArgumentNullException(nameof(sql));
 			Parameters = parameters ?? throw new ArgumentNullException(nameof(parameters));
@@ -29,13 +31,14 @@ namespace LinqToDB.SqlQuery
 			int id, string alias, Type objectType,
 			SqlField[]       fields,
 			string           sql,
-			ISqlExpression[] parameters)  : base(id, string.Empty, alias, null, null, null, string.Empty, objectType, null, fields, SqlTableType.RawSql, null)
+			ISqlExpression[] parameters)
+			: base(id, string.Empty, alias, null, null, null, string.Empty, objectType, null, fields, SqlTableType.RawSql, null, TableOptions.NotSet)
 		{
 			SQL        = sql;
 			Parameters = parameters;
 		}
 
-		public SqlRawSqlTable(SqlRawSqlTable table, IEnumerable<SqlField> fields, ISqlExpression[] parameters)
+		public SqlRawSqlTable(SqlRawSqlTable table, ISqlExpression[] parameters)
 		{
 			Alias              = table.Alias;
 			Server             = table.Server;
@@ -48,8 +51,6 @@ namespace LinqToDB.SqlQuery
 
 			SQL                = table.SQL;
 			Parameters         = parameters;
-
-			AddRange(fields);
 		}
 
 		public override QueryElementType ElementType  => QueryElementType.SqlRawSqlTable;
@@ -59,7 +60,7 @@ namespace LinqToDB.SqlQuery
 			return sb
 				.AppendLine("(")
 				.Append(SQL)
-				.Append(")")
+				.Append(')')
 				.AppendLine();
 		}
 
@@ -73,7 +74,6 @@ namespace LinqToDB.SqlQuery
 		public string SqlText =>
 			((IQueryElement) this).ToString(new StringBuilder(), new Dictionary<IQueryElement, IQueryElement>())
 			.ToString();
-
 
 		#endregion
 

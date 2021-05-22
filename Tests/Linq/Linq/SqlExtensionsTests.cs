@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
@@ -114,7 +113,7 @@ namespace Tests.Linq
 						TableName_Database = Sql.TableName(t, Sql.TableQualification.DatabaseName),
 					};
 
-				Console.WriteLine(query.ToString());
+				TestContext.WriteLine(query.ToString());
 
 				var ast = query.GetSelectQuery();
 
@@ -179,7 +178,7 @@ namespace Tests.Linq
 						TableName_Database = Sql.TableExpr(t, Sql.TableQualification.DatabaseName),
 					};
 
-				Console.WriteLine(query.ToString());
+				TestContext.WriteLine(query.ToString());
 
 				var ast = query.GetSelectQuery();
 
@@ -241,7 +240,7 @@ namespace Tests.Linq
 
 				var query1Str = query1.ToString();
 
-				Console.WriteLine(query1Str);
+				TestContext.WriteLine(query1Str);
 
 				var query2 = from t in table
 					from ft in db.FromSql<FreeTextKey<int>>(
@@ -251,7 +250,7 @@ namespace Tests.Linq
 
 				var query2Str = query2.ToString();
 
-				Console.WriteLine(query2Str);
+				TestContext.WriteLine(query2Str);
 
 
 				var query3 = db.FromSql<FreeTextKey<int>>(
@@ -259,11 +258,49 @@ namespace Tests.Linq
 
 				var query3Str = query3.ToString();
 
-				Console.WriteLine(query3Str);
+				TestContext.WriteLine(query3Str);
 
 				StringAssert.Contains("FREETEXTTABLE([database].[schema].[table_name], [value],", query1Str);
 				StringAssert.Contains("FREETEXTTABLE([database].[schema].[table_name], [value],", query2Str);
 				StringAssert.Contains("FREETEXTTABLE([database].[schema].[table_name], [value],", query3Str);
+			}
+		}
+
+		[Test]
+		public void TestSqlCollate1(
+			[DataSources(
+				ProviderName.SqlCe,
+				TestProvName.AllAccess,
+				TestProvName.AllSapHana,
+				TestProvName.AllOracle11,
+				TestProvName.AllInformix,
+				TestProvName.AllSybase)]
+			string context)
+		{
+			var collation = TestUtils.GetValidCollationName(GetProviderName(context, out _));
+
+			using (var db = GetDataContext(context))
+			{
+				db.Person.OrderBy(_ => "1" + Sql.Collate(_.FirstName, collation) + "2").ToList();
+			}
+		}
+
+		[Test]
+		public void TestSqlCollate2(
+			[DataSources(
+				ProviderName.SqlCe,
+				TestProvName.AllAccess,
+				TestProvName.AllSapHana,
+				TestProvName.AllOracle11,
+				TestProvName.AllInformix,
+				TestProvName.AllSybase)]
+			string context)
+		{
+			var collation = TestUtils.GetValidCollationName(GetProviderName(context, out _));
+
+			using (var db = GetDataContext(context))
+			{
+				db.Person.Select(_ => new { CollatedName = "1" + Sql.Collate(_.FirstName, collation) + "2" }).ToList();
 			}
 		}
 	}

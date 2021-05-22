@@ -272,7 +272,7 @@
 							  select new WmsGlobalTaskCombinedDTO()
 								  { GlobalTask = g, LoadCarrier = res };
 
-					Console.WriteLine(qry.ToString());
+					TestContext.WriteLine(qry.ToString());
 				}
 			}
 
@@ -294,7 +294,7 @@
 							GlobalTask = g,
 						};
 
-					Console.WriteLine(qry.ToString());
+					TestContext.WriteLine(qry.ToString());
 				}
 			}
 
@@ -329,8 +329,8 @@
 							GlobalTask = g, Source = source, SourceShelf = sourceShelf,
 							Destination = dest, DestinationShelf = destShelf, OriginDestination = origdest
 						};
-					
-					Console.WriteLine(qry.ToString());
+
+					TestContext.WriteLine(qry.ToString());
 				}
 			}
 
@@ -371,7 +371,7 @@
 						from outfeed in outfeed1List.DefaultIfEmpty()
 						select new WmsGlobalTaskCombinedDTO() { GlobalTask = g, LoadCarrier = res, Source = source, SourceShelf = sourceShelf, Destination = dest, DestinationShelf = destShelf, OriginDestination = origdest, OutfeedTransportOrder = outfeed };
 
-					Console.WriteLine(qry.ToString());
+					TestContext.WriteLine(qry.ToString());
 				}
 			}
 
@@ -526,7 +526,7 @@
 							});
 
 					var str = query.ToString();
-					Console.WriteLine(str);
+					TestContext.WriteLine(str);
 				}
 			}
 		}

@@ -9,6 +9,7 @@ namespace LinqToDB.Mapping
 {
 	using Expressions;
 	using Extensions;
+	using LinqToDB.Common;
 	using Reflection;
 
 	/// <summary>
@@ -424,11 +425,12 @@ namespace LinqToDB.Mapping
 		/// <returns>Returns current fluent entity mapping builder.</returns>
 		public EntityMappingBuilder<TEntity> HasSkipValuesOnInsert(Expression<Func<TEntity, object?>> func, params object?[] values)
 		{
-			return SetAttribute(func,
-			                    true,
-			                    _ => new SkipValuesOnInsertAttribute(values) { Configuration = Configuration },
-			                    (_, a) => { },
-			                    a => a.Configuration);
+			return SetAttribute(
+				func,
+				true,
+				_ => new SkipValuesOnInsertAttribute(values) { Configuration = Configuration },
+				(_, a) => { },
+				a => a.Configuration);
 		}
 
 		/// <summary>
@@ -439,11 +441,12 @@ namespace LinqToDB.Mapping
 		/// <returns>Returns current fluent entity mapping builder.</returns>
 		public EntityMappingBuilder<TEntity> HasSkipValuesOnUpdate(Expression<Func<TEntity, object?>> func, params object?[] values)
 		{
-			return SetAttribute(func,
-			                    true,
-			                    _ => new SkipValuesOnUpdateAttribute(values) { Configuration = Configuration },
-			                    (_, a) => { },
-			                    a => a.Configuration);
+			return SetAttribute(
+				func,
+				true,
+				_ => new SkipValuesOnUpdateAttribute(values) { Configuration = Configuration },
+				(_, a) => { },
+				a => a.Configuration);
 		}
 
 		/// <summary>
@@ -506,6 +509,34 @@ namespace LinqToDB.Mapping
 		public EntityMappingBuilder<TEntity> HasServerName(string serverName)
 		{
 			return SetTable(a => a.Server = serverName);
+		}
+
+		/// <summary>
+		/// Sets linked server name.
+		/// See <see cref="TableExtensions.IsTemporary{T}(ITable{T},bool)"/> method for support information per provider.
+		/// </summary>
+		/// <param name="isTemporary">Linked server name.</param>
+		/// <returns>Returns current fluent entity mapping builder.</returns>
+		public EntityMappingBuilder<TEntity> HasIsTemporary(bool isTemporary = true)
+		{
+			return SetTable(a => a.IsTemporary = isTemporary);
+		}
+
+		/// <summary>
+		/// Sets Table options.
+		/// See <see cref="TableExtensions.TableOptions{T}(ITable{T},TableOptions)"/> method for support information per provider.
+		/// </summary>
+		/// <param name="tableOptions">Table options.</param>
+		/// <returns>Returns current fluent entity mapping builder.</returns>
+		public EntityMappingBuilder<TEntity> HasTableOptions(TableOptions tableOptions)
+		{
+			return SetTable(a =>
+			{
+				if ((tableOptions & TableOptions.None) != 0)
+					a.TableOptions = tableOptions;
+				else
+					a.TableOptions |= tableOptions;
+			});
 		}
 
 		/// <summary>
@@ -573,12 +604,12 @@ namespace LinqToDB.Mapping
 			var queryParam   = Expression.Parameter(typeof(IQueryable<TEntity>), "q");
 			var dcParam      = Expression.Parameter(typeof(TDataContext), "dc");
 			var replaceParam = filter.Parameters[1];
-			var filterBody   = filter.Body.Transform(e => e == replaceParam ? dcParam : e);
+			var filterBody   = filter.Body.Replace(replaceParam, dcParam);
 			var filterLambda = Expression.Lambda(filterBody, filter.Parameters[0]);
 			var body         = Expression.Call(Methods.Queryable.Where.MakeGenericMethod(typeof(TEntity)), queryParam, filterLambda);
 			var lambda       = Expression.Lambda<Func<IQueryable<TEntity>, TDataContext, IQueryable<TEntity>>>(body, queryParam, dcParam);
 
-			return HasQueryFilter(lambda.Compile());
+			return HasQueryFilter(lambda.CompileExpression());
 		}
 
 		#region Dynamic Properties
@@ -631,6 +662,7 @@ namespace LinqToDB.Mapping
 					Schema                    = a.Schema,
 					Database                  = a.Database,
 					Server                    = a.Server,
+					TableOptions              = a.TableOptions,
 					IsColumnAttributeRequired = a.IsColumnAttributeRequired,
 				});
 		}
@@ -700,8 +732,8 @@ namespace LinqToDB.Mapping
 		{
 			var ex = func.Body;
 
-			if (ex is UnaryExpression)
-				ex = ((UnaryExpression)ex).Operand;
+			if (ex is UnaryExpression expression)
+				ex = expression.Operand;
 
 			if (existingGetter == null)
 				existingGetter = GetExisting;

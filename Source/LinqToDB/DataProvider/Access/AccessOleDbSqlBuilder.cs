@@ -1,8 +1,8 @@
-﻿using System.Data;
+﻿﻿using System.Data;
 
 namespace LinqToDB.DataProvider.Access
 {
-	using LinqToDB.Mapping;
+	using Mapping;
 	using SqlProvider;
 
 	class AccessOleDbSqlBuilder : AccessSqlBuilderBase
@@ -36,7 +36,7 @@ namespace LinqToDB.DataProvider.Access
 		protected override string? GetProviderTypeName(IDbDataParameter parameter)
 		{
 			if (_provider != null)
-		{
+			{
 				var param = _provider.TryGetProviderParameter(parameter, MappingSchema);
 				if (param != null)
 					return _provider.Adapter.GetDbType(param).ToString();

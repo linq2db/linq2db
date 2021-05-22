@@ -50,7 +50,7 @@ namespace LinqToDB.Common
 					{ typeof(byte ) , Tuple.Create((IComparable)(int)byte  .MinValue, (IComparable)(int)byte     .MaxValue) },
 					{ typeof(short) , Tuple.Create((IComparable)(int)short .MinValue, (IComparable)(int)short    .MaxValue) },
 					{ typeof(ushort), Tuple.Create((IComparable)(int)ushort.MinValue, (IComparable)(int)ushort   .MaxValue) },
-					{ typeof(uint)  , Tuple.Create((IComparable)(int)0              , (IComparable)     int      .MaxValue) },
+					{ typeof(uint)  , Tuple.Create((IComparable)     0              , (IComparable)     int      .MaxValue) },
 				}
 			},
 			{ typeof(uint) , new Dictionary<Type, Tuple<IComparable, IComparable>>()

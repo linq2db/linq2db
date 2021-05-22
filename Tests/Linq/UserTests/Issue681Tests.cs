@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 
-#if NET46
+#if NET472
 using System.ServiceModel;
 #endif
 
@@ -38,7 +38,8 @@ namespace Tests.UserTests
 			string? schemaName;
 			string? dbName;
 
-			using (var db = GetDataContext(context))
+			using (new DisableBaseline("Use instance name is SQL", context.Contains("SqlServer") && withServer))
+			using (var db = GetDataContext(context, testLinqService : false))
 			{
 				if (withServer && (!withDatabase || !withSchema) && (context.Contains("SqlServer") || context.Contains("Azure")))
 				{
@@ -86,7 +87,7 @@ namespace Tests.UserTests
 
 				if (throws && context.Contains(".LinqService"))
 				{
-#if NET46
+#if NET472
 					Assert.Throws<FaultException<ExceptionDetail>>(() => table.ToList());
 #endif
 				}

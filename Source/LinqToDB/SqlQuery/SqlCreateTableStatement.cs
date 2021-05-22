@@ -6,7 +6,12 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlCreateTableStatement : SqlStatement
 	{
-		public SqlTable?       Table           { get; set; }
+		public SqlCreateTableStatement(SqlTable sqlTable)
+		{
+			Table = sqlTable;
+		}
+
+		public SqlTable        Table           { get; private set; }
 		public string?         StatementHeader { get; set; }
 		public string?         StatementFooter { get; set; }
 		public DefaultNullable DefaultNullable { get; set; }
@@ -35,24 +40,9 @@ namespace LinqToDB.SqlQuery
 
 		public override ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
-			Table = ((ISqlExpressionWalkable?)Table)?.Walk(options, func) as SqlTable;;
+			Table = (SqlTable)((ISqlExpressionWalkable)Table).Walk(options, func)!;
 
 			return null;
-		}
-
-		public override ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			var clone = new SqlCreateTableStatement();
-
-			if (Table != null)
-				clone.Table = (SqlTable)Table.Clone(objectTree, doClone);
-
-			objectTree.Add(this, clone);
-
-			return clone;
 		}
 
 		public override ISqlTableSource? GetTableSource(ISqlTableSource table)

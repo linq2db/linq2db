@@ -5,18 +5,24 @@ using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlSearchCondition : ConditionBase<SqlSearchCondition, SqlSearchCondition.Next>, ISqlPredicate, ISqlExpression
+	public class SqlSearchCondition : ConditionBase<SqlSearchCondition, SqlSearchCondition.Next>, ISqlPredicate, ISqlExpression, IInvertibleElement
 	{
 		public SqlSearchCondition()
 		{
 		}
 
-		public SqlSearchCondition(IEnumerable<SqlCondition> list)
+		public SqlSearchCondition(SqlCondition condition)
 		{
-			Conditions.AddRange(list);
+			Conditions.Add(condition);
 		}
 
-		public SqlSearchCondition(params SqlCondition[] list)
+		public SqlSearchCondition(SqlCondition condition1, SqlCondition condition2)
+		{
+			Conditions.Add(condition1);
+			Conditions.Add(condition2);
+		}
+
+		public SqlSearchCondition(IEnumerable<SqlCondition> list)
 		{
 			Conditions.AddRange(list);
 		}
@@ -86,6 +92,32 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
+		#region IInvertibleElement Members
+
+		public bool CanInvert()
+		{
+			return Conditions.Count > 0 && Conditions.Count(c => c.IsNot) > Conditions.Count / 2;
+		}
+
+		public IQueryElement Invert()
+		{
+			if (Conditions.Count == 0)
+			{
+				return new SqlSearchCondition(new SqlCondition(false,
+					new SqlPredicate.ExprExpr(new SqlValue(1), SqlPredicate.Operator.Equal, new SqlValue(0), null)));
+			}
+
+			var newConditions = Conditions.Select(c =>
+			{
+				var condition = new SqlCondition(!c.IsNot, c.Predicate, !c.IsOr);
+				return condition;
+			});
+
+			return new SqlSearchCondition(newConditions);
+		}
+
+		#endregion
+
 		#region IEquatable<ISqlExpression> Members
 
 		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
@@ -112,27 +144,6 @@ namespace LinqToDB.SqlQuery
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{
 			return this == other;
-		}
-
-		#endregion
-
-		#region ICloneableElement Members
-
-		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			if (!objectTree.TryGetValue(this, out var clone))
-			{
-				var sc = new SqlSearchCondition();
-
-				objectTree.Add(this, clone = sc);
-
-				sc.Conditions.AddRange(Conditions.Select(c => (SqlCondition)c.Clone(objectTree, doClone)));
-			}
-
-			return clone;
 		}
 
 		#endregion

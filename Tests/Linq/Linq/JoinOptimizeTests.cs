@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -109,13 +108,13 @@ namespace Tests.Linq
 				Assert.AreEqual(1, q.GetTableSource().Joins.Count);
 
 				var proj1 = q.Select(v => v.OrderID);
-				Console.WriteLine(proj1.ToString());
+				TestContext.WriteLine(proj1.ToString());
 				var sq1 = proj1.GetSelectQuery();
 				Assert.AreEqual(1, sq1.GetTableSource().Joins.Count);
 				Assert.AreEqual(0, sq1.GetWhere().Conditions.Count);
 
 				var proj2 = q.Select(v => v.OrderDate);
-				Console.WriteLine(proj2.ToString());
+				TestContext.WriteLine(proj2.ToString());
 				var sq2 = proj2.GetSelectQuery();
 				Assert.AreEqual(1, sq2.GetTableSource().Joins.Count);
 				Assert.AreEqual(0, sq2.GetWhere().Conditions.Count);
@@ -275,7 +274,7 @@ namespace Tests.Linq
 					join o1 in db.Order on e.OrderID equals o1.OrderID
 					select e;
 
-				Console.WriteLine(q2.ToString());
+				TestContext.WriteLine(q2.ToString());
 				var ts = q2.GetTableSource();
 				Assert.AreEqual(1, ts.Joins.Count);
 			}
@@ -330,11 +329,11 @@ namespace Tests.Linq
 						OrderID4 = o4.OrderID,
 					};
 
-				Console.WriteLine(q.ToString());
+				TestContext.WriteLine(q.ToString());
 				Assert.AreEqual(1, q.GetTableSource().Joins.Count);
 
 				var proj1 = q.Select(v => v.OrderID);
-				Console.WriteLine(proj1.ToString());
+				TestContext.WriteLine(proj1.ToString());
 				Assert.AreEqual(1, proj1.GetTableSource().Joins.Count);
 			}
 		}
@@ -378,7 +377,7 @@ namespace Tests.Linq
 					join o1 in db.Order on od.OrderID equals o1.OrderID
 					join o2 in db.Order on od.OrderID equals o2.OrderID
 					join o3 in db.Order on od.OrderID equals o3.OrderID
-					where o1.OrderDate == DateTime.Now || o2.OrderDate < DateTime.Now && o3.EmployeeID != null
+					where o1.OrderDate == TestData.DateTime || o2.OrderDate < TestData.DateTime && o3.EmployeeID != null
 					orderby od.OrderID
 					select new
 					{
@@ -499,7 +498,7 @@ namespace Tests.Linq
 						OrderID2 = o2.OrderID,
 					};
 
-				Console.WriteLine(q.ToString());
+				TestContext.WriteLine(q.ToString());
 
 				Assert.AreEqual(1, q.GetTableSource().Joins.Count, "Join not optimized");
 

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 
 using NUnit.Framework;
 
@@ -25,7 +24,7 @@ namespace Tests.UserTests
 					{
 						g.Key.EmployeeID,
 						//g.FirstOrDefault().FirstName,
-						db.Employee.FirstOrDefault(em => em.EmployeeID == g.Key.EmployeeID).FirstName,
+						db.Employee.FirstOrDefault(em => em.EmployeeID == g.Key.EmployeeID)!.FirstName,
 					};
 
 				//    zz = zz.OrderBy(a => a.FirstName);

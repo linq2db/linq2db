@@ -1,11 +1,18 @@
 ﻿Param(
 	[Parameter(Mandatory=$true)][string]$path,
+	[Parameter(Mandatory=$true)][string]$buildPath,
 	[Parameter(Mandatory=$true)][string]$version,
 	[Parameter(Mandatory=$false)][string]$branch
 )
 
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
+
+if (Test-Path $buildPath) {
+	Remove-Item $buildPath -Recurse
+}
+
+New-Item -Path $buildPath -ItemType Directory
 
 if ($version) {
 
@@ -45,7 +52,7 @@ if ($version) {
 		$xml.package.metadata.AppendChild($child)
 
 		$child = $xml.CreateElement('copyright', $nsUri)
-		$child.InnerText = 'Copyright © 2020 ' + $authors
+		$child.InnerText = 'Copyright © 2021 ' + $authors
 		$xml.package.metadata.AppendChild($child)
 
 		$child = $xml.CreateElement('authors', $nsUri)
@@ -80,7 +87,7 @@ if ($version) {
 
 		$child = $xml.CreateElement('file', $nsUri)
 		$attr = $xml.CreateAttribute('src')
-		$attr.Value = 'icon64.png'
+		$attr.Value = '..\NuGet\icon64.png'
 		$child.Attributes.Append($attr)
 		$attr = $xml.CreateAttribute('target')
 		$attr.Value = 'images\icon.png'
@@ -108,6 +115,6 @@ if ($version) {
 		$xml.package.metadata.AppendChild($child)
 
 		Write-Host "Patched $xmlPath"
-		$xml.Save($xmlPath)
+		$xml.Save($buildPath + '\' + [System.IO.Path]::GetFileName($xmlPath))
 	}
 }

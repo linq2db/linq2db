@@ -24,10 +24,10 @@ namespace LinqToDB.Tools.Mapper
 			public BuilderData(Tuple<MemberInfo[],LambdaExpression>[]? memberMappers) => MemberMappers = memberMappers;
 
 			public readonly Tuple<MemberInfo[],LambdaExpression>[]?          MemberMappers;
-			public readonly Dictionary<Tuple<Type,Type>,ParameterExpression> Mappers     = new Dictionary<Tuple<Type,Type>,ParameterExpression>();
-			public readonly HashSet<Tuple<Type,Type>>                        MapperTypes = new HashSet<Tuple<Type,Type>>();
-			public readonly List<ParameterExpression>                        Locals      = new List<ParameterExpression>();
-			public readonly List<Expression>                                 Expressions = new List<Expression>();
+			public readonly Dictionary<Tuple<Type,Type>,ParameterExpression> Mappers     = new ();
+			public readonly HashSet<Tuple<Type,Type>>                        MapperTypes = new ();
+			public readonly List<ParameterExpression>                        Locals      = new ();
+			public readonly List<Expression>                                 Expressions = new ();
 
 			public ParameterExpression? LocalDic;
 
@@ -217,14 +217,14 @@ namespace LinqToDB.Tools.Mapper
 			initExpression =
 				Convert(
 					binds.Count > 0
-						? (Expression)MemberInit(newExpression, binds)
+						? MemberInit(newExpression, binds)
 						: newExpression,
 					toType);
 
 			return initExpression;
 		}
 
-		static NewExpression GetNewExpression([NotNull] Type originalType)
+		static NewExpression GetNewExpression(Type originalType)
 		{
 			var type = originalType;
 
@@ -258,8 +258,8 @@ namespace LinqToDB.Tools.Mapper
 		Expression? ConvertCollection(Expression fromExpression, Type toType)
 		{
 			var fromType     = fromExpression.Type;
-			var fromItemType = fromType.GetItemType();
-			var toItemType   = toType.  GetItemType();
+			var fromItemType = fromType.GetItemType()!;
+			var toItemType   = toType.  GetItemType()!;
 
 			if (toType.IsGenericType && !toType.IsGenericTypeDefinition)
 			{
@@ -365,8 +365,8 @@ namespace LinqToDB.Tools.Mapper
 			readonly ParameterExpression       _localObject;
 			readonly TypeAccessor              _fromAccessor;
 			readonly TypeAccessor              _toAccessor;
-			readonly List<Expression>          _expressions = new List<Expression>();
-			readonly List<ParameterExpression> _locals      = new List<ParameterExpression>();
+			readonly List<Expression>          _expressions = new ();
+			readonly List<ParameterExpression> _locals      = new ();
 			readonly bool                      _cacheMapper;
 
 			public Expression GetExpression()
@@ -543,8 +543,8 @@ namespace LinqToDB.Tools.Mapper
 
 				if (toType.IsArray && fromType.IsSubClassOf(typeof(IEnumerable<>)))
 				{
-					var fromItemType = fromType.GetItemType();
-					var toItemType   = toType.  GetItemType();
+					var fromItemType = fromType.GetItemType()!;
+					var toItemType   = toType.  GetItemType()!;
 
 					var expr = ToArray(_builder, _fromExpression, fromItemType, toItemType);
 
@@ -569,8 +569,8 @@ namespace LinqToDB.Tools.Mapper
 				if (clearMethodInfo != null)
 					_expressions.Add(Call(_localObject, clearMethodInfo));
 
-				var fromItemType = fromListType.GetItemType();
-				var toItemType   = toListType.  GetItemType();
+				var fromItemType = fromListType.GetItemType()!;
+				var toItemType   = toListType.  GetItemType()!;
 
 				var addRangeMethodInfo = toListType.GetMethod("AddRange");
 
@@ -590,7 +590,7 @@ namespace LinqToDB.Tools.Mapper
 
 						_expressions.Add(
 							Call(
-								MemberHelper.MethodOf(() => AddRange(((ICollection<int>)null!), (IEnumerable<int>)null!))
+								MemberHelper.MethodOf(() => AddRange<int>(null!, null!))
 									.GetGenericMethodDefinition()
 									.MakeGenericMethod(toItemType),
 								_localObject,
@@ -638,7 +638,7 @@ namespace LinqToDB.Tools.Mapper
 				dic[key] = value;
 		}
 
-		static HashSet<T> ToHashSet<T>([InstantHandle] IEnumerable<T> source) => new HashSet<T>(source);
+		static HashSet<T> ToHashSet<T>([InstantHandle] IEnumerable<T> source) => new (source);
 
 		static void AddRange<T>(ICollection<T> source, [InstantHandle] IEnumerable<T> items)
 		{

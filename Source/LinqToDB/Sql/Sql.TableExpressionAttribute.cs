@@ -1,14 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using LinqToDB.Mapping;
 
 // ReSharper disable CheckNamespace
 
 namespace LinqToDB
 {
+	using LinqToDB.SqlProvider;
 	using SqlQuery;
 
 	partial class Sql
@@ -45,11 +44,22 @@ namespace LinqToDB
 				set => base.Name = value;
 			}
 
-			public override void SetTable(MappingSchema mappingSchema, SqlTable table, MemberInfo member, IEnumerable<Expression> arguments, IEnumerable<ISqlExpression> sqlArgs)
+			public override void SetTable(ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, Func<Expression, ColumnDescriptor?, ISqlExpression> converter)
 			{
 				table.SqlTableType   = SqlTableType.Expression;
-				table.Name           = Expression ?? member.Name;
-				table.TableArguments = ConvertArgs(member, sqlArgs.ToArray());
+				table.Name           = Expression ?? methodCall.Method.Name;
+
+				var expressionStr = table.Name;
+				ExpressionAttribute.PrepareParameterValues(methodCall, ref expressionStr, false, out var knownExpressions, out var genericTypes);
+
+				if (string.IsNullOrEmpty(expressionStr))
+					throw new LinqToDBException($"Cannot retrieve Table Expression body from expression '{methodCall}'.");
+
+				// Add two fake expressions, TableName and Alias
+				knownExpressions.Insert(0, null);
+				knownExpressions.Insert(0, null);
+
+				table.TableArguments = ExpressionAttribute.PrepareArguments(expressionStr!, ArgIndices, addDefault: false, knownExpressions, genericTypes, converter).Skip(2).ToArray();
 
 				if (Schema   != null) table.Schema   = Schema;
 				if (Database != null) table.Database = Database;

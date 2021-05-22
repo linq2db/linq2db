@@ -18,7 +18,7 @@ namespace LinqToDB
 		/// Microsoft Access ODBC provider.
 		/// Used as configuration name for Access mapping schema <see cref="DataProvider.Access.AccessMappingSchema"/>.
 		/// </summary>
-		public const string AccessOdbc = "Access.Odbc";
+		public const string AccessOdbc    = "Access.Odbc";
 
 		/// <summary>
 		/// IBM DB2 default provider (DB2 LUW).
@@ -79,6 +79,11 @@ namespace LinqToDB
 		/// Microsoft SQL Server 2012 provider.
 		/// </summary>
 		public const string SqlServer2014 = "SqlServer.2014";
+		/// <summary>
+		/// Microsoft SQL Server 2016 provider.
+		/// Used as configuration name for SQL Server 2016 mapping schema <see cref="DataProvider.SqlServer.SqlServer2016MappingSchema"/>.
+		/// </summary>
+		public const string SqlServer2016 = "SqlServer.2016";
 		/// <summary>
 		/// Microsoft SQL Server 2017 provider.
 		/// Used as configuration name for SQL Server 2017 mapping schema <see cref="DataProvider.SqlServer.SqlServer2017MappingSchema"/>.
@@ -164,7 +169,7 @@ namespace LinqToDB
 		/// Used as configuration name for SAP HANA mapping schema <see cref="DataProvider.SapHana.SapHanaMappingSchema"/>.
 		/// </summary>
 		public const string SapHana       = "SapHana";
-#if !NETSTANDARD2_0 && !NETSTANDARD2_1
+#if NETFRAMEWORK || NETCOREAPP
 		/// <summary>
 		/// SAP HANA provider.
 		/// Used as configuration name for SAP HANA mapping schema <see cref="DataProvider.SapHana.SapHanaMappingSchema.NativeMappingSchema"/>.

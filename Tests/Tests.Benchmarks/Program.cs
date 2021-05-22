@@ -1,6 +1,11 @@
 ﻿using System.Threading.Tasks;
 using BenchmarkDotNet.Running;
+using LinqToDB.Benchmarks.Benchmarks.QueryGeneration;
 using LinqToDB.Benchmarks.Queries;
+
+#if JETBRAINS
+using JetBrains.Profiler.Api;
+#endif
 
 namespace LinqToDB.Benchmarks
 {
@@ -8,12 +13,133 @@ namespace LinqToDB.Benchmarks
 	{
 		static void Main(string[] args)
 		{
+			//if (args.Length == 0)
+			//{
+			//	var b1 = new FetchGraphBenchmark();
+			//	var b2 = new FetchIndividualBenchmark();
+			//	var b3 = new FetchSetBenchmark();
+			//	var b4 = new InsertSetBenchmark();
+			//	var b5 = new SelectBenchmark();
+			//	var b6 = new UpdateBenchmark();
+			//	var b7 = new QueryGenerationBenchmark();
+
+			//	b1.Setup();
+			//	b2.Setup();
+			//	b3.Setup();
+			//	b4.Setup();
+			//	b5.Setup();
+			//	b6.Setup();
+			//	b7.Setup();
+
+			//	for (var i = 0; i < 10; i++)
+			//	{
+			//		b1.Compiled();
+			//		b1.Linq();
+
+			//		b2.Compiled();
+			//		b2.Linq();
+
+			//		b3.Compiled();
+			//		b3.Linq();
+
+			//		b4.Test();
+
+			//		b5.Compiled();
+			//		b5.Execute();
+			//		b5.FromSql_Formattable();
+			//		b5.FromSql_Interpolation();
+			//		b5.Linq();
+			//		b5.Query();
+
+			//		b6.CompiledLinqObject();
+			//		b6.CompiledLinqSet();
+			//		b6.LinqObject();
+			//		b6.LinqSet();
+			//		b6.Object();
+
+			//		b7.VwSalesByCategoryContains();
+			//		b7.VwSalesByYear();
+			//		b7.VwSalesByYearMutation();
+			//	}
+
+			//	return;
+			//}
+			//TestConcurrent();
+			/*
+			VwSalesByCategoryContainsPerf();
+			return;
+			*/
+
 			BenchmarkSwitcher
 				.FromAssembly(typeof(Program).Assembly)
 				.Run(
-					args.Length > 0 ? args : new [] { "--filter=*" },
+					args.Length > 0 ? args : new[] { "--filter=*" },
 					Config.Instance);
 		}
+
+		#region Concurrent
+		static void TestConcurrent()
+		{
+			var benchmark = new ConcurrentBenchmark();
+			benchmark.Setup();
+			benchmark.Linq();
+			benchmark.Compiled();
+		}
+		#endregion
+		#region QueryGeneration
+
+		static void TestVwSalesByYear()
+		{
+			var benchmark = new QueryGenerationBenchmark();
+			benchmark.DataProvider = ProviderName.MySqlConnector;
+
+			for (int i = 0; i < 100000; i++)
+			{
+				benchmark.VwSalesByYear();
+			}
+		}
+
+		static void VwSalesByCategoryContainsPerf()
+		{
+			var benchmark = new QueryGenerationBenchmark();
+			benchmark.DataProvider = ProviderName.Access;
+
+#if JETBRAINS
+			MeasureProfiler.StartCollectingData();
+#endif
+			benchmark.VwSalesByCategoryContains();
+			for (int i = 0; i < 100; i++)
+			{
+				benchmark.VwSalesByCategoryContains();
+			}
+#if JETBRAINS
+			MeasureProfiler.StopCollectingData();
+			//			MeasureProfiler.StopCollectingData();
+			MeasureProfiler.SaveData();
+#endif
+		}
+
+		static void VwSalesByCategoryContainsMem()
+		{
+			var benchmark = new QueryGenerationBenchmark();
+			benchmark.DataProvider = ProviderName.Access;
+
+#if JETBRAINS
+			MemoryProfiler.CollectAllocations(true);
+#endif
+			for (int c = 0; c < 5; c++)
+			{
+				for (int i = 0; i < 1000; i++)
+				{
+					benchmark.VwSalesByCategoryContains();
+				}
+#if JETBRAINS
+				MemoryProfiler.GetSnapshot();
+#endif
+			}
+		}
+
+		#endregion
 
 		#region InsertSet
 		static async Task Main_FetchGraph(string[] args)
@@ -44,9 +170,9 @@ namespace LinqToDB.Benchmarks
 			b.Compiled();
 			await b.CompiledAsync();
 		}
-		#endregion
+#endregion
 
-		#region InsertSet
+#region InsertSet
 		static void Main_InsertSet(string[] args)
 		//static void Main(string[] args)
 		{
@@ -68,9 +194,9 @@ namespace LinqToDB.Benchmarks
 		{
 			b.Test();
 		}
-		#endregion
+#endregion
 
-		#region FetchSet
+#region FetchSet
 		static void Main_FetchSetBenchmark_Memory(string[] args)
 		//static void Main()
 		{
@@ -96,9 +222,9 @@ namespace LinqToDB.Benchmarks
 			b.Compiled();
 			b.RawAdoNet();
 		}
-		#endregion
+#endregion
 
-		#region FetchIndividual
+#region FetchIndividual
 		static void Main_FetchIndividualBenchmark_Memory(string[] args)
 		//static void Main()
 		{
@@ -124,9 +250,9 @@ namespace LinqToDB.Benchmarks
 			b.Compiled();
 			b.RawAdoNet();
 		}
-		#endregion
+#endregion
 
-		#region Select
+#region Select
 		static void Main_SelectBenchmark_Memory(string[] args)
 		{
 			var b = new SelectBenchmark();
@@ -160,6 +286,6 @@ namespace LinqToDB.Benchmarks
 			b.Execute();
 			b.RawAdoNet();
 		}
-		#endregion
+#endregion
 	}
 }

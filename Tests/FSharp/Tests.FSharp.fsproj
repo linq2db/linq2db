@@ -5,10 +5,14 @@
 	<PropertyGroup>
 		<AssemblyName>linq2db.Tests.FSharp</AssemblyName>
 		<LangVersion>latest</LangVersion>
+
+		<!--see notes in Directory.Packages.props-->
+		<ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<Compile Include="AssemblyInfo.fs" />
+		<Compile Include="Issue2678.fs" />
 		<Compile Include="Models.fs" />
 		<Compile Include="WhereTest.fs" />
 		<Compile Include="SelectTest.fs" />
@@ -21,7 +25,13 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Update="FSharp.Core" Version="4.7.2" />
-		<PackageReference Update="System.ValueTuple" Version="4.5.0" />
+		<PackageReference Include="FSharp.Core" Version="5.0.1" />
+		<PackageReference Include="System.ValueTuple" Version="4.5.0" />
+
+		<!--workaround for Directory.Packages.props issue-->
+		<PackageReference Update="Newtonsoft.Json" Version="13.0.1" />
+		<PackageReference Update="System.Collections.Immutable" Version="5.0.0" />
+		<PackageReference Update="NUnit" Version="3.13.2" />
+		<PackageReference Update="FluentAssertions " Version="5.10.3" />
 	</ItemGroup>
 </Project>

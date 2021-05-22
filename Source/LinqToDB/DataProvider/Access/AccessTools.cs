@@ -5,7 +5,7 @@ using System.Data;
 namespace LinqToDB.DataProvider.Access
 {
 	using System.IO;
-	using System.Runtime.InteropServices;
+	using System.Security;
 	using Data;
 	using LinqToDB.Configuration;
 
@@ -106,18 +106,16 @@ namespace LinqToDB.DataProvider.Access
 		#endregion
 
 		#region Database management
-		// ADOX.Catalog
-		[ComImport, Guid("00000602-0000-0010-8000-00AA006D2EA4")]
-		class CatalogClass
-		{
-		}
-
 		/// <summary>
-		/// Creates new Access database file. Requires Jet OLE DB provider and ADOX.
+		/// Creates new Access database file. Requires Access OLE DB provider (JET or ACE) and ADOX.
 		/// </summary>
 		/// <param name="databaseName">Name of database to create.</param>
 		/// <param name="deleteIfExists">If <c>true</c>, existing database will be removed before create.</param>
-		public static void CreateDatabase(string databaseName, bool deleteIfExists = false)
+		/// <param name="provider">Name of OleDb provider to use to create database. Default value: "Microsoft.Jet.OLEDB.4.0".</param>
+		/// <remarks>
+		/// Provider value examples: Microsoft.Jet.OLEDB.4.0 (for JET database), Microsoft.ACE.OLEDB.12.0, Microsoft.ACE.OLEDB.15.0 (for ACE database).
+		/// </remarks>
+		public static void CreateDatabase(string databaseName, bool deleteIfExists = false, string provider = "Microsoft.Jet.OLEDB.4.0")
 		{
 			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
 
@@ -133,21 +131,19 @@ namespace LinqToDB.DataProvider.Access
 				File.Delete(databaseName);
 			}
 
-			var connectionString = string.Format(
-				@"Provider=Microsoft.Jet.OLEDB.4.0;Data Source={0};Locale Identifier=1033;Jet OLEDB:Engine Type=5",
-				databaseName);
+			var connectionString = $"Provider={provider};Data Source={databaseName};Locale Identifier=1033";
 
 			DataTools.CreateFileDatabase(
 				databaseName, deleteIfExists, ".mdb",
-				dbName =>
-				{
-					dynamic catalog = new CatalogClass();
+				_ => CreateAccessDB(connectionString));
+		}
 
-					var conn = catalog.Create(connectionString);
-
-					if (conn != null)
-						conn.Close();
-				});
+		[SecuritySafeCritical]
+		private static void CreateAccessDB(string connectionString)
+		{
+			using (var catalog = ComWrapper.Create("ADOX.Catalog"))
+				using (var conn = ComWrapper.Wrap(catalog.Create(connectionString)))
+					conn.Close();
 		}
 
 		/// <summary>

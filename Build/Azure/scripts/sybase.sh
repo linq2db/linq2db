@@ -2,27 +2,33 @@
 
 docker run -d --name sybase -e SYBASE_DB=TestDataCore -p 5000:5000 datagrip/sybase:16.0
 docker ps -a
+
+# add trace flag to server startup procedure
+cat <<-EOL > start_fixed.sh
+#!/bin/sh
+/opt/sybase/ASE-16_0/bin/dataserver -T11889 \
+-d/opt/sybase/data/master.dat \
+-e/opt/sybase/ASE-16_0/install/MYSYBASE.log \
+-c/opt/sybase/ASE-16_0/MYSYBASE.cfg \
+-M/opt/sybase/ASE-16_0 \
+-N/opt/sybase/ASE-16_0/sysam/MYSYBASE.properties \
+-i/opt/sybase \
+-sMYSYBASE
+EOL
+
+docker cp start_fixed.sh sybase:/opt/sybase/ASE-16_0/install/RUN_MYSYBASE
+docker exec sybase chmod +x /opt/sybase/ASE-16_0/install/RUN_MYSYBASE
+
+# restart container to take effect
+docker stop sybase
+docker start sybase
+
+docker ps -a
+
 sleep 45
 
-echo Generate CREATE DATABASE script
-# sometimes it fails to create user and db, so we need to do it manually
-# https://github.com/DataGrip/docker-env/issues/8
-# we just need to create db if it is missing, nothing else
-cat <<-EOSQL > sybase_init.sql
-USE master
-GO
-disk resize name='master', size='200m'
-GO
-IF NOT EXISTS(SELECT * FROM dbo.sysdatabases WHERE name = 'TestDataCore')
-  CREATE DATABASE TestDataCore ON master = '102400K'
-GO
-EOSQL
-
-cat sybase_init.sql
-docker cp sybase_init.sql sybase:/init.sql
-
 retries=0
-until docker exec -e SYBASE=/opt/sybase sybase /opt/sybase/OCS-16_0/bin/isql -Usa -PmyPassword -SMYSYBASE -i"/init.sql" -e --retserverror ; do
+until docker logs sybase | grep -q 'SYBASE INITIALIZED'; do
     sleep 5
     retries=`expr $retries + 1`
     if [ $retries -gt 30 ]; then
@@ -33,5 +39,4 @@ until docker exec -e SYBASE=/opt/sybase sybase /opt/sybase/OCS-16_0/bin/isql -Us
     echo 'Waiting for sybase'
 done
 
-echo PRINTING DOCKER LOGS
 docker logs sybase

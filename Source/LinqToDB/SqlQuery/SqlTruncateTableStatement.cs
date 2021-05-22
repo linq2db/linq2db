@@ -38,21 +38,6 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
-		public override ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			var clone = new SqlTruncateTableStatement();
-
-			if (Table != null)
-				clone.Table = (SqlTable)Table.Clone(objectTree, doClone);
-
-			objectTree.Add(this, clone);
-
-			return clone;
-		}
-
 		public override ISqlTableSource? GetTableSource(ISqlTableSource table)
 		{
 			return null;

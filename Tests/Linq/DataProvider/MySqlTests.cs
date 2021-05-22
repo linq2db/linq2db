@@ -1,7 +1,4 @@
-﻿extern alias MySqlData;
-extern alias MySqlConnector;
-
-using System;
+﻿using System;
 using System.Data.Linq;
 using System.Linq;
 using System.Xml;
@@ -16,14 +13,15 @@ using LinqToDB.Tools;
 
 using NUnit.Framework;
 
-using MySqlDataDateTime = MySqlData::MySql.Data.Types.MySqlDateTime;
-using MySqlDataDecimal  = MySqlData::MySql.Data.Types.MySqlDecimal;
+using MySqlDataDateTime = MySql.Data.Types.MySqlDateTime;
+using MySqlDataDecimal  = MySql.Data.Types.MySqlDecimal;
 
-using MySqlConnectorDateTime = MySqlConnector::MySql.Data.Types.MySqlDateTime;
+using MySqlConnectorDateTime = MySqlConnector.MySqlDateTime;
 
 namespace Tests.DataProvider
 {
 	using LinqToDB.DataProvider.MySql;
+	using LinqToDB.SqlProvider;
 	using LinqToDB.Tools.Comparers;
 	using Model;
 	using System.Collections;
@@ -106,7 +104,8 @@ namespace Tests.DataProvider
 				}
 				else
 				{
-					Assert.That(TestType<MySqlConnectorDateTime?>(conn, "datetimeDataType", DataType.DateTime), Is.EqualTo(new MySqlConnectorDateTime(2012, 12, 12, 12, 12, 12, 0)));
+					using (new DisableBaseline("Output (datetime format) is culture-/system-dependent"))
+						Assert.That(TestType<MySqlConnectorDateTime?>(conn, "datetimeDataType", DataType.DateTime), Is.EqualTo(new MySqlConnectorDateTime(2012, 12, 12, 12, 12, 12, 0)));
 				}
 			}
 		}
@@ -199,15 +198,15 @@ namespace Tests.DataProvider
 
 			using (var conn = new DataConnection(context))
 			{
-				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Binary   ("p", arr1)),             Is.EqualTo(arr1));
-				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", arr1)),             Is.EqualTo(arr1));
-				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Create   ("p", arr1)),             Is.EqualTo(arr1));
-				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", null)),             Is.EqualTo(null));
-				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", new byte[0])),      Is.EqualTo(new byte[0]));
-				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Image    ("p", new byte[0])),      Is.EqualTo(new byte[0]));
-				Assert.That(conn.Execute<byte[]>("SELECT @p", new DataParameter { Name = "p", Value = arr1 }), Is.EqualTo(arr1));
-				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Create   ("p", new Binary(arr1))), Is.EqualTo(arr1));
-				Assert.That(conn.Execute<byte[]>("SELECT @p", new DataParameter("p", new Binary(arr1))),       Is.EqualTo(arr1));
+				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Binary   ("p", arr1)),              Is.EqualTo(arr1));
+				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", arr1)),              Is.EqualTo(arr1));
+				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Create   ("p", arr1)),              Is.EqualTo(arr1));
+				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", null)),              Is.EqualTo(null));
+				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", Array<byte>.Empty)), Is.EqualTo(Array<byte>.Empty));
+				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Image    ("p", Array<byte>.Empty)), Is.EqualTo(Array<byte>.Empty));
+				Assert.That(conn.Execute<byte[]>("SELECT @p", new DataParameter { Name = "p", Value = arr1 }),  Is.EqualTo(arr1));
+				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Create   ("p", new Binary(arr1))),  Is.EqualTo(arr1));
+				Assert.That(conn.Execute<byte[]>("SELECT @p", new DataParameter("p", new Binary(arr1))),        Is.EqualTo(arr1));
 			}
 		}
 
@@ -332,10 +331,10 @@ namespace Tests.DataProvider
 								decimalDataType     = 9000 + n,
 								doubleDataType      = 8800 + n,
 								floatDataType       = 7700 + n,
-								dateDataType        = DateTime.Now.Date,
-								datetimeDataType    = TestUtils.StripMilliseconds(DateTime.Now, true),
-								timestampDataType   = TestUtils.StripMilliseconds(DateTime.Now, true),
-								timeDataType        = TestUtils.StripMilliseconds(DateTime.Now, true).TimeOfDay,
+								dateDataType        = TestData.Date,
+								datetimeDataType    = TestUtils.StripMilliseconds(TestData.DateTime, true),
+								timestampDataType   = TestUtils.StripMilliseconds(TestData.DateTime, true),
+								timeDataType        = TestUtils.StripMilliseconds(TestData.DateTime, true).TimeOfDay,
 								yearDataType        = (1000 + n) % 100,
 								year2DataType       = (1000 + n) % 100,
 								year4DataType       = (1000 + n) % 100,
@@ -362,7 +361,7 @@ namespace Tests.DataProvider
 
 						// compare only 10 records
 						// as we don't compare all, we must ensure we inserted all records
-						Assert.AreEqual(source.Count(), result.Count());
+						Assert.AreEqual(source.Count, result.Count());
 						AreEqual(source.Take(10), result.Take(10), ComparerBuilder.GetEqualityComparer<AllTypeBaseProviderSpecific>());
 					}
 					else
@@ -374,7 +373,7 @@ namespace Tests.DataProvider
 
 						// compare only 10 records
 						// as we don't compare all, we must ensure we inserted all records
-						Assert.AreEqual(source.Count(), result.Count());
+						Assert.AreEqual(source.Count, result.Count());
 						AreEqual(source.Take(10), result.Take(10), ComparerBuilder.GetEqualityComparer<AllType>());
 					}
 				}
@@ -418,10 +417,10 @@ namespace Tests.DataProvider
 								decimalDataType     = 9000 + n,
 								doubleDataType      = 8800 + n,
 								floatDataType       = 7700 + n,
-								dateDataType        = DateTime.Now.Date,
-								datetimeDataType    = TestUtils.StripMilliseconds(DateTime.Now, true),
-								timestampDataType   = TestUtils.StripMilliseconds(DateTime.Now, true),
-								timeDataType        = TestUtils.StripMilliseconds(DateTime.Now, true).TimeOfDay,
+								dateDataType        = TestData.Date,
+								datetimeDataType    = TestUtils.StripMilliseconds(TestData.DateTime, true),
+								timestampDataType   = TestUtils.StripMilliseconds(TestData.DateTime, true),
+								timeDataType        = TestUtils.StripMilliseconds(TestData.DateTime, true).TimeOfDay,
 								yearDataType        = (1000 + n) % 100,
 								year2DataType       = (1000 + n) % 100,
 								year4DataType       = (1000 + n) % 100,
@@ -448,7 +447,7 @@ namespace Tests.DataProvider
 
 						// compare only 10 records
 						// as we don't compare all, we must ensure we inserted all records
-						Assert.AreEqual(source.Count(), result.Count());
+						Assert.AreEqual(source.Count, result.Count());
 						AreEqual(source.Take(10), result.Take(10), ComparerBuilder.GetEqualityComparer<AllTypeBaseProviderSpecific>());
 					}
 					else
@@ -460,7 +459,7 @@ namespace Tests.DataProvider
 
 						// compare only 10 records
 						// as we don't compare all, we must ensure we inserted all records
-						Assert.AreEqual(source.Count(), result.Count());
+						Assert.AreEqual(source.Count, result.Count());
 						AreEqual(source.Take(10), result.Take(10), ComparerBuilder.GetEqualityComparer<AllType>());
 					}
 				}
@@ -686,7 +685,7 @@ namespace Tests.DataProvider
 								MoneyValue    = 1000m + n,
 								DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
 								BoolValue     = true,
-								GuidValue     = Guid.NewGuid(),
+								GuidValue     = TestData.SequentialGuid(n),
 								SmallIntValue = (short)n
 							}));
 					}
@@ -717,7 +716,7 @@ namespace Tests.DataProvider
 								MoneyValue    = 1000m + n,
 								DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
 								BoolValue     = true,
-								GuidValue     = Guid.NewGuid(),
+								GuidValue     = TestData.SequentialGuid(n),
 								SmallIntValue = (short)n
 							}));
 					}
@@ -831,12 +830,32 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		public void TestBeginTransactionWithIsolationLevel([IncludeDataSources(TestProvName.AllMySql)] string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				db.GetTable<Parent>().Update(p => p.ParentID == 1, p => new Parent { Value1 = 1 });
+
+				using (var tran = db.BeginTransaction(IsolationLevel.Unspecified))
+				{
+					db.GetTable<Parent>().Update(p => p.ParentID == 1, p => new Parent { Value1 = null });
+
+					Assert.IsNull(db.GetTable<Parent>().First(p => p.ParentID == 1).Value1);
+
+					tran.Rollback();
+
+					Assert.That(1, Is.EqualTo(db.GetTable<Parent>().First(p => p.ParentID == 1).Value1));
+				}
+			}
+		}
+
+		[Test]
 		public void SchemaProviderTest([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
 				var sp = db.DataProvider.GetSchemaProvider();
-				var schema = sp.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				var schema = sp.GetSchema(db);
 
 				var systemTables = schema.Tables.Where(_ => _.CatalogName!.Equals("sys", StringComparison.OrdinalIgnoreCase)).ToList();
 
@@ -847,12 +866,24 @@ namespace Tests.DataProvider
 			}
 		}
 
-		public static IEnumerable<ProcedureSchema> ProcedureTestCases
+		public class ProcedureTestCase
+		{
+			public ProcedureTestCase(ProcedureSchema schema)
+			{
+				Schema = schema;
+			}
+
+			public ProcedureSchema Schema { get; }
+
+			public override string ToString() => Schema.ProcedureName;
+		}
+
+		public static IEnumerable<ProcedureTestCase> ProcedureTestCases
 		{
 			get
 			{
 				// create procedure
-				yield return new ProcedureSchema()
+				yield return new ProcedureTestCase(new ProcedureSchema()
 				{
 					CatalogName     = "SET_BY_TEST",
 					ProcedureName   = "TestProcedure",
@@ -954,10 +985,10 @@ namespace Tests.DataProvider
 							TableName = "person"
 						}
 					}
-				};
+				});
 
 				// create function
-				yield return new ProcedureSchema()
+				yield return new ProcedureTestCase(new ProcedureSchema()
 				{
 					CatalogName     = "SET_BY_TEST",
 					ProcedureName   = "TestFunction",
@@ -987,10 +1018,10 @@ namespace Tests.DataProvider
 							DataType      = DataType.Int32
 						}
 					}
-				};
+				});
 
 				// create function
-				yield return new ProcedureSchema()
+				yield return new ProcedureTestCase(new ProcedureSchema()
 				{
 					CatalogName     = "SET_BY_TEST",
 					ProcedureName   = "TestOutputParametersWithoutTableProcedure",
@@ -1021,21 +1052,23 @@ namespace Tests.DataProvider
 							DataType      = DataType.SByte
 						}
 					}
-				};
+				});
 			}
 		}
 
 		[Test]
 		public void ProceduresSchemaProviderTest(
 			[IncludeDataSources(TestProvName.AllMySql)] string context,
-			[ValueSource(nameof(ProcedureTestCases))] ProcedureSchema expectedProc)
+			[ValueSource(nameof(ProcedureTestCases))] ProcedureTestCase testCase)
 		{
 			// TODO: add aggregate/udf functions test cases
 			using (var db = (DataConnection)GetDataContext(context))
 			{
+
+				var expectedProc = testCase.Schema;
 				expectedProc.CatalogName = TestUtils.GetDatabaseName(db);
 
-				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 
 				var procedures = schema.Procedures.Where(_ => _.ProcedureName == expectedProc.ProcedureName).ToList();
 
@@ -1050,8 +1083,7 @@ namespace Tests.DataProvider
 				Assert.AreEqual(expectedProc.IsAggregateFunction,   procedure.IsAggregateFunction);
 				Assert.AreEqual(expectedProc.IsDefaultSchema,       procedure.IsDefaultSchema);
 
-				if (GetProviderName(context, out var _) == ProviderName.MySqlConnector
-					&& procedure.ResultException != null)
+				if (GetProviderName(context, out _) == ProviderName.MySqlConnector && procedure.ResultException != null)
 				{
 					Assert.False       (procedure.IsLoaded);
 					Assert.IsInstanceOf(typeof(InvalidOperationException), procedure.ResultException);
@@ -1119,7 +1151,7 @@ namespace Tests.DataProvider
 					{
 						var expectedColumn = expectedTable.Columns
 							.Where(_ => _.ColumnName == actualColumn.ColumnName)
-							.SingleOrDefault();
+							.SingleOrDefault()!;
 
 						Assert.IsNotNull(expectedColumn);
 
@@ -1146,7 +1178,7 @@ namespace Tests.DataProvider
 
 					foreach (var table in procedure.SimilarTables!)
 					{
-						var tbl = expectedProc.SimilarTables
+						var tbl = expectedProc.SimilarTables!
 							.SingleOrDefault(_ => _.TableName!.ToLower() == table.TableName!.ToLower());
 
 						Assert.IsNotNull(tbl);
@@ -1160,7 +1192,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
-				DatabaseSchema schema = db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				DatabaseSchema schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 				var res = schema.Tables.FirstOrDefault(c => c.ID!.ToLower().Contains("fulltextindex"));
 				Assert.AreNotEqual(null, res);
 			}
@@ -1171,8 +1203,8 @@ namespace Tests.DataProvider
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
-				DatabaseSchema schema = db.DataProvider.GetSchemaProvider().GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
-				var table = schema.Tables.FirstOrDefault(t => t.ID!.ToLower().Contains("issue1993"));
+				DatabaseSchema schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
+				var table = schema.Tables.FirstOrDefault(t => t.ID!.ToLower().Contains("issue1993"))!;
 				Assert.IsNotNull(table);
 				Assert.AreEqual(2, table.Columns.Count);
 				Assert.AreEqual("id",          table.Columns[0].ColumnName);
@@ -1377,8 +1409,8 @@ namespace Tests.DataProvider
 					Assert.True(sql.Contains("\t`UnsignedBigInt`   BIGINT UNSIGNED   NOT NULL"));
 					Assert.True(sql.Contains("\t`Decimal`          DECIMAL           NOT NULL"));
 					Assert.True(sql.Contains("\t`Decimal15_0`      DECIMAL(15)       NOT NULL"));
-					Assert.True(sql.Contains("\t`Decimal10_5`      DECIMAL(10,5)     NOT NULL"));
-					Assert.True(sql.Contains("\t`Decimal20_2`      DECIMAL(20,2)     NOT NULL"));
+					Assert.True(sql.Contains("\t`Decimal10_5`      DECIMAL(10, 5)    NOT NULL"));
+					Assert.True(sql.Contains("\t`Decimal20_2`      DECIMAL(20, 2)    NOT NULL"));
 					Assert.True(sql.Contains("\t`Float`            FLOAT             NOT NULL"));
 					Assert.True(sql.Contains("\t`Float10`          FLOAT(10)         NOT NULL"));
 					Assert.True(sql.Contains("\t`Double`           DOUBLE            NOT NULL"));
@@ -1448,7 +1480,7 @@ namespace Tests.DataProvider
 						Bit10            = 0x003F,
 						Bit64            = 0xDEADBEAF,
 						Json             = "{\"x\": 10}",
-						Guid             = Guid.NewGuid()
+						Guid             = TestData.Guid1
 					};
 
 					db.Insert(testRecord);
@@ -1611,7 +1643,7 @@ namespace Tests.DataProvider
 				{
 					var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, new GetSchemaOptions() { GetProcedures = false });
 
-					var tableSchema = schema.Tables.Where(t => t.TableName!.ToLower() == "testschematypestable").SingleOrDefault();
+					var tableSchema = schema.Tables.Where(t => t.TableName!.ToLower() == "testschematypestable").SingleOrDefault()!;
 					Assert.IsNotNull(tableSchema);
 
 					assertColumn("VarChar255"        , "string"  , DataType.VarChar);
@@ -1693,7 +1725,7 @@ namespace Tests.DataProvider
 
 					void assertColumn(string name, string type, DataType dataType)
 					{
-						var column = tableSchema.Columns.Where(c => c.ColumnName == name).SingleOrDefault();
+						var column = tableSchema.Columns.Where(c => c.ColumnName == name).SingleOrDefault()!;
 						Assert.IsNotNull(column);
 						Assert.AreEqual(type, column.MemberType);
 						Assert.AreEqual(dataType, column.DataType);
@@ -1709,7 +1741,7 @@ namespace Tests.DataProvider
 			{
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, new GetSchemaOptions() { GetTables = false });
 
-				var proc = schema.Procedures.Where(t => t.ProcedureName == "Issue2313Parameters").SingleOrDefault();
+				var proc = schema.Procedures.Where(t => t.ProcedureName == "Issue2313Parameters").SingleOrDefault()!;
 
 				Assert.IsNotNull(proc);
 
@@ -1773,7 +1805,7 @@ namespace Tests.DataProvider
 
 				void assertParameter(string name, string type, DataType dataType)
 				{
-					var parameter = proc.Parameters.Where(c => c.ParameterName == name).SingleOrDefault();
+					var parameter = proc.Parameters.Where(c => c.ParameterName == name).SingleOrDefault()!;
 
 					Assert.IsNotNull(parameter);
 
@@ -1790,7 +1822,7 @@ namespace Tests.DataProvider
 			{
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, new GetSchemaOptions() { GetTables = false });
 
-				var proc = schema.Procedures.Where(t => t.ProcedureName == "Issue2313Results").SingleOrDefault();
+				var proc = schema.Procedures.Where(t => t.ProcedureName == "Issue2313Results").SingleOrDefault()!;
 
 				Assert.IsNotNull(proc);
 				Assert.IsNotNull(proc.ResultTable);
@@ -1861,7 +1893,7 @@ namespace Tests.DataProvider
 				{
 					// m'kaaaay...
 					name       = "`" + name + "`";
-					var column = proc.ResultTable!.Columns.Where(c => c.ColumnName == name).SingleOrDefault();
+					var column = proc.ResultTable!.Columns.Where(c => c.ColumnName == name).SingleOrDefault()!;
 
 					Assert.IsNotNull(column);
 

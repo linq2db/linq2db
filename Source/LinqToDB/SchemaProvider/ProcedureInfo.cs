@@ -50,5 +50,9 @@
 		/// Get or sets flag, indicating that procedure returns dynamic (generic) result.
 		/// </summary>
 		public bool IsResultDynamic;
+		/// <summary>
+		/// Procedure or function description.
+		/// </summary>
+		public string? Description;
 	}
 }

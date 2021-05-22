@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.DB2
@@ -56,6 +56,7 @@ namespace LinqToDB.DataProvider.DB2
 			return _primaryKeys = dataConnection.Query(
 				rd => new PrimaryKeyInfo
 				{
+					// IMPORTANT: reader calls must be ordered to support SequentialAccess
 					TableID        = dataConnection.Connection.Database + "." + rd.ToString(0) + "." + rd.ToString(1),
 					PrimaryKeyName = rd.ToString(2)!,
 					ColumnName     = rd.ToString(3)!,
@@ -100,10 +101,16 @@ namespace LinqToDB.DataProvider.DB2
 
 			return dataConnection.Query(rd =>
 				{
+					// IMPORTANT: reader calls must be ordered to support SequentialAccess
+					var tableId = dataConnection.Connection.Database + "." + rd.ToString(0) + "." + rd.ToString(1);
+					var name    = rd.ToString(2)!;
+					var size    = rd[3];
+					var scale   = rd[4];
+
 					var ci = new ColumnInfo
 					{
-						TableID     = dataConnection.Connection.Database + "." + rd.GetString(0) + "." + rd.GetString(1),
-						Name        = rd.ToString(2)!,
+						TableID     = tableId,
+						Name        = name,
 						IsNullable  = rd.ToString(5) == "Y",
 						IsIdentity  = rd.ToString(6) == "Y",
 						Ordinal     = Converter.ChangeTypeTo<int> (rd[7]),
@@ -111,7 +118,7 @@ namespace LinqToDB.DataProvider.DB2
 						Description = rd.ToString(9),
 					};
 
-					SetColumnParameters(ci, Converter.ChangeTypeTo<long?>(rd[3]), Converter.ChangeTypeTo<int?> (rd[4]));
+					SetColumnParameters(ci, Converter.ChangeTypeTo<long?>(size), Converter.ChangeTypeTo<int?> (scale));
 
 					return ci;
 				},
@@ -155,6 +162,7 @@ namespace LinqToDB.DataProvider.DB2
 			(
 				from fk in dataConnection.Query(rd => new
 				{
+					// IMPORTANT: reader calls must be ordered to support SequentialAccess
 					name        = rd.ToString(0),
 					thisTable   = dataConnection.Connection.Database + "." + rd.ToString(1)  + "." + rd.ToString(2),
 					thisColumn  = rd.ToString(3),
@@ -202,6 +210,7 @@ namespace LinqToDB.DataProvider.DB2
 			return dataConnection
 				.Query(rd =>
 				{
+					// IMPORTANT: reader calls must be ordered to support SequentialAccess
 					var schema     = rd.ToString(0);
 					var name       = rd.ToString(1)!;
 					var isFunction = rd.ToString(2) == "F";
@@ -232,18 +241,22 @@ namespace LinqToDB.DataProvider.DB2
 			return dataConnection
 				.Query(rd =>
 				{
+					// IMPORTANT: reader calls must be ordered to support SequentialAccess
 					var schema   = rd.ToString(0);
 					var procname = rd.ToString(1);
-					var length   = ConvertTo<long?>. From(rd["LENGTH"]);
-					var scale    = ConvertTo<int?>.  From(rd["SCALE"]);
+					var pName    = rd.ToString(2);
+					var dataType = rd.ToString(3);
 					var mode     = ConvertTo<string>.From(rd[4]);
+					var ordinal  = rd[5];
+					var length   = ConvertTo<long?>. From(rd[6]);
+					var scale    = ConvertTo<int?>.  From(rd[7]);
 
 					var ppi = new ProcedureParameterInfo
 					{
 						ProcedureID   = dataConnection.Connection.Database + "." + schema + "." + procname,
-						ParameterName = rd.ToString(2),
-						DataType      = rd.ToString(3),
-						Ordinal       = ConvertTo<int>.From(rd["ORDINAL"]),
+						ParameterName = pName,
+						DataType      = dataType,
+						Ordinal       = ConvertTo<int>.From(ordinal),
 						IsIn          = mode.Contains("IN"),
 						IsOut         = mode.Contains("OUT"),
 						IsResult      = false,

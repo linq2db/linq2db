@@ -1,30 +1,31 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.Firebird
 {
+	using System.Linq;
 	using Common;
 	using Data;
 	using Mapping;
 	using SqlProvider;
-	using System.Threading;
-	using System.Threading.Tasks;
 
 	public class FirebirdDataProvider : DynamicDataProviderBase<FirebirdProviderAdapter>
 	{
 		public FirebirdDataProvider()
-			: this(ProviderName.Firebird, new FirebirdMappingSchema(), null)
+			: this(ProviderName.Firebird, null, null)
 		{
 		}
 
 		public FirebirdDataProvider(ISqlOptimizer sqlOptimizer)
-			: this(ProviderName.Firebird, new FirebirdMappingSchema(), sqlOptimizer)
+			: this(ProviderName.Firebird, null, sqlOptimizer)
 		{
 		}
 
-		protected FirebirdDataProvider(string name, MappingSchema mappingSchema, ISqlOptimizer? sqlOptimizer)
-			: base(name, mappingSchema, FirebirdProviderAdapter.GetInstance())
+		protected FirebirdDataProvider(string name, MappingSchema? mappingSchema, ISqlOptimizer? sqlOptimizer)
+			: base(name, GetMappingSchema(mappingSchema, FirebirdProviderAdapter.GetInstance().MappingSchema), FirebirdProviderAdapter.GetInstance())
 		{
 			SqlProviderFlags.IsIdentityParameterRequired       = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
@@ -33,23 +34,29 @@ namespace LinqToDB.DataProvider.Firebird
 			SqlProviderFlags.IsUpdateFromSupported             = false;
 
 			SetCharField("CHAR", (r,i) => r.GetString(i).TrimEnd(' '));
-			SetCharFieldToType<char>("CHAR", (r, i) => DataTools.GetChar(r, i));
+			SetCharFieldToType<char>("CHAR", DataTools.GetCharExpression);
 
 			SetProviderField<IDataReader,TimeSpan,DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1970, 1, 1));
-			SetProviderField<IDataReader,DateTime,DateTime>((r,i) => GetDateTime(r, i));
+			SetProviderField<IDataReader,DateTime,DateTime>((r,i) => GetDateTime(r.GetDateTime(i)));
 
 			_sqlOptimizer = sqlOptimizer ?? new FirebirdSqlOptimizer(SqlProviderFlags);
 		}
 
-		static DateTime GetDateTime(IDataReader dr, int idx)
+		static DateTime GetDateTime(DateTime value)
 		{
-			var value = dr.GetDateTime(idx);
-
 			if (value.Year == 1970 && value.Month == 1 && value.Day == 1)
 				return new DateTime(1, 1, 1, value.Hour, value.Minute, value.Second, value.Millisecond);
 
 			return value;
 		}
+
+		public override TableOptions SupportedTableOptions =>
+			TableOptions.IsTemporary                |
+			TableOptions.IsGlobalTemporaryStructure |
+			TableOptions.IsLocalTemporaryData       |
+			TableOptions.IsTransactionTemporaryData |
+			TableOptions.CreateIfNotExists          |
+			TableOptions.DropIfExists;
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
@@ -65,7 +72,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
 		{
-			return new FirebirdSchemaProvider();
+			return new FirebirdSchemaProvider(this);
 		}
 
 		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
@@ -75,9 +82,9 @@ namespace LinqToDB.DataProvider.Firebird
 
 		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
 		{
-			if (value is bool)
+			if (value is bool boolVal)
 			{
-				value = (bool)value ? "1" : "0";
+				value    = boolVal ? "1" : "0";
 				dataType = dataType.WithDataType(DataType.Char);
 			}
 
@@ -86,6 +93,22 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
 		{
+			FirebirdProviderAdapter.FbDbType? type = null;
+			switch (dataType.DataType)
+			{
+				case DataType.DateTimeOffset     : type = FirebirdProviderAdapter.FbDbType.TimeStampTZ; break;
+			}
+
+			if (type != null)
+			{
+				var param = TryGetProviderParameter(parameter, dataConnection.MappingSchema);
+				if (param != null)
+				{
+					Adapter.SetDbType(param, type.Value);
+					return;
+				}
+			}
+
 			switch (dataType.DataType)
 			{
 				case DataType.SByte      : dataType = dataType.WithDataType(DataType.Int16);    break;
@@ -97,6 +120,11 @@ namespace LinqToDB.DataProvider.Firebird
 			}
 
 			base.SetParameterType(dataConnection, parameter, dataType);
+		}
+
+		private static MappingSchema GetMappingSchema(params MappingSchema?[] schemas)
+		{
+			return new FirebirdProviderMappingSchema(schemas.Where(s => s != null).ToArray()!);
 		}
 
 		#region BulkCopy
@@ -122,7 +150,7 @@ namespace LinqToDB.DataProvider.Firebird
 				cancellationToken);
 		}
 
-#if !NET45 && !NET46
+#if NATIVE_ASYNC
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{

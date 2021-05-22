@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Globalization;
 using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Data;
@@ -55,8 +54,8 @@ namespace Tests.UserTests
 
 			var users = new[]
 			{
-				new User { Id = Guid.NewGuid(), Name = "User1" },
-				new User { Id = Guid.NewGuid(), Name = "User2" }
+				new User { Id = TestData.Guid1, Name = "User1" },
+				new User { Id = TestData.Guid2, Name = "User2" }
 			};
 
 			// Ensures that concurrent async queries for multiple db instances are handled correctly

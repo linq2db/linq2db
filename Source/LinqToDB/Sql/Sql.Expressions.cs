@@ -17,7 +17,7 @@ namespace LinqToDB
 
 	public partial class Sql
 	{
-		private class FieldsExprBuilderDirect : Sql.IExtensionCallBuilder
+		private class FieldsExprBuilderDirect : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -30,7 +30,7 @@ namespace LinqToDB
 
 				for (var i = 0; i < columns.Length; i++)
 					columnExpressions[i] = qualified
-						? (ISqlExpression)new SqlField(columns[i])
+						? new SqlField(columns[i])
 						: new SqlExpression(columns[i].ColumnName, Precedence.Primary);
 
 				if (columns.Length == 1)
@@ -43,7 +43,7 @@ namespace LinqToDB
 			}
 		}
 
-		private class FieldNameBuilderDirect : Sql.IExtensionCallBuilder
+		private class FieldNameBuilderDirect : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -79,9 +79,9 @@ namespace LinqToDB
 				var qualified    = builder.Arguments.Length <= 1 || builder.GetValue<bool>(1);
 				var isExpression = builder.Member.Name == "FieldExpr";
 
-				var field = QueryHelper.GetUnderlyingField(fieldExpr);
+				var field = QueryHelper.ExtractField(fieldExpr);
 				if (field == null)
-					throw new LinqToDBException($"Can not convert expression {builder.Arguments[1]} to field.");
+					throw new LinqToDBException($"Can not convert expression {builder.Arguments[0]} to field.");
 
 				if (isExpression)
 				{
@@ -102,15 +102,17 @@ namespace LinqToDB
 		}
 
 		[Pure]
-		[Sql.Extension("", BuilderType = typeof(FieldNameBuilderDirect), ServerSideOnly = false)]
+		[Extension("", BuilderType = typeof(FieldNameBuilderDirect), ServerSideOnly = false)]
 		public static string FieldName<T>([NoEnumeration] ITable<T> table, Expression<Func<T, object>> fieldExpr)
+			where T : notnull
 		{
 			return FieldName(table, fieldExpr, true);
 		}
 
 		[Pure]
-		[Sql.Extension("", BuilderType = typeof(FieldNameBuilderDirect), ServerSideOnly = false)]
+		[Extension("", BuilderType = typeof(FieldNameBuilderDirect), ServerSideOnly = false)]
 		public static string FieldName<T>([NoEnumeration] ITable<T> table, Expression<Func<T, object>> fieldExpr, [SqlQueryDependent] bool qualified)
+			where T : notnull
 		{
 			var mappingSchema = MappingSchema.Default;
 
@@ -129,30 +131,33 @@ namespace LinqToDB
 				var sqlBuilder = dataContext.CreateSqlProvider();
 				result         = sqlBuilder.ConvertInline(result, ConvertType.NameToQueryField);
 			}
-				
+
 			return result;
 		}
 
 		[Flags]
 		public enum TableQualification
 		{
-			None = 0x0,
-			TableName    = 0x1,
-			DatabaseName = 0x2,
-			SchemaName   = 0x4,
-			ServerName   = 0x8,
+			None         = 0b00000000,
+			TableName    = 0b00000001,
+			DatabaseName = 0b00000010,
+			SchemaName   = 0b00000100,
+			ServerName   = 0b00001000,
+			TableOptions = 0b00010000,
 
-			Full = TableName | DatabaseName | SchemaName | ServerName
+			Full         = TableName | DatabaseName | SchemaName | ServerName | TableOptions
 		}
 
-		[Sql.Extension("", BuilderType = typeof(FieldNameBuilderDirect), ServerSideOnly = false)]
+		[Extension("", BuilderType = typeof(FieldNameBuilderDirect), ServerSideOnly = false)]
 		public static ISqlExpression FieldExpr<T, TV>([NoEnumeration] ITable<T> table, Expression<Func<T, TV>> fieldExpr)
+			where T : notnull
 		{
 			return FieldExpr(table, fieldExpr, true);
 		}
 
-		[Sql.Extension("", BuilderType = typeof(FieldNameBuilderDirect), ServerSideOnly = false)]
+		[Extension("", BuilderType = typeof(FieldNameBuilderDirect), ServerSideOnly = false)]
 		public static ISqlExpression FieldExpr<T, TV>([NoEnumeration] ITable<T> table, Expression<Func<T, TV>> fieldExpr, bool qualified)
+			where T : notnull
 		{
 			var mappingSchema = MappingSchema.Default;
 
@@ -166,18 +171,20 @@ namespace LinqToDB
 			{
 				return new SqlField(column);
 			}
-				
+
 			return new SqlExpression(column.ColumnName, Precedence.Primary);
 		}
 
-		[Sql.Extension("", BuilderType = typeof(FieldsExprBuilderDirect), ServerSideOnly = false)]
+		[Extension("", BuilderType = typeof(FieldsExprBuilderDirect), ServerSideOnly = false)]
 		internal static ISqlExpression FieldsExpr<T>([NoEnumeration] ITable<T> table, Expression<Func<T, object?>> fieldsExpr)
+			where T : notnull
 		{
 			return FieldsExpr(table, fieldsExpr, true);
 		}
 
-		[Sql.Extension("", BuilderType = typeof(FieldsExprBuilderDirect), ServerSideOnly = false)]
+		[Extension("", BuilderType = typeof(FieldsExprBuilderDirect), ServerSideOnly = false)]
 		internal static ISqlExpression FieldsExpr<T>([NoEnumeration] ITable<T> table, Expression<Func<T, object?>> fieldsExpr, bool qualified)
+			where T : notnull
 		{
 			var mappingSchema = MappingSchema.Default;
 
@@ -191,7 +198,7 @@ namespace LinqToDB
 
 			for (var i = 0; i < columns.Length; i++)
 				columnExpressions[i] = qualified
-					? (ISqlExpression)new SqlField(columns[i])
+					? new SqlField(columns[i])
 					: new SqlExpression(columns[i].ColumnName, Precedence.Primary);
 
 			if (columns.Length == 1)
@@ -204,6 +211,7 @@ namespace LinqToDB
 		}
 
 		private static IDataContext? GetDataContext<T>(ITable<T> table)
+			where T : notnull
 		{
 			if (table is ExpressionQuery<T> query)
 				return query.DataContext;
@@ -216,8 +224,7 @@ namespace LinqToDB
 
 		private static ColumnDescriptor[] GetColumnsFromExpression(Type entityType, LambdaExpression fieldExpr, MappingSchema mappingSchema)
 		{
-			var init = fieldExpr.Body as NewExpression;
-			if (init == null)
+			if (!(fieldExpr.Body is NewExpression init))
 				return new[] { GetColumnFromExpression(entityType, fieldExpr, mappingSchema) };
 
 			if (init.Arguments == null || init.Arguments.Count == 0)
@@ -254,28 +261,28 @@ namespace LinqToDB
 		}
 
 		[Pure]
-		[Sql.Extension("", BuilderType = typeof(FieldNameBuilder), ServerSideOnly = true)]
+		[Extension("", BuilderType = typeof(FieldNameBuilder), ServerSideOnly = true)]
 		public static string FieldName(object fieldExpr)
 		{
 			throw new LinqToDBException("'Sql.FieldName' is server side only method and used only for generating custom SQL parts");
 		}
 
 		[Pure]
-		[Sql.Extension("", BuilderType = typeof(FieldNameBuilder), ServerSideOnly = true)]
+		[Extension("", BuilderType = typeof(FieldNameBuilder), ServerSideOnly = true)]
 		public static string FieldName(object fieldExpr, bool qualified)
 		{
 			throw new LinqToDBException("'Sql.FieldName' is server side only method and used only for generating custom SQL parts");
 		}
 
 		[Pure]
-		[Sql.Extension("", BuilderType = typeof(FieldNameBuilder), ServerSideOnly = true)]
+		[Extension("", BuilderType = typeof(FieldNameBuilder), ServerSideOnly = true)]
 		public static ISqlExpression FieldExpr(object fieldExpr)
 		{
 			throw new LinqToDBException("'Sql.FieldExpr' is server side only method and used only for generating custom SQL parts");
 		}
 
 		[Pure]
-		[Sql.Extension("", BuilderType = typeof(FieldNameBuilder), ServerSideOnly = true)]
+		[Extension("", BuilderType = typeof(FieldNameBuilder), ServerSideOnly = true)]
 		public static ISqlExpression FieldExpr(object fieldExpr, bool qualified)
 		{
 			throw new LinqToDBException("'Sql.FieldExpr' is server side only method and used only for generating custom SQL parts");
@@ -283,13 +290,15 @@ namespace LinqToDB
 
 		private abstract class TableHelper
 		{
-			public abstract string? ServerName   { get; }
-			public abstract string? DatabaseName { get; }
-			public abstract string? SchemaName   { get; }
-			public abstract string TableName    { get; }
+			public abstract string?      ServerName   { get; }
+			public abstract string?      DatabaseName { get; }
+			public abstract string?      SchemaName   { get; }
+			public abstract string       TableName    { get; }
+			public abstract TableOptions TableOptions { get; }
 		}
 
 		private class TableHelper<T> : TableHelper
+			where T : notnull
 		{
 			private readonly ITable<T> _table;
 
@@ -298,12 +307,12 @@ namespace LinqToDB
 				_table = table;
 			}
 
-			public override string? ServerName   => _table.ServerName;
-			public override string? DatabaseName => _table.DatabaseName;
-			public override string? SchemaName   => _table.SchemaName;
-			public override string  TableName    => _table.TableName;
+			public override string?      ServerName   => _table.ServerName;
+			public override string?      DatabaseName => _table.DatabaseName;
+			public override string?      SchemaName   => _table.SchemaName;
+			public override string       TableName    => _table.TableName;
+			public override TableOptions TableOptions => _table.TableOptions;
 		}
-
 
 		private class TableNameBuilderDirect : IExtensionCallBuilder
 		{
@@ -322,11 +331,14 @@ namespace LinqToDB
 						builder.ResultExpression = new SqlExpression(typeof(string), tableHelper.TableName, Precedence.Primary);
 					else
 					{
-						var table = new SqlTable(tableType);
-						table.PhysicalName = tableHelper.TableName;
-						table.Server       = (qualified & TableQualification.ServerName)   != 0 ? tableHelper.ServerName   : null;
-						table.Database     = (qualified & TableQualification.DatabaseName) != 0 ? tableHelper.DatabaseName : null;
-						table.Schema       = (qualified & TableQualification.SchemaName)   != 0 ? tableHelper.SchemaName   : null;
+						var table = new SqlTable(tableType)
+						{
+							PhysicalName = tableHelper.TableName,
+							Server       = (qualified & TableQualification.ServerName)   != 0 ? tableHelper.ServerName   : null,
+							Database     = (qualified & TableQualification.DatabaseName) != 0 ? tableHelper.DatabaseName : null,
+							Schema       = (qualified & TableQualification.SchemaName)   != 0 ? tableHelper.SchemaName   : null,
+							TableOptions = (qualified & TableQualification.TableOptions) != 0 ? tableHelper.TableOptions : TableOptions.NotSet,
+						};
 
 						builder.ResultExpression = table;
 					}
@@ -338,11 +350,12 @@ namespace LinqToDB
 					if (qualified != TableQualification.None)
 					{
 						var sb = new StringBuilder();
-						builder.DataContext.CreateSqlProvider().ConvertTableName(sb, 
+						builder.DataContext.CreateSqlProvider().ConvertTableName(sb,
 							(qualified & TableQualification.ServerName)   != 0 ? tableHelper.ServerName   : null,
 							(qualified & TableQualification.DatabaseName) != 0 ? tableHelper.DatabaseName : null,
 							(qualified & TableQualification.SchemaName)   != 0 ? tableHelper.SchemaName   : null,
-							name);
+							name,
+							(qualified & TableQualification.TableOptions) != 0 ? tableHelper.TableOptions : TableOptions.NotSet);
 						name = sb.ToString();
 					}
 
@@ -355,18 +368,14 @@ namespace LinqToDB
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
-				var tableExpr      = builder.GetExpression(0);
-				SqlTable? sqlTable = null;
-				if (tableExpr is SqlTable t)
-					sqlTable = t;
-				else if (tableExpr is SqlField field)
+				var tableExpr = builder.GetExpression(0);
+				var sqlTable  = tableExpr switch
 				{
-					sqlTable = field.Table as SqlTable;
-				}
-				else if (tableExpr is SqlColumn column)
-				{
-					sqlTable = QueryHelper.GetUnderlyingField(column)?.Table as SqlTable;
-				}
+					SqlTable  t      => t,
+					SqlField  field  => field.Table as SqlTable,
+					SqlColumn column => QueryHelper.ExtractField(column)?.Table as SqlTable,
+					_                => null
+				};
 
 				//TODO: review, maybe we need here TableSource
 				if (sqlTable == null)
@@ -380,17 +389,20 @@ namespace LinqToDB
 				if (qualified != TableQualification.None)
 				{
 					var sb = new StringBuilder();
-					builder.DataContext.CreateSqlProvider().ConvertTableName(sb, 
-						(qualified & TableQualification.ServerName)   != 0 ? sqlTable.Server   : null,
-						(qualified & TableQualification.DatabaseName) != 0 ? sqlTable.Database : null,
-						(qualified & TableQualification.SchemaName)   != 0 ? sqlTable.Schema   : null,
-						sqlTable.PhysicalName!);
+
+					builder.DataContext.CreateSqlProvider().ConvertTableName(sb,
+						(qualified & TableQualification.ServerName)   != 0 ? sqlTable.Server       : null,
+						(qualified & TableQualification.DatabaseName) != 0 ? sqlTable.Database     : null,
+						(qualified & TableQualification.SchemaName)   != 0 ? sqlTable.Schema       : null,
+						sqlTable.PhysicalName!,
+						(qualified & TableQualification.TableOptions) != 0 ? sqlTable.TableOptions : TableOptions.NotSet);
+
 					name = sb.ToString();
 				}
 
 				builder.ResultExpression = isExpression
 					? new SqlExpression(name, Precedence.Primary)
-					: (ISqlExpression)new SqlValue(name);
+					: new SqlValue(name);
 			}
 		}
 
@@ -455,75 +467,36 @@ namespace LinqToDB
 			}
 		}
 
-		[Sql.Extension("", BuilderType = typeof(TableFieldBuilder))]
+		[Extension("", BuilderType = typeof(TableFieldBuilder))]
 		internal static TColumn TableField<TEntity, TColumn>([NoEnumeration] TEntity entity, string fieldName)
 		{
 			throw new LinqToDBException("'Sql.TableField' is server side only method and used only for generating custom SQL parts");
 		}
 
-		[Sql.Extension("", BuilderType = typeof(TableOrColumnAsFieldBuilder))]
+		[Extension("", BuilderType = typeof(TableOrColumnAsFieldBuilder))]
 		internal static TColumn TableOrColumnAsField<TColumn>([NoEnumeration] object? entityOrColumn)
 		{
 			throw new LinqToDBException("'Sql.TableOrColumnAsField' is server side only method and used only for generating custom SQL parts");
 		}
 
-		[Sql.Extension("", BuilderType = typeof(TableAsFieldBuilder))]
+		[Extension("", BuilderType = typeof(TableAsFieldBuilder))]
 		internal static TColumn TableAsField<TEntity, TColumn>([NoEnumeration] TEntity entity)
 		{
 			throw new LinqToDBException("'Sql.TableAsField' is server side only method and used only for generating custom SQL parts");
 		}
 
-		[Sql.Extension("", BuilderType = typeof(TableNameBuilderDirect))]
+		[Extension("", BuilderType = typeof(TableNameBuilderDirect))]
 		public static string TableName<T>([NoEnumeration] ITable<T> table)
+			where T : notnull
 		{
 			return TableName(table, TableQualification.Full);
 		}
 
-		[Sql.Extension("", BuilderType = typeof(TableNameBuilderDirect))]
+		[Extension("", BuilderType = typeof(TableNameBuilderDirect))]
 		public static string TableName<T>([NoEnumeration] ITable<T> table, [SqlQueryDependent] TableQualification qualification)
+			where T : notnull
 		{
 			var result = table.TableName;
-			if (qualification != TableQualification.None)
-			{
-				var dataContext = GetDataContext(table);
-				if (dataContext == null)
-					throw new LinqToDBException("Can not provide information for qualified table name");
-
-				var sqlBuilder = dataContext.CreateSqlProvider();
-				var sb = new StringBuilder();
-				sqlBuilder.ConvertTableName(sb, 
-					(qualification & TableQualification.ServerName)   != 0 ? table.ServerName   : null,
-					(qualification & TableQualification.DatabaseName) != 0 ? table.DatabaseName : null,
-					(qualification & TableQualification.SchemaName)   != 0 ? table.SchemaName   : null,
-					table.TableName);
-				result = sb.ToString();
-			}
-				
-			return result;
-		}
-
-		[Sql.Extension("", BuilderType = typeof(TableNameBuilder), ServerSideOnly = true)]
-		public static string TableName(object tableExpr)
-		{
-			throw new LinqToDBException("'Sql.TableName' is server side only method and used only for generating custom SQL parts");
-		}
-
-		[Sql.Extension("", BuilderType = typeof(TableNameBuilder), ServerSideOnly = true)]
-		public static string TableName(object tableExpr, [SqlQueryDependent] TableQualification qualification)
-		{
-			throw new LinqToDBException("'Sql.TableName' is server side only method and used only for generating custom SQL parts");
-		}
-
-		[Sql.Extension("", BuilderType = typeof(TableNameBuilderDirect))]
-		public static ISqlExpression TableExpr<T>([NoEnumeration] ITable<T> table)
-		{
-			return TableExpr(table, TableQualification.Full);
-		}
-
-		[Sql.Extension("", BuilderType = typeof(TableNameBuilderDirect))]
-		public static ISqlExpression TableExpr<T>([NoEnumeration] ITable<T> table, [SqlQueryDependent] TableQualification qualification)
-		{
-			var name = table.TableName;
 
 			if (qualification != TableQualification.None)
 			{
@@ -537,20 +510,68 @@ namespace LinqToDB
 					(qualification & TableQualification.ServerName)   != 0 ? table.ServerName   : null,
 					(qualification & TableQualification.DatabaseName) != 0 ? table.DatabaseName : null,
 					(qualification & TableQualification.SchemaName)   != 0 ? table.SchemaName   : null,
-					table.TableName);
+					table.TableName,
+					(qualification & TableQualification.TableOptions) != 0 ? table.TableOptions : TableOptions.NotSet);
+				result = sb.ToString();
+			}
+
+			return result;
+		}
+
+		[Extension("", BuilderType = typeof(TableNameBuilder), ServerSideOnly = true)]
+		public static string TableName(object tableExpr)
+		{
+			throw new LinqToDBException("'Sql.TableName' is server side only method and used only for generating custom SQL parts");
+		}
+
+		[Extension("", BuilderType = typeof(TableNameBuilder), ServerSideOnly = true)]
+		public static string TableName(object tableExpr, [SqlQueryDependent] TableQualification qualification)
+		{
+			throw new LinqToDBException("'Sql.TableName' is server side only method and used only for generating custom SQL parts");
+		}
+
+		[Extension("", BuilderType = typeof(TableNameBuilderDirect))]
+		public static ISqlExpression TableExpr<T>([NoEnumeration] ITable<T> table)
+			where T : notnull
+		{
+			return TableExpr(table, TableQualification.Full);
+		}
+
+		[Extension("", BuilderType = typeof(TableNameBuilderDirect))]
+		public static ISqlExpression TableExpr<T>([NoEnumeration] ITable<T> table, [SqlQueryDependent] TableQualification qualification)
+			where T : notnull
+		{
+			var name = table.TableName;
+
+			if (qualification != TableQualification.None)
+			{
+				var dataContext = GetDataContext(table);
+				if (dataContext == null)
+					throw new LinqToDBException("Can not provide information for qualified table name");
+
+				var sqlBuilder = dataContext.CreateSqlProvider();
+				var sb         = new StringBuilder();
+
+				sqlBuilder.ConvertTableName(sb,
+					(qualification & TableQualification.ServerName)   != 0 ? table.ServerName   : null,
+					(qualification & TableQualification.DatabaseName) != 0 ? table.DatabaseName : null,
+					(qualification & TableQualification.SchemaName)   != 0 ? table.SchemaName   : null,
+					table.TableName,
+					(qualification & TableQualification.TableOptions) != 0 ? table.TableOptions : TableOptions.NotSet);
+
 				name = sb.ToString();
 			}
 
 			return new SqlExpression(name, Precedence.Primary);
 		}
 
-		[Sql.Extension("", BuilderType = typeof(TableNameBuilder), ServerSideOnly = true)]
+		[Extension("", BuilderType = typeof(TableNameBuilder), ServerSideOnly = true)]
 		public static ISqlExpression TableExpr(object tableExpr)
 		{
 			throw new LinqToDBException("'Sql.TableExpr' is server side only method and used only for generating custom SQL parts");
 		}
 
-		[Sql.Extension("", BuilderType = typeof(TableNameBuilder), ServerSideOnly = true)]
+		[Extension("", BuilderType = typeof(TableNameBuilder), ServerSideOnly = true)]
 		public static ISqlExpression TableExpr(object tableExpr, [SqlQueryDependent] TableQualification qualification)
 		{
 			throw new LinqToDBException("'Sql.TableExpr' is server side only method and used only for generating custom SQL parts");
@@ -560,7 +581,7 @@ namespace LinqToDB
 		/// Useful for specifying place of alias when using <see cref="DataExtensions.FromSql{TEntity}(IDataContext, RawSqlString, object?[])"/> method.
 		/// </summary>
 		/// <remarks>
-		///		If <see cref="DataExtensions.FromSql{TEntity}(IDataContext, RawSqlString, object?[])"/> contains at least one <see cref="AliasExpr"/>, 
+		///		If <see cref="DataExtensions.FromSql{TEntity}(IDataContext, RawSqlString, object?[])"/> contains at least one <see cref="AliasExpr"/>,
 		///		automatic alias for the query will be not generated.
 		/// </remarks>
 		/// <returns>ISqlExpression which is Alias Placeholder.</returns>
@@ -571,19 +592,10 @@ namespace LinqToDB
 		/// db.FromSql&lt;int&gt;($"select 1 as value from TableA")
 		/// </code>
 		/// </example>
-		[Sql.Extension("", BuilderType = typeof(TableSourceBuilder), ServerSideOnly = true)]
+		[Extension("", BuilderType = typeof(TableSourceBuilder), ServerSideOnly = true)]
 		public static ISqlExpression AliasExpr()
 		{
 			return new SqlAliasPlaceholder();
-		}
-
-		class CustomExtensionAttribute : Sql.ExtensionAttribute
-		{
-			public CustomExtensionAttribute(string expression) : base(expression)
-			{
-			}
-
-			public override bool GetIsPredicate(Expression expression) => expression.Type == typeof(bool);
 		}
 
 		class ExprBuilder : IExtensionCallBuilder
@@ -596,14 +608,19 @@ namespace LinqToDB
 
 				var memberType = builder.Member.GetMemberType();
 
-				var sqlArguments = arguments.Select(builder.ConvertExpressionToSql).ToArray();
+				var sqlArguments = arguments.Select(e => builder.ConvertExpressionToSql(e)).ToArray();
 
-				builder.ResultExpression = new SqlExpression(memberType, format, Precedence.Primary, sqlArguments);
+				builder.ResultExpression = new SqlExpression(
+					memberType,
+					format,
+					Precedence.Primary,
+					memberType == typeof(bool) ? SqlFlags.IsPredicate | SqlFlags.IsPure : SqlFlags.IsPure,
+					sqlArguments);
 			}
 		}
 
 #if !NET45
-		[CustomExtension("", BuilderType = typeof(ExprBuilder), ServerSideOnly = true)]
+		[Extension("", BuilderType = typeof(ExprBuilder), ServerSideOnly = true)]
 		[StringFormatMethod("sql")]
 		public static T Expr<T>(
 			[DataExtensions.SqlFormattableComparer] FormattableString sql
@@ -612,7 +629,7 @@ namespace LinqToDB
 			throw new LinqToDBException("'Sql.Expr' is server side only method and used only for generating custom SQL parts");
 		}
 #endif
-		[CustomExtension("", BuilderType = typeof(ExprBuilder), ServerSideOnly = true)]
+		[Extension("", BuilderType = typeof(ExprBuilder), ServerSideOnly = true)]
 		[StringFormatMethod("sql")]
 		public static T Expr<T>(
 			[SqlQueryDependent]              RawSqlString sql,

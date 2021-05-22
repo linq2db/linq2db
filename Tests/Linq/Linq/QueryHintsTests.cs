@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -24,7 +23,7 @@ namespace Tests.Linq
 
 				var str = q.ToString();
 
-				Console.WriteLine(str);
+				TestContext.WriteLine(str);
 
 				Assert.That(str, Contains.Substring("---"));
 				Assert.That(str, Contains.Substring("----"));
@@ -41,7 +40,7 @@ namespace Tests.Linq
 
 				str = q.ToString();
 
-				Console.WriteLine(str);
+				TestContext.WriteLine(str);
 
 				Assert.That(str, Contains.Substring("---"));
 				Assert.That(str, Is.Not.Contains("----"));

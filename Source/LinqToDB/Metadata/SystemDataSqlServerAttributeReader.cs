@@ -26,7 +26,7 @@ namespace LinqToDB.Metadata
 		{
 			_sqlMethodAttributes = new[]
 			{
-#if NET45 || NET46
+#if NETFRAMEWORK
 				typeof(Microsoft.SqlServer.Server.SqlMethodAttribute),
 #endif
 				Type.GetType("Microsoft.SqlServer.Server.SqlMethodAttribute, System.Data.SqlClient", false),
@@ -35,7 +35,7 @@ namespace LinqToDB.Metadata
 
 			_sqlUserDefinedTypeAttributes = new[]
 			{
-#if NET45 || NET46
+#if NETFRAMEWORK
 				typeof(Microsoft.SqlServer.Server.SqlUserDefinedTypeAttribute),
 #endif
 				Type.GetType("Microsoft.SqlServer.Server.SqlUserDefinedTypeAttribute, System.Data.SqlClient", false),
@@ -75,14 +75,14 @@ namespace LinqToDB.Metadata
 									?
 									string.Format("{0}::{1}({2})",
 										memberInfo.DeclaringType!.Name.ToLower().StartsWith("sql")
-											? memberInfo.DeclaringType.Name.Substring(3)
-											: memberInfo.DeclaringType.Name,
+											? memberInfo.DeclaringType.Name.ToLower().Substring(3)
+											: memberInfo.DeclaringType.Name.ToLower(),
 											((dynamic)ma[0]).Name ?? memberInfo.Name,
-										string.Join(", ", ps.Select((_, i) => '{' + i.ToString() + '}').ToArray()))
+										string.Join(", ", ps.Select((_, i) => '{' + i.ToString() + '}')))
 									:
 									string.Format("{{0}}.{0}({1})",
 											((dynamic)ma[0]).Name ?? memberInfo.Name,
-										string.Join(", ", ps.Select((_, i) => '{' + (i + 1).ToString() + '}').ToArray()));
+										string.Join(", ", ps.Select((_, i) => '{' + (i + 1).ToString() + '}')));
 
 								attrs = new[] { (T)(Attribute)new Sql.ExpressionAttribute(ex) { ServerSideOnly = true } };
 							}

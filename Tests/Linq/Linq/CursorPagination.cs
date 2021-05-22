@@ -48,7 +48,7 @@ namespace Tests.Linq
 			return ex;
 		}
 
-		static MethodInfo FindMethodInfoInType(Type type, string methodName, int paramCount)
+		static MethodInfo? FindMethodInfoInType(Type type, string methodName, int paramCount)
 		{
 			var method = type.GetRuntimeMethods()
 				.FirstOrDefault(m => m.Name == methodName && m.GetParameters().Length == paramCount);
@@ -66,7 +66,7 @@ namespace Tests.Linq
 				.FirstOrDefault(m => m != null);
 
 			if (method == null)
-				throw new Exception($"Method '{methodName}' not found in type '{type.Name}'.");
+				throw new InvalidOperationException($"Method '{methodName}' not found in type '{type.Name}'.");
 
 			return method;
 		}
@@ -165,7 +165,7 @@ namespace Tests.Linq
 			bindings.Add(Expression.Bind(cursorMember,    cursor.GetBody(entityParam)));
 			bindings.Add(Expression.Bind(dataMember,      entityParam));
 
-			var newExpression = Expression.New(typeof(CteBody<T, TCursor>).GetConstructor(Type.EmptyTypes));
+			var newExpression = Expression.New(typeof(CteBody<T, TCursor>).GetConstructor(Type.EmptyTypes)!);
 
 			var selectLambda = Expression.Lambda(Expression.MemberInit(newExpression, bindings), entityParam);
 			var selectMethod = Methods.Queryable.Select.MakeGenericMethod(typeof(T), typeof(CteBody<T, TCursor>));
@@ -247,7 +247,7 @@ namespace Tests.Linq
 			var take = 12;
 			var sampleData = Enumerable.Range(1, 100).Select(i => new Booking
 			{
-				ServiceDate = DateTime.Now.AddDays(-1 - i % 3),
+				ServiceDate = TestData.DateTime.AddDays(-1 - i % 3),
 				Value = i,
 				BookingID = i
 			}).ToArray();
@@ -255,7 +255,7 @@ namespace Tests.Linq
 			using (var db = (DataConnection)GetDataContext(context))
 			using (var table = db.CreateLocalTable(sampleData))
 			{
-				var dataQuery = table.Where(t => t.ServiceDate > Sql.CurrentTimestamp.AddDays(-2));
+				var dataQuery = table.Where(t => t.ServiceDate > TestData.DateTime.AddDays(-2));
 
 				var query = dataQuery.OrderByDescending(t => t.ServiceDate).ThenByDescending(tt => tt.BookingID);
 

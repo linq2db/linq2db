@@ -1,10 +1,10 @@
-﻿<#@ template language="C#" debug="True" hostSpecific="True"                           #>
-<#@ output extension=".generated.cs"                                                  #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\T4Model.ttinclude"               #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\NotifyPropertyChanged.ttinclude" #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\Validation.ttinclude"            #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\NotifyDataErrorInfo.ttinclude"   #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\DataAnnotations.ttinclude"       #>
+﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6"      #>
+<#@ output extension=".generated.cs"                                                              #>
+<#@ include file="..\..\..\Source\LinqToDB.Templates\T4Model.ttinclude"               once="true" #>
+<#@ include file="..\..\..\Source\LinqToDB.Templates\NotifyPropertyChanged.ttinclude" once="true" #>
+<#@ include file="..\..\..\Source\LinqToDB.Templates\Validation.ttinclude"            once="true" #>
+<#@ include file="..\..\..\Source\LinqToDB.Templates\NotifyDataErrorInfo.ttinclude"   once="true" #>
+<#@ include file="..\..\..\Source\LinqToDB.Templates\DataAnnotations.ttinclude"       once="true" #>
 <#
 	EnableNullableReferenceTypes = true;
 	Model.Usings.Add("System.Windows.Media");
@@ -14,6 +14,7 @@
 			new NotifyingProperty("double", "NotifiedProp1", "NotifiedProp1", "NotifiedBrush1"),
 			new NotifyingProperty("int",    "NotifiedProp2", "NotifiedProp1", "NotifiedProp2") { InitValue = "500" },
 			new NotifyingProperty("Brush",  "NotifiedBrush1").InitGetter(() => new [] { "GetBrush()" }),
+			new NotifyingProperty(ModelType.Create<string>(false),    "ConditionalProp") { InitValue = "string.Empty", CustomValidation = true, Conditional = "DEBUG" },
 			new NotifyingProperty(ModelType.Create<string>(false),    "NotifiedProp3") { InitValue = "string.Empty", CustomValidation = true }));
 
 	GenerateModel();

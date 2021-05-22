@@ -8,7 +8,7 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlExpression : ISqlExpression
 	{
-		public SqlExpression(Type? systemType, string expr, int precedence, bool isAggregate, bool isPure, params ISqlExpression[] parameters)
+		public SqlExpression(Type? systemType, string expr, int precedence, SqlFlags flags, params ISqlExpression[] parameters)
 		{
 			if (parameters == null) throw new ArgumentNullException(nameof(parameters));
 
@@ -19,12 +19,11 @@ namespace LinqToDB.SqlQuery
 			Expr        = expr;
 			Precedence  = precedence;
 			Parameters  = parameters;
-			IsAggregate = isAggregate;
-			IsPure      = isPure;
+			Flags       = flags;
 		}
 
 		public SqlExpression(Type? systemType, string expr, int precedence, params ISqlExpression[] parameters)
-			: this(systemType, expr, precedence, false, true, parameters)
+			: this(systemType, expr, precedence, SqlFlags.IsPure, parameters)
 		{
 		}
 
@@ -47,8 +46,12 @@ namespace LinqToDB.SqlQuery
 		public string           Expr        { get; }
 		public int              Precedence  { get; }
 		public ISqlExpression[] Parameters  { get; }
-		public bool             IsAggregate { get; }
-		public bool             IsPure      { get; }
+		public SqlFlags         Flags       { get; }
+
+		public bool             IsAggregate      => (Flags & SqlFlags.IsAggregate)      != 0;
+		public bool             IsPure           => (Flags & SqlFlags.IsPure)           != 0;
+		public bool             IsPredicate      => (Flags & SqlFlags.IsPredicate)      != 0;
+		public bool             IsWindowFunction => (Flags & SqlFlags.IsWindowFunction) != 0;
 
 		#region Overrides
 
@@ -144,27 +147,6 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region ICloneableElement Members
-
-		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			if (!objectTree.TryGetValue(this, out var clone))
-			{
-				objectTree.Add(this, clone = new SqlExpression(
-					SystemType,
-					Expr,
-					Precedence,
-					Parameters.Select(e => (ISqlExpression)e.Clone(objectTree, doClone)).ToArray()));
-			}
-
-			return clone;
-		}
-
-		#endregion
-
 		#region IQueryElement Members
 
 		public QueryElementType ElementType => QueryElementType.SqlExpression;
@@ -180,7 +162,18 @@ namespace LinqToDB.SqlQuery
 				return (object)s;
 			});
 
-			return sb.AppendFormat(Expr, ss.ToArray());
+			if (Parameters.Length == 0)
+				return sb.Append(Expr);
+
+			if (Expr.Contains("{"))
+				sb.AppendFormat(Expr, ss.ToArray());
+			else
+				sb.Append(Expr)
+					.Append('{')
+					.Append(string.Join(", ", ss))
+					.Append('}');
+
+			return sb;
 		}
 
 		#endregion
@@ -194,6 +187,15 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SqlParameter:
 				case QueryElementType.SqlField    :
 				case QueryElementType.Column      : return true;
+				case QueryElementType.SqlExpression:
+				{
+					var expr = (SqlExpression)ex;
+					if (expr.IsPredicate)
+						return false;
+					if (QueryHelper.IsTransitiveExpression(expr))
+						return NeedsEqual(expr.Parameters[0]);
+					return true;
+				}
 				case QueryElementType.SqlFunction :
 
 					var f = (SqlFunction)ex;

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 
 using LinqToDB;
 
@@ -39,7 +38,7 @@ namespace Tests.Linq
 		public void FirstOrDefaultWhere([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(2, db.Parent.FirstOrDefault(p => p.ParentID == 2).ParentID);
+				Assert.AreEqual(2, db.Parent.FirstOrDefault(p => p.ParentID == 2)!.ParentID);
 		}
 
 		[Test]
@@ -67,7 +66,7 @@ namespace Tests.Linq
 		public void SingleOrDefaultWhere([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(2, db.Parent.SingleOrDefault(p => p.ParentID == 2).ParentID);
+				Assert.AreEqual(2, db.Parent.SingleOrDefault(p => p.ParentID == 2)!.ParentID);
 		}
 
 		[Test]
@@ -75,8 +74,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
-					   Parent.OrderBy(p => p.ParentID).FirstOrDefault().ParentID,
-					db.Parent.OrderBy(p => p.ParentID).FirstOrDefault().ParentID);
+					   Parent.OrderBy(p => p.ParentID).FirstOrDefault()!.ParentID,
+					db.Parent.OrderBy(p => p.ParentID).FirstOrDefault()!.ParentID);
 		}
 
 		[Test]
@@ -86,8 +85,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in    Parent select    Child.FirstOrDefault().ChildID,
-					from p in db.Parent select db.Child.FirstOrDefault().ChildID);
+					from p in    Parent select    Child.FirstOrDefault()!.ChildID,
+					from p in db.Parent select db.Child.FirstOrDefault()!.ChildID);
 		}
 
 		[Test]
@@ -111,7 +110,7 @@ namespace Tests.Linq
 							Child
 								.Where(c => c.Parent == p)
 								.OrderByDescending(c => c.ChildID * c.ParentID)
-								.FirstOrDefault()
+								.FirstOrDefault()!
 								.ChildID
 					},
 					from p in db.Parent
@@ -121,7 +120,7 @@ namespace Tests.Linq
 						MaxChild = db.Child
 							.Where(c => c.Parent == p)
 							.OrderByDescending(c => c.ChildID * c.ParentID)
-							.FirstOrDefault()
+							.FirstOrDefault()!
 							.ChildID
 					});
 		}
@@ -129,7 +128,6 @@ namespace Tests.Linq
 		[Test]
 		public void NestedFirstOrDefault1([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in    Parent select    Child.FirstOrDefault(),
@@ -139,7 +137,6 @@ namespace Tests.Linq
 		[Test]
 		public void NestedFirstOrDefault2([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in    Parent select p.Children.OrderBy(c => c.ChildID).FirstOrDefault(),
@@ -159,7 +156,6 @@ namespace Tests.Linq
 		[Test]
 		public void NestedFirstOrDefault4([DataSources(TestProvName.AllInformix, TestProvName.AllPostgreSQLLess10)] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in    Parent select p.Children.Where(c => c.ParentID > 0).Distinct().OrderBy(_ => _.ChildID).FirstOrDefault(),
@@ -170,7 +166,6 @@ namespace Tests.Linq
 		[Test]
 		public void NestedFirstOrDefault5([DataSources(TestProvName.AllAccess)] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in GrandChild 
@@ -193,7 +188,6 @@ namespace Tests.Linq
 		[Test]
 		public void FirstOrDefaultEntitySet([NorthwindDataContext] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = new NorthwindDB(context))
 			{
 				var dd = GetNorthwindAsList(context);
@@ -206,7 +200,6 @@ namespace Tests.Linq
 		[Test]
 		public void NestedSingleOrDefaultTest([NorthwindDataContext] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = new NorthwindDB(context))
 			{
 				var dd = GetNorthwindAsList(context);

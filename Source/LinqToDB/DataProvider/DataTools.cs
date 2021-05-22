@@ -3,6 +3,7 @@ using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 
 namespace LinqToDB.DataProvider
@@ -40,7 +41,7 @@ namespace LinqToDB.DataProvider
 				    (closeBracket - lastIndex == 2 && closeBracket - nextIndex == 1))
 				{
 					if (nextIndex < 0)
-						newStr.Append("[");
+						newStr.Append('[');
 				}
 				else
 					newStr.Append("[[]");
@@ -77,12 +78,12 @@ namespace LinqToDB.DataProvider
 							{
 								isInString = false;
 								stringBuilder
-									.Append("'");
+									.Append('\'');
 							}
 
 							if (i != 0)
 								stringBuilder
-									.Append(" ")
+									.Append(' ')
 									.Append(plusOperator)
 									.Append(' ')
 									;
@@ -98,12 +99,12 @@ namespace LinqToDB.DataProvider
 
 								if (i != 0)
 									stringBuilder
-										.Append(" ")
+										.Append(' ')
 										.Append(plusOperator)
 										.Append(' ')
 										;
 
-								stringBuilder.Append(startPrefix).Append("'");
+								stringBuilder.Append(startPrefix).Append('\'');
 							}
 
 							stringBuilder.Append("''");
@@ -117,12 +118,12 @@ namespace LinqToDB.DataProvider
 								{
 									isInString = false;
 									stringBuilder
-										.Append("'");
+										.Append('\'');
 								}
 
 								if (i != 0)
 									stringBuilder
-										.Append(" ")
+										.Append(' ')
 										.Append(plusOperator)
 										.Append(' ')
 										;
@@ -137,12 +138,12 @@ namespace LinqToDB.DataProvider
 
 								if (i != 0)
 									stringBuilder
-										.Append(" ")
+										.Append(' ')
 										.Append(plusOperator)
 										.Append(' ')
 										;
 
-								stringBuilder.Append(startPrefix).Append("'");
+								stringBuilder.Append(startPrefix).Append('\'');
 							}
 
 							stringBuilder.Append(c);
@@ -158,7 +159,7 @@ namespace LinqToDB.DataProvider
 			{
 				stringBuilder
 					.Append(startPrefix)
-					.Append("'")
+					.Append('\'')
 					.Append(value)
 					.Append('\'')
 					;
@@ -191,6 +192,7 @@ namespace LinqToDB.DataProvider
 			}
 		}
 
+		[Obsolete("Use expression-based " + nameof(GetCharExpression) + " for mapping")]
 		public static Func<IDataReader, int, string> GetChar = (dr, i) =>
 		{
 			var str = dr.GetString(i);
@@ -200,6 +202,16 @@ namespace LinqToDB.DataProvider
 
 			return string.Empty;
 		};
+
+		public static Expression<Func<IDataReader, int, string>> GetCharExpression = (dr, i) => GetCharFromString(dr.GetString(i));
+
+		private static string GetCharFromString(string str)
+		{
+			if (str.Length > 0)
+				return str[0].ToString();
+
+			return string.Empty;
+		}
 
 		#region Create/Drop Database
 

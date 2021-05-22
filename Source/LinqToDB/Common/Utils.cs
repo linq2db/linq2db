@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Common
 {
@@ -117,6 +119,85 @@ namespace LinqToDB.Common
 
 				currentCounters.Remove(name);
 				currentCounters.Add(name, startDigit);
+			}
+		}
+
+		public static void RemoveDuplicates<T>(this IList<T> list, IEqualityComparer<T>? comparer = null)
+		{
+			if (list.Count <= 1)
+				return;
+
+			var hashSet = new HashSet<T>(comparer ?? EqualityComparer<T>.Default);
+			var i = 0;
+			while (i < list.Count)
+			{
+				if (hashSet.Add(list[i]))
+					++i;
+				else
+				{
+					list.RemoveAt(i);
+				}
+			}
+		}
+
+		public static void RemoveDuplicatesFromTail<T>(this IList<T> list, Func<T, T, bool> compareFunc)
+		{
+			if (list.Count <= 1)
+				return;
+
+			for (var i = list.Count - 1; i >= 0; i--)
+			{
+				var current = list[i];
+				for (int j = 0; j < i; j++)
+				{
+					if (compareFunc(current, list[j]))
+					{
+						list.RemoveAt(j);
+						--j;
+						--i;
+					}
+				}
+			}
+		}
+
+		public class ObjectReferenceEqualityComparer<T> : IEqualityComparer<T>
+			where T: notnull
+		{
+			public static IEqualityComparer<T> Default = new ObjectReferenceEqualityComparer<T>();
+
+			#region IEqualityComparer<T> Members
+
+			public bool Equals(T? x, T? y)
+			{
+				return ReferenceEquals(x, y);
+			}
+
+			public int GetHashCode(T obj)
+			{
+				if (obj == null)
+					return 0;
+
+				return RuntimeHelpers.GetHashCode(obj);
+			}
+
+			#endregion
+		}
+
+		public static void RemoveDuplicates<T, TKey>(this IList<T> list, Func<T, TKey> keySelector, IEqualityComparer<TKey>? comparer = null)
+		{
+			if (list.Count <= 1)
+				return;
+
+			var hashSet = new HashSet<TKey>(comparer ?? EqualityComparer<TKey>.Default);
+			var i = 0;
+			while (i < list.Count)
+			{
+				if (hashSet.Add(keySelector(list[i])))
+					++i;
+				else
+				{
+					list.RemoveAt(i);
+				}
 			}
 		}
 	}

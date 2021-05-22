@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
@@ -20,6 +19,12 @@ namespace LinqToDB.SqlQuery
 
 		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
+			if (With?.Clauses.Count > 0)
+			{
+				With?.ToString(sb, dic);
+				sb.AppendLine("--------------------------");
+			}
+
 			return SelectQuery.ToString(sb, dic);
 		}
 
@@ -30,23 +35,6 @@ namespace LinqToDB.SqlQuery
 			if (!ReferenceEquals(newQuery, SelectQuery))
 				SelectQuery = (SelectQuery)newQuery;
 			return null;
-		}
-
-		public override ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			var clone = new SqlSelectStatement();
-
-			if (SelectQuery != null)
-				clone.SelectQuery = (SelectQuery)SelectQuery.Clone(objectTree, doClone);
-
-			if (With != null)
-				clone.With = (SqlWithClause)With.Clone(objectTree, doClone);
-
-			clone.Parameters.AddRange(Parameters.Select(p => (SqlParameter)p.Clone(objectTree, doClone)));
-
-			objectTree.Add(this, clone);
-
-			return clone;
 		}
 	}
 }

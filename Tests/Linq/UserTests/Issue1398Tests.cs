@@ -61,6 +61,7 @@ namespace Tests.UserTests
 		{
 			const int recordsCount = 20;
 
+			using (new DisableBaseline("Multi-threading"))
 			using (var db = new TestDataConnection(context))
 			using (db.CreateLocalTable<InsertTable>())
 			{
@@ -89,7 +90,7 @@ namespace Tests.UserTests
 		[Retry(3)] // could fail due to deadlock
 		[Test]
 		public void TestMerge([MergeDataContextSource(
-			ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SybaseManaged, TestProvName.AllInformix)]
+			TestProvName.AllFirebird, ProviderName.SybaseManaged, TestProvName.AllInformix)]
 			string context)
 		{
 			const int repeatsCount = 20;
@@ -98,6 +99,7 @@ namespace Tests.UserTests
 			var mammals  = new[] { "Elephant", "Cat" };
 			var reptiles = new[] { "Snake", "Lizard" };
 
+			using (new DisableBaseline("Multi-threading"))
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Animal>())
 			using (db.CreateLocalTable<AnimalUpdate>())

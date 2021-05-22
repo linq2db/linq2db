@@ -1,4 +1,4 @@
-﻿#if !NETSTANDARD2_0 && !NETSTANDARD2_1
+﻿#if NETFRAMEWORK || NETCOREAPP
 using System;
 using System.Data;
 
@@ -15,7 +15,7 @@ namespace LinqToDB.DataProvider.SapHana
 		private static readonly object _syncRoot = new object();
 		private static SapHanaProviderAdapter? _instance;
 
-#if NET45 || NET46
+#if NETFRAMEWORK
 		public const string AssemblyName        = "Sap.Data.Hana.v4.5";
 #else
 		public const string AssemblyName        = "Sap.Data.Hana.Core.v2.1";
@@ -109,7 +109,7 @@ namespace LinqToDB.DataProvider.SapHana
 							commandType,
 							transactionType,
 							typeSetter,
-							typeMapper.BuildWrappedFactory((IDbConnection connection, HanaBulkCopyOptions options, IDbTransaction? transaction) => new HanaBulkCopy((HanaConnection)connection, (HanaBulkCopyOptions)options, (HanaTransaction?)transaction)),
+							typeMapper.BuildWrappedFactory((IDbConnection connection, HanaBulkCopyOptions options, IDbTransaction? transaction) => new HanaBulkCopy((HanaConnection)connection, options, (HanaTransaction?)transaction)),
 							typeMapper.BuildWrappedFactory((int source, string destination) => new HanaBulkCopyColumnMapping(source, destination)));
 					}
 

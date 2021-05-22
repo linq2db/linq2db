@@ -39,8 +39,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			tableContext.SelectQuery.From.Tables.RemoveAt(0);
-			var queryVisitor = new QueryVisitor();
-			queryVisitor.Visit(query, e =>
+			query.Visit(query, static (query, e) =>
 			{
 				if (e is SelectQuery selectQuery && selectQuery.From.Tables.Count > 0)
 				{
@@ -83,13 +82,20 @@ namespace LinqToDB.Linq.Builder
 				var tableContext  = (TableBuilder.TableContext)onContext;
 				var clonedContext = new TableBuilder.TableContext(builder, new SelectQuery(), tableContext.SqlTable);
 
+				var targetParameter = Expression.Parameter(tableContext.ObjectType);
+
 				if (secondContext != null)
 				{
 					var secondContextRefExpression =
 							new ContextRefExpression(condition.Parameters[1].Type, secondContext);
 
-					var newBody = condition.Body.Replace(condition.Parameters[1], secondContextRefExpression);
-					condition   = Expression.Lambda(newBody, condition.Parameters[0]);
+					var newBody = condition.GetBody(targetParameter, secondContextRefExpression);
+					condition = Expression.Lambda(newBody, targetParameter);
+				}
+				else
+				{
+					var newBody = condition.GetBody(targetParameter);
+					condition   = Expression.Lambda(newBody, targetParameter);
 				}
 
 				var subqueryContext = new SubQueryContext(clonedContext);
@@ -105,7 +111,7 @@ namespace LinqToDB.Linq.Builder
 				//TODO: Why it is not handled by main optimizer
 				var sqlFlags = builder.DataContext.SqlProviderFlags;
 				new SelectQueryOptimizer(sqlFlags, query, query, 0, statement)
-					.FinalizeAndValidate(sqlFlags.IsApplyJoinSupported, sqlFlags.IsGroupByExpressionSupported, builder.DataContext.InlineParameters);
+					.FinalizeAndValidate(sqlFlags.IsApplyJoinSupported, sqlFlags.IsGroupByExpressionSupported);
 				
 				if (query.From.Tables.Count == 0)
 				{
@@ -126,8 +132,7 @@ namespace LinqToDB.Linq.Builder
 				builder.BuildSearchCondition(
 					new ExpressionContext(null, secondContext == null? new[] { onContext } : new[] { onContext, secondContext }, condition),
 					conditionExpr,
-					result.Conditions,
-					false);
+					result.Conditions);
 							
 			}
 

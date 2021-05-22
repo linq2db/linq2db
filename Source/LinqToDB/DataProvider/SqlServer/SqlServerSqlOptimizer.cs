@@ -5,6 +5,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
+	using Mapping;
 
 	abstract class SqlServerSqlOptimizer : BasicSqlOptimizer
 	{
@@ -22,20 +23,95 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			return QueryHelper.WrapQuery(
 				statement,
-				query => query.ParentSelect == null && (query.Select.SkipValue != null || query.Select.TakeValue != null || query.Select.TakeHints != null || !query.OrderBy.IsEmpty),
-				(query, wrappedQuery) => { }
-				);
+				(query, _) => query.ParentSelect == null && (query.Select.SkipValue != null ||
+				                                        query.Select.TakeValue != null ||
+				                                        query.Select.TakeHints != null || !query.OrderBy.IsEmpty),
+				(query, wrappedQuery) => { },
+				allowMutation: true
+			);
 		}
 
-		public override ISqlExpression ConvertExpression(ISqlExpression expr)
-		{
-			expr = base.ConvertExpression(expr);
 
-			switch (expr.ElementType)
+		public override ISqlPredicate ConvertSearchStringPredicate<TContext>(MappingSchema mappingSchema, SqlPredicate.SearchString predicate, ConvertVisitor<RunOptimizationContext<TContext>> visitor,
+			OptimizationContext optimizationContext)
+		{
+			var like = base.ConvertSearchStringPredicate(mappingSchema, predicate, visitor, optimizationContext);
+
+			if (predicate.CaseSensitive.EvaluateBoolExpression(optimizationContext.Context) == true)
+			{
+				SqlPredicate.ExprExpr? subStrPredicate = null;
+
+				switch (predicate.Kind)
+				{
+					case SqlPredicate.SearchString.SearchKind.StartsWith:
+					{
+						subStrPredicate =
+							new SqlPredicate.ExprExpr(
+								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, new SqlFunction(
+									typeof(string), "LEFT", predicate.Expr1,
+									new SqlFunction(typeof(int), "Length", predicate.Expr2))),
+								SqlPredicate.Operator.Equal,
+								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, predicate.Expr2),
+								null
+							);
+
+						break;
+					}
+
+					case SqlPredicate.SearchString.SearchKind.EndsWith:
+					{
+						subStrPredicate =
+							new SqlPredicate.ExprExpr(
+								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, new SqlFunction(
+									typeof(string), "RIGHT", predicate.Expr1,
+									new SqlFunction(typeof(int), "Length", predicate.Expr2))),
+								SqlPredicate.Operator.Equal,
+								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, predicate.Expr2),
+								null
+							);
+
+						break;
+					}
+					case SqlPredicate.SearchString.SearchKind.Contains:
+					{
+						subStrPredicate =
+							new SqlPredicate.ExprExpr(
+								new SqlFunction(typeof(int), "CHARINDEX",
+									new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary,
+										predicate.Expr2),
+									new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary,
+										predicate.Expr1)),
+								SqlPredicate.Operator.Greater,
+								new SqlValue(0), null);
+
+						break;
+					}
+
+				}
+
+				if (subStrPredicate != null)
+				{
+					var result = new SqlSearchCondition(
+						new SqlCondition(false, like, predicate.IsNot),
+						new SqlCondition(predicate.IsNot, subStrPredicate));
+
+					return result;
+				}
+			}
+
+			return like;
+		}
+
+		public override ISqlExpression ConvertExpressionImpl<TContext>(ISqlExpression expression, ConvertVisitor<TContext> visitor,
+			EvaluationContext context)
+		{
+			expression = base.ConvertExpressionImpl(expression, visitor, context);
+
+			switch (expression.ElementType)
 			{
 				case QueryElementType.SqlBinaryExpression:
 					{
-						var be = (SqlBinaryExpression)expr;
+						var be = (SqlBinaryExpression)expression;
 
 						switch (be.Operation)
 						{
@@ -61,7 +137,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 				case QueryElementType.SqlFunction:
 					{
-						var func = (SqlFunction)expr;
+						var func = (SqlFunction)expression;
 
 						switch (func.Name)
 						{
@@ -118,7 +194,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					}
 			}
 
-			return expr;
+			return expression;
 		}
 
 	}

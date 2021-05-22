@@ -1,14 +1,19 @@
 ﻿using System;
 using System.Text;
 
+
 namespace LinqToDB.DataProvider.Sybase
 {
+	using Common;
 	using Mapping;
 	using SqlQuery;
 	using System.Data.Linq;
+	using System.Globalization;
 
 	public class SybaseMappingSchema : MappingSchema
 	{
+		private const string TIME3_FORMAT= "'{0:hh\\:mm\\:ss\\.fff}'";
+
 		public SybaseMappingSchema() : this(ProviderName.Sybase)
 		{
 		}
@@ -28,32 +33,24 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 			stringBuilder.Append("0x");
 
-			foreach (var b in value)
-				stringBuilder.Append(b.ToString("X2"));
+			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
 		}
 
 		static void ConvertTimeSpanToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, TimeSpan value)
 		{
 			if (sqlDataType.Type.DataType == DataType.Int64)
-			{
 				stringBuilder.Append(value.Ticks);
-			}
 			else
 			{
 				// to match logic for values as parameters
 				if (value < TimeSpan.Zero)
 					value = TimeSpan.FromDays(1 - value.Days) + value;
 
-				var format = "hh\\:mm\\:ss\\.fff";
-
-				stringBuilder
-					.Append('\'')
-					.Append(value.ToString(format))
-					.Append('\'')
-					;
+				stringBuilder.AppendFormat(CultureInfo.InvariantCulture, TIME3_FORMAT, value);
 			}
 		}
 
+		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
 			stringBuilder
@@ -65,15 +62,15 @@ namespace LinqToDB.DataProvider.Sybase
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
 		{
-			DataTools.ConvertStringToSql(stringBuilder, "+", null, AppendConversion, value, null);
+			DataTools.ConvertStringToSql(stringBuilder, "+", null, AppendConversionAction, value, null);
 		}
 
 		static void ConvertCharToSql(StringBuilder stringBuilder, char value)
 		{
-			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversion, value);
+			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversionAction, value);
 		}
 
-		internal static readonly SybaseMappingSchema Instance = new SybaseMappingSchema();
+		internal static readonly SybaseMappingSchema Instance = new ();
 
 		public class NativeMappingSchema : MappingSchema
 		{

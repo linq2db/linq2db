@@ -13,6 +13,7 @@ namespace LinqToDB.DataProvider
 	using System.Threading.Tasks;
 
 	public class MultipleRowsHelper<T> : MultipleRowsHelper
+		where T : notnull
 	{
 		public MultipleRowsHelper(ITable<T> table, BulkCopyOptions options)
 			: base((DataConnection)table.DataContext, options, typeof(T))
@@ -48,9 +49,9 @@ namespace LinqToDB.DataProvider
 		public          string?             TableName;
 		public readonly string              ParameterName;
 
-		public readonly List<DataParameter> Parameters    = new List<DataParameter>();
-		public readonly StringBuilder       StringBuilder = new StringBuilder();
-		public readonly BulkCopyRowsCopied  RowsCopied    = new BulkCopyRowsCopied();
+		public readonly List<DataParameter> Parameters    = new ();
+		public readonly StringBuilder       StringBuilder = new ();
+		public readonly BulkCopyRowsCopied  RowsCopied    = new ();
 
 		public int CurrentCount;
 		public int ParameterIndex;
@@ -89,7 +90,7 @@ namespace LinqToDB.DataProvider
 					});
 				}
 
-				StringBuilder.Append(",");
+				StringBuilder.Append(',');
 			}
 
 			StringBuilder.Length--;

@@ -1,13 +1,14 @@
-﻿namespace LinqToDB.ServiceModel
+﻿#if NETFRAMEWORK
+using System;
+using System.Linq.Expressions;
+
+namespace LinqToDB.ServiceModel
 {
-	using LinqToDB.Common;
-	using LinqToDB.Expressions;
-	using LinqToDB.Extensions;
+	using Common;
+	using Common.Internal.Cache;
+	using Expressions;
+	using Extensions;
 	using Mapping;
-	using System;
-	using System.Collections.Concurrent;
-	using System.Collections.Generic;
-	using System.Linq.Expressions;
 
 	/// <summary>
 	/// Implements conversions support between raw values and string to support de-/serialization of remote data context
@@ -15,9 +16,15 @@
 	/// </summary>
 	internal class SerializationConverter
 	{
-		private static readonly Type _stringType = typeof(string);
-		private static readonly IDictionary<object, Func<object, string>> _serializeConverters   = new ConcurrentDictionary<object, Func<object, string>>();
-		private static readonly IDictionary<object, Func<string, object>> _deserializeConverters = new ConcurrentDictionary<object, Func<string, object>>();
+		static readonly Type _stringType = typeof(string);
+		static readonly MemoryCache<(Type from, string schemaId)> _serializeConverters   = new (new ());
+		static readonly MemoryCache<(Type to  , string schemaId)> _deserializeConverters = new (new ());
+
+		public static void ClearCaches()
+		{
+			_serializeConverters  .Clear();
+			_deserializeConverters.Clear();
+		}
 
 		public static string Serialize(MappingSchema ms, object value)
 		{
@@ -26,37 +33,43 @@
 
 			var from = value.GetType();
 
-			// don't see much sense to have multiple schema-dependent serialziation logic for same type
-			// otherwise we should care about converters cleanup
-			var key  = from;
-
-			if (!_serializeConverters.TryGetValue(key, out var converter))
-			{
-				Type? enumType = null;
-				if (from.IsEnum)
+			var converter = _serializeConverters.GetOrCreate(
+				(from, ms.ConfigurationID),
+				ms,
+				static (o, ms) =>
 				{
-					enumType = from;
-					from     = Enum.GetUnderlyingType(from);
-				}
+					var from            = o.Key.from;
+					o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
 
-				var li = ms.GetConverter(new DbDataType(from), new DbDataType(_stringType), true)!;
-				var b  = li.CheckNullLambda.Body;
-				var ps = li.CheckNullLambda.Parameters;
+					Type? enumType = null;
 
-				var p = Expression.Parameter(typeof(object), "p");
-				var ex = Expression.Lambda<Func<object, string>>(
-					b.Transform(e =>
-						e == ps[0]
-							? Expression.Convert(
-								enumType != null ? Expression.Convert(p, enumType) : (Expression)p,
-								e.Type)
-							: e),
-					p);
+					var li = ms.GetConverter(new DbDataType(from), new DbDataType(_stringType), false);
+					if (li == null && from.IsEnum)
+					{
+						enumType = from;
+						from     = Enum.GetUnderlyingType(from);
+					}
 
-				converter = ex.Compile();
+					if (li == null)
+						li = ms.GetConverter(new DbDataType(from), new DbDataType(_stringType), true)!;
 
-				_serializeConverters[key] = converter;
-			}
+					var b  = li.CheckNullLambda.Body;
+					var ps = li.CheckNullLambda.Parameters;
+
+					var p = Expression.Parameter(typeof(object), "p");
+					var ex = Expression.Lambda<Func<object, string>>(
+						b.Transform(
+							(ps, enumType, p),
+							static (context, e) =>
+								e == context.ps[0]
+									? Expression.Convert(
+										context.enumType != null ? Expression.Convert(context.p, context.enumType) : context.p,
+										e.Type)
+									: e),
+						p);
+
+					return ex.CompileExpression();
+				});
 
 			return converter(value);
 		}
@@ -71,38 +84,52 @@
 
 			to = to.ToNullableUnderlying();
 
-			// don't see much sense to have multiple schema-dependent serialziation logic for same type
-			// otherwise we should care about converters cleanup
-			var key = to;
-
-			if (!_deserializeConverters.TryGetValue(key, out var converter))
-			{
-				Type? enumType = null;
-				if (to.IsEnum)
+			var converter = _deserializeConverters.GetOrCreate(
+				(to, ms.ConfigurationID),
+				ms,
+				static (o, ms) =>
 				{
-					enumType = to;
-					to       = Enum.GetUnderlyingType(to);
-				}
+					var to = o.Key.to;
+					o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
 
-				var li = ms.GetConverter(new DbDataType(_stringType), new DbDataType(to), true)!;
+					Type? enumType = null;
 
-				var b  = li.CheckNullLambda.Body;
-				var ps = li.CheckNullLambda.Parameters;
+					var li = ms.GetConverter(new DbDataType(_stringType), new DbDataType(to), false);
+					if (li == null && to.IsEnum)
+					{
+						var type = Converter.GetDefaultMappingFromEnumType(ms, to);
+						if (type != null)
+						{
+							if (type == typeof(int) || type == typeof(long))
+								enumType = to;
+							to = type;
+						}	
+						else
+						{
+							enumType = to;
+							to = Enum.GetUnderlyingType(to);
+						}
+					}
 
-				if (enumType != null)
-					b = Expression.Convert(b, enumType);
+					if (li == null)
+						li = ms.GetConverter(new DbDataType(_stringType), new DbDataType(to), true)!;
 
-				var p  = Expression.Parameter(_stringType, "p");
-				var ex = Expression.Lambda<Func<string, object>>(
-					Expression.Convert(b, typeof(object)).Transform(e => e == ps[0] ? p : e),
-					p);
+					var b  = li.CheckNullLambda.Body;
+					var ps = li.CheckNullLambda.Parameters;
 
-				converter = ex.Compile();
+					if (enumType != null)
+						b = Expression.Convert(b, enumType);
 
-				_deserializeConverters[key] = converter;
-			}
+					var p  = Expression.Parameter(_stringType, "p");
+					var ex = Expression.Lambda<Func<string, object>>(
+						Expression.Convert(b, typeof(object)).Replace(ps[0], p),
+						p);
+
+					return ex.CompileExpression();
+				});
 
 			return converter(value);
 		}
 	}
 }
+#endif

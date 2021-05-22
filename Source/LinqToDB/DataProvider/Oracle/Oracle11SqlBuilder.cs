@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using System;
+using System.Data;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.Oracle
@@ -7,7 +8,7 @@ namespace LinqToDB.DataProvider.Oracle
 	using SqlQuery;
 	using SqlProvider;
 	using System.Text;
-	using LinqToDB.Mapping;
+	using Mapping;
 
 	partial class Oracle11SqlBuilder : BasicSqlBuilder
 	{
@@ -52,7 +53,7 @@ namespace LinqToDB.DataProvider.Oracle
 				throw new SqlException("Identity field must be defined for '{0}'.", insertClause.Into.Name);
 
 			AppendIndent().AppendLine("RETURNING ");
-			AppendIndent().Append("\t");
+			AppendIndent().Append('\t');
 			BuildExpression(identityField, false, true);
 			StringBuilder.AppendLine(" INTO :IDENTITY_PARAMETER");
 		}
@@ -64,45 +65,24 @@ namespace LinqToDB.DataProvider.Oracle
 				var attr = GetSequenceNameAttribute(table, false);
 
 				if (attr != null)
-					return new SqlExpression(attr.SequenceName + ".nextval", Precedence.Primary);
+					return new SqlExpression(
+							(attr.Schema != null ? ConvertInline(attr.Schema, ConvertType.NameToSchema) + "." : null) +
+							ConvertInline(attr.SequenceName, ConvertType.SequenceName) +
+							".nextval",
+						Precedence.Primary);
 			}
 
 			return base.GetIdentityExpression(table);
 		}
 
-		static void ConvertEmptyStringToNullIfNeeded(ISqlExpression expr)
-		{
-			var sqlParameter = expr as SqlParameter;
-			var sqlValue     = expr as SqlValue;
-
-			if (sqlParameter?.Value is string && sqlParameter.Value.ToString() == "")
-				sqlParameter.Value = null;
-
-			if (sqlValue?.Value is string && sqlValue.Value.ToString() == "")
-				sqlValue.Value = null;
-		}
-
-		protected override void BuildPredicate(ISqlPredicate predicate)
-		{
-			if (predicate.ElementType == QueryElementType.ExprExprPredicate)
-			{
-				var expr = (SqlPredicate.ExprExpr)predicate;
-				if (expr.Operator == SqlPredicate.Operator.Equal ||
-					expr.Operator == SqlPredicate.Operator.NotEqual)
-				{
-					ConvertEmptyStringToNullIfNeeded(expr.Expr1);
-					ConvertEmptyStringToNullIfNeeded(expr.Expr2);
-				}
-			}
-			base.BuildPredicate(predicate);
-		}
-
 		protected override bool BuildWhere(SelectQuery selectQuery)
 		{
+			SqlOptimizer.ConvertSkipTake(MappingSchema, selectQuery, OptimizationContext, out var takeExpr, out var skipEpr);
+
 			return
 				base.BuildWhere(selectQuery) ||
-				!NeedSkip(selectQuery) &&
-				 NeedTake(selectQuery) &&
+				!NeedSkip(takeExpr, skipEpr) &&
+				 NeedTake(takeExpr) &&
 				selectQuery.OrderBy.IsEmpty && selectQuery.Having.IsEmpty;
 		}
 
@@ -119,12 +99,6 @@ namespace LinqToDB.DataProvider.Oracle
 				case SetOperation.ExceptAll : sb.Append("MINUS ALL"); return;
 			}
 			base.BuildSetOperation(operation, sb);
-		}
-
-		protected override void BuildFunction(SqlFunction func)
-		{
-			func = ConvertFunctionParameters(func);
-			base.BuildFunction(func);
 		}
 
 		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
@@ -149,8 +123,8 @@ namespace LinqToDB.DataProvider.Oracle
 				case DataType.Int64          : StringBuilder.Append("Number(19)");                break;
 				case DataType.SByte          :
 				case DataType.Byte           : StringBuilder.Append("Number(3)");                 break;
-				case DataType.Money          : StringBuilder.Append("Number(19,4)");              break;
-				case DataType.SmallMoney     : StringBuilder.Append("Number(10,4)");              break;
+				case DataType.Money          : StringBuilder.Append("Number(19, 4)");             break;
+				case DataType.SmallMoney     : StringBuilder.Append("Number(10, 4)");             break;
 				case DataType.VarChar        :
 					if (type.Type.Length == null || type.Type.Length > 4000 || type.Type.Length < 1)
 						StringBuilder.Append("VarChar(4000)");
@@ -172,7 +146,7 @@ namespace LinqToDB.DataProvider.Oracle
 					if (type.Type.Length == null || type.Type.Length == 0)
 						StringBuilder.Append("BLOB");
 					else
-						StringBuilder.Append("Raw(").Append(type.Type.Length).Append(")");
+						StringBuilder.Append("Raw(").Append(type.Type.Length).Append(')');
 					break;
 				default: base.BuildDataTypeFromDataType(type, forCreateTable);                    break;
 			}
@@ -215,27 +189,6 @@ namespace LinqToDB.DataProvider.Oracle
 			return ReservedWords.IsReserved(word, ProviderName.Oracle);
 		}
 
-		protected override void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
-		{
-			var wrap = false;
-
-			if (expr.SystemType == typeof(bool))
-			{
-				if (expr is SqlSearchCondition)
-					wrap = true;
-				else
-					wrap =
-						expr is SqlExpression ex      &&
-						ex.Expr              == "{0}" &&
-						ex.Parameters.Length == 1     &&
-						ex.Parameters[0] is SqlSearchCondition;
-			}
-
-			if (wrap) StringBuilder.Append("CASE WHEN ");
-			base.BuildColumnExpression(selectQuery, expr, alias, ref addAlias);
-			if (wrap) StringBuilder.Append(" THEN 1 ELSE 0 END");
-		}
-
 		/// <summary>
 		/// Check if identifier is valid without quotation. Expects non-zero length string as input.
 		/// </summary>
@@ -269,6 +222,10 @@ namespace LinqToDB.DataProvider.Oracle
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryField:
 				case ConvertType.NameToQueryTable:
+				case ConvertType.NameToServer:
+				case ConvertType.SequenceName:
+				case ConvertType.NameToSchema:
+				case ConvertType.TriggerName:
 					if (!IsValidIdentifier(value))
 						return sb.Append('"').Append(value).Append('"');
 
@@ -278,6 +235,34 @@ namespace LinqToDB.DataProvider.Oracle
 			return sb.Append(value);
 		}
 
+		protected override StringBuilder BuildExpression(
+			ISqlExpression expr,
+			bool buildTableName,
+			bool checkParentheses,
+			string? alias,
+			ref bool addAlias,
+			bool throwExceptionIfTableNotFound = true)
+		{
+			return base.BuildExpression(
+				expr,
+				buildTableName && Statement.QueryType != QueryType.MultiInsert,
+				checkParentheses,
+				alias,
+				ref addAlias,
+				throwExceptionIfTableNotFound);
+		}
+
+		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr)
+		{
+			StringBuilder.Append("DECODE(");
+			BuildExpression(Precedence.Unknown, expr.Expr1);
+			StringBuilder.Append(", ");
+			BuildExpression(Precedence.Unknown, expr.Expr2);
+			StringBuilder
+				.Append(", 0, 1) = ")
+				.Append(expr.IsNot ? '0' : '1');
+		}
+
 		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
 			BuildInsertOrUpdateQueryAsMerge(insertOrUpdate, "FROM SYS.DUAL");
@@ -285,14 +270,14 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public override string GetReserveSequenceValuesSql(int count, string sequenceName)
 		{
-			return "SELECT " + sequenceName + ".nextval ID from DUAL connect by level <= " + count;
+			return $"SELECT {ConvertInline(sequenceName, ConvertType.SequenceName)}.nextval ID from DUAL connect by level <= {count}";
 		}
 
 		protected override void BuildEmptyInsert(SqlInsertClause insertClause)
 		{
 			StringBuilder.Append("VALUES ");
 
-			foreach (var col in insertClause.Into!.Fields)
+			foreach (var _ in insertClause.Into!.Fields)
 				StringBuilder.Append("(DEFAULT)");
 
 			StringBuilder.AppendLine();
@@ -305,10 +290,10 @@ namespace LinqToDB.DataProvider.Oracle
 			switch (statement)
 			{
 				case SqlTruncateTableStatement truncateTable:
-					return truncateTable.ResetIdentity && truncateTable.Table!.Fields.Values.Any(f => f.IsIdentity) ? 2 : 1;
+					return truncateTable.ResetIdentity && truncateTable.Table!.IdentityFields.Count > 0 ? 2 : 1;
 
 				case SqlCreateTableStatement createTable:
-					_identityField = createTable.Table!.Fields.Values.FirstOrDefault(f => f.IsIdentity);
+					_identityField = createTable.Table!.IdentityFields.Count > 0 ? createTable.Table!.IdentityFields[0] : null;
 					if (_identityField != null)
 						return 3;
 					break;
@@ -319,17 +304,15 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
-			var identityField = dropTable.Table!.Fields.Values.FirstOrDefault(f => f.IsIdentity);
+			var identityField = dropTable.Table!.IdentityFields.Count > 0 ? dropTable.Table!.IdentityFields[0] : null;
 
-			if (identityField == null && dropTable.IfExists == false)
+			if (identityField == null && dropTable.Table.TableOptions.HasDropIfExists() == false && dropTable.Table.TableOptions.HasIsTemporary() == false)
 			{
 				base.BuildDropTableStatement(dropTable);
 			}
 			else
 			{
-				var schemaPrefix = string.IsNullOrWhiteSpace(dropTable.Table.Schema)
-					? string.Empty
-					: dropTable.Table.Schema + ".";
+				BuildTag(dropTable);
 
 				StringBuilder
 					.AppendLine(@"BEGIN");
@@ -343,7 +326,7 @@ namespace LinqToDB.DataProvider.Oracle
 						.AppendLine("';")
 						;
 
-					if (dropTable.IfExists)
+					if (dropTable.Table.TableOptions.HasDropIfExists() || dropTable.Table.TableOptions.HasIsTemporary())
 					{
 						StringBuilder
 							.AppendLine("EXCEPTION")
@@ -354,18 +337,22 @@ namespace LinqToDB.DataProvider.Oracle
 							;
 					}
 				}
-				else if (!dropTable.IfExists)
+				else if (!dropTable.Table.TableOptions.HasDropIfExists() && !dropTable.Table.TableOptions.HasIsTemporary())
 				{
 					StringBuilder
-						.Append("\tEXECUTE IMMEDIATE 'DROP TRIGGER ")
-						.Append(schemaPrefix)
-						.Append("TIDENTITY_")
-						.Append(dropTable.Table.PhysicalName)
+						.Append("\tEXECUTE IMMEDIATE 'DROP TRIGGER ");
+
+					AppendSchemaPrefix(StringBuilder, dropTable.Table!.Schema);
+					Convert(StringBuilder, MakeIdentityTriggerName(dropTable.Table.PhysicalName!), ConvertType.TriggerName);
+
+					StringBuilder
 						.AppendLine("';")
-						.Append("\tEXECUTE IMMEDIATE 'DROP SEQUENCE ")
-						.Append(schemaPrefix)
-						.Append("SIDENTITY_")
-						.Append(dropTable.Table.PhysicalName)
+						.Append("\tEXECUTE IMMEDIATE 'DROP SEQUENCE ");
+
+					AppendSchemaPrefix(StringBuilder, dropTable.Table!.Schema);
+					Convert(StringBuilder, MakeIdentitySequenceName(dropTable.Table.PhysicalName!), ConvertType.SequenceName);
+
+					StringBuilder
 						.AppendLine("';")
 						.Append("\tEXECUTE IMMEDIATE 'DROP TABLE ");
 					BuildPhysicalTable(dropTable.Table, null);
@@ -377,10 +364,12 @@ namespace LinqToDB.DataProvider.Oracle
 				{
 					StringBuilder
 						.AppendLine("\tBEGIN")
-						.Append("\t\tEXECUTE IMMEDIATE 'DROP TRIGGER ")
-						.Append(schemaPrefix)
-						.Append("TIDENTITY_")
-						.Append(dropTable.Table.PhysicalName)
+						.Append("\t\tEXECUTE IMMEDIATE 'DROP TRIGGER ");
+
+					AppendSchemaPrefix(StringBuilder, dropTable.Table!.Schema);
+					Convert(StringBuilder, MakeIdentityTriggerName(dropTable.Table.PhysicalName!), ConvertType.TriggerName);
+
+					StringBuilder
 						.AppendLine("';")
 						.AppendLine("\tEXCEPTION")
 						.AppendLine("\t\tWHEN OTHERS THEN")
@@ -390,10 +379,12 @@ namespace LinqToDB.DataProvider.Oracle
 						.AppendLine("\tEND;")
 
 						.AppendLine("\tBEGIN")
-						.Append("\t\tEXECUTE IMMEDIATE 'DROP SEQUENCE ")
-						.Append(schemaPrefix)
-						.Append("SIDENTITY_")
-						.Append(dropTable.Table.PhysicalName)
+						.Append("\t\tEXECUTE IMMEDIATE 'DROP SEQUENCE ");
+					
+					AppendSchemaPrefix(StringBuilder, dropTable.Table!.Schema);
+					Convert(StringBuilder, MakeIdentitySequenceName(dropTable.Table.PhysicalName!), ConvertType.SequenceName);
+
+					StringBuilder
 						.AppendLine("';")
 						.AppendLine("\tEXCEPTION")
 						.AppendLine("\t\tWHEN OTHERS THEN")
@@ -422,65 +413,77 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
+		protected static string MakeIdentityTriggerName(string tableName)
+		{
+			return "TIDENTITY_" + tableName;
+		}
+
+		protected static string MakeIdentitySequenceName(string tableName)
+		{
+			return "SIDENTITY_" + tableName;
+		}
+
 		protected override void BuildCommand(SqlStatement statement, int commandNumber)
 		{
-			static string GetSchemaPrefix(SqlTable table)
-			{
-				return string.IsNullOrWhiteSpace(table.Schema)
-					? string.Empty
-					: table.Schema + ".";
-			}
-
 			switch (Statement)
 			{
 				case SqlTruncateTableStatement truncate:
+					var sequenceName = ConvertInline(MakeIdentitySequenceName(truncate.Table!.PhysicalName!), ConvertType.SequenceName);
 					StringBuilder
 						.AppendFormat(@"DECLARE
 	l_value number;
 BEGIN
 	-- Select the next value of the sequence
-	EXECUTE IMMEDIATE 'SELECT SIDENTITY_{0}.NEXTVAL FROM dual' INTO l_value;
+	EXECUTE IMMEDIATE 'SELECT {0}.NEXTVAL FROM dual' INTO l_value;
 
 	-- Set a negative increment for the sequence, with value = the current value of the sequence
-	EXECUTE IMMEDIATE 'ALTER SEQUENCE SIDENTITY_{0} INCREMENT BY -' || l_value || ' MINVALUE 0';
+	EXECUTE IMMEDIATE 'ALTER SEQUENCE {0} INCREMENT BY -' || l_value || ' MINVALUE 0';
 
 	-- Select once from the sequence, to take its current value back to 0
-	EXECUTE IMMEDIATE 'select SIDENTITY_{0}.NEXTVAL FROM dual' INTO l_value;
+	EXECUTE IMMEDIATE 'select {0}.NEXTVAL FROM dual' INTO l_value;
 
 	-- Set the increment back to 1
-	EXECUTE IMMEDIATE 'ALTER SEQUENCE SIDENTITY_{0} INCREMENT BY 1 MINVALUE 0';
+	EXECUTE IMMEDIATE 'ALTER SEQUENCE {0} INCREMENT BY 1 MINVALUE 0';
 END;",
-							truncate.Table!.PhysicalName)
+							sequenceName)
 						.AppendLine()
 						;
 
 					break;
 				case SqlCreateTableStatement createTable:
 				{
-					var schemaPrefix = GetSchemaPrefix(createTable.Table!);
-
 					if (commandNumber == 1)
 					{
 						StringBuilder
-							.Append("CREATE SEQUENCE ")
-							.Append(schemaPrefix)
-							.Append("SIDENTITY_")
-							.Append(createTable.Table!.PhysicalName)
+							.Append("CREATE SEQUENCE ");
+						AppendSchemaPrefix(StringBuilder, createTable.Table!.Schema);
+						Convert(StringBuilder, MakeIdentitySequenceName(createTable.Table!.PhysicalName!), ConvertType.SequenceName);
+						StringBuilder
 							.AppendLine();
 					}
 					else
 					{
 						StringBuilder
-							.AppendFormat("CREATE OR REPLACE TRIGGER {0}TIDENTITY_{1}", schemaPrefix, createTable.Table!.PhysicalName)
+							.Append("CREATE OR REPLACE TRIGGER ");
+						AppendSchemaPrefix(StringBuilder, createTable.Table!.Schema);
+						Convert(StringBuilder, MakeIdentityTriggerName(createTable.Table!.PhysicalName!), ConvertType.TriggerName);
+						StringBuilder
 							.AppendLine()
 							.AppendFormat("BEFORE INSERT ON ");
 
 						BuildPhysicalTable(createTable.Table, null);
 
 						StringBuilder
-							.AppendLine  (" FOR EACH ROW")
-							.AppendLine  ("BEGIN")
-							.AppendFormat("\tSELECT {2}SIDENTITY_{1}.NEXTVAL INTO :NEW.{0} FROM dual;", _identityField!.PhysicalName, createTable.Table.PhysicalName, schemaPrefix)
+							.AppendLine(" FOR EACH ROW")
+							.AppendLine("BEGIN")
+							.Append("\tSELECT ");
+						AppendSchemaPrefix(StringBuilder, createTable.Table!.Schema);
+						Convert(StringBuilder, MakeIdentitySequenceName(createTable.Table!.PhysicalName!), ConvertType.SequenceName);
+						StringBuilder
+							.Append(".NEXTVAL INTO :NEW.");
+						Convert(StringBuilder, _identityField!.PhysicalName, ConvertType.NameToQueryField);
+						StringBuilder
+							.Append(" FROM dual;")
 							.AppendLine  ()
 							.AppendLine  ("END;");
 					}
@@ -495,20 +498,29 @@ END;",
 			StringBuilder.Append("TRUNCATE TABLE ");
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions)
 		{
 			if (server != null && server.Length == 0) server = null;
 			if (schema != null && schema.Length == 0) schema = null;
 
 			if (schema != null)
-				sb.Append(schema).Append(".");
+				sb.Append(schema).Append('.');
 
 			sb.Append(table);
 
 			if (server != null)
-				sb.Append("@").Append(server);
+				sb.Append('@').Append(server);
 
 			return sb;
+		}
+
+		private void AppendSchemaPrefix(StringBuilder sb, string? schema)
+		{
+			if (schema != null)
+			{
+				Convert(sb, schema, ConvertType.NameToSchema);
+				sb.Append('.');
+			}
 		}
 
 		protected override string? GetProviderTypeName(IDbDataParameter parameter)
@@ -522,5 +534,135 @@ END;",
 
 			return base.GetProviderTypeName(parameter);
 		}
+
+		protected override void BuildCreateTableCommand(SqlTable table)
+		{
+			string command;
+
+			if (table.TableOptions.IsTemporaryOptionSet())
+			{
+				switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
+				{
+					case TableOptions.IsTemporary                                                                                     :
+					case TableOptions.IsTemporary |                                           TableOptions.IsLocalTemporaryData       :
+					case TableOptions.IsTemporary | TableOptions.IsGlobalTemporaryStructure                                           :
+					case TableOptions.IsTemporary | TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData       :
+					case                                                                      TableOptions.IsLocalTemporaryData       :
+					case                                                                      TableOptions.IsTransactionTemporaryData :
+					case                            TableOptions.IsGlobalTemporaryStructure                                           :
+					case                            TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData       :
+					case                            TableOptions.IsGlobalTemporaryStructure | TableOptions.IsTransactionTemporaryData :
+						command = "CREATE GLOBAL TEMPORARY TABLE ";
+						break;
+					case var value :
+						throw new InvalidOperationException($"Incompatible table options '{value}'");
+				}
+			}
+			else
+			{
+				command = "CREATE TABLE ";
+			}
+
+			StringBuilder.Append(command);
+		}
+
+		protected override void BuildStartCreateTableStatement(SqlCreateTableStatement createTable)
+		{
+			if (createTable.StatementHeader == null && (createTable.Table.TableOptions.HasCreateIfNotExists() || createTable.Table.TableOptions.HasIsTemporary()))
+			{
+				AppendIndent().AppendLine(@"BEGIN");
+
+				Indent++;
+
+				AppendIndent().AppendLine(@"EXECUTE IMMEDIATE '");
+
+				Indent++;
+			}
+
+			base.BuildStartCreateTableStatement(createTable);
+		}
+
+		protected override void BuildEndCreateTableStatement(SqlCreateTableStatement createTable)
+		{
+			base.BuildEndCreateTableStatement(createTable);
+
+			if (createTable.StatementHeader == null)
+			{
+				var table = createTable.Table;
+
+				if (table.TableOptions.IsTemporaryOptionSet())
+				{
+					AppendIndent().AppendLine(table.TableOptions.HasIsTransactionTemporaryData()
+						? "ON COMMIT DELETE ROWS"
+						: "ON COMMIT PRESERVE ROWS");
+				}
+
+				if (table.TableOptions.HasCreateIfNotExists() || table.TableOptions.HasIsTemporary())
+				{
+					Indent--;
+
+					AppendIndent()
+						.AppendLine("';");
+
+					Indent--;
+
+					StringBuilder
+						.AppendLine("EXCEPTION")
+						.AppendLine("\tWHEN OTHERS THEN")
+						.AppendLine("\t\tIF SQLCODE != -955 THEN")
+						.AppendLine("\t\t\tRAISE;")
+						.AppendLine("\t\tEND IF;")
+						.AppendLine("END;")
+						;
+				}
+			}
+		}
+
+		#region Build MultiInsert
+
+		protected override void BuildMultiInsertQuery(SqlMultiInsertStatement statement)
+		{
+			BuildMultiInsertClause(statement);
+			BuildSqlBuilder((SelectQuery)statement.Source.Source, Indent, skipAlias: false);
+		}
+
+		protected void BuildMultiInsertClause(SqlMultiInsertStatement statement)
+		{
+			StringBuilder.AppendLine(statement.InsertType == MultiInsertType.First ? "INSERT FIRST" : "INSERT ALL");
+			
+			Indent++;
+
+			if (statement.InsertType == MultiInsertType.Unconditional)
+			{
+				foreach (var insert in statement.Inserts)
+					BuildInsertClause(statement, insert.Insert, "INTO ", appendTableName: true, addAlias: false);
+			}
+			else
+			{
+				foreach (var insert in statement.Inserts)
+				{
+					if (insert.When != null)
+					{
+						int length = StringBuilder.Append("WHEN ").Length;
+						BuildSearchCondition(insert.When, wrapCondition: true);
+						// If `when` condition is optimized to always `true`, 
+						// then BuildSearchCondition doesn't write anything.
+						if (StringBuilder.Length == length)
+							StringBuilder.Append("1 = 1");
+						StringBuilder.AppendLine(" THEN");
+					}
+					else
+					{
+						StringBuilder.AppendLine("ELSE");
+					}
+		
+					BuildInsertClause(statement, insert.Insert, "INTO ", appendTableName: true, addAlias: false);
+				}
+			}
+
+			Indent--;
+		}
+
+		#endregion 
 	}
 }

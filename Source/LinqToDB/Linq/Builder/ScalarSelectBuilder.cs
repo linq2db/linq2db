@@ -138,6 +138,10 @@ namespace LinqToDB.Linq.Builder
 			{
 				return Statement ??= new SqlSelectStatement(SelectQuery);
 			}
+
+			public void CompleteColumns()
+			{
+			}
 		}
 	}
 }

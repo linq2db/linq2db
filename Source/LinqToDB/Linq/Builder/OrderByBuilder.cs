@@ -10,9 +10,11 @@ namespace LinqToDB.Linq.Builder
 
 	class OrderByBuilder : MethodCallBuilder
 	{
+		private static readonly string[] MethodNames = { "OrderBy", "OrderByDescending", "ThenBy", "ThenByDescending", "ThenOrBy", "ThenOrByDescending" };
+
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			if (!methodCall.IsQueryable("OrderBy", "OrderByDescending", "ThenBy", "ThenByDescending", "ThenOrBy", "ThenOrByDescending"))
+			if (!methodCall.IsQueryable(MethodNames))
 				return false;
 
 			var body = ((LambdaExpression)methodCall.Arguments[1].Unwrap()).Body.Unwrap();
@@ -47,6 +49,7 @@ namespace LinqToDB.Linq.Builder
 				wrapped = true;
 			}
 
+			var isContinuousOrder = !sequence.SelectQuery.OrderBy.IsEmpty && methodCall.Method.Name.StartsWith("Then");
 			var lambda  = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 			SqlInfo[] sql;
 
@@ -59,49 +62,48 @@ namespace LinqToDB.Linq.Builder
 
 				builder.ReplaceParent(order, sparent);
 
-			    if (wrapped)
-				    break;
+				// Do not create subquery for ThenByExtensions
+				if (wrapped || isContinuousOrder)
+					break;
 
 				// handle situation when order by uses complex field
-			    
-			    var isComplex = false;
 
-			    foreach (var sqlInfo in sql)
-			    {
-				    // immutable expressions will be removed later
-				    //
-					var isImmutable = QueryHelper.IsImmutable(sqlInfo.Sql);
+				var isComplex = false;
+
+				foreach (var sqlInfo in sql)
+				{
+					// immutable expressions will be removed later
+					//
+					var isImmutable = QueryHelper.IsConstant(sqlInfo.Sql);
 					if (isImmutable)
 						continue;
 					
 					// possible we have to extend this list
 					//
-				    isComplex = null != new QueryVisitor().Find(sqlInfo.Sql, 
-					                e => e.ElementType == QueryElementType.SqlQuery);
-				    if (isComplex)
-					    break;
-			    }
+					isComplex = null != sqlInfo.Sql.Find(QueryElementType.SqlQuery);
+					if (isComplex)
+						break;
+				}
 
-			    if (!isComplex)
-				    break;
+				if (!isComplex)
+					break;
 
-			    sequence = new SubQueryContext(sequence);
-			    wrapped = true;
+				sequence = new SubQueryContext(sequence);
+				wrapped = true;
 			}
 
 	
-			if (!methodCall.Method.Name.StartsWith("Then") && !Configuration.Linq.DoNotClearOrderBys)
+			if (!isContinuousOrder && !Configuration.Linq.DoNotClearOrderBys)
 				sequence.SelectQuery.OrderBy.Items.Clear();
 
 			foreach (var expr in sql)
 			{
 				// we do not need sorting by immutable values, like "Some", Func("Some"), "Some1" + "Some2". It does nothing for ordering
 				//
-				if (QueryHelper.IsImmutable(expr.Sql))
+				if (QueryHelper.IsConstant(expr.Sql))
 					continue;
 			
-				var e = builder.ConvertSearchCondition(expr.Sql);
-				sequence.SelectQuery.OrderBy.Expr(e, methodCall.Method.Name.EndsWith("Descending"));
+				sequence.SelectQuery.OrderBy.Expr(expr.Sql, methodCall.Method.Name.EndsWith("Descending"));
 			}
 
 			return sequence;

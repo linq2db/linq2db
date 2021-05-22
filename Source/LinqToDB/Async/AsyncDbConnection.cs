@@ -37,12 +37,12 @@ namespace LinqToDB.Async
 
 		public virtual IDbConnection Connection => _connection;
 
-#if NET45 || NET46
+#if !NATIVE_ASYNC
 		public virtual Task<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
 			=> Task.FromResult(AsyncFactory.Create(BeginTransaction()));
-#elif NETSTANDARD2_0 || NETCOREAPP2_1
+#elif !NETSTANDARD2_1PLUS
 		public virtual ValueTask<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
-			=> new ValueTask<IAsyncDbTransaction>(AsyncFactory.Create(BeginTransaction()));
+			=> new (AsyncFactory.Create(BeginTransaction()));
 #else
 		public virtual async ValueTask<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
 		{
@@ -56,13 +56,7 @@ namespace LinqToDB.Async
 		}
 #endif
 
-#if NET45 || NET46
-		public virtual Task<IAsyncDbTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken = default)
-			=> Task.FromResult(AsyncFactory.Create(BeginTransaction(isolationLevel)));
-#elif NETSTANDARD2_0 || NETCOREAPP2_1
-		public virtual ValueTask<IAsyncDbTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken = default)
-			=> new ValueTask<IAsyncDbTransaction>(AsyncFactory.Create(BeginTransaction(isolationLevel)));
-#else
+#if NETSTANDARD2_1PLUS
 		public virtual async ValueTask<IAsyncDbTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken = default)
 		{
 			if (Connection is DbConnection dbConnection)
@@ -73,11 +67,17 @@ namespace LinqToDB.Async
 			}
 			return AsyncFactory.Create(BeginTransaction(isolationLevel));
 		}
+#elif NATIVE_ASYNC
+		public virtual ValueTask<IAsyncDbTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken = default)
+			=> new (AsyncFactory.Create(BeginTransaction(isolationLevel)));
+#else
+		public virtual Task<IAsyncDbTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken = default)
+			=> Task.FromResult(AsyncFactory.Create(BeginTransaction(isolationLevel)));
 #endif
 
 		public virtual Task CloseAsync()
 		{
-#if NETSTANDARD2_1 || NETCOREAPP3_1
+#if NETSTANDARD2_1PLUS
 			if (Connection is DbConnection dbConnection)
 				return dbConnection.CloseAsync();
 #endif
@@ -99,9 +99,9 @@ namespace LinqToDB.Async
 			return AsyncFactory.Create(Connection.BeginTransaction());
 		}
 
-		public virtual IDbTransaction BeginTransaction(IsolationLevel isolationLevel)
+		public virtual IDbTransaction BeginTransaction(IsolationLevel il)
 		{
-			return AsyncFactory.Create(Connection.BeginTransaction(isolationLevel));
+			return AsyncFactory.Create(Connection.BeginTransaction(il));
 		}
 
 		public virtual void Close()
@@ -129,7 +129,7 @@ namespace LinqToDB.Async
 			Connection.Dispose();
 		}
 
-#if NET45 || NET46
+#if !NATIVE_ASYNC
 		public virtual Task DisposeAsync()
 		{
 			Dispose();
@@ -143,7 +143,7 @@ namespace LinqToDB.Async
 				return asyncDisposable.DisposeAsync();
 
 			Dispose();
-			return new ValueTask(Task.CompletedTask);
+			return default;
 		}
 #endif
 

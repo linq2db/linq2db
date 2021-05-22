@@ -325,7 +325,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			var result = dataConnection
 					.Query(rd =>
 					{
-						var dataType = rd.GetString(4);
+						// IMPORTANT: reader calls must be ordered to support SequentialAccess
+						var tableId    = rd.GetString(0);
+						var name       = rd.GetString(1);
+						var isNullable = rd.GetBoolean(2);
+						var ordinal    = rd.GetInt32(3);
+						var dataType   = rd.GetString(4);
 						// null - not array
 						// 0 - array with unknown dimensions (unknown for views)
 						// >0 - array with specified dimensions (known for tables)
@@ -346,10 +351,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 						return new ColumnInfo()
 						{
-							TableID      = rd.GetString(0),
-							Name         = rd.GetString(1),
-							IsNullable   = rd.GetBoolean(2),
-							Ordinal      = rd.GetInt32(3),
+							TableID      = tableId,
+							Name         = name,
+							IsNullable   = isNullable,
+							Ordinal      = ordinal,
 							DataType     = dataType,
 							Length       = rd.IsDBNull(6) ? (int?)null : rd.GetInt32(6),
 							Precision    = rd.IsDBNull(7) ? (int?)null : rd.GetInt32(7),
@@ -371,6 +376,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			var data = dataConnection.Query(
 				rd => new
 				{
+					// IMPORTANT: reader calls must be ordered to support SequentialAccess
 					name         = rd[0],
 					thisTable    = rd[1],
 					otherTable   = rd[2],
@@ -577,7 +583,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					}
 				}
 			}
-						
+
 			return foundType;
 		}
 
@@ -624,23 +630,29 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				return dataConnection
 					.Query(rd =>
 					{
+						// IMPORTANT: reader calls must be ordered to support SequentialAccess
 						var catalog       = rd.GetString(0);
 						var schema        = rd.GetString(1);
+						var procName      = rd.GetString(2);
+						var isFunction    = rd.GetString(3) == "FUNCTION";
+						var definition    = Converter.ChangeTypeTo<string>(rd[4]);
+						var procId        = catalog + "." + schema + "." + rd.GetString(5);
+						var isAggregate   = Converter.ChangeTypeTo<bool>(rd[6]);
 						var isTableResult = Converter.ChangeTypeTo<bool>(rd[7]);
 
 						return new ProcedureInfo()
 						{
-							ProcedureID         = catalog + "." + schema + "." + rd.GetString(5),
+							ProcedureID         = procId,
 							CatalogName         = catalog,
 							SchemaName          = schema,
-							ProcedureName       = rd.GetString(2),
+							ProcedureName       = procName,
 							// versions prior 11 doesn't support procedures but support functions with void return type
 							// still, we report them as function in metadata. Just without return parameter
-							IsFunction          = rd.GetString(3) == "FUNCTION",
+							IsFunction          = isFunction,
 							IsTableFunction     = isTableResult,
-							IsAggregateFunction = Converter.ChangeTypeTo<bool>(rd[6]),
+							IsAggregateFunction = isAggregate,
 							IsDefaultSchema     = schema == (options.DefaultSchema ?? "public"),
-							ProcedureDefinition = Converter.ChangeTypeTo<string>(rd[4]),
+							ProcedureDefinition = definition,
 							// result of function has dynamic form and vary per call if function return type is 'record'
 							// only exception is function with out/inout parameters, where we know that record contains those parameters
 							IsResultDynamic     = Converter.ChangeTypeTo<string>(rd[8]) == "record" && Converter.ChangeTypeTo<int>(rd[9]) == 0
@@ -669,17 +681,21 @@ SELECT	r.ROUTINE_CATALOG,
 				return dataConnection
 					.Query(rd =>
 					{
+						// IMPORTANT: reader calls must be ordered to support SequentialAccess
 						var catalog       = rd.GetString(0);
 						var schema        = rd.GetString(1);
-						var isTableResult = Converter.ChangeTypeTo<bool>(rd[6]);
+						var name          = rd.GetString(2);
+						var definition    = Converter.ChangeTypeTo<string>(rd[3]);
+						var procId        = catalog + "." + schema + "." + rd.GetString(4);
 						var kind          = Converter.ChangeTypeTo<char>(rd[5]);
+						var isTableResult = Converter.ChangeTypeTo<bool>(rd[6]);
 
 						return new ProcedureInfo()
 						{
-							ProcedureID         = catalog + "." + schema + "." + rd.GetString(4),
+							ProcedureID         = procId,
 							CatalogName         = catalog,
 							SchemaName          = schema,
-							ProcedureName       = rd.GetString(2),
+							ProcedureName       = name,
 							// versions prior 11 doesn't support procedures but support functions with void return type
 							// still, we report them as function in metadata. Just without return parameter
 							IsFunction          = kind != 'p',
@@ -688,7 +704,7 @@ SELECT	r.ROUTINE_CATALOG,
 							IsAggregateFunction = kind == 'a',
 							IsWindowFunction    = kind == 'w',
 							IsDefaultSchema     = schema == (options.DefaultSchema ?? "public"),
-							ProcedureDefinition = Converter.ChangeTypeTo<string>(rd[3]),
+							ProcedureDefinition = definition,
 							IsResultDynamic     = Converter.ChangeTypeTo<string>(rd[7]) == "record" && Converter.ChangeTypeTo<int>(rd[8]) == 0
 						};
 					}, $@"
@@ -716,14 +732,18 @@ SELECT	r.ROUTINE_CATALOG,
 			return dataConnection
 				.Query(rd =>
 				{
-					var mode = Converter.ChangeTypeTo<string>(rd[4]);
+					// IMPORTANT: reader calls must be ordered to support SequentialAccess
+					var procId  = rd.GetString(0) + "." + rd.GetString(1) + "." + rd.GetString(2);
+					var ordinal = Converter.ChangeTypeTo<int>(rd[3]);
+					var mode    = Converter.ChangeTypeTo<string>(rd[4]);
+
 					return new ProcedureParameterInfo()
 					{
-						ProcedureID   = rd.GetString(0) + "." + rd.GetString(1) + "." + rd.GetString(2),
+						ProcedureID   = procId,
 						ParameterName = Converter.ChangeTypeTo<string>(rd[5]),
 						IsIn          = mode == "IN"  || mode == "INOUT",
 						IsOut         = mode == "OUT" || mode == "INOUT",
-						Ordinal       = Converter.ChangeTypeTo<int>(rd[3]),
+						Ordinal       = ordinal,
 						IsResult      = false,
 						DataType      = rd.GetString(6),
 						// those fields not supported by pgsql on parameter level
@@ -739,6 +759,7 @@ SELECT	r.ROUTINE_CATALOG,
 				// we need to read data_type of function itself if it is not table/void function to define return parameter
 				.Concat(dataConnection.Query(rd => new ProcedureParameterInfo()
 				{
+					// IMPORTANT: reader calls must be ordered to support SequentialAccess
 					ProcedureID   = rd.GetString(0) + "." + rd.GetString(1) + "." + rd.GetString(2),
 					ParameterName = null,
 					IsIn          = false,
@@ -776,9 +797,11 @@ SELECT	r.ROUTINE_CATALOG,
 				commandText += "NULL";
 
 				// we don't have proper support for any* yet
-				if (parameter.SchemaType == "anyarray")
+				if (parameter.SchemaType == "USER-DEFINED")
+				{ }
+				else if (parameter.SchemaType == "anyarray")
 					commandText += "::int[]";
-				if (parameter.SchemaType == "anyelement")
+				else if (parameter.SchemaType == "anyelement")
 					commandText += "::int";
 				else if (parameter.SchemaType != "ARRAY")
 					// otherwise it will fail on overrides with same parameter count

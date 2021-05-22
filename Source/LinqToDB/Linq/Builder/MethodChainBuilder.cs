@@ -10,6 +10,7 @@ using LinqToDB.SqlQuery;
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
+	using LinqToDB.Reflection;
 
 	class MethodChainBuilder : MethodCallBuilder
 	{
@@ -76,9 +77,9 @@ namespace LinqToDB.Linq.Builder
 			public int             FieldIndex;
 			public ISqlExpression? Sql;
 
-			static int CheckNullValue(IDataRecord reader, object context)
+			static int CheckNullValue(bool isNull, object context)
 			{
-				if (reader.IsDBNull(0))
+				if (isNull)
 					throw new InvalidOperationException(
 						$"Function {context} returns non-nullable value, but result is NULL. Use nullable version of the function instead.");
 				return 0;
@@ -89,6 +90,7 @@ namespace LinqToDB.Linq.Builder
 				var expr   = BuildExpression(FieldIndex, Sql);
 				var mapper = Builder.BuildMapper<object>(expr);
 
+				CompleteColumns();
 				QueryRunner.SetRunQuery(query, mapper);
 			}
 
@@ -112,7 +114,7 @@ namespace LinqToDB.Linq.Builder
 				else
 				{
 					expr = Expression.Block(
-						Expression.Call(null, MemberHelper.MethodOf(() => CheckNullValue(null!, null!)), ExpressionBuilder.DataReaderParam, Expression.Constant(_methodName)),
+						Expression.Call(null, MemberHelper.MethodOf(() => CheckNullValue(false, null!)), Expression.Call(ExpressionBuilder.DataReaderParam, Methods.ADONet.IsDBNull, Expression.Constant(0)), Expression.Constant(_methodName)),
 						Builder.BuildSql(_returnType, fieldIndex, sqlExpression));
 				}
 

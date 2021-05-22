@@ -9,8 +9,6 @@ using NUnit.Framework;
 
 namespace Tests.xUpdate
 {
-	using Model;
-
 	[TestFixture]
 //	[Order(10101)]
 	public partial class MergeTests : TestBase
@@ -18,35 +16,23 @@ namespace Tests.xUpdate
 		[AttributeUsage(AttributeTargets.Parameter)]
 		public class MergeDataContextSourceAttribute : DataSourcesAttribute
 		{
-			static string[] Unsupported =
+			public static List<string> Unsupported = new[]
 			{
 				TestProvName.AllAccess,
 				ProviderName.SqlCe,
-				ProviderName.SQLiteClassic,
-				TestProvName.SQLiteClassicMiniProfilerMapped,
-				TestProvName.SQLiteClassicMiniProfilerUnmapped,
-				ProviderName.SQLiteMS,
-				ProviderName.SqlServer2000,
-				ProviderName.SqlServer2005,
-				ProviderName.PostgreSQL,
-				ProviderName.PostgreSQL92,
-				ProviderName.PostgreSQL93,
-				ProviderName.PostgreSQL95,
-				TestProvName.PostgreSQL10,
-				TestProvName.PostgreSQL11,
-				ProviderName.MySql,
-				ProviderName.MySqlConnector,
-				TestProvName.MySql55,
-				TestProvName.MariaDB
-			};
+				TestProvName.AllSQLite,
+				TestProvName.AllSqlServer2005Minus,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllMySql,
+			}.SelectMany(_ => _.Split(',')).ToList();
 
 			public MergeDataContextSourceAttribute(params string[] except)
-				: base(true, Unsupported.Concat(except).ToArray())
+				: base(true, Unsupported.Concat(except.SelectMany(_ => _.Split(','))).ToArray())
 			{
 			}
 
 			public MergeDataContextSourceAttribute(bool includeLinqService, params string[] except)
-				: base(includeLinqService, Unsupported.Concat(except).ToArray())
+				: base(includeLinqService, Unsupported.Concat(except.SelectMany(_ => _.Split(','))).ToArray())
 			{
 			}
 		}
@@ -61,7 +47,11 @@ namespace Tests.xUpdate
 				ProviderName.SqlServer2008,
 				ProviderName.SqlServer2012,
 				ProviderName.SqlServer2014,
+				ProviderName.SqlServer2016,
 				ProviderName.SqlServer2017,
+				TestProvName.SqlServer2019,
+				TestProvName.SqlServer2019SequentialAccess,
+				TestProvName.SqlServer2019FastExpressionCompiler,
 				TestProvName.SqlAzure
 			};
 
@@ -77,7 +67,7 @@ namespace Tests.xUpdate
 		}
 
 		[Table("merge1")]
-		class TestMapping1
+		internal class TestMapping1
 		{
 			[Column("Id")]
 			[PrimaryKey]
@@ -114,7 +104,7 @@ namespace Tests.xUpdate
 		}
 
 		[Table("merge2")]
-		class TestMapping2
+		internal class TestMapping2
 		{
 			[Column("Id")]
 			[PrimaryKey]

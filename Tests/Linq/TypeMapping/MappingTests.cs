@@ -3,10 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
+using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Expressions;
 using NUnit.Framework;
 
-namespace Tests
+namespace Tests.TypeMapping
 {
 	namespace Dynamic
 	{
@@ -457,10 +460,10 @@ namespace Tests
 				var l4 = typeMapper.MapLambda((SampleClass s, int i) => s.GetOther(i).OtherStrProp);
 
 
-				var cl1 = (Func<Dynamic.SampleClass, int>)l1.Compile();
-				var cl2 = (Func<Dynamic.SampleClass, int>)l2.Compile();
-				var cl3 = (Func<Dynamic.SampleClass, int, Dynamic.OtherClass>)l3.Compile();
-				var cl4 = (Func<Dynamic.SampleClass, int, string>)l4.Compile();
+				var cl1 = (Func<Dynamic.SampleClass, int>)l1.CompileExpression();
+				var cl2 = (Func<Dynamic.SampleClass, int>)l2.CompileExpression();
+				var cl3 = (Func<Dynamic.SampleClass, int, Dynamic.OtherClass>)l3.CompileExpression();
+				var cl4 = (Func<Dynamic.SampleClass, int, string>)l4.CompileExpression();
 
 				Assert.That(cl1(concrete), Is.EqualTo(33));
 				Assert.That(cl2(concrete), Is.EqualTo(1));
@@ -484,7 +487,7 @@ namespace Tests
 
 				var newExpression = typeMapper.MapExpression(() => new SampleClass(55, 77));
 				var newLambda     = Expression.Lambda<Func<Dynamic.SampleClass>>(newExpression);
-				var instance      = newLambda.Compile()();
+				var instance      = newLambda.CompileExpression()();
 
 				Assert.That(instance.Id   , Is.EqualTo(55));
 				Assert.That(instance.Value, Is.EqualTo(77));
@@ -498,7 +501,7 @@ namespace Tests
 				var newMemberInit    = typeMapper.MapExpression(() => new SampleClass(55, 77) {StrValue = "Str"});
 				var memberInitLambda = Expression.Lambda<Func<Dynamic.SampleClass>>(newMemberInit);
 
-				var instance = memberInitLambda.Compile()();
+				var instance = memberInitLambda.CompileExpression()();
 
 				Assert.That(instance.Id      , Is.EqualTo(55));
 				Assert.That(instance.Value   , Is.EqualTo(77));
@@ -712,6 +715,37 @@ namespace Tests
 				var wrapped = typeMapper.BuildWrappedFactory(() => new SampleClass(1, 2))();
 
 				Assert.AreEqual(4, wrapped.ReturnTypeMapper("test"));
+			}
+
+			[Test]
+			public void ValueTaskToTaskMapperTest1()
+			{
+				var taskExpression = Expression.Constant(new ValueTask<long>());
+				var mapper         = new ValueTaskToTaskMapper();
+				var result         = ((ICustomMapper)mapper).Map(taskExpression);
+
+				Assert.AreEqual(typeof(Task<long>), result.Type);
+				Assert.True(typeof(Task<long>).IsAssignableFrom(result.EvaluateExpression()!.GetType()));
+			}
+
+			[Test]
+			public void ValueTaskToTaskMapperTest2()
+			{
+				var taskExpression = Expression.Constant(new ValueTask());
+				var mapper         = new ValueTaskToTaskMapper();
+				var result         = ((ICustomMapper)mapper).Map(taskExpression);
+
+				Assert.AreEqual(typeof(Task), result.Type);
+				Assert.True(typeof(Task).IsAssignableFrom(result.EvaluateExpression()!.GetType()));
+			}
+
+			[Test]
+			public void ValueTaskToTaskMapperTest3()
+			{
+				var taskExpression = Expression.Constant(0);
+				var mapper         = new ValueTaskToTaskMapper();
+
+				Assert.Throws(typeof(LinqToDBException), () => ((ICustomMapper)mapper).Map(taskExpression));
 			}
 		}
 	}

@@ -1,4 +1,6 @@
-﻿using System.ServiceModel;
+﻿#if NETFRAMEWORK
+using System;
+using System.ServiceModel;
 
 namespace LinqToDB.ServiceModel
 {
@@ -12,3 +14,4 @@ namespace LinqToDB.ServiceModel
 		[OperationContract] int             ExecuteBatch   (string? configuration, string queryData);
 	}
 }
+#endif

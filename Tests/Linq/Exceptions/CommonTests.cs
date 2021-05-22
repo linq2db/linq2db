@@ -20,12 +20,12 @@ namespace Tests.Exceptions
 			{
 			}
 
-			protected override SqlStatement ProcessQuery(SqlStatement statement)
+			protected override SqlStatement ProcessQuery(SqlStatement statement, EvaluationContext context)
 			{
 				if (statement.IsInsert() && statement.RequireInsertClause().Into!.Name == "Parent")
 				{
 					var expr =
-						new QueryVisitor().Find(statement.RequireInsertClause(), e =>
+						statement.RequireInsertClause().Find(static e =>
 						{
 							if (e.ElementType == QueryElementType.SetExpression)
 							{
@@ -36,16 +36,16 @@ namespace Tests.Exceptions
 							return false;
 						}) as SqlSetExpression;
 
-					if (expr != null)
+					if (expr != null && expr.Expression!.TryEvaluateExpression(context, out var expressionValue))
 					{
-						var value = ConvertTo<int>.From(((IValueContainer)expr.Expression!).Value);
+						var value = ConvertTo<int>.From(expressionValue);
 
 						if (value == 555)
 						{
 							var tableName = "Parent1";
 							var dic       = new Dictionary<IQueryElement,IQueryElement>();
 
-							statement = ConvertVisitor.Convert(statement, (v, e) =>
+							statement = statement.Convert(new { dic, tableName }, static (v, e) =>
 							{
 								if (e.ElementType == QueryElementType.SqlTable)
 								{
@@ -53,17 +53,17 @@ namespace Tests.Exceptions
 
 									if (oldTable.Name == "Parent")
 									{
-										var newTable = new SqlTable(oldTable) { Name = tableName, PhysicalName = tableName };
+										var newTable = new SqlTable(oldTable) { Name = v.Context.tableName, PhysicalName = v.Context.tableName };
 
-										foreach (var field in oldTable.Fields.Values)
-											dic.Add(field, newTable.Fields[field.Name]);
+										foreach (var field in oldTable.Fields)
+											v.Context.dic.Add(field, newTable[field.Name] ?? throw new InvalidOperationException());
 
 										return newTable;
 									}
 								}
 
 								IQueryElement? ex;
-								return dic.TryGetValue(e, out ex) ? ex : e;
+								return v.Context.dic.TryGetValue(e, out ex) ? ex : e;
 							});
 						}
 					}
@@ -93,7 +93,7 @@ namespace Tests.Exceptions
 							ParentID = n,
 							Value1   = n
 						}),
-					"Invalid object name 'Parent1'.");
+					"Invalid object name 'Parent1'.")!;
 				Assert.True(ex.GetType().Name == "SqlException");
 
 				ex = Assert.Throws(
@@ -104,7 +104,7 @@ namespace Tests.Exceptions
 							ParentID = n,
 							Value1   = n
 						}),
-					"Invalid object name 'Parent1'.");
+					"Invalid object name 'Parent1'.")!;
 				Assert.True(ex.GetType().Name == "SqlException");
 
 				db.Parent.Delete(p => p.ParentID == n);

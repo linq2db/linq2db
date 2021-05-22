@@ -1,30 +1,26 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Configuration;
 using System.Data;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-
-using NUnit.Framework;
-
 using LinqToDB;
 using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.DB2;
 using LinqToDB.DataProvider.SqlServer;
+using NUnit.Framework;
 
 namespace Tests.Data
 {
-	using Microsoft.Extensions.DependencyInjection;
-
 	using System.Collections.Generic;
-	using System.Runtime.InteropServices;
+	using System.Data.Common;
 	using System.Transactions;
 	using LinqToDB.AspNet;
 	using LinqToDB.Data.RetryPolicy;
 	using LinqToDB.Mapping;
+	using Microsoft.Extensions.DependencyInjection;
 	using Model;
 
 	[TestFixture]
@@ -332,29 +328,32 @@ namespace Tests.Data
 		[ActiveIssue("Fails due to connection limit for development version when run with nonmanaged provider", Configuration = ProviderName.SybaseManaged)]
 		public void MultipleConnectionsTest([DataSources(TestProvName.AllInformix)] string context)
 		{
-			var exceptions = new ConcurrentBag<Exception>();
+			using (new DisableBaseline("Multi-threading"))
+			{
+				var exceptions = new ConcurrentBag<Exception>();
 
-			var threads = Enumerable
-				.Range(1, 10)
-				.Select(n => new Thread(() =>
-				{
-					try
+				var threads = Enumerable
+					.Range(1, 10)
+					.Select(n => new Thread(() =>
 					{
-						using (var db = GetDataContext(context))
-							db.Parent.ToList();
-					}
-					catch (Exception e)
-					{
-						exceptions.Add(e);
-					}
-				}))
-				.ToArray();
+						try
+						{
+							using (var db = GetDataContext(context))
+								db.Parent.ToList();
+						}
+						catch (Exception e)
+						{
+							exceptions.Add(e);
+						}
+					}))
+					.ToArray();
 
-			foreach (var thread in threads) thread.Start();
-			foreach (var thread in threads) thread.Join();
+				foreach (var thread in threads) thread.Start();
+				foreach (var thread in threads) thread.Join();
 
-			if (exceptions.Count > 0)
-				throw new AggregateException(exceptions);
+				if (!exceptions.IsEmpty)
+					throw new AggregateException(exceptions);
+			}
 		}
 
 		[Test]
@@ -411,11 +410,11 @@ namespace Tests.Data
 					if (cn.State == ConnectionState.Closed)
 						open = true;
 				};
-				conn.OnBeforeConnectionOpenAsync += async (dc, cn, token) => await Task.Run(() =>
+				conn.OnBeforeConnectionOpenAsync += (dc, cn, token) => Task.Run(() =>
 				{
 					if (cn.State == ConnectionState.Closed)
 						openAsync = true;
-				});
+				}, default);
 				Assert.False(open);
 				Assert.False(openAsync);
 				Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
@@ -440,7 +439,7 @@ namespace Tests.Data
 						{
 							if (cn.State == ConnectionState.Closed)
 								openAsync = true;
-						});
+						}, default);
 				Assert.False(open);
 				Assert.False(openAsync);
 				await conn.SelectAsync(() => 1);
@@ -1136,8 +1135,7 @@ namespace Tests.Data
 			TransactionScope? scope = withScope ? new TransactionScope() : null;
 			try
 			{
-				using (new AllowMultipleQuery())
-				using (var db = new DataConnection(context))
+				using (var db = GetDataContext(context))
 				using (db.CreateLocalTable(Category.Data))
 				using (db.CreateLocalTable(Product.Data))
 				{
@@ -1163,7 +1161,7 @@ namespace Tests.Data
 				context == ProviderName.SapHanaOdbc         ||
 				context == ProviderName.SqlCe               ||
 				context == ProviderName.Sybase              ||
-#if !NET46
+#if !NET472
 				(context.Contains("Oracle") && context.Contains("Managed")) ||
 				context == ProviderName.SapHanaNative       ||
 #endif
@@ -1194,7 +1192,6 @@ namespace Tests.Data
 			TransactionScope? scope = withScope ? new TransactionScope() : null;
 			try
 			{
-				using (new AllowMultipleQuery())
 				using (var db = new DataConnection(context))
 				{
 					// test cloned data connection without LoadWith, as it doesn't use cloning in v3
@@ -1212,7 +1209,127 @@ namespace Tests.Data
 				scope?.Dispose();
 			}
 		}
-#endregion
+		#endregion
 
+		[Table]
+		class TransactionScopeTable
+		{
+			[Column] public int Id { get; set; }
+		}
+
+		[Test]
+		public void Issue2676TransactionScopeTest1([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				db.DropTable<TransactionScopeTable>(throwExceptionIfNotExists: false);
+				db.CreateTable<TransactionScopeTable>();
+			}
+
+			try
+			{
+				using (var db = new TestDataConnection(context))
+				{
+					db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 1 });
+					using (var transaction = new TransactionScope(TransactionScopeOption.Required, TransactionScopeAsyncFlowOption.Enabled))
+					{
+						// this query will be executed outside of TransactionScope transaction as it wasn't enlisted into connection
+						db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 2 });
+
+						Transaction.Current!.Rollback();
+					}
+
+					db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 3 });
+
+					var ids = db.GetTable<TransactionScopeTable>().Select(_ => _.Id).OrderBy(_ => _).ToArray();
+
+					Assert.AreEqual(3, ids.Length);
+				}
+			}
+			finally
+			{
+				using (var db = new TestDataConnection(context))
+				{
+					db.DropTable<TransactionScopeTable>(throwExceptionIfNotExists: false);
+				}
+			}
+		}
+
+		[Test]
+		public void Issue2676TransactionScopeTest2([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				db.DropTable<TransactionScopeTable>(throwExceptionIfNotExists: false);
+				db.CreateTable<TransactionScopeTable>();
+			}
+
+			try
+			{
+				using (var db = new TestDataConnection(context))
+				{
+					using (var transaction = new TransactionScope(TransactionScopeOption.Required, TransactionScopeAsyncFlowOption.Enabled))
+					{
+						db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 2 });
+
+						Transaction.Current!.Rollback();
+					}
+
+					db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 3 });
+
+					var ids = db.GetTable<TransactionScopeTable>().Select(_ => _.Id).OrderBy(_ => _).ToArray();
+
+					Assert.AreEqual(1, ids.Length);
+					Assert.AreEqual(3, ids[0]);
+				}
+			}
+			finally
+			{
+				using (var db = new TestDataConnection(context))
+				{
+					db.DropTable<TransactionScopeTable>(throwExceptionIfNotExists: false);
+				}
+			}
+		}
+
+		[Test]
+		public void Issue2676TransactionScopeTest3([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				db.DropTable<TransactionScopeTable>(throwExceptionIfNotExists: false);
+				db.CreateTable<TransactionScopeTable>();
+			}
+
+			try
+			{
+				using (var db = new TestDataConnection(context))
+				{
+					db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 1 });
+					using (var transaction = new TransactionScope(TransactionScopeOption.Required, TransactionScopeAsyncFlowOption.Enabled))
+					{
+						((DbConnection)db.Connection).EnlistTransaction(Transaction.Current);
+						db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 2 });
+
+						Transaction.Current!.Rollback();
+					}
+
+					db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 3 });
+
+					var ids = db.GetTable<TransactionScopeTable>().Select(_ => _.Id).OrderBy(_ => _).ToArray();
+
+					Assert.AreEqual(2, ids.Length);
+					Assert.AreEqual(1, ids[0]);
+					Assert.AreEqual(3, ids[1]);
+				}
+			}
+			finally
+			{
+				using (var db = new TestDataConnection(context))
+				{
+					db.DropTable<TransactionScopeTable>(throwExceptionIfNotExists: false);
+				}
+			}
+		}
 	}
 }

@@ -17,7 +17,7 @@ namespace Tests.Linq
 			public int Id { get; set; }
 
 			[Column]
-			public string? DuplicateData { get; set; }
+			public string DuplicateData { get; set; } = null!;
 
 			[Column]
 			public int OrderData1 { get; set; }
@@ -435,10 +435,6 @@ namespace Tests.Linq
 						t.DuplicateData,
 						Count = subQuery2.Where(s => s.DuplicateData == t.DuplicateData).Count()
 					};
-
-				var selectQuery = query.GetSelectQuery();
-				var info = new QueryInformation(selectQuery);
-				info.GetParentQuery(selectQuery);
 
 				var result = query.ToArray();
 			}

@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.Oracle
 {
@@ -10,8 +12,6 @@ namespace LinqToDB.DataProvider.Oracle
 	using Extensions;
 	using Mapping;
 	using SqlProvider;
-	using System.Threading;
-	using System.Threading.Tasks;
 
 	public class OracleDataProvider : DynamicDataProviderBase<OracleProviderAdapter>
 	{
@@ -20,9 +20,9 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public OracleDataProvider(string name, OracleVersion version)
 			: base(
-				  name,
-				  GetMappingSchema(name, OracleProviderAdapter.GetInstance(name).MappingSchema),
-				  OracleProviderAdapter.GetInstance(name))
+				name,
+				GetMappingSchema(name, OracleProviderAdapter.GetInstance(name).MappingSchema),
+				OracleProviderAdapter.GetInstance(name))
 		{
 			Version = version;
 
@@ -43,8 +43,8 @@ namespace LinqToDB.DataProvider.Oracle
 
 			SetCharField            ("Char",  (r, i) => r.GetString(i).TrimEnd(' '));
 			SetCharField            ("NChar", (r, i) => r.GetString(i).TrimEnd(' '));
-			SetCharFieldToType<char>("Char",  (r, i) => DataTools.GetChar(r, i));
-			SetCharFieldToType<char>("NChar", (r, i) => DataTools.GetChar(r, i));
+			SetCharFieldToType<char>("Char",  DataTools.GetCharExpression);
+			SetCharFieldToType<char>("NChar", DataTools.GetCharExpression);
 
 			if (version == OracleVersion.v11)
 				_sqlOptimizer = new Oracle11SqlOptimizer(SqlProviderFlags);
@@ -81,6 +81,14 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		public OracleVersion Version { get; }
+
+		public override TableOptions SupportedTableOptions =>
+			TableOptions.IsTemporary                |
+			TableOptions.IsGlobalTemporaryStructure |
+			TableOptions.IsLocalTemporaryData       |
+			TableOptions.IsTransactionTemporaryData |
+			TableOptions.CreateIfNotExists          |
+			TableOptions.DropIfExists;
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
@@ -133,7 +141,7 @@ namespace LinqToDB.DataProvider.Oracle
 				if (parameters != null)
 					foreach (var parameter in parameters)
 					{
-						if (parameter.IsArray 
+						if (parameter.IsArray
 							&& parameter.Value is object[] value
 							&& value.Length != 0)
 						{
@@ -242,11 +250,13 @@ namespace LinqToDB.DataProvider.Oracle
 				case DataType.NText    : type = OracleProviderAdapter.OracleDbType.NClob       ; break;
 				case DataType.Image    :
 				case DataType.Binary   :
+				case DataType.Blob     :
 				case DataType.VarBinary: type = OracleProviderAdapter.OracleDbType.Blob        ; break;
 				case DataType.Cursor   : type = OracleProviderAdapter.OracleDbType.RefCursor   ; break;
 				case DataType.NVarChar : type = OracleProviderAdapter.OracleDbType.NVarchar2   ; break;
 				case DataType.Long     : type = OracleProviderAdapter.OracleDbType.Long        ; break;
 				case DataType.LongRaw  : type = OracleProviderAdapter.OracleDbType.LongRaw     ; break;
+				case DataType.Json     : type = OracleProviderAdapter.OracleDbType.Json        ; break;
 			}
 
 			if (type != null)
@@ -318,7 +328,7 @@ namespace LinqToDB.DataProvider.Oracle
 				cancellationToken);
 		}
 
-#if !NET45 && !NET46
+#if NATIVE_ASYNC
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{

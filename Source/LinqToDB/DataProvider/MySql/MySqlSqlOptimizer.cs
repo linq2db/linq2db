@@ -3,6 +3,7 @@
 namespace LinqToDB.DataProvider.MySql
 {
 	using Extensions;
+	using LinqToDB.Mapping;
 	using SqlProvider;
 	using SqlQuery;
 
@@ -12,6 +13,8 @@ namespace LinqToDB.DataProvider.MySql
 		{
 		}
 
+		public override bool CanCompareSearchConditions => true;
+		
 		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
 			return statement.QueryType switch
@@ -34,11 +37,12 @@ namespace LinqToDB.DataProvider.MySql
 			return statement;
 		}
 
-		public override ISqlExpression ConvertExpression(ISqlExpression expr)
+		public override ISqlExpression ConvertExpressionImpl<TContext>(ISqlExpression expression, ConvertVisitor<TContext> visitor,
+			EvaluationContext context)
 		{
-			expr = base.ConvertExpression(expr);
+			expression = base.ConvertExpressionImpl(expression, visitor, context);
 
-			if (expr is SqlBinaryExpression be)
+			if (expression is SqlBinaryExpression be)
 			{
 				switch (be.Operation)
 				{
@@ -77,7 +81,7 @@ namespace LinqToDB.DataProvider.MySql
 						break;
 				}
 			}
-			else if (expr is SqlFunction func)
+			else if (expression is SqlFunction func)
 			{
 				switch (func.Name)
 				{
@@ -98,7 +102,35 @@ namespace LinqToDB.DataProvider.MySql
 				}
 			}
 
-			return expr;
+			return expression;
+		}
+
+		public override ISqlPredicate ConvertSearchStringPredicate<TContext>(MappingSchema mappingSchema, SqlPredicate.SearchString predicate,
+			ConvertVisitor<RunOptimizationContext<TContext>> visitor,
+			OptimizationContext optimizationContext)
+		{
+			var caseSensitive = predicate.CaseSensitive.EvaluateBoolExpression(optimizationContext.Context);
+
+			if (caseSensitive == false)
+			{
+				predicate = new SqlPredicate.SearchString(
+					new SqlFunction(typeof(string), "$ToLower$", predicate.Expr1),
+					predicate.IsNot,
+					new SqlFunction(typeof(string), "$ToLower$", predicate.Expr2),
+					predicate.Kind,
+					new SqlValue(false));
+			}
+			else if (caseSensitive == true)
+			{
+				predicate = new SqlPredicate.SearchString(
+					new SqlExpression(typeof(string), $"{{0}} COLLATE utf8_bin", Precedence.Primary, predicate.Expr1),
+					predicate.IsNot,
+					predicate.Expr2,
+					predicate.Kind,
+					new SqlValue(false));
+			}
+
+			return ConvertSearchStringPredicateViaLike(mappingSchema, predicate, visitor, optimizationContext);
 		}
 	}
 }

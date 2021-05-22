@@ -14,6 +14,7 @@ using NUnit.Framework;
 
 namespace Tests.xUpdate
 {
+	using LinqToDB.Common;
 	using Model;
 
 	public partial class MergeTests
@@ -30,16 +31,16 @@ namespace Tests.xUpdate
 					() => LinqExtensions.Merge<Child>(new FakeTable<Child>(), null!),
 
 					() => LinqExtensions.MergeInto<Child, Child>(null!, new FakeTable<Child>()),
-					() => LinqExtensions.MergeInto<Child, Child>(new Child[0].AsQueryable(), null!),
+					() => LinqExtensions.MergeInto<Child, Child>(Array<Child>.Empty.AsQueryable(), null!),
 
 					() => LinqExtensions.MergeInto<Child, Child>(null!, new FakeTable<Child>(), "hint"),
-					() => LinqExtensions.MergeInto<Child, Child>(new Child[0].AsQueryable(), null!, "hint"),
-					() => LinqExtensions.MergeInto<Child, Child>(new Child[0].AsQueryable(), new FakeTable<Child>(), null!),
+					() => LinqExtensions.MergeInto<Child, Child>(Array<Child>.Empty.AsQueryable(), null!, "hint"),
+					() => LinqExtensions.MergeInto<Child, Child>(Array<Child>.Empty.AsQueryable(), new FakeTable<Child>(), null!),
 
-					() => LinqExtensions.Using<Child, Child>(null!, new Child[0].AsQueryable()),
+					() => LinqExtensions.Using<Child, Child>(null!, Array<Child>.Empty.AsQueryable()),
 					() => LinqExtensions.Using<Child, Child>(new FakeMergeUsing<Child>(), null!),
 
-					() => LinqExtensions.Using<Child, Child>(null!, new Child[0]),
+					() => LinqExtensions.Using<Child, Child>(null!, Array<Child>.Empty),
 					() => LinqExtensions.Using<Child, Child>(new FakeMergeUsing<Child>(), null!),
 
 					() => LinqExtensions.UsingTarget<Child>(null!),
@@ -187,6 +188,7 @@ namespace Tests.xUpdate
 		}
 
 		class FakeTable<TEntity> : ITable<TEntity>
+			where TEntity : notnull
 		{
 			IDataContext   IExpressionQuery.DataContext => throw new NotImplementedException();
 			Expression     IExpressionQuery.Expression  => throw new NotImplementedException();
@@ -221,12 +223,12 @@ namespace Tests.xUpdate
 				throw new NotImplementedException();
 			}
 
-			Task<TResult> IQueryProviderAsync.ExecuteAsync<TResult>(Expression expression, CancellationToken token)
+			Task<TResult> IQueryProviderAsync.ExecuteAsync<TResult>(Expression expression, CancellationToken cancellationToken)
 			{
 				throw new NotImplementedException();
 			}
 
-			IAsyncEnumerable<TResult> IQueryProviderAsync.ExecuteAsync<TResult>(Expression expression)
+			Task<IAsyncEnumerable<TResult>> IQueryProviderAsync.ExecuteAsyncEnumerable<TResult>(Expression expression, CancellationToken cancellationToken)
 			{
 				throw new NotImplementedException();
 			}
@@ -241,10 +243,11 @@ namespace Tests.xUpdate
 				throw new NotImplementedException();
 			}
 
-			public string? ServerName   { get; }
-			public string? DatabaseName { get; }
-			public string? SchemaName   { get; }
-			public string TableName     { get; } = null!;
+			public string?      ServerName   { get; }
+			public string?      DatabaseName { get; }
+			public string?      SchemaName   { get; }
+			public string       TableName    { get; } = null!;
+			public TableOptions TableOptions { get; }
 
 			public string GetTableName()
 			{

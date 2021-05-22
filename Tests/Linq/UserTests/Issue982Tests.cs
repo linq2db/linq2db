@@ -18,9 +18,9 @@ namespace Tests.UserTests
 			{
 			}
 
-			public override SqlStatement Finalize(SqlStatement statement, bool inlineParameters)
+			public override SqlStatement Finalize(SqlStatement statement)
 			{
-				statement = base.Finalize(statement, inlineParameters);
+				statement = base.Finalize(statement);
 
 				AddConditions(statement);
 
@@ -92,7 +92,7 @@ namespace Tests.UserTests
 			{
 				statement.WalkQueries(query =>
 				{
-					new QueryVisitor().Visit(query, e =>
+					query.Visit(this, static (optimizer, e) =>
 					{
 						if (e.ElementType != QueryElementType.SqlQuery)
 							return;
@@ -102,10 +102,10 @@ namespace Tests.UserTests
 						foreach (var source in q.From.Tables)
 						{
 							if (source.Joins.Any())
-								AddConditions(q.Select.Where, source);
+								optimizer.AddConditions(q.Select.Where, source);
 
 							foreach (var join in source.Joins)
-								AddConditions(q.Select.Where, join.Table);
+								optimizer.AddConditions(q.Select.Where, join.Table);
 						}
 					});
 

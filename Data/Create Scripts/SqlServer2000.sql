@@ -682,15 +682,6 @@ GO
 
 GRANT EXEC ON AddIssue792Record TO PUBLIC
 GO
-DROP TABLE Issue1144
-GO
-CREATE TABLE Issue1144
-(
-	id	INT
-	CONSTRAINT PK_Issue1144 PRIMARY KEY CLUSTERED (id ASC)
-)
-GO
-
 DROP Procedure Issue1897
 GO
 
@@ -699,4 +690,30 @@ AS
 BEGIN
 	RETURN 4
 END
+GO
+DROP Procedure OutRefTest
+GO
+
+CREATE Procedure OutRefTest
+	@ID             int,
+	@outputID       int output,
+	@inputOutputID  int output,
+	@str            varchar(50),
+	@outputStr      varchar(50) output,
+	@inputOutputStr varchar(50) output
+AS
+
+SET @outputID       = @ID
+SET @inputOutputID  = @ID + @inputOutputID
+SET @outputStr      = @str
+SET @inputOutputStr = @str + @inputOutputStr
+GO
+DROP TABLE CollatedTable
+GO
+CREATE TABLE CollatedTable
+(
+	Id				INT NOT NULL,
+	CaseSensitive	NVARCHAR(20) COLLATE Latin1_General_100_CS_AI NOT NULL,
+	CaseInsensitive	NVARCHAR(20) COLLATE Latin1_General_100_CI_AI NOT NULL
+)
 GO

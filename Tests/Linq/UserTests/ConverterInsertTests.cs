@@ -52,13 +52,14 @@ namespace Tests.UserTests
 		[Test]
 		public void Test([DataSources] string context)
 		{
+			ResetPersonIdentity(context);
+
 			MappingSchema.Default.SetConverter<Dictionary<string,string>?, string?>       (obj => obj == null ? null : obj.Keys.FirstOrDefault());
 			MappingSchema.Default.SetConverter<Dictionary<string,string>?, DataParameter?>(obj => obj == null ? null : new DataParameter { Value = obj.Keys.FirstOrDefault(), DataType = DataType.NVarChar});
 			MappingSchema.Default.SetConverter<string?, Dictionary<string,string>?>       (txt => txt == null ? null : new Dictionary<string,string> { { txt, txt } });
 
 			using (var db = GetDataContext(context))
 			{
-
 				var id = Convert.ToInt32(db.InsertWithIdentity(new Person
 				{
 					FirstName  = new Dictionary<string,string>{ { "123", "123" } },
@@ -118,6 +119,8 @@ namespace Tests.UserTests
 
 		public void TestEnumString(string context, Action<MappingSchema> initMappingSchema)
 		{
+			ResetPersonIdentity(context);
+
 			var ms = new MappingSchema();
 			ms.SetConverter<Dictionary<string, string>?, string?>       (obj => obj == null ? null : obj.Keys.FirstOrDefault());
 			ms.SetConverter<Dictionary<string, string>?, DataParameter?>(obj => obj == null ? null : new DataParameter { Value = obj.Keys.FirstOrDefault(), DataType = DataType.NVarChar });

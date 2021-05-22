@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using LinqToDB;
 using NUnit.Framework;
 
@@ -32,9 +31,9 @@ namespace Tests.UserTests
 					query = query?.Union(innerQuery) ?? innerQuery;
 				}
 
-				Assert.DoesNotThrow(() => Console.WriteLine(query?.ToString()));
+				Assert.DoesNotThrow(() => TestContext.WriteLine(query?.ToString()));
 
-				query.ToList();
+				query!.ToList();
 			}
 		}
 

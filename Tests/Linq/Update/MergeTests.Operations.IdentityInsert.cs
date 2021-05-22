@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -15,6 +14,8 @@ namespace Tests.xUpdate
 		[Test]
 		public void ImplicitIdentityInsert([IdentityInsertMergeDataContextSource(false)] string context)
 		{
+			ResetPersonIdentity(context);
+
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
 			{
@@ -62,6 +63,8 @@ namespace Tests.xUpdate
 			ProviderName.Sybase, ProviderName.SybaseManaged)]
 			string context)
 		{
+			ResetPersonIdentity(context);
+
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
 			{
@@ -112,6 +115,8 @@ namespace Tests.xUpdate
 			ProviderName.Sybase, ProviderName.SybaseManaged)]
 			string context)
 		{
+			ResetPersonIdentity(context);
+
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
 			{

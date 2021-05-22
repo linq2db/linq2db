@@ -1,14 +1,11 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 
 using LinqToDB;
-
+using LinqToDB.Mapping;
 using NUnit.Framework;
 
 namespace Tests.xUpdate
 {
-	using Model;
-
 	public partial class MergeTests
 	{
 		[Test]
@@ -112,7 +109,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void UpdateWithConditionDeleteWithConditionUpdate([MergeDataContextSource(
-			TestProvName.SqlAzure, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.SqlServer2017,
+			TestProvName.AllSqlServer2008Plus,
 			TestProvName.AllOracle, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird, ProviderName.Sybase)]
 			string context)
@@ -239,7 +236,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void InsertWithConditionInsertUpdateWithConditionDeleteWithConditionDelete([MergeDataContextSource(
-			TestProvName.SqlAzure, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.SqlServer2017,
+			TestProvName.AllSqlServer2008Plus,
 			TestProvName.AllOracle,
 			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
@@ -312,8 +309,8 @@ namespace Tests.xUpdate
 		[Test]
 		public void UpdateWithConditionUpdate([MergeDataContextSource(
 			TestProvName.AllOracle,
-			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.SqlServer2017,
-			TestProvName.SqlAzure, TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllSqlServer2008Plus,
+			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -720,6 +717,49 @@ namespace Tests.xUpdate
 				AssertRow(InitialSourceData[0], result[2], null, 203);
 				AssertRow(InitialSourceData[2], result[3], null, null);
 				AssertRow(InitialSourceData[3], result[4], null, 216);
+			}
+		}
+
+		[Table]
+		class PKOnlyTable
+		{
+			[PrimaryKey] public int ID { get; set; }
+		}
+
+
+		[Test]
+		public void InsertUpdatePKOnly([MergeDataContextSource] string context)
+		{
+			var src = new []
+				{
+					new PKOnlyTable() { ID = 1 },
+					new PKOnlyTable() { ID = 2 },
+					new PKOnlyTable() { ID = 3 }
+				};
+
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(src.Skip(1).Take(1)))
+			{
+				var rows = table
+					.Merge()
+					.Using(src)
+					.OnTargetKey()
+					.InsertWhenNotMatched()
+					.UpdateWhenMatched()
+					.Merge();
+
+				var result = table.OrderBy(_ => _.ID).ToList();
+
+				if (context.Contains("Sybase"))
+					Assert.AreEqual(3, rows);
+				else
+					Assert.AreEqual(2, rows);
+
+				Assert.AreEqual(3, result.Count);
+
+				Assert.AreEqual(1, result[0].ID);
+				Assert.AreEqual(2, result[1].ID);
+				Assert.AreEqual(3, result[2].ID);
 			}
 		}
 	}

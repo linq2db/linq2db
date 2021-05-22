@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 
 using LinqToDB;
 
@@ -224,12 +223,12 @@ namespace Tests.Linq
 					from p in Parent
 					let ch = p.Children
 					where ch.FirstOrDefault() != null
-					select ch.FirstOrDefault().ParentID
+					select ch.FirstOrDefault()!.ParentID
 					,
 					from p in db.Parent
 					let ch = p.Children
 					where ch.FirstOrDefault() != null
-					select ch.FirstOrDefault().ParentID);
+					select ch.FirstOrDefault()!.ParentID);
 			}
 		}
 
@@ -259,18 +258,17 @@ namespace Tests.Linq
 				AreEqual(
 					from p in Parent
 					let ch = Child
-					select ch.FirstOrDefault().ParentID
+					select ch.FirstOrDefault()!.ParentID
 					,
 					from p in db.Parent
 					let ch = db.Child
-					select ch.FirstOrDefault().ParentID);
+					select ch.FirstOrDefault()!.ParentID);
 			}
 		}
 
 		[Test]
 		public void LetTest4([DataSources(TestProvName.AllInformix, TestProvName.AllSapHana)] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				AreEqual(
@@ -301,7 +299,6 @@ namespace Tests.Linq
 		[Test]
 		public void LetTest41([DataSources(TestProvName.AllInformix, TestProvName.AllSapHana)] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				AreEqual(
@@ -332,7 +329,6 @@ namespace Tests.Linq
 		[Test]
 		public void LetTest5([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				AreEqual(
@@ -343,7 +339,7 @@ namespace Tests.Linq
 					{
 						Any    = ch2.Any(),
 						Count  = ch2.Count(),
-						First1 = ch2.FirstOrDefault(c => c.ParentID > 0) == null ? 0 : ch2.FirstOrDefault(c => c.ParentID > 0).ParentID,
+						First1 = ch2.FirstOrDefault(c => c.ParentID > 0) == null ? 0 : ch2.FirstOrDefault(c => c.ParentID > 0)!.ParentID,
 						First2 = ch2.FirstOrDefault()
 					}
 					,
@@ -354,7 +350,7 @@ namespace Tests.Linq
 					{
 						Any    = ch2.Any(),
 						Count  = ch2.Count(),
-						First1 = ch2.FirstOrDefault(c => c.ParentID > 0).ParentID,
+						First1 = ch2.FirstOrDefault(c => c.ParentID > 0)!.ParentID,
 						First2 = ch2.FirstOrDefault()
 					});
 			}
@@ -365,7 +361,6 @@ namespace Tests.Linq
 		{
 			//LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true;
 
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var expected = (from p in Parent
@@ -376,7 +371,7 @@ namespace Tests.Linq
 						p.ParentID,
 						Any    = ch2.Any(),
 						Count  = ch2.Count(),
-						First1 = ch2.FirstOrDefault(c => c.ParentID > 0) == null ? 0 : ch2.FirstOrDefault(c => c.ParentID > 0).ParentID,
+						First1 = ch2.FirstOrDefault(c => c.ParentID > 0) == null ? 0 : ch2.FirstOrDefault(c => c.ParentID > 0)!.ParentID,
 						First2 = ch2.FirstOrDefault()
 					})
 					.Where(t => t.ParentID > 0)
@@ -391,7 +386,7 @@ namespace Tests.Linq
 						p.ParentID,
 						Any    = ch2.Any(),
 						Count  = ch2.Count(),
-						First1 = ch2.FirstOrDefault(c => c.ParentID > 0).ParentID,
+						First1 = ch2.FirstOrDefault(c => c.ParentID > 0)!.ParentID,
 						First2 = ch2.FirstOrDefault()
 					}
 				)
@@ -409,7 +404,6 @@ namespace Tests.Linq
 		{
 			//LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true;
 
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var expected = (from p in Parent
@@ -420,7 +414,7 @@ namespace Tests.Linq
 						p.ParentID,
 						Any    = ch2.Any(),
 						Count  = ch2.Count(),
-						First1 = ch2.FirstOrDefault(c => c.ParentID > 0) == null ? 0 : ch2.FirstOrDefault(c => c.ParentID > 0).ParentID,
+						First1 = ch2.FirstOrDefault(c => c.ParentID > 0) == null ? 0 : ch2.FirstOrDefault(c => c.ParentID > 0)!.ParentID,
 						First2 = ch2.FirstOrDefault()
 					})
 					.Where(t => t.ParentID > 0)
@@ -435,7 +429,7 @@ namespace Tests.Linq
 						p.ParentID,
 						Any    = ch2.Any(),
 						Count  = ch2.Count(),
-						First1 = ch2.FirstOrDefault(c => c.ParentID > 0).ParentID,
+						First1 = ch2.FirstOrDefault(c => c.ParentID > 0)!.ParentID,
 						First2 = ch2.FirstOrDefault()
 					}
 				)
@@ -452,7 +446,6 @@ namespace Tests.Linq
 		[Test]
 		public void LetTest7([DataSources(TestProvName.AllInformix, ProviderName.PostgreSQL92, TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllAccess)] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					(
@@ -464,7 +457,7 @@ namespace Tests.Linq
 							p.ParentID,
 							Any    = ch2.Any(),
 							Count  = ch2.Count(),
-							First1 = ch2.FirstOrDefault(c => c.ParentID > 0) == null ? 0 : ch2.FirstOrDefault(c => c.ParentID > 0).ParentID,
+							First1 = ch2.FirstOrDefault(c => c.ParentID > 0) == null ? 0 : ch2.FirstOrDefault(c => c.ParentID > 0)!.ParentID,
 							First2 = ch2.FirstOrDefault()
 						}
 					).Where(t => t.ParentID > 0).Take(5000)
@@ -478,7 +471,7 @@ namespace Tests.Linq
 							p.ParentID,
 							Any    = ch2.Any(),
 							Count  = ch2.Count(),
-							First1 = ch2.FirstOrDefault(c => c.ParentID > 0).ParentID,
+							First1 = ch2.FirstOrDefault(c => c.ParentID > 0)!.ParentID,
 							First2 = ch2.FirstOrDefault()
 						}
 					).Where(t => t.ParentID > 0).Take(5000));
@@ -487,7 +480,6 @@ namespace Tests.Linq
 		[Test]
 		public void LetTest71([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana, ProviderName.Access)] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					(
@@ -499,7 +491,7 @@ namespace Tests.Linq
 							p.ParentID,
 							Any    = ch2.Any(),
 							Count  = ch2.Count(),
-							First1 = ch2.FirstOrDefault(c => c.ParentID > 0) == null ? 0 : ch2.FirstOrDefault(c => c.ParentID > 0).ParentID,
+							First1 = ch2.FirstOrDefault(c => c.ParentID > 0) == null ? 0 : ch2.FirstOrDefault(c => c.ParentID > 0)!.ParentID,
 							First2 = ch2.FirstOrDefault()
 						}
 					).Where(t => t.ParentID > 0).Take(5000)
@@ -513,7 +505,7 @@ namespace Tests.Linq
 							p.ParentID,
 							Any    = ch2.Any(),
 							Count  = ch2.Count(),
-							First1 = ch2.FirstOrDefault(c => c.ParentID > 0).ParentID,
+							First1 = ch2.FirstOrDefault(c => c.ParentID > 0)!.ParentID,
 							First2 = ch2.FirstOrDefault()
 						}
 					).Where(t => t.ParentID > 0).Take(5000));
@@ -522,7 +514,6 @@ namespace Tests.Linq
 		[Test]
 		public void LetTest8([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in Parent
@@ -553,7 +544,6 @@ namespace Tests.Linq
 		[Test]
 		public void LetTest9([DataSources(TestProvName.AllSybase)] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					(
@@ -578,7 +568,6 @@ namespace Tests.Linq
 		[Test]
 		public void LetTest10([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
 					(
@@ -603,7 +592,6 @@ namespace Tests.Linq
 		[Test]
 		public void LetTest11([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in Parent

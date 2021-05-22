@@ -1,7 +1,11 @@
-﻿namespace LinqToDB.DataProvider.SapHana
+﻿
+
+namespace LinqToDB.DataProvider.SapHana
 {
+	using Common;
 	using Mapping;
 	using SqlQuery;
+	using System;
 	using System.Data.Linq;
 	using System.Text;
 
@@ -21,6 +25,7 @@
 			SetValueToSqlConverter(typeof(Binary), (sb, dt, v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
 		}
 
+		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
 			// char works with values in 0..255 range
@@ -28,7 +33,7 @@
 			stringBuilder
 				.Append("char(")
 				.Append(value)
-				.Append(")")
+				.Append(')')
 				;
 		}
 
@@ -36,25 +41,24 @@
 		{
 			stringBuilder.Append("x'");
 
-			foreach (var b in value)
-				stringBuilder.Append(b.ToString("X2"));
+			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
 
-			stringBuilder.Append("'");
+			stringBuilder.Append('\'');
 		}
 
-		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
+		internal static void ConvertStringToSql(StringBuilder stringBuilder, string value)
 		{
-			DataTools.ConvertStringToSql(stringBuilder, "||", null, AppendConversion, value, null);
+			DataTools.ConvertStringToSql(stringBuilder, "||", null, AppendConversionAction, value, null);
 		}
 
 		static void ConvertCharToSql(StringBuilder stringBuilder, char value)
 		{
-			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversion, value);
+			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversionAction, value);
 		}
 
-		internal static readonly SapHanaMappingSchema Instance = new SapHanaMappingSchema();
+		internal static readonly SapHanaMappingSchema Instance = new ();
 
-#if !NETSTANDARD2_0 && !NETSTANDARD2_1
+#if NETFRAMEWORK || NETCOREAPP
 		public class NativeMappingSchema : MappingSchema
 		{
 			public NativeMappingSchema()

@@ -1,18 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
-
+using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.Informix;
 using LinqToDB.Mapping;
-
 using NUnit.Framework;
 
 namespace Tests.xUpdate
 {
-	using LinqToDB.DataProvider.Informix;
 	using Model;
-	using System.Collections.Generic;
-	using System.Threading.Tasks;
 
 	[TestFixture]
 	[Order(10000)]
@@ -54,12 +52,10 @@ namespace Tests.xUpdate
 			[DataSources(false)]string context,
 			[Values(null, true, false)]bool? keepIdentity,
 			[Values] BulkCopyType copyType,
-#if NET46
-			[Values(0, 1)] int asyncMode) // 0 == sync, 1 == async
-#else
 			[Values(0, 1, 2)] int asyncMode) // 0 == sync, 1 == async, 2 == async with IAsyncEnumerable
-#endif
 		{
+			ResetAllTypesIdentity(context);
+
 			if ((context == ProviderName.OracleNative || context == TestProvName.Oracle11Native) && copyType == BulkCopyType.ProviderSpecific)
 				Assert.Inconclusive("Oracle BulkCopy doesn't support identity triggers");
 
@@ -120,11 +116,9 @@ namespace Tests.xUpdate
 						}
 						else // asynchronous with IAsyncEnumerable
 						{
-#if !NET46
 							await db.BulkCopyAsync(
 								options,
 								AsAsyncEnumerable(values));
-#endif
 						}
 					}
 				}
@@ -142,12 +136,10 @@ namespace Tests.xUpdate
 			[DataSources(false)]        string       context,
 			[Values(null, true, false)] bool?        keepIdentity,
 			[Values]                    BulkCopyType copyType,
-#if NET46
-			[Values(0, 1)]              int          asyncMode) // 0 == sync, 1 == async
-#else
 			[Values(0, 1, 2)]           int          asyncMode) // 0 == sync, 1 == async, 2 == async with IAsyncEnumerable
-#endif
 		{
+			ResetAllTypesIdentity(context);
+
 			// don't use transactions as some providers will fallback to non-provider-specific implementation then
 			using (var db = new TestDataConnection(context))
 			{
@@ -205,11 +197,9 @@ namespace Tests.xUpdate
 						}
 						else // asynchronous with IAsyncEnumerable
 						{
-#if !NET46
 							await db.BulkCopyAsync(
 								options,
 								AsAsyncEnumerable(values));
-#endif
 						}
 					}
 				}
@@ -221,7 +211,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if !NET46
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 		private async IAsyncEnumerable<T> AsAsyncEnumerable<T>(IEnumerable<T> enumerable)
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
@@ -232,17 +221,16 @@ namespace Tests.xUpdate
 				yield return enumerator.Current;
 			}
 		}
-#endif
 
 		private async Task<bool> ExecuteAsync(DataConnection db, string context, Func<Task> perform, bool? keepIdentity, BulkCopyType copyType)
 		{
-			if ((context == ProviderName.Firebird || context == TestProvName.Firebird3)
+			if (context.Contains("Firebird")
 				&& keepIdentity == true
 				&& (copyType    == BulkCopyType.Default
 					|| copyType == BulkCopyType.MultipleRows
 					|| copyType == BulkCopyType.ProviderSpecific))
 			{
-				var ex = Assert.CatchAsync(async () => await perform());
+				var ex = Assert.CatchAsync(async () => await perform())!;
 				Assert.IsInstanceOf<LinqToDBException>(ex);
 				Assert.AreEqual("BulkCopyOptions.KeepIdentity = true is not supported by Firebird provider. If you use generators with triggers, you should disable triggers during BulkCopy execution manually.", ex.Message);
 				return false;
@@ -265,7 +253,7 @@ namespace Tests.xUpdate
 					|| (context == ProviderName.SapHanaOdbc && copyType == BulkCopyType.ProviderSpecific))
 				&& keepIdentity == true)
 			{
-				var ex = Assert.CatchAsync(async () => await perform());
+				var ex = Assert.CatchAsync(async () => await perform())!;
 				Assert.IsInstanceOf<LinqToDBException>(ex);
 				Assert.AreEqual("BulkCopyOptions.KeepIdentity = true is not supported by BulkCopyType.RowByRow mode", ex.Message);
 				return false;
@@ -280,13 +268,12 @@ namespace Tests.xUpdate
 		public void ReuseOptionTest([DataSources(false, ProviderName.DB2)] string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
-				db.BeginTransaction();
-
 				var options = new BulkCopyOptions();
 
-				db.Parent.BulkCopy(options, new [] { new Parent { ParentID = 111001 } });
-				db.Child. BulkCopy(options, new [] { new Child  { ParentID = 111001 } });
+				db.Parent.BulkCopy(options, new[] { new Parent { ParentID = 111001 } });
+				db.Child. BulkCopy(options, new[] { new Child  { ParentID = 111001 } });
 			}
 		}
 	}

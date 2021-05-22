@@ -2,7 +2,7 @@
 {
 	using SqlQuery;
 	using SqlProvider;
-	using LinqToDB.Mapping;
+	using Mapping;
 
 	class SqlServer2000SqlBuilder : SqlServerSqlBuilder
 	{
@@ -81,18 +81,13 @@
 			base.BuildDataTypeFromDataType(type, forCreateTable);
 		}
 
-		protected override void BuildFunction(SqlFunction func)
-		{
-			func = ConvertFunctionParameters(func);
-			base.BuildFunction(func);
-		}
-
 		public override string  Name => ProviderName.SqlServer2000;
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
 			var table = dropTable.Table!;
 
+			BuildTag(dropTable);
 			AppendIndent().Append("DROP TABLE ");
 			BuildPhysicalTable(table, null);
 			StringBuilder.AppendLine();

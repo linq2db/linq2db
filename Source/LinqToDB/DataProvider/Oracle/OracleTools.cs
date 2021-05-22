@@ -19,7 +19,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 	public static partial class OracleTools
 	{
-#if NET45 || NET46
+#if NETFRAMEWORK
 		private static readonly Lazy<IDataProvider> _oracleNativeDataProvider11 = new Lazy<IDataProvider>(() =>
 		{
 			var provider = new OracleDataProvider(ProviderName.OracleNative, OracleVersion.v11);
@@ -64,7 +64,7 @@ namespace LinqToDB.DataProvider.Oracle
 			bool? managed = null;
 			switch (css.ProviderName)
 			{
-#if NET45 || NET46
+#if NETFRAMEWORK
 				case OracleProviderAdapter.NativeAssemblyName    :
 				case OracleProviderAdapter.NativeClientNamespace :
 				case ProviderName.OracleNative                   :
@@ -84,7 +84,7 @@ namespace LinqToDB.DataProvider.Oracle
 						goto case ProviderName.Oracle;
 					break;
 				case ProviderName.Oracle                         :
-#if NET45 || NET46
+#if NETFRAMEWORK
 					if (css.Name.Contains("Native") || managed == false)
 					{
 						if (css.Name.Contains("11"))
@@ -118,7 +118,7 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				var cs = string.IsNullOrWhiteSpace(connectionString) ? css.ConnectionString : connectionString;
 
-#if NET45 || NET46
+#if NETFRAMEWORK
 				if (!managed)
 					providerAdapter = OracleProviderAdapter.GetInstance(ProviderName.OracleNative);
 				else
@@ -165,7 +165,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		private static IDataProvider GetVersionedDataProvider(OracleVersion version, bool managed)
 		{
-#if NET45 || NET46
+#if NETFRAMEWORK
 			if (!managed)
 			{
 				return version switch
@@ -187,7 +187,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		private static string DetectProviderName()
 		{
-#if NET45 || NET46
+#if NETFRAMEWORK
 			try
 			{
 				var path = typeof(OracleTools).Assembly.GetPath();
@@ -205,29 +205,31 @@ namespace LinqToDB.DataProvider.Oracle
 #endif
 		}
 
-		public static IDataProvider GetDataProvider(string? providerName = null, string? assemblyName = null)
+		public static IDataProvider GetDataProvider(string? providerName = null, string? assemblyName = null, OracleVersion? version = null)
 		{
-#if NET45 || NET46
-			if (assemblyName == OracleProviderAdapter.NativeAssemblyName ) return GetVersionedDataProvider(DefaultVersion, false);
-			if (assemblyName == OracleProviderAdapter.ManagedAssemblyName) return GetVersionedDataProvider(DefaultVersion, true);
+			version ??= DefaultVersion;
+
+#if NETFRAMEWORK
+			if (assemblyName == OracleProviderAdapter.NativeAssemblyName ) return GetVersionedDataProvider(version.Value, false);
+			if (assemblyName == OracleProviderAdapter.ManagedAssemblyName) return GetVersionedDataProvider(version.Value, true);
 
 			return providerName switch
 			{
-				ProviderName.OracleNative  => GetVersionedDataProvider(DefaultVersion, false),
-				ProviderName.OracleManaged => GetVersionedDataProvider(DefaultVersion, true),
+				ProviderName.OracleNative  => GetVersionedDataProvider(version.Value, false),
+				ProviderName.OracleManaged => GetVersionedDataProvider(version.Value, true),
 				_						   => 
 					DetectedProviderName == ProviderName.OracleNative
-					? GetVersionedDataProvider(DefaultVersion, false)
-					: GetVersionedDataProvider(DefaultVersion, true),
+					? GetVersionedDataProvider(version.Value, false)
+					: GetVersionedDataProvider(version.Value, true),
 			};
 #else
-			return GetVersionedDataProvider(DefaultVersion, true);
+			return GetVersionedDataProvider(version.Value, true);
 #endif
 		}
 
 		public static void ResolveOracle(string path)       => new AssemblyResolver(
 			path,
-#if NET45 || NET46
+#if NETFRAMEWORK
 			DetectedProviderName == ProviderName.OracleManaged
 				? OracleProviderAdapter.ManagedAssemblyName
 				: OracleProviderAdapter.NativeAssemblyName
@@ -303,14 +305,14 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public static AlternativeBulkCopy UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
 
+		[Obsolete("This field is not used by linq2db. Configure reader expressions on DataProvider directly")]
 		public static Func<IDataReader,int,decimal> DataReaderGetDecimal = (dr, i) => dr.GetDecimal(i);
 
 		/// <summary>
 		/// Gets or sets flag to tell LinqToDB to quote identifiers, if they contain lowercase letters.
-		/// Default value: <c>true</c>.
-		/// This flag added for backward compatibility and will be removed later, so it is recommended to
-		/// set it to <c>false</c> and and fix mappings to use uppercase letters for non-quoted identifiers.
+		/// Default value: <c>false</c>.
+		/// This flag is added for backward compatibility and not recommended for use with new applications.
 		/// </summary>
-		public static bool DontEscapeLowercaseIdentifiers { get; set; } = true;
+		public static bool DontEscapeLowercaseIdentifiers { get; set; }
 	}
 }

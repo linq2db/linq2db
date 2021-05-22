@@ -1,36 +1,64 @@
 ﻿using System;
 using System.Reflection;
+using LinqToDB.Common;
 
 namespace LinqToDB.Metadata
 {
+	// TODO: v4: replace arrays with IEnumerable and use generic GetCustomAttributes API
+	// cache commented out as we modify attributes, e.g. in ColumnDescriptor and first we should refactor code like that
 	public class AttributeReader : IMetadataReader
 	{
+		//private static readonly MemoryCache<(Type type, Type attribute, bool inherit)>             _typeAttributesCache   = new (new ());
+		//private static readonly MemoryCache<(MemberInfo memberInfo, Type attribute, bool inherit)> _memberAttributesCache = new (new ());
+
+		//public static void ClearCaches()
+		//{
+		//	_typeAttributesCache.Clear();
+		//	_memberAttributesCache.Clear();
+		//}
+
 		public T[] GetAttributes<T>(Type type, bool inherit = true)
 			where T : Attribute
 		{
-			var attrs = type.GetCustomAttributes(typeof(T), inherit);
-			var arr   = new T[attrs.Length];
+			//return _typeAttributesCache.GetOrCreate(
+				//(type, attribute: typeof(T), inherit),
+				//static e =>
+				//{
+					var attrs = /*e.Key.*/type.GetCustomAttributes(/*e.Key.attribute*/typeof(T), /*e.Key.*/inherit);
+					if (attrs.Length == 0)
+						return Array<T>.Empty;
 
-			for (var i = 0; i < attrs.Length; i++)
-				arr[i] = (T)attrs[i];
+					var arr   = new T[attrs.Length];
 
-			return arr;
+					for (var i = 0; i < attrs.Length; i++)
+						arr[i] = (T)attrs[i];
+
+					return arr;
+				//});
 		}
 
 		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool inherit = true)
 			where T : Attribute
 		{
-			var attrs = memberInfo.GetCustomAttributes(typeof(T), inherit);
-			var arr   = new T[attrs.Length];
+			//return _memberAttributesCache.GetOrCreate(
+			//	(memberInfo, attribute: typeof(T), inherit),
+			//	static e =>
+			//	{
+					var attrs = /*e.Key.*/memberInfo.GetCustomAttributes(/*e.Key.attribute*/typeof(T), /*e.Key.*/inherit);
+					if (attrs.Length == 0)
+						return Array<T>.Empty;
 
-			for (var i = 0; i < attrs.Length; i++)
-				arr[i] = (T)attrs[i];
+					var arr   = new T[attrs.Length];
 
-			return arr;
+					for (var i = 0; i < attrs.Length; i++)
+						arr[i] = (T)attrs[i];
+
+					return arr;
+				//});
 		}
 
 		/// <inheritdoc cref="IMetadataReader.GetDynamicColumns"/>
 		public MemberInfo[] GetDynamicColumns(Type type)
-			=> new MemberInfo[0];
+			=> Array<MemberInfo>.Empty;
 	}
 }

@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Globalization;
 using System.Reflection;
+using LinqToDB.Common;
 
 namespace LinqToDB.Mapping
 {
 	/// <summary>
 	/// Represents a dynamic column, which doesn't have a backing field in it's declaring type.
 	/// </summary>
-	/// <seealso cref="System.Reflection.MemberInfo" />
+	/// <seealso cref="MemberInfo" />
 	public class DynamicColumnInfo : PropertyInfo, IEquatable<DynamicColumnInfo>
 	{
 		private static readonly MethodInfo _dummyGetter = typeof(DynamicColumnInfo).GetMethod(nameof(DummyGetter), BindingFlags.Instance | BindingFlags.NonPublic)!;
@@ -99,11 +100,11 @@ namespace LinqToDB.Mapping
 
 		/// <inheritdoc cref="MemberInfo.GetCustomAttributes(bool)"/>
 		public override object[] GetCustomAttributes(bool inherit)
-			=> new object[0];
+			=> Array<object>.Empty;
 
 		/// <inheritdoc cref="MemberInfo.GetCustomAttributes(Type, bool)"/>
 		public override object[] GetCustomAttributes(Type attributeType, bool inherit)
-			=> new object[0];
+			=> Array<object>.Empty;
 
 		/// <inheritdoc cref="MemberInfo.IsDefined"/>
 		public override bool IsDefined(Type attributeType, bool inherit)
@@ -129,7 +130,7 @@ namespace LinqToDB.Mapping
 
 		/// <inheritdoc cref="PropertyInfo.GetIndexParameters"/>
 		public override ParameterInfo[] GetIndexParameters()
-			=> new ParameterInfo[0];
+			=> Array<ParameterInfo>.Empty;
 
 		/// <inheritdoc cref="PropertyInfo.GetValue(object, BindingFlags, Binder, object[], CultureInfo)"/>
 		public override object GetValue(object? obj, BindingFlags invokeAttr, Binder? binder, object?[]? index, CultureInfo? culture)

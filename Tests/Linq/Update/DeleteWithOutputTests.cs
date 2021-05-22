@@ -1,14 +1,11 @@
-﻿using System;
-using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Linq;
 using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Mapping;
-using NUnit.Framework;
-using Tests.Model;
 using LinqToDB.Tools.Comparers;
+using NUnit.Framework;
 
-namespace Tests.Playground
+namespace Tests.xUpdate
 {
 	[TestFixture]
 	public class DeleteWithOutputTests : TestBase
@@ -45,6 +42,51 @@ namespace Tests.Playground
 		}
 
 		[Test]
+		public void DeleteWithOutputTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			{
+				var expected = source
+					.Where(s => s.Id > 3)
+					.ToArray();
+
+				var output = source
+					.Where(s => s.Id > 3)
+					.DeleteWithOutput()
+					.ToArray();
+
+				AreEqual(
+					expected,
+					output,
+					ComparerBuilder.GetEqualityComparer<TableWithData>());
+			}
+		}
+
+		[Test]
+		public async Task DeleteWithOutputAsyncTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			{
+				var expected = source
+					.Where(s => s.Id > 3)
+					.ToArray();
+
+				var output = await source
+					.Where(s => s.Id > 3)
+					.DeleteWithOutputAsync();
+
+				AreEqual(
+					expected,
+					output,
+					ComparerBuilder.GetEqualityComparer<TableWithData>());
+			}
+		}
+
+		[Test]
 		public void DeleteWithOutputProjectionFromQueryTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
 		{
 			var sourceData    = GetSourceData();
@@ -60,16 +102,49 @@ namespace Tests.Playground
 					.DeleteWithOutput(
 						deleted => new
 						{
-							Id       = Sql.AsSql(deleted.Id + 1),
+							Id       = Sql.AsSql(deleted.Id       + 1),
 							ValueStr = Sql.AsSql(deleted.ValueStr + 1),
 						})
 					.ToArray();
 
-				AreEqual(expected.Select(t => new
-					{
-						Id       = t.Id + 1,
-						ValueStr = t.ValueStr + 1,
-					}),
+				AreEqual(
+					expected
+						.Select(t => new
+						{
+							Id       = t.Id       + 1,
+							ValueStr = t.ValueStr + 1,
+						}),
+					output);
+			}
+		}
+
+		[Test]
+		public async Task DeleteWithOutputProjectionFromQueryAsyncTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			{
+				var expected = source
+					.Where(s => s.Id > 3)
+					.ToArray();
+
+				var output = await source
+					.Where(s => s.Id > 3)
+					.DeleteWithOutputAsync(
+						deleted => new
+						{
+							Id       = Sql.AsSql(deleted.Id       + 1),
+							ValueStr = Sql.AsSql(deleted.ValueStr + 1),
+						});
+
+				AreEqual(
+					expected
+						.Select(t => new
+						{
+							Id       = t.Id       + 1,
+							ValueStr = t.ValueStr + 1,
+						}),
 					output);
 			}
 		}
@@ -90,24 +165,27 @@ namespace Tests.Playground
 					.DeleteWithOutput(
 						s => new DestinationTable
 						{
-							Id       = s.Id + param,
-							Value    = s.Value + param,
+							Id       = s.Id       + param,
+							Value    = s.Value    + param,
 							ValueStr = s.ValueStr + param
 						})
 					.ToArray();
 
-				AreEqual(expected.Select(s => new DestinationTable
-					{
-						Id       = s.Id + param,
-						Value    = s.Value + param,
-						ValueStr = s.ValueStr + param,
-					}),
-					output, ComparerBuilder.GetEqualityComparer<DestinationTable>());
+				AreEqual(
+					expected
+						.Select(s => new DestinationTable
+						{
+							Id       = s.Id       + param,
+							Value    = s.Value    + param,
+							ValueStr = s.ValueStr + param,
+						}),
+					output,
+					ComparerBuilder.GetEqualityComparer<DestinationTable>());
 			}
 		}
 
 		[Test]
-		public async Task DeleteWithOutputFromQueryTestAsync([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
+		public async Task DeleteWithOutputFromQueryAsyncTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -127,13 +205,16 @@ namespace Tests.Playground
 							ValueStr = s.ValueStr + param
 						});
 
-				AreEqual(expected.Select(s => new DestinationTable
-					{
-						Id       = s.Id       + param,
-						Value    = s.Value    + param,
-						ValueStr = s.ValueStr + param,
-					}),
-					output, ComparerBuilder.GetEqualityComparer<DestinationTable>());
+				AreEqual(
+					expected
+						.Select(s => new DestinationTable
+						{
+							Id       = s.Id       + param,
+							Value    = s.Value    + param,
+							ValueStr = s.ValueStr + param,
+						}),
+					output,
+					ComparerBuilder.GetEqualityComparer<DestinationTable>());
 			}
 		}
 
@@ -155,18 +236,57 @@ namespace Tests.Playground
 						target,
 						s => new DestinationTable
 						{
-							Id       = s.Id + param,
-							Value    = s.Value + param,
+							Id       = s.Id       + param,
+							Value    = s.Value    + param,
 							ValueStr = s.ValueStr + param
 						});
 
-				AreEqual(expected.Select(s => new DestinationTable
-					{
-						Id       = s.Id + param,
-						Value    = s.Value + param,
-						ValueStr = s.ValueStr + param,
-					}),
-					target.ToArray(), ComparerBuilder.GetEqualityComparer<DestinationTable>());
+				AreEqual(
+					expected
+						.Select(s => new DestinationTable
+						{
+							Id       = s.Id       + param,
+							Value    = s.Value    + param,
+							ValueStr = s.ValueStr + param,
+						}),
+					target.ToArray(), 
+					ComparerBuilder.GetEqualityComparer<DestinationTable>());
+			}
+		}
+
+		[Test]
+		public async Task DeleteWithOutputIntoFromQueryAsyncTest([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			using (var target = db.CreateLocalTable<DestinationTable>())
+			{
+				var expected = source
+					.Where(s => s.Id > 3)
+					.ToArray();
+
+				var output = await source
+					.Where(s => s.Id > 3)
+					.DeleteWithOutputIntoAsync(
+						target,
+						s => new DestinationTable
+						{
+							Id       = s.Id       + param,
+							Value    = s.Value    + param,
+							ValueStr = s.ValueStr + param
+						});
+
+				AreEqual(
+					expected
+						.Select(s => new DestinationTable
+						{
+							Id       = s.Id       + param,
+							Value    = s.Value    + param,
+							ValueStr = s.ValueStr + param,
+						}),
+					target.ToArray(), 
+					ComparerBuilder.GetEqualityComparer<DestinationTable>());
 			}
 		}
 	}

@@ -6,7 +6,7 @@
 		<RootNamespace>LinqToDB.Tools</RootNamespace>
 
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.Tools.xml</DocumentationFile>
-		<TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
+		<TargetFrameworks>net45;net46;netstandard2.0</TargetFrameworks>
 	</PropertyGroup>
 
 	<ItemGroup>

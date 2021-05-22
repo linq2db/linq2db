@@ -37,6 +37,8 @@ namespace Tests.UserTests
 		[Test]
 		public void Issue693Test([DataSources] string context)
 		{
+			ResetPersonIdentity(context);
+
 			var ms = new MappingSchema();
 
 			ms.SetConverter<Test?, string?>((obj) =>
@@ -59,7 +61,6 @@ namespace Tests.UserTests
 					return null;
 				return (Test?)Enum.Parse(typeof(Test), txt, true);
 			});
-
 
 			using (var db = GetDataContext(context, ms))
 			using (new DeletePerson(db))

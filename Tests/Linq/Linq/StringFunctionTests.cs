@@ -1,13 +1,12 @@
 ﻿using System;
-
-#if NET46
+#if NET472
 using System.Data.Linq.SqlClient;
 #else
 using System.Data;
 #endif
 
 using System.Linq;
-
+using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Mapping;
 
@@ -20,6 +19,222 @@ namespace Tests.Linq
 	[TestFixture]
 	public class StringFunctionTests : TestBase
 	{
+		#region Non-Database tests
+
+		[Test]
+		public void Length()
+		{
+			Assert.AreEqual(null, Sql.Length((string)null!));
+			Assert.AreEqual(0,    Sql.Length(string.Empty));
+			Assert.AreEqual(4,    Sql.Length("test"));
+		}
+
+		[Test]
+		public void Substring()
+		{
+			Assert.AreEqual(null, Sql.Substring(null,   0,    0));
+			Assert.AreEqual(null, Sql.Substring("test", null, 0));
+			Assert.AreEqual(null, Sql.Substring("test", -1,   0));
+			Assert.AreEqual(null, Sql.Substring("test", 5,    0));
+			Assert.AreEqual(null, Sql.Substring("test", 0,    null));
+			Assert.AreEqual(null, Sql.Substring("test", 0,    -1));
+
+			Assert.AreEqual("",   Sql.Substring("test", 3,    0));
+			Assert.AreEqual("s",  Sql.Substring("test", 3,    1));
+			Assert.AreEqual("st", Sql.Substring("test", 3,    2));
+			Assert.AreEqual("st", Sql.Substring("test", 3,    3));
+		}
+
+		[Test]
+		public void Like()
+		{
+#if !NETFRAMEWORK
+			Assert.Throws<InvalidOperationException>(() => Sql.Like(null, null));
+			Assert.Throws<InvalidOperationException>(() => Sql.Like(null, null, null));
+#else
+			Assert.Pass("We don't test server-side method here.");
+#endif
+		}
+
+		[Test]
+		public void CharIndex1()
+		{
+			Assert.AreEqual(null, Sql.CharIndex("",            null));
+			Assert.AreEqual(null, Sql.CharIndex((string)null!, "test"));
+
+			Assert.AreEqual(0,    Sql.CharIndex("",            "test"));
+			Assert.AreEqual(0,    Sql.CharIndex("g",           "test"));
+			Assert.AreEqual(3,    Sql.CharIndex("st",          "test"));
+		}
+
+		[Test]
+		public void CharIndex2()
+		{
+			Assert.AreEqual(null, Sql.CharIndex("",            null,   0));
+			Assert.AreEqual(null, Sql.CharIndex((string)null!, "test", 0));
+			Assert.AreEqual(null, Sql.CharIndex("st",          "test", null));
+
+			Assert.AreEqual(0,    Sql.CharIndex("",            "test", 0));
+			Assert.AreEqual(0,    Sql.CharIndex("g",           "test", 0));
+			Assert.AreEqual(3,    Sql.CharIndex("st",          "test", -1));
+			Assert.AreEqual(3,    Sql.CharIndex("st",          "test", 2));
+			Assert.AreEqual(0,    Sql.CharIndex("st",          "test", 4));
+			Assert.AreEqual(0,    Sql.CharIndex("st",          "test", 5));
+		}
+
+		[Test]
+		public void CharIndex3()
+		{
+			Assert.AreEqual(null, Sql.CharIndex('t',           null));
+			Assert.AreEqual(null, Sql.CharIndex((char?)null!,  "test"));
+
+			Assert.AreEqual(0,    Sql.CharIndex(Char.MinValue, "test"));
+			Assert.AreEqual(0,    Sql.CharIndex('g',           "test"));
+			Assert.AreEqual(3,    Sql.CharIndex('s',           "test"));
+		}
+
+		[Test]
+		public void CharIndex4()
+		{
+			Assert.AreEqual(null, Sql.CharIndex('t',           null,   0));
+			Assert.AreEqual(null, Sql.CharIndex((char?)null!,  "test", 0));
+			Assert.AreEqual(null, Sql.CharIndex('t',           "test", null));
+
+			Assert.AreEqual(0,    Sql.CharIndex(Char.MinValue, "test", 0));
+			Assert.AreEqual(0,    Sql.CharIndex('g',           "test", 0));
+			Assert.AreEqual(3,    Sql.CharIndex('s',           "test", -1));
+			Assert.AreEqual(3,    Sql.CharIndex('s',           "test", 2));
+			Assert.AreEqual(0,    Sql.CharIndex('s',           "test", 4));
+			Assert.AreEqual(0,    Sql.CharIndex('s',           "test", 5));
+		}
+
+		[Test]
+		public void Reverse()
+		{
+			Assert.AreEqual(null,         Sql.Reverse(null));
+			Assert.AreEqual(string.Empty, Sql.Reverse(string.Empty));
+			Assert.AreEqual("dcba",       Sql.Reverse("abcd"));
+		}
+
+		[Test]
+		public void Left()
+		{
+			Assert.AreEqual(null,   Sql.Left(null,   0));
+			Assert.AreEqual(null,   Sql.Left("test", null));
+			Assert.AreEqual(null,   Sql.Left("test", -1));
+			Assert.AreEqual("",     Sql.Left("test", 0));
+			Assert.AreEqual("te",   Sql.Left("test", 2));
+			Assert.AreEqual("test", Sql.Left("test", 5));
+		}
+
+		[Test]
+		public void Right()
+		{
+			Assert.AreEqual(null,   Sql.Right(null,   0));
+			Assert.AreEqual(null,   Sql.Right("test", null));
+			Assert.AreEqual(null,   Sql.Right("test", -1));
+			Assert.AreEqual("",     Sql.Right("test", 0));
+			Assert.AreEqual("st",   Sql.Right("test", 2));
+			Assert.AreEqual("test", Sql.Right("test", 5));
+		}
+
+		[Test]
+		public void Stuff1()
+		{
+			// Disallowed null parameters
+			Assert.AreEqual(null,       Sql.Stuff((string)null!, 1,    1,    "test"));
+			Assert.AreEqual(null,       Sql.Stuff("test",        null, 1,    "test"));
+			Assert.AreEqual(null,       Sql.Stuff("test",        1,    null, "test"));
+			Assert.AreEqual(null,       Sql.Stuff("test",        1,    1,    null));
+
+			// Disallowed start
+			Assert.AreEqual(null,       Sql.Stuff("test",        0,    1,    "test"));
+			Assert.AreEqual(null,       Sql.Stuff("test",        5,    1,    "test"));
+
+			// Disallowed length
+			Assert.AreEqual(null,       Sql.Stuff("test",        1,    -1,   "test"));
+
+			// Correct start and length
+			Assert.AreEqual("5678",     Sql.Stuff("1234",        1,    4,    "5678"));
+
+			// Correct start
+			Assert.AreEqual("12356784", Sql.Stuff("1234",        4,    0,    "5678"));
+
+			// Correct length												 
+			Assert.AreEqual("125678",   Sql.Stuff("1234",        3,    5,    "5678"));
+		}
+
+		[Test]
+		public void Stuff2()
+		{
+			var expression = Enumerable.Empty<string>();
+			Assert.Throws<NotImplementedException>(() => Sql.Stuff(expression, 1, 1, "")); // ServerSideOnly
+		}
+
+		[Test]
+		public void Space()
+		{
+			Assert.AreEqual(null, Sql.Space(null));
+			Assert.AreEqual(null, Sql.Space(-1));
+			Assert.AreEqual("",   Sql.Space(0));
+			Assert.AreEqual(" ",  Sql.Space(1));
+		}
+
+		[Test]
+		public void PadLeft()
+		{
+			Assert.AreEqual(null,     Sql.PadLeft(null,   1,    '.'));
+			Assert.AreEqual(null,     Sql.PadLeft("test", null, '.'));
+			Assert.AreEqual(null,     Sql.PadLeft("test", 1,    null));
+
+			Assert.AreEqual(null,     Sql.PadLeft("test", -1,   '.'));
+			Assert.AreEqual("",       Sql.PadLeft("test", 0,    '.'));
+			Assert.AreEqual("tes",    Sql.PadLeft("test", 3,    '.'));
+			Assert.AreEqual("test",   Sql.PadLeft("test", 4,    '.'));
+			Assert.AreEqual(".test",  Sql.PadLeft("test", 5,    '.'));
+		}
+
+		[Test]
+		public void PadRight()
+		{
+			Assert.AreEqual(null,     Sql.PadRight(null,   1,    '.'));
+			Assert.AreEqual(null,     Sql.PadRight("test", null, '.'));
+			Assert.AreEqual(null,     Sql.PadRight("test", 1,    null));
+
+			Assert.AreEqual(null,     Sql.PadRight("test", -1,   '.'));
+			Assert.AreEqual("",       Sql.PadRight("test", 0,    '.'));
+			Assert.AreEqual("tes",    Sql.PadRight("test", 3,    '.'));
+			Assert.AreEqual("test",   Sql.PadRight("test", 4,    '.'));
+			Assert.AreEqual("test.",  Sql.PadRight("test", 5,    '.'));
+		}
+
+		[Test]
+		public void Replace1()
+		{
+			Assert.AreEqual(null,    Sql.Replace(null,   "e",  "oa"));
+			Assert.AreEqual(null,    Sql.Replace("test", null, "oa"));
+			Assert.AreEqual(null,    Sql.Replace("test", "e",  null));
+
+			Assert.AreEqual("",      Sql.Replace("",     "e",  "oa"));
+			Assert.AreEqual("test",  Sql.Replace("test", "",   "oa"));
+			Assert.AreEqual("test",  Sql.Replace("test", "g",  "oa"));
+			Assert.AreEqual("toast", Sql.Replace("test", "e",  "oa"));
+		}
+
+		[Test]
+		public void Replace2()
+		{
+			Assert.AreEqual(null,    Sql.Replace(null,   'e',  'o'));
+			Assert.AreEqual(null,    Sql.Replace("test", null, 'o'));
+			Assert.AreEqual(null,    Sql.Replace("test", 'e',  null));
+
+			Assert.AreEqual("",      Sql.Replace("",     'e',  'o'));
+			Assert.AreEqual("test",  Sql.Replace("test", 'g',  'o'));
+			Assert.AreEqual("tost",  Sql.Replace("test", 'e',  'o'));
+		}
+
+		#endregion
+
 		[Test]
 		public void Length([DataSources] string context)
 		{
@@ -35,18 +250,43 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = from p in db.Person where p.FirstName.Contains("oh") && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				db.Person.Count(p => p.FirstName.Contains("jOh") && p.ID == 1).Should().Be(IsCaseSensitiveComparison(context) ? 0 : 1);
+				db.Person.Count(p => !p.FirstName.Contains("jOh") && p.ID == 1).Should().Be(IsCaseSensitiveComparison(context) ? 1 : 0);
 			}
 		}
+
+#if NETSTANDARD2_1PLUS
+		[Test]
+		public void ContainsConstantWithCase1([DataSources(ProviderName.SqlCe)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				//db.Person.Count(p =>  p.FirstName.Contains("Joh", StringComparison.Ordinal) && p.ID == 1).Should().Be(1);
+				db.Person.Count(p => !p.FirstName.Contains("Joh", StringComparison.Ordinal) && p.ID == 1).Should().Be(0);
+
+				// db.Person.Count(p =>  p.FirstName.Contains("joh", StringComparison.Ordinal) && p.ID == 1).Should().Be(0);
+				// db.Person.Count(p => !p.FirstName.Contains("joh", StringComparison.Ordinal) && p.ID == 1).Should().Be(1);
+			}
+		}
+#endif
+		[Test]
+		public void ContainsConstantWithCase2([DataSources(ProviderName.SqlCe)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Person.Count(p => p.FirstName.Contains("Joh") && p.ID == 1).Should().Be(1);
+				db.Person.Count(p => !p.FirstName.Contains("Joh") && p.ID == 1).Should().Be(0);
+			}
+		}
+
 
 		[Test]
 		public void ContainsConstant2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = from p in db.Person where !p.FirstName.Contains("o%h") && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				db.Person.Count(p => p.FirstName.Contains("o%h") && p.ID == 1).Should().Be(0);
+				db.Person.Count(p => !p.FirstName.Contains("o%h") && p.ID == 1).Should().Be(1);
 			}
 		}
 
@@ -63,14 +303,14 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ContainsConstant4([DataSources(TestProvName.AllFirebird)] string context)
+		public void ContainsConstant4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
 				var s = "123[456";
 
-				var q = from p in db.Person where p.ID == 1 && s.Contains("[") select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				db.Person.Count(p => p.ID == 1 && s.Contains("[")).Should().Be(1);
+				db.Person.Count(p => p.ID == 1 && !s.Contains("[")).Should().Be(0);
 			}
 		}
 
@@ -79,21 +319,45 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = from p in db.Person where p.ID == 1 && "123[456".Contains("[") select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				db.Person.Count(p => p.ID == 1 && "123[456".Contains("[")).Should().Be(1);
 			}
 		}
 
 		[Test]
-		public void ContainsConstant41([DataSources(TestProvName.AllInformix)] string context)
+		public void ContainsConstant41([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
 				var s  = "123[456";
 				var ps = "[";
 
-				var q = from p in db.Person where p.ID == 1 && s.Contains(ps) select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				db.Person.Count(p => p.ID == 1 && s.Contains(ps)).Should().Be(1);
+			}
+		}
+
+		[Test]
+		public void ContainsValueAll([DataSources] string context,
+			[Values("n", "-", "*", "?", "#", "%", "[", "]", "[]", "[[", "]]")]string toTest)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var s  = "123" + toTest + "456";
+
+				db.Person.Count(p => p.ID == 1 && s.Contains(Sql.ToSql(toTest))).Should().Be(1);
+				db.Person.Count(p => p.ID == 1 && !s.Contains(Sql.ToSql(toTest))).Should().Be(0);
+			}
+		}
+
+
+		[Test]
+		public void ContainsParameterAll([DataSources] string context,
+			[Values("n", "-", "*", "?", "#", "%", "[", "]", "[]", "[[", "]]")]string toTest)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var s  = "123" + toTest + "456";
+
+				db.Person.Count(p => p.ID == 1 && s.Contains(toTest)).Should().Be(1);
 			}
 		}
 
@@ -104,8 +368,7 @@ namespace Tests.Linq
 			{
 				var ps = "[";
 
-				var q = from p in db.Person where p.ID == 1 && "123[456".Contains(ps) select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				db.Person.Count(p => p.ID == 1 && "123[456".Contains(ps)).Should().Be(1);
 			}
 		}
 
@@ -180,7 +443,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ContainsNull([DataSources(ProviderName.Access, TestProvName.AllInformix)] string context)
+		public void ContainsNull([DataSources(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -199,6 +462,44 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void StartsWithCacheCheck([DataSources] string context, [Values(StringComparison.OrdinalIgnoreCase, StringComparison.Ordinal, StringComparison.InvariantCultureIgnoreCase, StringComparison.InvariantCulture)] StringComparison comparison)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var firstName = db.Person.Where(p => p.ID == 1).Select(p => p.FirstName).Single();
+				var nameToCheck = firstName.Substring(0, 3);
+				switch (comparison)
+				{
+					case StringComparison.OrdinalIgnoreCase : 
+					case StringComparison.InvariantCultureIgnoreCase : 
+					case StringComparison.CurrentCultureIgnoreCase : 
+						nameToCheck = nameToCheck.ToUpper();
+						break;
+				}
+
+				db.Person.Count(p => p.FirstName.StartsWith(nameToCheck, comparison)  && p.ID == 1).Should().Be(1);
+				db.Person.Count(p => !p.FirstName.StartsWith(nameToCheck, comparison) && p.ID == 1).Should().Be(0);
+
+				switch (comparison)
+				{
+					case StringComparison.Ordinal : 
+					case StringComparison.CurrentCulture : 
+					case StringComparison.InvariantCulture : 
+					{
+						nameToCheck = firstName.Substring(0, 3);
+						nameToCheck = nameToCheck.ToUpper();
+
+						db.Person.Count(p => p.FirstName.StartsWith(nameToCheck, comparison)  && p.ID == 1).Should().Be(0);
+						db.Person.Count(p => !p.FirstName.StartsWith(nameToCheck, comparison) && p.ID == 1).Should().Be(1);
+
+						break;
+					}
+				}
+
+			}
+		}
+
+		[Test]
 		public void StartsWith1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -208,35 +509,25 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(2005, Configuration = TestProvName.AllFirebird)]
 		[Test]
-		public void StartsWithSQL([DataSources(false)] string context)
+		public void StartsWith1IgnoreCase([DataSources] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
-				(from p in db.Person where p.FirstName.StartsWith("Jo") && !p.LastName.StartsWith("Je") select p).ToList();
+				db.Person.Count(p => p.FirstName.StartsWith("joH", StringComparison.OrdinalIgnoreCase) && p.ID == 1).Should().Be(1);
+				db.Person.Count(p => !p.FirstName.StartsWith("joH", StringComparison.OrdinalIgnoreCase) && p.ID == 1).Should().Be(0);
+			}
+		}
 
-				// https://github.com/linq2db/linq2db/issues/2005
-				if (context.Contains("Firebird"))
-				{
-					Assert.True(db.LastQuery!.Contains(" STARTING WITH 'Jo'"));
-					Assert.True(db.LastQuery.Contains(" NOT STARTING WITH 'Je'"));
-				}
-				else if (context.Contains("SqlServer") || context.Contains("SqlAzure"))
-				{
-					Assert.True(db.LastQuery!.Contains(" LIKE N'Jo%'"));
-					Assert.True(db.LastQuery.Contains("NOT LIKE N'Je%'"));
-				}
-				else if (context.Contains("Informix"))
-				{
-					Assert.True(db.LastQuery!.Contains(" LIKE 'Jo%'"));
-					Assert.True(db.LastQuery.Contains("NOT p.LastName LIKE 'Je%'"));
-				}
-				else
-				{
-					Assert.True(db.LastQuery!.Contains(" LIKE 'Jo%'"));
-					Assert.True(db.LastQuery.Contains("NOT LIKE 'Je%'"));
-				}
+		[Test]
+		public void StartsWith1Case([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Person.Count(p => p.FirstName.StartsWith("Jo", StringComparison.Ordinal) && p.ID == 1).Should().Be(1);
+				db.Person.Count(p => p.FirstName.StartsWith("jo", StringComparison.Ordinal) && p.ID == 1).Should().Be(0);
+
+				db.Person.Count(p => !p.FirstName.StartsWith("Jo", StringComparison.Ordinal) && p.ID == 1).Should().Be(0);
 			}
 		}
 
@@ -292,16 +583,29 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void EndsWith([DataSources] string context)
+		public void EndsWithIgnoreCase([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = from p in db.Person where p.FirstName.EndsWith("hn") && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				db.Person.Count(p => p.FirstName.EndsWith("JOHN") && p.ID == 1).Should().Be(IsCaseSensitiveComparison(context) ? 0 : 1);
+				db.Person.Count(p => !p.FirstName.EndsWith("JOHN") && p.ID == 1).Should().Be(IsCaseSensitiveComparison(context) ? 1 : 0);
 			}
 		}
 
-#if NET46
+		[Test]
+		public void EndsWithWithCase([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Patient.Count(p =>  p.Diagnosis.EndsWith("Persecution", StringComparison.Ordinal) && p.PersonID == 2).Should().Be(1);
+				db.Patient.Count(p => !p.Diagnosis.EndsWith("Persecution", StringComparison.Ordinal) && p.PersonID == 2).Should().Be(0);
+
+				db.Patient.Count(p =>  p.Diagnosis.EndsWith("persecution", StringComparison.Ordinal) && p.PersonID == 2).Should().Be(0);
+				db.Patient.Count(p => !p.Diagnosis.EndsWith("persecution", StringComparison.Ordinal) && p.PersonID == 2).Should().Be(1);
+			}
+		}
+
+#if NET472
 		[Test]
 		public void Like11([DataSources] string context)
 		{
@@ -344,7 +648,18 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void IndexOf11([DataSources(TestProvName.AllInformix, ProviderName.SQLiteMS)] string context)
+		public void Like23([DataSources] string context)
+		{
+			var pattern = @"%h~%n%";
+			using (var db = GetDataContext(context))
+			{
+				var q = from p in db.Person where !Sql.Like(p.FirstName, pattern, '~') && p.ID == 1 select p;
+				Assert.AreEqual(1, q.ToList().First().ID);
+			}
+		}
+
+		[Test]
+		public void IndexOf11([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -354,7 +669,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void IndexOf12([DataSources(TestProvName.AllInformix, ProviderName.SQLiteMS)] string context)
+		public void IndexOf12([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -364,7 +679,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void IndexOf2([DataSources(TestProvName.AllInformix, ProviderName.SQLiteMS)] string context)
+		public void IndexOf2([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -393,7 +708,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void LastIndexOf1([DataSources(
-			ProviderName.DB2, TestProvName.AllInformix,
+			ProviderName.DB2,
 			ProviderName.SqlCe, TestProvName.AllAccess, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
 			string context)
 		{
@@ -406,7 +721,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void LastIndexOf2([DataSources(
-			ProviderName.DB2, TestProvName.AllInformix, ProviderName.SqlCe,
+			ProviderName.DB2, ProviderName.SqlCe,
 			TestProvName.AllAccess, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
 			string context)
 		{
@@ -420,7 +735,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void LastIndexOf3([DataSources(
-			ProviderName.DB2, TestProvName.AllInformix, ProviderName.SqlCe,
+			ProviderName.DB2, ProviderName.SqlCe,
 			TestProvName.AllAccess, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
 			string context)
 		{
@@ -433,7 +748,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CharIndex1([DataSources(TestProvName.AllInformix, ProviderName.SQLiteMS)] string context)
+		public void CharIndex1([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -443,7 +758,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CharIndex2([DataSources(TestProvName.AllInformix, ProviderName.SQLiteMS)] string context)
+		public void CharIndex2([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -504,7 +819,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Reverse([DataSources(
-			ProviderName.DB2, TestProvName.AllInformix, ProviderName.SqlCe,
+			ProviderName.DB2, ProviderName.SqlCe,
 			TestProvName.AllAccess, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
 			string context)
 		{
@@ -563,7 +878,7 @@ namespace Tests.Linq
 							select "," + c.Name, 1, 1, "")
 					};
 
-				q.ToString();
+				TestContext.WriteLine(q.ToString());
 			}
 		}
 
@@ -932,6 +1247,237 @@ namespace Tests.Linq
 			{
 				var q = from p in db.Person where p.ID == 1 select string.IsNullOrEmpty(p.FirstName);
 				Assert.AreEqual(false, q.ToList().First());
+			}
+		}
+
+		[Table]
+		class CollatedTable
+		{
+			[Column, PrimaryKey] public int    Id              { get; set; }
+			[Column            ] public string CaseSensitive   { get; set; } = null!;
+			[Column            ] public string CaseInsensitive { get; set; } = null!;
+
+			public static readonly CollatedTable TestData = new () { Id = 1, CaseSensitive = "TestString", CaseInsensitive = "TestString" };
+		}
+
+#if NETSTANDARD2_1PLUS
+		[Test]
+		public void ExplicitOrdinalIgnoreCase_Contains([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.GetTable<CollatedTable>().Delete();
+				db.Insert(CollatedTable.TestData);
+
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseSensitive.Contains("stSt", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseInsensitive.Contains("stSt", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseSensitive.Contains("stst", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseInsensitive.Contains("stst", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
+			}
+		}
+
+		[Test]
+		public void ExplicitOrdinal_Contains([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.GetTable<CollatedTable>().Delete();
+				db.Insert(CollatedTable.TestData);
+
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseSensitive.Contains("stSt", StringComparison.Ordinal)).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseInsensitive.Contains("stSt", StringComparison.Ordinal)).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseSensitive.Contains("stst", StringComparison.Ordinal)).Should().Be(0);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseInsensitive.Contains("stst", StringComparison.Ordinal)).Should().Be(0);
+			}
+		}
+
+		[Test]
+		public void Explicit_Contains([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Patient
+					.Count(r => r.Diagnosis.Contains("Paranoid", StringComparison.Ordinal)).Should().Be(1);
+				db.Patient
+					.Count(r => r.Diagnosis.Contains("paranoid", StringComparison.Ordinal)).Should().Be(0);
+				db.Patient
+					.Count(r => r.Diagnosis.Contains("paranoid", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
+				db.Patient
+					.Count(r => r.Diagnosis.Contains("Paranoid", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
+			}
+		}
+#endif
+
+		[Test]
+		public void Default_Contains([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.GetTable<CollatedTable>().Delete();
+				db.Insert(CollatedTable.TestData);
+
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseSensitive.Contains("stSt")).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseInsensitive.Contains("stSt")).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseSensitive.Contains("stst")).Should().Be(IsCollatedTableConfigured(context) || IsCaseSensitiveComparison(context) ? 0 : 1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseInsensitive.Contains("stst")).Should().Be(IsCollatedTableConfigured(context) || !IsCaseSensitiveComparison(context) ? 1 : 0);
+			}
+		}
+
+		[Test]
+		public void ExplicitOrdinalIgnoreCase_StartsWith([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.GetTable<CollatedTable>().Delete();
+				db.Insert(CollatedTable.TestData);
+
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseSensitive.StartsWith("TestSt", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseInsensitive.StartsWith("TestSt", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseSensitive.StartsWith("testst", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseInsensitive.StartsWith("testst", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
+			}
+		}
+
+		[Test]
+		public void ExplicitOrdinal_StartsWith([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.GetTable<CollatedTable>().Delete();
+				db.Insert(CollatedTable.TestData);
+
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseSensitive.StartsWith("TestSt", StringComparison.Ordinal)).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseInsensitive.StartsWith("TestSt", StringComparison.Ordinal)).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseSensitive.StartsWith("testst", StringComparison.Ordinal)).Should().Be(0);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseInsensitive.StartsWith("testst", StringComparison.Ordinal)).Should().Be(0);
+			}
+		}
+
+		[Test]
+		public void Default_StartsWith([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.GetTable<CollatedTable>().Delete();
+				db.Insert(CollatedTable.TestData);
+
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseSensitive.StartsWith("TestSt")).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseInsensitive.StartsWith("TestSt")).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseSensitive.StartsWith("testst")).Should().Be(IsCollatedTableConfigured(context) || IsCaseSensitiveComparison(context) ? 0 : 1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseInsensitive.StartsWith("testst")).Should().Be(IsCollatedTableConfigured(context) || !IsCaseSensitiveComparison(context) ? 1 : 0);
+			}
+		}
+
+		[Test]
+		public void Explicit_StartsWith([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Patient
+					.Count(r => r.Diagnosis.StartsWith("Hall", StringComparison.Ordinal)).Should().Be(1);
+				db.Patient
+					.Count(r => r.Diagnosis.StartsWith("hall", StringComparison.Ordinal)).Should().Be(0);
+				db.Patient
+					.Count(r => r.Diagnosis.StartsWith("hall", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
+				db.Patient
+					.Count(r => r.Diagnosis.StartsWith("Hall", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
+			}
+		}
+
+		[Test]
+		public void ExplicitOrdinalIgnoreCase_EndsWith([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.GetTable<CollatedTable>().Delete();
+				db.Insert(CollatedTable.TestData);
+
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseSensitive.EndsWith("stString", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseInsensitive.EndsWith("stString", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseSensitive.EndsWith("ststring", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseInsensitive.EndsWith("ststring", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
+			}
+		}
+
+		[Test]
+		public void ExplicitOrdinal_EndsWith([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.GetTable<CollatedTable>().Delete();
+				db.Insert(CollatedTable.TestData);
+
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseSensitive.EndsWith("stString", StringComparison.Ordinal)).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseInsensitive.EndsWith("stString", StringComparison.Ordinal)).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseSensitive.EndsWith("ststring", StringComparison.Ordinal)).Should().Be(0);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseInsensitive.EndsWith("ststring", StringComparison.Ordinal)).Should().Be(0);
+			}
+		}
+
+		[Test]
+		public void Default_EndsWith([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.GetTable<CollatedTable>().Delete();
+				db.Insert(CollatedTable.TestData);
+
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseSensitive.EndsWith("stString")).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseInsensitive.EndsWith("stString")).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseSensitive.EndsWith("ststring")).Should().Be(IsCollatedTableConfigured(context) || IsCaseSensitiveComparison(context) ? 0 : 1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseInsensitive.EndsWith("ststring")).Should().Be(IsCollatedTableConfigured(context) || !IsCaseSensitiveComparison(context) ? 1 : 0);
+			}
+		}
+
+		[Test]
+		public void Explicit_EndsWith([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Patient
+					.Count(r => r.Diagnosis.EndsWith("Persecution", StringComparison.Ordinal)).Should().Be(1);
+				db.Patient
+					.Count(r => r.Diagnosis.EndsWith("persecution", StringComparison.Ordinal)).Should().Be(0);
+				db.Patient
+					.Count(r => r.Diagnosis.EndsWith("persecution", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
+				db.Patient
+					.Count(r => r.Diagnosis.EndsWith("Persecution", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
 			}
 		}
 	}

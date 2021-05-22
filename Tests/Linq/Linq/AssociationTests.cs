@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-
+using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Mapping;
 
@@ -514,7 +514,7 @@ namespace Tests.Linq
 					.Select(s => new
 					{
 						s.ChildID,
-						s.a.c,
+						s.a!.c,
 						s.a.Parent
 					})
 					.Select(s => new
@@ -536,7 +536,6 @@ namespace Tests.Linq
 		[Test]
 		public void Issue148Test([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q =
@@ -711,7 +710,7 @@ namespace Tests.Linq
 
 				var list = q.ToList();
 
-				Assert.AreEqual(1, list.Count());
+				Assert.AreEqual(1, list.Count);
 			}
 		}
 
@@ -1036,7 +1035,6 @@ namespace Tests.Linq
 			[Column] public bool    Deleted      { get; set; }
 		}
 
-		[ActiveIssue(845)]
 		[Test]
 		public void Issue845Test([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllSQLite)] string context)
 		{
@@ -1045,12 +1043,11 @@ namespace Tests.Linq
 			using (db.CreateLocalTable<Department>())
 			{
 				var result = db.GetTable<Employee>()
-					.Select(e => new { e.Id, e.Department!.Name})
+					.Select(e => new { e.Id, e.Department!.Name })
 					.ToList();
 
 				Assert.False(db.LastQuery!.Contains(" NOT"));
-				//Assert.True(db.LastQuery!.Contains("AND 1 <> [a_Department].[Deleted]"));
-				Assert.True(db.LastQuery!.Contains("AND 0 = [a_Department].[Deleted]"));
+				Assert.True(db.LastQuery!.Contains("AND [a_Department].[Deleted] = 0"));
 			}
 		}
 
@@ -1160,6 +1157,62 @@ namespace Tests.Linq
 				Assert.AreEqual(true, res[0].ActualStage.Actual);
 			}
 		}
+
+		#region issue 2981
+
+		public interface IIssue2981Entity
+		{
+			int OwnerId { get; set; }
+		}
+
+		public abstract class Issue2981OwnedEntity<T> where T : IIssue2981Entity
+		{
+			/// <summary>
+			/// Owner.
+			/// </summary>
+			[Association(ExpressionPredicate = nameof(OwnerPredicate), CanBeNull = true, Relationship = Relationship.ManyToOne, IsBackReference = false)]
+			public Issue2981OwnerEntity? Owner { get; set; }
+
+			public static Expression<Func<T, Issue2981OwnerEntity, bool>> OwnerPredicate { get; set; } = (T entity, Issue2981OwnerEntity owner) => entity.OwnerId == owner.Id;
+		}
+
+		[Table]
+		public class Issue2981Entity: Issue2981OwnedEntity<Issue2981Entity>, IIssue2981Entity
+		{
+			[Column] public int OwnerId { get; set; }
+		}
+
+		[Table]
+		public class Issue2981OwnerEntity
+		{
+			[Column] public int Id { get; set; }
+
+		}
+
+		[Test]
+		public void Issue2981Test([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<Issue2981Entity>(new[]
+			{
+				new Issue2981Entity {OwnerId = 1}, 
+				new Issue2981Entity {OwnerId = 2}
+			});
+			using var t2 = db.CreateLocalTable<Issue2981OwnerEntity>(new[] {new Issue2981OwnerEntity {Id = 1}});
+
+
+			var res = t1.Select(r => new {r.OwnerId, Id = (int?)r.Owner!.Id})
+				.OrderBy(_ => _.OwnerId)
+				.ToArray();
+
+			res.Length.Should().Be(2);
+			res[0].Id.Should().Be(1);
+			res[0].OwnerId.Should().Be(1);
+			res[1].OwnerId.Should().Be(2);
+			res[1].Id.Should().BeNull();
+		}
+
+		#endregion
 	}
 
 	public static class AssociationExtension

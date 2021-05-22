@@ -5,11 +5,13 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+
 using LinqToDB.Async;
 
 namespace LinqToDB.Linq
 {
 	class PersistentTable<T> : ITable<T>
+		where T : notnull
 	{
 		private readonly IQueryable<T> _query;
 
@@ -31,11 +33,11 @@ namespace LinqToDB.Linq
 		public Expression Expression => _query.Expression;
 		Expression IExpressionQuery<T>.Expression
 		{
-			get { return _query.Expression; }
-			set { throw new NotImplementedException(); }
+			get => _query.Expression;
+			set => throw new NotImplementedException();
 		}
 
-		public string         SqlText        { get; } = null!;
+		public string         SqlText     { get; } = null!;
 		public IDataContext   DataContext => null!;
 		public Type           ElementType => _query.ElementType;
 		public IQueryProvider Provider    => _query.Provider;
@@ -60,22 +62,23 @@ namespace LinqToDB.Linq
 			return _query.Provider.Execute<TResult>(expression);
 		}
 
-		public IAsyncEnumerable<TResult> ExecuteAsync<TResult>(Expression expression)
+		public Task<IAsyncEnumerable<TResult>> ExecuteAsyncEnumerable<TResult>(Expression expression, CancellationToken cancellationToken)
 		{
 			throw new NotImplementedException();
 		}
 
-		public Task<TResult> ExecuteAsync<TResult>(Expression expression, CancellationToken token)
+		public Task<TResult> ExecuteAsync<TResult>(Expression expression, CancellationToken cancellationToken)
 		{
 			throw new NotImplementedException();
 		}
 
 		Expression IExpressionQuery.Expression => Expression;
 
-		public string? DatabaseName { get; }
-		public string? SchemaName   { get; }
-		public string  TableName    { get; } = null!;
-		public string? ServerName   { get; }
+		public string?      DatabaseName { get; }
+		public string?      SchemaName   { get; }
+		public string       TableName    { get; } = null!;
+		public string?      ServerName   { get; }
+		public TableOptions TableOptions { get; }
 
 		public string GetTableName()
 		{

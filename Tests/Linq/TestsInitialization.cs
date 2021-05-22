@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Data.Common;
-using System.IO;
 using System.Reflection;
-
 using NUnit.Framework;
+
+#if !NET472
+using System.IO;
+#endif
 
 using Tests;
 
@@ -17,12 +19,16 @@ public class TestsInitialization
 	[OneTimeSetUp]
 	public void TestAssemblySetup()
 	{
+		// uncomment it to run tests with SeqentialAccess command behavior
+		//LinqToDB.Common.Configuration.OptimizeForSequentialAccess = true;
+		//DbCommandProcessorExtensions.Instance = new SequentialAccessCommandProcessor();
+
 		// netcoreapp2.1 adds DbProviderFactories support, but providers should be registered by application itself
 		// this code allows to load assembly using factory without adding explicit reference to project
 		RegisterSapHanaFactory();
 		RegisterSqlCEFactory();
 
-#if NET46 && !AZURE
+#if NET472 && !AZURE
 		// configure assembly redirect for referenced assemblies to use version from GAC
 		// this solves exception from provider-specific tests, when it tries to load version from redist folder
 		// but loaded from GAC assembly has other version
@@ -43,13 +49,16 @@ public class TestsInitialization
 #endif
 
 		// register test providers
-		TestNoopProvider          .Init();
+		TestNoopProvider.Init();
 		SQLiteMiniprofilerProvider.Init();
+
+		// uncomment to run FEC for all tests and comment reset line in TestBase.OnAfterTest
+		//LinqToDB.Common.Compilation.SetExpressionCompiler(_ => FastExpressionCompiler.ExpressionCompiler.CompileFast(_, true));
 	}
 
 	private void RegisterSapHanaFactory()
 	{
-#if !NET46
+#if !NET472
 		try
 		{
 			// woo-hoo, hardcoded pathes! default install location on x64 system
@@ -61,7 +70,7 @@ public class TestsInitialization
 				// if you run tests from path with spaces - it will not help you
 				File.Copy(srcPath, targetPath, true);
 				var sapHanaAssembly = Assembly.LoadFrom(targetPath);
-				DbProviderFactories.RegisterFactory("Sap.Data.Hana", sapHanaAssembly.GetType("Sap.Data.Hana.HanaFactory"));
+				DbProviderFactories.RegisterFactory("Sap.Data.Hana", sapHanaAssembly.GetType("Sap.Data.Hana.HanaFactory")!);
 			}
 		}
 		catch { }
@@ -70,7 +79,7 @@ public class TestsInitialization
 
 	private void RegisterSqlCEFactory()
 	{
-#if !NET46
+#if !NET472
 		try
 		{
 			// default install pathes. Hardcoded for now as hardly anyone will need other location in near future
@@ -78,7 +87,7 @@ public class TestsInitialization
 			var pathx86 = @"c:\Program Files (x86)\Microsoft SQL Server Compact Edition\v4.0\Private\System.Data.SqlServerCe.dll";
 			var path = IntPtr.Size == 4 ? pathx86 : pathx64;
 			var assembly = Assembly.LoadFrom(path);
-			DbProviderFactories.RegisterFactory("System.Data.SqlServerCe.4.0", assembly.GetType("System.Data.SqlServerCe.SqlCeProviderFactory"));
+			DbProviderFactories.RegisterFactory("System.Data.SqlServerCe.4.0", assembly.GetType("System.Data.SqlServerCe.SqlCeProviderFactory")!);
 		}
 		catch { }
 #endif

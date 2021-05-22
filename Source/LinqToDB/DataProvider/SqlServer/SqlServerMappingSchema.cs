@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Data.Linq;
 using System.Data.SqlTypes;
 using System.IO;
@@ -8,6 +8,7 @@ using System.Xml;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
+	using System.Globalization;
 	using Common;
 	using Expressions;
 	using LinqToDB.Metadata;
@@ -16,6 +17,30 @@ namespace LinqToDB.DataProvider.SqlServer
 
 	public class SqlServerMappingSchema : MappingSchema
 	{
+		private const string DATETIME0_FORMAT = "'{0:yyyy-MM-ddTHH:mm:ss}'";
+		private const string DATETIME1_FORMAT = "'{0:yyyy-MM-ddTHH:mm:ss.f}'";
+		private const string DATETIME2_FORMAT = "'{0:yyyy-MM-ddTHH:mm:ss.ff}'";
+		private const string DATETIME3_FORMAT = "'{0:yyyy-MM-ddTHH:mm:ss.fff}'";
+		private const string DATETIME4_FORMAT = "'{0:yyyy-MM-ddTHH:mm:ss.ffff}'";
+		private const string DATETIME5_FORMAT = "'{0:yyyy-MM-ddTHH:mm:ss.fffff}'";
+		private const string DATETIME6_FORMAT = "'{0:yyyy-MM-ddTHH:mm:ss.ffffff}'";
+		private const string DATETIME7_FORMAT = "'{0:yyyy-MM-ddTHH:mm:ss.fffffff}'";
+
+		private const string TIME0_FORMAT     = "'{0:hh\\:mm\\:ss}'";
+		private const string TIME7_FORMAT     = "'{0:hh\\:mm\\:ss\\.fffffff}'";
+
+		private const string TIMESPAN0_FORMAT = "'{0:d\\.hh\\:mm\\:ss}'";
+		private const string TIMESPAN7_FORMAT = "'{0:d\\.hh\\:mm\\:ss\\.fffffff}'";
+
+		private const string DATETIMEOFFSET0_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss zzz}'";
+		private const string DATETIMEOFFSET1_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.f zzz}'";
+		private const string DATETIMEOFFSET2_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.ff zzz}'";
+		private const string DATETIMEOFFSET3_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.fff zzz}'";
+		private const string DATETIMEOFFSET4_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.ffff zzz}'";
+		private const string DATETIMEOFFSET5_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.fffff zzz}'";
+		private const string DATETIMEOFFSET6_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.ffffff zzz}'";
+		private const string DATETIMEOFFSET7_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.fffffff zzz}'";
+
 		public SqlServerMappingSchema()
 			: base(ProviderName.SqlServer)
 		{
@@ -73,7 +98,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			AddMetadataReader(new SystemDataSqlServerAttributeReader());
 		}
 
-		internal static SqlServerMappingSchema Instance = new SqlServerMappingSchema();
+		internal static SqlServerMappingSchema Instance = new ();
 
 		// TODO: move to SqlServerTypes.Configure?
 		public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
@@ -85,19 +110,20 @@ namespace LinqToDB.DataProvider.SqlServer
 				var p = Expression.Parameter(@from);
 
 				return Expression.Lambda(
-					Expression.Call(to, "Parse", new Type[0],
+					Expression.Call(to, "Parse", Array<Type>.Empty,
 						Expression.New(
 							MemberHelper.ConstructorOf(() => new SqlString("")),
 							Expression.Call(
 								Expression.Convert(p, typeof(object)),
 								"ToString",
-								new Type[0]))),
+								Array<Type>.Empty))),
 					p);
 			}
 
 			return base.TryGetConvertExpression(@from, to);
 		}
 
+		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
 			stringBuilder
@@ -123,7 +149,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					break;
 			}
 
-			DataTools.ConvertStringToSql(stringBuilder, "+", startPrefix, AppendConversion, value, null);
+			DataTools.ConvertStringToSql(stringBuilder, "+", startPrefix, AppendConversionAction, value, null);
 		}
 
 		static void ConvertCharToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, char value)
@@ -142,25 +168,29 @@ namespace LinqToDB.DataProvider.SqlServer
 					break;
 			}
 
-			DataTools.ConvertCharToSql(stringBuilder, start, AppendConversion, value);
+			DataTools.ConvertCharToSql(stringBuilder, start, AppendConversionAction, value);
 		}
 
 		internal static void ConvertDateTimeToSql(StringBuilder stringBuilder, SqlDataType? dt, DateTime value)
 		{
-			var format =
-				value.Millisecond == 0
-					? "yyyy-MM-ddTHH:mm:ss"
-					: dt == null || dt.Type.DataType != DataType.DateTime2
-						? "yyyy-MM-ddTHH:mm:ss.fff"
-						: dt.Type.Precision == 0
-							? "yyyy-MM-ddTHH:mm:ss"
-							: "yyyy-MM-ddTHH:mm:ss." + new string('f', dt.Type.Precision ?? 7);
+			string format;
 
-			stringBuilder
-				.Append('\'')
-				.Append(value.ToString(format))
-				.Append('\'')
-				;
+			if (dt?.Type.DataType == DataType.DateTime2)
+				format = dt.Type.Precision switch
+				{
+					0 => DATETIME0_FORMAT,
+					1 => DATETIME1_FORMAT,
+					2 => DATETIME2_FORMAT,
+					3 => DATETIME3_FORMAT,
+					4 => DATETIME4_FORMAT,
+					5 => DATETIME5_FORMAT,
+					6 => DATETIME6_FORMAT,
+					_ => DATETIME7_FORMAT,
+				};
+			else
+				format = value.Millisecond == 0 ? DATETIME0_FORMAT : DATETIME3_FORMAT;
+
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value);
 		}
 
 		static void ConvertTimeSpanToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, TimeSpan value)
@@ -173,46 +203,39 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				var format = value.Days > 0
 					? value.Ticks % 10000000 != 0
-						? "d\\.hh\\:mm\\:ss\\.fffffff"
-						: "d\\.hh\\:mm\\:ss"
+						? TIMESPAN7_FORMAT
+						: TIMESPAN0_FORMAT
 					: value.Ticks % 10000000 != 0
-						? "hh\\:mm\\:ss\\.fffffff"
-						: "hh\\:mm\\:ss";
+						? TIME7_FORMAT
+						: TIME0_FORMAT;
 
-				stringBuilder
-					.Append('\'')
-					.Append(value.ToString(format))
-					.Append('\'')
-					;
+				stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value);
 			}
 		}
 
 		static void ConvertDateTimeOffsetToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, DateTimeOffset value)
 		{
-			var format = "'{0:yyyy-MM-dd HH:mm:ss.fffffff zzz}'";
-
-			switch (sqlDataType.Type.Precision ?? sqlDataType.Type.Scale)
+			var format = (sqlDataType.Type.Precision ?? sqlDataType.Type.Scale) switch
 			{
-				case 0 : format = "'{0:yyyy-MM-dd HH:mm:ss zzz}'"; break;
-				case 1 : format = "'{0:yyyy-MM-dd HH:mm:ss.f zzz}'"; break;
-				case 2 : format = "'{0:yyyy-MM-dd HH:mm:ss.ff zzz}'"; break;
-				case 3 : format = "'{0:yyyy-MM-dd HH:mm:ss.fff zzz}'"; break;
-				case 4 : format = "'{0:yyyy-MM-dd HH:mm:ss.ffff zzz}'"; break;
-				case 5 : format = "'{0:yyyy-MM-dd HH:mm:ss.fffff zzz}'"; break;
-				case 6 : format = "'{0:yyyy-MM-dd HH:mm:ss.ffffff zzz}'"; break;
-				case 7 : format = "'{0:yyyy-MM-dd HH:mm:ss.fffffff zzz}'"; break;
-			}
+				0 => DATETIMEOFFSET0_FORMAT,
+				1 => DATETIMEOFFSET1_FORMAT,
+				2 => DATETIMEOFFSET2_FORMAT,
+				3 => DATETIMEOFFSET3_FORMAT,
+				4 => DATETIMEOFFSET4_FORMAT,
+				5 => DATETIMEOFFSET5_FORMAT,
+				6 => DATETIMEOFFSET6_FORMAT,
+				_ => DATETIMEOFFSET7_FORMAT
+			};
 
-			stringBuilder.AppendFormat(format, value);
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value);
 		}
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
 		{
 			stringBuilder.Append("0x");
-
-			foreach (var b in value)
-				stringBuilder.Append(b.ToString("X2"));
+			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
 		}
+		
 	}
 
 	public class SqlServer2000MappingSchema : MappingSchema
@@ -262,6 +285,21 @@ namespace LinqToDB.DataProvider.SqlServer
 	{
 		public SqlServer2012MappingSchema()
 			: base(ProviderName.SqlServer2012, SqlServerMappingSchema.Instance)
+		{
+			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
+			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => SqlServerMappingSchema.ConvertDateTimeToSql(sb, dt, (DateTime)v));
+		}
+
+		public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
+		{
+			return SqlServerMappingSchema.Instance.TryGetConvertExpression(@from, to);
+		}
+	}
+
+	public class SqlServer2016MappingSchema : MappingSchema
+	{
+		public SqlServer2016MappingSchema()
+			: base(ProviderName.SqlServer2016, SqlServerMappingSchema.Instance)
 		{
 			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => SqlServerMappingSchema.ConvertDateTimeToSql(sb, dt, (DateTime)v));

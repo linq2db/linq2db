@@ -22,7 +22,6 @@ namespace LinqToDB.Linq.Builder
 
 				var statement = mergeContext.Merge;
 				var operation = new SqlMergeOperationClause(MergeOperationType.Update);
-				statement.Operations.Add(operation);
 
 				var predicate = methodCall.Arguments[1];
 				var setter    = methodCall.Arguments[2];
@@ -41,18 +40,24 @@ namespace LinqToDB.Linq.Builder
 				else
 				{
 					// build setters like QueryRunner.Update
-					var targetType = methodCall.Method.GetGenericArguments()[0];
 					var sqlTable   = (SqlTable)statement.Target.Source;
-					var param      = Expression.Parameter(targetType, "s");
+					var param      = Expression.Parameter(sqlTable.ObjectType, "s");
 					var keys       = sqlTable.GetKeys(false).Cast<SqlField>().ToList();
-					foreach (var field in sqlTable.Fields.Values.Where(f => f.IsUpdatable).Except(keys))
+					foreach (var field in sqlTable.Fields.Where(f => f.IsUpdatable).Except(keys))
 					{
 						var expression = LinqToDB.Expressions.Extensions.GetMemberGetter(field.ColumnDescriptor.MemberInfo, param);
 						var expr       = mergeContext.SourceContext.ConvertToSql(builder.ConvertExpression(expression), 1, ConvertFlags.Field)[0].Sql;
 
 						operation.Items.Add(new SqlSetExpression(field, expr));
 					}
+
+					// skip empty Update operation with implicit setter
+					// per https://github.com/linq2db/linq2db/issues/2843
+					if (operation.Items.Count == 0)
+						return mergeContext;
 				}
+
+				statement.Operations.Add(operation);
 
 				if (!(predicate is ConstantExpression constPredicate) || constPredicate.Value != null)
 				{

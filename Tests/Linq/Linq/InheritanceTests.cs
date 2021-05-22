@@ -11,6 +11,7 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using System.Linq.Expressions;
 	using Model;
 
 	[TestFixture]
@@ -206,8 +207,8 @@ namespace Tests.Linq
 			{
 				var dd = GetNorthwindAsList(context);
 				Assert.AreEqual(
-					dd.DiscontinuedProduct.FirstOrDefault().ProductID,
-					db.DiscontinuedProduct.FirstOrDefault().ProductID);
+					dd.DiscontinuedProduct.FirstOrDefault()!.ProductID,
+					db.DiscontinuedProduct.FirstOrDefault()!.ProductID);
 			}
 		}
 
@@ -356,7 +357,7 @@ namespace Tests.Linq
 				var expected = db.Product.ToList().Select(x => x is Northwind.DiscontinuedProduct ? x : null).ToList();
 
 				Assert.That(result.Count,                    Is.GreaterThan(0));
-				Assert.That(expected.Count(),                Is.EqualTo(result.Count));
+				Assert.That(expected.Count,                  Is.EqualTo(result.Count));
 				Assert.That(result.Contains(null),           Is.True);
 				Assert.That(result.Select(x => x == null ? (int?)null : x.ProductID).Except(expected.Select(x => x == null ? (int?)null : x.ProductID)).Count(), Is.EqualTo(0));
 			}
@@ -407,8 +408,8 @@ namespace Tests.Linq
 
 		}
 
-		T FindById<T>(IQueryable<T> queryable, int id)
-			where T : IChildTest14
+		T? FindById<T>(IQueryable<T> queryable, int id)
+			where T : class, IChildTest14
 		{
 			return queryable.Where(x => x.ChildID == id).FirstOrDefault();
 		}
@@ -467,10 +468,7 @@ namespace Tests.Linq
 			[Column] public Guid GuidValue { get; set; }
 
 			[Column("ID")]
-			public virtual TypeCodeEnum TypeCode
-			{
-				get { return TypeCodeEnum.Base; }
-			}
+			public virtual TypeCodeEnum TypeCode => TypeCodeEnum.Base;
 		}
 
 		[InheritanceMapping(Code = TypeCodeEnum.A1, Type = typeof(InheritanceA1), IsDefault = false)]
@@ -481,28 +479,19 @@ namespace Tests.Linq
 			public List<InheritanceB> Bs { get; set; } = null!;
 
 			[Column("ID", IsDiscriminator = true)]
-			public override TypeCodeEnum TypeCode
-			{
-				get { return TypeCodeEnum.A; }
-			}
+			public override TypeCodeEnum TypeCode => TypeCodeEnum.A;
 		}
 
 		public class InheritanceA1 : InheritanceA
 		{
 			[Column("ID", IsDiscriminator = true)]
-			public override TypeCodeEnum TypeCode
-			{
-				get { return TypeCodeEnum.A1; }
-			}
+			public override TypeCodeEnum TypeCode => TypeCodeEnum.A1;
 		}
 
 		public class InheritanceA2 : InheritanceA
 		{
 			[Column("ID", IsDiscriminator = true)]
-			public override TypeCodeEnum TypeCode
-			{
-				get { return TypeCodeEnum.A2; }
-			}
+			public override TypeCodeEnum TypeCode => TypeCodeEnum.A2;
 		}
 
 		public class InheritanceB : InheritanceBase
@@ -662,5 +651,134 @@ namespace Tests.Linq
 				AreEqual(expected, result);
 			}
 		}
+
+		#region issue 2429
+
+		public abstract class Root
+		{
+			public abstract int Value { get; set; }
+			public abstract int GetValue();
+		}
+
+		[Table]
+		public class BaseTable : Root
+		{
+			[PrimaryKey, NotNull  ] public int Id { get; set; }
+			[Column(nameof(Value))] public int BaseValue { get; set; }
+
+			private static Expression<Func<BaseTable, int>> GeValueImpl() => e => e.BaseValue;
+
+			[ExpressionMethod(nameof(GeValueImpl), IsColumn = true)]
+			public override int Value { get => BaseValue; set => BaseValue = value; }
+
+			[ExpressionMethod(nameof(GeValueImpl))]
+			public override int GetValue() => BaseValue;
+
+			public static readonly BaseTable[] Data = new []
+			{
+				new BaseTable() { Id = 1, Value = 100 }
+			};
+		}
+
+		[Table]
+		public class BaseTable2
+		{
+			[PrimaryKey, NotNull] public         int Id { get; set; }
+			[Column             ] public virtual int Value { get; set; }
+
+			[ExpressionMethod(nameof(GetBaseTableOverrideImpl), IsColumn = true)]
+			public virtual int GetValue() => Value;
+
+			private static Expression<Func<BaseTable2, int>> GetBaseTableOverrideImpl() => e => e.Value;
+
+			public static readonly BaseTable2[] Data = new []
+			{
+				new BaseTable2() { Id = 1, Value = 100 }
+			};
+		}
+
+		public class DerivedTable2 : BaseTable2
+		{
+			private static Expression<Func<DerivedTable2, int>> GetDerivedTableOverrideImpl() => e => e.BaseValue * -1;
+
+			[Column(nameof(Value))] public int BaseValue { get; set; }
+
+			[ExpressionMethod(nameof(GetDerivedTableOverrideImpl), IsColumn = true)]
+			public override int Value { get; set; }
+
+			[ExpressionMethod(nameof(GetDerivedTableOverrideImpl))]
+			public override int GetValue() => BaseValue * -1;
+		}
+
+		[Test]
+		public void Issue2429PropertiesTest1([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(BaseTable.Data))
+			{
+					var baseTableRecordById = db.GetTable<BaseTable>().FirstOrDefault(x => x.Id == 1);
+					Assert.AreEqual(1, baseTableRecordById?.Id);
+					Assert.AreEqual(100, baseTableRecordById?.Value);
+
+					var baseTableRecordWithValuePredicate = db.GetTable<BaseTable>().FirstOrDefault(x => x.Id == 1 && x.Value == 100);
+					Assert.AreEqual(1, baseTableRecordWithValuePredicate?.Id);
+					Assert.AreEqual(100, baseTableRecordWithValuePredicate?.Value);
+			}
+		}
+
+		[Test]
+		public void Issue2429MethodsTest1([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(BaseTable.Data))
+			{
+				var baseTableRecordById = db.GetTable<BaseTable>().FirstOrDefault(x => x.Id == 1);
+				Assert.AreEqual(1, baseTableRecordById?.Id);
+				Assert.AreEqual(100, baseTableRecordById?.Value);
+
+				var baseTableRecordWithValuePredicate = db.GetTable<BaseTable>().FirstOrDefault(x => x.Id == 1 && x.GetValue() == 100);
+				Assert.AreEqual(1, baseTableRecordWithValuePredicate?.Id);
+				Assert.AreEqual(100, baseTableRecordWithValuePredicate?.Value);
+			}
+		}
+
+		[ActiveIssue(Details = "Invalid mappings?")]
+		[Test]
+		public void Issue2429PropertiesTest2([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(BaseTable2.Data))
+			{
+				var baseTableRecord    = db.GetTable<BaseTable2>().FirstOrDefault(x => x.Id == 1 && x.Value == 100);
+				//var derivedTableRecord = db.GetTable<DerivedTable2>().FirstOrDefault(x => x.Id == 1 && x.Value == (100 * -1 ));
+				var derivedTableRecord = db.GetTable<BaseTable2>().OfType<DerivedTable2>().FirstOrDefault(x => x.Id == 1 && x.Value == (100 * -1 ));
+
+				Assert.AreEqual(1, baseTableRecord?.Id);
+				Assert.AreEqual(100, baseTableRecord?.Value);
+
+				Assert.AreEqual(1, derivedTableRecord?.Id);
+				Assert.AreEqual(100, derivedTableRecord?.Value * -1);
+			}
+		}
+
+		[ActiveIssue(Details = "Invalid mappings?")]
+		[Test]
+		public void Issue2429MethodsTest2([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(BaseTable2.Data))
+			{
+				var baseTableRecord    = db.GetTable<BaseTable2>().FirstOrDefault(x => x.Id == 1 && x.GetValue() == 100);
+				//var derivedTableRecord = db.GetTable<DerivedTable2>().FirstOrDefault(x => x.Id == 1 && x.GetValue() == (100 * -1 ));
+				var derivedTableRecord = db.GetTable<BaseTable2>().OfType<DerivedTable2>().FirstOrDefault(x => x.Id == 1 && x.GetValue() == (100 * -1 ));
+
+				Assert.AreEqual(1, baseTableRecord?.Id);
+				Assert.AreEqual(100, baseTableRecord?.Value);
+
+				Assert.AreEqual(1, derivedTableRecord?.Id);
+				Assert.AreEqual(100, derivedTableRecord?.Value * -1);
+			}
+		}
+		#endregion
 	}
 }

@@ -5,10 +5,13 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	using SqlQuery;
-	using Mapping;
 	using Expressions;
 	using Linq;
+	using SqlQuery;
+#if !NET45
+	using LinqToDB.Common;
+	using Mapping;
+#endif
 
 	public interface IPostgreSQLExtensions
 	{
@@ -36,7 +39,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						builder.AddExpression("modifier", "ALL");
 						break;
 					default :
-						throw new ArgumentOutOfRangeException();
+						throw new InvalidOperationException($"Unexpected modifier: {modifier}");
 				}
 			}
 		}
@@ -309,6 +312,42 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			throw new LinqException($"'{nameof(ArrayToString)}' is server-side method.");
 		}
 
+		[Sql.Extension("{value} = ANY({array})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Comparison, IsPredicate = true)]
+		public static bool ValueIsEqualToAny<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T value, [ExprParameter] T[] array)
+		{
+			throw new LinqException($"'{nameof(ValueIsEqualToAny)}' is server-side method.");
+		}
+
+		[Sql.Extension("{value} < ANY({array})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Comparison, IsPredicate = true)]
+		public static bool ValueIsLessThanAny<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T value, [ExprParameter] T[] array)
+		{
+			throw new LinqException($"'{nameof(ValueIsLessThanAny)}' is server-side method.");
+		}
+
+		[Sql.Extension("{value} <= ANY({array})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Comparison, IsPredicate = true)]
+		public static bool ValueIsLessThanOrEqualToAny<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T value, [ExprParameter] T[] array)
+		{
+			throw new LinqException($"'{nameof(ValueIsLessThanOrEqualToAny)}' is server-side method.");
+		}
+
+		[Sql.Extension("{value} > ANY({array})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Comparison, IsPredicate = true)]
+		public static bool ValueIsGreaterThanAny<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T value, [ExprParameter] T[] array)
+		{
+			throw new LinqException($"'{nameof(ValueIsGreaterThanAny)}' is server-side method.");
+		}
+
+		[Sql.Extension("{value} >= ANY({array})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Comparison, IsPredicate = true)]
+		public static bool ValueIsGreaterThanOrEqualToAny<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T value, [ExprParameter] T[] array)
+		{
+			throw new LinqException($"'{nameof(ValueIsGreaterThanOrEqualToAny)}' is server-side method.");
+		}
+
+		[Sql.Extension("{value} <> ANY({array})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Comparison, IsPredicate = true)]
+		public static bool ValueIsNotEqualToAny<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T value, [ExprParameter] T[] array)
+		{
+			throw new LinqException($"'{nameof(ValueIsNotEqualToAny)}' is server-side method.");
+		}
+
 		#endregion
 
 		#region generate_series
@@ -319,7 +358,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		[ExpressionMethod(nameof(GenerateSeriesIntImpl))]
 		public static IQueryable<int> GenerateSeries(this IDataContext dc, [ExprParameter] int start, [ExprParameter] int stop)
 		{
-			return (_generateSeriesIntFunc ??= GenerateSeriesIntImpl().Compile())(dc, start, stop);
+			return (_generateSeriesIntFunc ??= GenerateSeriesIntImpl().CompileExpression())(dc, start, stop);
 		}
 
 		static Expression<Func<IDataContext, int, int, IQueryable<int>>> GenerateSeriesIntImpl()
@@ -333,7 +372,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		[ExpressionMethod(nameof(GenerateSeriesIntStepImpl))]
 		public static IQueryable<int> GenerateSeries(this IDataContext dc, [ExprParameter] int start, [ExprParameter] int stop, [ExprParameter] int step)
 		{
-			return (_generateSeriesIntStepFunc ??= GenerateSeriesIntStepImpl().Compile())(dc, start, stop, step);
+			return (_generateSeriesIntStepFunc ??= GenerateSeriesIntStepImpl().CompileExpression())(dc, start, stop, step);
 		}
 
 		static Expression<Func<IDataContext, int, int, int, IQueryable<int>>> GenerateSeriesIntStepImpl()
@@ -347,7 +386,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		[ExpressionMethod(nameof(GenerateSeriesDateImpl))]
 		public static IQueryable<DateTime> GenerateSeries(this IDataContext dc, [ExprParameter] DateTime start, [ExprParameter] DateTime stop, [ExprParameter] TimeSpan step)
 		{
-			return (_generateSeriesDateFunc ??= GenerateSeriesDateImpl().Compile())(dc, start, stop, step);
+			return (_generateSeriesDateFunc ??= GenerateSeriesDateImpl().CompileExpression())(dc, start, stop, step);
 		}
 
 		static Expression<Func<IDataContext, DateTime, DateTime, TimeSpan, IQueryable<DateTime>>> GenerateSeriesDateImpl()

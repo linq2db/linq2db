@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -12,7 +12,7 @@ namespace LinqToDB.Reflection
 
 		protected void AddMember(MemberAccessor member)
 		{
-			if (member == null) throw new ArgumentNullException("member");
+			if (member == null) throw new ArgumentNullException(nameof(member));
 
 			Members.Add(member);
 			_membersByName[member.MemberInfo.Name] = member;
@@ -45,22 +45,17 @@ namespace LinqToDB.Reflection
 
 		#region Items
 
-		public List<MemberAccessor>    Members       { get; } = new List<MemberAccessor>();
+		public List<MemberAccessor>    Members       { get; } = new();
 
-		readonly ConcurrentDictionary<string,MemberAccessor> _membersByName = new ConcurrentDictionary<string,MemberAccessor>();
+		readonly ConcurrentDictionary<string,MemberAccessor> _membersByName = new();
 
-		public MemberAccessor this[string memberName]
-		{
-			get
+		public MemberAccessor this[string memberName] =>
+			_membersByName.GetOrAdd(memberName, name =>
 			{
-				return _membersByName.GetOrAdd(memberName, name =>
-				{
-					var ma = new MemberAccessor(this, name, null);
-					Members.Add(ma);
-					return ma;
-				});
-			}
-		}
+				var ma = new MemberAccessor(this, name, null);
+				Members.Add(ma);
+				return ma;
+			});
 
 		public MemberAccessor this[int index] => Members[index];
 
@@ -68,7 +63,7 @@ namespace LinqToDB.Reflection
 
 		#region Static Members
 
-		static readonly ConcurrentDictionary<Type,TypeAccessor> _accessors = new ConcurrentDictionary<Type,TypeAccessor>();
+		static readonly ConcurrentDictionary<Type,TypeAccessor> _accessors = new();
 
 		public static TypeAccessor GetAccessor(Type type)
 		{

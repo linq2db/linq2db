@@ -3,7 +3,7 @@ using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
-namespace Tests.Update
+namespace Tests.xUpdate
 {
 	[TestFixture]
 	public class UpdateFromTests : TestBase
@@ -11,12 +11,12 @@ namespace Tests.Update
 		[Table]
 		public partial class UpdatedEntities
 		{
-			[PrimaryKey, NotNull] public int id { get; set; } 
+			[PrimaryKey, NotNull] public int id { get; set; }
 			[Column] public int Value1 { get; set; }
 			[Column] public int Value2 { get; set; }
 			[Column] public int Value3 { get; set; }
 
-			[Column] public int? RelationId { get; set; } 
+			[Column] public int? RelationId { get; set; }
 
 			[Association(ThisKey = "RelationId", OtherKey = "id")]
 			public UpdateRelation? Relation;
@@ -26,7 +26,7 @@ namespace Tests.Update
 		[Table]
 		public class UpdateRelation
 		{
-			[PrimaryKey, NotNull] public int id { get; set; } 
+			[PrimaryKey, NotNull] public int id { get; set; }
 			[Column] public int RelatedValue1 { get; set; }
 			[Column] public int RelatedValue2 { get; set; }
 			[Column] public int RelatedValue3 { get; set; }
@@ -35,7 +35,7 @@ namespace Tests.Update
 		[Table]
 		public partial class NewEntities
 		{
-			[PrimaryKey, NotNull] public int id { get; set; } 
+			[PrimaryKey, NotNull] public int id { get; set; }
 			[Column] public int Value1 { get; set; }
 			[Column] public int Value2 { get; set; }
 			[Column] public int Value3 { get; set; }
@@ -46,10 +46,10 @@ namespace Tests.Update
 		{
 			return new UpdatedEntities[]
 			{
-				new UpdatedEntities {id = 0, Value1 = 01, Value2 = 01, Value3 = 03, RelationId = 0}, 
-				new UpdatedEntities {id = 1, Value1 = 11, Value2 = 12, Value3 = 13, RelationId = 1}, 
-				new UpdatedEntities {id = 2, Value1 = 21, Value2 = 22, Value3 = 23, RelationId = 2}, 
-				new UpdatedEntities {id = 3, Value1 = 31, Value2 = 32, Value3 = 33, RelationId = 3}, 
+				new UpdatedEntities {id = 0, Value1 = 01, Value2 = 01, Value3 = 03, RelationId = 0},
+				new UpdatedEntities {id = 1, Value1 = 11, Value2 = 12, Value3 = 13, RelationId = 1},
+				new UpdatedEntities {id = 2, Value1 = 21, Value2 = 22, Value3 = 23, RelationId = 2},
+				new UpdatedEntities {id = 3, Value1 = 31, Value2 = 32, Value3 = 33, RelationId = 3},
 			};
 		}
 
@@ -57,10 +57,10 @@ namespace Tests.Update
 		{
 			return new UpdateRelation[]
 			{
-				new UpdateRelation {id = 0, RelatedValue1 = 01, RelatedValue2 = 02, RelatedValue3 = 03}, 
-				new UpdateRelation {id = 1, RelatedValue1 = 11, RelatedValue2 = 12, RelatedValue3 = 13}, 
-				new UpdateRelation {id = 2, RelatedValue1 = 21, RelatedValue2 = 22, RelatedValue3 = 23}, 
-				new UpdateRelation {id = 3, RelatedValue1 = 31, RelatedValue2 = 32, RelatedValue3 = 33}, 
+				new UpdateRelation {id = 0, RelatedValue1 = 01, RelatedValue2 = 02, RelatedValue3 = 03},
+				new UpdateRelation {id = 1, RelatedValue1 = 11, RelatedValue2 = 12, RelatedValue3 = 13},
+				new UpdateRelation {id = 2, RelatedValue1 = 21, RelatedValue2 = 22, RelatedValue3 = 23},
+				new UpdateRelation {id = 3, RelatedValue1 = 31, RelatedValue2 = 32, RelatedValue3 = 33},
 			};
 		}
 
@@ -68,10 +68,10 @@ namespace Tests.Update
 		{
 			return new NewEntities[]
 			{
-				new NewEntities {id = 0, Value1 = 0, Value2 = 0, Value3 = 0}, 
-				new NewEntities {id = 1, Value1 = 1, Value2 = 1, Value3 = 1}, 
-				new NewEntities {id = 2, Value1 = 2, Value2 = 2, Value3 = 2}, 
-				new NewEntities {id = 3, Value1 = 3, Value2 = 3, Value3 = 3}, 
+				new NewEntities {id = 0, Value1 = 0, Value2 = 0, Value3 = 0},
+				new NewEntities {id = 1, Value1 = 1, Value2 = 1, Value3 = 1},
+				new NewEntities {id = 2, Value1 = 2, Value2 = 2, Value3 = 2},
+				new NewEntities {id = 3, Value1 = 3, Value2 = 3, Value3 = 3},
 			};
 		}
 
@@ -83,7 +83,7 @@ namespace Tests.Update
 			var data = GenerateData();
 			var newData = GenerateNewData();
 			using (var db = GetDataContext(context))
-			using (var forUpdates = db.CreateLocalTable<UpdatedEntities>(data))
+			using (var forUpdates = db.CreateLocalTable(data))
 			using (var tempTable = db.CreateLocalTable(newData))
 			{
 				var someId = 100;
@@ -174,12 +174,11 @@ namespace Tests.Update
 
 				AreEqual(expected, actual);
 			}
-		}		
+		}
 
 		[Test]
 		public void UpdateTestJoinSkip(
 			[IncludeDataSources(
-				ProviderName.SqlServer,
 				TestProvName.AllSqlServer2005Plus,
 				TestProvName.AllPostgreSQL)]
 			string context)
@@ -228,7 +227,7 @@ namespace Tests.Update
 				AreEqual(expected, actual);
 
 			}
-		}		
+		}
 
 		[Test]
 		public void UpdateTestJoinSkipTake(
@@ -329,7 +328,7 @@ namespace Tests.Update
 
 				AreEqual(expected, actual);
 			}
-		}		
+		}
 
 		[Test]
 		public void UpdateTestAssociation(
@@ -354,7 +353,7 @@ namespace Tests.Update
 				Assert.AreEqual(13, updatedValue);
 
 			}
-		}		
+		}
 
 		[Test]
 		public void UpdateTestAssociationAsUpdatable(
@@ -382,7 +381,7 @@ namespace Tests.Update
 				Assert.AreEqual(13, updatedValue);
 
 			}
-		}		
+		}
 
 		[Test]
 		public void UpdateTestAssociationSimple(
@@ -412,7 +411,7 @@ namespace Tests.Update
 				Assert.AreEqual(36, updatedValue.Value2);
 				Assert.AreEqual(1,  updatedValue.Value3);
 			}
-		}		
+		}
 
 		[Test]
 		public void UpdateTestAssociationSimpleAsUpdatable(
@@ -445,6 +444,6 @@ namespace Tests.Update
 				Assert.AreEqual(36, updatedValue.Value2);
 				Assert.AreEqual(1,  updatedValue.Value3);
 			}
-		}		
+		}
 	}
 }

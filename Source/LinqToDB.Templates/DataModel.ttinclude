@@ -1,8 +1,6 @@
-<#@ assembly name="System.Data"                #>
-<#@ import namespace="System.Data"             #>
-<#@ import namespace="LinqToDB.SchemaProvider" #>
-<#@ import namespace="LinqToDB.Data"           #>
-<#@ include file="T4Model.ttinclude"           #>
+<#@ assembly name="System.Data"                   #>
+<#@ include file="LinqToDB.ttinclude" once="true" #>
+<#@ import namespace="LinqToDB.SchemaProvider"    #>
 <#
 	{
 		var beforeGenerateModel = BeforeGenerateModel;
@@ -20,74 +18,74 @@ string   NamespaceName
 	set { Model.Namespace.Name = value; }
 }
 
-string   ServerName                    = null;
-string   DatabaseName                  = null;
-string   DataContextName               = null;
-string   BaseDataContextClass          = null;
-string   BaseEntityClass               = null;
-string   OneToManyAssociationType      = "IEnumerable<{0}>";
+public string   ServerName;
+public string   DatabaseName;
+public string   DataContextName;
+public string   BaseDataContextClass;
+public string   BaseEntityClass;
+public string   OneToManyAssociationType      = "IEnumerable<{0}>";
 
-bool     GenerateDatabaseInfo          = true;
-bool     GenerateDatabaseName          = false;
-bool     GenerateConstructors          = true;
-string   DefaultConfiguration          = null;
-bool     GenerateAssociations          = true;
-bool     GenerateBackReferences        = true;
-bool     GenerateAssociationExtensions = false;
-bool     ReplaceSimilarTables          = true;
-bool     IncludeDefaultSchema          = true;
+public bool     GenerateDatabaseInfo          = true;
+public bool     GenerateDatabaseName;
+public bool     GenerateConstructors          = true;
+public string   DefaultConfiguration;
+public bool     GenerateAssociations          = true;
+public bool     GenerateBackReferences        = true;
+public bool     GenerateAssociationExtensions;
+public bool     ReplaceSimilarTables          = true;
+public bool     IncludeDefaultSchema          = true;
 
 Class    DataContextObject;
 
-bool PluralizeClassNames                 = false;
-bool SingularizeClassNames               = true;
-bool PluralizeDataContextPropertyNames   = true;
-bool SingularizeDataContextPropertyNames = false;
+public bool PluralizeClassNames;
+public bool SingularizeClassNames               = true;
+public bool PluralizeDataContextPropertyNames   = true;
+public bool SingularizeDataContextPropertyNames;
 
-bool NormalizeNames                      = true;
-bool NormalizeNamesWithoutUnderscores    = false;
-static bool EnforceModelNullability      = true;
+public bool NormalizeNames                      = true;
+public bool NormalizeNamesWithoutUnderscores;
+public static bool EnforceModelNullability      = true;
 
 private Func<string, bool, string> _toValidName;
-Func<string, bool, string> ToValidName
+public Func<string, bool, string> ToValidName
 {
 	get { return _toValidName ?? ToValidNameDefault; }
-	set { _toValidName = value; }
+	set { _toValidName = value;                      }
 }
 
 private Func<string, bool, string> _convertToCompilabl;
-Func<string, bool, string> ConvertToCompilable
+public Func<string, bool, string> ConvertToCompilable
 {
 	get { return _convertToCompilabl ?? ConvertToCompilableDefault; }
-	set { _convertToCompilabl = value; }
+	set { _convertToCompilabl = value;                              }
 }
 
 private Func<ForeignKey, string> _getAssociationExtensionPluralName;
-Func<ForeignKey, string> GetAssociationExtensionPluralName
+public Func<ForeignKey, string> GetAssociationExtensionPluralName
 {
 	get { return _getAssociationExtensionPluralName ?? GetAssociationExtensionPluralNameDefault; }
-	set { _getAssociationExtensionPluralName = value; }
+	set { _getAssociationExtensionPluralName = value;                                            }
 }
 
 private Func<ForeignKey, string> _getAssociationExtensionSingularName;
-Func<ForeignKey, string> GetAssociationExtensionSinglularName
+public Func<ForeignKey, string> GetAssociationExtensionSingularName
 {
-	get { return _getAssociationExtensionSingularName ?? GetAssociationExtensionSinglularNameDefault; }
-	set { _getAssociationExtensionSingularName = value; }
+	get { return _getAssociationExtensionSingularName ?? GetAssociationExtensionSingularNameDefault; }
+	set { _getAssociationExtensionSingularName = value;                                              }
 }
 
-LinqToDB.SchemaProvider.GetSchemaOptions GetSchemaOptions =
+public LinqToDB.SchemaProvider.GetSchemaOptions GetSchemaOptions =
 	new LinqToDB.SchemaProvider.GetSchemaOptions();
 
 LinqToDB.SqlProvider.ISqlBuilder SqlBuilder;
 
-Func<TableSchema,Table> LoadProviderSpecificTable = tableSchema => null;
+public Func<TableSchema,Table> LoadProviderSpecificTable = tableSchema => null;
 
-static Func<ColumnSchema,string>                 ConvertColumnMemberType          = (c) => c.MemberType;
-static Func<TableSchema,ColumnSchema,string>     ConvertTableColumnMemberType     = (t,c) => ConvertColumnMemberType(c);
-static Func<ProcedureSchema,ColumnSchema,string> ConvertProcedureColumnMemberType = (t,c) => ConvertColumnMemberType(c);
+public static Func<ColumnSchema,string>                 ConvertColumnMemberType          = (c) => c.MemberType;
+public static Func<TableSchema,ColumnSchema,string>     ConvertTableColumnMemberType     = (t,c) => ConvertColumnMemberType(c);
+public static Func<ProcedureSchema,ColumnSchema,string> ConvertProcedureColumnMemberType = (t,c) => ConvertColumnMemberType(c);
 
-HashSet<string> KeyWords = new HashSet<string>
+public HashSet<string> KeyWords = new HashSet<string>
 {
 	"abstract", "as",       "base",     "bool",    "break",     "byte",      "case",       "catch",     "char",    "checked",
 	"class",    "const",    "continue", "decimal", "default",   "delegate",  "do",         "double",    "else",    "enum",
@@ -98,6 +96,11 @@ HashSet<string> KeyWords = new HashSet<string>
 	"this",     "throw",    "true",     "try",     "typeof",    "uint",      "ulong",      "unchecked", "unsafe",  "ushort",
 	"using",    "virtual",  "volatile", "void",    "while",     "namespace", "string"
 };
+
+public static Func<string, bool>  IsValueType    = IsValueTypeDefault;
+public static Func<string,string> ToPlural       = s => s + "s";
+public static Func<string,string> ToSingular     = s => s;
+
 
 void LoadServerMetadata(DataConnection dataConnection)
 {
@@ -244,9 +247,10 @@ void LoadServerMetadata(DataConnection dataConnection)
 
 	foreach (var key in keys)
 	{
-		key.t.table.ForeignKeys.Add(
-			key.k.OtherTable.IsDefaultSchema ? key.KeyName : key.k.OtherTable.SchemaName + "." + key.KeyName,
-			key.key);
+		var keyName = (key.k.OtherTable.IsDefaultSchema ? null : key.k.OtherTable.SchemaName + ".")
+			+ key.k.OtherTable.TableName + "."
+			+ key.KeyName;
+		key.t.table.ForeignKeys.Add(keyName, key.key);
 
 		if (key.k.BackReference != null)
 			key.key.BackReference = keys.First(k => k.k == key.k.BackReference).key;
@@ -271,6 +275,7 @@ void LoadServerMetadata(DataConnection dataConnection)
 				IsTableFunction     = p.IsTableFunction,
 				IsAggregateFunction = p.IsAggregateFunction,
 				IsDefaultSchema     = p.IsDefaultSchema,
+				Description         = p.Description,
 				IsLoaded            = p.IsLoaded,
 				ResultTable         = p.ResultTable == null ? null :
 					new Table
@@ -318,7 +323,8 @@ void LoadServerMetadata(DataConnection dataConnection)
 						ParameterType = pr.ParameterType,
 						SystemType    = pr.SystemType,
 						DataType      = pr.DataType.ToString(),
-						IsNullable    = pr.IsNullable
+						IsNullable    = pr.IsNullable,
+						Description   = pr.Description,
 					})
 					.ToList(),
 			}
@@ -564,7 +570,6 @@ string ConvertToCompilableDefault(string name, bool mayRemoveUnderscore)
 Table GetTable(string name)
 {
 	Table tbl;
-
 	if (Tables.TryGetValue(name, out tbl))
 		return tbl;
 
@@ -584,7 +589,6 @@ Table GetTable(string name)
 Procedure GetProcedure(string name)
 {
 	Procedure proc;
-
 	if (Procedures.TryGetValue(name, out proc))
 		return proc;
 
@@ -607,7 +611,6 @@ Column GetColumn(string tableName, string columnName)
 	var tbl = GetTable(tableName);
 
 	Column col;
-
 	if (tbl.Columns.TryGetValue(columnName, out col))
 		return col;
 
@@ -634,10 +637,9 @@ ForeignKey GetForeignKey(string tableName, string fkName)
 {
 	var tbl = GetTable(tableName);
 
-	ForeignKey col;
-
-	if (tbl.ForeignKeys.TryGetValue(fkName, out col))
-		return col;
+	ForeignKey fk;
+	if (tbl.ForeignKeys.TryGetValue(fkName, out fk))
+		return fk;
 
 	WriteLine("#error FK '" + tableName + "'.'" + fkName +  "' not found.");
 	WriteLine("");
@@ -833,6 +835,7 @@ public partial class Procedure : Method
 	public bool   IsAggregateFunction { get; set; }
 	public bool   IsDefaultSchema     { get; set; }
 	public bool   IsLoaded            { get; set; }
+	public string Description         { get; set; }
 
 	public Table           ResultTable     { get; set; }
 	public Exception       ResultException { get; set; }
@@ -854,6 +857,7 @@ public class Parameter
 	public bool     IsNullable    { get; set; }
 	public Type     SystemType    { get; set; }
 	public string   DataType      { get; set; }
+	public string   Description   { get; set; }
 
 	public ModelType Type => new ModelType(ParameterType, !IsValueType(ParameterType), IsNullable);
 }
@@ -902,7 +906,7 @@ static string NormalizeFragment(string s)
 	return char.ToUpper(s[0]) + (s.Substring(1).All(char.IsUpper) ? s.Substring(1).ToLower() : s.Substring(1));
 }
 
-private string GetAssociationExtensionSinglularNameDefault(ForeignKey key)
+private string GetAssociationExtensionSingularNameDefault(ForeignKey key)
 {
 	return ToSingular(key.Name);
 }
@@ -910,6 +914,84 @@ private string GetAssociationExtensionSinglularNameDefault(ForeignKey key)
 private string GetAssociationExtensionPluralNameDefault(ForeignKey key)
 {
 	return ToPlural(ToSingular(key.Name));
+}
+
+static bool IsValueTypeDefault(string typeName)
+{
+	switch (typeName)
+	{
+		case "bool":
+		case "bool?":
+		case "char":
+		case "char?":
+		case "decimal":
+		case "decimal?":
+		case "int":
+		case "int?":
+		case "uint":
+		case "uint?":
+		case "byte":
+		case "byte?":
+		case "sbyte":
+		case "sbyte?":
+		case "long":
+		case "long?":
+		case "ulong":
+		case "ulong?":
+		case "short":
+		case "short?":
+		case "ushort":
+		case "ushort?":
+		case "float":
+		case "float?":
+		case "double":
+		case "double?":
+		case "DateTime":
+		case "DateTime?":
+		case "DateTimeOffset":
+		case "DateTimeOffset?":
+		case "TimeSpan":
+		case "TimeSpan?":
+		case "Guid":
+		case "Guid?":
+		case "SqlHierarchyId":
+		case "SqlHierarchyId?":
+		case "NpgsqlDate":
+		case "NpgsqlDate?":
+		case "NpgsqlTimeSpan":
+		case "NpgsqlTimeSpan?":
+		case "NpgsqlPoint":
+		case "NpgsqlPoint?":
+		case "NpgsqlLSeg":
+		case "NpgsqlLSeg?":
+		case "NpgsqlBox":
+		case "NpgsqlBox?":
+		case "NpgsqlPath":
+		case "NpgsqlPath?":
+		case "NpgsqlPolygon":
+		case "NpgsqlPolygon?":
+		case "NpgsqlCircle":
+		case "NpgsqlCircle?":
+		case "NpgsqlLine":
+		case "NpgsqlLine?":
+		case "NpgsqlInet":
+		case "NpgsqlInet?":
+		case "NpgsqlDateTime":
+		case "NpgsqlDateTime?":
+			return true;
+		case "object":
+		case "string":
+		case "byte[]":
+		case "BitArray":
+		case "SqlGeography":
+		case "SqlGeometry":
+		case "PhysicalAddress":
+		case "Array":
+		case "DataTable":
+			return false;
+	}
+
+	return typeName.EndsWith("?");
 }
 
 #>

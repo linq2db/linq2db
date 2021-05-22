@@ -2,11 +2,12 @@
 
 namespace LinqToDB.DataProvider.DB2
 {
+	using System.Collections.Generic;
 	using SqlQuery;
 
 	abstract partial class DB2SqlBuilderBase
 	{
-		protected override bool MergeSourceValueTypeRequired(SqlValuesTable sourceEnumerable, int row, int column)
+		protected override bool MergeSourceValueTypeRequired(SqlValuesTable source, IReadOnlyList<ISqlExpression[]> rows, int row, int column)
 		{
 			/* DB2 doesn't like NULLs without type information
 			 : ERROR [42610] [IBM][DB2/NT64] SQL0418N  The statement was not processed because the statement
@@ -30,7 +31,7 @@ namespace LinqToDB.DataProvider.DB2
 				return false;
 
 			// check if column contains NULL in all rows
-			return sourceEnumerable.Rows.All(r => r[column] is SqlValue value && value.Value == null);
+			return rows.All(r => r[column] is SqlValue value && value.Value == null);
 		}
 	}
 }

@@ -1,8 +1,7 @@
-﻿#if NET45 || NET46
+﻿#if NET472
 using LinqToDB;
 using LinqToDB.Metadata;
 using NUnit.Framework;
-using System;
 using System.ComponentModel;
 using System.Linq;
 
@@ -24,7 +23,7 @@ namespace Tests.Metadata
 
 			private string? _Phone;
 
-			#region Extensibility Method Definitions
+#region Extensibility Method Definitions
 			partial void OnLoaded();
 			partial void OnValidate(System.Data.Linq.ChangeAction action);
 			partial void OnCreated();
@@ -34,7 +33,7 @@ namespace Tests.Metadata
 			partial void OnCompanyNameChanged();
 			partial void OnPhoneChanging(string? value);
 			partial void OnPhoneChanged();
-			#endregion
+#endregion
 
 			public Shipper()
 			{
@@ -51,7 +50,7 @@ namespace Tests.Metadata
 						OnShipperIDChanging(value);
 						SendPropertyChanging();
 						_ShipperID = value;
-						SendPropertyChanged("ShipperID");
+						SendPropertyChanged(nameof(ShipperID));
 						OnShipperIDChanged();
 					}
 				}
@@ -67,7 +66,7 @@ namespace Tests.Metadata
 						OnCompanyNameChanging(value);
 						SendPropertyChanging();
 						_CompanyName = value;
-						SendPropertyChanged("CompanyName");
+						SendPropertyChanged(nameof(CompanyName));
 						OnCompanyNameChanged();
 					}
 				}
@@ -83,7 +82,7 @@ namespace Tests.Metadata
 						OnPhoneChanging(value);
 						SendPropertyChanging();
 						_Phone = value;
-						SendPropertyChanged("Phone");
+						SendPropertyChanged(nameof(Phone));
 						OnPhoneChanged();
 					}
 				}

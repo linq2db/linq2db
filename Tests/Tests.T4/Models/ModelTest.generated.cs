@@ -831,9 +831,7 @@ namespace Tests.T4.Model
 
 		#region INotifyPropertyChanged support
 
-#if !SILVERLIGHT
 		[field : NonSerialized]
-#endif
 		public virtual event PropertyChangedEventHandler? PropertyChanged;
 
 		protected void OnPropertyChanged(string propertyName)
@@ -860,9 +858,7 @@ namespace Tests.T4.Model
 
 		#region INotifyPropertyChanging support
 
-#if !SILVERLIGHT
 		[field : NonSerialized]
-#endif
 		public virtual event PropertyChangingEventHandler? PropertyChanging;
 
 		protected void OnPropertyChanging(string propertyName)
@@ -889,9 +885,7 @@ namespace Tests.T4.Model
 
 		#region Validation
 
-#if !SILVERLIGHT
 		[field : NonSerialized]
-#endif
 		public int _isValidCounter;
 
 		public static partial class CustomValidator
@@ -907,7 +901,7 @@ namespace Tests.T4.Model
 					var flag2 = ValidationResult.Success == ValidateEditableLong1(obj, obj.EditableLong1);
 					var flag3 = ValidationResult.Success == ValidateEditableInt1(obj, obj.EditableInt1);
 
-					return flag0 || flag1 || flag2 || flag3;
+					return flag0 && flag1 && flag2 && flag3;
 				}
 				finally
 				{
@@ -915,7 +909,7 @@ namespace Tests.T4.Model
 				}
 			}
 
-			public static ValidationResult ValidateEditableString1(TestClass1 obj, string value)
+			public static ValidationResult? ValidateEditableString1(TestClass1 obj, string value)
 			{
 				var list = new List<ValidationResult>();
 
@@ -939,7 +933,7 @@ namespace Tests.T4.Model
 				return ValidationResult.Success;
 			}
 
-			public static ValidationResult ValidateEditableString2(TestClass1 obj, string? value)
+			public static ValidationResult? ValidateEditableString2(TestClass1 obj, string? value)
 			{
 				var list = new List<ValidationResult>();
 
@@ -963,7 +957,7 @@ namespace Tests.T4.Model
 				return ValidationResult.Success;
 			}
 
-			public static ValidationResult ValidateEditableLong1(TestClass1 obj, long value)
+			public static ValidationResult? ValidateEditableLong1(TestClass1 obj, long value)
 			{
 				var list = new List<ValidationResult>();
 
@@ -987,7 +981,7 @@ namespace Tests.T4.Model
 				return ValidationResult.Success;
 			}
 
-			public static ValidationResult ValidateEditableInt1(TestClass1 obj, int value)
+			public static ValidationResult? ValidateEditableInt1(TestClass1 obj, int value)
 			{
 				var list = new List<ValidationResult>();
 

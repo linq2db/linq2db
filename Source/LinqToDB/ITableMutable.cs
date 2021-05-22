@@ -5,12 +5,13 @@
 	/// It may change or be removed without further notice.
 	/// </summary>
 	public interface ITableMutable<out T>
+		where T : notnull
 	{
 		/// <summary>
 		/// This is internal API and is not intended for use by Linq To DB applications.
 		/// It may change or be removed without further notice.
 		/// </summary>
-		ITable<T> ChangeServerName(string? serverName);
+		ITable<T> ChangeServerName  (string? serverName);
 
 		/// <summary>
 		/// This is internal API and is not intended for use by Linq To DB applications.
@@ -29,5 +30,11 @@
 		/// It may change or be removed without further notice.
 		/// </summary>
 		ITable<T> ChangeTableName   (string tableName);
+
+		/// <summary>
+		/// This is internal API and is not intended for use by Linq To DB applications.
+		/// It may change or be removed without further notice.
+		/// </summary>
+		ITable<T> ChangeTableOptions(TableOptions options);
 	}
 }

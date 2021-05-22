@@ -15,7 +15,6 @@ using NUnit.Framework;
 namespace Tests.DataProvider
 {
 	using System.Collections.Generic;
-	using System.Diagnostics.CodeAnalysis;
 	using System.Globalization;
 	using System.Threading.Tasks;
 	using LinqToDB.Tools.Comparers;
@@ -38,7 +37,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		static void TestType<T>(DataConnection connection, string dataTypeName, [DisallowNull] T value, string tableName = "AllTypes", bool convertToString = false)
+		static void TestType<T>(DataConnection connection, string dataTypeName, T value, string tableName = "AllTypes", bool convertToString = false)
+			where T : notnull
 		{
 			Assert.That(connection.Execute<T>(string.Format("SELECT {0} FROM {1} WHERE ID = 1", dataTypeName, tableName)),
 				Is.EqualTo(connection.MappingSchema.GetDefaultValue(typeof(T))));
@@ -352,13 +352,33 @@ namespace Tests.DataProvider
 			}
 		}
 
-		public static IEnumerable<Tuple<string, string>> StringTestCases
+		public static IEnumerable<StringTestCase> StringTestCases
 		{
 			get
 			{
-				yield return Tuple.Create("'\u2000\u2001\u2002\u2003\uabab\u03bctесt", "u&'''\\2000\\2001\\2002\\2003\\abab\\03bctесt'");
+				yield return new StringTestCase("'\u2000\u2001\u2002\u2003\uabab\u03bctесt", "u&'''\\2000\\2001\\2002\\2003\\abab\\03bctесt'", "Test case 1");
 				// this case fails for parameters, because driver terminates parameter value at \0 character
 				//yield return Tuple.Create("\0test", "char(0) + 'test'");
+			}
+		}
+
+		public class StringTestCase
+		{
+			private readonly string _caseName;
+
+			public StringTestCase(string value, string literal, string caseName)
+			{
+				_caseName = caseName;
+				Value     = value;
+				Literal   = literal;
+			}
+
+			public string Value   { get; }
+			public string Literal { get; }
+
+			public override string ToString()
+			{
+				return _caseName;
 			}
 		}
 
@@ -366,12 +386,12 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestUnicodeString(
 			[IncludeDataSources(TestProvName.AllSybase)] string context,
-			[ValueSource(nameof(StringTestCases))] Tuple<string,string> testCase)
+			[ValueSource(nameof(StringTestCases))] StringTestCase testCase)
 		{
 			using (var conn = new DataConnection(context))
 			{
-				var value = testCase.Item1;
-				var literal = testCase.Item2;
+				var value   = testCase.Value;
+				var literal = testCase.Literal;
 
 				// test raw literals queries
 				Assert.That(conn.Execute<string>($"SELECT Cast({literal} as char)"),               Is.EqualTo(value));
@@ -417,10 +437,10 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", arr1)), Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Create   ("p", arr1)), Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", null)), Is.EqualTo(null));
-				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as binary(1))", DataParameter.Binary("p", new byte[0])), Is.EqualTo(new byte[] {0}));
-				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Binary   ("p", new byte[0])),      Is.EqualTo(new byte[1]));
-				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", new byte[0])),      Is.EqualTo(new byte[1]));
-				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Image    ("p", new byte[0])),      Is.EqualTo(null));
+				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as binary(1))", DataParameter.Binary("p", Array<byte>.Empty)), Is.EqualTo(new byte[] {0}));
+				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Binary   ("p", Array<byte>.Empty)),      Is.EqualTo(new byte[1]));
+				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", Array<byte>.Empty)),      Is.EqualTo(new byte[1]));
+				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Image    ("p", Array<byte>.Empty)),      Is.EqualTo(null));
 				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Image    ("p", arr2)),             Is.EqualTo(arr2));
 				Assert.That(conn.Execute<byte[]>("SELECT @p", new DataParameter { Name = "p", Value = arr1 }), Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Create   ("p", new Binary(arr1))), Is.EqualTo(arr1));
@@ -441,7 +461,7 @@ namespace Tests.DataProvider
 					conn.Execute<Guid?>("SELECT '6F9619FF-8B86-D011-B42D-00C04FC964FF'"),
 					Is.EqualTo(new Guid("6F9619FF-8B86-D011-B42D-00C04FC964FF")));
 
-				var guid = Guid.NewGuid();
+				var guid = TestData.Guid1;
 
 				Assert.That(conn.Execute<Guid>("SELECT @p", DataParameter.Create("p", guid)),                Is.EqualTo(guid));
 				Assert.That(conn.Execute<Guid>("SELECT @p", new DataParameter { Name = "p", Value = guid }), Is.EqualTo(guid));
@@ -530,7 +550,7 @@ namespace Tests.DataProvider
 									MoneyValue    = 1000m + n,
 									DateTimeValue = new DateTime(2001,  1,  11,  1, 11, 21, 100),
 									BoolValue     = true,
-									GuidValue     = Guid.NewGuid(),
+									GuidValue     = TestData.SequentialGuid(n),
 									SmallIntValue = (short)n
 								}
 							));
@@ -561,7 +581,7 @@ namespace Tests.DataProvider
 									MoneyValue    = 1000m + n,
 									DateTimeValue = new DateTime(2001,  1,  11,  1, 11, 21, 100),
 									BoolValue     = true,
-									GuidValue     = Guid.NewGuid(),
+									GuidValue     = TestData.SequentialGuid(n),
 									SmallIntValue = (short)n
 								}
 							));
@@ -790,7 +810,7 @@ namespace Tests.DataProvider
 								DateTimeValue  = new DateTime(2001, 1, 11, 1, 11, 21, 100),
 								DateTimeValue2 = new DateTime(2001, 1, 10, 1, 11, 21, 100),
 								BoolValue      = true,
-								GuidValue      = Guid.NewGuid(),
+								GuidValue      = TestData.SequentialGuid(n),
 								BinaryValue    = new byte[] { (byte)n },
 								SmallIntValue  = (short)n,
 								IntValue       = n,
@@ -827,7 +847,7 @@ namespace Tests.DataProvider
 								DateTimeValue  = new DateTime(2001, 1, 11, 1, 11, 21, 100),
 								DateTimeValue2 = new DateTime(2001, 1, 10, 1, 11, 21, 100),
 								BoolValue      = true,
-								GuidValue      = Guid.NewGuid(),
+								GuidValue      = TestData.SequentialGuid(n),
 								BinaryValue    = new byte[] { (byte)n },
 								SmallIntValue  = (short)n,
 								IntValue       = n,
@@ -864,7 +884,7 @@ namespace Tests.DataProvider
 								DateTimeValue  = new DateTime(2001, 1, 11, 1, 11, 21, 100),
 								DateTimeValue2 = new DateTime(2001, 1, 10, 1, 11, 21, 100),
 								BoolValue      = true,
-								GuidValue      = Guid.NewGuid(),
+								GuidValue      = TestData.SequentialGuid(n),
 								BinaryValue    = new byte[] { (byte)n },
 								SmallIntValue  = (short)n,
 								IntValue       = n,
@@ -901,7 +921,7 @@ namespace Tests.DataProvider
 								DateTimeValue  = new DateTime(2001, 1, 11, 1, 11, 21, 100),
 								DateTimeValue2 = new DateTime(2001, 1, 10, 1, 11, 21, 100),
 								BoolValue      = true,
-								GuidValue      = Guid.NewGuid(),
+								GuidValue      = TestData.SequentialGuid(n),
 								BinaryValue    = new byte[] { (byte)n },
 								SmallIntValue  = (short)n,
 								IntValue       = n,
@@ -989,7 +1009,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		void CompareObject<T>(MappingSchema mappingSchema, [DisallowNull] T actual, [DisallowNull] T test, bool hasBitBug)
+		void CompareObject<T>(MappingSchema mappingSchema, T actual, T test, bool hasBitBug)
+			where T: notnull
 		{
 			var ed = mappingSchema.GetEntityDescriptor(typeof(T));
 

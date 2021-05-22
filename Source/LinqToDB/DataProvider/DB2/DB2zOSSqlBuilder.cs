@@ -1,6 +1,6 @@
 ﻿namespace LinqToDB.DataProvider.DB2
 {
-	using LinqToDB.Mapping;
+	using Mapping;
 	using SqlProvider;
 
 	class DB2zOSSqlBuilder : DB2SqlBuilderBase

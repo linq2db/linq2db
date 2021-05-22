@@ -126,8 +126,8 @@ namespace Tests.Linq
 				var query = Sql.Ext.SQLite().MatchTable(db.GetTable<FtsTable>(), "found");
 
 				var sql = query.ToString()!;
-				Assert.That(sql.Contains("p1 = 'found'"));
-				Assert.That(sql.Contains("[FTS5_TABLE](@p1)"));
+				Assert.That(sql.Contains("p_1 = 'found'"));
+				Assert.That(sql.Contains("[FTS5_TABLE](@p_1)"));
 			}
 		}
 
@@ -498,7 +498,7 @@ namespace Tests.Linq
 				finally
 				{
 					Assert.AreEqual("INSERT INTO [FTS5_TABLE]([FTS5_TABLE], rowid, [text1], [text2]) VALUES('delete', 2, @p0, @p1)", db.LastQuery);
-					
+
 					Assert.AreEqual(2, db.Command.Parameters.Count);
 					Assert.AreEqual("one", ((DbParameter)db.Command.Parameters[0]!).Value);
 					Assert.AreEqual("two", ((DbParameter)db.Command.Parameters[1]!).Value);
@@ -682,6 +682,32 @@ namespace Tests.Linq
 				{
 					Assert.AreEqual("INSERT INTO [FTS5_TABLE]([FTS5_TABLE], rank) VALUES('usermerge', 7)", db.LastQuery);
 				}
+			}
+		}
+		#endregion
+
+		#region FTS shadow tables
+		[Table]
+		class FTS3_TABLE_segdir
+		{
+			[Column] public long    level;
+			[Column] public long    idx;
+			[Column] public long?   start_block;
+			[Column] public long?   leaves_end_block;
+			//[Column] public long?   end_block;
+			// from documentation:
+			// This field may contain either an integer or a text field consisting of two integers separated by a space character
+			[Column] public string?   end_block;
+			[Column] public byte[]? root;
+		}
+
+		[ActiveIssue(Configuration = TestProvName.AllSQLiteClassic, Details = "Make hybrid fields work for classic provider too")]
+		[Test]
+		public void Fts3SegDirTableQuery([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				db.GetTable<FTS3_TABLE_segdir>().ToList();
 			}
 		}
 		#endregion

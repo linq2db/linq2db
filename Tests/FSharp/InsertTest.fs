@@ -36,7 +36,7 @@ let Insert2 (db : IDataContext) =
     let id = query {
         for p in db.GetTable<Person>() do
         maxBy p.ID }
-  //  try
+    try
     db.Insert(p) |> ignore
 
     let inserted = query {
@@ -48,5 +48,5 @@ let Insert2 (db : IDataContext) =
     NUnitAssert.AreEqual(p.Name.LastName, inserted.Name.LastName)
     NUnitAssert.AreEqual(p.Gender, inserted.Gender)
 
-//    finally
-        //db.GetTable<Person>().Delete(fun t -> t.ID > id) |> ignore
+    finally
+        db.GetTable<Person>().Delete(fun t -> t.ID > id) |> ignore

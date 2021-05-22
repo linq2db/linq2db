@@ -18,7 +18,6 @@ namespace LinqToDB.SqlQuery
 		public SqlTable()
 		{
 			SourceID = Interlocked.Increment(ref SelectQuery.SourceIDCounter);
-			Fields   = new Dictionary<string,SqlField>();
 		}
 
 		internal SqlTable(
@@ -26,9 +25,10 @@ namespace LinqToDB.SqlQuery
 			string? server, string? database, string? schema, string? physicalName,
 			Type?                    objectType,
 			SequenceNameAttribute[]? sequenceAttributes,
-			SqlField[]               fields,
+			IEnumerable<SqlField>    fields,
 			SqlTableType             sqlTableType,
-			ISqlExpression[]?        tableArguments)
+			ISqlExpression[]?        tableArguments,
+			TableOptions             tableOptions)
 		{
 			SourceID           = id;
 			Name               = name;
@@ -40,30 +40,19 @@ namespace LinqToDB.SqlQuery
 			ObjectType         = objectType;
 			SequenceAttributes = sequenceAttributes;
 
-			Fields = new Dictionary<string, SqlField>();
-
 			AddRange(fields);
-
-			foreach (var field in fields)
-			{
-				if (field.Name == "*")
-				{
-					_all = field;
-					Fields.Remove("*");
-					_all.Table = this;
-					break;
-				}
-			}
 
 			SqlTableType   = sqlTableType;
 			TableArguments = tableArguments;
+			TableOptions   = tableOptions;
 		}
 
 		#endregion
 
 		#region Init from type
 
-		public SqlTable(MappingSchema mappingSchema, Type objectType, string? physicalName = null) : this()
+		public SqlTable(MappingSchema mappingSchema, Type objectType, string? physicalName = null)
+			: this()
 		{
 			if (mappingSchema == null) throw new ArgumentNullException(nameof(mappingSchema));
 
@@ -75,6 +64,7 @@ namespace LinqToDB.SqlQuery
 			Name         = ed.TableName;
 			ObjectType   = objectType;
 			PhysicalName = physicalName ?? Name;
+			TableOptions = ed.TableOptions;
 
 			foreach (var column in ed.Columns)
 			{
@@ -151,7 +141,7 @@ namespace LinqToDB.SqlQuery
 			ObjectType         = table.ObjectType;
 			SequenceAttributes = table.SequenceAttributes;
 
-			foreach (var field in table.Fields.Values)
+			foreach (var field in table.Fields)
 				Add(new SqlField(field));
 
 			SqlTableType   = table.SqlTableType;
@@ -193,7 +183,7 @@ namespace LinqToDB.SqlQuery
 		{
 			get
 			{
-				Fields.TryGetValue(fieldName, out var field);
+				_fieldsLookup.TryGetValue(fieldName, out var field);
 				return field;
 			}
 		}
@@ -207,23 +197,39 @@ namespace LinqToDB.SqlQuery
 		public virtual string?           PhysicalName   { get; set; }
 		public virtual SqlTableType      SqlTableType   { get; set; }
 		public         ISqlExpression[]? TableArguments { get; set; }
+		public         TableOptions      TableOptions   { get; set; }
 
-		public Dictionary<string,SqlField> Fields { get; }
+		private readonly Dictionary<string, SqlField> _fieldsLookup   = new ();
 
-		public SequenceNameAttribute[]? SequenceAttributes { get; protected set; }
+		// list user to preserve order of fields in queries
+		private readonly List<SqlField>                  _orderedFields  = new ();
+		public           IReadOnlyList<SqlField>         Fields => _orderedFields;
+
+		// identity fields cached, as it is most used fields filter
+		private readonly List<SqlField>                  _identityFields = new ();
+		public IReadOnlyList<SqlField> IdentityFields => _identityFields;
+
+		internal void ClearFields()
+		{
+			_fieldsLookup  .Clear();
+			_orderedFields .Clear();
+			_identityFields.Clear();
+		}
+
+		public SequenceNameAttribute[]? SequenceAttributes { get; internal set; }
 
 		private SqlField? _all;
-		public  SqlField  All => _all ??= SqlField.All(this);
+		public  SqlField   All => _all ??= SqlField.All(this);
 
 		public SqlField? GetIdentityField()
 		{
 			foreach (var field in Fields)
-				if (field.Value.IsIdentity)
-					return field.Value;
+				if (field.IsIdentity)
+					return field;
 
 			var keys = GetKeys(true);
 
-			if (keys != null && keys.Count == 1)
+			if (keys.Count == 1)
 				return (SqlField)keys[0];
 
 			return null;
@@ -235,7 +241,16 @@ namespace LinqToDB.SqlQuery
 
 			field.Table = this;
 
-			Fields.Add(field.Name, field);
+			if (field.Name == "*")
+				_all = field;
+			else
+			{
+				_fieldsLookup.Add(field.Name, field);
+				_orderedFields.Add(field);
+
+				if (field.IsIdentity)
+					_identityFields.Add(field);
+			}
 		}
 
 		public void AddRange(IEnumerable<SqlField> collection)
@@ -248,71 +263,25 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlTableSource Members
 
-		public   int  SourceID { get; protected set; }
+		public int SourceID { get; protected set; }
 
 		List<ISqlExpression>? _keyFields;
 
 		public IList<ISqlExpression> GetKeys(bool allIfEmpty)
 		{
-			if (_keyFields == null)
-			{
-				_keyFields = (
-					from f in Fields.Values
-					where   f.IsPrimaryKey
-					orderby f.PrimaryKeyOrder
-					select f as ISqlExpression
-				).ToList();
-			}
+			_keyFields ??=
+			(
+				from f in Fields
+				where f.IsPrimaryKey
+				orderby f.PrimaryKeyOrder
+				select f as ISqlExpression
+			)
+			.ToList();
 
 			if (_keyFields.Count == 0 && allIfEmpty)
-				return Fields.Values.Select(f => f as ISqlExpression).ToList();
+				return Fields.Select(f => f as ISqlExpression).ToList();
 
 			return _keyFields;
-		}
-
-		#endregion
-
-		#region ICloneableElement Members
-
-		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			if (!objectTree.TryGetValue(this, out var clone))
-			{
-				var table = new SqlTable
-				{
-					Name               = Name,
-					Alias              = Alias,
-					Server             = Server,
-					Database           = Database,
-					Schema             = Schema,
-					PhysicalName       = PhysicalName,
-					ObjectType         = ObjectType,
-					SqlTableType       = SqlTableType,
-					SequenceAttributes = SequenceAttributes,
-				};
-
-				table.Fields.Clear();
-
-				foreach (var field in Fields)
-				{
-					var fc = new SqlField(field.Value);
-
-					objectTree.Add(field.Value, fc);
-					table.     Add(fc);
-				}
-
-				TableArguments = TableArguments?.Select(e => (ISqlExpression)e.Clone(objectTree, doClone)).ToArray();
-
-				objectTree.Add(this, table);
-				objectTree.Add(All,  table.All);
-
-				clone = table;
-			}
-
-			return clone;
 		}
 
 		#endregion
@@ -321,7 +290,7 @@ namespace LinqToDB.SqlQuery
 
 		public virtual QueryElementType ElementType { [DebuggerStepThrough] get; } = QueryElementType.SqlTable;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		public virtual StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{
 			if (Server   != null) sb.Append($"[{Server}].");
 			if (Database != null) sb.Append($"[{Database}].");
@@ -369,7 +338,7 @@ namespace LinqToDB.SqlQuery
 
 		#region System tables
 		internal static SqlTable Inserted(Type objectType)
-			=> new SqlTable(objectType)
+			=> new (objectType)
 			{
 				Name         = "INSERTED",
 				PhysicalName = "INSERTED",
@@ -379,7 +348,7 @@ namespace LinqToDB.SqlQuery
 				SqlTableType = SqlTableType.SystemTable,
 			};
 		internal static SqlTable Deleted(Type objectType)
-			=> new SqlTable(objectType)
+			=> new (objectType)
 			{
 				Name         = "DELETED",
 				PhysicalName = "DELETED",

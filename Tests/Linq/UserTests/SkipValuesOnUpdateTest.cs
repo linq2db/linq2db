@@ -1,9 +1,7 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
+using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
-
-using LinqToDB;
 
 namespace Tests.UserTests
 {
@@ -76,7 +74,7 @@ namespace Tests.UserTests
 
 					Assert.Greater(count, 0);
 
-					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1);
+					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 
 					Assert.IsNotNull(r);
 					Assert.AreEqual(r.Name, "Manuel");
@@ -85,7 +83,7 @@ namespace Tests.UserTests
 					r.Age = 15;
 					count = db.Update(r);
 					Assert.Greater(count, 0);
-					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1);
+					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 					Assert.IsNotNull(r);
 					Assert.AreEqual(r.Age, 15);
 					Assert.AreEqual(r.Name, "Jacob");
@@ -94,7 +92,7 @@ namespace Tests.UserTests
 					r.Age = 22;
 					count = db.Update(r);
 					Assert.Greater(count, 0);
-					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1);
+					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 					Assert.IsNotNull(r);
 					Assert.AreEqual(r.Age, 22);
 					Assert.AreEqual(r.Name, "Jacob");
@@ -114,7 +112,7 @@ namespace Tests.UserTests
 
 					Assert.Greater(count, 0);
 
-					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1);
+					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 
 					Assert.IsNotNull(r);
 					Assert.AreEqual(r.Age, 2);
@@ -123,7 +121,7 @@ namespace Tests.UserTests
 					r.Age = 15;
 					count = db.Update(r);
 					Assert.Greater(count, 0);
-					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1);
+					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 					Assert.IsNotNull(r);
 					Assert.AreEqual(r.Age, 15);
 					Assert.AreEqual(r.Name, "Franki");
@@ -132,7 +130,7 @@ namespace Tests.UserTests
 					r.Age = 2;
 					count = db.Update(r);
 					Assert.Greater(count, 0);
-					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1);
+					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 					Assert.IsNotNull(r);
 					Assert.AreEqual(r.Age, 15);
 					Assert.AreEqual(r.Name, "Jack");
@@ -150,7 +148,7 @@ namespace Tests.UserTests
 					var count = db.Insert(new TestTableNull() { Id = 1, Name = "Tommy", Age = null });
 
 					Assert.Greater(count, 0);
-					var r = db.GetTable<TestTableNull>().FirstOrDefault(t => t.Id == 1);
+					var r = db.GetTable<TestTableNull>().FirstOrDefault(t => t.Id == 1)!;
 
 					Assert.IsNotNull(r);
 					Assert.IsNull(r.Age);
@@ -159,7 +157,7 @@ namespace Tests.UserTests
 					r.Age = 2;
 					count = db.Update(r);
 					Assert.Greater(count, 0);
-					r = db.GetTable<TestTableNull>().FirstOrDefault(t => t.Id == 1);
+					r = db.GetTable<TestTableNull>().FirstOrDefault(t => t.Id == 1)!;
 					Assert.IsNotNull(r);
 					Assert.AreEqual(r.Age, 2);
 					Assert.AreEqual(r.Name, "Jack");
@@ -168,7 +166,7 @@ namespace Tests.UserTests
 					r.Age = null;
 					count = db.Update(r);
 					Assert.Greater(count, 0);
-					r = db.GetTable<TestTableNull>().FirstOrDefault(t => t.Id == 1);
+					r = db.GetTable<TestTableNull>().FirstOrDefault(t => t.Id == 1)!;
 					Assert.IsNotNull(r);
 					Assert.AreEqual(r.Age, 2);
 					Assert.AreEqual(r.Name, "Franki");
@@ -188,7 +186,7 @@ namespace Tests.UserTests
 
 					Assert.Greater(count, 0);
 
-					var r = db.GetTable<TestTableFluent>().FirstOrDefault(t => t.Id == 1);
+					var r = db.GetTable<TestTableFluent>().FirstOrDefault(t => t.Id == 1)!;
 
 					Assert.IsNotNull(r);
 					Assert.AreEqual(r.Age, 2);
@@ -197,7 +195,7 @@ namespace Tests.UserTests
 					r.Age = 18;
 					count = db.Update(r);
 					Assert.Greater(count, 0);
-					r = db.GetTable<TestTableFluent>().FirstOrDefault(t => t.Id == 1);
+					r = db.GetTable<TestTableFluent>().FirstOrDefault(t => t.Id == 1)!;
 					Assert.IsNotNull(r);
 					Assert.AreEqual(r.Age, 18);
 					Assert.AreEqual(r.Name, "Franki");
@@ -206,7 +204,7 @@ namespace Tests.UserTests
 					r.Age = 2;
 					count = db.Update(r);
 					Assert.Greater(count, 0);
-					r = db.GetTable<TestTableFluent>().FirstOrDefault(t => t.Id == 1);
+					r = db.GetTable<TestTableFluent>().FirstOrDefault(t => t.Id == 1)!;
 					Assert.IsNotNull(r);
 					Assert.AreEqual(r.Age, 18);
 					Assert.AreEqual(r.Name, "Jack");
@@ -225,7 +223,7 @@ namespace Tests.UserTests
 
 					Assert.Greater(count, 0);
 
-					var r = db.GetTable<TestTableEnum>().FirstOrDefault(t => t.Id == 1);
+					var r = db.GetTable<TestTableEnum>().FirstOrDefault(t => t.Id == 1)!;
 
 					Assert.IsNotNull(r);
 					Assert.AreEqual(r.Gender, TestTableEnum.GenderType.Female);
@@ -235,7 +233,7 @@ namespace Tests.UserTests
 					r.Gender = TestTableEnum.GenderType.Male;
 					count = db.Update(r);
 					Assert.Greater(count, 0);
-					r = db.GetTable<TestTableEnum>().FirstOrDefault(t => t.Id == 1);
+					r = db.GetTable<TestTableEnum>().FirstOrDefault(t => t.Id == 1)!;
 					Assert.IsNotNull(r);
 					Assert.AreEqual(r.Age, 2);
 					Assert.AreEqual(r.Name, "Jack");
@@ -246,7 +244,7 @@ namespace Tests.UserTests
 					r.Gender = TestTableEnum.GenderType.Female;
 					count = db.Update(r);
 					Assert.Greater(count, 0);
-					r = db.GetTable<TestTableEnum>().FirstOrDefault(t => t.Id == 1);
+					r = db.GetTable<TestTableEnum>().FirstOrDefault(t => t.Id == 1)!;
 					Assert.IsNotNull(r);
 					Assert.AreEqual(r.Age, 20);
 					Assert.AreEqual(r.Name, "Francine");

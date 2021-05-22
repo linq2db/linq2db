@@ -66,8 +66,7 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			stringBuilder.Append("0x");
 
-			foreach (var b in value)
-				stringBuilder.Append(b.ToString("X2"));
+			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
 		}
 
 		internal static readonly MappingSchema Instance = new MySqlMappingSchema();

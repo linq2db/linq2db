@@ -8,9 +8,9 @@ using JetBrains.Annotations;
 
 namespace LinqToDB
 {
+	using System.Threading;
 	using Async;
 	using Linq;
-	using System.Threading;
 
 	public partial class LinqExtensions
 	{
@@ -47,6 +47,7 @@ namespace LinqToDB
 		public static ITable<T> LoadWithAsTable<T>(
 			                this ITable<T> table,
 			[InstantHandle] Expression<Func<T,object?>> selector)
+			where T : notnull
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
 

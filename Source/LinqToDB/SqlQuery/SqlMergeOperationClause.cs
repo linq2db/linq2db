@@ -4,7 +4,7 @@ using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlMergeOperationClause : IQueryElement, ISqlExpressionWalkable, ICloneableElement
+	public class SqlMergeOperationClause : IQueryElement, ISqlExpressionWalkable
 	{
 		public SqlMergeOperationClause(MergeOperationType type)
 		{
@@ -97,7 +97,7 @@ namespace LinqToDB.SqlQuery
 
 					foreach (var item in Items)
 					{
-						sb.Append("\t");
+						sb.Append('\t');
 						((IQueryElement)item).ToString(sb, dic);
 						sb.AppendLine();
 					}
@@ -117,7 +117,7 @@ namespace LinqToDB.SqlQuery
 
 					foreach (var item in Items)
 					{
-						sb.Append("\t");
+						sb.Append('\t');
 						((IQueryElement)item).ToString(sb, dic);
 						sb.AppendLine();
 					}
@@ -137,7 +137,7 @@ namespace LinqToDB.SqlQuery
 
 					foreach (var item in Items)
 					{
-						sb.Append("\t");
+						sb.Append('\t');
 						((IQueryElement)item).ToString(sb, dic);
 						sb.AppendLine();
 					}
@@ -163,15 +163,6 @@ namespace LinqToDB.SqlQuery
 			}
 
 			return sb;
-		}
-
-		#endregion
-
-		#region ICloneableElement
-
-		ICloneableElement ICloneableElement.Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			throw new NotImplementedException();
 		}
 
 		#endregion

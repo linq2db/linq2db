@@ -7,7 +7,7 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
-namespace Tests.ComplexTests2
+namespace Tests.Linq
 {
 	using Model;
 
@@ -235,6 +235,7 @@ namespace Tests.ComplexTests2
 		{
 			var ms = SetMappings();
 
+			using (new DisableBaseline("TODO: debug reason for inconsistent column order"))
 			using (var db = GetDataContext(context, ms))
 			{
 				try
@@ -255,6 +256,7 @@ namespace Tests.ComplexTests2
 		{
 			var ms = SetMappings();
 
+			using (new DisableBaseline("TODO: debug reason for inconsistent column order"))
 			using (var db = GetDataContext(context, ms))
 			{
 				try
@@ -275,6 +277,7 @@ namespace Tests.ComplexTests2
 		{
 			var ms = SetMappings();
 
+			using (new DisableBaseline("TODO: debug reason for inconsistent column order"))
 			using (var db = GetDataContext(context, ms))
 			{
 				try
@@ -302,6 +305,7 @@ namespace Tests.ComplexTests2
 		{
 			var ms = SetMappings();
 
+			using (new DisableBaseline("TODO: debug reason for inconsistent column order"))
 			using (var db = GetDataContext(context, ms))
 			{
 				try
@@ -324,6 +328,7 @@ namespace Tests.ComplexTests2
 		{
 			var ms = SetMappings();
 
+			using (new DisableBaseline("TODO: debug reason for inconsistent column order"))
 			using (var db = GetDataContext(context, ms))
 			{
 				try
@@ -333,12 +338,12 @@ namespace Tests.ComplexTests2
 
 					Assert.NotNull(db.GetTable<Dog>().First(x => x.AnimalType == AnimalType.Big));
 					Assert.NotNull(db.GetTable<Dog>().First(x => x.AnimalType == d.AnimalType));
-
+					
 					Assert.NotNull(db.GetTable<Dog>().First(x => x.AnimalType2 == AnimalType2.Big));
 					Assert.NotNull(db.GetTable<Dog>().First(x => x.AnimalType2 == d.AnimalType2));
 
 					Assert.NotNull(db.GetTable<Animal>().First(x => x is SuperWildAnimal));
-
+					
 					Assert.NotNull(db.GetTable<Test>().First(x => x.TestAnimal is Dog && ((Dog)x.TestAnimal).EyeId == 1));
 				}
 				finally
@@ -353,6 +358,7 @@ namespace Tests.ComplexTests2
 		{
 			var ms = SetMappings();
 
+			using (new DisableBaseline("TODO: debug reason for inconsistent column order"))
 			using (var db = GetDataContext(context, ms))
 			{
 				try
@@ -383,6 +389,8 @@ namespace Tests.ComplexTests2
 		[Test]
 		public void TestInsertUsingDerivedObjectUsingAttributes([DataSources] string context)
 		{
+			ResetPersonIdentity(context);
+
 			var ms = SetMappings();
 			using (var db = GetDataContext(context, ms))
 			{
@@ -407,7 +415,7 @@ namespace Tests.ComplexTests2
 
 					void Validate()
 					{
-						var data = db.GetTable<Person>().FirstOrDefault(_ => _.FirstName == "test_inherited_insert");
+						var data = db.GetTable<Person>().FirstOrDefault(_ => _.FirstName == "test_inherited_insert")!;
 						Assert.IsNotNull(data);
 						Assert.AreEqual(person.ID        , data.ID);
 						Assert.AreEqual(person.FirstName , data.FirstName);
@@ -424,10 +432,11 @@ namespace Tests.ComplexTests2
 		}
 
 		[Test]
-		public void TestInsertUsingDerivedObjectUsingFluentMapping([DataSources] string context)
+		public void TestInsertUsingDerivedObjectUsingFluentMapping([InsertOrUpdateDataSources] string context)
 		{
 			var ms = SetMappings();
 
+			using (new DisableBaseline("TODO: debug reason for inconsistent column order"))
 			using (var db = GetDataContext(context, ms))
 			{
 				try
@@ -458,7 +467,7 @@ namespace Tests.ComplexTests2
 						else
 							Assert.AreEqual(1, cnt);
 
-						var data = db.GetTable<Eye>().Where(_ => _.Id == 123).FirstOrDefault();
+						var data = db.GetTable<Eye>().Where(_ => _.Id == 123).FirstOrDefault()!;
 						Assert.IsNotNull(data);
 						Assert.AreEqual(eye.Id, data.Id);
 						Assert.AreEqual(eye.Xy, data.Xy);
@@ -472,10 +481,11 @@ namespace Tests.ComplexTests2
 		}
 
 		[Test]
-		public void TestInheritanceByBaseType([DataSources] string context)
+		public void TestInheritanceByBaseType([InsertOrUpdateDataSources] string context)
 		{
 			var ms = SetMappings();
 
+			using (new DisableBaseline("TODO: debug reason for inconsistent column order"))
 			using (var db = GetDataContext(context, ms))
 			{
 				try
@@ -514,7 +524,7 @@ namespace Tests.ComplexTests2
 						else
 							Assert.AreEqual(1, cnt);
 
-						var data = db.GetTable<Dog>().Where(_ => _.Id == 666).FirstOrDefault();
+						var data = db.GetTable<Dog>().Where(_ => _.Id == 666).FirstOrDefault()!;
 						Assert.IsNotNull(data);
 						Assert.AreEqual(dog.Id            , data.Id);
 						Assert.AreEqual(dog.AnimalType    , data.AnimalType);

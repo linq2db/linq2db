@@ -1,10 +1,7 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
+using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
-
-using LinqToDB;
-using LinqToDB.Linq;
 
 namespace Tests.UserTests
 {
@@ -22,7 +19,7 @@ namespace Tests.UserTests
 		}
 		
 		[Test]
-		public void TestSkipInsertUpdate([DataSources] string context, [Values(1, 2, 1)] int value)
+		public void TestSkipInsertUpdate([DataSources] string context, [Values(1, 2)] int value)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -32,7 +29,7 @@ namespace Tests.UserTests
 
 					Assert.Greater(count, 0);
 
-					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1);
+					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 
 					Assert.IsNotNull(r);
 					if (value == 2)
@@ -48,7 +45,7 @@ namespace Tests.UserTests
 					count = db.Update(r);
 
 					Assert.Greater(count, 0);
-					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1);
+					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 					Assert.IsNotNull(r);
 					if (value == 2)
 					{
@@ -64,8 +61,8 @@ namespace Tests.UserTests
 
 		[Test]
 		public void TestSkipInsertOrReplace(
-			[DataSources(TestProvName.AllOracleNative)] string context,
-			[Values(1, 2, 1)] int value)
+			[InsertOrUpdateDataSources(TestProvName.AllOracleNative)] string context,
+			[Values(1, 2)] int value)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -75,7 +72,7 @@ namespace Tests.UserTests
 
 					Assert.Greater(count, 0);
 
-					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1);
+					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 
 					Assert.IsNotNull(r);
 					if (value == 2)
@@ -91,7 +88,7 @@ namespace Tests.UserTests
 					count = db.InsertOrReplace(r);
 
 					Assert.Greater(count, 0);
-					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1);
+					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 					Assert.IsNotNull(r);
 					if (value == 2)
 					{

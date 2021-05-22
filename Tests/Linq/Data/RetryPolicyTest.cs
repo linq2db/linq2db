@@ -4,10 +4,11 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Data.RetryPolicy;
 using LinqToDB.DataProvider.SqlServer;
-
+using LinqToDB.Mapping;
 using NUnit.Framework;
 
 namespace Tests.Data
@@ -132,6 +133,68 @@ namespace Tests.Data
 			}
 
 			Assert.AreEqual(2, ret.Count); // 1 - open connection, 1 - execute command
+		}
+
+		[Test]
+		public void Issue2672_RetryPolicyFactoryTest([DataSources(false)] string context)
+		{
+			try
+			{
+				Configuration.RetryPolicy.Factory = cn => new DummyRetryPolicy();
+				using (var db = new DataConnection(context))
+				using (db.CreateLocalTable<MyEntity>())
+				{
+					Assert.Fail("Exception expected");
+				}
+			}
+			catch (NotImplementedException ex)
+			{
+				Assert.AreEqual("Execute", ex.Message);
+			}
+			finally
+			{
+				Configuration.RetryPolicy.Factory = null;
+			}
+		}
+
+		[Test]
+		public void Issue2672_ExternalConnection([DataSources(false)] string context)
+		{
+			using (var db1 = new DataConnection(context))
+			{
+				try
+				{
+					Configuration.RetryPolicy.Factory = cn => new DummyRetryPolicy();
+					using (var db = new DataConnection(db1.DataProvider, db1.Connection))
+					using (db.CreateLocalTable<MyEntity>())
+					{
+						Assert.Fail("Exception expected");
+					}
+				}
+				catch (NotImplementedException ex)
+				{
+					Assert.AreEqual("ExecuteT", ex.Message);
+				}
+				finally
+				{
+					Configuration.RetryPolicy.Factory = null;
+				}
+			}
+		}
+
+		[Table]
+		class MyEntity
+		{
+			[Column                       ] public long   Id   { get; set; }
+			[NotNull, Column(Length = 256)] public string Name { get; set; } = null!;
+		}
+
+		class DummyRetryPolicy : IRetryPolicy
+		{
+			public TResult       Execute<TResult>(Func<TResult> operation)                                                                                              => throw new NotImplementedException("ExecuteT");
+			public void          Execute(Action operation)                                                                                                              => throw new NotImplementedException("Execute");
+			public Task<TResult> ExecuteAsync<TResult>(Func<CancellationToken, Task<TResult>> operation, CancellationToken cancellationToken = new CancellationToken()) => throw new NotImplementedException("ExecuteAsyncT");
+			public Task          ExecuteAsync(Func<CancellationToken, Task> operation, CancellationToken cancellationToken = new CancellationToken())                   => throw new NotImplementedException("ExecuteAsync");
 		}
 	}
 }

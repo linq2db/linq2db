@@ -52,6 +52,7 @@ namespace Tests.Mapping
 		[Test]
 		public void AliasingTest([DataSources] string context)
 		{
+			using (new DisableBaseline("TODO: debug reason for inconsistent column order"))
 			using (var db = GetDataContext(context, CreateMappingSchemaWithAlias()))
 			{
 				var testData = GenerateData();

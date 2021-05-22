@@ -59,6 +59,7 @@ namespace LinqToDB
 		[Pure, LinqTunnel]
 		public static IMergeableUsing<TTarget> Merge<TTarget>(
 			 this ITable<TTarget> target)
+			where TTarget : notnull
 		{
 			if (target == null) throw new ArgumentNullException(nameof(target));
 
@@ -82,6 +83,7 @@ namespace LinqToDB
 		public static IMergeableUsing<TTarget> Merge<TTarget>(
 			                    this ITable<TTarget> target,
 			[SqlQueryDependent]      string          hint)
+			where TTarget : notnull
 		{
 			if (target == null) throw new ArgumentNullException(nameof(target));
 			if (hint   == null) throw new ArgumentNullException(nameof(hint));
@@ -107,6 +109,7 @@ namespace LinqToDB
 		public static IMergeableOn<TTarget, TSource> MergeInto<TTarget, TSource>(
 			 this IQueryable<TSource> source,
 			      ITable<TTarget>     target)
+			where TTarget : notnull
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (target == null) throw new ArgumentNullException(nameof(target));
@@ -134,6 +137,7 @@ namespace LinqToDB
 			                    this IQueryable<TSource> source,
 			                         ITable<TTarget>     target,
 			[SqlQueryDependent]      string              hint)
+			where TTarget : notnull
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (target == null) throw new ArgumentNullException(nameof(target));
@@ -895,7 +899,7 @@ namespace LinqToDB
 		/// <returns>Returns number of target table records, affected by merge comand.</returns>
 		public static Task<int> MergeAsync<TTarget, TSource>(
 			 this IMergeable<TTarget, TSource> merge,
-			               CancellationToken            token = default)
+			               CancellationToken   token = default)
 		{
 			if (merge == null) throw new ArgumentNullException(nameof(merge));
 

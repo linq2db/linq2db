@@ -13,19 +13,6 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
-		internal SqlSelectClause(
-			SelectQuery     selectQuery,
-			SqlSelectClause clone,
-			Dictionary<ICloneableElement,ICloneableElement> objectTree,
-			Predicate<ICloneableElement> doClone)
-			: base(selectQuery)
-		{
-			Columns.AddRange(clone.Columns.Select(c => (SqlColumn)c.Clone(objectTree, doClone)));
-			IsDistinct = clone.IsDistinct;
-			TakeValue  = (ISqlExpression?)clone.TakeValue?.Clone(objectTree, doClone);
-			SkipValue  = (ISqlExpression?)clone.SkipValue?.Clone(objectTree, doClone);
-		}
-
 		internal SqlSelectClause(bool isDistinct, ISqlExpression? takeValue, TakeHints? takeHints, ISqlExpression? skipValue, IEnumerable<SqlColumn> columns)
 			: base(null)
 		{
@@ -159,12 +146,12 @@ namespace LinqToDB.SqlQuery
 			return SelectQuery.Select.Columns[Add(expr)];
 		}
 
-		public int AddNew(ISqlExpression expr)
+		public int AddNew(ISqlExpression expr, string? alias = default)
 		{
 			if (expr is SqlColumn column && column.Parent == SelectQuery)
 				throw new InvalidOperationException();
 
-			Columns.Add(new SqlColumn(SelectQuery, expr));
+			Columns.Add(new SqlColumn(SelectQuery, expr, alias));
 			return Columns.Count - 1;
 		}
 
@@ -186,7 +173,14 @@ namespace LinqToDB.SqlQuery
 		{
 			for (var i = 0; i < Columns.Count; i++)
 			{
-				if (Columns[i].Equals(col))
+				var expr1 = Columns[i].Expression;
+				var expr2 = col.Expression;
+				if (expr1.CanBeNull == expr2.CanBeNull && QueryHelper.UnwrapExpression(expr1).Equals(QueryHelper.UnwrapExpression(expr2)))
+				{
+					return i;
+				}
+
+				if (Columns[i].UnderlyingExpression().Equals(col.UnderlyingExpression()))
 				{
 					return i;
 				}
@@ -250,7 +244,8 @@ namespace LinqToDB.SqlQuery
 
 		#region Distinct
 
-		public bool IsDistinct { get; set; }
+		public bool IsDistinct       { get; set; }
+		public bool OptimizeDistinct { get; set; }
 
 		#endregion
 
@@ -270,7 +265,7 @@ namespace LinqToDB.SqlQuery
 			return this;
 		}
 
-		public ISqlExpression? TakeValue { get; private set; }
+		public ISqlExpression? TakeValue { get; internal set; }
 		public TakeHints?      TakeHints { get; private set; }
 
 		#endregion
@@ -310,15 +305,18 @@ namespace LinqToDB.SqlQuery
 
 		ISqlExpression? ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
-			for (var i = 0; i < Columns.Count; i++)
+			if (!options.SkipColumnDeclaration)
 			{
-				var col  = Columns[i];
-				var expr = col.Walk(options, func);
+				for (var i = 0; i < Columns.Count; i++)
+				{
+					var col = Columns[i];
+					var expr = col.Walk(options, func);
 
-				if (expr is SqlColumn column)
-					Columns[i] = column;
-				else
-					Columns[i] = new SqlColumn(col.Parent, expr, col.Alias);
+					if (expr is SqlColumn column)
+						Columns[i] = column;
+					else
+						Columns[i] = new SqlColumn(col.Parent, expr, col.Alias);
+				}
 			}
 
 			TakeValue = TakeValue?.Walk(options, func);
@@ -348,14 +346,14 @@ namespace LinqToDB.SqlQuery
 			{
 				sb.Append("SKIP ");
 				SkipValue.ToString(sb, dic);
-				sb.Append(" ");
+				sb.Append(' ');
 			}
 
 			if (TakeValue != null)
 			{
 				sb.Append("TAKE ");
 				TakeValue.ToString(sb, dic);
-				sb.Append(" ");
+				sb.Append(' ');
 			}
 
 			sb.AppendLine();
@@ -363,16 +361,53 @@ namespace LinqToDB.SqlQuery
 			if (Columns.Count == 0)
 				sb.Append("\t*, \n");
 			else
+			{
+				var columnNames = new List<string>();
+				var csb         = new StringBuilder();
+				var maxLength   = 0;
 				for (var i = 0; i < Columns.Count; i++)
 				{
+					csb.Length = 0;
 					var c = Columns[i];
-					sb.Append("\t");
-					((IQueryElement)c).ToString(sb, dic);
+					csb.Append('\t');
+
+					csb
+						.Append('t')
+						.Append(c.Parent?.SourceID ?? -1)
+#if DEBUG
+						.Append('[').Append(c.ColumnNumber).Append(']')
+#endif
+						.Append('.')
+						.Append(c.Alias ?? "c" + (i + 1));
+
+					var columnName = csb.ToString();
+					columnNames.Add(columnName);
+					maxLength = Math.Max(maxLength, columnName.Length);
+				}
+
+				for (var i = 0; i < Columns.Count; i++)
+				{
+					var c          = Columns[i];
+					var columnName = columnNames[i];
+					sb.Append(columnName)
+						.Append(' ', maxLength - columnName.Length)
+						.Append(" = ");
+
+					csb.Length = 0;
+					c.Expression.ToString(csb, dic);
+
+					var expressionText = csb.ToString();
+					if (expressionText.Contains("\n"))
+					{
+						var ident = "\t" + new string(' ', maxLength + 2);
+						expressionText = expressionText.Replace("\n", "\n" + ident);
+					}
+
 					sb
-						.Append(" as ")
-						.Append(c.Alias ?? "c" + (i + 1))
+						.Append(expressionText)
 						.Append(", \n");
 				}
+			}
 
 			sb.Length -= 3;
 

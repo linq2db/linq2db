@@ -13,22 +13,22 @@ namespace Tests.Linq
 {
 	using LinqToDB.Linq;
 	using Model;
-	using Tools;
 
 	public class CteTests : TestBase
 	{
 		public static string[] CteSupportedProviders = new[]
 		{
 			TestProvName.AllSqlServer2008Plus,
-			ProviderName.Firebird,
+			TestProvName.AllFirebird,
 			TestProvName.AllPostgreSQL,
 			ProviderName.DB2,
 			TestProvName.AllSQLite,
-			TestProvName.AllOracle
+			TestProvName.AllOracle,
+			TestProvName.AllMySqlWithCTE,
 			// TODO: v14
 			//TestProvName.AllInformix,
 			// Will be supported in SQL 8.0 - ProviderName.MySql
-		};
+		}.SelectMany(_ => _.Split(',')).ToArray();
 
 		public class CteContextSourceAttribute : IncludeDataSourcesAttribute
 		{
@@ -42,12 +42,12 @@ namespace Tests.Linq
 			}
 
 			public CteContextSourceAttribute(params string[] excludedProviders)
-				: base(CteSupportedProviders.Except(excludedProviders).ToArray())
+				: base(CteSupportedProviders.Except(excludedProviders.SelectMany(_ => _.Split(','))).ToArray())
 			{
 			}
 
 			public CteContextSourceAttribute(bool includeLinqService, params string[] excludedProviders)
-				: base(includeLinqService, CteSupportedProviders.Except(excludedProviders).ToArray())
+				: base(includeLinqService, CteSupportedProviders.Except(excludedProviders.SelectMany(_ => _.Split(','))).ToArray())
 			{
 			}
 		}
@@ -87,7 +87,7 @@ namespace Tests.Linq
 					join c in cte1 on p.ParentID equals c.ParentID
 					join c2 in cte2 on p.ParentID equals c2.ParentID
 					join c3 in cte3 on p.ParentID equals c3.ParentID
-					from c4 in db.Child.Where(c4 => c4.ParentID % 2 == 0).AsCte("LAST").InnerJoin(c4 => c4.ParentID == c3.ParentID)
+					from c4 in db.Child.Where(c4 => c4.ParentID % 2 == 0).AsCte("LATEST").InnerJoin(c4 => c4.ParentID == c3.ParentID)
 					select c3;
 
 				var ncte1 = db.GetTable<Child>().Where(c => c.ParentID > 1);
@@ -122,7 +122,7 @@ namespace Tests.Linq
 
 		static IQueryable<TSource> RemoveCte<TSource>(IQueryable<TSource> source)
 		{
-			var newExpr = source.Expression.Transform(e =>
+			var newExpr = source.Expression.Transform<object?>(null, static (_, e) =>
 			{
 				if (e is MethodCallExpression methodCall && methodCall.Method.Name == "AsCte")
 					return methodCall.Arguments[0];
@@ -557,8 +557,9 @@ namespace Tests.Linq
 			}
 		}
 
+		// MariaDB support expected in v10.6 : https://jira.mariadb.org/browse/MDEV-18511
 		[Test]
-		public void TestDelete([CteContextSource(ProviderName.Firebird, ProviderName.DB2)] string context)
+		public void TestDelete([CteContextSource(TestProvName.AllFirebird, ProviderName.DB2, TestProvName.MariaDB)] string context)
 		{
 			using (var db  = GetDataContext(context))
 			using (var tmp = db.CreateLocalTable("CteChild",
@@ -576,10 +577,11 @@ namespace Tests.Linq
 			}
 		}
 
+		// MariaDB support expected in v10.6 : https://jira.mariadb.org/browse/MDEV-18511
 		[ActiveIssue(Configuration = TestProvName.AllOracle, Details = "Oracle needs special syntax for CTE + UPDATE")]
 		[Test]
 		public void TestUpdate(
-			[CteContextSource(ProviderName.Firebird, ProviderName.DB2, TestProvName.AllOracle)]
+			[CteContextSource(TestProvName.AllFirebird, ProviderName.DB2, TestProvName.AllOracle, TestProvName.MariaDB)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -827,7 +829,7 @@ namespace Tests.Linq
 						q.Level
 					};
 
-				Assert.DoesNotThrow(() => Console.WriteLine(query.ToString()));
+				Assert.DoesNotThrow(() => TestContext.WriteLine(query.ToString()));
 			}
 		}
 
@@ -981,7 +983,7 @@ namespace Tests.Linq
 					select c;
 
 				var sql = query.ToString();
-				Console.WriteLine(sql);
+				TestContext.WriteLine(sql);
 
 				Assert.That(sql, Is.Not.Contains("WITH"));
 			}
@@ -1122,7 +1124,7 @@ namespace Tests.Linq
 				var result = from item in wipCte.AllowedNcCode() where item.NcCodeBo == ncCodeBo select item;
 				var sql = ((IExpressionQuery)result).SqlText;
 
-				Assert.True(sql.Replace("\"", "").Replace("[", "").Replace("]", "").ToLowerInvariant().Contains("WITH AllowedNcCode (NcCodeBo, NcCode, NcCodeDescription)".ToLowerInvariant()));
+				Assert.True(sql.Replace("\"", "").Replace("`", "").Replace("[", "").Replace("]", "").ToLowerInvariant().Contains("WITH AllowedNcCode (NcCodeBo, NcCode, NcCodeDescription)".ToLowerInvariant()));
 			}
 		}
 

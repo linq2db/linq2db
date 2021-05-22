@@ -2,8 +2,8 @@
 {
 	using System.Data;
 	using System.Text;
-	using LinqToDB.Mapping;
-	using LinqToDB.SqlProvider;
+	using Mapping;
+	using SqlProvider;
 
 	class AccessODBCSqlBuilder : AccessSqlBuilderBase
 	{

@@ -1,8 +1,9 @@
-﻿namespace LinqToDB.DataProvider.SapHana
+﻿using System.Text;
+
+namespace LinqToDB.DataProvider.SapHana
 {
-	using System.Text;
-	using LinqToDB.Mapping;
-	using LinqToDB.SqlQuery;
+	using Mapping;
+	using SqlQuery;
 	using SqlProvider;
 
 	class SapHanaOdbcSqlBuilder : SapHanaSqlBuilder
@@ -31,10 +32,10 @@
 			switch (type.Type.DataType)
 			{
 				case DataType.Money:
-					StringBuilder.Append("Decimal(19,4)");
+					StringBuilder.Append("Decimal(19, 4)");
 					break;
 				case DataType.SmallMoney:
-					StringBuilder.Append("Decimal(10,4)");
+					StringBuilder.Append("Decimal(10, 4)");
 					break;
 				default:
 					base.BuildDataTypeFromDataType(type, forCreateTable);

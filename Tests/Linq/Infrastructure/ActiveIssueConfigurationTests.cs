@@ -1,6 +1,4 @@
-﻿using System;
-
-using LinqToDB;
+﻿using LinqToDB;
 
 using NUnit.Framework;
 
@@ -28,6 +26,7 @@ namespace Tests.Infrastructure
 			{
 				case TestProvName.NoopProvider:
 					return;
+				case TestProvName.Firebird4:
 				case TestProvName.Firebird3:
 				case ProviderName.Firebird:
 					Assert.Fail("This test should be available only for explicit run");
@@ -48,6 +47,7 @@ namespace Tests.Infrastructure
 			{
 				case TestProvName.NoopProvider:
 					return;
+				case TestProvName.Firebird4:
 				case TestProvName.Firebird3:
 				case ProviderName.Firebird:
 					Assert.Fail("This test should be available only for explicit run");
@@ -146,31 +146,6 @@ namespace Tests.Infrastructure
 					return;
 				case TestProvName.NoopProvider + ".LinqService":
 				case ProviderName.SQLiteClassic + ".LinqService":
-					Assert.Fail("This test should be available only for explicit run");
-					break;
-			}
-
-			Assert.Fail($"Unexpected configuration: {configuration}");
-		}
-
-		[Test]
-		[ActiveIssue(
-			Details = "Active Issue Testing: Access wcf disabled and sqlite non-wcf disabled",
-			Configurations = new[] { ProviderName.Access + ".LinqService", ProviderName.SQLiteClassic, TestProvName.NoopProvider },
-			SkipForNonLinqService = true)]
-		public void MultipleAttributesTest([IncludeDataSources(true,
-			TestProvName.NoopProvider, ProviderName.SQLiteClassic, ProviderName.Access)]
-			string configuration)
-		{
-			switch (configuration)
-			{
-				case ProviderName.Access:
-				case TestProvName.NoopProvider + ".LinqService":
-				case ProviderName.SQLiteClassic + ".LinqService":
-					return;
-				case ProviderName.SQLiteClassic:
-				case ProviderName.Access + ".LinqService":
-				case TestProvName.NoopProvider:
 					Assert.Fail("This test should be available only for explicit run");
 					break;
 			}

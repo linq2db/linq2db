@@ -1,6 +1,4 @@
-﻿using System;
-
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 
 namespace LinqToDB
 {
@@ -12,11 +10,13 @@ namespace LinqToDB
 	/// <typeparam name="T">Record mapping type.</typeparam>
 	[PublicAPI]
 	public interface ITable<out T> : IExpressionQuery<T>
+		where T : notnull
 	{
-		string? ServerName   { get; }
-		string? DatabaseName { get; }
-		string? SchemaName   { get; }
-		string  TableName    { get; }
+		string?      ServerName    { get; }
+		string?      DatabaseName  { get; }
+		string?      SchemaName    { get; }
+		string       TableName     { get; }
+		TableOptions TableOptions  { get; }
 
 		//TODO: replace with extension method
 		string GetTableName();

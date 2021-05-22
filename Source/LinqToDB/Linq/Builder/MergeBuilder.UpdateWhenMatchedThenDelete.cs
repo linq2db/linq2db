@@ -42,12 +42,11 @@ namespace LinqToDB.Linq.Builder
 				else
 				{
 					// build setters like QueryRunner.Update
-					var targetType = methodCall.Method.GetGenericArguments()[0];
 					var sqlTable   = (SqlTable)statement.Target.Source;
-					var param      = Expression.Parameter(targetType, "s");
+					var param      = Expression.Parameter(sqlTable.ObjectType, "s");
 					var keys       = sqlTable.GetKeys(false).Cast<SqlField>().ToList();
 
-					foreach (var field in sqlTable.Fields.Values.Where(f => f.IsUpdatable).Except(keys))
+					foreach (var field in sqlTable.Fields.Where(f => f.IsUpdatable).Except(keys))
 					{
 						var expression = LinqToDB.Expressions.Extensions.GetMemberGetter(field.ColumnDescriptor.MemberInfo, param);
 						var expr       = mergeContext.SourceContext.ConvertToSql(builder.ConvertExpression(expression), 1, ConvertFlags.Field)[0].Sql;

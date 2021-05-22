@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
@@ -80,7 +79,10 @@ namespace LinqToDB.Linq.Builder
 				.ConvertToIndex(expression, level, flags)
 				.ToArray();
 
-			return indexes;
+			var corrected = indexes.Select(s => s.WithSql(SubqueryContext.SelectQuery.Select.Columns[s.Index]))
+				.ToArray();
+
+			return corrected;
 		}
 
 		public IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
@@ -119,6 +121,10 @@ namespace LinqToDB.Linq.Builder
 		public SqlStatement GetResultStatement()
 		{
 			return SubqueryContext.GetResultStatement();
+		}
+
+		public void CompleteColumns()
+		{
 		}
 	}
 }

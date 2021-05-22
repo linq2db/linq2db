@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace LinqToDB.SqlQuery
+﻿namespace LinqToDB.SqlQuery
 {
 	/// <summary>
 	/// This is internal API and is not intended for use by Linq To DB applications.
@@ -18,7 +15,8 @@ namespace LinqToDB.SqlQuery
 		{
 			return
 				statement.QueryType == QueryType.Insert ||
-				statement.QueryType == QueryType.InsertOrUpdate;
+				statement.QueryType == QueryType.InsertOrUpdate ||
+				statement.QueryType == QueryType.MultiInsert;
 		}
 
 		/// <summary>
@@ -143,26 +141,6 @@ namespace LinqToDB.SqlQuery
 			if (selectQuery == null)
 				throw new LinqToDBException("Sqlect Query required");
 				return selectQuery;
-		}
-
-		/// <summary>
-		/// This is internal API and is not intended for use by Linq To DB applications.
-		/// It may change or be removed without further notice.
-		/// </summary>
-		public static T Clone<T>(this T cloneable)
-			where T: ICloneableElement
-		{
-			return (T)cloneable.Clone(new Dictionary<ICloneableElement,ICloneableElement>(), _ => true);
-		}
-
-		/// <summary>
-		/// This is internal API and is not intended for use by Linq To DB applications.
-		/// It may change or be removed without further notice.
-		/// </summary>
-		public static T Clone<T>(this T cloneable, Predicate<ICloneableElement> doClone)
-			where T: ICloneableElement
-		{
-			return (T)cloneable.Clone(new Dictionary<ICloneableElement,ICloneableElement>(), doClone);
 		}
 	}
 }

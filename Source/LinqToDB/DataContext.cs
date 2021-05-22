@@ -12,7 +12,7 @@ namespace LinqToDB
 	using Data;
 	using DataProvider;
 	using Linq;
-	using LinqToDB.Async;
+	using Async;
 	using Mapping;
 	using SqlProvider;
 
@@ -109,7 +109,7 @@ namespace LinqToDB
 		/// <summary>
 		/// Gets or sets trace handler, used for data connection instance.
 		/// </summary>
-		public Action<TraceInfo>? OnTraceConnection { get; set; } 
+		public Action<TraceInfo>? OnTraceConnection { get; set; }
 
 		private bool _keepConnectionAlive;
 		/// <summary>
@@ -300,10 +300,11 @@ namespace LinqToDB
 			}
 		}
 
-		Func<ISqlBuilder>   IDataContext.CreateSqlProvider => () => DataProvider.CreateSqlBuilder(MappingSchema);
-		Func<ISqlOptimizer> IDataContext.GetSqlOptimizer   => DataProvider.GetSqlOptimizer;
-		Type                IDataContext.DataReaderType    => DataProvider.DataReaderType;
-		SqlProviderFlags    IDataContext.SqlProviderFlags  => DataProvider.SqlProviderFlags;
+		Func<ISqlBuilder>   IDataContext.CreateSqlProvider     => () => DataProvider.CreateSqlBuilder(MappingSchema);
+		Func<ISqlOptimizer> IDataContext.GetSqlOptimizer       => DataProvider.GetSqlOptimizer;
+		Type                IDataContext.DataReaderType        => DataProvider.DataReaderType;
+		SqlProviderFlags    IDataContext.SqlProviderFlags      => DataProvider.SqlProviderFlags;
+		TableOptions        IDataContext.SupportedTableOptions => DataProvider.SupportedTableOptions;
 
 		Expression IDataContext.GetReaderExpression(IDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
@@ -325,7 +326,7 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Creates instance of <see cref="DataConnection"/> class, attached to same database connection/transaction.
-		/// Used by <see cref="IDataContext.Clone(bool)"/> API only if <see cref="DataConnection.IsMarsEnabled"/> 
+		/// Used by <see cref="IDataContext.Clone(bool)"/> API only if <see cref="DataConnection.IsMarsEnabled"/>
 		/// is <c>true</c> and there is an active connection associated with current context.
 		/// <paramref name="dbConnection"/> and <paramref name="dbTransaction"/> parameters are mutually exclusive.
 		/// One and only one parameter will have value - if there is active transaction, <paramref name="dbTransaction"/>
@@ -387,8 +388,44 @@ namespace LinqToDB
 
 		void IDisposable.Dispose()
 		{
+			Dispose(disposing: true);
+			GC.SuppressFinalize(this);
+		}
+
+		/// <summary>
+		/// Closes underlying connection and fires <see cref="OnClosing"/> event (only if connection existed).
+		/// </summary>
+		protected virtual void Dispose(bool disposing)
+		{
 			_disposed = true;
 			Close();
+		}
+
+#if NATIVE_ASYNC
+		async ValueTask IAsyncDisposable.DisposeAsync()
+#else
+		async Task IAsyncDisposable.DisposeAsync()
+#endif
+		{
+			await DisposeAsync(disposing: true).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			GC.SuppressFinalize(this);
+		}
+
+		/// <summary>
+		/// Closes underlying connection and fires <see cref="OnClosing"/> event (only if connection existed).
+		/// </summary>
+#if NATIVE_ASYNC
+		protected virtual ValueTask DisposeAsync(bool disposing)
+#else
+		protected virtual Task DisposeAsync(bool disposing)
+#endif
+		{
+			_disposed = true;
+#if NATIVE_ASYNC
+			return new ValueTask(((IDataContext)this).CloseAsync());
+#else
+			return ((IDataContext)this).CloseAsync();
+#endif
 		}
 
 		/// <summary>
@@ -411,6 +448,20 @@ namespace LinqToDB
 		void IDataContext.Close()
 		{
 			Close();
+		}
+
+		async Task IDataContext.CloseAsync()
+		{
+			if (_dataConnection != null)
+			{
+				OnClosing?.Invoke(this, EventArgs.Empty);
+
+				if (_dataConnection.QueryHints.    Count > 0) QueryHints.AddRange(_queryHints!);
+				if (_dataConnection.NextQueryHints.Count > 0) NextQueryHints.AddRange(_nextQueryHints!);
+
+				await _dataConnection.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				_dataConnection = null;
+			}
 		}
 
 		/// <summary>
@@ -499,6 +550,19 @@ namespace LinqToDB
 				_dataContext = null;
 			}
 
+#if NATIVE_ASYNC
+			public async ValueTask DisposeAsync()
+#else
+			public async Task DisposeAsync()
+#endif
+			{
+				await _queryRunner!.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				_dataContext!.ReleaseQuery();
+
+				_queryRunner = null;
+				_dataContext = null;
+			}
+
 			public int ExecuteNonQuery()
 			{
 				return _queryRunner!.ExecuteNonQuery();
@@ -534,7 +598,7 @@ namespace LinqToDB
 				return _queryRunner!.GetSqlText();
 			}
 
-			public IDataContext DataContext      { get => _queryRunner!.DataContext;      set => _queryRunner!.DataContext      = value; }
+			public IDataContext DataContext      { get => _dataContext!;                  set => _queryRunner!.DataContext      = value; }
 			public Expression   Expression       { get => _queryRunner!.Expression;       set => _queryRunner!.Expression       = value; }
 			public object?[]?   Parameters       { get => _queryRunner!.Parameters;       set => _queryRunner!.Parameters       = value; }
 			public object?[]?   Preambles        { get => _queryRunner!.Preambles;        set => _queryRunner!.Preambles        = value; }

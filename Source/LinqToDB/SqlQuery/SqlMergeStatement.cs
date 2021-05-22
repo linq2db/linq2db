@@ -17,7 +17,7 @@ namespace LinqToDB.SqlQuery
 		internal SqlMergeStatement(
 			string?                              hint,
 			SqlTableSource                       target,
-			SqlMergeSourceTable                  source,
+			SqlTableLikeSource                  source,
 			SqlSearchCondition                   on,
 			IEnumerable<SqlMergeOperationClause> operations)
 		{
@@ -30,26 +30,21 @@ namespace LinqToDB.SqlQuery
 				Operations.Add(operation);
 		}
 
-		public string?                        Hint       { get; internal set; }
+		public string?                        Hint      { get; internal set; }
 
-		public SqlTableSource                 Target     { get; }
+		public SqlTableSource                 Target    { get; }
 
-		public SqlMergeSourceTable            Source     { get; internal set; } = null!;
+		public SqlTableLikeSource            Source     { get; internal set; } = null!;
 
-		public SqlSearchCondition             On         { get; }               = new SqlSearchCondition();
+		public SqlSearchCondition             On        { get; }               = new SqlSearchCondition();
 
-		public IList<SqlMergeOperationClause> Operations { get; }               = new List<SqlMergeOperationClause>();
+		public List<SqlMergeOperationClause> Operations { get; }               = new List<SqlMergeOperationClause>();
 
 		public bool                           HasIdentityInsert                 => Operations.Any(o => o.OperationType == MergeOperationType.Insert && o.Items.Any(item => item.Column is SqlField field && field.IsIdentity));
 
 		public override QueryType        QueryType   => QueryType.Merge;
 
 		public override QueryElementType ElementType => QueryElementType.MergeStatement;
-
-		public override ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			throw new NotImplementedException();
-		}
 
 		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{

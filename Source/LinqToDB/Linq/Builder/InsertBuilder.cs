@@ -1,7 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using LinqToDB.Mapping;
+using LinqToDB.Common;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -11,11 +12,30 @@ namespace LinqToDB.Linq.Builder
 
 	class InsertBuilder : MethodCallBuilder
 	{
+		private static readonly string[] MethodNames = { "Insert", "InsertWithIdentity", "InsertWithOutput", "InsertWithOutputInto" };
+
 		#region InsertBuilder
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsQueryable("Insert", "InsertWithIdentity", "InsertWithOutput", "InsertWithOutputAsync", "InsertWithOutputInto");
+			return methodCall.IsQueryable(MethodNames);
+		}
+
+		static void AddInsertColumns(SelectQuery selectQuery, List<SqlSetExpression> items)
+		{
+			foreach (var item in items)
+			{
+				if (item.Expression is SqlColumn column)
+				{
+					if (column.Parent == selectQuery)
+					{
+						if (selectQuery.Select.Columns.IndexOf(column) < 0)
+							selectQuery.Select.Columns.Add(column);
+						continue;
+					}
+				}
+				selectQuery.Select.ExprNew(item.Expression!);
+			}
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -75,8 +95,11 @@ namespace LinqToDB.Linq.Builder
 					// static int Insert<TSource,TTarget>(this ISelectInsertable<TSource,TTarget> source)
 
 					sequence.SelectQuery.Select.Columns.Clear();
-					foreach (var item in insertStatement.Insert.Items)
-						sequence.SelectQuery.Select.ExprNew(item.Expression!);
+
+					if (insertStatement.Insert.Items.Count == 0)
+						insertStatement.Insert.Items.AddRange(insertStatement.Insert.DefaultItems);
+
+					AddInsertColumns(sequence.SelectQuery, insertStatement.Insert.Items);
 				}
 				else if (methodCall.Arguments.Count > 1                  &&
 					typeof(IQueryable<>).IsSameOrParentOf(argument.Type) &&
@@ -97,8 +120,10 @@ namespace LinqToDB.Linq.Builder
 
 					sequence.SelectQuery.Select.Columns.Clear();
 
-					foreach (var item in insertStatement.Insert.Items)
-						sequence.SelectQuery.Select.Columns.Add(new SqlColumn(sequence.SelectQuery, item.Expression!));
+					if (insertStatement.Insert.Items.Count == 0)
+						insertStatement.Insert.Items.AddRange(insertStatement.Insert.DefaultItems);
+
+					AddInsertColumns(sequence.SelectQuery, insertStatement.Insert.Items);
 
 					insertStatement.Insert.Into = ((TableBuilder.TableContext)into).SqlTable;
 				}
@@ -136,9 +161,10 @@ namespace LinqToDB.Linq.Builder
 
 								var table = new SqlTable(objType);
 
-								foreach (ColumnDescriptor c in ed.Columns.Where(c => !c.SkipOnInsert))
+								foreach (var c in ed.Columns.Where(c => !c.SkipOnInsert))
 								{
-									if (!table.Fields.TryGetValue(c.ColumnName, out var field))
+									var field = table[c.ColumnName];
+									if (field == null)
 										continue;
 
 									var pe = Expression.MakeMemberAccess(arg, c.MemberInfo);
@@ -192,10 +218,8 @@ namespace LinqToDB.Linq.Builder
 
 			var insert = insertStatement.Insert;
 
-			var q = insert.Into!.Fields.Values
-				.Except(insert.Items.Select(e => e.Column))
-				.OfType<SqlField>()
-				.Where(f => f.IsIdentity);
+			var q = insert.Into!.IdentityFields
+				.Except(insert.Items.Select(e => e.Column).OfType<SqlField>());
 
 			foreach (var field in q)
 			{
@@ -270,7 +294,7 @@ namespace LinqToDB.Linq.Builder
 						QueryRunner.SetNonQueryQuery(query);
 						break;
 					default:
-						throw new ArgumentOutOfRangeException();
+						throw new InvalidOperationException($"Unexpected insert type: {_insertType}");
 				}
 			}
 
@@ -337,12 +361,34 @@ namespace LinqToDB.Linq.Builder
 				return methodCall.IsQueryable("Into");
 			}
 
+			public static List<Tuple<SqlInfo, SqlInfo>> MatchSequences(IBuildContext source, IBuildContext destination)
+			{
+				var sourceInfos = source.ConvertToSql(null, 0, ConvertFlags.All).ToList();
+				var destInfos   = destination.ConvertToSql(null, 0, ConvertFlags.All).ToList();
+
+				var result = new List<Tuple<SqlInfo, SqlInfo>>();
+
+				foreach (var info in sourceInfos)
+				{
+					if (info.MemberChain.Length == 0)
+						continue;
+
+					var destInfo = destInfos.FirstOrDefault(di => info.CompareMembers(di));
+
+					if (destInfo != null)
+						result.Add(Tuple.Create(info, destInfo));
+				}
+
+				return result;
+			}
+
 			protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{
 				var source = methodCall.Arguments[0].Unwrap();
 				var into   = methodCall.Arguments[1].Unwrap();
 
 				IBuildContext sequence;
+				IBuildContext destinationSequence;
 				SqlInsertStatement insertStatement;
 
 				// static IValueInsertable<T> Into<T>(this IDataContext dataContext, Table<T> target)
@@ -350,6 +396,7 @@ namespace LinqToDB.Linq.Builder
 				if (source.NodeType == ExpressionType.Constant && ((ConstantExpression)source).Value == null)
 				{
 					sequence = builder.BuildSequence(new BuildInfo((IBuildContext?)null, into, new SelectQuery()));
+					destinationSequence = sequence;
 
 					if (sequence.SelectQuery.Select.IsDistinct)
 						sequence = new SubQueryContext(sequence);
@@ -363,14 +410,25 @@ namespace LinqToDB.Linq.Builder
 				else
 				{
 					sequence = builder.BuildSequence(new BuildInfo(buildInfo, source));
+					destinationSequence = builder.BuildSequence(new BuildInfo((IBuildContext?)null, into, new SelectQuery()));
 
 					if (sequence.SelectQuery.Select.IsDistinct)
 						sequence = new SubQueryContext(sequence);
 
-					insertStatement = new SqlInsertStatement(sequence.SelectQuery);
+					var destinationTable = ((TableBuilder.TableContext)destinationSequence).SqlTable;
 
-					var tbl = builder.BuildSequence(new BuildInfo((IBuildContext?)null, into, new SelectQuery()));
-					insertStatement.Insert.Into = ((TableBuilder.TableContext)tbl).SqlTable;
+					insertStatement = new SqlInsertStatement(sequence.SelectQuery);
+					insertStatement.Insert.Into = destinationTable;
+				}
+
+				// generating default items
+				var matched = MatchSequences(sequence, destinationSequence);
+				foreach (var tuple in matched)
+				{
+					var field = QueryHelper.GetUnderlyingField(tuple.Item2.Sql);
+					if (field == null || field.ColumnDescriptor.SkipOnInsert)
+						continue;
+					insertStatement.Insert.DefaultItems.Add(new SqlSetExpression(field, tuple.Item1.Sql));
 				}
 
 				sequence.Statement = insertStatement;
@@ -436,6 +494,8 @@ namespace LinqToDB.Linq.Builder
 						2,
 						sequence,
 						insertStatement.Insert.Items);
+
+				insertStatement.Insert.Items.RemoveDuplicatesFromTail((s1, s2) => s1.Column.Equals(s2.Column));
 
 				return sequence;
 			}

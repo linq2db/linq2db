@@ -263,8 +263,23 @@ RETURN
 
 GO
 
+CREATE Procedure Person_SelectAll
+AS
+
+SELECT * FROM Person
+
+GO
+
 CREATE TABLE KeepIdentityTest (
 	ID    NUMERIC(12, 0) IDENTITY,
 	Value INT            NULL
+)
+GO
+
+CREATE TABLE CollatedTable
+(
+	Id				INT NOT NULL,
+	CaseSensitive	NVARCHAR(20) NOT NULL,
+	CaseInsensitive	NVARCHAR(20) NOT NULL
 )
 GO

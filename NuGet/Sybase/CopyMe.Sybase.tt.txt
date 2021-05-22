@@ -1,9 +1,8 @@
-<#@ template language="C#" debug="True" hostSpecific="True"                        #>
-<#@ output extension=".generated.cs"                                               #>
-<#@ include file="$(LinqToDBT4SybaseTemplatesDirectory)LinqToDB.Sybase.Tools.ttinclude" #>
-<#@ include file="$(LinqToDBT4SybaseTemplatesDirectory)PluralizationService.ttinclude"  #>
-<# //@ include file="$(ProjectDir)LinqToDB.Templates\LinqToDB.Sybase.Tools.ttinclude" #>
-<# //@ include file="$(ProjectDir)LinqToDB.Templates\PluralizationService.ttinclude"  #>
+<#@ template language="C#" debug="True" hostSpecific="True" #>
+<#@ output extension=".generated.cs"                        #>
+
+<#@ include file="$(LinqToDBT4SybaseAseTemplatesPath)LinqToDB.Sybase.Tools.ttinclude" once="true" #>
+<#@ include file="$(LinqToDBT4SybaseAseTemplatesPath)PluralizationService.ttinclude"  once="true" #>
 <#
 	/*
 		1. Download and install Sybase data provider for .NET.
@@ -22,7 +21,7 @@
 		5. Add connection string to the web/app.config file:
 
 			<connectionStrings>
-				<add name="MyDatabase" connectionString="Data Source=MyServer;Port=5000;Database=MyDatabase;Uid=sa;Password=TestPassword;Charset=utf8;" providerName="Sybase" />
+				<add name="MyDatabase" connectionString="Data Source=MyServer;Port=5000;Database=MyDatabase;Uid=sa;Password=TestPassword;" providerName="Sybase" />
 			</connectionStrings>
 
 		6. To access your database use the following code:
@@ -40,7 +39,7 @@
 		7. See more at https://linq2db.github.io/articles/T4.html
 
 		IMPORTANT: if running .tt file gives you error like this:
-		"error : Failed to resolve include text for file: C:\...\$(LinqToDBT4<SOME_DB>TemplatesDirectory)LinqToDB.<DB_NAME>.Tools.ttinclude"
+		"error : Failed to resolve include text for file: C:\...\$(LinqToDBT4<DB>TemplatesPath)LinqToDB.<DB>.Tools.ttinclude"
 		check tt file properties.
 		Custom tool must be set to TextTemplatingFileGenerator, not TextTemplatingFilePreprocessor or any other value.
 	*/

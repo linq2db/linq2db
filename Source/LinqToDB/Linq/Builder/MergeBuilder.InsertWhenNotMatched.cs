@@ -41,11 +41,10 @@ namespace LinqToDB.Linq.Builder
 				else
 				{
 					// build setters like QueryRunner.Insert
-					var targetType = methodCall.Method.GetGenericArguments()[0];
 					var sqlTable   = (SqlTable)statement.Target.Source;
-					var param      = Expression.Parameter(targetType, "s");
+					var param      = Expression.Parameter(sqlTable.ObjectType, "s");
 
-					foreach (var field in sqlTable.Fields.Values)
+					foreach (var field in sqlTable.Fields)
 					{
 						if (field.IsInsertable)
 						{
@@ -74,8 +73,7 @@ namespace LinqToDB.Linq.Builder
 					builder.BuildSearchCondition(
 						new ExpressionContext(null, new[] { mergeContext.SourceContext }, condition),
 						conditionExpr,
-						operation.Where.Conditions,
-						false);
+						operation.Where.Conditions);
 				}
 
 				return mergeContext;

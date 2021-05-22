@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NETFRAMEWORK
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
@@ -106,10 +107,11 @@ namespace LinqToDB.Configuration
 				isPresent = true;
 			}
 
-			return 
+			return
 				 isPresent == false &&
-				(source    == null  || 
+				(source    == null  ||
 				source.EndsWith("machine.config", StringComparison.OrdinalIgnoreCase));
 		}
 	}
 }
+#endif

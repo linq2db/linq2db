@@ -28,8 +28,6 @@ namespace Tests.SchemaProvider
 					GetTables     = true
 				};
 
-				options = TestUtils.GetDefaultSchemaOptions(context, options);
-
 				var p = db.DataProvider.GetSchemaProvider();
 				p.GetSchema(db, options);
 			}
@@ -44,10 +42,10 @@ namespace Tests.SchemaProvider
 			{
 				var sp         = conn.DataProvider.GetSchemaProvider();
 				var schemaName = TestUtils.GetSchemaName(conn);
-				var dbSchema   = sp.GetSchema(conn, TestUtils.GetDefaultSchemaOptions(context, new GetSchemaOptions()
+				var dbSchema   = sp.GetSchema(conn, new GetSchemaOptions()
 				{
 					IncludedSchemas = schemaName != TestUtils.NO_SCHEMA_NAME ?new[] { schemaName } : null
-				}));
+				});
 
 				var tableNames = new HashSet<string>();
 				foreach (var schemaTable in dbSchema.Tables)
@@ -70,7 +68,12 @@ namespace Tests.SchemaProvider
 					}
 				}
 
-				var table = dbSchema.Tables.SingleOrDefault(t => t.TableName!.ToLower() == "parent");
+				//Get table from default schema and fall back to schema indifferent
+				TableSchema getTable(string name) =>
+								dbSchema.Tables.SingleOrDefault(t => t.IsDefaultSchema && t.TableName!.ToLower() == name)
+							??  dbSchema.Tables.SingleOrDefault(t => t.TableName!.ToLower() == name)!;
+
+				var table = getTable("parent");
 
 				Assert.That(table,                                           Is.Not.Null);
 				Assert.That(table.Columns.Count(c => c.ColumnName != "_ID"), Is.EqualTo(2));
@@ -79,19 +82,23 @@ namespace Tests.SchemaProvider
 				AssertType<Model.Parent>       (conn.MappingSchema, dbSchema);
 
 				if (context != ProviderName.AccessOdbc)
-					Assert.That(dbSchema.Tables.Single(t => t.TableName!.ToLower() == "doctor").ForeignKeys.Count, Is.EqualTo(1));
+					Assert.That(getTable("doctor").ForeignKeys.Count, Is.EqualTo(1));
 				else // no FK information for ACCESS ODBC
 					Assert.That(dbSchema.Tables.Single(t => t.TableName!.ToLower() == "doctor").ForeignKeys.Count, Is.EqualTo(0));
 
 				switch (context)
 				{
-					case ProviderName.SqlServer2000 :
-					case ProviderName.SqlServer2005 :
-					case ProviderName.SqlServer2008 :
-					case ProviderName.SqlServer2012 :
-					case ProviderName.SqlServer2014 :
-					case ProviderName.SqlServer2017 :
-					case TestProvName.SqlAzure      :
+					case ProviderName.SqlServer2000                       :
+					case ProviderName.SqlServer2005                       :
+					case ProviderName.SqlServer2008                       :
+					case ProviderName.SqlServer2012                       :
+					case ProviderName.SqlServer2014                       :
+					case ProviderName.SqlServer2016                       :
+					case ProviderName.SqlServer2017                       :
+					case TestProvName.SqlServer2019                       :
+					case TestProvName.SqlServer2019SequentialAccess       :
+					case TestProvName.SqlServer2019FastExpressionCompiler :
+					case TestProvName.SqlAzure                            :
 						{
 							var indexTable = dbSchema.Tables.Single(t => t.TableName == "IndexTable");
 							Assert.That(indexTable.ForeignKeys.Count,                Is.EqualTo(1));
@@ -104,18 +111,22 @@ namespace Tests.SchemaProvider
 						{
 							var indexTable = dbSchema.Tables.First(t => t.TableName == "testunique");
 							Assert.That(indexTable.Columns.Count(c => c.IsPrimaryKey), Is.EqualTo(2));
-							Assert.That(indexTable.ForeignKeys.Count(), Is.EqualTo(2));
+							Assert.That(indexTable.ForeignKeys.Count, Is.EqualTo(2));
 						}
 						break;
 				}
 
 				switch (context)
 				{
-					case ProviderName.SqlServer2008 :
-					case ProviderName.SqlServer2012 :
-					case ProviderName.SqlServer2014 :
-					case ProviderName.SqlServer2017 :
-					case TestProvName.SqlAzure      :
+					case ProviderName.SqlServer2008                       :
+					case ProviderName.SqlServer2012                       :
+					case ProviderName.SqlServer2014                       :
+					case ProviderName.SqlServer2016                       :
+					case ProviderName.SqlServer2017                       :
+					case TestProvName.SqlServer2019                       :
+					case TestProvName.SqlServer2019SequentialAccess       :
+					case TestProvName.SqlServer2019FastExpressionCompiler :
+					case TestProvName.SqlAzure                            :
 						{
 							var tbl = dbSchema.Tables.Single(at => at.TableName == "AllTypes");
 							var col = tbl.Columns.First(c => c.ColumnName == "datetimeoffset3DataType");
@@ -133,14 +144,14 @@ namespace Tests.SchemaProvider
 		{
 			var e = mappingSchema.GetEntityDescriptor(typeof(T));
 
-			var schemaTable = dbSchema.Tables.FirstOrDefault(_ => _.TableName!.Equals(e.TableName, StringComparison.OrdinalIgnoreCase));
+			var schemaTable = dbSchema.Tables.FirstOrDefault(_ => _.TableName!.Equals(e.TableName, StringComparison.OrdinalIgnoreCase))!;
 			Assert.IsNotNull(schemaTable, e.TableName);
 
 			Assert.That(schemaTable.Columns.Count >= e.Columns.Count);
 
 			foreach (var column in e.Columns)
 			{
-				var schemaColumn = schemaTable.Columns.FirstOrDefault(_ => _.ColumnName.Equals(column.ColumnName, StringComparison.InvariantCultureIgnoreCase));
+				var schemaColumn = schemaTable.Columns.FirstOrDefault(_ => _.ColumnName.Equals(column.ColumnName, StringComparison.InvariantCultureIgnoreCase))!;
 				Assert.IsNotNull(schemaColumn, column.ColumnName);
 
 				if (column.CanBeNull)
@@ -158,7 +169,7 @@ namespace Tests.SchemaProvider
 			using (var conn = new DataConnection(context))
 			{
 				var sp       = conn.DataProvider.GetSchemaProvider();
-				var dbSchema = sp.GetSchema(conn, TestUtils.GetDefaultSchemaOptions(context));
+				var dbSchema = sp.GetSchema(conn);
 
 				Assert.IsNotNull(dbSchema);
 			}
@@ -170,7 +181,7 @@ namespace Tests.SchemaProvider
 			using (var conn = new DataConnection(context))
 			{
 				var sp       = conn.DataProvider.GetSchemaProvider();
-				var dbSchema = sp.GetSchema(conn, TestUtils.GetDefaultSchemaOptions(context));
+				var dbSchema = sp.GetSchema(conn);
 				var table    = dbSchema.Tables.Single(t => t.TableName!.Equals("alltypes", StringComparison.OrdinalIgnoreCase));
 
 				Assert.That(table.Columns[0].MemberType, Is.Not.EqualTo("object"));
@@ -190,7 +201,7 @@ namespace Tests.SchemaProvider
 			using (var conn = new DataConnection(context))
 			{
 				var sp       = conn.DataProvider.GetSchemaProvider();
-				var dbSchema = sp.GetSchema(conn, TestUtils.GetDefaultSchemaOptions(context));
+				var dbSchema = sp.GetSchema(conn);
 				var table    = dbSchema.Tables.Single(t => t.TableName!.Equals("person", StringComparison.OrdinalIgnoreCase));
 				var pk       = table.Columns.FirstOrDefault(t => t.IsPrimaryKey);
 
@@ -221,7 +232,7 @@ namespace Tests.SchemaProvider
 			using (conn.CreateLocalTable<ArrayTest>())
 			{
 				var sp       = conn.DataProvider.GetSchemaProvider();
-				var dbSchema = sp.GetSchema(conn, TestUtils.GetDefaultSchemaOptions(context));
+				var dbSchema = sp.GetSchema(conn);
 				var table    = dbSchema.Tables.Single(t => t.TableName == "ArrayTest");
 			}
 		}
@@ -232,7 +243,7 @@ namespace Tests.SchemaProvider
 			using (var conn = new DataConnection(context))
 			{
 				var sp       = conn.DataProvider.GetSchemaProvider();
-				var dbSchema = sp.GetSchema(conn, TestUtils.GetDefaultSchemaOptions(context));
+				var dbSchema = sp.GetSchema(conn);
 				var table    = dbSchema.Tables.Single(t => t.TableName == "ALLTYPES");
 
 				Assert.That(table.Columns.Single(c => c.ColumnName == "BINARYDATATYPE").   ColumnType, Is.EqualTo("CHAR (5) FOR BIT DATA"));
@@ -254,35 +265,35 @@ namespace Tests.SchemaProvider
 		{
 			using (var conn = new DataConnection(context))
 			{
-				var exclude = conn.DataProvider.GetSchemaProvider().GetSchema(conn, TestUtils.GetDefaultSchemaOptions(context)).Tables.Select(_ => _.CatalogName).Distinct().ToList();
+				var exclude = conn.DataProvider.GetSchemaProvider().GetSchema(conn).Tables.Select(_ => _.CatalogName).Distinct().ToList();
 				exclude.Add(null);
 				exclude.Add("");
 
-				var schema1 = conn.DataProvider.GetSchemaProvider().GetSchema(conn, TestUtils.GetDefaultSchemaOptions(context, new GetSchemaOptions {ExcludedCatalogs = exclude.ToArray()}));
-				var schema2 = conn.DataProvider.GetSchemaProvider().GetSchema(conn, TestUtils.GetDefaultSchemaOptions(context, new GetSchemaOptions {IncludedCatalogs = new []{ "IncludeExcludeCatalogTest" }}));
+				var schema1 = conn.DataProvider.GetSchemaProvider().GetSchema(conn, new GetSchemaOptions {ExcludedCatalogs = exclude.ToArray()});
+				var schema2 = conn.DataProvider.GetSchemaProvider().GetSchema(conn, new GetSchemaOptions {IncludedCatalogs = new []{ "IncludeExcludeCatalogTest" }});
 
 				Assert.IsEmpty(schema1.Tables);
 				Assert.IsEmpty(schema2.Tables);
 			}
 		}
 
-		[SkipCI("It is insanely slow for oracle. Wether we should fix it or implement configurations support for SkipCI")]
 		[Test]
 		public void IncludeExcludeSchemaTest([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector)]
 			string context)
 		{
+			using (new DisableBaseline("TODO: exclude schema list is not stable, db2 schema provider needs refactoring", GetProviderName(context, out var _) == ProviderName.DB2))
 			using (var conn = new DataConnection(context))
 			{
 				var exclude = conn.DataProvider.GetSchemaProvider()
-					.GetSchema(conn, TestUtils.GetDefaultSchemaOptions(context, new GetSchemaOptions {ExcludedSchemas = new string?[] { null }}))
+					.GetSchema(conn, new GetSchemaOptions {ExcludedSchemas = new string?[] { null }})
 					.Tables.Select(_ => _.SchemaName)
 					.Distinct()
 					.ToList();
 				exclude.Add(null);
 				exclude.Add("");
 
-				var schema1 = conn.DataProvider.GetSchemaProvider().GetSchema(conn, TestUtils.GetDefaultSchemaOptions(context, new GetSchemaOptions {ExcludedSchemas = exclude.ToArray()}));
-				var schema2 = conn.DataProvider.GetSchemaProvider().GetSchema(conn, TestUtils.GetDefaultSchemaOptions(context, new GetSchemaOptions {IncludedSchemas = new []{ "IncludeExcludeSchemaTest" } }));
+				var schema1 = conn.DataProvider.GetSchemaProvider().GetSchema(conn, new GetSchemaOptions {ExcludedSchemas = exclude.ToArray()});
+				var schema2 = conn.DataProvider.GetSchemaProvider().GetSchema(conn, new GetSchemaOptions {IncludedSchemas = new []{ "IncludeExcludeSchemaTest" } });
 
 				Assert.IsEmpty(schema1.Tables);
 				Assert.IsEmpty(schema2.Tables);
@@ -322,7 +333,7 @@ namespace Tests.SchemaProvider
 					)");
 
 				var sp = db.DataProvider.GetSchemaProvider();
-				var sc = sp.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				var sc = sp.GetSchema(db);
 
 				Assert.IsNotNull(sc);
 				Assert.IsEmpty(sc.Tables.SelectMany(_ => _.ForeignKeys).Where(_ => _.MemberName.Any(char.IsDigit)));
@@ -339,10 +350,10 @@ namespace Tests.SchemaProvider
 			{
 				var p = db.DataProvider.GetSchemaProvider();
 				var schemaName = TestUtils.GetSchemaName(db);
-				var s = p.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context, new GetSchemaOptions()
+				var s = p.GetSchema(db, new GetSchemaOptions()
 				{
 					IncludedSchemas = schemaName != TestUtils.NO_SCHEMA_NAME ? new[] { schemaName } : null
-				}));
+				});
 
 				var fkCountDoctor = s.Tables.Single(_ => _.TableName!.Equals(nameof(Model.Doctor), StringComparison.OrdinalIgnoreCase)).ForeignKeys.Count;
 				var pkCountDoctor = s.Tables.Single(_ => _.TableName!.Equals(nameof(Model.Doctor), StringComparison.OrdinalIgnoreCase)).Columns.Count(_ => _.IsPrimaryKey);
@@ -364,7 +375,7 @@ namespace Tests.SchemaProvider
 			using (var db = new DataConnection(context))
 			{
 				var p = db.DataProvider.GetSchemaProvider();
-				var s = p.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				var s = p.GetSchema(db);
 
 				var table = s.Tables.Single(t => t.TableName == "TestSchemaY");
 				var fks   = table.ForeignKeys.Select(fk => fk.MemberName).ToArray();
@@ -385,7 +396,7 @@ namespace Tests.SchemaProvider
 			using (var db = new DataConnection(context))
 			{
 				var p = db.DataProvider.GetSchemaProvider();
-				var s = p.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				var s = p.GetSchema(db);
 
 				var table = s.Tables.Single(t => t.TableName == "Employees");
 				var fks   = table.ForeignKeys.Select(fk => fk.MemberName).ToArray();
@@ -509,9 +520,7 @@ namespace Tests.SchemaProvider
 						var c2 = t2.Columns[j];
 
 						Assert.That(c1.ColumnName,           Is.EqualTo(c2.ColumnName));
-						// IT: Different approaches return different result: nvarchar(50) vs nvarchar(100).
-						// We do not use it anyway.
-						//Assert.That(c1.ColumnType,         Is.EqualTo(c2.ColumnType));
+						Assert.That(c1.ColumnType,           Is.EqualTo(c2.ColumnType));
 						Assert.That(c1.IsNullable,           Is.EqualTo(c2.IsNullable));
 						Assert.That(c1.IsIdentity,           Is.EqualTo(c2.IsIdentity));
 						Assert.That(c1.IsPrimaryKey,         Is.EqualTo(c2.IsPrimaryKey));

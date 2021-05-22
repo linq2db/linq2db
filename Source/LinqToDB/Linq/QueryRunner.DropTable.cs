@@ -13,18 +13,23 @@ namespace LinqToDB.Linq
 		{
 			public static void Query(
 				IDataContext dataContext,
-				string? tableName, string? serverName, string? databaseName, string? schemaName,
-				bool ifExists)
+				string?      tableName,
+				string?      serverName,
+				string?      databaseName,
+				string?      schemaName,
+				bool?        ifExists,
+				TableOptions tableOptions)
 			{
 				var sqlTable  = new SqlTable<T>(dataContext.MappingSchema);
-				var dropTable = new SqlDropTableStatement(ifExists);
+				var dropTable = new SqlDropTableStatement(sqlTable);
 
 				if (tableName    != null) sqlTable.PhysicalName = tableName;
 				if (serverName   != null) sqlTable.Server       = serverName;
 				if (databaseName != null) sqlTable.Database     = databaseName;
 				if (schemaName   != null) sqlTable.Schema       = schemaName;
+				if (tableOptions.IsSet()) sqlTable.TableOptions = tableOptions;
 
-				dropTable.Table  = sqlTable;
+				sqlTable.Set(ifExists, TableOptions.DropIfExists);
 
 				var query = new Query<int>(dataContext, null)
 				{
@@ -37,20 +42,25 @@ namespace LinqToDB.Linq
 			}
 
 			public static async Task QueryAsync(
-				IDataContext dataContext,
-				string? tableName, string? serverName, string? databaseName, string? schemaName,
-				bool ifExists,
+				IDataContext      dataContext,
+				string?           tableName,
+				string?           serverName,
+				string?           databaseName,
+				string?           schemaName,
+				bool?             ifExists,
+				TableOptions      tableOptions,
 				CancellationToken token)
 			{
 				var sqlTable  = new SqlTable<T>(dataContext.MappingSchema);
-				var dropTable = new SqlDropTableStatement(ifExists);
+				var dropTable = new SqlDropTableStatement(sqlTable);
 
 				if (tableName    != null) sqlTable.PhysicalName = tableName;
 				if (serverName   != null) sqlTable.Server       = serverName;
 				if (databaseName != null) sqlTable.Database     = databaseName;
 				if (schemaName   != null) sqlTable.Schema       = schemaName;
+				if (tableOptions.IsSet()) sqlTable.TableOptions = tableOptions;
 
-				dropTable.Table  = sqlTable;
+				sqlTable.Set(ifExists, TableOptions.DropIfExists);
 
 				var query = new Query<int>(dataContext, null)
 				{

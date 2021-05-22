@@ -541,10 +541,11 @@ namespace Tests.Linq
 		[Test]
 		public void GuidToString([DataSources] string context)
 		{
+			var guid = IsCaseSensitiveDB(context) ? "FEBE3ECA-CB5F-40B2-AD39-2979D312AFCA" : "febe3eca-cb5f-40b2-ad39-2979d312afca";
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from t in    Types where Sql.ConvertTo<string>.From(t.GuidValue) == "febe3eca-cb5f-40b2-ad39-2979d312afca" select t.GuidValue,
-					from t in db.Types where Sql.ConvertTo<string>.From(t.GuidValue) == "febe3eca-cb5f-40b2-ad39-2979d312afca" select t.GuidValue);
+					from t in db.Types where Sql.ConvertTo<string>.From(t.GuidValue) == guid select t.GuidValue);
 		}
 
 		#endregion
@@ -634,7 +635,7 @@ namespace Tests.Linq
 		{
 			var r = db.Types.Select(_ => ServerConvert<TTo, TFrom>(value)).First();
 
-			Console.WriteLine($"Expected {expected} result {r}");
+			TestContext.WriteLine($"Expected {expected} result {r}");
 
 			Assert.GreaterOrEqual(0.01m,
 				Math.Abs(LinqToDB.Common.Convert<TTo, decimal>.From(expected) - LinqToDB.Common.Convert<TTo, decimal>.From(r)));
@@ -687,8 +688,8 @@ namespace Tests.Linq
 				var sqlActual   = qActual.  ToString();
 				var sqlExpected = qExpected.ToString();
 
-				Assert.That(sqlActual,   Is.Not.Contains   ("Convert").Or.Contains("Cast"));
-				Assert.That(sqlExpected, Contains.Substring("Convert").Or.Contains("Cast"));
+				Assert.That(sqlActual,   Is.Not.Contains("Convert").Or.Contains("Cast"));
+				Assert.That(sqlExpected, Is.Not.Contains("Convert").Or.Contains("Cast"));
 
 				var actual   = qActual.  ToArray();
 				var expected = qExpected.ToArray();

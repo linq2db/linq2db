@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NETFRAMEWORK
+using System;
 using System.Linq;
 using System.Reflection;
 
@@ -73,10 +74,13 @@ namespace LinqToDB.Metadata
 
 					var attr = new ColumnAttribute
 					{
-						Name      = c.Name,
-						DbType    = c.DbType,
-						CanBeNull = c.CanBeNull,
-						Storage   = c.Storage,
+						Name            = c.Name,
+						DbType          = c.DbType,
+						CanBeNull       = c.CanBeNull,
+						Storage         = c.Storage,
+						IsPrimaryKey    = c.IsPrimaryKey,
+						IsIdentity      = c.IsDbGenerated,
+						IsDiscriminator = c.IsDiscriminator,
 					};
 
 					return new[] { (T)(Attribute)attr };
@@ -103,3 +107,4 @@ namespace LinqToDB.Metadata
 			=> _reader.GetDynamicColumns(type);
 	}
 }
+#endif

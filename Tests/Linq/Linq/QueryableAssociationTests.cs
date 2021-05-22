@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
-namespace Tests.Playground
+namespace Tests.Linq
 {
 	[TestFixture]
 	public class QueryableAssociationTests : TestBase
@@ -273,7 +274,6 @@ AS RETURN
 		{
 			var (entities, others) = GenerateEntities();
 
-			using (new AllowMultipleQuery())
 			using (var db = (DataConnection)GetDataContext(context, GetMapping()))
 			using (db.CreateLocalTable("SomeTable", entities))
 			using (db.CreateLocalTable(others))
@@ -388,7 +388,6 @@ AS RETURN
 		{
 			var (entities, others) = GenerateEntities();
 
-			using (new AllowMultipleQuery())
 			using (var db = (DataConnection)GetDataContext(context, GetMapping()))
 			using (db.CreateLocalTable(entities))
 			using (db.CreateLocalTable(others))
@@ -415,7 +414,6 @@ AS RETURN
 		{
 			var (entities, others) = GenerateEntities();
 
-			using (new AllowMultipleQuery())
 			using (var db = (DataConnection)GetDataContext(context, GetMapping()))
 			using (db.CreateLocalTable(entities))
 			using (db.CreateLocalTable(others))
@@ -505,7 +503,7 @@ WHERE
 				// Ensure that cross apply inlined in query
 				Assert.AreEqual(2, select.Select.From.Tables[0].Joins.Count);
 
-				Console.WriteLine(q.ToString());
+				TestContext.WriteLine(q.ToString());
 			}
 		}
 
@@ -536,7 +534,6 @@ WHERE
 		[Test]
 		public void AssociationFromInterfaceInGenericMethod([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = (DataConnection)GetDataContext(context, GetMapping()))
 			using (db.CreateLocalTable<TreeItem>())
 			{
@@ -725,13 +722,13 @@ WHERE
 			[Association(QueryExpressionMethod = nameof(UsersWithLanguageExpression), Relationship = Relationship.OneToMany)]
 			public IQueryable<User> UsersWithLanguage(IDataContext db, int languageId)
 			{
-				return (_usersWithLanguageExpression ??= UsersWithLanguageExpression().Compile())(this, db, languageId);
+				return (_usersWithLanguageExpression ??= UsersWithLanguageExpression().CompileExpression())(this, db, languageId);
 			}
 			
 			[ExpressionMethod(nameof(UsersWithLanguageExpression))]
 			public IQueryable<User> UsersWithLanguageEM(IDataContext db, int languageId)
 			{
-				return (_usersWithLanguageExpression ??= UsersWithLanguageExpression().Compile())(this, db, languageId);
+				return (_usersWithLanguageExpression ??= UsersWithLanguageExpression().CompileExpression())(this, db, languageId);
 			}
 			
 			public static Expression<Func<UserGroup, IDataContext, int, IQueryable<User>>> UsersWithLanguageExpression()
@@ -744,9 +741,7 @@ WHERE
 			[Association(QueryExpressionMethod = nameof(UsersWithLanguageLikeExpression), Relationship = Relationship.OneToMany)]
 			public IQueryable<User> UsersWithLanguageLike(IDataContext db, string language)
 			{
-				return (_usersWithLanguageLikeExpression ??=
-UsersWithLanguageLikeExpression().Compile()
-					)(this, db, language);
+				return (_usersWithLanguageLikeExpression ??= UsersWithLanguageLikeExpression().CompileExpression())(this, db, language);
 			}
 						
 			public static Expression<Func<UserGroup, IDataContext, string, IQueryable<User>>> UsersWithLanguageLikeExpression()
@@ -760,10 +755,10 @@ UsersWithLanguageLikeExpression().Compile()
 			private static Func<UserGroup, IDataContext, string, IQueryable<User>>? _usersWithLanguageLikeExpression;
 
 			[Association(QueryExpressionMethod = nameof(FirstUserWithMultipleParametersExpression), Relationship = Relationship.OneToOne, CanBeNull = true)]
-			public User FirstUserWithMultipleParameters(IDataContext db, int parameter1, string parameter2, decimal parameter3)
+			public User? FirstUserWithMultipleParameters(IDataContext db, int parameter1, string parameter2, decimal parameter3)
 			{
 				return (_firstUserWithMultipleParametersExpression ??=
-						FirstUserWithMultipleParametersExpression().Compile()
+						FirstUserWithMultipleParametersExpression().CompileExpression()
 					)(this, db, parameter1, parameter2, parameter3).FirstOrDefault();
 			}
 			
@@ -783,9 +778,9 @@ UsersWithLanguageLikeExpression().Compile()
 			
 			
 			[Association(QueryExpressionMethod = nameof(FirstUserWithLanguageExpression), Relationship = Relationship.OneToOne, CanBeNull = true)]
-			public User FirstUsersWithLanguage(IDataContext db, int languageId)
+			public User? FirstUsersWithLanguage(IDataContext db, int languageId)
 			{
-				return (_firstUserWithLanguageExpression ??= FirstUserWithLanguageExpression().Compile())(this, db, languageId).FirstOrDefault();
+				return (_firstUserWithLanguageExpression ??= FirstUserWithLanguageExpression().CompileExpression())(this, db, languageId).FirstOrDefault();
 			}
 			
 			public static Expression<Func<UserGroup, IDataContext, int, IQueryable<User>>> FirstUserWithLanguageExpression()
@@ -850,8 +845,8 @@ UsersWithLanguageLikeExpression().Compile()
 					.Select(x => new
 					{
 						x.Id,
-						FirstUserId = x.FirstUsersWithLanguage(db, 1).Id,
-						LanguageName = x.FirstUsersWithLanguage(db, 1).Language!.Name
+						FirstUserId = x.FirstUsersWithLanguage(db, 1)!.Id,
+						LanguageName = x.FirstUsersWithLanguage(db, 1)!.Language!.Name
 					})
 					.First();
 
@@ -886,9 +881,9 @@ UsersWithLanguageLikeExpression().Compile()
 					{
 						x.Id,
 						FirstUserId  = x
-							.FirstUsersWithLanguage(db, 1)
+							.FirstUsersWithLanguage(db, 1)!
 							.UserGroup
-							.FirstUsersWithLanguage(db, 2)
+							.FirstUsersWithLanguage(db, 2)!
 							.Id
 					})
 					.First();
@@ -922,13 +917,13 @@ UsersWithLanguageLikeExpression().Compile()
 					.Select(x => new
 					{
 						x.Id,
-						LanguagesWithEnCount = x.UsersWithLanguageLike(db, "_En").Count(),
+						LanguagesWithEnCount  = x.UsersWithLanguageLike(db, "_En").Count(),
 						LanguagesWithLisCount = x.UsersWithLanguageLike(db, "Lis").Count()
 					})
 					.First();
 
-				Assert.AreEqual(3, data.LanguagesWithEnCount);
-				Assert.AreEqual(2, data.LanguagesWithLisCount);
+				Assert.AreEqual(IsCaseSensitiveDB(context) ? 2 : 3, data.LanguagesWithEnCount);
+				Assert.AreEqual(IsCaseSensitiveDB(context) ? 0 : 2, data.LanguagesWithLisCount);
 			}
 		}
 		
@@ -957,7 +952,7 @@ UsersWithLanguageLikeExpression().Compile()
 					.Select(x => new
 					{
 						x.Id,
-						FirstUserId = x.FirstUserWithMultipleParameters(db, default, string.Empty, default).Id
+						FirstUserId = x.FirstUserWithMultipleParameters(db, default, string.Empty, default)!.Id
 					})
 					.First();
 

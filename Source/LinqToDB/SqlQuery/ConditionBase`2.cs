@@ -45,7 +45,7 @@
 				readonly Expr_              _expr;
 				readonly SqlPredicate.Operator _op;
 
-				public T2 Expr    (ISqlExpression expr)       { return _expr.Add(new SqlPredicate.ExprExpr(_expr._expr, _op, expr)); }
+				public T2 Expr    (ISqlExpression expr)       { return _expr.Add(new SqlPredicate.ExprExpr(_expr._expr, _op, expr, null)); }
 				public T2 Field   (SqlField      field)       { return Expr(field);               }
 				public T2 SubQuery(SelectQuery   selectQuery) { return Expr(selectQuery);         }
 				public T2 Value   (object        value)       { return Expr(new SqlValue(value)); }
@@ -55,20 +55,20 @@
 				public T2 Any     (SelectQuery   subQuery)    { return Expr(SqlFunction.CreateAny (subQuery)); }
 			}
 
-			public Op_ Equal          => new Op_(this, SqlPredicate.Operator.Equal);
-			public Op_ NotEqual       => new Op_(this, SqlPredicate.Operator.NotEqual);
-			public Op_ Greater        => new Op_(this, SqlPredicate.Operator.Greater);
-			public Op_ GreaterOrEqual => new Op_(this, SqlPredicate.Operator.GreaterOrEqual);
-			public Op_ NotGreater     => new Op_(this, SqlPredicate.Operator.NotGreater);
-			public Op_ Less           => new Op_(this, SqlPredicate.Operator.Less);
-			public Op_ LessOrEqual    => new Op_(this, SqlPredicate.Operator.LessOrEqual);
-			public Op_ NotLess        => new Op_(this, SqlPredicate.Operator.NotLess);
+			public Op_ Equal          => new (this, SqlPredicate.Operator.Equal);
+			public Op_ NotEqual       => new (this, SqlPredicate.Operator.NotEqual);
+			public Op_ Greater        => new (this, SqlPredicate.Operator.Greater);
+			public Op_ GreaterOrEqual => new (this, SqlPredicate.Operator.GreaterOrEqual);
+			public Op_ NotGreater     => new (this, SqlPredicate.Operator.NotGreater);
+			public Op_ Less           => new (this, SqlPredicate.Operator.Less);
+			public Op_ LessOrEqual    => new (this, SqlPredicate.Operator.LessOrEqual);
+			public Op_ NotLess        => new (this, SqlPredicate.Operator.NotLess);
 
 			#endregion
 
 			#region Predicate.Like
 
-			public T2 Like(ISqlExpression expression, SqlValue? escape) { return Add(new SqlPredicate.Like(_expr, false, expression, escape, true)); }
+			public T2 Like(ISqlExpression expression, SqlValue? escape) { return Add(new SqlPredicate.Like(_expr, false, expression, escape)); }
 			public T2 Like(ISqlExpression expression)                   { return Like(expression, null); }
 			public T2 Like(string expression,         SqlValue escape)  { return Like(new SqlValue(expression), escape); }
 			public T2 Like(string expression)                           { return Like(new SqlValue(expression), null);   }
@@ -96,7 +96,7 @@
 
 			SqlPredicate.InList CreateInList(bool isNot, object[] exprs)
 			{
-				var list = new SqlPredicate.InList(_expr, isNot, null);
+				var list = new SqlPredicate.InList(_expr, Common.Configuration.Linq.CompareNullsAsValues ? false : null, isNot);
 
 				if (exprs != null && exprs.Length > 0)
 				{
@@ -151,7 +151,7 @@
 			return (T1)this;
 		}
 
-		public Not_  Not => new Not_(this);
+		public Not_  Not => new (this);
 
 		public Expr_ Expr    (ISqlExpression expr)        { return new Expr_(this, false, expr); }
 		public Expr_ Field   (SqlField       field)       { return Expr(field);                  }

@@ -5,10 +5,8 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
-namespace Tests.Playground
+namespace Tests.Mapping
 {
-	using Tools;
-
 	[TestFixture]
 	public class FluentMappingExpressionMethodTests : TestBase
 	{

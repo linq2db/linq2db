@@ -27,8 +27,7 @@ void NotifyPropertyChangedImpl()
 
 		if (prop.Parent is Class)
 		{
-			var parent = (Class)prop.Parent;
-			parentMembers = parent.Members;
+			parentMembers = ((Class)prop.Parent).Members;
 		}
 		else
 		{
@@ -59,6 +58,9 @@ void NotifyPropertyChangedImpl()
 			parentMembers.RemoveAt(index);
 			parentMembers.Insert  (index, gr);
 		}
+
+		gr.Conditional   = prop.Conditional;
+		prop.Conditional = null;
 
 		if (prop.IsAuto)
 		{
@@ -217,7 +219,7 @@ void NotifyPropertyChangedImpl()
 						new Event("PropertyChangedEventHandler", "PropertyChanged", true)
 						{
 							IsVirtual  = true,
-							Attributes = { new Attribute("field : NonSerialized") { Conditional = "!SILVERLIGHT" } }
+							Attributes = { new Attribute("field : NonSerialized") }
 						},
 						new Method(() => "void", "OnPropertyChanged", new Func<string>[] { () => "string propertyName" }, () => OnPropertyChangedBody)
 						{
@@ -246,7 +248,7 @@ void NotifyPropertyChangedImpl()
 						new Event("PropertyChangingEventHandler", "PropertyChanging", true)
 						{
 							IsVirtual  = true,
-							Attributes = { new Attribute("field : NonSerialized") { Conditional = "!SILVERLIGHT" } }
+							Attributes = { new Attribute("field : NonSerialized") }
 						},
 						new Method(() => "void", "OnPropertyChanging", new Func<string>[] { () => "string propertyName" }, () => OnPropertyChangingBody)
 						{
@@ -309,7 +311,7 @@ partial class Property
 	public List<string> Dependents = new List<string>();
 }
 
-class NotifyingProperty : Property
+public class NotifyingProperty : Property
 {
 	public NotifyingProperty()
 	{
@@ -317,7 +319,7 @@ class NotifyingProperty : Property
 	}
 
 	public NotifyingProperty(ModelType type, string name, params string[] dependents)
-		: base(() => type.ToTypeName(), name, null, null)
+		: base(type.ToTypeName, name)
 	{
 		IsNotifying = true;
 
@@ -328,7 +330,7 @@ class NotifyingProperty : Property
 	}
 
 	public NotifyingProperty(string type, string name, params string[] dependents)
-		: base(() => type, name, null, null)
+		: base(() => type, name)
 	{
 		IsNotifying = true;
 

@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 
 namespace LinqToDB.Common
 {
@@ -40,6 +43,8 @@ namespace LinqToDB.Common
 			{
 				var currentTemplateArguments = templateType.GetGenericArguments();
 				var replacedArguments        = replaced.GetGenericArguments();
+				if (replacedArguments.Length == 0 && replaced.IsArray)
+					replacedArguments = new[] { replaced.GetElementType()! };
 
 				for (int i = 0; i < currentTemplateArguments.Length; i++)
 				{
@@ -67,6 +72,55 @@ namespace LinqToDB.Common
 					}
 				}
 			}
+		}
+
+		/// <summary>
+		/// Creates MethodCallExpression without specifying generic parameters.
+		/// </summary>
+		/// <param name="methodInfo"></param>
+		/// <param name="arguments"></param>
+		/// <returns>New MethodCallExpression.</returns>
+		public static MethodCallExpression MakeMethodCall(MethodInfo methodInfo, params Expression[] arguments)
+		{
+			var callMethodInfo = MakeGenericMethod(methodInfo, arguments);
+			var callExpression = Expression.Call(callMethodInfo, arguments);
+
+			return callExpression;
+		}
+
+		/// <summary>
+		/// Makes generic method based on type of arguments.
+		/// </summary>
+		/// <param name="methodInfo"></param>
+		/// <param name="arguments"></param>
+		/// <returns>New MethodCallExpression.</returns>
+		public static MethodInfo MakeGenericMethod(MethodInfo methodInfo, Expression[] arguments)
+		{
+			if (!methodInfo.IsGenericMethod)
+				return methodInfo;
+
+			if (!methodInfo.IsGenericMethodDefinition)
+				methodInfo = methodInfo.GetGenericMethodDefinition();
+		
+			var genericArguments = methodInfo.GetGenericArguments();
+			var typesMapping     = new Dictionary<Type, Type>();
+
+			for (var i = 0; i < methodInfo.GetParameters().Length; i++)
+			{
+				var parameter = methodInfo.GetParameters()[i];
+				RegisterTypeRemapping(parameter.ParameterType, arguments[i].Type, genericArguments, typesMapping);
+			}
+
+			var newGenericArguments = genericArguments.Select((t, i) =>
+			{
+				if (!typesMapping.TryGetValue(t, out var replaced))
+					throw new LinqToDBException($"Not found type mapping for generic argument '{t.Name}'.");
+				return replaced;
+			}).ToArray();
+
+			var callMethodInfo = methodInfo.MakeGenericMethod(newGenericArguments);
+
+			return callMethodInfo;
 		}
 		
 	}

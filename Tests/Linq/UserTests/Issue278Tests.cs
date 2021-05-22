@@ -13,6 +13,7 @@ using NUnit.Framework;
 
 namespace Tests.UserTests
 {
+	using LinqToDB.Common;
 	using Model;
 
 	[TestFixture]
@@ -106,9 +107,9 @@ namespace Tests.UserTests
 			var table       = Expression.Call(tableMethod, dbParam);
 
 			var recordParam = Expression.Parameter(typeof(LinqDataTypes2), "record");
-			var where       = MemberHelper.MethodOf(() => Queryable.Where<LinqDataTypes2>(null, (Expression<Func<LinqDataTypes2, bool>>?)null));
+			var where       = MemberHelper.MethodOf(() => Queryable.Where<LinqDataTypes2>(null!, (Expression<Func<LinqDataTypes2, bool>>?)null!));
 
-			var toListMethod = MemberHelper.MethodOf(() => Enumerable.ToList<LinqDataTypes2>(null));
+			var toListMethod = MemberHelper.MethodOf(() => Enumerable.ToList<LinqDataTypes2>(null!));
 
 			for (var i = 0; i < actions.Length; i++)
 			{
@@ -118,7 +119,7 @@ namespace Tests.UserTests
 
 				body = Expression.Call(toListMethod, body);
 
-				actions[i] = Expression.Lambda<Action<ITestDataContext>>(body, dbParam).Compile();
+				actions[i] = Expression.Lambda<Action<ITestDataContext>>(body, dbParam).CompileExpression();
 			}
 
 			using (new DisableQueryCache(false))
@@ -135,9 +136,9 @@ namespace Tests.UserTests
 			var table       = Expression.Call(tableMethod, dbParam);
 
 			var recordParam = Expression.Parameter(typeof(LinqDataTypes2), "record");
-			var where       = MemberHelper.MethodOf(() => Queryable.Where<LinqDataTypes2>(null, (Expression<Func<LinqDataTypes2, bool>>?)null));
+			var where       = MemberHelper.MethodOf(() => Queryable.Where<LinqDataTypes2>(null!, (Expression<Func<LinqDataTypes2, bool>>?)null!));
 
-			var toListMethod = MemberHelper.MethodOf(() => Enumerable.ToList<LinqDataTypes2>(null));
+			var toListMethod = MemberHelper.MethodOf(() => Enumerable.ToList<LinqDataTypes2>(null!));
 
 			for (var i = 0; i < actions.Length; i++)
 			{
@@ -147,7 +148,7 @@ namespace Tests.UserTests
 
 				body = Expression.Call(toListMethod, body);
 
-				actions[i] = Expression.Lambda<Action<ITestDataContext>>(body, dbParam).Compile();
+				actions[i] = Expression.Lambda<Action<ITestDataContext>>(body, dbParam).CompileExpression();
 			}
 
 			using (new DisableQueryCache(false))
@@ -163,6 +164,7 @@ namespace Tests.UserTests
 
 			var start = DateTimeOffset.Now;
 
+			using (new DisableBaseline("Multi-threading"))
 			using (new DisableLogging())
 				Parallel.ForEach(Enumerable.Range(1, threadCount), _ =>
 				{
@@ -217,7 +219,7 @@ namespace Tests.UserTests
 		{
 			db.Types2.Insert(() => new LinqDataTypes2()
 			{
-				DateTimeValue = DateTime.Now
+				DateTimeValue = TestData.DateTime
 			});
 		}
 
@@ -225,7 +227,7 @@ namespace Tests.UserTests
 		{
 			db.Types2.InsertWithIdentity(() => new LinqDataTypes2()
 			{
-				DateTimeValue = DateTime.Now
+				DateTimeValue = TestData.DateTime
 			});
 		}
 
@@ -234,10 +236,10 @@ namespace Tests.UserTests
 			db.Types2.InsertOrUpdate(() => new LinqDataTypes2()
 			{
 				ID = 100500,
-				DateTimeValue = DateTime.Now
+				DateTimeValue = TestData.DateTime
 			}, r => new LinqDataTypes2()
 			{
-				DateTimeValue = DateTime.Now
+				DateTimeValue = TestData.DateTime
 			});
 		}
 
@@ -246,7 +248,7 @@ namespace Tests.UserTests
 			db.Types2.Update(_ => new LinqDataTypes2()
 			{
 				ID = 100500,
-				DateTimeValue = DateTime.Now
+				DateTimeValue = TestData.DateTime
 			});
 		}
 

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -19,12 +19,13 @@ namespace Tests.Tools
 	public class TestSettings
 	{
 		public string?   BasedOn;
+		public string?   BaselinesPath;
 		public string[]? Providers;
 		public string[]? Skip;
 		public string?   TraceLevel;
 		public string?   DefaultConfiguration;
 		public string?   NoLinqService;
-		public Dictionary<string,TestConnection> Connections = new Dictionary<string,TestConnection>();
+		public Dictionary<string,TestConnection> Connections = new ();
 	}
 
 	public static class SettingsReader
@@ -51,13 +52,16 @@ namespace Tests.Tools
 
 				if (settings1.NoLinqService == null)
 					settings1.NoLinqService = settings2.NoLinqService;
+
+				if (settings1.BaselinesPath == null)
+					settings1.BaselinesPath = settings2.BaselinesPath;
 			}
 
-			var defaultSettings = JsonConvert.DeserializeObject<Dictionary<string,TestSettings>>(defaultJson);
+			var defaultSettings = JsonConvert.DeserializeObject<Dictionary<string,TestSettings>>(defaultJson)!;
 
 			if (userJson != null)
 			{
-				var userSettings = JsonConvert.DeserializeObject<Dictionary<string,TestSettings>>(userJson);
+				var userSettings = JsonConvert.DeserializeObject<Dictionary<string,TestSettings>>(userJson)!;
 
 				foreach (var uSetting in userSettings)
 				{
@@ -98,6 +102,20 @@ namespace Tests.Tools
 					var baseOnSettings = GetSettings(settings.BasedOn);
 
 					Merge(settings, baseOnSettings);
+				}
+
+				//Translate connection strings enclosed in brackets as references to other existing connection strings.
+				foreach (var connection in settings.Connections)
+				{
+					var cs = connection.Value.ConnectionString;
+					if (cs.StartsWith("[") && cs.EndsWith("]"))
+					{
+						cs = cs.Substring(1, cs.Length - 2);
+						if (settings.Connections.TryGetValue(cs, out var baseConnection))
+							connection.Value.ConnectionString = baseConnection.ConnectionString;
+						else
+							throw new InvalidOperationException($"Connection {cs} not found.");
+					}
 				}
 
 				return settings;

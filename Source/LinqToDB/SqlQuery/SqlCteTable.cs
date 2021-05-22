@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using LinqToDB.Common;
-using LinqToDB.Mapping;
-using LinqToDB.Reflection;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlCteTable : SqlTable, ICloneableElement
+	using Mapping;
+
+	public class SqlCteTable : SqlTable
 	{
 		public          CteClause? Cte  { get; private set; }
 
@@ -24,6 +22,10 @@ namespace LinqToDB.SqlQuery
 			set => base.PhysicalName = value;
 		}
 
+		// required by Clone :-/
+		internal string? BaseName         => base.Name;
+		internal string? BasePhysicalName => base.PhysicalName;
+
 		public SqlCteTable(
 			MappingSchema mappingSchema,
 			CteClause     cte)
@@ -32,18 +34,18 @@ namespace LinqToDB.SqlQuery
 			Cte = cte ?? throw new ArgumentNullException(nameof(cte));
 
 			// CTE has it's own names even there is mapping
-			foreach (var field in Fields.Values)
+			foreach (var field in Fields)
 				field.PhysicalName = field.Name;
 		}
 
 		internal SqlCteTable(int id, string alias, SqlField[] fields, CteClause cte)
-			: base(id, cte.Name, alias, string.Empty, string.Empty, string.Empty, cte.Name, cte.ObjectType, null, fields, SqlTableType.Cte, null)
+			: base(id, cte.Name, alias, string.Empty, string.Empty, string.Empty, cte.Name, cte.ObjectType, null, fields, SqlTableType.Cte, null, TableOptions.NotSet)
 		{
 			Cte = cte ?? throw new ArgumentNullException(nameof(cte));
 		}
 
 		internal SqlCteTable(int id, string alias, SqlField[] fields)
-			: base(id, null, alias, string.Empty, string.Empty, string.Empty, null, null, null, fields, SqlTableType.Cte, null)
+			: base(id, null, alias, string.Empty, string.Empty, string.Empty, null, null, null, fields, SqlTableType.Cte, null, TableOptions.NotSet)
 		{
 		}
 
@@ -74,9 +76,10 @@ namespace LinqToDB.SqlQuery
 		public override QueryElementType ElementType  => QueryElementType.SqlCteTable;
 		public override SqlTableType     SqlTableType => SqlTableType.Cte;
 
-		public StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
-			return sb.Append(Name);
+			Cte?.ToString(sb, dic);
+			return sb;
 		}
 
 		#region IQueryElement Members
@@ -87,43 +90,5 @@ namespace LinqToDB.SqlQuery
 
 
 		#endregion
-
-		ICloneableElement ICloneableElement.Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			if (!objectTree.TryGetValue(this, out var clone))
-			{
-				var table = new SqlCteTable(this, Array<SqlField>.Empty, Cte == null ? throw new ArgumentException() : (CteClause)Cte.Clone(objectTree, doClone))
-				{
-					Name               = base.Name,
-					Alias              = Alias,
-					Server             = Server,
-					Database           = Database,
-					Schema             = Schema,
-					PhysicalName       = base.PhysicalName,
-					ObjectType         = ObjectType,
-					SqlTableType       = SqlTableType,
-				};
-
-				table.Fields.Clear();
-
-				foreach (var field in Fields)
-				{
-					var fc = new SqlField(field.Value);
-
-					objectTree.Add(field.Value, fc);
-					table.     Add(fc);
-				}
-
-				objectTree.Add(this, table);
-				objectTree.Add(All,  table.All);
-
-				clone = table;
-			}
-
-			return clone;
-		}
 	}
 }

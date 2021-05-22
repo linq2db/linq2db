@@ -3,7 +3,6 @@ using System.IO;
 
 namespace LinqToDB.DataProvider.Access
 {
-	using System.Data;
 	using Common;
 	using Data;
 	using SchemaProvider;
@@ -14,12 +13,12 @@ namespace LinqToDB.DataProvider.Access
 		{
 		}
 
-		protected override string GetDatabaseName(DataConnection connection)
+		protected override string GetDatabaseName(DataConnection dbConnection)
 		{
-			var name = base.GetDatabaseName(connection);
+			var name = base.GetDatabaseName(dbConnection);
 
 			if (name.IsNullOrEmpty())
-				name = Path.GetFileNameWithoutExtension(GetDataSourceName(connection));
+				name = Path.GetFileNameWithoutExtension(GetDataSourceName(dbConnection));
 
 			return name;
 		}
@@ -31,8 +30,7 @@ namespace LinqToDB.DataProvider.Access
 			if (dataTypeInfo == null && dataType != null)
 			{
 				if (dataType.ToLower() == "text")
-					return typeof(string);
-				throw new InvalidOperationException();
+					return length == 1 && !options.GenerateChar1AsString ? typeof(char) : typeof(string);
 			}
 
 			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options);

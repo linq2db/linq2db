@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
@@ -52,7 +51,9 @@ namespace LinqToDB.SqlQuery
 		public bool             IsPure       { get; }
 		public ISqlExpression[] Parameters   { get; }
 
-		public static SqlFunction CreateCount (Type type, ISqlTableSource table) { return new SqlFunction(type, "Count", true, new SqlExpression("*")); }
+		public bool DoNotOptimize { get; set; }
+
+		public static SqlFunction CreateCount (Type type, ISqlTableSource table) { return new SqlFunction(type, "Count", true, new SqlExpression("*", new SqlValue(table.SourceID))); }
 
 		public static SqlFunction CreateAll   (SelectQuery subQuery) { return new SqlFunction(typeof(bool), "ALL",    false, SqlQuery.Precedence.Comparison, subQuery); }
 		public static SqlFunction CreateSome  (SelectQuery subQuery) { return new SqlFunction(typeof(bool), "SOME",   false, SqlQuery.Precedence.Comparison, subQuery); }
@@ -74,12 +75,12 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> action)
+		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
 			for (var i = 0; i < Parameters.Length; i++)
-				Parameters[i] = Parameters[i].Walk(options, action)!;
+				Parameters[i] = Parameters[i].Walk(options, func)!;
 
-			return action(this);
+			return func(this);
 		}
 
 		#endregion
@@ -104,35 +105,27 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region ICloneableElement Members
+		#region Equals Members
 
-		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			if (!objectTree.TryGetValue(this, out var clone))
-			{
-				objectTree.Add(this, clone = new SqlFunction(
-					SystemType,
-					Name,
-					IsAggregate,
-					Precedence,
-					Parameters.Select(e => (ISqlExpression)e.Clone(objectTree, doClone)).ToArray()));
-			}
-
-			return clone;
-		}
+		int? _hashCode;
 
 		public override int GetHashCode()
 		{
+			// ReSharper disable NonReadonlyMemberInGetHashCode
+			if (_hashCode.HasValue)
+				return _hashCode.Value;
+
 			var hashCode = SystemType.GetHashCode();
 
 			hashCode = unchecked(hashCode + (hashCode * 397) ^ Name.GetHashCode());
+			hashCode = unchecked(hashCode + (hashCode * 397) ^ CanBeNull.GetHashCode());
+			hashCode = unchecked(hashCode + (hashCode * 397) ^ DoNotOptimize.GetHashCode());
 			for (var i = 0; i < Parameters.Length; i++)
 				hashCode = unchecked(hashCode + (hashCode * 397) ^ Parameters[i].GetHashCode());
 
+			_hashCode = hashCode;
 			return hashCode;
+			// ReSharper restore NonReadonlyMemberInGetHashCode
 		}
 
 		public bool Equals(ISqlExpression? other, Func<ISqlExpression,ISqlExpression,bool> comparer)
@@ -161,7 +154,7 @@ namespace LinqToDB.SqlQuery
 		{
 			sb
 				.Append(Name)
-				.Append("(");
+				.Append('(');
 
 			foreach (var p in Parameters)
 			{
@@ -172,7 +165,7 @@ namespace LinqToDB.SqlQuery
 			if (Parameters.Length > 0)
 				sb.Length -= 2;
 
-			return sb.Append(")");
+			return sb.Append(')');
 		}
 
 		#endregion

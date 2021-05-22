@@ -1,3 +1,4 @@
+<#@ include file="T4Model.ttinclude" once="true" #>
 <#
 	{
 		var beforeGenerateModel = BeforeGenerateModel;
@@ -23,12 +24,9 @@ void EditableObjectImpl()
 
 		List<IClassMember> parentMembers;
 
-		MemberGroup gr = null;
-
 		if (prop.Parent is Class)
 		{
-			var parent = (Class)prop.Parent;
-			parentMembers = parent.Members;
+		    parentMembers = ((Class)prop.Parent).Members;
 		}
 		else
 		{
@@ -41,20 +39,17 @@ void EditableObjectImpl()
 		var name = prop.Name.Trim();
 		var type = prop.BuildType().Trim();
 
-		if (gr == null)
+		var gr = new MemberGroup
 		{
-			gr = new MemberGroup
-			{
-				Region          = name + " : " + type,
-				Members         = { prop },
-				IsPropertyGroup = true,
-			};
+			Region          = name + " : " + type,
+			Members         = { prop },
+			IsPropertyGroup = true,
+		};
 
-			var index = parentMembers.IndexOf(prop);
+		var index = parentMembers.IndexOf(prop);
 
-			parentMembers.RemoveAt(index);
-			parentMembers.Insert  (index, gr);
-		}
+		parentMembers.RemoveAt(index);
+		parentMembers.Insert  (index, gr);
 
 		var originalField = new Field(() => type, "_original" + name)
 		{
@@ -237,7 +232,7 @@ partial class Property
 	public string IsDirtyText = "{0} != {1}";
 }
 
-class EditableProperty : Property
+public class EditableProperty : Property
 {
 	public EditableProperty()
 	{
@@ -245,13 +240,13 @@ class EditableProperty : Property
 	}
 
 	public EditableProperty(ModelType type, string name)
-		: base(() => type.ToTypeName(), name, null, null)
+		: base(type.ToTypeName, name)
 	{
 		IsEditable = true;
 	}
 
 	public EditableProperty(string type, string name)
-		: base(() => type, name, null, null)
+		: base(() => type, name)
 	{
 		IsEditable = true;
 	}

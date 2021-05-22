@@ -14,23 +14,33 @@ namespace LinqToDB.DataProvider.Oracle
 	{
 		private readonly OracleDataProvider _provider;
 
+		protected string? SchemasFilter { get; private set; }
+
 		public OracleSchemaProvider(OracleDataProvider provider)
 		{
 			_provider = provider;
 		}
 
-		protected override string GetDataSourceName(DataConnection dataConnection)
+		public override DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions? options = null)
 		{
-			var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
+			var defaultSchema = dataConnection.Execute<string>("SELECT USER FROM DUAL");
+			SchemasFilter     = BuildSchemaFilter(options, defaultSchema, OracleMappingSchema.ConvertStringToSql);
+
+			return base.GetSchema(dataConnection, options);
+		}
+
+		protected override string GetDataSourceName(DataConnection dbConnection)
+		{
+			var connection = _provider.TryGetProviderConnection(dbConnection.Connection, dbConnection.MappingSchema);
 			if (connection == null)
 				return string.Empty;
 
 			return _provider.Adapter.GetHostName(connection);
 		}
 
-		protected override string GetDatabaseName(DataConnection dataConnection)
+		protected override string GetDatabaseName(DataConnection dbConnection)
 		{
-			var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
+			var connection = _provider.TryGetProviderConnection(dbConnection.Connection, dbConnection.MappingSchema);
 			if (connection == null)
 				return string.Empty;
 
@@ -41,6 +51,9 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
+			if (SchemasFilter == null)
+				return new List<TableInfo>();
+
 			LoadCurrentUser(dataConnection);
 
 			if (IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0)
@@ -49,21 +62,30 @@ namespace LinqToDB.DataProvider.Oracle
 				return dataConnection.Query<TableInfo>(
 					@"
 					SELECT
-						d.OWNER || '.' || d.NAME                         as TableID,
-						d.OWNER                                          as SchemaName,
-						d.NAME                                           as TableName,
-						d.IsView                                         as IsView,
-						CASE :CurrentUser WHEN d.OWNER THEN 1 ELSE 0 END as IsDefaultSchema,
-						tc.COMMENTS                                      as Description
+						d.OWNER || '.' || d.NAME                                     as TableID,
+						d.OWNER                                                      as SchemaName,
+						d.NAME                                                       as TableName,
+						d.IsView                                                     as IsView,
+						CASE :CurrentUser WHEN d.OWNER THEN 1 ELSE 0 END             as IsDefaultSchema,
+						CASE d.MatView WHEN 1 THEN mvc.COMMENTS ELSE tc.COMMENTS END as Description
 					FROM
 					(
-						SELECT t.OWNER, t.TABLE_NAME NAME, 0 as IsView FROM ALL_TABLES t
-							UNION ALL
-							SELECT v.OWNER, v.VIEW_NAME NAME, 1 as IsView FROM ALL_VIEWS v
+						SELECT t.OWNER, t.TABLE_NAME NAME, 0 as IsView, 0 as MatView FROM ALL_TABLES t
+							LEFT JOIN ALL_MVIEWS tm ON t.OWNER = tm.OWNER AND t.TABLE_NAME = tm.CONTAINER_NAME
+							WHERE tm.MVIEW_NAME IS NULL AND t.OWNER " + SchemasFilter + @"
+						UNION ALL
+						SELECT v.OWNER, v.VIEW_NAME NAME, 1 as IsView, 0 as MatView FROM ALL_VIEWS v
+							WHERE v.OWNER " + SchemasFilter + @"
+						UNION ALL
+						SELECT m.OWNER, m.MVIEW_NAME NAME, 1 as IsView, 1 as MatView FROM ALL_MVIEWS m
+							WHERE m.OWNER " + SchemasFilter + @"
 					) d
-						JOIN ALL_TAB_COMMENTS tc ON
+						LEFT JOIN ALL_TAB_COMMENTS tc ON
 							d.OWNER = tc.OWNER AND
 							d.NAME  = tc.TABLE_NAME
+						LEFT JOIN ALL_MVIEW_COMMENTS mvc ON
+							d.OWNER = mvc.OWNER AND
+							d.NAME  = mvc.MVIEW_NAME
 					ORDER BY TableID, isView
 					",
 					new DataParameter("CurrentUser", _currentUser, DataType.VarChar))
@@ -80,15 +102,23 @@ namespace LinqToDB.DataProvider.Oracle
 						d.NAME                        as TableName,
 						d.IsView                      as IsView,
 						1                             as IsDefaultSchema,
-						tc.COMMENTS                   as Description
+						d.COMMENTS                    as Description
 					FROM
 					(
-						SELECT t.TABLE_NAME NAME, 0 as IsView FROM USER_TABLES t
+						SELECT NAME, ISVIEW, CASE c.MatView WHEN 1 THEN mvc.COMMENTS ELSE tc.COMMENTS END AS COMMENTS
+						FROM 
+						(
+							SELECT t.TABLE_NAME NAME, 0 as IsView, 0 as MatView FROM USER_TABLES t
+								LEFT JOIN USER_MVIEWS tm ON t.TABLE_NAME = tm.CONTAINER_NAME
+								WHERE tm.MVIEW_NAME IS NULL
 							UNION ALL
-							SELECT v.VIEW_NAME NAME, 1 as IsView FROM USER_VIEWS v
+							SELECT v.VIEW_NAME NAME, 1 as IsView, 0 as MatView FROM USER_VIEWS v
+							UNION ALL
+							SELECT m.MVIEW_NAME NAME, 1 as IsView, 1 as MatView FROM USER_MVIEWS m
+						) c
+							LEFT JOIN USER_TAB_COMMENTS tc ON c.NAME = tc.TABLE_NAME
+							LEFT JOIN USER_MVIEW_COMMENTS mvc ON c.NAME = mvc.MVIEW_NAME
 					) d
-						JOIN USER_TAB_COMMENTS tc ON
-							d.NAME = tc.TABLE_NAME
 					ORDER BY TableID, isView
 					",
 					new DataParameter("CurrentUser", _currentUser, DataType.VarChar))
@@ -99,6 +129,9 @@ namespace LinqToDB.DataProvider.Oracle
 		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
+			if (SchemasFilter == null)
+				return new List<PrimaryKeyInfo>();
+
 			return
 				dataConnection.Query<PrimaryKeyInfo>(@"
 					SELECT
@@ -110,10 +143,11 @@ namespace LinqToDB.DataProvider.Oracle
 						ALL_CONS_COLUMNS FKCOLS,
 						ALL_CONSTRAINTS FKCON
 					WHERE
-						FKCOLS.OWNER           = FKCON.OWNER and
-						FKCOLS.TABLE_NAME      = FKCON.TABLE_NAME and
+						FKCOLS.OWNER           = FKCON.OWNER AND
+						FKCOLS.TABLE_NAME      = FKCON.TABLE_NAME AND
 						FKCOLS.CONSTRAINT_NAME = FKCON.CONSTRAINT_NAME AND
-						FKCON.CONSTRAINT_TYPE  = 'P'")
+						FKCON.CONSTRAINT_TYPE  = 'P' AND
+						FKCOLS.OWNER " + SchemasFilter)
 				.ToList();
 		}
 
@@ -134,6 +168,9 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
+			if (SchemasFilter == null)
+				return new List<ColumnInfo>();
+
 			var isIdentitySql = "0                                              as IsIdentity,";
 			if (GetMajorVersion(dataConnection) >= 12)
 			{
@@ -163,7 +200,7 @@ namespace LinqToDB.DataProvider.Oracle
 							c.OWNER       = cc.OWNER      AND
 							c.TABLE_NAME  = cc.TABLE_NAME AND
 							c.COLUMN_NAME = cc.COLUMN_NAME
-					";
+					WHERE c.OWNER " + SchemasFilter;
 			}
 			else
 			{
@@ -190,16 +227,22 @@ namespace LinqToDB.DataProvider.Oracle
 
 			return dataConnection.Query(rd =>
 			{
+				// IMPORTANT: reader calls must be ordered to support SequentialAccess
+				var tableId    = rd.GetString(0);
+				var name       = rd.GetString(1);
 				var dataType   = rd.IsDBNull(2) ?       null : rd.GetString(2);
+				var isNullable = rd.GetInt32(3) != 0;
+				var ordinal    = rd.IsDBNull(4) ? 0 : rd.GetInt32(4);
 				var dataLength = rd.IsDBNull(5) ? (int?)null : rd.GetInt32(5);
 				var charLength = rd.IsDBNull(6) ? (int?)null : rd.GetInt32(6);
+
 				return new ColumnInfo
 				{
-					TableID     = rd.GetString(0),
-					Name        = rd.GetString(1),
-					DataType    = rd.IsDBNull(2) ? null : rd.GetString(2),
-					IsNullable  = rd.GetInt32(3) != 0,
-					Ordinal     = rd.IsDBNull(4) ? 0 : rd.GetInt32(4),
+					TableID     = tableId,
+					Name        = name,
+					DataType    = dataType,
+					IsNullable  = isNullable,
+					Ordinal     = ordinal,
 					Precision   = rd.IsDBNull(7) ? (int?)null : rd.GetInt32(7),
 					Scale       = rd.IsDBNull(8) ? (int?)null : rd.GetInt32(8),
 					IsIdentity  = rd.GetInt32(9) != 0,
@@ -214,6 +257,9 @@ namespace LinqToDB.DataProvider.Oracle
 		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
+			if (SchemasFilter == null)
+				return new List<ForeignKeyInfo>();
+
 			if (IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0)
 			{
 				// This is very slow
@@ -243,8 +289,9 @@ namespace LinqToDB.DataProvider.Oracle
 								PKCON.CONSTRAINT_NAME = FKCON.R_CONSTRAINT_NAME
 						WHERE 
 							FKCON.CONSTRAINT_TYPE = 'R'          AND
-							FKCOLS.POSITION       = PKCOLS.POSITION
-						")
+							FKCOLS.POSITION       = PKCOLS.POSITION AND
+							FKCON.OWNER " + SchemasFilter + @" AND
+							PKCON.OWNER " + SchemasFilter)
 					.ToList();
 			}
 			else
@@ -334,16 +381,16 @@ namespace LinqToDB.DataProvider.Oracle
 			).ToList();
 		}
 
-		protected override string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, long? length, int? prec, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
+		protected override string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, long? length, int? precision, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
 		{
 			switch (columnType)
 			{
 				case "NUMBER" :
-					if (prec == 0) return columnType;
+					if (precision == 0) return columnType;
 					break;
 			}
 
-			return base.GetDbType(options, columnType, dataType, length, prec, scale, udtCatalog, udtSchema, udtName);
+			return base.GetDbType(options, columnType, dataType, length, precision, scale, udtCatalog, udtSchema, udtName);
 		}
 
 		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale, GetSchemaOptions options)

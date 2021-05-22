@@ -11,8 +11,11 @@ namespace LinqToDB.DataProvider.Sybase
 
 	class SybaseSchemaProvider : SchemaProviderBase
 	{
-		// sybase provider will execute procedure
-		protected override bool GetProcedureSchemaExecutesProcedure => true;
+		private readonly SybaseDataProvider _provider;
+		public SybaseSchemaProvider(SybaseDataProvider provider)
+		{
+			_provider = provider;
+		}
 
 		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
 		{
@@ -165,6 +168,7 @@ WHERE
 			{
 				return reader.Query(rd =>
 				{
+					// IMPORTANT: reader calls must be ordered to support SequentialAccess
 					var catalog = rd.GetString(0);
 					var schema  = rd.GetString(1);
 					var name    = rd.GetString(2).Split(';')[0];
@@ -185,7 +189,7 @@ WHERE
 		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)
 		{
 			// otherwise GetSchema will throw AseException
-			if (dataConnection.Transaction != null)
+			if (dataConnection.Transaction != null && GetProcedureSchemaExecutesProcedure)
 				throw new LinqToDBException("Cannot read schema with GetSchemaOptions.GetProcedures = true from transaction. Remove transaction or set GetSchemaOptions.GetProcedures to false");
 
 			using (var reader = dataConnection.ExecuteReader(
@@ -195,12 +199,17 @@ WHERE
 			{
 				return reader.Query(rd =>
 				{
-					var catalog   = rd.GetString(0);
-					var schema    = rd.GetString(1);
-					var name      = rd.GetString(2);
-					var direction = rd.IsDBNull(5) ? (short?)null : rd.GetInt16(5);
-					var length    = rd.IsDBNull(10) ? (int?)null : rd.GetInt32(10);
-					var type      = rd.GetString(15);
+					// IMPORTANT: reader calls must be ordered to support SequentialAccess
+					var catalog    = rd.GetString(0);
+					var schema     = rd.GetString(1);
+					var name       = rd.GetString(2);
+					var pName      = rd.GetString(3).TrimStart('@');
+					var ordinal    = rd.GetInt32(4);
+					var direction  = rd.IsDBNull(5) ? (short?)null : rd.GetInt16(5);
+					var isNullable = rd.GetBoolean(8);
+					var length     = rd.IsDBNull(10) ? (int?)null : rd.GetInt32(10);
+					var scale      = rd.IsDBNull(13) ? (int?)null : rd.GetInt32(13);
+					var type       = rd.GetString(15);
 
 					if (type == "nchar" || type == "nvarchar")
 						length /= 3; // that's right...
@@ -208,16 +217,16 @@ WHERE
 					return new ProcedureParameterInfo()
 					{
 						ProcedureID   = catalog + "." + schema + "." + name,
-						ParameterName = rd.GetString(3).TrimStart('@'),
+						ParameterName = pName,
 						IsIn          = direction == 1 || direction == 2,
 						IsOut         = direction == 3 || direction == 2,
 						Length        = length,
 						Precision     = length, // this is also correct...
-						Scale         = rd.IsDBNull(13) ? (int?)null : rd.GetInt32(13),
-						Ordinal       = rd.GetInt32(4),
+						Scale         = scale,
+						Ordinal       = ordinal,
 						IsResult      = direction == 4,
 						DataType      = type,
-						IsNullable    = rd.GetBoolean(8)
+						IsNullable    = isNullable
 					};
 				}).ToList();
 			}
@@ -225,8 +234,22 @@ WHERE
 
 		protected override DataTable? GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters, GetSchemaOptions options)
 		{
-			var dt = base.GetProcedureSchema(dataConnection, commandText, commandType, parameters, options);
-			return dt.AsEnumerable().Any() ? dt : null;
+			DataTable? dt;
+
+			dataConnection.Execute("SET FMTONLY ON");
+
+			if (dataConnection.DataProvider.Name == ProviderName.SybaseManaged)
+			{
+				// https://github.com/DataAction/AdoNetCore.AseClient/issues/189
+				using (var rd = dataConnection.ExecuteReader(commandText, commandType, CommandBehavior.Default, parameters))
+					dt = rd.Reader!.GetSchemaTable();
+			}
+			else
+				dt = base.GetProcedureSchema(dataConnection, commandText, commandType, parameters, options);
+
+			dataConnection.Execute("SET FMTONLY OFF");
+
+			return dt?.AsEnumerable().Any() == true ? dt : null;
 		}
 
 		protected override List<ColumnSchema> GetProcedureResultColumns(DataTable resultTable, GetSchemaOptions options)
@@ -285,6 +308,7 @@ WHERE
 					new DataTypeInfo { TypeName = "timestamp"       , DataType = typeof(byte[])  .FullName!, CreateFormat = "timestamp"        , ProviderDbType = 19                                                                   },
 					new DataTypeInfo { TypeName = "binary"          , DataType = typeof(byte[])  .FullName!, CreateFormat = "binary({0})"      , ProviderDbType = 1   , CreateParameters = "length"                                    },
 					new DataTypeInfo { TypeName = "image"           , DataType = typeof(byte[])  .FullName!, CreateFormat = "image"            , ProviderDbType = 7                                                                    },
+					new DataTypeInfo { TypeName = "varbinary"       , DataType = typeof(byte[])  .FullName!, CreateFormat = "varbinary({0})"   , ProviderDbType = 21  , CreateParameters = "max length"                                },
 					new DataTypeInfo { TypeName = "text"            , DataType = typeof(string)  .FullName!, CreateFormat = "text"             , ProviderDbType = 18                                                                   },
 					new DataTypeInfo { TypeName = "ntext"           , DataType = typeof(string)  .FullName!, CreateFormat = "ntext"            , ProviderDbType = 11                                                                   },
 					new DataTypeInfo { TypeName = "decimal"         , DataType = typeof(decimal) .FullName!, CreateFormat = "decimal({0}, {1})", ProviderDbType = 5   , CreateParameters = "precision,scale"                           },
@@ -297,7 +321,6 @@ WHERE
 					new DataTypeInfo { TypeName = "char"            , DataType = typeof(string)  .FullName!, CreateFormat = "char({0})"        , ProviderDbType = 3   , CreateParameters = "length"                                    },
 					new DataTypeInfo { TypeName = "nchar"           , DataType = typeof(string)  .FullName!, CreateFormat = "nchar({0})"       , ProviderDbType = 10  , CreateParameters = "length"                                    },
 					new DataTypeInfo { TypeName = "nvarchar"        , DataType = typeof(string)  .FullName!, CreateFormat = "nvarchar({0})"    , ProviderDbType = 12  , CreateParameters = "max length"                                },
-					new DataTypeInfo { TypeName = "varbinary"       , DataType = typeof(string)  .FullName!, CreateFormat = "varbinary({0})"   , ProviderDbType = 21  , CreateParameters = "max length"                                },
 					new DataTypeInfo { TypeName = "uniqueidentifier", DataType = typeof(Guid)    .FullName!, CreateFormat = "uniqueidentifier" , ProviderDbType = 14                                                                   }
 				};
 			}

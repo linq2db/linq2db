@@ -7,15 +7,23 @@ using System.Linq;
 
 namespace LinqToDB.DataProvider.Firebird
 {
+	using System.Numerics;
 	using Common;
 	using Data;
 	using SchemaProvider;
 
 	class FirebirdSchemaProvider : SchemaProviderBase
 	{
-		protected override string GetDatabaseName(DataConnection connection)
+		private readonly FirebirdDataProvider _provider;
+
+		public FirebirdSchemaProvider(FirebirdDataProvider provider)
 		{
-			return Path.GetFileNameWithoutExtension(base.GetDatabaseName(connection));
+			_provider = provider;
+		}
+
+		protected override string GetDatabaseName(DataConnection dbConnection)
+		{
+			return Path.GetFileNameWithoutExtension(base.GetDatabaseName(dbConnection));
 		}
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
@@ -67,7 +75,9 @@ namespace LinqToDB.DataProvider.Firebird
 			return
 			(
 				from c in tcs.AsEnumerable()
-				let dt = GetDataType(c.Field<string>("COLUMN_DATA_TYPE"), options)
+				let type      = c.Field<string>("COLUMN_DATA_TYPE")
+				let dt        = GetDataType(type, options)
+				let precision = Converter.ChangeTypeTo<int>(c["NUMERIC_PRECISION"])
 				select new ColumnInfo
 				{
 					TableID      = c.Field<string>("TABLE_CATALOG") + "." + c.Field<string>("TABLE_SCHEMA") + "." + c.Field<string>("TABLE_NAME"),
@@ -75,9 +85,9 @@ namespace LinqToDB.DataProvider.Firebird
 					DataType     = dt?.TypeName,
 					IsNullable   = Converter.ChangeTypeTo<bool>(c["IS_NULLABLE"]),
 					Ordinal      = Converter.ChangeTypeTo<int> (c["ORDINAL_POSITION"]),
-					Length       = Converter.ChangeTypeTo<long>(c["COLUMN_SIZE"]),
-					Precision    = Converter.ChangeTypeTo<int> (c["NUMERIC_PRECISION"]),
-					Scale        = Converter.ChangeTypeTo<int> (c["NUMERIC_SCALE"]),
+					Length       = (type != "char" && type != "varchar") ? null : Converter.ChangeTypeTo<long>(c["COLUMN_SIZE"]),
+					Precision    = precision == 0 ? null : precision,
+					Scale        = (type != "decimal" && type != "numeric") ? null : Converter.ChangeTypeTo<int>(c["NUMERIC_SCALE"]),
 					IsIdentity   = false,
 					Description  = c.Field<string>("DESCRIPTION"),
 					SkipOnInsert = Converter.ChangeTypeTo<bool>(c["IS_READONLY"]),
@@ -181,6 +191,7 @@ namespace LinqToDB.DataProvider.Firebird
 					SystemType           = systemType ?? typeof(object),
 					DataType             = GetDataType(columnType, null, length, precision, scale),
 					ProviderSpecificType = GetProviderSpecificType(columnType),
+					Precision            = providerType == 21 ? 16 : null
 				}
 			).ToList();
 		}
@@ -203,8 +214,10 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 			var dataTypes = base.GetDataTypes(dataConnection);
 
+			var knownTypes = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 			foreach (var dataType in dataTypes)
 			{
+				knownTypes.Add(dataType.TypeName);
 				if (dataType.CreateFormat.IsNullOrEmpty() && !dataType.CreateParameters.IsNullOrEmpty())
 				{
 					dataType.CreateFormat =
@@ -214,6 +227,33 @@ namespace LinqToDB.DataProvider.Firebird
 				}
 			}
 
+			// as on 8.0.1 version provider doesn't add new FB4 types to DATATYPES schema API and older boolean type
+			if (!knownTypes.Contains("boolean"))
+				dataTypes.Add(new DataTypeInfo { ProviderSpecific = false, TypeName = "boolean", DataType = "System.Boolean", ProviderDbType = 3 });
+			if (!knownTypes.Contains("int128"))
+				dataTypes.Add(new DataTypeInfo { ProviderSpecific = false, TypeName = "int128", DataType = "System.Numerics.BigInteger", ProviderDbType = 23 });
+			if (!knownTypes.Contains("decfloat"))
+			{
+				// decfloat(16)
+				dataTypes.Add(new DataTypeInfo { ProviderSpecific = true, TypeName = "decfloat", DataType = $"{FirebirdProviderAdapter.TypesNamespace}.FbDecFloat", CreateFormat = "DECFLOAT({0})", ProviderDbType = 21 });
+				// decfloat(34)
+				dataTypes.Add(new DataTypeInfo { ProviderSpecific = true, TypeName = "decfloat", DataType = $"{FirebirdProviderAdapter.TypesNamespace}.FbDecFloat", CreateFormat = null, ProviderDbType = 22 });
+			}
+			if (!knownTypes.Contains("timestamp with time zone"))
+			{
+				// tstz
+				dataTypes.Add(new DataTypeInfo { ProviderSpecific = true, TypeName = "timestamp with time zone", DataType = $"{FirebirdProviderAdapter.TypesNamespace}.FbZonedDateTime", ProviderDbType = 17 });
+				// tstzEx
+				dataTypes.Add(new DataTypeInfo { ProviderSpecific = true, TypeName = "timestamp with time zone", DataType = $"{FirebirdProviderAdapter.TypesNamespace}.FbZonedDateTime", ProviderDbType = 18 });
+			}
+			if (!knownTypes.Contains("time with time zone"))
+			{
+				//ttz
+				dataTypes.Add(new DataTypeInfo { ProviderSpecific = true, TypeName = "time with time zone", DataType = $"{FirebirdProviderAdapter.TypesNamespace}.FbZonedTime", ProviderDbType = 19 });
+				//ttzEx
+				dataTypes.Add(new DataTypeInfo { ProviderSpecific = true, TypeName = "time with time zone", DataType = $"{FirebirdProviderAdapter.TypesNamespace}.FbZonedTime", ProviderDbType = 20 });
+			}
+
 			return dataTypes;
 		}
 
@@ -221,25 +261,72 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 			return dataType?.ToLower() switch
 			{
-				"array"            => DataType.VarBinary,
-				"bigint"           => DataType.Int64,
-				"blob"             => DataType.Blob,
-				"char"             => DataType.NChar,
-				"date"             => DataType.Date,
-				"decimal"          => DataType.Decimal,
-				"double precision" => DataType.Double,
-				"float"            => DataType.Single,
-				"integer"          => DataType.Int32,
-				"numeric"          => DataType.Decimal,
-				"smallint"         => DataType.Int16,
-				"blob sub_type 1"  => DataType.Text,
-				"time"             => DataType.Time,
-				"timestamp"        => DataType.DateTime,
-				"varchar"          => DataType.NVarChar,
-				_                  => DataType.Undefined,
+				"array"                    => DataType.VarBinary,
+				"bigint"                   => DataType.Int64,
+				"blob"                     => DataType.Blob,
+				"char"                     => DataType.NChar,
+				"date"                     => DataType.Date,
+				"decimal"                  => DataType.Decimal,
+				"double precision"         => DataType.Double,
+				"float"                    => DataType.Single,
+				"integer"                  => DataType.Int32,
+				"numeric"                  => DataType.Decimal,
+				"smallint"                 => DataType.Int16,
+				"blob sub_type 1"          => DataType.Text,
+				"time"                     => DataType.Time,
+				"timestamp"                => DataType.DateTime,
+				"varchar"                  => DataType.NVarChar,
+				"int128"                   => DataType.Int128,
+				"decfloat"                 => DataType.DecFloat,
+				"timestamp with time zone" => DataType.DateTimeOffset,
+				"time with time zone"      => DataType.TimeTZ,
+				_                          => DataType.Undefined,
 			};
 		}
 
-		protected override string? GetProviderSpecificTypeNamespace() => null;
+		protected override string? GetProviderSpecificTypeNamespace()
+		{
+			return _provider.Adapter.ProviderTypesNamespace;
+		}
+
+		protected override string? GetProviderSpecificType(string? dataType)
+		{
+			switch (dataType?.ToLower())
+			{
+				case "decfloat"                : return _provider.Adapter.FbDecFloatType?.Name;
+				case "timestamp with time zone": return _provider.Adapter.FbZonedDateTimeType?.Name;
+				case "time with time zone"     : return _provider.Adapter.FbZonedTimeType?.Name;
+			}
+
+			return base.GetProviderSpecificType(dataType);
+		}
+
+		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale, GetSchemaOptions options)
+		{
+			switch (dataType?.ToLower())
+			{
+				case "int128"                  : return typeof(BigInteger);
+				case "decfloat"                : return _provider.Adapter.FbDecFloatType;
+				case "timestamp with time zone": return _provider.Adapter.FbZonedDateTimeType;
+				case "time with time zone"     : return _provider.Adapter.FbZonedTimeType;
+			}
+
+			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options);
+		}
+
+		protected override void LoadProcedureTableSchema(DataConnection dataConnection, GetSchemaOptions options, ProcedureSchema procedure, string commandText, List<TableSchema> tables)
+		{
+			base.LoadProcedureTableSchema(dataConnection, options, procedure, commandText, tables);
+
+			// remove output parameters, defined for return columns if `FOR SELECT` procedures
+			if (procedure.ResultTable != null)
+				foreach (var col in procedure.ResultTable.Columns)
+					for (var i = 0; i < procedure.Parameters.Count; i++)
+						if (procedure.Parameters[i].IsOut && col.ColumnName == procedure.Parameters[i].ParameterName)
+						{
+							procedure.Parameters.RemoveAt(i);
+							break;
+						}
+		}
 	}
 }

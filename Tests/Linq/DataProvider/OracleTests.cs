@@ -1,14 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.Linq;
 using System.Diagnostics;
-using System.Linq;
-using System.Xml;
-using System.Xml.Linq;
 using System.Globalization;
-using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
+using System.Xml;
+using System.Xml.Linq;
+using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
@@ -16,19 +17,17 @@ using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
-
 using NUnit.Framework;
-
 using Oracle.ManagedDataAccess.Client;
 using Oracle.ManagedDataAccess.Types;
 
 namespace Tests.DataProvider
 {
-	using System.Diagnostics.CodeAnalysis;
 	using System.Threading;
 	using System.Threading.Tasks;
 	using LinqToDB.Data.RetryPolicy;
 	using LinqToDB.Linq;
+	using LinqToDB.Linq.Internal;
 	using LinqToDB.SchemaProvider;
 	using Model;
 
@@ -63,12 +62,13 @@ namespace Tests.DataProvider
 		}
 
 		static void TestType<T>(
-			DataConnection   connection,
-			string           dataTypeName,
-			[DisallowNull] T value,
-			string           tableName       = "AllTypes",
-			bool             convertToString = false,
-			bool             throwException  = false)
+			DataConnection connection,
+			string         dataTypeName,
+			T              value,
+			string         tableName       = "\"AllTypes\"",
+			bool           convertToString = false,
+			bool           throwException  = false)
+			where T : notnull
 		{
 			Assert.That(connection.Execute<T>($"SELECT {dataTypeName} FROM {tableName} WHERE ID = 1"),
 				Is.EqualTo(connection.MappingSchema.GetDefaultValue(typeof(T))));
@@ -85,7 +85,7 @@ namespace Tests.DataProvider
 			if (throwException)
 			{
 				if (!EqualityComparer<T>.Default.Equals((T)actualValue, (T)expectedValue))
-					throw new Exception($"Expected: {expectedValue} But was: {actualValue}");
+					throw new AssertionException($"Expected: {expectedValue} But was: {actualValue}");
 			}
 			else
 			{
@@ -107,45 +107,45 @@ namespace Tests.DataProvider
 		{
 			using (var conn = new DataConnection(context))
 			{
-				TestType(conn, "bigintDataType",         1000000L);
-				TestType(conn, "numericDataType",        9999999m);
-				TestType(conn, "bitDataType",            true);
-				TestType(conn, "smallintDataType",       (short)25555);
-				TestType(conn, "decimalDataType",        2222222m);
-				TestType(conn, "smallmoneyDataType",     100000m);
-				TestType(conn, "intDataType",            7777777);
-				TestType(conn, "tinyintDataType",        (sbyte)100);
-				TestType(conn, "moneyDataType",          100000m);
-				TestType(conn, "floatDataType",          20.31d);
-				TestType(conn, "realDataType",           16.2f);
+				TestType(conn, "\"bigintDataType\"",         1000000L);
+				TestType(conn, "\"numericDataType\"",        9999999m);
+				TestType(conn, "\"bitDataType\"",            true);
+				TestType(conn, "\"smallintDataType\"",       (short)25555);
+				TestType(conn, "\"decimalDataType\"",        2222222m);
+				TestType(conn, "\"smallmoneyDataType\"",     100000m);
+				TestType(conn, "\"intDataType\"",            7777777);
+				TestType(conn, "\"tinyintDataType\"",        (sbyte)100);
+				TestType(conn, "\"moneyDataType\"",          100000m);
+				TestType(conn, "\"floatDataType\"",          20.31d);
+				TestType(conn, "\"realDataType\"",           16.2f);
 
-				TestType(conn, "datetimeDataType",       new DateTime(2012, 12, 12, 12, 12, 12));
-				TestType(conn, "datetime2DataType",      new DateTime(2012, 12, 12, 12, 12, 12, 012));
-				TestType(conn, "datetimeoffsetDataType", new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, new TimeSpan(-5, 0, 0)));
+				TestType(conn, "\"datetimeDataType\"",       new DateTime(2012, 12, 12, 12, 12, 12));
+				TestType(conn, "\"datetime2DataType\"",      new DateTime(2012, 12, 12, 12, 12, 12, 012));
+				TestType(conn, "\"datetimeoffsetDataType\"", new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, new TimeSpan(-5, 0, 0)));
 
 				// TODO: fix timezones handling
 				if (!context.Contains("Native"))
 				{
 					var dt = new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, TimeSpan.Zero);
-					TestType(conn, "localZoneDataType", new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, TimeZoneInfo.Local.GetUtcOffset(dt) /* new TimeSpan(-4, 0, 0)*/), throwException:true);
+					TestType(conn, "\"localZoneDataType\"", new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, TimeZoneInfo.Local.GetUtcOffset(dt) /* new TimeSpan(-4, 0, 0)*/), throwException:true);
 				}
 
-				TestType(conn, "charDataType",           '1');
-				TestType(conn, "varcharDataType",        "234");
-				TestType(conn, "textDataType",           "567");
-				TestType(conn, "ncharDataType",          "23233");
-				TestType(conn, "nvarcharDataType",       "3323");
-				TestType(conn, "ntextDataType",          "111");
+				TestType(conn, "\"charDataType\"",           '1');
+				TestType(conn, "\"varcharDataType\"",        "234");
+				TestType(conn, "\"textDataType\"",           "567");
+				TestType(conn, "\"ncharDataType\"",          "23233");
+				TestType(conn, "\"nvarcharDataType\"",       "3323");
+				TestType(conn, "\"ntextDataType\"",          "111");
 
-				TestType(conn, "binaryDataType",         new byte[] { 0, 170 });
+				TestType(conn, "\"binaryDataType\"",         new byte[] { 0, 170 });
 #if !AZURE
 				// TODO: configure test file in docker image
-				TestType(conn, "bfileDataType",          new byte[] { 49, 50, 51, 52, 53 });
+				TestType(conn, "\"bfileDataType\"",          new byte[] { 49, 50, 51, 52, 53 });
 #endif
 
 				var res = "<root><element strattr=\"strvalue\" intattr=\"12345\"/></root>";
 
-				TestType(conn, "XMLSERIALIZE(DOCUMENT xmlDataType AS CLOB NO INDENT)", res);
+				TestType(conn, "XMLSERIALIZE(DOCUMENT \"xmlDataType\" AS CLOB NO INDENT)", res);
 			}
 		}
 
@@ -322,8 +322,8 @@ namespace Tests.DataProvider
 					"SELECT timestamp '2012-12-12 12:12:12.012 +05:00' FROM sys.dual"),
 					Is.EqualTo(dto));
 
-				Assert.That(conn.Execute<DateTime> ("SELECT datetimeoffsetDataType FROM AllTypes WHERE ID = 1"), Is.EqualTo(default(DateTime)));
-				Assert.That(conn.Execute<DateTime?>("SELECT datetimeoffsetDataType FROM AllTypes WHERE ID = 1"), Is.EqualTo(default(DateTime?)));
+				Assert.That(conn.Execute<DateTime> ("SELECT \"datetimeoffsetDataType\" FROM \"AllTypes\" WHERE ID = 1"), Is.EqualTo(default(DateTime)));
+				Assert.That(conn.Execute<DateTime?>("SELECT \"datetimeoffsetDataType\" FROM \"AllTypes\" WHERE ID = 1"), Is.EqualTo(default(DateTime?)));
 
 				Assert.That(conn.Execute<DateTimeOffset?>(PathThroughSql, new DataParameter("p", dto)).                         ToString(), Is.EqualTo(dto.ToString()));
 				Assert.That(conn.Execute<DateTimeOffset?>(PathThroughSql, new DataParameter("p", dto, DataType.DateTimeOffset)).ToString(), Is.EqualTo(dto.ToString()));
@@ -379,8 +379,8 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<string>("SELECT Cast('12345' as varchar2(20)) FROM sys.dual"),  Is.EqualTo("12345"));
 				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as varchar2(20)) FROM sys.dual"),  Is.Null);
 
-				Assert.That(conn.Execute<string>("SELECT textDataType FROM AllTypes WHERE ID = 2"),      Is.EqualTo("567"));
-				Assert.That(conn.Execute<string>("SELECT textDataType FROM AllTypes WHERE ID = 1"),      Is.Null);
+				Assert.That(conn.Execute<string>("SELECT \"textDataType\" FROM \"AllTypes\" WHERE ID = 2"),      Is.EqualTo("567"));
+				Assert.That(conn.Execute<string>("SELECT \"textDataType\" FROM \"AllTypes\" WHERE ID = 1"),      Is.Null);
 
 				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nchar(20)) FROM sys.dual"),     Is.EqualTo("12345"));
 				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as nchar(20)) FROM sys.dual"),     Is.Null);
@@ -388,8 +388,8 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nvarchar2(20)) FROM sys.dual"), Is.EqualTo("12345"));
 				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as nvarchar2(20)) FROM sys.dual"), Is.Null);
 
-				Assert.That(conn.Execute<string>("SELECT ntextDataType FROM AllTypes WHERE ID = 2"),     Is.EqualTo("111"));
-				Assert.That(conn.Execute<string>("SELECT ntextDataType FROM AllTypes WHERE ID = 1"),     Is.Null);
+				Assert.That(conn.Execute<string>("SELECT \"ntextDataType\" FROM \"AllTypes\" WHERE ID = 2"),     Is.EqualTo("111"));
+				Assert.That(conn.Execute<string>("SELECT \"ntextDataType\" FROM \"AllTypes\" WHERE ID = 1"),     Is.Null);
 
 				Assert.That(conn.Execute<string>(PathThroughSql, DataParameter.Char    ("p", "123")), Is.EqualTo("123"));
 				Assert.That(conn.Execute<string>(PathThroughSql, DataParameter.VarChar ("p", "123")), Is.EqualTo("123"));
@@ -419,8 +419,8 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<byte[]>(PathThroughSql, DataParameter.Binary   ("p", arr1)), Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>(PathThroughSql, DataParameter.VarBinary("p", arr1)), Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>(PathThroughSql, DataParameter.Create   ("p", arr1)), Is.EqualTo(arr1));
-				Assert.That(conn.Execute<byte[]>(PathThroughSql, DataParameter.VarBinary("p", new byte[0])), Is.EqualTo(new byte[0]));
-				Assert.That(conn.Execute<byte[]>(PathThroughSql, DataParameter.Image    ("p", new byte[0])), Is.EqualTo(new byte[0]));
+				Assert.That(conn.Execute<byte[]>(PathThroughSql, DataParameter.VarBinary("p", Array<byte>.Empty)), Is.EqualTo(Array<byte>.Empty));
+				Assert.That(conn.Execute<byte[]>(PathThroughSql, DataParameter.Image    ("p", Array<byte>.Empty)), Is.EqualTo(Array<byte>.Empty));
 				Assert.That(conn.Execute<byte[]>(PathThroughSql, new DataParameter { Name = "p", Value = arr1 }), Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>(PathThroughSql, DataParameter.Create   ("p", new Binary(arr1))), Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>(PathThroughSql, new DataParameter("p", new Binary(arr1))), Is.EqualTo(arr1));
@@ -438,13 +438,13 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<Oracle.ManagedDataAccess.Types.OracleBlob>     ("SELECT to_blob('3039')          FROM sys.dual").      Value, Is.EqualTo(arr));
 				Assert.That(conn.Execute<Oracle.ManagedDataAccess.Types.OracleDecimal>  ("SELECT Cast(1       as decimal) FROM sys.dual").      Value, Is.EqualTo(1));
 				Assert.That(conn.Execute<Oracle.ManagedDataAccess.Types.OracleString>   ("SELECT Cast('12345' as char(6)) FROM sys.dual").      Value, Is.EqualTo("12345 "));
-				Assert.That(conn.Execute<Oracle.ManagedDataAccess.Types.OracleClob>     ("SELECT ntextDataType     FROM AllTypes WHERE ID = 2").Value, Is.EqualTo("111"));
-				Assert.That(conn.Execute<Oracle.ManagedDataAccess.Types.OracleDate>     ("SELECT datetimeDataType  FROM AllTypes WHERE ID = 2").Value, Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
-				Assert.That(conn.Execute<Oracle.ManagedDataAccess.Types.OracleTimeStamp>("SELECT datetime2DataType FROM AllTypes WHERE ID = 2").Value, Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 12)));
+				Assert.That(conn.Execute<Oracle.ManagedDataAccess.Types.OracleClob>     ("SELECT \"ntextDataType\"     FROM \"AllTypes\" WHERE ID = 2").Value, Is.EqualTo("111"));
+				Assert.That(conn.Execute<Oracle.ManagedDataAccess.Types.OracleDate>     ("SELECT \"datetimeDataType\"  FROM \"AllTypes\" WHERE ID = 2").Value, Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
+				Assert.That(conn.Execute<Oracle.ManagedDataAccess.Types.OracleTimeStamp>("SELECT \"datetime2DataType\" FROM \"AllTypes\" WHERE ID = 2").Value, Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 12)));
 			}
 		}
 
-#if NET46
+#if NET472
 
 		[Test]
 		public void TestOracleNativeTypes([IncludeDataSources(TestProvName.AllOracleNative)] string context)
@@ -457,9 +457,9 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<Oracle.DataAccess.Types.OracleBlob>     ("SELECT to_blob('3039')          FROM sys.dual").      Value, Is.EqualTo(arr));
 				Assert.That(conn.Execute<Oracle.DataAccess.Types.OracleDecimal>  ("SELECT Cast(1       as decimal) FROM sys.dual").      Value, Is.EqualTo(1));
 				Assert.That(conn.Execute<Oracle.DataAccess.Types.OracleString>   ("SELECT Cast('12345' as char(6)) FROM sys.dual").      Value, Is.EqualTo("12345 "));
-				Assert.That(conn.Execute<Oracle.DataAccess.Types.OracleClob>     ("SELECT ntextDataType     FROM AllTypes WHERE ID = 2").Value, Is.EqualTo("111"));
-				Assert.That(conn.Execute<Oracle.DataAccess.Types.OracleDate>     ("SELECT datetimeDataType  FROM AllTypes WHERE ID = 2").Value, Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
-				Assert.That(conn.Execute<Oracle.DataAccess.Types.OracleTimeStamp>("SELECT datetime2DataType FROM AllTypes WHERE ID = 2").Value, Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 12)));
+				Assert.That(conn.Execute<Oracle.DataAccess.Types.OracleClob>     ("SELECT \"ntextDataType\"     FROM \"AllTypes\" WHERE ID = 2").Value, Is.EqualTo("111"));
+				Assert.That(conn.Execute<Oracle.DataAccess.Types.OracleDate>     ("SELECT \"datetimeDataType\"  FROM \"AllTypes\" WHERE ID = 2").Value, Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
+				Assert.That(conn.Execute<Oracle.DataAccess.Types.OracleTimeStamp>("SELECT \"datetime2DataType\" FROM \"AllTypes\" WHERE ID = 2").Value, Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 12)));
 			}
 		}
 
@@ -468,12 +468,13 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestGuid([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
+			using (new DisableBaseline("Server-side guid generation test"))
 			using (var conn = new DataConnection(context))
 			{
-				var guid = conn.Execute<Guid>("SELECT guidDataType FROM AllTypes WHERE ID = 2");
+				var guid = conn.Execute<Guid>("SELECT \"guidDataType\" FROM \"AllTypes\" WHERE ID = 2");
 
-				Assert.That(conn.Execute<Guid?>("SELECT guidDataType FROM AllTypes WHERE ID = 1"), Is.EqualTo(null));
-				Assert.That(conn.Execute<Guid?>("SELECT guidDataType FROM AllTypes WHERE ID = 2"), Is.EqualTo(guid));
+				Assert.That(conn.Execute<Guid?>("SELECT \"guidDataType\" FROM \"AllTypes\" WHERE ID = 1"), Is.EqualTo(null));
+				Assert.That(conn.Execute<Guid?>("SELECT \"guidDataType\" FROM \"AllTypes\" WHERE ID = 2"), Is.EqualTo(guid));
 
 				Assert.That(conn.Execute<Guid>(PathThroughSql, DataParameter.Create("p", guid)),                Is.EqualTo(guid));
 				Assert.That(conn.Execute<Guid>(PathThroughSql, new DataParameter { Name = "p", Value = guid }), Is.EqualTo(guid));
@@ -588,37 +589,37 @@ namespace Tests.DataProvider
 
 		#region DateTime Tests
 
-		[Table(Name="ALLTYPES")]
-		public partial class ALLTYPE
+		[Table]
+		public partial class AllTypes
 		{
 			[Column(DataType=DataType.Decimal,        Length=22, Scale=0),               PrimaryKey,  NotNull] public decimal         ID                     { get; set; } // NUMBER
-			[Column(DataType=DataType.Decimal,        Length=22, Precision=20, Scale=0),    Nullable         ] public decimal?        BIGINTDATATYPE         { get; set; } // NUMBER (20,0)
-			[Column(DataType=DataType.Decimal,        Length=22, Scale=0),                  Nullable         ] public decimal?        NUMERICDATATYPE        { get; set; } // NUMBER
-			[Column(DataType=DataType.Decimal,        Length=22, Precision=1, Scale=0),     Nullable         ] public sbyte?          BITDATATYPE            { get; set; } // NUMBER (1,0)
-			[Column(DataType=DataType.Decimal,        Length=22, Precision=5, Scale=0),     Nullable         ] public int?            SMALLINTDATATYPE       { get; set; } // NUMBER (5,0)
-			[Column(DataType=DataType.Decimal,        Length=22, Scale=6),                  Nullable         ] public decimal?        DECIMALDATATYPE        { get; set; } // NUMBER
-			[Column(DataType=DataType.Decimal,        Length=22, Precision=10, Scale=4),    Nullable         ] public decimal?        SMALLMONEYDATATYPE     { get; set; } // NUMBER (10,4)
-			[Column(DataType=DataType.Decimal,        Length=22, Precision=10, Scale=0),    Nullable         ] public long?           INTDATATYPE            { get; set; } // NUMBER (10,0)
-			[Column(DataType=DataType.Decimal,        Length=22, Precision=3, Scale=0),     Nullable         ] public short?          TINYINTDATATYPE        { get; set; } // NUMBER (3,0)
-			[Column(DataType=DataType.Decimal,        Length=22),                           Nullable         ] public decimal?        MONEYDATATYPE          { get; set; } // NUMBER
-			[Column(DataType=DataType.Double,         Length=8),                            Nullable         ] public double?         FLOATDATATYPE          { get; set; } // BINARY_DOUBLE
-			[Column(DataType=DataType.Single,         Length=4),                            Nullable         ] public float?          REALDATATYPE           { get; set; } // BINARY_FLOAT
-			[Column(DataType=DataType.Date),                                                Nullable         ] public DateTime?       DATETIMEDATATYPE       { get; set; } // DATE
-			[Column(DataType=DataType.DateTime2,      Length=11, Scale=6),                  Nullable         ] public DateTime?       DATETIME2DATATYPE      { get; set; } // TIMESTAMP(6)
-			[Column(DataType=DataType.DateTimeOffset, Length=13, Scale=6),                  Nullable         ] public DateTimeOffset? DATETIMEOFFSETDATATYPE { get; set; } // TIMESTAMP(6) WITH TIME ZONE
-			[Column(DataType=DataType.DateTimeOffset, Length=11, Scale=6),                  Nullable         ] public DateTimeOffset? LOCALZONEDATATYPE      { get; set; } // TIMESTAMP(6) WITH LOCAL TIME ZONE
-			[Column(DataType=DataType.Char,           Length=1),                            Nullable         ] public char?           CHARDATATYPE           { get; set; } // CHAR(1)
-			[Column(DataType=DataType.VarChar,        Length=20),                           Nullable         ] public string?         VARCHARDATATYPE        { get; set; } // VARCHAR2(20)
-			[Column(DataType=DataType.Text,           Length=4000),                         Nullable         ] public string?         TEXTDATATYPE           { get; set; } // CLOB
-			[Column(DataType=DataType.NChar,          Length=40),                           Nullable         ] public string?         NCHARDATATYPE          { get; set; } // NCHAR(40)
-			[Column(DataType=DataType.NVarChar,       Length=40),                           Nullable         ] public string?         NVARCHARDATATYPE       { get; set; } // NVARCHAR2(40)
-			[Column(DataType=DataType.NText,          Length=4000),                         Nullable         ] public string?         NTEXTDATATYPE          { get; set; } // NCLOB
-			[Column(DataType=DataType.Blob,           Length=4000),                         Nullable         ] public byte[]?         BINARYDATATYPE         { get; set; } // BLOB
-			[Column(DataType=DataType.VarBinary,      Length=530),                          Nullable         ] public byte[]?         BFILEDATATYPE          { get; set; } // BFILE
-			[Column(DataType=DataType.Binary,         Length=16),                           Nullable         ] public byte[]?         GUIDDATATYPE           { get; set; } // RAW(16)
-			[Column(DataType=DataType.Long),                                                Nullable         ] public string?         LONGDATATYPE           { get; set; } // LONG
-			[Column(DataType=DataType.Undefined,      Length=256),                          Nullable         ] public object?         URIDATATYPE            { get; set; } // URITYPE
-			[Column(DataType=DataType.Xml,            Length=2000),                         Nullable         ] public string?         XMLDATATYPE            { get; set; } // XMLTYPE
+			[Column(DataType=DataType.Decimal,        Length=22, Precision=20, Scale=0),    Nullable         ] public decimal?        bigintDataType         { get; set; } // NUMBER (20,0)
+			[Column(DataType=DataType.Decimal,        Length=22, Scale=0),                  Nullable         ] public decimal?        numericDataType        { get; set; } // NUMBER
+			[Column(DataType=DataType.Decimal,        Length=22, Precision=1, Scale=0),     Nullable         ] public sbyte?          bitDataType            { get; set; } // NUMBER (1,0)
+			[Column(DataType=DataType.Decimal,        Length=22, Precision=5, Scale=0),     Nullable         ] public int?            smallintDataType       { get; set; } // NUMBER (5,0)
+			[Column(DataType=DataType.Decimal,        Length=22, Scale=6),                  Nullable         ] public decimal?        decimalDataType        { get; set; } // NUMBER
+			[Column(DataType=DataType.Decimal,        Length=22, Precision=10, Scale=4),    Nullable         ] public decimal?        smallmoneyDataType     { get; set; } // NUMBER (10,4)
+			[Column(DataType=DataType.Decimal,        Length=22, Precision=10, Scale=0),    Nullable         ] public long?           intDataType            { get; set; } // NUMBER (10,0)
+			[Column(DataType=DataType.Decimal,        Length=22, Precision=3, Scale=0),     Nullable         ] public short?          tinyintDataType        { get; set; } // NUMBER (3,0)
+			[Column(DataType=DataType.Decimal,        Length=22),                           Nullable         ] public decimal?        moneyDataType          { get; set; } // NUMBER
+			[Column(DataType=DataType.Double,         Length=8),                            Nullable         ] public double?         floatDataType          { get; set; } // BINARY_DOUBLE
+			[Column(DataType=DataType.Single,         Length=4),                            Nullable         ] public float?          realDataType           { get; set; } // BINARY_FLOAT
+			[Column(DataType=DataType.Date),                                                Nullable         ] public DateTime?       datetimeDataType       { get; set; } // DATE
+			[Column(DataType=DataType.DateTime2,      Length=11, Scale=6),                  Nullable         ] public DateTime?       datetime2DataType      { get; set; } // TIMESTAMP(6)
+			[Column(DataType=DataType.DateTimeOffset, Length=13, Scale=6),                  Nullable         ] public DateTimeOffset? datetimeoffsetDataType { get; set; } // TIMESTAMP(6) WITH TIME ZONE
+			[Column(DataType=DataType.DateTimeOffset, Length=11, Scale=6),                  Nullable         ] public DateTimeOffset? localZoneDataType      { get; set; } // TIMESTAMP(6) WITH LOCAL TIME ZONE
+			[Column(DataType=DataType.Char,           Length=1),                            Nullable         ] public char?           charDataType           { get; set; } // CHAR(1)
+			[Column(DataType=DataType.VarChar,        Length=20),                           Nullable         ] public string?         varcharDataType        { get; set; } // VARCHAR2(20)
+			[Column(DataType=DataType.Text,           Length=4000),                         Nullable         ] public string?         textDataType           { get; set; } // CLOB
+			[Column(DataType=DataType.NChar,          Length=40),                           Nullable         ] public string?         ncharDataType          { get; set; } // NCHAR(40)
+			[Column(DataType=DataType.NVarChar,       Length=40),                           Nullable         ] public string?         nvarcharDataType       { get; set; } // NVARCHAR2(40)
+			[Column(DataType=DataType.NText,          Length=4000),                         Nullable         ] public string?         ntextDataType          { get; set; } // NCLOB
+			[Column(DataType=DataType.Blob,           Length=4000),                         Nullable         ] public byte[]?         binaryDataType         { get; set; } // BLOB
+			[Column(DataType=DataType.VarBinary,      Length=530),                          Nullable         ] public byte[]?         bfileDataType          { get; set; } // BFILE
+			[Column(DataType=DataType.Binary,         Length=16),                           Nullable         ] public byte[]?         guidDataType           { get; set; } // RAW(16)
+			[Column(DataType=DataType.Long),                                                Nullable         ] public string?         longDataType           { get; set; } // LONG
+			[Column(DataType=DataType.Undefined,      Length=256),                          Nullable         ] public object?         uriDataType            { get; set; } // URITYPE
+			[Column(DataType=DataType.Xml,            Length=2000),                         Nullable         ] public string?         xmlDataType            { get; set; } // XMLTYPE
 		}
 
 		[Table("t_entity")]
@@ -648,7 +649,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = new DataConnection(context))
 			{
-				db.GetTable<ALLTYPE>().Delete(t => t.ID >= 1000);
+				db.GetTable<AllTypes>().Delete(t => t.ID >= 1000);
 
 				using (db.BeginTransaction())
 				{
@@ -656,11 +657,11 @@ namespace Tests.DataProvider
 						new BulkCopyOptions() { BulkCopyType = BulkCopyType.MultipleRows },
 						new[]
 						{
-							new ALLTYPE
+							new AllTypes
 							{
 								ID                = 1000,
-								DATETIMEDATATYPE  = DateTime.Now,
-								DATETIME2DATATYPE = DateTime.Now
+								datetimeDataType  = TestData.DateTime,
+								datetime2DataType = TestData.DateTime
 							}
 						});
 				}
@@ -672,7 +673,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = new DataConnection(context))
 			{
-				db.GetTable<ALLTYPE>().Delete(t => t.ID >= 1000);
+				db.GetTable<AllTypes>().Delete(t => t.ID >= 1000);
 
 				using (db.BeginTransaction())
 				{
@@ -680,11 +681,11 @@ namespace Tests.DataProvider
 						new BulkCopyOptions() { BulkCopyType = BulkCopyType.MultipleRows },
 						new[]
 						{
-							new ALLTYPE
+							new AllTypes
 							{
 								ID                = 1000,
-								DATETIMEDATATYPE  = DateTime.Now,
-								DATETIME2DATATYPE = DateTime.Now
+								datetimeDataType  = TestData.DateTime,
+								datetime2DataType = TestData.DateTime
 							}
 						});
 				}
@@ -694,6 +695,8 @@ namespace Tests.DataProvider
 		[Test]
 		public void NVarchar2InsertTest([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
+			ResetAllTypesIdentity(context);
+
 			using (var db = new DataConnection(context))
 			using (db.BeginTransaction())
 			{
@@ -701,24 +704,26 @@ namespace Tests.DataProvider
 
 				var value   = "致我们最爱的母亲";
 
-				var id = db.GetTable<ALLTYPE>()
-					.InsertWithInt32Identity(() => new ALLTYPE
+				var id = db.GetTable<AllTypes>()
+					.InsertWithInt32Identity(() => new AllTypes
 					{
-						NVARCHARDATATYPE = value
+						nvarcharDataType = value
 					});
 
-				var query = from p in db.GetTable<ALLTYPE>()
+				var query = from p in db.GetTable<AllTypes>()
 							where p.ID == id
-							select new { p.NVARCHARDATATYPE };
+							select new { p.nvarcharDataType };
 
 				var res = query.Single();
-				Assert.That(res.NVARCHARDATATYPE, Is.EqualTo(value));
+				Assert.That(res.nvarcharDataType, Is.EqualTo(value));
 			}
 		}
 
 		[Test]
 		public void NVarchar2UpdateTest([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
+			ResetAllTypesIdentity(context);
+
 			using (var db = new DataConnection(context))
 			using (db.BeginTransaction())
 			{
@@ -726,22 +731,22 @@ namespace Tests.DataProvider
 
 				var value = "致我们最爱的母亲";
 
-				var id = db.GetTable<ALLTYPE>()
-					.InsertWithInt32Identity(() => new ALLTYPE
+				var id = db.GetTable<AllTypes>()
+					.InsertWithInt32Identity(() => new AllTypes
 					{
-						INTDATATYPE = 123
+						intDataType = 123
 					});
 
-				db.GetTable<ALLTYPE>()
-					.Set(e => e.NVARCHARDATATYPE, () => value)
+				db.GetTable<AllTypes>()
+					.Set(e => e.nvarcharDataType, () => value)
 					.Update();
 
-				var query = from p in db.GetTable<ALLTYPE>()
+				var query = from p in db.GetTable<AllTypes>()
 							where p.ID == id
-							select new { p.NVARCHARDATATYPE };
+							select new { p.nvarcharDataType };
 
 				var res = query.Single();
-				Assert.That(res.NVARCHARDATATYPE, Is.EqualTo(value));
+				Assert.That(res.nvarcharDataType, Is.EqualTo(value));
 			}
 		}
 
@@ -771,7 +776,7 @@ namespace Tests.DataProvider
 
 				db.AddMappingSchema(ms);
 
-				var res = (db.GetTable<ALLTYPE>().Where(e => e.DATETIME2DATATYPE == DateTime.Now)).ToList();
+				var res = db.GetTable<AllTypes>().Where(e => e.datetime2DataType == TestData.DateTime).ToList();
 				Debug.WriteLine(res.Count);
 			}
 		}
@@ -797,7 +802,7 @@ namespace Tests.DataProvider
 
 			using (var db = new DataConnection(context, ms))
 			{
-				db.GetTable<ALLTYPE>().Delete(t => t.ID >= 1000);
+				db.GetTable<AllTypes>().Delete(t => t.ID >= 1000);
 
 				using (db.BeginTransaction())
 				{
@@ -805,11 +810,11 @@ namespace Tests.DataProvider
 						new BulkCopyOptions() { BulkCopyType = BulkCopyType.MultipleRows },
 						new[]
 						{
-							new ALLTYPE
+							new AllTypes
 							{
 								ID                = 1000,
-								DATETIMEDATATYPE  = DateTime.Now,
-								DATETIME2DATATYPE = DateTime.Now
+								datetimeDataType  = TestData.DateTime,
+								datetime2DataType = TestData.DateTime
 							}
 						});
 				}
@@ -837,7 +842,7 @@ namespace Tests.DataProvider
 
 			using (var db = new DataConnection(context, ms))
 			{
-				db.GetTable<ALLTYPE>().Delete(t => t.ID >= 1000);
+				db.GetTable<AllTypes>().Delete(t => t.ID >= 1000);
 
 				using (db.BeginTransaction())
 				{
@@ -845,11 +850,11 @@ namespace Tests.DataProvider
 						new BulkCopyOptions() { BulkCopyType = BulkCopyType.MultipleRows },
 						new[]
 						{
-							new ALLTYPE
+							new AllTypes
 							{
 								ID                = 1000,
-								DATETIMEDATATYPE  = DateTime.Now,
-								DATETIME2DATATYPE = DateTime.Now
+								datetimeDataType  = TestData.DateTime,
+								datetime2DataType = TestData.DateTime
 							}
 						});
 				}
@@ -859,11 +864,11 @@ namespace Tests.DataProvider
 		[Test]
 		public void ClauseDateTimeWithoutJointure([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			var date = DateTime.Today;
+			var date = TestData.Date;
 			using (var db = new DataConnection(context))
 			{
-				var query = from a in db.GetTable<ALLTYPE>()
-							where a.DATETIMEDATATYPE == date
+				var query = from a in db.GetTable<AllTypes>()
+							where a.datetimeDataType == date
 							select a;
 
 				query.FirstOrDefault();
@@ -878,12 +883,12 @@ namespace Tests.DataProvider
 		[Test]
 		public void ClauseDateTimeWithJointure([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			var date = DateTime.Today;
+			var date = TestData.Date;
 			using (var db = new DataConnection(context))
 			{
-				var query = from a in db.GetTable<ALLTYPE>()
-							join b in db.GetTable<ALLTYPE>() on a.ID equals b.ID
-							where a.DATETIMEDATATYPE == date
+				var query = from a in db.GetTable<AllTypes>()
+							join b in db.GetTable<AllTypes>() on a.ID equals b.ID
+							where a.datetimeDataType == date
 							select a;
 
 				query.FirstOrDefault();
@@ -974,7 +979,7 @@ namespace Tests.DataProvider
 								MoneyValue    = 1000m + n,
 								DateTimeValue = new DateTime(2001,  1,  11,  1, 11, 21, 100),
 								BoolValue     = true,
-								GuidValue     = Guid.NewGuid(),
+								GuidValue     = TestData.SequentialGuid(n),
 								SmallIntValue = (short)n
 							}
 						));
@@ -1023,7 +1028,7 @@ namespace Tests.DataProvider
 								MoneyValue    = 1000m + n,
 								DateTimeValue = new DateTime(2001,  1,  11,  1, 11, 21, 100),
 								BoolValue     = true,
-								GuidValue     = Guid.NewGuid(),
+								GuidValue     = TestData.SequentialGuid(n),
 								SmallIntValue = (short)n
 							}
 						));
@@ -1315,16 +1320,16 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Table(Name = "stg_trade_information")]
+		[Table(Name = "STG_TRADE_INFORMATION")]
 		public class Trade
 		{
 			[Column("STG_TRADE_ID")]          public int       ID             { get; set; }
 			[Column("STG_TRADE_VERSION")]     public int       Version        { get; set; }
 			[Column("INFORMATION_TYPE_ID")]   public int       TypeID         { get; set; }
 			[Column("INFORMATION_TYPE_NAME")] public string?   TypeName       { get; set; }
-			[Column("value")]                 public string?   Value          { get; set; }
-			[Column("value_as_integer")]      public int?      ValueAsInteger { get; set; }
-			[Column("value_as_date")]         public DateTime? ValueAsDate    { get; set; }
+			[Column("VALUE")]                 public string?   Value          { get; set; }
+			[Column("VALUE_AS_INTEGER")]      public int?      ValueAsInteger { get; set; }
+			[Column("VALUE_AS_DATE")]         public DateTime? ValueAsDate    { get; set; }
 		}
 
 		static void BulkCopy1(string context, BulkCopyType bulkCopyType)
@@ -1471,11 +1476,28 @@ namespace Tests.DataProvider
 			}
 		}
 
+		// we use copy of table with all-uppercase names to be able to use it with native
+		// bulk copy with ODP.NET provider
+		[Table("LINQDATATYPESBC")]
+		public class LinqDataTypesBC
+		{
+			[PrimaryKey]                                             public int       ID;
+			[Column("MONEYVALUE")]                                   public decimal   MoneyValue;
+			[Column("DATETIMEVALUE", DataType = DataType.DateTime2)] public DateTime? DateTimeValue;
+			[Column("DATETIMEVALUE2")]                               public DateTime? DateTimeValue2;
+			[Column("BOOLVALUE", DataType = DataType.Int16)]         public bool?     BoolValue;
+			[Column("GUIDVALUE")]                                    public Guid?     GuidValue;
+			[Column("SMALLINTVALUE")]                                public short?    SmallIntValue;
+			[Column("INTVALUE")]                                     public int?      IntValue;
+			[Column("BIGINTVALUE")]                                  public long?     BigIntValue;
+			[Column("STRINGVALUE")]                                  public string?   StringValue;
+		}
+
 		static void BulkCopy21(string context, BulkCopyType bulkCopyType)
 		{
 			using (var db = new TestDataConnection(context))
 			{
-				db.Types2.Delete(_ => _.ID > 1000);
+				db.GetTable<LinqDataTypesBC>().Delete();
 
 				if (context.Contains("Native") && bulkCopyType == BulkCopyType.ProviderSpecific)
 				{
@@ -1484,7 +1506,7 @@ namespace Tests.DataProvider
 					db.AddMappingSchema(ms);
 
 					ms.GetFluentMappingBuilder()
-						.Entity<LinqDataTypes2>()
+						.Entity<LinqDataTypesBC>()
 							.Property(e => e.GuidValue)
 								.IsNotColumn()
 						;
@@ -1496,15 +1518,15 @@ namespace Tests.DataProvider
 						new BulkCopyOptions { MaxBatchSize = 2, BulkCopyType = bulkCopyType },
 						new[]
 						{
-							new LinqDataTypes2 { ID = 1003, MoneyValue = 0m, DateTimeValue = null,         BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue = null, IntValue = null    },
-							new LinqDataTypes2 { ID = 1004, MoneyValue = 0m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 2,    IntValue = 1532334 },
-							new LinqDataTypes2 { ID = 1005, MoneyValue = 1m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 5,    IntValue = null    },
-							new LinqDataTypes2 { ID = 1006, MoneyValue = 2m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 6,    IntValue = 153     }
+							new LinqDataTypesBC { ID = 1003, MoneyValue = 0m, DateTimeValue = null,              BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue = null, IntValue = null    },
+							new LinqDataTypesBC { ID = 1004, MoneyValue = 0m, DateTimeValue = TestData.DateTime, BoolValue = false, GuidValue = null,                                             SmallIntValue = 2,    IntValue = 1532334 },
+							new LinqDataTypesBC { ID = 1005, MoneyValue = 1m, DateTimeValue = TestData.DateTime, BoolValue = false, GuidValue = null,                                             SmallIntValue = 5,    IntValue = null    },
+							new LinqDataTypesBC { ID = 1006, MoneyValue = 2m, DateTimeValue = TestData.DateTime, BoolValue = false, GuidValue = null,                                             SmallIntValue = 6,    IntValue = 153     }
 						});
 				}
 				finally
 				{
-					db.Types2.Delete(_ => _.ID > 1000);
+					db.GetTable<LinqDataTypesBC>().Delete();
 				}
 			}
 		}
@@ -1513,7 +1535,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = new TestDataConnection(context))
 			{
-				db.Types2.Delete(_ => _.ID > 1000);
+				db.GetTable<LinqDataTypesBC>().Delete();
 
 				if (context.Contains("Native") && bulkCopyType == BulkCopyType.ProviderSpecific)
 				{
@@ -1522,7 +1544,7 @@ namespace Tests.DataProvider
 					db.AddMappingSchema(ms);
 
 					ms.GetFluentMappingBuilder()
-						.Entity<LinqDataTypes2>()
+						.Entity<LinqDataTypesBC>()
 							.Property(e => e.GuidValue)
 								.IsNotColumn()
 						;
@@ -1534,15 +1556,15 @@ namespace Tests.DataProvider
 						new BulkCopyOptions { MaxBatchSize = 2, BulkCopyType = bulkCopyType },
 						new[]
 						{
-							new LinqDataTypes2 { ID = 1003, MoneyValue = 0m, DateTimeValue = null,         BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue = null, IntValue = null    },
-							new LinqDataTypes2 { ID = 1004, MoneyValue = 0m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 2,    IntValue = 1532334 },
-							new LinqDataTypes2 { ID = 1005, MoneyValue = 1m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 5,    IntValue = null    },
-							new LinqDataTypes2 { ID = 1006, MoneyValue = 2m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 6,    IntValue = 153     }
+							new LinqDataTypesBC { ID = 1003, MoneyValue = 0m, DateTimeValue = null,              BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue = null, IntValue = null    },
+							new LinqDataTypesBC { ID = 1004, MoneyValue = 0m, DateTimeValue = TestData.DateTime, BoolValue = false, GuidValue = null,                                             SmallIntValue = 2,    IntValue = 1532334 },
+							new LinqDataTypesBC { ID = 1005, MoneyValue = 1m, DateTimeValue = TestData.DateTime, BoolValue = false, GuidValue = null,                                             SmallIntValue = 5,    IntValue = null    },
+							new LinqDataTypesBC { ID = 1006, MoneyValue = 2m, DateTimeValue = TestData.DateTime, BoolValue = false, GuidValue = null,                                             SmallIntValue = 6,    IntValue = 153     }
 						});
 				}
 				finally
 				{
-					await db.Types2.DeleteAsync(_ => _.ID > 1000);
+					db.GetTable<LinqDataTypesBC>().Delete();
 				}
 			}
 		}
@@ -1653,10 +1675,10 @@ namespace Tests.DataProvider
 						new BulkCopyOptions { MaxBatchSize = 2, BulkCopyType = bulkCopyType },
 						new[]
 						{
-							new LinqDataTypes2 { ID = 1003, MoneyValue = 0m, DateTimeValue = DateTime.Now, BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue = null, IntValue = null    },
-							new LinqDataTypes2 { ID = 1004, MoneyValue = 0m, DateTimeValue = null,         BoolValue = false, GuidValue = null,                                             SmallIntValue = 2,    IntValue = 1532334 },
-							new LinqDataTypes2 { ID = 1005, MoneyValue = 1m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 5,    IntValue = null    },
-							new LinqDataTypes2 { ID = 1006, MoneyValue = 2m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 6,    IntValue = 153     }
+							new LinqDataTypes2 { ID = 1003, MoneyValue = 0m, DateTimeValue = TestData.DateTime, BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue = null, IntValue = null    },
+							new LinqDataTypes2 { ID = 1004, MoneyValue = 0m, DateTimeValue = null,              BoolValue = false, GuidValue = null,                                             SmallIntValue = 2,    IntValue = 1532334 },
+							new LinqDataTypes2 { ID = 1005, MoneyValue = 1m, DateTimeValue = TestData.DateTime, BoolValue = false, GuidValue = null,                                             SmallIntValue = 5,    IntValue = null    },
+							new LinqDataTypes2 { ID = 1006, MoneyValue = 2m, DateTimeValue = TestData.DateTime, BoolValue = false, GuidValue = null,                                             SmallIntValue = 6,    IntValue = 153     }
 						});
 				}
 				finally
@@ -1688,10 +1710,10 @@ namespace Tests.DataProvider
 						new BulkCopyOptions { MaxBatchSize = 2, BulkCopyType = bulkCopyType },
 						new[]
 						{
-							new LinqDataTypes2 { ID = 1003, MoneyValue = 0m, DateTimeValue = DateTime.Now, BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue = null, IntValue = null    },
-							new LinqDataTypes2 { ID = 1004, MoneyValue = 0m, DateTimeValue = null,         BoolValue = false, GuidValue = null,                                             SmallIntValue = 2,    IntValue = 1532334 },
-							new LinqDataTypes2 { ID = 1005, MoneyValue = 1m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 5,    IntValue = null    },
-							new LinqDataTypes2 { ID = 1006, MoneyValue = 2m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 6,    IntValue = 153     }
+							new LinqDataTypes2 { ID = 1003, MoneyValue = 0m, DateTimeValue = TestData.DateTime, BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue = null, IntValue = null    },
+							new LinqDataTypes2 { ID = 1004, MoneyValue = 0m, DateTimeValue = null,              BoolValue = false, GuidValue = null,                                             SmallIntValue = 2,    IntValue = 1532334 },
+							new LinqDataTypes2 { ID = 1005, MoneyValue = 1m, DateTimeValue = TestData.DateTime, BoolValue = false, GuidValue = null,                                             SmallIntValue = 5,    IntValue = null    },
+							new LinqDataTypes2 { ID = 1006, MoneyValue = 2m, DateTimeValue = TestData.DateTime, BoolValue = false, GuidValue = null,                                             SmallIntValue = 6,    IntValue = 153     }
 						});
 				}
 				finally
@@ -2147,30 +2169,30 @@ namespace Tests.DataProvider
 		[Test]
 		public void OverflowTest([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			var func = OracleTools.DataReaderGetDecimal;
-			try
-			{
-				OracleTools.DataReaderGetDecimal = GetDecimal;
+			OracleDataProvider provider;
 
-				using (var db = new DataConnection(context))
-				{
-					var list = db.GetTable<DecimalOverflow>().ToList();
-				}
-			}
-			finally
+			using (var db = new DataConnection(context))
 			{
-				OracleTools.DataReaderGetDecimal = func;
+				provider = new OracleDataProvider(db.DataProvider.Name, ((OracleDataProvider)db.DataProvider).Version);
+			}
+
+			provider.ReaderExpressions[new ReaderInfo { FieldType = typeof(decimal) }] = (Expression<Func<IDataReader, int, decimal>>)((r,i) => GetDecimal(r, i));
+
+			using (var db = new DataConnection(provider, DataConnection.GetConnectionString(context)))
+			{
+				var list = db.GetTable<DecimalOverflow>().ToList();
 			}
 		}
 
 		const int ClrPrecision = 29;
 
+		[ColumnReader(1)]
 		static decimal GetDecimal(IDataReader rd, int idx)
 		{
-			if (rd is Oracle.ManagedDataAccess.Client.OracleDataReader)
+			if (rd is Oracle.ManagedDataAccess.Client.OracleDataReader reader)
 			{
-				var value  = ((Oracle.ManagedDataAccess.Client.OracleDataReader)rd).GetOracleDecimal(idx);
-				var newval = Oracle.ManagedDataAccess.Types.OracleDecimal.SetPrecision(value, value > 0 ? ClrPrecision : (ClrPrecision - 1));
+				var value  = reader.GetOracleDecimal(idx);
+				var newval = OracleDecimal.SetPrecision(value, value > 0 ? ClrPrecision : (ClrPrecision - 1));
 
 				return newval.Value;
 			}
@@ -2194,20 +2216,9 @@ namespace Tests.DataProvider
 		[Test]
 		public void OverflowTest2([IncludeDataSources(TestProvName.AllOracleManaged)] string context)
 		{
-			var func = OracleTools.DataReaderGetDecimal;
-			try
+			using (var db = new DataConnection(context))
 			{
-
-				OracleTools.DataReaderGetDecimal = (rd, idx) => { throw new Exception(); };
-
-				using (var db = new DataConnection(context))
-				{
-					var list = db.GetTable<DecimalOverflow2>().ToList();
-				}
-			}
-			finally
-			{
-				OracleTools.DataReaderGetDecimal = func;
+				var list = db.GetTable<DecimalOverflow2>().ToList();
 			}
 		}
 
@@ -2530,7 +2541,7 @@ namespace Tests.DataProvider
 
 		public static IEnumerable<Person> PersonSelectByKey(DataConnection dataConnection, int id)
 		{
-			return dataConnection.QueryProc<Person>("Person_SelectByKey",
+			return dataConnection.QueryProc<Person>("PERSON_SELECTBYKEY",
 				new DataParameter("pID", @id),
 				new DataParameter { Name = "retCursor", DataType = DataType.Cursor, Direction = ParameterDirection.ReturnValue });
 		}
@@ -2544,18 +2555,20 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Table(Name = "ALLTYPES")]
+		[Table(Name = "AllTypes")]
 		public partial class ALLTYPE2
 		{
 			[Column, PrimaryKey, Identity] public decimal ID             { get; set; } // NUMBER
-			[Column,             Nullable] public byte[]? BINARYDATATYPE { get; set; } // BLOB
-			[Column,             Nullable] public byte[]? BFILEDATATYPE  { get; set; } // BFILE
-			[Column,             Nullable] public byte[]? GUIDDATATYPE   { get; set; } // RAW(16)
+			[Column,             Nullable] public byte[]? binaryDataType { get; set; } // BLOB
+			[Column,             Nullable] public byte[]? bfileDataType  { get; set; } // BFILE
+			[Column,             Nullable] public byte[]? guidDataType   { get; set; } // RAW(16)
 		}
 
 		[Test]
 		public void Issue539([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
+			ResetAllTypesIdentity(context);
+
 			using (var db = GetDataContext(context))
 			{
 				var n = 0;
@@ -2564,19 +2577,19 @@ namespace Tests.DataProvider
 					var val = new byte[] { 1, 2, 3 };
 
 					n = Convert.ToInt32(db.GetTable<ALLTYPE2>()
-						.InsertWithIdentity(() => new ALLTYPE2 { ID = 1000, BINARYDATATYPE = val, GUIDDATATYPE = val }));
+						.InsertWithIdentity(() => new ALLTYPE2 { ID = 1000, binaryDataType = val, guidDataType = val }));
 
-					var qry = db.GetTable<ALLTYPE2>().Where(_ => _.ID == 1000 && _.GUIDDATATYPE == val);
+					var qry = db.GetTable<ALLTYPE2>().Where(_ => _.ID == 1000 && _.guidDataType == val);
 
 					var data = db.GetTable<ALLTYPE2>()
 						.Where(_ => _.ID == n)
 						.Select(_ => new
 						{
-							_.BINARYDATATYPE,
+							_.binaryDataType,
 							Count = qry.Count()
 						}).First();
 
-					AreEqual(val, data.BINARYDATATYPE!);
+					AreEqual(val, data.binaryDataType!);
 
 				}
 				finally
@@ -2586,6 +2599,7 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Table("ISSUE723TABLE")]
 		public class Issue723Table
 		{
 			[PrimaryKey, Identity, NotNull]
@@ -2609,41 +2623,41 @@ namespace Tests.DataProvider
 				db.Execute("GRANT DROP ANY TRIGGER TO " + currentUser);
 				db.Execute("GRANT DROP ANY SEQUENCE TO " + currentUser);
 
-				try {db.Execute("DROP USER C##Issue723Schema CASCADE");} catch { }
+				try {db.Execute("DROP USER C##ISSUE723SCHEMA CASCADE");} catch { }
 
-				db.Execute("CREATE USER C##Issue723Schema IDENTIFIED BY password");
+				db.Execute("CREATE USER C##ISSUE723SCHEMA IDENTIFIED BY password");
 
 				try
 				{
 
 					var tableSpace = db.Execute<string>("SELECT default_tablespace FROM sys.dba_users WHERE username = 'C##ISSUE723SCHEMA'");
-					db.Execute($"ALTER USER C##Issue723Schema quota unlimited on {tableSpace}");
+					db.Execute($"ALTER USER C##ISSUE723SCHEMA quota unlimited on {tableSpace}");
 
-					db.CreateTable<Issue723Table>(schemaName: "C##Issue723Schema");
-					Assert.That(db.LastQuery!.Contains("C##Issue723Schema.Issue723Table"));
+					db.CreateTable<Issue723Table>(schemaName: "C##ISSUE723SCHEMA");
+					Assert.That(db.LastQuery!.Contains("C##ISSUE723SCHEMA.ISSUE723TABLE"));
 
 					try
 					{
 
 						db.MappingSchema.GetFluentMappingBuilder()
 							.Entity<Issue723Table>()
-							.HasSchemaName("C##Issue723Schema");
+							.HasSchemaName("C##ISSUE723SCHEMA");
 
 						for (var i = 1; i < 3; i++)
 						{
 							var id = Convert.ToInt32(db.InsertWithIdentity(new Issue723Table() { StringValue = i.ToString() }));
 							Assert.AreEqual(i, id);
 						}
-						Assert.That(db.LastQuery.Contains("C##Issue723Schema.Issue723Table"));
+						Assert.That(db.LastQuery.Contains("C##ISSUE723SCHEMA.ISSUE723TABLE"));
 					}
 					finally
 					{
-						db.DropTable<Issue723Table>(schemaName: "C##Issue723Schema");
+						db.DropTable<Issue723Table>(schemaName: "C##ISSUE723SCHEMA");
 					}
 				}
 				finally
 				{
-					db.Execute("DROP USER C##Issue723Schema CASCADE");
+					db.Execute("DROP USER C##ISSUE723SCHEMA CASCADE");
 				}
 			}
 		}
@@ -2679,8 +2693,8 @@ namespace Tests.DataProvider
 				var origin = new Issue731Table()
 				{
 					Id         = 1,
-					Guid       = Guid.NewGuid(),
-					BinaryGuid = Guid.NewGuid(),
+					Guid       = TestData.Guid1,
+					BinaryGuid = TestData.Guid2,
 					BlobValue  = new byte[] { 1, 2, 3 },
 					RawValue   = new byte[] { 4, 5, 6 }
 				};
@@ -2761,9 +2775,8 @@ namespace Tests.DataProvider
 			//
 			ms.SetValueToSqlConverter(typeof(MyDate), (sb,tp,v) =>
 			{
-				var value = v as MyDate;
-				if (value == null) sb.Append("NULL");
-				else               sb.Append($"DATE '{value.Year}-{value.Month}-{value.Day}'");
+				if (!(v is MyDate value)) sb.Append("NULL");
+				else sb.Append($"DATE '{value.Year}-{value.Month}-{value.Day}'");
 			});
 
 			// Converts object property value to SQL.
@@ -2892,18 +2905,18 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Table("AllTypes")]
+		[Table("BinaryData")]
 		public class TestIdentifiersTable1
 		{
 			[Column]
-			public int Id { get; set; }
+			public int BinaryDataID { get; set; }
 		}
 
-		[Table("ALLTYPES")]
+		[Table("BINARYDATA")]
 		public class TestIdentifiersTable2
 		{
-			[Column("ID")]
-			public int Id { get; set; }
+			[Column("BINARYDATAID")]
+			public int BinaryDataID { get; set; }
 		}
 
 		[Test]
@@ -2956,10 +2969,10 @@ namespace Tests.DataProvider
 					new DataParameter {Name = "floatDataType"         , Direction = ParameterDirection.InputOutput, DataType = DataType.Double,         Value = 1},
 					new DataParameter {Name = "realDataType"          , Direction = ParameterDirection.InputOutput, DataType = DataType.Single,         Value = 1},
 
-					new DataParameter {Name = "datetimeDataType"      , Direction = ParameterDirection.InputOutput, DataType = DataType.DateTime,       Value = DateTime.Now},
-					new DataParameter {Name = "datetime2DataType"     , Direction = ParameterDirection.InputOutput, DataType = DataType.DateTime2,      Value = DateTime.Now},
-					new DataParameter {Name = "datetimeoffsetDataType", Direction = ParameterDirection.InputOutput, DataType = DataType.DateTimeOffset, Value = DateTimeOffset.Now},
-					new DataParameter {Name = "localZoneDataType"     , Direction = ParameterDirection.InputOutput, DataType = DataType.DateTimeOffset, Value = DateTimeOffset.Now},
+					new DataParameter {Name = "datetimeDataType"      , Direction = ParameterDirection.InputOutput, DataType = DataType.DateTime,       Value = TestData.DateTime},
+					new DataParameter {Name = "datetime2DataType"     , Direction = ParameterDirection.InputOutput, DataType = DataType.DateTime2,      Value = TestData.DateTime},
+					new DataParameter {Name = "datetimeoffsetDataType", Direction = ParameterDirection.InputOutput, DataType = DataType.DateTimeOffset, Value = TestData.DateTimeOffset},
+					new DataParameter {Name = "localZoneDataType"     , Direction = ParameterDirection.InputOutput, DataType = DataType.DateTimeOffset, Value = TestData.DateTimeOffset},
 
 					new DataParameter {Name = "charDataType"          , Direction = ParameterDirection.InputOutput, DataType = DataType.Char,           Value = 'A'},
 					new DataParameter {Name = "char20DataType"        , Direction = ParameterDirection.InputOutput, DataType = DataType.Char,           Value = 'B'},
@@ -2973,14 +2986,14 @@ namespace Tests.DataProvider
 
 					new DataParameter {Name = "bfileDataType"         , Direction = ParameterDirection.InputOutput, DataType = DataType.BFile,          Value = new byte []{ 1,2,3 }},
 
-					new DataParameter {Name = "guidDataType"          , Direction = ParameterDirection.InputOutput, DataType = DataType.Guid,           Value = Guid.NewGuid()},
+					new DataParameter {Name = "guidDataType"          , Direction = ParameterDirection.InputOutput, DataType = DataType.Guid,           Value = TestData.Guid1},
 
 					// TODO: it is not clear which db type use for this parameter so oracle will accept it
 					//new DataParameter {Name = "uriDataType"           , Direction = ParameterDirection.InputOutput, DataType = DataType.Undefined,      Value = "http://uri.com" },
 					new DataParameter {Name = "xmlDataType"           , Direction = ParameterDirection.InputOutput, DataType = DataType.Xml,            Value = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><test>hi</test>"},
 				};
 
-				db.ExecuteProc("AllOutputParameters", pms);
+				db.ExecuteProc("ALLOUTPUTPARAMETERS", pms);
 
 				// assert types converted
 				Assert.AreEqual(typeof(decimal)       , pms[0] .Value!.GetType());
@@ -3032,8 +3045,9 @@ namespace Tests.DataProvider
 				if (!context.Contains("Native"))
 					Assert.That(pms[15].Value,
 						Is.EqualTo(new DateTimeOffset(2012, 12, 12, 11, 12, 12, isNative ? 0 : 12, TimeSpan.Zero)).
-						Or.EqualTo(new DateTimeOffset(2012, 12, 12, 11, 12, 12, isNative ? 0 : 12, DateTimeOffset.Now.Offset)).
-						Or.EqualTo(new DateTimeOffset(2012, 12, 12, 12, 12, 12, isNative ? 0 : 12, DateTimeOffset.Now.Offset.Add(new TimeSpan(-1, 0, 0)))));
+						Or.EqualTo(new DateTimeOffset(2012, 12, 12, 11, 12, 12, isNative ? 0 : 12, TestData.DateTimeOffset.Offset)).
+						Or.EqualTo(new DateTimeOffset(2012, 12, 12, 12, 12, 12, isNative ? 0 : 12, TestData.DateTimeOffset.Offset.Add(new TimeSpan(-1, 0, 0)))).
+						Or.EqualTo(new DateTimeOffset(2012, 12, 12, 12, 12, 12, isNative ? 0 : 12, new TimeSpan(-5, 0, 0))));
 
 				Assert.AreEqual("1"                   , pms[16].Value);
 				Assert.IsNull(pms[17].Value);
@@ -3045,10 +3059,10 @@ namespace Tests.DataProvider
 				Assert.AreEqual(new byte[] { 0, 0xAA }, pms[23].Value);
 
 				// default converter for BFile missing intentionally
-				var bfile = pms[24].Output!.Value;
+				var bfile = pms[24].Output!.Value!;
 				if (isNative)
 				{
-#if NET46
+#if NET472
 					using (var file = (Oracle.DataAccess.Types.OracleBFile)bfile)
 					{
 						file.OpenFile();
@@ -3106,53 +3120,55 @@ namespace Tests.DataProvider
 		[Test]
 		public void LongDataTypeTest([IncludeDataSources(false, TestProvName.AllOracle)] string context)
 		{
+			ResetAllTypesIdentity(context);
+
 			using (var db = GetDataContext(context))
 			{
-				db.GetTable<ALLTYPE>()
+				db.GetTable<AllTypes>()
 					.Where(t => t.ID > 2)
 					.Delete();
 
 				try
 				{
-					var items = db.GetTable<ALLTYPE>()
-						.Select(t => new { t.LONGDATATYPE })
+					var items = db.GetTable<AllTypes>()
+						.Select(t => new { t.longDataType })
 						.ToArray();
 
 					Assert.That(items.Length, Is.GreaterThanOrEqualTo(2));
-					Assert.That(items[0].LONGDATATYPE, Is.Null);
-					Assert.That(items[1].LONGDATATYPE, Is.EqualTo("LONG"));
+					Assert.That(items[0].longDataType, Is.Null);
+					Assert.That(items[1].longDataType, Is.EqualTo("LONG"));
 
 					var str = new string('A', 10000);
 
-					var id = db.GetTable<ALLTYPE>().InsertWithDecimalIdentity(() => new ALLTYPE
+					var id = db.GetTable<AllTypes>().InsertWithDecimalIdentity(() => new AllTypes
 					{
-						LONGDATATYPE = str,
+						longDataType = str,
 					});
 
-					var insertedItems = db.GetTable<ALLTYPE>()
+					var insertedItems = db.GetTable<AllTypes>()
 						.Where(t => t.ID == id)
-						.Select(t => new { t.LONGDATATYPE })
+						.Select(t => new { t.longDataType })
 						.ToArray();
 
-					Assert.That(insertedItems[0].LONGDATATYPE, Is.EqualTo(str));
+					Assert.That(insertedItems[0].longDataType, Is.EqualTo(str));
 
 					var str2 = new string('B', 4000);
 
-					var id2 = db.GetTable<ALLTYPE>().InsertWithDecimalIdentity(() => new ALLTYPE
+					var id2 = db.GetTable<AllTypes>().InsertWithDecimalIdentity(() => new AllTypes
 					{
-						LONGDATATYPE = Sql.ToSql(str2),
+						longDataType = Sql.ToSql(str2),
 					});
 
-					var insertedItems2 = db.GetTable<ALLTYPE>()
+					var insertedItems2 = db.GetTable<AllTypes>()
 						.Where(t => t.ID == id2)
-						.Select(t => new { t.LONGDATATYPE })
+						.Select(t => new { t.longDataType })
 						.ToArray();
 
-					Assert.That(insertedItems2[0].LONGDATATYPE, Is.EqualTo(str2));
+					Assert.That(insertedItems2[0].longDataType, Is.EqualTo(str2));
 				}
 				finally
 				{
-					db.GetTable<ALLTYPE>()
+					db.GetTable<AllTypes>()
 						.Where(t => t.ID > 2)
 						.Delete();
 				}
@@ -3350,17 +3366,17 @@ namespace Tests.DataProvider
 			using (var db    = new TestDataConnection(context))
 			using (var table = db.CreateLocalTable<TestDateTimeTypes>())
 			{
-				Assert.True(db.LastQuery!.Contains("\"Date\"           date                        NOT NULL"));
-				Assert.True(db.LastQuery.Contains("DateTime         timestamp                   NOT NULL"));
-				Assert.True(db.LastQuery.Contains("DateTime_        date                        NOT NULL"));
-				Assert.True(db.LastQuery.Contains("DateTime2        timestamp                   NOT NULL"));
-				Assert.True(db.LastQuery.Contains("DateTime2_0      timestamp(0)                NOT NULL"));
-				Assert.True(db.LastQuery.Contains("DateTime2_1      timestamp(1)                NOT NULL"));
-				Assert.True(db.LastQuery.Contains("DateTime2_9      timestamp(9)                NOT NULL"));
-				Assert.True(db.LastQuery.Contains("DateTimeOffset_  timestamp with time zone    NOT NULL"));
-				Assert.True(db.LastQuery.Contains("DateTimeOffset_0 timestamp(0) with time zone NOT NULL"));
-				Assert.True(db.LastQuery.Contains("DateTimeOffset_1 timestamp(1) with time zone NOT NULL"));
-				Assert.True(db.LastQuery.Contains("DateTimeOffset_9 timestamp(9) with time zone NOT NULL"));
+				Assert.True(db.LastQuery!.Contains("\"Date\"             date                        NOT NULL"));
+				Assert.True(db.LastQuery.Contains("\"DateTime\"         timestamp                   NOT NULL"));
+				Assert.True(db.LastQuery.Contains("\"DateTime_\"        date                        NOT NULL"));
+				Assert.True(db.LastQuery.Contains("\"DateTime2\"        timestamp                   NOT NULL"));
+				Assert.True(db.LastQuery.Contains("\"DateTime2_0\"      timestamp(0)                NOT NULL"));
+				Assert.True(db.LastQuery.Contains("\"DateTime2_1\"      timestamp(1)                NOT NULL"));
+				Assert.True(db.LastQuery.Contains("\"DateTime2_9\"      timestamp(9)                NOT NULL"));
+				Assert.True(db.LastQuery.Contains("\"DateTimeOffset_\"  timestamp with time zone    NOT NULL"));
+				Assert.True(db.LastQuery.Contains("\"DateTimeOffset_0\" timestamp(0) with time zone NOT NULL"));
+				Assert.True(db.LastQuery.Contains("\"DateTimeOffset_1\" timestamp(1) with time zone NOT NULL"));
+				Assert.True(db.LastQuery.Contains("\"DateTimeOffset_9\" timestamp(9) with time zone NOT NULL"));
 
 				db.Insert(TestDateTimeTypes.Data[0]);
 
@@ -3371,37 +3387,37 @@ namespace Tests.DataProvider
 				var pDateTimeOffset = new DateTimeOffset(2020, 1, 3, 4, 5, 6, 789, TimeSpan.FromMinutes(45)).AddTicks(1234);
 
 				var results = table.Where(r => r.Date == pDate).ToArray();
-				assert("TO_DATE('2020-01-03', 'YYYY-MM-DD')");
+				assert("DATE '2020-01-03'");
 
 				results = table.Where(r => r.DateTime == pDateTime).ToArray();
-				assert("TO_TIMESTAMP('2020-01-03 04:05:06.789123', 'YYYY-MM-DD HH24:MI:SS.FF6')");
+				assert("TIMESTAMP '2020-01-03 04:05:06.789123'");
 
 				results = table.Where(r => r.DateTime_ == pDateTime).ToArray();
 				assert("TO_DATE('2020-01-03 04:05:06', 'YYYY-MM-DD HH24:MI:SS')");
 
 				results = table.Where(r => r.DateTime2 == pDateTime).ToArray();
-				assert("TO_TIMESTAMP('2020-01-03 04:05:06.789123', 'YYYY-MM-DD HH24:MI:SS.FF6')");
+				assert("TIMESTAMP '2020-01-03 04:05:06.789123'");
 
 				results = table.Where(r => r.DateTime2_0 == pDateTime).ToArray();
-				assert("TO_TIMESTAMP('2020-01-03 04:05:06', 'YYYY-MM-DD HH24:MI:SS')");
+				assert("TIMESTAMP '2020-01-03 04:05:06'");
 
 				results = table.Where(r => r.DateTime2_1 == pDateTime).ToArray();
-				assert("TO_TIMESTAMP('2020-01-03 04:05:06.7', 'YYYY-MM-DD HH24:MI:SS.FF1')");
+				assert("TIMESTAMP '2020-01-03 04:05:06.7'");
 
 				results = table.Where(r => r.DateTime2_9 == pDateTime).ToArray();
-				assert("TO_TIMESTAMP('2020-01-03 04:05:06.7891234', 'YYYY-MM-DD HH24:MI:SS.FF7')");
+				assert("TIMESTAMP '2020-01-03 04:05:06.7891234'");
 
 				results = table.Where(r => r.DateTimeOffset_ == pDateTimeOffset).ToArray();
-				assert("TO_TIMESTAMP_TZ('2020-01-03 03:20:06.789123 00:00', 'YYYY-MM-DD HH24:MI:SS.FF6 TZH:TZM')");
+				assert("TIMESTAMP '2020-01-03 03:20:06.789123 +00:00'");
 
 				results = table.Where(r => r.DateTimeOffset_0 == pDateTimeOffset).ToArray();
-				assert("TO_TIMESTAMP_TZ('2020-01-03 03:20:06 00:00', 'YYYY-MM-DD HH24:MI:SS TZH:TZM')");
+				assert("TIMESTAMP '2020-01-03 03:20:06 +00:00'");
 
 				results = table.Where(r => r.DateTimeOffset_1 == pDateTimeOffset).ToArray();
-				assert("TO_TIMESTAMP_TZ('2020-01-03 03:20:06.7 00:00', 'YYYY-MM-DD HH24:MI:SS.FF1 TZH:TZM')");
+				assert("TIMESTAMP '2020-01-03 03:20:06.7 +00:00'");
 
 				results = table.Where(r => r.DateTimeOffset_9 == pDateTimeOffset).ToArray();
-				assert("TO_TIMESTAMP_TZ('2020-01-03 03:20:06.7891234 00:00', 'YYYY-MM-DD HH24:MI:SS.FF7 TZH:TZM')");
+				assert("TIMESTAMP '2020-01-03 03:20:06.7891234 +00:00'");
 
 				void assert(string function)
 				{
@@ -3449,7 +3465,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Table]
+		[Table("TYPESTEST")]
 		public class TypesTest
 		{
 			[Column(DbType = "CHAR(10)")     ] public string Char10       { get; set; } = null!;
@@ -3472,7 +3488,7 @@ namespace Tests.DataProvider
 					GetProcedures = false
 				});
 
-				var table = schema.Tables.Where(t => t.TableName == nameof(TypesTest).ToUpperInvariant()).SingleOrDefault();
+				var table = schema.Tables.Where(t => t.TableName == nameof(TypesTest).ToUpperInvariant()).SingleOrDefault()!;
 				Assert.IsNotNull(table);
 				Assert.AreEqual(5, table.Columns.Count);
 
@@ -3484,11 +3500,145 @@ namespace Tests.DataProvider
 
 				void AssertColumn(string name, string dbType, int? length)
 				{
-					var column = table.Columns.SingleOrDefault(c => c.ColumnName == name.ToUpperInvariant());
+					var column = table.Columns.SingleOrDefault(c => c.ColumnName == name)!;
 
 					Assert.IsNotNull(column);
 					Assert.AreEqual(dbType, column.ColumnType);
 					Assert.AreEqual(length, column.Length);
+				}
+			}
+		}
+
+		[Table("BULKCOPYTABLE")]
+		class BulkCopyTable
+		{
+			[Column("ID")] public int Id { get; set; }
+		}
+
+		[Table("BULKCOPYTABLE2")]
+		class BulkCopyTable2
+		{
+			[Column("id")] public int Id { get; set; }
+		}
+
+		[Test]
+		public void BulkCopyWithSchemaName(
+			[IncludeDataSources(false, TestProvName.AllOracle)] string context, [Values] bool withSchema)
+		{
+			using var db    = new TestDataConnection(context);
+			using var table = db.CreateLocalTable<BulkCopyTable>();
+			{
+				var schemaName = TestUtils.GetSchemaName(db);
+
+				var trace = string.Empty;
+				db.OnTraceConnection += ti =>
+				{
+					if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+						trace = ti.SqlText;
+				};
+
+				table.BulkCopy(
+						new BulkCopyOptions() { BulkCopyType = BulkCopyType.ProviderSpecific, SchemaName = withSchema ? schemaName : null },
+						Enumerable.Range(1, 10).Select(id => new BulkCopyTable { Id = id }));
+
+				if (withSchema)
+					Assert.True(trace.Contains($"INSERT BULK {schemaName}.BULKCOPYTABLE"));
+				else
+					Assert.True(trace.Contains("INSERT BULK BULKCOPYTABLE"));
+			}
+		}
+
+		[Test]
+		public void BulkCopyWithServerName(
+			[IncludeDataSources(false, TestProvName.AllOracle)] string context, [Values] bool withServer)
+		{
+			using var db    = new TestDataConnection(context);
+			using var table = db.CreateLocalTable<BulkCopyTable>();
+			{
+				var serverName = TestUtils.GetServerName(db);
+
+				var trace = string.Empty;
+				db.OnTraceConnection += ti =>
+				{
+					if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+						trace = ti.SqlText;
+				};
+
+				table.BulkCopy(
+						new BulkCopyOptions() { BulkCopyType = BulkCopyType.ProviderSpecific, ServerName = withServer ? serverName : null },
+						Enumerable.Range(1, 10).Select(id => new BulkCopyTable { Id = id }));
+
+				if (withServer)
+					Assert.False(trace.Contains($"INSERT BULK"));
+				else
+					Assert.True(trace.Contains("INSERT BULK BULKCOPYTABLE"));
+			}
+		}
+
+		[Test]
+		public void BulkCopyWithEscapedColumn(
+			[IncludeDataSources(false, TestProvName.AllOracle)] string context)
+		{
+			using var db    = new TestDataConnection(context);
+			using var table = db.CreateLocalTable<BulkCopyTable2>();
+			{
+				var serverName = TestUtils.GetServerName(db);
+
+				var trace = string.Empty;
+				db.OnTraceConnection += ti =>
+				{
+					if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+						trace = ti.SqlText;
+				};
+
+				table.BulkCopy(
+						new BulkCopyOptions() { BulkCopyType = BulkCopyType.ProviderSpecific },
+						Enumerable.Range(1, 10).Select(id => new BulkCopyTable2 { Id = id }));
+
+				Assert.False(trace.Contains($"INSERT BULK"));
+			}
+		}
+
+		[Test]
+		public void BulkCopyTransactionTest(
+			[IncludeDataSources(false, TestProvName.AllOracle)] string context, [Values] bool withTransaction, [Values] bool withInternalTransaction)
+		{
+			using var db    = new TestDataConnection(context);
+			using var table = db.CreateLocalTable<BulkCopyTable>();
+			{
+				IDisposable? tr = null;
+				if (withTransaction)
+					tr = db.BeginTransaction();
+
+				try
+				{
+
+					var trace = string.Empty;
+					db.OnTraceConnection += ti =>
+					{
+						if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+							trace = ti.SqlText;
+					};
+
+					if (withTransaction && withInternalTransaction)
+						Assert.Throws<InvalidOperationException>(() =>
+						{
+							table.BulkCopy(
+								new BulkCopyOptions() { BulkCopyType = BulkCopyType.ProviderSpecific, UseInternalTransaction = withInternalTransaction },
+								Enumerable.Range(1, 10).Select(id => new BulkCopyTable { Id = id }));
+						});
+					else
+					{
+						table.BulkCopy(
+							new BulkCopyOptions() { BulkCopyType = BulkCopyType.ProviderSpecific, UseInternalTransaction = withInternalTransaction },
+							Enumerable.Range(1, 10).Select(id => new BulkCopyTable { Id = id }));
+
+						Assert.True(trace.Contains($"INSERT BULK"));
+					}
+				}
+				finally
+				{
+					tr?.Dispose();
 				}
 			}
 		}
@@ -3503,12 +3653,15 @@ namespace Tests.DataProvider
 				OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertInto;
 				Configuration.RetryPolicy.Factory  = connection => new DummyRetryPolicy();
 
-				using (var db    = new TestDataConnection(context))
-				using (var table = db.CreateTempTable<Issue2342Entity>())
+				using var db    = new TestDataConnection(context);
+				using var table = db.CreateLocalTable<Issue2342Entity>();
+
 				using (db.BeginTransaction())
 				{
 					table.BulkCopy(Enumerable.Range(1, 10).Select(id => new Issue2342Entity { Id = id, Name = $"Name_{id}" }));
 				}
+
+				table.Truncate();
 			}
 			finally
 			{
@@ -3532,5 +3685,172 @@ namespace Tests.DataProvider
 			[NotNull, Column(Length = 256)] public string Name { get; set; } = null!;
 		}
 		#endregion
+
+		[Test]
+		public void TestTablesAndViewsLoad([IncludeDataSources(false, TestProvName.AllOracle)] string context, [Values] bool withFilter)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				var options = withFilter
+					? new GetSchemaOptions() { ExcludedSchemas = new string[] { "fake" } }
+					: null;
+
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, options);
+
+				var table        = schema.Tables.Where(t => t.TableName == "SchemaTestTable").FirstOrDefault()!;
+				var view         = schema.Tables.Where(t => t.TableName == "SchemaTestView").FirstOrDefault()!;
+				var matView      = schema.Tables.Where(t => t.TableName == "SchemaTestMatView" && t.IsView).FirstOrDefault()!;
+				var matViewTable = schema.Tables.Where(t => t.TableName == "SchemaTestMatView" && !t.IsView).FirstOrDefault();
+
+				Assert.IsNotNull(table);
+				Assert.AreEqual("This is table", table.Description);
+				Assert.IsFalse(table.IsView);
+
+				Assert.AreEqual(1, table.Columns.Count);
+				Assert.AreEqual("Id", table.Columns[0].ColumnName);
+				Assert.AreEqual("This is column", table.Columns[0].Description);
+
+				Assert.IsNotNull(view);
+				Assert.IsNull(view.Description);
+				Assert.IsTrue(view.IsView);
+
+				Assert.AreEqual(1, view.Columns.Count);
+				Assert.AreEqual("Id", view.Columns[0].ColumnName);
+				Assert.AreEqual("This is view column", view.Columns[0].Description);
+
+				Assert.IsNotNull(matView);
+				Assert.AreEqual("This is matview", matView.Description);
+
+				Assert.AreEqual(1, matView.Columns.Count);
+				Assert.AreEqual("Id", matView.Columns[0].ColumnName);
+				Assert.AreEqual("This is matview column", matView.Columns[0].Description);
+
+				Assert.IsNull(matViewTable);
+			}
+		}
+
+		#region Issue 2504
+		[Test]
+		public async Task Issue2504Test([IncludeDataSources(false, TestProvName.AllOracle)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				db.Execute("CREATE SEQUENCE SEQ_A START WITH 1 MINVALUE 0");
+				try
+				{
+					db.Execute(@"
+CREATE TABLE ""TABLE_A""(
+	""COLUMN_A"" NUMBER(20, 0) NOT NULL,
+	""COLUMN_B"" NUMBER(6, 0) NOT NULL,
+	""COLUMN_C"" NUMBER(6, 0) NOT NULL,
+	CONSTRAINT ""PK_TABLE_A"" PRIMARY KEY(""COLUMN_A"", ""COLUMN_B"", ""COLUMN_C"")
+)");
+
+					var id = await db.InsertWithInt64IdentityAsync(new Issue2504Table1
+					{
+						COLUMNA = 1,
+						COLUMNB = 2
+					});
+
+					Assert.AreEqual(1, id);
+
+					id = await db.InsertWithInt64IdentityAsync(new Issue2504Table2()
+					{
+						COLUMNA = 1,
+						COLUMNB = 2
+					});
+
+					Assert.AreEqual(2, id);
+				}
+				finally
+				{
+					try { db.Execute("DROP SEQUENCE SEQ_A"); } catch { }
+					try { db.Execute("DROP TABLE \"TABLE_A\""); } catch { }
+				}
+			}
+		}
+
+		[Table(Name = "TABLE_A")]
+		public sealed class Issue2504Table1
+		{
+			[PrimaryKey]
+			[Column(Name = "COLUMN_A"), NotNull]
+			public long COLUMNA { get; set; }
+
+			[PrimaryKey]
+			[Column(Name = "COLUMN_B"), NotNull]
+			public int COLUMNB { get; set; }
+
+			[PrimaryKey]
+			[Column(Name = "COLUMN_C"), NotNull, SequenceName("SEQ_A")]
+			public int COLUMNC { get; set; }
+		}
+
+		[Table(Name = "TABLE_A")]
+		public sealed class Issue2504Table2
+		{
+			[PrimaryKey]
+			[Column(Name = "COLUMN_A"), NotNull]
+			public long COLUMNA { get; set; }
+
+			[PrimaryKey]
+			[Column(Name = "COLUMN_B"), NotNull]
+			public int COLUMNB { get; set; }
+
+			[PrimaryKey]
+			[Column(Name = "COLUMN_C"), NotNull, SequenceName(ProviderName.Oracle, "SEQ_A")]
+			public int COLUMNC { get; set; }
+		}
+		#endregion
+
+		[Test]
+		public void TestDateTimeNAddTimeSpan([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			var ts = TimeSpan.FromHours(1);
+
+			using (var db = GetDataContext(context))
+			{
+				db.GetTable<AllTypes>()
+					.Where(_ =>
+						 Sql.CurrentTimestamp > _.datetime2DataType + TimeSpan.FromHours(1)
+					).Select(x => x.ID).ToArray();
+			}
+		}
+	
+		[Table("LinqDataTypes", IsColumnAttributeRequired = false)]
+		class LinqDataTypesBlobs
+		{
+			public int ID { get; set; }
+			// Implicit OracleBlob support, no attribute
+			public OracleBlob? BinaryValue { get; set; }
+			// Explicit attribute with DataType = Blob
+			[Column("BinaryValue", DataType = DataType.Blob)]
+			public OracleBlob? Blob { get; set; }
+		}
+		
+		[Test]
+		public void TestBlob([IncludeDataSources(TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+			if (db is not DataConnection dc) return;
+
+			using var tx = dc.BeginTransaction();
+
+			using var blob = new OracleBlob((OracleConnection)dc.Connection);
+			blob.WriteByte(1);
+
+			db.GetTable<LinqDataTypesBlobs>().Insert(() => new LinqDataTypesBlobs { ID = -10, BinaryValue = blob });
+			db.GetTable<LinqDataTypesBlobs>().Insert(() => new LinqDataTypesBlobs { ID = -20, Blob = blob });
+
+			var inserted = db
+				.GetTable<LinqDataTypesBlobs>()
+				.Where(x => x.ID.In(-10, -20))
+				.Select(x => Sql.Expr<int>("LENGTH(\"BinaryValue\")"))
+				.ToList();
+
+			tx.Rollback();
+
+			inserted.Should().Equal(1, 1);
+		}
 	}
 }

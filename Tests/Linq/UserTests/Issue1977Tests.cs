@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Linq;
-using System.Linq.Expressions;
 using LinqToDB;
-using LinqToDB.Mapping;
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -20,8 +18,8 @@ namespace Tests.UserTests
 				{
 					new Issue1977Table()
 					{
-						firstField = Guid.NewGuid(),
-						secondField = Guid.NewGuid()
+						firstField  = TestBase.TestData.Guid1,
+						secondField = TestBase.TestData.Guid2
 					}
 				};
 		}

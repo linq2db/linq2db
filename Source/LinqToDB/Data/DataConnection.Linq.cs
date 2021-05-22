@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -7,12 +8,10 @@ namespace LinqToDB.Data
 {
 	using DataProvider;
 	using Linq;
-	using Mapping;
-	using SqlQuery;
 	using SqlProvider;
-	using System.Linq;
+	using SqlQuery;
 
-	public partial class DataConnection : IDataContext
+	public partial class DataConnection
 	{
 		/// <summary>
 		/// Returns queryable source for specified mapping class for current connection, mapped to database table or view.
@@ -31,7 +30,7 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <typeparam name="T">Mapping class type.</typeparam>
 		/// <param name="instance">Instance object for <paramref name="methodInfo"/> method or null for static method.</param>
-		/// <param name="methodInfo">Method, decorated with expression attribute, based on <see cref="LinqToDB.Sql.TableFunctionAttribute"/>.</param>
+		/// <param name="methodInfo">Method, decorated with expression attribute, based on <see cref="Sql.TableFunctionAttribute"/>.</param>
 		/// <param name="parameters">Parameters for <paramref name="methodInfo"/> method.</param>
 		/// <returns>Queryable source.</returns>
 		public ITable<T> GetTable<T>(object instance, MethodInfo methodInfo, params object?[] parameters)
@@ -40,15 +39,16 @@ namespace LinqToDB.Data
 			return DataExtensions.GetTable<T>(this, instance, methodInfo, parameters);
 		}
 
-		protected virtual SqlStatement ProcessQuery(SqlStatement statement)
+		protected virtual SqlStatement ProcessQuery(SqlStatement statement, EvaluationContext context)
 		{
 			return statement;
 		}
 
 		#region IDataContext Members
 
-		SqlProviderFlags IDataContext.SqlProviderFlags => DataProvider.SqlProviderFlags;
-		Type             IDataContext.DataReaderType   => DataProvider.DataReaderType;
+		SqlProviderFlags IDataContext.SqlProviderFlags      => DataProvider.SqlProviderFlags;
+		TableOptions     IDataContext.SupportedTableOptions => DataProvider.SupportedTableOptions;
+		Type             IDataContext.DataReaderType        => DataProvider.DataReaderType;
 
 		bool             IDataContext.CloseAfterUse    { get; set; }
 

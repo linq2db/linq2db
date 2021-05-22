@@ -1,11 +1,14 @@
 ﻿using System;
+using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Mapping;
 
 // ReSharper disable CheckNamespace
 
 namespace LinqToDB
 {
 	using Extensions;
+	using LinqToDB.Common;
 	using SqlQuery;
 
 	partial class Sql
@@ -57,11 +60,24 @@ namespace LinqToDB
 				set => Expression = value;
 			}
 
-			public override ISqlExpression GetExpression(MemberInfo member, params ISqlExpression[] args)
+			public override ISqlExpression? GetExpression(IDataContext dataContext, SelectQuery query, Expression expression, Func<Expression, ColumnDescriptor?, ISqlExpression> converter)
 			{
-				return new SqlExpression(member.GetMemberType(), Name ?? member.Name, SqlQuery.Precedence.Primary)
+				var name = Name;
+
+				if (name == null)
 				{
-					CanBeNull = GetCanBeNull(new ISqlExpression[0])
+					if (expression is MethodCallExpression mc)
+						name = mc.Method.Name;
+					else if (expression is MemberExpression me)
+						name = me.Member.Name;
+				}
+
+				if (string.IsNullOrEmpty(name))
+					throw new LinqToDBException($"Cannot retrieve property name for expression '{expression}'.");
+
+				return new SqlExpression(expression.Type, name!, SqlQuery.Precedence.Primary)
+				{
+					CanBeNull = GetCanBeNull(Array<ISqlExpression>.Empty)
 				};
 			}
 		}

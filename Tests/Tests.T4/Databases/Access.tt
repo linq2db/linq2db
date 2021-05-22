@@ -1,7 +1,7 @@
-﻿<#@ template language="C#" debug="True" hostSpecific="True"                     #>
-<#@ output extension=".generated.cs"                                            #>
-<#@ include file="..\Shared.ttinclude"                                          #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.Access.ttinclude" #>
+﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6" #>
+<#@ output extension=".generated.cs"                                                         #>
+<#@ include file="..\Shared.ttinclude"                                          once="true"  #>
+<#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.Access.ttinclude" once="true"  #>
 <#
 	NamespaceName = "AccessDataContext";
 
@@ -10,7 +10,7 @@
 
 	var solutionsPath = Host.ResolveAssemblyReference("$(SolutionDir)");
 	//LoadAccessMetadata(solutionsPath + @"\Data\", "TestData.mdb");
-	var path = $@"{solutionsPath}\Tests\Linq\bin\Debug\net46\Database\TestData.mdb";
+	var path = $@"{solutionsPath}\Tests\Linq\bin\Debug\net472\Database\TestData.mdb";
 	LoadAccessMetadata($"Provider=Microsoft.Jet.OLEDB.4.0;Data Source={path};Locale Identifier=1033;Jet OLEDB:Engine Type=5;Persist Security Info=True");
 
 	GenerateModel();

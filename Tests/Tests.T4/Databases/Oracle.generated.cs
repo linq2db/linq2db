@@ -15,6 +15,7 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Common;
+using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
@@ -22,30 +23,42 @@ namespace OracleDataContext
 {
 	public partial class XEDB : LinqToDB.Data.DataConnection
 	{
-		public ITable<ALLTYPE>               ALLTYPES               { get { return this.GetTable<ALLTYPE>(); } }
-		public ITable<BillingDevreadingtype> BillingDevreadingtypes { get { return this.GetTable<BillingDevreadingtype>(); } }
-		public ITable<BINARYDATA>            Binarydatas            { get { return this.GetTable<BINARYDATA>(); } }
-		public ITable<CHILD>                 Children               { get { return this.GetTable<CHILD>(); } }
-		public ITable<DATATYPETEST>          Datatypetests          { get { return this.GetTable<DATATYPETEST>(); } }
-		public ITable<DECIMALOVERFLOW>       Decimaloverflows       { get { return this.GetTable<DECIMALOVERFLOW>(); } }
-		public ITable<DOCTOR>                Doctors                { get { return this.GetTable<DOCTOR>(); } }
-		public ITable<GRANDCHILD>            Grandchilds            { get { return this.GetTable<GRANDCHILD>(); } }
-		public ITable<INHERITANCECHILD>      Inheritancechilds      { get { return this.GetTable<INHERITANCECHILD>(); } }
-		public ITable<INHERITANCEPARENT>     Inheritanceparents     { get { return this.GetTable<INHERITANCEPARENT>(); } }
-		public ITable<LINQDATATYPE>          LINQDATATYPES          { get { return this.GetTable<LINQDATATYPE>(); } }
-		public ITable<LONGRAWTABLE>          Longrawtables          { get { return this.GetTable<LONGRAWTABLE>(); } }
-		public ITable<PARENT>                Parents                { get { return this.GetTable<PARENT>(); } }
-		public ITable<PATIENT>               Patients               { get { return this.GetTable<PATIENT>(); } }
-		public ITable<PERSON>                People                 { get { return this.GetTable<PERSON>(); } }
-		public ITable<SEQUENCETEST>          Sequencetests          { get { return this.GetTable<SEQUENCETEST>(); } }
-		public ITable<StgTradeInformation>   StgTradeInformation    { get { return this.GetTable<StgTradeInformation>(); } }
-		public ITable<STRINGTEST>            Stringtests            { get { return this.GetTable<STRINGTEST>(); } }
-		public ITable<TEntity>               TEntities              { get { return this.GetTable<TEntity>(); } }
-		public ITable<TESTIDENTITY>          Testidentities         { get { return this.GetTable<TESTIDENTITY>(); } }
-		public ITable<TESTMERGE1>            TESTMERGE1             { get { return this.GetTable<TESTMERGE1>(); } }
-		public ITable<TESTMERGE2>            TESTMERGE2             { get { return this.GetTable<TESTMERGE2>(); } }
-		public ITable<TTestUser>             TTestUsers             { get { return this.GetTable<TTestUser>(); } }
-		public ITable<TTestUserContract>     TTestUserContracts     { get { return this.GetTable<TTestUserContract>(); } }
+		public ITable<AllType>                 AllTypes                 { get { return this.GetTable<AllType>(); } }
+		public ITable<BINARYDATA>              Binarydatas              { get { return this.GetTable<BINARYDATA>(); } }
+		public ITable<Child>                   Children                 { get { return this.GetTable<Child>(); } }
+		public ITable<DataTypeTest>            DataTypeTests            { get { return this.GetTable<DataTypeTest>(); } }
+		public ITable<DecimalOverflow>         DecimalOverflows         { get { return this.GetTable<DecimalOverflow>(); } }
+		public ITable<Doctor>                  Doctors                  { get { return this.GetTable<Doctor>(); } }
+		public ITable<GrandChild>              GrandChildren            { get { return this.GetTable<GrandChild>(); } }
+		public ITable<InheritanceChild>        InheritanceChildren      { get { return this.GetTable<InheritanceChild>(); } }
+		public ITable<InheritanceParent>       InheritanceParents       { get { return this.GetTable<InheritanceParent>(); } }
+		public ITable<Issue2564Table>          Issue2564Tables          { get { return this.GetTable<Issue2564Table>(); } }
+		public ITable<LinqDataType>            LinqDataTypes            { get { return this.GetTable<LinqDataType>(); } }
+		public ITable<LINQDATATYPESBC>         Linqdatatypesbcs         { get { return this.GetTable<LINQDATATYPESBC>(); } }
+		public ITable<LongRawTable>            LongRawTables            { get { return this.GetTable<LongRawTable>(); } }
+		public ITable<OracleBulkCopyTable>     OracleBulkCopyTables     { get { return this.GetTable<OracleBulkCopyTable>(); } }
+		public ITable<Parent>                  Parents                  { get { return this.GetTable<Parent>(); } }
+		public ITable<Patient>                 Patients                 { get { return this.GetTable<Patient>(); } }
+		public ITable<Person>                  People                   { get { return this.GetTable<Person>(); } }
+		/// <summary>
+		/// This is matview
+		/// </summary>
+		public ITable<SchemaTestMatView>       SchemaTestMatViews       { get { return this.GetTable<SchemaTestMatView>(); } }
+		/// <summary>
+		/// This is table
+		/// </summary>
+		public ITable<SchemaTestTable>         SchemaTestTables         { get { return this.GetTable<SchemaTestTable>(); } }
+		public ITable<SchemaTestView>          SchemaTestViews          { get { return this.GetTable<SchemaTestView>(); } }
+		public ITable<SEQUENCETEST>            Sequencetests            { get { return this.GetTable<SEQUENCETEST>(); } }
+		public ITable<StgTradeInformation>     StgTradeInformation      { get { return this.GetTable<StgTradeInformation>(); } }
+		public ITable<StringTest>              StringTests              { get { return this.GetTable<StringTest>(); } }
+		public ITable<TEntity>                 TEntities                { get { return this.GetTable<TEntity>(); } }
+		public ITable<TestIdentity>            TestIdentities           { get { return this.GetTable<TestIdentity>(); } }
+		public ITable<TestMerge1>              TestMerge1               { get { return this.GetTable<TestMerge1>(); } }
+		public ITable<TestMerge2>              TestMerge2               { get { return this.GetTable<TestMerge2>(); } }
+		public ITable<TestSequenceSchemaTable> TestSequenceSchemaTables { get { return this.GetTable<TestSequenceSchemaTable>(); } }
+		public ITable<TTestUser>               TTestUsers               { get { return this.GetTable<TTestUser>(); } }
+		public ITable<TTestUserContract>       TTestUserContracts       { get { return this.GetTable<TTestUserContract>(); } }
 
 		public XEDB()
 		{
@@ -60,345 +73,415 @@ namespace OracleDataContext
 			InitMappingSchema();
 		}
 
+		public XEDB(LinqToDbConnectionOptions options)
+			: base(options)
+		{
+			InitDataContext();
+			InitMappingSchema();
+		}
+
 		partial void InitDataContext  ();
 		partial void InitMappingSchema();
 	}
 
-	[Table(Schema="MANAGED", Name="ALLTYPES")]
-	public partial class ALLTYPE
+	[Table(Schema="MANAGED", Name="AllTypes")]
+	public partial class AllType
 	{
-		[Column(DbType="NUMBER",                            DataType=DataType.Decimal,        Length=22, Scale=0),               PrimaryKey,  NotNull] public decimal         ID                     { get; set; } // NUMBER
-		[Column(DbType="NUMBER (20,0)",                     DataType=DataType.Decimal,        Length=22, Precision=20, Scale=0),    Nullable         ] public decimal?        BIGINTDATATYPE         { get; set; } // NUMBER (20,0)
-		[Column(DbType="NUMBER",                            DataType=DataType.Decimal,        Length=22, Scale=0),                  Nullable         ] public decimal?        NUMERICDATATYPE        { get; set; } // NUMBER
-		[Column(DbType="NUMBER (1,0)",                      DataType=DataType.Decimal,        Length=22, Precision=1, Scale=0),     Nullable         ] public sbyte?          BITDATATYPE            { get; set; } // NUMBER (1,0)
-		[Column(DbType="NUMBER (5,0)",                      DataType=DataType.Decimal,        Length=22, Precision=5, Scale=0),     Nullable         ] public int?            SMALLINTDATATYPE       { get; set; } // NUMBER (5,0)
-		[Column(DbType="NUMBER",                            DataType=DataType.Decimal,        Length=22, Scale=6),                  Nullable         ] public decimal?        DECIMALDATATYPE        { get; set; } // NUMBER
-		[Column(DbType="NUMBER (10,4)",                     DataType=DataType.Decimal,        Length=22, Precision=10, Scale=4),    Nullable         ] public decimal?        SMALLMONEYDATATYPE     { get; set; } // NUMBER (10,4)
-		[Column(DbType="NUMBER (10,0)",                     DataType=DataType.Decimal,        Length=22, Precision=10, Scale=0),    Nullable         ] public long?           INTDATATYPE            { get; set; } // NUMBER (10,0)
-		[Column(DbType="NUMBER (3,0)",                      DataType=DataType.Decimal,        Length=22, Precision=3, Scale=0),     Nullable         ] public short?          TINYINTDATATYPE        { get; set; } // NUMBER (3,0)
-		[Column(DbType="NUMBER",                            DataType=DataType.Decimal,        Length=22),                           Nullable         ] public decimal?        MONEYDATATYPE          { get; set; } // NUMBER
-		[Column(DbType="BINARY_DOUBLE",                     DataType=DataType.Double,         Length=8),                            Nullable         ] public double?         FLOATDATATYPE          { get; set; } // BINARY_DOUBLE
-		[Column(DbType="BINARY_FLOAT",                      DataType=DataType.Single,         Length=4),                            Nullable         ] public float?          REALDATATYPE           { get; set; } // BINARY_FLOAT
-		[Column(DbType="DATE",                              DataType=DataType.DateTime,       Length=7),                            Nullable         ] public DateTime?       DATETIMEDATATYPE       { get; set; } // DATE
-		[Column(DbType="TIMESTAMP(6)",                      DataType=DataType.DateTime2,      Length=11, Scale=6),                  Nullable         ] public DateTime?       DATETIME2DATATYPE      { get; set; } // TIMESTAMP(6)
-		[Column(DbType="TIMESTAMP(6) WITH TIME ZONE",       DataType=DataType.DateTimeOffset, Length=13, Scale=6),                  Nullable         ] public DateTimeOffset? DATETIMEOFFSETDATATYPE { get; set; } // TIMESTAMP(6) WITH TIME ZONE
-		[Column(DbType="TIMESTAMP(6) WITH LOCAL TIME ZONE", DataType=DataType.DateTimeOffset, Length=11, Scale=6),                  Nullable         ] public DateTimeOffset? LOCALZONEDATATYPE      { get; set; } // TIMESTAMP(6) WITH LOCAL TIME ZONE
-		[Column(DbType="CHAR(1)",                           DataType=DataType.Char,           Length=1),                            Nullable         ] public char?           CHARDATATYPE           { get; set; } // CHAR(1)
-		[Column(DbType="CHAR(20)",                          DataType=DataType.Char,           Length=20),                           Nullable         ] public string?         CHAR20DATATYPE         { get; set; } // CHAR(20)
-		[Column(DbType="VARCHAR2(20)",                      DataType=DataType.VarChar,        Length=20),                           Nullable         ] public string?         VARCHARDATATYPE        { get; set; } // VARCHAR2(20)
-		[Column(DbType="CLOB",                              DataType=DataType.Text,           Length=4000),                         Nullable         ] public string?         TEXTDATATYPE           { get; set; } // CLOB
-		[Column(DbType="NCHAR(20)",                         DataType=DataType.NChar,          Length=20),                           Nullable         ] public string?         NCHARDATATYPE          { get; set; } // NCHAR(20)
-		[Column(DbType="NVARCHAR2(20)",                     DataType=DataType.NVarChar,       Length=20),                           Nullable         ] public string?         NVARCHARDATATYPE       { get; set; } // NVARCHAR2(20)
-		[Column(DbType="NCLOB",                             DataType=DataType.NText,          Length=4000),                         Nullable         ] public string?         NTEXTDATATYPE          { get; set; } // NCLOB
-		[Column(DbType="BLOB",                              DataType=DataType.Blob,           Length=4000),                         Nullable         ] public byte[]?         BINARYDATATYPE         { get; set; } // BLOB
-		[Column(DbType="BFILE",                             DataType=DataType.VarBinary,      Length=530),                          Nullable         ] public byte[]?         BFILEDATATYPE          { get; set; } // BFILE
-		[Column(DbType="RAW(16)",                           DataType=DataType.Binary,         Length=16),                           Nullable         ] public byte[]?         GUIDDATATYPE           { get; set; } // RAW(16)
-		[Column(DbType="LONG",                              DataType=DataType.Long,           Length=0),                            Nullable         ] public string?         LONGDATATYPE           { get; set; } // LONG
-		[Column(DbType="URITYPE",                           DataType=DataType.Undefined,      Length=256),                          Nullable         ] public object?         URIDATATYPE            { get; set; } // URITYPE
-		[Column(DbType="XMLTYPE",                           DataType=DataType.Xml,            Length=2000),                         Nullable         ] public string?         XMLDATATYPE            { get; set; } // XMLTYPE
-	}
-
-	[Table(Schema="MANAGED", Name="BILLING_DEVREADINGTYPE")]
-	public partial class BillingDevreadingtype
-	{
-		[Column(DbType="NUMBER",       DataType=DataType.Decimal, Length=22, Scale=0), PrimaryKey, NotNull] public decimal ID             { get; set; } // NUMBER
-		[Column(DbType="NUMBER",       DataType=DataType.Decimal, Length=22, Scale=0),             NotNull] public decimal DEVTYPEID      { get; set; } // NUMBER
-		[Column(DbType="VARCHAR2(50)", DataType=DataType.VarChar, Length=50),                      NotNull] public string  NAME           { get; set; } = null!; // VARCHAR2(50)
-		[Column(DbType="NUMBER",       DataType=DataType.Decimal, Length=22, Scale=0),             NotNull] public decimal RESPONSIBILITY { get; set; } // NUMBER
+		[Column(                          DbType="NUMBER",                            DataType=LinqToDB.DataType.Decimal,        Length=22, Scale=0),               PrimaryKey,  NotNull] public decimal         ID                     { get; set; } // NUMBER
+		[Column("bigintDataType",         DbType="NUMBER (20,0)",                     DataType=LinqToDB.DataType.Decimal,        Length=22, Precision=20, Scale=0),    Nullable         ] public decimal?        BigintDataType         { get; set; } // NUMBER (20,0)
+		[Column("numericDataType",        DbType="NUMBER",                            DataType=LinqToDB.DataType.Decimal,        Length=22, Scale=0),                  Nullable         ] public decimal?        NumericDataType        { get; set; } // NUMBER
+		[Column("bitDataType",            DbType="NUMBER (1,0)",                      DataType=LinqToDB.DataType.Decimal,        Length=22, Precision=1, Scale=0),     Nullable         ] public sbyte?          BitDataType            { get; set; } // NUMBER (1,0)
+		[Column("smallintDataType",       DbType="NUMBER (5,0)",                      DataType=LinqToDB.DataType.Decimal,        Length=22, Precision=5, Scale=0),     Nullable         ] public int?            SmallintDataType       { get; set; } // NUMBER (5,0)
+		[Column("decimalDataType",        DbType="NUMBER",                            DataType=LinqToDB.DataType.Decimal,        Length=22, Scale=6),                  Nullable         ] public decimal?        DecimalDataType        { get; set; } // NUMBER
+		[Column("smallmoneyDataType",     DbType="NUMBER (10,4)",                     DataType=LinqToDB.DataType.Decimal,        Length=22, Precision=10, Scale=4),    Nullable         ] public decimal?        SmallmoneyDataType     { get; set; } // NUMBER (10,4)
+		[Column("intDataType",            DbType="NUMBER (10,0)",                     DataType=LinqToDB.DataType.Decimal,        Length=22, Precision=10, Scale=0),    Nullable         ] public long?           IntDataType            { get; set; } // NUMBER (10,0)
+		[Column("tinyintDataType",        DbType="NUMBER (3,0)",                      DataType=LinqToDB.DataType.Decimal,        Length=22, Precision=3, Scale=0),     Nullable         ] public short?          TinyintDataType        { get; set; } // NUMBER (3,0)
+		[Column("moneyDataType",          DbType="NUMBER",                            DataType=LinqToDB.DataType.Decimal,        Length=22),                           Nullable         ] public decimal?        MoneyDataType          { get; set; } // NUMBER
+		[Column("floatDataType",          DbType="BINARY_DOUBLE",                     DataType=LinqToDB.DataType.Double,         Length=8),                            Nullable         ] public double?         FloatDataType          { get; set; } // BINARY_DOUBLE
+		[Column("realDataType",           DbType="BINARY_FLOAT",                      DataType=LinqToDB.DataType.Single,         Length=4),                            Nullable         ] public float?          RealDataType           { get; set; } // BINARY_FLOAT
+		[Column("datetimeDataType",       DbType="DATE",                              DataType=LinqToDB.DataType.DateTime,       Length=7),                            Nullable         ] public DateTime?       DatetimeDataType       { get; set; } // DATE
+		[Column("datetime2DataType",      DbType="TIMESTAMP(6)",                      DataType=LinqToDB.DataType.DateTime2,      Length=11, Scale=6),                  Nullable         ] public DateTime?       Datetime2DataType      { get; set; } // TIMESTAMP(6)
+		[Column("datetimeoffsetDataType", DbType="TIMESTAMP(6) WITH TIME ZONE",       DataType=LinqToDB.DataType.DateTimeOffset, Length=13, Scale=6),                  Nullable         ] public DateTimeOffset? DatetimeoffsetDataType { get; set; } // TIMESTAMP(6) WITH TIME ZONE
+		[Column("localZoneDataType",      DbType="TIMESTAMP(6) WITH LOCAL TIME ZONE", DataType=LinqToDB.DataType.DateTimeOffset, Length=11, Scale=6),                  Nullable         ] public DateTimeOffset? LocalZoneDataType      { get; set; } // TIMESTAMP(6) WITH LOCAL TIME ZONE
+		[Column("charDataType",           DbType="CHAR(1)",                           DataType=LinqToDB.DataType.Char,           Length=1),                            Nullable         ] public char?           CharDataType           { get; set; } // CHAR(1)
+		[Column("char20DataType",         DbType="CHAR(20)",                          DataType=LinqToDB.DataType.Char,           Length=20),                           Nullable         ] public string?         Char20DataType         { get; set; } // CHAR(20)
+		[Column("varcharDataType",        DbType="VARCHAR2(20)",                      DataType=LinqToDB.DataType.VarChar,        Length=20),                           Nullable         ] public string?         VarcharDataType        { get; set; } // VARCHAR2(20)
+		[Column("textDataType",           DbType="CLOB",                              DataType=LinqToDB.DataType.Text,           Length=4000),                         Nullable         ] public string?         TextDataType           { get; set; } // CLOB
+		[Column("ncharDataType",          DbType="NCHAR(20)",                         DataType=LinqToDB.DataType.NChar,          Length=20),                           Nullable         ] public string?         NcharDataType          { get; set; } // NCHAR(20)
+		[Column("nvarcharDataType",       DbType="NVARCHAR2(20)",                     DataType=LinqToDB.DataType.NVarChar,       Length=20),                           Nullable         ] public string?         NvarcharDataType       { get; set; } // NVARCHAR2(20)
+		[Column("ntextDataType",          DbType="NCLOB",                             DataType=LinqToDB.DataType.NText,          Length=4000),                         Nullable         ] public string?         NtextDataType          { get; set; } // NCLOB
+		[Column("binaryDataType",         DbType="BLOB",                              DataType=LinqToDB.DataType.Blob,           Length=4000),                         Nullable         ] public byte[]?         BinaryDataType         { get; set; } // BLOB
+		[Column("bfileDataType",          DbType="BFILE",                             DataType=LinqToDB.DataType.VarBinary,      Length=530),                          Nullable         ] public byte[]?         BfileDataType          { get; set; } // BFILE
+		[Column("guidDataType",           DbType="RAW(16)",                           DataType=LinqToDB.DataType.Binary,         Length=16),                           Nullable         ] public byte[]?         GuidDataType           { get; set; } // RAW(16)
+		[Column("longDataType",           DbType="LONG",                              DataType=LinqToDB.DataType.Long,           Length=0),                            Nullable         ] public string?         LongDataType           { get; set; } // LONG
+		[Column("uriDataType",            DbType="URITYPE",                           DataType=LinqToDB.DataType.Undefined,      Length=256),                          Nullable         ] public object?         UriDataType            { get; set; } // URITYPE
+		[Column("xmlDataType",            DbType="XMLTYPE",                           DataType=LinqToDB.DataType.Xml,            Length=2000),                         Nullable         ] public string?         XmlDataType            { get; set; } // XMLTYPE
 	}
 
 	[Table(Schema="MANAGED", Name="BINARYDATA")]
 	public partial class BINARYDATA
 	{
-		[Column(DbType="NUMBER",       DataType=DataType.Decimal,   Length=22),          PrimaryKey, NotNull] public decimal  BINARYDATAID { get; set; } // NUMBER
-		[Column(DbType="TIMESTAMP(6)", DataType=DataType.DateTime2, Length=11, Scale=6),             NotNull] public DateTime STAMP        { get; set; } // TIMESTAMP(6)
-		[Column(DbType="BLOB",         DataType=DataType.Blob,      Length=4000),                    NotNull] public byte[]   DATA         { get; set; } = null!; // BLOB
+		[Column(DbType="NUMBER",       DataType=LinqToDB.DataType.Decimal,   Length=22),          PrimaryKey, NotNull] public decimal  BINARYDATAID { get; set; } // NUMBER
+		[Column(DbType="TIMESTAMP(6)", DataType=LinqToDB.DataType.DateTime2, Length=11, Scale=6),             NotNull] public DateTime STAMP        { get; set; } // TIMESTAMP(6)
+		[Column(DbType="BLOB",         DataType=LinqToDB.DataType.Blob,      Length=4000),                    NotNull] public byte[]   DATA         { get; set; } = null!; // BLOB
 	}
 
-	[Table(Schema="MANAGED", Name="CHILD")]
-	public partial class CHILD
+	[Table(Schema="MANAGED", Name="Child")]
+	public partial class Child
 	{
-		[Column(DbType="NUMBER", DataType=DataType.Decimal, Length=22, Scale=0), Nullable] public decimal? PARENTID { get; set; } // NUMBER
-		[Column(DbType="NUMBER", DataType=DataType.Decimal, Length=22, Scale=0), Nullable] public decimal? CHILDID  { get; set; } // NUMBER
+		[Column(DbType="NUMBER", DataType=LinqToDB.DataType.Decimal, Length=22, Scale=0), Nullable] public decimal? ParentID { get; set; } // NUMBER
+		[Column(DbType="NUMBER", DataType=LinqToDB.DataType.Decimal, Length=22, Scale=0), Nullable] public decimal? ChildID  { get; set; } // NUMBER
 	}
 
-	[Table(Schema="MANAGED", Name="DATATYPETEST")]
-	public partial class DATATYPETEST
+	[Table(Schema="MANAGED", Name="DataTypeTest")]
+	public partial class DataTypeTest
 	{
-		[Column(             DbType="NUMBER",        DataType=DataType.Decimal,  Length=22, Scale=0),               PrimaryKey,  NotNull] public decimal   DATATYPEID { get; set; } // NUMBER
-		[Column("BINARY_",   DbType="RAW(50)",       DataType=DataType.Binary,   Length=50),                           Nullable         ] public byte[]?   Binary     { get; set; } // RAW(50)
-		[Column("BOOLEAN_",  DbType="NUMBER (1,0)",  DataType=DataType.Decimal,  Length=22, Precision=1, Scale=0),     Nullable         ] public sbyte?    Boolean    { get; set; } // NUMBER (1,0)
-		[Column("BYTE_",     DbType="NUMBER (3,0)",  DataType=DataType.Decimal,  Length=22, Precision=3, Scale=0),     Nullable         ] public short?    Byte       { get; set; } // NUMBER (3,0)
-		[Column("BYTES_",    DbType="BLOB",          DataType=DataType.Blob,     Length=4000),                         Nullable         ] public byte[]?   Bytes      { get; set; } // BLOB
-		[Column("CHAR_",     DbType="NCHAR(1)",      DataType=DataType.NChar,    Length=1),                            Nullable         ] public char?     Char       { get; set; } // NCHAR(1)
-		[Column("DATETIME_", DbType="DATE",          DataType=DataType.DateTime, Length=7),                            Nullable         ] public DateTime? Datetime   { get; set; } // DATE
-		[Column("DECIMAL_",  DbType="NUMBER (19,5)", DataType=DataType.Decimal,  Length=22, Precision=19, Scale=5),    Nullable         ] public decimal?  Decimal    { get; set; } // NUMBER (19,5)
-		[Column("DOUBLE_",   DbType="FLOAT(126)",    DataType=DataType.Decimal,  Length=22, Precision=126),            Nullable         ] public decimal?  Double     { get; set; } // FLOAT(126)
-		[Column("GUID_",     DbType="RAW(16)",       DataType=DataType.Binary,   Length=16),                           Nullable         ] public byte[]?   Guid       { get; set; } // RAW(16)
-		[Column("INT16_",    DbType="NUMBER (5,0)",  DataType=DataType.Decimal,  Length=22, Precision=5, Scale=0),     Nullable         ] public int?      INT16      { get; set; } // NUMBER (5,0)
-		[Column("INT32_",    DbType="NUMBER (10,0)", DataType=DataType.Decimal,  Length=22, Precision=10, Scale=0),    Nullable         ] public long?     INT32      { get; set; } // NUMBER (10,0)
-		[Column("INT64_",    DbType="NUMBER (20,0)", DataType=DataType.Decimal,  Length=22, Precision=20, Scale=0),    Nullable         ] public decimal?  INT64      { get; set; } // NUMBER (20,0)
-		[Column("MONEY_",    DbType="NUMBER",        DataType=DataType.Decimal,  Length=22),                           Nullable         ] public decimal?  Money      { get; set; } // NUMBER
-		[Column("SBYTE_",    DbType="NUMBER (3,0)",  DataType=DataType.Decimal,  Length=22, Precision=3, Scale=0),     Nullable         ] public short?    Sbyte      { get; set; } // NUMBER (3,0)
-		[Column("SINGLE_",   DbType="FLOAT(126)",    DataType=DataType.Decimal,  Length=22, Precision=126),            Nullable         ] public decimal?  Single     { get; set; } // FLOAT(126)
-		[Column("STREAM_",   DbType="BLOB",          DataType=DataType.Blob,     Length=4000),                         Nullable         ] public byte[]?   Stream     { get; set; } // BLOB
-		[Column("STRING_",   DbType="NVARCHAR2(50)", DataType=DataType.NVarChar, Length=50),                           Nullable         ] public string?   String     { get; set; } // NVARCHAR2(50)
-		[Column("UINT16_",   DbType="NUMBER (5,0)",  DataType=DataType.Decimal,  Length=22, Precision=5, Scale=0),     Nullable         ] public int?      UINT16     { get; set; } // NUMBER (5,0)
-		[Column("UINT32_",   DbType="NUMBER (10,0)", DataType=DataType.Decimal,  Length=22, Precision=10, Scale=0),    Nullable         ] public long?     UINT32     { get; set; } // NUMBER (10,0)
-		[Column("UINT64_",   DbType="NUMBER (20,0)", DataType=DataType.Decimal,  Length=22, Precision=20, Scale=0),    Nullable         ] public decimal?  UINT64     { get; set; } // NUMBER (20,0)
-		[Column("XML_",      DbType="XMLTYPE",       DataType=DataType.Xml,      Length=2000),                         Nullable         ] public string?   Xml        { get; set; } // XMLTYPE
+		[Column(             DbType="NUMBER",        DataType=LinqToDB.DataType.Decimal,  Length=22, Scale=0),               PrimaryKey,  NotNull] public decimal   DataTypeID { get; set; } // NUMBER
+		[Column("Binary_",   DbType="RAW(50)",       DataType=LinqToDB.DataType.Binary,   Length=50),                           Nullable         ] public byte[]?   Binary     { get; set; } // RAW(50)
+		[Column("Boolean_",  DbType="NUMBER (1,0)",  DataType=LinqToDB.DataType.Decimal,  Length=22, Precision=1, Scale=0),     Nullable         ] public sbyte?    Boolean    { get; set; } // NUMBER (1,0)
+		[Column("Byte_",     DbType="NUMBER (3,0)",  DataType=LinqToDB.DataType.Decimal,  Length=22, Precision=3, Scale=0),     Nullable         ] public short?    Byte       { get; set; } // NUMBER (3,0)
+		[Column("Bytes_",    DbType="BLOB",          DataType=LinqToDB.DataType.Blob,     Length=4000),                         Nullable         ] public byte[]?   Bytes      { get; set; } // BLOB
+		[Column("Char_",     DbType="NCHAR(1)",      DataType=LinqToDB.DataType.NChar,    Length=1),                            Nullable         ] public char?     Char       { get; set; } // NCHAR(1)
+		[Column("DateTime_", DbType="DATE",          DataType=LinqToDB.DataType.DateTime, Length=7),                            Nullable         ] public DateTime? DateTime   { get; set; } // DATE
+		[Column("Decimal_",  DbType="NUMBER (19,5)", DataType=LinqToDB.DataType.Decimal,  Length=22, Precision=19, Scale=5),    Nullable         ] public decimal?  Decimal    { get; set; } // NUMBER (19,5)
+		[Column("Double_",   DbType="FLOAT(126)",    DataType=LinqToDB.DataType.Decimal,  Length=22, Precision=126),            Nullable         ] public decimal?  Double     { get; set; } // FLOAT(126)
+		[Column("Guid_",     DbType="RAW(16)",       DataType=LinqToDB.DataType.Binary,   Length=16),                           Nullable         ] public byte[]?   Guid       { get; set; } // RAW(16)
+		[Column("Int16_",    DbType="NUMBER (5,0)",  DataType=LinqToDB.DataType.Decimal,  Length=22, Precision=5, Scale=0),     Nullable         ] public int?      Int16      { get; set; } // NUMBER (5,0)
+		[Column("Int32_",    DbType="NUMBER (10,0)", DataType=LinqToDB.DataType.Decimal,  Length=22, Precision=10, Scale=0),    Nullable         ] public long?     Int32      { get; set; } // NUMBER (10,0)
+		[Column("Int64_",    DbType="NUMBER (20,0)", DataType=LinqToDB.DataType.Decimal,  Length=22, Precision=20, Scale=0),    Nullable         ] public decimal?  Int64      { get; set; } // NUMBER (20,0)
+		[Column("Money_",    DbType="NUMBER",        DataType=LinqToDB.DataType.Decimal,  Length=22),                           Nullable         ] public decimal?  Money      { get; set; } // NUMBER
+		[Column("SByte_",    DbType="NUMBER (3,0)",  DataType=LinqToDB.DataType.Decimal,  Length=22, Precision=3, Scale=0),     Nullable         ] public short?    SByte      { get; set; } // NUMBER (3,0)
+		[Column("Single_",   DbType="FLOAT(126)",    DataType=LinqToDB.DataType.Decimal,  Length=22, Precision=126),            Nullable         ] public decimal?  Single     { get; set; } // FLOAT(126)
+		[Column("Stream_",   DbType="BLOB",          DataType=LinqToDB.DataType.Blob,     Length=4000),                         Nullable         ] public byte[]?   Stream     { get; set; } // BLOB
+		[Column("String_",   DbType="NVARCHAR2(50)", DataType=LinqToDB.DataType.NVarChar, Length=50),                           Nullable         ] public string?   String     { get; set; } // NVARCHAR2(50)
+		[Column("UInt16_",   DbType="NUMBER (5,0)",  DataType=LinqToDB.DataType.Decimal,  Length=22, Precision=5, Scale=0),     Nullable         ] public int?      UInt16     { get; set; } // NUMBER (5,0)
+		[Column("UInt32_",   DbType="NUMBER (10,0)", DataType=LinqToDB.DataType.Decimal,  Length=22, Precision=10, Scale=0),    Nullable         ] public long?     UInt32     { get; set; } // NUMBER (10,0)
+		[Column("UInt64_",   DbType="NUMBER (20,0)", DataType=LinqToDB.DataType.Decimal,  Length=22, Precision=20, Scale=0),    Nullable         ] public decimal?  UInt64     { get; set; } // NUMBER (20,0)
+		[Column("Xml_",      DbType="XMLTYPE",       DataType=LinqToDB.DataType.Xml,      Length=2000),                         Nullable         ] public string?   Xml        { get; set; } // XMLTYPE
 	}
 
-	[Table(Schema="MANAGED", Name="DECIMALOVERFLOW")]
-	public partial class DECIMALOVERFLOW
+	[Table(Schema="MANAGED", Name="DecimalOverflow")]
+	public partial class DecimalOverflow
 	{
-		[Column(DbType="NUMBER (38,20)", DataType=DataType.Decimal, Length=22, Precision=38, Scale=20), Nullable] public decimal? DECIMAL1 { get; set; } // NUMBER (38,20)
-		[Column(DbType="NUMBER (31,2)",  DataType=DataType.Decimal, Length=22, Precision=31, Scale=2),  Nullable] public decimal? DECIMAL2 { get; set; } // NUMBER (31,2)
-		[Column(DbType="NUMBER (38,36)", DataType=DataType.Decimal, Length=22, Precision=38, Scale=36), Nullable] public decimal? DECIMAL3 { get; set; } // NUMBER (38,36)
-		[Column(DbType="NUMBER (29,0)",  DataType=DataType.Decimal, Length=22, Precision=29, Scale=0),  Nullable] public decimal? DECIMAL4 { get; set; } // NUMBER (29,0)
-		[Column(DbType="NUMBER (38,38)", DataType=DataType.Decimal, Length=22, Precision=38, Scale=38), Nullable] public decimal? DECIMAL5 { get; set; } // NUMBER (38,38)
+		[Column(DbType="NUMBER (38,20)", DataType=LinqToDB.DataType.Decimal, Length=22, Precision=38, Scale=20), Nullable] public decimal? Decimal1 { get; set; } // NUMBER (38,20)
+		[Column(DbType="NUMBER (31,2)",  DataType=LinqToDB.DataType.Decimal, Length=22, Precision=31, Scale=2),  Nullable] public decimal? Decimal2 { get; set; } // NUMBER (31,2)
+		[Column(DbType="NUMBER (38,36)", DataType=LinqToDB.DataType.Decimal, Length=22, Precision=38, Scale=36), Nullable] public decimal? Decimal3 { get; set; } // NUMBER (38,36)
+		[Column(DbType="NUMBER (29,0)",  DataType=LinqToDB.DataType.Decimal, Length=22, Precision=29, Scale=0),  Nullable] public decimal? Decimal4 { get; set; } // NUMBER (29,0)
+		[Column(DbType="NUMBER (38,38)", DataType=LinqToDB.DataType.Decimal, Length=22, Precision=38, Scale=38), Nullable] public decimal? Decimal5 { get; set; } // NUMBER (38,38)
 	}
 
-	[Table(Schema="MANAGED", Name="DOCTOR")]
-	public partial class DOCTOR
+	[Table(Schema="MANAGED", Name="Doctor")]
+	public partial class Doctor
 	{
-		[Column(DbType="NUMBER",        DataType=DataType.Decimal,  Length=22), PrimaryKey, NotNull] public decimal PERSONID { get; set; } // NUMBER
-		[Column(DbType="NVARCHAR2(50)", DataType=DataType.NVarChar, Length=50),             NotNull] public string  TAXONOMY { get; set; } = null!; // NVARCHAR2(50)
+		[Column(DbType="NUMBER",        DataType=LinqToDB.DataType.Decimal,  Length=22), PrimaryKey, NotNull] public decimal PersonID { get; set; } // NUMBER
+		[Column(DbType="NVARCHAR2(50)", DataType=LinqToDB.DataType.NVarChar, Length=50),             NotNull] public string  Taxonomy { get; set; } = null!; // NVARCHAR2(50)
 
 		#region Associations
 
 		/// <summary>
-		/// FK_DOCTOR_PERSON
+		/// Fk_Doctor_Person
 		/// </summary>
-		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_DOCTOR_PERSON", BackReferenceName="DOCTOR")]
-		public PERSON PERSON { get; set; } = null!;
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="Fk_Doctor_Person", BackReferenceName="FkDoctor")]
+		public Person Person { get; set; } = null!;
 
 		#endregion
 	}
 
-	[Table(Schema="MANAGED", Name="GRANDCHILD")]
-	public partial class GRANDCHILD
+	[Table(Schema="MANAGED", Name="GrandChild")]
+	public partial class GrandChild
 	{
-		[Column(DbType="NUMBER", DataType=DataType.Decimal, Length=22, Scale=0), Nullable] public decimal? PARENTID     { get; set; } // NUMBER
-		[Column(DbType="NUMBER", DataType=DataType.Decimal, Length=22, Scale=0), Nullable] public decimal? CHILDID      { get; set; } // NUMBER
-		[Column(DbType="NUMBER", DataType=DataType.Decimal, Length=22, Scale=0), Nullable] public decimal? GRANDCHILDID { get; set; } // NUMBER
+		[Column(DbType="NUMBER", DataType=LinqToDB.DataType.Decimal, Length=22, Scale=0), Nullable] public decimal? ParentID     { get; set; } // NUMBER
+		[Column(DbType="NUMBER", DataType=LinqToDB.DataType.Decimal, Length=22, Scale=0), Nullable] public decimal? ChildID      { get; set; } // NUMBER
+		[Column(DbType="NUMBER", DataType=LinqToDB.DataType.Decimal, Length=22, Scale=0), Nullable] public decimal? GrandChildID { get; set; } // NUMBER
 	}
 
-	[Table(Schema="MANAGED", Name="INHERITANCECHILD")]
-	public partial class INHERITANCECHILD
+	[Table(Schema="MANAGED", Name="InheritanceChild")]
+	public partial class InheritanceChild
 	{
-		[Column(DbType="NUMBER",        DataType=DataType.Decimal,  Length=22), PrimaryKey,  NotNull] public decimal  INHERITANCECHILDID  { get; set; } // NUMBER
-		[Column(DbType="NUMBER",        DataType=DataType.Decimal,  Length=22),              NotNull] public decimal  INHERITANCEPARENTID { get; set; } // NUMBER
-		[Column(DbType="NUMBER",        DataType=DataType.Decimal,  Length=22),    Nullable         ] public decimal? TYPEDISCRIMINATOR   { get; set; } // NUMBER
-		[Column(DbType="NVARCHAR2(50)", DataType=DataType.NVarChar, Length=50),    Nullable         ] public string?  NAME                { get; set; } // NVARCHAR2(50)
+		[Column(DbType="NUMBER",        DataType=LinqToDB.DataType.Decimal,  Length=22), PrimaryKey,  NotNull] public decimal  InheritanceChildId  { get; set; } // NUMBER
+		[Column(DbType="NUMBER",        DataType=LinqToDB.DataType.Decimal,  Length=22),              NotNull] public decimal  InheritanceParentId { get; set; } // NUMBER
+		[Column(DbType="NUMBER",        DataType=LinqToDB.DataType.Decimal,  Length=22),    Nullable         ] public decimal? TypeDiscriminator   { get; set; } // NUMBER
+		[Column(DbType="NVARCHAR2(50)", DataType=LinqToDB.DataType.NVarChar, Length=50),    Nullable         ] public string?  Name                { get; set; } // NVARCHAR2(50)
 	}
 
-	[Table(Schema="MANAGED", Name="INHERITANCEPARENT")]
-	public partial class INHERITANCEPARENT
+	[Table(Schema="MANAGED", Name="InheritanceParent")]
+	public partial class InheritanceParent
 	{
-		[Column(DbType="NUMBER",        DataType=DataType.Decimal,  Length=22), PrimaryKey,  NotNull] public decimal  INHERITANCEPARENTID { get; set; } // NUMBER
-		[Column(DbType="NUMBER",        DataType=DataType.Decimal,  Length=22),    Nullable         ] public decimal? TYPEDISCRIMINATOR   { get; set; } // NUMBER
-		[Column(DbType="NVARCHAR2(50)", DataType=DataType.NVarChar, Length=50),    Nullable         ] public string?  NAME                { get; set; } // NVARCHAR2(50)
+		[Column(DbType="NUMBER",        DataType=LinqToDB.DataType.Decimal,  Length=22), PrimaryKey,  NotNull] public decimal  InheritanceParentId { get; set; } // NUMBER
+		[Column(DbType="NUMBER",        DataType=LinqToDB.DataType.Decimal,  Length=22),    Nullable         ] public decimal? TypeDiscriminator   { get; set; } // NUMBER
+		[Column(DbType="NVARCHAR2(50)", DataType=LinqToDB.DataType.NVarChar, Length=50),    Nullable         ] public string?  Name                { get; set; } // NVARCHAR2(50)
 	}
 
-	[Table(Schema="MANAGED", Name="LINQDATATYPES")]
-	public partial class LINQDATATYPE
+	[Table(Schema="MANAGED", Name="Issue2564Table")]
+	public partial class Issue2564Table
 	{
-		[Column(DbType="NUMBER",        DataType=DataType.Decimal,   Length=22, Scale=0),               Nullable] public decimal?  ID             { get; set; } // NUMBER
-		[Column(DbType="NUMBER (10,4)", DataType=DataType.Decimal,   Length=22, Precision=10, Scale=4), Nullable] public decimal?  MONEYVALUE     { get; set; } // NUMBER (10,4)
-		[Column(DbType="TIMESTAMP(6)",  DataType=DataType.DateTime2, Length=11, Scale=6),               Nullable] public DateTime? DATETIMEVALUE  { get; set; } // TIMESTAMP(6)
-		[Column(DbType="TIMESTAMP(6)",  DataType=DataType.DateTime2, Length=11, Scale=6),               Nullable] public DateTime? DATETIMEVALUE2 { get; set; } // TIMESTAMP(6)
-		[Column(DbType="NUMBER",        DataType=DataType.Decimal,   Length=22, Scale=0),               Nullable] public decimal?  BOOLVALUE      { get; set; } // NUMBER
-		[Column(DbType="RAW(16)",       DataType=DataType.Binary,    Length=16),                        Nullable] public byte[]?   GUIDVALUE      { get; set; } // RAW(16)
-		[Column(DbType="BLOB",          DataType=DataType.Blob,      Length=4000),                      Nullable] public byte[]?   BINARYVALUE    { get; set; } // BLOB
-		[Column(DbType="NUMBER",        DataType=DataType.Decimal,   Length=22, Scale=0),               Nullable] public decimal?  SMALLINTVALUE  { get; set; } // NUMBER
-		[Column(DbType="NUMBER",        DataType=DataType.Decimal,   Length=22, Scale=0),               Nullable] public decimal?  INTVALUE       { get; set; } // NUMBER
-		[Column(DbType="NUMBER (20,0)", DataType=DataType.Decimal,   Length=22, Precision=20, Scale=0), Nullable] public decimal?  BIGINTVALUE    { get; set; } // NUMBER (20,0)
-		[Column(DbType="VARCHAR2(50)",  DataType=DataType.VarChar,   Length=50),                        Nullable] public string?   STRINGVALUE    { get; set; } // VARCHAR2(50)
+		[Column(DbType="NUMBER (19,0)", DataType=LinqToDB.DataType.Decimal,   Length=22, Precision=19, Scale=0), PrimaryKey,  NotNull] public long      Id                     { get; set; } // NUMBER (19,0)
+		[Column(DbType="TIMESTAMP(6)",  DataType=LinqToDB.DataType.DateTime2, Length=11, Scale=6),                            NotNull] public DateTime  TimestampGenerated     { get; set; } // TIMESTAMP(6)
+		[Column(DbType="TIMESTAMP(6)",  DataType=LinqToDB.DataType.DateTime2, Length=11, Scale=6),                  Nullable         ] public DateTime? TimestampGone          { get; set; } // TIMESTAMP(6)
+		[Column(DbType="VARCHAR2(255)", DataType=LinqToDB.DataType.VarChar,   Length=255),                          Nullable         ] public string?   MessageClassName       { get; set; } // VARCHAR2(255)
+		[Column(DbType="VARCHAR2(255)", DataType=LinqToDB.DataType.VarChar,   Length=255),                          Nullable         ] public string?   ExternID1              { get; set; } // VARCHAR2(255)
+		[Column(DbType="VARCHAR2(255)", DataType=LinqToDB.DataType.VarChar,   Length=255),                          Nullable         ] public string?   TranslatedMessageGroup { get; set; } // VARCHAR2(255)
+		[Column(DbType="VARCHAR2(255)", DataType=LinqToDB.DataType.VarChar,   Length=255),                          Nullable         ] public string?   TranslatedMessage1     { get; set; } // VARCHAR2(255)
 	}
 
-	[Table(Schema="MANAGED", Name="LONGRAWTABLE")]
-	public partial class LONGRAWTABLE
+	[Table(Schema="MANAGED", Name="LinqDataTypes")]
+	public partial class LinqDataType
 	{
-		[Column(DbType="NUMBER",   DataType=DataType.Decimal, Length=22), PrimaryKey,  NotNull] public decimal ID              { get; set; } // NUMBER
-		[Column(DbType="LONG RAW", DataType=DataType.LongRaw, Length=0),     Nullable         ] public byte[]? LONGRAWDATATYPE { get; set; } // LONG RAW
+		[Column(DbType="NUMBER",        DataType=LinqToDB.DataType.Decimal,   Length=22, Scale=0),               Nullable] public decimal?  ID             { get; set; } // NUMBER
+		[Column(DbType="NUMBER (10,4)", DataType=LinqToDB.DataType.Decimal,   Length=22, Precision=10, Scale=4), Nullable] public decimal?  MoneyValue     { get; set; } // NUMBER (10,4)
+		[Column(DbType="TIMESTAMP(6)",  DataType=LinqToDB.DataType.DateTime2, Length=11, Scale=6),               Nullable] public DateTime? DateTimeValue  { get; set; } // TIMESTAMP(6)
+		[Column(DbType="TIMESTAMP(6)",  DataType=LinqToDB.DataType.DateTime2, Length=11, Scale=6),               Nullable] public DateTime? DateTimeValue2 { get; set; } // TIMESTAMP(6)
+		[Column(DbType="NUMBER",        DataType=LinqToDB.DataType.Decimal,   Length=22, Scale=0),               Nullable] public decimal?  BoolValue      { get; set; } // NUMBER
+		[Column(DbType="RAW(16)",       DataType=LinqToDB.DataType.Binary,    Length=16),                        Nullable] public byte[]?   GuidValue      { get; set; } // RAW(16)
+		[Column(DbType="BLOB",          DataType=LinqToDB.DataType.Blob,      Length=4000),                      Nullable] public byte[]?   BinaryValue    { get; set; } // BLOB
+		[Column(DbType="NUMBER",        DataType=LinqToDB.DataType.Decimal,   Length=22, Scale=0),               Nullable] public decimal?  SmallIntValue  { get; set; } // NUMBER
+		[Column(DbType="NUMBER",        DataType=LinqToDB.DataType.Decimal,   Length=22, Scale=0),               Nullable] public decimal?  IntValue       { get; set; } // NUMBER
+		[Column(DbType="NUMBER (20,0)", DataType=LinqToDB.DataType.Decimal,   Length=22, Precision=20, Scale=0), Nullable] public decimal?  BigIntValue    { get; set; } // NUMBER (20,0)
+		[Column(DbType="VARCHAR2(50)",  DataType=LinqToDB.DataType.VarChar,   Length=50),                        Nullable] public string?   StringValue    { get; set; } // VARCHAR2(50)
 	}
 
-	[Table(Schema="MANAGED", Name="PARENT")]
-	public partial class PARENT
+	[Table(Schema="MANAGED", Name="LINQDATATYPESBC")]
+	public partial class LINQDATATYPESBC
 	{
-		[Column(DbType="NUMBER", DataType=DataType.Decimal, Length=22, Scale=0), Nullable] public decimal? PARENTID { get; set; } // NUMBER
-		[Column(DbType="NUMBER", DataType=DataType.Decimal, Length=22, Scale=0), Nullable] public decimal? VALUE1   { get; set; } // NUMBER
+		[Column(DbType="NUMBER",        DataType=LinqToDB.DataType.Decimal,   Length=22, Scale=0),               Nullable] public decimal?  ID             { get; set; } // NUMBER
+		[Column(DbType="NUMBER (10,4)", DataType=LinqToDB.DataType.Decimal,   Length=22, Precision=10, Scale=4), Nullable] public decimal?  MONEYVALUE     { get; set; } // NUMBER (10,4)
+		[Column(DbType="TIMESTAMP(6)",  DataType=LinqToDB.DataType.DateTime2, Length=11, Scale=6),               Nullable] public DateTime? DATETIMEVALUE  { get; set; } // TIMESTAMP(6)
+		[Column(DbType="TIMESTAMP(6)",  DataType=LinqToDB.DataType.DateTime2, Length=11, Scale=6),               Nullable] public DateTime? DATETIMEVALUE2 { get; set; } // TIMESTAMP(6)
+		[Column(DbType="NUMBER",        DataType=LinqToDB.DataType.Decimal,   Length=22, Scale=0),               Nullable] public decimal?  BOOLVALUE      { get; set; } // NUMBER
+		[Column(DbType="RAW(16)",       DataType=LinqToDB.DataType.Binary,    Length=16),                        Nullable] public byte[]?   GUIDVALUE      { get; set; } // RAW(16)
+		[Column(DbType="NUMBER",        DataType=LinqToDB.DataType.Decimal,   Length=22, Scale=0),               Nullable] public decimal?  SMALLINTVALUE  { get; set; } // NUMBER
+		[Column(DbType="NUMBER",        DataType=LinqToDB.DataType.Decimal,   Length=22, Scale=0),               Nullable] public decimal?  INTVALUE       { get; set; } // NUMBER
+		[Column(DbType="NUMBER (20,0)", DataType=LinqToDB.DataType.Decimal,   Length=22, Precision=20, Scale=0), Nullable] public decimal?  BIGINTVALUE    { get; set; } // NUMBER (20,0)
+		[Column(DbType="VARCHAR2(50)",  DataType=LinqToDB.DataType.VarChar,   Length=50),                        Nullable] public string?   STRINGVALUE    { get; set; } // VARCHAR2(50)
 	}
 
-	[Table(Schema="MANAGED", Name="PATIENT")]
-	public partial class PATIENT
+	[Table(Schema="MANAGED", Name="LongRawTable")]
+	public partial class LongRawTable
 	{
-		[Column(DbType="NUMBER",         DataType=DataType.Decimal,  Length=22),  PrimaryKey, NotNull] public decimal PERSONID  { get; set; } // NUMBER
-		[Column(DbType="NVARCHAR2(256)", DataType=DataType.NVarChar, Length=256),             NotNull] public string  DIAGNOSIS { get; set; } = null!; // NVARCHAR2(256)
+		[Column(                   DbType="NUMBER",   DataType=LinqToDB.DataType.Decimal, Length=22), PrimaryKey,  NotNull] public decimal ID              { get; set; } // NUMBER
+		[Column("longRawDataType", DbType="LONG RAW", DataType=LinqToDB.DataType.LongRaw, Length=0),     Nullable         ] public byte[]? LongRawDataType { get; set; } // LONG RAW
+	}
+
+	[Table(Schema="MANAGED", Name="OracleBulkCopyTable")]
+	public partial class OracleBulkCopyTable
+	{
+		[Column(DbType="NUMBER", DataType=LinqToDB.DataType.Decimal, Length=22, Scale=0), NotNull] public decimal ID { get; set; } // NUMBER
+	}
+
+	[Table(Schema="MANAGED", Name="Parent")]
+	public partial class Parent
+	{
+		[Column(DbType="NUMBER", DataType=LinqToDB.DataType.Decimal, Length=22, Scale=0), Nullable] public decimal? ParentID { get; set; } // NUMBER
+		[Column(DbType="NUMBER", DataType=LinqToDB.DataType.Decimal, Length=22, Scale=0), Nullable] public decimal? Value1   { get; set; } // NUMBER
+	}
+
+	[Table(Schema="MANAGED", Name="Patient")]
+	public partial class Patient
+	{
+		[Column(DbType="NUMBER",         DataType=LinqToDB.DataType.Decimal,  Length=22),  PrimaryKey, NotNull] public decimal PersonID  { get; set; } // NUMBER
+		[Column(DbType="NVARCHAR2(256)", DataType=LinqToDB.DataType.NVarChar, Length=256),             NotNull] public string  Diagnosis { get; set; } = null!; // NVARCHAR2(256)
 
 		#region Associations
 
 		/// <summary>
-		/// FK_PATIENT_PERSON
+		/// Fk_Patient_Person
 		/// </summary>
-		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_PATIENT_PERSON", BackReferenceName="PATIENT")]
-		public PERSON PERSON { get; set; } = null!;
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="Fk_Patient_Person", BackReferenceName="FkPatient")]
+		public Person Person { get; set; } = null!;
 
 		#endregion
 	}
 
-	[Table(Schema="MANAGED", Name="PERSON")]
-	public partial class PERSON
+	[Table(Schema="MANAGED", Name="Person")]
+	public partial class Person
 	{
-		[Column(DbType="NUMBER",       DataType=DataType.Decimal, Length=22), PrimaryKey,  NotNull] public decimal PERSONID   { get; set; } // NUMBER
-		[Column(DbType="VARCHAR2(50)", DataType=DataType.VarChar, Length=50),              NotNull] public string  FIRSTNAME  { get; set; } = null!; // VARCHAR2(50)
-		[Column(DbType="VARCHAR2(50)", DataType=DataType.VarChar, Length=50),              NotNull] public string  LASTNAME   { get; set; } = null!; // VARCHAR2(50)
-		[Column(DbType="VARCHAR2(50)", DataType=DataType.VarChar, Length=50),    Nullable         ] public string? MIDDLENAME { get; set; } // VARCHAR2(50)
-		[Column(DbType="CHAR(1)",      DataType=DataType.Char,    Length=1),               NotNull] public char    GENDER     { get; set; } // CHAR(1)
+		[Column(DbType="NUMBER",       DataType=LinqToDB.DataType.Decimal, Length=22), PrimaryKey,  NotNull] public decimal PersonID   { get; set; } // NUMBER
+		[Column(DbType="VARCHAR2(50)", DataType=LinqToDB.DataType.VarChar, Length=50),              NotNull] public string  FirstName  { get; set; } = null!; // VARCHAR2(50)
+		[Column(DbType="VARCHAR2(50)", DataType=LinqToDB.DataType.VarChar, Length=50),              NotNull] public string  LastName   { get; set; } = null!; // VARCHAR2(50)
+		[Column(DbType="VARCHAR2(50)", DataType=LinqToDB.DataType.VarChar, Length=50),    Nullable         ] public string? MiddleName { get; set; } // VARCHAR2(50)
+		[Column(DbType="CHAR(1)",      DataType=LinqToDB.DataType.Char,    Length=1),               NotNull] public char    Gender     { get; set; } // CHAR(1)
 
 		#region Associations
 
 		/// <summary>
-		/// FK_DOCTOR_PERSON_BackReference
+		/// Fk_Doctor_Person_BackReference
 		/// </summary>
-		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
-		public DOCTOR? DOCTOR { get; set; }
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+		public Doctor? FkDoctor { get; set; }
 
 		/// <summary>
-		/// FK_PATIENT_PERSON_BackReference
+		/// Fk_Patient_Person_BackReference
 		/// </summary>
-		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
-		public PATIENT? PATIENT { get; set; }
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+		public Patient? FkPatient { get; set; }
 
 		#endregion
+	}
+
+	/// <summary>
+	/// This is matview
+	/// </summary>
+	[Table(Schema="MANAGED", Name="SchemaTestMatView", IsView=true)]
+	public partial class SchemaTestMatView
+	{
+		/// <summary>
+		/// This is matview column
+		/// </summary>
+		[Column(DbType="NUMBER", DataType=LinqToDB.DataType.Decimal, Length=22), PrimaryKey, NotNull] public decimal Id { get; set; } // NUMBER
+	}
+
+	/// <summary>
+	/// This is table
+	/// </summary>
+	[Table(Schema="MANAGED", Name="SchemaTestTable")]
+	public partial class SchemaTestTable
+	{
+		/// <summary>
+		/// This is column
+		/// </summary>
+		[Column(DbType="NUMBER", DataType=LinqToDB.DataType.Decimal, Length=22), PrimaryKey, NotNull] public decimal Id { get; set; } // NUMBER
+	}
+
+	[Table(Schema="MANAGED", Name="SchemaTestView", IsView=true)]
+	public partial class SchemaTestView
+	{
+		/// <summary>
+		/// This is view column
+		/// </summary>
+		[Column(DbType="NUMBER", DataType=LinqToDB.DataType.Decimal, Length=22), NotNull] public decimal Id { get; set; } // NUMBER
 	}
 
 	[Table(Schema="MANAGED", Name="SEQUENCETEST")]
 	public partial class SEQUENCETEST
 	{
-		[Column(DbType="NUMBER",       DataType=DataType.Decimal, Length=22, Scale=0), PrimaryKey, NotNull] public decimal ID    { get; set; } // NUMBER
-		[Column(DbType="VARCHAR2(50)", DataType=DataType.VarChar, Length=50),                      NotNull] public string  VALUE { get; set; } = null!; // VARCHAR2(50)
+		[Column(DbType="NUMBER",       DataType=LinqToDB.DataType.Decimal, Length=22, Scale=0), PrimaryKey, NotNull] public decimal ID    { get; set; } // NUMBER
+		[Column(DbType="VARCHAR2(50)", DataType=LinqToDB.DataType.VarChar, Length=50),                      NotNull] public string  VALUE { get; set; } = null!; // VARCHAR2(50)
 	}
 
 	[Table(Schema="MANAGED", Name="STG_TRADE_INFORMATION")]
 	public partial class StgTradeInformation
 	{
-		[Column("STG_TRADE_ID",          DbType="NUMBER",         DataType=DataType.Decimal,  Length=22),   NotNull    ] public decimal   StgTradeId          { get; set; } // NUMBER
-		[Column("STG_TRADE_VERSION",     DbType="NUMBER",         DataType=DataType.Decimal,  Length=22),   NotNull    ] public decimal   StgTradeVersion     { get; set; } // NUMBER
-		[Column("INFORMATION_TYPE_ID",   DbType="NUMBER",         DataType=DataType.Decimal,  Length=22),   NotNull    ] public decimal   InformationTypeId   { get; set; } // NUMBER
-		[Column("INFORMATION_TYPE_NAME", DbType="VARCHAR2(50)",   DataType=DataType.VarChar,  Length=50),      Nullable] public string?   InformationTypeName { get; set; } // VARCHAR2(50)
-		[Column(                         DbType="VARCHAR2(4000)", DataType=DataType.VarChar,  Length=4000),    Nullable] public string?   VALUE               { get; set; } // VARCHAR2(4000)
-		[Column("VALUE_AS_INTEGER",      DbType="NUMBER",         DataType=DataType.Decimal,  Length=22),      Nullable] public decimal?  ValueAsInteger      { get; set; } // NUMBER
-		[Column("VALUE_AS_DATE",         DbType="DATE",           DataType=DataType.DateTime, Length=7),       Nullable] public DateTime? ValueAsDate         { get; set; } // DATE
+		[Column("STG_TRADE_ID",          DbType="NUMBER",         DataType=LinqToDB.DataType.Decimal,  Length=22),   NotNull    ] public decimal   StgTradeId          { get; set; } // NUMBER
+		[Column("STG_TRADE_VERSION",     DbType="NUMBER",         DataType=LinqToDB.DataType.Decimal,  Length=22),   NotNull    ] public decimal   StgTradeVersion     { get; set; } // NUMBER
+		[Column("INFORMATION_TYPE_ID",   DbType="NUMBER",         DataType=LinqToDB.DataType.Decimal,  Length=22),   NotNull    ] public decimal   InformationTypeId   { get; set; } // NUMBER
+		[Column("INFORMATION_TYPE_NAME", DbType="VARCHAR2(50)",   DataType=LinqToDB.DataType.VarChar,  Length=50),      Nullable] public string?   InformationTypeName { get; set; } // VARCHAR2(50)
+		[Column(                         DbType="VARCHAR2(4000)", DataType=LinqToDB.DataType.VarChar,  Length=4000),    Nullable] public string?   VALUE               { get; set; } // VARCHAR2(4000)
+		[Column("VALUE_AS_INTEGER",      DbType="NUMBER",         DataType=LinqToDB.DataType.Decimal,  Length=22),      Nullable] public decimal?  ValueAsInteger      { get; set; } // NUMBER
+		[Column("VALUE_AS_DATE",         DbType="DATE",           DataType=LinqToDB.DataType.DateTime, Length=7),       Nullable] public DateTime? ValueAsDate         { get; set; } // DATE
 	}
 
-	[Table(Schema="MANAGED", Name="STRINGTEST")]
-	public partial class STRINGTEST
+	[Table(Schema="MANAGED", Name="StringTest")]
+	public partial class StringTest
 	{
-		[Column(DbType="VARCHAR2(50)", DataType=DataType.VarChar, Length=50),    Nullable] public string? STRINGVALUE1 { get; set; } // VARCHAR2(50)
-		[Column(DbType="CHAR(50)",     DataType=DataType.Char,    Length=50),    Nullable] public string? STRINGVALUE2 { get; set; } // CHAR(50)
-		[Column(DbType="VARCHAR2(50)", DataType=DataType.VarChar, Length=50), NotNull    ] public string  KEYVALUE     { get; set; } = null!; // VARCHAR2(50)
+		[Column(DbType="VARCHAR2(50)", DataType=LinqToDB.DataType.VarChar, Length=50),    Nullable] public string? StringValue1 { get; set; } // VARCHAR2(50)
+		[Column(DbType="CHAR(50)",     DataType=LinqToDB.DataType.Char,    Length=50),    Nullable] public string? StringValue2 { get; set; } // CHAR(50)
+		[Column(DbType="VARCHAR2(50)", DataType=LinqToDB.DataType.VarChar, Length=50), NotNull    ] public string  KeyValue     { get; set; } = null!; // VARCHAR2(50)
 	}
 
-	[Table(Schema="MANAGED", Name="T_ENTITY")]
+	[Table(Schema="MANAGED", Name="t_entity")]
 	public partial class TEntity
 	{
-		[Column("ENTITY_ID", DbType="NUMBER",                       DataType=DataType.Decimal,   Length=22, Scale=0),              PrimaryKey,  NotNull] public decimal   EntityId { get; set; } // NUMBER
-		[Column(             DbType="DATE",                         DataType=DataType.DateTime,  Length=7),                           Nullable         ] public DateTime? TIME     { get; set; } // DATE
-		[Column(             DbType="INTERVAL DAY(3) TO SECOND(2)", DataType=DataType.Undefined, Length=11, Precision=3, Scale=2),    Nullable         ] public object?   DURATION { get; set; } // INTERVAL DAY(3) TO SECOND(2)
+		[Column("entity_id", DbType="NUMBER",                       DataType=LinqToDB.DataType.Decimal,   Length=22, Scale=0),              PrimaryKey,  NotNull] public decimal   EntityId { get; set; } // NUMBER
+		[Column("time",      DbType="DATE",                         DataType=LinqToDB.DataType.DateTime,  Length=7),                           Nullable         ] public DateTime? Time     { get; set; } // DATE
+		[Column("duration",  DbType="INTERVAL DAY(3) TO SECOND(2)", DataType=LinqToDB.DataType.Undefined, Length=11, Precision=3, Scale=2),    Nullable         ] public object?   Duration { get; set; } // INTERVAL DAY(3) TO SECOND(2)
 	}
 
-	[Table(Schema="MANAGED", Name="TESTIDENTITY")]
-	public partial class TESTIDENTITY
+	[Table(Schema="MANAGED", Name="TestIdentity")]
+	public partial class TestIdentity
 	{
-		[Column(DbType="NUMBER", DataType=DataType.Decimal, Length=22), PrimaryKey, NotNull] public decimal ID { get; set; } // NUMBER
+		[Column(DbType="NUMBER", DataType=LinqToDB.DataType.Decimal, Length=22), PrimaryKey, NotNull] public decimal ID { get; set; } // NUMBER
 	}
 
-	[Table(Schema="MANAGED", Name="TESTMERGE1")]
-	public partial class TESTMERGE1
+	[Table(Schema="MANAGED", Name="TestMerge1")]
+	public partial class TestMerge1
 	{
-		[Column(DbType="NUMBER",                      DataType=DataType.Decimal,        Length=22),                         PrimaryKey,  NotNull] public decimal         ID              { get; set; } // NUMBER
-		[Column(DbType="NUMBER",                      DataType=DataType.Decimal,        Length=22),                            Nullable         ] public decimal?        FIELD1          { get; set; } // NUMBER
-		[Column(DbType="NUMBER",                      DataType=DataType.Decimal,        Length=22),                            Nullable         ] public decimal?        FIELD2          { get; set; } // NUMBER
-		[Column(DbType="NUMBER",                      DataType=DataType.Decimal,        Length=22),                            Nullable         ] public decimal?        FIELD3          { get; set; } // NUMBER
-		[Column(DbType="NUMBER",                      DataType=DataType.Decimal,        Length=22),                            Nullable         ] public decimal?        FIELD4          { get; set; } // NUMBER
-		[Column(DbType="NUMBER",                      DataType=DataType.Decimal,        Length=22),                            Nullable         ] public decimal?        FIELD5          { get; set; } // NUMBER
-		[Column(DbType="NUMBER (20,0)",               DataType=DataType.Decimal,        Length=22, Precision=20, Scale=0),     Nullable         ] public decimal?        FIELDINT64      { get; set; } // NUMBER (20,0)
-		[Column(DbType="NUMBER (1,0)",                DataType=DataType.Decimal,        Length=22, Precision=1, Scale=0),      Nullable         ] public sbyte?          FIELDBOOLEAN    { get; set; } // NUMBER (1,0)
-		[Column(DbType="VARCHAR2(20)",                DataType=DataType.VarChar,        Length=20),                            Nullable         ] public string?         FIELDSTRING     { get; set; } // VARCHAR2(20)
-		[Column(DbType="NVARCHAR2(20)",               DataType=DataType.NVarChar,       Length=20),                            Nullable         ] public string?         FIELDNSTRING    { get; set; } // NVARCHAR2(20)
-		[Column(DbType="CHAR(1)",                     DataType=DataType.Char,           Length=1),                             Nullable         ] public char?           FIELDCHAR       { get; set; } // CHAR(1)
-		[Column(DbType="NCHAR(1)",                    DataType=DataType.NChar,          Length=1),                             Nullable         ] public char?           FIELDNCHAR      { get; set; } // NCHAR(1)
-		[Column(DbType="BINARY_FLOAT",                DataType=DataType.Single,         Length=4),                             Nullable         ] public float?          FIELDFLOAT      { get; set; } // BINARY_FLOAT
-		[Column(DbType="BINARY_DOUBLE",               DataType=DataType.Double,         Length=8),                             Nullable         ] public double?         FIELDDOUBLE     { get; set; } // BINARY_DOUBLE
-		[Column(DbType="DATE",                        DataType=DataType.DateTime,       Length=7),                             Nullable         ] public DateTime?       FIELDDATETIME   { get; set; } // DATE
-		[Column(DbType="TIMESTAMP(7) WITH TIME ZONE", DataType=DataType.DateTimeOffset, Length=13, Scale=7),                   Nullable         ] public DateTimeOffset? FIELDDATETIME2  { get; set; } // TIMESTAMP(7) WITH TIME ZONE
-		[Column(DbType="BLOB",                        DataType=DataType.Blob,           Length=4000),                          Nullable         ] public byte[]?         FIELDBINARY     { get; set; } // BLOB
-		[Column(DbType="RAW(16)",                     DataType=DataType.Binary,         Length=16),                            Nullable         ] public byte[]?         FIELDGUID       { get; set; } // RAW(16)
-		[Column(DbType="NUMBER (24,10)",              DataType=DataType.Decimal,        Length=22, Precision=24, Scale=10),    Nullable         ] public decimal?        FIELDDECIMAL    { get; set; } // NUMBER (24,10)
-		[Column(DbType="VARCHAR2(20)",                DataType=DataType.VarChar,        Length=20),                            Nullable         ] public string?         FIELDENUMSTRING { get; set; } // VARCHAR2(20)
-		[Column(DbType="NUMBER",                      DataType=DataType.Decimal,        Length=22),                            Nullable         ] public decimal?        FIELDENUMNUMBER { get; set; } // NUMBER
+		[Column(DbType="NUMBER",                      DataType=LinqToDB.DataType.Decimal,        Length=22),                         PrimaryKey,  NotNull] public decimal         Id              { get; set; } // NUMBER
+		[Column(DbType="NUMBER",                      DataType=LinqToDB.DataType.Decimal,        Length=22),                            Nullable         ] public decimal?        Field1          { get; set; } // NUMBER
+		[Column(DbType="NUMBER",                      DataType=LinqToDB.DataType.Decimal,        Length=22),                            Nullable         ] public decimal?        Field2          { get; set; } // NUMBER
+		[Column(DbType="NUMBER",                      DataType=LinqToDB.DataType.Decimal,        Length=22),                            Nullable         ] public decimal?        Field3          { get; set; } // NUMBER
+		[Column(DbType="NUMBER",                      DataType=LinqToDB.DataType.Decimal,        Length=22),                            Nullable         ] public decimal?        Field4          { get; set; } // NUMBER
+		[Column(DbType="NUMBER",                      DataType=LinqToDB.DataType.Decimal,        Length=22),                            Nullable         ] public decimal?        Field5          { get; set; } // NUMBER
+		[Column(DbType="NUMBER (20,0)",               DataType=LinqToDB.DataType.Decimal,        Length=22, Precision=20, Scale=0),     Nullable         ] public decimal?        FieldInt64      { get; set; } // NUMBER (20,0)
+		[Column(DbType="NUMBER (1,0)",                DataType=LinqToDB.DataType.Decimal,        Length=22, Precision=1, Scale=0),      Nullable         ] public sbyte?          FieldBoolean    { get; set; } // NUMBER (1,0)
+		[Column(DbType="VARCHAR2(20)",                DataType=LinqToDB.DataType.VarChar,        Length=20),                            Nullable         ] public string?         FieldString     { get; set; } // VARCHAR2(20)
+		[Column(DbType="NVARCHAR2(20)",               DataType=LinqToDB.DataType.NVarChar,       Length=20),                            Nullable         ] public string?         FieldNString    { get; set; } // NVARCHAR2(20)
+		[Column(DbType="CHAR(1)",                     DataType=LinqToDB.DataType.Char,           Length=1),                             Nullable         ] public char?           FieldChar       { get; set; } // CHAR(1)
+		[Column(DbType="NCHAR(1)",                    DataType=LinqToDB.DataType.NChar,          Length=1),                             Nullable         ] public char?           FieldNChar      { get; set; } // NCHAR(1)
+		[Column(DbType="BINARY_FLOAT",                DataType=LinqToDB.DataType.Single,         Length=4),                             Nullable         ] public float?          FieldFloat      { get; set; } // BINARY_FLOAT
+		[Column(DbType="BINARY_DOUBLE",               DataType=LinqToDB.DataType.Double,         Length=8),                             Nullable         ] public double?         FieldDouble     { get; set; } // BINARY_DOUBLE
+		[Column(DbType="DATE",                        DataType=LinqToDB.DataType.DateTime,       Length=7),                             Nullable         ] public DateTime?       FieldDateTime   { get; set; } // DATE
+		[Column(DbType="TIMESTAMP(7) WITH TIME ZONE", DataType=LinqToDB.DataType.DateTimeOffset, Length=13, Scale=7),                   Nullable         ] public DateTimeOffset? FieldDateTime2  { get; set; } // TIMESTAMP(7) WITH TIME ZONE
+		[Column(DbType="BLOB",                        DataType=LinqToDB.DataType.Blob,           Length=4000),                          Nullable         ] public byte[]?         FieldBinary     { get; set; } // BLOB
+		[Column(DbType="RAW(16)",                     DataType=LinqToDB.DataType.Binary,         Length=16),                            Nullable         ] public byte[]?         FieldGuid       { get; set; } // RAW(16)
+		[Column(DbType="NUMBER (24,10)",              DataType=LinqToDB.DataType.Decimal,        Length=22, Precision=24, Scale=10),    Nullable         ] public decimal?        FieldDecimal    { get; set; } // NUMBER (24,10)
+		[Column(DbType="VARCHAR2(20)",                DataType=LinqToDB.DataType.VarChar,        Length=20),                            Nullable         ] public string?         FieldEnumString { get; set; } // VARCHAR2(20)
+		[Column(DbType="NUMBER",                      DataType=LinqToDB.DataType.Decimal,        Length=22),                            Nullable         ] public decimal?        FieldEnumNumber { get; set; } // NUMBER
 	}
 
-	[Table(Schema="MANAGED", Name="TESTMERGE2")]
-	public partial class TESTMERGE2
+	[Table(Schema="MANAGED", Name="TestMerge2")]
+	public partial class TestMerge2
 	{
-		[Column(DbType="NUMBER",                      DataType=DataType.Decimal,        Length=22),                         PrimaryKey,  NotNull] public decimal         ID              { get; set; } // NUMBER
-		[Column(DbType="NUMBER",                      DataType=DataType.Decimal,        Length=22),                            Nullable         ] public decimal?        FIELD1          { get; set; } // NUMBER
-		[Column(DbType="NUMBER",                      DataType=DataType.Decimal,        Length=22),                            Nullable         ] public decimal?        FIELD2          { get; set; } // NUMBER
-		[Column(DbType="NUMBER",                      DataType=DataType.Decimal,        Length=22),                            Nullable         ] public decimal?        FIELD3          { get; set; } // NUMBER
-		[Column(DbType="NUMBER",                      DataType=DataType.Decimal,        Length=22),                            Nullable         ] public decimal?        FIELD4          { get; set; } // NUMBER
-		[Column(DbType="NUMBER",                      DataType=DataType.Decimal,        Length=22),                            Nullable         ] public decimal?        FIELD5          { get; set; } // NUMBER
-		[Column(DbType="NUMBER (20,0)",               DataType=DataType.Decimal,        Length=22, Precision=20, Scale=0),     Nullable         ] public decimal?        FIELDINT64      { get; set; } // NUMBER (20,0)
-		[Column(DbType="NUMBER (1,0)",                DataType=DataType.Decimal,        Length=22, Precision=1, Scale=0),      Nullable         ] public sbyte?          FIELDBOOLEAN    { get; set; } // NUMBER (1,0)
-		[Column(DbType="VARCHAR2(20)",                DataType=DataType.VarChar,        Length=20),                            Nullable         ] public string?         FIELDSTRING     { get; set; } // VARCHAR2(20)
-		[Column(DbType="NVARCHAR2(20)",               DataType=DataType.NVarChar,       Length=20),                            Nullable         ] public string?         FIELDNSTRING    { get; set; } // NVARCHAR2(20)
-		[Column(DbType="CHAR(1)",                     DataType=DataType.Char,           Length=1),                             Nullable         ] public char?           FIELDCHAR       { get; set; } // CHAR(1)
-		[Column(DbType="NCHAR(1)",                    DataType=DataType.NChar,          Length=1),                             Nullable         ] public char?           FIELDNCHAR      { get; set; } // NCHAR(1)
-		[Column(DbType="BINARY_FLOAT",                DataType=DataType.Single,         Length=4),                             Nullable         ] public float?          FIELDFLOAT      { get; set; } // BINARY_FLOAT
-		[Column(DbType="BINARY_DOUBLE",               DataType=DataType.Double,         Length=8),                             Nullable         ] public double?         FIELDDOUBLE     { get; set; } // BINARY_DOUBLE
-		[Column(DbType="DATE",                        DataType=DataType.DateTime,       Length=7),                             Nullable         ] public DateTime?       FIELDDATETIME   { get; set; } // DATE
-		[Column(DbType="TIMESTAMP(7) WITH TIME ZONE", DataType=DataType.DateTimeOffset, Length=13, Scale=7),                   Nullable         ] public DateTimeOffset? FIELDDATETIME2  { get; set; } // TIMESTAMP(7) WITH TIME ZONE
-		[Column(DbType="BLOB",                        DataType=DataType.Blob,           Length=4000),                          Nullable         ] public byte[]?         FIELDBINARY     { get; set; } // BLOB
-		[Column(DbType="RAW(16)",                     DataType=DataType.Binary,         Length=16),                            Nullable         ] public byte[]?         FIELDGUID       { get; set; } // RAW(16)
-		[Column(DbType="NUMBER (24,10)",              DataType=DataType.Decimal,        Length=22, Precision=24, Scale=10),    Nullable         ] public decimal?        FIELDDECIMAL    { get; set; } // NUMBER (24,10)
-		[Column(DbType="VARCHAR2(20)",                DataType=DataType.VarChar,        Length=20),                            Nullable         ] public string?         FIELDENUMSTRING { get; set; } // VARCHAR2(20)
-		[Column(DbType="NUMBER",                      DataType=DataType.Decimal,        Length=22),                            Nullable         ] public decimal?        FIELDENUMNUMBER { get; set; } // NUMBER
+		[Column(DbType="NUMBER",                      DataType=LinqToDB.DataType.Decimal,        Length=22),                         PrimaryKey,  NotNull] public decimal         Id              { get; set; } // NUMBER
+		[Column(DbType="NUMBER",                      DataType=LinqToDB.DataType.Decimal,        Length=22),                            Nullable         ] public decimal?        Field1          { get; set; } // NUMBER
+		[Column(DbType="NUMBER",                      DataType=LinqToDB.DataType.Decimal,        Length=22),                            Nullable         ] public decimal?        Field2          { get; set; } // NUMBER
+		[Column(DbType="NUMBER",                      DataType=LinqToDB.DataType.Decimal,        Length=22),                            Nullable         ] public decimal?        Field3          { get; set; } // NUMBER
+		[Column(DbType="NUMBER",                      DataType=LinqToDB.DataType.Decimal,        Length=22),                            Nullable         ] public decimal?        Field4          { get; set; } // NUMBER
+		[Column(DbType="NUMBER",                      DataType=LinqToDB.DataType.Decimal,        Length=22),                            Nullable         ] public decimal?        Field5          { get; set; } // NUMBER
+		[Column(DbType="NUMBER (20,0)",               DataType=LinqToDB.DataType.Decimal,        Length=22, Precision=20, Scale=0),     Nullable         ] public decimal?        FieldInt64      { get; set; } // NUMBER (20,0)
+		[Column(DbType="NUMBER (1,0)",                DataType=LinqToDB.DataType.Decimal,        Length=22, Precision=1, Scale=0),      Nullable         ] public sbyte?          FieldBoolean    { get; set; } // NUMBER (1,0)
+		[Column(DbType="VARCHAR2(20)",                DataType=LinqToDB.DataType.VarChar,        Length=20),                            Nullable         ] public string?         FieldString     { get; set; } // VARCHAR2(20)
+		[Column(DbType="NVARCHAR2(20)",               DataType=LinqToDB.DataType.NVarChar,       Length=20),                            Nullable         ] public string?         FieldNString    { get; set; } // NVARCHAR2(20)
+		[Column(DbType="CHAR(1)",                     DataType=LinqToDB.DataType.Char,           Length=1),                             Nullable         ] public char?           FieldChar       { get; set; } // CHAR(1)
+		[Column(DbType="NCHAR(1)",                    DataType=LinqToDB.DataType.NChar,          Length=1),                             Nullable         ] public char?           FieldNChar      { get; set; } // NCHAR(1)
+		[Column(DbType="BINARY_FLOAT",                DataType=LinqToDB.DataType.Single,         Length=4),                             Nullable         ] public float?          FieldFloat      { get; set; } // BINARY_FLOAT
+		[Column(DbType="BINARY_DOUBLE",               DataType=LinqToDB.DataType.Double,         Length=8),                             Nullable         ] public double?         FieldDouble     { get; set; } // BINARY_DOUBLE
+		[Column(DbType="DATE",                        DataType=LinqToDB.DataType.DateTime,       Length=7),                             Nullable         ] public DateTime?       FieldDateTime   { get; set; } // DATE
+		[Column(DbType="TIMESTAMP(7) WITH TIME ZONE", DataType=LinqToDB.DataType.DateTimeOffset, Length=13, Scale=7),                   Nullable         ] public DateTimeOffset? FieldDateTime2  { get; set; } // TIMESTAMP(7) WITH TIME ZONE
+		[Column(DbType="BLOB",                        DataType=LinqToDB.DataType.Blob,           Length=4000),                          Nullable         ] public byte[]?         FieldBinary     { get; set; } // BLOB
+		[Column(DbType="RAW(16)",                     DataType=LinqToDB.DataType.Binary,         Length=16),                            Nullable         ] public byte[]?         FieldGuid       { get; set; } // RAW(16)
+		[Column(DbType="NUMBER (24,10)",              DataType=LinqToDB.DataType.Decimal,        Length=22, Precision=24, Scale=10),    Nullable         ] public decimal?        FieldDecimal    { get; set; } // NUMBER (24,10)
+		[Column(DbType="VARCHAR2(20)",                DataType=LinqToDB.DataType.VarChar,        Length=20),                            Nullable         ] public string?         FieldEnumString { get; set; } // VARCHAR2(20)
+		[Column(DbType="NUMBER",                      DataType=LinqToDB.DataType.Decimal,        Length=22),                            Nullable         ] public decimal?        FieldEnumNumber { get; set; } // NUMBER
 	}
 
-	[Table(Schema="MANAGED", Name="T_TEST_USER")]
+	[Table(Schema="MANAGED", Name="TestSequenceSchemaTable")]
+	public partial class TestSequenceSchemaTable
+	{
+		[Column(DbType="NUMBER (19,0)", DataType=LinqToDB.DataType.Decimal, Length=22, Precision=19, Scale=0), PrimaryKey, NotNull] public long Id { get; set; } // NUMBER (19,0)
+	}
+
+	[Table(Schema="MANAGED", Name="t_test_user")]
 	public partial class TTestUser
 	{
-		[Column("USER_ID", DbType="NUMBER",        DataType=DataType.Decimal, Length=22),  PrimaryKey, NotNull] public decimal UserId { get; set; } // NUMBER
-		[Column(           DbType="VARCHAR2(255)", DataType=DataType.VarChar, Length=255),             NotNull] public string  NAME   { get; set; } = null!; // VARCHAR2(255)
+		[Column("user_id", DbType="NUMBER",        DataType=LinqToDB.DataType.Decimal, Length=22),  PrimaryKey, NotNull] public decimal UserId { get; set; } // NUMBER
+		[Column("name",    DbType="VARCHAR2(255)", DataType=LinqToDB.DataType.VarChar, Length=255),             NotNull] public string  Name   { get; set; } = null!; // VARCHAR2(255)
 
 		#region Associations
 
 		/// <summary>
-		/// SYS_C00613092_BackReference
+		/// SYS_C00799365_BackReference
 		/// </summary>
-		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 		public IEnumerable<TTestUserContract> Syscs { get; set; } = null!;
 
 		#endregion
 	}
 
-	[Table(Schema="MANAGED", Name="T_TEST_USER_CONTRACT")]
+	[Table(Schema="MANAGED", Name="t_test_user_contract")]
 	public partial class TTestUserContract
 	{
-		[Column("USER_CONTRACT_ID", DbType="NUMBER",        DataType=DataType.Decimal, Length=22),  PrimaryKey, NotNull] public decimal UserContractId { get; set; } // NUMBER
-		[Column("USER_ID",          DbType="NUMBER",        DataType=DataType.Decimal, Length=22),              NotNull] public decimal UserId         { get; set; } // NUMBER
-		[Column("CONTRACT_NO",      DbType="NUMBER",        DataType=DataType.Decimal, Length=22),              NotNull] public decimal ContractNo     { get; set; } // NUMBER
-		[Column(                    DbType="VARCHAR2(255)", DataType=DataType.VarChar, Length=255),             NotNull] public string  NAME           { get; set; } = null!; // VARCHAR2(255)
+		[Column("user_contract_id", DbType="NUMBER",        DataType=LinqToDB.DataType.Decimal, Length=22),  PrimaryKey, NotNull] public decimal UserContractId { get; set; } // NUMBER
+		[Column("user_id",          DbType="NUMBER",        DataType=LinqToDB.DataType.Decimal, Length=22),              NotNull] public decimal UserId         { get; set; } // NUMBER
+		[Column("contract_no",      DbType="NUMBER",        DataType=LinqToDB.DataType.Decimal, Length=22),              NotNull] public decimal ContractNo     { get; set; } // NUMBER
+		[Column("name",             DbType="VARCHAR2(255)", DataType=LinqToDB.DataType.VarChar, Length=255),             NotNull] public string  Name           { get; set; } = null!; // VARCHAR2(255)
 
 		#region Associations
 
 		/// <summary>
-		/// SYS_C00613092
+		/// SYS_C00799365
 		/// </summary>
-		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="SYS_C00613092", BackReferenceName="Syscs")]
-		public TTestUser USER { get; set; } = null!;
+		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="SYS_C00799365", BackReferenceName="Syscs")]
+		public TTestUser User { get; set; } = null!;
 
 		#endregion
 	}
@@ -410,11 +493,11 @@ namespace OracleDataContext
 		public static int PersonUpdate(this XEDB dataConnection, decimal? PPERSONID, string? PFIRSTNAME, string? PLASTNAME, string? PMIDDLENAME, string? PGENDER)
 		{
 			return dataConnection.ExecuteProc("MANAGED.PERSON_UPDATE",
-				new DataParameter("PPERSONID",   PPERSONID,   DataType.Decimal),
-				new DataParameter("PFIRSTNAME",  PFIRSTNAME,  DataType.NVarChar),
-				new DataParameter("PLASTNAME",   PLASTNAME,   DataType.NVarChar),
-				new DataParameter("PMIDDLENAME", PMIDDLENAME, DataType.NVarChar),
-				new DataParameter("PGENDER",     PGENDER,     DataType.Char));
+				new DataParameter("PPERSONID",   PPERSONID,   LinqToDB.DataType.Decimal),
+				new DataParameter("PFIRSTNAME",  PFIRSTNAME,  LinqToDB.DataType.NVarChar),
+				new DataParameter("PLASTNAME",   PLASTNAME,   LinqToDB.DataType.NVarChar),
+				new DataParameter("PMIDDLENAME", PMIDDLENAME, LinqToDB.DataType.NVarChar),
+				new DataParameter("PGENDER",     PGENDER,     LinqToDB.DataType.Char));
 		}
 
 		#endregion
@@ -424,7 +507,7 @@ namespace OracleDataContext
 		public static int PersonDelete(this XEDB dataConnection, decimal? PPERSONID)
 		{
 			return dataConnection.ExecuteProc("MANAGED.PERSON_DELETE",
-				new DataParameter("PPERSONID", PPERSONID, DataType.Decimal));
+				new DataParameter("PPERSONID", PPERSONID, LinqToDB.DataType.Decimal));
 		}
 
 		#endregion
@@ -434,12 +517,12 @@ namespace OracleDataContext
 		public static int OUTREFTEST(this XEDB dataConnection, decimal? PID, out decimal? POUTPUTID, ref decimal? PINPUTOUTPUTID, string? PSTR, out string? POUTPUTSTR, ref string? PINPUTOUTPUTSTR)
 		{
 			var ret = dataConnection.ExecuteProc("MANAGED.OUTREFTEST",
-				new DataParameter("PID",             PID,             DataType.Decimal),
-				new DataParameter("POUTPUTID", null,       DataType.Decimal) { Direction = ParameterDirection.Output, Size = 22 },
-				new DataParameter("PINPUTOUTPUTID",  PINPUTOUTPUTID,  DataType.Decimal) { Direction = ParameterDirection.InputOutput, Size = 22 },
-				new DataParameter("PSTR",            PSTR,            DataType.NVarChar),
-				new DataParameter("POUTPUTSTR", null,      DataType.NVarChar) { Direction = ParameterDirection.Output },
-				new DataParameter("PINPUTOUTPUTSTR", PINPUTOUTPUTSTR, DataType.NVarChar) { Direction = ParameterDirection.InputOutput });
+				new DataParameter("PID",             PID,             LinqToDB.DataType.Decimal),
+				new DataParameter("POUTPUTID", null,       LinqToDB.DataType.Decimal) { Direction = ParameterDirection.Output, Size = 22 },
+				new DataParameter("PINPUTOUTPUTID",  PINPUTOUTPUTID,  LinqToDB.DataType.Decimal) { Direction = ParameterDirection.InputOutput, Size = 22 },
+				new DataParameter("PSTR",            PSTR,            LinqToDB.DataType.NVarChar),
+				new DataParameter("POUTPUTSTR", null,      LinqToDB.DataType.NVarChar) { Direction = ParameterDirection.Output },
+				new DataParameter("PINPUTOUTPUTSTR", PINPUTOUTPUTSTR, LinqToDB.DataType.NVarChar) { Direction = ParameterDirection.InputOutput });
 
 			POUTPUTID       = Converter.ChangeTypeTo<decimal?>(((IDbDataParameter)dataConnection.Command.Parameters["POUTPUTID"]).      Value);
 			PINPUTOUTPUTID  = Converter.ChangeTypeTo<decimal?>(((IDbDataParameter)dataConnection.Command.Parameters["PINPUTOUTPUTID"]). Value);
@@ -456,9 +539,9 @@ namespace OracleDataContext
 		public static int OUTREFENUMTEST(this XEDB dataConnection, string? PSTR, out string? POUTPUTSTR, ref string? PINPUTOUTPUTSTR)
 		{
 			var ret = dataConnection.ExecuteProc("MANAGED.OUTREFENUMTEST",
-				new DataParameter("PSTR",            PSTR,            DataType.NVarChar),
-				new DataParameter("POUTPUTSTR", null,      DataType.NVarChar) { Direction = ParameterDirection.Output },
-				new DataParameter("PINPUTOUTPUTSTR", PINPUTOUTPUTSTR, DataType.NVarChar) { Direction = ParameterDirection.InputOutput });
+				new DataParameter("PSTR",            PSTR,            LinqToDB.DataType.NVarChar),
+				new DataParameter("POUTPUTSTR", null,      LinqToDB.DataType.NVarChar) { Direction = ParameterDirection.Output },
+				new DataParameter("PINPUTOUTPUTSTR", PINPUTOUTPUTSTR, LinqToDB.DataType.NVarChar) { Direction = ParameterDirection.InputOutput });
 
 			POUTPUTSTR      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["POUTPUTSTR"]).     Value);
 			PINPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["PINPUTOUTPUTSTR"]).Value);
@@ -471,103 +554,121 @@ namespace OracleDataContext
 
 	public static partial class TableExtensions
 	{
-		public static ALLTYPE Find(this ITable<ALLTYPE> table, decimal ID)
+		public static AllType? Find(this ITable<AllType> table, decimal ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static BillingDevreadingtype Find(this ITable<BillingDevreadingtype> table, decimal ID)
-		{
-			return table.FirstOrDefault(t =>
-				t.ID == ID);
-		}
-
-		public static BINARYDATA Find(this ITable<BINARYDATA> table, decimal BINARYDATAID)
+		public static BINARYDATA? Find(this ITable<BINARYDATA> table, decimal BINARYDATAID)
 		{
 			return table.FirstOrDefault(t =>
 				t.BINARYDATAID == BINARYDATAID);
 		}
 
-		public static DATATYPETEST Find(this ITable<DATATYPETEST> table, decimal DATATYPEID)
+		public static DataTypeTest? Find(this ITable<DataTypeTest> table, decimal DataTypeID)
 		{
 			return table.FirstOrDefault(t =>
-				t.DATATYPEID == DATATYPEID);
+				t.DataTypeID == DataTypeID);
 		}
 
-		public static DOCTOR Find(this ITable<DOCTOR> table, decimal PERSONID)
+		public static Doctor? Find(this ITable<Doctor> table, decimal PersonID)
 		{
 			return table.FirstOrDefault(t =>
-				t.PERSONID == PERSONID);
+				t.PersonID == PersonID);
 		}
 
-		public static INHERITANCECHILD Find(this ITable<INHERITANCECHILD> table, decimal INHERITANCECHILDID)
+		public static InheritanceChild? Find(this ITable<InheritanceChild> table, decimal InheritanceChildId)
 		{
 			return table.FirstOrDefault(t =>
-				t.INHERITANCECHILDID == INHERITANCECHILDID);
+				t.InheritanceChildId == InheritanceChildId);
 		}
 
-		public static INHERITANCEPARENT Find(this ITable<INHERITANCEPARENT> table, decimal INHERITANCEPARENTID)
+		public static InheritanceParent? Find(this ITable<InheritanceParent> table, decimal InheritanceParentId)
 		{
 			return table.FirstOrDefault(t =>
-				t.INHERITANCEPARENTID == INHERITANCEPARENTID);
+				t.InheritanceParentId == InheritanceParentId);
 		}
 
-		public static LONGRAWTABLE Find(this ITable<LONGRAWTABLE> table, decimal ID)
+		public static Issue2564Table? Find(this ITable<Issue2564Table> table, long Id)
 		{
 			return table.FirstOrDefault(t =>
-				t.ID == ID);
+				t.Id == Id);
 		}
 
-		public static PATIENT Find(this ITable<PATIENT> table, decimal PERSONID)
-		{
-			return table.FirstOrDefault(t =>
-				t.PERSONID == PERSONID);
-		}
-
-		public static PERSON Find(this ITable<PERSON> table, decimal PERSONID)
-		{
-			return table.FirstOrDefault(t =>
-				t.PERSONID == PERSONID);
-		}
-
-		public static SEQUENCETEST Find(this ITable<SEQUENCETEST> table, decimal ID)
+		public static LongRawTable? Find(this ITable<LongRawTable> table, decimal ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static TEntity Find(this ITable<TEntity> table, decimal EntityId)
+		public static Patient? Find(this ITable<Patient> table, decimal PersonID)
+		{
+			return table.FirstOrDefault(t =>
+				t.PersonID == PersonID);
+		}
+
+		public static Person? Find(this ITable<Person> table, decimal PersonID)
+		{
+			return table.FirstOrDefault(t =>
+				t.PersonID == PersonID);
+		}
+
+		public static SchemaTestMatView? Find(this ITable<SchemaTestMatView> table, decimal Id)
+		{
+			return table.FirstOrDefault(t =>
+				t.Id == Id);
+		}
+
+		public static SchemaTestTable? Find(this ITable<SchemaTestTable> table, decimal Id)
+		{
+			return table.FirstOrDefault(t =>
+				t.Id == Id);
+		}
+
+		public static SEQUENCETEST? Find(this ITable<SEQUENCETEST> table, decimal ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
+		public static TEntity? Find(this ITable<TEntity> table, decimal EntityId)
 		{
 			return table.FirstOrDefault(t =>
 				t.EntityId == EntityId);
 		}
 
-		public static TESTIDENTITY Find(this ITable<TESTIDENTITY> table, decimal ID)
+		public static TestIdentity? Find(this ITable<TestIdentity> table, decimal ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static TESTMERGE1 Find(this ITable<TESTMERGE1> table, decimal ID)
+		public static TestMerge1? Find(this ITable<TestMerge1> table, decimal Id)
 		{
 			return table.FirstOrDefault(t =>
-				t.ID == ID);
+				t.Id == Id);
 		}
 
-		public static TESTMERGE2 Find(this ITable<TESTMERGE2> table, decimal ID)
+		public static TestMerge2? Find(this ITable<TestMerge2> table, decimal Id)
 		{
 			return table.FirstOrDefault(t =>
-				t.ID == ID);
+				t.Id == Id);
 		}
 
-		public static TTestUser Find(this ITable<TTestUser> table, decimal UserId)
+		public static TestSequenceSchemaTable? Find(this ITable<TestSequenceSchemaTable> table, long Id)
+		{
+			return table.FirstOrDefault(t =>
+				t.Id == Id);
+		}
+
+		public static TTestUser? Find(this ITable<TTestUser> table, decimal UserId)
 		{
 			return table.FirstOrDefault(t =>
 				t.UserId == UserId);
 		}
 
-		public static TTestUserContract Find(this ITable<TTestUserContract> table, decimal UserContractId)
+		public static TTestUserContract? Find(this ITable<TTestUserContract> table, decimal UserContractId)
 		{
 			return table.FirstOrDefault(t =>
 				t.UserContractId == UserContractId);

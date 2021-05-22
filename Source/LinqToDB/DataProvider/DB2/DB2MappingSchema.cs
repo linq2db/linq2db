@@ -11,6 +11,35 @@ namespace LinqToDB.DataProvider.DB2
 
 	public class DB2MappingSchema : MappingSchema
 	{
+		private const string DATETIME_FORMAT   = "{0:yyyy-MM-dd-HH.mm.ss}";
+
+		private const string TIMESTAMP0_FORMAT = "{0:yyyy-MM-dd-HH.mm.ss}";
+		private const string TIMESTAMP1_FORMAT = "{0:yyyy-MM-dd-HH.mm.ss.f}";
+		private const string TIMESTAMP2_FORMAT = "{0:yyyy-MM-dd-HH.mm.ss.ff}";
+		private const string TIMESTAMP3_FORMAT = "{0:yyyy-MM-dd-HH.mm.ss.fff}";
+		private const string TIMESTAMP4_FORMAT = "{0:yyyy-MM-dd-HH.mm.ss.ffff}";
+		private const string TIMESTAMP5_FORMAT = "{0:yyyy-MM-dd-HH.mm.ss.fffff}";
+		private const string TIMESTAMP6_FORMAT = "{0:yyyy-MM-dd-HH.mm.ss.ffffff}";
+		private const string TIMESTAMP7_FORMAT = "{0:yyyy-MM-dd-HH.mm.ss.fffffff}";
+
+		private static readonly string[] DateParseFormats = new[]
+		{
+			"yyyy-MM-dd",
+			"yyyy-MM-dd-HH.mm.ss",
+			"yyyy-MM-dd-HH.mm.ss.f",
+			"yyyy-MM-dd-HH.mm.ss.ff",
+			"yyyy-MM-dd-HH.mm.ss.fff",
+			"yyyy-MM-dd-HH.mm.ss.ffff",
+			"yyyy-MM-dd-HH.mm.ss.fffff",
+			"yyyy-MM-dd-HH.mm.ss.ffffff",
+			"yyyy-MM-dd-HH.mm.ss.fffffff",
+			"yyyy-MM-dd-HH.mm.ss.ffffffff",
+			"yyyy-MM-dd-HH.mm.ss.fffffffff",
+			"yyyy-MM-dd-HH.mm.ss.ffffffffff",
+			"yyyy-MM-dd-HH.mm.ss.fffffffffff",
+			"yyyy-MM-dd-HH.mm.ss.ffffffffffff",
+		};
+
 		public DB2MappingSchema() : this(ProviderName.DB2)
 		{
 		}
@@ -39,23 +68,7 @@ namespace LinqToDB.DataProvider.DB2
 
 			return DateTime.ParseExact(
 				value,
-				new[]
-				{
-					"yyyy-MM-dd",
-					"yyyy-MM-dd-HH.mm.ss",
-					"yyyy-MM-dd-HH.mm.ss.f",
-					"yyyy-MM-dd-HH.mm.ss.ff",
-					"yyyy-MM-dd-HH.mm.ss.fff",
-					"yyyy-MM-dd-HH.mm.ss.ffff",
-					"yyyy-MM-dd-HH.mm.ss.fffff",
-					"yyyy-MM-dd-HH.mm.ss.ffffff",
-					"yyyy-MM-dd-HH.mm.ss.fffffff",
-					"yyyy-MM-dd-HH.mm.ss.ffffffff",
-					"yyyy-MM-dd-HH.mm.ss.fffffffff",
-					"yyyy-MM-dd-HH.mm.ss.ffffffffff",
-					"yyyy-MM-dd-HH.mm.ss.fffffffffff",
-					"yyyy-MM-dd-HH.mm.ss.ffffffffffff",
-				},
+				DateParseFormats,
 				CultureInfo.InvariantCulture,
 				DateTimeStyles.None);
 		}
@@ -82,58 +95,58 @@ namespace LinqToDB.DataProvider.DB2
 			precision = precision == null || precision < 0 ? 6 : (precision > 7 ? 7 : precision);
 			return precision switch
 			{
-				0 => "yyyy-MM-dd-HH.mm.ss",
-				1 => "yyyy-MM-dd-HH.mm.ss.f",
-				2 => "yyyy-MM-dd-HH.mm.ss.ff",
-				3 => "yyyy-MM-dd-HH.mm.ss.fff",
-				4 => "yyyy-MM-dd-HH.mm.ss.ffff",
-				5 => "yyyy-MM-dd-HH.mm.ss.fffff",
-				6 => "yyyy-MM-dd-HH.mm.ss.ffffff",
-				7 => "yyyy-MM-dd-HH.mm.ss.fffffff",
-				_ => throw new InvalidOperationException(),
+				0    => TIMESTAMP0_FORMAT,
+				1    => TIMESTAMP1_FORMAT,
+				2    => TIMESTAMP2_FORMAT,
+				3    => TIMESTAMP3_FORMAT,
+				4    => TIMESTAMP4_FORMAT,
+				5    => TIMESTAMP5_FORMAT,
+				>= 7 => TIMESTAMP7_FORMAT, // DB2 supports up to 12 digits
+				_    => TIMESTAMP6_FORMAT, // default precision
 			};
 		}
 
+
 		static void ConvertDateTimeToSql(StringBuilder stringBuilder, SqlDataType type, DateTime value)
 		{
-			stringBuilder.Append("'");
+			stringBuilder.Append('\'');
 			if (type.Type.DataType == DataType.Date || "date".Equals(type.Type.DbType, StringComparison.OrdinalIgnoreCase))
-				stringBuilder.Append(value.ToString("yyyy-MM-dd-HH.mm.ss"));
+				stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATETIME_FORMAT, value);
 			else
-				stringBuilder.Append(value.ToString(GetTimestampFormat(type)));
-			stringBuilder.Append("'");
+				stringBuilder.AppendFormat(CultureInfo.InvariantCulture, GetTimestampFormat(type), value);
+			stringBuilder.Append('\'');
 		}
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
 		{
 			stringBuilder.Append("BX'");
 
-			foreach (var b in value)
-				stringBuilder.Append(b.ToString("X2"));
+			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
 
-			stringBuilder.Append("'");
+			stringBuilder.Append('\'');
 		}
 
+		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
 			stringBuilder
 				.Append("chr(")
 				.Append(value)
-				.Append(")")
+				.Append(')')
 				;
 		}
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
 		{
-			DataTools.ConvertStringToSql(stringBuilder, "||", null, AppendConversion, value, null);
+			DataTools.ConvertStringToSql(stringBuilder, "||", null, AppendConversionAction, value, null);
 		}
 
 		static void ConvertCharToSql(StringBuilder stringBuilder, char value)
 		{
-			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversion, value);
+			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversionAction, value);
 		}
 
-		internal static readonly DB2MappingSchema Instance = new DB2MappingSchema();
+		internal static readonly DB2MappingSchema Instance = new ();
 
 		static void ConvertGuidToSql(StringBuilder stringBuilder, Guid value)
 		{

@@ -1,11 +1,10 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Data;
 using NUnit.Framework;
 
-#if NET46
+#if NET472
 using Tests.FSharp.Models;
 #else
 using Tests.Model;
@@ -42,7 +41,7 @@ namespace Tests.Linq
 				var p   = "abc";
 				var sql = db.GetTable<Person>().Where(t => t.FirstName == p).ToString();
 
-				Console.WriteLine(sql);
+				TestContext.WriteLine(sql);
 
 				Assert.That(sql, Contains.Substring("(3)").Or.Contains("(4000)"));
 			}

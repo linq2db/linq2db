@@ -11,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using JetBrains.Annotations;
+using LinqToDB.Common.Internal.Cache;
 
 namespace LinqToDB.Data
 {
@@ -29,7 +30,7 @@ namespace LinqToDB.Data
 	/// or attached to existing connection or transaction.
 	/// </summary>
 	[PublicAPI]
-	public partial class DataConnection : ICloneable
+	public partial class DataConnection : IDataContext, ICloneable
 	{
 		#region .ctor
 
@@ -250,9 +251,6 @@ namespace LinqToDB.Data
 					DataProvider     = ci.DataProvider;
 					ConnectionString = ci.ConnectionString;
 					MappingSchema    = DataProvider.MappingSchema;
-					RetryPolicy      = Configuration.RetryPolicy.Factory != null
-										? Configuration.RetryPolicy.Factory(this)
-										: null;
 					break;
 
 				case ConnectionSetupType.ConnectionString:
@@ -318,6 +316,10 @@ namespace LinqToDB.Data
 				default:
 					throw new NotImplementedException($"SetupType: {options.SetupType}");
 			}
+
+			RetryPolicy = Configuration.RetryPolicy.Factory != null
+					? Configuration.RetryPolicy.Factory(this)
+					: null;
 
 			if (options.DataProvider != null)
 			{
@@ -469,7 +471,7 @@ namespace LinqToDB.Data
 
 		/// <summary>
 		/// Gets or sets trace handler, used for current connection instance.
-		/// Configured on the connection builder using <see cref="LinqToDbConnectionOptionsBuilder.WithTracing(System.Action{LinqToDB.Data.TraceInfo})"/>.
+		/// Configured on the connection builder using <see cref="LinqToDbConnectionOptionsBuilder.WithTracing(Action{TraceInfo})"/>.
 		/// defaults to <see cref="OnTrace"/>.
 		/// </summary>
 		public Action<TraceInfo> OnTraceConnection { get; set; } = _onTrace;
@@ -564,7 +566,7 @@ namespace LinqToDB.Data
 			}
 		}
 
-		private static TraceSwitch _traceSwitch = new TraceSwitch("DataConnection",
+		private static TraceSwitch _traceSwitch = new ("DataConnection",
 			"DataConnection trace switch",
 #if DEBUG
 			"Warning"
@@ -579,11 +581,11 @@ namespace LinqToDB.Data
 		/// defaults to off unless library was built in debug mode.
 		/// <remarks>Should only be used when <see cref="TraceSwitchConnection"/> can not be used!</remarks>
 		/// </summary>
-		public  static TraceSwitch  TraceSwitch
+		public static TraceSwitch TraceSwitch
 		{
 			// used by LoggingExtensions
 			get => _traceSwitch;
-			set => _traceSwitch = value;
+			set => Volatile.Write(ref _traceSwitch, value);
 		}
 
 		/// <summary>
@@ -643,7 +645,7 @@ namespace LinqToDB.Data
 		{
 			get
 			{
-#if NET45 || NET46
+#if NETFRAMEWORK
 				return _defaultSettings ??= LinqToDBSection.Instance;
 #else
 				return _defaultSettings;
@@ -706,8 +708,7 @@ namespace LinqToDB.Data
 			}
 		}
 
-		static readonly List<Func<IConnectionStringSettings,string,IDataProvider?>> _providerDetectors =
-			new List<Func<IConnectionStringSettings,string,IDataProvider?>>();
+		static readonly List<Func<IConnectionStringSettings,string,IDataProvider?>> _providerDetectors = new();
 
 		/// <summary>
 		/// Registers database provider factory method.
@@ -736,7 +737,7 @@ namespace LinqToDB.Data
 			}
 		}
 
-		static readonly object _initSyncRoot = new object();
+		static readonly object _initSyncRoot = new ();
 		static          bool   _initialized;
 
 		static void InitConfig()
@@ -751,8 +752,7 @@ namespace LinqToDB.Data
 			}
 		}
 
-		static readonly ConcurrentDictionary<string,IDataProvider> _dataProviders =
-			new ConcurrentDictionary<string,IDataProvider>();
+		static readonly ConcurrentDictionary<string,IDataProvider> _dataProviders = new ();
 
 		/// <summary>
 		/// Registers database provider implementation by provided unique name.
@@ -958,8 +958,7 @@ namespace LinqToDB.Data
 			}
 		}
 
-		static readonly ConcurrentDictionary<string,ConfigurationInfo> _configurations =
-			new ConcurrentDictionary<string, ConfigurationInfo>();
+		static readonly ConcurrentDictionary<string,ConfigurationInfo> _configurations = new ();
 
 		/// <summary>
 		/// Register connection configuration with specified connection string and database provider implementation.
@@ -1090,6 +1089,8 @@ namespace LinqToDB.Data
 				if (RetryPolicy != null)
 					_connection = new RetryingDbConnection(this, _connection, RetryPolicy);
 			}
+			else if (RetryPolicy != null && _connection is not RetryingDbConnection)
+				_connection = new RetryingDbConnection(this, _connection, RetryPolicy);
 
 			if (_connection.State == ConnectionState.Closed)
 			{
@@ -1172,6 +1173,11 @@ namespace LinqToDB.Data
 		/// </summary>
 		public string? LastQuery;
 
+		/// <summary>
+		/// Contains last parameters, sent to database using current connection.
+		/// </summary>
+		public IDataParameterCollection? LastParameters;
+
 		internal void InitCommand(CommandType commandType, string sql, DataParameter[]? parameters, List<string>? queryHints, bool withParameters)
 		{
 			if (queryHints?.Count > 0)
@@ -1183,6 +1189,7 @@ namespace LinqToDB.Data
 
 			DataProvider.InitCommand(this, commandType, sql, parameters, withParameters);
 			LastQuery = Command.CommandText;
+			LastParameters = Command.Parameters;
 		}
 
 		private int? _commandTimeout;
@@ -1212,6 +1219,13 @@ namespace LinqToDB.Data
 		}
 
 		private IDbCommand? _command;
+
+		/// <summary>
+		/// Provides acess to current <see cref="_command"/> instance. Used for logs to avoid command instance creation
+		/// in <see cref="Command"/> getter if <see cref="_command"/> is not initialized.
+		/// </summary>
+		internal IDbCommand? GetCurrentCommand() => _command;
+
 		/// <summary>
 		/// Gets or sets command object, used by current connection.
 		/// </summary>
@@ -1267,10 +1281,10 @@ namespace LinqToDB.Data
 
 			if (TraceSwitchConnection.TraceInfo)
 			{
-				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute)
+				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteNonQuery, false)
 				{
 					TraceLevel     = TraceLevel.Info,
-					Command        = Command,
+					Command        = GetCurrentCommand(),
 					StartTime      = now,
 				});
 			}
@@ -1283,10 +1297,10 @@ namespace LinqToDB.Data
 
 				if (TraceSwitchConnection.TraceInfo)
 				{
-					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute)
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, TraceOperation.ExecuteNonQuery, false)
 					{
 						TraceLevel      = TraceLevel.Info,
-						Command         = Command,
+						Command         = GetCurrentCommand(),
 						StartTime       = now,
 						ExecutionTime   = sw.Elapsed,
 						RecordsAffected = ret,
@@ -1299,10 +1313,10 @@ namespace LinqToDB.Data
 			{
 				if (TraceSwitchConnection.TraceError)
 				{
-					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error)
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteNonQuery, false)
 					{
 						TraceLevel     = TraceLevel.Error,
-						Command        = Command,
+						Command        = GetCurrentCommand(),
 						StartTime      = now,
 						ExecutionTime  = sw.Elapsed,
 						Exception      = ex,
@@ -1333,10 +1347,10 @@ namespace LinqToDB.Data
 
 			if (TraceSwitchConnection.TraceInfo)
 			{
-				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute)
+				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteScalar, false)
 				{
 					TraceLevel     = TraceLevel.Info,
-					Command        = Command,
+					Command        = GetCurrentCommand(),
 					StartTime      = now,
 				});
 			}
@@ -1349,10 +1363,10 @@ namespace LinqToDB.Data
 
 				if (TraceSwitchConnection.TraceInfo)
 				{
-					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute)
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, TraceOperation.ExecuteScalar, false)
 					{
 						TraceLevel     = TraceLevel.Info,
-						Command        = Command,
+						Command        = GetCurrentCommand(),
 						StartTime      = now,
 						ExecutionTime  = sw.Elapsed,
 					});
@@ -1364,10 +1378,10 @@ namespace LinqToDB.Data
 			{
 				if (TraceSwitchConnection.TraceError)
 				{
-					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error)
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteScalar, false)
 					{
 						TraceLevel     = TraceLevel.Error,
-						Command        = Command,
+						Command        = GetCurrentCommand(),
 						StartTime      = now,
 						ExecutionTime  = sw.Elapsed,
 						Exception      = ex,
@@ -1403,10 +1417,10 @@ namespace LinqToDB.Data
 
 			if (TraceSwitchConnection.TraceInfo)
 			{
-				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute)
+				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteReader, false)
 				{
 					TraceLevel     = TraceLevel.Info,
-					Command        = Command,
+					Command        = GetCurrentCommand(),
 					StartTime      = now,
 				});
 			}
@@ -1420,10 +1434,10 @@ namespace LinqToDB.Data
 
 				if (TraceSwitchConnection.TraceInfo)
 				{
-					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute)
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, TraceOperation.ExecuteReader, false)
 					{
 						TraceLevel     = TraceLevel.Info,
-						Command        = Command,
+						Command        = GetCurrentCommand(),
 						StartTime      = now,
 						ExecutionTime  = sw.Elapsed,
 					});
@@ -1435,10 +1449,10 @@ namespace LinqToDB.Data
 			{
 				if (TraceSwitchConnection.TraceError)
 				{
-					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error)
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteReader, false)
 					{
 						TraceLevel     = TraceLevel.Error,
-						Command        = Command,
+						Command        = GetCurrentCommand(),
 						StartTime      = now,
 						ExecutionTime  = sw.Elapsed,
 						Exception      = ex,
@@ -1587,15 +1601,25 @@ namespace LinqToDB.Data
 		/// Gets list of query hints (writable collection), that will be used only for next query, executed through current connection.
 		/// </summary>
 		public  List<string>  NextQueryHints => _nextQueryHints ??= new List<string>();
+		
+		private static readonly MemoryCache<(string baseSchemaId, string addedSchemaId)> _combinedSchemas = new (new ());
 
 		/// <summary>
 		/// Adds additional mapping schema to current connection.
 		/// </summary>
+		/// <remarks><see cref="DataConnection"/> will share <see cref="Mapping.MappingSchema"/> instances that were created by combining same mapping schemas.</remarks>
 		/// <param name="mappingSchema">Mapping schema.</param>
 		/// <returns>Current connection object.</returns>
 		public DataConnection AddMappingSchema(MappingSchema mappingSchema)
 		{
-			MappingSchema = new MappingSchema(mappingSchema, MappingSchema);
+			MappingSchema = _combinedSchemas.GetOrCreate(
+				(MappingSchema.ConfigurationID, mappingSchema.ConfigurationID),
+				new { BaseSchema = MappingSchema, AddedSchema = mappingSchema },
+				static (entry, context) => 
+				{
+					entry.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
+					return new MappingSchema(context.AddedSchema, context.BaseSchema);
+				});
 			_id            = null;
 
 			return this;

@@ -23,9 +23,9 @@ namespace Tests.Linq
 
 				var id = 1;
 
-				var parent1 = db.Parent.FirstOrDefault(p => p.ParentID == id);
+				var parent1 = db.Parent.FirstOrDefault(p => p.ParentID == id)!;
 				id++;
-				var parent2 = db.Parent.FirstOrDefault(p => p.ParentID == id);
+				var parent2 = db.Parent.FirstOrDefault(p => p.ParentID == id)!;
 
 				Assert.That(parent1.ParentID, Is.Not.EqualTo(parent2.ParentID));
 			}
@@ -51,6 +51,23 @@ namespace Tests.Linq
 			{
 				var id = 1;
 				Assert.AreEqual(1, db.Person.Where(_ => _.ID == id || _.ID <= id || _.ID == id).Count());
+			}
+		}
+
+		[Test]
+		public void InlineTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var id = 1;
+				var query = from t in db.Person
+					where t.ID == id
+					select t;
+
+				var queryInlined = query.InlineParameters();
+
+				Assert.That(query.GetStatement().CollectParameters().Length,        Is.EqualTo(1));
+				Assert.That(queryInlined.GetStatement().CollectParameters().Length, Is.EqualTo(0));
 			}
 		}
 
@@ -161,9 +178,9 @@ namespace Tests.Linq
 				var p   = 123.456m;
 				var sql = db.GetTable<AllTypes>().Where(t => t.DecimalDataType == p).ToString();
 
-				Console.WriteLine(sql);
+				TestContext.WriteLine(sql);
 
-				Assert.That(sql, Contains.Substring("(6,3)"));
+				Assert.That(sql, Contains.Substring("(6, 3)"));
 			}
 		}
 
@@ -176,7 +193,7 @@ namespace Tests.Linq
 				var p   = new byte[] { 0, 1, 2 };
 				var sql = db.GetTable<AllTypes>().Where(t => t.BinaryDataType == p).ToString();
 
-				Console.WriteLine(sql);
+				TestContext.WriteLine(sql);
 
 				Assert.That(sql, Contains.Substring("(3)").Or.Contains("Blob").Or.Contains("(8000)"));
 			}
@@ -187,7 +204,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var dt = DateTime.Now;
+				var dt = TestData.DateTime;
 
 				if (context.Contains("Informix"))
 					dt = new DateTime(dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute, dt.Second);
@@ -203,9 +220,9 @@ namespace Tests.Linq
 			{
 				int id1 = 1, id2 = 10000;
 
-				var parent1 = db.Parent.OrderBy(p => p.ParentID).FirstOrDefault(p => p.ParentID == id1 || p.ParentID >= id1 || p.ParentID >= id2);
+				var parent1 = db.Parent.OrderBy(p => p.ParentID).FirstOrDefault(p => p.ParentID == id1 || p.ParentID >= id1 || p.ParentID >= id2)!;
 				id1++;
-				var parent2 = db.Parent.OrderBy(p => p.ParentID).FirstOrDefault(p => p.ParentID == id1 || p.ParentID >= id1 || p.ParentID >= id2);
+				var parent2 = db.Parent.OrderBy(p => p.ParentID).FirstOrDefault(p => p.ParentID == id1 || p.ParentID >= id1 || p.ParentID >= id2)!;
 
 				Assert.That(parent1.ParentID, Is.Not.EqualTo(parent2.ParentID));
 			}
@@ -274,6 +291,23 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				db.Parent.Where(p => GetChildrenFiltered(db, ChildFilter).Select(c => c.ParentID).Contains(p.ParentID)).ToList();
+			}
+		}
+
+		[ActiveIssue(Configuration = TestProvName.AllSybase, Details = "CI: sybase image needs utf-8 enabled")]
+		[Test]
+		public void TestInternationalParamName([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var параметр = 1;
+				var result1 = db.Parent.Where(p => p.ParentID == параметр).ToList();
+
+				var 参数 = 1;
+				var result2 = db.Parent.Where(p => p.ParentID == 参数).ToList();
+
+				var パラメータ = 1;
+				var result3 = db.Parent.Where(p => p.ParentID == パラメータ).ToList();
 			}
 		}
 
@@ -364,45 +398,50 @@ namespace Tests.Linq
 			public List<Table404Two>? Values;
 		}
 
-		[Repeat(2)] // don't ever remove Repeat, as it used to test issue #2174
 		[Test]
 		public void Issue404Test([DataSources(TestProvName.AllSybase)] string context)
 		{
-			using (new AllowMultipleQuery(true))
-			using (var db = GetDataContext(context))
-			using (var t1 = db.CreateLocalTable(Table404One.Data))
-			using (var t2 = db.CreateLocalTable(Table404Two.Data))
+			// executed twice to test issue #2174
+			Execute();
+			Execute();
+
+			void Execute()
 			{
-				Issue404? usage = null;
-				var allUsages = !usage.HasValue;
-				var res1 = Test();
-				Assert.AreEqual(1, res1.Id);
-				Assert.AreEqual(3, res1.Values.Count());
-				Assert.AreEqual(3, res1.Values.Where(v => v.FirstTableId == 1).Count());
-
-				usage = Issue404.Value1;
-				allUsages = false;
-				var res2 = Test();
-				Assert.AreEqual(1, res2.Id);
-				Assert.AreEqual(2, res2.Values.Count());
-				Assert.AreEqual(2, res2.Values.Where(v => v.Usage == usage).Count());
-				Assert.AreEqual(2, res2.Values.Where(v => v.FirstTableId == 1).Count());
-
-				usage = Issue404.Value2;
-				allUsages = false;
-				var res3 = Test();
-				Assert.AreEqual(1, res2.Id);
-				Assert.AreEqual(1, res3.Values.Count());
-				Assert.AreEqual(1, res3.Values.Where(v => v.Usage == usage).Count());
-				Assert.AreEqual(1, res3.Values.Where(v => v.FirstTableId == 1).Count());
-
-				FirstTable Test()
+				using (var db = GetDataContext(context))
+				using (var t1 = db.CreateLocalTable(Table404One.Data))
+				using (var t2 = db.CreateLocalTable(Table404Two.Data))
 				{
-					return t1
-					  .GroupJoin(t2.Where(v =>
-						allUsages || v.Usage == usage.GetValueOrDefault()), c => c.Id, v => v.FirstTableId,
-						 (c, v) => new FirstTable { Id = c.Id, Values = v.ToList() })
-					  .FirstOrDefault();
+					Issue404? usage = null;
+					var allUsages = !usage.HasValue;
+					var res1 = Test()!;
+					Assert.AreEqual(1, res1.Id);
+					Assert.AreEqual(3, res1.Values!.Count);
+					Assert.AreEqual(3, res1.Values.Where(v => v.FirstTableId == 1).Count());
+
+					usage = Issue404.Value1;
+					allUsages = false;
+					var res2 = Test()!;
+					Assert.AreEqual(1, res2.Id);
+					Assert.AreEqual(2, res2.Values!.Count);
+					Assert.AreEqual(2, res2.Values.Where(v => v.Usage == usage).Count());
+					Assert.AreEqual(2, res2.Values.Where(v => v.FirstTableId == 1).Count());
+
+					usage = Issue404.Value2;
+					allUsages = false;
+					var res3 = Test()!;
+					Assert.AreEqual(1, res2.Id);
+					Assert.AreEqual(1, res3.Values!.Count);
+					Assert.AreEqual(1, res3.Values.Where(v => v.Usage == usage).Count());
+					Assert.AreEqual(1, res3.Values.Where(v => v.FirstTableId == 1).Count());
+
+					FirstTable? Test()
+					{
+						return t1
+						  .GroupJoin(t2.Where(v =>
+							allUsages || v.Usage == usage.GetValueOrDefault()), c => c.Id, v => v.FirstTableId,
+							 (c, v) => new FirstTable { Id = c.Id, Values = v.ToList() })
+						  .ToList().OrderBy(_ => _.Id).FirstOrDefault();
+					}
 				}
 			}
 		}
@@ -419,18 +458,54 @@ namespace Tests.Linq
 
 			static Expression<Func<Issue1189Customer, DateTime>> DefaultDateTime()
 			{
-				return p => Sql.AsSql(DateTime.Now);
+				return p => Sql.AsSql(TestData.DateTime);
 			}
 		}
 
-		[ActiveIssue(1189)]
+		[ActiveIssue("SQL0418N", Configuration = ProviderName.DB2)]
 		[Test]
 		public void Issue1189Test([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<Issue1189Customer>())
 			{
-				table.Where(k => k.ToDelete <= DateTime.Now).ToList();
+				table.Where(k => k.ToDelete <= TestData.DateTime).ToList();
+			}
+		}
+
+		[Table]
+		class TestEqualsTable1
+		{
+			[Column]
+			public int Id { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(TestEqualsTable2.FK), CanBeNull = true)]
+			public IQueryable<TestEqualsTable2> Relation { get; } = null!;
+		}
+
+		[Table]
+		class TestEqualsTable2
+		{
+			[Column]
+			public int Id { get; set; }
+
+			[Column]
+			public int? FK { get; set; }
+		}
+
+		[Test]
+		public void TestParameterInEquals([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table1 = db.CreateLocalTable<TestEqualsTable1>())
+			using (var table2 = db.CreateLocalTable<TestEqualsTable2>())
+			{
+				int? param = null;
+				table1
+				.Where(_ => _.Relation
+					.Select(__ => __.Id)
+					.Any(__ => __.Equals(param)))
+				.ToList();
 			}
 		}
 	}

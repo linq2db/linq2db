@@ -35,6 +35,11 @@ namespace LinqToDB.Mapping
 		string? ServerName { get; set; }
 
 		/// <summary>
+		/// Gets or sets Table options. See <see cref="TableOptions"/> enum for support information per provider.
+		/// </summary>
+		TableOptions TableOptions { get; set; }
+
+		/// <summary>
 		/// Gets list of change interfaces for column descriptors for current entity.
 		/// </summary>
 		IEnumerable<IColumnChangeDescriptor> Columns { get; }

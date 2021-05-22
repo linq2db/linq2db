@@ -1,0 +1,189 @@
+parameters:
+  for_nuget: false
+
+jobs:
+- job: build_job
+  pool:
+    vmImage: 'windows-2019'
+  displayName: 'Build'
+
+  steps:
+
+  # mitigate https://status.dev.azure.com/_event/182998791
+  - task: NuGetToolInstaller@1
+
+  - task: PowerShell@2
+    inputs:
+      filePath: '$(Build.SourcesDirectory)/Build/SetVersion.ps1'
+      workingDirectory: '$(Build.SourcesDirectory)'
+      arguments: -path $(Build.SourcesDirectory)/Build/linq2db.Default.props -version $(assemblyVersion)
+    displayName: Update assembly version
+
+  - task: MSBuild@1
+    inputs:
+      solution: '$(solution)'
+      configuration: '$(build_configuration)'
+      msbuildArguments: '/t:Restore;Rebuild -m /p:ContinuousIntegrationBuild=true'
+    displayName: Build Solution
+
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: 'publish'
+      projects: '**/Tests/Linq/Tests.csproj'
+      publishWebProjects: false
+      zipAfterPublish: false
+      arguments: -f netcoreapp2.1 -c $(build_configuration)
+      nobuild: true
+    displayName: Publish Test Project for netcore 2.1
+
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: 'publish'
+      projects: '**/Tests/Linq/Tests.csproj'
+      publishWebProjects: false
+      zipAfterPublish: false
+      arguments: -f netcoreapp3.1 -c $(build_configuration)
+      nobuild: true
+    displayName: Publish Test Project for netcore 3.1
+
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: 'publish'
+      projects: '**/Tests/Linq/Tests.csproj'
+      publishWebProjects: false
+      zipAfterPublish: false
+      arguments: -f net5.0 -c $(build_configuration)
+      nobuild: true
+    displayName: Publish Test Project for net 5.0
+
+  - task: CopyFiles@2
+    inputs:
+      targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net472'
+      sourceFolder: '$(Build.SourcesDirectory)/Tests'
+      contents: 'DataProviders.json'
+    displayName: Copy test settings for NETFX472
+
+  - task: CopyFiles@2
+    inputs:
+      targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.1/publish'
+      sourceFolder: '$(Build.SourcesDirectory)/Tests'
+      contents: 'DataProviders.json'
+    displayName: Copy test settings for NETCOREAPP2.1
+
+  - task: CopyFiles@2
+    inputs:
+      targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp3.1/publish'
+      sourceFolder: '$(Build.SourcesDirectory)/Tests'
+      contents: 'DataProviders.json'
+    displayName: Copy test settings for NETCOREAPP3.1
+
+  - task: CopyFiles@2
+    inputs:
+      targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net5.0/publish'
+      sourceFolder: '$(Build.SourcesDirectory)/Tests'
+      contents: 'DataProviders.json'
+    displayName: Copy test settings for NET 5.0
+
+  - task: CopyFiles@2
+    inputs:
+      targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net472/configs'
+      sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/net472'
+    displayName: Copy test configs for NETFX472
+
+  - task: CopyFiles@2
+    inputs:
+      targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.1/publish/configs'
+      sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/netcoreapp21'
+    displayName: Copy test configs for NETCOREAPP2.1
+
+  - task: CopyFiles@2
+    inputs:
+      targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp3.1/publish/configs'
+      sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/netcoreapp31'
+    displayName: Copy test configs for NETCOREAPP3.1
+
+  - task: CopyFiles@2
+    inputs:
+      targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net5.0/publish/configs'
+      sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/net50'
+    displayName: Copy test configs for NET 5.0
+
+  - task: CmdLine@2
+    inputs:
+      script: 'copy "$(System.DefaultWorkingDirectory)\Data\Create Scripts\Northwind.sql" $(Build.SourcesDirectory)\Build\Azure\scripts\northwind.sql'
+    displayName: Copy northwind.sql to scripts
+
+  - task: CopyFiles@2
+    inputs:
+      targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.1/publish/scripts'
+      sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/scripts'
+    displayName: Copy test scripts for NETCOREAPP2.1
+
+  - task: CopyFiles@2
+    inputs:
+      targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp3.1/publish/scripts'
+      sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/scripts'
+    displayName: Copy test scripts for NETCOREAPP3.1
+
+  - task: CopyFiles@2
+    inputs:
+      targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net5.0/publish/scripts'
+      sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/scripts'
+    displayName: Copy test scripts for NET5.0
+
+  - task: CopyFiles@2
+    inputs:
+      targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net472/scripts'
+      sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/scripts'
+    displayName: Copy test scripts for NETFX472
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      path: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net472'
+      artifact: '$(netfx472_tests)'
+    displayName: Publish test artifacts for NETFX472
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      path: '$(Build.SourcesDirectory)/Tests/Tests.T4/bin/$(build_configuration)/net472'
+      artifact: '$(netfx472_tests_t4)'
+    displayName: Publish T4 test artifacts for NETFX472
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      path: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.1/publish'
+      artifact: '$(netcore21_tests)'
+    displayName: Publish test artifacts for NETCOREAPP2.1
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      path: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp3.1/publish'
+      artifact: '$(netcore31_tests)'
+    displayName: Publish test artifacts for NETCOREAPP3.1
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      path: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net5.0/publish'
+      artifact: '$(net50_tests)'
+    displayName: Publish test artifacts for NET 5.0
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      path: '$(Build.SourcesDirectory)/Source/LinqToDB/bin/Release'
+      artifact: '$(artifact_linq2db_binaries)'
+    displayName: Publish linq2db build results
+    condition: ${{ parameters.for_nuget }}
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      path: '$(Build.SourcesDirectory)/Source/LinqToDB.Tools/bin/Release'
+      artifact: '$(artifact_linq2db_tools_binaries)'
+    displayName: Publish linq2db.Tools build results
+    condition: ${{ parameters.for_nuget }}
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      path: '$(Build.SourcesDirectory)/Source/LinqToDB.AspNet/bin/Release'
+      artifact: '$(artifact_linq2db_aspnet_binaries)'
+    displayName: Publish linq2db.AspNet build results
+    condition: ${{ parameters.for_nuget }}

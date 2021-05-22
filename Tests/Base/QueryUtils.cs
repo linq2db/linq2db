@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using JetBrains.Annotations;
 using LinqToDB.Linq;
 using LinqToDB.SqlQuery;
@@ -14,7 +15,14 @@ namespace Tests
 			var expression = eq.Expression;
 			var info = Query<T>.GetQuery(eq.DataContext, ref expression);
 
+			InitParameters(eq, info, expression);
+
 			return info.Queries.Single().Statement;
+		}
+
+		private static void InitParameters<T>(IExpressionQuery eq, Query<T> info, Expression expression)
+		{
+			eq.DataContext.GetQueryRunner(info, 0, expression, null, null).GetSqlText();
 		}
 
 		public static int GetPreamblesCount<T>(this IQueryable<T> query)
@@ -22,6 +30,7 @@ namespace Tests
 			var eq = (IExpressionQuery)query;
 			var expression = eq.Expression;
 			var info = Query<T>.GetQuery(eq.DataContext, ref expression);
+
 			return info.PreamblesCount();
 		}
 

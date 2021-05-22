@@ -5,9 +5,11 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
-	public interface IDataReaderAsync : IDisposable
-#if !NET45 && !NET46
-		, IAsyncDisposable
+	public interface IDataReaderAsync : IDisposable,
+#if NATIVE_ASYNC
+		IAsyncDisposable
+#else
+		Async.IAsyncDisposable
 #endif
 	{
 		IDataReader DataReader { get; }
