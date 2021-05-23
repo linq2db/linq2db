@@ -1246,6 +1246,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.With);
 							Append(elem.Update);
 							Append(elem.SelectQuery);
+							Append(elem.Output);
 
 							break;
 						}
@@ -2082,10 +2083,12 @@ namespace LinqToDB.ServiceModel
 							var with        = Read<SqlWithClause>();
 							var update      = Read<SqlUpdateClause>()!;
 							var selectQuery = Read<SelectQuery>()!;
+							var output      = Read<SqlOutputClause>()!;
 
 							obj = _statement = new SqlUpdateStatement(selectQuery)
 							{
 								Update = update,
+								Output = output,
 								With   = with,
 								Tag    = tag
 							};

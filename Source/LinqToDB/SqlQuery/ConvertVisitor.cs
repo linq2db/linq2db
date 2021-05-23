@@ -604,8 +604,10 @@ namespace LinqToDB.SqlQuery
 						var with        = s.With        != null ? (SqlWithClause?)  ConvertInternal(s.With) : null;
 						var selectQuery = (SelectQuery?    )ConvertInternal(s.SelectQuery);
 						var update      = (SqlUpdateClause?)ConvertInternal(s.Update);
+						var output      = (SqlOutputClause?)ConvertInternal(s.Output);
 
 						if (update      != null && !ReferenceEquals(s.Update, update)           ||
+							output      != null && !ReferenceEquals(s.Output, output)           ||
 							selectQuery != null && !ReferenceEquals(s.SelectQuery, selectQuery) ||
 							tag         != null && !ReferenceEquals(s.Tag, tag)                 ||
 							with        != null && !ReferenceEquals(s.With, with))
@@ -613,8 +615,9 @@ namespace LinqToDB.SqlQuery
 							newElement = new SqlUpdateStatement(selectQuery ?? s.SelectQuery)
 							{
 								Update = update ?? s.Update,
+								Output = output ?? s.Output,
 								Tag    = tag    ?? s.Tag,
-								With   = with   ?? s.With
+								With   = with   ?? s.With,
 							};
 							CorrectQueryHierarchy(((SqlUpdateStatement)newElement).SelectQuery);
 						}

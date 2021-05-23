@@ -2265,6 +2265,9 @@ namespace LinqToDB.SqlProvider
 
 		protected SqlUpdateStatement GetAlternativeUpdate(SqlUpdateStatement updateStatement)
 		{
+			if (updateStatement.Output != null)
+				throw new NotImplementedException($"GetAlternativeUpdate not implemented for update with output");
+
 			var sourcesCount  = QueryHelper.EnumerateAccessibleSources(updateStatement.SelectQuery).Skip(1).Take(2).Count();
 
 			// It covers subqueries also. Simple subquery will have sourcesCount == 2

@@ -62,14 +62,6 @@ namespace LinqToDB.SqlQuery
 			set => throw new InvalidOperationException();
 		}
 		
-		public override IEnumerable<IQueryElement> EnumClauses()
-		{
-			foreach (var insert in Inserts)
-				yield return insert;
-			
-			yield return Source;
-		}
-
 		public override ISqlTableSource? GetTableSource(ISqlTableSource table)
 		{
 			if (Source == table)
