@@ -529,13 +529,11 @@ namespace LinqToDB.Linq.Builder
 			public UpdateOutputContext(IBuildContext? parent, LambdaExpression lambda, IBuildContext source, IBuildContext deletedTable, IBuildContext insertedTable)
 				: base(parent, lambda, source, deletedTable, insertedTable)
 			{
-				Statement     = source.Statement;
-				DeletedTable  = deletedTable;
-				InsertedTable = insertedTable;
+				Statement = source.Statement;
+				Sequence[0].SelectQuery.Select.Columns.Clear();
+				Sequence[1].SelectQuery = Sequence[0].SelectQuery;
+				Sequence[2].SelectQuery = Sequence[0].SelectQuery;
 			}
-
-			public IBuildContext DeletedTable { get; }
-			public IBuildContext InsertedTable { get; }
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
@@ -543,14 +541,11 @@ namespace LinqToDB.Linq.Builder
 				var mapper = Builder.BuildMapper<T>(expr);
 
 				var updateStatement = (SqlUpdateStatement)Statement!;
-				//TODO: check this
-				var outputQuery     = Sequence[0].SelectQuery;
 
-				updateStatement.Output!.OutputQuery = outputQuery;
+				updateStatement.Output!.OutputQuery = Sequence[0].SelectQuery;
 
 				QueryRunner.SetRunQuery(query, mapper);
 			}
-
 		}
 		#endregion
 

@@ -69,7 +69,6 @@ namespace LinqToDB.SqlQuery
 						if (result != null)
 							return result;
 					}
-
 				}
 			}
 

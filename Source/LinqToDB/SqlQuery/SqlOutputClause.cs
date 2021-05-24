@@ -8,10 +8,10 @@ namespace LinqToDB.SqlQuery
 	{
 		private List<SqlSetExpression>? _outputItems;
 
-		public SqlTable     SourceTable    { get; set; } = null!;
-		public SqlTable     InsertedTable  { get; set; } = null!;
-		public SqlTable     DeletedTable   { get; set; } = null!;
-		public SqlTable     OutputTable    { get; set; } = null!;
+		public SqlTable?    SourceTable    { get; set; }
+		public SqlTable?    InsertedTable  { get; set; }
+		public SqlTable?    DeletedTable   { get; set; }
+		public SqlTable?    OutputTable    { get; set; }
 		public SelectQuery? OutputQuery    { get; set; }
 
 		public bool                   HasOutputItems => _outputItems != null && _outputItems.Count > 0 || OutputQuery != null;
@@ -34,10 +34,10 @@ namespace LinqToDB.SqlQuery
 
 		ISqlExpression? ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
-			((ISqlExpressionWalkable)SourceTable  )?.Walk(options, func);
-			((ISqlExpressionWalkable)DeletedTable )?.Walk(options, func);
-			((ISqlExpressionWalkable)InsertedTable)?.Walk(options, func);
-			((ISqlExpressionWalkable)OutputTable  )?.Walk(options, func);
+			((ISqlExpressionWalkable?)SourceTable  )?.Walk(options, func);
+			((ISqlExpressionWalkable?)DeletedTable )?.Walk(options, func);
+			((ISqlExpressionWalkable?)InsertedTable)?.Walk(options, func);
+			((ISqlExpressionWalkable?)OutputTable  )?.Walk(options, func);
 
 			if (HasOutputItems)
 				foreach (var t in OutputItems)

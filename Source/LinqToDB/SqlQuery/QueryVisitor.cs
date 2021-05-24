@@ -550,7 +550,7 @@ namespace LinqToDB.SqlQuery
 			foreach (var j in table.Joins) Visit(j);
 		}
 
-		void VisitX(SqlTable table)
+		void VisitX(SqlTable? table)
 		{
 			if (table == null)
 				return;
