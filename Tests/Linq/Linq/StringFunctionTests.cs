@@ -14,7 +14,6 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using System.Collections.Generic;
 	using Model;
 
 	[TestFixture]
@@ -1585,7 +1584,14 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue3002Test([DataSources] string context)
+		public void Issue3002Test([DataSources(
+			// providers doesn't support IConvertible parameter coercion
+			ProviderName.SQLiteMS,
+			ProviderName.DB2,
+			ProviderName.MySqlConnector,
+			TestProvName.AllPostgreSQL,
+			TestProvName.AllInformix,
+			TestProvName.AllSybase)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable<SampleClass>())
