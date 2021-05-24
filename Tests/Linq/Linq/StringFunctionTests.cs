@@ -14,6 +14,7 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using System.Collections.Generic;
 	using Model;
 
 	[TestFixture]
@@ -1480,5 +1481,142 @@ namespace Tests.Linq
 					.Count(r => r.Diagnosis.EndsWith("Persecution", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
 			}
 		}
+
+		#region Issue 3002
+		public abstract class MySpecialBaseClass : IConvertible, IEquatable<MySpecialBaseClass>
+		{
+			[NotNull]
+			public string Value { get; set; }
+
+			protected MySpecialBaseClass(string value)
+			{
+				if (value == null)
+					throw new ArgumentNullException(nameof(value));
+				Value = value;
+			}
+
+			public static bool operator ==(MySpecialBaseClass? leftSide, string? rightSide)
+				=> leftSide?.Value == rightSide;
+
+			public static bool operator !=(MySpecialBaseClass? leftSide, string? rightSide)
+				=> leftSide?.Value != rightSide;
+
+			public override string ToString() => Value;
+
+			public override int GetHashCode() => Value.GetHashCode();
+
+			public override bool Equals(object? obj)
+			{
+				if (obj == null)
+					return false;
+
+				if (obj is string str)
+					return Value.Equals(str);
+
+				if (obj.GetType() == GetType())
+					return string.Equals(((MySpecialBaseClass)obj).Value, Value);
+
+				return base.Equals(obj);
+			}
+
+			public bool Equals(MySpecialBaseClass? other)
+			{
+				if (other?.GetType() != GetType())
+					return false;
+
+				return string.Equals(other.Value, Value);
+			}
+
+			#region IConvertible
+			public TypeCode GetTypeCode() => TypeCode.String;
+
+			public string ToString(IFormatProvider? provider) => Value;
+
+			public object ToType(Type conversionType, IFormatProvider? provider)
+			{
+				if (conversionType.IsSubclassOf(typeof(MySpecialBaseClass))
+					|| conversionType == typeof(MySpecialBaseClass))
+					return this;
+
+				return Value;
+			}
+
+			public bool     ToBoolean (IFormatProvider? provider) { throw new NotImplementedException(); }
+			public char     ToChar    (IFormatProvider? provider) { throw new NotImplementedException(); }
+			public sbyte    ToSByte   (IFormatProvider? provider) { throw new NotImplementedException(); }
+			public byte     ToByte    (IFormatProvider? provider) { throw new NotImplementedException(); }
+			public short    ToInt16   (IFormatProvider? provider) { throw new NotImplementedException(); }
+			public ushort   ToUInt16  (IFormatProvider? provider) { throw new NotImplementedException(); }
+			public int      ToInt32   (IFormatProvider? provider) { throw new NotImplementedException(); }
+			public uint     ToUInt32  (IFormatProvider? provider) { throw new NotImplementedException(); }
+			public long     ToInt64   (IFormatProvider? provider) { throw new NotImplementedException(); }
+			public ulong    ToUInt64  (IFormatProvider? provider) { throw new NotImplementedException(); }
+			public float    ToSingle  (IFormatProvider? provider) { throw new NotImplementedException(); }
+			public double   ToDouble  (IFormatProvider? provider) { throw new NotImplementedException(); }
+			public decimal  ToDecimal (IFormatProvider? provider) { throw new NotImplementedException(); }
+			public DateTime ToDateTime(IFormatProvider? provider) { throw new NotImplementedException(); }
+			#endregion
+		}
+
+		public class MyClass : MySpecialBaseClass
+		{
+			public MyClass(string value)
+				: base(value)
+			{
+			}
+
+			public static implicit operator MyClass?(string? value)
+			{
+				if (value == null)
+					return null;
+				return new MyClass(value);
+			}
+
+			public static implicit operator string?(MyClass? auswahlliste)
+				=> auswahlliste?.Value;
+		}
+
+		[Table]
+		class SampleClass
+		{
+			[Column] public int Id { get; set; }
+			[Column(DataType = DataType.NVarChar, Length = 50)] public MyClass? Value { get; set; }
+			[Column] public string? Value2 { get; set; }
+		}
+
+		[Test]
+		public void Issue3002Test([DataSources] string context)
+		{
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable<SampleClass>())
+			{
+				table.Insert(() => new SampleClass()
+				{
+					Id          = 1,
+					Value       = "Test",
+					Value2      = "SampleClass"
+				});
+				table.Insert(() => new SampleClass()
+				{
+					Id     = 2,
+					Value  = "Value",
+					Value2 = "SomeTest"
+				});
+
+				var test = "Test";
+
+				Assert.True(table.Any(sampleClass => sampleClass.Value == test || sampleClass.Value2!.Contains(test)));
+				Assert.AreEqual(2, table.Count(sampleClass => sampleClass.Value == test || sampleClass.Value2!.Contains(test)));
+
+				test = "Value";
+				Assert.True(table.Any(sampleClass => sampleClass.Value == test || sampleClass.Value2!.Contains(test)));
+				Assert.AreEqual(1, table.Count(sampleClass => sampleClass.Value == test || sampleClass.Value2!.Contains(test)));
+
+				test = "Class";
+				Assert.True(table.Any(sampleClass => sampleClass.Value == test || sampleClass.Value2!.Contains(test)));
+				Assert.AreEqual(1, table.Count(sampleClass => sampleClass.Value == test || sampleClass.Value2!.Contains(test)));
+			}
+		}
+		#endregion
 	}
 }
