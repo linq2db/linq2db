@@ -148,7 +148,9 @@ namespace LinqToDB.Expressions
 				case ExpressionType.MemberAccess:
 				{
 					var ma = (MemberExpression)expr;
-					return ma.Update(ma.Expression.SkipPathThrough());
+					if (ma.Expression != null)
+						return ma.Update(ma.Expression.SkipPathThrough());
+					break;
 				}
 				case ExpressionType.Call:
 				{
