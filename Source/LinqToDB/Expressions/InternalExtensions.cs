@@ -136,12 +136,31 @@ namespace LinqToDB.Expressions
 			};
 		}
 
-		private static readonly MethodInfo[] SkipPathThroughMethods = new [] { Methods.Enumerable.AsQueryable, Methods.LinqToDB.SqlExt.ToNotNull };
+		private static readonly MethodInfo[] SkipPathThroughMethods =
+		{
+			Methods.Enumerable.AsQueryable, Methods.LinqToDB.SqlExt.ToNotNull, Methods.LinqToDB.SqlExt.Alias
+		};
 
 		public static Expression SkipPathThrough(this Expression expr)
 		{
-			while (expr is MethodCallExpression mce && mce.IsSameGenericMethod(SkipPathThroughMethods))
-				expr = mce.Arguments[0];
+			switch (expr.NodeType)
+			{
+				case ExpressionType.MemberAccess:
+				{
+					var ma = (MemberExpression)expr;
+					if (ma.Expression != null)
+						return ma.Update(ma.Expression.SkipPathThrough());
+					break;
+				}
+				case ExpressionType.Call:
+				{
+					var mc = (MethodCallExpression)expr;
+					if (mc.IsSameGenericMethod(SkipPathThroughMethods))
+						return mc.Arguments[0].SkipPathThrough();
+					break;
+				}
+			}
+			
 			return expr;
 		}
 
