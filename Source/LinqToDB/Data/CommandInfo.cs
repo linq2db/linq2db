@@ -905,7 +905,7 @@ namespace LinqToDB.Data
 		/// <returns>Number of records, affected by command execution.</returns>
 		public int Execute()
 		{
-			var startedOn = DateTime.Now;
+			var startedOn = DateTime.UtcNow;
 			var stopwatch = Stopwatch.StartNew();
 			var hasParameters = Parameters?.Length > 0;
 
@@ -998,7 +998,7 @@ namespace LinqToDB.Data
 		/// <returns>Resulting value.</returns>
 		public T Execute<T>()
 		{
-			var startedOn = DateTime.Now;
+			var startedOn = DateTime.UtcNow;
 			var stopwatch = Stopwatch.StartNew();
 			var hasParameters = Parameters?.Length > 0;
 
