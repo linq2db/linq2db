@@ -118,6 +118,12 @@ namespace LinqToDB.Expressions
 			return mi is PropertyInfo info ? info.GetGetMethod()! : (MethodInfo)mi;
 		}
 
+		public static MethodInfo MethodOf<T1, T2, T3, T4>(Expression<Func<T1, T2, T3, T4, object?>> func)
+		{
+			var mi = GetMemberInfo(func);
+			return mi is PropertyInfo info ? info.GetGetMethod()! : (MethodInfo)mi;
+		}
+
 		public static MethodInfo MethodOf(Expression<Func<object?>> func)
 		{
 			var mi = GetMemberInfo(func);
@@ -147,6 +153,14 @@ namespace LinqToDB.Expressions
 		}
 
 		public static MethodInfo MethodOfGeneric<T1, T2, T3>(Expression<Func<T1, T2, T3, object?>> func)
+		{
+			var mi = MethodOf(func);
+			if (mi.IsGenericMethod)
+				mi = mi.GetGenericMethodDefinition();
+			return mi;
+		}
+
+		public static MethodInfo MethodOfGeneric<T1, T2, T3, T4>(Expression<Func<T1, T2, T3, T4, object?>> func)
 		{
 			var mi = MethodOf(func);
 			if (mi.IsGenericMethod)

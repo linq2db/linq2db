@@ -1,11 +1,11 @@
-﻿using System.Linq;
-using LinqToDB.Expressions;
+﻿using LinqToDB.Expressions;
 using LinqToDB.SqlQuery;
 using System.Linq.Expressions;
-using LinqToDB.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
+	using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
+
 	internal partial class MergeBuilder
 	{
 		internal class DeleteWhenNotMatchedBySource : MethodCallBuilder
@@ -13,7 +13,7 @@ namespace LinqToDB.Linq.Builder
 			protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{
 				return methodCall.Method.IsGenericMethod
-					&& LinqExtensions.DeleteWhenNotMatchedBySourceAndMethodInfo == methodCall.Method.GetGenericMethodDefinition();
+					&& DeleteWhenNotMatchedBySourceAndMethodInfo == methodCall.Method.GetGenericMethodDefinition();
 			}
 
 			protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)

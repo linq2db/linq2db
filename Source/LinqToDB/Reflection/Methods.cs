@@ -265,6 +265,27 @@ namespace LinqToDB.Reflection
 				public static readonly MethodInfo DeleteQueryablePredicateAsync = MemberHelper.MethodOfGeneric((IQueryable<LW1> q, Expression<Func<LW1, bool>> p) => q.DeleteAsync(p, default));
 			}
 
+			public static class Merge
+			{
+				public static readonly MethodInfo MergeMethodInfo1                          = MemberHelper.MethodOfGeneric<ITable<LW1>>(q => q.Merge(string.Empty));
+				public static readonly MethodInfo MergeMethodInfo2                          = MemberHelper.MethodOfGeneric<IQueryable<LW1>>(q => q.Merge());
+				public static readonly MethodInfo MergeIntoMethodInfo1                      = MemberHelper.MethodOfGeneric((IQueryable<LW1> q, ITable<LW2> t) => q.MergeInto(t, string.Empty));
+				public static readonly MethodInfo MergeIntoMethodInfo2                      = MemberHelper.MethodOfGeneric((IQueryable<LW1> q, IQueryable<LW2> t) => q.MergeInto(t));
+				public static readonly MethodInfo UsingMethodInfo1                          = MemberHelper.MethodOfGeneric((IMergeableUsing<LW1> q, IQueryable<LW2> t) => q.Using(t));
+				public static readonly MethodInfo UsingMethodInfo2                          = MemberHelper.MethodOfGeneric((IMergeableUsing<LW1> q, IEnumerable<LW2> t) => q.Using(t));
+				public static readonly MethodInfo UsingTargetMethodInfo                     = MemberHelper.MethodOfGeneric<IMergeableUsing<LW1>>(q => q.UsingTarget());
+				public static readonly MethodInfo OnMethodInfo1                             = MemberHelper.MethodOfGeneric((IMergeableOn<LW1, LW2> q, Expression<Func<LW1, int>> p, Expression<Func<LW2, int>> s) => q.On(p, s));
+				public static readonly MethodInfo OnMethodInfo2                             = MemberHelper.MethodOfGeneric((IMergeableOn<LW1, LW2> q, Expression<Func<LW1, LW2, bool>> p) => q.On(p));
+				public static readonly MethodInfo OnTargetKeyMethodInfo                     = MemberHelper.MethodOfGeneric<IMergeableOn<LW1, LW1>>(q => q.OnTargetKey());
+				public static readonly MethodInfo InsertWhenNotMatchedAndMethodInfo         = MemberHelper.MethodOfGeneric((IMergeable<LW1, LW2> q, Expression<Func<LW2, bool>> p, Expression<Func<LW2, LW1>> s) => q.InsertWhenNotMatchedAnd(p, s));
+				public static readonly MethodInfo UpdateWhenMatchedAndMethodInfo            = MemberHelper.MethodOfGeneric((IMergeable<LW1, LW2> q, Expression<Func<LW1, LW2, bool>> p, Expression<Func<LW1, LW2, LW1>> s) => q.UpdateWhenMatchedAnd(p, s));
+				public static readonly MethodInfo UpdateWhenMatchedAndThenDeleteMethodInfo  = MemberHelper.MethodOfGeneric((IMergeable<LW1, LW2> q, Expression<Func<LW1, LW2, bool>> p, Expression<Func<LW1, LW2, LW1>> s, Expression<Func<LW1, LW2, bool>> d) => q.UpdateWhenMatchedAndThenDelete(p, s, d));
+				public static readonly MethodInfo DeleteWhenMatchedAndMethodInfo            = MemberHelper.MethodOfGeneric((IMergeable<LW1, LW2> q, Expression<Func<LW1, LW2, bool>> p) => q.DeleteWhenMatchedAnd(p));
+				public static readonly MethodInfo UpdateWhenNotMatchedBySourceAndMethodInfo = MemberHelper.MethodOfGeneric((IMergeable<LW1, LW2> q, Expression<Func<LW1, bool>> p, Expression<Func<LW1, LW1>> s) => q.UpdateWhenNotMatchedBySourceAnd(p, s));
+				public static readonly MethodInfo DeleteWhenNotMatchedBySourceAndMethodInfo = MemberHelper.MethodOfGeneric((IMergeable<LW1, LW2> q, Expression<Func<LW1, bool>> p) => q.DeleteWhenNotMatchedBySourceAnd(p));
+				public static readonly MethodInfo ExecuteMergeMethodInfo                    = MemberHelper.MethodOfGeneric<IMergeable<LW1, LW2>>(q => q.Merge());
+			}
+
 			public static class MultiInsert
 			{
 				// Sadly member names must be different from their englobing type, this actually is `.MultiInsert()`

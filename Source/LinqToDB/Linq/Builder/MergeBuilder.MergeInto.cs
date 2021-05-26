@@ -5,6 +5,8 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
+
 	internal partial class MergeBuilder
 	{
 		internal class MergeInto : MethodCallBuilder
@@ -12,8 +14,8 @@ namespace LinqToDB.Linq.Builder
 			protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{
 				return methodCall.Method.IsGenericMethod
-					&& (   LinqExtensions.MergeIntoMethodInfo1 == methodCall.Method.GetGenericMethodDefinition()
-						|| LinqExtensions.MergeIntoMethodInfo2 == methodCall.Method.GetGenericMethodDefinition());
+					&& (   MergeIntoMethodInfo1 == methodCall.Method.GetGenericMethodDefinition()
+						|| MergeIntoMethodInfo2 == methodCall.Method.GetGenericMethodDefinition());
 			}
 
 			protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)

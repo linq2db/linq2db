@@ -4,6 +4,8 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
+
 	internal partial class MergeBuilder
 	{
 		internal class On : MethodCallBuilder
@@ -13,9 +15,9 @@ namespace LinqToDB.Linq.Builder
 				if (methodCall.Method.IsGenericMethod)
 				{
 					var genericMethod = methodCall.Method.GetGenericMethodDefinition();
-					return  LinqExtensions.OnMethodInfo1         == genericMethod
-						 || LinqExtensions.OnMethodInfo2         == genericMethod
-						 || LinqExtensions.OnTargetKeyMethodInfo == genericMethod;
+					return  OnMethodInfo1         == genericMethod
+						 || OnMethodInfo2         == genericMethod
+						 || OnTargetKeyMethodInfo == genericMethod;
 				}
 
 				return false;

@@ -4,6 +4,8 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
+
 	internal partial class MergeBuilder
 	{
 		internal class InsertWhenNotMatched : MethodCallBuilder
@@ -11,7 +13,7 @@ namespace LinqToDB.Linq.Builder
 			protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{
 				return methodCall.Method.IsGenericMethod
-					&& LinqExtensions.InsertWhenNotMatchedAndMethodInfo == methodCall.Method.GetGenericMethodDefinition();
+					&& InsertWhenNotMatchedAndMethodInfo == methodCall.Method.GetGenericMethodDefinition();
 			}
 
 			protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
