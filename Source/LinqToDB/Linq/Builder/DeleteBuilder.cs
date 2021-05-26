@@ -10,11 +10,11 @@ namespace LinqToDB.Linq.Builder
 	class DeleteBuilder : MethodCallBuilder
 	{
 		private static readonly string[] MethodNames =
-			{
-				nameof(LinqExtensions.Delete),
-				nameof(LinqExtensions.DeleteWithOutput),
-				nameof(LinqExtensions.DeleteWithOutputInto)
-			};
+		{
+			nameof(LinqExtensions.Delete),
+			nameof(LinqExtensions.DeleteWithOutput),
+			nameof(LinqExtensions.DeleteWithOutputInto)
+		};
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -25,9 +25,9 @@ namespace LinqToDB.Linq.Builder
 		{
 			var deleteType = methodCall.Method.Name switch
 			{
-				nameof(LinqExtensions.DeleteWithOutput) => DeleteContext.DeleteType.DeleteOutput,
+				nameof(LinqExtensions.DeleteWithOutput)     => DeleteContext.DeleteType.DeleteOutput,
 				nameof(LinqExtensions.DeleteWithOutputInto) => DeleteContext.DeleteType.DeleteOutputInto,
-				_ => DeleteContext.DeleteType.Delete,
+				_                                           => DeleteContext.DeleteType.Delete,
 			};
 
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
@@ -72,11 +72,6 @@ namespace LinqToDB.Linq.Builder
 			var indexedParameters
 				= methodCall.Method.GetParameters().Select((p, i) => Tuple.Create(p, i)).ToDictionary(t => t.Item1.Name, t => t.Item2);
 
-			Expression GetArgumentByName(string name)
-			{
-				return methodCall.Arguments[indexedParameters[name]];
-			}
-
 			LambdaExpression GetOutputExpression(Type outputType)
 			{
 				if (!indexedParameters.TryGetValue("outputExpression", out var index))
@@ -97,7 +92,7 @@ namespace LinqToDB.Linq.Builder
 
 				deleteStatement.Output = new SqlOutputClause();
 
-				var deletedTable = SqlTable.Deleted(methodCall.Method.GetGenericArguments().Last());
+				var deletedTable = SqlTable.Deleted(methodCall.Method.GetGenericArguments()[0]);
 
 				outputContext = new TableBuilder.TableContext(builder, new SelectQuery(), deletedTable);
 
@@ -105,7 +100,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (deleteType == DeleteContext.DeleteType.DeleteOutputInto)
 				{
-					var outputTable = GetArgumentByName("outputTable");
+					var outputTable = methodCall.Arguments[indexedParameters["outputTable"]];
 					var destination = builder.BuildSequence(new BuildInfo(buildInfo, outputTable, new SelectQuery()));
 
 					UpdateBuilder.BuildSetter(
