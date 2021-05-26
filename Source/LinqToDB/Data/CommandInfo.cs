@@ -998,6 +998,8 @@ namespace LinqToDB.Data
 		/// <returns>Resulting value.</returns>
 		public T Execute<T>()
 		{
+			var startedOn = DateTime.Now;
+			var stopwatch = Stopwatch.StartNew();
 			var hasParameters = Parameters?.Length > 0;
 
 			DataConnection.InitCommand(CommandType, CommandText, Parameters, null, hasParameters);
@@ -1033,6 +1035,19 @@ namespace LinqToDB.Data
 						result = GetObjectReader2<T>(DataConnection, rd, CommandText, additionalKey)(rd);
 					}
 				}
+			}
+
+			stopwatch.Stop();
+			if (DataConnection.TraceSwitchConnection.TraceInfo)
+			{
+				DataConnection.OnTraceConnection(new TraceInfo(DataConnection, TraceInfoStep.Completed, TraceOperation.DisposeQuery, isAsync: false)
+				{
+					TraceLevel = TraceLevel.Info,
+					Command = DataConnection.GetCurrentCommand(),
+					StartTime = startedOn,
+					ExecutionTime = stopwatch.Elapsed,
+					RecordsAffected = 1,
+				});
 			}
 
 			if (hasParameters)
