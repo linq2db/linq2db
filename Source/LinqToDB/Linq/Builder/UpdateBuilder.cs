@@ -31,9 +31,9 @@ namespace LinqToDB.Linq.Builder
 		{
 			var updateType = methodCall.Method.Name switch
 			{
-				nameof(LinqExtensions.UpdateWithOutput) => UpdateContext.UpdateType.UpdateOutput,
+				nameof(LinqExtensions.UpdateWithOutput)     => UpdateContext.UpdateType.UpdateOutput,
 				nameof(LinqExtensions.UpdateWithOutputInto) => UpdateContext.UpdateType.UpdateOutputInto,
-				_ => UpdateContext.UpdateType.Update,
+				_                                           => UpdateContext.UpdateType.Update,
 			};
 
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
@@ -44,111 +44,109 @@ namespace LinqToDB.Linq.Builder
 			switch (GetOutputMethod(methodCall))
 			{
 				case OutputMethod.IUpdatable:
-					{
-						// int Update<T>(this IUpdateable<T> source)
-						CheckAssociation(sequence);
-						break;
-					}
+				{
+					// int Update<T>(this IUpdateable<T> source)
+					CheckAssociation(sequence);
+					break;
+				}
 
 				case OutputMethod.QueryableSetter:
+				{
+					// int Update<T>(this IQueryable<T> source, Expression<Func<T,T>> setter)
+					// int Update<T>(this IQueryable<T> source, Expression<Func<T,bool>> predicate, Expression<Func<T,T>> setter)
+					CheckAssociation(sequence);
+
+					var expr = methodCall.Arguments[1].Unwrap();
+					if (expr is LambdaExpression lex && lex.ReturnType == typeof(bool))
 					{
-						// int Update<T>(this IQueryable<T> source, Expression<Func<T,T>> setter)
-						// int Update<T>(this IQueryable<T> source, Expression<Func<T,bool>> predicate, Expression<Func<T,T>> setter)
-						CheckAssociation(sequence);
+						sequence = builder.BuildWhere(buildInfo.Parent, sequence, (LambdaExpression)methodCall.Arguments[1].Unwrap(), false);
+						expr = methodCall.Arguments[2].Unwrap();
+					}
 
-						var expr = methodCall.Arguments[1].Unwrap();
-						if (expr is LambdaExpression lex && lex.ReturnType == typeof(bool))
-							sequence = builder.BuildWhere(buildInfo.Parent, sequence, (LambdaExpression)methodCall.Arguments[1].Unwrap(), false);
+					if (sequence.SelectQuery.Select.SkipValue != null || !sequence.SelectQuery.Select.OrderBy.IsEmpty)
+						sequence = new SubQueryContext(sequence);
 
-							if (sequence.SelectQuery.Select.SkipValue != null || !sequence.SelectQuery.Select.OrderBy.IsEmpty)
-								sequence = new SubQueryContext(sequence);
+					updateStatement.SelectQuery = sequence.SelectQuery;
+					sequence.Statement = updateStatement;
 
-							updateStatement.SelectQuery = sequence.SelectQuery;
-							sequence.Statement = updateStatement;
+					BuildSetter(
+						builder,
+						buildInfo,
+						(LambdaExpression)expr,
+						sequence,
+						updateStatement.Update.Items,
+						sequence);
 
-							BuildSetter(
-								builder,
-								buildInfo,
-								(LambdaExpression)methodCall.Arguments[2].Unwrap(),
-								sequence,
-								updateStatement.Update.Items,
-								sequence);
-
-						break;
-						}
+					break;
+				}
 
 				case OutputMethod.QueryableTarget:
-						{
-						// int Update<TSource,TTarget>(this IQueryable<TSource> source, ITable<TTarget> target, Expression<Func<TSource,TTarget>> setter)
-						// int Update<TSource,TTarget>(this IQueryable<TSource> source, Expression<Func<TSource,TTarget>> target, Expression<Func<TSource,TTarget>> setter)
+				{
+					// int Update<TSource,TTarget>(this IQueryable<TSource> source, ITable<TTarget> target, Expression<Func<TSource,TTarget>> setter)
+					// int Update<TSource,TTarget>(this IQueryable<TSource> source, Expression<Func<TSource,TTarget>> target, Expression<Func<TSource,TTarget>> setter)
 
-						var expr = methodCall.Arguments[1].Unwrap();
-							IBuildContext into;
+					var expr = methodCall.Arguments[1].Unwrap();
+					IBuildContext into;
 
-							if (expr is LambdaExpression expression)
-							{
-								var body  = expression.Body;
-								var level = body.GetLevel(builder.MappingSchema);
+					if (expr is LambdaExpression expression)
+					{
+						var body  = expression.Body;
+						var level = body.GetLevel(builder.MappingSchema);
 
-								var tableInfo = sequence.IsExpression(body, level, RequestFor.Table);
+						var tableInfo = sequence.IsExpression(body, level, RequestFor.Table);
 
-								if (tableInfo.Result == false)
-									throw new LinqException("Expression '{0}' must be a table.", body);
+						if (tableInfo.Result == false)
+							throw new LinqException("Expression '{0}' must be a table.", body);
 
-								into = tableInfo.Context!;
-							}
-							else
-							{
-								into = builder.BuildSequence(new BuildInfo(buildInfo, expr, new SelectQuery()));
-							}
+						into = tableInfo.Context!;
+					}
+					else
+					{
+						into = builder.BuildSequence(new BuildInfo(buildInfo, expr, new SelectQuery()));
+					}
 
-							sequence.ConvertToIndex(null, 0, ConvertFlags.All);
-							new SelectQueryOptimizer(builder.DataContext.SqlProviderFlags, updateStatement, updateStatement.SelectQuery, 0)
-								.ResolveWeakJoins();
-							updateStatement.SelectQuery.Select.Columns.Clear();
+					sequence.ConvertToIndex(null, 0, ConvertFlags.All);
+					new SelectQueryOptimizer(builder.DataContext.SqlProviderFlags, updateStatement, updateStatement.SelectQuery, 0)
+						.ResolveWeakJoins();
+					updateStatement.SelectQuery.Select.Columns.Clear();
 
-							BuildSetter(
-								builder,
-								buildInfo,
-								(LambdaExpression)methodCall.Arguments[2].Unwrap(),
-								into,
-								updateStatement.Update.Items,
-								sequence);
+					BuildSetter(
+						builder,
+						buildInfo,
+						(LambdaExpression)methodCall.Arguments[2].Unwrap(),
+						into,
+						updateStatement.Update.Items,
+						sequence);
 
-							updateStatement.SelectQuery.Select.Columns.Clear();
+					updateStatement.SelectQuery.Select.Columns.Clear();
 
-							foreach (var item in updateStatement.Update.Items)
-								updateStatement.SelectQuery.Select.Columns.Add(new SqlColumn(updateStatement.SelectQuery, item.Expression!));
+					foreach (var item in updateStatement.Update.Items)
+						updateStatement.SelectQuery.Select.Columns.Add(new SqlColumn(updateStatement.SelectQuery, item.Expression!));
 
-							updateStatement.Update.Table = ((TableBuilder.TableContext)into!).SqlTable;
+					updateStatement.Update.Table = ((TableBuilder.TableContext)into!).SqlTable;
 
-						break;
-						}
+					break;
+				}
 			}
 
 			var indexedParameters
 				= methodCall.Method.GetParameters().Select((p, i) => Tuple.Create(p, i)).ToDictionary(t => t.Item1.Name, t => t.Item2);
 
-			Expression GetArgumentByName(string name) =>
-				methodCall.Arguments[indexedParameters[name]];
-
 			LambdaExpression GetOutputExpression(Type outputType)
 			{
-				if (!indexedParameters.TryGetValue("outputExpression", out var index))
-				{
-					var param1 = Expression.Parameter(outputType, "source");
-					var param2 = Expression.Parameter(outputType, "deleted");
-					var param3 = Expression.Parameter(outputType, "inserted");
-					var returnType = typeof(UpdateOutput<>).MakeGenericType(outputType);
-					return Expression.Lambda(
-						Expression.MemberInit(
-							Expression.New(returnType),
-							Expression.Bind(returnType.GetProperty("Deleted"), param2),
-							Expression.Bind(returnType.GetProperty("Inserted"), param3)),
-						param1, param2, param3);
-					}
+				if (indexedParameters.TryGetValue("outputExpression", out var index))
+					return (LambdaExpression)methodCall.Arguments[index].Unwrap();
 
-				return (LambdaExpression)methodCall.Arguments[index].Unwrap();
+				var param1 = Expression.Parameter(outputType, "source");
+				var param2 = Expression.Parameter(outputType, "deleted");
+				var param3 = Expression.Parameter(outputType, "inserted");
+				var returnType = typeof(UpdateOutput<>).MakeGenericType(outputType);
+				return Expression.Lambda(
+					Expression.MemberInit(
+						Expression.New(returnType),
+						Expression.Bind(returnType.GetProperty("Deleted"), param2),
+						Expression.Bind(returnType.GetProperty("Inserted"), param3)),
+					param1, param2, param3);
 			}
 
 			if (updateType != UpdateContext.UpdateType.Update)
@@ -175,7 +173,7 @@ namespace LinqToDB.Linq.Builder
 				if (updateType != UpdateContext.UpdateType.UpdateOutputInto)
 					return outputContext;
 
-				var outputTable = GetArgumentByName("outputTable");
+				var outputTable = methodCall.Arguments[indexedParameters["outputTable"]];
 				var destination = builder.BuildSequence(new BuildInfo(buildInfo, outputTable, new SelectQuery()));
 
 				BuildSetter(
@@ -208,8 +206,8 @@ namespace LinqToDB.Linq.Builder
 			return parameters[1].Name switch
 			{
 				"predicate" => OutputMethod.QueryableSetter,
-				"setter" => OutputMethod.QueryableSetter,
-				_ => OutputMethod.QueryableTarget,
+				"setter"    => OutputMethod.QueryableSetter,
+				_           => OutputMethod.QueryableTarget,
 			};
 		}
 

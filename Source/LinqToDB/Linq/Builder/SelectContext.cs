@@ -1363,8 +1363,6 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				System.Diagnostics.Debugger.Break();
-
 				throw new LinqToDBException($"'{sourceExpression}' cannot be converted to SQL.");
 			}
 
