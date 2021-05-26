@@ -905,6 +905,8 @@ namespace LinqToDB.Data
 		/// <returns>Number of records, affected by command execution.</returns>
 		public int Execute()
 		{
+			var startedOn = DateTime.Now;
+			var stopwatch = Stopwatch.StartNew();
 			var hasParameters = Parameters?.Length > 0;
 
 			DataConnection.InitCommand(CommandType, CommandText, Parameters, null, hasParameters);
@@ -913,6 +915,19 @@ namespace LinqToDB.Data
 				SetParameters(DataConnection, Parameters!);
 
 			var commandResult = DataConnection.ExecuteNonQuery();
+
+			stopwatch.Stop();
+			if (DataConnection.TraceSwitchConnection.TraceInfo)
+			{
+				DataConnection.OnTraceConnection(new TraceInfo(DataConnection, TraceInfoStep.Completed, TraceOperation.DisposeQuery, isAsync: false)
+				{
+					TraceLevel = TraceLevel.Info,
+					Command = DataConnection.GetCurrentCommand(),
+					StartTime = startedOn,
+					ExecutionTime = stopwatch.Elapsed,
+					RecordsAffected = commandResult,
+				});
+			}
 
 			if (hasParameters)
 				RebindParameters(DataConnection, Parameters!);

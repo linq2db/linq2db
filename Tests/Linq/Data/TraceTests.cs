@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using LinqToDB;
 using LinqToDB.Configuration;
 using NUnit.Framework;
 
@@ -194,6 +195,80 @@ namespace Tests.Data
 				// steps never called
 				Assert.AreEqual(0, counters[TraceInfoStep.MapperCreated]);
 				Assert.AreEqual(0, counters[TraceInfoStep.Error]);
+			}
+		}
+
+		[Test]
+		public void TraceInfoStepsAreReportedForLinqUpdate([NorthwindDataContext] string context)
+		{
+			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+			var counters = GetEnumValues((TraceInfoStep s) => 0);
+
+			using (var db = new DataConnection(context))
+			using (db.BeginTransaction())
+			{
+				db.OnTraceConnection = e =>
+				{
+					events[e.TraceInfoStep] = e;
+					counters[e.TraceInfoStep]++;
+				};
+
+				db.GetTable<Northwind.Category>()
+					.Set(c => c.CategoryName, c => c.CategoryName)
+					.Update();
+
+				// the same command is reported on each step
+				var command = events[TraceInfoStep.BeforeExecute]!.Command;
+				Assert.AreSame(command, events[TraceInfoStep.AfterExecute]!.Command);
+				Assert.AreSame(command, events[TraceInfoStep.Completed]!.Command);
+				Assert.NotNull(command);
+
+				// steps called once
+				Assert.AreEqual(1, counters[TraceInfoStep.BeforeExecute]);
+				Assert.AreEqual(1, counters[TraceInfoStep.AfterExecute]);
+				Assert.AreEqual(1, counters[TraceInfoStep.Completed]);
+
+				// steps never called
+				Assert.AreEqual(0, counters[TraceInfoStep.MapperCreated]);
+				Assert.AreEqual(0, counters[TraceInfoStep.Error]);
+
+				db.RollbackTransaction();
+			}
+		}
+
+		[Test]
+		public void TraceInfoStepsAreReportedForSqlUpdate([NorthwindDataContext] string context)
+		{
+			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+			var counters = GetEnumValues((TraceInfoStep s) => 0);
+
+			using (var db = new DataConnection(context))
+			using (db.BeginTransaction())
+			{
+				db.OnTraceConnection = e =>
+				{
+					events[e.TraceInfoStep] = e;
+					counters[e.TraceInfoStep]++;
+				};
+
+				db.SetCommand(@"UPDATE Categories SET CategoryName = CategoryName WHERE 1=2").Execute();
+
+				// the same command is reported on each step
+				var command = events[TraceInfoStep.BeforeExecute]!.Command;
+				Assert.AreSame(command, events[TraceInfoStep.AfterExecute]!.Command);
+				Assert.AreSame(command, events[TraceInfoStep.Completed]!.Command);
+				Assert.NotNull(command);
+
+				// steps called once
+				Assert.AreEqual(1, counters[TraceInfoStep.BeforeExecute]);
+				Assert.AreEqual(1, counters[TraceInfoStep.AfterExecute]);
+				Assert.AreEqual(1, counters[TraceInfoStep.Completed]);
+
+				// steps never called
+				Assert.AreEqual(0, counters[TraceInfoStep.MapperCreated]);
+				Assert.AreEqual(0, counters[TraceInfoStep.Error]);
+
+				db.RollbackTransaction();
 			}
 		}
 
