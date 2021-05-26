@@ -26,6 +26,7 @@ namespace LinqToDB.Data
 	using Reflection;
 	using Linq;
 	using Common.Internal.Cache;
+	using System.Diagnostics;
 
 	/// <summary>
 	/// Provides database connection command abstraction.
@@ -342,6 +343,10 @@ namespace LinqToDB.Data
 		
 		IEnumerable<T> ReadEnumerator<T>(IDataReader rd, IDisposable? scope, bool disposeReader = true)
 		{
+			var startedOn = DateTime.UtcNow;
+			var stopwatch = Stopwatch.StartNew();
+			var rowCount = 0;
+
 			using (scope)
 				try
 				{
@@ -371,6 +376,7 @@ namespace LinqToDB.Data
 								result = objectReader(rd);
 							}
 
+							rowCount++;
 							yield return result;
 
 						} while (rd.Read());
@@ -378,8 +384,23 @@ namespace LinqToDB.Data
 				}
 				finally
 				{
+					stopwatch.Stop();
 					if (disposeReader)
+					{
 						rd.Dispose();
+
+						if (DataConnection.TraceSwitchConnection.TraceInfo)
+						{
+							DataConnection.OnTraceConnection(new TraceInfo(DataConnection, TraceInfoStep.Completed, TraceOperation.DisposeQuery, isAsync: false)
+							{
+								TraceLevel = TraceLevel.Info,
+								Command = DataConnection.GetCurrentCommand(),
+								StartTime = startedOn,
+								ExecutionTime = stopwatch.Elapsed,
+								RecordsAffected = rowCount
+							});
+						}
+					}
 				}
 
 			if (Parameters?.Length > 0)
