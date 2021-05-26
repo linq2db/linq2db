@@ -960,6 +960,8 @@ namespace LinqToDB.Data
 		{
 			await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
+			var startedOn = DateTime.UtcNow;
+			var stopwatch = Stopwatch.StartNew();
 			var hasParameters = Parameters?.Length > 0;
 
 			DataConnection.InitCommand(CommandType, CommandText, Parameters, null, hasParameters);
@@ -968,6 +970,19 @@ namespace LinqToDB.Data
 				SetParameters(DataConnection, Parameters!);
 
 			var commandResult = await DataConnection.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+			stopwatch.Stop();
+			if (DataConnection.TraceSwitchConnection.TraceInfo)
+			{
+				DataConnection.OnTraceConnection(new TraceInfo(DataConnection, TraceInfoStep.Completed, TraceOperation.DisposeQuery, isAsync: true)
+				{
+					TraceLevel = TraceLevel.Info,
+					Command = DataConnection.GetCurrentCommand(),
+					StartTime = startedOn,
+					ExecutionTime = stopwatch.Elapsed,
+					RecordsAffected = commandResult,
+				});
+			}
 
 			if (hasParameters)
 				RebindParameters(DataConnection, Parameters!);
@@ -1083,6 +1098,8 @@ namespace LinqToDB.Data
 		{
 			await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
+			var startedOn = DateTime.UtcNow;
+			var stopwatch = Stopwatch.StartNew();
 			var hasParameters = Parameters?.Length > 0;
 
 			DataConnection.InitCommand(CommandType, CommandText, Parameters, null, hasParameters);
@@ -1114,6 +1131,19 @@ namespace LinqToDB.Data
 					}
 				}
 			}
+			}
+
+			stopwatch.Stop();
+			if (DataConnection.TraceSwitchConnection.TraceInfo)
+			{
+				DataConnection.OnTraceConnection(new TraceInfo(DataConnection, TraceInfoStep.Completed, TraceOperation.DisposeQuery, isAsync: true)
+				{
+					TraceLevel = TraceLevel.Info,
+					Command = DataConnection.GetCurrentCommand(),
+					StartTime = startedOn,
+					ExecutionTime = stopwatch.Elapsed,
+					RecordsAffected = 1,
+				});
 			}
 
 			if (hasParameters)
