@@ -1013,7 +1013,7 @@ namespace LinqToDB
 			return currentSource.Provider.Execute<int>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(UpdateWithOutput, source),
+					MethodHelper.GetMethodInfo(UpdateWithOutputInto, source, outputTable),
 					currentSource.Expression,
 					((IQueryable<T>)outputTable).Expression));
 		}
@@ -1041,7 +1041,7 @@ namespace LinqToDB
 			var expr =
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(UpdateWithOutput, source),
+					MethodHelper.GetMethodInfo(UpdateWithOutputInto, source, outputTable),
 					currentSource.Expression,
 					((IQueryable<T>)outputTable).Expression);
 

@@ -786,6 +786,247 @@ namespace Tests.Playground
 					ComparerBuilder.GetEqualityComparer<DestinationTable>());
 			}
 		}
+
+		#endregion
+
+		#region Update against Source
+
+		[Test]
+		public void UpdateIUpdatableWithDefaultOutputTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			{
+				var expected = sourceData
+					.Where(s => s.Id > 3)
+					.Select(s => new UpdateOutput<TableWithData>()
+					{
+						Deleted  = new TableWithData { Id = s.Id, Value = s.Value,     ValueStr = s.ValueStr, },
+						Inserted = new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
+					})
+					.ToArray();
+
+				var output = source
+					.Where(s => s.Id > 3)
+					.AsUpdatable()
+					.Set(s => s.Value, s => s.Value + 1)
+					.Set(s => s.ValueStr, s => s.ValueStr + "Upd")
+					.UpdateWithOutput()
+					.ToArray();
+
+				AreEqual(
+					expected,
+					output,
+					new UpdateOutputComparer<TableWithData>());
+			}
+		}
+
+		[Test]
+		public async Task UpdateIUpdatableWithDefaultOutputTestAsync([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			{
+				var expected = sourceData
+					.Where(s => s.Id > 3)
+					.Select(s => new UpdateOutput<TableWithData>()
+					{
+						Deleted  = new TableWithData { Id = s.Id, Value = s.Value,     ValueStr = s.ValueStr, },
+						Inserted = new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
+					})
+					.ToArray();
+
+				var output = await source
+					.Where(s => s.Id > 3)
+					.AsUpdatable()
+					.Set(s => s.Value, s => s.Value + 1)
+					.Set(s => s.ValueStr, s => s.ValueStr + "Upd")
+					.UpdateWithOutputAsync();
+
+				AreEqual(
+					expected,
+					output,
+					new UpdateOutputComparer<TableWithData>());
+			}
+		}
+
+		[Test]
+		public void UpdateIUpdatableWithProjectionOutputTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			{
+				var expected = sourceData
+					.Where(s => s.Id > 3)
+					.Select(s => new
+					{
+						DeletedValue  = s.Value,
+						InsertedValue = s.Value + 1,
+					})
+					.ToArray();
+
+				var output = source
+					.Where(s => s.Id > 3)
+					.AsUpdatable()
+					.Set(s => s.Value, s => s.Value + 1)
+					.Set(s => s.ValueStr, s => s.ValueStr + "Upd")
+					.UpdateWithOutput(
+						(deleted, inserted) => new { DeletedValue = deleted.Value, InsertedValue = inserted.Value, })
+					.ToArray();
+
+				AreEqual(
+					expected,
+					output);
+			}
+		}
+
+		[Test]
+		public async Task UpdateIUpdatableWithProjectionOutputTestAsync([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			{
+				var expected = sourceData
+					.Where(s => s.Id > 3)
+					.Select(s => new
+					{
+						DeletedValue  = s.Value,
+						InsertedValue = s.Value + 1,
+					})
+					.ToArray();
+
+				var output = await source
+					.Where(s => s.Id > 3)
+					.AsUpdatable()
+					.Set(s => s.Value, s => s.Value + 1)
+					.Set(s => s.ValueStr, s => s.ValueStr + "Upd")
+					.UpdateWithOutputAsync(
+						(deleted, inserted) => new { DeletedValue = deleted.Value, InsertedValue = inserted.Value, });
+
+				AreEqual(
+					expected,
+					output);
+			}
+		}
+
+		[Test]
+		public void UpdateIUpdatableWithDefaultOutputIntoTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			var sourceData         = GetSourceData();
+			using (var db          = GetDataContext(context))
+			using (var source      = db.CreateLocalTable(sourceData))
+			using (var destination = db.CreateLocalTable<TableWithData>("destination"))
+			{
+				var expected = sourceData
+					.Where(s => s.Id > 3)
+					.Select(s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", })
+					.ToArray();
+
+				source
+					.Where(s => s.Id > 3)
+					.AsUpdatable()
+					.Set(s => s.Value, s => s.Value + 1)
+					.Set(s => s.ValueStr, s => s.ValueStr + "Upd")
+					.UpdateWithOutputInto(
+						destination);
+
+				AreEqual(
+					expected,
+					destination.ToArray(),
+					ComparerBuilder.GetEqualityComparer<TableWithData>());
+			}
+		}
+
+		[Test]
+		public async Task UpdateIUpdatableWithDefaultOutputIntoTestAsync([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			var sourceData         = GetSourceData();
+			using (var db          = GetDataContext(context))
+			using (var source      = db.CreateLocalTable(sourceData))
+			using (var destination = db.CreateLocalTable<TableWithData>("destination"))
+			{
+				var expected = sourceData
+					.Where(s => s.Id > 3)
+					.Select(s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", })
+					.ToArray();
+
+				await source
+					.Where(s => s.Id > 3)
+					.AsUpdatable()
+					.Set(s => s.Value, s => s.Value + 1)
+					.Set(s => s.ValueStr, s => s.ValueStr + "Upd")
+					.UpdateWithOutputIntoAsync(
+						destination);
+
+				AreEqual(
+					expected,
+					destination.ToArray(),
+					ComparerBuilder.GetEqualityComparer<TableWithData>());
+			}
+		}
+
+		[Test]
+		public void UpdateIUpdatableWithProjectionOutputIntoTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			var sourceData         = GetSourceData();
+			using (var db          = GetDataContext(context))
+			using (var source      = db.CreateLocalTable(sourceData))
+			using (var destination = db.CreateLocalTable<DestinationTable>("destination"))
+			{
+				var expected = sourceData
+					.Where(s => s.Id > 3)
+					.Select(s => new DestinationTable { Id = s.Id, Value = s.Value, ValueStr = s.ValueStr + "Upd", })
+					.ToArray();
+
+				source
+					.Where(s => s.Id > 3)
+					.AsUpdatable()
+					.Set(s => s.Value, s => s.Value + 1)
+					.Set(s => s.ValueStr, s => s.ValueStr + "Upd")
+					.UpdateWithOutputInto(
+						destination,
+						(deleted, inserted) => new DestinationTable { Id = inserted.Id, Value = deleted.Value, ValueStr = inserted.ValueStr, });
+
+				AreEqual(
+					expected,
+					destination.ToArray(),
+					ComparerBuilder.GetEqualityComparer<DestinationTable>());
+			}
+		}
+
+		[Test]
+		public async Task UpdateIUpdatableWithProjectionOutputTestIntoAsync([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			var sourceData         = GetSourceData();
+			using (var db          = GetDataContext(context))
+			using (var source      = db.CreateLocalTable(sourceData))
+			using (var destination = db.CreateLocalTable<DestinationTable>("destination"))
+			{
+				var expected = sourceData
+					.Where(s => s.Id > 3)
+					.Select(s => new DestinationTable { Id = s.Id, Value = s.Value, ValueStr = s.ValueStr + "Upd", })
+					.ToArray();
+
+				await source
+					.Where(s => s.Id > 3)
+					.AsUpdatable()
+					.Set(s => s.Value, s => s.Value + 1)
+					.Set(s => s.ValueStr, s => s.ValueStr + "Upd")
+					.UpdateWithOutputIntoAsync(
+						destination,
+						(deleted, inserted) => new DestinationTable { Id = inserted.Id, Value = deleted.Value, ValueStr = inserted.ValueStr, });
+
+				AreEqual(
+					expected,
+					destination.ToArray(),
+					ComparerBuilder.GetEqualityComparer<DestinationTable>());
+			}
+		}
+
 		#endregion
 	}
 }
