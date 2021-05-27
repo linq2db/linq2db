@@ -13,8 +13,7 @@ namespace LinqToDB.Linq.Builder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.Method.IsGenericMethod
-				&& ExecuteMergeMethodInfo == methodCall.Method.GetGenericMethodDefinition();
+			return methodCall.IsSameGenericMethod(ExecuteMergeMethodInfo);
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)

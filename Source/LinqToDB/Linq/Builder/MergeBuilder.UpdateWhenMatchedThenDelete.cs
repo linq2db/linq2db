@@ -1,10 +1,11 @@
-﻿using LinqToDB.Expressions;
-using LinqToDB.SqlQuery;
-using System.Linq;
+﻿using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
+	using SqlQuery;
+
 	using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
 
 	internal partial class MergeBuilder
@@ -13,8 +14,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{
-				return methodCall.Method.IsGenericMethod
-					&& UpdateWhenMatchedAndThenDeleteMethodInfo == methodCall.Method.GetGenericMethodDefinition();
+				return methodCall.IsSameGenericMethod(UpdateWhenMatchedAndThenDeleteMethodInfo);
 			}
 
 			protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)

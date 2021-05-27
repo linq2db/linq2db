@@ -1,18 +1,18 @@
-﻿using System.Linq.Expressions;
-using LinqToDB.Reflection;
+﻿using System.Reflection;
+using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using System.Reflection;
 	using LinqToDB.Expressions;
+	using LinqToDB.Reflection;
 
 	class PassThroughBuilder : MethodCallBuilder
 	{
-		private static readonly MethodInfo[] SupportedMethods = new [] { Methods.Enumerable.AsQueryable, Methods.LinqToDB.AsQueryable, Methods.LinqToDB.SqlExt.Alias };
+		static readonly MethodInfo[] _supportedMethods = { Methods.Enumerable.AsQueryable, Methods.LinqToDB.AsQueryable, Methods.LinqToDB.SqlExt.Alias };
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsSameGenericMethod(SupportedMethods);
+			return methodCall.IsSameGenericMethod(_supportedMethods);
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)

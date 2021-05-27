@@ -1,21 +1,23 @@
-﻿using LinqToDB.Expressions;
-using LinqToDB.SqlQuery;
-using System;
+﻿using System;
 using System.Linq.Expressions;
+using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
+	using SqlQuery;
+
 	using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
 
 	internal partial class MergeBuilder
 	{
 		internal class MergeInto : MethodCallBuilder
 		{
+			static readonly MethodInfo[] _supportedMethods = {MergeIntoMethodInfo1, MergeIntoMethodInfo2};
+
 			protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{
-				return methodCall.Method.IsGenericMethod
-					&& (   MergeIntoMethodInfo1 == methodCall.Method.GetGenericMethodDefinition()
-						|| MergeIntoMethodInfo2 == methodCall.Method.GetGenericMethodDefinition());
+				return methodCall.IsSameGenericMethod(_supportedMethods);
 			}
 
 			protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)

@@ -1,11 +1,12 @@
-﻿using LinqToDB.Expressions;
-using LinqToDB.SqlQuery;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
+	using SqlQuery;
+
 	internal partial class MergeBuilder
 	{
 		private class MergeContext : SequenceContextBase
