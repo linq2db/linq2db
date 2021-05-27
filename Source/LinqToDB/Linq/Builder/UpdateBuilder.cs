@@ -41,12 +41,36 @@ namespace LinqToDB.Linq.Builder
 			var updateStatement = sequence.Statement as SqlUpdateStatement ?? new SqlUpdateStatement(sequence.SelectQuery);
 			sequence.Statement = updateStatement;
 
+			var genericArguments = methodCall.Method.GetGenericArguments();
+			Type? objectType     = default;
+
+			var indexedParameters = methodCall.Method.GetParameters()
+				.Select((p, i) => Tuple.Create(p, i)).ToDictionary(t => t.Item1.Name, t => t.Item2);
+			var outputExpression = indexedParameters.TryGetValue("outputExpression", out var index) 
+				? (LambdaExpression)methodCall.Arguments[index].Unwrap()
+				: default;
+			static LambdaExpression? RewriteOutputExpression(LambdaExpression? expr)
+			{
+				if (expr == default) return default;
+				
+				var outputType = expr.Parameters[0].Type;
+				var param1 = Expression.Parameter(outputType, "source");
+				return Expression.Lambda(
+					// (source, deleted, inserted) => expr(deleted, inserted)
+					expr.Body,
+					param1, expr.Parameters[0], expr.Parameters[1]);
+			}
+
 			switch (GetOutputMethod(methodCall))
 			{
 				case OutputMethod.IUpdatable:
 				{
 					// int Update<T>(this IUpdateable<T> source)
 					CheckAssociation(sequence);
+
+					objectType       = genericArguments[0];
+					outputExpression = RewriteOutputExpression(outputExpression);
+
 					break;
 				}
 
@@ -76,6 +100,9 @@ namespace LinqToDB.Linq.Builder
 						sequence,
 						updateStatement.Update.Items,
 						sequence);
+
+					objectType       = genericArguments[0];
+					outputExpression = RewriteOutputExpression(outputExpression);
 
 					break;
 				}
@@ -125,19 +152,20 @@ namespace LinqToDB.Linq.Builder
 
 					updateStatement.Update.Table = ((TableBuilder.TableContext)into!).SqlTable;
 
+					objectType       = genericArguments[1];
+
 					break;
 				}
-			}
 
-			var indexedParameters
-				= methodCall.Method.GetParameters().Select((p, i) => Tuple.Create(p, i)).ToDictionary(t => t.Item1.Name, t => t.Item2);
+				default:
+					throw new InvalidOperationException("Unknown Output Method");
+			}
 
 			if (updateType == UpdateType.Update)
 				return new UpdateContext(buildInfo.Parent, sequence);
 
-			var objectType    = methodCall.Method.GetGenericArguments()[1];
-			var insertedTable = SqlTable.Inserted(objectType);
-			var deletedTable  = SqlTable.Deleted(objectType);
+			var insertedTable    = SqlTable.Inserted(objectType);
+			var deletedTable     = SqlTable.Deleted(objectType);
 
 			updateStatement.Output = new SqlOutputClause()
 			{
@@ -147,11 +175,8 @@ namespace LinqToDB.Linq.Builder
 
 			if (updateType == UpdateType.UpdateOutput)
 			{
-				LambdaExpression GetOutputExpression(Type outputType)
+				LambdaExpression BuildDefaultOutputExpression(Type outputType)
 				{
-					if (indexedParameters.TryGetValue("outputExpression", out var index))
-						return (LambdaExpression)methodCall.Arguments[index].Unwrap();
-
 					var param1 = Expression.Parameter(outputType, "source");
 					var param2 = Expression.Parameter(outputType, "deleted");
 					var param3 = Expression.Parameter(outputType, "inserted");
@@ -165,7 +190,7 @@ namespace LinqToDB.Linq.Builder
 						param1, param2, param3);
 				}
 
-				var outputExpression = GetOutputExpression(methodCall.Method.GetGenericArguments().Last());
+				outputExpression ??= BuildDefaultOutputExpression(objectType);
 
 				var outputContext = new UpdateOutputContext(
 					buildInfo.Parent,
@@ -178,7 +203,7 @@ namespace LinqToDB.Linq.Builder
 			}
 			else // updateType == UpdateType.UpdateOutputInto
 			{
-				LambdaExpression GetOutputExpression(Type outputType)
+				LambdaExpression BuildDefaultOutputExpression(Type outputType)
 				{
 					if (indexedParameters.TryGetValue("outputExpression", out var index))
 						return (LambdaExpression)methodCall.Arguments[index].Unwrap();
@@ -195,7 +220,7 @@ namespace LinqToDB.Linq.Builder
 				var outputTable = methodCall.Arguments[indexedParameters["outputTable"]];
 				var destination = builder.BuildSequence(new BuildInfo(buildInfo, outputTable, new SelectQuery()));
 
-				var outputExpression = GetOutputExpression(methodCall.Method.GetGenericArguments().Last());
+				outputExpression ??= BuildDefaultOutputExpression(objectType);
 				BuildSetterWithContext(
 					builder,
 					buildInfo,

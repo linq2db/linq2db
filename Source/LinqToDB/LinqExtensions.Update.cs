@@ -767,7 +767,7 @@ namespace LinqToDB
 			return currentSource.Provider.Execute<int>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(UpdateWithOutput, source, setter),
+					MethodHelper.GetMethodInfo(UpdateWithOutputInto, source, setter, outputTable),
 					currentSource.Expression, Expression.Quote(setter),
 					((IQueryable<T>)outputTable).Expression));
 		}
@@ -797,7 +797,7 @@ namespace LinqToDB
 			var expr =
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(UpdateWithOutput, source, setter),
+					MethodHelper.GetMethodInfo(UpdateWithOutputInto, source, setter, outputTable),
 					currentSource.Expression, Expression.Quote(setter),
 					((IQueryable<T>)outputTable).Expression);
 
