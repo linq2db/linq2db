@@ -596,7 +596,7 @@ namespace LinqToDB.SqlQuery
 			VisitX(outputClause.SourceTable);
 			Visit(outputClause.DeletedTable);
 			Visit(outputClause.InsertedTable);
-			VisitX(outputClause.OutputTable);
+			Visit(outputClause.OutputTable);
 			if (outputClause.OutputQuery != null)
 				Visit(outputClause.OutputQuery);
 

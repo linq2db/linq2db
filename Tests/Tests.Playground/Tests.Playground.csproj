@@ -9,7 +9,6 @@
 
 	<ItemGroup>
 		<Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
-		<Compile Include="..\Linq\Update\UpdateWithOutputTests.cs" Link="UpdateWithOutputTests.cs" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">

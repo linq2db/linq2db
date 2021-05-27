@@ -38,8 +38,8 @@ namespace LinqToDB.Linq.Builder
 
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-			var updateStatement = sequence.Statement as SqlUpdateStatement ?? new SqlUpdateStatement(sequence.SelectQuery);
-			sequence.Statement = updateStatement;
+			var updateStatement  = sequence.Statement as SqlUpdateStatement ?? new SqlUpdateStatement(sequence.SelectQuery);
+			sequence.Statement   = updateStatement;
 
 			var genericArguments = methodCall.Method.GetGenericArguments();
 			Type? objectType     = default;
