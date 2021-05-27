@@ -31,15 +31,15 @@ namespace LinqToDB.Linq.Builder
 		{
 			var updateType = methodCall.Method.Name switch
 			{
-				nameof(LinqExtensions.UpdateWithOutput)     => UpdateContext.UpdateType.UpdateOutput,
-				nameof(LinqExtensions.UpdateWithOutputInto) => UpdateContext.UpdateType.UpdateOutputInto,
-				_                                           => UpdateContext.UpdateType.Update,
+				nameof(LinqExtensions.UpdateWithOutput)     => UpdateType.UpdateOutput,
+				nameof(LinqExtensions.UpdateWithOutputInto) => UpdateType.UpdateOutputInto,
+				_                                           => UpdateType.Update,
 			};
 
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
 			var updateStatement = sequence.Statement as SqlUpdateStatement ?? new SqlUpdateStatement(sequence.SelectQuery);
-			sequence.Statement  = updateStatement;
+			sequence.Statement = updateStatement;
 
 			switch (GetOutputMethod(methodCall))
 			{
@@ -132,36 +132,40 @@ namespace LinqToDB.Linq.Builder
 			var indexedParameters
 				= methodCall.Method.GetParameters().Select((p, i) => Tuple.Create(p, i)).ToDictionary(t => t.Item1.Name, t => t.Item2);
 
-			LambdaExpression GetOutputExpression(Type outputType)
+			if (updateType == UpdateType.Update)
+				return new UpdateContext(buildInfo.Parent, sequence);
+
+			var objectType    = methodCall.Method.GetGenericArguments()[1];
+			var insertedTable = SqlTable.Inserted(objectType);
+			var deletedTable  = SqlTable.Deleted(objectType);
+
+			updateStatement.Output = new SqlOutputClause()
 			{
-				if (indexedParameters.TryGetValue("outputExpression", out var index))
-					return (LambdaExpression)methodCall.Arguments[index].Unwrap();
+				InsertedTable = insertedTable,
+				DeletedTable = deletedTable,
+			};
 
-				var param1 = Expression.Parameter(outputType, "source");
-				var param2 = Expression.Parameter(outputType, "deleted");
-				var param3 = Expression.Parameter(outputType, "inserted");
-				var returnType = typeof(UpdateOutput<>).MakeGenericType(outputType);
-				return Expression.Lambda(
-					Expression.MemberInit(
-						Expression.New(returnType),
-						Expression.Bind(returnType.GetProperty("Deleted"), param2),
-						Expression.Bind(returnType.GetProperty("Inserted"), param3)),
-					param1, param2, param3);
-			}
-
-			if (updateType != UpdateContext.UpdateType.Update)
+			if (updateType == UpdateType.UpdateOutput)
 			{
-				var outputExpression = GetOutputExpression(methodCall.Method.GetGenericArguments().Last());
-
-				var objectType    = methodCall.Method.GetGenericArguments()[1];
-				var insertedTable = SqlTable.Inserted(objectType);
-				var deletedTable  = SqlTable.Deleted(objectType);
-
-				updateStatement.Output = new SqlOutputClause()
+				LambdaExpression GetOutputExpression(Type outputType)
 				{
-					InsertedTable = insertedTable,
-					DeletedTable  = deletedTable,
-				};
+					if (indexedParameters.TryGetValue("outputExpression", out var index))
+						return (LambdaExpression)methodCall.Arguments[index].Unwrap();
+
+					var param1 = Expression.Parameter(outputType, "source");
+					var param2 = Expression.Parameter(outputType, "deleted");
+					var param3 = Expression.Parameter(outputType, "inserted");
+					var returnType = typeof(UpdateOutput<>).MakeGenericType(outputType);
+					return Expression.Lambda(
+						// (source, deleted, inserted) => new UpdateOutput<T> { Deleted = deleted, Inserted = inserted, }
+						Expression.MemberInit(
+							Expression.New(returnType),
+							Expression.Bind(returnType.GetProperty("Deleted"), param2),
+							Expression.Bind(returnType.GetProperty("Inserted"), param3)),
+						param1, param2, param3);
+				}
+
+				var outputExpression = GetOutputExpression(methodCall.Method.GetGenericArguments().Last());
 
 				var outputContext = new UpdateOutputContext(
 					buildInfo.Parent,
@@ -170,24 +174,48 @@ namespace LinqToDB.Linq.Builder
 					new TableBuilder.TableContext(builder, new SelectQuery(), deletedTable),
 					new TableBuilder.TableContext(builder, new SelectQuery(), insertedTable));
 
-				if (updateType != UpdateContext.UpdateType.UpdateOutputInto)
-					return outputContext;
+				return outputContext;
+			}
+			else // updateType == UpdateType.UpdateOutputInto
+			{
+				LambdaExpression GetOutputExpression(Type outputType)
+				{
+					if (indexedParameters.TryGetValue("outputExpression", out var index))
+						return (LambdaExpression)methodCall.Arguments[index].Unwrap();
+
+					var param1 = Expression.Parameter(outputType, "source");
+					var param2 = Expression.Parameter(outputType, "deleted");
+					var param3 = Expression.Parameter(outputType, "inserted");
+					return Expression.Lambda(
+						// (source, deleted, inserted) => inserted
+						param3,
+						param1, param2, param3);
+				}
 
 				var outputTable = methodCall.Arguments[indexedParameters["outputTable"]];
 				var destination = builder.BuildSequence(new BuildInfo(buildInfo, outputTable, new SelectQuery()));
 
-				BuildSetter(
+				var outputExpression = GetOutputExpression(methodCall.Method.GetGenericArguments().Last());
+				BuildSetterWithContext(
 					builder,
 					buildInfo,
 					outputExpression,
 					destination,
 					updateStatement.Output.OutputItems,
-					outputContext);
+					sequence,
+					new TableBuilder.TableContext(builder, new SelectQuery(), deletedTable),
+					new TableBuilder.TableContext(builder, new SelectQuery(), insertedTable));
 
 				updateStatement.Output.OutputTable = ((TableBuilder.TableContext)destination).SqlTable;
+				return new UpdateContext(buildInfo.Parent, sequence);
 			}
+		}
 
-			return new UpdateContext(buildInfo.Parent, sequence);
+		enum UpdateType
+		{
+			Update,
+			UpdateOutput,
+			UpdateOutputInto,
 		}
 
 		enum OutputMethod
@@ -479,13 +507,6 @@ namespace LinqToDB.Linq.Builder
 
 		class UpdateContext : SequenceContextBase
 		{
-			public enum UpdateType
-			{
-				Update,
-				UpdateOutput,
-				UpdateOutputInto,
-			}
-
 			public UpdateContext(IBuildContext? parent, IBuildContext sequence)
 				: base(parent, sequence, null)
 			{

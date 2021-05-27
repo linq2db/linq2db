@@ -195,6 +195,122 @@ namespace Tests.Playground
 			}
 		}
 
+		[Test]
+		public void UpdateITableWithDefaultOutputIntoTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			using (var target = db.CreateLocalTable(sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", })))
+			using (var destination = db.CreateLocalTable<DestinationTable>(tableName: "Destination"))
+			{
+				source
+					.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
+					.UpdateWithOutputInto(
+						target,
+						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, },
+						destination);
+
+				AreEqual(
+					target.ToArray(),
+					destination.ToArray(),
+					ComparerBuilder.GetEqualityComparer<DestinationTable>());
+			}
+		}
+
+		[Test]
+		public async Task UpdateITableWithDefaultOutputIntoTestAsync([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			using (var target = db.CreateLocalTable(sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", })))
+			using (var destination = db.CreateLocalTable<DestinationTable>(tableName: "Destination"))
+			{
+				await source
+					.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
+					.UpdateWithOutputIntoAsync(
+						target,
+						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, },
+						destination);
+
+				AreEqual(
+					target.ToArray(),
+					destination.ToArray(),
+					ComparerBuilder.GetEqualityComparer<DestinationTable>());
+			}
+		}
+
+		[Test]
+		public void UpdateITableWithProjectionOutputIntoTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			using (var target = db.CreateLocalTable(sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", })))
+			using (var destination = db.CreateLocalTable<TableWithData>(tableName: "Destination"))
+			{
+				var expected = sourceData
+					.Select(s => new TableWithData
+					{
+						Id = s.Id,
+						Value = s.Value + 1,
+						ValueStr = s.ValueStr,
+					})
+					.ToArray();
+
+				source
+					.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
+					.UpdateWithOutputInto(
+						target,
+						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, },
+						destination,
+						(source, deleted, inserted) => new TableWithData { Id = source.s.Id, Value = deleted.Value, ValueStr = inserted.ValueStr, });
+
+				AreEqual(
+					expected,
+					destination.ToArray(),
+					ComparerBuilder.GetEqualityComparer<TableWithData>());
+			}
+		}
+
+		[Test]
+		public async Task UpdateITableWithProjectionOutputIntoTestAsync([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			using (var target = db.CreateLocalTable(sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", })))
+			using (var destination = db.CreateLocalTable<TableWithData>(tableName: "Destination"))
+			{
+				var expected = sourceData
+					.Select(s => new TableWithData
+					{
+						Id = s.Id,
+						Value = s.Value + 1,
+						ValueStr = s.ValueStr,
+					})
+					.ToArray();
+
+				await source
+					.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
+					.UpdateWithOutputIntoAsync(
+						target,
+						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, },
+						destination,
+						(source, deleted, inserted) => new TableWithData { Id = source.s.Id, Value = deleted.Value, ValueStr = inserted.ValueStr, });
+
+				AreEqual(
+					expected,
+					destination.ToArray(),
+					ComparerBuilder.GetEqualityComparer<TableWithData>());
+			}
+		}
+
 		#endregion
 	}
 }
