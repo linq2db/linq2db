@@ -350,6 +350,7 @@ namespace LinqToDB.DataProvider
 			int                                       maxParameters,
 			int                                       maxSqlLength)
 		{
+			var adjustedBatchSize = helper.Options.UseParameters ?  Math.Min(helper.BatchSize, maxParameters / helper.Columns.Length): helper.BatchSize;
 			prepFunction(helper);
 
 			foreach (var item in source)
@@ -360,7 +361,7 @@ namespace LinqToDB.DataProvider
 				var needRemove = helper.Parameters.Count > maxParameters ||
 				                 helper.StringBuilder.Length > maxSqlLength;
 				var isSingle = helper.CurrentCount == 1;
-				if (helper.CurrentCount >= helper.BatchSize || needRemove)
+				if (helper.CurrentCount >= adjustedBatchSize || needRemove)
 				{
 					if (needRemove && !isSingle)
 					{
@@ -398,6 +399,7 @@ namespace LinqToDB.DataProvider
 			int                                         maxParameters,
 			int                                         maxSqlLength)
 		{
+			var adjustedBatchSize = helper.Options.UseParameters ?  Math.Min(helper.BatchSize, maxParameters / helper.Columns.Length): helper.BatchSize;
 			prepFunction(helper);
 
 			foreach (var item in source)
@@ -409,7 +411,7 @@ namespace LinqToDB.DataProvider
 				var needRemove = helper.Parameters.Count     > maxParameters ||
 				                 helper.StringBuilder.Length > maxSqlLength;
 				var isSingle = helper.CurrentCount == 1;
-				if (helper.CurrentCount >= helper.BatchSize || needRemove)
+				if (helper.CurrentCount >= adjustedBatchSize || needRemove)
 				{
 					if (needRemove && !isSingle)
 					{
@@ -448,6 +450,7 @@ namespace LinqToDB.DataProvider
 			int                                         maxParameters,
 			int                                         maxSqlLength)
 		{
+			var adjustedBatchSize = helper.Options.UseParameters ?  Math.Min(helper.BatchSize, maxParameters / helper.Columns.Length): helper.BatchSize;
 			prepFunction(helper);
 
 			await foreach (var item in source.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext).WithCancellation(cancellationToken))
@@ -459,7 +462,7 @@ namespace LinqToDB.DataProvider
 				var needRemove = helper.Parameters.Count     > maxParameters ||
 				                 helper.StringBuilder.Length > maxSqlLength;
 				var isSingle = helper.CurrentCount == 1;
-				if (helper.CurrentCount >= helper.BatchSize || needRemove)
+				if (helper.CurrentCount >= adjustedBatchSize || needRemove)
 				{
 					if (needRemove && !isSingle)
 					{
