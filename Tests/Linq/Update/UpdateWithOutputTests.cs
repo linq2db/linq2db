@@ -6,7 +6,7 @@ using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
 using NUnit.Framework;
 
-namespace Tests.Playground
+namespace Tests.xUpdate
 {
 	[TestFixture]
 	public class UpdateWithOutputTests : TestBase
