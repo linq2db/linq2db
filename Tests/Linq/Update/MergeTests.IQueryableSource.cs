@@ -42,12 +42,12 @@ namespace Tests.xUpdate
 
 		[Test]
 		[ActiveIssue(3015, Configurations = new[] 
-		{ 
-			"Access", "Access.Odbc", 
-			"SqlCe", 
-			"SQLite.Classic", "SQLite.MS", "SQLite.Classic.MPU", "SQLite.Classic.MPM",
-			"PostgreSQL", "PostgreSQL.9.2", "PostgreSQL.9.3", "PostgreSQL.9.5", "PostgreSQL.10", "PostgreSQL.11", "PostgreSQL.12", "PostgreSQL.13",
-			"MySql", "MySqlConnector", "MySql55", "MariaDB",
+		{
+			TestProvName.AllAccess,
+			ProviderName.SqlCe,
+			TestProvName.AllSQLite,
+			TestProvName.AllPostgreSQL,
+			TestProvName.AllMySql,
 		})]
 		public void MergeIntoCte([MergeDataContextSource] string context)
 		{
@@ -112,11 +112,11 @@ namespace Tests.xUpdate
 		[Test]
 		[ActiveIssue(3015, Configurations = new[]
 		{
-			"Access", "Access.Odbc",
-			"SqlCe",
-			"SQLite.Classic", "SQLite.MS", "SQLite.Classic.MPU", "SQLite.Classic.MPM",
-			"PostgreSQL", "PostgreSQL.9.2", "PostgreSQL.9.3", "PostgreSQL.9.5", "PostgreSQL.10", "PostgreSQL.11", "PostgreSQL.12", "PostgreSQL.13",
-			"MySql", "MySqlConnector", "MySql55", "MariaDB",
+			TestProvName.AllAccess,
+			ProviderName.SqlCe,
+			TestProvName.AllSQLite,
+			TestProvName.AllPostgreSQL,
+			TestProvName.AllMySql,
 		})]
 		public void MergeFromCte([MergeDataContextSource] string context)
 		{
@@ -150,11 +150,11 @@ namespace Tests.xUpdate
 		[Test]
 		[ActiveIssue(3015, Configurations = new[]
 		{
-			"Access", "Access.Odbc",
-			"SqlCe",
-			"SQLite.Classic", "SQLite.MS", "SQLite.Classic.MPU", "SQLite.Classic.MPM",
-			"PostgreSQL", "PostgreSQL.9.2", "PostgreSQL.9.3", "PostgreSQL.9.5", "PostgreSQL.10", "PostgreSQL.11", "PostgreSQL.12", "PostgreSQL.13",
-			"MySql", "MySqlConnector", "MySql55", "MariaDB",
+			TestProvName.AllAccess,
+			ProviderName.SqlCe,
+			TestProvName.AllSQLite,
+			TestProvName.AllPostgreSQL,
+			TestProvName.AllMySql,
 		})]
 		public void MergeUsingCteJoin([MergeDataContextSource] string context)
 		{
@@ -188,11 +188,11 @@ namespace Tests.xUpdate
 		[Test]
 		[ActiveIssue(3015, Configurations = new[]
 		{
-			"Access", "Access.Odbc",
-			"SqlCe",
-			"SQLite.Classic", "SQLite.MS", "SQLite.Classic.MPU", "SQLite.Classic.MPM",
-			"PostgreSQL", "PostgreSQL.9.2", "PostgreSQL.9.3", "PostgreSQL.9.5", "PostgreSQL.10", "PostgreSQL.11", "PostgreSQL.12", "PostgreSQL.13",
-			"MySql", "MySqlConnector", "MySql55", "MariaDB",
+			TestProvName.AllAccess,
+			ProviderName.SqlCe,
+			TestProvName.AllSQLite,
+			TestProvName.AllPostgreSQL,
+			TestProvName.AllMySql,
 		})]
 		public void MergeUsingCteWhere([MergeDataContextSource] string context)
 		{
