@@ -5,6 +5,7 @@ using System.Xml;
 
 namespace LinqToDB.DataProvider.SqlCe
 {
+	using System;
 	using System.Data.Linq;
 	using Common;
 	using Mapping;
@@ -67,6 +68,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
 		}
 
+		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
 			stringBuilder
@@ -78,12 +80,12 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
 		{
-			DataTools.ConvertStringToSql(stringBuilder, "+", null, AppendConversion, value, null);
+			DataTools.ConvertStringToSql(stringBuilder, "+", null, AppendConversionAction, value, null);
 		}
 
 		static void ConvertCharToSql(StringBuilder stringBuilder, char value)
 		{
-			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversion, value);
+			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversionAction, value);
 		}
 	}
 }

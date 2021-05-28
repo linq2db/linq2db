@@ -6,7 +6,7 @@ using System.Data;
 #endif
 
 using System.Linq;
-
+using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Mapping;
 
@@ -250,18 +250,43 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = from p in db.Person where p.FirstName.Contains("oh") && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				db.Person.Count(p => p.FirstName.Contains("jOh") && p.ID == 1).Should().Be(IsCaseSensitiveComparison(context) ? 0 : 1);
+				db.Person.Count(p => !p.FirstName.Contains("jOh") && p.ID == 1).Should().Be(IsCaseSensitiveComparison(context) ? 1 : 0);
 			}
 		}
+
+#if NETSTANDARD2_1PLUS
+		[Test]
+		public void ContainsConstantWithCase1([DataSources(ProviderName.SqlCe)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				//db.Person.Count(p =>  p.FirstName.Contains("Joh", StringComparison.Ordinal) && p.ID == 1).Should().Be(1);
+				db.Person.Count(p => !p.FirstName.Contains("Joh", StringComparison.Ordinal) && p.ID == 1).Should().Be(0);
+
+				// db.Person.Count(p =>  p.FirstName.Contains("joh", StringComparison.Ordinal) && p.ID == 1).Should().Be(0);
+				// db.Person.Count(p => !p.FirstName.Contains("joh", StringComparison.Ordinal) && p.ID == 1).Should().Be(1);
+			}
+		}
+#endif
+		[Test]
+		public void ContainsConstantWithCase2([DataSources(ProviderName.SqlCe)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Person.Count(p => p.FirstName.Contains("Joh") && p.ID == 1).Should().Be(1);
+				db.Person.Count(p => !p.FirstName.Contains("Joh") && p.ID == 1).Should().Be(0);
+			}
+		}
+
 
 		[Test]
 		public void ContainsConstant2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = from p in db.Person where !p.FirstName.Contains("o%h") && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				db.Person.Count(p => p.FirstName.Contains("o%h") && p.ID == 1).Should().Be(0);
+				db.Person.Count(p => !p.FirstName.Contains("o%h") && p.ID == 1).Should().Be(1);
 			}
 		}
 
@@ -284,8 +309,8 @@ namespace Tests.Linq
 			{
 				var s = "123[456";
 
-				var q = from p in db.Person where p.ID == 1 && s.Contains("[") select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				db.Person.Count(p => p.ID == 1 && s.Contains("[")).Should().Be(1);
+				db.Person.Count(p => p.ID == 1 && !s.Contains("[")).Should().Be(0);
 			}
 		}
 
@@ -294,8 +319,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = from p in db.Person where p.ID == 1 && "123[456".Contains("[") select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				db.Person.Count(p => p.ID == 1 && "123[456".Contains("[")).Should().Be(1);
 			}
 		}
 
@@ -307,8 +331,7 @@ namespace Tests.Linq
 				var s  = "123[456";
 				var ps = "[";
 
-				var q = from p in db.Person where p.ID == 1 && s.Contains(ps) select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				db.Person.Count(p => p.ID == 1 && s.Contains(ps)).Should().Be(1);
 			}
 		}
 
@@ -320,18 +343,8 @@ namespace Tests.Linq
 			{
 				var s  = "123" + toTest + "456";
 
-				var q = from p in db.Person where p.ID == 1 && s.Contains(Sql.ToSql(toTest)) select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
-
-				//TODO: check case sensitivity for each provider
-				/*
-				var s2 = s.ToUpper(CultureInfo.InvariantCulture);
-				if (s != s2)
-				{
-					var q2 = from p in db.Person where p.ID == 1 && s2.Contains(Sql.ToSql(toTest)) select p;
-					Assert.AreEqual(1, q2.ToList().First().ID);
-				}
-				*/
+				db.Person.Count(p => p.ID == 1 && s.Contains(Sql.ToSql(toTest))).Should().Be(1);
+				db.Person.Count(p => p.ID == 1 && !s.Contains(Sql.ToSql(toTest))).Should().Be(0);
 			}
 		}
 
@@ -344,19 +357,7 @@ namespace Tests.Linq
 			{
 				var s  = "123" + toTest + "456";
 
-				var q = from p in db.Person where p.ID == 1 && s.Contains(toTest) select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
-
-				//TODO: check case sensitivity for each provider
-				/*
-				var s2 = s.ToUpper(CultureInfo.InvariantCulture);
-				if (s != s2)
-				{
-					var q2 = from p in db.Person where p.ID == 1 && s2.Contains(toTest) select p;
-					Assert.AreEqual(1, q2.ToList().First().ID);
-				}
-				*/
-
+				db.Person.Count(p => p.ID == 1 && s.Contains(toTest)).Should().Be(1);
 			}
 		}
 
@@ -367,8 +368,7 @@ namespace Tests.Linq
 			{
 				var ps = "[";
 
-				var q = from p in db.Person where p.ID == 1 && "123[456".Contains(ps) select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				db.Person.Count(p => p.ID == 1 && "123[456".Contains(ps)).Should().Be(1);
 			}
 		}
 
@@ -462,6 +462,44 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void StartsWithCacheCheck([DataSources] string context, [Values(StringComparison.OrdinalIgnoreCase, StringComparison.Ordinal, StringComparison.InvariantCultureIgnoreCase, StringComparison.InvariantCulture)] StringComparison comparison)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var firstName = db.Person.Where(p => p.ID == 1).Select(p => p.FirstName).Single();
+				var nameToCheck = firstName.Substring(0, 3);
+				switch (comparison)
+				{
+					case StringComparison.OrdinalIgnoreCase : 
+					case StringComparison.InvariantCultureIgnoreCase : 
+					case StringComparison.CurrentCultureIgnoreCase : 
+						nameToCheck = nameToCheck.ToUpper();
+						break;
+				}
+
+				db.Person.Count(p => p.FirstName.StartsWith(nameToCheck, comparison)  && p.ID == 1).Should().Be(1);
+				db.Person.Count(p => !p.FirstName.StartsWith(nameToCheck, comparison) && p.ID == 1).Should().Be(0);
+
+				switch (comparison)
+				{
+					case StringComparison.Ordinal : 
+					case StringComparison.CurrentCulture : 
+					case StringComparison.InvariantCulture : 
+					{
+						nameToCheck = firstName.Substring(0, 3);
+						nameToCheck = nameToCheck.ToUpper();
+
+						db.Person.Count(p => p.FirstName.StartsWith(nameToCheck, comparison)  && p.ID == 1).Should().Be(0);
+						db.Person.Count(p => !p.FirstName.StartsWith(nameToCheck, comparison) && p.ID == 1).Should().Be(1);
+
+						break;
+					}
+				}
+
+			}
+		}
+
+		[Test]
 		public void StartsWith1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -472,33 +510,24 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void StartsWithSQL([DataSources(false)] string context)
+		public void StartsWith1IgnoreCase([DataSources] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
-				(from p in db.Person where p.FirstName.StartsWith("Jo") && !p.LastName.StartsWith("Je") select p).ToList();
+				db.Person.Count(p => p.FirstName.StartsWith("joH", StringComparison.OrdinalIgnoreCase) && p.ID == 1).Should().Be(1);
+				db.Person.Count(p => !p.FirstName.StartsWith("joH", StringComparison.OrdinalIgnoreCase) && p.ID == 1).Should().Be(0);
+			}
+		}
 
-				// https://github.com/linq2db/linq2db/issues/2005
-				if (context.Contains("Firebird"))
-				{
-					Assert.True(db.LastQuery!.Contains(" STARTING WITH 'Jo'"));
-					Assert.True(db.LastQuery.Contains(" NOT STARTING WITH 'Je'"));
-				}
-				else if (context.Contains("SqlServer") || context.Contains("SqlAzure"))
-				{
-					Assert.True(db.LastQuery!.Contains(" LIKE N'Jo%'"));
-					Assert.True(db.LastQuery.Contains("NOT LIKE N'Je%'"));
-				}
-				else if (context.Contains("Informix"))
-				{
-					Assert.True(db.LastQuery!.Contains(" LIKE 'Jo%'"));
-					Assert.True(db.LastQuery.Contains("NOT p.LastName LIKE 'Je%'"));
-				}
-				else
-				{
-					Assert.True(db.LastQuery!.Contains(" LIKE 'Jo%'"));
-					Assert.True(db.LastQuery.Contains("NOT LIKE 'Je%'"));
-				}
+		[Test]
+		public void StartsWith1Case([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Person.Count(p => p.FirstName.StartsWith("Jo", StringComparison.Ordinal) && p.ID == 1).Should().Be(1);
+				db.Person.Count(p => p.FirstName.StartsWith("jo", StringComparison.Ordinal) && p.ID == 1).Should().Be(0);
+
+				db.Person.Count(p => !p.FirstName.StartsWith("Jo", StringComparison.Ordinal) && p.ID == 1).Should().Be(0);
 			}
 		}
 
@@ -554,12 +583,25 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void EndsWith([DataSources] string context)
+		public void EndsWithIgnoreCase([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = from p in db.Person where p.FirstName.EndsWith("hn") && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				db.Person.Count(p => p.FirstName.EndsWith("JOHN") && p.ID == 1).Should().Be(IsCaseSensitiveComparison(context) ? 0 : 1);
+				db.Person.Count(p => !p.FirstName.EndsWith("JOHN") && p.ID == 1).Should().Be(IsCaseSensitiveComparison(context) ? 1 : 0);
+			}
+		}
+
+		[Test]
+		public void EndsWithWithCase([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Patient.Count(p =>  p.Diagnosis.EndsWith("Persecution", StringComparison.Ordinal) && p.PersonID == 2).Should().Be(1);
+				db.Patient.Count(p => !p.Diagnosis.EndsWith("Persecution", StringComparison.Ordinal) && p.PersonID == 2).Should().Be(0);
+
+				db.Patient.Count(p =>  p.Diagnosis.EndsWith("persecution", StringComparison.Ordinal) && p.PersonID == 2).Should().Be(0);
+				db.Patient.Count(p => !p.Diagnosis.EndsWith("persecution", StringComparison.Ordinal) && p.PersonID == 2).Should().Be(1);
 			}
 		}
 
@@ -1205,6 +1247,237 @@ namespace Tests.Linq
 			{
 				var q = from p in db.Person where p.ID == 1 select string.IsNullOrEmpty(p.FirstName);
 				Assert.AreEqual(false, q.ToList().First());
+			}
+		}
+
+		[Table]
+		class CollatedTable
+		{
+			[Column, PrimaryKey] public int    Id              { get; set; }
+			[Column            ] public string CaseSensitive   { get; set; } = null!;
+			[Column            ] public string CaseInsensitive { get; set; } = null!;
+
+			public static readonly CollatedTable TestData = new () { Id = 1, CaseSensitive = "TestString", CaseInsensitive = "TestString" };
+		}
+
+#if NETSTANDARD2_1PLUS
+		[Test]
+		public void ExplicitOrdinalIgnoreCase_Contains([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.GetTable<CollatedTable>().Delete();
+				db.Insert(CollatedTable.TestData);
+
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseSensitive.Contains("stSt", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseInsensitive.Contains("stSt", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseSensitive.Contains("stst", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseInsensitive.Contains("stst", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
+			}
+		}
+
+		[Test]
+		public void ExplicitOrdinal_Contains([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.GetTable<CollatedTable>().Delete();
+				db.Insert(CollatedTable.TestData);
+
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseSensitive.Contains("stSt", StringComparison.Ordinal)).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseInsensitive.Contains("stSt", StringComparison.Ordinal)).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseSensitive.Contains("stst", StringComparison.Ordinal)).Should().Be(0);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseInsensitive.Contains("stst", StringComparison.Ordinal)).Should().Be(0);
+			}
+		}
+
+		[Test]
+		public void Explicit_Contains([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Patient
+					.Count(r => r.Diagnosis.Contains("Paranoid", StringComparison.Ordinal)).Should().Be(1);
+				db.Patient
+					.Count(r => r.Diagnosis.Contains("paranoid", StringComparison.Ordinal)).Should().Be(0);
+				db.Patient
+					.Count(r => r.Diagnosis.Contains("paranoid", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
+				db.Patient
+					.Count(r => r.Diagnosis.Contains("Paranoid", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
+			}
+		}
+#endif
+
+		[Test]
+		public void Default_Contains([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.GetTable<CollatedTable>().Delete();
+				db.Insert(CollatedTable.TestData);
+
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseSensitive.Contains("stSt")).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseInsensitive.Contains("stSt")).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseSensitive.Contains("stst")).Should().Be(IsCollatedTableConfigured(context) || IsCaseSensitiveComparison(context) ? 0 : 1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseInsensitive.Contains("stst")).Should().Be(IsCollatedTableConfigured(context) || !IsCaseSensitiveComparison(context) ? 1 : 0);
+			}
+		}
+
+		[Test]
+		public void ExplicitOrdinalIgnoreCase_StartsWith([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.GetTable<CollatedTable>().Delete();
+				db.Insert(CollatedTable.TestData);
+
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseSensitive.StartsWith("TestSt", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseInsensitive.StartsWith("TestSt", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseSensitive.StartsWith("testst", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseInsensitive.StartsWith("testst", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
+			}
+		}
+
+		[Test]
+		public void ExplicitOrdinal_StartsWith([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.GetTable<CollatedTable>().Delete();
+				db.Insert(CollatedTable.TestData);
+
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseSensitive.StartsWith("TestSt", StringComparison.Ordinal)).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseInsensitive.StartsWith("TestSt", StringComparison.Ordinal)).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseSensitive.StartsWith("testst", StringComparison.Ordinal)).Should().Be(0);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseInsensitive.StartsWith("testst", StringComparison.Ordinal)).Should().Be(0);
+			}
+		}
+
+		[Test]
+		public void Default_StartsWith([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.GetTable<CollatedTable>().Delete();
+				db.Insert(CollatedTable.TestData);
+
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseSensitive.StartsWith("TestSt")).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseInsensitive.StartsWith("TestSt")).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseSensitive.StartsWith("testst")).Should().Be(IsCollatedTableConfigured(context) || IsCaseSensitiveComparison(context) ? 0 : 1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseInsensitive.StartsWith("testst")).Should().Be(IsCollatedTableConfigured(context) || !IsCaseSensitiveComparison(context) ? 1 : 0);
+			}
+		}
+
+		[Test]
+		public void Explicit_StartsWith([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Patient
+					.Count(r => r.Diagnosis.StartsWith("Hall", StringComparison.Ordinal)).Should().Be(1);
+				db.Patient
+					.Count(r => r.Diagnosis.StartsWith("hall", StringComparison.Ordinal)).Should().Be(0);
+				db.Patient
+					.Count(r => r.Diagnosis.StartsWith("hall", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
+				db.Patient
+					.Count(r => r.Diagnosis.StartsWith("Hall", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
+			}
+		}
+
+		[Test]
+		public void ExplicitOrdinalIgnoreCase_EndsWith([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.GetTable<CollatedTable>().Delete();
+				db.Insert(CollatedTable.TestData);
+
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseSensitive.EndsWith("stString", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseInsensitive.EndsWith("stString", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseSensitive.EndsWith("ststring", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseInsensitive.EndsWith("ststring", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
+			}
+		}
+
+		[Test]
+		public void ExplicitOrdinal_EndsWith([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.GetTable<CollatedTable>().Delete();
+				db.Insert(CollatedTable.TestData);
+
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseSensitive.EndsWith("stString", StringComparison.Ordinal)).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseInsensitive.EndsWith("stString", StringComparison.Ordinal)).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseSensitive.EndsWith("ststring", StringComparison.Ordinal)).Should().Be(0);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseInsensitive.EndsWith("ststring", StringComparison.Ordinal)).Should().Be(0);
+			}
+		}
+
+		[Test]
+		public void Default_EndsWith([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.GetTable<CollatedTable>().Delete();
+				db.Insert(CollatedTable.TestData);
+
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseSensitive.EndsWith("stString")).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseInsensitive.EndsWith("stString")).Should().Be(1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseSensitive.EndsWith("ststring")).Should().Be(IsCollatedTableConfigured(context) || IsCaseSensitiveComparison(context) ? 0 : 1);
+				db.GetTable<CollatedTable>()
+					.Count(r => r.CaseInsensitive.EndsWith("ststring")).Should().Be(IsCollatedTableConfigured(context) || !IsCaseSensitiveComparison(context) ? 1 : 0);
+			}
+		}
+
+		[Test]
+		public void Explicit_EndsWith([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Patient
+					.Count(r => r.Diagnosis.EndsWith("Persecution", StringComparison.Ordinal)).Should().Be(1);
+				db.Patient
+					.Count(r => r.Diagnosis.EndsWith("persecution", StringComparison.Ordinal)).Should().Be(0);
+				db.Patient
+					.Count(r => r.Diagnosis.EndsWith("persecution", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
+				db.Patient
+					.Count(r => r.Diagnosis.EndsWith("Persecution", StringComparison.OrdinalIgnoreCase)).Should().Be(1);
 			}
 		}
 	}

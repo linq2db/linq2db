@@ -639,9 +639,7 @@ namespace LinqToDB.ServiceModel
 					foreach (var hint in queryHints!)
 						Builder.AppendLine(hint);
 
-				var visitor = new QueryVisitor();
-
-				visitor.Visit(statement, e => Visit(e, parameterValues));
+				statement.Visit((serializer: this, parameterValues), static (context, e) => context.serializer.Visit(e, context.parameterValues));
 
 				if (DelayedObjects.Count > 0)
 					throw new LinqToDBException($"QuerySerializer error. Unknown object '{DelayedObjects.First().Key.GetType()}'.");
@@ -977,6 +975,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.IsNot);
 							Append(elem.Expr2);
 							Append(elem.Escape);
+							Append(elem.FunctionName);
 							break;
 						}
 
@@ -988,7 +987,7 @@ namespace LinqToDB.ServiceModel
 						Append(elem.IsNot);
 						Append(elem.Expr2);
 						Append((int)elem.Kind);
-						Append(elem.IgnoreCase);
+						Append(elem.CaseSensitive);
 						break;
 					}
 
@@ -1023,6 +1022,17 @@ namespace LinqToDB.ServiceModel
 
 							Append(elem.Expr1);
 							Append(elem.IsNot);
+
+							break;
+						}
+
+					case QueryElementType.IsDistinctPredicate :
+						{
+							var elem = (SqlPredicate.IsDistinct)e;
+
+							Append(elem.Expr1);
+							Append(elem.IsNot);
+							Append(elem.Expr2);
 
 							break;
 						}
@@ -1779,19 +1789,20 @@ namespace LinqToDB.ServiceModel
 							var isNot  = ReadBool();
 							var expr2  = Read<ISqlExpression>()!;
 							var escape = Read<ISqlExpression>();
-							obj = new SqlPredicate.Like(expr1, isNot, expr2, escape);
+							var fun    = ReadString();
+							obj = new SqlPredicate.Like(expr1, isNot, expr2, escape, fun);
 
 							break;
 						}
 
 					case QueryElementType.SearchStringPredicate:
 					{
-						var expr1      = Read<ISqlExpression>()!;
-						var isNot      = ReadBool();
-						var expr2      = Read<ISqlExpression>()!;
-						var kind       = (SqlPredicate.SearchString.SearchKind)ReadInt();
-						var ignoreCase = ReadBool();
-						obj = new SqlPredicate.SearchString(expr1, isNot, expr2, kind, ignoreCase);
+						var expr1         = Read<ISqlExpression>()!;
+						var isNot         = ReadBool();
+						var expr2         = Read<ISqlExpression>()!;
+						var kind          = (SqlPredicate.SearchString.SearchKind)ReadInt();
+						var caseSensitive = Read<ISqlExpression>()!;
+						obj = new SqlPredicate.SearchString(expr1, isNot, expr2, kind, caseSensitive);
 
 						break;
 					}
@@ -1827,6 +1838,17 @@ namespace LinqToDB.ServiceModel
 							var isNot = ReadBool();
 
 							obj = new SqlPredicate.IsNull(expr1, isNot);
+
+							break;
+						}
+
+					case QueryElementType.IsDistinctPredicate :
+						{
+							var expr1 = Read<ISqlExpression>()!;
+							var isNot = ReadBool();
+							var expr2 = Read<ISqlExpression>()!;
+
+							obj = new SqlPredicate.IsDistinct(expr1, isNot, expr2);
 
 							break;
 						}

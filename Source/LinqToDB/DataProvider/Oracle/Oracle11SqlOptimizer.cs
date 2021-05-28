@@ -6,7 +6,6 @@ namespace LinqToDB.DataProvider.Oracle
 	using SqlProvider;
 	using SqlQuery;
 	using Mapping;
-	using Tools;
 
 	public class Oracle11SqlOptimizer : BasicSqlOptimizer
 	{
@@ -51,7 +50,10 @@ namespace LinqToDB.DataProvider.Oracle
 
 					// Oracle saves empty string as null to database, so we need predicate modification before sending query
 					//
-					if (expr.Operator.In(SqlPredicate.Operator.Equal, SqlPredicate.Operator.NotEqual, SqlPredicate.Operator.GreaterOrEqual, SqlPredicate.Operator.LessOrEqual) && expr.WithNull == true)
+					if ((expr.Operator == SqlPredicate.Operator.Equal          ||
+						 expr.Operator == SqlPredicate.Operator.NotEqual       ||
+						 expr.Operator == SqlPredicate.Operator.GreaterOrEqual ||
+						 expr.Operator == SqlPredicate.Operator.LessOrEqual) && expr.WithNull == true)
 					{
 						if (expr.Expr1.SystemType == typeof(string) && expr.Expr1.CanBeEvaluated(true))
 							return true;
@@ -65,7 +67,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return false;
 		}
 
-		public override ISqlPredicate ConvertPredicateImpl(MappingSchema mappingSchema, ISqlPredicate predicate, ConvertVisitor visitor, OptimizationContext optimizationContext)
+		public override ISqlPredicate ConvertPredicateImpl<TContext>(MappingSchema mappingSchema, ISqlPredicate predicate, ConvertVisitor<RunOptimizationContext<TContext>> visitor, OptimizationContext optimizationContext)
 		{
 			switch (predicate.ElementType)
 			{
@@ -75,7 +77,11 @@ namespace LinqToDB.DataProvider.Oracle
 
 					// Oracle saves empty string as null to database, so we need predicate modification before sending query
 					//
-					if (expr.Operator.In(SqlPredicate.Operator.Equal, SqlPredicate.Operator.NotEqual, SqlPredicate.Operator.GreaterOrEqual, SqlPredicate.Operator.LessOrEqual) && expr.WithNull == true)
+					if (expr.WithNull == true &&
+						(expr.Operator == SqlPredicate.Operator.Equal          ||
+						 expr.Operator == SqlPredicate.Operator.NotEqual       ||
+						 expr.Operator == SqlPredicate.Operator.GreaterOrEqual ||
+						 expr.Operator == SqlPredicate.Operator.LessOrEqual))
 					{
 						if (expr.Expr1.SystemType == typeof(string) &&
 						    expr.Expr1.TryEvaluateExpression(optimizationContext.Context, out var value1) && value1 is string string1)
@@ -110,7 +116,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return predicate;
 		}
 
-		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor visitor,
+		public override ISqlExpression ConvertExpressionImpl<TContext>(ISqlExpression expression, ConvertVisitor<TContext> visitor,
 			EvaluationContext context)
 		{
 			expression = base.ConvertExpressionImpl(expression, visitor, context);

@@ -23,9 +23,10 @@ namespace LinqToDB.DataProvider.Firebird
 			return statement;
 		}
 
-		protected static string[] LikeFirebirdEscapeSymbosl = { "_", "%" };
+		protected static string[] LikeFirebirdEscapeSymbols = { "_", "%" };
 
-		public override string[] LikeCharactersToEscape => LikeFirebirdEscapeSymbosl;
+		public override string[] LikeCharactersToEscape    => LikeFirebirdEscapeSymbols;
+		public override bool     LikeValueParameterSupport => false;
 
 
 		public override bool IsParameterDependedElement(IQueryElement element)
@@ -60,47 +61,89 @@ namespace LinqToDB.DataProvider.Firebird
 		}
 
 
-		public override ISqlPredicate ConvertSearchStringPredicate(MappingSchema mappingSchema, SqlPredicate.SearchString predicate,
-			ConvertVisitor visitor,
+		public override ISqlPredicate ConvertSearchStringPredicate<TContext>(MappingSchema mappingSchema, SqlPredicate.SearchString predicate,
+			ConvertVisitor<RunOptimizationContext<TContext>> visitor,
 			OptimizationContext optimizationContext)
 		{
-			if (!predicate.IgnoreCase)
-				return ConvertSearchStringPredicateViaLike(mappingSchema, predicate, visitor, optimizationContext);
-
 			ISqlExpression expr;
+
+			var caseSensitive = predicate.CaseSensitive.EvaluateBoolExpression(optimizationContext.Context);
+
+			// for explicit case-sensitive search we apply "CAST({0} AS BLOB)" to searched string as COLLATE's collation is character set-dependent
 			switch (predicate.Kind)
 			{
 				case SqlPredicate.SearchString.SearchKind.EndsWith:
 				{
-					predicate = new SqlPredicate.SearchString(
-						new SqlFunction(typeof(string), "$ToLower$", predicate.Expr1),
-						predicate.IsNot,
-						new SqlFunction(typeof(string), "$ToLower$", predicate.Expr2), predicate.Kind,
-						predicate.IgnoreCase);
+					if (caseSensitive == false)
+					{
+						predicate = new SqlPredicate.SearchString(
+							new SqlFunction(typeof(string), "$ToLower$", predicate.Expr1),
+							predicate.IsNot,
+							new SqlFunction(typeof(string), "$ToLower$", predicate.Expr2), predicate.Kind,
+							predicate.CaseSensitive);
+					}
+					else if (caseSensitive == true)
+					{
+						predicate = new SqlPredicate.SearchString(
+							new SqlExpression(typeof(string), "CAST({0} AS BLOB)", Precedence.Primary, predicate.Expr1),
+							predicate.IsNot,
+							predicate.Expr2,
+							predicate.Kind,
+							predicate.CaseSensitive);
+					}
 
 					return ConvertSearchStringPredicateViaLike(mappingSchema, predicate, visitor, optimizationContext);
 				}	
 				case SqlPredicate.SearchString.SearchKind.StartsWith:
 				{
 					expr = new SqlExpression(typeof(bool),
-						predicate.IsNot ? "{0} NOT STARTING WITH {1}" : "{0} STARTING WITH {1}", 
+						predicate.IsNot ? "{0} NOT STARTING WITH {1}" : "{0} STARTING WITH {1}",
 						Precedence.Comparison,
-						TryConvertToValue(predicate.Expr1, optimizationContext.Context), TryConvertToValue(predicate.Expr2, optimizationContext.Context)) { CanBeNull = false };
+						TryConvertToValue(
+							caseSensitive == false
+								? new SqlFunction(typeof(string), "$ToLower$", predicate.Expr1)
+								: caseSensitive == true
+									? new SqlExpression(typeof(string), "CAST({0} AS BLOB)", Precedence.Primary, predicate.Expr1)
+									: predicate.Expr1,
+							optimizationContext.Context),
+						TryConvertToValue(
+							caseSensitive == false
+								? new SqlFunction(typeof(string), "$ToLower$", predicate.Expr2)
+								: predicate.Expr2, optimizationContext.Context)) {CanBeNull = false};
 					break;
 				}	
 				case SqlPredicate.SearchString.SearchKind.Contains:
-					expr = new SqlExpression(typeof(bool),
-						predicate.IsNot ? "{0} NOT CONTAINING {1}" : "{0} CONTAINING {1}", 
-						Precedence.Comparison,
-						TryConvertToValue(predicate.Expr1, optimizationContext.Context), TryConvertToValue(predicate.Expr2, optimizationContext.Context)) { CanBeNull = false };
+				{
+					if (caseSensitive == false)
+					{
+						expr = new SqlExpression(typeof(bool),
+							predicate.IsNot ? "{0} NOT CONTAINING {1}" : "{0} CONTAINING {1}",
+							Precedence.Comparison,
+							TryConvertToValue(predicate.Expr1, optimizationContext.Context),
+							TryConvertToValue(predicate.Expr2, optimizationContext.Context)) {CanBeNull = false};
+					}
+					else
+					{
+						if (caseSensitive == true)
+						{
+							predicate = new SqlPredicate.SearchString(
+								new SqlExpression(typeof(string), "CAST({0} AS BLOB)", Precedence.Primary, predicate.Expr1),
+								predicate.IsNot,
+								predicate.Expr2,
+								predicate.Kind,
+								new SqlValue(false));
+						}
+
+						return ConvertSearchStringPredicateViaLike(mappingSchema, predicate, visitor, optimizationContext);
+					}
 					break;
+				}	
 				default:
 					throw new InvalidOperationException($"Unexpected predicate: {predicate.Kind}");
 			}
 
 			return new SqlSearchCondition(new SqlCondition(false, new SqlPredicate.Expr(expr)));
 		}
-
 
 		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
@@ -112,7 +155,7 @@ namespace LinqToDB.DataProvider.Firebird
 			};
 		}
 
-		public override ISqlExpression OptimizeExpression(ISqlExpression expression, ConvertVisitor convertVisitor,
+		public override ISqlExpression OptimizeExpression<TContext>(ISqlExpression expression, ConvertVisitor<TContext> convertVisitor,
 			EvaluationContext context)
 		{
 			var newExpr = base.OptimizeExpression(expression, convertVisitor, context);
@@ -155,7 +198,7 @@ namespace LinqToDB.DataProvider.Firebird
 			return newExpr;
 		}
 
-		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor visitor,
+		public override ISqlExpression ConvertExpressionImpl<TContext>(ISqlExpression expression, ConvertVisitor<TContext> visitor,
 			EvaluationContext context)
 		{
 			expression = base.ConvertExpressionImpl(expression, visitor, context);
@@ -212,11 +255,11 @@ namespace LinqToDB.DataProvider.Firebird
 			// - in select column expression at any position (except nested subquery): select, subquery, merge source
 			// - in composite expression in insert or update setter: insert, update, merge (not always, in some cases it works)
 
-			statement = ConvertVisitor.Convert(statement, (visitor, e) =>
+			statement = statement.Convert(context, static (visitor, e) =>
 			{
 				if (e is SqlParameter p && p.IsQueryParameter)
 				{
-					var paramValue = p.GetParameterValue(context.ParameterValues);
+					var paramValue = p.GetParameterValue(visitor.Context.ParameterValues);
 
 					// Don't cast in cast
 					if (visitor.ParentElement is SqlFunction convertFunc && convertFunc.Name == "$Convert$")

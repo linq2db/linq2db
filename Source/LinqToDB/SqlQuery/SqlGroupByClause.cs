@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
@@ -18,17 +17,6 @@ namespace LinqToDB.SqlQuery
 
 		internal SqlGroupByClause(SelectQuery selectQuery) : base(selectQuery)
 		{
-		}
-
-		internal SqlGroupByClause(
-			SelectQuery   selectQuery,
-			SqlGroupByClause clone,
-			Dictionary<ICloneableElement,ICloneableElement> objectTree,
-			Predicate<ICloneableElement> doClone)
-			: base(selectQuery)
-		{
-			GroupingType = clone.GroupingType;
-			Items.AddRange(clone.Items.Select(e => (ISqlExpression)e.Clone(objectTree, doClone)));
 		}
 
 		internal SqlGroupByClause(GroupingType groupingType, IEnumerable<ISqlExpression> items) : base(null)

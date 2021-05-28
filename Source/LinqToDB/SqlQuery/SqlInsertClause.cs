@@ -4,7 +4,7 @@ using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlInsertClause : IQueryElement, ISqlExpressionWalkable, ICloneableElement
+	public class SqlInsertClause : IQueryElement, ISqlExpressionWalkable
 	{
 		public SqlInsertClause()
 		{
@@ -27,28 +27,6 @@ namespace LinqToDB.SqlQuery
 			}
 
 #endif
-
-		#endregion
-
-		#region ICloneableElement Members
-
-		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			var clone = new SqlInsertClause { WithIdentity = WithIdentity };
-
-			if (Into != null)
-				clone.Into = (SqlTable)Into.Clone(objectTree, doClone);
-
-			foreach (var item in Items)
-				clone.Items.Add((SqlSetExpression)item.Clone(objectTree, doClone));
-
-			objectTree.Add(this, clone);
-
-			return clone;
-		}
 
 		#endregion
 

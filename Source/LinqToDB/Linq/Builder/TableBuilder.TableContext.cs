@@ -1462,6 +1462,8 @@ namespace LinqToDB.Linq.Builder
 					return new ContextInfo(this, null, 0);
 				}
 
+				expression = expression.SkipPathThrough();
+
 				var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
 
 				switch (levelExpression.NodeType)
@@ -1583,7 +1585,7 @@ namespace LinqToDB.Linq.Builder
 			AssociationDescriptor? GetAssociationDescriptor(Expression expression, out AccessorMember? memberInfo, bool onlyCurrent = true)
 			{
 				memberInfo = null;
-				if (expression.NodeType.In(ExpressionType.MemberAccess, ExpressionType.Call))
+				if (expression.NodeType == ExpressionType.MemberAccess || expression.NodeType == ExpressionType.Call)
 					memberInfo = new AccessorMember(expression);
 
 				if (memberInfo == null)

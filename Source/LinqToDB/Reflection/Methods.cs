@@ -11,6 +11,7 @@ namespace LinqToDB.Reflection
 	using Expressions;
 	using Linq;
 	using LinqToDB.Common;
+	using LinqToDB.Extensions;
 
 	/// <summary>
 	/// This API supports the LinqToDB infrastructure and is not intended to be used  directly from your code.
@@ -25,7 +26,7 @@ namespace LinqToDB.Reflection
 		}
 
 		public static class Enumerable
-		{	
+		{
 			public static readonly MethodInfo ToArray     = MemberHelper.MethodOfGeneric<IEnumerable<int>>(e => e.ToArray());
 			public static readonly MethodInfo ToList      = MemberHelper.MethodOfGeneric<IEnumerable<int>>(e => e.ToList());
 			public static readonly MethodInfo AsQueryable = MemberHelper.MethodOfGeneric<IEnumerable<int>>(e => e.AsQueryable());
@@ -145,7 +146,9 @@ namespace LinqToDB.Reflection
 			{
 				public static readonly MethodInfo ToNotNull     = MemberHelper.MethodOfGeneric<int?>(i => Sql.ToNotNull(i));
 				public static readonly MethodInfo ToNotNullable = MemberHelper.MethodOfGeneric<int?>(i => Sql.ToNotNullable(i));
-				public static readonly MethodInfo Alias         = MemberHelper.MethodOfGeneric<int>(i => Sql.Alias(i, ""));
+				public static readonly MethodInfo Alias         = MemberHelper.MethodOfGeneric<int?>(i => Sql.Alias(i, ""));
+				// don't use MethodOfGeneric here (Sql.Property treatened in specifal way by it)
+				public static readonly MethodInfo Property      = typeof(Sql).GetMethodEx(nameof(Sql.Property))!.GetGenericMethodDefinition();
 			}
 
 			public static class Update

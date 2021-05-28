@@ -10,13 +10,14 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using Mapping;
 	using Common;
-	using SqlQuery;
 
 	class LoadWithBuilder : MethodCallBuilder
 	{
+		public static readonly string[] MethodNames = { "LoadWith", "ThenLoad", "LoadWithAsTable" };
+
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsQueryable("LoadWith", "ThenLoad", "LoadWithAsTable");
+			return methodCall.IsQueryable(MethodNames);
 		}
 
 		static void CheckFilterFunc(Type expectedType, Type filterType, MappingSchema mappingSchema)

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -16,10 +15,10 @@ namespace LinqToDB.SqlQuery
 
 	public class SqlObjectExpression : ISqlExpression
 	{
-		readonly Dictionary<int, Func<object, object>> _getters = new Dictionary<int,Func<object,object>>();
+		readonly Dictionary<int, Func<object, object>> _getters = new ();
 		readonly SqlInfo[]                             _infoParameters;
 
-		public SqlObjectExpression(MappingSchema mappingSchema, params SqlInfo[] infoParameters)
+		public SqlObjectExpression(MappingSchema mappingSchema, SqlInfo[] infoParameters)
 		{
 			MappingSchema   = mappingSchema;
 			_infoParameters = infoParameters;
@@ -127,26 +126,6 @@ namespace LinqToDB.SqlQuery
 		public bool Equals(ISqlExpression? other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
 			return ReferenceEquals(this, other);
-		}
-
-		#endregion
-
-		#region ICloneableElement Members
-
-		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			if (!objectTree.TryGetValue(this, out var clone))
-			{
-				objectTree.Add(this,
-					clone = new SqlObjectExpression(MappingSchema,
-						_infoParameters.Select(p => p.WithSql((ISqlExpression)p.Sql.Clone(objectTree, doClone)))
-							.ToArray()));
-			}
-
-			return clone;
 		}
 
 		#endregion

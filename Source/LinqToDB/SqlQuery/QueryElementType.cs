@@ -20,6 +20,7 @@
 		SearchStringPredicate,
 		BetweenPredicate,
 		IsNullPredicate,
+		IsDistinctPredicate,
 		IsTruePredicate,
 		InSubQueryPredicate,
 		InListPredicate,

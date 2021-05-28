@@ -10,9 +10,11 @@ namespace LinqToDB.Linq.Builder
 
 	class OrderByBuilder : MethodCallBuilder
 	{
+		private static readonly string[] MethodNames = { "OrderBy", "OrderByDescending", "ThenBy", "ThenByDescending", "ThenOrBy", "ThenOrByDescending" };
+
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			if (!methodCall.IsQueryable("OrderBy", "OrderByDescending", "ThenBy", "ThenByDescending", "ThenOrBy", "ThenOrByDescending"))
+			if (!methodCall.IsQueryable(MethodNames))
 				return false;
 
 			var body = ((LambdaExpression)methodCall.Arguments[1].Unwrap()).Body.Unwrap();
@@ -78,8 +80,7 @@ namespace LinqToDB.Linq.Builder
 					
 					// possible we have to extend this list
 					//
-					isComplex = null != new QueryVisitor().Find(sqlInfo.Sql,
-						e => e.ElementType == QueryElementType.SqlQuery);
+					isComplex = null != sqlInfo.Sql.Find(QueryElementType.SqlQuery);
 					if (isComplex)
 						break;
 				}

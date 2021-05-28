@@ -19,7 +19,7 @@ namespace LinqToDB.Common
 	[PublicAPI]
 	public static class Converter
 	{
-		static readonly ConcurrentDictionary<object,LambdaExpression> _expressions = new ConcurrentDictionary<object,LambdaExpression>();
+		static readonly ConcurrentDictionary<(Type from, Type to), LambdaExpression> _expressions = new ();
 
 		static XmlDocument CreateXmlDocument(string str)
 		{
@@ -87,7 +87,7 @@ namespace LinqToDB.Common
 		/// <param name="expr">Converter expression.</param>
 		public static void SetConverter<TFrom,TTo>(Expression<Func<TFrom,TTo>> expr)
 		{
-			_expressions[new { from = typeof(TFrom), to = typeof(TTo) }] = expr;
+			_expressions[(typeof(TFrom), typeof(TTo))] = expr;
 		}
 
 		/// <summary>
@@ -98,11 +98,11 @@ namespace LinqToDB.Common
 		/// <returns>Conversion expression or null, of converter not found.</returns>
 		internal static LambdaExpression? GetConverter(Type from, Type to)
 		{
-			_expressions.TryGetValue(new { from, to }, out var l);
+			_expressions.TryGetValue((from, to), out var l);
 			return l;
 		}
 
-		static readonly ConcurrentDictionary<object,Func<object,object>> _converters = new ConcurrentDictionary<object,Func<object,object>>();
+		static readonly ConcurrentDictionary<object,Func<object,object>> _converters = new ();
 
 		/// <summary>
 		/// Converts value to <paramref name="conversionType"/> type.
@@ -140,12 +140,14 @@ namespace LinqToDB.Common
 				var p  = Expression.Parameter(typeof(object), "p");
 				var ex = Expression.Lambda<Func<object,object>>(
 					Expression.Convert(
-						b.Transform(e =>
-							e == ps[0] ?
-								Expression.Convert(p, e.Type) :
-							IsDefaultValuePlaceHolder(e) ?
-								new DefaultValueExpression(mappingSchema, e.Type) :
-								e),
+						b.Transform(
+							(mappingSchema, ps, p),
+							static (context, e) =>
+								e == context.ps[0] ?
+									Expression.Convert(context.p, e.Type) :
+								IsDefaultValuePlaceHolder(e) ?
+									new DefaultValueExpression(context.mappingSchema, e.Type) :
+									e),
 						typeof(object)),
 					p);
 
@@ -159,7 +161,7 @@ namespace LinqToDB.Common
 
 		static class ExprHolder<T>
 		{
-			public static readonly ConcurrentDictionary<Type,Func<object,T>> Converters = new ConcurrentDictionary<Type,Func<object,T>>();
+			public static readonly ConcurrentDictionary<Type,Func<object,T>> Converters = new ();
 		}
 
 		/// <summary>
@@ -190,12 +192,14 @@ namespace LinqToDB.Common
 
 				var p  = Expression.Parameter(typeof(object), "p");
 				var ex = Expression.Lambda<Func<object,T>>(
-					b.Transform(e =>
-						e == ps[0] ?
-							Expression.Convert (p, e.Type) :
-							IsDefaultValuePlaceHolder(e) ?
-								new DefaultValueExpression(mappingSchema, e.Type) :
-								e),
+					b.Transform(
+						(ps, p, mappingSchema),
+						static (context, e) =>
+							e == context.ps[0] ?
+								Expression.Convert (context.p, e.Type) :
+								IsDefaultValuePlaceHolder(e) ?
+									new DefaultValueExpression(context.mappingSchema, e.Type) :
+									e),
 					p);
 
 				l = ex.CompileExpression();
@@ -224,6 +228,8 @@ namespace LinqToDB.Common
 
 			return expr is DefaultValueExpression;
 		}
+
+		internal static readonly FindVisitor<object?> IsDefaultValuePlaceHolderVisitor = FindVisitor<object?>.Create(IsDefaultValuePlaceHolder);
 
 		/// <summary>
 		/// Returns type, to which provided enumeration values should be mapped.

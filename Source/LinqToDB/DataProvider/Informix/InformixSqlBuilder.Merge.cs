@@ -10,8 +10,8 @@ namespace LinqToDB.DataProvider.Informix
 		// VALUES(...) syntax not supported in MERGE source
 		protected override bool MergeSupportsSourceDirectValues => false;
 
-		// or also we can use
-		// sysmaster:'informix'.sysdual
+		// or also we can use sysmaster:sysdual added in 11.70
+		// // but SET present even in ancient 9.x versions (but not it 7.x it seems)
 		protected override string FakeTable => "table(set{1})";
 
 		// Informix is too lazy to infer types itself from context

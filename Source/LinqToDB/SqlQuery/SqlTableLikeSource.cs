@@ -137,12 +137,6 @@ namespace LinqToDB.SqlQuery
 		
 		#endregion
 
-		#region ICloneableElement
-
-		ICloneableElement ICloneableElement.Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone) => throw new NotImplementedException();
-
-		#endregion
-
 		#region IEquatable
 
 		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other) => throw new NotImplementedException();
