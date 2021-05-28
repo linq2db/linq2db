@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -569,6 +567,16 @@ namespace LinqToDB.Expressions
 
 			var value = Expression.Lambda(expr).CompileExpression().DynamicInvoke();
 			return value;
+		}
+
+		public static Expression? GetArgumentByName(this MethodCallExpression methodCall, string parameterName)
+		{
+			var arguments = methodCall.Arguments;
+			var parameters = methodCall.Method.GetParameters();
+			for (int i = 0; i < parameters.Length; i++)
+				if (parameters[i].Name == parameterName)
+					return arguments[i];
+			return default;
 		}
 
 		#endregion

@@ -44,11 +44,7 @@ namespace LinqToDB.Linq.Builder
 			var genericArguments = methodCall.Method.GetGenericArguments();
 			Type? objectType     = default;
 
-			var indexedParameters = methodCall.Method.GetParameters()
-				.Select((p, i) => Tuple.Create(p, i)).ToDictionary(t => t.Item1.Name, t => t.Item2);
-			var outputExpression = indexedParameters.TryGetValue("outputExpression", out var index) 
-				? (LambdaExpression)methodCall.Arguments[index].Unwrap()
-				: default;
+			var outputExpression = (LambdaExpression?)methodCall.GetArgumentByName("outputExpression")?.Unwrap();
 			static LambdaExpression? RewriteOutputExpression(LambdaExpression? expr)
 			{
 				if (expr == default) return default;
@@ -175,7 +171,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (updateType == UpdateType.UpdateOutput)
 			{
-				LambdaExpression BuildDefaultOutputExpression(Type outputType)
+				static LambdaExpression BuildDefaultOutputExpression(Type outputType)
 				{
 					var param1 = Expression.Parameter(outputType, "source");
 					var param2 = Expression.Parameter(outputType, "deleted");
@@ -203,11 +199,8 @@ namespace LinqToDB.Linq.Builder
 			}
 			else // updateType == UpdateType.UpdateOutputInto
 			{
-				LambdaExpression BuildDefaultOutputExpression(Type outputType)
+				static LambdaExpression BuildDefaultOutputExpression(Type outputType)
 				{
-					if (indexedParameters.TryGetValue("outputExpression", out var index))
-						return (LambdaExpression)methodCall.Arguments[index].Unwrap();
-
 					var param1 = Expression.Parameter(outputType, "source");
 					var param2 = Expression.Parameter(outputType, "deleted");
 					var param3 = Expression.Parameter(outputType, "inserted");
@@ -217,7 +210,7 @@ namespace LinqToDB.Linq.Builder
 						param1, param2, param3);
 				}
 
-				var outputTable = methodCall.Arguments[indexedParameters["outputTable"]];
+				var outputTable = methodCall.GetArgumentByName("outputTable")!;
 				var destination = builder.BuildSequence(new BuildInfo(buildInfo, outputTable, new SelectQuery()));
 
 				outputExpression ??= BuildDefaultOutputExpression(objectType);

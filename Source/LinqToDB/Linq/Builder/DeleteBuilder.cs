@@ -69,18 +69,10 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			var indexedParameters
-				= methodCall.Method.GetParameters().Select((p, i) => Tuple.Create(p, i)).ToDictionary(t => t.Item1.Name, t => t.Item2);
-
-			LambdaExpression GetOutputExpression(Type outputType)
+			static LambdaExpression BuildDefaultOutputExpression(Type outputType)
 			{
-				if (!indexedParameters.TryGetValue("outputExpression", out var index))
-				{
-					var param = Expression.Parameter(outputType);
-					return Expression.Lambda(param, param);
-				}
-
-				return (LambdaExpression)methodCall.Arguments[index].Unwrap();
+				var param = Expression.Parameter(outputType);
+				return Expression.Lambda(param, param);
 			}
 
 			IBuildContext? outputContext = null;
@@ -88,7 +80,9 @@ namespace LinqToDB.Linq.Builder
 
 			if (deleteType != DeleteContext.DeleteType.Delete)
 			{
-				outputExpression = GetOutputExpression(methodCall.Method.GetGenericArguments().Last());
+				outputExpression =
+					(LambdaExpression?)methodCall.GetArgumentByName("outputExpression")
+					?? BuildDefaultOutputExpression(methodCall.Method.GetGenericArguments().Last());
 
 				deleteStatement.Output = new SqlOutputClause();
 
@@ -100,7 +94,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (deleteType == DeleteContext.DeleteType.DeleteOutputInto)
 				{
-					var outputTable = methodCall.Arguments[indexedParameters["outputTable"]];
+					var outputTable = methodCall.GetArgumentByName("outputTable")!;
 					var destination = builder.BuildSequence(new BuildInfo(buildInfo, outputTable, new SelectQuery()));
 
 					UpdateBuilder.BuildSetter(
