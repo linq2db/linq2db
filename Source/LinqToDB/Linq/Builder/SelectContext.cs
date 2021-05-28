@@ -195,41 +195,9 @@ namespace LinqToDB.Linq.Builder
 									{
 										case ExpressionType.New        :
 										case ExpressionType.MemberInit :
-											{
-												var resultExpression = memberExpression.Transform(
-													(context: this, memberExpression, enforceServerSide),
-													static (context, e) =>
-													{
-														if (!ReferenceEquals(e, context.memberExpression))
-														{
-															switch (e.NodeType)
-															{
-																case ExpressionType.MemberAccess :
-																case ExpressionType.Parameter :
-																	{
-																		var sequence = context.context.GetSequence(e, 0)!;
-																		return context.context.Builder.BuildExpression(sequence, e, context.enforceServerSide);
-																	}
-																default:
-																	{
-																		if (e is ContextRefExpression refExpression)
-																		{
-																			return context.context.Builder.BuildExpression(refExpression.BuildContext, e, context.enforceServerSide);
-																		}
-
-																		break;
-																	}
-															}
-
-															if (context.enforceServerSide)
-																return context.context.Builder.BuildExpression(context.context, e, true);
-														}
-
-														return e;
-													});
-
-												return resultExpression;
-											}
+										{
+											return Builder.BuildExpression(this, memberExpression, enforceServerSide);
+										}
 									}
 
 									var me = memberExpression.NodeType == ExpressionType.Parameter ? null : memberExpression;
