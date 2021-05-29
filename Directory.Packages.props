@@ -63,7 +63,14 @@
 		<!--main version-->
 		<PackageVersion Include="Microsoft.Data.SQLite" Version="5.0.6" />
 		<PackageVersion Include="Npgsql" Version="5.0.5" />
+	
+		<!--workaround for
+		https://system.data.sqlite.org/index.html/tktview?name=be4daf18b7
+		transient dependency with fixed version
+		-->
+		<PackageVersion Include="Stub.System.Data.SQLite.Core.NetStandard" Version="1.0.113.2" />
 	</ItemGroup>
+	
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net472' ">
 		<!--specify here or it will conflict with Reference-include in netcore targets-->
 		<PackageVersion Include="Microsoft.SqlServer.Types" Version="14.0.1016.290" />

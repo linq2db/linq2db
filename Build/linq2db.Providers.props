@@ -21,7 +21,6 @@
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net472' ">
 		<!--workaround for VS 16.10 breaking change
-		https://system.data.sqlite.org/index.html/tktview?name=be4daf18b7
 		https://sqlite.org/forum/info/e4c09bad740332eadb7141b31e6e6a941360a7a1ec6454881d3ff9cd975e3b1d
 		-->
 		<SQLiteInteropFiles Include="$(USERPROFILE)\.nuget\packages\stub.system.data.sqlite.core.netframework\1.0.114\build\net46\**\SQLite.Interop.*" />
@@ -59,6 +58,12 @@
 		<PackageReference Include="System.Data.OleDb" />
 		<PackageReference Include="MiniProfiler.Shared" />
 		<PackageReference Include="Oracle.ManagedDataAccess.Core" />
+		
+		<!--workaround for
+		https://system.data.sqlite.org/index.html/tktview?name=be4daf18b7
+		transient dependency with fixed version
+		-->
+		<PackageReference Include="Stub.System.Data.SQLite.Core.NetStandard" />
 		
 		<!--magic-->
 		<PackageReference Include="IBM.Data.DB2.Core" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' " />
