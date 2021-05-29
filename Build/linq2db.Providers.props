@@ -59,12 +59,6 @@
 		<PackageReference Include="MiniProfiler.Shared" />
 		<PackageReference Include="Oracle.ManagedDataAccess.Core" />
 		
-		<!--workaround for
-		https://system.data.sqlite.org/index.html/tktview?name=be4daf18b7
-		transient dependency with fixed version
-		-->
-		<PackageReference Include="Stub.System.Data.SQLite.Core.NetStandard" />
-		
 		<!--magic-->
 		<PackageReference Include="IBM.Data.DB2.Core" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' " />
 		<PackageReference Include="IBM.Data.DB2.Core-lnx" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' " />
