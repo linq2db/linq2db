@@ -345,7 +345,7 @@ namespace LinqToDB.Data
 		{
 			var startedOn = DateTime.UtcNow;
 			var stopwatch = Stopwatch.StartNew();
-			var rowCount = 0;
+			var rowCount  = 0;
 
 			using (scope)
 				try
@@ -393,10 +393,10 @@ namespace LinqToDB.Data
 						{
 							DataConnection.OnTraceConnection(new TraceInfo(DataConnection, TraceInfoStep.Completed, TraceOperation.DisposeQuery, isAsync: false)
 							{
-								TraceLevel = TraceLevel.Info,
-								Command = DataConnection.GetCurrentCommand(),
-								StartTime = startedOn,
-								ExecutionTime = stopwatch.Elapsed,
+								TraceLevel      = TraceLevel.Info,
+								Command         = DataConnection.GetCurrentCommand(),
+								StartTime       = startedOn,
+								ExecutionTime   = stopwatch.Elapsed,
 								RecordsAffected = rowCount
 							});
 						}
@@ -905,8 +905,8 @@ namespace LinqToDB.Data
 		/// <returns>Number of records, affected by command execution.</returns>
 		public int Execute()
 		{
-			var startedOn = DateTime.UtcNow;
-			var stopwatch = Stopwatch.StartNew();
+			var startedOn     = DateTime.UtcNow;
+			var stopwatch     = Stopwatch.StartNew();
 			var hasParameters = Parameters?.Length > 0;
 
 			DataConnection.InitCommand(CommandType, CommandText, Parameters, null, hasParameters);
@@ -921,10 +921,10 @@ namespace LinqToDB.Data
 			{
 				DataConnection.OnTraceConnection(new TraceInfo(DataConnection, TraceInfoStep.Completed, TraceOperation.DisposeQuery, isAsync: false)
 				{
-					TraceLevel = TraceLevel.Info,
-					Command = DataConnection.GetCurrentCommand(),
-					StartTime = startedOn,
-					ExecutionTime = stopwatch.Elapsed,
+					TraceLevel      = TraceLevel.Info,
+					Command         = DataConnection.GetCurrentCommand(),
+					StartTime       = startedOn,
+					ExecutionTime   = stopwatch.Elapsed,
 					RecordsAffected = commandResult,
 				});
 			}
@@ -960,8 +960,8 @@ namespace LinqToDB.Data
 		{
 			await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
-			var startedOn = DateTime.UtcNow;
-			var stopwatch = Stopwatch.StartNew();
+			var startedOn     = DateTime.UtcNow;
+			var stopwatch     = Stopwatch.StartNew();
 			var hasParameters = Parameters?.Length > 0;
 
 			DataConnection.InitCommand(CommandType, CommandText, Parameters, null, hasParameters);
@@ -976,10 +976,10 @@ namespace LinqToDB.Data
 			{
 				DataConnection.OnTraceConnection(new TraceInfo(DataConnection, TraceInfoStep.Completed, TraceOperation.DisposeQuery, isAsync: true)
 				{
-					TraceLevel = TraceLevel.Info,
-					Command = DataConnection.GetCurrentCommand(),
-					StartTime = startedOn,
-					ExecutionTime = stopwatch.Elapsed,
+					TraceLevel      = TraceLevel.Info,
+					Command         = DataConnection.GetCurrentCommand(),
+					StartTime       = startedOn,
+					ExecutionTime   = stopwatch.Elapsed,
 					RecordsAffected = commandResult,
 				});
 			}
@@ -1013,8 +1013,8 @@ namespace LinqToDB.Data
 		/// <returns>Resulting value.</returns>
 		public T Execute<T>()
 		{
-			var startedOn = DateTime.UtcNow;
-			var stopwatch = Stopwatch.StartNew();
+			var startedOn     = DateTime.UtcNow;
+			var stopwatch     = Stopwatch.StartNew();
 			var hasParameters = Parameters?.Length > 0;
 
 			DataConnection.InitCommand(CommandType, CommandText, Parameters, null, hasParameters);
@@ -1057,10 +1057,10 @@ namespace LinqToDB.Data
 			{
 				DataConnection.OnTraceConnection(new TraceInfo(DataConnection, TraceInfoStep.Completed, TraceOperation.DisposeQuery, isAsync: false)
 				{
-					TraceLevel = TraceLevel.Info,
-					Command = DataConnection.GetCurrentCommand(),
-					StartTime = startedOn,
-					ExecutionTime = stopwatch.Elapsed,
+					TraceLevel      = TraceLevel.Info,
+					Command         = DataConnection.GetCurrentCommand(),
+					StartTime       = startedOn,
+					ExecutionTime   = stopwatch.Elapsed,
 					RecordsAffected = 1,
 				});
 			}
@@ -1138,10 +1138,10 @@ namespace LinqToDB.Data
 			{
 				DataConnection.OnTraceConnection(new TraceInfo(DataConnection, TraceInfoStep.Completed, TraceOperation.DisposeQuery, isAsync: true)
 				{
-					TraceLevel = TraceLevel.Info,
-					Command = DataConnection.GetCurrentCommand(),
-					StartTime = startedOn,
-					ExecutionTime = stopwatch.Elapsed,
+					TraceLevel      = TraceLevel.Info,
+					Command         = DataConnection.GetCurrentCommand(),
+					StartTime       = startedOn,
+					ExecutionTime   = stopwatch.Elapsed,
 					RecordsAffected = 1,
 				});
 			}
