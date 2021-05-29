@@ -2062,7 +2062,10 @@ namespace Tests.xUpdate
 
 			// those providers generate IF (), which doesn't return rowcount if not entered
 			// for some reason it doesn't affect managed sybase provider (provider bug?)
+			// and oracle native provider always was "special"
 			return provider == ProviderName.Sybase
+				|| provider == ProviderName.OracleNative
+				|| provider == TestProvName.Oracle11Native
 				|| provider == ProviderName.SqlServer2000
 				|| provider == ProviderName.SqlServer2005
 				? -1
