@@ -248,6 +248,15 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (expression == null || level == 0)
 				{
+					if (expression == null)
+					{
+						if (!Builder.DataContext.SqlProviderFlags.IsSubQueryColumnSupported 
+						    || Sequence.IsExpression(null, level, RequestFor.Object).Result)
+						{
+							return Builder.BuildMultipleQuery(Parent!, _methodCall, enforceServerSide);
+						}
+					}
+
 					if (Builder.DataContext.SqlProviderFlags.IsApplyJoinSupported &&
 						Parent!.SelectQuery.GroupBy.IsEmpty &&
 						Parent.SelectQuery.From.Tables.Count > 0)
@@ -280,18 +289,10 @@ namespace LinqToDB.Linq.Builder
 
 					if (expression == null)
 					{
-						if (   !Builder.DataContext.SqlProviderFlags.IsSubQueryColumnSupported 
-						    || Sequence.IsExpression(null, level, RequestFor.Object).Result)
-						{
-							return Builder.BuildMultipleQuery(Parent!, _methodCall, enforceServerSide);
-						}
-
 						var idx = Parent!.SelectQuery.Select.Add(SelectQuery);
-						    idx = Parent.ConvertToParentIndex(idx, Parent);
+						idx = Parent.ConvertToParentIndex(idx, Parent);
 						return Builder.BuildSql(_methodCall.Type, idx, SelectQuery);
 					}
-
-					return null!; // ???
 				}
 
 				throw new NotImplementedException();
