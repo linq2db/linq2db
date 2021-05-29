@@ -20,6 +20,7 @@ namespace LinqToDB
 		/// <typeparam name="TSource">Source query record type.</typeparam>
 		/// <param name="source">Source query, that returns data for delete operation.</param>
 		/// <returns>Enumeration of records.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static IEnumerable<TSource> DeleteWithOutput<TSource>(
 			                this IQueryable<TSource>          source)
 		{
@@ -42,6 +43,7 @@ namespace LinqToDB
 		/// <param name="source">Source query, that returns data for delete operation.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Array of records.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static Task<TSource[]> DeleteWithOutputAsync<TSource>(
 			                this IQueryable<TSource>          source,
 							CancellationToken                  token = default)
@@ -67,6 +69,7 @@ namespace LinqToDB
 		/// <param name="outputExpression">Output record constructor expression.
 		/// Expression supports only record new expression with field initializers.</param>
 		/// <returns>Enumeration of records.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		[Pure]
 		public static IEnumerable<TOutput> DeleteWithOutput<TSource,TOutput>(
 			                this IQueryable<TSource>           source,
@@ -96,6 +99,7 @@ namespace LinqToDB
 		/// Expression supports only record new expression with field initializers.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Array of records.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static Task<TOutput[]> DeleteWithOutputAsync<TSource,TOutput>(
 			                this IQueryable<TSource>           source,
 			                Expression<Func<TSource, TOutput>> outputExpression,
@@ -123,6 +127,7 @@ namespace LinqToDB
 		/// <param name="source">Source query, that returns data for delete operation.</param>
 		/// <param name="outputTable">Output table.</param>
 		/// <returns>Number of affected records.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static int DeleteWithOutputInto<TSource,TOutput>(
 			                this IQueryable<TSource>          source,
 			                ITable<TOutput>                   outputTable)
@@ -150,6 +155,7 @@ namespace LinqToDB
 		/// <param name="outputTable">Output table.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static Task<int> DeleteWithOutputIntoAsync<TSource,TOutput>(
 			                this IQueryable<TSource>          source,
 			                ITable<TOutput>                   outputTable,
@@ -184,6 +190,7 @@ namespace LinqToDB
 		/// <param name="outputExpression">Output record constructor expression.
 		/// Expression supports only record new expression with field initializers.</param>
 		/// <returns>Number of affected records.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static int DeleteWithOutputInto<TSource,TOutput>(
 			                this IQueryable<TSource>          source,
 			                ITable<TOutput>                   outputTable,
@@ -216,6 +223,7 @@ namespace LinqToDB
 		/// Expression supports only record new expression with field initializers.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static Task<int> DeleteWithOutputIntoAsync<TSource,TOutput>(
 			                this IQueryable<TSource>          source,
 			                ITable<TOutput>                   outputTable,

@@ -31,6 +31,7 @@ namespace LinqToDB
 		/// <param name="target">Target table.</param>
 		/// <param name="setter">Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.</param>
 		/// <returns>Deleted and inserted values for every record updated.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static IEnumerable<UpdateOutput<TTarget>> UpdateWithOutput<TSource,TTarget>(
 			                this IQueryable<TSource>          source,
 			                ITable<TTarget>                   target,
@@ -60,6 +61,7 @@ namespace LinqToDB
 		/// <param name="setter">Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Deleted and inserted values for every record updated.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static Task<UpdateOutput<TTarget>[]> UpdateWithOutputAsync<TSource,TTarget>(
 			                this IQueryable<TSource>          source,
 			                ITable<TTarget>                   target,
@@ -94,6 +96,7 @@ namespace LinqToDB
 		/// Parameters passed are as follows: (<typeparamref name="TSource"/> source, <typeparamref name="TTarget"/> deleted, <typeparamref name="TTarget"/> inserted).
 		/// Expression supports only record new expression with field initializers.</param>
 		/// <returns>Output values from the update statement.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static IEnumerable<TOutput> UpdateWithOutput<TSource,TTarget,TOutput>(
 			                this IQueryable<TSource>                          source,
 			                ITable<TTarget>                                   target,
@@ -132,6 +135,7 @@ namespace LinqToDB
 		/// Expression supports only record new expression with field initializers.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Output values from the update statement.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static Task<TOutput[]> UpdateWithOutputAsync<TSource,TTarget,TOutput>(
 			                this IQueryable<TSource>                          source,
 			                ITable<TTarget>                                   target,
@@ -168,6 +172,7 @@ namespace LinqToDB
 		/// <param name="setter">Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.</param>
 		/// <param name="outputTable">Output table.</param>
 		/// <returns>Number of affected records.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static int UpdateWithOutputInto<TSource,TTarget>(
 			                this IQueryable<TSource>          source,
 			                ITable<TTarget>                   target,
@@ -203,6 +208,7 @@ namespace LinqToDB
 		/// <param name="outputTable">Output table.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static Task<int> UpdateWithOutputIntoAsync<TSource,TTarget>(
 			                this IQueryable<TSource>          source,
 			                ITable<TTarget>                   target,
@@ -247,6 +253,7 @@ namespace LinqToDB
 		/// Parameters passed are as follows: (<typeparamref name="TSource"/> source, <typeparamref name="TTarget"/> deleted, <typeparamref name="TTarget"/> inserted).
 		/// Expression supports only record new expression with field initializers.</param>
 		/// <returns>Output values from the update statement.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static int UpdateWithOutputInto<TSource,TTarget,TOutput>(
 			                this IQueryable<TSource>                          source,
 			                ITable<TTarget>                                   target,
@@ -290,6 +297,7 @@ namespace LinqToDB
 		/// Expression supports only record new expression with field initializers.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Output values from the update statement.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static Task<int> UpdateWithOutputIntoAsync<TSource,TTarget,TOutput>(
 			                this IQueryable<TSource>                          source,
 			                ITable<TTarget>                                   target,
@@ -337,6 +345,7 @@ namespace LinqToDB
 		/// <param name="target">Target table.</param>
 		/// <param name="setter">Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.</param>
 		/// <returns>Deleted and inserted values for every record updated.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static IEnumerable<UpdateOutput<TTarget>> UpdateWithOutput<TSource,TTarget>(
 			                this IQueryable<TSource>          source,
 			                Expression<Func<TSource,TTarget>> target,
@@ -367,6 +376,7 @@ namespace LinqToDB
 		/// <param name="setter">Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Deleted and inserted values for every record updated.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static Task<UpdateOutput<TTarget>[]> UpdateWithOutputAsync<TSource,TTarget>(
 			                this IQueryable<TSource>          source,
 			                Expression<Func<TSource,TTarget>> target,
@@ -402,6 +412,7 @@ namespace LinqToDB
 		/// Parameters passed are as follows: (<typeparamref name="TSource"/> source, <typeparamref name="TTarget"/> deleted, <typeparamref name="TTarget"/> inserted).
 		/// Expression supports only record new expression with field initializers.</param>
 		/// <returns>Output values from the update statement.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static IEnumerable<TOutput> UpdateWithOutput<TSource,TTarget,TOutput>(
 			                this IQueryable<TSource>                          source,
 			                Expression<Func<TSource,TTarget>>                 target,
@@ -439,6 +450,7 @@ namespace LinqToDB
 		/// Expression supports only record new expression with field initializers.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Output values from the update statement.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static Task<TOutput[]> UpdateWithOutputAsync<TSource,TTarget,TOutput>(
 			                this IQueryable<TSource>                          source,
 			                Expression<Func<TSource,TTarget>>                 target,
@@ -474,6 +486,7 @@ namespace LinqToDB
 		/// <param name="setter">Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.</param>
 		/// <param name="outputTable">Output table.</param>
 		/// <returns>Number of affected records.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static int UpdateWithOutputInto<TSource,TTarget>(
 			                this IQueryable<TSource>          source,
 			                Expression<Func<TSource,TTarget>> target,
@@ -509,6 +522,7 @@ namespace LinqToDB
 		/// <param name="outputTable">Output table.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static Task<int> UpdateWithOutputIntoAsync<TSource,TTarget>(
 			                this IQueryable<TSource>          source,
 			                Expression<Func<TSource,TTarget>> target,
@@ -553,6 +567,7 @@ namespace LinqToDB
 		/// Parameters passed are as follows: (<typeparamref name="TSource"/> source, <typeparamref name="TTarget"/> deleted, <typeparamref name="TTarget"/> inserted).
 		/// Expression supports only record new expression with field initializers.</param>
 		/// <returns>Output values from the update statement.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static int UpdateWithOutputInto<TSource,TTarget,TOutput>(
 			                this IQueryable<TSource>                          source,
 			                Expression<Func<TSource,TTarget>>                 target,
@@ -595,6 +610,7 @@ namespace LinqToDB
 		/// Expression supports only record new expression with field initializers.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Output values from the update statement.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static Task<int> UpdateWithOutputIntoAsync<TSource,TTarget,TOutput>(
 			                this IQueryable<TSource>                          source,
 			                Expression<Func<TSource,TTarget>>                 target,
@@ -639,6 +655,7 @@ namespace LinqToDB
 		/// <param name="source">Source data query.</param>
 		/// <param name="setter">Update expression. Uses updated record as parameter. Expression supports only target table record new expression with field initializers.</param>
 		/// <returns>Deleted and inserted values for every record updated.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static IEnumerable<UpdateOutput<T>> UpdateWithOutput<T>(
 			           this IQueryable<T>         source,
 			[InstantHandle] Expression<Func<T,T>> setter)
@@ -663,6 +680,7 @@ namespace LinqToDB
 		/// <param name="setter">Update expression. Uses updated record as parameter. Expression supports only target table record new expression with field initializers.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Deleted and inserted values for every record updated.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static Task<UpdateOutput<T>[]> UpdateWithOutputAsync<T>(
 			           this IQueryable<T>         source, 
 			[InstantHandle] Expression<Func<T,T>> setter,
@@ -692,6 +710,7 @@ namespace LinqToDB
 		/// Parameters passed are as follows: (<typeparamref name="T"/> deleted, <typeparamref name="T"/> inserted).
 		/// Expression supports only record new expression with field initializers.</param>
 		/// <returns>Output values from the update statement.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static IEnumerable<TOutput> UpdateWithOutput<T,TOutput>(
 			           this IQueryable<T>                 source,
 			[InstantHandle] Expression<Func<T,T>>         setter,
@@ -723,6 +742,7 @@ namespace LinqToDB
 		/// Expression supports only record new expression with field initializers.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Output values from the update statement.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static Task<TOutput[]> UpdateWithOutputAsync<T,TOutput>(
 			           this IQueryable<T>                 source,
 			[InstantHandle] Expression<Func<T,T>>         setter,
@@ -752,6 +772,7 @@ namespace LinqToDB
 		/// <param name="setter">Update expression. Uses updated record as parameter. Expression supports only target table record new expression with field initializers.</param>
 		/// <param name="outputTable">Output table.</param>
 		/// <returns>Number of updated records.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static int UpdateWithOutputInto<T>(
 			           this IQueryable<T>         source,
 			[InstantHandle] Expression<Func<T,T>> setter,
@@ -781,6 +802,7 @@ namespace LinqToDB
 		/// <param name="outputTable">Output table.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of updated records.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static Task<int> UpdateWithOutputIntoAsync<T>(
 			           this IQueryable<T>         source,
 			[InstantHandle] Expression<Func<T,T>> setter,
@@ -819,6 +841,7 @@ namespace LinqToDB
 		/// Expression supports only record new expression with field initializers.</param>
 		/// <param name="outputTable">Output table.</param>
 		/// <returns>Number of updated records.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static int UpdateWithOutputInto<T,TOutput>(
 			           this IQueryable<T>                 source,
 			[InstantHandle] Expression<Func<T,T>>         setter,
@@ -855,6 +878,7 @@ namespace LinqToDB
 		/// <param name="outputTable">Output table.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of updated records.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static Task<int> UpdateWithOutputIntoAsync<T,TOutput>(
 			           this IQueryable<T>                 source,
 			[InstantHandle] Expression<Func<T,T>>         setter,
@@ -894,6 +918,7 @@ namespace LinqToDB
 		/// <typeparam name="T">Updated table record type.</typeparam>
 		/// <param name="source">Source data query.</param>
 		/// <returns>Deleted and inserted values for every record updated.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static IEnumerable<UpdateOutput<T>> UpdateWithOutput<T>(
 			           this IUpdatable<T>         source)
 		{
@@ -916,6 +941,7 @@ namespace LinqToDB
 		/// <param name="source">Source data query.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Deleted and inserted values for every record updated.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static Task<UpdateOutput<T>[]> UpdateWithOutputAsync<T>(
 			           this IUpdatable<T>         source, 
 			                CancellationToken     token = default)
@@ -943,6 +969,7 @@ namespace LinqToDB
 		/// Parameters passed are as follows: (<typeparamref name="T"/> deleted, <typeparamref name="T"/> inserted).
 		/// Expression supports only record new expression with field initializers.</param>
 		/// <returns>Output values from the update statement.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static IEnumerable<TOutput> UpdateWithOutput<T,TOutput>(
 			           this IUpdatable<T>                 source,
 			                Expression<Func<T,T,TOutput>> outputExpression)
@@ -972,6 +999,7 @@ namespace LinqToDB
 		/// Expression supports only record new expression with field initializers.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Output values from the update statement.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static Task<TOutput[]> UpdateWithOutputAsync<T,TOutput>(
 			           this IUpdatable<T>                 source,
 			                Expression<Func<T,T,TOutput>> outputExpression,
@@ -999,6 +1027,7 @@ namespace LinqToDB
 		/// <param name="source">Source data query.</param>
 		/// <param name="outputTable">Output table.</param>
 		/// <returns>Number of updated records.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static int UpdateWithOutputInto<T>(
 			           this IUpdatable<T>         source,
 			                ITable<T>             outputTable)
@@ -1026,6 +1055,7 @@ namespace LinqToDB
 		/// <param name="outputTable">Output table.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of updated records.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static Task<int> UpdateWithOutputIntoAsync<T>(
 			           this IUpdatable<T>         source,
 			                ITable<T>             outputTable,
@@ -1062,6 +1092,7 @@ namespace LinqToDB
 		/// Expression supports only record new expression with field initializers.</param>
 		/// <param name="outputTable">Output table.</param>
 		/// <returns>Number of updated records.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static int UpdateWithOutputInto<T,TOutput>(
 			           this IUpdatable<T>                 source,
 			                ITable<TOutput>               outputTable,
@@ -1096,6 +1127,7 @@ namespace LinqToDB
 		/// <param name="outputTable">Output table.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of updated records.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static Task<int> UpdateWithOutputIntoAsync<T,TOutput>(
 			           this IUpdatable<T>                 source,
 			                ITable<TOutput>               outputTable,
