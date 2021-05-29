@@ -2062,11 +2062,25 @@ namespace Tests.xUpdate
 
 			// those providers generate IF (), which doesn't return rowcount if not entered
 			// for some reason it doesn't affect managed sybase provider (provider bug?)
+			// and oracle native provider always was "special"
 			return provider == ProviderName.Sybase
+				|| provider == ProviderName.OracleNative
+				|| provider == TestProvName.Oracle11Native
 				|| provider == ProviderName.SqlServer2000
 				|| provider == ProviderName.SqlServer2005
 				? -1
 				: 0;
+		}
+
+		private int GetNonEmptyRowCount(string context)
+		{
+			var provider = GetProviderName(context, out _);
+
+			// oracle native provider and rowcount are not familiar with each other
+			return provider == ProviderName.OracleNative
+				|| provider == TestProvName.Oracle11Native
+				? -1
+				: 1;
 		}
 
 		[Test]
@@ -2090,7 +2104,7 @@ namespace Tests.xUpdate
 					},
 					p => new TestInsertOrReplaceInfo() { });
 
-				Assert.AreEqual(1, cnt1);
+				Assert.AreEqual(GetNonEmptyRowCount(context), cnt1);
 				Assert.AreEqual(GetEmptyRowCount(context), cnt2);
 			}
 		}
@@ -2118,7 +2132,7 @@ namespace Tests.xUpdate
 					p => new TestInsertOrReplaceInfo() { },
 					() => new TestInsertOrReplaceInfo() { Id = 1 });
 
-				Assert.AreEqual(1, cnt1);
+				Assert.AreEqual(GetNonEmptyRowCount(context), cnt1);
 				Assert.AreEqual(GetEmptyRowCount(context), cnt2);
 			}
 		}
@@ -2144,7 +2158,7 @@ namespace Tests.xUpdate
 					},
 					p => new TestInsertOrReplaceInfo());
 
-				Assert.AreEqual(1, cnt1);
+				Assert.AreEqual(GetNonEmptyRowCount(context), cnt1);
 				Assert.AreEqual(GetEmptyRowCount(context), cnt2);
 			}
 		}
@@ -2172,7 +2186,7 @@ namespace Tests.xUpdate
 					p => new TestInsertOrReplaceInfo(),
 					() => new TestInsertOrReplaceInfo() { Id = 1 });
 
-				Assert.AreEqual(1, cnt1);
+				Assert.AreEqual(GetNonEmptyRowCount(context), cnt1);
 				Assert.AreEqual(GetEmptyRowCount(context), cnt2);
 			}
 		}
@@ -2198,7 +2212,7 @@ namespace Tests.xUpdate
 					},
 					p => null);
 
-				Assert.AreEqual(1, cnt1);
+				Assert.AreEqual(GetNonEmptyRowCount(context), cnt1);
 				Assert.AreEqual(GetEmptyRowCount(context), cnt2);
 			}
 		}
@@ -2226,7 +2240,7 @@ namespace Tests.xUpdate
 					p => null,
 					() => new TestInsertOrReplaceInfo() { Id = 1 });
 
-				Assert.AreEqual(1, cnt1);
+				Assert.AreEqual(GetNonEmptyRowCount(context), cnt1);
 				Assert.AreEqual(GetEmptyRowCount(context), cnt2);
 			}
 		}
@@ -2252,7 +2266,7 @@ namespace Tests.xUpdate
 					},
 					null);
 
-				Assert.AreEqual(1, cnt1);
+				Assert.AreEqual(GetNonEmptyRowCount(context), cnt1);
 				Assert.AreEqual(GetEmptyRowCount(context), cnt2);
 			}
 		}
@@ -2280,7 +2294,7 @@ namespace Tests.xUpdate
 					null,
 					() => new TestInsertOrReplaceInfo() { Id = 1 });
 
-				Assert.AreEqual(1, cnt1);
+				Assert.AreEqual(GetNonEmptyRowCount(context), cnt1);
 				Assert.AreEqual(GetEmptyRowCount(context), cnt2);
 			}
 		}

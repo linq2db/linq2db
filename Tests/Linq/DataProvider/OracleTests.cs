@@ -3829,7 +3829,7 @@ CREATE TABLE ""TABLE_A""(
 		}
 		
 		[Test]
-		public void TestBlob([IncludeDataSources(TestProvName.AllOracle)] string context)
+		public void TestBlob([IncludeDataSources(TestProvName.AllOracleManaged)] string context)
 		{
 			using var db = GetDataContext(context);
 			if (db is not DataConnection dc) return;
@@ -3852,5 +3852,43 @@ CREATE TABLE ""TABLE_A""(
 
 			inserted.Should().Equal(1, 1);
 		}
+
+#if NETFRAMEWORK
+		[Table("LinqDataTypes", IsColumnAttributeRequired = false)]
+		class LinqDataTypesBlobsNative
+		{
+			public int ID { get; set; }
+			// Implicit OracleBlob support, no attribute
+			public Oracle.DataAccess.Types.OracleBlob? BinaryValue { get; set; }
+			// Explicit attribute with DataType = Blob
+			[Column("BinaryValue", DataType = DataType.Blob)]
+			public Oracle.DataAccess.Types.OracleBlob? Blob { get; set; }
+		}
+
+		[Test]
+		public void TestBlobNative([IncludeDataSources(TestProvName.AllOracleNative)] string context)
+		{
+			using var db = GetDataContext(context);
+			if (db is not DataConnection dc) return;
+
+			using var tx = dc.BeginTransaction();
+
+			using var blob = new Oracle.DataAccess.Types.OracleBlob((Oracle.DataAccess.Client.OracleConnection)dc.Connection);
+			blob.WriteByte(1);
+
+			db.GetTable<LinqDataTypesBlobsNative>().Insert(() => new LinqDataTypesBlobsNative { ID = -10, BinaryValue = blob });
+			db.GetTable<LinqDataTypesBlobsNative>().Insert(() => new LinqDataTypesBlobsNative { ID = -20, Blob = blob });
+
+			var inserted = db
+				.GetTable<LinqDataTypesBlobsNative>()
+				.Where(x => x.ID.In(-10, -20))
+				.Select(x => Sql.Expr<int>("LENGTH(\"BinaryValue\")"))
+				.ToList();
+
+			tx.Rollback();
+
+			inserted.Should().Equal(1, 1);
+		}
+#endif
 	}
 }
