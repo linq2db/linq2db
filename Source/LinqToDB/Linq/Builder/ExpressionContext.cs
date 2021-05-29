@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Common;
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
@@ -63,6 +64,16 @@ namespace LinqToDB.Linq.Builder
 										Sequence.ConvertToSql(null,       0,         flags) :
 										Sequence.ConvertToSql(expression, level + 1, flags);
 								}
+							}
+							else if (root.NodeType == ExpressionType.Constant)
+							{
+								if (((ConstantExpression)root).Value == null)
+									return Array<SqlInfo>.Empty;
+							}
+							else if (root.NodeType == ExpressionType.New)
+							{
+								if (((NewExpression)root).Arguments.Count == 0)
+									return Array<SqlInfo>.Empty;
 							}
 
 							break;

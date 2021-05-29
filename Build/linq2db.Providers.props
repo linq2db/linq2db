@@ -16,9 +16,15 @@
 	<PropertyGroup Condition="'$(TargetFramework)' == 'net472'">
 		<!--Cannot use Any CPU due to native providers-->
 		<PlatformTarget>x86</PlatformTarget>
+
 	</PropertyGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net472' ">
+		<!--workaround for VS 16.10 breaking change
+		https://sqlite.org/forum/info/e4c09bad740332eadb7141b31e6e6a941360a7a1ec6454881d3ff9cd975e3b1d
+		-->
+		<SQLiteInteropFiles Include="$(USERPROFILE)\.nuget\packages\stub.system.data.sqlite.core.netframework\1.0.114\build\net46\**\SQLite.Interop.*" />
+		
 		<Reference Include="System.Data.Services" />
 		<Reference Include="System.Windows.Forms" />
 

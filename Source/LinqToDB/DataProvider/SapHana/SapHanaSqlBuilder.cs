@@ -76,11 +76,6 @@ namespace LinqToDB.DataProvider.SapHana
 			}
 		}
 
-		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
-		{
-			BuildInsertOrUpdateQueryAsUpdateInsert(insertOrUpdate);
-		}
-
 		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
 			switch (type.Type.DataType)

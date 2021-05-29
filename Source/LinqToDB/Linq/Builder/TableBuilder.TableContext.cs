@@ -1462,6 +1462,8 @@ namespace LinqToDB.Linq.Builder
 					return new ContextInfo(this, null, 0);
 				}
 
+				expression = expression.SkipPathThrough();
+
 				var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
 
 				switch (levelExpression.NodeType)
