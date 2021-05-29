@@ -43,11 +43,16 @@ namespace Tests.xUpdate
 		[Test]
 		[ActiveIssue(3015, Configurations = new[]
 		{
-			TestProvName.AllSapHana,
-			TestProvName.AllOracle,
+			TestProvName.AllAccess,
 			ProviderName.DB2,
 			TestProvName.AllFirebird,
 			TestProvName.AllInformix,
+			TestProvName.AllMySql,
+			TestProvName.AllOracle,
+			TestProvName.AllPostgreSQL,
+			ProviderName.SqlCe,
+			TestProvName.AllSQLite,
+			TestProvName.AllSapHana,
 			TestProvName.AllSybase,
 		})]
 		public void MergeIntoCte([MergeDataContextSource] string context)
@@ -113,11 +118,16 @@ namespace Tests.xUpdate
 		[Test]
 		[ActiveIssue(3015, Configurations = new[]
 		{
-			TestProvName.AllSapHana,
-			TestProvName.AllOracle,
+			TestProvName.AllAccess,
 			ProviderName.DB2,
 			TestProvName.AllFirebird,
 			TestProvName.AllInformix,
+			TestProvName.AllMySql,
+			TestProvName.AllOracle,
+			TestProvName.AllPostgreSQL,
+			ProviderName.SqlCe,
+			TestProvName.AllSQLite,
+			TestProvName.AllSapHana,
 			TestProvName.AllSybase,
 		})]
 		public void MergeFromCte([MergeDataContextSource] string context)
@@ -152,11 +162,16 @@ namespace Tests.xUpdate
 		[Test]
 		[ActiveIssue(3015, Configurations = new[]
 		{
-			TestProvName.AllSapHana,
-			TestProvName.AllOracle,
+			TestProvName.AllAccess,
 			ProviderName.DB2,
 			TestProvName.AllFirebird,
 			TestProvName.AllInformix,
+			TestProvName.AllMySql,
+			TestProvName.AllOracle,
+			TestProvName.AllPostgreSQL,
+			ProviderName.SqlCe,
+			TestProvName.AllSQLite,
+			TestProvName.AllSapHana,
 			TestProvName.AllSybase,
 		})]
 		public void MergeUsingCteJoin([MergeDataContextSource] string context)
@@ -191,11 +206,16 @@ namespace Tests.xUpdate
 		[Test]
 		[ActiveIssue(3015, Configurations = new[]
 		{
-			TestProvName.AllSapHana,
-			TestProvName.AllOracle,
+			TestProvName.AllAccess,
 			ProviderName.DB2,
 			TestProvName.AllFirebird,
 			TestProvName.AllInformix,
+			TestProvName.AllMySql,
+			TestProvName.AllOracle,
+			TestProvName.AllPostgreSQL,
+			ProviderName.SqlCe,
+			TestProvName.AllSQLite,
+			TestProvName.AllSapHana,
 			TestProvName.AllSybase,
 		})]
 		public void MergeUsingCteWhere([MergeDataContextSource] string context)
