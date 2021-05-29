@@ -646,7 +646,6 @@ namespace LinqToDB
 							.Distinct()
 							.ToArray()!;
 
-						ColumnDescriptor? descriptor;
 						if (names.Length > 0)
 						{
 							if (method.IsGenericMethod)
@@ -654,12 +653,7 @@ namespace LinqToDB
 								var templateParam  = templateParameters[i];
 								var elementType    = templateParam.ParameterType!;
 								var argElementType = param.ParameterType;
-								if (elementType.IsArray && argElementType.IsArray)
-								{
-									elementType    = elementType.GetElementType()!;
-									argElementType = argElementType.GetElementType()!;
-								}
-								descriptorMapping.TryGetValue(elementType, out descriptor);
+								descriptorMapping.TryGetValue(elementType, out var descriptor);
 
 								ISqlExpression[] sqlExpressions;
 								if (arg is NewArrayExpression arrayInit)
@@ -675,7 +669,7 @@ namespace LinqToDB
 
 								if (descriptor == null)
 								{
-									descriptor = sqlExpressions.Select(e => QueryHelper.GetColumnDescriptor(e)).FirstOrDefault(d => d != null);
+									descriptor = sqlExpressions.Select(QueryHelper.GetColumnDescriptor).FirstOrDefault(d => d != null);
 									if (descriptor != null)
 									{
 										foreach (var pair

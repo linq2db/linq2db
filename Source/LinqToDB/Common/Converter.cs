@@ -241,5 +241,35 @@ namespace LinqToDB.Common
 		{
 			return ConvertBuilder.GetDefaultMappingFromEnumType(mappingSchema, enumType);
 		}
+
+		internal static bool TryConvertToString(object? value, out string? str)
+		{
+			if (value is null)
+			{
+				str = null;
+				return true;
+			}
+
+			if (value is string stringValue)
+			{
+				str = stringValue;
+				return true;
+			}
+
+			if (value is IConvertible convertible)
+			{
+				try
+				{
+					str = convertible.ToString(null);
+					return true;
+				}
+				catch
+				{
+				}
+			}
+
+			str = null;
+			return false;
+		}
 	}
 }
