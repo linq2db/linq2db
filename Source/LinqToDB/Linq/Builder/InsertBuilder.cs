@@ -181,7 +181,7 @@ namespace LinqToDB.Linq.Builder
 				if (insertType == InsertContext.InsertType.InsertOutput || insertType == InsertContext.InsertType.InsertOutputInto)
 				{
 					outputExpression = 
-						(LambdaExpression?)methodCall.GetArgumentByName("outputExpression")
+						(LambdaExpression?)methodCall.GetArgumentByName("outputExpression")?.Unwrap()
 						?? BuildDefaultOutputExpression(methodCall.Method.GetGenericArguments().Last());
 
 					insertStatement.Output = new SqlOutputClause();

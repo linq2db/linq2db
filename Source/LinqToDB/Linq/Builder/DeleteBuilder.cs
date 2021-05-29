@@ -81,7 +81,7 @@ namespace LinqToDB.Linq.Builder
 			if (deleteType != DeleteContext.DeleteType.Delete)
 			{
 				outputExpression =
-					(LambdaExpression?)methodCall.GetArgumentByName("outputExpression")
+					(LambdaExpression?)methodCall.GetArgumentByName("outputExpression")?.Unwrap()
 					?? BuildDefaultOutputExpression(methodCall.Method.GetGenericArguments().Last());
 
 				deleteStatement.Output = new SqlOutputClause();
