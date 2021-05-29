@@ -12,9 +12,15 @@ namespace LinqToDB.DataProvider.MySql
 	class MySqlBulkCopy : BasicBulkCopy
 	{
 		/// <summary>
-		/// MySQL supports more but realistically this might be too much already. 
+		/// Settings based on https://www.jooq.org/doc/3.12/manual/sql-building/dsl-context/custom-settings/settings-inline-threshold/
+		/// MySQL supports more but realistically this might be too much already for practical cases. 
 		/// </summary>
 		protected override int               MaxParameters => 32767;
+		/// <summary>
+		/// MySQL can support much larger sizes, based on
+		/// https://dev.mysql.com/doc/refman/8.0/en/server-system-variables.html#sysvar_max_allowed_packet
+		/// But we keep a smaller number here to avoid choking the network.
+		/// </summary>
 		protected override int               MaxSqlLength  => 327670;
 		private readonly   MySqlDataProvider _provider;
 

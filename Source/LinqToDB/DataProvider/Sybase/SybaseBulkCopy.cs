@@ -14,7 +14,15 @@ namespace LinqToDB.DataProvider.Sybase
 	// AseException : Incorrect syntax near ','.
 	class SybaseBulkCopy : BasicBulkCopy
 	{
-		protected override int                MaxSqlLength  => 327670;
+		/// <remarks>
+		/// Setting is conservative based on https://maxdb.sap.com/doc/7_6/f6/069940ccd42a54e10000000a1550b0/content.htm
+		/// Possible to be higher in other versions.
+		/// </remarks>
+		protected override int                MaxSqlLength  => 65536;
+		/// <remarks>
+		/// Settings based on https://www.jooq.org/doc/3.12/manual/sql-building/dsl-context/custom-settings/settings-inline-threshold/
+		/// We subtract 1 based on possibility of provider using parameter for command.
+		/// </remarks>
 		protected override int                MaxParameters => 1999;
 		private readonly   SybaseDataProvider _provider;
 

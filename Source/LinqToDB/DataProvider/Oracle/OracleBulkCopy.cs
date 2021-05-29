@@ -14,8 +14,16 @@ namespace LinqToDB.DataProvider.Oracle
 
 	class OracleBulkCopy : BasicBulkCopy
 	{
+		/// <remarks>
+		/// Settings based on https://www.jooq.org/doc/3.12/manual/sql-building/dsl-context/custom-settings/settings-inline-threshold/
+		/// We subtract 1 based on possibility of provider using parameter for command.
+		/// </remarks>
 		private const      int                _maxParameters = 32766;
-		private const      int                _maxSqlLength  = 327670;
+		/// <summary>
+		/// Setting is conservative, based on https://docs.oracle.com/cd/A58617_01/server.804/a58242/ch5.htm
+		/// Max is actually more arbitrary in later versions than Oracle 8.
+		/// </summary>
+		private const      int                _maxSqlLength  = 65535;
 		protected override int                MaxParameters => _maxParameters;
 		protected override int                MaxSqlLength  => _maxSqlLength;
 		private readonly   OracleDataProvider _provider;

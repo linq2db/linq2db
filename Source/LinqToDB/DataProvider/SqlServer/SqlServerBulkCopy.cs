@@ -12,7 +12,15 @@ namespace LinqToDB.DataProvider.SqlServer
 
 	class SqlServerBulkCopy : BasicBulkCopy
 	{
+		/// <remarks>
+		/// Settings based on https://www.jooq.org/doc/3.12/manual/sql-building/dsl-context/custom-settings/settings-inline-threshold/
+		/// We subtract 1 since SQL Server ADO Provider uses one parameter for command.
+		/// </remarks>
 		protected override int                   MaxParameters => 2099;
+		/// <remarks>
+		/// Based on https://docs.microsoft.com/en-us/sql/sql-server/maximum-capacity-specifications-for-sql-server?redirectedfrom=MSDN&view=sql-server-ver15
+		/// Default Max is actually (4096*65536) = 256MIB, but we keep a lower number here to avoid the cost of huge statements.
+		/// </remarks>
 		protected override int                   MaxSqlLength => 327670;
 		private readonly   SqlServerDataProvider _provider;
 
