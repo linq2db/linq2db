@@ -41,13 +41,14 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ActiveIssue(3015, Configurations = new[] 
+		[ActiveIssue(3015, Configurations = new[]
 		{
-			TestProvName.AllAccess,
-			ProviderName.SqlCe,
-			TestProvName.AllSQLite,
-			TestProvName.AllPostgreSQL,
-			TestProvName.AllMySql,
+			TestProvName.AllSapHana,
+			TestProvName.AllOracle,
+			ProviderName.DB2,
+			TestProvName.AllFirebird,
+			TestProvName.AllInformix,
+			TestProvName.AllSybase,
 		})]
 		public void MergeIntoCte([MergeDataContextSource] string context)
 		{
@@ -112,11 +113,12 @@ namespace Tests.xUpdate
 		[Test]
 		[ActiveIssue(3015, Configurations = new[]
 		{
-			TestProvName.AllAccess,
-			ProviderName.SqlCe,
-			TestProvName.AllSQLite,
-			TestProvName.AllPostgreSQL,
-			TestProvName.AllMySql,
+			TestProvName.AllSapHana,
+			TestProvName.AllOracle,
+			ProviderName.DB2,
+			TestProvName.AllFirebird,
+			TestProvName.AllInformix,
+			TestProvName.AllSybase,
 		})]
 		public void MergeFromCte([MergeDataContextSource] string context)
 		{
@@ -150,11 +152,12 @@ namespace Tests.xUpdate
 		[Test]
 		[ActiveIssue(3015, Configurations = new[]
 		{
-			TestProvName.AllAccess,
-			ProviderName.SqlCe,
-			TestProvName.AllSQLite,
-			TestProvName.AllPostgreSQL,
-			TestProvName.AllMySql,
+			TestProvName.AllSapHana,
+			TestProvName.AllOracle,
+			ProviderName.DB2,
+			TestProvName.AllFirebird,
+			TestProvName.AllInformix,
+			TestProvName.AllSybase,
 		})]
 		public void MergeUsingCteJoin([MergeDataContextSource] string context)
 		{
@@ -188,11 +191,12 @@ namespace Tests.xUpdate
 		[Test]
 		[ActiveIssue(3015, Configurations = new[]
 		{
-			TestProvName.AllAccess,
-			ProviderName.SqlCe,
-			TestProvName.AllSQLite,
-			TestProvName.AllPostgreSQL,
-			TestProvName.AllMySql,
+			TestProvName.AllSapHana,
+			TestProvName.AllOracle,
+			ProviderName.DB2,
+			TestProvName.AllFirebird,
+			TestProvName.AllInformix,
+			TestProvName.AllSybase,
 		})]
 		public void MergeUsingCteWhere([MergeDataContextSource] string context)
 		{
