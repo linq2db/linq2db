@@ -1229,6 +1229,21 @@ namespace Tests
 			Assert.IsTrue(b);
 		}
 
+		public static Expression CheckForNull(Expression? expression)
+		{
+			if (expression != null && expression.NodeType.NotIn(ExpressionType.Lambda, ExpressionType.Quote) &&
+			    (expression.Type.IsClass || expression.Type.IsInterface) &&
+			    !typeof(IQueryable<>).IsSameOrParentOf(expression.Type))
+			{
+				var test = Expression.ReferenceEqual(expression,
+					Expression.Constant(null, expression.Type));
+				return Expression.Condition(test,
+					Expression.Constant(DefaultValue.GetValue(expression.Type), expression.Type), expression);
+			}
+
+			return expression;
+		}
+
 		public T[] AssertQuery<T>(IQueryable<T> query)
 		{
 			var expr    = query.Expression;
@@ -1265,6 +1280,13 @@ namespace Tests
 							return queryCall;
 						}
 					}
+
+					return mc.Update(CheckForNull(mc.Object), mc.Arguments.Select(CheckForNull));
+				}
+				else if (e.NodeType == ExpressionType.MemberAccess)
+				{
+					var ma = (MemberExpression)e;
+					return ma.Update(CheckForNull(ma.Expression));
 				}
 
 				return e;
