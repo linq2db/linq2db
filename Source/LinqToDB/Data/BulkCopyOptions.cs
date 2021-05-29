@@ -90,8 +90,15 @@ namespace LinqToDB.Data
 		public Action<BulkCopyRowsCopied>? RowsCopiedCallback { get; set; }
 
 		/// <summary>
-		/// Gets or sets whether to Always use Parameters for MultipleRowsCopy.
+		/// Gets or sets whether to Always use Parameters for MultipleRowsCopy. Default is false.
+		/// If True, provider's override for <see cref="LinqToDB.DataProvider.BasicBulkCopy.MaxParameters"/> will be used to determine the maximum number of rows per insert,
+		/// Unless overridden by <see cref="MaxParametersForBatch"/>.
 		/// </summary>
 		public bool UseParameters { get; set; }
+		
+		/// <summary>
+		/// If set, will override the Maximum parameters per batch statement from <see cref="LinqToDB.DataProvider.BasicBulkCopy.MaxParameters"/>.
+		/// </summary>
+		public int? MaxParametersForBatch { get; set; }
 	}
 }
