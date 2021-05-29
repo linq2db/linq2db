@@ -135,7 +135,8 @@ namespace LinqToDB.Linq.Builder
 			if (info != null)
 			{
 				methodCall = (MethodCallExpression)methodCall.Transform(
-					ex => ConvertMethod(methodCall, 0, info, selector.Parameters[0], ex));
+					(methodCall, info, selector),
+					static (context, ex) => ConvertMethod(context.methodCall, 0, context.info, context.selector.Parameters[0], ex));
 				selector   = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 			}
 
@@ -174,7 +175,7 @@ namespace LinqToDB.Linq.Builder
 								Expression.MemberInit(
 									Expression.New(btype),
 									Expression.Bind(fields[0], psel),
-									Expression.Bind(fields[1], selector.Body.Transform(e => e == pold ? psel : e))),
+									Expression.Bind(fields[1], selector.Body.Replace(pold, psel))),
 								psel));
 
 						selector = (LambdaExpression)methodCall.Arguments[1].Unwrap();
@@ -185,7 +186,7 @@ namespace LinqToDB.Linq.Builder
 						var expr = Expression.MakeMemberAccess(param, fields[0]);
 
 						foreach (var t in list)
-							t.Expr = t.Expr.Transform(ex => ReferenceEquals(ex, pold) ? expr : ex);
+							t.Expr = t.Expr.Transform((pold, expr), static(context, ex) => ReferenceEquals(ex, context.pold) ? context.expr : ex);
 
 						return new SequenceConvertInfo
 						{
@@ -199,8 +200,8 @@ namespace LinqToDB.Linq.Builder
 					{
 						foreach (var path in info.ExpressionsToReplace)
 						{
-							path.Path = path.Path.Transform(e => ReferenceEquals(e, info.Parameter) ? p.Path : e);
-							path.Expr = path.Expr.Transform(e => ReferenceEquals(e, info.Parameter) ? p.Path : e);
+							path.Path = path.Path.Transform((p, info), static (context, e) => ReferenceEquals(e, context.info.Parameter) ? context.p.Path : e);
+							path.Expr = path.Expr.Transform((p, info), static (context, e) => ReferenceEquals(e, context.info.Parameter) ? context.p.Path : e);
 							path.Level += p.Level;
 
 							list.Add(path);
@@ -219,7 +220,7 @@ namespace LinqToDB.Linq.Builder
 								.Where (e => !ReferenceEquals(e, p))
 								.Select(ei =>
 								{
-									ei.Expr = ei.Expr.Transform(e => ReferenceEquals(e, p.Expr) ? p.Path : e);
+									ei.Expr = ei.Expr.Transform(p, static (p, e) => ReferenceEquals(e, p.Expr) ? p.Path : e);
 									return ei;
 								})
 								.ToList()

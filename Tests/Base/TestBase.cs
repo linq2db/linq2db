@@ -1056,6 +1056,58 @@ namespace Tests
 			return GetProviderName(context, out var _) == TestProvName.SqlServer2019;
 		}
 
+		/// <summary>
+		/// Returns case-sensitivity of string comparison (e.g. using LIKE) without explicit collation specified.
+		/// Depends on database implementation or database collation.
+		/// </summary>
+		protected bool IsCaseSensitiveComparison(string context)
+		{
+			var provider = GetProviderName(context, out var _);
+
+			// we intentionally configure Sql Server 2019 test database to be case-sensitive to test
+			// linq2db support for this configuration
+			// on CI we test two configurations:
+			// linux/mac: db is case sensitive, catalog is case insensitive
+			// windows: both db and catalog are case sensitive
+			return provider == TestProvName.SqlServer2019
+				|| provider == ProviderName.DB2
+				|| provider.StartsWith(ProviderName.Firebird)
+				|| provider.StartsWith(ProviderName.Informix)
+				|| provider.StartsWith(ProviderName.Oracle)
+				|| provider.StartsWith(ProviderName.PostgreSQL)
+				|| provider.StartsWith(ProviderName.SapHana)
+				|| provider.StartsWith(ProviderName.Sybase)
+				;
+		}
+
+		/// <summary>
+		/// Returns status of test CollatedTable - wether it is configured to have proper column collations or
+		/// use database defaults (<see cref="IsCaseSensitiveComparison"/>).
+		/// </summary>
+		protected bool IsCollatedTableConfigured(string context)
+		{
+			var provider = GetProviderName(context, out var _);
+
+			// unconfigured providers (some could be configured in theory):
+			// Access : no such concept as collation on column level (db-only)
+			// DB2
+			// Informix
+			// Oracle (in theory v12 has collations, but to enable them you need to complete quite a quest...)
+			// PostgreSQL (v12 + custom collation required (no default CI collations))
+			// SAP HANA
+			// SQL CE
+			// Sybase ASE
+			return provider == TestProvName.SqlAzure
+				|| provider == TestProvName.MariaDB
+				|| provider == TestProvName.AllOracleNative
+				|| provider.StartsWith(ProviderName.SqlServer)
+				|| provider.StartsWith(ProviderName.Firebird)
+				|| provider.StartsWith(ProviderName.MySql)
+				// while it is configured, LIKE in SQLite is case-insensitive (for ASCII only though)
+				//|| provider.StartsWith(ProviderName.SQLite)
+				;
+		}
+
 		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result, bool allowEmpty = false)
 		{
 			AreEqual(t => t, expected, result, EqualityComparer<T>.Default, allowEmpty);
@@ -1182,7 +1234,7 @@ namespace Tests
 			var expr    = query.Expression;
 			var loaded  = new Dictionary<Type, Expression>();
 			var actual  = query.ToArray();
-			var newExpr = expr.Transform(e =>
+			var newExpr = expr.Transform(loaded, static (loaded, e) =>
 			{
 				if (e.NodeType == ExpressionType.Call)
 				{

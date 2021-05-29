@@ -166,5 +166,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		{
 			throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
 		}
+
+		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(expr);
 	}
 }

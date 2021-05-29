@@ -58,6 +58,20 @@ namespace LinqToDB.DataProvider.MySql
 			return statement.NeedsIdentity() ? 2 : 1;
 		}
 
+		protected override void BuildSelectClause(SelectQuery selectQuery)
+		{
+			// mysql <= 5.5 doesn't support WHERE without FROM
+			// https://docs.oracle.com/cd/E19957-01/mysql-refman-5.5/sql-syntax.html#select
+			if (selectQuery.From.Tables.Count == 0 && !selectQuery.Where.IsEmpty)
+			{
+				AppendIndent().Append("SELECT").AppendLine();
+				BuildColumns(selectQuery);
+				AppendIndent().Append("FROM DUAL").AppendLine();
+			}
+			else
+				base.BuildSelectClause(selectQuery);
+		}
+
 		protected override void BuildCommand(SqlStatement statement, int commandNumber)
 		{
 			StringBuilder.AppendLine("SELECT LAST_INSERT_ID()");
@@ -433,6 +447,15 @@ namespace LinqToDB.DataProvider.MySql
 				throwExceptionIfTableNotFound);
 		}
 
+		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr)
+		{
+			if (!expr.IsNot)
+				StringBuilder.Append("NOT ");
+			BuildExpression(GetPrecedence(expr), expr.Expr1);
+			StringBuilder.Append(" <=> ");
+			BuildExpression(GetPrecedence(expr), expr.Expr2);
+		}
+
 		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
 			var position = StringBuilder.Length;
@@ -535,7 +558,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override void BuildGroupByBody(GroupingType groupingType, List<ISqlExpression> items)
 		{
-			if (groupingType.In(GroupingType.GroupBySets, GroupingType.Default))
+			if (groupingType == GroupingType.GroupBySets || groupingType == GroupingType.Default)
 			{
 				base.BuildGroupByBody(groupingType, items);
 				return;

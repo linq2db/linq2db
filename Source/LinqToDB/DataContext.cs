@@ -598,7 +598,7 @@ namespace LinqToDB
 				return _queryRunner!.GetSqlText();
 			}
 
-			public IDataContext DataContext      { get => _queryRunner!.DataContext;      set => _queryRunner!.DataContext      = value; }
+			public IDataContext DataContext      { get => _dataContext!;                  set => _queryRunner!.DataContext      = value; }
 			public Expression   Expression       { get => _queryRunner!.Expression;       set => _queryRunner!.Expression       = value; }
 			public object?[]?   Parameters       { get => _queryRunner!.Parameters;       set => _queryRunner!.Parameters       = value; }
 			public object?[]?   Preambles        { get => _queryRunner!.Preambles;        set => _queryRunner!.Preambles        = value; }

@@ -39,8 +39,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			tableContext.SelectQuery.From.Tables.RemoveAt(0);
-			var queryVisitor = new QueryVisitor();
-			queryVisitor.Visit(query, e =>
+			query.Visit(query, static (query, e) =>
 			{
 				if (e is SelectQuery selectQuery && selectQuery.From.Tables.Count > 0)
 				{

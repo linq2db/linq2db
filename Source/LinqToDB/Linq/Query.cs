@@ -76,7 +76,6 @@ namespace LinqToDB.Linq
 		readonly List<QueryableAccessor>                  _queryableAccessorList = new ();
 		readonly Dictionary<Expression,Expression>        _queryDependedObjects  = new ();
 
-
 		public bool IsFastCacheable => _queryableMemberAccessorDic == null;
 
 		internal int AddQueryableAccessors(Expression expr, Expression<Func<Expression,IQueryable>> qe)
@@ -169,7 +168,7 @@ namespace LinqToDB.Linq
 		/// </summary>
 		public static void ClearCaches()
 		{
-			InternalExtensions.ClearCaches();
+			EqualsToVisitor.ClearCaches();
 
 			foreach (var cleaner in CacheCleaners)
 			{

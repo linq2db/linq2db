@@ -2111,6 +2111,8 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Inserts new record into target table or updates existing record if record with the same primary key value already exists in target table.
+		/// When <c>null</c> value or expression without field setters passed to <paramref name="onDuplicateKeyUpdateSetter"/>, this method
+		/// implements <c>INSERT IF NOT EXISTS</c> logic.
 		/// </summary>
 		/// <typeparam name="T">Table record type.</typeparam>
 		/// <param name="target">Target table.</param>
@@ -2121,14 +2123,13 @@ namespace LinqToDB
 		/// Accepts updated record as parameter.</param>
 		/// <returns>Number of affected records.</returns>
 		public static int InsertOrUpdate<T>(
-			                this ITable<T>        target,
-			[InstantHandle] Expression<Func<T>>   insertSetter,
-			[InstantHandle] Expression<Func<T,T>> onDuplicateKeyUpdateSetter)
+			                this ITable<T>          target,
+			[InstantHandle] Expression<Func<T>>     insertSetter,
+			[InstantHandle] Expression<Func<T,T?>>? onDuplicateKeyUpdateSetter)
 			where T : notnull
 		{
 			if (target                     == null) throw new ArgumentNullException(nameof(target));
 			if (insertSetter               == null) throw new ArgumentNullException(nameof(insertSetter));
-			if (onDuplicateKeyUpdateSetter == null) throw new ArgumentNullException(nameof(onDuplicateKeyUpdateSetter));
 
 			IQueryable<T> query = target;
 
@@ -2138,11 +2139,13 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					_insertOrUpdateMethodInfo.MakeGenericMethod(typeof(T)),
-					currentQuery.Expression, Expression.Quote(insertSetter), Expression.Quote(onDuplicateKeyUpdateSetter)));
+					currentQuery.Expression, Expression.Quote(insertSetter), onDuplicateKeyUpdateSetter != null ? Expression.Quote(onDuplicateKeyUpdateSetter) : Expression.Constant(null, typeof(Expression<Func<T, T>>))));
 		}
 
 		/// <summary>
 		/// Asynchronously inserts new record into target table or updates existing record if record with the same primary key value already exists in target table.
+		/// When <c>null</c> value or expression without field setters passed to <paramref name="onDuplicateKeyUpdateSetter"/>, this method
+		/// implements <c>INSERT IF NOT EXISTS</c> logic.
 		/// </summary>
 		/// <typeparam name="T">Table record type.</typeparam>
 		/// <param name="target">Target table.</param>
@@ -2154,15 +2157,14 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
 		public static async Task<int> InsertOrUpdateAsync<T>(
-			                this ITable<T>        target,
-			[InstantHandle] Expression<Func<T>>   insertSetter,
-			[InstantHandle] Expression<Func<T,T>> onDuplicateKeyUpdateSetter,
-			CancellationToken                     token = default)
+			                this ITable<T>          target,
+			[InstantHandle] Expression<Func<T>>     insertSetter,
+			[InstantHandle] Expression<Func<T,T?>>? onDuplicateKeyUpdateSetter,
+			CancellationToken                       token = default)
 			where T : notnull
 		{
 			if (target                     == null) throw new ArgumentNullException(nameof(target));
 			if (insertSetter               == null) throw new ArgumentNullException(nameof(insertSetter));
-			if (onDuplicateKeyUpdateSetter == null) throw new ArgumentNullException(nameof(onDuplicateKeyUpdateSetter));
 
 			IQueryable<T> source = target;
 
@@ -2171,7 +2173,7 @@ namespace LinqToDB
 			var expr = Expression.Call(
 				null,
 				_insertOrUpdateMethodInfo.MakeGenericMethod(typeof(T)),
-				currentSource.Expression, Expression.Quote(insertSetter), Expression.Quote(onDuplicateKeyUpdateSetter));
+				currentSource.Expression, Expression.Quote(insertSetter), onDuplicateKeyUpdateSetter != null ? Expression.Quote(onDuplicateKeyUpdateSetter) : Expression.Constant(null, typeof(Expression<Func<T, T>>)));
 
 			if (currentSource is IQueryProviderAsync query)
 				return await query.ExecuteAsync<int>(expr, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -2184,6 +2186,8 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Inserts new record into target table or updates existing record if record with the same key value already exists in target table.
+		/// When <c>null</c> value or expression without field setters passed to <paramref name="onDuplicateKeyUpdateSetter"/>, this method
+		/// implements <c>INSERT IF NOT EXISTS</c> logic.
 		/// </summary>
 		/// <typeparam name="T">Table record type.</typeparam>
 		/// <param name="target">Target table.</param>
@@ -2196,15 +2200,14 @@ namespace LinqToDB
 		/// Expression supports only target table record new expression with field initializers for each key field. Assigned key field value will be used as key value by operation type selector.</param>
 		/// <returns>Number of affected records.</returns>
 		public static int InsertOrUpdate<T>(
-			                this ITable<T>        target,
-			[InstantHandle] Expression<Func<T>>   insertSetter,
-			[InstantHandle] Expression<Func<T,T>> onDuplicateKeyUpdateSetter,
-			[InstantHandle] Expression<Func<T>>   keySelector)
+			                this ITable<T>          target,
+			[InstantHandle] Expression<Func<T>>     insertSetter,
+			[InstantHandle] Expression<Func<T,T?>>? onDuplicateKeyUpdateSetter,
+			[InstantHandle] Expression<Func<T>>     keySelector)
 			where T : notnull
 		{
 			if (target                     == null) throw new ArgumentNullException(nameof(target));
 			if (insertSetter               == null) throw new ArgumentNullException(nameof(insertSetter));
-			if (onDuplicateKeyUpdateSetter == null) throw new ArgumentNullException(nameof(onDuplicateKeyUpdateSetter));
 			if (keySelector                == null) throw new ArgumentNullException(nameof(keySelector));
 
 			IQueryable<T> query = target;
@@ -2217,12 +2220,14 @@ namespace LinqToDB
 					_insertOrUpdateMethodInfo2.MakeGenericMethod(typeof(T)),
 					currentQuery.Expression,
 					Expression.Quote(insertSetter),
-					Expression.Quote(onDuplicateKeyUpdateSetter),
+					onDuplicateKeyUpdateSetter != null ? Expression.Quote(onDuplicateKeyUpdateSetter) : Expression.Constant(null, typeof(Expression<Func<T, T>>)),
 					Expression.Quote(keySelector)));
 		}
 
 		/// <summary>
 		/// Asynchronously inserts new record into target table or updates existing record if record with the same key value already exists in target table.
+		/// When <c>null</c> value or expression without field setters passed to <paramref name="onDuplicateKeyUpdateSetter"/>, this method
+		/// implements <c>INSERT IF NOT EXISTS</c> logic.
 		/// </summary>
 		/// <typeparam name="T">Table record type.</typeparam>
 		/// <param name="target">Target table.</param>
@@ -2236,16 +2241,15 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
 		public static async Task<int> InsertOrUpdateAsync<T>(
-			                this ITable<T>        target,
-			[InstantHandle] Expression<Func<T>>   insertSetter,
-			[InstantHandle] Expression<Func<T,T>> onDuplicateKeyUpdateSetter,
-			[InstantHandle] Expression<Func<T>>   keySelector,
-			CancellationToken                     token = default)
+			                this ITable<T>          target,
+			[InstantHandle] Expression<Func<T>>     insertSetter,
+			[InstantHandle] Expression<Func<T,T?>>? onDuplicateKeyUpdateSetter,
+			[InstantHandle] Expression<Func<T>>     keySelector,
+			CancellationToken                       token = default)
 			where T : notnull
 		{
 			if (target                     == null) throw new ArgumentNullException(nameof(target));
 			if (insertSetter               == null) throw new ArgumentNullException(nameof(insertSetter));
-			if (onDuplicateKeyUpdateSetter == null) throw new ArgumentNullException(nameof(onDuplicateKeyUpdateSetter));
 			if (keySelector                == null) throw new ArgumentNullException(nameof(keySelector));
 
 			IQueryable<T> source = target;
@@ -2257,7 +2261,7 @@ namespace LinqToDB
 				_insertOrUpdateMethodInfo2.MakeGenericMethod(typeof(T)),
 				currentSource.Expression,
 				Expression.Quote(insertSetter),
-				Expression.Quote(onDuplicateKeyUpdateSetter),
+				onDuplicateKeyUpdateSetter != null ? Expression.Quote(onDuplicateKeyUpdateSetter) : Expression.Constant(null, typeof(Expression<Func<T, T>>)),
 				Expression.Quote(keySelector));
 
 			if (currentSource is IQueryProviderAsync query)

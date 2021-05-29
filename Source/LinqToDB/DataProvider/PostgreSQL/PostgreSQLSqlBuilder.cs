@@ -38,6 +38,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 
 		protected override bool IsRecursiveCteKeywordRequired => true;
+		protected override bool SupportsNullInColumn          => false;
 
 		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{

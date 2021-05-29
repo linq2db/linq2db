@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
@@ -106,28 +105,7 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region ICloneableElement Members
-
-		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			if (!objectTree.TryGetValue(this, out var clone))
-			{
-				objectTree.Add(this, clone = new SqlFunction(
-					SystemType,
-					Name,
-					IsAggregate,
-					Precedence,
-					Parameters.Select(e => (ISqlExpression)e.Clone(objectTree, doClone)).ToArray())
-				{
-					CanBeNull = CanBeNull, DoNotOptimize = DoNotOptimize
-				});
-			}
-
-			return clone;
-		}
+		#region Equals Members
 
 		int? _hashCode;
 
@@ -191,8 +169,5 @@ namespace LinqToDB.SqlQuery
 		}
 
 		#endregion
-
-
-
 	}
 }

@@ -42,7 +42,7 @@ namespace LinqToDB.Linq.Builder
 			ParameterExpression? param,
 			Expression           expression)
 		{
-			if (string.ReferenceEquals(expression, methodCall) && param != null && param.Type != info.Parameter!.Type)
+			if (ReferenceEquals(expression, methodCall) && param != null && param.Type != info.Parameter!.Type)
 			{
 				var types = methodCall.Method.GetGenericArguments();
 				var mgen  = methodCall.Method.GetGenericMethodDefinition();
@@ -61,10 +61,12 @@ namespace LinqToDB.Linq.Builder
 					{
 						var l = (LambdaExpression)arg;
 
-						if (l.Parameters.Any(a => string.ReferenceEquals(a, param)))
+						if (l.Parameters.Any(a => ReferenceEquals(a, param)))
 						{
 							args[i] = Expression.Lambda(
-								l.Body.Transform(ex => ConvertMethod(methodCall, sourceTypeNumber, info, param, ex)),
+								l.Body.Transform(
+									(methodCall, sourceTypeNumber, info, param),
+									static (context, ex) => ConvertMethod(context.methodCall, context.sourceTypeNumber, context.info, context.param, ex)),
 								info.Parameter);
 
 							return Expression.Call(methodCall.Object, mgen.MakeGenericMethod(types), args);

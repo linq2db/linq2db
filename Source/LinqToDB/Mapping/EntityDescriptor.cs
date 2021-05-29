@@ -302,7 +302,7 @@ namespace LinqToDB.Mapping
 			}
 		}
 
-		readonly Dictionary<string, ColumnDescriptor> _columnNames = new Dictionary<string, ColumnDescriptor>();
+		readonly Dictionary<string, ColumnDescriptor> _columnNames = new ();
 
 		/// <summary>
 		/// Gets column descriptor by member name.
