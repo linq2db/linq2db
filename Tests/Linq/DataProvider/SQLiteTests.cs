@@ -601,10 +601,15 @@ namespace Tests.DataProvider
 				case TestProvName.SQLiteClassicMiniProfilerUnmapped:
 					// temporary downgrade for non-windows platforms:
 					// https://system.data.sqlite.org/index.html/tktview?name=be4daf18b7
-					if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-						expectedVersion = "3.35.5";
-					else
-						expectedVersion = "3.32.1";
+#if NET472
+					expectedVersion = "3.35.5";
+#else
+					expectedVersion = "3.32.1";
+#endif
+					//if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+					//	expectedVersion = "3.35.5";
+					//else
+					//	expectedVersion = "3.32.1";
 					break;
 				case ProviderName.SQLiteMS:
 #if NET472
