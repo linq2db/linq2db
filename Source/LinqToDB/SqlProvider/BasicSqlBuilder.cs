@@ -930,7 +930,6 @@ namespace LinqToDB.SqlProvider
 		protected void BuildInsertOrUpdateQueryAsUpdateInsert(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
 			BuildTag(insertOrUpdate);
-			AppendIndent().AppendLine("BEGIN TRAN").AppendLine();
 
 			var buildUpdate = insertOrUpdate.Update.Items.Count > 0;
 			if (buildUpdate)
@@ -1006,7 +1005,6 @@ namespace LinqToDB.SqlProvider
 			AppendIndent().AppendLine("END");
 
 			StringBuilder.AppendLine();
-			AppendIndent().AppendLine("COMMIT");
 		}
 
 		#endregion

@@ -1878,14 +1878,11 @@ namespace LinqToDB.SqlProvider
 			ConvertVisitor<RunOptimizationContext<TContext>> visitor,
 			OptimizationContext optimizationContext)
 		{
-			if (predicate.Expr2.TryEvaluateExpression(optimizationContext.Context, out var patternRaw))
+			if (predicate.Expr2.TryEvaluateExpression(optimizationContext.Context, out var patternRaw)
+				&& Converter.TryConvertToString(patternRaw, out var patternRawValue))
 			{
-				var patternRawValue = patternRaw as string;
-
 				if (patternRawValue == null)
-				{
 					return new SqlPredicate.IsTrue(new SqlValue(true), new SqlValue(true), new SqlValue(false), null, predicate.IsNot);
-				}
 
 				var patternValue = LikeIsEscapeSupported
 					? EscapeLikeCharacters(patternRawValue, LikeEscapeCharacter)
@@ -1931,7 +1928,6 @@ namespace LinqToDB.SqlProvider
 					SqlPredicate.SearchString.SearchKind.Contains   => new SqlBinaryExpression(typeof(string), new SqlBinaryExpression(typeof(string), anyCharacterExpr, "+", patternExpr, Precedence.Additive), "+", anyCharacterExpr, Precedence.Additive),
 					_ => throw new InvalidOperationException($"Unexpected predicate kind: {predicate.Kind}")
 				};
-
 
 				patternExpr = OptimizeExpression(patternExpr, visitor, optimizationContext.Context);
 
