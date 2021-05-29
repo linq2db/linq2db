@@ -284,8 +284,9 @@ namespace Tests.xUpdate
 			using (db.BeginTransaction())
 			{
 				var options = new BulkCopyOptions(){ UseParameters = true, MaxBatchSize = 50};
+				var start = 111001;
 				var rowsToIns = Enumerable.Range(111001, 149)
-					.Select(r => new Parent() {ParentID = r}).ToList();
+					.Select(r => new Parent() {ParentID = r, Value1 = r-start}).ToList();
 				db.Parent.BulkCopy(options, rowsToIns);
 				Assert.AreEqual(rowsToIns.Count,
 					db.Parent.Where(r =>
