@@ -311,7 +311,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TraceInfoStepsAreReportedForSqlInsert([IncludeDataSources(true, TestProvName.AllSQLiteNorthwind)] string context)
+		public void TraceInfoStepsAreReportedForSqlInsert([IncludeDataSources(false, TestProvName.AllSQLiteNorthwind)] string context)
 		{
 			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
