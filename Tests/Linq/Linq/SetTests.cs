@@ -392,7 +392,6 @@ namespace Tests.Linq
 		[Test]
 		public void Issue3017([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
-			// actually it is hard to break this test, so check for debug Sleep() call in SqlObjectExpression.GetValue
 			using var scope = new DisableBaseline("Multithreading");
 
 			var tasks = new List<Task>();
