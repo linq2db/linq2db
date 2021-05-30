@@ -58,7 +58,7 @@ namespace AccessDataContext
 			InitMappingSchema();
 		}
 
-		public TestDataDB(LinqToDbConnectionOptions options)
+		public TestDataDB(LinqToDbConnectionOptions<TestDataDB> options)
 			: base(options)
 		{
 			InitDataContext();
