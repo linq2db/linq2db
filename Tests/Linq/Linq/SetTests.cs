@@ -6,7 +6,9 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using System.Threading.Tasks;
 	using LinqToDB;
+	using LinqToDB.Tools;
 	using Model;
 
 	[TestFixture]
@@ -384,6 +386,35 @@ namespace Tests.Linq
 			{
 				GetData(db, new List<int?> { 2 });
 				GetData(db, new List<int?> { 3 });
+			}
+		}
+
+		[Test]
+		public void Issue3017([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			var tasks = new List<Task>();
+
+			for (var i = 0; i < 30; i++)
+			{
+				var local = i;
+				tasks.Add(Task.Run(() => Issue3017Action(context)));
+			}
+
+			Task.WaitAll(tasks.ToArray());
+
+			foreach (var task in tasks)
+				Assert.False(task.IsFaulted);
+		}
+
+		private async Task Issue3017Action(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var targets = db.Person.ToArray();
+
+				var keys = targets.Select(r => new { r.ID, r.FirstName, r.LastName });
+
+				await db.Person.Where(r => new { r.ID, r.FirstName, r.LastName }.In(keys)).ToListAsync();
 			}
 		}
 	}
