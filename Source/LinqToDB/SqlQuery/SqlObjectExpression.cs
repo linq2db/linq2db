@@ -12,6 +12,7 @@ namespace LinqToDB.SqlQuery
 	using Linq.Builder;
 	using Mapping;
 	using Reflection;
+	using System.Threading;
 
 	public class SqlObjectExpression : ISqlExpression
 	{
@@ -31,6 +32,8 @@ namespace LinqToDB.SqlQuery
 
 			if (!_getters.TryGetValue(index, out var getter))
 			{
+				// this is debug code for Issue3017 test
+				Thread.Sleep(1000);
 				var ta        = TypeAccessor.GetAccessor(mi.DeclaringType!);
 				var valueType = mi.GetMemberType();
 				getter        = ta[mi.Name].Getter!;
