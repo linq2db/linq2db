@@ -722,23 +722,24 @@ namespace LinqToDB.SqlProvider
 		/// <returns>List of unique keys</returns>
 		List<VirtualField[]>? GetKeysInternal(SqlTableSource tableSource)
 		{
-			var knownKeys = new List<IList<ISqlExpression>>();
-			QueryHelper.CollectUniqueKeys(tableSource, knownKeys);
-			if (knownKeys.Count == 0)
-			{
-				return null;
-			}
+			throw new NotImplementedException("Oh noe!! It's actually called!");
+			//var knownKeys = new List<IList<ISqlExpression>>();
+			//QueryHelper.CollectUniqueKeys(tableSource, knownKeys);
+			//if (knownKeys.Count == 0)
+			//{
+			//	return null;
+			//}
 
-			var result = new List<VirtualField[]>();
+			//var result = new List<VirtualField[]>();
 
-			foreach (var v in knownKeys)
-			{
-				var fields = v.Select(GetUnderlayingField).ToArray();
-				if (fields.Length == v.Count)
-					result.Add(fields!);
-			}
+			//foreach (var v in knownKeys)
+			//{
+			//	var fields = v.Select(GetUnderlayingField).ToArray();
+			//	if (fields.Length == v.Count)
+			//		result.Add(fields!);
+			//}
 
-			return result.Count > 0 ? result : null;
+			//return result.Count > 0 ? result : null;
 		}
 
 		List<VirtualField[]>? GetKeys(SqlTableSource tableSource)
