@@ -10,6 +10,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using Mapping;
 	using System.Data.Linq;
 	using System.Globalization;
+	using System.Linq.Expressions;
 
 	public class PostgreSQLMappingSchema : MappingSchema
 	{
@@ -57,14 +58,29 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				if (quote) sb.Append("'::float8");
 			});
 
-			AddScalarType(typeof(string),          DataType.Text);
-			AddScalarType(typeof(TimeSpan),        DataType.Interval);
-			AddScalarType(typeof(TimeSpan?),       DataType.Interval);
+			AddScalarType(typeof(string),    DataType.Text);
+			AddScalarType(typeof(TimeSpan),  DataType.Interval);
+			AddScalarType(typeof(TimeSpan?), DataType.Interval);
 
 			// npgsql doesn't support unsigned types except byte (and sbyte)
-			SetConvertExpression<ushort?, DataParameter>(value => new DataParameter(null, value == null ? (int?    )null : value, DataType.Int32)  , false);
-			SetConvertExpression<uint?  , DataParameter>(value => new DataParameter(null, value == null ? (long?   )null : value, DataType.Int64)  , false);
-			SetConvertExpression<ulong? , DataParameter>(value => new DataParameter(null, value == null ? (decimal?)null : value, DataType.Decimal), false);
+			SetConvertExpression<ushort , DataParameter>(value => new DataParameter(null, (int  )value, DataType.Int32));
+			SetConvertExpression<ushort?, DataParameter>(value => new DataParameter(null, (int? )value, DataType.Int32), addNullCheck: false);
+			SetConvertExpression<uint   , DataParameter>(value => new DataParameter(null, (long )value, DataType.Int64));
+			SetConvertExpression<uint?  , DataParameter>(value => new DataParameter(null, (long?)value, DataType.Int64), addNullCheck: false);
+
+			var ulongType = new SqlDataType(DataType.Decimal, typeof(decimal), 20, 0);
+			// set type for proper SQL type generation
+			AddScalarType(typeof(ulong ), ulongType);
+			AddScalarType(typeof(ulong?), ulongType);
+
+			SetConvertExpression(
+				ulongType.Type.WithSystemType(typeof(ulong)),
+				ulongType.Type.WithSystemType(typeof(DataParameter)),
+				(Expression<Func<ulong, DataParameter>>)((ulong value) => new DataParameter(null, (decimal)value, DataType.Decimal) /*{ Precision = 20, Scale = 0 }*/));
+			SetConvertExpression(
+				ulongType.Type.WithSystemType(typeof(ulong?)),
+				ulongType.Type.WithSystemType(typeof(DataParameter)),
+				(Expression<Func<ulong?, DataParameter>>)((ulong? value) => new DataParameter(null, (decimal?)value, DataType.Decimal) /*{ Precision = 20, Scale = 0 }*/), addNullCheck: false);
 		}
 
 		static void BuildDateTime(StringBuilder stringBuilder, SqlDataType dt, DateTime value)
