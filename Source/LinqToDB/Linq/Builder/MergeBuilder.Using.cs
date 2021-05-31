@@ -27,7 +27,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var mergeContext = (MergeContext)builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-				if (UsingMethodInfo1 == methodCall.Method.GetGenericMethodDefinition())
+				if (methodCall.IsSameGenericMethod(UsingMethodInfo1))
 				{
 					var sourceContext         = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
 					var source                = new TableLikeQueryContext(sourceContext);
