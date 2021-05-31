@@ -440,6 +440,15 @@ namespace LinqToDB
 		[Property(PN.MySql,         "Char",           ServerSideOnly=true)]
 		[Property(                  "NVarChar",       ServerSideOnly=true)] public static string  DefaultNVarChar                          { get { return ""; } }
 
+		[CLSCompliant(false)]
+		[Expression(PN.Oracle, "CAST({0} AS {3} DEFAULT NULL ON CONVERSION ERROR)", ServerSideOnly = true, IsNullable = IsNullableType.Nullable)]
+		[Function(             "TRY_CONVERT", 3, 0,                                 ServerSideOnly = true, IsNullable = IsNullableType.Nullable)]
+		public static TTo? TryConvert<TFrom, TTo>(TFrom value, TTo? _) where TTo : struct => throw new LinqException($"'{nameof(TryConvert)}' is only server-side method.");
+
+		[CLSCompliant(false)]
+		[Expression(PN.Oracle, "CAST({0} AS {3} DEFAULT NULL ON CONVERSION ERROR)", ServerSideOnly = true, IsNullable = IsNullableType.Nullable)]
+		[Function(             "TRY_CONVERT", 3, 0,                                 ServerSideOnly = true, IsNullable = IsNullableType.Nullable)]
+		public static TTo? TryConvert<TFrom, TTo>(TFrom value, TTo? _) where TTo : class => throw new LinqException($"'{nameof(TryConvert)}' is only server-side method.");
 		#endregion
 
 		#region String Functions

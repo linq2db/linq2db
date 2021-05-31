@@ -1278,6 +1278,45 @@ namespace Tests.Linq
 				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
-#endregion
+		#endregion
+
+		#region TryConvert
+		[Test]
+		public void TryConvertConvertedStruct([IncludeDataSources(true,
+			TestProvName.AllOracle12,
+			TestProvName.AllSqlServer2012Plus
+			)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				Assert.AreEqual(123, db.Select(() => Sql.TryConvert("123", (int?)0)));
+			}
+		}
+
+		[Test]
+		public void TryConvertNotConvertedStruct([IncludeDataSources(true,
+			TestProvName.AllOracle12,
+			TestProvName.AllSqlServer2012Plus
+			)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				Assert.IsNull(db.Select(() => Sql.TryConvert("burp", (int?)0)));
+			}
+		}
+
+		[Test]
+		public void TryConvertConvertedClass([IncludeDataSources(true,
+			TestProvName.AllOracle12,
+			TestProvName.AllSqlServer2012Plus
+			)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				Assert.AreEqual("345", db.Select(() => Sql.TryConvert(345, "")));
+			}
+		}
+
+		#endregion
 	}
 }
