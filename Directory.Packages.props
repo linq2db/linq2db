@@ -37,7 +37,7 @@
 		<PackageVersion Include="System.Data.OleDb" Version="5.0.0" />
 		<PackageVersion Include="Oracle.ManagedDataAccess" Version="19.11.0" />
 		<PackageVersion Include="FirebirdSql.Data.FirebirdClient" Version="8.0.1" />
-		<PackageVersion Include="System.Data.SQLite.Core" Version="1.0.114.1" />
+		<PackageVersion Include="System.Data.SQLite.Core" Version="1.0.114.2" />
 
 		<PackageVersion Include="IBM.Data.DB.Provider" Version="11.5.4000.4861" />
 
