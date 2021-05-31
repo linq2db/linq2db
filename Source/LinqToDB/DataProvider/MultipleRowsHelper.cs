@@ -64,7 +64,9 @@ namespace LinqToDB.DataProvider
 			HeaderSize = StringBuilder.Length;
 		}
 
-		public virtual void BuildColumns(object item, Func<ColumnDescriptor, bool>? skipConvert = null)
+		public virtual void BuildColumns(object item,
+			Func<ColumnDescriptor, bool>? skipConvert = null,
+			bool castParameters = false)
 		{
 			skipConvert ??= (_ => false);
 
@@ -77,7 +79,27 @@ namespace LinqToDB.DataProvider
 				{
 					var name = ParameterName == "?" ? ParameterName : ParameterName + ++ParameterIndex;
 
-					StringBuilder.Append(name);
+					if (castParameters)
+					{
+						StringBuilder.Append("CAST(");
+						StringBuilder.Append(name);
+						StringBuilder.Append(" AS ");
+						StringBuilder.Append(column.DataType);
+						if (!string.IsNullOrEmpty(column.DbType))
+							StringBuilder.Append($":\"{column.DbType}\"");
+
+						if (column.Length != 0)
+							StringBuilder.Append('(').Append(column.Length).Append(')');
+						else if (column.Precision != 0)
+							StringBuilder.Append('(').Append(column.Precision).Append(',').Append(column.Scale).Append(')');
+
+						StringBuilder.Append(')');
+					}
+					else
+					{
+						StringBuilder.Append(name);	
+					}
+					
 
 					if (value is DataParameter dataParameter)
 						value = dataParameter.Value;
