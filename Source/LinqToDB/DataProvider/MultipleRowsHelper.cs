@@ -16,7 +16,7 @@ namespace LinqToDB.DataProvider
 		where T : notnull
 	{
 		public MultipleRowsHelper(ITable<T> table, BulkCopyOptions options)
-			: base((DataConnection)table.DataContext, options, typeof(T))
+			: base(table.DataContext, options, typeof(T))
 		{
 			TableName = BasicBulkCopy.GetTableName(SqlBuilder, options, table);
 		}
@@ -24,11 +24,16 @@ namespace LinqToDB.DataProvider
 
 	public abstract class MultipleRowsHelper
 	{
-		protected MultipleRowsHelper(DataConnection dataConnection, BulkCopyOptions options, Type entityType)
+		protected MultipleRowsHelper(IDataContext dataConnection, BulkCopyOptions options, Type entityType)
 		{
-			DataConnection = dataConnection;
+			DataConnection = dataConnection is DataConnection dc
+				? dc
+				: dataConnection is DataContext dx
+					? dx.GetDataConnection()
+					: throw new ArgumentException($"Must be of {nameof(DataConnection)} or {nameof(DataContext)} type but was {dataConnection.GetType()}", nameof(dataConnection));
+
 			Options        = options;
-			SqlBuilder     = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
+			SqlBuilder     = DataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
 			ValueConverter = dataConnection.MappingSchema.ValueToSqlConverter;
 			Descriptor     = dataConnection.MappingSchema.GetEntityDescriptor(entityType);
 			Columns        = Descriptor.Columns
