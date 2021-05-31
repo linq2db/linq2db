@@ -7,12 +7,13 @@ namespace LinqToDB.Linq.Builder
 	using Reflection;
 	using SqlQuery;
 
+	using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
+
 	internal partial class MergeBuilder : MethodCallBuilder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.Method.IsGenericMethod
-				&& LinqExtensions.ExecuteMergeMethodInfo == methodCall.Method.GetGenericMethodDefinition();
+			return methodCall.IsSameGenericMethod(ExecuteMergeMethodInfo);
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -133,7 +134,6 @@ namespace LinqToDB.Linq.Builder
 					new ExpressionContext(null, secondContext == null? new[] { onContext } : new[] { onContext, secondContext }, condition),
 					conditionExpr,
 					result.Conditions);
-							
 			}
 
 			return result;
