@@ -175,7 +175,7 @@ namespace Tests.UserTests
 					.ToArray();
 
 				result.Should().HaveCount(1);
-				result[0].DocumentName.Names.Should().HaveCount(2);
+				result[0].DocumentName?.Names.Should().HaveCount(2);
 			}
 		}
 	}
