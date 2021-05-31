@@ -1307,7 +1307,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void TryConvertConvertedClass([IncludeDataSources(true,
-			TestProvName.AllOracle12,
+			// oracle doesn't support specific conversion types
 			TestProvName.AllSqlServer2012Plus
 			)] string context)
 		{
