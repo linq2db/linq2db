@@ -1281,6 +1281,9 @@ namespace Tests.Linq
 		#endregion
 
 		#region TryConvert
+		// NOTE:
+		// class-typed overloads not tested for Oracle as it doesn't support DEFAULT CAST for strings
+		// and we need custom reference type that wraps something like int for test
 		[Test]
 		public void TryConvertConvertedStruct([IncludeDataSources(true,
 			TestProvName.AllOracle12,
@@ -1306,14 +1309,29 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TryConvertConvertedClass([IncludeDataSources(true,
-			// oracle doesn't support specific conversion types
-			TestProvName.AllSqlServer2012Plus
-			)] string context)
+		public void TryConvertConvertedClass([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
 				Assert.AreEqual("345", db.Select(() => Sql.TryConvert(345, "")));
+			}
+		}
+
+		[Test]
+		public void TryConvertOrDefaultConvertedStruct([IncludeDataSources(true, TestProvName.AllOracle12)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				Assert.AreEqual(123, db.Select(() => Sql.TryConvertOrDefault("123", (int?)100500)));
+			}
+		}
+
+		[Test]
+		public void TryConvertOrDefaultNotConvertedStruct([IncludeDataSources(true, TestProvName.AllOracle12)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				Assert.AreEqual(-10, db.Select(() => Sql.TryConvertOrDefault("burp", (int?)-10)));
 			}
 		}
 
