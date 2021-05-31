@@ -383,7 +383,7 @@ namespace LinqToDB.SqlQuery
 					VisitX((SqlConditionalInsertClause)element);
 					break;
 
-				case QueryElementType.MergeSourceTable:
+				case QueryElementType.SqlTableLikeSource:
 					VisitX((SqlTableLikeSource)element);
 					break;
 
@@ -576,6 +576,7 @@ namespace LinqToDB.SqlQuery
 		void VisitX(SqlMergeStatement element)
 		{
 			Visit(element.Tag);
+			Visit(element.With);
 			Visit(element.Target);
 			Visit(element.Source);
 			Visit(element.On);

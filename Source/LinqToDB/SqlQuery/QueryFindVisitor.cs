@@ -335,6 +335,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.MergeStatement:
 					{
 						return
+							Find(((SqlMergeStatement)element).With      ) ??
 							Find(((SqlMergeStatement)element).Target    ) ??
 							Find(((SqlMergeStatement)element).Source    ) ??
 							Find(((SqlMergeStatement)element).On        ) ??
@@ -343,7 +344,7 @@ namespace LinqToDB.SqlQuery
 							Find(((SqlMergeStatement)element).Tag       );
 					}
 
-				case QueryElementType.MergeSourceTable:
+				case QueryElementType.SqlTableLikeSource:
 					{
 						return
 							Find(((SqlTableLikeSource)element).SourceEnumerable) ??

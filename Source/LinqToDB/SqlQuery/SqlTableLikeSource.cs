@@ -93,7 +93,7 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement
 
-		QueryElementType IQueryElement.ElementType => QueryElementType.MergeSourceTable;
+		QueryElementType IQueryElement.ElementType => QueryElementType.SqlTableLikeSource;
 
 		public StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{

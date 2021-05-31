@@ -2287,13 +2287,13 @@ namespace LinqToDB.Linq.Builder
 
 					sr = false;
 
-					var lm = lmembers;
+					var lm   = lmembers;
 					lmembers = rmembers;
 					rmembers = lm;
 				}
 
 				isNull = right is ConstantExpression expression && expression.Value == null;
-				lcols = lmembers.Select(m => new SqlInfo(m.Key, ConvertToSql(leftContext, m.Value))).ToArray();
+				lcols  = lmembers.Select(m => new SqlInfo(m.Key, ConvertToSql(leftContext, m.Value))).ToArray();
 			}
 			else
 			{
@@ -2301,14 +2301,14 @@ namespace LinqToDB.Linq.Builder
 				{
 					var r = right;
 					right = left;
-					left = r;
+					left  = r;
 
-					var c = rightContext;
+					var c        = rightContext;
 					rightContext = leftContext;
-					leftContext = c;
+					leftContext  = c;
 
 					var q = qsr;
-					qsl = q;
+					qsl   = q;
 
 					sr = false;
 				}
