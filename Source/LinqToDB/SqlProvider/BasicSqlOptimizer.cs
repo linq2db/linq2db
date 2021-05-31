@@ -2017,13 +2017,7 @@ namespace LinqToDB.SqlProvider
 							var values = new List<ISqlExpression>();
 
 							foreach (var item in items)
-							{
-								var value = expr.GetValue(item!, 0);
-								var systemType = parameters[0].Sql.SystemType ?? value?.GetType();
-								if (systemType == null)
-									throw new InvalidOperationException("Cannot calculate SystemType for constant.");
-								values.Add(new SqlValue(systemType, value));
-							}
+								values.Add(expr.GetSqlValue(item!, 0));
 
 							if (values.Count == 0)
 								return new SqlPredicate.Expr(new SqlValue(p.IsNot));
@@ -2040,10 +2034,10 @@ namespace LinqToDB.SqlProvider
 							for (var i = 0; i < parameters.Length; i++)
 							{
 								var sql   = parameters[i].Sql;
-								var value = expr.GetValue(item!, i);
+								var value = expr.GetSqlValue(item!, i);
 								var cond  = value == null ?
 									new SqlCondition(false, new SqlPredicate.IsNull  (sql, false)) :
-									new SqlCondition(false, new SqlPredicate.ExprExpr(sql, SqlPredicate.Operator.Equal, new SqlValue(value), null));
+									new SqlCondition(false, new SqlPredicate.ExprExpr(sql, SqlPredicate.Operator.Equal, value, null));
 
 								itemCond.Conditions.Add(cond);
 							}
