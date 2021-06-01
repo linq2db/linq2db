@@ -6,6 +6,7 @@ namespace LinqToDB.AspNet
 	using System.Reflection;
 	using Configuration;
 	using Data;
+	using Microsoft.Extensions.DependencyInjection.Extensions;
 
 	public static class ServiceConfigurationExtensions
 	{
@@ -160,8 +161,8 @@ namespace LinqToDB.AspNet
 			ServiceLifetime lifetime  = ServiceLifetime.Scoped) where TContextImplementation : TContext, IDataContext
 		{
 			var hasTypedConstructor = HasTypedContextConstructor<TContextImplementation>();
-			serviceCollection.Add(new ServiceDescriptor(typeof(TContext), typeof(TContextImplementation), lifetime));
-			serviceCollection.Add(new ServiceDescriptor(typeof(LinqToDbConnectionOptions<TContextImplementation>),
+			serviceCollection.TryAdd(new ServiceDescriptor(typeof(TContext), typeof(TContextImplementation), lifetime));
+			serviceCollection.TryAdd(new ServiceDescriptor(typeof(LinqToDbConnectionOptions<TContextImplementation>),
 				provider =>
 				{
 					var builder = new LinqToDbConnectionOptionsBuilder();
@@ -171,7 +172,7 @@ namespace LinqToDB.AspNet
 				lifetime));
 
 			if (!hasTypedConstructor)
-				serviceCollection.Add(new ServiceDescriptor(typeof(LinqToDbConnectionOptions),
+				serviceCollection.TryAdd(new ServiceDescriptor(typeof(LinqToDbConnectionOptions),
 					provider => provider.GetService(typeof(LinqToDbConnectionOptions<TContextImplementation>)), lifetime));
 
 			return serviceCollection;
