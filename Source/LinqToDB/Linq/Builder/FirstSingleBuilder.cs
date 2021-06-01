@@ -296,7 +296,7 @@ namespace LinqToDB.Linq.Builder
 					if (Builder.DataContext.SqlProviderFlags.IsApplyJoinSupported &&
 					    Parent!.SelectQuery.GroupBy.IsEmpty                       &&
 					    Parent.SelectQuery.From.Tables.Count > 0                  &&
-					    !Sequence.IsExpression(null, level, RequestFor.Object).Result)
+					    !HasSubQuery(Sequence))
 					{
 						CreateJoin();
 
