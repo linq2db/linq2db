@@ -44,15 +44,15 @@ namespace Tests.xUpdate
 			{
 				TestProvName.AllSybase,
 				TestProvName.AllSqlServer2008Plus
-			};
+			}.SelectMany(_ => _.Split(',')).ToArray();
 
 			public IdentityInsertMergeDataContextSourceAttribute(params string[] except)
-				: base(true, Supported.Except(except).ToArray())
+				: base(true, Supported.Except(except.SelectMany(_ => _.Split(','))).ToArray())
 			{
 			}
 
 			public IdentityInsertMergeDataContextSourceAttribute(bool includeLinqService, params string[] except)
-				: base(includeLinqService, Supported.Except(except).ToArray())
+				: base(includeLinqService, Supported.Except(except.SelectMany(_ => _.Split(','))).ToArray())
 			{
 			}
 		}
