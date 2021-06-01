@@ -87,38 +87,39 @@ namespace Tests
 		{
 			switch (GetContextName(db))
 			{
-				case ProviderName.Informix:
-				case ProviderName.InformixDB2:
-				case ProviderName.Oracle:
-				case ProviderName.OracleNative:
-				case ProviderName.OracleManaged:
-				case TestProvName.Oracle11Native:
-				case TestProvName.Oracle11Managed:
-				case ProviderName.PostgreSQL:
-				case ProviderName.PostgreSQL92:
-				case ProviderName.PostgreSQL93:
-				case ProviderName.PostgreSQL95:
-				case TestProvName.PostgreSQL10:
-				case TestProvName.PostgreSQL11:
-				case TestProvName.PostgreSQL12:
-				case TestProvName.PostgreSQL13:
-				case ProviderName.DB2:
-				case ProviderName.Sybase:
-				case ProviderName.SybaseManaged:
-				case ProviderName.SqlServer2005:
-				case ProviderName.SqlServer2008:
-				case ProviderName.SqlServer2012:
-				case ProviderName.SqlServer2014:
-				case ProviderName.SqlServer2016:
-				case ProviderName.SqlServer2017:
-				case TestProvName.SqlServer2019:
-				case TestProvName.SqlServer2019SequentialAccess:
+				case ProviderName.Informix                           :
+				case ProviderName.InformixDB2                        :
+				case ProviderName.Oracle                             :
+				case ProviderName.OracleNative                       :
+				case ProviderName.OracleManaged                      :
+				case TestProvName.Oracle11Native                     :
+				case TestProvName.Oracle11Managed                    :
+				case ProviderName.PostgreSQL                         :
+				case ProviderName.PostgreSQL92                       :
+				case ProviderName.PostgreSQL93                       :
+				case ProviderName.PostgreSQL95                       :
+				case TestProvName.PostgreSQL10                       :
+				case TestProvName.PostgreSQL11                       :
+				case TestProvName.PostgreSQL12                       :
+				case TestProvName.PostgreSQL13                       :
+				case ProviderName.DB2                                :
+				case ProviderName.Sybase                             :
+				case ProviderName.SybaseManaged                      :
+				case ProviderName.SqlServer2005                      :
+				case ProviderName.SqlServer2008                      :
+				case ProviderName.SqlServer2012                      :
+				case ProviderName.SqlServer2014                      :
+				case ProviderName.SqlServer2016                      :
+				case ProviderName.SqlServer2017                      :
+				case TestProvName.SqlServer2019                      :
+				case TestProvName.SqlServer2019SequentialAccess      :
 				case TestProvName.SqlServer2019FastExpressionCompiler:
-				case TestProvName.SqlAzure:
-				case ProviderName.SapHanaNative:
-				case ProviderName.SapHanaOdbc:
+				case TestProvName.SqlServerContained                 :
+				case TestProvName.SqlAzure                           :
+				case ProviderName.SapHanaNative                      :
+				case ProviderName.SapHanaOdbc                        :
 					return db.GetTable<LinqDataTypes>().Select(_ => SchemaName()).First();
-				case ProviderName.SqlServer2000:
+				case ProviderName.SqlServer2000                      :
 					return db.FromSql<string>($"SELECT TABLE_SCHEMA FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = {nameof(LinqDataTypes)}").First();
 			}
 
@@ -133,27 +134,28 @@ namespace Tests
 		{
 			switch (GetContextName(db))
 			{
-				case ProviderName.SybaseManaged:
-				case ProviderName.SqlServer2000:
-				case ProviderName.SqlServer2005:
-				case ProviderName.SqlServer2008:
-				case ProviderName.SqlServer2012:
-				case ProviderName.SqlServer2014:
-				case ProviderName.SqlServer2016:
-				case ProviderName.SqlServer2017:
-				case TestProvName.SqlServer2019:
-				case TestProvName.SqlServer2019SequentialAccess:
-				case TestProvName.SqlServer2019FastExpressionCompiler:
-				case TestProvName.SqlAzure:
-				case ProviderName.OracleManaged:
-				case ProviderName.OracleNative:
-				case TestProvName.Oracle11Native:
-				case TestProvName.Oracle11Managed:
-				case ProviderName.Informix:
-				case ProviderName.InformixDB2:
+				case ProviderName.SybaseManaged                          :
+				case ProviderName.SqlServer2000                          :
+				case ProviderName.SqlServer2005                          :
+				case ProviderName.SqlServer2008                          :
+				case ProviderName.SqlServer2012                          :
+				case ProviderName.SqlServer2014                          :
+				case ProviderName.SqlServer2016                          :
+				case ProviderName.SqlServer2017                          :
+				case TestProvName.SqlServer2019                          :
+				case TestProvName.SqlServer2019SequentialAccess          :
+				case TestProvName.SqlServer2019FastExpressionCompiler    :
+				case TestProvName.SqlServerContained                     :
+				case TestProvName.SqlAzure                               :
+				case ProviderName.OracleManaged                          :
+				case ProviderName.OracleNative                           :
+				case TestProvName.Oracle11Native                         :
+				case TestProvName.Oracle11Managed                        :
+				case ProviderName.Informix                               :
+				case ProviderName.InformixDB2                            :
 					return db.Select(() => ServerName());
-				case ProviderName.SapHanaNative:
-				case ProviderName.SapHanaOdbc:
+				case ProviderName.SapHanaNative                          :
+				case ProviderName.SapHanaOdbc                            :
 					/* SAP HANA should be configured for linked server queries
 					 This will help to configure (especially second link):
 					 https://www.linkedin.com/pulse/cross-database-queries-thing-past-how-use-sap-hana-your-nandan
@@ -195,43 +197,44 @@ namespace Tests
 		{
 			switch (GetContextName(db))
 			{
-				case ProviderName.SQLiteClassic:
-				case TestProvName.SQLiteClassicMiniProfilerMapped:
-				case TestProvName.SQLiteClassicMiniProfilerUnmapped:
-				case ProviderName.SQLiteMS:
+				case ProviderName.SQLiteClassic                      :
+				case TestProvName.SQLiteClassicMiniProfilerMapped    :
+				case TestProvName.SQLiteClassicMiniProfilerUnmapped  :
+				case ProviderName.SQLiteMS                           :
 					return "main";
-				case ProviderName.Access:
-				case ProviderName.AccessOdbc:
+				case ProviderName.Access                             :
+				case ProviderName.AccessOdbc                         :
 					return "Database\\TestData";
-				case ProviderName.MySql:
-				case ProviderName.MySqlConnector:
-				case TestProvName.MariaDB:
-				case TestProvName.MySql55:
-				case ProviderName.PostgreSQL:
-				case ProviderName.PostgreSQL92:
-				case ProviderName.PostgreSQL93:
-				case ProviderName.PostgreSQL95:
-				case TestProvName.PostgreSQL10:
-				case TestProvName.PostgreSQL11:
-				case TestProvName.PostgreSQL12:
-				case TestProvName.PostgreSQL13:
-				case ProviderName.DB2:
-				case ProviderName.Sybase:
-				case ProviderName.SybaseManaged:
-				case ProviderName.SqlServer2000:
-				case ProviderName.SqlServer2005:
-				case ProviderName.SqlServer2008:
-				case ProviderName.SqlServer2012:
-				case ProviderName.SqlServer2014:
-				case ProviderName.SqlServer2016:
-				case ProviderName.SqlServer2017:
-				case TestProvName.SqlServer2019:
-				case TestProvName.SqlServer2019SequentialAccess:
+				case ProviderName.MySql                              :
+				case ProviderName.MySqlConnector                     :
+				case TestProvName.MariaDB                            :
+				case TestProvName.MySql55                            :
+				case ProviderName.PostgreSQL                         :
+				case ProviderName.PostgreSQL92                       :
+				case ProviderName.PostgreSQL93                       :
+				case ProviderName.PostgreSQL95                       :
+				case TestProvName.PostgreSQL10                       :
+				case TestProvName.PostgreSQL11                       :
+				case TestProvName.PostgreSQL12                       :
+				case TestProvName.PostgreSQL13                       :
+				case ProviderName.DB2                                :
+				case ProviderName.Sybase                             :
+				case ProviderName.SybaseManaged                      :
+				case ProviderName.SqlServer2000                      :
+				case ProviderName.SqlServer2005                      :
+				case ProviderName.SqlServer2008                      :
+				case ProviderName.SqlServer2012                      :
+				case ProviderName.SqlServer2014                      :
+				case ProviderName.SqlServer2016                      :
+				case ProviderName.SqlServer2017                      :
+				case TestProvName.SqlServer2019                      :
+				case TestProvName.SqlServer2019SequentialAccess      :
 				case TestProvName.SqlServer2019FastExpressionCompiler:
-				case TestProvName.SqlAzure:
+				case TestProvName.SqlServerContained                 :
+				case TestProvName.SqlAzure                           :
 					return db.GetTable<LinqDataTypes>().Select(_ => DbName()).First();
-				case ProviderName.Informix:
-				case ProviderName.InformixDB2:
+				case ProviderName.Informix                           :
+				case ProviderName.InformixDB2                        :
 					return db.GetTable<LinqDataTypes>().Select(_ => DbInfo("dbname")).First();
 			}
 
@@ -396,6 +399,7 @@ namespace Tests
 				case TestProvName.SqlServer2019                      :
 				case TestProvName.SqlServer2019SequentialAccess      :
 				case TestProvName.SqlServer2019FastExpressionCompiler:
+				case TestProvName.SqlServerContained                 :
 					return "Albanian_CI_AS";
 				default                                              :
 					return "whatever";

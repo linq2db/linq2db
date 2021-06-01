@@ -419,6 +419,7 @@ namespace Tests
 			TestProvName.SqlServer2019,
 			TestProvName.SqlServer2019SequentialAccess,
 			TestProvName.SqlServer2019FastExpressionCompiler,
+			TestProvName.SqlServerContained,
 			ProviderName.SqlServer2000,
 			ProviderName.SqlServer2005,
 			TestProvName.SqlAzure,
@@ -1308,19 +1309,20 @@ namespace Tests
 			var finalTableName = tableName;
 			switch (GetProviderName(context, out var _))
 			{
-				case TestProvName.SqlAzure:
-				case ProviderName.SqlServer:
-				case ProviderName.SqlServer2000:
-				case ProviderName.SqlServer2005:
-				case ProviderName.SqlServer2008:
-				case ProviderName.SqlServer2012:
-				case ProviderName.SqlServer2014:
-				case ProviderName.SqlServer2016:
-				case ProviderName.SqlServer2017:
-				case TestProvName.SqlServer2019:
-				case TestProvName.SqlServer2019SequentialAccess:
+				case TestProvName.SqlAzure                           :
+				case ProviderName.SqlServer                          :
+				case ProviderName.SqlServer2000                      :
+				case ProviderName.SqlServer2005                      :
+				case ProviderName.SqlServer2008                      :
+				case ProviderName.SqlServer2012                      :
+				case ProviderName.SqlServer2014                      :
+				case ProviderName.SqlServer2016                      :
+				case ProviderName.SqlServer2017                      :
+				case TestProvName.SqlServer2019                      :
+				case TestProvName.SqlServer2019SequentialAccess      :
 				case TestProvName.SqlServer2019FastExpressionCompiler:
-				{
+				case TestProvName.SqlServerContained                 :
+					{
 					if (!tableName.StartsWith("#"))
 						finalTableName = "#" + tableName;
 					break;
