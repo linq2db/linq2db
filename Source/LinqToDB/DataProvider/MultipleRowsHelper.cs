@@ -32,10 +32,11 @@ namespace LinqToDB.DataProvider
 					? dx.GetDataConnection()
 					: throw new ArgumentException($"Must be of {nameof(DataConnection)} or {nameof(DataContext)} type but was {dataConnection.GetType()}", nameof(dataConnection));
 
+			MappingSchema  = dataConnection.MappingSchema;
 			Options        = options;
-			SqlBuilder     = DataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
-			ValueConverter = dataConnection.MappingSchema.ValueToSqlConverter;
-			Descriptor     = dataConnection.MappingSchema.GetEntityDescriptor(entityType);
+			SqlBuilder     = DataConnection.DataProvider.CreateSqlBuilder(MappingSchema);
+			ValueConverter = MappingSchema.ValueToSqlConverter;
+			Descriptor     = MappingSchema.GetEntityDescriptor(entityType);
 			Columns        = Descriptor.Columns
 				.Where(c => !c.SkipOnInsert || c.IsIdentity && options.KeepIdentity == true)
 				.ToArray();
@@ -46,6 +47,7 @@ namespace LinqToDB.DataProvider
 
 		public readonly ISqlBuilder         SqlBuilder;
 		public readonly DataConnection      DataConnection;
+		public readonly MappingSchema       MappingSchema;
 		public readonly BulkCopyOptions     Options;
 		public readonly ValueToSqlConverter ValueConverter;
 		public readonly EntityDescriptor    Descriptor;

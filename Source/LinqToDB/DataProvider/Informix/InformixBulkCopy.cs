@@ -25,9 +25,10 @@ namespace LinqToDB.DataProvider.Informix
 			BulkCopyOptions options,
 			IEnumerable<T>  source)
 		{
-			if ((_provider.Adapter.InformixBulkCopy != null || _provider.Adapter.DB2BulkCopy != null) && table.DataContext is DataConnection dataConnection && dataConnection.Transaction == null)
+			if ((_provider.Adapter.InformixBulkCopy != null || _provider.Adapter.DB2BulkCopy != null)
+				&& table.TryGetDataConnection(out var dataConnection) && dataConnection.Transaction == null)
 			{
-				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
+				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, table.DataContext.MappingSchema);
 
 				if (connection != null)
 				{
@@ -60,9 +61,10 @@ namespace LinqToDB.DataProvider.Informix
 			IEnumerable<T>    source,
 			CancellationToken cancellationToken)
 		{
-			if ((_provider.Adapter.InformixBulkCopy != null || _provider.Adapter.DB2BulkCopy != null) && table.DataContext is DataConnection dataConnection && dataConnection.Transaction == null)
+			if ((_provider.Adapter.InformixBulkCopy != null || _provider.Adapter.DB2BulkCopy != null)
+				&& table.TryGetDataConnection(out var dataConnection) && dataConnection.Transaction == null)
 			{
-				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
+				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, table.DataContext.MappingSchema);
 
 				if (connection != null)
 				{
@@ -97,9 +99,10 @@ namespace LinqToDB.DataProvider.Informix
 			IAsyncEnumerable<T> source,
 			CancellationToken   cancellationToken)
 		{
-			if ((_provider.Adapter.InformixBulkCopy != null || _provider.Adapter.DB2BulkCopy != null) && table.DataContext is DataConnection dataConnection && dataConnection.Transaction == null)
+			if ((_provider.Adapter.InformixBulkCopy != null || _provider.Adapter.DB2BulkCopy != null)
+				&& table.TryGetDataConnection(out var dataConnection) && dataConnection.Transaction == null)
 			{
-				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
+				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, table.DataContext.MappingSchema);
 
 				if (connection != null)
 				{
@@ -143,9 +146,9 @@ namespace LinqToDB.DataProvider.Informix
 			InformixProviderAdapter.BulkCopyAdapter bulkCopy)
 			where T: notnull
 		{
-			var ed      = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
+			var ed      = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
 			var columns = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
-			var sb      = _provider.CreateSqlBuilder(dataConnection.MappingSchema);
+			var sb      = _provider.CreateSqlBuilder(table.DataContext.MappingSchema);
 			var rd      = new BulkCopyReader<T>(dataConnection, columns, source);
 			var sqlopt  = InformixProviderAdapter.IfxBulkCopyOptions.Default;
 			var rc      = new BulkCopyRowsCopied();
