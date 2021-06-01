@@ -141,8 +141,9 @@ namespace Tests.UserTests
 			[Column]
 			public string Name { get; set; } = null!;
 		}
+
 		[Test]
-		public void EagerLoadingTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void EagerLoadingTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<InternalEmail>(new[]{new InternalEmail{Id = 10, UserId = 1, RequestId = 1}}))
