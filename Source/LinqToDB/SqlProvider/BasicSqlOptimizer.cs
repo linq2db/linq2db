@@ -2977,10 +2977,10 @@ namespace LinqToDB.SqlProvider
 				(p, q) =>
 				{
 					var columnItems  = q.Select.Columns.Select(c => c.Expression).ToList();
-					var orderItems   = q.Select.OrderBy.Items.Select(o => o.Expression).ToList();
+					var orderItems   = q.Select.OrderBy.Items.Select(o => o.Expression);
 
-					var projectionItemsCount = columnItems.Union(orderItems).Count();
-					if (projectionItemsCount < columnItems.Count)
+					var additionalProjection = orderItems.Except(columnItems).ToList();
+					if (additionalProjection.Count > 0)
 					{
 						// Sort columns not in projection, transforming to 
 						/*
@@ -3007,7 +3007,6 @@ namespace LinqToDB.SqlProvider
 							$"ROW_NUMBER() OVER (PARTITION BY {partitionBy} ORDER BY {orderBy})", Precedence.Primary,
 							SqlFlags.IsWindowFunction, parameters);
 
-						var additionalProjection = orderItems.Except(columnItems);
 						foreach (var expr in additionalProjection)
 						{
 							q.Select.AddNew(expr);
