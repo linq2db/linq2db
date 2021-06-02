@@ -727,20 +727,14 @@ namespace LinqToDB.SqlProvider
 			if (knownKeys.Count == 0)
 				return null;
 
-			if (knownKeys.Count > 1)
-				throw new NotImplementedException("Checkpoint 2");
-			if (knownKeys[0].Count > 2)
-				throw new NotImplementedException("Checkpoint 3");
-
 			var result = new List<VirtualField[]>();
 
 			foreach (var v in knownKeys)
 			{
-				var fields = v.Select(GetUnderlayingField).ToArray();
-				if (fields.Any(f => f == null))
-					throw new NotImplementedException("Checkpoint 1");
-				if (fields.Length == v.Count)
-					result.Add(fields!);
+				var fields = new VirtualField[v.Count];
+				for (var i = 0; i < v.Count; i++)
+					fields[i] = GetUnderlayingField(v[i]) ?? throw new InvalidOperationException($"Cannot get field for {v[i]}");
+				result.Add(fields);
 			}
 
 			return result.Count > 0 ? result : null;
