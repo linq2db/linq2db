@@ -76,11 +76,6 @@ namespace LinqToDB.DataProvider.SapHana
 			}
 		}
 
-		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
-		{
-			BuildInsertOrUpdateQueryAsUpdateInsert(insertOrUpdate);
-		}
-
 		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
 			switch (type.Type.DataType)
@@ -242,5 +237,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 			StringBuilder.Append(command);
 		}
+
+		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(expr);
 	}
 }

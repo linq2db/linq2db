@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,25 +11,26 @@ using System.Threading.Tasks;
 namespace LinqToDB.Common.Internal.Cache
 {
 	/// <summary>
-	/// An implementation of <see cref="IMemoryCache"/> using a dictionary to
+	/// An implementation of <see cref="IMemoryCache{TKey}"/> using a dictionary to
 	/// store its entries.
 	/// </summary>
-	public class MemoryCache : IMemoryCache
+	public class MemoryCache<TKey> : IMemoryCache<TKey>
+		where TKey : notnull
 	{
-		private readonly ConcurrentDictionary<object, CacheEntry> _entries;
+		private readonly ConcurrentDictionary<TKey, CacheEntry<TKey>> _entries;
 		private long _cacheSize;
 		private bool _disposed;
 
 		// We store the delegates locally to prevent allocations
 		// every time a new CacheEntry is created.
-		private readonly Action<CacheEntry> _setEntry;
-		private readonly Action<CacheEntry> _entryExpirationNotification;
+		private readonly Action<CacheEntry<TKey>> _setEntry;
+		private readonly Action<CacheEntry<TKey>> _entryExpirationNotification;
 
 		private readonly MemoryCacheOptions _options;
 		private DateTimeOffset _lastExpirationScan;
 
 		/// <summary>
-		/// Creates a new <see cref="MemoryCache"/> instance.
+		/// Creates a new <see cref="MemoryCache{TKey}"/> instance.
 		/// </summary>
 		/// <param name="optionsAccessor">The options of the cache.</param>
 		public MemoryCache(MemoryCacheOptions optionsAccessor)
@@ -42,7 +42,7 @@ namespace LinqToDB.Common.Internal.Cache
 
 			_options = optionsAccessor;
 
-			_entries = new ConcurrentDictionary<object, CacheEntry>();
+			_entries = new ();
 			_setEntry = SetEntry;
 			_entryExpirationNotification = EntryExpired;
 
@@ -70,23 +70,21 @@ namespace LinqToDB.Common.Internal.Cache
 		// internal for testing
 		internal long Size => Interlocked.Read(ref _cacheSize);
 
-		private ICollection<KeyValuePair<object, CacheEntry>> EntriesCollection => _entries;
+		private ICollection<KeyValuePair<TKey, CacheEntry<TKey>>> EntriesCollection => _entries;
 
 		/// <inheritdoc />
-		public ICacheEntry CreateEntry(object key)
+		public ICacheEntry<TKey> CreateEntry(TKey key)
 		{
 			CheckDisposed();
 
-			ValidateCacheKey(key);
-
-			return new CacheEntry(
+			return new CacheEntry<TKey>(
 				key,
 				_setEntry,
 				_entryExpirationNotification
 			);
 		}
 
-		private void SetEntry(CacheEntry entry)
+		private void SetEntry(CacheEntry<TKey> entry)
 		{
 			if (_disposed)
 			{
@@ -125,7 +123,7 @@ namespace LinqToDB.Common.Internal.Cache
 			// Initialize the last access timestamp at the time the entry is added
 			entry.LastAccessed = utcNow;
 
-			if (_entries.TryGetValue(entry.Key, out CacheEntry? priorEntry))
+			if (_entries.TryGetValue(entry.Key, out CacheEntry<TKey>? priorEntry))
 			{
 				priorEntry.SetExpired(EvictionReason.Replaced);
 			}
@@ -212,10 +210,8 @@ namespace LinqToDB.Common.Internal.Cache
 		}
 
 		/// <inheritdoc />
-		public bool TryGetValue(object key, out object? value)
+		public bool TryGetValue(TKey key, out object? value)
 		{
-			ValidateCacheKey(key);
-
 			CheckDisposed();
 
 			value = null;
@@ -239,7 +235,7 @@ namespace LinqToDB.Common.Internal.Cache
 
 					// When this entry is retrieved in the scope of creating another entry,
 					// that entry needs a copy of these expiration tokens.
-					entry.PropagateOptions(CacheEntryHelper.Current);
+					entry.PropagateOptions(CacheEntryHelper<TKey>.Current);
 				}
 			}
 
@@ -249,10 +245,8 @@ namespace LinqToDB.Common.Internal.Cache
 		}
 
 		/// <inheritdoc />
-		public void Remove(object key)
+		public void Remove(TKey key)
 		{
-			ValidateCacheKey(key);
-
 			CheckDisposed();
 			if (_entries.TryRemove(key, out var entry))
 			{
@@ -268,9 +262,9 @@ namespace LinqToDB.Common.Internal.Cache
 			StartScanForExpiredItems();
 		}
 
-		private void RemoveEntry(CacheEntry entry)
+		private void RemoveEntry(CacheEntry<TKey> entry)
 		{
-			if (EntriesCollection.Remove(new KeyValuePair<object, CacheEntry>(entry.Key, entry)))
+			if (EntriesCollection.Remove(new KeyValuePair<TKey, CacheEntry<TKey>>(entry.Key, entry)))
 			{
 				if (_options.SizeLimit.HasValue)
 				{
@@ -280,7 +274,7 @@ namespace LinqToDB.Common.Internal.Cache
 			}
 		}
 
-		private void EntryExpired(CacheEntry entry)
+		private void EntryExpired(CacheEntry<TKey> entry)
 		{
 			// TODO: For efficiency consider processing these expirations in batches.
 			RemoveEntry(entry);
@@ -296,12 +290,12 @@ namespace LinqToDB.Common.Internal.Cache
 			if (_options.ExpirationScanFrequency < now - _lastExpirationScan)
 			{
 				_lastExpirationScan = now;
-				Task.Factory.StartNew(state => ScanForExpiredItems((MemoryCache)state!), this,
+				Task.Factory.StartNew(state => ScanForExpiredItems((MemoryCache<TKey>)state!), this,
 					CancellationToken.None, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default);
 			}
 		}
 
-		private static void ScanForExpiredItems(MemoryCache cache)
+		private static void ScanForExpiredItems(MemoryCache<TKey> cache)
 		{
 			var now = cache._options.Clock!.UtcNow;
 			foreach (var entry in cache._entries.Values)
@@ -313,7 +307,7 @@ namespace LinqToDB.Common.Internal.Cache
 			}
 		}
 
-		private bool UpdateCacheSizeExceedsCapacity(CacheEntry entry)
+		private bool UpdateCacheSizeExceedsCapacity(CacheEntry<TKey> entry)
 		{
 			if (!_options.SizeLimit.HasValue)
 			{
@@ -345,10 +339,10 @@ namespace LinqToDB.Common.Internal.Cache
 		{
 
 			// Spawn background thread for compaction
-			ThreadPool.QueueUserWorkItem(s => OvercapacityCompaction((MemoryCache)s!), this);
+			ThreadPool.QueueUserWorkItem(s => OvercapacityCompaction((MemoryCache<TKey>)s!), this);
 		}
 
-		private static void OvercapacityCompaction(MemoryCache cache)
+		private static void OvercapacityCompaction(MemoryCache<TKey> cache)
 		{
 			var currentSize = Interlocked.Read(ref cache._cacheSize);
 
@@ -379,13 +373,13 @@ namespace LinqToDB.Common.Internal.Cache
 		/// </summary>
 		public void Clear() => Compact(1.0);
 
-		private void Compact(long removalSizeTarget, Func<CacheEntry, long> computeEntrySize)
+		private void Compact(long removalSizeTarget, Func<CacheEntry<TKey>, long> computeEntrySize)
 		{
-			var entriesToRemove = new List<CacheEntry>();
-			var lowPriEntries = new List<CacheEntry>();
-			var normalPriEntries = new List<CacheEntry>();
-			var highPriEntries = new List<CacheEntry>();
-			long removedSize = 0;
+			var entriesToRemove  = new List<CacheEntry<TKey>>();
+			var lowPriEntries    = new List<CacheEntry<TKey>>();
+			var normalPriEntries = new List<CacheEntry<TKey>>();
+			var highPriEntries   = new List<CacheEntry<TKey>>();
+			long removedSize     = 0;
 
 			// Sort items by expired & priority status
 			var now = _options.Clock!.UtcNow;
@@ -432,7 +426,7 @@ namespace LinqToDB.Common.Internal.Cache
 		/// ?. Items with the soonest absolute expiration.
 		/// ?. Items with the soonest sliding expiration.
 		/// ?. Larger objects - estimated by object graph size, inaccurate.
-		private void ExpirePriorityBucket(ref long removedSize, long removalSizeTarget, Func<CacheEntry, long> computeEntrySize, List<CacheEntry> entriesToRemove, List<CacheEntry> priorityEntries)
+		private void ExpirePriorityBucket(ref long removedSize, long removalSizeTarget, Func<CacheEntry<TKey>, long> computeEntrySize, List<CacheEntry<TKey>> entriesToRemove, List<CacheEntry<TKey>> priorityEntries)
 		{
 			// Do we meet our quota by just removing expired entries?
 			if (removalSizeTarget <= removedSize)
@@ -480,15 +474,7 @@ namespace LinqToDB.Common.Internal.Cache
 		{
 			if (_disposed)
 			{
-				throw new ObjectDisposedException(typeof(MemoryCache).FullName);
-			}
-		}
-
-		private static void ValidateCacheKey(object key)
-		{
-			if (key == null)
-			{
-				throw new ArgumentNullException(nameof(key));
+				throw new ObjectDisposedException(typeof(MemoryCache<TKey>).FullName);
 			}
 		}
 	}

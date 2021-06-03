@@ -8,18 +8,21 @@ namespace LinqToDB.Common.Internal.Cache
 {
 	public static class CacheExtensions
 	{
-		public static object? Get(this IMemoryCache cache, object key)
+		public static object? Get<TKey>(this IMemoryCache<TKey> cache, TKey key)
+			where TKey : notnull
 		{
 			cache.TryGetValue(key, out object? value);
 			return value;
 		}
 
-		public static TItem? Get<TItem>(this IMemoryCache cache, object key)
+		public static TItem? Get<TKey, TItem>(this IMemoryCache<TKey> cache, TKey key)
+			where TKey : notnull
 		{
 			return (TItem?)(cache.Get(key) ?? default(TItem));
 		}
 
-		public static bool TryGetValue<TItem>(this IMemoryCache cache, object key, out TItem? value)
+		public static bool TryGetValue<TKey, TItem>(this IMemoryCache<TKey> cache, TKey key, out TItem? value)
+			where TKey : notnull
 		{
 			if (cache.TryGetValue(key, out object? result))
 			{
@@ -40,44 +43,49 @@ namespace LinqToDB.Common.Internal.Cache
 			return false;
 		}
 
-		public static TItem Set<TItem>(this IMemoryCache cache, object key, TItem value)
+		public static TItem Set<TKey, TItem>(this IMemoryCache<TKey> cache, TKey key, TItem value)
+			where TKey : notnull
 		{
-			using ICacheEntry entry = cache.CreateEntry(key);
+			using ICacheEntry<TKey> entry = cache.CreateEntry(key);
 			entry.Value = value;
 
 			return value;
 		}
 
-		public static TItem Set<TItem>(this IMemoryCache cache, object key, TItem value, DateTimeOffset absoluteExpiration)
+		public static TItem Set<TKey, TItem>(this IMemoryCache<TKey> cache, TKey key, TItem value, DateTimeOffset absoluteExpiration)
+			where TKey : notnull
 		{
-			using ICacheEntry entry = cache.CreateEntry(key);
+			using ICacheEntry<TKey> entry = cache.CreateEntry(key);
 			entry.AbsoluteExpiration = absoluteExpiration;
 			entry.Value = value;
 
 			return value;
 		}
 
-		public static TItem Set<TItem>(this IMemoryCache cache, object key, TItem value, TimeSpan absoluteExpirationRelativeToNow)
+		public static TItem Set<TKey, TItem>(this IMemoryCache<TKey> cache, TKey key, TItem value, TimeSpan absoluteExpirationRelativeToNow)
+			where TKey : notnull
 		{
-			using ICacheEntry entry = cache.CreateEntry(key);
+			using ICacheEntry<TKey> entry = cache.CreateEntry(key);
 			entry.AbsoluteExpirationRelativeToNow = absoluteExpirationRelativeToNow;
 			entry.Value = value;
 
 			return value;
 		}
 
-		public static TItem Set<TItem>(this IMemoryCache cache, object key, TItem value, IChangeToken expirationToken)
+		public static TItem Set<TKey, TItem>(this IMemoryCache<TKey> cache, TKey key, TItem value, IChangeToken expirationToken)
+			where TKey : notnull
 		{
-			using ICacheEntry entry = cache.CreateEntry(key);
+			using ICacheEntry<TKey> entry = cache.CreateEntry(key);
 			entry.AddExpirationToken(expirationToken);
 			entry.Value = value;
 
 			return value;
 		}
 
-		public static TItem Set<TItem>(this IMemoryCache cache, object key, TItem value, MemoryCacheEntryOptions options)
+		public static TItem Set<TKey, TItem>(this IMemoryCache<TKey> cache, TKey key, TItem value, MemoryCacheEntryOptions<TKey> options)
+			where TKey : notnull
 		{
-			using ICacheEntry entry = cache.CreateEntry(key);
+			using ICacheEntry<TKey> entry = cache.CreateEntry(key);
 			if (options != null)
 			{
 				entry.SetOptions(options);
@@ -88,11 +96,12 @@ namespace LinqToDB.Common.Internal.Cache
 			return value;
 		}
 
-		public static TItem GetOrCreate<TItem>(this IMemoryCache cache, object key, Func<ICacheEntry, TItem> factory)
+		public static TItem GetOrCreate<TKey, TItem>(this IMemoryCache<TKey> cache, TKey key, Func<ICacheEntry<TKey>, TItem> factory)
+			where TKey : notnull
 		{
 			if (!cache.TryGetValue(key, out var result))
 			{
-				using ICacheEntry entry = cache.CreateEntry(key);
+				using ICacheEntry<TKey> entry = cache.CreateEntry(key);
 
 				result = factory(entry);
 				entry.Value = result;
@@ -101,12 +110,27 @@ namespace LinqToDB.Common.Internal.Cache
 			return (TItem)result!;
 		}
 
-		public static TItem GetOrCreate<TItem, TKey, TContext>(this IMemoryCache cache, TKey key, TContext context, Func<ICacheEntry, TKey, TContext, TItem> factory)
+		public static TItem GetOrCreate<TItem, TKey, TContext>(this IMemoryCache<TKey> cache, TKey key, TContext context, Func<ICacheEntry<TKey>, TContext, TItem> factory)
 					where TKey : notnull
 		{
 			if (!cache.TryGetValue(key, out var result))
 			{
-				using ICacheEntry entry = cache.CreateEntry(key);
+				using var entry = cache.CreateEntry(key);
+
+				result = factory(entry, context);
+				entry.Value = result;
+			}
+
+			return (TItem)result!;
+		}
+
+		public static TItem GetOrCreate<TItem, TKey, TDerivedKey, TContext>(this IMemoryCache<TKey> cache, TDerivedKey key, TContext context, Func<ICacheEntry<TKey>, TDerivedKey, TContext, TItem> factory)
+					where TKey : notnull
+					where TDerivedKey : TKey
+		{
+			if (!cache.TryGetValue(key, out var result))
+			{
+				using var entry = cache.CreateEntry(key);
 
 				result = factory(entry, key, context);
 				entry.Value = result;
@@ -115,11 +139,12 @@ namespace LinqToDB.Common.Internal.Cache
 			return (TItem)result!;
 		}
 
-		public static async Task<TItem> GetOrCreateAsync<TItem>(this IMemoryCache cache, object key, Func<ICacheEntry, Task<TItem>> factory)
+		public static async Task<TItem> GetOrCreateAsync<TKey, TItem>(this IMemoryCache<TKey> cache, TKey key, Func<ICacheEntry<TKey>, Task<TItem>> factory)
+			where TKey : notnull
 		{
 			if (!cache.TryGetValue(key, out object? result))
 			{
-				using ICacheEntry entry = cache.CreateEntry(key);
+				using ICacheEntry<TKey> entry = cache.CreateEntry(key);
 
 				result = await factory(entry).ConfigureAwait(false);
 				entry.Value = result;

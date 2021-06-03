@@ -147,33 +147,6 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region ICloneableElement Members
-
-		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			if (Table != null)
-			{
-				var table = Table.Clone(objectTree, doClone);
-				if (table == Table)
-					return this;
-				return objectTree[this];
-			}
-			else
-			{
-				if (!objectTree.TryGetValue(this, out var clone))
-				{
-					clone = new SqlField(this);
-					objectTree.Add(this, clone);
-				}
-				return clone;
-			}
-		}
-
-		#endregion
-
 		#region IQueryElement Members
 
 		public QueryElementType ElementType => QueryElementType.SqlField;

@@ -2106,14 +2106,6 @@ namespace Tests.Linq
 			[MapValue("D")] Delisted,
 		}
 
-		[ActiveIssue(913, Configurations = new[]
-		{
-			TestProvName.AllAccess,
-			TestProvName.AllInformix,
-			TestProvName.AllMySql,
-			TestProvName.AllPostgreSQL,
-			TestProvName.AllSQLite
-		})]
 		[Test]
 		public void Issue913Test([DataSources] string context)
 		{

@@ -21,6 +21,7 @@
 	<ItemGroup>
 		<PackageReference Include="NUnit" />
 		<PackageReference Include="Newtonsoft.Json" />
+		<PackageReference Include="FluentAssertions"/>
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net472' ">

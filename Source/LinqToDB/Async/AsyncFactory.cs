@@ -114,6 +114,7 @@ namespace LinqToDB.Async
 			// - DbTransaction (netstandard2.1, netcoreapp3.0)
 			// - MySqlConnector
 			// - npgsql
+			// - FirebirdSql.Data.FirebirdClient 8+
 			var commitAsync   = CreateDelegate<Func<IDbTransaction, CancellationToken, Task>, IDbTransaction>(type, "CommitAsync"  , _tokenParams     , _tokenParams     , _tokenParams     , false, false);
 
 			// Task RollbackAsync(CancellationToken)
@@ -121,6 +122,7 @@ namespace LinqToDB.Async
 			// - DbTransaction (netstandard2.1, netcoreapp3.0)
 			// - MySqlConnector
 			// - npgsql
+			// - FirebirdSql.Data.FirebirdClient 8+
 			var rollbackAsync = CreateDelegate<Func<IDbTransaction, CancellationToken, Task>, IDbTransaction>(type, "RollbackAsync", _tokenParams     , _tokenParams     , _tokenParams     , false, false);
 
 			// ValueTask DisposeAsync()
@@ -167,6 +169,7 @@ namespace LinqToDB.Async
 			// Availability:
 			// - MySql.Data
 			// - MySqlConnector < 0.57
+			// - FirebirdSql.Data.FirebirdClient 8+
 #if !NATIVE_ASYNC
 									   ?? CreateTaskTDelegate<Func<IDbConnection, CancellationToken           ,      Task<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _tokenParams           , _transactionWrap,      false, false);
 #else
@@ -187,6 +190,7 @@ namespace LinqToDB.Async
 			// Availability:
 			// - MySql.Data
 			// - MySqlConnector < 0.57
+			// - FirebirdSql.Data.FirebirdClient 8+
 #if !NATIVE_ASYNC
 									   ?? CreateTaskTDelegate<Func<IDbConnection, IsolationLevel, CancellationToken,      Task<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _beginTransactionParams, _transactionWrap,      false, false);
 #else
@@ -207,6 +211,7 @@ namespace LinqToDB.Async
 			// - MySql.Data
 			// - MySqlConnector 0.57+
 			// - npgsql 4.1.0+
+			// - FirebirdSql.Data.FirebirdClient 8+
 									   ?? CreateDelegate<Func<IDbConnection, Task>, IDbConnection>(type, "CloseAsync", Array<Type>.Empty,   Array<Type>.Empty, Array<Type>.Empty, false, false);
 
 			// ValueTask DisposeAsync()

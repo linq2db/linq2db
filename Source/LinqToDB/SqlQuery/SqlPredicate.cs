@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	using Tools;
-
 	public abstract class SqlPredicate : ISqlPredicate
 	{
 		public enum Operator
@@ -46,17 +43,6 @@ namespace LinqToDB.SqlQuery
 			}
 
 			public override bool CanBeNull => Expr1.CanBeNull;
-
-			protected override ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-			{
-				if (!doClone(this))
-					return this;
-
-				if (!objectTree.TryGetValue(this, out var clone))
-					objectTree.Add(this, clone = new Expr((ISqlExpression)Expr1.Clone(objectTree, doClone), Precedence));
-
-				return clone;
-			}
 
 			public override QueryElementType ElementType => QueryElementType.ExprPredicate;
 
@@ -100,17 +86,6 @@ namespace LinqToDB.SqlQuery
 				return new NotExpr(Expr1, !IsNot, Precedence);
 			}
 
-			protected override ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-			{
-				if (!doClone(this))
-					return this;
-
-				if (!objectTree.TryGetValue(this, out var clone))
-					objectTree.Add(this, clone = new NotExpr((ISqlExpression)Expr1.Clone(objectTree, doClone), IsNot, Precedence));
-
-				return clone;
-			}
-
 			public override QueryElementType ElementType => QueryElementType.NotExprPredicate;
 		}
 
@@ -138,18 +113,6 @@ namespace LinqToDB.SqlQuery
 			}
 
 			public override bool CanBeNull => base.CanBeNull || Expr2.CanBeNull;
-
-			protected override ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-			{
-				if (!doClone(this))
-					return this;
-
-				if (!objectTree.TryGetValue(this, out var clone))
-					objectTree.Add(this, clone = new ExprExpr(
-						(ISqlExpression)Expr1.Clone(objectTree, doClone), Operator, (ISqlExpression)Expr2.Clone(objectTree, doClone), WithNull));
-
-				return clone;
-			}
 
 			public override QueryElementType ElementType => QueryElementType.ExprExprPredicate;
 
@@ -201,7 +164,7 @@ namespace LinqToDB.SqlQuery
 
 			public ISqlPredicate Reduce(EvaluationContext context)
 			{
-				if (Operator.In(Operator.Equal, Operator.NotEqual))
+				if (Operator == Operator.Equal || Operator == Operator.NotEqual)
 				{
 					if (Expr1.TryEvaluateExpression(context, out var value1))
 					{
@@ -238,13 +201,13 @@ namespace LinqToDB.SqlQuery
 						{
 							if (isInverted)
 							{
-								if (!Operator.In(Operator.Equal))
+								if (Operator != Operator.Equal)
 								{
 									search.Conditions.Add(new SqlCondition(false, predicate, true));
 									search.Conditions.Add(new SqlCondition(false, new IsNull(Expr2, false), false));
 								}
 							}
-							else if (Operator.In(Operator.NotEqual))
+							else if (Operator == Operator.NotEqual)
 							{
 								search.Conditions.Add(new SqlCondition(false, predicate, true));
 								search.Conditions.Add(new SqlCondition(false, new IsNull(Expr2, false), false));
@@ -258,13 +221,13 @@ namespace LinqToDB.SqlQuery
 					{
 						if (isInverted)
 						{
-							if (!Operator.In(Operator.Equal))
+							if (Operator != Operator.Equal)
 							{
 								search.Conditions.Add(new SqlCondition(false, predicate, true));
 								search.Conditions.Add(new SqlCondition(false, new IsNull(Expr1, false), false));
 							}
 						}
-						else if (Operator.In(Operator.NotEqual))
+						else if (Operator == Operator.NotEqual)
 						{
 							search.Conditions.Add(new SqlCondition(false, predicate, true));
 							search.Conditions.Add(new SqlCondition(false, new IsNull(Expr1, false), false));
@@ -279,7 +242,7 @@ namespace LinqToDB.SqlQuery
 						{
 							if (isInverted)
 							{
-								if (Operator.In(Operator.Equal))
+								if (Operator == Operator.Equal)
 								{
 									search.Conditions.Add(new SqlCondition(false, predicate, true));
 
@@ -290,7 +253,7 @@ namespace LinqToDB.SqlQuery
 									search.Conditions.Add(new SqlCondition(false, new IsNull(Expr2, false), false));
 								}
 								else
-								if (Operator.In(Operator.NotEqual))
+								if (Operator == Operator.NotEqual)
 								{
 									search.Conditions.Add(new SqlCondition(false, predicate, true));
 
@@ -301,13 +264,13 @@ namespace LinqToDB.SqlQuery
 									search.Conditions.Add(new SqlCondition(false, new IsNull(Expr2, false), false));
 								}
 								else
-								if (Operator.In(Operator.LessOrEqual, Operator.GreaterOrEqual))
+								if (Operator == Operator.LessOrEqual || Operator == Operator.GreaterOrEqual)
 								{
 									search.Conditions.Add(new SqlCondition(false, predicate, true));
 									search.Conditions.Add(new SqlCondition(false, new IsNull(Expr1, false), true));
 									search.Conditions.Add(new SqlCondition(false, new IsNull(Expr2, false), false));
 								}
-								else if (Operator.In(Operator.NotEqual))
+								else if (Operator == Operator.NotEqual)
 								{
 									search.Conditions.Add(new SqlCondition(false, predicate, true));
 									search.Conditions.Add(new SqlCondition(false, new IsNull(Expr1, false), false));
@@ -320,13 +283,13 @@ namespace LinqToDB.SqlQuery
 									search.Conditions.Add(new SqlCondition(false, new IsNull(Expr2, false), false));
 								}
 							}
-							else if (Operator.In(Operator.Equal))
+							else if (Operator == Operator.Equal)
 							{
 								search.Conditions.Add(new SqlCondition(false, predicate, true));
 								search.Conditions.Add(new SqlCondition(false, new IsNull(Expr1, false), false));
 								search.Conditions.Add(new SqlCondition(false, new IsNull(Expr2, false), false));
 							}
-							else if (Operator.In(Operator.NotEqual))
+							else if (Operator == Operator.NotEqual)
 							{
 								search.Conditions.Add(new SqlCondition(false, predicate, true));
 
@@ -383,15 +346,17 @@ namespace LinqToDB.SqlQuery
 		//
 		public class Like : BaseNotExpr
 		{
-			public Like(ISqlExpression exp1, bool isNot, ISqlExpression exp2, ISqlExpression? escape)
+			public Like(ISqlExpression exp1, bool isNot, ISqlExpression exp2, ISqlExpression? escape, string? functionName = null)
 				: base(exp1, isNot, SqlQuery.Precedence.Comparison)
 			{
 				Expr2     = exp2;
 				Escape    = escape;
+				FunctionName = functionName;
 			}
 
 			public ISqlExpression  Expr2     { get; internal set; }
 			public ISqlExpression? Escape    { get; internal set; }
+			public string?         FunctionName { get; internal set; }
 
 			protected override void Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 			{
@@ -406,18 +371,6 @@ namespace LinqToDB.SqlQuery
 				return new Like(Expr1, !IsNot, Expr2, Escape);
 			}
 
-			protected override ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-			{
-				if (!doClone(this))
-					return this;
-
-				if (!objectTree.TryGetValue(this, out var clone))
-					objectTree.Add(this, clone = new Like(
-						(ISqlExpression)Expr1.Clone(objectTree, doClone), IsNot, (ISqlExpression)Expr2.Clone(objectTree, doClone), Escape));
-
-				return clone;
-			}
-
 			public override QueryElementType ElementType => QueryElementType.LikePredicate;
 
 			protected override void ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
@@ -425,7 +378,8 @@ namespace LinqToDB.SqlQuery
 				Expr1.ToString(sb, dic);
 
 				if (IsNot) sb.Append(" NOT");
-				sb.Append(" LIKE ");
+
+				sb.Append(' ').Append(FunctionName ?? "LIKE").Append(' ');
 
 				Expr2.ToString(sb, dic);
 
@@ -449,17 +403,17 @@ namespace LinqToDB.SqlQuery
 				Contains
 			}
 
-			public SearchString(ISqlExpression exp1, bool isNot, ISqlExpression exp2, SearchKind searchKind, bool ignoreCase)
+			public SearchString(ISqlExpression exp1, bool isNot, ISqlExpression exp2, SearchKind searchKind, ISqlExpression caseSensitive)
 				: base(exp1, isNot, SqlQuery.Precedence.Comparison)
 			{
-				Expr2      = exp2;
-				Kind       = searchKind;
-				IgnoreCase = ignoreCase;
+				Expr2         = exp2;
+				Kind          = searchKind;
+				CaseSensitive = caseSensitive;
 			}
 
-			public ISqlExpression Expr2      { get; internal set; }
-			public SearchKind     Kind       { get; }
-			public bool           IgnoreCase { get; }
+			public ISqlExpression Expr2         { get; internal set; }
+			public SearchKind     Kind          { get; }
+			public ISqlExpression CaseSensitive { get; }
 
 			protected override void Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 			{
@@ -469,19 +423,7 @@ namespace LinqToDB.SqlQuery
 
 			public override IQueryElement Invert()
 			{
-				return new SearchString(Expr1, !IsNot, Expr2, Kind, IgnoreCase);
-			}
-
-			protected override ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-			{
-				if (!doClone(this))
-					return this;
-
-				if (!objectTree.TryGetValue(this, out var clone))
-					objectTree.Add(this, clone = new SearchString(
-						(ISqlExpression)Expr1.Clone(objectTree, doClone), IsNot, (ISqlExpression)Expr2.Clone(objectTree, doClone), Kind, IgnoreCase));
-
-				return clone;
+				return new SearchString(Expr1, !IsNot, Expr2, Kind, CaseSensitive);
 			}
 
 			public override QueryElementType ElementType => QueryElementType.SearchStringPredicate;
@@ -510,6 +452,37 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
+		// expression IS [ NOT ] DISTINCT FROM expression
+		//
+		public class IsDistinct : BaseNotExpr
+		{
+			public IsDistinct(ISqlExpression exp1, bool isNot, ISqlExpression exp2)
+				: base(exp1, isNot, SqlQuery.Precedence.Comparison)
+			{
+				Expr2 = exp2;
+			}
+
+			public ISqlExpression Expr2 { get; internal set; }
+
+			protected override void Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
+			{
+				base.Walk(options, func);
+				Expr2 = Expr2.Walk(options, func)!;
+			}
+
+			public override IQueryElement Invert() => new IsDistinct(Expr1, !IsNot, Expr2);
+
+			public override QueryElementType ElementType => QueryElementType.IsDistinctPredicate;
+
+			protected override void ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+			{
+				Expr1.ToString(sb, dic);
+				sb.Append(IsNot ? " IS NOT DISTINCT FROM " : " IS DISTINCT FROM ");
+				Expr2.ToString(sb, dic);
+			}
+		
+		}
+
 		// expression [ NOT ] BETWEEN expression AND expression
 		//
 		public class Between : BaseNotExpr
@@ -534,21 +507,6 @@ namespace LinqToDB.SqlQuery
 			public override IQueryElement Invert()
 			{
 				return new Between(Expr1, !IsNot, Expr2, Expr3);
-			}
-
-			protected override ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-			{
-				if (!doClone(this))
-					return this;
-
-				if (!objectTree.TryGetValue(this, out var clone))
-					objectTree.Add(this, clone = new Between(
-						(ISqlExpression)Expr1.Clone(objectTree, doClone),
-						IsNot,
-						(ISqlExpression)Expr2.Clone(objectTree, doClone),
-						(ISqlExpression)Expr3.Clone(objectTree, doClone)));
-
-				return clone;
 			}
 
 			public override QueryElementType ElementType => QueryElementType.BetweenPredicate;
@@ -580,17 +538,6 @@ namespace LinqToDB.SqlQuery
 				TrueValue    = trueValue;
 				FalseValue   = falseValue;
 				WithNull = withNull;
-			}
-
-			protected override ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-			{
-				if (!doClone(this))
-					return this;
-
-				if (!objectTree.TryGetValue(this, out var clone))
-					objectTree.Add(this, clone = new IsTrue((ISqlExpression)Expr1.Clone(objectTree, doClone), TrueValue, FalseValue, WithNull, IsNot));
-
-				return clone;
 			}
 
 			protected override void ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
@@ -640,17 +587,6 @@ namespace LinqToDB.SqlQuery
 				return new IsNull(Expr1, !IsNot);
 			}
 
-			protected override ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-			{
-				if (!doClone(this))
-					return this;
-
-				if (!objectTree.TryGetValue(this, out var clone))
-					objectTree.Add(this, clone = new IsNull((ISqlExpression)Expr1.Clone(objectTree, doClone), IsNot));
-
-				return clone;
-			}
-
 			protected override void ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 			{
 				Expr1.ToString(sb, dic);
@@ -686,20 +622,6 @@ namespace LinqToDB.SqlQuery
 				return new InSubQuery(Expr1, !IsNot, SubQuery);
 			}
 
-			protected override ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-			{
-				if (!doClone(this))
-					return this;
-
-				if (!objectTree.TryGetValue(this, out var clone))
-					objectTree.Add(this, clone = new InSubQuery(
-						(ISqlExpression)Expr1.Clone(objectTree, doClone),
-						IsNot,
-						(SelectQuery)SubQuery.Clone(objectTree, doClone)));
-
-				return clone;
-			}
-
 			public override QueryElementType ElementType => QueryElementType.InSubQueryPredicate;
 
 			protected override void ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
@@ -718,12 +640,17 @@ namespace LinqToDB.SqlQuery
 		{
 			public bool?          WithNull    { get; }
 
-			public InList(ISqlExpression exp1, bool? withNull, bool isNot, params ISqlExpression[]? values)
+			public InList(ISqlExpression exp1, bool? withNull, bool isNot)
 				: base(exp1, isNot, SqlQuery.Precedence.Comparison)
 			{
 				WithNull = withNull;
-				if (values != null && values.Length > 0)
-					Values.AddRange(values);
+			}
+
+			public InList(ISqlExpression exp1, bool? withNull, bool isNot, ISqlExpression value)
+				: base(exp1, isNot, SqlQuery.Precedence.Comparison)
+			{
+				WithNull = withNull;
+				Values.Add(value);
 			}
 
 			public InList(ISqlExpression exp1, bool? withNull, bool isNot, IEnumerable<ISqlExpression>? values)
@@ -746,23 +673,6 @@ namespace LinqToDB.SqlQuery
 			public override IQueryElement Invert()
 			{
 				return new InList(Expr1, !WithNull, !IsNot, Values);
-			}
-
-			protected override ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-			{
-				if (!doClone(this))
-					return this;
-
-				if (!objectTree.TryGetValue(this, out var clone))
-				{
-					objectTree.Add(this, clone = new InList(
-						(ISqlExpression)Expr1.Clone(objectTree, doClone),
-						WithNull,
-						IsNot,
-						Values.Select(e => (ISqlExpression)e.Clone(objectTree, doClone)).ToArray()));
-				}
-
-				return clone;
 			}
 
 			public override QueryElementType ElementType => QueryElementType.InListPredicate;
@@ -809,17 +719,6 @@ namespace LinqToDB.SqlQuery
 
 			public override bool CanBeNull => Function.CanBeNull;
 
-			protected override ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-			{
-				if (!doClone(this))
-					return this;
-
-				if (!objectTree.TryGetValue(this, out var clone))
-					objectTree.Add(this, clone = new FuncLike((SqlFunction)Function.Clone(objectTree, doClone)));
-
-				return clone;
-			}
-
 			public override QueryElementType ElementType => QueryElementType.FuncLikePredicate;
 
 			protected override void ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
@@ -851,21 +750,12 @@ namespace LinqToDB.SqlQuery
 		public             int               Precedence { get; }
 
 		public    abstract bool              CanBeNull  { get; }
-		protected abstract ICloneableElement Clone    (Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone);
 		protected abstract void              Walk     (WalkOptions options, Func<ISqlExpression,ISqlExpression> func);
 
 		ISqlExpression? ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
 		{
 			Walk(options, func);
 			return null;
-		}
-
-		ICloneableElement ICloneableElement.Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			return Clone(objectTree, doClone);
 		}
 
 		#endregion

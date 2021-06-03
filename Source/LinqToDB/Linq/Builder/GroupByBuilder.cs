@@ -15,10 +15,11 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using SqlQuery;
 	using Reflection;
-	using Tools;
 
 	class GroupByBuilder : MethodCallBuilder
 	{
+		private static readonly MethodInfo[] GroupingSetMethods = new [] { Methods.LinqToDB.GroupBy.Rollup, Methods.LinqToDB.GroupBy.Cube, Methods.LinqToDB.GroupBy.GroupingSets };
+
 		#region Builder Methods
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -89,7 +90,7 @@ namespace LinqToDB.Linq.Builder
 							if (assignment?.Expression.NodeType == ExpressionType.Call)
 							{
 								var mc = (MethodCallExpression)assignment.Expression;
-								if (mc.IsSameGenericMethod(Methods.LinqToDB.GroupBy.Rollup, Methods.LinqToDB.GroupBy.Cube, Methods.LinqToDB.GroupBy.GroupingSets))
+								if (mc.IsSameGenericMethod(GroupingSetMethods))
 								{
 									groupingMethod = mc;
 									groupingKey    = (LambdaExpression)mc.Arguments[0].Unwrap();
@@ -108,7 +109,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							sequenceExpr = sequenceExpr.Replace(groupingMethod, groupingKey.Body.Unwrap());
 						}
-						
+
 					}
 				}
 			}
@@ -121,7 +122,7 @@ namespace LinqToDB.Linq.Builder
 			var elementSelector = (LambdaExpression)methodCall.Arguments[2].Unwrap()!;
 
 			if (wrapSequence)
-			{ 
+			{
 				sequence = new SubQueryContext(sequence);
 			}
 
@@ -257,9 +258,11 @@ namespace LinqToDB.Linq.Builder
 				{
 					Key = key;
 
-					_queryRunner = queryRunner;
-					_parameters   = parameters;
-					_itemReader   = itemReader;
+					_queryExpression = queryRunner.Expression;
+					_queryParameters = queryRunner.Parameters;
+					_dataContext     = queryRunner.DataContext;
+					_parameters      = parameters;
+					_itemReader      = itemReader;
 
 					if (Configuration.Linq.PreloadGroups)
 					{
@@ -268,7 +271,9 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				private  IList<TElement>?                                        _items;
-				readonly IQueryRunner                                            _queryRunner;
+				readonly IDataContext                                            _dataContext;
+				readonly Expression                                              _queryExpression;
+				readonly object?[]?                                              _queryParameters;
 				readonly List<ParameterAccessor>                                 _parameters;
 				readonly Func<IDataContext,TKey,object?[]?,IQueryable<TElement>> _itemReader;
 
@@ -276,12 +281,12 @@ namespace LinqToDB.Linq.Builder
 
 				List<TElement> GetItems()
 				{
-					using (var db = _queryRunner.DataContext.Clone(true))
+					using (var db = _dataContext.Clone(true))
 					{
 						var ps = new object?[_parameters.Count];
 
 						for (var i = 0; i < ps.Length; i++)
-							ps[i] = _parameters[i].OriginalAccessor(_queryRunner.Expression, _queryRunner.DataContext, _queryRunner.Parameters);
+							ps[i] = _parameters[i].OriginalAccessor(_queryExpression, db, _queryParameters);
 
 						return _itemReader(db, Key, ps).ToList();
 					}
@@ -330,22 +335,24 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					var parameters = context.Builder.CurrentSqlParameters
-						.Select((p,i) => new { p, i })
+						.Select((p, i) => (p, i))
 						.ToDictionary(_ => _.p.Expression, _ => _.i);
 					var paramArray = Expression.Parameter(typeof(object[]), "ps");
 
-					var groupExpression = context._sequenceExpr.Transform(e =>
-					{
-						if (parameters.TryGetValue(e, out var idx))
+					var groupExpression = context._sequenceExpr.Transform(
+						(parameters, paramArray),
+						static (context, e) =>
 						{
-							return
-								Expression.Convert(
-									Expression.ArrayIndex(paramArray, Expression.Constant(idx)),
-									e.Type);
-						}
+							if (context.parameters.TryGetValue(e, out var idx))
+							{
+								return
+									Expression.Convert(
+										Expression.ArrayIndex(context.paramArray, Expression.Constant(idx)),
+										e.Type);
+							}
 
-						return e;
-					});
+							return e;
+						});
 
 					var keyParam = Expression.Parameter(typeof(TKey), "key");
 
@@ -648,8 +655,7 @@ namespace LinqToDB.Linq.Builder
 				throw new LinqException("Expression '{0}' cannot be converted to SQL.", expression);
 			}
 
-			readonly Dictionary<Tuple<Expression?,int,ConvertFlags>,SqlInfo[]> _expressionIndex =
-				new Dictionary<Tuple<Expression?,int,ConvertFlags>,SqlInfo[]>();
+			readonly Dictionary<Tuple<Expression?,int,ConvertFlags>,SqlInfo[]> _expressionIndex = new ();
 
 			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{

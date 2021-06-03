@@ -23,11 +23,6 @@ namespace LinqToDB.SqlQuery
 			return this;
 		}
 
-		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			return new SqlAliasPlaceholder();
-		}
-
 		public bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
 			return comparer(this, other);

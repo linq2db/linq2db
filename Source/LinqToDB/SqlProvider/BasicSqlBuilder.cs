@@ -236,12 +236,14 @@ namespace LinqToDB.SqlProvider
 				case QueryType.DropTable     : BuildDropTableStatement    ((SqlDropTableStatement)Statement);                                         break;
 				case QueryType.TruncateTable : BuildTruncateTableStatement((SqlTruncateTableStatement)Statement);                                     break;
 				case QueryType.Merge         : BuildMergeStatement        ((SqlMergeStatement)Statement);                                             break;
+				case QueryType.MultiInsert   : BuildMultiInsertQuery      ((SqlMultiInsertStatement)Statement);                                       break;
 				default                      : BuildUnknownQuery();                                                                                   break;
 			}
 		}
 
 		protected virtual void BuildDeleteQuery(SqlDeleteStatement deleteStatement)
 		{
+			BuildStep = Step.Tag;           BuildTag(deleteStatement);
 			BuildStep = Step.WithClause;    BuildWithClause(deleteStatement.With);
 			BuildStep = Step.DeleteClause;  BuildDeleteClause(deleteStatement);
 			BuildStep = Step.FromClause;    BuildFromClause(Statement, deleteStatement.SelectQuery);
@@ -254,6 +256,7 @@ namespace LinqToDB.SqlProvider
 
 		protected void BuildDeleteQuery2(SqlDeleteStatement deleteStatement)
 		{
+			BuildStep = Step.Tag;          BuildTag(deleteStatement);
 			BuildStep = Step.DeleteClause; BuildDeleteClause(deleteStatement);
 
 			while (StringBuilder[StringBuilder.Length - 1] == ' ')
@@ -278,6 +281,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildUpdateQuery(SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)
 		{
+			BuildStep = Step.Tag;           BuildTag(statement);
 			BuildStep = Step.WithClause;    BuildWithClause(statement.GetWithClause());
 			BuildStep = Step.UpdateClause;  BuildUpdateClause(Statement, selectQuery, updateClause);
 
@@ -295,6 +299,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildSelectQuery(SqlSelectStatement selectStatement)
 		{
+			BuildStep = Step.Tag;           BuildTag(selectStatement);
 			BuildStep = Step.WithClause;    BuildWithClause(selectStatement.With);
 			BuildStep = Step.SelectClause;  BuildSelectClause(selectStatement.SelectQuery);
 			BuildStep = Step.FromClause;    BuildFromClause(selectStatement, selectStatement.SelectQuery);
@@ -313,6 +318,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildInsertQuery(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
 		{
+			BuildStep = Step.Tag;          BuildTag(statement);
 			BuildStep = Step.WithClause;   BuildWithClause(statement.GetWithClause());
 			BuildStep = Step.InsertClause; BuildInsertClause(statement, insertClause, addAlias);
 
@@ -337,8 +343,8 @@ namespace LinqToDB.SqlProvider
 
 		protected void BuildInsertQuery2(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
 		{
-			BuildStep = Step.InsertClause;
-			BuildInsertClause(statement, insertClause, addAlias);
+			BuildStep = Step.Tag;          BuildTag(statement);
+			BuildStep = Step.InsertClause; BuildInsertClause(statement, insertClause, addAlias);
 
 			AppendIndent().AppendLine("SELECT * FROM");
 			AppendIndent().AppendLine(OpenParens);
@@ -367,6 +373,9 @@ namespace LinqToDB.SqlProvider
 
 			AppendIndent().AppendLine(")");
 		}
+
+		protected virtual void BuildMultiInsertQuery(SqlMultiInsertStatement statement)
+			=> throw new SqlException("This data provider does not support multi-table insert.");
 
 		protected virtual void BuildUnknownQuery()
 		{
@@ -569,6 +578,7 @@ namespace LinqToDB.SqlProvider
 		}
 
 		protected virtual bool SupportsBooleanInColumn => false;
+		protected virtual bool SupportsNullInColumn    => true;
 
 		protected virtual ISqlExpression WrapBooleanExpression(ISqlExpression expr)
 		{
@@ -588,7 +598,7 @@ namespace LinqToDB.SqlProvider
 
 			if (wrap)
 			{
-				expr = new SqlFunction(typeof(int), "CASE", expr, new SqlValue(true), new SqlValue(false))
+				expr = new SqlFunction(typeof(bool), "CASE", expr, new SqlValue(true), new SqlValue(false))
 				{
 					DoNotOptimize = true
 				};
@@ -604,7 +614,19 @@ namespace LinqToDB.SqlProvider
 				expr = WrapBooleanExpression(expr);
 			}
 
+			expr = WrapColumnExpression(expr);
+
 			BuildExpression(expr, true, true, alias, ref addAlias, true);
+		}
+
+		protected virtual ISqlExpression WrapColumnExpression(ISqlExpression expr)
+		{
+			if (!SupportsNullInColumn && expr is SqlValue sqlValue && sqlValue.Value == null)
+			{
+				return new SqlFunction(sqlValue.ValueType.SystemType, "Convert", false, new SqlDataType(sqlValue.ValueType), sqlValue);
+			}
+
+			return expr;
 		}
 
 		#endregion
@@ -625,8 +647,8 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildUpdateClause(SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)
 		{
-			BuildUpdateTable(selectQuery, updateClause);
-			BuildUpdateSet  (selectQuery, updateClause);
+			BuildUpdateTable (selectQuery, updateClause);
+			BuildUpdateSet   (selectQuery, updateClause);
 		}
 
 		protected virtual void BuildUpdateTable(SelectQuery selectQuery, SqlUpdateClause updateClause)
@@ -767,7 +789,9 @@ namespace LinqToDB.SqlProvider
 
 				BuildOutputSubclause(statement, insertClause);
 
-				if (statement.QueryType == QueryType.InsertOrUpdate || statement.EnsureQuery().From.Tables.Count == 0)
+				if (statement.QueryType == QueryType.InsertOrUpdate || 
+					statement.QueryType == QueryType.MultiInsert ||
+					statement.EnsureQuery().From.Tables.Count == 0)
 				{
 					AppendIndent().AppendLine("VALUES");
 					AppendIndent().AppendLine(OpenParens);
@@ -817,6 +841,7 @@ namespace LinqToDB.SqlProvider
 			var sourceAlias = ConvertInline(GetTempAliases(1, "s")[0],        ConvertType.NameToQueryTableAlias);
 			var keys        = insertOrUpdate.Update.Keys;
 
+			BuildTag(insertOrUpdate);
 			AppendIndent().Append("MERGE INTO ");
 			BuildPhysicalTable(table!, null);
 			StringBuilder.Append(' ').AppendLine(targetAlias);
@@ -904,7 +929,7 @@ namespace LinqToDB.SqlProvider
 
 		protected void BuildInsertOrUpdateQueryAsUpdateInsert(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
-			AppendIndent().AppendLine("BEGIN TRAN").AppendLine();
+			BuildTag(insertOrUpdate);
 
 			var buildUpdate = insertOrUpdate.Update.Items.Count > 0;
 			if (buildUpdate)
@@ -980,7 +1005,6 @@ namespace LinqToDB.SqlProvider
 			AppendIndent().AppendLine("END");
 
 			StringBuilder.AppendLine();
-			AppendIndent().AppendLine("COMMIT");
 		}
 
 		#endregion
@@ -989,6 +1013,8 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildTruncateTableStatement(SqlTruncateTableStatement truncateTable)
 		{
+			BuildTag(truncateTable);
+
 			var table = truncateTable.Table;
 
 			AppendIndent();
@@ -1007,6 +1033,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
+			BuildTag(dropTable);
 			AppendIndent().Append("DROP TABLE ");
 			BuildPhysicalTable(dropTable.Table!, null);
 			StringBuilder.AppendLine();
@@ -1014,6 +1041,7 @@ namespace LinqToDB.SqlProvider
 
 		protected void BuildDropTableStatementIfExists(SqlDropTableStatement dropTable)
 		{
+			BuildTag(dropTable);
 			AppendIndent().Append("DROP TABLE ");
 
 			if (dropTable.Table.TableOptions.HasDropIfExists())
@@ -1389,7 +1417,7 @@ namespace LinqToDB.SqlProvider
 					break;
 
 				case QueryElementType.SqlCteTable     :
-				case QueryElementType.MergeSourceTable:
+				case QueryElementType.SqlTableLikeSource:
 					StringBuilder.Append(GetPhysicalTableName(table, alias));
 					break;
 
@@ -1878,6 +1906,10 @@ namespace LinqToDB.SqlProvider
 
 					break;
 
+				case QueryElementType.IsDistinctPredicate:
+					BuildIsDistinctPredicate((SqlPredicate.IsDistinct)predicate);
+					break;
+
 				case QueryElementType.InSubQueryPredicate:
 					{
 						BuildExpression(GetPrecedence((SqlPredicate.InSubQuery)predicate), ((SqlPredicate.InSubQuery)predicate).Expr1);
@@ -1957,6 +1989,32 @@ namespace LinqToDB.SqlProvider
 			}
 
 			BuildExpression(GetPrecedence(expr), expr.Expr2);
+		}
+
+		protected virtual void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr)
+		{
+			BuildExpression(GetPrecedence(expr), expr.Expr1);
+			StringBuilder.Append(expr.IsNot ? " IS NOT DISTINCT FROM " : " IS DISTINCT FROM ");
+			BuildExpression(GetPrecedence(expr), expr.Expr2);
+		}
+
+		protected void BuildIsDistinctPredicateFallback(SqlPredicate.IsDistinct expr)
+		{
+			// This is the fallback implementation of IS DISTINCT FROM 
+			// for all providers that don't support the standard syntax
+			// nor have a proprietary alternative
+			expr.Expr1.ShouldCheckForNull();
+			StringBuilder.Append("CASE WHEN ");
+			BuildExpression(Precedence.Comparison, expr.Expr1);
+			StringBuilder.Append(" = ");
+			BuildExpression(Precedence.Comparison, expr.Expr2);
+			StringBuilder.Append(" OR ");
+			BuildExpression(Precedence.Comparison, expr.Expr1);
+			StringBuilder.Append(" IS NULL AND ");
+			BuildExpression(Precedence.Comparison, expr.Expr2);
+			StringBuilder
+				.Append(" IS NULL THEN 0 ELSE 1 END = ")
+				.Append(expr.IsNot ? '0' : '1');
 		}
 
 		static SqlField GetUnderlayingField(ISqlExpression expr)
@@ -2216,7 +2274,10 @@ namespace LinqToDB.SqlProvider
 			var precedence = GetPrecedence(predicate);
 
 			BuildExpression(precedence, predicate.Expr1);
-			StringBuilder.Append(predicate.IsNot ? " NOT LIKE " : " LIKE ");
+			StringBuilder
+				.Append(predicate.IsNot ? " NOT " : " ")
+				.Append(predicate.FunctionName ?? "LIKE")
+				.Append(' ');
 			BuildExpression(precedence, predicate.Expr2);
 
 			if (predicate.Escape != null)
@@ -2625,7 +2686,9 @@ namespace LinqToDB.SqlProvider
 				AppendIndent().Append("END");
 			}
 			else
+			{
 				BuildFunction(func.Name, func.Parameters);
+			}
 		}
 
 		void BuildFunction(string name, ISqlExpression[] exprs)
@@ -2650,6 +2713,22 @@ namespace LinqToDB.SqlProvider
 		#endregion
 
 		#region BuildDataType
+		
+		/// <summary>
+		/// Appends an <see cref="SqlDataType"/>'s String to a provided <see cref="StringBuilder"/>
+		/// </summary>
+		/// <param name="sb"></param>
+		/// <param name="dataType"></param>
+		/// <returns>The stringbuilder with the type information appended.</returns>
+		public StringBuilder BuildDataType(StringBuilder sb,
+			SqlDataType dataType)
+		{
+			WithStringBuilder(sb, () =>
+			{
+				BuildDataType(dataType, false);
+			});
+			return sb;
+		}
 		protected void BuildDataType(SqlDataType type, bool forCreateTable)
 		{
 			if (!string.IsNullOrEmpty(type.Type.DbType))
@@ -2658,6 +2737,12 @@ namespace LinqToDB.SqlProvider
 			{
 				if (type.Type.DataType == DataType.Undefined)
 					type = MappingSchema.GetDataType(type.Type.SystemType);
+
+				if (!string.IsNullOrEmpty(type.Type.DbType))
+				{
+					StringBuilder.Append(type.Type.DbType);
+					return;
+				}
 
 				if (type.Type.DataType == DataType.Undefined)
 					// give some hint to user that it is expected situation and he need to fix something on his side
@@ -2709,6 +2794,32 @@ namespace LinqToDB.SqlProvider
 
 		#endregion
 
+		#region Comments
+
+		protected virtual void BuildTag(SqlStatement statement)
+		{
+			if (statement.Tag != null)
+				BuildSqlComment(StringBuilder, statement.Tag);
+		}
+
+		protected virtual StringBuilder BuildSqlComment(StringBuilder sb, SqlComment comment)
+		{
+			sb.Append("/* ");
+
+			for (var i = 0; i < comment.Lines.Count; i++)
+			{
+				sb.Append(comment.Lines[i].Replace("/*", "").Replace("*/", ""));
+				if (i < comment.Lines.Count - 1)
+					sb.AppendLine();
+			}
+
+			sb.AppendLine(" */");
+
+			return sb;
+		}
+
+		#endregion
+
 		#endregion
 
 		#region Internal Types
@@ -2725,7 +2836,8 @@ namespace LinqToDB.SqlProvider
 			GroupByClause,
 			HavingClause,
 			OrderByClause,
-			OffsetLimit
+			OffsetLimit,
+			Tag
 		}
 
 		#endregion
@@ -2836,7 +2948,7 @@ namespace LinqToDB.SqlProvider
 						var alias = ((SqlTable)table).Alias;
 						return alias != "$" && alias != "$F" ? alias : null;
 					}
-				case QueryElementType.MergeSourceTable:
+				case QueryElementType.SqlTableLikeSource:
 					return null;
 
 				default:
@@ -2937,8 +3049,8 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.SqlRawSqlTable:
 					return GetTablePhysicalName((SqlTable)table)!;
 
-				case QueryElementType.MergeSourceTable:
-					return ConvertInline(((SqlMergeSourceTable)table).Name, ConvertType.NameToQueryTable);
+				case QueryElementType.SqlTableLikeSource:
+					return ConvertInline(((SqlTableLikeSource)table).Name, ConvertType.NameToQueryTable);
 
 				default:
 					throw new InvalidOperationException($"Unexpected table type {table.ElementType}");
