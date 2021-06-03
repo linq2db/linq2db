@@ -2713,6 +2713,22 @@ namespace LinqToDB.SqlProvider
 		#endregion
 
 		#region BuildDataType
+		
+		/// <summary>
+		/// Appends an <see cref="SqlDataType"/>'s String to a provided <see cref="StringBuilder"/>
+		/// </summary>
+		/// <param name="sb"></param>
+		/// <param name="dataType"></param>
+		/// <returns>The stringbuilder with the type information appended.</returns>
+		public StringBuilder BuildDataType(StringBuilder sb,
+			SqlDataType dataType)
+		{
+			WithStringBuilder(sb, () =>
+			{
+				BuildDataType(dataType, false);
+			});
+			return sb;
+		}
 		protected void BuildDataType(SqlDataType type, bool forCreateTable)
 		{
 			if (!string.IsNullOrEmpty(type.Type.DbType))

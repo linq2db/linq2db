@@ -13,7 +13,17 @@ namespace LinqToDB.DataProvider.DB2
 
 	class DB2BulkCopy : BasicBulkCopy
 	{
-		private readonly DB2DataProvider _provider;
+		/// <remarks>
+		/// Settings based on https://www.ibm.com/docs/en/i/7.3?topic=reference-sql-limits
+		/// We subtract 1 here to be safe since some ADO providers use parameter for command itself. 
+		/// </remarks>
+		protected override int             MaxParameters => 1999;
+		/// <remarks>
+		/// Setting based on https://www.ibm.com/docs/en/i/7.3?topic=reference-sql-limits
+		/// Max is actually 2MIB, but we keep a lower number here to avoid the cost of huge statements.
+		/// </remarks>
+		protected override int             MaxSqlLength  => 327670;
+		private readonly   DB2DataProvider _provider;
 
 		public DB2BulkCopy(DB2DataProvider provider)
 		{

@@ -276,6 +276,26 @@ namespace Tests.xUpdate
 				db.Child. BulkCopy(options, new[] { new Child  { ParentID = 111001 } });
 			}
 		}
+		
+		[Test]
+		public void UseParametersTest([DataSources(false)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				var options = new BulkCopyOptions(){ UseParameters = true, MaxBatchSize = 50, BulkCopyType = BulkCopyType.MultipleRows };
+				var start   = 111001;
+
+				var rowsToInsert = Enumerable.Range(start, 149)
+					.Select(r => new Parent() {ParentID = r, Value1 = r-start}).ToList();
+
+				db.Parent.BulkCopy(options, rowsToInsert);
+
+				Assert.AreEqual(rowsToInsert.Count,
+					db.Parent.Where(r =>
+						r.ParentID >= rowsToInsert[0].ParentID && r.ParentID <= rowsToInsert.Last().ParentID).Count());
+			}
+		}
 
 		[Table]
 		public class SimpleBulkCopyTable

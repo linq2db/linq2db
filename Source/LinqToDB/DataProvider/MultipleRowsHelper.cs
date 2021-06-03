@@ -44,7 +44,6 @@ namespace LinqToDB.DataProvider
 			ParameterName  = SqlBuilder.ConvertInline("p", ConvertType.NameToQueryParameter);
 			BatchSize      = Math.Max(10, Options.MaxBatchSize ?? 1000);
 		}
-
 		public readonly ISqlBuilder         SqlBuilder;
 		public readonly DataConnection      DataConnection;
 		public readonly MappingSchema       MappingSchema;
@@ -64,26 +63,42 @@ namespace LinqToDB.DataProvider
 		public int ParameterIndex;
 		public int HeaderSize;
 		public int BatchSize;
+		public int LastRowStringIndex;
+		public int LastRowParameterIndex;
 
 		public void SetHeader()
 		{
 			HeaderSize = StringBuilder.Length;
 		}
 
-		public virtual void BuildColumns(object item, Func<ColumnDescriptor, bool>? skipConvert = null)
+		private static Func<ColumnDescriptor, bool> defaultSkipConvert = (_ => false);
+
+		public virtual void BuildColumns(
+			object                        item,
+			Func<ColumnDescriptor, bool>? skipConvert    = null,
+			bool                          castParameters = false,
+			bool                          castAllRows    = false)
 		{
-			skipConvert ??= (_ => false);
+			skipConvert ??= defaultSkipConvert;
 
 			for (var i = 0; i < Columns.Length; i++)
 			{
 				var column = Columns[i];
 				var value  = column.GetValue(item);
 
-				if (skipConvert(column) || !ValueConverter.TryConvert(StringBuilder, ColumnTypes[i], value))
+				if (Options.UseParameters || skipConvert(column) || !ValueConverter.TryConvert(StringBuilder, ColumnTypes[i], value))
 				{
 					var name = ParameterName == "?" ? ParameterName : ParameterName + ++ParameterIndex;
 
-					StringBuilder.Append(name);
+					if (castParameters && (CurrentCount == 0 || castAllRows))
+					{
+						AddParameterCasted(name, ColumnTypes[i]);
+					}
+					else
+					{
+						StringBuilder.Append(name);	
+					}
+					
 
 					if (value is DataParameter dataParameter)
 						value = dataParameter.Value;
@@ -103,6 +118,15 @@ namespace LinqToDB.DataProvider
 			StringBuilder.Length--;
 		}
 
+		private void AddParameterCasted(string name, SqlDataType type)
+		{
+			StringBuilder.Append("CAST(");
+			StringBuilder.Append(name);
+			StringBuilder.Append(" AS ");
+			SqlBuilder.BuildDataType(StringBuilder, type);
+			StringBuilder.Append(')');
+		}
+
 		public bool Execute()
 		{
 			DataConnection.Execute(StringBuilder.AppendLine().ToString(), Parameters.ToArray());
@@ -116,9 +140,11 @@ namespace LinqToDB.DataProvider
 			}
 
 			Parameters.Clear();
-			ParameterIndex       = 0;
-			CurrentCount         = 0;
-			StringBuilder.Length = HeaderSize;
+			ParameterIndex        = 0;
+			CurrentCount          = 0;
+			LastRowParameterIndex = 0;
+			LastRowStringIndex    = HeaderSize;
+			StringBuilder.Length  = HeaderSize;
 
 			return true;
 		}
@@ -137,9 +163,11 @@ namespace LinqToDB.DataProvider
 			}
 
 			Parameters.Clear();
-			ParameterIndex       = 0;
-			CurrentCount         = 0;
-			StringBuilder.Length = HeaderSize;
+			ParameterIndex        = 0;
+			CurrentCount          = 0;
+			LastRowParameterIndex = 0;
+			LastRowStringIndex    = HeaderSize;
+			StringBuilder.Length  = HeaderSize;
 
 			return true;
 		}

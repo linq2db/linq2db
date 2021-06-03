@@ -13,7 +13,17 @@ namespace LinqToDB.DataProvider.PostgreSQL
 {
 	class PostgreSQLBulkCopy : BasicBulkCopy
 	{
-		readonly PostgreSQLDataProvider _provider;
+		/// <remarks>
+		/// Settings based on https://www.jooq.org/doc/3.12/manual/sql-building/dsl-context/custom-settings/settings-inline-threshold/
+		/// We subtract 1 based on possibility of provider using parameter for command.
+		/// </remarks>
+		protected override int                    MaxParameters => 32766;
+		/// <summary>
+		/// Setting based on https://stackoverflow.com/a/4937695/2937845
+		/// Max is actually 2GiB, but we keep a lower number here to avoid the cost of huge statements.
+		/// </summary>
+		protected override int                    MaxSqlLength  => 327670;
+		readonly           PostgreSQLDataProvider _provider;
 
 		public PostgreSQLBulkCopy(PostgreSQLDataProvider dataProvider)
 		{
