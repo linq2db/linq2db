@@ -247,6 +247,7 @@ namespace LinqToDB.SqlQuery
 					{
 						return Find(((SqlInsertStatement)element).SelectQuery) ??
 						       Find(((SqlInsertStatement)element).Insert     ) ??
+						       Find(((SqlInsertStatement)element).Output     ) ??
 						       Find(((SqlInsertStatement)element).With       ) ??
 						       Find(((SqlInsertStatement)element).Tag        );
 					}
@@ -255,6 +256,7 @@ namespace LinqToDB.SqlQuery
 					{
 						return Find(((SqlUpdateStatement)element).SelectQuery) ??
 						       Find(((SqlUpdateStatement)element).Update     ) ??
+						       Find(((SqlUpdateStatement)element).Output     ) ??
 						       Find(((SqlUpdateStatement)element).With       ) ??
 						       Find(((SqlUpdateStatement)element).Tag        );
 					}

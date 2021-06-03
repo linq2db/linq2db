@@ -259,6 +259,7 @@ namespace LinqToDB.SqlQuery
 						Visit(((SqlUpdateStatement)element).Tag);
 						Visit(((SqlUpdateStatement)element).With);
 						Visit(((SqlUpdateStatement)element).Update);
+						Visit(((SqlUpdateStatement)element).Output);
 						Visit(((SqlUpdateStatement)element).SelectQuery);
 						break;
 					}
@@ -549,7 +550,7 @@ namespace LinqToDB.SqlQuery
 			foreach (var j in table.Joins) Visit(j);
 		}
 
-		void VisitX(SqlTable table)
+		void VisitX(SqlTable? table)
 		{
 			if (table == null)
 				return;
@@ -592,10 +593,10 @@ namespace LinqToDB.SqlQuery
 			if (outputClause == null)
 				return;
 
-			VisitX(outputClause.SourceTable);
+			Visit(outputClause.SourceTable);
 			Visit(outputClause.DeletedTable);
 			Visit(outputClause.InsertedTable);
-			VisitX(outputClause.OutputTable);
+			Visit(outputClause.OutputTable);
 			if (outputClause.OutputQuery != null)
 				Visit(outputClause.OutputQuery);
 

@@ -434,7 +434,8 @@ namespace LinqToDB.SqlQuery
 					var newInsert = new SqlInsertStatement(Clone(insert.SelectQuery))
 					{
 						Tag     = Clone(insert.Tag),
-						With    = Clone(insert.With)
+						With    = Clone(insert.With),
+						Output  = Clone(insert.Output)
 					};
 
 					if (insert.HasInsert)
@@ -723,7 +724,8 @@ namespace LinqToDB.SqlQuery
 					var newUpdate = new SqlUpdateStatement(Clone(update.SelectQuery))
 					{
 						Tag     = Clone(update.Tag),
-						With    = Clone(update.With)
+						With    = Clone(update.With),
+						Output  = Clone(update.Output)
 					};
 
 					if (update.HasUpdate)

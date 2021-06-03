@@ -48,14 +48,6 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
-		public override IEnumerable<IQueryElement> EnumClauses()
-		{
-			if (_insert != null)
-				yield return _insert;
-			if (_update != null)
-				yield return _update;
-		}
-
 		public override ISqlTableSource? GetTableSource(ISqlTableSource table)
 		{
 			if (_update?.Table == table)

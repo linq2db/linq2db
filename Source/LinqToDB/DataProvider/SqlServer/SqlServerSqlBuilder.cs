@@ -182,6 +182,14 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
+		protected override void BuildUpdateClause(SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)
+		{
+			base.BuildUpdateClause(statement, selectQuery, updateClause);
+
+			var output = statement.GetOutputClause();
+			BuildOutputSubclause(output);
+		}
+
 		protected override void BuildDeleteClause(SqlDeleteStatement deleteStatement)
 		{
 			var table = deleteStatement.Table != null ?

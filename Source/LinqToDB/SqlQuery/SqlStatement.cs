@@ -67,11 +67,6 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		public virtual IEnumerable<IQueryElement> EnumClauses()
-		{
-			yield break;
-		}
-
 		#region Aliases
 
 		static string? NormalizeParameterName(string? name)

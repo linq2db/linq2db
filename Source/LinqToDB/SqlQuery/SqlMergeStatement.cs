@@ -35,11 +35,11 @@ namespace LinqToDB.SqlQuery
 		}
 
 		public string?                        Hint       { get; internal set; }
-														 
+
 		public SqlTableSource                 Target     { get; }
-														 
+
 		public SqlTableLikeSource             Source     { get; internal set; } = null!;
-														 
+
 		public SqlSearchCondition             On         { get; }               = new SqlSearchCondition();
 
 		public List<SqlMergeOperationClause>  Operations { get; }               = new List<SqlMergeOperationClause>();
@@ -118,19 +118,6 @@ namespace LinqToDB.SqlQuery
 				return Source;
 
 			return null;
-		}
-
-		public override IEnumerable<IQueryElement> EnumClauses()
-		{
-			if (With != null)
-				yield return With;
-
-			yield return Target;
-			yield return Source;
-			yield return On;
-
-			foreach (var operation in Operations)
-				yield return operation;
 		}
 
 		public override void WalkQueries(Func<SelectQuery, SelectQuery> func)
