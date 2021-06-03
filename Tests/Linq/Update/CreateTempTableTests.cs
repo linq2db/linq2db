@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB;
-
+using LinqToDB.Mapping;
 using NUnit.Framework;
 using Tests.Model;
 
@@ -284,5 +284,27 @@ namespace Tests.xUpdate
 			await tempTable.DisposeAsync();
 		}
 #endif
+
+		[Table]
+		public class TableWithPrimaryKey
+		{
+			[PrimaryKey] public int Key { get; set; }
+		}
+
+		[Test]
+		public void CreateTempTableWithPrimaryKey([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateTempTable<TableWithPrimaryKey>(tableOptions: TableOptions.IsTemporary);
+		}
+
+		[Test]
+		public void InsertIntoTempTableWithPrimaryKey([DataSources(false)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			using var t = new[] { new TableWithPrimaryKey() { Key = 1 } }
+				.IntoTempTable(db, tableOptions: TableOptions.IsTemporary);
+		}
 	}
 }
