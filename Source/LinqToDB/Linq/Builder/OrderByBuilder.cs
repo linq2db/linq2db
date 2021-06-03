@@ -42,8 +42,7 @@ namespace LinqToDB.Linq.Builder
 
 			var wrapped = false;
 
-			if (sequence.SelectQuery.Select.TakeValue != null ||
-				sequence.SelectQuery.Select.SkipValue != null)
+			if (sequence.SelectQuery.Select.HasModifier)
 			{
 				sequence = new SubQueryContext(sequence);
 				wrapped = true;
