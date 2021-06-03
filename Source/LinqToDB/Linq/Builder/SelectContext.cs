@@ -1216,7 +1216,7 @@ namespace LinqToDB.Linq.Builder
 					return memberExpression;
 			}
 
-			if (!memberExpression.Type.IsAssignableFrom(levelExpression.Type))
+			if (!memberExpression.Type.IsAssignableFrom(levelExpression.Type) && !levelExpression.Type.IsAssignableFrom(memberExpression.Type))
 				return memberExpression;
 
 			return !ReferenceEquals(levelExpression, expression) ?
