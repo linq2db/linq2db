@@ -18,7 +18,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// </remarks>
 		protected override int                   MaxParameters => 2099;
 		/// <remarks>
-		/// Based on https://docs.microsoft.com/en-us/sql/sql-server/maximum-capacity-specifications-for-sql-server?redirectedfrom=MSDN&view=sql-server-ver15
+		/// Based on https://docs.microsoft.com/en-us/sql/sql-server/maximum-capacity-specifications-for-sql-server?redirectedfrom=MSDN&amp;view=sql-server-ver15
 		/// Default Max is actually (4096*65536) = 256MIB, but we keep a lower number here to avoid the cost of huge statements.
 		/// </remarks>
 		protected override int                   MaxSqlLength => 327670;
