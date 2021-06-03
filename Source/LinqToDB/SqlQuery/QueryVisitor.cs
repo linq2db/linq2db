@@ -35,7 +35,7 @@ namespace LinqToDB.SqlQuery
 		{
 			if (element == null || !_all && VisitedElements.ContainsKey(element))
 				return;
-
+			
 			switch (element.ElementType)
 			{
 				case QueryElementType.SqlFunction:
@@ -45,10 +45,10 @@ namespace LinqToDB.SqlQuery
 					}
 
 				case QueryElementType.SqlExpression:
-					{
+				{
 						VisitX((SqlExpression)element);
-						break;
-					}
+					break;
+				}
 
 				case QueryElementType.SqlObjectExpression:
 				{
@@ -72,7 +72,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SqlCteTable:
 					{
 						if (VisitedElements.ContainsKey(element))
-							return;
+								return;
 						VisitedElements.Add(element, element);
 
 						VisitX((SqlCteTable)element);
@@ -259,6 +259,7 @@ namespace LinqToDB.SqlQuery
 						Visit(((SqlUpdateStatement)element).Tag);
 						Visit(((SqlUpdateStatement)element).With);
 						Visit(((SqlUpdateStatement)element).Update);
+						Visit(((SqlUpdateStatement)element).Output);
 						Visit(((SqlUpdateStatement)element).SelectQuery);
 						break;
 					}
@@ -385,7 +386,7 @@ namespace LinqToDB.SqlQuery
 					VisitX((SqlConditionalInsertClause)element);
 					break;
 
-				case QueryElementType.MergeSourceTable:
+				case QueryElementType.SqlTableLikeSource:
 					VisitX((SqlTableLikeSource)element);
 					break;
 
@@ -549,7 +550,7 @@ namespace LinqToDB.SqlQuery
 			foreach (var j in table.Joins) Visit(j);
 		}
 
-		void VisitX(SqlTable table)
+		void VisitX(SqlTable? table)
 		{
 			if (table == null)
 				return;
@@ -592,10 +593,10 @@ namespace LinqToDB.SqlQuery
 			if (outputClause == null)
 				return;
 
-			VisitX(outputClause.SourceTable);
+			Visit(outputClause.SourceTable);
 			Visit(outputClause.DeletedTable);
 			Visit(outputClause.InsertedTable);
-			VisitX(outputClause.OutputTable);
+			Visit(outputClause.OutputTable);
 			if (outputClause.OutputQuery != null)
 				Visit(outputClause.OutputQuery);
 
@@ -622,6 +623,7 @@ namespace LinqToDB.SqlQuery
 		void VisitX(SqlMergeStatement element)
 		{
 			Visit(element.Tag);
+			Visit(element.With);
 			Visit(element.Target);
 			Visit(element.Source);
 			Visit(element.On);
@@ -671,5 +673,5 @@ namespace LinqToDB.SqlQuery
 			foreach (var item in element.Items)
 				Visit(item);
 		}
-	}
-}
+			}
+		}

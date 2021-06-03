@@ -8,11 +8,11 @@ namespace LinqToDB.Linq.Builder
 
 	class DistinctBuilder : MethodCallBuilder
 	{
-		private static readonly MethodInfo[] SupportedMethods = new [] { Methods.Queryable.Distinct, Methods.Enumerable.Distinct, Methods.LinqToDB.SelectDistinct };
+		static readonly MethodInfo[] _supportedMethods = { Methods.Queryable.Distinct, Methods.Enumerable.Distinct, Methods.LinqToDB.SelectDistinct };
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsSameGenericMethod(SupportedMethods);
+			return methodCall.IsSameGenericMethod(_supportedMethods);
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)

@@ -40,16 +40,16 @@ namespace LinqToDB.DataProvider.Oracle
 			// database name is not a part of table FQN in oracle
 			var serverName   = options.ServerName ?? table.ServerName;
 
-			if (table.DataContext is DataConnection dataConnection && _provider.Adapter.BulkCopy != null
+			if (table.TryGetDataConnection(out var dataConnection) && _provider.Adapter.BulkCopy != null
 				&& serverName == null)
 			{
-				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
+				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, table.DataContext.MappingSchema);
 
 				if (connection != null)
 				{
-					var ed        = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
+					var ed        = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
 					var columns   = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
-					var sb        = _provider.CreateSqlBuilder(dataConnection.MappingSchema);
+					var sb        = _provider.CreateSqlBuilder(table.DataContext.MappingSchema);
 
 					// ODP.NET doesn't bulk copy doesn't work if columns that require escaping:
 					// - if escaping applied, pre-flight validation fails as it performs uppercase comparison and quotes make it fail with
@@ -350,7 +350,7 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				var column   = helper.Columns[i];
 				var dataType = column.DataType == DataType.Undefined
-					? helper.DataConnection.MappingSchema.GetDataType(column.MemberType).Type.DataType
+					? helper.MappingSchema.GetDataType(column.MemberType).Type.DataType
 					: column.DataType;
 
 				helper.Parameters.Add(new DataParameter(":p" + (i + 1), list.Select(o => column.GetValue(o)).ToArray(), dataType, column.DbType)
@@ -369,7 +369,7 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				var column   = helper.Columns[i];
 				var dataType = column.DataType == DataType.Undefined
-					? helper.DataConnection.MappingSchema.GetDataType(column.MemberType).Type.DataType
+					? helper.MappingSchema.GetDataType(column.MemberType).Type.DataType
 					: column.DataType;
 
 				helper.Parameters.Add(new DataParameter(":p" + (i + 1), list.Select(o => column.GetValue(o)).ToArray(), dataType, column.DbType)

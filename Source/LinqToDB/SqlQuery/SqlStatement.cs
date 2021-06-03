@@ -67,11 +67,6 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		public virtual IEnumerable<IQueryElement> EnumClauses()
-		{
-			yield break;
-		}
-
 		#region Aliases
 
 		static string? NormalizeParameterName(string? name)
@@ -137,7 +132,7 @@ namespace LinqToDB.SqlQuery
 
 				switch (expr.ElementType)
 				{
-					case QueryElementType.MergeSourceTable:
+					case QueryElementType.SqlTableLikeSource:
 						{
 							var source = (SqlTableLikeSource)expr;
 

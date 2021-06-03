@@ -10,11 +10,11 @@ namespace LinqToDB.Linq.Builder
 	class DeleteBuilder : MethodCallBuilder
 	{
 		private static readonly string[] MethodNames =
-			{
-				nameof(LinqExtensions.Delete),
-				nameof(LinqExtensions.DeleteWithOutput),
-				nameof(LinqExtensions.DeleteWithOutputInto)
-			};
+		{
+			nameof(LinqExtensions.Delete),
+			nameof(LinqExtensions.DeleteWithOutput),
+			nameof(LinqExtensions.DeleteWithOutputInto)
+		};
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -25,9 +25,9 @@ namespace LinqToDB.Linq.Builder
 		{
 			var deleteType = methodCall.Method.Name switch
 			{
-				nameof(LinqExtensions.DeleteWithOutput) => DeleteContext.DeleteType.DeleteOutput,
+				nameof(LinqExtensions.DeleteWithOutput)     => DeleteContext.DeleteType.DeleteOutput,
 				nameof(LinqExtensions.DeleteWithOutputInto) => DeleteContext.DeleteType.DeleteOutputInto,
-				_ => DeleteContext.DeleteType.Delete,
+				_                                           => DeleteContext.DeleteType.Delete,
 			};
 
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
@@ -69,23 +69,10 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			var indexedParameters
-				= methodCall.Method.GetParameters().Select((p, i) => Tuple.Create(p, i)).ToDictionary(t => t.Item1.Name, t => t.Item2);
-
-			Expression GetArgumentByName(string name)
+			static LambdaExpression BuildDefaultOutputExpression(Type outputType)
 			{
-				return methodCall.Arguments[indexedParameters[name]];
-			}
-
-			LambdaExpression GetOutputExpression(Type outputType)
-			{
-				if (!indexedParameters.TryGetValue("outputExpression", out var index))
-				{
-					var param = Expression.Parameter(outputType);
-					return Expression.Lambda(param, param);
-				}
-
-				return (LambdaExpression)methodCall.Arguments[index].Unwrap();
+				var param = Expression.Parameter(outputType);
+				return Expression.Lambda(param, param);
 			}
 
 			IBuildContext? outputContext = null;
@@ -93,7 +80,9 @@ namespace LinqToDB.Linq.Builder
 
 			if (deleteType != DeleteContext.DeleteType.Delete)
 			{
-				outputExpression = GetOutputExpression(methodCall.Method.GetGenericArguments().Last());
+				outputExpression =
+					(LambdaExpression?)methodCall.GetArgumentByName("outputExpression")?.Unwrap()
+					?? BuildDefaultOutputExpression(methodCall.Method.GetGenericArguments().Last());
 
 				deleteStatement.Output = new SqlOutputClause();
 
@@ -105,7 +94,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (deleteType == DeleteContext.DeleteType.DeleteOutputInto)
 				{
-					var outputTable = GetArgumentByName("outputTable");
+					var outputTable = methodCall.GetArgumentByName("outputTable")!;
 					var destination = builder.BuildSequence(new BuildInfo(buildInfo, outputTable, new SelectQuery()));
 
 					UpdateBuilder.BuildSetter(

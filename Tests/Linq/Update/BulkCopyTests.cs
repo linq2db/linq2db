@@ -294,5 +294,76 @@ namespace Tests.xUpdate
 
 			}
 		}
+
+		[Table]
+		public class SimpleBulkCopyTable
+		{
+			[Column] public int Id { get; set; }
+		}
+
+		[Test]
+		public void BulkCopyWithDataContext(
+			[DataSources(false)]        string       context,
+			[Values]                    BulkCopyType copyType)
+		{
+			using (var db = new DataContext(context))
+			using (var table = db.CreateLocalTable<SimpleBulkCopyTable>())
+			{
+				db.DataProvider.BulkCopy(table, new BulkCopyOptions() { BulkCopyType = copyType }, new[] { new SimpleBulkCopyTable() { Id = 1 } });
+			}
+		}
+
+		[Test]
+		public async Task BulkCopyWithDataContextAsync(
+			[DataSources(false)] string context,
+			[Values] BulkCopyType copyType)
+		{
+			using (var db = new DataContext(context))
+			using (var table = db.CreateLocalTable<SimpleBulkCopyTable>())
+			{
+				await db.DataProvider.BulkCopyAsync(table, new BulkCopyOptions() { BulkCopyType = copyType }, new[] { new SimpleBulkCopyTable() { Id = 1 } }, default);
+				await db.DataProvider.BulkCopyAsync(table, new BulkCopyOptions() { BulkCopyType = copyType }, AsyncEnumerableData(2, 1), default);
+			}
+		}
+
+		[Test]
+		public void BulkCopyWithDataContextFromTable(
+			[DataSources(false)] string context,
+			[Values] BulkCopyType copyType)
+		{
+			using (var db = new DataContext(context))
+			using (var table = db.CreateLocalTable<SimpleBulkCopyTable>())
+			{
+				table.BulkCopy(new[] { new SimpleBulkCopyTable() { Id = 1 } });
+				table.BulkCopy(5, new[] { new SimpleBulkCopyTable() { Id = 2 } });
+				table.BulkCopy(new BulkCopyOptions() { BulkCopyType = copyType }, new[] { new SimpleBulkCopyTable() { Id = 3 } });
+			}
+		}
+
+		[Test]
+		public async Task BulkCopyWithDataContextFromTableAsync(
+			[DataSources(false)] string context,
+			[Values] BulkCopyType copyType)
+		{
+			using (var db = new DataContext(context))
+			using (var table = db.CreateLocalTable<SimpleBulkCopyTable>())
+			{
+				await table.BulkCopyAsync(new[] { new SimpleBulkCopyTable() { Id = 1 } });
+				await table.BulkCopyAsync(5, new[] { new SimpleBulkCopyTable() { Id = 2 } });
+				await table.BulkCopyAsync(new BulkCopyOptions() { BulkCopyType = copyType }, new[] { new SimpleBulkCopyTable() { Id = 3 } });
+
+				await table.BulkCopyAsync(AsyncEnumerableData(10, 1));
+				await table.BulkCopyAsync(5, AsyncEnumerableData(20, 1));
+				await table.BulkCopyAsync(new BulkCopyOptions() { BulkCopyType = copyType }, AsyncEnumerableData(30, 1));
+			}
+		}
+
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+		private async IAsyncEnumerable<SimpleBulkCopyTable> AsyncEnumerableData(int start, int count)
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+		{
+			for (var i = 0; i < count; i++)
+				yield return new SimpleBulkCopyTable() { Id = start + i };
+		}
 	}
 }

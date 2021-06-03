@@ -272,6 +272,7 @@ public class a_CreateData : TestBase
 			case TestProvName.SqlServer2019                       :
 			case TestProvName.SqlServer2019SequentialAccess       :
 			case TestProvName.SqlServer2019FastExpressionCompiler :
+			case TestProvName.SqlServerContained                  :
 			case TestProvName.SqlAzure                            : RunScript(context,          "\nGO\n",  "SqlServer");                   break;
 			case TestProvName.Default                             : RunScript(context,          "\nGO\n",  "SQLite",   SQLiteAction);      break;
 			case ProviderName.SQLiteClassic                       :

@@ -440,6 +440,73 @@ namespace LinqToDB
 		[Property(PN.MySql,         "Char",           ServerSideOnly=true)]
 		[Property(                  "NVarChar",       ServerSideOnly=true)] public static string  DefaultNVarChar                          { get { return ""; } }
 
+		/// <summary>
+		/// Performs value conversion to specified type. If conversion failed, returns <c>null</c>.
+		/// Supported databases:
+		/// <list type="bullet">
+		/// <item>SQL Server 2012 or newer</item>
+		/// <item>Oracle 12.2 or newer (not all conversions possible, check Oracle's documentation on CAST expression)</item>
+		/// </list>
+		/// </summary>
+		/// <typeparam name="TFrom">Source value type.</typeparam>
+		/// <typeparam name="TTo">Target value type.</typeparam>
+		/// <param name="value">Value to convert.</param>
+		/// <param name="_">Unused. Added to support method overloads.</param>
+		/// <returns>Value, converted to target type or <c>null</c> if conversion failed.</returns>
+		[CLSCompliant(false)]
+		[Expression(PN.Oracle, "CAST({0} AS {3} DEFAULT NULL ON CONVERSION ERROR)", ServerSideOnly = true, IsNullable = IsNullableType.Nullable)]
+		[Function(             "TRY_CONVERT", 3, 0,                                 ServerSideOnly = true, IsNullable = IsNullableType.Nullable)]
+		public static TTo? TryConvert<TFrom, TTo>(TFrom value, TTo? _) where TTo : struct => throw new LinqException($"'{nameof(TryConvert)}' is only server-side method.");
+
+		/// <summary>
+		/// Performs value conversion to specified type. If conversion failed, returns <c>null</c>.
+		/// Supported databases:
+		/// <list type="bullet">
+		/// <item>SQL Server 2012 or newer</item>
+		/// <item>Oracle 12.2 or newer (not all conversions possible, check Oracle's documentation on CAST expression)</item>
+		/// </list>
+		/// </summary>
+		/// <typeparam name="TFrom">Source value type.</typeparam>
+		/// <typeparam name="TTo">Target value type.</typeparam>
+		/// <param name="value">Value to convert.</param>
+		/// <param name="_">Unused. Added to support method overloads.</param>
+		/// <returns>Value, converted to target type or <c>null</c> if conversion failed.</returns>
+		[CLSCompliant(false)]
+		[Expression(PN.Oracle, "CAST({0} AS {3} DEFAULT NULL ON CONVERSION ERROR)", ServerSideOnly = true, IsNullable = IsNullableType.Nullable)]
+		[Function(             "TRY_CONVERT", 3, 0,                                 ServerSideOnly = true, IsNullable = IsNullableType.Nullable)]
+		public static TTo? TryConvert<TFrom, TTo>(TFrom value, TTo? _) where TTo : class => throw new LinqException($"'{nameof(TryConvert)}' is only server-side method.");
+
+		/// <summary>
+		/// Performs value conversion to specified type. If conversion failed, returns value, specified by <paramref name="defaultValue"/> parameter.
+		/// Supported databases:
+		/// <list type="bullet">
+		/// <item>Oracle 12.2 or newer (not all conversions possible, check Oracle's documentation on CAST expression)</item>
+		/// </list>
+		/// </summary>
+		/// <typeparam name="TFrom">Source value type.</typeparam>
+		/// <typeparam name="TTo">Target value type.</typeparam>
+		/// <param name="value">Value to convert.</param>
+		/// <param name="defaultValue">Value, returned when conversion failed.</param>
+		/// <returns>Value, converted to target type or <paramref name="defaultValue"/> if conversion failed.</returns>
+		[CLSCompliant(false)]
+		[Expression("CAST({0} AS {3} DEFAULT {1} ON CONVERSION ERROR)", ServerSideOnly = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
+		public static TTo? TryConvertOrDefault<TFrom, TTo>(TFrom value, TTo? defaultValue) where TTo : struct => throw new LinqException($"'{nameof(TryConvertOrDefault)}' is only server-side method.");
+
+		/// <summary>
+		/// Performs value conversion to specified type. If conversion failed, returns value, specified by <paramref name="defaultValue"/> parameter.
+		/// Supported databases:
+		/// <list type="bullet">
+		/// <item>Oracle 12.2 or newer (not all conversions possible, check Oracle's documentation on CAST expression)</item>
+		/// </list>
+		/// </summary>
+		/// <typeparam name="TFrom">Source value type.</typeparam>
+		/// <typeparam name="TTo">Target value type.</typeparam>
+		/// <param name="value">Value to convert.</param>
+		/// <param name="defaultValue">Value, returned when conversion failed.</param>
+		/// <returns>Value, converted to target type or <paramref name="defaultValue"/> if conversion failed.</returns>
+		[CLSCompliant(false)]
+		[Expression("CAST({0} AS {3} DEFAULT {1} ON CONVERSION ERROR)", ServerSideOnly = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
+		public static TTo? TryConvertOrDefault<TFrom, TTo>(TFrom value, TTo? defaultValue) where TTo : class => throw new LinqException($"'{nameof(TryConvertOrDefault)}' is only server-side method.");
 		#endregion
 
 		#region String Functions

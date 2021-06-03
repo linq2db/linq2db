@@ -9,6 +9,8 @@ namespace LinqToDB.SqlQuery
 		public override QueryType QueryType          => QueryType.Update;
 		public override QueryElementType ElementType => QueryElementType.UpdateStatement;
 
+		public SqlOutputClause? Output { get; set; }
+
 		private SqlUpdateClause? _update;
 
 		public SqlUpdateClause Update
@@ -40,16 +42,11 @@ namespace LinqToDB.SqlQuery
 		{
 			With?.Walk(options, func);
 			((ISqlExpressionWalkable?)_update)?.Walk(options, func);
+			((ISqlExpressionWalkable?)Output)?.Walk(options, func);
 
 			SelectQuery = (SelectQuery)SelectQuery.Walk(options, func);
 
 			return null;
-		}
-
-		public override IEnumerable<IQueryElement> EnumClauses()
-		{
-			if (_update != null)
-				yield return _update;
 		}
 
 		public override ISqlTableSource? GetTableSource(ISqlTableSource table)
@@ -72,7 +69,6 @@ namespace LinqToDB.SqlQuery
 						if (result != null)
 							return result;
 					}
-
 				}
 			}
 
