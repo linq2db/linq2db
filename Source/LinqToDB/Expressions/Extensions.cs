@@ -206,9 +206,24 @@ namespace LinqToDB.Expressions
 			return new TransformVisitor<TContext>(context, func).Transform(expr);
 		}
 
+		/// <summary>
+		/// Enumerates the expression tree of <paramref name="expr"/> and might
+		/// replace expression with the returned value of the given <paramref name="func"/>.
+		/// </summary>
+		/// <returns>The modified expression.</returns>
+		[return: NotNullIfNotNull("expr")]
+		public static Expression? Transform(this Expression? expr, [InstantHandle] Func<Expression, Expression> func)
+		{
+			if (expr == null)
+				return null;
+
+			return new TransformVisitor<Func<Expression, Expression>>(func, static (f, e) => f(e)).Transform(expr);
+		}
+
 		#endregion
 
 		#region Transform2
+
 		[return: NotNullIfNotNull("expr")]
 		public static Expression? Transform<TContext>(this Expression? expr, TContext context, Func<TContext, Expression, TransformInfo> func)
 		{
@@ -217,6 +232,16 @@ namespace LinqToDB.Expressions
 
 			return new TransformInfoVisitor<TContext>(context, func).Transform(expr);
 		}
+
+		[return: NotNullIfNotNull("expr")]
+		public static Expression? Transform(this Expression? expr, Func<Expression, TransformInfo> func)
+		{
+			if (expr == null)
+				return null;
+
+			return new TransformInfoVisitor<Func<Expression, TransformInfo>>(func, static (f, e) => f(e)).Transform(expr);
+		}
+
 		#endregion
 
 		public static Expression GetMemberGetter(MemberInfo mi, Expression obj)
