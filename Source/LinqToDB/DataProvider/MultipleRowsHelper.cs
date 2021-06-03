@@ -64,11 +64,13 @@ namespace LinqToDB.DataProvider
 			HeaderSize = StringBuilder.Length;
 		}
 
+		private static Func<ColumnDescriptor, bool>? defaultSkipConvert = (_ => false);
+
 		public virtual void BuildColumns(object item,
 			Func<ColumnDescriptor, bool>? skipConvert = null,
 			bool castParameters = false)
 		{
-			skipConvert ??= (_ => false);
+			skipConvert ??= MultipleRowsHelper.defaultSkipConvert;
 
 			for (var i = 0; i < Columns.Length; i++)
 			{
@@ -79,21 +81,9 @@ namespace LinqToDB.DataProvider
 				{
 					var name = ParameterName == "?" ? ParameterName : ParameterName + ++ParameterIndex;
 
-					if (castParameters)
+					if (castParameters && CurrentCount == 0)
 					{
-						StringBuilder.Append("CAST(");
-						StringBuilder.Append(name);
-						StringBuilder.Append(" AS ");
-						StringBuilder.Append(column.DataType);
-						if (!string.IsNullOrEmpty(column.DbType))
-							StringBuilder.Append($":\"{column.DbType}\"");
-
-						if (column.Length != 0)
-							StringBuilder.Append('(').Append(column.Length).Append(')');
-						else if (column.Precision != 0)
-							StringBuilder.Append('(').Append(column.Precision).Append(',').Append(column.Scale).Append(')');
-
-						StringBuilder.Append(')');
+						addParameterCasted(name, column);
 					}
 					else
 					{
@@ -117,6 +107,15 @@ namespace LinqToDB.DataProvider
 			}
 
 			StringBuilder.Length--;
+		}
+
+		private void addParameterCasted(string name, ColumnDescriptor column)
+		{
+			StringBuilder.Append("CAST(");
+			StringBuilder.Append(name);
+			StringBuilder.Append(" AS ");
+			SqlBuilder.BuildDataType(StringBuilder, new SqlDataType(column.GetDbDataType(true)));
+			StringBuilder.Append(')');
 		}
 
 		public bool Execute()
