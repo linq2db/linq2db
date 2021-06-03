@@ -82,13 +82,13 @@ namespace LinqToDB.DataProvider.SapHana
 		private ProviderConnections? TryGetProviderConnections<T>(ITable<T> table)
 			where T : notnull
 		{
-			if (table.DataContext is DataConnection dataConnection)
+			if (table.TryGetDataConnection(out var dataConnection))
 			{
-				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
+				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, table.DataContext.MappingSchema);
 
 				var transaction = dataConnection.Transaction;
 				if (connection != null && transaction != null)
-					transaction = _provider.TryGetProviderTransaction(transaction, dataConnection.MappingSchema);
+					transaction = _provider.TryGetProviderTransaction(transaction, table.DataContext.MappingSchema);
 
 				if (connection != null && (dataConnection.Transaction == null || transaction != null))
 				{
@@ -115,7 +115,7 @@ namespace LinqToDB.DataProvider.SapHana
 			var dataConnection = providerConnections.DataConnection;
 			var connection     = providerConnections.ProviderConnection;
 			var transaction    = providerConnections.ProviderTransaction;
-			var ed             = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
+			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
 			var columns        = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
 			var rc             = new BulkCopyRowsCopied();
 
@@ -147,7 +147,7 @@ namespace LinqToDB.DataProvider.SapHana
 				else if (Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout)
 					bc.BulkCopyTimeout = connection.ConnectionTimeout;
 
-				var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
+				var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(table.DataContext.MappingSchema);
 				var tableName  = GetTableName(sqlBuilder, options, table);
 
 				bc.DestinationTableName = tableName;
@@ -190,7 +190,7 @@ namespace LinqToDB.DataProvider.SapHana
 			var dataConnection = providerConnections.DataConnection;
 			var connection     = providerConnections.ProviderConnection;
 			var transaction    = providerConnections.ProviderTransaction;
-			var ed             = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
+			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
 			var columns        = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
 			var rc             = new BulkCopyRowsCopied();
 
@@ -222,7 +222,7 @@ namespace LinqToDB.DataProvider.SapHana
 				else if (Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout)
 					bc.BulkCopyTimeout = connection.ConnectionTimeout;
 
-				var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
+				var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(table.DataContext.MappingSchema);
 				var tableName  = GetTableName(sqlBuilder, options, table);
 
 				bc.DestinationTableName = tableName;

@@ -16,7 +16,7 @@ namespace LinqToDB.DataProvider
 		where T : notnull
 	{
 		public MultipleRowsHelper(ITable<T> table, BulkCopyOptions options)
-			: base((DataConnection)table.DataContext, options, typeof(T))
+			: base(table.DataContext, options, typeof(T))
 		{
 			TableName = BasicBulkCopy.GetTableName(SqlBuilder, options, table);
 		}
@@ -24,13 +24,19 @@ namespace LinqToDB.DataProvider
 
 	public abstract class MultipleRowsHelper
 	{
-		protected MultipleRowsHelper(DataConnection dataConnection, BulkCopyOptions options, Type entityType)
+		protected MultipleRowsHelper(IDataContext dataConnection, BulkCopyOptions options, Type entityType)
 		{
-			DataConnection = dataConnection;
+			DataConnection = dataConnection is DataConnection dc
+				? dc
+				: dataConnection is DataContext dx
+					? dx.GetDataConnection()
+					: throw new ArgumentException($"Must be of {nameof(DataConnection)} or {nameof(DataContext)} type but was {dataConnection.GetType()}", nameof(dataConnection));
+
+			MappingSchema  = dataConnection.MappingSchema;
 			Options        = options;
-			SqlBuilder     = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
-			ValueConverter = dataConnection.MappingSchema.ValueToSqlConverter;
-			Descriptor     = dataConnection.MappingSchema.GetEntityDescriptor(entityType);
+			SqlBuilder     = DataConnection.DataProvider.CreateSqlBuilder(MappingSchema);
+			ValueConverter = MappingSchema.ValueToSqlConverter;
+			Descriptor     = MappingSchema.GetEntityDescriptor(entityType);
 			Columns        = Descriptor.Columns
 				.Where(c => !c.SkipOnInsert || c.IsIdentity && options.KeepIdentity == true)
 				.ToArray();
@@ -41,6 +47,7 @@ namespace LinqToDB.DataProvider
 
 		public readonly ISqlBuilder         SqlBuilder;
 		public readonly DataConnection      DataConnection;
+		public readonly MappingSchema       MappingSchema;
 		public readonly BulkCopyOptions     Options;
 		public readonly ValueToSqlConverter ValueConverter;
 		public readonly EntityDescriptor    Descriptor;

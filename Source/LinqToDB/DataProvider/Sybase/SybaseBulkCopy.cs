@@ -84,16 +84,16 @@ namespace LinqToDB.DataProvider.Sybase
 		private ProviderConnections? GetProviderConnection<T>(ITable<T> table)
 			where T : notnull
 		{
-			if (table.DataContext is DataConnection dataConnection && _provider.Adapter.BulkCopy != null)
+			if (table.TryGetDataConnection(out var dataConnection) && _provider.Adapter.BulkCopy != null)
 			{
-				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
+				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, table.DataContext.MappingSchema);
 
 				// for run in transaction see
 				// https://stackoverflow.com/questions/57675379
 				// provider will call sp_oledb_columns which creates temp table
 				var transaction = dataConnection.Transaction;
 				if (connection != null && transaction != null)
-					transaction = _provider.TryGetProviderTransaction(transaction, dataConnection.MappingSchema);
+					transaction = _provider.TryGetProviderTransaction(transaction, table.DataContext.MappingSchema);
 
 				if (connection != null && (dataConnection.Transaction == null || transaction != null))
 				{
@@ -118,9 +118,9 @@ namespace LinqToDB.DataProvider.Sybase
 			var dataConnection = providerConnections.DataConnection;
 			var connection     = providerConnections.ProviderConnection;
 			var transaction    = providerConnections.ProviderTransaction;
-			var ed             = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
+			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
 			var columns        = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
-			var sb             = _provider.CreateSqlBuilder(dataConnection.MappingSchema);
+			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema);
 			var rd             = createDataReader(columns);
 			var sqlopt         = SybaseProviderAdapter.AseBulkCopyOptions.Default;
 			var rc             = new BulkCopyRowsCopied();
