@@ -18,7 +18,8 @@ namespace LinqToDB.DataProvider
 		protected virtual int MaxParameters => 999;
 		protected virtual int MaxSqlLength => 100000;
 
-		protected virtual bool CastOnUnionAll => false;
+		protected virtual bool CastOnUnionAll         => false;
+		protected virtual bool TypeAllUnionParameters => false;
 
 		public virtual BulkCopyRowsCopied BulkCopy<T>(BulkCopyType bulkCopyType, ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 			where T : notnull
@@ -548,7 +549,7 @@ namespace LinqToDB.DataProvider
 			helper.StringBuilder
 				.AppendLine()
 				.Append('(');
-			helper.BuildColumns(item!);
+			helper.BuildColumns(item);
 			helper.StringBuilder.Append("),");
 
 			helper.RowsCopied.RowsCopied++;
@@ -612,7 +613,7 @@ namespace LinqToDB.DataProvider
 			helper.StringBuilder
 				.AppendLine()
 				.Append("SELECT ");
-			helper.BuildColumns(item!);
+			helper.BuildColumns(item, castParameters: CastOnUnionAll, castAllRows: TypeAllUnionParameters);
 			helper.StringBuilder.Append(from);
 			helper.StringBuilder.Append(" UNION ALL");
 
@@ -667,7 +668,7 @@ namespace LinqToDB.DataProvider
 			helper.StringBuilder
 				.AppendLine()
 				.Append("\tSELECT ");
-			helper.BuildColumns(item,castParameters:CastOnUnionAll);
+			helper.BuildColumns(item, castParameters: CastOnUnionAll, castAllRows : TypeAllUnionParameters);
 			helper.StringBuilder.Append(from);
 			helper.StringBuilder.Append(" UNION ALL");
 

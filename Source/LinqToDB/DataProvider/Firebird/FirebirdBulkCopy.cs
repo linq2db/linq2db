@@ -21,7 +21,8 @@ namespace LinqToDB.DataProvider.Firebird
 		/// </remarks>
 		protected override int MaxParameters => 32767;
 
-		protected override bool CastOnUnionAll => true;
+		protected override bool CastOnUnionAll         => true;
+		protected override bool TypeAllUnionParameters => true;
 
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
 			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
