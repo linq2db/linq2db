@@ -92,7 +92,7 @@ namespace LinqToDB.DataProvider
 
 					if (castParameters && (CurrentCount == 0 || castAllRows))
 					{
-						AddParameterCasted(name, column);
+						AddParameterCasted(name, ColumnTypes[i]);
 					}
 					else
 					{
@@ -118,12 +118,12 @@ namespace LinqToDB.DataProvider
 			StringBuilder.Length--;
 		}
 
-		private void AddParameterCasted(string name, ColumnDescriptor column)
+		private void AddParameterCasted(string name, SqlDataType type)
 		{
 			StringBuilder.Append("CAST(");
 			StringBuilder.Append(name);
 			StringBuilder.Append(" AS ");
-			SqlBuilder.BuildDataType(StringBuilder, new SqlDataType(column.GetDbDataType(true)));
+			SqlBuilder.BuildDataType(StringBuilder, type);
 			StringBuilder.Append(')');
 		}
 
