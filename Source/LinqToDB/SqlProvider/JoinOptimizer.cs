@@ -725,17 +725,16 @@ namespace LinqToDB.SqlProvider
 			var knownKeys = new List<IList<ISqlExpression>>();
 			QueryHelper.CollectUniqueKeys(tableSource, knownKeys);
 			if (knownKeys.Count == 0)
-			{
 				return null;
-			}
 
 			var result = new List<VirtualField[]>();
 
 			foreach (var v in knownKeys)
 			{
-				var fields = v.Select(GetUnderlayingField).ToArray();
-				if (fields.Length == v.Count)
-					result.Add(fields!);
+				var fields = new VirtualField[v.Count];
+				for (var i = 0; i < v.Count; i++)
+					fields[i] = GetUnderlayingField(v[i]) ?? throw new InvalidOperationException($"Cannot get field for {v[i]}");
+				result.Add(fields);
 			}
 
 			return result.Count > 0 ? result : null;
