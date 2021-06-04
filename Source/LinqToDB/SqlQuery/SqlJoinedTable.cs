@@ -4,7 +4,7 @@ using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlJoinedTable : IQueryElement, ISqlExpressionWalkable, ICloneableElement
+	public class SqlJoinedTable : IQueryElement, ISqlExpressionWalkable
 	{
 		public SqlJoinedTable(JoinType joinType, SqlTableSource table, bool isWeak, SqlSearchCondition searchCondition)
 		{
@@ -30,21 +30,6 @@ namespace LinqToDB.SqlQuery
 		public SqlSearchCondition Condition       { get; private set; }
 		public bool               IsWeak          { get; set; }
 		public bool               CanConvertApply { get; set; }
-
-		public ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			if (!objectTree.TryGetValue(this, out var clone))
-				objectTree.Add(this, clone = new SqlJoinedTable(
-					JoinType,
-					(SqlTableSource)Table.Clone(objectTree, doClone),
-					IsWeak,
-					(SqlSearchCondition)Condition.Clone(objectTree, doClone)));
-
-			return clone;
-		}
 
 #if OVERRIDETOSTRING
 

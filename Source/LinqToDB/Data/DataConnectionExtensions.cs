@@ -2246,10 +2246,7 @@ namespace LinqToDB.Data
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
 
-			if (!(table.DataContext is DataConnection dataConnection))
-				throw new ArgumentException("DataContext must be of DataConnection type.");
-
-			return dataConnection.DataProvider.BulkCopy(table, options, source);
+			return table.GetDataProvider().BulkCopy(table, options, source);
 		}
 
 		/// <summary>
@@ -2265,10 +2262,7 @@ namespace LinqToDB.Data
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
 
-			if (!(table.DataContext is DataConnection dataConnection))
-				throw new ArgumentException("DataContext must be of DataConnection type.");
-
-			return dataConnection.DataProvider.BulkCopy(table, new BulkCopyOptions { MaxBatchSize = maxBatchSize, }, source);
+			return table.GetDataProvider().BulkCopy(table, new BulkCopyOptions { MaxBatchSize = maxBatchSize, }, source);
 		}
 
 		/// <summary>
@@ -2283,11 +2277,10 @@ namespace LinqToDB.Data
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
 
-			if (!(table.DataContext is DataConnection dataConnection))
-				throw new ArgumentException("DataContext must be of DataConnection type.");
-
-			return dataConnection.DataProvider.BulkCopy(table, new BulkCopyOptions(), source);
+			return table.GetDataProvider().BulkCopy(table, new BulkCopyOptions(), source);
 		}
+
+		
 
 		#endregion
 
@@ -2369,10 +2362,7 @@ namespace LinqToDB.Data
 			if (table  == null) throw new ArgumentNullException(nameof(table));
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			if (!(table.DataContext is DataConnection dataConnection))
-				throw new ArgumentException("DataContext must be of DataConnection type.");
-
-			return dataConnection.DataProvider.BulkCopyAsync(table, options, source, cancellationToken);
+			return table.GetDataProvider().BulkCopyAsync(table, options, source, cancellationToken);
 		}
 
 		/// <summary>
@@ -2390,10 +2380,7 @@ namespace LinqToDB.Data
 			if (table  == null) throw new ArgumentNullException(nameof(table));
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			if (!(table.DataContext is DataConnection dataConnection))
-				throw new ArgumentException("DataContext must be of DataConnection type.");
-
-			return dataConnection.DataProvider.BulkCopyAsync(table, new BulkCopyOptions { MaxBatchSize = maxBatchSize, }, source, cancellationToken);
+			return table.GetDataProvider().BulkCopyAsync(table, new BulkCopyOptions { MaxBatchSize = maxBatchSize, }, source, cancellationToken);
 		}
 
 		/// <summary>
@@ -2410,10 +2397,7 @@ namespace LinqToDB.Data
 			if (table  == null) throw new ArgumentNullException(nameof(table));
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			if (!(table.DataContext is DataConnection dataConnection))
-				throw new ArgumentException("DataContext must be of DataConnection type.");
-
-			return dataConnection.DataProvider.BulkCopyAsync(table, new BulkCopyOptions(), source, cancellationToken);
+			return table.GetDataProvider().BulkCopyAsync(table, new BulkCopyOptions(), source, cancellationToken);
 		}
 
 		#endregion
@@ -2497,10 +2481,7 @@ namespace LinqToDB.Data
 			if (table  == null) throw new ArgumentNullException(nameof(table));
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			if (!(table.DataContext is DataConnection dataConnection))
-				throw new ArgumentException("DataContext must be of DataConnection type.");
-
-			return dataConnection.DataProvider.BulkCopyAsync(table, options, source, cancellationToken);
+			return table.GetDataProvider().BulkCopyAsync(table, options, source, cancellationToken);
 		}
 
 		/// <summary>
@@ -2518,10 +2499,7 @@ namespace LinqToDB.Data
 			if (table  == null) throw new ArgumentNullException(nameof(table));
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			if (!(table.DataContext is DataConnection dataConnection))
-				throw new ArgumentException("DataContext must be of DataConnection type.");
-
-			return dataConnection.DataProvider.BulkCopyAsync(table, new BulkCopyOptions { MaxBatchSize = maxBatchSize, }, source, cancellationToken);
+			return table.GetDataProvider().BulkCopyAsync(table, new BulkCopyOptions { MaxBatchSize = maxBatchSize, }, source, cancellationToken);
 		}
 
 		/// <summary>
@@ -2538,10 +2516,7 @@ namespace LinqToDB.Data
 			if (table  == null) throw new ArgumentNullException(nameof(table));
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			if (!(table.DataContext is DataConnection dataConnection))
-				throw new ArgumentException("DataContext must be of DataConnection type.");
-
-			return dataConnection.DataProvider.BulkCopyAsync(table, new BulkCopyOptions(), source, cancellationToken);
+			return table.GetDataProvider().BulkCopyAsync(table, new BulkCopyOptions(), source, cancellationToken);
 		}
 
 #endif

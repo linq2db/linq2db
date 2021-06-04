@@ -195,39 +195,9 @@ namespace LinqToDB.Linq.Builder
 									{
 										case ExpressionType.New        :
 										case ExpressionType.MemberInit :
-											{
-												var resultExpression = memberExpression.Transform(e =>
-												{
-													if (!ReferenceEquals(e, memberExpression))
-													{
-														switch (e.NodeType)
-														{
-															case ExpressionType.MemberAccess :
-															case ExpressionType.Parameter :
-																{
-																	var sequence = GetSequence(e, 0)!;
-																	return Builder.BuildExpression(sequence, e, enforceServerSide);
-																}
-															default:
-																{
-																	if (e is ContextRefExpression refExpression)
-																	{
-																		return Builder.BuildExpression(refExpression.BuildContext, e, enforceServerSide);
-																	}
-
-																	break;
-																}
-														}
-
-														if (enforceServerSide)
-															return Builder.BuildExpression(this, e, true);
-													}
-
-													return e;
-												});
-
-												return resultExpression;
-											}
+										{
+											return Builder.BuildExpression(this, memberExpression, enforceServerSide);
+										}
 									}
 
 									var me = memberExpression.NodeType == ExpressionType.Parameter ? null : memberExpression;
@@ -276,7 +246,7 @@ namespace LinqToDB.Linq.Builder
 										}
 								}
 
-								var expr = expression.Transform(ex => ReferenceEquals(ex, levelExpression) ? memberExpression : ex);
+								var expr = expression.Replace(levelExpression, memberExpression);
 
 								if (sequence == null)
 									return Builder.BuildExpression(this, expr, enforceServerSide);
@@ -464,8 +434,7 @@ namespace LinqToDB.Linq.Builder
 
 		SqlInfo[] ConvertExpressions(Expression expression, ConvertFlags flags, ColumnDescriptor? columnDescriptor)
 		{
-			return Builder.ConvertExpressions(this, expression, flags, columnDescriptor)
-				.ToArray();
+			return Builder.ConvertExpressions(this, expression, flags, columnDescriptor);
 		}
 
 		#endregion
@@ -1247,11 +1216,11 @@ namespace LinqToDB.Linq.Builder
 					return memberExpression;
 			}
 
-			if (!memberExpression.Type.IsAssignableFrom(levelExpression.Type))
+			if (!memberExpression.Type.IsAssignableFrom(levelExpression.Type) && !levelExpression.Type.IsAssignableFrom(memberExpression.Type))
 				return memberExpression;
 
 			return !ReferenceEquals(levelExpression, expression) ?
-				expression.Transform(ex => ReferenceEquals(ex, levelExpression) ? memberExpression : ex) :
+				expression.Replace(levelExpression, memberExpression) :
 				memberExpression;
 		}
 

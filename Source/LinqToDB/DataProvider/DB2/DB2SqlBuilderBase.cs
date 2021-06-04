@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Data;
 using System.Data.SqlTypes;
+using System.Data.Common;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
@@ -9,7 +11,6 @@ namespace LinqToDB.DataProvider.DB2
 	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
-	using System.Data.Common;
 
 	abstract partial class DB2SqlBuilderBase : BasicSqlBuilder
 	{
@@ -28,6 +29,8 @@ namespace LinqToDB.DataProvider.DB2
 		SqlField? _identityField;
 
 		protected abstract DB2Version Version { get; }
+
+		protected override bool SupportsNullInColumn => false;
 
 		public override int CommandCount(SqlStatement statement)
 		{
@@ -67,6 +70,7 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			var table = truncateTable.Table!;
 
+			BuildTag(truncateTable);
 			AppendIndent();
 			StringBuilder.Append("TRUNCATE TABLE ");
 			BuildPhysicalTable(table, null);
@@ -248,6 +252,7 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			var table = dropTable.Table!;
 
+			BuildTag(dropTable);
 			if (dropTable.Table.TableOptions.HasDropIfExists())
 			{
 				AppendIndent().Append(@"BEGIN
@@ -332,6 +337,21 @@ END");
 				StringBuilder
 					.AppendLine("END");
 			}
+		}
+
+		protected override void BuildCreateTablePrimaryKey(SqlCreateTableStatement createTable, string pkName, IEnumerable<string> fieldNames)
+		{
+			// DB2 doesn't support constraints on temp tables
+			if (createTable.Table.TableOptions.IsTemporaryOptionSet())
+			{
+				var idx = StringBuilder.Length - 1;
+				while (idx >= 0 && StringBuilder[idx] != ',')
+					idx--;
+				StringBuilder.Length = idx == -1 ? 0 : idx;
+				return;
+			}
+
+			base.BuildCreateTablePrimaryKey(createTable, pkName, fieldNames);
 		}
 
 		public override string? GetTableSchemaName(SqlTable table)

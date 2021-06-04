@@ -12,7 +12,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 	public class SapHanaProviderAdapter : IDynamicProviderAdapter
 	{
-		private static readonly object _syncRoot = new object();
+		private static readonly object _syncRoot = new ();
 		private static SapHanaProviderAdapter? _instance;
 
 #if NETFRAMEWORK
@@ -207,11 +207,15 @@ namespace LinqToDB.DataProvider.SapHana
 			public HanaBulkCopy(HanaConnection connection, HanaBulkCopyOptions options, HanaTransaction? transaction) => throw new NotImplementedException();
 
 			public void Dispose      ()                       => ((Action<HanaBulkCopy>)CompiledWrappers[0])(this);
+#pragma warning disable RS0030 // API mapping must preserve type
 			public void WriteToServer(IDataReader dataReader) => ((Action<HanaBulkCopy, IDataReader>)CompiledWrappers[1])(this, dataReader);
+#pragma warning restore RS0030 //  API mapping must preserve type
 
 			public bool CanWriteToServerAsync => CompiledWrappers[11] != null;
+#pragma warning disable RS0030 // API mapping must preserve type
 			public Task WriteToServerAsync(IDataReader dataReader, CancellationToken cancellationToken)
 				=> ((Func<HanaBulkCopy, IDataReader, CancellationToken, Task>)CompiledWrappers[11])(this, dataReader, cancellationToken);
+#pragma warning restore RS0030 //  API mapping must preserve type
 
 			public int NotifyAfter
 			{

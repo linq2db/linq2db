@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Data;
+using System.Data.Common;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
@@ -6,8 +8,6 @@ using System.Text;
 
 namespace LinqToDB.Data
 {
-	using System.Data;
-	using System.Data.Common;
 
 	/// <summary>
 	/// Tracing information for the <see cref="DataConnection"/> events.
@@ -124,7 +124,7 @@ namespace LinqToDB.Data
 
 					sb.AppendLine();
 
-					sqlProvider.PrintParameters(sb, Command.Parameters.Cast<DbParameter>().ToArray());
+					sqlProvider.PrintParameters(sb, Command.Parameters.Cast<DbParameter>());
 
 					sb.AppendLine(Command.CommandText);
 

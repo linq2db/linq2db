@@ -79,9 +79,9 @@ namespace LinqToDB.SqlQuery
 			var conv = _valueConverter;
 
 			if (conv == null)
-				_valueConverter = v => v == null ? null : (object) ((int) v + take);
+				_valueConverter = v => v == null ? null : ((int) v + take);
 			else
-				_valueConverter = v => v == null ? null : (object) ((int) conv(v)! + take);
+				_valueConverter = v => v == null ? null : ((int) conv(v)! + take);
 		}
 
 		#endregion
@@ -135,16 +135,6 @@ namespace LinqToDB.SqlQuery
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{
 			return ((ISqlExpression)this).Equals(other) && comparer(this, other);
-		}
-
-		#endregion
-
-		#region ICloneableElement Members
-
-		public ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			// we do not allow parameters cloning 
-			return this;
 		}
 
 		#endregion

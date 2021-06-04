@@ -1,14 +1,14 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
+using System.Linq;
+using System.Threading;
 using BenchmarkDotNet.Attributes;
 using LinqToDB.Benchmarks.Mappings;
+using LinqToDB.Benchmarks.TestProvider;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.PostgreSQL;
-using LinqToDB.Benchmarks.TestProvider;
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Data.Common;
 
 namespace LinqToDB.Benchmarks.Queries
 {
@@ -16,15 +16,15 @@ namespace LinqToDB.Benchmarks.Queries
 	{
 		private const int                                            _threadsMultiplier = 2;
 		private Thread[]                                             _threads           = null!;
-		private EventWaitHandle[]                                    _threadEvents      = null!;
 		private EventWaitHandle                                      _startJob          = new ManualResetEvent(false);
 		private EventWaitHandle                                      _endJob            = new ManualResetEvent(false);
 		private Action<DataConnection, long?>                        _job               = null!;
 		private const int                                            _iterations        = 2;
 		private long?                                                _userId            = 100500;
 		private DataConnection[]                                     _db                = null!;
-		private DbConnection                                         _cn                = null!;
+		private DbConnection                                        _cn                = null!;
 		private static Func<DataConnection, long?, IQueryable<User>> _compiled          = null!;
+		private volatile int                                         _doneCount;
 
 		[GlobalSetup]
 		public void Setup()
@@ -56,12 +56,10 @@ namespace LinqToDB.Benchmarks.Queries
 			var threadCount = ThreadCount;
 			_threads        = new Thread[threadCount];
 			_db             = new DataConnection[threadCount];
-			_threadEvents   = new AutoResetEvent[threadCount];
 
 			for (var i = 0; i < _threads.Length; i++)
 			{
 				_db[i]                   = new DataConnection(new PostgreSQLDataProvider(PostgreSQLVersion.v95), _cn);
-				_threadEvents[i]         = new AutoResetEvent(false);
 				_threads[i]              = new Thread(ThreadWorker);
 				_threads[i].IsBackground = true; // we don't stop threads explicitly
 				_threads[i].Start(i);
@@ -74,17 +72,21 @@ namespace LinqToDB.Benchmarks.Queries
 			while (_startJob.WaitOne(Timeout.Infinite))
 			{
 				_job(_db[idx], _userId);
-				_threadEvents[idx].Set();
+				Interlocked.Increment(ref _doneCount);
 				_endJob.WaitOne(Timeout.Infinite);
 			}
 		}
 
 		void RunConcurrent(Action<DataConnection, long?> action)
 		{
+			Interlocked.Exchange(ref _doneCount, 0);
 			_job = action;
 			_endJob.Reset();
 			_startJob.Set();
-			WaitHandle.WaitAll(_threadEvents);
+			while (_doneCount != ThreadCount)
+			{
+				Thread.Sleep(1);
+			}
 			_startJob.Reset();
 			_endJob.Set();
 		}

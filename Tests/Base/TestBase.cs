@@ -30,7 +30,6 @@ using NUnit.Framework.Internal;
 
 namespace Tests
 {
-	using FastExpressionCompiler;
 	using LinqToDB.Data.RetryPolicy;
 	using LinqToDB.Interceptors;
 	using Model;
@@ -45,8 +44,10 @@ namespace Tests
 			public static readonly DateTimeOffset DateTimeOffsetUtc       = new DateTimeOffset(2020, 2, 29, 17, 9, 55, 123, TimeSpan.Zero).AddTicks(1234);
 			public static readonly DateTime DateTime                      = new DateTime(2020, 2, 29, 17, 54, 55, 123).AddTicks(1234);
 			public static readonly DateTime DateTimeUtc                   = new DateTime(2020, 2, 29, 17, 54, 55, 123, DateTimeKind.Utc).AddTicks(1234);
+			public static readonly DateTime DateTime4Utc                  = new DateTime(2020, 2, 29, 17, 54, 55, 123, DateTimeKind.Utc).AddTicks(1000);
 			public static readonly DateTime Date                          = new (2020, 2, 29);
 			public static readonly TimeSpan TimeOfDay                     = new TimeSpan(0, 17, 54, 55, 123).Add(TimeSpan.FromTicks(1234));
+			public static readonly TimeSpan TimeOfDay4                    = new TimeSpan(0, 17, 54, 55, 123).Add(TimeSpan.FromTicks(1000));
 			public static readonly Guid     Guid1                         = new ("bc7b663d-0fde-4327-8f92-5d8cc3a11d11");
 			public static readonly Guid     Guid2                         = new ("a948600d-de21-4f74-8ac2-9516b287076e");
 			public static readonly Guid     Guid3                         = new ("bd3973a5-4323-4dd8-9f4f-df9f93e2a627");
@@ -333,8 +334,8 @@ namespace Tests
 		}
 
 #if NET472
-		const           int              IP = 22654;
-		static          bool             _isHostOpen;
+		const           int          IP = 22654;
+		static          bool         _isHostOpen;
 		static          TestLinqService? _service;
 		static readonly object           _syncRoot = new ();
 #endif
@@ -410,6 +411,7 @@ namespace Tests
 			TestProvName.Oracle11Managed,
 			ProviderName.Firebird,
 			TestProvName.Firebird3,
+			TestProvName.Firebird4,
 			ProviderName.SqlServer2008,
 			ProviderName.SqlServer2012,
 			ProviderName.SqlServer2014,
@@ -418,6 +420,7 @@ namespace Tests
 			TestProvName.SqlServer2019,
 			TestProvName.SqlServer2019SequentialAccess,
 			TestProvName.SqlServer2019FastExpressionCompiler,
+			TestProvName.SqlServerContained,
 			ProviderName.SqlServer2005,
 			TestProvName.SqlAzure,
 			ProviderName.PostgreSQL,
@@ -1101,6 +1104,58 @@ namespace Tests
 			return GetProviderName(context, out var _) == TestProvName.SqlServer2019;
 		}
 
+		/// <summary>
+		/// Returns case-sensitivity of string comparison (e.g. using LIKE) without explicit collation specified.
+		/// Depends on database implementation or database collation.
+		/// </summary>
+		protected bool IsCaseSensitiveComparison(string context)
+		{
+			var provider = GetProviderName(context, out var _);
+
+			// we intentionally configure Sql Server 2019 test database to be case-sensitive to test
+			// linq2db support for this configuration
+			// on CI we test two configurations:
+			// linux/mac: db is case sensitive, catalog is case insensitive
+			// windows: both db and catalog are case sensitive
+			return provider == TestProvName.SqlServer2019
+				|| provider == ProviderName.DB2
+				|| provider.StartsWith(ProviderName.Firebird)
+				|| provider.StartsWith(ProviderName.Informix)
+				|| provider.StartsWith(ProviderName.Oracle)
+				|| provider.StartsWith(ProviderName.PostgreSQL)
+				|| provider.StartsWith(ProviderName.SapHana)
+				|| provider.StartsWith(ProviderName.Sybase)
+				;
+		}
+
+		/// <summary>
+		/// Returns status of test CollatedTable - wether it is configured to have proper column collations or
+		/// use database defaults (<see cref="IsCaseSensitiveComparison"/>).
+		/// </summary>
+		protected bool IsCollatedTableConfigured(string context)
+		{
+			var provider = GetProviderName(context, out var _);
+
+			// unconfigured providers (some could be configured in theory):
+			// Access : no such concept as collation on column level (db-only)
+			// DB2
+			// Informix
+			// Oracle (in theory v12 has collations, but to enable them you need to complete quite a quest...)
+			// PostgreSQL (v12 + custom collation required (no default CI collations))
+			// SAP HANA
+			// SQL CE
+			// Sybase ASE
+			return provider == TestProvName.SqlAzure
+				|| provider == TestProvName.MariaDB
+				|| provider == TestProvName.AllOracleNative
+				|| provider.StartsWith(ProviderName.SqlServer)
+				|| provider.StartsWith(ProviderName.Firebird)
+				|| provider.StartsWith(ProviderName.MySql)
+				// while it is configured, LIKE in SQLite is case-insensitive (for ASCII only though)
+				//|| provider.StartsWith(ProviderName.SQLite)
+				;
+		}
+
 		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result, bool allowEmpty = false)
 		{
 			AreEqual(t => t, expected, result, EqualityComparer<T>.Default, allowEmpty);
@@ -1227,7 +1282,7 @@ namespace Tests
 			var expr    = query.Expression;
 			var loaded  = new Dictionary<Type, Expression>();
 			var actual  = query.ToArray();
-			var newExpr = expr.Transform(e =>
+			var newExpr = expr.Transform(loaded, static (loaded, e) =>
 			{
 				if (e.NodeType == ExpressionType.Call)
 				{
@@ -1312,6 +1367,7 @@ namespace Tests
 				case TestProvName.SqlServer2019:
 				case TestProvName.SqlServer2019SequentialAccess:
 				case TestProvName.SqlServer2019FastExpressionCompiler:
+				case TestProvName.SqlServerContained                 :
 				{
 					if (!tableName.StartsWith("#"))
 						finalTableName = "#" + tableName;
@@ -1392,6 +1448,11 @@ namespace Tests
 			}
 
 			CustomTestContext.Release();
+		}
+
+		protected string GetCurrentBaselines()
+		{
+			return CustomTestContext.Get().Get<StringBuilder>(CustomTestContext.BASELINE)?.ToString() ?? string.Empty;
 		}
 
 		protected static bool IsIDSProvider(string context)

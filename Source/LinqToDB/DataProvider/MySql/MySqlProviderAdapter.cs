@@ -13,8 +13,8 @@ namespace LinqToDB.DataProvider.MySql
 
 	public class MySqlProviderAdapter : IDynamicProviderAdapter
 	{
-		private static readonly object _mysqlDataSyncRoot      = new object();
-		private static readonly object _mysqlConnectorSyncRoot = new object();
+		private static readonly object _mysqlDataSyncRoot      = new ();
+		private static readonly object _mysqlConnectorSyncRoot = new ();
 
 		private static MySqlProviderAdapter? _mysqlDataInstance;
 		private static MySqlProviderAdapter? _mysqlConnectorInstance;
@@ -285,8 +285,8 @@ namespace LinqToDB.DataProvider.MySql
 
 		internal class MySqlConnector
 		{
-			private static readonly Version MinBulkCopyVersion = new Version(0, 67);
-			private static readonly Version MinModernVersion   = new Version(1, 0);
+			private static readonly Version MinBulkCopyVersion = new (0, 67);
+			private static readonly Version MinModernVersion   = new (1, 0);
 
 			internal static MySqlProviderAdapter CreateAdapter()
 			{
@@ -480,12 +480,16 @@ namespace LinqToDB.DataProvider.MySql
 
 				public MySqlBulkCopy(MySqlConnection connection, MySqlTransaction? transaction) => throw new NotImplementedException();
 
+#pragma warning disable RS0030 // API mapping must preserve type
 				public void WriteToServer(IDataReader dataReader) => ((Action<MySqlBulkCopy, IDataReader>)CompiledWrappers[0])(this, dataReader);
 				public Task WriteToServerAsync      (IDataReader dataReader, CancellationToken cancellationToken) => ((Func<MySqlBulkCopy, IDataReader, CancellationToken,      Task>)CompiledWrappers[8])(this, dataReader, cancellationToken);
+#pragma warning restore RS0030 //  API mapping must preserve type
 				public bool CanWriteToServerAsync => CompiledWrappers[8] != null;
 #if !NETFRAMEWORK
 				[TypeWrapperName("WriteToServerAsync")]
+#pragma warning disable RS0030 // API mapping must preserve type
 				public ValueTask WriteToServerAsync2(IDataReader dataReader, CancellationToken cancellationToken) => ((Func<MySqlBulkCopy, IDataReader, CancellationToken, ValueTask>)CompiledWrappers[9])(this, dataReader, cancellationToken);
+#pragma warning restore RS0030 //  API mapping must preserve type
 				public bool CanWriteToServerAsync2 => CompiledWrappers[9] != null;
 #else
 				[TypeWrapperName("WriteToServerAsync")]

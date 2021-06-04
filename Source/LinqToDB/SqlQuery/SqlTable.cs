@@ -25,7 +25,7 @@ namespace LinqToDB.SqlQuery
 			string? server, string? database, string? schema, string? physicalName,
 			Type?                    objectType,
 			SequenceNameAttribute[]? sequenceAttributes,
-			SqlField[]               fields,
+			IEnumerable<SqlField>    fields,
 			SqlTableType             sqlTableType,
 			ISqlExpression[]?        tableArguments,
 			TableOptions             tableOptions)
@@ -199,14 +199,14 @@ namespace LinqToDB.SqlQuery
 		public         ISqlExpression[]? TableArguments { get; set; }
 		public         TableOptions      TableOptions   { get; set; }
 
-		private readonly Dictionary<string, SqlField> _fieldsLookup   = new Dictionary<string, SqlField>();
+		private readonly Dictionary<string, SqlField> _fieldsLookup   = new ();
 
 		// list user to preserve order of fields in queries
-		private readonly List<SqlField>                  _orderedFields  = new List<SqlField>();
-		public IReadOnlyCollection<SqlField>   Fields => _orderedFields;
+		private readonly List<SqlField>                  _orderedFields  = new ();
+		public           IReadOnlyList<SqlField>         Fields => _orderedFields;
 
 		// identity fields cached, as it is most used fields filter
-		private readonly List<SqlField>                  _identityFields = new List<SqlField>();
+		private readonly List<SqlField>                  _identityFields = new ();
 		public IReadOnlyList<SqlField> IdentityFields => _identityFields;
 
 		internal void ClearFields()
@@ -216,7 +216,7 @@ namespace LinqToDB.SqlQuery
 			_identityFields.Clear();
 		}
 
-		public SequenceNameAttribute[]? SequenceAttributes { get; protected set; }
+		public SequenceNameAttribute[]? SequenceAttributes { get; internal set; }
 
 		private SqlField? _all;
 		public  SqlField   All => _all ??= SqlField.All(this);
@@ -286,51 +286,6 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region ICloneableElement Members
-
-		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			if (!objectTree.TryGetValue(this, out var clone))
-			{
-				var table = new SqlTable
-				{
-					Name               = Name,
-					Alias              = Alias,
-					Server             = Server,
-					Database           = Database,
-					Schema             = Schema,
-					PhysicalName       = PhysicalName,
-					ObjectType         = ObjectType,
-					SqlTableType       = SqlTableType,
-					SequenceAttributes = SequenceAttributes,
-				};
-
-				table.ClearFields();
-
-				foreach (var field in Fields)
-				{
-					var fc = new SqlField(field);
-
-					objectTree.Add(field, fc);
-					table.     Add(fc);
-				}
-
-				TableArguments = TableArguments?.Select(e => (ISqlExpression)e.Clone(objectTree, doClone)).ToArray();
-
-				objectTree.Add(this, table);
-				objectTree.Add(All,  table.All);
-
-				clone = table;
-			}
-
-			return clone;
-		}
-
-		#endregion
-
 		#region IQueryElement Members
 
 		public virtual QueryElementType ElementType { [DebuggerStepThrough] get; } = QueryElementType.SqlTable;
@@ -383,7 +338,7 @@ namespace LinqToDB.SqlQuery
 
 		#region System tables
 		internal static SqlTable Inserted(Type objectType)
-			=> new SqlTable(objectType)
+			=> new (objectType)
 			{
 				Name         = "INSERTED",
 				PhysicalName = "INSERTED",
@@ -393,7 +348,7 @@ namespace LinqToDB.SqlQuery
 				SqlTableType = SqlTableType.SystemTable,
 			};
 		internal static SqlTable Deleted(Type objectType)
-			=> new SqlTable(objectType)
+			=> new (objectType)
 			{
 				Name         = "DELETED",
 				PhysicalName = "DELETED",

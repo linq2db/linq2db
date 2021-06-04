@@ -8,6 +8,9 @@ namespace LinqToDB.Linq.Builder
 
 	class AllJoinsBuilder : MethodCallBuilder
 	{
+		private static readonly string[] RightNullableOnlyMethodNames    = { "RightJoin", "FullJoin" };
+		private static readonly string[] NotRightNullableOnlyMethodNames = { "InnerJoin", "LeftJoin", "RightJoin", "FullJoin" };
+
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			return IsMatchingMethod(methodCall, false);
@@ -17,8 +20,8 @@ namespace LinqToDB.Linq.Builder
 		{
 			return
 				methodCall.IsQueryable("Join") && methodCall.Arguments.Count == 3
-				|| !rightNullableOnly && methodCall.IsQueryable("InnerJoin", "LeftJoin", "RightJoin", "FullJoin") && methodCall.Arguments.Count == 2
-				|| rightNullableOnly && methodCall.IsQueryable("RightJoin", "FullJoin") && methodCall.Arguments.Count == 2;
+				|| !rightNullableOnly && methodCall.IsQueryable(NotRightNullableOnlyMethodNames) && methodCall.Arguments.Count == 2
+				|| rightNullableOnly  && methodCall.IsQueryable(RightNullableOnlyMethodNames)    && methodCall.Arguments.Count == 2;
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)

@@ -6,9 +6,11 @@ namespace LinqToDB.Linq.Builder
 
 	class WhereBuilder : MethodCallBuilder
 	{
+		private static readonly string[] MethodNames = { "Where", "Having" };
+
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsQueryable("Where", "Having");
+			return methodCall.IsQueryable(MethodNames);
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -37,19 +39,21 @@ namespace LinqToDB.Linq.Builder
 
 			if (info != null)
 			{
-				info.Expression = methodCall.Transform(ex => ConvertMethod(methodCall, 0, info, predicate.Parameters[0], ex));
+				info.Expression = methodCall.Transform((methodCall, info, predicate), static (context, ex) => ConvertMethod(context.methodCall, 0, context.info, context.predicate.Parameters[0], ex));
 
 				if (param != null)
 				{
 					if (param.Type != info.Parameter!.Type)
 						param = Expression.Parameter(info.Parameter.Type, param.Name);
 
-					if (info.ExpressionsToReplace != null)
+					if (info.ExpressionsToReplace != null && info.ExpressionsToReplace.Count > 0)
+					{
 						foreach (var path in info.ExpressionsToReplace)
 						{
-							path.Path = path.Path.Transform(e => e == info.Parameter ? param : e);
-							path.Expr = path.Expr.Transform(e => e == info.Parameter ? param : e);
+							path.Path = path.Path.Transform((p: info.Parameter, param), static (context, e) => e == context.p ? context.param : e);
+							path.Expr = path.Expr.Transform((p: info.Parameter, param), static (context, e) => e == context.p ? context.param : e);
 						}
+					}
 				}
 
 				info.Parameter = param;

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace LinqToDB.DataProvider.SQLite
 {
@@ -8,7 +7,6 @@ namespace LinqToDB.DataProvider.SQLite
 	using SqlQuery;
 	using Common;
 	using Mapping;
-	using Tools;
 
 	class SQLiteSqlOptimizer : BasicSqlOptimizer
 	{
@@ -36,7 +34,71 @@ namespace LinqToDB.DataProvider.SQLite
 			return statement;
 		}
 
-		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor visitor,
+		public override ISqlPredicate ConvertSearchStringPredicate<TContext>(MappingSchema mappingSchema, SqlPredicate.SearchString predicate, ConvertVisitor<RunOptimizationContext<TContext>> visitor,
+			OptimizationContext optimizationContext)
+		{
+			var like = ConvertSearchStringPredicateViaLike(mappingSchema, predicate, visitor,
+				optimizationContext);
+
+			if (predicate.CaseSensitive.EvaluateBoolExpression(optimizationContext.Context) == true)
+			{
+				SqlPredicate.ExprExpr? subStrPredicate = null;
+
+				switch (predicate.Kind)
+				{
+					case SqlPredicate.SearchString.SearchKind.StartsWith:
+					{
+						subStrPredicate =
+							new SqlPredicate.ExprExpr(
+								new SqlFunction(typeof(string), "Substr", predicate.Expr1, new SqlValue(1),
+									new SqlFunction(typeof(int), "Length", predicate.Expr2)),
+								SqlPredicate.Operator.Equal,
+								predicate.Expr2, null);
+
+						break;
+					}
+
+					case SqlPredicate.SearchString.SearchKind.EndsWith:
+					{
+						subStrPredicate =
+							new SqlPredicate.ExprExpr(
+								new SqlFunction(typeof(string), "Substr", predicate.Expr1,
+									new SqlBinaryExpression(typeof(int),
+										new SqlFunction(typeof(int), "Length", predicate.Expr2), "*", new SqlValue(-1),
+										Precedence.Multiplicative)
+								),
+								SqlPredicate.Operator.Equal,
+								predicate.Expr2, null);
+
+						break;
+					}
+					case SqlPredicate.SearchString.SearchKind.Contains:
+					{
+						subStrPredicate =
+							new SqlPredicate.ExprExpr(
+								new SqlFunction(typeof(int), "InStr", predicate.Expr1, predicate.Expr2),
+								SqlPredicate.Operator.Greater,
+								new SqlValue(0), null);
+
+						break;
+					}
+
+				}
+
+				if (subStrPredicate != null)
+				{
+					var result = new SqlSearchCondition(
+						new SqlCondition(false, like, predicate.IsNot),
+						new SqlCondition(predicate.IsNot, subStrPredicate));
+
+					return result;
+				}
+			}
+
+			return like;
+		}
+
+		public override ISqlExpression ConvertExpressionImpl<TContext>(ISqlExpression expression, ConvertVisitor<TContext> visitor,
 			EvaluationContext context)
 		{
 			expression = base.ConvertExpressionImpl(expression, visitor, context);
@@ -83,7 +145,7 @@ namespace LinqToDB.DataProvider.SQLite
 			return expression;
 		}
 
-		public override ISqlPredicate ConvertPredicateImpl(MappingSchema mappingSchema, ISqlPredicate predicate, ConvertVisitor visitor, OptimizationContext optimizationContext)
+		public override ISqlPredicate ConvertPredicateImpl<TContext>(MappingSchema mappingSchema, ISqlPredicate predicate, ConvertVisitor<RunOptimizationContext<TContext>> visitor, OptimizationContext optimizationContext)
 		{
 			if (predicate is SqlPredicate.ExprExpr exprExpr)
 			{
@@ -119,8 +181,13 @@ namespace LinqToDB.DataProvider.SQLite
 
 		private static bool IsDateTime(DbDataType dbDataType)
 		{
-			if (dbDataType.DataType.In(DataType.Date, DataType.Time, DataType.DateTime, DataType.DateTime2,
-				DataType.DateTimeOffset, DataType.SmallDateTime, DataType.Timestamp))
+			if (dbDataType.DataType == DataType.Date           ||
+				dbDataType.DataType == DataType.Time           ||
+				dbDataType.DataType == DataType.DateTime       ||
+				dbDataType.DataType == DataType.DateTime2      ||
+				dbDataType.DataType == DataType.DateTimeOffset ||
+				dbDataType.DataType == DataType.SmallDateTime  ||
+				dbDataType.DataType == DataType.Timestamp)
 				return true;
 
 			if (dbDataType.DataType != DataType.Undefined)

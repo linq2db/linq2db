@@ -115,6 +115,7 @@ namespace LinqToDB.Async
 			// - DbTransaction (netstandard2.1, netcoreapp3.0)
 			// - MySqlConnector
 			// - npgsql
+			// - FirebirdSql.Data.FirebirdClient 8+
 			var commitAsync   = CreateDelegate<Func<DbTransaction, CancellationToken, Task>, DbTransaction>(type, "CommitAsync"  , _tokenParams     , _tokenParams     , _tokenParams     , false, false);
 
 			// Task RollbackAsync(CancellationToken)
@@ -122,6 +123,7 @@ namespace LinqToDB.Async
 			// - DbTransaction (netstandard2.1, netcoreapp3.0)
 			// - MySqlConnector
 			// - npgsql
+			// - FirebirdSql.Data.FirebirdClient 8+
 			var rollbackAsync = CreateDelegate<Func<DbTransaction, CancellationToken, Task>, DbTransaction>(type, "RollbackAsync", _tokenParams     , _tokenParams     , _tokenParams     , false, false);
 
 			// ValueTask DisposeAsync()
@@ -168,6 +170,7 @@ namespace LinqToDB.Async
 			// Availability:
 			// - MySql.Data
 			// - MySqlConnector < 0.57
+			// - FirebirdSql.Data.FirebirdClient 8+
 #if !NATIVE_ASYNC
 									   ?? CreateTaskTDelegate<Func<DbConnection, CancellationToken           ,      Task<IAsyncDbTransaction>>, DbConnection, DbTransaction>(type, "BeginTransactionAsync", _tokenParams           , _transactionWrap,      false, false);
 #else
@@ -188,6 +191,7 @@ namespace LinqToDB.Async
 			// Availability:
 			// - MySql.Data
 			// - MySqlConnector < 0.57
+			// - FirebirdSql.Data.FirebirdClient 8+
 #if !NATIVE_ASYNC
 									   ?? CreateTaskTDelegate<Func<DbConnection, IsolationLevel, CancellationToken,      Task<IAsyncDbTransaction>>, DbConnection, DbTransaction>(type, "BeginTransactionAsync", _beginTransactionParams, _transactionWrap,      false, false);
 #else
@@ -208,6 +212,7 @@ namespace LinqToDB.Async
 			// - MySql.Data
 			// - MySqlConnector 0.57+
 			// - npgsql 4.1.0+
+			// - FirebirdSql.Data.FirebirdClient 8+
 									   ?? CreateDelegate<Func<DbConnection, Task>, DbConnection>(type, "CloseAsync", Array<Type>.Empty,   Array<Type>.Empty, Array<Type>.Empty, false, false);
 
 			// ValueTask DisposeAsync()

@@ -9,8 +9,8 @@ namespace LinqToDB.DataProvider.Sybase
 
 	public class SybaseProviderAdapter : IDynamicProviderAdapter
 	{
-		private static readonly object _nativeSyncRoot = new object();
-		private static readonly object _managedSyncRoot = new object();
+		private static readonly object _nativeSyncRoot = new ();
+		private static readonly object _managedSyncRoot = new ();
 
 		private static SybaseProviderAdapter? _nativeInstance;
 		private static SybaseProviderAdapter? _managedInstance;
@@ -248,7 +248,9 @@ namespace LinqToDB.DataProvider.Sybase
 
 			void IDisposable.Dispose() => ((Action<AseBulkCopy>)CompiledWrappers[0])(this);
 
+#pragma warning disable RS0030 // API mapping must preserve type
 			public void WriteToServer(IDataReader dataReader) => ((Action<AseBulkCopy, IDataReader>)CompiledWrappers[1])(this, dataReader);
+#pragma warning restore RS0030 //  API mapping must preserve type
 
 			public int NotifyAfter
 			{

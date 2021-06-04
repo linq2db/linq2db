@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB;
-
+using LinqToDB.Mapping;
 using NUnit.Framework;
 using Tests.Model;
 
@@ -156,8 +156,10 @@ namespace Tests.xUpdate
 			}
 		}
 
+
+		// TODO: Firebird disabled temporary due to bug in provider
 		[Test]
-		public async Task CreateTableAsyncCanceled([DataSources(false)] string context)
+		public async Task CreateTableAsyncCanceled([DataSources(false, TestProvName.AllFirebird)] string context)
 		{
 			var cts = new CancellationTokenSource();
 			cts.Cancel();
@@ -197,8 +199,9 @@ namespace Tests.xUpdate
 			}
 		}
 
+		// TODO: Firebird disabled temporary due to bug in provider
 		[Test]
-		public async Task CreateTableAsyncCanceled2([DataSources(false)] string context)
+		public async Task CreateTableAsyncCanceled2([DataSources(false, TestProvName.AllFirebird)] string context)
 		{
 			var cts = new CancellationTokenSource();
 			using (var db = GetDataContext(context))
@@ -281,5 +284,27 @@ namespace Tests.xUpdate
 			await tempTable.DisposeAsync();
 		}
 #endif
+
+		[Table]
+		public class TableWithPrimaryKey
+		{
+			[PrimaryKey] public int Key { get; set; }
+		}
+
+		[Test]
+		public void CreateTempTableWithPrimaryKey([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateTempTable<TableWithPrimaryKey>(tableOptions: TableOptions.IsTemporary);
+		}
+
+		[Test]
+		public void InsertIntoTempTableWithPrimaryKey([DataSources(false)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			using var t = new[] { new TableWithPrimaryKey() { Key = 1 } }
+				.IntoTempTable(db, tableOptions: TableOptions.IsTemporary);
+		}
 	}
 }

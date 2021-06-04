@@ -1581,6 +1581,129 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Table]
+		public class UIntTable
+		{
+			[Column] public ushort  Field16  { get; set; }
+			[Column] public uint    Field32  { get; set; }
+			[Column] public ulong   Field64  { get; set; }
+			[Column] public ushort? Field16N { get; set; }
+			[Column] public uint?   Field32N { get; set; }
+			[Column] public ulong?  Field64N { get; set; }
+		}
+
+		[Test]
+		public void UIntXXMappingTest([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			using (var table = db.CreateLocalTable<UIntTable>())
+			{
+				// test create table
+				Assert.True(db.LastQuery!.Contains("\"Field16\"  Int"));
+				Assert.True(db.LastQuery!.Contains("\"Field32\"  BigInt"));
+				Assert.True(db.LastQuery!.Contains("\"Field64\"  decimal(20)"));
+				Assert.True(db.LastQuery!.Contains("\"Field16N\" Int"));
+				Assert.True(db.LastQuery!.Contains("\"Field32N\" BigInt"));
+				Assert.True(db.LastQuery!.Contains("\"Field64N\" decimal(20)"));
+
+				var value16      = ushort.MaxValue;
+				var value32      = uint.MaxValue;
+				var value64      = ulong.MaxValue;
+				ushort? value16N = ushort.MaxValue;
+				uint? value32N   = uint.MaxValue;
+				ulong? value64N  = ulong.MaxValue;
+
+				// test literal (+materialization)
+				db.InlineParameters = true;
+				table.Insert(() => new UIntTable() { Field16 = value16, Field32 = value32, Field64 = value64, Field16N = value16N, Field32N = value32N, Field64N = value64N });
+				Assert.True(db.LastQuery!.Contains("\t65535,"));
+				Assert.True(db.LastQuery!.Contains("\t4294967295,"));
+				Assert.True(db.LastQuery!.Contains("18446744073709551615"));
+				var res = table.ToArray();
+				Assert.AreEqual(1, res.Length);
+				Assert.AreEqual(ushort.MaxValue, res[0].Field16);
+				Assert.AreEqual(uint.MaxValue  , res[0].Field32);
+				Assert.AreEqual(ulong.MaxValue , res[0].Field64);
+				Assert.AreEqual(ushort.MaxValue, res[0].Field16N);
+				Assert.AreEqual(uint.MaxValue  , res[0].Field32N);
+				Assert.AreEqual(ulong.MaxValue , res[0].Field64N);
+				table.Delete();
+
+				// test parameter (+materialization)
+				db.InlineParameters = false;
+				table.Insert(() => new UIntTable() { Field16 = value16, Field32 = value32, Field64 = value64, Field16N = value16N, Field32N = value32N, Field64N = value64N });
+				Assert.False(db.LastQuery!.Contains("65535"));
+				Assert.False(db.LastQuery!.Contains("4294967295"));
+				Assert.False(db.LastQuery!.Contains("18446744073709551615"));
+				res = table.ToArray();
+				Assert.AreEqual(1, res.Length);
+				Assert.AreEqual(ushort.MaxValue, res[0].Field16);
+				Assert.AreEqual(uint.MaxValue  , res[0].Field32);
+				Assert.AreEqual(ulong.MaxValue , res[0].Field64);
+				Assert.AreEqual(ushort.MaxValue, res[0].Field16N);
+				Assert.AreEqual(uint.MaxValue  , res[0].Field32N);
+				Assert.AreEqual(ulong.MaxValue , res[0].Field64N);
+
+				// test schema
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, new LinqToDB.SchemaProvider.GetSchemaOptions()
+				{
+					GetProcedures = false,
+					GetTables     = true,
+					LoadTable     = t => t.Name == nameof(UIntTable)
+				});
+
+				Assert.AreEqual(1                , schema.Tables.Count);
+				Assert.AreEqual(nameof(UIntTable), schema.Tables[0].TableName);
+				Assert.AreEqual(6                , schema.Tables[0].Columns.Count);
+
+				var column = schema.Tables[0].Columns.Where(c => c.ColumnName == nameof(UIntTable.Field16)).Single();
+
+				Assert.AreEqual("integer"     , column.ColumnType);
+				Assert.AreEqual(DataType.Int32, column.DataType);
+				Assert.AreEqual("int"         , column.MemberType);
+				Assert.AreEqual(typeof(int)   , column.SystemType);
+
+				column = schema.Tables[0].Columns.Where(c => c.ColumnName == nameof(UIntTable.Field32)).Single();
+
+				Assert.AreEqual("bigint"      , column.ColumnType);
+				Assert.AreEqual(DataType.Int64, column.DataType);
+				Assert.AreEqual("long"        , column.MemberType);
+				Assert.AreEqual(typeof(long)  , column.SystemType);
+
+				column = schema.Tables[0].Columns.Where(c => c.ColumnName == nameof(UIntTable.Field64)).Single();
+
+				Assert.AreEqual("numeric(20,0)" , column.ColumnType);
+				Assert.AreEqual(DataType.Decimal, column.DataType);
+				Assert.AreEqual("decimal"       , column.MemberType);
+				Assert.AreEqual(20              , column.Precision);
+				Assert.AreEqual(0               , column.Scale);
+				Assert.AreEqual(typeof(decimal) , column.SystemType);
+
+				column = schema.Tables[0].Columns.Where(c => c.ColumnName == nameof(UIntTable.Field16N)).Single();
+
+				Assert.AreEqual("integer"     , column.ColumnType);
+				Assert.AreEqual(DataType.Int32, column.DataType);
+				Assert.AreEqual("int?"        , column.MemberType);
+				Assert.AreEqual(typeof(int)   , column.SystemType);
+
+				column = schema.Tables[0].Columns.Where(c => c.ColumnName == nameof(UIntTable.Field32N)).Single();
+
+				Assert.AreEqual("bigint"      , column.ColumnType);
+				Assert.AreEqual(DataType.Int64, column.DataType);
+				Assert.AreEqual("long?"       , column.MemberType);
+				Assert.AreEqual(typeof(long)  , column.SystemType);
+
+				column = schema.Tables[0].Columns.Where(c => c.ColumnName == nameof(UIntTable.Field64N)).Single();
+
+				Assert.AreEqual("numeric(20,0)" , column.ColumnType);
+				Assert.AreEqual(DataType.Decimal, column.DataType);
+				Assert.AreEqual("decimal?"      , column.MemberType);
+				Assert.AreEqual(20              , column.Precision);
+				Assert.AreEqual(0               , column.Scale);
+				Assert.AreEqual(typeof(decimal) , column.SystemType);
+			}
+		}
+
 		class ExtraBulkCopyTypesTable
 		{
 			[Column] public int     Id     { get; set; }
@@ -2086,7 +2209,6 @@ namespace Tests.DataProvider
 				TestContext.WriteLine(str);
 			}
 		}
-
 	}
 
 	public static class TestPgAggregates

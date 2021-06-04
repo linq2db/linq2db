@@ -153,7 +153,7 @@ namespace LinqToDB.Common
 			public static bool TraceMapperExpression;
 
 			/// <summary>
-			/// Controls behavior, when LINQ query chain contains multiple <see cref="System.Linq.Queryable.OrderBy{TSource, TKey}(System.Linq.IQueryable{TSource}, System.Linq.Expressions.Expression{Func{TSource, TKey}})"/> or <see cref="System.Linq.Queryable.OrderByDescending{TSource, TKey}(System.Linq.IQueryable{TSource}, System.Linq.Expressions.Expression{Func{TSource, TKey}})"/> calls:
+			/// Controls behavior, when LINQ query chain contains multiple <see cref="System.Linq.Queryable.OrderBy{TSource, TKey}(System.Linq.IQueryable{TSource}, Expression{Func{TSource, TKey}})"/> or <see cref="System.Linq.Queryable.OrderByDescending{TSource, TKey}(System.Linq.IQueryable{TSource}, Expression{Func{TSource, TKey}})"/> calls:
 			/// - if <c>true</c> - non-first OrderBy* call will be treated as ThenBy* call;
 			/// - if <c>false</c> - OrderBy* call will discard sort specifications, added by previous OrderBy* and ThenBy* calls.
 			/// Default value: <c>false</c>.
@@ -318,7 +318,7 @@ namespace LinqToDB.Common
 			public static bool UseDefaultPolicy
 			{
 				get => Factory == DefaultRetryPolicyFactory.GetRetryPolicy;
-				set => Factory = value ? DefaultRetryPolicyFactory.GetRetryPolicy : (Func<DataConnection,IRetryPolicy?>?)null;
+				set => Factory = value ? DefaultRetryPolicyFactory.GetRetryPolicy : null;
 			}
 
 			/// <summary>

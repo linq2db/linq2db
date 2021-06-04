@@ -19,10 +19,7 @@ namespace LinqToDB.Benchmarks
 			var net472 = Job.Default.WithRuntime(ClrRuntime.Net472).WithDefault().AsBaseline();
 			var core21 = Job.Default.WithRuntime(CoreRuntime.Core21).WithDefault();
 			var core31 = Job.Default.WithRuntime(CoreRuntime.Core31).WithDefault();
-
-			// TODO: workaround, remove after BDN update released
-			//var net50  = Job.Default.WithRuntime(CoreRuntime.CreateForNewVersion("net5.0", ".NET 5.0")).WithDefault();
-			var net50  = Job.Default.WithRuntime(CoreRuntime.CreateForNewVersion("netcoreapp5.0", ".NET 5.0")).WithDefault();
+			var net50  = Job.Default.WithRuntime(CoreRuntime.Core50).WithDefault();
 
 			return new ManualConfig()
 				.AddLogger         (DefaultConfig.Instance.GetLoggers        ().ToArray())

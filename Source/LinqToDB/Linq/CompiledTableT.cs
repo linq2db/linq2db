@@ -25,20 +25,21 @@ namespace LinqToDB.Linq
 			var contextType     = dataContext.GetType();
 			var mappingSchemaID = dataContext.MappingSchema.ConfigurationID;
 
-			var key = new { Operation = "CT", contextID, contextType, mappingSchemaID, Expression = _expression };
+			var result = QueryRunner.Cache<T>.QueryCache.GetOrCreate(
+				(operation: "CT", contextID, contextType, mappingSchemaID, expression: _expression),
+				(dataContext, lambda: _lambda),
+				static (o, key, ctx) =>
+				{
+					o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
 
-			var result = QueryRunner.Cache<T>.QueryCache.GetOrCreate(key, o =>
-			{
-				o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+					var query = new Query<T>(ctx.dataContext, key.expression);
 
-				var query = new Query<T>(dataContext, _expression);
+					query = new ExpressionBuilder(query, ctx.dataContext, key.expression, ctx.lambda.Parameters.ToArray())
+						.Build<T>();
 
-				query = new ExpressionBuilder(query, dataContext, _expression, _lambda.Parameters.ToArray())
-					.Build<T>();
-
-				query.ClearMemberQueryableInfo();
-				return query;
-			});
+					query.ClearMemberQueryableInfo();
+					return query;
+				});
 
 
 			return result;

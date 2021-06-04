@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using JetBrains.Annotations;
 using LinqToDB.Extensions;
 using LinqToDB.Tools;
 
@@ -11,7 +10,7 @@ namespace LinqToDB.Common.Internal
 {
 	public static class TypeExtensions
 	{
-		private static readonly Dictionary<Type, string> _builtInTypeNames = new Dictionary<Type, string>
+		private static readonly Dictionary<Type, string> _builtInTypeNames = new ()
 		{
 			{ typeof(bool),    "bool"    },
 			{ typeof(byte),    "byte"    },
@@ -157,7 +156,16 @@ namespace LinqToDB.Common.Internal
 
 		public static bool IsNumericType(this Type? type)
 		{
-			return type != null && type.In(
+			return type != null && type.In(NumericTypes);
+		}
+
+		public static bool IsSignedType(this Type? type)
+		{
+			return type != null && type.In(SignedTypes);
+		}
+
+		private static readonly Type[] NumericTypes =
+			{
 				typeof(byte),
 				typeof(decimal),
 				typeof(double),
@@ -169,20 +177,17 @@ namespace LinqToDB.Common.Internal
 				typeof(uint),
 				typeof(ulong),
 				typeof(ushort)
-			);
-		}
+			};
 
-		public static bool IsSignedType(this Type? type)
-		{
-			return type != null && type.In(
+		private static readonly Type[] SignedTypes =
+			{
 				typeof(decimal),
 				typeof(double),
 				typeof(float),
 				typeof(int),
 				typeof(long),
 				typeof(short)
-			);
-		}
+			};
 
 	}
 }

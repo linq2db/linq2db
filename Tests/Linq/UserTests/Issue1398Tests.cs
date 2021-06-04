@@ -90,7 +90,7 @@ namespace Tests.UserTests
 		[Retry(3)] // could fail due to deadlock
 		[Test]
 		public void TestMerge([MergeDataContextSource(
-			ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SybaseManaged, TestProvName.AllInformix)]
+			TestProvName.AllFirebird, ProviderName.SybaseManaged, TestProvName.AllInformix)]
 			string context)
 		{
 			const int repeatsCount = 20;
