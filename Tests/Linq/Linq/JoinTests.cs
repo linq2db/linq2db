@@ -2885,5 +2885,34 @@ namespace Tests.Linq
 			}
 		}
 		#endregion
+
+
+		[ActiveIssue(1224, Configurations = new[] 
+		{
+			TestProvName.AllSQLite,
+			TestProvName.AllAccess,
+			TestProvName.AllMySql,
+			TestProvName.AllSybase,
+			ProviderName.SqlCe
+		}, Details = "FULL OUTER JOIN support. Also check and enable other tests that do full join on fix")]
+		[Test(Description = "Tests regression in v3.3 when for RightCount generated SQL started to use same field as for LeftCount")]
+		// InformixDB2 disabled due to serious bug in provider: while query returns 3, data reader returns 0 here
+		public void FullJoinCondition_Regression([DataSources(ProviderName.InformixDB2)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				// query returns 0 if subqueries contain same values and number of non-matching records otherwise
+				var count = LinqExtensions.FullJoin(
+						db.Person.Select(p => p.ID).GroupBy(id => id).Select(g => new { g.Key, Count = g.Count() }),
+						db.Patient.Select(p => p.PersonID).GroupBy(id => id).Select(g => new { g.Key, Count = g.Count() }),
+						(q1, q2) => q1.Key == q2.Key && q1.Count == q2.Count,
+						(q1, q2) => new { LeftCount = (int?)q1.Count, RightCount = (int?)q2.Count })
+					.Where(q => q.LeftCount == null || q.RightCount == null)
+					.Count();
+
+				Assert.AreNotEqual(0, count);
+			}
+		}
+
 	}
 }

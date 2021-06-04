@@ -14,7 +14,8 @@ namespace LinqToDB.Linq.Builder
 
 	class AggregationBuilder : MethodCallBuilder
 	{
-		public static string[] MethodNames = { "Average", "Min", "Max", "Sum" };
+		public  static readonly string[] MethodNames      = { "Average"     , "Min"     , "Max"     , "Sum"      };
+		private static readonly string[] MethodNamesAsync = { "AverageAsync", "MinAsync", "MaxAsync", "SumAsync" };
 
 		public static Sql.ExpressionAttribute? GetAggregateDefinition(MethodCallExpression methodCall, MappingSchema mapping)
 		{
@@ -26,7 +27,7 @@ namespace LinqToDB.Linq.Builder
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			if (methodCall.IsQueryable(MethodNames) || methodCall.IsAsyncExtension(MethodNames))
+			if (methodCall.IsQueryable(MethodNames) || methodCall.IsAsyncExtension(MethodNamesAsync))
 				return true;
 
 			return false;

@@ -147,27 +147,6 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region ICloneableElement Members
-
-		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			if (!objectTree.TryGetValue(this, out var clone))
-			{
-				objectTree.Add(this, clone = new SqlExpression(
-					SystemType,
-					Expr,
-					Precedence,
-					Parameters.Select(e => (ISqlExpression)e.Clone(objectTree, doClone)).ToArray()));
-			}
-
-			return clone;
-		}
-
-		#endregion
-
 		#region IQueryElement Members
 
 		public QueryElementType ElementType => QueryElementType.SqlExpression;
@@ -186,7 +165,15 @@ namespace LinqToDB.SqlQuery
 			if (Parameters.Length == 0)
 				return sb.Append(Expr);
 
-			return sb.AppendFormat(Expr, ss.ToArray());
+			if (Expr.Contains("{"))
+				sb.AppendFormat(Expr, ss.ToArray());
+			else
+				sb.Append(Expr)
+					.Append('{')
+					.Append(string.Join(", ", ss))
+					.Append('}');
+
+			return sb;
 		}
 
 		#endregion

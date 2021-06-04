@@ -90,6 +90,7 @@ namespace Tests.xUpdate
 						case TestProvName.SqlServer2019                       :
 						case TestProvName.SqlServer2019SequentialAccess       :
 						case TestProvName.SqlServer2019FastExpressionCompiler :
+						case TestProvName.SqlServerContained                  :
 						case TestProvName.SqlAzure                            : db.DropTable<TestTable>("#" + tableName); break;
 						default                                               : db.DropTable<TestTable>(tableName);       break;
 					}
@@ -110,6 +111,7 @@ namespace Tests.xUpdate
 					case TestProvName.SqlServer2019                       :
 					case TestProvName.SqlServer2019SequentialAccess       :
 					case TestProvName.SqlServer2019FastExpressionCompiler :
+					case TestProvName.SqlServerContained                  :
 					case TestProvName.SqlAzure                            :
 						table = db.CreateTable<TestTable>("#" + tableName);
 						break;
@@ -153,6 +155,7 @@ namespace Tests.xUpdate
 						case TestProvName.SqlServer2019                       :
 						case TestProvName.SqlServer2019SequentialAccess       :
 						case TestProvName.SqlServer2019FastExpressionCompiler :
+						case TestProvName.SqlServerContained                  :
 						case TestProvName.SqlAzure                            : await db.DropTableAsync<TestTable>("#" + tableName); break;
 						default                                               : await db.DropTableAsync<TestTable>(tableName);       break;
 					}
@@ -173,6 +176,7 @@ namespace Tests.xUpdate
 					case TestProvName.SqlServer2019                                 :
 					case TestProvName.SqlServer2019SequentialAccess                 :
 					case TestProvName.SqlServer2019FastExpressionCompiler           :
+					case TestProvName.SqlServerContained                            :
 					case TestProvName.SqlAzure                                      :
 						table = await db.CreateTableAsync<TestTable>("#" + tableName);
 						break;

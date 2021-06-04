@@ -12,7 +12,17 @@ namespace LinqToDB.DataProvider.SqlServer
 
 	class SqlServerBulkCopy : BasicBulkCopy
 	{
-		private readonly SqlServerDataProvider _provider;
+		/// <remarks>
+		/// Settings based on https://www.jooq.org/doc/3.12/manual/sql-building/dsl-context/custom-settings/settings-inline-threshold/
+		/// We subtract 1 since SQL Server ADO Provider uses one parameter for command.
+		/// </remarks>
+		protected override int                   MaxParameters => 2099;
+		/// <remarks>
+		/// Based on https://docs.microsoft.com/en-us/sql/sql-server/maximum-capacity-specifications-for-sql-server?redirectedfrom=MSDN&amp;view=sql-server-ver15
+		/// Default Max is actually (4096*65536) = 256MIB, but we keep a lower number here to avoid the cost of huge statements.
+		/// </remarks>
+		protected override int                   MaxSqlLength => 327670;
+		private readonly   SqlServerDataProvider _provider;
 
 		public SqlServerBulkCopy(SqlServerDataProvider provider)
 		{
@@ -82,13 +92,13 @@ namespace LinqToDB.DataProvider.SqlServer
 		private ProviderConnections? TryGetProviderConnections<T>(ITable<T> table)
 			where T : notnull
 		{
-			if (table.DataContext is DataConnection dataConnection)
+			if (table.TryGetDataConnection(out var dataConnection))
 			{
-				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
+				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, table.DataContext.MappingSchema);
 
 				var transaction = dataConnection.Transaction;
 				if (connection != null && transaction != null)
-					transaction = _provider.TryGetProviderTransaction(transaction, dataConnection.MappingSchema);
+					transaction = _provider.TryGetProviderTransaction(transaction, table.DataContext.MappingSchema);
 
 				if (connection != null && (dataConnection.Transaction == null || transaction != null))
 				{
@@ -114,9 +124,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			var dataConnection = providerConnections.DataConnection;
 			var connection     = providerConnections.ProviderConnection;
 			var transaction    = providerConnections.ProviderTransaction;
-			var ed             = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
+			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
 			var columns        = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
-			var sb             = _provider.CreateSqlBuilder(dataConnection.MappingSchema);
+			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema);
 			var rd             = createDataReader(columns);
 			var sqlopt         = SqlServerProviderAdapter.SqlBulkCopyOptions.Default;
 			var rc             = new BulkCopyRowsCopied();
@@ -188,9 +198,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			var dataConnection = providerConnections.DataConnection;
 			var connection     = providerConnections.ProviderConnection;
 			var transaction    = providerConnections.ProviderTransaction;
-			var ed             = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
+			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
 			var columns        = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
-			var sb             = _provider.CreateSqlBuilder(dataConnection.MappingSchema);
+			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema);
 			var rd             = createDataReader(columns);
 			var sqlopt         = SqlServerProviderAdapter.SqlBulkCopyOptions.Default;
 			var rc             = new BulkCopyRowsCopied();

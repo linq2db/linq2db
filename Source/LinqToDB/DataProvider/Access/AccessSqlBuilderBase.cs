@@ -148,6 +148,21 @@ namespace LinqToDB.DataProvider.Access
 			base.BuildBinaryExpression(expr);
 		}
 
+		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr)
+		{
+			StringBuilder.Append("IIF(");
+			BuildExpression(Precedence.Comparison, expr.Expr1);
+			StringBuilder.Append(" = ");
+			BuildExpression(Precedence.Comparison, expr.Expr2);
+			StringBuilder.Append(" OR ");
+			BuildExpression(Precedence.Comparison, expr.Expr1);
+			StringBuilder.Append(" IS NULL AND ");
+			BuildExpression(Precedence.Comparison, expr.Expr2);
+			StringBuilder
+				.Append(" IS NULL, 0, 1) = ")
+				.Append(expr.IsNot ? '0' : '1');
+		}
+
 		protected override void BuildFunction(SqlFunction func)
 		{
 			switch (func.Name)
@@ -300,6 +315,12 @@ namespace LinqToDB.DataProvider.Access
 		protected override void BuildMergeStatement(SqlMergeStatement merge)
 		{
 			throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
+		}
+
+		protected override StringBuilder BuildSqlComment(StringBuilder sb, SqlComment comment)
+		{
+			// comments not supported by Access
+			return sb;
 		}
 	}
 }

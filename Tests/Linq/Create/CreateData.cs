@@ -91,7 +91,8 @@ public class a_CreateData : TestBase
 							TestContext.WriteLine(command);
 
 						var isDrop =
-							command.TrimStart().StartsWith("DROP") ||
+							command.TrimStart().StartsWith("DROP")          ||
+							command.TrimStart().Contains("DROP PROCEDURE ") ||
 							command.TrimStart().StartsWith("CALL DROP");
 
 						TestContext.WriteLine(ex.Message);
@@ -244,7 +245,8 @@ public class a_CreateData : TestBase
 		switch (context)
 		{
 			case ProviderName.Firebird                            :
-			case TestProvName.Firebird3                           : RunScript(context,          "COMMIT;", "Firebird", FirebirdAction);    break;
+			case TestProvName.Firebird3                           :
+			case TestProvName.Firebird4                           : RunScript(context,          "COMMIT;", "Firebird", FirebirdAction);    break;
 			case ProviderName.PostgreSQL                          :
 			case ProviderName.PostgreSQL92                        :
 			case ProviderName.PostgreSQL93                        :
@@ -266,6 +268,7 @@ public class a_CreateData : TestBase
 			case TestProvName.SqlServer2019                       :
 			case TestProvName.SqlServer2019SequentialAccess       :
 			case TestProvName.SqlServer2019FastExpressionCompiler :
+			case TestProvName.SqlServerContained                  :
 			case TestProvName.SqlAzure                            : RunScript(context,          "\nGO\n",  "SqlServer");                   break;
 			case TestProvName.Default                             : RunScript(context,          "\nGO\n",  "SQLite",   SQLiteAction);      break;
 			case ProviderName.SQLiteClassic                       :

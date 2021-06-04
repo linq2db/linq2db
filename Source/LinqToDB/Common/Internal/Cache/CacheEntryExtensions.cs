@@ -12,10 +12,11 @@ namespace LinqToDB.Common.Internal.Cache
 		/// </summary>
 		/// <param name="entry">The entry to set the priority for.</param>
 		/// <param name="priority">The <see cref="CacheItemPriority"/> to set on the entry.</param>
-		/// <returns>The <see cref="ICacheEntry"/> for chaining.</returns>
-		public static ICacheEntry SetPriority(
-			this ICacheEntry entry,
+		/// <returns>The <see cref="ICacheEntry{TKey}"/> for chaining.</returns>
+		public static ICacheEntry<TKey> SetPriority<TKey>(
+			this ICacheEntry<TKey> entry,
 			CacheItemPriority priority)
+			where TKey: notnull
 		{
 			entry.Priority = priority;
 			return entry;
@@ -24,12 +25,13 @@ namespace LinqToDB.Common.Internal.Cache
 		/// <summary>
 		/// Expire the cache entry if the given <see cref="IChangeToken"/> expires.
 		/// </summary>
-		/// <param name="entry">The <see cref="ICacheEntry"/>.</param>
+		/// <param name="entry">The <see cref="ICacheEntry{TKey}"/>.</param>
 		/// <param name="expirationToken">The <see cref="IChangeToken"/> that causes the cache entry to expire.</param>
-		/// <returns>The <see cref="ICacheEntry"/> for chaining.</returns>
-		public static ICacheEntry AddExpirationToken(
-			this ICacheEntry entry,
+		/// <returns>The <see cref="ICacheEntry{TKey}"/> for chaining.</returns>
+		public static ICacheEntry<TKey> AddExpirationToken<TKey>(
+			this ICacheEntry<TKey> entry,
 			IChangeToken expirationToken)
+			where TKey: notnull
 		{
 			if (expirationToken == null)
 			{
@@ -43,12 +45,13 @@ namespace LinqToDB.Common.Internal.Cache
 		/// <summary>
 		/// Sets an absolute expiration time, relative to now.
 		/// </summary>
-		/// <param name="entry">The <see cref="ICacheEntry"/>.</param>
+		/// <param name="entry">The <see cref="ICacheEntry{TKey}"/>.</param>
 		/// <param name="relative">The <see cref="TimeSpan"/> representing the expiration time relative to now.</param>
-		/// <returns>The <see cref="ICacheEntry"/> for chaining.</returns>
-		public static ICacheEntry SetAbsoluteExpiration(
-			this ICacheEntry entry,
+		/// <returns>The <see cref="ICacheEntry{TKey}"/> for chaining.</returns>
+		public static ICacheEntry<TKey> SetAbsoluteExpiration<TKey>(
+			this ICacheEntry<TKey> entry,
 			TimeSpan relative)
+			where TKey: notnull
 		{
 			entry.AbsoluteExpirationRelativeToNow = relative;
 			return entry;
@@ -57,12 +60,13 @@ namespace LinqToDB.Common.Internal.Cache
 		/// <summary>
 		/// Sets an absolute expiration date for the cache entry.
 		/// </summary>
-		/// <param name="entry">The <see cref="ICacheEntry"/>.</param>
+		/// <param name="entry">The <see cref="ICacheEntry{TKey}"/>.</param>
 		/// <param name="absolute">A <see cref="DateTimeOffset"/> representing the expiration time in absolute terms.</param>
-		/// <returns>The <see cref="ICacheEntry"/> for chaining.</returns>
-		public static ICacheEntry SetAbsoluteExpiration(
-			this ICacheEntry entry,
+		/// <returns>The <see cref="ICacheEntry{TKey}"/> for chaining.</returns>
+		public static ICacheEntry<TKey> SetAbsoluteExpiration<TKey>(
+			this ICacheEntry<TKey> entry,
 			DateTimeOffset absolute)
+			where TKey : notnull
 		{
 			entry.AbsoluteExpiration = absolute;
 			return entry;
@@ -72,12 +76,13 @@ namespace LinqToDB.Common.Internal.Cache
 		/// Sets how long the cache entry can be inactive (e.g. not accessed) before it will be removed.
 		/// This will not extend the entry lifetime beyond the absolute expiration (if set).
 		/// </summary>
-		/// <param name="entry">The <see cref="ICacheEntry"/>.</param>
+		/// <param name="entry">The <see cref="ICacheEntry{TKey}"/>.</param>
 		/// <param name="offset">A <see cref="TimeSpan"/> representing a sliding expiration.</param>
-		/// <returns>The <see cref="ICacheEntry"/> for chaining.</returns>
-		public static ICacheEntry SetSlidingExpiration(
-			this ICacheEntry entry,
+		/// <returns>The <see cref="ICacheEntry{TKey}"/> for chaining.</returns>
+		public static ICacheEntry<TKey> SetSlidingExpiration<TKey>(
+			this ICacheEntry<TKey> entry,
 			TimeSpan offset)
+			where TKey : notnull
 		{
 			entry.SlidingExpiration = offset;
 			return entry;
@@ -86,12 +91,13 @@ namespace LinqToDB.Common.Internal.Cache
 		/// <summary>
 		/// The given callback will be fired after the cache entry is evicted from the cache.
 		/// </summary>
-		/// <param name="entry">The <see cref="ICacheEntry"/>.</param>
+		/// <param name="entry">The <see cref="ICacheEntry{TKey}"/>.</param>
 		/// <param name="callback">The callback to run after the entry is evicted.</param>
-		/// <returns>The <see cref="ICacheEntry"/> for chaining.</returns>
-		public static ICacheEntry RegisterPostEvictionCallback(
-			this ICacheEntry entry,
-			PostEvictionDelegate callback)
+		/// <returns>The <see cref="ICacheEntry{TKey}"/> for chaining.</returns>
+		public static ICacheEntry<TKey> RegisterPostEvictionCallback<TKey>(
+			this ICacheEntry<TKey> entry,
+			PostEvictionDelegate<TKey> callback)
+			where TKey : notnull
 		{
 			if (callback == null)
 			{
@@ -104,21 +110,22 @@ namespace LinqToDB.Common.Internal.Cache
 		/// <summary>
 		/// The given callback will be fired after the cache entry is evicted from the cache.
 		/// </summary>
-		/// <param name="entry">The <see cref="ICacheEntry"/>.</param>
+		/// <param name="entry">The <see cref="ICacheEntry{TKey}"/>.</param>
 		/// <param name="callback">The callback to run after the entry is evicted.</param>
 		/// <param name="state">The state to pass to the post-eviction callback.</param>
-		/// <returns>The <see cref="ICacheEntry"/> for chaining.</returns>
-		public static ICacheEntry RegisterPostEvictionCallback(
-			this ICacheEntry entry,
-			PostEvictionDelegate callback,
+		/// <returns>The <see cref="ICacheEntry{TKey}"/> for chaining.</returns>
+		public static ICacheEntry<TKey> RegisterPostEvictionCallback<TKey>(
+			this ICacheEntry<TKey> entry,
+			PostEvictionDelegate<TKey> callback,
 			object? state)
+			where TKey : notnull
 		{
 			if (callback == null)
 			{
 				throw new ArgumentNullException(nameof(callback));
 			}
 
-			entry.PostEvictionCallbacks.Add(new PostEvictionCallbackRegistration()
+			entry.PostEvictionCallbacks.Add(new PostEvictionCallbackRegistration<TKey>()
 			{
 				EvictionCallback = callback,
 				State = state
@@ -129,12 +136,13 @@ namespace LinqToDB.Common.Internal.Cache
 		/// <summary>
 		/// Sets the value of the cache entry.
 		/// </summary>
-		/// <param name="entry">The <see cref="ICacheEntry"/>.</param>
+		/// <param name="entry">The <see cref="ICacheEntry{TKey}"/>.</param>
 		/// <param name="value">The value to set on the <paramref name="entry"/>.</param>
-		/// <returns>The <see cref="ICacheEntry"/> for chaining.</returns>
-		public static ICacheEntry SetValue(
-			this ICacheEntry entry,
+		/// <returns>The <see cref="ICacheEntry{TKey}"/> for chaining.</returns>
+		public static ICacheEntry<TKey> SetValue<TKey>(
+			this ICacheEntry<TKey> entry,
 			object? value)
+			where TKey : notnull
 		{
 			entry.Value = value;
 			return entry;
@@ -143,12 +151,13 @@ namespace LinqToDB.Common.Internal.Cache
 		/// <summary>
 		/// Sets the size of the cache entry value.
 		/// </summary>
-		/// <param name="entry">The <see cref="ICacheEntry"/>.</param>
+		/// <param name="entry">The <see cref="ICacheEntry{TKey}"/>.</param>
 		/// <param name="size">The size to set on the <paramref name="entry"/>.</param>
-		/// <returns>The <see cref="ICacheEntry"/> for chaining.</returns>
-		public static ICacheEntry SetSize(
-			this ICacheEntry entry,
+		/// <returns>The <see cref="ICacheEntry{TKey}"/> for chaining.</returns>
+		public static ICacheEntry<TKey> SetSize<TKey>(
+			this ICacheEntry<TKey> entry,
 			long size)
+			where TKey : notnull
 		{
 			if (size < 0)
 			{
@@ -160,12 +169,13 @@ namespace LinqToDB.Common.Internal.Cache
 		}
 
 		/// <summary>
-		/// Applies the values of an existing <see cref="MemoryCacheEntryOptions"/> to the entry.
+		/// Applies the values of an existing <see cref="MemoryCacheEntryOptions{TKey}"/> to the entry.
 		/// </summary>
-		/// <param name="entry">The <see cref="ICacheEntry"/>.</param>
+		/// <param name="entry">The <see cref="ICacheEntry{TKey}"/>.</param>
 		/// <param name="options">Set the values of these options on the <paramref name="entry"/>.</param>
-		/// <returns>The <see cref="ICacheEntry"/> for chaining.</returns>
-		public static ICacheEntry SetOptions(this ICacheEntry entry, MemoryCacheEntryOptions options)
+		/// <returns>The <see cref="ICacheEntry{TKey}"/> for chaining.</returns>
+		public static ICacheEntry<TKey> SetOptions<TKey>(this ICacheEntry<TKey> entry, MemoryCacheEntryOptions<TKey> options)
+			where TKey : notnull
 		{
 			if (options == null)
 			{

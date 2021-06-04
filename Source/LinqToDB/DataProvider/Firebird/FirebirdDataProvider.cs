@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.Firebird
 {
-	using System.Data.Common;
 	using Common;
 	using Data;
 	using Mapping;
@@ -15,17 +16,17 @@ namespace LinqToDB.DataProvider.Firebird
 	public class FirebirdDataProvider : DynamicDataProviderBase<FirebirdProviderAdapter>
 	{
 		public FirebirdDataProvider()
-			: this(ProviderName.Firebird, new FirebirdMappingSchema(), null)
+			: this(ProviderName.Firebird, null, null)
 		{
 		}
 
 		public FirebirdDataProvider(ISqlOptimizer sqlOptimizer)
-			: this(ProviderName.Firebird, new FirebirdMappingSchema(), sqlOptimizer)
+			: this(ProviderName.Firebird, null, sqlOptimizer)
 		{
 		}
 
-		protected FirebirdDataProvider(string name, MappingSchema mappingSchema, ISqlOptimizer? sqlOptimizer)
-			: base(name, mappingSchema, FirebirdProviderAdapter.GetInstance())
+		protected FirebirdDataProvider(string name, MappingSchema? mappingSchema, ISqlOptimizer? sqlOptimizer)
+			: base(name, GetMappingSchema(mappingSchema, FirebirdProviderAdapter.GetInstance().MappingSchema), FirebirdProviderAdapter.GetInstance())
 		{
 			SqlProviderFlags.IsIdentityParameterRequired       = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
@@ -72,7 +73,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
 		{
-			return new FirebirdSchemaProvider();
+			return new FirebirdSchemaProvider(this);
 		}
 
 		public override bool? IsDBNullAllowed(DbDataReader reader, int idx)
@@ -93,6 +94,22 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
 		{
+			FirebirdProviderAdapter.FbDbType? type = null;
+			switch (dataType.DataType)
+			{
+				case DataType.DateTimeOffset     : type = FirebirdProviderAdapter.FbDbType.TimeStampTZ; break;
+			}
+
+			if (type != null)
+			{
+				var param = TryGetProviderParameter(parameter, dataConnection.MappingSchema);
+				if (param != null)
+				{
+					Adapter.SetDbType(param, type.Value);
+					return;
+				}
+			}
+
 			switch (dataType.DataType)
 			{
 				case DataType.SByte      : dataType = dataType.WithDataType(DataType.Int16);    break;
@@ -104,6 +121,11 @@ namespace LinqToDB.DataProvider.Firebird
 			}
 
 			base.SetParameterType(dataConnection, parameter, dataType);
+		}
+
+		private static MappingSchema GetMappingSchema(params MappingSchema?[] schemas)
+		{
+			return new FirebirdProviderMappingSchema(schemas.Where(s => s != null).ToArray()!);
 		}
 
 		#region BulkCopy

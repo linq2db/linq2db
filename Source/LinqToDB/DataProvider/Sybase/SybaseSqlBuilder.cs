@@ -292,6 +292,8 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 			var table = dropTable.Table!;
 
+			BuildTag(dropTable);
+
 			if (dropTable.Table.TableOptions.HasDropIfExists())
 			{
 				var defaultDatabaseName = IsTemporary(table) ? "tempdb" : null;
@@ -359,5 +361,7 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 			return table.TableOptions.IsTemporaryOptionSet() || table.PhysicalName!.StartsWith("#");
 		}
+
+		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(expr);
 	}
 }

@@ -1870,13 +1870,13 @@ namespace Tests.DataProvider
 				// mysql.data cannot handle json procedure parameter
 				if (context == ProviderName.MySqlConnector)
 				{
-					assertColumn("Point"             , "byte[]", DataType.Undefined);
-					assertColumn("LineString"        , "byte[]", DataType.Undefined);
-					assertColumn("Polygon"           , "byte[]", DataType.Undefined);
-					assertColumn("MultiPoint"        , "byte[]", DataType.Undefined);
-					assertColumn("MultiLineString"   , "byte[]", DataType.Undefined);
-					assertColumn("MultiPolygon"      , "byte[]", DataType.Undefined);
-					assertColumn("Geometry"          , "byte[]", DataType.Undefined);
+					assertColumn("Point"               , "byte[]", DataType.Undefined);
+					assertColumn("LineString"          , "byte[]", DataType.Undefined);
+					assertColumn("Polygon"             , "byte[]", DataType.Undefined);
+					assertColumn("MultiPoint"          , "byte[]", DataType.Undefined);
+					assertColumn("MultiLineString"     , "byte[]", DataType.Undefined);
+					assertColumn("MultiPolygon"        , "byte[]", DataType.Undefined);
+					assertColumn("Geometry"            , "byte[]", DataType.Undefined);
 					assertColumn("GeometryCollection", "byte[]", DataType.Undefined);
 
 					assertColumn("Json"    , "string", DataType.Json);
@@ -1920,10 +1920,7 @@ namespace Tests.DataProvider
 				}
 			};
 
-			// WORKAROUND: db name needed for MySql.Data 8.0.21, as they managed to break already escaped procedure name handling
-			var dbName = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema).ConvertInline(TestUtils.GetDatabaseName(dataConnection), ConvertType.NameToDatabase);
-
-			var ret = dataConnection.ExecuteProc($"{dbName}.`TestOutputParametersWithoutTableProcedure`", parameters);
+			var ret = dataConnection.ExecuteProc("`TestOutputParametersWithoutTableProcedure`", parameters);
 
 			aOutParam = Converter.ChangeTypeTo<sbyte?>(parameters[1].Value);
 
@@ -1945,10 +1942,7 @@ namespace Tests.DataProvider
 				}
 			};
 
-			// WORKAROUND: db name needed for MySql.Data 8.0.21, as they managed to break already escaped procedure name handling
-			var dbName = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema).ConvertInline(TestUtils.GetDatabaseName(dataConnection), ConvertType.NameToDatabase);
-
-			var ret = dataConnection.QueryProc<Person>($"{dbName}.`TestProcedure`", parameters).ToList();
+			var ret = dataConnection.QueryProc<Person>("`TestProcedure`", parameters).ToList();
 
 			param2 = Converter.ChangeTypeTo<int?>(parameters[1].Value);
 			param1 = Converter.ChangeTypeTo<int?>(parameters[2].Value);

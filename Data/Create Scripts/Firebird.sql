@@ -13,6 +13,15 @@ DROP PROCEDURE "OutRefEnumTest";                COMMIT;
 DROP PROCEDURE "Scalar_DataReader";             COMMIT;
 DROP PROCEDURE "Scalar_OutputParameter";        COMMIT;
 DROP PROCEDURE "Scalar_ReturnParameter";        COMMIT;
+-- SKIP Firebird BEGIN
+-- SKIP Firebird3 BEGIN
+DROP PROCEDURE test_v4_types;
+-- SKIP Firebird END
+-- SKIP Firebird3 END
+-- SKIP Firebird4 BEGIN
+SELECT 1 FROM rdb$database
+-- SKIP Firebird4 END
+COMMIT;
 
 DROP VIEW "PersonView";                         COMMIT;
 
@@ -295,6 +304,7 @@ CREATE TABLE "AllTypes"
 	"intDataType"              int,
 	"floatDataType"            float,
 	"realDataType"             real,
+	"doubleDataType"           double precision,
 
 	"timestampDataType"        timestamp,
 
@@ -304,6 +314,16 @@ CREATE TABLE "AllTypes"
 	"textDataType"             blob sub_type TEXT,
 	"ncharDataType"            char(20) character set UNICODE_FSS,
 	"nvarcharDataType"         varchar(20) character set UNICODE_FSS,
+
+-- SKIP Firebird BEGIN
+-- SKIP Firebird3 BEGIN
+	"timestampTZDataType"      timestamp with time zone,
+	"timeTZDataType"           time with time zone,
+	"decfloat16DataType"       decfloat(16),
+	"decfloat34DataType"       decfloat,
+	"int128DataType"           int128,
+-- SKIP Firebird3 END
+-- SKIP Firebird END
 
 	"blobDataType"             blob
 );
@@ -330,15 +350,26 @@ VALUES
 	NULL,
 	NULL,
 	NULL,
-
 	NULL,
 
 	NULL,
+
 	NULL,
 	NULL,
 	NULL,
 	NULL,
 	NULL,
+	NULL,
+
+-- SKIP Firebird BEGIN
+-- SKIP Firebird3 BEGIN
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+-- SKIP Firebird3 END
+-- SKIP Firebird END
 
 	NULL
 );
@@ -355,6 +386,7 @@ VALUES
 	7777777,
 	20.31,
 	16,
+	16.17,
 
 	Cast('2012-12-12 12:12:12' as timestamp),
 
@@ -364,6 +396,16 @@ VALUES
 	'567',
 	'23233',
 	'3323',
+
+-- SKIP Firebird BEGIN
+-- SKIP Firebird3 BEGIN
+	'2020-12-12 12:24:35 Europe/Andorra',
+	'12:13 Australia/Hobart',
+	1234567890.123456,
+	123456789012345678901234567890.1234,
+	170141183460469231731687303715884105727,
+-- SKIP Firebird3 END
+-- SKIP Firebird END
 
 	'12345'
 );
@@ -774,6 +816,53 @@ CREATE PROCEDURE "AddIssue792Record"
 AS
 BEGIN
 	INSERT INTO "AllTypes"("char20DataType") VALUES('issue792');
-	SUSPEND;
 END;
+COMMIT;
+
+-- SKIP Firebird4 BEGIN
+SELECT 1 FROM rdb$database
+-- SKIP Firebird4 END
+
+-- SKIP Firebird BEGIN
+-- SKIP Firebird3 BEGIN
+CREATE PROCEDURE test_v4_types
+(
+	tstz       timestamp with time zone,
+	ttz        time with time zone,
+	decfloat16 decfloat(16),
+	decfloat34 decfloat,
+	int_128    int128
+)
+RETURNS
+(
+	col_tstz       timestamp with time zone,
+	col_ttz        time with time zone,
+	col_decfloat16 decfloat(16),
+	col_decfloat34 decfloat,
+	col_int_128    int128
+)
+AS
+BEGIN
+	FOR SELECT FIRST 1 :tstz, :ttz, :decfloat16, :decfloat34, :int_128 FROM rdb$database
+	INTO
+		:col_tstz,
+		:col_ttz,
+		:col_decfloat16,
+		:col_decfloat34,
+		:col_int_128
+	DO SUSPEND;
+END;
+-- SKIP Firebird3 END
+-- SKIP Firebird END
+COMMIT;
+
+DROP TABLE "CollatedTable"
+COMMIT;
+
+CREATE TABLE "CollatedTable"
+(
+	"Id"				INT NOT NULL,
+	"CaseSensitive"		VARCHAR(20) CHARACTER SET UTF8 COLLATE UNICODE,
+	"CaseInsensitive"	VARCHAR(20) CHARACTER SET UTF8 COLLATE UNICODE_CI
+)
 COMMIT;

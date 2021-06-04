@@ -287,8 +287,7 @@ WHERE
 							var format = string.Join(",",
 								type.CreateParameters
 									.Split(',')
-									.Select((p,i) => "{" + i + "}")
-									.ToArray());
+									.Select((p,i) => "{" + i + "}"));
 
 							type.CreateFormat = type.TypeName + "(" + format + ")";
 						}

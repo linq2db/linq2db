@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -102,7 +101,7 @@ namespace LinqToDB.Linq.Builder
 		//TODO: We have to separate TableContext in proper hierarchy
 		class RawSqlContext : TableContext
 		{
-			public RawSqlContext(ExpressionBuilder builder, BuildInfo buildInfo, Type originalType, bool isScalar, string sql, params ISqlExpression[] parameters)
+			public RawSqlContext(ExpressionBuilder builder, BuildInfo buildInfo, Type originalType, bool isScalar, string sql, ISqlExpression[] parameters)
 				: base(builder, buildInfo, new SqlRawSqlTable(builder.MappingSchema, originalType, sql, parameters))
 			{
 				// Marking All field as not nullable for satisfying DefaultIfEmptyBuilder 

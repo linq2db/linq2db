@@ -183,6 +183,14 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
+		protected override void BuildUpdateClause(SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)
+		{
+			base.BuildUpdateClause(statement, selectQuery, updateClause);
+
+			var output = statement.GetOutputClause();
+			BuildOutputSubclause(output);
+		}
+
 		protected override void BuildDeleteClause(SqlDeleteStatement deleteStatement)
 		{
 			var table = deleteStatement.Table != null ?
@@ -344,7 +352,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			AppendIndent();
 
-			if (!pkName.StartsWith("[PK_#"))
+			if (!pkName.StartsWith("[PK_#") && !createTable.Table.TableOptions.IsTemporaryOptionSet())
 				StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(' ');
 
 			StringBuilder.Append("PRIMARY KEY CLUSTERED (");
@@ -355,6 +363,8 @@ namespace LinqToDB.DataProvider.SqlServer
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
 			var table = dropTable.Table!;
+
+			BuildTag(dropTable);
 
 			if (dropTable.Table.TableOptions.HasDropIfExists())
 			{
@@ -499,5 +509,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				Indent--;
 			}
 		}
+
+		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(expr);
 	}
 }

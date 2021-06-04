@@ -114,6 +114,7 @@ namespace Tests
 				case TestProvName.SqlServer2019:
 				case TestProvName.SqlServer2019SequentialAccess:
 				case TestProvName.SqlServer2019FastExpressionCompiler:
+				case TestProvName.SqlServerContained                 :
 				case TestProvName.SqlAzure:
 				case ProviderName.SapHanaNative:
 				case ProviderName.SapHanaOdbc:
@@ -141,6 +142,7 @@ namespace Tests
 				case TestProvName.SqlServer2019:
 				case TestProvName.SqlServer2019SequentialAccess:
 				case TestProvName.SqlServer2019FastExpressionCompiler:
+				case TestProvName.SqlServerContained                     :
 				case TestProvName.SqlAzure:
 				case ProviderName.OracleManaged:
 				case ProviderName.OracleNative:
@@ -224,6 +226,7 @@ namespace Tests
 				case TestProvName.SqlServer2019:
 				case TestProvName.SqlServer2019SequentialAccess:
 				case TestProvName.SqlServer2019FastExpressionCompiler:
+				case TestProvName.SqlServerContained                 :
 				case TestProvName.SqlAzure:
 					return db.GetTable<LinqDataTypes>().Select(_ => DbName()).First();
 				case ProviderName.Informix:
@@ -374,6 +377,7 @@ namespace Tests
 					return "NOCASE";
 				case ProviderName.Firebird                           :
 				case TestProvName.Firebird3                          :
+				case TestProvName.Firebird4                          :
 					return "UNICODE_FSS";
 				case ProviderName.MySql                              :
 				case ProviderName.MySqlConnector                     :
@@ -390,6 +394,7 @@ namespace Tests
 				case TestProvName.SqlServer2019                      :
 				case TestProvName.SqlServer2019SequentialAccess      :
 				case TestProvName.SqlServer2019FastExpressionCompiler:
+				case TestProvName.SqlServerContained                 :
 					return "Albanian_CI_AS";
 				default                                              :
 					return "whatever";
