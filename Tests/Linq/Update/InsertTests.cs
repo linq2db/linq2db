@@ -2066,7 +2066,6 @@ namespace Tests.xUpdate
 			return provider == ProviderName.Sybase
 				|| provider == ProviderName.OracleNative
 				|| provider == TestProvName.Oracle11Native
-				|| provider == ProviderName.SqlServer2000
 				|| provider == ProviderName.SqlServer2005
 				? -1
 				: 0;

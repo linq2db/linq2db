@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
 using System.Linq;
@@ -10,7 +9,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Linq
 {
@@ -181,7 +179,7 @@ namespace LinqToDB.Linq
 
 			class TransformMapperExpressionContext
 			{
-				public TransformMapperExpressionContext(Expression<Func<IQueryRunner, IDataReader, T>> expression, IDataContext context, IDataReader dataReader, Type dataReaderType)
+				public TransformMapperExpressionContext(Expression<Func<IQueryRunner, DbDataReader, T>> expression, IDataContext context, DbDataReader dataReader, Type dataReaderType)
 				{
 					Expression     = expression;
 					Context        = context;
@@ -189,10 +187,10 @@ namespace LinqToDB.Linq
 					DataReaderType = dataReaderType;
 				}
 
-				public Expression<Func<IQueryRunner,IDataReader,T>> Expression;
-				public readonly IDataContext                        Context;
-				public readonly IDataReader                         DataReader;
-				public readonly Type                                DataReaderType;
+				public Expression<Func<IQueryRunner,DbDataReader,T>> Expression;
+				public readonly IDataContext                         Context;
+				public readonly DbDataReader                         DataReader;
+				public readonly Type                                 DataReaderType;
 
 				public ParameterExpression? OldVariable;
 				public ParameterExpression? NewVariable;

@@ -14,7 +14,7 @@ namespace LinqToDB.DataProvider.Oracle
 		const int NanosecondsPerTick = 100;
 
 #if NETFRAMEWORK
-		private static readonly object _nativeSyncRoot = new object();
+		private static readonly object _nativeSyncRoot = new ();
 
 		public const string NativeAssemblyName        = "Oracle.DataAccess";
 		public const string NativeProviderFactoryName = "Oracle.DataAccess.Client";
@@ -24,7 +24,7 @@ namespace LinqToDB.DataProvider.Oracle
 		private static OracleProviderAdapter? _nativeAdapter;
 #endif
 
-		private static readonly object _managedSyncRoot = new object();
+		private static readonly object _managedSyncRoot = new ();
 
 		public const string ManagedAssemblyName    = "Oracle.ManagedDataAccess";
 		public const string ManagedClientNamespace = "Oracle.ManagedDataAccess.Client";
@@ -241,7 +241,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		private static OracleProviderAdapter CreateAdapter(string assemblyName, string clientNamespace, string typesNamespace, string? factoryName)
 		{
-			var assembly = Common.Tools.TryLoadAssembly(assemblyName, factoryName);
+			var assembly = Tools.TryLoadAssembly(assemblyName, factoryName);
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {assemblyName}");
 
@@ -674,7 +674,9 @@ namespace LinqToDB.DataProvider.Oracle
 			public OracleBulkCopy(OracleConnection connection, OracleBulkCopyOptions options) => throw new NotImplementedException();
 
 			public void Dispose      ()                       => ((Action<OracleBulkCopy>)CompiledWrappers[0])(this);
+#pragma warning disable RS0030 // API mapping must preserve type
 			public void WriteToServer(IDataReader dataReader) => ((Action<OracleBulkCopy, IDataReader>)CompiledWrappers[1])(this, dataReader);
+#pragma warning restore RS0030 //  API mapping must preserve type
 
 			public int NotifyAfter
 			{

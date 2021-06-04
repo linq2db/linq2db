@@ -24,7 +24,7 @@ namespace LinqToDB.DataProvider.DB2
 		public const string ClientNamespace      = "IBM.Data.DB2.Core";
 #endif
 
-		private static readonly object _syncRoot = new object();
+		private static readonly object _syncRoot = new ();
 		private static DB2ProviderAdapter? _instance;
 
 		private DB2ProviderAdapter(
@@ -476,8 +476,9 @@ namespace LinqToDB.DataProvider.DB2
 			public DB2BulkCopy(DB2Connection connection, DB2BulkCopyOptions options) => throw new NotImplementedException();
 
 			public void Dispose      ()                       => ((Action<DB2BulkCopy>)CompiledWrappers[0])(this);
+#pragma warning disable RS0030 // API mapping must preserve type
 			public void WriteToServer(IDataReader dataReader) => ((Action<DB2BulkCopy, IDataReader>)CompiledWrappers[1])(this, dataReader);
-
+#pragma warning restore RS0030 //  API mapping must preserve type
 			public int NotifyAfter
 			{
 				get => ((Func  <DB2BulkCopy, int>)CompiledWrappers[2])(this);

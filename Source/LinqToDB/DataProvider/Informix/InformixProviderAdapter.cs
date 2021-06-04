@@ -23,8 +23,8 @@ namespace LinqToDB.DataProvider.Informix
 		public const string IfxProviderFactoryName = "IBM.Data.Informix";
 		public const string IfxTypesNamespace      = "IBM.Data.Informix";
 
-		private static readonly object _ifxSyncRoot = new object();
-		private static readonly object _db2SyncRoot = new object();
+		private static readonly object _ifxSyncRoot = new ();
+		private static readonly object _db2SyncRoot = new ();
 
 		private static InformixProviderAdapter? _ifxAdapter;
 		private static InformixProviderAdapter? _db2Adapter;
@@ -187,7 +187,7 @@ namespace LinqToDB.DataProvider.Informix
 
 		private static InformixProviderAdapter CreateIfxAdapter()
 		{
-			var assembly = Common.Tools.TryLoadAssembly(IfxAssemblyName, IfxProviderFactoryName);
+			var assembly = Tools.TryLoadAssembly(IfxAssemblyName, IfxProviderFactoryName);
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {IfxAssemblyName}");
 
@@ -405,7 +405,9 @@ namespace LinqToDB.DataProvider.Informix
 			public IfxBulkCopy(IfxConnection connection, IfxBulkCopyOptions options) => throw new NotImplementedException();
 
 			void IDisposable.Dispose ()                       => ((Action<IfxBulkCopy>)CompiledWrappers[0])(this);
+#pragma warning disable RS0030 // API mapping must preserve type
 			public void WriteToServer(IDataReader dataReader) => ((Action<IfxBulkCopy, IDataReader>)CompiledWrappers[1])(this, dataReader);
+#pragma warning restore RS0030 //  API mapping must preserve type
 
 			public int NotifyAfter
 			{

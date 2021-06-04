@@ -371,7 +371,7 @@ namespace LinqToDB.Data
 							DataConnection.OnTraceConnection(new TraceInfo(DataConnection, TraceInfoStep.Completed, TraceOperation.DisposeQuery, isAsync: false)
 							{
 								TraceLevel      = TraceLevel.Info,
-								Command         = DataConnection.GetCurrentCommand(),
+								Command         = DataConnection.CurrentCommand,
 								StartTime       = startedOn,
 								ExecutionTime   = stopwatch.Elapsed,
 								RecordsAffected = rowCount
@@ -875,7 +875,7 @@ namespace LinqToDB.Data
 				DataConnection.OnTraceConnection(new TraceInfo(DataConnection, TraceInfoStep.Completed, TraceOperation.DisposeQuery, isAsync: false)
 				{
 					TraceLevel      = TraceLevel.Info,
-					Command         = DataConnection.GetCurrentCommand(),
+					Command         = DataConnection.CurrentCommand,
 					StartTime       = startedOn,
 					ExecutionTime   = stopwatch.Elapsed,
 					RecordsAffected = commandResult,
@@ -926,7 +926,7 @@ namespace LinqToDB.Data
 				DataConnection.OnTraceConnection(new TraceInfo(DataConnection, TraceInfoStep.Completed, TraceOperation.DisposeQuery, isAsync: true)
 				{
 					TraceLevel      = TraceLevel.Info,
-					Command         = DataConnection.GetCurrentCommand(),
+					Command         = DataConnection.CurrentCommand,
 					StartTime       = startedOn,
 					ExecutionTime   = stopwatch.Elapsed,
 					RecordsAffected = commandResult,
@@ -1001,7 +1001,7 @@ namespace LinqToDB.Data
 					DataConnection.OnTraceConnection(new TraceInfo(DataConnection, TraceInfoStep.Completed, TraceOperation.DisposeQuery, isAsync: false)
 					{
 						TraceLevel      = TraceLevel.Info,
-						Command         = DataConnection.GetCurrentCommand(),
+						Command         = DataConnection.CurrentCommand,
 						StartTime       = startedOn,
 						ExecutionTime   = stopwatch.Elapsed,
 						RecordsAffected = 1,
@@ -1075,7 +1075,7 @@ namespace LinqToDB.Data
 					DataConnection.OnTraceConnection(new TraceInfo(DataConnection, TraceInfoStep.Completed, TraceOperation.DisposeQuery, isAsync: true)
 					{
 						TraceLevel      = TraceLevel.Info,
-						Command         = DataConnection.GetCurrentCommand(),
+						Command         = DataConnection.CurrentCommand,
 						StartTime       = startedOn,
 						ExecutionTime   = stopwatch.Elapsed,
 						RecordsAffected = 1,
@@ -1287,8 +1287,10 @@ namespace LinqToDB.Data
 				if (parameter.Direction != null) p.Direction =       parameter.Direction.Value;
 				if (parameter.Size      != null) p.Size      =       parameter.Size     .Value;
 #if NET45
+#pragma warning disable RS0030 // API missing from DbParameter in NET 4.5
 				if (parameter.Precision != null) ((IDbDataParameter)p).Precision = (byte)parameter.Precision.Value;
 				if (parameter.Scale     != null) ((IDbDataParameter)p).Scale     = (byte)parameter.Scale    .Value;
+#pragma warning restore RS0030 // API missing from DbParameter in NET 4.5
 #else
 				if (parameter.Precision != null) p.Precision = (byte)parameter.Precision.Value;
 				if (parameter.Scale     != null) p.Scale     = (byte)parameter.Scale    .Value;

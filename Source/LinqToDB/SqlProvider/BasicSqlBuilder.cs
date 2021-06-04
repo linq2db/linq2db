@@ -3134,11 +3134,13 @@ namespace LinqToDB.SqlProvider
 						sb.Append('(').Append(parameter.Size).Append(')');
 				}
 #if NET45
+#pragma warning disable RS0030 // API missing from DbParameter in NET 4.5
 				else if (((IDbDataParameter)parameter).Precision > 0)
 				{
 					if (t1.IndexOf('(') < 0)
 						sb.Append('(').Append(((IDbDataParameter)parameter).Precision).Append(InlineComma).Append(((IDbDataParameter)parameter).Scale).Append(')');
 				}
+#pragma warning restore RS0030 // API missing from DbParameter in NET 4.5
 #else
 				else if (parameter.Precision > 0)
 				{

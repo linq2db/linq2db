@@ -376,7 +376,7 @@ namespace LinqToDB
 		[Property(PN.SqlServer2005, "DateTime",       ServerSideOnly=true)]
 		[Property(PN.PostgreSQL,    "TimeStamp",      ServerSideOnly=true)]
 		[Property(PN.Firebird,      "TimeStamp",      ServerSideOnly=true)]
-		[Property(PN.MySql,         "DateTime"a,       ServerSideOnly=true)]
+		[Property(PN.MySql,         "DateTime",       ServerSideOnly=true)]
 		[Property(PN.SqlCe,         "DateTime",       ServerSideOnly=true)]
 		[Property(PN.Sybase,        "DateTime",       ServerSideOnly=true)]
 		[Property(PN.SapHana,       "TimeStamp",      ServerSideOnly=true)]
@@ -1429,7 +1429,6 @@ namespace LinqToDB
 		/// Returns last identity value (current value) for specific table.
 		/// </summary>
 		[Function  (PN.SqlServer    , "IDENT_CURRENT", ServerSideOnly = true)]
-		[Expression(PN.SqlServer2000, "NULL"         , ServerSideOnly = true)]
 		[Expression(                  "NULL"         , ServerSideOnly = true)]
 		internal static object? CurrentIdentity(string tableName) => throw new LinqException($"'{nameof(CurrentIdentity)}' is server side only property.");
 
@@ -1437,7 +1436,6 @@ namespace LinqToDB
 		/// Returns identity step for specific table.
 		/// </summary>
 		[Function  (PN.SqlServer    , "IDENT_INCR", ServerSideOnly = true)]
-		[Expression(PN.SqlServer2000, "NULL"      , ServerSideOnly = true)]
 		[Expression(                  "NULL"      , ServerSideOnly = true)]
 		internal static object? IdentityStep(string tableName) => throw new LinqException($"'{nameof(IdentityStep)}' is server side only property.");
 		#endregion

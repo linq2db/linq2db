@@ -17,8 +17,8 @@ namespace LinqToDB.DataProvider.SqlServer
 	// We don't take it into account, as there is no reason to use such old provider versions
 	public class SqlServerProviderAdapter : IDynamicProviderAdapter
 	{
-		private static readonly object _sysSyncRoot = new object();
-		private static readonly object _msSyncRoot  = new object();
+		private static readonly object _sysSyncRoot = new ();
+		private static readonly object _msSyncRoot  = new ();
 
 		private static SqlServerProviderAdapter? _systemAdapter;
 		private static SqlServerProviderAdapter? _microsoftAdapter;
@@ -411,9 +411,11 @@ namespace LinqToDB.DataProvider.SqlServer
 			public SqlBulkCopy(SqlConnection connection, SqlBulkCopyOptions options, SqlTransaction? transaction) => throw new NotImplementedException();
 
 			void IDisposable.Dispose()                        => ((Action<SqlBulkCopy>)CompiledWrappers[0])(this);
+#pragma warning disable RS0030 // API mapping must preserve type
 			public void WriteToServer(IDataReader dataReader) => ((Action<SqlBulkCopy, IDataReader>)CompiledWrappers[1])(this, dataReader);
 			public Task WriteToServerAsync(IDataReader dataReader, CancellationToken cancellationToken)
 				=> ((Func<SqlBulkCopy, IDataReader, CancellationToken, Task>)CompiledWrappers[11])(this, dataReader, cancellationToken);
+#pragma warning restore RS0030 //  API mapping must preserve type
 
 			public int NotifyAfter
 			{
