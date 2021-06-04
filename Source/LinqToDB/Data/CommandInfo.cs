@@ -371,7 +371,7 @@ namespace LinqToDB.Data
 							DataConnection.OnTraceConnection(new TraceInfo(DataConnection, TraceInfoStep.Completed, TraceOperation.DisposeQuery, isAsync: false)
 							{
 								TraceLevel      = TraceLevel.Info,
-								Command         = DataConnection.CurrentCommand,
+								Command         = rd.Command,
 								StartTime       = startedOn,
 								ExecutionTime   = stopwatch.Elapsed,
 								RecordsAffected = rowCount
@@ -1001,7 +1001,7 @@ namespace LinqToDB.Data
 					DataConnection.OnTraceConnection(new TraceInfo(DataConnection, TraceInfoStep.Completed, TraceOperation.DisposeQuery, isAsync: false)
 					{
 						TraceLevel      = TraceLevel.Info,
-						Command         = DataConnection.CurrentCommand,
+						Command         = rd.Command,
 						StartTime       = startedOn,
 						ExecutionTime   = stopwatch.Elapsed,
 						RecordsAffected = 1,
@@ -1075,7 +1075,7 @@ namespace LinqToDB.Data
 					DataConnection.OnTraceConnection(new TraceInfo(DataConnection, TraceInfoStep.Completed, TraceOperation.DisposeQuery, isAsync: true)
 					{
 						TraceLevel      = TraceLevel.Info,
-						Command         = DataConnection.CurrentCommand,
+						Command         = rd.Command,
 						StartTime       = startedOn,
 						ExecutionTime   = stopwatch.Elapsed,
 						RecordsAffected = 1,
