@@ -135,6 +135,7 @@ namespace LinqToDB.DataProvider.Firebird
 					                                                                                      break;
 
 				case DataType.Guid          : StringBuilder.Append("CHAR(16) CHARACTER SET OCTETS");      break;
+				case DataType.NChar         :
 				case DataType.Char          :
 					if (type.Type.SystemType == typeof(Guid) || type.Type.SystemType == typeof(Guid?))
 						StringBuilder.Append("CHAR(38)");

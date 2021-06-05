@@ -732,13 +732,13 @@ namespace Tests.Linq
 		[Table]
 		class TableWithGuid
 		{
-			[Column                          ] public Guid Default { get; set; }
-			[Column(DataType = DataType.Guid)] public Guid Binary  { get; set; }
-			[Column(DataType = DataType.Char)] public Guid String  { get; set; }
+			[Column                           ] public Guid Default   { get; set; }
+			[Column(DataType = DataType.Guid) ] public Guid Binary    { get; set; }
+			[Column(DataType = DataType.Char) ] public Guid String    { get; set; }
 
-			[Column                          ] public Guid? DefaultN { get; set; }
-			[Column(DataType = DataType.Guid)] public Guid? BinaryN  { get; set; }
-			[Column(DataType = DataType.Char)] public Guid? StringN  { get; set; }
+			[Column                           ] public Guid? DefaultN { get; set; }
+			[Column(DataType = DataType.Guid) ] public Guid? BinaryN  { get; set; }
+			[Column(DataType = DataType.NChar)] public Guid? StringN  { get; set; }
 		}
 	}
 }

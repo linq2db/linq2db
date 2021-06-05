@@ -83,7 +83,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		static void ConvertGuidToSql(StringBuilder sb, SqlDataType dataType, Guid value)
 		{
-			if (dataType.Type.DataType == DataType.Char)
+			if (dataType.Type.DataType == DataType.Char || dataType.Type.DataType == DataType.NChar)
 				sb.Append('\'').Append(value.ToString()).Append('\'');
 			else
 			{
