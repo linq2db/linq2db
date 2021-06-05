@@ -692,38 +692,53 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue2823Guid([IncludeDataSources(false, TestProvName.AllFirebird)] string context, [Values] bool useParametersForInsert, [Values]bool useParametersForSelect)
+		public void Issue2823Guid([IncludeDataSources(false, TestProvName.AllFirebird)] string context, [Values] bool inlineParameters)
 		{
-			using(var db = GetDataContext(context))
-			using(var table = db.CreateLocalTable<TableWithGuid>())			
+			using(var db    = (DataConnection)GetDataContext(context))
+			using(var table = db.CreateLocalTable<TableWithGuid>())
 			{
-				db.BeginTransaction();				
+				Assert.True(db.LastQuery!.Contains("\"Default\"  CHAR(16) CHARACTER SET OCTETS"));
+				Assert.True(db.LastQuery!.Contains("\"Binary\"   CHAR(16) CHARACTER SET OCTETS"));
+				Assert.True(db.LastQuery!.Contains("\"String\"   CHAR(38)"));
+				Assert.True(db.LastQuery!.Contains("\"DefaultN\" CHAR(16) CHARACTER SET OCTETS"));
+				Assert.True(db.LastQuery!.Contains("\"BinaryN\"  CHAR(16) CHARACTER SET OCTETS"));
+				Assert.True(db.LastQuery!.Contains("\"StringN\"  CHAR(38)"));
+
+				db.InlineParameters = inlineParameters;
+
+				table.Insert(() => new TableWithGuid {
+					Default  = TestData.Guid1, Binary  = TestData.Guid2, String  = TestData.Guid3,
+					DefaultN = TestData.Guid4, BinaryN = TestData.Guid5, StringN = TestData.Guid6,
+				});
 				
-				var guid = Guid.NewGuid();
-				db.InlineParameters = !useParametersForInsert;
-				table.Insert(() => new TableWithGuid { Guid = guid, Data = "My data" });
+				var data = table.ToArray();
+				Assert.AreEqual(1, data.Length);
+				Assert.AreEqual(TestData.Guid1, data[0].Default);
+				Assert.AreEqual(TestData.Guid2, data[0].Binary);
+				Assert.AreEqual(TestData.Guid3, data[0].String);
+				Assert.AreEqual(TestData.Guid4, data[0].DefaultN);
+				Assert.AreEqual(TestData.Guid5, data[0].BinaryN);
+				Assert.AreEqual(TestData.Guid6, data[0].StringN);
 
-				db.InlineParameters = useParametersForSelect;
-				Assert.AreEqual("My data", table.Where(x => x.Guid == guid).Select(x => x.Data).First());
-
-				//AreEqual(from x in db.Types2 select x.GuidValue, from x in Types2 select x.GuidValue);
-				guid = Guid.NewGuid();
-				db.InlineParameters = !useParametersForInsert;
-				db.Types2.Insert(() => new LinqDataTypes2 { GuidValue = guid });
-
-				db.InlineParameters = !useParametersForSelect;
-
-				Assert.AreEqual(guid, db.Types2.Where(x => x.GuidValue == guid).Select(x => x.GuidValue).First());
+				Assert.AreEqual(1, table.Where(x => x.Default  == TestData.Guid1).Count());
+				Assert.AreEqual(1, table.Where(x => x.Binary   == TestData.Guid2).Count());
+				Assert.AreEqual(1, table.Where(x => x.String   == TestData.Guid3).Count());
+				Assert.AreEqual(1, table.Where(x => x.DefaultN == TestData.Guid4).Count());
+				Assert.AreEqual(1, table.Where(x => x.BinaryN  == TestData.Guid5).Count());
+				Assert.AreEqual(1, table.Where(x => x.StringN  == TestData.Guid6).Count());
 			}
 		}
 
 		[Table]
 		class TableWithGuid
 		{
-			[Column] public Guid Guid { get; set; }
-			[Column] public string? Data { get; set; }
+			[Column                          ] public Guid Default { get; set; }
+			[Column(DataType = DataType.Guid)] public Guid Binary  { get; set; }
+			[Column(DataType = DataType.Char)] public Guid String  { get; set; }
+
+			[Column                          ] public Guid? DefaultN { get; set; }
+			[Column(DataType = DataType.Guid)] public Guid? BinaryN  { get; set; }
+			[Column(DataType = DataType.Char)] public Guid? StringN  { get; set; }
 		}
-
 	}
-
 }

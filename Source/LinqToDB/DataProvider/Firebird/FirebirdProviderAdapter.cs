@@ -128,8 +128,9 @@ namespace LinqToDB.DataProvider.Firebird
 
 						var dbTypeBuilder = typeMapper.Type<FbParameter>().Member(p => p.FbDbType);
 						var clearAllPools = typeMapper.BuildAction(typeMapper.MapActionLambda(() => FbConnection.ClearAllPools()));
+
 						var useLegacyGuidEncoding = assembly.GetName().Version < new Version(6, 0, 0, 0);
-TODO
+
 						_instance = new FirebirdProviderAdapter(
 							connectionType,
 							dataReaderType,

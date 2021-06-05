@@ -32,8 +32,7 @@ namespace LinqToDB.DataProvider.Firebird
 			SetValueToSqlConverter(typeof(byte[])  , (sb, dt, v) => ConvertBinaryToSql(sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary)  , (sb, dt, v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
 			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => BuildDateTime(sb, dt, (DateTime)v));
-
-			SetValueToSqlConverter(typeof(Guid), (sb, dt, v) => ConvertGuidToSql(false, sb, dt, (Guid)v));
+			SetValueToSqlConverter(typeof(Guid)    , (sb, dt, v) => ConvertGuidToSql(sb, dt, (Guid)v));
 
 			SetDataType(typeof(BigInteger), new SqlDataType(DataType.Int128, typeof(BigInteger), "INT128"));
 			SetValueToSqlConverter(typeof(BigInteger), (sb, dt, v) => sb.Append(((BigInteger)v).ToString(CultureInfo.InvariantCulture)));
@@ -82,13 +81,14 @@ namespace LinqToDB.DataProvider.Firebird
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value, dbType);
 		}
 
-		static void ConvertGuidToSql(bool useLegacyGuidEncoding, StringBuilder sb, SqlDataType dataType, Guid value)
+		static void ConvertGuidToSql(StringBuilder sb, SqlDataType dataType, Guid value)
 		{
-			if (dataType.Type.DataType == DataType.Guid)
+			if (dataType.Type.DataType == DataType.Char)
+				sb.Append('\'').Append(value.ToString()).Append('\'');
+			else
 			{
 				var bytes = value.ToByteArray();
-				// workaround for http://tracker.firebirdsql.org/browse/DNET-509
-				if (BitConverter.IsLittleEndian && !useLegacyGuidEncoding)
+				if (BitConverter.IsLittleEndian)
 				{
 					Array.Reverse(bytes, 0, 4);
 					Array.Reverse(bytes, 4, 2);
@@ -97,10 +97,6 @@ namespace LinqToDB.DataProvider.Firebird
 				sb.Append("X'");
 				sb.AppendByteArrayAsHexViaLookup32(bytes);
 				sb.Append('\'');
-			} 
-			else
-			{
-				sb.Append('\'').Append(value.ToString()).Append('\'');
 			}
 		}
 
